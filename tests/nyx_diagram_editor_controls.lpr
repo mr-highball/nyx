@@ -25,7 +25,7 @@ program nyx_diagram_editor_controls;
 {$ifdef PAS2JS}{$modeswitch externalclass}{$endif}
 
 uses
-  SysUtils, Math, nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.events,
+  SysUtils, Math, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.state, nyx.diagram, nyx.diagram.drawing,
   nyx.diagram.editor, nyx.diagram.manipulation, nyx.drawing, nyx.drawing.view, nyx.canvas.geometry,
   nyx.canvas.types, nyx.canvas.workspace, nyx.canvas.observers, nyx.test.diagram,
@@ -193,6 +193,8 @@ begin
 end;
 
 procedure TWorker.Execute;
+var
+  LHistory: INyxDiagramHistoryView;
 begin
   try
     View.GetDiagram;
@@ -212,6 +214,31 @@ begin
   end;
   try
     View.NudgeSelection(10, 0, 0);
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  LHistory := View as INyxDiagramHistoryView;
+  try
+    LHistory.GetUndoCount;
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  try
+    LHistory.Undo(0);
+  except
+    on E: ENyxSchedule do
+    begin
+      Inc(Refusals);
+    end;
+  end;
+  try
+    LHistory.ClearHistory;
   except
     on E: ENyxSchedule do
     begin
@@ -489,7 +516,10 @@ begin
   GOtherHost.style.setProperty('left', '-2000px');
   document.body.appendChild(GOtherHost);
   GTarget := MountNyxBrowserDiagramEditor(GEditor, GDocument, GHost);
+  GEditor.WithOptions(LOptions.HistoryLimit(2)
+    .HistoryByteBudget(3 * NyxUTF8ByteCount(GInitialBytes) + 512));
   GOther := MountNyxBrowserDiagramEditor(GEditor, GDocument, GOtherHost);
+  GEditor.WithOptions(LOptions);
   GCanvas := GTarget.Canvas as INyxBrowserCanvasWorkspaceView;
   {$else}
   GHost := TForm.CreateNew(nil);
@@ -505,7 +535,10 @@ begin
   GOtherHost.SetBounds(1100, 20, 400, 500);
   GOtherHost.Show;
   GTarget := MountNyxLCLDiagramEditor(GEditor, GDocument, GHost);
+  GEditor.WithOptions(LOptions.HistoryLimit(2)
+    .HistoryByteBudget(3 * NyxUTF8ByteCount(GInitialBytes) + 512));
   GOther := MountNyxLCLDiagramEditor(GEditor, GDocument, GOtherHost);
+  GEditor.WithOptions(LOptions);
   GCanvas := GTarget.Canvas as INyxLCLCanvasWorkspaceView;
   {$endif}
   GView := GTarget;
@@ -644,6 +677,7 @@ end;
 
 procedure RunManipulation(ADisconnect: Boolean); {$ifdef PAS2JS}async;{$endif}
 var
+  LHistory: INyxDiagramHistoryView;
   LSaved: INyxDiagram;
   LBefore: TNyxText;
   LRevision: Integer;
@@ -670,6 +704,8 @@ begin
   Pump;
   {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
   LBefore := GView.Diagram.ToData.ToJSON;
+  Check(Supports(GView, INyxDiagramHistoryView, LHistory), 'manipulation exposes optional local graph history');
+  LHistory.ClearHistory;
   LRevision := GView.Revision;
   LPoint := LVertex.Bounds.Center;
   LMinimum := DrawNyxDiagramEditor(GView.Diagram, GView.Selection,
@@ -695,6 +731,8 @@ begin
   Check((GView.Revision = LRevision) and (LPresentation.PresentationRevision = LSceneRevision + 1) and
     (GView.DisplayDiagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left + 20.5) and
     (GView.Diagram.ToData.ToJSON = LBefore), 'one deferred preview coalesces the burst and leaves accepted model exact');
+  Check((LHistory.UndoCount = 0) and (LHistory.RedoCount = 0),
+    'coalesced pointer previews do not append local graph history');
   LExpected := DrawNyxDiagramEditor(GView.DisplayDiagram, GView.Selection,
     GView.SelectedEdge, 8 / GView.Canvas.Camera.Zoom, LMinimum);
   {$ifndef PAS2JS}
@@ -720,6 +758,10 @@ begin
   Pump;
   {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@DiagramTurn)));{$endif}
   Check(GView.Revision = LRevision + 1, 'retired queued samples cannot publish again');
+  Check(LHistory.UndoCount = 1, 'one released pointer gesture creates exactly one local command');
+  LHistory.Undo(GView.Revision);
+  Check(GView.Diagram.ToData.ToJSON = LBefore, 'one local Undo restores the complete pre-drag graph');
+  LHistory.Redo(GView.Revision);
 
   LVertex := GView.Diagram.FindVertex(LVertex.Reference);
   LRevision := GView.Revision;
@@ -819,6 +861,8 @@ begin
     {$endif}
   end;
 end;
+
+{$I nyx.test.diagram.history.controls.inc}
 
 procedure RunAuthoring;
 var
@@ -978,6 +1022,7 @@ end;
 
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
+  LHistory: INyxDiagramHistoryView;
   LBefore: TNyxText;
   LRevision: Integer;
   LFailed: Boolean;
@@ -1116,6 +1161,7 @@ begin
     'complete edited intent exports independently of its picture');
   Check((GInitial.ToData.ToJSON = GInitialBytes) and (GOther.Revision = 0) and
     (GOther.Diagram.ToData.ToJSON = GInitialBytes), 'retained initial and independent mount stay exact');
+  {$ifdef PAS2JS}await(RunHistoryLimits);{$else}RunHistoryLimits;{$endif}
   LBefore := GView.Diagram.ToData.ToJSON;
   RetainNyxControl(GTarget.Renderer.Root).Configure.ReadOnly(True).Done;
   GTarget.Renderer.Sync;
@@ -1135,7 +1181,7 @@ begin
   LWorker.View := GView;
   LWorker.Start;
   LWorker.WaitFor;
-  Check((LWorker.Refusals = 3) and (GView.Diagram.ToData.ToJSON = LBefore),
+  Check((LWorker.Refusals = 6) and (GView.Diagram.ToData.ToJSON = LBefore),
     'three direct worker UI calls refuse before touching live state');
   LWorker.Free;
   Check(GFailure.Message = '', 'no framework failures escaped event/layout ownership');
@@ -1222,6 +1268,7 @@ begin
   {$endif}
   RunAuthoring;
   {$ifdef PAS2JS}await(RunManipulation(False));{$else}RunManipulation(False);{$endif}
+  RunHistory;
   GDisconnect := GTarget.Renderer.Events.On(NyxControlEvents(ID(ndepNext)), ntClick)
     .Subscribe(TDisconnect.Create);
   Click(ndepNext);
@@ -1236,6 +1283,18 @@ begin
     end;
   end;
   Check(LFailed, 'retained disconnected editor refuses live access');
+  Check(Supports(GView, INyxDiagramHistoryView, LHistory),
+    'a retained retired view still exposes its guarded optional history interface');
+  LFailed := False;
+  try
+    LHistory.GetUndoCount;
+  except
+    on E: ENyxDiagram do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'retained history authority refuses after editor retirement');
 end;
 
 procedure Cleanup;

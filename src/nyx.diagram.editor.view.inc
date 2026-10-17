@@ -24,6 +24,51 @@
   draft guards, prepared publication and ordinary Nyx chrome remain shared. }
 
 type
+  { Read-only data checkpoint, independent of any source/control/application
+    owner. Interfaces live in a managed object rather than a record so both FPC
+    and pas2js can independently retain the same immutable graph and wire. }
+  IDiagramHistoryEntry = interface(IInterface)
+    ['{EF8DC3E8-AB6D-4899-9744-461D218411E9}']
+    function GetDiagram: INyxDiagram;
+    function GetSelection: TNyxDiagramVertexRef;
+    function GetEdge: TNyxDiagramEdgeRef;
+    function GetWire: TNyxText;
+    function GetBytes: Integer;
+    property Diagram: INyxDiagram read GetDiagram;
+    property Selection: TNyxDiagramVertexRef read GetSelection;
+    property Edge: TNyxDiagramEdgeRef read GetEdge;
+    property Wire: TNyxText read GetWire;
+    property Bytes: Integer read GetBytes;
+  end;
+
+  { Private immutable checkpoint implementation. Only already admitted private
+    diagrams enter this constructor; no getter invokes a creator or exposes
+    writable arrays. Final release retires data without calling application code. }
+  TDiagramHistoryEntry = class(TInterfacedObject, IDiagramHistoryEntry)
+  private
+    FDiagram: INyxDiagram;
+    FSelection: TNyxDiagramVertexRef;
+    FEdge: TNyxDiagramEdgeRef;
+    FWire: TNyxText;
+    FBytes: Integer;
+  public
+    constructor Create(const ADiagram: INyxDiagram; const ASelection: TNyxDiagramVertexRef;
+      const AEdge: TNyxDiagramEdgeRef; const AWire: TNyxText; ABytes: Integer);
+    function GetDiagram: INyxDiagram;
+    function GetSelection: TNyxDiagramVertexRef;
+    function GetEdge: TNyxDiagramEdgeRef;
+    function GetWire: TNyxText;
+    function GetBytes: Integer;
+  end;
+
+  { Independently prepared stack, oldest first. Published arrays are never
+    edited in place; a complete replacement joins the graph's prepared commit. }
+  TDiagramHistoryEntries = array of IDiagramHistoryEntry;
+
+  { Closed local stack transition. Preview has no history participant; a source
+    context replacement resets both stacks independently of this edit choice. }
+  TDiagramHistoryAction = (dhaRecord, dhaUndo, dhaRedo);
+
   { Copied mapping from a graph vertex to one private canvas content lifetime.
     Values retain no interfaces or trees. Stable names survive geometry/header
     changes; a removed and recreated vertex receives a fresh controlled ID. }
@@ -125,6 +170,10 @@ type
     Zoom: Double;
     ContentBindings: TDiagramContentBindings;
     NextContentID: Integer;
+    NewUndo: TDiagramHistoryEntries;
+    NewRedo: TDiagramHistoryEntries;
+    NewHistoryWire: TNyxText;
+    NewHistoryBytes: Integer;
     procedure Validate;
     procedure CheckReady;
     procedure Install;
@@ -139,7 +188,8 @@ type
     All retained callbacks are explicitly revoked first.
     Runtime exports grant no document/source/history or filesystem authority. }
   TEditorView = class(TInterfacedObject, INyxDiagramEditorView, IDiagramTargetView,
-    INyxDiagramContentView, INyxDiagramSourceView, INyxDiagramPortsView)
+    INyxDiagramContentView, INyxDiagramSourceView, INyxDiagramPortsView,
+    INyxDiagramHistoryView)
   private
     FEditorID: TNyxText;
     FPortToolsExpanded: Boolean;
@@ -169,6 +219,10 @@ type
     FNextContentID: Integer;
     FContentToolsExpanded: Boolean;
     FDiagram: INyxDiagram;
+    FUndo: TDiagramHistoryEntries;
+    FRedo: TDiagramHistoryEntries;
+    FHistoryWire: TNyxText;
+    FHistoryBytes: Integer;
     FSelection: TNyxDiagramVertexRef;
     FSelectedEdge: TNyxDiagramEdgeRef;
     FConnectionStart: TNyxDiagramVertexRef;
@@ -241,6 +295,10 @@ type
     procedure AdvanceSelection(ADelta: Integer);
     procedure AdvanceEdgeSelection(ADelta: Integer);
     procedure RefreshDraw;
+    procedure RefreshHistory;
+    procedure PrepareHistory(ACommit: TDiagramEditorCommit; AAction: TDiagramHistoryAction);
+    procedure ReplayHistory(AAction: TDiagramHistoryAction; AExpectedRevision: Integer;
+      ADiscardProperties: Boolean);
     procedure AddShapeAtCenter(AShape: TNyxDiagramShape);
     function FreshVertexReference(AShape: TNyxDiagramShape): TNyxDiagramVertexRef;
     function FreshEdgeReference: TNyxDiagramEdgeRef;
@@ -256,7 +314,7 @@ type
     procedure PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
       const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef;
       APreview: Boolean; ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
-      const ASnapshot: TNyxDiagramSourceSnapshot);
+      const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction = dhaRecord);
     procedure QueueFrame;
     procedure RefreshFrame;
     function PointerFrameCurrent: Boolean;
@@ -274,6 +332,12 @@ type
       AMode: TNyxDiagramContentMode; const AContext: INyxApplicationContext;
       const AResolver: INyxLogicResolver; const AResources: INyxApplicationResources);
     destructor Destroy; override;
+    function GetUndoCount: Integer;
+    function GetRedoCount: Integer;
+    function GetHistoryBytes: Integer;
+    procedure Undo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
+    procedure Redo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
+    procedure ClearHistory;
     function GetRenderer: TDiagramRenderer;
     function ContentItem(const AVertex: TNyxDiagramVertexRef): TNyxCanvasItemRef;
     function ContentControl(const AVertex: TNyxDiagramVertexRef): TNyxControlRef;
@@ -658,9 +722,9 @@ begin
     raise ENyxDiagram.Create('Diagram publication is stale or retired');
   end;
 
-  if SourceChange and (Owner.PropertyBuffer <> ExpectedProperties) then
+  if Owner.PropertyBuffer <> ExpectedProperties then
   begin
-    raise ENyxDiagram.Create('Diagram fields changed while source was staged');
+    raise ENyxDiagram.Create('Diagram fields changed while publication was staged');
   end;
 
   if (SourceInspection <> nil) and ((Owner.FSaveHost <> SaveHost) or
@@ -723,6 +787,10 @@ begin
     Owner.FConnectionStart := Default(TNyxDiagramVertexRef);
     Owner.FConnectionStartPort := Default(TNyxDiagramPortRef);
     Owner.FReconnectingEdge := Default(TNyxDiagramEdgeRef);
+    Owner.FUndo := NewUndo;
+    Owner.FRedo := NewRedo;
+    Owner.FHistoryWire := NewHistoryWire;
+    Owner.FHistoryBytes := NewHistoryBytes;
     Inc(Owner.FRevision);
   end;
   Owner.FProvider.Plan := Projection;
@@ -748,6 +816,9 @@ begin
   Candidate := nil;
   Projection := nil;
   ContentBindings := nil;
+  NewUndo := nil;
+  NewRedo := nil;
+  NewHistoryWire := '';
 end;
 
 constructor TEditorView.Create(const AEditor: INyxDiagramEditor;
@@ -810,6 +881,18 @@ begin
   FOptions := AEditor.Options;
   FDiagram := NyxDiagramFromData(AEditor.InitialDiagram.ToData);
   ADocument.ValidateDiagramContent(FDiagram);
+
+  if (FOptions.MaximumHistoryCommands > 0) and (FOptions.MaximumHistoryBytes > 0) then
+  begin
+    FHistoryWire := FDiagram.ToData.ToJSON;
+    FHistoryBytes := NyxUTF8ByteCount(FHistoryWire);
+
+    if FHistoryBytes > FOptions.MaximumHistoryBytes then
+    begin
+      FHistoryWire := '';
+      FHistoryBytes := 0;
+    end;
+  end;
 
   if FDiagram.VertexCount > 0 then
   begin
@@ -907,6 +990,8 @@ begin
   end;
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepApply).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRestore).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepUndo).ID, ntClick);
+  Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepRedo).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSave).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepReloadSaved).ID, ntClick);
   Subscribe(FRenderer.Events, NyxDiagramEditorPart(AEditor.ID, ndepSelection).ID, ntClick);
@@ -987,6 +1072,7 @@ begin
   FLastError := AMessage;
   LCaption := RetainNyxControl(Part(ndepStatus)) as INyxCaptionControl;
   LCaption.Text := AMessage;
+  RefreshHistory;
 
   if AMessage = '' then
   begin
@@ -1179,6 +1265,7 @@ begin
   FPortFieldBaseline := PortFieldBuffer;
   FFormBaseline := PropertyBuffer;
   RefreshDraw;
+  RefreshHistory;
   FRenderer.Sync;
 end;
 
@@ -1323,7 +1410,7 @@ end;
 procedure TEditorView.PublishSourceSelection(const ADiagram: INyxDiagram; AExpectedRevision: Integer;
   const AVertex: TNyxDiagramVertexRef; const AEdge: TNyxDiagramEdgeRef; APreview: Boolean;
   ASource: TNyxDocument; const AInspection: INyxDiagramSourceInspection;
-  const ASnapshot: TNyxDiagramSourceSnapshot);
+  const ASnapshot: TNyxDiagramSourceSnapshot; AHistoryAction: TDiagramHistoryAction);
 var
   LCandidate: INyxDiagram;
   LProjection: INyxDrawingPlan;
@@ -1422,8 +1509,11 @@ begin
     begin
       LSelection := Default(TNyxDiagramVertexRef);
 
-      if (LCandidate.VertexCount > 0) and not LSelectedEdge.Defined then
+      if (LCandidate.VertexCount > 0) and not LSelectedEdge.Defined and
+        not ((AHistoryAction <> dhaRecord) and not AVertex.Defined and not AEdge.Defined) then
       begin
+        { Replaying a deliberately empty selection must not turn it into the
+          ordinary replacement fallback of selecting the first surviving shape. }
         LSelection := LCandidate.Vertex(0).Reference;
       end;
     end;
@@ -1459,6 +1549,11 @@ begin
     LCommit.ContentBindings := LContentBindings;
     LCommit.NextContentID := LNextContentID;
     try
+
+      if not APreview then
+      begin
+        PrepareHistory(LCommit, AHistoryAction);
+      end;
 
       if LCommit.SourceChange then
       begin
@@ -1624,6 +1719,8 @@ var
   LDistance: Double;
   LResponse: INyxEventResponse;
   LHandled: Boolean;
+  LHistoryUndo: Boolean;
+  LHistoryRedo: Boolean;
   LPolicy: TNyxInteractionPolicy;
   LHit: TNyxDiagramVertexRef;
   LPortHit: TNyxDiagramPortHit;
@@ -1734,6 +1831,34 @@ begin
 
   if AEvent.HasKeyboard and (AEvent.Trigger = ntBeforeKeyDown) then
   begin
+    { Only the subscribed canvas/selection surfaces own these shortcuts.
+      Text editors retain their own native/browser text Undo and composition. }
+
+    if not LPolicy.ReadOnly and (FOptions.MaximumHistoryCommands > 0) and
+      (FOptions.MaximumHistoryBytes > 0) then
+    begin
+      LHistoryUndo := AEvent.Keyboard.Matches(nkZKey, [nmControl], True) or
+        AEvent.Keyboard.Matches(nkZKey, [nmMeta], True);
+      LHistoryRedo := AEvent.Keyboard.Matches(nkYKey, [nmControl], True) or
+        AEvent.Keyboard.Matches(nkZKey, [nmControl, nmShift], True) or
+        AEvent.Keyboard.Matches(nkZKey, [nmMeta, nmShift], True);
+
+      if LHistoryUndo or LHistoryRedo then
+      begin
+        NyxEventResponse(AExecution).Consume;
+
+        if LHistoryUndo then
+        begin
+          Undo(FRevision);
+        end
+        else
+        begin
+          Redo(FRevision);
+        end;
+        Feedback('');
+        Exit;
+      end;
+    end;
 
     if (AEvent.Keyboard.Modifiers <> []) or LPolicy.ReadOnly then
     begin
@@ -1771,7 +1896,7 @@ begin
 
     if LPolicy.ReadOnly and (LPart in [ndepLeft, ndepUp, ndepRight,
       ndepDown, ndepApply, ndepRestore, ndepSave, ndepReloadSaved,
-      ndepApplyContent, ndepRestoreContent]) then
+      ndepApplyContent, ndepRestoreContent, ndepUndo, ndepRedo]) then
     begin
       Exit;
     end;
@@ -1790,6 +1915,8 @@ begin
       Exit;
     end;
     case LPart of
+      ndepUndo: Undo(FRevision);
+      ndepRedo: Redo(FRevision);
       ndepPrevious: AdvanceSelection(-1);
       ndepNext: AdvanceSelection(1);
       ndepZoomOut: FCanvas.Execute(nccZoomOut);
@@ -1992,6 +2119,10 @@ begin
   FProvider := nil;
   FProviderLease := nil;
   FDiagram := nil;
+  FUndo := nil;
+  FRedo := nil;
+  FHistoryWire := '';
+  FHistoryBytes := 0;
   FreeAndNil(FDocument);
 
   if FOwnState then
@@ -2004,3 +2135,4 @@ end;
 {$I nyx.diagram.editor.manipulation.inc}
 {$I nyx.diagram.editor.content.inc}
 {$I nyx.diagram.editor.ports.inc}
+{$I nyx.diagram.editor.history.inc}

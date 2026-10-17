@@ -369,11 +369,63 @@ the destination shape by pointer or the ordinary selection/Connect buttons.
 `BeginReconnect` shares pending-connection cancellation and revision guards.
 `ReconnectEdge` also accepts typed free endpoints. Both retain the edge identity,
 opposite endpoint, routing, arrows and style; complete graph admission rejects
-dangling targets. These operations add no hidden source or local Undo authority.
-Explicit Studio Save below publishes the entire applied result as one paired
-design/Pascal history step. Independent local command history, draggable endpoint
+dangling targets. These operations use the local graph history below without
+granting project/source publication authority. Explicit Studio Save below publishes
+the entire applied result as one paired design/Pascal history step. Draggable endpoint
 grips, waypoint editing and the broader behavior matrix remain open. Named physical
 ports use the separate optional workspace above.
+
+### Local Undo and Redo
+
+Each mounted editor owns local graph history. Toolbar Undo/Redo and the scoped
+Control-Z, Control-Y and Control-Shift-Z shortcuts share the same prepared canvas
+publication as ordinary editing. Meta-Z/Meta-Shift-Z are also recognized. These
+shortcuts belong to the canvas and selection surfaces; property inputs and
+embedded editors retain their own text-editing shortcuts. Read-only editor input
+does not invoke graph history. Native input and browser compilation have separate
+evidence in WORK.md; hardware, assistive and browser execution remain unqualified.
+
+One accepted gesture produces one command; intermediate previews, camera movement
+and selection-only changes produce none. Undo restores complete shapes, ports,
+styles, content selectors and connections with the command's selection. It advances
+the current revision rather than reusing an older revision. Redo restores the
+corresponding accepted graph; a changed edit releases that future branch. An exact
+canonical graph no-op preserves it. Reconciliation keeps surviving embedded
+controls and runtime store values; history itself retains no control or callback.
+
+Configure independent mounts through the typed options:
+
+```pascal
+LDesigner := NewNyxDiagramEditor('workflow', LGraph)
+  .WithOptions(NyxDiagramEditorOptions
+    .HistoryLimit(64)
+    .HistoryByteBudget(32 * 1024 * 1024));
+```
+
+The defaults retain at most 32 commands and 16 MiB of canonical UTF-8 graph data,
+counting the current graph with both stacks. The command limit accepts 0 through
+256; either limit set to zero disables retention and hides the history buttons.
+The oldest commands retire when a bound is reached. A current graph larger than
+the byte budget remains editable but retains no history/wire copy; its disabled
+Undo control explains the configured budget. These are retained data bounds,
+not a qualified process-memory or latency budget. Undo/Redo permute the already
+admitted states, so an Undo always has room for its corresponding Redo.
+
+Optional `INyxDiagramHistoryView` exposes revision-guarded Undo/Redo, counts,
+retained byte accounting and `ClearHistory`. Query it with `Supports` for portable
+browser/native consumers. Stale requests, unfinished properties, active manipulation
+and a pending Save refuse without consuming a command. An explicit discard argument
+allows unfinished properties to retire only with a successful graph publication.
+Empty Undo/Redo leave the graph/revision unchanged; clearing history preserves the
+current graph, revision, camera and fields. Failed admission preserves both stacks.
+
+Successful source-context replacement starts fresh local history, preventing old
+resource/reusable definitions from being restored into a new source owner. Saving
+does not clear history. Local Undo never edits the saved document or Pascal;
+deliberate Studio Save and the project's paired Undo/Redo keep their existing
+authority. Disconnect releases local checkpoints and revokes retained history
+interfaces. This runtime capability is not a new semantic tool or installed schema;
+bounded active-view history access retains the existing workflow owner.
 
 ## Studio authoring and deliberate Save
 
@@ -650,7 +702,7 @@ or format compatibility. The full requested scope stays with the owners below.
 | Layers, order, locking/visibility | Scene layers exist; graph-to-layer semantics and editor controls remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Multiple pages | Document pages exist; independent diagram page lifecycle remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Clipboard and duplicate | Independent snapshots exist; semantic selection/clipboard operations remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
-| Undo/Redo | Explicit Studio Save joins exact ordinary paired history; independent runtime local command history remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
+| Undo/Redo | Bounded local graph history joins prepared publication, scoped keys, draft/revision guards and one-step gesture completion; explicit Studio Save retains separate paired history. WORK.md separates native execution from browser compilation; runtime semantic access, full target quality and delivery remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Workflow](../TODO/NS-4_agent-workflows_01.md) |
 | Search | Exact typed reference lookup exists; text/library search remains open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |
 | Keyboard/touch/pen | Native pointer selection, focused-button nudges and ordinary property controls; full gesture/focus/accessibility and browser execution remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md), [Parity](../TODO/NS-2_parity-accessibility_01.md) |
 | Connectivity | Shape/free/named-port endpoints, guarded existing-edge reconnection, self-loops, parallel edges and independent arrows exist; native port input/source/history evidence is separate from browser compilation. Endpoint drag grips, editable waypoints, curves, obstacle routing and transformed/grouped endpoints remain open | [Diagram](../TODO/NS-3_diagram-editor_01.md) |

@@ -1,5 +1,24 @@
 # Working in Nyx
 
+Current-source local diagram Undo/Redo uses immutable managed checkpoints and
+prepared graph/history publication, typed command/UTF-8 byte limits, scoped keys
+and ordinary Nyx controls. Draft/revision/capture/pending-Save guards preserve
+both stacks; one released gesture records once. Source replacement resets local
+history; Save retains separate paired authority. Replay preserves empty/edge
+selection and surviving bound controls/caret/runtime values. Native editor/content/
+Studio/runtime pass 254/120/51/37 per configured desktop/compact host; workspace 38.
+Fourteen accepted composite compiler receipts have zero owned warnings, eleven
+native heaps are clean, and eight whole exports stay exact. Both Studios/backend/
+worker and four browser consumers compile only. WORK.md owns retained portability/
+fixture/oracle failures and exact source/remote identity. Five protected files/
+nine contexts and 349 frozen artifacts remain exact; all owned processes join.
+No current Nyx tool is exposed; active-view semantic history stays with the
+existing runtime-navigation/workflow owner. No new tool/schema/kind or rollout.
+Full diagram/reference/input/assistive/visual/parity/budgets/delivery remain open;
+original criteria/counters/credit stay unchanged. Stop local-history/fixture/
+compiler variants and reassess those original outcomes. LAN stays offline; no
+HTTP-host retry, capture/configuration refresh, cleanup retry or sub-agents.
+
 Current-source Win32 button accessibility uses the system BUTTON proxy with typed
 native state/action adaptation, fresh client marshaling and revocable borrowed
 receivers. Ordinary Nyx activation retains creator/event routing, dormant-source

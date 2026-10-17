@@ -83,6 +83,14 @@ saved-layout/schema variants; runtime graph/card/viewport inspection, semantic
 reveal, useful demos, full parity/quality and preserving delivery retain their
 existing owners and the recorded external HTTP-host gate. No host retry.
 
+The public diagram editor now has revision-guarded local graph Undo/Redo, distinct
+from the saved project's paired history. Bounded semantic inspection/commands for
+an active runtime editor still belong to this task's existing runtime navigation
+and reflection outcome; no new tool/schema or installed capability is implied.
+Use the public contract for owned adapter/input qualification, without substituting
+screenshot-driven automation for the missing semantic operation. WORK.md and
+[local history](../docs/diagrams.md#local-undo-and-redo) retain that scope boundary.
+
 Current-source graph-aware navigation (2026-10-16) adds public typed Fit/reveal
 and revocable overlay capture, not an MCP operation or installed schema. Bounded
 runtime graph/card/viewport inspection, revision-aware reveal and grouped saved

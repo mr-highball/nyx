@@ -386,6 +386,7 @@ var
   LVertex: TNyxDiagramVertex;
   LFailed: Boolean;
   LCaption: TNyxText;
+  LHistory: INyxDiagramHistoryView;
 begin
   {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
   Check(GView.Connected and (GView.Canvas.MountedCount = 3),
@@ -422,6 +423,20 @@ begin
     (GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and (ReadMemo = LCaption) and GSubscription.Active,
     'geometry publication retains the exact live editor, value and callback subscription');
   Check(MemoCaret = 5, 'geometry publication preserves the live memo caret');
+  Check(Supports(GView, INyxDiagramHistoryView, LHistory),
+    'embedded content uses the ordinary local diagram history');
+  LHistory.Undo(GView.Revision);
+  {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+  Check((GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and
+    (ReadMemo = LCaption) and (MemoCaret = 5) and GSubscription.Active and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = LVertex.Bounds.Left),
+    'local geometry Undo retains the exact bound memo, caret, runtime value and callback lifetime');
+  LHistory.Redo(GView.Revision);
+  {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}
+  Check((GCanvas.RendererFor(LFormItem).InputFor(MemoID) = LFace) and
+    (ReadMemo = LCaption) and (MemoCaret = 5) and GSubscription.Active and
+    (GView.Diagram.FindVertex(LVertex.Reference).Bounds.Left = 80),
+    'local Redo restores geometry without reconstructing retained embedded controls');
   {$ifdef PAS2JS}await(PortJourney);{$else}PortJourney;{$endif}
   GContent.SetContent(LVertex.Reference, LVertex.Content.Padded(18).CaptionSpace(36), GView.Revision);
   {$ifdef PAS2JS}await(Idle);{$else}Idle;{$endif}

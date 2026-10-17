@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [local diagram Undo/Redo](../docs/diagrams.md#local-undo-and-redo)
+uses bounded immutable checkpoints, typed options and coordinated graph/history
+publication. Ordinary controls/shortcuts keep local proposals separate from Studio
+Save and paired source history. WORK.md separates native execution from browser
+compilation and the remaining semantic/quality/parity/delivery outcomes; no full
+criterion, task or completion credit closes.
+
 Current-source [native button activation](../docs/canvas.md#native-button-roles-and-activation)
 connects real Windows roles/actions to ordinary Nyx event routing and revocable
 view lifetimes, including alternate native controls. WORK.md owns actual native

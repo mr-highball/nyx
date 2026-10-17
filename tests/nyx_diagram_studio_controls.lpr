@@ -435,6 +435,7 @@ var
   LEdit: TNyxStudioDesignEdit;
   LFailed: Boolean;
   LOriginalView: INyxDiagramEditorView;
+  LHistory: INyxDiagramHistoryView;
   {$ifndef PAS2JS}
   LWorker: TReplyWorker;
   LForm: TCustomForm;
@@ -507,9 +508,29 @@ begin
         BindTarget;
         DragSelectedShape;
         GSubmitted := GView.Diagram.ToData.ToJSON;
+        Check(Supports(GView, INyxDiagramHistoryView, LHistory),
+          'ordinary Studio uses the public local graph history capability');
+        Click(ndepUndo);
+        Check((GView.Diagram.ToData.ToJSON = LPlan.ToData.ToJSON) and
+          (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GBefore)),
+          'ordinary local Undo reverses one drag without changing the saved project');
+        Click(ndepRedo);
+        Check(GView.Diagram.ToData.ToJSON = GSubmitted,
+          'ordinary local Redo restores the exact proposal for deliberate Save');
         Click(ndepSave);
         Check(GView.SavePending and (EncodeNyxProject(GStudio.ProjectSnapshot) = EncodeNyxProject(GBefore)),
           'Save returns pending before ordinary paired source publication');
+        LFailed := False;
+        try
+          LHistory.Undo(GView.Revision);
+        except
+          on E: ENyxDiagram do
+          begin
+            LFailed := True;
+          end;
+        end;
+        Check(LFailed and GView.SavePending and (GView.Diagram.ToData.ToJSON = GSubmitted),
+          'local Undo refuses while the owning source publication remains pending');
         GView.SetGeometry(NyxDiagramVertexRef('start'), NyxCanvasBounds(70, 35, 160, 95), GView.Revision);
         GLocal := GView.Diagram.ToData.ToJSON;
         GView.ShowTools(True);

@@ -30,7 +30,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Native button accessibility actions — 2026-10-17
+## Current integration: Local diagram command history — 2026-10-17
+
+The previous goal turn is progress: native button actions at 1ec82c7 are clean
+and remote-matched before this work. Reassess the original diagram reference
+matrix: its immutable graph, coordinated canvas publisher, runtime content/source
+ownership and ordinary Studio Save now provide the prerequisites for local
+Undo/Redo. Saved paired history alone does not undo an unsaved editor proposal.
+This addresses that required runtime behavior under the existing NS-3 owner;
+full reference parity, original criteria, allocation and completion credit stay open.
+
+Optional INyxDiagramHistoryView provides UI-owned revision-guarded Undo/Redo,
+counts, byte accounting and explicit clearing. Existing view GUIDs/vtables and
+document persistence remain unchanged; the expanded copied options record and
+affected callers are rebuilt. Typed HistoryLimit/HistoryByteBudget default to
+32 commands and 16 MiB of canonical UTF-8 graph data, including the current graph.
+Zero disables retention. Oldest checkpoints retire at a bound; an over-budget
+current graph stays editable without retained history/wire, with a scoped Undo
+hint. These are retained data limits, not measured peak memory/latency budgets.
+
+Private immutable reference-counted checkpoints own graph/selection/wire only,
+never a document, view, control, application or callback. Independent replacement
+stacks are prepared before the existing coordinated commit adopts them with the
+graph. Undo/Redo permute states inside the same bound; subtracting remaining
+capacity keeps arithmetic in exact portable Integers. Revisions advance rather
+than rewind. Changed edits release Redo; exact canonical no-ops preserve it.
+Selection/camera changes and pointer previews create no command, while one
+released coalesced gesture creates one. Replay preserves selected connections and
+deliberately empty selection, including the latter's distinction from the
+ordinary replacement fallback to the first shape.
+
+Ordinary Nyx toolbar controls and scoped Control-Z/Control-Y/Control-Shift-Z
+callbacks use the same publisher; Meta-Z/Meta-Shift-Z are recognized without
+capturing property/embedded text-editor shortcuts. Dirty properties, stale
+revisions, active manipulation and pending Save refuse before consuming history.
+Explicit draft discard joins successful publication only. The prepared readiness
+guard now also rejects freshly changed fields for ordinary graph publication,
+instead of restricting that check to source replacement. Successful source-context
+replacement resets local checkpoints. Save retains local history and its separate
+project/source authority. Surviving embedded controls keep runtime values/caret;
+disconnect revokes history access and releases its data. Worker calls refuse
+before reading UI/model/history, through the existing scheduler.
+
+Accepted composite evidence is located by ignored
+.local/diagram-history-paths-private.json:
+
+- Native editor 254, content 120, ordinary Studio 51 and authored runtime 37 per
+  configured desktop/compact host; workspace 38. History exercises actual toolbar/
+  key hooks, incident removal, no-op/branching, selected edges/empty selection,
+  exact unfinished Unicode text, revision/draft refusal, bounded/disabled stacks,
+  gesture coalescing, independent mounts, worker and retirement guards. Embedded
+  geometry Undo/Redo keeps the same memo, text, caret, runtime store and callback.
+- Ordinary Studio reverses/replays a completed drag before Save without changing
+  its saved project. A pending paired source publication refuses local Undo;
+  existing Save/history journeys still pass. Eight whole source/model exports
+  match the prior packet exactly; no new generated-constructor execution is inferred.
+- Fourteen accepted compiler receipts (eight FPC/six pas2js), zero owned warnings;
+  forty-two upstream Classes warnings remain separate. Both Studios/backend/
+  module worker and four matching browser consumers compile. Eleven accepted
+  native heap receipts are clean, including the unchanged raster generator and
+  frozen-release verifier. The regenerated fixture unit is byte-identical to
+  the previous native-layout fixture. Existing maintained diagram consumers pick
+  up these checks; their underlying consumers run separately, not the whole runner.
+
+Retained preparation includes missing fixture imports/camera member spelling,
+the generated raster unit's initially missing search path, and a draft test that
+tried to edit a collapsed/inactive property panel. The corrected test opens that
+panel and requires a real pending draft. Pas2js rejects interface fields inside
+records and warns on Int64: the final design uses managed immutable checkpoint
+objects and bounded Integer arithmetic. Its unrelated optional-interface casts
+also require Supports in portable consumers. The final native warning gate caught
+an implicit UTF8String-to-UnicodeString comparison in the draft oracle; an explicit
+TNyxText constant retains that exact assertion without conversion. These failed/
+superseded preparations remain outside the accepted logs. The broad read-only
+fixture search was cancelled by its exact process identity after choosing the
+maintained generator; its separate qualification-root query joined. No file cleanup
+or service stop occurred. This is composite evidence, not an uninterrupted full run.
+
+All owned processes join. Five protected files/nine complete contexts and 349
+frozen 7422453 artifacts remain exact. Current tool metadata exposes no Nyx
+semantic capability; owned public Pascal consumers are the explicit adapter/input
+fallback. Missing bounded active-view history inspection/commands are recorded
+with the existing workflow/runtime-navigation owner. No new tool/schema/kind,
+HTTP host, browser execution/capture, configuration refresh, cleanup retry,
+LAN rollout or sub-agent is used. Full browser/native input, assistive/visual
+quality, production budgets, the broader diagram reference and observing delivery
+remain required. Stop local-history/fixture/compiler variants and return to those
+original outcomes. Diagram eleven, canvas twelve, Graph/Logic thirty-eight and
+behavior-program zero stay unchanged; no full criterion/task/DONE/credit/parity
+closes. The private final checkpoint owns exact source/remote identity. The
+original full goal remains active.
+
+## Previous integration: Native button accessibility actions — 2026-10-17
 
 The preceding cleanup-script handoff added no product implementation evidence;
 it is no progress toward the full goal. Revalidate the unfinished native provider

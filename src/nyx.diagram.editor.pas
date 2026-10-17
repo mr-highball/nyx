@@ -56,7 +56,7 @@ type
     ndepTogglePorts, ndepPortTools, ndepPortChoice, ndepPortName, ndepPortX,
     ndepPortY, ndepPortDirection, ndepPortCaption, ndepApplyPort, ndepRestorePort,
     ndepRemovePort, ndepPortIncidentEdges, ndepStartPortConnection, ndepFinishPortConnection,
-    ndepCancelPortConnection);
+    ndepCancelPortConnection, ndepUndo, ndepRedo);
 
   { Copied runtime presentation policy. Camera/grid reuse the public canvas
     values; Nudge is a positive world-unit distance, not a device pixel count.
@@ -67,15 +67,24 @@ type
     FGrid: TNyxCanvasGrid;
     FNudge: Double;
     FToolsExpanded: Boolean;
+    FHistoryLimit: Integer;
+    FHistoryByteBudget: Integer;
   public
     function WithCamera(const AValue: TNyxCanvasCamera): TNyxDiagramEditorOptions;
     function WithGrid(const AValue: TNyxCanvasGrid): TNyxDiagramEditorOptions;
     function Nudge(AWorldDistance: Double): TNyxDiagramEditorOptions;
     function ToolsExpanded(AValue: Boolean): TNyxDiagramEditorOptions;
+    { Retain at most this many local graph commands (0 disables history).
+      Current graph plus retained checkpoints also obey the UTF-8 wire budget;
+      native object overhead is not a measured process-memory limit. }
+    function HistoryLimit(AMaximumCommands: Integer): TNyxDiagramEditorOptions;
+    function HistoryByteBudget(AMaximumBytes: Integer): TNyxDiagramEditorOptions;
     property Camera: TNyxCanvasCamera read FCamera;
     property Grid: TNyxCanvasGrid read FGrid;
     property NudgeDistance: Double read FNudge;
     property InitiallyExpanded: Boolean read FToolsExpanded;
+    property MaximumHistoryCommands: Integer read FHistoryLimit;
+    property MaximumHistoryBytes: Integer read FHistoryByteBudget;
   end;
 
   { Public managed Panel/Row/Button/Input composition. Each mount independently
@@ -205,6 +214,31 @@ type
     property LastError: TNyxText read GetLastError;
     property SavePending: Boolean read GetSavePending;
     property HasUnsavedChanges: Boolean read GetHasUnsavedChanges;
+  end;
+
+  { Optional UI-owned local command history, independent of Studio's saved
+    source/history. Each accepted graph edit records its prior graph/selection;
+    camera, selection-only changes and pointer previews are not commands.
+    Undo/Redo use the same revision/draft/prepared-publication guards as edits,
+    advance Revision monotonically, and revalidate current content dependencies.
+    Dirty properties refuse unless explicitly discarded; refusal preserves them
+    and both stacks. Successful source-context replacement starts fresh history.
+    Save does not clear local history. Counts/bytes require the owning UI thread;
+    Disconnect revokes this capability and releases all data-only checkpoints. }
+  INyxDiagramHistoryView = interface(IInterface)
+    ['{7F75E283-8E0F-41A5-A490-AF4DD033D4C7}']
+    function GetUndoCount: Integer;
+    function GetRedoCount: Integer;
+    { Canonical UTF-8 bytes of current and retained checkpoints, excluding native
+      object overhead. An over-budget current graph retains no history/wire copy. }
+    function GetHistoryBytes: Integer;
+    procedure Undo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
+    procedure Redo(AExpectedRevision: Integer; ADiscardProperties: Boolean = False);
+    { Release retained commands without changing graph/revision/draft/camera. }
+    procedure ClearHistory;
+    property UndoCount: Integer read GetUndoCount;
+    property RedoCount: Integer read GetRedoCount;
+    property HistoryBytes: Integer read GetHistoryBytes;
   end;
 
   { Optional coherent source/graph replacement for an open editor. The supplied
@@ -338,6 +372,30 @@ begin
   Result.FCamera := NyxCanvasCamera(800, 600, NyxCanvasPoint(0, 0));
   Result.FGrid := NyxCanvasGrid(20, ncgsNone, ncsmFree);
   Result.FNudge := 10;
+  Result.FHistoryLimit := 32;
+  Result.FHistoryByteBudget := 16 * 1024 * 1024;
+end;
+
+function TNyxDiagramEditorOptions.HistoryLimit(AMaximumCommands: Integer): TNyxDiagramEditorOptions;
+begin
+
+  if (AMaximumCommands < 0) or (AMaximumCommands > 256) then
+  begin
+    raise ENyxDiagram.Create('Diagram history command limit must be between 0 and 256');
+  end;
+  Result := Self;
+  Result.FHistoryLimit := AMaximumCommands;
+end;
+
+function TNyxDiagramEditorOptions.HistoryByteBudget(AMaximumBytes: Integer): TNyxDiagramEditorOptions;
+begin
+
+  if AMaximumBytes < 0 then
+  begin
+    raise ENyxDiagram.Create('Diagram history byte budget cannot be negative');
+  end;
+  Result := Self;
+  Result.FHistoryByteBudget := AMaximumBytes;
 end;
 
 function TNyxDiagramEditorOptions.WithCamera(const AValue: TNyxCanvasCamera): TNyxDiagramEditorOptions;
@@ -400,7 +458,7 @@ const
     'toggle-ports', 'port-tools', 'port-choice', 'port-name', 'port-x', 'port-y',
     'port-direction', 'port-caption', 'apply-port', 'restore-port',
     'remove-port', 'port-incident-edges', 'start-port-connection', 'finish-port-connection',
-    'cancel-port-connection');
+    'cancel-port-connection', 'undo', 'redo');
 begin
 
   if (AEditorID = '') or (NyxUTF8ByteCount(AEditorID) > 64) or
@@ -430,6 +488,8 @@ begin
     ndepRestore: Result := 'Revert';
     ndepSave: Result := 'Save diagram';
     ndepReloadSaved: Result := 'Reload saved';
+    ndepUndo: Result := 'Undo';
+    ndepRedo: Result := 'Redo';
   else
     raise ENyxDiagram.Create('Unknown diagram editor button');
   end;
@@ -562,6 +622,10 @@ begin
       .WithText(ButtonCaption(LPart)));
   end;
   Node.Add(LToolbar);
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepUndo).ID)
+    .Configure.Text('Undo').Hint('Undo the last diagram change').Enabled(False).Done);
+  LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepRedo).ID)
+    .Configure.Text('Redo').Hint('Redo the last undone diagram change').Enabled(False).Done);
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleDraw).ID).WithText('Draw'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepToggleContent).ID).WithText('Content'));
   LToolbar.Add(NewNyxButton(NyxDiagramEditorPart(AID, ndepTogglePorts).ID).WithText('Ports'));
@@ -725,7 +789,8 @@ var
   LOptions: TNyxDiagramEditorOptions;
 begin
   LOptions := NyxDiagramEditorOptions.WithCamera(AOptions.Camera).WithGrid(AOptions.Grid)
-    .Nudge(AOptions.NudgeDistance).ToolsExpanded(AOptions.InitiallyExpanded);
+    .Nudge(AOptions.NudgeDistance).ToolsExpanded(AOptions.InitiallyExpanded)
+    .HistoryLimit(AOptions.MaximumHistoryCommands).HistoryByteBudget(AOptions.MaximumHistoryBytes);
   FOptions := LOptions;
   Result := Self as INyxDiagramEditor;
 end;

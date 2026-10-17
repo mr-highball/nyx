@@ -4,6 +4,15 @@
 
 **Description:**
 
+Current-source [local Undo/Redo](../docs/diagrams.md#local-undo-and-redo) records
+bounded immutable graph/selection checkpoints in the same prepared publication.
+Scoped keys and ordinary Nyx toolbar actions preserve revision/draft guards,
+coalesced gestures and surviving embedded controls. Local history grants no
+project/source authority; Studio Save and paired history remain separate.
+WORK.md owns native input and compiler evidence, retained portability/fixture
+failures and the remaining browser/semantic/quality/delivery gates. This is one
+required runtime behavior, not full draw.io-equivalent or task acceptance.
+
 After eleven partial diagram batches, the next priority is actual browser/parity
 qualification of the existing editor under criterion six. WORK.md records the
 qualified external scratch storage and the separate unchanged HTTP-host gate.
