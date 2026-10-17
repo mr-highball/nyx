@@ -21,8 +21,12 @@ carry the exact captured inventory. Optional compiler capabilities refuse older
 providers, and private service receivers bind retained inputs independently of
 wire metadata. WORK.md owns actual native queue/pool/application evidence and the
 separate compiled-only browser boundary. Dedicated file editing/helper drafts,
-whole-registry cold recovery/semantic import, asset/linker coverage and complete
-cache/reload/parity/delivery criteria/credit stay open.
+asset/linker coverage and complete cache/reload/parity/delivery criteria/credit
+stay open. Whole-registry recovery now retains files in optional version three,
+verifies exact main/helper identities and preserves legacy layouts. Compiler
+import executes its incoming inventory before ticketed adoption. WORK.md owns
+actual native constructor/semantic/history evidence and retained failures;
+ordinary observing, socket/browser execution and preserving rollout remain open.
 
 Current-source compiled native application/page/reusable execution now exercises
 real editing, ordered callbacks, saved Logic routes, navigation and independent

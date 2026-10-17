@@ -30,7 +30,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Project-aware compiler queues and outputs — 2026-10-17
+## Current integration: Whole-project recovery and import — 2026-10-17
+
+The preceding goal turn is progress: e180975 is clean and remote-matched. Reassess
+the full NS-4 project and NS-5 owned-input outcome: ordinary local commands carry
+files, but the shared registry codec still omits them and recovery caches only the
+main source. Before shared adoption, preserve exact helper snapshots through all
+current/history frames and verify each complete input independently. Old version
+one/two bytes stay exact when no files are present. Compiler-backed semantic import
+must consume its uploaded inventory, not the destination's helpers or a serialized
+execution claim. One maintained native recovery/import journey must prove exact
+main-equal/helper-different construction, drafts/history, refusal/cancellation and
+cold recovery; browser products/consumers compile without an execution claim.
+Stop recovery/import/fixture/compiler variants at that boundary and return to
+dedicated helper editing/drafts and full original quality/parity/delivery. No
+listener, HTTP retry, cleanup/configuration/enrollment retry, new MCP tool/schema,
+rollout or sub-agent. Fresh E: evidence/protection baselines live behind the
+ignored project-recovery pointer. No original full criterion/task/credit closes.
+
+The codec now selects optional version three for supporting files anywhere in
+current/Undo/Redo frames. Versions one/two consume no extra bytes. Staged input,
+load-scoped caching and final saved-meaning checks use exact main plus file value;
+an optional whole-project verifier prevents a legacy strategy from ignoring
+helpers. Native construction and private browser compile requests retain that
+captured inventory. Compiler import executes its uploaded files independently of
+the destination baseline. None of these data fields grants execution or a new
+application-build facet. Source/producer authority stays with existing owners.
+
+The existing complete nine-session/history recovery journey passes 93 and the
+maintained legacy/draft checkpoint mode passes 14, both clean heaps. That mode
+links the exact newly constructed companion and executes its existing checkpoint
+checks against a fresh owned runtime; it does not invoke that companion or alter
+the frozen release. Version-one/two byte-exact round trips remain qualified.
+Both Studios/backend/worker and the existing browser recovery consumers compile;
+browser execution, socket authentication and observing input remain separate.
+
+Retained new-consumer preparation failures are excluded from acceptance: a missing
+scalar-count unit and uninitialized byte-result warning, an invalid registry
+reference suffix, and an invocation typo that supplied Ci as an extra filename.
+The correctly typed source imports/result initialization, ordinary project-N
+identity and explicit compiler flag list repair those fixture/command issues.
+The next full run reaches the existing pending-draft adoption guard; the fixture
+now resolves that buffer through ordinary draft-only synchronization before the
+second import. A later cold-attachment check incorrectly used unsupported join;
+it now uses the explicit paired claim contract. Product guards stay intact and
+all terminal failed executions have clean heaps. Earlier partial runs do not
+substitute for the final fresh complete journey below.
+
+That maintained consumer now passes **48 actual complete-project recovery/import
+checks** with a clean heap. Independent expected documents qualify two real native
+constructions with exact equal main text and different helper defaults, including
+supplementary Unicode. Staging rejects the wrong actual helper context, native
+load verifies each complete input once, and current/Undo/Redo/draft/base re-save
+byte exactly. A legacy verifier refuses before executing main-only code; cancelled
+actual verification publishes no partial registry and retains original bytes.
+The private deferred protocol compiles captured helpers with real pas2js and
+refuses malformed producer data without advancing recovery. It executes no browser
+worker. Two actual semantic upload/review/apply journeys retain incoming helpers,
+resolve the existing draft guard explicitly, preserve paired Undo/Redo and survive
+real cold shared recovery with equal-main/different-helper history. No suspended
+engine starts a listener or establishes socket authentication/observing UI.
+
+The accepted composite has nine top-level compiler logs and 27 actual child
+compiler logs with zero owned warnings; 28/14 warnings belong to unchanged upstream
+Classes. Four main/verifier and 23 checked child heap logs are clean. The complete
+48, existing 93 and legacy 14 streams have exact log/source receipts. Both Studios,
+backend, worker and existing browser recovery consumers compile; browser execution
+is not inferred. The maintained pascal-projects target now includes this consumer.
+Source review covers version-three selection for helper-bearing history; the
+executed composite qualifies helper-bearing current inputs plus both history
+directions and independently qualifies no-helper version-one/two selection. No
+separate history-only-helper selector workload or full packet-budget matrix is
+claimed from these counts. All eight changed source/tool inputs remain exact.
+
+Five protected files/nine complete contexts and all 349 frozen artifacts remain
+exact. Owned compilers/processes join; LAN remains offline. No exposed Nyx tool,
+host/configuration/enrollment/cleanup retry, new MCP tool/schema/kind, capture or
+rollout occurs. The private packet owns final source/remote identity and receipts.
+Stop recovery/import/fixture/compiler variants; return to dedicated helper
+selection/editing and independent drafts through reusable Nyx editor contracts,
+while qualifying ordinary observing adoption under the existing source owner.
+Full source grammar, assets/dependencies/cache/reload, packet/performance budgets,
+browser/socket/observing/quality/parity/delivery and original full criteria/tasks/
+counters/completion credit remain open. No sub-agents.
+
+## Previous integration: Project-aware compiler queues and outputs — 2026-10-17
 
 The preceding turn is progress: 9a10cce is clean and pushed. The immutable compiler
 and ownership batches do not close original full NS-4/NS-5 criteria. Reassessment

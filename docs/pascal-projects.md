@@ -133,9 +133,9 @@ project-store transport still has its existing **4 MiB encoded packet limit**.
 A larger valid compiler project refuses that persistence boundary before
 publication; its helper files are never truncated to fit.
 
-Dedicated file selection/editing, independent helper drafts, automatic compiler-
-backed cold recovery and semantic import/publication still need integration under
-the existing authoring/service owners. The installed MCP protocol/release has not
+Dedicated file selection/editing, independent helper drafts and complete observing/
+recovery/publication quality still need integration under the existing authoring/
+service owners. The installed MCP protocol/release has not
 changed. Embedded images/data/localization keep the Resources abstraction; this
 API adds no native linker-asset mechanism.
 
@@ -164,15 +164,61 @@ receivers bind their locally captured request inventory to the authenticated job
 result; a received metadata object cannot assert execution. Native decoding retains
 actual construction, while a compiled browser worker still needs separate execution.
 Shared strategies carry that same inventory through their existing revision-aware
-transport. The service's whole-registry recovery format and semantic multi-file
-adoption remain prerequisites to qualifying durable shared project publication;
-compilation or a direct private-pool test does not establish either outcome.
+transport. Whole-registry recovery and compiler-backed semantic adoption now retain
+that inventory as described below. Ordinary observing-editor input, socket/browser
+execution and preserving delivery remain separate qualification outcomes.
 
 Ordinary application/view jobs now open supporting inputs from their exact accepted
 source checkpoint. A pair/checkpoint mismatch refuses before a compiler slot is
 allocated. No replacement helper argument can be attached to an older checkpoint.
 The executor-local `BuildProject` receipt path remains available to trusted hosts;
 transport metadata wrappers do not acquire that private application-build facet.
+
+## Whole-registry recovery and semantic import
+
+The private shared-runtime checkpoint uses version three when supporting files
+occur in a current, Undo or Redo frame. Every such frame retains its complete
+canonical inventory beside the exact main source. Drafts and their independent
+bases keep their existing framing. Registries without supporting files retain
+their exact version-one or version-two layout; old files remain readable. Existing
+text/packet and whole-checkpoint budgets still refuse excessive data without
+truncation. The format carries data, never execution authority or compiler paths.
+
+Recovery identifies construction by the exact main source **and** supporting-file
+value, including declared input limits. Equal main text with different helper
+meaning requires independent verification. Repeated identical inputs across
+projects and draft-only history execute once per load, while every saved design
+is still compared. No execution cache survives that load or a process restart.
+
+`INyxRuntimeProjectVerifier` supplements the original source-only startup strategy.
+The native verifier returned by `NewNyxNativeRuntimeSourceVerifier` implements both
+capabilities and freezes complete input before delegating to the existing owned
+compiler. An older verifier refuses helper-bearing data before executing its main
+unit. Automatic literal admission keeps such data pending for explicit recovery;
+it never discards the helpers to obtain a parseable single unit.
+
+Staged browser recovery reads one captured source/helper context and compiles it
+through the existing private pool. A returned worker remains compiled-only until
+actual execution supplies its bound producer message. The server binds its retained
+inventory before checking exact saved meaning. Cancellation, malformed results and
+an execution from a different helper context cannot advance the stage or rewrite
+the original registry. Browser compilation is distinct from browser execution.
+
+The existing `nyx_project` upload/review/apply workflow also accepts supporting-file
+packets through compiler admission. Its job compiles the uploaded inventory rather
+than the destination's helpers. A ready review has no adoption authority: the exact
+owner/revision ticket must still be applied. One paired Undo/Redo restores accepted
+source, helpers and unfinished draft/base together. Resolve the current draft before
+adopting another project; ordinary draft-only synchronization preserves accepted
+files and does not manufacture an additional history command.
+
+The maintained `pascal-projects` target includes the complete-project native
+recovery/import consumer. It uses actual constructors and the suspended production
+semantic engine, never a listener or an invented execution flag. It additionally
+checks the private deferred compiler protocol without executing a browser worker.
+WORK.md owns accepted evidence, retained harness failures and the separate ordinary
+observing/browser/delivery boundaries. Dedicated helper selection/editing and
+independent helper drafts remain required under the existing authoring owner.
 
 `tools/build.ps1 -Target pascal-projects -PascalProjectEvidenceDirectory <NEW-path>`
 runs the maintained data checks and actual native compiler/session/history/store

@@ -2049,7 +2049,7 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
       "-FU$nyxProjectNative", "-FE$nyxProjectNative")
     foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data',
-      'nyx_project_files_native')) {
+      'nyx_project_files_native', 'nyx_project_recovery_native')) {
       Invoke-NyxCompiler $nyxFpc ($nyxProjectFlags + @("tests/$nyxProgram.lpr"))
     }
     foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
@@ -2060,6 +2060,9 @@ try {
     $nyxProjectToolsPath = Join-Path $nyxRoot '.local/toolchain.json'
     & (Join-Path $nyxProjectNative 'nyx_project_files_native.exe') $nyxRoot $nyxProjectToolsPath $nyxProjectRuntime
     if ($LASTEXITCODE -ne 0) { throw 'Compiled supporting-file session/history/store checks failed.' }
+    $nyxWholeProjectRuntime = Join-Path $nyxProjectPacket 'whole-project-runtime'
+    & (Join-Path $nyxProjectNative 'nyx_project_recovery_native.exe') $nyxRoot $nyxProjectToolsPath $nyxWholeProjectRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Complete-project registry recovery/semantic import checks failed.' }
     $nyxProjectTools = Get-Content -LiteralPath $nyxProjectToolsPath -Raw | ConvertFrom-Json
     foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
       Invoke-NyxCompiler $nyxProjectTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',

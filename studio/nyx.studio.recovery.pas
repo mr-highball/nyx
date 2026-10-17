@@ -27,7 +27,7 @@ interface
 
 uses
   Classes, nyx.text, nyx.studio.directories, nyx.studio.agents, nyx.studio.workspaces,
-  nyx.studio.sourceprojection, nyx.studio.builds;
+  nyx.studio.sourceprojection, nyx.studio.builds, nyx.pascal.project;
 
 type
   { Host startup choice, independent of project/output configuration. Automatic
@@ -37,6 +37,8 @@ type
     BrowserWorker always defers. Files cannot choose a verifier or make a compile
     receipt executable evidence. Existing explicit mode ordinals remain stable. }
   TNyxRuntimeRecoveryMode = (rrmImmediate, rrmBrowserWorker, rrmAutomatic);
+  { A staged attempt publishes all owners together or remains retained. Cancel
+    retires execution evidence without rewriting the saved checkpoint. }
   TNyxRuntimeRecoveryState = (rrsAwaitingExecution, rrsPublished, rrsCancelled);
   { Explicit trusted startup execution strategy, separate from output selection
     and serialized files. Verify executes exactly this accepted source and
@@ -51,11 +53,20 @@ type
     function Verify(const ASource: TNyxText): INyxSourceProjection;
   end;
 
+  { Optional whole-project startup strategy. Freeze and execute the exact main
+    plus supporting inventory; a legacy source-only verifier cannot ignore the
+    helpers. Results retain their captured project facet and borrow no provider
+    or restored session. Serialized metadata cannot select this capability. }
+  INyxRuntimeProjectVerifier = interface(INyxRuntimeSourceVerifier)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000013}']
+    function VerifyProject(const AProject: INyxPascalProject): INyxSourceProjection;
+  end;
+
   { Native host's staged checkpoint. The store owns this object; callers borrow
     it only while that store lives and serialize all methods. Complete digest,
-    registry and static property admission precede construction. Source returns
-    just one unique unit, never all projects/drafts/history. Accept requires an
-    actual executed result for that exact unit/target and every saved meaning.
+    registry and static property admission precede construction. Source/Files
+    return one unique complete input, never all projects/drafts/history. Accept
+    requires actual execution for that exact input/target and every saved meaning.
     Complete transfers both fully recovered owners once, under the captured
     creator generation. Cancel/failure never publishes owners or changes bytes.
     The retained read stream prevents replacement while execution is pending. }
@@ -78,6 +89,9 @@ type
     constructor Create;
     destructor Destroy; override;
     function Source(AIndex: Integer): TNyxText;
+    { Immutable inventory paired with Source at this index. Equal main text can
+      occur at distinct indices when helpers differ; drafts never enter either. }
+    function Files(AIndex: Integer): TNyxPascalProjectFiles;
     procedure Accept(AIndex: Integer; const AProjection: INyxSourceProjection);
     procedure Complete(out APrimary: TNyxAgentSession;
       out AWorkspaces: TNyxStudioWorkspaces);
@@ -157,13 +171,14 @@ implementation
 uses
   SysUtils, md5, nyx.model, nyx.source, nyx.studio.projects,
   nyx.studio.session, nyx.studio.history, nyx.studio.release, nyx.editing,
-  nyx.codec, nyx.schema
+  nyx.codec, nyx.schema, nyx.studio.projectinputs
   {$IFDEF MSWINDOWS}, Windows{$ELSE}, Unix, BaseUnix{$ENDIF};
 
 const
   CRecoveryMagic: TNyxText = 'NYX-STUDIO-RUNTIME';
   CRecoveryVersion = 1;
   CRecoveryDraftVersion = 2;
+  CRecoveryProjectVersion = 3;
   CMaximumFileBytes = Int64(512) * 1024 * 1024;
   CMaximumTextBytes = 4 * 1024 * 1024;
   { The older supported Windows unit omits the named write-through flag. }
@@ -178,33 +193,38 @@ type
     Undo: array of TNyxProjectPair;
     Redo: array of TNyxProjectPair;
   end;
+  { Exact construction identity includes helpers and declared input limits.
+    This is unadmitted text only, with no execution or session authority. }
+  TRecoverySourceInput = record
+    Source: TNyxText;
+    Files: TNyxPascalProjectFiles;
+  end;
   { Raw file values are retained without mutable session owners. Sources are
-    unique exact accepted units; unfinished buffers are never compiled. }
+    unique complete accepted inputs; unfinished buffers are never compiled. }
   TRecoveryInput = class
   public
     Sessions: array of TRecoverySessionInput;
     Registry: TNyxWorkspaceRecoveryFrame;
-    Sources: array of TNyxText;
-    procedure IncludeSource(const ASource: TNyxText);
+    Sources: array of TRecoverySourceInput;
+    procedure IncludePair(const APair: TNyxProjectPair);
   end;
   { Borrowed only during serialized final admission. The stage owns immutable
     executed results and remains live until all restored owners have committed. }
-  TRecoveryProjectionVerifier = class(TInterfacedObject, INyxRuntimeSourceVerifier)
+  TRecoveryProjectionVerifier = class(TInterfacedObject, INyxRuntimeSourceVerifier,
+    INyxRuntimeProjectVerifier)
   public
     Stage: TNyxStudioRuntimeRecovery;
     procedure RequireActive;
     function Verify(const ASource: TNyxText): INyxSourceProjection;
+    function VerifyProject(const AProject: INyxPascalProject): INyxSourceProjection;
   end;
-  { One load-scoped verifier cache. Exact accepted units may recur across current
-    files and draft-only history; compile them once, compare every saved design,
-    and never retain these execution capabilities across restarts or loads. }
+  { One load-scoped verifier cache. Exact source/helper inputs may recur across
+    current files and draft-only history; execute each complete input once and
+    compare every saved design. Capabilities never survive this load. }
   TRecoveryAdmission = class
   private
     FVerifier: INyxRuntimeSourceVerifier;
-    FAccepted: array of record
-      Source: TNyxText;
-      Checkpoint: TNyxSourceCheckpoint;
-    end;
+    FAccepted: array of TNyxSourceCheckpoint;
     function AdmitPair(const APair: TNyxProjectPair): TNyxSourceCheckpoint;
   public
     constructor Create(const AVerifier: INyxRuntimeSourceVerifier);
@@ -239,6 +259,10 @@ type
     function ReadNumber: Integer;
     procedure WriteText(const AText: TNyxText);
     function ReadText: TNyxText;
+    { Version three frames retain the canonical optional helper value. Earlier
+      versions consume/write no extra bytes and return an absent inventory. }
+    procedure WriteFiles(const AFiles: TNyxPascalProjectFiles);
+    function ReadFiles(const ASource: TNyxText): TNyxPascalProjectFiles;
     procedure WriteSession(const AFrame: TNyxAgentRecoveryFrame);
     function ReadSession: TRecoverySessionInput;
     property Version: Integer read FVersion write FVersion;
@@ -246,21 +270,23 @@ type
     procedure ReadDigest;
 end;
 
-procedure TRecoveryInput.IncludeSource(const ASource: TNyxText);
+procedure TRecoveryInput.IncludePair(const APair: TNyxProjectPair);
 var
   LIndex: Integer;
 begin
   for LIndex := 0 to High(Sources) do
   begin
 
-    if Sources[LIndex] = ASource then
+    if (Sources[LIndex].Source = APair.Source) and
+      (Sources[LIndex].Files.Encoded = APair.Files.Encoded) then
     begin
       Exit;
     end;
   end;
   LIndex := Length(Sources);
   SetLength(Sources, LIndex + 1);
-  Sources[LIndex] := ASource;
+  Sources[LIndex].Source := APair.Source;
+  Sources[LIndex].Files := APair.Files;
 end;
 
 constructor TNyxStudioRuntimeRecovery.Create;
@@ -328,26 +354,36 @@ begin
   begin
     raise ENyxModel.Create('Runtime recovery unit is outside its exact staged checkpoint');
   end;
-  Result := TRecoveryInput(FInput).Sources[AIndex];
+  Result := TRecoveryInput(FInput).Sources[AIndex].Source;
+end;
+
+function TNyxStudioRuntimeRecovery.Files(AIndex: Integer): TNyxPascalProjectFiles;
+begin
+  Source(AIndex);
+  Result := TRecoveryInput(FInput).Sources[AIndex].Files;
 end;
 
 procedure TNyxStudioRuntimeRecovery.Accept(AIndex: Integer;
   const AProjection: INyxSourceProjection);
 var
   LSource: TNyxText;
+  LFiles: TNyxPascalProjectFiles;
+  LProjectProjection: INyxPascalProjectProjection;
   LInput: TRecoveryInput;
   LSession: Integer;
   LHistory: Integer;
   procedure RequireMeaning(const APair: TNyxProjectPair);
   begin
 
-    if (APair.Source = LSource) and (APair.Design <> AProjection.Design) then
+    if (APair.Source = LSource) and (APair.Files.Encoded = LFiles.Encoded) and
+      (APair.Design <> AProjection.Design) then
     begin
       raise ENyxModel.Create('Runtime recovery execution differs from a saved current/history design');
     end;
   end;
 begin
   LSource := Source(AIndex);
+  LFiles := Files(AIndex);
 
   if (AIndex <> AcceptedCount) or (AProjection = nil) then
   begin
@@ -358,6 +394,19 @@ begin
     (AProjection.State <> spsExecuted) then
   begin
     raise ENyxModel.Create('Runtime recovery execution differs from its exact source/target');
+  end;
+
+  if Supports(AProjection, INyxPascalProjectProjection, LProjectProjection) then
+  begin
+
+    if LProjectProjection.Files.Encoded <> LFiles.Encoded then
+    begin
+      raise ENyxModel.Create('Runtime recovery execution has different supporting Pascal files');
+    end;
+  end
+  else if not LFiles.IsEmpty then
+  begin
+    raise ENyxModel.Create('Runtime recovery execution omitted supporting Pascal files');
   end;
   LInput := TRecoveryInput(FInput);
   for LSession := 0 to High(LInput.Sessions) do
@@ -401,12 +450,34 @@ begin
   for LIndex := 0 to High(Stage.FProjections) do
   begin
 
-    if Stage.FProjections[LIndex].Source = ASource then
+    if (Stage.FProjections[LIndex].Source = ASource) and Stage.Files(LIndex).IsEmpty then
     begin
       Exit(Stage.FProjections[LIndex]);
     end;
   end;
   raise ENyxModel.Create('Runtime recovery has no bound execution for this accepted unit');
+end;
+
+function TRecoveryProjectionVerifier.VerifyProject(
+  const AProject: INyxPascalProject): INyxSourceProjection;
+var
+  LInputs: INyxPascalProject;
+  LFiles: TNyxPascalProjectFiles;
+  LIndex: Integer;
+begin
+  RequireActive;
+  LInputs := CaptureNyxPascalProject(AProject);
+  LFiles := TNyxPascalProjectFiles.Capture(LInputs);
+  for LIndex := 0 to High(Stage.FProjections) do
+  begin
+
+    if (Stage.Source(LIndex) = LInputs.Source) and
+      (Stage.Files(LIndex).Encoded = LFiles.Encoded) then
+    begin
+      Exit(Stage.FProjections[LIndex]);
+    end;
+  end;
+  raise ENyxModel.Create('Runtime recovery has no execution for this complete Pascal project');
 end;
 
 procedure TNyxStudioRuntimeRecovery.Publish(const AVerifier: INyxRuntimeSourceVerifier;
@@ -495,6 +566,7 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LResolved: TNyxProjectPair;
   LProjection: INyxSourceProjection;
+  LProjectVerifier: INyxRuntimeProjectVerifier;
   LIndex: Integer;
 begin
   RequireActive;
@@ -504,9 +576,10 @@ begin
     for LIndex := 0 to High(FAccepted) do
     begin
 
-      if FAccepted[LIndex].Source = APair.Source then
+      if (FAccepted[LIndex].Source = APair.Source) and
+        (FAccepted[LIndex].Files.Encoded = APair.Files.Encoded) then
       begin
-        AdmitNyxCapturedProject(APair, FAccepted[LIndex].Checkpoint,
+        AdmitNyxCapturedProject(APair, FAccepted[LIndex],
           LDocument, LWorkspace, LResolved);
         Result := LWorkspace.Capture;
         Exit;
@@ -519,7 +592,20 @@ begin
     end
     else
     begin
-      LProjection := FVerifier.Verify(APair.Source);
+
+      if APair.Files.IsEmpty then
+      begin
+        LProjection := FVerifier.Verify(APair.Source);
+      end
+      else
+      begin
+
+        if not Supports(FVerifier, INyxRuntimeProjectVerifier, LProjectVerifier) then
+        begin
+          raise ENyxModel.Create('Runtime verifier cannot execute supporting Pascal files');
+        end;
+        LProjection := LProjectVerifier.VerifyProject(APair.Files.Open(APair.Source));
+      end;
 
       if (LProjection = nil) or (LProjection.State <> spsExecuted) then
       begin
@@ -535,6 +621,7 @@ begin
     end;
 
     if (LResolved.Design <> APair.Design) or (LResolved.Source <> APair.Source) or
+      (LResolved.Files.Encoded <> APair.Files.Encoded) or
       (LResolved.Pending <> APair.Pending) or (LResolved.Draft <> APair.Draft) or
       (LResolved.DraftBase <> APair.DraftBase) then
     begin
@@ -543,8 +630,7 @@ begin
     Result := LWorkspace.Capture;
     LIndex := Length(FAccepted);
     SetLength(FAccepted, LIndex + 1);
-    FAccepted[LIndex].Source := APair.Source;
-    FAccepted[LIndex].Checkpoint := Result;
+    FAccepted[LIndex] := Result;
   finally
     LWorkspace.Free;
     LDocument.Free;
@@ -594,7 +680,15 @@ var
   LDocument: TNyxDocument;
 begin
   DecodeNyxProject(EncodeNyxProject(APair));
-  NyxCompanionUnitName(APair.Source);
+
+  if APair.Files.IsEmpty then
+  begin
+    NyxCompanionUnitName(APair.Source);
+  end
+  else
+  begin
+    APair.Files.Open(APair.Source);
+  end;
   LDocument := TNyxCodec.Decode(APair.Design);
   try
     ValidateNyxDocumentProperties(LDocument);
@@ -736,6 +830,32 @@ begin
   NyxTextScalarCount(Result);
 end;
 
+procedure TRecoveryCodec.WriteFiles(const AFiles: TNyxPascalProjectFiles);
+begin
+
+  if FVersion >= CRecoveryProjectVersion then
+  begin
+    WriteText(AFiles.Encoded);
+  end;
+end;
+
+function TRecoveryCodec.ReadFiles(const ASource: TNyxText): TNyxPascalProjectFiles;
+var
+  LData: TNyxText;
+begin
+  Result := Default(TNyxPascalProjectFiles);
+
+  if FVersion >= CRecoveryProjectVersion then
+  begin
+    LData := ReadText;
+
+    if LData <> '' then
+    begin
+      Result := TNyxPascalProjectFiles.Parse(LData, ASource);
+    end;
+  end;
+end;
+
 procedure TRecoveryCodec.WriteSession(const AFrame: TNyxAgentRecoveryFrame);
 var
   LIndex: Integer;
@@ -745,6 +865,7 @@ begin
   WriteNumber(Ord(AFrame.Claimed));
   WriteText(AFrame.Session.Pair.Design);
   WriteText(AFrame.Session.Pair.Source);
+  WriteFiles(AFrame.Session.Pair.Files);
   WriteText(AFrame.Session.Pair.Draft);
   WriteText(AFrame.Session.Pair.DraftBase);
   WriteNumber(Ord(AFrame.Session.Pair.Pending));
@@ -757,8 +878,9 @@ begin
   begin
     WriteText(AFrame.Session.Undo[LIndex].Design);
     WriteText(AFrame.Session.Undo[LIndex].Source);
+    WriteFiles(AFrame.Session.Undo[LIndex].Frame.Files);
 
-    if FVersion = 2 then
+    if FVersion >= CRecoveryDraftVersion then
     begin
       WriteNumber(Ord(AFrame.Session.Undo[LIndex].Pending));
 
@@ -773,8 +895,9 @@ begin
   begin
     WriteText(AFrame.Session.Redo[LIndex].Design);
     WriteText(AFrame.Session.Redo[LIndex].Source);
+    WriteFiles(AFrame.Session.Redo[LIndex].Frame.Files);
 
-    if FVersion = 2 then
+    if FVersion >= CRecoveryDraftVersion then
     begin
       WriteNumber(Ord(AFrame.Session.Redo[LIndex].Pending));
 
@@ -813,6 +936,7 @@ begin
   Result.Frame.Claimed := LValue = 1;
   Result.Frame.Session.Pair.Design := ReadText;
   Result.Frame.Session.Pair.Source := ReadText;
+  Result.Frame.Session.Pair.Files := ReadFiles(Result.Frame.Session.Pair.Source);
   Result.Frame.Session.Pair.Draft := ReadText;
   Result.Frame.Session.Pair.DraftBase := ReadText;
   LValue := ReadNumber;
@@ -838,11 +962,12 @@ begin
   begin
     LPair.Design := ReadText;
     LPair.Source := ReadText;
+    LPair.Files := ReadFiles(LPair.Source);
     LPair.Draft := '';
     LPair.DraftBase := '';
     LPair.Pending := False;
 
-    if FVersion = 2 then
+    if FVersion >= CRecoveryDraftVersion then
     begin
       LValue := ReadNumber;
 
@@ -1039,7 +1164,7 @@ begin
     end;
     LCodec.Version := LCodec.ReadNumber;
 
-    if not (LCodec.Version in [1, 2]) then
+    if not (LCodec.Version in [1, 2, 3]) then
     begin
       raise ENyxModel.Create('Runtime checkpoint format/version is not supported');
     end;
@@ -1066,14 +1191,14 @@ begin
     for LIndex := 0 to High(LInput.Sessions) do
     begin
       ValidateRecoveryInput(LInput.Sessions[LIndex]);
-      LInput.IncludeSource(LInput.Sessions[LIndex].Frame.Session.Pair.Source);
+      LInput.IncludePair(LInput.Sessions[LIndex].Frame.Session.Pair);
       for LHistory := 0 to High(LInput.Sessions[LIndex].Undo) do
       begin
-        LInput.IncludeSource(LInput.Sessions[LIndex].Undo[LHistory].Source);
+        LInput.IncludePair(LInput.Sessions[LIndex].Undo[LHistory]);
       end;
       for LHistory := 0 to High(LInput.Sessions[LIndex].Redo) do
       begin
-        LInput.IncludeSource(LInput.Sessions[LIndex].Redo[LHistory].Source);
+        LInput.IncludePair(LInput.Sessions[LIndex].Redo[LHistory]);
       end;
     end;
     Result := TNyxStudioRuntimeRecovery.Create;
@@ -1192,6 +1317,41 @@ begin
   Result := False;
 end;
 
+{ Select the smallest complete frame format. Draft-only legacy bytes stay exact;
+  supporting files anywhere in history require version three for the whole file. }
+function RecoveryFrameVersion(const AFrame: TNyxAgentRecoveryFrame): Integer;
+var
+  LIndex: Integer;
+begin
+  Result := CRecoveryVersion;
+
+  if HasDraftHistory(AFrame) then
+  begin
+    Result := CRecoveryDraftVersion;
+  end;
+
+  if not AFrame.Session.Pair.Files.IsEmpty then
+  begin
+    Exit(CRecoveryProjectVersion);
+  end;
+  for LIndex := 0 to High(AFrame.Session.Undo) do
+  begin
+
+    if not AFrame.Session.Undo[LIndex].Frame.Files.IsEmpty then
+    begin
+      Exit(CRecoveryProjectVersion);
+    end;
+  end;
+  for LIndex := 0 to High(AFrame.Session.Redo) do
+  begin
+
+    if not AFrame.Session.Redo[LIndex].Frame.Files.IsEmpty then
+    begin
+      Exit(CRecoveryProjectVersion);
+    end;
+  end;
+end;
+
 procedure TNyxStudioRuntimeStore.Save(APrimary: TNyxAgentSession;
   AWorkspaces: TNyxStudioWorkspaces);
 var
@@ -1203,6 +1363,7 @@ var
   LIdentity: TGUID;
   LIndex: Integer;
   LVersion: Integer;
+  LEntryVersion: Integer;
   {$IFDEF MSWINDOWS}
   LTemporaryWide: UnicodeString;
   LDestinationWide: UnicodeString;
@@ -1214,22 +1375,19 @@ begin
     raise ENyxModel.Create('Retained runtime recovery must finish before saving shared projects');
   end;
   { Keep ordinary accepted-only checkpoints in their exact version-1 layout.
-    Version 2 is needed only when an Undo/Redo entry owns unfinished source.
+    Version 2 adds unfinished history; version 3 adds supporting files anywhere.
     All frames are captured once before publication; mixed versions cannot occur. }
   LPrimaryFrame := APrimary.RecoveryFrame;
   LRegistry := AWorkspaces.RecoveryFrame;
-  LVersion := CRecoveryVersion;
-
-  if HasDraftHistory(LPrimaryFrame) then
-  begin
-    LVersion := CRecoveryDraftVersion;
-  end;
+  LVersion := RecoveryFrameVersion(LPrimaryFrame);
   for LIndex := 0 to High(LRegistry.Entries) do
   begin
 
-    if HasDraftHistory(LRegistry.Entries[LIndex].Session) then
+    LEntryVersion := RecoveryFrameVersion(LRegistry.Entries[LIndex].Session);
+
+    if LEntryVersion > LVersion then
     begin
-      LVersion := CRecoveryDraftVersion;
+      LVersion := LEntryVersion;
     end;
   end;
   FDirectories.Validate;

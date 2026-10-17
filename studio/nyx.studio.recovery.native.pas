@@ -47,10 +47,14 @@ function NewNyxNativeRuntimeSourceVerifier(const ADirectories: TNyxStudioDirecto
 
 implementation
 
-uses nyx.model, nyx.source, nyx.studio.outputs, nyx.studio.builds;
+uses nyx.model, nyx.source, nyx.studio.outputs, nyx.studio.builds, nyx.pascal.project;
 
 type
-  TNativeRecoveryVerifier = class(TInterfacedObject, INyxRuntimeSourceVerifier)
+  { Startup-only producer owns copied machine settings and a cancellation token.
+    Each call freezes its complete input and joins native construction; no saved
+    metadata, provider or recovered session supplies execution authority. }
+  TNativeRecoveryVerifier = class(TInterfacedObject, INyxRuntimeSourceVerifier,
+    INyxRuntimeProjectVerifier)
   public
     Directories: TNyxStudioDirectories;
     Profile: TNyxText;
@@ -59,6 +63,7 @@ type
     Checks: TNyxSourceProjectionChecks;
     procedure RequireActive;
     function Verify(const ASource: TNyxText): INyxSourceProjection;
+    function VerifyProject(const AProject: INyxPascalProject): INyxSourceProjection;
   end;
 
 procedure TNativeRecoveryVerifier.RequireActive;
@@ -81,6 +86,26 @@ begin
     LExecutor.ConfigureLimits(Limits);
     LBuild := LExecutor.ProjectSource(ASource,
       NyxPascalUnit(NyxCompanionUnitName(ASource)), btNativeLCL, Checks, Cancellation);
+    Result := LBuild.Projection;
+  finally
+    LExecutor.Free;
+  end;
+  RequireActive;
+end;
+
+function TNativeRecoveryVerifier.VerifyProject(
+  const AProject: INyxPascalProject): INyxSourceProjection;
+var
+  LInputs: INyxPascalProject;
+  LExecutor: TNyxBuildExecutor;
+  LBuild: INyxSourceProjectionBuild;
+begin
+  RequireActive;
+  LInputs := CaptureNyxPascalProject(AProject);
+  LExecutor := TNyxBuildExecutor.Create(Directories, Profile);
+  try
+    LExecutor.ConfigureLimits(Limits);
+    LBuild := LExecutor.ProjectSource(LInputs, btNativeLCL, Checks, Cancellation);
     Result := LBuild.Projection;
   finally
     LExecutor.Free;

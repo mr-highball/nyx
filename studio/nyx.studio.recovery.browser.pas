@@ -30,7 +30,7 @@ uses nyx.text, nyx.studio.transport, nyx.studio.sourcecompilation;
 
 type
   { Closed presentation state for an optional owning browser recovery host.
-    Counts refer to unique accepted units, not unfinished draft buffers. }
+    Counts refer to unique accepted source/helper inputs, not draft buffers. }
   TNyxBrowserRecoveryPhase = (brpConnecting, brpReadingUnit, brpCompiling,
     brpExecuting, brpPublishing, brpCancelling, brpCompleted, brpCancelled,
     brpFailed);
@@ -67,12 +67,18 @@ function StartNyxBrowserRuntimeRecovery(const APort: INyxBrowserRecoveryPort;
 implementation
 
 uses SysUtils, JS, Web, nyx.data, nyx.bytes, nyx.model, nyx.studio.builds,
+  nyx.pascal.project,
   nyx.studio.sourceprojection, nyx.studio.sourcebuilds, nyx.studio.editorbuild,
   nyx.studio.recovery.status;
 
 type
+  { Closed private recovery protocol phase. Requests retain exact operation bytes
+    across retries and can address only this attempt's immutable saved inputs. }
   TRecoveryWire = (rwConnect, rwRetry, rwUnit, rwRequest, rwJob, rwComplete, rwCancel,
     rwJoin);
+  { Owns one same-origin staged recovery attempt, its copied source/helper data,
+    XHR/worker and revocable delivery port. No live editor/project is borrowed;
+    cancellation joins server jobs before reporting confirmed retirement. }
   TBrowserRecovery = class(TInterfacedObject, INyxSourceCompilation)
   private
     FState: TNyxSourceCompilationState;
@@ -82,6 +88,7 @@ type
     FToken: TNyxText;
     FOperation: TNyxText;
     FSource: TNyxText;
+    FFiles: TNyxPascalProjectFiles;
     FJob: TNyxText;
     FProducer: TNyxText;
     FBody: TNyxText;
@@ -198,6 +205,7 @@ begin
   FBuild := nil;
   FProducer := '';
   FSource := '';
+  FFiles := Default(TNyxPascalProjectFiles);
   FBody := '';
   FLease := nil;
 
@@ -464,7 +472,7 @@ begin
             raise ENyxModel.Create('Recovery substituted another saved unit');
           end;
           FSource := LValue.Field('source').AsText;
-          ValidateNyxProjectionSource(FSource);
+          FFiles := ReadNyxSourceProjectFiles(LValue);
 
           if FCancelled then
           begin
@@ -516,7 +524,7 @@ begin
           end
           else
           begin
-            FBuild := DecodeNyxBrowserSourceBuild(FSource, LValue.Field('receipt'));
+            FBuild := DecodeNyxBrowserSourceBuild(FSource, LValue.Field('receipt'), FFiles);
 
             if (LState <> bjsSucceeded) or (FBuild.Projection.State <> spsCompiled) then
             begin

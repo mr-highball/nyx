@@ -10,7 +10,10 @@ still gates helper admission. WORK.md owns actual compiler/session/store evidenc
 and compiled-only browser limits. Normal queued Open/Apply/visual work now retains
 helpers and independent main drafts through actual compilation and paired history;
 application jobs use that same accepted checkpoint. Dedicated file editing/helper
-drafts, semantic import, whole-registry recovery and full authoring criteria stay open;
+drafts and full authoring criteria stay open. Optional whole-registry version
+three and compiler-backed semantic import now preserve exact helper contexts;
+WORK.md separates native source/history evidence from ordinary observing input,
+browser execution and delivery. Original full criteria remain open;
 this advances original criterion two without changing counters or completion credit.
 
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public

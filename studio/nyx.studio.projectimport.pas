@@ -272,10 +272,15 @@ begin
     LDocument.Free;
   end;
 
-  if (NyxUTF8ByteCount(FInput.Source) > NyxProjectionMaximumSourceBytes) or
-    (NyxCompanionUnitName(FInput.Source) = '') then
+  ValidateNyxProjectionSource(FInput.Source);
+
+  if FInput.Files.IsEmpty then
   begin
-    raise ENyxModel.Create('Imported Pascal exceeds the constructor source boundary');
+    NyxCompanionUnitName(FInput.Source);
+  end
+  else
+  begin
+    FInput.Files.Open(FInput.Source);
   end;
   FUpload := AUpload;
   FOwner := AOwner;

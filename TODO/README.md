@@ -7,9 +7,18 @@ Current-source [ordinary project compiler commands](../docs/pascal-projects.md#o
 carry supporting files through queued Open/Apply/visual edits, private compiler
 jobs and accepted-checkpoint application/view builds. WORK.md separates actual
 native/compiler evidence from compiled-only browser adapters. Dedicated helper
-editing/drafts, durable semantic import/recovery, full service/cache/reload and
+editing/drafts, full shared recovery/observing quality, service/cache/reload and
 authoring/parity/delivery remain with their original owners; no full criterion or
 completion credit closes.
+
+Current-source [whole-project recovery/import](../docs/pascal-projects.md#whole-registry-recovery-and-semantic-import)
+retains helpers in optional version-three registry frames and verifies exact
+source/helper identities across current/history states. Existing semantic project
+review compiles incoming files independently of the destination. WORK.md owns
+native constructor/tool/history evidence, retained harness failures and the
+separate browser-compilation boundary. Helper editing/drafts, ordinary observing
+input, socket/browser execution and full original quality/parity/delivery remain
+open; no full criterion/task or completion credit closes.
 
 Current-source [supporting-file ownership](../docs/pascal-projects.md#studio-project-ownership)
 retains accepted helper inventories through ordinary Studio project completion,

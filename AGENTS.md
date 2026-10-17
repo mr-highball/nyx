@@ -1,5 +1,23 @@
 # Working in Nyx
 
+Current-source whole-registry recovery retains supporting files in optional
+version three across current/Undo/Redo frames, preserving old one/two layouts.
+Staging/cache/saved meaning use exact main plus helpers; optional project
+verification refuses a legacy strategy before main-only execution. Existing
+compiler import consumes incoming files, with exact ticketed paired adoption.
+Maintained native 48 passes real constructors, byte-exact history/drafts, cache
+identity, refusal/cancellation, semantic imports and cold recovery. Existing
+nine-session 93 and legacy/draft 14 pass; heaps are clean. Both products/worker
+and browser consumers compile only; no browser worker or HTTP input executes.
+Nine top-level/27 child compiler logs have zero owned warnings. WORK.md owns
+retained fixture/CLI/draft/attachment failures, exact receipts, limits and final
+source/remote identity. Five protected files/nine contexts and 349 frozen files
+stay exact; LAN is offline. No full criterion/task/DONE/credit/counter/parity,
+MCP tool/schema/kind or rollout closes. Stop recovery/import/fixture/compiler
+variants. Next dedicated helper editing/selection/drafts and ordinary observing
+adoption retain existing owners; full budgets/quality/browser/delivery remain.
+No host/configuration/enrollment/cleanup retry, capture, bypass or sub-agents.
+
 Current-source project inputs follow normal queued Open/Apply/visual edits,
 optional native/browser/shared strategies and accepted-checkpoint application
 jobs. Private source service data retains captured helpers without new receipt

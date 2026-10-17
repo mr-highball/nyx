@@ -1391,7 +1391,17 @@ begin
     end
     else if APublication.IsCaptured then
     begin
-      LSourceFiles := APublication.Baseline.Files;
+
+      if APublication.ProjectImport <> nil then
+      begin
+        { Import review executes the uploaded candidate, independently of the
+          destination's current helper inventory. Review still cannot publish. }
+        LSourceFiles := APublication.ProjectImport.Input.Files;
+      end
+      else
+      begin
+        LSourceFiles := APublication.Baseline.Files;
+      end;
 
       if not LSourceFiles.IsEmpty then
       begin

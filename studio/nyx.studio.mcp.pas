@@ -264,7 +264,7 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
   nyx.studio.sourcebuilds, nyx.studio.projectimport,
-  nyx.canvas.declarations, nyx.canvas.editing;
+  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project;
 
 function NewCapability: TNyxText;
 var
@@ -553,6 +553,7 @@ var
   LMode: TNyxText;
   LUnit: Integer;
   LSource: TNyxText;
+  LFiles: TNyxPascalProjectFiles;
   LArguments: TNyxDataValue;
   LStatus: TNyxDataValue;
   LBuild: INyxSourceProjectionBuild;
@@ -658,12 +659,13 @@ begin
       raise ENyxProjectConflict.Create('Recovery requires its next unique saved unit');
     end;
     LSource := FRecovery.Staged.Source(LUnit);
+    LFiles := FRecovery.Staged.Files(LUnit);
 
     if LMode = 'unit' then
     begin
       NyxAgentFields(ARequest, '|mode|unit|');
-      Exit(NyxObject([NyxField('unit', NyxData(LUnit)),
-        NyxField('source', NyxData(LSource))]));
+      Exit(WithNyxSourceProjectFiles(NyxObject([NyxField('unit', NyxData(LUnit)),
+        NyxField('source', NyxData(LSource))]), LFiles));
     end;
 
     if LMode = 'request' then
@@ -673,6 +675,7 @@ begin
         NyxField('expectedRevision', NyxData(1)),
         NyxField('operationId', ARequest.Field('operationId')),
         NyxField('source', NyxData(LSource))]);
+      LArguments := WithNyxSourceProjectFiles(LArguments, LFiles);
       FBuilds.AdmitSourceRequest(LArguments);
 
       if (FRecoveryJob <> '') and
@@ -700,7 +703,7 @@ begin
     begin
       raise ENyxProjectConflict.Create('Recovery requires a joined successful browser compilation');
     end;
-    LBuild := DecodeNyxBrowserSourceBuild(LSource, LStatus.Field('receipt'));
+    LBuild := DecodeNyxBrowserSourceBuild(LSource, LStatus.Field('receipt'), LFiles);
 
     if LBuild.Projection.State <> spsCompiled then
     begin
@@ -708,6 +711,11 @@ begin
     end;
     LProjection := ReceiveNyxSourceProjection(LSource, LBuild.Reference, btBrowser,
       ARequest.Field('producer').AsText, LBuild.Projection.Report);
+
+    if not LFiles.IsEmpty then
+    begin
+      LProjection := BindNyxProjectSourceProjection(LProjection, LFiles.Open(LSource));
+    end;
     FRecovery.Staged.Accept(LUnit, LProjection);
 
     if FRecovery.Staged.AcceptedCount = FRecovery.Staged.SourceCount then
