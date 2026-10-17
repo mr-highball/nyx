@@ -619,7 +619,8 @@ begin
   for LIndex := 0 to High(GChildren) do
   begin
     Check(WaitForSingleObject(GChildren[LIndex].Handle, 0) = WAIT_OBJECT_0,
-      'Shutdown retires every actually started compiler/helper/grandchild');
+      'Shutdown retires every actually started compiler/helper/grandchild / ' +
+      GChildren[LIndex].Role + ' / PID ' + TNyxText(IntToStr(GChildren[LIndex].PID)));
   end;
 end;
 

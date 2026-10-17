@@ -30,7 +30,78 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Multi-shape diagram arrangement — 2026-10-17
+## Current integration: Atomic Windows compiler admission — 2026-10-17
+
+The preceding multi-shape batch is progress: 0cde630 is clean and remote-matched.
+Reassess the full scope instead of extending selection variants. NS-5 service-
+reload criterion one records a two-call suspended-create/job-assignment window.
+The bounded deliverable is creation-time family ownership, followed by one
+maintained admission consumer and the existing executor/queue/source regressions.
+The installed FPC supplies a supported virtual SysExecute seam, so no dependency
+source change, process-global interception or launcher workaround is needed.
+
+Windows creates the suspended compiler with STARTUPINFOEX/JOB_LIST inside the
+invocation's non-inherited kill-on-close job. FCL keeps descriptor/stream/handle
+ownership. Redirected standard handles have an explicit inheritance list. FCL
+argument spelling, structured executable/parameters, working directory and
+environment remain intact; this is not a shell interface. NUL and oversized
+command lines refuse before creation. An unsupported startup capability refuses
+without a create-then-assign fallback. The Windows backend itself needs the
+qualified FPC/FCL 3.3.1+ seam and Windows 10+; application compilers are independent
+choices, and a built Studio still designs without a compiler. Other native hosts
+retain their existing direct-process behavior, without a new parity claim.
+
+A private completion port is attached before any child. Empty accounting alone
+does not finish the invocation: its active-zero notification and root join also
+fence publication. Windows documents notifications as best effort; missing OS
+evidence retains ownership rather than inventing terminal success/slot reuse.
+This is not universal bounded OS-reaping or process-tree resource acceptance.
+
+Ignored .local/atomic-compiler-paths-private.json owns the final composite matrix:
+
+- Admission passes 27 actual Win32 checks. The child is captured alive at the
+  actual pre-resume virtual boundary, with executable/birth/handle identity; abrupt
+  parent termination runs no Pascal finalizers. Kernel ownership retires the child.
+  The same maintained consumer fails against the exact previous committed unit
+  at that assertion, then joins its deliberately unowned child. This comparison
+  proves the creation gap, not an old whole-release or unrelated-process result.
+- Maintained lifecycle 142, retained job/profile/retry 50 and portable admission
+  72 pass. Native source shutdown reports 39 lifecycle, a separate 40-check ordinary
+  source-command consumer and final 42 harness checks; these counts overlap.
+- The unchanged real-compiler consumer passes 44: twelve complete application/
+  focused jobs across FPC/LCL and pas2js, plus checked native constructor compilation/
+  execution and exact source/model guards. Browser applications compile only.
+- Nine current-source compiler receipts have zero owned warnings; both native
+  products compile. One separately accepted old-source compile supports the negative
+  comparison. Eight main heap receipts (including that controlled failure and
+  frozen verifier) are clean; the echo child also asserts its independent heap.
+  The maintained runner now includes admission and parses, but is not claimed to
+  have executed as a whole. Underlying Pascal consumers run separately.
+
+Retained preparation includes an unsupported string case in the Delphi-mode
+fixture, a Windows/GetEnvironmentVariable name collision, child heap diagnostics
+initially mixed into stdout, and a rejected C-runtime argument-quoting hypothesis.
+The final implementation preserves FCL spelling rather than changing the compiler
+parser contract. An initial accounting-only shutdown assertion failed once; the
+unchanged assertion passed after diagnostic role/PID context, then the final
+completion-fenced matrix passes. The first failure's precise OS interleaving is
+not proven, and broad OS-failure/retirement acceptance remains open. No failed or
+superseded log counts as success. A proposed fixture-retirement precheck found its
+PID already terminal and stopped nothing; the original live exec handle then
+reported successful 42-check completion. Observation time is not a failure result.
+
+All owned processes join. Five protected files/nine complete contexts and all
+349 frozen 7422453 artifacts remain exact. Tool discovery still exposes no Nyx
+capability; owned Pascal consumers are the explicit existing fallback. No HTTP
+host/browser execution/capture, configuration/enrollment refresh, cleanup retry,
+protected service replacement, new tool/schema, rollout or sub-agent occurs.
+Full other-host/x64/OS-failure/HTTP, caching/reload/resource budgets and observing
+delivery remain with the original service owner; no full criterion/task/DONE or
+credit closes. Existing diagram/canvas/Graph/behavior counters remain unchanged.
+Stop admission/fixture/compiler variants and reassess those original outcomes.
+The private final checkpoint owns exact source/remote identity. The full goal stays active.
+
+## Previous integration: Multi-shape diagram arrangement — 2026-10-17
 
 The preceding script handoff is maintenance and no progress toward the full
 product. Revalidate and finish the interrupted multi-shape work against 9a206ba.

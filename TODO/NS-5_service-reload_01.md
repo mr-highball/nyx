@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source Windows compiler admission moves job ownership into native
+process creation through FCL's virtual startup seam. A private completion port
+also fences ordinary family retirement. WORK.md owns actual pre-resume handles,
+the failing previous-source comparison, retained shutdown/fixture failures,
+integrated queue/source/real-compiler evidence and exact protected state.
+Windows backend hosts require the qualified FPC/FCL startup capability; unsupported
+hosts refuse without creating an unowned child. Selected output compilers remain
+independent and targets remain optional during design. This addresses criterion
+one's crash-atomic Windows prerequisite; other-host/x64/OS-failure/HTTP, complete
+cache/reload and all original service criteria/credit/delivery remain open.
+
 New-invocation source storage is now an independent prerequisite under
 [owned constructor storage](DONE/NS-5_projection-storage_01.md). It follows the accepted
 executed-source API and addresses the measured full-drive failure without closing

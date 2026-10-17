@@ -1,5 +1,23 @@
 # Working in Nyx
 
+Current-source Windows compiler admission uses supported FCL virtual startup and
+creation-time JOB_LIST ownership, preserving FCL descriptors/argument spelling.
+A pre-attached private completion port, empty accounting and root join fence
+retirement; missing OS evidence never grants terminal success. Actual admission
+27, lifecycle 142, retention 50, portable admission 72, source shutdown 39/40/42
+and real compiler 44 checks pass, with overlapping counts. Twelve application/
+focused jobs compile across both targets and a checked native constructor runs.
+Nine current-source compiler logs have zero owned warnings; eight main heaps are
+clean. Both native products compile; no browser execution or delivery is claimed.
+Windows backend hosts require the qualified FPC/FCL 3.3.1+ startup seam/Windows10+;
+selected application compilers remain independent, and design requires neither
+a target nor a compiler. WORK.md owns the exact old-source failing comparison,
+retained interleaving/fixture failures and joined process evidence. Five protected
+files/nine contexts and 349 frozen artifacts stay exact. Full OS-failure/other-host/
+x64/HTTP/cache/reload/budgets/delivery remain open, with no full criterion/credit.
+Stop admission/fixture/compiler variants. No host retry, configuration refresh,
+cleanup retry, rollout or sub-agent; reassess original service prerequisites.
+
 Current-source multi-shape diagram selection uses immutable ordered references,
 one prepared group publisher and complete local selection/history checkpoints.
 Modifier/picker/keyboard input, grouped drag, six alignments and four distributions

@@ -100,6 +100,40 @@ the staged `agent-builds.html` through an already admitted host for the browser
 half; compilation alone is insufficient. See
 [the current evidence and remaining limits](../WORK.md#windows-compiler-families--2026-10-06).
 
+Windows compiler admission now uses `STARTUPINFOEXW` and a creation-time
+`PROC_THREAD_ATTRIBUTE_JOB_LIST`. The compiler is born suspended inside its
+private kill-on-close job; it never exists between separate CreateProcess and
+AssignProcess calls. Normal completion/cancellation still joins the compiler and
+complete family before releasing the worker slot. Redirected standard handles
+use an explicit inheritance list, so concurrent compiler pipes are not inherited
+implicitly. This is the native compiler adapter, not a shell command interface;
+structured Executable/Parameters preserve FCL argument spelling and explicit
+caller quotes. The admission consumer owns and joins every test process, including
+the deliberately failing previous-source comparison.
+
+A private completion port is associated before the first child. Retirement
+requires its active-process-zero notification as well as empty accounting and
+the root process join. Windows documents job notifications as best effort:
+missing notification does not turn a timeout into terminal success or release
+the owned slot. This strengthens the completion fence; it does not establish
+bounded OS retirement under every failure. See Microsoft's
+[job completion contract](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_associate_completion_port).
+
+This Windows backend startup path requires Windows 10+ and an FPC/FCL 3.3.1+
+host exposing virtual `SysExecute`. An older host can still compile this unit,
+but Windows build attempts refuse before process creation with an actionable
+diagnostic. There is no create-then-assign fallback. These are backend-host
+requirements; an application's selected FPC/pas2js toolchain is independent.
+Designing and launching a built Studio remain compiler-independent. Other native
+hosts retain their existing direct-child behavior; x64/other-host family and
+full HTTP/reload/delivery qualification remain separate.
+
+The native API contracts are Microsoft's
+[creation attributes](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute)
+and [CreateProcessW](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw),
+checked 2026-10-17. WORK.md separates actual Win32 handle/abrupt-exit evidence
+from compiler checks and the remaining service outcomes.
+
 `designer-controls` compiles the Pascal semantic review author, runs the checked
 actual LCL designer/retained-source consumer and stages its pas2js counterpart.
 Supply `-DesignerMCPConfig <local-file>` for an explicit owned MCP review or

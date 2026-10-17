@@ -43,18 +43,28 @@ type
     FInvoked: Boolean;
     {$ifdef MSWINDOWS}
     FFamily: THandle;
+    FFamilyPort: THandle;
+    FFamilyEmpty: Boolean;
     FAssigned: Boolean;
     procedure CreateFamily;
     function QueryFamily(out AActive: Cardinal): Boolean;
+    function ObserveFamilyEmpty: Boolean;
+    {$endif}
+  protected
+    {$if defined(MSWINDOWS) and (FPC_FULLVERSION >= 30301)}
+    { Use FCL's virtual startup seam and its owned descriptors/handle fields;
+      no dependency source patch or process-global API interception is needed. }
+    procedure SysExecute; override;
     {$endif}
   public
-    { Single use. Windows creates suspended, assigns before Resume and refuses
-      an incompatible outer job instead of running an uncontained compiler.
-      TProcess pipes/options are configured by the executor before this call.
-      This two-call admission is not crash-atomic: abrupt host death between
-      creation and assignment can leave a suspended, unassigned compiler.
-      Kill-on-close protects assigned members; atomic job-list creation remains
-      separate compiler-host hardening. Normal failures retire before raising. }
+    { Single use. Windows 10+ creates the suspended compiler inside its private
+      kill-on-close job with STARTUPINFOEX/JOB_LIST, before any user instruction.
+      Host death during admission therefore closes the job without an unowned
+      suspended child. Unsupported OS/FCL startup capability refuses before
+      creation, without reverting to create-then-assign. The backend itself needs
+      FPC 3.3.1+ for this startup seam; selected application compilers are separate.
+      The executor configures structured Executable/Parameters and pipes. Legacy
+      free-form command lines are outside this compiler adapter's contract. }
     procedure Execute; override;
     { Includes Windows descendants even after the compiler exits. Query failure
       raises before result publication; retirement still retains ownership. }
@@ -79,6 +89,8 @@ const
   CJobBasicAccounting = 1;
   CJobExtendedLimit = 9;
   CJobKillOnClose = $00002000;
+  CJobCompletionPort = 7;
+  CJobActiveZero = 4;
 
 type
   { Exact Win32/Win64 ABI for the small kernel32 surface missing in FPC 3.2's
@@ -108,6 +120,9 @@ type
     {$endif}
   end;
 
+  { Native JOBOBJECT_EXTENDED_LIMIT_INFORMATION owns no handles; its basic limits
+    request kill-on-close for this adapter's independently owned unnamed job.
+    Pointer-width fields preserve the documented i386/x64 kernel ABI. }
   TJobExtendedLimits = packed record
     Basic: TJobBasicLimits;
     IOReadOperations: QWord;
@@ -122,6 +137,8 @@ type
     PeakJobMemory: PtrUInt;
   end;
 
+  { Copied JOBOBJECT_BASIC_ACCOUNTING_INFORMATION from the borrowed job handle.
+    ActiveProcesses is the retirement authority; compiler exit alone is weaker. }
   TJobAccounting = packed record
     UserTime: Int64;
     KernelTime: Int64;
@@ -133,6 +150,15 @@ type
     TerminatedProcesses: Cardinal;
   end;
 
+type
+  { JOBOBJECT_ASSOCIATE_COMPLETION_PORT borrows this invocation's native port.
+    Key is an opaque tag, never a Pascal object pointer. Association precedes
+    the first child so an early exit cannot precede monitor attachment. }
+  TJobCompletionLink = packed record
+    Key: Pointer;
+    Port: THandle;
+  end;
+
 function CreateJobObjectW(AAttributes: Pointer; AName: PWideChar): THandle;
   stdcall; external 'kernel32' name 'CreateJobObjectW';
 function SetInformationJobObject(AJob: THandle; AClass: Integer;
@@ -141,15 +167,17 @@ function SetInformationJobObject(AJob: THandle; AClass: Integer;
 function QueryInformationJobObject(AJob: THandle; AClass: Integer;
   AInformation: Pointer; ALength: Cardinal; AReturned: Pointer): BOOL;
   stdcall; external 'kernel32' name 'QueryInformationJobObject';
-function AssignProcessToJobObject(AJob, AProcess: THandle): BOOL;
-  stdcall; external 'kernel32' name 'AssignProcessToJobObject';
 function TerminateJobObject(AJob: THandle; AExitCode: Cardinal): BOOL;
   stdcall; external 'kernel32' name 'TerminateJobObject';
+function ReadCompilerCompletion(APort: THandle; out ACode: Cardinal;
+  out AKey: PtrUInt; out AMessage: Pointer; ATimeout: Cardinal): BOOL;
+  stdcall; external 'kernel32' name 'GetQueuedCompletionStatus';
 
 procedure TNyxCompilerProcess.CreateFamily;
 var
   LLimits: TJobExtendedLimits;
   LActive: Cardinal;
+  LCompletion: TJobCompletionLink;
 begin
   { nil security attributes produce a non-inherited handle. Do not set either
     breakaway limit: CreateProcess descendants stay in this invocation's job,
@@ -169,6 +197,21 @@ begin
     RaiseLastOSError;
   end;
 
+  FFamilyPort := CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 1);
+
+  if FFamilyPort = 0 then
+  begin
+    RaiseLastOSError;
+  end;
+  LCompletion.Key := Pointer(1);
+  LCompletion.Port := FFamilyPort;
+
+  if not SetInformationJobObject(FFamily, CJobCompletionPort, @LCompletion,
+    SizeOf(LCompletion)) then
+  begin
+    RaiseLastOSError;
+  end;
+
   if not QueryFamily(LActive) then
   begin
     RaiseLastOSError;
@@ -184,6 +227,31 @@ begin
     @LAccounting, SizeOf(LAccounting), nil);
   AActive := LAccounting.ActiveProcesses;
 end;
+
+function TNyxCompilerProcess.ObserveFamilyEmpty: Boolean;
+var
+  LCode: Cardinal;
+  LKey: PtrUInt;
+  LMessage: Pointer;
+begin
+  { Accounting is a snapshot. Require the job's own all-process-exit notification
+    as well before publishing retirement. No message payload is dereferenced and
+    no recycled process ID is opened. Missing OS notification retains ownership;
+    a timeout is never converted into successful retirement or slot reuse. }
+  while ReadCompilerCompletion(FFamilyPort, LCode, LKey, LMessage, 0) do
+  begin
+
+    if (LKey = 1) and (LCode = CJobActiveZero) then
+    begin
+      FFamilyEmpty := True;
+    end;
+  end;
+  Result := FFamilyEmpty;
+end;
+{$endif}
+
+{$if defined(MSWINDOWS) and (FPC_FULLVERSION >= 30301)}
+{$I nyx.studio.compilerprocess.win.inc}
 {$endif}
 
 procedure TNyxCompilerProcess.Execute;
@@ -195,22 +263,18 @@ begin
   end;
   FInvoked := True;
   {$ifdef MSWINDOWS}
+  {$if FPC_FULLVERSION < 30301}
+  raise EProcess.Create('Windows compiler ownership requires a backend built with FPC 3.3.1 or newer');
+  {$else}
   CreateFamily;
   Options := Options + [poRunSuspended];
   inherited Execute;
-
-  if not AssignProcessToJobObject(FFamily, ProcessHandle) then
-  begin
-    { Never resume or fall back. The executor's finally/destructor retires this
-      exact suspended process even if assignment or pipe setup raises. }
-    RaiseLastOSError;
-  end;
-  FAssigned := True;
 
   if Resume = -1 then
   begin
     RaiseLastOSError;
   end;
+  {$endif}
   {$else}
   inherited Execute;
   {$endif}
@@ -228,7 +292,7 @@ begin
   begin
     RaiseLastOSError;
   end;
-  Result := (LActive > 0) or Running;
+  Result := (LActive > 0) or Running or not ObserveFamilyEmpty;
   {$else}
   Result := Running;
   {$endif}
@@ -259,7 +323,7 @@ begin
         { Termination is asynchronous. Keep the job open until accounting
           confirms actual retirement, independently of the compiler handle. }
         TerminateJobObject(FFamily, 1);
-        LFamilyGone := QueryFamily(LActive) and (LActive = 0);
+        LFamilyGone := QueryFamily(LActive) and (LActive = 0) and ObserveFamilyEmpty;
       end;
       {$else}
       LFamilyGone := True;
@@ -290,6 +354,12 @@ begin
   begin
     CloseHandle(FFamily);
     FFamily := 0;
+  end;
+
+  if FFamilyPort <> 0 then
+  begin
+    CloseHandle(FFamilyPort);
+    FFamilyPort := 0;
   end;
   {$endif}
   inherited Destroy;

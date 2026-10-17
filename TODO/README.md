@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [Windows compiler admission](../docs/building.md) assigns native
+job ownership during creation, with the existing queue/executor/source consumers.
+WORK.md owns abrupt-host/handle evidence, the previous-source failing comparison,
+real compiler jobs and preserved projects. This advances the existing
+[service reliability](NS-5_service-reload_01.md) prerequisite; full host/HTTP/
+cache/reload/resource/delivery criteria and completion credit remain open.
+
 Current-source [diagram multi-selection and arrangement](../docs/diagrams.md#selecting-and-arranging-shapes)
 shares immutable shape sets, grouped movement, alignment/distribution and local
 history through the existing public editor. Ordinary Studio saves the changed
