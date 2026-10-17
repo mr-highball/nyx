@@ -112,12 +112,8 @@ begin
   end;
 end;
 
-function NyxDrawingMapping(const APlan: INyxDrawingPlan;
-  AWidth, AHeight: Double): TNyxDrawingMapping;
-var
-  LIndex: Integer;
-  LCommand: TNyxDataValue;
-  LStyle: TNyxDrawingStyle;
+{ Allocation preflight invokes no creator getter/provider or snapshot callback. }
+procedure RequireDrawingAllocation(const APlan: INyxDrawingPlan; AWidth, AHeight: Double);
 begin
 
   if (APlan = nil) or IsNan(AWidth) or IsNan(AHeight) or IsInfinite(AWidth) or
@@ -126,29 +122,43 @@ begin
   begin
     raise ENyxDrawing.Create('Drawing allocation requires finite 0..32768 logical pixels');
   end;
-  Result.ViewBox := APlan.ViewBox;
+end;
+
+function NyxDrawingMapping(const APlan: INyxDrawingPlan;
+  AWidth, AHeight: Double): TNyxDrawingMapping;
+var
+  LIndex: Integer;
+  LCommand: TNyxDrawingCommand;
+  LStyle: TNyxDrawingStyle;
+  LPlan: INyxDrawingPlan;
+  LCommands: INyxDrawingCommands;
+begin
+  RequireDrawingAllocation(APlan, AWidth, AHeight);
+  LPlan := CaptureNyxDrawingPlan(APlan);
+  LCommands := NyxDrawingCommands(LPlan);
+  Result.ViewBox := LPlan.ViewBox;
 
   if not Result.ViewBox.Defined or (Result.ViewBox.Width <= 0) or
-    (Result.ViewBox.Height <= 0) or (APlan.Count < 0) or
-    (APlan.Count > MaximumNyxDrawingCommands) then
+    (Result.ViewBox.Height <= 0) or (LPlan.Count < 0) or
+    (LPlan.Count > MaximumNyxDrawingCommands) then
   begin
     raise ENyxDrawing.Create('Drawing mapping requires an admitted immutable plan');
   end;
   Result.Scale := Min(AWidth / Result.ViewBox.Width, AHeight / Result.ViewBox.Height);
   Result.Left := (AWidth - Result.ViewBox.Width * Result.Scale) / 2;
   Result.Top := (AHeight - Result.ViewBox.Height * Result.Scale) / 2;
-  for LIndex := 0 to APlan.Count - 1 do
+  for LIndex := 0 to LCommands.Count - 1 do
   begin
-    LCommand := APlan.Command(LIndex);
+    LCommand := LCommands.TypedCommand(LIndex);
 
-    if LCommand.Field('kind').AsInteger = 0 then
+    if LCommand.Kind = ndckPath then
     begin
-      LStyle := TNyxDrawingStyle.FromData(LCommand.Field('style'));
+      LStyle := LCommand.Style;
       Result.Metric(LStyle.StrokeWidth);
     end
     else
     begin
-      Result.Metric(LCommand.Field('size').AsNumber);
+      Result.Metric(LCommand.Size);
     end;
   end;
 end;
@@ -160,8 +170,9 @@ var
   LFrame: TNyxDrawingFrame;
 begin
   { Reject hostile allocation before calling even a registered provider. }
-  NyxDrawingMapping(APlan, AWidth, AHeight);
-  Result := APlan;
+  RequireDrawingAllocation(APlan, AWidth, AHeight);
+  Result := CaptureNyxDrawingPlan(APlan);
+  NyxDrawingMapping(Result, AWidth, AHeight);
 
   if AProvider <> nil then
   begin

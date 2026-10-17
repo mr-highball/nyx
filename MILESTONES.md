@@ -19,7 +19,17 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
-Current-source [immutable plan capture](docs/canvas.md#capturing-live-immutable-plans)
+Current-source [typed live drawing](docs/canvas.md#reading-typed-live-commands)
+removes wire materialization from ordinary command construction/reading, sampling,
+mapping and target painters. Existing interchange and exact admission limits stay
+authoritative. WORK.md owns native ownership/boundary/input, complete result and
+timing evidence, with browser compilation distinguished from execution. One
+native 256/512 projection changes 499.19 to 19.82 ms; a complete fresh move/
+projection changes 693.91 to 195.57 ms, still above the provisional target.
+Shared performance work changes no completion credit; original full target/
+quality/production-budget and delivery outcomes remain open.
+
+Preceding [immutable plan capture](docs/canvas.md#capturing-live-immutable-plans)
 preserves strict creator/aggregation, canonical-byte and worker/lifetime guards
 while sharing admitted live values. WORK.md owns exact results, actual native
 consumers and one 256/512 move/projection comparison 913.91 to 668.60 ms. Browser

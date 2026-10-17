@@ -120,7 +120,8 @@ function TNyxBrowserDrawing.BuildSVG(const APlan: INyxDrawingPlan;
 var
   LIndex: Integer;
   LPointIndex: Integer;
-  LCommand: TNyxDataValue;
+  LCommand: TNyxDrawingCommand;
+  LCommands: INyxDrawingCommands;
   LShape: TJSElement;
   LPoints: TNyxDrawingPoints;
   LStyle: TNyxDrawingStyle;
@@ -128,6 +129,7 @@ var
   LBox: TNyxCanvasBounds;
 begin
   Result := document.createElementNS(SVGNamespace, 'svg');
+  LCommands := NyxDrawingCommands(APlan);
   LBox := APlan.ViewBox;
   Result.setAttribute('viewBox', Number(LBox.Left) + ' ' + Number(LBox.Top) + ' ' +
     Number(LBox.Width) + ' ' + Number(LBox.Height));
@@ -137,14 +139,14 @@ begin
   Result.setAttribute('aria-hidden', 'true');
   Result.setAttribute('focusable', 'false');
   Result.setAttribute('style', 'display:block;overflow:hidden;pointer-events:none');
-  for LIndex := 0 to APlan.Count - 1 do
+  for LIndex := 0 to LCommands.Count - 1 do
   begin
-    LCommand := APlan.Command(LIndex);
+    LCommand := LCommands.TypedCommand(LIndex);
 
-    if LCommand.Field('kind').AsInteger = 0 then
+    if LCommand.Kind = ndckPath then
     begin
-      LPoints := NyxDrawingPathPoints(TNyxDrawingPath.FromData(LCommand.Field('path')));
-      LStyle := TNyxDrawingStyle.FromData(LCommand.Field('style'));
+      LPoints := NyxDrawingPathPoints(LCommand.Path);
+      LStyle := LCommand.Style;
       LWire := '';
       for LPointIndex := 0 to High(LPoints) do
       begin
@@ -169,20 +171,20 @@ begin
     else
     begin
       LShape := document.createElementNS(SVGNamespace, 'text');
-      LShape.textContent := LCommand.Field('text').AsText;
-      LShape.setAttribute('x', Number(LCommand.Field('position').Item(0).AsNumber));
-      LShape.setAttribute('y', Number(LCommand.Field('position').Item(1).AsNumber));
+      LShape.textContent := LCommand.Text;
+      LShape.setAttribute('x', Number(LCommand.Position.X));
+      LShape.setAttribute('y', Number(LCommand.Position.Y));
       LShape.setAttribute('dominant-baseline', 'text-before-edge');
       LShape.setAttribute('font-family', 'Segoe UI, sans-serif');
-      LShape.setAttribute('font-size', Number(LCommand.Field('size').AsNumber));
-      LShape.setAttribute('fill', PaintValue(TNyxDrawingPaint.FromData(LCommand.Field('paint')), ATheme));
-      case TNyxDrawingTextAnchor(LCommand.Field('anchor').AsInteger) of
+      LShape.setAttribute('font-size', Number(LCommand.Size));
+      LShape.setAttribute('fill', PaintValue(LCommand.Paint, ATheme));
+      case LCommand.Anchor of
         ndtaStart: LShape.setAttribute('text-anchor', 'start');
         ndtaCenter: LShape.setAttribute('text-anchor', 'middle');
         ndtaEnd: LShape.setAttribute('text-anchor', 'end');
       end;
 
-      if LCommand.Field('bold').AsBoolean then
+      if LCommand.Bold then
       begin
         LShape.setAttribute('font-weight', 'bold');
       end;

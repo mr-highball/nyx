@@ -3,7 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [immutable live capture](../docs/canvas.md#capturing-live-immutable-plans)
+Current-source [typed live drawing](../docs/canvas.md#reading-typed-live-commands)
+provides immutable command/step reads to projection, mapping and both adapters.
+Strict creator capture, version-one interchange, independent ownership and exact
+byte/sample limits remain required. WORK.md separates checked/optimized native
+results from browser compilation and full quality/budget/delivery outcomes.
+This shared performance work adds no feature counter or completion credit.
+
+Preceding [immutable live capture](../docs/canvas.md#capturing-live-immutable-plans)
 shares admitted private class/interface identity and retains strict alternate/
 aggregating creator snapshots, byte limits and independent lifetime. Native
 Drawing and ordinary Studio/runtime consumers pass; complete results remain exact

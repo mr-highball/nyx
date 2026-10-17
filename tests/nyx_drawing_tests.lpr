@@ -24,7 +24,7 @@ program nyx_drawing_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Math, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
+  SysUtils, Math, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.drawing, nyx.drawing.view, nyx.canvas.geometry, nyx.design.tokens,
   nyx.colors, nyx.theme, nyx.codec, nyx.codegen, nyx.source, nyx.schema,
   nyx.test.drawing.fixture, nyx.test.drawing.capture
@@ -86,6 +86,12 @@ var
   LForeign: INyxDrawingPlan;
   LCreator: TNyxTestDrawingPlan;
   LLive: Integer;
+  LCommands: INyxDrawingCommands;
+  LAdvertised: INyxDrawingCommands;
+  LTyped: TNyxDrawingCommand;
+  LDerived: TNyxDrawingPath;
+  LByteText: TNyxText;
+  LNumeric: INyxDrawingPlan;
 begin
   LUnicode := 'Dedicated coverage 🐾 𝄞 漢字';
   LPath := NyxDrawingPath(NyxCanvasPoint(0, 0)).LineTo(NyxCanvasPoint(10, 0));
@@ -124,6 +130,83 @@ begin
   LCopy := LBuilder.Build;
   Check(LCopy.Command(1).Field('text').AsText = LUnicode, 'exact supplementary text');
   Check(NyxDrawingPlanFromData(LCopy.ToData).ToData.ToJSON = LCopy.ToData.ToJSON, 'strict normalized wire');
+  LCommands := NyxDrawingCommands(LCopy);
+  Check((LCommands.Count = LCopy.Count) and
+    (LCommands.TypedCommand(0).ToData.ToJSON = LCopy.Command(0).ToJSON) and
+    (LCommands.TypedCommand(1).ToData.ToJSON = LCopy.Command(1).ToJSON),
+    'typed command values preserve the complete legacy wire vocabulary and order');
+  LTyped := LCommands.TypedCommand(0);
+  Check((LTyped.Kind = ndckPath) and (LTyped.Path.Step(0).Kind = ndskMove) and
+    (LTyped.Path.Step(2).Kind = ndskCurve) and (LTyped.Path.Step(2).Point(1).X = 20),
+    'typed path commands expose immutable move/curve instructions and control points');
+  LTyped := LCommands.TypedCommand(1);
+  Check((LTyped.Kind = ndckText) and (LTyped.Text = LUnicode) and
+    (LTyped.Position.X = 10) and (LTyped.Paint.Role = ntcText) and (LTyped.Size = 14),
+    'typed text retains supplementary scalars, position, semantic paint and font size');
+  LFailed := False;
+  try
+    LDerived := LTyped.Path;
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'kind-specific command reads refuse a mismatched value');
+  LFailed := False;
+  try
+    LCommands.TypedCommand(-1);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'typed reads retain bounded display-list indexing');
+  LFailed := False;
+  try
+    Default(TNyxDrawingStep).Point(0);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'default typed steps cannot silently supply an origin');
+  LFailed := False;
+  try
+    Default(TNyxDrawingCommand).ToData;
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'absent command serialization refuses instead of becoming a path');
+  LFailed := False;
+  try
+    LCommands.TypedCommand(0).Path.Step(4);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'typed path reads refuse the first step past the end');
+  LFailed := False;
+  try
+    LCommands.TypedCommand(0).Path.Step(3).Point(0);
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'close instructions contain no fabricated point');
+  LDerived := LPath.LineTo(NyxCanvasPoint(40, 40));
+  Check((LPath.StepCount = 2) and (LDerived.StepCount = 3) and
+    (LCommands.TypedCommand(0).Path.StepCount = 4),
+    'extending a typed path preserves earlier records and published command storage');
   LLive := LiveNyxTestDrawingPlans;
   LCreator := TNyxTestDrawingPlan.Create(LCopy);
   LCreator.ForwardObject := True;
@@ -151,6 +234,15 @@ begin
   end;
   Check(LFailed and (LCreator.WireReads = 2) and (LCaptured.Count = 2),
     'valid live getters cannot conceal malformed creator wire or replace accepted output');
+  Check(Supports(LForeign, INyxDrawingCommands, LAdvertised),
+    'creator fixture genuinely advertises its own typed capability');
+  LAdvertised := nil;
+  LCreator.FailWire := False;
+  LCreator.Base := LCopy;
+  LCommands := NyxDrawingCommands(LForeign);
+  Check((LCreator.TypedReads = 0) and (LCreator.WireReads = 3) and
+    (LCommands.TypedCommand(1).Text = LUnicode),
+    'typed reader lookup captures creator wire before considering optional capabilities');
   LCreator := nil;
   LForeign := nil;
   Check((LiveNyxTestDrawingPlans = LLive) and (LCaptured.ToData.ToJSON = LCopy.ToData.ToJSON),
@@ -218,6 +310,73 @@ begin
   end;
   Check(LFailed and (LBuilder.Build.ToData.ToJSON = LBefore),
     'persisted absent-stroke width still refuses without changing the complete builder');
+  { A conservative byte bound is allowed to require an exact check, never to
+    reject a large valid plan. These two fixtures distinguish that acceptance
+    from the actual UTF-8 limit, independently of the bound's arithmetic. }
+  LByteText := TNyxText(StringOfChar('x', 4096));
+  LBudget := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 100, 100));
+  for LIndex := 1 to 64 do
+  begin
+    LBudget.Text(LByteText, NyxCanvasPoint(0, 0), NyxThemePaint(ntcText));
+  end;
+  Check((LBudget.Build.Count = 64) and
+    (NyxUTF8ByteCount(LBudget.Build.ToData.ToJSON) < MaximumNyxDrawingBytes),
+    'exact byte fallback admits large valid text plans without conservative false refusals');
+  for LIndex := 65 to 256 do
+  begin
+    LBudget.Text(LByteText, NyxCanvasPoint(0, 0), NyxThemePaint(ntcText));
+  end;
+  LFailed := False;
+  try
+    LBudget.Build;
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'typed live construction still refuses a complete oversized wire value');
+  LBudget := NewNyxDrawingPlan(NyxCanvasBounds(0, 0, 1, 1));
+  for LIndex := 1 to MaximumNyxDrawingCommands do
+  begin
+    LBudget.Text('', NyxCanvasPoint(0, 0), Default(TNyxDrawingPaint));
+  end;
+  LBefore := LBudget.Build.ToData.ToJSON;
+  Check(LBudget.Build.Count = MaximumNyxDrawingCommands,
+    'the full command capacity remains publishable within the exact byte limit');
+  LFailed := False;
+  try
+    LBudget.Text('', NyxCanvasPoint(0, 0), Default(TNyxDrawingPaint));
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LBudget.Build.ToData.ToJSON = LBefore),
+    'overflowing command membership preserves the complete previously admitted builder');
+  { Checked builds independently compare the conservative live-byte bound to
+    canonical output. Release builds exercise its serialization-free branch.
+    Wide/near-zero numbers, literal/theme/transparent paints and escaped text
+    qualify the framing assumptions without changing admission or the codec. }
+  LNumeric := NewNyxDrawingPlan(NyxCanvasBounds(-1.0e12, -1.0e12, 1.0e12, 1.0e12))
+    .Path(NyxDrawingPath(NyxCanvasPoint(-1.0e12, -1.0e12))
+      .CurveTo(NyxCanvasPoint(-1.0e-300, -0.00000123456789012345),
+        NyxCanvasPoint(-123456789012.34567, -1), NyxCanvasPoint(0, 0)),
+      NyxDrawingStyle.Fill(NyxDrawingPaint(TNyxRGBColor.FromText('#abcdef')))
+        .Stroke(NyxThemePaint(ntcAccent), 0.12345678901234567))
+    .Text('Quote " and slash \ ' + LUnicode, NyxCanvasPoint(-1.0e-300, 0),
+      NyxDrawingPaint(TNyxRGBColor.FromText('#123456')), 512, ndtaEnd, True)
+    .Text('', NyxCanvasPoint(0, 0), Default(TNyxDrawingPaint), 1)
+    .Build;
+  Check(NyxDrawingPlanFromData(LNumeric.ToData).ToData.ToJSON = LNumeric.ToData.ToJSON,
+    'typed live-byte admission preserves extreme finite coordinates and escaped Unicode');
+  LTyped := NyxDrawingCommands(LNumeric).TypedCommand(0);
+  Check((LTyped.Path.Step(1).Point(0).X = NyxCanvasPoint(-1.0e-300, 0).X) and
+    (LTyped.Style.FillPaint.Color.ToText = '#abcdef') and
+    (NyxDrawingCommands(LNumeric).TypedCommand(1).Anchor = ndtaEnd) and
+    NyxDrawingCommands(LNumeric).TypedCommand(1).Bold,
+    'numeric, literal-paint and font values remain typed through complete capture');
   LFailed := False;
   try
     NyxDrawingProvider('   ');

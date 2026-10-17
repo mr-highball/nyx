@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [typed live drawing](../docs/canvas.md#reading-typed-live-commands)
+keeps geometry, command reading, mapping and both adapters outside JSON during
+ordinary rendering. Explicit wire admission/encoding retains the existing schema
+and exact byte limit; conservative small-plan admission falls back to exact
+encoding near that limit. WORK.md owns native boundary/input/whole-output and
+release timing evidence separately from browser compilation. This shared work
+does not close production frame/input/memory budgets, full parity or delivery.
+
 Current-source [immutable live capture](../docs/canvas.md#capturing-live-immutable-plans)
 shares only exact admitted built-in class/interface identity, while alternate or
 aggregating creators retain strict complete snapshot admission. Fresh graph byte

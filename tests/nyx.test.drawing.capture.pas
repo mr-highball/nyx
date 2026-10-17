@@ -33,7 +33,7 @@ type
     getter traversal. FailWire supplies a malformed proposal while preserving its
     valid live getters. Lifetime counters are fixture-thread-only; callers borrow
     the class pointer only while retaining its interface. }
-  TNyxTestDrawingPlan = class(TInterfacedObject, INyxDrawingPlan)
+  TNyxTestDrawingPlan = class(TInterfacedObject, INyxDrawingPlan, INyxDrawingCommands)
   private
     FBase: INyxDrawingPlan;
     FWireReads: Integer;
@@ -41,6 +41,7 @@ type
     FFailWire: Boolean;
     FForwardObject: Boolean;
     FObjectQueries: Integer;
+    FTypedReads: Integer;
   public
     {$ifndef PAS2JS}
     { FPC's interface-to-class operator asks IObjectInstance. Deliberate
@@ -55,12 +56,15 @@ type
     function GetCount: Integer;
     function Command(AIndex: Integer): TNyxDataValue;
     function ToData: TNyxDataValue;
+    { A creator-advertised typed capability must not bypass its wire capture. }
+    function TypedCommand(AIndex: Integer): TNyxDrawingCommand;
     property Base: INyxDrawingPlan read FBase write FBase;
     property FailWire: Boolean read FFailWire write FFailWire;
     property WireReads: Integer read FWireReads;
     property GetterReads: Integer read FGetterReads;
     property ForwardObject: Boolean read FForwardObject write FForwardObject;
     property ObjectQueries: Integer read FObjectQueries;
+    property TypedReads: Integer read FTypedReads;
   end;
 
 { Current facade lifetimes, observed on the fixture's single owning thread.
@@ -143,6 +147,13 @@ end;
 function LiveNyxTestDrawingPlans: Integer;
 begin
   Result := GLive;
+end;
+
+function TNyxTestDrawingPlan.TypedCommand(AIndex: Integer): TNyxDrawingCommand;
+begin
+  Result := Default(TNyxDrawingCommand);
+  Inc(FTypedReads);
+  raise ENyxDrawing.Create('A creator typed reader must not bypass complete wire admission');
 end;
 
 end.

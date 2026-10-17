@@ -608,6 +608,44 @@ failure/Resize behavior remain. Graph projection uses the corresponding
 admission for fresh edits. Sharing these immutable values introduces no document,
 application, view or scheduler back edge, and changes no persistence schema.
 
+### Reading typed live commands
+
+`NyxDrawingCommands(Plan)` returns an `INyxDrawingCommands` reader of immutable
+`TNyxDrawingCommand` values. `Kind` selects `ndckPath` or `ndckText`; path commands
+expose `Path`/`Style`, and text commands expose `Text`, `Position`, `Paint`, `Size`,
+`Anchor` and `Bold`. Reading a property for the wrong kind refuses. The default
+command is `ndckAbsent` and cannot be serialized.
+
+Paths expose `StepCount` and bounded `Step(Index)` values. `TNyxDrawingStep.Kind`
+selects Move, Line, Curve or Close. `Point(0)` is Move/Line's coordinate; Curve
+uses zero/one for its controls and two for its end. Close has no point. Absent
+steps and invalid indices refuse. Extending a path derives an independent
+sequence; retained commands and prior plans keep their original geometry.
+
+```pascal
+LCommands := NyxDrawingCommands(LConnectionDrawing.Plan);
+LCommand := LCommands.TypedCommand(0);
+
+if LCommand.Kind = ndckPath then
+begin
+  LStart := LCommand.Path.Step(0).Point(0);
+end;
+```
+
+The reader first captures the complete plan through the existing admission
+boundary. A creator's advertised typed interface cannot bypass its wire decoder
+or retain a mutable facade. Both renderers, shared cubic sampling and mapping use
+these typed values directly. Legacy `Command(Index)` and explicit `ToData` retain
+the same version-one wire and strict decoder; they remain interchange operations.
+
+Build still admits the complete command, point, sample and UTF-8 budgets. Small
+live plans use a conservative bound derived from the closed wire vocabulary,
+bounded numeric formatter and at most twelve encoded bytes per Unicode scalar.
+If that bound exceeds 1 MiB, exact serialization decides admission, allowing
+large valid plans. Checked builds independently compare the bound with complete
+wire bytes. Every explicit `ToData` also enforces the exact byte boundary. No
+encoded snapshot, mutable reader or application owner is cached by this path.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission
@@ -646,6 +684,20 @@ graph before repeated projection. Each move creates a fresh graph and includes
 its first canonical byte check. Whole graph/routes/drawing/moved bytes remain
 exact. This single warmed release pair excludes actual rendering and does not
 meet the provisional phase target. Browser and production budgets remain open.
+
+With typed live commands, a further matched native release pair gives the
+following medians in milliseconds, preserving the complete previous output:
+
+| Vertices / edges | Projection before | Projection after | Move + projection before | Move + projection after |
+| --- | ---: | ---: | ---: | ---: |
+| 16 / 32 | 33.67 | 0.82 | 46.08 | 11.70 |
+| 64 / 128 | 123.49 | 3.63 | 170.47 | 46.87 |
+| 256 / 512 | 499.19 | 19.82 | 693.91 | 195.57 |
+
+Fresh graph admission is now the larger remaining portable cost. The full
+256/512 update still exceeds the provisional target. This single local pair
+excludes actual painting/input and peak memory, and does not establish browser
+execution, alternating production measurements or full performance acceptance.
 
 ## Remaining integration
 

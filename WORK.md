@@ -30,7 +30,82 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Immutable live plan capture — 2026-10-16
+## Current integration: Typed live drawing — 2026-10-16
+
+Previous goal checkpoint 0cdfb3d is progress and remote-matched. The requested
+cleanup script is delivered and its fresh ordinary-folder preview finds zero
+eligible files; it deletes nothing and retains twenty protected hashes. External
+storage remains available. Resume the existing uncommitted runtime/performance
+work instead of adding a separate feature or changing the canvas/diagram scope.
+The owning outcomes are diagram criterion six, canvas target/quality budgets and
+the existing performance task. Deliverable: typed immutable live geometry and
+commands through construction, sampling, mapping and both Drawing adapters.
+Evidence policy remains one unchanged release baseline and one final candidate,
+complete output equality, checked/optimized boundary and ownership checks, actual
+native Studio/history and exact whole constructors, plus browser compilation.
+Stop on changed intent, lost creator/byte admission or compiler refusal. No HTTP
+host/capture retry, rollout, configuration refresh, cleanup or sub-agents.
+
+The public optional INyxDrawingCommands reader returns typed immutable command
+values; paths expose bounded immutable steps. Wrong-kind/default/out-of-range
+reads refuse. Creator lookup first captures complete strict wire intent, even
+when the creator advertises that optional interface or forwards native object
+identity. Published lists and derived paths keep independent ownership. Legacy
+Command/ToData preserve the exact version-one wire and strict decoder. Both
+painters and shared mapping/sampling consume typed values without reparsing JSON.
+
+Small Build results use a conservative bound for the closed framing, finite
+numeric formatter and escaped Unicode. Larger bounds always use exact encoding,
+allowing large valid intent. Every ToData retains the exact byte guard, and
+checked Build independently asserts its bound against complete wire output.
+Command/sample capacities, point admission and immutable failed candidates remain
+unchanged; no text/model/view or application back edge is cached.
+
+The matched native release pair reduces projection medians from
+33.67/123.49/499.19 to 0.82/3.63/19.82 ms at 16/64/256 vertices and twice as
+many edges. Fresh move/projection changes 46.08/170.47/693.91 to
+11.70/46.87/195.57 ms. The 256/512 phase still fails the provisional 16-ms
+target. Fresh graph admission now dominates; wire encoding, target painting,
+frame/input latency, peak memory, browser execution and production budgets remain
+separate. One unchanged baseline and one final candidate are not an alternating
+production benchmark. The full 1,364,909-byte graph/routes/drawing/moved snapshot
+is exact against 0cdfb3d for both checked and optimized candidates.
+
+Final native checks pass 57 Drawing in both checked/optimized modes, 154 graph,
+93 document/source/history, 43 manipulation and 21 named ports. Boundaries include
+all 2,048 commands with atomic overflow refusal, sampled points, path steps,
+large valid and oversized byte cases, escaped Unicode, finite numeric extremes,
+default/wrong-kind reads, immutable derivation and creator retirement. Actual
+Drawing controls pass 19; ordinary Studio/runtime pass 47/37 per desktop/compact
+width. Five exact whole Pascal companions construct natively. All sixteen final
+checked runs have clean heaps. Ten complete companion source/model inputs match
+their baseline and pre-compiler hashes; all ten separately compiled native/browser
+products remain retained. The optimized binary omits the checked bound assertion;
+the checked binary retains it. Counts overlap and add no completion credit.
+
+Both Studios/backend/worker and matching consumers compile. The 34 final compiler
+logs have zero owned warnings and 112 repeated upstream pas2js Classes warnings.
+Browser typed-record copy/detached Build generation is inspected, not executed.
+Public method comments added during qualification change no runtime behavior;
+the final 57-check consumers compile those exact declarations. Earlier owned
+enum/result warnings are corrected. Retained fixture failures distinguish
+preserved RGB spelling and native extended-literal versus stored Double comparison;
+product behavior was not changed to satisfy either oracle. A shell tokenization
+failure precedes the final browser builds and is excluded from accepted compiler
+evidence. The earlier 50/55-check runs remain superseded qualification records.
+
+The ignored .local/typed-drawing-paths-private.json pointer owns scope, unchanged
+baseline binary/hash, complete outputs, timings, source/model inputs, assertion
+modes and final audit. All five protected files/nine complete contexts and 349
+frozen 7422453 artifacts stay exact. No qualification process remains live; LAN
+stays offline. No host/capture retry, installation, configuration refresh or
+cleanup occurred. Diagram eleven/canvas twelve/Graph-Logic thirty-eight/behavior-
+program zero remain unchanged; no original full criterion/task/DONE/credit,
+tool/schema, full target parity or delivery closes. Stop typed-reader/fixture/
+timing variants. Return to the complete scene update budget through fresh graph
+admission and existing target/input/accessibility/visual/production owners.
+
+## Previous qualification: Immutable live plan capture — 2026-10-16
 
 Previous goal turn is progress: d463048 is clean/remote-matched with the measured
 Drawing repair and corrected mode receipts below. Continue the original canvas/

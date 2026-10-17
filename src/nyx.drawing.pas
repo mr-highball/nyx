@@ -26,7 +26,7 @@ unit nyx.drawing;
 interface
 
 uses
-  SysUtils, Math, nyx.text, nyx.data, nyx.colors, nyx.theme,
+  SysUtils, Math, nyx.text, nyx.bytes, nyx.data, nyx.colors, nyx.theme,
   nyx.design.tokens.core, nyx.canvas.geometry;
 
 const
@@ -38,8 +38,11 @@ const
   MaximumNyxDrawingSamplePoints = 65536;
 
 type
+  { Refusal before a drawing candidate can replace an admitted plan or builder. }
   ENyxDrawing = class(EArgumentException);
+  { Transparent, literal RGB and semantic palette paint are distinct choices. }
   TNyxDrawingPaintKind = (ndpkNone, ndpkRGB, ndpkTheme);
+  { Closed horizontal text origin; the vertical coordinate always addresses its top. }
   TNyxDrawingTextAnchor = (ndtaStart, ndtaCenter, ndtaEnd);
 
   { Optional immutable paint. None is transparent, independently of black.
@@ -74,25 +77,110 @@ type
     property StrokeWidth: Double read FWidth;
   end;
 
+  { Closed geometric instructions. Move begins a path, Line/Curve extend it,
+    and Close retires its open figure. Ordinals retain the version-one wire. }
+  TNyxDrawingStepKind = (ndskMove, ndskLine, ndskCurve, ndskClose);
+
+  { Immutable value-only geometric instruction, obtained from an admitted path.
+    Point reads return independent values; Curve owns two controls and one end.
+    Default is absent, and all meaningful reads refuse it. No host is retained. }
+  TNyxDrawingStep = record
+  private
+    FDefined: Boolean;
+    FKind: TNyxDrawingStepKind;
+    FFirst: TNyxCanvasPoint;
+    FSecond: TNyxCanvasPoint;
+    FEnd: TNyxCanvasPoint;
+    function GetKind: TNyxDrawingStepKind;
+  public
+    { Move/Line admit index zero; Curve admits controls zero/one and end two.
+      Close, absent steps and all other indices refuse. }
+    function Point(AIndex: Integer): TNyxCanvasPoint;
+    { Explicit version-one wire encoding; absent instructions refuse. }
+    function ToData: TNyxDataValue;
+    property Kind: TNyxDrawingStepKind read GetKind;
+    property Defined: Boolean read FDefined;
+  end;
+
   { One contiguous typed path. Coordinates/control points must belong to the
     plan's view box at admission. Close ends the figure; further segments refuse.
-    JSON is an explicit persistence boundary, never SVG/code to execute. }
+    JSON is an explicit persistence boundary, never SVG/code to execute.
+    Step/StepCount expose immutable values without crossing that boundary. }
   TNyxDrawingPath = record
   private
     { Private immutable sequence. Append copies before writing; keeping typed
       steps here avoids reparsing every preceding JSON segment during fluent
       construction. Serialization happens once at the explicit boundary. }
-    FSteps: array of TNyxDataValue;
-    function Append(const AStep: TNyxDataValue): TNyxDrawingPath;
+    FSteps: array of TNyxDrawingStep;
+    function Append(const AStep: TNyxDrawingStep): TNyxDrawingPath;
+    function GetStepCount: Integer;
   public
     function LineTo(const APoint: TNyxCanvasPoint): TNyxDrawingPath;
     function CurveTo(const AFirst, ASecond, AEnd: TNyxCanvasPoint): TNyxDrawingPath;
     function Close: TNyxDrawingPath;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxDrawingPath; static;
+    { Bounded immutable value reads; they do not encode or parse wire data. }
+    function Step(AIndex: Integer): TNyxDrawingStep;
+    property StepCount: Integer read GetStepCount;
   end;
 
+  { Detached sampled polyline in world units; callers own the mutable array and
+    adapters never retain it beyond their paint/build operation. }
   TNyxDrawingPoints = array of TNyxCanvasPoint;
+
+  { Closed live command vocabulary. Absent is the default/refusing record;
+    Path/Text map explicitly to the existing version-one wire ordinals. }
+  TNyxDrawingCommandKind = (ndckAbsent, ndckPath, ndckText);
+
+  { Immutable admitted command value, obtained from INyxDrawingCommands. It owns
+    typed geometry/paint/text only. Kind-specific getters refuse mismatched or
+    absent commands; path extension always derives an independent sequence. }
+  TNyxDrawingCommand = record
+  private
+    FKind: TNyxDrawingCommandKind;
+    FPath: TNyxDrawingPath;
+    FStyle: TNyxDrawingStyle;
+    FText: TNyxText;
+    FPosition: TNyxCanvasPoint;
+    FPaint: TNyxDrawingPaint;
+    FSize: Double;
+    FAnchor: TNyxDrawingTextAnchor;
+    FBold: Boolean;
+    procedure RequireKind(AKind: TNyxDrawingCommandKind);
+    function GetPath: TNyxDrawingPath;
+    function GetStyle: TNyxDrawingStyle;
+    function GetText: TNyxText;
+    function GetPosition: TNyxCanvasPoint;
+    function GetPaint: TNyxDrawingPaint;
+    function GetSize: Double;
+    function GetAnchor: TNyxDrawingTextAnchor;
+    function GetBold: Boolean;
+  public
+    { Encode the existing version-one path/text schema; absent commands refuse. }
+    function ToData: TNyxDataValue;
+    property Kind: TNyxDrawingCommandKind read FKind;
+    property Path: TNyxDrawingPath read GetPath;
+    property Style: TNyxDrawingStyle read GetStyle;
+    property Text: TNyxText read GetText;
+    property Position: TNyxCanvasPoint read GetPosition;
+    property Paint: TNyxDrawingPaint read GetPaint;
+    property Size: Double read GetSize;
+    property Anchor: TNyxDrawingTextAnchor read GetAnchor;
+    property Bold: Boolean read GetBold;
+  end;
+
+  { Optional bounded typed read port. NyxDrawingCommands first captures complete
+    creator intent, so implementing this port alone grants no admission bypass.
+    A reader retains its immutable plan, never a document, view or application. }
+  INyxDrawingCommands = interface(IInterface)
+    ['{D1401014-4CA0-4C84-A708-000000000004}']
+    function GetCount: Integer;
+    { Zero-based bounded value read. Holding/extending a returned path cannot
+      mutate this reader or a previously returned command. }
+    function TypedCommand(AIndex: Integer): TNyxDrawingCommand;
+    property Count: Integer read GetCount;
+  end;
 
   { Immutable display list. Commands own typed normalized data, never callbacks,
     platform objects, a document, renderer or live mutable builder. Reads return
@@ -138,6 +226,8 @@ type
     Height: Double;
     Palette: TNyxThemeTokens;
   end;
+  { UI-owned synchronous geometry producer returns an independent immutable plan.
+    It must retain no renderer/model cycle; errors refuse the prepared picture. }
   INyxDrawingProvider = interface(IInterface)
     ['{D1401014-4CA0-4C84-A708-000000000003}']
     function Build(const AFrame: TNyxDrawingFrame): INyxDrawingPlan;
@@ -155,6 +245,9 @@ function NewNyxDrawingPlan(const AViewBox: TNyxCanvasBounds): INyxDrawingBuilder
   strict decoder, without retaining the creator. Nil refuses. This adds no cache
   or mutable shared state; builders still detach every published command array. }
 function CaptureNyxDrawingPlan(const APlan: INyxDrawingPlan): INyxDrawingPlan;
+{ Capture full intent before looking up its typed reader. Nil/invalid creators
+  refuse through the same boundary; the result owns only the admitted plan. }
+function NyxDrawingCommands(const APlan: INyxDrawingPlan): INyxDrawingCommands;
 function NyxDrawingPlanFromData(const AData: TNyxDataValue): INyxDrawingPlan;
 function NyxDrawingProvider(const AName: TNyxText): TNyxDrawingProviderRef;
 { Shared deterministic cubic sampling. Adapters use the same points and map to
@@ -165,18 +258,33 @@ function NyxDrawingPalette(ATheme: TNyxTheme): TNyxThemeTokens;
 
 implementation
 
+const
+  { Closed version-one JSON framing, including typed paints and number fields.
+    These conservative bounds avoid encoding small live plans. Larger bounds
+    always fall back to exact serialization instead of refusing valid intent. }
+  DrawingRootByteBound = 256;
+  DrawingCommandByteBound = 256;
+  { Shared number formatting uses at most 17 significant digits, short exponent
+    notation or ordinary decimals only for exponents -6..16: at most 25 bytes. }
+  DrawingNumberByteBound = 32;
+  DrawingPointByteBound = 2 * DrawingNumberByteBound + 4;
+  { Step brackets/ordinal/comma spacing and worst-case escaped scalar length. }
+  DrawingStepByteBound = 8;
+  DrawingScalarByteBound = 12;
+
 type
-  { Immutable admitted command storage. Build detaches the array, while each
-    command is already an independently owned Nyx data value. No builder/view or
+  { Immutable admitted typed storage. Build detaches the command array; nested
+    paths own immutable step sequences and text is an owned value. No builder/view or
     application is retained and subsequent builder edits cannot change a plan. }
-  TPlan = class(TInterfacedObject, INyxDrawingPlan)
+  TPlan = class(TInterfacedObject, INyxDrawingPlan, INyxDrawingCommands)
   private
     FBox: TNyxCanvasBounds;
-    FCommands: array of TNyxDataValue;
+    FCommands: array of TNyxDrawingCommand;
   public
     function GetViewBox: TNyxCanvasBounds;
     function GetCount: Integer;
     function Command(AIndex: Integer): TNyxDataValue;
+    function TypedCommand(AIndex: Integer): TNyxDrawingCommand;
     function ToData: TNyxDataValue;
   end;
   { Single-author construction owner. Typed methods admit complete commands and
@@ -185,11 +293,12 @@ type
   TBuilder = class(TInterfacedObject, INyxDrawingBuilder)
   private
     FBox: TNyxCanvasBounds;
-    FCommands: array of TNyxDataValue;
+    FCommands: array of TNyxDrawingCommand;
     FSamplePoints: Integer;
+    FByteBound: Integer;
     { Only the typed Path/Text entries call this, with their admitted point cost.
       Wire callers still pass through the complete strict path/style decoders. }
-    procedure Add(const ACommand: TNyxDataValue; ASamplePoints: Integer);
+    procedure Add(const ACommand: TNyxDrawingCommand; ASamplePoints, AByteBound: Integer);
     procedure AdmitPoint(const APoint: TNyxCanvasPoint);
   public
     constructor Create(const ABox: TNyxCanvasBounds);
@@ -326,13 +435,13 @@ end;
 function TNyxDrawingStyle.Fill(const APaint: TNyxDrawingPaint): TNyxDrawingStyle;
 begin
   Result := Self;
-  Result.FFill := TNyxDrawingPaint.FromData(APaint.ToData);
+  Result.FFill := APaint;
 end;
 
 function TNyxDrawingStyle.Stroke(const APaint: TNyxDrawingPaint; AWidth: Double): TNyxDrawingStyle;
 begin
   Result := Self;
-  Result.FStroke := TNyxDrawingPaint.FromData(APaint.ToData);
+  Result.FStroke := APaint;
 
   if Result.FStroke.Kind = ndpkNone then
   begin
@@ -367,18 +476,73 @@ begin
   end;
 end;
 
+function TNyxDrawingStep.GetKind: TNyxDrawingStepKind;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxDrawing.Create('Construct a drawing step first');
+  end;
+  Result := FKind;
+end;
+
+function TNyxDrawingStep.Point(AIndex: Integer): TNyxCanvasPoint;
+begin
+
+  if (GetKind = ndskClose) or (AIndex < 0) or (AIndex > 2) or
+    ((FKind <> ndskCurve) and (AIndex <> 0)) then
+  begin
+    raise ENyxDrawing.Create('Drawing step point is outside its instruction');
+  end;
+  case AIndex of
+    0: Result := FFirst;
+    1: Result := FSecond;
+    2: Result := FEnd;
+  end;
+end;
+
+function TNyxDrawingStep.ToData: TNyxDataValue;
+begin
+  case GetKind of
+    ndskMove, ndskLine: Result := NyxArray([NyxData(Ord(FKind)), PointData(FFirst)]);
+    ndskCurve: Result := NyxArray([NyxData(2), PointData(FFirst), PointData(FSecond), PointData(FEnd)]);
+    ndskClose: Result := NyxArray([NyxData(3)]);
+  end;
+end;
+
+{ Private typed construction is the only writer of instruction coordinates.
+  Validate points immediately; later builder admission adds the owning view box. }
+function DrawingStep(AKind: TNyxDrawingStepKind; const AFirst, ASecond,
+  AEnd: TNyxCanvasPoint): TNyxDrawingStep;
+begin
+  Result := Default(TNyxDrawingStep);
+  Result.FDefined := True;
+  Result.FKind := AKind;
+
+  if AKind <> ndskClose then
+  begin
+    Result.FFirst := NyxCanvasPoint(AFirst.X, AFirst.Y);
+  end;
+
+  if AKind = ndskCurve then
+  begin
+    Result.FSecond := NyxCanvasPoint(ASecond.X, ASecond.Y);
+    Result.FEnd := NyxCanvasPoint(AEnd.X, AEnd.Y);
+  end;
+end;
+
 function NyxDrawingPath(const AStart: TNyxCanvasPoint): TNyxDrawingPath;
 begin
   Result := Default(TNyxDrawingPath);
   SetLength(Result.FSteps, 1);
-  Result.FSteps[0] := NyxArray([NyxData(0), PointData(AStart)]);
+  Result.FSteps[0] := DrawingStep(ndskMove, AStart, Default(TNyxCanvasPoint), Default(TNyxCanvasPoint));
 end;
 
-function TNyxDrawingPath.Append(const AStep: TNyxDataValue): TNyxDrawingPath;
+function TNyxDrawingPath.Append(const AStep: TNyxDrawingStep): TNyxDrawingPath;
 begin
 
   if (Length(FSteps) = 0) or (Length(FSteps) >= MaximumNyxDrawingPathSteps) or
-    (FSteps[High(FSteps)].Item(0).AsInteger = 3) then
+    (FSteps[High(FSteps)].Kind = ndskClose) then
   begin
     raise ENyxDrawing.Create('Construct an open path with available segment capacity');
   end;
@@ -390,27 +554,51 @@ end;
 
 function TNyxDrawingPath.LineTo(const APoint: TNyxCanvasPoint): TNyxDrawingPath;
 begin
-  Result := Append(NyxArray([NyxData(1), PointData(APoint)]));
+  Result := Append(DrawingStep(ndskLine, APoint, Default(TNyxCanvasPoint), Default(TNyxCanvasPoint)));
 end;
 
 function TNyxDrawingPath.CurveTo(const AFirst, ASecond, AEnd: TNyxCanvasPoint): TNyxDrawingPath;
 begin
-  Result := Append(NyxArray([NyxData(2), PointData(AFirst), PointData(ASecond), PointData(AEnd)]));
+  Result := Append(DrawingStep(ndskCurve, AFirst, ASecond, AEnd));
 end;
 
 function TNyxDrawingPath.Close: TNyxDrawingPath;
 begin
-  Result := Append(NyxArray([NyxData(3)]));
+  Result := Append(DrawingStep(ndskClose, Default(TNyxCanvasPoint),
+    Default(TNyxCanvasPoint), Default(TNyxCanvasPoint)));
 end;
 
 function TNyxDrawingPath.ToData: TNyxDataValue;
+var
+  LSteps: array of TNyxDataValue;
+  LIndex: Integer;
 begin
 
   if Length(FSteps) = 0 then
   begin
     raise ENyxDrawing.Create('Construct a drawing path first');
   end;
-  Result := NyxArray(FSteps);
+  SetLength(LSteps, Length(FSteps));
+  for LIndex := 0 to High(FSteps) do
+  begin
+    LSteps[LIndex] := FSteps[LIndex].ToData;
+  end;
+  Result := NyxArray(LSteps);
+end;
+
+function TNyxDrawingPath.GetStepCount: Integer;
+begin
+  Result := Length(FSteps);
+end;
+
+function TNyxDrawingPath.Step(AIndex: Integer): TNyxDrawingStep;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FSteps)) then
+  begin
+    raise ENyxDrawing.Create('Drawing step is outside its path');
+  end;
+  Result := FSteps[AIndex];
 end;
 
 class function TNyxDrawingPath.FromData(const AData: TNyxDataValue): TNyxDrawingPath;
@@ -495,6 +683,77 @@ begin
     .LineTo(NyxCanvasPoint(ABounds.Left, (ABounds.Top + ABounds.Height))).Close;
 end;
 
+procedure TNyxDrawingCommand.RequireKind(AKind: TNyxDrawingCommandKind);
+begin
+
+  if FKind <> AKind then
+  begin
+    raise ENyxDrawing.Create('Drawing command does not contain the requested typed value');
+  end;
+end;
+
+function TNyxDrawingCommand.GetPath: TNyxDrawingPath;
+begin
+  RequireKind(ndckPath);
+  Result := FPath;
+end;
+
+function TNyxDrawingCommand.GetStyle: TNyxDrawingStyle;
+begin
+  RequireKind(ndckPath);
+  Result := FStyle;
+end;
+
+function TNyxDrawingCommand.GetText: TNyxText;
+begin
+  RequireKind(ndckText);
+  Result := FText;
+end;
+
+function TNyxDrawingCommand.GetPosition: TNyxCanvasPoint;
+begin
+  RequireKind(ndckText);
+  Result := FPosition;
+end;
+
+function TNyxDrawingCommand.GetPaint: TNyxDrawingPaint;
+begin
+  RequireKind(ndckText);
+  Result := FPaint;
+end;
+
+function TNyxDrawingCommand.GetSize: Double;
+begin
+  RequireKind(ndckText);
+  Result := FSize;
+end;
+
+function TNyxDrawingCommand.GetAnchor: TNyxDrawingTextAnchor;
+begin
+  RequireKind(ndckText);
+  Result := FAnchor;
+end;
+
+function TNyxDrawingCommand.GetBold: Boolean;
+begin
+  RequireKind(ndckText);
+  Result := FBold;
+end;
+
+function TNyxDrawingCommand.ToData: TNyxDataValue;
+begin
+  case FKind of
+    ndckPath: Result := NyxObject([NyxField('kind', NyxData(0)), NyxField('path', FPath.ToData),
+      NyxField('style', FStyle.ToData)]);
+    ndckText: Result := NyxObject([NyxField('kind', NyxData(1)), NyxField('text', NyxData(FText)),
+      NyxField('position', PointData(FPosition)), NyxField('paint', FPaint.ToData),
+      NyxField('size', NyxData(FSize)), NyxField('anchor', NyxData(Ord(FAnchor))),
+      NyxField('bold', NyxData(FBold))]);
+  else
+    raise ENyxDrawing.Create('Construct a drawing command first');
+  end;
+end;
+
 constructor TBuilder.Create(const ABox: TNyxCanvasBounds);
 begin
   inherited Create;
@@ -504,6 +763,9 @@ begin
     raise ENyxDrawing.Create('Drawing view box requires positive finite dimensions');
   end;
   FBox := ABox;
+  { Version-one root syntax plus four bounded numeric coordinates. This exceeds
+    its fixed ASCII punctuation/key cost and four <=32-byte number spellings. }
+  FByteBound := DrawingRootByteBound;
 end;
 
 procedure TBuilder.AdmitPoint(const APoint: TNyxCanvasPoint);
@@ -517,7 +779,7 @@ begin
   end;
 end;
 
-procedure TBuilder.Add(const ACommand: TNyxDataValue; ASamplePoints: Integer);
+procedure TBuilder.Add(const ACommand: TNyxDrawingCommand; ASamplePoints, AByteBound: Integer);
 begin
 
   if Length(FCommands) >= MaximumNyxDrawingCommands then
@@ -532,34 +794,56 @@ begin
   SetLength(FCommands, Length(FCommands) + 1);
   FCommands[High(FCommands)] := ACommand;
   Inc(FSamplePoints, ASamplePoints);
+  Inc(FByteBound, AByteBound);
 end;
 
 function TBuilder.Path(const APath: TNyxDrawingPath; const AStyle: TNyxDrawingStyle): INyxDrawingBuilder;
 var
-  LSteps: TNyxDataValue;
-  LStep: TNyxDataValue;
+  LStep: TNyxDrawingStep;
+  LCommand: TNyxDrawingCommand;
   LIndex: Integer;
   LPoint: Integer;
   LSamplePoints: Integer;
+  LPointCount: Integer;
+  LByteBound: Integer;
 begin
-  { Path steps are private and immutable: factories/Append/FromData are their
-    only writers. ToData still refuses an absent path. Admit every point against
-    this builder's box, but do not serialize/decode the same admitted sequence
-    again or rediscover its point cost from a newly assembled command. }
-  LSteps := APath.ToData;
+  { Typed factories and the strict decoder are the private sequence's writers.
+    Each current-box point is still admitted before this builder can append. }
+
+  if APath.StepCount = 0 then
+  begin
+    raise ENyxDrawing.Create('Construct a drawing path first');
+  end;
   LSamplePoints := 1;
+  { Closed version-one command/style syntax and two finite typed paints fit
+    256 ASCII bytes. NyxStateNumberText emits <=17 significant digits with a
+    short exponent or bounded ordinary decimal: 32 bytes safely covers a Double.
+    A point uses two such numbers and four punctuation/spacing bytes. Eight
+    additional bytes cover every step's ordinal, brackets and comma spacing. }
+  LByteBound := DrawingCommandByteBound;
   for LIndex := 0 to High(APath.FSteps) do
   begin
     LStep := APath.FSteps[LIndex];
-    for LPoint := 1 to LStep.Count - 1 do
+    LPointCount := 1;
+
+    if LStep.Kind = ndskCurve then
     begin
-      AdmitPoint(ReadPoint(LStep.Item(LPoint)));
+      LPointCount := 3;
+    end
+    else if LStep.Kind = ndskClose then
+    begin
+      LPointCount := 0;
     end;
+    for LPoint := 0 to LPointCount - 1 do
+    begin
+      AdmitPoint(LStep.Point(LPoint));
+    end;
+    Inc(LByteBound, DrawingStepByteBound + LPointCount * DrawingPointByteBound);
 
     if LIndex > 0 then
     begin
 
-      if LStep.Item(0).AsInteger = 2 then
+      if LStep.Kind = ndskCurve then
       begin
         Inc(LSamplePoints, 32);
       end
@@ -569,10 +853,11 @@ begin
       end;
     end;
   end;
-  { Style fields are also private; their factories and wire decoder already
-    normalize paints and enforce stroke widths. Preserve that exact value. }
-  Add(NyxObject([NyxField('kind', NyxData(0)), NyxField('path', LSteps),
-    NyxField('style', AStyle.ToData)]), LSamplePoints);
+  LCommand := Default(TNyxDrawingCommand);
+  LCommand.FKind := ndckPath;
+  LCommand.FPath := APath;
+  LCommand.FStyle := AStyle;
+  Add(LCommand, LSamplePoints, LByteBound);
   Result := Self;
 end;
 
@@ -582,10 +867,13 @@ function TBuilder.Text(const AText: TNyxText; const APosition: TNyxCanvasPoint;
 var
   LIndex: Integer;
   LScalar: Integer;
+  LScalars: Integer;
+  LCommand: TNyxDrawingCommand;
 begin
   AdmitPoint(APosition);
+  LScalars := DrawingScalarCount(AText);
 
-  if (DrawingScalarCount(AText) > 4096) or IsNan(ASize) or IsInfinite(ASize) or
+  if (LScalars > 4096) or IsNan(ASize) or IsInfinite(ASize) or
     (ASize < 1) or (ASize > 512) or
     (Ord(AAnchor) < Ord(Low(TNyxDrawingTextAnchor))) or
     (Ord(AAnchor) > Ord(High(TNyxDrawingTextAnchor))) then
@@ -604,56 +892,47 @@ begin
       raise ENyxDrawing.Create('Drawing text requires a single printable line');
     end;
   end;
-  Add(NyxObject([NyxField('kind', NyxData(1)), NyxField('text', NyxData(AText)),
-    NyxField('position', PointData(APosition)), NyxField('paint', APaint.ToData),
-    NyxField('size', NyxData(ASize)), NyxField('anchor', NyxData(Ord(AAnchor))),
-    NyxField('bold', NyxData(ABold))]), 0);
+  LCommand := Default(TNyxDrawingCommand);
+  LCommand.FKind := ndckText;
+  LCommand.FText := AText;
+  LCommand.FPosition := APosition;
+  LCommand.FPaint := APaint;
+  LCommand.FSize := ASize;
+  LCommand.FAnchor := AAnchor;
+  LCommand.FBold := ABold;
+  { Twelve bytes per scalar also covers a JSON-escaped UTF-16 surrogate pair;
+    the fixed allowance covers paints, position/font numbers and closed keys. }
+  Add(LCommand, 0, DrawingCommandByteBound + LScalars * DrawingScalarByteBound);
   Result := Self;
 end;
 
 function TBuilder.Build: INyxDrawingPlan;
 var
   LPlan: TPlan;
-  LJSON: TNyxText;
-  LIndex: Integer;
-  LScalar: Integer;
+  {$ifopt C+}
   LBytes: Integer;
+  {$endif}
 begin
   LPlan := TPlan.Create;
   Result := LPlan;
   LPlan.FBox := FBox;
   LPlan.FCommands := Copy(FCommands, 0, Length(FCommands));
 
-  { Count UTF-8 bytes on both targets, independently of UTF-16 storage. }
-  LJSON := LPlan.ToData.ToJSON;
-  LIndex := 1;
-  LBytes := 0;
-  while LIndex <= Length(LJSON) do
-  begin
-    NyxNextScalar(LJSON, LIndex, LScalar);
+  { Safe small plans need no serialization. A conservative bound never rejects
+    a larger valid plan: near the limit, the exact canonical boundary decides. }
 
-    if LScalar <= $7F then
-    begin
-      Inc(LBytes);
-    end
-    else if LScalar <= $7FF then
-    begin
-      Inc(LBytes, 2);
-    end
-    else if LScalar <= $FFFF then
-    begin
-      Inc(LBytes, 3);
-    end
-    else
-    begin
-      Inc(LBytes, 4);
-    end;
-  end;
+  {$ifopt C+}
+  { Checked qualification independently verifies the bound against whole wire
+    output, including Unicode, small exponents and maximum membership. }
+  LBytes := NyxUTF8ByteCount(LPlan.ToData.ToJSON);
+  Assert(LBytes <= FByteBound, 'Drawing byte bound underestimated canonical output');
+  {$else}
 
-  if LBytes > MaximumNyxDrawingBytes then
+  if FByteBound > MaximumNyxDrawingBytes then
   begin
-    raise ENyxDrawing.Create('Drawing plan exceeds its persistence byte boundary');
+    LPlan.ToData;
   end;
+  {$endif}
 end;
 
 function NewNyxDrawingPlan(const AViewBox: TNyxCanvasBounds): INyxDrawingBuilder;
@@ -700,6 +979,11 @@ end;
 
 function TPlan.Command(AIndex: Integer): TNyxDataValue;
 begin
+  Result := TypedCommand(AIndex).ToData;
+end;
+
+function TPlan.TypedCommand(AIndex: Integer): TNyxDrawingCommand;
+begin
 
   if (AIndex < 0) or (AIndex >= Length(FCommands)) then
   begin
@@ -709,10 +993,35 @@ begin
 end;
 
 function TPlan.ToData: TNyxDataValue;
+var
+  LCommands: array of TNyxDataValue;
+  LIndex: Integer;
 begin
+  SetLength(LCommands, Length(FCommands));
+  for LIndex := 0 to High(FCommands) do
+  begin
+    LCommands[LIndex] := FCommands[LIndex].ToData;
+  end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('box', NyxArray([NyxData(FBox.Left), NyxData(FBox.Top),
-      NyxData(FBox.Width), NyxData(FBox.Height)])), NyxField('commands', NyxArray(FCommands))]);
+      NyxData(FBox.Width), NyxData(FBox.Height)])), NyxField('commands', NyxArray(LCommands))]);
+
+  if NyxUTF8ByteCount(Result.ToJSON) > MaximumNyxDrawingBytes then
+  begin
+    raise ENyxDrawing.Create('Drawing plan exceeds its persistence byte boundary');
+  end;
+end;
+
+function NyxDrawingCommands(const APlan: INyxDrawingPlan): INyxDrawingCommands;
+var
+  LPlan: INyxDrawingPlan;
+begin
+  LPlan := CaptureNyxDrawingPlan(APlan);
+
+  if not Supports(LPlan, INyxDrawingCommands, Result) then
+  begin
+    raise ENyxDrawing.Create('Admitted drawing has no typed command reader');
+  end;
 end;
 
 function NyxDrawingPlanFromData(const AData: TNyxDataValue): INyxDrawingPlan;
@@ -813,8 +1122,7 @@ end;
 
 function NyxDrawingPathPoints(const APath: TNyxDrawingPath): TNyxDrawingPoints;
 var
-  LData: TNyxDataValue;
-  LStep: TNyxDataValue;
+  LStep: TNyxDrawingStep;
   LCurrent: TNyxCanvasPoint;
   LFirst: TNyxCanvasPoint;
   LSecond: TNyxCanvasPoint;
@@ -833,13 +1141,16 @@ var
   end;
 begin
   Result := nil;
-  LData := APath.ToData;
+  if APath.StepCount = 0 then
+  begin
+    raise ENyxDrawing.Create('Construct a drawing path first');
+  end;
   { Size once from admitted steps; avoid quadratic array copying for curves. }
   LCount := 1;
-  for LIndex := 1 to LData.Count - 1 do
+  for LIndex := 1 to APath.StepCount - 1 do
   begin
 
-    if LData.Item(LIndex).Item(0).AsInteger = 2 then
+    if APath.Step(LIndex).Kind = ndskCurve then
     begin
       Inc(LCount, 32);
     end
@@ -850,23 +1161,23 @@ begin
   end;
   SetLength(Result, LCount);
   LCount := 0;
-  LStart := ReadPoint(LData.Item(0).Item(1));
+  LStart := APath.Step(0).Point(0);
   LCurrent := LStart;
   Add(LCurrent);
-  for LIndex := 1 to LData.Count - 1 do
+  for LIndex := 1 to APath.StepCount - 1 do
   begin
-    LStep := LData.Item(LIndex);
-    case LStep.Item(0).AsInteger of
-      1:
+    LStep := APath.Step(LIndex);
+    case LStep.Kind of
+      ndskLine:
         begin
-          LCurrent := ReadPoint(LStep.Item(1));
+          LCurrent := LStep.Point(0);
           Add(LCurrent);
         end;
-      2:
+      ndskCurve:
         begin
-          LFirst := ReadPoint(LStep.Item(1));
-          LSecond := ReadPoint(LStep.Item(2));
-          LEnd := ReadPoint(LStep.Item(3));
+          LFirst := LStep.Point(0);
+          LSecond := LStep.Point(1);
+          LEnd := LStep.Point(2);
           for LSample := 1 to 32 do
           begin
             LT := LSample / 32;
@@ -878,7 +1189,11 @@ begin
           end;
           LCurrent := LEnd;
         end;
-      3: Add(LStart);
+      ndskClose: Add(LStart);
+    ndskMove:
+      begin
+        raise ENyxDrawing.Create('A drawing path may begin only once');
+      end;
     end;
   end;
 end;

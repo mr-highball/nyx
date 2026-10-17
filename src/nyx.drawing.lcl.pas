@@ -148,7 +148,8 @@ procedure PaintNyxLCLDrawing(ACanvas: TCanvas; const APlan: INyxDrawingPlan;
 var
   LIndex: Integer;
   LPointIndex: Integer;
-  LCommand: TNyxDataValue;
+  LCommand: TNyxDrawingCommand;
+  LCommands: INyxDrawingCommands;
   LPath: TNyxDrawingPath;
   LStyle: TNyxDrawingStyle;
   LPoints: TNyxDrawingPoints;
@@ -162,14 +163,15 @@ begin
   begin
     Exit;
   end;
-  for LIndex := 0 to APlan.Count - 1 do
+  LCommands := NyxDrawingCommands(APlan);
+  for LIndex := 0 to LCommands.Count - 1 do
   begin
-    LCommand := APlan.Command(LIndex);
+    LCommand := LCommands.TypedCommand(LIndex);
 
-    if LCommand.Field('kind').AsInteger = 0 then
+    if LCommand.Kind = ndckPath then
     begin
-      LPath := TNyxDrawingPath.FromData(LCommand.Field('path'));
-      LStyle := TNyxDrawingStyle.FromData(LCommand.Field('style'));
+      LPath := LCommand.Path;
+      LStyle := LCommand.Style;
       LPoints := NyxDrawingPathPoints(LPath);
       SetLength(LNative, Length(LPoints));
       for LPointIndex := 0 to High(LPoints) do
@@ -196,25 +198,23 @@ begin
         ACanvas.Polyline(LNative);
       end;
     end
-    else if TNyxDrawingPaint.FromData(LCommand.Field('paint')).Kind <> ndpkNone then
+    else if LCommand.Paint.Kind <> ndpkNone then
     begin
-      LPosition := AMapping.Point(NyxCanvasPoint(
-        LCommand.Field('position').Item(0).AsNumber,
-        LCommand.Field('position').Item(1).AsNumber));
-      LText := LCommand.Field('text').AsText;
+      LPosition := AMapping.Point(LCommand.Position);
+      LText := LCommand.Text;
       ACanvas.Brush.Style := bsClear;
       ACanvas.Font.Name := 'Segoe UI';
-      ACanvas.Font.Height := -Max(1, Round(AMapping.Metric(LCommand.Field('size').AsNumber)));
+      ACanvas.Font.Height := -Max(1, Round(AMapping.Metric(LCommand.Size)));
       ACanvas.Font.Style := [];
 
-      if LCommand.Field('bold').AsBoolean then
+      if LCommand.Bold then
       begin
         ACanvas.Font.Style := [fsBold];
       end;
-      ACanvas.Font.Color := FaceColor(TNyxDrawingPaint.FromData(LCommand.Field('paint')), ATheme);
+      ACanvas.Font.Color := FaceColor(LCommand.Paint, ATheme);
       LX := Round(LPosition.X);
       LY := Round(LPosition.Y);
-      case TNyxDrawingTextAnchor(LCommand.Field('anchor').AsInteger) of
+      case LCommand.Anchor of
         ndtaStart:
           begin
             { Position already addresses the first glyph. }
