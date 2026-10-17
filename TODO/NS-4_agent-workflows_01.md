@@ -2,6 +2,17 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [supporting-file semantics](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
+extend existing nyx_pascal with bounded revision-pinned file identities/helper
+windows and exact mixed main/unit/include range groups. The same native compiler
+owner constructs one complete candidate before one paired publication; helper-only
+changes cannot take main-only literal admission. Proposed helper diagnostics keep
+their own typed coordinates without changing current-source navigation semantics.
+WORK.md owns qualification, retained failures and the source-only schema boundary.
+General helper declarations/completion, semantic inventory creation/removal, full
+source grammar and authenticated browser/observing/delivery remain under original
+criterion five. No original full criterion/task/counter/credit closes.
+
 Ordinary Studio source-file management now shares typed compiler-backed creation
 and reviewed removal with both controllers. This is an editor/private-provider
 boundary, not a new semantic MCP operation or installed schema. General bounded

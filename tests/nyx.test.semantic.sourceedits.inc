@@ -113,7 +113,9 @@ begin
     Change('class function TNotebookCards.Caption: TNyxText;',
       'class function TNotebookCards.Caption(const APrefix: TNyxText): TNyxText;'),
     Change('  Result := CQualificationText;',
-      '  Result := APrefix + ''A prepared notebook 🚀 with letter 𐐷.'';'),
+      { Keep the emitted concatenation in portable UTF-8 too: a Unicode source
+        literal must not promote the complete native expression through ANSI. }
+      '  Result := APrefix + TNyxText(''A prepared notebook 🚀 with letter 𐐷.'');'),
     Change(LTitleExpected, LTitleReplacement)]);
   LBefore := Observe;
   LReceipt := Apply(LArguments);

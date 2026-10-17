@@ -30,7 +30,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordinary Pascal file management — 2026-10-17
+## Current integration: Semantic supporting-file authoring — 2026-10-17
+
+Previous goal turn is progress: 298e47d supplied ordinary file creation/removal.
+Reassessment of original NS-4 workflow criterion five found that nyx_pascal still
+addressed main source only. This batch now supplies bounded supporting-file
+inspection and exact mixed-file source editing through that EXISTING tool, under
+the original semantic-agent requirement. No new tool or installed schema/rollout
+is claimed. No original full criterion/task/counter/credit closes. No Nyx tool is
+exposed in this chat; owned never-listening production-engine consumers remain
+the explicit fallback. Evidence is behind .local/semantic-source-files-paths-private.json
+on the provisioned scratch drive.
+
+Files mode pages accepted typed main/unit/include identities, titles and pending
+indicators without source text. Unit windows reuse exact file selectors, scalar
+offsets or source lines at a revision; unfinished buffers are not exported.
+Legacy omitted selectors retain main-only behavior. Source range groups may
+interleave files while keeping ascending/nonoverlapping ORIGINAL ranges per file.
+Sixteen changes and 262144-scalar side budgets cover the complete group. Public
+immutable typed file/range values reuse the existing scalar patcher, freeze inputs
+and preserve membership/order/main identity/limits. They grant no execution.
+
+A sealed project request stages no visible buffer. Supporting-file changes always
+require one complete native constructor, including helper-only edits with unchanged
+main source. The owning pool executes the request's exact candidate files, not
+baseline helpers. One admitted result makes one paired Undo publication. Pending
+or newer main/helper drafts, revision/context/profile changes and failed execution/
+publication refuse the complete group. The ordinary observer keeps its chosen
+helper and the same memo; actual mounted text follows successful updates.
+
+Mapped proposed-file diagnostics add submittedSource {file,line,column} through
+the existing bounded build response. These coordinates remain tied to submitted
+text. Existing navigable/line/column fields keep current-main navigation meaning;
+a helper error cannot redirect that caret. Source text is not included in rows.
+
+Accepted evidence is composite, with separate overlapping counts:
+
+- `logs/semantic-7-run.log`: **111** complete actual Win32 checks at 1280/390,
+  clean heap. Production tool discovery retains **24** names. Bounded metadata/
+  helper windows, direct line mapping, revision/path/case refusal, interleaved
+  main/unit/include construction, exact retry, paired Undo/Redo, compiler refusal,
+  typed proposed-helper diagnostics and late-draft preservation pass. The ordinary
+  connected observer qualifies exact physical memo/model text and retained editor/
+  selection after mixed and helper-only updates, plus unchanged draft text after
+  refused publication. Sockets are substituted; the copied recovery seed is
+  trusted setup, not semantic import or authenticated HTTP evidence.
+- `logs/portable-2-run.log`: **52** portable file/draft contracts, including 14
+  new typed project range checks. Supplementary Unicode/NUL, detached caller
+  arrays, interleaved ranges, aliases/missing files, order/overlap and aggregate
+  budgets retain exact original inputs, clean heap. The matching browser consumer
+  compiles only. `logs/diagnostics-1-run.log`: unchanged **341** source/report/
+  session checks, clean heap.
+- `logs/clean-legacy-run.log`: **60** focused actual compiler-backed main-unit
+  source-range checks on final product code, clean heap. The older emitted
+  qualification concatenation now casts its Unicode operand to TNyxText; two
+  owned fixture conversion warnings are repaired without changing intended text.
+- Both Studios/backend/worker and maintained consumers compile. Nine accepted
+  top-level compiler logs have **zero owned warnings**; three pas2js builds retain
+  seven upstream RTL warnings each. The **19** complete native/legacy child logs
+  contain three deliberate compiler refusals and zero warnings. Browser products/
+  consumers are compiled only; no browser input, observing, accessibility, visual
+  quality, full parity or delivery is established by these passes.
+
+Ten inputs stay exact through the complete native run; the final eleven-input
+composite adds only the separately qualified legacy fixture text repair. All
+compiler/runtime handles join with no owned process remaining. Five current
+protected hashes/nine complete checkpoint/history/draft contexts and profiles stay
+exact, and the read-only frozen verifier passes all **349** 7422453 artifacts.
+The older inherited user-config hash difference remains retained in the previous
+packet without overwrite or attribution. LAN stays offline. No host/browser/
+capture, protected configuration/enrollment/cleanup retry, approval bypass or
+sub-agent occurs; manual scripts remain on-demand only.
+
+Retained failures are not accepted evidence: missing fixture scalar utility
+imports; ordinary InvokeTool used instead of trusted InvokeBuild for job polling;
+the real pool's baseline-helper selection refused at exact completion; optional
+diagnostic-member assumptions; and the public response layer dropping the new
+proposed-file field. Repairs follow actual joins. Complete final runtime replaces
+partial passes; typed metadata is never rebound onto execution with different
+inputs. Earlier two-warning legacy logs are retained beside the clean rerun.
+
+Stop source-group/formatter/fixture/compiler variants. Return to semantic
+supporting-file membership using the existing typed file-change/review owner;
+general helper declarations/completion, source grammar and full source/quality/
+budgets/parity/observing delivery retain their existing owners. The full original
+Nyx/Studio objective and workflow criterion five remain open. WORK.md records this
+boundary without inventing completion credit; final source/remote and accepted-log
+identities are recorded in the private packet.
+
+## Previous integration: Ordinary Pascal file management — 2026-10-17
 
 The preceding 459020f integration supplied exact helper diagnostics/navigation.
 Original NS-4 criterion two / NS-5 compiler ownership still lacked ordinary file

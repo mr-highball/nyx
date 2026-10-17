@@ -313,6 +313,66 @@ messages with no invented coordinates. General declaration navigation, semantic
 helper navigation and completion remain separate outcomes. WORK.md owns the
 ongoing actual editor qualification; this contract alone proves no target input.
 
+## Semantic source-file windows and grouped edits
+
+Current-source `nyx_pascal` adds `mode:files`: accepted main/unit/include
+identities in authored order, twenty by default and fifty maximum. Use `offset`
+and `limit`, and pin `expectedRevision` while paging. Each entry contains a
+round-trippable `file` selector, title and pending-buffer indicator. No source
+text or host path is returned. Main uses `{"kind":"main"}`; helpers use
+`{"kind":"unit","name":"example.presenter.pas"}` or
+`{"kind":"include","name":"presenter-body.inc"}`. Names/extensions/case must
+match the accepted inventory exactly; missing helpers never fall back to main.
+
+Pass that selector to `mode:unit` to read an accepted helper window. The existing
+zero-based Unicode-scalar `offset` or one-based source `line` selects the start;
+`count` remains capped at 4096 scalars. A helper's unfinished buffer stays local,
+and `pendingDraft` reports it without substituting that text for accepted input.
+Omitting `file` retains the original main-unit query/response contract.
+
+Each `mode:edit-unit` change can likewise carry `file`. Omitted selectors retain
+main-source semantics. One group can interleave main, unit and include ranges;
+each file's ranges must remain ascending and nonoverlapping in its ORIGINAL
+accepted text. The sixteen-change and 262144-scalar expected/replacement-side
+budgets apply to the entire group. Exact expected text, current revision, owning
+transport, operation identity, permission and all pending-source guards remain.
+Membership, names, main identity, order and limits cannot change through ranges.
+Use deliberate Files authoring for inventory changes; this schema does not yet
+add semantic creation/removal or declaration/completion operations for helpers.
+
+The typed preparation API shares the existing scalar patcher:
+
+```pascal
+LFile := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('presenter-body.inc'));
+LPatch := NyxSourceProjectPatch([
+  NyxSourceFileEdit(LFile, NyxSourceEdit(LOffset, LExpected, LReplacement)),
+  NyxSourceFileEdit(TNyxPascalSourceRef.Main,
+    NyxSourceEdit(LMainOffset, LMainExpected, LMainReplacement))
+]);
+LProposedInputs := LPatch.PrepareProject(LAcceptedInputs);
+LRequest := LSession.PrepareSourceEditRequest(LProposedInputs, NyxSchemaRevision);
+```
+
+Preparation returns independent validated source data and a sealed request. It
+does not compile, execute, replace visible buffers or publish a document. The
+owning semantic compiler constructs the exact complete project before one paired
+Undo publication. Supporting-file groups require that compiler even when main
+text is unchanged or its prior origin is literal. A newer main/helper draft,
+changed revision/context/profile or failed construction/publication refuses the
+whole result. Existing main-only declarative admission stays separate.
+
+For these grouped project jobs only, bounded `nyx_build` diagnostic rows can add
+`submittedSource:{file,line,column}`. Those one-based Unicode-scalar coordinates
+belong to the immutable proposed file. Existing `navigable`, `line` and `column`
+retain main-only current-source navigation meaning; a helper failure never
+masquerades as a main-file caret location. No proposed source is returned in the
+diagnostic row. Poll `publication.state` and its revision to establish success;
+compiler success alone does not establish paired editor publication.
+
+This extends the existing tool in current source, with no new tool name or
+installed-release claim. WORK.md owns actual native/compiler/observing evidence
+separately from browser compilation and the existing HTTP/delivery gate.
+
 ## Creating and removing source files
 
 The current-source **Files** tab consumes the public Nyx source-file card. It

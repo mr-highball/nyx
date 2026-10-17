@@ -269,8 +269,10 @@ function CaptureNyxStudioSourceEditPublication(const AAuthority: TNyxText;
 begin
 
   if (AAuthority = '') or (ARevision < 1) or (ASchemas = nil) or
-    ABaseline.Pending or not ARequest.IsSourceEdit or not ARequest.Changed or
-    (ARequest.Source = '') or (ARequest.Source = ABaseline.Source) or
+    ABaseline.Pending or (ABaseline.FileDrafts.Count > 0) or
+    not ARequest.IsSourceEdit or not ARequest.Changed or (ARequest.Source = '') or
+    ((ARequest.Source = ABaseline.Source) and
+      (ARequest.Files.Encoded = ABaseline.Files.Encoded)) or
     (ARequest.SchemaRevision <> ASchemas.Revision) or
     (AArguments.Field('mode').AsText <> 'edit-unit') or
     (AArguments.Field('expectedRevision').AsInteger <> ARevision) then

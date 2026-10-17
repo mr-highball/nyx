@@ -102,6 +102,9 @@ type
       Both completion paths refuse intervening changes to that selected buffer. }
     FBufferBaseline: TNyxText;
     FSourceEdit: Boolean;
+    { Only a sealed complete-project range capture may replace several retained
+      inputs. It admits no membership/limit changes or visible draft staging. }
+    FProjectSourceEdit: Boolean;
     FSchemaRevision: Integer;
     FChanged: Boolean;
     function GetOrigin: TNyxSourceOrigin;
@@ -111,14 +114,14 @@ type
     { Closed captured construction origin. This lets a host choose its explicit
       compiler dispatch without guessing from comments or raw source strings. }
     property Origin: TNyxSourceOrigin read GetOrigin;
-    { Frozen candidate supporting files include only the selected helper edit
-      or explicit inventory change; other files remain accepted inputs. The
-      compiler reconstructs this exact project against Source, never later editor
-      buffers. Managed text only. }
+    { Frozen candidate supporting files contain a selected helper edit, explicit
+      inventory intent or sealed grouped source ranges. All unedited inputs stay
+      exact. Compilation uses this snapshot, never later editor buffers. }
     property Files: TNyxPascalProjectFiles read GetFiles;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
     property IsSourceEdit: Boolean read FSourceEdit;
+    property IsProjectSourceEdit: Boolean read FProjectSourceEdit;
     { The selected file alone supplies unfinished input. Other helper/main
       buffers remain outside this captured compiler candidate. }
     property FileReference: TNyxPascalSourceRef read FFile;
@@ -854,7 +857,11 @@ type
       grants no execution; an owning host must supply an admitted processor
       result at the same session/load/schema and exact accepted baseline. }
     function PrepareSourceEditRequest(const ASource: TNyxText;
-      ASchemaRevision: Integer): TNyxStudioSourceRequest;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest; overload;
+    { Stage one complete source-only group. Membership/order/main identity and
+      limits stay fixed; all unfinished buffers must be resolved first. }
+    function PrepareSourceEditRequest(const AProject: INyxPascalProject;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest; overload;
     function CompleteSourceRequest(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     { Capture a queued explicit design intent against the fresh current pair.
@@ -3748,6 +3755,11 @@ var
   LIndex: Integer;
   LFound: Boolean;
 begin
+
+  if ARequest.IsProjectSourceEdit and SourceDraftsPending then
+  begin
+    Exit(False);
+  end;
   LFound := False;
   for LIndex := 0 to SourceFileCount - 1 do
   begin
@@ -3794,7 +3806,7 @@ function TNyxStudioSession.PrepareSourceEditRequest(const ASource: TNyxText;
   ASchemaRevision: Integer): TNyxStudioSourceRequest;
 begin
 
-  if FSourceDraftPending then
+  if SourceDraftsPending then
   begin
     raise ENyxStudioDraftResolutionRequired.Create(
       'Resolve the pending Pascal draft before source edits');
@@ -3808,6 +3820,59 @@ begin
   Result.FSource := ASource;
   Result.FChanged := True;
   Result.FSourceEdit := True;
+end;
+
+function TNyxStudioSession.PrepareSourceEditRequest(const AProject: INyxPascalProject;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LProject: INyxPascalProject;
+  LOriginal: INyxPascalProject;
+  LFiles: TNyxPascalProjectFiles;
+  LIndex: Integer;
+begin
+
+  if SourceDraftsPending then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'Resolve all pending Pascal file drafts before project source edits');
+  end;
+  LProject := CaptureNyxPascalProject(AProject);
+  LOriginal := FSourceWorkspace.Capture.Files.Open(Source);
+
+  if LOriginal = nil then
+  begin
+    LOriginal := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Source)), Source);
+  end;
+
+  if (LProject.MainUnit.Name <> LOriginal.MainUnit.Name) or
+    (LProject.Count <> LOriginal.Count) or
+    (LProject.Limits.MaximumFiles <> LOriginal.Limits.MaximumFiles) or
+    (LProject.Limits.MaximumBytes <> LOriginal.Limits.MaximumBytes) then
+  begin
+    raise ENyxProjectConflict.Create('Source ranges retain the complete file inventory and limits');
+  end;
+  for LIndex := 0 to LOriginal.Count - 1 do
+  begin
+
+    if (LProject.Input(LIndex).Kind <> LOriginal.Input(LIndex).Kind) or
+      (LProject.Input(LIndex).Name <> LOriginal.Input(LIndex).Name) then
+    begin
+      raise ENyxProjectConflict.Create('Source ranges cannot rename, reorder, create or remove files');
+    end;
+  end;
+  LFiles := TNyxPascalProjectFiles.Capture(LProject);
+
+  if (LProject.Source = Source) and
+    (LFiles.Encoded = TNyxPascalProjectFiles.Capture(LOriginal).Encoded) then
+  begin
+    raise ENyxModel.Create('Project source edit requires changed accepted input');
+  end;
+  Result := PrepareSourceRequest(ASchemaRevision);
+  Result.FSource := LProject.Source;
+  Result.FInputFiles := LFiles;
+  Result.FSourceEdit := True;
+  Result.FProjectSourceEdit := True;
+  Result.FChanged := True;
 end;
 
 function TNyxStudioSession.CompleteSourceRequest(
@@ -3911,7 +3976,7 @@ begin
     LPublication.Session := Self;
     LPublication.Checkpoint := LCheckpoint;
     LPublication.RememberDraft := ARequest.IsFileEdit;
-    LPublication.AllowProjectFiles := ARequest.IsFileEdit;
+    LPublication.AllowProjectFiles := ARequest.IsFileEdit or ARequest.IsProjectSourceEdit;
     LPublication.RemainingFileDrafts := LRemainingFileDrafts;
     LPublication.UseCapturedHistory := True;
     LPublication.CapturedHistory := ARequest.FUndo;

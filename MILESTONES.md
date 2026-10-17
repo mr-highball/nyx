@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [semantic source projects](docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
+extend the existing Pascal tool with bounded file identities/helper windows and
+one compiler-backed mixed-file range group. Ordinary file creation/removal remains
+available through the public Nyx form; semantic membership/declaration/completion
+and full source/quality/parity/delivery keep their original NS-4/NS-5 owners.
+WORK.md separates actual native/compiler/observing evidence from browser
+compilation and source-only schema changes. No original full criterion/task or
+completion credit closes from this integration.
+
 Current-source [ordinary Pascal project compilation](docs/pascal-projects.md#ordinary-compiler-commands)
 retains supporting units/includes through queued source/visual edits and captured
 application/view builds. Optional whole-registry framing now retains helper

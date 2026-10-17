@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [grouped source-file authoring](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
+shares typed immutable project ranges with the semantic backend. Actual complete
+construction precedes one accepted main/helper history publication; all pending
+buffers and later edits retain their guards. Ordinary observing source selection
+and editor ownership remain part of qualification in WORK.md, separately from
+browser compilation and broader authoring quality/parity/delivery. Source-file
+completion/declaration navigation and the full original criterion two stay open.
+
 Current-source [ordinary Files authoring](../docs/pascal-projects.md#creating-and-removing-source-files)
 now provides typed unit/include templates and a named removal warning through a
 public Nyx form. Creation/removal uses the existing compiler-backed paired history;

@@ -1366,7 +1366,8 @@ begin
     begin
       LSession := ContextSession(AArguments, AOwner, AActor);
 
-      if LSession.RequiresCompiledTransaction or LImports then
+      if LSession.RequiresCompiledTransaction or LImports or
+        (LSourceEdits and LSession.SourceEditRequiresCompiler(AArguments)) then
       begin
         LArguments := NyxReviewArguments(NyxWorkspaceArguments(AArguments));
 
@@ -2257,6 +2258,7 @@ var
   LItem: TNyxDataValue;
   LDiagnostics: TNyxDataValue;
   LIndex: Integer;
+  LFieldIndex: Integer;
   AArguments: TNyxDataValue;
   LReview: TNyxReviewRef;
   LSession: TNyxAgentSession;
@@ -2486,6 +2488,20 @@ begin
         NyxField('message', LItem.Field('message')), NyxField('line', LItem.Field('line')),
         NyxField('column', LItem.Field('column')),
         NyxField('navigable', NyxData(LCurrent and LItem.Field('mapped').AsBoolean))]);
+
+      if NyxAgentHas(LItem, 'submittedSource') then
+      begin
+        { This already bounded private row belongs to the immutable proposed
+          project. Preserve its identity independently of current navigation. }
+        SetLength(LFields, LItems[LIndex].Count + 1);
+        for LFieldIndex := 0 to LItems[LIndex].Count - 1 do
+        begin
+          LFields[LFieldIndex] := NyxField(LItems[LIndex].Key(LFieldIndex),
+            LItems[LIndex].Field(LItems[LIndex].Key(LFieldIndex)));
+        end;
+        LFields[High(LFields)] := NyxField('submittedSource', LItem.Field('submittedSource'));
+        LItems[LIndex] := NyxObject(LFields);
+      end;
     end;
     SetLength(LFields, Result.Count + 3);
     for LIndex := 0 to Result.Count - 1 do
@@ -2740,7 +2756,17 @@ begin
   end
   else if AName = 'nyx_pascal' then
   begin
-    LDescription := 'On compiler-admitted handwritten projects, mode apply stages the exact ' +
+    LDescription := 'Files mode pages accepted main/unit/include identities without source text ' +
+      '(20 default, 50 maximum), with optional expectedRevision. Reuse its exact file selector ' +
+      'in unit windows, or in individual edit-unit changes. Omitted selectors retain main ' +
+      'source semantics. Supporting-file edits require one compiler-backed project group, ' +
+      'including mixed main/helper ranges, and publish one paired Undo command. Per-file ' +
+      'ranges are ascending/nonoverlapping in original accepted text; files may interleave. ' +
+      'The 16-change and 262144-scalar text-side budgets cover the whole group. All pending ' +
+      'main/helper drafts refuse. Membership, names, order and limits remain unchanged. ' +
+      'Poll the ordinary nyx_build job; submittedSource diagnostics describe its immutable ' +
+      'proposed file, never a current-editor navigation action. ' +
+      'On compiler-admitted handwritten projects, mode apply stages the exact ' +
       'guarded callback-body group and returns a native constructor job. The job has operation ' +
       'handlers, purpose transaction, scope construction and bounded proposedHandlers rows. ' +
       'Use nyx_build status/jobs/cancel in the same owning context; only publication.state ' +
@@ -2773,6 +2799,9 @@ begin
       'only committed includes the published revision. Polling can complete an already admitted ' +
       'semantic group as one paired Undo step. Failed/unpublished diagnostics cannot navigate ' +
       'active source. Constructor jobs have no application artifacts and cannot preview/launch. ' +
+      'Grouped project source jobs may include submittedSource {file,line,column} on mapped ' +
+      'diagnostic rows. Those one-based positions belong to the proposed file, independently ' +
+      'of existing main-only navigable/line/column navigation fields. ' +
       'Ordinary application build jobs retain the following contract. ' + ADescription;
   end;
 
@@ -3669,6 +3698,15 @@ begin
 end;
 
 function NyxStudioMCPTools: TNyxDataValue;
+const
+  { Closed portable source identities. Main has no name, and helper leaves do
+    not admit host paths; runtime admission additionally verifies membership. }
+  CSourceFileSelector: TNyxText =
+    '{"oneOf":[{"type":"object","properties":{"kind":{"const":"main"}},' +
+    '"required":["kind"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"kind":{"enum":["unit","include"]},' +
+    '"name":{"type":"string","minLength":1,"maxLength":124}},' +
+    '"required":["kind","name"],"additionalProperties":false}]}';
 var
   LMenuBarOperation: TNyxDataValue;
   LTabsOperation: TNyxDataValue;
@@ -3949,8 +3987,9 @@ Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substrin
         '{"type":"object","properties":{"mode":{"const":"edit-declarations"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"oneOf":[{"type":"object","properties":{"op":{"const":"create"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"edit"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedImplementation":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","expectedImplementation","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"remove"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"signature"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false}]}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"views"},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-views"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"expected":{"type":"string","maxLength":262144},"builder":{"type":"string","maxLength":262144}},"required":["mode","expectedRevision","operationId","expected","builder"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"unit"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4194304},"line":{"type":"integer","minimum":1,"maximum":1000000},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode"],"allOf":[{"not":{"required":["line","offset"]}}],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"edit-unit"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":4194304},"expected":{"type":"string","maxLength":262144},"replacement":{"type":"string","maxLength":262144}},"required":["offset","expected","replacement"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}'), False),
+        '{"type":"object","properties":{"mode":{"const":"files"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"unit"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4194304},"line":{"type":"integer","minimum":1,"maximum":1000000},"count":{"type":"integer","minimum":1,"maximum":4096},"file":' + CSourceFileSelector + '},"required":["mode"],"allOf":[{"not":{"required":["line","offset"]}}],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"edit-unit"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":4194304},"expected":{"type":"string","maxLength":262144},"replacement":{"type":"string","maxLength":262144},"file":' + CSourceFileSelector + '},"required":["offset","expected","replacement"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}'), False),
     Tool('nyx_roots', 'Review removal of 1..16 exact page/reusable roots, then apply the unchanged group as ONE paired Undo step. Inspect roots through nyx_outline. Review reports descendant/callback counts and retained reusable dependencies; dependencies block removal. Pascal imports, helpers, handler classes and state defaults remain; compile afterward to check application references to removed IDs. Review requires expectedRevision and no draft; apply also requires Allow edits, unique operationId and its current actor/revision/exact-roots reviewID. Eight reviews are retained. This is active-document cleanup, not an isolated review workspace.',
       TNyxDataValue.ParseJSON('{"type":"object","properties":{' +
         '"mode":{"enum":["review","apply"]},"expectedRevision":{"type":"integer","minimum":1},' +

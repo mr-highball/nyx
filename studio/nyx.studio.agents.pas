@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
-  nyx.expressions, nyx.expressions.editing, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.expressions, nyx.expressions.editing, nyx.pascal.project,
+  nyx.pascal.drafts, nyx.pascal.filechanges,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
   nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
@@ -190,6 +191,8 @@ type
     { Bounded accepted-unit context and exact range groups share ordinary paired
       admission; no pending draft or compiler profile is edited through this API. }
     function SourceUnit(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
+    { Paged typed source identities only; no file text or host path is returned. }
+    function SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     { Reused at admission and completion. Tickets belong to the exact transport,
@@ -351,6 +354,9 @@ type
     function CaptureSourceEditPublication(const AArguments: TNyxDataValue;
       out ARequest: TNyxStudioSourceRequest;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Supporting-input edits always need construction, including a literal main
+      baseline. This decision grants no admission; capture validates all fields. }
+    function SourceEditRequiresCompiler(const AArguments: TNyxDataValue): Boolean;
     { Whole-unit and body-only operations share the same bounded Pascal-tool
       retry budget; changed arguments or cross-tool operation IDs refuse. }
     function SourceEditReceipt(const AOwner: TNyxText;
@@ -2779,6 +2785,71 @@ begin
     NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
+{ Public selectors name portable accepted files, never paths or an implicit
+  fallback. Main has no name; helper leaves retain their exact extension/case. }
+function SourceFileSelection(const AData: TNyxDataValue): TNyxPascalSourceRef;
+var
+  LKind: TNyxText;
+  LName: TNyxText;
+begin
+  NyxAgentFields(AData, '|kind|name|');
+  LKind := TextArgument(AData, 'kind');
+
+  if LKind = 'main' then
+  begin
+
+    if AData.Count <> 1 then
+    begin
+      raise ENyxModel.Create('Main source selection has no helper name');
+    end;
+    Exit(TNyxPascalSourceRef.Main);
+  end;
+
+  if (AData.Count <> 2) or not NyxAgentHas(AData, 'name') then
+  begin
+    raise ENyxModel.Create('Supporting source selection requires its exact kind and name');
+  end;
+  LName := TextArgument(AData, 'name');
+
+  if LKind = 'unit' then
+  begin
+
+    if (Length(LName) <= 4) or (Copy(LName, Length(LName) - 3, 4) <> '.pas') then
+    begin
+      raise ENyxModel.Create('A unit source selector requires its exact .pas leaf');
+    end;
+    Result := TNyxPascalSourceRef.UnitFile(NyxPascalUnit(Copy(LName, 1, Length(LName) - 4)));
+  end
+  else if LKind = 'include' then
+  begin
+    Result := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude(LName));
+  end
+  else
+  begin
+    raise ENyxModel.Create('Source selection kind must be main, unit or include');
+  end;
+end;
+
+{ Small round-trippable identities keep discovery independent of source size. }
+function SourceFileSelectionData(const AFile: TNyxPascalSourceRef): TNyxDataValue;
+var
+  LKind: TNyxText;
+begin
+
+  if AFile.Role = npsMain then
+  begin
+    Exit(NyxObject([NyxField('kind', NyxData('main'))]));
+  end;
+  LKind := 'unit';
+
+  if AFile.Role = npsInclude then
+  begin
+    LKind := 'include';
+  end;
+  Result := NyxObject([NyxField('kind', NyxData(LKind)),
+    NyxField('name', NyxData(AFile.Name))]);
+end;
+
 { This strict wire decoder is shared by literal admission and compiler capture.
   The immutable patch recaptures ordered scalar ranges and both text budgets. }
 function ReadSourceEditPatch(const AChanges: TNyxDataValue): INyxSourcePatch;
@@ -2797,7 +2868,13 @@ begin
   for LIndex := 0 to AChanges.Count - 1 do
   begin
     LChange := AChanges.Item(LIndex);
-    NyxAgentFields(LChange, '|offset|expected|replacement|');
+    NyxAgentFields(LChange, '|offset|expected|replacement|file|');
+
+    if NyxAgentHas(LChange, 'file') and
+      (SourceFileSelection(LChange.Field('file')).Role <> npsMain) then
+    begin
+      raise ENyxModel.Create('Supporting source ranges require project compiler preparation');
+    end;
 
     if not NyxAgentHas(LChange, 'offset') or
       not NyxAgentHas(LChange, 'expected') or
@@ -2810,6 +2887,96 @@ begin
       TextArgument(LChange, 'replacement'));
   end;
   Result := NyxSourcePatch(LEdits);
+end;
+
+{ File groups reuse the same scalar ranges and complete group budgets. Omitted
+  selectors retain legacy main semantics; all other identities are explicit. }
+function ReadSourceProjectEditPatch(const AChanges: TNyxDataValue): INyxSourceProjectPatch;
+var
+  LChange: TNyxDataValue;
+  LFile: TNyxPascalSourceRef;
+  LEdits: array of TNyxSourceFileEdit;
+  LIndex: Integer;
+begin
+
+  if (AChanges.Kind <> ndArray) or (AChanges.Count < 1) or
+    (AChanges.Count > NyxMaximumSourceEdits) then
+  begin
+    raise ENyxModel.Create('Source edits require 1..16 changes');
+  end;
+  SetLength(LEdits, AChanges.Count);
+  for LIndex := 0 to AChanges.Count - 1 do
+  begin
+    LChange := AChanges.Item(LIndex);
+    NyxAgentFields(LChange, '|offset|expected|replacement|file|');
+
+    if not NyxAgentHas(LChange, 'offset') or
+      not NyxAgentHas(LChange, 'expected') or not NyxAgentHas(LChange, 'replacement') then
+    begin
+      raise ENyxModel.Create('Source changes require offset, expected and replacement');
+    end;
+    LFile := TNyxPascalSourceRef.Main;
+
+    if NyxAgentHas(LChange, 'file') then
+    begin
+      LFile := SourceFileSelection(LChange.Field('file'));
+    end;
+    LEdits[LIndex] := NyxSourceFileEdit(LFile, NyxSourceEdit(
+      IntegerArgument(LChange, 'offset', 0, 0, NyxMaximumSourceCharacters),
+      TextArgument(LChange, 'expected'), TextArgument(LChange, 'replacement')));
+  end;
+  Result := NyxSourceProjectPatch(LEdits);
+end;
+
+function TNyxAgentSession.SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LOffset: Integer;
+  LLimit: Integer;
+  LCount: Integer;
+  LIndex: Integer;
+  LFile: TNyxPascalSourceRef;
+  LItems: array of TNyxDataValue;
+  LPending: Boolean;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|limit|');
+
+  if NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4096);
+  LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
+  LCount := FSession.SourceFileCount;
+
+  if LOffset > LCount then
+  begin
+    raise ENyxModel.Create('Source file offset is outside the accepted inventory');
+  end;
+
+  if LLimit > LCount - LOffset then
+  begin
+    LLimit := LCount - LOffset;
+  end;
+  SetLength(LItems, LLimit);
+  for LIndex := 0 to LLimit - 1 do
+  begin
+    LFile := FSession.SourceFile(LOffset + LIndex);
+    LPending := FSession.SourceDraftPending;
+
+    if LFile.Role <> npsMain then
+    begin
+      LPending := FSession.FileDrafts.Contains(LFile);
+    end;
+    LItems[LIndex] := NyxObject([
+      NyxField('file', SourceFileSelectionData(LFile)),
+      NyxField('title', NyxData(FSession.SourceFileTitle(LFile))),
+      NyxField('pendingDraft', NyxData(LPending))]);
+  end;
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LCount)),
+    NyxField('nextOffset', NyxData(LOffset + LLimit)),
+    NyxField('files', NyxArray(LItems)),
+    NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
 end;
 
 function TNyxAgentSession.SourceUnit(const AArguments: TNyxDataValue;
@@ -2827,6 +2994,8 @@ var
   LScalar: Integer;
   LRequestedLine: Integer;
   LScannedOffset: Integer;
+  LFile: TNyxPascalSourceRef;
+  LPending: Boolean;
 begin
 
   if AApply then
@@ -2834,7 +3003,7 @@ begin
     NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
     RequireRevision(AArguments);
 
-    if RequiresCompiledTransaction then
+    if SourceEditRequiresCompiler(AArguments) then
     begin
       raise ENyxProjectConflict.Create(
         'Executed source edits require the owning compiler-aware MCP transport');
@@ -2847,7 +3016,7 @@ begin
     FSession.AdoptProject(LPair);
     Exit;
   end;
-  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|line|count|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|line|count|file|');
 
   if NyxAgentHas(AArguments, 'offset') and NyxAgentHas(AArguments, 'line') then
   begin
@@ -2860,7 +3029,19 @@ begin
   end;
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumSourceCharacters);
   LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
-  LSource := FSession.Source;
+  LFile := TNyxPascalSourceRef.Main;
+
+  if NyxAgentHas(AArguments, 'file') then
+  begin
+    LFile := SourceFileSelection(AArguments.Field('file'));
+  end;
+  LSource := FSession.SourceFileText(LFile);
+  LPending := FSession.SourceDraftPending;
+
+  if LFile.Role <> npsMain then
+  begin
+    LPending := FSession.FileDrafts.Contains(LFile);
+  end;
   LLine := 1;
   LCursor := 1;
   LRequestedLine := 0;
@@ -2921,7 +3102,12 @@ begin
     NyxField('text', NyxData(LText)),
     NyxField('maximumChanges', NyxData(NyxMaximumSourceEdits)),
     NyxField('maximumEditCharacters', NyxData(NyxMaximumSourceEditCharacters)),
-    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
+    NyxField('pendingDraft', NyxData(LPending))]);
+
+  if NyxAgentHas(AArguments, 'file') then
+  begin
+    Result := WithResults(Result, SourceFileSelectionData(LFile), 'file');
+  end;
 end;
 
 function TNyxAgentSession.Imports(const AArguments: TNyxDataValue;
@@ -3376,7 +3562,11 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if LSourceApply or (TextArgument(AArguments, 'mode') = 'unit') then
+      if TextArgument(AArguments, 'mode') = 'files' then
+      begin
+        Result := SourceFiles(AArguments);
+      end
+      else if LSourceApply or (TextArgument(AArguments, 'mode') = 'unit') then
       begin
         Result := SourceUnit(AArguments, LSourceApply);
         LSourceResults := Result;
@@ -4121,31 +4311,84 @@ function TNyxAgentSession.CaptureSourceEditPublication(const AArguments: TNyxDat
 var
   LPatch: INyxSourcePatch;
   LPreparation: INyxSourcePatchPreparation;
+  LProjectPatch: INyxSourceProjectPatch;
+  LInputs: INyxPascalProject;
+  LProjectGroup: Boolean;
+  LChanges: TNyxDataValue;
+  LIndex: Integer;
 begin
   NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
   RequireRevision(AArguments);
 
   if (AArguments.Field('mode').AsText <> 'edit-unit') or
-    (FPermission <> apEdit) or not RequiresCompiledTransaction then
+    (FPermission <> apEdit) or not SourceEditRequiresCompiler(AArguments) then
   begin
-    raise ENyxModel.Create('Compiled source edits require Allow edits and an executed baseline');
+    raise ENyxModel.Create('Compiled source edits require Allow edits and a captured compiler intent');
   end;
   Result := FSession.ProjectSnapshot;
 
-  if Result.Pending then
+  if Result.Pending or (Result.FileDrafts.Count > 0) then
   begin
     raise ENyxStudioDraftResolutionRequired.Create(
       'Resolve the pending Pascal draft before source edits');
   end;
-  LPatch := ReadSourceEditPatch(AArguments.Field('changes'));
+  LChanges := AArguments.Field('changes');
+  LProjectGroup := False;
+  for LIndex := 0 to LChanges.Count - 1 do
+  begin
+
+    if NyxAgentHas(LChanges.Item(LIndex), 'file') and
+      (SourceFileSelection(LChanges.Item(LIndex).Field('file')).Role <> npsMain) then
+    begin
+      LProjectGroup := True;
+    end;
+  end;
+  ASchemas := CaptureNyxSchemas;
+
+  if LProjectGroup then
+  begin
+    LProjectPatch := ReadSourceProjectEditPatch(LChanges);
+    LInputs := Result.Files.Open(Result.Source);
+
+    if LInputs = nil then
+    begin
+      LInputs := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Result.Source)), Result.Source);
+    end;
+    ARequest := FSession.PrepareSourceEditRequest(
+      LProjectPatch.PrepareProject(LInputs), ASchemas.Revision);
+    Exit;
+  end;
+  LPatch := ReadSourceEditPatch(LChanges);
 
   if not Supports(LPatch, INyxSourcePatchPreparation, LPreparation) then
   begin
     raise ENyxModel.Create('Source patch has no independent text preparation');
   end;
-  ASchemas := CaptureNyxSchemas;
   ARequest := FSession.PrepareSourceEditRequest(
     LPreparation.PrepareSource(Result.Source), ASchemas.Revision);
+end;
+
+function TNyxAgentSession.SourceEditRequiresCompiler(const AArguments: TNyxDataValue): Boolean;
+var
+  LChanges: TNyxDataValue;
+  LIndex: Integer;
+begin
+  Result := RequiresCompiledTransaction;
+
+  if Result then
+  begin
+    Exit;
+  end;
+  LChanges := AArguments.Field('changes');
+  for LIndex := 0 to LChanges.Count - 1 do
+  begin
+
+    if NyxAgentHas(LChanges.Item(LIndex), 'file') and
+      (SourceFileSelection(LChanges.Item(LIndex).Field('file')).Role <> npsMain) then
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 function TNyxAgentSession.CaptureTransactionPublication(const AArguments: TNyxDataValue;

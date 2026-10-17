@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source [semantic project ranges](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
+capture a fixed-inventory main/unit/include candidate and execute those exact
+request files in the existing constructor pool. Baseline helpers cannot satisfy
+that result, even when main text is unchanged. Failed/stale construction retains
+the complete accepted pair; one successful group has one paired history entry.
+Bounded proposed-file diagnostic sites survive the public build-response layer
+without enabling current-source navigation. WORK.md owns actual compiler/native
+observation and retained failures separately from browser compilation, cache/
+reload/HTTP/delivery and full original criteria/credit.
+
 Current-source [typed file membership](../docs/pascal-projects.md#creating-and-removing-source-files)
 retains one create/remove intent through the ordinary compiler queue and exact
 paired publication. Optional shared capabilities refuse older providers before

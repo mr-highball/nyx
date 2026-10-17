@@ -552,6 +552,47 @@ begin
   Result := NyxObject(LFields);
 end;
 
+{ A grouped source job keeps proposed text outside the editor. Its diagnostic
+  coordinates name that immutable submitted file, and deliberately leave the
+  existing main-only navigation fields unchanged. No source text is returned. }
+function WithSubmittedSource(const ARow: TNyxDataValue;
+  const AItem: TNyxCompilerDiagnostic): TNyxDataValue;
+var
+  LFile: TNyxDataValue;
+  LKind: TNyxText;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+begin
+  Result := ARow;
+
+  if not AItem.Navigable then
+  begin
+    Exit;
+  end;
+  LFile := NyxObject([NyxField('kind', NyxData('main'))]);
+
+  if AItem.SourceFile.Role <> npsMain then
+  begin
+    LKind := 'unit';
+
+    if AItem.SourceFile.Role = npsInclude then
+    begin
+      LKind := 'include';
+    end;
+    LFile := NyxObject([NyxField('kind', NyxData(LKind)),
+      NyxField('name', NyxData(AItem.SourceFile.Name))]);
+  end;
+  SetLength(LFields, ARow.Count + 1);
+  for LIndex := 0 to ARow.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(ARow.Key(LIndex), ARow.Field(ARow.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('submittedSource', NyxObject([
+    NyxField('file', LFile), NyxField('line', NyxData(AItem.SourceLine)),
+    NyxField('column', NyxData(AItem.SourceColumn))]));
+  Result := NyxObject(LFields);
+end;
+
 function TBuildJob.Snapshot(AOffset, ALimit: Integer;
   const ASeverity: TNyxText): TNyxDataValue;
 var
@@ -646,6 +687,11 @@ begin
         NyxField('line', NyxData(LSourceLine)),
         NyxField('column', NyxData(LSourceColumn)),
         NyxField('mapped', NyxData(LMapped))]);
+
+      if SourcePublication.IsSourceEdit and SourcePublication.Request.IsProjectSourceEdit then
+      begin
+        LItems[LCount] := WithSubmittedSource(LItems[LCount], LItem);
+      end;
       Inc(LCount);
     end;
     SetLength(LItems, LCount);
@@ -1417,8 +1463,11 @@ begin
       else
       begin
 
-        if APublication.Request.IsFileEdit then
+        if APublication.Request.IsFileEdit or APublication.Request.IsProjectSourceEdit then
         begin
+          { A general project range group can change several helper inputs even
+            while main text is unchanged. Execute the SEALED candidate inventory;
+            binding new metadata onto construction with baseline helpers refuses. }
           LSourceFiles := APublication.Request.Files;
         end
         else

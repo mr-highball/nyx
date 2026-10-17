@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source nyx_pascal adds bounded file identities/helper windows and typed
+mixed main/unit/include ranges through the existing 24-tool inventory. Exact
+project inputs construct once before one paired Undo publication; helper-only
+updates cannot use baseline files or main-only literal admission. Proposed helper
+diagnostics survive the public response with separate submittedSource coordinates.
+Actual native 111 at desktop/compact qualifies mounted memo/model text, selection,
+history/retry/refusal and late drafts; portable 52, final compiler legacy 60 and
+source/report 341 pass, clean heaps. Both Studios/backend/worker/consumers compile;
+final owned warnings and 19 child-log warnings are zero, with 21 upstream pas2js
+warnings separate. WORK.md owns composite source boundaries and retained failures.
+Five protected hashes/nine complete contexts and 349 frozen artifacts remain exact.
+All handles join; LAN stays offline. Source schema changes are not installed.
+Stop range/formatter/fixture/compiler variants. Return to semantic supporting-file
+membership through existing typed file/review ownership; helper declarations/
+completion, full source/quality/budgets/parity/delivery retain owners. No original
+full criterion/task/DONE/counter/credit, new tool or rollout closes. No host/browser/
+capture, protected configuration/enrollment/cleanup retry, approval bypass or
+sub-agents. Cleanup/helper scripts remain on-demand only.
+
 Current-source Files authoring uses public typed unit/include creation and named
 reviewed removal through both ordinary controllers, sealed compiler candidates
 and exact paired history. Independent drafts/first bases stay retained; FIFO

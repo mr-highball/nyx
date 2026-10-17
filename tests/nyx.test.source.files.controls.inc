@@ -20,12 +20,18 @@
   SOFTWARE.
 }
 
+type
+  { Focused journeys reuse the actual editor/provider owner. Semantic mode
+    exercises the production tools with ordinary observing controls; it never
+    substitutes a new listener, browser or trusted source publication. }
+  TNyxSourceFileJourney = (sfjFull, sfjFeedback, sfjSemantic);
+
 { Same maintained ordinary-input harness, with no capture/HTTP execution. Both
   local and connected modes use real compiler processes; the connected transport
   substitutes sockets only, preserving the production backend/provider/bridge.
   Every project, recovery seed and machine profile belongs to this fresh packet. }
 procedure RunSourceFileControls(const ADirectories: TNyxStudioDirectories;
-  const ATools: TNyxDataValue; AFeedbackOnly: Boolean);
+  const ATools: TNyxDataValue; AJourney: TNyxSourceFileJourney);
 const
   CInitial: TNyxText = 'An independent first plan';
   CChanged: TNyxText = 'A file-authored plan 🚀 𐐷';
@@ -249,6 +255,330 @@ var
         'mounted text and exact code model come from the selected independent buffer');
     end;
 
+    { Actual production semantic dispatch and constructor workers publish into
+      this ordinary connected editor. No accepted buffer is written by the test;
+      the copied initial seed remains trusted setup, not semantic import evidence. }
+    procedure SemanticFiles;
+    const
+      COwner: TNyxText = 'semantic-file-qualification';
+      CActor: TNyxText = 'Source project qualification';
+      CBadValue: TNyxText = '{ 🚀 𐐷 } MissingSemanticValue';
+    var
+      LFiles: TNyxDataValue;
+      LWindow: TNyxDataValue;
+      LArguments: TNyxDataValue;
+      LReceipt: TNyxDataValue;
+      LStatus: TNyxDataValue;
+      LItems: TNyxDataValue;
+      LItem: TNyxDataValue;
+      LBefore: TNyxText;
+      LAfter: TNyxText;
+      LMainText: TNyxText;
+      LUnitText: TNyxText;
+      LIncludeText: TNyxText;
+      LHelperOnlyMain: TNyxText;
+      LIndex: Integer;
+      LMember: Integer;
+      LRejected: Boolean;
+      LFound: Boolean;
+      LStarted: QWord;
+
+      function Revision: Integer;
+      begin
+        Result := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor,
+          NyxObject([NyxField('mode', NyxData('files')),
+            NyxField('limit', NyxData(1))])).Field('revision').AsInteger;
+      end;
+
+      function Selector(const AFile: TNyxPascalSourceRef): TNyxDataValue;
+      var
+        LKind: TNyxText;
+      begin
+
+        if AFile.Role = npsMain then
+        begin
+          Exit(NyxObject([NyxField('kind', NyxData('main'))]));
+        end;
+        LKind := 'unit';
+
+        if AFile.Role = npsInclude then
+        begin
+          LKind := 'include';
+        end;
+        Result := NyxObject([NyxField('kind', NyxData(LKind)),
+          NyxField('name', NyxData(AFile.Name))]);
+      end;
+
+      function Change(const AFile: TNyxPascalSourceRef; const AText,
+        AExpected, AReplacement: TNyxText; AAppend: Boolean = False): TNyxDataValue;
+      var
+        LAt: Integer;
+        LOffset: Integer;
+      begin
+        LAt := Pos(AExpected, AText);
+
+        if AAppend then
+        begin
+          LAt := Length(AText) + 1;
+        end;
+        Check(LAt > 0, 'semantic fixture owns the exact requested source span');
+        LOffset := NyxTextScalarCount(Copy(AText, 1, LAt - 1));
+        LWindow := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, NyxObject([
+          NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(Revision)),
+          NyxField('file', Selector(AFile)), NyxField('offset', NyxData(LOffset)),
+          NyxField('count', NyxData(4096))]));
+        Check((LWindow.Field('file').ToJSON = Selector(AFile).ToJSON) and
+          (Copy(LWindow.Field('text').AsText, 1, Length(AExpected)) = AExpected),
+          'bounded semantic text windows retain exact file identity and Unicode expectations');
+        Result := NyxObject([NyxField('file', Selector(AFile)),
+          NyxField('offset', NyxData(LOffset)), NyxField('expected', NyxData(AExpected)),
+          NyxField('replacement', NyxData(AReplacement))]);
+      end;
+
+      function Arguments(const AOperation: TNyxText;
+        const AChanges: array of TNyxDataValue): TNyxDataValue;
+      begin
+        Result := NyxObject([NyxField('mode', NyxData('edit-unit')),
+          NyxField('expectedRevision', NyxData(Revision)),
+          NyxField('operationId', NyxData(AOperation)), NyxField('changes', NyxArray(AChanges))]);
+      end;
+
+      function Apply(const AArguments: TNyxDataValue): TNyxDataValue;
+      begin
+        Result := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, AArguments);
+      end;
+
+      function Await(const AJob: TNyxText): TNyxDataValue;
+      begin
+        LStarted := GetTickCount64;
+        repeat
+          Result := GSharedEngine.InvokeBuild(COwner, CActor, NyxObject([
+            NyxField('mode', NyxData('status')), NyxField('job', NyxData(AJob))]));
+
+          if (Result.Field('publication').Field('state').AsText = 'committed') or
+            (Result.Field('publication').Field('state').AsText = 'refused') then
+          begin
+            Settled;
+            Exit;
+          end;
+          Pump;
+          Sleep(1);
+        until GetTickCount64 - LStarted > 180000;
+        raise Exception.Create('Semantic source-file compiler/publication exceeded its budget');
+      end;
+
+      procedure RefuseRead(const AArguments: TNyxDataValue; const AReason: TNyxText);
+      var
+        LRejected: Boolean;
+        LBeforeRead: TNyxText;
+      begin
+        LBeforeRead := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LRejected := False;
+        try
+          GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, AArguments);
+        except
+          on Exception do
+          begin
+            LRejected := True;
+          end;
+        end;
+        Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRead), AReason);
+      end;
+
+    begin
+      WriteLn('SEMANTIC FILES ', LCase, ' starting');
+      Flush(Output);
+      LFiles := NyxStudioMCPTools.Field('tools');
+      Check(LFiles.Count = 24, 'source-file semantics extend the existing 24-tool inventory');
+      LFound := False;
+      for LIndex := 0 to LFiles.Count - 1 do
+      begin
+
+        if LFiles.Item(LIndex).Field('name').AsText = 'nyx_pascal' then
+        begin
+          LItems := LFiles.Item(LIndex).Field('inputSchema').Field('oneOf');
+          LFound := Pos('submittedSource', LFiles.Item(LIndex).Field('description').AsText) > 0;
+          Break;
+        end;
+      end;
+      Check(LFound and (LItems.Count > 0), 'ordinary tool discovery parses the extended bounded Pascal schema');
+      Pick(LInclude);
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      LMainText := GStudio.Session.Source;
+      LUnitText := GStudio.Session.SourceFileText(LUnit);
+      LIncludeText := GStudio.Session.SourceFileText(LInclude);
+      LFiles := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('files')), NyxField('expectedRevision', NyxData(Revision)),
+        NyxField('limit', NyxData(1))]));
+      Check((LFiles.Field('files').Count = 1) and
+        (LFiles.Field('files').Item(0).Field('file').Field('kind').AsText = 'main') and
+        (LFiles.Field('total').AsInteger = GStudio.Session.SourceFileCount) and
+        (Pos(LIncludeText, LFiles.ToJSON) = 0),
+        'semantic inventory is bounded metadata in authored order, not project/source export');
+      LFiles := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('files')), NyxField('expectedRevision', NyxData(Revision)),
+        NyxField('offset', NyxData(1)), NyxField('limit', NyxData(50))]));
+      Check((LFiles.Field('nextOffset').AsInteger = GStudio.Session.SourceFileCount) and
+        (LFiles.Field('files').Count = GStudio.Session.SourceFileCount - 1),
+        'file discovery pages the remaining exact helper identities');
+      RefuseRead(NyxObject([NyxField('mode', NyxData('files')),
+        NyxField('expectedRevision', NyxData(Revision - 1))]),
+        'stale inventory revisions refuse without moving selection or changing source');
+      RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
+        NyxField('file', NyxObject([NyxField('kind', NyxData('include')),
+          NyxField('name', NyxData('../outside.inc'))]))]),
+        'public source selectors refuse host paths');
+      RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
+        NyxField('file', NyxObject([NyxField('kind', NyxData('unit')),
+          NyxField('name', NyxData('PROJECT.values.pas'))]))]),
+        'public source selectors require the exact accepted case identity');
+      RefuseRead(NyxObject([NyxField('mode', NyxData('unit')),
+        NyxField('file', Selector(LInclude)), NyxField('line', NyxData(1000000))]),
+        'helper line navigation refuses a location outside its accepted file');
+      LWindow := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(Revision)),
+        NyxField('file', Selector(LInclude)), NyxField('line', NyxData(3)),
+        NyxField('count', NyxData(80))]));
+      Check((LWindow.Field('line').AsInteger = 3) and
+        (Pos('Result :=', LWindow.Field('text').AsText) > 0),
+        'one revision-pinned helper line query maps directly to its bounded scalar window');
+      LArguments := Arguments('semantic-files-group', [
+        Change(LUnit, LUnitText, '', #10 + '{ A retained semantic helper note. }', True),
+        Change(LInclude, LIncludeText, TNyxCodegen.TextLiteral(CInitial),
+          TNyxCodegen.TextLiteral(CChanged)),
+        Change(TNyxPascalSourceRef.Main, LMainText, '',
+          #10 + '{ A grouped main note. }', True),
+        Change(LInclude, LIncludeText, '', #10 + '{ A final include note. }', True)]);
+      LReceipt := Apply(LArguments);
+      Check((LReceipt.Field('publication').Field('state').AsText = 'pending') and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+        'one queued semantic group keeps all proposed text off the observing buffers');
+      Check(Apply(LArguments).ToJSON = LReceipt.ToJSON,
+        'exact compiler retries retain the original queue receipt and one job');
+      LStatus := Await(LReceipt.Field('job').AsText);
+      Check(LStatus.Field('publication').Field('state').AsText = 'committed',
+        'actual complete-project construction publishes the group / ' + LStatus.Field('error').AsText);
+      Check((GStudio.Session.Source <> LMainText) and
+        (GStudio.Session.SourceFileText(LUnit) <> LUnitText) and
+        (Pos(CChanged, GStudio.Session.SourceFileText(LInclude)) > 0) and
+        (GStudio.Session.Save <> LPair.Design) and
+        GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (AdjustLineBreaks(LMemo.Text, tlbsLF) = AdjustLineBreaks(
+          String(GStudio.Session.SourceFileText(LInclude)), tlbsLF)) and
+        (GStudio.CodeView.Root.Prop('value') = GStudio.Session.SourceFileText(LInclude)) and
+        (GStudio.CodeView.InputFor('studio-code') = LMemo),
+        'ordinary observing Studio retains selection/editor and constructed meaning across all changed files');
+      LAfter := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Click('action-undo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+        'one ordinary Undo restores the complete original main/unit/include pair');
+      Click('action-redo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter,
+        'one ordinary Redo restores the exact constructed multi-file source');
+      LRejected := False;
+      try
+        Apply(Arguments('semantic-files-old-expectation', [
+          NyxObject([NyxField('file', Selector(LInclude)),
+            NyxField('offset', NyxData(NyxTextScalarCount(Copy(LIncludeText, 1,
+              Pos(TNyxCodegen.TextLiteral(CInitial), LIncludeText) - 1)))),
+            NyxField('expected', NyxData(TNyxCodegen.TextLiteral(CInitial))),
+            NyxField('replacement', NyxData('''Refused'''))])]));
+      except
+        on Exception do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter),
+        'mismatched accepted helper expectations refuse the complete semantic group');
+      LIncludeText := GStudio.Session.SourceFileText(LInclude);
+      LReceipt := Apply(Arguments('semantic-files-compiler-refusal', [
+        Change(LInclude, LIncludeText, TNyxCodegen.TextLiteral(CChanged), CBadValue)]));
+      LStatus := Await(LReceipt.Field('job').AsText);
+      Check((LStatus.Field('publication').Field('state').AsText = 'refused') and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter),
+        'real helper compiler failure retains all accepted inputs and paired history');
+      LItems := LStatus.Field('diagnostics').Field('items');
+      LFound := False;
+      for LIndex := 0 to LItems.Count - 1 do
+      begin
+        LItem := LItems.Item(LIndex);
+        LWindow := NyxNull;
+        for LMember := 0 to LItem.Count - 1 do
+        begin
+
+          if LItem.Key(LMember) = 'submittedSource' then
+          begin
+            LWindow := LItem.Field('submittedSource');
+          end;
+        end;
+
+        if (LWindow.Kind = ndObject) and
+          (LWindow.Field('file').Field('kind').AsText = 'include') and
+          (LWindow.Field('file').Field('name').AsText = LInclude.Name) then
+        begin
+          LFound := (LWindow.Field('line').AsInteger > 0) and
+            (LWindow.Field('column').AsInteger > 0) and
+            not LItem.Field('navigable').AsBoolean and (LItem.Field('line').AsInteger = 0);
+          Break;
+        end;
+      end;
+      Check(LFound, 'bounded helper diagnostics name proposed Unicode coordinates without main navigation / ' +
+        LStatus.Field('diagnostics').ToJSON);
+      LMemo.Text := CMainDraft;
+      Settled;
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      LRejected := False;
+      try
+        Apply(Arguments('semantic-files-pending-refusal', [
+          Change(LUnit, GStudio.Session.SourceFileText(LUnit), '', #10 + '{ Refused. }', True)]));
+      except
+        on Exception do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+        'an independent unfinished helper buffer refuses grouped semantic source changes');
+      LFiles := GSharedEngine.InvokeTool('nyx_pascal', COwner, CActor, NyxObject([
+        NyxField('mode', NyxData('files')), NyxField('expectedRevision', NyxData(Revision))]));
+      Check(LFiles.Field('pendingDrafts').AsBoolean,
+        'bounded file discovery visibly reports independent pending source work');
+      Click('action-reset-source');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter,
+        'ordinary scoped Restore consumes only the owned qualification draft');
+      LHelperOnlyMain := GStudio.Session.Source;
+      LReceipt := Apply(Arguments('semantic-files-helper-only', [
+        Change(LInclude, LIncludeText, TNyxCodegen.TextLiteral(CChanged),
+          TNyxCodegen.TextLiteral(CInitial))]));
+      LStatus := Await(LReceipt.Field('job').AsText);
+      Check((LStatus.Field('publication').Field('state').AsText = 'committed') and
+        (GStudio.Session.Source = LHelperOnlyMain) and
+        (AdjustLineBreaks(LMemo.Text, tlbsLF) = AdjustLineBreaks(
+          String(GStudio.Session.SourceFileText(LInclude)), tlbsLF)) and
+        (Pos(CInitial, GStudio.Session.SourceFileText(LInclude)) > 0),
+        'a helper-only group constructs and publishes while main source remains unchanged');
+      LIncludeText := GStudio.Session.SourceFileText(LInclude);
+      LReceipt := Apply(Arguments('semantic-files-late-draft', [
+        Change(LInclude, LIncludeText, TNyxCodegen.TextLiteral(CInitial),
+          TNyxCodegen.TextLiteral(CChanged))]));
+      LMemo.Text := CUnitDraft;
+      Settled;
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      LStatus := Await(LReceipt.Field('job').AsText);
+      Check((LStatus.Field('publication').Field('state').AsText = 'refused') and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore) and
+        (LMemo.Text = CUnitDraft),
+        'late ordinary helper typing revokes publication and retains its exact draft/base');
+      Click('action-reset-source');
+      Settled;
+      WriteLn('SEMANTIC FILES ', LCase, ' passed');
+      Flush(Output);
+    end;
+
     { Ordinary public Files controls own the user journey. Source templates are
       project data until the existing compiler/publisher admits the candidate;
       unrelated drafts and exact paired history remain observable throughout. }
@@ -311,7 +641,7 @@ var
         (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
         'invalid creation retains its actual field and complete accepted/draft pair');
 
-      if AFeedbackOnly then
+      if AJourney = sfjFeedback then
       begin
         { The complete management journey separately qualifies compilation and
           history. This focused real-input continuation checks only ownership of
@@ -544,9 +874,14 @@ var
       LInitialInclude := GStudio.Session.SourceFileText(LInclude);
       LChangedInclude := 'function ProjectPlan: TNyxText;' + #10 + 'begin' + #10 +
         '  Result := ' + TNyxCodegen.TextLiteral(CChanged) + ';' + #10 + 'end;' + #10;
+      if AJourney = sfjSemantic then
+      begin
+        SemanticFiles;
+        Exit;
+      end;
       ManageFiles;
 
-      if AFeedbackOnly then
+      if AJourney = sfjFeedback then
       begin
         Exit;
       end;
@@ -826,14 +1161,18 @@ begin
     Check((LProjection.State = spsExecuted) and (LProjection.Design = LPair.Design),
       'initial fixture construction independently matches its expected document');
 
-    if not AFeedbackOnly then
+    if AJourney = sfjFull then
     begin
       QualifyBrowserCompilerSite;
     end;
     RunCase(1280, True);
     RunCase(390, True);
-    RunCase(1280, False);
-    RunCase(390, False);
+
+    if AJourney <> sfjSemantic then
+    begin
+      RunCase(1280, False);
+      RunCase(390, False);
+    end;
   finally
     LProjection := nil;
     LProjectVerifier := nil;

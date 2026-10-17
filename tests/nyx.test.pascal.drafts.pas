@@ -31,12 +31,16 @@ function RunNyxPascalDraftChecks: Integer;
 { Inventory/form/strict private-intent contracts only. Actual construction and
   ordinary controller input remain separate maintained consumers. }
 function RunNyxPascalFileChangeChecks: Integer;
+{ Exact multi-file range/Unicode/value/budget admission, without executing code.
+  Real compiler, semantic publication and observing input are separate checks. }
+function RunNyxPascalProjectEditChecks: Integer;
 
 implementation
 
-uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.pascal.names,
+uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.editing, nyx.pascal.names,
   nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
-  nyx.pascal.files.editor, nyx.controls, nyx.studio.sourcebuilds;
+  nyx.pascal.files.editor, nyx.controls, nyx.studio.sourcebuilds,
+  nyx.studio.sourceedits;
 
 function RunNyxPascalDraftChecks: Integer;
 const
@@ -306,6 +310,173 @@ begin
     (LForm.Node.Find('files-form-remove-confirm') <> nil),
     'the reusable confirmation names the exact reviewed target');
   LForm := nil;
+  Result := LChecks;
+end;
+
+function RunNyxPascalProjectEditChecks: Integer;
+const
+  CMain: TNyxText = 'unit ranges.views;' + #10 +
+    '{$mode delphi}{$H+}{$codepage utf8}' + #10 + 'interface' + #10 +
+    'implementation' + #10 + 'end.' + #10;
+  CInclude: TNyxText = '{ head 🚀 𐐷 ' + #0 + ' tail }' + #10;
+  CExpectedInclude: TNyxText = '{ start 🚀 𐐷 ' + #0 + ' finish }' + #10;
+var
+  LOriginal: INyxPascalProject;
+  LResult: INyxPascalProject;
+  LGroup: INyxSourceProjectPatch;
+  LEdits: array of TNyxSourceFileEdit;
+  LMain: TNyxPascalSourceRef;
+  LUnit: TNyxPascalSourceRef;
+  LInclude: TNyxPascalSourceRef;
+  LBefore: TNyxText;
+  LUnitText: TNyxText;
+  LLarge: TNyxText;
+  LRejected: Boolean;
+  LChecks: Integer;
+
+  procedure Check(AValue: Boolean; const AReason: String);
+  begin
+
+    if not AValue then
+    begin
+      raise Exception.Create(AReason);
+    end;
+    Inc(LChecks);
+  end;
+
+  function Range(const AFile: TNyxPascalSourceRef; AOffset: Integer;
+    const AExpected, AReplacement: TNyxText): TNyxSourceFileEdit;
+  begin
+    Result := NyxSourceFileEdit(AFile, NyxSourceEdit(AOffset, AExpected, AReplacement));
+  end;
+
+begin
+  LChecks := 0;
+  LMain := TNyxPascalSourceRef.Main;
+  LUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('ranges.helpers'));
+  LInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('notes.inc'));
+  LUnitText := TNyxPascalFileChange.CreateUnit(NyxPascalUnit('ranges.helpers')).Text;
+  LOriginal := NewNyxPascalProject(NyxPascalUnit('ranges.views'), CMain,
+    TNyxPascalProjectLimits.Defaults.UpToFiles(8).UpToBytes(8192))
+    .WithUnit(NyxPascalUnit('ranges.helpers'), LUnitText)
+    .WithInclude(NyxPascalInclude('notes.inc'), CInclude);
+  LBefore := TNyxPascalProjectFiles.Capture(LOriginal).Encoded;
+  SetLength(LEdits, 4);
+  LEdits[0] := Range(LUnit, NyxTextScalarCount(LUnitText), '', '{ A helper note. }');
+  LEdits[1] := Range(LInclude, NyxTextScalarCount(Copy(CInclude, 1, Pos('head', CInclude) - 1)),
+    'head', 'start');
+  LEdits[2] := Range(LMain, NyxTextScalarCount(CMain), '', '{ A main note. }');
+  LEdits[3] := Range(LInclude, NyxTextScalarCount(Copy(CInclude, 1, Pos('tail', CInclude) - 1)),
+    'tail', 'finish');
+  LGroup := NyxSourceProjectPatch(LEdits);
+  LResult := LGroup.PrepareProject(LOriginal);
+  Check((LResult.Source = CMain + '{ A main note. }') and
+    (LUnit.Text(LResult) = LUnitText + '{ A helper note. }'),
+    'one immutable group changes main and unit without altering untouched text');
+  Check(LInclude.Text(LResult) = CExpectedInclude,
+    'interleaved helper ranges retain supplementary Unicode and embedded NUL');
+  Check((LResult.Count = LOriginal.Count) and
+    (LResult.Input(0).Name = LOriginal.Input(0).Name) and
+    (LResult.Input(1).Name = LOriginal.Input(1).Name) and
+    (LResult.Limits.MaximumFiles = 8) and (LResult.Limits.MaximumBytes = 8192),
+    'range preparation retains authored inventory order, identity and tuned limits');
+  Check((LOriginal.Source = CMain) and
+    (TNyxPascalProjectFiles.Capture(LOriginal).Encoded = LBefore),
+    'complete candidate preparation never mutates its accepted provider');
+  LEdits[0] := Range(LMain, 0, 'wrong', 'replacement');
+  Check((LGroup.PrepareProject(LOriginal).Source = LResult.Source) and
+    (TNyxPascalProjectFiles.Capture(LGroup.PrepareProject(LOriginal)).Encoded =
+      TNyxPascalProjectFiles.Capture(LResult).Encoded),
+    'later caller-array mutations cannot retarget the captured group');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(LInclude, 2, 'wrong', 'replacement')]).PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'mismatched expected text refuses before any accepted publication');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(LInclude, 4, 'ad', 'x'),
+      Range(LMain, 0, '', ' '), Range(LInclude, 3, 'e', 'y')]).PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'interleaving does not permit out-of-order ranges in the same file');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(LInclude, 2, 'head', 'x'),
+      Range(LMain, 0, '', ' '), Range(LInclude, 3, 'ead', 'y')]).PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'overlapping same-file ranges refuse across intervening files');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(TNyxPascalSourceRef.IncludeFile(
+      NyxPascalInclude('NOTES.inc')), 0, '', '{ A note. }')]).PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'a case alias cannot select or create an accepted helper');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(TNyxPascalSourceRef.UnitFile(
+      NyxPascalUnit('ranges.absent')), 0, '', ' ')]).PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'missing files refuse without silently selecting main or adding membership');
+  LLarge := StringOfChar('x', 131073);
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([Range(LMain, 0, '', LLarge), Range(LInclude, 0, '', LLarge)]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'replacement budgets apply across the whole project group');
+  LRejected := False;
+  try
+    NyxSourceProjectPatch([]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'an empty project range group refuses');
+  LRejected := False;
+  try
+    SetLength(LEdits, 17);
+    NyxSourceProjectPatch(LEdits);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'more than sixteen changes refuse before inspecting partial ranges');
+  Check((LOriginal.Source = CMain) and
+    (TNyxPascalProjectFiles.Capture(LOriginal).Encoded = LBefore),
+    'all refusal cases retain the exact original project');
   Result := LChecks;
 end;
 
