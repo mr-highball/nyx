@@ -30,7 +30,94 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Retained Drawing fallback admission — 2026-10-17
+## Current integration: Native clipped Drawing paths — 2026-10-17
+
+The preceding goal turn is progress: 8bb1619 is clean/remote-matched with retained
+fallback admission and actual native evidence below. Continue original diagram
+criterion six and canvas/Drawing performance owners. Deliverable: the native
+painter avoids sampled-point allocation and draw calls for provably clipped paths,
+preserving complete admission, pixels, paint state and caller join policies.
+One unchanged six-workload baseline and one final native release matrix are the
+timing policy. Independent numeric bitmap API checks qualify complete raster
+results in memory, not screenshots or observing/visual-quality evidence. No HTTP
+host/capture/rollout, configuration refresh, cleanup retry or sub-agents.
+
+The painter reads the actual logical DC clip without substituting the LCL
+getter's fallback rectangle. Mapped control hulls include both cubic controls;
+native stroke width, endpoint/rounding slack and the caller's actual Win32 miter
+limit expand that bound. Failed/unknown clip or miter policy keeps the complete
+command. Color/metric validation and public final pen/brush/font state still run.
+The portable command list, sampling/codec, model, callbacks and browser SVG remain
+unchanged. The private bridge/helper comments identify borrowed DC lifetime,
+platform availability and conservative refusal to optimize unknown conditions.
+
+The fixed programmatic fixture passes 226 checked/optimized native painter
+checks, matching its accepted pre-change baseline. It compares all 2,654,208
+pixels across 54 direct/partial/one-pixel/empty/tiled crop cases, three zooms and
+three joins with an explicit miter limit of 25. Entering cubic curves, enclosing
+fills, thick borders, Unicode text, final paint state and invalid offscreen
+mapping/metric refusal remain covered. Both checked baseline/candidate heaps are
+clean. The program shows no host and saves no raster/image. Its comparisons are
+API evidence, not a replacement for the original input/accessibility/visual scope.
+
+The fixed native release pair changes forced repaint medians at 16/64/256 vertices
+(twice as many edges) from 11.47/23.56/83.37 to 10.36/20.02/60.47 ms at width
+800, and 9.43/23.91/82.13 to 8.76/17.59/57.94 ms at width 390. Largest synchronous
+publication remains 355.65/358.46 ms; the observed small difference from the
+365.38/365.17 baseline is not treated as a separate admission improvement.
+Allocator high-water changes by 24 bytes, from 10,093,792 to 10,093,816. The workload retains exact graph,
+revision, caller document and memo/text/caret/state, with eighteen forwarded native
+paint messages per run. These are forced WM_PAINT/hook samples, not compositor
+presentation, physical devices, browser performance or accepted production budgets.
+Both publication and painting remain too expensive for smooth manipulation.
+
+Retained prequalification failures stay separate: Win32's TBitmap name shadowed
+the fixture class, then numeric GetPixel reads outside a still-active DC clip
+returned CLR_INVALID. The fixture retires that clip before full comparison; the
+accepted fixture is frozen for both implementations. Adding the native bridge also
+required explicitly qualifying Math.Min/Max instead of Win32 integer helpers.
+The later compiler audit found an omitted explicit Close case, repeated as nine
+owned warnings. The first timed/ordinary native products remain retained as an
+intermediate, outside final acceptance. An exhaustive enum else also emitted an
+unreachable warning; Ord discrimination now retains a conservative future-kind
+fallback without suppressing warnings. This required correcting the declared
+one-candidate plan, not claiming an uninterrupted first pass. Corrected raster
+and final timing builds check warnings before execution. A runner's single scalar
+optimization flag was also refused before execution and replaced by a literal
+argument; the passed checked raster was not needlessly repeated. Affected native products
+and input/retirement runs use fresh accepted paths; unchanged portable/browser/
+whole-constructor evidence remains separately retained. Final acceptance selects
+nine corrected native compiler receipts and twenty unchanged browser/portable/
+constructor receipts: twenty-nine pass, with zero owned warnings and 91 repeated
+upstream pas2js Classes warnings. This is selective requalification after a failed
+warning gate, not an uninterrupted first-pass matrix.
+
+Corrected native Drawing input passes 25, editor 212 and ordinary Studio/runtime
+47/37 per desktop/compact width. Both full-size lifetimes and five whole exact
+constructors pass. All fifteen accepted checked runs have zero unfreed blocks.
+The eight corrected Studio exports match the already compiled exact inputs; all
+ten whole source/model inputs remain unchanged before/after both compilers. All
+ten separate companion products remain retained. Full portable output remains
+byte-exact at 1,364,909 bytes. Both mounted workload/harness and the raster fixture
+retain their baseline hashes. The new regression is included in the maintained
+canvas-drawing target; its runner passes syntax review and the Pascal consumer is
+qualified directly. The whole legacy target is not rerun to request its existing
+capture. No screenshot/HTTP/observing workaround occurs.
+
+All five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+remain exact; qualification processes have joined. Browser evidence remains
+compilation only. No full criterion/task/DONE/credit, new schema/tool/control kind,
+target parity or preserving delivery closes. Diagram eleven/canvas twelve/
+Graph-Logic thirty-eight/behavior-program zero stay unchanged. The ignored
+.local/drawing-clip-paths-private.json pointer
+owns exact baseline/source/harness/fixture identities and failure receipts.
+Feature counters and completion credit stay unchanged. Full browser input,
+accessibility/visual quality, frame/memory/production budgets, broader source and
+preserving delivery retain existing owners. LAN stays offline. Stop current
+clip/raster/timing variants after qualification; return to remaining prepared
+scene/descriptor admission and complete target-quality budgets.
+
+## Previous qualification: Retained Drawing fallback admission — 2026-10-17
 
 The preceding goal turn is progress: 92a55c8 is clean/remote-matched with exact
 mounted/source/ownership evidence below. Continue original diagram criterion six

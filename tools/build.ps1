@@ -1529,6 +1529,14 @@ try {
       "-Fu$nyxLazarus/lcl/units/$nyxDrawingPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxDrawingPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxDrawingPlatform")
+    # Programmatic bitmap crops/tiles exercise the public painter without a
+    # shown host or saved raster. Keep this regression in the maintained target.
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDrawingFlags + @('tests/nyx_drawing_clip_tests.lpr'))
+    & (Join-Path $nyxDrawingNative 'nyx_drawing_clip_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Native drawing clip/pixel/paint-state qualification failed.'
+    }
     Invoke-NyxCompiler $nyxLclFpc ($nyxDrawingFlags + @('tests/nyx_drawing_controls.lpr'))
     & (Join-Path $nyxDrawingNative 'nyx_drawing_controls.exe') (Join-Path $nyxDrawingRoot 'native.png')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native drawing/control/resource input failed.' }

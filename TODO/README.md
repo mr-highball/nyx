@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [native clipped paths](../docs/canvas.md#native-clipped-paths)
+avoid offscreen sampling/drawing while retaining strict admission, full numeric
+crop/tile results, native paint state and caller miter policy. WORK.md owns one
+accepted native comparison and ordinary/compiler/lifetime evidence, including
+the retained warning gate and corrected native qualification.
+Mounted costs still exceed smooth-input budgets; browser execution, full target
+quality/parity and delivery remain required. Counters/credit are unchanged.
+
 Current-source [Drawing fallback admission](../docs/canvas.md#retaining-saved-fallback-plans)
 retains exact source/immutable geometry per renderer binding while preserving
 descriptor changes, encoding policy, fresh provider calls and target publication.

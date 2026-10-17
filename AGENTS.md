@@ -1,5 +1,19 @@
 # Working in Nyx
 
+Current-source native clipped paths retain conservative cubic/stroke/miter bounds,
+complete admission and final canvas state. The frozen in-memory fixture passes
+226; corrected Drawing 25, editor 212 and Studio/runtime 47/37 per width, five
+whole constructors and fifteen clean-heap runs pass. Largest forced repaint falls
+from 82/83 to 58/60 ms; publication remains about 356/358 ms. Accepted compiler
+evidence is nine corrected native plus twenty unchanged receipts, zero owned
+warnings; the earlier warning-bearing candidate stays retained outside acceptance.
+Browser evidence is compilation only. WORK.md owns exact source/remote, receipts,
+failures, maintained test wiring and remaining admission/paint/frame/input/quality/
+budgets/delivery work. Five protected files/nine contexts and 349 frozen artifacts
+remain exact; LAN stays offline. Stop current clip/raster/timing variants. No full
+criterion/task/DONE/credit/parity/delivery, host/capture retry, configuration refresh,
+cleanup retry or sub-agents.
+
 Current-source Drawing fallback admission retains exact source/immutable geometry
 per binding on both adapters; changed bytes/presence/escaping policy re-admit.
 Providers and physical publication stay fresh. One fixed native pair reduces the

@@ -666,6 +666,34 @@ reader includes the caller's encoding policy in admission: a large descriptor
 that fits plainly can still refuse under stricter normalized slash escaping.
 Changing the global formatter during a read requires caller synchronization.
 
+### Native clipped paths
+
+The LCL painter tests each path's mapped control hull against the actual device
+context clip before allocating sampled/native points. Cubic controls belong to
+the hull, so a curve with offscreen endpoints can still enter the visible area.
+The bound includes rounding slack and the current native stroke width. Win32
+miter joins use the caller's actual limit; unavailable/failed limit or clip
+queries keep the complete drawing path. No clip, pen join policy or model is
+replaced. The underlying contracts are
+[GetClipBox](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getclipbox)
+and [GetMiterLimit/SetMiterLimit](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setmiterlimit).
+
+Complete plan admission, color/metric refusal and final public pen/brush/font
+state remain required even for clipped commands. Native glyph clipping remains
+with the font renderer. The browser SVG implementation is unchanged; this native
+optimization supplies no browser execution or visual-parity claim.
+
+`tests/nyx_drawing_clip_tests.lpr` compares every pixel of complete in-memory
+reference crops against direct and tiled paints across three zooms, three join
+styles, a nondefault miter limit, partial/one-pixel/empty clips, entering curves,
+wide strokes, enclosing fills and Unicode text. The unchanged fixture passes
+226 checks in the checked baseline and checked/optimized native candidate,
+including paint-state and invalid offscreen-metric refusal. It shows no
+host and saves no raster or screenshot; it is a programmatic painter check,
+separate from hardware, accessibility, observing-editor or visual-quality proof.
+The maintained `tools/build.ps1 -Target canvas-drawing` includes this native
+regression before its existing control/input journey.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission
@@ -778,6 +806,16 @@ installed-hook costs, not frame presentation or trusted input. The reductions
 still leave mounted costs too high for smooth editing. WORK.md owns exact
 receipts, failures and separate compiled-only browser evidence; full target
 quality/input/memory/production budgets and delivery stay open.
+
+Conservative native path clipping then changes forced repaint medians in one
+fixed matched release pair from 11.47/23.56/83.37 to 10.36/20.02/60.47 ms at
+16/64/256 vertices (twice as many edges) and width 800. At width 390 they change
+9.43/23.91/82.13 to 8.76/17.59/57.94 ms. The same complete workload/memo/caret/
+state and 1,364,909-byte portable result remain exact; allocator high-water is
+10,093,816 bytes, 24 above its baseline. Synchronous publication remains about 356/358 ms at the largest
+size. These forced native paint samples still exceed smooth-editing budgets and
+are not compositor/frame presentation or trusted hardware latency. WORK.md owns
+the exact receipts and separate input/lifetime/compiler qualifications.
 
 ## Remaining integration
 

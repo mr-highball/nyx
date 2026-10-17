@@ -26,7 +26,9 @@ unit nyx.drawing.lcl;
 interface
 
 uses
-  Classes, SysUtils, Math, Types, Controls, Graphics, nyx.text, nyx.data,
+  Classes, SysUtils, Math,
+  {$ifdef MSWINDOWS}Windows,{$endif}Types, Controls, Graphics, LCLIntf, LCLType,
+  nyx.text, nyx.data,
   nyx.colors, nyx.theme, nyx.design.tokens, nyx.drawing, nyx.drawing.view,
   nyx.canvas.geometry;
 
@@ -64,6 +66,111 @@ procedure PaintNyxLCLDrawing(ACanvas: TCanvas; const APlan: INyxDrawingPlan;
   const AMapping: TNyxDrawingMapping; ATheme: TNyxTheme);
 
 implementation
+
+{ Include native endpoint/rounding slack and any actual miter extension. Win32's
+  GetMiterLimit borrows the caller DC for this read only. Unknown/failed limits
+  (including other widgetsets' miter policies) disable rejection, never drawing.
+  No caller pen/join policy or device context state is changed by this query. }
+function StrokeClipMargin(ACanvas: TCanvas; AWidth: Integer; out AMargin: Double): Boolean;
+{$ifdef MSWINDOWS}
+var
+  LLimit: Single;
+{$endif}
+begin
+  AMargin := AWidth + 2;
+  Result := True;
+
+  if (AWidth > 0) and (ACanvas.Pen.JoinStyle = pjsMiter) then
+  begin
+    {$ifdef MSWINDOWS}
+    LLimit := 0;
+    Result := Windows.GetMiterLimit(ACanvas.Handle, LLimit) and not IsNan(LLimit) and
+      not IsInfinite(LLimit) and (LLimit >= 1);
+
+    if Result then
+    begin
+      AMargin := Double(AWidth) * LLimit + 2;
+    end;
+    {$else}
+    Result := False;
+    {$endif}
+  end;
+end;
+
+{ A cubic stays inside its control hull. Compare its mapped axis-aligned hull,
+  enlarged for the native stroke, with the actual logical DC clip before costly
+  sampling. Degenerate/nonfinite/out-of-native-range input falls through to the
+  existing painter rather than concealing its refusal or overflow behavior. }
+function PathOutsideClip(const APath: TNyxDrawingPath; const AMapping: TNyxDrawingMapping;
+  const AClip: TRect; AMargin: Double): Boolean;
+var
+  LStep: TNyxDrawingStep;
+  LPoint: TNyxCanvasPoint;
+  LIndex: Integer;
+  LPointIndex: Integer;
+  LPointCount: Integer;
+  LHasPoint: Boolean;
+  LLeft: Double;
+  LTop: Double;
+  LRight: Double;
+  LBottom: Double;
+begin
+  Result := False;
+  LHasPoint := False;
+  LLeft := 0;
+  LTop := 0;
+  LRight := 0;
+  LBottom := 0;
+  for LIndex := 0 to APath.StepCount - 1 do
+  begin
+    LStep := APath.Step(LIndex);
+    LPointCount := 0;
+    { Ord retains the conservative fallback without an unreachable enum branch
+      on compilers that already know today's complete instruction vocabulary. }
+    case Ord(LStep.Kind) of
+      Ord(ndskMove), Ord(ndskLine): LPointCount := 1;
+      Ord(ndskCurve): LPointCount := 3;
+      Ord(ndskClose): LPointCount := 0;
+    else
+      { A future instruction must remain visible until its hull is understood. }
+      Exit;
+    end;
+    for LPointIndex := 0 to LPointCount - 1 do
+    begin
+      LPoint := AMapping.Point(LStep.Point(LPointIndex));
+
+      if IsNan(LPoint.X) or IsInfinite(LPoint.X) or IsNan(LPoint.Y) or IsInfinite(LPoint.Y) or
+        (LPoint.X <= Low(Integer)) or (LPoint.X >= High(Integer)) or
+        (LPoint.Y <= Low(Integer)) or (LPoint.Y >= High(Integer)) then
+      begin
+        Exit;
+      end;
+
+      if not LHasPoint then
+      begin
+        LLeft := LPoint.X;
+        LRight := LPoint.X;
+        LTop := LPoint.Y;
+        LBottom := LPoint.Y;
+        LHasPoint := True;
+      end
+      else
+      begin
+        LLeft := Math.Min(LLeft, LPoint.X);
+        LRight := Math.Max(LRight, LPoint.X);
+        LTop := Math.Min(LTop, LPoint.Y);
+        LBottom := Math.Max(LBottom, LPoint.Y);
+      end;
+    end;
+  end;
+
+  if LHasPoint then
+  begin
+    Result := (AClip.Right <= AClip.Left) or (AClip.Bottom <= AClip.Top) or
+      (LRight + AMargin < AClip.Left) or (LLeft - AMargin > AClip.Right) or
+      (LBottom + AMargin < AClip.Top) or (LTop - AMargin > AClip.Bottom);
+  end;
+end;
 
 function FaceColor(const APaint: TNyxDrawingPaint; ATheme: TNyxTheme): TColor;
 var
@@ -158,12 +265,21 @@ var
   LText: TNyxText;
   LX: Integer;
   LY: Integer;
+  LClip: TRect;
+  LClipRead: Boolean;
+  LCanClip: Boolean;
+  LVisible: Boolean;
+  LStrokeWidth: Integer;
+  LMargin: Double;
 begin
+
   if (APlan = nil) or (AMapping.Scale = 0) then
   begin
     Exit;
   end;
   LCommands := NyxDrawingCommands(APlan);
+  LClipRead := False;
+  LCanClip := False;
   for LIndex := 0 to LCommands.Count - 1 do
   begin
     LCommand := LCommands.TypedCommand(LIndex);
@@ -172,13 +288,40 @@ begin
     begin
       LPath := LCommand.Path;
       LStyle := LCommand.Style;
-      LPoints := NyxDrawingPathPoints(LPath);
-      SetLength(LNative, Length(LPoints));
-      for LPointIndex := 0 to High(LPoints) do
+      LStrokeWidth := 0;
+
+      if LStyle.StrokePaint.Kind <> ndpkNone then
       begin
-        LPosition := AMapping.Point(LPoints[LPointIndex]);
-        LNative[LPointIndex] := Types.Point(Round(LPosition.X), Round(LPosition.Y));
+        { Metrics must still refuse even for a fully clipped command. }
+        LStrokeWidth := Max(1, Round(AMapping.Metric(LStyle.StrokeWidth)));
       end;
+
+      if not LClipRead then
+      begin
+        LClipRead := True;
+        { Unlike TCanvas.ClipRect's fallback rectangle, a failed native query
+          must disable optimization. The caller's DC/clip is never replaced. }
+        LCanClip := LCLIntf.GetClipBox(ACanvas.Handle, @LClip) <> LCLType.ERROR;
+      end;
+      LVisible := True;
+
+      if LCanClip and StrokeClipMargin(ACanvas, LStrokeWidth, LMargin) then
+      begin
+        LVisible := not PathOutsideClip(LPath, AMapping, LClip, LMargin);
+      end;
+
+      if LVisible then
+      begin
+        LPoints := NyxDrawingPathPoints(LPath);
+        SetLength(LNative, Length(LPoints));
+        for LPointIndex := 0 to High(LPoints) do
+        begin
+          LPosition := AMapping.Point(LPoints[LPointIndex]);
+          LNative[LPointIndex] := Types.Point(Round(LPosition.X), Round(LPosition.Y));
+        end;
+      end;
+      { Keep paint/color validation and final public canvas state identical even
+        when no sample allocation or native drawing call is needed. }
       ACanvas.Brush.Style := bsClear;
       ACanvas.Pen.Style := psClear;
 
@@ -186,7 +329,11 @@ begin
       begin
         ACanvas.Brush.Style := bsSolid;
         ACanvas.Brush.Color := FaceColor(LStyle.FillPaint, ATheme);
-        ACanvas.Polygon(LNative);
+
+        if LVisible then
+        begin
+          ACanvas.Polygon(LNative);
+        end;
       end;
 
       if LStyle.StrokePaint.Kind <> ndpkNone then
@@ -194,8 +341,12 @@ begin
         ACanvas.Brush.Style := bsClear;
         ACanvas.Pen.Style := psSolid;
         ACanvas.Pen.Color := FaceColor(LStyle.StrokePaint, ATheme);
-        ACanvas.Pen.Width := Max(1, Round(AMapping.Metric(LStyle.StrokeWidth)));
-        ACanvas.Polyline(LNative);
+        ACanvas.Pen.Width := LStrokeWidth;
+
+        if LVisible then
+        begin
+          ACanvas.Polyline(LNative);
+        end;
       end;
     end
     else if LCommand.Paint.Kind <> ndpkNone then
