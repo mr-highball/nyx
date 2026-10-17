@@ -28,6 +28,16 @@ interface
 uses nyx.pascal.project, nyx.studio.sourceprojection;
 
 type
+  { Detached projection attachment for exact supporting-file admission. This is
+    local producer data, never a wire execution flag. The trusted compiler host
+    binds it to its result; editor admission compares the entire inventory as
+    well as the ordinary exact source/design/state checks. }
+  INyxPascalProjectProjection = interface(INyxSourceProjection)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000005}']
+    function GetFiles: TNyxPascalProjectFiles;
+    property Files: TNyxPascalProjectFiles read GetFiles;
+  end;
+
   { In-process compiler receipt retaining the exact frozen main/unit/include
     snapshot. The ordinary projection still distinguishes compilation/execution.
     This facet has no wire representation and grants no editor publication,

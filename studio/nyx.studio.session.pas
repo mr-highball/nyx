@@ -493,7 +493,7 @@ type
       var AWorkspace: TNyxSourceWorkspace);
     procedure PublishCapturedPair(var ACandidate: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
-      ARememberDraft: Boolean = True);
+      ARememberDraft: Boolean = True; AAllowProjectFiles: Boolean = False);
     { Shared final publication for fully admitted independent owners. Success
       transfers/clears them; wrappers release them on refusal or an exact no-op. }
     procedure AdoptAdmittedProject(var ADocument: TNyxDocument;
@@ -1496,11 +1496,20 @@ end;
 
 procedure TNyxStudioSession.PublishCapturedPair(var ACandidate: TNyxDocument;
   var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
-  ARememberDraft: Boolean);
+  ARememberDraft: Boolean; AAllowProjectFiles: Boolean);
 var
   LPrevious: TNyxDocument;
   LPreviousSource: TNyxSourceWorkspace;
 begin
+  { Source-only/visual commands cannot accidentally drop or replace helper
+    meaning. Only complete project admission may change that inventory. Check
+    before history allocation/publication, preserving both staged owners. }
+
+  if not AAllowProjectFiles and
+    (ACheckpoint.Files.Encoded <> AWorkspace.Capture.Files.Encoded) then
+  begin
+    raise ENyxProjectConflict.Create('This command did not retain the exact supporting Pascal files');
+  end;
   FUndo.Add(NyxStudioCheckpoint(ACheckpoint,
     FSourceDraft, FSourceDraftBase, ARememberDraft and FSourceDraftPending));
   { No fallible reconciliation follows publication. Source edits already have
@@ -2560,6 +2569,7 @@ end;
 function TNyxStudioSession.ProjectSnapshot: TNyxProjectPair;
 begin
   Result := NyxProjectPair(Save, Source);
+  Result.Files := FSourceWorkspace.Capture.Files;
   Result.Pending := FSourceDraftPending;
 
   if Result.Pending then
@@ -2629,7 +2639,15 @@ begin
   finally
     LDocument.Free;
   end;
-  NyxCompanionUnitName(Result.FPair.Source);
+
+  if Result.FPair.Files.IsEmpty then
+  begin
+    NyxCompanionUnitName(Result.FPair.Source);
+  end
+  else
+  begin
+    Result.FPair.Files.Open(Result.FPair.Source);
+  end;
   Result.FOwner := FSourceIdentity;
   Result.FGeneration := FSourceGeneration;
   Result.FBaseline := EncodeNyxProject(ProjectSnapshot);
@@ -2682,6 +2700,11 @@ begin
   LPublication.Pair := ARequest.FPair;
   LPublication.Pair.Design := APrepared.Design;
   APrepared.Take(LPublication.Document, LPublication.Workspace);
+
+  if LPublication.Workspace.Capture.Files.Encoded <> ARequest.FPair.Files.Encoded then
+  begin
+    raise ENyxProjectConflict.Create('Project preparation has different supporting Pascal files');
+  end;
 
   if CommitNyxSchemaRevision(ARequest.FSchemaRevision, LAction) then
   begin
@@ -3015,6 +3038,7 @@ begin
   LCurrent := ProjectSnapshot;
 
   if (AResolved.Design = LCurrent.Design) and (AResolved.Source = LCurrent.Source) and
+    (AResolved.Files.Encoded = LCurrent.Files.Encoded) and
     (AResolved.Pending = LCurrent.Pending) and (AResolved.Draft = LCurrent.Draft) and
     (AResolved.DraftBase = LCurrent.DraftBase) then
   begin
@@ -3025,11 +3049,12 @@ begin
     the previous checkpoint. Draft-only synchronization preserves existing Redo. }
 
   if (AAdoption = spaCommand) or (AResolved.Design <> LCurrent.Design) or
-    (AResolved.Source <> LCurrent.Source) then
+    (AResolved.Source <> LCurrent.Source) or
+    (AResolved.Files.Encoded <> LCurrent.Files.Encoded) then
   begin
     PublishCapturedPair(ADocument, AWorkspace, FSourceWorkspace.Capture(FDocument),
       not ((AAdoption = spaSynchronization) and not AResolved.Pending and
-        FSourceDraftPending and (FSourceDraft = AResolved.Source)));
+        FSourceDraftPending and (FSourceDraft = AResolved.Source)), True);
   end;
   DiscardSourceDraft;
 
@@ -3263,6 +3288,7 @@ begin
 
   if (LAccepted <> ARequest.FAccepted) or
     (LCheckpoint.Design <> ARequest.FCheckpoint.Design) or
+    (LCheckpoint.Files.Encoded <> ARequest.FCheckpoint.Files.Encoded) or
     (DraftSource <> ARequest.FBufferBaseline) then
   begin
     Exit;

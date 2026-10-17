@@ -2,6 +2,16 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Supporting Pascal-file ownership adds no MCP tool/schema. Typed accepted
+inventories now travel through local project completion, paired history/export
+and native journals, with exact executed-result admission. Bounded supporting-
+file discovery/source windows, grouped revision-aware helper edits and compiler-
+aware semantic import still belong to this owner's general-source workflow.
+Existing one-unit queues cannot yet dispatch that inventory. WORK.md separates
+actual native compiler/session evidence from browser compilation and installed
+delivery. No Nyx capability is currently exposed; owned Pascal/native consumers
+are the explicit fallback, with no screenshot composition or host/config refresh.
+
 Runtime diagram multi-shape selection, group movement and arrangement add no MCP
 tool or schema. Current tool discovery exposes no connected Nyx capability;
 owned public Pascal consumers are the explicit target/input fallback. Bounded

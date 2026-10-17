@@ -8,7 +8,7 @@ DOM/LCL, machine paths and a selected output. A project owns one main unit plus
 ordered auxiliary Pascal units and include fragments. It reads no host files.
 
 ```pascal
-uses nyx.source, nyx.pascal.project;
+uses nyx.pascal.names, nyx.pascal.project;
 
 LInputs := NewNyxPascalProject(NyxPascalUnit('example.views'), LMainSource)
   .WithUnit(NyxPascalUnit('example.presenter'), LPresenterSource)
@@ -98,15 +98,53 @@ project source remains evidence. Application outputs and browser packages remain
 preserved. The configured storage-capacity check is a preflight, not a reservation.
 Compiler/RTL/LCL/configuration identity and full cache reuse remain separate.
 
-## Current integration boundary
+## Studio project ownership
 
-This is a Pascal compiler-host API. Ordinary Studio project/recovery packets and
-the installed MCP protocol still carry their existing one-unit accepted pair;
-they do not serialize, adopt or publish this local receipt. Dedicated project-file
-editing, grouped dependency history, import/export/recovery and source-job worker
-publication still need their own integration under the existing authoring and
-service owners. Embedded images/data/localization keep the Resources abstraction;
-this API adds no native linker-asset mechanism.
+`TNyxPascalProjectFiles.Capture(LInputs)` retains an immutable supporting-file
+inventory for source checkpoints and Studio project values. Open reconstructs a
+complete independent project against the exact main source. The main text remains
+with its existing source frame; it is not duplicated in the file inventory.
+Only managed text travels through records, including on pas2js.
+
+```pascal
+LPair := LSession.ProjectSnapshot;
+LPair.Source := LConstruction.Projection.Source;
+LPair.Design := LConstruction.Projection.Design;
+LPair.Files := TNyxPascalProjectFiles.Capture(LConstruction.Inputs);
+LSession.AdoptProjectedProject(LPair, LConstruction.Projection);
+```
+
+This explicit local admission requires the executed result's exact inventory,
+source and design. Helpers may contain initialization behavior even when the
+main source or rendered design is unchanged. Changing only those helpers is
+therefore a real paired Undo command. A different inventory beside an older
+projection or live checkpoint refuses. Source-only commands cannot silently
+discard supporting files. The independent main draft/base retains its existing
+history contract.
+
+Portable project packets use version two only when a supporting-file value is
+present. Existing six-field version-one bytes remain unchanged. Source snapshots
+similarly add one explicit member only for a multi-file executed frame. Decoding
+these values does not execute or reauthorize them. Native project-store journals
+and exports retain all supporting text inside the complete packet; the established
+adjacent main companion remains separate. An interrupted multi-file journal
+remains compiler-required data until exact admitted completion. Current JSON/
+project-store transport still has its existing **4 MiB encoded packet limit**.
+A larger valid compiler project refuses that persistence boundary before
+publication; its helper files are never truncated to fit.
+
+Dedicated file selection/editing, independent helper drafts, project-aware source
+queues, automatic compiler-backed cold recovery and semantic import/publication
+still need integration under the existing authoring/service owners. The installed
+MCP protocol/release has not changed. Embedded images/data/localization keep the
+Resources abstraction; this API adds no native linker-asset mechanism.
+
+`tools/build.ps1 -Target pascal-projects -PascalProjectEvidenceDirectory <NEW-path>`
+runs the maintained data checks and actual native compiler/session/history/store
+journey, then compiles the browser consumers. It never launches an HTTP host or
+browser, refreshes enrollment or changes an active Studio project. WORK.md owns
+accepted evidence and retained failures; compiler success is distinct from actual
+application/control execution and complete parity.
 
 `tools/build.ps1 -Target compiled-runtime -CompiledRuntimeProjectInputs
 -CompiledRuntimeEvidenceDirectory <NEW-path>` runs the maintained captured project

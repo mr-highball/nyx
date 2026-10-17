@@ -1,5 +1,29 @@
 # Working in Nyx
 
+Current-source supporting Pascal files travel through immutable managed-text
+values, accepted source frames, ordinary project completion and paired Undo/Redo.
+Optional version-two packets/native journals preserve exact helpers and main
+drafts; absent values preserve legacy version-one bytes. JSON/store persistence
+retains its existing 4 MiB encoded bound without truncation; compiler-only budgets
+stay separate. Exact executed result/checkpoint helper agreement gates admission.
+Source/visual queue identity and drag/move/resize guards include helper bytes.
+Maintained native 42/30/50, final draft 29 and design/source 140 pass; four native
+constructions plus matching browser compilation qualify saved/helper-only/cold
+data ownership. Earlier unchanged core 30/14,347 and paired store 60 remain
+composite regressions, not final guard binaries. Both Studios/backend/worker and
+browser consumers compile only. WORK.md owns exact accepted logs, retained
+fixture/CLI/compiler/path failures, final blank-line-only equality and source/
+remote receipts. Five protected files/nine contexts and 349 frozen artifacts
+stay exact; LAN remains offline. No new MCP tool/schema/kind, rollout, original
+full criterion/task/DONE/credit/parity or existing counter closes. Stop ownership/
+codec/fixture variants; next wire inventory through ordinary source/application
+jobs, helper drafts/file selection, semantic import and automatic compiler-backed
+recovery. Single-unit queues/checkpoint application paths do not yet dispatch
+helpers. Broader assets/dependencies/cache/reload/browser/observing/quality/delivery
+retain existing owners. No exposed Nyx tool; owned Pascal/native consumers are the
+explicit fallback. No host retry, configuration refresh, old cleanup retry or
+sub-agents.
+
 Current-source captured Pascal project inputs retain immutable main/unit/include
 snapshots and exact helper meaning through actual construction/application builds.
 An executor-local facet supplements ordinary projection receipts; changed public

@@ -2,6 +2,15 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source supporting Pascal files now have an explicit immutable project
+value, retained by accepted source frames and ordinary paired Undo/Redo. Version
+two project packets and native journals preserve helpers and independent main
+drafts without changing legacy single-unit bytes. Exact executed construction
+still gates helper admission. WORK.md owns actual compiler/session/store evidence
+and compiled-only browser limits. Dedicated file editing/helper drafts, source
+queues, semantic import, automatic recovery and full authoring criteria stay open;
+this advances original criterion two without changing counters or completion credit.
+
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
 Nyx naming form and guarded collision-free identity preview to ordinary paired
 authoring. The quick shortcut remains. Exact source/history and actual browser/LCL

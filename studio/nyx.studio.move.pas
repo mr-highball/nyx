@@ -356,6 +356,7 @@ begin
 
   if not FGeometry.SameContext(FGuides(FOwner)) or
     (LPair.Design <> FPair.Design) or (LPair.Source <> FPair.Source) or
+    (LPair.Files.Encoded <> FPair.Files.Encoded) or
     LPair.Pending or (LPair.Draft <> FPair.Draft) or (LPair.DraftBase <> FPair.DraftBase) then
   begin
     FPair := Default(TNyxProjectPair);

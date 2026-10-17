@@ -169,6 +169,23 @@ begin
   LDocument.Free;
 end;
 
+{ Supporting sources stay packed in the complete journal/packet; only the
+  established adjacent main companion is published. Its namespace must come
+  from the exact admitted inventory so include-bearing mains remain portable.
+  No supporting name is ever treated as a host path by the project store. }
+function ProjectUnitName(const APair: TNyxProjectPair): TNyxText;
+begin
+
+  if APair.Files.IsEmpty then
+  begin
+    Result := NyxCompanionUnitName(APair.Source);
+  end
+  else
+  begin
+    Result := APair.Files.Open(APair.Source).MainUnit.Name;
+  end;
+end;
+
 constructor TNyxProjectStore.Create(const ARoot: TNyxText);
 begin
   inherited Create;
@@ -207,7 +224,7 @@ procedure TNyxProjectStore.Publish(const ADirectory: TNyxText;
   const APair: TNyxProjectPair);
 begin
   ReplaceText(ADirectory + ProjectDesignFile, APair.Design);
-  ReplaceText(ADirectory + NyxCompanionUnitName(APair.Source) + '.pas', APair.Source);
+  ReplaceText(ADirectory + ProjectUnitName(APair) + '.pas', APair.Source);
   ReplaceText(ADirectory + ProjectPacketFile, EncodeNyxProject(APair));
 
   if not DeleteFile(ADirectory + ProjectJournalFile) then
@@ -254,7 +271,7 @@ begin
         Corrupt codecs, paths and malformed envelopes still refuse here. }
       LPacket := ReadText(LDirectory + ProjectJournalFile);
       LPair := DecodeNyxProject(LPacket);
-      NyxCompanionUnitName(LPair.Source);
+      ProjectUnitName(LPair);
       LDocument := TNyxCodec.Decode(LPair.Design);
       try
         ValidateNyxDocumentProperties(LDocument);
@@ -278,7 +295,7 @@ begin
   end;
   LPacket := ReadText(LDirectory + ProjectPacketFile);
   LPair := DecodeNyxProject(LPacket);
-  LSourcePath := LDirectory + NyxCompanionUnitName(LPair.Source) + '.pas';
+  LSourcePath := LDirectory + ProjectUnitName(LPair) + '.pas';
   { Do not repair direct edits from yesterday's packet. Exact current files
     determine the revision and travel to Studio for mismatch resolution. }
   LPair.Design := ReadText(LDirectory + ProjectDesignFile);

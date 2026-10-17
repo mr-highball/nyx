@@ -863,7 +863,8 @@ begin
     The isolated publication rechecks the exact captured pair/creator epoch. }
   LPair := LContext.Session.ProjectSnapshot;
 
-  if LPair.Pending or (LPair.Design <> FPair.Design) or (LPair.Source <> FPair.Source) then
+  if LPair.Pending or (LPair.Design <> FPair.Design) or (LPair.Source <> FPair.Source) or
+    (LPair.Files.Encoded <> FPair.Files.Encoded) then
   begin
     Cancel;
     Exit;

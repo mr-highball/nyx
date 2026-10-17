@@ -614,6 +614,7 @@ begin
     (FNextID = AOther.FNextID) and (FSchemaRevision = AOther.FSchemaRevision) and
     (RequiresExecution = AOther.RequiresExecution) and
     (FPair.Design = AOther.FPair.Design) and (FPair.Source = AOther.FPair.Source) and
+    (FPair.Files.Encoded = AOther.FPair.Files.Encoded) and
     (FPair.Pending = AOther.FPair.Pending) and (FPair.Draft = AOther.FPair.Draft) and
     (FPair.DraftBase = AOther.FPair.DraftBase) and (FEdit.Action = AOther.FEdit.Action) and
     (FEdit.Selection = AOther.FEdit.Selection) and (FEdit.View = AOther.FEdit.View) and
@@ -2027,6 +2028,7 @@ begin
 
   if (LCurrent.Design <> ARequest.FPair.Design) or
     (LCurrent.Source <> ARequest.FPair.Source) or
+    (LCurrent.Files.Encoded <> ARequest.FPair.Files.Encoded) or
     (LCurrent.Pending <> ARequest.FPair.Pending) or
     (LCurrent.Draft <> ARequest.FPair.Draft) or
     (LCurrent.DraftBase <> ARequest.FPair.DraftBase) then

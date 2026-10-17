@@ -12,11 +12,14 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 Current-source [captured Pascal project inputs](../docs/pascal-projects.md) supply
 an immutable main/unit/include compiler API and retain exact helper meaning with
 actual construction before application/view compilation. This advances criterion
-three's owned-input prerequisite; existing project/recovery/MCP envelopes remain
-unchanged. Ordinary file editing/dependency history/import/export, source-job
-publication, asset/linker coverage, complete cache/reload/parity/delivery and all
-original criteria/credit stay open. WORK.md owns exact native/compiler evidence
-separately from compiled-only browser consumers.
+three's owned-input prerequisite. Supporting-file values now follow ordinary
+project completion, paired history/export and native project-store journals through
+an explicit optional version-two packet; absent values preserve version-one bytes.
+Execution still requires the exact captured result. Installed MCP/release behavior
+is unchanged. Dedicated file editing/helper drafts, project-aware source queues,
+automatic cold recovery/semantic import, asset/linker coverage and complete cache/
+reload/parity/delivery criteria/credit stay open. WORK.md owns exact native/compiler
+evidence separately from compiled-only browser consumers.
 
 Current-source compiled native application/page/reusable execution now exercises
 real editing, ordered callbacks, saved Logic routes, navigation and independent

@@ -31,6 +31,7 @@ uses
   nyx.text,
   nyx.model,
   nyx.source,
+  nyx.pascal.project,
   nyx.studio.sourceprojection;
 
 type
@@ -48,6 +49,9 @@ type
     Draft: TNyxText;
     DraftBase: TNyxText;
     Pending: Boolean;
+    { Accepted helper inventory only. Unfinished main text retains its existing
+      independent draft/base; serialized helpers grant no execution authority. }
+    Files: TNyxPascalProjectFiles;
   end;
 
   { Distinguishes a valid but divergent pair from malformed/unsupported input.
@@ -97,10 +101,11 @@ uses
   nyx.data,
   nyx.codec,
   nyx.codegen,
-  nyx.schema;
+  nyx.schema, nyx.studio.projectinputs;
 
 function NyxProjectPair(const ADesign, ASource: TNyxText): TNyxProjectPair;
 begin
+  Result := Default(TNyxProjectPair);
   Result.Design := ADesign;
   Result.Source := ASource;
   Result.Draft := '';
@@ -110,6 +115,20 @@ end;
 
 function EncodeNyxProject(const APair: TNyxProjectPair): TNyxText;
 begin
+
+  if not APair.Files.IsEmpty then
+  begin
+    APair.Files.Open(APair.Source);
+    Exit(NyxObject([
+      NyxField('version', NyxData(2)),
+      NyxField('design', NyxData(APair.Design)),
+      NyxField('source', NyxData(APair.Source)),
+      NyxField('draft', NyxData(APair.Draft)),
+      NyxField('draftBase', NyxData(APair.DraftBase)),
+      NyxField('pending', NyxData(APair.Pending)),
+      NyxField('pascalFiles', TNyxDataValue.ParseJSON(APair.Files.Encoded))
+    ]).ToJSON);
+  end;
   Result := NyxObject([
     NyxField('version', NyxData(1)),
     NyxField('design', NyxData(APair.Design)),
@@ -123,11 +142,19 @@ end;
 function DecodeNyxProject(const AText: TNyxText): TNyxProjectPair;
 var
   LData: TNyxDataValue;
+  LVersion: Integer;
 begin
+  Result := Default(TNyxProjectPair);
   LData := TNyxDataValue.ParseJSON(AText);
 
-  if (LData.Kind <> ndObject) or (LData.Count <> 6) or
-    (LData.Field('version').AsInteger <> 1) then
+  if LData.Kind <> ndObject then
+  begin
+    raise ENyxModel.Create('Unsupported Nyx project packet');
+  end;
+  LVersion := LData.Field('version').AsInteger;
+
+  if not (((LVersion = 1) and (LData.Count = 6)) or
+    ((LVersion = 2) and (LData.Count = 7))) then
   begin
     raise ENyxModel.Create('Unsupported Nyx project packet');
   end;
@@ -136,6 +163,12 @@ begin
   Result.Draft := LData.Field('draft').AsText;
   Result.DraftBase := LData.Field('draftBase').AsText;
   Result.Pending := LData.Field('pending').AsBoolean;
+
+  if LVersion = 2 then
+  begin
+    Result.Files := TNyxPascalProjectFiles.Parse(
+      LData.Field('pascalFiles').ToJSON, Result.Source);
+  end;
 
   if not Result.Pending and ((Result.Draft <> '') or (Result.DraftBase <> '')) then
   begin
@@ -158,6 +191,14 @@ begin
   LCandidate := nil;
   LWorkspace := nil;
   LResolved := DecodeNyxProject(EncodeNyxProject(APair));
+  { A file packet is data. Ordinary literal admission must never guess at helper
+    meaning or regenerate its main unit while silently dropping dependencies. }
+
+  if not LResolved.Files.IsEmpty then
+  begin
+    raise ENyxSourceExecutionRequired.CreateAt(
+      'Supporting Pascal files require their exact compiled construction', APair.Source, 1);
+  end;
   try
     LDocument := TNyxCodec.Decode(APair.Design);
     LWorkspace := TNyxSourceWorkspace.Create;
@@ -225,6 +266,7 @@ var
   LDocument: TNyxDocument;
   LWorkspace: TNyxSourceWorkspace;
   LResolved: TNyxProjectPair;
+  LProject: INyxPascalProjectProjection;
 begin
   ADocument := nil;
   AWorkspace := nil;
@@ -239,6 +281,22 @@ begin
     begin
       raise ENyxProjectConflict.Create('Project files require their exact executed source result');
     end;
+
+    if not LResolved.Files.IsEmpty then
+    begin
+
+      if not Supports(AProjection, INyxPascalProjectProjection, LProject) or
+        (LProject.Files.Encoded <> LResolved.Files.Encoded) then
+      begin
+        raise ENyxProjectConflict.Create('Project construction has different supporting Pascal files');
+      end;
+    end
+    else if Supports(AProjection, INyxPascalProjectProjection, LProject) then
+    begin
+      { Even an otherwise unused helper can carry initialization behavior. An
+        older single-unit pair cannot discard that captured inventory. }
+      raise ENyxProjectConflict.Create('Project construction requires its captured supporting-file value');
+    end;
     LDocument := AProjection.CopyDocument;
     ValidateNyxDocumentProperties(LDocument);
 
@@ -247,7 +305,7 @@ begin
       raise ENyxProjectConflict.Create('Executed project changed during complete admission');
     end;
     LWorkspace := TNyxSourceWorkspace.Create;
-    LWorkspace.AcceptExecuted(LDocument, LResolved.Source);
+    LWorkspace.AcceptExecuted(LDocument, LResolved.Source, LResolved.Files);
     AResolved := LResolved;
     ADocument := LDocument;
     LDocument := nil;
@@ -275,7 +333,8 @@ begin
   try
 
     if (ACheckpoint.Design = '') or (ACheckpoint.Design <> LResolved.Design) or
-      (ACheckpoint.Source <> LResolved.Source) then
+      (ACheckpoint.Source <> LResolved.Source) or
+      (ACheckpoint.Files.Encoded <> LResolved.Files.Encoded) then
     begin
       raise ENyxProjectConflict.Create('Observed project does not match its live accepted checkpoint');
     end;

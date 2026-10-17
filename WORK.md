@@ -30,7 +30,96 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Captured Pascal project inputs — 2026-10-17
+## Current integration: Studio ownership of supporting Pascal files — 2026-10-17
+
+The cleanup-script handoff is no product progress. Current 5319a55 is clean;
+reassess original NS-4 criterion two and NS-5 criterion three: immutable compiler
+inputs exist, but ordinary Studio checkpoints still lose their helper inventory.
+This batch carries that exact accepted inventory through source checkpoints,
+ordinary paired history/export and native project-store recovery. Preserve legacy
+single-unit bytes. Only an exact executed project result admits new helper
+meaning; serialized files never claim construction provenance. A maintained
+actual compiler/session/store consumer must prove helper-only changes, paired
+Undo/Redo, independent main drafts, mismatch refusal and cold data recovery.
+Stop ownership/codec/fixture variants at that boundary; return to ordinary file
+editing, source-job publication and compiler-backed recovery/import. Browser
+consumers/products compile only; no host/capture/configuration/cleanup retry,
+rollout, new MCP tool/schema or sub-agent. The ignored local project-files pointer
+owns fresh E: evidence. Original full criteria/counters/credit remain open.
+
+The accepted inventory is now a typed immutable managed-text value, excluding
+the separately retained main source. A lower-level Pascal namespace owner keeps
+the original source factory/type alias compatible without an interface cycle.
+Capture/Parse/Open preserve exact ordered Unicode input, declared limits and
+include references. Existing portable JSON/store packets retain their 4 MiB
+encoded limit and refuse larger values without truncation; the compiler-only
+32 MiB default remains unchanged. Version two is used only when files are present;
+the six-field version-one bytes stay exact. Source snapshots similarly add one
+explicit member. Source/history byte accounting includes retained helper text.
+
+The executor's detached projection carries its actual captured inventory through
+the existing trusted preparation/admission bridge. Ordinary project completion
+and explicit project adoption require exact helper/source/design agreement.
+One paired Undo/Redo restores helper-only behavior and same-design comment edits,
+including independent unfinished main buffers. Live captured recovery frames,
+native cold project-store reads, interrupted journals and a real cold
+reconstruction retain those files. JSON alone supplies no execution authority.
+Queued source/visual request equality and completion now include helper bytes;
+drag/move/resize baseline guards retain the same identity. Those gesture changes
+are source/compilation qualified here, not new physical-input evidence.
+
+The maintained `pascal-projects` target passes **42 captured-project, 30 data/
+legacy-packet and 50 actual compiler/session/history/store checks**. Its five
+compiler invocations construct four native inputs (including exact cold saved
+files) and compile the matching browser input. That browser result remains
+compiled-only and refuses editor admission. The browser data/ownership consumer
+compiles; no HTTP/browser/control execution is inferred. Final ordinary draft
+history **29** and design/source **140** pass with clean heaps. Earlier unchanged
+core **30/14,347** and paired file/store **60** remain composite regression
+evidence, not a claim that their binaries contain the final helper-staleness
+guards. Both Studios/backend/source worker and ordinary browser project consumer
+compile. The private packet owns exact logs/counts, compiler input IDs, accepted
+source hashes and the final blank-line-only correction proof/recompilation.
+
+The final compiler audit finds one owned warning in the data fixture's implicit
+UTF-8/Unicode literal comparison. A typed TNyxText constant removes it; the
+corrected data consumer reruns 30 and compiles for pas2js. The complete maintained
+stream is retained, including that obsolete warning. Accepted compiler/run windows
+have exact source-log hashes/line bounds and pair with the corrected data logs;
+the actual 50-check construction/history body is unchanged. Seven final layout
+edits change only blank lines/EOF; retained before/after values prove every
+nonblank line equal. Exact final consumers compile after those edits.
+The accepted composite has 14 top-level compiler logs and five construction
+compiler logs with zero owned warnings; 35/7 warnings belong to unchanged upstream
+Classes. Eight accepted main executions and four native constructors have clean
+heaps. The mixed stream's superseded fixture warning remains outside that accepted
+compiler set. Private validation/window/summary receipts retain these boundaries.
+
+Retained preparation failures are excluded: an extra test parenthesis, a missing
+journal revision argument, a formatter-dependent malformed-role assertion and an
+incorrect journal path. Structured malformed values replace the format guess.
+The first native Studio command joined its unit paths incorrectly; explicit
+arguments compile. A browser-only test was mistakenly sent to FPC; its failure/
+warning is retained and the correct pas2js consumer compiles. The legacy source-
+projection executable was called without its required arguments and refused
+before allocating a runtime; it supplies no regression result. One shell-template
+parse error executed nothing. Two newly owned legacy store fixtures initially
+used the checkout as their default parent; both are retained under an ignored
+owned build folder with exact relocation hashes. No old job/runtime cleanup ran.
+
+All five protected files/nine complete contexts match this turn's and the prior
+packet's baselines; the frozen verifier accepts all 349 artifacts. No listener,
+browser, protected configuration/enrollment, rollout or cached chat refresh is
+attempted. No current Nyx tool is exposed, so the explicit fallback is the
+maintained Pascal/native consumer. The full goal remains active. Stop ownership/
+codec/fixture variants; next connect this inventory to ordinary project-aware
+source queues and application builds, helper drafts/file selection, semantic
+import and automatic compiler-backed recovery. Current single-unit compiler
+queues/application checkpoint paths do not yet dispatch the additional inventory.
+Full original NS-4/NS-5 criteria, source grammar, assets/dependencies/cache/reload,
+browser/observing/quality/parity/delivery and completion credit stay open. Solo.
+
+## Previous integration: Captured Pascal project inputs — 2026-10-17
 
 The preceding goal turn is progress: 9605110 is clean and remote-matched. Reassess
 the full NS-5 outcome after the service prerequisites: project packets still own

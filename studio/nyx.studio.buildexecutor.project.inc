@@ -20,6 +20,25 @@
   SOFTWARE.
 }
 type
+  { Immutable projection delegate binds the captured supporting-file inventory
+    to the actual constructor's detached result. It owns both values and borrows
+    no executor, document, provider, native handle or enclosing build wrapper. }
+  TProjectProjection = class(TInterfacedObject, INyxSourceProjection,
+    INyxPascalProjectProjection)
+  private
+    FProjection: INyxSourceProjection;
+    FInputs: INyxPascalProject;
+  public
+    function GetSource: TNyxText;
+    function GetTarget: TNyxBuildTarget;
+    function GetState: TNyxSourceProjectionState;
+    function GetMessage: TNyxText;
+    function GetDesign: TNyxText;
+    function GetReport: INyxCompilerReport;
+    function CopyDocument: TNyxDocument;
+    function GetFiles: TNyxPascalProjectFiles;
+  end;
+
   { Private local producer facet. Only executor-created values carry this
     attachment; a public/wire projection or an alternate metadata wrapper cannot
     silently attach different helper meaning to an earlier construction. }
@@ -38,6 +57,7 @@ type
     FInputs: INyxPascalProject;
     FBuild: INyxSourceProjectionBuild;
     FStorage: INyxProjectionStorageBuild;
+    FProjection: INyxSourceProjection;
   public
     function GetInputs: INyxPascalProject;
     function GetCapturedBuild: INyxSourceProjectionBuild;
@@ -53,6 +73,48 @@ begin
   Result := FInputs;
 end;
 
+function TProjectProjection.GetSource: TNyxText;
+begin
+  Result := FProjection.Source;
+end;
+
+function TProjectProjection.GetTarget: TNyxBuildTarget;
+begin
+  Result := FProjection.Target;
+end;
+
+function TProjectProjection.GetState: TNyxSourceProjectionState;
+begin
+  Result := FProjection.State;
+end;
+
+function TProjectProjection.GetMessage: TNyxText;
+begin
+  Result := FProjection.Message;
+end;
+
+function TProjectProjection.GetDesign: TNyxText;
+begin
+  Result := FProjection.Design;
+end;
+
+function TProjectProjection.GetReport: INyxCompilerReport;
+begin
+  Result := FProjection.Report;
+end;
+
+function TProjectProjection.CopyDocument: TNyxDocument;
+begin
+  Result := FProjection.CopyDocument;
+end;
+
+function TProjectProjection.GetFiles: TNyxPascalProjectFiles;
+begin
+  { Saving observes the portable packet budget; a larger compiler-only project
+    remains valid without acquiring editor/import authority or losing files. }
+  Result := TNyxPascalProjectFiles.Capture(FInputs);
+end;
+
 function TProjectBuild.GetCapturedBuild: INyxSourceProjectionBuild;
 begin
   Result := FBuild;
@@ -65,7 +127,7 @@ end;
 
 function TProjectBuild.GetProjection: INyxSourceProjection;
 begin
-  Result := FBuild.Projection;
+  Result := FProjection;
 end;
 
 function TProjectBuild.GetArtifact: TNyxText;
@@ -88,6 +150,8 @@ function NewNyxPascalProjectBuild(const AInputs: INyxPascalProject;
 var
   LResult: TProjectBuild;
   LStorage: INyxProjectionStorageBuild;
+  LProjection: TProjectProjection;
+  LOwnedProjection: INyxSourceProjection;
 begin
 
   if (AInputs = nil) or (ABuild = nil) or (ABuild.Projection = nil) or
@@ -100,9 +164,16 @@ begin
   begin
     raise ENyxModel.Create('A project compiler receipt requires actual invocation storage evidence');
   end;
+  LProjection := TProjectProjection.Create;
+  LOwnedProjection := LProjection;
+  LProjection.FProjection := ABuild.Projection;
+  LProjection.FInputs := AInputs;
+  { Attach the interface before any remaining allocation so both owners retire
+    together on failure. All borrowed/provider validation has already completed. }
   LResult := TProjectBuild.Create;
+  Result := LResult;
+  LResult.FProjection := LOwnedProjection;
   LResult.FInputs := AInputs;
   LResult.FBuild := ABuild;
   LResult.FStorage := LStorage;
-  Result := LResult;
 end;

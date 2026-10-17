@@ -26,19 +26,8 @@
   only live with the source being edited. Normal comments are never deleted. }
 
 function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
-var
-  LIndex: Integer;
 begin
-  for LIndex := 1 to Length(AName) do
-  begin
-
-    if not (AName[LIndex] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '.']) then
-    begin
-      raise ENyxModel.Create('Pascal imports require an ASCII unit namespace');
-    end;
-  end;
-  TNyxCodegen.AdmitUnitName(AName);
-  Result.FName := AName;
+  Result := nyx.pascal.names.NyxPascalUnit(AName);
 end;
 
 function TNyxImportClause.GetCount: Integer;

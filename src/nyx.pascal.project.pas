@@ -25,7 +25,7 @@ unit nyx.pascal.project;
 
 interface
 
-uses SysUtils, nyx.text, nyx.source;
+uses SysUtils, nyx.text, nyx.pascal.names;
 
 type
   { Invalid project input is distinct from an actual compiler diagnostic. No
@@ -103,6 +103,29 @@ type
     procedure Validate;
   end;
 
+  { Immutable supporting-file value for project/history records. Only canonical
+    managed text is retained: pas2js records cannot own COM interface fields.
+    The main unit's text stays with its source frame, without a second escaped
+    copy. Capture freezes alternate providers; Open reconstructs an independent
+    complete input snapshot against the supplied exact main source. Neither
+    decoding nor restoring this data proves constructor execution. Default is
+    absent, preserving the legacy single-unit checkpoint/packet bytes. }
+  TNyxPascalProjectFiles = record
+  private
+    FData: TNyxText;
+    function GetIsEmpty: Boolean;
+    function GetStorageBytes: TNyxTextBytes;
+  public
+    class function Capture(const AProject: INyxPascalProject): TNyxPascalProjectFiles; static;
+    { Explicit persistence boundary. Malformed shape, aliases, unknown roles,
+      references and payload overflow refuse before a value is returned. }
+    class function Parse(const AData, AMainSource: TNyxText): TNyxPascalProjectFiles; static;
+    function Open(const AMainSource: TNyxText): INyxPascalProject;
+    property IsEmpty: Boolean read GetIsEmpty;
+    property Encoded: TNyxText read FData;
+    property StorageBytes: TNyxTextBytes read GetStorageBytes;
+  end;
+
 function NyxPascalInclude(const AName: TNyxText): TNyxPascalIncludeRef;
 { No file is read. The supplied main source is copied and budget-admitted;
   complete namespace/include admission follows Validate/Capture after authoring. }
@@ -119,7 +142,7 @@ function CaptureNyxPascalProject(const AProject: INyxPascalProject): INyxPascalP
 
 implementation
 
-uses nyx.files, nyx.bytes;
+uses nyx.files, nyx.bytes, nyx.source, nyx.data;
 
 type
   { Entry owns one immutable text-file payload; unit identity is copied only for
@@ -638,6 +661,145 @@ begin
   end;
   LSnapshot.Validate;
   Result := LSnapshot;
+end;
+
+function TNyxPascalProjectFiles.GetIsEmpty: Boolean;
+begin
+  Result := FData = '';
+end;
+
+function TNyxPascalProjectFiles.GetStorageBytes: TNyxTextBytes;
+begin
+  Result := Length(FData);
+  {$ifdef PAS2JS}
+  Result := Result * 2;
+  {$endif}
+end;
+
+class function TNyxPascalProjectFiles.Capture(
+  const AProject: INyxPascalProject): TNyxPascalProjectFiles;
+var
+  LProject: INyxPascalProject;
+  LInput: INyxPascalInput;
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+  LRole: TNyxText;
+begin
+  LProject := CaptureNyxPascalProject(AProject);
+  SetLength(LItems, LProject.Count);
+  for LIndex := 0 to LProject.Count - 1 do
+  begin
+    LInput := LProject.Input(LIndex);
+
+    if LInput.Kind = npiUnit then
+    begin
+      LRole := 'unit';
+    end
+    else
+    begin
+      LRole := 'include';
+    end;
+    LItems[LIndex] := NyxObject([
+      NyxField('kind', NyxData(LRole)),
+      NyxField('name', NyxData(LInput.Name)),
+      NyxField('text', NyxData(LInput.Text))]);
+  end;
+  { This is the existing portable JSON boundary, with its own 4 MiB encoded
+    limit. A larger valid compiler project cannot silently become a smaller
+    saved project: serialization refuses before editor publication instead. }
+  Result.FData := NyxObject([
+    NyxField('version', NyxData(1)),
+    NyxField('main', NyxData(LProject.MainUnit.Name)),
+    NyxField('maximumFiles', NyxData(LProject.Limits.MaximumFiles)),
+    NyxField('maximumBytes', NyxData(LProject.Limits.MaximumBytes)),
+    NyxField('files', NyxArray(LItems))]).ToJSON;
+end;
+
+function TNyxPascalProjectFiles.Open(
+  const AMainSource: TNyxText): INyxPascalProject;
+var
+  LData: TNyxDataValue;
+  LFiles: TNyxDataValue;
+  LItem: TNyxDataValue;
+  LLimits: TNyxPascalProjectLimits;
+  LRole: TNyxText;
+  LName: TNyxText;
+  LIndex: Integer;
+begin
+  Result := nil;
+
+  if IsEmpty then
+  begin
+    Exit;
+  end;
+  LData := TNyxDataValue.ParseJSON(FData);
+
+  if (LData.Kind <> ndObject) or (LData.Count <> 5) or
+    (LData.Field('version').AsInteger <> 1) then
+  begin
+    raise ENyxPascalProject.Create('Unsupported supporting Pascal files');
+  end;
+  LLimits := TNyxPascalProjectLimits.Defaults
+    .UpToFiles(LData.Field('maximumFiles').AsInteger)
+    .UpToBytes(LData.Field('maximumBytes').AsInteger);
+  LFiles := LData.Field('files');
+
+  if (LFiles.Kind <> ndArray) or (LFiles.Count >= LLimits.MaximumFiles) then
+  begin
+    raise ENyxPascalProject.Create('Supporting files exceed their declared count');
+  end;
+  Result := NewNyxPascalProject(NyxPascalUnit(LData.Field('main').AsText),
+    AMainSource, LLimits);
+  for LIndex := 0 to LFiles.Count - 1 do
+  begin
+    LItem := LFiles.Item(LIndex);
+
+    if (LItem.Kind <> ndObject) or (LItem.Count <> 3) then
+    begin
+      raise ENyxPascalProject.Create('A supporting file requires kind, name and text');
+    end;
+    LRole := LItem.Field('kind').AsText;
+    LName := LItem.Field('name').AsText;
+
+    if LRole = 'unit' then
+    begin
+
+      if Copy(LName, Length(LName) - 3, 4) <> '.pas' then
+      begin
+        raise ENyxPascalProject.Create('A supporting unit requires its exact Pascal leaf');
+      end;
+      Result := Result.WithUnit(NyxPascalUnit(Copy(LName, 1, Length(LName) - 4)),
+        LItem.Field('text').AsText);
+    end
+    else if LRole = 'include' then
+    begin
+      Result := Result.WithInclude(NyxPascalInclude(LName), LItem.Field('text').AsText);
+    end
+    else
+    begin
+      raise ENyxPascalProject.Create('Unknown supporting file role');
+    end;
+
+    if Result.Count <> LIndex + 1 then
+    begin
+      raise ENyxPascalProject.Create('Supporting files repeat a compiler identity');
+    end;
+  end;
+  Result.Validate;
+end;
+
+class function TNyxPascalProjectFiles.Parse(
+  const AData, AMainSource: TNyxText): TNyxPascalProjectFiles;
+var
+  LValue: TNyxPascalProjectFiles;
+begin
+  LValue.FData := AData;
+
+  if LValue.IsEmpty then
+  begin
+    Exit(Default(TNyxPascalProjectFiles));
+  end;
+  Result := Capture(LValue.Open(AMainSource));
 end;
 
 end.

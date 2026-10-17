@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
@@ -98,6 +98,9 @@ param(
   # Fresh native application/page/reusable input evidence. Pascal owns actual
   # builds, process families and messages; browser products are compiled only.
   [string]$CompiledRuntimeEvidenceDirectory = 'build/compiled-runtime/maintained',
+  # Fresh owned packet for supporting-file data, actual compiler construction,
+  # ordinary paired session/history and native project-store recovery checks.
+  [string]$PascalProjectEvidenceDirectory = 'build/pascal-projects/maintained',
   # Exercise captured units/main/helper includes through the same complete
   # application journey. Default preserves the existing single-companion checks.
   [switch]$CompiledRuntimeProjectInputs,
@@ -2033,6 +2036,37 @@ try {
     }
     Write-Host 'Portable files qualified natively; browser UI consumers staged for explicit HTTP execution.'
     return
+  }
+
+  if ($Target -eq 'pascal-projects') {
+    if (-not $IsWindows) { throw 'Actual project-file compiler/store checks currently require Windows.' }
+    $nyxProjectPacket = [IO.Path]::GetFullPath($PascalProjectEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxProjectPacket) { throw 'Supply a NEW -PascalProjectEvidenceDirectory.' }
+    $nyxProjectNative = Join-Path $nyxProjectPacket 'native'
+    $nyxProjectBrowser = Join-Path $nyxProjectPacket 'browser'
+    New-Item -ItemType Directory -Path $nyxProjectNative, $nyxProjectBrowser | Out-Null
+    $nyxProjectFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
+      "-FU$nyxProjectNative", "-FE$nyxProjectNative")
+    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data',
+      'nyx_project_files_native')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxProjectFlags + @("tests/$nyxProgram.lpr"))
+    }
+    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
+      & (Join-Path $nyxProjectNative "$nyxProgram.exe")
+      if ($LASTEXITCODE -ne 0) { throw "Supporting Pascal data checks failed: $nyxProgram" }
+    }
+    $nyxProjectRuntime = Join-Path $nyxProjectPacket 'runtime'
+    $nyxProjectToolsPath = Join-Path $nyxRoot '.local/toolchain.json'
+    & (Join-Path $nyxProjectNative 'nyx_project_files_native.exe') $nyxRoot $nyxProjectToolsPath $nyxProjectRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled supporting-file session/history/store checks failed.' }
+    $nyxProjectTools = Get-Content -LiteralPath $nyxProjectToolsPath -Raw | ConvertFrom-Json
+    foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data')) {
+      Invoke-NyxCompiler $nyxProjectTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
+        "-Ji$($nyxProjectTools.PAS2JS_RUNTIME)", '-Fusrc', '-Fustudio', '-Futests',
+        '-Fisrc', '-Fistudio', "-FE$nyxProjectBrowser", "tests/$nyxProgram.lpr")
+    }
+    exit 0
   }
 
   if ($Target -eq 'compiled-runtime') {

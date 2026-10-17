@@ -40,9 +40,13 @@ function PrepareNyxProjectedSource(const AProjection: INyxSourceProjection;
 
 implementation
 
-uses SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.source;
+uses SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.source,
+  nyx.studio.projectinputs, nyx.pascal.project;
 
 type
+  { One-shot prepared owners from an actual immutable compiler result. The
+    optional captured helper inventory follows that same result; no file/wire
+    claim can select executed preparation or supply a different helper value. }
   TProjectedSource = class(TInterfacedObject, INyxPreparedSource, INyxSchemaAction)
   private
     FProjection: INyxSourceProjection;
@@ -71,6 +75,9 @@ begin
 end;
 
 procedure TProjectedSource.Execute;
+var
+  LProject: INyxPascalProjectProjection;
+  LFiles: TNyxPascalProjectFiles;
 begin
   FDocument := FProjection.CopyDocument;
   ValidateNyxDocumentProperties(FDocument);
@@ -81,7 +88,13 @@ begin
     raise ENyxModel.Create('Executed design changed during detached source preparation');
   end;
   FWorkspace := TNyxSourceWorkspace.Create;
-  FWorkspace.AcceptExecuted(FDocument, FSource);
+  LFiles := Default(TNyxPascalProjectFiles);
+
+  if Supports(FProjection, INyxPascalProjectProjection, LProject) then
+  begin
+    LFiles := LProject.Files;
+  end;
+  FWorkspace.AcceptExecuted(FDocument, FSource, LFiles);
 end;
 
 function TProjectedSource.GetSource: TNyxText;

@@ -3,6 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [supporting-file ownership](../docs/pascal-projects.md#studio-project-ownership)
+retains accepted helper inventories through ordinary Studio project completion,
+paired history/export and native project-store recovery. WORK.md owns actual
+compiler/session evidence and the separate browser compilation boundary. File
+editing/helper drafts, project-aware queues/import/recovery and full original
+[authoring](NS-4_studio-authoring_01.md)/[service](NS-5_service-reload_01.md)
+acceptance remain open; no counter, task or completion credit closes.
+
 Current-source [captured Pascal projects](../docs/pascal-projects.md) add an immutable
 main/unit/include compiler-host API, retaining actual construction with its exact
 helper snapshot for application/view compilation. WORK.md owns native input/

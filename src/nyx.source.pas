@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.pascal.names, nyx.pascal.project,
   nyx.dates,
   nyx.times,
   nyx.colors,
@@ -162,14 +163,9 @@ type
   TNyxImportSection = (nisInterface, nisImplementation);
   TNyxImportAction = (niaAdd, niaRemove);
 
-  { Distinct open Pascal namespace reference. Construction validates ASCII
-    namespace syntax; identity is case insensitive, like the compiler. }
-  TNyxPascalUnitRef = record
-  private
-    FName: TNyxText;
-  public
-    property Name: TNyxText read FName;
-  end;
+  { Source-compatible alias to the shared portable namespace identity. Existing
+    import authors retain this unit's factory; projects use the same exact type. }
+  TNyxPascalUnitRef = nyx.pascal.names.TNyxPascalUnitRef;
 
   { Private lexical offsets belong only to their exact source snapshot. They
     are never wire coordinates or mutable editor identities. }
@@ -302,6 +298,7 @@ type
     FDesign: TNyxText;
     FCustomFrame: Boolean;
     FOrigin: TNyxSourceOrigin;
+    FFiles: TNyxPascalProjectFiles;
     function GetStorageBytes: TNyxTextBytes;
     function GetSource: TNyxText;
   public
@@ -311,6 +308,7 @@ type
     property Source: TNyxText read GetSource;
     property StorageBytes: TNyxTextBytes read GetStorageBytes;
     property Origin: TNyxSourceOrigin read FOrigin;
+    property Files: TNyxPascalProjectFiles read FFiles;
   end;
 
   { An owned companion to the design, independent of a target compiler.
@@ -345,6 +343,7 @@ type
     FDesign: TNyxText;
     FCustomFrame: Boolean;
     FOrigin: TNyxSourceOrigin;
+    FFiles: TNyxPascalProjectFiles;
     { Derived canonical builder for FDesign only. It owns text, never a model or
       reader. Recovery/history deliberately omit this disposable workspace cache;
       Restore clears it, and every Render still freshly encodes the public tree. }
@@ -384,7 +383,12 @@ type
       source or authorize a file/HTTP/MCP import. Both values stage before swap.
       Until compiler-aware reconciliation is supplied, changed visual meaning
       raises ENyxSourceExecutionRequired instead of discarding Pascal. }
-    procedure AcceptExecuted(ADocument: TNyxDocument; const ASource: TNyxText);
+    procedure AcceptExecuted(ADocument: TNyxDocument; const ASource: TNyxText); overload;
+    { Exact helper inventory accompanies the already executed main source.
+      Validation/encoding stage before replacement; the caller must establish
+      that these files belong to that construction. No wire flag proves this. }
+    procedure AcceptExecuted(ADocument: TNyxDocument; const ASource: TNyxText;
+      const AFiles: TNyxPascalProjectFiles); overload;
     property Origin: TNyxSourceOrigin read FOrigin;
     procedure Reset;
     { Capture without a document copies the accepted frame only. The document
@@ -6003,6 +6007,7 @@ end;
 
 procedure TNyxSourceWorkspace.Reset;
 begin
+  FFiles := Default(TNyxPascalProjectFiles);
   FPrefix := '';
   FBody := '';
   FSuffix := '';
@@ -6480,16 +6485,31 @@ begin
   FCustomFrame := (APrefix <> LGeneratedPrefix) or (ASuffix <> LGeneratedSuffix);
   FOrigin := nsoDeclarative;
   FGeneratedBody := LGeneratedBody;
+  FFiles := Default(TNyxPascalProjectFiles);
 end;
 
 procedure TNyxSourceWorkspace.AcceptExecuted(ADocument: TNyxDocument;
   const ASource: TNyxText);
+begin
+  AcceptExecuted(ADocument, ASource, Default(TNyxPascalProjectFiles));
+end;
+
+procedure TNyxSourceWorkspace.AcceptExecuted(ADocument: TNyxDocument;
+  const ASource: TNyxText; const AFiles: TNyxPascalProjectFiles);
 var
   LDesign: TNyxText;
 begin
   { Admission/encoding can fail. Publish none of the workspace members until
     the complete source identity and detached design have both been validated. }
-  NyxCompanionUnitName(ASource);
+
+  if AFiles.IsEmpty then
+  begin
+    NyxCompanionUnitName(ASource);
+  end
+  else
+  begin
+    AFiles.Open(ASource);
+  end;
   ValidateNyxDocumentProperties(ADocument);
   LDesign := TNyxCodec.Encode(ADocument);
   FPrefix := ASource;
@@ -6498,6 +6518,7 @@ begin
   FDesign := LDesign;
   FCustomFrame := True;
   FOrigin := nsoExecuted;
+  FFiles := AFiles;
   FGeneratedBody := '';
 end;
 
@@ -6507,6 +6528,7 @@ begin
   {$ifdef PAS2JS}
   Result := Result * 2;
   {$endif}
+  Result := Result + FFiles.StorageBytes;
 end;
 
 function TNyxSourceCheckpoint.GetSource: TNyxText;
@@ -6522,6 +6544,7 @@ begin
   Result.FDesign := FDesign;
   Result.FCustomFrame := FCustomFrame;
   Result.FOrigin := FOrigin;
+  Result.FFiles := FFiles;
 end;
 
 function TNyxSourceWorkspace.Capture(ADocument: TNyxDocument): TNyxSourceCheckpoint;
@@ -6543,13 +6566,15 @@ begin
   FDesign := ACheckpoint.FDesign;
   FCustomFrame := ACheckpoint.FCustomFrame;
   FOrigin := ACheckpoint.FOrigin;
+  FFiles := ACheckpoint.FFiles;
   FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
 
 function TNyxSourceWorkspace.Snapshot: TNyxText;
-{$ifdef NYX_SOURCE_PROFILE}
 var
+  LData: TNyxDataValue;
+{$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
 {$endif}
 begin
@@ -6560,11 +6585,21 @@ begin
 
   if FOrigin = nsoExecuted then
   begin
-    Result := NyxObject([
+    LData := NyxObject([
       NyxField('prefix', NyxData(FPrefix)), NyxField('body', NyxData(FBody)),
       NyxField('suffix', NyxData(FSuffix)), NyxField('design', NyxData(FDesign)),
       NyxField('custom', NyxData(FCustomFrame)),
-      NyxField('executed', NyxData(True))]).ToJSON;
+      NyxField('executed', NyxData(True))]);
+
+    if not FFiles.IsEmpty then
+    begin
+      LData := NyxObject([
+        NyxField('prefix', NyxData(FPrefix)), NyxField('body', NyxData(FBody)),
+        NyxField('suffix', NyxData(FSuffix)), NyxField('design', NyxData(FDesign)),
+        NyxField('custom', NyxData(FCustomFrame)), NyxField('executed', NyxData(True)),
+        NyxField('pascalFiles', TNyxDataValue.ParseJSON(FFiles.Encoded))]);
+    end;
+    Result := LData.ToJSON;
   end
   else
   begin
@@ -6587,6 +6622,7 @@ var
   LDesign: TNyxText;
   LCustom: Boolean;
   LOrigin: TNyxSourceOrigin;
+  LFiles: TNyxPascalProjectFiles;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
   {$endif}
@@ -6599,13 +6635,14 @@ begin
   LDesign := LData.Field('design').AsText;
   LCustom := LData.Field('custom').AsBoolean;
   LOrigin := nsoDeclarative;
+  LFiles := Default(TNyxPascalProjectFiles);
 
   if LData.Kind <> ndObject then
   begin
     raise ENyxSource.CreateAt('Source checkpoint requires an object', ASnapshot, 1);
   end;
 
-  if LData.Count = 6 then
+  if (LData.Count = 6) or (LData.Count = 7) then
   begin
 
     if (LData.Field('executed').Kind <> ndBoolean) or
@@ -6614,7 +6651,15 @@ begin
     begin
       raise ENyxSource.CreateAt('Executed source checkpoint has invalid metadata', ASnapshot, 1);
     end;
-    NyxCompanionUnitName(LPrefix);
+
+    if LData.Count = 7 then
+    begin
+      LFiles := TNyxPascalProjectFiles.Parse(LData.Field('pascalFiles').ToJSON, LPrefix);
+    end
+    else
+    begin
+      NyxCompanionUnitName(LPrefix);
+    end;
     LOrigin := nsoExecuted;
   end
   else if LData.Count <> 5 then
@@ -6627,6 +6672,7 @@ begin
   FDesign := LDesign;
   FCustomFrame := LCustom;
   FOrigin := LOrigin;
+  FFiles := LFiles;
   FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
