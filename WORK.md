@@ -33,7 +33,87 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Semantic file membership — 2026-10-17
+## Current integration: Project routine navigation — 2026-10-17
+
+Previous goal turn is progress: edbca96 supplies reviewed semantic membership,
+qualified and pushed with exact protected work. Reassessment of original NS-4
+criterion five follows the managed-main-only routine/declaration reader. The
+deliverable now supplies include-aware helper discovery and exact physical source
+locations, bounded counterpart/body windows and compiler-backed focused body
+editing through existing nyx_pascal. It reuses the source lexer, portable project
+and scalar patcher, preserving legacy managed-source guards. No invented credit
+or smaller task is introduced.
+
+The public immutable routine index expands only captured include leaves, keeps
+physical Unicode/occurrence provenance and rejects cycles/budget overflow without
+a partial index. Nested functions belong to their parent. Sparse physical cursors
+bound location rescans; typed browse limits and one revision-pinned owning-unit
+cache remain independent of compiler/project limits. Unknown/conditional
+counterparts and split physical bodies explain their limits. Shared fragments
+require an explicit owner; overload ordinals are revision-pinned inspection only.
+Main compiler entry points remain protected with or without managed-view markers.
+
+Captured-file projects automatically use aware default main queries. Qualified
+physical locations preserve file/line/column and scalar offsets; the simple line
+field is zero for another leaf, preventing an include-to-main caret mistake.
+Projects without captured files retain legacy query/admission behavior.
+Typed owner/name body groups resolve exact original-file ranges, retain complete
+calling-convention signatures/siblings and use one sealed complete construction/
+paired publication. No proposed buffer is staged. Explicit mixed-file ranges
+remain available for broader source changes. No new tool or installed schema.
+
+Accepted evidence is composite, with separate overlapping counts:
+
+- logs/semantic-4-run.log: 107 actual native production-tool/observing checks at
+  1280/390, clean heap, on every functional thirteen-input byte pin. Default main and
+  selected helper/include discovery/windows, physical counterparts, overload
+  ordinals, wrong owner/revision/expectation and modifier-escape refusals pass.
+  One group edits main/include/unit bodies, calls the compiled cdecl helper and
+  changes actual Unicode document meaning; unchanged main text, exact memo/model/
+  selection, retry, paired ordinary Undo/Redo, compiler diagnostics and late/
+  pending drafts pass. Nine child compilers include two deliberate error logs,
+  zero warnings. Sockets are substituted, not authenticated HTTP evidence.
+- logs/portable-3-run.log: 92 native source-file checks (29 routine/index/body
+  checks), clean heap, including nested/split includes, Unicode physical offsets,
+  read-only conditional/managed contexts, limits/cycles, exact copied ownership,
+  scope escapes and immutable calling conventions. Its core inputs remain exact;
+  later changes affect only agent queries and their observing fixture.
+- Maintained legacy paths pass 21 routine lexical, 20 declaration lexical and
+  31 semantic routine checks, clean heaps. These precede the isolated project-
+  modifier/default-query refinements and retain their own source boundary.
+- Eleven accepted top-level compiler logs have zero owned warnings. Both Studios,
+  backend/worker and portable/authority browser consumers compile. Four pas2js
+  products/consumers retain seven upstream RTL warnings each (28). No browser
+  product/consumer executes; constructor jobs are not full application artifacts.
+- Five current protected hashes retain all nine complete contexts/history/drafts/
+  profile, with the inherited historical user-config difference kept separate.
+  All 349 frozen 7422453 artifacts verify, clean heap. All owned handles joined;
+  no owned process/listener remains. LAN stays offline; no rollout/config change.
+
+Retain logs/abi-before-repair-run.log as an expected failing regression, excluded from
+acceptance. Review found cdecl inside the replaceable body; its failing assertion
+proved the gap before the owning index moved declaration modifiers into the
+immutable signature. Final actual construction calls that preserved convention.
+Preliminary observing runs 90/101 do not replace the final 107/default-query
+qualification. source-pins-5-private.json owns the complete functional thirteen-
+input identity; final-source-pins-private.json owns the final composite. The staged whitespace check
+caught one extra blank EOF line in the new agent include; after all handles
+joined, only that blank line was removed. Diff/whitespace review qualifies this
+format-only final composite, not another runtime execution claim.
+
+Stop routine/modifier/default-query/compiler/fixture variants. Reassess ordinary
+source outline/navigation integration through this public index, with general
+type/symbol completion and richer declarations under existing NS-4/NS-5 owners.
+Full grammar, performance budgets, browser/HTTP/observing quality, parity and
+delivery remain open. No original full criterion/task/counter/credit/DONE closes.
+
+Fresh document-control discovery finds no connected sessions; no native Nyx tool
+is exposed. The owned never-listening production engine is the explicit fallback.
+No host/browser/capture, protected configuration/enrollment/cleanup retry, approval
+bypass or sub-agents. Evidence and five baseline hashes are behind ignored
+.local/project-routines-paths-private.json on the provisioned scratch drive.
+
+## Previous integration: Semantic file membership — 2026-10-17
 
 Previous goal turn is progress: pushed 5c94eee adds bounded helper windows and
 atomic source ranges, with actual native compiler/observing/history evidence.

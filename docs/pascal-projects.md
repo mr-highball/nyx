@@ -373,6 +373,79 @@ This extends the existing tool in current source, with no new tool name or
 installed-release claim. WORK.md owns actual native/compiler/observing evidence
 separately from browser compilation and the existing HTTP/delivery gate.
 
+## Project routines and physical source locations
+
+The current-source Pascal tool accepts exact `file` selectors on `routines`,
+`routine` and `declaration` reads, plus an optional `expectedRevision`. Omitting
+the selector selects main. Captured-file projects automatically use include-aware
+context; projects without captured files retain legacy managed-main behavior.
+Selecting a main/helper unit
+indexes that translation unit and its nested includes. Selecting an include also
+requires `owner`, an exact main/helper selector: the same fragment may have
+different scope in different units. No include context is guessed.
+
+`routines` remains paged (20 default, 50 maximum). Each row reports a stable name,
+kind, revision-local ordinal, editability/reason and separate physical locations
+for its definition, body, implementation signature and interface counterpart.
+Locations use zero-based Unicode-scalar offsets and one-based line/column values
+in the original accepted file, never the concatenated expansion. Feed those file/
+line values into existing `unit` windows for surrounding context. Queries do not
+move the observing editor or publish source.
+The simple `line` field remains scoped to the queried file and is zero for a
+location in another leaf. A default main query cannot redirect a caret to an
+include's line by treating it as a main-unit location.
+
+`routine` and `declaration` return at most 4096 scalars of the requested accepted
+text. Concatenate windows at one revision for an exact expectation. Declaration
+`part` chooses interface or implementation; unresolved/conditional counterparts
+report `visibility:unknown`. A defined `textSource` identifies the exact physical
+span. An undefined location deliberately omits file/caret coordinates and the
+window contains expanded read-only text. Nested routines remain inside their
+parent. Overloads remain distinct discovery rows; inspecting one needs its ordinal
+and exact revision. Ordinals never become focused mutation identities.
+
+Bodies retain authored include directives when both boundaries belong to one
+physical occurrence. Bodies split across different files/occurrences remain
+readable and explain why focused replacement refuses. Use explicit grouped file
+ranges for broader changes. Physical text and `pendingDraft` refer to the returned
+span; `pendingDrafts` also reports unfinished work elsewhere. Pending buffers are
+not returned as accepted routine text.
+
+`edit-routines` items can supply `file` and `owner` with the existing routine,
+expected and implementation fields. Explicit contexts, and admitted handwritten
+main projects, use one complete compiler-backed project candidate and one paired
+Undo publication. No visible buffer is staged. A name must be unambiguous in its
+owner; signatures, calling conventions and siblings stay retained. Source-data
+preparation rejects scope escapes before compilation. Compiler diagnostics, failed
+publication and late ordinary typing preserve the complete accepted pair/drafts.
+Legacy main-only literal admission remains separate.
+
+```pascal
+LOwner := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('example.presenter'));
+LIndex := CaptureNyxPascalRoutineIndex(LAcceptedInputs, LOwner);
+LSite := LIndex.Item(LChosenIndex);
+LPatch := NewNyxProjectRoutinePatch([
+  NyxProjectRoutineEdit(LOwner,
+    NyxRoutineEdit(LSite.Routine, LSite.Body, LImplementation))
+]);
+LProposedInputs := LPatch.PrepareProject(LAcceptedInputs);
+```
+
+The immutable index copies text/locations and outlives its input provider. Browsing
+is lexical, not compiler type resolution or target-conditional execution. Cycles,
+unsupported/incomplete syntax and bounds refuse without a partial index. Typed
+`TNyxPascalRoutineLimits` defaults allow 32 MiB expanded UTF-8, depth 32 and 4096
+include occurrences; callers can tune these independently of project limits.
+Sparse physical Unicode cursors bound location lookup scans. Studio caches one
+owning-unit index at the accepted revision and retires it on change. Shared include
+edits intentionally affect every user of that physical leaf; compile the complete
+project to check the used dependency closure.
+
+This extends the existing tool in source only. It does not install a schema,
+execute browser consumers, add an ordinary symbol-outline UI or prove general
+type/symbol completion, full grammar, performance budgets, parity or delivery.
+WORK.md owns exact qualification, retained failures and those separate owners.
+
 ## Semantic source-file membership
 
 Current-source `nyx_pascal` also supports `edit-files`: typed helper creation or

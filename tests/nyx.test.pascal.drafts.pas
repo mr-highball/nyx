@@ -34,13 +34,16 @@ function RunNyxPascalFileChangeChecks: Integer;
 { Exact multi-file range/Unicode/value/budget admission, without executing code.
   Real compiler, semantic publication and observing input are separate checks. }
 function RunNyxPascalProjectEditChecks: Integer;
+{ Include-aware lexical ownership/physical locations and typed body preparation;
+  these are data checks, not application execution or ordinary editor evidence. }
+function RunNyxPascalRoutineIndexChecks: Integer;
 
 implementation
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.editing, nyx.pascal.names,
   nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
   nyx.pascal.files.editor, nyx.controls, nyx.studio.sourcebuilds,
-  nyx.studio.sourceedits;
+  nyx.studio.sourceedits, nyx.source, nyx.studio.routineedits, nyx.studio.session;
 
 function RunNyxPascalDraftChecks: Integer;
 const
@@ -581,6 +584,245 @@ begin
     (TNyxPascalProjectFiles.Capture(LOriginal).Encoded = LBefore) and
     (Pos(LDirective, LCreated.Source) > 0),
     'successful and refused groups retain both independent previous projects');
+  Result := LChecks;
+end;
+
+function RunNyxPascalRoutineIndexChecks: Integer;
+const
+  CMain: TNyxText = 'unit browse.main;' + #10 +
+    '{$mode delphi}{$H+}{$codepage utf8}' + #10 +
+    'interface' + #10 + 'implementation' + #10 + 'end.' + #10;
+  CHelper: TNyxText = 'unit browse.helpers;' + #10 +
+    '{$mode delphi}{$H+}{$codepage utf8}' + #10 +
+    'interface' + #10 + 'uses nyx.text;' + #10 + '{$I api.inc}' + #10 +
+    'implementation' + #10 + '(*$include ''bodies.inc''*)' + #10 + 'end.' + #10;
+  CAPI: TNyxText = 'function Plan: TNyxText;' + #10;
+  CBody: TNyxText = '{ A physical Unicode prefix 🚀 𐐷 }' + #10 +
+    'function Plan: TNyxText;' + #10 +
+    '  function Nested: Integer;' + #10 + '  begin' + #10 + '    Result := 1;' + #10 + '  end;' + #10 +
+    'begin' + #10 + '  {$I value.inc}' + #10 + 'end;' + #10 +
+    'procedure Other;' + #10 + 'begin' + #10 + 'end;' + #10;
+  CValue: TNyxText = 'Result := ''Original 🚀 {$I absent.inc} function Phantom: Integer;'';' + #10;
+  CPlan: TNyxText = #10 + 'begin' + #10 + '  Result := TNyxText(''Updated 🚀 𐐷'');' + #10 + 'end;';
+var
+  LProject: INyxPascalProject;
+  LChanged: INyxPascalProject;
+  LVariant: INyxPascalProject;
+  LIndex: INyxPascalRoutineIndex;
+  LBeforeIndex: INyxPascalRoutineIndex;
+  LSite: TNyxPascalRoutineSite;
+  LOther: TNyxPascalRoutineSite;
+  LSession: TNyxStudioSession;
+  LOwner: TNyxPascalSourceRef;
+  LBody: TNyxPascalSourceRef;
+  LAPI: TNyxPascalSourceRef;
+  LValue: TNyxPascalSourceRef;
+  LPatch: INyxSourceProjectPatch;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+  LChecks: Integer;
+  LKind: Integer;
+
+  procedure Check(AValue: Boolean; const AReason: String);
+  begin
+
+    if not AValue then
+    begin
+      raise Exception.Create(AReason);
+    end;
+    Inc(LChecks);
+  end;
+
+begin
+  LChecks := 0;
+  LOwner := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('browse.helpers'));
+  LBody := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('bodies.inc'));
+  LAPI := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('api.inc'));
+  LValue := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('value.inc'));
+  LProject := NewNyxPascalProject(NyxPascalUnit('browse.main'), CMain)
+    .WithUnit(NyxPascalUnit('browse.helpers'), CHelper)
+    .WithInclude(NyxPascalInclude('api.inc'), CAPI)
+    .WithInclude(NyxPascalInclude('bodies.inc'), CBody)
+    .WithInclude(NyxPascalInclude('value.inc'), CValue);
+  LBefore := TNyxPascalProjectFiles.Capture(LProject).Encoded;
+  LIndex := CaptureNyxPascalRoutineIndex(LProject, LOwner);
+  Check((LIndex.Count = 2) and LIndex.Owner.SameFile(LOwner),
+    'one owning helper indexes include definitions without promoting nested or quoted routines');
+  LSite := LIndex.Item(0);
+  LOther := LIndex.Item(1);
+  Check((LSite.Routine.Name = 'Plan') and (LOther.Routine.Name = 'Other'),
+    'expanded discovery retains physical declaration order');
+  Check(LSite.Definition.FileReference.SameFile(LBody) and
+    (LSite.Definition.Line = 2) and (LSite.Definition.Column = 1) and
+    (LSite.Definition.Offset = NyxTextScalarCount(Copy(CBody, 1, Pos('function Plan', CBody) - 1))),
+    'physical definition uses Unicode scalars rather than expanded offsets or UTF-8 bytes');
+  Check(LSite.SignatureLocation.IsDefined and LSite.BodyLocation.IsDefined and
+    LSite.BodyLocation.FileReference.SameFile(LBody) and LSite.Editable,
+    'a complete include-owned body has an exact safe physical range');
+  Check((Pos('{$I value.inc}', LSite.Body) > 0) and (Pos('Original', LSite.Body) = 0) and
+    (Pos('Nested', LSite.Body) > 0),
+    'contiguous body windows retain authored directives and nested routines, not expanded replacements');
+  Check((LSite.Visibility = prvInterface) and (LSite.Declaration = Copy(CAPI, 1, Length(CAPI) - 1)) and
+    LSite.DeclarationLocation.FileReference.SameFile(LAPI) and (LSite.DeclarationLocation.Line = 1),
+    'counterpart declarations retain their own physical include and exact signature');
+  Check(LSite.TouchesFile(LBody) and LSite.TouchesFile(LAPI) and LSite.TouchesFile(LValue),
+    'all contributing files remain queryable, including nested body includes');
+  Check(CaptureNyxPascalRoutineIndex(LProject, TNyxPascalSourceRef.Main).Count = 0,
+    'ordinary units need no synthetic Nyx managed-view markers');
+  LSession := TNyxStudioSession.Create;
+  try
+    LVariant := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(LSession.Source)),
+      LSession.Source);
+    LIndex := CaptureNyxPascalRoutineIndex(LVariant, TNyxPascalSourceRef.Main);
+    Check(LIndex.Count > 0, 'managed main browsing retains readable compiler infrastructure');
+    LRejected := False;
+    for LKind := 0 to LIndex.Count - 1 do
+    begin
+
+      if SameText(LIndex.Item(LKind).Routine.Name, 'BuildNyxDocument') then
+      begin
+        LRejected := not LIndex.Item(LKind).Editable;
+      end;
+    end;
+    Check(LRejected, 'managed builders remain noneditable through project routine context');
+  finally
+    LSession.Free;
+  end;
+  LIndex := CaptureNyxPascalRoutineIndex(LProject, LOwner);
+  LBeforeIndex := LIndex;
+  LPatch := NewNyxProjectRoutinePatch([
+    NyxProjectRoutineEdit(LOwner, NyxRoutineEdit(LOther.Routine, LOther.Body,
+      #10 + 'begin' + #10 + '  { An independent sibling note. }' + #10 + 'end;')),
+    NyxProjectRoutineEdit(LOwner, NyxRoutineEdit(LSite.Routine, LSite.Body, CPlan))]);
+  LChanged := LPatch.PrepareProject(LProject);
+  LIndex := CaptureNyxPascalRoutineIndex(LChanged, LOwner);
+  Check((LChanged.Source = CMain) and (LOwner.Text(LChanged) = CHelper) and
+    (LAPI.Text(LChanged) = CAPI) and (LValue.Text(LChanged) = CValue),
+    'reverse-ordered semantic bodies retain main, unit, counterparts and unused nested include bytes');
+  Check((LIndex.Item(0).Body = CPlan) and
+    (Pos('independent sibling note', LIndex.Item(1).Body) > 0),
+    'typed body preparation sorts original physical ranges and changes both exact routines');
+  Check((TNyxPascalProjectFiles.Capture(LProject).Encoded = LBefore) and
+    (LBeforeIndex.Item(0).Body = LSite.Body),
+    'old input and detached index values survive independent candidate preparation');
+  for LKind := 0 to 2 do
+  begin
+    LRejected := False;
+    try
+      case LKind of
+        0:
+          LPatch := NewNyxProjectRoutinePatch([NyxProjectRoutineEdit(LOwner,
+            NyxRoutineEdit(LSite.Routine, 'wrong', CPlan))]);
+        1:
+          LPatch := NewNyxProjectRoutinePatch([NyxProjectRoutineEdit(LOwner,
+            NyxRoutineEdit(LSite.Routine, LSite.Body, CPlan + #10 +
+              'procedure Escaped; begin end;'))]);
+        2:
+          LPatch := NewNyxProjectRoutinePatch([NyxProjectRoutineEdit(LOwner,
+            NyxRoutineEdit(LSite.Routine, LSite.Body, CPlan + #10 + 'var Escaped: Integer;'))]);
+      end;
+      LPatch.PrepareProject(LProject);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (TNyxPascalProjectFiles.Capture(LProject).Encoded = LBefore),
+      'mismatched expectations and sibling/declaration escapes preserve the original inputs');
+  end;
+  for LKind := 0 to 3 do
+  begin
+    LRejected := False;
+    try
+      case LKind of
+        0:
+          CaptureNyxPascalRoutineIndex(LProject, LBody);
+        1:
+          CaptureNyxPascalRoutineIndex(LProject, LOwner,
+            TNyxPascalRoutineLimits.Defaults.UpToExpandedBytes(16));
+        2:
+          CaptureNyxPascalRoutineIndex(LProject, LOwner,
+            TNyxPascalRoutineLimits.Defaults.UpToDepth(1));
+        3:
+          CaptureNyxPascalRoutineIndex(LProject, LOwner,
+            TNyxPascalRoutineLimits.Defaults.UpToIncludes(1));
+      end;
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'unowned fragments and explicit browse budgets refuse without a partial index');
+  end;
+  LVariant := LProject.WithUnit(NyxPascalUnit('browse.helpers'),
+    'unit browse.helpers; interface implementation {$I head.inc}{$I tail.inc} end.')
+    .WithInclude(NyxPascalInclude('head.inc'), 'function Split: Integer;' + #10 + 'begin' + #10)
+    .WithInclude(NyxPascalInclude('tail.inc'), 'Result := 7;' + #10 + 'end;');
+  LIndex := CaptureNyxPascalRoutineIndex(LVariant, LOwner);
+  Check((LIndex.Count = 1) and not LIndex.Item(0).Editable and
+    not LIndex.Item(0).BodyLocation.IsDefined and (Pos('Result := 7', LIndex.Item(0).Body) > 0) and
+    LIndex.Item(0).TouchesFile(TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('tail.inc'))),
+    'physically split implementations stay readable and discoverable without a fabricated edit site');
+  LVariant := LProject.WithUnit(NyxPascalUnit('browse.helpers'),
+    'unit browse.helpers; interface implementation {$I cycle-a.inc} end.')
+    .WithInclude(NyxPascalInclude('cycle-a.inc'), '{$I cycle-b.inc}')
+    .WithInclude(NyxPascalInclude('cycle-b.inc'), '{$I cycle-a.inc}');
+  LRejected := False;
+  try
+    CaptureNyxPascalRoutineIndex(LVariant, LOwner);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'include cycles refuse before returning any indexed context');
+  LVariant := LProject.WithUnit(NyxPascalUnit('browse.helpers'),
+    'unit browse.helpers; interface implementation ' +
+    '{$ifdef FIRST}procedure Conditional; begin end;{$endif} end.');
+  LIndex := CaptureNyxPascalRoutineIndex(LVariant, LOwner);
+  Check((LIndex.Count = 1) and not LIndex.Item(0).Editable and (LIndex.Item(0).Reason <> ''),
+    'conditional definitions retain discovery and explicit focused-edit refusal');
+  LVariant := LProject.WithInclude(NyxPascalInclude('api.inc'), 'function Plan: Integer;');
+  LIndex := CaptureNyxPascalRoutineIndex(LVariant, LOwner);
+  Check((LIndex.Item(0).Visibility = prvUnknown) and not LIndex.Item(0).Editable,
+    'incompatible declaration counterparts cannot pretend to own an editable signature');
+  LVariant := LProject.WithUnit(NyxPascalUnit('browse.helpers'),
+    'unit browse.helpers; interface implementation ' +
+    'function Convention: Integer; cdecl;' + #10 + 'begin Result := 7; end; end.');
+  LIndex := CaptureNyxPascalRoutineIndex(LVariant, LOwner);
+  LOther := LIndex.Item(0);
+  Check((Pos('cdecl;', LOther.Signature) > 0) and (Pos('cdecl', LOther.Body) = 0) and LOther.Editable,
+    'calling convention belongs to the immutable declaration, never the replaceable body');
+  LChanged := NewNyxProjectRoutinePatch([NyxProjectRoutineEdit(LOwner,
+    NyxRoutineEdit(LOther.Routine, LOther.Body, #10 + 'begin Result := 9; end;'))])
+    .PrepareProject(LVariant);
+  LIndex := CaptureNyxPascalRoutineIndex(LChanged, LOwner);
+  Check((LIndex.Item(0).Signature = LOther.Signature) and (Pos('Result := 9', LIndex.Item(0).Body) > 0),
+    'typed replacement preserves the complete calling-convention signature exactly');
+  LRejected := False;
+  try
+    NewNyxProjectRoutinePatch([NyxProjectRoutineEdit(LOwner,
+      NyxRoutineEdit(LOther.Routine, LOther.Body, #10 + 'stdcall;' + #10 + 'begin Result := 9; end;'))])
+      .PrepareProject(LVariant);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'a focused body cannot insert a different calling convention before begin');
+  LVariant := NewNyxPascalProject(NyxPascalUnit('browse.main'),
+    'unit browse.main; interface implementation function BuildNyxDocument: Integer;' +
+    'begin Result := 1; end; end.');
+  LIndex := CaptureNyxPascalRoutineIndex(LVariant, TNyxPascalSourceRef.Main);
+  Check((LIndex.Count = 1) and not LIndex.Item(0).Editable,
+    'main compiler entry points stay protected even without a managed-view frame');
+  LProject := nil;
+  Check((LBeforeIndex.Count = 2) and (LBeforeIndex.Item(0).Declaration = LSite.Declaration),
+    'copied source windows and locations outlive the complete provider');
   Result := LChecks;
 end;
 

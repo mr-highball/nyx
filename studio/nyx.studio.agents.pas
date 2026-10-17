@@ -133,6 +133,12 @@ type
     FProjectExportRevision: Integer;
     FProjectExportPair: TNyxProjectPair;
     FProjectExportPacket: TNyxText;
+    { One immutable owning-unit index at the accepted revision. This bounds
+      retained expansion data and avoids rebuilding it for every scalar window.
+      Drafts never enter the index; Changed revokes it with source authority. }
+    FSourceRoutineIndex: INyxPascalRoutineIndex;
+    FSourceRoutineOwner: TNyxPascalSourceRef;
+    FSourceRoutineRevision: Integer;
     procedure RemoveProjectImport(AIndex: Integer);
     function ProjectImportIndex(const AOwner, AID: TNyxText): Integer;
     function ProjectFile(const AArguments: TNyxDataValue;
@@ -187,6 +193,8 @@ type
     function Imports(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Bounded helper discovery/text and guarded grouped implementation editing. }
     function Routines(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
+    function ProjectRoutines(const AArguments: TNyxDataValue): TNyxDataValue;
+    function RoutineIndex(const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex;
     { Exact interface counterpart context and one grouped declaration edit. }
     function Declarations(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Bounded exact managed-builder text and one guarded paired source command.
@@ -722,6 +730,9 @@ begin
   FProjectImportSerial := AOrigin.FProjectImportSerial;
   FProjectReviewSerial := AOrigin.FProjectReviewSerial;
   FProjectExportRevision := AOrigin.FProjectExportRevision;
+  FSourceRoutineIndex := AOrigin.FSourceRoutineIndex;
+  FSourceRoutineOwner := AOrigin.FSourceRoutineOwner;
+  FSourceRoutineRevision := AOrigin.FSourceRoutineRevision;
   FProjectExportPair := AOrigin.FProjectExportPair;
   FProjectExportPacket := AOrigin.FProjectExportPacket;
 end;
@@ -771,6 +782,8 @@ begin
   FProjectExportRevision := 0;
   FProjectExportPair := NyxProjectPair('', '');
   FProjectExportPacket := '';
+  FSourceRoutineIndex := nil;
+  FSourceRoutineRevision := 0;
   FClaimed := True;
 end;
 
@@ -3144,6 +3157,8 @@ begin
   raise ENyxModel.Create('Removal needs a current owner/revision/exact-group reviewID');
 end;
 
+{$I nyx.studio.agents.projectroutines.inc}
+
 function TNyxAgentSession.SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LOffset: Integer;
@@ -3391,6 +3406,18 @@ var
   LText: TNyxText;
 begin
 
+  if not AApply and NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
+
+  if not AApply and (NyxAgentHas(AArguments, 'file') or
+    NyxAgentHas(AArguments, 'owner') or NyxAgentHas(AArguments, 'ordinal') or
+    not FSession.ProjectSnapshot.Files.IsEmpty) then
+  begin
+    Exit(ProjectRoutines(AArguments));
+  end;
+
   if AApply then
   begin
     NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
@@ -3405,7 +3432,7 @@ begin
 
   if AArguments.Field('mode').AsText = 'routine' then
   begin
-    NyxAgentFields(AArguments, '|mode|routine|offset|count|');
+    NyxAgentFields(AArguments, '|mode|expectedRevision|routine|offset|count|');
     LRoutine := ReadNyxRoutineSource(FSession.Source,
       NyxRoutine(TextArgument(AArguments, 'routine')));
     LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4 * 1024 * 1024);
@@ -3429,7 +3456,7 @@ begin
       NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
     Exit;
   end;
-  NyxAgentFields(AArguments, '|mode|offset|limit|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|limit|');
   LCatalog := ReadNyxRoutines(FSession.Source);
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4096);
   LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
@@ -3467,6 +3494,18 @@ var
   LPartName: TNyxText;
 begin
 
+  if not AApply and NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
+
+  if not AApply and (NyxAgentHas(AArguments, 'file') or
+    NyxAgentHas(AArguments, 'owner') or NyxAgentHas(AArguments, 'ordinal') or
+    not FSession.ProjectSnapshot.Files.IsEmpty) then
+  begin
+    Exit(ProjectRoutines(AArguments));
+  end;
+
   if AApply then
   begin
     NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
@@ -3478,7 +3517,7 @@ begin
     FSession.AdoptProject(LPair);
     Exit;
   end;
-  NyxAgentFields(AArguments, '|mode|routine|part|offset|count|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|routine|part|offset|count|');
   LPart := dspInterface;
   LPartName := 'interface';
 
@@ -4379,9 +4418,10 @@ function TNyxAgentSession.SourceEditReceipt(const AOwner: TNyxText;
 begin
 
   if (AArguments.Field('mode').AsText <> 'edit-unit') and
-    (AArguments.Field('mode').AsText <> 'edit-files') then
+    (AArguments.Field('mode').AsText <> 'edit-files') and
+    (AArguments.Field('mode').AsText <> 'edit-routines') then
   begin
-    raise ENyxModel.Create('Source edit receipts require edit-unit or edit-files mode');
+    raise ENyxModel.Create('Source edit receipts require a supported compiled source mode');
   end;
   Result := CompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
 end;
@@ -4413,7 +4453,8 @@ begin
     if (AArguments.Field('mode').AsText <> 'apply') and
       not ((ATool = 'nyx_pascal') and
         ((AArguments.Field('mode').AsText = 'edit-unit') or
-          (AArguments.Field('mode').AsText = 'edit-files'))) then
+          (AArguments.Field('mode').AsText = 'edit-files') or
+          (AArguments.Field('mode').AsText = 'edit-routines'))) then
     begin
       raise ENyxModel.Create('Compiled focused receipts require their supported mutation mode');
     end;
@@ -4566,7 +4607,8 @@ begin
   RequireRevision(AArguments);
 
   if ((AArguments.Field('mode').AsText <> 'edit-unit') and
-    (AArguments.Field('mode').AsText <> 'edit-files')) or
+    (AArguments.Field('mode').AsText <> 'edit-files') and
+    (AArguments.Field('mode').AsText <> 'edit-routines')) or
     (FPermission <> apEdit) or not SourceEditRequiresCompiler(AArguments) then
   begin
     raise ENyxModel.Create('Compiled source edits require Allow edits and a captured compiler intent');
@@ -4577,6 +4619,21 @@ begin
   begin
     raise ENyxStudioDraftResolutionRequired.Create(
       'Resolve the pending Pascal draft before source edits');
+  end;
+
+  if AArguments.Field('mode').AsText = 'edit-routines' then
+  begin
+    LInputs := Result.Files.Open(Result.Source);
+
+    if LInputs = nil then
+    begin
+      LInputs := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Result.Source)), Result.Source);
+    end;
+    LProjectPatch := ReadProjectRoutinePatch(LInputs, AArguments.Field('changes'));
+    ASchemas := CaptureNyxSchemas;
+    ARequest := FSession.PrepareSourceEditRequest(
+      LProjectPatch.PrepareProject(LInputs), ASchemas.Revision);
+    Exit;
   end;
 
   if AArguments.Field('mode').AsText = 'edit-files' then
@@ -4649,6 +4706,12 @@ begin
   LChanges := AArguments.Field('changes');
   for LIndex := 0 to LChanges.Count - 1 do
   begin
+
+    if (AArguments.Field('mode').AsText = 'edit-routines') and
+      (NyxAgentHas(LChanges.Item(LIndex), 'file') or NyxAgentHas(LChanges.Item(LIndex), 'owner')) then
+    begin
+      Exit(True);
+    end;
 
     if NyxAgentHas(LChanges.Item(LIndex), 'file') and
       (SourceFileSelection(LChanges.Item(LIndex).Field('file')).Role <> npsMain) then

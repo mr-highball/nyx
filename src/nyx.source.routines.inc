@@ -106,7 +106,8 @@ begin
   end;
 end;
 
-function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
+function ReadRoutineCatalog(const ASource: TNyxText;
+  AManaged: Boolean): TNyxRoutineCatalog;
 var
   LTokens: TTokens;
   LPrefix: TNyxText;
@@ -127,7 +128,13 @@ var
 begin
   Result := Default(TNyxRoutineCatalog);
   NyxCompanionUnitName(ASource);
-  SplitNyxSourceFrame(ASource, LPrefix, LBuilder, LSuffix);
+  LPrefix := '';
+  LBuilder := '';
+
+  if AManaged then
+  begin
+    SplitNyxSourceFrame(ASource, LPrefix, LBuilder, LSuffix);
+  end;
   LTokens := HandlerTokens(ASource);
   LIndex := 0;
   while (LIndex < Length(LTokens)) and not HandlerWord(LTokens, LIndex, 'implementation') do
@@ -224,12 +231,12 @@ begin
       LEntry.FLine := LLine;
       LEntry.FEditable := True;
 
-      if (LEntry.FStart <= Length(LPrefix) + Length(LBuilder)) and
+      if AManaged and (LEntry.FStart <= Length(LPrefix) + Length(LBuilder)) and
         (LEntry.FFinish > Length(LPrefix)) then
       begin
         LEntry.FReason := 'Managed views belong to the design contract';
       end
-      else if SameText(LName, 'BuildNyxDocument') or SameText(LName, 'BindNyxCallbacks') then
+      else if AManaged and (SameText(LName, 'BuildNyxDocument') or SameText(LName, 'BindNyxCallbacks')) then
       begin
         LEntry.FReason := 'Compiler-managed companion infrastructure';
       end
@@ -274,6 +281,11 @@ begin
     end;
     Inc(LIndex);
   end;
+end;
+
+function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
+begin
+  Result := ReadRoutineCatalog(ASource, True);
 end;
 
 function ReadNyxRoutineSource(const ASource: TNyxText;

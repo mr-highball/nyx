@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source [project routine bodies](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
+resolve typed owner/name intentions into exact original-file ranges, validate
+the complete source-only candidate and use the same sealed constructor/publisher.
+Main text may remain unchanged while several helper bodies supply new application
+meaning. Compiler failure and late typing retain the pair/history. WORK.md owns
+qualification and source-only schema limits; full reload/cache/HTTP/parity/
+delivery and original criteria/credit remain open.
+
 Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)
 stages typed inventory and dependency-text changes before complete validation,
 then uses the existing sealed source-edit constructor/publication owner. Main

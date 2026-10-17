@@ -31,7 +31,7 @@ var
 begin
   try
     LChecks := RunNyxPascalDraftChecks + RunNyxPascalFileChangeChecks +
-      RunNyxPascalProjectEditChecks;
+      RunNyxPascalProjectEditChecks + RunNyxPascalRoutineIndexChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-file-drafts', 'passed');
     document.body.setAttribute('data-file-draft-checks', IntToStr(LChecks));

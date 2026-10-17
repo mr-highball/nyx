@@ -4,6 +4,28 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source project routines preserve owning-unit/include scope and physical
+Unicode locations through the existing Pascal tool. Captured-file projects use
+aware default main queries; cross-file simple lines are zero, with qualified sites
+retained. Revision-pinned overload inspection and typed focused body groups share
+the complete constructor/publisher and paired Undo. Functional exact 13-input native
+observing 107 at 1280/390 and core portable 92 pass, clean heaps; unchanged legacy
+paths separately pass 21/20/31. Nine child compilers include two deliberate errors
+and zero warnings. Eleven accepted top-level logs have zero owned warnings; both
+Studios/backend/worker/browser consumers compile, browser execution stays held
+(28 upstream RTL warnings). WORK.md owns composite pins and the retained failing
+cdecl regression; final bodies preserve declaration modifiers and actual compiled
+calling convention. Final post-runtime Pascal delta removes one extra blank EOF
+line in the new agent include, qualified by diff/whitespace review only. Five
+protected hashes/nine
+complete contexts and 349 frozen 7422453 artifacts stay exact; all handles join,
+no owned process remains and LAN stays offline. Stop routine/modifier/default/
+fixture/compiler variants. Reassess ordinary source outline/navigation through
+the public index, then broader declaration/type/symbol completion with existing
+owners. Full grammar/budgets/quality/parity/delivery and original criteria/credit
+remain open. No new tool, installed schema, DONE or rollout. No host/configuration/
+enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source nyx_pascal now supports grouped typed helper creation/removal with
 related original-file ranges. review-files issues bounded owner/revision/exact-
 group named warnings; edit-files uses one complete constructor and paired Undo.

@@ -30,7 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
-  nyx.pascal.names, nyx.pascal.project,
+  nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts,
   nyx.dates,
   nyx.times,
   nyx.colors,
@@ -157,6 +157,97 @@ type
   public
     function Item(AIndex: Integer): TNyxRoutineSource;
     property Count: Integer read GetCount;
+  end;
+
+  { Physical accepted-file position, independent of expanded include offsets.
+    Offset counts zero-based Unicode scalars; line/column are one-based. An
+    undefined location deliberately grants no single-file edit/navigation site. }
+  TNyxPascalRoutineLocation = record
+  private
+    FDefined: Boolean;
+    FFile: TNyxPascalSourceRef;
+    FOffset: Integer;
+    FLine: Integer;
+    FColumn: Integer;
+  public
+    property IsDefined: Boolean read FDefined;
+    property FileReference: TNyxPascalSourceRef read FFile;
+    property Offset: Integer read FOffset;
+    property Line: Integer read FLine;
+    property Column: Integer read FColumn;
+  end;
+
+  { Counterpart knowledge is lexical, never compiler type resolution. Methods
+    and conditional/ambiguous declarations retain Unknown rather than pretend
+    that an absent trustworthy counterpart means implementation-only visibility. }
+  TNyxPascalRoutineVisibility = (prvUnknown, prvImplementation, prvInterface);
+
+  { Detached routine context from one owning translation unit. Text is exact
+    physical source when its location is defined; a split span instead contains
+    expanded read-only text. Includes inside a contiguous body stay authored
+    directives. Copies retain no project/editor or compiler capability. Editable
+    means a focused body replacement has unambiguous single-file ownership;
+    compilation and paired publication remain separate requirements. }
+  TNyxPascalRoutineSite = record
+  private
+    FRoutine: TNyxRoutineRef;
+    FKind: TNyxRoutineKind;
+    FDefinition: TNyxPascalRoutineLocation;
+    FSignatureLocation: TNyxPascalRoutineLocation;
+    FBodyLocation: TNyxPascalRoutineLocation;
+    FDeclarationLocation: TNyxPascalRoutineLocation;
+    FSignature: TNyxText;
+    FBody: TNyxText;
+    FDeclaration: TNyxText;
+    FVisibility: TNyxPascalRoutineVisibility;
+    FEditable: Boolean;
+    FReason: TNyxText;
+    FSourceFiles: array of TNyxPascalSourceRef;
+  public
+    { Includes contributing a split span remain discoverable even when neither
+      endpoint supplies a trustworthy contiguous physical body. }
+    function TouchesFile(const AFile: TNyxPascalSourceRef): Boolean;
+    property Routine: TNyxRoutineRef read FRoutine;
+    property Kind: TNyxRoutineKind read FKind;
+    property Definition: TNyxPascalRoutineLocation read FDefinition;
+    property SignatureLocation: TNyxPascalRoutineLocation read FSignatureLocation;
+    property BodyLocation: TNyxPascalRoutineLocation read FBodyLocation;
+    property DeclarationLocation: TNyxPascalRoutineLocation read FDeclarationLocation;
+    property Signature: TNyxText read FSignature;
+    property Body: TNyxText read FBody;
+    property Declaration: TNyxText read FDeclaration;
+    property Visibility: TNyxPascalRoutineVisibility read FVisibility;
+    property Editable: Boolean read FEditable;
+    property Reason: TNyxText read FReason;
+  end;
+
+  { Explicit browsing bounds, independent of compiler/project admission. Defaults
+    permit 32 MiB expanded UTF-8, depth 32 and 4096 include occurrences. Repeated
+    includes consume the same budget again; no filesystem/preprocessor executes. }
+  TNyxPascalRoutineLimits = record
+  private
+    FBytes: Integer;
+    FDepth: Integer;
+    FIncludes: Integer;
+  public
+    class function Defaults: TNyxPascalRoutineLimits; static;
+    function UpToExpandedBytes(AValue: Integer): TNyxPascalRoutineLimits;
+    function UpToDepth(AValue: Integer): TNyxPascalRoutineLimits;
+    function UpToIncludes(AValue: Integer): TNyxPascalRoutineLimits;
+    procedure Validate;
+  end;
+
+  { Immutable include-aware catalog for an explicit main/helper unit. Nested
+    routines stay inside their parent; overloads remain discovery entries with
+    refusal reasons. Source text and physical positions survive input disposal.
+    Compilation still owns conditional selection/type correctness. At most 4096
+    routines are indexed; incomplete/unsupported syntax fails without a partial
+    index. An include requires its owning unit context, never a guessed scope. }
+  INyxPascalRoutineIndex = interface(IInterface)
+    ['{68F89A18-71A1-4D73-84BC-265587A0343C}']
+    function Count: Integer;
+    function Item(AIndex: Integer): TNyxPascalRoutineSite;
+    function Owner: TNyxPascalSourceRef;
   end;
 
   { Import sections are Pascal visibility choices, independent of output target. }
@@ -436,6 +527,13 @@ function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
   Expression/type correctness remains the ordinary compiler's responsibility. }
 function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
+{ Capture complete independent inputs, expand only admitted include leaves and
+  retain exact physical provenance. No host files, compiler or editor is touched. }
+function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
+  const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex; overload;
+function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
+  const AOwner: TNyxPascalSourceRef;
+  const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex; overload;
 { Preserve a handwritten builder and helpers while proposing typed customization
   procedures. New controls/pages/reusables, descendant placement, ordering and
   removal, typed defaults and resource variants use independent chronological
@@ -5777,6 +5875,7 @@ end;
 {$I nyx.source.imports.inc}
 {$I nyx.source.routines.inc}
 {$I nyx.source.declarations.inc}
+{$I nyx.source.projectroutines.inc}
 {$I nyx.source.customizations.inc}
 {$I nyx.source.continuations.inc}
 

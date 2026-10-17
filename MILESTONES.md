@@ -19,6 +19,14 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [routine context](docs/pascal-projects.md#project-routines-and-physical-source-locations)
+extends helper authoring with owning-unit/include discovery and exact physical
+locations. Named body groups share the existing complete compiler and paired
+history; WORK.md owns actual evidence and browser-compilation/delivery limits.
+General type/symbol completion, richer declarations, ordinary outline UI and full
+source/performance/quality/parity retain their original NS-4/NS-5 owners. No full
+criterion/task or completion credit closes from this bounded integration.
+
 Current-source [semantic source projects](docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
 extend the existing Pascal tool with bounded file identities/helper windows and
 one compiler-backed mixed-file range group. Ordinary file creation/removal remains

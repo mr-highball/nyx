@@ -1338,7 +1338,8 @@ begin
       (AArguments.Field('mode').AsText = 'apply');
     LSourceEdits := (ATool = 'nyx_pascal') and
       ((AArguments.Field('mode').AsText = 'edit-unit') or
-        (AArguments.Field('mode').AsText = 'edit-files'));
+        (AArguments.Field('mode').AsText = 'edit-files') or
+        (AArguments.Field('mode').AsText = 'edit-routines'));
     LImports := (ATool = 'nyx_project') and
       (AArguments.Field('mode').AsText = 'review-import') and
       (AArguments.Field('admission').AsText = 'compiler');
@@ -2772,6 +2773,16 @@ begin
       'the same budgets. Removal requires review-files first, then its owner/revision/exact-group ' +
       'reviewID on edit-files. Review returns named warnings without compiling or mutating; eight ' +
       'tickets expire on revision/disconnect. Repair uses/include dependencies in the same group. ' +
+      'Routine/declaration reads accept file and expectedRevision. Captured file projects use ' +
+      'owning-unit browsing automatically, with main as the default. The simple line field is ' +
+      'zero when a location belongs to another file; use the qualified physical location instead. ' +
+      'Units include their lexical ' +
+      'include contents; an include selector additionally requires its owning main/unit in owner. ' +
+      'Responses retain physical Unicode locations, never expanded-file caret offsets. ' +
+      'Revision-pinned ordinals inspect overloads; focused mutation still requires one unambiguous ' +
+      'name per owner. Explicit file/owner edit-routines changes and admitted handwritten routine ' +
+      'groups use one complete compiler-backed paired publication. Bodies retain signatures and ' +
+      'siblings; conditional or physically split bodies explain refusal and remain readable. ' +
       'Poll the ordinary nyx_build job; submittedSource diagnostics describe its immutable ' +
       'proposed file, never a current-editor navigation action. ' +
       'On compiler-admitted handwritten projects, mode apply stages the exact ' +
@@ -3723,9 +3734,15 @@ var
   LTransaction: TNyxDataValue;
   LBoolean: TNyxDataValue;
   LFileMutationProperties: TNyxText;
+  LRoutineSelectors: TNyxText;
 begin
   LPage := NyxObject([NyxField('offset', IntSchema(0, 100000)), NyxField('limit', IntSchema(1, 50))]);
   LBoolean := NyxObject([NyxField('type', NyxData('boolean'))]);
+  LRoutineSelectors := '"file":' + CSourceFileSelector +
+    ',"owner":{"oneOf":[{"type":"object","properties":{"kind":{"const":"main"}},' +
+    '"required":["kind"],"additionalProperties":false},{"type":"object","properties":{' +
+    '"kind":{"const":"unit"},"name":{"type":"string","minLength":1,"maxLength":124}},' +
+    '"required":["kind","name"],"additionalProperties":false}]}';
   LFileMutationProperties :=
     '"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{' +
     '"op":{"enum":["create","remove"]},"file":{"type":"object","properties":{' +
@@ -4000,10 +4017,10 @@ Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substrin
         '{"type":"object","properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"handler":{"type":"string"},"expected":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["handler","expected","implementation"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"imports"},"section":{"enum":["interface","implementation"]},"offset":{"type":"integer","minimum":0,"maximum":256},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode","section"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-imports"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":32,"items":{"type":"object","properties":{"op":{"enum":["add","remove"]},"section":{"enum":["interface","implementation"]},"unit":{"type":"string","minLength":1,"maxLength":120}},"required":["op","section","unit"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"routines"},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"routine"},"routine":{"type":"string","minLength":1,"maxLength":120},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","routine"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"edit-routines"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"routine":{"type":"string","minLength":1,"maxLength":120},"expected":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["routine","expected","implementation"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
-        '{"type":"object","properties":{"mode":{"const":"declaration"},"routine":{"type":"string","minLength":1,"maxLength":120},"part":{"enum":["interface","implementation"]},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","routine"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"routines"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50},' + LRoutineSelectors + '},"required":["mode"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"routine"},"expectedRevision":{"type":"integer","minimum":1},"ordinal":{"type":"integer","minimum":0,"maximum":4095},"routine":{"type":"string","minLength":1,"maxLength":120},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096},' + LRoutineSelectors + '},"required":["mode","routine"],"allOf":[{"if":{"required":["ordinal"]},"then":{"required":["expectedRevision"]}}],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"edit-routines"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"routine":{"type":"string","minLength":1,"maxLength":120},"expected":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768},' + LRoutineSelectors + '},"required":["routine","expected","implementation"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"declaration"},"expectedRevision":{"type":"integer","minimum":1},"ordinal":{"type":"integer","minimum":0,"maximum":4095},"routine":{"type":"string","minLength":1,"maxLength":120},"part":{"enum":["interface","implementation"]},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096},' + LRoutineSelectors + '},"required":["mode","routine"],"allOf":[{"if":{"required":["ordinal"]},"then":{"required":["expectedRevision"]}}],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-declarations"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"oneOf":[{"type":"object","properties":{"op":{"const":"create"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"edit"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedImplementation":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","expectedImplementation","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"remove"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"signature"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false}]}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"views"},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-views"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"expected":{"type":"string","maxLength":262144},"builder":{"type":"string","maxLength":262144}},"required":["mode","expectedRevision","operationId","expected","builder"],"additionalProperties":false},' +

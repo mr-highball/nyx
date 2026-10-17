@@ -552,7 +552,8 @@ begin
 
     if ((ParamCount <> 4) and ((ParamCount <> 5) or
       ((ParamStr(5) <> '--callbacks-only') and (ParamStr(5) <> '--source-files') and
-      (ParamStr(5) <> '--file-feedback') and (ParamStr(5) <> '--semantic-files')))) or
+      (ParamStr(5) <> '--file-feedback') and (ParamStr(5) <> '--semantic-files') and
+      (ParamStr(5) <> '--project-routines')))) or
       DirectoryExists(ParamStr(4)) or FileExists(ParamStr(4)) then
     begin
       raise Exception.Create('Supply repository, toolchain, compiled fixture home and NEW evidence home');
@@ -563,7 +564,7 @@ begin
     LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
 
     if (ParamStr(5) <> '--source-files') and (ParamStr(5) <> '--file-feedback') and
-      (ParamStr(5) <> '--semantic-files') then
+      (ParamStr(5) <> '--semantic-files') and (ParamStr(5) <> '--project-routines') then
     begin
       LSource := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/source.pas');
       LExpected := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/expected.nyx');
@@ -576,7 +577,7 @@ begin
     GForm.Show;
 
     if (ParamStr(5) = '--source-files') or (ParamStr(5) = '--file-feedback') or
-      (ParamStr(5) = '--semantic-files') then
+      (ParamStr(5) = '--semantic-files') or (ParamStr(5) = '--project-routines') then
     begin
       LSourceFileJourney := sfjFull;
 
@@ -587,6 +588,10 @@ begin
       else if ParamStr(5) = '--semantic-files' then
       begin
         LSourceFileJourney := sfjSemantic;
+      end
+      else if ParamStr(5) = '--project-routines' then
+      begin
+        LSourceFileJourney := sfjProjectRoutines;
       end;
       RunSourceFileControls(LDirectories, LTools, LSourceFileJourney);
       WriteLn('PASS ', GChecks, ' actual source-file compiler/editor controls');

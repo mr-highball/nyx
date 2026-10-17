@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [project routines](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
+add include-aware physical source context and compiler-backed named body groups
+through the existing tool and typed public API. WORK.md separates native/portable
+evidence from browser compilation and delivery. General declarations/type/symbol
+completion, ordinary outline UI, full quality/parity and original credit remain open.
+
 Current-source [semantic file membership](../docs/pascal-projects.md#semantic-source-file-membership)
 extends the existing Pascal tool with grouped typed helper creation/removal,
 related exact ranges and actor-bound named removal warnings. Complete compilation

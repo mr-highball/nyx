@@ -98,7 +98,8 @@ begin
 end;
 
 function DeclarationSite(const ASource: TNyxText;
-  const ARoutine: TNyxRoutineRef): TNyxRoutineDeclarationSource;
+  const ARoutine: TNyxRoutineRef;
+  AManaged: Boolean = True): TNyxRoutineDeclarationSource;
 var
   LTokens: TTokens;
   LIndex: Integer;
@@ -110,7 +111,15 @@ var
 begin
   Result := Default(TNyxRoutineDeclarationSource);
   Result.FVisibility := rvImplementation;
-  DeclarationGlobal(ARoutine);
+
+  if AManaged then
+  begin
+    DeclarationGlobal(ARoutine);
+  end
+  else
+  begin
+    NyxRoutine(ARoutine.Name);
+  end;
   LTokens := HandlerTokens(ASource);
   LIndex := 0;
   while (LIndex < Length(LTokens)) and not HandlerWord(LTokens, LIndex, 'interface') do

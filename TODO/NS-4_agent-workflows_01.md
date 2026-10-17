@@ -2,6 +2,16 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [project routine context](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
+uses the existing Pascal tool for include-aware helper discovery, physical
+definition/counterpart/body windows and compiler-backed focused body groups.
+Owner context, exact expectations, revision-local overload inspection and one
+paired history publication remain explicit. WORK.md owns exact native/portable/
+compiler evidence, retained failures and compiled-only browser boundaries.
+General type/symbol completion, richer declarations, ordinary outline UI,
+performance/quality/parity/HTTP/delivery and original criterion five remain open.
+No new tool, installed schema or completion credit follows.
+
 Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)
 adds reviewed grouped helper creation/removal and related exact source ranges to
 existing nyx_pascal. Owner/revision/exact-group warnings precede removal; one

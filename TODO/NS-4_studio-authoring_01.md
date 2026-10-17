@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [include-aware routine authoring](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
+shares public typed snapshot/body intents with semantic tools and the complete
+compiler/history owner. Physical locations retain Unicode and include context;
+focused body edits preserve calling conventions/signatures and ordinary buffers.
+WORK.md owns native observation separately from browser compilation. A public
+ordinary symbol outline, general declarations/type completion, full grammar,
+performance/quality/parity/delivery and original criterion two remain open.
+
 Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)
 shares typed file intents and exact ranges with the ordinary compiler/history
 owner. Named removal reviews belong to the transport, revision and unchanged

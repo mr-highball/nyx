@@ -24,7 +24,7 @@ type
   { Focused journeys reuse the actual editor/provider owner. Semantic mode
     exercises the production tools with ordinary observing controls; it never
     substitutes a new listener, browser or trusted source publication. }
-  TNyxSourceFileJourney = (sfjFull, sfjFeedback, sfjSemantic);
+  TNyxSourceFileJourney = (sfjFull, sfjFeedback, sfjSemantic, sfjProjectRoutines);
 
 { Same maintained ordinary-input harness, with no capture/HTTP execution. Both
   local and connected modes use real compiler processes; the connected transport
@@ -51,6 +51,8 @@ var
   LVerifier: INyxRuntimeSourceVerifier;
   LProjectVerifier: INyxRuntimeProjectVerifier;
   LProjection: INyxSourceProjection;
+  LExtraUnit: TNyxText;
+  LUnitEnd: Integer;
 
   { Real pas2js diagnostics qualify the compiler boundary only. The generated
     application/worker never executes, and no host, socket or browser starts. }
@@ -577,7 +579,243 @@ var
         Flush(Output);
       end;
 
+      { Existing production transport/pool and ordinary mounted controls qualify
+        file-aware routine context. Trusted initial seeding remains distinct from
+        semantic edits; every application/helper proposal below uses public tools. }
+      procedure ProjectRoutines;
+      var
+        LCatalog: TNyxDataValue;
+        LHelper: TNyxDataValue;
+        LMain: TNyxDataValue;
+        LConvention: TNyxDataValue;
+        LDefault: TNyxDataValue;
+        LDefaultFound: Boolean;
+        LDefaultScan: Integer;
+        LDeclaration: TNyxDataValue;
+        LArgs: TNyxDataValue;
+        LReply: TNyxDataValue;
+        LJob: TNyxDataValue;
+        LBeforeRoutines: TNyxText;
+        LAfterRoutines: TNyxText;
+        LHelperBody: TNyxText;
+        LMainBody: TNyxText;
+        LConventionBody: TNyxText;
+        LNewBody: TNyxText;
+        LStableMain: TNyxText;
+
+        function ReadBody(const AFile, AOwner: TNyxPascalSourceRef;
+          const AName: TNyxText): TNyxDataValue;
+        begin
+          Result := Apply(NyxObject([NyxField('mode', NyxData('routine')),
+            NyxField('expectedRevision', NyxData(Revision)), NyxField('file', Selector(AFile)),
+            NyxField('owner', Selector(AOwner)), NyxField('routine', NyxData(AName)),
+            NyxField('count', NyxData(4096))]));
+          Check(Result.Field('nextOffset').AsInteger = Result.Field('total').AsInteger,
+            'owned routine fixture fits its bounded exact source window');
+        end;
+
+        function BodyEdit(const AFile, AOwner: TNyxPascalSourceRef;
+          const AName, AExpected, ACode: TNyxText): TNyxDataValue;
+        begin
+          Result := NyxObject([NyxField('file', Selector(AFile)), NyxField('owner', Selector(AOwner)),
+            NyxField('routine', NyxData(AName)), NyxField('expected', NyxData(AExpected)),
+            NyxField('implementation', NyxData(ACode))]);
+        end;
+
+        function BodyArguments(const AOperation: TNyxText;
+          const AEdits: array of TNyxDataValue): TNyxDataValue;
+        begin
+          Result := NyxObject([NyxField('mode', NyxData('edit-routines')),
+            NyxField('expectedRevision', NyxData(Revision)),
+            NyxField('operationId', NyxData(AOperation)), NyxField('changes', NyxArray(AEdits))]);
+        end;
+
+      begin
+        WriteLn('PROJECT ROUTINES ', LCase, ' starting');
+        Flush(Output);
+        Check((NyxStudioMCPTools.Field('tools').Count = 24) and
+          (Pos('physical Unicode locations', NyxStudioMCPTools.ToJSON) > 0),
+          'source schema extends existing tools with explicit routine owning context');
+        Pick(LInclude);
+        LBeforeRoutines := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LStableMain := GStudio.Session.Source;
+        LDefault := Apply(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('limit', NyxData(50))]));
+        LDefaultFound := False;
+        for LDefaultScan := 0 to LDefault.Field('routines').Count - 1 do
+        begin
+
+          if LDefault.Field('routines').Item(LDefaultScan).Field('routine').AsText = 'ReadProjectPlan' then
+          begin
+            LDefaultFound := (LDefault.Field('routines').Item(LDefaultScan).Field('line').AsInteger = 0) and
+              (LDefault.Field('routines').Item(LDefaultScan).Field('definition').Field('file').ToJSON =
+                Selector(LUtility).ToJSON);
+          end;
+        end;
+        Check(LDefaultFound and (LDefault.Field('owner').ToJSON = Selector(TNyxPascalSourceRef.Main).ToJSON),
+          'default main discovery uses captured includes and never labels their lines as main-unit navigation');
+        LDefault := Apply(NyxObject([NyxField('mode', NyxData('routine')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('routine', NyxData('ReadProjectPlan'))]));
+        Check((LDefault.Field('line').AsInteger = 0) and
+          (LDefault.Field('textSource').Field('file').ToJSON = Selector(LUtility).ToJSON) and
+          (Pos('GProjectConstructions', LDefault.Field('text').AsText) > 0),
+          'default routine windows retain the main owning context and physical include body');
+        LDefault := Apply(NyxObject([NyxField('mode', NyxData('declaration')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('routine', NyxData('ReadProjectPlan')),
+          NyxField('part', NyxData('implementation'))]));
+        Check((LDefault.Field('line').AsInteger = 0) and
+          (LDefault.Field('textSource').Field('file').ToJSON = Selector(LUtility).ToJSON) and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRoutines),
+          'default counterpart queries are file-aware without changing accepted source, buffers or selection');
+        LCatalog := Apply(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('file', Selector(LUnit)),
+          NyxField('limit', NyxData(1))]));
+        Check((LCatalog.Field('total').AsInteger = 4) and
+          (LCatalog.Field('routines').Count = 1) and
+          (LCatalog.Field('routines').Item(0).Field('routine').AsText = 'ProjectPlan') and
+          (LCatalog.Field('routines').Item(0).Field('definition').Field('file').ToJSON = Selector(LInclude).ToJSON),
+          'bounded helper catalog locates the actual include-owned definition');
+        LCatalog := Apply(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('file', Selector(LUnit)),
+          NyxField('offset', NyxData(1)), NyxField('limit', NyxData(2))]));
+        Check((LCatalog.Field('routines').Count = 2) and
+          not LCatalog.Field('routines').Item(0).Field('editable').AsBoolean and
+          not LCatalog.Field('routines').Item(1).Field('editable').AsBoolean,
+          'overloads remain distinct discovery rows with focused-edit refusal');
+        LDeclaration := Apply(NyxObject([NyxField('mode', NyxData('routine')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('file', Selector(LUnit)),
+          NyxField('routine', NyxData('OverloadedPlan')),
+          NyxField('ordinal', LCatalog.Field('routines').Item(0).Field('ordinal'))]));
+        Check((Pos('Result := AValue', LDeclaration.Field('text').AsText) > 0) and
+          not LDeclaration.Field('editable').AsBoolean,
+          'revision-pinned ordinal reads an exact overload implementation without granting mutation');
+        RefuseRead(BodyArguments('project-routines-overload', [
+          BodyEdit(LUnit, LUnit, 'OverloadedPlan', LDeclaration.Field('text').AsText,
+            #10 + 'begin' + #10 + '  Result := 3;' + #10 + 'end;')]),
+          'overloaded identities cannot become implicit focused mutation targets');
+        LHelper := ReadBody(LInclude, LUnit, 'ProjectPlan');
+        LHelperBody := LHelper.Field('text').AsText;
+        Check(LHelper.Field('textSource').Field('defined').AsBoolean and
+          (LHelper.Field('textSource').Field('file').ToJSON = Selector(LInclude).ToJSON) and
+          LHelper.Field('editable').AsBoolean and (Pos(CInitial, LHelperBody) > 0),
+          'body inspection returns exact accepted physical helper text and editability');
+        LDeclaration := Apply(NyxObject([NyxField('mode', NyxData('declaration')),
+          NyxField('expectedRevision', NyxData(Revision)), NyxField('file', Selector(LInclude)),
+          NyxField('owner', Selector(LUnit)), NyxField('routine', NyxData('ProjectPlan'))]));
+        Check((LDeclaration.Field('visibility').AsText = 'interface') and
+          (LDeclaration.Field('textSource').Field('file').ToJSON = Selector(LUnit).ToJSON) and
+          (LDeclaration.Field('text').AsText = 'function ProjectPlan: TNyxText;'),
+          'counterpart window names its own helper-unit location rather than the body include');
+        LMain := ReadBody(LUtility, TNyxPascalSourceRef.Main, 'ReadProjectPlan');
+        LMainBody := LMain.Field('text').AsText;
+        LConvention := ReadBody(LUnit, LUnit, 'ConventionPlan');
+        LConventionBody := LConvention.Field('text').AsText;
+        Check((Pos('cdecl;', LConvention.Field('signature').AsText) > 0) and
+          (Pos('cdecl', LConventionBody) = 0) and LConvention.Field('editable').AsBoolean,
+          'calling convention is immutable declaration context outside the focused body');
+        RefuseRead(BodyArguments('project-routines-convention-escape', [
+          BodyEdit(LUnit, LUnit, 'ConventionPlan', LConventionBody,
+            #10 + 'stdcall;' + #10 + 'begin Result := 9; end;')]),
+          'a semantic body replacement cannot alter its calling convention');
+        Check((LMain.Field('textSource').Field('file').ToJSON = Selector(LUtility).ToJSON) and
+          (Pos('GProjectConstructions', LMainBody) > 0),
+          'main-unit context also discovers its physical included helper without losing managed guards');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('file', Selector(LInclude))]), 'include browsing never guesses an owning translation unit');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routine')),
+          NyxField('file', Selector(LInclude)), NyxField('owner', Selector(TNyxPascalSourceRef.Main)),
+          NyxField('routine', NyxData('ProjectPlan'))]),
+          'a shared fragment selector cannot borrow an unrelated owning routine');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routines')),
+          NyxField('expectedRevision', NyxData(Revision - 1)), NyxField('file', Selector(LUnit))]),
+          'stale routine catalogs refuse without altering the complete project');
+        RefuseRead(NyxObject([NyxField('mode', NyxData('routine')),
+          NyxField('file', Selector(LUnit)), NyxField('routine', NyxData('ProjectPlan')),
+          NyxField('ordinal', NyxData(0))]), 'routine ordinals require their exact revision pin');
+        LNewBody := #10 + 'begin' + #10#10 + '  if ConventionPlan = 9 then' + #10 +
+          '  begin' + #10 + '    Result := TNyxText(' + TNyxCodegen.TextLiteral(CChanged) + ');' + #10 +
+          '  end' + #10 + '  else' + #10 + '  begin' + #10 +
+          '    Result := ''A stale convention helper'';' + #10 + '  end;' + #10 + 'end;';
+        LArgs := BodyArguments('project-routines-group', [
+          BodyEdit(LUtility, TNyxPascalSourceRef.Main, 'ReadProjectPlan', LMainBody,
+            #10 + '{ An authored main helper note. }' + LMainBody),
+          BodyEdit(LUnit, LUnit, 'ConventionPlan', LConventionBody,
+            #10 + 'begin' + #10 + '  Result := 9;' + #10 + 'end;'),
+          BodyEdit(LInclude, LUnit, 'ProjectPlan', LHelperBody, LNewBody)]);
+        LReply := Apply(LArgs);
+        Check((LReply.Field('publication').Field('state').AsText = 'pending') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRoutines) and
+          (Apply(LArgs).ToJSON = LReply.ToJSON),
+          'one named routine group stages no visible text and retains its exact retry receipt');
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'committed') and
+          (GStudio.Session.Source = LStableMain) and (Pos(CChanged, GStudio.Session.Save) > 0) and
+          (Pos('authored main helper note', GStudio.Session.SourceFileText(LUtility)) > 0),
+          'main/helper include bodies construct actual Unicode meaning together with unchanged main text / ' +
+          LJob.Field('error').AsText);
+        Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+          (GStudio.CodeView.InputFor('studio-code') = LMemo) and
+          (AdjustLineBreaks(LMemo.Text, tlbsLF) = AdjustLineBreaks(
+            String(GStudio.Session.SourceFileText(LInclude)), tlbsLF)),
+          'ordinary observer retains selection and its real memo while both routine files update');
+        LAfterRoutines := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LDeclaration := ReadBody(LUnit, LUnit, 'ConventionPlan');
+        Check((LDeclaration.Field('signature').AsText = LConvention.Field('signature').AsText) and
+          (Pos('Result := 9', LDeclaration.Field('text').AsText) > 0),
+          'compiled body replacement retains every calling-convention signature byte');
+        LHelper := ReadBody(LInclude, LUnit, 'ProjectPlan');
+        Check(LHelper.Field('text').AsText = LNewBody, 'accepted revision invalidates prior routine index windows');
+        Click('action-undo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRoutines,
+          'one ordinary Undo restores both routine bodies and exact design');
+        LHelper := ReadBody(LInclude, LUnit, 'ProjectPlan');
+        Check(LHelper.Field('text').AsText = LHelperBody, 'Undo invalidates cached accepted body coordinates/text');
+        Click('action-redo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterRoutines,
+          'one ordinary Redo restores the entire compiler-authored routine pair');
+        RefuseRead(BodyArguments('project-routines-mismatch', [
+          BodyEdit(LInclude, LUnit, 'ProjectPlan', LHelperBody, LNewBody)]),
+          'old exact helper expectations refuse without a compiler/publication side effect');
+        LReply := Apply(BodyArguments('project-routines-compiler-failure', [
+          BodyEdit(LInclude, LUnit, 'ProjectPlan', LNewBody,
+            #10 + 'begin' + #10 + '  Result := MissingRoutineValue;' + #10 + 'end;')]));
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'refused') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterRoutines) and
+          (Pos('submittedSource', LJob.Field('diagnostics').ToJSON) > 0),
+          'real helper compiler failure retains the pair and physical proposed-file diagnostics');
+        LReply := Apply(BodyArguments('project-routines-late-draft', [
+          BodyEdit(LInclude, LUnit, 'ProjectPlan', LNewBody,
+            #10 + 'begin' + #10 + '  Result := TNyxText(' +
+              TNyxCodegen.TextLiteral(CInitial) + ');' + #10 + 'end;')]));
+        LMemo.Text := CUnitDraft;
+        Settled;
+        LAfterRoutines := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'refused') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterRoutines) and
+          (LMemo.Text = CUnitDraft), 'newer helper typing revokes focused routine publication exactly');
+        RefuseRead(BodyArguments('project-routines-pending', [
+          BodyEdit(LInclude, LUnit, 'ProjectPlan', LNewBody, LHelperBody)]),
+          'pending ordinary drafts refuse focused routine mutation at its current revision');
+        LHelper := ReadBody(LInclude, LUnit, 'ProjectPlan');
+        Check(LHelper.Field('pendingDraft').AsBoolean and (LHelper.Field('text').AsText = LNewBody),
+          'accepted body inspection reports pending text without exporting that unfinished buffer');
+        Click('action-reset-source');
+        Settled;
+        WriteLn('PROJECT ROUTINES ', LCase, ' passed');
+        Flush(Output);
+      end;
+
     begin
+
+      if AJourney = sfjProjectRoutines then
+      begin
+        ProjectRoutines;
+        Exit;
+      end;
       WriteLn('SEMANTIC FILES ', LCase, ' starting');
       Flush(Output);
       LFiles := NyxStudioMCPTools.Field('tools');
@@ -1067,7 +1305,8 @@ var
       LInitialInclude := GStudio.Session.SourceFileText(LInclude);
       LChangedInclude := 'function ProjectPlan: TNyxText;' + #10 + 'begin' + #10 +
         '  Result := ' + TNyxCodegen.TextLiteral(CChanged) + ';' + #10 + 'end;' + #10;
-      if AJourney = sfjSemantic then
+
+      if AJourney in [sfjSemantic, sfjProjectRoutines] then
       begin
         SemanticFiles;
         Exit;
@@ -1344,6 +1583,29 @@ begin
       LDocument.Free;
     end;
     LInputs := CompiledRuntimeProject(LSource, CInitial);
+
+    if AJourney = sfjProjectRoutines then
+    begin
+      { The routine journey alone owns these real compiled overloads. Other
+        maintained file fixtures and their original expected inventories stay
+        unchanged; this adds no metadata-only stand-in for compiler evidence. }
+      LExtraUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('project.values')).Text(LInputs);
+        LUnitEnd := Pos('implementation', LExtraUnit);
+        Check(LUnitEnd > 0, 'owned helper fixture has its explicit implementation boundary');
+        LExtraUnit := Copy(LExtraUnit, 1, LUnitEnd - 1) +
+          'function ConventionPlan: Integer; cdecl;' + #10 + Copy(LExtraUnit, LUnitEnd, MaxInt);
+      LUnitEnd := Pos('end.', LExtraUnit);
+      Check(LUnitEnd > 0, 'owned helper fixture has its explicit final unit boundary');
+      LExtraUnit := Copy(LExtraUnit, 1, LUnitEnd - 1) +
+        'function OverloadedPlan(AValue: Integer): Integer; overload;' + #10 +
+        'begin' + #10 + '  Result := AValue;' + #10 + 'end;' + #10 +
+        'function OverloadedPlan(const AValue: TNyxText): TNyxText; overload;' + #10 +
+        'begin' + #10 + '  Result := AValue;' + #10 + 'end;' + #10 +
+        'function ConventionPlan: Integer; cdecl;' + #10 +
+        'begin' + #10 + '  Result := 7;' + #10 + 'end;' + #10 +
+        Copy(LExtraUnit, LUnitEnd, MaxInt);
+      LInputs := LInputs.WithUnit(NyxPascalUnit('project.values'), LExtraUnit);
+    end;
     LPair.Source := LInputs.Source;
     LPair.Files := TNyxPascalProjectFiles.Capture(LInputs);
     LVerifier := NewNyxNativeRuntimeSourceVerifier(ADirectories,
@@ -1361,7 +1623,7 @@ begin
     RunCase(1280, True);
     RunCase(390, True);
 
-    if AJourney <> sfjSemantic then
+    if not (AJourney in [sfjSemantic, sfjProjectRoutines]) then
     begin
       RunCase(1280, False);
       RunCase(390, False);
