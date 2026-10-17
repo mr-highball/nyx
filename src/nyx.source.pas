@@ -30,7 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
-  nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts,
+  nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources,
   nyx.dates,
   nyx.times,
   nyx.colors,
@@ -241,13 +241,25 @@ type
     routines stay inside their parent; overloads remain discovery entries with
     refusal reasons. Source text and physical positions survive input disposal.
     Compilation still owns conditional selection/type correctness. At most 4096
-    routines are indexed; incomplete/unsupported syntax fails without a partial
-    index. An include requires its owning unit context, never a guessed scope. }
+    routines are indexed. Compiler-project inspection refuses incomplete syntax;
+    explicit editing snapshots may retain a complete prefix with optional problem
+    data. An include requires its owning unit context, never a guessed scope. }
   INyxPascalRoutineIndex = interface(IInterface)
     ['{68F89A18-71A1-4D73-84BC-265587A0343C}']
     function Count: Integer;
     function Item(AIndex: Integer): TNyxPascalRoutineSite;
     function Owner: TNyxPascalSourceRef;
+  end;
+
+  { Optional inspection problem, independent of compiler diagnostics. Editing
+    snapshots retain only complete routines before a recognized lexical/body
+    fault; no closing tokens or later scope are invented. A missing physical
+    location stays undefined. Empty text means no such fault was recognized,
+    never proof of complete syntax, compiler acceptance or application behavior. }
+  INyxPascalRoutineReadStatus = interface(IInterface)
+    ['{68F89A18-71A1-4D73-84BC-265587A0343F}']
+    function ProblemText: TNyxText;
+    function ProblemLocation: TNyxPascalRoutineLocation;
   end;
 
   { Import sections are Pascal visibility choices, independent of output target. }
@@ -355,6 +367,7 @@ type
     FLine: Integer;
     FColumn: Integer;
     FDiagnosticText: TNyxText;
+    FDetail: TNyxText;
   public
     constructor CreateAt(const AMessage: TNyxText; const ASource: TNyxText;
       APosition: Integer);
@@ -362,6 +375,9 @@ type
     property Column: Integer read FColumn;
     { Exact portable text avoids native Exception.Message's ANSI boundary. }
     property DiagnosticText: TNyxText read FDiagnosticText;
+    { Unqualified portable reason, for remapping expanded inspection failures
+      back to a physical file without parsing a formatted message string. }
+    property Detail: TNyxText read FDetail;
   end;
 
   { A complete executed unit can contain ordinary Pascal beyond the declarative
@@ -532,6 +548,15 @@ function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
 function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
   const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex; overload;
 function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
+  const AOwner: TNyxPascalSourceRef;
+  const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex; overload;
+{ Read-only current-buffer inspection. Accepted snapshots retain strict reading;
+  editing snapshots recover a trustworthy prefix and expose recognized faults
+  through INyxPascalRoutineReadStatus. Budget/cycle/membership failures still
+  return no index. This overload cannot accept or produce a compiler project. }
+function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
+  const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex; overload;
+function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
   const AOwner: TNyxPascalSourceRef;
   const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex; overload;
 { Preserve a handwritten builder and helpers while proposing typed customization
@@ -735,6 +760,11 @@ end;
 {$endif}
 
 type
+  { Hard inspection/admission quota refusal. Draft recovery must never turn a
+    resource limit into an apparently usable partial catalog. Strict callers
+    retain their existing ENyxSource catch contract. }
+  ENyxSourceLimit = class(ENyxSource);
+
   TTokenKind = (tkWord, tkString, tkNumber, tkCharacter, tkSymbol, tkComment);
   TToken = record
     Kind: TTokenKind;
@@ -1128,12 +1158,35 @@ begin
       Inc(FColumn);
     end;
   end;
+  FDetail := AMessage;
   FDiagnosticText := 'Pascal ' + IntToStr(FLine) + ':' + IntToStr(FColumn) +
     ': ' + AMessage;
   inherited Create(FDiagnosticText);
 end;
 
-function Lex(const ASource: TNyxText): TTokens;
+{ A detached lexical problem uses the existing exact Unicode diagnostic mapper;
+  no exception or source provider survives this synchronous capture. }
+function SourceReadProblem(const AMessage, ASource: TNyxText;
+  APosition: Integer): TNyxSourceDiagnostic;
+var
+  LError: ENyxSource;
+begin
+  LError := ENyxSource.CreateAt(AMessage, ASource, APosition);
+  try
+    Result.Defined := True;
+    Result.Message := LError.Detail;
+    Result.Line := LError.Line;
+    Result.Column := LError.Column;
+  finally
+    LError.Free;
+  end;
+end;
+
+{ Strict consumers and editor inspection share one lexer. Recovery stops before
+  an unfinished quote/comment, retaining complete prefix tokens only. Encoding,
+  byte/token budgets remain hard failures even when inspecting a draft. }
+function LexSourceRead(const ASource: TNyxText; AReadIncomplete: Boolean;
+  out AProblem: TNyxSourceDiagnostic; out AStop: Integer): TTokens;
 var
   LIndex: Integer;
   LStart: Integer;
@@ -1145,6 +1198,8 @@ var
   LClosed: Boolean;
   LChar: Char;
 begin
+  AProblem := Default(TNyxSourceDiagnostic);
+  AStop := Length(ASource) + 1;
   { Bound allocation before scanning, validate Unicode once, then tokenize ASCII
     Pascal syntax without converting any caption through an ANSI collection.
     Comment text is retained for delimiter discovery; strings are decoded once.
@@ -1152,7 +1207,7 @@ begin
 
   if Length(ASource) > 4 * 1024 * 1024 then
   begin
-    raise ENyxSource.CreateAt('Source exceeds the editor budget', ASource, 1);
+    raise ENyxSourceLimit.CreateAt('Source exceeds the editor budget', ASource, 1);
   end;
   LIndex := 1;
   while LIndex <= Length(ASource) do
@@ -1268,6 +1323,13 @@ begin
 
       if not LClosed then
       begin
+
+        if AReadIncomplete then
+        begin
+          AStop := LOpeningQuote;
+          AProblem := SourceReadProblem('Unterminated Pascal string', ASource, AStop);
+          Break;
+        end;
         raise ENyxSource.CreateAt('Unterminated Pascal string', ASource, LStart - 1);
       end;
       { Recover the complete token's position, including its opening quote. }
@@ -1339,6 +1401,13 @@ begin
 
       if not LClosed then
       begin
+
+        if AReadIncomplete then
+        begin
+          AStop := LStart;
+          AProblem := SourceReadProblem('Unterminated Pascal comment', ASource, AStop);
+          Break;
+        end;
         raise ENyxSource.CreateAt('Unterminated Pascal comment', ASource, LStart);
       end;
       LText := Copy(ASource, LStart, LIndex - LStart);
@@ -1367,7 +1436,7 @@ begin
 
     if LCount >= 200000 then
     begin
-      raise ENyxSource.CreateAt('Source exceeds the token budget', ASource, LStart);
+      raise ENyxSourceLimit.CreateAt('Source exceeds the token budget', ASource, LStart);
     end;
 
     if LCount = Length(Result) then
@@ -1381,6 +1450,14 @@ begin
     Inc(LCount);
   end;
   SetLength(Result, LCount);
+end;
+
+function Lex(const ASource: TNyxText): TTokens;
+var
+  LProblem: TNyxSourceDiagnostic;
+  LStop: Integer;
+begin
+  Result := LexSourceRead(ASource, False, LProblem, LStop);
 end;
 
 procedure Split(const ASource: TNyxText; out APrefix, ABody, ASuffix: TNyxText;

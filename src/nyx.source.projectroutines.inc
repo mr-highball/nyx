@@ -52,11 +52,15 @@ type
   { Constructor owns its detached expansion scratch, then releases it after
     building copied catalog values. Returned entries borrow no source provider;
     no application, lexer, mutable session or transport is retained. }
-  TPascalRoutineIndex = class(TInterfacedObject, INyxPascalRoutineIndex)
+  TPascalRoutineIndex = class(TInterfacedObject, INyxPascalRoutineIndex,
+    INyxPascalRoutineReadStatus)
   private
     FOwner: TNyxPascalSourceRef;
     FEntries: array of TNyxPascalRoutineSite;
-    FProject: INyxPascalProject;
+    FSources: INyxPascalSourceSnapshot;
+    FProblemText: TNyxText;
+    FProblemLocation: TNyxPascalRoutineLocation;
+    FStopped: Boolean;
     FLimits: TNyxPascalRoutineLimits;
     FParts: TNyxStrings;
     FText: TNyxText;
@@ -80,11 +84,13 @@ type
       AStart, AFinish: Integer);
     procedure Build;
   public
-    constructor Create(const AProject: INyxPascalProject;
+    constructor Create(const ASources: INyxPascalSourceSnapshot;
       const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits);
     function Count: Integer;
     function Item(AIndex: Integer): TNyxPascalRoutineSite;
     function Owner: TNyxPascalSourceRef;
+    function ProblemText: TNyxText;
+    function ProblemLocation: TNyxPascalRoutineLocation;
   end;
 
 class function TNyxPascalRoutineLimits.Defaults: TNyxPascalRoutineLimits;
@@ -175,7 +181,7 @@ begin
   Result := NyxPascalInclude(LText).Name;
 end;
 
-constructor TPascalRoutineIndex.Create(const AProject: INyxPascalProject;
+constructor TPascalRoutineIndex.Create(const ASources: INyxPascalSourceSnapshot;
   const AOwner: TNyxPascalSourceRef; const ALimits: TNyxPascalRoutineLimits);
 begin
   inherited Create;
@@ -188,7 +194,7 @@ begin
   end;
   FOwner := AOwner;
   FLimits := ALimits;
-  FProject := CaptureNyxPascalProject(AProject);
+  FSources := CaptureNyxPascalSources(ASources);
   FParts := TNyxStrings.Create;
   try
     Expand(FOwner);
@@ -196,7 +202,7 @@ begin
     Build;
   finally
     FreeAndNil(FParts);
-    FProject := nil;
+    FSources := nil;
     FText := '';
     FSpans := nil;
     FPhysical := nil;
@@ -243,6 +249,8 @@ var
   LIndex: Integer;
   LCursor: Integer;
   LOccurrence: Integer;
+  LProblem: TNyxSourceDiagnostic;
+  LStop: Integer;
 begin
 
   if Length(FStack) >= FLimits.FDepth then
@@ -267,8 +275,8 @@ begin
   SetLength(FStack, Length(FStack) + 1);
   FStack[High(FStack)] := AFile;
   try
-    LText := AFile.Text(FProject);
-    LTokens := Lex(LText);
+    LText := FSources.Text(AFile);
+    LTokens := LexSourceRead(LText, FSources.Kind = pssEditing, LProblem, LStop);
     LCursor := 1;
     for LIndex := 0 to High(LTokens) do
     begin
@@ -283,11 +291,23 @@ begin
           directives when both boundaries belong to the same occurrence. }
         Append(AFile, 0, 1, 1, ' ');
         Expand(TNyxPascalSourceRef.IncludeFile(NyxPascalInclude(LName)));
+
+        if FStopped then
+        begin
+          Exit;
+        end;
         Append(AFile, 0, 1, 1, ' ');
         LCursor := LTokens[LIndex].Finish;
       end;
     end;
-    Append(AFile, LOccurrence, LCursor, Length(LText) + 1 - LCursor, LText);
+    Append(AFile, LOccurrence, LCursor, LStop - LCursor, LText);
+
+    if LProblem.Defined then
+    begin
+      FProblemText := LProblem.Message;
+      FProblemLocation := PhysicalLocation(AFile, LStop);
+      FStopped := True;
+    end;
   finally
     SetLength(FStack, Length(FStack) - 1);
   end;
@@ -311,7 +331,7 @@ begin
   Result := Length(FPhysical);
   SetLength(FPhysical, Result + 1);
   FPhysical[Result].FileReference := AFile;
-  FPhysical[Result].Text := AFile.Text(FProject);
+  FPhysical[Result].Text := FSources.Text(AFile);
   LCursor := Default(TRoutinePhysicalPoint);
   LCursor.Position := 1;
   LCursor.Line := 1;
@@ -588,9 +608,46 @@ var
   LDeclaration: TNyxRoutineDeclarationSource;
   LManaged: Boolean;
   LBodyStart: Integer;
+  LProblem: TNyxSourceDiagnostic;
+  LProblemPosition: Integer;
+  LLastSpan: Integer;
+  LDeclarationText: TNyxText;
 begin
   LManaged := (FOwner.Role = npsMain) and (Pos(NyxViewsBegin, FText) > 0);
-  LCatalog := ReadRoutineCatalog(FText, LManaged);
+  LCatalog := ReadRoutineCatalog(FText, LManaged, FSources.Kind = pssEditing, LProblem);
+
+  if LProblem.Defined and (FProblemText = '') then
+  begin
+    FProblemText := LProblem.Message;
+    LProblemPosition := NyxTextPosition(FText, LProblem.Line, LProblem.Column);
+
+    if LProblemPosition <= FLogicalLength then
+    begin
+      FProblemLocation := Point(LProblemPosition);
+    end
+    else if Length(FSpans) > 0 then
+    begin
+      LLastSpan := High(FSpans);
+
+      if FSpans[LLastSpan].Occurrence <> 0 then
+      begin
+        FProblemLocation := PhysicalLocation(FSpans[LLastSpan].FileReference,
+          FSpans[LLastSpan].PhysicalStart + FSpans[LLastSpan].Count);
+      end;
+    end
+    else if FLogicalLength = 0 then
+    begin
+      FProblemLocation := PhysicalLocation(FOwner, 1);
+    end;
+  end;
+  LDeclarationText := FText;
+
+  if (FSources.Kind = pssEditing) and (LCatalog.Count > 0) then
+  begin
+    { Counterpart lookup sees the exact complete prefix, never a fabricated
+      closing body for an unrelated unfinished routine later in the buffer. }
+    LDeclarationText := Copy(FText, 1, LCatalog.Item(LCatalog.Count - 1).FFinish - 1);
+  end;
   SetLength(FEntries, LCatalog.Count);
   for LIndex := 0 to LCatalog.Count - 1 do
   begin
@@ -627,7 +684,7 @@ begin
         { Browsing may read compiler-managed names; editability already follows
           the owning-unit catalog. Legacy helper authoring retains its stricter
           DeclarationGlobal guard through the default managed overload. }
-        LDeclaration := DeclarationSite(FText, LSource.Routine, False);
+        LDeclaration := DeclarationSite(LDeclarationText, LSource.Routine, False);
         LSite.FVisibility := prvImplementation;
 
         if LDeclaration.Visibility = rvInterface then
@@ -677,15 +734,38 @@ begin
   Result := FOwner;
 end;
 
+function TPascalRoutineIndex.ProblemText: TNyxText;
+begin
+  Result := FProblemText;
+end;
+
+function TPascalRoutineIndex.ProblemLocation: TNyxPascalRoutineLocation;
+begin
+  Result := FProblemLocation;
+end;
+
 function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
   const AOwner: TNyxPascalSourceRef;
   const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex;
 begin
-  Result := TPascalRoutineIndex.Create(AProject, AOwner, ALimits);
+  Result := TPascalRoutineIndex.Create(CaptureNyxPascalSources(AProject), AOwner, ALimits);
 end;
 
 function CaptureNyxPascalRoutineIndex(const AProject: INyxPascalProject;
   const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex;
 begin
   Result := CaptureNyxPascalRoutineIndex(AProject, AOwner, TNyxPascalRoutineLimits.Defaults);
+end;
+
+function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
+  const AOwner: TNyxPascalSourceRef): INyxPascalRoutineIndex;
+begin
+  Result := CaptureNyxPascalRoutineIndex(ASources, AOwner, TNyxPascalRoutineLimits.Defaults);
+end;
+
+function CaptureNyxPascalRoutineIndex(const ASources: INyxPascalSourceSnapshot;
+  const AOwner: TNyxPascalSourceRef;
+  const ALimits: TNyxPascalRoutineLimits): INyxPascalRoutineIndex;
+begin
+  Result := TPascalRoutineIndex.Create(ASources, AOwner, ALimits);
 end;

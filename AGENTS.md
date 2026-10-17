@@ -4,6 +4,24 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source editing-buffer snapshots separate unfinished text from compiler
+projects, retaining fixed accepted membership and independent text/base ownership.
+Ordinary Outline defaults to current buffers and retains accepted mode. Partial
+inspection shares the lexer/balancer, preserving complete prefix routines and
+physical fault anchors without invented closing tokens; hard budgets/cycles fail.
+Exact functional eleven-input native controls 524 at 1280/390 local/connected,
+contracts 45 and strict 92/21/20/31 pass with clean heaps. Both Studios/backend/
+worker/browser consumer compile; eleven accepted logs have zero owned warnings
+(21 upstream RTL warnings). Browser execution/capture stays held. After all
+handles join, three purpose comments in two Pascal files receive final review;
+WORK.md distinguishes those composite bytes from runtime pins and owns receipts.
+Five protected files/nine complete contexts and 349 frozen artifacts stay exact;
+LAN stays offline. No new tool/schema, original criterion/task/counter/credit/DONE,
+parity or rollout closes. Stop buffer/outline/lexer/compiler/fixture variants.
+Return to revision-pinned exact semantic buffer reads under the existing workflow
+owner; general declarations/type-symbol resolution and full quality/delivery stay
+open. No host/protected-config/enrollment/cleanup retry, bypass or sub-agents.
+
 Current-source ordinary routine outline consumes the public include-aware index
 through one reusable Nyx card/shared guarded route. Accepted-source owner/search/
 twelve-row pages and physical Definition/Declaration/Body navigation preserve

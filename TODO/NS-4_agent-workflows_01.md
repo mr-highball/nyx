@@ -2,6 +2,13 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [read-only buffer snapshots](../docs/pascal-projects.md#read-only-buffer-snapshots)
+and ordinary editing-buffer navigation supply a typed reusable inspection model.
+The existing semantic Pascal reads still use accepted code. Add bounded exact
+buffer context through that existing owner before claiming agents can inspect the
+same unfinished text; do not substitute browser automation. No new tool/schema,
+installed behavior or original criterion-five closure follows from the editor API.
+
 The ordinary [routine outline](../docs/pascal-projects.md#studio-routine-outline)
 now consumes the same include-aware public index as existing semantic reads.
 Its editor-only navigation preserves buffers/history and adds no MCP tool/schema.

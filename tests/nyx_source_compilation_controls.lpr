@@ -32,7 +32,7 @@ uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType
   nyx.codec, nyx.codegen, nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts,
   nyx.studio.session, nyx.studio.agents, nyx.studio.recovery, nyx.studio.recovery.native,
   nyx.studio.source,
-  nyx.studio.sourceoutline, nyx.pascal.outline, nyx.controls,
+  nyx.studio.sourceoutline, nyx.pascal.outline, nyx.pascal.sources, nyx.controls,
   nyx.studio.compiler, nyx.studio.sourcebuilds, nyx.studio.builds,
   nyx.studio.buildexecutor, nyx.studio.sourceprojection, nyx.studio.sourcecompilation.native,
   nyx.test.compiled.runtime, nyx.test.pascal.project,

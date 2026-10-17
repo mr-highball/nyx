@@ -81,6 +81,22 @@ begin
   raise ENyxSource.CreateAt(AMessage, ASource, LPosition);
 end;
 
+{ Preserve the ordinary source exception family while distinguishing limits
+  that an unfinished-buffer inspection must not recover into partial success. }
+procedure HandlerLimitFail(const ASource, AMessage: TNyxText;
+  const ATokens: TTokens; AIndex: Integer);
+var
+  LPosition: Integer;
+begin
+  LPosition := Length(ASource) + 1;
+
+  if (AIndex >= 0) and (AIndex < Length(ATokens)) then
+  begin
+    LPosition := ATokens[AIndex].Position;
+  end;
+  raise ENyxSourceLimit.CreateAt(AMessage, ASource, LPosition);
+end;
+
 function HandlerTypeBlock(const ATokens: TTokens; AIndex: Integer): Boolean;
 begin
   Result := HandlerWord(ATokens, AIndex, 'record') or
@@ -156,7 +172,7 @@ begin
 
       if LDepth = Length(LStack) then
       begin
-        HandlerFail(ASource, 'Callback block nesting exceeds the editor budget', ATokens, LIndex);
+        HandlerLimitFail(ASource, 'Callback block nesting exceeds the editor budget', ATokens, LIndex);
       end;
       LStack[LDepth] := LKind;
       Inc(LDepth);
@@ -194,7 +210,7 @@ begin
 
   if ANesting > 32 then
   begin
-    HandlerFail(ASource, 'Callback local routine nesting exceeds the editor budget', ATokens, AStart);
+    HandlerLimitFail(ASource, 'Callback local routine nesting exceeds the editor budget', ATokens, AStart);
   end;
   LIndex := AStart + 1;
   LGroups := 0;

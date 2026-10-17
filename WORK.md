@@ -33,7 +33,92 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordinary routine outline — 2026-10-17
+## Current integration: Editing-buffer source navigation — 2026-10-17
+
+Previous goal turn is progress: pushed 38c38cb integrates the ordinary accepted-
+source outline with exact protected work. Reassessment follows its explicit dirty-
+target limitation under the existing NS-4 authoring/workflow owners. Full IDE,
+grammar, type resolution, performance/quality/parity and original credit remain
+open; this adds no artificial task, tool/schema or installed behavior.
+
+Public INyxPascalSourceSnapshot freezes accepted membership and exact independent
+buffer text without implementing INyxPascalProject. WithBuffer preserves accepted
+comparison text, permits unfinished/empty/Unicode/NUL data and enforces member,
+encoding/per-file/project limits. Namespace typing cannot rename a member or admit
+an application. Alternate readers are frozen before lexical use; no provider,
+session, widget or execution authority survives capture.
+
+Editing-snapshot inspection shares the existing lexer/balancer. It retains only
+complete routines before a recognized unfinished quote/comment/implementation and
+never manufactures closing tokens or later scope. Optional typed problem data
+maps to the physical file, anchoring an unfinished implementation at its opening.
+Unqualified exception detail prevents expanded line numbers from masquerading as
+physical coordinates. Hard limits/cycles still return no index; compiler-project
+inspection remains strict. Absence of a browsing problem proves no compilation.
+
+Ordinary Outline defaults to Editing buffers, with Accepted code explicitly
+selectable. Shared presenter caches exact main/helper values without serializing
+every buffer for comparison; stale buffer/source/load/node/mount actions refuse.
+Current positions select the retained source editor without compilation, admission
+or history. Accepted positions still guard a changed target. The same typed source
+selector/card/route serves both adapters and expanded mode.
+
+Accepted evidence is composite, with source-pins-3-private.json owning all eleven
+functional Pascal inputs before final comment review:
+
+- logs/observing-1-run.log passes 524 controlled native editor/boundary assertions
+  at widths 1280/390, local and connected, clean heap. The maintained same fixture
+  covers both accepted and current-buffer modes, four independent dirty buffers,
+  shifted supplementary text, physical definition/declaration/body sites, partial
+  feedback, unchanged pair/history/input, modal retention, stale buffer refusal
+  and exact owned-pair restoration through ordinary scoped input. Five actual
+  constructor/compiler jobs are separate from full application execution.
+- logs/contracts-4-run.log passes 45 native snapshot/outline contracts, clean
+  heap: no compiler-interface upcast, independent accepted comparison, empty and
+  Unicode/NUL text, fixed membership, partial literals/comments/identities/bodies,
+  physical shared-include counterparts, exact opening anchors and hard quotas/
+  cycles/tunable bounds. This lexical fixture grants no construction provenance.
+- Strict regressions pass 92 source-file, 21 routine lexical, 20 declaration
+  lexical and 31 semantic routine checks, clean heaps. They use the same final
+  functional core; their counts overlap earlier maintained evidence.
+- Eleven accepted top-level compiler logs have zero owned warnings. Both Studios,
+  backend/worker, outline browser consumer and strict consumers compile. Three
+  pas2js logs retain seven upstream RTL warnings each (21). Browser products and
+  consumers are compiled only, with no execution/capture claim.
+
+After every owned handle joined and all eleven pins reverified, only three purpose
+comments in two Pascal files changed: the index distinguishes strict projects from
+editing-prefix reads, and the presenter describes current buffers/accepted-target
+conflicts accurately. Diff/whitespace review qualifies this final comment-only
+composite; no later runtime execution is claimed. Final preservation, source/remote
+identity and log hashes are behind ignored .local/draft-outline-paths-private.json
+on the scratch drive. The earlier running-native receipt is historical, not a live
+handle; all owned producers/readers have joined.
+
+Retain contracts-2-run.log: a bare unfinished procedure consumed the enclosing
+unit's end as a name, exposing a boundary failure before recovery was corrected.
+contracts-3-run.log is a corrected test-oracle failure: 200 nested blocks do not
+exceed the existing 256-block bound; the final 300-block fixture verifies a hard
+typed limit. Neither failure counts as acceptance.
+
+Fresh document-control discovery finds no connected session/native Nyx tool. The
+owned never-listening production engine remains the explicit connected-provider
+fallback; substituted sockets are not HTTP qualification. Existing semantic Pascal
+reads still inspect accepted code: bounded revision-pinned buffer reads belong to
+the existing workflow owner. No browser automation substitutes for this gap.
+No HTTP/browser execution/capture, protected configuration/enrollment/cleanup retry,
+approval bypass or sub-agents. LAN stays offline; no original full criterion/task/
+counter/credit/DONE or parity closes.
+
+Stop buffer/outline/lexer/compiler/fixture variants. Return to bounded exact
+semantic buffer context through the existing workflow owner, preserving actor/
+revision/captured-text ownership and its distinction from admitted source. General
+declarations and compiler type/symbol completion retain NS-4/NS-5 ownership. Full
+grammar/performance/visual/accessibility/parity, browser/HTTP observation and
+preserving delivery remain open. The protected five files/nine complete contexts
+and 349 frozen 7422453 artifacts remain exact; LAN stays offline.
+
+## Previous integration: Ordinary routine outline — 2026-10-17
 
 Previous turn clarified on-demand cleanup only (no product progress). Revalidated
 clean 323572f and fresh document-control discovery: no connected session or native

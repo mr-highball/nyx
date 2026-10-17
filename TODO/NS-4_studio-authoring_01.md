@@ -2,13 +2,21 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [buffer inspection](../docs/pascal-projects.md#read-only-buffer-snapshots)
+separates unfinished main/unit/include text from compiler inputs. Ordinary Outline
+defaults to current buffers, retains earlier complete routines on recognized
+incompleteness and guards exact buffer positions. Accepted code stays selectable.
+WORK.md owns actual control/strict-regression qualification and remaining browser,
+full grammar/performance/quality/parity/delivery gates. General declarations and
+compiler type/symbol completion remain under original criterion two.
+
 Current-source [routine outline](../docs/pascal-projects.md#studio-routine-outline)
 composes a public Nyx card into the ordinary source workspace. Explicit owner,
 bounded search/pages and physical counterpart actions share the public index;
 target drafts and stale snapshots preserve their guards. WORK.md owns interaction
-evidence and the separate browser/visual/delivery limits. Draft-aware navigation,
-general declaration/type/symbol completion, full quality/parity and original
-criterion two remain open; accepted-source navigation does not complete the IDE.
+evidence and the separate browser/visual/delivery limits. General declaration/type/
+symbol completion, full quality/parity and original criterion two remain open;
+routine navigation does not complete the IDE.
 
 Current-source [include-aware routine authoring](../docs/pascal-projects.md#project-routines-and-physical-source-locations)
 shares public typed snapshot/body intents with semantic tools and the complete

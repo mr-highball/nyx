@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [buffer snapshots](../docs/pascal-projects.md#read-only-buffer-snapshots)
+support ordinary current-text navigation independently of source admission.
+WORK.md separates native control/strict-reader evidence from compiled-only browser
+products and broader quality/delivery. Semantic buffer reads, general declarations,
+compiler type/symbol completion and original credit remain open.
+
 Current-source [routine outline](../docs/pascal-projects.md#studio-routine-outline)
 adds a public Nyx source card with bounded search/pages and guarded physical
 counterpart navigation in ordinary Studio. WORK.md separates native input from

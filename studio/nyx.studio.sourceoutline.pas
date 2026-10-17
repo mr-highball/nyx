@@ -51,7 +51,8 @@ type
   { Transient managed outline owner shared by both adapters. It owns copied
     inputs/index/search, borrowing a session only during calls. Switching loads
     resets discovery; no document/control/compiler/history or session is retained.
-    Changed inputs retire navigation; a target draft refuses without erasure.
+    Changed inputs retire navigation. Editing positions follow captured buffers;
+    accepted positions refuse a changed target without erasing unfinished text.
     Calls are serialized by the owning editor UI thread. Search/owner/page are
     presentation, deliberately absent from project Undo. }
   INyxStudioSourceOutline = interface(IInterface)
@@ -68,16 +69,21 @@ function NewNyxStudioSourceOutline: INyxStudioSourceOutline;
 implementation
 
 uses SysUtils, nyx.types, nyx.data, nyx.pascal.project, nyx.pascal.drafts,
-  nyx.pascal.outline;
+  nyx.pascal.outline, nyx.pascal.sources;
 
 type
-  { Cached index belongs to one immutable accepted owner/project. Opaque mount
+  { Cached index belongs to fixed accepted membership and exact inspected
+    buffers for one explicit owning unit. Opaque mount
     serials distinguish retired rows even when renderers reconcile equal IDs.
     Exceptions become scoped readable feedback, never draft/history changes. }
   TSourceOutline = class(TNyxStudioSourceOutline, INyxStudioSourceOutline)
   private
     FContext: TNyxStudioCommandContext;
     FProject: INyxPascalProject;
+    FSources: INyxPascalSourceSnapshot;
+    FKind: TNyxPascalSourceSnapshotKind;
+    FMainBuffer: TNyxText;
+    FHelperBuffers: TNyxPascalFileDrafts;
     FIndex: INyxPascalRoutineIndex;
     FAttempted: Boolean;
     FOwner: TNyxPascalSourceRef;
@@ -107,6 +113,11 @@ var
   LProject: INyxPascalProject;
   LOwnerExists: Boolean;
   LInput: Integer;
+  LMain: TNyxText;
+  LHelpers: TNyxPascalFileDrafts;
+  LReadStatus: INyxPascalRoutineReadStatus;
+  LMessage: TNyxText;
+  LProblem: TNyxPascalRoutineLocation;
 begin
 
   if ASession = nil then
@@ -118,6 +129,7 @@ begin
   begin
     FContext := ASession.CommandContext;
     FProject := nil;
+    FSources := nil;
     FIndex := nil;
     FAttempted := False;
     FOwner := TNyxPascalSourceRef.Main;
@@ -130,12 +142,18 @@ begin
     FFilter := '';
     FPage := 0;
     FMessage := '';
+    FKind := pssEditing;
   end;
   LProject := ASession.AcceptedPascalProject;
+  LMain := ASession.DraftSource;
+  LHelpers := ASession.FileDrafts;
 
-  if FProject <> LProject then
+  if (FProject <> LProject) or
+    ((FKind = pssEditing) and ((FMainBuffer <> LMain) or
+      not FHelperBuffers.SameValues(LHelpers))) then
   begin
     FProject := LProject;
+    FSources := nil;
     FIndex := nil;
     FAttempted := False;
   end;
@@ -162,7 +180,20 @@ begin
   begin
     FAttempted := True;
     try
-      FIndex := CaptureNyxPascalRoutineIndex(FProject, FOwner);
+      FSources := CaptureNyxPascalSources(FProject);
+      FMainBuffer := LMain;
+      FHelperBuffers := LHelpers;
+
+      if FKind = pssEditing then
+      begin
+        FSources := FSources.WithBuffer(TNyxPascalSourceRef.Main, FMainBuffer);
+        for LInput := 0 to FHelperBuffers.Count - 1 do
+        begin
+          FSources := FSources.WithBuffer(FHelperBuffers.Item(LInput).FileReference,
+            FHelperBuffers.Item(LInput).Text);
+        end;
+      end;
+      FIndex := CaptureNyxPascalRoutineIndex(FSources, FOwner);
     except
       on LException: Exception do
       begin
@@ -175,8 +206,27 @@ begin
     end;
   end;
   Inc(FMount);
+  LMessage := FMessage;
+
+  if Supports(FIndex, INyxPascalRoutineReadStatus, LReadStatus) and
+    (LReadStatus.ProblemText <> '') then
+  begin
+    LProblem := LReadStatus.ProblemLocation;
+
+    if LMessage <> '' then
+    begin
+      LMessage := LMessage + #10;
+    end;
+
+    if LProblem.IsDefined then
+    begin
+      LMessage := LMessage + ASession.SourceFileTitle(LProblem.FileReference) +
+        ' / ' + IntToStr(LProblem.Line) + ':' + IntToStr(LProblem.Column) + ' / ';
+    end;
+    LMessage := LMessage + LReadStatus.ProblemText;
+  end;
   Result := NewNyxPascalOutline(NyxStudioSourceOutlineID, FProject, FIndex,
-    FOwner, FQuery, FFilter, FPage, FMessage);
+    FOwner, FQuery, FFilter, FPage, FKind, LMessage);
   Result.Node.Extensions.SetValue(NyxExtension(CMountKey), NyxData(FMount));
 end;
 
@@ -217,9 +267,23 @@ begin
     begin
       raise ENyxModel.Create('The source changed. Use the refreshed outline before navigating');
     end;
+
+    if (FKind = pssEditing) and ((ASession.DraftSource <> FMainBuffer) or
+      not FHelperBuffers.SameValues(ASession.FileDrafts)) then
+    begin
+      raise ENyxModel.Create('The editing buffers changed. Use the refreshed outline before navigating');
+    end;
     FMessage := '';
     FQuery := LForm.Find(NyxStudioSourceOutlineID + '-query').Prop('value');
     case LAction of
+      poaSnapshot:
+        begin
+          FKind := NyxPascalOutlineSnapshotKind(ANode.Prop('value'));
+          FSources := nil;
+          FIndex := nil;
+          FAttempted := False;
+          FPage := 0;
+        end;
       poaField:
         begin
           Result := soeField;
@@ -283,8 +347,8 @@ begin
             raise ENyxModel.Create('This routine has no unambiguous physical location');
           end;
 
-          if ASession.DraftFileText(ALocation.FileReference) <>
-            ASession.SourceFileText(ALocation.FileReference) then
+          if (FSources = nil) or (ASession.DraftFileText(ALocation.FileReference) <>
+            FSources.Text(ALocation.FileReference)) then
           begin
             raise ENyxModel.Create('This file has unfinished Pascal. Apply or restore it before navigating');
           end;

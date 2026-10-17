@@ -24,7 +24,7 @@ program nyx_pascal_outline_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.source,
-  nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.outline,
+  nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.outline, nyx.pascal.sources,
   nyx.studio.view, nyx.studio.presentation
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -169,9 +169,183 @@ begin
     'historical source preference ordinals remain unchanged');
 end;
 
+{ Read-only buffer inspection is qualified independently of compilation. These
+  unfinished source values intentionally cannot become an admitted project. }
+procedure RunDraftSources;
+const
+  CPrefix: TNyxText = '{ A shifted draft 🚀 𐐷 }' + #10#10;
+  CBody: TNyxText = 'procedure Shared;' + #10 + 'begin' + #10 + 'end;' + #10;
+  CUnfinished: TNyxText = 'procedure InProgress;' + #10 + 'begin' + #10 +
+    '  WriteLn(''An unfinished literal 🚀';
+  CPacked: TNyxText = 'An unfinished buffer 🚀' + #0 + '𐐷';
+var
+  LProject: INyxPascalProject;
+  LExecutable: INyxPascalProject;
+  LOriginal: INyxPascalSourceSnapshot;
+  LEditing: INyxPascalSourceSnapshot;
+  LFrozen: INyxPascalSourceSnapshot;
+  LIndex: INyxPascalRoutineIndex;
+  LStatus: INyxPascalRoutineReadStatus;
+  LInclude: TNyxPascalSourceRef;
+  LHelper: TNyxPascalSourceRef;
+  LMain: TNyxPascalSourceRef;
+  LSite: TNyxPascalRoutineSite;
+  LRefused: Boolean;
+  LDeep: TNyxText;
+  LStep: Integer;
+  LDrafts: TNyxPascalFileDrafts;
+  LCopy: TNyxPascalFileDrafts;
+begin
+  LMain := TNyxPascalSourceRef.Main;
+  LInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('shared.inc'));
+  LHelper := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('draft.helper'));
+  LProject := NewNyxPascalProject(NyxPascalUnit('draft.main'),
+    'unit draft.main; interface procedure Shared; implementation {$I shared.inc} end.')
+    .WithUnit(NyxPascalUnit('draft.helper'),
+      'unit draft.helper; interface procedure Shared; implementation {$I shared.inc} end.')
+    .WithInclude(NyxPascalInclude('shared.inc'), CBody);
+  LOriginal := CaptureNyxPascalSources(LProject);
+  Check((LOriginal.Kind = pssAccepted) and (LOriginal.Count = 3) and
+    LOriginal.FileReference(0).SameFile(LMain), 'accepted inspection freezes exact typed membership');
+  LEditing := LOriginal.WithBuffer(LInclude, CPrefix + CBody + CUnfinished);
+  Check(not Supports(LEditing, INyxPascalProject, LExecutable),
+    'buffer snapshots cannot be passed as executable compiler projects');
+  Check((LEditing.Kind = pssEditing) and (LOriginal.Text(LInclude) = CBody) and
+    (LEditing.AcceptedText(LInclude) = CBody),
+    'editing snapshots preserve independent accepted text without rebasing it');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  Check((LIndex.Count = 1) and (LIndex.Item(0).Routine.Name = 'Shared'),
+    'an unfinished literal retains only earlier complete routines');
+  LSite := LIndex.Item(0);
+  Check(LSite.Definition.IsDefined and LSite.Definition.FileReference.SameFile(LInclude) and
+    (LSite.Definition.Line = 3), 'draft prefix navigation uses shifted physical include coordinates');
+  Check(Supports(LIndex, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> '') and LStatus.ProblemLocation.IsDefined and
+    LStatus.ProblemLocation.FileReference.SameFile(LInclude),
+    'incomplete lexical feedback belongs to the exact physical buffer');
+  Check(LSite.DeclarationLocation.IsDefined and LSite.DeclarationLocation.FileReference.SameFile(LMain),
+    'an unrelated unfinished body does not erase an earlier interface counterpart');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LHelper);
+  Check((LIndex.Count = 1) and LIndex.Item(0).DeclarationLocation.FileReference.SameFile(LHelper),
+    'a shared edited include retains distinct owning-unit declaration contexts');
+  LEditing := LOriginal.WithBuffer(LInclude, CPrefix + CBody + 'procedure InProgress; begin');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  Check((LIndex.Count = 1) and Supports(LIndex, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> ''), 'an unfinished body exposes its complete prefix without invented end tokens');
+  Check(LStatus.ProblemLocation.IsDefined and
+    LStatus.ProblemLocation.FileReference.SameFile(LInclude) and
+    (LStatus.ProblemLocation.Line = 6),
+    'incomplete-body feedback stays anchored to its physical include opening');
+  LEditing := LOriginal.WithBuffer(LInclude, CPrefix + CBody + '{ procedure Hidden; begin end;');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  Check((LIndex.Count = 1) and Supports(LIndex, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> ''), 'unfinished comments cannot fabricate routines from their text');
+  LEditing := LOriginal.WithBuffer(LInclude, CPrefix + CBody + 'procedure');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  Check((LIndex.Count = 1) and Supports(LIndex, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> ''), 'an unfinished identity preserves prior complete entries');
+  LEditing := LOriginal.WithBuffer(LHelper,
+    'unit a.new.name; interface implementation procedure Local; begin end;');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LHelper);
+  Check((LIndex.Count = 1) and (LEditing.MainUnit.Name = 'draft.main'),
+    'namespace typing does not rename accepted membership or block read-only local discovery');
+  LEditing := LEditing.WithBuffer(LMain, '');
+  LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  Check((LIndex.Count = 0) and Supports(LIndex, INyxPascalRoutineReadStatus, LStatus) and
+    (LStatus.ProblemText <> ''), 'empty editing text stays inspectable with readable context');
+  LEditing := LEditing.WithBuffer(LInclude, CPacked);
+  LFrozen := CaptureNyxPascalSources(LEditing);
+  LEditing := nil;
+  Check(LFrozen.Text(LInclude) = CPacked, 'detached inspection retains supplementary and embedded-NUL buffers');
+  LRefused := False;
+  try
+    LFrozen.WithBuffer(TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('missing.inc')), '');
+  except
+    on ENyxPascalProject do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LFrozen.Text(LInclude) = CPacked), 'buffer inspection cannot create missing project members');
+  LRefused := False;
+  try
+    LFrozen.WithBuffer(LInclude, TNyxText(StringOfChar('x', 4 * 1024 * 1024 + 1)));
+  except
+    on ENyxPascalProject do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'buffer text quotas refuse before replacing any snapshot');
+  LEditing := LOriginal.WithBuffer(LInclude, '{$I shared.inc}');
+  LIndex := nil;
+  LRefused := False;
+  try
+    LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LIndex = nil), 'draft include cycles cannot return a partial success');
+  LDeep := CBody + 'procedure Deep; begin ';
+  for LStep := 1 to 300 do
+  begin
+    LDeep := LDeep + 'begin ';
+  end;
+  for LStep := 1 to 300 do
+  begin
+    LDeep := LDeep + 'end; ';
+  end;
+  LDeep := LDeep + 'end;';
+  LEditing := LOriginal.WithBuffer(LInclude, LDeep);
+  LRefused := False;
+  try
+    LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain);
+  except
+    on ENyxSource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LIndex = nil), 'block-depth quotas stay hard failures after earlier complete routines');
+  LEditing := LOriginal.WithBuffer(LInclude, CPrefix + CBody);
+  LRefused := False;
+  try
+    LIndex := CaptureNyxPascalRoutineIndex(LEditing, LMain,
+      TNyxPascalRoutineLimits.Defaults.UpToDepth(1));
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LIndex = nil), 'caller-supplied inspection bounds also govern editing snapshots');
+  LRefused := False;
+  try
+    LIndex := CaptureNyxPascalRoutineIndex(LProject.WithInclude(NyxPascalInclude('shared.inc'),
+      CPrefix + CBody + CUnfinished), LMain);
+  except
+    on ENyxSource do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LIndex = nil), 'legacy compiler-project routine inspection remains strict');
+  LDrafts := Default(TNyxPascalFileDrafts);
+  LDrafts := LDrafts.Editing(LInclude, CBody, CPacked);
+  LCopy := LDrafts;
+  Check(LDrafts.SameValues(LCopy), 'copied buffer values compare without serialization');
+  LCopy := LCopy.Editing(LInclude, CBody, 'Another buffer');
+  Check(not LDrafts.SameValues(LCopy) and (LDrafts.Draft(LInclude).Text = CPacked),
+    'buffer comparison detects changes without mutating an older value');
+end;
+
 begin
   try
     Run;
+    RunDraftSources;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-outline', 'passed');
     document.body.setAttribute('data-outline-checks', IntToStr(GChecks));

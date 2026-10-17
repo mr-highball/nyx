@@ -92,12 +92,37 @@ type
     function Encoded: TNyxText;
     class function Parse(const AData: TNyxText): TNyxPascalFileDrafts; static;
     function StorageBytes: TNyxTextBytes;
+    { Compare exact persistent buffer/base values without serializing all text.
+      Order is retained presentation data; this grants no admission or rebasing. }
+    function SameValues(const AOther: TNyxPascalFileDrafts): Boolean;
     property Count: Integer read GetCount;
   end;
 
 implementation
 
 uses SysUtils, nyx.bytes, nyx.data;
+
+function TNyxPascalFileDrafts.SameValues(const AOther: TNyxPascalFileDrafts): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := Count = AOther.Count;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if not FEntries[LIndex].FileReference.SameFile(AOther.FEntries[LIndex].FileReference) or
+      (FEntries[LIndex].Text <> AOther.FEntries[LIndex].Text) or
+      (FEntries[LIndex].Base <> AOther.FEntries[LIndex].Base) then
+    begin
+      Exit(False);
+    end;
+  end;
+end;
 
 procedure ValidateBuffer(const AText: TNyxText);
 var

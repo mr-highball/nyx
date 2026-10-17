@@ -26,7 +26,7 @@ unit nyx.pascal.outline;
 interface
 
 uses nyx.text, nyx.types, nyx.model, nyx.controls, nyx.source,
-  nyx.pascal.project, nyx.pascal.drafts;
+  nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources;
 
 const
   NyxPascalOutlinePageSize = 12;
@@ -39,7 +39,7 @@ type
   { Presentation intent only. A navigation action carries a revision-local row
     ordinal, not a persistent routine identity or permission to edit source. }
   TNyxPascalOutlineAction = (poaNone, poaField, poaOwner, poaFind,
-    poaPrevious, poaNext, poaNavigate);
+    poaPrevious, poaNext, poaNavigate, poaSnapshot);
 
 { Build an ordinary reusable Nyx card from a borrowed immutable project/index.
   Search matches routine names and signatures; at most twelve rows are mounted.
@@ -50,7 +50,17 @@ type
   Query is applied on Find, preserving a live search field while the user types. }
 function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
   const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
-  const AQuery, AFilter: TNyxText; APage: Integer; const AMessage: TNyxText = ''): INyxCard;
+  const AQuery, AFilter: TNyxText; APage: Integer; const AMessage: TNyxText = ''): INyxCard; overload;
+{ Snapshot origin is a closed presentation choice, never compiler authority.
+  The embedding owner pairs the index with these exact accepted members and
+  inspected buffers, validating that same snapshot before placing a caret. }
+function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
+  const AQuery, AFilter: TNyxText; APage: Integer;
+  AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText = ''): INyxCard; overload;
+{ Decode a closed source-selector caption at the UI boundary. Unknown values
+  refuse, preserving the caller's current inspection/selection. }
+function NyxPascalOutlineSnapshotKind(const ACaption: TNyxText): TNyxPascalSourceSnapshotKind;
 
 { Decode only the card's closed controls. The embedding owner must additionally
   require a currently mounted node and the exact source snapshot. }
@@ -69,6 +79,25 @@ uses SysUtils, nyx.data, nyx.text.search;
 const
   CRowKey = 'nyx.pascal.outline.row';
   CPartKey = 'nyx.pascal.outline.part';
+  CSourceCaptions: array[TNyxPascalSourceSnapshotKind] of TNyxText =
+    ('Accepted code', 'Editing buffers');
+  CSourceSummaries: array[TNyxPascalSourceSnapshotKind] of TNyxText =
+    ('accepted source', 'editing buffers');
+
+function NyxPascalOutlineSnapshotKind(const ACaption: TNyxText): TNyxPascalSourceSnapshotKind;
+var
+  LKind: TNyxPascalSourceSnapshotKind;
+begin
+  for LKind := Low(TNyxPascalSourceSnapshotKind) to High(TNyxPascalSourceSnapshotKind) do
+  begin
+
+    if ACaption = CSourceCaptions[LKind] then
+    begin
+      Exit(LKind);
+    end;
+  end;
+  raise ENyxPascalProject.Create('Choose accepted code or editing buffers');
+end;
 
 function NyxPascalOutlineLocation(const ASite: TNyxPascalRoutineSite;
   APart: TNyxPascalOutlinePart): TNyxPascalRoutineLocation;
@@ -91,7 +120,8 @@ end;
 
 function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
   const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
-  const AQuery, AFilter: TNyxText; APage: Integer; const AMessage: TNyxText): INyxCard;
+  const AQuery, AFilter: TNyxText; APage: Integer;
+  AKind: TNyxPascalSourceSnapshotKind; const AMessage: TNyxText): INyxCard;
 var
   LItems: TNyxText;
   LOwner: TNyxText;
@@ -141,6 +171,12 @@ begin
   end;
   AOwner.Validate;
 
+  if (Ord(AKind) < Ord(Low(TNyxPascalSourceSnapshotKind))) or
+    (Ord(AKind) > Ord(High(TNyxPascalSourceSnapshotKind))) then
+  begin
+    raise ENyxPascalProject.Create('Unknown outline snapshot origin');
+  end;
+
   if (AOwner.Role = npsInclude) or
     ((AIndex <> nil) and not AIndex.Owner.SameFile(AOwner)) then
   begin
@@ -163,6 +199,10 @@ begin
   end;
   Result := NewNyxCard(AID);
   Result.Configure.Padding(12).Gap(10).Flex(1).Done;
+  Result.Add(NewNyxSelect(AID + '-snapshot').Configure.Text('Source snapshot')
+    .AccessibleName('Outline source snapshot').Items(CSourceCaptions[pssAccepted] + #10 +
+    CSourceCaptions[pssEditing]).Value(CSourceCaptions[AKind])
+    .Hint('Editing buffers are uncompiled text; accepted code stays independent').Done);
   Result.Add(NewNyxSelect(AID + '-owner').Configure.Text('Owning unit')
     .AccessibleName('Outline owning unit').Items(LItems).Value(LOwner)
     .Hint('An include is interpreted within the unit that includes it').Done);
@@ -200,11 +240,11 @@ begin
   begin
     LPage := (LCount - 1) div NyxPascalOutlinePageSize;
   end;
-  LTitle := IntToStr(LCount) + ' routines / accepted source';
+  LTitle := IntToStr(LCount) + ' routines / ' + CSourceSummaries[AKind];
 
   if LCount = 1 then
   begin
-    LTitle := '1 routine / accepted source';
+    LTitle := '1 routine / ' + CSourceSummaries[AKind];
   end;
   Result.Add(NewNyxLabel(AID + '-summary').Configure.Text(LTitle).Done);
   LActions := NewNyxRow(AID + '-pages');
@@ -240,6 +280,14 @@ begin
   end;
 end;
 
+function NewNyxPascalOutline(const AID: TNyxText; const AProject: INyxPascalProject;
+  const AIndex: INyxPascalRoutineIndex; const AOwner: TNyxPascalSourceRef;
+  const AQuery, AFilter: TNyxText; APage: Integer; const AMessage: TNyxText): INyxCard;
+begin
+  Result := NewNyxPascalOutline(AID, AProject, AIndex, AOwner,
+    AQuery, AFilter, APage, pssAccepted, AMessage);
+end;
+
 function NyxPascalOutlineAction(const AID: TNyxText; ANode: TNyxNode;
   ATrigger: TNyxTrigger; out ARow: Integer;
   out APart: TNyxPascalOutlinePart): TNyxPascalOutlineAction;
@@ -266,6 +314,11 @@ begin
     if ANode.ID = AID + '-owner' then
     begin
       Exit(poaOwner);
+    end;
+
+    if ANode.ID = AID + '-snapshot' then
+    begin
+      Exit(poaSnapshot);
     end;
   end;
 

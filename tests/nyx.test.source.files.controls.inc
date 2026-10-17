@@ -263,6 +263,7 @@ var
     procedure OutlineControls;
     var
       LOutlineOwner: TComboBox;
+      LSnapshot: TComboBox;
       LSearch: TCustomEdit;
       LIndex: INyxPascalRoutineIndex;
       LRow: Integer;
@@ -282,6 +283,11 @@ var
       procedure OwnerUnit;
       begin
         Click(NyxStudioSourceOutlineTabID);
+        Settled;
+        LSnapshot := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-snapshot'));
+        Check(LSnapshot <> nil, 'ordinary outline exposes its explicit source snapshot');
+        LSnapshot.ItemIndex := LSnapshot.Items.IndexOf('Accepted code');
+        LSnapshot.OnChange(LSnapshot);
         Settled;
         LOutlineOwner := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-owner'));
         Check(LOutlineOwner <> nil, 'outline uses an ordinary typed Nyx owner selector');
@@ -413,6 +419,173 @@ var
       Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LPair),
         'complete owned observing fixture is restored through ordinary scoped input');
       WriteLn('SOURCE OUTLINE ', LCase, ' passed');
+      Flush(Output);
+    end;
+
+    { Current-buffer navigation uses the ordinary physical memo and the same
+      shared presenter. Its unfinished buffers are never compiled or staged as
+      accepted source; all restoration stays with ordinary scoped actions. }
+    procedure DraftOutlineControls;
+    const
+      CMainPrefix: TNyxText = '{ A current main note 🚀 }' + #10#10;
+      CUnitPrefix: TNyxText = '{ A current helper note 𐐷 }' + #10;
+      CIncludePrefix: TNyxText = '{ A current include note 🚀 𐐷 }' + #10#10;
+      CUnfinished: TNyxText = 'procedure WorkInProgress;' + #10 + 'begin';
+      CUnrelated: TNyxText = '{ An unrelated unfinished include';
+    var
+      LSnapshot: TComboBox;
+      LOwner: TComboBox;
+      LMainText: TNyxText;
+      LUnitText: TNyxText;
+      LIncludeText: TNyxText;
+      LBeforeDrafts: TNyxText;
+      LCanUndo: Boolean;
+      LCanRedo: Boolean;
+      LOutline: INyxStudioSourceOutline;
+      LForm: INyxCard;
+      LEvent: TNyxEventInfo;
+      LLocation: TNyxPascalRoutineLocation;
+      LEffect: TNyxStudioSourceOutlineEffect;
+
+      function LineOf(const AText, AName: TNyxText): Integer;
+      var
+        LIndex: Integer;
+        LAt: Integer;
+      begin
+        LAt := Pos(AName, AText);
+        Check(LAt > 0, 'known owned fixture marker exists independently of the routine index');
+        Result := 1;
+        for LIndex := 1 to LAt - 1 do
+        begin
+
+          if AText[LIndex] = #10 then
+          begin
+            Inc(Result);
+          end;
+        end;
+      end;
+
+      procedure Browse(AKind: TNyxPascalSourceSnapshotKind);
+      var
+        LCaption: TNyxText;
+      begin
+        Click(NyxStudioSourceOutlineTabID);
+        Settled;
+        LSnapshot := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-snapshot'));
+        LCaption := 'Editing buffers';
+
+        if AKind = pssAccepted then
+        begin
+          LCaption := 'Accepted code';
+        end;
+        LSnapshot.ItemIndex := LSnapshot.Items.IndexOf(LCaption);
+        Check(LSnapshot.ItemIndex >= 0, 'source snapshot selector offers its explicit typed mode');
+        LSnapshot.OnChange(LSnapshot);
+        Settled;
+        LOwner := TComboBox(GStudio.SourceView.InputFor(NyxStudioSourceOutlineID + '-owner'));
+        LOwner.ItemIndex := LOwner.Items.IndexOf('project.values.pas');
+        LOwner.OnChange(LOwner);
+        Settled;
+      end;
+
+      procedure Go(APart: TNyxPascalOutlinePart);
+      begin
+        Click(NyxStudioSourceOutlineID + '-go-0-' + IntToStr(Ord(APart)));
+        Settled;
+      end;
+
+    begin
+      LCanUndo := GStudio.Session.CanUndo;
+      LCanRedo := GStudio.Session.CanRedo;
+      LMainText := CMainPrefix + GStudio.Session.Source;
+      LUnitText := CUnitPrefix + GStudio.Session.SourceFileText(LUnit);
+      LIncludeText := CIncludePrefix + GStudio.Session.SourceFileText(LInclude) + #10 + CUnfinished;
+      Pick(TNyxPascalSourceRef.Main);
+      LMemo.Text := LMainText;
+      Settled;
+      Pick(LUnit);
+      LMemo.Text := LUnitText;
+      Settled;
+      Pick(LUtility);
+      LMemo.Text := CUnrelated;
+      Settled;
+      Pick(LInclude);
+      LMemo.Text := LIncludeText;
+      Settled;
+      Check((GStudio.Session.DraftSource = LMainText) and
+        (GStudio.Session.DraftFileText(LUnit) = LUnitText) and
+        (GStudio.Session.DraftFileText(LInclude) = LIncludeText),
+        'actual memo entry retains exact shifted supplementary main/unit/include buffers');
+      LBeforeDrafts := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Click('action-expand-source');
+      Settled;
+      Browse(pssEditing);
+      Check(GStudio.SourceView.Root.Find(NyxStudioSourceOutlineID + '-summary').Prop('text') =
+        '1 routine / editing buffers', 'editing mode retains its complete helper before the unfinished body');
+      Check(Pos('plan-values.inc', GStudio.SourceView.Root.Find(
+        NyxStudioSourceOutlineID + '-message').Prop('text')) > 0,
+        'ordinary partial-source feedback names the exact unfinished physical include');
+      Go(popDefinition);
+      Check(GStudio.SourceModal.IsOpen and GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (LMemo.CaretPos.Y + 1 = LineOf(LIncludeText, 'function ProjectPlan')),
+        'editing definition navigates to the shifted include inside the same expanded editor');
+      Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeDrafts) and
+        (GStudio.CodeView.InputFor('studio-code') = LMemo),
+        'current-buffer navigation preserves the complete unfinished pair and native input');
+      Browse(pssAccepted);
+      Go(popDefinition);
+      Check(GStudio.SourceView.Root.Find(NyxStudioSourceOutlineID + '-message').Prop('text') =
+        'This file has unfinished Pascal. Apply or restore it before navigating',
+        'explicit accepted mode still refuses a stale accepted location in a changed buffer');
+      Browse(pssEditing);
+      Go(popDeclaration);
+      Check(GStudio.Session.ActiveSourceFile.SameFile(LUnit) and
+        (LMemo.CaretPos.Y + 1 = LineOf(LUnitText, 'function ProjectPlan')),
+        'editing declaration selects its independently shifted unfinished unit buffer');
+      Browse(pssEditing);
+      Go(popBody);
+      Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+        (GStudio.CodeView.Root.Prop('value') = LIncludeText) and
+        (GStudio.Session.DraftFileText(LUtility) = CUnrelated),
+        'editing body navigation preserves unrelated invalid input and exact target text');
+      Check((GStudio.Session.CanUndo = LCanUndo) and (GStudio.Session.CanRedo = LCanRedo) and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeDrafts),
+        'current-buffer inspection publishes no accepted pair or Undo command');
+
+      { The same shared route checks a changed buffer before a deferred repaint;
+        this boundary assertion is separate from controlled widget navigation. }
+      LOutline := NewNyxStudioSourceOutline;
+      LForm := LOutline.Build(GStudio.Session);
+      LMemo.Text := CIncludePrefix + LIncludeText;
+      Settled;
+      LEvent := Default(TNyxEventInfo);
+      LEvent.Trigger := ntClick;
+      LEffect := LOutline.Route(GStudio.Session, LForm.Node,
+        LForm.Node.Find(NyxStudioSourceOutlineID + '-find'), LEvent, LLocation);
+      Check((LEffect = soeRebuild) and not LLocation.IsDefined and
+        (GStudio.Session.DraftFileText(LInclude) = CIncludePrefix + LIncludeText),
+        'a still-mounted former buffer snapshot refuses after newer typing without overwriting it');
+      LForm := nil;
+      LOutline := nil;
+      Pick(TNyxPascalSourceRef.Main);
+      Click('action-reset-source');
+      Settled;
+      Pick(LUnit);
+      Click('action-reset-source');
+      Settled;
+      Pick(LUtility);
+      Click('action-reset-source');
+      Settled;
+      Pick(LInclude);
+      Click('action-reset-source');
+      Settled;
+      Click('action-expand-source');
+      Settled;
+      Check(not GStudio.SourceModal.IsOpen and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(LPair)) and
+        (GStudio.CodeView.InputFor('studio-code') = LMemo),
+        'ordinary scoped Restore returns the exact owned pair and retains the editor');
+      WriteLn('DRAFT OUTLINE ', LCase, ' passed');
       Flush(Output);
     end;
 
@@ -1468,6 +1641,7 @@ var
       if AJourney = sfjOutline then
       begin
         OutlineControls;
+        DraftOutlineControls;
         Exit;
       end;
 

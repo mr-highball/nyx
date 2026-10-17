@@ -107,7 +107,8 @@ begin
 end;
 
 function ReadRoutineCatalog(const ASource: TNyxText;
-  AManaged: Boolean): TNyxRoutineCatalog;
+  AManaged, AReadIncomplete: Boolean;
+  out AProblem: TNyxSourceDiagnostic): TNyxRoutineCatalog; overload;
 var
   LTokens: TTokens;
   LPrefix: TNyxText;
@@ -125,17 +126,37 @@ var
   LLine: Integer;
   LLineCursor: Integer;
   LEntry: TNyxRoutineSource;
+  LAllTokens: TTokens;
+  LToken: Integer;
+  LStop: Integer;
 begin
   Result := Default(TNyxRoutineCatalog);
-  NyxCompanionUnitName(ASource);
+  AProblem := Default(TNyxSourceDiagnostic);
+
+  if not AReadIncomplete then
+  begin
+    NyxCompanionUnitName(ASource);
+  end;
   LPrefix := '';
   LBuilder := '';
 
-  if AManaged then
+  if AManaged and not AReadIncomplete then
   begin
     SplitNyxSourceFrame(ASource, LPrefix, LBuilder, LSuffix);
   end;
-  LTokens := HandlerTokens(ASource);
+  LAllTokens := LexSourceRead(ASource, AReadIncomplete, AProblem, LStop);
+  SetLength(LTokens, Length(LAllTokens));
+  LCount := 0;
+  for LToken := 0 to High(LAllTokens) do
+  begin
+
+    if LAllTokens[LToken].Kind <> tkComment then
+    begin
+      LTokens[LCount] := LAllTokens[LToken];
+      Inc(LCount);
+    end;
+  end;
+  SetLength(LTokens, LCount);
   LIndex := 0;
   while (LIndex < Length(LTokens)) and not HandlerWord(LTokens, LIndex, 'implementation') do
   begin
@@ -144,6 +165,16 @@ begin
 
   if LIndex = Length(LTokens) then
   begin
+
+    if AReadIncomplete then
+    begin
+
+      if not AProblem.Defined then
+      begin
+        AProblem := SourceReadProblem('Routine discovery needs an implementation section', ASource, LStop);
+      end;
+      Exit;
+    end;
     HandlerFail(ASource, 'Routine discovery requires a companion implementation section', LTokens, LIndex);
   end;
   Inc(LIndex);
@@ -174,113 +205,163 @@ begin
       HandlerWord(LTokens, LIndex - 1, 'class')) then
     begin
       LStart := LIndex;
+      try
 
-      if HandlerWord(LTokens, LIndex - 1, 'class') then
-      begin
-        Dec(LStart);
-      end;
-      LCursor := LIndex + 1;
-      LName := '';
-      while LCursor < Length(LTokens) do
-      begin
-
-        { Escaping a reserved identifier does not change Pascal identity. Keep
-          its authored ampersand in the immutable signature, not the reference. }
-
-        if HandlerSymbol(LTokens, LCursor, '&') then
+        if HandlerWord(LTokens, LIndex - 1, 'class') then
         begin
+          Dec(LStart);
+        end;
+        LCursor := LIndex + 1;
+        LName := '';
+        while LCursor < Length(LTokens) do
+        begin
+
+          { Escaping a reserved identifier does not change Pascal identity. Keep
+            its authored ampersand in the immutable signature, not the reference. }
+
+          if HandlerSymbol(LTokens, LCursor, '&') then
+          begin
+            Inc(LCursor);
+          end;
+
+          if (LCursor >= Length(LTokens)) or (LTokens[LCursor].Kind <> tkWord) then
+          begin
+            HandlerFail(ASource, 'Routine identity has ambiguous qualification', LTokens, LCursor);
+          end;
+          LName := LName + LTokens[LCursor].Text;
+          Inc(LCursor);
+
+          if not HandlerSymbol(LTokens, LCursor, '.') then
+          begin
+            Break;
+          end;
+          LName := LName + '.';
           Inc(LCursor);
         end;
+        LEntry := Default(TNyxRoutineSource);
 
-        if (LCursor >= Length(LTokens)) or (LTokens[LCursor].Kind <> tkWord) then
+        if AReadIncomplete and (LName = '') then
         begin
-          HandlerFail(ASource, 'Routine identity has ambiguous qualification', LTokens, LCursor);
+          HandlerFail(ASource, 'Routine identity is unfinished', LTokens, LCursor);
         end;
-        LName := LName + LTokens[LCursor].Text;
-        Inc(LCursor);
-
-        if not HandlerSymbol(LTokens, LCursor, '.') then
-        begin
-          Break;
-        end;
-        LName := LName + '.';
-        Inc(LCursor);
-      end;
-      LEntry := Default(TNyxRoutineSource);
-      LEntry.FRoutine := NyxRoutine(LName);
-      LEntry.FKind := RoutineKind(LTokens, LIndex);
-      { Nesting=1 lets the same balancer locate forward/external declarations.
-        They are discovery-only, never editable implementations. }
-      LFinish := HandlerRoutineEnd(ASource, LTokens, LIndex, 1, LHeader);
-      LEntry.FStart := LTokens[LStart].Position;
-      LEntry.FHeaderFinish := LTokens[LHeader].Finish;
-      LEntry.FFinish := LTokens[LFinish].Finish;
-      LEntry.FSignature := Copy(ASource, LEntry.FStart,
-        LEntry.FHeaderFinish - LEntry.FStart);
-      LEntry.FImplementation := Copy(ASource, LEntry.FHeaderFinish,
-        LEntry.FFinish - LEntry.FHeaderFinish);
-      while LLineCursor < LEntry.FStart do
-      begin
-
-        if ASource[LLineCursor] = #10 then
-        begin
-          Inc(LLine);
-        end;
-        Inc(LLineCursor);
-      end;
-      LEntry.FLine := LLine;
-      LEntry.FEditable := True;
-
-      if AManaged and (LEntry.FStart <= Length(LPrefix) + Length(LBuilder)) and
-        (LEntry.FFinish > Length(LPrefix)) then
-      begin
-        LEntry.FReason := 'Managed views belong to the design contract';
-      end
-      else if AManaged and (SameText(LName, 'BuildNyxDocument') or SameText(LName, 'BindNyxCallbacks')) then
-      begin
-        LEntry.FReason := 'Compiler-managed companion infrastructure';
-      end
-      else if HandlerWord(LTokens, LHeader + 1, 'forward') or
-        HandlerWord(LTokens, LHeader + 1, 'external') then
-      begin
-        LEntry.FReason := 'No local implementation for this declaration';
-      end
-      else
-      begin
         try
-          HandlerNoDirectives(ASource, LEntry.FStart, LEntry.FFinish);
+          LEntry.FRoutine := NyxRoutine(LName);
         except
-          on LException: ENyxSource do
+          on ENyxModel do
           begin
-            LEntry.FReason := TNyxText(LException.Message);
+
+            if not AReadIncomplete then
+            begin
+              raise;
+            end;
+            HandlerFail(ASource, 'Routine identity is incomplete or unsupported', LTokens, LStart);
           end;
         end;
-      end;
-      LEntry.FEditable := LEntry.FReason = '';
-
-      if LCount = 4096 then
-      begin
-        HandlerFail(ASource, 'Routine discovery exceeds 4096 entries', LTokens, LIndex);
-      end;
-      SetLength(Result.FEntries, LCount + 1);
-      Result.FEntries[LCount] := LEntry;
-      for LPrior := 0 to LCount - 1 do
-      begin
-
-        if SameText(Result.FEntries[LPrior].Routine.Name, LName) then
+        LEntry.FKind := RoutineKind(LTokens, LIndex);
+        { Nesting=1 lets the same balancer locate forward/external declarations.
+          They are discovery-only, never editable implementations. }
+        LFinish := HandlerRoutineEnd(ASource, LTokens, LIndex, 1, LHeader);
+        LEntry.FStart := LTokens[LStart].Position;
+        LEntry.FHeaderFinish := LTokens[LHeader].Finish;
+        LEntry.FFinish := LTokens[LFinish].Finish;
+        LEntry.FSignature := Copy(ASource, LEntry.FStart,
+          LEntry.FHeaderFinish - LEntry.FStart);
+        LEntry.FImplementation := Copy(ASource, LEntry.FHeaderFinish,
+          LEntry.FFinish - LEntry.FHeaderFinish);
+        while LLineCursor < LEntry.FStart do
         begin
-          Result.FEntries[LPrior].FEditable := False;
-          Result.FEntries[LPrior].FReason := 'Overloaded or duplicate routine identity';
-          Result.FEntries[LCount].FEditable := False;
-          Result.FEntries[LCount].FReason := 'Overloaded or duplicate routine identity';
+
+          if ASource[LLineCursor] = #10 then
+          begin
+            Inc(LLine);
+          end;
+          Inc(LLineCursor);
+        end;
+        LEntry.FLine := LLine;
+        LEntry.FEditable := True;
+
+        if AManaged and (LEntry.FStart <= Length(LPrefix) + Length(LBuilder)) and
+          (LEntry.FFinish > Length(LPrefix)) then
+        begin
+          LEntry.FReason := 'Managed views belong to the design contract';
+        end
+        else if AManaged and (SameText(LName, 'BuildNyxDocument') or SameText(LName, 'BindNyxCallbacks')) then
+        begin
+          LEntry.FReason := 'Compiler-managed companion infrastructure';
+        end
+        else if HandlerWord(LTokens, LHeader + 1, 'forward') or
+          HandlerWord(LTokens, LHeader + 1, 'external') then
+        begin
+          LEntry.FReason := 'No local implementation for this declaration';
+        end
+        else
+        begin
+          try
+            HandlerNoDirectives(ASource, LEntry.FStart, LEntry.FFinish);
+          except
+            on LException: ENyxSource do
+            begin
+              LEntry.FReason := TNyxText(LException.Message);
+            end;
+          end;
+        end;
+        LEntry.FEditable := LEntry.FReason = '';
+
+        if LCount = 4096 then
+        begin
+
+          if AReadIncomplete then
+          begin
+            raise ENyxModel.Create('Routine discovery exceeds 4096 entries');
+          end;
+          HandlerFail(ASource, 'Routine discovery exceeds 4096 entries', LTokens, LIndex);
+        end;
+        SetLength(Result.FEntries, LCount + 1);
+        Result.FEntries[LCount] := LEntry;
+        for LPrior := 0 to LCount - 1 do
+        begin
+
+          if SameText(Result.FEntries[LPrior].Routine.Name, LName) then
+          begin
+            Result.FEntries[LPrior].FEditable := False;
+            Result.FEntries[LPrior].FReason := 'Overloaded or duplicate routine identity';
+            Result.FEntries[LCount].FEditable := False;
+            Result.FEntries[LCount].FReason := 'Overloaded or duplicate routine identity';
+          end;
+        end;
+        Inc(LCount);
+        LIndex := LFinish + 1;
+        Continue;
+      except
+        on LError: ENyxSource do
+        begin
+
+          if not AReadIncomplete or (LError is ENyxSourceLimit) then
+          begin
+            raise;
+          end;
+
+          if not AProblem.Defined then
+          begin
+            { Anchor an incomplete implementation at its actual opening token.
+              An enclosing unit's end cannot move blame into another file when
+              an included routine has not yet supplied its own closing body. }
+            AProblem := SourceReadProblem(LError.Detail, ASource, LTokens[LStart].Position);
+          end;
+          Break;
         end;
       end;
-      Inc(LCount);
-      LIndex := LFinish + 1;
-      Continue;
     end;
     Inc(LIndex);
   end;
+end;
+
+function ReadRoutineCatalog(const ASource: TNyxText;
+  AManaged: Boolean): TNyxRoutineCatalog; overload;
+var
+  LProblem: TNyxSourceDiagnostic;
+begin
+  Result := ReadRoutineCatalog(ASource, AManaged, False, LProblem);
 end;
 
 function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
