@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
   nyx.expressions, nyx.expressions.editing, nyx.pascal.project,
-  nyx.pascal.drafts, nyx.pascal.filechanges, nyx.pascal.sources,
+  nyx.pascal.drafts, nyx.pascal.filechanges, nyx.pascal.sources, nyx.pascal.completion,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
   nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
@@ -46,6 +46,16 @@ type
   { Operator permissions are closed, session-local and never part of a design.
     Only the editor exchange can change them. MCP cannot grant itself access. }
   TNyxAgentPermission = (apDisabled, apReadOnly, apEdit);
+
+  { Opaque transient completion admission. Session/load, revision and permission
+    generation survive only this exact read; no source interface, editor pointer,
+    serialization or publication capability is retained. Default values refuse. }
+  TNyxAgentPascalCompletionContext = record
+  private
+    FSession: TNyxStudioCommandContext;
+    FRevision: Integer;
+    FPermissionGeneration: Integer;
+  end;
 
   { Open application-run names use distinct references. Scope separates a full
     application, one mounted view and a resource-only preview. A resource preview
@@ -94,6 +104,7 @@ type
     FSession: TNyxStudioSession;
     FRevision: Integer;
     FPermission: TNyxAgentPermission;
+    FPermissionGeneration: Integer;
     FClaimed: Boolean;
     FActivity: array of TNyxDataValue;
     FActivitySerial: Integer;
@@ -244,6 +255,18 @@ type
       const AOwner: TNyxText);
   public
     constructor Create; overload;
+    { Serialized transport admission captures acknowledged buffers and an opaque
+      session/load identity. Completion is read-only but always revision-pinned;
+      the host must release its model guard before calling an external provider. }
+    function CapturePascalCompletion(const AArguments: TNyxDataValue;
+      out AContext: TNyxAgentPascalCompletionContext): INyxPascalCompletionRequest;
+    { Reacquire this current session before calling. Recheck permission, revision,
+      load identity, complete sources and query/response identity. Return only
+      bounded detached rows; no buffer, selection, pair or history is changed. }
+    function FinishPascalCompletion(const AArguments: TNyxDataValue;
+      const AContext: TNyxAgentPascalCompletionContext;
+      const ARequest: INyxPascalCompletionRequest;
+      const AResult: INyxPascalCompletionResult): TNyxDataValue;
     { Trusted independent review seed; accepts an owned pair through ordinary
       Studio admission and empty history, without a sample/claim replacement. }
     constructor Create(const APair: TNyxProjectPair); overload;
@@ -462,6 +485,9 @@ type
     { Exact source-pair draft state, read without logging a semantic operation. }
     property PendingDraft: Boolean read GetPendingDraft;
     property Permission: TNyxAgentPermission read FPermission;
+    { Transient authority generation, also changed by disable/reenable. Hosts
+      compare it around external reads; it is never checkpoint/project data. }
+    property PermissionGeneration: Integer read FPermissionGeneration;
   end;
 
 { Shared strict field helpers at JSON admission boundaries. Unknown arguments
@@ -720,6 +746,7 @@ begin
   FSession := AOrigin.FSession.Clone;
   FRevision := AOrigin.FRevision;
   FPermission := AOrigin.FPermission;
+  FPermissionGeneration := AOrigin.FPermissionGeneration;
   FClaimed := AOrigin.FClaimed;
   FActivity := Copy(AOrigin.FActivity);
   FActivitySerial := AOrigin.FActivitySerial;
@@ -3186,6 +3213,7 @@ begin
 end;
 
 {$I nyx.studio.agents.projectroutines.inc}
+{$I nyx.studio.agents.completion.inc}
 
 function TNyxAgentSession.SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
 var
@@ -3853,7 +3881,11 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if TextArgument(AArguments, 'mode') = 'review-files' then
+      if TextArgument(AArguments, 'mode') = 'complete' then
+      begin
+        raise ENyxProjectConflict.Create('Completion requires the owning worker-aware MCP transport');
+      end
+      else if TextArgument(AArguments, 'mode') = 'review-files' then
       begin
         Result := ReviewSourceFiles(AArguments, LAuthority);
       end
@@ -4133,15 +4165,15 @@ begin
 
     if LPermission = 'disabled' then
     begin
-      FPermission := apDisabled;
+      InheritPermission(apDisabled);
     end
     else if LPermission = 'readOnly' then
     begin
-      FPermission := apReadOnly;
+      InheritPermission(apReadOnly);
     end
     else if LPermission = 'edit' then
     begin
-      FPermission := apEdit;
+      InheritPermission(apEdit);
     end
     else
     begin
@@ -4964,7 +4996,17 @@ end;
 
 procedure TNyxAgentSession.InheritPermission(AValue: TNyxAgentPermission);
 begin
-  FPermission := AValue;
+
+  if FPermission <> AValue then
+  begin
+
+    if FPermissionGeneration = High(Integer) then
+    begin
+      raise ENyxProjectConflict.Create('Agent permission generation exhausted');
+    end;
+    Inc(FPermissionGeneration);
+    FPermission := AValue;
+  end;
 end;
 
 function TNyxAgentSession.ReviewSeed(AExpected: Integer): TNyxProjectPair;

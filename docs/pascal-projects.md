@@ -804,7 +804,58 @@ The maintained Pascal consumers are `nyx_pascal_completion_tests.lpr` and
 SDK root, FPC executable, FPC source root, Lazarus source root and a fresh owned
 scratch directory. It also exports the exact proposed Pascal for independent
 compiler checks. WORK.md separates native engine execution from browser-only
-compilation. Interactive Studio completion, semantic completion queries, cancellation
+compilation. Interactive Studio completion, observing/socket qualification, cancellation
 integration, general overload/generic identity, browser compiler context, broad
 language coverage, quality/parity and delivery remain with the original authoring,
 service and workflow owners.
+
+## Semantic completion queries
+
+Current source extends the existing `nyx_pascal` tool with `mode:complete`.
+An explicit acknowledged `expectedRevision` and Unicode-scalar `caret` are always
+required. For this mode, omitted `snapshot` selects **editing** buffers; explicit
+`accepted` selects the accepted inputs. Other existing source reads retain their
+accepted default. Unsynchronized frontend keystrokes are not acknowledged server
+inputs. The same typed file/owner selectors used by routine reads select supporting
+units and the owning unit of an include.
+
+```json
+{
+  "mode": "complete",
+  "expectedRevision": 12,
+  "file": {"kind": "unit", "name": "example.presenter.pas"},
+  "caret": 164,
+  "limit": 8
+}
+```
+
+The response contains typed suggestion kinds, names, insertion text, readable
+details, total/page positions and exact scalar replacement metadata. It never
+returns the full source project. Twenty rows are the default, fifty the maximum;
+the complete semantic response retains the existing 48 KiB context limit. Reduce
+the page size if rich signatures exceed it. Results remain inspection-only:
+neither a ready row nor its replacement range grants source admission, compilation,
+application execution or authority to consume a pending draft. Existing accepted
+source edits retain their compiler/history/draft guards; semantic current-buffer
+editing and ordinary interactive completion remain separate workflow work.
+
+The owning backend captures immutable inputs under its guard, records scoped
+`resolving completion` activity, then releases that guard before calling the
+optional provider. Ordinary editor observation and independent projects can
+continue. It resolves the live context afresh afterward; raw session pointers do
+not survive external analysis. Revision, session/load identity, complete sources,
+all query selectors, permission generations and provider generation must still
+match. Disable/reenable or provider replacement/restoration retires the old reply.
+A retired review cannot fall back to the primary project. The page is independently
+bounded/validated before a completed activity row is recorded. External exceptions
+produce a generic refusal, keeping private host details out of operator activity.
+
+Hosts explicitly supply a trusted adapter through
+`TNyxStudioMCP.ConfigureCompletionProvider`. It is independent of document output
+targets and exposes no executable/search-path configuration through MCP. A missing
+adapter returns `unavailable`; it never blocks browsing or design. The default
+products still install no analysis helper. Selecting/distributing the optional
+CodeTools engine, a private host settings UI and interactive Nyx completion
+presentation remain open. WORK.md owns native production-engine evidence separately
+from socket/observing browser qualification, broader source/target behavior and
+preserving delivery; this schema is not installed in the frozen release.

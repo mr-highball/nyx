@@ -33,7 +33,96 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Replaceable compiler-context completion — 2026-10-17
+## Current integration: Revision-aware semantic completion — 2026-10-17
+
+Previous goal turn is progress: pushed 9b5fafe qualifies the portable completion
+provider and optional isolated SDK engine. This batch connects that public provider
+to existing semantic source inspection under original NS-4 criterion two and
+workflow criterion five/NS-5 ownership. Interactive Studio completion and original
+criteria/credit remain open; the default engine/distribution choice stays pending.
+
+The existing nyx_pascal tool adds mode:complete, always requiring exact acknowledged
+revision and scalar caret. Omitted snapshot means editing for this mode only;
+accepted is explicit, and old reads retain their accepted default. Typed file/owner
+selectors and bounded pages use the same source membership. Responses contain
+suggestions/signatures and exact replacement metadata, not full source projects.
+The complete semantic context retains the existing 48 KiB limit. Results are
+inspection-only and do not consume drafts, publish source or grant compilation.
+
+The transport captures under FGuard and records scoped in-flight activity, then
+releases that guard before provider analysis. It drops raw session pointers and
+resolves the live scope again afterward. A sealed typed admission retains session/
+load, revision and transient permission generation; final checks compare complete
+sources, every query selector and independent provider-result bounds. Global and
+local permission generations retire disable/reenable replies; provider generation
+retires replacement/restoration replies. The old adapter is retained through guard
+release before destruction. External exceptions become generic refusals without
+private host-path activity. A missing provider is a normal unavailable response,
+independent of output configuration. The public trusted ConfigureCompletionProvider
+seam exposes no machine configuration in MCP and installs no default helper.
+
+Evidence behind ignored .local/semantic-completion-paths-private.json is pinned to
+the exact five Pascal inputs in source-pins-3-private.json:
+
+- logs/semantic-5-run.log passes 60 production semantic checks with clean heap.
+  The engine is constructed suspended in a fresh owned runtime and never starts
+  a listener. An actual optional SDK worker returns specialized WithText from an
+  unfinished INyxBadge buffer under read-only permission, with exact supplementary
+  Unicode scalar positions and no source dump. Absent provider and accepted/
+  editing origin behavior retain the whole pair and history/navigation.
+- Real gated native query threads permit independent ordinary editor observation
+  while analysis waits. The observer sees resolving completion activity, then
+  successful completion without changing drafts/accepted source/selection/view/
+  Undo/Redo. New operator text, permission disable/reenable, provider replacement/
+  restoration, a mismatched returned query, external exceptions and oversized
+  semantic responses refuse. An independent ordinary project can be created and
+  queried without invalidating the primary query. Discarding the owned review
+  during analysis refuses through fresh resolution after its old session is freed.
+  Sockets are substituted; this is not authenticated HTTP or physical UI input.
+- logs/schema-2-run.log passes 90 actual discovery checks, clean heap: 18 strict
+  modes in existing nyx_pascal, unconditional completion revision/caret, closed
+  origin/default/page bounds and outer review/workspace authority. Source tool
+  inventory stays 24, frozen installed 23. No new tool or installed schema closes.
+- Maintained native authority 150 and semantic routine 45 checks pass, clean heaps.
+  They overlap prior evidence; no aggregate completion credit is inferred.
+- Nine accepted compiler logs have zero owned warnings. Both Studios/backend/
+  source worker compile, as does the matching browser semantic consumer. Three
+  pas2js logs retain seven upstream RTL warnings each (21). Browser execution,
+  observing editor/capture, full target parity and delivery remain separate.
+
+The optional helper is reused exactly from the prior accepted packet; its binary
+and compiler-log hashes are recorded in reused-helper-private.json. It is injected
+only into this explicit owned test and is never bundled/default-enabled. The
+CodeTools helper versus owned-resolver preference remains pending. The native
+analysis worker reports a clean heap, and all query threads/owned processes join.
+
+Retain semantic-1-compile.log for the fixture's mixed Unicode concatenation warnings,
+corrected with a typed constant before acceptance. semantic-2-run.log exposes an
+empty fixture profile string, corrected by a valid unconfigured profile value.
+semantic-3 first passes 50; final 60 adds explicit origin and independent-project
+coverage. Earlier preparation logs are excluded from the final accepted ledger.
+The last rebuild makes the old-provider lifetime read explicit, removing its new
+assigned-only note; it changes no provider admission policy.
+
+Fresh document-control discovery finds no connected session/native Nyx tool. This
+owned never-listening production-engine path remains the explicit fallback; no
+browser automation, HTTP host retry or cached-handle refresh attempt occurs.
+All five protected files/nine complete contexts/history/drafts/profile remain exact,
+and all 349 frozen 7422453 artifacts verify exact. LAN stays offline. No protected
+configuration/enrollment/cleanup retry, approval bypass or sub-agents occurs.
+Only owned fresh test storage is created; cleanup remains on demand.
+
+Final source/remote identity, accepted log hashes and protection/terminal receipts
+live in the packet's final-checkpoint-private.json. No original full criterion/
+task/counter/credit/DONE, default engine selection, full parity or rollout closes.
+Stop semantic-query/schema/guard/fixture/compiler variants. The next meaningful
+step is public Nyx completion presentation and ordinary selected-buffer insertion,
+with explicit caret/mount guards and normal editor Undo. Backend/browser transport
+cancellation, private host configuration, default helper choice, general overload/
+generic/compiler-target coverage, quality/cache/performance budgets, observing
+input and delivery retain their existing authoring/service/workflow owners.
+
+## Previous integration: Replaceable compiler-context completion — 2026-10-17
 
 Previous goal turn is progress: pushed b47b0eb exposes scoped lexical declarations.
 This batch follows original NS-4 criterion two and NS-5/workflow ownership toward

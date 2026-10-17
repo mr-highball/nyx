@@ -5,7 +5,8 @@
 
 Current-source [completion providers](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
 qualify typed native SDK member queries and exact detached buffer proposals through
-an optional worker. Ordinary Studio/MCP presentation, default-engine selection,
+an optional worker. Existing-tool semantic queries now retain exact revision,
+context and permission around guard-released analysis. Ordinary Studio presentation, default-engine selection,
 full compiler-context/quality/parity and delivery remain with existing authoring,
 service and workflow owners. WORK.md separates this provider boundary from an
 installed feature or original criterion/credit closure.

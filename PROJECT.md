@@ -24,8 +24,10 @@ member completion and full grammar/quality/parity remain separate requirements.
 
 The optional [completion provider boundary](docs/pascal-projects.md#replaceable-pascal-completion-providers)
 now qualifies real native SDK member resolution and exact detached insertion
-proposals. No default Studio/MCP completion provider or helper binary is installed;
-interactive integration and broader compiler context remain open.
+proposals. The existing tool's optional [semantic completion mode](docs/pascal-projects.md#semantic-completion-queries)
+now performs revision/context/permission-aware analysis outside the model guard.
+No default provider/helper binary is installed; interactive integration, broader
+compiler context and observing delivery remain open.
 
 ## Decisions
 

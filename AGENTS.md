@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source existing nyx_pascal mode:complete qualifies optional-provider
+queries at exact acknowledged revision/caret, defaulting to editing buffers only
+for this mode. Guard-released analysis retains scoped activity and fresh source/
+query/context/permission/provider checks; disable/reenable and provider ABA changes
+retire old replies. Native production semantic 60, actual schema 90, retained
+authority 150 and routine 45 checks pass with clean heaps. Independent ordinary
+projects/observation continue; retired reviews refuse through fresh resolution.
+Nine accepted compiler logs have zero owned warnings (21 upstream RTL warnings).
+Both Studios/backend/worker/browser consumer compile; no browser/HTTP execution or
+physical observing input is claimed. Five Pascal pins, five protected files/nine
+contexts and 349 frozen 7422453 artifacts stay exact; LAN remains offline. Source
+inventory stays 24/frozen 23 with eighteen source Pascal modes. No default engine/
+helper is enabled or distributed; the user's engine preference remains pending.
+WORK.md owns receipts, failures and public completion presentation/normal buffer
+Undo as the next meaningful step. Stop query/schema/guard/fixture/compiler variants.
+No new tool, installed schema, original criterion/task/counter/credit/DONE, full
+parity or rollout closes. No host/browser/capture, protected configuration/
+enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source completion supplies immutable typed queries/results and exact
 detached insertion previews, with an optional independent CodeTools worker.
 Native boundary 23 and actual provider/SDK 48 checks pass, clean heaps; five

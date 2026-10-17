@@ -30,7 +30,7 @@ uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection, nyx.studio.projectinputs,
   nyx.schema, nyx.studio.session,
-  nyx.pascal.filechanges,
+  nyx.pascal.filechanges, nyx.pascal.completion,
   nyx.canvas.types,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
@@ -106,6 +106,12 @@ type
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
     FOnOperatorProfileChange: TNyxOperatorProfileChange;
+    FCompletionProvider: INyxPascalCompletionProvider;
+    FCompletionGeneration: Integer;
+    { Captures under FGuard, runs the detached provider outside it, then resolves
+      the live context again. Never retain raw sessions across external work. }
+    function CompletePascal(const AOwner, AActor: TNyxText;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     { Caller holds FGuard. Validate, persist through the borrowed host callback,
       then publish to future jobs and retire obsolete launch intents. }
     function PublishOutputProfile(const AProfile: TNyxText): TNyxText;
@@ -238,6 +244,10 @@ type
       Persistent host saves use PersistOutputProfile; private editor saves share
       its guarded publication boundary. MCP cannot set paths. }
     procedure ConfigureOutputs(const AProfile: TNyxText);
+    { Optional trusted host adapter, independent of document output targets.
+      Replacing/clearing it retires in-flight replies even after an ABA change.
+      No machine paths or default helper dependency are exposed to MCP. }
+    procedure ConfigureCompletionProvider(const AProvider: INyxPascalCompletionProvider);
     { Owned canonical profile snapshot under the same guard as editor saves.
       No mutable configuration object or host persistence callback escapes. }
     function OutputProfile: TNyxText;
@@ -1295,6 +1305,143 @@ begin
   end;
 end;
 
+procedure TNyxStudioMCP.ConfigureCompletionProvider(
+  const AProvider: INyxPascalCompletionProvider);
+var
+  LPrevious: INyxPascalCompletionProvider;
+begin
+  FGuard.Acquire;
+  try
+
+    if FCompletionProvider <> AProvider then
+    begin
+
+      if FCompletionGeneration = High(Integer) then
+      begin
+        raise ENyxProjectConflict.Create('Completion provider generation exhausted');
+      end;
+      { Keep the old adapter alive until after the guard is released; its
+        external destructor must not run inside the model's critical section. }
+      LPrevious := FCompletionProvider;
+      Inc(FCompletionGeneration);
+      FCompletionProvider := AProvider;
+    end;
+  finally
+    FGuard.Release;
+  end;
+
+  if LPrevious <> nil then
+  begin
+    LPrevious := nil;
+  end;
+end;
+
+function TNyxStudioMCP.CompletePascal(const AOwner, AActor: TNyxText;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LSession: TNyxAgentSession;
+  LArguments: TNyxDataValue;
+  LRequest: INyxPascalCompletionRequest;
+  LReply: INyxPascalCompletionResult;
+  LProvider: INyxPascalCompletionProvider;
+  LGeneration: Integer;
+  LContext: TNyxAgentPascalCompletionContext;
+  LPermissionGeneration: Integer;
+  LFailed: Boolean;
+begin
+  LSession := nil;
+  FGuard.Acquire;
+  try
+    try
+      RequireRecovered;
+      PollBuilds;
+
+      if FCore.Permission = apDisabled then
+      begin
+        raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
+      end;
+      LSession := ContextSession(AArguments, AOwner, AActor);
+      LArguments := NyxReviewArguments(NyxWorkspaceArguments(AArguments));
+      LRequest := LSession.CapturePascalCompletion(LArguments, LContext);
+      LProvider := FCompletionProvider;
+      LGeneration := FCompletionGeneration;
+      LPermissionGeneration := FCore.PermissionGeneration;
+      LSession.RecordActivity(AActor, 'nyx_pascal', 'resolving completion');
+      LSession := nil;
+      LFailed := False;
+      FGuard.Release;
+      try
+        try
+
+          if LProvider = nil then
+          begin
+            LReply := NewNyxPascalCompletionResult(LRequest, pcsUnavailable,
+              'No Pascal completion provider is configured', 0, '', [], 0);
+          end
+          else
+          begin
+            LReply := LProvider.Complete(LRequest);
+          end;
+        except
+          on E: Exception do
+          begin
+            { External diagnostics may contain host paths. Do not expose them
+              through activity or the semantic response. No page is admitted. }
+            LFailed := True;
+          end;
+        end;
+      finally
+        FGuard.Acquire;
+      end;
+      { The prior session may have been retired/recovered while analysis ran.
+        Resolve authority afresh; do not dereference any pre-worker raw pointer. }
+      LSession := ContextSession(AArguments, AOwner);
+
+      if FCore.Permission = apDisabled then
+      begin
+        raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
+      end;
+
+      if LGeneration <> FCompletionGeneration then
+      begin
+        raise ENyxProjectConflict.Create('Completion provider changed; request a fresh page');
+      end;
+
+      if LPermissionGeneration <> FCore.PermissionGeneration then
+      begin
+        raise ENyxProjectConflict.Create('Agent permissions changed; request a fresh completion page');
+      end;
+
+      if LFailed then
+      begin
+        raise ENyxProjectConflict.Create('The completion provider could not produce a page');
+      end;
+      Result := LSession.FinishPascalCompletion(LArguments, LContext, LRequest, LReply);
+      Result := NyxWithWorkspace(NyxWithReview(Result,
+        NyxReviewArgument(AArguments)), NyxWorkspaceArgument(AArguments));
+
+      if NyxUTF8ByteCount(Result.ToJSON) > 48 * 1024 then
+      begin
+        raise ENyxProjectConflict.Create('Completion context exceeds 48 KiB; request fewer rows');
+      end;
+      LSession.RecordActivity(AActor, 'nyx_pascal',
+        'completion ' + Result.Field('status').AsText);
+    except
+      on E: Exception do
+      begin
+
+        if LSession <> nil then
+        begin
+          LSession.RecordActivity(AActor, 'nyx_pascal', 'completion refused: ' + E.Message);
+        end;
+        raise;
+      end;
+    end;
+  finally
+    FGuard.Release;
+  end;
+end;
+
 function TNyxStudioMCP.InvokeTool(const ATool, AOwner, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
 var
@@ -1325,6 +1472,11 @@ begin
     (NyxTextScalarCount(AActor) > 120) or (ATool = 'nyx_build') or (ATool = 'nyx_preview') then
   begin
     raise ENyxProjectConflict.Create('Ordinary tool dispatch requires a trusted bounded transport context');
+  end;
+
+  if (ATool = 'nyx_pascal') and (AArguments.Field('mode').AsText = 'complete') then
+  begin
+    Exit(CompletePascal(AOwner, AActor, AArguments));
   end;
   LRollback := nil;
   FGuard.Acquire;
@@ -4027,6 +4179,7 @@ Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substrin
         '{"type":"object","properties":{"mode":{"const":"review-files"},"expectedRevision":{"type":"integer","minimum":1},' + LFileMutationProperties + '},"required":["mode","expectedRevision","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-files"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"reviewID":{"type":"string","minLength":1,"maxLength":120},' + LFileMutationProperties + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"files"},"snapshot":{"enum":["accepted","editing"]},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode"],"allOf":[{"if":{"required":["snapshot"],"properties":{"snapshot":{"const":"editing"}}},"then":{"required":["expectedRevision"]}}],"additionalProperties":false},' +
+        '{"type":"object","description":"Bounded optional-provider completion at an exact acknowledged revision. Omitted snapshot means editing for this mode. Analysis runs outside the model guard; changed permission, context, provider or any source refuses the page. Returns typed suggestions and scalar replacement metadata, never edits or compilation provenance. Missing provider returns unavailable. Maximum response 48 KiB; reduce limit when needed.","properties":{"mode":{"const":"complete"},"snapshot":{"enum":["accepted","editing"],"default":"editing"},"expectedRevision":{"type":"integer","minimum":1},"caret":{"type":"integer","minimum":0,"maximum":2147483647},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50},' + LRoutineSelectors + '},"required":["mode","expectedRevision","caret"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"symbols"},"snapshot":{"enum":["accepted","editing"]},"expectedRevision":{"type":"integer","minimum":1},"query":{"type":"string","maxLength":512},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50},' + LRoutineSelectors + '},"required":["mode"],"allOf":[{"if":{"required":["snapshot"],"properties":{"snapshot":{"const":"editing"}}},"then":{"required":["expectedRevision"]}}],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"unit"},"snapshot":{"enum":["accepted","editing"]},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4194304},"line":{"type":"integer","minimum":1,"maximum":1000000},"count":{"type":"integer","minimum":1,"maximum":4096},"file":' + CSourceFileSelector + '},"required":["mode"],"allOf":[{"not":{"required":["line","offset"]}},{"if":{"required":["snapshot"],"properties":{"snapshot":{"const":"editing"}}},"then":{"required":["expectedRevision"]}}],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-unit"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":4194304},"expected":{"type":"string","maxLength":262144},"replacement":{"type":"string","maxLength":262144},"file":' + CSourceFileSelector + '},"required":["offset","expected","replacement"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}'), False),

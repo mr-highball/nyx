@@ -4,10 +4,10 @@
 
 The optional [completion worker/provider](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
 now resolves native SDK members through exact captured files and bounded private
-packets. It is not linked into default products or exposed through MCP. Before
-semantic/ordinary integration, add revision/context/permission revalidation around
-external worker calls, release the model guard while analysis runs, retain visible
-activity and join cancellation before result publication. General target/compiler
+packets. It is not linked into default products. The existing Pascal tool now
+provides optional revision/context/permission-aware completion queries, with
+guard-released analysis and scoped operator activity. Interactive integration,
+transport cancellation and general target/compiler
 configuration, caching/latency, broad source meaning, parity and delivery remain
 open. WORK.md owns evidence and the optional helper's pending distribution choice.
 

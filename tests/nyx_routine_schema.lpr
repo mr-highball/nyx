@@ -39,6 +39,8 @@ var
   LGuard: TNyxDataValue;
   LGuardIndex: Integer;
   LEditingGuard: Boolean;
+  LHasRevision: Boolean;
+  LHasCaret: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: String);
 begin
@@ -68,7 +70,7 @@ begin
     end;
     Check(LFound, 'The actual Pascal tool contains routine capabilities');
     LModes := LTool.Field('inputSchema').Field('oneOf');
-    Check(LModes.Count = 17, 'Existing source tool includes bounded general declaration inspection');
+    Check(LModes.Count = 18, 'Existing source tool includes optional compiler-context completion');
     for LIndex := 0 to LModes.Count - 1 do
     begin
       LMode := LModes.Item(LIndex);
@@ -78,7 +80,28 @@ begin
       Check(LMode.Field('not').Field('required').Count = 2, 'Mixed contexts refuse');
       LModeName := LMode.Field('properties').Field('mode').Field('const').AsText;
 
-      if (LModeName = 'files') or (LModeName = 'unit') or (LModeName = 'routines') or
+      if LModeName = 'complete' then
+      begin
+        LChange := LMode.Field('properties');
+        Check((LChange.Field('snapshot').Field('enum').Count = 2) and
+          (LChange.Field('snapshot').Field('default').AsText = 'editing') and
+          (LChange.Field('limit').Field('maximum').AsInteger = 50),
+          'Completion advertises current-buffer default and bounded typed pages');
+        LHasRevision := False;
+        LHasCaret := False;
+        for LGuardIndex := 0 to LMode.Field('required').Count - 1 do
+        begin
+          LHasRevision := LHasRevision or
+            (LMode.Field('required').Item(LGuardIndex).AsText = 'expectedRevision');
+          LHasCaret := LHasCaret or
+            (LMode.Field('required').Item(LGuardIndex).AsText = 'caret');
+        end;
+        Check(LHasRevision and LHasCaret,
+          'Every completion origin requires its exact revision and scalar caret');
+        Check(not NyxAgentHas(LChange, 'executable') and not NyxAgentHas(LChange, 'operationId'),
+          'Completion grants no worker-path configuration or mutation authority');
+      end
+      else if (LModeName = 'files') or (LModeName = 'unit') or (LModeName = 'routines') or
         (LModeName = 'routine') or (LModeName = 'declaration') or (LModeName = 'symbols') then
       begin
         LChange := LMode.Field('properties').Field('snapshot').Field('enum');

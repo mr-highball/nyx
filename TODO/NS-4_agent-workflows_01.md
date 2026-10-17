@@ -2,6 +2,16 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [semantic completion](../docs/pascal-projects.md#semantic-completion-queries)
+uses existing nyx_pascal with exact acknowledged revision/caret, bounded typed rows
+and optional-provider capability status. External analysis releases the model
+guard; scoped activity and source/context/permission/provider revalidation retain
+ordinary editing and independent projects. WORK.md owns native production-engine
+qualification and the separate socket/observing-browser/interactive/default-engine
+and delivery limits. No new tool, installed schema or full original criterion-five
+closure follows; current-buffer editing, broader compiler assistance and complete
+quality/parity retain their existing owners.
+
 Current-source [declaration queries](../docs/pascal-projects.md#general-declarations)
 add mode:symbols to the existing Pascal tool: bounded names/kinds/scopes/physical
 sites with explicit origin, query and revision guards. No source dump or compiler
