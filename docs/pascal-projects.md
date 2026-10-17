@@ -859,3 +859,70 @@ CodeTools engine, a private host settings UI and interactive Nyx completion
 presentation remain open. WORK.md owns native production-engine evidence separately
 from socket/observing browser qualification, broader source/target behavior and
 preserving delivery; this schema is not installed in the frozen release.
+
+## Shared editing history and completion presentation
+
+`nyx.editing.history` supplies an independent `INyxTextEditHistory` for one
+physical buffer. Immutable frames contain exact text and scalar selection,
+including unavailable selection rather than an inferred caret. Ordinary physical
+observations and programmatic replacements share the same timeline. Each accepted
+physical text change is one entry; composition drafts retain a separate base and
+commit one entry at genuine composition end. Returning to that base adds no entry
+and preserves Redo. Selection-only observations also preserve Redo.
+
+The retention limits are copied fluent values. Defaults keep 128 entries and
+16 MiB across both stacks, accounting UTF-8 text plus 32 bytes per frame. This is
+a portable accounting budget, not a heap measurement; Current and a live composition
+base are excluded. Physical edits remain real input even when their previous
+frames cannot be retained; `Truncated` reports eviction. Programmatic replacement
+instead refuses before mutation if it cannot retain its immediate Undo/Redo.
+`UndoFrame`/`RedoFrame` let an owning source model stage its own candidate/budget
+admission before synchronously changing the timeline. Reset, selection, composition
+and edits advance a runtime generation, preventing an old query from reviving after
+an edit/Undo back to identical text. None of this admits accepted source.
+
+`nyx.pascal.completion.view` builds a reusable completion card from ordinary Nyx
+buttons, badges, rows, labels and a bounded scroll area. It can be embedded in an
+existing popover or inline host; it owns no window-positioning system. The default
+page is twelve rows, with readable signatures, typed kind captions, current-row
+presentation, paging actions and explicit pending/unavailable/failure feedback.
+
+```pascal
+LHistory := NewNyxTextEditHistory(NyxTextEditorFrame(LText, LSelection));
+LMenu := NewNyxPascalCompletionMenu(LHistory);
+LQuery := LMenu.BeginQuery(LBuffers, LFile, LOwner, LTicket);
+{ Run the provider on a worker, then return its immutable result to the UI. }
+
+if LMenu.Present(LTicket, LReply, LCurrentBuffers) then
+begin
+  LContent := LMenu.Build('source-completion', LCurrentBuffers);
+end;
+```
+
+The opaque ticket belongs to this exact menu request, including equal successive
+queries. Current sources, history generation and the captured caret must still
+match. Foreign/out-of-order replies leave the newest request intact; stale matching
+replies close it. Row routing additionally checks exact node presence in the current
+tree, its ticket and effective interaction policy. `Accept` prepares the complete
+source snapshot first, then performs one exact expected-frame replacement through
+the text history. Accepted text and independent helper buffers remain exact.
+
+The typed `Key` action decoder offers Control+Space, arrows, Enter/Tab, Escape and
+ordinary Control/Command Undo/Redo. The embedding input owner consumes handled
+actions through Nyx's sequential event response and renders the proposed text/caret
+without replacing its input widget. Empty/repeated history commands still belong
+to this timeline and must not fall through to a stale platform stack. Composition
+retains its own keys. The owner must enforce its physical mount/read-only policy,
+observe every physical edit/selection/composition, publish ordinary draft changes
+and route **all** platform history producers consistently. This component does not
+intercept native context menus, browser beforeinput or OS history actions itself.
+
+The maintained `nyx_completion_view_tests.lpr` covers the portable model/view.
+`nyx_completion_controls.lpr` exercises real Win32 memo/button/key callbacks and
+an asynchronously joined SDK provider at two native host widths. Its arguments are
+SDK root, toolchain JSON, owned scratch, optional helper, FPC source root and width.
+It changes only its independent buffer and never runs an authored application.
+WORK.md distinguishes that native evidence from browser compilation. Ordinary
+Studio adoption, floating anchor/layout/visual quality, complete native/browser
+history-producer integration, hardware/IME/accessibility, performance and preserving
+delivery remain open; these factories do not install an editor or helper in Studio.

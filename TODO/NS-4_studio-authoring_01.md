@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [completion presentation](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
+adds a reusable Nyx card and shared exact text/selection history. Real native
+controls qualify selection, completion, ordinary typing and keyboard Undo/Redo
+without replacing the memo. WORK.md owns bounded model/input evidence separately
+from compiled-only browser consumers. Ordinary Studio adoption, every platform
+history producer, anchoring/visual/accessibility/performance and full criterion two
+remain open; this is a public component prerequisite, not an installed editor.
+
 Current-source [completion providers](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
 freeze exact current/accepted multi-file context and return typed bounded member
 pages with stale-safe detached insertion proposals. An optional isolated CodeTools

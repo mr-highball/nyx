@@ -4,6 +4,23 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source public completion card and shared text timeline qualify exact
+completion/typing Undo without owning DOM/LCL or a second toolkit. Native contracts
+40 and actual Win32 memo/button/key callbacks 20 per native width 1280/390 pass,
+clean heaps; asynchronously joined real SDK workers are clean. The same memo and
+accepted source remain exact. Three accepted compiler logs have zero owned warnings
+(seven upstream RTL); the portable browser consumer compiles only. Four Pascal
+pins, five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact;
+LAN remains offline. WORK.md owns retained failures, exact evidence and next ordinary
+Studio selected-file adoption. Stop timeline/menu/fixture/compiler variants; do not
+claim Studio already consumes these new components. Native/browser history producers,
+operator transport independent of agent enablement, mount/caret/read-only guards,
+floating/visual/IME/accessibility/performance and delivery remain open. Engine choice
+is still pending; no helper/default is enabled. Source tools stay 24/frozen 23,
+with eighteen Pascal modes. No new tool/schema/kind, original criterion/task/counter/
+credit/DONE, full parity or rollout closes. No host/browser/capture, protected
+configuration/enrollment/cleanup retry, deletion, approval bypass or sub-agents.
+
 Current-source existing nyx_pascal mode:complete qualifies optional-provider
 queries at exact acknowledged revision/caret, defaulting to editing buffers only
 for this mode. Guard-released analysis retains scoped activity and fresh source/

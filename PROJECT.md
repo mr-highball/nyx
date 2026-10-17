@@ -29,6 +29,11 @@ now performs revision/context/permission-aware analysis outside the model guard.
 No default provider/helper binary is installed; interactive integration, broader
 compiler context and observing delivery remain open.
 
+The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
+now compose Nyx controls and preserve exact completion/typing Undo in a real native
+consumer. Studio adoption and complete platform-history/input/visual qualification
+remain separate; browser consumers compile only.
+
 ## Decisions
 
 | Decision | Project value |

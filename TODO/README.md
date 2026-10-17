@@ -3,6 +3,11 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The public [completion card/text timeline](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
+now qualifies a real native buffer journey. Studio adoption and complete native/
+browser history/input/visual/performance/delivery remain under original authoring
+and service ownership. WORK.md separates component evidence from installed behavior.
+
 Current-source [completion providers](../docs/pascal-projects.md#replaceable-pascal-completion-providers)
 qualify typed native SDK member queries and exact detached buffer proposals through
 an optional worker. Existing-tool semantic queries now retain exact revision,

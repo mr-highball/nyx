@@ -33,7 +33,99 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Revision-aware semantic completion — 2026-10-17
+## Current integration: Public completion view and text timeline — 2026-10-17
+
+Previous goal turn is progress: pushed 078ff87 connects optional completion queries
+to the existing Pascal tool. Source inspection found that list typeahead is not a
+code-completion menu and the current Studio source face delegates history to its
+platform text control. This batch supplies the reusable view and shared editing
+transaction prerequisite under original NS-4 authoring criterion two. It does not
+substitute a standalone companion for ordinary Studio adoption or full acceptance.
+
+The portable text timeline retains exact text/scalar selection, independent Undo/
+Redo and a runtime generation including selection, composition and explicit Reset.
+Physical composition commits one entry at genuine end; a cancelled draft and
+selection-only changes preserve Redo. Replacements require an exact current frame
+and room for their immediate Undo/Redo. Physical observation remains authoritative
+when old frames must be evicted. Limits are copied fluent values, accounting both
+stacks as UTF-8 plus fixed per-frame bytes, not measured heap/peak memory. Staged
+arrays and peeked Undo/Redo targets let owning source models admit before mutation.
+No DOM/LCL, document, renderer or compiler dependency enters that timeline.
+
+The public completion card composes specialized Nyx buttons/badges/rows/labels and
+scroll content. It owns no second toolkit or popup-positioning system. Independent
+menu tickets reject equal out-of-order replies; full source/history/caret checks
+retire changed helpers and text/Undo ABA. Pending/capability/error states do not
+manufacture symbols. Physical row admission checks the current tree, ticket and
+interaction policy. Accept stages the complete candidate source snapshot, then
+performs one ordinary text transaction, preserving accepted/helper bytes. Typed
+keyboard actions cover request, navigation, acceptance/dismissal and normal history;
+even an exhausted/repeated Undo belongs to the owned timeline. Platform producers
+must consume handled commands and feed all physical observations explicitly.
+
+Evidence behind ignored .local/completion-view-paths-private.json is pinned to the
+exact four final Pascal inputs in source-pins-5-private.json:
+
+- logs/contracts-4-run.log passes 40 native public view/history checks, clean heap.
+  Exact supplementary Unicode/NUL/line endings, selection/Redo, middle-identifier
+  completion, composition/cancellation, byte/entry eviction, atomic budget/stale
+  refusal, peek targets, Reset generation, obsolete/foreign/equal-newer tickets,
+  moved caret, text/Undo ABA, changed helpers, retired rows, disabled paging and
+  unavailable/composing keyboard behavior pass. These are model/presentation tests,
+  not hardware, executed browser or accepted compiler construction.
+- logs/controls-6-1280-run.log and controls-6-390-run.log pass 20 actual Win32
+  control checks each at native host widths 1280/390, clean heaps. The independent
+  consumer owns a real memo and Nyx completion button/card, a sequential key
+  callback and an asynchronously joined actual SDK provider. Native line-ending
+  normalization is captured before analysis. Real WithText presentation, row
+  navigation/button activation, exact text/caret update, Ctrl+Z/redo, later physical
+  typing and its Undo preserve the same memo and accepted source. Application
+  messages continue while analysis runs. Both analysis workers report clean heaps.
+- The three accepted compiler logs have zero owned warnings; browser compilation
+  retains seven upstream RTL warnings. The matching portable view/history consumer
+  compiles in pas2js only. Existing Studio/backend products are unchanged consumers;
+  this batch does not claim a new product build, observing browser input/capture,
+  visual/anchoring/accessibility quality or complete target parity.
+
+Retained failures: controls-1-compile.log assumes a public renderer Clear method;
+the consumer now stages a new document through ordinary Render before releasing its
+previous document. controls-2/3-wide-run.log expose the fixture's missing key-up
+producer, which made later Z input repeat. The corrected input sequence emits both
+actual native slots. Review also closes a real empty/repeated history fallthrough:
+normal history commands stay owned even without a next frame. Initial contract
+compilation retains an incomplete message-case warning, corrected before acceptance.
+browser-3-compile.log exposes an unsupported pas2js Int64 budget accumulator; the
+bounded integer sum now uses exact Double arithmetic below 2^44 on both targets.
+Final native and browser checks are rerun at the exact final pins. Earlier passing/
+failed preparations remain excluded from the final accepted ledger.
+
+Every new public/private/forward/alias type has its individual purpose/lifetime
+comment; method contracts distinguish source proposals, platform observation and
+accepted publication. The library retains MIT attribution. The prior optional
+CodeTools helper is reused explicitly only in the owned consumer; binary/input
+receipts remain private. The user's engine/distribution preference remains pending,
+and no helper/default configuration is installed.
+
+All owned compiler/runtime/analysis readers join. Four Pascal pins, five protected
+files/nine complete contexts/history/drafts/profile and 349 frozen 7422453 artifacts
+remain exact. LAN remains offline; no HTTP/browser execution/capture, protected
+configuration/enrollment/cleanup retry, approval bypass, deletion or sub-agents
+occurs. No native Nyx tools are exposed in this chat; this is library/input
+qualification, not an active-design mutation. Tool inventory stays source 24/frozen
+23 with eighteen existing Pascal modes; no new tool/schema/kind or rollout is added.
+
+The packet's final-checkpoint-private.json owns final source/remote identity,
+compiler/run/protection hashes and terminal evidence. No original full criterion,
+task/counter/credit/DONE, full parity or delivery closes. Stop timeline/menu/fixture/
+compiler variants. Next adopt this public view/timeline into ordinary Studio's
+retained selected-file source host, with mount/read-only/caret guards, all native
+and browser history producers and asynchronous operator completion. The private
+operator route must remain available independently of agent enablement and optional
+output targets. Default engine/private host settings, compiler-target/general
+language coverage, floating anchor/visual/IME/accessibility/performance budgets,
+observing input and preserving delivery retain their existing owners.
+
+## Previous integration: Revision-aware semantic completion — 2026-10-17
 
 Previous goal turn is progress: pushed 9b5fafe qualifies the portable completion
 provider and optional isolated SDK engine. This batch connects that public provider
