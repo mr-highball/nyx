@@ -83,6 +83,16 @@ callback may reopen or release the presenter. Escape/window dismissal is Cancel;
 `Close` is silent and turns a pending result into Cancelled. Repeated opening and
 calls during initial/return focus transitions refuse instead of overlapping hosts.
 
+A focused control gets first refusal of Escape. A consumed key keeps the modal
+open; an unconsumed key reaches ordinary dismissal. The native host uses LCL's
+remaining child-key stage instead of form KeyPreview. The browser uses the
+[HTML close-request order](https://html.spec.whatwg.org/multipage/interaction.html#close-requests-and-close-watchers),
+which stops close processing after a canceled keydown (checked 2026-10-16).
+The maintained host-space consumer qualifies actual Win32/LCL nested edit/form
+messages, retained text/focus and owner state at wide/compact widths. Its matching
+browser consumer compiles; these checks do not establish browser execution,
+hardware/assistive input or the separate Studio diagram focus/drag workflow.
+
 Call methods on the UI thread. A threaded callback must queue UI work through the
 existing scheduler; the presenter does not create a second scheduler. Registrations
 must avoid strongly retaining their own presenter, which would create an application

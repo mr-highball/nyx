@@ -45,12 +45,23 @@ function NewNyxLCLModalHost(AOwner: TWinControl): INyxLCLModalHost;
 implementation
 
 uses
-  Classes, Forms, LCLType, SysUtils, Types, Math, nyx.model, nyx.text;
+  Classes, Forms, LMessages, LCLType, SysUtils, Types, Math, nyx.model, nyx.text;
 
 type
+  { Owned modal form handles only Escape left unconsumed by a focused child.
+    ChildKey is the LCL remaining-key stage, after the child's before/interface
+    handlers. KeyDown reuses the host's borrowed dismissal receiver; this form
+    retains no host/controller interface. Other keys keep normal LCL routing. }
+  TNyxLCLModalWindow = class(TForm)
+  protected
+    function ChildKey(var AMessage: TLMKey): Boolean; override;
+  end;
+
   { Modeless message pumping keeps Studio processors alive; disabling the exact
     owner supplies modal input isolation without a nested blocking ShowModal.
-    The previous Enabled state is restored, including already disabled owners. }
+    The previous Enabled state is restored, including already disabled owners.
+    Child input gets first refusal of Escape; form focus and unconsumed child
+    keys share the same existing dismissal callback. }
   TNyxLCLModalHost = class(TInterfacedObject, INyxModalHost, INyxLCLModalHost)
   private
     FOwner: TWinControl;
@@ -75,6 +86,28 @@ type
     procedure Hide;
   end;
 
+function TNyxLCLModalWindow.ChildKey(var AMessage: TLMKey): Boolean;
+var
+  LKey: Word;
+begin
+
+  if AMessage.CharCode = VK_ESCAPE then
+  begin
+    LKey := AMessage.CharCode;
+    KeyDown(LKey, Forms.KeyDataToShiftState(AMessage.KeyData));
+    { The borrowed callback can hide/retire its host. Only the caller-owned
+      message and local value are inspected after that dispatch. }
+    AMessage.CharCode := LKey;
+
+    if LKey = 0 then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  Result := inherited ChildKey(AMessage);
+end;
+
 constructor TNyxLCLModalHost.Create(AOwner: TWinControl);
 begin
   inherited Create;
@@ -89,10 +122,13 @@ begin
   begin
     FOwner := AOwner;
   end;
-  FWindow := TForm.CreateNew(nil);
+  FWindow := TNyxLCLModalWindow.CreateNew(nil);
   FWindow.BorderStyle := bsSizeable;
   FWindow.Position := poDesigned;
-  FWindow.KeyPreview := True;
+  { Preview would steal Escape before embedded Nyx controls can consume it.
+    ChildKey supplies the unconsumed fallback; a directly focused form still
+    reaches WindowKey through its ordinary OnKeyDown handler. }
+  FWindow.KeyPreview := False;
   FWindow.OnClose := WindowClose;
   FWindow.OnKeyDown := WindowKey;
 end;

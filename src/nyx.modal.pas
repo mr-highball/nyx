@@ -64,7 +64,8 @@ type
 
   { Managed presentation lifetime, independent of document/history ownership.
     A controller moves or unmounts its Nyx view before retiring this host.
-    Hide is silent; user Escape/window dismissal notifies the borrowed receiver.
+    Hide is silent. A focused control may consume Escape first; unconsumed
+    Escape/window dismissal notifies the borrowed receiver.
     Source/document pointers and platform control types never cross this API. }
   INyxModalHost = interface(IInterface)
     ['{271BE5DA-8A62-4F45-A8BC-001005005001}']

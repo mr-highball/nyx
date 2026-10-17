@@ -29,7 +29,8 @@ uses
   JS, Web, nyx.model, nyx.controls, nyx.render.browser,
   nyx.hostspace.browser, nyx.modal.browser;
   {$else}
-  Interfaces, Forms, Controls, nyx.hostspace.lcl;
+  Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls, LMessages, LCLType, nyx.hostspace.lcl,
+  nyx.modal.lcl;
   {$endif}
 
 type
@@ -43,6 +44,9 @@ type
   protected
     function Capture: TNyxHostSpaceSnapshot; override;
   end;
+  { Fixture-owned receiver outlives borrowed host resize/key callbacks. During
+    the native modal check it retains the host explicitly; its borrowed dismiss
+    callback and that lease are cleared before either receiver or owner retires. }
   TReceiver = class
   public
     Calls: Integer;
@@ -50,10 +54,18 @@ type
     ReplacementCalls: Integer;
     Retire: Boolean;
     Last: TNyxHostExtent;
+    {$ifndef PAS2JS}
+    ConsumeEscape: Boolean;
+    EscapeCalls: Integer;
+    DismissCalls: Integer;
+    Modal: INyxModalHost;
+    {$endif}
     procedure Changed(const AExtent: TNyxHostExtent);
     {$ifndef PAS2JS}
     procedure ExistingResize(ASender: TObject);
     procedure ReplacementResize(ASender: TObject);
+    procedure ChildKey(ASender: TObject; var AKey: Word; AShift: TShiftState);
+    procedure Dismissed;
     {$endif}
   end;
 
@@ -107,6 +119,124 @@ end;
 procedure TReceiver.ReplacementResize(ASender: TObject);
 begin
   Inc(ReplacementCalls);
+end;
+
+procedure TReceiver.ChildKey(ASender: TObject; var AKey: Word; AShift: TShiftState);
+begin
+
+  if AKey = VK_ESCAPE then
+  begin
+    Inc(EscapeCalls);
+
+    if ConsumeEscape then
+    begin
+      AKey := 0;
+    end;
+  end;
+end;
+
+procedure TReceiver.Dismissed;
+begin
+  Inc(DismissCalls);
+  Modal.Hide;
+end;
+
+{ Deliver the ordinary LCL before/remaining stages to one focused, owned edit.
+  This includes its parent form's preview/fallback order without sending global
+  input or calling either OnKeyDown handler directly. Hardware remains separate. }
+procedure NativeEscape(AControl: TWinControl);
+begin
+
+  if AControl.Perform(CN_KEYDOWN, VK_ESCAPE, 0) = 0 then
+  begin
+    AControl.Perform(LM_KEYDOWN, VK_ESCAPE, 0);
+  end;
+
+  if AControl.Perform(CN_KEYUP, VK_ESCAPE, 0) = 0 then
+  begin
+    AControl.Perform(LM_KEYUP, VK_ESCAPE, 0);
+  end;
+end;
+
+procedure NativeModalKeys;
+var
+  LOwner: TForm;
+  LHost: INyxLCLModalHost;
+  LPanel: TPanel;
+  LEdit: TEdit;
+begin
+  LOwner := TForm.CreateNew(nil);
+  try
+    LOwner.SetBounds(20, 20, 800, 600);
+
+    if FindCmdLineSwitch('compact') then
+    begin
+      LOwner.SetBounds(20, 20, 390, 780);
+    end;
+    LOwner.Show;
+    LHost := NewNyxLCLModalHost(LOwner);
+    GReceiver.Modal := LHost;
+    LHost.OnDismiss := GReceiver.Dismissed;
+    LPanel := TPanel.Create(LHost.Control);
+    LPanel.Parent := LHost.Control;
+    LPanel.Align := alClient;
+    LEdit := TEdit.Create(LHost.Control);
+    LEdit.Parent := LPanel;
+    LEdit.SetBounds(12, 12, 240, 30);
+    LEdit.Text := 'An unfinished thought';
+    LEdit.OnKeyDown := GReceiver.ChildKey;
+    LHost.Show(NyxModal('Keyboard review'));
+    LEdit.SetFocus;
+    Application.ProcessMessages;
+    Check((GetParentForm(LEdit).ActiveControl = LEdit) and not LOwner.Enabled,
+      'real focused modal input isolates only its native owner');
+    GReceiver.ConsumeEscape := True;
+    NativeEscape(LEdit);
+    Check(LHost.IsOpen and (GReceiver.EscapeCalls = 1) and (GReceiver.DismissCalls = 0),
+      'a focused child consumes Escape before modal dismissal');
+    Check((LEdit.Text = 'An unfinished thought') and
+      (GetParentForm(LEdit).ActiveControl = LEdit),
+      'consumed native Escape retains exact draft and focus');
+    GReceiver.ConsumeEscape := False;
+    NativeEscape(LEdit);
+    Check(not LHost.IsOpen and (GReceiver.EscapeCalls = 2) and
+      (GReceiver.DismissCalls = 1) and LOwner.Enabled,
+      'unconsumed Escape dismisses once after child delivery and restores the owner');
+    LHost.Show(NyxModal('Keyboard review'));
+    Check(LEdit.Text = 'An unfinished thought', 'reopening retains the same input draft');
+    TForm(LHost.Control).Close;
+    Check(not LHost.IsOpen and (GReceiver.DismissCalls = 2) and LOwner.Enabled,
+      'native window-close dismissal retains its existing single callback');
+    LHost.OnDismiss := nil;
+    LHost.Show(NyxModal('Keyboard review'));
+    NativeEscape(LEdit);
+    Check(not LHost.IsOpen and (GReceiver.DismissCalls = 2) and LOwner.Enabled,
+      'an unobserved modal silently hides after an unconsumed nested child key');
+    LHost.Show(NyxModal('Keyboard review'));
+    NativeEscape(LHost.Control);
+    Check(not LHost.IsOpen and (GReceiver.DismissCalls = 2) and LOwner.Enabled,
+      'direct form key delivery still uses the ordinary Escape dismissal');
+    LOwner.Enabled := False;
+    LHost.Show(NyxModal('Keyboard review'));
+    NativeEscape(LEdit);
+    Check(not LHost.IsOpen and not LOwner.Enabled,
+      'remaining-key dismissal preserves an already disabled owner');
+    LOwner.Enabled := True;
+    LHost.Show(NyxModal('Keyboard review'));
+    LHost.Hide;
+    Check(LOwner.Enabled and (GReceiver.DismissCalls = 2),
+      'deliberate Hide remains silent after repeated keyboard dismissal');
+  finally
+
+    if LHost <> nil then
+    begin
+      LHost.OnDismiss := nil;
+      LHost.Hide;
+    end;
+    GReceiver.Modal := nil;
+    LHost := nil;
+    LOwner.Free;
+  end;
 end;
 {$endif}
 
@@ -380,7 +510,7 @@ begin
       Geometry;
       Refusals;
       AdmissionAndLifetime;
-      {$ifdef PAS2JS}BrowserHost;{$else}NativeHost;{$endif}
+      {$ifdef PAS2JS}BrowserHost;{$else}NativeHost; NativeModalKeys;{$endif}
     finally
       GSpace := nil;
       GReceiver.Free;

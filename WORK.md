@@ -30,7 +30,52 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current maintenance: External build storage and cleanup — 2026-10-16
+## Current qualification: Native modal keyboard ordering — 2026-10-16
+
+Previous goal turn is progress: ebbed51 is clean and remote-matched, providing
+the audited cleanup script and qualified external build storage. Return to
+diagram criterion six and the parity owner after ten partial diagram batches.
+Two actual ordinary Studio focused-selection/drag probes stop at gesture
+admission before any key delivery, including after its normal focus turn settles.
+Both logs have clean heaps; source/diff remain in the private packet. Neither is
+accepted evidence or proof of the key-order hypothesis. Stop that probe sequence;
+the experimental Studio consumer is restored exactly. Focus/gesture admission
+remains a separate original criterion-six gap, not a reason to weaken that test.
+
+The independently bounded lower-layer modal check confirms the actual ordering
+defect: form KeyPreview closes before a focused native edit can consume Escape.
+The maintained host-space consumer reproduces it without a pointer precondition.
+The private native form now handles unconsumed Escape through LCL ChildKey after
+child delivery, while direct-form keys/window closure keep the existing receiver.
+It borrows that receiver and adds no public type/tool, source authority or cycle.
+The portable modal comment documents the same consumed-key priority as the
+current HTML close-request model, whose primary standard was checked directly.
+
+Final native host-space input passes 57 per wide/compact width, including nested
+child consumption, retained text/focus, one unconsumed dismissal, direct form and
+unobserved fallback, silent Hide, reopening, window-close and previously disabled
+owner state. Both native runs have clean heaps. Native Studio and the matching
+browser consumer compile; three accepted compiler logs have zero owned warnings
+(seven upstream pas2js Classes warnings remain separate). Earlier 53-check runs
+are superseded, not added. The missing Classes fixture import, original failing
+modal baseline and the two stopped Studio probes are retained outside acceptance.
+The failing modal baseline exits through its historical Halt/error path; its
+three RTL/error-reporting allocations are not a clean-heap claim.
+
+`.local/diagram-keyboard-paths-private.json` locates exact external receipts and
+the protected before/after ledger. Full diagram keys/gestures, browser execution,
+hardware/assistive input and observing delivery remain unqualified here. No
+HTTP-host, capture, enrollment/configuration refresh or cleanup retry occurs.
+No original full criterion/task/DONE/credit, schema, parity or delivery closes;
+diagram ten, canvas twelve, Graph/Logic thirty-eight and behavior-program zero
+remain their separate existing counters. Return to the complete original input/
+quality matrix through its unchanged prerequisites, rather than another source-
+only route or focused-selection/capture variant.
+All five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+remain exact; LAN stays offline. Final current-source/remote identity is retained
+in the same ignored packet, independently of the historical installed releases.
+
+## Previous maintenance: External build storage and cleanup — 2026-10-16
 
 The user supplied an independent E: output directory and explicitly authorized
 scoped Nyx build/scratch cleanup on C:/D:. The ignored local storage pointer
@@ -72,7 +117,7 @@ intermediate inventory is a separate bounded estimate, not a second cleanup.
 
 ## Return path: Existing diagram qualification and parity — 2026-10-16
 
-The last product turn is progress: b79fcb9 was clean and remote-matched, with
+The named-port batch b79fcb9 was clean and remote-matched, with
 the accepted native port/source/Studio/constructor receipts below and separately
 compiled browser consumers. Reassess after ten partial diagram batches. Adding
 another source-only route variant would not resolve the required browser input,

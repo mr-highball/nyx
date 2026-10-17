@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source native modal dismissal honors a focused child's consumed Escape
+before the remaining-key fallback. Actual nested LCL edit/form input passes 57
+checks per wide/compact width with clean heaps; native Studio and the matching
+browser consumer compile. WORK.md retains two ordinary Studio focused-selection/
+gesture-admission failures that stopped before key delivery. They remain open;
+no full diagram keyboard, browser execution, hardware/assistive, parity or delivery
+claim follows. Stop that probe sequence; preserve the complete original criteria.
+
 Named physical diagram ports have native wide/compact input and Studio paired
 history evidence; matching browser consumers compile only. Actual browser port
 input, modal focus/cancellation and embedded-control overlay behavior remain
@@ -12,10 +20,11 @@ compiler pass substitutes for those outcomes.
 Current-source [direct diagram manipulation](../docs/diagrams.md#direct-manipulation-and-reconnection)
 uses mounted native mouse/key hooks and exact prepared preview/model publication.
 Browser consumers compile only. Capture/cancellation tests do not establish pen,
-touch, hardware or assistive input. In particular, the native floating modal owns
-form-level Escape dismissal through KeyPreview; the focused-button cancellation
-hook is a separate path. Whole-window keyboard/focus behavior must be qualified
-against browser modal cancellation before claiming parity. Readable wide/compact
+touch, hardware or assistive input. The original form-level KeyPreview dismissal
+is replaced by the qualified child-first fallback above; the focused-button
+cancellation hook and full diagram gesture path remain separate. Whole-window
+keyboard/focus behavior must be qualified against browser modal cancellation
+before claiming parity. Readable wide/compact
 native captures and semantic Saved graph operations do not close that gap, full
 accessibility, large-scene performance or observing delivery. WORK.md owns evidence.
 

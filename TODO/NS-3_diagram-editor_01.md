@@ -10,6 +10,13 @@ qualified external scratch storage and the separate unchanged HTTP-host gate.
 Do not replace these outcomes with another source-only route/form variant or
 reset the no-closure count. The complete original feature matrix stays required.
 
+The native modal owner now respects consumed child Escape before dismissal,
+qualified separately through actual nested LCL edit/form messages. The ordinary
+Studio focused-selection/drag probe still fails gesture admission before key
+delivery, both before/after settling its normal focus turn. WORK.md retains the
+failed source/logs and stops that sequence; it is not a diagram Escape pass.
+Browser execution, full input/quality/budgets and delivery remain required.
+
 Current-source [named physical ports](../docs/diagrams.md#named-physical-ports)
 advance criteria two/three/five through typed routing, persistence/source, the
 shared public editor and ordinary paired Studio Save. WORK.md owns native input,

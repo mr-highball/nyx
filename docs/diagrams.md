@@ -294,9 +294,13 @@ Disconnect revokes queued work and callbacks before releasing capture/controls.
 pixel resolution limits the precision of input; the portable geometry remains
 Double. Browser/pen/touch/hardware execution and full accessibility stay separate
 from native host-dispatch evidence.
-The native floating modal owns form-level Escape dismissal through KeyPreview;
-its focused-button cancellation hook is separate. Whole-window keyboard/focus
-parity remains with the [parity owner](../TODO/NS-2_parity-accessibility_01.md).
+The native floating modal lets focused controls consume Escape before its
+remaining-key dismissal fallback; form KeyPreview no longer preempts that input.
+Generic nested native edit/form delivery is qualified separately. The ordinary
+Studio focused-selection/gesture probe stops at capture admission before key
+delivery, so it does not establish the whole diagram Escape path. Whole-window
+keyboard/focus parity remains with the
+[parity owner](../TODO/NS-2_parity-accessibility_01.md).
 
 Select an existing line and choose Reconnect start or Reconnect end, then choose
 the destination shape by pointer or the ordinary selection/Connect buttons.
