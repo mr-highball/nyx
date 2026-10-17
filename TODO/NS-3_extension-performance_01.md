@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [indexed immutable routing](../docs/diagrams.md) gives each graph
+independent exact-name maps and shares routes within one projection. Ordered
+arrays, collision/case/namespace semantics, retirement, canonical admission and
+source/history stay authoritative. WORK.md owns complete results and native
+input/release evidence separately from browser compilation. Actual target/frame/
+input/memory/quality and full production budgets remain open; no feature credit
+or original full criterion closes from this portable optimization.
+
 Current-source [fresh graph admission](../docs/diagrams.md) proves the complete
 live byte limit through immutable typed values, with exact canonical fallback
 and checked whole-output assertions. Creator/aggregation, concurrent certificate,

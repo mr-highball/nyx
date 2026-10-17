@@ -72,6 +72,12 @@ implementation
 
 uses nyx.diagram.manipulation, nyx.diagram.content;
 
+type
+  { One projection's detached routes, in declared edge order. Bounds and drawing
+    borrow the same immutable point values; the vector retires on return/failure
+    and retains no graph, document, renderer or long-lived geometry cache. }
+  TProjectionRoutes = array of TNyxDiagramRoute;
+
 function ShapePath(const AVertex: TNyxDiagramVertex): TNyxDrawingPath;
 const
   { Standard four-cubic ellipse approximation; shared drawing adapters sample
@@ -191,6 +197,7 @@ var
   LVertex: TNyxDiagramVertex;
   LEdge: TNyxDiagramEdge;
   LRoute: TNyxDiagramRoute;
+  LRoutes: TProjectionRoutes;
   LPath: TNyxDrawingPath;
   LStyle: TNyxDrawingStyle;
   LTextPaint: TNyxDrawingPaint;
@@ -253,9 +260,11 @@ begin
       end;
     end;
   end;
+  SetLength(LRoutes, LDiagram.EdgeCount);
   for LIndex := 0 to LDiagram.EdgeCount - 1 do
   begin
     LRoute := LDiagram.Route(LDiagram.Edge(LIndex).Reference);
+    LRoutes[LIndex] := LRoute;
     for LPoint := 0 to LRoute.Count - 1 do
     begin
       IncludePoint(LRoute.Point(LPoint), LDefined, LLeft, LTop, LRight, LBottom);
@@ -288,7 +297,7 @@ begin
     begin
       LEdge := LEdge.Styled(LEdge.Style.Stroke(NyxThemePaint(ntcAccent), 3));
     end;
-    LRoute := LDiagram.Route(LEdge.Reference);
+    LRoute := LRoutes[LIndex];
     LPath := NyxDrawingPath(LRoute.Point(0));
     for LPoint := 1 to LRoute.Count - 1 do
     begin

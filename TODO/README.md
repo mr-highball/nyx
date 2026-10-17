@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [indexed immutable routing](../docs/diagrams.md) preserves exact
+name/order/geometry semantics through private snapshot maps and projection-local
+route reuse. WORK.md separates checked/optimized whole results, native ordinary
+input and exact constructors from browser compilation and full target/quality/
+budget/delivery acceptance. Existing feature counters and credit stay unchanged.
+
 Current-source [fresh graph admission](../docs/diagrams.md) uses a complete typed
 byte bound, exact near-limit encoding and the existing atomic certificate. Strict
 creator capture and independent edits preserve source/history intent. WORK.md

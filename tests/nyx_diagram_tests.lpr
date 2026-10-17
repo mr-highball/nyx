@@ -24,7 +24,7 @@ program nyx_diagram_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, fpjson, nyx.text, nyx.bytes, nyx.data, nyx.diagram, nyx.diagram.drawing,
+  SysUtils, fpjson, nyx.text, nyx.text.index, nyx.bytes, nyx.data, nyx.diagram, nyx.diagram.drawing,
   nyx.drawing, nyx.canvas.geometry, nyx.test.diagram
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -218,6 +218,102 @@ begin
   finally
     TJSONString.StrictEscaping := LStrict;
   end;
+end;
+
+{ Exact-name indices may share immutable text values, never mutable buckets or
+  their owner. Aa/BB collide under the existing polynomial hash on both targets.
+  Graph edits must preserve case, namespace and ordered-array authority through
+  replacement, compaction, recreation, decoding and prior-owner retirement. }
+procedure IndexedSnapshots;
+var
+  LIndex: TNyxTextIndex;
+  LIndexCopy: TNyxTextIndex;
+  LBase: INyxDiagram;
+  LChanged: INyxDiagram;
+  LReduced: INyxDiagram;
+  LRecreated: INyxDiagram;
+  LDecoded: INyxDiagram;
+  LBefore: TNyxText;
+  LFailed: Boolean;
+begin
+  LIndex := TNyxTextIndex.Create;
+  LIndexCopy := nil;
+  try
+    LIndex.AddFirst('Aa', 0);
+    LIndexCopy := LIndex.Clone;
+    LIndexCopy.AddFirst('BB', 1);
+    Check((LIndex.IndexOf('BB') = -1) and (LIndexCopy.IndexOf('Aa') = 0) and
+      (LIndexCopy.IndexOf('BB') = 1), 'cloned collision buckets detach before insertion');
+    LIndex.AddFirst('Original only', 2);
+    Check(LIndexCopy.IndexOf('Original only') = -1,
+      'source insertions cannot change a cloned exact-text index');
+    FreeAndNil(LIndex);
+    Check((LIndexCopy.IndexOf('Aa') = 0) and (LIndexCopy.IndexOf('BB') = 1),
+      'the cloned index owns its keys after the original owner retires');
+  finally
+    LIndexCopy.Free;
+    LIndex.Free;
+  end;
+  LBase := NewNyxDiagram
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('Aa'), ndsRectangle,
+      NyxCanvasBounds(0, 0, 120, 80)))
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('BB'), ndsEllipse,
+      NyxCanvasBounds(240, 0, 120, 80)))
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('aa'), ndsDiamond,
+      NyxCanvasBounds(480, 0, 120, 80)))
+    .WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('Shape 🌙'), ndsRectangle,
+      NyxCanvasBounds(720, 0, 120, 80)))
+    .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('Aa'),
+      NyxDiagramAttached(NyxDiagramVertexRef('Aa'), ndaRight),
+      NyxDiagramAttached(NyxDiagramVertexRef('BB'), ndaLeft)).Routed(ndrOrthogonal))
+    .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('BB'),
+      NyxDiagramAttached(NyxDiagramVertexRef('BB'), ndaRight),
+      NyxDiagramAttached(NyxDiagramVertexRef('aa'), ndaLeft)).Routed(ndrOrthogonal));
+  LBefore := LBase.ToData.ToJSON;
+  Check((LBase.FindVertex(NyxDiagramVertexRef('Aa')).Bounds.Left = 0) and
+    (LBase.FindVertex(NyxDiagramVertexRef('BB')).Bounds.Left = 240) and
+    (LBase.FindVertex(NyxDiagramVertexRef('aa')).Bounds.Left = 480) and
+    (LBase.FindEdge(NyxDiagramEdgeRef('BB')).Start.Vertex.Name = 'BB'),
+    'colliding exact names preserve case and separate vertex/edge namespaces');
+  LChanged := LBase.WithVertex(LBase.Vertex(0).AtBounds(NyxCanvasBounds(10, 0, 120, 80)));
+  Check((LChanged.Route(NyxDiagramEdgeRef('Aa')).Point(0).X = 130) and
+    (LBase.Route(NyxDiagramEdgeRef('Aa')).Point(0).X = 120),
+    'replacement preserves indexed identity and independent route geometry');
+  LReduced := LChanged.WithoutVertex(NyxDiagramVertexRef('Aa'), ndrmIncidentEdges);
+  Check((LReduced.Vertex(0).Reference.Name = 'BB') and
+    (LReduced.Edge(0).Reference.Name = 'BB') and
+    (LReduced.Route(NyxDiagramEdgeRef('BB')).Point(0).X = 360),
+    'incident removal rebuilds both shifted namespaces without changing retained order');
+  LRecreated := LReduced.WithVertex(NyxDiagramVertex(NyxDiagramVertexRef('Aa'), ndsRectangle,
+      NyxCanvasBounds(-240, 0, 120, 80)))
+    .WithEdge(NyxDiagramEdge(NyxDiagramEdgeRef('Aa'),
+      NyxDiagramAttached(NyxDiagramVertexRef('Aa'), ndaRight),
+      NyxDiagramAttached(NyxDiagramVertexRef('BB'), ndaLeft)));
+  Check((LRecreated.Vertex(3).Reference.Name = 'Aa') and
+    (LRecreated.Edge(1).Reference.Name = 'Aa') and
+    (LRecreated.FindVertex(NyxDiagramVertexRef('Aa')).Bounds.Left = -240) and
+    (LReduced.VertexCount = 3) and (LReduced.EdgeCount = 1),
+    'recreated names append with fresh ordinals while earlier snapshots stay independent');
+  LDecoded := NyxDiagramFromData(LRecreated.ToData);
+  Check((LDecoded.ToData.ToJSON = LRecreated.ToData.ToJSON) and
+    (LDecoded.FindVertex(NyxDiagramVertexRef('Shape 🌙')).Bounds.Left = 720),
+    'strict decoding reconstructs independent indices and exact supplementary names');
+  Check(LBase.ToData.ToJSON = LBefore, 'lookup metadata never changes original complete wire output');
+  LBase := nil;
+  LChanged := nil;
+  LReduced := nil;
+  Check(LRecreated.Route(NyxDiagramEdgeRef('Aa')).Point(0).X = -120,
+    'an edited graph retains its lookup ownership after prior graphs retire');
+  LFailed := False;
+  try
+    LRecreated.FindVertex(Default(TNyxDiagramVertexRef));
+  except
+    on E: Exception do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'an absent typed reference still refuses before index lookup');
 end;
 
 procedure Run;
@@ -506,6 +602,7 @@ end;
 
 begin
   try
+    IndexedSnapshots;
     CaptureEscaping;
     CaptureBudget;
     Run;

@@ -30,7 +30,68 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Fresh graph byte admission — 2026-10-16
+## Current integration: Indexed immutable routing and projection — 2026-10-17
+
+Previous goal turn is progress: 337a9fa is clean/remote-matched with complete
+typed byte admission and the native/compiled-browser evidence below. Continue
+diagram criterion six and existing canvas/performance owners toward full scene
+update budgets. Deliverable: independently owned exact-name lookup indices in
+immutable graph snapshots, with projection-local route reuse for bounds/painting.
+Ordered arrays retain name/order/persistence authority; private indices never
+become serialized identity or a renderer/model back edge. Evidence policy is one
+unchanged baseline and one final candidate, exact complete outputs, checked and
+optimized collision/retirement/edit/decoder/byte/worker tests, actual native
+Studio/runtime and four whole constructors, plus matching browser compilation.
+Stop on changed geometry/picking/order/source or lost admission. No HTTP host/
+capture retry, rollout, configuration refresh, cleanup or sub-agents.
+The existing exact-text index now supplies independently owned Clone buckets.
+Its entry/vector/class declarations receive individual purpose/ownership comments.
+Graph construction and decoding own complete private maps; forks detach them,
+replacement keeps positions and removal rebuilds ordinals from retained arrays.
+Exact string equality resolves hash collisions and preserves separate case-
+sensitive vertex/edge namespaces. Published indices are read-only; their keys/
+positions retain no previous graph owner. Projection owns its bounded route
+vector only for that call, reusing identical points for bounds and painting.
+No persistent route cache or application/view back edge is added.
+
+The final matched native release pair changes route medians at 16/64/256
+vertices (twice as many edges) from 0.26/1.26/7.64 to 0.27/1.09/4.26 ms;
+projection changes 0.82/3.57/18.99 to 0.55/2.12/8.41 ms; complete fresh move/
+projection changes 1.07/4.90/26.85 to 0.84/3.29/13.51 ms. The largest sample
+is below the provisional 16-ms portable phase target. This is one unchanged
+baseline and one candidate, not an alternating production benchmark or evidence
+of actual frame/input latency. Whole graph/routes/drawing/moved results remain
+byte-exact against 337a9fa's 1,364,909-byte snapshot in both checked/optimized
+builds. Actual target painting, peak/live memory and browser budgets remain open.
+
+Final native graph checks pass 169 in checked and optimized modes, including
+detached collision buckets, source/clone retirement, exact case/namespaces,
+replacement, incident compaction, name recreation, decoding and absent-reference
+refusal. Existing byte/creator/concurrent-reader guards remain. Native document/
+source/history 93, manipulation 43, named ports 21 and content/source 25 pass.
+Ordinary Studio/runtime pass 47/37 per desktop/compact width; four exact whole
+companions construct. All fourteen final checked runs have clean heaps. Eight
+source/model inputs match the previous baseline and pre/post compiler hashes;
+all eight separate native/browser companion products remain retained. These
+overlapping counts add no completion credit.
+
+Both Studios/backend/worker and matching consumers compile. All thirty final
+compiler jobs pass with zero owned warnings and 98 repeated upstream pas2js
+Classes warnings. Generated browser bucket-record copies and projection route
+assignments are inspected, not executed. No compiler/input failure or repair
+variant occurs in this batch. The ignored .local/diagram-routing-paths-private.json
+pointer owns baseline identity, four exact source hashes, full outputs, matched
+timings, current products and final audit. All five protected files/nine complete
+contexts and 349 frozen 7422453 artifacts stay exact; no qualification process
+remains live. LAN stays offline with no host/capture retry, configuration refresh,
+cleanup, installation or new tool/schema/control kind. No original full criterion/
+task/DONE/credit, full parity or delivery closes. Diagram eleven/canvas twelve/
+Graph-Logic thirty-eight/behavior-program zero stay unchanged. Stop routing/index/
+fixture/timing variants. Return to actual mounted target/frame/input/live-memory
+and full canvas/diagram quality budgets through existing owners; this portable
+CPU sample does not replace that acceptance.
+
+## Previous qualification: Fresh graph byte admission — 2026-10-16
 
 Previous goal turn is progress: bb07cde is clean/remote-matched with typed live
 drawing, exact whole outputs and the native/compiled-browser receipts below.

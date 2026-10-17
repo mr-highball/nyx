@@ -39,6 +39,20 @@ resolution uses that plan's current geometry. Workers may read published plans
 or create private copies after the normal safe handoff. They must not mutate a
 live Drawing or call a renderer. Applications still own scheduling/publication.
 
+Private exact-name indices accelerate shape/edge lookup without determining
+paint or persistence order. Each edited snapshot owns detached index buckets;
+replacement keeps its ordinal, while removal rebuilds both maps from the
+retained ordered arrays. Recreated names append normally. Hash collisions use
+exact text equality, with separate vertex/edge namespaces and unchanged typed
+reference validation. Strict decoding builds those maps before route validation.
+Indices retain names/positions only and retire with their graph; they retain no
+document, renderer or previous graph owner.
+
+Drawing projection computes each edge route once for its bounds and paint pass.
+Those immutable point values belong to one projection call and retire on return
+or failure. No route cache outlives that call; subsequent edits still resolve
+all routes against their own captured graph and retain complete admission.
+
 `CaptureNyxDiagram` provides a live immutable snapshot boundary. Built-in plans
 retain their interface after whole byte admission; fresh fluent edits must pass
 that admission independently. A conservative typed bound includes every vertex,

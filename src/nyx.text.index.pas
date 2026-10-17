@@ -38,12 +38,19 @@ uses
   Instances are independently owned and mutable; callers must serialize access
   or publish only a fully initialized read-only instance to other consumers. }
 type
+  { One owned hash bucket. Occupied distinguishes an empty key from absence;
+    copied text has value ownership and the position retains no external object. }
   TNyxTextIndexEntry = record
     Key: TNyxText;
     Value: Integer;
     Occupied: Boolean;
   end;
+  { Owned bucket vector. Detach before mutation so snapshots cannot overwrite
+    another vector's entries; managed text remains independently retained. }
   TNyxTextIndexEntries = array of TNyxTextIndexEntry;
+  { Exact-text positions with independently owned mutable buckets. Owners must
+    serialize mutation or publish a fully built read-only instance. Clone keeps
+    positions/collision layout while giving its caller separate mutation rights. }
   TNyxTextIndex = class
   private
     FEntries: TNyxTextIndexEntries;
@@ -55,12 +62,27 @@ type
       keys, matching the former ordered scan. Values must be nonnegative. }
     function IndexOf(const AKey: TNyxText): Integer;
     procedure AddFirst(const AKey: TNyxText; AValue: Integer);
+    { Caller owns the returned index. Bucket records are detached; neither side
+      retains the other owner, and subsequent insertions remain independent. }
+    function Clone: TNyxTextIndex;
   end;
 
 implementation
 
 uses
   SysUtils;
+
+function TNyxTextIndex.Clone: TNyxTextIndex;
+begin
+  Result := TNyxTextIndex.Create;
+  try
+    Result.FEntries := Copy(FEntries, 0, Length(FEntries));
+    Result.FCount := FCount;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
 
 function TNyxTextIndex.Slot(const AKey: TNyxText): Integer;
 var

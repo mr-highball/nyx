@@ -708,6 +708,14 @@ single local release pair does not qualify target painting, browser execution,
 frame/input/memory or full production budgets. See the
 [complete graph admission contract](diagrams.md) and WORK.md for scope/receipts.
 
+With private exact-name indices and one route preparation per projection, a
+fresh matched native pair changes move/projection medians from 1.07/4.90/26.85
+to 0.84/3.29/13.51 ms at 16/64/256 vertices and twice as many edges. Projection
+changes 0.82/3.57/18.99 to 0.55/2.12/8.41 ms; complete outputs stay byte-exact.
+The largest local portable sample is below the provisional phase target. This
+single pair does not establish production, actual mounted target/frame/input,
+peak/live-memory or browser budgets. Those remain separate required outcomes.
+
 ## Remaining integration
 
 The separate [visual diagram preparation](diagrams.md) uses this same ordinary

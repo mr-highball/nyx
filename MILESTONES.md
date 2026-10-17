@@ -19,6 +19,15 @@ The historical catalog count and
 aggregate **32/0/10/11/56/12** remain evidence for their prior scope only;
 expanded-scope weights/allocation require reassessment before completion credit.
 
+Current-source [indexed immutable routing](docs/diagrams.md) removes repeated
+name scans and duplicate per-projection routes while retaining declared order,
+geometry, isolated edits and strict byte/creator admission. WORK.md owns exact
+results, native input and release evidence separately from compiled-only browser
+consumers. One local 256/512 move/projection pair changes 26.85 to 13.51 ms,
+below the provisional portable phase target. Shared performance work changes no
+completion credit; actual target/frame/input/memory/quality, full production
+budgets and delivery remain open.
+
 Current-source [fresh graph byte admission](docs/diagrams.md) removes whole wire
 materialization from small immutable graph captures while retaining complete
 budget proof, exact near-limit encoding and strict custom creator snapshots.

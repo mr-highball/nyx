@@ -310,6 +310,8 @@ function NyxDiagramFromData(const AData: TNyxDataValue): INyxDiagram;
 
 implementation
 
+uses nyx.text.index;
+
 const
   { Closed version-one/two/three framing, including worst-case numeric spelling
     and typed paints. NyxStateNumberText uses <=17 significant digits with a short
@@ -327,13 +329,16 @@ const
   DiagramContentByteBound = 256;
 
 type
-  { Private immutable graph storage. Fork copies both arrays before an edit;
-    records contain no interface fields. A failed fork is freed by its local
-    interface owner. Linear name lookup is bounded by the declared capacities. }
+  { Private immutable graph storage. Fork detaches arrays and exact-name indices
+    before edits; ordered arrays alone own paint/persistence order. Each graph
+    owns its read-only published indices, with no document/view back reference.
+    A failed fork is freed by its local interface owner. }
   TDiagram = class(TInterfacedObject, INyxDiagram)
   private
     FVertices: array of TNyxDiagramVertex;
     FEdges: array of TNyxDiagramEdge;
+    FVertexNames: TNyxTextIndex;
+    FEdgeNames: TNyxTextIndex;
     { A complete typed bound or exact canonical byte admission sets this
       monotonic certificate. Fork leaves a fresh zero; native readers/writers
       use atomic operations. No payload/caller/UI owner is retained. }
@@ -346,8 +351,15 @@ type
     function VertexIndex(const AReference: TNyxDiagramVertexRef): Integer;
     function EdgeIndex(const AReference: TNyxDiagramEdgeRef): Integer;
     function Fork: TDiagram;
+    { Removal changes ordinals. Build both replacement indices privately before
+      retiring the candidate's old maps; no published snapshot is mutated. }
+    procedure RebuildNames;
     procedure ValidateRoutes;
   public
+    { Nil creates empty storage. A source is borrowed only during construction;
+      every mutable array/index is independently owned before this returns. }
+    constructor Create(ASource: TDiagram = nil);
+    destructor Destroy; override;
     function GetVertexCount: Integer;
     function GetEdgeCount: Integer;
     function Vertex(AIndex: Integer): TNyxDiagramVertex;
@@ -364,6 +376,32 @@ type
     function PickEdge(const APoint: TNyxCanvasPoint; ATolerance: Double): TNyxDiagramEdgeRef;
     function ToData: TNyxDataValue;
   end;
+
+constructor TDiagram.Create(ASource: TDiagram);
+begin
+  inherited Create;
+
+  if ASource = nil then
+  begin
+    FVertexNames := TNyxTextIndex.Create;
+    FEdgeNames := TNyxTextIndex.Create;
+  end
+  else
+  begin
+    FVertices := Copy(ASource.FVertices, 0, Length(ASource.FVertices));
+    FEdges := Copy(ASource.FEdges, 0, Length(ASource.FEdges));
+    FVertexNames := ASource.FVertexNames.Clone;
+    FEdgeNames := ASource.FEdgeNames.Clone;
+  end;
+  { New instances never inherit the source's byte-admission certificate. }
+end;
+
+destructor TDiagram.Destroy;
+begin
+  FEdgeNames.Free;
+  FVertexNames.Free;
+  inherited Destroy;
+end;
 
 { ASCII is counted directly, with room for either slash-escaping policy.
   Other scalars admit UTF-8 or a fully escaped UTF-16 pair. Quotes are included;
@@ -771,35 +809,15 @@ begin
 end;
 
 function TDiagram.VertexIndex(const AReference: TNyxDiagramVertexRef): Integer;
-var
-  LIndex: Integer;
 begin
   NyxDiagramVertexRef(AReference.Name);
-  for LIndex := 0 to High(FVertices) do
-  begin
-
-    if FVertices[LIndex].Reference.Name = AReference.Name then
-    begin
-      Exit(LIndex);
-    end;
-  end;
-  Result := -1;
+  Result := FVertexNames.IndexOf(AReference.Name);
 end;
 
 function TDiagram.EdgeIndex(const AReference: TNyxDiagramEdgeRef): Integer;
-var
-  LIndex: Integer;
 begin
   NyxDiagramEdgeRef(AReference.Name);
-  for LIndex := 0 to High(FEdges) do
-  begin
-
-    if FEdges[LIndex].Reference.Name = AReference.Name then
-    begin
-      Exit(LIndex);
-    end;
-  end;
-  Result := -1;
+  Result := FEdgeNames.IndexOf(AReference.Name);
 end;
 
 function TDiagram.Vertex(AIndex: Integer): TNyxDiagramVertex;
@@ -850,9 +868,38 @@ end;
 
 function TDiagram.Fork: TDiagram;
 begin
-  Result := TDiagram.Create;
-  Result.FVertices := Copy(FVertices, 0, Length(FVertices));
-  Result.FEdges := Copy(FEdges, 0, Length(FEdges));
+  Result := TDiagram.Create(Self);
+end;
+
+procedure TDiagram.RebuildNames;
+var
+  LVertices: TNyxTextIndex;
+  LEdges: TNyxTextIndex;
+  LIndex: Integer;
+begin
+  LVertices := nil;
+  LEdges := nil;
+  try
+    LVertices := TNyxTextIndex.Create;
+    LEdges := TNyxTextIndex.Create;
+    for LIndex := 0 to High(FVertices) do
+    begin
+      LVertices.AddFirst(FVertices[LIndex].Reference.Name, LIndex);
+    end;
+    for LIndex := 0 to High(FEdges) do
+    begin
+      LEdges.AddFirst(FEdges[LIndex].Reference.Name, LIndex);
+    end;
+    FVertexNames.Free;
+    FVertexNames := LVertices;
+    LVertices := nil;
+    FEdgeNames.Free;
+    FEdgeNames := LEdges;
+    LEdges := nil;
+  finally
+    LEdges.Free;
+    LVertices.Free;
+  end;
 end;
 
 procedure TDiagram.ValidateRoutes;
@@ -891,6 +938,7 @@ begin
   begin
     LIndex := Length(LCandidate.FVertices);
     SetLength(LCandidate.FVertices, LIndex + 1);
+    LCandidate.FVertexNames.AddFirst(LVertex.Reference.Name, LIndex);
   end;
   LCandidate.FVertices[LIndex] := LVertex;
   LCandidate.ValidateRoutes;
@@ -917,6 +965,7 @@ begin
   begin
     LIndex := Length(LCandidate.FEdges);
     SetLength(LCandidate.FEdges, LIndex + 1);
+    LCandidate.FEdgeNames.AddFirst(LEdge.Reference.Name, LIndex);
   end;
   LCandidate.FEdges[LIndex] := LEdge;
   LCandidate.Route(LEdge.Reference);
@@ -969,6 +1018,7 @@ begin
     end;
   end;
   SetLength(LCandidate.FEdges, LWrite);
+  LCandidate.RebuildNames;
 end;
 
 function TDiagram.WithoutEdge(const AReference: TNyxDiagramEdgeRef): INyxDiagram;
@@ -990,6 +1040,7 @@ begin
     LCandidate.FEdges[LIndex] := LCandidate.FEdges[LIndex + 1];
   end;
   SetLength(LCandidate.FEdges, Length(LCandidate.FEdges) - 1);
+  LCandidate.RebuildNames;
 end;
 
 function EndpointCenter(const ADiagram: INyxDiagram;
@@ -1754,6 +1805,7 @@ begin
       raise ENyxDiagram.Create('Duplicate diagram vertex');
     end;
     LPlan.FVertices[LIndex] := LVertex;
+    LPlan.FVertexNames.AddFirst(LVertex.Reference.Name, LIndex);
   end;
   for LIndex := 0 to LEdges.Count - 1 do
   begin
@@ -1769,6 +1821,7 @@ begin
       raise ENyxDiagram.Create('Duplicate diagram edge');
     end;
     LPlan.FEdges[LIndex] := LEdge;
+    LPlan.FEdgeNames.AddFirst(LEdge.Reference.Name, LIndex);
   end;
   LPlan.ValidateRoutes;
 end;
