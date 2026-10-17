@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
-  nyx.expressions, nyx.expressions.editing,
+  nyx.expressions, nyx.expressions.editing, nyx.pascal.drafts,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
   nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
@@ -291,6 +291,11 @@ type
       buffer, including accepted text when no draft is pending. }
     function CaptureSourcePublication(AExpected: Integer; const ASource: TNyxText;
       out ARequest: TNyxStudioSourceRequest;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Owning-editor helper capture reconstructs the candidate from its own
+      acknowledged draft/base and accepted inventory, never proposed wire files. }
+    function CaptureFilePublication(AExpected: Integer; const ASource: TNyxText;
+      const AFile: TNyxPascalSourceRef; out ARequest: TNyxStudioSourceRequest;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
     { Independently prepare an intent against this server-owned session. Supplied
       source must equal the server's writer output; an unfinished buffer stays
@@ -3797,7 +3802,8 @@ begin
     raise ENyxProjectConflict.Create('Source publication requires an actually executed result');
   end;
 
-  if LCurrent.Pending and (LCurrent.Draft <> AProjection.Source) then
+  if not ARequest.IsFileEdit and LCurrent.Pending and
+    (LCurrent.Draft <> AProjection.Source) then
   begin
     raise ENyxProjectConflict.Create('Source publication would discard a different unfinished draft');
   end;
@@ -3856,6 +3862,21 @@ begin
   end;
   ASchemas := CaptureNyxSchemas;
   ARequest := FSession.PrepareSourceRequest(ASchemas.Revision);
+end;
+
+function TNyxAgentSession.CaptureFilePublication(AExpected: Integer;
+  const ASource: TNyxText; const AFile: TNyxPascalSourceRef;
+  out ARequest: TNyxStudioSourceRequest;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+begin
+  Result := EditorSourcePair(AExpected);
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareFileRequest(AFile, ASchemas.Revision);
+
+  if not ARequest.IsFileEdit or (ASource <> ARequest.Source) then
+  begin
+    raise ENyxProjectConflict.Create('Selected-file publication requires the accepted main source');
+  end;
 end;
 
 function TNyxAgentSession.CaptureVisualPublication(AExpected: Integer;

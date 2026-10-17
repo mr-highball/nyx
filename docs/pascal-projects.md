@@ -262,11 +262,58 @@ The main-only `SourceDraftPending` remains useful when an operation edits only m
 text and preserves helpers. Saved project adoption must resolve all pending source
 work through the existing explicit workflow.
 
-This is the durable source-file editing contract. Studio's file picker, selected-
-helper compiler/publication commands and physical browser/LCL editor integration
-remain the next authoring work; adding buffers does not establish that UI or full
-parity. The maintained `pascal-projects` target accepts `-PascalFileDrafts` to include
+This is the durable source-file editing contract. Buffer persistence alone does
+not establish ordinary editor input or full parity. The maintained
+`pascal-projects` target accepts `-PascalFileDrafts` to include
 the buffer/session/history/recovery journey and compiles its browser consumers.
+
+## Selecting and applying a source file
+
+The current-source Pascal pane uses an ordinary Nyx Select to list the main unit
+and its captured units/includes. Switching files keeps each independent buffer;
+the same code editor moves between inline and expanded presentation. Apply,
+Restore accepted and Save draft address the selected file. Selection belongs to
+the local editor context and grants no compiler or document authority.
+
+```pascal
+LHelper := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('customer-rules.inc'));
+LSession.ActiveSourceFile := LHelper;
+LSession.SetFileDraft(LHelper, LEditedRules);
+LCommands.ApplyFile(LHelper);
+```
+
+Helper Apply captures accepted main/other files plus only the selected draft.
+The isolated compiler constructs that complete candidate. Publication verifies
+the sealed owner/load, schema, accepted baseline and selected buffer before
+changing the accepted pair in one Undo step. It consumes only that helper draft,
+retaining unfinished main/other helper text and first bases. Repeated waiting
+Apply intents coalesce per file; another file's intent stays queued. Stale bases,
+older providers and substituted compiler inputs refuse rather than silently
+applying the main unit or dropping files.
+
+The Undo entry captures the dispatch frame on both peers. Newer unrelated typing
+stays current after publication and is retained in the opposite Redo entry if
+Undo deliberately restores that earlier frame. Restore retires only the selected
+file's Apply intent; it preserves another file's active compilation and queued
+visual work. Visual compilation likewise keeps unfinished helper buffers outside
+its disposable literal planner and retains their exact history snapshots.
+
+The shared private compiler protocol carries a typed selected-file intent. Its
+owning backend independently prepares the acknowledged file change and checks
+the exact candidate inventory. Newer unrelated local typing remains retained
+through publication and the following observing acknowledgement. No serialized
+file field grants execution provenance, and no new MCP tool/schema is introduced.
+Existing main-source callback/diagnostic navigation returns to the main buffer;
+helper refusals keep a message scoped to their exact selected buffer without
+inventing scalar coordinates. General helper declaration/diagnostic navigation
+remains a separate outcome.
+
+`-PascalSourceFileEditors` adds the maintained ordinary native controls mode to
+the `pascal-projects` target. That mode uses real local/shared compiler workers
+and wide/compact Win32 controls without a listener or captures. Socket transport
+is substituted by the existing production-backend consumer. WORK.md distinguishes
+actual native input from browser compilation and retains failed preparations;
+neither this API nor a compile pass proves browser input, full parity or delivery.
 
 `tools/build.ps1 -Target pascal-projects -PascalProjectEvidenceDirectory <NEW-path>`
 runs the maintained data checks and actual native compiler/session/history/store

@@ -937,8 +937,17 @@ begin
           end
           else
           begin
-            LPair := LSession.CaptureSourcePublication(LArguments.Field('expectedRevision').AsInteger,
-              LArguments.Field('source').AsText, LSourceRequest, LSchemas);
+
+            if NyxAgentHas(LArguments, 'sourceFile') then
+            begin
+              LPair := LSession.CaptureFilePublication(LArguments.Field('expectedRevision').AsInteger,
+                LArguments.Field('source').AsText, ReadNyxSourceFile(LArguments), LSourceRequest, LSchemas);
+            end
+            else
+            begin
+              LPair := LSession.CaptureSourcePublication(LArguments.Field('expectedRevision').AsInteger,
+                LArguments.Field('source').AsText, LSourceRequest, LSchemas);
+            end;
             LPublication := CaptureNyxStudioSourcePublication(FEditorToken, LWorkspace,
               LArguments.Field('expectedRevision').AsInteger, LPair, LSourceRequest, LSchemas);
           end;

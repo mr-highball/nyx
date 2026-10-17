@@ -26,7 +26,7 @@ unit nyx.studio.sourcebuilds;
 
 interface
 
-uses nyx.text, nyx.data, nyx.pascal.project, nyx.studio.sourceprojection;
+uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.sourceprojection;
 
 const
   { JSON escaping can expand the admitted 1 MiB UTF-8 source by six. This HTTP
@@ -72,10 +72,90 @@ function WithNyxSourceProjectFiles(const AArguments: TNyxDataValue;
   const AFiles: TNyxPascalProjectFiles): TNyxDataValue;
 function ReadNyxSourceProjectFiles(const AArguments: TNyxDataValue): TNyxPascalProjectFiles;
 
+{ Private selected-helper intent. Absence preserves the old main-Apply wire;
+  the typed exact leaf identifies acknowledged editor data, never a host path. }
+function WithNyxSourceFile(const AArguments: TNyxDataValue;
+  const AFile: TNyxPascalSourceRef): TNyxDataValue;
+function ReadNyxSourceFile(const AArguments: TNyxDataValue): TNyxPascalSourceRef;
+
 implementation
 
 uses nyx.bytes, nyx.model, nyx.source, nyx.studio.builds, nyx.studio.compiler,
-  nyx.studio.projectinputs;
+  nyx.studio.projectinputs, nyx.pascal.names;
+
+function ReadNyxSourceFile(const AArguments: TNyxDataValue): TNyxPascalSourceRef;
+var
+  LIndex: Integer;
+  LFile: TNyxDataValue;
+  LName: TNyxText;
+begin
+  Result := TNyxPascalSourceRef.Main;
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+
+    if AArguments.Key(LIndex) = 'sourceFile' then
+    begin
+      LFile := AArguments.Field('sourceFile');
+
+      if (LFile.Kind <> ndObject) or (LFile.Count <> 2) then
+      begin
+        raise ENyxModel.Create('Selected source file requires its exact kind and name');
+      end;
+      LName := LFile.Field('name').AsText;
+
+      if LFile.Field('kind').AsText = 'unit' then
+      begin
+
+        if Copy(LName, Length(LName) - 3, 4) <> '.pas' then
+        begin
+          raise ENyxModel.Create('Selected unit requires its .pas leaf');
+        end;
+        Result := TNyxPascalSourceRef.UnitFile(
+          NyxPascalUnit(Copy(LName, 1, Length(LName) - 4)));
+      end
+      else if LFile.Field('kind').AsText = 'include' then
+      begin
+        Result := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude(LName));
+      end
+      else
+      begin
+        raise ENyxModel.Create('Unknown selected source file kind');
+      end;
+      Result.Validate;
+      Exit;
+    end;
+  end;
+end;
+
+function WithNyxSourceFile(const AArguments: TNyxDataValue;
+  const AFile: TNyxPascalSourceRef): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LKind: TNyxText;
+begin
+  AFile.Validate;
+  Result := AArguments.Copy;
+
+  if AFile.Role = npsMain then
+  begin
+    Exit;
+  end;
+  LKind := 'unit';
+
+  if AFile.Role = npsInclude then
+  begin
+    LKind := 'include';
+  end;
+  SetLength(LFields, AArguments.Count + 1);
+  for LIndex := 0 to AArguments.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(AArguments.Key(LIndex), AArguments.Field(AArguments.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('sourceFile', NyxObject([
+    NyxField('kind', NyxData(LKind)), NyxField('name', NyxData(AFile.Name))]));
+  Result := NyxObject(LFields);
+end;
 
 function ReadNyxSourceProjectFiles(const AArguments: TNyxDataValue): TNyxPascalProjectFiles;
 var

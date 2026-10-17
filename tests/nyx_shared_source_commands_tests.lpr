@@ -638,12 +638,15 @@ begin
       Exit;
     end;
 
-    if (Commands.State = nssPreparing) and ((Provider = nil) or
+    if (Commands.State = nssPreparing) and
+      (Bridge.SharedSourceHost.Waiting or (Provider = nil) or
       ((Provider.Port <> nil) and (Provider.StateValue = scsRunning))) then
     begin
       { Dispatch ends this deterministic editor exchange drain. The original
-        provider holds publication explicitly; the real asynchronous provider
-        is awaited separately from its actual command/producer state. }
+        provider holds publication explicitly. A reserved visual preparation
+        has also dispatched, but its worker has not reached the provider yet;
+        AwaitProvider observes that actual completion separately. Do not spin
+        twenty zero-wait exchange steps as a proxy for worker completion. }
       Exit;
     end;
     Exchange.Fire;

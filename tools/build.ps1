@@ -104,6 +104,9 @@ param(
   # Qualify independent helper buffers in the same full recovery/import journey.
   # Omission retains the existing supporting-file ownership/recovery workload.
   [switch]$PascalFileDrafts,
+  # Ordinary source-file controls: real local/shared native compilation and
+  # wide/compact input. The connected engine never starts an HTTP listener.
+  [switch]$PascalSourceFileEditors,
   # Exercise captured units/main/helper includes through the same complete
   # application journey. Default preserves the existing single-companion checks.
   [switch]$CompiledRuntimeProjectInputs,
@@ -2069,6 +2072,25 @@ try {
     & (Join-Path $nyxProjectNative 'nyx_project_recovery_native.exe') @nyxWholeProjectArguments
     if ($LASTEXITCODE -ne 0) { throw 'Complete-project registry recovery/semantic import checks failed.' }
     $nyxProjectTools = Get-Content -LiteralPath $nyxProjectToolsPath -Raw | ConvertFrom-Json
+    if ($PascalSourceFileEditors) {
+      if (-not $IsWindows) { throw 'Source-file input qualification currently requires Win32/LCL.' }
+      $nyxProjectLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+      $nyxProjectLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxProjectPlatform = "$((& $nyxProjectLclFpc '-iTP').Trim())-$((& $nyxProjectLclFpc '-iTO').Trim())"
+      $nyxProjectControls = Join-Path $nyxProjectPacket 'native-source-files'
+      New-Item -ItemType Directory -Path $nyxProjectControls | Out-Null
+      Invoke-NyxCompiler $nyxProjectLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio', '-Fitests',
+        "-FU$nyxProjectControls", "-FE$nyxProjectControls",
+        "-Fu$nyxProjectLazarus/lcl/units/$nyxProjectPlatform",
+        "-Fu$nyxProjectLazarus/lcl/units/$nyxProjectPlatform/$Widgetset",
+        "-Fu$nyxProjectLazarus/components/lazutils/lib/$nyxProjectPlatform",
+        "-Fu$nyxProjectLazarus/packager/units/$nyxProjectPlatform",
+        'tests/nyx_source_compilation_controls.lpr')
+      & (Join-Path $nyxProjectControls 'nyx_source_compilation_controls.exe') `
+        $nyxRoot $nyxProjectToolsPath 'unused' (Join-Path $nyxProjectPacket 'source-file-input') '--source-files'
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary selected-file compiler/editor input failed.' }
+    }
     foreach ($nyxProgram in @('nyx_pascal_project_tests', 'nyx_project_files_data', 'nyx_pascal_drafts_tests')) {
       Invoke-NyxCompiler $nyxProjectTools.PAS2JS @('-B', '-Mdelphi', '-Tbrowser',
         "-Ji$($nyxProjectTools.PAS2JS_RUNTIME)", '-Fusrc', '-Fustudio', '-Futests',

@@ -1653,7 +1653,7 @@ begin
       begin
         { An explicit Restore accepted command may have discarded this buffer.
           Use the session's current draft policy when retaining field focus. }
-        LFocusValue := FSession.DraftSource;
+        LFocusValue := FSession.ActiveSourceText;
         LCodeStart := TJSHTMLTextAreaElement(LActive).selectionStart;
         LCodeEnd := TJSHTMLTextAreaElement(LActive).selectionEnd;
         LCodeScroll := LActive.scrollTop;
@@ -1899,14 +1899,14 @@ begin
     if FCodeRenderer.Root = nil then
     begin
       FreeAndNil(FCodeDocument);
-      FCodeDocument := NewNyxStudioCodeDocument(FSession.DraftSource);
+      FCodeDocument := NewNyxStudioCodeDocument(FSession.ActiveSourceText);
       FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
     end
     else
     begin
       { Move the existing public view, including its listeners and text range.
         Sync changes value only when source admission/history changed the draft. }
-      FCodeRenderer.Root.Configure.Value(FSession.DraftSource).Done;
+      FCodeRenderer.Root.Configure.Value(FSession.ActiveSourceText).Done;
       FCodeRenderer.Sync;
       FCodeRenderer.MoveHost(LCodeHost);
     end;
@@ -2501,6 +2501,7 @@ begin
     if (LEvent.Action = seaAdd) and (LHandler.Name <> '') and
       (FSession.SelectedID = LOwner) and (FSession.ActiveViewID = LView) then
     begin
+      FSession.ActiveSourceFile := FSession.SourceFile(0);
       FSourceLine := FSession.CallbackLine(LHandler);
       FSourceColumn := 1;
       FCodeVisible := True;
@@ -3562,6 +3563,15 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntChange) and (ANode.ID = NyxStudioSourceFileID) then
+    begin
+      RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
+      FSourceLine := 1;
+      FSourceColumn := 1;
+      Refresh(True, True);
+      Exit;
+    end;
+
     if FSourceCommands.Route(ANode, AEvent, FShellRenderer.RootFor(ANode.ID)) then
     begin
       Exit;
@@ -3573,6 +3583,7 @@ begin
       case LInspectorEffect of
         nieSource:
           begin
+            FSession.ActiveSourceFile := FSession.SourceFile(0);
             FSourceLine := LSourceLine;
             FSourceColumn := 1;
             FCodeVisible := True;
@@ -4096,7 +4107,7 @@ begin
             end;
           'action-export-source-draft':
             begin
-              Download('nyx.view.draft.pas', FSession.DraftSource);
+              Download(FSession.SourceFileTitle(FSession.ActiveSourceFile), FSession.ActiveSourceText);
               Exit;
             end;
           'action-import':
@@ -5350,7 +5361,7 @@ begin
       if LID = 'studio-code' then
       begin
         { A viewport crossing can occur before the textarea's change event. }
-        FSession.SetSourceDraft(LValue);
+        FSession.SetFileDraft(FSession.ActiveSourceFile, LValue);
       end;
       LCanvasFocus := LActive.closest('[data-node=studio-canvas]') <> nil;
 

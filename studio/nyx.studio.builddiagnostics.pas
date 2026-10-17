@@ -492,6 +492,7 @@ begin
   ADiagnostic.Line := LItem.Line;
   ADiagnostic.Column := LItem.Column;
   ADiagnostic.Message := NyxCompilerSeverityName(LItem.Severity) + ': ' + LItem.MessageText;
+  ASession.ActiveSourceFile := ASession.SourceFile(0);
 end;
 
 end.

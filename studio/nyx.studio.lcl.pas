@@ -3236,13 +3236,13 @@ begin
       if FCodeView.Root = nil then
       begin
         FreeAndNil(FCodeDocument);
-        FCodeDocument := NewNyxStudioCodeDocument(FSession.DraftSource);
+        FCodeDocument := NewNyxStudioCodeDocument(FSession.ActiveSourceText);
         FCodeDocument.Pages[0].Configure.HeightSizing(nsFill).Done;
         FCodeView.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
       end
       else
       begin
-        FCodeView.Root.Configure.Value(FSession.DraftSource)
+        FCodeView.Root.Configure.Value(FSession.ActiveSourceText)
           .Clear(atHeight).HeightSizing(nsFill).Done;
         FCodeView.Sync;
         FCodeView.MoveHost(LCodeHost);
@@ -3451,6 +3451,7 @@ begin
     if (LEvent.Action = seaAdd) and (LHandler.Name <> '') and
       (FSession.SelectedID = LOwner) and (FSession.ActiveViewID = LView) then
     begin
+      FSession.ActiveSourceFile := FSession.SourceFile(0);
       FSourceLine := FSession.CallbackLine(LHandler);
       FSourceColumn := 1;
       FState.CodeVisible := True;
@@ -3598,7 +3599,7 @@ begin
 
     if FCodeView.Root <> nil then
     begin
-      FCodeView.Root.Configure.Value(FSession.DraftSource).Done;
+      FCodeView.Root.Configure.Value(FSession.ActiveSourceText).Done;
       FCodeView.Sync;
     end;
 
@@ -4684,6 +4685,27 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntChange) and (ANode.ID = NyxStudioSourceFileID) then
+    begin
+      RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
+      FSourceLine := 1;
+      FSourceColumn := 1;
+      RequestRefresh(False);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-export-source-draft') then
+    begin
+
+      if FProjectFiles = nil then
+      begin
+        FProjectFiles := CreateProjectFiles;
+      end;
+      FProjectFiles.ExportFiles([NyxTextFile(
+        FSession.SourceFileTitle(FSession.ActiveSourceFile), FSession.ActiveSourceText)]);
+      Exit;
+    end;
+
     if FSourceCommands.Route(ANode, AEvent, FShellView.RootFor(ANode.ID)) then
     begin
       Exit;
@@ -4698,6 +4720,7 @@ begin
       case LEffect of
         nieSource:
           begin
+            FSession.ActiveSourceFile := FSession.SourceFile(0);
             FSourceLine := LLine;
             FSourceColumn := 1;
             FState.CodeVisible := True;

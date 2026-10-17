@@ -1252,6 +1252,10 @@ begin
         FRequest retains the exact original files for writing/compilation and
         publication; no generated planner is ever admitted as their execution. }
       LPair.Files := Default(TNyxPascalProjectFiles);
+      { Unfinished helpers belong to the original request/live session, not the
+        disposable single-unit planner. Its generated input has no helper
+        membership; retain every real buffer on FRequest for publication. }
+      LPair.FileDrafts := Default(TNyxPascalFileDrafts);
     except
       LBefore.Free;
       raise;
@@ -2085,6 +2089,13 @@ begin
     LPublication.Session := Self;
     LPublication.Checkpoint := LCheckpoint;
     LPublication.RememberDraft := True;
+    { Other helper buffers may have changed during visual compilation. Keep
+      the same dispatch baseline on both peers; newer drafts stay current and
+      are retained in opposite history when that earlier frame is restored. }
+    LPublication.UseCapturedHistory := True;
+    LPublication.CapturedHistory := NyxStudioCheckpoint(LCheckpoint,
+      ARequest.FPair.Draft, ARequest.FPair.DraftBase, ARequest.FPair.Pending,
+      ARequest.FPair.FileDrafts);
     LPublication.Document := LCandidate;
     LPublication.Workspace := LWorkspace;
     LCandidate := nil;

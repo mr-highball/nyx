@@ -28,6 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
+  nyx.pascal.drafts,
   nyx.behavior,
   nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
@@ -106,7 +107,7 @@ type
 
   { One processor controller belongs to one session. Native work uses the public
     scheduler and browser work the compiled Pascal worker. Apply coalesces old
-    drafts; design edits remain FIFO, coalescing only adjacent queued changes to
+    waiting drafts per file; design edits remain FIFO, coalescing only adjacent queued changes to
     the same field. Each admitted command owns one paired Undo step. Up to 64
     waiting intents are retained; excess input refuses without dropping a job.
 
@@ -124,7 +125,6 @@ type
     FState: TNyxSourceCommandState;
     FMessage: TNyxText;
     FSequence: Integer;
-    FLatestSourceSequence: Integer;
     FActive: TNyxEditorSourceJob;
     FQueue: array of TNyxEditorSourceJob;
     FRunning: Boolean;
@@ -181,6 +181,8 @@ type
       const AView: TNyxControlRef; const ARequest: INyxCanvasRouteAdoptionRequest);
     procedure Enqueue(const AJob: TNyxEditorSourceJob);
     procedure ClearQueue;
+    { Retire the active lifetime without discarding other queued intents. }
+    procedure CancelActive;
     procedure StartQueued;
     { Continue a detached executed-source proposal without releasing the FIFO
       head. Only the actual compiler's guarded completion can publish it. }
@@ -199,6 +201,13 @@ type
     { Capture the exact draft; repeated Apply supersedes prior Apply while design
       commands retain their order and their own fresh paired/draft guards. }
     procedure Apply;
+    { Apply only this retained source buffer. Repeated waiting intents coalesce
+      per file; other files retain FIFO order and their independent drafts. }
+    procedure ApplyFile(const AFile: TNyxPascalSourceRef);
+    { Retire only this file's waiting/running Apply intent. Other files and
+      visual commands retain FIFO ownership; shared uncertainty still freezes
+      the ordinary bridge for explicit reconciliation. }
+    procedure CancelFile(const AFile: TNyxPascalSourceRef);
     { Install/remove the trusted execution strategy while this context is idle.
       Configuration is host-owned and never saved in the design or history.
       Existing drafts and literal authoring remain valid without a compiler. }
@@ -566,6 +575,14 @@ begin
       begin
         LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
       end;
+    end
+    else if (AOutcome = npoRefused) and (DesignProposal = nil) and
+      (AProjection <> nil) and (AProjection.State <> spsExecuted) and
+      (AProjection.Source = ExpectedSource) then
+    begin
+      { Failure data grants no admission. Retain its exact source diagnostic so
+        a selected-helper refusal can be displayed beside that pending buffer. }
+      LDelivery.Source := PrepareNyxProjectedSource(AProjection, Schemas);
     end;
   except
     on LException: Exception do
@@ -779,6 +796,11 @@ begin
 end;
 
 procedure TNyxSourceCommands.Apply;
+begin
+  ApplyFile(TNyxPascalSourceRef.Main);
+end;
+
+procedure TNyxSourceCommands.ApplyFile(const AFile: TNyxPascalSourceRef);
 var
   LJob: TNyxEditorSourceJob;
   LIndex: Integer;
@@ -791,12 +813,13 @@ begin
   LJob.Sequence := NextSequence;
   LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
   try
-    LJob.Source := FSession.PrepareSourceRequest(LJob.Schemas.Value.Revision);
+    LJob.Source := FSession.PrepareFileRequest(AFile, LJob.Schemas.Value.Revision);
     LCount := 0;
     for LIndex := 0 to High(FQueue) do
     begin
 
-      if FQueue[LIndex].Kind <> eskPascal then
+      if (FQueue[LIndex].Kind <> eskPascal) or
+        not FQueue[LIndex].Source.FileReference.SameFile(AFile) then
       begin
         Inc(LCount);
       end;
@@ -812,7 +835,8 @@ begin
     for LIndex := 0 to High(FQueue) do
     begin
 
-      if FQueue[LIndex].Kind <> eskPascal then
+      if (FQueue[LIndex].Kind <> eskPascal) or
+        not FQueue[LIndex].Source.FileReference.SameFile(AFile) then
       begin
         FQueue[LCount] := FQueue[LIndex];
         Inc(LCount);
@@ -823,11 +847,16 @@ begin
       end;
     end;
     SetLength(FQueue, LCount);
-    FLatestSourceSequence := LJob.Sequence;
+
+    if FRunning and (FActive.Kind = eskPascal) and
+      FActive.Source.FileReference.SameFile(AFile) then
+    begin
+      FDiscardActive := True;
+    end;
 
     if not LJob.Source.Changed then
     begin
-      FSession.DiscardSourceDraft;
+      FSession.DiscardFileDraft(AFile);
 
       if Busy then
       begin
@@ -1442,6 +1471,7 @@ var
   LCompilationCount: Integer;
   LSharedPort: TSharedCompilationPort;
   LSharedLease: INyxSharedSourceCompilationPort;
+  LPreparationHost: INyxSharedDesignPreparationHost;
   {$ifdef PAS2JS}
   LProposal: INyxPreparedDesign;
   {$endif}
@@ -1488,10 +1518,25 @@ begin
     begin
       FActive.Design := FSession.PrepareDesignRequest(FActive.Edit, FActive.Schemas.Value.Revision);
     end;
+
+    if FActive.Kind = eskPascal then
+    begin
+      FActive.Source := FSession.RefreshFileRequest(FActive.Source, FActive.Schemas.Value.Revision);
+
+      if FActive.Source.IsFileEdit and (FCompiler = nil) and (FSharedHost = nil) then
+      begin
+        raise ENyxModel.Create('Configure a project source compiler before applying a supporting file');
+      end;
+    end;
     FRunning := True;
 
     if (FActive.Kind = eskDesign) and FActive.Design.RequiresExecution then
     begin
+
+      if Supports(FSharedHost, INyxSharedDesignPreparationHost, LPreparationHost) then
+      begin
+        LPreparationHost.ReserveDesign(FActive.Design);
+      end;
 
       if (FCompiler = nil) and (FSharedHost = nil) then
       begin
@@ -1540,7 +1585,16 @@ begin
         LSharedPort.Schemas := FActive.Schemas.Value;
         LSharedPort.Sequence := FActive.Sequence;
         LSharedPort.ExpectedSource := FActive.Source.Source;
-        FCompilation := FSharedHost.Start(FActive.Source.Source, LSharedLease);
+
+        if FActive.Source.IsFileEdit then
+        begin
+          FCompilation := StartNyxSharedFileCompilation(FSharedHost,
+            FActive.Source, LSharedLease);
+        end
+        else
+        begin
+          FCompilation := FSharedHost.Start(FActive.Source.Source, LSharedLease);
+        end;
       end
       else
       begin
@@ -1618,6 +1672,11 @@ begin
     on LException: Exception do
     begin
       {$ifdef PAS2JS}RetireWorker;{$endif}
+
+      if Supports(FSharedHost, INyxSharedDesignPreparationHost, LPreparationHost) then
+      begin
+        LPreparationHost.ReleaseDesignPreparation;
+      end;
       FCompilation := nil;
       FRunning := False;
       RetireJob(FActive);
@@ -1657,6 +1716,7 @@ var
   LAdoption: INyxCanvasRouteAdoptionRequest;
   LDiagramSave: INyxDiagramSaveRequest;
   LAdopted: Boolean;
+  LPreparationHost: INyxSharedDesignPreparationHost;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   LAdmissionStarted: QWord;
   LNotificationStarted: QWord;
@@ -1683,11 +1743,17 @@ begin
       end;
     end;
   end;
+  { No compiler was started for a diagnostic/no-op preparation. Release only
+    that phase; an active compiler or observing acknowledgement stays owned. }
+
+  if Supports(FSharedHost, INyxSharedDesignPreparationHost, LPreparationHost) then
+  begin
+    LPreparationHost.ReleaseDesignPreparation;
+  end;
   FRunning := False;
   FCompilation := nil;
 
-  if not FDiscardActive and ((FActive.Kind in [eskDesign, eskProject]) or
-    (ASequence = FLatestSourceSequence)) then
+  if not FDiscardActive then
   begin
     {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
     LAdmissionStarted := GetTickCount64;
@@ -1746,7 +1812,9 @@ begin
               end
               else if FActive.Kind = eskPascal then
               begin
-                LMessage := FSession.SourceDiagnostic.Message;
+                { The user may now be viewing another buffer. Report this exact
+                  job's rejection without borrowing the active-file diagnostic. }
+                LMessage := ASource.Diagnostic.Message;
               end
               else
               begin
@@ -1901,8 +1969,7 @@ begin
   LMessage := AMessage;
   try
 
-    if FDiscardActive or ((FActive.Kind = eskPascal) and
-      (ASequence <> FLatestSourceSequence)) then
+    if FDiscardActive then
     begin
       FSharedHost.Abandon(npoUnconfirmed, 'A newer Apply superseded the shared result');
       Finish(ASequence, nil, nil, 'Shared result needs reconciliation with the current draft');
@@ -1917,6 +1984,16 @@ begin
         LMessage := 'Shared source compilation did not confirm publication';
       end;
       FSharedHost.Abandon(AOutcome, LMessage);
+
+      if (AOutcome = npoRefused) and (FActive.Kind = eskPascal) and
+        FActive.Source.IsFileEdit and (ASource <> nil) and ASource.Diagnostic.Defined then
+      begin
+        { The diagnostic-only sealed completion checks the exact current buffer
+          before recording its message. No shared/local pair is published. }
+        LCompletion := FSession.CompleteSourceRequest(FActive.Source, ASource);
+        Finish(ASequence, ASource, nil, '', True, LCompletion);
+        Exit;
+      end;
       Finish(ASequence, nil, nil, LMessage);
       Exit;
     end;
@@ -1948,6 +2025,50 @@ begin
   FScheduler.RequireUI;
   NextSequence;
   ClearQueue;
+  CancelActive;
+end;
+
+procedure TNyxSourceCommands.CancelFile(const AFile: TNyxPascalSourceRef);
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  FScheduler.RequireUI;
+  AFile.Validate;
+
+  if FRunning and (FActive.Kind = eskPascal) and
+    FActive.Source.FileReference.SameFile(AFile) then
+  begin
+    NextSequence;
+  end;
+  LCount := 0;
+  for LIndex := 0 to High(FQueue) do
+  begin
+
+    if (FQueue[LIndex].Kind = eskPascal) and
+      FQueue[LIndex].Source.FileReference.SameFile(AFile) then
+    begin
+      FQueue[LIndex].Schemas.Free;
+    end
+    else
+    begin
+      FQueue[LCount] := FQueue[LIndex];
+      Inc(LCount);
+    end;
+  end;
+  SetLength(FQueue, LCount);
+
+  if FRunning and (FActive.Kind = eskPascal) and
+    FActive.Source.FileReference.SameFile(AFile) then
+  begin
+    CancelActive;
+  end;
+  StartQueued;
+end;
+
+procedure TNyxSourceCommands.CancelActive;
+begin
+  FScheduler.RequireUI;
   FDiscardActive := True;
 
   if FActive.Schemas <> nil then
@@ -2365,15 +2486,24 @@ begin
 
     if ANode.ID = CApply then
     begin
-      Apply;
+      ApplyFile(FSession.ActiveSourceFile);
       Exit(True);
     end;
 
     if ANode.ID = CRestore then
     begin
-      Cancel;
-      FSession.DiscardSourceDraft;
-      Notify(nssIdle, 'Accepted Pascal restored', False, sdaProperty, False, True);
+      FSession.DiscardFileDraft(FSession.ActiveSourceFile);
+      CancelFile(FSession.ActiveSourceFile);
+
+      if Busy then
+      begin
+        Notify(nssPreparing, 'Selected file restored / other pending work retained',
+          False, sdaProperty, False, True);
+      end
+      else
+      begin
+        Notify(nssIdle, 'Accepted Pascal restored', False, sdaProperty, False, True);
+      end;
       Exit(True);
     end;
 

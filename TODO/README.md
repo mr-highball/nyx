@@ -3,12 +3,14 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
-Current-source [independent source-file buffers](../docs/pascal-projects.md#independent-source-file-buffers)
-retain unfinished helper text and first bases through session/project/history and
-cold recovery. WORK.md separates native compiler/data evidence from browser
-compilation. File selection, selected-helper application/publication and ordinary
-physical editor input remain the next authoring integration; no full original
-criterion/task or completion credit closes from the data prerequisite.
+Current-source [selected-file authoring](../docs/pascal-projects.md#selecting-and-applying-a-source-file)
+uses the retained Nyx source editor for main units, supporting units and includes.
+Ordinary native wide/compact controls qualify selected-file compilation, independent
+drafts, scoped Restore and paired history through local/connected providers.
+WORK.md separates that evidence from compiled-only browser adapters. Bounded
+semantic helper editing, general navigation/completion, file management, ordinary
+browser input and full quality/parity/delivery retain their existing owners;
+no full original criterion/task or completion credit closes.
 
 Current-source [ordinary project compiler commands](../docs/pascal-projects.md#ordinary-compiler-commands)
 carry supporting files through queued Open/Apply/visual edits, private compiler

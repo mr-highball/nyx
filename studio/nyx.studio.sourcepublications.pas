@@ -241,7 +241,7 @@ var
 begin
   LBuffer := ABaseline.Source;
 
-  if ABaseline.Pending then
+  if ABaseline.Pending and not ARequest.IsFileEdit then
   begin
     LBuffer := ABaseline.Draft;
   end;

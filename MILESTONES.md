@@ -25,16 +25,18 @@ application/view builds. Optional whole-registry framing now retains helper
 contexts across cold recovery; semantic project review compiles its own incoming
 files before ticketed adoption. WORK.md owns actual native command/tool/history
 evidence separately from browser compilation. This advances NS-4 project authoring
-and NS-5 owned compiler inputs; dedicated helper editing/drafts, ordinary observing
+and NS-5 owned compiler inputs; broader file management, ordinary browser observing
 input, full cache/reload/quality/parity/delivery and completion credit
 remain open. No original full criterion or task closes from this prerequisite.
 
 The [source-file buffer prerequisite](docs/pascal-projects.md#independent-source-file-buffers)
 retains unfinished helpers and their independent bases through session copies,
 paired history and cold recovery. WORK.md owns native data/compiler evidence and
-compiled-only browser limits. Selection, guarded helper application/publication
-and ordinary source-editor input remain the next user-visible authoring work;
-this prerequisite changes no full criterion/task or completion credit.
+compiled-only browser limits. Typed file selection, guarded helper application/
+publication and scoped Restore now share the ordinary source editor, with actual
+wide/compact native local/connected compiler input. Bounded semantic helper editing,
+general source navigation/completion, file management and ordinary browser input
+remain open. This changes no full criterion/task or completion credit.
 
 Current-source [indexed immutable routing](docs/diagrams.md) removes repeated
 name scans and duplicate per-projection routes while retaining declared order,

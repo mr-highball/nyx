@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.shared.native;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.scheduler, nyx.studio.transport,
+  nyx.text, nyx.data, nyx.pascal.drafts, nyx.scheduler, nyx.studio.transport,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared;
 
 type
@@ -178,18 +178,21 @@ type
     Workspace: TNyxWorkspaceRef;
     Revision: Integer;
     Intent: TNyxDataValue;
+    FileReference: TNyxPascalSourceRef;
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
+  { Owns native shared jobs until join. Each idle compiler captures one explicit
+    main/visual/helper intent and cannot borrow its editor or later buffers. }
   TNativeSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
-    INyxSharedVisualSourceCompilerFactory, INativeSourceOwner)
+    INyxSharedVisualSourceCompilerFactory, INyxSharedFileSourceCompilerFactory, INativeSourceOwner)
   private
     FJobs: array of INyxSourceCompilation;
     function Compiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
-      const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+      const AIntent: TNyxDataValue; const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
   public
     Transport: INyxNativeSourceTransport;
     Options: TNyxNativeSourceServiceOptions;
@@ -200,6 +203,9 @@ type
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+    function CreateFileCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
     function Submit(AOperation: TNativeSharedOperation): INyxSourceCompilation;
   end;
 
@@ -699,6 +705,7 @@ begin
   end;
 
   LOperation.Arguments := WithNyxSourceProjectFiles(LOperation.Arguments, AFiles);
+  LOperation.Arguments := WithNyxSourceFile(LOperation.Arguments, FileReference);
 
   if NyxUTF8ByteCount(NyxWithWorkspace(NyxObject([
     NyxField('compile', LOperation.Arguments)]), Workspace).ToJSON) >
@@ -714,7 +721,7 @@ end;
 
 function TNativeSharedFactory.Compiler(const ACapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
-  const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+  const AIntent: TNyxDataValue; const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
 var
   LCompiler: TNativeSharedCompiler;
 begin
@@ -735,12 +742,14 @@ begin
   LCompiler.Workspace := AWorkspace;
   LCompiler.Revision := ARevision;
   LCompiler.Intent := AIntent.Copy;
+  LCompiler.FileReference := AFile;
 end;
 
 function TNativeSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
 begin
-  Result := Compiler(ACapability, AIssuer, AWorkspace, ARevision, NyxNull);
+  Result := Compiler(ACapability, AIssuer, AWorkspace, ARevision, NyxNull,
+    TNyxPascalSourceRef.Main);
 end;
 
 function TNativeSharedFactory.CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
@@ -748,7 +757,21 @@ function TNativeSharedFactory.CreateVisualCompiler(const ACapability, AIssuer: T
   const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
 begin
   ReadNyxStudioDesignIntent(AIntent);
-  Result := Compiler(ACapability, AIssuer, AWorkspace, ARevision, AIntent);
+  Result := Compiler(ACapability, AIssuer, AWorkspace, ARevision, AIntent,
+    TNyxPascalSourceRef.Main);
+end;
+
+function TNativeSharedFactory.CreateFileCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    raise ENyxModel.Create('Selected-file compilation requires a supporting file');
+  end;
+  Result := Compiler(ACapability, AIssuer, AWorkspace, ARevision, NyxNull, AFile);
 end;
 
 function TNativeSharedFactory.Submit(AOperation: TNativeSharedOperation): INyxSourceCompilation;

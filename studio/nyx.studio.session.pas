@@ -86,9 +86,15 @@ type
     FAccepted: TNyxText;
     FCheckpoint: TNyxSourceCheckpoint;
     FSource: TNyxText;
+    FInputFiles: TNyxPascalProjectFiles;
+    FFile: TNyxPascalSourceRef;
+    FFileBase: TNyxText;
+    { Shared/local publication must record the same dispatch-time Undo frame.
+      Later unrelated typing stays current and is captured in opposite history. }
+    FUndo: TNyxStudioCheckpoint;
     { Ordinary Apply captures its current draft; an explicit source-range edit
       captures the unchanged buffer and keeps its proposed text off the editor.
-      Both completion paths refuse any intervening buffer change. }
+      Both completion paths refuse intervening changes to that selected buffer. }
     FBufferBaseline: TNyxText;
     FSourceEdit: Boolean;
     FSchemaRevision: Integer;
@@ -100,13 +106,17 @@ type
     { Closed captured construction origin. This lets a host choose its explicit
       compiler dispatch without guessing from comments or raw source strings. }
     property Origin: TNyxSourceOrigin read GetOrigin;
-    { Frozen accepted supporting files follow this exact main-source request.
-      A compiler reconstructs its candidate project against Source, never against
-      later editor buffers. The record contains managed text only. }
+    { Frozen candidate supporting files include only the selected helper edit;
+      other files remain accepted inputs. The compiler reconstructs this exact
+      project against Source, never later editor buffers. Managed text only. }
     property Files: TNyxPascalProjectFiles read GetFiles;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
     property IsSourceEdit: Boolean read FSourceEdit;
+    { The selected file alone supplies unfinished input. Other helper/main
+      buffers remain outside this captured compiler candidate. }
+    property FileReference: TNyxPascalSourceRef read FFile;
+    function IsFileEdit: Boolean;
   end;
 
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
@@ -462,8 +472,13 @@ type
       it lazily after any admitted accepted-input change. }
     FFileInputCache: INyxPascalProject;
     FFileInputKey: TNyxText;
+    { Presentation belongs to this editor context, never accepted source/history. }
+    FActiveSourceFile: TNyxPascalSourceRef;
     FSourceDiagnostic: TNyxSourceDiagnostic;
     FSourceDiagnosticSource: TNyxText;
+    { The latest rejection belongs to one exact editable buffer. Helper compiler
+      errors keep their message; legacy scalar mapping grants main sites only. }
+    FSourceDiagnosticFile: TNyxPascalSourceRef;
     FSourceIdentity: TNyxText;
     FSourceGeneration: Integer;
     FSelectedID: TNyxText;
@@ -475,6 +490,9 @@ type
     FCallbackReservedSource: TNyxText;
     function GetSourceDiagnostic: TNyxSourceDiagnostic;
     function SourceFileInputs: INyxPascalProject;
+    function GetActiveSourceFile: TNyxPascalSourceRef;
+    procedure SetActiveSourceFile(const AFile: TNyxPascalSourceRef);
+    function GetActiveSourceText: TNyxText;
     procedure DoApplySourceDraft;
     function NewID(const AKind: TNyxText): TNyxText;
     { Construction-only empty owners, with one private session identity. Does
@@ -513,6 +531,11 @@ type
     procedure PublishCapturedPair(var ACandidate: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
       ARememberDraft: Boolean = True; AAllowProjectFiles: Boolean = False);
+    { Same atomic owner transfer with an explicit immutable Undo baseline.
+      Source commands capture it before independent compiler work begins. }
+    procedure PublishHistoryPair(var ACandidate: TNyxDocument;
+      var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
+      const AHistory: TNyxStudioCheckpoint; AAllowProjectFiles: Boolean);
     { Shared final publication for fully admitted independent owners. Success
       transfers/clears them; wrappers release them on refusal or an exact no-op. }
     procedure AdoptAdmittedProject(var ADocument: TNyxDocument;
@@ -750,6 +773,15 @@ type
       main draft contract; auxiliaries keep their first accepted base until an
       explicit discard or a future acknowledged file application. }
     function SourceFileText(const AFile: TNyxPascalSourceRef): TNyxText;
+    { Stable current inventory order, with the main buffer at zero. Returned
+      references are values; missing members after project changes refuse. }
+    function SourceFileCount: Integer;
+    function SourceFile(AIndex: Integer): TNyxPascalSourceRef;
+    { Display a typed leaf without reading every helper's text. Main resolves
+      the current namespace; membership is enforced when selecting/reading. }
+    function SourceFileTitle(const AFile: TNyxPascalSourceRef): TNyxText;
+    property ActiveSourceFile: TNyxPascalSourceRef read GetActiveSourceFile write SetActiveSourceFile;
+    property ActiveSourceText: TNyxText read GetActiveSourceText;
     function DraftFileText(const AFile: TNyxPascalSourceRef): TNyxText;
     procedure SetFileDraft(const AFile: TNyxPascalSourceRef; const AText: TNyxText);
     procedure DiscardFileDraft(const AFile: TNyxPascalSourceRef);
@@ -768,6 +800,14 @@ type
       then transfers both owners through one paired Undo entry. Rejected/stale
       results never replace the accepted pair or erase the current draft. }
     function PrepareSourceRequest(ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    { Capture one helper against accepted complete inputs. A stale first base
+      refuses; unfinished unrelated files never enter compilation. }
+    function PrepareFileRequest(const AFile: TNyxPascalSourceRef;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    { FIFO dispatch may follow another file's Apply. Rebase only when this
+      selected file/buffer/base and project load still match their exact ticket. }
+    function RefreshFileRequest(const ARequest: TNyxStudioSourceRequest;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
     { Capture an explicit whole-source proposal without replacing the visible
       buffer. Pending drafts and unchanged proposals refuse. This sealed value
       grants no execution; an owning host must supply an admitted processor
@@ -843,9 +883,18 @@ type
     Document: TNyxDocument;
     Workspace: TNyxSourceWorkspace;
     Checkpoint: TNyxSourceCheckpoint;
-    { Visual publication preserves an independent unfinished buffer in history.
-      Source Apply leaves False because it consumes that exact staging buffer. }
+    { Fallback publication retains an independent main draft when requested.
+      Selected-file and visual completions supply CapturedHistory explicitly. }
     RememberDraft: Boolean;
+    { Only a sealed selected-helper command may replace the captured inventory. }
+    AllowProjectFiles: Boolean;
+    { Prepared before publication, so consuming a helper buffer cannot allocate
+      or fail after the accepted owners and paired history have been swapped. }
+    RemainingFileDrafts: TNyxPascalFileDrafts;
+    { Explicit source/visual requests retain their dispatch frame. Other admitted
+      operations use the current-buffer policy through PublishCapturedPair. }
+    UseCapturedHistory: Boolean;
+    CapturedHistory: TNyxStudioCheckpoint;
     destructor Destroy; override;
     procedure Execute;
   end;
@@ -887,7 +936,22 @@ procedure TSourcePairPublication.Execute;
 begin
   { Source Apply consumes its staging buffer; visual editing retains it. Both
     use the same atomic owner swap with their explicit history policy. }
-  Session.PublishCapturedPair(Document, Workspace, Checkpoint, RememberDraft);
+
+  if UseCapturedHistory then
+  begin
+    Session.PublishHistoryPair(Document, Workspace, Checkpoint, CapturedHistory,
+      AllowProjectFiles);
+  end
+  else
+  begin
+    Session.PublishCapturedPair(Document, Workspace, Checkpoint, RememberDraft,
+      AllowProjectFiles);
+  end;
+
+  if AllowProjectFiles then
+  begin
+    Session.FFileDrafts := RemainingFileDrafts;
+  end;
 end;
 
 constructor TNyxStudioSession.CreateRecovered(const AFrame: TNyxStudioRecoveryFrame);
@@ -1003,6 +1067,7 @@ begin
   FFileDrafts := AOrigin.FFileDrafts;
   FSourceDiagnostic := AOrigin.FSourceDiagnostic;
   FSourceDiagnosticSource := AOrigin.FSourceDiagnosticSource;
+  FSourceDiagnosticFile := AOrigin.FSourceDiagnosticFile;
   FSourceIdentity := AOrigin.FSourceIdentity;
   FSourceGeneration := AOrigin.FSourceGeneration;
   FSelectedID := AOrigin.FSelectedID;
@@ -1527,12 +1592,22 @@ end;
 procedure TNyxStudioSession.PublishCapturedPair(var ACandidate: TNyxDocument;
   var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
   ARememberDraft: Boolean; AAllowProjectFiles: Boolean);
+begin
+  PublishHistoryPair(ACandidate, AWorkspace, ACheckpoint,
+    NyxStudioCheckpoint(ACheckpoint, FSourceDraft, FSourceDraftBase,
+      ARememberDraft and FSourceDraftPending, FFileDrafts), AAllowProjectFiles);
+end;
+
+procedure TNyxStudioSession.PublishHistoryPair(var ACandidate: TNyxDocument;
+  var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint;
+  const AHistory: TNyxStudioCheckpoint; AAllowProjectFiles: Boolean);
 var
   LPrevious: TNyxDocument;
   LPreviousSource: TNyxSourceWorkspace;
 begin
   { Source-only/visual commands cannot accidentally drop or replace helper
-    meaning. Only complete project admission may change that inventory. Check
+    meaning. Complete project admission and a sealed selected-helper command may
+    change that inventory. Check
     before history allocation/publication, preserving both staged owners. }
 
   if not AAllowProjectFiles and
@@ -1540,8 +1615,13 @@ begin
   begin
     raise ENyxProjectConflict.Create('This command did not retain the exact supporting Pascal files');
   end;
-  FUndo.Add(NyxStudioCheckpoint(ACheckpoint,
-    FSourceDraft, FSourceDraftBase, ARememberDraft and FSourceDraftPending, FFileDrafts));
+
+  if (AHistory.Source <> ACheckpoint.Source) or (AHistory.Design <> ACheckpoint.Design) or
+    (AHistory.Frame.Files.Encoded <> ACheckpoint.Files.Encoded) then
+  begin
+    raise ENyxProjectConflict.Create('Source Undo baseline does not match its accepted checkpoint');
+  end;
+  FUndo.Add(AHistory);
   { No fallible reconciliation follows publication. Source edits already have
     their exact admitted companion; regenerating that unused intermediate would
     reject valid authored arrangements and perform the same work twice. }
@@ -2579,6 +2659,7 @@ begin
   FFileDrafts := Default(TNyxPascalFileDrafts);
   FFileInputCache := nil;
   FFileInputKey := '';
+  FActiveSourceFile := TNyxPascalSourceRef.Main;
   FUndo.Clear;
   FRedo.Clear;
 end;
@@ -2776,6 +2857,7 @@ begin
   FNextID := 0;
   DiscardSourceDraft;
   FFileDrafts := AResolved.FileDrafts;
+  FActiveSourceFile := TNyxPascalSourceRef.Main;
 
   if AResolved.Pending then
   begin
@@ -3166,6 +3248,87 @@ begin
   Result := FFileInputCache;
 end;
 
+function TNyxStudioSession.GetActiveSourceFile: TNyxPascalSourceRef;
+var
+  LIndex: Integer;
+begin
+  Result := TNyxPascalSourceRef.Main;
+  for LIndex := 0 to SourceFileCount - 1 do
+  begin
+
+    if SourceFile(LIndex).SameFile(FActiveSourceFile) then
+    begin
+      Exit(FActiveSourceFile);
+    end;
+  end;
+end;
+
+procedure TNyxStudioSession.SetActiveSourceFile(const AFile: TNyxPascalSourceRef);
+begin
+  SourceFileText(AFile);
+  FActiveSourceFile := AFile;
+end;
+
+function TNyxStudioSession.GetActiveSourceText: TNyxText;
+begin
+  Result := DraftFileText(ActiveSourceFile);
+end;
+
+function TNyxStudioSession.SourceFileCount: Integer;
+begin
+  Result := 1;
+
+  if not FSourceWorkspace.Capture.Files.IsEmpty then
+  begin
+    Inc(Result, SourceFileInputs.Count);
+  end;
+end;
+
+function TNyxStudioSession.SourceFile(AIndex: Integer): TNyxPascalSourceRef;
+var
+  LInput: INyxPascalInput;
+begin
+
+  if (AIndex < 0) or (AIndex >= SourceFileCount) then
+  begin
+    raise ENyxModel.Create('Source file index is outside this project');
+  end;
+
+  if AIndex = 0 then
+  begin
+    Exit(TNyxPascalSourceRef.Main);
+  end;
+  LInput := SourceFileInputs.Input(AIndex - 1);
+
+  if LInput.Kind = npiUnit then
+  begin
+    Result := TNyxPascalSourceRef.UnitFile(LInput.UnitReference);
+  end
+  else
+  begin
+    Result := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude(LInput.Name));
+  end;
+end;
+
+function TNyxStudioSession.SourceFileTitle(const AFile: TNyxPascalSourceRef): TNyxText;
+begin
+  AFile.Validate;
+
+  if AFile.Role <> npsMain then
+  begin
+    Exit(AFile.Name);
+  end;
+
+  if not FSourceWorkspace.Capture.Files.IsEmpty then
+  begin
+    Result := SourceFileInputs.MainUnit.Name + '.pas';
+  end
+  else
+  begin
+    Result := NyxCompanionUnitName(Source) + '.pas';
+  end;
+end;
+
 function TNyxStudioSession.SourceFileText(const AFile: TNyxPascalSourceRef): TNyxText;
 begin
   AFile.Validate;
@@ -3204,6 +3367,12 @@ begin
     Exit;
   end;
   FFileDrafts := FFileDrafts.Editing(AFile, SourceFileText(AFile), AText);
+
+  if FSourceDiagnosticFile.SameFile(AFile) then
+  begin
+    FSourceDiagnostic := Default(TNyxSourceDiagnostic);
+    FSourceDiagnosticSource := '';
+  end;
 end;
 
 procedure TNyxStudioSession.DiscardFileDraft(const AFile: TNyxPascalSourceRef);
@@ -3217,6 +3386,12 @@ begin
   else
   begin
     FFileDrafts := FFileDrafts.Without(AFile);
+
+    if FSourceDiagnosticFile.SameFile(AFile) then
+    begin
+      FSourceDiagnostic := Default(TNyxSourceDiagnostic);
+      FSourceDiagnosticSource := '';
+    end;
   end;
 end;
 
@@ -3335,7 +3510,12 @@ end;
 
 function TNyxStudioSourceRequest.GetFiles: TNyxPascalProjectFiles;
 begin
-  Result := FCheckpoint.Files;
+  Result := FInputFiles;
+end;
+
+function TNyxStudioSourceRequest.IsFileEdit: Boolean;
+begin
+  Result := FFile.Role <> npsMain;
 end;
 
 function TNyxStudioSession.PrepareSourceRequest(
@@ -3348,7 +3528,11 @@ begin
   Result.FOwner := FSourceIdentity;
   Result.FGeneration := FSourceGeneration;
   Result.FAccepted := LAccepted;
+  Result.FFileBase := LAccepted;
   Result.FCheckpoint := FSourceWorkspace.Capture;
+  Result.FUndo := NyxStudioCheckpoint(Result.FCheckpoint, '', '', False, FFileDrafts);
+  Result.FInputFiles := Result.FCheckpoint.Files;
+  Result.FFile := TNyxPascalSourceRef.Main;
   Result.FSource := DraftSource;
   Result.FBufferBaseline := Result.FSource;
   Result.FSchemaRevision := ASchemaRevision;
@@ -3360,6 +3544,80 @@ begin
       'The design changed while this draft was open. Save the draft, restore ' +
       'accepted Pascal and merge your edits before applying', Result.FSource, 1);
   end;
+end;
+
+function TNyxStudioSession.PrepareFileRequest(const AFile: TNyxPascalSourceRef;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LProject: INyxPascalProject;
+  LInput: INyxPascalInput;
+  LIndex: Integer;
+begin
+  AFile.Validate;
+
+  if AFile.Role = npsMain then
+  begin
+    Exit(PrepareSourceRequest(ASchemaRevision));
+  end;
+  Result := Default(TNyxStudioSourceRequest);
+  Result.FOwner := FSourceIdentity;
+  Result.FGeneration := FSourceGeneration;
+  Result.FCheckpoint := FSourceWorkspace.Capture;
+  Result.FUndo := NyxStudioCheckpoint(Result.FCheckpoint,
+    FSourceDraft, FSourceDraftBase, FSourceDraftPending, FFileDrafts);
+  Result.FAccepted := Source;
+  Result.FSource := Result.FAccepted;
+  Result.FInputFiles := Result.FCheckpoint.Files;
+  Result.FFile := AFile;
+  Result.FFileBase := SourceFileText(AFile);
+  Result.FBufferBaseline := DraftFileText(AFile);
+  Result.FSchemaRevision := ASchemaRevision;
+  Result.FChanged := Result.FFileBase <> Result.FBufferBaseline;
+
+  if not Result.FChanged then
+  begin
+    Exit;
+  end;
+
+  if FFileDrafts.Draft(AFile).Base <> Result.FFileBase then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'This file changed after the draft began. Save or merge the draft before applying');
+  end;
+  LProject := SourceFileInputs;
+  for LIndex := 0 to LProject.Count - 1 do
+  begin
+    LInput := LProject.Input(LIndex);
+
+    if LInput.Name = AFile.Name then
+    begin
+
+      if AFile.Role = npsUnit then
+      begin
+        LProject := LProject.WithUnit(LInput.UnitReference, Result.FBufferBaseline);
+      end
+      else
+      begin
+        LProject := LProject.WithInclude(NyxPascalInclude(LInput.Name), Result.FBufferBaseline);
+      end;
+      Break;
+    end;
+  end;
+  Result.FInputFiles := TNyxPascalProjectFiles.Capture(LProject);
+end;
+
+function TNyxStudioSession.RefreshFileRequest(const ARequest: TNyxStudioSourceRequest;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+begin
+
+  if ARequest.IsSourceEdit or (ARequest.FOwner <> FSourceIdentity) or
+    (ARequest.FGeneration <> FSourceGeneration) or
+    (SourceFileText(ARequest.FFile) <> ARequest.FFileBase) or
+    (DraftFileText(ARequest.FFile) <> ARequest.FBufferBaseline) then
+  begin
+    raise ENyxProjectConflict.Create('Queued file Apply no longer matches its selected buffer');
+  end;
+  Result := PrepareFileRequest(ARequest.FFile, ASchemaRevision);
 end;
 
 function TNyxStudioSession.PrepareSourceEditRequest(const ASource: TNyxText;
@@ -3393,6 +3651,7 @@ var
   LPublication: TSourcePairPublication;
   LAction: INyxSchemaAction;
   LActiveView: TNyxNode;
+  LRemainingFileDrafts: TNyxPascalFileDrafts;
 begin
   Result := nscStale;
 
@@ -3417,14 +3676,14 @@ begin
   if (LAccepted <> ARequest.FAccepted) or
     (LCheckpoint.Design <> ARequest.FCheckpoint.Design) or
     (LCheckpoint.Files.Encoded <> ARequest.FCheckpoint.Files.Encoded) or
-    (DraftSource <> ARequest.FBufferBaseline) then
+    (DraftFileText(ARequest.FFile) <> ARequest.FBufferBaseline) then
   begin
     Exit;
   end;
 
   if not ARequest.Changed then
   begin
-    DiscardSourceDraft;
+    DiscardFileDraft(ARequest.FFile);
     Exit(nscUnchanged);
   end;
 
@@ -3438,12 +3697,36 @@ begin
   begin
     FSourceDiagnostic := APrepared.Diagnostic;
     FSourceDiagnosticSource := ARequest.Source;
+    FSourceDiagnosticFile := ARequest.FileReference;
+
+    if ARequest.IsFileEdit then
+    begin
+      FSourceDiagnosticSource := ARequest.FBufferBaseline;
+      { Existing compiler mapping knows main coordinates. A helper error must
+        never invent a main-file caret or reuse it inside another buffer. }
+      FSourceDiagnostic.Line := 0;
+      FSourceDiagnostic.Column := 0;
+    end;
     Exit(nscRejected);
   end;
   LCandidate := nil;
   LWorkspace := nil;
   try
+    LRemainingFileDrafts := FFileDrafts;
+
+    if ARequest.IsFileEdit then
+    begin
+      LRemainingFileDrafts := FFileDrafts.Without(ARequest.FileReference);
+    end;
     APrepared.Take(LCandidate, LWorkspace);
+    { A provider cannot satisfy a helper command with a main-only result or a
+      different helper snapshot, even when both happen to construct equal UI. }
+
+    if (LWorkspace = nil) or
+      (LWorkspace.Capture.Files.Encoded <> ARequest.Files.Encoded) then
+    begin
+      raise ENyxProjectConflict.Create('Source completion has different supporting Pascal inputs');
+    end;
     { The trusted processor contract already completely admitted this independent
       pair. No mutable staged handle was exposed before Take; replay/validation
       on the UI would duplicate that work. Serialized project/MCP imports do not
@@ -3456,6 +3739,11 @@ begin
     LAction := LPublication;
     LPublication.Session := Self;
     LPublication.Checkpoint := LCheckpoint;
+    LPublication.RememberDraft := ARequest.IsFileEdit;
+    LPublication.AllowProjectFiles := ARequest.IsFileEdit;
+    LPublication.RemainingFileDrafts := LRemainingFileDrafts;
+    LPublication.UseCapturedHistory := True;
+    LPublication.CapturedHistory := ARequest.FUndo;
     LPublication.Document := LCandidate;
     LPublication.Workspace := LWorkspace;
     LCandidate := nil;
@@ -3465,7 +3753,16 @@ begin
     begin
       Exit;
     end;
-    DiscardSourceDraft;
+
+    if not ARequest.IsFileEdit then
+    begin
+      DiscardSourceDraft;
+    end
+    else
+    begin
+      FSourceDiagnostic := Default(TNyxSourceDiagnostic);
+      FSourceDiagnosticSource := '';
+    end;
 
     LActiveView := FDocument.Find(FActiveViewID);
 
@@ -3507,7 +3804,8 @@ begin
   Result := Default(TNyxSourceDiagnostic);
 
   if FSourceDiagnostic.Defined and
-    (FSourceDiagnosticSource = DraftSource) then
+    ActiveSourceFile.SameFile(FSourceDiagnosticFile) and
+    (FSourceDiagnosticSource = DraftFileText(FSourceDiagnosticFile)) then
   begin
     Result := FSourceDiagnostic;
   end;
@@ -3520,6 +3818,7 @@ begin
   LSource := DraftSource;
   FSourceDiagnostic := Default(TNyxSourceDiagnostic);
   FSourceDiagnosticSource := '';
+  FSourceDiagnosticFile := TNyxPascalSourceRef.Main;
   try
     DoApplySourceDraft;
   except

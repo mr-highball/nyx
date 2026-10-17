@@ -155,6 +155,7 @@ begin
   ADiagnostic.Defined := True;
   ADiagnostic.Line := LItem.SourceLine;
   ADiagnostic.Column := LItem.SourceColumn;
+  ASession.ActiveSourceFile := ASession.SourceFile(0);
   ADiagnostic.Message := NyxCompilerSeverityName(LItem.Severity) + ': ' + LItem.Message;
 end;
 

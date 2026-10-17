@@ -29,6 +29,11 @@ uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType
   Graphics, IntfGraphics, FPWritePNG, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.resources, nyx.resources.editor, nyx.resources.browser, nyx.binding.types,
   nyx.source, nyx.types, nyx.callbacks, nyx.scheduler,
+  nyx.codec, nyx.codegen, nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts,
+  nyx.studio.session, nyx.studio.agents, nyx.studio.recovery, nyx.studio.recovery.native,
+  nyx.studio.source,
+  nyx.studio.buildexecutor, nyx.studio.sourceprojection, nyx.studio.sourcecompilation.native,
+  nyx.test.compiled.runtime, nyx.test.pascal.project,
   nyx.studio.callbackedits, nyx.studio.callbackintent,
   nyx.studio.handleredits, nyx.studio.handlerintent,
   nyx.studio.sourcejobs,
@@ -39,6 +44,8 @@ uses Interfaces, SysUtils, Classes, Forms, Controls, StdCtrls, ExtCtrls, LCLType
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcecompilation.shared.native;
 
 type
+  { Exposes ordinary protected widget activation for actual native input;
+    the test borrows controls and never owns the renderer's widget lifetime. }
   TControlAccess = class(TControl);
   TSplitGripAccess = class(TNyxLCLSplitGrip);
   TObserver = class
@@ -326,6 +333,8 @@ end;
 
 {$include nyx.test.source.callback.controls.inc}
 
+{$include nyx.test.source.files.controls.inc}
+
 { The same maintained physical-control harness now consumes the real shared
   provider as well as local execution. All runtime/configuration paths belong to
   this NEW evidence home. No primary server/project, listener or enrollment is
@@ -540,7 +549,7 @@ begin
   try
 
     if ((ParamCount <> 4) and ((ParamCount <> 5) or
-      (ParamStr(5) <> '--callbacks-only'))) or
+      ((ParamStr(5) <> '--callbacks-only') and (ParamStr(5) <> '--source-files')))) or
       DirectoryExists(ParamStr(4)) or FileExists(ParamStr(4)) then
     begin
       raise Exception.Create('Supply repository, toolchain, compiled fixture home and NEW evidence home');
@@ -549,8 +558,12 @@ begin
     LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
       .RunningIn(IncludeTrailingPathDelimiter(ParamStr(4)) + 'runtime');
     LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
-    LSource := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/source.pas');
-    LExpected := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/expected.nyx');
+
+    if ParamStr(5) <> '--source-files' then
+    begin
+      LSource := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/source.pas');
+      LExpected := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/expected.nyx');
+    end;
     Application.Initialize;
     GObserver := TObserver.Create;
     Application.OnException := GObserver.Failed;
@@ -558,7 +571,12 @@ begin
     GForm.SetBounds(30, 30, 1280, 900);
     GForm.Show;
 
-    if ParamStr(5) = '--callbacks-only' then
+    if ParamStr(5) = '--source-files' then
+    begin
+      RunSourceFileControls(LDirectories, LTools);
+      WriteLn('PASS ', GChecks, ' actual source-file compiler/editor controls');
+    end
+    else if ParamStr(5) = '--callbacks-only' then
     begin
       RunSharedControls(LDirectories, LTools, LSource, LExpected);
       WriteLn('PASS ', GChecks, ' actual native semantic callback controls');

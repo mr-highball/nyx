@@ -74,7 +74,8 @@ begin
   ValidateContext(AIssuer, ARevision);
 
   if (ACheckpoint.Design = '') or (ACheckpoint.Design <> APair.Design) or
-    (ACheckpoint.Source <> APair.Source) then
+    (ACheckpoint.Source <> APair.Source) or
+    (ACheckpoint.Files.Encoded <> APair.Files.Encoded) then
   begin
     raise ENyxProjectConflict.Create('Source observation must capture the exact admitted pair');
   end;
@@ -152,6 +153,20 @@ begin
   begin
     SetLength(LFields, 6);
     LFields[5] := NyxField('executed', NyxData(True));
+
+    if not APair.Files.IsEmpty then
+    begin
+      { The authenticated pair already carries these exact inputs. Reconstruct
+        its complete private snapshot, so the legacy single-unit parser cannot
+        drop helpers or reject their admitted includes. No wire flag is added. }
+      APair.Files.Open(APair.Source);
+      SetLength(LFields, 7);
+      LFields[6] := NyxField('pascalFiles', TNyxDataValue.ParseJSON(APair.Files.Encoded));
+    end;
+  end
+  else if not APair.Files.IsEmpty then
+  begin
+    raise ENyxProjectConflict.Create('Supporting-file observation requires its executed private context');
   end;
   LWorkspace := TNyxSourceWorkspace.Create;
   try

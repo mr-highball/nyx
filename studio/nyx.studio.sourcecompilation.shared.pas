@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.shared;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.pascal.project, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
+  nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
   nyx.studio.sourcepublications, nyx.studio.workspaces,
   nyx.studio.session, nyx.source.preparation;
 
@@ -82,6 +82,15 @@ type
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
   end;
 
+  { Optional selected-file strategy. The owning backend reconstructs the one
+    acknowledged file edit; proposed inventories cannot grant publication. }
+  INyxSharedFileSourceCompilerFactory = interface(INyxSharedSourceCompilerFactory)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000015}']
+    function CreateFileCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
+  end;
+
   { UI-only revocable dispatch courier. Resume requests another queue dispatch;
     a detached controller ignores it. Hosts must not borrow controller pointers. }
   INyxSharedSourceDispatch = interface(IInterface)
@@ -124,6 +133,46 @@ type
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
   end;
 
+  { Revocable UI-only selected-file dispatch. It reserves the same acknowledged
+    pair as Apply; existing Admit verifies and consumes the sealed file request. }
+  INyxSharedFileSourceHost = interface(INyxSharedSourceHost)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000016}']
+    function StartFile(const ARequest: TNyxStudioSourceRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+  end;
+
+  { Optional two-phase visual lifetime. Reserve the acknowledged frame before
+    off-thread proposal preparation, deferring newer independent buffer sync.
+    Release affects only an unstarted preparation and grants no compilation or
+    publication authority. All calls remain on the owning UI thread. }
+  INyxSharedDesignPreparationHost = interface(INyxSharedDesignSourceHost)
+    ['{68FE918B-457C-45BE-B2E0-CA2300000017}']
+    procedure ReserveDesign(const ARequest: TNyxStudioDesignRequest);
+    procedure ReleaseDesignPreparation;
+  end;
+
+{ Older hosts refuse before any compiler effect; never turn a helper Apply into
+  main Apply or fall back to local publication behind a shared editor. }
+function StartNyxSharedFileCompilation(const AHost: INyxSharedSourceHost;
+  const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+
 implementation
+
+uses SysUtils;
+
+function StartNyxSharedFileCompilation(const AHost: INyxSharedSourceHost;
+  const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LHost: INyxSharedFileSourceHost;
+begin
+
+  if not Supports(AHost, INyxSharedFileSourceHost, LHost) then
+  begin
+    raise Exception.Create('Shared source host does not support selected-file compilation');
+  end;
+  Result := LHost.StartFile(ARequest, APort);
+end;
 
 end.

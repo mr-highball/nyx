@@ -27,7 +27,7 @@ unit nyx.studio.sourcecompilation.shared.browser;
 interface
 
 uses
-  nyx.studio.sourcecompilation.browser, nyx.studio.sourcecompilation.shared;
+  nyx.pascal.drafts, nyx.studio.sourcecompilation.browser, nyx.studio.sourcecompilation.shared;
 
 { Reuses the ordinary owned browser worker adapter, then delegates only its live
   executed result to the same shared provider. The specialized completion port
@@ -97,13 +97,18 @@ type
     function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
+  { Idle strategies capture closed editor intent and connection values only;
+    no factory or produced compiler retains a mutable Studio session. }
   TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
-    INyxSharedVisualSourceCompilerFactory)
+    INyxSharedVisualSourceCompilerFactory, INyxSharedFileSourceCompilerFactory)
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+    function CreateFileCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
   end;
 
 function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
@@ -124,6 +129,14 @@ end;
 function NewNyxSharedBrowserSourceCompilerFactory: INyxSharedSourceCompilerFactory;
 begin
   Result := TSharedFactory.Create;
+end;
+
+function TSharedFactory.CreateFileCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
+begin
+  Result := NewNyxSharedBrowserSourceCompiler(NewNyxFileSharedBrowserSourceService(
+    ACapability, AIssuer, AWorkspace, ARevision, AFile));
 end;
 
 procedure TSharedCompilation.Retire;

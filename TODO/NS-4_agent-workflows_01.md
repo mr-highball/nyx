@@ -7,9 +7,11 @@ inventories now travel through local project completion, paired history/export
 and native journals, with exact executed-result admission. Bounded supporting-
 file discovery/source windows, grouped revision-aware helper edits and compiler-
 aware semantic import still belong to this owner's general-source workflow.
-Existing one-unit queues cannot yet dispatch that inventory. WORK.md separates
-actual native compiler/session evidence from browser compilation and installed
-delivery. No Nyx capability is currently exposed; owned Pascal/native consumers
+Ordinary local/shared source queues now dispatch that inventory, including a
+selected helper draft reconstructed independently by the private backend. This
+adds no public helper inspection/edit operation. WORK.md separates actual native
+compiler/session/input evidence from browser compilation and installed delivery.
+No Nyx capability is currently exposed; owned Pascal/native consumers
 are the explicit fallback, with no screenshot composition or host/config refresh.
 
 Runtime diagram multi-shape selection, group movement and arrangement add no MCP

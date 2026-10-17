@@ -34,6 +34,8 @@ uses
   nyx.studio.session;
 
 const
+  { Shared chrome identity; selection is decoded to a typed file reference. }
+  NyxStudioSourceFileID = 'studio-source-file';
   NyxStudioDiagnosticID = 'studio-source-diagnostic';
   NyxStudioDiagnosticGoID = 'action-source-diagnostic';
 
@@ -98,6 +100,9 @@ begin
   begin
     raise ENyxModel.Create('This source diagnostic no longer belongs to the current draft');
   end;
+  { This existing diagnostic owns main-source scalar coordinates only. Choosing
+    a helper cannot redirect its caret into an unrelated editable buffer. }
+  ASession.ActiveSourceFile := ASession.SourceFile(0);
 end;
 
 end.

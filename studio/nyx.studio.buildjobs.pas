@@ -1400,7 +1400,15 @@ begin
       end
       else
       begin
-        LSourceFiles := APublication.Baseline.Files;
+
+        if APublication.Request.IsFileEdit then
+        begin
+          LSourceFiles := APublication.Request.Files;
+        end
+        else
+        begin
+          LSourceFiles := APublication.Baseline.Files;
+        end;
       end;
 
       if not LSourceFiles.IsEmpty then
@@ -1484,7 +1492,7 @@ procedure TNyxBuildJobs.AdmitSourceRequest(const AArguments: TNyxDataValue);
 var
   LOperation: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|pascalFiles|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|source|publish|issuer|visual|target|pascalFiles|sourceFile|');
 
   if AArguments.Field('mode').AsText <> 'request' then
   begin
@@ -1536,6 +1544,16 @@ begin
     end;
   end;
   ReadNyxSourceProjectFiles(AArguments);
+
+  if NyxAgentHas(AArguments, 'sourceFile') then
+  begin
+    ReadNyxSourceFile(AArguments);
+
+    if not AArguments.Field('publish').AsBoolean or NyxAgentHas(AArguments, 'visual') then
+    begin
+      raise ENyxModel.Create('Selected-file compilation requires ordinary shared publication');
+    end;
+  end;
   LOperation := AArguments.Field('operationId').AsText;
 
   if (NyxTextScalarCount(LOperation) < 1) or (NyxTextScalarCount(LOperation) > 120) or
@@ -1596,10 +1614,23 @@ begin
     raise ENyxModel.Create('Shared visual job changed its captured semantic intent');
   end;
 
-  if APublication.IsCaptured and NyxAgentHas(AArguments, 'pascalFiles') and
+  if APublication.IsCaptured and not APublication.Request.IsFileEdit and
+    NyxAgentHas(AArguments, 'pascalFiles') and
     (ReadNyxSourceProjectFiles(AArguments).Encoded <> APublication.Baseline.Files.Encoded) then
   begin
     raise ENyxModel.Create('Main-source publication cannot substitute supporting Pascal files');
+  end;
+
+  if NyxAgentHas(AArguments, 'sourceFile') <> APublication.Request.IsFileEdit then
+  begin
+    raise ENyxModel.Create('Selected-file job requires its own sealed file publication');
+  end;
+
+  if APublication.Request.IsFileEdit and
+    (not ReadNyxSourceFile(AArguments).SameFile(APublication.Request.FileReference) or
+    (ReadNyxSourceProjectFiles(AArguments).Encoded <> APublication.Request.Files.Encoded)) then
+  begin
+    raise ENyxModel.Create('Selected-file job changed its captured candidate inputs');
   end;
 
   if Retry(AOwner, AArguments, Result) then

@@ -9,8 +9,8 @@ drafts without changing legacy single-unit bytes. Exact executed construction
 still gates helper admission. WORK.md owns actual compiler/session/store evidence
 and compiled-only browser limits. Normal queued Open/Apply/visual work now retains
 helpers and independent main drafts through actual compilation and paired history;
-application jobs use that same accepted checkpoint. Dedicated file editing/helper
-drafts and full authoring criteria stay open. Optional whole-registry version
+application jobs use that same accepted checkpoint. Broader file management and
+full authoring criteria stay open. Optional whole-registry version
 three and compiler-backed semantic import now preserve exact helper contexts;
 WORK.md separates native source/history evidence from ordinary observing input,
 browser execution and delivery. Original full criteria remain open;
@@ -19,10 +19,21 @@ this advances original criterion two without changing counters or completion cre
 Current-source typed source-file references and independent helper buffers now
 retain exact text/first bases through session copies, paired history, optional
 project version three and shared-runtime version four. WORK.md separates portable
-data/native compiler/recovery evidence from browser compilation. The file picker,
-selected-helper compiler/publication commands, independent helper source navigation
-and actual browser/LCL input remain the next integration under criterion two;
-buffer persistence alone closes no authoring criterion or completion credit.
+data/native compiler/recovery evidence from browser compilation. The ordinary
+picker and selected-helper compiler/publication commands now have actual native
+input evidence below; general helper navigation and ordinary browser input remain
+open under criterion two. Buffer persistence alone closes no authoring criterion
+or completion credit.
+
+Current-source ordinary source-file selection and selected-file Apply now share
+the retained Nyx editor on both adapters. Private shared compilation reconstructs
+the acknowledged file candidate independently; per-file queueing/Restore and
+captured paired history retain other buffers through source and visual work.
+WORK.md owns the real native input/compiler qualification and retained
+failures separately from compiled-only browser consumers. Bounded semantic helper
+inspection/editing, general helper navigation/completion, file creation/removal,
+ordinary browser input, full quality/parity and delivery remain under the original
+authoring/workflow/service owners; no full criterion or credit closes here.
 
 Current-source [named reusable copies](../docs/reusable-authoring.md) add a public
 Nyx naming form and guarded collision-free identity preview to ordinary paired

@@ -623,6 +623,8 @@ var
   LMessages: TNyxNode;
   LField: TNyxNode;
   LMessageCount: Integer;
+  LFileIndex: Integer;
+  LFileItems: TNyxText;
 begin
 
   if ASession = nil then
@@ -642,14 +644,28 @@ begin
     LActions := TNyxNode.Create(nkRow, 'studio-code-actions')
       .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
     Result.Add(LActions);
+    LFileItems := '';
+    for LFileIndex := 0 to ASession.SourceFileCount - 1 do
+    begin
+
+      if LFileIndex > 0 then
+      begin
+        LFileItems := LFileItems + #10;
+      end;
+      LFileItems := LFileItems + ASession.SourceFileTitle(ASession.SourceFile(LFileIndex));
+    end;
+    LActions.Add(NewNyxSelect(NyxStudioSourceFileID).Configure.Text('Source file')
+      .AccessibleName('Source file').Hint('Each source file retains its own unfinished draft')
+      .Items(LFileItems).Value(ASession.SourceFileTitle(ASession.ActiveSourceFile))
+      .Visible(ASession.SourceFileCount > 1).Done);
     { These width conditions use the source pane's available space on both
       targets. The same buttons, callbacks and full hints remain reachable;
       compact presentation does not create a second set of editor actions. }
     LActions.Add(Button('action-apply-source', 'Apply Pascal').Configure
-      .Hint('Apply the Pascal draft')
+      .Hint('Compile and apply this file; retain other unfinished drafts')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Apply').Done);
     LActions.Add(Button('action-reset-source', 'Restore accepted').Configure
-      .Hint('Discard the pending draft and restore accepted Pascal')
+      .Hint('Discard only this file draft and restore its accepted Pascal')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Restore').Done);
     LActions.Add(Button('action-export-source-draft', 'Save draft').Configure
       .Hint('Download the current Pascal draft')
@@ -718,7 +734,7 @@ begin
     end
     else
     begin
-      Result.Add(NewNyxStudioCodeEditor(ASession.DraftSource).Configure
+      Result.Add(NewNyxStudioCodeEditor(ASession.ActiveSourceText).Configure
         .Visible(AState.SourceTab = nstSource).Done);
     end;
   except

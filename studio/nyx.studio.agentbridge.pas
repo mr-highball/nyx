@@ -27,7 +27,7 @@ unit nyx.studio.agentbridge;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.pascal.project, nyx.studio.session, nyx.studio.exchange,
+  SysUtils, nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
@@ -107,12 +107,21 @@ type
     FSharedAvailable: Boolean;
     FSharedVisualAvailable: Boolean;
     FSharedReserved: Boolean;
+    { An immutable request, not a borrowed worker/tree. The shared frame is
+      reserved while the independent proposal is prepared and then compiled. }
+    FSharedPreparing: Boolean;
+    FSharedPreparation: TNyxStudioDesignRequest;
     FSharedAcknowledging: Boolean;
     FSharedDirty: Boolean;
     FSharedRevision: Integer;
     FSharedSource: TNyxText;
     FSharedAccepted: TNyxProjectPair;
     function StartSharedSource(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    procedure ReserveSharedFrame;
+    procedure ReserveSharedDesign(const ARequest: TNyxStudioDesignRequest);
+    procedure ReleaseSharedDesignPreparation;
+    function StartSharedFile(const ARequest: TNyxStudioSourceRequest;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function StartSharedDesign(const ARequest: TNyxStudioDesignRequest;
       const AProposal: INyxPreparedDesign;
@@ -129,7 +138,8 @@ type
     function AdmitSharedDesign(const ARequest: TNyxStudioDesignRequest;
       const APrepared: INyxPreparedDesign;
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
-    procedure AwaitSharedAcknowledgement(const AReceipt: TNyxSourcePublicationReceipt);
+    procedure AwaitSharedAcknowledgement(const AReceipt: TNyxSourcePublicationReceipt;
+      AConsumeFile: Boolean; const AFile: TNyxPascalSourceRef);
     procedure AbandonSharedSource(AOutcome: TNyxSourcePublicationOutcome;
       const AMessage: TNyxText);
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
@@ -248,8 +258,10 @@ uses
   {$ifdef PAS2JS}nyx.studio.exchange.browser{$else}nyx.studio.exchange.lcl{$endif};
 
 type
+  { UI-only revocable bridge borrow. Detach removes the owner before session
+    retirement; compiler ports retain this courier rather than the bridge. }
   TBridgeSharedPort = class(TInterfacedObject, INyxSharedSourceHost,
-    INyxSharedDesignSourceHost)
+    INyxSharedDesignSourceHost, INyxSharedFileSourceHost, INyxSharedDesignPreparationHost)
   public
     { Sole borrow, revoked by the bridge before its transport/session retirement. }
     Owner: TNyxStudioAgentBridge;
@@ -259,6 +271,10 @@ type
     function Waiting: Boolean;
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function StartFile(const ARequest: TNyxStudioSourceRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    procedure ReserveDesign(const ARequest: TNyxStudioDesignRequest);
+    procedure ReleaseDesignPreparation;
     function Admit(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource;
       const AReceipt: TNyxSourcePublicationReceipt): TNyxSourceCompletion;
@@ -316,6 +332,36 @@ begin
     raise ENyxProjectConflict.Create('Shared compiler editor has retired');
   end;
   Result := Owner.StartSharedSource(ASource, APort);
+end;
+
+function TBridgeSharedPort.StartFile(const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxProjectConflict.Create('Shared compiler editor has retired');
+  end;
+  Result := Owner.StartSharedFile(ARequest, APort);
+end;
+
+procedure TBridgeSharedPort.ReserveDesign(const ARequest: TNyxStudioDesignRequest);
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxProjectConflict.Create('Shared preparation editor has retired');
+  end;
+  Owner.ReserveSharedDesign(ARequest);
+end;
+
+procedure TBridgeSharedPort.ReleaseDesignPreparation;
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.ReleaseSharedDesignPreparation;
+  end;
 end;
 
 function TBridgeSharedPort.Admit(const ARequest: TNyxStudioSourceRequest;
@@ -396,6 +442,82 @@ begin
   Result := StartSharedCompiler(ASource, LCompiler, FSession.ProjectSnapshot.Files, APort);
 end;
 
+function TNyxStudioAgentBridge.StartSharedFile(const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LFactory: INyxSharedFileSourceCompilerFactory;
+  LCompiler: INyxSharedSourceCompiler;
+  LCurrent: TNyxStudioSourceRequest;
+begin
+
+  if not FSharedPort.Ready or (APort = nil) or not ARequest.IsFileEdit then
+  begin
+    raise ENyxProjectConflict.Create('Selected-file compilation requires its acknowledged editor frame');
+  end;
+
+  if not Supports(FSharedFactory, INyxSharedFileSourceCompilerFactory, LFactory) then
+  begin
+    raise ENyxProjectConflict.Create('Shared compiler does not support selected-file publication');
+  end;
+  LCurrent := FSession.RefreshFileRequest(ARequest, ARequest.SchemaRevision);
+
+  if (LCurrent.Source <> ARequest.Source) or
+    (LCurrent.Files.Encoded <> ARequest.Files.Encoded) then
+  begin
+    raise ENyxProjectConflict.Create('Selected-file candidate changed before shared dispatch');
+  end;
+  LCompiler := LFactory.CreateFileCompiler(FToken, FSourceObservationIssuer,
+    FWorkspace, FView.Revision, ARequest.FileReference);
+  Result := StartSharedCompiler(ARequest.Source, LCompiler, ARequest.Files, APort);
+end;
+
+procedure TNyxStudioAgentBridge.ReserveSharedFrame;
+begin
+  FSharedAccepted := FSession.ProjectSnapshot;
+  FSharedSource := '';
+  FSharedRevision := FView.Revision;
+  FSharedReserved := True;
+  { Retire the older observing read before local preparation or compilation.
+    Newer buffer input remains local and is synchronized after acknowledgement. }
+  FExchange.CancelRequest;
+  FRequest := False;
+  FView.Busy := False;
+  FExchange.CancelTick;
+  FTimer := False;
+end;
+
+procedure TNyxStudioAgentBridge.ReserveSharedDesign(const ARequest: TNyxStudioDesignRequest);
+begin
+
+  if not FSharedPort.Ready or not FSharedVisualAvailable or
+    not ARequest.RequiresExecution or
+    (ARequest.Files.Encoded <> FSession.ProjectSnapshot.Files.Encoded) then
+  begin
+    raise ENyxProjectConflict.Create('Visual preparation needs its exact acknowledged editor frame');
+  end;
+  FSharedPreparation := ARequest;
+  FSharedPreparing := True;
+  try
+    ReserveSharedFrame;
+  except
+    { Neither snapshot capture nor retiring an observing port can grant a
+      compiler effect. Retire the provisional phase before returning failure. }
+    AbandonSharedSource(npoRefused, 'Visual frame reservation failed before compilation');
+    FSharedPreparing := False;
+    FSharedPreparation := Default(TNyxStudioDesignRequest);
+    raise;
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.ReleaseSharedDesignPreparation;
+begin
+
+  if FSharedPreparing then
+  begin
+    AbandonSharedSource(npoRefused, 'Visual preparation ended before compiler admission');
+  end;
+end;
+
 function TNyxStudioAgentBridge.StartSharedDesign(const ARequest: TNyxStudioDesignRequest;
   const AProposal: INyxPreparedDesign;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
@@ -404,7 +526,10 @@ var
   LCompiler: INyxSharedSourceCompiler;
 begin
 
-  if not FSharedPort.Ready or not FSharedVisualAvailable or (APort = nil) or
+  if (not FSharedPreparing and not FSharedPort.Ready) or
+    (FSharedPreparing and (not FSharedReserved or
+      not FSharedPreparation.SameRequest(ARequest))) or
+    not FSharedVisualAvailable or (APort = nil) or
     not ARequest.RequiresExecution or (AProposal = nil) or
     not AProposal.RequiresCompilation or AProposal.Diagnostic.Defined or
     not AProposal.Matches(ARequest) then
@@ -416,8 +541,13 @@ begin
   begin
     raise ENyxProjectConflict.Create('Shared compiler does not support visual continuation');
   end;
+
+  if not FSharedPreparing then
+  begin
+    ReserveSharedDesign(ARequest);
+  end;
   LCompiler := LFactory.CreateVisualCompiler(FToken, FSourceObservationIssuer,
-    FWorkspace, FView.Revision, ARequest.IntentData);
+    FWorkspace, FSharedRevision, ARequest.IntentData);
 
   if ARequest.Files.Encoded <> FSession.ProjectSnapshot.Files.Encoded then
   begin
@@ -450,17 +580,14 @@ begin
     end;
     LProject := AFiles.Open(ASource);
   end;
-  FSharedAccepted := FSession.ProjectSnapshot;
+
+  if not FSharedPreparing then
+  begin
+    ReserveSharedFrame;
+  end;
+  FSharedPreparing := False;
+  FSharedPreparation := Default(TNyxStudioDesignRequest);
   FSharedSource := ASource;
-  FSharedRevision := FView.Revision;
-  FSharedReserved := True;
-  { An older observing read has no mutation authority. Retire its delivery before
-    reserving this context; the compiler's independent HTTP channel owns its work. }
-  FExchange.CancelRequest;
-  FRequest := False;
-  FView.Busy := False;
-  FExchange.CancelTick;
-  FTimer := False;
   try
 
     if LProject = nil then
@@ -507,7 +634,7 @@ begin
     AbandonSharedSource(npoUnconfirmed, 'Server committed an earlier draft; local work needs reconciliation');
     Exit;
   end;
-  AwaitSharedAcknowledgement(AReceipt);
+  AwaitSharedAcknowledgement(AReceipt, True, ARequest.FileReference);
 end;
 
 function TNyxStudioAgentBridge.AdmitSharedDesign(const ARequest: TNyxStudioDesignRequest;
@@ -532,13 +659,37 @@ begin
     AbandonSharedSource(npoUnconfirmed, 'Server committed an earlier visual change; local work needs reconciliation');
     Exit;
   end;
-  AwaitSharedAcknowledgement(AReceipt);
+  AwaitSharedAcknowledgement(AReceipt, False, TNyxPascalSourceRef.Main);
 end;
 
 procedure TNyxStudioAgentBridge.AwaitSharedAcknowledgement(
-  const AReceipt: TNyxSourcePublicationReceipt);
+  const AReceipt: TNyxSourcePublicationReceipt; AConsumeFile: Boolean;
+  const AFile: TNyxPascalSourceRef);
+var
+  LPublished: TNyxProjectPair;
 begin
-  FSharedAccepted := FSession.ProjectSnapshot;
+  { The server published from its acknowledged buffers. Newer unrelated typing
+    remains local and is sent after this exact acknowledgement; it cannot become
+    part of the expected remote frame merely because local completion kept it. }
+  LPublished := FSession.ProjectSnapshot;
+  FSharedAccepted.Design := LPublished.Design;
+  FSharedAccepted.Source := LPublished.Source;
+  FSharedAccepted.Files := LPublished.Files;
+
+  if AConsumeFile then
+  begin
+
+    if AFile.Role = npsMain then
+    begin
+      FSharedAccepted.Pending := False;
+      FSharedAccepted.Draft := '';
+      FSharedAccepted.DraftBase := '';
+    end
+    else
+    begin
+      FSharedAccepted.FileDrafts := FSharedAccepted.FileDrafts.Without(AFile);
+    end;
+  end;
   FSharedRevision := AReceipt.Revision;
   FSharedReserved := False;
   FSharedAcknowledging := True;
@@ -554,8 +705,16 @@ begin
   begin
     Exit;
   end;
+
+  if FSharedPreparing then
+  begin
+    { Proposal preparation has no remote effect; cancellation here is certain. }
+    AOutcome := npoRefused;
+  end;
   FSharedReserved := False;
   FSharedAcknowledging := False;
+  FSharedPreparing := False;
+  FSharedPreparation := Default(TNyxStudioDesignRequest);
   FSharedSource := '';
   FSharedAccepted := Default(TNyxProjectPair);
 
@@ -983,6 +1142,8 @@ end;
 procedure TNyxStudioAgentBridge.AcceptRemote;
 begin
   FSharedReserved := False;
+  FSharedPreparing := False;
+  FSharedPreparation := Default(TNyxStudioDesignRequest);
   FSharedAcknowledging := False;
   FSharedDirty := False;
   FSharedSource := '';

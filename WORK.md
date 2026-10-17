@@ -30,7 +30,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Durable source-file drafts — 2026-10-17
+## Current integration: Source-file authoring — 2026-10-17
+
+The preceding manual-script turn syntax-checked existing handoff artifacts and
+added no product acceptance. This continuation returns from the qualified 38120ac
+buffer foundation to original NS-4 criterion two / NS-5 compiler ownership.
+Studio now selects, edits, applies, restores and exports a main unit or captured
+helper through the ordinary Nyx source pane. The same editor survives switching
+files and expanded presentation. Selection is local presentation, not source or
+publication authority. No installed Nyx tool is exposed in this chat; the existing
+never-listening production semantic/backend consumer remains the explicit fallback.
+Fresh evidence is behind .local/source-file-editor-paths-private.json.
+
+Selected-helper Apply freezes accepted main/other files plus that one draft.
+Publication checks owner/load, schema, accepted checkpoint and selected buffer,
+then consumes only that helper in one paired history step. Waiting repeats coalesce
+per file; another file's Restore preserves active unrelated work. FIFO dispatch
+refreshes accepted inputs without replacing the selected draft/base. Shared
+providers carry a private typed file intent; the owning backend independently
+reconstructs it from acknowledged buffers and checks the complete candidate.
+No public MCP tool/schema or serialized execution authority is added.
+
+Source and visual publication retain the same dispatch Undo frame on both peers.
+Newer unrelated typing stays current and enters opposite Redo history. Helper
+buffer retirement is prepared before the owner swap. Visual planning excludes
+unfinished helpers only from its disposable single-unit copy, preserving the real
+request/session buffers. A two-phase shared reservation now begins before worker
+proposal preparation; later typing cannot race an observing revision into that
+compiler's acknowledged baseline. Failed/cancelled unstarted preparations release
+only their provisional phase. Private observations reconstruct exact captured
+helpers instead of invoking the single-unit parser. Existing mapped navigation
+returns to main; helper rejections retain scoped messages with no invented caret.
+
+Accepted current implementation evidence, with independent counts rather than an
+added aggregate:
+
+- `logs/controls-run-12.log`: **328**, complete uninterrupted connected 1280/390
+  and local 1280/390 native journeys, clean parent heap. Ordinary picker/memo,
+  Apply/Restore, compact Actions/View/source menu, expanded editor and Undo/Redo
+  combine with typed queued/visual commands. Actual FPC construction qualifies
+  helper-only changes, overlapping other-file typing, per-file queue coalescing,
+  exact complete history and expected helper syntax refusal. The 25 child compiler
+  logs contain four deliberate refusals and zero warnings. Connected mode replaces
+  sockets with the production backend; its owned recovery seed is trusted setup,
+  not semantic import or authenticated HTTP evidence. No screenshots are taken.
+- `logs/final-diagnostics-run.log`: **323** maintained source diagnostic/session/
+  command checks, clean heap. `logs/final-shared-2-run.log`: **176** maintained
+  queue/bridge/provider checks, clean heap, including all nine real native provider
+  scenarios. Its 19 child compiler logs have zero warnings. Counts overlap earlier
+  retained source/history coverage; compiler success is distinct from publication.
+- Both Studios, backend, worker and browser diagnostic consumer compile on the
+  qualified implementation. Final blank-line corrections and three reviewed
+  comment corrections preserve all implementation text across 25 owned input
+  files (`final-layout-proof-private.json`); affected final consumers are rebuilt.
+  Native/owned compiler warnings are zero; browser RTL warnings remain upstream.
+  Browser products/consumers compile only: no browser execution/input/observation,
+  socket authentication, visual quality or target parity is inferred.
+- Five protected configuration/checkpoint files match their before hashes. The
+  read-only frozen verifier still passes all **349** 7422453 artifacts. Nine
+  retained contexts remain untouched; LAN is offline. No host, cleanup/configuration
+  retry, enrollment, rollout or sub-agent occurs.
+
+Retained failed preparation/input streams remain excluded from acceptance. They
+expose the main-title parser's missing captured-file lookup, native CRLF display
+oracle, malformed-token refusal before FPC, hidden compact source action and
+missing View submenu, private observation's lost helper inventory, and visual
+preparation's late shared reservation. Repairs address those owners without
+weakening exact model/history assertions. The first final coordination regression
+also spun twenty zero-wait observing steps while a reserved preparation worker
+was running. Its corrected driver stops at actual reserved dispatch, then uses
+the existing dedicated provider-completion wait; the complete 176 rerun passes.
+Earlier passing partial/failed runs are not substituted for the accepted full run.
+
+The packet's `final-validation-private.json` seals accepted log hashes, the final
+six compiler results, exact implementation-text proof and preservation checks.
+`final-checkpoint-private.json` owns the final branch/source/remote identity; none
+of these development receipts is a live installed operator authority.
+
+Return to original general-source authoring: bounded semantic helper discovery/
+editing, source navigation/completion and file creation/removal, with compiler job
+ownership, browser observing/input and full quality/parity/delivery retained by
+NS-4/NS-5/NS-2. Do not add another buffer/codec/fixture variant. No original full
+criterion/task/DONE, counter, completion credit or product completion closes.
+The manual cleanup/browser-review scripts remain user-run handoffs, unexecuted.
+
+## Previous integration: Durable source-file drafts — 2026-10-17
 
 The preceding goal turn is progress: afc94df is clean and remote-matched. Reassess
 the full file-authoring outcome: accepted helpers compile/recover, but only the

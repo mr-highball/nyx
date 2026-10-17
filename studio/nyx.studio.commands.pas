@@ -65,6 +65,8 @@ function RouteNyxStudioProperty(ASession: TNyxStudioSession; ANode: TNyxNode;
 implementation
 
 uses
+  nyx.pascal.drafts,
+  nyx.studio.source,
   nyx.state,
   nyx.binding.types,
   nyx.studio.authoring,
@@ -78,9 +80,12 @@ uses
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
   AEvent: TNyxTrigger): Boolean;
 type
+  { Legacy synchronous source commands keep main-only literal admission;
+    selected helpers require the ordinary project-aware compiler queue. }
   TSourceCommand = (scApply, scRestore);
 var
   LCommand: TSourceCommand;
+  LIndex: Integer;
 begin
   Result := False;
 
@@ -91,8 +96,22 @@ begin
 
   if (AEvent = ntChange) and (ANode.ID = 'studio-code') then
   begin
-    ASession.SetSourceDraft(ANode.Prop('value'));
+    ASession.SetFileDraft(ASession.ActiveSourceFile, ANode.Prop('value'));
     Exit(True);
+  end;
+
+  if (AEvent = ntChange) and (ANode.ID = NyxStudioSourceFileID) then
+  begin
+    for LIndex := 0 to ASession.SourceFileCount - 1 do
+    begin
+
+      if ASession.SourceFileTitle(ASession.SourceFile(LIndex)) = ANode.Prop('value') then
+      begin
+        ASession.ActiveSourceFile := ASession.SourceFile(LIndex);
+        Exit(True);
+      end;
+    end;
+    raise ENyxModel.Create('Selected source file is no longer in this project');
   end;
 
   if AEvent <> ntClick then
@@ -113,8 +132,19 @@ begin
     Exit;
   end;
   case LCommand of
-    scApply: ASession.ApplySourceDraft;
-    scRestore: ASession.DiscardSourceDraft;
+    scApply:
+      begin
+
+        if ASession.ActiveSourceFile.Role <> npsMain then
+        begin
+          raise ENyxModel.Create('Supporting-file Apply requires the project-aware source command queue');
+        end;
+        ASession.ApplySourceDraft;
+      end;
+    scRestore:
+      begin
+        ASession.DiscardFileDraft(ASession.ActiveSourceFile);
+      end;
   end;
   Result := True;
 end;
