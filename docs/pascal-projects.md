@@ -373,6 +373,55 @@ This extends the existing tool in current source, with no new tool name or
 installed-release claim. WORK.md owns actual native/compiler/observing evidence
 separately from browser compilation and the existing HTTP/delivery gate.
 
+## Semantic source-file membership
+
+Current-source `nyx_pascal` also supports `edit-files`: typed helper creation or
+removal with optional related exact ranges in `edits`. It always queues one
+complete constructor and publishes one paired Undo step. For example, add an
+include and its directive together, or remove a helper and repair its callers
+together. No dependency text is silently rewritten.
+
+Each `changes` item has `op:create|remove` and the same exact unit/include `file`
+selector used by file windows. Creation optionally supplies `text`; otherwise it
+uses the English Delphi/UTF-8 template. Removal has no text. Main cannot be
+created/removed. A membership target appears once and cannot also receive ranges.
+Ranges address other ORIGINAL accepted files. Combined operations are limited to
+16; creation text and replacements share 262144 scalars, with the existing separate
+262144-scalar expected-text budget. Project identity, order of retained files and
+configured limits stay retained. Used dependencies are validated/compiled; unused
+helpers remain captured data, not a standalone type-check claim.
+
+For any removal, first call `review-files` with `expectedRevision`, the exact
+`changes` and optional `edits`. It returns named removals, a warning and `reviewID`
+without compiling or changing history. Supply that ticket on `edit-files`, along
+with the unchanged group, revision and a unique `operationId`. Eight reviews are
+bounded; each belongs to its transport owner and expires on revision/disconnect.
+Creation-only groups need no ticket. Missing/changed reviews, pending drafts,
+stale revisions and compiler/publication failure preserve the complete pair.
+As with range edits, text typed while compilation runs prevents publication.
+
+Code-first preparation uses the same typed intents:
+
+```pascal
+LPatch := NyxSourceProjectMutation([
+  TNyxPascalFileChange.CreateInclude(NyxPascalInclude('presenter-body.inc'))
+    .WithText(LBody)
+], [
+  NyxSourceFileEdit(TNyxPascalSourceRef.Main,
+    NyxSourceEdit(LOffset, LExpected, LReplacement))
+]);
+LProposedInputs := LPatch.PrepareProject(LAcceptedInputs);
+```
+
+Preparation is detached source data. The ordinary owning compiler must construct
+the exact complete inputs before accepted publication. `INyxPascalFileChanges.Stage`
+deliberately permits private intermediate dependency gaps; `Candidate` validates
+its complete final project. A staged value is never execution authority.
+Poll the existing build job's publication result, rather than infer publication
+from a compile result. This extends the existing source tool; installed schema,
+authenticated HTTP/browser input, full parity and delivery remain separate.
+WORK.md owns qualification and retained failures.
+
 ## Creating and removing source files
 
 The current-source **Files** tab consumes the public Nyx source-file card. It
@@ -410,7 +459,8 @@ Private shared intent names one closed create/remove. The backend reconstructs
 the proposed change against its acknowledged inventory and independently verifies
 all retained files. Older strategies refuse the optional capability. Saved files
 or wire fields grant no compiler, execution or publication authority. There is
-no new MCP tool/schema. WORK.md owns native/compiler and compiled-only browser
+no separate tool for this private intent; semantic membership is described above.
+WORK.md owns native/compiler and compiled-only browser
 qualification; full authoring/semantic analysis/parity/delivery remain separate.
 
 `-PascalSourceFileEditors` adds the maintained ordinary native controls mode to

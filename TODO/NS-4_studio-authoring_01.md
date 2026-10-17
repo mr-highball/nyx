@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)
+shares typed file intents and exact ranges with the ordinary compiler/history
+owner. Named removal reviews belong to the transport, revision and unchanged
+group; no unfinished buffer is silently consumed. WORK.md owns qualification and
+the source-only schema boundary. Completion/navigation, ordinary browser input,
+full quality/parity/delivery and original criterion two remain open.
+
 Current-source [grouped source-file authoring](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
 shares typed immutable project ranges with the semantic backend. Actual complete
 construction precedes one accepted main/helper history publication; all pending

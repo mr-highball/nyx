@@ -1291,7 +1291,7 @@ begin
         (ATool = 'nyx_project')) and (LMode = 'apply')) or
       ((ATool = 'nyx_pascal') and ((LMode = 'edit-imports') or
         (LMode = 'edit-routines') or (LMode = 'edit-declarations') or
-        (LMode = 'edit-views') or (LMode = 'edit-unit')));
+        (LMode = 'edit-views') or (LMode = 'edit-unit') or (LMode = 'edit-files')));
   end;
 end;
 
@@ -1337,7 +1337,8 @@ begin
     LHandlers := (ATool = 'nyx_pascal') and
       (AArguments.Field('mode').AsText = 'apply');
     LSourceEdits := (ATool = 'nyx_pascal') and
-      (AArguments.Field('mode').AsText = 'edit-unit');
+      ((AArguments.Field('mode').AsText = 'edit-unit') or
+        (AArguments.Field('mode').AsText = 'edit-files'));
     LImports := (ATool = 'nyx_project') and
       (AArguments.Field('mode').AsText = 'review-import') and
       (AArguments.Field('admission').AsText = 'compiler');
@@ -1442,7 +1443,7 @@ begin
           end
           else if LSourceEdits then
           begin
-            LPair := LSession.CaptureSourceEditPublication(LArguments,
+            LPair := LSession.CaptureSourceEditPublication(LArguments, AOwner,
               LSourceEditRequest, LSchemas);
             LPublication := CaptureNyxStudioSourceEditPublication(FEditorToken,
               LWorkspace, LSession.Revision, LPair, LSourceEditRequest, LSchemas,
@@ -2763,7 +2764,14 @@ begin
       'including mixed main/helper ranges, and publish one paired Undo command. Per-file ' +
       'ranges are ascending/nonoverlapping in original accepted text; files may interleave. ' +
       'The 16-change and 262144-scalar text-side budgets cover the whole group. All pending ' +
-      'main/helper drafts refuse. Membership, names, order and limits remain unchanged. ' +
+      'main/helper drafts refuse. Range-only groups retain membership, names, order and limits. ' +
+      'edit-files creates/removes 1..16 helper files with optional related exact ranges in edits, ' +
+      'as ONE complete constructor and paired Undo step. Create uses an English typed template ' +
+      'unless text is supplied. Main is never created/removed. Each membership target appears ' +
+      'once and cannot also receive ranges. Combined operations and replacement text share ' +
+      'the same budgets. Removal requires review-files first, then its owner/revision/exact-group ' +
+      'reviewID on edit-files. Review returns named warnings without compiling or mutating; eight ' +
+      'tickets expire on revision/disconnect. Repair uses/include dependencies in the same group. ' +
       'Poll the ordinary nyx_build job; submittedSource diagnostics describe its immutable ' +
       'proposed file, never a current-editor navigation action. ' +
       'On compiler-admitted handwritten projects, mode apply stages the exact ' +
@@ -3714,9 +3722,21 @@ var
   LPage: TNyxDataValue;
   LTransaction: TNyxDataValue;
   LBoolean: TNyxDataValue;
+  LFileMutationProperties: TNyxText;
 begin
   LPage := NyxObject([NyxField('offset', IntSchema(0, 100000)), NyxField('limit', IntSchema(1, 50))]);
   LBoolean := NyxObject([NyxField('type', NyxData('boolean'))]);
+  LFileMutationProperties :=
+    '"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{' +
+    '"op":{"enum":["create","remove"]},"file":{"type":"object","properties":{' +
+    '"kind":{"enum":["unit","include"]},"name":{"type":"string","minLength":1,"maxLength":124}},' +
+    '"required":["kind","name"],"additionalProperties":false},"text":{"type":"string","maxLength":262144}},' +
+    '"required":["op","file"],"additionalProperties":false,"allOf":[{"if":{"properties":{"op":{"const":"remove"}}},' +
+    '"then":{"not":{"required":["text"]}}}]}},' +
+    '"edits":{"type":"array","minItems":1,"maxItems":15,"items":{"type":"object","properties":{' +
+    '"offset":{"type":"integer","minimum":0,"maximum":4194304},"expected":{"type":"string","maxLength":262144},' +
+    '"replacement":{"type":"string","maxLength":262144},"file":' + CSourceFileSelector +
+    '},"required":["offset","expected","replacement"],"additionalProperties":false}}';
   LSelectionOperation := TNyxDataValue.ParseJSON(
     '{"type":"object","additionalProperties":false,"required":["op","id","options"],' +
     '"properties":{"op":{"const":"selection-set"},"id":{"type":"string","minLength":1},' +
@@ -3987,6 +4007,8 @@ Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substrin
         '{"type":"object","properties":{"mode":{"const":"edit-declarations"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"oneOf":[{"type":"object","properties":{"op":{"const":"create"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"edit"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedImplementation":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768}},"required":["op","routine","expectedImplementation","implementation"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"remove"},"routine":{"type":"string","minLength":1,"maxLength":120},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false},{"type":"object","properties":{"op":{"const":"signature"},"routine":{"type":"string","minLength":1,"maxLength":120},"kind":{"enum":["procedure","function"]},"visibility":{"enum":["interface","implementation"]},"signature":{"type":"string","maxLength":32768},"implementation":{"type":"string","maxLength":32768},"expectedSignature":{"type":"string","maxLength":32768},"expectedImplementation":{"type":"string","maxLength":32768},"expectedDeclaration":{"type":"string","maxLength":32768}},"required":["op","routine","kind","visibility","signature","implementation","expectedSignature","expectedImplementation","expectedDeclaration"],"additionalProperties":false}]}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"views"},"offset":{"type":"integer","minimum":0,"maximum":4194304},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-views"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"expected":{"type":"string","maxLength":262144},"builder":{"type":"string","maxLength":262144}},"required":["mode","expectedRevision","operationId","expected","builder"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"review-files"},"expectedRevision":{"type":"integer","minimum":1},' + LFileMutationProperties + '},"required":["mode","expectedRevision","changes"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"edit-files"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"reviewID":{"type":"string","minLength":1,"maxLength":120},' + LFileMutationProperties + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"files"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4096},"limit":{"type":"integer","minimum":1,"maximum":50}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"unit"},"expectedRevision":{"type":"integer","minimum":1},"offset":{"type":"integer","minimum":0,"maximum":4194304},"line":{"type":"integer","minimum":1,"maximum":1000000},"count":{"type":"integer","minimum":1,"maximum":4096},"file":' + CSourceFileSelector + '},"required":["mode"],"allOf":[{"not":{"required":["line","offset"]}}],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"edit-unit"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"offset":{"type":"integer","minimum":0,"maximum":4194304},"expected":{"type":"string","maxLength":262144},"replacement":{"type":"string","maxLength":262144},"file":' + CSourceFileSelector + '},"required":["offset","expected","replacement"],"additionalProperties":false}}},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}'), False),

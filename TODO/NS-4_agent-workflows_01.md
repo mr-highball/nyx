@@ -2,6 +2,14 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Current-source [semantic membership](../docs/pascal-projects.md#semantic-source-file-membership)
+adds reviewed grouped helper creation/removal and related exact source ranges to
+existing nyx_pascal. Owner/revision/exact-group warnings precede removal; one
+complete constructor and paired publication own the final inputs. WORK.md owns
+qualification and retained failures. No new tool or installed schema is claimed.
+General declarations/completion, full source grammar, authenticated browser input,
+quality/parity/delivery and original criterion five remain open.
+
 Current-source [supporting-file semantics](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
 extend existing nyx_pascal with bounded revision-pinned file identities/helper
 windows and exact mixed main/unit/include range groups. The same native compiler
@@ -9,7 +17,7 @@ owner constructs one complete candidate before one paired publication; helper-on
 changes cannot take main-only literal admission. Proposed helper diagnostics keep
 their own typed coordinates without changing current-source navigation semantics.
 WORK.md owns qualification, retained failures and the source-only schema boundary.
-General helper declarations/completion, semantic inventory creation/removal, full
+General helper declarations/completion, full
 source grammar and authenticated browser/observing/delivery remain under original
 criterion five. No original full criterion/task/counter/credit closes.
 

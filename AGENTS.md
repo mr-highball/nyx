@@ -4,6 +4,21 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source nyx_pascal now supports grouped typed helper creation/removal with
+related original-file ranges. review-files issues bounded owner/revision/exact-
+group named warnings; edit-files uses one complete constructor and paired Undo.
+Native observing 181 at 1280/390, portable 63 and authority 150 pass, clean heaps;
+19 child compilers include four deliberate refusals and zero warnings. Nine
+accepted top-level logs have zero owned warnings; browser products/consumers only
+compile (28 upstream RTL warnings). After all handles joined, final two-unit
+changes are four blank lines and corrected lifetime/membership comments only;
+WORK.md retains the exact composite pins and excluded preflight warning. All five
+protected hashes/nine complete contexts and 349 frozen 7422453 artifacts stay
+exact; LAN remains offline. No installed schema, new tool, full criterion/task/
+DONE/counter/credit/parity/delivery closes. Stop membership/review/compiler
+variants; reassess helper declaration/navigation/completion under existing owners.
+No host/configuration/enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source nyx_pascal adds bounded file identities/helper windows and typed
 mixed main/unit/include ranges through the existing 24-tool inventory. Exact
 project inputs construct once before one paired Undo publication; helper-only

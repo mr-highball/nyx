@@ -274,7 +274,8 @@ begin
     ((ARequest.Source = ABaseline.Source) and
       (ARequest.Files.Encoded = ABaseline.Files.Encoded)) or
     (ARequest.SchemaRevision <> ASchemas.Revision) or
-    (AArguments.Field('mode').AsText <> 'edit-unit') or
+    ((AArguments.Field('mode').AsText <> 'edit-unit') and
+      (AArguments.Field('mode').AsText <> 'edit-files')) or
     (AArguments.Field('expectedRevision').AsInteger <> ARevision) then
   begin
     raise ENyxProjectConflict.Create('Source edit publication requires its sealed complete context');

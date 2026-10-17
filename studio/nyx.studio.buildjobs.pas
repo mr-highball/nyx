@@ -541,7 +541,8 @@ begin
     SetLength(LFields, LCount + 4);
     LFields[LCount + 2] := NyxField('operation', NyxData('source-edit'));
     LFields[LCount + 3] := NyxField('sourceEdit', NyxObject([
-      NyxField('changes', NyxData(SourcePublication.SourceEditArguments.Field('changes').Count))]));
+      NyxField('changes', NyxData(SourcePublication.SourceEditArguments.Field('changes').Count)),
+      NyxField('mode', SourcePublication.SourceEditArguments.Field('mode'))]));
   end
   else if SourcePublication.ProjectImport <> nil then
   begin

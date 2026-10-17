@@ -102,8 +102,9 @@ type
       Both completion paths refuse intervening changes to that selected buffer. }
     FBufferBaseline: TNyxText;
     FSourceEdit: Boolean;
-    { Only a sealed complete-project range capture may replace several retained
-      inputs. It admits no membership/limit changes or visible draft staging. }
+    { Sealed complete-project source capture may replace retained inputs or apply
+      explicit typed membership. Main identity/limits and visible buffers remain
+      fixed until complete constructor admission and paired publication. }
     FProjectSourceEdit: Boolean;
     FSchemaRevision: Integer;
     FChanged: Boolean;
@@ -862,6 +863,12 @@ type
       limits stay fixed; all unfinished buffers must be resolved first. }
     function PrepareSourceEditRequest(const AProject: INyxPascalProject;
       ASchemaRevision: Integer): TNyxStudioSourceRequest; overload;
+    { Explicit membership proposal. Typed intents determine the exact final
+      inventory/order; related source ranges may repair dependencies together.
+      All drafts refuse and only subsequent complete construction can publish. }
+    function PrepareSourceFileChanges(const AChanges: array of TNyxPascalFileChange;
+      const AProject: INyxPascalProject;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
     function CompleteSourceRequest(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     { Capture a queued explicit design intent against the fresh current pair.
@@ -3873,6 +3880,70 @@ begin
   Result.FSourceEdit := True;
   Result.FProjectSourceEdit := True;
   Result.FChanged := True;
+end;
+
+function TNyxStudioSession.PrepareSourceFileChanges(
+  const AChanges: array of TNyxPascalFileChange;
+  const AProject: INyxPascalProject;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LOriginal: INyxPascalProject;
+  LExpected: INyxPascalProject;
+  LProject: INyxPascalProject;
+  LIndex: Integer;
+begin
+
+  if SourceDraftsPending then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create(
+      'Resolve all pending Pascal file drafts before membership changes');
+  end;
+  LOriginal := FSourceWorkspace.Capture.Files.Open(Source);
+
+  if LOriginal = nil then
+  begin
+    LOriginal := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Source)), Source);
+  end;
+  LExpected := NyxPascalFileChanges(AChanges).Stage(LOriginal);
+  LProject := CaptureNyxPascalProject(AProject);
+
+  if (LProject.MainUnit.Name <> LExpected.MainUnit.Name) or
+    (LProject.Count <> LExpected.Count) or
+    (LProject.Limits.MaximumFiles <> LExpected.Limits.MaximumFiles) or
+    (LProject.Limits.MaximumBytes <> LExpected.Limits.MaximumBytes) then
+  begin
+    raise ENyxProjectConflict.Create('The proposal differs from its typed membership inventory');
+  end;
+  for LIndex := 0 to LExpected.Count - 1 do
+  begin
+
+    if (LProject.Input(LIndex).Kind <> LExpected.Input(LIndex).Kind) or
+      (LProject.Input(LIndex).Name <> LExpected.Input(LIndex).Name) then
+    begin
+      raise ENyxProjectConflict.Create('Typed membership retains exact file identities and order');
+    end;
+  end;
+  for LIndex := 0 to High(AChanges) do
+  begin
+
+    if (AChanges[LIndex].Kind = npfcCreate) and
+      (AChanges[LIndex].FileReference.Text(LProject) <> AChanges[LIndex].Text) then
+    begin
+      raise ENyxProjectConflict.Create('A created file retains its exact typed initial text');
+    end;
+  end;
+  Result := PrepareSourceRequest(ASchemaRevision);
+  Result.FSource := LProject.Source;
+  Result.FInputFiles := TNyxPascalProjectFiles.Capture(LProject);
+  Result.FSourceEdit := True;
+  Result.FProjectSourceEdit := True;
+  Result.FChanged := (LProject.Source <> Source) or
+    (Result.FInputFiles.Encoded <> TNyxPascalProjectFiles.Capture(LOriginal).Encoded);
+
+  if not Result.FChanged then
+  begin
+    raise ENyxModel.Create('File membership group has no resulting changes');
+  end;
 end;
 
 function TNyxStudioSession.CompleteSourceRequest(

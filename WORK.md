@@ -7,6 +7,9 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Cleanup helpers are on-demand requests. Do not repeatedly recreate/review them
+or announce “cleanup build script ready” while doing unrelated goal work.
+
 Type-comment review (2026-10-16): the browser file-save adapter's six existing
 type comments were reviewed against their implementations; the Window bridge
 now names its mapped API explicitly. PROJECT.md and AGENTS.md explicitly include
@@ -30,7 +33,69 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Semantic supporting-file authoring — 2026-10-17
+## Current integration: Semantic file membership — 2026-10-17
+
+Previous goal turn is progress: pushed 5c94eee adds bounded helper windows and
+atomic source ranges, with actual native compiler/observing/history evidence.
+Reassessment of original NS-4 workflow criterion five ends range/formatter
+variants and follows semantic inventory management through existing typed file
+changes/reviews. Existing nyx_pascal now supplies grouped creation/removal plus
+related exact source ranges in one constructor/publication/history step, with
+actor-bound removal review. This makes the source-file workflow usable without asking
+an operator to drive the Files form. Full original criteria/counters/credit stay
+open; no artificial smaller task or installed-schema claim is introduced.
+
+edit-files accepts typed unit/include changes and optional related original-file
+ranges. Creation uses the ordinary English template unless text is supplied.
+review-files names all removals before construction and seals the transport owner,
+revision and exact group. Eight warnings expire on revision/disconnect. Main
+membership cannot change, each target appears once, and ranges cannot also target
+a membership-changed file. Sixteen total operations and shared 262144-scalar
+creation/replacement budgets retain the existing separate expected-text budget.
+Private membership staging permits dependency repair before final validation.
+The existing sealed source request, owning pool and paired publisher construct
+the complete result once; no proposed text enters visible buffers beforehand.
+
+Accepted composite evidence on the provisioned drive:
+
+- logs/semantic-1-run.log: 181 actual native editor/compiler checks at 1280/390,
+  clean heap. Production semantic tools create a used unit/include whose Unicode
+  result changes the document, then review/remove both while repairing retained
+  callers. Ordinary mounted memo/model/selection, exact paired Undo/Redo, retry,
+  wrong-owner/changed/expired review refusal, compiler failure and late typing pass.
+  Socket transport is substituted; this is not authenticated HTTP evidence.
+- logs/portable-1-run.log: 63 native portable checks, including 11 new membership/
+  dependency/Unicode/NUL/alias/budget/refusal checks; clean heap.
+- logs/authority-1-run.log: maintained 150 authority regressions, clean heap.
+- Nineteen child compiler logs include four deliberate refusal logs and zero
+  warnings. Nine accepted top-level compiler logs have zero owned warnings;
+  four pas2js products/consumers each retain seven upstream RTL warnings (28 total).
+  Both Studios/backend/worker and portable/authority browser consumers compile;
+  no browser product or consumer executes.
+- All five current protected hashes remain exact, retaining the complete nine
+  contexts/history/drafts/profile. The inherited historical user-config difference
+  remains separate. Frozen 7422453's 349 artifacts verify, clean heap. All owned
+  compiler/runtime handles are joined; no owned process or listener remains.
+
+source-pins-1-private.json pins all ten Pascal inputs throughout construction.
+After every handle joined, final source adds four preferred blank lines and
+corrects the agent retirement/request-membership comments in two units only.
+Those nonfunctional changes receive diff/whitespace review, not another runtime
+claim. final-source-pins-private.json owns that final composite identity.
+Retain the preflight managed-result warning as excluded evidence: initializing
+the decoder result removed it before all accepted compiler/runtime checks.
+
+Stop membership/review/compiler variants. Reassess general supporting-file
+declaration/navigation/completion under original NS-4/NS-5 owners; broader source
+grammar, browser/HTTP/observing quality, full parity and delivery remain open.
+No original full criterion/task/counter/credit/DONE closes from this integration.
+
+No Nyx tools are exposed here; the never-listening production engine remains the
+explicit semantic fallback. No HTTP host/browser/capture, protected configuration/
+enrollment/cleanup retry, approval bypass or sub-agents. New evidence and five
+current protected hashes are behind .local/semantic-file-membership-paths-private.json.
+
+## Previous integration: Semantic supporting-file authoring — 2026-10-17
 
 Previous goal turn is progress: 298e47d supplied ordinary file creation/removal.
 Reassessment of original NS-4 workflow criterion five found that nyx_pascal still

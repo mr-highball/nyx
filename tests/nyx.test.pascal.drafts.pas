@@ -331,6 +331,9 @@ var
   LBefore: TNyxText;
   LUnitText: TNyxText;
   LLarge: TNyxText;
+  LCreated: INyxPascalProject;
+  LChanges: array of TNyxPascalFileChange;
+  LDirective: TNyxText;
   LRejected: Boolean;
   LChecks: Integer;
 
@@ -477,6 +480,107 @@ begin
   Check((LOriginal.Source = CMain) and
     (TNyxPascalProjectFiles.Capture(LOriginal).Encoded = LBefore),
     'all refusal cases retain the exact original project');
+  LDirective := 'implementation' + #10 + '{$I additions.inc}';
+  SetLength(LChanges, 1);
+  LChanges[0] := TNyxPascalFileChange.CreateInclude(NyxPascalInclude('additions.inc'))
+    .WithText(CInclude);
+  LGroup := NyxSourceProjectMutation(LChanges, [Range(LMain,
+    NyxTextScalarCount(Copy(CMain, 1, Pos('implementation', CMain) - 1)),
+    'implementation', LDirective)]);
+  LChanges[0] := TNyxPascalFileChange.CreateInclude(NyxPascalInclude('different.inc'));
+  LCreated := LGroup.PrepareProject(LOriginal);
+  Check((LCreated.Count = LOriginal.Count + 1) and
+    (TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('additions.inc')).Text(LCreated) = CInclude),
+    'captured creation and original-source directive admit together with exact Unicode/NUL');
+  Check(Pos(LDirective, LCreated.Source) > 0,
+    'related dependency text is prepared before complete project validation');
+  LRejected := False;
+  try
+    TNyxPascalFileChange.Remove(TNyxPascalSourceRef.IncludeFile(
+      NyxPascalInclude('additions.inc'))).Candidate(LCreated);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'ordinary single-file removal retains missing-include refusal');
+  LResult := NyxSourceProjectMutation([TNyxPascalFileChange.Remove(
+    TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('additions.inc')))],
+    [Range(LMain, NyxTextScalarCount(Copy(LCreated.Source, 1,
+      Pos(LDirective, LCreated.Source) - 1)), LDirective, 'implementation')])
+    .PrepareProject(LCreated);
+  Check((LResult.Source = CMain) and
+    (TNyxPascalProjectFiles.Capture(LResult).Encoded = LBefore),
+    'grouped removal repairs its dependency and returns every original input exactly');
+  LRejected := False;
+  try
+    NyxSourceProjectMutation([TNyxPascalFileChange.Remove(LInclude)],
+      [Range(LInclude, 0, '', ' ')]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'membership owns a whole file and cannot ambiguously share its ranges');
+  LRejected := False;
+  try
+    NyxSourceProjectMutation([TNyxPascalFileChange.CreateInclude(NyxPascalInclude('NOTES.inc'))], [])
+      .PrepareProject(LOriginal);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'new file creation refuses a case alias of an existing helper');
+  LRejected := False;
+  try
+    NyxPascalFileChanges([TNyxPascalFileChange.Remove(LInclude),
+      TNyxPascalFileChange.CreateInclude(NyxPascalInclude('notes.inc'))]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'a membership target cannot appear twice in one reviewed group');
+  LRejected := False;
+  try
+    NyxSourceProjectMutation([TNyxPascalFileChange.CreateInclude(
+      NyxPascalInclude('large.inc')).WithText(LLarge)], [Range(LMain, 0, '', LLarge)]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'new file bytes and source replacements share the total scalar budget');
+  LRejected := False;
+  try
+    NyxSourceProjectMutation([], [Range(LMain, 0, '', ' ')]);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'range-only proposals use the existing fixed-inventory contract');
+  LRejected := False;
+  try
+    NyxSourceProjectMutation([TNyxPascalFileChange.Remove(TNyxPascalSourceRef.Main)], []);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'no grouped path can remove the main source');
+  Check((LOriginal.Source = CMain) and
+    (TNyxPascalProjectFiles.Capture(LOriginal).Encoded = LBefore) and
+    (Pos(LDirective, LCreated.Source) > 0),
+    'successful and refused groups retain both independent previous projects');
   Result := LChecks;
 end;
 

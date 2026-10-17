@@ -22,7 +22,10 @@ expanded-scope weights/allocation require reassessment before completion credit.
 Current-source [semantic source projects](docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
 extend the existing Pascal tool with bounded file identities/helper windows and
 one compiler-backed mixed-file range group. Ordinary file creation/removal remains
-available through the public Nyx form; semantic membership/declaration/completion
+available through the public Nyx form. The existing semantic Pascal tool also
+supports [reviewed grouped membership](docs/pascal-projects.md#semantic-source-file-membership)
+and related exact ranges, with one complete constructor/history publication.
+General declaration/completion
 and full source/quality/parity/delivery keep their original NS-4/NS-5 owners.
 WORK.md separates actual native/compiler/observing evidence from browser
 compilation and source-only schema changes. No original full criterion/task or

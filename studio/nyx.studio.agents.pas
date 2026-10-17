@@ -115,6 +115,10 @@ type
     FRootReviews: array of TNyxDataValue;
     FRootRemovals: array of INyxRootRemoval;
     FRootReviewSerial: Integer;
+    { Eight actor/revision/exact-group warnings. Values own bounded request text;
+      no editor/node is borrowed and authority expires on change/disconnect. }
+    FFileReviews: array of TNyxDataValue;
+    FFileReviewSerial: Integer;
     { Eight file reservations, at most 8 MiB in total. Uploads/candidates are
       immutable interfaces in separate arrays for pas2js. Metadata is detached
       for rollback; authority and review tickets never enter project recovery. }
@@ -209,6 +213,10 @@ type
       const AArguments, AReceipt: TNyxDataValue);
     function RemoveRoots(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+    function ReviewSourceFiles(const AArguments: TNyxDataValue;
+      const AOwner: TNyxText): TNyxDataValue;
+    procedure RequireFileReview(const AArguments: TNyxDataValue;
+      const AOwner: TNyxText);
   public
     constructor Create; overload;
     { Trusted independent review seed; accepts an owned pair through ordinary
@@ -222,8 +230,8 @@ type
       This is never serialized; immutable commands/reports retain managed values,
       while the mutable Studio session and every backing array are independent. }
     function Clone: TNyxAgentSession;
-    { Trusted transport retirement releases only this owner's private uploads.
-      Accepted project, history and other live owners remain unchanged. }
+    { Trusted transport retirement releases this owner's private uploads and
+      source-file reviews. Accepted history and other owners remain unchanged. }
     procedure ReleaseProjectImports(const AOwner: TNyxText);
     { Explicit compiler review is staged transport work, not document adoption.
       Capture is pure; Start follows successful queue admission, so a full queue
@@ -352,6 +360,7 @@ type
       Capture validates the complete immutable group; only the owning compiler
       transport may publish its subsequently executed source request. }
     function CaptureSourceEditPublication(const AArguments: TNyxDataValue;
+      const AOwner: TNyxText;
       out ARequest: TNyxStudioSourceRequest;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
     { Supporting-input edits always need construction, including a literal main
@@ -705,6 +714,8 @@ begin
   FRootReviews := Copy(AOrigin.FRootReviews);
   FRootRemovals := Copy(AOrigin.FRootRemovals);
   FRootReviewSerial := AOrigin.FRootReviewSerial;
+  FFileReviews := Copy(AOrigin.FFileReviews);
+  FFileReviewSerial := AOrigin.FFileReviewSerial;
   FProjectImports := Copy(AOrigin.FProjectImports);
   FProjectUploads := Copy(AOrigin.FProjectUploads);
   FProjectCandidates := Copy(AOrigin.FProjectCandidates);
@@ -756,6 +767,7 @@ begin
   FProjectImports := nil;
   FProjectUploads := nil;
   FProjectCandidates := nil;
+  FFileReviews := nil;
   FProjectExportRevision := 0;
   FProjectExportPair := NyxProjectPair('', '');
   FProjectExportPacket := '';
@@ -2889,22 +2901,29 @@ begin
   Result := NyxSourcePatch(LEdits);
 end;
 
+type
+  { Detached typed ranges decoded only at the semantic boundary; caller arrays
+    never become editor state and the immutable patch recaptures every value. }
+  TSourceFileEdits = array of TNyxSourceFileEdit;
+  { Chronological helper intents carry exact typed references and copied text. }
+  TSourceFileChanges = array of TNyxPascalFileChange;
+
 { File groups reuse the same scalar ranges and complete group budgets. Omitted
   selectors retain legacy main semantics; all other identities are explicit. }
-function ReadSourceProjectEditPatch(const AChanges: TNyxDataValue): INyxSourceProjectPatch;
+function ReadSourceFileEdits(const AChanges: TNyxDataValue): TSourceFileEdits;
 var
   LChange: TNyxDataValue;
   LFile: TNyxPascalSourceRef;
-  LEdits: array of TNyxSourceFileEdit;
   LIndex: Integer;
 begin
+  Result := nil;
 
   if (AChanges.Kind <> ndArray) or (AChanges.Count < 1) or
     (AChanges.Count > NyxMaximumSourceEdits) then
   begin
     raise ENyxModel.Create('Source edits require 1..16 changes');
   end;
-  SetLength(LEdits, AChanges.Count);
+  SetLength(Result, AChanges.Count);
   for LIndex := 0 to AChanges.Count - 1 do
   begin
     LChange := AChanges.Item(LIndex);
@@ -2921,11 +2940,208 @@ begin
     begin
       LFile := SourceFileSelection(LChange.Field('file'));
     end;
-    LEdits[LIndex] := NyxSourceFileEdit(LFile, NyxSourceEdit(
+    Result[LIndex] := NyxSourceFileEdit(LFile, NyxSourceEdit(
       IntegerArgument(LChange, 'offset', 0, 0, NyxMaximumSourceCharacters),
       TextArgument(LChange, 'expected'), TextArgument(LChange, 'replacement')));
   end;
-  Result := NyxSourceProjectPatch(LEdits);
+end;
+
+function ReadSourceProjectEditPatch(const AChanges: TNyxDataValue): INyxSourceProjectPatch;
+begin
+  Result := NyxSourceProjectPatch(ReadSourceFileEdits(AChanges));
+end;
+
+{ Parse membership and its optional related ranges once, before any compiler or
+  review effect. Closed selectors prevent main/path/case fallback semantics. }
+function ReadSourceMembership(const AArguments: TNyxDataValue;
+  out AChanges: TSourceFileChanges): INyxSourceProjectPatch;
+var
+  LItems: TNyxDataValue;
+  LItem: TNyxDataValue;
+  LFile: TNyxPascalSourceRef;
+  LEdits: TSourceFileEdits;
+  LIndex: Integer;
+begin
+  LItems := AArguments.Field('changes');
+
+  if (LItems.Kind <> ndArray) or (LItems.Count < 1) or
+    (LItems.Count > NyxMaximumSourceEdits) then
+  begin
+    raise ENyxModel.Create('File membership requires 1..16 changes');
+  end;
+  SetLength(AChanges, LItems.Count);
+  for LIndex := 0 to LItems.Count - 1 do
+  begin
+    LItem := LItems.Item(LIndex);
+    NyxAgentFields(LItem, '|op|file|text|');
+    LFile := SourceFileSelection(LItem.Field('file'));
+
+    if LFile.Role = npsMain then
+    begin
+      raise ENyxModel.Create('Main source cannot be created or removed');
+    end;
+
+    if TextArgument(LItem, 'op') = 'create' then
+    begin
+
+      if LFile.Role = npsUnit then
+      begin
+        AChanges[LIndex] := TNyxPascalFileChange.CreateUnit(
+          NyxPascalUnit(Copy(LFile.Name, 1, Length(LFile.Name) - 4)));
+      end
+      else
+      begin
+        AChanges[LIndex] := TNyxPascalFileChange.CreateInclude(NyxPascalInclude(LFile.Name));
+      end;
+
+      if NyxAgentHas(LItem, 'text') then
+      begin
+        AChanges[LIndex] := AChanges[LIndex].WithText(TextArgument(LItem, 'text'));
+      end;
+    end
+    else if TextArgument(LItem, 'op') = 'remove' then
+    begin
+
+      if NyxAgentHas(LItem, 'text') then
+      begin
+        raise ENyxModel.Create('Removal cannot supply creation text');
+      end;
+      AChanges[LIndex] := TNyxPascalFileChange.Remove(LFile);
+    end
+    else
+    begin
+      raise ENyxModel.Create('File membership op must be create or remove');
+    end;
+  end;
+  LEdits := nil;
+
+  if NyxAgentHas(AArguments, 'edits') then
+  begin
+    LEdits := ReadSourceFileEdits(AArguments.Field('edits'));
+  end;
+  Result := NyxSourceProjectMutation(AChanges, LEdits);
+end;
+
+{ Exact wire group, excluding the apply mode/receipt and private review ticket.
+  Omitted related ranges normalize to an empty array for equivalent reviews. }
+function SourceMembershipKey(const AArguments: TNyxDataValue): TNyxText;
+var
+  LEdits: TNyxDataValue;
+begin
+  LEdits := NyxArray([]);
+
+  if NyxAgentHas(AArguments, 'edits') then
+  begin
+    LEdits := AArguments.Field('edits');
+  end;
+  Result := NyxObject([NyxField('changes', AArguments.Field('changes')),
+    NyxField('edits', LEdits)]).ToJSON;
+end;
+
+function TNyxAgentSession.ReviewSourceFiles(const AArguments: TNyxDataValue;
+  const AOwner: TNyxText): TNyxDataValue;
+var
+  LChanges: TSourceFileChanges;
+  LInputs: INyxPascalProject;
+  LWarnings: array of TNyxDataValue;
+  LCount: Integer;
+  LIndex: Integer;
+  LID: TNyxText;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|changes|edits|');
+  RequireRevision(AArguments);
+
+  if FSession.SourceDraftsPending then
+  begin
+    raise ENyxStudioDraftResolutionRequired.Create('Resolve all Pascal drafts before file review');
+  end;
+  ReadSourceMembership(AArguments, LChanges);
+  LInputs := FSession.ProjectSnapshot.Files.Open(FSession.Source);
+
+  if LInputs = nil then
+  begin
+    LInputs := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(FSession.Source)), FSession.Source);
+  end;
+  { Validate inventory independently of still-used dependencies. Review names
+    every removal before final source preparation/compilation may refuse it. }
+  LInputs := NyxPascalFileChanges(LChanges).Stage(LInputs);
+  SetLength(LWarnings, Length(LChanges));
+  LCount := 0;
+  for LIndex := 0 to High(LChanges) do
+  begin
+
+    if LChanges[LIndex].Kind = npfcRemove then
+    begin
+      FSession.ReviewFileRemoval(LChanges[LIndex].FileReference);
+      LWarnings[LCount] := SourceFileSelectionData(LChanges[LIndex].FileReference);
+      Inc(LCount);
+    end;
+  end;
+
+  if (LCount = 0) or (AOwner = '') or (FFileReviewSerial = High(Integer)) then
+  begin
+    raise ENyxModel.Create('Removal review requires a transport owner and at least one existing removal');
+  end;
+  SetLength(LWarnings, LCount);
+  LID := 'file-review-' + IntToStr(FFileReviewSerial + 1);
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('reviewID', NyxData(LID)), NyxField('removals', NyxArray(LWarnings)),
+    NyxField('warning', NyxData('These files will be removed. Repair retained uses/include references in the same group. Undo restores the complete project.'))]);
+  BoundContext(Result);
+
+  if Length(FFileReviews) = 8 then
+  begin
+    for LIndex := 1 to High(FFileReviews) do
+    begin
+      FFileReviews[LIndex - 1] := FFileReviews[LIndex];
+    end;
+    SetLength(FFileReviews, 7);
+  end;
+  Inc(FFileReviewSerial);
+  LIndex := Length(FFileReviews);
+  SetLength(FFileReviews, LIndex + 1);
+  FFileReviews[LIndex] := NyxObject([NyxField('id', NyxData(LID)),
+    NyxField('owner', NyxData(AOwner)), NyxField('revision', NyxData(FRevision)),
+    NyxField('group', NyxData(SourceMembershipKey(AArguments)))]);
+end;
+
+procedure TNyxAgentSession.RequireFileReview(const AArguments: TNyxDataValue;
+  const AOwner: TNyxText);
+var
+  LChanges: TNyxDataValue;
+  LIndex: Integer;
+  LRequired: Boolean;
+  LID: TNyxText;
+begin
+  LRequired := False;
+  LChanges := AArguments.Field('changes');
+  for LIndex := 0 to LChanges.Count - 1 do
+  begin
+    LRequired := LRequired or (TextArgument(LChanges.Item(LIndex), 'op') = 'remove');
+  end;
+
+  if not LRequired then
+  begin
+
+    if NyxAgentHas(AArguments, 'reviewID') then
+    begin
+      raise ENyxModel.Create('Creation-only groups do not take a removal reviewID');
+    end;
+    Exit;
+  end;
+  LID := TextArgument(AArguments, 'reviewID');
+  for LIndex := 0 to High(FFileReviews) do
+  begin
+
+    if (FFileReviews[LIndex].Field('id').AsText = LID) and
+      (FFileReviews[LIndex].Field('owner').AsText = AOwner) and
+      (FFileReviews[LIndex].Field('revision').AsInteger = FRevision) and
+      (FFileReviews[LIndex].Field('group').AsText = SourceMembershipKey(AArguments)) then
+    begin
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Removal needs a current owner/revision/exact-group reviewID');
 end;
 
 function TNyxAgentSession.SourceFiles(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -3400,7 +3616,8 @@ begin
       LRoutineApply := TextArgument(AArguments, 'mode') = 'edit-routines';
       LDeclarationApply := TextArgument(AArguments, 'mode') = 'edit-declarations';
       LViewsApply := TextArgument(AArguments, 'mode') = 'edit-views';
-      LSourceApply := TextArgument(AArguments, 'mode') = 'edit-unit';
+      LSourceApply := (TextArgument(AArguments, 'mode') = 'edit-unit') or
+        (TextArgument(AArguments, 'mode') = 'edit-files');
     end;
     if ATool = 'nyx_roots' then
     begin
@@ -3562,7 +3779,15 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if TextArgument(AArguments, 'mode') = 'files' then
+      if TextArgument(AArguments, 'mode') = 'review-files' then
+      begin
+        Result := ReviewSourceFiles(AArguments, LAuthority);
+      end
+      else if TextArgument(AArguments, 'mode') = 'edit-files' then
+      begin
+        raise ENyxProjectConflict.Create('File membership requires the owning compiler-aware MCP transport');
+      end
+      else if TextArgument(AArguments, 'mode') = 'files' then
       begin
         Result := SourceFiles(AArguments);
       end
@@ -4153,9 +4378,10 @@ function TNyxAgentSession.SourceEditReceipt(const AOwner: TNyxText;
   const AArguments: TNyxDataValue; out AReceipt: TNyxDataValue): Boolean;
 begin
 
-  if AArguments.Field('mode').AsText <> 'edit-unit' then
+  if (AArguments.Field('mode').AsText <> 'edit-unit') and
+    (AArguments.Field('mode').AsText <> 'edit-files') then
   begin
-    raise ENyxModel.Create('Source edit receipts require edit-unit mode');
+    raise ENyxModel.Create('Source edit receipts require edit-unit or edit-files mode');
   end;
   Result := CompiledReceipt('nyx_pascal', AOwner, AArguments, AReceipt);
 end;
@@ -4174,11 +4400,20 @@ begin
   if (ATool = 'nyx_pascal') or (ATool = 'nyx_state') or
     (ATool = 'nyx_collections') or (ATool = 'nyx_resources') then
   begin
-    NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|');
+
+    if ATool = 'nyx_pascal' then
+    begin
+      NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|edits|reviewID|');
+    end
+    else
+    begin
+      NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|');
+    end;
 
     if (AArguments.Field('mode').AsText <> 'apply') and
       not ((ATool = 'nyx_pascal') and
-        (AArguments.Field('mode').AsText = 'edit-unit')) then
+        ((AArguments.Field('mode').AsText = 'edit-unit') or
+          (AArguments.Field('mode').AsText = 'edit-files'))) then
     begin
       raise ENyxModel.Create('Compiled focused receipts require their supported mutation mode');
     end;
@@ -4306,6 +4541,7 @@ begin
 end;
 
 function TNyxAgentSession.CaptureSourceEditPublication(const AArguments: TNyxDataValue;
+  const AOwner: TNyxText;
   out ARequest: TNyxStudioSourceRequest;
   out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
 var
@@ -4316,11 +4552,21 @@ var
   LProjectGroup: Boolean;
   LChanges: TNyxDataValue;
   LIndex: Integer;
+  LMembership: TSourceFileChanges;
 begin
-  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+
+  if AArguments.Field('mode').AsText = 'edit-files' then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|edits|reviewID|');
+  end
+  else
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+  end;
   RequireRevision(AArguments);
 
-  if (AArguments.Field('mode').AsText <> 'edit-unit') or
+  if ((AArguments.Field('mode').AsText <> 'edit-unit') and
+    (AArguments.Field('mode').AsText <> 'edit-files')) or
     (FPermission <> apEdit) or not SourceEditRequiresCompiler(AArguments) then
   begin
     raise ENyxModel.Create('Compiled source edits require Allow edits and a captured compiler intent');
@@ -4331,6 +4577,22 @@ begin
   begin
     raise ENyxStudioDraftResolutionRequired.Create(
       'Resolve the pending Pascal draft before source edits');
+  end;
+
+  if AArguments.Field('mode').AsText = 'edit-files' then
+  begin
+    LProjectPatch := ReadSourceMembership(AArguments, LMembership);
+    RequireFileReview(AArguments, AOwner);
+    LInputs := Result.Files.Open(Result.Source);
+
+    if LInputs = nil then
+    begin
+      LInputs := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Result.Source)), Result.Source);
+    end;
+    ASchemas := CaptureNyxSchemas;
+    ARequest := FSession.PrepareSourceFileChanges(LMembership,
+      LProjectPatch.PrepareProject(LInputs), ASchemas.Revision);
+    Exit;
   end;
   LChanges := AArguments.Field('changes');
   LProjectGroup := False;
@@ -4373,6 +4635,11 @@ var
   LChanges: TNyxDataValue;
   LIndex: Integer;
 begin
+
+  if AArguments.Field('mode').AsText = 'edit-files' then
+  begin
+    Exit(True);
+  end;
   Result := RequiresCompiledTransaction;
 
   if Result then

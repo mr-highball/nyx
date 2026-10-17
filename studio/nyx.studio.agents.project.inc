@@ -54,7 +54,20 @@ end;
 procedure TNyxAgentSession.ReleaseProjectImports(const AOwner: TNyxText);
 var
   LIndex: Integer;
+  LNext: Integer;
 begin
+  for LIndex := High(FFileReviews) downto 0 do
+  begin
+
+    if FFileReviews[LIndex].Field('owner').AsText = AOwner then
+    begin
+      for LNext := LIndex + 1 to High(FFileReviews) do
+      begin
+        FFileReviews[LNext - 1] := FFileReviews[LNext];
+      end;
+      SetLength(FFileReviews, Length(FFileReviews) - 1);
+    end;
+  end;
   for LIndex := High(FProjectImports) downto 0 do
   begin
 

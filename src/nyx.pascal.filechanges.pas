@@ -63,9 +63,34 @@ type
     property Text: TNyxText read FText;
   end;
 
+  { Copied chronological membership intents. Stage keeps intermediate dependency
+    gaps private so callers can repair uses/include text in the same candidate.
+    It never grants compilation or publication authority. Candidate validates the
+    complete final project; both methods retain independent immutable inputs. }
+  INyxPascalFileChanges = interface(IInterface)
+    ['{68F89A18-71A1-4D73-84BC-265587A0343B}']
+    function Stage(const AProject: INyxPascalProject): INyxPascalProject;
+    function Candidate(const AProject: INyxPascalProject): INyxPascalProject;
+  end;
+
+{ Freeze 1..16 typed helper changes. Main removal/creation always refuses. }
+function NyxPascalFileChanges(const AChanges: array of TNyxPascalFileChange): INyxPascalFileChanges;
+
 implementation
 
 uses SysUtils;
+
+type
+  { Detached membership vector; intermediate projects remain private source data,
+    never accepted compiler inputs. No session, editor or application is retained. }
+  TNyxPascalFileChanges = class(TInterfacedObject, INyxPascalFileChanges)
+  private
+    FChanges: array of TNyxPascalFileChange;
+  public
+    constructor Create(const AChanges: array of TNyxPascalFileChange);
+    function Stage(const AProject: INyxPascalProject): INyxPascalProject;
+    function Candidate(const AProject: INyxPascalProject): INyxPascalProject;
+  end;
 
 class function TNyxPascalFileChange.CreateUnit(
   const AUnit: TNyxPascalUnitRef): TNyxPascalFileChange;
@@ -129,22 +154,23 @@ begin
   Result.FText := AText;
 end;
 
-function TNyxPascalFileChange.Candidate(
+function StageFileChange(const AChange: TNyxPascalFileChange;
   const AProject: INyxPascalProject): INyxPascalProject;
 var
   LIndex: Integer;
   LFound: Boolean;
 begin
-  Validate;
-  Result := CaptureNyxPascalProject(AProject);
+  AChange.Validate;
+  Result := AProject;
   LFound := False;
   for LIndex := 0 to Result.Count - 1 do
   begin
 
-    if SameText(String(Result.Input(LIndex).Name), String(FFile.Name)) then
+    if SameText(String(Result.Input(LIndex).Name), String(AChange.FileReference.Name)) then
     begin
 
-      if (FKind = npfcRemove) and (Result.Input(LIndex).Name <> FFile.Name) then
+      if (AChange.Kind = npfcRemove) and
+        (Result.Input(LIndex).Name <> AChange.FileReference.Name) then
       begin
         raise ENyxPascalProject.Create('Removal requires the exact captured file identity');
       end;
@@ -153,32 +179,88 @@ begin
     end;
   end;
 
-  if ((FKind = npfcCreate) and LFound) or ((FKind = npfcRemove) and not LFound) then
+  if ((AChange.Kind = npfcCreate) and LFound) or
+    ((AChange.Kind = npfcRemove) and not LFound) then
   begin
     raise ENyxPascalProject.Create('Creating requires a new file; removing requires an existing file');
   end;
 
-  if FFile.Role = npsUnit then
+  if AChange.FileReference.Role = npsUnit then
   begin
 
-    if FKind = npfcCreate then
+    if AChange.Kind = npfcCreate then
     begin
-      Result := Result.WithUnit(NyxPascalUnit(Copy(FFile.Name, 1, Length(FFile.Name) - 4)), FText);
+      Result := Result.WithUnit(NyxPascalUnit(Copy(AChange.FileReference.Name, 1,
+        Length(AChange.FileReference.Name) - 4)), AChange.Text);
     end
     else
     begin
-      Result := Result.WithoutUnit(NyxPascalUnit(Copy(FFile.Name, 1, Length(FFile.Name) - 4)));
+      Result := Result.WithoutUnit(NyxPascalUnit(Copy(AChange.FileReference.Name, 1,
+        Length(AChange.FileReference.Name) - 4)));
     end;
   end
-  else if FKind = npfcCreate then
+  else if AChange.Kind = npfcCreate then
   begin
-    Result := Result.WithInclude(NyxPascalInclude(FFile.Name), FText);
+    Result := Result.WithInclude(NyxPascalInclude(AChange.FileReference.Name), AChange.Text);
   end
   else
   begin
-    Result := Result.WithoutInclude(NyxPascalInclude(FFile.Name));
+    Result := Result.WithoutInclude(NyxPascalInclude(AChange.FileReference.Name));
   end;
-  Result.Validate;
+end;
+
+constructor TNyxPascalFileChanges.Create(const AChanges: array of TNyxPascalFileChange);
+var
+  LIndex: Integer;
+  LScan: Integer;
+begin
+  inherited Create;
+
+  if (Length(AChanges) < 1) or (Length(AChanges) > 16) then
+  begin
+    raise ENyxPascalProject.Create('File membership requires 1..16 changes');
+  end;
+  SetLength(FChanges, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    AChanges[LIndex].Validate;
+    for LScan := 0 to LIndex - 1 do
+    begin
+
+      if SameText(String(AChanges[LScan].FileReference.Name),
+        String(AChanges[LIndex].FileReference.Name)) then
+      begin
+        raise ENyxPascalProject.Create('Each membership target appears once per group');
+      end;
+    end;
+    FChanges[LIndex] := AChanges[LIndex];
+  end;
+end;
+
+function TNyxPascalFileChanges.Stage(const AProject: INyxPascalProject): INyxPascalProject;
+var
+  LIndex: Integer;
+begin
+  Result := CaptureNyxPascalProject(AProject);
+  for LIndex := 0 to High(FChanges) do
+  begin
+    Result := StageFileChange(FChanges[LIndex], Result);
+  end;
+end;
+
+function TNyxPascalFileChanges.Candidate(const AProject: INyxPascalProject): INyxPascalProject;
+begin
+  Result := CaptureNyxPascalProject(Stage(AProject));
+end;
+
+function NyxPascalFileChanges(const AChanges: array of TNyxPascalFileChange): INyxPascalFileChanges;
+begin
+  Result := TNyxPascalFileChanges.Create(AChanges);
+end;
+
+function TNyxPascalFileChange.Candidate(const AProject: INyxPascalProject): INyxPascalProject;
+begin
+  Result := NyxPascalFileChanges([Self]).Candidate(AProject);
 end;
 
 end.

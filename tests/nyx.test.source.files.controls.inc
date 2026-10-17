@@ -385,6 +385,198 @@ var
         Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeRead), AReason);
       end;
 
+      { Inventory changes use production wire operations and the same observing
+        editor. New helpers actually supply the constructed plan, so captured
+        metadata alone cannot satisfy this journey. All fixtures are owned. }
+      procedure MembershipFiles;
+      const
+        CPlan: TNyxText = 'A semantic helper plan 🚀 𐐷';
+        CUnitText: TNyxText = 'unit semantic.extra;' + #10 +
+          '{$mode delphi}{$H+}{$codepage utf8}' + #10 +
+          'interface' + #10 + 'uses nyx.text;' + #10 +
+          'function ExtraPlan: TNyxText;' + #10 + 'implementation' + #10 +
+          'function ExtraPlan: TNyxText;' + #10 + 'begin' + #10 +
+          '  Result := TNyxText(''A semantic helper plan 🚀 𐐷'');' + #10 + 'end;' + #10 + 'end.' + #10;
+        CIncludeText: TNyxText = 'function LocalExtraPlan: TNyxText;' + #10 +
+          'begin' + #10 + '  Result := ExtraPlan;' + #10 + 'end;' + #10;
+        CImplementation: TNyxText = 'implementation' + #10 +
+          'uses semantic.extra;' + #10 + '{$I semantic-extra.inc}';
+      var
+        LNewUnit: TNyxPascalSourceRef;
+        LNewInclude: TNyxPascalSourceRef;
+        LBeforeMembership: TNyxText;
+        LAfterMembership: TNyxText;
+        LCreate: TNyxDataValue;
+        LRemove: TNyxDataValue;
+        LRelated: TNyxDataValue;
+        LReview: TNyxDataValue;
+        LApply: TNyxDataValue;
+        LReply: TNyxDataValue;
+        LJob: TNyxDataValue;
+        LTicket: TNyxText;
+        LRejected: Boolean;
+        LFileCount: Integer;
+
+        function Member(const AOperation: TNyxText;
+          const AFile: TNyxPascalSourceRef; const AText: TNyxText = ''): TNyxDataValue;
+        begin
+
+          if AOperation = 'create' then
+          begin
+            Exit(NyxObject([NyxField('op', NyxData(AOperation)),
+              NyxField('file', Selector(AFile)), NyxField('text', NyxData(AText))]));
+          end;
+          Result := NyxObject([NyxField('op', NyxData(AOperation)),
+            NyxField('file', Selector(AFile))]);
+        end;
+
+        function Group(const AMode, AOperation: TNyxText;
+          const AChanges, AEdits: TNyxDataValue; const ATicket: TNyxText = ''): TNyxDataValue;
+        var
+          LFields: array of TNyxDataField;
+        begin
+          SetLength(LFields, 4);
+          LFields[0] := NyxField('mode', NyxData(AMode));
+          LFields[1] := NyxField('expectedRevision', NyxData(Revision));
+          LFields[2] := NyxField('changes', AChanges);
+          LFields[3] := NyxField('edits', AEdits);
+
+          if AMode = 'edit-files' then
+          begin
+            SetLength(LFields, 5);
+            LFields[4] := NyxField('operationId', NyxData(AOperation));
+          end;
+
+          if ATicket <> '' then
+          begin
+            SetLength(LFields, Length(LFields) + 1);
+            LFields[High(LFields)] := NyxField('reviewID', NyxData(ATicket));
+          end;
+          Result := NyxObject(LFields);
+        end;
+
+      begin
+        LNewUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('semantic.extra'));
+        LNewInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('semantic-extra.inc'));
+        LBeforeMembership := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LFileCount := GStudio.Session.SourceFileCount;
+        LCreate := NyxArray([Member('create', LNewUnit, CUnitText),
+          Member('create', LNewInclude, CIncludeText)]);
+        LRelated := NyxArray([
+          Change(LUnit, GStudio.Session.SourceFileText(LUnit), 'implementation', CImplementation),
+          Change(LInclude, GStudio.Session.SourceFileText(LInclude),
+            TNyxCodegen.TextLiteral(CInitial), 'LocalExtraPlan')]);
+        RefuseRead(Group('edit-files', 'membership-case-alias', NyxArray([
+          Member('create', TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('PLAN-values.inc')), '')]),
+          LRelated), 'membership refuses case aliases without publishing any paired input');
+        LReply := Apply(Group('edit-files', 'membership-compiler-refusal', NyxArray([
+          Member('create', LNewUnit, CUnitText), Member('create', LNewInclude,
+            'function LocalExtraPlan: TNyxText;' + #10 + 'begin' + #10 +
+            '  Result := MissingNewHelper;' + #10 + 'end;' + #10)]), LRelated));
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'refused') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeMembership) and
+          (GStudio.Session.SourceFileCount = LFileCount),
+          'new helper compiler failure retains every old input and admits no partial membership');
+        LApply := Group('edit-files', 'membership-create', LCreate, LRelated);
+        LReply := Apply(LApply);
+        Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeMembership) and
+          (GStudio.Session.SourceFileCount = LFileCount) and (Apply(LApply).ToJSON = LReply.ToJSON),
+          'grouped semantic creation retains visible inputs and returns one exact retry receipt');
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'committed') and
+          (GStudio.Session.SourceFileCount = LFileCount + 2) and
+          (GStudio.Session.SourceFileText(LNewUnit) = CUnitText) and
+          (GStudio.Session.SourceFileText(LNewInclude) = CIncludeText) and
+          (Pos(CPlan, GStudio.Session.Save) > 0),
+          'new unit/include and related ranges construct their actual Unicode document meaning / ' +
+          LJob.Field('error').AsText);
+        Check(GStudio.Session.ActiveSourceFile.SameFile(LInclude) and
+          (GStudio.CodeView.InputFor('studio-code') = LMemo) and
+          (AdjustLineBreaks(LMemo.Text, tlbsLF) = AdjustLineBreaks(
+            String(GStudio.Session.SourceFileText(LInclude)), tlbsLF)),
+          'ordinary observer keeps its selected helper and real memo through file creation');
+        LAfterMembership := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        Click('action-undo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeMembership,
+          'one ordinary Undo removes both new helpers and restores dependency source/design exactly');
+        Click('action-redo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterMembership,
+          'one ordinary Redo restores the entire constructed inventory');
+        LRemove := NyxArray([Member('remove', LNewUnit), Member('remove', LNewInclude)]);
+        LRelated := NyxArray([
+          Change(LUnit, GStudio.Session.SourceFileText(LUnit), CImplementation, 'implementation'),
+          Change(LInclude, GStudio.Session.SourceFileText(LInclude), 'LocalExtraPlan',
+            TNyxCodegen.TextLiteral(CInitial))]);
+        RefuseRead(Group('edit-files', 'membership-no-review', LRemove, LRelated),
+          'semantic helper removal requires an explicit current warning ticket');
+        LReview := Apply(Group('review-files', '', LRemove, LRelated));
+        LTicket := LReview.Field('reviewID').AsText;
+        Check((LReview.Field('removals').Count = 2) and
+          (Pos('removed', LReview.Field('warning').AsText) > 0) and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterMembership),
+          'bounded review names exact removals without compiling, mutation or history');
+        LApply := Group('edit-files', 'membership-remove', LRemove, LRelated, LTicket);
+        LRejected := False;
+        try
+          GSharedEngine.InvokeTool('nyx_pascal', 'a-different-owner', CActor, LApply);
+        except
+          on Exception do
+          begin
+            LRejected := True;
+          end;
+        end;
+        Check(LRejected and (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterMembership),
+          'same display name cannot borrow another transport removal review');
+        RefuseRead(Group('edit-files', 'membership-changed-group',
+          NyxArray([Member('remove', LNewUnit)]), LRelated, LTicket),
+          'review authority requires the exact unchanged membership/range group');
+        LMemo.Text := CUnitDraft;
+        Settled;
+        RefuseRead(LApply, 'unfinished ordinary typing refuses membership without losing any draft text');
+        Click('action-reset-source');
+        Settled;
+        { A fresh review follows any revision changed by ordinary draft restore. }
+        LReview := Apply(Group('review-files', '', LRemove, LRelated));
+        LTicket := LReview.Field('reviewID').AsText;
+        LApply := Group('edit-files', 'membership-remove', LRemove, LRelated, LTicket);
+        LReply := Apply(LApply);
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'committed') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeMembership),
+          'reviewed removal and dependency repair publish the exact original pair in one constructor / ' +
+          LJob.Field('error').AsText);
+        Click('action-undo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterMembership,
+          'one ordinary Undo restores removed files and all authored source exactly');
+        Click('action-redo');
+        Settled;
+        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBeforeMembership,
+          'one ordinary Redo reapplies the complete reviewed removal');
+        RefuseRead(Group('edit-files', 'membership-expired-review', LRemove, LRelated, LTicket),
+          'completed history/revision changes revoke earlier removal reviews');
+        LRelated := NyxArray([
+          Change(LUnit, GStudio.Session.SourceFileText(LUnit), 'implementation', CImplementation),
+          Change(LInclude, GStudio.Session.SourceFileText(LInclude),
+            TNyxCodegen.TextLiteral(CInitial), 'LocalExtraPlan')]);
+        LReply := Apply(Group('edit-files', 'membership-late-draft', LCreate, LRelated));
+        LMemo.Text := CUnitDraft;
+        Settled;
+        LAfterMembership := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        LJob := Await(LReply.Field('job').AsText);
+        Check((LJob.Field('publication').Field('state').AsText = 'refused') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfterMembership) and
+          (GStudio.Session.SourceFileCount = LFileCount) and (LMemo.Text = CUnitDraft),
+          'late ordinary typing revokes complete membership publication and preserves its exact buffer');
+        Click('action-reset-source');
+        Settled;
+        WriteLn('SEMANTIC MEMBERSHIP ', LCase, ' passed');
+        Flush(Output);
+      end;
+
     begin
       WriteLn('SEMANTIC FILES ', LCase, ' starting');
       Flush(Output);
@@ -575,6 +767,7 @@ var
         'late ordinary helper typing revokes publication and retains its exact draft/base');
       Click('action-reset-source');
       Settled;
+      MembershipFiles;
       WriteLn('SEMANTIC FILES ', LCase, ' passed');
       Flush(Output);
     end;

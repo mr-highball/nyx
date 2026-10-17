@@ -27,7 +27,8 @@ unit nyx.studio.sourceedits;
 interface
 
 uses
-  nyx.text, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.projects;
+  nyx.text, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.studio.projects;
 
 const
   { Scalar counts are identical for native UTF-8 and browser UTF-16. The group
@@ -94,8 +95,9 @@ type
   { Immutable ordered project range group. Each file's ranges are ascending and
     nonoverlapping even when different files are interleaved. The shared 16-edit
     and 262144-scalar side budgets apply to the COMPLETE group. Preparation
-    preserves membership, order, main identity and limits, validates the complete
-    result, and grants no execution/publication authority. The owning compiler
+    retains membership for range-only groups; explicit membership groups stage
+    their typed inventory together. All retain main identity/limits, validate the
+    complete result, and grant no execution/publication authority. The owning compiler
     must construct these exact independent inputs before one paired publication. }
   INyxSourceProjectPatch = interface(IInterface)
     ['{68F89A18-71A1-4D73-84BC-265587A0343A}']
@@ -114,6 +116,12 @@ function NyxSourcePatch(const AEdits: array of TNyxSourceEdit): INyxSourcePatch;
 function NyxSourceFileEdit(const AFile: TNyxPascalSourceRef;
   const AEdit: TNyxSourceEdit): TNyxSourceFileEdit;
 function NyxSourceProjectPatch(const AEdits: array of TNyxSourceFileEdit): INyxSourceProjectPatch;
+{ Membership and related original-file ranges share one complete final capture.
+  Ranges may not target created/removed files: creation owns their entire text.
+  Combined operation/replacement budgets include the new files. No intermediate
+  dependency gap escapes as accepted input or compiler authority. }
+function NyxSourceProjectMutation(const AChanges: array of TNyxPascalFileChange;
+  const AEdits: array of TNyxSourceFileEdit): INyxSourceProjectPatch;
 
 implementation
 
@@ -139,6 +147,19 @@ type
     FEdits: array of TNyxSourceFileEdit;
   public
     constructor Create(const AEdits: array of TNyxSourceFileEdit);
+    function Stage(const AOriginal, AStaged: INyxPascalProject): INyxPascalProject;
+    function PrepareProject(const AProject: INyxPascalProject): INyxPascalProject;
+  end;
+
+  { Owns copied helper intents and exact ranges. Staging remains detached; the
+    last capture alone validates dependencies spanning membership and source. }
+  TNyxSourceProjectMutation = class(TInterfacedObject, INyxSourceProjectPatch)
+  private
+    FChanges: INyxPascalFileChanges;
+    FPatch: INyxSourceProjectPatch;
+  public
+    constructor Create(const AChanges: array of TNyxPascalFileChange;
+      const AEdits: array of TNyxSourceFileEdit);
     function PrepareProject(const AProject: INyxPascalProject): INyxPascalProject;
   end;
 
@@ -347,10 +368,9 @@ begin
   end;
 end;
 
-function TNyxSourceProjectPatch.PrepareProject(
-  const AProject: INyxPascalProject): INyxPascalProject;
+function TNyxSourceProjectPatch.Stage(
+  const AOriginal, AStaged: INyxPascalProject): INyxPascalProject;
 var
-  LOriginal: INyxPascalProject;
   LIndex: Integer;
   LPrior: Integer;
   LScan: Integer;
@@ -362,8 +382,7 @@ var
   LPreparation: INyxSourcePatchPreparation;
   LText: TNyxText;
 begin
-  LOriginal := CaptureNyxPascalProject(AProject);
-  Result := LOriginal;
+  Result := AStaged;
   for LIndex := 0 to High(FEdits) do
   begin
     LFile := FEdits[LIndex].FileReference;
@@ -400,7 +419,7 @@ begin
     begin
       raise ENyxModel.Create('Project range preparation requires the scalar patch capability');
     end;
-    LText := LPreparation.PrepareSource(LFile.Text(LOriginal));
+    LText := LPreparation.PrepareSource(LFile.Text(AOriginal));
     case LFile.Role of
       npsMain:
         begin
@@ -416,12 +435,87 @@ begin
         end;
     end;
   end;
-  Result := CaptureNyxPascalProject(Result);
+end;
+
+function TNyxSourceProjectPatch.PrepareProject(
+  const AProject: INyxPascalProject): INyxPascalProject;
+var
+  LOriginal: INyxPascalProject;
+begin
+  LOriginal := CaptureNyxPascalProject(AProject);
+  Result := CaptureNyxPascalProject(Stage(LOriginal, LOriginal));
 end;
 
 function NyxSourceProjectPatch(const AEdits: array of TNyxSourceFileEdit): INyxSourceProjectPatch;
 begin
   Result := TNyxSourceProjectPatch.Create(AEdits);
+end;
+
+constructor TNyxSourceProjectMutation.Create(
+  const AChanges: array of TNyxPascalFileChange;
+  const AEdits: array of TNyxSourceFileEdit);
+var
+  LIndex: Integer;
+  LScan: Integer;
+  LReplacement: Integer;
+begin
+  inherited Create;
+
+  if (Length(AChanges) < 1) or
+    (Length(AChanges) + Length(AEdits) > NyxMaximumSourceEdits) then
+  begin
+    raise ENyxModel.Create('Membership and source ranges require 1..16 combined changes');
+  end;
+  FChanges := NyxPascalFileChanges(AChanges);
+  LReplacement := 0;
+  for LIndex := 0 to High(AChanges) do
+  begin
+    Inc(LReplacement, CharacterCount(AChanges[LIndex].Text, NyxMaximumSourceEditCharacters));
+    for LScan := 0 to High(AEdits) do
+    begin
+
+      if AChanges[LIndex].FileReference.SameFile(AEdits[LScan].FileReference) then
+      begin
+        raise ENyxModel.Create('A source range cannot target a membership-changed file');
+      end;
+    end;
+  end;
+  for LIndex := 0 to High(AEdits) do
+  begin
+    Inc(LReplacement, CharacterCount(AEdits[LIndex].Edit.Replacement,
+      NyxMaximumSourceEditCharacters));
+  end;
+
+  if LReplacement > NyxMaximumSourceEditCharacters then
+  begin
+    raise ENyxModel.Create('Created files and replacements share the 262144-scalar budget');
+  end;
+
+  if Length(AEdits) > 0 then
+  begin
+    FPatch := TNyxSourceProjectPatch.Create(AEdits);
+  end;
+end;
+
+function TNyxSourceProjectMutation.PrepareProject(
+  const AProject: INyxPascalProject): INyxPascalProject;
+var
+  LOriginal: INyxPascalProject;
+begin
+  LOriginal := CaptureNyxPascalProject(AProject);
+  Result := FChanges.Stage(LOriginal);
+
+  if FPatch <> nil then
+  begin
+    Result := (FPatch as TNyxSourceProjectPatch).Stage(LOriginal, Result);
+  end;
+  Result := CaptureNyxPascalProject(Result);
+end;
+
+function NyxSourceProjectMutation(const AChanges: array of TNyxPascalFileChange;
+  const AEdits: array of TNyxSourceFileEdit): INyxSourceProjectPatch;
+begin
+  Result := TNyxSourceProjectMutation.Create(AChanges, AEdits);
 end;
 
 end.

@@ -3,12 +3,19 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [semantic file membership](../docs/pascal-projects.md#semantic-source-file-membership)
+extends the existing Pascal tool with grouped typed helper creation/removal,
+related exact ranges and actor-bound named removal warnings. Complete compilation
+and paired history own the group. WORK.md separates qualification from browser
+compilation and installed-schema/delivery gates. General declarations/completion
+and full original criteria/credit remain open.
+
 Current-source [semantic supporting files](../docs/pascal-projects.md#semantic-source-file-windows-and-grouped-edits)
 add bounded accepted file discovery/windows and grouped exact ranges through the
 existing Pascal tool. One complete compiler candidate and paired publication own
 all changed main/unit/include inputs; proposed diagnostics retain typed helper
 coordinates. WORK.md owns current evidence and separate browser/delivery limits.
-Semantic inventory/declaration/completion, full source/quality/parity and original
+Semantic declaration/completion, full source/quality/parity and original
 workflow criteria/credit remain open; no new tool or installed schema is claimed.
 
 Current-source [source-file management](../docs/pascal-projects.md#creating-and-removing-source-files)
