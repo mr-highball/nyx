@@ -30,7 +30,120 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Coherent compiler library inputs — 2026-10-17
+## Current integration: Live compiler messages — 2026-10-17
+
+The preceding input-lifetime turn is progress: 65adb0e is clean and remote-matched.
+After two service prerequisites, reassess the full NS-5 outcome. Builds still own
+one accepted companion, with no complete external project/include/toolchain cache
+identity; do not introduce speculative cache hits. The existing status endpoint
+instead withholds all diagnostics until terminal state. Deliver live structured
+messages through that unchanged bounded query and its ordinary Studio observer,
+under the original service diagnostic owner. One maintained decoder/semantic
+consumer and the existing source/compiler/bridge/lifetime regressions supply the
+gate. This is user-visible feedback, not cache reuse or reload-latency acceptance.
+
+One invocation-owned incremental Pascal reader reuses the existing line parser
+and lazy source map. Complete CR/LF records publish independent immutable reports;
+EOF seals an unterminated final line. Earlier chunks/snapshots cannot grow or
+silently reopen. The incremental budget is one Mi text units (native UTF-8 bytes,
+browser UTF-16 units), with the existing 512-record limit; the native service
+still enforces its own exact compiler byte/time budgets first. The reader scans
+only newly appended positions in a partial line. Legacy complete-log admission
+retains its existing caller budget and identical mapping/wire protocol.
+
+The executor's typed retained observer publishes only on its worker, never into
+widgets or accepted editor state. The job-owned receiver takes the short job lock
+and retains immutable values, with no reference cycle. Existing cancellation
+clears the worker report after join and prevents later delivery. Receiver failure
+uses the ordinary owning Build/ProjectSource failure path after process/input
+retirement. Native constructor execution has no compiler reader, so diagnostic-
+like runtime stdout stays in its separate execution log.
+
+Existing status pages now expose in-flight messages in severity order. Each reply
+is an immutable bounded read; growing `available`/`total` can reorder pages while
+compilation runs, so callers paging a changing report should restart at offset
+zero. This supplies no cross-query pinned diagnostic generation. The production
+semantic owner still grants navigation only for the exact current accepted pair;
+unpublished source proposals retain their existing guard. Source clicks now
+compare the exact local row identity as well as job/page/index/source, so an old
+control cannot jump to a different newly sorted message.
+
+The shared browser/LCL bridge polls only a selected ongoing page on idle turns,
+alternating with ordinary observation. It uses the existing queue and reply
+destination, preserving commands added while that read is in flight. Unchanged
+replies avoid redraw; origin changes still refresh navigation. Compiler success
+does not stop observation while paired source publication remains pending.
+Explicit shared-source reservation/acknowledgement barriers remain intact; this
+adds no polling bypass while those owners deliberately hold synchronization.
+Closing/reselecting invalidates old deliveries, and settled pages stop polling.
+The final review also exercises cancellation while a later page is selected:
+its explicitly cleared report resets that inspection to offset zero instead of
+turning an expected transition into a synchronization conflict. Other wrong
+job/page shapes still refuse; accepted source/history remain untouched.
+
+Ignored .local/compiler-messages-paths-private.json owns the new E: packet and
+composite receipts. Retained preparation includes a parser-edit boundary search
+that refused before writing, implementation-class Count/interface spelling and
+an unavailable generic exception name, repaired with the existing getter and an
+explicit sealed-reader exception. An initial cancellation assertion incorrectly
+expected retained worker diagnostics; the established clear-on-cancel policy is
+preserved. A mixed redraw/routing assertion also incorrectly assumed unchanged
+navigation while another request was queued; the final separate assertions retain
+that source-synchronization guard. The warning gate refused untyped Unicode
+fixture concatenation; explicit TNyxText operands repair it. No failed or
+superseded preparation counts as accepted evidence.
+
+The accepted composite matrix is complete:
+
+- Incremental decoding passes 762 native checks over every split position,
+  one-unit fragments, CR/LF, supplementary text, final EOF, immutable snapshots,
+  atomic budget refusal and the existing record cap. The browser counterpart
+  compiles; no browser execution is inferred from native byte-split results.
+- The production suspended semantic engine passes 29 checks with actual marked
+  compiler handles: complete early messages appear while the child remains
+  alive, later errors reorder safely, earlier pages stay exact, and neither
+  progress nor cancellation replaces accepted work/report. A deliberately
+  failing receiver returns only after exact compiler join and source-lease
+  retirement. This dispatch/operator-token seam uses no socket and does not
+  establish HTTP authentication or ordinary observing-editor execution.
+- The same maintained consumer against the exact 65adb0e buildjobs unit fails
+  the early-message assertion. The compiler selects that old implementation;
+  its copied blob is exact and its owned child joins with a clean heap. This
+  proves the missing progress boundary, not a failing old whole release.
+- Shared bridge/model presentation passes 95: automatic selected-page reads,
+  independent workflow acknowledgements, ordinary observation fairness,
+  unchanged-reply redraw suppression, pending publication, terminal stop,
+  exact row/source/draft guards, cleared cancellation of a later selected page
+  and inert retired deliveries. Its transport is
+  substituted; this is not physical native/browser editor input. Existing source
+  diagnostics pass 323, including the complete-log mapper and navigation suite.
+- The actual compiler consumer passes 58 across twelve application/focused jobs
+  and one checked native constructor compile/execute. Each streamed final report
+  exactly matches its independent complete-log result. Diagnostic-like constructor
+  stdout remains only in RuntimeLog. Browser applications compile only; native
+  full-application execution is not claimed from constructor evidence.
+- Existing compiler lifetime 142, retained job/profile/retry 50, portable admission
+  72 and source shutdown 39/40/42 pass. Counts overlap. Nineteen accepted top-level
+  compiler receipts include eighteen current-source builds and one old-unit
+  comparison. Thirteen real job logs also have zero owned warnings; 35 top-level
+  and 42 job pas2js Classes warnings are upstream. Ten main heaps, including that
+  controlled comparison and frozen verifier, are clean. Both Studios/backend/
+  worker and all relevant browser consumers compile. The maintained runner is
+  updated and syntax-checked; only its underlying Pascal consumers are executed.
+
+All owned processes join. Five protected files/nine complete contexts and all
+349 frozen 7422453 artifacts remain exact. Qualified-inputs and accepted-validation
+records pin the final code and receipt set; the packet's final checkpoint owns
+exact source/remote identity. Tool discovery still exposes no Nyx capability;
+these owned Pascal consumers remain the explicit fallback, not a live connection.
+No HTTP host/browser execution/capture, configuration/enrollment refresh, cleanup
+retry, protected replacement, new tool/schema or rollout occurs. Full original
+service/source/quality/parity/cache/reload/delivery outcomes and all existing
+completion counters/credit remain open. Stop message/parser/poll/fixture/compiler
+variants. Reassess the original project/include/asset, dependency/cache and full
+reload outcomes rather than extending this completed feedback batch. Solo.
+
+## Previous integration: Coherent compiler library inputs — 2026-10-17
 
 The repeated cleanup-script handoff is maintenance, with no new product progress.
 The preceding compiler-admission batch is committed at 57da900. Reassess NS-5's

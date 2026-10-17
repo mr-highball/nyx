@@ -249,7 +249,11 @@ uses
   nyx.studio.sourcebuilds;
 
 type
+  { Forward declaration for the job-owned worker and its scoped report receiver.
+    The manager joins the worker before releasing this job or its lock. }
   TBuildJob = class;
+  { Retains only a borrowed job until its owning manager joins this thread.
+    Compiler and immutable progress ownership are released before thread exit. }
   TBuildWorker = class(TThread)
   private
     FJob: TBuildJob;
@@ -260,6 +264,9 @@ type
     destructor Destroy; override;
   end;
 
+  { Owns immutable request/result values, cancellation and the joined worker.
+    Guard serializes progress snapshots and terminal publication; live messages
+    cannot grant artifact or editor-publication authority. }
   TBuildJob = class
   public
     Purpose: TNyxCompilerJobPurpose;
@@ -313,6 +320,37 @@ type
     function Snapshot(AOffset, ALimit: Integer;
       const ASeverity: TNyxText = 'all'): TNyxDataValue;
   end;
+
+  { Executor-retained receiver on the compiler worker only. The manager owns
+    the borrowed job past worker join, so this relation creates no reference
+    cycle. Publication holds only the short job lock and never calls an editor. }
+  TBuildProgress = class(TInterfacedObject, INyxCompilerProgress)
+  private
+    FJob: TBuildJob;
+  public
+    constructor Create(AJob: TBuildJob);
+    procedure Publish(const AReport: INyxCompilerReport);
+  end;
+
+constructor TBuildProgress.Create(AJob: TBuildJob);
+begin
+  inherited Create;
+  FJob := AJob;
+end;
+
+procedure TBuildProgress.Publish(const AReport: INyxCompilerReport);
+begin
+  FJob.Guard.Acquire;
+  try
+
+    if not FJob.Cancellation.Cancelled then
+    begin
+      FJob.Report := AReport;
+    end;
+  finally
+    FJob.Guard.Release;
+  end;
+end;
 
 function NyxBuildFingerprint(const AText: TNyxText): TNyxText;
 var
@@ -559,10 +597,7 @@ begin
     LCount := 0;
     LOrder := nil;
 
-    if NyxBuildJobTerminal(State) then
-    begin
-      LOrder := NyxCompilerDiagnosticOrder(Report);
-    end;
+    LOrder := NyxCompilerDiagnosticOrder(Report);
     SetLength(LFiltered, Length(LOrder));
     for LIndex := 0 to High(LOrder) do
     begin
@@ -673,6 +708,7 @@ begin
   try
     try
       LExecutor := TNyxBuildExecutor.Create(FJob.Directories, FJob.Profile);
+      LExecutor.ConfigureProgress(TBuildProgress.Create(FJob));
 
       if FJob.Purpose in [cjpSourceProjection, cjpTransaction] then
       begin

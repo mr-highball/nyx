@@ -26,7 +26,40 @@ program nyx_focused_context_builds;
 uses Classes, SysUtils, fpjson, nyx.text, nyx.bytes, nyx.data, nyx.types,
   nyx.model, nyx.codec, nyx.codegen, nyx.composition, nyx.source,
   nyx.studio.outputs, nyx.studio.builds, nyx.studio.buildexecutor,
-  nyx.studio.directories, nyx.studio.sourceprojection, nyx.test.focused.context;
+  nyx.studio.directories, nyx.studio.sourceprojection, nyx.studio.compiler,
+  nyx.test.focused.context;
+
+type
+  { Synchronous compiler-only observer. Independent report values outlive each
+    invocation; no renderer, source tree or runtime receiver is retained. }
+  TFocusedCompilerProgress = class(TInterfacedObject, INyxCompilerProgress)
+  private
+    FLast: INyxCompilerReport;
+    FRuntimeMessage: Boolean;
+  public
+    procedure Clear;
+    procedure Publish(const AReport: INyxCompilerReport);
+    property Last: INyxCompilerReport read FLast;
+    property RuntimeMessage: Boolean read FRuntimeMessage;
+  end;
+
+procedure TFocusedCompilerProgress.Clear;
+begin
+  FLast := nil;
+  FRuntimeMessage := False;
+end;
+
+procedure TFocusedCompilerProgress.Publish(const AReport: INyxCompilerReport);
+var
+  LIndex: Integer;
+begin
+  FLast := AReport;
+  for LIndex := 0 to AReport.Count - 1 do
+  begin
+    FRuntimeMessage := FRuntimeMessage or
+      (Pos('Runtime log only: source construction', AReport.Item(LIndex).Message) > 0);
+  end;
+end;
 
 var
   GChecks: Integer;
@@ -103,6 +136,9 @@ var
   LOutputs: TNyxOutputConfiguration;
   LDirectories: TNyxStudioDirectories;
   LExecutor: TNyxBuildExecutor;
+  LProgress: TFocusedCompilerProgress;
+  LProgressOwner: INyxCompilerProgress;
+  LCompilerReport: INyxCompilerReport;
   LDocument: TNyxDocument;
   LProjected: TNyxDocument;
   LExpected: TNyxDocument;
@@ -127,6 +163,7 @@ var
   var
     LProgram: TNyxText;
   begin
+    LProgress.Clear;
     LReply := LExecutor.Build(ADocument, NyxBuildTargetName(LTarget), AScope,
       AView, ASource, AFrame);
     try
@@ -136,6 +173,10 @@ var
         raise Exception.Create('Focused compiler job failed: ' + LReply.Get('log', ''));
       end;
       Check(True, 'actual requested target compiler accepted the complete focus harness');
+      LCompilerReport := DecodeNyxCompilerReport(TNyxText(LReply.Objects['diagnostics'].AsJSON));
+      Check(((LCompilerReport.Count = 0) and (LProgress.Last = nil)) or
+        ((LProgress.Last <> nil) and (LProgress.Last.Encode = LCompilerReport.Encode)),
+        'real compiler progress reconstructs the exact final independent diagnostic report');
       LDirectory := LDirectories.Jobs + LReply.Get('build', '') + PathDelim;
       LExpected := nil;
       try
@@ -203,6 +244,9 @@ begin
     LOutputs.SetField('pas2js', LTools.Field('PAS2JS').AsText);
     LOutputs.SetField('runtime', LTools.Field('PAS2JS_RUNTIME').AsText);
     LExecutor := TNyxBuildExecutor.Create(LDirectories, LOutputs.Encode);
+    LProgress := TFocusedCompilerProgress.Create;
+    LProgressOwner := LProgress;
+    LExecutor.ConfigureProgress(LProgressOwner);
     LDocument := FocusedContextDocument;
     LBefore := TNyxCodec.Encode(LDocument);
     LLiteral := TNyxCodegen.Generate(LDocument);
@@ -220,19 +264,27 @@ begin
     LHelper := 'var' + #10 + '  GConstructions: Integer;' + #10#10 +
       '{ Called once by each actual complete construction. }' + #10 +
       'function FocusedCaption: TNyxText;' + #10 +
-      'begin' + #10 + '  Inc(GConstructions);' + #10#10 +
+      'begin' + #10 + '  Inc(GConstructions);' + #10 +
+      '  WriteLn(''Warning: Runtime log only: source construction'');' + #10#10 +
       '  if GConstructions <> 1 then' + #10 +
       '  begin' + #10 +
       '    raise ENyxModel.Create(''Construct the application only once'');' + #10 +
       '  end;' + #10 + '  Result := ''Focused workspace'';' + #10 + 'end;' + #10;
     LHandwritten := ReplaceOnce(LHandwritten, #10 + 'implementation' + #10,
       #10 + 'implementation' + #10#10 + LHelper);
+    LProgress.Clear;
     LProjection := LExecutor.ProjectSource(LHandwritten, NyxPascalUnit('nyx.generated.view'),
       btNativeLCL, spcChecked);
     Check((LProjection.Projection.State = spsExecuted) and
       (LProjection.Projection.Design = LBefore), 'actual checked handwritten constructor reproduces exact accepted design');
     Check(Pos('0 unfreed memory blocks', LProjection.RuntimeLog) > 0,
       'executed constructor retires its complete owned source tree');
+    Check(((LProjection.Projection.Report.Count = 0) and (LProgress.Last = nil)) or
+      ((LProgress.Last <> nil) and
+        (LProgress.Last.Encode = LProjection.Projection.Report.Encode)),
+      'native constructor compilation preserves exact streamed compiler diagnostics');
+    Check((Pos('Warning: Runtime log only: source construction', LProjection.RuntimeLog) > 0) and
+      not LProgress.RuntimeMessage, 'constructor stdout cannot impersonate a compiler message');
     LProjected := LProjection.Projection.CopyDocument;
     LWorkspace := TNyxSourceWorkspace.Create;
     LWorkspace.AcceptExecuted(LProjected, LHandwritten);
@@ -264,6 +316,7 @@ begin
     LProjected.Free;
     LDocument.Free;
     LExecutor.Free;
+    LProgressOwner := nil;
     LOutputs.Free;
   end;
 end;

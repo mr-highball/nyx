@@ -59,6 +59,7 @@ type
     FOrigin: TNyxBuildDiagnosticOrigin;
     FJob: TNyxBuildJobRef;
     FState: TNyxBuildJobState;
+    FAwaitingPublication: Boolean;
     FOffset: Integer;
     FTotal: Integer;
     FSource: TNyxText;
@@ -71,6 +72,9 @@ type
     property Origin: TNyxBuildDiagnosticOrigin read FOrigin;
     property Job: TNyxBuildJobRef read FJob;
     property State: TNyxBuildJobState read FState;
+    { Successful compilation can precede a source job's paired publication.
+      Keep observing its existing status until that separate phase settles. }
+    property AwaitingPublication: Boolean read FAwaitingPublication;
     property Offset: Integer read FOffset;
     property Total: Integer read FTotal;
     property Count: Integer read GetCount;
@@ -84,7 +88,9 @@ function NyxBuildDiagnosticsLoading(const AJob: TNyxBuildJobRef;
 { Admit only this immutable job and requested page. Current-source borrowing
   requires authenticated currentness, the owning bridge's exact acknowledged
   frame and committed semantic publication. Otherwise locations stay read-only.
-  Invalid shape, closed choices, counts or coordinates raise without a result. }
+  A cancelled worker's explicitly empty report retires any selected later page
+  to offset zero without creating a synchronization conflict. Other mismatched
+  shapes, closed choices, counts or coordinates raise without a result. }
 function ReadNyxBuildDiagnostics(const AStatus: TNyxDataValue;
   const AJob: TNyxBuildJobRef; AOffset: Integer;
   const AAcceptedSource: TNyxText; ASourceAcknowledged: Boolean): TNyxBuildDiagnosticInspection;
@@ -116,6 +122,7 @@ uses
 const
   CIndexKey: TNyxText = 'studio.build-diagnostic-index';
   CPageKey: TNyxText = 'studio.build-diagnostic-page';
+  CItemKey: TNyxText = 'studio.build-diagnostic-item';
   CSeparator: TNyxText = ' · ';
 
 function TNyxBuildDiagnosticInspection.GetCount: Integer;
@@ -131,6 +138,18 @@ begin
     raise ENyxModel.Create('Compiler diagnostic index is outside this inspected page');
   end;
   Result := FItems[AIndex];
+end;
+
+{ Exact bounded local row identity. Severity ordering can change while a build
+  runs; an older control at the same job/page/index must not navigate a newer
+  message. This is editor metadata, never document or transport authority. }
+function DiagnosticIdentity(const AItem: TNyxBuildDiagnosticItem): TNyxText;
+begin
+  Result := NyxObject([NyxField('file', NyxData(AItem.FileName)),
+    NyxField('message', NyxData(AItem.MessageText)),
+    NyxField('severity', NyxData(Ord(AItem.Severity))),
+    NyxField('line', NyxData(AItem.Line)), NyxField('column', NyxData(AItem.Column)),
+    NyxField('navigable', NyxData(AItem.Navigable))]).ToJSON;
 end;
 
 function NyxBuildDiagnosticsLoading(const AJob: TNyxBuildJobRef;
@@ -160,6 +179,7 @@ var
   LFound: Boolean;
   LName: TNyxText;
   LProposed: Boolean;
+  LRetiredPage: Boolean;
 begin
   Result := NyxBuildDiagnosticsLoading(AJob, AOffset);
 
@@ -179,9 +199,16 @@ begin
   LItems := LPage.Field('items');
   Result.FOffset := LPage.Field('offset').AsInteger;
   Result.FTotal := LPage.Field('total').AsInteger;
+  LRetiredPage := (Result.FState = bjsCancelled) and (LItems.Kind = ndArray) and
+    (LItems.Count = 0) and (Result.FTotal = 0) and (Result.FOffset = AOffset);
+
+  if LRetiredPage then
+  begin
+    Result.FOffset := 0;
+  end;
 
   if (LItems.Kind <> ndArray) or (LItems.Count > 20) or
-    (Result.FOffset <> AOffset) or (Result.FTotal < 0) or
+    ((Result.FOffset <> AOffset) and not LRetiredPage) or (Result.FTotal < 0) or
     (Result.FTotal > 512) or (Result.FOffset > Result.FTotal) or
     (LItems.Count > Result.FTotal - Result.FOffset) then
   begin
@@ -204,6 +231,7 @@ begin
       raise ENyxModel.Create('Unknown compiler diagnostic publication');
     end;
     LProposed := LName <> 'committed';
+    Result.FAwaitingPublication := LName = 'pending';
 
     if (LName = 'committed') and ((Result.FState <> bjsSucceeded) or
       (AStatus.Field('publication').Field('revision').AsInteger < 1)) then
@@ -393,6 +421,7 @@ begin
         LButton.Extensions.SetValue(NyxStudioInspectBuildKey, NyxData(AInspection.Job.ID));
         LButton.Extensions.SetValue(NyxStudioBuildDiagnosticIndexKey, NyxData(LIndex));
         LButton.Extensions.SetValue(NyxExtension(CPageKey), NyxData(AInspection.Offset));
+        LButton.Extensions.SetValue(NyxExtension(CItemKey), NyxData(DiagnosticIdentity(LItem)));
       end;
     end;
 
@@ -448,6 +477,12 @@ begin
     raise ENyxModel.Create('This compiler location does not match the unchanged accepted source and inspected page');
   end;
   LItem := AInspection.Item(ANode.Extensions.Value(NyxStudioBuildDiagnosticIndexKey).AsInteger);
+
+  if not ANode.Extensions.Has(NyxExtension(CItemKey)) or
+    (ANode.Extensions.Value(NyxExtension(CItemKey)).AsText <> DiagnosticIdentity(LItem)) then
+  begin
+    raise ENyxModel.Create('This compiler message changed; inspect the current row before navigating');
+  end;
 
   if not LItem.Navigable then
   begin

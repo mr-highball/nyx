@@ -77,6 +77,11 @@ type
     FQueueRoutes: array of TNyxStudioCompilerReplyRoute;
     FSentRoute: TNyxStudioCompilerReplyRoute;
     FInspectionSequence: Integer;
+    { Idle inspection alternates with ordinary observation, so live compiler
+      messages do not starve resources/roster updates or create another request.
+      Only the current selected page is polled; queued edits keep priority. }
+    FInspectionPoll: Boolean;
+    FInspectionReplyText: TNyxText;
     FQueueUnits: Integer;
     FTimer: Boolean;
     FApplying: Boolean;
@@ -958,6 +963,8 @@ begin
   FQueueRoutes := nil;
   Inc(FInspectionSequence);
   FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
+  FInspectionPoll := False;
+  FInspectionReplyText := '';
   FQueueUnits := 0;
   FDraftCapturePending := False;
   FAcceptRemote := True;
@@ -1091,6 +1098,22 @@ begin
   else
   begin
 
+    if not FInspectionPoll and CanInspectBuild and
+      (FView.BuildInspection.Phase = bdpReady) and
+      (not NyxBuildJobTerminal(FView.BuildInspection.State) or
+        FView.BuildInspection.AwaitingPublication) then
+    begin
+      FInspectionPoll := True;
+      { Use the ordinary queue even for this read. Its exact acknowledgement
+        must never consume a user command queued during the in-flight poll. }
+      Queue(NyxObject([NyxField('op', NyxData('build')),
+        NyxField('build', NyxCompilerStatus(FView.BuildInspection.Job,
+          FView.BuildInspection.Offset))]), crtInspection, FInspectionSequence);
+      DispatchTick;
+      Exit;
+    end;
+    FInspectionPoll := False;
+
     if FResourceInspection and FView.CanInspectResourceRuntime and SourceSynchronized then
     begin
       Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(FView.Revision)),
@@ -1122,6 +1145,7 @@ end;
 
 procedure TNyxStudioAgentBridge.Ready(AStatus: Integer; const AText: TNyxText);
 var
+  LInspectionOrigin: TNyxBuildDiagnosticOrigin;
   LData: TNyxDataValue;
   LState: TNyxDataValue;
   LResourceReports: TNyxDataValue;
@@ -1376,6 +1400,8 @@ begin
             (FView.BuildInspection.Phase <> bdpHidden) then
           begin
             LInspectionReply := LState.Field('buildReply').Copy;
+            LRefresh := LRefresh or (FView.BuildInspection.Phase = bdpLoading) or
+              (FInspectionReplyText <> LInspectionReply.ToJSON);
           end;
         end
         else
@@ -1383,8 +1409,8 @@ begin
           FView.BuildReplyKind := ParseNyxCompilerOperation(FSent.Field('build').Field('mode').AsText);
           FView.BuildReply := LState.Field('buildReply').Copy;
           Inc(FView.BuildReplySequence);
+          LRefresh := True;
         end;
-        LRefresh := True;
       end;
 
       if NyxAgentHas(LState, 'buildJobControl') then
@@ -1535,9 +1561,12 @@ begin
       begin
         { The ordinary frame/source adoption above must finish before this read
           can borrow exact local accepted bytes. A pending draft remains owned. }
+        LInspectionOrigin := FView.BuildInspection.Origin;
         FView.BuildInspection := ReadNyxBuildDiagnostics(LInspectionReply,
           FView.BuildInspection.Job, FView.BuildInspection.Offset, FSession.Source,
           SourceSynchronized);
+        LRefresh := LRefresh or (LInspectionOrigin <> FView.BuildInspection.Origin);
+        FInspectionReplyText := LInspectionReply.ToJSON;
       end;
       Schedule;
     except
@@ -1709,6 +1738,8 @@ begin
   LInspection := NyxBuildDiagnosticsLoading(AJob, AOffset);
   LArguments := NyxCompilerStatus(AJob, AOffset);
   Inc(FInspectionSequence);
+  FInspectionPoll := False;
+  FInspectionReplyText := '';
   Queue(NyxObject([NyxField('op', NyxData('build')),
     NyxField('build', LArguments)]), crtInspection, FInspectionSequence);
   FView.BuildInspection := LInspection;
@@ -1718,6 +1749,8 @@ end;
 procedure TNyxStudioAgentBridge.CloseBuildInspection;
 begin
   Inc(FInspectionSequence);
+  FInspectionPoll := False;
+  FInspectionReplyText := '';
   FView.BuildInspection := Default(TNyxBuildDiagnosticInspection);
 end;
 

@@ -109,6 +109,32 @@ are allowed; finish library edits before building if a writer already owns an
 input. Application/design source admission keeps its separate immutable pair.
 Empty output profiles and compiler-free design remain available.
 
+Compiler diagnostics now become available while the process runs, through the
+existing bounded status query. Only complete lines enter immutable snapshots;
+the final receipt remains separate from progress and editor publication.
+Selected Studio diagnostics refresh on idle turns, alternating with ordinary
+observation; queued edits keep priority and unchanged pages avoid redraw. Close
+the inspection to stop its polling. A finished source compilation continues to
+be observed until its separate paired publication settles. Existing explicit
+source-reservation/acknowledgement barriers still hold synchronization.
+
+Live reports grow and retain severity order. Compare `available`/`total` when
+paging and restart at offset zero if they change; separate replies do not pin
+one diagnostic generation. Locations still require the exact accepted source,
+and older controls cannot navigate a changed row. Cancellation retains accepted
+source/history/report and retires the cancelled worker's report. Runtime stdout
+from native constructors never becomes a compiler diagnostic.
+Cancelling while a later page is selected clears that inspection safely rather
+than treating the retired page as a project synchronization conflict.
+
+Trusted native hosts may configure `INyxCompilerProgress` before delegating an
+executor. Its synchronous receiver gets independent reports on the worker and
+must not access UI. Receiver failure follows the owning build/projection failure
+path after actual process/input join. The portable `INyxCompilerReportReader`
+also supports incremental parsing without a compiler or transport, with explicit
+EOF, immutable snapshots and bounded input. No cache reuse, successful application
+execution or new MCP schema is implied by live diagnostics.
+
 The input budget is 4,096 entries, 256 pinned directories, 64 MiB per file and
 256 MiB total file bytes, including nested files. Linked/locked/oversized inputs
 or unavailable filesystem observation refuse compilation. No source copies or

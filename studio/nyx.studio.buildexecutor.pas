@@ -30,9 +30,20 @@ interface
 uses
   Classes, SysUtils, Process, SyncObjs, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
   nyx.studio.directories, nyx.studio.builds, nyx.source,
-  nyx.studio.sourceprojection, nyx.studio.projectionstorage;
+  nyx.studio.sourceprojection, nyx.studio.projectionstorage, nyx.studio.compiler;
 
 type
+  { Synchronous worker-thread receiver of independent immutable report snapshots.
+    It must not touch UI or borrow a mutable source tree. The executor retains
+    this interface through actual process join. Receiver failures follow the
+    owning Build/ProjectSource failure path after retirement; progress never
+    grants terminal/artifact/publication authority. Cancellation prevents later
+    progress delivery. }
+  INyxCompilerProgress = interface
+    ['{662B7680-F23D-4A3C-82AF-80522F740887}']
+    procedure Publish(const AReport: INyxCompilerReport);
+  end;
+
   { A monotonic, thread-safe request to retire an owned compiler. Holding this
     interface never retains a job, document or transport. Cancellation of an
     HTTP request alone is deliberately not a compiler cancellation request. }
@@ -79,6 +90,7 @@ type
     FLimits: TNyxCompilerLimits;
     FProjectionStorage: TNyxProjectionStoragePolicy;
     FFailure: TNyxCompilerFailure;
+    FProgress: INyxCompilerProgress;
     procedure CheckOutput(const ATarget: TNyxText);
     { Compiler runs lease owned library inputs on Windows. Constructor execution
       passes False: trusted application side effects do not borrow source files.
@@ -86,7 +98,8 @@ type
     function RunCompiler(const AExecutable, ADirectory: TNyxText;
       AArguments: TStrings; out ALog: TNyxText;
       const ACancellation: INyxBuildCancellation;
-      ACompiler: Boolean = True): Boolean;
+      ACompiler: Boolean = True;
+      const AReader: INyxCompilerReportReader = nil): Boolean;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { Retains the admitted directory value separately from the immutable profile.
@@ -100,6 +113,9 @@ type
     function Readiness(const ATarget: TNyxText): TNyxText;
     { Called by the trusted host before delegation; never during Build. }
     procedure ConfigureLimits(const ALimits: TNyxCompilerLimits);
+    { Trusted host configuration before delegation; nil disables streaming.
+      Final compiler receipts are identical with or without this observer. }
+    procedure ConfigureProgress(const AProgress: INyxCompilerProgress);
     { Trusted host configuration before delegation, copied by value. Native
       constructors retain source/result/log evidence and retire unchanged
       compiler derivatives after join. Browser worker packages remain intact.
@@ -138,7 +154,7 @@ implementation
 
 uses
   nyx.json, nyx.bytes, nyx.schema, nyx.codec, nyx.codegen, nyx.callbacks,
-  nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing,
+  nyx.scheduler, nyx.composition, nyx.editing,
   nyx.studio.compilerprocess
   {$ifdef MSWINDOWS}, nyx.studio.compilerinputs{$endif};
 
@@ -226,6 +242,11 @@ procedure TNyxBuildExecutor.ConfigureLimits(const ALimits: TNyxCompilerLimits);
 begin
   ALimits.Validate;
   FLimits := ALimits;
+end;
+
+procedure TNyxBuildExecutor.ConfigureProgress(const AProgress: INyxCompilerProgress);
+begin
+  FProgress := AProgress;
 end;
 
 procedure TNyxBuildExecutor.ConfigureProjectionStorage(
@@ -388,9 +409,11 @@ end;
 
 function TNyxBuildExecutor.RunCompiler(const AExecutable, ADirectory: TNyxText;
   AArguments: TStrings; out ALog: TNyxText;
-  const ACancellation: INyxBuildCancellation; ACompiler: Boolean): Boolean;
+  const ACancellation: INyxBuildCancellation; ACompiler: Boolean;
+  const AReader: INyxCompilerReportReader): Boolean;
 var
   LProcess: TNyxCompilerProcess;
+  LProgress: INyxCompilerProgress;
   {$ifdef MSWINDOWS}
   LInputs: TNyxCompilerInputs;
   {$endif}
@@ -456,6 +479,7 @@ var
   end;
 begin
   LProcess := nil;
+  LProgress := FProgress;
   {$ifdef MSWINDOWS}
   LInputs := nil;
   {$endif}
@@ -512,6 +536,12 @@ begin
             ALog := LogPrefix + #10 + 'Compiler log budget exceeded.';
             Exit(False);
           end;
+
+          if (LProgress <> nil) and (AReader <> nil) and AReader.Append(LChunk) then
+          begin
+            CheckCancellation;
+            LProgress.Publish(AReader.Snapshot);
+          end;
         end;
 
         CheckCancellation;
@@ -537,6 +567,13 @@ begin
       { Check after the last owned child exits, before admitting any artifact.
         The lease stays live through the finally block's explicit join. }
       CheckCancellation;
+      { A final unterminated line is complete only after real compiler EOF.
+        Cancellation and budget exits deliberately do not seal a partial line. }
+
+      if (LProgress <> nil) and (AReader <> nil) and AReader.Finish then
+      begin
+        LProgress.Publish(AReader.Snapshot);
+      end;
       Result := LProcess.ExitStatus = 0;
 
       if not Result then
@@ -592,6 +629,7 @@ var
   LBytes: TNyxBytes;
   LReport: INyxCompilerReport;
   LProjection: INyxSourceProjection;
+  LReader: INyxCompilerReportReader;
   LFailureState: TNyxSourceProjectionState;
   LStorage: TNyxOwnedProjectionStorage;
   LStorageReport: TNyxProjectionStorageReport;
@@ -680,7 +718,13 @@ begin
         LArguments.Add(LDirectory + 'nyx_projection.lpr');
 
         try
-          LCompiled := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
+
+          if FProgress <> nil then
+          begin
+            LReader := NewNyxCompilerReportReader(ASource, ASource, LFileName);
+          end;
+          LCompiled := RunCompiler(LExecutable, LDirectory, LArguments, LLog,
+            ACancellation, True, LReader);
         finally
           { RunCompiler's finally joins even on cancellation/failure. Capture
             now, before trusted constructor code can alter any compiler output. }
@@ -831,6 +875,7 @@ var
   LWidgetset: TNyxText;
   LOK: Boolean;
   LReport: INyxCompilerReport;
+  LReader: INyxCompilerReportReader;
   LSubmittedSource: TNyxText;
   LExecuted: Boolean;
   LScopeDeclarations: TNyxText;
@@ -1021,6 +1066,12 @@ begin
     LArguments.Add('-Fu' + LDirectory);
     LArguments.Add('-FE' + LDirectory);
 
+    if FProgress <> nil then
+    begin
+      LReader := NewNyxCompilerReportReader(LSubmittedSource, LCompanionSource,
+        LDirectory + LUnitName + '.pas');
+    end;
+
     if ATarget = 'browser' then
     begin
       LExecutable := FOutputs.Field('pas2js');
@@ -1069,7 +1120,8 @@ begin
         'end.' + #10;
       WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
       LArguments.Add(LDirectory + 'nyx_preview.lpr');
-      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation,
+        True, LReader);
       WriteFile(LDirectory + 'rtl.js', ReadFile(LRuntime));
       WriteFile(LDirectory + 'index.html', HostHTML('nyx_preview'));
     end
@@ -1132,7 +1184,8 @@ begin
         '  end;' + #10 + 'end.' + #10;
       WriteFile(LDirectory + 'nyx_native.lpr', LSource);
       LArguments.Add(LDirectory + 'nyx_native.lpr');
-      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation,
+        True, LReader);
     end;
 
     if ACancellation <> nil then

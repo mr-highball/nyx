@@ -96,6 +96,51 @@ begin
   end;
 end;
 
+{ Progress gates are files in the already owned status child, never a listener
+  or a protected source folder. The harness observes live messages before
+  allowing a second record or EOF; timeout is an actual fixture failure. }
+procedure AwaitMessageGate(const AName: TNyxText);
+var
+  LStart: QWord;
+begin
+  LStart := GetTickCount64;
+  while not FileExists('fixture-status/' + AName) do
+  begin
+
+    if GetTickCount64 - LStart > 10000 then
+    begin
+      raise Exception.Create('Owned compiler message fixture was not released');
+    end;
+    Sleep(5);
+  end;
+end;
+
+{ Emit exact UTF-8 bytes through the same stdout pipe used by real compilers.
+  A split supplementary character and CR/LF exercise decoder chunk ownership. }
+procedure EmitMessages;
+var
+  LStream: THandleStream;
+  LText: TNyxText;
+  LSplit: Integer;
+begin
+  LStream := THandleStream.Create(TTextRec(Output).Handle);
+  try
+    LText := TNyxText(GetCurrentDir) +
+      TNyxText('/nyx.generated.view.pas(1,1) Warning: Early message 🌙') + #13#10;
+    LSplit := Length(LText) - 4;
+    LStream.WriteBuffer(LText[1], LSplit);
+    Sleep(50);
+    LStream.WriteBuffer(LText[LSplit + 1], Length(LText) - LSplit);
+    AwaitMessageGate('messages.next');
+    LText := TNyxText(GetCurrentDir) + '/nyx.generated.view.pas(1,1) Error: Later message' + #10;
+    LStream.WriteBuffer(LText[1], Length(LText));
+    AwaitMessageGate('messages.finish');
+  finally
+    LStream.Free;
+  end;
+  ExitCode := 1;
+end;
+
 var
   LFile: TFileStream;
   LText: UTF8String;
@@ -153,6 +198,12 @@ begin
     end;
   finally
     LMode.Free;
+  end;
+
+  if LPolicy = 'messages' then
+  begin
+    EmitMessages;
+    Exit;
   end;
 
   if Pos('family-', LPolicy) = 1 then

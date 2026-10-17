@@ -9,6 +9,13 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source status queries expose complete compiler messages before terminal
+completion, preserving existing bounds, schema, source-currentness and publication
+authority. The public Studio diagnostic composition follows that selected page
+through the shared browser/LCL bridge. WORK.md separates native execution and
+actual both-provider compilation from browser compilation, HTTP/ordinary-editor
+observation and installed delivery. No full criterion or completion credit closes.
+
 The existing bounded status protocol now has an ordinary retained-job consumer
 (2026-10-11). Authenticated `navigable` authority is consumed after service source/
 publication checks; compiler-pool `mapped` is deliberately not editor authority.

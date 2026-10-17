@@ -28,9 +28,13 @@ unit nyx.studio.compiler;
 interface
 
 uses
-  nyx.text;
+  SysUtils, nyx.text;
 
 type
+  { Further input after explicit EOF is a lifecycle error, with the retained
+    immutable snapshots and already sealed reader left unchanged. }
+  ENyxCompilerReportSealed = class(Exception);
+
   { Closed compiler meanings; file names and messages remain open user text. }
   TNyxCompilerSeverity = (csError, csFatal, csWarning, csHint, csNote, csInfo);
 
@@ -77,7 +81,27 @@ type
 
 function NyxCompilerSeverityName(ASeverity: TNyxCompilerSeverity): TNyxText;
 type
+  { Independent indices keep presentation sorting separate from report identity. }
   TNyxCompilerDiagnosticIndices = array of Integer;
+
+  { One invocation's incremental text decoder, with no document/widget ownership.
+    Native chunks may split UTF-8 bytes; browser chunks may split UTF-16 scalars.
+    Only complete CR/LF lines are admitted until Finish seals the final fragment.
+    Append/Finish return whether recognized records were added. The input budget
+    is one Mi text units (native bytes/browser UTF-16 units), with 512 records.
+    Snapshot returns an independent immutable report, never a live mutable view.
+    Calls are serialized by the owning worker; interfaces may outlive that worker. }
+  INyxCompilerReportReader = interface
+    ['{D2AA1554-50AB-47EE-91BE-3D2B06268664}']
+    function Append(const AChunk: TNyxText): Boolean;
+    function Finish: Boolean;
+    function Snapshot: INyxCompilerReport;
+  end;
+
+{ Capture exact mapping context before a compiler starts. No compiler, callback,
+  process, UI or transport is created by this portable parser. }
+function NewNyxCompilerReportReader(const ASubmitted, ACompiled,
+  ACompanionFile: TNyxText): INyxCompilerReportReader;
 
 { Stable presentation order: errors/fatals, warnings, then hints/notes/info.
   The immutable report retains its original compiler order and item identities.
@@ -99,7 +123,6 @@ function DecodeNyxCompilerReport(const AMessage: TNyxText): INyxCompilerReport;
 implementation
 
 uses
-  SysUtils,
   nyx.data,
   nyx.source;
 
@@ -109,6 +132,8 @@ const
   MaximumDiagnostics = 512;
 
 type
+  { Immutable after publication. Readers build private instances and clone the
+    record array for snapshots; open text values retain ordinary value semantics. }
   TCompilerReport = class(TInterfacedObject, INyxCompilerReport)
   private
     FSource: TNyxText;
@@ -137,6 +162,29 @@ type
     constructor Create(const AOriginal, ACompiled: TNyxText);
     function Map(ALine, AByteColumn: Integer;
       out ASourceLine, ASourceColumn: Integer): Boolean;
+  end;
+
+  { Mutable state stays private to one invocation. The report owner retains its
+    implementation while snapshots copy records; the lazily built map is reused
+    across all complete lines and is retired with the reader. }
+  TCompilerReportReader = class(TInterfacedObject, INyxCompilerReportReader)
+  private
+    FReport: TCompilerReport;
+    FOwner: INyxCompilerReport;
+    FMap: TSourceMap;
+    FCompiled: TNyxText;
+    FCompanionFile: TNyxText;
+    FPending: TNyxText;
+    FScanned: Integer;
+    FUnits: Integer;
+    FFinished: Boolean;
+    procedure ReadLine(const ALine: TNyxText);
+  public
+    constructor Create(const ASubmitted, ACompiled, ACompanionFile: TNyxText);
+    destructor Destroy; override;
+    function Append(const AChunk: TNyxText): Boolean;
+    function Finish: Boolean;
+    function Snapshot: INyxCompilerReport;
   end;
 
 function NyxCompilerSeverityName(ASeverity: TNyxCompilerSeverity): TNyxText;
@@ -490,100 +538,202 @@ begin
     NyxField('source', NyxData(FSource)), NyxField('items', NyxArray(LItems))]).ToJSON;
 end;
 
-function ReadNyxCompilerReport(const ASubmitted, ACompiled, ACompanionFile,
-  ALog: TNyxText): INyxCompilerReport;
+procedure TCompilerReportReader.ReadLine(const ALine: TNyxText);
 var
-  LReport: TCompilerReport;
-  LOwner: INyxCompilerReport;
-  LLines: TNyxStrings;
-  LMap: TSourceMap;
   LItem: TNyxCompilerDiagnostic;
-  LLine: TNyxText;
   LFile: TNyxText;
   LMarker: TNyxText;
   LCoordinates: TNyxText;
-  LIndex: Integer;
   LPosition: Integer;
   LOpen: Integer;
   LComma: Integer;
   LSeverity: TNyxCompilerSeverity;
   LKnown: Boolean;
 begin
+
+  if FReport.GetCount >= MaximumDiagnostics then
+  begin
+    Exit;
+  end;
+  for LSeverity := Low(TNyxCompilerSeverity) to High(TNyxCompilerSeverity) do
+  begin
+    LMarker := SeverityNames[LSeverity] + ': ';
+    LPosition := Pos(LMarker, ALine);
+
+    if LPosition = 0 then
+    begin
+      Continue;
+    end;
+    LItem := Default(TNyxCompilerDiagnostic);
+    LItem.FSeverity := LSeverity;
+    LItem.FMessage := Copy(ALine, LPosition + Length(LMarker), MaxInt);
+    LFile := '';
+
+    if (LPosition > 3) and (Copy(ALine, LPosition - 2, 2) = ') ') then
+    begin
+      LOpen := LPosition - 3;
+      while (LOpen > 0) and (ALine[LOpen] <> '(') do
+      begin
+        Dec(LOpen);
+      end;
+
+      if LOpen > 0 then
+      begin
+        LCoordinates := Copy(ALine, LOpen + 1, LPosition - LOpen - 3);
+        LComma := Pos(',', LCoordinates);
+        LItem.FLine := StrToIntDef(Copy(LCoordinates, 1, LComma - 1), 0);
+        LItem.FColumn := StrToIntDef(Copy(LCoordinates, LComma + 1, MaxInt), 0);
+
+        if (LComma > 0) and (LItem.FLine > 0) and (LItem.FColumn > 0) then
+        begin
+          LFile := NormalizePath(Copy(ALine, 1, LOpen - 1));
+          LItem.FFile := LeafName(LFile);
+        end
+        else
+        begin
+          LItem.FLine := 0;
+          LItem.FColumn := 0;
+        end;
+      end;
+    end;
+    LKnown := (LFile <> '') and
+      SameCompilerPath(LFile, NormalizePath(FCompanionFile));
+
+    if LKnown then
+    begin
+
+      if FMap = nil then
+      begin
+        FMap := TSourceMap.Create(FReport.FSource, FCompiled);
+      end;
+      FMap.Map(LItem.FLine, LItem.FColumn, LItem.FSourceLine, LItem.FSourceColumn);
+    end;
+
+    if FReport.GetCount < MaximumDiagnostics then
+    begin
+      FReport.Add(LItem);
+    end;
+    Break;
+  end;
+end;
+
+constructor TCompilerReportReader.Create(const ASubmitted, ACompiled,
+  ACompanionFile: TNyxText);
+begin
+  inherited Create;
+  FReport := TCompilerReport.Create;
+  FOwner := FReport;
+  FReport.FSource := ASubmitted;
+  FCompiled := ACompiled;
+  FCompanionFile := ACompanionFile;
+end;
+
+destructor TCompilerReportReader.Destroy;
+begin
+  FMap.Free;
+  inherited Destroy;
+end;
+
+function TCompilerReportReader.Append(const AChunk: TNyxText): Boolean;
+const
+  CMaximumUnits = 1024 * 1024;
+var
+  LBefore: Integer;
+  LStart: Integer;
+  LIndex: Integer;
+begin
+
+  if FFinished then
+  begin
+    raise ENyxCompilerReportSealed.Create('Compiler message input is already sealed');
+  end;
+
+  if Length(AChunk) > CMaximumUnits - FUnits then
+  begin
+    raise EArgumentException.Create('Incremental compiler log budget exceeded');
+  end;
+  Inc(FUnits, Length(AChunk));
+  LBefore := FReport.GetCount;
+
+  if LBefore >= MaximumDiagnostics then
+  begin
+    Exit(False);
+  end;
+  FPending := FPending + AChunk;
+  LStart := 1;
+  for LIndex := FScanned + 1 to Length(FPending) do
+  begin
+
+    if FPending[LIndex] in [#10, #13] then
+    begin
+      ReadLine(Copy(FPending, LStart, LIndex - LStart));
+      LStart := LIndex + 1;
+    end;
+  end;
+  FPending := Copy(FPending, LStart, MaxInt);
+  FScanned := Length(FPending);
+
+  if FReport.GetCount >= MaximumDiagnostics then
+  begin
+    FPending := '';
+  end;
+  Result := FReport.GetCount <> LBefore;
+end;
+
+function TCompilerReportReader.Finish: Boolean;
+var
+  LBefore: Integer;
+begin
+
+  if FFinished then
+  begin
+    Exit(False);
+  end;
+  LBefore := FReport.GetCount;
+  ReadLine(FPending);
+  FPending := '';
+  FFinished := True;
+  Result := FReport.GetCount <> LBefore;
+end;
+
+function TCompilerReportReader.Snapshot: INyxCompilerReport;
+var
+  LReport: TCompilerReport;
+begin
   LReport := TCompilerReport.Create;
-  LOwner := LReport;
-  LReport.FSource := ASubmitted;
+  Result := LReport;
+  LReport.FSource := FReport.FSource;
+  LReport.FItems := Copy(FReport.FItems);
+end;
+
+function NewNyxCompilerReportReader(const ASubmitted, ACompiled,
+  ACompanionFile: TNyxText): INyxCompilerReportReader;
+begin
+  Result := TCompilerReportReader.Create(ASubmitted, ACompiled, ACompanionFile);
+end;
+
+function ReadNyxCompilerReport(const ASubmitted, ACompiled, ACompanionFile,
+  ALog: TNyxText): INyxCompilerReport;
+var
+  LReader: TCompilerReportReader;
+  LOwner: INyxCompilerReportReader;
+  LLines: TNyxStrings;
+  LIndex: Integer;
+begin
+  LReader := TCompilerReportReader.Create(ASubmitted, ACompiled, ACompanionFile);
+  LOwner := LReader;
   LLines := TNyxStrings.Create;
-  LMap := nil;
   try
+    { Legacy complete-log admission retains its existing caller budget. Both
+      paths share the exact parser and lazy source mapping, without reprocessing
+      the accumulated log on every streamed chunk. }
     LLines.Text := ALog;
     for LIndex := 0 to LLines.Count - 1 do
     begin
-      LLine := LLines[LIndex];
-
-      for LSeverity := Low(TNyxCompilerSeverity) to High(TNyxCompilerSeverity) do
-      begin
-        LMarker := SeverityNames[LSeverity] + ': ';
-        LPosition := Pos(LMarker, LLine);
-
-        if LPosition = 0 then
-        begin
-          Continue;
-        end;
-        LItem := Default(TNyxCompilerDiagnostic);
-        LItem.FSeverity := LSeverity;
-        LItem.FMessage := Copy(LLine, LPosition + Length(LMarker), MaxInt);
-        LFile := '';
-
-        if (LPosition > 3) and (Copy(LLine, LPosition - 2, 2) = ') ') then
-        begin
-          LOpen := LPosition - 3;
-          while (LOpen > 0) and (LLine[LOpen] <> '(') do
-          begin
-            Dec(LOpen);
-          end;
-
-          if LOpen > 0 then
-          begin
-            LCoordinates := Copy(LLine, LOpen + 1, LPosition - LOpen - 3);
-            LComma := Pos(',', LCoordinates);
-            LItem.FLine := StrToIntDef(Copy(LCoordinates, 1, LComma - 1), 0);
-            LItem.FColumn := StrToIntDef(Copy(LCoordinates, LComma + 1, MaxInt), 0);
-
-            if (LComma > 0) and (LItem.FLine > 0) and (LItem.FColumn > 0) then
-            begin
-              LFile := NormalizePath(Copy(LLine, 1, LOpen - 1));
-              LItem.FFile := LeafName(LFile);
-            end
-            else
-            begin
-              LItem.FLine := 0;
-              LItem.FColumn := 0;
-            end;
-          end;
-        end;
-        LKnown := (LFile <> '') and
-          SameCompilerPath(LFile, NormalizePath(ACompanionFile));
-
-        if LKnown then
-        begin
-
-          if LMap = nil then
-          begin
-            LMap := TSourceMap.Create(ASubmitted, ACompiled);
-          end;
-          LMap.Map(LItem.FLine, LItem.FColumn, LItem.FSourceLine, LItem.FSourceColumn);
-        end;
-
-        if LReport.GetCount < MaximumDiagnostics then
-        begin
-          LReport.Add(LItem);
-        end;
-        Break;
-      end;
+      LReader.ReadLine(LLines[LIndex]);
     end;
-    Result := LOwner;
+    Result := LOwner.Snapshot;
   finally
-    LMap.Free;
     LLines.Free;
   end;
 end;

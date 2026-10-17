@@ -28,9 +28,14 @@ uses
   nyx.text, nyx.data, nyx.types, nyx.model, nyx.source,
   nyx.studio.session, nyx.studio.projects, nyx.studio.agents,
   nyx.studio.agentbridge, nyx.studio.agentview, nyx.studio.exchange,
-  nyx.studio.workspaces, nyx.studio.editorbuild, nyx.studio.builddiagnostics;
+  nyx.studio.workspaces, nyx.studio.editorbuild, nyx.studio.builddiagnostics,
+  nyx.studio.builds;
 
 type
+  { Closed modeled publication phases keep compiler completion separate from
+    paired source admission. They exercise observer routing, not provenance. }
+  TFixturePublication = (fpAbsent, fpPending, fpCommitted);
+
   { Deterministic deferred transport seam. The real session/bridge owns frame
     and queue admission; this fixture controls only delivery order and replies.
     No listener, compiler, protected project or browser automation is involved. }
@@ -43,6 +48,10 @@ type
     FConnect: Boolean;
   public
     WrongJob: Boolean;
+    CompilerState: TNyxBuildJobState;
+    Publication: TFixturePublication;
+    BuildQueries: Integer;
+    Observations: Integer;
     constructor Create(APeer: TNyxAgentSession);
     procedure Post(AConnect: Boolean; const AToken, ABody: TNyxText;
       AReply: TNyxEditorReply); override;
@@ -52,6 +61,19 @@ type
     procedure Deliver;
     procedure Advance;
   end;
+
+  { Counts actual bridge refresh deliveries, retaining no session or widgets.
+    Its lifetime encloses the bridge's borrowed callback and pending transport. }
+  TRefreshCounter = class
+  public
+    Calls: Integer;
+    procedure Refreshed(ADocumentChanged: Boolean);
+  end;
+
+procedure TRefreshCounter.Refreshed(ADocumentChanged: Boolean);
+begin
+  Inc(Calls);
+end;
 
 var
   GChecks: Integer;
@@ -138,6 +160,7 @@ constructor TDeferredExchange.Create(APeer: TNyxAgentSession);
 begin
   inherited Create;
   FPeer := APeer;
+  CompilerState := bjsSucceeded;
 end;
 
 procedure TDeferredExchange.Post(AConnect: Boolean; const AToken, ABody: TNyxText;
@@ -145,6 +168,15 @@ procedure TDeferredExchange.Post(AConnect: Boolean; const AToken, ABody: TNyxTex
 begin
   Check(not Assigned(FReply), 'one deferred request owns its borrowed reply');
   FBody := TNyxDataValue.ParseJSON(ABody);
+
+  if FBody.Field('op').AsText = 'build' then
+  begin
+    Inc(BuildQueries);
+  end
+  else if FBody.Field('op').AsText = 'observe' then
+  begin
+    Inc(Observations);
+  end;
   FReply := AReply;
   FConnect := AConnect;
 end;
@@ -183,6 +215,8 @@ var
   LState: TNyxDataValue;
   LBuild: TNyxDataValue;
   LJob: TNyxText;
+  LReplyStatus: TNyxDataValue;
+  LPublication: TNyxText;
 begin
   Check(Assigned(FReply), 'an actual deferred request exists before delivery');
   LReply := FReply;
@@ -201,8 +235,29 @@ begin
     end;
     LState := FPeer.Exchange(NyxObject([NyxField('op', NyxData('observe')),
       NyxField('after', FBody.Field('after'))]));
-    LState := Changed(LState, 'buildReply',
-      Status(LJob, LBuild.Field('offset').AsInteger));
+    LReplyStatus := Changed(Status(LJob, LBuild.Field('offset').AsInteger), 'state',
+      NyxData(NyxBuildJobStateName(CompilerState)));
+
+    if CompilerState = bjsCancelled then
+    begin
+      LReplyStatus := Changed(LReplyStatus, 'diagnostics', NyxObject([
+        NyxField('offset', LBuild.Field('offset')), NyxField('total', NyxData(0)),
+        NyxField('items', NyxArray([]))]));
+    end;
+
+    if Publication <> fpAbsent then
+    begin
+      LPublication := 'pending';
+
+      if Publication = fpCommitted then
+      begin
+        LPublication := 'committed';
+      end;
+      LReplyStatus := Changed(LReplyStatus, 'purpose', NyxData('transaction'));
+      LReplyStatus := Changed(LReplyStatus, 'publication', NyxObject([
+        NyxField('state', NyxData(LPublication)), NyxField('revision', NyxData(1))]));
+    end;
+    LState := Changed(LState, 'buildReply', LReplyStatus);
   end
   else
   begin
@@ -237,6 +292,10 @@ var
   LSequence: Integer;
   LItems: array of TNyxDataValue;
   LIndex: Integer;
+  LQueries: Integer;
+  LObservations: Integer;
+  LCallbacks: Integer;
+  LRefreshCounter: TRefreshCounter;
 
   procedure Refuses(const AValue: TNyxDataValue; const AReason: TNyxText);
   begin
@@ -257,6 +316,7 @@ begin
   LPeer := TNyxAgentSession.Create;
   LBridge := nil;
   LPanel := nil;
+  LRefreshCounter := TRefreshCounter.Create;
   try
     LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
     Check(DefaultNyxStudioAgentView.BuildInspection.Phase = bdpHidden,
@@ -273,6 +333,29 @@ begin
     Check(RouteNyxBuildDiagnostic(LSession, LAction, ntClick, LInspection, True,
       LDiagnostic) and LDiagnostic.Defined and (LDiagnostic.Line = 1),
       'source navigation routes the exact mapped value without editing');
+    LBad := Changed(Status('first-job', 0), 'state', NyxData('running'));
+    SetLength(LItems, LBad.Field('diagnostics').Field('items').Count);
+    for LIndex := 0 to High(LItems) do
+    begin
+      LItems[LIndex] := LBad.Field('diagnostics').Field('items').Item(LIndex);
+    end;
+    LItems[0] := Changed(LItems[0], 'message', NyxData('A later live compiler message.'));
+    LItems[0] := Changed(LItems[0], 'column', NyxData(2));
+    LBad := Changed(LBad, 'diagnostics', Changed(LBad.Field('diagnostics'),
+      'items', NyxArray(LItems)));
+    LSecond := ReadNyxBuildDiagnostics(LBad, NyxBuildJob('first-job'), 0,
+      LSession.Source, True);
+    LRejected := False;
+    try
+      RouteNyxBuildDiagnostic(LSession, LAction, ntClick, LSecond, True, LDiagnostic);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and not LDiagnostic.Defined,
+      'an older row cannot navigate a changed message at the same running job/page/index');
     Check((LPanel.Find('studio-job-diagnostics-next').Extensions
       .Value(NyxStudioInspectOffsetKey).AsInteger = 20) and
       (LPanel.Find('studio-job-diagnostics-next').Extensions
@@ -310,6 +393,14 @@ begin
       LSession.Source, True);
     Check(LInspection.Origin = bdoProposed,
       'even a forged current-source flag cannot turn an unapplied proposal into accepted source');
+    Check(not LInspection.AwaitingPublication,
+      'a refused source proposal is settled independently of compiler state');
+    LBad := Changed(LProposed, 'publication', NyxObject([
+      NyxField('state', NyxData('pending')), NyxField('revision', NyxNull)]));
+    LSecond := ReadNyxBuildDiagnostics(LBad, NyxBuildJob('first-job'), 0,
+      LSession.Source, True);
+    Check(LSecond.AwaitingPublication,
+      'compiler success alone does not finish an outstanding paired source publication');
     FreeAndNil(LPanel);
     LPanel := BuildNyxStudioBuildDiagnostics(LSession, LInspection, True, True);
     Check(LPanel.Find('studio-job-diagnostic-go-0').Prop('enabled') = 'false',
@@ -366,7 +457,8 @@ begin
       'inspection/navigation/refusal preserve the entire accepted pair and history');
 
     LExchange := TDeferredExchange.Create(LPeer);
-    LBridge := TNyxStudioAgentBridge.Create(LSession, nil, NyxPrimaryWorkspace, LExchange);
+    LBridge := TNyxStudioAgentBridge.Create(LSession,
+      {$ifdef PAS2JS}@{$endif}LRefreshCounter.Refreshed, NyxPrimaryWorkspace, LExchange);
     LBridge.Connect;
     LExchange.Deliver;
     Check(LBridge.CanInspectBuild and LBridge.SourceSynchronized,
@@ -400,6 +492,76 @@ begin
     Check((LBridge.State.BuildInspection.Phase = bdpReady) and
       (LBridge.State.BuildInspection.Job.ID = 'second-job'),
       'the newer request retains its own queued destination and generation');
+    LExchange.CompilerState := bjsRunning;
+    LBridge.InspectBuild(NyxBuildJob('first-job'));
+    LExchange.Deliver;
+    LQueries := LExchange.BuildQueries;
+    LSequence := LBridge.State.BuildReplySequence;
+    LCallbacks := LRefreshCounter.Calls;
+    LExchange.Advance;
+    Check(LExchange.BuildQueries = LQueries + 1,
+      'the selected running page refreshes on an ordinary idle turn');
+    LExchange.Deliver;
+    Check((LRefreshCounter.Calls = LCallbacks) and
+      (LBridge.State.BuildReplySequence = LSequence),
+      'an unchanged live page neither redraws nor steals a workflow reply');
+    LExchange.Advance;
+    LExchange.Deliver;
+    LExchange.Advance;
+    LBridge.BuildStatus(NyxBuildJob('workflow-during-live-poll'));
+    LExchange.Deliver;
+    Check(LBridge.State.BuildReplySequence = LSequence,
+      'inspection acknowledges its own poll before a later queued workflow');
+    LExchange.Advance;
+    LExchange.Deliver;
+    Check((LBridge.State.BuildReplySequence = LSequence + 1) and
+      (LBridge.State.BuildReply.Field('job').AsText = 'workflow-during-live-poll'),
+      'a workflow queued during inspection retains its own exact acknowledgement');
+    LObservations := LExchange.Observations;
+    LExchange.Advance;
+    Check(LExchange.Observations = LObservations + 1,
+      'ordinary observation receives an idle turn between live diagnostic polls');
+    LExchange.Deliver;
+    LExchange.CompilerState := bjsSucceeded;
+    LExchange.Advance;
+    LExchange.Deliver;
+    Check(LBridge.State.BuildInspection.State = bjsSucceeded,
+      'automatic inspection admits the final same-job page');
+    LQueries := LExchange.BuildQueries;
+    LExchange.Advance;
+    LExchange.Deliver;
+    LExchange.Advance;
+    LExchange.Deliver;
+    Check(LExchange.BuildQueries = LQueries,
+      'terminal pages stop automatic compiler requests while observing continues');
+    LExchange.Publication := fpPending;
+    LBridge.InspectBuild(NyxBuildJob('first-job'));
+    LExchange.Deliver;
+    LQueries := LExchange.BuildQueries;
+    LExchange.Advance;
+    Check(LExchange.BuildQueries = LQueries + 1,
+      'finished compilation keeps observing its still-pending paired publication');
+    LExchange.Publication := fpCommitted;
+    LExchange.Deliver;
+    Check(not LBridge.State.BuildInspection.AwaitingPublication and
+      (LBridge.State.BuildInspection.Origin = bdoAccepted),
+      'settled publication requires a fresh admitted same-job response');
+    LExchange.Publication := fpAbsent;
+    LExchange.CompilerState := bjsRunning;
+    LBridge.InspectBuild(NyxBuildJob('first-job'), 20);
+    LExchange.Deliver;
+    Check(LBridge.State.BuildInspection.Offset = 20,
+      'a live report can retain an explicitly selected later page');
+    LExchange.CompilerState := bjsCancelled;
+    LExchange.Advance;
+    LExchange.Deliver;
+    Check(not LBridge.State.Conflict and
+      (LBridge.State.BuildInspection.State = bjsCancelled) and
+      (LBridge.State.BuildInspection.Offset = 0) and
+      (LBridge.State.BuildInspection.Count = 0) and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'a cleared cancelled report retires a later page without freezing or replacing work');
+    LExchange.CompilerState := bjsSucceeded;
     LBridge.InspectBuild(NyxBuildJob('first-job'));
     LExchange.WrongJob := True;
     LExchange.Deliver;
@@ -409,6 +571,7 @@ begin
   finally
     LPanel.Free;
     LBridge.Free;
+    LRefreshCounter.Free;
     LPeer.Free;
     LSession.Free;
   end;

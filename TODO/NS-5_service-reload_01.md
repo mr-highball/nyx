@@ -9,6 +9,15 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source live diagnostics use an incremental Pascal reader and existing
+bounded semantic queries. Worker snapshots remain independent of terminal
+compilation and paired publication; the shared Studio bridge observes only its
+selected ongoing page through the normal queue. Exact row/source guards prevent
+stale navigation. WORK.md owns real compiler/semantic/bridge/lifetime evidence,
+the failing previous job implementation and compile-only browser limits. Cache
+identity/reuse, full reload/project/include/asset integration, HTTP observation,
+broader resource/parity/delivery and all original criteria/credit remain open.
+
 Current-source Windows compiler input leases protect the complete ordinary
 src/studio trees while an invocation reads them. Changes in membership refuse
 output, existing writers refuse admission, and actual family/I/O join precedes

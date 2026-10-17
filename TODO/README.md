@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [live compiler diagnostics](../docs/building.md) use existing
+bounded queries, immutable worker snapshots and selected-page Studio observation.
+WORK.md owns actual native/semantic/compiler evidence and compile-only browser
+limits under the existing [service owner](NS-5_service-reload_01.md). Full cache,
+reload, source-project, HTTP/parity/delivery criteria and credit remain open.
+
 Current-source [compiler library input leases](../docs/building.md) retain ordinary
 owned source trees until actual compiler join, refusing changes during a build.
 WORK.md owns bounded Windows input/lifetime and existing compiler/source/storage

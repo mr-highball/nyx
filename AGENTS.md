@@ -1,5 +1,25 @@
 # Working in Nyx
 
+Current-source live compiler diagnostics use immutable incremental reports and
+the existing bounded status schema. Selected Studio pages poll through the normal
+queue, alternate observation, suppress unchanged redraw and retain source/row/
+draft/publication guards. Compiler completion alone does not close pending source
+publication; cancellation preserves the established clear-worker-report policy.
+Native decoder 762, suspended production semantic 29, bridge/model 95, source 323,
+real compiler 58, lifetime 142, retention 50, admission 72 and shutdown 39/40/42
+pass with overlapping counts. Exact previous buildjobs fails early visibility;
+WORK.md owns that controlled comparison and retained fixture/assertion/warning
+failures. Nineteen top-level compiler receipts (one old unit), thirteen real job
+logs and ten main heaps qualify zero owned warnings/clean retirement. Both Studios,
+backend/worker and browser consumers compile only; no browser/HTTP/physical-editor
+or rollout evidence is inferred. Five protected files/nine contexts and 349 frozen
+artifacts remain exact, all owned processes join and LAN stays offline. No tool/
+schema/kind, full criterion/task/DONE/credit or existing counter closes. Stop live-
+message/parser/poll/fixture/compiler variants; reassess original source-project/
+include/asset/dependency/cache/reload and observing/delivery outcomes. WORK.md and
+the private compiler-messages packet own source/remote receipts. No host retry,
+configuration refresh, cleanup retry or sub-agents.
+
 Current-source Windows compiler input leases retain ordinary nested src/studio
 files until actual family join, with bounded handles/bytes and pre-inventory
 membership observation. Concurrent readers coexist; writers, replacements,
