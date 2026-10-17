@@ -4,6 +4,24 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source Files authoring uses public typed unit/include creation and named
+reviewed removal through both ordinary controllers, sealed compiler candidates
+and exact paired history. Independent drafts/first bases stay retained; FIFO
+membership cannot coalesce with typing or scoped Restore. Main-only first creation
+and last-helper explicit-empty scope retain exact Undo/Redo. Native complete input
+888, targeted feedback 128, final shared provider 183 and source/report 341 pass,
+clean heaps; portable contracts 38 remain separate. Final both Studios/backend/
+worker/consumers compile, zero owned warnings and fourteen upstream pas2js warnings.
+WORK.md owns composite source boundaries, the earlier six fixture warnings and
+retained failures. Five fresh protected hashes/nine complete contexts and 349
+frozen artifacts stay exact; the inherited user-config baseline difference remains
+historical. All handles join; LAN is offline. Stop file/template/compiler/fixture
+variants. Reassess bounded semantic helper inspection/editing/navigation under
+the existing workflow owner; declarations/completion, unused-unit diagnostics,
+full quality/budgets/parity/delivery retain owners. No original full criterion/
+task/DONE/counter/credit, MCP tool/schema, host/browser/capture, protected
+configuration/enrollment/cleanup retry, approval bypass or sub-agents.
+
 Current-source helper compiler navigation carries typed main/unit/include sites
 and exact copied context through private failures and ordinary Nyx Messages.
 Source-free receipts reconstruct helper text only from captured caller inputs;

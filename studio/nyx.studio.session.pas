@@ -31,6 +31,7 @@ uses
   Classes,
   nyx.text,
   nyx.pascal.drafts,
+  nyx.pascal.filechanges,
   nyx.data,
   nyx.types,
   SysUtils,
@@ -89,6 +90,10 @@ type
     FInputFiles: TNyxPascalProjectFiles;
     FFile: TNyxPascalSourceRef;
     FFileBase: TNyxText;
+    { Inventory changes retain their own closed intent. Selection is copied
+      only to avoid stealing a later file navigation on delayed completion. }
+    FFileChange: TNyxPascalFileChange;
+    FActiveFile: TNyxPascalSourceRef;
     { Shared/local publication must record the same dispatch-time Undo frame.
       Later unrelated typing stays current and is captured in opposite history. }
     FUndo: TNyxStudioCheckpoint;
@@ -106,9 +111,10 @@ type
     { Closed captured construction origin. This lets a host choose its explicit
       compiler dispatch without guessing from comments or raw source strings. }
     property Origin: TNyxSourceOrigin read GetOrigin;
-    { Frozen candidate supporting files include only the selected helper edit;
-      other files remain accepted inputs. The compiler reconstructs this exact
-      project against Source, never later editor buffers. Managed text only. }
+    { Frozen candidate supporting files include only the selected helper edit
+      or explicit inventory change; other files remain accepted inputs. The
+      compiler reconstructs this exact project against Source, never later editor
+      buffers. Managed text only. }
     property Files: TNyxPascalProjectFiles read GetFiles;
     property SchemaRevision: Integer read FSchemaRevision;
     property Changed: Boolean read FChanged;
@@ -116,9 +122,28 @@ type
     { The selected file alone supplies unfinished input. Other helper/main
       buffers remain outside this captured compiler candidate. }
     property FileReference: TNyxPascalSourceRef read FFile;
+    property FileChange: TNyxPascalFileChange read FFileChange;
     function IsFileEdit: Boolean;
   end;
 
+  { Warning-only removal review. It seals one session/load and exact accepted/
+    unfinished target bytes; it is deliberately not a compilable source request.
+    Confirmation revalidates these values before constructing a candidate. }
+  TNyxStudioFileRemovalReview = record
+  private
+    FOwner: TNyxText;
+    FGeneration: Integer;
+    FFile: TNyxPascalSourceRef;
+    FAccepted: TNyxText;
+    FBuffer: TNyxText;
+    function GetDefined: Boolean;
+  public
+    property IsDefined: Boolean read GetDefined;
+    property FileReference: TNyxPascalSourceRef read FFile;
+  end;
+
+  { Closed admission result; only Applied transfers a changed accepted pair.
+    Diagnostics/stale work retain the current owners and independent buffers. }
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
 
   { A saved project is data, never execution evidence. This sealed opening
@@ -494,6 +519,9 @@ type
     procedure CaptureCompilerDiagnostic(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource);
     function SourceFileInputs: INyxPascalProject;
+    { Creation requires continued absence; existing-file intents require exact
+      accepted/buffer bytes. Missing members refuse without dereferencing them. }
+    function MatchesSourceFileRequest(const ARequest: TNyxStudioSourceRequest): Boolean;
     function GetActiveSourceFile: TNyxPascalSourceRef;
     procedure SetActiveSourceFile(const AFile: TNyxPascalSourceRef);
     function GetActiveSourceText: TNyxText;
@@ -808,6 +836,15 @@ type
       refuses; unfinished unrelated files never enter compilation. }
     function PrepareFileRequest(const AFile: TNyxPascalSourceRef;
       ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    { Create/remove one helper against accepted complete inputs, retaining every
+      independent buffer in dispatch history. The result grants no execution. }
+    function PrepareFileChangeRequest(const AChange: TNyxPascalFileChange;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    { Review does not prepare/validate a removal candidate, so even a still-used
+      dependency receives its warning before confirmation can refuse it. }
+    function ReviewFileRemoval(const AFile: TNyxPascalSourceRef): TNyxStudioFileRemovalReview;
+    function PrepareReviewedFileRemoval(const AReview: TNyxStudioFileRemovalReview;
+      ASchemaRevision: Integer): TNyxStudioSourceRequest;
     { FIFO dispatch may follow another file's Apply. Rebase only when this
       selected file/buffer/base and project load still match their exact ticket. }
     function RefreshFileRequest(const ARequest: TNyxStudioSourceRequest;
@@ -870,6 +907,7 @@ function ReceiveNyxPreparedDesign(const AData: TNyxDataValue;
 implementation
 
 uses
+  nyx.pascal.names,
   nyx.binding,
   nyx.composition,
   nyx.platform,
@@ -1614,7 +1652,7 @@ var
   LPreviousSource: TNyxSourceWorkspace;
 begin
   { Source-only/visual commands cannot accidentally drop or replace helper
-    meaning. Complete project admission and a sealed selected-helper command may
+    meaning. Complete project admission and a sealed helper/inventory command may
     change that inventory. Check
     before history allocation/publication, preserving both staged owners. }
 
@@ -3614,18 +3652,142 @@ begin
   Result.FInputFiles := TNyxPascalProjectFiles.Capture(LProject);
 end;
 
+function TNyxStudioFileRemovalReview.GetDefined: Boolean;
+begin
+  Result := FOwner <> '';
+end;
+
+function TNyxStudioSession.ReviewFileRemoval(
+  const AFile: TNyxPascalSourceRef): TNyxStudioFileRemovalReview;
+begin
+  TNyxPascalFileChange.Remove(AFile);
+  Result := Default(TNyxStudioFileRemovalReview);
+  Result.FOwner := FSourceIdentity;
+  Result.FGeneration := FSourceGeneration;
+  Result.FFile := AFile;
+  Result.FAccepted := SourceFileText(AFile);
+  Result.FBuffer := DraftFileText(AFile);
+end;
+
+function TNyxStudioSession.PrepareReviewedFileRemoval(
+  const AReview: TNyxStudioFileRemovalReview;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LIndex: Integer;
+  LFound: Boolean;
+begin
+
+  if not AReview.IsDefined or (AReview.FOwner <> FSourceIdentity) or
+    (AReview.FGeneration <> FSourceGeneration) then
+  begin
+    raise ENyxProjectConflict.Create('This source-file removal review belongs to an earlier project');
+  end;
+  LFound := False;
+  for LIndex := 0 to SourceFileCount - 1 do
+  begin
+
+    if SourceFile(LIndex).SameFile(AReview.FFile) then
+    begin
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound or (SourceFileText(AReview.FFile) <> AReview.FAccepted) or
+    (DraftFileText(AReview.FFile) <> AReview.FBuffer) then
+  begin
+    raise ENyxProjectConflict.Create('The reviewed source file or draft changed; review removal again');
+  end;
+  Result := PrepareFileChangeRequest(TNyxPascalFileChange.Remove(AReview.FFile), ASchemaRevision);
+end;
+
+function TNyxStudioSession.PrepareFileChangeRequest(const AChange: TNyxPascalFileChange;
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LProject: INyxPascalProject;
+begin
+  AChange.Validate;
+
+  if FSourceWorkspace.Capture.Files.IsEmpty then
+  begin
+    { A legacy single-unit project has no captured helper scope yet. Stage its
+      declared main identity independently; only successful publication may add
+      the first inventory. Existing-file lookup retains its stricter contract. }
+    LProject := NewNyxPascalProject(NyxPascalUnit(NyxCompanionUnitName(Source)), Source);
+  end
+  else
+  begin
+    LProject := SourceFileInputs;
+  end;
+  LProject := AChange.Candidate(LProject);
+  Result := Default(TNyxStudioSourceRequest);
+  Result.FOwner := FSourceIdentity;
+  Result.FGeneration := FSourceGeneration;
+  Result.FCheckpoint := FSourceWorkspace.Capture;
+  Result.FUndo := NyxStudioCheckpoint(Result.FCheckpoint,
+    FSourceDraft, FSourceDraftBase, FSourceDraftPending, FFileDrafts);
+  Result.FAccepted := Source;
+  Result.FSource := Result.FAccepted;
+  Result.FInputFiles := TNyxPascalProjectFiles.Capture(LProject);
+  Result.FFile := AChange.FileReference;
+  Result.FFileChange := AChange;
+  Result.FActiveFile := ActiveSourceFile;
+  Result.FSchemaRevision := ASchemaRevision;
+  Result.FChanged := True;
+
+  if AChange.Kind = npfcRemove then
+  begin
+    Result.FFileBase := SourceFileText(Result.FFile);
+    Result.FBufferBaseline := DraftFileText(Result.FFile);
+  end;
+end;
+
+function TNyxStudioSession.MatchesSourceFileRequest(
+  const ARequest: TNyxStudioSourceRequest): Boolean;
+var
+  LIndex: Integer;
+  LFound: Boolean;
+begin
+  LFound := False;
+  for LIndex := 0 to SourceFileCount - 1 do
+  begin
+
+    if SourceFile(LIndex).SameFile(ARequest.FileReference) then
+    begin
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if ARequest.FileChange.IsDefined and (ARequest.FileChange.Kind = npfcCreate) then
+  begin
+    Exit(not LFound);
+  end;
+  Result := LFound and (SourceFileText(ARequest.FFile) = ARequest.FFileBase) and
+    (DraftFileText(ARequest.FFile) = ARequest.FBufferBaseline);
+end;
+
 function TNyxStudioSession.RefreshFileRequest(const ARequest: TNyxStudioSourceRequest;
   ASchemaRevision: Integer): TNyxStudioSourceRequest;
 begin
 
   if ARequest.IsSourceEdit or (ARequest.FOwner <> FSourceIdentity) or
     (ARequest.FGeneration <> FSourceGeneration) or
-    (SourceFileText(ARequest.FFile) <> ARequest.FFileBase) or
-    (DraftFileText(ARequest.FFile) <> ARequest.FBufferBaseline) then
+    not MatchesSourceFileRequest(ARequest) then
   begin
     raise ENyxProjectConflict.Create('Queued file Apply no longer matches its selected buffer');
   end;
-  Result := PrepareFileRequest(ARequest.FFile, ASchemaRevision);
+  if ARequest.FileChange.IsDefined then
+  begin
+    Result := PrepareFileChangeRequest(ARequest.FileChange, ASchemaRevision);
+    { A confirmation captures presentation too; queued dispatch must not replace
+      its original navigation baseline with the user's later file choice. }
+    Result.FActiveFile := ARequest.FActiveFile;
+  end
+  else
+  begin
+    Result := PrepareFileRequest(ARequest.FFile, ASchemaRevision);
+  end;
 end;
 
 function TNyxStudioSession.PrepareSourceEditRequest(const ASource: TNyxText;
@@ -3684,7 +3846,7 @@ begin
   if (LAccepted <> ARequest.FAccepted) or
     (LCheckpoint.Design <> ARequest.FCheckpoint.Design) or
     (LCheckpoint.Files.Encoded <> ARequest.FCheckpoint.Files.Encoded) or
-    (DraftFileText(ARequest.FFile) <> ARequest.FBufferBaseline) then
+    not MatchesSourceFileRequest(ARequest) then
   begin
     Exit;
   end;
@@ -3771,6 +3933,12 @@ begin
     begin
       FSourceDiagnostic := Default(TNyxSourceDiagnostic);
       FSourceDiagnosticSource := '';
+    end;
+
+    if ARequest.FileChange.IsDefined and (ARequest.FileChange.Kind = npfcCreate) and
+      ActiveSourceFile.SameFile(ARequest.FActiveFile) then
+    begin
+      FActiveSourceFile := ARequest.FileReference;
     end;
 
     LActiveView := FDocument.Find(FActiveViewID);

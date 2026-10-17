@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
-  nyx.pascal.drafts,
+  nyx.pascal.drafts, nyx.pascal.filechanges,
   nyx.behavior,
   nyx.source.preparation, nyx.studio.sourcecompilation, nyx.studio.session,
   nyx.studio.sourcecompilation.shared, nyx.studio.sourcepublications,
@@ -139,6 +139,7 @@ type
     FCompletedEdit: TNyxStudioDesignEdit;
     FCompletedContext: TNyxStudioCommandContext;
     FCompletedHandler: TNyxHandlerRef;
+    FCompletedFileChange: TNyxPascalFileChange;
     FCompiler: INyxSourceCompiler;
     FProjectCompiler: INyxSourceCompiler;
     FSharedHost: INyxSharedSourceHost;
@@ -204,6 +205,10 @@ type
     { Apply only this retained source buffer. Repeated waiting intents coalesce
       per file; other files retain FIFO order and their independent drafts. }
     procedure ApplyFile(const AFile: TNyxPascalSourceRef);
+    { Inventory proposals retain FIFO order and never coalesce with typing.
+      Removal callers should present a warning before submitting a sealed ticket. }
+    procedure ChangeFile(const AChange: TNyxPascalFileChange); overload;
+    procedure ChangeFile(const ARequest: TNyxStudioSourceRequest); overload;
     { Retire only this file's waiting/running Apply intent. Other files and
       visual commands retain FIFO ownership; shared uncertainty still freezes
       the ordinary bridge for explicit reconciliation. }
@@ -285,6 +290,9 @@ type
     function Route(ANode: TNyxNode; const AEvent: TNyxEventInfo;
       AShellRoot: TNyxNode): Boolean; overload;
     property State: TNyxSourceCommandState read FState;
+    { Defined only during the applied notification; presentation may reset the
+      selected file's caret, without retaining the queue slot or compiler. }
+    property CompletedFileChange: TNyxPascalFileChange read FCompletedFileChange;
     property Message: TNyxText read FMessage;
     property Busy: Boolean read GetBusy;
     { Current notification's typed design effect. False for source/status-only
@@ -778,6 +786,7 @@ begin
     FPublishedProject := False;
     FPublishedCanvasAdoption := False;
     FRestoredDraft := False;
+    FCompletedFileChange := Default(TNyxPascalFileChange);
   end;
 end;
 
@@ -818,7 +827,7 @@ begin
     for LIndex := 0 to High(FQueue) do
     begin
 
-      if (FQueue[LIndex].Kind <> eskPascal) or
+      if (FQueue[LIndex].Kind <> eskPascal) or FQueue[LIndex].Source.FileChange.IsDefined or
         not FQueue[LIndex].Source.FileReference.SameFile(AFile) then
       begin
         Inc(LCount);
@@ -835,7 +844,7 @@ begin
     for LIndex := 0 to High(FQueue) do
     begin
 
-      if (FQueue[LIndex].Kind <> eskPascal) or
+      if (FQueue[LIndex].Kind <> eskPascal) or FQueue[LIndex].Source.FileChange.IsDefined or
         not FQueue[LIndex].Source.FileReference.SameFile(AFile) then
       begin
         FQueue[LCount] := FQueue[LIndex];
@@ -848,7 +857,7 @@ begin
     end;
     SetLength(FQueue, LCount);
 
-    if FRunning and (FActive.Kind = eskPascal) and
+    if FRunning and (FActive.Kind = eskPascal) and not FActive.Source.FileChange.IsDefined and
       FActive.Source.FileReference.SameFile(AFile) then
     begin
       FDiscardActive := True;
@@ -872,6 +881,41 @@ begin
     LJob.Schemas := nil;
     try
       Notify(nssPreparing, 'Preparing Pascal / current design retained');
+    finally
+      StartQueued;
+    end;
+  finally
+    LJob.Schemas.Free;
+  end;
+end;
+
+procedure TNyxSourceCommands.ChangeFile(const AChange: TNyxPascalFileChange);
+begin
+  FScheduler.RequireUI;
+  ChangeFile(FSession.PrepareFileChangeRequest(AChange, NyxSchemaRevision));
+end;
+
+procedure TNyxSourceCommands.ChangeFile(const ARequest: TNyxStudioSourceRequest);
+var
+  LJob: TNyxEditorSourceJob;
+begin
+  FScheduler.RequireUI;
+
+  if not ARequest.FileChange.IsDefined then
+  begin
+    raise ENyxModel.Create('Inventory commands require an explicit create/remove ticket');
+  end;
+  LJob := Default(TNyxEditorSourceJob);
+  LJob.Kind := eskPascal;
+  LJob.Context := FSession.CommandContext;
+  LJob.Sequence := NextSequence;
+  LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
+  try
+    LJob.Source := FSession.RefreshFileRequest(ARequest, LJob.Schemas.Value.Revision);
+    Enqueue(LJob);
+    LJob.Schemas := nil;
+    try
+      Notify(nssPreparing, 'Preparing source-file change / current files retained');
     finally
       StartQueued;
     end;
@@ -1586,7 +1630,12 @@ begin
         LSharedPort.Sequence := FActive.Sequence;
         LSharedPort.ExpectedSource := FActive.Source.Source;
 
-        if FActive.Source.IsFileEdit then
+        if FActive.Source.FileChange.IsDefined then
+        begin
+          FCompilation := StartNyxSharedFileChangeCompilation(FSharedHost,
+            FActive.Source, LSharedLease);
+        end
+        else if FActive.Source.IsFileEdit then
         begin
           FCompilation := StartNyxSharedFileCompilation(FSharedHost,
             FActive.Source, LSharedLease);
@@ -1796,6 +1845,20 @@ begin
               else if FActive.Kind = eskPascal then
               begin
                 LMessage := 'Pascal applied / one Undo restores the pair';
+
+                if FActive.Source.FileChange.IsDefined then
+                begin
+
+                  if FActive.Source.FileChange.Kind = npfcCreate then
+                  begin
+                    LMessage := 'Created ' + FActive.Source.FileReference.Name;
+                  end
+                  else
+                  begin
+                    LMessage := 'Removed ' + FActive.Source.FileReference.Name;
+                  end;
+                  LMessage := LMessage + ' / one Undo restores the pair';
+                end;
               end
               else
               begin
@@ -1846,6 +1909,12 @@ begin
     FCompletedEdit := FActive.Edit;
     FCompletedContext := FActive.Context;
     FCompletedHandler := Default(TNyxHandlerRef);
+    FCompletedFileChange := Default(TNyxPascalFileChange);
+
+    if (LState = nssApplied) and (FActive.Kind = eskPascal) then
+    begin
+      FCompletedFileChange := FActive.Source.FileChange;
+    end;
 
     if (LState = nssApplied) and LDesign and (LAction = sdaEvent) then
     begin
@@ -2036,7 +2105,7 @@ begin
   FScheduler.RequireUI;
   AFile.Validate;
 
-  if FRunning and (FActive.Kind = eskPascal) and
+  if FRunning and (FActive.Kind = eskPascal) and not FActive.Source.FileChange.IsDefined and
     FActive.Source.FileReference.SameFile(AFile) then
   begin
     NextSequence;
@@ -2045,7 +2114,7 @@ begin
   for LIndex := 0 to High(FQueue) do
   begin
 
-    if (FQueue[LIndex].Kind = eskPascal) and
+    if (FQueue[LIndex].Kind = eskPascal) and not FQueue[LIndex].Source.FileChange.IsDefined and
       FQueue[LIndex].Source.FileReference.SameFile(AFile) then
     begin
       FQueue[LIndex].Schemas.Free;
@@ -2058,7 +2127,7 @@ begin
   end;
   SetLength(FQueue, LCount);
 
-  if FRunning and (FActive.Kind = eskPascal) and
+  if FRunning and (FActive.Kind = eskPascal) and not FActive.Source.FileChange.IsDefined and
     FActive.Source.FileReference.SameFile(AFile) then
   begin
     CancelActive;

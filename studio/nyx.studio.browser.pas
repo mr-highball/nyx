@@ -79,6 +79,7 @@ uses
   nyx.projection.refresh,
   nyx.studio.session,
   nyx.studio.source,
+  nyx.studio.sourcefiles,
   nyx.studio.sourcejobs,
   nyx.studio.previewruntime, nyx.canvas.palette,
   nyx.studio.sourcecompilation,
@@ -2485,6 +2486,26 @@ begin
   end;
   FStatus := AMessage;
 
+  if FSourceCommands.CompletedFileChange.IsDefined then
+  begin
+
+    if FViewState.SourceFileRemoval.IsDefined and
+      FViewState.SourceFileRemoval.FileReference.SameFile(
+        FSourceCommands.CompletedFileChange.FileReference) then
+    begin
+      FViewState.SourceFileRemoval := Default(TNyxStudioFileRemovalReview);
+    end;
+
+    if (FSourceTab = nstFiles) and
+      FSession.ActiveSourceFile.SameFile(FSourceCommands.CompletedFileChange.FileReference) and
+      FViewState.SourceFilesDraft.AcceptCreation(FSourceCommands.CompletedFileChange) then
+    begin
+      FSourceTab := nstSource;
+      FSourceLine := 1;
+      FSourceColumn := 1;
+    end;
+  end;
+
   if FSourceCommands.PublishedProject then
   begin
     ProjectOpened;
@@ -3018,6 +3039,7 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LSourceFilesEffect: TNyxStudioSourceFilesEffect;
   LDiagramAction: TNyxDiagramLibraryAction;
   LDiagramReference: TNyxDiagramRef;
   LInspectorGroup: TNyxInspectorGroup;
@@ -3563,6 +3585,19 @@ begin
       Exit;
     end;
 
+    LSourceFilesEffect := RouteNyxStudioSourceFiles(FSession, FSourceCommands,
+      FSourcePaneRenderer.Root, ANode, AEvent, FViewState.SourceFilesDraft, FViewState.SourceFileRemoval);
+
+    if LSourceFilesEffect <> ssfeNone then
+    begin
+
+      if LSourceFilesEffect <> ssfeField then
+      begin
+        Refresh(True, True);
+      end;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntChange) and (ANode.ID = NyxStudioSourceFileID) then
     begin
       RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
@@ -4047,6 +4082,11 @@ begin
           'action-messages-tab':
             begin
               FSourceTab := nstMessages;
+              LRetainCanvas := True;
+            end;
+          NyxStudioSourceFilesTabID:
+            begin
+              FSourceTab := nstFiles;
               LRetainCanvas := True;
             end;
           'action-expand-source':

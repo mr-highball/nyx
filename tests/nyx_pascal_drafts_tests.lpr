@@ -30,12 +30,12 @@ var
   LChecks: Integer;
 begin
   try
-    LChecks := RunNyxPascalDraftChecks;
+    LChecks := RunNyxPascalDraftChecks + RunNyxPascalFileChangeChecks;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-file-drafts', 'passed');
     document.body.setAttribute('data-file-draft-checks', IntToStr(LChecks));
     {$else}
-    WriteLn('PASS ', LChecks, ' portable source-file buffer checks');
+    WriteLn('PASS ', LChecks, ' portable Pascal source-file checks');
     {$endif}
   except
     on LException: Exception do

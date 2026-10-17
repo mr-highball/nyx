@@ -24,7 +24,8 @@ program nyx_shared_source_commands_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Interfaces, Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.types,
-  nyx.source,
+  nyx.source, nyx.schema,
+  nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
   nyx.studio.projects, nyx.studio.session, nyx.studio.sourcejobs,
   nyx.studio.agentbridge, nyx.studio.exchange, nyx.studio.mcp,
   nyx.studio.directories, nyx.studio.outputs, nyx.studio.buildexecutor,
@@ -97,7 +98,7 @@ type
     tokens, so cancellation/retirement is qualified from terminal native state,
     never inferred from an editor's locally idle presentation or a timeout. }
   TObservedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
-    INyxSharedVisualSourceCompilerFactory)
+    INyxSharedVisualSourceCompilerFactory, INyxSharedFileChangeCompilerFactory)
   public
     Inner: INyxSharedSourceCompilerFactory;
     Operations: array of INyxSourceCompilation;
@@ -106,14 +107,22 @@ type
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AIntent: TNyxDataValue): INyxSharedSourceCompiler;
+    function CreateFileChangeCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AChange: TNyxPascalFileChange): INyxSharedSourceCompiler;
     function Terminal: Boolean;
   end;
-  TObservedCompiler = class(TInterfacedObject, INyxSharedSourceCompiler)
+  { Transparent compiler lease records actual native operation tokens without
+    stripping the optional complete-project input contract from its producer. }
+  TObservedCompiler = class(TInterfacedObject, INyxSharedSourceCompiler,
+    INyxSharedProjectSourceCompiler)
   public
     Inner: INyxSharedSourceCompiler;
     Owner: TObservedFactory;
     Lease: INyxSharedSourceCompilerFactory;
     function Start(const ASource: TNyxText;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function StartProject(const AProject: INyxPascalProject;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
   { The real native provider is retained unchanged. Only this worker-safe private
@@ -342,6 +351,41 @@ begin
   LCompiler.Owner := Self;
   LCompiler.Lease := Self;
   LCompiler.Inner := LVisual.CreateVisualCompiler(ACapability, AIssuer, AWorkspace, ARevision, AIntent);
+end;
+
+function TObservedFactory.CreateFileChangeCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AChange: TNyxPascalFileChange): INyxSharedSourceCompiler;
+var
+  LFactory: INyxSharedFileChangeCompilerFactory;
+  LCompiler: TObservedCompiler;
+begin
+
+  if not Supports(Inner, INyxSharedFileChangeCompilerFactory, LFactory) then
+  begin
+    raise Exception.Create('Real native provider lacks file management');
+  end;
+  LCompiler := TObservedCompiler.Create;
+  Result := LCompiler;
+  LCompiler.Owner := Self;
+  LCompiler.Lease := Self;
+  LCompiler.Inner := LFactory.CreateFileChangeCompiler(ACapability, AIssuer,
+    AWorkspace, ARevision, AChange);
+end;
+
+function TObservedCompiler.StartProject(const AProject: INyxPascalProject;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LCompiler: INyxSharedProjectSourceCompiler;
+begin
+
+  if not Supports(Inner, INyxSharedProjectSourceCompiler, LCompiler) then
+  begin
+    raise Exception.Create('Observed producer lacks captured project inputs');
+  end;
+  Result := LCompiler.StartProject(AProject, APort);
+  SetLength(Owner.Operations, Length(Owner.Operations) + 1);
+  Owner.Operations[High(Owner.Operations)] := Result;
 end;
 
 function TObservedCompiler.Start(const ASource: TNyxText;
@@ -1286,6 +1330,10 @@ var
   LWaiting: Boolean;
   LObserved: TObservedFactory;
   LOptions: TNyxNativeSourceServiceOptions;
+  LFileChange: TNyxPascalFileChange;
+  LRemoval: TNyxStudioFileRemovalReview;
+  LBeforeFiles: TNyxProjectPair;
+  LCreatedFiles: TNyxProjectPair;
 
   procedure AwaitDispatch(AOperationCount: Integer);
   var
@@ -1548,6 +1596,49 @@ begin
     LJourney.Session.Redo;
     Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
       'paired Redo reproduces both real native visual results');
+    { Same ordinary provider and acknowledged handwritten project. Removing its
+      sole helper retains the explicit empty project scope through real ownership,
+      compilation, paired publication and observing acknowledgement. }
+    LJourney.Bridge.RecordLocal;
+    LJourney.Drain;
+    LBefore := LJourney.Session.ProjectSnapshot;
+    Check(LBefore.Files.IsEmpty, 'real provider begins the membership boundary without helpers');
+    LBeforeFiles := LBefore;
+    { A captured empty project is distinct from an absent project value: its
+      declared main identity and caller-tuned limits must survive removal too. }
+    LBefore.Files := TNyxPascalProjectFiles.Capture(NewNyxPascalProject(
+      NyxPascalUnit(NyxCompanionUnitName(LBefore.Source)), LBefore.Source));
+    LFileChange := TNyxPascalFileChange.CreateInclude(NyxPascalInclude('owned-notes.inc'));
+    LJourney.Commands.ChangeFile(LFileChange);
+    AwaitDispatch(4);
+    AwaitCommand;
+    Acknowledge;
+    Check((LJourney.Commands.State = nssApplied) and
+      not LJourney.Session.ProjectSnapshot.Files.IsEmpty and
+      (LJourney.Session.DraftSource = LBefore.Draft),
+      'actual shared provider creates the sole helper and retains independent main text');
+    LCreatedFiles := LJourney.Session.ProjectSnapshot;
+    LRemoval := LJourney.Session.ReviewFileRemoval(LFileChange.FileReference);
+    LJourney.Commands.ChangeFile(LJourney.Session.PrepareReviewedFileRemoval(LRemoval, NyxSchemaRevision));
+    AwaitDispatch(5);
+    AwaitCommand;
+    Acknowledge;
+    Check((LJourney.Commands.State = nssApplied) and
+      (EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)),
+      'actual shared last-helper removal retains exact empty project scope and draft');
+    LRemote := DecodeNyxProject(ObserveJourney(LJourney).Field('project').AsText);
+    Check(EncodeNyxProject(LRemote) = EncodeNyxProject(LBefore),
+      'owning backend independently publishes the same empty-project result');
+    LJourney.Session.Undo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LCreatedFiles),
+      'last-helper removal Undo restores the exact created inventory');
+    LJourney.Session.Undo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBeforeFiles),
+      'first-helper creation Undo restores the original absent inventory and draft exactly');
+    LJourney.Session.Redo;
+    LJourney.Session.Redo;
+    Check(EncodeNyxProject(LJourney.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'first-helper paired Redo retains the explicit empty scope after removal');
   finally
     LTransport.ReleaseReply.SetEvent;
     LJourney.Free;

@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.source,
-  nyx.expressions, nyx.expressions.editing, nyx.pascal.drafts,
+  nyx.expressions, nyx.expressions.editing, nyx.pascal.drafts, nyx.pascal.filechanges,
   nyx.canvas.types, nyx.canvas.geometry, nyx.canvas.precision,
   nyx.canvas.declarations, nyx.canvas.route.types,
   nyx.flow.types, nyx.flow.declarations, nyx.logic.catalog,
@@ -296,6 +296,11 @@ type
       acknowledged draft/base and accepted inventory, never proposed wire files. }
     function CaptureFilePublication(AExpected: Integer; const ASource: TNyxText;
       const AFile: TNyxPascalSourceRef; out ARequest: TNyxStudioSourceRequest;
+      out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+    { Reconstruct one explicit inventory change against this editor's accepted
+      files; supplied candidates cannot replace other helpers or their buffers. }
+    function CaptureFileChangePublication(AExpected: Integer; const ASource: TNyxText;
+      const AChange: TNyxPascalFileChange; out ARequest: TNyxStudioSourceRequest;
       out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
     { Independently prepare an intent against this server-owned session. Supplied
       source must equal the server's writer output; an unfinished buffer stays
@@ -3876,6 +3881,21 @@ begin
   if not ARequest.IsFileEdit or (ASource <> ARequest.Source) then
   begin
     raise ENyxProjectConflict.Create('Selected-file publication requires the accepted main source');
+  end;
+end;
+
+function TNyxAgentSession.CaptureFileChangePublication(AExpected: Integer;
+  const ASource: TNyxText; const AChange: TNyxPascalFileChange;
+  out ARequest: TNyxStudioSourceRequest;
+  out ASchemas: INyxSchemaSnapshot): TNyxProjectPair;
+begin
+  Result := EditorSourcePair(AExpected);
+  ASchemas := CaptureNyxSchemas;
+  ARequest := FSession.PrepareFileChangeRequest(AChange, ASchemas.Revision);
+
+  if ASource <> ARequest.Source then
+  begin
+    raise ENyxProjectConflict.Create('File management requires the accepted main source');
   end;
 end;
 

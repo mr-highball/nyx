@@ -27,7 +27,8 @@ unit nyx.studio.sourcecompilation.shared.browser;
 interface
 
 uses
-  nyx.pascal.drafts, nyx.studio.sourcecompilation.browser, nyx.studio.sourcecompilation.shared;
+  nyx.pascal.drafts, nyx.pascal.filechanges, nyx.studio.sourcecompilation.browser,
+  nyx.studio.sourcecompilation.shared;
 
 { Reuses the ordinary owned browser worker adapter, then delegates only its live
   executed result to the same shared provider. The specialized completion port
@@ -100,7 +101,8 @@ type
   { Idle strategies capture closed editor intent and connection values only;
     no factory or produced compiler retains a mutable Studio session. }
   TSharedFactory = class(TInterfacedObject, INyxSharedSourceCompilerFactory,
-    INyxSharedVisualSourceCompilerFactory, INyxSharedFileSourceCompilerFactory)
+    INyxSharedVisualSourceCompilerFactory, INyxSharedFileSourceCompilerFactory,
+    INyxSharedFileChangeCompilerFactory)
     function CreateCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer): INyxSharedSourceCompiler;
     function CreateVisualCompiler(const ACapability, AIssuer: TNyxText;
@@ -109,6 +111,9 @@ type
     function CreateFileCompiler(const ACapability, AIssuer: TNyxText;
       const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
       const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
+    function CreateFileChangeCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AChange: TNyxPascalFileChange): INyxSharedSourceCompiler;
   end;
 
 function TSharedFactory.CreateCompiler(const ACapability, AIssuer: TNyxText;
@@ -137,6 +142,14 @@ function TSharedFactory.CreateFileCompiler(const ACapability, AIssuer: TNyxText;
 begin
   Result := NewNyxSharedBrowserSourceCompiler(NewNyxFileSharedBrowserSourceService(
     ACapability, AIssuer, AWorkspace, ARevision, AFile));
+end;
+
+function TSharedFactory.CreateFileChangeCompiler(const ACapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+  const AChange: TNyxPascalFileChange): INyxSharedSourceCompiler;
+begin
+  Result := NewNyxSharedBrowserSourceCompiler(NewNyxFileChangeSharedBrowserSourceService(
+    ACapability, AIssuer, AWorkspace, ARevision, AChange));
 end;
 
 procedure TSharedCompilation.Retire;

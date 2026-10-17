@@ -25,13 +25,17 @@
   substitutes sockets only, preserving the production backend/provider/bridge.
   Every project, recovery seed and machine profile belongs to this fresh packet. }
 procedure RunSourceFileControls(const ADirectories: TNyxStudioDirectories;
-  const ATools: TNyxDataValue);
+  const ATools: TNyxDataValue; AFeedbackOnly: Boolean);
 const
   CInitial: TNyxText = 'An independent first plan';
   CChanged: TNyxText = 'A file-authored plan 🚀 𐐷';
   CMainDraft: TNyxText = '{ An unfinished main idea';
   CUnitDraft: TNyxText = '{ An unfinished independent unit';
   CMainDuring: TNyxText = '{ A newer main idea typed during helper compilation';
+  { Explicit portable operands prevent a supplementary-character source literal
+    from promoting the complete fixture through an ANSI RTL conversion. }
+  CBrowserFailure: TNyxText = '  { 🚀 𐐷 } MissingBrowserDiagnostic;';
+  CNativeFailure: TNyxText = '  { 🚀 𐐷 } MissingDiagnostic;';
 var
   LProfile: TNyxOutputConfiguration;
   LPair: TNyxProjectPair;
@@ -62,7 +66,7 @@ var
     LAt := Pos('implementation', LText) + Length('implementation') - 1;
     Check(LAt >= Length('implementation'), 'browser compiler fixture owns its explicit unit body');
     LText := Copy(LText, 1, LAt) + #10 + 'procedure BrokenBrowserDiagnostic;' + #10 +
-      'begin' + #10 + '  { 🚀 𐐷 } MissingBrowserDiagnostic;' + #10 + 'end;' + #10 +
+      'begin' + #10 + CBrowserFailure + #10 + 'end;' + #10 +
       Copy(LText, LAt + 1, MaxInt);
     LCandidate := LInputs.WithUnit(NyxPascalUnit('project.values'), LText);
     LExecutor := TNyxBuildExecutor.Create(ADirectories, LProfile.Encode);
@@ -245,6 +249,194 @@ var
         'mounted text and exact code model come from the selected independent buffer');
     end;
 
+    { Ordinary public Files controls own the user journey. Source templates are
+      project data until the existing compiler/publisher admits the candidate;
+      unrelated drafts and exact paired history remain observable throughout. }
+    procedure ManageFiles;
+    var
+      LNewUnit: TNyxPascalSourceRef;
+      LNewInclude: TNyxPascalSourceRef;
+      LNameInput: TEdit;
+      LKindInput: TComboBox;
+      LBefore: TNyxText;
+      LAfter: TNyxText;
+      LCount: Integer;
+      LMessage: TNyxNode;
+      LFeedback: TNyxText;
+
+      procedure NameFile(const AName: TNyxText; AInclude: Boolean);
+      begin
+        Click('action-source-files-tab');
+        Settled;
+        LKindInput := TComboBox(GStudio.SourceView.InputFor('studio-source-files-kind'));
+        Check(LKindInput <> nil, 'Files exposes its ordinary typed unit/include selector');
+        LKindInput.ItemIndex := Ord(AInclude);
+        LKindInput.OnChange(LKindInput);
+        Settled;
+        LNameInput := TEdit(GStudio.SourceView.InputFor('studio-source-files-name'));
+        Check(LNameInput <> nil, 'Files exposes the ordinary new-name input');
+        LNameInput.Text := AName;
+        Settled;
+      end;
+
+      procedure ReviewRemoval(const AFile: TNyxPascalSourceRef);
+      begin
+        Pick(AFile);
+        Click('action-source-files-tab');
+        Click('studio-source-files-remove');
+        Settled;
+        LMessage := GStudio.SourceView.Root.Find('studio-source-files-warning');
+        Check((LMessage <> nil) and (Pos(AFile.Name, LMessage.Prop('text')) > 0),
+          'visible removal warning names the exact captured source file');
+      end;
+
+    begin
+      WriteLn('SOURCE MANAGEMENT ', LCase, ' starting');
+      Flush(Output);
+      LNewUnit := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('project.toolbox'));
+      LNewInclude := TNyxPascalSourceRef.IncludeFile(NyxPascalInclude('toolbox-notes.inc'));
+      LCount := GStudio.Session.SourceFileCount;
+      LMemo.Text := CMainDraft;
+      Settled;
+      Pick(LUtility);
+      LMemo.Text := '{ An independent file-management idea 🚀';
+      Settled;
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      NameFile('../invalid', False);
+      Click('studio-source-files-create');
+      Settled;
+      LMessage := GStudio.SourceView.Root.Find('studio-source-files-message');
+      Check((LMessage <> nil) and (LMessage.Prop('text') <> '') and
+        (GStudio.SourceView.Root.Find('studio-source-files-name').Prop('value') = '../invalid') and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+        'invalid creation retains its actual field and complete accepted/draft pair');
+
+      if AFeedbackOnly then
+      begin
+        { The complete management journey separately qualifies compilation and
+          history. This focused real-input continuation checks only ownership of
+          successive local refusals/reviews, without repeating unrelated builds. }
+        LFeedback := LMessage.Prop('text');
+        ReviewRemoval(LUtility);
+        Check((GStudio.SourceView.Root.Find('studio-source-files-message').Prop('text') <> LFeedback) and
+          (GStudio.SourceView.Root.Find('studio-source-files-name').Prop('value') = '../invalid') and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+          'a new removal review clears earlier local feedback while retaining exact fields and pair');
+        Click('action-source-tab');
+        LMemo.Text := GStudio.Session.DraftFileText(LUtility) + #10 + '{ A later review idea. }';
+        Settled;
+        LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+        Click('action-source-files-tab');
+        Click('studio-source-files-remove-confirm');
+        Settled;
+        LFeedback := GStudio.SourceView.Root.Find('studio-source-files-message').Prop('text');
+        Check((Pos('changed', LFeedback) > 0) and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+          'changed reviewed input receives its own scoped refusal without publication');
+        Click('studio-source-files-remove-cancel');
+        Settled;
+        Check((GStudio.SourceView.Root.Find('studio-source-files-warning') = nil) and
+          (GStudio.SourceView.Root.Find('studio-source-files-message').Prop('text') <> LFeedback) and
+          (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+          'Keep file retires only that refusal and review, preserving every accepted and draft byte');
+        WriteLn('SOURCE FEEDBACK ', LCase, ' passed');
+        Flush(Output);
+        Exit;
+      end;
+      NameFile('project.toolbox', False);
+      Click('studio-source-files-create');
+      Settled;
+      Check((GStudio.SourceCommands.State = nssApplied) and
+        (GStudio.Session.SourceFileCount = LCount + 1) and
+        GStudio.Session.ActiveSourceFile.SameFile(LNewUnit) and
+        (Pos('unit project.toolbox;', LMemo.Text) > 0),
+        'ordinary creation publishes and opens its typed unit template / ' + GStudio.SourceCommands.Message);
+      LAfter := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Click('action-undo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+        'unit creation Undo restores all earlier files and independent buffers');
+      Click('action-redo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter,
+        'unit creation Redo restores exact captured source and buffers');
+      Pick(LNewUnit);
+      LMemo.Text := '{ An unfinished new unit 🚀 𐐷';
+      Settled;
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      ReviewRemoval(LNewUnit);
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+        'review alone never removes a file, draft or history value');
+      Click('studio-source-files-remove-cancel');
+      Settled;
+      Check((GStudio.SourceView.Root.Find('studio-source-files-warning') = nil) and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+        'Keep file cancels the warning without changing project data');
+      ReviewRemoval(LNewUnit);
+      Click('action-source-tab');
+      LMemo.Text := GStudio.Session.ActiveSourceText + #10 + '{ A newer draft. }';
+      Settled;
+      LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Click('action-source-files-tab');
+      Click('studio-source-files-remove-confirm');
+      Settled;
+      Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore) and
+        (GStudio.SourceView.Root.Find('studio-source-files-message').Prop('text') <> ''),
+        'changed reviewed draft refuses confirmation and preserves every byte');
+      Click('studio-source-files-remove-cancel');
+      ReviewRemoval(LNewUnit);
+      Click('studio-source-files-remove-confirm');
+      Settled;
+      Check((GStudio.SourceCommands.State = nssApplied) and
+        (GStudio.Session.SourceFileCount = LCount) and
+        not GStudio.Session.FileDrafts.Contains(LNewUnit),
+        'confirmed removal retires only its named file and draft / ' + GStudio.SourceCommands.Message);
+      LAfter := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+      Click('action-undo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore,
+        'removal Undo restores exact unit text and unfinished draft/base together');
+      Click('action-redo');
+      Settled;
+      Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter,
+        'removal Redo retains the exact independent buffers');
+      NameFile('toolbox-notes.inc', True);
+      Click('studio-source-files-create');
+      Settled;
+      Check((GStudio.SourceCommands.State = nssApplied) and
+        GStudio.Session.ActiveSourceFile.SameFile(LNewInclude),
+        'ordinary include creation opens its independently owned fragment');
+      ReviewRemoval(LNewInclude);
+      Click('studio-source-files-remove-confirm');
+      Settled;
+      Check((GStudio.SourceCommands.State = nssApplied) and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter),
+        'include creation/removal returns exactly to the retained earlier pair');
+      ReviewRemoval(LInclude);
+      Click('studio-source-files-remove-confirm');
+      Settled;
+      Check((EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter) and
+        (GStudio.SourceView.Root.Find('studio-source-files-message').Prop('text') <> ''),
+        'a referenced include refuses removal before any paired publication');
+      Click('studio-source-files-remove-cancel');
+      ReviewRemoval(LUnit);
+      Click('studio-source-files-remove-confirm');
+      Settled;
+      Check((GStudio.SourceCommands.State in [nssRejected, nssFailed]) and
+        (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LAfter),
+        'actual compiler rejects deleting the used unit and keeps the complete pair');
+      Pick(LUtility);
+      Click('action-reset-source');
+      Settled;
+      Check(not GStudio.Session.FileDrafts.Contains(LUtility) and
+        (GStudio.Session.DraftSource = CMainDraft) and
+        (GStudio.CodeView.InputFor('studio-code') = LMemo),
+        'file management retains the same memo and only explicit Restore consumes its fixture draft');
+      Pick(GStudio.Session.SourceFile(0));
+      WriteLn('SOURCE MANAGEMENT ', LCase, ' passed');
+      Flush(Output);
+    end;
+
   begin
     LCase := 'local-';
 
@@ -352,6 +544,12 @@ var
       LInitialInclude := GStudio.Session.SourceFileText(LInclude);
       LChangedInclude := 'function ProjectPlan: TNyxText;' + #10 + 'begin' + #10 +
         '  Result := ' + TNyxCodegen.TextLiteral(CChanged) + ';' + #10 + 'end;' + #10;
+      ManageFiles;
+
+      if AFeedbackOnly then
+      begin
+        Exit;
+      end;
       LMemo.Text := CMainDraft;
       Settled;
       Click('action-expand-source');
@@ -550,7 +748,7 @@ var
         Check(LInsertion >= Length('implementation'), 'fixture contains its explicit unit implementation');
         LMemo.Text := Copy(LUnitSource, 1, LInsertion) + #10 +
           'procedure BrokenDiagnostic;' + #10 + 'begin' + #10 +
-          '  { 🚀 𐐷 } MissingDiagnostic;' + #10 + 'end;' + #10 +
+          CNativeFailure + #10 + 'end;' + #10 +
           Copy(LUnitSource, LInsertion + 1, MaxInt);
         Settled;
         LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
@@ -627,7 +825,11 @@ begin
     LProjection := LProjectVerifier.VerifyProject(LInputs);
     Check((LProjection.State = spsExecuted) and (LProjection.Design = LPair.Design),
       'initial fixture construction independently matches its expected document');
-    QualifyBrowserCompilerSite;
+
+    if not AFeedbackOnly then
+    begin
+      QualifyBrowserCompilerSite;
+    end;
     RunCase(1280, True);
     RunCase(390, True);
     RunCase(1280, False);

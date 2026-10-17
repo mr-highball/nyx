@@ -9,6 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-5.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current-source [typed file membership](../docs/pascal-projects.md#creating-and-removing-source-files)
+retains one create/remove intent through the ordinary compiler queue and exact
+paired publication. Optional shared capabilities refuse older providers before
+dispatch; the owning backend reconstructs its candidate independently from the
+acknowledged complete project. Explicit empty inventories retain their main
+identity and limits. Normal compiler dependency semantics remain: unused helpers
+are source data, not separately type-checked units. WORK.md owns actual native
+provider/input evidence and compiled-only browser limits. Complete cache/reload,
+per-file diagnostics/semantic analysis, socket/browser/parity/delivery and original
+criteria/credit remain open; no public MCP tool/schema or rollout changes.
+
 Current-source [captured Pascal project inputs](../docs/pascal-projects.md) supply
 an immutable main/unit/include compiler API and retain exact helper meaning with
 actual construction before application/view compilation. This advances criterion

@@ -439,7 +439,8 @@ uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
   nyx.collections.query.editor,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
-  nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
+  nyx.studio.palette, nyx.studio.source, nyx.studio.sourcefiles,
+  nyx.pascal.filechanges, nyx.studio.diagnostics, nyx.studio.rootview,
   nyx.studio.builddiagnostics,
   nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy,
   nyx.studio.sourceconfiguration.native, nyx.studio.sourcecompilation.native,
@@ -626,6 +627,7 @@ type
     ncCode,
     ncSourceTab,
     ncMessagesTab,
+    ncSourceFilesTab,
     ncExpandSource,
     ncOutputs,
     ncFiles,
@@ -694,6 +696,7 @@ const
     'action-code',
     'action-source-tab',
     'action-messages-tab',
+    'action-source-files-tab',
     'action-expand-source',
     'action-outputs',
     'action-import',
@@ -3425,6 +3428,26 @@ begin
   end;
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
+
+  if FSourceCommands.CompletedFileChange.IsDefined then
+  begin
+
+    if FState.SourceFileRemoval.IsDefined and
+      FState.SourceFileRemoval.FileReference.SameFile(
+        FSourceCommands.CompletedFileChange.FileReference) then
+    begin
+      FState.SourceFileRemoval := Default(TNyxStudioFileRemovalReview);
+    end;
+
+    if (FState.SourceTab = nstFiles) and
+      FSession.ActiveSourceFile.SameFile(FSourceCommands.CompletedFileChange.FileReference) and
+      FState.SourceFilesDraft.AcceptCreation(FSourceCommands.CompletedFileChange) then
+    begin
+      FState.SourceTab := nstSource;
+      FSourceLine := 1;
+      FSourceColumn := 1;
+    end;
+  end;
   { Scalar preparation deliberately retains the existing source pane. Update
     its owned activity face immediately; a queued chrome rebuild can otherwise
     arrive after the worker has already completed. The nested editor stays owned
@@ -4144,6 +4167,7 @@ var
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
   LEventFilter: TNyxEventFilter;
+  LSourceFilesEffect: TNyxStudioSourceFilesEffect;
 begin
 
   if not FPainting and not FChangingProject and
@@ -4685,6 +4709,19 @@ begin
       Exit;
     end;
 
+    LSourceFilesEffect := RouteNyxStudioSourceFiles(FSession, FSourceCommands,
+      FSourcePaneView.Root, ANode, AEvent, FState.SourceFilesDraft, FState.SourceFileRemoval);
+
+    if LSourceFilesEffect <> ssfeNone then
+    begin
+
+      if LSourceFilesEffect <> ssfeField then
+      begin
+        RequestRefresh;
+      end;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntChange) and (ANode.ID = NyxStudioSourceFileID) then
     begin
       RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
@@ -5039,6 +5076,10 @@ begin
           ncMessagesTab:
             begin
               FState.SourceTab := nstMessages;
+            end;
+          ncSourceFilesTab:
+            begin
+              FState.SourceTab := nstFiles;
             end;
           ncExpandSource:
             begin

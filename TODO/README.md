@@ -3,6 +3,15 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [source-file management](../docs/pascal-projects.md#creating-and-removing-source-files)
+adds ordinary typed unit/include creation and reviewed removal through the same
+Nyx Files form, compiler queue and paired history. Independent buffers remain
+retained; stale confirmation and referenced-file failures refuse publication.
+WORK.md owns current qualification and retained failures. General semantic helper
+editing/navigation, declarations/completion, unused-unit diagnostics and full
+browser/quality/parity/delivery remain with the existing authoring/service owners;
+no original full criterion/task or completion credit closes.
+
 Current-source [compiler navigation](../docs/pascal-projects.md#selecting-and-applying-a-source-file)
 retains typed main/unit/include sites and exact submitted helper context through
 private source failures. Ordinary Messages actions select the matching buffer;

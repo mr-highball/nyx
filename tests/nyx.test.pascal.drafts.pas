@@ -28,11 +28,15 @@ interface
 { Pure portable draft/reference checks. No source is executed, no file is read
   and no UI/transport is substituted for an execution or interaction claim. }
 function RunNyxPascalDraftChecks: Integer;
+{ Inventory/form/strict private-intent contracts only. Actual construction and
+  ordinary controller input remain separate maintained consumers. }
+function RunNyxPascalFileChangeChecks: Integer;
 
 implementation
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.data, nyx.pascal.names,
-  nyx.pascal.project, nyx.pascal.drafts;
+  nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.pascal.files.editor, nyx.controls, nyx.studio.sourcebuilds;
 
 function RunNyxPascalDraftChecks: Integer;
 const
@@ -161,6 +165,147 @@ begin
   end;
   Check(LRejected, 'duplicate helper identity refuses atomically');
   Check(LBoth.Draft(LUnit).Text = CDraft, 'all refusal cases retain prior values');
+  Result := LChecks;
+end;
+
+function RunNyxPascalFileChangeChecks: Integer;
+const
+  CMain: TNyxText = 'unit files.views;' + #10 +
+    '{$mode delphi}{$H+}{$codepage utf8}' + #10 + 'interface' + #10 +
+    'implementation' + #10 + 'end.' + #10;
+  CInclude: TNyxText = '{ Exact helper 🚀 𐐷 }' + #10;
+var
+  LBase: INyxPascalProject;
+  LUnit: INyxPascalProject;
+  LBoth: INyxPascalProject;
+  LRemoved: INyxPascalProject;
+  LChange: TNyxPascalFileChange;
+  LCopy: TNyxPascalFileChange;
+  LWire: TNyxDataValue;
+  LRead: TNyxPascalFileChange;
+  LForm: INyxCard;
+  LState: TNyxPascalFilesEditorState;
+  LRejected: Boolean;
+  LChecks: Integer;
+
+  procedure Check(AValue: Boolean; const AReason: String);
+  begin
+
+    if not AValue then
+    begin
+      raise Exception.Create(AReason);
+    end;
+    Inc(LChecks);
+  end;
+
+begin
+  LChecks := 0;
+  LBase := NewNyxPascalProject(NyxPascalUnit('files.views'), CMain);
+  LChange := TNyxPascalFileChange.CreateUnit(NyxPascalUnit('files.helpers'));
+  LUnit := LChange.Candidate(LBase);
+  Check((LBase.Count = 0) and (LUnit.Count = 1) and (LUnit.Source = CMain),
+    'creation owns a new inventory without editing old values or uses clauses');
+  Check((LUnit.Input(0).Name = 'files.helpers.pas') and
+    (Pos('{$mode delphi}{$H+}{$codepage utf8}', LUnit.Input(0).Text) > 0),
+    'a typed unit name supplies the exact Delphi/UTF-8 template');
+  LCopy := TNyxPascalFileChange.CreateInclude(NyxPascalInclude('notes.inc')).WithText(CInclude);
+  LBoth := LCopy.Candidate(LUnit);
+  Check((LBoth.Count = 2) and (LUnit.Count = 1) and (LBoth.Input(1).Text = CInclude),
+    'independent include creation retains supplementary text and authored order');
+  LRemoved := TNyxPascalFileChange.Remove(LChange.FileReference).Candidate(LBoth);
+  Check((LRemoved.Count = 1) and (LRemoved.Input(0).Name = 'notes.inc') and
+    (LBoth.Count = 2), 'removal preserves the other helper and original snapshot');
+  LRemoved := TNyxPascalFileChange.Remove(LCopy.FileReference).Candidate(LRemoved);
+  Check((LRemoved.Count = 0) and not TNyxPascalProjectFiles.Capture(LRemoved).IsEmpty and
+    (TNyxPascalProjectFiles.Capture(LRemoved).Open(CMain).Count = 0),
+    'removing the last helper retains the explicit project and its empty inventory');
+  LRejected := False;
+  try
+    LChange.Candidate(LUnit);
+  except
+    on ENyxPascalProject do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LUnit.Count = 1), 'Create never replaces an existing helper');
+  LRejected := False;
+  try
+    TNyxPascalFileChange.CreateUnit(NyxPascalUnit('FILES.HELPERS')).Candidate(LUnit);
+  except
+    on ENyxPascalProject do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'case aliases cannot overwrite a captured identity');
+  LRejected := False;
+  try
+    TNyxPascalFileChange.Remove(LChange.FileReference).Candidate(LBase);
+  except
+    on ENyxPascalProject do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'missing removal refuses instead of inventing a history command');
+  LRejected := False;
+  try
+    TNyxPascalFileChange.Remove(TNyxPascalSourceRef.Main);
+  except
+    on ENyxPascalProject do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'inventory authoring cannot remove main source');
+  LWire := WithNyxSourceProjectFiles(NyxObject([NyxField('source', NyxData(CMain))]),
+    TNyxPascalProjectFiles.Capture(LUnit));
+  LWire := WithNyxSourceFileChange(LWire, LChange);
+  LRead := ReadNyxSourceFileChange(LWire);
+  Check(LRead.IsDefined and (LRead.Kind = npfcCreate) and
+    LRead.FileReference.SameFile(LChange.FileReference) and (LRead.Text = LChange.Text),
+    'private creation reconstructs only its named captured member');
+  LWire := WithNyxSourceFileChange(NyxObject([NyxField('source', NyxData(CMain))]),
+    TNyxPascalFileChange.Remove(LChange.FileReference));
+  LRead := ReadNyxSourceFileChange(LWire);
+  Check(LRead.IsDefined and (LRead.Kind = npfcRemove) and (LRead.Text = ''),
+    'last-helper removal needs no proposed member or duplicated source text');
+  LWire := WithNyxSourceFile(NyxObject([NyxField('source', NyxData(CMain))]),
+    LChange.FileReference);
+  Check((LWire.Field('sourceFile').Count = 2) and not ReadNyxSourceFileChange(LWire).IsDefined,
+    'legacy selected-file Apply keeps its exact two-member intent');
+  LState := Default(TNyxPascalFilesEditorState);
+  LForm := NewNyxPascalFilesEditor('files-form', LState,
+    TNyxPascalSourceRef.Main, TNyxPascalSourceRef.Main);
+  LForm.Node.Find('files-form-name').Configure.Value('../unfinished').Done;
+  LState.Capture('files-form', LForm.Node);
+  LRejected := False;
+  try
+    LState.Creation;
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LState.Name = '../unfinished'),
+    'invalid names remain copied form values after explicit Create refusal');
+  LForm.Node.Find('files-form-name').Configure.Value('files.helpers').Done;
+  LState.Capture('files-form', LForm.Node);
+  LCopy := LState.Creation;
+  Check(LCopy.FileReference.SameFile(LChange.FileReference),
+    'public form supplies the same strong unit reference as code-first callers');
+  LForm.Node.Find('files-form-name').Configure.Value('files.later').Done;
+  LState.Capture('files-form', LForm.Node);
+  Check(not LState.AcceptCreation(LCopy) and (LState.Name = 'files.later'),
+    'a delayed compiler completion cannot clear newer form input');
+  LForm := NewNyxPascalFilesEditor('files-form', LState,
+    LChange.FileReference, LChange.FileReference);
+  Check((Pos(LChange.FileReference.Name, LForm.Node.Find('files-form-warning').Prop('text')) > 0) and
+    (LForm.Node.Find('files-form-remove-confirm') <> nil),
+    'the reusable confirmation names the exact reviewed target');
+  LForm := nil;
   Result := LChecks;
 end;
 

@@ -30,7 +30,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Exact helper compiler navigation — 2026-10-17
+## Current integration: Ordinary Pascal file management — 2026-10-17
+
+The preceding 459020f integration supplied exact helper diagnostics/navigation.
+Original NS-4 criterion two / NS-5 compiler ownership still lacked ordinary file
+creation/removal. This batch now supplies that editor workflow without narrowing
+those full criteria or changing counters/credit. No Nyx tool is exposed in this
+chat; the existing never-listening production backend/native consumer is the
+explicit fallback. Evidence is behind .local/source-file-management-paths-private.json
+on the provisioned scratch drive. Cleanup/helper scripts remain on-demand only.
+
+The public immutable file-change contract distinguishes create/remove from
+selected-file Apply. A reusable public Nyx Card supplies closed unit/include
+choices, retained unfinished names and named warning/confirmation actions. Both
+ordinary controllers consume it in a separate Files tab. Default templates are
+English Delphi-dialect UTF-8 Pascal. Main removal, collisions and case aliases
+refuse. New actions retire earlier scoped validation feedback without changing
+fields, project data or authoritative compiler status.
+
+Sealed candidates preserve unrelated main/helper drafts and first bases. Removal
+review captures one session/load and exact accepted/unfinished target bytes;
+confirmation revalidates before candidate construction. Successful removal consumes
+only its named draft; paired Undo restores both. Inventory intents remain FIFO,
+separate from typing/coalescing/scoped Restore. Shared providers advertise an
+optional capability; the backend independently reconstructs the acknowledged
+change. Legacy main-only first creation stages a complete main-only project
+without changing acceptance. Removing the last helper retains its explicit main
+identity/limits; Undo of first creation restores the original absent scope.
+
+No uses/include clauses are silently rewritten. Normal project compilation checks
+the used closure; unused units/fragments remain captured data. Do not claim
+standalone type-checking of every helper from constructor success. General
+per-file diagnostics/semantic analysis remains with the original owners.
+
+Qualified evidence is composite, with overlapping counts kept separate:
+
+- `logs/ui-controls-2-run.log`: **888** complete uninterrupted native checks,
+  connected/local at 1280/390, clean heap. Actual Files controls qualify creation,
+  invalid-name retention, warning/cancel/stale review, exact paired history,
+  independent Unicode drafts, include validation and used-unit compiler refusal.
+  The existing selected-file/editor/modal/diagnostic journey remains present.
+  This runtime precedes the scoped feedback and main-only-first-creation repairs.
+- `logs/feedback-4-run.log`: **128** focused actual native controls across the same
+  four cases qualify the later feedback repair, exact field/pair retention and
+  stale-review cancellation. `logs/shared-5-run.log`: **183** complete queue/bridge/
+  real native provider checks, including nine provider scenarios and the repaired
+  first-helper creation, last-helper removal, independent backend acknowledgement
+  and exact absent/explicit-empty paired Undo/Redo. Heaps are clean. Connected
+  transport substitutes sockets; copied recovery seeds are trusted setup, not
+  authenticated HTTP or semantic import.
+- `logs/diagnostics-5-run.log`: **341** source/report/session regressions, clean
+  heap. Unchanged portable file/draft contracts pass **38** in
+  `logs/ui-portable-2-run.log`; the corresponding browser consumer compiles only.
+  Seven final `*-5-compile.log` products/consumers compile both Studios, backend,
+  worker, maintained native UI/provider consumers and source regression. Final
+  owned warnings are **zero**; two pas2js builds retain seven upstream RTL
+  warnings each. The earlier full/feedback harnesses retain six fixture-only
+  Unicode-conversion warnings: explicit portable operands repair them, and the
+  final maintained UI consumer compiles cleanly without a new full-runtime claim.
+  The complete native/provider journeys retain **50/21** child compiler logs;
+  thirteen deliberate compiler-refusal logs remain accepted failure-path evidence.
+  Their only warnings are seven upstream pas2js RTL rows in the compiler-only
+  browser diagnostic fixture; owned child warnings are zero.
+
+All 22 final Pascal input hashes stay exact through join. Five fresh protected
+hashes match after qualification, including the complete nine-project checkpoint/
+history/drafts and profiles. These use the prior turn's first-observed user-config
+state; its older inherited-hash difference remains retained without attribution
+or overwrite. The read-only frozen verifier passes all 349 7422453 artifacts.
+All owned handles are terminal and no qualification process remains. LAN stays
+offline; no configuration/enrollment refresh, host/browser/capture, approval
+bypass, public MCP tool/schema or rollout occurs. Browser compilation does not
+qualify browser input/observation, visual quality, accessibility or full parity.
+
+Retained failures are not accepted evidence: initial missing route import;
+fixture normalization of an explicit empty inventory and later capture of nil;
+native-only browser feedback encoding and misplaced browser Files action; a shell
+compiler-argument grouping mistake; and the real first-creation absent-inventory
+refusal. Each repair follows the relevant runtime join. Original logs and the
+pre-final work note remain in the packet. The final source/remote checkpoint and
+accepted-log identities are recorded there separately from runtime evidence.
+
+Stop file-management/template/compiler/fixture variants. Next reassess bounded
+semantic helper inspection/editing/navigation under the existing workflow owner;
+ordinary file membership alone does not supply those operations. General source
+and declarations/completion, unused-unit analysis, full quality/budgets/parity
+and observing delivery retain their existing NS-4/NS-5 owners. No original full
+criterion/task/DONE/counter/credit closes, and the full Nyx/Studio goal stays active.
+
+## Previous integration: Exact helper compiler navigation — 2026-10-17
 
 User clarification: cleanup/scratch scripts are on-demand requests. Their earlier
 handoff is historical, not a recurring review, creation or readiness status item.

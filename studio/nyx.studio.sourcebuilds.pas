@@ -26,7 +26,8 @@ unit nyx.studio.sourcebuilds;
 
 interface
 
-uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.sourceprojection;
+uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.studio.sourceprojection;
 
 const
   { JSON escaping can expand the admitted 1 MiB UTF-8 source by six. This HTTP
@@ -71,6 +72,11 @@ function DecodeNyxNativeSourceBuild(const ASource: TNyxText;
 function WithNyxSourceProjectFiles(const AArguments: TNyxDataValue;
   const AFiles: TNyxPascalProjectFiles): TNyxDataValue;
 function ReadNyxSourceProjectFiles(const AArguments: TNyxDataValue): TNyxPascalProjectFiles;
+{ Closed private inventory intent. New text is read only from its proposed
+  captured member; the backend independently reconstructs all retained inputs. }
+function ReadNyxSourceFileChange(const AArguments: TNyxDataValue): TNyxPascalFileChange;
+function WithNyxSourceFileChange(const AArguments: TNyxDataValue;
+  const AChange: TNyxPascalFileChange): TNyxDataValue;
 
 { Private selected-helper intent. Absence preserves the old main-Apply wire;
   the typed exact leaf identifies acknowledged editor data, never a host path. }
@@ -224,9 +230,15 @@ begin
     begin
       LFile := AArguments.Field('sourceFile');
 
-      if (LFile.Kind <> ndObject) or (LFile.Count <> 2) then
+      if (LFile.Kind <> ndObject) or ((LFile.Count <> 2) and (LFile.Count <> 3)) then
       begin
         raise ENyxModel.Create('Selected source file requires its exact kind and name');
+      end;
+
+      if (LFile.Count = 3) and (LFile.Field('operation').AsText <> 'create') and
+        (LFile.Field('operation').AsText <> 'remove') then
+      begin
+        raise ENyxModel.Create('Unknown source-file inventory operation');
       end;
       LName := LFile.Field('name').AsText;
 
@@ -252,6 +264,81 @@ begin
       Exit;
     end;
   end;
+end;
+
+function ReadNyxSourceFileChange(const AArguments: TNyxDataValue): TNyxPascalFileChange;
+var
+  LFile: TNyxPascalSourceRef;
+  LData: TNyxDataValue;
+  LProject: INyxPascalProject;
+begin
+  Result := Default(TNyxPascalFileChange);
+  LFile := ReadNyxSourceFile(AArguments);
+
+  if LFile.Role = npsMain then
+  begin
+    Exit;
+  end;
+  LData := AArguments.Field('sourceFile');
+
+  if LData.Count = 2 then
+  begin
+    Exit;
+  end;
+
+  if LData.Field('operation').AsText = 'remove' then
+  begin
+    Exit(TNyxPascalFileChange.Remove(LFile));
+  end;
+  LProject := ReadNyxSourceProjectFiles(AArguments).Open(AArguments.Field('source').AsText);
+
+  if LFile.Role = npsUnit then
+  begin
+    Result := TNyxPascalFileChange.CreateUnit(
+      NyxPascalUnit(Copy(LFile.Name, 1, Length(LFile.Name) - 4)));
+  end
+  else
+  begin
+    Result := TNyxPascalFileChange.CreateInclude(NyxPascalInclude(LFile.Name));
+  end;
+  Result := Result.WithText(LFile.Text(LProject));
+end;
+
+function WithNyxSourceFileChange(const AArguments: TNyxDataValue;
+  const AChange: TNyxPascalFileChange): TNyxDataValue;
+var
+  LArguments: TNyxDataValue;
+  LFile: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LOperation: TNyxText;
+begin
+  AChange.Validate;
+  LArguments := WithNyxSourceFile(AArguments, AChange.FileReference);
+  LFile := LArguments.Field('sourceFile');
+  LOperation := 'create';
+
+  if AChange.Kind = npfcRemove then
+  begin
+    LOperation := 'remove';
+  end;
+  SetLength(LFields, LArguments.Count);
+  for LIndex := 0 to LArguments.Count - 1 do
+  begin
+
+    if LArguments.Key(LIndex) = 'sourceFile' then
+    begin
+      LFields[LIndex] := NyxField('sourceFile', NyxObject([
+        NyxField('kind', LFile.Field('kind')), NyxField('name', LFile.Field('name')),
+        NyxField('operation', NyxData(LOperation))]));
+    end
+    else
+    begin
+      LFields[LIndex] := NyxField(LArguments.Key(LIndex),
+        LArguments.Field(LArguments.Key(LIndex)));
+    end;
+  end;
+  Result := NyxObject(LFields);
 end;
 
 function WithNyxSourceFile(const AArguments: TNyxDataValue;

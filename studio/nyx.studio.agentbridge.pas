@@ -261,7 +261,8 @@ type
   { UI-only revocable bridge borrow. Detach removes the owner before session
     retirement; compiler ports retain this courier rather than the bridge. }
   TBridgeSharedPort = class(TInterfacedObject, INyxSharedSourceHost,
-    INyxSharedDesignSourceHost, INyxSharedFileSourceHost, INyxSharedDesignPreparationHost)
+    INyxSharedDesignSourceHost, INyxSharedFileSourceHost, INyxSharedDesignPreparationHost,
+    INyxSharedFileChangeSourceHost)
   public
     { Sole borrow, revoked by the bridge before its transport/session retirement. }
     Owner: TNyxStudioAgentBridge;
@@ -272,6 +273,8 @@ type
     function Start(const ASource: TNyxText;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     function StartFile(const ARequest: TNyxStudioSourceRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+    function StartFileChange(const ARequest: TNyxStudioSourceRequest;
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
     procedure ReserveDesign(const ARequest: TNyxStudioDesignRequest);
     procedure ReleaseDesignPreparation;
@@ -343,6 +346,17 @@ begin
     raise ENyxProjectConflict.Create('Shared compiler editor has retired');
   end;
   Result := Owner.StartSharedFile(ARequest, APort);
+end;
+
+function TBridgeSharedPort.StartFileChange(const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+begin
+
+  if not ARequest.FileChange.IsDefined then
+  begin
+    raise ENyxProjectConflict.Create('Inventory dispatch requires a captured file change');
+  end;
+  Result := StartFile(ARequest, APort);
 end;
 
 procedure TBridgeSharedPort.ReserveDesign(const ARequest: TNyxStudioDesignRequest);
@@ -446,6 +460,7 @@ function TNyxStudioAgentBridge.StartSharedFile(const ARequest: TNyxStudioSourceR
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
 var
   LFactory: INyxSharedFileSourceCompilerFactory;
+  LChangeFactory: INyxSharedFileChangeCompilerFactory;
   LCompiler: INyxSharedSourceCompiler;
   LCurrent: TNyxStudioSourceRequest;
 begin
@@ -455,7 +470,15 @@ begin
     raise ENyxProjectConflict.Create('Selected-file compilation requires its acknowledged editor frame');
   end;
 
-  if not Supports(FSharedFactory, INyxSharedFileSourceCompilerFactory, LFactory) then
+  if ARequest.FileChange.IsDefined then
+  begin
+
+    if not Supports(FSharedFactory, INyxSharedFileChangeCompilerFactory, LChangeFactory) then
+    begin
+      raise ENyxProjectConflict.Create('Shared compiler does not support source-file management');
+    end;
+  end
+  else if not Supports(FSharedFactory, INyxSharedFileSourceCompilerFactory, LFactory) then
   begin
     raise ENyxProjectConflict.Create('Shared compiler does not support selected-file publication');
   end;
@@ -466,8 +489,16 @@ begin
   begin
     raise ENyxProjectConflict.Create('Selected-file candidate changed before shared dispatch');
   end;
-  LCompiler := LFactory.CreateFileCompiler(FToken, FSourceObservationIssuer,
-    FWorkspace, FView.Revision, ARequest.FileReference);
+  if ARequest.FileChange.IsDefined then
+  begin
+    LCompiler := LChangeFactory.CreateFileChangeCompiler(FToken, FSourceObservationIssuer,
+      FWorkspace, FView.Revision, ARequest.FileChange);
+  end
+  else
+  begin
+    LCompiler := LFactory.CreateFileCompiler(FToken, FSourceObservationIssuer,
+      FWorkspace, FView.Revision, ARequest.FileReference);
+  end;
   Result := StartSharedCompiler(ARequest.Source, LCompiler, ARequest.Files, APort);
 end;
 

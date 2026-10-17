@@ -2,6 +2,17 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source [ordinary Files authoring](../docs/pascal-projects.md#creating-and-removing-source-files)
+now provides typed unit/include templates and a named removal warning through a
+public Nyx form. Creation/removal uses the existing compiler-backed paired history;
+unrelated unfinished buffers stay independent. Cancel, stale confirmation and
+dependency refusals retain the exact pair. WORK.md owns the native input evidence,
+current compiler qualification and separate browser-compilation boundary. General
+semantic helper authoring/navigation, declarations/completion, unused-unit
+diagnostics, ordinary browser input and full quality/parity/delivery remain open
+under original criterion two. No original full criterion, counter, task or credit
+closes from file membership alone.
+
 Current-source supporting Pascal files now have an explicit immutable project
 value, retained by accepted source frames and ordinary paired Undo/Redo. Version
 two project packets and native journals preserve helpers and independent main

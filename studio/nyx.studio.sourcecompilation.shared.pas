@@ -27,7 +27,8 @@ unit nyx.studio.sourcecompilation.shared;
 interface
 
 uses
-  nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
+  nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.studio.sourceprojection, nyx.studio.sourcecompilation,
   nyx.studio.sourcepublications, nyx.studio.workspaces,
   nyx.studio.session, nyx.source.preparation;
 
@@ -91,6 +92,16 @@ type
       const AFile: TNyxPascalSourceRef): INyxSharedSourceCompiler;
   end;
 
+  { Optional inventory authoring capability. The owning backend reconstructs
+    this one closed change against acknowledged inputs before compiler admission.
+    Older factories refuse instead of treating creation/removal as text Apply. }
+  INyxSharedFileChangeCompilerFactory = interface(INyxSharedSourceCompilerFactory)
+    ['{68FE918B-457C-45BE-B2E0-CA230000001A}']
+    function CreateFileChangeCompiler(const ACapability, AIssuer: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
+      const AChange: TNyxPascalFileChange): INyxSharedSourceCompiler;
+  end;
+
   { UI-only revocable dispatch courier. Resume requests another queue dispatch;
     a detached controller ignores it. Hosts must not borrow controller pointers. }
   INyxSharedSourceDispatch = interface(IInterface)
@@ -141,6 +152,14 @@ type
       const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
   end;
 
+  { Inventory commands use a separate optional capability. A legacy file-Apply
+    host cannot start a mutation whose member may not yet/already exist. }
+  INyxSharedFileChangeSourceHost = interface(INyxSharedSourceHost)
+    ['{68FE918B-457C-45BE-B2E0-CA230000001B}']
+    function StartFileChange(const ARequest: TNyxStudioSourceRequest;
+      const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+  end;
+
   { Optional two-phase visual lifetime. Reserve the acknowledged frame before
     off-thread proposal preparation, deferring newer independent buffer sync.
     Release affects only an unstarted preparation and grants no compilation or
@@ -156,10 +175,29 @@ type
 function StartNyxSharedFileCompilation(const AHost: INyxSharedSourceHost;
   const ARequest: TNyxStudioSourceRequest;
   const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+{ Require explicit membership support before invoking an older host. }
+function StartNyxSharedFileChangeCompilation(const AHost: INyxSharedSourceHost;
+  const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
 
 implementation
 
 uses SysUtils;
+
+function StartNyxSharedFileChangeCompilation(const AHost: INyxSharedSourceHost;
+  const ARequest: TNyxStudioSourceRequest;
+  const APort: INyxSharedSourceCompilationPort): INyxSourceCompilation;
+var
+  LHost: INyxSharedFileChangeSourceHost;
+begin
+
+  if not ARequest.FileChange.IsDefined or
+    not Supports(AHost, INyxSharedFileChangeSourceHost, LHost) then
+  begin
+    raise Exception.Create('Shared source host does not support source-file management');
+  end;
+  Result := LHost.StartFileChange(ARequest, APort);
+end;
 
 function StartNyxSharedFileCompilation(const AHost: INyxSharedSourceHost;
   const ARequest: TNyxStudioSourceRequest;

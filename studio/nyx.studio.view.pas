@@ -75,6 +75,7 @@ uses
   nyx.studio.hierarchy,
   nyx.studio.session,
   nyx.studio.source,
+  nyx.pascal.files.editor, nyx.pascal.drafts,
   nyx.studio.compiler,
   nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentview,
@@ -95,8 +96,9 @@ type
     ordinary shell consumers; hosted adds a code panel and pane-hosted delegates
     the complete reusable workspace to an independently retained Nyx renderer. }
   TNyxStudioCodePresentation = (ncpInline, ncpHosted, ncpPaneHosted);
-  { Source/messages are editor presentation; neither changes document history. }
-  TNyxStudioSourceTab = (nstSource, nstMessages);
+  { Source/messages/files are editor presentation. Inventory changes still pass
+    through the separate compiler/publication/history owner. }
+  TNyxStudioSourceTab = (nstSource, nstMessages, nstFiles);
   { Closed allocation commands, separate from application design commands. }
   TNyxStudioWorkspaceAction = (swaUnknown, swaDetails, swaTools, swaExpand, swaRestore);
 
@@ -110,6 +112,10 @@ type
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
     SourceTab: TNyxStudioSourceTab;
+    { Unfinished file names and warning tickets belong to this editor context,
+      never to exported designs or application runtime state. }
+    SourceFilesDraft: TNyxPascalFilesEditorState;
+    SourceFileRemoval: TNyxStudioFileRemovalReview;
     { Transient copied callback discovery. Policy fields and callback commands
       remain mounted; query changes never enter document/Pascal history. }
     EventFilter: TNyxEventFilter;
@@ -313,6 +319,7 @@ function BuildNyxStudioView(ASession: TNyxStudioSession;
 implementation
 
 uses
+  nyx.studio.sourcefiles,
   nyx.binding, nyx.interaction, nyx.resources, nyx.application.resources,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
 
@@ -625,6 +632,7 @@ var
   LMessageCount: Integer;
   LFileIndex: Integer;
   LFileItems: TNyxText;
+  LRemoval: TNyxPascalSourceRef;
 begin
 
   if ASession = nil then
@@ -662,7 +670,8 @@ begin
       targets. The same buttons, callbacks and full hints remain reachable;
       compact presentation does not create a second set of editor actions. }
     LActions.Add(Button('action-apply-source', 'Apply Pascal').Configure
-      .Hint('Compile and apply this file; retain other unfinished drafts')
+      .Hint('Apply this file through project compilation; retain other unfinished drafts. ' +
+        'Add uses/include references where you need a helper.')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Apply').Done);
     LActions.Add(Button('action-reset-source', 'Restore accepted').Configure
       .Hint('Discard only this file draft and restore its accepted Pascal')
@@ -704,6 +713,23 @@ begin
     if AState.SourceTab = nstMessages then
     begin
       LButton.Configure.Variant(nvPrimary).Done;
+    end;
+    LButton := Button(NyxStudioSourceFilesTabID, 'Files');
+    LButton.Configure.Pressed(AState.SourceTab = nstFiles)
+      .Hint('Create or remove project units and include fragments').Done;
+    LTabs.Add(LButton);
+
+    if AState.SourceTab = nstFiles then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+      LRemoval := TNyxPascalSourceRef.Main;
+
+      if AState.SourceFileRemoval.IsDefined then
+      begin
+        LRemoval := AState.SourceFileRemoval.FileReference;
+      end;
+      Result.Add(NewNyxPascalFilesEditor(NyxStudioSourceFilesID, AState.SourceFilesDraft,
+        ASession.ActiveSourceFile, LRemoval, AState.SourceStatus));
     end;
     LMessages := TNyxNode.Create(nkColumn, 'studio-source-messages')
       .Configure.Gap(8).Padding(0).Flex(1).Visible(AState.SourceTab = nstMessages).Done;

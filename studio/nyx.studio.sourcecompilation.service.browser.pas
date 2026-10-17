@@ -26,7 +26,8 @@ unit nyx.studio.sourcecompilation.service.browser;
 
 interface
 
-uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.studio.workspaces, nyx.studio.transport,
+uses nyx.text, nyx.data, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.filechanges,
+  nyx.studio.workspaces, nyx.studio.transport,
   nyx.studio.sourcecompilation.browser;
 
 { Explicit private-editor compilation provider. Capture capability, project and
@@ -61,6 +62,12 @@ function NewNyxVisualSharedBrowserSourceService(const AEditorCapability, AIssuer
 function NewNyxFileSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
   const AFile: TNyxPascalSourceRef;
+  const APolicy: INyxTransportPolicy = nil): INyxBrowserSharedSourceBuilder;
+{ Inventory intent carries no document authority. The owning server reconstructs
+  the one named create/remove against its acknowledged editor frame. }
+function NewNyxFileChangeSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const AChange: TNyxPascalFileChange;
   const APolicy: INyxTransportPolicy = nil): INyxBrowserSharedSourceBuilder;
 
 implementation
@@ -123,6 +130,7 @@ type
     { Immutable request copy; null keeps the original Apply wire shape. }
     Intent: TNyxDataValue;
     FileReference: TNyxPascalSourceRef;
+    FileChange: TNyxPascalFileChange;
     function SharedPublication: Boolean; virtual;
     function Compile(const ASource: TNyxText;
       const APort: INyxBrowserSourceBuildPort): INyxSourceCompilation;
@@ -457,7 +465,14 @@ begin
     end;
   end;
   LArguments := WithNyxSourceProjectFiles(LArguments, AFiles);
-  LArguments := WithNyxSourceFile(LArguments, FileReference);
+  if FileChange.IsDefined then
+  begin
+    LArguments := WithNyxSourceFileChange(LArguments, FileChange);
+  end
+  else
+  begin
+    LArguments := WithNyxSourceFile(LArguments, FileReference);
+  end;
 
   if NyxUTF8ByteCount(NyxWithWorkspace(NyxObject([
     NyxField('compile', LArguments)]), Workspace).ToJSON) > NyxSourceBuildMaximumRequestBytes then
@@ -722,6 +737,7 @@ end;
 function CreateSharedSourceService(const AEditorCapability, AIssuer: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
   const AIntent: TNyxDataValue; const AFile: TNyxPascalSourceRef;
+  const AChange: TNyxPascalFileChange;
   const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
 var
   LOwner: TSharedSourceService;
@@ -741,6 +757,7 @@ begin
   LOwner.Revision := AExpectedRevision;
   LOwner.Intent := AIntent.Copy;
   LOwner.FileReference := AFile;
+  LOwner.FileChange := AChange;
   LOwner.Limits := NewNyxTransportPolicy.Snapshot;
 
   if APolicy <> nil then
@@ -755,7 +772,7 @@ function NewNyxSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyx
   const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
 begin
   Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
-    AExpectedRevision, NyxNull, TNyxPascalSourceRef.Main, APolicy);
+    AExpectedRevision, NyxNull, TNyxPascalSourceRef.Main, Default(TNyxPascalFileChange), APolicy);
 end;
 
 function NewNyxVisualSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
@@ -765,7 +782,7 @@ function NewNyxVisualSharedBrowserSourceService(const AEditorCapability, AIssuer
 begin
   ReadNyxStudioDesignIntent(AIntent);
   Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
-    AExpectedRevision, AIntent, TNyxPascalSourceRef.Main, APolicy);
+    AExpectedRevision, AIntent, TNyxPascalSourceRef.Main, Default(TNyxPascalFileChange), APolicy);
 end;
 
 function NewNyxFileSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
@@ -780,7 +797,17 @@ begin
     raise ENyxModel.Create('Selected-file compilation requires a supporting file');
   end;
   Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
-    AExpectedRevision, NyxNull, AFile, APolicy);
+    AExpectedRevision, NyxNull, AFile, Default(TNyxPascalFileChange), APolicy);
+end;
+
+function NewNyxFileChangeSharedBrowserSourceService(const AEditorCapability, AIssuer: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef; AExpectedRevision: Integer;
+  const AChange: TNyxPascalFileChange;
+  const APolicy: INyxTransportPolicy): INyxBrowserSharedSourceBuilder;
+begin
+  AChange.Validate;
+  Result := CreateSharedSourceService(AEditorCapability, AIssuer, AWorkspace,
+    AExpectedRevision, NyxNull, AChange.FileReference, AChange, APolicy);
 end;
 
 end.

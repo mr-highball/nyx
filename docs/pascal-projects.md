@@ -313,6 +313,46 @@ messages with no invented coordinates. General declaration navigation, semantic
 helper navigation and completion remain separate outcomes. WORK.md owns the
 ongoing actual editor qualification; this contract alone proves no target input.
 
+## Creating and removing source files
+
+The current-source **Files** tab consumes the public Nyx source-file card. It
+offers a typed unit/include choice, keeps unfinished names visible after refusal
+and identifies the exact target before removal. Main source cannot be removed.
+The same command queue owns local and shared compilation and paired history.
+
+```pascal
+LCommands.ChangeFile(TNyxPascalFileChange.CreateUnit(
+  NyxPascalUnit('example.presenter')));
+LCommands.ChangeFile(TNyxPascalFileChange.CreateInclude(
+  NyxPascalInclude('presenter-body.inc')));
+
+LReview := LSession.ReviewFileRemoval(LHelper);
+{ Present the named-file warning and wait for the user's explicit confirmation. }
+LCommands.ChangeFile(LSession.PrepareReviewedFileRemoval(LReview, NyxSchemaRevision));
+```
+
+Creation refuses existing identities, including case aliases. Removal requires
+the exact captured helper. A review seals the session/load and accepted/draft
+target bytes; changed targets or another project refuse before confirmation can
+prepare a candidate. Commands retain independent main/other helper buffers and
+first bases. A successful removal consumes its named draft deliberately; one
+Undo restores that file and draft/base together. Inventory commands keep FIFO
+order and do not coalesce with selected-file Apply or Restore.
+
+No uses/include clauses are silently rewritten. Add dependencies explicitly
+where the helper belongs. Project compilation checks the used dependency closure;
+unused units/fragments remain captured source data, not a standalone type-check
+claim. Removing a still-used include or unit refuses validation/compilation while
+retaining the accepted pair. A captured project with zero helpers retains its
+explicit main identity and limits; that value differs from an absent project.
+
+Private shared intent names one closed create/remove. The backend reconstructs
+the proposed change against its acknowledged inventory and independently verifies
+all retained files. Older strategies refuse the optional capability. Saved files
+or wire fields grant no compiler, execution or publication authority. There is
+no new MCP tool/schema. WORK.md owns native/compiler and compiled-only browser
+qualification; full authoring/semantic analysis/parity/delivery remain separate.
+
 `-PascalSourceFileEditors` adds the maintained ordinary native controls mode to
 the `pascal-projects` target. That mode uses real local/shared compiler workers
 and wide/compact Win32 controls without a listener or captures. Socket transport

@@ -30,6 +30,7 @@ uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.types, nyx.source, nyx.studio.sourceprojection, nyx.studio.projectinputs,
   nyx.schema, nyx.studio.session,
+  nyx.pascal.filechanges,
   nyx.canvas.types,
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
@@ -877,6 +878,7 @@ var
   LPair: TNyxProjectPair;
   LPublication: TNyxStudioSourcePublication;
   LSourceRequest: TNyxStudioSourceRequest;
+  LFileChange: TNyxPascalFileChange;
   LDesignRequest: TNyxStudioDesignRequest;
   LDesignProposal: INyxPreparedDesign;
   LSchemas: INyxSchemaSnapshot;
@@ -940,8 +942,19 @@ begin
 
             if NyxAgentHas(LArguments, 'sourceFile') then
             begin
-              LPair := LSession.CaptureFilePublication(LArguments.Field('expectedRevision').AsInteger,
-                LArguments.Field('source').AsText, ReadNyxSourceFile(LArguments), LSourceRequest, LSchemas);
+              LFileChange := ReadNyxSourceFileChange(LArguments);
+
+              if LFileChange.IsDefined then
+              begin
+                LPair := LSession.CaptureFileChangePublication(
+                  LArguments.Field('expectedRevision').AsInteger,
+                  LArguments.Field('source').AsText, LFileChange, LSourceRequest, LSchemas);
+              end
+              else
+              begin
+                LPair := LSession.CaptureFilePublication(LArguments.Field('expectedRevision').AsInteger,
+                  LArguments.Field('source').AsText, ReadNyxSourceFile(LArguments), LSourceRequest, LSchemas);
+              end;
             end
             else
             begin

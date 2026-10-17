@@ -1649,6 +1649,17 @@ begin
     raise ENyxModel.Create('Selected-file job changed its captured candidate inputs');
   end;
 
+  if APublication.Request.FileChange.IsDefined <> ReadNyxSourceFileChange(AArguments).IsDefined then
+  begin
+    raise ENyxModel.Create('File management requires its independently captured inventory intent');
+  end;
+
+  if APublication.Request.FileChange.IsDefined and
+    (APublication.Request.FileChange.Kind <> ReadNyxSourceFileChange(AArguments).Kind) then
+  begin
+    raise ENyxModel.Create('Source-file operation changed after its sealed capture');
+  end;
+
   if Retry(AOwner, AArguments, Result) then
   begin
     Exit;

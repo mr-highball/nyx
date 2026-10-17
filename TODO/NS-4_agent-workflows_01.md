@@ -2,6 +2,15 @@
 
 [Milestones](../MILESTONES.md) · [Task catalog](README.md) · [Work](../WORK.md)
 
+Ordinary Studio source-file management now shares typed compiler-backed creation
+and reviewed removal with both controllers. This is an editor/private-provider
+boundary, not a new semantic MCP operation or installed schema. General bounded
+helper inspection/editing/navigation and file membership remain part of original
+criterion five; agents must not substitute browser automation for the missing
+operations. WORK.md owns native input/provider evidence separately from browser
+compilation and the existing host/observing/delivery gate. No original full
+criterion, counter or completion credit closes here.
+
 Supporting Pascal-file ownership adds no MCP tool/schema. Typed accepted
 inventories now travel through local project completion, paired history/export
 and native journals, with exact executed-result admission. Bounded supporting-

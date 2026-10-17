@@ -550,7 +550,8 @@ begin
   try
 
     if ((ParamCount <> 4) and ((ParamCount <> 5) or
-      ((ParamStr(5) <> '--callbacks-only') and (ParamStr(5) <> '--source-files')))) or
+      ((ParamStr(5) <> '--callbacks-only') and (ParamStr(5) <> '--source-files') and
+      (ParamStr(5) <> '--file-feedback')))) or
       DirectoryExists(ParamStr(4)) or FileExists(ParamStr(4)) then
     begin
       raise Exception.Create('Supply repository, toolchain, compiled fixture home and NEW evidence home');
@@ -560,7 +561,7 @@ begin
       .RunningIn(IncludeTrailingPathDelimiter(ParamStr(4)) + 'runtime');
     LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
 
-    if ParamStr(5) <> '--source-files' then
+    if (ParamStr(5) <> '--source-files') and (ParamStr(5) <> '--file-feedback') then
     begin
       LSource := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/source.pas');
       LExpected := ReadText(IncludeTrailingPathDelimiter(ParamStr(3)) + 'web/expected.nyx');
@@ -572,9 +573,9 @@ begin
     GForm.SetBounds(30, 30, 1280, 900);
     GForm.Show;
 
-    if ParamStr(5) = '--source-files' then
+    if (ParamStr(5) = '--source-files') or (ParamStr(5) = '--file-feedback') then
     begin
-      RunSourceFileControls(LDirectories, LTools);
+      RunSourceFileControls(LDirectories, LTools, ParamStr(5) = '--file-feedback');
       WriteLn('PASS ', GChecks, ' actual source-file compiler/editor controls');
     end
     else if ParamStr(5) = '--callbacks-only' then
