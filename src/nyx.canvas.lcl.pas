@@ -89,7 +89,7 @@ implementation
 
 uses
   nyx.design.tokens, nyx.interaction.policy, nyx.behavior, nyx.widgets.lcl,
-  nyx.paint.buffer.lcl, LCLType, LMessages;
+  nyx.paint.buffer.lcl, nyx.order.lcl, LCLType, LMessages;
 type
   { Forward identity for adapter-owned faces; neither face acquires a managed
     reference back into its owning presentation. }
@@ -124,6 +124,9 @@ type
     procedure WndProc(var AMessage: TLMessage); override;
   public
     constructor CreateFor(AOwner: TComponent; AView: TCanvasView);
+    { Reconcile a borrowed back-to-front suffix through LCL. Win32 can skip
+      restacking only when both LCL and native siblings already match. }
+    procedure ReconcileSuffix(const AChildren: array of TControl);
   end;
 
   { One owned native item presentation. This mount retains scene content and
@@ -341,6 +344,36 @@ begin
   if FView <> nil then
   begin
     FView.Resized;
+  end;
+end;
+
+procedure TCanvasSurface.ReconcileSuffix(const AChildren: array of TControl);
+var
+  LIndex: Integer;
+begin
+
+  if NyxLCLChildSuffixCurrent(Self, AChildren) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(AChildren) do
+  begin
+
+    if (FView = nil) or not FView.FConnected then
+    begin
+      Exit;
+    end;
+
+    if AChildren[LIndex].Parent <> Self then
+    begin
+      raise ENyxCanvasScene.Create('Canvas child order changed during presentation');
+    end;
+    { BringToFront on every item rotates an otherwise correct stack, temporarily
+      covering embedded editors and asking the widgetset to repaint those holes.
+      Recheck both lists each time instead of caching a previous presentation.
+      A changed stack uses the original full LCL operation, including its native
+      handle-order reconciliation; intermediate indexed moves are not equivalent. }
+    AChildren[LIndex].BringToFront;
   end;
 end;
 
@@ -626,6 +659,7 @@ var
   LPresentationLease: INyxPreparedPublication;
   LNotificationFailed: Boolean;
   LReceiverMessage: TNyxText;
+  LOrder: array of TControl;
 begin
   Result := False;
   RequireConnected;
@@ -831,6 +865,8 @@ begin
       begin
         Exit;
       end;
+      SetLength(LOrder, Length(LMounts) + 2);
+      LCount := 0;
       for LIndex := 0 to High(LMounts) do
       begin
 
@@ -848,7 +884,8 @@ begin
           begin
             Exit;
           end;
-          LMounts[LIndex].Host.BringToFront;
+          LOrder[LCount] := LMounts[LIndex].Host;
+          Inc(LCount);
         end;
         LKeepFocus := False;
         LFocus := Screen.ActiveControl;
@@ -877,6 +914,30 @@ begin
         end;
       end;
       PaintPrecision;
+
+      if not FConnected then
+      begin
+        Exit;
+      end;
+
+      if FTopRuler.Visible then
+      begin
+        LOrder[LCount] := FTopRuler;
+        Inc(LCount);
+      end;
+
+      if FLeftRuler.Visible then
+      begin
+        LOrder[LCount] := FLeftRuler;
+        Inc(LCount);
+      end;
+      SetLength(LOrder, LCount);
+      FSurface.ReconcileSuffix(LOrder);
+
+      if not FConnected then
+      begin
+        Exit;
+      end;
       FSurface.Invalidate;
       FPresentationObservers.Notify(FPresentationRevision);
     finally

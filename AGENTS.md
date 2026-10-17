@@ -1,5 +1,20 @@
 # Working in Nyx
 
+Current-source native sibling reconciliation skips restacking only when current
+LCL and actual Win32 suffixes agree. Missing handles/other widgetsets keep normal
+LCL behavior; native-only reorder is not hidden by a correct LCL list. Stacking
+passes 45 checked/optimized per width. WORK.md owns final ordinary input, whole
+source equality, compiler/lifetime and fixed timing evidence, including retained
+failed indexed-order and fixture/compiler attempts. Fourteen final compiler
+receipts have zero owned warnings; fifteen heaps are clean. All five protected
+files/nine contexts and 349 frozen artifacts remain exact. Browser consumers and
+both Studios compile; browser execution is unqualified. Publication remains too slow
+for full smooth-input acceptance. Original criteria/counters/credit and full
+browser/input/accessibility/visual/frame/memory/delivery owners stay unchanged.
+Stop sibling/profile/timing variants; retain remaining projection/native geometry/
+property-layout costs under those owners. LAN stays offline; no host, capture,
+configuration refresh, cleanup retry or sub-agents.
+
 Current-source Win32 viewport buffering preserves public DoubleBuffered, normal
 background/foreground ownership, exact dirty/visible publication and revocable
 HWND lifetimes. Final largest paint is 16/13 ms versus 61/58; publication stays

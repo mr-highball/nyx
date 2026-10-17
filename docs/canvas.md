@@ -732,6 +732,30 @@ visual/accessibility, full frame/memory/production budgets and delivery gates.
 WORK.md retains the discarded style hypothesis, loader/metadata repairs and
 selective final qualification instead of claiming an uninterrupted first pass.
 
+### Retaining native sibling order
+
+Canvas publication keeps visible item hosts in scene paint order, followed by
+visible rulers. On Win32, an already correct stack requires no restacking calls.
+The target adapter reads both the current LCL child list and actual HWND siblings
+on every presentation. It does not cache a previous order: handle creation,
+ordinary caller reordering and native-only reordering can change either list.
+A changed stack uses the original full LCL `BringToFront` sequence. Moving each
+child to an indexed position is not an equivalent native reconciliation.
+
+`nyx.order.lcl.NyxLCLChildSuffixCurrent` reads a borrowed back-to-front suffix on
+the UI thread. It creates no handle, changes no control and retains no owner.
+Missing handles or unsupported widgetsets return False so callers keep ordinary
+LCL reconciliation. Existing clipping, offscreen focused editors, scene revisions
+and coordinated publication retain their owners. This native optimization adds
+no portable property, source syntax, persisted flag or browser behavior.
+
+The maintained Win32 stacking consumer checks actual native order as well as LCL,
+calibrates its native position-message spy, and verifies stable refreshes produce
+no position notifications. It also exercises caller/native-only reorder, scene
+order, hidden controls, both/single/no rulers and exact memo text/caret/focus.
+WORK.md owns fixed-workload timing, ordinary editor/Studio and retirement evidence
+separately from full frame/memory/quality, browser execution and delivery.
+
 ### Measuring portable projection
 
 Typed builder paths/styles already own normalized values. Command admission

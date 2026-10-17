@@ -1647,16 +1647,23 @@ try {
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxCanvasPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+    $nyxCanvasFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
       '-gl', '-gh', '-Fusrc', '-Fisrc', "-FU$nyxCanvasNative", "-FE$nyxCanvasNative",
       "-Fu$nyxLazarus/lcl/units/$nyxCanvasPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxCanvasPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxCanvasPlatform",
-      "-Fu$nyxLazarus/packager/units/$nyxCanvasPlatform",
-      'tests/nyx_canvas_workspace_controls.lpr')
+      "-Fu$nyxLazarus/packager/units/$nyxCanvasPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_canvas_workspace_controls.lpr'))
     & (Join-Path $nyxCanvasNative 'nyx_canvas_workspace_controls.exe')
 
     if ($LASTEXITCODE -ne 0) { throw 'Actual native canvas workspace checks failed' }
+
+    if ($nyxCanvasPlatform -match '-win(32|64)$' -and $Widgetset -eq 'win32') {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxCanvasFlags + @('tests/nyx_canvas_stacking_controls.lpr'))
+      & (Join-Path $nyxCanvasNative 'nyx_canvas_stacking_controls.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native canvas stacking checks failed' }
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',

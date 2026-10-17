@@ -85,6 +85,8 @@ var
   LRulers: TNyxCanvasRulers;
   LSize: Integer;
   LTop: Integer;
+  LOrder: array of TControl;
+  LCount: Integer;
 begin
 
   if (FSurface = nil) or (FGuideInput = nil) then
@@ -104,6 +106,8 @@ begin
     not FDesignMode and (FGuideInput.Accepted.Count < MaximumNyxCanvasGuides);
   FLeftRuler.Enabled := FTopRuler.Enabled;
   LTop := 0;
+  SetLength(LOrder, 2);
+  LCount := 0;
 
   if FTopRuler.Visible then
   begin
@@ -112,7 +116,8 @@ begin
     FTopRuler.Caption := 'Horizontal ruler';
     FTopRuler.Hint := 'Drag to add a horizontal guide. Enter adds one at the center. Units: ' +
       LRulers.UnitCaption;
-    FTopRuler.BringToFront;
+    LOrder[LCount] := FTopRuler;
+    Inc(LCount);
     FTopRuler.Invalidate;
   end;
 
@@ -122,9 +127,12 @@ begin
     FLeftRuler.Caption := 'Vertical ruler';
     FLeftRuler.Hint := 'Drag to add a vertical guide. Enter adds one at the center. Units: ' +
       LRulers.UnitCaption;
-    FLeftRuler.BringToFront;
+    LOrder[LCount] := FLeftRuler;
+    Inc(LCount);
     FLeftRuler.Invalidate;
   end;
+  SetLength(LOrder, LCount);
+  FSurface.ReconcileSuffix(LOrder);
 end;
 
 procedure TCanvasView.PaintRuler(ARuler: TCanvasRuler);

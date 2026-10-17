@@ -30,7 +30,80 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Win32 viewport-buffered painting — 2026-10-17
+## Current integration: Native sibling reconciliation — 2026-10-17
+
+The manual cleanup-script handoff added no new product evidence. Revalidate the
+clean, remote-matched 0c6324f checkpoint and continue original diagram criterion
+six/canvas performance owners. A private copied-source profile measures roughly
+8 ms projection, less than 1 ms content/scene preparation, 7–17 ms physical
+reconciliation, 2 ms Drawing Sync and 6 ms property refresh. Instrumentation never
+enters product code or accepted timings. The remaining cost is not a repeated
+saved-descriptor parse; native bounds/restacking dominate the reconciler.
+
+Canvas item/ruler presentation now checks a borrowed back-to-front sibling
+suffix before restacking. Public native `NyxLCLChildSuffixCurrent` requires both
+current LCL and actual Win32 HWND order to agree. It reads existing handles only,
+retains no control/view and creates no native handle. Unsupported widgetsets or
+missing handles keep ordinary LCL reconciliation. Changed stacks use the original
+full BringToFront sequence; stable stacks avoid its temporary control occlusion.
+Visible scene items remain below visible rulers. Focused offscreen controls keep
+their prior ownership/placement policy. Portable models/source/wire and browser
+behavior do not change. Each changed/new owned type retains its purpose comment;
+the helper documents borrowed host access and its platform/capability limits.
+
+The maintained native stacking consumer passes 45 checked/optimized at both
+desktop and compact width. It checks both native and LCL order, calibrates a real
+position-message spy, and observes zero such notifications over four stable
+refreshes. Caller LCL reorder, native-only reorder, scene order, hidden controls,
+both/single/no rulers and exact memo identity/text/caret/selection/focus pass.
+The maintained workspace runner includes the Windows/widgetset-gated consumer;
+its syntax passes. The whole runner is not claimed as executed by this packet.
+
+One final fresh baseline/current matrix uses the exact unchanged mounted harness
+and 0c6324f binary, without overlapping compiler/Nyx workloads. At 256 vertices /
+512 edges, publication changes 39.11 to 37.30 ms at width 800 and 38.93 to
+35.96 ms at width 390. Keyboard dispatch changes 34.96 to 32.65 and 34.52 to
+32.39 ms. Forced paint is 15.43/13.71 versus 15.77/14.62 ms; this change claims
+no paint improvement. All six workloads retain eighteen forwarded paints and
+exact graph/revision/caller document/live memo/state. Process allocator high-water
+is 10,094,464 versus 10,094,512 bytes for the largest workload; this is not an
+isolated view, native GDI, OS-memory or compositor measurement.
+
+Preparation is not an uninterrupted pass. The first private canvas clock misses
+its Windows import. The initial consumer misses a reference unit and retrieves a
+button through the input API; both fixture errors are corrected. Actual native
+order then disproves the indexed-child-move hypothesis: correct LCL order alone
+does not establish HWND order. Preserve that failing receipt and pilot separately.
+Moving the read-only Win32 check into its own adapter also resolves namespace
+collisions from importing Windows into the canvas include owner. A reused receipt
+name refuses before another compiler starts. All failed/intermediate receipts
+remain outside final acceptance; no native order assertion is weakened.
+
+The ignored `.local/diagram-publication-paths-private.json` pointer owns the
+current packet, baseline binary identity, frozen harness/source inputs, phase
+receipts, final timing matrix and qualification logs. Final actual native Drawing
+passes 25, editor 212, ordinary Studio Save/history 47 and runtime 37 per wide/
+compact width; workspace passes 37 and precision 25 per width. Both largest checked
+mounted workloads pass. Fifteen native consumer/verifier receipts explicitly have
+zero unfreed blocks. Fourteen final compiler receipts have zero owned warnings;
+21 repeated upstream pas2js Classes warnings stay separate. Both Studios compile;
+browser editor/Studio consumers compile only. Backend/worker sources and their
+preceding accepted builds are unchanged. Eight ordinary source/model exports
+match the four previously compiled whole companion inputs exactly. No unchanged
+constructor rebuild is added to inflate this native-adapter packet.
+
+All qualification processes join. The final audit preserves all five protected
+files/nine complete contexts and verifies all 349 frozen 7422453 artifacts. No
+live operator project or enrollment is edited. Current-source and remote identity
+are retained in final-checkpoint-private.json beside that accepted packet.
+No original full criterion/task/DONE/credit or target/parity/delivery closes.
+Diagram eleven, canvas twelve, Graph/Logic thirty-eight and behavior-program zero
+remain unchanged. LAN stays offline; no HTTP/capture, configuration refresh,
+cleanup retry or sub-agents. Remaining projection/native geometry/property-layout
+costs, full browser/input/accessibility/visual/frame/memory/production budgets and
+delivery retain their existing owners. Do not add sibling/profile/timing variants.
+
+## Previous integration: Win32 viewport-buffered painting — 2026-10-17
 
 The preceding goal turn is progress: c7e3fef is clean/remote-matched and removes
 the repeated graph admission. Continue original diagram criterion six and native

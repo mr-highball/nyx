@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Current-source [native sibling reconciliation](../docs/canvas.md#retaining-native-sibling-order)
+checks both LCL and HWND order before skipping repeated restacking. Native
+stacking passes 45 checked/optimized per width; WORK.md owns the fixed comparison,
+ordinary editor/source/lifetime evidence and retained failures. Publication still
+exceeds smooth-input budgets. Browser execution, full quality/parity/budgets and
+delivery remain required; original criteria, counters and credit stay unchanged.
+
 Current-source [native viewport buffers](../docs/canvas.md#native-viewport-buffers)
 retain double buffering while bounding native bitmap work to visible dirty input.
 One accepted final matrix reduces largest forced paint from 61/58 to 16/13 ms;
