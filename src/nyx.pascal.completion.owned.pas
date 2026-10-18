@@ -933,7 +933,8 @@ begin
     LResult.Definitions[LAt].Root := LView.Source.Files.FileAt(LView.Source.Occurrence(0).FileIndex);
     LResult.Definitions[LAt].Span := LOrigin.PhysicalSpan;
     LResult.Definitions[LAt].Occurrence := LOrigin.Occurrence;
-    LResult.DefinitionSources[LAt] := LView.Source.Physical(LOrigin.FileIndex);
+    LResult.DefinitionSources[LAt] := NyxPascalOccurrenceLexical(
+      LView.Source, LOrigin.Occurrence);
   end;
   Check;
   LResult.Base := NewNyxPascalCompletionResult(FRequest, pcsReady, '',

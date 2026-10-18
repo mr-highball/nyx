@@ -804,9 +804,10 @@ FPC/PAS2JS/platform defines from the analyzer's own build. Unknown family/versio
 metadata supports inspection before optional output/compiler configuration.
 
 Facts include exact signed 32-bit condition integers, short-option state and
-typed nested/anonymous/function-reference callback features. Persistent changes
-detach data; source mode changes revoke option/feature defaults rather than guessing
-them. Condition analysis supports `defined`, integer comparisons, parentheses,
+typed nested/anonymous/function-reference callback and OUT-parameter features.
+Persistent changes detach data. `InMode` revokes option/feature knowledge;
+translation separately restores the verified source-mode defaults described below.
+Condition analysis supports `defined`, integer comparisons, parentheses,
 Boolean operators and unary signs with Pascal precedence. General arithmetic,
 replacement macros, strings, `declared`/`sizeof` and ambiguous conditional spellings
 remain explicitly unresolved. This is a bounded subset of the compiler's
@@ -847,10 +848,10 @@ unchanged state diagnoses a cycle, while a changing include guard can finish.
 The snapshot's `Resolved` flag covers encountered supported translation constructs,
 not complete compiler context, grammar, type binding, compilation or execution.
 Missing files, unknown expressions, unsupported directives and lexical errors
-remain physical diagnostics. Fixed lexical policies are explicit: transitions that
-need different comment termination or uncaptured mode defaults stop interpreting
-later directives and mark participation unknown. Full dynamic lexical-mode support,
-broader compiler expressions/macros and complete SDK/compiler-default capture
+remain physical diagnostics. Initial lexical policies are explicit; supported
+comment/mode changes now apply between tokens. Unknown lexical changes or
+uncaptured mode defaults stop interpreting later directives and mark participation
+unknown. Broader lexical modes, compiler expressions/macros and complete SDK/default capture
 remain required before general language coverage can be claimed.
 
 Tokens, expanded bytes, depth, occurrences, states and diagnostics have independent
@@ -861,6 +862,43 @@ consumers compile only. WORK.md owns exact receipts and remaining incremental/
 project-scale cancellation/budgets. Structured type expressions, semantic binding,
 provider/editor adoption and full platform/quality/delivery remain open. No MCP
 tool/schema, default engine or active design is changed by these primitives.
+
+## Ordered lexical mode and include contexts
+
+`NewNyxPascalContextualLexicalSnapshot` scans the original source once, notifying
+an explicit construction-only `INyxPascalLexicalObserver` after each token. The
+visitor may change the next comment's nesting policy without rewriting text,
+changing quotas or exposing a mutable snapshot. Publication releases the visitor
+and cancellation scope. `Options` describes the initial policy; individual tokens
+retain their actual spans, physical line/column, spelling and completeness.
+
+Translation gives each include occurrence its own lexical construction. A mode or
+nesting directive inside an include affects the caller's next token. The same
+physical bytes can consequently have different token ordinals on later visits.
+`INyxPascalTranslationLexicalContexts` and `NyxPascalOccurrenceLexical` expose the
+exact occurrence snapshot. `PhysicalToken`/`Text` route through it, and syntax
+navigation and completion definitions preserve that identity. Legacy `Physical`
+file-only access refuses differing occurrence policies/tokenizations. Alternate
+translators retain the helper's legacy fallback; no existing interface GUID changes.
+
+Known active FPC source modes now include FPC, ObjFPC, Delphi, DelphiUnicode and
+TP. Translation records their verified nested-comment, H/string, Unicode-string
+and OUT defaults and updates mode defines without inventing platform/version
+facts. Version-sensitive callback/helper defaults remain unknown after mode reset.
+The independent native compiler oracle checks each dialect in a separate job:
+FPC permits [one source MODE directive per module](https://www.freepascal.org/docs-html/3.0.0/user/userse61.html).
+Repeated or uncertain conditional modes refuse; other placement/grammar rules still require
+compiler admission. Known NESTEDCOMMENTS on/off and +/- modeswitches work in source
+order; OUT has a typed feature. The official [comment rules](https://docs.freepascal.org/daily/doc/ref/refse2.html)
+and [mode switches](https://docs.freepascal.org/docs-html/current/prog/progsu105.html)
+describe these compiler behaviors. Recording facts does not implement all enabled grammar.
+
+Unknown comment termination blocks subsequent semantic certainty, including after
+an include returns; no guessed ENDIF restores it. Inactive changes perform no
+mutation. Directive-looking strings/comments are ordinary text. Existing token,
+byte, depth, occurrence, state and diagnostic budgets and cancellation still abort
+the unpublished candidate. Full RTL/default/target/include capture, broader modes,
+incremental work, language meaning and Studio input/navigation/parity remain open.
 
 ## Structured type syntax and physical origins
 
@@ -1164,15 +1202,15 @@ and broader filesystem/platform qualification remain open. Header recognition is
 metadata preparation under the current default lexer, not conditional-wrapper or
 mode-aware declaration proof; loaded root identity remains independently checked.
 
-WORK.md records 31 native dependency checks, 20 native SDK/file checks and 81
+WORK.md records 31 native dependency checks, 22 native SDK/file checks and 81
 production in-process semantic/private-editor checks. The actual repository
 capture has 490 files/378 modules. A badge query loads `nyx.controls` and
 `nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
-Windows RTL files supplies that root (510 files/383 modules), but its current
-fixed lexical context leaves an incomplete interface. This remains a typed
-prerequisite; no export stubs turn it into readiness. The language's differing
-[nested-comment modes](https://docs.freepascal.org/daily/doc/ref/refse2.html)
-remain part of complete compiler/lexical context, not a source-rewriting shortcut.
+Windows RTL files supplies that root (510 files/383 modules). Ordered lexical
+translation now passes its ObjFPC/OUT setup and reaches the uncaptured
+`sysutilh.inc` at physical scalar 1860. The imported interface remains incomplete;
+explicit real include/default/define capture is the next prerequisite. No export
+stub or source rewriting turns this qualified boundary into readiness.
 
 The real `TNyxPascalCompilerVersion.FullNumber` record member resolves through the
 indexed production semantic/private-editor paths. Maintained provider 86, binding

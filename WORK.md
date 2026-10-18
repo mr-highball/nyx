@@ -33,7 +33,90 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Captured SDK modules and lazy dependencies — 2026-10-17
+## Current integration: Ordered RTL lexical contexts — 2026-10-17
+
+Previous goal turn is progress: pushed c05db64 supplies captured SDK namespaces
+and lazy dependency loading. This continuation addresses the real SysUtils
+lexical prerequisite under original NS-4 authoring criterion two, retaining the
+wholly Nyx-owned MIT resolver direction. Full compiler/target/include context,
+grammar/expression/helper/overload/constraint meaning, incremental work, modern
+editor/navigation, quality/budgets/parity and delivery remain the destination.
+No original criterion/task/counter/credit/DONE, default engine adoption, installed
+MCP schema/tool or rollout closes. Solo; no HTTP/file/browser execution or capture,
+protected configuration mutation, cleanup/deletion/restart/review bypass occurs.
+
+The lossless lexer now accepts a construction-only token observer. Known source
+directives change the next comment policy, including after textual includes
+return. Each occurrence owns its exact immutable lexical snapshot; source bytes,
+scalar spans, line/column, quotas and cancellation remain owned. Observer and
+cancellation references retire at publication. Initial Options stay initial.
+Optional INyxPascalTranslationLexicalContexts/NyxPascalOccurrenceLexical route
+physical token reads, syntax navigation and completion definition text through
+that exact occurrence. Legacy file-only access refuses differing lexical views.
+
+Supported FPC source defaults cover FPC/ObjFPC/Delphi/DelphiUnicode/TP comment
+nesting, H/string, Unicode-string and OUT facts, plus actual mode defines. Mode
+reset leaves unqualified/version-sensitive features unknown. Known nesting and
+OUT switches retain ordered typed state. Only one source MODE per module is
+permitted. Unknown modes/conditional lexical effects block later certainty;
+inactive effects and directive-looking comment/string text remain inert. These
+translation facts do not prove all enabled grammar or compiler acceptance.
+
+Evidence behind ignored .local/rtl-lexical-paths-private.json:
+
+- source-pins-final-private.json freezes 16 focused inputs before 18 final
+  compilers. Complete Nyx SDK/selected RTL inventories freeze 490/20 physical
+  files; all 510 and focused pins remain exact after every reader joins.
+- logs/modes-final-run.log passes 41 native checks, clean heap: visitor retirement,
+  exact storage, verified mode/OUT facts and reset uncertainty, repeated include
+  policy/token identity, legacy ambiguity refusal, origin round trips, CRLF and
+  supplementary Unicode, detached lifetime, second/unknown mode refusal,
+  inactive/uncertain effects, nested depth and in-token cancellation.
+- Five oracle-*-final compiler/runtime pairs independently qualify actual FPC
+  mode defines, short/Ansi/Unicode string kinds, nested/nonnested comments and OUT
+  defaults/explicit switches. All pass, clean heaps. Deliberate nested-comment
+  diagnostic 2005 is disabled only around those explicit lexical probes.
+- Maintained native translation 209, lossless lexical 540 (490 actual files /
+  2,180,783 tokens), structured-type/physical-origin 357, indexed dependencies 31,
+  owned completion 86, scoped binding 62 and concrete generics 127 pass with
+  clean heaps. The actual controls grammar diagnostic remains explicit.
+- Native SDK 22 passes, clean heap. Actual capture remains 490 files/378 modules;
+  adding 20 exact RTL files yields 510/383. Real SysUtils passes ObjFPC/OUT and
+  reaches uncaptured sysutilh.inc at physical scalar 1860. Its interface remains
+  incomplete, not false export absence. The full badge query remains unavailable
+  at that real prerequisite; aggregate translated tokens stay 100,788/113,802.
+- Production --indexed semantic/private-editor consumer passes 81, clean heap,
+  through an owned never-listening in-process engine. It preserves revision,
+  permission/context, guard release, concurrency/activity/workspace/source pairs
+  and detached receiver behavior. This is neither HTTP nor observing UI evidence.
+  Native Nyx tool handles are absent in this chat; no endpoint retry is made.
+- Eighteen final compiler logs have zero owned warnings (14 upstream pas2js RTL
+  warnings); three browser consumers compile only. Fifteen native fixture
+  processes pass with clean heaps. Complete frozen 7422453 verifier passes all
+  349 artifacts. Five protected files covering nine complete contexts remain
+  exact; no LAN listener or owned reader remains. terminal-private.json owns the
+  bounded evidence; final-checkpoint-private.json records source/remote identity.
+
+Retained corrections: oracle-prep-1 attempted multiple source MODE directives;
+the independent compiler rejected it and the translator now enforces that rule.
+Initial oracle jobs emitted intentional nested-comment warnings; the specific
+diagnostic is scoped to the probes in final bytes. oracle-unicode-2 incorrectly
+expected Char width to follow Unicode string mode; the independent fixture now
+checks actual String RTTI, never inferring Char semantics. sdk-prep-1 lacked the
+translation unit import and did not compile; sdk-prep-2 and final qualify the
+corrected consumer. Initial 38/39-check preparation runs are not substituted for
+the final 41. Failed/earlier logs are retained, not counted as final evidence.
+
+Next useful action: capture explicit actual RTL include search/default/target/
+define context through existing immutable files/module owners. SysUtils needs
+sysutilh.inc; native bounded header capture also retains its mode-aware proof gap.
+Do not add lexical/oracle/fixture variants or manufacture System/RTL exports.
+Full source meaning, dependency invalidation/caching, measured project-scale
+work, default Studio adoption and input/navigation/parity/delivery remain open.
+Concurrent MILESTONES/catalog/new reference/browser-compiler task edits are
+preserved outside this checkpoint. Original counters are unchanged.
+
+## Previous integration: Captured SDK modules and lazy dependencies — 2026-10-17
 
 Previous goal turn is progress: pushed aa02178 connects the first owned provider.
 This continuation addresses its retained nyx.model dependency gap under original

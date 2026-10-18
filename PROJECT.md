@@ -39,8 +39,10 @@ The owned [compiler/include context](docs/pascal-projects.md#captured-compiler-a
 now captures explicit facts and virtual files, with conditional participation and
 separate state for repeated includes. Unconfigured outputs retain source inspection.
 Native checks exercise the real callback gate; browser consumers compile only.
-Dynamic lexical contexts, complete compiler/SDK capture and type/member resolution
-remain prerequisites to a general language engine and its Studio adoption.
+Ordered lexical contexts now follow supported source-mode/comment changes across
+includes, with exact occurrence views and explicit uncertainty. Complete compiler/
+SDK capture and type/member resolution remain prerequisites to a general language
+engine and its Studio adoption.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

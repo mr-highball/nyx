@@ -73,7 +73,8 @@ type
   end;
   { One source token with its inclusion and pre-token compiler state. Activity
     describes conditional participation only, never semantic validity. Physical
-    token/text remain in their cached lexical snapshot; records own no interfaces. }
+    token ordinals belong to their exact occurrence's lexical snapshot, including
+    repeated visits with different policies. Records own no interfaces. }
   TNyxPascalTranslatedToken = record
   private
     FOccurrence: Integer;
@@ -104,7 +105,8 @@ type
       levels, 4096 occurrences/states and 1024 diagnostics. Zeroed options refuse;
       all fluent setters return validated independent copies. }
     class function Defaults: TNyxPascalTranslationOptions; static;
-    { Capture exact fixed lexical policies; dynamic lexical changes diagnose. }
+    { Capture initial lexical policy and immutable per-occurrence budgets.
+      Known source directives may change comment nesting between tokens. }
     function Lexical(const AValue: TNyxPascalLexicalOptions): TNyxPascalTranslationOptions;
     { Includes trivia/directives and the root EOF, across repeated includes. }
     function UpToTokens(AValue: Integer): TNyxPascalTranslationOptions;
@@ -142,6 +144,8 @@ type
     function Token(AIndex: Integer): TNyxPascalTranslatedToken;
     function PhysicalToken(AIndex: Integer): TNyxPascalToken;
     function Text(AIndex: Integer): TNyxText;
+    { Legacy file-only access refuses differing occurrence tokenizations/policies.
+      Prefer NyxPascalOccurrenceLexical when an origin supplies its occurrence. }
     function Physical(AFile: Integer): INyxPascalLexicalSnapshot;
     function OccurrenceCount: Integer;
     function Occurrence(AIndex: Integer): TNyxPascalInclusion;
@@ -150,6 +154,18 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalTranslationDiagnostic;
   end;
+  { Optional precise lexical views for repeated textual includes. PhysicalToken
+    ordinals belong to this occurrence's snapshot, never another visit of its
+    file. Returned snapshots are detached and retain no translation/visitor. }
+  INyxPascalTranslationLexicalContexts = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C04}']
+    function OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
+  end;
+
+{ Read exact occurrence tokens, with legacy file-only fallback for alternate
+  translators which have not exposed contextual lexing. Indices remain checked. }
+function NyxPascalOccurrenceLexical(const ATranslation: INyxPascalTranslation;
+  AOccurrence: Integer): INyxPascalLexicalSnapshot;
 
 { Freeze caller-serialized alternate inputs once and traverse only captured files.
   Root must name an explicit captured unit/program file; no include owner is guessed.
@@ -167,10 +183,23 @@ implementation
 uses SysUtils, nyx.bytes;
 
 type
-  { Builder-owned cached lexer; each entry retains one immutable physical file.
-    Interface fields live in a class, avoiding pas2js record ownership differences. }
+  { File-only compatibility view. The first immutable occurrence is retained;
+    differing later policies/tokens revoke ambiguous legacy access. }
   TPhysicalCache = class
     Lexical: INyxPascalLexicalSnapshot;
+    Ambiguous: Boolean;
+  end;
+  { Borrowed only by synchronous token visitors while construction is active. }
+  TTranslation = class;
+  { One lexical construction's visitor. Owner is borrowed, never reference counted
+    back to its translation; recursive includes get independent visitors. }
+  TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver)
+  public
+    Owner: TTranslation;
+    Occurrence: Integer;
+    Included: Boolean;
+    procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
+      const AText: TNyxText; var AAllowNestedComments: Boolean);
   end;
   { One conditional frame may cross include boundaries. Taken is three-valued;
     an unknown branch's writes revoke facts rather than merging a guessed path. }
@@ -183,13 +212,15 @@ type
   end;
   { Owns every cache/immutable vector. Construction alone retains cancellation;
     all published references point outward to data, never back to a document. }
-  TTranslation = class(TInterfacedObject, INyxPascalTranslation)
+  TTranslation = class(TInterfacedObject, INyxPascalTranslation,
+    INyxPascalTranslationLexicalContexts)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
     FContext: INyxPascalCompilerContext;
     FOptions: TNyxPascalTranslationOptions;
     FPhysical: array of TPhysicalCache;
+    FLexical: array of INyxPascalLexicalSnapshot;
     FTokens: array of TNyxPascalTranslatedToken;
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
@@ -204,6 +235,8 @@ type
     FActive: TNyxPascalKnowledge;
     FResolved: Boolean;
     FBlocked: Boolean;
+    FNested: Boolean;
+    FModeSeen: Boolean;
     FCancellation: INyxCancellationScope;
     procedure CheckCancellation;
     procedure Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
@@ -231,6 +264,7 @@ type
     function PhysicalToken(AIndex: Integer): TNyxPascalToken;
     function Text(AIndex: Integer): TNyxText;
     function Physical(AFile: Integer): INyxPascalLexicalSnapshot;
+    function OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
     function OccurrenceCount: Integer;
     function Occurrence(AIndex: Integer): TNyxPascalInclusion;
     function StateCount: Integer;
@@ -341,6 +375,7 @@ begin
     FFiles := CaptureNyxPascalFiles(AFiles);
     FInitial := CaptureNyxPascalCompilerContext(AContext);
     FContext := FInitial;
+    FNested := FOptions.LexicalOptions.AllowNestedComments;
 
     if (FInitial.Feature(ppfNestedComments) <> ppkUnknown) and
       ((FInitial.Feature(ppfNestedComments) = ppkTrue) <>
@@ -470,6 +505,59 @@ begin
   SaveState;
 end;
 
+procedure TTranslationReader.AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
+  const AText: TNyxText; var AAllowNestedComments: Boolean);
+begin
+
+  if not Included or (AToken.Kind <> ptkEOF) then
+  begin
+    Owner.AddToken(Occurrence, AIndex);
+
+    if (AToken.Kind = ptkDirective) and not Owner.FBlocked then
+    begin
+      Owner.Directive(Occurrence, AToken, AText);
+    end;
+  end;
+  { Includes share the caller's compiler state. In particular a nested include
+    may change the policy used for this reader's very next physical token. }
+  AAllowNestedComments := Owner.FNested;
+end;
+
+function SameLexicalView(const ALeft, ARight: INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope): Boolean;
+var
+  LAt: Integer;
+  LLeft: TNyxPascalToken;
+  LRight: TNyxPascalToken;
+begin
+  Result := False;
+
+  if (ALeft.Count <> ARight.Count) or
+    (ALeft.Options.AllowNestedComments <> ARight.Options.AllowNestedComments) then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to ALeft.Count - 1 do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Pascal lexical comparison cancelled');
+    end;
+    LLeft := ALeft.Token(LAt);
+    LRight := ARight.Token(LAt);
+    { Both views scan the same immutable text with fixed identifier policy.
+      Nesting can alter only token boundaries, families and completeness. }
+
+    if (LLeft.Kind <> LRight.Kind) or (LLeft.Span.Start <> LRight.Span.Start) or
+      (LLeft.Span.Length <> LRight.Span.Length) or (LLeft.Complete <> LRight.Complete) then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
 procedure TTranslation.Visit(AFile, AParent: Integer; const AInclude: TNyxPascalSpan);
 var
   LOccurrence: Integer;
@@ -477,7 +565,8 @@ var
   LAncestor: Integer;
   LBytes: Integer;
   LLexical: INyxPascalLexicalSnapshot;
-  LToken: TNyxPascalToken;
+  LReader: TTranslationReader;
+  LObserver: INyxPascalLexicalObserver;
 begin
   CheckCancellation;
 
@@ -516,6 +605,7 @@ begin
   if LOccurrence = Length(FOccurrences) then
   begin
     SetLength(FOccurrences, Capacity(LOccurrence, FOptions.MaximumOccurrences));
+    SetLength(FLexical, Length(FOccurrences));
   end;
   FOccurrences[LOccurrence].FFile := AFile;
   FOccurrences[LOccurrence].FParent := AParent;
@@ -526,32 +616,29 @@ begin
   Inc(FDepth);
   try
 
-    if FPhysical[AFile] = nil then
-    begin
-      FPhysical[AFile] := TPhysicalCache.Create;
-      FPhysical[AFile].Lexical := NewNyxPascalLexicalSnapshot(FFiles.TextAt(AFile),
-        FOptions.LexicalOptions, FCancellation);
-    end;
-    LLexical := FPhysical[AFile].Lexical;
+    LReader := TTranslationReader.Create;
+    LObserver := LReader;
+    LReader.Owner := Self;
+    LReader.Occurrence := LOccurrence;
+    LReader.Included := AParent >= 0;
+    LLexical := NewNyxPascalContextualLexicalSnapshot(FFiles.TextAt(AFile),
+      FOptions.LexicalOptions.NestedComments(FNested), LObserver, FCancellation);
+    FLexical[LOccurrence] := LLexical;
     for LAt := 0 to LLexical.DiagnosticCount - 1 do
     begin
       Problem(ptiLexicalIssue, LOccurrence, LLexical.Diagnostic(LAt).Span,
         LLexical.Diagnostic(LAt).MessageText);
     end;
-    for LAt := 0 to LLexical.Count - 1 do
+
+    if FPhysical[AFile] = nil then
     begin
-      LToken := LLexical.Token(LAt);
-
-      if (AParent >= 0) and (LToken.Kind = ptkEOF) then
-      begin
-        Continue;
-      end;
-      AddToken(LOccurrence, LAt);
-
-      if (LToken.Kind = ptkDirective) and not FBlocked then
-      begin
-        Directive(LOccurrence, LToken, LLexical.Text(LAt));
-      end;
+      FPhysical[AFile] := TPhysicalCache.Create;
+      FPhysical[AFile].Lexical := LLexical;
+    end
+    else if not FPhysical[AFile].Ambiguous then
+    begin
+      FPhysical[AFile].Ambiguous := not SameLexicalView(
+        FPhysical[AFile].Lexical, LLexical, FCancellation);
     end;
     FOccurrences[LOccurrence].FCount := FTokenCount - FOccurrences[LOccurrence].FFirst;
     FOccurrences[LOccurrence].FExit := FStateCount - 1;
@@ -687,7 +774,7 @@ function FeatureNamed(const AName: TNyxText; out AFeature: TNyxPascalLanguageFea
 const
   CNames: array[TNyxPascalLanguageFeature] of TNyxText =
     ('advancedrecords', 'nestedprocvars', 'anonymousfunctions', 'functionreferences',
-      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings');
+      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out');
 var
   LFeature: TNyxPascalLanguageFeature;
 begin
@@ -885,32 +972,76 @@ begin
     begin
       LMode := ModeNamed(LValue);
 
-      if (FActive <> ppkTrue) or not (LMode in [ppmDelphi, ppmTP]) or
-        FOptions.LexicalOptions.AllowNestedComments then
+      if FModeSeen then
+      begin
+        Problem(ptiMalformedDirective, AOccurrence, AToken.Span,
+          'Only one source MODE directive is supported per compiler module');
+        UnknownEffect;
+        Exit;
+      end;
+      FModeSeen := True;
+
+      if (FActive <> ppkTrue) or
+        not ((LMode in [ppmDelphi, ppmTP]) or
+          ((FContext.Family = ppcFPC) and (LMode in [ppmFPC, ppmObjFPC, ppmDelphiUnicode]))) then
       begin
         Problem(ptiLexicalPolicyChange, AOccurrence, AToken.Span,
-          'This mode transition needs captured lexical defaults before further analysis');
+          'This conditional or unsupported mode needs verified lexical defaults');
         FBlocked := True;
         UnknownEffect;
       end
       else
       begin
         FContext := FContext.InMode(LMode);
+        FNested := LMode in [ppmFPC, ppmObjFPC];
+        FContext := FContext.WithFeature(ppfNestedComments, ppkFalse);
+
+        if FNested then
+        begin
+          FContext := FContext.WithFeature(ppfNestedComments, ppkTrue);
+        end;
 
         if FContext.Family = ppcFPC then
         begin
+          { Only independently qualified mode facts are restored after InMode
+            revokes options/features. Version-sensitive callback/helper defaults
+            remain unknown until explicitly captured or switched in source. }
+          FContext := FContext.WithOption('H', ppkFalse)
+            .WithFeature(ppfUnicodeStrings, ppkFalse)
+            .WithFeature(ppfOutParameters, ppkFalse);
+
+          if LMode in [ppmDelphi, ppmDelphiUnicode] then
+          begin
+            FContext := FContext.WithOption('H', ppkTrue);
+          end;
+
+          if LMode = ppmDelphiUnicode then
+          begin
+            FContext := FContext.WithFeature(ppfUnicodeStrings, ppkTrue);
+          end;
+
+          if LMode in [ppmDelphi, ppmDelphiUnicode, ppmObjFPC] then
+          begin
+            FContext := FContext.WithFeature(ppfOutParameters, ppkTrue);
+          end;
           FContext := FContext.WithSymbol(NyxPascalDefine('FPC_DELPHI'), ppdUndefined)
             .WithSymbol(NyxPascalDefine('FPC_OBJFPC'), ppdUndefined)
             .WithSymbol(NyxPascalDefine('FPC_TP'), ppdUndefined)
-            .WithSymbol(NyxPascalDefine('FPC_MACPAS'), ppdUndefined);
+            .WithSymbol(NyxPascalDefine('FPC_MACPAS'), ppdUndefined)
+            .WithSymbol(NyxPascalDefine('FPC_ISO'), ppdUndefined)
+            .WithSymbol(NyxPascalDefine('FPC_EXTENDEDPASCAL'), ppdUndefined);
 
-          if LMode = ppmDelphi then
+          if LMode in [ppmDelphi, ppmDelphiUnicode] then
           begin
             FContext := FContext.WithSymbol(NyxPascalDefine('FPC_DELPHI'), ppdDefined);
           end
-          else
+          else if LMode = ppmTP then
           begin
             FContext := FContext.WithSymbol(NyxPascalDefine('FPC_TP'), ppdDefined);
+          end
+          else if LMode = ppmObjFPC then
+          begin
+            FContext := FContext.WithSymbol(NyxPascalDefine('FPC_OBJFPC'), ppdDefined);
           end;
         end;
         SaveState;
@@ -961,17 +1092,21 @@ begin
       end;
 
       if (LFeature = ppfNestedComments) and
-        ((LCondition = ppkUnknown) or
-          ((LCondition = ppkTrue) <> FOptions.LexicalOptions.AllowNestedComments)) then
+        (LCondition = ppkUnknown) then
       begin
         Problem(ptiLexicalPolicyChange, AOccurrence, AToken.Span,
-          'Changing comment termination requires an incremental lexical context');
+          'Conditional comment termination is unknown; later directives cannot be interpreted');
         UnknownEffect;
         FBlocked := True;
       end
       else
       begin
         FContext := FContext.WithFeature(LFeature, LCondition);
+
+        if LFeature = ppfNestedComments then
+        begin
+          FNested := LCondition = ppkTrue;
+        end;
         SaveState;
       end;
       Exit;
@@ -1038,7 +1173,7 @@ var
   LToken: TNyxPascalTranslatedToken;
 begin
   LToken := Token(AIndex);
-  Result := Physical(Occurrence(LToken.Occurrence).FileIndex).Token(LToken.PhysicalToken);
+  Result := OccurrenceLexical(LToken.Occurrence).Token(LToken.PhysicalToken);
 end;
 
 function TTranslation.Text(AIndex: Integer): TNyxText;
@@ -1046,7 +1181,7 @@ var
   LToken: TNyxPascalTranslatedToken;
 begin
   LToken := Token(AIndex);
-  Result := Physical(Occurrence(LToken.Occurrence).FileIndex).Text(LToken.PhysicalToken);
+  Result := OccurrenceLexical(LToken.Occurrence).Text(LToken.PhysicalToken);
 end;
 
 function TTranslation.Physical(AFile: Integer): INyxPascalLexicalSnapshot;
@@ -1057,7 +1192,39 @@ begin
   begin
     raise ENyxPascalContext.Create('This captured file has no translation occurrence');
   end;
+
+  if FPhysical[AFile].Ambiguous then
+  begin
+    raise ENyxPascalContext.Create('This file has differing lexical contexts; select its exact occurrence');
+  end;
   Result := FPhysical[AFile].Lexical;
+end;
+
+function TTranslation.OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
+begin
+  Occurrence(AOccurrence);
+  Result := FLexical[AOccurrence];
+end;
+
+function NyxPascalOccurrenceLexical(const ATranslation: INyxPascalTranslation;
+  AOccurrence: Integer): INyxPascalLexicalSnapshot;
+var
+  LContexts: INyxPascalTranslationLexicalContexts;
+begin
+
+  if ATranslation = nil then
+  begin
+    raise ENyxPascalContext.Create('A lexical occurrence needs its owning translation');
+  end;
+
+  if Supports(ATranslation, INyxPascalTranslationLexicalContexts, LContexts) then
+  begin
+    Result := LContexts.OccurrenceLexical(AOccurrence);
+  end
+  else
+  begin
+    Result := ATranslation.Physical(ATranslation.Occurrence(AOccurrence).FileIndex);
+  end;
 end;
 
 function TTranslation.OccurrenceCount: Integer;

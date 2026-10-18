@@ -183,6 +183,8 @@ type
   INyxPascalLexicalSnapshot = interface(IInterface)
     ['{98349E7C-C0ED-48DE-A518-427A04570B01}']
     function Source: TNyxText;
+    { Initial policy and fixed budgets; contextual construction may change
+      comment nesting between tokens without changing this captured value. }
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
     { Zero-based token access. Count includes EOF; bad ordinals refuse. Text
@@ -200,6 +202,16 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
+  { Synchronous construction-only visitor. Each complete token (including EOF)
+    arrives once before scanning its successor. A translator may change the next
+    block comment's nesting policy after a directive or textual include. The
+    visitor never receives a mutable snapshot or controls quotas/source text;
+    exceptions abort construction. Retained only until the factory returns. }
+  INyxPascalLexicalObserver = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B02}']
+    procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
+      const AText: TNyxText; var AAllowNestedComments: Boolean);
+  end;
 
 { Construct a checked nonnegative scalar range without associating a source. }
 function NyxPascalSpan(AStart, ALength: Integer): TNyxPascalSpan;
@@ -214,6 +226,12 @@ function NewNyxPascalLexicalSnapshot(const ASource: TNyxText): INyxPascalLexical
 function NewNyxPascalLexicalSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot; overload;
+{ Ordered lexical construction without source rewriting. Options retain the
+  initial policy/budgets; individual tokens reflect visitor-approved changes.
+  The detached result retains neither visitor nor cancellation scope. }
+function NewNyxPascalContextualLexicalSnapshot(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
 
 implementation
 
@@ -260,8 +278,9 @@ const
 type
   { Active nested block-comment delimiter, never a compiler conditional scope. }
   TCommentDelimiter = (pcdBrace, pcdParenthesis);
-  { Owns its text/vectors. Cursor, cancellation borrow and quota counters exist
-    only while Build runs; publication releases the cancellation scope. }
+  { Owns exact text/vectors. Cursor and observer/cancellation borrows exist only
+    during Build; publication retains initial options and contextually scanned
+    tokens, releasing both external interfaces. No partial snapshot escapes. }
   TLexicalSnapshot = class(TInterfacedObject, INyxPascalLexicalSnapshot)
   private
     FSource: TNyxText;
@@ -276,6 +295,8 @@ type
     FColumn: Integer;
     FBytes: Integer;
     FPreviousCR: Boolean;
+    FNested: Boolean;
+    FObserver: INyxPascalLexicalObserver;
     FCancellation: INyxCancellationScope;
     function Current: Integer;
     function NextASCII(AChar: Char): Boolean;
@@ -292,7 +313,8 @@ type
     procedure Build;
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalLexicalOptions;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope;
+      const AObserver: INyxPascalLexicalObserver = nil);
     function Source: TNyxText;
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
@@ -416,11 +438,14 @@ begin
 end;
 
 constructor TLexicalSnapshot.Create(const ASource: TNyxText;
-  const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope);
+  const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope;
+  const AObserver: INyxPascalLexicalObserver);
 begin
   inherited Create;
   AOptions.Validate;
   FOptions := AOptions;
+  FNested := AOptions.AllowNestedComments;
+  FObserver := AObserver;
   FCancellation := ACancellation;
   CheckCancellation;
   { Target storage length is a cheap lower bound for UTF-8 byte length. Exact
@@ -438,6 +463,7 @@ begin
     Build;
   finally
     FCancellation := nil;
+    FObserver := nil;
   end;
 end;
 
@@ -603,6 +629,11 @@ begin
   end;
   FTokens[FTokenCount] := AToken;
   Inc(FTokenCount);
+
+  if FObserver <> nil then
+  begin
+    FObserver.AfterToken(FTokenCount - 1, AToken, Text(FTokenCount - 1), FNested);
+  end;
 end;
 
 procedure TLexicalSnapshot.WordToken(var AToken: TNyxPascalToken);
@@ -818,7 +849,7 @@ begin
       Continue;
     end;
 
-    if FOptions.AllowNestedComments and ((Current = Ord('{')) or
+    if FNested and ((Current = Ord('{')) or
       ((Current = Ord('(')) and NextASCII('*'))) then
     begin
 
@@ -1119,6 +1150,18 @@ function NewNyxPascalLexicalSnapshot(const ASource: TNyxText;
   const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
 begin
   Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation);
+end;
+
+function NewNyxPascalContextualLexicalSnapshot(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
+  const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
+begin
+
+  if AObserver = nil then
+  begin
+    raise ENyxPascalLexical.Create('Contextual lexical construction needs an explicit observer');
+  end;
+  Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, AObserver);
 end;
 
 procedure InitializeVocabulary;

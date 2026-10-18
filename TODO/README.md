@@ -51,8 +51,9 @@ original authoring/service ownership. No original credit closes.
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now captures real source files and loads explicit indexed imports on demand.
 Native dependency/capture/production semantic checks and maintained contracts
-pass; three browser consumers compile only. Real SysUtils context remains a typed
-prerequisite. Complete RTL/compiler context, language meaning, incremental work,
+pass; three browser consumers compile only. Ordered mode/comment contexts now
+retain exact repeated-include tokens; real SysUtils passes ObjFPC/OUT and reaches
+uncaptured sysutilh.inc. Complete RTL/compiler context, language meaning, incremental work,
 default Studio adoption and full input/navigation/budget/quality/parity/delivery
 remain under original authoring/service ownership. No original credit closes.
 

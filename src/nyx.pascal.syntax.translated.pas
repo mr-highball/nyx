@@ -301,11 +301,10 @@ end;
 function TTranslatedSyntax.VirtualAt(AOccurrence, APhysicalOffset: Integer): Integer;
 var
   LAt: Integer;
-  LFile: Integer;
 begin
-  LFile := FSource.Occurrence(AOccurrence).FileIndex;
 
-  if (APhysicalOffset < 0) or (APhysicalOffset > FSource.Physical(LFile).Scalars) then
+  if (APhysicalOffset < 0) or
+    (APhysicalOffset > NyxPascalOccurrenceLexical(FSource, AOccurrence).Scalars) then
   begin
     raise ENyxPascalLexical.Create('Physical source offset is outside its exact include occurrence');
   end;

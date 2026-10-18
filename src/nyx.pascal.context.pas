@@ -46,7 +46,7 @@ type
     does not pretend to enumerate every FPC switch; unknown directives diagnose. }
   TNyxPascalLanguageFeature = (ppfAdvancedRecords, ppfNestedProcVars,
     ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
-    ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings);
+    ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings, ppfOutParameters);
   { Bounded compiler version, stored without target-dependent floating arithmetic.
     Minor/patch have two decimal digits, matching FPC_FULLVERSION's convention. }
   TNyxPascalCompilerVersion = record

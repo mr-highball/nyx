@@ -4,6 +4,26 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source ordered lexical construction follows known source-mode/comment
+changes through textual includes without rewriting physical text. Each occurrence
+owns its detached lexical view; legacy file-only access refuses ambiguity, while
+syntax navigation/completion definitions retain exact occurrences. FPC/ObjFPC/
+Delphi/DelphiUnicode/TP verified defaults and typed OUT facts are supported; a
+second source MODE or unknown lexical effect stops certainty. Native modes 41,
+maintained translation/lexing/origins 209/540/357 and provider/dependency/SDK/
+binding/generic/semantic 86/31/22/62/127/81 pass, clean heaps; five independent
+native compiler-mode jobs pass. Eighteen compiler logs have zero owned warnings
+(14 upstream RTL); three browser consumers compile only. Real SysUtils now passes
+ObjFPC/OUT and stops at uncaptured sysutilh.inc (physical scalar 1860), retaining
+its incomplete imported interface. Sixteen focused pins/all 510 captured inputs,
+five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact;
+all readers join, LAN offline. WORK.md owns receipts, corrected failures and the
+next explicit RTL include/default/target/define context, followed by full language/
+incremental/adoption/input/navigation/budget/quality/parity/delivery requirements.
+Stop lexical/oracle/capture variants. No original criterion/task/counter/credit/
+DONE/new MCP tool/schema/rollout closes. No HTTP retry, protected configuration/
+cleanup bypass, deletion or sub-agents. Preserve concurrent planning changes.
+
 Current-source SDK module capture/indexed provider loads explicit captured imports
 on demand with fresh world handles, retained parse/counters and one receiver parse.
 Incomplete/malformed imported interfaces cannot prove export absence or select an

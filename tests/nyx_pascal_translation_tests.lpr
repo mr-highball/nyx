@@ -138,7 +138,7 @@ begin
   begin
     LToken := ATranslation.Token(LAt);
     LOccurrence := ATranslation.Occurrence(LToken.Occurrence);
-    LPhysical := ATranslation.Physical(LOccurrence.FileIndex);
+    LPhysical := NyxPascalOccurrenceLexical(ATranslation, LToken.Occurrence);
     Check((LToken.State >= 0) and (LToken.State < ATranslation.StateCount) and
       (ATranslation.Text(LAt) = LPhysical.Text(LToken.PhysicalToken)) and
       (ATranslation.PhysicalToken(LAt).Span.Finish <= LPhysical.Scalars),
@@ -401,10 +401,10 @@ begin
   LFiles := LFiles.WithFile(NyxPascalPhysicalFile('main.pas'),
     '{$nestedcomments on} Following {$define UNSAFE} Tail');
   LUnknown := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('main.pas'), NativeFacts, LOptions);
-  Check(HasIssue(LUnknown, ptiLexicalPolicyChange) and
-    (LUnknown.Token(WordAt(LUnknown, 'Following')).Activity = ppkUnknown) and
-    (LUnknown.State(LUnknown.StateCount - 1).Symbol(NyxPascalDefine('UNSAFE')).IsDefined = ppkUnknown),
-    'Unsupported lexical transitions stop interpreting the remaining directives');
+  Check(LUnknown.Resolved and
+    (LUnknown.Token(WordAt(LUnknown, 'Following')).Activity = ppkTrue) and
+    (LUnknown.State(LUnknown.StateCount - 1).Symbol(NyxPascalDefine('UNSAFE')).IsDefined = ppkTrue),
+    'Known lexical transitions retain subsequent directive interpretation');
   LFiles := LFiles.WithFile(NyxPascalPhysicalFile('main.pas'), '{$else} Unbalanced');
   LUnknown := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('main.pas'), NativeFacts, LOptions);
   Check(HasIssue(LUnknown, ptiUnbalancedConditional), 'Unmatched branch boundaries remain visible');

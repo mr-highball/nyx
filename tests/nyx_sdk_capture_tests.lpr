@@ -23,7 +23,7 @@ program nyx_sdk_capture_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.editing,
   nyx.scheduler, nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.binding,
-  nyx.pascal.files, nyx.pascal.modules,
+  nyx.pascal.files, nyx.pascal.modules, nyx.pascal.translation,
   nyx.pascal.files.native, nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts,
   nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.completion.owned
   {$ifdef windows}, Windows{$endif};
@@ -217,6 +217,9 @@ var
   LModel: Boolean;
   LRTL: INyxPascalDirectoryCapture;
   LQuery: INyxPascalCompletionRequest;
+  LTranslation: INyxPascalTranslation;
+  LMissingInclude: Boolean;
+  LPolicyIssue: Boolean;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(IncludeTrailingPathDelimiter(ARepository) + 'src',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -259,6 +262,28 @@ begin
       TNyxPascalDirectoryOptions.Defaults.Under('rtl/win'));
     Check(LRTL.Modules.Find(NyxPascalModule('SysUtils')) >= 0,
       'The explicit real RTL directory supplies the exact SysUtils source root');
+    LTranslation := NewNyxPascalTranslation(LRTL.Files,
+      LRTL.Modules.Entry(LRTL.Modules.Find(NyxPascalModule('SysUtils'))).Root,
+      Facts.WithSymbol(NyxPascalDefine('FPC_DOTTEDUNITS'), ppdUndefined)
+        .WithSymbol(NyxPascalDefine('UNICODERTL'), ppdUndefined),
+      TNyxPascalTranslationOptions.Defaults);
+    LMissingInclude := False;
+    LPolicyIssue := False;
+    for LAt := 0 to LTranslation.DiagnosticCount - 1 do
+    begin
+      LMissingInclude := LMissingInclude or
+        (LTranslation.Diagnostic(LAt).Issue = ptiMissingInclude);
+      LPolicyIssue := LPolicyIssue or
+        (LTranslation.Diagnostic(LAt).Issue = ptiLexicalPolicyChange);
+      WriteLn('actual RTL translation / issue=', Ord(LTranslation.Diagnostic(LAt).Issue),
+        ' at=', LTranslation.Diagnostic(LAt).Span.Start,
+        ' message=', LTranslation.Diagnostic(LAt).MessageText);
+    end;
+    Check(LMissingInclude and not LPolicyIssue,
+      'Real SysUtils passes ObjFPC/OUT lexical configuration and reaches its uncaptured include');
+    Check((LTranslation.State(LTranslation.StateCount - 2).Mode = ppmObjFPC) and
+      (LTranslation.State(LTranslation.StateCount - 2).Feature(ppfOutParameters) = ppkTrue),
+      'The real RTL retains typed mode/OUT facts before its exact missing-include boundary');
     { The raw selected SysUtils namespace requires the ordinary nondotted RTL
       build fact. Other unprovided facts remain open, never sealed as absent. }
     LProvider := NewNyxIndexedPascalCompletionProvider(
@@ -273,7 +298,7 @@ begin
     Check((LReply.Status = pcsUnavailable) and
       (LMetadata.BindingIssue = pbiIncompleteSource) and
       (LMetadata.RelatedName = TNyxText('SysUtils')),
-      'Real RTL lexical context remains a qualified prerequisite instead of false export absence');
+      'The incomplete real RTL retains its exact prerequisite instead of false export absence');
   end;
 end;
 
