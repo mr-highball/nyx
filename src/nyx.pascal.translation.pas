@@ -83,6 +83,33 @@ type
     function RegisterDirectiveCount: Integer;
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
   end;
+  { One authored diagnostic-category toggle at its exact physical occurrence.
+    State precedes the directive; Enabled is the authored request while Activity
+    preserves uncertain participation. Value-only origins own no source/context/
+    callback. This does not predict the compiler's delayed diagnostic emission. }
+  TNyxPascalEmissionDirective = record
+  private
+    FOrigin: TNyxPascalConditionOrigin;
+    FState: Integer;
+    FActivity: TNyxPascalKnowledge;
+    FChannel: TNyxPascalDiagnosticChannel;
+    FEnabled: Boolean;
+  public
+    property Origin: TNyxPascalConditionOrigin read FOrigin;
+    property State: Integer read FState;
+    property Activity: TNyxPascalKnowledge read FActivity;
+    property Channel: TNyxPascalDiagnosticChannel read FChannel;
+    property Enabled: Boolean read FEnabled;
+  end;
+  { Optional checked category-emission receipts. Prefixes freeze only already
+    visited values and retain their source separately; restoring settings does
+    not erase historical intent. Analyzer diagnostics remain independent and
+    cannot be suppressed through a source compiler-verbosity request. }
+  INyxPascalEmissionDirectives = interface(IInterface)
+    ['{4CC9D819-1AB9-4B23-A2D8-6B9A7D47667B}']
+    function EmissionDirectiveCount: Integer;
+    function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
+  end;
   { One authored per-warning request at its exact physical include occurrence.
     State is the pre-directive context and PrefixCount excludes the directive.
     The rule preserves conditional activity without resolving compiler aliases;
@@ -383,14 +410,15 @@ type
   end;
   { Borrowed only by synchronous token visitors while construction is active. }
   TTranslation = class;
-  { Owns one immutable completed source, bounded prefix ordinals and diagnostic
-    indices. All outward references retain original files/contexts, never a
-    constructing visitor, callback, editor or mutable source buffer. }
+  { Owns one immutable completed source, bounded prefix ordinals, copied emission
+    intents and diagnostic indices. Outward references retain original files and
+    contexts, never a constructing visitor, callback, editor or mutable buffer. }
   TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
-    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives)
+    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
+    INyxPascalEmissionDirectives)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -411,6 +439,7 @@ type
     FCodeAlignmentRows: array of Integer;
     FOptimizationDirectives: INyxPascalOptimizationDirectives;
     FOptimizationRows: array of Integer;
+    FEmissionRows: array of TNyxPascalEmissionDirective;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -445,6 +474,8 @@ type
     function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
     function OptimizationDirectiveCount: Integer;
     function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
+    function EmissionDirectiveCount: Integer;
+    function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -501,11 +532,14 @@ type
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
-    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives)
+    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
+    INyxPascalEmissionDirectives)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
     FContext: INyxPascalCompilerContext;
+    FEmissionDirectives: array of TNyxPascalEmissionDirective;
+    FEmissionCount: Integer;
     FOptions: TNyxPascalTranslationOptions;
     FPhysical: array of TPhysicalCache;
     FLexical: array of INyxPascalLexicalSnapshot;
@@ -597,6 +631,8 @@ type
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
     function UnresolvedCount: Integer;
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+    function EmissionDirectiveCount: Integer;
+    function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
     function RegisterDirectiveCount: Integer;
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
     function WarningDirectiveCount: Integer;
@@ -1726,6 +1762,44 @@ begin
   end;
 end;
 
+{ FPC's category toggle reader consumes one ON/OFF identifier or one sign.
+  Remaining source belongs to the directive's comment and remains untouched in
+  the physical token. Consume the whole identifier so OFFLINE/OFF1 never becomes
+  OFF; DEFAULT and per-message ERROR are not category-emission states. }
+function ParseDiagnosticEmission(const AValue: TNyxText): Boolean;
+var
+  LAt: Integer;
+  LWord: TNyxText;
+begin
+
+  if AValue = '' then
+  begin
+    raise ENyxPascalContext.Create('A diagnostic category needs ON/OFF or a sign');
+  end;
+
+  if AValue[1] in ['+', '-'] then
+  begin
+    Exit(AValue[1] = '+');
+  end;
+  LAt := 1;
+  while (LAt <= Length(AValue)) and (AValue[LAt] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) do
+  begin
+    Inc(LAt);
+  end;
+  LWord := NyxPascalASCIIKey(Copy(AValue, 1, LAt - 1));
+
+  if LWord = 'on' then
+  begin
+    Exit(True);
+  end;
+
+  if LWord = 'off' then
+  begin
+    Exit(False);
+  end;
+  raise ENyxPascalContext.Create('A diagnostic category needs ON/OFF or a sign');
+end;
+
 { FPC consumes one selector and action, including adjacent +/- spelling.
   Explanatory trailing text stays in the physical directive receipt. Numeric and
   named selectors are not collapsed through a guessed compiler message catalog. }
@@ -2005,6 +2079,8 @@ var
   LOptimization: TNyxPascalOptimizationRequest;
   LOptimizations: INyxPascalContextOptimizations;
   LOptimizedContext: INyxPascalCompilerContext;
+  LChannel: TNyxPascalDiagnosticChannel;
+  LEmissionEnabled: Boolean;
 begin
   NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
@@ -2114,6 +2190,65 @@ begin
 
     if FActive = ppkFalse then
     begin
+      Exit;
+    end;
+
+    if (LName = 'warnings') or (LName = 'hints') or (LName = 'notes') then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Category emission requests need an explicit FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+      LChannel := pdcWarnings;
+
+      if LName = 'hints' then
+      begin
+        LChannel := pdcHints;
+      end
+      else if LName = 'notes' then
+      begin
+        LChannel := pdcNotes;
+      end;
+      LEmissionEnabled := ParseDiagnosticEmission(LValue);
+      LCondition := ppkFalse;
+
+      if LEmissionEnabled then
+      begin
+        LCondition := ppkTrue;
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LCondition := ppkUnknown;
+      end;
+
+      if FEmissionCount >= FOptions.MaximumTokens then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Emission requests exceed their construction budget');
+      end;
+      LWarningContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).EmitDiagnostics(LChannel, LCondition));
+
+      if FEmissionCount = Length(FEmissionDirectives) then
+      begin
+        SetLength(FEmissionDirectives, Capacity(FEmissionCount, FOptions.MaximumTokens));
+      end;
+      FEmissionDirectives[FEmissionCount].FOrigin.FileReference :=
+        FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+      FEmissionDirectives[FEmissionCount].FOrigin.Occurrence := AOccurrence;
+      FEmissionDirectives[FEmissionCount].FOrigin.Span := AToken.Span;
+      FEmissionDirectives[FEmissionCount].FOrigin.PrefixCount := FTokenCount - 1;
+      FEmissionDirectives[FEmissionCount].FState := FTokens[FTokenCount - 1].State;
+      FEmissionDirectives[FEmissionCount].FActivity := FActive;
+      FEmissionDirectives[FEmissionCount].FChannel := LChannel;
+      FEmissionDirectives[FEmissionCount].FEnabled := LEmissionEnabled;
+      Inc(FEmissionCount);
+      FContext := LWarningContext;
+      SaveState;
       Exit;
     end;
 
@@ -3136,6 +3271,21 @@ begin
   Result := FCodeAlignmentDirectives[AIndex];
 end;
 
+function TTranslation.EmissionDirectiveCount: Integer;
+begin
+  Result := FEmissionCount;
+end;
+
+function TTranslation.EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= FEmissionCount) then
+  begin
+    raise ENyxPascalContext.Create('Emission directive index is outside its translation');
+  end;
+  Result := FEmissionDirectives[AIndex];
+end;
+
 function TTranslation.WarningDirectiveCount: Integer;
 begin
   Result := FWarningCount;
@@ -3194,6 +3344,9 @@ var
   LWarning: TNyxPascalWarningDirective;
   LAlignment: TNyxPascalCodeAlignmentDirective;
   LOptimization: TNyxPascalOptimizationDirective;
+  LEmissions: INyxPascalEmissionDirectives;
+  LEmission: TNyxPascalEmissionDirective;
+  LEmissionCount: Integer;
 
   procedure Check;
   begin
@@ -3235,6 +3388,51 @@ begin
   Supports(FSource, INyxPascalWarningDirectives, FWarningDirectives);
   Supports(FSource, INyxPascalCodeAlignmentDirectives, FCodeAlignmentDirectives);
   Supports(FSource, INyxPascalOptimizationDirectives, FOptimizationDirectives);
+
+  if Supports(FSource, INyxPascalEmissionDirectives, LEmissions) then
+  begin
+    LEmissionCount := LEmissions.EmissionDirectiveCount;
+
+    if (LEmissionCount < 0) or (LEmissionCount > AOptions.MaximumTokens) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Emission prefix directives exceed their input budget');
+    end;
+    SetLength(FEmissionRows, LEmissionCount);
+    LUsed := 0;
+    for LAt := 0 to LEmissionCount - 1 do
+    begin
+      Check;
+      LEmission := LEmissions.EmissionDirectiveAt(LAt);
+
+      if (Ord(LEmission.Channel) < Ord(Low(TNyxPascalDiagnosticChannel))) or
+        (Ord(LEmission.Channel) > Ord(High(TNyxPascalDiagnosticChannel))) or
+        (Ord(LEmission.Activity) < Ord(Low(TNyxPascalKnowledge))) or
+        (Ord(LEmission.Activity) > Ord(High(TNyxPascalKnowledge))) or
+        (LEmission.Origin.PrefixCount < 0) or (LEmission.Origin.PrefixCount >= LSourceCount) or
+        (LEmission.State < 0) or (LEmission.State >= LStates) or
+        (LEmission.Origin.Occurrence < 0) or (LEmission.Origin.Occurrence >= LOccurrences) then
+      begin
+        raise ENyxPascalContext.Create('An emission receipt is outside its source or value domain');
+      end;
+      LToken := FSource.Token(LEmission.Origin.PrefixCount);
+      LSpan := FSource.PhysicalToken(LEmission.Origin.PrefixCount).Span;
+
+      if (LEmission.State <> LToken.State) or (LEmission.Origin.Occurrence <> LToken.Occurrence) or
+        (LEmission.Origin.Span.Start <> LSpan.Start) or (LEmission.Origin.Span.Length <> LSpan.Length) or
+        (LEmission.Origin.FileReference.Name <>
+          FSource.Files.FileAt(FSource.Occurrence(LToken.Occurrence).FileIndex).Name) then
+      begin
+        raise ENyxPascalContext.Create('An emission receipt does not match its original source token');
+      end;
+
+      if LEmission.Origin.PrefixCount < FCount then
+      begin
+        FEmissionRows[LUsed] := LEmission;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FEmissionRows, LUsed);
+  end;
 
   if FOptimizationDirectives <> nil then
   begin
@@ -3609,6 +3807,21 @@ begin
     raise ENyxPascalContext.Create('Code-alignment directive index is outside this prefix');
   end;
   Result := FCodeAlignmentDirectives.CodeAlignmentDirectiveAt(FCodeAlignmentRows[AIndex]);
+end;
+
+function TTranslationPrefix.EmissionDirectiveCount: Integer;
+begin
+  Result := Length(FEmissionRows);
+end;
+
+function TTranslationPrefix.EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FEmissionRows)) then
+  begin
+    raise ENyxPascalContext.Create('Emission directive index is outside its prefix');
+  end;
+  Result := FEmissionRows[AIndex];
 end;
 
 function TTranslationPrefix.WarningDirectiveCount: Integer;

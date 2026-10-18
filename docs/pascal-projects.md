@@ -1993,6 +1993,49 @@ Native FPC observations are separated from the browser consumer, which compiles
 the portable checks. WORK.md owns qualification, retained failures and the next
 real RTL boundary; full grammar/type/incremental/editor/parity remains open.
 
+## Diagnostic emission
+
+`TNyxPascalCompilerPolicies.EmitDiagnostics` selects a closed
+`TNyxPascalDiagnosticChannel` and three-valued request. Zero-initialized policies
+retain unknown warnings, hints and notes. They use three scalar fields rather
+than a shared mutable record array. Category emission is separate from ordered
+per-message `WARN` requests and does not calculate effective severity, compiler
+alias membership or queued diagnostic activation.
+
+For example, a caller can retain its other policies while changing one category:
+
+```pascal
+LContext := NyxPascalWithCompilerPolicies(LContext,
+  NyxPascalCompilerPolicies(LContext).EmitDiagnostics(pdcWarnings, ppkFalse));
+```
+
+Complete context capture and identity include these requests. Local PUSH/POP
+restores them while preserving later definitions; source mode changes retain
+verbosity while resetting language-specific policies. Unknown textual effects
+revoke category knowledge. Missing compiler evidence remains unknown rather
+than borrowing the executing host's defaults.
+
+Captured FPC source accepts `WARNINGS`, `HINTS` and `NOTES` ON/OFF or sign
+requests. Complete identifiers are checked, so OFF1 does not become OFF. Exact
+trailing annotation stays in the physical source. Known inactive directives
+have no effect; uncertain activity retains the authored Boolean separately from
+unknown current category knowledge. Other compiler families do not silently
+inherit FPC parsing. Malformed or unsupported source remains an analyzer
+diagnostic even when the source compiler warning category is disabled.
+
+`INyxPascalEmissionDirectives` exposes checked bounded receipts with original
+file/occurrence/span, pre-directive state, category, authored value and activity.
+Restoration changes current settings without deleting these historical values.
+Prefixes freeze only earlier receipts, exclude the current directive, and retain
+source ownership separately. Records own no interfaces, callbacks or editor state.
+
+The independent native compiler fixture observes suppression and restoration at
+real token barriers and across a source mode change. Its three deliberate visible
+messages include one expected warning; they are separate from product warning
+debt. It is compiled alone and never executed. Portable focused ownership/source/
+refusal checks run natively; browser consumers compile only. WORK.md owns final
+whole-RTL results, failures and remaining language/editor/parity requirements.
+
 ## Atomic primitive fulfillment
 
 `nyx.pascal.fulfillment` consumes existing typed compiler requirements through a

@@ -231,9 +231,15 @@ type
   TNyxPascalLocalSwitch = (plsBooleanEvaluation, plsAssertions, plsLongStrings,
     plsIOChecks, plsWritableConstants, plsOverflowChecks, plsRangeChecks,
     plsStackChecks, plsTypedAddress, plsVarStrings, plsStackFrames);
+  { Closed source-level diagnostic categories. These verbosity requests are
+    separate from numeric/named WARN rules; errors are never a suppressible
+    category here. No compiler's default or message activation time is inferred. }
+  TNyxPascalDiagnosticChannel = (pdcWarnings, pdcHints, pdcNotes);
   { Value-owned local and module policies, independent of renderer/ABI types.
     Zero initialization means unknown. Fluent copies retain exact symbolic
-    values; they never infer a compiler's defaults or target capabilities. }
+    values; they never infer a compiler's defaults or target capabilities.
+    Diagnostic emission retains three scalar knowledge values, with no array or
+    interface alias. Per-message rules and eventual emitted severity stay separate. }
   TNyxPascalCompilerPolicies = record
   private
     FInlining: TNyxPascalKnowledge;
@@ -244,6 +250,9 @@ type
     FSmartLinking: TNyxPascalKnowledge;
     FGoto: TNyxPascalKnowledge;
     FAssembler: TNyxPascalAssemblerReader;
+    FWarnings: TNyxPascalKnowledge;
+    FHints: TNyxPascalKnowledge;
+    FNotes: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -260,6 +269,14 @@ type
     { Local reader intent participates in saved settings. No instruction parser
       or compiler callback is retained by this independent value copy. }
     function ReadAssemblyBy(AValue: TNyxPascalAssemblerReader): TNyxPascalCompilerPolicies;
+    { Set one category's requested emission knowledge in an independent value.
+      Unknown revokes knowledge; neither False nor True resolves message-specific
+      WARN actions, compiler availability or delayed activation. Invalid enums
+      refuse before any caller-owned value changes. }
+    function EmitDiagnostics(AChannel: TNyxPascalDiagnosticChannel;
+      AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { Read one validated category; a missing capture remains Unknown. }
+    function DiagnosticEmission(AChannel: TNyxPascalDiagnosticChannel): TNyxPascalKnowledge;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -1212,7 +1229,11 @@ begin
   end;
   LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown
     .RequestSmartLinking(FPolicies.SmartLinkingRequested)
-    .RequestGoto(FPolicies.GotoRequested);
+    .RequestGoto(FPolicies.GotoRequested)
+    { Source mode changes reset language policies but retain verbosity. }
+    .EmitDiagnostics(pdcWarnings, FPolicies.DiagnosticEmission(pdcWarnings))
+    .EmitDiagnostics(pdcHints, FPolicies.DiagnosticEmission(pdcHints))
+    .EmitDiagnostics(pdcNotes, FPolicies.DiagnosticEmission(pdcNotes));
   for LAt := 0 to High(LCopy.FOptions) do
   begin
     LCopy.FOptions[LAt] := ppkUnknown;
@@ -1746,7 +1767,13 @@ begin
     (Ord(FAssembler) < Ord(Low(TNyxPascalAssemblerReader))) or
     (Ord(FAssembler) > Ord(High(TNyxPascalAssemblerReader))) or
     (Ord(FCalling) < Ord(Low(TNyxPascalCallingConvention))) or
-    (Ord(FCalling) > Ord(High(TNyxPascalCallingConvention))) then
+    (Ord(FCalling) > Ord(High(TNyxPascalCallingConvention))) or
+    (Ord(FWarnings) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FWarnings) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FHints) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FHints) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FNotes) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FNotes) > Ord(High(TNyxPascalKnowledge))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -1808,6 +1835,47 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPolicies.EmitDiagnostics(AChannel: TNyxPascalDiagnosticChannel;
+  AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+
+  if (Ord(AChannel) < Ord(Low(TNyxPascalDiagnosticChannel))) or
+    (Ord(AChannel) > Ord(High(TNyxPascalDiagnosticChannel))) then
+  begin
+    raise ENyxPascalContext.Create('A diagnostic category is outside its closed domain');
+  end;
+  Result := Self;
+  case AChannel of
+    pdcWarnings:
+      Result.FWarnings := AValue;
+    pdcHints:
+      Result.FHints := AValue;
+    pdcNotes:
+      Result.FNotes := AValue;
+  end;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.DiagnosticEmission(
+  AChannel: TNyxPascalDiagnosticChannel): TNyxPascalKnowledge;
+begin
+  Validate;
+
+  if (Ord(AChannel) < Ord(Low(TNyxPascalDiagnosticChannel))) or
+    (Ord(AChannel) > Ord(High(TNyxPascalDiagnosticChannel))) then
+  begin
+    raise ENyxPascalContext.Create('A diagnostic category is outside its closed domain');
+  end;
+  case AChannel of
+    pdcWarnings:
+      Result := FWarnings;
+    pdcHints:
+      Result := FHints;
+    pdcNotes:
+      Result := FNotes;
+  end;
+end;
+
 function TNyxPascalCompilerPolicies.SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
 begin
   Validate;
@@ -1815,7 +1883,9 @@ begin
   Result := (FInlining = AOther.FInlining) and (FRecords = AOther.FRecords) and
     (FEnums = AOther.FEnums) and (FSets = AOther.FSets) and
     (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking) and
-    (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto);
+    (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto) and
+    (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
+    (FNotes = AOther.FNotes);
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;

@@ -89,6 +89,31 @@ original criterion two/source/type/incremental/editor/input/quality/parity/adopt
 stay open. WORK.md owns terminal evidence and the next genuine prerequisite.
 No original criterion/task/credit/DONE/new tool/schema/rollout closes.
 
+Diagnostic-emission prerequisite (2026-10-18): follow actual ustrings.inc WARNINGS
+OFF through existing compiler-policy/translation/settings owners. Closed warning/
+hint/note channels retain three-valued requests independently of per-message WARN
+rules and effective verbosity. Exact receipts retain authored value/activity and
+original occurrences; prefixes freeze earlier values. Capture/identity, unknown
+effects, local restoration and source-mode retention must preserve defaults and
+ownership without inference. Focused native 37 and an independent compiler-only
+oracle pass. All 71 main compiler logs have zero owned warnings; 40 completed
+native consumers pass with clean heaps under one source freeze. The unchanged
+whole-RTL consumer fails the existing translated-token quota after Longint/Int64
+requests, with clean heap and no new final semantic/indexed result. The view cap
+is 2M and conditional aggregate 4M; identify which active cap/accounting path fails
+before implementation. Browser consumers compile only.
+The deliberate visible compiler-oracle warning is separate from product debt.
+Stop emission/oracle/compiler/capture variants. Reassess budget-accounted ordered
+conditional refinement/reuse through existing conditions/translation/syntax
+owners, preserving both limits, exact source/context/ordered answers, cancellation
+and atomic refusal. No probes, source truncation or ignored directives substitute
+for the original RTL outcome. Prior b403025 RTL success stays historical. This is
+local qualification with failed full integration across at least thirty-four
+unclosed batches; full
+original criterion two/source/type/incremental/editor/quality/parity/adoption/
+delivery stays open. WORK.md owns exact authority, evidence and the next actual
+prerequisite. No original criterion/task/credit/DONE/new tool/schema/rollout closes.
+
 Optimization prerequisite (2026-10-18): retain closed typed ON/OFF/DEFAULT and
 named toggle requests, exact include origins/conditional activity and local
 settings lifetime through existing compiler context/translation owners. Capture,

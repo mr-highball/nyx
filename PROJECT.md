@@ -144,6 +144,12 @@ annotation text and atomic malformed-group refusal. Independent native IFOPT
 observations qualify that grammar; other compiler families retain their previous
 strict behavior. Full compiler grammar and ordinary editor adoption remain open.
 
+Typed [diagnostic emission](docs/pascal-projects.md#diagnostic-emission)
+now separates warning/hint/note category requests from individual warning rules.
+Exact source receipts, captured unknown defaults and saved-settings lifetime
+remain independent of effective compiler diagnostics. Native qualification and
+browser compilation stay separate; the general engine is not yet adopted.
+
 The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
 separates linker suffixes from class visibility and retains typed declaration
 flags/ranges. Known layout directives retain explanatory trailing text without

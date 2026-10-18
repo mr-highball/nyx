@@ -4,7 +4,38 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source short-switch translation ties FPC annotation/immediate-comma grammar
+Current-source diagnostic emission adds closed warning/hint/note channels to
+existing scalar compiler policies, independent of ordered per-message WARN rules.
+Owned source receipts retain original occurrences, pre-state, authored Boolean
+and conditional activity; prefixes copy bounded earlier values. Capture/identity,
+unknown effects, saved local settings and mode retention are qualified by 37
+focused native checks with clean heap. An independent compiler-only fixture has
+zero hidden and three restored visible markers, including one deliberate warning
+kept outside product warning debt. All 71 main compiler logs have zero owned
+warnings/168 upstream; 40 maintained native consumers pass with clean heaps.
+The unchanged original RTL run fails AddToken's existing quota after Longint/
+Int64 requests, with clean heap and no new final semantic/indexed receipt. Prior
+b403025 System/ObjPas/Free results remain historical, not current RTL success.
+The existing view cap is two million and conditional aggregate cap four million;
+the failure log does not distinguish a view cap from a smaller replay remainder.
+Stop emission/oracle/compiler/capture variants. Reassess budget-accounted ordered
+conditional refinement/reuse through existing conditions/translation/syntax owners,
+first identifying the active cap and repeated work. Preserve both limits, pass/
+probe quotas, exact input/context/ordered-answer identity, cancellation and atomic
+refusal; no added probes, truncation, skipped directives or guessed facts.
+Four focused/655 maintained/97 RTL/24 compiler inputs, 156 packets/48 includes,
+five protected files/nine contexts, 349 frozen 7422453 artifacts and thirteen
+concurrent planning files stay exact. Readers joined; LAN offline; native Nyx
+tools absent. All pending identities are historical. WORK.md and ignored
+.local/diagnostic-emission-paths-private.json own final source/remote receipts,
+retained failures and return path. This is local qualification with failed real
+RTL integration across at least thirty-four unclosed batches; full original
+criterion/task/credit/DONE/source/type/incremental/editor/input/quality/parity/
+adoption/delivery stays open. Browser consumers compile only. No host/config
+retry, protected mutation, cleanup/restart, approval bypass, new tool/schema/
+rollout or sub-agents. Preserve concurrent work.
+
+Previously qualified short-switch translation ties FPC annotation/immediate-comma grammar
 to captured FPC only; other families retain strict prior behavior. Native focused
 45, repaired original RTL 56 and all 40 native consumers pass with clean heaps.
 The stronger RTL oracle qualifies one exact interface helper in systemh.inc plus

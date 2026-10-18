@@ -33,7 +33,99 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Short-switch annotation grammar — 2026-10-18
+## Current integration: Typed diagnostic emission — 2026-10-18
+
+Focused native 37 and all 40 maintained native consumers pass with clean heaps;
+71 main compiler logs have zero owned warnings/168 upstream. The independent
+compiler-only oracle retains its one deliberate warning separately. The required
+unchanged whole-RTL consumer fails the existing translated-token quota after
+Longint/Int64 requests, with a clean heap. No current final System/ObjPas semantic
+or indexed result is produced. This is local qualification with failed full RTL
+integration, across at least thirty-four documented unclosed batches; no full
+original criterion/task/credit/DONE/parity/adoption/delivery closes.
+
+The starting b403025 checkpoint retained original authoring criterion two across
+at least thirty-three unclosed batches and refused `{$warnings off}` in
+ustrings.inc. The implementation follows existing context/policy/translation/
+saved-settings owners with closed warning/hint/note channels and three-valued
+requested emission, independent of per-message WARN rules and effective compiler
+verbosity. Retain immutable source receipts, exact physical occurrences and
+conditional activity. Capture/identity/unknown effects/local PUSH/POP and source
+mode changes must preserve the correct lifetime, without inferred defaults.
+The installed scanner retains verbosity through mode changes and saves/restores
+it as local state. Native compiler observations, portable refusal/ownership/
+prefix checks, maintained consumers and the original whole-RTL route decide this
+boundary. Browser consumers compile only. Keep the first different prerequisite
+visible; do not skip directives, change source/probes/quotas or raise limits.
+Preserve five protected files/nine complete contexts, 349 frozen 7422453 artifacts
+and concurrent planning work. LAN remains offline. No host/config retry,
+browser/HTTP/file execution/capture, protected mutation, cleanup/restart, approval
+bypass or sub-agents. Full source/type/module/incremental/editor/input/quality/
+parity/adoption/delivery and original criterion/task/credit/DONE remain open.
+
+The policy record now retains three independent scalar category requests with
+closed typed selection and explicit unknown defaults. Whole capture and exact
+identity include them; InMode retains verbosity and unknown effects revoke it.
+Ordinary saved settings restore the category values while retaining later
+definitions and independent per-warning rules. The source reader is FPC-scoped,
+checks full ON/OFF identifiers or signs, and retains exact trailing annotation.
+An immutable optional receipt capability records original occurrence/span,
+pre-state, authored Boolean and activity. Prefixes validate source ownership and
+copy only earlier value rows, with no producer/context/interface in a record.
+
+Focused native qualification passes 37 with clean heap, including independent
+record copies, capture/identity, mode retention, historical frames, includes,
+repeated occurrences, exact supplementary annotation spans, detached prefixes,
+checked ordinals, conditional uncertainty, inactive/malformed source, unknown
+effects, compiler-family refusal, cancellation and state quotas. The independent
+FPC fixture is compiled alone from ObjFPC into its declared Delphi mode, then
+suppresses warning/hint/note markers and restores all three through POP at real
+token barriers. No hidden marker is emitted; exactly one warning/hint/note marker
+is restored. Its one deliberate warning is separate from product compiler debt.
+No fixture program is executed. An earlier preparation emitted two unreachable-
+code warnings from exhaustive enum case ELSE arms; checked ordinal guards now
+precede exhaustive cases, retaining rejection without suppressing diagnostics.
+That preparation remains retained outside accepted evidence. Existing policy
+preparation 73 also passes; no full maintained/RTL result is inferred from it.
+
+Four final sources, 655 maintained source paths, 97 RTL and 24 compiler inputs
+are frozen. All 71 main compiler logs pass with zero owned warnings/168 upstream;
+the separate deliberate oracle warning remains explicitly accounted for. Both
+Studios/backend/worker and twenty-six browser consumers compile as applicable.
+All 40 completed native consumers pass with clean heaps, including policy 73,
+warning 44, original regions 45 and production semantic completion 84. The single
+unchanged original RTL consumer fails the retained translated-token budget; no
+all-41 or successful final RTL result is claimed. Browser execution/input/parity/
+adoption/delivery remains open. Five
+protected files/nine contexts, thirteen planning files, 156 original packets and
+349 frozen 7422453 artifacts remain exact. Final results, retained failure and
+committed/remote source identity are in the ignored packet located by
+`.local/diagnostic-emission-paths-private.json`; inspect actual handles before
+acting. `module-failed-terminal-private.json` supersedes every pending/live/wait
+snapshot. Session 79486/PID 6948 terminated with exit 1; no retry or replacement
+occurs. All readers are joined and Studio listeners remain absent. Its
+33,016,044 blocks /41,823,702,787 cumulative bytes are fully freed.
+
+The original module source still sets a 2,000,000-token translation view and
+4,000,000 aggregate conditional translation/prefix tokens with 64 passes. Symbol
+preparation stays three/eight, initial primitive queries five, explicit Word job
+one and generic fact allowance eight. AddToken refuses inside ordered semantic
+reconstruction following the Int64 request. The existing loop reduces each
+translation's cap to the aggregate remainder; the retained log does not identify
+whether the active cap was the full 2M view allowance or a smaller remainder.
+Do not label that distinction as measured. No current declaration-count/source-
+resolution/indexed success is inferred; b403025's results remain historical.
+
+Stop emission/oracle/compiler/capture variants. Next reassess budget-accounted
+ordered conditional refinement/reuse through existing conditions/translation/
+syntax owners, first identifying active budget scope and repeated work. Preserve
+both original limits, exact source/context/ordered-answer identity, cancellation,
+atomic refusal and all pass/probe ceilings. Increasing a limit, adding fixed
+probes, truncating source, ignoring directives or reusing stale evidence does not
+qualify the original consumer. Full source/type/module/incremental/editor/input/
+quality/parity/adoption/delivery stays open; no new tool/schema or rollout occurs.
+
+## Previous integration: Short-switch annotation grammar — 2026-10-18
 
 Final composite qualification passes focused native 45, repaired original RTL 56
 and all 40 native consumers with clean heaps. All 69 accepted compiler logs have
