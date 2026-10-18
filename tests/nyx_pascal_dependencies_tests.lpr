@@ -194,6 +194,50 @@ begin
     'An implementation token inside an unclosed member scope cannot certify complete exports');
 end;
 
+procedure CompilerImplicitImports;
+var
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LProvider: INyxPascalCompletionProvider;
+  LReply: INyxPascalCompletionResult;
+  LReceipt: INyxPascalCompletionAnalysis;
+begin
+  { Synthetic source worlds exercise dependency ownership, not a fabricated RTL
+    replacement. The native compiler oracle independently qualifies precedence. }
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('sdk/empty.pp'),
+      'unit Empty; {$mode delphi} interface implementation end.')
+    .WithFile(NyxPascalPhysicalFile('sdk/objpas.pp'),
+      'unit ObjPas; {$mode objfpc} interface type TImplicit=record Value:Byte; end; implementation end.');
+  LModules := NewNyxPascalModuleCatalog.WithModule(Root('Empty', 'sdk/empty.pp'))
+    .WithModule(Root('ObjPas', 'sdk/objpas.pp'));
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
+    TNyxOwnedPascalCompletionOptions.Defaults);
+  LReply := LProvider.Complete(Query('Empty', 'TImplicit', 'Current.Va'));
+  Check((LReply.Status = pcsReady) and (LReply.Count = 1) and
+    (LReply.Item(0).Name = TNyxText('Value')),
+    'Ordinary indexed completion resolves an implicit-unit source declaration');
+  LReceipt := Analysis(LReply);
+  Check((LReceipt.ModuleCount = 3) and (LReceipt.DependencyLoads = 2) and
+    (LReceipt.ModuleName(2).Name = TNyxText('ObjPas')),
+    'Implicit imports use the existing on-demand loader and retained analysis receipt');
+  LReply := LProvider.Complete(Query('Empty', 'ObjPas.TImplicit', 'Current.Va'));
+  Check((LReply.Status = pcsReady) and (LReply.Item(0).Name = TNyxText('Value')),
+    'Explicit implicit-unit qualification uses the same normal completion path');
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
+    TNyxOwnedPascalCompletionOptions.Defaults.UpToDependencyLoads(1));
+  LReply := LProvider.Complete(Query('Empty', 'TImplicit', 'Current.Va'));
+  Check((LReply.Status = pcsUnavailable) and (Gap(LReply).Gap = pcgBudget),
+    'Implicit dependency work consumes the existing request load budget');
+  LModules := NewNyxPascalModuleCatalog.WithModule(Root('Empty', 'sdk/empty.pp'));
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
+    TNyxOwnedPascalCompletionOptions.Defaults);
+  LReply := LProvider.Complete(Query('Empty', 'TImplicit', 'Current.Va'));
+  Check((LReply.Status = pcsUnavailable) and (Gap(LReply).BindingIssue = pbiMissingModule) and
+    (Gap(LReply).RelatedName = TNyxText('ObjPas')),
+    'Missing implicit capture stays an actionable namespace gap without source fabrication');
+end;
+
 procedure UnitContexts;
 var
   LFiles: INyxPascalFileCatalog;
@@ -243,6 +287,7 @@ begin
   try
     LazyWorld;
     ImportAuthority;
+    CompilerImplicitImports;
     UnitContexts;
     WriteLn('PASS ', GChecks, ' indexed dependency checks');
   except

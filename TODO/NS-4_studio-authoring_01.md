@@ -20,6 +20,16 @@ switch at a different genuine semantic prerequisite, preserving the full resolve
 scope and all original grammar/editor/parity/delivery requirements. This is not
 another local-directive variant or an independently credited task.
 
+Continuation reassessment: 7a092e2 makes progress without closing criterion two;
+the documented consecutive lower bound is now at least five unclosed batches
+including this scope continuation. Older retained work remains counted, not reset.
+The concrete next prerequisite is compiler implicit-unit precedence and source
+identity in the existing binding/completion consumers, qualified by one scope
+oracle and a whole actual ObjPas inspection. The latter's unconfigured lexical
+refusal is retained, not promoted to RTL binding. Stop namespace/oracle variants
+at that boundary and return to ordered source-scope conditional semantics, then
+full language/incremental/adoption/input/navigation/quality/parity/delivery.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

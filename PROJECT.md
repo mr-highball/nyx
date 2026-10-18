@@ -60,6 +60,12 @@ Pristine measurements retain their provenance and never substitute for local or
 imported type binding. Real RTL translation advances through one targeted compiler
 query; complete RTL meaning and default Studio adoption remain open.
 
+Owned completion now selects [compiler scope lookup](docs/pascal-projects.md#compiler-scopes-and-intrinsic-identity),
+including captured implicit units through the ordinary dependency loader.
+Intrinsic identities preserve namespace and declaring context; no measurement
+substitutes for a local/imported declaration. Full RTL and conditional semantic
+binding, canonical type rules and ordinary editor adoption remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

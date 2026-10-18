@@ -1307,6 +1307,59 @@ overload meaning, complete compiler/SDK/grammar capture, completion-provider ado
 incremental dependencies/budgets and full editor/navigation/quality/parity/delivery
 remain under original authoring/service ownership.
 
+## Compiler scopes and intrinsic identity
+
+`TNyxPascalImplicitScopePolicy` separates declaration-only symbolic names from
+compiler-unit lookup. Low-level binding options retain the former default for
+compatibility; owned completion options now select `pispCompilerUnits`. Callers
+can choose through the typed `WithBinding`/`WithImplicitScopes` contracts. This
+does not install a default language engine in the observing Studio release.
+
+Compiler-unit lookup checks lexical declarations and explicit imports first,
+then the implicit units appropriate to the captured family/mode. FPC Delphi,
+DelphiUnicode and ObjFPC contexts consult captured `ObjPas` before `System`; FPC
+and TP omit `ObjPas`. A unit does not import itself, and `System` does not import
+`ObjPas`. Unsupported modes and unknown compiler context refuse. The pas2js
+branch retains its System-only implicit chain; the installed upstream parser/
+compiler source identifies that initialization, separately from browser execution.
+
+FPC documents [automatic ObjPas loading](https://www.freepascal.org/daily/doc/rtl/objpas/index.html)
+and [the separate System.Integer meaning](https://docs.freepascal.org/docs-html/current/rtl/system/integer.html).
+The native compiler oracle independently compiles two whole owned units and
+checks last-import, local/nested shadowing, System qualification and explicit
+qualification of implicit ObjPas. Source binding reads those same whole imported
+units; small synthetic System/ObjPas views isolate ordering without replacing or
+claiming qualification of a real SDK.
+
+Missing implicit modules return the existing typed dependency gap. Indexed
+completion loads them through its ordinary captured catalog, preserving load/
+module/token limits, cancellation and detached analysis receipts. Explicit
+namespace lookup keeps its own authority; a missing unrelated implicit unit
+cannot change an explicitly selected known System declaration. No host directory
+search, invented export catalog, compiler execution or new wire tool is added.
+
+`INyxPascalIntrinsicIdentity` optionally exposes a builtin type's checked
+reference, named/System origin and immutable compiler context. Its getters
+require a builtin; it does not compute a size or layout. Alias nodes retain their
+actual declarations. A terminal System primitive uses the captured System unit's
+context, independently of the consumer's or ObjPas alias's source mode. The
+existing builtin category alone is insufficient for type identity: generic
+environment comparisons also retain reference/origin/context. This avoids treating
+unqualified Integer and System.Integer as interchangeable symbolic categories.
+Full canonical type equivalence, compiler-injected declarations, assignment/
+overload rules, and layouts remain required.
+
+Whole actual ObjPas is separately retained in an unconfigured native inspection.
+The current ObjFPC lexical-policy guard refuses without a known compiler family;
+that inspection preserves the original source but produces no declarations. It
+does not prove actual RTL Integer binding. The configured real RTL consumer still
+has the six recorded size/declared conditions open. Next connect sound source-
+scope semantic queries with the ordered conditional reader, preserving prefix
+visibility, imports, source positions and unknown settings effects. Do not infer
+`sizeof` or `declared` results from pristine measurements alone. Full compiler/
+grammar/incremental/default-adoption/input/navigation/quality/parity/delivery
+remains under the original authoring owners. Browser evidence here is compilation.
+
 ## Concrete generic binding and member pages
 
 The binding kernel now carries immutable concrete arguments through supported

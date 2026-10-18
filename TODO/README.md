@@ -16,6 +16,12 @@ plans only missing conditional compiler symbols. Real RTL continuation and exact
 remaining semantic gaps are recorded in WORK.md. This stays under original
 authoring criterion two; full scope/incremental/adoption/parity/delivery stays open.
 
+The [compiler scope layer](../docs/pascal-projects.md#compiler-scopes-and-intrinsic-identity)
+now feeds implicit units through indexed completion's ordinary bounded loader
+and preserves intrinsic namespace/context identity. Whole actual RTL binding and
+ordered source-conditional semantics remain open under original authoring
+criterion two; WORK.md owns qualification and retained failures.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

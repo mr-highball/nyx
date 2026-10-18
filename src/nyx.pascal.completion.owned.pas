@@ -253,7 +253,7 @@ begin
   Result.FDefined := True;
   Result.FTranslation := TNyxPascalTranslationOptions.Defaults;
   Result.FSyntax := TNyxPascalSyntaxOptions.Defaults;
-  Result.FBinding := TNyxPascalBindingOptions.Defaults;
+  Result.FBinding := TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits);
   Result.FTokens := 1000000;
   Result.FReceiverTokens := 128;
   Result.FDependencyLoads := 128;

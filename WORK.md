@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler measurements and conditional requests — 2026-10-18
+## Current integration: Compiler scopes and intrinsic identity — 2026-10-18
+
+Previous turn is progress: pushed 7a092e2 captures measurements and targeted
+conditional requests without pretending they bind authored names. This batch
+follows the concrete source-binding prerequisite under original authoring
+criterion two. Its documented consecutive unclosed lower bound is now at least
+five batches, with earlier evidence retained rather than reset. Full fresh MIT
+Nyx-owned language/compiler semantics, incremental/project-scale budgets,
+default Studio adoption and input/navigation/quality/parity/delivery remain
+required. No original criterion/task/counter/credit/DONE, new tool/schema or
+rollout closes. Solo; no HTTP/browser/file-protocol execution/capture, protected
+mutation, cleanup/deletion/restart or approval bypass occurs. All new build and
+evidence files use the provisioned scratch drive.
+
+Owned completion defaults now choose typed compiler-unit lookup. Low-level
+declaration worlds retain symbolic-name compatibility; callers choose explicitly
+through binding options. Lexical declarations and explicit imports precede the
+implicit chain. Supported FPC object modes consult captured ObjPas before System;
+FPC/TP omit ObjPas, and System/ObjPas do not import themselves. Unknown compiler
+context or unsupported mode refuses. Qualified System lookup keeps independent
+authority. Missing implicit units use existing typed gaps and the ordinary indexed
+dependency loader, preserving cancellation, budgets and detached source receipts.
+No synthetic SDK, filesystem search or new transport operation is installed.
+
+Optional intrinsic identity retains a checked reference, namespace origin and
+captured context. Alias declarations keep their own source nodes; terminal
+System primitives retain the System unit's context, independently of consumer
+or ObjPas mode. Generic-environment comparisons no longer equate intrinsic
+categories without reference/origin/context evidence. No size, layout, assignment
+compatibility or complete canonical type equivalence is inferred. The original
+semantic interfaces stay intact; the new capability is in process only.
+
+Accepted composite evidence is in the ignored scoped-bindings-20261018-031427
+packet, located by .local/scoped-bindings-paths-private.json:
+
+- An independent native oracle passes five checks over whole compiled owned
+  import units: last explicit import, local/nested shadowing, System meaning
+  and explicit ObjPas qualification. Imported/local/System sizes are 8/2/2 in
+  this deliberate scope fixture, with the first imported alias independently
+  one byte. These are compiler observations, not a host ABI borrowed by Nyx.
+- Native source scope/provenance checks pass 26, clean heap, including those
+  exact whole imported source files. Small synthetic System/ObjPas views isolate
+  lookup rules and are explicitly not substituted for the real SDK. The source
+  chain binds the captured ObjPas alias before System; missing capture refuses.
+- Indexed dependency checks pass 40, clean heap, including implicit loading and
+  explicit qualification through ordinary completion, exact load receipts,
+  missing namespace and the existing dependency-load budget. Owned completion
+  remains 86; maintained low-level binding/generic checks pass 62/127. These
+  counts overlap earlier evidence and do not establish full type equivalence.
+- Production in-process semantic completion passes 84; actual configured
+  profile/RTL checks pass 73, clean heaps. Their seven compiler jobs retain
+  cancellation/output/deadline and exact source ownership. Real SysUtils still
+  reduces 38 unknown conditions to six; full size/declared meaning is open.
+  No HTTP/authenticated/observing-editor claim follows from the semantic fixture.
+- Whole actual ObjPas is separately read unchanged without a configured compiler
+  family. Its ObjFPC lexical-policy guard refuses before declarations: zero
+  declarations, one translation diagnostic and an unresolved name. The accepted
+  check qualifies complete source preservation and refusal only. It does not
+  prove actual RTL Integer binding or broader unconfigured outline support.
+- Fifteen accepted compiler logs have zero owned warnings and 35 upstream pas2js
+  RTL warnings. Three browser consumers and both Studios/backend/worker compile;
+  browser products/consumers execute nowhere in this checkpoint. Prior unchanged
+  context/policy/macro/token/translation evidence stays retained without repeat.
+- Eight focused pins, 493 Nyx inputs, the earlier 68 RTL inputs plus actual
+  ObjPas, and three configured compiler inputs stay exact after readers. Five
+  protected files/nine complete contexts and all 349 frozen 7422453 artifacts
+  remain exact. All owned readers/compiler families join; LAN stays offline.
+  Private input/compiler/native/protected receipts and final checkpoint own the
+  exact source/remote identity. The chat still advertises no native Nyx tools.
+
+Retained failures are excluded from acceptance. The first owned-completion
+fixture omitted its newly required implicit-unit capture and correctly refused;
+the maintained fixture now supplies its explicit synthetic ObjPas source.
+Whole actual ObjPas initially had a speculative minimum-declaration assertion.
+Unconfigured ObjFPC lexical policy actually refuses first. The corrected fixture
+records exact preservation/refusal and the zero-declaration limit, retaining both
+failed attempts; it does not lower or close the original full-RTL criterion.
+Review also pins System primitive context to its declaring unit before final
+qualification. This is composite evidence, not one uninterrupted green run.
+
+Next useful deliverable: connect source-scope semantic queries to the ordered
+conditional reader, with exact prefix visibility, implicit/import/local ownership
+and captured lexical/settings context. Resolve the actual six sizeof/declared
+sites without replacing compiler-injected types or trusting pristine measurements
+as arbitrary bindings. Actual ObjPas/System exports, full grammar/canonical type/
+helper/overload/constraint/expression rules, incremental budgets, default adoption,
+input/navigation/quality/parity and delivery retain their original owners.
+Stop namespace/oracle/inspection variants here. Preserve concurrent planning,
+protected bytes, offline LAN and the existing no-retry gate.
+
+## Previous integration: Compiler measurements and conditional requests — 2026-10-18
 
 Previous goal turn is progress: pushed 988b405 supplies typed policies and local
 settings scopes. Reassessment retains at least three preceding handoffs with

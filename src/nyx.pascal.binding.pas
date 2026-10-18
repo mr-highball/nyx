@@ -60,6 +60,13 @@ type
     pbbChar, pbbAnsiChar, pbbWideChar, pbbSingle, pbbDouble, pbbExtended,
     pbbReal, pbbCurrency, pbbPointer, pbbAnsiString, pbbUTF8String,
     pbbUnicodeString, pbbWideString, pbbShortString);
+  { Declaration-only callers may retain symbolic intrinsic classification.
+    Compiler-unit policy instead resolves the implicit import chain, refusing a
+    missing unit exactly like a missing explicit import. No SDK stub is created. }
+  TNyxPascalImplicitScopePolicy = (pispDeclarationNames, pispCompilerUnits);
+  { An unqualified symbolic name or an intrinsic supplied
+    in System's scope. Equal spelling/category alone does not establish identity. }
+  TNyxPascalIntrinsicOrigin = (pioUnqualified, pioSystem);
   { Explicit receiver intent; resolving a type name never grants instance access
     to an instance field through a class reference. }
   TNyxPascalMemberAccess = (pmaInstance, pmaType);
@@ -80,17 +87,24 @@ type
     FDepth: Integer;
     FSteps: Integer;
     FCandidates: Integer;
+    FImplicitScopes: TNyxPascalImplicitScopePolicy;
   public
+    { Low-level declaration inspection retains symbolic-name compatibility.
+      Owned completion defaults opt into the compiler-unit policy explicitly. }
     class function Defaults: TNyxPascalBindingOptions; static;
     function UpToModules(AValue: Integer): TNyxPascalBindingOptions;
     function UpToDepth(AValue: Integer): TNyxPascalBindingOptions;
     function UpToSteps(AValue: Integer): TNyxPascalBindingOptions;
     function UpToCandidates(AValue: Integer): TNyxPascalBindingOptions;
+    { Select explicit compiler-scope lookup rather than declaration-only names.
+      The owned completion engine selects compiler units in its defaults. }
+    function WithImplicitScopes(AValue: TNyxPascalImplicitScopePolicy): TNyxPascalBindingOptions;
     procedure Validate;
     property MaximumModules: Integer read FModules;
     property MaximumDepth: Integer read FDepth;
     property MaximumSteps: Integer read FSteps;
     property MaximumCandidates: Integer read FCandidates;
+    property ImplicitScopes: TNyxPascalImplicitScopePolicy read FImplicitScopes;
   end;
   { Forward world contract. Results/sites/symbols retain this immutable owner;
     the world retains only source views, so there is no reference-counting cycle. }
@@ -192,6 +206,15 @@ type
     function ParameterName(AIndex: Integer): TNyxText;
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { Optional intrinsic provenance, independent of inferred ABI/layout. Getters
+    require a builtin semantic type and retain its exact captured source context.
+    World ownership points outward only; neither world nor context owns results. }
+  INyxPascalIntrinsicIdentity = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E0B}']
+    function IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
+    function IntrinsicReference: TNyxPascalSizeReference;
+    function IntrinsicContext: INyxPascalCompilerContext;
   end;
   { Bounded query result. Symbol alternatives are never silently discarded.
     BoundType may accompany an intrinsic/constructed type with zero symbols.
@@ -327,11 +350,14 @@ type
   TGenericNames = array of TNyxText;
   { Builder-owned semantic shape. Published instances are read-only; interface
     vectors live in the class and point only to other immutable shapes/worlds. }
-  TSemanticType = class(TInterfacedObject, INyxPascalSemanticType)
+  TSemanticType = class(TInterfacedObject, INyxPascalSemanticType, INyxPascalIntrinsicIdentity)
   public
     Owner: INyxPascalSemanticWorld;
     TypeKind: TNyxPascalSemanticTypeKind;
     Intrinsic: TNyxPascalBuiltin;
+    IntrinsicScope: TNyxPascalIntrinsicOrigin;
+    IntrinsicName: TNyxPascalSizeReference;
+    IntrinsicFacts: INyxPascalCompilerContext;
     Declared: INyxPascalBoundSymbol;
     Element: INyxPascalSemanticType;
     TypeSyntax: INyxPascalTypeSyntax;
@@ -342,6 +368,9 @@ type
     function World: INyxPascalSemanticWorld;
     function Kind: TNyxPascalSemanticTypeKind;
     function Builtin: TNyxPascalBuiltin;
+    function IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
+    function IntrinsicReference: TNyxPascalSizeReference;
+    function IntrinsicContext: INyxPascalCompilerContext;
     function Definition: INyxPascalBoundSymbol;
     function Target: INyxPascalSemanticType;
     function Syntax: INyxPascalTypeSyntax;
@@ -446,13 +475,14 @@ type
       AImports: Boolean): INyxPascalResolution;
     function Imports(const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
     function UnitVisible(const ASite: INyxPascalBindingSite; const AName: TNyxText): Boolean;
+    function UsesObjPas(const ASite: INyxPascalBindingSite): TNyxPascalKnowledge;
     function CurrentClass(const ASite: INyxPascalBindingSite): INyxPascalBoundSymbol;
     function Descends(const AChild, AParent: INyxPascalBoundSymbol;
       out AUnresolved: Boolean): Boolean;
     function Access(const AMember, AOwner: INyxPascalBoundSymbol;
       const ASite: INyxPascalBindingSite): TNyxPascalKnowledge;
     function BuiltinType(const ASite: INyxPascalBindingSite;
-      const AName: TNyxText): INyxPascalResolution;
+      const AName: TNyxText; ASystem: Boolean = False): INyxPascalResolution;
     function BindNode(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function Bases(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
@@ -541,10 +571,20 @@ end;
 procedure TNyxPascalBindingOptions.Validate;
 begin
 
-  if not FDefined or (FModules < 1) or (FDepth < 1) or (FSteps < 1) or (FCandidates < 1) then
+  if not FDefined or (FModules < 1) or (FDepth < 1) or (FSteps < 1) or (FCandidates < 1) or
+    (Ord(FImplicitScopes) < Ord(Low(TNyxPascalImplicitScopePolicy))) or
+    (Ord(FImplicitScopes) > Ord(High(TNyxPascalImplicitScopePolicy))) then
   begin
     raise ENyxPascalBinding.Create('Use explicit positive Pascal binding budgets');
   end;
+end;
+
+function TNyxPascalBindingOptions.WithImplicitScopes(
+  AValue: TNyxPascalImplicitScopePolicy): TNyxPascalBindingOptions;
+begin
+  Result := Self;
+  Result.FImplicitScopes := AValue;
+  Result.Validate;
 end;
 
 function TNyxPascalBindingOptions.UpToModules(AValue: Integer): TNyxPascalBindingOptions;
@@ -749,6 +789,28 @@ end;
 function TSemanticType.Builtin: TNyxPascalBuiltin;
 begin
   Result := Intrinsic;
+end;
+
+function TSemanticType.IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
+begin
+  IntrinsicReference;
+  Result := IntrinsicScope;
+end;
+
+function TSemanticType.IntrinsicReference: TNyxPascalSizeReference;
+begin
+
+  if (TypeKind <> pstBuiltin) or (IntrinsicName.Name = '') or (IntrinsicFacts = nil) then
+  begin
+    raise ENyxPascalBinding.Create('Only a captured builtin has intrinsic source identity');
+  end;
+  Result := IntrinsicName;
+end;
+
+function TSemanticType.IntrinsicContext: INyxPascalCompilerContext;
+begin
+  IntrinsicReference;
+  Result := IntrinsicFacts;
 end;
 
 function TSemanticType.Definition: INyxPascalBoundSymbol;
@@ -1250,6 +1312,8 @@ end;
 function TBindingQuery.SameType(const ALeft, ARight: INyxPascalSemanticType): Boolean;
 var
   LAt: Integer;
+  LLeftIntrinsic: INyxPascalIntrinsicIdentity;
+  LRightIntrinsic: INyxPascalIntrinsicIdentity;
 begin
   Enter;
   try
@@ -1269,12 +1333,30 @@ begin
       Exit(False);
     end;
 
+    if ALeft.Kind = pstBuiltin then
+    begin
+
+      if not Supports(ALeft, INyxPascalIntrinsicIdentity, LLeftIntrinsic) or
+        not Supports(ARight, INyxPascalIntrinsicIdentity, LRightIntrinsic) then
+      begin
+        Exit(False);
+      end;
+
+      if (LLeftIntrinsic.IntrinsicOrigin <> LRightIntrinsic.IntrinsicOrigin) or
+        (LLeftIntrinsic.IntrinsicReference.Name <> LRightIntrinsic.IntrinsicReference.Name) or
+        not LLeftIntrinsic.IntrinsicContext.SameFacts(LRightIntrinsic.IntrinsicContext) then
+      begin
+        Exit(False);
+      end;
+    end;
+
     if (ALeft.Definition <> nil) or (ARight.Definition <> nil) then
     begin
       Exit(SameBinding(ALeft.Definition, ARight.Definition));
     end;
     { Anonymous bounds/conventions cannot be declared equivalent merely because
       their element types agree. Retain their exact lexical node identity. }
+
     if (ALeft.Syntax <> nil) or (ARight.Syntax <> nil) then
     begin
 
@@ -1487,12 +1569,53 @@ begin
   { An unknown/unfinished imported interface cannot prove a name is absent.
     Returning Missing here would silently choose an earlier import or intrinsic.
     Known declarations stay usable; full overload/grammar meaning remains separate. }
+
   if AExternal and (LCount = 0) and (AScope = 0) and
     not ExportsKnown(AModule) then
   begin
     Exit(Answer(pbsUnresolved, pbiIncompleteSource, LSyntax.Scope(0).Name));
   end;
   Result := SymbolAnswer(LSymbols);
+end;
+
+function TBindingQuery.UsesObjPas(const ASite: INyxPascalBindingSite): TNyxPascalKnowledge;
+var
+  LContext: INyxPascalCompilerContext;
+  LModule: TNyxText;
+begin
+  LModule := NyxPascalASCIIKey(FWorld.ModuleAt(ASite.ModuleIndex).Syntax.Scope(0).Name);
+
+  if (LModule = 'system') or (LModule = 'objpas') then
+  begin
+    Exit(ppkFalse);
+  end;
+  LContext := ContextAt(ASite);
+  Result := ppkUnknown;
+
+  if LContext = nil then
+  begin
+    Exit;
+  end;
+
+  if LContext.Family = ppcPas2JS then
+  begin
+    Exit(ppkFalse);
+  end;
+
+  if LContext.Family <> ppcFPC then
+  begin
+    Exit;
+  end;
+  case LContext.Mode of
+    ppmFPC, ppmTP:
+      Result := ppkFalse;
+    ppmObjFPC, ppmDelphi, ppmDelphiUnicode:
+      Result := ppkTrue;
+  else
+    begin
+      { Unqualified aliases in another mode need their own compiler contract. }
+    end;
+  end;
 end;
 
 function TBindingQuery.UnitVisible(const ASite: INyxPascalBindingSite;
@@ -1504,6 +1627,12 @@ begin
   LSyntax := FWorld.ModuleAt(ASite.ModuleIndex).Syntax;
   Result := (NyxPascalASCIIKey(LSyntax.Scope(0).Name) = NyxPascalASCIIKey(AName)) or
     (NyxPascalASCIIKey(AName) = 'system');
+
+  if (FLimits.ImplicitScopes = pispCompilerUnits) and
+    (NyxPascalASCIIKey(AName) = 'objpas') and (UsesObjPas(ASite) = ppkTrue) then
+  begin
+    Result := True;
+  end;
 
   if Result then
   begin
@@ -1529,6 +1658,7 @@ var
   LImport: TNyxPascalSyntaxImport;
   LAt: Integer;
   LModule: Integer;
+  LImplicit: TNyxPascalKnowledge;
 begin
   LSyntax := FWorld.ModuleAt(ASite.ModuleIndex).Syntax;
   for LAt := LSyntax.ImportCount - 1 downto 0 do
@@ -1560,7 +1690,38 @@ begin
       Exit;
     end;
   end;
+
+  if FLimits.ImplicitScopes = pispCompilerUnits then
+  begin
+    LImplicit := UsesObjPas(ASite);
+
+    if LImplicit = ppkUnknown then
+    begin
+      Exit(Answer(pbsUnresolved, pbiCompilerContext));
+    end;
+
+    if LImplicit = ppkTrue then
+    begin
+      LModule := FWorld.FindModule('ObjPas');
+
+      if LModule < 0 then
+      begin
+        Exit(Answer(pbsUnresolved, pbiMissingModule, 'ObjPas'));
+      end;
+      Result := Exact(LModule, 0, InterfaceEnd(LModule), AName, True);
+
+      if Result.Status <> pbsMissing then
+      begin
+        Exit;
+      end;
+    end;
+  end;
   LModule := FWorld.FindModule('System');
+
+  if (LModule < 0) and (FLimits.ImplicitScopes = pispCompilerUnits) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
+  end;
 
   if (LModule >= 0) and (LModule <> ASite.ModuleIndex) then
   begin
@@ -1571,7 +1732,7 @@ begin
       Exit;
     end;
   end;
-  Result := BuiltinType(ASite, AName);
+  Result := BuiltinType(ASite, AName, FLimits.ImplicitScopes = pispCompilerUnits);
 end;
 
 function TBindingQuery.Single(const ASite: INyxPascalBindingSite;
@@ -1698,9 +1859,10 @@ begin
         if LModule < 0 then
         begin
 
-          if NyxPascalASCIIKey(LPrefix) = 'system' then
+          if (NyxPascalASCIIKey(LPrefix) = 'system') and
+            (FLimits.ImplicitScopes = pispDeclarationNames) then
           begin
-            Exit(BuiltinType(ASite, Copy(AName, LAt + 1, MaxInt)));
+            Exit(BuiltinType(ASite, Copy(AName, LAt + 1, MaxInt), True));
           end;
           Exit(Answer(pbsUnresolved, pbiMissingModule, LPrefix));
         end;
@@ -1727,7 +1889,7 @@ begin
 
           if (LLocal.Status = pbsMissing) and (NyxPascalASCIIKey(LPrefix) = 'system') then
           begin
-            Exit(BuiltinType(ASite, LPart));
+            Exit(BuiltinType(ASite, LPart, True));
           end;
           Exit(LLocal);
         end;
@@ -1865,7 +2027,7 @@ begin
 end;
 
 function TBindingQuery.BuiltinType(const ASite: INyxPascalBindingSite;
-  const AName: TNyxText): INyxPascalResolution;
+  const AName: TNyxText; ASystem: Boolean): INyxPascalResolution;
 const
   CNames: array[TNyxPascalBuiltin] of TNyxText =
     ('', 'integer', 'byte', 'word', 'smallint', 'shortint', 'longint', 'longword',
@@ -1877,6 +2039,7 @@ var
   LValue: TNyxPascalBuiltin;
   LType: TSemanticType;
   LContext: INyxPascalCompilerContext;
+  LSystem: Integer;
 begin
   Result := Answer(pbsMissing, pbiMissingName);
   for LValue := Succ(Low(TNyxPascalBuiltin)) to High(TNyxPascalBuiltin) do
@@ -1889,6 +2052,18 @@ begin
     end;
     LContext := ContextAt(ASite);
 
+    if ASystem then
+    begin
+      LSystem := FWorld.FindModule('System');
+
+      if LSystem >= 0 then
+      begin
+        { A terminal System primitive belongs to that unit's source context.
+          The consumer or an ObjPas alias must not reassign its mode/identity. }
+        LContext := ContextAt(FWorld.At(LSystem, 0, InterfaceEnd(LSystem)));
+      end;
+    end;
+
     if (LContext = nil) or (LContext.Family = ppcUnknown) or (LContext.Mode = ppmUnknown) then
     begin
       Exit(Answer(pbsUnresolved, pbiCompilerContext));
@@ -1897,6 +2072,15 @@ begin
     LType.Owner := FWorld;
     LType.TypeKind := pstBuiltin;
     LType.Intrinsic := LValue;
+    LType.IntrinsicScope := pioUnqualified;
+    LType.IntrinsicName := NyxPascalSizeReference(AName);
+
+    if ASystem then
+    begin
+      LType.IntrinsicScope := pioSystem;
+      LType.IntrinsicName := NyxPascalSizeReference('System.' + AName);
+    end;
+    LType.IntrinsicFacts := LContext;
     Result := TypeAnswer(LType);
     Exit;
   end;
@@ -2050,6 +2234,7 @@ begin
   end;
   { Alias expressions and ancestor clauses use the declaration's outer scope,
     yet their placeholders belong to the declaration currently being bound. }
+
   if (FTypeOwner <> nil) and (FTypeOwner.ModuleIndex = ASite.ModuleIndex) and
     (FTypeOwner.Declaration.Scope = AScope) and
     (FTypeOwner.Declaration.GenericSpan.Length > 0) then
@@ -2342,6 +2527,7 @@ begin
   { The supported compiler oracle rejects a generic declaration inside another
     generic. Ordinary nested types may capture the outer frame; creating another
     parameter frame here remains explicitly unsupported rather than simulated. }
+
   if (LOuter <> nil) and
     (LPrototype.Declaration.GenericSpan.Length > 0) then
   begin

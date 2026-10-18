@@ -4,7 +4,27 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source compiler size facts retain typed named operands, exact probe
+Current-source owned completion selects typed compiler-unit lookup: lexical and
+explicit imports precede captured implicit ObjPas/System as appropriate; missing
+implicit units use the existing bounded loader and refusal. Low-level declaration
+worlds retain symbolic compatibility. Intrinsic reference/origin/context identity
+preserves terminal System ownership and participates in generic comparison; no
+size/layout or full canonical equivalence is inferred. Native scope/oracle/
+dependency checks pass 26/5/40 and maintained binding/generic/owned/semantic/profile
+62/127/86/84/73, clean heaps. Whole actual unconfigured ObjPas preserves its source
+but stops at ObjFPC lexical policy with zero declarations; this is refusal evidence,
+not actual RTL binding. Fifteen accepted logs have zero owned warnings; three
+browser consumers and both Studios/backend/worker compile only as applicable.
+Eight focused/493 Nyx/69 RTL/three compiler pins, five protected files/nine contexts
+and 349 frozen 7422453 artifacts remain exact; readers join and LAN stays offline.
+WORK.md owns retained missing-fixture/overoptimistic actual-source failures and
+the next ordered conditional source-scope integration. At least five documented
+unclosed batches retain the original full scope; no criterion/task/counter/credit/
+DONE/new tool/schema/adoption/parity/delivery closes. Stop namespace/oracle/
+inspection variants. No HTTP retry, protected mutation, cleanup/deletion bypass or
+sub-agents. Preserve concurrent planning files.
+
+Earlier compiler size facts retain typed named operands, exact probe
 mode/H provenance and distinct unknown/absent/known/out-of-range states. They
 do not bind authored names; native oracle proves the mode/local/qualified Integer
 names differ (4/1/2 bytes on configured Win32). Ordered replies and bounded

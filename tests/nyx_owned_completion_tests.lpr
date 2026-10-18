@@ -60,6 +60,8 @@ begin
     .WithFile(NyxPascalPhysicalFile('sdk/system.pas'),
       'unit System; {$mode delphi} interface type TObject=class end; ' +
       'IInterface=interface end; implementation end.')
+    .WithFile(NyxPascalPhysicalFile('sdk/objpas.pas'),
+      'unit ObjPas; {$mode objfpc} interface type Integer=LongInt; implementation end.')
     .WithFile(NyxPascalPhysicalFile('sdk/templates.pas'),
       'unit Templates; {$mode delphi} interface type TBadge=class public ' +
       '{$I badge-members.inc} end; ' +
@@ -72,9 +74,10 @@ function Provider(const AOptions: TNyxOwnedPascalCompletionOptions): INyxPascalC
 var
   LRoots: array of TNyxPascalPhysicalFile;
 begin
-  SetLength(LRoots, 2);
+  SetLength(LRoots, 3);
   LRoots[0] := NyxPascalPhysicalFile('sdk/system.pas');
   LRoots[1] := NyxPascalPhysicalFile('sdk/templates.pas');
+  LRoots[2] := NyxPascalPhysicalFile('sdk/objpas.pas');
   Result := NewNyxOwnedPascalCompletionProvider(Facts, Files, LRoots, AOptions);
 end;
 
