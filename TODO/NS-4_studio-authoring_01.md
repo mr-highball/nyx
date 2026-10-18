@@ -88,6 +88,26 @@ incomplete-source refusal at INPUT_RECORD's anonymous Event record. Follow that
 distinct structured-field ownership/boundary prerequisite next; WORK.md owns the
 final compiler/native/preservation receipts and unchanged full acceptance scope.
 
+Anonymous-type continuation: ad308b0 is progress, retaining at least eleven
+documented unclosed batches and complete original criterion two. Follow the
+actual anonymous structured-field failure through owned unnamed type identity,
+member scope, exact type-expression ranges and ordinary binding/completion,
+including nested/container and grouped declarations. Use whole compiled
+handwritten input and one prepared/final unchanged Windows continuation; stop at
+the next genuinely different SDK/import/language prerequisite. Do not invent
+named exports, ABI layout, canonical compatibility or complete SDK meaning.
+Full language/incremental/adoption/input/navigation/quality/parity/delivery stays
+required, with no original criterion/task/credit closure or new tool/schema.
+
+The qualified anonymous-type boundary now passes 52 portable/34 whole compiled
+source/26 actual Windows checks. Windows retains 29,823 declarations with zero
+supported declaration diagnostics and ready wYear completion/navigation; actual
+inspected field type binding still requires uncaptured ObjPas. Return to genuine
+compiler implicit-unit roots/context through the existing indexed dependency
+loader, then reassess actual System/Windows/SysUtils and full resolver/editor
+gates. WORK.md owns final compiler/native/preservation receipts; full criterion
+two and all original acceptance requirements remain open.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

@@ -216,6 +216,7 @@ type
     FVariantArm: Integer;
     FFirstHint: Integer;
     FLastHint: Integer;
+    FAnonymous: Boolean;
   public
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
@@ -229,6 +230,10 @@ type
     { -1 means no standard hint. Follow NextHint only in this snapshot's optional
       INyxPascalHintSyntax; each grouped declaration owns its own list. }
     property FirstHint: Integer read FFirstHint;
+    { An unnamed structured type has ordinary owned type identity/member scope,
+      an empty Name and its actual structured-type keyword as NameSpan. It never
+      enters Named lookup; declarations sharing one expression share this type. }
+    property Anonymous: Boolean read FAnonymous;
     property TypeForm: TNyxPascalSyntaxTypeForm read FForm;
     property Visibility: TNyxPascalSyntaxVisibility read FVisibility;
     property ParameterMode: TNyxPascalSyntaxParameterMode read FParameterMode;
@@ -348,6 +353,14 @@ type
     function HintCount: Integer;
     function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
   end;
+  { Exact structured-type source index over this immutable declaration arena.
+    Both named and anonymous bodies keep ordinary type declarations/member scopes;
+    TypeAt accepts a lexical scalar start (including authored packing), returns -1
+    away from a body, and never creates a synthetic exported name or ABI layout. }
+  INyxPascalStructuredSyntax = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B06}']
+    function TypeAt(AStart: Integer): Integer;
+  end;
 
 { Pure analysis on copied text. Unknown/missing syntax retains preceding
   declarations and physical spans with explicit recovery issues. Quotas and
@@ -369,7 +382,8 @@ type
     Significant-token ordinals keep lossless trivia on Lexical. No raw source
     provider or cancellation borrow survives publication. }
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
-    INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax)
+    INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
+    INyxPascalStructuredSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -394,6 +408,8 @@ type
     FHintCount: Integer;
     FActiveArm: Integer;
     FNames: TNyxTextIndex;
+    { Owned source-position index, separate from exported/lexical names. }
+    FStructures: TNyxTextIndex;
     FPosition: Integer;
     { A generic header may end in the physical >= token. Only its > belongs
       to the header; the residual equals sign stays for the alias declaration. }
@@ -421,7 +437,7 @@ type
     procedure FinishScope(AScope: Integer; AComplete: Boolean);
     function AddDeclaration(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
       AVisibility: TNyxPascalSyntaxVisibility; AName: Integer;
-      AOperator: TNyxPascalOperatorKind = pokNone): Integer;
+      AOperator: TNyxPascalOperatorKind = pokNone; AAnonymous: Boolean = False): Integer;
     procedure Separator;
     procedure Groups(AOpen, AClose: TNyxPascalSymbol);
     procedure Angles;
@@ -433,6 +449,10 @@ type
     procedure CloneDeclarationHints(AFrom, ATo: Integer);
     procedure VariantPart(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure VariantFields(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
+    { Reuse declared-body grammar and ownership for named and inline types. }
+    procedure StructuredBody(AScope, AOwner: Integer);
+    procedure TypeExpression(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
+      AStop: TNyxPascalSymbol; AArmEnd: Boolean = False);
     function Form: TNyxPascalSyntaxTypeForm;
     { Extend a procedural expression across only its supported trailing directive
       separators. Never consume an escaped/contextual name beginning a new type. }
@@ -474,6 +494,7 @@ type
     function LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
     function HintCount: Integer;
     function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
+    function TypeAt(AStart: Integer): Integer;
     function ImportCount: Integer;
     function ImportAt(AIndex: Integer): TNyxPascalSyntaxImport;
     function DiagnosticCount: Integer;
@@ -554,6 +575,7 @@ begin
   FOptions := AOptions;
   FCancellation := ACancellation;
   FNames := TNyxTextIndex.Create;
+  FStructures := TNyxTextIndex.Create;
   FActiveArm := -1;
   try
     FLexical := NewNyxPascalLexicalSnapshot(ASource, AOptions.LexicalOptions, ACancellation);
@@ -565,6 +587,7 @@ end;
 
 destructor TSyntaxSnapshot.Destroy;
 begin
+  FStructures.Free;
   FNames.Free;
   inherited Destroy;
 end;
@@ -781,7 +804,7 @@ end;
 
 function TSyntaxSnapshot.AddDeclaration(AScope: Integer;
   AKind: TNyxPascalSyntaxDeclarationKind; AVisibility: TNyxPascalSyntaxVisibility;
-  AName: Integer; AOperator: TNyxPascalOperatorKind): Integer;
+  AName: Integer; AOperator: TNyxPascalOperatorKind; AAnonymous: Boolean): Integer;
 var
   LToken: TNyxPascalToken;
   LKey: TNyxText;
@@ -801,7 +824,11 @@ begin
     SetLength(FDeclarations, Capacity(Result, FOptions.MaximumDeclarations));
   end;
 
-  if AOperator = pokNone then
+  if AAnonymous then
+  begin
+    FDeclarations[Result].FName := '';
+  end
+  else if AOperator = pokNone then
   begin
     FDeclarations[Result].FName := FLexical.Identifier(FTokens[AName]);
   end
@@ -821,6 +848,7 @@ begin
   FDeclarations[Result].FVariantArm := -1;
   FDeclarations[Result].FFirstHint := -1;
   FDeclarations[Result].FLastHint := -1;
+  FDeclarations[Result].FAnonymous := AAnonymous;
 
   if (AKind = psdkField) and (FActiveArm >= 0) and
     (FSelectors[FArms[FActiveArm].SelectorIndex].RecordScope = AScope) then
@@ -844,6 +872,11 @@ begin
   end;
   FScopes[AScope].FLast := Result;
   Inc(FScopes[AScope].FCount);
+
+  if AAnonymous then
+  begin
+    Exit;
+  end;
   LKey := TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(FDeclarations[Result].Name);
 
   if AOperator <> pokNone then
@@ -1211,14 +1244,132 @@ begin
   end;
 end;
 
+procedure TSyntaxSnapshot.StructuredBody(AScope, AOwner: Integer);
+var
+  LMemberScope: Integer;
+  LAncestor: Integer;
+  LParentArm: Integer;
+begin
+  Enter;
+  LParentArm := FActiveArm;
+  FActiveArm := -1;
+  try
+    Step;
+
+    if Word(pkwSealed) or Word(pkwAbstract) then
+    begin
+      Step;
+    end;
+
+    if Sym(psoSemicolon) then
+    begin
+      Include(FDeclarations[AOwner].FFlags, psdfForward);
+      Exit;
+    end;
+
+    if Sym(psoOpenParen) then
+    begin
+      LAncestor := FPosition;
+      Groups(psoOpenParen, psoCloseParen);
+      FDeclarations[AOwner].FAncestorSpan := Range(LAncestor, FPosition);
+    end;
+    LMemberScope := AddScope(psskMembers, AScope, AOwner, Tok.Span.Start,
+      FDeclarations[AOwner].Name);
+    FDeclarations[AOwner].FNestedScope := LMemberScope;
+
+    if (FDeclarations[AOwner].TypeForm = pstfClass) and Sym(psoSemicolon) then
+    begin
+      { Delphi's empty descendant spelling class(TAncestor) has no end. }
+      FScopes[LMemberScope].FComplete := True;
+      FScopes[LMemberScope].FSpan := NyxPascalSpan(Tok.Span.Start, 0);
+    end
+    else
+    begin
+      Declarations(LMemberScope, psavUnspecified, True);
+
+      if Word(pkwEnd) then
+      begin
+        Step;
+        FinishScope(LMemberScope, True);
+      end
+      else
+      begin
+        Include(FDeclarations[AOwner].FFlags, psdfIncomplete);
+        Problem(psiUnclosedScope, 'Finish this structured type with end', Tok.Span);
+        FinishScope(LMemberScope, False);
+      end;
+    end;
+  finally
+    FActiveArm := LParentArm;
+    Leave;
+  end;
+end;
+
+procedure TSyntaxSnapshot.TypeExpression(AScope: Integer;
+  AVisibility: TNyxPascalSyntaxVisibility; AStop: TNyxPascalSymbol; AArmEnd: Boolean);
+var
+  LStart: Integer;
+  LBodyStart: Integer;
+  LOwner: Integer;
+begin
+  LStart := FPosition;
+  while not EOF and not Sym(AStop) and not Sym(psoSemicolon) and
+    not Sym(psoEqual) and not Sym(psoAssign) and
+    not (AArmEnd and Sym(psoCloseParen)) and not Word(pkwEnd) and
+    not Word(pkwImplementation) and not Word(pkwBegin) do
+  begin
+
+    if AtHint(LStart) or ((FPosition > LStart) and
+      (Tok.Word in [pkwType, pkwVar, pkwThreadvar, pkwConst, pkwResourcestring,
+        pkwInitialization, pkwFinalization])) then
+    begin
+      Break;
+    end;
+    LBodyStart := FPosition;
+
+    if Word(pkwPacked) and (Word(pkwRecord, 1) or Word(pkwObject, 1)) then
+    begin
+      Step;
+    end;
+
+    { A method pointer's of object is a qualifier, not an anonymous body. }
+
+    if Word(pkwRecord) or (Word(pkwObject) and not Word(pkwOf, -1)) or
+      Word(pkwInterface) or Word(pkwDispinterface) or
+      (Word(pkwClass) and not Word(pkwOf, 1)) then
+    begin
+      LOwner := AddDeclaration(AScope, psdkType, AVisibility, FPosition, pokNone, True);
+      FDeclarations[LOwner].FForm := Form;
+      StructuredBody(AScope, LOwner);
+      FDeclarations[LOwner].FTypeSpan := Range(LBodyStart, FPosition);
+      FDeclarations[LOwner].FHeaderSpan := FDeclarations[LOwner].TypeSpan;
+      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LOwner].TypeSpan.Start)), LOwner);
+    end
+    else if Sym(psoOpenParen) then
+    begin
+      Groups(psoOpenParen, psoCloseParen);
+    end
+    else if Sym(psoOpenBracket) then
+    begin
+      Groups(psoOpenBracket, psoCloseBracket);
+    end
+    else if Sym(psoLess) then
+    begin
+      Angles;
+    end
+    else
+    begin
+      Step;
+    end;
+  end;
+end;
+
 procedure TSyntaxSnapshot.ParseType(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
 var
   LEntry: Integer;
   LStart: Integer;
   LTypeStart: Integer;
   LGenericStart: Integer;
-  LAncestor: Integer;
-  LMemberScope: Integer;
   LEnum: Integer;
   LForm: TNyxPascalSyntaxTypeForm;
 begin
@@ -1264,53 +1415,7 @@ begin
 
     if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
     begin
-      Step;
-
-      if Word(pkwSealed) or Word(pkwAbstract) then
-      begin
-        Step;
-      end;
-
-      if Sym(psoSemicolon) then
-      begin
-        Include(FDeclarations[LEntry].FFlags, psdfForward);
-      end
-      else
-      begin
-
-        if Sym(psoOpenParen) then
-        begin
-          LAncestor := FPosition;
-          Groups(psoOpenParen, psoCloseParen);
-          FDeclarations[LEntry].FAncestorSpan := Range(LAncestor, FPosition);
-        end;
-        LMemberScope := AddScope(psskMembers, AScope, LEntry, Tok.Span.Start,
-          FDeclarations[LEntry].Name);
-        FDeclarations[LEntry].FNestedScope := LMemberScope;
-
-        if (LForm = pstfClass) and Sym(psoSemicolon) then
-        begin
-          { Delphi's empty descendant spelling class(TAncestor) has no end. }
-          FScopes[LMemberScope].FComplete := True;
-          FScopes[LMemberScope].FSpan := NyxPascalSpan(Tok.Span.Start, 0);
-        end
-        else
-        begin
-          Declarations(LMemberScope, psavUnspecified, True);
-
-          if Word(pkwEnd) then
-          begin
-            Step;
-            FinishScope(LMemberScope, True);
-          end
-          else
-          begin
-            Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
-            Problem(psiUnclosedScope, 'Finish this structured type with end', Tok.Span);
-            FinishScope(LMemberScope, False);
-          end;
-        end;
-      end;
+      StructuredBody(AScope, LEntry);
     end
     else if LForm = pstfEnumeration then
     begin
@@ -1358,7 +1463,7 @@ begin
     end
     else
     begin
-      Expression(psoSemicolon, False, True);
+      TypeExpression(AScope, AVisibility, psoSemicolon);
 
       if LForm = pstfRoutine then
       begin
@@ -1366,6 +1471,11 @@ begin
       end;
     end;
     FDeclarations[LEntry].FTypeSpan := Range(LTypeStart, FPosition);
+
+    if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
+    begin
+      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LEntry].TypeSpan.Start)), LEntry);
+    end;
     DeclarationHints(LEntry);
     Separator;
     FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
@@ -1679,33 +1789,7 @@ begin
     end
     else
     begin
-      while not EOF and not Sym(psoSemicolon) and not Sym(psoEqual) and
-        not Sym(psoAssign) and not SectionBoundary(Tok.Word) and
-        not (AArmEnd and Sym(psoCloseParen)) do
-      begin
-
-        if AtHint(LType) then
-        begin
-          Break;
-        end;
-
-        if Sym(psoOpenParen) then
-        begin
-          Groups(psoOpenParen, psoCloseParen);
-        end
-        else if Sym(psoOpenBracket) then
-        begin
-          Groups(psoOpenBracket, psoCloseBracket);
-        end
-        else if Sym(psoLess) then
-        begin
-          Angles;
-        end
-        else
-        begin
-          Step;
-        end;
-      end;
+      TypeExpression(AScope, AVisibility, psoSemicolon, AArmEnd);
     end;
     LTypeSpan := Range(LType, FPosition);
   end
@@ -1743,7 +1827,8 @@ begin
     end;
   end;
 
-  if not (AArmEnd and Sym(psoCloseParen)) then
+  if not (AArmEnd and Sym(psoCloseParen)) and
+    not ((AKind = psdkField) and Word(pkwEnd)) then
   begin
     Separator;
   end;
@@ -1769,19 +1854,7 @@ begin
   begin
     Step;
     LType := FPosition;
-    while not EOF and not Sym(psoEqual) and not Sym(psoSemicolon) and
-      not SectionBoundary(Tok.Word) do
-    begin
-
-      if Sym(psoOpenBracket) then
-      begin
-        Groups(psoOpenBracket, psoCloseBracket);
-      end
-      else
-      begin
-        Step;
-      end;
-    end;
+    TypeExpression(AScope, AVisibility, psoEqual);
     FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
   end;
 
@@ -2984,6 +3057,16 @@ begin
     raise ENyxPascalLexical.Create('Declaration hint index is outside its syntax snapshot');
   end;
   Result := FHints[AIndex];
+end;
+
+function TSyntaxSnapshot.TypeAt(AStart: Integer): Integer;
+begin
+
+  if (AStart < 0) or (AStart > FLexical.Scalars) then
+  begin
+    raise ENyxPascalLexical.Create('Structured type position is outside its syntax snapshot');
+  end;
+  Result := FStructures.IndexOf(TNyxText(IntToStr(AStart)));
 end;
 
 function TSyntaxSnapshot.ImportCount: Integer;

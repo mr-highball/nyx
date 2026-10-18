@@ -2627,11 +2627,29 @@ var
   LContext: INyxPascalCompilerContext;
   LOrigin: Integer;
   LCurrent: Integer;
+  LDeclaredSyntax: INyxPascalDeclaredTypeSyntax;
 
 begin
   Enter;
   try
     LNode := AType.Node(ANode);
+
+    if LNode.Kind = ptxStructured then
+    begin
+
+      if not Supports(AType, INyxPascalDeclaredTypeSyntax, LDeclaredSyntax) or
+        (LDeclaredSyntax.Declarations <> FWorld.ModuleAt(ASite.ModuleIndex).Syntax) then
+      begin
+        raise ENyxPascalBinding.Create('This structured type belongs to another declared source');
+      end;
+      LAt := LDeclaredSyntax.DeclarationOf(ANode);
+
+      if LAt < 0 then
+      begin
+        Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      end;
+      Exit(TypeOfSymbol(InEnvironment(FWorld.Symbol(ASite.ModuleIndex, LAt), FEnvironment)));
+    end;
 
     if LNode.Kind in [ptxName, ptxQualified] then
     begin
@@ -3330,7 +3348,8 @@ begin
     begin
       Tick;
 
-      if LSyntax.Declaration(LDeclaration).OperatorKind <> pokNone then
+      if (LSyntax.Declaration(LDeclaration).OperatorKind <> pokNone) or
+        LSyntax.Declaration(LDeclaration).Anonymous then
       begin
         LDeclaration := LSyntax.Declaration(LDeclaration).Next;
         Continue;

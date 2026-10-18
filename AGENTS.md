@@ -4,7 +4,35 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source variant records retain typed selectors/arms/labels, real tag
+Current-source anonymous structured types have owned unnamed declaration identity
+and member scopes, shared by grouped declarations and independent across nested
+bodies. Optional source-position/type-leaf capabilities retain exact immutable
+owners through ordinary arrays/aliases/generic environments/member completion;
+standalone bodies without context still refuse. New-body variant ownership resets,
+method-pointer of object stays a qualifier and final record fields may omit their
+semicolon. Native portable/whole compiled source/actual Windows pass 52/34/26,
+clean heaps. Windows retains 29,823 declarations/zero supported declaration
+diagnostics, 58 selectors/138 arms/153 labels/eleven hints; exact anonymous member
+chains and ready wYear completion/navigation retain original include tokens.
+Whole SDK quota is explicitly 100,000; default 16,384 is unchanged. Actual inspected
+field type meaning still refuses missing ObjPas without synthetic exports.
+Maintained 18/22/367/7,632/62/127/10/48/86/74/84 pass; fourteen native consumers
+have clean heaps. Twenty-two accepted final logs have zero owned warnings
+(42 upstream); four browser consumers and both Studios/backend/worker compile only
+as applicable. Twenty focused/627 complete src+studio Pascal/include/program/97
+RTL/three compiler pins, 48 include packets, five protected files/nine contexts and
+349 frozen 7422453 artifacts remain exact. Readers join; LAN is offline. Original
+interfaces/GUIDs and MCP tool/schema inventory are unchanged; capabilities operate
+in process. WORK.md owns retained quota/semicolon/fixture/refusal preparations and
+final source/remote identity. At least eleven documented unclosed batches retain
+full criterion two; no original criterion/task/counter/credit/DONE/tool/schema/
+adoption/parity/delivery closes. Stop anonymous-record/pointer/fixture/compiler/
+capture variants. Next supply actual implicit-unit roots/context through existing
+indexed dependency ownership, then reassess genuine ObjPas/System/Windows/SysUtils
+and full resolver/editor gates. No HTTP retry, protected mutation, cleanup/deletion/
+restart bypass or sub-agents. Preserve concurrent planning files.
+
+Earlier variant records retain typed selectors/arms/labels, real tag
 fields, nested relationships and ordinary record member scope with per-field arm
 metadata. Optional hint syntax separates closed hint intent/ordered messages from
 type/value expressions; grouped declarations own independent links. Aggregate

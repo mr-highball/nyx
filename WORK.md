@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Variant records and declaration hints — 2026-10-18
+## Current integration: Anonymous structured type ownership — 2026-10-18
+
+Previous turn is progress: pushed ad308b0 retains variant records/hints and
+exposes INPUT_RECORD's actual inline Event body. This batch follows that source
+ownership/boundary prerequisite under original authoring criterion two. The
+documented consecutive unclosed lower bound is at least eleven, with older evidence
+retained. Full fresh MIT Nyx-owned resolver scope, incremental/project-scale work,
+ordinary Studio adoption and complete input/navigation/quality/parity/delivery
+remain required. No original criterion/task/counter/credit/DONE, new tool/schema
+or rollout closes. Solo; no HTTP/browser/file-protocol execution/capture, protected
+mutation, cleanup/deletion/restart or approval bypass occurs. Builds/evidence stay
+on the provisioned scratch drive; concurrent planning files remain separate.
+
+Anonymous bodies now have ordinary owned type declarations/member scopes, with
+Anonymous=True, an empty Name and the actual structured keyword as NameSpan.
+Grouped declarations share one expression/type identity; nested bodies retain
+distinct identities. They never enter named lookup or ordinary member suggestions.
+Named and inline types share body grammar; independent variant scope is restored
+on entry/exit. Method-pointer of object stays a qualifier, and a final record field
+may omit its semicolon before end. No invented Pascal name, layout/offset or
+canonical assignment compatibility follows from these declared identities.
+
+Optional INyxPascalStructuredSyntax indexes exact body starts (including packing).
+NewNyxPascalDeclaredTypeSyntax owns its actual declaration snapshot and emits
+ptxStructured leaves linked by optional INyxPascalDeclaredTypeSyntax. It never
+relexes a copied body. Standalone scanning still refuses bodies without context.
+The binder checks source ownership and follows ordinary declared types through
+arrays/aliases, nested members and concrete generic environments. Existing world,
+visibility, cancellation and query guards remain; no reference cycle points back
+from a snapshot to a type/world/editor. Original interfaces/GUIDs and MCP tool/
+schema inventory remain unchanged; new optional capabilities operate in process.
+
+Accepted composite evidence is in the ignored anonymous-types-20261018-051232
+packet, located by .local/anonymous-types-paths-private.json:
+
+- Fifty-two native portable checks qualify shared grouped identities, independent
+  nested/packed-array/generic/constant bodies, ordinary pages, exact source leases,
+  method-pointer separation, variant ownership reset and stale-world refusal.
+  Existing completion follows an ordinary anonymous local receiver. Unclosed
+  bodies, scope quotas and cancellation retain atomic refusal.
+- Thirty-four whole handwritten native compiler/source checks execute grouped,
+  nested, packed-array, generic, local and typed-constant record access in Delphi
+  mode, returning 44. An actual configured compiler probe supplies analysis context.
+  Original unit/include identities remain exact after supplementary Unicode.
+  The controlled symbolic world qualifies declared shapes separately from full
+  actual System/ObjPas/import/target meaning.
+- Twenty-six unchanged actual Windows checks retain 498,239 tokens/23 visits and
+  zero translation diagnostics. Syntax advances from 10,571/12 declarations/
+  diagnostics to 29,823/zero, with 58 selectors/138 arms/153 labels and eleven hints.
+  Native access and exact source inspection follow INPUT_RECORD.Event.KeyEvent.
+  wVirtualKeyCode. Ordinary indexed completion loads Windows once beside its
+  consumer and returns wYear with exact physical navigation after provider release.
+  This explicit whole-SDK analysis uses a 100,000-entry quota; the editor's 16,384
+  default remains unchanged. Actual field type binding still refuses missing
+  ObjPas under compiler-unit lookup policy, without replacement implicit exports.
+  Zero declaration diagnostics do not establish complete SDK/type/call meaning.
+- Maintained native operator/variant/types/syntax/binding/generic/conditional/
+  dependency/owned checks pass 18/22/367/7,632/62/127/10/48/86. The syntax corpus
+  remains five actual inputs/3,727 declarations. Configured compiler/profile and
+  production in-process semantic completion pass 74/84, retaining their actual
+  import/conditional prerequisites. Counts overlap earlier evidence. All fourteen
+  accepted native consumers have clean heaps.
+- Twenty-two final compiler logs have zero owned warnings and 42 upstream pas2js
+  RTL warnings. Four browser consumers and both Studios/backend/worker compile
+  as applicable. Browser products/consumers execute nowhere here; no HTTP/
+  authenticated/observing/input or full parity claim follows from compilation.
+- Twenty focused pins, all 627 src/studio Pascal/include/program files, 97 original
+  RTL inputs and three configured compiler inputs remain exact after final readers.
+  All 48 exported SysUtils include packets match original bytes. Five protected
+  files/nine complete contexts and 349 frozen 7422453 artifacts remain exact.
+  Reader/compiler groups join; no Studio listener remains and LAN stays offline.
+  Final compiler/native/input/include/protected receipts and the final checkpoint
+  own source/remote identity. Native Nyx chat tools remain absent; no host retry or
+  configuration mutation occurs to refresh them.
+
+Retained preparations are not accepted final evidence. The first whole Windows
+read correctly exhausted the smaller default quota after reaching later SDK
+declarations. With an explicit whole-unit quota it reached 29,823 declarations and
+revealed a legal omitted final-field semicolon plus the obsolete incomplete-source
+completion expectation. The field boundary is repaired; final completion now
+asserts its actual ready result and navigation. The first portable consumer used
+nonexistent DisplayText and lacked the scalar helper's unit; both fixture issues
+remain retained. Final ledgers select only the frozen final compiler/source batch;
+no uninterrupted historical-green or full SDK/compiler parity claim is made.
+
+Next useful deliverable: supply actual compiler implicit-unit roots/context through
+the existing indexed dependency loader so inspected field types bind past ObjPas.
+Use the genuine System/ObjPas inputs and reassess the actual Windows/SysUtils
+continuation, retaining SysUtils's six semantic conditions and complete language/
+canonical/expression meaning, incremental budgets and ordinary editor/input/
+navigation/quality/parity/delivery. Stop anonymous-record/pointer/fixture/compiler/
+capture variants. No user decision is missing and no original scope is narrowed.
+
+## Previous integration: Variant records and declaration hints — 2026-10-18
 
 Previous turn is progress: pushed 1de68c7 retains typed record operators and
 exposes the real variant-field/hint prerequisite. This batch follows that boundary

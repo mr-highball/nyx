@@ -49,9 +49,16 @@ original authoring criterion two; WORK.md owns evidence and the next prerequisit
 The [variant-record continuation](../docs/pascal-projects.md#variant-records-and-declaration-hints)
 now retains selectors/arms/labels, ordinary field membership and typed hints with
 compiled handwritten interaction and exact actual Windows record origins. The
-next anonymous structured-field boundary and full grammar/SDK/editor/parity/
-delivery requirements remain under original authoring criterion two; WORK.md
+subsequent anonymous structured-field continuation and full grammar/SDK/editor/
+parity/delivery requirements remain under original authoring criterion two; WORK.md
 owns evidence without original completion credit or default editor adoption.
+
+The [anonymous-type continuation](../docs/pascal-projects.md#anonymous-structured-type-ownership)
+now gives inline bodies owned unnamed identity and member scopes through existing
+type/binding/completion consumers. Whole compiled input and ordinary real Windows
+wYear suggestions/navigation qualify that boundary. Implicit-unit/type meaning,
+full language/editor/parity/delivery remain under original authoring criterion two;
+WORK.md owns receipts without original completion credit or default adoption.
 
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include

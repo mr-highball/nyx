@@ -128,6 +128,7 @@ var
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LName: TNyxText;
   LTime: Windows.TSystemTime;
+  LInput: Windows.INPUT_RECORD;
   LOrigin: TNyxPascalSyntaxOrigin;
   LOriginAt: Integer;
   LPrefix: TNyxText;
@@ -150,6 +151,9 @@ var
 begin
   LTime.wYear := 2026;
   Check(LTime.wYear = 2026, 'The selected native SDK exposes and executes its actual record member');
+  LInput.Event.KeyEvent.wVirtualKeyCode := 65;
+  Check(LInput.Event.KeyEvent.wVirtualKeyCode = 65,
+    'The configured native SDK executes its original anonymous record member chain');
   LCapture := CaptureNyxPascalSourceDirectory(ASource + '/rtl/win32',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
     TNyxPascalDirectoryOptions.Defaults.Under('rtl/win32'));
@@ -188,11 +192,14 @@ begin
       ' / ', NyxPascalOccurrenceLexical(LSource, LDiagnostic.Occurrence).Slice(LDiagnostic.Span));
     Check(LDiagnostic.Issue <> ptiMissingInclude, 'Every visited Windows include is explicitly captured');
   end;
-  LView := NewNyxPascalTranslatedSyntax(LSource, TNyxPascalSyntaxOptions.Defaults);
+  { The complete SDK now reaches declarations beyond INPUT_RECORD. Give this
+    explicit whole-unit analysis its own bounded quota; editor defaults stay put. }
+  LView := NewNyxPascalTranslatedSyntax(LSource,
+    TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
   WriteLn('actual Windows syntax / declarations=', LView.Syntax.DeclarationCount,
     ' diagnostics=', LView.Syntax.DiagnosticCount, ' complete translation=', LView.CompleteTranslation);
   Check(LSource.Resolved and LView.CompleteTranslation and
-    (LView.Syntax.DeclarationCount > 7000),
+    (LView.Syntax.DeclarationCount > 7000) and (LView.Syntax.DiagnosticCount = 0),
     'Whole real Windows translation reaches declared syntax without replacement SDK exports');
   LAt := LView.Syntax.Named(0, 'BFFCALLBACK');
   LCallback := LView.TypeOfDeclaration(LAt, TNyxPascalTypeOptions.Defaults);
@@ -257,6 +264,31 @@ begin
   WriteLn('actual Windows metadata / selectors=', LVariantSyntax.SelectorCount,
     ' arms=', LVariantSyntax.ArmCount, ' labels=', LVariantSyntax.LabelCount,
     ' hints=', LHintSyntax.HintCount);
+  LAt := LView.Syntax.Named(0, 'INPUT_RECORD');
+  LRecordType := LOperatorWorld.TypeOfSymbol(LOperatorWorld.Symbol(0, LAt)).BoundType;
+  LOperatorReply := LOperatorWorld.Member(LRecordType,
+    LOperatorWorld.At(0, 0, LView.Syntax.Lexical.Scalars), NyxPascalBindingName('Event'));
+  LRecordType := LOperatorWorld.TypeOfSymbol(LOperatorReply.SymbolAt(0)).BoundType;
+  Check((LRecordType.Kind = pstDeclared) and LRecordType.Definition.Declaration.Anonymous and
+    (LRecordType.Definition.Declaration.Name = ''),
+    'The exact SDK Event body retains anonymous declared identity without a synthetic export');
+  LOperatorReply := LOperatorWorld.Member(LRecordType,
+    LOperatorWorld.At(0, 0, LView.Syntax.Lexical.Scalars), NyxPascalBindingName('KeyEvent'));
+  LRecordType := LOperatorWorld.TypeOfSymbol(LOperatorReply.SymbolAt(0)).BoundType;
+  LOperatorReply := LOperatorWorld.Member(LRecordType,
+    LOperatorWorld.At(0, 0, LView.Syntax.Lexical.Scalars), NyxPascalBindingName('wVirtualKeyCode'));
+  Check((LOperatorReply.Status = pbsBound) and (LOperatorReply.Count = 1),
+    'Ordinary binding follows the unchanged SDK anonymous/named member chain');
+  LOrigin := LOperatorReply.SymbolAt(0).Origin;
+  Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/win/wininc/struct.inc')) and
+    (LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan) = TNyxText('wVirtualKeyCode')),
+    'The final SDK member retains its exact physical include/token origin');
+  LOperatorReply := LOperatorWorld.TypeOfSymbol(LOperatorReply.SymbolAt(0));
+  WriteLn('actual Windows field-type frontier / status=', Ord(LOperatorReply.Status),
+    ' issue=', Ord(LOperatorReply.Issue), ' related=', LOperatorReply.RelatedName);
+  Check((LOperatorReply.Status = pbsUnresolved) and (LOperatorReply.Issue = pbiMissingModule) and
+    (LOperatorReply.RelatedName = TNyxText('ObjPas')),
+    'Actual field type meaning still requires the uncaptured compiler implicit unit');
   for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
   begin
 
@@ -277,7 +309,8 @@ begin
   LProvider := NewNyxIndexedPascalCompletionProvider(LContext, LFiles,
     LCapture.Modules.WithModule(LCapture.Modules.Entry(
       LCapture.Modules.Find(NyxPascalModule('Windows'))).InContext(LContext, LOptions)),
-    TNyxOwnedPascalCompletionOptions.Defaults.WithTranslation(LOptions).UpToTokens(4000000));
+    TNyxOwnedPascalCompletionOptions.Defaults.WithTranslation(LOptions)
+      .WithSyntax(TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000)).UpToTokens(4000000));
   LPrefix := 'unit Consumer; {$mode delphi} interface uses Windows; implementation ' +
     'procedure Run; var Clock:TSystemTime; begin Clock.wY';
   LSources := CaptureNyxPascalSources(NewNyxPascalProject(NyxPascalUnit('Consumer'),
@@ -287,15 +320,20 @@ begin
     .At(TNyxPascalSourceRef.Main, NyxTextScalarCount(LPrefix)));
   Check(Supports(LReply, INyxOwnedPascalCompletionResult, LMetadata) and
     Supports(LReply, INyxPascalCompletionAnalysis, LReceipt),
-    'Actual SDK completion retains the ordinary typed refusal and loaded-source receipt');
+    'Actual SDK completion retains typed analysis detail and its loaded-source receipt');
   WriteLn('actual Windows completion / status=', Ord(LReply.Status),
     ' gap=', Ord(LMetadata.Gap), ' issue=', Ord(LMetadata.BindingIssue),
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads);
-  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBinding) and
-    (LMetadata.BindingIssue = pbiIncompleteSource) and (LReceipt.ModuleCount = 2) and
+  Check((LReply.Status = pcsReady) and (LReply.Count = 1) and
+    (LReply.Item(0).Name = TNyxText('wYear')) and (LMetadata.Gap = pcgNone) and
+    (LMetadata.BindingIssue = pbiNone) and (LReceipt.ModuleCount = 2) and
     (LReceipt.DependencyLoads = 1),
-    'Ordinary loading retains the anonymous structured-field boundary as incomplete source without inventing SDK exports');
+    'Ordinary indexed completion reaches the actual Windows wYear declaration after one real SDK load');
+  LProvider := nil;
+  Check((LMetadata.Definition(0).FileReference.Name = TNyxText('rtl/win/wininc/struct.inc')) and
+    (LMetadata.DefinitionSource(0).Slice(LMetadata.Definition(0).Span) = TNyxText('wYear')),
+    'Ordinary completion navigation retains the exact original SDK token after provider retirement');
 end;
 
 begin

@@ -36,7 +36,8 @@ type
   TNyxPascalTypeKind = (ptxMissing, ptxName, ptxQualified, ptxGeneric, ptxPointer,
     ptxArray, ptxSet, ptxFile, ptxString, ptxClassOf, ptxProcedure, ptxFunction,
     ptxReference, ptxDistinct, ptxParameterGroup, ptxParameterName, ptxUntyped,
-    ptxBound, ptxSubrange, ptxEnumeration, ptxEnumMember, ptxUnsupported);
+    ptxBound, ptxSubrange, ptxEnumeration, ptxEnumMember, ptxUnsupported,
+    ptxStructured);
   { Typed child intent. Ordinals and links are local to one immutable arena;
     they confer neither declaration visibility nor an editing capability. }
   TNyxPascalTypeRole = (ptrRoot, ptrBase, ptrMember, ptrArgument, ptrPointee,
@@ -67,6 +68,7 @@ type
     FMode: TNyxPascalSyntaxParameterMode;
     FConvention: TNyxPascalCallingConvention;
     FFlags: TNyxPascalTypeFlags;
+    FDeclaration: Integer;
   public
     property Kind: TNyxPascalTypeKind read FKind;
     property Role: TNyxPascalTypeRole read FRole;
@@ -131,6 +133,15 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalTypeDiagnostic;
   end;
+  { Optional declared-source lease for structured leaves. Their bodies/members
+    belong to this exact immutable declaration snapshot, never a copied parser
+    or synthetic type name. DeclarationOf returns -1 on other nodes; Declarations
+    is nil for standalone type syntax. There is no reverse reference or UI borrow. }
+  INyxPascalDeclaredTypeSyntax = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570D02}']
+    function Declarations: INyxPascalSyntaxSnapshot;
+    function DeclarationOf(ANode: Integer): Integer;
+  end;
 
 { Parse an exact scalar window without copying/relexing its text. Bounds cannot
   cut a significant token. Nested generic closers split >> and >= contextually;
@@ -140,15 +151,24 @@ function NewNyxPascalTypeSyntax(const ALexical: INyxPascalLexicalSnapshot;
   const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
 
+{ Read a type window in its actual declared-source owner. Structured leaves use
+  the owner's checked body/scope identity and existing grammar diagnostics. Names
+  remain unbound; full compiler eligibility/layout is not inferred. The original
+  standalone factory keeps refusing bodies without this explicit source context. }
+function NewNyxPascalDeclaredTypeSyntax(const ADeclarations: INyxPascalSyntaxSnapshot;
+  const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
+
 implementation
 
 type
   { Builder owns an immutable lexical snapshot, local ordinal vectors and a
     temporary cancellation lease. Partial compound symbols are cursor state only;
     no source token is mutated or shared with another parser. }
-  TTypeSyntax = class(TInterfacedObject, INyxPascalTypeSyntax)
+  TTypeSyntax = class(TInterfacedObject, INyxPascalTypeSyntax, INyxPascalDeclaredTypeSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
+    FDeclarations: INyxPascalSyntaxSnapshot;
     FWindow: TNyxPascalSpan;
     FOptions: TNyxPascalTypeOptions;
     FTokens: array of Integer;
@@ -166,7 +186,7 @@ type
     function AtEnd: Boolean;
     function Tok: TNyxPascalToken;
     function Sym(AValue: TNyxPascalSymbol): Boolean;
-    function Word(AValue: TNyxPascalWord): Boolean;
+    function Word(AValue: TNyxPascalWord; ALookAhead: Integer = 0): Boolean;
     function NameToken: Boolean;
     function Key: TNyxText;
     function Offset: Integer;
@@ -180,6 +200,7 @@ type
     function ParseType: Integer;
     function ParseName: Integer;
     function ParseRoutine: Integer;
+    function ParseStructure(AStart: Integer): Integer;
     procedure Parameters(AParent: Integer);
     function Bound(AStop: TNyxPascalSymbol; AComma, ARange: Boolean): Integer;
     function Convention(out AConvention: TNyxPascalCallingConvention): Boolean;
@@ -187,7 +208,8 @@ type
   public
     constructor Create(const ALexical: INyxPascalLexicalSnapshot;
       const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope;
+      const ADeclarations: INyxPascalSyntaxSnapshot = nil);
     function Lexical: INyxPascalLexicalSnapshot;
     function Window: TNyxPascalSpan;
     function Root: Integer;
@@ -198,6 +220,8 @@ type
       AOrdinal: Integer): Integer;
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalTypeDiagnostic;
+    function Declarations: INyxPascalSyntaxSnapshot;
+    function DeclarationOf(ANode: Integer): Integer;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -251,7 +275,7 @@ end;
 
 constructor TTypeSyntax.Create(const ALexical: INyxPascalLexicalSnapshot;
   const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
-  const ACancellation: INyxCancellationScope);
+  const ACancellation: INyxCancellationScope; const ADeclarations: INyxPascalSyntaxSnapshot);
 begin
   inherited Create;
   AOptions.Validate;
@@ -261,6 +285,7 @@ begin
     raise ENyxPascalLexical.Create('A type window needs an exact lexical source range');
   end;
   FLexical := ALexical;
+  FDeclarations := ADeclarations;
   FWindow := AWindow;
   FOptions := AOptions;
   FCancellation := ACancellation;
@@ -331,9 +356,19 @@ begin
   end;
 end;
 
-function TTypeSyntax.Word(AValue: TNyxPascalWord): Boolean;
+function TTypeSyntax.Word(AValue: TNyxPascalWord; ALookAhead: Integer): Boolean;
+var
+  LAt: Integer;
+  LToken: TNyxPascalToken;
 begin
-  Result := not AtEnd and (Tok.Kind = ptkWord) and (Tok.Word = AValue);
+  LAt := FAt + ALookAhead;
+  Result := False;
+
+  if (LAt >= 0) and (LAt < Length(FTokens)) then
+  begin
+    LToken := FLexical.Token(FTokens[LAt]);
+    Result := (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = AValue);
+  end;
 end;
 
 function TTypeSyntax.NameToken: Boolean;
@@ -403,6 +438,7 @@ begin
   FNodes[Result].FFirst := -1;
   FNodes[Result].FLast := -1;
   FNodes[Result].FNext := -1;
+  FNodes[Result].FDeclaration := -1;
   Inc(FCount);
 end;
 
@@ -850,6 +886,57 @@ begin
   Finish(Result);
 end;
 
+function TTypeSyntax.ParseStructure(AStart: Integer): Integer;
+var
+  LStructures: INyxPascalStructuredSyntax;
+  LAt: Integer;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+begin
+  Result := Add(ptxStructured, AStart);
+
+  if (FDeclarations = nil) or not Supports(FDeclarations, INyxPascalStructuredSyntax, LStructures) then
+  begin
+    Problem(ptiContextRequired, 'A structured type needs its exact declaration owner');
+    Step;
+    Exit;
+  end;
+  LAt := LStructures.TypeAt(AStart);
+
+  if LAt < 0 then
+  begin
+    Problem(ptiContextRequired, 'This structured body is not registered in the declared source');
+    Step;
+    Exit;
+  end;
+  LDeclaration := FDeclarations.Declaration(LAt);
+
+  if LDeclaration.TypeSpan.Finish > FWindow.Finish then
+  begin
+    Problem(ptiExpectedDelimiter, 'The type window cuts its owning structured body');
+    Step;
+    Exit;
+  end;
+  FNodes[Result].FDeclaration := LAt;
+
+  if (LDeclaration.NestedScope < 0) or
+    (LDeclaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported, psdfForward] <> []) then
+  begin
+    Problem(ptiUnsupportedType, 'This structured declaration is incomplete or unsupported');
+  end
+  else if not FDeclarations.Scope(LDeclaration.NestedScope).Complete or
+    FDeclarations.Scope(LDeclaration.NestedScope).UnsupportedSyntax then
+  begin
+    Problem(ptiUnsupportedType, 'This structured member scope is incomplete or unsupported');
+  end;
+  { The declaration parser owns body grammar and nesting budgets. Consume only
+    its exact range; never scan for a convenient end or reparse copied text. }
+  while not AtEnd and (Tok.Span.Start < LDeclaration.TypeSpan.Finish) do
+  begin
+    Step;
+  end;
+  Finish(Result);
+end;
+
 function TTypeSyntax.ParseType: Integer;
 var
   LStart: Integer;
@@ -916,18 +1003,21 @@ begin
       Step;
       Link(Result, ParseType, ptrPointee);
     end
+    else if Word(pkwRecord) or Word(pkwObject) or Word(pkwInterface) or Word(pkwDispinterface) then
+    begin
+      Result := ParseStructure(LStart);
+    end
     else if Word(pkwClass) then
     begin
-      Result := Add(ptxClassOf, LStart);
-      Step;
 
-      if not Word(pkwOf) then
+      if not Word(pkwOf, 1) then
       begin
-        FNodes[Result].FKind := ptxUnsupported;
-        Problem(ptiUnsupportedType, 'Structured class bodies use their declared member scope');
+        Result := ParseStructure(LStart);
       end
       else
       begin
+        Result := Add(ptxClassOf, LStart);
+        Step;
         Step;
         Link(Result, ParseType, ptrTarget);
       end;
@@ -1235,6 +1325,29 @@ function NewNyxPascalTypeSyntax(const ALexical: INyxPascalLexicalSnapshot;
   const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
 begin
   Result := TTypeSyntax.Create(ALexical, AWindow, AOptions, ACancellation);
+end;
+
+function TTypeSyntax.Declarations: INyxPascalSyntaxSnapshot;
+begin
+  Result := FDeclarations;
+end;
+
+function TTypeSyntax.DeclarationOf(ANode: Integer): Integer;
+begin
+  Node(ANode);
+  Result := FNodes[ANode].FDeclaration;
+end;
+
+function NewNyxPascalDeclaredTypeSyntax(const ADeclarations: INyxPascalSyntaxSnapshot;
+  const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+begin
+
+  if ADeclarations = nil then
+  begin
+    raise ENyxPascalLexical.Create('Declared type syntax needs its exact source snapshot');
+  end;
+  Result := TTypeSyntax.Create(ADeclarations.Lexical, AWindow, AOptions, ACancellation, ADeclarations);
 end;
 
 end.

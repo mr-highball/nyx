@@ -1268,10 +1268,10 @@ inline-field and inline-variable callbacks. Its parsed convention maps back to
 the exact included token after supplementary Unicode text. In the complete
 captured Windows unit, the real BFFCALLBACK now has a complete typed stdcall
 signature and physical origin; 78 spurious declarations/diagnostics disappear.
-That checkpoint decreased syntax diagnostics from 110 to 32. The operator
-continuation reached 18; the [variant continuation](#variant-records-and-declaration-hints)
-now retains 12 at an anonymous structured-field boundary. Ordinary indexed completion retains typed
-refusal rather than inventing complete SDK meaning. WORK.md owns exact native
+That checkpoint decreased syntax diagnostics from 110 to 32, followed by 18
+operator and 12 variant issues. The [anonymous continuation](#anonymous-structured-type-ownership)
+now passes the supported whole-Windows declaration grammar and returns its actual
+wYear member. This does not establish complete SDK type meaning. WORK.md owns exact native
 evidence; browser consumers compile only. Full language/context/canonical typing,
 incremental budgets, editor/input/navigation/quality/parity/delivery remain open.
 
@@ -1308,11 +1308,12 @@ uses the existing symbolic compatibility policy, not replacement RTL exports.
 This qualifies declared families/results/origins, not expression overload ranking
 or complete compiler-unit/target semantics.
 
-In the unchanged real Windows source, exact TSize inspection now returns its
+At the operator checkpoint, exact TSize inspection returned its
 typed equality declaration at the original shared include token without supplying
-synthetic System/ObjPas. The full syntax capture advances to 7,614 declarations/
-18 diagnostics, beginning with variant fields and declaration hints. Whole-unit
-indexed completion still refuses unsupported scope. WORK.md owns native compiler/
+synthetic System/ObjPas. Syntax retained 7,614 declarations/18 diagnostics,
+beginning with variant fields and declaration hints; whole-unit indexed completion
+refused unsupported scope. The [anonymous continuation](#anonymous-structured-type-ownership)
+now reaches an actual ready Windows member. WORK.md owns native compiler/
 consumer receipts and retained failures; browser consumers compile only. Full
 grammar/SDK/canonical typing/incremental/editor/input/navigation/quality/parity/
 delivery remain original authoring requirements.
@@ -1351,14 +1352,53 @@ The whole handwritten Delphi-mode unit/include compiles and executes ordinary,
 nested and overlapping ordinal fields under the configured native compiler.
 Its physical include identities and hinted alias remain exact after supplementary
 Unicode. Controlled member pages qualify declared access separately from actual
-compiler storage. The unchanged Windows capture now retains 10,571 declarations,
+compiler storage. That unchanged Windows capture retained 10,571 declarations,
 11 selectors/30 arms/30 labels, ten hints and 12 diagnostics. Exact TRect member
 inspection and BROWSEINFO hint origins pass without replacement implicit units.
-Ordinary indexed loading refuses incomplete source at INPUT_RECORD's anonymous
-Event record. Full anonymous structured-field grammar/import/RTL/canonical/
+Its anonymous Event record boundary is addressed by the
+[anonymous-type continuation](#anonymous-structured-type-ownership). Full remaining grammar/import/RTL/canonical/
 expression meaning, incremental budgets, editor/input/navigation/quality/parity/
 delivery remain original authoring requirements. WORK.md owns native evidence,
 retained failures and browser compilation only.
+
+## Anonymous structured type ownership
+
+Inline bodies now have ordinary type declarations with `Anonymous = True`, an
+empty Name and their original structured keyword as NameSpan. Each owns a member
+scope. Grouped declarations share one expression/type identity; separate nested
+bodies retain distinct identities. They never enter the named lookup index or
+ordinary member suggestion list. This grants no generated Pascal name, storage
+offset or canonical assignment compatibility.
+
+Optional `INyxPascalStructuredSyntax.TypeAt` maps an exact scalar body start,
+including authored packing, to its declaration ordinal. Named bodies use the
+same index/grammar. `NewNyxPascalDeclaredTypeSyntax` reads a window against its
+actual snapshot and emits `ptxStructured` leaves linked through optional
+`INyxPascalDeclaredTypeSyntax`. This retains one immutable source owner rather
+than relexing a copied body. The standalone factory still refuses structured
+bodies without that context. Original interfaces/GUIDs remain unchanged.
+
+The binder checks that source lease before resolving a leaf through its ordinary
+declared type. Arrays, aliases, concrete generic environments and multi-level
+member receivers retain existing lifetime, visibility, world and query-budget
+guards. A new body's variant scope resets independently from its enclosing
+field's arm. Method-pointer `of object` remains a procedural qualifier; a final
+record field may omit its semicolon before end. Incomplete bodies and construction
+limits/cancellation retain explicit refusal. Default editor quotas stay unchanged.
+
+The whole handwritten Delphi-mode compiler input executes grouped, nested,
+packed-array, generic, local and typed-constant record access. Ordinary completion
+also follows an anonymous local receiver. The unchanged Windows input now retains
+29,823 declarations with zero supported declaration-grammar diagnostics, plus
+58 selectors/138 arms/153 labels and eleven hints. Its explicit whole-unit quota
+is 100,000 entries, above the unchanged 16,384 default. Exact INPUT_RECORD.Event.
+KeyEvent member inspection and native compiled access retain original include
+tokens. Indexed completion loads Windows once and returns wYear with its exact
+physical navigation after provider retirement. Resolving the inspected WORD field
+type still refuses the uncaptured ObjPas implicit unit; no replacement exports
+are supplied. Full compiler/import/RTL/canonical/expression meaning, incremental
+budgets and ordinary editor/input/navigation/quality/parity/delivery remain open.
+WORK.md owns exact native evidence and browser compilation only.
 
 ## Scoped name and type binding
 
@@ -1768,17 +1808,16 @@ directory, then selects its two actual shared RTL includes. Forty-seven explicit
 compiler queries leave the future define set open. The unchanged 28-file capture
 translates all 498,239 tokens across 23 include visits with zero translation
 diagnostics. The initial syntax capture contained 7,652 declarations/110 grammar
-diagnostics. The [variant continuation](#variant-records-and-declaration-hints) now retains
-10,571 declarations/12 diagnostics, including callback/operator/variant structure;
+diagnostics. The [anonymous continuation](#anonymous-structured-type-ownership) now retains
+29,823 declarations/zero supported declaration diagnostics;
 this does not establish complete namespace/type meaning.
 
 The same capture feeds ordinary indexed completion with its explicit per-unit
-context/options. The real Windows root loads once beside the consumer, then
-refuses with typed incomplete-source metadata. It no longer reports an uncaptured
-Windows unit or obtains members from export stubs. Handwritten compiled input
-separately executes the real `Windows.TSystemTime.wYear` member; it does not prove
-resolver completion. Remaining grammar diagnostics follow the anonymous Event
-record inside INPUT_RECORD. Full remaining
+context/options and a bounded whole-SDK declaration quota. The Windows root loads
+once beside the consumer and returns its actual wYear suggestion/navigation.
+Handwritten compiled input separately executes TSystemTime and anonymous INPUT_RECORD
+member access. These observations do not prove complete namespace/type meaning:
+the inspected WORD field type still requires uncaptured ObjPas. Full remaining
 grammar, actual implicit System/ObjPas scope and SysUtils's six semantic
 conditions remain original authoring prerequisites. WORK.md owns current receipts,
 retained failures and the return path; browser evidence remains compilation only.

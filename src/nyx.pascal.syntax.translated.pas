@@ -381,7 +381,7 @@ function TTranslatedSyntax.TypeOfDeclaration(AIndex: Integer;
   const AOptions: TNyxPascalTypeOptions;
   const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
 begin
-  Result := NewNyxPascalTypeSyntax(FSyntax.Lexical, FSyntax.Declaration(AIndex).TypeSpan,
+  Result := NewNyxPascalDeclaredTypeSyntax(FSyntax, FSyntax.Declaration(AIndex).TypeSpan,
     AOptions, ACancellation);
 end;
 

@@ -91,8 +91,14 @@ source boundary; expression overload selection and full SDK/editor meaning stay 
 The [variant-record continuation](docs/pascal-projects.md#variant-records-and-declaration-hints)
 now retains selectors, alternatives, field membership and typed declaration hints.
 Ordinary declared-member lookup reaches nested variant fields with exact include
-origins. Compiled examples qualify source behavior; anonymous structured fields,
-full compiler meaning and ordinary editor adoption remain open.
+origins. Compiled examples qualify source behavior; full compiler meaning and
+ordinary editor adoption remain open.
+
+The [anonymous-type continuation](docs/pascal-projects.md#anonymous-structured-type-ownership)
+now gives inline bodies their own unnamed declaration identity and member scope.
+Nested/container/generic fields feed existing member completion and exact original
+navigation. Whole Windows declaration syntax now passes and its wYear completion
+is ready; actual implicit-unit/full type meaning and editor adoption remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
