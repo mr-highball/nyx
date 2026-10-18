@@ -493,6 +493,103 @@ begin
     ' tree-reads=', LTreeReads, ' peak=8 retained=0');
 end;
 
+procedure OrdinalPages;
+const
+  CEdges: array[0..10] of Integer = (0, 1, 3, 4, 15, 16, 63, 64, 255, 256, 1024);
+var
+  LText, LBefore: TNyxText;
+  LBaseLexical, LLeftLexical, LRightLexical: INyxPascalLexicalSnapshot;
+  LBase, LLeft, LRight: INyxPascalSyntaxSnapshot;
+  LWork, LLeftWork: INyxPascalSyntaxOrdinalMetadataWork;
+  LAccess: INyxPascalSyntaxMetadataLookupWork;
+  LAt, LIndex, LMode: Integer;
+  LLookups, LReads, LNodes, LRoots: Integer;
+  LIdentity: IInterface;
+  LRejected: Boolean;
+begin
+  LText := 'unit OrdinalPages; interface const ';
+  for LAt := 0 to 1099 do
+  begin
+    LText := LText + 'Value' + TNyxText(IntToStr(LAt)) + '=' + TNyxText(IntToStr(LAt)) + '; ';
+  end;
+  LText := LText + 'procedure Run(A:Integer); overload; ';
+  LBaseLexical := NewNyxPascalAppendLexical(LText, TNyxPascalLexicalOptions.Defaults);
+  LBase := NewNyxPascalSyntaxFromLexical(LBaseLexical, TNyxPascalSyntaxOptions.Defaults);
+  LBefore := SnapshotText(LBase);
+  Check(Supports(LBase, INyxPascalSyntaxOrdinalMetadataWork, LWork) and
+    (LWork.OrdinalMetadataLookups > 0) and (LWork.OrdinalMetadataPageReads > 0) and
+    (LWork.AllocatedOrdinalPages > 0) and (LWork.CapturedMetadataRoots > 0) and
+    (LWork.OrdinalMetadataDepth >= 6),
+    'Typed ordinal rows grow real persistent pages across four-slot directory levels');
+  LLookups := LWork.OrdinalMetadataLookups;
+  LReads := LWork.OrdinalMetadataPageReads;
+  LNodes := LWork.AllocatedOrdinalPages;
+  LRoots := LWork.CapturedMetadataRoots;
+  for LAt := Low(CEdges) to High(CEdges) do
+  begin
+    LIndex := LBase.Named(0, 'Value' + TNyxText(IntToStr(CEdges[LAt])));
+    Check((LIndex >= 0) and (LBase.Declaration(LIndex).Name =
+      'Value' + TNyxText(IntToStr(CEdges[LAt]))),
+      'Ordinal page growth preserves independently named rows on every boundary');
+  end;
+  for LMode := 0 to 2 do
+  begin
+    LRejected := False;
+    try
+      case LMode of
+        0: LBase.Declaration(-1);
+        1: LBase.Declaration(LBase.DeclarationCount);
+        2: LBase.Declaration(High(Integer));
+      end;
+    except
+      on ENyxPascalLexical do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Negative, next and maximum ordinals cannot wrap into an existing page slot');
+  end;
+  LIndex := LBase.Named(0, 'Run');
+  LIdentity := NyxPascalDeclarationIdentity(LBase, LIndex);
+  LLeftLexical := AppendNyxPascalLexical(LBaseLexical,
+    'procedure Run(A:Byte); overload; implementation end.');
+  LLeft := AppendNyxPascalSyntax(LBase, LLeftLexical, TNyxPascalSyntaxOptions.Defaults);
+  LRightLexical := AppendNyxPascalLexical(LBaseLexical,
+    'procedure Run(A:Word); overload; implementation end.');
+  LRight := AppendNyxPascalSyntax(LBase, LRightLexical, TNyxPascalSyntaxOptions.Defaults);
+  Check((SnapshotText(LLeft) = SnapshotText(NewNyxPascalSyntaxSnapshot(LText +
+    'procedure Run(A:Byte); overload; implementation end.'))) and
+    (SnapshotText(LRight) = SnapshotText(NewNyxPascalSyntaxSnapshot(LText +
+    'procedure Run(A:Word); overload; implementation end.'))) and
+    (SnapshotText(LBase) = LBefore),
+    'Independent ordinal-root siblings preserve exact whole-source meaning and their earlier snapshot');
+  Check((LIdentity <> nil) and (NyxPascalDeclarationIdentity(LBase, LIndex) = LIdentity) and
+    (NyxPascalDeclarationIdentity(LLeft, LIndex) <> LIdentity) and
+    (NyxPascalDeclarationIdentity(LRight, LIndex) <> LIdentity) and
+    (NyxPascalDeclarationIdentity(LLeft, LIndex) <> NyxPascalDeclarationIdentity(LRight, LIndex)),
+    'Typed cached rows still detach before sibling overload-link mutation');
+  Check((LWork.OrdinalMetadataLookups = LLookups) and
+    (LWork.OrdinalMetadataPageReads = LReads) and (LWork.AllocatedOrdinalPages = LNodes) and
+    (LWork.CapturedMetadataRoots = LRoots) and
+    Supports(LBase, INyxPascalSyntaxMetadataLookupWork, LAccess) and
+    (LAccess.RetainedMetadataLookups = 0),
+    'Published ordinal reads and sibling construction change no earlier receipt or retired cache');
+  Check(Supports(LLeft, INyxPascalSyntaxOrdinalMetadataWork, LLeftWork) and
+    (LLeftWork.AllocatedOrdinalPages < LNodes div 10) and
+    (LLeftWork.CapturedMetadataRoots > 0),
+    'A resumed ordinal directory allocates only the affected paths and bounded checkpoint roots');
+  WriteLn('ordinal metadata / lookups=', LLookups, ' reads=', LReads,
+    ' pages=', LNodes, ' roots=', LRoots, ' depth=', LWork.OrdinalMetadataDepth,
+    ' append-pages=', LLeftWork.AllocatedOrdinalPages);
+  LBase := nil;
+  LWork := nil;
+  LAccess := nil;
+  LBaseLexical := nil;
+  Check((LLeft.Declaration(LIndex).NextNamed >= 0) and
+    (LRight.Declaration(LIndex).NextNamed >= 0),
+    'Compound roots retain detached row pages after the source predecessor retires');
+end;
+
 procedure FilterSeams;
 const
   CCases: array[0..7] of TNyxText = (
@@ -678,6 +775,7 @@ begin
     FilterSeams;
     ActualReuse;
     MetadataBranches;
+    OrdinalPages;
     RetainedMetadata;
     Refusals;
     WriteLn('PASS ', GChecks, ' declaration checkpoint checks');

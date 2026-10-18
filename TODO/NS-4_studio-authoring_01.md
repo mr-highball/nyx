@@ -9,7 +9,35 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Direct lexical prerequisite (2026-10-18): the existing fixed-policy scanner now
+Typed ordinal prerequisite (2026-10-18): nine numeric row families now use
+persistent four-slot pages independently of the exact textual indexes. A compound
+checkpoint seals both root families, with payload COW stamps still gating writes.
+Visited/copied/allocated nodes and bounded directory/root application stay admitted;
+no text conversion/search or guessed cost discount replaces numeric access.
+The existing eight-entry lookup optimization uses typed keys within its original
+shared cap; publication retires every execution/cache lease. Native preflights
+pass 4,416 checkpoint and 453 work checks, clean heaps, including six-level growth,
+negative/next/maximum ordinals, exact siblings/retirement and all 413 smaller
+semantic budgets below the actual 414-unit fit. The initial uncached ordinal
+preparation passed functionality but grew 421 to 450 units; preserving the original
+lookup optimization with typed keys corrects that regression before the freeze.
+WORK.md owns retained preparations, two frozen sources, wider/original RTL evidence,
+historical/current-start preservation distinctions and the next owner. Full original
+criterion/task/credit/DONE/editor/input/quality/parity/adoption/delivery remain open.
+The unchanged real RTL advances from round 15 to 19/236,257 translated tokens,
+then retains a failed four-million aggregate gate in syntax-token admission,
+clean heap and no final semantic/indexed result. Stop directory/cache/fixture/
+compiler/oracle/capture variants. Next reassess repeated Tok reads inside Word/
+Sym through existing syntax predicate/cursor owners; one immutable token value
+per predicate must preserve offsets/partial symbols, identity, cancellation and
+actual remaining admission. Original inputs, queries and numeric caps stay exact.
+All 40 maintained native consumers and 81 accepted compiler jobs pass, zero owned
+warnings; browser consumers compile only. Five current-start protected files/nine
+contexts/349 frozen artifacts remain exact. Original/prior concurrent configuration
+failures stay historical and retained, with no original preservation or delivery
+closure. WORK.md and its ignored packet own exact final source/remote identity.
+
+Historical direct lexical prerequisite (2026-10-18): the existing fixed-policy scanner now
 emits final append token/diagnostic rows through a synchronous typed receiver,
 without an intermediate scanner vector, later import or Unicode byte recount.
 Exact scalar/byte/storage origins and source-start/assembly/comment policies stay

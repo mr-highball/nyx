@@ -2488,6 +2488,53 @@ describe actual logical preparation, not CPU time or editor latency. Native
 execution and browser compilation alone do not establish complete source meaning,
 editor integration, input quality, both-target parity, adoption or delivery.
 
+## Typed ordinal metadata storage
+
+The syntax constructor stores its nine ordinal row families separately from
+true name/structure indexes. Checked numeric ordinals select two bits per level
+in immutable four-slot pages. Leaf slots hold typed row payload leases; branch
+slots hold child pages. Numeric row access performs no decimal-key conversion or
+text-tree traversal. The name/structure indexes retain their exact namespaced
+text keys and balanced-tree ordering; declaration order remains explicit ordinals.
+
+A checkpoint now owns a compound immutable root containing the text root and
+nine ordinal roots. Each directory is independently copied under bounded node
+admission, without traversing all retained rows or retaining a predecessor/parser.
+Changing one ordinal prepares only its affected page path, then admits the root
+application before updating the constructing map. Every actual page visit and
+allocation remains admitted. A page clone has exactly four interface slots;
+the compound root has a closed nine-row-root directory plus the text root.
+These are bounded node operations, not guessed work discounts or larger caps.
+
+Payload write rights still depend on the independent COW stamp. Capturing rotates
+that stamp; later/sibling changes detach the row as well as its page path, retaining
+earlier opaque identity. The existing eight-slot construction cache uses exact
+ordinal-family/index or textual tags within the same cap and eviction order.
+Changed keys refresh cached absence/value only after admitted root application.
+Publication clears every cache/execution lease. Public/concurrent queries read
+completed immutable pages and never mutate construction receipts or refill slots.
+Class-owned dynamic arrays hold interface leases; records/static arrays do not.
+
+Growth handles all nonnegative Integer ordinals with a maximum level of fifteen;
+it never shifts by 32 or multiplies an overflowing capacity. Missing, negative,
+next and maximum out-of-range public ordinals retain refusal. No scalar wrapping
+can select an earlier page slot. Count accumulation checks overflow. Source-local
+identity, lexical origins, diagnostics, numeric limits and compiler facts stay
+under their existing owners.
+
+Optional `INyxPascalSyntaxOrdinalMetadataWork` exposes detached construction
+lookup/page-read/allocation/capture/depth counts. Existing metadata totals include
+text nodes, ordinal pages and compound roots. The controlled append case retains
+481 values, detaches six and creates four; node allocations fall from 100/6,241
+to 55/3,683, with height nine. Existing controlled lookups/hits remain 12,918/
+11,642 while actual lookup-tree reads fall from 10,707 to 6,153. A separate
+1,100-name source exercises six levels, independent sibling overload writes,
+whole-source comparison and retired predecessors. The small semantic fixture
+admits 414 units versus 421, with all 413 smaller allowances refusing atomically.
+These values describe preparation, not CPU time or editor latency. WORK.md owns
+frozen native/compiled-only browser qualification, the unchanged real RTL result,
+preservation failures, source/remote identity and the remaining full outcome.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

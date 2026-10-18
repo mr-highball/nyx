@@ -33,7 +33,114 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Direct lexical append preparation — 2026-10-18
+## Current integration: Typed ordinal metadata storage — 2026-10-18
+
+176a9de retains qualified direct lexical emission plus the strict post-push
+configuration failure; source/remote identity is exact, original acceptance stays
+open. Reassessment after forty-seven unclosed authoring batches follows original
+criterion two's real metadata-node admission refusal: numeric row families are
+encoded as decimal namespaced strings and search/rebuild the mixed-key AVL tree.
+The deliverable separates those typed ordinal rows into persistent four-slot
+radix pages, retaining true textual indexes and exact COW/checkpoint ownership.
+This is structural preparation work, not another cache/fixture/probe variant.
+
+The hypothesis is fewer real text conversions and tree visits/path allocations,
+with bounded page copies admitted before execution. Evidence must cover exact
+whole/append meaning, page/root growth seams, missing/invalid ordinals, row and
+name identity, independent sibling writes, retirement, cancellation and exhaustive
+smaller work allowances. One frozen maintained qualification and unchanged real
+RTL run decide this batch; retain failure and stop directory/compiler/oracle/
+fixture/capture variants afterward. Numeric limits, initial queries, source facts
+and original acceptance remain unchanged. Full source/type/module/incremental/
+editor/input/quality/parity/adoption/delivery remains required, with no completion
+credit from this prerequisite alone. The ignored
+`.local/ordinal-metadata-paths-private.json` owns exact receipts and the return
+path. Original and prior post-push configuration failures stay historical; a new
+current-start baseline does not erase either. No host/config retry, protected
+write, cleanup/restart, browser/HTTP/file execution/capture, new MCP tool/schema/
+rollout or sub-agent is authorized. LAN stays offline.
+
+Nine ordinal row families now have immutable four-slot radix roots; true name/
+structure keys keep their balanced text tree. Numeric lookups use checked two-bit
+slots, with no decimal key or text-tree traversal. Each visited page/path allocation
+is admitted; a copied page has exactly four interface slots. A captured root seals
+the text root plus nine row roots under bounded node admission and rotates the
+independent payload COW stamp. Resume copies those bounded roots, not all rows or
+a predecessor chain. Growth stops at level fifteen without shifting by 32 or
+overflowing capacity arithmetic. Dynamic arrays live in classes, never interfaces
+in records/static arrays. Publication retires all execution and lookup leases;
+later/concurrent reads write no counter or cache. No MCP tool/schema changes.
+
+The original eight-entry construction lookup optimization is preserved with typed
+row-family/ordinal versus text tags, sharing one cap and eviction order. Changed
+keys refresh cached value/absence only after root application is admitted. The
+first private implementation omitted ordinal reuse: native functionality passed
+4,396 but the small semantic work grew 421 to 450 units. That preparation remains
+retained; restoring the existing shared optimization with typed keys is required
+to preserve its contract, not a new cache experiment. Final preflight passes 4,416
+checkpoint checks and 453 work checks, clean heaps. The small semantic fit is 414
+units with all 413 smaller allowances refusing; its fixture source is unchanged.
+Controlled existing lookup counts stay 12,918/11,642 hits, while actual tree reads
+fall 10,707 to 6,153. Retained/copied/created values remain 481/six/four; actual
+nodes fall 100/6,241 to 55/3,683, height nine. These are preparation receipts, not
+CPU/editor-latency claims.
+
+An additional 1,100-name source reaches six ordinal page levels and preserves
+independent sibling overload mutations/whole-source meaning. Its constructor has
+33,082 ordinal lookups/5,158 actual page reads/11,597 allocated pages/1,103 compound
+captures; the append needs 42 pages. Boundary names, negative/next/maximum public
+ordinals, unchanged published receipts, retired predecessors and existing full
+differential/refusal/cancellation coverage stay qualified. Final browser preflight
+compiles only. Two functional sources freeze before wider qualification; no later
+functional/layout overlay is accepted.
+
+The unchanged real RTL run advances from round 15/224,739 translated tokens to
+round 19/236,257 before refusing the same four-million aggregate admission,
+prefix phase/syntax-token, requested one. Exit one/clean heap is retained as a
+failed acceptance gate, with no final System/ObjPas semantic/indexed result.
+Original source/consumer, five initial queries, explicit Word job, three/eight
+symbol preparation, generic fact ceiling eight, Longint then Int64 fulfillment
+and 2M view/4M aggregate/64-round limits remain exact. No probe, source condition,
+ordered answer or quota is changed. The failing admission identifies a work
+boundary, not a complete CPU profile.
+
+Source inspection finds a concrete next syntax prerequisite: Word and Sym each
+call Tok more than once at the same unchanged offset to inspect kind and payload.
+Reassess single token-value materialization inside those predicates through the
+existing syntax/cursor/filter owners. Eliminate actual repeated reads while
+preserving offset clamping, partial-equal behavior, source/context identity,
+cancellation and admission of every remaining read/step. No cross-source cache,
+numeric discount, relaxed limit or new fact substitutes for that change. Stop
+directory/cache/fixture/compiler/oracle/capture variants after this frozen batch.
+Full original criterion/task/credit/DONE/source/type/module/incremental/editor/
+input/quality/parity/adoption/delivery stays open across at least forty-eight
+unclosed batches.
+
+Final frozen qualification accepts 81 successful compiler jobs, zero owned
+warnings/182 unchanged upstream warnings. All 40 maintained native consumers,
+five focused consumers and the actual-source lexical read pass with clean heaps:
+46 successful logs. Native syntax retains 7,991 checks/five actual inputs/3,908
+declarations; the lexical corpus retains 501 actual files/2,322,904 lossless tokens.
+Both Studios/backend/worker and 33 browser consumers compile as applicable;
+browser execution/input/parity stays unqualified. Groups join normally, without
+an interrupted/resumed or functional-overlay qualification. The separate unchanged
+RTL failure remains excluded from passing totals and no full language meaning is
+established by these consumers.
+
+Two focused/661 maintained/97 RTL/24 compiler inputs plus three inspected compiler
+inputs stay pinned; 660 unrelated maintained sources remain exact. All 156 original
+unit packets/48 retained includes, nine project contexts, 349 frozen 7422453
+artifacts and thirteen concurrent planning files remain exact. All five current-
+start protected files remain exact with no new configuration delta. The original
+baseline and prior post-push global Codex configuration failures remain historical
+and retained without owned writes/restoration; no original complete preserving
+gate passes. Terminal receipts show zero packet readers/Studio listeners and
+native Nyx MCP tools remain absent. The ignored packet owns exact qualified
+working/committed blobs, branch/remote identity and final observed protected bytes.
+Only six owned files belong to this checkpoint; no concurrent planning is staged.
+LAN remains offline and the full goal remains active.
+
+## Previous integration: Direct lexical append preparation — 2026-10-18
 
 14f3a8a is qualified and pushed: bounded metadata lookup reuse advances the
 unchanged real RTL to round 15/224,739 translated tokens before its four-million

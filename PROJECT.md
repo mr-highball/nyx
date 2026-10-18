@@ -94,7 +94,9 @@ retain complete validation. [Construction-only metadata lookups](docs/pascal-pro
 now reuse exact key results until publication, with independent COW stamps and
 no mutable cache in published readers. [Direct lexical preparation](docs/pascal-projects.md#direct-lexical-append-preparation)
 now emits final append rows from the existing scanner without an intermediate
-vector or byte recount. Remaining copy/parser costs and full engine/editor
+vector or byte recount. [Typed ordinal metadata](docs/pascal-projects.md#typed-ordinal-metadata-storage)
+now separates numeric row pages from textual indexes while sealing both in an
+independent checkpoint root. Remaining copy/parser costs and full engine/editor
 quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)

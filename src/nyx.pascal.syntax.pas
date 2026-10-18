@@ -433,9 +433,10 @@ type
     function CopiedFilterRows: Integer;
     function FilterDirectoryEntries: Integer;
   end;
-  { Actual metadata/index construction. Retained values come from the sealed
-    checkpoint tree; copied values detach before mutation. Created values and
-    allocated tree nodes remain real work, independently of logical quotas.
+  { Actual metadata/index construction. Retained values come from sealed
+    checkpoint roots; copied values detach before mutation. Created values and
+    allocated nodes (text tree, ordinal pages and compound roots) remain real
+    work, independently of logical quotas.
     Diagnostic copying is separate. Counters grant no reuse/charging authority. }
   INyxPascalSyntaxMetadataWork = interface(IInterface)
     ['{C084FD4E-13F9-4E25-B9D8-E55D12961977}']
@@ -447,8 +448,9 @@ type
     function MetadataTreeHeight: Integer;
   end;
   { Immutable construction-access receipt. An unpublished parser alone may
-    reuse at most eight exact key/value lookups, including known absence. Each
-    root write refreshes that key; COW stamps independently gate mutation.
+    reuse at most eight exact typed ordinal/textual lookups, including absence.
+    Ordinal misses use direct page lookup without a text key. Root writes
+    refresh their typed key; COW stamps independently gate mutation.
     Publication drops all cached leases. Later/concurrent snapshot reads change
     none of these counters and retain zero cache entries. These values grant
     no reuse authority, discounted work, compiler meaning or latency guarantee. }
@@ -459,6 +461,18 @@ type
     function MetadataLookupTreeReads: Integer;
     function MetadataLookupPeak: Integer;
     function RetainedMetadataLookups: Integer;
+  end;
+  { Detached construction receipt for typed ordinal rows. Page nodes have four
+    fixed slots; true text indexes retain their own balanced tree. Counts grant
+    neither reuse authority nor compiler/latency meaning. Published reads change
+    none of them, and the syntax retains no constructor/execution borrow. }
+  INyxPascalSyntaxOrdinalMetadataWork = interface(IInterface)
+    ['{ED7A4903-C142-44F6-9E47-AD3191F0B572}']
+    function OrdinalMetadataLookups: Integer;
+    function OrdinalMetadataPageReads: Integer;
+    function AllocatedOrdinalPages: Integer;
+    function CapturedMetadataRoots: Integer;
+    function OrdinalMetadataDepth: Integer;
   end;
   { Optional declaration-label metadata, with checked snapshot-local ordinals.
     Metadata and typed declarations consume the shared node quota. Lexical lookup
@@ -562,6 +576,9 @@ const
   { One bounded probe/update operation covers at most these exact key slots.
     Entries exist only in the unpublished metadata constructor. }
   CMetadataReadSlots = 8;
+  { Two ordinal bits select one of four fixed slots. A page clone copies at
+    most four interface leases as one admitted metadata-node operation. }
+  CMetadataPageSlots = 4;
 
 type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
@@ -679,14 +696,57 @@ type
     function Height: Integer;
     function Count: Integer;
   end;
-  { A parser's private root over immutable balanced nodes. Unpublished lookup
-    entries retain exact value/absence results only until retirement. Root writes
-    refresh their key; Capture rotates the COW stamp independently. Later writes
-    still detach their value/path. Published readers use immutable tree reads,
-    with no cache mutation, execution lease or source/owner chain. }
+  { Persistent ordinal page. Level zero has four value slots; higher levels
+    have four child slots. No source/parent/history or mutable directory escapes.
+    The level selects two bits of a checked nonnegative snapshot-local ordinal. }
+  IMetadataRowNode = interface(IInterface)
+    function Level: Integer;
+    function Value(AIndex: Integer): IMetadataValue;
+    function Child(AIndex: Integer): IMetadataRowNode;
+    function Count: Integer;
+  end;
+  { Initialized once before publication. Dynamic class arrays hold interface
+    leases safely on both targets; a record/static array never holds them.
+    Only the array matching LevelValue is allocated, always exactly four slots. }
+  TMetadataRowNode = class(TInterfacedObject, IMetadataRowNode)
+  public
+    LevelValue: Integer;
+    Values: array of IMetadataValue;
+    Children: array of IMetadataRowNode;
+    CountValue: Integer;
+    function Level: Integer;
+    function Value(AIndex: Integer): IMetadataValue;
+    function Child(AIndex: Integer): IMetadataRowNode;
+    function Count: Integer;
+  end;
+  { One immutable checkpoint contains the text root and all nine typed row
+    roots. The bounded directory owns no preceding checkpoint/parser or stamp;
+    payload COW stamps independently prevent later/sibling mutation. }
+  IMetadataRoot = interface(IInterface)
+    function Names: IMetadataNode;
+    function Rows(AKind: TMetadataKind): IMetadataRowNode;
+    function Count: Integer;
+  end;
+  { Filled once by Capture, including its checked total value count. Root
+    directory references are copied explicitly under one bounded node admission. }
+  TMetadataRoot = class(TInterfacedObject, IMetadataRoot)
+  public
+    NameRoot: IMetadataNode;
+    RowRoots: array of IMetadataRowNode;
+    CountValue: Integer;
+    function Names: IMetadataNode;
+    function Rows(AKind: TMetadataKind): IMetadataRowNode;
+    function Count: Integer;
+  end;
+  { A parser's private text tree and typed ordinal directories. Bounded lookup
+    entries live only during construction; ordinal access never encodes a string
+    or searches that tree. Capture seals both root families and rotates the COW
+    stamp. Later writes detach their value/path. Published readers mutate no
+    cache/counter and retain no execution lease or source/owner chain. }
   TMetadataMap = class
   private
     FRoot: IMetadataNode;
+    FRows: array of IMetadataRowNode;
     FStamp: IInterface;
     FCopied: Integer;
     FCreated: Integer;
@@ -696,15 +756,27 @@ type
     FConstructing: Boolean;
     FReadKeys: array of TNyxText;
     FReadValues: array of IMetadataValue;
+    { Negative ordinal tags identify text keys; nonnegative entries contain
+      an exact row family/index. Both share the same original eight-slot cap. }
+    FReadKinds: array of TMetadataKind;
+    FReadOrdinals: array of Integer;
     FReadCount: Integer;
     FReadNext: Integer;
     FReadLookups: Integer;
     FReadHits: Integer;
     FReadTreeVisits: Integer;
     FReadPeak: Integer;
+    FOrdinalLookups, FOrdinalReads, FOrdinalNodes, FCaptures: Integer;
     procedure RequireConstruction;
     procedure RememberRead(const AKey: TNyxText; const AValue: IMetadataValue);
+    procedure RememberRow(AKind: TMetadataKind; AIndex: Integer; const AValue: IMetadataValue);
     procedure Store(const AKey: TNyxText; const AValue: IMetadataValue);
+    function FindRow(AKind: TMetadataKind; AIndex: Integer): IMetadataValue;
+    procedure StoreRow(AKind: TMetadataKind; AIndex: Integer; const AValue: IMetadataValue);
+    function NewRowNode(const APrevious: IMetadataRowNode; ALevel, ASlot: Integer;
+      const AValue: IMetadataValue; const AChild: IMetadataRowNode): IMetadataRowNode;
+    function InsertRow(const APrevious: IMetadataRowNode; ALevel, AIndex: Integer;
+      const AValue: IMetadataValue): IMetadataRowNode;
     function NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
       const ALeft, ARight: IMetadataNode): IMetadataNode;
     function Balance(const AKey: TNyxText; const AValue: IMetadataValue;
@@ -712,16 +784,17 @@ type
     function Insert(const ANode: IMetadataNode; const AKey: TNyxText;
       const AValue: IMetadataValue): IMetadataNode;
   public
-    constructor Create(const ARoot: IMetadataNode;
+    constructor Create(const ARoot: IMetadataRoot;
       const AExecution: INyxCancellationScope);
     procedure RetireExecution;
-    function Capture: IMetadataNode;
+    function Capture: IMetadataRoot;
     function Find(const AKey: TNyxText): IMetadataValue;
     function Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
     function Row(AKind: TMetadataKind; AIndex: Integer): TObject;
     function Index(AKind: TMetadataKind; const AKey: TNyxText): Integer;
     procedure AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
     function Height: Integer;
+    function OrdinalDepth: Integer;
     property Copied: Integer read FCopied;
     property Created: Integer read FCreated;
     property AllocatedNodes: Integer read FNodes;
@@ -730,6 +803,10 @@ type
     property ReadTreeVisits: Integer read FReadTreeVisits;
     property ReadPeak: Integer read FReadPeak;
     property RetainedReads: Integer read FReadCount;
+    property OrdinalLookups: Integer read FOrdinalLookups;
+    property OrdinalReads: Integer read FOrdinalReads;
+    property OrdinalNodes: Integer read FOrdinalNodes;
+    property Captures: Integer read FCaptures;
   end;
   { Significant lexical ordinal and its raw conditional participation. No source,
     interface or mutable collection is retained in a row. }
@@ -828,7 +905,8 @@ type
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
     INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
     INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork,
-    INyxPascalSyntaxMetadataWork, INyxPascalSyntaxMetadataLookupWork, ISyntaxOwner)
+    INyxPascalSyntaxMetadataWork, INyxPascalSyntaxMetadataLookupWork,
+    INyxPascalSyntaxOrdinalMetadataWork, ISyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -838,7 +916,7 @@ type
     FFilteredReads: Integer;
     FFilterRetained: Integer;
     FMetadata: TMetadataMap;
-    FCheckpointMetadata: IMetadataNode;
+    FCheckpointMetadata: IMetadataRoot;
     FRetainedMetadata: Integer;
     FDiagnostics: array of TNyxPascalSyntaxDiagnostic;
     FScopeCount: Integer;
@@ -996,6 +1074,11 @@ type
     function MetadataLookupTreeReads: Integer;
     function MetadataLookupPeak: Integer;
     function RetainedMetadataLookups: Integer;
+    function OrdinalMetadataLookups: Integer;
+    function OrdinalMetadataPageReads: Integer;
+    function AllocatedOrdinalPages: Integer;
+    function CapturedMetadataRoots: Integer;
+    function OrdinalMetadataDepth: Integer;
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -1296,16 +1379,87 @@ begin
   end;
 end;
 
-constructor TMetadataMap.Create(const ARoot: IMetadataNode;
+procedure RequireOrdinalKind(AKind: TMetadataKind);
+begin
+
+  if not (AKind in [mkScope..mkIntrinsic]) then
+  begin
+    raise ENyxPascalLexical.Create('A typed metadata row needs an ordinal family');
+  end;
+end;
+
+function TMetadataRowNode.Level: Integer;
+begin
+  Result := LevelValue;
+end;
+
+function TMetadataRowNode.Value(AIndex: Integer): IMetadataValue;
+begin
+
+  if (LevelValue <> 0) or (AIndex < 0) or (AIndex >= Length(Values)) then
+  begin
+    raise ENyxPascalLexical.Create('Metadata value slot is outside its ordinal leaf');
+  end;
+  Result := Values[AIndex];
+end;
+
+function TMetadataRowNode.Child(AIndex: Integer): IMetadataRowNode;
+begin
+
+  if (LevelValue = 0) or (AIndex < 0) or (AIndex >= Length(Children)) then
+  begin
+    raise ENyxPascalLexical.Create('Metadata child slot is outside its ordinal branch');
+  end;
+  Result := Children[AIndex];
+end;
+
+function TMetadataRowNode.Count: Integer;
+begin
+  Result := CountValue;
+end;
+
+function TMetadataRoot.Names: IMetadataNode;
+begin
+  Result := NameRoot;
+end;
+
+function TMetadataRoot.Rows(AKind: TMetadataKind): IMetadataRowNode;
+begin
+  RequireOrdinalKind(AKind);
+  Result := RowRoots[Ord(AKind)];
+end;
+
+function TMetadataRoot.Count: Integer;
+begin
+  Result := CountValue;
+end;
+
+constructor TMetadataMap.Create(const ARoot: IMetadataRoot;
   const AExecution: INyxCancellationScope);
+var
+  LAt: Integer;
 begin
   inherited Create;
   FExecution := AExecution;
   NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
-  FRoot := ARoot;
+  SetLength(FRows, Ord(mkIntrinsic) + 1);
+
+  if ARoot <> nil then
+  begin
+    { This closed directory contains nine row roots plus the text root. It is
+      one bounded node copy, independent of the number of retained rows. }
+    NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+    FRoot := ARoot.Names;
+    for LAt := 0 to High(FRows) do
+    begin
+      FRows[LAt] := ARoot.Rows(TMetadataKind(LAt));
+    end;
+  end;
   FStamp := TInterfacedObject.Create;
   SetLength(FReadKeys, CMetadataReadSlots);
   SetLength(FReadValues, CMetadataReadSlots);
+  SetLength(FReadKinds, CMetadataReadSlots);
+  SetLength(FReadOrdinals, CMetadataReadSlots);
   FConstructing := True;
 end;
 
@@ -1314,6 +1468,8 @@ begin
   FConstructing := False;
   SetLength(FReadKeys, 0);
   SetLength(FReadValues, 0);
+  SetLength(FReadKinds, 0);
+  SetLength(FReadOrdinals, 0);
   FReadCount := 0;
   FReadNext := 0;
   FExecution := nil;
@@ -1351,13 +1507,51 @@ begin
   for LAt := 0 to FReadCount - 1 do
   begin
 
-    if FReadKeys[LAt] = AKey then
+    if (FReadOrdinals[LAt] < 0) and (FReadKeys[LAt] = AKey) then
     begin
       FReadValues[LAt] := AValue;
       Exit;
     end;
   end;
   FReadKeys[FReadNext] := AKey;
+  FReadOrdinals[FReadNext] := -1;
+  FReadValues[FReadNext] := AValue;
+  FReadNext := (FReadNext + 1) mod CMetadataReadSlots;
+
+  if FReadCount < CMetadataReadSlots then
+  begin
+    Inc(FReadCount);
+    FReadPeak := FReadCount;
+  end;
+end;
+
+procedure TMetadataMap.RememberRow(AKind: TMetadataKind; AIndex: Integer;
+  const AValue: IMetadataValue);
+var
+  LAt: Integer;
+begin
+  RequireConstruction;
+  RequireOrdinalKind(AKind);
+
+  if AIndex < 0 then
+  begin
+    raise ENyxPascalLexical.Create('An ordinal lookup entry needs a nonnegative index');
+  end;
+  { Preserve the existing eight-slot construction optimization with typed keys.
+    This is not an additional cache or lease; text and ordinal entries evict
+    one another under the same bounded probe/root-application admission. }
+  for LAt := 0 to FReadCount - 1 do
+  begin
+
+    if (FReadOrdinals[LAt] = AIndex) and (FReadKinds[LAt] = AKind) then
+    begin
+      FReadValues[LAt] := AValue;
+      Exit;
+    end;
+  end;
+  FReadKeys[FReadNext] := '';
+  FReadKinds[FReadNext] := AKind;
+  FReadOrdinals[FReadNext] := AIndex;
   FReadValues[FReadNext] := AValue;
   FReadNext := (FReadNext + 1) mod CMetadataReadSlots;
 
@@ -1382,17 +1576,264 @@ begin
   RememberRead(AKey, AValue);
 end;
 
-function TMetadataMap.Capture: IMetadataNode;
+function TMetadataMap.Capture: IMetadataRoot;
+var
+  LRoot: TMetadataRoot;
+  LAt, LCount: Integer;
 begin
   RequireConstruction;
   NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
-  Result := FRoot;
+  NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+  IncrementMetadataAccess(FNodes);
+  IncrementMetadataAccess(FCaptures);
+  LRoot := TMetadataRoot.Create;
+  Result := LRoot;
+  LRoot.NameRoot := FRoot;
+  LRoot.CountValue := NodeCount(FRoot);
+  SetLength(LRoot.RowRoots, Length(FRows));
+  for LAt := 0 to High(FRows) do
+  begin
+    LRoot.RowRoots[LAt] := FRows[LAt];
+    LCount := 0;
+
+    if FRows[LAt] <> nil then
+    begin
+      LCount := FRows[LAt].Count;
+    end;
+
+    if LCount > High(Integer) - LRoot.CountValue then
+    begin
+      raise ENyxPascalSyntaxLimit.Create('Metadata roots exceed their exact count domain');
+    end;
+    Inc(LRoot.CountValue, LCount);
+  end;
   FStamp := TInterfacedObject.Create;
 end;
 
 function TMetadataMap.Height: Integer;
 begin
   Result := NodeHeight(FRoot);
+
+  if OrdinalDepth > Result then
+  begin
+    Result := OrdinalDepth;
+  end;
+end;
+
+function TMetadataMap.OrdinalDepth: Integer;
+var
+  LAt: Integer;
+begin
+  Result := 0;
+  for LAt := 0 to High(FRows) do
+  begin
+
+    if (FRows[LAt] <> nil) and (FRows[LAt].Level + 1 > Result) then
+    begin
+      Result := FRows[LAt].Level + 1;
+    end;
+  end;
+end;
+
+function TMetadataMap.NewRowNode(const APrevious: IMetadataRowNode;
+  ALevel, ASlot: Integer; const AValue: IMetadataValue;
+  const AChild: IMetadataRowNode): IMetadataRowNode;
+var
+  LNode: TMetadataRowNode;
+  LAt, LCount: Integer;
+begin
+  { One page operation has exactly four slots. Admission precedes allocation,
+    every copied reference and count calculation; no public getter defers it. }
+  NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+  IncrementMetadataAccess(FNodes);
+  IncrementMetadataAccess(FOrdinalNodes);
+  LNode := TMetadataRowNode.Create;
+  Result := LNode;
+  LNode.LevelValue := ALevel;
+
+  if ALevel = 0 then
+  begin
+    SetLength(LNode.Values, CMetadataPageSlots);
+    for LAt := 0 to CMetadataPageSlots - 1 do
+    begin
+
+      if APrevious <> nil then
+      begin
+        LNode.Values[LAt] := APrevious.Value(LAt);
+      end;
+    end;
+    LNode.Values[ASlot] := AValue;
+    for LAt := 0 to CMetadataPageSlots - 1 do
+    begin
+
+      if LNode.Values[LAt] <> nil then
+      begin
+        Inc(LNode.CountValue);
+      end;
+    end;
+  end
+  else
+  begin
+    SetLength(LNode.Children, CMetadataPageSlots);
+    for LAt := 0 to CMetadataPageSlots - 1 do
+    begin
+
+      if APrevious <> nil then
+      begin
+        LNode.Children[LAt] := APrevious.Child(LAt);
+      end;
+    end;
+    LNode.Children[ASlot] := AChild;
+    for LAt := 0 to CMetadataPageSlots - 1 do
+    begin
+      LCount := 0;
+
+      if LNode.Children[LAt] <> nil then
+      begin
+        LCount := LNode.Children[LAt].Count;
+      end;
+
+      if LCount > High(Integer) - LNode.CountValue then
+      begin
+        raise ENyxPascalSyntaxLimit.Create('Ordinal page exceeds its exact count domain');
+      end;
+      Inc(LNode.CountValue, LCount);
+    end;
+  end;
+end;
+
+function TMetadataMap.InsertRow(const APrevious: IMetadataRowNode;
+  ALevel, AIndex: Integer; const AValue: IMetadataValue): IMetadataRowNode;
+var
+  LSlot: Integer;
+  LChild: IMetadataRowNode;
+begin
+  NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+  LSlot := (AIndex shr (ALevel * 2)) and (CMetadataPageSlots - 1);
+
+  if ALevel = 0 then
+  begin
+    Exit(NewRowNode(APrevious, 0, LSlot, AValue, nil));
+  end;
+  LChild := nil;
+
+  if APrevious <> nil then
+  begin
+    LChild := APrevious.Child(LSlot);
+  end;
+  LChild := InsertRow(LChild, ALevel - 1, AIndex, AValue);
+  Result := NewRowNode(APrevious, ALevel, LSlot, nil, LChild);
+end;
+
+procedure TMetadataMap.StoreRow(AKind: TMetadataKind; AIndex: Integer;
+  const AValue: IMetadataValue);
+var
+  LRoot: IMetadataRowNode;
+  LLevel: Integer;
+begin
+  RequireConstruction;
+  RequireOrdinalKind(AKind);
+
+  if AIndex < 0 then
+  begin
+    raise ENyxPascalLexical.Create('An ordinal metadata write needs a nonnegative index');
+  end;
+  LRoot := FRows[Ord(AKind)];
+  LLevel := 0;
+
+  if LRoot <> nil then
+  begin
+    LLevel := LRoot.Level;
+  end;
+  { Level fifteen selects bits 30..31, covering every nonnegative Integer.
+    No shift by 32 or overflowing capacity multiplication is ever evaluated. }
+  while LLevel < 15 do
+  begin
+
+    if AIndex shr ((LLevel + 1) * 2) = 0 then
+    begin
+      Break;
+    end;
+    Inc(LLevel);
+
+    if LRoot <> nil then
+    begin
+      LRoot := NewRowNode(nil, LLevel, 0, nil, LRoot);
+    end;
+  end;
+  LRoot := InsertRow(LRoot, LLevel, AIndex, AValue);
+  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+  FRows[Ord(AKind)] := LRoot;
+  RememberRow(AKind, AIndex, AValue);
+end;
+
+function TMetadataMap.FindRow(AKind: TMetadataKind; AIndex: Integer): IMetadataValue;
+var
+  LNode: IMetadataRowNode;
+  LFirst: Boolean;
+  LAt: Integer;
+begin
+  RequireOrdinalKind(AKind);
+  Result := nil;
+
+  if AIndex < 0 then
+  begin
+    Exit;
+  end;
+
+  if FConstructing then
+  begin
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+    IncrementMetadataAccess(FReadLookups);
+    IncrementMetadataAccess(FOrdinalLookups);
+    for LAt := 0 to FReadCount - 1 do
+    begin
+
+      if (FReadOrdinals[LAt] = AIndex) and (FReadKinds[LAt] = AKind) then
+      begin
+        IncrementMetadataAccess(FReadHits);
+        Exit(FReadValues[LAt]);
+      end;
+    end;
+  end;
+  LNode := FRows[Ord(AKind)];
+  LFirst := True;
+  while LNode <> nil do
+  begin
+
+    if FConstructing then
+    begin
+      NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+      IncrementMetadataAccess(FReadTreeVisits);
+      IncrementMetadataAccess(FOrdinalReads);
+    end;
+
+    if LFirst then
+    begin
+
+      if LNode.Level < 15 then
+      begin
+
+        if AIndex shr ((LNode.Level + 1) * 2) <> 0 then
+        begin
+          Break;
+        end;
+      end;
+    end;
+    LFirst := False;
+
+    if LNode.Level = 0 then
+    begin
+      Result := LNode.Value(AIndex and (CMetadataPageSlots - 1));
+      Break;
+    end;
+    LNode := LNode.Child((AIndex shr (LNode.Level * 2)) and (CMetadataPageSlots - 1));
+  end;
+
+  if FConstructing then
+  begin
+    RememberRow(AKind, AIndex, Result);
+  end;
 end;
 
 function TMetadataMap.NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
@@ -1503,7 +1944,7 @@ begin
     for LAt := 0 to FReadCount - 1 do
     begin
 
-      if FReadKeys[LAt] = AKey then
+      if (FReadOrdinals[LAt] < 0) and (FReadKeys[LAt] = AKey) then
       begin
         IncrementMetadataAccess(FReadHits);
         Exit(FReadValues[LAt]);
@@ -1550,18 +1991,17 @@ function TMetadataMap.Row(AKind: TMetadataKind; AIndex: Integer): TObject;
 var
   LValue: IMetadataValue;
 begin
-  LValue := Find(MetadataKey(AKind, TNyxText(IntToStr(AIndex))));
+  LValue := FindRow(AKind, AIndex);
 
   if LValue = nil then
   begin
-    raise ENyxPascalLexical.Create('Metadata row is outside its immutable tree');
+    raise ENyxPascalLexical.Create('Metadata row is outside its immutable ordinal pages');
   end;
   Result := LValue.Borrow;
 end;
 
 function TMetadataMap.Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
 var
-  LKey: TNyxText;
   LValue: IMetadataValue;
   LCreated: TMetadataValue;
 begin
@@ -1571,8 +2011,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('A metadata row needs a nonnegative source ordinal');
   end;
-  LKey := MetadataKey(AKind, TNyxText(IntToStr(AIndex)));
-  LValue := Find(LKey);
+  LValue := FindRow(AKind, AIndex);
 
   if LValue = nil then
   begin
@@ -1619,14 +2058,14 @@ begin
     end;
     LValue := LCreated;
     LCreated.OwnerStamp := FStamp;
-    Store(LKey, LValue);
+    StoreRow(AKind, AIndex, LValue);
     Inc(FCreated);
   end
   else if LValue.Stamp <> FStamp then
   begin
     NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
     LValue := LValue.Detach(FStamp);
-    Store(LKey, LValue);
+    StoreRow(AKind, AIndex, LValue);
     Inc(FCopied);
   end;
   Result := LValue.Borrow;
@@ -1994,7 +2433,12 @@ begin
   FreeAndNil(FMetadata);
   FCheckpointMetadata := APrevious.FCheckpointMetadata;
   FMetadata := TMetadataMap.Create(FCheckpointMetadata, FCancellation);
-  FRetainedMetadata := NodeCount(FCheckpointMetadata);
+  FRetainedMetadata := 0;
+
+  if FCheckpointMetadata <> nil then
+  begin
+    FRetainedMetadata := FCheckpointMetadata.Count;
+  end;
   EditFrame(0).Value.FSpan := NyxPascalSpan(Frame(0).Value.Span.Start,
     FLexical.Scalars - Frame(0).Value.Span.Start);
   { Filter diagnostics belong to the current exact filter. Only parser
@@ -5371,6 +5815,31 @@ end;
 function TSyntaxSnapshot.RetainedMetadataLookups: Integer;
 begin
   Result := FMetadata.RetainedReads;
+end;
+
+function TSyntaxSnapshot.OrdinalMetadataLookups: Integer;
+begin
+  Result := FMetadata.OrdinalLookups;
+end;
+
+function TSyntaxSnapshot.OrdinalMetadataPageReads: Integer;
+begin
+  Result := FMetadata.OrdinalReads;
+end;
+
+function TSyntaxSnapshot.AllocatedOrdinalPages: Integer;
+begin
+  Result := FMetadata.OrdinalNodes;
+end;
+
+function TSyntaxSnapshot.CapturedMetadataRoots: Integer;
+begin
+  Result := FMetadata.Captures;
+end;
+
+function TSyntaxSnapshot.OrdinalMetadataDepth: Integer;
+begin
+  Result := FMetadata.OrdinalDepth;
 end;
 
 function NyxPascalDeclarationIdentity(const ASource: INyxPascalSyntaxSnapshot;
