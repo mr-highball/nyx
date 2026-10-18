@@ -1932,6 +1932,7 @@ var
   LRest: TNyxText;
   LPart: TNyxText;
   LAccess: TNyxPascalMemberAccess;
+  LNamespaceFound: Boolean;
 begin
   Enter;
   try
@@ -1947,6 +1948,7 @@ begin
 
     if LLocal.Status = pbsMissing then
     begin
+      LNamespaceFound := False;
       { Longest directly visible module namespace; another captured module does
         not acquire use-clause authority merely by existing in this world. }
       for LAt := Length(AName) downto 1 do
@@ -1962,6 +1964,7 @@ begin
         begin
           Continue;
         end;
+        LNamespaceFound := True;
         LModule := FWorld.FindModule(LPrefix);
 
         if LModule < 0 then
@@ -2007,7 +2010,18 @@ begin
 
       if LLocal.Status = pbsMissing then
       begin
-        Exit(Answer(pbsMissing, pbiMissingName));
+
+        if LNamespaceFound then
+        begin
+          Exit(Answer(pbsMissing, pbiMissingName));
+        end;
+        { A qualified receiver can start with a type/value imported by USES,
+          not only a local name or visible unit namespace. Keep the existing
+          local/explicit-namespace routes first; ordinary imported lookup then
+          retains use order and refuses uncaptured potential shadowing units. }
+        LFirstDot := Pos('.', AName);
+        LLocal := Single(ASite, Copy(AName, 1, LFirstDot - 1), True);
+        LRest := Copy(AName, LFirstDot + 1, MaxInt);
       end;
     end
     else

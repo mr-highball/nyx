@@ -580,7 +580,10 @@ type
     procedure Parameters(AScope: Integer);
     procedure Routine(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
       AClass: Boolean = False);
-    procedure PropertyDeclaration(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
+    { A class property retains its ordinary property kind/type plus explicit
+      class-member intent; accessors remain authored syntax, not executed code. }
+    procedure PropertyDeclaration(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
+      AClass: Boolean = False);
     procedure Imports(AScope: Integer);
     procedure Declarations(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
       AMembers: Boolean);
@@ -2895,7 +2898,7 @@ begin
 end;
 
 procedure TSyntaxSnapshot.PropertyDeclaration(AScope: Integer;
-  AVisibility: TNyxPascalSyntaxVisibility);
+  AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean);
 var
   LStart: Integer;
   LEntry: Integer;
@@ -2912,6 +2915,11 @@ begin
     Exit;
   end;
   LEntry := AddDeclaration(AScope, psdkProperty, AVisibility, FPosition);
+
+  if AClass then
+  begin
+    Include(FDeclarations[LEntry].FFlags, psdfClassMember);
+  end;
   Step;
 
   if Sym(psoOpenBracket) then
@@ -3014,6 +3022,7 @@ var
   LSection: TNyxPascalWord;
   LBefore: Integer;
   LClass: Boolean;
+  LGeneric: Boolean;
   LStrict: Boolean;
 begin
   Enter;
@@ -3123,17 +3132,33 @@ begin
       else if Tok.Word in [pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor,
         pkwClass, pkwGeneric] then
       begin
+        { FPC's generic class methods use both prefixes, in that order. Consume
+          each once; repeated/reversed prefixes retain the unsupported path. }
+        LGeneric := Word(pkwGeneric);
+
+        if LGeneric then
+        begin
+          Step;
+        end;
         LClass := Word(pkwClass);
 
-        if LClass or Word(pkwGeneric) then
+        if LClass then
         begin
           Step;
         end;
 
-        if Word(pkwVar) and LClass then
+        if Word(pkwVar) and LClass and not LGeneric and AMembers then
         begin
           Step;
           Variables(AScope, psdkField, AVisibility, True);
+          { The whole section owns this modifier, not just its first name group.
+            Visibility, another section or a routine ends the section normally. }
+          LSection := pkwClass;
+          Continue;
+        end
+        else if Word(pkwProperty) and LClass and not LGeneric and AMembers then
+        begin
+          PropertyDeclaration(AScope, AVisibility, True);
         end
         else if Tok.Word in [pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor] then
         begin
@@ -3169,6 +3194,10 @@ begin
       else if Tok.Kind = ptkWord then
       begin
         case LSection of
+          pkwClass:
+            begin
+              Variables(AScope, psdkField, AVisibility, True);
+            end;
           pkwVar, pkwThreadvar:
             begin
               Variables(AScope, psdkVariable, AVisibility);

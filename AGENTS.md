@@ -4,7 +4,32 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source statement labels retain typed lexical symbols, checked metadata,
+Current-source class-member families retain typed class properties, complete
+class-var sections and generic-class method signatures. Qualified imported
+receivers now follow property results without losing local/explicit-namespace
+authority or missing-import refusal. Focused native 46 and unchanged RTL 50 pass
+with clean heaps. System reaches 6,906 declarations/one syntax diagnostic/eleven
+semantic answers; ObjPas stays 209/four/one. Exact indexed Free/FreeInstance
+navigation/insertion remains ready; actual TMonitor/TPtrWrapper properties and
+TMarshal generic signatures retain class roles. Thirty-five native consumers
+have clean heaps; 59 accepted compiler logs have zero owned warnings/140 upstream.
+Both Studios/backend/worker and twenty browser consumers compile as applicable;
+browser execution/input/observing/parity/adoption/delivery remain open. Seven
+focused/638 unique product/97 RTL/19 compiler pins, 156 unit packets/48 includes,
+five protected files/nine contexts, 349 frozen 7422453 artifacts and thirteen
+concurrent planning files stay exact. Readers joined; LAN offline, native Nyx
+tools absent. WORK.md owns composite core/regression and separately rebuilt
+consumer/companion evidence, retained failures and final source/remote identity.
+Stop class-prefix/property/import/fixture/compiler/capture variants. Reassess the
+remaining actual compilerproc declaration suffix through existing syntax/linkage
+owners; CODEALIGN remains independent. Full property/generic/expression meaning,
+canonical types/module/incremental/editor/input/navigation/quality/parity/adoption/
+delivery remain open across at least twenty-seven documented unclosed batches.
+No original criterion/task/credit/DONE/new tool/schema/rollout closes. No host/
+config retry or capture, protected mutation, cleanup/deletion/restart, approval
+bypass or sub-agents. Preserve concurrent work.
+
+Earlier statement labels retain typed lexical symbols, checked metadata,
 module/nested owners and exact source origins. DECLARED and shadowing preserve
 label identity; value-type/member inference refuses. Typed module GOTO requests
 survive local PUSH/POP; procedural signatures/conventions retain outer initializer

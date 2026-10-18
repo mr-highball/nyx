@@ -9,6 +9,33 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Class-member continuation (2026-10-18): a74b50c is progress across at least
+twenty-six documented unclosed batches, retaining full original criterion two.
+Follow actual class-property/generic-class grammar and continued class-var
+ownership through existing parser/type/binding owners. Deliver correct typed
+class member roles through ordinary member completion/navigation, with compiled
+native behavior, exact source/include origins, portable refusal/ownership cases,
+maintained consumers and one unchanged RTL route. Stop on a different prerequisite
+without fixture/probe/capture variants, raised budgets or original criterion/
+task/credit/DONE/parity/adoption/delivery closure. WORK.md owns exact evidence,
+remaining editor/incremental/source/quality requirements and the return path.
+
+The final boundary passes 46 focused native and 50 unchanged real-RTL checks,
+both with clean heaps. Actual class/record properties, continued class storage,
+generic-class signatures and imported property-result lookup retain typed roles,
+source origins and refused uncertainty. System reaches 6,906 declarations/one
+syntax diagnostic/eleven answers, ObjPas 209/four/one; exact indexed Free/
+FreeInstance navigation/insertion remains ready. Thirty-five native consumers
+have clean heaps; 59 accepted compiler logs have zero owned warnings. Browser
+consumers/products compile only. WORK.md owns composite core/regression and
+separately rebuilt maintained-consumer/commented-companion evidence, retained
+failures and source/remote identity. Stop class-prefix/property/import/fixture/
+compiler/capture variants; reassess the remaining compilerproc declaration through
+existing syntax/linkage owners. CODEALIGN, full source/property/generic/expression/
+canonical type/module/incremental/editor/input/navigation/quality/parity/adoption/
+delivery remain open. At least twenty-seven documented unclosed batches retain
+full original criterion two without original criterion/task/credit/DONE closure.
+
 Declaration/scope continuation (2026-10-18): 5102b9e is progress across at least
 twenty-five documented unclosed batches, retaining full original criterion two.
 Reassessment follows actual LABEL ownership and initialized procedural-variable

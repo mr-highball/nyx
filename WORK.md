@@ -33,7 +33,105 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Statement labels and procedural initializers — 2026-10-18
+## Current integration: Class-member declaration families — 2026-10-18
+
+Previous goal turn is progress: committed/pushed a74b50c qualifies labels and
+procedural initializer boundaries across at least twenty-six documented unclosed
+batches, retaining complete original authoring criterion two. Reassessment follows
+actual class-property and generic-class method syntax through existing parser/
+type/binding owners; source also exposes lost class intent in continued class-var
+sections. Deliver typed class properties, complete class-var section ownership
+and supported generic-class prefixes through ordinary member lookup/completion/
+navigation. Whole native compiled units/include, portable boundary/refusal cases,
+maintained affected consumers and one unchanged RTL route decide the boundary.
+Preserve exact source, flags/visibility, ownership, quotas and cancellation; do
+not raise budgets or add fixture/probe/capture variants. Stop at a materially
+different prerequisite. Full source/canonical type/module/incremental/editor/
+input/navigation/quality/parity/adoption/delivery and original criterion/task/
+credit/DONE remain open. Solo; native execution/browser compile only. Preserve
+concurrent planning, protected files/nine contexts, frozen release and offline
+LAN. No host/config retry, browser/HTTP/file execution/capture, protected mutation,
+cleanup/deletion/restart or approval bypass.
+
+The parser now retains class properties as ordinary psdkProperty declarations
+with psdfClassMember. Class-var intent spans every grouped/continued field until
+a new declaration section, visibility, routine or property. Generic-class method
+prefixes are consumed once in supported order; generic signatures/parameter
+scopes and existing unsupported-prefix recovery remain explicit. Existing typed
+member access admits class/record class properties and refuses instance-only
+type access. Accessor legality and complete generic call inference stay separate.
+
+The actual returned-record completion journey discovers a binding gap: dotted
+receivers used local and explicit-unit paths without searching imported type/
+value prefixes. The corrected fallback retains both existing paths, then uses
+ordinary ordered import lookup. Missing later imports still refuse instead of
+donating an earlier type; explicit namespaces and local shadowing retain their
+authority. Native whole companions execute class/record properties/storage and
+ObjFPC generic-method specializations. The product/harness stay Delphi dialect.
+
+Retained preparations include a reserved namespace segment, native visibility
+requirements for fields following properties, incorrect generic specialization
+call spelling, and the controlled world's missing implicit base capture. The
+latter now remains an explicit refusal assertion before an owned small base
+capture qualifies outer lookup; the real SDK route stays independent. The added
+whole property-result consumer exposes/fixes the real imported-prefix gap. All
+failed logs remain excluded from final acceptance. Final focused source passes
+46 native checks, including detached property insertion/navigation, actual record
+result completion, class/instance access, generic-context refusal, import and
+shadowing boundaries, quota/cancellation and exact compiled source/include bytes.
+
+The initial current-product RTL run reaches 6,906 declarations/one syntax
+diagnostic/eleven semantic answers, then fails its obsolete assertion requiring
+unsupported class-property grammar. Only that maintained consumer is repaired:
+the old failure expectation becomes positive actual TMonitor/TPtrWrapper property
+and TMarshal generic-class signature checks. Six frozen product/companion files
+stay byte-exact while that independent harness repair is frozen and recompiled.
+Its fresh runtime/receipt remains separate from the retained failed run. Product
+inventory paths are normalized to absolute file identity before deduplication;
+the final unique corpus is 638 files, not 640 alias rows.
+
+The fresh repaired whole-RTL consumer passes 50 with clean heap. System reaches
+6,906 declarations/one syntax diagnostic/eleven semantic answers; ObjPas retains
+209/four/one. Actual class/record properties and generic-class signatures retain
+typed roles/owners. Exact indexed Free/FreeInstance navigation and detached
+insertion remain ready. The original five initial probes, eight-capped symbol
+preparation and one explicit Word requirement job remain unchanged; no compiler
+source, fixture inputs or budgets are altered to hide the remaining compilerproc
+declaration or independent CODEALIGN gap. This is partial RTL meaning, not full
+compiler/type correctness, general accessor/generic/expression support or adoption.
+
+Final native companion review adds purpose/ownership comments beside public
+methods/properties; those exact unit/include bytes are recompiled/executed in
+class-members-native-reviewed. Core/regression/product groups keep their unchanged
+parser/binding inputs. The maintained SDK consumer's exact repaired bytes compile/
+execute independently as module-native-refined. These form composite evidence;
+the retained earlier failures are not an uninterrupted all-green run or accepted
+logs. All 59 accepted compiler logs have zero owned warnings/140 separately
+identified upstream pas2js Classes warnings. All 35 native consumers have clean
+heaps. Both Studios/backend/worker and twenty browser consumers compile as
+applicable; no browser execution/input/observing/parity or delivery is claimed.
+
+Ignored class-members-20261018-102117 is located by
+.local/class-members-paths-private.json. All seven final focused source pins,
+638 unique product files, 97 prior RTL pins and nineteen compiler/config/primary
+source pins verify. All 156 original unit packets and 48 retained SysUtils
+includes remain exact. The read-only frozen verifier passes 349 files/7422453
+with clean heap. Five protected files/nine complete contexts and thirteen
+concurrent planning files stay exact. Readers are joined and ports 8088–8093
+have no listeners; native Nyx tools remain absent. Final source/remote identity
+is retained in the private packet after publication. No host/config retry,
+browser/HTTP/file execution/capture, protected mutation, cleanup/deletion/restart
+or approval bypass occurs; independently owned planning remains unstaged.
+
+Stop class-prefix/property/import/fixture/compiler/capture variants. Reassess the
+actual remaining compilerproc declaration through existing syntax/linkage owners;
+CODEALIGN remains a separate context requirement. Full property/generic/expression
+meaning, canonical types/module/incremental/editor/input/navigation/quality/parity/
+adoption/delivery and original authoring criterion two remain open across at least
+twenty-seven documented unclosed batches. No original criterion/task/counter/
+credit/DONE closes. Goal active; execution stays solo.
+
+## Earlier integration: Statement labels and procedural initializers — 2026-10-18
 
 Previous goal turn is progress: committed/pushed 5102b9e qualifies typed missing
 compiler facts while preserving original authoring criterion two across at least

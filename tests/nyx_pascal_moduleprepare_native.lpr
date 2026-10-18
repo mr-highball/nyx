@@ -171,6 +171,9 @@ var
   LRTLParameter: TNyxPascalSyntaxDeclaration;
   LNoReturnSeen: Boolean;
   LUnsupportedSyntax: Boolean;
+  LClassPropertyCount: Integer;
+  LGenericClassCount: Integer;
+  LOwner: Integer;
   LWarningGap: Boolean;
   LFreeCount: Integer;
   LFreeInstanceCount: Integer;
@@ -545,8 +548,44 @@ begin
           LUnsupportedSyntax := True;
         end;
       end;
-      Check(LUnsupportedSyntax,
-        'The expanded original System view explicitly retains its class-property grammar prerequisite');
+      Check(not LUnsupportedSyntax,
+        'The unchanged System view no longer reports unsupported class-property grammar');
+      LClassPropertyCount := 0;
+      LGenericClassCount := 0;
+      for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
+      begin
+        LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if not (psdfClassMember in LDeclaration.Flags) then
+        begin
+          Continue;
+        end;
+        LOwner := LView.Syntax.Scope(LDeclaration.Scope).OwnerDeclaration;
+
+        if LOwner < 0 then
+        begin
+          Continue;
+        end;
+
+        if (LDeclaration.Kind = psdkProperty) and (LDeclaration.TypeSpan.Length > 0) and
+          (((NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('defaultspincount')) and
+            (NyxPascalASCIIKey(LView.Syntax.Declaration(LOwner).Name) = TNyxText('tmonitor'))) or
+           ((NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('nilvalue')) and
+            (NyxPascalASCIIKey(LView.Syntax.Declaration(LOwner).Name) = TNyxText('tptrwrapper')))) then
+        begin
+          Inc(LClassPropertyCount);
+        end;
+
+        if (LDeclaration.Kind = psdkRoutine) and (LDeclaration.GenericSpan.Length > 0) and
+          (NyxPascalASCIIKey(LView.Syntax.Declaration(LOwner).Name) = TNyxText('tmarshal')) then
+        begin
+          Inc(LGenericClassCount);
+        end;
+      end;
+      Check(LClassPropertyCount = 2,
+        'Actual TMonitor and TPtrWrapper class properties retain their typed roles and owners');
+      Check(LGenericClassCount >= 2,
+        'Actual TMarshal generic-class methods retain their own signatures and class intent');
       LWarningGap := False;
       for LAt := 0 to LSource.Source.DiagnosticCount - 1 do
       begin

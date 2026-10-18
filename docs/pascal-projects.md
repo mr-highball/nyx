@@ -2052,6 +2052,51 @@ incremental coherence, editor/input/navigation, quality, parity, adoption and
 delivery remain under original authoring criterion two. This adds no MCP tool,
 schema or installed resolver.
 
+## Class-member declaration families
+
+Class properties retain ordinary `psdkProperty` identity with explicit
+`psdfClassMember` intent. Their result types flow through existing declared-type
+binding and member queries for both class and record owners. Type access admits
+class properties while retaining the existing refusal for instance-only members.
+Accessor expressions remain authored syntax; this source boundary does not
+evaluate a getter or prove accessor compatibility and assignment legality.
+
+A `class var` section applies to every grouped and continued field declaration.
+Visibility, another declaration section, a routine or a property ends that section.
+Later instance fields/properties retain independent flags and owners. All entries
+share the existing declaration quotas and immutable snapshot lifetime.
+
+Supported FPC `generic class function`/`generic class procedure` prefixes retain
+their generic signature and parameter scope. Prefixes are consumed once;
+unsupported orders/duplicates retain explicit diagnostics. Ordinary class methods
+and generic declarations keep their existing paths. A visible generic method
+declaration does not provide an inferred specialization: unresolved generic
+arguments remain explicit, and full call inference/constraints stay open.
+
+Qualified name binding also follows imported receiver types/values. For example,
+`TCounterSettings.State.Count` can resolve an imported class, its class property
+and the returned record field. Local declarations retain priority; established
+explicit unit namespaces keep their authority. When no such namespace applies,
+ordinary import lookup retains use order and refuses an uncaptured potential
+shadowing unit. This changes neither import authority nor compiler/SDK capture.
+Calls, indexing and constructed receiver expressions still require further
+inference rather than being treated as simple dotted names.
+
+The maintained native companions execute class/record properties, all continued
+class storage and actual generic-method specializations. The generic input unit
+deliberately uses ObjFPC syntax as a compiler oracle; the product and test harness
+remain Delphi dialect. Analysis reads the exact whole units/include, and ordinary
+completion preserves property/result origins and stages an exact detached insertion.
+Small controlled base captures qualify lookup/refusal cases separately from the
+unchanged real-System/ObjPas consumer. They do not substitute for actual SDK meaning.
+
+WORK.md owns final source/consumer evidence, retained failures and remaining
+compilerproc/CODEALIGN boundaries. Full property/generic/expression semantics,
+canonical types, modules, incremental work, editor/input/navigation, quality,
+browser/LCL parity, adoption and delivery remain under original authoring
+criterion two. Browser consumers compile only; this installs no default resolver,
+MCP tool/schema or observing release.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

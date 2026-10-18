@@ -182,6 +182,12 @@ Labels participate in shadowing and `declared` while refusing value-type inferen
 Module GOTO requests and procedural type/value boundaries retain their own typed
 contracts; full language, editor adoption and both-target quality remain open.
 
+The [class-member continuation](docs/pascal-projects.md#class-member-declaration-families)
+preserves class properties, continued class-var sections and FPC generic-class
+signatures. Ordinary completion follows an imported class property into its
+record result with exact navigation and detached insertion. Full property/
+generic/expression semantics, editor adoption and both-target quality stay open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
