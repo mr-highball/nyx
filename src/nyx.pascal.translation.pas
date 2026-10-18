@@ -436,6 +436,10 @@ implementation
 
 uses SysUtils, nyx.bytes, nyx.editing;
 
+const
+  { Immutable blocks bound each partial-tail copy and keep indexed reads flat. }
+  CTranslationPrefixBlockSize = 256;
+
 type
   { File-only compatibility view. The first immutable occurrence is retained;
     differing later policies/tokens revoke ambiguous legacy access. }
@@ -512,6 +516,33 @@ type
     function EmissionDirectiveCount: Integer;
     function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
   end;
+  { Advertises storage only when the retained source actually supplies its
+    immutable arena receipt. Exclusive source bounds remain with the base view;
+    the receipt describes the underlying arena, including its boundary token. }
+  TStoredTranslationPrefix = class(TTranslationPrefix, INyxPascalPrefixTokenStorage)
+  private
+    function Storage: INyxPascalPrefixTokenStorage;
+  public
+    function TokenRows: Integer;
+    function CopiedTokenRows: Integer;
+    function SharedTokenRows: Integer;
+    function DirectoryEntries: Integer;
+  end;
+  { Private immutable translated rows; no interface or live-builder pointer is
+    stored in a token value. The block itself owns the value array. }
+  ITranslatedTokenBlock = interface(IInterface)
+    function Token(AIndex: Integer): TNyxPascalTranslatedToken;
+  end;
+  { A snapshot owns its directory slots while completed blocks are shared.
+    Mutable array slots are never aliased between builder and frozen snapshots. }
+  TTranslatedTokenBlocks = array of ITranslatedTokenBlock;
+  { Filled completely before publication. A private partial block is never
+    extended after another prefix has retained it. }
+  TTranslatedTokenBlock = class(TInterfacedObject, ITranslatedTokenBlock)
+  public
+    Rows: array of TNyxPascalTranslatedToken;
+    function Token(AIndex: Integer): TNyxPascalTranslatedToken;
+  end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
   TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver,
@@ -584,6 +615,11 @@ type
     FCaptures: array of INyxPascalLexicalPrefixCapture;
     FWindows: array of INyxPascalLexicalPrefix;
     FTokens: array of TNyxPascalTranslatedToken;
+    { Complete-block cache during ordinary construction; detached directory in
+      a frozen prefix. The live cache retires on success and every failure. }
+    FPrefixBlocks: TTranslatedTokenBlocks;
+    FIsFrozen: Boolean;
+    FSharedRows: Integer;
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
     FMacroStates: array of INyxPascalMacroEnvironment;
@@ -687,6 +723,74 @@ type
     function OptimizationDirectiveCount: Integer;
     function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
   end;
+  { Only this detached construction exposes a token-storage receipt. All token
+    rows, directories and physical windows are immutable and retain no reader. }
+  TFrozenTranslation = class(TTranslation, INyxPascalPrefixTokenStorage)
+  public
+    function TokenRows: Integer;
+    function CopiedTokenRows: Integer;
+    function SharedTokenRows: Integer;
+    function DirectoryEntries: Integer;
+  end;
+
+function TTranslatedTokenBlock.Token(AIndex: Integer): TNyxPascalTranslatedToken;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Rows)) then
+  begin
+    raise ENyxPascalContext.Create('Translated token is outside its immutable block');
+  end;
+  Result := Rows[AIndex];
+end;
+
+function TFrozenTranslation.TokenRows: Integer;
+begin
+  Result := FTokenCount;
+end;
+
+function TFrozenTranslation.CopiedTokenRows: Integer;
+begin
+  Result := FTokenCount - FSharedRows;
+end;
+
+function TFrozenTranslation.SharedTokenRows: Integer;
+begin
+  Result := FSharedRows;
+end;
+
+function TFrozenTranslation.DirectoryEntries: Integer;
+begin
+  Result := Length(FPrefixBlocks);
+end;
+
+function TStoredTranslationPrefix.Storage: INyxPascalPrefixTokenStorage;
+begin
+
+  if not Supports(FSource, INyxPascalPrefixTokenStorage, Result) then
+  begin
+    raise ENyxPascalContext.Create('A stored prefix lost its immutable arena receipt');
+  end;
+end;
+
+function TStoredTranslationPrefix.TokenRows: Integer;
+begin
+  Result := Storage.TokenRows;
+end;
+
+function TStoredTranslationPrefix.CopiedTokenRows: Integer;
+begin
+  Result := Storage.CopiedTokenRows;
+end;
+
+function TStoredTranslationPrefix.SharedTokenRows: Integer;
+begin
+  Result := Storage.SharedTokenRows;
+end;
+
+function TStoredTranslationPrefix.DirectoryEntries: Integer;
+begin
+  Result := Storage.DirectoryEntries;
+end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
 begin
@@ -865,16 +969,28 @@ begin
     FConditions := nil;
     FPrefixConditions := nil;
     FWork := nil;
+    FPrefixBlocks := nil;
   end;
 end;
 
 constructor TTranslation.CreatePrefix(ASource: TTranslation);
 var
   LAt: Integer;
+  LRow: Integer;
+  LFirst: Integer;
+  LCount: Integer;
+  LBlock: TTranslatedTokenBlock;
+  LLease: ITranslatedTokenBlock;
   LDiagnostic: Integer;
   LFrame: TCompilerSettingsStack;
 begin
   inherited Create;
+
+  if (ASource = nil) or ASource.FIsFrozen then
+  begin
+    raise ENyxPascalContext.Create('Only the live translation can freeze its admitted token blocks');
+  end;
+  FIsFrozen := True;
   FOptions := ASource.FOptions;
   FFiles := ASource.FFiles;
   FInitial := ASource.FInitial;
@@ -884,11 +1000,47 @@ begin
   FOccurrenceCount := ASource.FOccurrenceCount;
   FStateCount := ASource.FStateCount;
   FDiagnosticCount := ASource.FDiagnosticCount;
-  SetLength(FTokens, FTokenCount);
-  for LAt := 0 to FTokenCount - 1 do
+  FSharedRows := Length(ASource.FPrefixBlocks) * CTranslationPrefixBlockSize;
+
+  if FSharedRows > FTokenCount then
+  begin
+    raise ENyxPascalContext.Create('Frozen translation blocks exceed their producing reader');
+  end;
+  while Length(ASource.FPrefixBlocks) < FTokenCount div CTranslationPrefixBlockSize do
+  begin
+    LFirst := Length(ASource.FPrefixBlocks) * CTranslationPrefixBlockSize;
+    LBlock := TTranslatedTokenBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, CTranslationPrefixBlockSize);
+    for LRow := 0 to CTranslationPrefixBlockSize - 1 do
+    begin
+      ASource.CheckCancellation;
+      LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
+    end;
+    LAt := Length(ASource.FPrefixBlocks);
+    SetLength(ASource.FPrefixBlocks, LAt + 1);
+    ASource.FPrefixBlocks[LAt] := LLease;
+  end;
+  LCount := Length(ASource.FPrefixBlocks);
+  SetLength(FPrefixBlocks, LCount + Ord(FTokenCount mod CTranslationPrefixBlockSize <> 0));
+  for LAt := 0 to LCount - 1 do
   begin
     ASource.CheckCancellation;
-    FTokens[LAt] := ASource.FTokens[LAt];
+    FPrefixBlocks[LAt] := ASource.FPrefixBlocks[LAt];
+  end;
+
+  if FTokenCount mod CTranslationPrefixBlockSize <> 0 then
+  begin
+    LFirst := LCount * CTranslationPrefixBlockSize;
+    LBlock := TTranslatedTokenBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, FTokenCount - LFirst);
+    for LRow := 0 to High(LBlock.Rows) do
+    begin
+      ASource.CheckCancellation;
+      LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
+    end;
+    FPrefixBlocks[LCount] := LLease;
   end;
   FStates := Copy(ASource.FStates, 0, FStateCount);
   FMacroStates := Copy(ASource.FMacroStates, 0, FStateCount);
@@ -1569,7 +1721,7 @@ begin
 
             if FPrefixConditions.PreparePrefix(LOrigin, FContext, LValue) then
             begin
-              LSnapshot := TTranslation.CreatePrefix(Self);
+              LSnapshot := TFrozenTranslation.CreatePrefix(Self);
               LPrefix := NewNyxPascalTranslationPrefix(LSnapshot,
                 LOrigin.PrefixCount, FOptions, FCancellation);
               Result := FPrefixConditions.EvaluatePrefix(LOrigin, FContext, LValue, LPrefix);
@@ -3201,7 +3353,16 @@ begin
   begin
     raise ENyxPascalContext.Create('Translated token index is outside its snapshot');
   end;
-  Result := FTokens[AIndex];
+
+  if FIsFrozen then
+  begin
+    Result := FPrefixBlocks[AIndex div CTranslationPrefixBlockSize].Token(
+      AIndex mod CTranslationPrefixBlockSize);
+  end
+  else
+  begin
+    Result := FTokens[AIndex];
+  end;
 end;
 
 function TTranslation.PhysicalToken(AIndex: Integer): TNyxPascalToken;
@@ -4133,8 +4294,18 @@ end;
 function NewNyxPascalTranslationPrefix(const ASource: INyxPascalTranslation;
   ABeforeToken: Integer; const AOptions: TNyxPascalTranslationOptions;
   const ACancellation: INyxCancellationScope): INyxPascalTranslation;
+var
+  LStorage: INyxPascalPrefixTokenStorage;
 begin
-  Result := TTranslationPrefix.Create(ASource, ABeforeToken, AOptions, ACancellation);
+
+  if Supports(ASource, INyxPascalPrefixTokenStorage, LStorage) then
+  begin
+    Result := TStoredTranslationPrefix.Create(ASource, ABeforeToken, AOptions, ACancellation);
+  end
+  else
+  begin
+    Result := TTranslationPrefix.Create(ASource, ABeforeToken, AOptions, ACancellation);
+  end;
 end;
 
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;

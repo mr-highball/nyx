@@ -228,8 +228,21 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
-  { Revocable construction borrow. Freeze copies the already scanned prefix at
-    the current synchronous callback; after the reader retires, Freeze refuses.
+  { Optional immutable token-arena receipt. Copied/shared rows describe this
+    freeze, including a translation wrapper's exclusive boundary token when its
+    underlying arena retains one. Directory entries are copied references to
+    fixed-size immutable blocks; diagnostics and other metadata remain separate.
+    These storage counts grant no syntax-reuse authority or reduced work charge. }
+  INyxPascalPrefixTokenStorage = interface(IInterface)
+    ['{C529230E-877F-4819-B322-53B1F6F262E1}']
+    function TokenRows: Integer;
+    function CopiedTokenRows: Integer;
+    function SharedTokenRows: Integer;
+    function DirectoryEntries: Integer;
+  end;
+  { Revocable construction borrow. Freeze retains the already scanned prefix at
+    the current synchronous callback, sharing only immutable complete blocks and
+    copying the unfinished block; after the reader retires, Freeze refuses.
     Retaining this capability does not keep its borrowed lexer alive. }
   INyxPascalLexicalPrefixCapture = interface(IInterface)
     ['{16A6A7AC-A9B2-4375-84A1-47B64F0E47C8}']
@@ -290,6 +303,8 @@ implementation
 uses nyx.text.index, nyx.unicode, nyx.unicode.types;
 
 const
+  { Bounds tail recopying without a recursive chain or a mutable shared vector. }
+  CLexicalPrefixBlockSize = 256;
   CWords: array[TNyxPascalWord] of TNyxText = (
     '', 'absolute', 'abstract', 'alias', 'and',
     'array', 'as', 'asm', 'assembler', 'automated',
@@ -330,6 +345,21 @@ const
 type
   { Active nested block-comment delimiter, never a compiler conditional scope. }
   TCommentDelimiter = (pcdBrace, pcdParenthesis);
+  { Private immutable block owner. Its value rows contain no interfaces and
+    never refer back to a lexer, visitor or mutable token vector. }
+  ILexicalTokenBlock = interface(IInterface)
+    function Token(AIndex: Integer): TNyxPascalToken;
+  end;
+  { Independent directories may share completed blocks; their interface slots
+    are copied explicitly rather than sharing a mutable dynamic-array vector. }
+  TLexicalTokenBlocks = array of ILexicalTokenBlock;
+  { Filled before publication, then read-only. At most 256 token values belong
+    to a block; the last partial block is private to its frozen prefix. }
+  TLexicalTokenBlock = class(TInterfacedObject, ILexicalTokenBlock)
+  public
+    Rows: array of TNyxPascalToken;
+    function Token(AIndex: Integer): TNyxPascalToken;
+  end;
   { Owns exact text/vectors. Cursor and observer/cancellation borrows exist only
     during Build; publication retains initial options and contextually scanned
     tokens, releasing both external interfaces. No partial snapshot escapes. }
@@ -338,6 +368,9 @@ type
     FSource: TNyxText;
     FOptions: TNyxPascalLexicalOptions;
     FTokens: array of TNyxPascalToken;
+    { Construction-only cache of complete immutable blocks. Frozen directories
+      retain their own leases; this cache retires on every constructor exit. }
+    FPrefixBlocks: TLexicalTokenBlocks;
     FDiagnostics: array of TNyxPascalLexicalDiagnostic;
     FTokenCount: Integer;
     FDiagnosticCount: Integer;
@@ -383,13 +416,17 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
-  { Copies only admitted token/diagnostic rows while the source is paused. Full
-    source storage is immutable; a later scan cannot extend or alter this view. }
-  TFrozenLexicalPrefix = class(TInterfacedObject, INyxPascalLexicalPrefix)
+  { Retains admitted rows through shared complete blocks and one private tail.
+    The directory and diagnostics are detached; later scanning cannot change
+    this view, and indexed access has no recursive snapshot-chain cost. }
+  TFrozenLexicalPrefix = class(TInterfacedObject, INyxPascalLexicalPrefix,
+    INyxPascalPrefixTokenStorage)
   private
     FSource: TNyxText;
     FScalars: Integer;
-    FTokens: array of TNyxPascalToken;
+    FBlocks: TLexicalTokenBlocks;
+    FCount: Integer;
+    FShared: Integer;
     FDiagnostics: array of TNyxPascalLexicalDiagnostic;
   public
     constructor Create(AReader: TLexicalSnapshot);
@@ -400,6 +437,10 @@ type
     function Text(AIndex: Integer): TNyxText;
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
+    function TokenRows: Integer;
+    function CopiedTokenRows: Integer;
+    function SharedTokenRows: Integer;
+    function DirectoryEntries: Integer;
   end;
   { Owns no lexer reference. The constructor's local lease guarantees this
     bridge is detached on success and every exception path before retirement. }
@@ -568,6 +609,7 @@ begin
     begin
       LCapture.Reader := nil;
     end;
+    FPrefixBlocks := nil;
     FCancellation := nil;
     FObserver := nil;
     FRegionObserver := nil;
@@ -577,16 +619,60 @@ end;
 constructor TFrozenLexicalPrefix.Create(AReader: TLexicalSnapshot);
 var
   LAt: Integer;
+  LRow: Integer;
+  LFirst: Integer;
+  LCount: Integer;
+  LBlock: TLexicalTokenBlock;
+  LLease: ILexicalTokenBlock;
 begin
   inherited Create;
   AReader.CheckCancellation;
   FSource := AReader.FSource;
   FScalars := AReader.FOffset;
-  SetLength(FTokens, AReader.FTokenCount);
-  for LAt := 0 to High(FTokens) do
+  FCount := AReader.FTokenCount;
+  FShared := Length(AReader.FPrefixBlocks) * CLexicalPrefixBlockSize;
+
+  if FShared > FCount then
+  begin
+    raise ENyxPascalLexical.Create('Frozen lexical blocks exceed their producing reader');
+  end;
+  { Completed blocks are immutable from their first publication. The producing
+    reader caches only full blocks; a later freeze never extends an old tail. }
+  while Length(AReader.FPrefixBlocks) < FCount div CLexicalPrefixBlockSize do
+  begin
+    LFirst := Length(AReader.FPrefixBlocks) * CLexicalPrefixBlockSize;
+    LBlock := TLexicalTokenBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, CLexicalPrefixBlockSize);
+    for LRow := 0 to CLexicalPrefixBlockSize - 1 do
+    begin
+      AReader.CheckCancellation;
+      LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
+    end;
+    LAt := Length(AReader.FPrefixBlocks);
+    SetLength(AReader.FPrefixBlocks, LAt + 1);
+    AReader.FPrefixBlocks[LAt] := LLease;
+  end;
+  LCount := Length(AReader.FPrefixBlocks);
+  SetLength(FBlocks, LCount + Ord(FCount mod CLexicalPrefixBlockSize <> 0));
+  for LAt := 0 to LCount - 1 do
   begin
     AReader.CheckCancellation;
-    FTokens[LAt] := AReader.FTokens[LAt];
+    FBlocks[LAt] := AReader.FPrefixBlocks[LAt];
+  end;
+
+  if FCount mod CLexicalPrefixBlockSize <> 0 then
+  begin
+    LFirst := LCount * CLexicalPrefixBlockSize;
+    LBlock := TLexicalTokenBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, FCount - LFirst);
+    for LRow := 0 to High(LBlock.Rows) do
+    begin
+      AReader.CheckCancellation;
+      LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
+    end;
+    FBlocks[LCount] := LLease;
   end;
   SetLength(FDiagnostics, AReader.FDiagnosticCount);
   for LAt := 0 to High(FDiagnostics) do
@@ -594,6 +680,36 @@ begin
     AReader.CheckCancellation;
     FDiagnostics[LAt] := AReader.FDiagnostics[LAt];
   end;
+end;
+
+function TLexicalTokenBlock.Token(AIndex: Integer): TNyxPascalToken;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Rows)) then
+  begin
+    raise ENyxPascalLexical.Create('Lexical token is outside its immutable block');
+  end;
+  Result := Rows[AIndex];
+end;
+
+function TFrozenLexicalPrefix.TokenRows: Integer;
+begin
+  Result := FCount;
+end;
+
+function TFrozenLexicalPrefix.CopiedTokenRows: Integer;
+begin
+  Result := FCount - FShared;
+end;
+
+function TFrozenLexicalPrefix.SharedTokenRows: Integer;
+begin
+  Result := FShared;
+end;
+
+function TFrozenLexicalPrefix.DirectoryEntries: Integer;
+begin
+  Result := Length(FBlocks);
 end;
 
 function TLexicalPrefixCapture.Freeze: INyxPascalLexicalPrefix;
@@ -618,17 +734,17 @@ end;
 
 function TFrozenLexicalPrefix.Count: Integer;
 begin
-  Result := Length(FTokens);
+  Result := FCount;
 end;
 
 function TFrozenLexicalPrefix.Token(AIndex: Integer): TNyxPascalToken;
 begin
 
-  if (AIndex < 0) or (AIndex >= Length(FTokens)) then
+  if (AIndex < 0) or (AIndex >= FCount) then
   begin
     raise ENyxPascalLexical.Create('Token index is outside the frozen lexical prefix');
   end;
-  Result := FTokens[AIndex];
+  Result := FBlocks[AIndex div CLexicalPrefixBlockSize].Token(AIndex mod CLexicalPrefixBlockSize);
 end;
 
 function TFrozenLexicalPrefix.Text(AIndex: Integer): TNyxText;

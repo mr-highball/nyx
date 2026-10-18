@@ -9,7 +9,26 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Integer-pattern prerequisite (2026-10-18): exact 64-bit AND/OR/XOR and explicit
+Shared-prefix prerequisite (2026-10-18): lexical and translated freezes now share
+immutable complete token blocks, retain independent partial tails/directories and
+release construction-only caches on success/failure/cancellation. Flat indexed
+reads preserve physical origins, macro/state/settings and detached lifetimes.
+Native focused storage checks pass 336 with clean heap; browser compilation is
+separate from execution. This only avoids repeated storage copying. Projection,
+syntax and binding still rebuild whole prefixes, and their existing full work
+charge remains unchanged. Append-only projection and safe declaration parser
+checkpoints remain necessary before reducing the aggregate charge. Do not replace
+them with counters, guessed reuse authority, relaxed budgets or fixed SDK facts.
+WORK.md owns the frozen maintained/actual RTL outcome, preservation and the return
+to genuine incremental syntax/binding. No original criterion/task/credit/DONE or
+full source/editor/quality/parity/adoption/delivery closes.
+All 40 maintained native consumers pass; 73 current compiler jobs have zero owned
+warnings. The unchanged original RTL run retains the same round-26 prefix-budget
+failure, clean heap and no final semantic/indexed result. Exact source preservation
+and the single layout-only evidence overlay are recorded in WORK.md. Stop storage/
+capture/compiler variants and return to append-only projection/parser checkpoints.
+
+Historical integer-pattern prerequisite (2026-10-18): exact 64-bit AND/OR/XOR and explicit
 value complement now use bounded byte lanes over existing exact decimal storage.
 Captured FPC/version authority selects ordinary/conditional source integer masks
 and high-bit radix interpretation. Raw token values stay mathematical; source NOT,

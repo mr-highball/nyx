@@ -33,7 +33,85 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Exact integer masks and source-radix meaning — 2026-10-18
+## Current integration: Shared immutable prefix token storage — 2026-10-18
+
+5841d16 identifies the remaining aggregate failure as repeated growing-prefix
+analysis. Source review finds two concrete prerequisites: freezes copy both the
+translated vector and active physical lexical windows, then projection/syntax/
+binding reconstructs the full preceding module. Current code addresses storage:
+lexical captures and translated freezes share completed immutable 256-row blocks,
+own their directory slots and copy their final partial block independently.
+Lookup stays flat; no chain of prior snapshots or live-builder back reference is
+retained. Construction-only caches retire on success and every exception path.
+The optional typed storage receipt describes copied/shared token rows and
+directory entries, including a translated prefix's retained exclusive boundary
+token. It grants no syntax reuse or reduced work authority. Alternate ordinary
+translations do not falsely advertise this capability.
+
+Focused native storage checks pass 336 with clean heap. Independent whole lexing
+matches every saved token's text, spans, kind, numeric/word/symbol flags, Unicode/
+NUL storage and region across block boundaries. Growing translated windows match
+their ordinary dense final source, including repeated includes, macro expansions,
+historical pre-state and saved settings. Callback failure and cancellation after
+sharing publish no ordinary result; detached snapshots survive while their
+callback/borrow retires. Many growing freezes copy less than half the logical
+row sum without mutating earlier snapshots. These are actual storage comparisons,
+not a wall-clock, browser execution or full incremental-performance claim.
+The first focused compiler log's unset-result warning is retained; its fixture
+stub receives an explicit Unknown result before deliberate refusal. Reviewed
+native/browser compilation then has zero owned warnings. Existing lexical 66 and
+conditional 37 pass before the wider frozen qualification.
+
+Three focused source files are frozen, with exact receipts under the ignored
+`.local/prefix-storage-paths-private.json` packet. The original 2M full-view/4M
+aggregate/64-round caps and every compiler probe/consumer remain unchanged. Full
+prefix projection/parsing still runs and remains charged. Genuine append-only
+projection and parser checkpoints must precede any accounting change; binding
+reuse must preserve exact context and unfinished scope owners. Full original
+criterion/task/credit/DONE/source/type/incremental/editor/input/quality/parity/
+adoption/delivery stays open. Browser products compile only; LAN remains offline.
+
+All 40 maintained native consumers and the focused storage consumer pass with
+clean heaps. Native actual-source lexical reading passes 566 across 499 files/
+2,292,060 lossless tokens. Syntax reading passes 7,885 across five inputs/3,834
+declarations; counts overlap. All 73 current compiler jobs succeed with zero
+owned warnings/168 upstream. Both Studios/backend/worker and 29 browser consumers
+compile as applicable; none is browser-executed. The historical emission compiler
+log remains an exact read-only test input, excluded from current compiler jobs.
+Final evidence is composite for exactly one preferred blank line above the new
+frozen-token branch, added after the three-source functional freeze. Exact old
+bytes and the one-line layout proof are retained; final source lexical reading
+passes. No runtime logic changed and no uninterrupted final-byte full run is claimed.
+
+The unchanged original RTL consumer remains a retained failed gate: exit one,
+clean heap, the same prefix phase at logical round 26, used 3,971,021/requested
+268,501/limit 4,000,000, translated 268,502. Longint, Int64 and Pointer remain
+binding-derived measurement requests; no new fixed query or quota is added.
+There is no final System/ObjPas semantic/indexed result or full RTL success.
+Original source/probe/2M view/4M aggregate/64-round limits remain exact. Stop
+storage/capture/compiler variants; next implement actual append-only analysis
+projection and safe declaration parser checkpoints through the existing
+translated-syntax/lexical/syntax/binding owners. Completed declarations may be
+reused only with exact lineage/context authority; an unfinished enclosing type
+or routine must retain its owner and reparse any provisional tail. Preserve
+physical origins, diagnostics, include/branch/macro/settings state, cancellation,
+both work caps and atomic refusal. Storage receipts alone do not authorize reuse.
+
+Original reader session 20561/PID 1508 is terminal exit one; native/regression/
+products sessions 39417/6831/76899 are terminal exit zero. No owned reader remains.
+Three focused final sources, 657 other maintained sources, 97 RTL/24 retained
+compiler inputs and three additionally inspected compiler sources stay exact;
+maintained inventory remains 659. All 156 original unit packets, 48 retained
+includes, five protected files/nine complete contexts, 349 frozen 7422453 artifacts
+and 13 concurrent planning files remain exact. Final source/remote identity is in
+the packet's final-checkpoint-private.json. Native Nyx tools remain absent; no
+fallback transport, host/config retry, browser/HTTP/file execution/capture,
+protected mutation, cleanup/restart, approval bypass, new tool/schema/rollout or
+sub-agents occurs. At least thirty-eight batches remain unclosed against the full
+original language/editor/incremental/input/quality/parity/adoption/delivery scope;
+no original criterion/task/credit/DONE closes.
+
+## Previous integration: Exact integer masks and source-radix meaning — 2026-10-18
 
 16d6f35 reached HeapInc's MaxVarChunkSize initializer, which combines shifted
 arithmetic with integer AND and a negative mask. Existing exact constant values

@@ -2076,6 +2076,35 @@ seed a fixed list or infer target widths. Replaying larger source remains a
 bounded full construction, not an incremental-performance claim. WORK.md owns
 the actual results, retained failures and remaining type/editor/parity gates.
 
+## Shared frozen token storage
+
+Lexical construction captures and the source-aware translator now retain frozen
+tokens in immutable blocks. Each snapshot owns its directory slots; complete
+earlier blocks are shared, while the final partial block is copied independently.
+Lookup remains flat, without a recursive chain of earlier snapshots. The live
+reader's cache retires on success, callback failure and cancellation. Retaining a
+frozen snapshot cannot keep its reader or callback alive or revive a retired
+construction borrow.
+
+The optional `INyxPascalPrefixTokenStorage` receipt distinguishes `TokenRows`,
+`CopiedTokenRows`, `SharedTokenRows` and `DirectoryEntries`. These describe token
+storage only. Diagnostics, physical occurrence windows, compiler states, macro
+environments and saved settings keep their independent exact ownership. A
+translated prefix's storage receipt includes its underlying exclusive boundary
+token; that token remains outside the prefix's public source view. Ordinary
+complete translations and alternate sources without this receipt do not
+advertise frozen-arena storage.
+
+This is a prerequisite to genuine incremental analysis. The current projection
+and declaration parser still process complete prefixes, and their original
+aggregate charge remains unchanged. Neither storage sharing nor its counters
+authorizes discounting that repeated work. Append-only projection, safe parser
+checkpoints and binding reuse must preserve unfinished declaration owners,
+physical origins, exact compiler/source context, cancellation and atomic refusal.
+WORK.md owns the native checks, compiled-only browser consumer, maintained
+regressions and unchanged actual RTL gate; full editor/incremental/parity/adoption
+and delivery remain open.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.
