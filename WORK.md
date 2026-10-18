@@ -33,7 +33,88 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Retained Studio completion popup — 2026-10-17
+## Current integration: Fresh Pascal lexical and scope foundation — 2026-10-17
+
+Previous goal turn is progress: pushed ae51467 connects the retained ordinary
+completion popup using controlled replies. The user explicitly selected a fresh,
+wholly Nyx-owned MIT Pascal resolver; do not ask that engine choice again. This
+batch serves original NS-4 criterion two and its existing service prerequisites,
+without adopting/running/distributing the historical CodeTools experiment.
+
+Reassessment: the admission lexer intentionally drops trivia/decodes strings and
+refuses incomplete prefixes; the existing declaration index omits declared types.
+Neither is silently repurposed into a compiler resolver. New public
+nyx.pascal.lexing owns exact physical text and lossless scalar-positioned tokens,
+closed word/symbol/numeric choices, trivia/directives, EOF and recovery diagnostics.
+CR/LF/CRLF, quoted escapes, supplementary Unicode and NUL remain exact. Explicit
+comment/identifier policies, byte/token/diagnostic/depth quotas and cooperative
+cancellation refuse complete candidates on hard limits. The immutable vocabulary
+retains no source/session and has native finalization/browser module lifetime.
+
+New nyx.pascal.syntax owns recoverable declared structure: typed surface forms,
+exact type/ancestor/generic/result/signature expressions, access/passing modes,
+fields/properties/parameters/constants/imports, forward/overload links and nested
+routine/member/block scopes. Qualified routines retain short lookup names and
+explicit owner spelling. Physical fragments require explicit grammar context.
+Unspecified member access is not guessed. Missing expressions/bodies remain
+incomplete; anonymous/inline/variant declarations explicitly retain unsupported
+scope uncertainty. Complete means closed boundaries, never compiler acceptance.
+Includes/conditional branches report required context, preserving both branches
+instead of claiming evaluated semantics. No type-expression binding is implied.
+
+Evidence behind ignored .local/owned-resolver-paths-private.json, four exact
+Pascal inputs pinned in source-pins-final-private.json:
+
+- logs/lex-final-run.log passes 530 native lexical checks across 480 actual owned
+  source/include files and 2,113,364 lossless tokens, clean heap. Per-file coverage
+  joins every token to the exact original, checks contiguous scalar positions and
+  token lookup, and requires no lexical diagnostics. This is lexical coverage,
+  not compiler acceptance of every source or a project-scale latency benchmark.
+- logs/syntax-final-run.log passes 7,602 native structure/scope assertions across
+  five actual inputs and 3,707 declarations, clean heap. Counts include repeated
+  per-entry invariants and forward/overload declarations, not distinct resolved
+  symbols. The actual INyxBadge/WithText signature retains INyxBadge result and
+  TNyxText parameter syntax. Generic/nested/shadowed/visibility/property/recovery,
+  explicit fragments, incomplete boundaries, unsupported scope, quota and
+  cancellation fixtures pass. Actual sources retain ten explicit syntax/context
+  diagnostics; they are not asserted to have full grammar support.
+- Four final compiler logs (lex-final, lex-browser-final, syntax-final,
+  syntax-browser-final) pass with zero owned warnings and fourteen upstream
+  pas2js RTL case warnings. Both browser consumers compile only. Native runtime
+  checks do not prove browser record/array/Unicode execution or platform parity.
+  Existing products are untouched consumers of the prior engine boundary; no
+  Studio/backend default-provider change is made by these new units.
+
+Retained preparations: lex-1 exposes a fixture's missing scalar-helper import,
+extra parenthesis and unsupported pas2js unit finalization. lex-2 native passes;
+its browser compile exposes a fixture-only Int64 warning, replaced with the
+existing target-safe count type. syntax-1 native passes while compilation exposes
+three incomplete case actions and a grouped-array initialization warning;
+its browser fixture lacks a conditional native stderr guard. syntax-2 passes
+after repairs. Final review expands case/exception bodies, documents public
+contracts and marks unsupported inline scopes/closed module boundaries explicitly.
+Preparations remain excluded from accepted compiler receipts. No Pascal inputs
+change while owned compiler/runtime/helper readers are live; every reader joins.
+
+Five protected files/nine complete contexts/history/drafts/profile and 349 frozen
+7422453 artifacts remain exact. LAN stays offline. Native Nyx tools remain absent;
+no active design is modified. There is no HTTP/browser execution, capture,
+protected configuration/enrollment/cleanup retry, approval bypass, deletion or
+sub-agent. Tools stay 24/frozen 23, Pascal modes eighteen. No new MCP schema/kind,
+original full criterion/task/counter/credit/DONE, engine, full parity or rollout
+closes. Final-checkpoint-private.json owns terminal, compiler, source/remote and
+preservation receipts; the original full Nyx/Studio goal remains active.
+
+Stop lexical/corpus/scope/compiler variants. Next prerequisite is exact captured
+translation context for includes, conditional branches and compiler/version/mode
+policies through existing immutable multi-file ownership, followed by structured
+type expressions and semantic name/type/member binding. Generic token splitting,
+anonymous/inline/variant/helper grammar, alias/inheritance/interface/overload
+resolution, dependency invalidation, cancellable incremental budgets and shared
+provider/editor/navigation adoption remain original requirements. Their ownership
+and browser/other-widgetset/input/visual/accessibility/delivery gates stay intact.
+
+## Prior integration: Retained Studio completion popup — 2026-10-17
 
 Previous goal turn is progress: pushed a1e42f2 qualifies authored/physical source
 projection. This batch connects the existing private operator channel and public

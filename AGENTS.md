@@ -4,6 +4,21 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source fresh Nyx-owned Pascal analysis has lossless physical tokens and
+recoverable declared type/signature/scope structure. Native lexical 530 across
+480 files/2,113,364 tokens and syntax 7,602 across five inputs/3,707 declarations
+pass, clean heaps. Counts overlap per-entry invariants; ten syntax/context
+diagnostics remain explicit. Four final native/browser compiler logs have zero
+owned warnings (14 upstream RTL); browser consumers compile only. Exact includes,
+conditional/compiler context and structured type binding remain prerequisites to
+a real provider; this is not full semantic resolution or Studio adoption. Five
+protected files/nine complete contexts and 349 frozen 7422453 artifacts stay exact;
+LAN is offline. WORK.md owns pins/receipts/failures and original authoring ownership.
+Stop lexical/corpus/scope/compiler variants; next capture exact translation context,
+then implement type/name/member binding through the existing provider boundary.
+No full criterion/task/counter/credit/DONE/parity/schema/rollout closes. No HTTP-host
+retry, protected configuration/cleanup bypass, deletion or sub-agents.
+
 Resolver direction is now decided by the user (2026-10-17): build a fresh, wholly
 Nyx-owned Pascal engine with MIT licensing and modern editing capabilities.
 Historical optional CodeTools qualification is not the engine to adopt/distribute;

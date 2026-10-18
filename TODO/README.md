@@ -3,6 +3,13 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+The user-selected fresh [Nyx-owned Pascal engine](../docs/pascal-projects.md#nyx-owned-pascal-analysis)
+now has lossless lexical and recoverable declaration/scope primitives. Original
+authoring criterion two retains captured include/conditional/compiler context,
+semantic binding, provider adoption and full incremental/navigation/quality/parity
+requirements. Native corpus checks and browser compilation grant no language-engine
+completion, new task credit or rollout. WORK.md owns the exact qualified boundary.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).

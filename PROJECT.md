@@ -29,6 +29,12 @@ now performs revision/context/permission-aware analysis outside the model guard.
 The user selected a fresh Nyx-owned resolver. No default engine/helper binary is
 installed; full language/compiler context and observing delivery remain open.
 
+The fresh [lexical and declared-scope foundation](docs/pascal-projects.md#nyx-owned-pascal-analysis)
+now retains every source token and recovers typed declaration syntax in unfinished
+buffers. Native checks exercise actual Nyx sources; browser consumers compile only.
+Captured include/compiler context and semantic type/member binding are still ahead;
+this foundation is not yet a completion provider or Studio engine.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

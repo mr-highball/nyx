@@ -736,6 +736,63 @@ and changes no enrollment/active project.
 WORK.md separates actual native evidence from compiled-only browser results and
 the remaining full service/editor/parity/delivery outcomes.
 
+## Nyx-owned Pascal analysis
+
+`nyx.pascal.lexing` is the first layer of the user-selected fresh MIT-licensed
+engine. Its immutable snapshot owns exact physical text, including whitespace,
+comments, compiler directives, quoted delimiters, character-code spellings and
+unfinished/invalid tokens. One zero-length EOF closes every stream. Public ranges
+count Unicode scalars, with one-based lines/columns and CRLF treated as one newline;
+native byte and browser UTF-16 indices stay private. Malformed Unicode refuses.
+Unfinished strings recover at the next physical newline; unfinished comments retain
+their remaining text and diagnostic. Nothing here admits or executes Pascal.
+
+Closed word/symbol/numeric enums describe spelling without claiming every spelling
+is legal in every compiler mode. Defaults use ASCII identifiers and Delphi-style
+non-nested comment termination. Nested comments and category-based Unicode
+identifiers are explicit independent policies; Unicode analysis is not compiler
+eligibility. Options bound UTF-8 source bytes on both targets, tokens including
+trivia/EOF, diagnostics and comment depth. Exceeding a quota or cooperative
+cancellation refuses the complete candidate instead of returning truncated context.
+
+`nyx.pascal.syntax` retains declared type/signature expressions, generic/ancestor
+ranges, authored visibility, grouped fields/parameters, properties, overload links,
+imports and lexical scope containment. Module, declaration, type, member and
+interface-declaration fragments have explicit starting contexts. Name lookup is
+ASCII case-insensitive within one exact scope; it follows no imports or inheritance.
+Unspecified member access remains unspecified instead of guessing compiler modes.
+Scope/declaration ordinals belong only to that immutable snapshot. Scope `Complete`
+describes closed boundaries; it never certifies grammar or successful compilation.
+
+```pascal
+LAnalysis := NewNyxPascalSyntaxSnapshot(LPhysicalText,
+  TNyxPascalSyntaxOptions.Defaults
+    .Fragment(psfTypes)
+    .UpToDeclarations(4096));
+LBadgeType := LAnalysis.Named(0, 'INyxBadge');
+
+if LBadgeType >= 0 then
+begin
+  LMembers := LAnalysis.Declaration(LBadgeType).NestedScope;
+  { Inspect declared syntax only; forward duplicates retain NextNamed links. }
+end;
+```
+
+Includes and unevaluated conditional branches produce explicit context diagnostics.
+Both branches remain marked rather than silently choosing one. Unsupported
+anonymous/inline/variant constructs retain uncertainty in their affected scope;
+they grant no authority to infer an outer declaration. Type expressions remain
+source spans, rather than resolved aliases, generic substitutions or compiler types.
+The original admission lexer/index remains unchanged and independent.
+
+WORK.md records native lossless corpus and declared-scope checks separately from
+browser compilation. Captured include/conditional/compiler context, richer type
+and statement syntax, name/type/member/overload/helper binding, incremental
+dependency invalidation and provider/ordinary-editor adoption remain ahead. This
+layer introduces no MCP mode, installed resolver, source edit or rollout. Full
+navigation, project-scale budgets and both-target execution/quality remain under
+the existing authoring/service owners.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

@@ -23,6 +23,16 @@ public contracts; no DOM/LCL types or external language engine enters the core.
 The modern editing experience is the acceptance destination, not parser coverage
 alone. Record each qualified capability and its remaining gaps in WORK.md.
 
+The first owned [analysis foundation](../docs/pascal-projects.md#nyx-owned-pascal-analysis)
+now preserves lossless physical tokens and typed, recoverable declarations/scopes.
+Native qualification includes actual Nyx interfaces; browser consumers compile
+only. It deliberately leaves the admission lexer and existing outline unchanged.
+Next prerequisite is captured translation context for includes, compiler modes and
+conditional branches, then structured type expressions and semantic binding through
+the existing provider. Generic token context, anonymous/inline/variant scopes,
+aliases/inheritance/overloads/helpers, dependency invalidation and full editor/
+navigation/quality/budgets remain open. No original criterion/counter/credit closes.
+
 Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now uses shared recent-file timelines in both adapters. Native keyboard/context
 Undo, readonly/recreation/modal and stale-source journeys are qualified; browser
@@ -56,7 +66,8 @@ helper qualifies real native SDK inheritance/signatures and explicit include own
 it is not a default dependency or Studio feature rollout. The optional semantic
 bridge now qualifies guard-released revision/context/permission-aware queries.
 Interactive presentation, compiler-context breadth, full source quality/parity and original
-criterion two remain open. WORK.md owns exact evidence and the pending helper choice.
+criterion two remain open. WORK.md owns exact evidence; the resolved user choice
+above supersedes the historical helper experiment.
 
 Current-source [general declarations](../docs/pascal-projects.md#general-declarations)
 extend the ordinary Outline with a typed declared-structure view and physical
