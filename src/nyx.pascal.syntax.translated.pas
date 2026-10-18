@@ -130,8 +130,9 @@ function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
 { Continue an owned, unblocked projection along the same captured translation
   lineage with exactly matching options. Existing physical origins stay exact;
   only new significant source tokens extend the lexical projection. The parser
-  resumes safe declaration checkpoints; metadata indexes and binding still
-  rebuild and no reduced work charge is implied.
+  resumes safe declaration checkpoints and shares immutable metadata indexes.
+  Bound meanings remain current-world queries; exact execution scopes admit
+  actual repeated work independently of the optional telemetry receipts.
   Unrelated, shorter, alternate or uncertain predecessors refuse atomically. }
 function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
   const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
@@ -139,7 +140,8 @@ function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSy
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append;
+uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append,
+  nyx.pascal.work;
 
 const
   { Complete mapping rows share by value; at most one partial block copies. }
@@ -285,6 +287,8 @@ begin
   FSource := ASource;
   FBlocked := -1;
   Build(AOptions, ACancellation, APrevious);
+  { Admission/cancellation remains outside the bounded memo mutex. }
+  NyxPascalAdmitAnalysis(ACancellation, papTypeMemo);
   InheritMemo(APrevious, ACancellation);
 end;
 
@@ -492,6 +496,7 @@ begin
         begin
           raise ENyxPascalAnalysisCancelled.Create('Translated origin continuation cancelled');
         end;
+        NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
         FBlocks[LAt] := APrevious.FBlocks[LAt];
       end;
       FCount := FSharedOrigins;
@@ -502,6 +507,7 @@ begin
         begin
           raise ENyxPascalAnalysisCancelled.Create('Translated partial origin continuation cancelled');
         end;
+        NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
         AddOrigin(APrevious.Origin(LAt));
         Inc(FCopiedOrigins);
       end;
@@ -516,6 +522,7 @@ begin
       begin
         raise ENyxPascalAnalysisCancelled.Create('Translated Pascal syntax cancelled');
       end;
+      NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
       LToken := FSource.Token(LAt);
       LPhysical := FSource.PhysicalToken(LAt);
       LEffective := NyxPascalEffectiveToken(FSource, LAt);
@@ -766,6 +773,7 @@ begin
   begin
     raise ENyxPascalAnalysisCancelled.Create('Pascal type analysis cancelled');
   end;
+  NyxPascalAdmitAnalysis(ACancellation, papTypeMemo);
   LPlan := FindPlan(AIndex);
   Result := ApplyNyxPascalTypePlan(LPlan, FSyntax, AIndex, AOptions, ACancellation);
 
@@ -777,6 +785,7 @@ begin
   RecordMemo(False);
   Result := NewNyxPascalDeclaredTypeSyntax(FSyntax, LWindow, AOptions, ACancellation);
   LPlan := CaptureNyxPascalTypePlan(Result, AIndex, ACancellation);
+  NyxPascalAdmitAnalysis(ACancellation, papTypeMemo);
   AdmitPlan(AIndex, LPlan);
 end;
 

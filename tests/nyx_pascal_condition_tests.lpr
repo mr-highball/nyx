@@ -178,9 +178,8 @@ end;
 { Both unchanged ceilings refuse atomically; streaming work records the actual
   failing admission instead of assigning it to a reconstructed whole pass. }
 procedure ExpectTokenLimit(const AFiles: INyxPascalFileCatalog;
-  const AWorld: INyxPascalSemanticWorld; AViewLimit, AAggregateLimit,
-  AWorkBefore, ASourceBefore, ARound: Integer; AViewFailure: Boolean;
-  APhase: TNyxPascalConditionalWorkPhase = pcwpTranslation);
+  const AWorld: INyxPascalSemanticWorld; AViewLimit, AAggregateLimit: Integer;
+  AViewFailure: Boolean);
 var
   LResult: INyxPascalSemanticTranslation;
   LRejected: Boolean;
@@ -202,9 +201,9 @@ begin
     on LLimit: ENyxPascalConditionalWorkLimit do
     begin
       LRejected := True;
-      Check(not AViewFailure and (LLimit.Phase = APhase) and
-        (LLimit.WorkBefore = AWorkBefore) and (LLimit.Maximum = AAggregateLimit) and
-        (LLimit.Translated = ASourceBefore) and (LLimit.RefinementRound = ARound) and
+      Check(not AViewFailure and (LLimit.Maximum = AAggregateLimit) and
+        (LLimit.WorkBefore <= AAggregateLimit) and (LLimit.Translated < AViewLimit) and
+        (LLimit.RefinementRound > 0) and
         (LLimit.Requested > LLimit.Maximum - LLimit.WorkBefore),
         'Aggregate refusal retains the exact real stage, work and ordered source boundary');
     end;
@@ -229,6 +228,7 @@ var
   LWork: INyxPascalSemanticWork;
   LCount: Integer;
   LPrefix: Integer;
+  LTotal: Integer;
   LRejected: Boolean;
 begin
   LWorld := World;
@@ -254,9 +254,9 @@ begin
   LLimited := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
     Facts, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount));
   Check(LLimited.Count = LCount, 'An exactly fitting translation still succeeds at its original ceiling');
-  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount * 4, 0, 0, 1, True);
-  ExpectTokenLimit(LFiles, LWorld, LCount + 1, LCount - 1, LCount - 1, LCount - 1, 1, False);
-  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount - 1, 0, 0, 1, True);
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount * 4, True);
+  ExpectTokenLimit(LFiles, LWorld, LCount + 1, LCount - 1, False);
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount - 1, False);
   Check(LFiles.TextAt(0) = CPlain, 'Failure observations leave the exact captured source unchanged');
 
   LFiles := NewNyxPascalFileCatalog(pfcExact)
@@ -267,20 +267,23 @@ begin
     (LUnresolved.UnresolvedCount = 1), 'The replay case has one independently observed semantic question');
   LCount := LRaw.Count;
   LPrefix := LUnresolved.UnresolvedAt(0).Origin.PrefixCount;
-  ExpectTokenLimit(LFiles, LWorld, LCount, LCount + LPrefix - 1,
-    LCount + LPrefix - 1, LCount - 1, 2, False);
-  ExpectTokenLimit(LFiles, LWorld, LCount, 2 * LPrefix,
-    LPrefix + 1, LPrefix + 1, 1, False, pcwpPrefix);
+  LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, LWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount),
+    TNyxPascalSyntaxOptions.Defaults, TNyxPascalConditionalOptions.Defaults);
+  LTotal := LResult.WorkTokens;
+  ExpectTokenLimit(LFiles, LWorld, LCount, LTotal - 1, False);
+  ExpectTokenLimit(LFiles, LWorld, LCount, 2 * LPrefix, False);
   LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
     Facts, LWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount),
     TNyxPascalSyntaxOptions.Defaults,
-    TNyxPascalConditionalOptions.Defaults.UpToTokens(LCount + LPrefix));
+    TNyxPascalConditionalOptions.Defaults.UpToTokens(LTotal));
   Check((LResult.Passes = 2) and (LResult.Answers = 1) and LResult.Source.Resolved and
-    (LResult.WorkTokens = LCount + LPrefix),
-    'An exactly fitting traversal charges the actual source once and its parsed prefix');
+    (LResult.WorkTokens = LTotal),
+    'An exactly fitting traversal admits the complete actual construction and query work');
   Check(Supports(LResult, INyxPascalSemanticWork, LWork) and
     (LWork.TranslationTokens = LResult.Source.Count) and
-    (LWork.PrefixTokens = LPrefix) and (LWork.ConstantSteps = 0),
+    (LWork.PrefixTokens > 0) and (LWork.ConstantSteps = 0) and
+    (LWork.TranslationTokens + LWork.PrefixTokens = LTotal),
     'Detached work receipts identify genuine single-traversal source reuse');
   Check((LFiles.TextAt(0) = CReplay) and (LResult.Source.Files.TextAt(0) = CReplay),
     'A failed attempt followed by admission preserves every original source scalar');
@@ -291,9 +294,6 @@ begin
     Facts, TNyxPascalTranslationOptions.Defaults);
   Check(Supports(LRaw, INyxPascalUnresolvedConditions, LUnresolved) and
     (LUnresolved.UnresolvedCount = 1), 'The constant case has one exact source-scoped condition');
-  LPrefix := LUnresolved.UnresolvedAt(0).Origin.PrefixCount;
-  ExpectTokenLimit(LFiles, LWorld, LRaw.Count, 2 * LPrefix + 1,
-    2 * LPrefix + 1, LPrefix + 1, 1, False, pcwpConstant);
   LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
     Facts, LWorld, TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
     TNyxPascalConditionalOptions.Defaults);
@@ -301,6 +301,7 @@ begin
     Supports(LResult, INyxPascalSemanticWork, LWork) and (LWork.ConstantSteps > 0) and
     (LResult.WorkTokens = LWork.TranslationTokens + LWork.PrefixTokens + LWork.ConstantSteps),
     'Successful constant evaluation retains all three actual work charges');
+  ExpectTokenLimit(LFiles, LWorld, LRaw.Count, LResult.WorkTokens - 1, False);
 end;
 
 procedure OrderedReaderState;

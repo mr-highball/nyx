@@ -25,7 +25,8 @@ unit nyx.pascal.types;
 
 interface
 
-uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.syntax;
+uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.syntax,
+  nyx.pascal.work;
 
 type
   { Quotas refuse the complete type candidate; ordinary incomplete source
@@ -264,6 +265,8 @@ type
     FCancellation: INyxCancellationScope;
     procedure CheckCancellation;
     function AtEnd: Boolean;
+    { One real token inspection; repeated lookahead remains separately admitted. }
+    function ReadToken(AIndex: Integer): TNyxPascalToken;
     function Tok: TNyxPascalToken;
     function Sym(AValue: TNyxPascalSymbol): Boolean;
     function Word(AValue: TNyxPascalWord; ALookAhead: Integer = 0): Boolean;
@@ -396,13 +399,22 @@ begin
   Result := FAt >= Length(FTokens);
 end;
 
+function TTypeSyntax.ReadToken(AIndex: Integer): TNyxPascalToken;
+begin
+  NyxPascalAdmitAnalysis(FCancellation, papTypeToken);
+  Result := FLexical.Token(AIndex);
+end;
+
 function TTypeSyntax.Tok: TNyxPascalToken;
 begin
-  Result := FLexical.Token(FLexical.Count - 1);
 
-  if not AtEnd then
+  if AtEnd then
   begin
-    Result := FLexical.Token(FTokens[FAt]);
+    Result := ReadToken(FLexical.Count - 1);
+  end
+  else
+  begin
+    Result := ReadToken(FTokens[FAt]);
   end;
 end;
 
@@ -451,7 +463,7 @@ begin
 
   if (LAt >= 0) and (LAt < Length(FTokens)) then
   begin
-    LToken := FLexical.Token(FTokens[LAt]);
+    LToken := ReadToken(FTokens[LAt]);
     Result := (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = AValue);
   end;
 end;
@@ -506,6 +518,7 @@ end;
 
 function TTypeSyntax.Add(AKind: TNyxPascalTypeKind; AStart: Integer): Integer;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papTypeNode);
   Result := FCount;
 
   if Result >= FOptions.MaximumNodes then
@@ -564,6 +577,7 @@ end;
 
 procedure TTypeSyntax.Problem(AIssue: TNyxPascalTypeIssue; const AMessage: TNyxText);
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
 
   if FDiagnosticCount >= FOptions.MaximumDiagnostics then
   begin
@@ -955,7 +969,7 @@ begin
 
       if not AtEnd and (Convention(LConvention) or Word(pkwVarargs) or Word(pkwInline)) then
       begin
-        FLastOffset := FLexical.Token(FTokens[FAt - 1]).Span.Finish;
+        FLastOffset := ReadToken(FTokens[FAt - 1]).Span.Finish;
       end
       else
       begin
@@ -1278,7 +1292,7 @@ begin
   while LAt < FLexical.Count do
   begin
     CheckCancellation;
-    LToken := FLexical.Token(LAt);
+    LToken := ReadToken(LAt);
 
     if (LToken.Kind = ptkEOF) or (LToken.Span.Start >= FWindow.Finish) then
     begin
@@ -1303,14 +1317,14 @@ begin
   for LAt := 0 to High(FTokens) do
   begin
 
-    if FLexical.Token(FTokens[LAt]).Kind = ptkDirective then
+    if ReadToken(FTokens[LAt]).Kind = ptkDirective then
     begin
       FAt := LAt;
       Problem(ptiContextRequired, 'Translate conditional/include directives before type analysis');
     end;
 
-    if not FLexical.Token(FTokens[LAt]).Complete or
-      (FLexical.Token(FTokens[LAt]).Kind = ptkInvalid) then
+    if not ReadToken(FTokens[LAt]).Complete or
+      (ReadToken(FTokens[LAt]).Kind = ptkInvalid) then
     begin
       FAt := LAt;
       Problem(ptiUnsupportedType, 'This type contains an incomplete or invalid lexical token');
@@ -1511,6 +1525,7 @@ begin
   for LAt := 0 to LPlan.NodeCount - 1 do
   begin
     CheckPlanCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papTypeProof);
 
     if LPlan.Nodes[LAt].FDeclaration < 0 then
     begin
@@ -1556,6 +1571,7 @@ var
 begin
   AOptions.Validate;
   CheckPlanCancellation(ACancellation);
+  NyxPascalAdmitAnalysis(ACancellation, papTypeProof);
   Result := nil;
 
   if (ADeclarations = nil) or not Supports(APlan, ITypePlanOwner, LOwner) then
@@ -1583,6 +1599,7 @@ begin
   for LAt := 0 to High(LPlan.DependencyNodes) do
   begin
     CheckPlanCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papTypeProof);
     LNode := LPlan.Nodes[LPlan.DependencyNodes[LAt]];
 
     if LStructures.TypeAt(LNode.Span.Start) <> LNode.FDeclaration then

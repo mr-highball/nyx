@@ -65,7 +65,7 @@ function NyxPascalRetainedLexicalTokens(const APrevious,
 
 implementation
 
-uses SysUtils;
+uses SysUtils, nyx.pascal.work;
 
 const
   { Bounds partial-tail copying while complete directories share value blocks. }
@@ -269,6 +269,7 @@ begin
   for LAt := 0 to ASource.Count - 1 do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
     LRow.Value := ASource.Token(LAt).Rebased(AScalarBase, AStorageBase, ALineBase, AColumnBase);
     LRow.Spelling := ASource.Text(LAt);
     LRow.ByteStart := LBytes;
@@ -306,6 +307,7 @@ begin
   for LAt := 0 to High(FDiagnostics) do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
     FDiagnostics[LAt] := LSource.Diagnostic(LAt);
   end;
 end;
@@ -348,12 +350,14 @@ begin
   for LAt := 0 to High(FBlocks) do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
     FBlocks[LAt] := ABase.BlockAt(LAt);
   end;
   FCount := FShared;
   for LAt := FShared to FRetained - 1 do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
     Add(ABase.Row(LAt));
   end;
   LParts := TNyxStrings.Create;
@@ -361,6 +365,7 @@ begin
     for LAt := FRetained to APrevious.Count - 2 do
     begin
       CheckCancellation(ACancellation);
+      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
       LParts.Add(ABase.Row(LAt).Spelling);
     end;
     LParts.Add(ATail);
@@ -379,6 +384,7 @@ begin
   for LAt := 0 to APrevious.DiagnosticCount - 1 do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
     LDiagnostic := APrevious.Diagnostic(LAt);
 
     if (LDiagnostic.Span.Start < LPrefix.Value.Span.Start) and
@@ -397,6 +403,7 @@ begin
   for LAt := 0 to APrevious.DiagnosticCount - 1 do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
     LDiagnostic := APrevious.Diagnostic(LAt);
 
     if (LDiagnostic.Span.Start < LPrefix.Value.Span.Start) and
@@ -409,6 +416,7 @@ begin
   for LAt := 0 to LSource.DiagnosticCount - 1 do
   begin
     CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
     FDiagnostics[LDiagnostics + LAt] := LSource.Diagnostic(LAt).Rebased(LPrefix.Value.Span.Start);
   end;
 end;

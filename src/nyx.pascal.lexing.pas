@@ -315,7 +315,7 @@ function NewNyxPascalLexicalFragment(const ASource: TNyxText;
 
 implementation
 
-uses nyx.text.index, nyx.unicode, nyx.unicode.types;
+uses nyx.text.index, nyx.unicode, nyx.unicode.types, nyx.pascal.work;
 
 const
   { Bounds tail recopying without a recursive chain or a mutable shared vector. }
@@ -696,6 +696,7 @@ begin
     for LRow := 0 to CLexicalPrefixBlockSize - 1 do
     begin
       AReader.CheckCancellation;
+      NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
       LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
     end;
     LAt := Length(AReader.FPrefixBlocks);
@@ -707,6 +708,7 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
     AReader.CheckCancellation;
+    NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
     FBlocks[LAt] := AReader.FPrefixBlocks[LAt];
   end;
 
@@ -719,6 +721,7 @@ begin
     for LRow := 0 to High(LBlock.Rows) do
     begin
       AReader.CheckCancellation;
+      NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
       LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
     end;
     FBlocks[LCount] := LLease;
@@ -727,6 +730,7 @@ begin
   for LAt := 0 to High(FDiagnostics) do
   begin
     AReader.CheckCancellation;
+    NyxPascalAdmitAnalysis(AReader.FCancellation, papDiagnosticRow);
     FDiagnostics[LAt] := AReader.FDiagnostics[LAt];
   end;
 end;
@@ -949,6 +953,7 @@ procedure TLexicalSnapshot.Issue(AIssue: TNyxPascalLexicalIssue; AStart: Integer
 var
   LCapacity: Integer;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
 
   if FDiagnosticCount >= FOptions.MaximumDiagnostics then
   begin
@@ -1317,6 +1322,7 @@ var
 begin
   repeat
     CheckCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papLexicalToken);
     LScalar := Current;
     LToken := Default(TNyxPascalToken);
     LToken.FSpan := NyxPascalSpan(FOffset, 0);

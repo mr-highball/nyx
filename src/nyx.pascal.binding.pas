@@ -312,6 +312,15 @@ type
     function BoundaryTokenReads: Integer;
     function ReusedBoundaryTokens: Integer;
   end;
+  { Optional immutable module construction with a caller-owned execution scope.
+    The new world retains source modules only, never the scope or its budget.
+    Plain WithModule stays compatible; guarded construction refuses alternate
+    worlds that cannot establish this pre-operation admission contract. }
+  INyxPascalWorldAdmission = interface(IInterface)
+    ['{58E2C39F-77C8-4326-A8F2-5297DA40DB81}']
+    function WithModuleInScope(const AView: INyxPascalTranslatedSyntax;
+      const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
+  end;
 
 { Validate up to 1024 ASCII identifier/dot characters; each segment is nonempty
   and starts with a letter/underscore. No keyword/member catalog is hardcoded. }
@@ -320,6 +329,13 @@ function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
   project until the caller explicitly supplies an already constructed source view. }
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
 
+{ Admit actual boundary scans/module rows while building an immutable candidate.
+  A work-bearing scope requires the optional construction capability; ordinary
+  cancellation-only callers may use alternate worlds without a work guarantee. }
+function WithNyxPascalSemanticModule(const AWorld: INyxPascalSemanticWorld;
+  const AView: INyxPascalTranslatedSyntax;
+  const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
+
 { Request a missing bound primitive's exact compiler evidence. Source ownership,
   origin and selected context are retained independently. Known/inconsistent facts
   or unqualified source provenance yield nil, never a guessed host request. }
@@ -327,7 +343,7 @@ function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
 implementation
 
-uses nyx.text.index, nyx.pascal.lexing.append;
+uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work;
 
 type
   { Immutable checked caller, retaining its world without any reverse cache. }
@@ -443,7 +459,8 @@ type
   { Owns a detached module vector/name index. Published worlds never mutate;
     each query has its own counters, alias/member trails and temporary type data. }
   TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld,
-    INyxPascalMemberQueries, INyxPascalOperatorQueries, INyxPascalWorldBuildWork)
+    INyxPascalMemberQueries, INyxPascalOperatorQueries, INyxPascalWorldBuildWork,
+    INyxPascalWorldAdmission)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
@@ -463,6 +480,8 @@ type
     function BoundaryTokenReads: Integer;
     function ReusedBoundaryTokens: Integer;
     function WithModule(const AView: INyxPascalTranslatedSyntax): INyxPascalSemanticWorld;
+    function WithModuleInScope(const AView: INyxPascalTranslatedSyntax;
+      const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
     function At(AModule, AScope, ACaret: Integer): INyxPascalBindingSite;
     function Symbol(AModule, ADeclaration: Integer): INyxPascalBoundSymbol;
     function Lookup(const ASite: INyxPascalBindingSite; const AName: TNyxPascalBindingName;
@@ -1072,6 +1091,12 @@ begin
 end;
 
 function TSemanticWorld.WithModule(const AView: INyxPascalTranslatedSyntax): INyxPascalSemanticWorld;
+begin
+  Result := WithModuleInScope(AView, nil);
+end;
+
+function TSemanticWorld.WithModuleInScope(const AView: INyxPascalTranslatedSyntax;
+  const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
 var
   LCopy: TSemanticWorld;
   LAt: Integer;
@@ -1121,6 +1146,12 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
 
+    if (AExecution <> nil) and AExecution.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Semantic module construction cancelled');
+    end;
+    NyxPascalAdmitAnalysis(AExecution, papWorldEntry);
+
     if LAt = LTarget then
     begin
       LCopy.FModules[LAt] := AView;
@@ -1156,6 +1187,12 @@ begin
       end;
       for LTokenIndex := LFirst to LLex.Count - 1 do
       begin
+
+        if (AExecution <> nil) and AExecution.Cancelled then
+        begin
+          raise ENyxPascalAnalysisCancelled.Create('Semantic module boundary scan cancelled');
+        end;
+        NyxPascalAdmitAnalysis(AExecution, papWorldToken);
         Inc(LCopy.FBoundaryReads);
         LToken := LLex.Token(LTokenIndex);
 
@@ -1220,6 +1257,7 @@ end;
 
 procedure TBindingQuery.Tick;
 begin
+  NyxPascalAdmitAnalysis(FCancel, papBindingStep);
 
   if (FCancel <> nil) and FCancel.Cancelled then
   begin
@@ -3895,6 +3933,39 @@ end;
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
 begin
   Result := TSemanticWorld.Create(AOptions);
+end;
+
+function WithNyxPascalSemanticModule(const AWorld: INyxPascalSemanticWorld;
+  const AView: INyxPascalTranslatedSyntax;
+  const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
+var
+  LAdmission: INyxPascalWorldAdmission;
+  LBudget: INyxPascalAnalysisBudget;
+begin
+
+  if AWorld = nil then
+  begin
+    raise ENyxPascalBinding.Create('Module admission needs its exact input world');
+  end;
+
+  if (AExecution <> nil) and AExecution.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Semantic module construction cancelled');
+  end;
+
+  if Supports(AWorld, INyxPascalWorldAdmission, LAdmission) then
+  begin
+    Result := LAdmission.WithModuleInScope(AView, AExecution);
+  end
+  else
+  begin
+
+    if Supports(AExecution, INyxPascalAnalysisBudget, LBudget) then
+    begin
+      raise ENyxPascalBinding.Create('This semantic world cannot admit guarded module work');
+    end;
+    Result := AWorld.WithModule(AView);
+  end;
 end;
 
 function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;

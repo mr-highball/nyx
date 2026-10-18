@@ -33,7 +33,101 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-free type plans and synchronized memos — 2026-10-18
+## Current integration: Actual analysis work admission — 2026-10-18
+
+41b57bd qualifies genuine lexical/filter/metadata/type-plan reuse but still
+charges complete prefix size at every semantic question. Reassessment after
+forty-three unclosed authoring batches follows original criterion two's next
+concrete prerequisite: admit real work before it executes through the ordinary
+source, translation, parser, type and binding owners. Receipt telemetry alone
+never authorizes a discount. No smaller criterion replaces the full resolver/
+editor outcome and no numeric source/work/query/round ceiling is raised.
+
+The public execution budget is also an ordinary cancellation scope, with no
+global/thread-local counters. It admits closed typed phases for actual token
+scanning/lookahead, frozen/projection/append/filter rows, metadata traversal/
+allocation/value changes, diagnostics, type grammar/proofs, bounded memo steps,
+world boundaries, binding steps, condition input and constant planning/evaluation.
+Nested budgets enforce both ceilings before committing child counters. One
+synchronous owner uses each budget; independent readers use independent budgets.
+Native Cancel uses RTL atomics. Published snapshots/worlds/plans/results retain
+no execution lease. Explicit retirement releases the outer cancellation lease;
+the semantic factory retires automatically on success, refusal and cancellation.
+
+These are bounded logical operations, not a CPU-instruction/allocator/string
+counter, timing comparison or latency claim. Existing source-byte, full-view
+token, node, depth and per-query guards remain independent. A memo operation is
+bounded by its fixed 64-entry/8,192-node policy; actual proof traversal is charged
+outside the mutex. Pure-plan reuse avoids grammar only after exact current-source
+validation. Existing compatibility totals remain additive, with PrefixTokens now
+containing analysis operations other than emitted source tokens/evaluator steps.
+Detailed copied phase receipts and pre-operation refusal phases are public.
+
+Retained preflight failure: the old condition test expects source plus estimated
+whole-prefix counts and fails after the accounting change, clean heap. Updated
+checks retain the original numeric/full-view guards and qualify exact fitting
+work instead. A complete first batch then passes its maintained/focused checks,
+but review discovers unmetered validation in TTranslationPrefix. That whole
+packet remains preflight evidence, excluded from final accepted logs. The repaired
+wrapper admits every repeated validation row before execution, including the
+complete earlier-token traversal, even when frozen token blocks are shared.
+The first RTL refusal is retained as metadata-node/round six; final source gets
+one fresh frozen qualification. No compiler/dependency or original RTL consumer
+is edited. The historical emission compiler log stays a read-only test input.
+
+Final focused native admission checks pass 494, clean heap: exact 454-unit cold
+semantic construction, all 453 smaller allowances refusing without publication,
+every exercised phase independently interruptible, selected caller cancellation
+before work, overflow-safe exhaustion, detached receipts and immediate parent
+retirement. Ordinary cold/warm type and current-world binding queries retain
+source ownership and guard a populated memo under a smaller caller budget.
+The static integer receipt vector's generated pas2js assignment copies its array;
+that is compiler-output inspection, with browser execution still unqualified.
+All twelve functional sources freeze before final wider qualification; no later
+source/layout overlay is accepted. The ignored packet located by
+`.local/analysis-work-paths-private.json` owns exact preflight/final receipts.
+
+Final original RTL still refuses atomically with clean heap: syntax-token phase,
+used 4,000,000/requested one/limit 4,000,000, translated 55,279, logical round six.
+It publishes no final System/ObjPas semantic/indexed result. Original consumer/
+source, five initial queries, explicit Word job, symbol preparation three/eight,
+generic fact ceiling eight and 2M view/4M aggregate/64 rounds stay unchanged.
+This is actual admission evidence, not improved full-RTL progress or performance.
+Complete-prefix validation still re-examines earlier source, while real syntax/
+metadata operations remain charged. Safe sealed prefix summaries are the next
+concrete reuse prerequisite; parser/metadata costs remain under their existing
+owners. No guessed counter-based discount or fixed compiler fact is admitted.
+
+All 40 maintained native consumers plus work 494/type-plan 209/checkpoint 4,391/
+projection 2,480/storage 336 pass, clean heaps. Actual-source lexing passes 568
+across 501 files/2,316,263 lossless tokens; syntax passes 7,934 across five inputs/
+3,865 declarations. Counts overlap; 46 passing native logs include the separate
+source read. All 81 successful current top-level compiler jobs have zero owned
+warnings/182 upstream RTL warnings, with dependency bytes unchanged. Both Studios,
+backend/worker and 33 browser consumers compile as applicable; browser execution/
+parity remain unqualified. Twelve final-byte functional sources stay exact through
+qualification and commit, without a post-freeze source/layout overlay.
+
+Native/regression/products/extra sessions 70482/38968/40060/9709 are terminal exit
+zero; original reader 3846 is terminal exit one. No owned reader or Studio listener
+remains. All 651 unrelated prior sources and maintained inventory 661 stay exact.
+So do 97 RTL/24 compiler inputs plus three inspected compiler sources, 156 original
+unit packets, 48 retained includes, five protected files/nine complete contexts,
+349 frozen 7422453 artifacts and 13 concurrent planning files. No protected pair,
+history, draft, profile, enrollment or configuration is rewritten. The final
+ignored packet owns qualified/committed byte identity and remote receipts; the
+earlier preflight packet remains separate and grants no final accepted evidence.
+
+Stop work-meter/fixture/oracle/compiler variants after this batch. Return to
+eliminating actual repeated frozen-prefix validation through exact builder-owned
+summaries, preserving include/branch/macro/settings state, diagnostics, provisional
+owners, cancellation and atomic refusal. Full language/editor/incremental/input/
+quality/parity/adoption/delivery and all original criteria/task/credit/DONE remain
+open across at least forty-four batches. LAN stays offline; no host/config retry,
+protected mutation, browser/HTTP/file execution/capture, cleanup/restart, approval
+bypass, new tool/schema or sub-agent occurs. Native Nyx tools remain absent.
+
+## Previous integration: Source-free type plans and synchronized memos — 2026-10-18
 
 c30ff74 supplies shared checkpoint metadata/index roots. Reassessment after
 forty-two unclosed authoring batches identifies repeated type grammar as the

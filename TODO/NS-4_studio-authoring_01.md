@@ -9,7 +9,31 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Type-plan prerequisite (2026-10-18): source-free immutable grammar plans now
+Actual-work prerequisite (2026-10-18): the ordinary semantic conditional reader
+now admits real work through an explicit caller-owned execution budget before
+scanning/copying/parsing/binding/evaluation. This includes the frozen-prefix
+wrapper's repeated token/directive/diagnostic validation; shared storage does not
+discount that pass. Nested budgets retain both allowances, cancellation preserves
+the outer generation, and published values retire all execution leases. Detached
+phase receipts and detailed pre-operation refusals preserve the original coarse
+diagnostic family. Existing numeric aggregate/full-view/round/query/node/depth
+limits and the original RTL source/probe oracle remain unchanged. Focused native
+checks pass 494, including exact 454-unit construction, all 453 smaller allowances,
+per-phase cancellation, overflow, detached receipts, current-world results and
+guarded memo hits. Browser consumers compile only. WORK.md owns final wider
+qualification, retained preflight gaps/failures and the return to eliminating real
+repeated prefix/metadata/parser work. No original criterion/task/credit/DONE or
+full language/editor/incremental/input/quality/parity/adoption/delivery closes.
+
+The final frozen batch retains all 40 maintained native passes, 81 successful
+top-level compiler jobs with zero owned warnings and compiled-only browser
+consumers. The original RTL reader still refuses at the unchanged four-million
+allowance, round six/syntax-token, with clean heap and no final semantic/indexed
+result. Repeated whole-prefix validation and real parser/metadata work remain
+charged; sealed exact prefix summaries are the next reuse prerequisite. WORK.md
+owns final source/remote identity and unchanged protected/concurrent state.
+
+Historical type-plan prerequisite (2026-10-18): source-free immutable grammar plans now
 retain opaque owned declaration/structured-body identities and no source/world/
 parser/cancellation owner. Applying a plan validates exact current identities,
 window and type policies, then returns a current-source view. Ordinary translated

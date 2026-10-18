@@ -540,7 +540,7 @@ function NyxPascalScopeIdentity(const ASource: INyxPascalSyntaxSnapshot;
 
 implementation
 
-uses nyx.pascal.lexing.append;
+uses nyx.pascal.lexing.append, nyx.pascal.work;
 
 const
   { Bounded private partial copying; the directory stays flat across appends. }
@@ -672,6 +672,8 @@ type
     FCopied: Integer;
     FCreated: Integer;
     FNodes: Integer;
+    { Construction-only outward admission lease, cleared before publication. }
+    FExecution: INyxCancellationScope;
     function NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
       const ALeft, ARight: IMetadataNode): IMetadataNode;
     function Balance(const AKey: TNyxText; const AValue: IMetadataValue;
@@ -679,7 +681,9 @@ type
     function Insert(const ANode: IMetadataNode; const AKey: TNyxText;
       const AValue: IMetadataValue): IMetadataNode;
   public
-    constructor Create(const ARoot: IMetadataNode);
+    constructor Create(const ARoot: IMetadataNode;
+      const AExecution: INyxCancellationScope);
+    procedure RetireExecution;
     function Capture: IMetadataNode;
     function Find(const AKey: TNyxText): IMetadataValue;
     function Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
@@ -1251,15 +1255,24 @@ begin
   end;
 end;
 
-constructor TMetadataMap.Create(const ARoot: IMetadataNode);
+constructor TMetadataMap.Create(const ARoot: IMetadataNode;
+  const AExecution: INyxCancellationScope);
 begin
   inherited Create;
+  FExecution := AExecution;
+  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
   FRoot := ARoot;
   FStamp := TInterfacedObject.Create;
 end;
 
+procedure TMetadataMap.RetireExecution;
+begin
+  FExecution := nil;
+end;
+
 function TMetadataMap.Capture: IMetadataNode;
 begin
+  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
   Result := FRoot;
   FStamp := TInterfacedObject.Create;
 end;
@@ -1276,6 +1289,7 @@ var
   LLeftCount: Integer;
   LRightCount: Integer;
 begin
+  NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
   LLeftCount := NodeCount(ALeft);
   LRightCount := NodeCount(ARight);
 
@@ -1339,6 +1353,7 @@ end;
 function TMetadataMap.Insert(const ANode: IMetadataNode; const AKey: TNyxText;
   const AValue: IMetadataValue): IMetadataNode;
 begin
+  NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
 
   if ANode = nil then
   begin
@@ -1366,6 +1381,7 @@ begin
   LNode := FRoot;
   while LNode <> nil do
   begin
+    NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
 
     if AKey < LNode.Key then
     begin
@@ -1417,6 +1433,7 @@ begin
 
   if LValue = nil then
   begin
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
     case AKind of
       mkScope:
         begin
@@ -1464,6 +1481,7 @@ begin
   end
   else if LValue.Stamp <> FStamp then
   begin
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
     LValue := LValue.Detach(FStamp);
     FRoot := Insert(FRoot, LKey, LValue);
     Inc(FCopied);
@@ -1496,6 +1514,7 @@ begin
   begin
     Exit;
   end;
+  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
   LValue := TOrdinalValue.Create;
   LLease := LValue;
   LValue.OwnerStamp := FStamp;
@@ -1531,6 +1550,7 @@ begin
     begin
       raise ENyxPascalAnalysisCancelled.Create('Filter directory continuation cancelled');
     end;
+    NyxPascalAdmitAnalysis(ACancellation, papFilterRow);
     FBlocks[LAt] := APrevious.FBlocks[LAt];
   end;
   FCount := FShared;
@@ -1541,6 +1561,7 @@ begin
     begin
       raise ENyxPascalAnalysisCancelled.Create('Filter partial-row continuation cancelled');
     end;
+    NyxPascalAdmitAnalysis(ACancellation, papFilterRow);
     LRow := APrevious.Row(LAt);
     Add(LRow.Token, LRow.Conditional);
     Inc(FCopied);
@@ -1672,12 +1693,17 @@ begin
   AOptions.Validate;
   FOptions := AOptions;
   FCancellation := ACancellation;
-  FMetadata := TMetadataMap.Create(nil);
+  FMetadata := TMetadataMap.Create(nil, ACancellation);
   FActiveArm := -1;
   try
     FLexical := NewNyxPascalLexicalSnapshot(ASource, AOptions.LexicalOptions, ACancellation);
     Build;
   finally
+
+    if FMetadata <> nil then
+    begin
+      FMetadata.RetireExecution;
+    end;
     FCancellation := nil;
   end;
 end;
@@ -1715,12 +1741,17 @@ begin
   end;
   FOptions := AOptions;
   FCancellation := ACancellation;
-  FMetadata := TMetadataMap.Create(nil);
+  FMetadata := TMetadataMap.Create(nil, ACancellation);
   FActiveArm := -1;
   try
     FLexical := ALexical;
     Build(APrevious, ARetained);
   finally
+
+    if FMetadata <> nil then
+    begin
+      FMetadata.RetireExecution;
+    end;
     FCancellation := nil;
   end;
 end;
@@ -1743,6 +1774,7 @@ end;
 
 function TSyntaxSnapshot.ReadToken(AIndex: Integer): TNyxPascalToken;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papSyntaxToken);
 
   if FParserReads = High(Integer) then
   begin
@@ -1817,7 +1849,7 @@ begin
   FRestart := FTokens[FPosition];
   FreeAndNil(FMetadata);
   FCheckpointMetadata := APrevious.FCheckpointMetadata;
-  FMetadata := TMetadataMap.Create(FCheckpointMetadata);
+  FMetadata := TMetadataMap.Create(FCheckpointMetadata, FCancellation);
   FRetainedMetadata := NodeCount(FCheckpointMetadata);
   EditFrame(0).Value.FSpan := NyxPascalSpan(Frame(0).Value.Span.Start,
     FLexical.Scalars - Frame(0).Value.Span.Start);
@@ -1833,6 +1865,7 @@ begin
   for LAt := 0 to FCheckpoint.ParserDiagnostics - 1 do
   begin
     CheckCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
     FDiagnostics[LFilterCount + LAt] :=
       APrevious.FDiagnostics[APrevious.FFilterDiagnostics + LAt];
     Inc(FCopied);
@@ -1954,6 +1987,7 @@ procedure TSyntaxSnapshot.Problem(AIssue: TNyxPascalSyntaxIssue; const AText: TN
 var
   LAt: Integer;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
   LAt := FDiagnosticCount;
 
   if LAt >= FOptions.MaximumDiagnostics then
@@ -4567,6 +4601,7 @@ begin
     for LAt := 0 to FDiagnosticCount - 1 do
     begin
       CheckCancellation;
+      NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
       FDiagnostics[LAt] := APrevious.FDiagnostics[LAt];
       Inc(FCopied);
     end;
@@ -4590,6 +4625,7 @@ begin
       FFilterCheckpoint.IncludeReported := LIncludeReported;
       FFilterCheckpoint.Diagnostics := FDiagnosticCount;
     end;
+    NyxPascalAdmitAnalysis(FCancellation, papFilterToken);
     LToken := FLexical.Token(LAt);
     Inc(FFilteredReads);
 

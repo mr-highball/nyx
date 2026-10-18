@@ -91,7 +91,7 @@ function PlanNyxPascalConstant(const AExpression: TNyxText;
 
 implementation
 
-uses nyx.data, nyx.numbers.decimal, nyx.pascal.syntax.translated;
+uses nyx.data, nyx.numbers.decimal, nyx.pascal.syntax.translated, nyx.pascal.work;
 
 type
   { Closed AST operation; qualified names remain distinct from intrinsic calls.
@@ -232,6 +232,7 @@ end;
 
 function TConstantPlan.Tok: TNyxPascalToken;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papConstantPlan);
   Result := FLexical.Token(FAt);
 end;
 
@@ -254,6 +255,7 @@ end;
 
 function TConstantPlan.Add(AKind: TConstantNodeKind): Integer;
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papConstantPlan);
 
   if Length(FNodes) >= 512 then
   begin
@@ -755,6 +757,7 @@ end;
 
 procedure TConstantQuery.Tick(AWork: Integer);
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papConstantStep, AWork);
 
   if (FCancellation <> nil) and FCancellation.Cancelled then
   begin

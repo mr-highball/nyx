@@ -365,8 +365,9 @@ type
     function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
   end;
-  { Optional construction-only source authority. Prepare admits the exact prefix
-    work before any copying; EvaluatePrefix receives a detached pre-directive
+  { Optional construction-only source authority. Prepare selects an exact prefix;
+    attached execution policy admits real work at its subsequent boundaries.
+    EvaluatePrefix receives a detached pre-directive
     translation, never the live builder. Active physical readers expose frozen
     tokens only, so their ordinary completed-lexical getters refuse. Full source,
     origins, contexts and saved settings remain exact. No callback is retained by
@@ -442,7 +443,7 @@ function NewNyxPascalTranslationPrefix(const ASource: INyxPascalTranslation;
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.editing;
+uses SysUtils, nyx.bytes, nyx.editing, nyx.pascal.work;
 
 const
   { Immutable blocks bound each partial-tail copy and keep indexed reads flat. }
@@ -1080,6 +1081,7 @@ begin
     for LRow := 0 to CTranslationPrefixBlockSize - 1 do
     begin
       ASource.CheckCancellation;
+      NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
       LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
     end;
     LAt := Length(ASource.FPrefixBlocks);
@@ -1091,6 +1093,7 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
     ASource.CheckCancellation;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
     FPrefixBlocks[LAt] := ASource.FPrefixBlocks[LAt];
   end;
 
@@ -1103,30 +1106,43 @@ begin
     for LRow := 0 to High(LBlock.Rows) do
     begin
       ASource.CheckCancellation;
+      NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
       LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
     end;
     FPrefixBlocks[LCount] := LLease;
   end;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FStateCount);
   FStates := Copy(ASource.FStates, 0, FStateCount);
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FStateCount);
   FMacroStates := Copy(ASource.FMacroStates, 0, FStateCount);
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, Length(ASource.FExpansions));
   FExpansions := Copy(ASource.FExpansions, 0, Length(ASource.FExpansions));
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papDiagnosticRow, FDiagnosticCount);
   FDiagnostics := Copy(ASource.FDiagnostics, 0, FDiagnosticCount);
   FUnresolvedCount := ASource.FUnresolvedCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FUnresolvedCount);
   FUnresolved := Copy(ASource.FUnresolved, 0, FUnresolvedCount);
   FEmissionCount := ASource.FEmissionCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FEmissionCount);
   FEmissionDirectives := Copy(ASource.FEmissionDirectives, 0, FEmissionCount);
   FRegisterCount := ASource.FRegisterCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FRegisterCount);
   FRegisterDirectives := Copy(ASource.FRegisterDirectives, 0, FRegisterCount);
   FWarningCount := ASource.FWarningCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FWarningCount);
   FWarningDirectives := Copy(ASource.FWarningDirectives, 0, FWarningCount);
   FCodeAlignmentCount := ASource.FCodeAlignmentCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FCodeAlignmentCount);
   FCodeAlignmentDirectives := Copy(ASource.FCodeAlignmentDirectives, 0, FCodeAlignmentCount);
   FOptimizationCount := ASource.FOptimizationCount;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FOptimizationCount);
   FOptimizationDirectives := Copy(ASource.FOptimizationDirectives, 0, FOptimizationCount);
   SetLength(FSettingsStates, FStateCount);
   for LAt := 0 to FStateCount - 1 do
   begin
     ASource.CheckCancellation;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow,
+      1 + Length(ASource.FSettingsStates[LAt].Frames));
     LFrame := TCompilerSettingsStack.Create;
     FSettingsStates[LAt] := LFrame;
     LFrame.Known := ASource.FSettingsStates[LAt].Known;
@@ -1137,6 +1153,7 @@ begin
   for LAt := 0 to High(FPhysical) do
   begin
     ASource.CheckCancellation;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
 
     if ASource.FPhysical[LAt] <> nil then
     begin
@@ -1145,12 +1162,14 @@ begin
       FPhysical[LAt].Ambiguous := ASource.FPhysical[LAt].Ambiguous;
     end;
   end;
+  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FOccurrenceCount);
   FLexical := Copy(ASource.FLexical, 0, FOccurrenceCount);
   SetLength(FWindows, FOccurrenceCount);
   SetLength(FOccurrences, FOccurrenceCount);
   for LAt := 0 to FOccurrenceCount - 1 do
   begin
     ASource.CheckCancellation;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
     FOccurrences[LAt] := ASource.FOccurrences[LAt];
 
     if ASource.FCaptures[LAt] <> nil then
@@ -1195,6 +1214,7 @@ end;
 procedure TTranslation.Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
   const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
 begin
+  NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
   FResolved := False;
 
   if FDiagnosticCount >= FOptions.MaximumDiagnostics then
@@ -1282,6 +1302,8 @@ begin
   begin
     raise ENyxPascalTokenLimit.Create(FTokenCount, FOptions.MaximumTokens);
   end;
+
+  NyxPascalAdmitAnalysis(FCancellation, papSourceToken);
 
   if FWork <> nil then
   begin
@@ -3783,6 +3805,9 @@ var
     begin
       raise ENyxPascalAnalysisCancelled.Create('Translation prefix cancelled');
     end;
+    { This wrapper still validates earlier tokens/directive rows. Storage reuse
+      does not exempt that real repeated work from the caller's allowance. }
+    NyxPascalAdmitAnalysis(LCancellation, papFrozenRow);
   end;
 
 begin
@@ -4017,6 +4042,7 @@ begin
   SetLength(LLast, LOccurrences);
   for LAt := 0 to LOccurrences - 1 do
   begin
+    Check;
     LLast[LAt] := -1;
   end;
   for LAt := 0 to FCount - 1 do

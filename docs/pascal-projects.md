@@ -2309,10 +2309,65 @@ receipt of entries, nodes, hits/misses and inherited candidates. Inheritance alo
 grants no reuse authority; hit/miss counters saturate at High(Integer).
 
 WORK.md owns portable grammar/source checks, both native four-thread journeys,
-compiled-only browser consumers and retained compiler failures. The original
-complete-prefix aggregate charge and RTL oracle remain unchanged until complete
-actual phase-work admission is qualified. Full language/editor/incremental/
+compiled-only browser consumers and retained compiler failures. Exact execution
+scopes now admit actual preparation/query work as described below; the original
+numeric caps and RTL oracle remain unchanged. Full language/editor/incremental/
 quality/parity/adoption/delivery remain open.
+
+## Actual analysis work admission
+
+`nyx.pascal.work` supplies an explicit `INyxPascalAnalysisBudget`, also usable as
+the ordinary cancellation scope. It owns an immutable positive allowance,
+phase counters and an outward cancellation lease. There is no global or thread-
+local budget. One synchronous operation owns its counters; concurrent readers
+use separate budgets. Native cancellation uses the existing RTL atomic pattern.
+Nested budgets enforce both allowances before committing a child's counters.
+Local cancellation preserves the caller's outer generation.
+
+Owned consumers admit logical operations before executing them: physical and
+projected lexical tokens, frozen/append/filter/origin rows, syntax lookahead,
+metadata tree/value operations, diagnostic rows, type grammar/proofs, module
+boundary scans, binding steps, condition input and constant planning/evaluation.
+The frozen-prefix wrapper's complete validation pass remains charged even when
+token blocks are shared. Repeated lookahead and copied diagnostics remain work.
+Unbound grammar reuse avoids parsing only after exact owned proof validation;
+memo telemetry and inherited candidates themselves confer no budget authority.
+The bounded memo admission happens outside its mutex, preserving cancellation
+callback ownership. Existing byte/token/node/depth/per-query guards remain active.
+
+These units describe bounded logical operations, not elapsed time, CPU
+instructions or every allocator/string operation. Token spelling remains bounded
+by the independent lexical byte allowance. A memo metadata operation is bounded
+by the existing 64-entry/8,192-node policy; its proof traversal is charged separately.
+Fewer units in a controlled reuse fixture do not establish editor latency or a
+whole RTL performance improvement.
+
+`NewNyxPascalSemanticTranslation` attaches this execution policy automatically.
+Its existing `UpToTokens`/`MaximumTokens` compatibility names retain their numeric
+aggregate ceiling, now applied to the admitted logical operations. The full-view
+translation token cap and 64 refinement-round default remain independent.
+`INyxPascalSemanticAnalysisWork.AnalysisWork` returns copied per-phase counts.
+Existing `INyxPascalSemanticWork` totals remain additive: emitted source tokens,
+evaluator steps, and all remaining analysis work under `PrefixTokens`. That last
+compatibility value is no longer an estimated complete-prefix token count.
+`ENyxPascalConditionalWorkLimit` preserves its existing coarse stage and adds
+`HasAnalysisPhase`/`AnalysisPhase` for the exact failed admission. Budget refusal
+and cancellation return no partial semantic translation.
+
+Standalone callers can pass the budget as their execution scope to ordinary
+translation/projection/type/binding consumers. `WithNyxPascalSemanticModule`
+constructs an immutable world through optional `INyxPascalWorldAdmission`.
+A budget-bearing scope refuses a world without that capability instead of
+assuming an alternate implementation's cost. Plain cancellation-only usage
+preserves the original module contract. Explicit callers retire the budget in
+`finally`; the semantic factory does this itself. Published snapshots, worlds,
+plans and results retain no execution capability. Receipts remain value-only
+and readable after retirement; further admission refuses.
+
+WORK.md owns the native exact-fit/exhaustive-refusal/cancellation/ownership
+qualification, compiled-only browser consumers and retained original RTL failure.
+The original source, probes and numeric limits are unchanged. Full RTL meaning,
+incremental editor integration, both-target execution/quality and delivery stay open.
 
 ## Declaration-bound constant expressions
 
