@@ -2095,10 +2095,11 @@ token; that token remains outside the prefix's public source view. Ordinary
 complete translations and alternate sources without this receipt do not
 advertise frozen-arena storage.
 
-This is a prerequisite to genuine incremental analysis. The current declaration
-parser still processes complete prefixes, and its original aggregate charge
-remains unchanged. Neither storage sharing nor its counters authorizes
-discounting that repeated work. Safe parser checkpoints and binding reuse must
+This is a prerequisite to genuine incremental analysis. Storage sharing alone
+does not avoid complete-prefix analysis; the declaration checkpoints below now
+reuse safe parser work. Full filtering, metadata copying and binding still
+rebuild, and the original aggregate charge remains unchanged. Storage counters
+do not authorize discounting repeated work. Checkpoints and binding reuse must
 preserve unfinished declaration owners,
 physical origins, exact compiler/source context, cancellation and atomic refusal.
 WORK.md owns the native checks, compiled-only browser consumer, maintained
@@ -2137,16 +2138,58 @@ identical syntax/lexical options and chronological continuity. The translation
 owner's private identity proves its exact immutable token history; equal text
 and equal compiler facts from another construction grant no continuity. Appended
 significant tokens retain exact physical occurrence, pre-state and macro origins.
-Earlier origin rows are still copied. The new lexical overload parses the retained
-arena without joining/relexing old text; declaration structure still rebuilds.
-Ordinary ordered semantic conditions now use this continuation during their one
-source traversal, with their existing full-prefix charge unchanged.
+Earlier origin rows are still copied. The lexical overload reads the retained
+arena without joining/relexing old text; parser continuation now uses the safe
+declaration checkpoints below. Ordinary ordered semantic conditions use this
+continuation during their one source traversal, with their existing full-prefix
+charge unchanged.
 
 WORK.md owns native differential checks against fresh whole scans/parsing,
-unchanged RTL integration and compiled-only browser evidence. Safe declaration
-checkpoints, binding/incremental work accounting, broader grammar/quality/parity,
+unchanged RTL integration and compiled-only browser evidence. Binding continuation,
+filter/origin reuse and actual incremental work accounting, broader grammar/quality/parity,
 default Studio adoption and delivery remain open. This API appends exact source;
 it does not yet implement arbitrary buffer edits or grant compiler admission.
+
+## Declaration parser checkpoints
+
+`AppendNyxPascalSyntax` resumes an owned declaration parser only along its exact
+sealed lexical predecessor and identical syntax/lexical policies. Public work
+counters or equal text cannot grant that authority. Foreign histories and
+changed policies refuse; a source without a safe checkpoint receives a fresh
+whole parse. An unchanged lexical snapshot returns the original immutable parser.
+
+```pascal
+LLexical := NewNyxPascalAppendLexical('unit Example; interface const Answer=42; ',
+  TNyxPascalLexicalOptions.Defaults);
+LSyntax := NewNyxPascalSyntaxFromLexical(LLexical,
+  TNyxPascalSyntaxOptions.Defaults);
+LNextLexical := AppendNyxPascalLexical(LLexical, 'var Count:Integer; implementation end.');
+LNextSyntax := AppendNyxPascalSyntax(LSyntax, LNextLexical,
+  TNyxPascalSyntaxOptions.Defaults);
+```
+
+One value-only root checkpoint records parser position, every token lookahead
+dependency, grammar/visibility/depth state and retained metadata counts. It keeps
+no predecessor owner or growing history. The point precedes the lexical repair
+window; restoration independently checks the actual retained-token boundary.
+An unfinished root routine/type is parsed again as a whole, preserving its
+enclosing ownership rather than retaining provisional child declarations.
+
+Retained scopes and declaration/variant/hint/label/intrinsic rows are copied into
+independent arrays. Name, overload, scope and anonymous-structure indexes rebuild
+without mutating the earlier snapshot. The complete token filter supplies fresh
+conditional/include diagnostics; only parser diagnostics before the checkpoint
+survive. Cancellation and the original shared node/scope/diagnostic/depth limits
+still refuse atomically. Ordinary translated semantic queries use this same path.
+
+Optional `INyxPascalSyntaxWork` reports reused declarations, copied metadata,
+filtered tokens, parser token reads and the restart token. These describe actual
+construction, not total CPU cost or binding reuse. Filtering, copied/reindexed
+metadata, translated origin rows and binding still do complete-prefix work.
+The original aggregate charge remains unchanged until that real work is avoided
+or accounted for through its existing owners. WORK.md retains the unchanged RTL
+gate, native differential checks and browser compilation separately; full
+language/editor/incremental/quality/parity/adoption/delivery remain open.
 
 ## Declaration-bound constant expressions
 

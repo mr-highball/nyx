@@ -57,6 +57,12 @@ function AppendNyxPascalLexical(const APrevious: INyxPascalLexicalSnapshot;
   const ATail: TNyxText;
   const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
 
+{ Sealed lexical continuity for parser construction. Returns the unchanged
+  leading token count for an owned direct predecessor/self, -1 otherwise.
+  An alternate implementation's public work counters grant no authority. }
+function NyxPascalRetainedLexicalTokens(const APrevious,
+  ACurrent: INyxPascalLexicalSnapshot): Integer;
+
 implementation
 
 uses SysUtils;
@@ -95,6 +101,7 @@ type
     function Row(AIndex: Integer): TAppendRow;
     function Bytes: Integer;
     function StorageUnits: Integer;
+    function RetainedFrom(const APrevious: INyxPascalLexicalSnapshot): Integer;
   end;
   { Owns a flat block directory, exact diagnostics and independent immutable
     identity. Construction alone may fill its private partial block; published
@@ -627,6 +634,19 @@ function NewNyxPascalAppendLexical(const AText: TNyxText;
   const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
 begin
   Result := TAppendLexical.Create(AText, AOptions, ACancellation);
+end;
+
+function NyxPascalRetainedLexicalTokens(const APrevious,
+  ACurrent: INyxPascalLexicalSnapshot): Integer;
+var
+  LCurrent: IAppendArena;
+begin
+  Result := -1;
+
+  if Supports(ACurrent, IAppendArena, LCurrent) then
+  begin
+    Result := LCurrent.RetainedFrom(APrevious);
+  end;
 end;
 
 function AppendNyxPascalLexical(const APrevious: INyxPascalLexicalSnapshot;

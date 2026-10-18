@@ -33,7 +33,86 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Append-only lexical and analysis projection — 2026-10-18
+## Current integration: Declaration parser checkpoint reuse — 2026-10-18
+
+8cc52f2 supplies exact append-only lexical/projection lineage. Current source
+adds real declaration parser continuation through the existing syntax owner;
+ordinary translated semantic queries consume it. One bounded value-only root
+checkpoint records grammar/visibility/depth, every parser token lookahead
+dependency, root state and retained metadata counts. It retains no predecessor
+owner or growing checkpoint history. The point precedes lexical tail repair and
+is independently checked against the sealed actual retained-token boundary.
+Equal text, public counters and foreign histories grant no reuse authority.
+
+Completed preceding declarations survive, while an unfinished enclosing root
+type/routine reparses as a whole. Restoration copies retained scopes, declarations,
+imports, variants, hints, statement labels and intrinsic rows independently;
+scope/name/overload/anonymous-type indexes rebuild without mutating the old
+snapshot. Fresh complete filtering owns conditional/include diagnostics. Only
+parser diagnostics before the rollback point survive. Cancellation during copying
+and unchanged node/scope/diagnostic/depth ceilings refuse atomically. Same lexical
+identity returns its unchanged parser; missing safe points use a whole parse.
+
+Focused native checks pass 2,993, clean heap. Every scalar append in module and
+fragment cases matches a fresh whole parser's complete public metadata, links,
+derived indexes, diagnostics and exact Unicode source. Dedicated retained
+variant/hint/label/intrinsic/overload rows, foreign lineage, changed policy,
+restoration cancellation and all four unchanged budget refusals are exercised.
+The reuse fixture retains at least 160 declarations and reads fewer than one
+quarter of the fresh parser's tokens; this is a bounded fixture result, not an
+editor latency or full-work reduction claim. Its receipt still exposes complete
+filtering and copied metadata. Append 2,415, storage 336 and all 40 maintained
+native consumers pass, clean heaps. Actual-source lexical reading passes 567
+across 500 files/2,301,869 lossless tokens; syntax reading passes 7,934 across
+five inputs/3,865 declarations. Counts overlap; 44 passing native logs include
+the separate actual-source read.
+
+All 77 successful current compiler jobs have zero owned warnings/168 upstream.
+Both Studios/backend/worker and 31 browser consumers compile as applicable;
+browser execution is not qualified. Four final-byte functional sources freeze
+before this qualification and remain exact through commit, without a layout
+overlay. Preflight focused runs precede that freeze and are not counted again.
+The historical emission compiler log is an unchanged read-only input, excluded
+from current compiler-job counts. A launcher initially names nonexistent
+nyx_pascal_storage_tests.lpr; its failed compiler log remains excluded from
+accepted evidence. Correcting only the path to the maintained prefix-storage
+fixture qualifies it through separate fresh output. An earlier PowerShell parse
+error occurs before execution and supplies no compiler/run evidence.
+
+The unchanged original RTL gate still exits one with clean heap: prefix phase,
+logical round 26, used 3,971,021/requested 268,501/limit 4,000,000, translated
+268,502. Longint, Int64 and Pointer binding-derived requests retain their exact
+authority; no final System/ObjPas semantic/indexed result publishes. Original
+consumer/source, five initial queries, explicit Word job, symbol preparation
+three/eight, generic fact ceiling eight, 2M view/4M aggregate/64 rounds remain
+unchanged. This parser improvement does not establish full RTL success.
+
+Full filtering, copied/reindexed metadata, translated origin rows and binding
+still perform complete-prefix work. Their original aggregate charge remains
+unchanged. Stop checkpoint/oracle/fixture/compiler/capture variants. Next
+reassess genuine binding continuation and persistent filter/origin/index reuse
+through existing binding/conditions/translation owners, with complete actual
+work accounting. Preserve exact source/context/include/branch/macro/settings,
+unfinished owners, cancellation and atomic refusal; no discounted repeated work,
+relaxed limits or new fixed probes substitutes for avoiding that work.
+
+Original reader session 54688/PID 4480 is terminal exit one. Native/regression/
+products sessions 2563/1023/30670 and corrected storage session 16991 are terminal
+exit zero; earlier extra orchestration 74963 retains its filename failure.
+No owned reader remains. Four frozen sources, 657 unrelated prior sources,
+97 RTL/24 compiler inputs and three additionally inspected compiler sources,
+156 original unit packets, 48 retained includes, five protected files/nine complete
+contexts, 349 frozen 7422453 artifacts and 13 concurrent planning files remain
+exact. Maintained source inventory stays 660. The ignored packet located by
+`.local/syntax-checkpoints-paths-private.json` owns receipts and final committed/
+remote identity. Native Nyx tools remain absent; no fallback transport occurs.
+LAN stays offline. No host/configuration retry, protected mutation, browser/HTTP/
+file execution/capture, cleanup/restart, approval bypass, new tool/schema or
+sub-agent occurs. At least forty batches remain unclosed against the original
+language/editor/incremental/input/quality/parity/adoption/delivery scope; no
+original criterion/task/credit/DONE closes.
+
+## Previous integration: Append-only lexical and analysis projection — 2026-10-18
 
 27d1d88 removes repeated frozen-token copying but still reconstructs projection
 text/lexing and declaration/binding state. Current source adds fixed-policy append

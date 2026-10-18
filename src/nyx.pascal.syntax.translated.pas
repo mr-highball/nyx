@@ -288,7 +288,15 @@ begin
     begin
       LLexical := NewNyxPascalAppendLexical(LParts.Join, AOptions.LexicalOptions, ACancellation);
     end;
-    FSyntax := NewNyxPascalSyntaxFromLexical(LLexical, AOptions, ACancellation);
+
+    if APrevious <> nil then
+    begin
+      FSyntax := AppendNyxPascalSyntax(APrevious.FSyntax, LLexical, AOptions, ACancellation);
+    end
+    else
+    begin
+      FSyntax := NewNyxPascalSyntaxFromLexical(LLexical, AOptions, ACancellation);
+    end;
   finally
     LParts.Free;
   end;

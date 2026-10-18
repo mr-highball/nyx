@@ -9,7 +9,31 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Append-projection prerequisite (2026-10-18): fixed-policy lexical arenas now
+Declaration-checkpoint prerequisite (2026-10-18): the owned parser now resumes
+completed root declarations along sealed exact lexical append lineage and
+identical policies. A bounded value-only checkpoint retains lookahead dependencies,
+root grammar/visibility/depth and metadata counts. Provisional enclosing owners
+reparse; fresh filter diagnostics replace provisional suffix diagnostics and
+retained parser metadata copies/reindexes independently. Focused native checks
+pass 2,993 with clean heap, comparing complete public metadata against fresh
+whole parses across scalar appends, unfinished scopes, variants/hints/labels/
+intrinsics/overloads, cancellation and unchanged node/scope/diagnostic/depth limits.
+Ordinary translated semantic queries consume this path. Browser compilation is
+separate from execution. Full filtering, metadata/origin copying and binding
+still rebuild; the existing complete-prefix charge remains unchanged. WORK.md
+owns the wider maintained/RTL gate, preservation and remaining real binding/
+filter/origin continuation prerequisite. No original criterion/task/credit/DONE
+or full language/editor/incremental/input/quality/parity/adoption/delivery closes.
+All 40 maintained native consumers plus append 2,415 and storage 336 pass;
+77 successful current compiler jobs have zero owned warnings. The unchanged RTL
+gate retains its exact round-26 aggregate-prefix refusal and clean heap, with no
+final semantic/indexed result. Four frozen sources remain exact; one incorrect
+storage fixture path is retained as failed orchestration, excluded from accepted
+evidence. WORK.md owns final preservation/source/remote identity. Stop checkpoint/
+oracle/fixture/compiler/capture variants and reassess genuine binding/filter/
+origin/index reuse with complete actual work accounting and unchanged limits.
+
+Historical append-projection prerequisite (2026-10-18): fixed-policy lexical arenas
 retain exact immutable predecessor identity, share completed blocks and repair
 their necessary tail. Ordinary semantic queries append only newly significant
 projection text under sealed chronological source lineage and identical options.

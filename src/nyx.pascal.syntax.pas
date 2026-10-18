@@ -407,6 +407,19 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
   end;
+  { Construction-only work receipt retained as immutable values. Reused
+    declarations still require copied/reindexed metadata; FilteredTokens counts
+    the complete lexical filter and ParserTokenReads includes actual lookahead.
+    These counters grant neither reduced aggregate charging nor binding reuse.
+    An unchanged returned snapshot keeps its original construction receipt. }
+  INyxPascalSyntaxWork = interface(IInterface)
+    ['{9E5014FB-52E2-47E4-B3B2-B33CB5623459}']
+    function ReusedDeclarations: Integer;
+    function CopiedEntries: Integer;
+    function FilteredTokens: Integer;
+    function ParserTokenReads: Integer;
+    function RestartToken: Integer;
+  end;
   { Optional declaration-label metadata, with checked snapshot-local ordinals.
     Metadata and typed declarations consume the shared node quota. Lexical lookup
     retains labels for shadowing/DECLARED; value-type/member inference refuses.
@@ -477,20 +490,70 @@ function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot
   const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot;
 
+{ Continue an owned parser along exact sealed lexical append lineage and
+  identical policies. Completed declarations may be restored before a safe
+  checkpoint; provisional tails and diagnostics are parsed afresh. The complete
+  token filter and metadata indexes still rebuild. Alternate/foreign histories
+  or changed options refuse; absent safe checkpoints fall back to a whole parse.
+  Cancellation/failure publishes no candidate and never mutates APrevious. }
+function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
+  const ALexical: INyxPascalLexicalSnapshot; const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot;
+
 implementation
 
-uses nyx.text.index;
+uses nyx.text.index, nyx.pascal.lexing.append;
 
 type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
     without putting interfaces or shared mutable arrays in published records. }
   TOrdinals = array of Integer;
+  { Closed continuation positions in the root declaration grammar. A type
+    section nested in root declarations must return to that caller's grammar;
+    an explicit types fragment does not gain a declaration-section caller. }
+  TParserResume = (prDeclarations, prTypes, prTypesFragment);
+  { Value-only rollback point before a root declaration. Counts exclude the
+    provisional suffix; Root retains pre-suffix flags and source identity.
+    ReadThrough includes every parser lookahead dependency, independently of
+    Position. No interface, mutable vector or prior snapshot is retained. }
+  TParserCheckpoint = record
+    Valid: Boolean;
+    Resume: TParserResume;
+    Position: Integer;
+    ReadThrough: Integer;
+    Depth: Integer;
+    PartialEqual: Boolean;
+    ActiveArm: Integer;
+    Visibility: TNyxPascalSyntaxVisibility;
+    Members: Boolean;
+    Section: TNyxPascalWord;
+    Root: TNyxPascalSyntaxScope;
+    Scopes: Integer;
+    Declarations: Integer;
+    Imports: Integer;
+    ParserDiagnostics: Integer;
+    Selectors: Integer;
+    Arms: Integer;
+    Labels: Integer;
+    StatementLabels: Integer;
+    Hints: Integer;
+    Intrinsics: Integer;
+  end;
+  { Forward owner for the private immutable construction seed. }
+  TSyntaxSnapshot = class;
+  { In-unit immutable parser authority. Snapshot is borrowed only while this
+    interface lease is held; an appended parser retains no predecessor owner. }
+  ISyntaxOwner = interface(IInterface)
+    ['{04123994-82CD-41B5-8A95-BBEB2140880B}']
+    function Snapshot: TSyntaxSnapshot;
+  end;
   { Owned parser builder becomes the immutable snapshot after construction.
     Significant-token ordinals keep lossless trivia on Lexical. No raw source
     provider or cancellation borrow survives publication. }
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
-    INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax)
+    INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
+    INyxPascalSyntaxWork, ISyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -526,6 +589,19 @@ type
       to the header; the residual equals sign stays for the alias declaration. }
     FPartialEqual: Boolean;
     FDepth: Integer;
+    FCheckpoint: TParserCheckpoint;
+    FFilterDiagnostics: Integer;
+    FReadThrough: Integer;
+    FParserReads: Integer;
+    FReused: Integer;
+    FCopied: Integer;
+    FRestart: Integer;
+    procedure CheckCancellation;
+    function ReadToken(AIndex: Integer): TNyxPascalToken;
+    procedure Remember(AResume: TParserResume; AVisibility: TNyxPascalSyntaxVisibility;
+      AMembers: Boolean; ASection: TNyxPascalWord);
+    procedure Restore(APrevious: TSyntaxSnapshot);
+    procedure LinkDeclaration(AIndex: Integer);
     function Tok(AOffset: Integer = 0): TNyxPascalToken;
     function Word(AWord: TNyxPascalWord; AOffset: Integer = 0): Boolean;
     function Sym(ASymbol: TNyxPascalSymbol; AOffset: Integer = 0): Boolean;
@@ -598,15 +674,24 @@ type
       AClass: Boolean = False);
     procedure Imports(AScope: Integer);
     procedure Declarations(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
-      AMembers: Boolean);
+      AMembers: Boolean; ASection: TNyxPascalWord = pkwNone);
     function Block(AScope: Integer): Boolean;
     procedure BuildTokens;
-    procedure Build;
+    procedure Build(APrevious: TSyntaxSnapshot = nil; ARetained: Integer = -1);
+    procedure ParseRoot;
+    procedure FinishRoot;
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope);
     constructor CreateLexical(const ALexical: INyxPascalLexicalSnapshot;
-      const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope);
+      const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope;
+      APrevious: TSyntaxSnapshot = nil; ARetained: Integer = -1);
+    function Snapshot: TSyntaxSnapshot;
+    function ReusedDeclarations: Integer;
+    function CopiedEntries: Integer;
+    function FilteredTokens: Integer;
+    function ParserTokenReads: Integer;
+    function RestartToken: Integer;
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -720,7 +805,8 @@ begin
 end;
 
 constructor TSyntaxSnapshot.CreateLexical(const ALexical: INyxPascalLexicalSnapshot;
-  const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope);
+  const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope;
+  APrevious: TSyntaxSnapshot; ARetained: Integer);
 var
   LPolicy: TNyxPascalLexicalOptions;
   LExpected: TNyxPascalLexicalOptions;
@@ -756,7 +842,7 @@ begin
   FActiveArm := -1;
   try
     FLexical := ALexical;
-    Build;
+    Build(APrevious, ARetained);
   finally
     FCancellation := nil;
   end;
@@ -767,6 +853,187 @@ begin
   FStructures.Free;
   FNames.Free;
   inherited Destroy;
+end;
+
+procedure TSyntaxSnapshot.CheckCancellation;
+begin
+
+  if (FCancellation <> nil) and FCancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Declaration checkpoint construction cancelled');
+  end;
+end;
+
+function TSyntaxSnapshot.ReadToken(AIndex: Integer): TNyxPascalToken;
+begin
+
+  if FParserReads = High(Integer) then
+  begin
+    raise ENyxPascalSyntaxLimit.Create('Parser token-read telemetry exceeds its exact counter domain');
+  end;
+  Inc(FParserReads);
+
+  if AIndex > FReadThrough then
+  begin
+    FReadThrough := AIndex;
+  end;
+  Result := FLexical.Token(AIndex);
+end;
+
+procedure TSyntaxSnapshot.Remember(AResume: TParserResume;
+  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TNyxPascalWord);
+var
+  LSafe: Integer;
+begin
+  { Keep only the latest point safe before append's two-token repair window.
+    Actual continuation independently rechecks its retained-token authority.
+    Lookahead reaching provisional EOF invalidates later rollback points. }
+  LSafe := FLexical.Count - 3;
+
+  if (FReadThrough >= LSafe) or (FTokens[FPosition] >= LSafe) then
+  begin
+    Exit;
+  end;
+  FCheckpoint.Valid := True;
+  FCheckpoint.Resume := AResume;
+  FCheckpoint.Position := FPosition;
+  FCheckpoint.ReadThrough := FReadThrough;
+  FCheckpoint.Depth := FDepth;
+  FCheckpoint.PartialEqual := FPartialEqual;
+  FCheckpoint.ActiveArm := FActiveArm;
+  FCheckpoint.Visibility := AVisibility;
+  FCheckpoint.Members := AMembers;
+  FCheckpoint.Section := ASection;
+  FCheckpoint.Root := FScopes[0];
+  FCheckpoint.Scopes := FScopeCount;
+  FCheckpoint.Declarations := FDeclarationCount;
+  FCheckpoint.Imports := FImportCount;
+  FCheckpoint.ParserDiagnostics := FDiagnosticCount - FFilterDiagnostics;
+  FCheckpoint.Selectors := FSelectorCount;
+  FCheckpoint.Arms := FArmCount;
+  FCheckpoint.Labels := FLabelCount;
+  FCheckpoint.StatementLabels := FStatementLabelCount;
+  FCheckpoint.Hints := FHintCount;
+  FCheckpoint.Intrinsics := FIntrinsicCount;
+end;
+
+procedure TSyntaxSnapshot.Restore(APrevious: TSyntaxSnapshot);
+var
+  LAt: Integer;
+  LFilterCount: Integer;
+begin
+  FCheckpoint := APrevious.FCheckpoint;
+  FScopeCount := FCheckpoint.Scopes;
+  FDeclarationCount := FCheckpoint.Declarations;
+  FImportCount := FCheckpoint.Imports;
+  FSelectorCount := FCheckpoint.Selectors;
+  FArmCount := FCheckpoint.Arms;
+  FLabelCount := FCheckpoint.Labels;
+  FStatementLabelCount := FCheckpoint.StatementLabels;
+  FHintCount := FCheckpoint.Hints;
+  FIntrinsicCount := FCheckpoint.Intrinsics;
+  FPosition := FCheckpoint.Position;
+  FPartialEqual := FCheckpoint.PartialEqual;
+  FActiveArm := FCheckpoint.ActiveArm;
+  FReadThrough := FCheckpoint.ReadThrough;
+  FReused := FDeclarationCount;
+  FRestart := FTokens[FPosition];
+  FCopied := FScopeCount + FDeclarationCount + FImportCount + FSelectorCount +
+    FArmCount + FLabelCount + FStatementLabelCount + FHintCount + FIntrinsicCount +
+    FCheckpoint.ParserDiagnostics;
+  SetLength(FScopes, FScopeCount);
+  for LAt := 0 to FScopeCount - 1 do
+  begin
+    CheckCancellation;
+    FScopes[LAt] := APrevious.FScopes[LAt];
+
+    if LAt = 0 then
+    begin
+      FScopes[LAt] := FCheckpoint.Root;
+    end;
+    { Unclosed recovered scopes originally reach their lexical source end,
+      even when recovery allowed later declarations to be inspected. }
+
+    if not FScopes[LAt].Complete then
+    begin
+      FScopes[LAt].FSpan := NyxPascalSpan(FScopes[LAt].Span.Start,
+        FLexical.Scalars - FScopes[LAt].Span.Start);
+    end;
+    FScopes[LAt].FFirst := -1;
+    FScopes[LAt].FLast := -1;
+    FScopes[LAt].FCount := 0;
+  end;
+  SetLength(FDeclarations, FDeclarationCount);
+  for LAt := 0 to FDeclarationCount - 1 do
+  begin
+    CheckCancellation;
+    FDeclarations[LAt] := APrevious.FDeclarations[LAt];
+    LinkDeclaration(LAt);
+
+    if (FDeclarations[LAt].Kind = psdkType) and
+      (FDeclarations[LAt].TypeForm in [pstfClass, pstfInterface, pstfRecord, pstfObject]) then
+    begin
+      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LAt].TypeSpan.Start)), LAt);
+    end;
+  end;
+  SetLength(FImports, FImportCount);
+  for LAt := 0 to FImportCount - 1 do
+  begin
+    CheckCancellation;
+    FImports[LAt] := APrevious.FImports[LAt];
+  end;
+  SetLength(FSelectors, FSelectorCount);
+  for LAt := 0 to FSelectorCount - 1 do
+  begin
+    CheckCancellation;
+    FSelectors[LAt] := APrevious.FSelectors[LAt];
+  end;
+  SetLength(FArms, FArmCount);
+  for LAt := 0 to FArmCount - 1 do
+  begin
+    CheckCancellation;
+    FArms[LAt] := APrevious.FArms[LAt];
+  end;
+  SetLength(FLabels, FLabelCount);
+  for LAt := 0 to FLabelCount - 1 do
+  begin
+    CheckCancellation;
+    FLabels[LAt] := APrevious.FLabels[LAt];
+  end;
+  SetLength(FStatementLabels, FStatementLabelCount);
+  for LAt := 0 to FStatementLabelCount - 1 do
+  begin
+    CheckCancellation;
+    FStatementLabels[LAt] := APrevious.FStatementLabels[LAt];
+  end;
+  SetLength(FHints, FHintCount);
+  for LAt := 0 to FHintCount - 1 do
+  begin
+    CheckCancellation;
+    FHints[LAt] := APrevious.FHints[LAt];
+  end;
+  SetLength(FIntrinsics, FIntrinsicCount);
+  for LAt := 0 to FIntrinsicCount - 1 do
+  begin
+    CheckCancellation;
+    FIntrinsics[LAt] := APrevious.FIntrinsics[LAt];
+  end;
+  { Filter diagnostics belong to the new complete filter pass. Only parser
+    diagnostics before the rollback point survive from the previous snapshot. }
+  LFilterCount := FDiagnosticCount;
+
+  if FCheckpoint.ParserDiagnostics > FOptions.MaximumDiagnostics - LFilterCount then
+  begin
+    raise ENyxPascalSyntaxLimit.Create('Restored diagnostics exceed the shared syntax budget');
+  end;
+  SetLength(FDiagnostics, LFilterCount + FCheckpoint.ParserDiagnostics);
+  for LAt := 0 to FCheckpoint.ParserDiagnostics - 1 do
+  begin
+    CheckCancellation;
+    FDiagnostics[LFilterCount + LAt] :=
+      APrevious.FDiagnostics[APrevious.FFilterDiagnostics + LAt];
+  end;
+  FDiagnosticCount := Length(FDiagnostics);
 end;
 
 function TSyntaxSnapshot.Tok(AOffset: Integer): TNyxPascalToken;
@@ -784,7 +1051,7 @@ begin
   begin
     LAt := High(FTokens);
   end;
-  Result := FLexical.Token(FTokens[LAt]);
+  Result := ReadToken(FTokens[LAt]);
 end;
 
 function TSyntaxSnapshot.Word(AWord: TNyxPascalWord; AOffset: Integer): Boolean;
@@ -842,7 +1109,7 @@ begin
   end
   else if FPosition > 0 then
   begin
-    Result := FLexical.Token(FTokens[FPosition - 1]).Span.Finish;
+    Result := ReadToken(FTokens[FPosition - 1]).Span.Finish;
   end;
 end;
 
@@ -853,7 +1120,7 @@ end;
 
 function TSyntaxSnapshot.Range(AStart, AEnd: Integer): TNyxPascalSpan;
 begin
-  Result := NyxPascalSpan(FLexical.Token(FTokens[AStart]).Span.Start, 0);
+  Result := NyxPascalSpan(ReadToken(FTokens[AStart]).Span.Start, 0);
 
   if (AEnd = FPosition) and FPartialEqual then
   begin
@@ -862,7 +1129,7 @@ begin
   else if AEnd > AStart then
   begin
     Result := NyxPascalSpan(Result.Start,
-      FLexical.Token(FTokens[AEnd - 1]).Span.Finish - Result.Start);
+      ReadToken(FTokens[AEnd - 1]).Span.Finish - Result.Start);
   end;
 end;
 
@@ -985,8 +1252,6 @@ function TSyntaxSnapshot.AddDeclaration(AScope: Integer;
   AName: Integer; AOperator: TNyxPascalOperatorKind; AAnonymous: Boolean): Integer;
 var
   LToken: TNyxPascalToken;
-  LKey: TNyxText;
-  LFirst: Integer;
 begin
   NodeBudget;
   Result := FDeclarationCount;
@@ -995,7 +1260,7 @@ begin
   begin
     raise ENyxPascalSyntaxLimit.Create('Pascal declarations exceed their syntax budget');
   end;
-  LToken := FLexical.Token(FTokens[AName]);
+  LToken := ReadToken(FTokens[AName]);
 
   if Result = Length(FDeclarations) then
   begin
@@ -1042,37 +1307,52 @@ begin
     Include(FDeclarations[Result].FFlags, psdfConditional);
   end;
 
-  if FScopes[AScope].FLast >= 0 then
+  LinkDeclaration(Result);
+end;
+
+procedure TSyntaxSnapshot.LinkDeclaration(AIndex: Integer);
+var
+  LScope: Integer;
+  LKey: TNyxText;
+  LFirst: Integer;
+begin
+  LScope := FDeclarations[AIndex].Scope;
+  FDeclarations[AIndex].FNext := -1;
+  FDeclarations[AIndex].FNextNamed := -1;
+  FDeclarations[AIndex].FLastNamed := AIndex;
+
+  if FScopes[LScope].FLast >= 0 then
   begin
-    FDeclarations[FScopes[AScope].FLast].FNext := Result;
+    FDeclarations[FScopes[LScope].FLast].FNext := AIndex;
   end
   else
   begin
-    FScopes[AScope].FFirst := Result;
+    FScopes[LScope].FFirst := AIndex;
   end;
-  FScopes[AScope].FLast := Result;
-  Inc(FScopes[AScope].FCount);
+  FScopes[LScope].FLast := AIndex;
+  Inc(FScopes[LScope].FCount);
 
-  if AAnonymous then
+  if FDeclarations[AIndex].Anonymous then
   begin
     Exit;
   end;
-  LKey := TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(FDeclarations[Result].Name);
+  LKey := TNyxText(IntToStr(LScope)) + ':' + NyxPascalASCIIKey(FDeclarations[AIndex].Name);
 
-  if AOperator <> pokNone then
+  if FDeclarations[AIndex].OperatorKind <> pokNone then
   begin
-    LKey := TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AOperator)));
+    LKey := TNyxText(IntToStr(LScope)) + ':operator#' +
+      TNyxText(IntToStr(Ord(FDeclarations[AIndex].OperatorKind)));
   end;
   LFirst := FNames.IndexOf(LKey);
 
   if LFirst < 0 then
   begin
-    FNames.AddFirst(LKey, Result);
+    FNames.AddFirst(LKey, AIndex);
   end
   else
   begin
-    FDeclarations[FDeclarations[LFirst].FLastNamed].FNextNamed := Result;
-    FDeclarations[LFirst].FLastNamed := Result;
+    FDeclarations[FDeclarations[LFirst].FLastNamed].FNextNamed := AIndex;
+    FDeclarations[LFirst].FLastNamed := AIndex;
   end;
 end;
 
@@ -2129,6 +2409,19 @@ begin
       Break;
     end;
     LBefore := FPosition;
+
+    if AScope = 0 then
+    begin
+
+      if FOptions.StartingContext = psfTypes then
+      begin
+        Remember(prTypesFragment, AVisibility, False, pkwNone);
+      end
+      else
+      begin
+        Remember(prTypes, AVisibility, FOptions.StartingContext = psfMembers, pkwNone);
+      end;
+    end;
     ParseType(AScope, AVisibility);
 
     if FPosition = LBefore then
@@ -2877,12 +3170,12 @@ begin
 
     if LIsOperator then
     begin
-      LOperator := OperatorToken(FLexical.Token(FTokens[LFinalName]), FLexical.Text(FTokens[LFinalName]));
+      LOperator := OperatorToken(ReadToken(FTokens[LFinalName]), FLexical.Text(FTokens[LFinalName]));
 
       if LOperator = pokUnknown then
       begin
         Unsupported(AScope, 'This operator spelling needs an explicit supported identity',
-          FLexical.Token(FTokens[LFinalName]).Span);
+          ReadToken(FTokens[LFinalName]).Span);
       end;
     end;
     LEntry := AddDeclaration(AScope, psdkRoutine, AVisibility, LFinalName, LOperator);
@@ -3143,7 +3436,7 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Declarations(AScope: Integer;
-  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean);
+  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TNyxPascalWord);
 var
   LSection: TNyxPascalWord;
   LBefore: Integer;
@@ -3153,10 +3446,15 @@ var
 begin
   Enter;
   try
-    LSection := pkwNone;
+    LSection := ASection;
     while not EOF and not Word(pkwEnd) and not Word(pkwBegin) and not Word(pkwAsm) do
     begin
       LBefore := FPosition;
+
+      if AScope = 0 then
+      begin
+        Remember(prDeclarations, AVisibility, AMembers, LSection);
+      end;
 
       if Word(pkwInterface) then
       begin
@@ -3536,14 +3834,51 @@ begin
   SetLength(FConditional, LCount);
 end;
 
-procedure TSyntaxSnapshot.Build;
+procedure TSyntaxSnapshot.Build(APrevious: TSyntaxSnapshot; ARetained: Integer);
+var
+  LResume: TParserCheckpoint;
+begin
+  BuildTokens;
+  FFilterDiagnostics := FDiagnosticCount;
+  FReadThrough := -1;
+
+  if (APrevious <> nil) and APrevious.FCheckpoint.Valid and
+    (APrevious.FCheckpoint.ReadThrough < ARetained) then
+  begin
+    Restore(APrevious);
+    LResume := FCheckpoint;
+    case LResume.Resume of
+      prDeclarations:
+        begin
+          FDepth := LResume.Depth - 1;
+          Declarations(0, LResume.Visibility, LResume.Members, LResume.Section);
+        end;
+      prTypes:
+        begin
+          FDepth := LResume.Depth;
+          TypeSection(0, LResume.Visibility);
+          FDepth := LResume.Depth - 1;
+          Declarations(0, LResume.Visibility, LResume.Members);
+        end;
+      prTypesFragment:
+        begin
+          FDepth := LResume.Depth;
+          TypeSection(0, LResume.Visibility);
+        end;
+    end;
+  end
+  else
+  begin
+    ParseRoot;
+  end;
+  FinishRoot;
+end;
+
+procedure TSyntaxSnapshot.ParseRoot;
 var
   LModule: TNyxText;
   LModuleScope: Integer;
-  LStart: Integer;
-  LBodyClosed: Boolean;
 begin
-  BuildTokens;
 
   if FOptions.StartingContext = psfMembers then
   begin
@@ -3595,7 +3930,13 @@ begin
       Declarations(0, psavImplementation, False);
     end;
   end;
+end;
 
+procedure TSyntaxSnapshot.FinishRoot;
+var
+  LStart: Integer;
+  LBodyClosed: Boolean;
+begin
   LBodyClosed := False;
 
   if Word(pkwBegin) or Word(pkwAsm) then
@@ -3867,6 +4208,89 @@ function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot
   const ACancellation: INyxCancellationScope): INyxPascalSyntaxSnapshot;
 begin
   Result := TSyntaxSnapshot.CreateLexical(ALexical, AOptions, ACancellation);
+end;
+
+function SamePolicy(const ALeft, ARight: TNyxPascalSyntaxOptions): Boolean;
+var
+  LLeft: TNyxPascalLexicalOptions;
+  LRight: TNyxPascalLexicalOptions;
+begin
+  LLeft := ALeft.LexicalOptions;
+  LRight := ARight.LexicalOptions;
+  Result := (ALeft.StartingContext = ARight.StartingContext) and
+    (ALeft.MaximumDeclarations = ARight.MaximumDeclarations) and
+    (ALeft.MaximumScopes = ARight.MaximumScopes) and
+    (ALeft.MaximumDepth = ARight.MaximumDepth) and
+    (ALeft.MaximumDiagnostics = ARight.MaximumDiagnostics) and
+    (LLeft.MaximumSourceBytes = LRight.MaximumSourceBytes) and
+    (LLeft.MaximumTokens = LRight.MaximumTokens) and
+    (LLeft.MaximumDiagnostics = LRight.MaximumDiagnostics) and
+    (LLeft.MaximumCommentDepth = LRight.MaximumCommentDepth) and
+    (LLeft.AllowNestedComments = LRight.AllowNestedComments) and
+    (LLeft.AllowUnicodeIdentifiers = LRight.AllowUnicodeIdentifiers);
+end;
+
+function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
+  const ALexical: INyxPascalLexicalSnapshot; const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalSyntaxSnapshot;
+var
+  LPrevious: ISyntaxOwner;
+  LRetained: Integer;
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Syntax continuation cancelled');
+  end;
+  AOptions.Validate;
+
+  if not Supports(APrevious, ISyntaxOwner, LPrevious) or (ALexical = nil) then
+  begin
+    raise ENyxPascalLexical.Create('Syntax continuation needs its owned predecessor and lexical source');
+  end;
+  LRetained := NyxPascalRetainedLexicalTokens(APrevious.Lexical, ALexical);
+
+  if (LRetained < 0) or not SamePolicy(LPrevious.Snapshot.FOptions, AOptions) then
+  begin
+    raise ENyxPascalLexical.Create('Syntax continuation needs exact lexical lineage and identical options');
+  end;
+
+  if ALexical = APrevious.Lexical then
+  begin
+    Exit(APrevious);
+  end;
+  Result := TSyntaxSnapshot.CreateLexical(ALexical, AOptions, ACancellation,
+    LPrevious.Snapshot, LRetained);
+end;
+
+function TSyntaxSnapshot.Snapshot: TSyntaxSnapshot;
+begin
+  Result := Self;
+end;
+
+function TSyntaxSnapshot.ReusedDeclarations: Integer;
+begin
+  Result := FReused;
+end;
+
+function TSyntaxSnapshot.CopiedEntries: Integer;
+begin
+  Result := FCopied;
+end;
+
+function TSyntaxSnapshot.FilteredTokens: Integer;
+begin
+  Result := FLexical.Count;
+end;
+
+function TSyntaxSnapshot.ParserTokenReads: Integer;
+begin
+  Result := FParserReads;
+end;
+
+function TSyntaxSnapshot.RestartToken: Integer;
+begin
+  Result := FRestart;
 end;
 
 end.
