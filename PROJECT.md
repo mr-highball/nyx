@@ -188,6 +188,12 @@ signatures. Ordinary completion follows an imported class property into its
 record result with exact navigation and detached insertion. Full property/
 generic/expression semantics, editor adoption and both-target quality stay open.
 
+The [routine-clause continuation](docs/pascal-projects.md#routine-header-directive-boundaries)
+retains configured-FPC header forms with an omitted initial separator, separate
+result types and adjacent closed modifiers. Existing roles, forward/overload
+intent, source origins and genuine terminator diagnostics remain explicit;
+complete language, editor adoption and both-target quality stay open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

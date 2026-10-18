@@ -4,7 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source class-member families retain typed class properties, complete
+Current-source routine boundaries retain configured-FPC adjacent first directives,
+separate result types and closed neighboring modifier/role clauses. Escaped/
+qualified/generic names and member visibility retain their own roles; genuine
+terminator/operand errors remain explicit. Native focused 29 and unchanged RTL
+50 pass with clean heaps; paired native compiler oracles accept both original
+header spellings without executing either program. System retains 6,906
+declarations/zero declaration-syntax diagnostics/eleven semantic answers; ObjPas
+stays 209/four/one. Exact indexed Free/FreeInstance navigation/insertion remains
+ready. Source.Resolved still refuses CODEALIGN, so zero syntax diagnostics do not
+prove full RTL meaning. All 36 native consumers have clean heaps; 61 accepted
+compiler logs have zero owned warnings/147 upstream. Both Studios/backend/worker
+and twenty-one browser consumers compile as applicable; browser execution/input/
+observing/parity/adoption/delivery stay open. Four focused/641 unique product/97
+RTL/20 compiler pins, 156 unit packets/48 includes, five protected files/nine
+contexts, 349 frozen 7422453 artifacts and thirteen concurrent planning files stay
+exact. Readers joined; LAN offline, native Nyx tools absent. WORK.md owns exact
+receipts, source/remote identity and remaining scope. Stop routine-clause/header/
+fixture/compiler/capture variants; reassess typed CODEALIGN requests through
+existing compiler-policy/context/translation owners, preserving source origin,
+conditional uncertainty, settings lifetime and caller target facts. No ignored
+directive or inferred ABI/layout. Full canonical type/module/incremental/editor/
+input/navigation/quality/parity/adoption/delivery remains open across at least
+twenty-eight documented unclosed batches. No original criterion/task/credit/DONE/
+new tool/schema/rollout closes. No host/config retry or capture, protected mutation,
+cleanup/deletion/restart, approval bypass or sub-agents. Preserve concurrent work.
+
+Earlier class-member families retain typed class properties, complete
 class-var sections and generic-class method signatures. Qualified imported
 receivers now follow property results without losing local/explicit-namespace
 authority or missing-import refusal. Focused native 46 and unchanged RTL 50 pass

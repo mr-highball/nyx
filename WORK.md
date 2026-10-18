@@ -33,7 +33,87 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Class-member declaration families — 2026-10-18
+## Current integration: Routine directive boundaries — 2026-10-18
+
+Previous goal turn is progress: committed/pushed 9fc23fd qualifies class-member
+families across at least twenty-seven documented unclosed batches, retaining
+complete original authoring criterion two. Reassessment locates the last actual
+System syntax diagnostic at compproc.inc's adjacent parameter-list/compilerproc
+spelling. One paired configured-compiler oracle accepts both original spellings
+with/without the initial separator; no SDK source is changed. Follow supported
+routine clause boundaries through existing syntax/linkage/type owners. Deliver
+correct result-type/clause ranges, adjacent closed modifiers, existing typed
+roles/flags and explicit missing-terminator refusal. Whole compiled native source,
+portable ownership/recovery/quota/cancel checks, maintained consumers and one
+unchanged RTL continuation decide the boundary. Do not relax arbitrary syntax,
+raise budgets or add fixture/probe/capture variants. Stop at a materially different
+prerequisite; CODEALIGN remains independent. Full language/canonical type/module/
+incremental/editor/input/navigation/quality/parity/adoption/delivery and original
+criterion/task/credit/DONE remain open. Solo; native execution/browser compile
+only. Preserve concurrent planning, protected files/nine contexts, frozen release
+and offline LAN. No host/config retry, browser/HTTP/file execution/capture,
+protected mutation, cleanup/deletion/restart or approval bypass.
+
+Both independent configured-FPC oracles accept the same original-shaped
+compiler-helper header with/without the initial separator; neither output program
+is executed. The owned parser now distinguishes supported clauses at that boundary
+instead of diagnosing a missing separator. Result types exclude following known
+directives while escaped/qualified names, generic arguments and grouped parameters
+keep their own ranges. Plain zero-operand modifiers retain adjacent overload/
+forward intent; existing linkage/intrinsic roles preserve their typed metadata.
+Member PUBLIC remains a visibility section and unexpected words/final missing
+terminators remain explicit. No SDK source is changed or arbitrary syntax erased.
+
+The focused native consumer passes 29 with clean heap. Whole compiled unit/include
+executes ordinary calling conventions, record results, an escaped contextual type
+and forward declarations. Compiler-helper admission is checked separately from
+ordinary call eligibility. The exact original unit/include then passes analysis,
+typed result binding and physical directive navigation. Portable cases retain
+scope ownership, missing terminator/role operand refusal, shared quotas,
+cancellation and independent prior snapshots. Per-type/public-method comments and
+blank-line review precede the final source freeze and compiler groups.
+
+The unchanged whole-RTL consumer passes 50 with clean heap. System retains
+6,906 declarations/zero declaration-syntax diagnostics/eleven semantic answers;
+ObjPas retains 209/four/one. Exact indexed Free/FreeInstance navigation and
+detached insertion remain ready. The original five initial primitive probes,
+eight-capped symbol preparation and one explicit Word request job stay unchanged.
+Zero System syntax diagnostics in this captured projection do not establish full
+RTL meaning: Source.Resolved remains false at the independent CODEALIGN request,
+and ObjPas/general type/property/generic/expression requirements stay open.
+
+Stop routine-clause/header/fixture/compiler/capture variants after qualification.
+Next reassess typed CODEALIGN requests through existing compiler-policy/context/
+translation ownership, retaining directive origin, conditional uncertainty,
+settings lifetime and caller-owned target facts. Compiler source confirms this
+request updates alignment policy; it must not be silently ignored or invent an
+ABI/layout. Preserve full canonical types/module/incremental/editor/input/
+navigation/quality/parity/adoption/delivery requirements. At least twenty-eight
+documented unclosed batches retain full original authoring criterion two; no
+original criterion/task/counter/credit/DONE closes. Goal active; execution solo.
+
+Ignored routine-boundary-20261018-104540 is located by
+.local/routine-boundary-paths-private.json. All four final native/compiler groups
+join with exit 0. Sixty-one accepted compiler logs have zero owned warnings and
+147 separately identified upstream pas2js Classes warnings; all 36 native consumers
+have clean heaps. Both Studios/backend/worker and twenty-one browser consumers
+compile as applicable. The independent two-program compiler-spelling oracle is
+separate evidence; its programs are not executed. Maintained native regression
+counts overlap prior qualification and do not establish new full-language credit.
+No browser execution/input/observing/parity or delivery is claimed.
+
+All four frozen focused sources, 641 unique product files, 97 original RTL pins
+and twenty compiler/config/primary-source pins verify. All 156 original unit byte
+packets and 48 retained SysUtils includes stay exact. Read-only release verification
+passes 349 frozen 7422453 artifacts with clean heap. Five protected files/nine
+complete contexts and thirteen independently owned planning files remain exact.
+Readers are joined and ports 8088–8093 have no listeners; native Nyx tools remain
+absent. No source changes follow the final freeze. Final Git/remote identity is
+retained in the private packet after publication. No host/config retry, browser/
+HTTP/file execution/capture, protected mutation, cleanup/deletion/restart or
+approval bypass occurs; concurrent planning stays unstaged. Goal remains active.
+
+## Earlier integration: Class-member declaration families — 2026-10-18
 
 Previous goal turn is progress: committed/pushed a74b50c qualifies labels and
 procedural initializer boundaries across at least twenty-six documented unclosed

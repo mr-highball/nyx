@@ -9,6 +9,30 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Routine-clause continuation (2026-10-18): 9fc23fd is progress across at least
+twenty-seven documented unclosed batches, retaining full original criterion two.
+The configured FPC accepts the exact remaining adjacent compilerproc spelling.
+Follow routine clause/result-type boundaries through existing syntax/linkage/type
+owners, preserving explicit missing-terminator errors, source ownership, quotas
+and cancellation. Whole native compiled behavior, portable cases, maintained
+consumers and one unchanged RTL route decide the boundary. Stop on a different
+prerequisite without arbitrary grammar relaxation, raised budgets, fixture/probe/
+capture variants or original criterion/task/credit/DONE/parity/adoption/delivery
+closure. WORK.md owns exact evidence and the full editor return path.
+
+The focused native boundary passes 29 with clean heap; unchanged real-RTL passes
+50. System retains 6,906 declarations/zero declaration-syntax diagnostics/eleven
+semantic answers, ObjPas 209/four/one. Exact indexed Free/FreeInstance navigation/
+insertion stays ready. Source.Resolved still refuses the independent CODEALIGN
+request; no full RTL/type/editor capability follows from zero syntax diagnostics.
+Stop routine-clause/header/fixture/compiler/capture variants; next reassess typed
+alignment intent through existing compiler-policy/context/translation owners.
+Settings lifetime, source origin and uncertainty must remain explicit. Full
+source/canonical type/module/incremental/editor/input/navigation/quality/parity/
+adoption/delivery stay open across at least twenty-eight documented unclosed
+batches without original criterion/task/credit/DONE closure. WORK.md owns exact
+compiler/preservation/source/remote evidence; browser consumers compile only.
+
 Class-member continuation (2026-10-18): a74b50c is progress across at least
 twenty-six documented unclosed batches, retaining full original criterion two.
 Follow actual class-property/generic-class grammar and continued class-var

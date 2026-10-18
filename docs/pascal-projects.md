@@ -2097,6 +2097,41 @@ browser/LCL parity, adoption and delivery remain under original authoring
 criterion two. Browser consumers compile only; this installs no default resolver,
 MCP tool/schema or observing release.
 
+## Routine header directive boundaries
+
+The declaration reader retains supported FPC routine headers whose first directive
+follows the parameter/result signature without a semicolon. A configured-compiler
+pair confirms both spellings of the actual remaining `compilerproc` boundary;
+the unchanged System input is never rewritten to make analysis pass.
+
+Result types stop before a known calling/modifier clause. Escaped and qualified
+type names, generic arguments and grouped parameter syntax keep their own source
+roles. Adjacent plain modifiers retain independent overload/forward intent;
+compiler-helper, RTL, non-returning and intrinsic roles continue through their
+existing typed flags/metadata. Member `public` remains a visibility section.
+Original result, header and linkage ranges map through the retained physical
+occurrence; projection separators never replace authored source text.
+
+The lookahead recognizes closed supported clauses rather than granting arbitrary
+identifier text directive authority. Genuine missing final terminators, malformed
+role operands and unfinished declarations remain diagnostics/incomplete syntax.
+Existing node/depth/work/cancellation quotas and immutable ownership remain active.
+This parses authored intent; it does not prove ABI compatibility, intrinsic opcode
+meaning, general operand expressions or compiler-helper call eligibility.
+
+The native companion executes ordinary routines using these calling boundaries,
+a preserved forward declaration and an escaped contextual result type. It also
+compiles the exact adjacent compiler-helper spelling without treating that helper
+as an ordinary callable API. Whole-source analysis separately retains every
+original unit/include scalar, declared result type and included directive origin.
+Portable refusal/ownership cases and the unchanged RTL route remain separate
+qualification consumers. WORK.md owns exact source/remote identity, native results,
+browser compilation and remaining compiler-context requirements.
+
+Complete grammar/canonical types, modules, incremental work, editor/input/navigation,
+quality, browser/LCL parity, adoption and delivery remain under original authoring
+criterion two. This adds no default resolver, MCP tool/schema or observing release.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

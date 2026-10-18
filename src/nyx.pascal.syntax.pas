@@ -545,7 +545,11 @@ type
     procedure Groups(AOpen, AClose: TNyxPascalSymbol);
     procedure Angles;
     procedure Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean = False;
-      AHints: Boolean = False; AArmEnd: Boolean = False; AInitializerBoundary: Boolean = False);
+      AHints: Boolean = False; AArmEnd: Boolean = False; AInitializerBoundary: Boolean = False;
+      ARoutineBoundary: Boolean = False);
+    { Closed routine clause lookahead; escaped/contextual type names keep their
+      source role, and member PUBLIC remains a visibility section. }
+    function RoutineClause(AScope: Integer = -1): Boolean;
     function HintWord(out AKind: TNyxPascalHintKind): Boolean;
     function AtHint(AExpressionStart: Integer): Boolean;
     procedure DeclarationHints(ADeclaration: Integer);
@@ -1243,6 +1247,16 @@ begin
   end;
 end;
 
+{ Modifier spellings shared by lookahead and the plain zero-operand path.
+  Hints and platform/linker clauses use their own operand readers first. }
+function RoutineModifier(AWord: TNyxPascalWord): Boolean;
+begin
+  Result := AWord in [pkwForward, pkwExternal, pkwAbstract, pkwOverload, pkwOverride,
+    pkwVirtual, pkwDynamic, pkwInline, pkwReintroduce, pkwAssembler, pkwCdecl,
+    pkwStdcall, pkwPascal, pkwSafecall, pkwRegister, pkwVarargs, pkwNostackframe,
+    pkwStatic, pkwDeprecated, pkwPlatform, pkwExperimental, pkwFinal];
+end;
+
 { Only contextual platform suffix keys enter this classification. Their values
   remain exact source syntax; no assembler symbol or intrinsic body is invented. }
 function LinkageFlagNamed(const AName: TNyxText; out AFlag: TNyxPascalLinkageFlag): Boolean;
@@ -1292,6 +1306,34 @@ begin
   else
   begin
     Result := False;
+  end;
+end;
+
+function TSyntaxSnapshot.RoutineClause(AScope: Integer): Boolean;
+var
+  LFlag: TNyxPascalLinkageFlag;
+  LHint: TNyxPascalHintKind;
+begin
+  Result := False;
+
+  if (Tok.Kind <> ptkWord) or Tok.Escaped then
+  begin
+    Exit;
+  end;
+  Result := RoutineModifier(Tok.Word) or HintWord(LHint);
+
+  if LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
+  begin
+    Result := True;
+
+    if (AScope >= 0) and (LFlag = plfPublic) then
+    begin
+
+      if FScopes[AScope].Kind = psskMembers then
+      begin
+        Result := False;
+      end;
+    end;
   end;
 end;
 
@@ -1467,7 +1509,8 @@ begin
     Step;
     LColon := False;
 
-    if (LFlag in [plfRTLProcedure, plfNoReturn]) and not Sym(psoSemicolon) then
+    if (LFlag in [plfRTLProcedure, plfNoReturn]) and not Sym(psoSemicolon) and
+      not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
     begin
       Unsupported(FDeclarations[ADeclaration].Scope,
         'This routine declaration marker has no operand', Tok.Span);
@@ -1480,7 +1523,13 @@ begin
       Step;
     end;
     LOperand := FPosition;
-    Expression(psoSemicolon);
+
+    if not (ARoutine and
+      (LFlag in [plfRTLProcedure, plfNoReturn, plfCompilerHelper]) and
+      RoutineClause(FDeclarations[ADeclaration].Scope)) then
+    begin
+      Expression(psoSemicolon, False, False, False, False, ARoutine);
+    end;
 
     if LFlag in [plfIntrinsic, plfConstantIntrinsic] then
     begin
@@ -1491,15 +1540,19 @@ begin
         LKind := pikConstant;
       end;
       IntrinsicDeclaration(ADeclaration, LKind, LKey, Range(LOperand, FPosition),
-        LColon and Sym(psoSemicolon));
+        LColon and (Sym(psoSemicolon) or (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope))));
     end;
   end;
 
-  if not Sym(psoSemicolon) then
+  if not Sym(psoSemicolon) and not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
   begin
     Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
   end;
-  Separator;
+
+  if Sym(psoSemicolon) or not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
+  begin
+    Separator;
+  end;
 
   if FDeclarations[ADeclaration].FLinkageSpan.Length > 0 then
   begin
@@ -1509,7 +1562,7 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean;
-  AHints: Boolean; AArmEnd: Boolean; AInitializerBoundary: Boolean);
+  AHints: Boolean; AArmEnd: Boolean; AInitializerBoundary: Boolean; ARoutineBoundary: Boolean);
 var
   LStart: Integer;
 begin
@@ -1520,6 +1573,13 @@ begin
     not (AArmEnd and Sym(psoSemicolon)) and
     not Word(pkwEnd) and not Word(pkwImplementation) and not Word(pkwBegin) do
   begin
+
+    if ARoutineBoundary and (FPosition > LStart) and not Sym(psoDot, -1) and
+      not Sym(psoCaret, -1) and not Sym(psoColon, -1) and
+      not Word(pkwOf, -1) and not Word(pkwTo, -1) and RoutineClause then
+    begin
+      Break;
+    end;
 
     if AHints and AtHint(LStart) then
     begin
@@ -1534,7 +1594,11 @@ begin
       Break;
     end;
 
-    if Sym(psoOpenParen) then
+    if ARoutineBoundary and Sym(psoLess) then
+    begin
+      Angles;
+    end
+    else if Sym(psoOpenParen) then
     begin
       Groups(psoOpenParen, psoCloseParen);
     end
@@ -2539,14 +2603,6 @@ begin
   end;
 end;
 
-function RoutineModifier(AWord: TNyxPascalWord): Boolean;
-begin
-  Result := AWord in [pkwForward, pkwExternal, pkwAbstract, pkwOverload, pkwOverride,
-    pkwVirtual, pkwDynamic, pkwInline, pkwReintroduce, pkwAssembler, pkwCdecl,
-    pkwStdcall, pkwPascal, pkwSafecall, pkwRegister, pkwVarargs, pkwNostackframe,
-    pkwStatic, pkwDeprecated, pkwPlatform, pkwExperimental, pkwFinal];
-end;
-
 { Read an authored operator token, without converting its spelling into a fake
   identifier or inferring arity/eligibility. Named aliases share a query family. }
 function OperatorToken(const AToken: TNyxPascalToken; const AText: TNyxText): TNyxPascalOperatorKind;
@@ -2817,7 +2873,7 @@ begin
     begin
       Step;
       LType := FPosition;
-      Expression(psoSemicolon, False, True);
+      Expression(psoSemicolon, False, True, False, False, True);
       FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
 
       if LResultEntry >= 0 then
@@ -2826,7 +2882,16 @@ begin
       end;
     end;
     DeclarationHints(LEntry);
-    Separator;
+
+    if Sym(psoSemicolon) or (not RoutineClause(AScope) and not Sym(psoOpenBracket)) then
+    begin
+
+      if not Sym(psoSemicolon) then
+      begin
+        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+      end;
+      Separator;
+    end;
     LHasBody := not (AVisibility in [psavInterface]) and
       (FScopes[AScope].Kind <> psskMembers);
     while not EOF do
@@ -2867,8 +2932,16 @@ begin
         Include(FDeclarations[LEntry].FFlags, psdfOverload);
       end;
       Step;
-      Expression(psoSemicolon);
-      Separator;
+
+      if Sym(psoSemicolon) then
+      begin
+        Step;
+      end
+      else if not RoutineClause(AScope) and not Sym(psoOpenBracket) then
+      begin
+        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+        Separator;
+      end;
     end;
     FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
 
