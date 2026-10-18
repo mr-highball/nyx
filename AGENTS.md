@@ -4,7 +4,29 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source actual Windows input uses typed set-packing, module smart-link
+Current-source procedural declarations retain supported calling/varargs/inline
+suffixes across semicolons in aliases, inline fields and variables. Exact authored/
+include/scalar origins survive; escaped declaration names remain independent and
+escaped conventions/conflicts refuse typed inference. Native structured types/
+syntax/whole compiled invocation/Windows checks pass 367/7,632/8/12. The selected
+syntax corpus is five actual inputs/3,727 declarations. Whole Windows syntax now
+contains 7,574 declarations/32 diagnostics (previous 7,652/110), including complete
+real BFFCALLBACK stdcall syntax/origin; ordinary indexed completion still refuses
+unsupported scope after one real Windows load. Maintained 62/127/10/48/86/84/74
+pass; eleven native consumers have clean heaps. Nineteen accepted logs have zero
+owned warnings (42 upstream); four browser consumers and both Studios/backend/
+worker compile only as applicable. Seven focused/621 complete src+studio/97 RTL/
+three compiler pins, 48 include packets, five protected files/nine contexts and
+349 frozen 7422453 artifacts stay exact. Readers join; LAN stays offline. WORK.md
+owns prepared/final evidence, retained prior failures, source/remote identity and
+the next actual advanced-record class operator prerequisite under existing syntax/
+binder owners. At least eight documented unclosed batches retain full criterion
+two; no original criterion/task/counter/credit/DONE/tool/schema/adoption/parity/
+delivery closes. Stop callback-suffix/fixture/compiler variants. No HTTP retry,
+protected mutation, cleanup/deletion/restart bypass or sub-agents. Preserve
+concurrent planning files.
+
+Earlier actual Windows input uses typed set-packing, module smart-link
 request and class-feature capture, plus native OnlyFile source selection. Native
 policy/oracle/capture/Windows checks pass 47/12/26/9; whole unchanged SDK input
 translates 498,239 tokens/23 visits with zero translation diagnostics. Recovered

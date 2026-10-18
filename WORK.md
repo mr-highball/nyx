@@ -33,7 +33,83 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Actual Windows SDK input — 2026-10-18
+## Current integration: Procedural type source boundaries — 2026-10-18
+
+Previous turn is progress: pushed 84ea322 captures complete original Windows
+input and exposes its actual grammar prerequisite. This batch follows that
+declaration/type consumer under original authoring criterion two. The documented
+consecutive unclosed lower bound is now at least eight, with older evidence
+retained. Full fresh MIT Nyx-owned resolver scope, incremental/project-scale work,
+ordinary Studio adoption and complete input/navigation/quality/parity/delivery
+remain required. No original criterion/task/counter/credit/DONE, new tool/schema
+or rollout closes. Solo; no HTTP/browser/file-protocol execution/capture, protected
+mutation, cleanup/deletion/restart or approval bypass occurs. New output/evidence
+stays on the provisioned scratch drive. Concurrent planning remains separate.
+
+The declaration reader now retains supported procedural calling/varargs/inline
+suffixes across their signature semicolons. Aliases, inline record fields and
+inline variables supply the complete range to the existing structured type
+consumer. Following declarations keep independent source ranges; escaped or
+contextual declaration names are not consumed as modifiers. The standalone type
+reader refuses an escaped convention spelling. Conflicts/incomplete grammar
+remain explicit diagnostics; no compiler eligibility, ABI compatibility, complete
+canonical type identity or source-admission authority is inferred. Immutable
+ownership and exact authored/include/scalar origins remain unchanged.
+
+Accepted composite evidence is in the ignored routine-types-20261018-043133
+packet, located by .local/routine-types-paths-private.json:
+
+- Structured-type/physical-origin checks pass 367, including exact suffix ranges,
+  next aliases/fields/variables, multiple directives, escaped names and conflicting
+  conventions. Native syntax/scope checks pass 7,632 over five actual inputs/
+  3,727 declarations; this is a maintained selected corpus, not every source file.
+- Eight native companion checks compile and execute the whole handwritten
+  routine.fixture unit/include: aliased, inline-field and inline-variable
+  callbacks produce 34. An actual configured FPC probe supplies its analysis
+  context. The callback's typed convention maps to its exact included token after
+  supplementary Unicode text, while an escaped stdcall remains its own alias.
+  No generated substitute or synthetic RTL export supplies this compiler oracle.
+- Twelve actual Windows checks preserve all 498,239 tokens/23 visits and zero
+  translation diagnostics. Its real BFFCALLBACK now exposes complete typed
+  stdcall syntax and the exact base.inc token; no fake exported stdcall type
+  remains. Declaration/diagnostic counts decrease 7,652/110 to 7,574/32. Ordinary
+  indexed completion still loads the root once and refuses unsupported scope
+  with two modules/one load. The first remaining failures are actual advanced-
+  record class operators in shared geometry types, not missing callback suffixes.
+- Maintained native binding/generics/conditional/dependency/owned checks pass
+  62/127/10/48/86. Production in-process semantic completion and actual configured
+  profiles pass 84/74. Their original SysUtils/implicit-unit prerequisites remain
+  qualified; these counts overlap earlier evidence. All eleven accepted native
+  consumers have clean heaps. No HTTP/authenticated/observing claim follows.
+- Nineteen accepted compiler logs have zero owned warnings and 42 upstream
+  pas2js RTL warnings. Four browser consumers and both Studios/backend/worker
+  compile as applicable. Browser products/consumers execute nowhere here;
+  compilation supplies no interaction, accessibility or complete parity proof.
+- Seven focused pins, all 621 src/studio Pascal/include files, 97 original RTL
+  inputs and three configured compiler inputs stay exact after readers. All 48
+  exported SysUtils include packets match original bytes. Five protected files/
+  nine complete contexts and all 349 frozen 7422453 artifacts remain exact.
+  All readers/compiler families join; no Studio listener remains and LAN stays
+  offline. Private compiler/native/input/include/protected receipts and the final
+  checkpoint own source/remote identity. Native Nyx chat tools remain absent;
+  no host retry or configuration mutation occurs to refresh them.
+
+The prepared real-root run exposes the next genuine grammar prerequisite; it is
+retained beside the final frozen consumer. All new final compiler/native checks
+pass. Earlier failed header/include/lexical/source preparations remain in their
+prior packets and are not reset, removed or promoted into current success.
+No broader uninterrupted historical-green or complete-SDK claim is made.
+
+Next useful deliverable: support actual advanced-record class operator declaration
+boundaries and typed operator identity through the existing syntax/binder owners,
+with handwritten compiled/executed input and the unchanged Windows source. Reassess
+the remaining 32 grammar diagnostics at that boundary, then return to actual
+System/ObjPas/imports, SysUtils's six semantic conditions and full language/
+canonical/expression meaning, incremental budgets and ordinary editor/input/
+navigation/quality/parity/delivery. Stop callback-suffix/fixture/compiler variants;
+no user decision is missing and no original acceptance scope is narrowed.
+
+## Earlier integration: Actual Windows SDK input — 2026-10-18
 
 Previous turn is progress: pushed 39b04d1 integrates ordered semantic conditions
 into ordinary owned/indexed completion. This continuation follows the retained

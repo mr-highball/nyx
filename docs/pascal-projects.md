@@ -1247,6 +1247,33 @@ source edit. Scoped name/alias/member/inheritance/interface/generic/overload/hel
 binding, broader grammar/context, incremental budgets/navigation and full platform/
 quality/delivery remain with the original authoring/service owners.
 
+## Procedural declaration suffixes
+
+Procedural type ranges now retain their supported trailing calling/varargs/inline
+directives across signature semicolons. Aliases, inline record fields and inline
+variables feed the same complete range into the existing structured type parser.
+Following declarations keep their own ranges; escaped convention names remain
+identifiers. The standalone type reader also refuses an escaped identifier as a
+calling directive. Conflicting conventions and unfinished types stay diagnostic;
+range recovery does not establish compiler eligibility or ABI compatibility.
+
+For example, `TCompute = function(A: LongInt): LongInt; cdecl;` exposes the full
+function plus `cdecl` in its TypeSpan and typed CallingConvention, without
+inventing an exported type named cdecl. Original source, trivia and physical
+include/scalar mappings remain unchanged. The analysis projection is never used
+as an authored replacement buffer.
+
+The whole handwritten routine.fixture unit/include compiles and executes aliased,
+inline-field and inline-variable callbacks. Its parsed convention maps back to
+the exact included token after supplementary Unicode text. In the complete
+captured Windows unit, the real BFFCALLBACK now has a complete typed stdcall
+signature and physical origin; 78 spurious declarations/diagnostics disappear.
+Remaining syntax diagnostics decrease from 110 to 32, beginning with overloaded
+geometry-record operators. Ordinary indexed completion retains unsupported-scope
+refusal rather than inventing complete SDK meaning. WORK.md owns exact native
+evidence; browser consumers compile only. Full language/context/canonical typing,
+incremental budgets, editor/input/navigation/quality/parity/delivery remain open.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.
@@ -1654,16 +1681,18 @@ The configured Win32 SDK consumer captures the whole Windows root and wininc
 directory, then selects its two actual shared RTL includes. Forty-seven explicit
 compiler queries leave the future define set open. The unchanged 28-file capture
 translates all 498,239 tokens across 23 include visits with zero translation
-diagnostics. Its recoverable syntax contains 7,652 declarations and 110 grammar
-diagnostics; this does not establish complete namespace/type meaning.
+diagnostics. The initial syntax capture contained 7,652 declarations/110 grammar
+diagnostics. The [procedural suffix continuation](#procedural-declaration-suffixes)
+now retains 7,574 declarations/32 diagnostics, including real callback typing;
+this does not establish complete namespace/type meaning.
 
 The same capture feeds ordinary indexed completion with its explicit per-unit
 context/options. The real Windows root loads once beside the consumer, then
 refuses with typed unsupported-scope metadata. It no longer reports an uncaptured
 Windows unit or obtains members from export stubs. Handwritten compiled input
 separately executes the real `Windows.TSystemTime.wYear` member; it does not prove
-resolver completion. The first retained grammar diagnostics concern procedural
-type declaration boundaries around trailing calling directives. Full remaining
+resolver completion. Remaining grammar diagnostics now begin with overloaded
+geometry-record operators after the calling-directive repair. Full remaining
 grammar, actual implicit System/ObjPas scope and SysUtils's six semantic
 conditions remain original authoring prerequisites. WORK.md owns current receipts,
 retained failures and the return path; browser evidence remains compilation only.

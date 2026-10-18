@@ -285,6 +285,65 @@ begin
   Check(LRejected and (LScope.Polls >= 8), 'Cancellation publishes no partial type candidate');
 end;
 
+procedure ProceduralDeclarations;
+const
+  CSource: TNyxText = 'unit CallbackShapes; interface type ' +
+    'TCall=function(A:LongInt):LongInt; cdecl; ' +
+    'TNext=LongInt; TNested=procedure is nested; ' +
+    'TMethod=procedure of object; stdcall; ' +
+    'TVarargs=procedure(A:LongInt); cdecl; varargs; ' +
+    'TSlots=record Callback:function(A:LongInt):LongInt; cdecl; After:LongInt; end; ' +
+    'TLast=procedure; &cdecl=LongInt; ' +
+    'var Direct:procedure(A:LongInt); stdcall; After:LongInt; implementation end.';
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LType: INyxPascalTypeSyntax;
+  LAt: Integer;
+  LMembers: Integer;
+  LText: TNyxText;
+begin
+  LSyntax := NewNyxPascalSyntaxSnapshot(CSource, TNyxPascalSyntaxOptions.Defaults);
+  Check((LSyntax.Lexical.Source = CSource) and (LSyntax.DiagnosticCount = 0),
+    'Procedural suffixes retain the whole source and separate declarations without spurious type names');
+  LAt := LSyntax.Named(0, 'TCall');
+  LText := LSyntax.Lexical.Slice(LSyntax.Declaration(LAt).TypeSpan);
+  Check(LText = TNyxText('function(A:LongInt):LongInt; cdecl'),
+    'The callback type range owns its signature separator and calling directive exactly');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccCdecl),
+    'The ordinary declared-type consumer receives the authored callback convention');
+  Check(LSyntax.Lexical.Slice(LSyntax.Declaration(LSyntax.Named(0, 'TNext')).TypeSpan) = TNyxText('LongInt'),
+    'A following alias is not swallowed by the callback range');
+  LAt := LSyntax.Named(0, 'TVarargs');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccCdecl) and
+    (ptfVarargs in LType.Node(LType.Root).Flags),
+    'Multiple authored suffix separators remain one typed callback expression');
+  LMembers := LSyntax.Declaration(LSyntax.Named(0, 'TSlots')).NestedScope;
+  LAt := LSyntax.Named(LMembers, 'Callback');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccCdecl) and
+    (LSyntax.Named(LMembers, 'After') >= 0),
+    'Inline record callback fields share suffix ownership and preserve the next field');
+  LAt := LSyntax.Named(0, 'Direct');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccStdcall) and
+    (LSyntax.Named(0, 'After') >= 0),
+    'Inline procedural variables preserve the directive and following variable');
+  Check((LSyntax.Named(0, 'cdecl') >= 0) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(LSyntax.Named(0, 'TLast')).TypeSpan) = TNyxText('procedure')),
+    'An escaped contextual identifier remains its own declaration');
+  LType := Parse('procedure; &cdecl');
+  Check(not LType.Complete,
+    'The standalone type parser never treats an escaped identifier as a calling directive');
+  LType := Parse('procedure; cdecl; stdcall');
+  Check(not LType.Complete, 'Conflicting procedural conventions remain explicit type diagnostics');
+end;
+
 procedure Projection;
 const
   CRoot = 'unit Demo; interface const Caption = ''Ready 🐾''#0; type TBox<T>=class end; ' +
@@ -465,6 +524,7 @@ end;
 begin
   try
     Types;
+    ProceduralDeclarations;
     Projection;
     {$ifndef PAS2JS}
     ActualControls;

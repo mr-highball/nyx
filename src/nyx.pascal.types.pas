@@ -633,6 +633,12 @@ const
 var
   LValue: TNyxPascalCallingConvention;
 begin
+  AConvention := pccDefault;
+
+  if Tok.Escaped then
+  begin
+    Exit(False);
+  end;
   for LValue := Succ(Low(TNyxPascalCallingConvention)) to High(TNyxPascalCallingConvention) do
   begin
 

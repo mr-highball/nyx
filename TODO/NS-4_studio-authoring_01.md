@@ -51,6 +51,16 @@ actual declaration-boundary failure under the existing parser/binder owner, then
 reassess the remaining actual SDK/System/ObjPas/SysUtils dependencies. Full
 language/incremental/adoption/input/navigation/quality/parity/delivery stay open.
 
+Procedural-type continuation: 84ea322 is progress; criterion two remains open
+across at least eight documented batches, retaining older evidence. Follow the
+actual Windows callback declaration failure through the existing syntax/type/
+binding owners. The deliverable preserves trailing calling directives and exact
+source boundaries in aliases and applicable inline declarations, with compiled
+handwritten invocation and one prepared/final whole-Windows continuation. Stop
+at the next genuine remaining grammar/import prerequisite; do not change actual
+SDK exports or narrow full language/incremental/adoption/input/navigation/quality/
+parity/delivery acceptance. No original credit or task closes from this batch.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

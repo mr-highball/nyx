@@ -30,9 +30,15 @@ remain under original authoring criterion two.
 
 The [actual Windows namespace capture](../docs/pascal-projects.md#actual-windows-namespace-capture)
 now feeds whole original SDK input into ordinary indexed completion. Translation
-passes while real procedural-type grammar still refuses; WORK.md owns the exact
+passes while remaining SDK grammar still refuses; WORK.md owns the exact
 distinction and retained failures. Full language/SDK/incremental/adoption/parity/
 delivery remain under original authoring criterion two.
+
+The [procedural declaration continuation](../docs/pascal-projects.md#procedural-declaration-suffixes)
+now preserves calling suffixes in aliases/inline fields/variables with real compiled
+invocation and whole Windows callback evidence. The next actual grammar boundary
+and remaining full scope stay with original authoring criterion two; WORK.md owns
+qualification without new completion credit or default editor adoption.
 
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include

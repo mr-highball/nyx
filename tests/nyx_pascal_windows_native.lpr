@@ -25,7 +25,7 @@ program nyx_pascal_windows_native;
 uses SysUtils, Windows, LazFileUtils, nyx.text, nyx.editing, nyx.pascal.context,
   nyx.pascal.compilertrace, nyx.studio.pascalprofiles, nyx.pascal.files,
   nyx.pascal.files.native, nyx.pascal.modules, nyx.pascal.lexing,
-  nyx.pascal.translation, nyx.pascal.syntax, nyx.pascal.syntax.translated,
+  nyx.pascal.translation, nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.pascal.types,
   nyx.pascal.binding, nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts,
   nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.completion.owned;
 
@@ -136,6 +136,7 @@ var
   LReply: INyxPascalCompletionResult;
   LMetadata: INyxOwnedPascalCompletionResult;
   LReceipt: INyxPascalCompletionAnalysis;
+  LCallback: INyxPascalTypeSyntax;
 begin
   LTime.wYear := 2026;
   Check(LTime.wYear = 2026, 'The selected native SDK exposes and executes its actual record member');
@@ -183,6 +184,17 @@ begin
   Check(LSource.Resolved and LView.CompleteTranslation and
     (LView.Syntax.DeclarationCount > 7000),
     'Whole real Windows translation reaches declared syntax without replacement SDK exports');
+  LAt := LView.Syntax.Named(0, 'BFFCALLBACK');
+  LCallback := LView.TypeOfDeclaration(LAt, TNyxPascalTypeOptions.Defaults);
+  Check(LCallback.Complete and (LCallback.Node(LCallback.Root).Kind = ptxFunction) and
+    (LCallback.Node(LCallback.Root).CallingConvention = pccStdcall),
+    'The real Windows callback declaration retains its complete authored signature and stdcall directive');
+  LOrigin := LView.Origin(LView.OriginAt(LCallback.Node(LCallback.Root).Span.Finish - 1));
+  Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/win/wininc/base.inc')) and
+    (LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan) = TNyxText('stdcall')),
+    'The actual SDK convention has its original physical include/token origin');
+  Check(LView.Syntax.Named(0, 'stdcall') < 0,
+    'Calling directives never become invented exported SDK type declarations');
   for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
   begin
 

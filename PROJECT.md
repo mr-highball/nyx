@@ -74,9 +74,14 @@ grammar meaning, target coherence and ordinary editor adoption remain open.
 
 The [actual Windows capture](docs/pascal-projects.md#actual-windows-namespace-capture)
 now reaches ordinary indexed completion through exact source selection and typed
-header policies. Complete translation exposes the real procedural-type grammar
-prerequisite; recovered declarations do not establish full SDK meaning. Native
+header policies. Complete translation exposes remaining SDK grammar
+prerequisites; recovered declarations do not establish full SDK meaning. Native
 evidence and browser compilation remain separate in WORK.md.
+
+[Procedural declaration ranges](docs/pascal-projects.md#procedural-declaration-suffixes)
+now retain callback calling directives through ordinary type consumers with exact
+physical origins. Compiled invocation and real Windows callback analysis qualify
+that boundary; full resolver/editor adoption and both-target quality remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

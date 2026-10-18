@@ -289,6 +289,9 @@ type
     procedure Angles;
     procedure Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean = False);
     function Form: TNyxPascalSyntaxTypeForm;
+    { Extend a procedural expression across only its supported trailing directive
+      separators. Never consume an escaped/contextual name beginning a new type. }
+    procedure RoutineTypeSuffix;
     procedure ParseType(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure TypeSection(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
@@ -853,6 +856,29 @@ begin
   end;
 end;
 
+procedure TSyntaxSnapshot.RoutineTypeSuffix;
+
+  function Modifier(AOffset: Integer): Boolean;
+  begin
+    Result := (Tok(AOffset).Kind = ptkWord) and not Tok(AOffset).Escaped and
+      ((Tok(AOffset).Word in [pkwCdecl, pkwStdcall, pkwPascal, pkwSafecall,
+        pkwRegister, pkwVarargs, pkwInline]) or
+        (NyxPascalASCIIKey(Name(AOffset)) = 'syscall') or
+        (NyxPascalASCIIKey(Name(AOffset)) = 'vectorcall'));
+  end;
+
+begin
+  while Sym(psoSemicolon) and Modifier(1) and
+    not Sym(psoEqual, 2) and not Sym(psoLess, 2) and
+    not Sym(psoColon, 2) and not Sym(psoComma, 2) do
+  begin
+    { Keep the separator inside the type's range. The structured type parser
+      owns qualifier validation/conflicts; this scanner owns declaration bounds. }
+    Step;
+    Expression(psoSemicolon);
+  end;
+end;
+
 procedure TSyntaxSnapshot.ParseType(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
 var
   LEntry: Integer;
@@ -1001,6 +1027,11 @@ begin
     else
     begin
       Expression(psoSemicolon);
+
+      if LForm = pstfRoutine then
+      begin
+        RoutineTypeSuffix;
+      end;
     end;
     FDeclarations[LEntry].FTypeSpan := Range(LTypeStart, FPosition);
     Separator;
@@ -1100,6 +1131,7 @@ begin
     if Word(pkwProcedure) or Word(pkwFunction) or Word(pkwReference) then
     begin
       Expression(psoSemicolon);
+      RoutineTypeSuffix;
     end
     else
     begin
