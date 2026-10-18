@@ -4,6 +4,37 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Resolver direction is now decided by the user (2026-10-17): build a fresh, wholly
+Nyx-owned Pascal engine with MIT licensing and modern editing capabilities.
+Historical optional CodeTools qualification is not the engine to adopt/distribute;
+do not ask that choice again or treat old pending-choice notes as current. The
+original authoring criterion two owns full language/context/incremental/navigation/
+quality requirements. Controlled provider replies qualify editor integration only,
+never real symbol/type/member resolution. Keep existing provider/semantic contracts
+and compiler admission independent; no language engine has been completed here.
+
+Current-source ordinary completion now connects the retained source editor to the
+private operator channel and public Nyx popovers on both adapters. Managed context
+leases require exact acknowledged frames/drafts/revision independently of agents
+or outputs. Query tickets, current mount/caret/history and optional detached helper
+preparation retain one ordinary draft Undo. Native ordinary popup input passes
+32/25 at host widths 390/1280 using controlled replies on a never-listening backend;
+maintained source input remains 38 per width and view/client/projection 40/10/159,
+clean heaps. Both Studios/browser client compile only where stated. Nine accepted
+logs have zero owned warnings (14 upstream RTL). Eight Pascal pins, five protected
+files/nine contexts and 349 frozen 7422453 artifacts stay exact; LAN is offline.
+WORK.md owns retained failures, including verified retirement of only hung native
+fixture PID 14816 after an absent-root readiness loop, corrected in both adapters.
+No real resolver/HTTP/browser/visual/hardware/IME/parity/delivery claim is added.
+Stop popup/history/transport/fixture/compiler variants. Next reassess existing
+lexical/declaration infrastructure and implement the user-selected Nyx-owned
+recoverable syntax/scoped semantic/type engine through the existing provider seam.
+Full language/navigation/incremental/budgets/quality and ordinary main/unit/include
+input, anchoring/accessibility/parity/delivery stay open. Tools remain 24/frozen 23,
+eighteen Pascal modes; no new tool/schema/kind or original criterion/task/counter/
+credit/DONE closes. No host/browser/capture, protected configuration/enrollment/
+cleanup retry, approval bypass, deletion or sub-agents.
+
 Current-source typed authored/physical projection preserves untouched Pascal bytes
 through ordinary Studio input and public completion/history ranges. Sparse newline
 maps refuse ambiguous exact CRLF interiors; inserted presentation uses an enum.

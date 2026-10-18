@@ -49,6 +49,15 @@ type
     FSerial: Integer;
   end;
 
+  { Optional detached proposal preparation for an embedding draft owner. Preview
+    changes no timeline; the owner may validate its own helper-buffer admission
+    before Accept performs the exact history replacement. No acceptance authority
+    or lifetime borrow is granted, and a later Accept still rechecks its guards. }
+  INyxPascalCompletionPreparation = interface(IInterface)
+    ['{4847558D-A467-44CA-B8C8-59A435EF9D02}']
+    function Preview(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
+  end;
+
   { One UI-thread-owned completion view beside one physical buffer/history.
     It owns immutable query/result data and a managed history, never a widget,
     renderer, application or document. Fresh source arguments and history
@@ -95,7 +104,7 @@ uses SysUtils, nyx.data, nyx.pascal.project, nyx.interaction;
 type
   { No callback back-reference is kept. The menu's serial and history generation
     revoke detached rows/replies, while the history owns only text values. }
-  TCompletionMenu = class(TInterfacedObject, INyxPascalCompletionMenu)
+  TCompletionMenu = class(TInterfacedObject, INyxPascalCompletionMenu, INyxPascalCompletionPreparation)
   private
     FIdentity: Integer;
     FSerial: Integer;
@@ -127,6 +136,7 @@ type
       ATrigger: TNyxTrigger;
       const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionAction;
     function Accept(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
+    function Preview(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
   end;
 
 const
@@ -535,11 +545,24 @@ begin
   end;
 end;
 
+function TCompletionMenu.Preview(
+  const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
+var
+  LCaret: Integer;
+begin
+
+  if not Current(ACurrentSources) or (FState <> pcvReady) or
+    (FResult = nil) or (FSelected < 0) then
+  begin
+    raise ENyxPascalProject.Create('Completion suggestion is no longer current');
+  end;
+  Result := FResult.Preview(FSelected, ACurrentSources, LCaret);
+end;
+
 function TCompletionMenu.Accept(
   const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
 var
   LCandidate: INyxPascalSourceSnapshot;
-  LCaret: Integer;
   LProjection: INyxTextProjection;
   LStart: Integer;
   LEnd: Integer;
@@ -551,7 +574,7 @@ begin
   begin
     raise ENyxPascalProject.Create('Completion suggestion is no longer current');
   end;
-  LCandidate := FResult.Preview(FSelected, ACurrentSources, LCaret);
+  LCandidate := Preview(ACurrentSources);
   LProjection := FFrame.Projection;
   LStart := LProjection.ToPresented(FResult.ReplaceStart);
   LEnd := LProjection.ToPresented(FResult.ReplaceStart + NyxTextScalarCount(FResult.ExpectedText));

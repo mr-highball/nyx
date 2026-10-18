@@ -28,7 +28,8 @@ interface
 
 uses nyx.text, nyx.model, nyx.types, nyx.events, nyx.behavior, nyx.scheduler, nyx.editing,
   nyx.editing.commands, nyx.editing.history, nyx.text.projection, nyx.pascal.project,
-  nyx.pascal.sources, nyx.pascal.drafts, nyx.studio.session;
+  nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion,
+  nyx.pascal.completion.view, nyx.studio.completion, nyx.studio.session;
 
 type
   { UI-only physical reader returns the current session as well as copied text.
@@ -40,9 +41,27 @@ type
     a new draft/command. Authored baseline bytes may use different line endings.
     Do not destroy the dispatching input/owner inline; queue their retirement. }
   TNyxStudioSourceWrite = procedure(const AFrame: TNyxTextEditorFrame; AChanged: Boolean) of object;
+  { The current project's managed weak service. Resolve on each query; switching
+    projects must not retain authority from the previous observer. }
+  TNyxStudioCompletionContextRead = function: INyxStudioCompletionContext of object;
+  { Explicit unit context for an include, selected by the ordinary Outline owner
+    control. Main/unit files use themselves; no include owner is guessed. }
+  TNyxStudioCompletionOwnerRead = function: TNyxPascalSourceRef of object;
+  { Queue popup presentation after input/transport dispatch. The receiver must
+    outlive the controller and must not destroy its dispatching callbacks inline. }
+  TNyxStudioCompletionChanged = procedure of object;
   { Forward owner for managed input callbacks; the full class owns timelines and
     subscriptions, while the callback only borrows it until explicit detach. }
   TNyxStudioSourceInput = class;
+  { One query's revocable weak receiver. The client retains this lease while
+    dispatching; retirement clears Owner before replacing a ticket or session. }
+  TNyxStudioSourceCompletionReply = class(TInterfacedObject, INyxStudioCompletionReply)
+  public
+    Owner: TNyxStudioSourceInput;
+    Ticket: TNyxPascalCompletionTicket;
+    procedure Receive(const AQuery: INyxPascalCompletionRequest;
+      const AResult: INyxPascalCompletionResult);
+  end;
   { One selected-file projected timeline. AuthorText detects external changes;
     each history frame owns exact authored/displayed bytes independently. The
     temporary composition base restores cancelled authored bytes exactly. }
@@ -83,6 +102,24 @@ type
     FPort: TNyxStudioSourceInputPort;
     FLease: INyxTextHistoryCommands;
     FSubscriptions: array of INyxEventSubscription;
+    FCompletionContextRead: TNyxStudioCompletionContextRead;
+    FCompletionOwnerRead: TNyxStudioCompletionOwnerRead;
+    FCompletionChanged: TNyxStudioCompletionChanged;
+    FCompletionContext: INyxStudioCompletionContext;
+    FCompletionMenu: INyxPascalCompletionMenu;
+    FCompletionQuery: INyxPascalCompletionRequest;
+    FCompletionReply: TNyxStudioSourceCompletionReply;
+    FCompletionLease: INyxStudioCompletionReply;
+    FCompletionGeneration: Integer;
+    FCompletionRevision: Integer;
+    FCompletionWaiting: Boolean;
+    procedure CompletionChanged;
+    function CompletionCurrent: Boolean;
+    procedure SubmitCompletion;
+    procedure StartCompletion(AOffset: Integer = 0);
+    procedure CompletionReply(AReply: TNyxStudioSourceCompletionReply;
+      const AQuery: INyxPascalCompletionRequest; const AResult: INyxPascalCompletionResult);
+    procedure CompletionAction(AAction: TNyxPascalCompletionAction);
     procedure Clear;
     function Current(out AEditing: TNyxEditingSnapshot): Boolean;
     function NextFrame(const AEditing: TNyxEditingSnapshot): TNyxTextEditorFrame;
@@ -106,12 +143,36 @@ type
     { Captured immutable accepted/current files for proposal staging. This is
       inspection data, never server acknowledgement or compilation authority. }
     function Sources: INyxPascalSourceSnapshot;
+    { Configure borrowed host callbacks before ordinary input. The managed
+      context itself is resolved per query and revoked on project retirement. }
+    procedure ConfigureCompletion(AContext: TNyxStudioCompletionContextRead;
+      AOwner: TNyxStudioCompletionOwnerRead; AChanged: TNyxStudioCompletionChanged);
+    { Close/revoke a local query without cancelling admitted server analysis. }
+    procedure DismissCompletion;
+    { Independent public Nyx card document, or nil when closed. Caller owns it.
+      Presentation must run after input/transport return, preserving source focus. }
+    function BuildCompletion: TNyxDocument;
+    { Exact current popup mount and typed action/ticket guard every row action. }
+    function RouteCompletion(ARoot, ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+    { Managed dismissal callback remains safe after this controller retires. }
+    function CompletionDismissReceiver: INyxEventCallback;
+    property CompletionRevision: Integer read FCompletionRevision;
     property Commands: INyxTextHistoryCommands read FLease;
   end;
 
 implementation
 
-uses SysUtils;
+uses SysUtils, nyx.controls;
+
+procedure TNyxStudioSourceCompletionReply.Receive(const AQuery: INyxPascalCompletionRequest;
+  const AResult: INyxPascalCompletionResult);
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.CompletionReply(Self, AQuery, AResult);
+  end;
+end;
 
 function TNyxStudioSourceInputPort.CanExecute(ACommand: TNyxTextHistoryCommand): Boolean;
 begin
@@ -133,7 +194,15 @@ begin
 
   if Owner <> nil then
   begin
-    Owner.Event(AEvent, AExecution);
+
+    if AEvent.IsNamed(NyxSemantic(nseDismiss)) then
+    begin
+      Owner.DismissCompletion;
+    end
+    else
+    begin
+      Owner.Event(AEvent, AExecution);
+    end;
   end;
 end;
 
@@ -182,6 +251,10 @@ destructor TNyxStudioSourceInput.Destroy;
 var
   LIndex: Integer;
 begin
+  FCompletionChanged := nil;
+  DismissCompletion;
+  FCompletionContextRead := nil;
+  FCompletionOwnerRead := nil;
 
   if FPort <> nil then
   begin
@@ -209,6 +282,8 @@ procedure TNyxStudioSourceInput.Clear;
 var
   LIndex: Integer;
 begin
+  DismissCompletion;
+  FCompletionMenu := nil;
   FActive := nil;
   for LIndex := 0 to High(FBuffers) do
   begin
@@ -230,6 +305,7 @@ begin
 
   if not LEditing.Defined or (LSession = nil) then
   begin
+    DismissCompletion;
     Exit;
   end;
   LProject := LSession.AcceptedPascalProject;
@@ -285,6 +361,12 @@ begin
     FBuffers[LIndex] := FBuffers[LIndex - 1];
   end;
   FBuffers[0] := LBuffer;
+
+  if FActive <> LBuffer then
+  begin
+    DismissCompletion;
+    FCompletionMenu := nil;
+  end;
   FActive := LBuffer;
 
   if FActive.AuthorText <> FSession.ActiveSourceText then
@@ -299,6 +381,25 @@ begin
     { Reparenting may recreate a native handle and normalize its line endings.
       Restore the owned physical frame without publishing another draft. }
     FWrite(FActive.History.Current, False);
+  end;
+
+  if FCompletionMenu = nil then
+  begin
+    FCompletionMenu := NewNyxPascalCompletionMenu(FActive.History);
+  end;
+
+  if FCompletionQuery <> nil then
+  begin
+
+    if not CompletionCurrent or (Assigned(FCompletionContextRead) and
+      (FCompletionContextRead() <> FCompletionContext)) then
+    begin
+      DismissCompletion;
+    end
+    else if FCompletionWaiting then
+    begin
+      SubmitCompletion;
+    end;
   end;
 end;
 
@@ -334,6 +435,11 @@ begin
   if not AEditing.Composing then
   begin
     FActive.HasCompositionBase := False;
+  end;
+
+  if (FCompletionQuery <> nil) and not CompletionCurrent then
+  begin
+    DismissCompletion;
   end;
 end;
 
@@ -374,6 +480,7 @@ begin
   begin
     FActive.HasCompositionBase := False;
   end;
+  DismissCompletion;
 end;
 
 procedure TNyxStudioSourceInput.Event(const AEvent: TNyxEventInfo;
@@ -381,6 +488,7 @@ procedure TNyxStudioSourceInput.Event(const AEvent: TNyxEventInfo;
 var
   LEditing: TNyxEditingSnapshot;
   LCommand: TNyxTextHistoryCommand;
+  LAction: TNyxPascalCompletionAction;
 begin
 
   if not Current(LEditing) then
@@ -398,8 +506,338 @@ begin
     TryNyxTextHistoryKey(AEvent.Keyboard, LCommand) then
   begin
     NyxEventResponse(AExecution).Consume;
+    DismissCompletion;
     Execute(LCommand);
+    Exit;
   end;
+
+  if AEvent.HasKeyboard and not LEditing.Composing and (FCompletionMenu <> nil) then
+  begin
+    LAction := FCompletionMenu.Key(AEvent.Keyboard, Sources);
+
+    if LAction <> pcaNone then
+    begin
+      NyxEventResponse(AExecution).Consume;
+      CompletionAction(LAction);
+    end;
+  end;
+end;
+
+procedure TNyxStudioSourceInput.ConfigureCompletion(AContext: TNyxStudioCompletionContextRead;
+  AOwner: TNyxStudioCompletionOwnerRead; AChanged: TNyxStudioCompletionChanged);
+begin
+  DismissCompletion;
+  FCompletionContextRead := AContext;
+  FCompletionOwnerRead := AOwner;
+  FCompletionChanged := AChanged;
+end;
+
+procedure TNyxStudioSourceInput.CompletionChanged;
+begin
+
+  if FCompletionRevision = High(Integer) then
+  begin
+    raise ENyxTextHistory.Create('Completion presentation identity exhausted');
+  end;
+  Inc(FCompletionRevision);
+
+  if Assigned(FCompletionChanged) then
+  begin
+    FCompletionChanged;
+  end;
+end;
+
+procedure TNyxStudioSourceInput.DismissCompletion;
+var
+  LVisible: Boolean;
+begin
+  LVisible := (FCompletionQuery <> nil) or
+    ((FCompletionMenu <> nil) and (FCompletionMenu.State <> pcvClosed));
+
+  if FCompletionReply <> nil then
+  begin
+    FCompletionReply.Owner := nil;
+  end;
+  FCompletionReply := nil;
+  FCompletionLease := nil;
+
+  if FCompletionContext <> nil then
+  begin
+    FCompletionContext.Cancel;
+  end;
+  FCompletionContext := nil;
+  FCompletionQuery := nil;
+  FCompletionWaiting := False;
+
+  if FCompletionMenu <> nil then
+  begin
+    FCompletionMenu.Dismiss;
+  end;
+
+  if LVisible then
+  begin
+    CompletionChanged;
+  end;
+end;
+
+function TNyxStudioSourceInput.CompletionCurrent: Boolean;
+var
+  LEditing: TNyxEditingSnapshot;
+begin
+  Result := (FCompletionQuery <> nil) and Current(LEditing);
+
+  if Result then
+  begin
+    Result := not LEditing.Composing and not FActive.History.Composing and
+      (FCompletionGeneration = FActive.History.Generation) and
+      (FActive.History.Current.Text = LEditing.Text) and
+      FActive.History.Current.Selection.SameRange(LEditing.Selection) and
+      FCompletionQuery.FileReference.SameFile(FActive.FileReference) and
+      FCompletionQuery.Matches(Sources);
+  end;
+end;
+
+procedure TNyxStudioSourceInput.StartCompletion(AOffset: Integer);
+var
+  LEditing: TNyxEditingSnapshot;
+  LOwner: TNyxPascalSourceRef;
+  LTicket: TNyxPascalCompletionTicket;
+begin
+  DismissCompletion;
+
+  if not Current(LEditing) or LEditing.Composing or not LEditing.Selection.Defined or
+    not LEditing.Selection.Collapsed or (FCompletionMenu = nil) then
+  begin
+    Exit;
+  end;
+  LOwner := FActive.FileReference;
+
+  if Assigned(FCompletionOwnerRead) then
+  begin
+    LOwner := FCompletionOwnerRead();
+  end;
+  FCompletionQuery := FCompletionMenu.BeginQuery(Sources, FActive.FileReference, LOwner,
+    LTicket, AOffset);
+  FCompletionGeneration := FActive.History.Generation;
+  FCompletionReply := TNyxStudioSourceCompletionReply.Create;
+  FCompletionLease := FCompletionReply;
+  FCompletionReply.Owner := Self;
+  FCompletionReply.Ticket := LTicket;
+
+  if Assigned(FCompletionContextRead) then
+  begin
+    FCompletionContext := FCompletionContextRead();
+  end;
+  SubmitCompletion;
+  CompletionChanged;
+end;
+
+procedure TNyxStudioSourceInput.SubmitCompletion;
+var
+  LReadiness: TNyxStudioCompletionReadiness;
+  LWasWaiting: Boolean;
+  LMessage: TNyxText;
+  LReply: TNyxStudioSourceCompletionReply;
+begin
+
+  if not CompletionCurrent or (FCompletionReply = nil) then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LWasWaiting := FCompletionWaiting;
+  LReadiness := scrOffline;
+  LReply := FCompletionReply;
+
+  if FCompletionContext <> nil then
+  begin
+    LReadiness := FCompletionContext.Request(FCompletionQuery, FCompletionLease);
+  end;
+  FCompletionWaiting := LReadiness = scrSynchronizing;
+
+  if LWasWaiting <> FCompletionWaiting then
+  begin
+    CompletionChanged;
+  end;
+
+  if LReadiness in [scrOffline, scrUnavailable] then
+  begin
+    LMessage := 'Connect Studio to its local service for Pascal completion';
+
+    if LReadiness = scrUnavailable then
+    begin
+      LMessage := 'Pascal completion is unavailable for this editor context';
+    end;
+    FCompletionMenu.Present(LReply.Ticket,
+      NewNyxPascalCompletionResult(FCompletionQuery, pcsUnavailable, LMessage, 0, '', [], 0), Sources);
+    LReply.Owner := nil;
+    FCompletionReply := nil;
+    FCompletionLease := nil;
+  end;
+end;
+
+procedure TNyxStudioSourceInput.CompletionReply(AReply: TNyxStudioSourceCompletionReply;
+  const AQuery: INyxPascalCompletionRequest; const AResult: INyxPascalCompletionResult);
+begin
+
+  if AReply <> FCompletionReply then
+  begin
+    Exit;
+  end;
+
+  if not CompletionCurrent or (FCompletionContext = nil) or
+    not FCompletionContext.Current(AQuery) then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+
+  if FCompletionMenu.Present(AReply.Ticket, AResult, Sources) then
+  begin
+    FCompletionWaiting := False;
+    AReply.Owner := nil;
+    FCompletionReply := nil;
+    FCompletionLease := nil;
+    CompletionChanged;
+  end;
+end;
+
+procedure TNyxStudioSourceInput.CompletionAction(AAction: TNyxPascalCompletionAction);
+var
+  LOffset: Integer;
+  LSources: INyxPascalSourceSnapshot;
+  LCandidate: INyxPascalSourceSnapshot;
+  LPreparation: INyxPascalCompletionPreparation;
+  LPreparedDrafts: TNyxPascalFileDrafts;
+begin
+  case AAction of
+    pcaRequest: StartCompletion;
+    pcaDismiss: DismissCompletion;
+    pcaSelect: CompletionChanged;
+    pcaUndo:
+      begin
+        DismissCompletion;
+        Execute(nhcUndo);
+      end;
+    pcaRedo:
+      begin
+        DismissCompletion;
+        Execute(nhcRedo);
+      end;
+    pcaPrevious, pcaNext:
+      begin
+
+        if not CompletionCurrent then
+        begin
+          DismissCompletion;
+          Exit;
+        end;
+        LOffset := FCompletionQuery.Offset - FCompletionQuery.Limit;
+
+        if AAction = pcaNext then
+        begin
+          LOffset := FCompletionQuery.Offset + FCompletionQuery.Limit;
+        end;
+
+        if LOffset < 0 then
+        begin
+          LOffset := 0;
+        end;
+        StartCompletion(LOffset);
+      end;
+    pcaAccept:
+      begin
+
+        if not CompletionCurrent or (FCompletionContext = nil) or
+          not FCompletionContext.Current(FCompletionQuery) then
+        begin
+          DismissCompletion;
+          Exit;
+        end;
+        LSources := Sources;
+        if not Supports(FCompletionMenu, INyxPascalCompletionPreparation, LPreparation) then
+        begin
+          raise ENyxTextHistory.Create('Completion requires detached draft preparation');
+        end;
+        LCandidate := LPreparation.Preview(LSources);
+
+        if FActive.FileReference.Role <> npsMain then
+        begin
+          { Validate helper draft membership/size before the text timeline moves.
+            No reentrant callback occurs between this preparation and admission. }
+          LPreparedDrafts := FSession.FileDrafts.Editing(FActive.FileReference,
+            FSession.SourceFileText(FActive.FileReference), LCandidate.Text(FActive.FileReference));
+          LPreparedDrafts.ValidateAgainst(FProject);
+        end;
+        LCandidate := FCompletionMenu.Accept(LSources);
+        FSession.SetFileDraft(FActive.FileReference, LCandidate.Text(FActive.FileReference));
+        FActive.AuthorText := FSession.ActiveSourceText;
+        DismissCompletion;
+        FWrite(FActive.History.Current, True);
+      end;
+    pcaNone:
+      begin
+        { Unhandled input retains its ordinary physical platform behavior. }
+      end;
+  end;
+end;
+
+function TNyxStudioSourceInput.BuildCompletion: TNyxDocument;
+var
+  LCard: INyxCard;
+begin
+  Result := nil;
+
+  if not CompletionCurrent then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LCard := FCompletionMenu.Build('studio-completion', Sources);
+
+  if FCompletionMenu.State = pcvClosed then
+  begin
+    Exit;
+  end;
+
+  if FCompletionWaiting then
+  begin
+    LCard.Add(NewNyxLabel('studio-completion-waiting')
+      .WithText('Waiting for this Pascal draft to synchronize'));
+  end;
+  Result := TNyxDocument.Create;
+  try
+    Result.AddPage(LCard);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function TNyxStudioSourceInput.RouteCompletion(ARoot, ANode: TNyxNode;
+  ATrigger: TNyxTrigger): Boolean;
+var
+  LAction: TNyxPascalCompletionAction;
+begin
+  Result := False;
+
+  if not CompletionCurrent then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LAction := FCompletionMenu.Route('studio-completion', ARoot, ANode, ATrigger, Sources);
+  Result := LAction <> pcaNone;
+
+  if Result then
+  begin
+    CompletionAction(LAction);
+  end;
+end;
+
+function TNyxStudioSourceInput.CompletionDismissReceiver: INyxEventCallback;
+begin
+  Result := FPort;
 end;
 
 function TNyxStudioSourceInput.Sources: INyxPascalSourceSnapshot;

@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Authored/physical source projection — 2026-10-17
+## Current integration: Retained Studio completion popup — 2026-10-17
+
+Previous goal turn is progress: pushed a1e42f2 qualifies authored/physical source
+projection. This batch connects the existing private operator channel and public
+Nyx card to ordinary retained source input under original NS-4 authoring criterion
+two and NS-5 service ownership. It supplies editor integration, not a real language
+engine or a full original criterion/task/quality/parity/delivery closure.
+
+The user resolved the engine choice during this batch: build a fresh, wholly
+Nyx-owned Pascal resolver with MIT licensing and modern editing capabilities.
+PROJECT.md and the existing authoring owner now retain that direction and the
+full language/context/incremental/navigation acceptance scope. Historical optional
+CodeTools experiments remain evidence; no helper is adopted, distributed or run
+here. The new ordinary-input consumer uses controlled semantic replies and makes
+no symbol/type/member-resolution claim. The fresh engine remains unimplemented.
+
+Each bridge now owns a separate private completion exchange and revocable managed
+context. Source/frame/accepted/draft and revision checks precede submission and
+presentation, independently of agents or selected outputs. Requests freeze before
+checking acknowledgement; packets contain selectors, never proposed source.
+An unsynchronized draft retains visible waiting feedback and retries after its
+ordinary acknowledgement. Bridge retirement/reconfiguration revokes old contexts
+before session/transport release; pending delivery owns no raw session.
+
+The source controller owns its menu/ticket, weak receiver, history generation,
+caret and current service context. Changed source/file/load/selection/composition
+or a retired mount dismisses it. Main/unit files use themselves; includes consume
+the ordinary Outline's explicit owner selector through an optional capability.
+Detached completion Preview lets helper admission validate before the history
+replacement. Acceptance publishes one ordinary authored draft edit with exact
+Undo/Redo; no accepted pair, compiler job or design command is manufactured.
+
+Both target adapters use existing public Nyx popovers after callback return.
+Changed cards retire on later turns, preserving the same source memo and focus.
+Native pending presentation includes its queued popup update. Hidden/unmounted
+source requires no readiness retry. Public card/optional preparation/context
+interfaces preserve existing menu/outline interface layouts and wire versions.
+
+Evidence behind ignored .local/studio-popup-paths-private.json, pinned to eight
+final Pascal inputs in source-pins-5-private.json:
+
+- logs/controls-5-390-runtime.log and controls-5-1280-runtime.log pass 32/25 actual
+  ordinary Win32 Studio checks, clean heaps. Compact uses visible Actions -> View
+  -> Pascal, adding menu assertions; these counts overlap earlier components.
+  A suspended never-listening production MCP engine and substituted asynchronous
+  transports qualify private authority while agents are disabled. Controlled
+  unavailable/member replies, same memo/focus/caret, actual suggestion-button and
+  Enter acceptance, exact authored bytes/Undo/Redo, delayed caret retirement,
+  acknowledged-only retry, expanded source and pending-query owner retirement
+  pass. The provider proves no language resolution; transport proves no HTTP.
+- logs/source-input-1-390-runtime.log and source-input-1-1280-runtime.log retain
+  all 38 ordinary native source-input checks each, clean heaps. Existing keyboard/
+  context/readonly/recreation/modal/stale-source/NUL and simulated composition
+  assertions remain unchanged. No hardware/IME or browser claim is made.
+- logs/view-1-runtime.log, client-1-runtime.log and projection-1-runtime.log retain
+  40/10/159 native checks respectively, clean heaps. Both Studios and the browser
+  client compile. Nine accepted compiler logs have zero owned warnings and 14
+  upstream pas2js RTL warnings. Browser products/consumers are compiled only.
+
+Retained preparations: both first product compiles expose the missing explicit
+source-reference import; controls-1 exposes a fixture-only nonexistent JSON Has
+member and omitted workspace argument. controls-2 compiles, but its initial hidden
+source encounters an infinite readiness retry. Exact owned PID 14816 is verified
+and retired before any input edit; its forced termination is not heap evidence.
+Both adapters now skip readiness for an absent root. controls-3 reaches expanded
+source, then fails on a guessed control ID; using the existing action-expand-source
+preserves the original modal assertion. controls-4 passes the compact journey before
+the final presentation-pending/query-freeze refinement; final controls-5 qualifies
+both widths. Final controls-6 rebuilds only after removing one empty EOF line
+from the fixture; fixture-eof-private.json and controls-5-qualified-source.lpr
+prove every program token and all product inputs remain exact, so its accepted
+runtime is not repeated for whitespace. Preparations remain excluded from
+accepted compiler receipts.
+
+All readers join; no Pascal input changes while an owned compiler/runtime/helper
+reads it. Five protected files/nine complete contexts/history/drafts/profile and
+all 349 frozen 7422453 artifacts remain exact. LAN stays offline. No HTTP/browser/
+capture, protected configuration/enrollment/cleanup retry, approval bypass, deletion
+or sub-agents occurs. Native Nyx tools remain absent; owned direct semantic/native
+input consumers change no active design. Tools remain 24/frozen 23 and eighteen
+Pascal modes. No new tool/schema/kind, original full criterion/task/counter/credit/
+DONE, complete language resolver, full parity or rollout closes.
+
+Final-checkpoint-private.json owns source/remote, pins, compiler logs, terminal and
+preservation receipts. Stop popup/history/transport/fixture/compiler variants.
+Next implement the fresh Nyx-owned resolver through the existing provider contract:
+reassess existing lexical/declaration infrastructure, then own recoverable syntax,
+scoped semantic/type context and incremental source identity. Its full declared
+language/navigation/budget/quality scope remains the destination. Full ordinary
+main/unit/include input, caret-level anchoring, browser/other-widgetset/IME/visual/
+accessibility/performance and preserving delivery retain their existing owners.
+The original full Nyx/Studio goal stays active.
+
+## Prior integration: Authored/physical source projection — 2026-10-17
 
 Previous goal turn is progress: pushed bc3423d connects ordinary source input to
 shared history. Completion adoption next needs exact authored/physical coordinates:

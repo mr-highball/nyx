@@ -26,26 +26,28 @@ The optional [completion provider boundary](docs/pascal-projects.md#replaceable-
 now qualifies real native SDK member resolution and exact detached insertion
 proposals. The existing tool's optional [semantic completion mode](docs/pascal-projects.md#semantic-completion-queries)
 now performs revision/context/permission-aware analysis outside the model guard.
-No default provider/helper binary is installed; interactive integration, broader
-compiler context and observing delivery remain open.
+The user selected a fresh Nyx-owned resolver. No default engine/helper binary is
+installed; full language/compiler context and observing delivery remain open.
 
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
-consumer. Studio completion-menu adoption and complete platform input/visual qualification
-remain separate; browser consumers compile only.
+consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input
+qualifies controlled replies, while browser consumers compile only. Real engine
+adoption and complete input/visual qualification remain separate.
 
 The private [operator completion channel](docs/pascal-projects.md#private-operator-completion-channel)
 now keeps asynchronous editor queries independent of agent enablement and output
 selection. Exact acknowledged sources and stale-result checks remain required;
-ordinary Studio frontend adoption and complete input/parity/delivery stay open.
+the ordinary retained editor now consumes that channel through revocable contexts.
+Complete input/parity/delivery and the new Nyx-owned engine remain open.
 
 Ordinary [source input ownership](docs/pascal-projects.md#studio-source-input-ownership)
 now connects the shared text timeline to both Studio adapters. Native keyboard/
 context history and retained modal/recreation journeys are qualified; browser
 consumers compile only. Typed [authored/displayed text projection](docs/pascal-projects.md#authored-and-presented-text)
 now preserves untouched authored bytes through ordinary edits and projects completion
-ranges through the public menu/history. Studio popup/channel adoption and full parity
-remain open.
+ranges through the public menu/history. The popup now keeps the retained memo and
+shares ordinary draft/history; full engine/quality/parity and delivery remain open.
 
 ## Decisions
 
@@ -62,6 +64,7 @@ remain open.
 | Studio | Browser-first Nyx application plus Pascal HTTP compiler service; native Studio parity remains an intended outcome |
 | Output configuration | Optional late target selection; machine profiles configured in Studio independently of portable designs |
 | Dependencies | Standard FPC/Lazarus/pas2js facilities first; justified dependencies pinned as submodules |
+| Pascal language engine | User selected a fresh, wholly Nyx-owned Pascal resolver; core and engine retain MIT licensing. The optional CodeTools helper is historical qualification, not the engine to adopt or distribute. |
 | Publishing | Not yet selected |
 | Work profile | Athena Lean stewardship unless explicitly changed |
 | Current staffing | Solo execution, explicitly requested by the user |

@@ -39,6 +39,24 @@ type
       const AResult: INyxPascalCompletionResult);
   end;
 
+  { Local editor readiness is independent of agent permission and selected
+    output. Synchronizing may be retried after ordinary acknowledgement; offline
+    and unavailable are explicit feedback, never permission to send stale text. }
+  TNyxStudioCompletionReadiness = (scrSubmitted, scrSynchronizing, scrOffline, scrUnavailable);
+  { Revocable UI-thread service borrowed through a managed lease. The bridge owns
+    transport/session authority; this port owns neither. Requests contain only
+    immutable inspection context, and Current requires exact acknowledged buffers.
+    Cancel revokes delivery, not admitted analysis. Detach permanently retires the
+    borrow before its bridge/session disappears; retained ports then refuse. }
+  INyxStudioCompletionContext = interface(IInterface)
+    ['{4847558D-A467-44CA-B8C8-59A435EF9D01}']
+    function Request(const AQuery: INyxPascalCompletionRequest;
+      const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+    function Current(const AQuery: INyxPascalCompletionRequest): Boolean;
+    procedure Cancel;
+    procedure Detach;
+  end;
+
   { Owns one private asynchronous editor exchange. No UI/session/document is
     borrowed. Request captures immutable query data and a managed receiver;
     Cancel revokes local delivery but cannot cancel admitted server analysis.

@@ -2,21 +2,44 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Resolver direction (user decision, 2026-10-17): build a fresh, wholly Nyx-owned
+Pascal engine for completion/navigation. Keep the existing typed provider boundary,
+exact multi-file snapshots and semantic/editor consumers; the optional GPLv2+
+CodeTools experiment is retained evidence, not the production resolver direction.
+This requirement stays under original criterion two and its service/workflow
+prerequisites; it adds no completion credit or independent percentage.
+
+The required end state includes lossless Unicode/include coordinates, lexical and
+syntactic recovery in unfinished buffers, scoped units/namespaces/declarations,
+type/member/inheritance/interface/generic/overload/helper resolution, FPC/Delphi
+dialect and conditional compiler/target context, nested and supported anonymous
+routines, useful completion/signature/definition/reference navigation and safe
+rename proposals. Incremental dependency invalidation, cancellation, bounded
+query pages, explicit unresolved/ambiguous diagnostics, measured project-scale
+budgets and both-target execution/ordinary-editor quality remain required.
+Compiler-backed source admission remains independent of resolver suggestions.
+Build this as portable Pascal with target worker/scheduler adapters and reusable
+public contracts; no DOM/LCL types or external language engine enters the core.
+The modern editing experience is the acceptance destination, not parser coverage
+alone. Record each qualified capability and its remaining gaps in WORK.md.
+
 Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now uses shared recent-file timelines in both adapters. Native keyboard/context
 Undo, readonly/recreation/modal and stale-source journeys are qualified; browser
 paths compile only. Full input/IME/multi-file/budget/parity and original criterion
 two stay open. Typed [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text)
 now preserves untouched source bytes through ordinary input and projects the public
-completion menu's ranges. Ordinary popup/private-channel adoption must still preserve
-complete source acknowledgement, current mount/caret and retained widget ownership.
+completion menu's ranges. Ordinary popup/private-channel adoption now qualifies
+controlled native input with exact source acknowledgement, current mount/caret and
+retained widget ownership. This supplies no real resolver/language-coverage evidence.
 
 The private [operator completion client](../docs/pascal-projects.md#private-operator-completion-channel)
 now supplies an asynchronous, revision-correlated channel independent of agent
 permission and selected output. The source editor must still require its exact
 acknowledged frame and connect the public view/history with every physical input
-producer. WORK.md owns bounded native/client evidence, not ordinary frontend
-adoption, HTTP/browser execution or original criterion-two acceptance.
+producer. WORK.md owns bounded native/client and ordinary popup evidence separately
+from HTTP/browser execution, real language resolution and original criterion-two
+acceptance.
 
 Current-source [completion presentation](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 adds a reusable Nyx card and shared exact text/selection history. Real native

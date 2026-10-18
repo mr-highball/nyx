@@ -32,7 +32,8 @@ uses
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
-  nyx.studio.sourcepublications, nyx.source.preparation, nyx.studio.builddiagnostics;
+  nyx.studio.sourcepublications, nyx.source.preparation, nyx.studio.builddiagnostics,
+  nyx.pascal.sources, nyx.pascal.completion, nyx.studio.completion;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -61,6 +62,8 @@ type
     FSession: TNyxStudioSession;
     FView: TNyxStudioAgentView;
     FExchange: TNyxStudioEditorExchange;
+    FCompletionClient: TNyxStudioCompletionClient;
+    FCompletionContext: INyxStudioCompletionContext;
     FRequest: Boolean;
     { Only unchanged, queue-free observing reads may retry a transport loss.
       This never replays a mutation or weakens revision/draft/authority guards. }
@@ -239,6 +242,12 @@ type
       frame before server diagnostics can borrow this observer's source text.
       Pending local publications and protected conflicts cannot grant navigation. }
     function SourceSynchronized: Boolean;
+    { Configure a separate owned private exchange before queries. Reconfiguration
+      retires pending delivery; never share the polling transport with analysis. }
+    procedure UseCompletionExchange(AExchange: TNyxStudioEditorExchange);
+    { Managed weak context remains safe after bridge retirement. No agent flag,
+      executable selection or application output is needed for operator queries. }
+    function CompletionContext: INyxStudioCompletionContext;
     { Compiler polling does not alter the accepted document revision. Permit
       cancellation behind compiler-only packets, but never behind a pending
       local capture, document/history operation or unacknowledged frame. }
@@ -258,6 +267,22 @@ uses
   {$ifdef PAS2JS}nyx.studio.exchange.browser{$else}nyx.studio.exchange.lcl{$endif};
 
 type
+  { Managed weak bridge borrow. Exact session sources and acknowledged frame are
+    rechecked for submission and presentation. Detach precedes bridge teardown. }
+  TBridgeCompletionContext = class(TInterfacedObject, INyxStudioCompletionContext)
+  private
+    FQuery: INyxPascalCompletionRequest;
+    FRevision: Integer;
+    function MatchesAcknowledged(const AQuery: INyxPascalCompletionRequest): Boolean;
+  public
+    Owner: TNyxStudioAgentBridge;
+    function Request(const AQuery: INyxPascalCompletionRequest;
+      const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+    function Current(const AQuery: INyxPascalCompletionRequest): Boolean;
+    procedure Cancel;
+    procedure Detach;
+  end;
+
   { UI-only revocable bridge borrow. Detach removes the owner before session
     retirement; compiler ports retain this courier rather than the bridge. }
   TBridgeSharedPort = class(TInterfacedObject, INyxSharedSourceHost,
@@ -294,6 +319,136 @@ const
   CMaximumObservationRetries = 2;
   CRevisionLabel: TNyxText = ' · revision ';
   CWarningSeparator: TNyxText = ' · ';
+
+function TBridgeCompletionContext.MatchesAcknowledged(const AQuery: INyxPascalCompletionRequest): Boolean;
+var
+  LSources: INyxPascalSourceSnapshot;
+  LDrafts: TNyxPascalFileDrafts;
+  LAt: Integer;
+begin
+  Result := (Owner <> nil) and (AQuery <> nil);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  Result := Owner.FEnabled and (Owner.FCompletionClient <> nil) and Owner.SourceSynchronized;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  LSources := CaptureNyxPascalSources(Owner.FSession.AcceptedPascalProject)
+    .WithBuffer(TNyxPascalSourceRef.Main, Owner.FSession.DraftSource);
+  LDrafts := Owner.FSession.FileDrafts;
+  for LAt := 0 to LDrafts.Count - 1 do
+  begin
+    LSources := LSources.WithBuffer(LDrafts.Item(LAt).FileReference, LDrafts.Item(LAt).Text);
+  end;
+  Result := AQuery.Matches(LSources);
+end;
+
+function TBridgeCompletionContext.Current(const AQuery: INyxPascalCompletionRequest): Boolean;
+begin
+  Result := (FQuery <> nil) and (AQuery <> nil) and MatchesAcknowledged(AQuery);
+
+  if Result then
+  begin
+    Result := (FRevision = Owner.FView.Revision) and
+      FQuery.FileReference.SameFile(AQuery.FileReference) and
+      FQuery.Owner.SameFile(AQuery.Owner) and (FQuery.Caret = AQuery.Caret) and
+      (FQuery.Offset = AQuery.Offset) and (FQuery.Limit = AQuery.Limit) and
+      FQuery.Matches(AQuery.Sources);
+  end;
+end;
+
+function TBridgeCompletionContext.Request(const AQuery: INyxPascalCompletionRequest;
+  const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+var
+  LQuery: INyxPascalCompletionRequest;
+begin
+
+  if (Owner = nil) or not Owner.FEnabled or not Owner.FView.Connected then
+  begin
+    Exit(scrOffline);
+  end;
+
+  if Owner.FCompletionClient = nil then
+  begin
+    Exit(scrUnavailable);
+  end;
+
+  if not Owner.SourceSynchronized then
+  begin
+    Exit(scrSynchronizing);
+  end;
+
+  LQuery := CaptureNyxPascalCompletionRequest(AQuery);
+
+  if not MatchesAcknowledged(LQuery) then
+  begin
+    Exit(scrUnavailable);
+  end;
+  FQuery := LQuery;
+  FRevision := Owner.FView.Revision;
+  Owner.FCompletionClient.Request(Owner.FToken, Owner.FWorkspace, Owner.FView.Revision,
+    LQuery, AReply);
+  Result := scrSubmitted;
+end;
+
+procedure TBridgeCompletionContext.Cancel;
+begin
+  FQuery := nil;
+  FRevision := 0;
+
+  if (Owner <> nil) and (Owner.FCompletionClient <> nil) then
+  begin
+    Owner.FCompletionClient.Cancel;
+  end;
+end;
+
+procedure TBridgeCompletionContext.Detach;
+begin
+  Cancel;
+  Owner := nil;
+end;
+
+procedure TNyxStudioAgentBridge.UseCompletionExchange(AExchange: TNyxStudioEditorExchange);
+var
+  LPort: TBridgeCompletionContext;
+  LContext: INyxStudioCompletionContext;
+  LClient: TNyxStudioCompletionClient;
+begin
+
+  if (AExchange = nil) or (AExchange = FExchange) then
+  begin
+    raise EArgumentException.Create('Completion requires a separate private exchange');
+  end;
+
+  LClient := TNyxStudioCompletionClient.Create(AExchange);
+  try
+    LPort := TBridgeCompletionContext.Create;
+    LPort.Owner := Self;
+    LContext := LPort;
+
+    if FCompletionContext <> nil then
+    begin
+      FCompletionContext.Detach;
+    end;
+    FCompletionContext := nil;
+    FreeAndNil(FCompletionClient);
+    FCompletionClient := LClient;
+    LClient := nil;
+    FCompletionContext := LContext;
+  finally
+    LClient.Free;
+  end;
+end;
+
+function TNyxStudioAgentBridge.CompletionContext: INyxStudioCompletionContext;
+begin
+  Result := FCompletionContext;
+end;
 
 procedure TBridgeSharedPort.Attach(const ADispatch: INyxSharedSourceDispatch);
 begin
@@ -851,6 +1006,13 @@ end;
 destructor TNyxStudioAgentBridge.Destroy;
 begin
   FEnabled := False;
+
+  if FCompletionContext <> nil then
+  begin
+    FCompletionContext.Detach;
+  end;
+  FCompletionContext := nil;
+  FreeAndNil(FCompletionClient);
 
   if FSharedPort <> nil then
   begin

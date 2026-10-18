@@ -26,7 +26,7 @@ unit nyx.studio.sourceoutline;
 interface
 
 uses nyx.text, nyx.model, nyx.controls, nyx.events, nyx.behavior, nyx.source,
-  nyx.studio.session;
+  nyx.studio.session, nyx.pascal.drafts;
 
 const
   NyxStudioSourceOutlineID = 'studio-source-outline';
@@ -64,11 +64,19 @@ type
       out ALocation: TNyxPascalRoutineLocation): TNyxStudioSourceOutlineEffect;
   end;
 
+  { Optional read-only compiler context. A selected main/unit uses itself;
+    includes use the ordinary Outline's explicit owner selector. This retains
+    no source or session and changes neither the existing outline vtable nor Undo. }
+  INyxStudioSourceOutlineContext = interface(IInterface)
+    ['{4847558D-A467-44CA-B8C8-59A435EF9D03}']
+    function CompletionOwner(ASession: TNyxStudioSession): TNyxPascalSourceRef;
+  end;
+
 function NewNyxStudioSourceOutline: INyxStudioSourceOutline;
 
 implementation
 
-uses SysUtils, nyx.types, nyx.data, nyx.pascal.project, nyx.pascal.drafts,
+uses SysUtils, nyx.types, nyx.data, nyx.pascal.project,
   nyx.pascal.outline, nyx.pascal.sources;
 
 type
@@ -76,7 +84,8 @@ type
     buffers for one explicit owning unit. Opaque mount
     serials distinguish retired rows even when renderers reconcile equal IDs.
     Exceptions become scoped readable feedback, never draft/history changes. }
-  TSourceOutline = class(TNyxStudioSourceOutline, INyxStudioSourceOutline)
+  TSourceOutline = class(TNyxStudioSourceOutline, INyxStudioSourceOutline,
+    INyxStudioSourceOutlineContext)
   private
     FContext: TNyxStudioCommandContext;
     FProject: INyxPascalProject;
@@ -96,6 +105,7 @@ type
     FMount: Integer;
   public
     function Presenter: TNyxStudioSourceOutline;
+    function CompletionOwner(ASession: TNyxStudioSession): TNyxPascalSourceRef;
     function Build(ASession: TNyxStudioSession): INyxCard; override;
     function Route(ASession: TNyxStudioSession; ARoot, ANode: TNyxNode;
       const AEvent: TNyxEventInfo;
@@ -108,6 +118,21 @@ const
 function TSourceOutline.Presenter: TNyxStudioSourceOutline;
 begin
   Result := Self;
+end;
+
+function TSourceOutline.CompletionOwner(ASession: TNyxStudioSession): TNyxPascalSourceRef;
+begin
+  Result := ASession.ActiveSourceFile;
+
+  if Result.Role = npsInclude then
+  begin
+    Result := TNyxPascalSourceRef.Main;
+
+    if ASession.MatchesCommandContext(FContext) then
+    begin
+      Result := FOwner;
+    end;
+  end;
 end;
 
 function TSourceOutline.Build(ASession: TNyxStudioSession): INyxCard;

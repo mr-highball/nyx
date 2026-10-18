@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source operator completion now supplies revocable acknowledged contexts to
+ordinary Studio through a separate owned exchange. Exact local frame/source and
+revision guards precede dispatch/presentation independently of agents and outputs.
+Controlled native Studio input qualifies integration on a never-listening backend;
+browser consumers compile only. Real Nyx-owned resolution, HTTP input/quality/parity/
+delivery and original service/codegen prerequisites remain open. WORK.md owns the
+evidence; no service criterion, counter or credit closes here.
+
 **Description:**
 
 Deliver pascal http builds as part of the user's full Nyx and Nyx Studio outcome.

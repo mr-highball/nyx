@@ -738,6 +738,15 @@ the remaining full service/editor/parity/delivery outcomes.
 
 ## Replaceable Pascal completion providers
 
+The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.
+The engine and core retain Nyx's MIT license. The existing provider/request/result
+contracts remain the integration seam for Studio and semantic clients. Historical
+CodeTools worker qualification below establishes that seam; it is not the chosen
+engine, a default dependency or a distribution plan. Original authoring criterion
+two owns language breadth, unfinished-buffer recovery, incremental/cancellable
+project analysis, navigation and full native/browser quality. A controlled fixture
+reply qualifies editor integration only and proves no language-resolution capability.
+
 `nyx.pascal.completion` describes completion independently of Studio, CodeTools,
 DOM and LCL. Queries freeze exact main/unit/include membership, accepted comparison
 text and every current buffer. Carets and replacement ranges count Unicode
@@ -899,10 +908,57 @@ provider returns unavailable. No default engine, helper binary, MCP tool or MCP
 schema is installed by this addition. The maintained native production-engine
 consumer exercises the private operation on a suspended, never-listening backend;
 the client consumer substitutes asynchronous transport and compiles for pas2js.
-These are not HTTP/browser execution or an interactive Studio integration claim.
-Ordinary retained-editor adoption must still connect synchronization, mount/read-
-only and caret guards, the public menu and **all** platform history producers.
-WORK.md owns evidence, engine-selection status and the delivery boundary.
+These consumers are not HTTP/browser execution. Ordinary retained-editor adoption
+now uses the managed context and public popup described below; controlled replies
+qualify that integration independently of language resolution. WORK.md owns exact
+evidence and the user-selected fresh Nyx-owned engine/delivery boundary.
+
+## Ordinary Studio completion popup
+
+Both Studio adapters configure an independently owned private completion exchange
+beside ordinary polling. A managed `INyxStudioCompletionContext` borrows the bridge
+through a revocable lease. Submission freezes the query and requires the complete
+local frame, accepted inputs and all draft buffers to match their acknowledged
+counterparts. It retains the exact revision and query selectors for presentation.
+Neither agent enablement nor application output configuration grants or revokes
+this operator capability. Bridge retirement/reconfiguration detaches old leases
+and cancels their local deliveries before releasing sessions or transport.
+
+Control+Space in the retained source view opens a public Nyx completion card inside
+the existing target popover. Pending synchronization has visible feedback and
+retries after ordinary acknowledgement; it sends no stale or user-supplied source
+through the query packet. Offline/unavailable/failed states remain explicit. Main
+and unit buffers use themselves as context; includes consume the ordinary Outline
+owner selector through an optional read-only capability. No owning unit is inferred
+from filesystem proximity.
+
+The source-input owner retains one menu, opaque ticket, query receiver, physical
+generation/caret and weak service context. A changed file/load/source, selection,
+composition or retired mount revokes it. A late reply must match the local current
+buffers and the service's acknowledged revision/context before the menu may admit
+it. Popup rows route through their exact current Nyx mount/ticket. Arrow selection,
+page actions, Escape and suggestion buttons use the shared presentation contract.
+Enter/Tab acceptance uses that same source keyboard producer.
+
+`INyxPascalCompletionPreparation` optionally stages an immutable candidate without
+moving history, letting Studio validate helper-draft admission before acceptance.
+One completion then publishes ordinary authored draft text through the same text
+timeline and existing draft bridge. Undo/Redo retain the exact preceding bytes and
+caret; completion does not compile/admit source or add a paired design command.
+The source memo survives popup updates and expanded-source movement. Target
+presentation runs after callback return, preserves source focus, and retires the
+old public popover before mounting a changed card. A hidden/unmounted source
+requires no readiness retry. Native presentation-pending includes this queued work.
+
+The owned `nyx_studio_completion_controls.lpr` consumer substitutes asynchronous
+transport into a suspended, never-listening production backend and uses controlled
+provider replies. It executes real ordinary Win32 memo/button/menu input at native
+390/1280 host widths. It proves editor synchronization, popup/history/input ownership,
+not real symbol/type resolution, HTTP transport, browser execution, visual quality
+or hardware/IME/accessibility. Browser Studio/client compile only. The user-selected
+Nyx-owned language engine, comprehensive main/unit/include interaction, caret-level
+anchoring, full performance/quality/parity and preserving delivery remain open.
+No default helper, new MCP tool/schema or installed release is added here.
 
 ## Authored and presented text
 
@@ -1000,9 +1056,8 @@ input evidence at two host widths and the ordinary editing regression. Synthetic
 native composition covers commit/cancelled-base ownership, not hardware/IME.
 Recent-file eviction/multi-project journeys, assistive technology, broader budgets,
 other widgetsets and full browser/parity/delivery remain open. The completion menu
-and private query channel are not yet connected to this controller. That adoption
-must preserve exact acknowledged sources and consume the typed authored/physical
-position/replacement projection when target line endings differ. No default helper,
+and private query channel now consume this controller and its typed authored/
+physical position/replacement projection as described above. No default helper,
 MCP tool/schema or observing release is installed by this source change.
 
 ## Shared editing history and completion presentation
@@ -1070,6 +1125,6 @@ an asynchronously joined SDK provider at two native host widths. Its arguments a
 SDK root, toolchain JSON, owned scratch, optional helper, FPC source root and width.
 It changes only its independent buffer and never runs an authored application.
 WORK.md distinguishes that native evidence from browser compilation. Ordinary
-Studio adoption, floating anchor/layout/visual quality, complete native/browser
+full Studio interaction, caret-level anchor/layout/visual quality, complete native/browser
 history-producer integration, hardware/IME/accessibility, performance and preserving
 delivery remain open; these factories do not install an editor or helper in Studio.

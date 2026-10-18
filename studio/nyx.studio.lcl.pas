@@ -53,7 +53,8 @@ uses
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.sourceconfiguration,
   nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
-  nyx.studio.sourceinput, nyx.editing, nyx.editing.history,
+  nyx.studio.sourceinput, nyx.editing, nyx.editing.history, nyx.studio.completion,
+  nyx.pascal.completion, nyx.pascal.drafts,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
@@ -221,6 +222,11 @@ type
     FSourceInput: TNyxStudioSourceInput;
     { Programmatic frame restoration must not be observed as physical typing. }
     FSourceInputWriting: Boolean;
+    { Independent public Nyx popover. Rebuild only after callback return; the
+      source memo and its text timeline remain mounted and keep keyboard focus. }
+    FCompletionPopover: INyxLCLPopover;
+    FCompletionRevision: Integer;
+    FCompletionQueued: Boolean;
     FCanvasParking: TPanel;
     FCodeParking: TPanel;
     FState: TNyxStudioViewState;
@@ -301,6 +307,11 @@ type
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     function ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
     procedure WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
+    function ReadCompletionContext: INyxStudioCompletionContext;
+    function ReadCompletionOwner: TNyxPascalSourceRef;
+    procedure CompletionChanged;
+    procedure UpdateCompletionPopup(AData: PtrInt);
+    procedure CompletionEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RenderStudioCanvas(AHost: TWinControl);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
@@ -431,6 +442,8 @@ type
     { Borrowed source workspace/window contracts; destroy neither. }
     property SourceView: TNyxLCLRenderer read FSourcePaneView;
     property SourceModal: INyxLCLModalHost read FSourceModal;
+    { Borrowed target observations for ordinary input/accessibility consumers. }
+    property CompletionPopover: INyxLCLPopover read FCompletionPopover;
     { Borrowed hosting seam for embedded viewers/input qualification, not edits. }
     property QueryPreviewModal: INyxLCLModalHost read FQueryPreviewModal;
     property QueryPreviewView: TNyxLCLRenderer read FQueryPreviewView;
@@ -984,6 +997,7 @@ begin
   if NyxLCLTextHistorySupported then
   begin
     FSourceInput := TNyxStudioSourceInput.Create(FCodeView.Events, ReadSourceInput, WriteSourceInput);
+    FSourceInput.ConfigureCompletion(ReadCompletionContext, ReadCompletionOwner, CompletionChanged);
   end;
   FCanvasParking := TPanel.Create(nil);
   FCanvasParking.Parent := FHost;
@@ -1089,6 +1103,7 @@ begin
     FSourceModal.OnDismiss := nil;
     FSourceModal.Hide;
   end;
+  FCompletionPopover := nil;
   FreeAndNil(FSourceInput);
   FCodeView.Free;
   FSourcePaneView.Free;
@@ -1829,6 +1844,7 @@ begin
     FServiceURL := ABaseURL;
     LProject.Bridge := TNyxStudioAgentBridge.Create(FSession, LProject.Refresh,
       AWorkspace, CreateEditorExchange);
+    LProject.Bridge.UseCompletionExchange(CreateEditorExchange);
     SetLength(FProjects, 1);
     FProjects[0] := LProject;
     FCurrentProject := LProject;
@@ -2026,6 +2042,7 @@ begin
       LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
       LProject.Bridge := TNyxStudioAgentBridge.Create(LProject.Session,
         LProject.Refresh, AWorkspace, CreateEditorExchange);
+      LProject.Bridge.UseCompletionExchange(CreateEditorExchange);
 
       if FSharedSourceFactory <> nil then
       begin
@@ -2197,7 +2214,7 @@ end;
 
 function TNyxNativeStudio.GetPresentationPending: Boolean;
 begin
-  Result := FQueued or FPainting;
+  Result := FQueued or FPainting or FCompletionQueued;
 end;
 
 procedure TNyxNativeStudio.RequestRefresh(AReplaceCanvas: Boolean);
@@ -3432,6 +3449,7 @@ begin
     LShell.Free;
     FPainting := False;
   end;
+  CompletionChanged;
 end;
 
 procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
@@ -3648,10 +3666,96 @@ begin
   ASession := FSession;
   Result := Default(TNyxEditingSnapshot);
 
-  if (FCodeView <> nil) and (FCodeView.Root <> nil) and
+  if FState.CodeVisible and not FState.CanvasExpanded and (FState.SourceTab = nstSource) and
+    (FCodeView <> nil) and (FCodeView.Root <> nil) and
     not FSourceInputWriting and NyxInteractionPolicy(FCodeView.Root).CanEditValue then
   begin
     Result := FCodeView.EditingFor('studio-code');
+  end;
+end;
+
+function TNyxNativeStudio.ReadCompletionContext: INyxStudioCompletionContext;
+begin
+  Result := nil;
+
+  if CurrentBridge <> nil then
+  begin
+    Result := CurrentBridge.CompletionContext;
+  end;
+end;
+
+function TNyxNativeStudio.ReadCompletionOwner: TNyxPascalSourceRef;
+var
+  LContext: INyxStudioSourceOutlineContext;
+begin
+  Supports(FSourceOutline, INyxStudioSourceOutlineContext, LContext);
+  Result := LContext.CompletionOwner(FSession);
+end;
+
+procedure TNyxNativeStudio.CompletionChanged;
+begin
+
+  if not FRunning or FCompletionQueued then
+  begin
+    Exit;
+  end;
+  FCompletionQueued := True;
+  Application.QueueAsyncCall(UpdateCompletionPopup, 0);
+end;
+
+procedure TNyxNativeStudio.UpdateCompletionPopup(AData: PtrInt);
+var
+  LDocument: TNyxDocument;
+begin
+  FCompletionQueued := False;
+
+  if not FRunning or (FSourceInput = nil) then
+  begin
+    Exit;
+  end;
+
+  if FPainting or ((FCodeView.Root <> nil) and not FCodeView.SectionPublicationReady) or
+    ((FCompletionPopover <> nil) and not FCompletionPopover.Renderer.SectionPublicationReady) then
+  begin
+    CompletionChanged;
+    Exit;
+  end;
+  FSourceInput.Bind;
+
+  if FCompletionRevision = FSourceInput.CompletionRevision then
+  begin
+    Exit;
+  end;
+  FCompletionRevision := FSourceInput.CompletionRevision;
+
+  if FCompletionPopover <> nil then
+  begin
+    FCompletionPopover.Close;
+  end;
+  FCompletionPopover := nil;
+  LDocument := FSourceInput.BuildCompletion;
+  try
+
+    if LDocument <> nil then
+    begin
+      FCompletionPopover := NewNyxLCLPopover(FCodeView.FocusFor('studio-code'),
+        LDocument, NyxPageRoot('studio-completion'), FTheme);
+      FCompletionPopover.Renderer.OnEvent := CompletionEvent;
+      FCompletionPopover.OnDismiss.Subscribe(FSourceInput.CompletionDismissReceiver);
+      FCompletionPopover.Open(NyxPopover('Pascal completion').Size(540, 360)
+        .Spacing(6, 8).DismissOn([npdEscape, npdOutsidePress]));
+    end;
+  finally
+    LDocument.Free;
+  end;
+end;
+
+procedure TNyxNativeStudio.CompletionEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+begin
+
+  if FCompletionPopover <> nil then
+  begin
+    FSourceInput.RouteCompletion(FCompletionPopover.Renderer.Root, ANode, AEvent.Trigger);
   end;
 end;
 

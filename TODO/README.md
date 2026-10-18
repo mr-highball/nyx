@@ -8,13 +8,16 @@ now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).
 Untouched source bytes survive ordinary edits and public completion proposals.
 WORK.md owns native ordinary-input evidence separately from compiled-only browser
-paths. Studio menu/private-channel integration and full original quality/parity/
-delivery remain under the existing authoring/service owners.
+paths. The ordinary popup now consumes the public card/private channel with exact
+acknowledgement and retained memo/history. Controlled replies qualify integration;
+the user-selected fresh Nyx-owned resolver and full original quality/parity/delivery
+remain under the existing authoring/service owners.
 
 The private [operator completion channel](../docs/pascal-projects.md#private-operator-completion-channel)
 now qualifies asynchronous bounded queries independently of agent enablement and
-output selection. Ordinary retained-editor adoption, all platform history/input
-producers and full quality/parity/delivery remain with the existing owners below.
+output selection. The retained editor now consumes its revocable context; language
+resolution, full platform history/input/quality/parity/delivery remain with the
+existing owners below.
 WORK.md distinguishes the never-listening backend/client seam from HTTP execution.
 
 The public [completion card/text timeline](../docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
