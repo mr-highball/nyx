@@ -33,7 +33,105 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declared RTL procedure roles — 2026-10-18
+## Current integration: Non-returning routine intent — 2026-10-18
+
+Previous goal turn is progress: committed/pushed 7355559 qualifies typed RTL role,
+original signatures/bodies and unchanged-source advancement to noreturn. At least
+twenty-one documented unclosed batches retain complete original authoring
+criterion two. Reassessment follows this materially different routine-effect
+prerequisite under existing parser/linkage ownership. Deliver typed non-returning
+intent with exact suffix/signature/body ranges, explicit malformed-source refusal,
+whole compiled native termination behavior and one prepared/final unchanged RTL
+route at existing budgets. A source annotation grants no verified control-flow,
+exception, eligibility or unreachable-code analysis. Stop at the next different
+genuine source prerequisite; full compiler/type/incremental/editor/input/navigation/
+quality/parity/adoption/delivery remain required without criterion/task/credit/
+DONE closure. Preserve foreign/protected inputs and offline LAN. Native execution/
+browser compilation only; no host/configuration retry, protected mutation,
+cleanup/deletion/restart, approval bypass or sub-agents.
+
+Appended plfNoReturn now preserves a contextual non-returning marker independently
+of external/forward/runtime intrinsic ownership. It leaves parameter/result ranges,
+ordinary implementation bodies and following declarations intact. The operand-free
+marker shares explicit direct/bracket malformed-operand refusal with RTL intent;
+unknown neighboring keys retain uncertainty. An escaped identifier or ordinary
+variable name acquires no effect. Existing enum ordinals/interfaces/record layouts
+stay intact, with the existing flag storage unchanged. No new MCP tool/schema is
+added and no compiler effect, exception or eligibility analysis is inferred.
+
+Ignored noreturn-20261018-080348 is located by .local/noreturn-paths-private.json.
+Twenty-eight focused native checks qualify metadata, signatures and bodies,
+external/forward independence, class visibility, direct/bracket malformed inputs,
+contextual/escaped names, supplementary physical origins, cancellation and quota
+exhaustion. The exact whole Delphi-mode companion compiles both independent bodies;
+its ordinary following routine returns 42. The same qualified executable's explicit
+child mode enters its annotated terminating body and exits 42, without entering
+the analysis runner. Both runs have clean heaps. The child receipt pins that exact
+executable and output independently of declaration metadata or browser compilation.
+
+Retained preparations are not accepted evidence. The initial budget input had one
+routine at a one-declaration quota, so lawful admission disproved the test's
+exhaustion assumption; the corrected input exceeds the unchanged quota. The first
+termination child deliberately halted while its ParamStr comparison temporary was
+still live (29 bytes). A returning Boolean helper now retires that temporary before
+the terminating call; no warning suppression or compiler workaround is used. The
+first actual module continuation also disproved the old pending-site assumption:
+the former Char query now resolves, and its checked Origin getter correctly refuses
+when no question remains. The final consumer checks that advancement and retains
+the next genuine warning-directive prerequisite instead of querying a retired site.
+
+Composite accepted qualification retains the unchanged first-phase compiler/native
+passes, a corrected real-module consumer and the previously unrun native tail:
+
+- Forty-four real-module checks retain all 156 exact original byte packets and
+  47 namespaces. System advances to 2,723 declarations/zero syntax diagnostics,
+  five semantic answers/no pending query. ObjPas advances to 209 declarations,
+  one answer/no pending query, with four syntax diagnostics still explicit.
+  Original RunError retains typed effect, Word value parameter and included
+  source owner. System's WARN 3018 OFF in objpash.inc remains an explicit
+  ptiUnsupportedDirective; raw preparation still has 36,104 tokens/19 visits/
+  five probes/six diagnostics/five requests. The configured-source budgets stay
+  unchanged, and complete warning/compiler/type meaning remains open.
+- The ordinary indexed TObject.Fr query is now ready with exactly Free and
+  FreeInstance, three analyzed modules and two dependency loads. Both method rows
+  retain exact System-root/objpash.inc name tokens. Navigation survives provider
+  retirement; the Free preview has the exact replacement/caret and leaves the
+  original caller untouched. This qualifies those known members before the
+  warning-policy gap, alongside explicit remaining ObjPas/source requirements.
+- All 28 accepted native consumers have clean heaps, including focused 28,
+  real-module 44 and maintained compiler/lexical/type/syntax/binding/completion
+  regressions. The syntax corpus remains five actual inputs/3,748 declarations.
+  Forty-six accepted compiler logs have zero owned warnings and 98 upstream
+  pas2js RTL warnings. Both Studios/backend/worker and fourteen browser consumers
+  compile as applicable; browser consumers/products compile only. The independent
+  hint-use oracle's unchanged source/compiler evidence is retained from the prior
+  packet, with its clean heap/three exact expected warnings outside this ledger.
+- Four focused/628 product/97 prior RTL/ten compiler/config/source pins, 48
+  SysUtils includes and the overlapping 156 original unit packets verify exact.
+  Five protected files/nine complete contexts and 349 frozen 7422453 artifacts
+  remain exact. Thirteen concurrent planning files stay exact outside the owned
+  six-line README insertion. Readers join, LAN stays offline, no Studio listener
+  exists and native Nyx tools remain absent. Final private receipts/checkpoint
+  own source/remote identity. No protected mutation, host/configuration retry,
+  cleanup/deletion/restart, approval bypass or sub-agents occur.
+
+The first full native phase also retained the obsolete unavailable-result assertion
+after actual indexed completion became ready. Its corrected consumer now verifies
+the actual two names, source navigation and detached preview; its earlier failure
+stays retained. Only that consumer's source changed after the first phase. Product
+source and all other accepted consumer inputs remain exact; final acceptance uses
+that corrected consumer and native tail with the unchanged completed checks.
+
+Next useful deliverable: typed warning-policy directives and their exact source/
+settings-stack effects through existing compiler-context/translation ownership,
+beginning with real WARN 3018 OFF. Preserve unknown warning identities/actions and
+compiler-specific diagnostic behavior explicitly. Stop non-returning/body/fixture/
+compiler/capture variants. At least twenty-one documented unclosed batches retain
+original authoring criterion two. Full compiler/canonical type/incremental/editor/
+input/navigation/quality/parity/adoption/delivery remain required; no full
+criterion/task/counter/credit/DONE or rollout closes. The original goal stays active.
+
+## Earlier integration: Declared RTL procedure roles — 2026-10-18
 
 Reassessment: 3be4254 is progress, retaining at least twenty documented unclosed
 batches and complete original authoring criterion two. Follow actual rtlproc

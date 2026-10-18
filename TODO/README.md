@@ -112,6 +112,12 @@ Callable native behavior remains separate from hidden compiler helpers and
 compiler-specific matching. Full source/compiler/editor/parity/delivery stay
 under original criterion two; WORK.md owns exact unchanged RTL evidence and gaps.
 
+The [non-returning routine layer](../docs/pascal-projects.md#non-returning-routine-intent)
+retains typed effect intent, exact signatures and ordinary body ownership. Native
+termination is qualified independently of source metadata and compiler eligibility.
+Original criterion two retains full language/editor/incremental/parity/delivery;
+WORK.md owns unchanged RTL continuation and its warning-policy context gap.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

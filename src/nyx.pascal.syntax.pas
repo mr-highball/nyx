@@ -149,10 +149,11 @@ type
     Public symbols do not turn subsequent unit declarations into class members.
     These flags describe source syntax, not linker/ABI admission or resolution
     of an alias, library expression or compiler intrinsic. RTL procedure intent
-    does not supply the compiler's special parameter-matching rules. }
+    does not supply the compiler's special parameter-matching rules. Non-returning
+    intent preserves a body; it does not prove the body's control-flow effects. }
   TNyxPascalLinkageFlag = (plfPublic, plfExport, plfExternal, plfAlias,
     plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes,
-    plfConstantIntrinsic, plfRTLProcedure);
+    plfConstantIntrinsic, plfRTLProcedure, plfNoReturn);
   { Independent value set; source ranges retain operands without mutable arrays,
     interfaces or fabricated external names. }
   TNyxPascalLinkageFlags = set of TNyxPascalLinkageFlag;
@@ -1225,6 +1226,10 @@ begin
   begin
     AFlag := plfRTLProcedure;
   end
+  else if AName = 'noreturn' then
+  begin
+    AFlag := plfNoReturn;
+  end
   else if AName = 'internproc' then
   begin
     AFlag := plfIntrinsic;
@@ -1307,7 +1312,8 @@ begin
   end;
 
   if not ARoutine and
-    (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic, plfRTLProcedure]) then
+    (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic,
+      plfRTLProcedure, plfNoReturn]) then
   begin
     Exit;
   end;
@@ -1341,10 +1347,11 @@ begin
       Step;
       LColon := False;
 
-      if (LFlag = plfRTLProcedure) and not (Sym(psoComma) or Sym(psoCloseBracket)) then
+      if (LFlag in [plfRTLProcedure, plfNoReturn]) and
+        not (Sym(psoComma) or Sym(psoCloseBracket)) then
       begin
         Unsupported(FDeclarations[ADeclaration].Scope,
-          'An RTL procedure marker has no operand', Tok.Span);
+          'This routine declaration marker has no operand', Tok.Span);
         Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
       end;
 
@@ -1409,10 +1416,10 @@ begin
     Step;
     LColon := False;
 
-    if (LFlag = plfRTLProcedure) and not Sym(psoSemicolon) then
+    if (LFlag in [plfRTLProcedure, plfNoReturn]) and not Sym(psoSemicolon) then
     begin
       Unsupported(FDeclarations[ADeclaration].Scope,
-        'An RTL procedure marker has no operand', Tok.Span);
+        'This routine declaration marker has no operand', Tok.Span);
       Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
     end;
 

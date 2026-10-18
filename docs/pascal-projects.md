@@ -1745,9 +1745,46 @@ lookup, so it is not included in the callable-behavior claim.
 Unchanged System source retains the original byte-string helper's RTL/compiler
 roles, out parameter and physical include owner. Its declaration count stays
 2,554 while syntax diagnostics fall from 13 to 6. The next unsupported suffix is
-`noreturn`; remaining conditional, ObjPas and broader binding requirements stay
-explicit. Browser consumers/products compile only. WORK.md owns exact evidence,
-retained preparations and the return to full resolver/editor/parity requirements.
+`noreturn` at that checkpoint; the continuation below advances that boundary.
+The continuation records which conditional/ObjPas requirements advance and which
+broader binding gaps remain. Browser consumers/products compile only. WORK.md owns
+exact evidence, retained preparations and the return to full resolver/editor/parity
+requirements.
+
+## Non-returning routine intent
+
+Appended `plfNoReturn` preserves the contextual `noreturn` suffix independently of
+external, forward and runtime-intrinsic ownership. Its exact `LinkageSpan` and
+original parameter/result types remain available through the existing immutable
+syntax snapshot. Direct/bracket markers take no operand; malformed operands,
+missing separators and unknown neighbors retain explicit uncertainty. Escaped
+identifiers and ordinary variable names do not acquire effect intent.
+
+The marker does not remove an implementation body, prove that it never returns,
+perform unreachable-code analysis or validate compiler-specific exception and
+eligibility rules. Existing enum ordinals, interfaces and record layouts stay
+intact; affected consumers are rebuilt together. There is no MCP schema change.
+
+The whole native Delphi-mode companion has an ordinary following routine and an
+annotated terminating body. A dedicated child mode enters that body and exits
+with code 42, with a clean heap. Its command-line comparison returns from a
+separate helper before termination so no managed comparison temporary survives
+the deliberate `Halt`. The normal analysis run inspects the unchanged source and
+executes the following routine independently; source inspection grants no
+termination authority. Browser consumers/products compile only.
+
+Original System `RunError` retains its effect role, value parameter and physical
+include owner. Ordered source binding now answers the former `Char` condition
+inside `TObject`; there is no pending-site location to query after that answer.
+System reaches 2,723 declarations with zero syntax diagnostics and five answers;
+ObjPas reaches 209 declarations with four syntax diagnostics and one answer. The
+ordinary indexed `TObject.Fr` query returns exactly `Free` and `FreeInstance`,
+with exact original include navigation after provider retirement and a detached
+`Free` insertion preview that preserves the caller. The warning directive in
+objpash.inc remains an explicit compiler-context gap; these known members precede
+that gap and do not establish complete RTL meaning.
+WORK.md owns exact unchanged-source evidence, retained preparations and the next
+warning-policy prerequisite, with full resolver/editor/parity/adoption still open.
 
 ## Scoped name and type binding
 

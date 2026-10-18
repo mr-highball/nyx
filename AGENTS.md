@@ -4,6 +4,37 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source non-returning routines retain typed plfNoReturn intent with exact
+suffix/signature/body ownership. Operand-bearing markers and unknown neighbors
+retain refusal; ordinary/escaped names stay contextual. Source metadata grants
+no compiler control-flow/exception/eligibility authority. Existing enum ordinals,
+interfaces/layouts stay intact. Focused native 28 and real-module 44 pass; the
+compiled child exits 42 with clean heap, independently of declaration inspection.
+System reaches 2,723 declarations/zero syntax diagnostics/five answers, ObjPas
+209/four/one; both conditional queries finish with no pending site. Ordinary
+indexed TObject.Fr yields exactly Free/FreeInstance with original include token
+navigation after provider retirement and an exact detached insertion. WARN 3018
+OFF in objpash.inc remains an explicit compiler-context gap, and broader ObjPas/
+compiler/type meaning stays open. All 28 accepted native consumers have clean
+heaps; 46 accepted compiler logs have zero owned warnings/98 upstream. Both
+Studios/backend/worker and fourteen browser consumers compile as applicable;
+browser execution/input/observing/parity/adoption/delivery stay open. Independent
+unchanged hint-use oracle evidence retains three exact expected warnings/clean
+heap separately. Four focused/628 product/97 prior RTL/ten compiler/config/source
+pins, 156 unit packets/48 includes, five protected files/nine contexts and 349
+frozen 7422453 artifacts remain exact. Thirteen concurrent planning files stay
+exact outside the owned README block. Readers join; LAN offline, native Nyx tools
+absent, no host/configuration retry. WORK.md owns budget/termination-temporary/
+obsolete pending and unavailable preparations, composite accepted checks with
+corrected consumer/native tail, and final source/remote identity. At least twenty-
+one documented unclosed batches retain original criterion two; no full criterion/
+task/counter/credit/DONE/schema/adoption/parity/delivery closes. Stop non-returning/
+body/fixture/compiler/capture variants. Next follow typed warning-policy source/
+settings-stack effects through existing compiler-context/translation ownership.
+Full source/canonical type/incremental/editor/input/navigation/quality/parity/
+delivery stay open. No protected mutation, cleanup/deletion/restart, host retry,
+approval bypass or sub-agents. Preserve concurrent planning.
+
 Current-source RTL procedures retain distinct plfRTLProcedure/helper roles,
 original signatures/suffixes and ordinary body ownership. Operand-bearing markers
 and unknown keys retain refusal; source roles grant no special compiler matching,

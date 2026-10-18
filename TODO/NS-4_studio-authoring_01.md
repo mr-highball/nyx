@@ -9,6 +9,29 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Non-returning continuation (2026-10-18): 7355559 is progress, retaining at least
+twenty-one documented unclosed batches and complete original criterion two.
+Follow actual noreturn through existing routine/linkage ownership with distinct
+typed intent, exact signatures/suffixes and ordinary bodies. Whole compiled native
+termination, portable malformed/refusal cases and one prepared/final unchanged RTL
+route decide the boundary. Source metadata grants no control-flow/exception/
+eligibility authority. Stop at a different genuine prerequisite with full compiler/
+incremental/editor/input/navigation/quality/parity/adoption/delivery still required
+and no criterion/task/credit/DONE closure.
+
+The qualified boundary passes 28 focused native and 44 real-module checks.
+Compiled child termination exits 42 with clean heap; original signatures/bodies
+stay exact. System reaches 2,723 declarations/zero syntax diagnostics/five answers;
+ObjPas reaches 209/four/one, with no pending conditional query in either. Ordinary
+indexed TObject.Fr now yields exactly Free/FreeInstance with original include
+navigation and detached insertion. All 28 native consumers have clean heaps;
+46 accepted compiler logs have zero owned warnings. Browser consumers/products
+compile only. Composite qualification retains corrected pending/ready expectations
+and the separate native tail. Next follow typed warning-policy source/settings
+effects at actual WARN 3018 OFF under existing compiler-context/translation owners;
+stop non-returning/body/fixture/compiler/capture variants. WORK.md owns exact
+preservation, retained failures and full resolver/editor/parity/adoption requirements.
+
 RTL-procedure continuation (2026-10-18): 3be4254 is progress, retaining at least
 twenty documented unclosed batches and complete original criterion two. Follow
 the actual rtlproc boundary through existing parser/linkage ownership, preserving

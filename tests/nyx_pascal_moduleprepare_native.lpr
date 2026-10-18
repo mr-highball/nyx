@@ -163,11 +163,14 @@ var
   LWordSwapSeen: Boolean;
   LRTLProcedureSeen: Boolean;
   LRTLParameter: TNyxPascalSyntaxDeclaration;
-  LQuestionPrefix: INyxPascalTranslation;
-  LQuestionView: INyxPascalTranslatedSyntax;
-  LQuestionScope: Integer;
-  LQuestionOwner: Integer;
-  LQuestionOrigin: Integer;
+  LNoReturnSeen: Boolean;
+  LUnsupportedSyntax: Boolean;
+  LWarningGap: Boolean;
+  LFreeCount: Integer;
+  LFreeInstanceCount: Integer;
+  LFreeAt: Integer;
+  LPreview: INyxPascalSourceSnapshot;
+  LNewCaret: Integer;
   LRegisterDirectives: INyxPascalRegisterDirectives;
   LSyntaxLimited: Boolean;
   LPublicVariable: Boolean;
@@ -326,11 +329,29 @@ begin
       LNoErrSeen := False;
       LWordSwapSeen := False;
       LRTLProcedureSeen := False;
+      LNoReturnSeen := False;
       Supports(LView.Syntax, INyxPascalHintSyntax, LHints);
       Supports(LView.Syntax, INyxPascalIntrinsicSyntax, LIntrinsics);
       for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
       begin
         LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if not LNoReturnSeen and (NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('runerror')) then
+        begin
+          LNoReturnSeen := True;
+          Check((LDeclaration.Linkage = [plfNoReturn]) and
+            not (psdfForward in LDeclaration.Flags),
+            'The original RunError preserves non-returning intent without bodyless intrinsic ownership');
+          LRTLParameter := LView.Syntax.Declaration(
+            LView.Syntax.Named(LDeclaration.NestedScope, 'w'));
+          Check((LRTLParameter.ParameterMode = pspmValue) and
+            (LView.Syntax.Lexical.Slice(LRTLParameter.TypeSpan) = TNyxText('Word')),
+            'The real non-returning overload retains its authored value parameter');
+          LHintOrigin := LView.OriginAt(LDeclaration.LinkageSpan.Start);
+          Check((LHintOrigin >= 0) and
+            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = TNyxText('rtl/inc/systemh.inc')),
+            'The real non-returning suffix keeps its exact included source owner');
+        end;
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('fpc_setstring_ansistr_pansichar') then
         begin
@@ -415,50 +436,43 @@ begin
       Check(LNoErrSeen, 'The unchanged whole System view contains its hinted initialized NoErrMsg declaration');
       Check(LWordSwapSeen, 'The unchanged whole System view contains the attributed Swap routine');
       Check(LRTLProcedureSeen, 'The unchanged whole System view contains the declared RTL helper');
+      Check(LNoReturnSeen, 'The unchanged whole System view contains the non-returning RunError overload');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
-      LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
-        LModule.Translation);
-      LQuestionView := NewNyxPascalTranslatedSyntax(LQuestionPrefix, TNyxPascalSyntaxOptions.Defaults);
-      LQuestionScope := LQuestionView.Syntax.ScopeAt(LQuestionView.Syntax.Lexical.Scalars);
-      LQuestionOwner := -1;
-      while LQuestionScope >= 0 do
-      begin
-        LAt := LQuestionView.Syntax.Scope(LQuestionScope).OwnerDeclaration;
-
-        if (LAt >= 0) and
-          (NyxPascalASCIIKey(LQuestionView.Syntax.Declaration(LAt).Name) = TNyxText('tobject')) then
-        begin
-          LQuestionOwner := LAt;
-          Break;
-        end;
-        LQuestionScope := LQuestionView.Syntax.Scope(LQuestionScope).Parent;
-      end;
-      WriteLn('actual enclosing query / answers=', LSource.Answers, ' pending=', LSource.Pending,
+      { The former Char query inside TObject now resolves. Origin is a checked
+        pending-site getter and must not be called after its question is answered. }
+      WriteLn('actual semantic continuation / answers=', LSource.Answers, ' pending=', LSource.Pending,
         ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName);
-      for LAt := 0 to LQuestionView.Syntax.DiagnosticCount - 1 do
+      Check(not LSource.Pending and (LSource.BindingIssue = pbiNone) and (LSource.Answers = 5),
+        'Original source binding now answers the Char condition inside TObject without a pending site');
+      LUnsupportedSyntax := False;
+      for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
       begin
 
-        if LQuestionView.Syntax.Diagnostic(LAt).Issue = psiUnsupportedSyntax then
+        if LView.Syntax.Diagnostic(LAt).Issue = psiUnsupportedSyntax then
         begin
-          LQuestionOrigin := LQuestionView.OriginAt(LQuestionView.Syntax.Diagnostic(LAt).Span.Start);
-          WriteLn('actual enclosing diagnostic / issue=', Ord(LQuestionView.Syntax.Diagnostic(LAt).Issue),
-            ' / ', LQuestionView.Syntax.Diagnostic(LAt).MessageText, ' / ',
-            LQuestionView.Syntax.Lexical.Slice(LQuestionView.Syntax.Diagnostic(LAt).Span));
-
-          if LQuestionOrigin >= 0 then
-          begin
-            WriteLn('actual enclosing physical / ', LQuestionView.Source.Files.FileAt(
-              LQuestionView.Origin(LQuestionOrigin).FileIndex).Name, ' / scalar=',
-              LQuestionView.Origin(LQuestionOrigin).PhysicalSpan.Start);
-          end;
-          Break;
+          LUnsupportedSyntax := True;
         end;
       end;
-      Check(LSource.Pending and (LSource.BindingIssue = pbiUnsupportedScope) and (LSource.Answers = 4) and
-        (LQuestionOwner >= 0) and
-        (NyxPascalASCIIKey(LQuestionView.Syntax.Declaration(LQuestionOwner).Name) = TNyxText('tobject')) and
-        (psdfIncomplete in LQuestionView.Syntax.Declaration(LQuestionOwner).Flags),
-        'The open TObject query now retains the earlier real unsupported module syntax prerequisite');
+      Check(not LUnsupportedSyntax, 'The actual known System prefix retains no unsupported declarations');
+      LWarningGap := False;
+      for LAt := 0 to LSource.Source.DiagnosticCount - 1 do
+      begin
+        LDiagnostic := LSource.Source.Diagnostic(LAt);
+        WriteLn('actual semantic source gap / issue=', Ord(LDiagnostic.Issue), ' / ',
+          LSource.Source.Files.FileAt(LSource.Source.Occurrence(LDiagnostic.Occurrence).FileIndex).Name,
+          ' / ', NyxPascalOccurrenceLexical(LSource.Source, LDiagnostic.Occurrence).Slice(LDiagnostic.Span));
+
+        if (LDiagnostic.Issue = ptiUnsupportedDirective) and
+          (LSource.Source.Files.FileAt(LSource.Source.Occurrence(LDiagnostic.Occurrence).FileIndex).Name =
+            TNyxText('rtl/inc/objpash.inc')) and
+          (NyxPascalOccurrenceLexical(LSource.Source, LDiagnostic.Occurrence).Slice(LDiagnostic.Span) =
+            TNyxText('{$WARN 3018 OFF}')) then
+        begin
+          LWarningGap := True;
+        end;
+      end;
+      Check(not LSource.Source.Resolved and LWarningGap,
+        'The original warning directive remains an explicit compiler-context prerequisite');
     end;
 
     if not LSyntaxLimited then
@@ -490,8 +504,46 @@ begin
     ' gap=', Ord(LMetadata.Gap), ' issue=', Ord(LMetadata.BindingIssue),
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads, ' message=', LReply.MessageText);
-  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBinding) and (LReply.Count = 0),
-    'Ordinary indexed loading reaches an explicit remaining source/binding refusal without invented suggestions');
+  Check((LReply.Status = pcsReady) and (LMetadata.Gap = pcgNone) and
+    (LMetadata.BindingIssue = pbiNone) and (LReply.Count = 2) and
+    (LReceipt.ModuleCount = 3) and (LReceipt.DependencyLoads = 2),
+    'Ordinary indexed loading reaches the two actual TObject members at the unchanged query');
+  LFreeCount := 0;
+  LFreeInstanceCount := 0;
+  LFreeAt := -1;
+  for LAt := 0 to LReply.Count - 1 do
+  begin
+    WriteLn('actual prepared member / ', LReply.Item(LAt).Name, ' / ',
+      LMetadata.Definition(LAt).FileReference.Name);
+
+    if LReply.Item(LAt).Name = TNyxText('Free') then
+    begin
+      Inc(LFreeCount);
+      LFreeAt := LAt;
+    end;
+
+    if LReply.Item(LAt).Name = TNyxText('FreeInstance') then
+    begin
+      Inc(LFreeInstanceCount);
+    end;
+    Check((LReply.Item(LAt).Kind = pckMethod) and
+      (LReply.Item(LAt).InsertText = LReply.Item(LAt).Name) and
+      (LMetadata.Definition(LAt).Root.Name = LModules.Entry(LModules.Find(NyxPascalModule('System'))).Root.Name) and
+      (LMetadata.Definition(LAt).FileReference.Name = TNyxText('rtl/inc/objpash.inc')) and
+      (LMetadata.DefinitionSource(LAt).Slice(LMetadata.Definition(LAt).Span) = LReply.Item(LAt).Name),
+      'Each ready method retains its exact original System include and authored name token');
+  end;
+  Check((LFreeCount = 1) and (LFreeInstanceCount = 1),
+    'The bounded page contains each actual matching method exactly once');
+  LProvider := nil;
+  Check(LMetadata.DefinitionSource(0).Slice(LMetadata.Definition(0).Span) = LReply.Item(0).Name,
+    'Original definition navigation survives provider retirement');
+  LPreview := LReply.Preview(LFreeAt, LSources, LNewCaret);
+  Check((LPreview.Text(TNyxPascalSourceRef.Main) =
+      Copy(LPrefix, 1, Length(LPrefix) - 2) + TNyxText('Free; end; end.')) and
+    (LNewCaret = NyxTextScalarCount(LPrefix) + 2) and
+    (LSources.Text(TNyxPascalSourceRef.Main) = LPrefix + TNyxText('; end; end.')),
+    'Actual RTL completion stages an exact detached insertion without changing the original caller');
 end;
 
 begin

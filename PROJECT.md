@@ -150,6 +150,12 @@ ordinary bodies. Native callable behavior stays separate from compiler-helper
 visibility and special matching rules. Unchanged RTL inspection advances to its
 next genuine suffix prerequisite; full resolver/editor adoption remains open.
 
+The [non-returning routine layer](docs/pascal-projects.md#non-returning-routine-intent)
+retains typed effect intent and ordinary signatures/bodies without inferring
+control-flow correctness. Whole compiled native termination is checked separately
+from source metadata; actual RTL continuation reaches the warning-policy context
+prerequisite. Full compiler meaning and ordinary editor adoption remain required.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
