@@ -10,6 +10,13 @@ semantic binding, provider adoption and full incremental/navigation/quality/pari
 requirements. Native corpus checks and browser compilation grant no language-engine
 completion, new task credit or rollout. WORK.md owns the exact qualified boundary.
 
+The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
+now retains explicit compiler facts, conditional participation and physical include
+occurrences through a standalone Pascal core and project-buffer bridge. Full
+dynamic lexical/compiler/SDK context, translated type syntax/binding and existing
+provider/editor/incremental/navigation/quality/parity requirements stay with the
+original authoring/service owners; no criterion/counter/credit closes.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).

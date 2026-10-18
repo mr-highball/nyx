@@ -4,6 +4,22 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source Pascal translation captures compiler facts, virtual files and
+physical include occurrences with three-valued conditional participation. Native
+209 checks, including the actual Nyx callback gate/native compiler assertion,
+pass with a clean heap. Two accepted compiler logs have zero owned warnings
+(seven upstream RTL); browser consumers compile only. Five changed input pins
+and the unchanged committed callback include remain exact. Full dynamic lexical/
+compiler/SDK context and semantic type binding stay open; no provider is installed.
+Unknown textual effects revoke later directive interpretation, not just define
+facts. Unconfigured outputs retain inspection. Five protected files/nine complete
+contexts and 349 frozen 7422453 artifacts stay exact; LAN is offline. WORK.md owns
+receipts/failures and original authoring/service ownership. Stop context/include/
+fixture/compiler variants; next structured type expressions/translation-aware
+syntax, then scoped semantic binding through the existing provider. No full
+criterion/task/counter/credit/DONE/parity/MCP schema/rollout closes. No HTTP retry,
+protected configuration/cleanup bypass, deletion or sub-agents.
+
 Current-source fresh Nyx-owned Pascal analysis has lossless physical tokens and
 recoverable declared type/signature/scope structure. Native lexical 530 across
 480 files/2,113,364 tokens and syntax 7,602 across five inputs/3,707 declarations

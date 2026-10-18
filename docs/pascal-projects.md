@@ -793,6 +793,75 @@ layer introduces no MCP mode, installed resolver, source edit or rollout. Full
 navigation, project-scale budgets and both-target execution/quality remain under
 the existing authoring/service owners.
 
+## Captured compiler and include context
+
+`nyx.pascal.context` owns immutable compiler metadata and conditional facts.
+Compiler families/modes, three-valued knowledge, define kinds and language features
+use closed types; open symbol names use `NyxPascalDefine`. Missing symbols stay
+unknown until the caller explicitly seals its define set. An explicitly unknown
+name stays unknown even in a sealed set. Version metadata never silently creates
+FPC/PAS2JS/platform defines from the analyzer's own build. Unknown family/version
+metadata supports inspection before optional output/compiler configuration.
+
+Facts include exact signed 32-bit condition integers, short-option state and
+typed nested/anonymous/function-reference callback features. Persistent changes
+detach data; source mode changes revoke option/feature defaults rather than guessing
+them. Condition analysis supports `defined`, integer comparisons, parentheses,
+Boolean operators and unary signs with Pascal precedence. General arithmetic,
+replacement macros, strings, `declared`/`sizeof` and ambiguous conditional spellings
+remain explicitly unresolved. This is a bounded subset of the compiler's
+[conditional grammar](https://www.freepascal.org/docs-html/prog/progsu126.html),
+not a replacement for compiler admission.
+
+`nyx.pascal.files` captures normalized relative virtual names and exact source text,
+with explicit case comparison and include search order. Current physical directory
+precedes the captured search directories. Relative parents normalize inside the
+virtual capture; an escaping candidate cannot hide a later contained match. There
+is no filesystem fallback. `nyx.pascal.files.project` separately freezes existing
+main/unit/include editing buffers, preserving accepted ownership and keeping the
+project/code-generation model out of the standalone analysis core. SDK sources
+can be explicitly captured without entering the application's admitted project.
+
+```pascal
+LFiles := CaptureNyxPascalProjectFiles(LCurrentBuffers, pfcExact);
+LCompilerFacts := NewNyxPascalCompilerContext(ppcFPC,
+  TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+  .WithSymbol(NyxPascalDefine('FPC'), ppdDefined)
+  .WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdInteger, 30301);
+{ The host supplies its actual captured facts; this example leaves absence unknown. }
+LTranslation := NewNyxPascalTranslation(LFiles,
+  NyxPascalProjectPhysicalFile(LCurrentBuffers, LOwnerFile),
+  LCompilerFacts, TNyxPascalTranslationOptions.Defaults);
+```
+
+`nyx.pascal.translation` retains physical token spans and a separate occurrence
+for every include. Entry/exit states preserve textual define/option changes, even
+when the same file appears again under different facts. Conditional frames can
+cross include boundaries. Every token records its pre-token state and known active,
+inactive or unknown participation; this is not semantic validity. Inactive includes
+perform no lookup or mutation. Unknown branch writes revoke the affected fact;
+uncaptured includes revoke all mutable state knowledge and stop interpreting later
+directives, since their lexical defaults could also have changed. Repeated recursion with
+unchanged state diagnoses a cycle, while a changing include guard can finish.
+
+The snapshot's `Resolved` flag covers encountered supported translation constructs,
+not complete compiler context, grammar, type binding, compilation or execution.
+Missing files, unknown expressions, unsupported directives and lexical errors
+remain physical diagnostics. Fixed lexical policies are explicit: transitions that
+need different comment termination or uncaptured mode defaults stop interpreting
+later directives and mark participation unknown. Full dynamic lexical-mode support,
+broader compiler expressions/macros and complete SDK/compiler-default capture
+remain required before general language coverage can be claimed.
+
+Tokens, expanded bytes, depth, occurrences, states and diagnostics have independent
+positive fluent budgets. Limits/cancellation refuse the complete candidate. The
+current native checks include Nyx's real callback gate and a matching actual native
+compiler assertion; older/browser profiles are captured-data simulations. Browser
+consumers compile only. WORK.md owns exact receipts and remaining incremental/
+project-scale cancellation/budgets. Structured type expressions, semantic binding,
+provider/editor adoption and full platform/quality/delivery remain open. No MCP
+tool/schema, default engine or active design is changed by these primitives.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

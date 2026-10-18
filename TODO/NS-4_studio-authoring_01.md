@@ -27,11 +27,22 @@ The first owned [analysis foundation](../docs/pascal-projects.md#nyx-owned-pasca
 now preserves lossless physical tokens and typed, recoverable declarations/scopes.
 Native qualification includes actual Nyx interfaces; browser consumers compile
 only. It deliberately leaves the admission lexer and existing outline unchanged.
-Next prerequisite is captured translation context for includes, compiler modes and
-conditional branches, then structured type expressions and semantic binding through
-the existing provider. Generic token context, anonymous/inline/variant scopes,
+The captured translation layer below now advances include/conditional context;
+complete compiler/mode coverage and structured type expressions/binding remain
+prerequisites to the existing provider. Generic token context, anonymous/inline/variant scopes,
 aliases/inheritance/overloads/helpers, dependency invalidation and full editor/
 navigation/quality/budgets remain open. No original criterion/counter/credit closes.
+
+Captured [compiler/include context](../docs/pascal-projects.md#captured-compiler-and-include-context)
+now owns explicit three-valued define/option/feature facts, frozen virtual files,
+physical inclusion occurrences and textual state changes. The project-buffer bridge
+preserves its existing source ownership; unknown compiler/output profiles still
+permit inspection. Native callback-gate evidence and browser compilation remain
+separate. This supports known fixed lexical contexts; dynamic comment/mode defaults,
+general compiler expressions/macros and complete SDK/host capture remain open.
+Next connect translated token/context locations to structured type expressions
+and real semantic binding through the existing provider. Preserve all original
+scope, source-admission independence and incremental/navigation/quality requirements.
 
 Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now uses shared recent-file timelines in both adapters. Native keyboard/context

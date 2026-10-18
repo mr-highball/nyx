@@ -33,7 +33,99 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Fresh Pascal lexical and scope foundation — 2026-10-17
+## Current integration: Captured Pascal compiler/include context — 2026-10-17
+
+Previous goal turn is progress: pushed 68a07e6 establishes the owned lexical and
+scope foundation. This batch advances its required captured translation context
+under original NS-4 authoring criterion two and existing service ownership. The
+whole fresh MIT resolver, modern editor outcome and original task scope stay intact.
+
+New nyx.pascal.context owns explicit compiler family/version/mode metadata,
+three-valued knowledge and captured define/integer/short-option/language-feature
+facts. Missing names stay unknown until a caller explicitly seals the define set;
+an explicit unknown fact still survives that seal. No compiler/platform/version
+define is borrowed from the analyzer's own build. Unconfigured profiles retain
+ordinary source inspection without selecting an output. Independent fluent copies
+and exact ordered identity include even explicitly unknown symbol names.
+
+Condition analysis owns bounded defined/integer-comparison/Boolean/parenthesis/
+unary-sign syntax with Pascal precedence. General arithmetic, strings, replacement
+macros, declared/sizeof and noncanonical condition literals remain unsupported;
+unknown syntax never becomes a guessed branch choice. This does not claim complete
+compiler-expression equivalence or source admission.
+
+New nyx.pascal.files owns exact captured text, explicit case policy and normalized
+relative virtual filenames/search directories. Resolution tries the current
+directory, then captured search order, without filesystem fallback. Escaping
+candidates cannot hide later contained matches. nyx.pascal.files.project is a
+separate main/unit/include editing-buffer bridge, retaining accepted/source
+ownership while keeping admission/code-generation dependencies outside the core.
+
+New nyx.pascal.translation retains physical scalar tokens and distinct include
+occurrences with pre-token compiler states and entry/exit state identities.
+Textual define/option changes flow out of includes; conditional frames can cross
+file boundaries. Repeated files retain separate contexts. Inactive includes have
+no lookup/effect, guarded reentry can finish, and unchanged recursive state diagnoses
+a cycle. Unknown branch define writes revoke the affected fact. Unknown textual
+effects also revoke lexical interpretation: later directives stay unexecuted,
+participation unknown, and unexamined frames do not manufacture unclosed errors.
+Fixed supported lexical/mode policies remain explicit; Resolved describes supported
+encountered translation only, never grammar/type binding/compiler success.
+
+Evidence behind ignored .local/pascal-context-paths-private.json:
+
+- source-pins-final-2-private.json pins five changed Pascal inputs before the
+  accepted compilers/runtime. callback-input-private.json separately verifies the
+  unchanged actual callback include against its committed baseline and records
+  its final SHA-256. No Pascal input changes while an owned reader is live.
+- logs/context-final-2-run.log passes 209 native checks, clean heap. Counts include
+  per-token physical/state/occurrence invariants. Repeated includes under changed
+  defines, source-side option/feature changes, typed callback features, unknown
+  conditions/branch writes, missing files, guarded/unguarded recursion, conditional
+  frames crossing includes, exact Unicode filename/NUL payload capture, search/case
+  behavior, project accepted/current buffer ownership and unconfigured metadata pass.
+- Actual src/nyx.callback.features.inc is captured and analyzed. The selected
+  current native inline gate agrees with the same test program's real compiler
+  directive assertion. Older compiler/browser/disabled profiles are captured-data
+  simulations, not execution on those compilers or browser targets.
+- Token/state/include-depth/occurrence/expanded-byte/diagnostic refusal and lexical
+  policy conflict cleanup pass, as do pre-cancellation and cancellation inside a
+  long physical token. This is not measured project-scale/incremental cancellation.
+- logs/context-final-2-compile.log and context-browser-final-2-compile.log pass:
+  zero owned warnings, seven upstream pas2js RTL warnings. Browser consumer compiles
+  only. Existing Studio/backend/default provider are untouched; no real resolver
+  is installed and no full SDK grammar/type-resolution evidence is implied.
+
+Retained preparations: both context-1 compiles expose a missing explicit lexical
+helper import in the file catalog. context-2 passes 197 native checks; the project
+bridge is then split out and recovery/Unicode/quota cases broadened. context-3
+compiles on both targets, then fails a now-obsolete fixture expectation that any
+escaping search candidate must reject even when another search directory is
+contained. The repaired oracle tests an all-escaping capture and a later contained
+match separately. Review also moves fixture NUL into a comment for valid lexical
+input. context-4 passes 208 native checks. Initial final passes 209 before the final
+unknown-lexical-effect refinement; only final-2 compilers/runtime are accepted.
+Earlier receipts/failures are retained, not relabeled as accepted final evidence.
+
+Five protected files/nine complete contexts/history/drafts/profile and 349 frozen
+7422453 artifacts remain exact. Native Nyx tools remain absent; no active design
+changes. LAN stays offline. There is no HTTP/browser execution, capture, protected
+configuration/enrollment/cleanup retry, approval bypass, deletion or sub-agent.
+All readers join. Tools remain 24/frozen 23, Pascal modes eighteen. No original full
+criterion/task/counter/credit/DONE, new MCP schema/kind, full engine/parity or rollout
+closes. Final-checkpoint-private.json owns source/remote, accepted logs, pins,
+terminal and preservation receipts. The original full Nyx/Studio goal remains active.
+
+Stop context/include/fixture/compiler variants. Next build structured type
+expressions and a translation-aware syntax consumer retaining physical locations,
+then real scoped name/type/member binding through the existing provider boundary.
+Full dynamic lexical-mode/default handling, compiler expressions/macros and complete
+SDK/host context capture remain prerequisites to general coverage. Alias/inheritance/
+interface/generic/overload/helper meaning, dependency invalidation, cancellable
+incremental/project-scale budgets and shared provider/editor/navigation adoption
+retain their original scope, quality/parity/input/visual/accessibility/delivery gates.
+
+## Prior integration: Fresh Pascal lexical and scope foundation — 2026-10-17
 
 Previous goal turn is progress: pushed ae51467 connects the retained ordinary
 completion popup using controlled replies. The user explicitly selected a fresh,

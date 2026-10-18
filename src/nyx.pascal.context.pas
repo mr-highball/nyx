@@ -1,0 +1,1105 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+unit nyx.pascal.context;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+interface
+
+uses SysUtils, nyx.text, nyx.pascal.lexing;
+
+type
+  { Invalid captured facts are caller contract failures, never compiler errors.
+    Construction and fluent changes perform no I/O or source execution. }
+  ENyxPascalContext = class(EArgumentException);
+  { Three-valued knowledge. Unknown must never silently become an absent define,
+    an inactive branch or a successful semantic inference. }
+  TNyxPascalKnowledge = (ppkUnknown, ppkFalse, ppkTrue);
+  { Captured compiler identity only. Unknown supports editing before optional
+    output/compiler configuration; this analyzer never borrows its own compiler's
+    conditional symbols or assumes these metadata grant execution. }
+  TNyxPascalCompilerFamily = (ppcUnknown, ppcFPC, ppcPas2JS);
+  { Explicit language grammar. Unknown preserves an unsupported source mode;
+    source directives may change it independently of the analyzer's compiler. }
+  TNyxPascalLanguageMode = (ppmUnknown, ppmFPC, ppmObjFPC, ppmDelphi,
+    ppmDelphiUnicode, ppmTP, ppmMacPas, ppmISO, ppmExtendedPascal);
+  { Grammar-sensitive switches with independently known on/off values. This list
+    does not pretend to enumerate every FPC switch; unknown directives diagnose. }
+  TNyxPascalLanguageFeature = (ppfAdvancedRecords, ppfNestedProcVars,
+    ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
+    ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings);
+  { Bounded compiler version, stored without target-dependent floating arithmetic.
+    Minor/patch have two decimal digits, matching FPC_FULLVERSION's convention. }
+  TNyxPascalCompilerVersion = record
+  private
+    FMajor: Integer;
+    FMinor: Integer;
+    FPatch: Integer;
+  public
+    class function Create(AMajor, AMinor, APatch: Integer): TNyxPascalCompilerVersion; static;
+    function FullNumber: Integer;
+    property Major: Integer read FMajor;
+    property Minor: Integer read FMinor;
+    property Patch: Integer read FPatch;
+  end;
+  { Open compiler symbol spelling, distinct from Pascal declarations and file
+    names. ASCII comparison is case-insensitive; there is no host path or macro. }
+  TNyxPascalDefineRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
+  { A captured define can be absent, present without a value, or an exact signed
+    32-bit condition integer. Unknown retains missing capture/conditional effects.
+    No replacement macro text is executed or expanded by this value. }
+  TNyxPascalDefineKind = (ppdUnknown, ppdUndefined, ppdDefined, ppdInteger);
+  { Detached define fact. IntegerValue refuses for another kind; strings and
+    general compiler constants require a future explicit semantic value model. }
+  TNyxPascalDefineValue = record
+  private
+    FKind: TNyxPascalDefineKind;
+    FInteger: Integer;
+  public
+    function IsDefined: TNyxPascalKnowledge;
+    function IntegerValue: Integer;
+    property Kind: TNyxPascalDefineKind read FKind;
+  end;
+  { Recoverable condition analysis, independent of compiler admission. Unknown
+    names and unsupported/malformed expressions never authorize a branch choice. }
+  TNyxPascalConditionIssue = (pciNone, pciUnknownSymbol, pciUnsupported, pciMalformed);
+  { One detached condition result. Boolean short-circuit knowledge may be known
+    despite an unknown operand; unsupported syntax always leaves Truth unknown. }
+  TNyxPascalConditionResult = record
+  private
+    FTruth: TNyxPascalKnowledge;
+    FIssue: TNyxPascalConditionIssue;
+  public
+    property Truth: TNyxPascalKnowledge read FTruth;
+    property Issue: TNyxPascalConditionIssue read FIssue;
+  end;
+  { Immutable captured compiler facts. Missing symbols are unknown until the
+    caller explicitly seals the entire define set. Short options/features have
+    separate knowledge, never guessed defaults. Each fluent change owns detached
+    vectors and borrows no caller, UI, process, filesystem or mutable provider.
+    Versions/modes are metadata; host capture must supply actual builtin defines. }
+  INyxPascalCompilerContext = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C01}']
+    function Family: TNyxPascalCompilerFamily;
+    function Version: TNyxPascalCompilerVersion;
+    function Mode: TNyxPascalLanguageMode;
+    function DefinesComplete: Boolean;
+    function Symbol(const AName: TNyxPascalDefineRef): TNyxPascalDefineValue;
+    function Option(AName: Char): TNyxPascalKnowledge;
+    function Feature(AFeature: TNyxPascalLanguageFeature): TNyxPascalKnowledge;
+    { Captures an explicit source/compiler fact. At most 2048 names are retained;
+      closed-set absence never overwrites an explicitly unknown fact. }
+    function WithSymbol(const AName: TNyxPascalDefineRef;
+      AKind: TNyxPascalDefineKind; AInteger: Integer = 0): INyxPascalCompilerContext;
+    function CompleteDefines(AValue: Boolean): INyxPascalCompilerContext;
+    { Known short-option facts require one ASCII letter; absent options stay
+      unknown. Feature facts are typed independently of command-line spelling. }
+    function WithOption(AName: Char; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function WithFeature(AFeature: TNyxPascalLanguageFeature;
+      AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    { A mode directive resets feature/short-option knowledge. The caller supplies
+      concrete defaults afterward; none are inferred from the analyzer's mode. }
+    function InMode(AValue: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+    { An unavailable include/unknown side effect may change every mutable fact.
+      Preserve compiler identity/version metadata, revoke all inferred state. }
+    function UnknownState: INyxPascalCompilerContext;
+    { Exact ordered capture identity, including explicit unknown symbol names,
+      options/features and compiler metadata. This is not semantic equivalence. }
+    function SameFacts(const AOther: INyxPascalCompilerContext): Boolean;
+    { Detached enumeration supports exact identity and future cache keys; order
+      is capture order, with updates retaining the first position. }
+    function SymbolCount: Integer;
+    function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
+  end;
+
+{ Reject empty/over-128/non-ASCII names and identifiers starting with a digit. }
+function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
+{ Pure metadata constructor with unknown options/features and an open define set.
+  No implicit FPC/PAS2JS/platform/version define is read from this build process. }
+function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
+  const AVersion: TNyxPascalCompilerVersion;
+  AMode: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+{ Explicit truth operations preserve unknown state without target Boolean casts. }
+function NyxPascalNot(AValue: TNyxPascalKnowledge): TNyxPascalKnowledge;
+function NyxPascalAnd(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
+function NyxPascalOr(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
+{ Bounded condition grammar: defined(), exact integer comparisons, parentheses,
+  Boolean not/and/or/xor and unary signs, with Pascal operator precedence.
+  General macros, declared()/sizeof(), strings and arithmetic stay unsupported.
+  At most 16 KiB/512 tokens/64 nesting levels; hard lexical quotas still refuse. }
+function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
+  const AExpression: TNyxText): TNyxPascalConditionResult;
+
+implementation
+
+uses nyx.text.index;
+
+type
+  { Owned name/value pair with no interfaces or mutable external data. }
+  TDefineFact = record
+    Name: TNyxPascalDefineRef;
+    Value: TNyxPascalDefineValue;
+  end;
+  { Persistent context implementation. Its index/vectors are detached on every
+    change; readers may share only a fully constructed immutable instance. }
+  TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext)
+  private
+    FFamily: TNyxPascalCompilerFamily;
+    FVersion: TNyxPascalCompilerVersion;
+    FMode: TNyxPascalLanguageMode;
+    FComplete: Boolean;
+    FSymbols: array of TDefineFact;
+    FNames: TNyxTextIndex;
+    FOptions: array[0..25] of TNyxPascalKnowledge;
+    FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
+    function Clone: TCompilerContext;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Family: TNyxPascalCompilerFamily;
+    function Version: TNyxPascalCompilerVersion;
+    function Mode: TNyxPascalLanguageMode;
+    function DefinesComplete: Boolean;
+    function Symbol(const AName: TNyxPascalDefineRef): TNyxPascalDefineValue;
+    function Option(AName: Char): TNyxPascalKnowledge;
+    function Feature(AFeature: TNyxPascalLanguageFeature): TNyxPascalKnowledge;
+    function WithSymbol(const AName: TNyxPascalDefineRef;
+      AKind: TNyxPascalDefineKind; AInteger: Integer): INyxPascalCompilerContext;
+    function CompleteDefines(AValue: Boolean): INyxPascalCompilerContext;
+    function WithOption(AName: Char; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function WithFeature(AFeature: TNyxPascalLanguageFeature;
+      AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function InMode(AValue: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+    function UnknownState: INyxPascalCompilerContext;
+    function SameFacts(const AOther: INyxPascalCompilerContext): Boolean;
+    function SymbolCount: Integer;
+    function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
+  end;
+  { Evaluator-only value domain, never a Pascal runtime expression or macro. }
+  TConditionValueKind = (pcvUnknown, pcvBoolean, pcvInteger);
+  { Value-owned evaluation operand; integer values remain exactly target-safe. }
+  TConditionValue = record
+    Kind: TConditionValueKind;
+    Truth: TNyxPascalKnowledge;
+    Number: Integer;
+  end;
+  { Owns one temporary lexical snapshot and borrows an immutable context for this
+    call only. Depth/steps are bounded and no provider or file lookup occurs. }
+  TConditionParser = class
+  private
+    FContext: INyxPascalCompilerContext;
+    FLexical: INyxPascalLexicalSnapshot;
+    FAt: Integer;
+    FDepth: Integer;
+    FIssue: TNyxPascalConditionIssue;
+    function Tok: TNyxPascalToken;
+    procedure Step;
+    procedure Issue(AValue: TNyxPascalConditionIssue);
+    function Primary: TConditionValue;
+    function Expression(AMinimum: Integer): TConditionValue;
+    function Precedence: Integer;
+    function Apply(const ALeft, ARight: TConditionValue;
+      const AOperator: TNyxPascalToken): TConditionValue;
+  public
+    function Analyze(const AContext: INyxPascalCompilerContext;
+      const AText: TNyxText): TNyxPascalConditionResult;
+  end;
+
+function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
+var
+  LAt: Integer;
+begin
+
+  if (Length(AName) = 0) or (Length(AName) > 128) then
+  begin
+    raise ENyxPascalContext.Create('A compiler symbol needs 1 to 128 ASCII identifier characters');
+  end;
+  for LAt := 1 to Length(AName) do
+  begin
+
+    if not (AName[LAt] in ['A'..'Z', 'a'..'z', '_']) and
+      not ((LAt > 1) and (AName[LAt] in ['0'..'9'])) then
+    begin
+      raise ENyxPascalContext.Create('A compiler symbol needs an ASCII identifier');
+    end;
+  end;
+  Result.FName := NyxPascalASCIIKey(AName);
+end;
+
+class function TNyxPascalCompilerVersion.Create(AMajor, AMinor, APatch: Integer): TNyxPascalCompilerVersion;
+begin
+
+  if (AMajor < 0) or (AMajor > 999) or (AMinor < 0) or (AMinor > 99) or
+    (APatch < 0) or (APatch > 99) then
+  begin
+    raise ENyxPascalContext.Create('A compiler version exceeds its decimal component bounds');
+  end;
+  Result.FMajor := AMajor;
+  Result.FMinor := AMinor;
+  Result.FPatch := APatch;
+end;
+
+function TNyxPascalCompilerVersion.FullNumber: Integer;
+begin
+  Result := FMajor * 10000 + FMinor * 100 + FPatch;
+end;
+
+function TNyxPascalDefineValue.IsDefined: TNyxPascalKnowledge;
+begin
+  Result := ppkTrue;
+
+  if FKind = ppdUnknown then
+  begin
+    Result := ppkUnknown;
+  end
+  else if FKind = ppdUndefined then
+  begin
+    Result := ppkFalse;
+  end;
+end;
+
+function TNyxPascalDefineValue.IntegerValue: Integer;
+begin
+
+  if FKind <> ppdInteger then
+  begin
+    raise ENyxPascalContext.Create('This compiler symbol has no captured integer value');
+  end;
+  Result := FInteger;
+end;
+
+function NyxPascalNot(AValue: TNyxPascalKnowledge): TNyxPascalKnowledge;
+begin
+  Result := ppkUnknown;
+
+  if AValue = ppkTrue then
+  begin
+    Result := ppkFalse;
+  end
+  else if AValue = ppkFalse then
+  begin
+    Result := ppkTrue;
+  end;
+end;
+
+function NyxPascalAnd(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
+begin
+  Result := ppkUnknown;
+
+  if (ALeft = ppkFalse) or (ARight = ppkFalse) then
+  begin
+    Result := ppkFalse;
+  end
+  else if (ALeft = ppkTrue) and (ARight = ppkTrue) then
+  begin
+    Result := ppkTrue;
+  end;
+end;
+
+function NyxPascalOr(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
+begin
+  Result := ppkUnknown;
+
+  if (ALeft = ppkTrue) or (ARight = ppkTrue) then
+  begin
+    Result := ppkTrue;
+  end
+  else if (ALeft = ppkFalse) and (ARight = ppkFalse) then
+  begin
+    Result := ppkFalse;
+  end;
+end;
+
+function OptionIndex(AName: Char): Integer;
+begin
+
+  if AName in ['a'..'z'] then
+  begin
+    AName := Chr(Ord(AName) - 32);
+  end;
+
+  if not (AName in ['A'..'Z']) then
+  begin
+    raise ENyxPascalContext.Create('A short compiler option needs one ASCII letter');
+  end;
+  Result := Ord(AName) - Ord('A');
+end;
+
+constructor TCompilerContext.Create;
+begin
+  inherited Create;
+  FNames := TNyxTextIndex.Create;
+end;
+
+destructor TCompilerContext.Destroy;
+begin
+  FNames.Free;
+  inherited Destroy;
+end;
+
+function TCompilerContext.Clone: TCompilerContext;
+var
+  LAt: Integer;
+  LFeature: TNyxPascalLanguageFeature;
+begin
+  Result := TCompilerContext.Create;
+  try
+    Result.FFamily := FFamily;
+    Result.FVersion := FVersion;
+    Result.FMode := FMode;
+    Result.FComplete := FComplete;
+    SetLength(Result.FSymbols, Length(FSymbols));
+    for LAt := 0 to High(FSymbols) do
+    begin
+      Result.FSymbols[LAt] := FSymbols[LAt];
+      Result.FNames.AddFirst(FSymbols[LAt].Name.Name, LAt);
+    end;
+    for LAt := 0 to High(FOptions) do
+    begin
+      Result.FOptions[LAt] := FOptions[LAt];
+    end;
+    for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+    begin
+      Result.FFeatures[LFeature] := FFeatures[LFeature];
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function TCompilerContext.Family: TNyxPascalCompilerFamily;
+begin
+  Result := FFamily;
+end;
+
+function TCompilerContext.Version: TNyxPascalCompilerVersion;
+begin
+  Result := FVersion;
+end;
+
+function TCompilerContext.Mode: TNyxPascalLanguageMode;
+begin
+  Result := FMode;
+end;
+
+function TCompilerContext.DefinesComplete: Boolean;
+begin
+  Result := FComplete;
+end;
+
+function TCompilerContext.Symbol(const AName: TNyxPascalDefineRef): TNyxPascalDefineValue;
+var
+  LAt: Integer;
+begin
+  NyxPascalDefine(AName.Name);
+  Result := Default(TNyxPascalDefineValue);
+  LAt := FNames.IndexOf(AName.Name);
+
+  if LAt >= 0 then
+  begin
+    Result := FSymbols[LAt].Value;
+  end
+  else if FComplete then
+  begin
+    Result.FKind := ppdUndefined;
+  end;
+end;
+
+function TCompilerContext.Option(AName: Char): TNyxPascalKnowledge;
+begin
+  Result := FOptions[OptionIndex(AName)];
+end;
+
+function TCompilerContext.Feature(AFeature: TNyxPascalLanguageFeature): TNyxPascalKnowledge;
+begin
+  Result := FFeatures[AFeature];
+end;
+
+function TCompilerContext.WithSymbol(const AName: TNyxPascalDefineRef;
+  AKind: TNyxPascalDefineKind; AInteger: Integer): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LAt: Integer;
+begin
+  NyxPascalDefine(AName.Name);
+
+  if (Ord(AKind) < Ord(Low(TNyxPascalDefineKind))) or
+    (Ord(AKind) > Ord(High(TNyxPascalDefineKind))) then
+  begin
+    raise ENyxPascalContext.Create('A captured compiler define has an invalid value kind');
+  end;
+  LAt := FNames.IndexOf(AName.Name);
+
+  if (LAt < 0) and (Length(FSymbols) >= 2048) then
+  begin
+    raise ENyxPascalContext.Create('Captured compiler symbols exceed 2048 names');
+  end;
+  LCopy := Clone;
+  Result := LCopy;
+
+  if LAt < 0 then
+  begin
+    LAt := Length(LCopy.FSymbols);
+    SetLength(LCopy.FSymbols, LAt + 1);
+    LCopy.FSymbols[LAt].Name := AName;
+    LCopy.FNames.AddFirst(AName.Name, LAt);
+  end;
+  LCopy.FSymbols[LAt].Value.FKind := AKind;
+  LCopy.FSymbols[LAt].Value.FInteger := 0;
+
+  if AKind = ppdInteger then
+  begin
+    LCopy.FSymbols[LAt].Value.FInteger := AInteger;
+  end;
+end;
+
+function TCompilerContext.CompleteDefines(AValue: Boolean): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+begin
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FComplete := AValue;
+end;
+
+function TCompilerContext.WithOption(AName: Char;
+  AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LAt: Integer;
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AValue) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('A captured compiler option has invalid knowledge');
+  end;
+  LAt := OptionIndex(AName);
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FOptions[LAt] := AValue;
+end;
+
+function TCompilerContext.WithFeature(AFeature: TNyxPascalLanguageFeature;
+  AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+begin
+
+  if (Ord(AFeature) < Ord(Low(TNyxPascalLanguageFeature))) or
+    (Ord(AFeature) > Ord(High(TNyxPascalLanguageFeature))) or
+    (Ord(AValue) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AValue) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('A captured language feature has invalid knowledge');
+  end;
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FFeatures[AFeature] := AValue;
+end;
+
+function TCompilerContext.InMode(AValue: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LAt: Integer;
+  LFeature: TNyxPascalLanguageFeature;
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxPascalLanguageMode))) or
+    (Ord(AValue) > Ord(High(TNyxPascalLanguageMode))) then
+  begin
+    raise ENyxPascalContext.Create('A captured language mode is outside its closed choices');
+  end;
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FMode := AValue;
+  for LAt := 0 to High(LCopy.FOptions) do
+  begin
+    LCopy.FOptions[LAt] := ppkUnknown;
+  end;
+  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+  begin
+    LCopy.FFeatures[LFeature] := ppkUnknown;
+  end;
+end;
+
+function TCompilerContext.UnknownState: INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+begin
+  LCopy := TCompilerContext.Create;
+  Result := LCopy;
+  LCopy.FFamily := FFamily;
+  LCopy.FVersion := FVersion;
+  LCopy.FMode := ppmUnknown;
+end;
+
+function TCompilerContext.SymbolCount: Integer;
+begin
+  Result := Length(FSymbols);
+end;
+
+function TCompilerContext.SymbolName(AIndex: Integer): TNyxPascalDefineRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FSymbols)) then
+  begin
+    raise ENyxPascalContext.Create('Captured compiler symbol index is outside its context');
+  end;
+  Result := FSymbols[AIndex].Name;
+end;
+
+function TCompilerContext.SameFacts(const AOther: INyxPascalCompilerContext): Boolean;
+var
+  LAt: Integer;
+  LFeature: TNyxPascalLanguageFeature;
+  LOther: TNyxPascalDefineValue;
+begin
+  Result := False;
+
+  if (AOther = nil) or (AOther.Family <> FFamily) or
+    (AOther.Version.FullNumber <> FVersion.FullNumber) or (AOther.Mode <> FMode) or
+    (AOther.DefinesComplete <> FComplete) or (AOther.SymbolCount <> SymbolCount) then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to SymbolCount - 1 do
+  begin
+    { Enumeration is part of exact capture identity, including explicitly
+      unknown names which otherwise compare equal to another missing name. }
+
+    if AOther.SymbolName(LAt).Name <> FSymbols[LAt].Name.Name then
+    begin
+      Exit;
+    end;
+    LOther := AOther.Symbol(FSymbols[LAt].Name);
+
+    if (LOther.Kind <> FSymbols[LAt].Value.Kind) or
+      ((LOther.Kind = ppdInteger) and (LOther.IntegerValue <> FSymbols[LAt].Value.IntegerValue)) then
+    begin
+      Exit;
+    end;
+  end;
+  for LAt := 0 to High(FOptions) do
+  begin
+
+    if AOther.Option(Chr(Ord('A') + LAt)) <> FOptions[LAt] then
+    begin
+      Exit;
+    end;
+  end;
+  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+  begin
+
+    if AOther.Feature(LFeature) <> FFeatures[LFeature] then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
+  const AVersion: TNyxPascalCompilerVersion;
+  AMode: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+var
+  LContext: TCompilerContext;
+begin
+
+  if (Ord(AFamily) < Ord(Low(TNyxPascalCompilerFamily))) or
+    (Ord(AFamily) > Ord(High(TNyxPascalCompilerFamily))) or
+    (Ord(AMode) < Ord(Low(TNyxPascalLanguageMode))) or
+    (Ord(AMode) > Ord(High(TNyxPascalLanguageMode))) then
+  begin
+    raise ENyxPascalContext.Create('Captured compiler identity is outside its closed choices');
+  end;
+  LContext := TCompilerContext.Create;
+  Result := LContext;
+  LContext.FFamily := AFamily;
+  LContext.FVersion := AVersion;
+  LContext.FMode := AMode;
+end;
+
+function UnknownValue: TConditionValue;
+begin
+  Result := Default(TConditionValue);
+end;
+
+function TruthValue(AValue: TNyxPascalKnowledge): TConditionValue;
+begin
+  Result := Default(TConditionValue);
+  Result.Kind := pcvBoolean;
+  Result.Truth := AValue;
+end;
+
+function NumberValue(AValue: Integer): TConditionValue;
+begin
+  Result := Default(TConditionValue);
+  Result.Kind := pcvInteger;
+  Result.Number := AValue;
+end;
+
+function AsTruth(const AValue: TConditionValue): TNyxPascalKnowledge;
+begin
+  Result := ppkUnknown;
+
+  if AValue.Kind = pcvBoolean then
+  begin
+    Result := AValue.Truth;
+  end
+  else if (AValue.Kind = pcvInteger) and (AValue.Number in [0, 1]) then
+  begin
+    Result := ppkFalse;
+
+    if AValue.Number = 1 then
+    begin
+      Result := ppkTrue;
+    end;
+  end;
+end;
+
+function TConditionParser.Tok: TNyxPascalToken;
+begin
+  Result := FLexical.Token(FAt);
+end;
+
+procedure TConditionParser.Step;
+begin
+
+  if FAt < FLexical.Count - 1 then
+  begin
+    Inc(FAt);
+  end;
+  while (FAt < FLexical.Count - 1) and
+    (Tok.Kind = ptkWhitespace) do
+  begin
+    Inc(FAt);
+  end;
+end;
+
+procedure TConditionParser.Issue(AValue: TNyxPascalConditionIssue);
+begin
+
+  if (FIssue = pciNone) or (AValue > FIssue) then
+  begin
+    FIssue := AValue;
+  end;
+end;
+
+function TConditionParser.Primary: TConditionValue;
+var
+  LName: TNyxText;
+  LFact: TNyxPascalDefineValue;
+  LNumber: Double;
+  LAt: Integer;
+  LDigit: Integer;
+  LBase: Integer;
+  LNegative: Boolean;
+begin
+  Result := UnknownValue;
+  Inc(FDepth);
+
+  if FDepth > 64 then
+  begin
+    Issue(pciUnsupported);
+    Dec(FDepth);
+    Exit;
+  end;
+  try
+
+    if (Tok.Kind = ptkSymbol) and (Tok.Symbol = psoOpenParen) then
+    begin
+      Step;
+      Result := Expression(0);
+
+      if (Tok.Kind = ptkSymbol) and (Tok.Symbol = psoCloseParen) then
+      begin
+        Step;
+      end
+      else
+      begin
+        Issue(pciMalformed);
+      end;
+    end
+    else if (Tok.Kind = ptkWord) and (Tok.Word = pkwNot) then
+    begin
+      Step;
+      Result := TruthValue(NyxPascalNot(AsTruth(Primary)));
+    end
+    else if (Tok.Kind = ptkSymbol) and (Tok.Symbol in [psoPlus, psoMinus]) then
+    begin
+      LNegative := Tok.Symbol = psoMinus;
+      Step;
+      Result := Primary;
+
+      if Result.Kind <> pcvInteger then
+      begin
+        Result := UnknownValue;
+        Issue(pciUnsupported);
+      end
+      else if LNegative then
+      begin
+
+        if Result.Number = Low(Integer) then
+        begin
+          Result := UnknownValue;
+          Issue(pciUnsupported);
+        end
+        else
+        begin
+          Result.Number := -Result.Number;
+        end;
+      end;
+    end
+    else if (Tok.Kind = ptkNumber) and Tok.Complete and not Tok.RealNumber then
+    begin
+      LName := FLexical.Text(FAt);
+      { A bare noncanonical decimal may follow compiler-version-specific
+        conditional string rules. Do not normalize it into a guessed Boolean. }
+
+      if (Tok.NumberBase = pnbDecimal) and (Length(LName) > 1) and (LName[1] = '0') then
+      begin
+        Issue(pciUnsupported);
+      end;
+      LBase := 10;
+      LAt := 1;
+      case Tok.NumberBase of
+        pnbHexadecimal:
+          begin
+            LBase := 16;
+            LAt := 2;
+          end;
+        pnbOctal:
+          begin
+            LBase := 8;
+            LAt := 2;
+          end;
+        pnbBinary:
+          begin
+            LBase := 2;
+            LAt := 2;
+          end;
+      else
+        begin
+          { Decimal spelling starts at its first digit. }
+        end;
+      end;
+      LNumber := 0;
+      while LAt <= Length(LName) do
+      begin
+        LDigit := Ord(LName[LAt]) - Ord('0');
+
+        if LName[LAt] in ['A'..'F'] then
+        begin
+          LDigit := Ord(LName[LAt]) - Ord('A') + 10;
+        end
+        else if LName[LAt] in ['a'..'f'] then
+        begin
+          LDigit := Ord(LName[LAt]) - Ord('a') + 10;
+        end;
+        LNumber := LNumber * LBase + LDigit;
+
+        if LNumber > High(Integer) then
+        begin
+          Issue(pciUnsupported);
+          Step;
+          Exit;
+        end;
+        Inc(LAt);
+      end;
+      Result := NumberValue(Trunc(LNumber));
+      Step;
+    end
+    else if Tok.Kind = ptkWord then
+    begin
+      { Escaped Pascal identifiers are not compiler-symbol syntax. }
+
+      if Tok.Escaped then
+      begin
+        Issue(pciUnsupported);
+      end;
+      LName := NyxPascalASCIIKey(FLexical.Identifier(FAt));
+      Step;
+
+      if LName = 'defined' then
+      begin
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoOpenParen) then
+        begin
+          Issue(pciMalformed);
+          Exit;
+        end;
+        Step;
+
+        if Tok.Kind <> ptkWord then
+        begin
+          Issue(pciMalformed);
+          Exit;
+        end;
+
+        if Tok.Escaped then
+        begin
+          Issue(pciUnsupported);
+        end;
+        LName := FLexical.Identifier(FAt);
+        Step;
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoCloseParen) then
+        begin
+          Issue(pciMalformed);
+          Exit;
+        end;
+        Step;
+        LFact := FContext.Symbol(NyxPascalDefine(LName));
+        Result := TruthValue(LFact.IsDefined);
+
+        if Result.Truth = ppkUnknown then
+        begin
+          Issue(pciUnknownSymbol);
+        end;
+      end
+      else if (LName = 'true') or (LName = 'false') then
+      begin
+        Result := TruthValue(ppkFalse);
+
+        if LName = 'true' then
+        begin
+          Result := TruthValue(ppkTrue);
+        end;
+      end
+      else
+      begin
+        LFact := FContext.Symbol(NyxPascalDefine(LName));
+
+        if LFact.Kind = ppdInteger then
+        begin
+          Result := NumberValue(LFact.IntegerValue);
+        end
+        else
+        begin
+          Issue(pciUnknownSymbol);
+        end;
+      end;
+    end
+    else
+    begin
+      Issue(pciMalformed);
+      Step;
+    end;
+  finally
+    Dec(FDepth);
+  end;
+end;
+
+function TConditionParser.Precedence: Integer;
+begin
+  Result := -1;
+
+  if (Tok.Kind = ptkSymbol) and (Tok.Symbol in [psoEqual, psoNotEqual,
+    psoLess, psoGreater, psoLessEqual, psoGreaterEqual]) then
+  begin
+    Result := 10;
+  end
+  else if (Tok.Kind = ptkWord) and (Tok.Word in [pkwOr, pkwXor]) then
+  begin
+    Result := 20;
+  end
+  else if (Tok.Kind = ptkWord) and (Tok.Word = pkwAnd) then
+  begin
+    Result := 30;
+  end;
+end;
+
+function TConditionParser.Apply(const ALeft, ARight: TConditionValue;
+  const AOperator: TNyxPascalToken): TConditionValue;
+var
+  LLeft: TNyxPascalKnowledge;
+  LRight: TNyxPascalKnowledge;
+  LComparison: Boolean;
+begin
+  Result := UnknownValue;
+
+  if AOperator.Kind = ptkWord then
+  begin
+    LLeft := AsTruth(ALeft);
+    LRight := AsTruth(ARight);
+
+    if ((ALeft.Kind = pcvInteger) and (LLeft = ppkUnknown)) or
+      ((ARight.Kind = pcvInteger) and (LRight = ppkUnknown)) then
+    begin
+      Issue(pciUnsupported);
+      Exit;
+    end;
+    case AOperator.Word of
+      pkwAnd:
+        begin
+          Result := TruthValue(NyxPascalAnd(LLeft, LRight));
+        end;
+      pkwOr:
+        begin
+          Result := TruthValue(NyxPascalOr(LLeft, LRight));
+        end;
+      pkwXor:
+        begin
+          Result := TruthValue(ppkUnknown);
+
+          if (LLeft <> ppkUnknown) and (LRight <> ppkUnknown) then
+          begin
+            Result := TruthValue(ppkFalse);
+
+            if LLeft <> LRight then
+            begin
+              Result := TruthValue(ppkTrue);
+            end;
+          end;
+        end;
+    else
+      begin
+        Issue(pciUnsupported);
+      end;
+    end;
+    Exit;
+  end;
+
+  if (ALeft.Kind = pcvUnknown) or (ARight.Kind = pcvUnknown) then
+  begin
+    Exit;
+  end;
+
+  if (ALeft.Kind <> pcvInteger) or (ARight.Kind <> pcvInteger) then
+  begin
+    Issue(pciUnsupported);
+    Exit;
+  end;
+  LComparison := False;
+  case AOperator.Symbol of
+    psoEqual:
+      begin
+        LComparison := ALeft.Number = ARight.Number;
+      end;
+    psoNotEqual:
+      begin
+        LComparison := ALeft.Number <> ARight.Number;
+      end;
+    psoLess:
+      begin
+        LComparison := ALeft.Number < ARight.Number;
+      end;
+    psoGreater:
+      begin
+        LComparison := ALeft.Number > ARight.Number;
+      end;
+    psoLessEqual:
+      begin
+        LComparison := ALeft.Number <= ARight.Number;
+      end;
+    psoGreaterEqual:
+      begin
+        LComparison := ALeft.Number >= ARight.Number;
+      end;
+  else
+    begin
+      Issue(pciUnsupported);
+    end;
+  end;
+  Result := TruthValue(ppkFalse);
+
+  if LComparison then
+  begin
+    Result := TruthValue(ppkTrue);
+  end;
+end;
+
+function TConditionParser.Expression(AMinimum: Integer): TConditionValue;
+var
+  LOperator: TNyxPascalToken;
+  LRight: TConditionValue;
+  LPrecedence: Integer;
+begin
+  Result := Primary;
+  LPrecedence := Precedence;
+  while LPrecedence >= AMinimum do
+  begin
+    LOperator := Tok;
+    Step;
+    LRight := Expression(LPrecedence + 1);
+    Result := Apply(Result, LRight, LOperator);
+    LPrecedence := Precedence;
+  end;
+end;
+
+function TConditionParser.Analyze(const AContext: INyxPascalCompilerContext;
+  const AText: TNyxText): TNyxPascalConditionResult;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Condition analysis requires captured compiler facts');
+  end;
+  FContext := AContext;
+  FLexical := NewNyxPascalLexicalSnapshot(AText, TNyxPascalLexicalOptions.Defaults
+    .UpToSourceBytes(16384).UpToTokens(512));
+  FAt := 0;
+
+  if Tok.Kind = ptkWhitespace then
+  begin
+    Step;
+  end;
+  Result.FTruth := AsTruth(Expression(0));
+
+  if (Tok.Kind <> ptkEOF) or (FLexical.DiagnosticCount <> 0) then
+  begin
+    Issue(pciUnsupported);
+  end;
+
+  if (Result.FTruth = ppkUnknown) and (FIssue = pciNone) then
+  begin
+    Issue(pciUnsupported);
+  end;
+  Result.FIssue := FIssue;
+
+  if FIssue in [pciUnsupported, pciMalformed] then
+  begin
+    Result.FTruth := ppkUnknown;
+  end;
+end;
+
+function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
+  const AExpression: TNyxText): TNyxPascalConditionResult;
+var
+  LParser: TConditionParser;
+begin
+  LParser := TConditionParser.Create;
+  try
+    Result := LParser.Analyze(AContext, AExpression);
+  finally
+    LParser.Free;
+  end;
+end;
+
+end.

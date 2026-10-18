@@ -32,8 +32,15 @@ installed; full language/compiler context and observing delivery remain open.
 The fresh [lexical and declared-scope foundation](docs/pascal-projects.md#nyx-owned-pascal-analysis)
 now retains every source token and recovers typed declaration syntax in unfinished
 buffers. Native checks exercise actual Nyx sources; browser consumers compile only.
-Captured include/compiler context and semantic type/member binding are still ahead;
+Complete compiler/include context and semantic type/member binding remain open;
 this foundation is not yet a completion provider or Studio engine.
+
+The owned [compiler/include context](docs/pascal-projects.md#captured-compiler-and-include-context)
+now captures explicit facts and virtual files, with conditional participation and
+separate state for repeated includes. Unconfigured outputs retain source inspection.
+Native checks exercise the real callback gate; browser consumers compile only.
+Dynamic lexical contexts, complete compiler/SDK capture and type/member resolution
+remain prerequisites to a general language engine and its Studio adoption.
 
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
