@@ -9,6 +9,17 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Checkpoint reassessment (2026-10-18): at least the last three handoffs leave
+original criterion two open; earlier unclosed evidence is retained, not reset.
+The next batch follows a concrete compiler-context prerequisite, combining
+typed target-size capture with bounded conditional-symbol planning and a real
+RTL consumer. It must distinguish scoped type names from intrinsic facts before
+admitting sizeof results. One bounded source-scope oracle decides that contract;
+one prepared/final RTL continuation verifies the resulting integration. Stop or
+switch at a different genuine semantic prerequisite, preserving the full resolver
+scope and all original grammar/editor/parity/delivery requirements. This is not
+another local-directive variant or an independently credited task.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;
@@ -31,7 +42,11 @@ origins. Native macro/oracle checks retain 38/11; four current browser consumers
 compile only. [Typed local policies and settings scopes](../docs/pascal-projects.md#typed-local-compiler-policies-and-settings-scopes)
 now pass 38 native checks and nine independent compiler checks. Current browser
 consumers compile only. SysUtils passes inlining and reaches later missing
-conditional/target-size facts, including sizeof(Integer). Continue full real
+conditional/target-size facts, including sizeof(Integer). The
+[target fact/request layer](../docs/pascal-projects.md#target-measurements-and-conditional-requests)
+now separates pristine compiler measurements from authored binding and plans
+bounded missing compiler queries. The real-root continuation's accepted result
+and retained fixture failures stay in WORK.md. Continue full real
 RTL/default/target/define context without export
 stubs, guessed encodings or source rewriting. Full expression/grammar/helpers/
 overloads/constraints, incremental/project-scale work, default Studio adoption and

@@ -33,7 +33,112 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed compiler policies and scoped settings — 2026-10-18
+## Current integration: Compiler measurements and conditional requests — 2026-10-18
+
+Previous goal turn is progress: pushed 988b405 supplies typed policies and local
+settings scopes. Reassessment retains at least three preceding handoffs with
+original authoring criterion two still open; it does not reset earlier unclosed
+work or split off easier completion credit. This batch follows that checkpoint's
+concrete target-fact/compiler-query prerequisite. The user-selected fresh MIT
+Nyx-owned engine remains the destination, including full source/compiler scope,
+language meaning, incremental/project-scale budgets and ordinary editor adoption,
+input/navigation/quality/parity/delivery. No original criterion/task/counter/
+credit/DONE, new MCP tool/schema, default engine or rollout closes. Solo; scratch
+and evidence stay on the provisioned drive. No HTTP/browser/file-protocol input/
+capture, protected mutation, cleanup/deletion/restart or approval bypass occurs.
+
+New checked size references distinguish compiler defines from named size operands.
+Optional probe/context capabilities preserve the original interfaces, ordered
+queries, immutable copies, exact equality and explicit measurement provenance.
+Known zero, unknown, unqualified absence and out-of-range remain independent;
+numeric reads without a known value refuse. Each successful size response has
+an ordered status and 31 exact bits. Malformed/missing/repeated/reordered rows
+refuse before result publication. Alternate requests are frozen with counts
+bounded before element callbacks, and the native host retains its existing job,
+source-lease, process-family retirement, cancellation/deadline/output ownership.
+Qualified unavailable names refuse compiler admission: actual FPC declared()
+cannot accept the dotted operand, so the generator does not invent its absence.
+
+The independent compiler oracle proves the scope distinction: pristine Delphi
+Integer is four bytes, local Integer = Byte is one, and System.Integer is two
+before and after that local alias; Pointer is four for this configured Win32
+target. Actual Delphi/ObjFPC probes independently measure those pristine names
+and retain mode/H policy. No host ABI, fabricated System exports or raw source
+name-to-measurement shortcut authorizes a branch. Changed mode/unknown effects
+revoke earlier measurements; historical contexts retain independent evidence.
+
+PlanNyxPascalCondition reuses the bounded conditional parser, producing detached
+missing-symbol and named-size vectors without binding types, selecting branches
+or executing I/O. Known symbols are omitted and duplicates retain first-use
+order. Unsupported syntax clears all requests; quotas refuse without partial
+publication. The real RTL consumer reads actual unresolved directive spans and
+their exact pre-token states, performs one fresh targeted compiler query, then
+re-translates the same original SysUtils root and frozen files.
+
+Accepted composite evidence is in the ignored target-facts-20261018-024520 packet,
+located by .local/target-facts-paths-private.json:
+
+- Native target facts/planning/protocol checks pass 34, clean heap. They include
+  independent transcript boundary/absence/zero cases, ordered-row refusal,
+  immutable context/capture/equality/mode behavior, syntax separation, quotas,
+  hostile alternate counts and changed source. The independent native compiler
+  size oracle also passes with a clean heap.
+- Actual profile/RTL checks pass 73, clean heap. Six configured compiler jobs
+  include Delphi/ObjFPC successes, exact post-launch cancellation/output/deadline
+  refusal and the one targeted RTL continuation. Thirty-three total define
+  queries (thirteen baseline plus twenty discovered names) reduce 38 unknown
+  conditions to six across the actual original root. The remaining expressions
+  are sizeof(Char)=2/1, sizeof(Integer)=2/4 and two occurrences of
+  not declared(TFilenameCaseMatch). A read-only follow-up plan requests zero
+  further compiler symbols. The unresolved fallback FATAL at syshelph.inc scalar
+  649 stays a context diagnostic. Full imported meaning remains incomplete.
+- Actual directory capture remains 561 files/386 modules, including all 48
+  original include packets with one explicitly opaque source. Independent whole
+  exported-byte hashes match all 48. Six focused source pins, 493 Nyx inputs,
+  68 RTL inputs and three compiler/configuration inputs verify unchanged after
+  owned readers. Fixture corrections are pinned after their final source edit;
+  no compiled or runtime reader overlaps an edit to its product inputs.
+- Production in-process semantic completion passes 84, clean heap, including
+  the seventh configured compiler job. Existing context/revision/permission,
+  activity/concurrency/workspace and exact-pair guards remain intact. The chat
+  exposes no native Nyx tools; neither this consumer nor the resolver listens.
+  No HTTP/authenticated/ordinary-editor claim follows from this fixture.
+- Maintained current native trace/owned/dependency/translation/origin/mode/macro/
+  policy checks pass 24/86/31/209/357/41/38/38, clean heaps; counts overlap prior
+  evidence. Twenty-one accepted compiler logs have zero owned warnings and
+  35 upstream pas2js RTL warnings. Five browser consumers and both Studios/
+  backend/worker compile; browser products/consumers execute nowhere in this
+  checkpoint. No full parity or user-input claim follows from compilation.
+- Five protected files/nine complete contexts remain exact. Complete frozen
+  7422453 verification passes 349 files. All owned readers/compiler families
+  join and LAN stays offline. Private native/compiler/input/protected receipts
+  retain exact hashes; the final checkpoint records source and remote identity.
+
+Retained failures are excluded from acceptance. The first oracle assumed bare
+Integer and System.Integer were interchangeable; actual compilation disproved
+that assumption and the corrected oracle retains the local-shadowing contract.
+The first actual size probe used declared() on a qualified name and correctly
+failed compiler admission. Early continuation fixtures accidentally restarted
+from the last diagnostic include; the corrected consumer explicitly asserts its
+original root. Its real result is six unresolved conditions, not the earlier
+unaccepted include-only count of two. A speculative Unix-macro absence assertion
+was also corrected against the actual unconditional sysutilh.inc definitions;
+both original replacement bodies remain exact. Wrong macro/policy filenames in
+one orchestration batch and omitted optional repository arguments are retained;
+corrected required consumers run separately. This is composite qualification,
+not an uninterrupted successful batch or a reset of prior failed evidence.
+
+Next useful action: bind intrinsic/mode aliases and imported/local declarations
+in the authored scope, then supply sound sizeof/declared conditional meaning
+through that scope. The actual remaining expressions need semantic binding,
+not another initial compiler-symbol query. Stop target-fact/probe/conditional-
+capture/fixture variants here. Full type layout, expressions/helpers/overloads/
+constraints, compilation-order/default/global-placement/textual-reader/external-
+macro/codepage meaning, incremental budgets, default adoption, actual input/
+navigation/quality/parity/delivery retain existing owners. Preserve concurrent
+planning files, protected bytes, offline LAN and the existing no-retry gate.
+
+## Previous integration: Typed compiler policies and scoped settings — 2026-10-18
 
 Previous goal turn is progress: pushed b1d8b56 supplies ordered replacements and
 physical origins. This batch adds the coherent local-policy/restore prerequisite

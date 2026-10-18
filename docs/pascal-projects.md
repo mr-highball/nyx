@@ -1127,11 +1127,64 @@ stack effects refuse rather than guessing shape. Complete compilation-order
 continuation, target/ABI/type-size facts, wider policies, global directive placement
 and full language/editor/parity/delivery remain under their original owners.
 
-The real SysUtils continuation now traverses later headers and retains 38 unknown
-conditional decisions. `sizeof(Integer)` lacks explicit target type-size facts;
-the unresolved fallback FATAL in syshelph.inc is a context diagnostic, not a chosen
-compiler error. No branch is selected from the analyzer's host integer size.
-WORK.md owns exact native evidence separately from browser compilation.
+This foundation reached 38 unknown conditional decisions in real SysUtils.
+The explicit request continuation below resolves compiler names while keeping
+authored type scope independent of the analyzer's host integer size.
+
+## Target measurements and conditional requests
+
+`TNyxPascalSizeReference` describes a checked named `sizeof` operand, separately
+from a compiler define or a bound type. It accepts at most eight ASCII identifier
+parts, 128 characters each and 1024 total; calls, indexing, generic expressions,
+escaped identifiers and injected directives refuse. Case normalizes while
+qualification stays intact.
+
+`INyxPascalSizeProbe` optionally extends the existing FPC probe with up to 64
+deduplicated operands. `NyxFPCProbeSizeOf` and `CaptureNyxFPCCompilerProbe` preserve
+ordinary symbol queries and checked source. Alternate counts are bounded before
+element callbacks. The native host freezes both vectors before writing its owned
+source and retains its existing process-family retirement, deadline, cancellation,
+read lease and output limits. A probe compiles without running application code.
+
+Each size response has an ordered status and, when known, 31 ordered exact bits.
+Missing, repeated, altered or reordered replies refuse the whole context.
+Unqualified absence has its own status. FPC's `declared()` does not accept the
+qualified probe operand: a qualified size is compiled directly, and an unavailable
+export refuses that job rather than inventing an absence. The optional
+`INyxPascalContextSizes` capability stores independent unknown, undeclared, known
+and out-of-range states. Known zero stays distinct from unknown; reading `Bytes`
+without a known value refuses. Each fact records its probe mode and long-string
+policy. Immutable copies, capture and equality retain these facts; a changed mode
+or unknown source effect revokes the old measurements.
+
+These are facts about the probe's pristine source scope. They do not bind names
+in a different unit. The independent Win32 Delphi compiler oracle observes four
+bytes for bare `Integer`, one after a local `Integer = Byte`, and two for
+`System.Integer` both before and after that local declaration. The configured
+probe separately measures the pristine aliases and pointer. This is concrete
+evidence against equating a mode alias, an imported export and a local declaration.
+FPC documents the [compile-time byte result of sizeof](https://www.freepascal.org/docs-html/current/rtl/system/sizeof.html)
+and the [mode-dependent Integer alias](https://docs.freepascal.org/docs-html/current/ref/refsu4.html).
+No captured measurement silently enables arbitrary source `sizeof` evaluation.
+
+`PlanNyxPascalCondition` reuses the bounded conditional parser to produce an
+immutable `INyxPascalConditionNeeds`: missing compiler symbols in first-use order
+and a separate vector of simple named size operands. The plan owns no context,
+source, editor, callbacks or process. Known compiler symbols are omitted;
+duplicates collapse. Unsupported or malformed syntax publishes no requests.
+Existing 16 KiB, 512-token and 64-level bounds apply, with explicit 256-symbol and
+64-size caps. Planning selects no branch, performs no I/O and does not turn a
+type operand into a define. `declared()` still requires semantic scope support.
+
+The actual RTL consumer starts from the captured SysUtils root, associates each
+unknown directive with its original pre-token state, and queries only the planned
+compiler names in one fresh owned job. It re-translates the same root and files;
+it never replaces dependencies with export stubs or seals unqueried definitions.
+WORK.md owns the accepted native reduction and exact remaining expressions.
+The retained fallback FATAL remains a context diagnostic, not a selected compiler
+error. Full intrinsic/import/local binding, type layout, grammar, compiler order,
+incremental budgets and Studio adoption/input/navigation/quality/parity/delivery
+remain required. Browser consumers compile only in this checkpoint.
 
 ## Structured type syntax and physical origins
 

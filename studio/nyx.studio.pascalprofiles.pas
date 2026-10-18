@@ -110,7 +110,6 @@ var
   LAt: Integer;
   LBefore: Integer;
   LCode: Integer;
-  LQueryCount: Integer;
   LStart: QWord;
   LSourceHandle: THandle;
 
@@ -161,23 +160,8 @@ begin
   begin
     raise ENyxPascalContext.Create('Compiler fact capture needs a compiler, bounded time and fresh private directory');
   end;
-  LProbe := NewNyxFPCCompilerProbe(AProbe.Identity, AProbe.Mode);
-  LQueryCount := AProbe.Count;
-
-  if (LQueryCount < 0) or (LQueryCount > 256) then
-  begin
-    raise ENyxPascalContext.Create('Compiler probe queries exceed their bounded vector');
-  end;
-  for LAt := 0 to LQueryCount - 1 do
-  begin
-    LProbe := LProbe.WithSymbol(AProbe.Symbol(LAt));
-  end;
+  LProbe := CaptureNyxFPCCompilerProbe(AProbe);
   LSource := LProbe.Source;
-
-  if (LProbe.Count <> LQueryCount) or (LSource <> AProbe.Source) then
-  begin
-    raise ENyxPascalContext.Create('An alternate compiler probe changed its checked source/query');
-  end;
   LDirectory := IncludeTrailingPathDelimiter(ExpandFileNameUTF8(AFreshDirectory));
 
   if not CreateDirUTF8(LDirectory) then

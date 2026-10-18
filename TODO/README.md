@@ -10,6 +10,12 @@ semantic binding, provider adoption and full incremental/navigation/quality/pari
 requirements. Native corpus checks and browser compilation grant no language-engine
 completion, new task credit or rollout. WORK.md owns the exact qualified boundary.
 
+The [target fact/request layer](../docs/pascal-projects.md#target-measurements-and-conditional-requests)
+now separates compiler-scoped size measurements from authored name binding and
+plans only missing conditional compiler symbols. Real RTL continuation and exact
+remaining semantic gaps are recorded in WORK.md. This stays under original
+authoring criterion two; full scope/incremental/adoption/parity/delivery stays open.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

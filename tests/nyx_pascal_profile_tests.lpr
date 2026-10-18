@@ -73,6 +73,10 @@ begin
     .WithSymbol(NyxPascalDefine('UNICODERTL'))
     .WithSymbol(NyxPascalDefine('WIN32'))
     .WithSymbol(NyxPascalDefine('CPUI386'));
+  Result := NyxFPCProbeSizeOf(Result, NyxPascalSizeReference('Integer'));
+  Result := NyxFPCProbeSizeOf(Result, NyxPascalSizeReference('System.Integer'));
+  Result := NyxFPCProbeSizeOf(Result, NyxPascalSizeReference('Pointer'));
+  Result := NyxFPCProbeSizeOf(Result, NyxPascalSizeReference('NyxMissingSizeName'));
 end;
 
 procedure ReleasedSource(const ADirectory: TNyxText);
@@ -111,6 +115,14 @@ begin
     (Result.Symbol(NyxPascalDefine('UNASKED_FUTURE_SYMBOL')).IsDefined = ppkUnknown) and
     (Result.Feature(ppfAnonymousFunctions) = ppkUnknown),
     'The compiler transcript does not invent global absence or feature enablement');
+  Check((NyxPascalCapturedSize(Result, NyxPascalSizeReference('Integer')).Bytes = 4) and
+    (NyxPascalCapturedSize(Result, NyxPascalSizeReference('System.Integer')).Bytes = 2) and
+    (NyxPascalCapturedSize(Result, NyxPascalSizeReference('Pointer')).Bytes = 4) and
+    (NyxPascalCapturedSize(Result, NyxPascalSizeReference('NyxMissingSizeName')).State = pssUndeclared),
+    'The selected Win32 compiler keeps pristine mode alias, System export, pointer and absent name distinct');
+  Check((NyxPascalCapturedSize(Result, NyxPascalSizeReference('Integer')).ProbeMode = ppmDelphi) and
+    (NyxPascalCapturedSize(Result, NyxPascalSizeReference('Integer')).ProbeLongStrings = ppkTrue),
+    'Measured sizes retain their exact probe mode and string policy without authored-scope authority');
   WriteLn('actual profile / version=', Result.Version.FullNumber,
     ' observed=', Result.SymbolCount, ' queried=', LProbe.Count);
   ReleasedSource(ADirectory + '/delphi');
@@ -121,6 +133,10 @@ begin
     (LOther.Symbol(NyxPascalDefine('FPC_OBJFPC')).IsDefined = ppkTrue) and
     (LOther.Symbol(NyxPascalDefine('FPC_DELPHI')).IsDefined = ppkFalse),
     'A different source-mode query captures its own exact native state');
+  Check((NyxPascalCapturedSize(LOther, NyxPascalSizeReference('Integer')).Bytes = 4) and
+    (NyxPascalCapturedSize(LOther, NyxPascalSizeReference('System.Integer')).Bytes = 2) and
+    (NyxPascalCapturedSize(LOther, NyxPascalSizeReference('Integer')).ProbeLongStrings = ppkFalse),
+    'ObjFPC measurements remain separately scoped even when their byte counts agree');
   LRejected := False;
   try
     CaptureNyxFPCCompilerContext(ACompiler, ADirectory + '/delphi', LProbe, LOptions);
@@ -169,7 +185,84 @@ begin
   ReleasedSource(ADirectory + '/deadline');
 end;
 
-procedure ActualRTL(const ARoot, ASourceRoot, AArtifacts: TNyxText;
+{ Qualification consumer of detached conditional requests. It reads only actual
+  unresolved source spans and their pre-token states; size requirements remain
+  recorded scope gaps, never automatic aliases of pristine compiler facts. }
+function RTLRequests(const ATranslation: INyxPascalTranslation): INyxPascalCompilerProbe;
+var
+  LAt: Integer;
+  LToken: Integer;
+  LNameAt: Integer;
+  LName: TNyxText;
+  LText: TNyxText;
+  LBody: TNyxText;
+  LDiagnostic: TNyxPascalTranslationDiagnostic;
+  LRow: TNyxPascalTranslatedToken;
+  LNeeds: INyxPascalConditionNeeds;
+  LQuery: Integer;
+  LContext: INyxPascalCompilerContext;
+begin
+  Result := Probe('RTL_REQUIREMENTS');
+  for LAt := 0 to ATranslation.DiagnosticCount - 1 do
+  begin
+    LDiagnostic := ATranslation.Diagnostic(LAt);
+
+    if LDiagnostic.Issue <> ptiUnknownCondition then
+    begin
+      Continue;
+    end;
+    LContext := nil;
+    for LToken := 0 to ATranslation.Count - 1 do
+    begin
+      LRow := ATranslation.Token(LToken);
+
+      if (LRow.Occurrence = LDiagnostic.Occurrence) and
+        (ATranslation.PhysicalToken(LToken).Span.Start = LDiagnostic.Span.Start) then
+      begin
+        LContext := ATranslation.State(LRow.State);
+        Break;
+      end;
+    end;
+    Check(LContext <> nil, 'An actual unresolved condition retains its exact pre-token compiler state');
+    LText := NyxPascalOccurrenceLexical(ATranslation, LDiagnostic.Occurrence).Slice(LDiagnostic.Span);
+
+    if Copy(LText, 1, 2) = '{$' then
+    begin
+      LBody := Copy(LText, 3, Length(LText) - 3);
+    end
+    else
+    begin
+      Check(Copy(LText, 1, 3) = '(*$', 'Only an actual compiler-directive token enters planning');
+      LBody := Copy(LText, 4, Length(LText) - 5);
+    end;
+    LBody := TNyxText(Trim(LBody));
+    LNameAt := 1;
+    while (LNameAt <= Length(LBody)) and not (LBody[LNameAt] in [#9, #10, #13, ' ']) do
+    begin
+      Inc(LNameAt);
+    end;
+    LName := NyxPascalASCIIKey(Copy(LBody, 1, LNameAt - 1));
+    LBody := TNyxText(Trim(Copy(LBody, LNameAt, Length(LBody))));
+
+    if (LName = 'ifdef') or (LName = 'ifndef') then
+    begin
+      LBody := 'defined(' + LBody + ')';
+    end
+    else if (LName <> 'if') and (LName <> 'elseif') then
+    begin
+      Continue;
+    end;
+    LNeeds := PlanNyxPascalCondition(LContext, LBody);
+    WriteLn('actual request / supported=', LNeeds.SyntaxSupported, ' symbols=',
+      LNeeds.SymbolCount, ' scoped sizes=', LNeeds.SizeCount, ' ', LBody);
+    for LQuery := 0 to LNeeds.SymbolCount - 1 do
+    begin
+      Result := Result.WithSymbol(LNeeds.Symbol(LQuery));
+    end;
+  end;
+end;
+
+procedure ActualRTL(const ARoot, ACompiler, ASourceRoot, AArtifacts: TNyxText;
   const AContext: INyxPascalCompilerContext);
 var
   LCapture: INyxPascalDirectoryCapture;
@@ -184,6 +277,7 @@ var
   LMissing: Boolean;
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LFile: TNyxPascalPhysicalFile;
+  LRoot: TNyxPascalPhysicalFile;
   LSources: INyxPascalSourceSnapshot;
   LProvider: INyxPascalCompletionProvider;
   LReply: INyxPascalCompletionResult;
@@ -198,6 +292,9 @@ var
   LExport: TFileStream;
   LOutput: TNyxBytes;
   LDirectory: TNyxText;
+  LRequested: INyxPascalCompilerProbe;
+  LVerified: INyxPascalCompilerContext;
+  LRemaining: Integer;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(ARoot + '/src',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -261,8 +358,8 @@ begin
     (LCapture.Modules.Count = LBeforeModules) and (LOpaque = 1),
     'All 48 actual include sources are retained; an opaque view does not drop its file');
   LFiles := LCapture.Files.WithIncludeDirectory('rtl/objpas/sysutils');
-  LFile := LCapture.Modules.Entry(LCapture.Modules.Find(NyxPascalModule('SysUtils'))).Root;
-  LTranslation := NewNyxPascalTranslation(LFiles, LFile, AContext,
+  LRoot := LCapture.Modules.Entry(LCapture.Modules.Find(NyxPascalModule('SysUtils'))).Root;
+  LTranslation := NewNyxPascalTranslation(LFiles, LRoot, AContext,
     TNyxPascalTranslationOptions.Defaults);
   LMissing := False;
   LTargetContextGap := False;
@@ -296,14 +393,49 @@ begin
     'Actual policies reach the retained target-size/conditional context gaps without invented branch choices');
   WriteLn('actual RTL context / occurrences=', LTranslation.OccurrenceCount,
     ' unknown conditions=', LConditions);
+  LRequested := RTLRequests(LTranslation);
+  Check(LRequested.Count > Probe('BASELINE').Count,
+    'Actual unresolved RTL conditions contribute explicit missing compiler queries');
+  LVerified := CaptureNyxFPCCompilerContext(ACompiler, AArtifacts + '/rtl-required',
+    LRequested, TNyxPascalCompilerTraceOptions.Defaults);
+  LTranslation := NewNyxPascalTranslation(LFiles, LRoot, LVerified,
+    TNyxPascalTranslationOptions.Defaults);
+  Check(LTranslation.Files.FileAt(LTranslation.Occurrence(0).FileIndex).Name = LRoot.Name,
+    'The compiler continuation retains the actual original SysUtils root, independently of diagnostic includes');
+  LRemaining := 0;
+  for LAt := 0 to LTranslation.DiagnosticCount - 1 do
+  begin
+    LDiagnostic := LTranslation.Diagnostic(LAt);
+
+    if LDiagnostic.Issue = ptiUnknownCondition then
+    begin
+      Inc(LRemaining);
+    end;
+    LFile := LFiles.FileAt(LTranslation.Occurrence(LDiagnostic.Occurrence).FileIndex);
+    WriteLn('remaining RTL / ', LFile.Name, ':', LDiagnostic.Span.Start,
+      ' issue=', Ord(LDiagnostic.Issue), ' ', LDiagnostic.MessageText);
+
+    if LDiagnostic.Issue = ptiUnknownCondition then
+    begin
+      WriteLn('remaining expression / ', NyxPascalOccurrenceLexical(LTranslation,
+        LDiagnostic.Occurrence).Slice(LDiagnostic.Span));
+    end;
+  end;
+  Check((LRequested.Count = 33) and (LRemaining = 6) and
+    not LTranslation.Resolved and not LVerified.DefinesComplete,
+    'One bounded real-compiler continuation resolves requested names while retaining source type/syntax gaps');
+  WriteLn('actual query continuation / requested=', LRequested.Count,
+    ' unknown conditions before=', LConditions, ' after=', LRemaining);
+  LRequested := RTLRequests(LTranslation);
+  WriteLn('remaining planned symbols / ', LRequested.Count - Probe('BASELINE').Count);
   Check(Supports(LTranslation, INyxPascalTranslationMacros, LMacroContext) and
     (LMacroContext.StateMacros(LTranslation.StateCount - 1).Definition(
       NyxPascalDefine('SUT')).Replacement = TNyxText('sysutils')) and
     (LMacroContext.StateMacros(LTranslation.StateCount - 1).Definition(
       NyxPascalDefine('BU')).Replacement = TNyxText('baseunix')),
-    'Actual nondotted RTL alternatives retain their exact ordered replacement bodies');
+    'Actual nondotted RTL retains both unconditional ordered replacement bodies');
   WriteLn('actual capture / files=', LFiles.Count, ' modules=', LCapture.Modules.Count);
-  LProvider := NewNyxIndexedPascalCompletionProvider(AContext, LFiles, LCapture.Modules,
+  LProvider := NewNyxIndexedPascalCompletionProvider(LVerified, LFiles, LCapture.Modules,
     TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000));
   LPrefix := 'unit Consumer; {$mode delphi} interface uses nyx.controls; implementation ' +
     'procedure Run; var Badge:INyxBadge; begin Badge.';
@@ -323,7 +455,7 @@ begin
     Check(ParamCount = 4, 'Supply repository, configured FPC, FPC source root and fresh E: runtime');
     Check(not DirectoryExistsUTF8(ParamStr(4)) and CreateDirUTF8(ParamStr(4)),
       'The native profile consumer owns a fresh explicit runtime');
-    ActualRTL(TNyxText(ParamStr(1)), TNyxText(ParamStr(3)), TNyxText(ParamStr(4)),
+    ActualRTL(TNyxText(ParamStr(1)), TNyxText(ParamStr(2)), TNyxText(ParamStr(3)), TNyxText(ParamStr(4)),
       NativeProfiles(TNyxText(ParamStr(2)), TNyxText(ParamStr(4))));
     WriteLn('PASS ', GChecks, ' actual compiler/RTL profile checks');
   except

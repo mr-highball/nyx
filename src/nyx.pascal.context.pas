@@ -86,6 +86,35 @@ type
     property EnumStorage: TNyxPascalEnumStorage read FEnums;
     property CallingConvention: TNyxPascalCallingConvention read FCalling;
   end;
+  { Simple named sizeof operand, distinct from compiler defines and arbitrary
+    Pascal expressions. ASCII dotted identifiers are normalized without admitting
+    injected directives, calls, indexing or generic syntax. Wider operands stay
+    with semantic expression resolution, never a guessed intrinsic lookup. }
+  TNyxPascalSizeReference = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
+  { No captured result, an absent name, a measured size, or a size beyond the
+    portable signed-32 domain. Undeclared is not a zero-byte type. }
+  TNyxPascalSizeState = (pssUnknown, pssUndeclared, pssKnown, pssOutOfRange);
+  { Value-owned measurement in an explicit pristine probe mode/H scope. It is
+    compiler evidence, not proof that the same name binds in authored source.
+    In particular Integer and System.Integer can denote different sized types. }
+  TNyxPascalSizeFact = record
+  private
+    FState: TNyxPascalSizeState;
+    FMode: TNyxPascalLanguageMode;
+    FLongStrings: TNyxPascalKnowledge;
+    FBytes: Integer;
+  public
+    function Bytes: Integer;
+    function SameFact(const AOther: TNyxPascalSizeFact): Boolean;
+    property State: TNyxPascalSizeState read FState;
+    property ProbeMode: TNyxPascalLanguageMode read FMode;
+    property ProbeLongStrings: TNyxPascalKnowledge read FLongStrings;
+  end;
   { Bounded compiler version, stored without target-dependent floating arithmetic.
     Minor/patch have two decimal digits, matching FPC_FULLVERSION's convention. }
   TNyxPascalCompilerVersion = record
@@ -136,6 +165,18 @@ type
     property Truth: TNyxPascalKnowledge read FTruth;
     property Issue: TNyxPascalConditionIssue read FIssue;
   end;
+  { Detached requests from one bounded conditional expression. Only unknown
+    compiler symbols enter Symbol; named sizeof operands stay a separate vector
+    and require source-scope binding before use. Unsupported syntax publishes
+    no requests. No context, source, process or callback survives construction. }
+  INyxPascalConditionNeeds = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C10}']
+    function SyntaxSupported: Boolean;
+    function SymbolCount: Integer;
+    function Symbol(AIndex: Integer): TNyxPascalDefineRef;
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+  end;
   { Immutable captured compiler facts. Missing symbols are unknown until the
     caller explicitly seals the entire define set. Short options/features have
     separate knowledge, never guessed defaults. Each fluent change owns detached
@@ -181,6 +222,28 @@ type
     function Policies: TNyxPascalCompilerPolicies;
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
   end;
+  { Optional named-size evidence retains exact measurement scope and ordered
+    query identity. It does not export a fabricated System symbol catalog or
+    authorize unqualified lookups in an application's different lexical scope. }
+  INyxPascalContextSizes = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C09}']
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+    function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+    function WithSizeFact(const AName: TNyxPascalSizeReference;
+      const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+  end;
+
+function NyxPascalSizeReference(const AName: TNyxText): TNyxPascalSizeReference;
+function NyxPascalSizeFact(AState: TNyxPascalSizeState;
+  AMode: TNyxPascalLanguageMode = ppmUnknown; ALongStrings: TNyxPascalKnowledge = ppkUnknown;
+  ABytes: Integer = 0): TNyxPascalSizeFact;
+{ Read/write explicit pristine measurements; neither helper resolves an authored
+  type binding. Legacy contexts have no captured sizes. }
+function NyxPascalCapturedSize(const AContext: INyxPascalCompilerContext;
+  const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+function NyxPascalWithCapturedSize(const AContext: INyxPascalCompilerContext;
+  const AName: TNyxPascalSizeReference; const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
 
 { Legacy contexts carry unknown policies. Alternate values are validated before
   capture; no default is borrowed from the analyzer's own build. }
@@ -219,6 +282,12 @@ function NyxPascalOr(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
   At most 16 KiB/512 tokens/64 nesting levels; hard lexical quotas still refuse. }
 function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
   const AExpression: TNyxText): TNyxPascalConditionResult;
+{ Plans only the supported conditional grammar above plus simple named sizeof
+  operands. This does not evaluate sizeof, bind a type or select a branch.
+  Symbols are deduplicated in first-use order, at most 256; size operands at
+  most 64. Existing lexical/depth quotas apply and refuse without partial output. }
+function PlanNyxPascalCondition(const AContext: INyxPascalCompilerContext;
+  const AExpression: TNyxText): INyxPascalConditionNeeds;
 
 implementation
 
@@ -234,6 +303,10 @@ var
   LCaptured: INyxPascalCompilerContext;
   LPolicies: INyxPascalContextPolicies;
   LCount: Integer;
+  LSizes: INyxPascalContextSizes;
+  LTargetSizes: INyxPascalContextSizes;
+  LSizeCount: Integer;
+  LSizeName: TNyxPascalSizeReference;
 begin
 
   if AContext = nil then
@@ -275,6 +348,28 @@ begin
   end;
   Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
   LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
+
+  if Supports(AContext, INyxPascalContextSizes, LSizes) then
+  begin
+    LSizeCount := LSizes.SizeCount;
+
+    if (LSizeCount < 0) or (LSizeCount > 64) then
+    begin
+      raise ENyxPascalContext.Create('Captured size queries exceed their bounded vector');
+    end;
+    for LAt := 0 to LSizeCount - 1 do
+    begin
+      Supports(LCaptured, INyxPascalContextSizes, LTargetSizes);
+      LSizeName := LSizes.SizeName(LAt);
+      LCaptured := LTargetSizes.WithSizeFact(LSizeName, LSizes.SizeFact(LSizeName));
+      Supports(LCaptured, INyxPascalContextSizes, LTargetSizes);
+
+      if LTargetSizes.SizeCount <> LAt + 1 then
+      begin
+        raise ENyxPascalContext.Create('Captured size queries contain duplicate references');
+      end;
+    end;
+  end;
   { Native managed result storage may alias the caller's target. Publish only
     after every alternate getter and policy validation has succeeded. }
   Result := LCaptured;
@@ -286,9 +381,15 @@ type
     Name: TNyxPascalDefineRef;
     Value: TNyxPascalDefineValue;
   end;
+  { Ordered immutable query/result pair with managed text but no interfaces. }
+  TCapturedSize = record
+    Name: TNyxPascalSizeReference;
+    Value: TNyxPascalSizeFact;
+  end;
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance. }
-  TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies)
+  TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
+    INyxPascalContextSizes)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -299,6 +400,7 @@ type
     FOptions: array[0..25] of TNyxPascalKnowledge;
     FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
     FPolicies: TNyxPascalCompilerPolicies;
+    FSizes: array of TCapturedSize;
     function Clone: TCompilerContext;
   public
     constructor Create;
@@ -323,6 +425,11 @@ type
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
     function Policies: TNyxPascalCompilerPolicies;
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+    function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+    function WithSizeFact(const AName: TNyxPascalSizeReference;
+      const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
   end;
   { Evaluator-only value domain, never a Pascal runtime expression or macro. }
   TConditionValueKind = (pcvUnknown, pcvBoolean, pcvInteger);
@@ -331,6 +438,22 @@ type
     Kind: TConditionValueKind;
     Truth: TNyxPascalKnowledge;
     Number: Integer;
+  end;
+  { Owns value-only request vectors for a single expression. Unsupported syntax
+    clears both vectors; checked getters cannot expose mutable backing storage. }
+  TConditionNeeds = class(TInterfacedObject, INyxPascalConditionNeeds)
+  private
+    FSupported: Boolean;
+    FSymbols: array of TNyxPascalDefineRef;
+    FSizes: array of TNyxPascalSizeReference;
+    procedure NeedSymbol(const AName: TNyxPascalDefineRef);
+    procedure NeedSize(const AName: TNyxPascalSizeReference);
+  public
+    function SyntaxSupported: Boolean;
+    function SymbolCount: Integer;
+    function Symbol(AIndex: Integer): TNyxPascalDefineRef;
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
   end;
   { Owns one temporary lexical snapshot and borrows an immutable context for this
     call only. Depth/steps are bounded and no provider or file lookup occurs. }
@@ -341,6 +464,7 @@ type
     FAt: Integer;
     FDepth: Integer;
     FIssue: TNyxPascalConditionIssue;
+    FNeeds: TConditionNeeds;
     function Tok: TNyxPascalToken;
     procedure Step;
     procedure Issue(AValue: TNyxPascalConditionIssue);
@@ -498,6 +622,7 @@ begin
     Result.FMode := FMode;
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
+    Result.FSizes := Copy(FSizes);
     SetLength(Result.FSymbols, Length(FSymbols));
     for LAt := 0 to High(FSymbols) do
     begin
@@ -664,6 +789,11 @@ begin
   LCopy := Clone;
   Result := LCopy;
   LCopy.FMode := AValue;
+
+  if AValue <> FMode then
+  begin
+    SetLength(LCopy.FSizes, 0);
+  end;
   LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
@@ -706,6 +836,7 @@ var
   LAt: Integer;
   LFeature: TNyxPascalLanguageFeature;
   LOther: TNyxPascalDefineValue;
+  LSizes: INyxPascalContextSizes;
 begin
   Result := False;
 
@@ -717,6 +848,28 @@ begin
   end;
 
   if not FPolicies.SamePolicies(NyxPascalCompilerPolicies(AOther)) then
+  begin
+    Exit;
+  end;
+
+  if Supports(AOther, INyxPascalContextSizes, LSizes) then
+  begin
+
+    if LSizes.SizeCount <> Length(FSizes) then
+    begin
+      Exit;
+    end;
+    for LAt := 0 to High(FSizes) do
+    begin
+
+      if (LSizes.SizeName(LAt).Name <> FSizes[LAt].Name.Name) or
+        not LSizes.SizeFact(LSizes.SizeName(LAt)).SameFact(FSizes[LAt].Value) then
+      begin
+        Exit;
+      end;
+    end;
+  end
+  else if Length(FSizes) <> 0 then
   begin
     Exit;
   end;
@@ -775,6 +928,197 @@ begin
   LContext.FFamily := AFamily;
   LContext.FVersion := AVersion;
   LContext.FMode := AMode;
+end;
+
+function NyxPascalSizeReference(const AName: TNyxText): TNyxPascalSizeReference;
+var
+  LAt: Integer;
+  LStart: Integer;
+  LParts: Integer;
+  LLexical: INyxPascalLexicalSnapshot;
+begin
+
+  if (Length(AName) < 1) or (Length(AName) > 1024) then
+  begin
+    raise ENyxPascalContext.Create('A size reference needs a bounded dotted identifier');
+  end;
+  LStart := 1;
+  LParts := 1;
+  for LAt := 1 to Length(AName) do
+  begin
+
+    if AName[LAt] = '.' then
+    begin
+
+      if (LAt = LStart) or (LAt - LStart > 128) or (LParts >= 8) then
+      begin
+        raise ENyxPascalContext.Create('A size reference has an invalid qualification');
+      end;
+      LStart := LAt + 1;
+      Inc(LParts);
+    end
+    else if not (AName[LAt] in ['A'..'Z', 'a'..'z', '_', '0'..'9']) or
+      ((LAt = LStart) and (AName[LAt] in ['0'..'9'])) then
+    begin
+      raise ENyxPascalContext.Create('A size reference cannot inject a Pascal expression');
+    end;
+  end;
+
+  if (LStart > Length(AName)) or (Length(AName) - LStart + 1 > 128) then
+  begin
+    raise ENyxPascalContext.Create('A size reference has an invalid final identifier');
+  end;
+  LLexical := NewNyxPascalLexicalSnapshot(AName, TNyxPascalLexicalOptions.Defaults);
+  for LAt := 0 to LLexical.Count - 2 do
+  begin
+
+    if (LLexical.Token(LAt).Kind = ptkWord) and
+      not (LLexical.Token(LAt).Word in [pkwNone, pkwString]) then
+    begin
+      raise ENyxPascalContext.Create('A size reference cannot use a reserved grammar word');
+    end;
+  end;
+  Result.FName := NyxPascalASCIIKey(AName);
+end;
+
+function NyxPascalSizeFact(AState: TNyxPascalSizeState; AMode: TNyxPascalLanguageMode;
+  ALongStrings: TNyxPascalKnowledge; ABytes: Integer): TNyxPascalSizeFact;
+begin
+
+  if (Ord(AState) < Ord(Low(TNyxPascalSizeState))) or
+    (Ord(AState) > Ord(High(TNyxPascalSizeState))) or
+    (Ord(AMode) < Ord(Low(TNyxPascalLanguageMode))) or
+    (Ord(AMode) > Ord(High(TNyxPascalLanguageMode))) or
+    (Ord(ALongStrings) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(ALongStrings) > Ord(High(TNyxPascalKnowledge))) or (ABytes < 0) or
+    ((AState <> pssKnown) and (ABytes <> 0)) or
+    ((AState <> pssUnknown) and ((AMode = ppmUnknown) or (ALongStrings = ppkUnknown))) then
+  begin
+    raise ENyxPascalContext.Create('A size measurement needs an exact supported value and probe scope');
+  end;
+  Result.FState := AState;
+  Result.FMode := AMode;
+  Result.FLongStrings := ALongStrings;
+  Result.FBytes := ABytes;
+end;
+
+function TNyxPascalSizeFact.Bytes: Integer;
+begin
+
+  if FState <> pssKnown then
+  begin
+    raise ENyxPascalContext.Create('An unmeasured size has no byte value');
+  end;
+  Result := FBytes;
+end;
+
+function TNyxPascalSizeFact.SameFact(const AOther: TNyxPascalSizeFact): Boolean;
+begin
+  Result := (FState = AOther.FState) and (FMode = AOther.FMode) and
+    (FLongStrings = AOther.FLongStrings) and (FBytes = AOther.FBytes);
+end;
+
+function TCompilerContext.SizeCount: Integer;
+begin
+  Result := Length(FSizes);
+end;
+
+function TCompilerContext.SizeName(AIndex: Integer): TNyxPascalSizeReference;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FSizes)) then
+  begin
+    raise ENyxPascalContext.Create('Captured size index is outside its context');
+  end;
+  Result := FSizes[AIndex].Name;
+end;
+
+function TCompilerContext.SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+var
+  LAt: Integer;
+begin
+  Result := NyxPascalSizeFact(pssUnknown);
+  for LAt := 0 to High(FSizes) do
+  begin
+
+    if FSizes[LAt].Name.Name = AName.Name then
+    begin
+      Exit(FSizes[LAt].Value);
+    end;
+  end;
+end;
+
+function TCompilerContext.WithSizeFact(const AName: TNyxPascalSizeReference;
+  const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LAt: Integer;
+  LIndex: Integer;
+  LBytes: Integer;
+begin
+  NyxPascalSizeReference(AName.Name);
+  LBytes := 0;
+
+  if AValue.State = pssKnown then
+  begin
+    LBytes := AValue.Bytes;
+  end;
+  NyxPascalSizeFact(AValue.State, AValue.ProbeMode, AValue.ProbeLongStrings, LBytes);
+  LIndex := -1;
+  for LAt := 0 to High(FSizes) do
+  begin
+
+    if FSizes[LAt].Name.Name = AName.Name then
+    begin
+      LIndex := LAt;
+    end;
+  end;
+
+  if (LIndex < 0) and (Length(FSizes) >= 64) then
+  begin
+    raise ENyxPascalContext.Create('Captured size facts exceed 64 references');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+
+  if LIndex < 0 then
+  begin
+    LIndex := Length(LCopy.FSizes);
+    SetLength(LCopy.FSizes, LIndex + 1);
+  end;
+  LCopy.FSizes[LIndex].Name := AName;
+  LCopy.FSizes[LIndex].Value := AValue;
+  Result := LOwner;
+end;
+
+function NyxPascalCapturedSize(const AContext: INyxPascalCompilerContext;
+  const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+var
+  LSizes: INyxPascalContextSizes;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('A captured size needs its compiler context');
+  end;
+  Result := NyxPascalSizeFact(pssUnknown);
+
+  if Supports(AContext, INyxPascalContextSizes, LSizes) then
+  begin
+    Result := LSizes.SizeFact(AName);
+  end;
+end;
+
+function NyxPascalWithCapturedSize(const AContext: INyxPascalCompilerContext;
+  const AName: TNyxPascalSizeReference; const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+var
+  LContext: INyxPascalCompilerContext;
+  LSizes: INyxPascalContextSizes;
+begin
+  LContext := CaptureNyxPascalCompilerContext(AContext);
+  Supports(LContext, INyxPascalContextSizes, LSizes);
+  Result := LSizes.WithSizeFact(AName, AValue);
 end;
 
 class function TNyxPascalCompilerPolicies.Unknown: TNyxPascalCompilerPolicies;
@@ -1005,6 +1349,7 @@ var
   LDigit: Integer;
   LBase: Integer;
   LNegative: Boolean;
+  LSize: TNyxPascalSizeReference;
 begin
   Result := UnknownValue;
   Inc(FDepth);
@@ -1166,7 +1511,60 @@ begin
         if Result.Truth = ppkUnknown then
         begin
           Issue(pciUnknownSymbol);
+
+          if FNeeds <> nil then
+          begin
+            FNeeds.NeedSymbol(NyxPascalDefine(LName));
+          end;
         end;
+      end
+      else if (LName = 'sizeof') and (FNeeds <> nil) then
+      begin
+        { Planning names is deliberately independent of evaluating types. A
+          pristine compiler probe cannot establish this authored scope's binding. }
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoOpenParen) then
+        begin
+          Issue(pciMalformed);
+          Exit;
+        end;
+        Step;
+        LName := '';
+        while Tok.Kind = ptkWord do
+        begin
+
+          if Tok.Escaped then
+          begin
+            Issue(pciUnsupported);
+          end;
+          LName := LName + FLexical.Identifier(FAt);
+          Step;
+
+          if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoDot) then
+          begin
+            Break;
+          end;
+          LName := LName + '.';
+          Step;
+        end;
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoCloseParen) then
+        begin
+          Issue(pciUnsupported);
+          Exit;
+        end;
+        Step;
+        try
+          LSize := NyxPascalSizeReference(LName);
+        except
+          on ENyxPascalContext do
+          begin
+            Issue(pciUnsupported);
+            Exit;
+          end;
+        end;
+        FNeeds.NeedSize(LSize);
+        Issue(pciUnknownSymbol);
       end
       else if (LName = 'true') or (LName = 'false') then
       begin
@@ -1188,6 +1586,11 @@ begin
         else
         begin
           Issue(pciUnknownSymbol);
+
+          if (FNeeds <> nil) and (LFact.IsDefined = ppkUnknown) then
+          begin
+            FNeeds.NeedSymbol(NyxPascalDefine(LName));
+          end;
         end;
       end;
     end
@@ -1382,6 +1785,112 @@ begin
   LParser := TConditionParser.Create;
   try
     Result := LParser.Analyze(AContext, AExpression);
+  finally
+    LParser.Free;
+  end;
+end;
+
+function TConditionNeeds.SyntaxSupported: Boolean;
+begin
+  Result := FSupported;
+end;
+
+function TConditionNeeds.SymbolCount: Integer;
+begin
+  Result := Length(FSymbols);
+end;
+
+function TConditionNeeds.Symbol(AIndex: Integer): TNyxPascalDefineRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= SymbolCount) then
+  begin
+    raise ENyxPascalContext.Create('Conditional symbol request is outside this plan');
+  end;
+  Result := FSymbols[AIndex];
+end;
+
+function TConditionNeeds.SizeCount: Integer;
+begin
+  Result := Length(FSizes);
+end;
+
+function TConditionNeeds.SizeName(AIndex: Integer): TNyxPascalSizeReference;
+begin
+
+  if (AIndex < 0) or (AIndex >= SizeCount) then
+  begin
+    raise ENyxPascalContext.Create('Conditional size operand is outside this plan');
+  end;
+  Result := FSizes[AIndex];
+end;
+
+procedure TConditionNeeds.NeedSymbol(const AName: TNyxPascalDefineRef);
+var
+  LAt: Integer;
+begin
+  for LAt := 0 to High(FSymbols) do
+  begin
+
+    if FSymbols[LAt].Name = AName.Name then
+    begin
+      Exit;
+    end;
+  end;
+
+  if SymbolCount >= 256 then
+  begin
+    raise ENyxPascalContext.Create('Conditional symbol requests exceed 256');
+  end;
+  LAt := SymbolCount;
+  SetLength(FSymbols, LAt + 1);
+  FSymbols[LAt] := AName;
+end;
+
+procedure TConditionNeeds.NeedSize(const AName: TNyxPascalSizeReference);
+var
+  LAt: Integer;
+begin
+  for LAt := 0 to High(FSizes) do
+  begin
+
+    if FSizes[LAt].Name = AName.Name then
+    begin
+      Exit;
+    end;
+  end;
+
+  if SizeCount >= 64 then
+  begin
+    raise ENyxPascalContext.Create('Conditional size operands exceed 64');
+  end;
+  LAt := SizeCount;
+  SetLength(FSizes, LAt + 1);
+  FSizes[LAt] := AName;
+end;
+
+function PlanNyxPascalCondition(const AContext: INyxPascalCompilerContext;
+  const AExpression: TNyxText): INyxPascalConditionNeeds;
+var
+  LParser: TConditionParser;
+  LNeeds: TConditionNeeds;
+  LOwner: INyxPascalConditionNeeds;
+  LAnalysis: TNyxPascalConditionResult;
+begin
+  LNeeds := TConditionNeeds.Create;
+  LOwner := LNeeds;
+  LParser := TConditionParser.Create;
+  try
+    LParser.FNeeds := LNeeds;
+    LAnalysis := LParser.Analyze(AContext, AExpression);
+    LNeeds.FSupported := LAnalysis.Issue in [pciNone, pciUnknownSymbol];
+
+    if not LNeeds.FSupported then
+    begin
+      SetLength(LNeeds.FSymbols, 0);
+      SetLength(LNeeds.FSizes, 0);
+    end;
+    Result := LOwner;
   finally
     LParser.Free;
   end;

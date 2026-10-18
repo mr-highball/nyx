@@ -54,8 +54,11 @@ text. [Ordered replacements](docs/pascal-projects.md#ordered-replacement-macros)
 now feed syntax and declared-member completion while preserving invocation and
 recursive definition origins. [Typed local policies](docs/pascal-projects.md#typed-local-compiler-policies-and-settings-scopes)
 now retain inlining, layout and calling intent beside historical settings stacks.
-Real RTL translation passes inlining and reaches missing conditional/target-size
-facts in later headers. Complete RTL meaning and default Studio adoption remain open.
+The [target fact/request layer](docs/pascal-projects.md#target-measurements-and-conditional-requests)
+now captures compiler-scoped named sizes and plans missing conditional facts.
+Pristine measurements retain their provenance and never substitute for local or
+imported type binding. Real RTL translation advances through one targeted compiler
+query; complete RTL meaning and default Studio adoption remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

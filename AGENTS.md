@@ -4,7 +4,29 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source typed local policies retain symbolic inlining/layout/calling
+Current-source compiler size facts retain typed named operands, exact probe
+mode/H provenance and distinct unknown/absent/known/out-of-range states. They
+do not bind authored names; native oracle proves the mode/local/qualified Integer
+names differ (4/1/2 bytes on configured Win32). Ordered replies and bounded
+alternate capture refuse before publication. Native facts/profile/production
+semantic pass 34/73/84 and maintained trace/owned/dependency/translation/origin/
+mode/macro/policy 24/86/31/209/357/41/38/38, clean heaps. One actual compiler
+continuation reduces real-root SysUtils conditions 38 to six: Char/Integer size
+alternatives and two declared(TFilenameCaseMatch) sites. A remaining plan needs
+zero further compiler symbols. Do not substitute pristine measurements for
+source binding. Twenty-one accepted compiler logs have zero owned warnings;
+five browser consumers and both Studios/backend/worker compile only as applicable.
+All 48 retained includes, six focused pins, 493 Nyx/68 RTL/three compiler inputs,
+five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact.
+Readers join; LAN stays offline. WORK.md owns exact receipts and retained failed
+oracle/probe/root/macro fixture corrections. Stop target/probe/capture variants;
+next bind intrinsic/mode aliases and imported/local declarations for sound sizeof/
+declared meaning. Full original scope/grammar/incremental/adoption/input/quality/
+parity/delivery remains open; no criterion/task/counter/credit/DONE/new tool/schema/
+rollout closes. No HTTP retry, protected mutation, cleanup/deletion bypass or
+sub-agents. Preserve concurrent planning files.
+
+Earlier typed local policies retain symbolic inlining/layout/calling
 intent, exact optional context capture and historical settings stacks. PUSH/POP
 restores supported local facts while preserving current definitions/global
 mode/macro changes; unknown effects revoke stack knowledge. Native policy/oracle/

@@ -42,6 +42,27 @@ type
     function WithSymbol(const AName: TNyxPascalDefineRef): INyxPascalCompilerProbe;
     function Source: TNyxText;
   end;
+  { Optional bounded named-size requests in the probe's pristine source scope.
+    A result is not a binding assertion about another unit's local/imported names.
+    Each successful request emits a status plus 31 ordered exact integer bits.
+    Unqualified absence is measured; unavailable qualified names refuse the
+    compiler job because FPC declared() does not admit qualified operands. }
+  INyxPascalSizeProbe = interface(IInterface)
+    ['{1ABFEF75-4549-40C8-9F3E-3CA5129A5102}']
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+    function WithSizeOf(const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+  end;
+
+{ Add a checked reference while preserving ordinary define queries. Legacy
+  alternate probes are frozen into the owned request before this extension. }
+function NyxFPCProbeSizeOf(const AProbe: INyxPascalCompilerProbe;
+  const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+{ Freeze all ordinary/optional queries and verify exact generated source. Excess
+  counts refuse before enumeration; no alternate callback survives the capture. }
+function CaptureNyxFPCCompilerProbe(const AProbe: INyxPascalCompilerProbe): INyxPascalCompilerProbe;
+
+type
   { Copied input/work limits. Diagnostics are external input, not trusted facts.
     Defaults admit 4 MiB UTF-8, 65536 lines and 16384 UTF-8 bytes per
     line; no limit truncates an accepted compiler context. }
@@ -86,17 +107,27 @@ uses SysUtils, nyx.bytes, nyx.pascal.lexing;
 type
   { Owns a detached query vector. Source is rebuilt from checked closed mode
     spellings and ASCII names; caller text cannot inject compiler directives. }
-  TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe)
+  TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe, INyxPascalSizeProbe)
   public
     ProbeID: TNyxPascalDefineRef;
     SourceMode: TNyxPascalLanguageMode;
     Names: array of TNyxPascalDefineRef;
+    SizeNames: array of TNyxPascalSizeReference;
     function Identity: TNyxPascalDefineRef;
     function Mode: TNyxPascalLanguageMode;
     function Count: Integer;
     function Symbol(AIndex: Integer): TNyxPascalDefineRef;
     function WithSymbol(const AName: TNyxPascalDefineRef): INyxPascalCompilerProbe;
     function Source: TNyxText;
+    function SizeCount: Integer;
+    function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+    function WithSizeOf(const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+  end;
+  { Construction-only size status/bit accumulator. Probe mode and H knowledge
+    are attached only after the complete transcript's remaining guards succeed. }
+  TPendingSize = record
+    State: TNyxPascalSizeState;
+    Bytes: Integer;
   end;
   { Synchronous transcript owner. Context candidates and progress state stay
     private until every row/version/terminal check succeeds. Cancellation and
@@ -115,6 +146,10 @@ type
     FCompleted: Boolean;
     FOption: Boolean;
     FNext: Integer;
+    FSizeProbe: INyxPascalSizeProbe;
+    FSizes: array of TPendingSize;
+    FSizeNext: Integer;
+    FSizeBit: Integer;
     procedure Check;
     procedure Line(const ALine: TNyxText);
     procedure Reply(const AReply: TNyxText);
@@ -152,6 +187,57 @@ begin
   else
     raise ENyxPascalContext.Create('This compiler probe needs a qualified FPC source mode');
   end;
+end;
+
+function CaptureNyxFPCCompilerProbe(const AProbe: INyxPascalCompilerProbe): INyxPascalCompilerProbe;
+var
+  LProbe: INyxPascalCompilerProbe;
+  LSourceSizes: INyxPascalSizeProbe;
+  LTargetSizes: INyxPascalSizeProbe;
+  LCount: Integer;
+  LSizeCount: Integer;
+  LAt: Integer;
+begin
+
+  if AProbe = nil then
+  begin
+    raise ENyxPascalContext.Create('An explicit compiler probe is required');
+  end;
+  LCount := AProbe.Count;
+
+  if (LCount < 0) or (LCount > 256) then
+  begin
+    raise ENyxPascalContext.Create('An alternate probe exceeds its name-query budget');
+  end;
+  LSizeCount := 0;
+
+  if Supports(AProbe, INyxPascalSizeProbe, LSourceSizes) then
+  begin
+    LSizeCount := LSourceSizes.SizeCount;
+
+    if (LSizeCount < 0) or (LSizeCount > 64) then
+    begin
+      raise ENyxPascalContext.Create('An alternate probe exceeds its size-query budget');
+    end;
+  end;
+  LProbe := NewNyxFPCCompilerProbe(AProbe.Identity, AProbe.Mode);
+  for LAt := 0 to LCount - 1 do
+  begin
+    LProbe := LProbe.WithSymbol(AProbe.Symbol(LAt));
+  end;
+  for LAt := 0 to LSizeCount - 1 do
+  begin
+    Supports(LProbe, INyxPascalSizeProbe, LTargetSizes);
+    LProbe := LTargetSizes.WithSizeOf(LSourceSizes.SizeName(LAt));
+  end;
+  Supports(LProbe, INyxPascalSizeProbe, LTargetSizes);
+
+  if (LProbe.Count <> LCount) or (LTargetSizes.SizeCount <> LSizeCount) or
+    (LProbe.Source <> AProbe.Source) then
+  begin
+    raise ENyxPascalContext.Create('An alternate compiler probe changed its checked source/query');
+  end;
+  Result := LProbe;
 end;
 
 function TCompilerProbe.Identity: TNyxPascalDefineRef;
@@ -203,6 +289,7 @@ begin
   Result := LCopy;
   LCopy.ProbeID := ProbeID;
   LCopy.SourceMode := SourceMode;
+  LCopy.SizeNames := Copy(SizeNames);
   SetLength(LCopy.Names, Count + 1);
   for LAt := 0 to Count - 1 do
   begin
@@ -215,21 +302,126 @@ function TCompilerProbe.Source: TNyxText;
 var
   LAt: Integer;
   LPrefix: TNyxText;
+  LParts: TNyxStrings;
+  LBit: Integer;
+  LRow: TNyxText;
+  LName: TNyxText;
 begin
   LPrefix := 'NYX_CONTEXT_' + ProbeID.Name + '_';
-  Result := 'program NyxCompilerContext;'#10'{$mode ' + ModeName(SourceMode) +
-    '}{$codepage utf8}'#10 +
-    '{ This declaration forces implicit System setup before fact queries. }'#10 +
-    'type TNyxContextMarker = Byte;'#10'{$note ' + LPrefix + 'BEGIN}'#10;
-  for LAt := 0 to Count - 1 do
-  begin
-    Result := Result + '{$ifdef ' + Names[LAt].Name + '}'#10'{$note ' + LPrefix +
-      'D_' + TNyxText(IntToStr(LAt)) + '}'#10'{$else}'#10'{$note ' + LPrefix +
-      'U_' + TNyxText(IntToStr(LAt)) + '}'#10'{$endif}'#10;
+  LParts := TNyxStrings.Create;
+  try
+    LParts.Add('program NyxCompilerContext;'#10'{$mode ' + ModeName(SourceMode) +
+      '}{$codepage utf8}'#10 +
+      '{ This declaration forces implicit System setup before fact queries. }'#10 +
+      'type TNyxContextMarker = Byte;'#10'{$note ' + LPrefix + 'BEGIN}'#10);
+    for LAt := 0 to Count - 1 do
+    begin
+      LParts.Add('{$ifdef ' + Names[LAt].Name + '}'#10'{$note ' + LPrefix +
+        'D_' + TNyxText(IntToStr(LAt)) + '}'#10'{$else}'#10'{$note ' + LPrefix +
+        'U_' + TNyxText(IntToStr(LAt)) + '}'#10'{$endif}'#10);
+    end;
+    for LAt := 0 to SizeCount - 1 do
+    begin
+      LName := SizeNames[LAt].Name;
+      LRow := LPrefix + 'S_' + TNyxText(IntToStr(LAt)) + '_';
+      { FPC's declared() accepts an unqualified symbol. A qualified operand
+        instead compiles directly: an unavailable export refuses the entire
+        owned probe rather than manufacturing a measured absence. }
+
+      if Pos('.', LName) > 0 then
+      begin
+        LParts.Add('{$if true}'#10);
+      end
+      else
+      begin
+        LParts.Add('{$if declared(' + LName + ')}'#10);
+      end;
+      LParts.Add(
+        '{$if (sizeof(' + LName + ') >= 0) and (sizeof(' + LName + ') <= 2147483647)}'#10 +
+        '{$note ' + LRow + 'K}'#10);
+      for LBit := 0 to 30 do
+      begin
+        LParts.Add('{$if ((sizeof(' + LName + ') div ' + TNyxText(IntToStr(1 shl LBit)) +
+          ') mod 2) = 0}'#10 + '{$note ' + LRow + 'B_' + TNyxText(IntToStr(LBit)) + '_0}'#10 +
+          '{$else}'#10'{$note ' + LRow + 'B_' + TNyxText(IntToStr(LBit)) + '_1}'#10'{$endif}'#10);
+      end;
+      LParts.Add('{$else}'#10'{$note ' + LRow + 'O}'#10'{$endif}'#10 +
+        '{$else}'#10'{$note ' + LRow + 'U}'#10'{$endif}'#10);
+    end;
+    LParts.Add('{$ifopt H+}'#10'{$note ' + LPrefix + 'H_TRUE}'#10 +
+      '{$else}'#10'{$note ' + LPrefix + 'H_FALSE}'#10'{$endif}'#10 +
+      '{$note ' + LPrefix + 'END}'#10'begin'#10'end.'#10);
+    Result := LParts.Join;
+  finally
+    LParts.Free;
   end;
-  Result := Result + '{$ifopt H+}'#10'{$note ' + LPrefix + 'H_TRUE}'#10 +
-    '{$else}'#10'{$note ' + LPrefix + 'H_FALSE}'#10'{$endif}'#10 +
-    '{$note ' + LPrefix + 'END}'#10'begin'#10'end.'#10;
+end;
+
+function TCompilerProbe.SizeCount: Integer;
+begin
+  Result := Length(SizeNames);
+end;
+
+function TCompilerProbe.SizeName(AIndex: Integer): TNyxPascalSizeReference;
+begin
+
+  if (AIndex < 0) or (AIndex >= SizeCount) then
+  begin
+    raise ENyxPascalContext.Create('Size query is outside this probe');
+  end;
+  Result := SizeNames[AIndex];
+end;
+
+function TCompilerProbe.WithSizeOf(const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+var
+  LCopy: TCompilerProbe;
+  LAt: Integer;
+  LOwner: INyxPascalCompilerProbe;
+begin
+  NyxPascalSizeReference(AName.Name);
+  for LAt := 0 to High(SizeNames) do
+  begin
+
+    if SizeNames[LAt].Name = AName.Name then
+    begin
+      Exit(Self);
+    end;
+  end;
+
+  if SizeCount >= 64 then
+  begin
+    raise ENyxPascalContext.Create('Size queries exceed 64 references');
+  end;
+  LCopy := TCompilerProbe.Create;
+  LOwner := LCopy;
+  LCopy.ProbeID := ProbeID;
+  LCopy.SourceMode := SourceMode;
+  LCopy.Names := Copy(Names);
+  LCopy.SizeNames := Copy(SizeNames);
+  SetLength(LCopy.SizeNames, SizeCount + 1);
+  LCopy.SizeNames[SizeCount] := AName;
+  Result := LOwner;
+end;
+
+function NyxFPCProbeSizeOf(const AProbe: INyxPascalCompilerProbe;
+  const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+var
+  LSizes: INyxPascalSizeProbe;
+  LProbe: INyxPascalCompilerProbe;
+begin
+
+  if AProbe = nil then
+  begin
+    raise ENyxPascalContext.Create('A size query needs its explicit probe');
+  end;
+
+  if Supports(AProbe, INyxPascalSizeProbe, LSizes) then
+  begin
+    Exit(LSizes.WithSizeOf(AName));
+  end;
+  LProbe := CaptureNyxFPCCompilerProbe(AProbe);
+  Supports(LProbe, INyxPascalSizeProbe, LSizes);
+  Result := LSizes.WithSizeOf(AName);
 end;
 
 function NewNyxFPCCompilerProbe(const AIdentity: TNyxPascalDefineRef;
@@ -415,6 +607,7 @@ procedure TTraceReader.Reply(const AReply: TNyxText);
 var
   LName: TNyxPascalDefineRef;
   LExpected: TNyxText;
+  LMask: Integer;
 begin
 
   if AReply = 'BEGIN' then
@@ -452,6 +645,62 @@ begin
       FContext := FContext.WithSymbol(LName, ppdDefined);
     end;
     Inc(FNext);
+    Exit;
+  end;
+
+  if FSizeNext < Length(FSizes) then
+  begin
+    LExpected := 'S_' + TNyxText(IntToStr(FSizeNext)) + '_';
+
+    if FSizeBit < 0 then
+    begin
+
+      if AReply = LExpected + 'K' then
+      begin
+        FSizes[FSizeNext].State := pssKnown;
+        FSizeBit := 0;
+      end
+      else if (AReply = LExpected + 'U') or (AReply = LExpected + 'O') then
+      begin
+        FSizes[FSizeNext].State := pssUndeclared;
+
+        if AReply = LExpected + 'O' then
+        begin
+          FSizes[FSizeNext].State := pssOutOfRange;
+        end;
+        Inc(FSizeNext);
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('A size status is missing, repeated or out of order');
+      end;
+    end
+    else
+    begin
+      LExpected := LExpected + 'B_' + TNyxText(IntToStr(FSizeBit)) + '_';
+
+      if AReply = LExpected + '1' then
+      begin
+        LMask := 1 shl FSizeBit;
+
+        if FSizes[FSizeNext].Bytes > High(Integer) - LMask then
+        begin
+          raise ENyxPascalContext.Create('Captured size exceeds the signed-32 domain');
+        end;
+        Inc(FSizes[FSizeNext].Bytes, LMask);
+      end
+      else if AReply <> LExpected + '0' then
+      begin
+        raise ENyxPascalContext.Create('A size bit is missing, repeated or out of order');
+      end;
+      Inc(FSizeBit);
+
+      if FSizeBit = 31 then
+      begin
+        FSizeBit := -1;
+        Inc(FSizeNext);
+      end;
+    end;
     Exit;
   end;
 
@@ -565,7 +814,7 @@ var
   LVersion: TNyxPascalCompilerVersion;
   LInteger: Integer;
   LName: TNyxPascalDefineRef;
-  LQueryCount: Integer;
+  LCaptured: INyxPascalCompilerContext;
 begin
   AOptions.Validate;
   FOptions := AOptions;
@@ -584,22 +833,10 @@ begin
   end;
   { Capture alternate requests through checked values rather than retaining a
     mutable query producer. The generated source remains a host job invariant. }
-  LQueryCount := AProbe.Count;
-
-  if (LQueryCount < 0) or (LQueryCount > 256) then
-  begin
-    raise ENyxPascalContext.Create('Compiler probe queries exceed their bounded vector');
-  end;
-  FProbe := NewNyxFPCCompilerProbe(AProbe.Identity, AProbe.Mode);
-  for LAt := 0 to LQueryCount - 1 do
-  begin
-    FProbe := FProbe.WithSymbol(AProbe.Symbol(LAt));
-  end;
-
-  if (FProbe.Count <> LQueryCount) or (FProbe.Source <> AProbe.Source) then
-  begin
-    raise ENyxPascalContext.Create('An alternate compiler probe changed its checked source/query');
-  end;
+  FProbe := CaptureNyxFPCCompilerProbe(AProbe);
+  Supports(FProbe, INyxPascalSizeProbe, FSizeProbe);
+  SetLength(FSizes, FSizeProbe.SizeCount);
+  FSizeBit := -1;
   FFile := AFile;
   FPrefix := 'NYX_CONTEXT_' + FProbe.Identity.Name + '_';
   FContext := NewNyxPascalCompilerContext(ppcFPC,
@@ -632,7 +869,7 @@ begin
   end;
 
   if not FCompiled or not FStarted or not FEnded or not FCompleted or not FOption or
-    (FNext <> FProbe.Count) or
+    (FNext <> FProbe.Count) or (FSizeNext <> Length(FSizes)) or
     (FContext.Symbol(NyxPascalDefine('FPC')).IsDefined <> ppkTrue) then
   begin
     raise ENyxPascalContext.Create('Compiler facts are incomplete or lack actual FPC identity');
@@ -682,7 +919,7 @@ begin
   begin
     raise ENyxPascalContext.Create('Compiler Unicode defaults differ from the selected source mode');
   end;
-  Result := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode);
+  LCaptured := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode);
   for LAt := 0 to FContext.SymbolCount - 1 do
   begin
     LName := FContext.SymbolName(LAt);
@@ -692,29 +929,35 @@ begin
     begin
       LInteger := FContext.Symbol(LName).IntegerValue;
     end;
-    Result := Result.WithSymbol(LName, FContext.Symbol(LName).Kind, LInteger);
+    LCaptured := LCaptured.WithSymbol(LName, FContext.Symbol(LName).Kind, LInteger);
   end;
-  Result := Result.WithOption('H', FContext.Option('H'));
+  LCaptured := LCaptured.WithOption('H', FContext.Option('H'));
   { Only mode defaults already independently compiler-qualified are restored.
     Neither version capability macros nor this analyzer's build enables closures. }
-  Result := Result.WithFeature(ppfNestedComments, ppkFalse)
+  LCaptured := LCaptured.WithFeature(ppfNestedComments, ppkFalse)
     .WithFeature(ppfUnicodeStrings, ppkFalse).WithFeature(ppfOutParameters, ppkFalse);
 
   if FProbe.Mode in [ppmFPC, ppmObjFPC] then
   begin
-    Result := Result.WithFeature(ppfNestedComments, ppkTrue);
+    LCaptured := LCaptured.WithFeature(ppfNestedComments, ppkTrue);
   end;
 
   if FProbe.Mode = ppmDelphiUnicode then
   begin
-    Result := Result.WithFeature(ppfUnicodeStrings, ppkTrue);
+    LCaptured := LCaptured.WithFeature(ppfUnicodeStrings, ppkTrue);
   end;
 
   if FProbe.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode] then
   begin
-    Result := Result.WithFeature(ppfOutParameters, ppkTrue);
+    LCaptured := LCaptured.WithFeature(ppfOutParameters, ppkTrue);
+  end;
+  for LAt := 0 to High(FSizes) do
+  begin
+    LCaptured := NyxPascalWithCapturedSize(LCaptured, FSizeProbe.SizeName(LAt),
+      NyxPascalSizeFact(FSizes[LAt].State, FProbe.Mode, LCaptured.Option('H'), FSizes[LAt].Bytes));
   end;
   Check;
+  Result := LCaptured;
 end;
 
 function ReadNyxFPCCompilerContext(const AProbe: INyxPascalCompilerProbe;
