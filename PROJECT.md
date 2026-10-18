@@ -75,8 +75,10 @@ grammar meaning, target coherence and ordinary editor adoption remain open.
 [Frozen prefix storage](docs/pascal-projects.md#shared-frozen-token-storage) now
 shares immutable earlier token blocks across chronological source queries.
 Detached tails, physical origins and retirement remain exact. Full-prefix parsing
-and its existing budget charge remain; append-only projection and parser
-checkpoints are still required before claiming incremental analysis or adoption.
+and its existing budget charge remain. Chronological queries now use
+[append-only projection](docs/pascal-projects.md#append-only-lexical-and-analysis-projection)
+with sealed source lineage and exact lexical tail repair. Declaration parser/
+binding checkpoints and wider quality remain required before engine adoption.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

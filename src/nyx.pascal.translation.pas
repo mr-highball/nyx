@@ -396,6 +396,14 @@ function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
 function NyxPascalEffectiveText(const ASource: INyxPascalTranslation;
   AIndex: Integer): TNyxText;
 
+{ Exact common leading token count for snapshots from one owned chronological
+  translation, -1 for unrelated/alternate sources. Immutable construction stamps
+  establish lineage without hashes, full-prefix rescanning or live-builder access.
+  This grants source-token continuity only; options, activity, projection and
+  provisional syntax still require their independent checks. }
+function NyxPascalSharedTranslationTokens(const ALeft,
+  ARight: INyxPascalTranslation): Integer;
+
 { Decompose an existing complete directive token without interpreting it.
   The value offset uses Unicode scalars in that token's original storage;
   ASCII whitespace trimming preserves UTF-8 include/condition spelling. }
@@ -449,6 +457,13 @@ type
   end;
   { Borrowed only by synchronous token visitors while construction is active. }
   TTranslation = class;
+  { Private in-unit proof of one immutable append history. Identity is an empty
+    value lease with no source/reader back link; alternate translators do not
+    acquire continuity merely by returning equal text or storage counters. }
+  ITranslationLineage = interface(IInterface)
+    ['{787C7FD7-1308-4E79-BF9A-9E81F5DC9CF5}']
+    function LineageIdentity: IInterface;
+  end;
   { Owns one immutable completed source, bounded prefix ordinals, copied emission
     intents and diagnostic indices. Outward references retain original files and
     contexts, never a constructing visitor, callback, editor or mutable buffer. }
@@ -457,7 +472,7 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives)
+    INyxPascalEmissionDirectives, ITranslationLineage)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -515,6 +530,7 @@ type
     function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
     function EmissionDirectiveCount: Integer;
     function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
+    function LineageIdentity: IInterface;
   end;
   { Advertises storage only when the retained source actually supplies its
     immutable arena receipt. Exclusive source bounds remain with the base view;
@@ -600,8 +616,9 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives)
+    INyxPascalEmissionDirectives, ITranslationLineage)
   private
+    FLineage: IInterface;
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
     FContext: INyxPascalCompilerContext;
@@ -722,6 +739,7 @@ type
     function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
     function OptimizationDirectiveCount: Integer;
     function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
+    function LineageIdentity: IInterface;
   end;
   { Only this detached construction exposes a token-storage receipt. All token
     rows, directories and physical windows are immutable and retain no reader. }
@@ -741,6 +759,51 @@ begin
     raise ENyxPascalContext.Create('Translated token is outside its immutable block');
   end;
   Result := Rows[AIndex];
+end;
+
+function TTranslation.LineageIdentity: IInterface;
+begin
+  Result := FLineage;
+end;
+
+function TTranslationPrefix.LineageIdentity: IInterface;
+var
+  LSource: ITranslationLineage;
+begin
+  Result := nil;
+
+  if Supports(FSource, ITranslationLineage, LSource) then
+  begin
+    Result := LSource.LineageIdentity;
+  end;
+end;
+
+function NyxPascalSharedTranslationTokens(const ALeft,
+  ARight: INyxPascalTranslation): Integer;
+var
+  LLeft: ITranslationLineage;
+  LRight: ITranslationLineage;
+  LIdentity: IInterface;
+begin
+  Result := -1;
+
+  if not Supports(ALeft, ITranslationLineage, LLeft) or
+    not Supports(ARight, ITranslationLineage, LRight) then
+  begin
+    Exit;
+  end;
+  LIdentity := LLeft.LineageIdentity;
+
+  if (LIdentity = nil) or (LIdentity <> LRight.LineageIdentity) then
+  begin
+    Exit;
+  end;
+  Result := ALeft.Count;
+
+  if ARight.Count < Result then
+  begin
+    Result := ARight.Count;
+  end;
 end;
 
 function TFrozenTranslation.TokenRows: Integer;
@@ -901,6 +964,7 @@ var
   LDefinition: TNyxPascalMacroDefinition;
 begin
   inherited Create;
+  FLineage := TInterfacedObject.Create;
   AOptions.Validate;
   FOptions := AOptions;
   FCancellation := ACancellation;
@@ -991,6 +1055,7 @@ begin
     raise ENyxPascalContext.Create('Only the live translation can freeze its admitted token blocks');
   end;
   FIsFrozen := True;
+  FLineage := ASource.FLineage;
   FOptions := ASource.FOptions;
   FFiles := ASource.FFiles;
   FInitial := ASource.FInitial;

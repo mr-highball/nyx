@@ -9,7 +9,28 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Shared-prefix prerequisite (2026-10-18): lexical and translated freezes now share
+Append-projection prerequisite (2026-10-18): fixed-policy lexical arenas now
+retain exact immutable predecessor identity, share completed blocks and repair
+their necessary tail. Ordinary semantic queries append only newly significant
+projection text under sealed chronological source lineage and identical options.
+Native focused checks pass 2,415 with clean heap, including every scalar split
+and successive scalar append across language/Unicode/assembly seams, whole fresh
+projection/parsing comparison, unfinished scopes, repeated includes/macros,
+atomic limits/cancellation and foreign/backward/changed-option refusal. Browser
+compilation is separate from execution. Declaration parsing/binding and origin
+row copying still rebuild, and the existing complete-prefix work charge remains.
+Do not reduce that charge before genuine parser/binding reuse. WORK.md owns the
+frozen maintained/RTL results, preservation and remaining checkpoint prerequisite.
+No original criterion/task/credit/DONE or full language/editor/incremental/input/
+quality/parity/adoption/delivery closes.
+All 40 maintained native consumers and storage 336 pass; 75 current compiler jobs
+have zero owned warnings. The unchanged RTL gate retains the same round-26 prefix
+budget failure and no final semantic/indexed result, clean heap. Seven frozen
+sources stay exact with no layout overlay. WORK.md owns current source/remote
+identity and the next genuine syntax/binding checkpoint gate. Stop append/oracle/
+fixture/compiler/capture variants; no relaxed limits or guessed reuse authority.
+
+Historical shared-prefix prerequisite (2026-10-18): lexical and translated freezes now share
 immutable complete token blocks, retain independent partial tails/directories and
 release construction-only caches on success/failure/cancellation. Flat indexed
 reads preserve physical origins, macro/state/settings and detached lifetimes.

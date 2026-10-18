@@ -114,6 +114,8 @@ type
     FSpan: TNyxPascalSpan;
   public
     function MessageText: TNyxText;
+    { Rebase a fragment diagnostic into its owning immutable source. }
+    function Rebased(AScalarOffset: Integer): TNyxPascalLexicalDiagnostic;
     property Issue: TNyxPascalLexicalIssue read FIssue;
     property Span: TNyxPascalSpan read FSpan;
   end;
@@ -175,6 +177,11 @@ type
     FReal: Boolean;
     FRegion: TNyxPascalLexicalRegion;
   public
+    { Rebase local fragment coordinates without changing classification. Offsets
+      are nonnegative; the column offset applies only to the first local line.
+      Storage uses target String units, independently of Unicode scalar spans. }
+    function Rebased(AScalarOffset, AStorageOffset, ALineOffset,
+      AColumnOffset: Integer): TNyxPascalToken;
     property Span: TNyxPascalSpan read FSpan;
     property Kind: TNyxPascalTokenKind read FKind;
     property Word: TNyxPascalWord read FWord;
@@ -298,6 +305,14 @@ function NewNyxPascalContextualLexicalSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
   const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
 
+{ Fixed-policy fragment scanner for immutable append continuations. Coordinates
+  remain local; the caller supplies the exact entry region and whether a BOM is
+  at the original source start. No include/observer/compiler authority is inferred. }
+function NewNyxPascalLexicalFragment(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
+  ASourceStart: Boolean;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
+
 implementation
 
 uses nyx.text.index, nyx.unicode, nyx.unicode.types;
@@ -380,6 +395,7 @@ type
     FColumn: Integer;
     FBytes: Integer;
     FPreviousCR: Boolean;
+    FSourceStart: Boolean;
     FNested: Boolean;
     FObserver: INyxPascalLexicalObserver;
     FRegionObserver: INyxPascalLexicalRegionObserver;
@@ -403,7 +419,8 @@ type
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalLexicalOptions;
       const ACancellation: INyxCancellationScope;
-      const AObserver: INyxPascalLexicalObserver = nil);
+      const AObserver: INyxPascalLexicalObserver = nil;
+      ARegion: TNyxPascalLexicalRegion = plrPascal; ASourceStart: Boolean = True);
     function Source: TNyxText;
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
@@ -470,6 +487,35 @@ end;
 function TNyxPascalSpan.Finish: Integer;
 begin
   Result := FStart + FLength;
+end;
+
+function TNyxPascalToken.Rebased(AScalarOffset, AStorageOffset, ALineOffset,
+  AColumnOffset: Integer): TNyxPascalToken;
+begin
+
+  if (FStorage < 1) or (FLine < 1) or (FColumn < 1) or
+    (AScalarOffset < 0) or (AStorageOffset < 0) or (ALineOffset < 0) or
+    (AColumnOffset < 0) or (FStorage > High(Integer) - AStorageOffset) or
+    (FLine > High(Integer) - ALineOffset) or
+    ((FLine = 1) and (FColumn > High(Integer) - AColumnOffset)) then
+  begin
+    raise ENyxPascalLexical.Create('Fragment token rebase exceeds its coordinate domain');
+  end;
+  Result := Self;
+  Result.FSpan := NyxPascalSpan(NyxPascalSpan(AScalarOffset, FSpan.Start).Finish, FSpan.Length);
+  Result.FStorage := FStorage + AStorageOffset;
+  Result.FLine := FLine + ALineOffset;
+
+  if FLine = 1 then
+  begin
+    Result.FColumn := FColumn + AColumnOffset;
+  end;
+end;
+
+function TNyxPascalLexicalDiagnostic.Rebased(AScalarOffset: Integer): TNyxPascalLexicalDiagnostic;
+begin
+  Result := Self;
+  Result.FSpan := NyxPascalSpan(NyxPascalSpan(AScalarOffset, FSpan.Start).Finish, FSpan.Length);
 end;
 
 function NyxPascalASCIIKey(const AText: TNyxText): TNyxText;
@@ -562,7 +608,8 @@ end;
 
 constructor TLexicalSnapshot.Create(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope;
-  const AObserver: INyxPascalLexicalObserver);
+  const AObserver: INyxPascalLexicalObserver; ARegion: TNyxPascalLexicalRegion;
+  ASourceStart: Boolean);
 var
   LObserver: INyxPascalLexicalConstructionObserver;
   LCapture: TLexicalPrefixCapture;
@@ -572,6 +619,8 @@ begin
   AOptions.Validate;
   FOptions := AOptions;
   FNested := AOptions.AllowNestedComments;
+  FSourceStart := ASourceStart;
+  SetRegion(ARegion);
   FObserver := AObserver;
   Supports(AObserver, INyxPascalLexicalRegionObserver, FRegionObserver);
 
@@ -1291,7 +1340,7 @@ begin
       Break;
     end;
 
-    if (LScalar = $FEFF) and (FOffset = 0) then
+    if (LScalar = $FEFF) and (FOffset = 0) and FSourceStart then
     begin
       { A physical UTF-8 BOM remains lossless trivia only at the source start. }
       LToken.FKind := ptkWhitespace;
@@ -1555,6 +1604,13 @@ begin
     raise ENyxPascalLexical.Create('Contextual lexical construction needs an explicit observer');
   end;
   Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, AObserver);
+end;
+
+function NewNyxPascalLexicalFragment(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
+  ASourceStart: Boolean; const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
+begin
+  Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, nil, ARegion, ASourceStart);
 end;
 
 procedure InitializeVocabulary;

@@ -2095,15 +2095,58 @@ token; that token remains outside the prefix's public source view. Ordinary
 complete translations and alternate sources without this receipt do not
 advertise frozen-arena storage.
 
-This is a prerequisite to genuine incremental analysis. The current projection
-and declaration parser still process complete prefixes, and their original
-aggregate charge remains unchanged. Neither storage sharing nor its counters
-authorizes discounting that repeated work. Append-only projection, safe parser
-checkpoints and binding reuse must preserve unfinished declaration owners,
+This is a prerequisite to genuine incremental analysis. The current declaration
+parser still processes complete prefixes, and its original aggregate charge
+remains unchanged. Neither storage sharing nor its counters authorizes
+discounting that repeated work. Safe parser checkpoints and binding reuse must
+preserve unfinished declaration owners,
 physical origins, exact compiler/source context, cancellation and atomic refusal.
 WORK.md owns the native checks, compiled-only browser consumer, maintained
 regressions and unchanged actual RTL gate; full editor/incremental/parity/adoption
 and delivery remain open.
+
+## Append-only lexical and analysis projection
+
+`nyx.pascal.lexing.append` owns fixed-policy append snapshots. A snapshot shares
+immutable complete blocks, privately repairs its tail and keeps a flat directory.
+Appending rescans the last two non-EOF tokens plus new text, preserving scanner
+lookahead, numeric dot seams, unfinished strings/comments, CRLF and entry assembly
+state. Provisional tail diagnostics are replaced. Scalar, UTF-8 byte and target
+String storage coordinates remain distinct; cancellation is polled during byte
+counting, copying and scanning. Global byte/token/diagnostic limits stay exact.
+
+```pascal
+LLexical := NewNyxPascalAppendLexical('unit Example; interface ',
+  TNyxPascalLexicalOptions.Defaults);
+LLexical := AppendNyxPascalLexical(LLexical, 'const Answer = 42;');
+LSyntax := NewNyxPascalSyntaxFromLexical(LLexical,
+  TNyxPascalSyntaxOptions.Defaults);
+```
+
+`Source` assembles the whole text only on explicit request; `Text` and scalar
+`Slice` read owned segments. `INyxPascalLexicalAppendWork.RetainedFrom` recognizes
+the exact direct predecessor (or the same unchanged snapshot), refusing sibling/
+foreign histories. Its token counters describe actual lexical scan/copy/sharing,
+not total CPU work or completed syntax reuse. Independent identity stamps contain
+no source or parent pointers; retaining a result cannot retain a chain of earlier
+snapshots. Arbitrary/contextual lexical implementations require an explicit fresh
+start and cannot donate unknown entry state.
+
+`AppendNyxPascalTranslatedSyntax` requires an owned, unblocked predecessor,
+identical syntax/lexical options and chronological continuity. The translation
+owner's private identity proves its exact immutable token history; equal text
+and equal compiler facts from another construction grant no continuity. Appended
+significant tokens retain exact physical occurrence, pre-state and macro origins.
+Earlier origin rows are still copied. The new lexical overload parses the retained
+arena without joining/relexing old text; declaration structure still rebuilds.
+Ordinary ordered semantic conditions now use this continuation during their one
+source traversal, with their existing full-prefix charge unchanged.
+
+WORK.md owns native differential checks against fresh whole scans/parsing,
+unchanged RTL integration and compiled-only browser evidence. Safe declaration
+checkpoints, binding/incremental work accounting, broader grammar/quality/parity,
+default Studio adoption and delivery remain open. This API appends exact source;
+it does not yet implement arbitrary buffer edits or grant compiler admission.
 
 ## Declaration-bound constant expressions
 

@@ -209,6 +209,10 @@ type
     FExpression: TNyxText;
     FOrigin: TNyxPascalConditionOrigin;
     FPlan: INyxPascalConstantPlan;
+    { Construction-only detached projection. Its lexical blocks may be reused
+      by the next exact chronological prefix; syntax/binding still rebuild and
+      their existing full-prefix charge remains unchanged. }
+    FProjection: INyxPascalTranslatedSyntax;
     procedure CheckCancellation;
     procedure Admit(AWork: Integer; APhase: TNyxPascalConditionalWorkPhase);
   public
@@ -651,7 +655,16 @@ begin
       Data.Issue := pbiIncompleteSource;
       Exit;
     end;
-    LView := NewNyxPascalTranslatedSyntax(APrefix, SyntaxOptions, Cancellation);
+
+    if FProjection <> nil then
+    begin
+      LView := AppendNyxPascalTranslatedSyntax(FProjection, APrefix, SyntaxOptions, Cancellation);
+    end
+    else
+    begin
+      LView := NewNyxPascalTranslatedSyntax(APrefix, SyntaxOptions, Cancellation);
+    end;
+    FProjection := LView;
     LName := LView.Syntax.Scope(0).Name;
 
     if (LName = '') or not LView.CompleteTranslation then

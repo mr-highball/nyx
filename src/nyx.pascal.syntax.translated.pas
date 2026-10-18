@@ -93,26 +93,46 @@ function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
 
+{ Continue an owned, unblocked projection along the same captured translation
+  lineage with exactly matching options. Existing physical origins stay exact;
+  only new significant source tokens extend the lexical projection. The parser
+  still reconstructs declarations and no reduced work charge is implied.
+  Unrelated, shorter, alternate or uncertain predecessors refuse atomically. }
+function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
+
 implementation
 
-uses SysUtils, nyx.bytes, nyx.pascal.context;
+uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append;
 
 type
+  { Forward owner for the private borrowed construction seed below. }
+  TTranslatedSyntax = class;
+  { In-unit immutable projection authority. The pointer is borrowed only while
+    its interface lease is held; no appended result retains the prior owner. }
+  IProjectionOwner = interface(IInterface)
+    ['{7B440252-DB39-4370-A7EC-D51E2BE12FB9}']
+    function Projection: TTranslatedSyntax;
+  end;
   { Owns its input translation, projection parser and detached origin vector.
     Cancellation exists during construction only; no document/editor cycle occurs. }
-  TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax)
+  TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax, IProjectionOwner)
   private
     FSource: INyxPascalTranslation;
     FSyntax: INyxPascalSyntaxSnapshot;
     FOrigins: array of TNyxPascalSyntaxOrigin;
     FCount: Integer;
     FBlocked: Integer;
+    FBytes: Integer;
+    FOptions: TNyxPascalSyntaxOptions;
     procedure Build(const AOptions: TNyxPascalSyntaxOptions;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
   public
     constructor Create(const ASource: INyxPascalTranslation;
       const AOptions: TNyxPascalSyntaxOptions;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax = nil);
+    function Projection: TTranslatedSyntax;
     function Source: INyxPascalTranslation;
     function Syntax: INyxPascalSyntaxSnapshot;
     function CompleteTranslation: Boolean;
@@ -129,7 +149,7 @@ type
 
 constructor TTranslatedSyntax.Create(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalSyntaxOptions;
-  const ACancellation: INyxCancellationScope);
+  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
 begin
   inherited Create;
 
@@ -138,13 +158,14 @@ begin
     raise ENyxPascalLexical.Create('Translated syntax needs its immutable source translation');
   end;
   AOptions.Validate;
+  FOptions := AOptions;
   FSource := ASource;
   FBlocked := -1;
-  Build(AOptions, ACancellation);
+  Build(AOptions, ACancellation, APrevious);
 end;
 
 procedure TTranslatedSyntax.Build(const AOptions: TNyxPascalSyntaxOptions;
-  const ACancellation: INyxCancellationScope);
+  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
 var
   LParts: TNyxStrings;
   LAt: Integer;
@@ -157,12 +178,33 @@ var
   LEffective: TNyxPascalToken;
   LOrigin: TNyxPascalSyntaxOrigin;
   LCapacity: Integer;
+  LFirst: Integer;
+  LLexical: INyxPascalLexicalSnapshot;
 begin
   LParts := TNyxStrings.Create;
   try
     LOffset := 0;
     LBytes := 0;
-    for LAt := 0 to FSource.Count - 1 do
+    LFirst := 0;
+
+    if APrevious <> nil then
+    begin
+      FCount := APrevious.FCount;
+      SetLength(FOrigins, FCount);
+      for LAt := 0 to FCount - 1 do
+      begin
+
+        if (ACancellation <> nil) and ACancellation.Cancelled then
+        begin
+          raise ENyxPascalAnalysisCancelled.Create('Translated origin continuation cancelled');
+        end;
+        FOrigins[LAt] := APrevious.FOrigins[LAt];
+      end;
+      LFirst := APrevious.FSource.Count;
+      LOffset := APrevious.FSyntax.Lexical.Scalars;
+      LBytes := APrevious.FBytes;
+    end;
+    for LAt := LFirst to FSource.Count - 1 do
     begin
 
       if (ACancellation <> nil) and ACancellation.Cancelled then
@@ -236,10 +278,25 @@ begin
       Inc(LOffset, LEffective.Span.Length);
       LParts.Add(LText);
     end;
-    FSyntax := NewNyxPascalSyntaxSnapshot(LParts.Join, AOptions, ACancellation);
+    FBytes := LBytes;
+
+    if APrevious <> nil then
+    begin
+      LLexical := AppendNyxPascalLexical(APrevious.FSyntax.Lexical, LParts.Join, ACancellation);
+    end
+    else
+    begin
+      LLexical := NewNyxPascalAppendLexical(LParts.Join, AOptions.LexicalOptions, ACancellation);
+    end;
+    FSyntax := NewNyxPascalSyntaxFromLexical(LLexical, AOptions, ACancellation);
   finally
     LParts.Free;
   end;
+end;
+
+function TTranslatedSyntax.Projection: TTranslatedSyntax;
+begin
+  Result := Self;
 end;
 
 function TTranslatedSyntax.Source: INyxPascalTranslation;
@@ -390,6 +447,53 @@ function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
   const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
 begin
   Result := TTranslatedSyntax.Create(ASource, AOptions, ACancellation);
+end;
+
+function SameOptions(const ALeft, ARight: TNyxPascalSyntaxOptions): Boolean;
+var
+  LLeft: TNyxPascalLexicalOptions;
+  LRight: TNyxPascalLexicalOptions;
+begin
+  LLeft := ALeft.LexicalOptions;
+  LRight := ARight.LexicalOptions;
+  Result := (ALeft.StartingContext = ARight.StartingContext) and
+    (ALeft.MaximumDeclarations = ARight.MaximumDeclarations) and
+    (ALeft.MaximumScopes = ARight.MaximumScopes) and
+    (ALeft.MaximumDepth = ARight.MaximumDepth) and
+    (ALeft.MaximumDiagnostics = ARight.MaximumDiagnostics) and
+    (LLeft.MaximumSourceBytes = LRight.MaximumSourceBytes) and
+    (LLeft.MaximumTokens = LRight.MaximumTokens) and
+    (LLeft.MaximumDiagnostics = LRight.MaximumDiagnostics) and
+    (LLeft.MaximumCommentDepth = LRight.MaximumCommentDepth) and
+    (LLeft.AllowNestedComments = LRight.AllowNestedComments) and
+    (LLeft.AllowUnicodeIdentifiers = LRight.AllowUnicodeIdentifiers);
+end;
+
+function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
+var
+  LPrevious: IProjectionOwner;
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Translated continuation cancelled');
+  end;
+  AOptions.Validate;
+
+  if not Supports(APrevious, IProjectionOwner, LPrevious) or (ASource = nil) then
+  begin
+    raise ENyxPascalLexical.Create('Translated continuation needs its owned immutable predecessor and source');
+  end;
+
+  if not APrevious.CompleteTranslation or
+    (NyxPascalSharedTranslationTokens(APrevious.Source, ASource) <> APrevious.Source.Count) or
+    not SameOptions(LPrevious.Projection.FOptions, AOptions) then
+  begin
+    raise ENyxPascalLexical.Create('Translated continuation needs exact lineage, order, activity and options');
+  end;
+  Result := TTranslatedSyntax.Create(ASource, AOptions, ACancellation, LPrevious.Projection);
 end;
 
 end.

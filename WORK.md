@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Shared immutable prefix token storage — 2026-10-18
+## Current integration: Append-only lexical and analysis projection — 2026-10-18
+
+27d1d88 removes repeated frozen-token copying but still reconstructs projection
+text/lexing and declaration/binding state. Current source adds fixed-policy append
+arenas with independent immutable identity, flat shared blocks and private tail
+repair. Only the last two non-EOF tokens plus appended text are rescanned under
+their exact entry region; this retains numeric lookahead, unfinished strings/
+comments, CRLF, assembly and noninitial BOM meaning. Whole text assembles only on
+explicit Source reads. Token text/scalar slices use owned segments, with separate
+scalar, UTF-8 byte and target String storage coordinates. Byte counting, copying
+and scanning poll cancellation; original global byte/token/diagnostic limits stay
+exact. Identity stamps contain no source or parent links and do not form chains.
+
+Chronological source continuity now uses the translation owner's private immutable
+stamp. Equal text/facts from another construction grant no continuity. Appended
+translated views require their owned unblocked predecessor and identical options;
+origin rows are retained exactly but still copied. Ordinary ordered semantic
+conditions now use this append projection under their original single traversal.
+The declaration parser still reconstructs the whole prefix through the new
+immutable-lexical overload; binding remains fresh. Full-prefix charging remains
+unchanged. Storage/lexical counters alone do not authorize discounted work or
+general editor incremental performance.
+
+Focused native checks pass 2,415, clean heap. Every scalar split and successive
+scalar append in dedicated language/Unicode/assembly/CRLF inputs matches fresh
+whole scanning, all token attributes and diagnostics. Owned source callbacks
+compare complete projections, declaration ranges/unfinished owners and physical/
+macro/pre-state origins with fresh whole projection/parsing through repeated
+includes. Limits, malformed Unicode, cancellation during work, sibling/foreign/
+backward/changed-option refusal and exceptional callback retirement preserve
+their original owner. The existing semantic condition consumer passes 37 during
+integration. Browser consumers compile only.
+
+Retained early failures: two test-only native Unicode conversion warnings are
+repaired through typed text and an actual scalar literal. Malformed appended
+Unicode first leaked the resource codec exception; cancellable lexical byte
+counting now owns that refusal. A deliberate cancellation fixture's implicit
+constructor-to-interface argument temporary leaked one 28-byte object despite
+its PASS line; an explicit interface lease repairs ownership. That log is failed
+evidence, not a clean qualification. The final focused native run has zero owned
+warnings and zero unfreed blocks. Seven focused sources are frozen in the ignored
+packet located by `.local/append-projection-paths-private.json` before the wider
+qualification. Source/layout/type comments are reviewed before the freeze.
+Full original criterion/task/credit/DONE/source/type/incremental/editor/
+input/quality/parity/adoption/delivery remain open. LAN stays offline; no host or
+configuration retry, protected mutation, browser/HTTP/file execution/capture,
+cleanup/restart, approval bypass, new tool/schema or sub-agent is introduced.
+
+All 40 maintained native consumers, append 2,415 and storage 336 pass with clean
+heaps. Actual-source lexical reading passes 567 across 500 files/2,298,708 lossless
+tokens. Syntax reading passes 7,934 across five inputs/3,865 declarations. These
+counts overlap; 43 native passing logs include the separate actual-source read.
+All 75 current compiler jobs succeed, zero owned warnings/168 upstream. Both
+Studios/backend/worker and 30 browser consumers compile as applicable; browser
+execution remains unqualified. Seven final-byte functional sources remain exact
+throughout qualification and commit; no post-freeze layout overlay occurs. The
+historical emission compiler log is an unchanged read-only fixture, excluded from
+the current compiler-job count.
+
+The unchanged original RTL run remains a retained failed gate: exit one, clean
+heap, prefix phase at logical round 26, used 3,971,021/requested 268,501/limit
+4,000,000, translated 268,502. It reaches Longint, Int64 and Pointer binding-derived
+measurement requests and publishes no final System/ObjPas semantic/indexed result.
+The five original primitive queries, explicit Word job, symbol preparation three/
+eight ceilings, generic fact-job ceiling eight, 2M view/4M aggregate/64-round
+limits and original consumer/source remain unchanged. No full RTL success or
+current indexed Free/FreeInstance result follows from the append improvement.
+Stop append/oracle/fixture/compiler/capture variants. Next implement genuine
+declaration parser checkpoints and binding continuation through existing syntax/
+binding/conditions owners. Exact lexical lineage does not prove syntax reuse:
+unfinished enclosing declarations, provisional diagnostics and scope/index links
+must be restored/reparsed safely. Earlier origin rows and binding state are still
+copied/rebuilt; their real work must remain charged. Preserve both caps, exact
+source/context/include/branch/macro/settings identity, cancellation and atomic
+refusal. Do not discount work, add fixed probes or relax the original RTL oracle.
+
+Original reader session 89489/PID 12512 is terminal exit one; native/regression/
+products sessions 78734/62152/53721 and extra native 63832 are terminal exit zero.
+No owned reader remains. Seven focused sources, 654 unchanged prior sources,
+97 RTL/24 retained compiler inputs and three additionally inspected compiler
+sources remain exact; maintained inventory is 660. All 156 original unit packets,
+48 retained includes, five protected files/nine complete contexts, 349 frozen
+7422453 artifacts and 13 concurrent planning files remain exact. Final committed
+source/remote identity is in the packet's final-checkpoint-private.json. Native
+Nyx tools remain absent; no fallback transport occurs. At least thirty-nine
+batches remain unclosed against the original language/editor/incremental/input/
+quality/parity/adoption/delivery scope; no original criterion/task/credit/DONE closes.
+
+## Previous integration: Shared immutable prefix token storage — 2026-10-18
 
 5841d16 identifies the remaining aggregate failure as repeated growing-prefix
 analysis. Source review finds two concrete prerequisites: freezes copy both the

@@ -469,6 +469,14 @@ function NewNyxPascalSyntaxSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot; overload;
 
+{ Consume an immutable lexical snapshot under exactly matching lexical options.
+  The parser retains that value owner, never reassembles/relexes its Source text.
+  Alternate implementations must honor the lexical snapshot's immutable contract;
+  source admission, compiler execution and incremental parsing are not implied. }
+function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot;
+  const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot;
+
 implementation
 
 uses nyx.text.index;
@@ -597,6 +605,8 @@ type
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope);
+    constructor CreateLexical(const ALexical: INyxPascalLexicalSnapshot;
+      const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope);
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -703,6 +713,49 @@ begin
   FActiveArm := -1;
   try
     FLexical := NewNyxPascalLexicalSnapshot(ASource, AOptions.LexicalOptions, ACancellation);
+    Build;
+  finally
+    FCancellation := nil;
+  end;
+end;
+
+constructor TSyntaxSnapshot.CreateLexical(const ALexical: INyxPascalLexicalSnapshot;
+  const AOptions: TNyxPascalSyntaxOptions; const ACancellation: INyxCancellationScope);
+var
+  LPolicy: TNyxPascalLexicalOptions;
+  LExpected: TNyxPascalLexicalOptions;
+begin
+  inherited Create;
+  AOptions.Validate;
+
+  if ALexical = nil then
+  begin
+    raise ENyxPascalLexical.Create('Declared syntax needs its immutable lexical snapshot');
+  end;
+  LPolicy := ALexical.Options;
+  LPolicy.Validate;
+  LExpected := AOptions.LexicalOptions;
+
+  if (LPolicy.MaximumSourceBytes <> LExpected.MaximumSourceBytes) or
+    (LPolicy.MaximumTokens <> LExpected.MaximumTokens) or
+    (LPolicy.MaximumDiagnostics <> LExpected.MaximumDiagnostics) or
+    (LPolicy.MaximumCommentDepth <> LExpected.MaximumCommentDepth) or
+    (LPolicy.AllowNestedComments <> LExpected.AllowNestedComments) or
+    (LPolicy.AllowUnicodeIdentifiers <> LExpected.AllowUnicodeIdentifiers) or
+    (ALexical.Count < 1) or (ALexical.Count > LExpected.MaximumTokens) or
+    (ALexical.DiagnosticCount < 0) or (ALexical.DiagnosticCount > LExpected.MaximumDiagnostics) or
+    (ALexical.Scalars < 0) or (ALexical.Scalars > LExpected.MaximumSourceBytes) or
+    (ALexical.Token(ALexical.Count - 1).Kind <> ptkEOF) then
+  begin
+    raise ENyxPascalLexical.Create('Declared syntax lexical input does not match its fixed policy and bounds');
+  end;
+  FOptions := AOptions;
+  FCancellation := ACancellation;
+  FNames := TNyxTextIndex.Create;
+  FStructures := TNyxTextIndex.Create;
+  FActiveArm := -1;
+  try
+    FLexical := ALexical;
     Build;
   finally
     FCancellation := nil;
@@ -3807,6 +3860,13 @@ function NewNyxPascalSyntaxSnapshot(const ASource: TNyxText;
   const ACancellation: INyxCancellationScope): INyxPascalSyntaxSnapshot;
 begin
   Result := TSyntaxSnapshot.Create(ASource, AOptions, ACancellation);
+end;
+
+function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot;
+  const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalSyntaxSnapshot;
+begin
+  Result := TSyntaxSnapshot.CreateLexical(ALexical, AOptions, ACancellation);
 end;
 
 end.
