@@ -164,6 +164,12 @@ retain verified facts across compatible compiler captures under unchanged quotas
 Real RTL integration still exposes source prerequisites; full resolver/editor
 adoption, both-target quality and delivery remain open.
 
+The [constant-expression layer](docs/pascal-projects.md#declaration-bound-constant-expressions)
+now resolves exact source constants and supported ordinal bounds at their owning
+declaration sites. Typed ordinary-Pascal/FPC-conditional dialects retain actual
+compiler differences; missing primitive facts and unsigned/nominal uncertainty
+remain explicit. Full language, editor adoption and both-target quality remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

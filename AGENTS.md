@@ -4,7 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source ordered warning requests use typed numeric/named selectors and
+Current-source declaration-bound constants use exact signed/unsigned values,
+distinct enum ordinals, reusable immutable plans and retained source dependencies.
+Names bind at their declaration sites; source aliases/inline ranges keep their
+own lexical arena. Primitive bounds require matching captured FPC facts. Explicit
+Pascal/FPC-conditional dialects preserve HIGH/ORD/unsupported LOW and signed radix
+differences; wrapping, mixed-sign uncertainty and signed unary/binary overflow
+refuse. Focused native 78 and unchanged real-module 46 pass; the independent native
+oracle returns 42 and LOW remains an exact expected compiler error with no binary.
+System retains 5,631 declarations/seven syntax diagnostics/six answers and now
+identifies missing compiler-root Word facts at the existing High(errorcode)
+condition. ObjPas remains 209/four/one; exact Free/FreeInstance completion,
+navigation and detached insertion still pass. All 32 native consumers have clean
+heaps; 53 accepted compiler logs have zero owned warnings/119 upstream. Both
+Studios/backend/worker and seventeen browser consumers compile as applicable;
+browser execution/input/observing/parity/adoption/delivery remain open. Seven
+focused/630 product/97 RTL/15 compiler pins, 156 byte packets/48 includes, five
+protected files/nine contexts, 349 frozen 7422453 files and thirteen concurrent
+planning files remain exact. Readers joined; LAN offline, native Nyx tools absent.
+WORK.md owns retained oracle/ownership/warning preparations, final-source passes
+and final source/remote identity. At least twenty-four documented unclosed batches
+retain full original criterion two; no original criterion/task/credit/DONE/tool/
+schema/adoption/parity/delivery closes. Stop constant/dialect/fixture/compiler/
+capture variants. Next follow typed missing-primitive requests through existing
+binding/context/preparation ownership; do not patch a fixed Word probe into the
+fixture. Class/property/compilerproc/CODEALIGN, complete canonical types, module
+coherence/incremental budgets/editor/input/navigation/quality/parity/adoption/
+delivery remain required. No host retry/capture, protected mutation, cleanup/
+deletion/restart, approval bypass or sub-agents. Preserve concurrent planning.
+
+Earlier ordered warning requests use typed numeric/named selectors and
 closed actions with independent conditional activity, detached capture/identity,
 physical include receipts and authored PUSH/POP scopes. They do not predict FPC's
 pending message activation or group aliases. Focused warning/planner/protocol

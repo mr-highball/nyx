@@ -33,7 +33,135 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered per-warning compiler policies — 2026-10-18
+## Current integration: Declaration-bound constant meaning — 2026-10-18
+
+Previous goal turn is progress: committed/pushed 20cec00 qualifies ordered warning
+intent, coherent compiler cohorts and the expanded unchanged RTL frontier. At least
+twenty-three documented unclosed batches retain full original authoring criterion
+two. Reassessment follows the concrete High(errorcode)<>maxExitCode prerequisite
+through existing condition/binding owners, rather than more capture/probe variants.
+Deliver typed exact constant values, immutable declaration-bound evaluation and
+ordinal-bound queries through ordinary ordered conditions. Source constants,
+aliases/subranges and declaration-site lookup must retain ownership, scope, exact
+numbers, cycle/depth/work/cancellation refusal. Captured primitive facts must be
+present before deriving supported bounds; no analyzer ABI or name-only compiler
+answer may substitute. Whole compiled authored behavior, portable failure/ownership
+checks and one unchanged prepared real-RTL continuation decide this boundary.
+Stop at a different genuine prerequisite without raising budgets or narrowing the
+original full compiler/type/incremental/editor/input/navigation/quality/parity/
+adoption/delivery requirements. No original criterion/task/credit/DONE closure.
+Native execution/browser compilation only; preserve protected/concurrent inputs
+and offline LAN. No host/config retry, browser/HTTP/file-protocol execution/capture,
+protected mutation, cleanup/deletion/restart, approval bypass or sub-agents.
+
+Qualification reassessment: independent native conditional compilation disproves
+using ordinary Pascal semantics wholesale. The pinned FPC preprocessor recognizes
+HIGH/ORD but not LOW; direct wide radix literals first pass signed-64 Val, and ORD
+uses its own signed projection. Keep the original failed oracle log. The API now
+captures a typed ordinary-Pascal/FPC-conditional dialect; nested declaration
+initializers always keep ordinary Pascal rules. FPC-only evaluation requires an
+FPC source context, parsed dialects cannot change during evaluation, and the LOW
+case remains a deliberately asserted compiler failure/refusal. This is a necessary
+condition-admission correction, not a broader passing claim or a modified compiler.
+Continue the unchanged real RTL route once, retaining its next different source
+prerequisite and original budgets. At least twenty-four documented unclosed batches
+retain full original criterion two; no full acceptance or completion credit closes.
+
+The public nyx.pascal.values/nyx.pascal.constants contract now exposes exact copied
+integer/Boolean/enum-ordinal values, explicit operations, immutable parsed plans,
+typed dialect/options and detached results with checked source dependencies.
+The existing decimal implementation preserves integers beyond 2^53 through the
+signed/unsigned 64-bit domain. Unsigned intent survives small results; overflow,
+unsigned underflow and uncertain mixed-sign coercion refuse. Enum values require
+explicit Ord for ordinary integer operations. Constants bind at their declaration
+sites, including imported dependencies and local shadowing; later names cannot
+donate values. Source aliases/distinct types/inline ranges retain their exact
+lexical owner. Recognized primitive names alone cannot establish a bound: the
+matched captured context/mode/H/size/family must support its integer type.
+
+The ordinary ordered conditional consumer now uses supported FPC plans through
+the same exact prefix and sealed replay path, preserving legacy declaration/size
+authority. It charges value work to the existing aggregate quota and requires an
+FPC source context for FPC-only rules. Source initializers retain ordinary Pascal
+semantics even inside a conditional query. Plans cannot change dialect during
+evaluation. Every public/private type has its own purpose/ownership comment;
+records contain values only. Existing interfaces/enum ordinals/wire/tool inventory
+stay unchanged; new constant interfaces are separate optional library contracts.
+
+Ignored constant-meaning-20261018-090708 is located by
+.local/constant-meaning-paths-private.json. Final frozen-source accepted native,
+regression and product groups and the unchanged real-module consumer all join with
+exit 0. Fifty-three accepted compiler logs have zero owned warnings and 119
+identified upstream pas2js Classes warnings. Thirty-two native consumers have clean
+heaps. Focused constant checks pass 78; the full compiled authored companion and
+independent native conditional oracle return 42. That oracle separately proves
+source ranges/enums, wide decimal arithmetic, direct signed radix interpretation,
+conditional Ord projection and signed div/mod. Its explicit LOW mode emits exactly
+the retained Wanted Boolean/AnsiString diagnostic, exits 1 and produces no binary;
+that expected failure is outside the regular warning ledger. Browser consumers
+and products compile only; no HTTP/file-protocol/browser execution or capture is
+claimed. Both Studios, backend and worker compile, with seventeen browser consumers.
+
+The same final-source ledger retains native warning/planner/protocol 44/30/38,
+translation 157, syntax 7,671, structured types 367, binding 62, generic binding
+127, dependencies 48, owned completion 86, compiler/RTL profile 74, actual Windows
+SDK 26 and production semantic completion 84, alongside the other maintained
+lexical/policy/macro/linkage/bootstrap/intrinsic/RTL/non-returning assertions.
+These counts overlap earlier qualification; they add no independent product credit.
+
+The unchanged whole real-module frontier passes 46. System still prepares eight
+joined probes/135,763 tokens/37 visits/twelve diagnostics/eleven requirements.
+Source refinement retains 5,631 declarations/seven syntax diagnostics/six answers;
+the existing High(errorcode)<>maxExitCode condition now reaches actual bound-type
+lookup and explicitly reports missing compiler-root Word facts at system.inc
+scalar 1051. The underlying related name survives instead of being replaced by
+errorcode. No Word measurement or successful branch is invented. ObjPas remains
+209 declarations/four syntax diagnostics/one answer/no pending site. Ordinary
+indexed TObject.Fr still yields exactly Free and FreeInstance, retaining original
+objpash.inc name tokens after provider retirement and exact detached insertion.
+
+Retained preparations are excluded from acceptance: initial exhaustive-case and
+constant-folded fixture warnings, a missing test uses entry, and the first value
+consumer exposed a constructed range leaf without its own Definition. Evaluation
+now carries the last actual declared owner through aliases and checks the exact
+lexical arena, including inline variable types. The independent oracle disproved
+ordinary/conditional LOW and radix equivalence; typed dialects retain that finding
+instead of changing compiler sources or hiding the input. Subsequent review
+preserved unsigned intent through zero/small results, signed binary overflow and
+the Low(Int64) unary edge; final-source checks were rebuilt after those meaningful
+value-layout/domain changes. Underlying binder diagnostics retain their own related
+name. Earlier complete preliminary groups remain separate; only the final accepted
+source hashes/logs enter the final ledger. After compilation, one missing blank
+line before a new nested if was restored to the author's style; the exact compiled
+file is retained and reversing that one insertion reproduces its bytes. This
+spacing-only review adds no runtime claim or repeated compiler batch. Two final
+type-purpose comments clarify the retained source-world lease and reused decimal
+arithmetic; their exact inverse restores separately retained compiled bytes, with
+no executable-token change. Final source inventories record those reviewed forms.
+Receipt inventory filenames were mapped
+to their actual retained paths without rerunning or rewriting accepted logs.
+
+Final verification retains seven focused source files, 630 product files, 97 prior
+RTL pins and fifteen compiler/config/source pins, including the inspected scanner.
+All 156 original unit packets and 48 retained SysUtils includes remain byte-exact.
+All five protected files/nine complete contexts and thirteen concurrent planning
+files remain exact outside this turn's six-line README addition. The read-only
+frozen verifier passes all 349 files at 7422453 with a clean heap. Readers joined;
+ports 8088–8093 have no listener. Native Nyx tools remain absent. No host/config
+retry, active project mutation, cleanup/deletion/restart or approval bypass occurred.
+The final source/remote identity is recorded in the private packet after publication.
+
+Stop constant/dialect/fixture/compiler/capture variants. The next concrete
+prerequisite is typed missing-primitive requests through existing binding/context/
+module-preparation ownership, so consumers can request coherent compiler-root
+evidence without interpreting a diagnostic string or patching the fixture's probe
+list. Class/property/compilerproc/CODEALIGN grammar and full canonical types/module
+coherence/incremental/editor/input/navigation/quality/parity/adoption/delivery stay
+open. At least twenty-four documented unclosed batches retain complete original
+criterion two; no original criterion/task/counter/credit/DONE closes. Goal active,
+solo; independently owned browser-compiler/reference planning remains unstaged.
+
+## Earlier integration: Ordered per-warning compiler policies — 2026-10-18
 
 Previous goal turn is progress: committed/pushed 9359fec qualifies non-returning
 intent and original RTL TObject completion/navigation. At least twenty-two

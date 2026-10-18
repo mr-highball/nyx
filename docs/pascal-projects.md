@@ -1860,6 +1860,73 @@ browser consumers compile only. Full RTL grammar/type meaning, incremental/edito
 adoption, interaction, parity and delivery remain under original authoring criterion
 two, with no new MCP tool or schema.
 
+## Declaration-bound constant expressions
+
+`nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.
+Integers use the existing exact decimal arithmetic through the signed/unsigned
+64-bit domain, preserving values above 2^53 on both targets without floating-point
+conversion. Unsigned intent survives small results; wrapping, signed overflow and
+uncertain mixed-sign coercion refuse. Enum ordinals remain distinct and require
+explicit `Ord` before ordinary integer arithmetic. This is bounded constant
+meaning, not full compiler overload, nominal-type or expression checking.
+
+`PlanNyxPascalConstant` retains an immutable parsed expression independently of a
+source world. Its `Evaluate` method binds names at one exact `INyxPascalBindingSite`;
+nested constants use their own declaration sites, preventing later declarations
+or a caller's shadowing names from donating values. Source aliases, distinct types,
+inline subranges and supported enum values retain their owning lexical arena.
+Primitive bounds require matching captured compiler-root/pristine size facts and
+the supported FPC integer family; the analyzer's host types never supply them.
+
+```pascal
+LOptions := TNyxPascalConstantOptions.Defaults.UpToSteps(100000);
+LPlan := PlanNyxPascalConstant('Answer', LOptions);
+LReply := LPlan.Evaluate(LSourceSite, LOptions);
+
+if LReply.Value.Kind = pvvInteger then
+begin
+  LExactText := LReply.Value.Number.ToText;
+end;
+```
+
+These expression strings are an explicit Pascal-source parsing boundary. Public
+values, options, operations and results use closed types. Exact integer radix
+literals, unary signs, Boolean operations/comparisons, arithmetic `+`, `-`, `*`,
+`div`, `mod`, qualified names and supported `Low`/`High`/`Ord`/`SizeOf`/`Declared`/
+`Defined` forms feed that plan. Ordinary calls, runtime variables, mutable typed
+constants, real/string/cast/width-sensitive bitwise meaning and unsupported layout
+remain unknown. Checked getters refuse incompatible kinds; there is no application,
+filesystem, network, script or UI invocation.
+
+`TNyxPascalConstantOptions.InDialect` distinguishes ordinary Pascal from FPC's
+separate conditional expression language. Parsed plans cannot change dialect at
+evaluation, and declaration initializers always use ordinary Pascal rules. The
+configured FPC oracle establishes that preprocessor `HIGH`/`ORD` are recognized
+while `LOW` is not. Direct wide radix literals first use signed-64 `Val`, and
+conditional `Ord` has a separate signed projection. The conditional reader retains
+those distinctions and existing noncanonical-decimal refusal instead of treating
+ordinary source arithmetic as compiler admission. Other compiler families cannot
+acquire FPC conditional authority from this option.
+
+Results own bounded exact declaration dependencies for navigation after the query,
+plan and original caller retire. Cycles, unsupported types and missing modules/
+primitive facts retain typed issues and the underlying related name. Evaluation
+shares one recursion/work quota across declaration expansion, with independent
+per-call binding-world quotas. Defaults retain 512 tokens/16 KiB per expression,
+64 levels, 100000 value work units and at most 256 dependencies. Exhaustion and
+cancellation publish no partial result; these budgets do not establish full
+incremental or total CPU performance.
+
+Ordinary ordered semantic translation now consumes supported FPC constant plans
+through the same exact-prefix binding and sealed replay path. Existing supported
+declaration/size conditions retain their earlier authority. Value work charges the
+existing aggregate budget and missing facts never produce a guessed branch.
+WORK.md owns the native whole-source/compiler oracle, compiled-only browser
+consumer and unchanged real-RTL frontier. The next missing primitive packet,
+class/property grammar and full source/type/incremental/editor/input/navigation/
+quality/parity/adoption/delivery remain under original authoring criterion two.
+This adds no MCP tool/schema or observing release.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

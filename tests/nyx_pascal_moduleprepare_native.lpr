@@ -487,6 +487,8 @@ begin
         ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName);
       Check(LSource.Pending and (LSource.BindingIssue = pbiCompilerContext) and (LSource.Answers = 6),
         'Original source binding answers six conditions and explicitly retains the next compiler-context requirement');
+      Check(NyxPascalASCIIKey(LSource.RelatedName) = TNyxText('word'),
+        'The evaluated High condition identifies missing compiler-root Word facts instead of inventing its bound');
       WriteLn('actual pending condition / ', LSource.Origin.FileReference.Name,
         ' / scalar=', LSource.Origin.Span.Start);
       LUnsupportedSyntax := False;

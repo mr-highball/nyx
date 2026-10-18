@@ -9,6 +9,32 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Constant-meaning continuation (2026-10-18): 20cec00 is progress, retaining at least
+twenty-three documented unclosed batches and full original criterion two. Follow
+the actual High(errorcode)<>maxExitCode condition through existing constant/binding
+owners. Deliver typed exact values and declaration-bound constants/ordinal ranges
+with immutable source ownership, declaration-site visibility, cycle/work/cancel
+refusal and explicit missing primitive facts. Whole compiled authored behavior,
+portable failures and one prepared unchanged RTL route decide the boundary. Stop
+at a different genuine prerequisite; no analyzer ABI/name-only answer, raised
+budget, full criterion/task/credit/DONE/parity/adoption/delivery closure is allowed.
+WORK.md owns evidence, retained failures and the full compiler/editor return path.
+
+The qualified value boundary passes 78 focused native checks and an independent
+configured compiler oracle returning 42. LOW in FPC conditions remains an exact
+expected compiler error/refusal, with ordinary source LOW kept separately. Values
+retain unsigned intent and refuse overflow, underflow and uncertain coercions.
+The unchanged real-module frontier passes 46, now identifying missing compiler-root
+Word facts at High(errorcode) without guessing its bound. System stays 5,631/seven/
+six, ObjPas 209/four/one; exact Free/FreeInstance completion/navigation/insertion
+still pass. Thirty-two native consumers have clean heaps; 53 accepted compiler
+logs have zero owned warnings. Browser consumers/products compile only. Next
+follow typed missing-primitive requests through existing binding/context/preparation
+owners rather than adding a fixed fixture probe. Class/property grammar and full
+source/type/incremental/editor/input/navigation/quality/parity/adoption/delivery
+remain open across at least twenty-four documented unclosed batches. WORK.md owns
+final-source evidence, retained failures and preservation; no original closure.
+
 Per-warning continuation (2026-10-18): 9359fec is progress, retaining at least
 twenty-two documented unclosed batches and complete original criterion two.
 Follow real WARN through existing context/translation ownership with typed open

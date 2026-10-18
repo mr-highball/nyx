@@ -79,7 +79,7 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
 
 implementation
 
-uses SysUtils, nyx.pascal.lexing;
+uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.values;
 
 type
   { One sealed source query/answer. Context is owned in this class, never in a
@@ -421,6 +421,12 @@ var
   LRemaining: Integer;
   LPassOptions: TNyxPascalTranslationOptions;
   LCancellation: INyxCancellationScope;
+  LLegacyEligible: Boolean;
+  LConstantPlan: INyxPascalConstantPlan;
+  LConstantResult: INyxPascalConstantResult;
+  LConstantOptions: TNyxPascalConstantOptions;
+  LTruth: TNyxPascalKnowledge;
+  LBoolean: Boolean;
 begin
   AOptions.Validate;
   ATranslation.Validate;
@@ -476,10 +482,28 @@ begin
     LNeeds := PlanNyxPascalCondition(LCache.Question.Context, LCache.Question.Expression);
     Supports(LNeeds, INyxPascalConditionDeclarations, LDeclarations);
 
-    if not LNeeds.SyntaxSupported or (LNeeds.SymbolCount > 0) or
-      ((LNeeds.SizeCount = 0) and (LDeclarations.DeclarationCount = 0)) then
+    LLegacyEligible := LNeeds.SyntaxSupported and (LNeeds.SymbolCount = 0) and
+      ((LNeeds.SizeCount > 0) or (LDeclarations.DeclarationCount > 0));
+    LConstantPlan := nil;
+
+    if not LLegacyEligible then
     begin
-      Break;
+
+      if LCache.Question.Context.Family <> ppcFPC then
+      begin
+        Break;
+      end;
+
+      { A constant-expression plan supplies a separate typed source authority.
+        Unsupported syntax still stops here; no compiler symbol becomes a
+        declaration value merely because an earlier reader could not parse it. }
+      LConstantPlan := PlanNyxPascalConstant(LCache.Question.Expression,
+        TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional), LCancellation);
+
+      if not LConstantPlan.SyntaxSupported then
+      begin
+        Break;
+      end;
     end;
 
     if LResult.Site.PrefixCount > AOptions.MaximumTokens - LResult.Tokens then
@@ -513,16 +537,55 @@ begin
     LSemanticOwner := LMeanings;
     LMeanings.Site := LPrefixWorld.At(LModule, LScope, LCaret);
     LMeanings.Cancellation := LCancellation;
-    LAnalysis := AnalyzeNyxPascalCondition(LCache.Question.Context,
-      LCache.Question.Expression, LSemanticOwner);
+    LTruth := ppkUnknown;
 
-    if LAnalysis.Truth = ppkUnknown then
+    if LLegacyEligible then
     begin
+      LAnalysis := AnalyzeNyxPascalCondition(LCache.Question.Context,
+        LCache.Question.Expression, LSemanticOwner);
+      LTruth := LAnalysis.Truth;
       LResult.Issue := LMeanings.Issue;
       LResult.Related := LMeanings.Related;
+    end
+    else
+    begin
+      LRemaining := AOptions.MaximumTokens - LResult.Tokens;
+
+      if LRemaining < 1 then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Constant conditions exhaust the aggregate work budget');
+      end;
+      LConstantOptions := TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional);
+
+      if LConstantOptions.MaximumSteps > LRemaining then
+      begin
+        LConstantOptions := LConstantOptions.UpToSteps(LRemaining);
+      end;
+      LConstantResult := LConstantPlan.Evaluate(LMeanings.Site, LConstantOptions, LCancellation);
+      Inc(LResult.Tokens, LConstantResult.WorkUnits);
+      LResult.Issue := LConstantResult.Issue;
+      LResult.Related := LConstantResult.RelatedName;
+
+      if LConstantResult.Value.TryTruth(LBoolean) then
+      begin
+        LTruth := ppkFalse;
+
+        if LBoolean then
+        begin
+          LTruth := ppkTrue;
+        end;
+      end
+      else if LResult.Issue = pbiNone then
+      begin
+        LResult.Issue := pbiUnsupportedType;
+      end;
+    end;
+
+    if LTruth = ppkUnknown then
+    begin
       Break;
     end;
-    LCache.Accept(LAnalysis.Truth);
+    LCache.Accept(LTruth);
     LResult.HasQuestion := False;
     LResult.Issue := pbiNone;
     LResult.Related := '';
@@ -530,6 +593,8 @@ begin
     LPrefixWorld := nil;
     LView := nil;
     LPrefix := nil;
+    LConstantResult := nil;
+    LConstantPlan := nil;
   end;
   Result := LOwner;
 end;

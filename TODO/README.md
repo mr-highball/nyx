@@ -124,6 +124,12 @@ cohorts under unchanged quotas. Real RTL integration retains explicit source gap
 Original criterion two keeps full compiler/editor/incremental/parity/delivery;
 WORK.md owns qualified checks, retained failures and the next source prerequisite.
 
+The [constant-expression layer](../docs/pascal-projects.md#declaration-bound-constant-expressions)
+retains exact source values, ordinal bounds and declaration-site dependencies.
+Typed source/conditional dialects preserve actual compiler distinctions; missing
+primitive facts remain explicit. Original criterion two keeps full language,
+editor/incremental/parity/delivery; WORK.md owns evidence and the next prerequisite.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full
