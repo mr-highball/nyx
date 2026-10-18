@@ -1268,11 +1268,54 @@ inline-field and inline-variable callbacks. Its parsed convention maps back to
 the exact included token after supplementary Unicode text. In the complete
 captured Windows unit, the real BFFCALLBACK now has a complete typed stdcall
 signature and physical origin; 78 spurious declarations/diagnostics disappear.
-Remaining syntax diagnostics decrease from 110 to 32, beginning with overloaded
-geometry-record operators. Ordinary indexed completion retains unsupported-scope
+That checkpoint decreased syntax diagnostics from 110 to 32. The
+[operator continuation](#typed-record-operators) now reaches 18 remaining issues.
+Ordinary indexed completion retains unsupported-scope
 refusal rather than inventing complete SDK meaning. WORK.md owns exact native
 evidence; browser consumers compile only. Full language/context/canonical typing,
 incremental budgets, editor/input/navigation/quality/parity/delivery remain open.
+
+## Typed record operators
+
+`TNyxPascalOperatorKind` retains a closed declared operator family separately from
+its original name and signature. Symbolic/named spellings remain exact source;
+unary/binary arity and operand/result types remain in their routine scopes.
+Operators retain the existing routine kind for compatibility. Family equality
+does not establish compiler eligibility, conversion equivalence or call selection.
+Unknown spellings keep explicit unsupported-scope diagnostics.
+
+Optional `INyxPascalOperatorSyntax.NamedOperator` indexes a family inside one
+immutable scope. Ordinary `Named` remains independent, including a normal method
+called Add beside the named Add operator. `NextNamed` traverses the family's
+alternatives. No synthetic Pascal identifier replaces an authored operator token.
+Global FPC declarations also retain their explicit result identifier in the
+operator's local scope. Qualified implementation owners and exact physical
+name/header/result/parameter locations remain available.
+
+Optional `INyxPascalOperatorQueries.OperatorMembers` uses the existing world,
+receiver type and caller site. It returns bounded declared alternatives with
+visibility, generic context, cancellation and stale-world guards. Exhaustion
+refuses atomically. Ordinary member pages exclude operators; method completion
+retains its existing contract. These are in-process optional capabilities, with
+the original interfaces/GUIDs and MCP transport/tool inventory unchanged.
+
+The whole handwritten compiler input executes symbolic/named/unary/equality/
+implicit/explicit record operations and an ordinary Add method in Delphi mode.
+A separate ObjFPC unit executes the global operator grammar; this configured FPC
+does not admit that global form in Delphi mode. Analysis preserves both actual
+units and their source mode distinction. The controlled lookup world deliberately
+uses the existing symbolic compatibility policy, not replacement RTL exports.
+This qualifies declared families/results/origins, not expression overload ranking
+or complete compiler-unit/target semantics.
+
+In the unchanged real Windows source, exact TSize inspection now returns its
+typed equality declaration at the original shared include token without supplying
+synthetic System/ObjPas. The full syntax capture advances to 7,614 declarations/
+18 diagnostics, beginning with variant fields and declaration hints. Whole-unit
+indexed completion still refuses unsupported scope. WORK.md owns native compiler/
+consumer receipts and retained failures; browser consumers compile only. Full
+grammar/SDK/canonical typing/incremental/editor/input/navigation/quality/parity/
+delivery remain original authoring requirements.
 
 ## Scoped name and type binding
 
@@ -1682,8 +1725,8 @@ directory, then selects its two actual shared RTL includes. Forty-seven explicit
 compiler queries leave the future define set open. The unchanged 28-file capture
 translates all 498,239 tokens across 23 include visits with zero translation
 diagnostics. The initial syntax capture contained 7,652 declarations/110 grammar
-diagnostics. The [procedural suffix continuation](#procedural-declaration-suffixes)
-now retains 7,574 declarations/32 diagnostics, including real callback typing;
+diagnostics. The [operator continuation](#typed-record-operators) now retains
+7,614 declarations/18 diagnostics, including callback and typed operator meaning;
 this does not establish complete namespace/type meaning.
 
 The same capture feeds ordinary indexed completion with its explicit per-unit
@@ -1691,8 +1734,8 @@ context/options. The real Windows root loads once beside the consumer, then
 refuses with typed unsupported-scope metadata. It no longer reports an uncaptured
 Windows unit or obtains members from export stubs. Handwritten compiled input
 separately executes the real `Windows.TSystemTime.wYear` member; it does not prove
-resolver completion. Remaining grammar diagnostics now begin with overloaded
-geometry-record operators after the calling-directive repair. Full remaining
+resolver completion. Remaining grammar diagnostics now begin with variant record
+fields and declaration hints after the operator repair. Full remaining
 grammar, actual implicit System/ObjPas scope and SysUtils's six semantic
 conditions remain original authoring prerequisites. WORK.md owns current receipts,
 retained failures and the return path; browser evidence remains compilation only.

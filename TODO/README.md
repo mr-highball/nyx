@@ -40,6 +40,12 @@ invocation and whole Windows callback evidence. The next actual grammar boundary
 and remaining full scope stay with original authoring criterion two; WORK.md owns
 qualification without new completion credit or default editor adoption.
 
+The [typed operator continuation](../docs/pascal-projects.md#typed-record-operators)
+now retains declared operator families/signatures through bounded optional syntax/
+binding queries and exact source origins. Actual compiler invocation and Windows
+record inspection retain the remaining full grammar/SDK/editor requirements under
+original authoring criterion two; WORK.md owns evidence and the next prerequisite.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

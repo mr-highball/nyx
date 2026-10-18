@@ -83,6 +83,11 @@ now retain callback calling directives through ordinary type consumers with exac
 physical origins. Compiled invocation and real Windows callback analysis qualify
 that boundary; full resolver/editor adoption and both-target quality remain open.
 
+[Typed record operators](docs/pascal-projects.md#typed-record-operators) now retain
+declared families, signatures and original tokens through optional bounded
+queries. Compiled invocation and exact Windows record inspection qualify this
+source boundary; expression overload selection and full SDK/editor meaning stay open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

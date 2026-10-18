@@ -61,6 +61,16 @@ at the next genuine remaining grammar/import prerequisite; do not change actual
 SDK exports or narrow full language/incremental/adoption/input/navigation/quality/
 parity/delivery acceptance. No original credit or task closes from this batch.
 
+Record-operator continuation: 5ead679 is progress, retaining at least nine
+documented unclosed batches and the complete original criterion two. Follow the
+actual geometry-record operator prerequisite through typed declaration identity,
+signature/source preservation and bounded record-operator queries, qualified by
+whole handwritten compiler invocation and one prepared/final unchanged Windows
+continuation. Stop at the next genuine grammar/import prerequisite. This grants
+no expression overload selection, full SDK meaning, new transport schema or
+original task/credit closure; full language/incremental/adoption/input/navigation/
+quality/parity/delivery acceptance remains unchanged.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

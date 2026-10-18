@@ -43,6 +43,16 @@ type
     a routine preserves its complete signature, result, parameters and owner name. }
   TNyxPascalSyntaxDeclarationKind = (psdkType, psdkConstant, psdkVariable,
     psdkField, psdkParameter, psdkProperty, psdkRoutine, psdkEnumValue, psdkResourceString);
+  { Closed operator family, independent of its authored symbolic/named spelling.
+    None is an ordinary declaration; Unknown retains unsupported operator syntax.
+    Arity, operand/result types and compiler eligibility remain separate facts;
+    family equality never selects an overload or implies conversion equivalence. }
+  TNyxPascalOperatorKind = (pokNone, pokUnknown, pokAdd, pokSubtract, pokMultiply,
+    pokDivide, pokIntDivide, pokModulus, pokPower, pokEqual, pokNotEqual, pokLess,
+    pokLessEqual, pokGreater, pokGreaterEqual, pokImplicit, pokExplicit, pokNot,
+    pokAnd, pokOr, pokXor, pokShiftLeft, pokShiftRight, pokIn,
+    pokSymmetricDifference, pokInc, pokDec, pokEnumerator, pokInitialize,
+    pokFinalize, pokAddRef, pokCopy);
   { Surface type construction. Named expressions may still be generic/qualified;
     neither this form nor an ancestor expression claims semantic resolution. }
   TNyxPascalSyntaxTypeForm = (pstfNone, pstfNamed, pstfClass, pstfInterface,
@@ -113,6 +123,7 @@ type
     FName: TNyxText;
     FOwnerName: TNyxText;
     FKind: TNyxPascalSyntaxDeclarationKind;
+    FOperator: TNyxPascalOperatorKind;
     FForm: TNyxPascalSyntaxTypeForm;
     FVisibility: TNyxPascalSyntaxVisibility;
     FParameterMode: TNyxPascalSyntaxParameterMode;
@@ -132,6 +143,9 @@ type
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
     property Kind: TNyxPascalSyntaxDeclarationKind read FKind;
+    { Operators remain routines for existing consumers, with their own typed
+      lookup family. Name/NameSpan retain the exact authored operator token. }
+    property OperatorKind: TNyxPascalOperatorKind read FOperator;
     property TypeForm: TNyxPascalSyntaxTypeForm read FForm;
     property Visibility: TNyxPascalSyntaxVisibility read FVisibility;
     property ParameterMode: TNyxPascalSyntaxParameterMode read FParameterMode;
@@ -224,6 +238,14 @@ type
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
   end;
 
+  { Optional typed operator index over the same immutable declaration arena.
+    Ordinary Named never returns operators, even when an operator's named form
+    matches a normal method. NextNamed follows this operator family's overloads. }
+  INyxPascalOperatorSyntax = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B03}']
+    function NamedOperator(AScope: Integer; AKind: TNyxPascalOperatorKind): Integer;
+  end;
+
 { Pure analysis on copied text. Unknown/missing syntax retains preceding
   declarations and physical spans with explicit recovery issues. Quotas and
   cancellation refuse the complete candidate; no parser result admits source. }
@@ -243,7 +265,7 @@ type
   { Owned parser builder becomes the immutable snapshot after construction.
     Significant-token ordinals keep lossless trivia on Lexical. No raw source
     provider or cancellation borrow survives publication. }
-  TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot)
+  TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot, INyxPascalOperatorSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -283,7 +305,8 @@ type
       AStart: Integer; const AName: TNyxText): Integer;
     procedure FinishScope(AScope: Integer; AComplete: Boolean);
     function AddDeclaration(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
-      AVisibility: TNyxPascalSyntaxVisibility; AName: Integer): Integer;
+      AVisibility: TNyxPascalSyntaxVisibility; AName: Integer;
+      AOperator: TNyxPascalOperatorKind = pokNone): Integer;
     procedure Separator;
     procedure Groups(AOpen, AClose: TNyxPascalSymbol);
     procedure Angles;
@@ -319,6 +342,7 @@ type
     function DeclarationCount: Integer;
     function Declaration(AIndex: Integer): TNyxPascalSyntaxDeclaration;
     function Named(AScope: Integer; const AName: TNyxText): Integer;
+    function NamedOperator(AScope: Integer; AKind: TNyxPascalOperatorKind): Integer;
     function ImportCount: Integer;
     function ImportAt(AIndex: Integer): TNyxPascalSyntaxImport;
     function DiagnosticCount: Integer;
@@ -615,7 +639,7 @@ end;
 
 function TSyntaxSnapshot.AddDeclaration(AScope: Integer;
   AKind: TNyxPascalSyntaxDeclarationKind; AVisibility: TNyxPascalSyntaxVisibility;
-  AName: Integer): Integer;
+  AName: Integer; AOperator: TNyxPascalOperatorKind): Integer;
 var
   LToken: TNyxPascalToken;
   LKey: TNyxText;
@@ -633,8 +657,17 @@ begin
   begin
     SetLength(FDeclarations, Capacity(Result, FOptions.MaximumDeclarations));
   end;
-  FDeclarations[Result].FName := FLexical.Identifier(FTokens[AName]);
+
+  if AOperator = pokNone then
+  begin
+    FDeclarations[Result].FName := FLexical.Identifier(FTokens[AName]);
+  end
+  else
+  begin
+    FDeclarations[Result].FName := FLexical.Text(FTokens[AName]);
+  end;
   FDeclarations[Result].FKind := AKind;
+  FDeclarations[Result].FOperator := AOperator;
   FDeclarations[Result].FVisibility := AVisibility;
   FDeclarations[Result].FNameSpan := LToken.Span;
   FDeclarations[Result].FScope := AScope;
@@ -660,6 +693,11 @@ begin
   FScopes[AScope].FLast := Result;
   Inc(FScopes[AScope].FCount);
   LKey := TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(FDeclarations[Result].Name);
+
+  if AOperator <> pokNone then
+  begin
+    LKey := TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AOperator)));
+  end;
   LFirst := FNames.IndexOf(LKey);
 
   if LFirst < 0 then
@@ -1044,7 +1082,7 @@ end;
 function SectionBoundary(AWord: TNyxPascalWord): Boolean;
 begin
   Result := AWord in [pkwType, pkwVar, pkwThreadvar, pkwConst, pkwResourcestring,
-    pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor, pkwImplementation,
+    pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor, pkwImplementation,
     pkwInterface, pkwBegin, pkwEnd, pkwInitialization, pkwFinalization,
     pkwPrivate, pkwProtected, pkwPublic, pkwPublished, pkwStrict, pkwAutomated,
     pkwClass, pkwProperty, pkwGeneric];
@@ -1370,6 +1408,146 @@ begin
     pkwStatic, pkwDeprecated, pkwPlatform, pkwExperimental, pkwFinal];
 end;
 
+{ Read an authored operator token, without converting its spelling into a fake
+  identifier or inferring arity/eligibility. Named aliases share a query family. }
+function OperatorToken(const AToken: TNyxPascalToken; const AText: TNyxText): TNyxPascalOperatorKind;
+const
+  CNames: array[TNyxPascalOperatorKind] of TNyxText =
+    ('', '', 'add', 'subtract', 'multiply', 'divide', 'intdivide', 'modulus', '',
+      'equal', 'notequal', 'lessthan', 'lessthanorequal', 'greaterthan',
+      'greaterthanorequal', 'implicit', 'explicit', 'not', 'and', 'or', 'xor',
+      'shl', 'shr', 'in', '', 'inc', 'dec', 'enumerator', 'initialize',
+      'finalize', 'addref', 'copy');
+var
+  LKind: TNyxPascalOperatorKind;
+  LKey: TNyxText;
+begin
+  Result := pokUnknown;
+
+  if AToken.Escaped then
+  begin
+    Exit;
+  end;
+
+  if AToken.Kind = ptkSymbol then
+  begin
+    case AToken.Symbol of
+      psoPlus:
+        begin
+          Result := pokAdd;
+        end;
+      psoMinus:
+        begin
+          Result := pokSubtract;
+        end;
+      psoStar:
+        begin
+          Result := pokMultiply;
+        end;
+      psoSlash:
+        begin
+          Result := pokDivide;
+        end;
+      psoPower:
+        begin
+          Result := pokPower;
+        end;
+      psoEqual:
+        begin
+          Result := pokEqual;
+        end;
+      psoNotEqual:
+        begin
+          Result := pokNotEqual;
+        end;
+      psoLess:
+        begin
+          Result := pokLess;
+        end;
+      psoLessEqual:
+        begin
+          Result := pokLessEqual;
+        end;
+      psoGreater:
+        begin
+          Result := pokGreater;
+        end;
+      psoGreaterEqual:
+        begin
+          Result := pokGreaterEqual;
+        end;
+      psoAssign:
+        begin
+          Result := pokImplicit;
+        end;
+      psoSymmetricDifference:
+        begin
+          Result := pokSymmetricDifference;
+        end;
+    else
+      begin
+        { Unsupported punctuation remains explicitly unknown. }
+      end;
+    end;
+    Exit;
+  end;
+
+  if AToken.Kind <> ptkWord then
+  begin
+    Exit;
+  end;
+  LKey := NyxPascalASCIIKey(AText);
+  for LKind := pokAdd to High(TNyxPascalOperatorKind) do
+  begin
+
+    if (CNames[LKind] <> '') and (CNames[LKind] = LKey) then
+    begin
+      Exit(LKind);
+    end;
+  end;
+
+  if LKey = 'div' then
+  begin
+    Result := pokIntDivide;
+  end
+  else if LKey = 'mod' then
+  begin
+    Result := pokModulus;
+  end
+  else if LKey = 'positive' then
+  begin
+    Result := pokAdd;
+  end
+  else if LKey = 'negative' then
+  begin
+    Result := pokSubtract;
+  end
+  else if LKey = 'logicalnot' then
+  begin
+    Result := pokNot;
+  end
+  else if (LKey = 'logicaland') or (LKey = 'bitwiseand') then
+  begin
+    Result := pokAnd;
+  end
+  else if (LKey = 'logicalor') or (LKey = 'bitwiseor') then
+  begin
+    Result := pokOr;
+  end
+  else if (LKey = 'logicalxor') or (LKey = 'bitwisexor') then
+  begin
+    Result := pokXor;
+  end
+  else if LKey = 'leftshift' then
+  begin
+    Result := pokShiftLeft;
+  end
+  else if LKey = 'rightshift' then
+  begin
+    Result := pokShiftRight;
+  end;
+end;
+
 procedure TSyntaxSnapshot.Routine(AScope: Integer;
   AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean);
 var
@@ -1382,6 +1560,9 @@ var
   LGeneric: Integer;
   LHasBody: Boolean;
   LIsFunction: Boolean;
+  LIsOperator: Boolean;
+  LOperator: TNyxPascalOperatorKind;
+  LResultEntry: Integer;
   LFullName: TNyxText;
   LOwner: TNyxText;
   LGenericSpan: TNyxPascalSpan;
@@ -1390,11 +1571,23 @@ begin
   try
     LStart := Tok.Span.Start;
     LIsFunction := Word(pkwFunction);
+    LIsOperator := Word(pkwOperator);
+    LOperator := pokNone;
+    LResultEntry := -1;
     Step;
 
-    if Tok.Kind <> ptkWord then
+    if (Tok.Kind <> ptkWord) and
+      not (LIsOperator and (OperatorToken(Tok, FLexical.Text(FTokens[FPosition])) <> pokUnknown)) then
     begin
-      Problem(psiExpectedName, 'A routine needs an identifier', Tok.Span);
+
+      if LIsOperator then
+      begin
+        Unsupported(AScope, 'This operator needs a supported token or named spelling', Tok.Span);
+      end
+      else
+      begin
+        Problem(psiExpectedName, 'A routine needs an identifier', Tok.Span);
+      end;
       Expression(psoSemicolon);
       Separator;
       Exit;
@@ -1403,6 +1596,11 @@ begin
     LFinalName := LName;
     LGenericSpan := NyxPascalSpan(Tok.Span.Start, 0);
     LFullName := Name;
+
+    if LIsOperator and (Tok.Kind <> ptkWord) then
+    begin
+      LFullName := FLexical.Text(FTokens[FPosition]);
+    end;
     Step;
     LOwner := '';
 
@@ -1412,11 +1610,11 @@ begin
       Angles;
       LGenericSpan := Range(LGeneric, FPosition);
     end;
-    while Sym(psoDot) and (Tok(1).Kind = ptkWord) do
+    while Sym(psoDot) and ((Tok(1).Kind = ptkWord) or LIsOperator) do
     begin
       Step;
       LOwner := LFullName;
-      LFullName := LFullName + '.' + Name;
+      LFullName := LFullName + '.' + FLexical.Text(FTokens[FPosition]);
       LFinalName := FPosition;
       Step;
 
@@ -1427,10 +1625,35 @@ begin
         LGenericSpan := Range(LGeneric, FPosition);
       end;
     end;
-    LEntry := AddDeclaration(AScope, psdkRoutine, AVisibility, LFinalName);
+
+    if LIsOperator then
+    begin
+      LOperator := OperatorToken(FLexical.Token(FTokens[LFinalName]), FLexical.Text(FTokens[LFinalName]));
+
+      if LOperator = pokUnknown then
+      begin
+        Unsupported(AScope, 'This operator spelling needs an explicit supported identity',
+          FLexical.Token(FTokens[LFinalName]).Span);
+      end;
+    end;
+    LEntry := AddDeclaration(AScope, psdkRoutine, AVisibility, LFinalName, LOperator);
     FDeclarations[LEntry].FGenericSpan := LGenericSpan;
     FDeclarations[LEntry].FOwnerName := LOwner;
-    FDeclarations[LEntry].FNameSpan := Range(LName, FPosition);
+
+    if not LIsOperator then
+    begin
+      FDeclarations[LEntry].FNameSpan := Range(LName, FPosition);
+    end;
+
+    if LIsOperator then
+    begin
+      Include(FDeclarations[LEntry].FFlags, psdfOverload);
+
+      if LOperator = pokUnknown then
+      begin
+        Include(FDeclarations[LEntry].FFlags, psdfUnsupported);
+      end;
+    end;
 
     if AClass then
     begin
@@ -1444,12 +1667,23 @@ begin
       Parameters(LScope);
     end;
 
-    if LIsFunction and Sym(psoColon) then
+    if LIsOperator and (Tok.Kind = ptkWord) and Sym(psoColon, 1) then
+    begin
+      LResultEntry := AddDeclaration(LScope, psdkVariable, psavLocal, FPosition);
+      Step;
+    end;
+
+    if (LIsFunction or LIsOperator) and Sym(psoColon) then
     begin
       Step;
       LType := FPosition;
       Expression(psoSemicolon);
       FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
+
+      if LResultEntry >= 0 then
+      begin
+        FDeclarations[LResultEntry].FTypeSpan := FDeclarations[LEntry].FTypeSpan;
+      end;
     end;
     Separator;
     LHasBody := not (AVisibility in [psavInterface]) and
@@ -1705,7 +1939,7 @@ begin
         PropertyDeclaration(AScope, AVisibility);
         LSection := pkwNone;
       end
-      else if Tok.Word in [pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor,
+      else if Tok.Word in [pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor,
         pkwClass, pkwGeneric] then
       begin
         LClass := Word(pkwClass);
@@ -1720,7 +1954,7 @@ begin
           Step;
           Variables(AScope, psdkField, AVisibility, True);
         end
-        else if Tok.Word in [pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor] then
+        else if Tok.Word in [pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor] then
         begin
           Routine(AScope, AVisibility, LClass);
         end
@@ -2123,6 +2357,22 @@ function TSyntaxSnapshot.Named(AScope: Integer; const AName: TNyxText): Integer;
 begin
   Scope(AScope);
   Result := FNames.IndexOf(TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(AName));
+
+  if (Result >= 0) and (FDeclarations[Result].OperatorKind <> pokNone) then
+  begin
+    Result := -1;
+  end;
+end;
+
+function TSyntaxSnapshot.NamedOperator(AScope: Integer; AKind: TNyxPascalOperatorKind): Integer;
+begin
+  Scope(AScope);
+
+  if (Ord(AKind) <= Ord(pokUnknown)) or (Ord(AKind) > Ord(High(TNyxPascalOperatorKind))) then
+  begin
+    raise ENyxPascalLexical.Create('Select one supported typed operator family');
+  end;
+  Result := FNames.IndexOf(TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AKind))));
 end;
 
 function TSyntaxSnapshot.ImportCount: Integer;

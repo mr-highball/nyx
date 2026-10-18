@@ -137,6 +137,12 @@ var
   LMetadata: INyxOwnedPascalCompletionResult;
   LReceipt: INyxPascalCompletionAnalysis;
   LCallback: INyxPascalTypeSyntax;
+  LOperatorSyntax: INyxPascalOperatorSyntax;
+  LOperatorWorld: INyxPascalSemanticWorld;
+  LOperatorQueries: INyxPascalOperatorQueries;
+  LRecordType: INyxPascalSemanticType;
+  LOperatorReply: INyxPascalResolution;
+  LRecordScope: Integer;
 begin
   LTime.wYear := 2026;
   Check(LTime.wYear = 2026, 'The selected native SDK exposes and executes its actual record member');
@@ -195,6 +201,27 @@ begin
     'The actual SDK convention has its original physical include/token origin');
   Check(LView.Syntax.Named(0, 'stdcall') < 0,
     'Calling directives never become invented exported SDK type declarations');
+  Supports(LView.Syntax, INyxPascalOperatorSyntax, LOperatorSyntax);
+  LAt := LView.Syntax.Named(0, 'TSize');
+  LRecordScope := LView.Syntax.Declaration(LAt).NestedScope;
+  Check((LOperatorSyntax.NamedOperator(LRecordScope, pokEqual) >= 0) and
+    (LView.Syntax.Named(LRecordScope, '=') < 0),
+    'Actual geometry record operators have typed identities separate from ordinary members');
+  { Inspect this exact captured record. A handle grants no whole-unit export or
+    expression meaning; no synthetic implicit units are supplied to this world. }
+  LOperatorWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults
+    .WithImplicitScopes(pispCompilerUnits)).WithModule(LView);
+  LRecordType := LOperatorWorld.TypeOfSymbol(LOperatorWorld.Symbol(0, LAt)).BoundType;
+  Supports(LOperatorWorld, INyxPascalOperatorQueries, LOperatorQueries);
+  LOperatorReply := LOperatorQueries.OperatorMembers(LRecordType,
+    LOperatorWorld.At(0, 0, LView.Syntax.Lexical.Scalars), pokEqual);
+  Check((LOperatorReply.Status = pbsBound) and (LOperatorReply.Count = 1) and
+    (LOperatorReply.SymbolAt(0).Declaration.OperatorKind = pokEqual),
+    'The exact real TSize record exposes its bounded equality declaration without claiming full SDK binding');
+  LOrigin := LOperatorReply.SymbolAt(0).Origin;
+  Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/inc/typshrdh.inc')) and
+    (LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan) = TNyxText('=')),
+    'The actual operator declaration retains its original physical include token');
   for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
   begin
 

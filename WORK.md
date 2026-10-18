@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Procedural type source boundaries — 2026-10-18
+## Current integration: Typed record operator declarations — 2026-10-18
+
+Previous turn is progress: pushed 5ead679 repairs procedural type ranges and
+exposes actual geometry-record operators. This batch follows that prerequisite
+under original authoring criterion two. The documented consecutive unclosed lower
+bound is now at least nine, retaining older evidence. Full fresh MIT Nyx-owned
+resolver scope, incremental/project-scale work, ordinary Studio adoption and
+complete input/navigation/quality/parity/delivery remain required. No original
+criterion/task/counter/credit/DONE, new tool/schema or rollout closes. Solo; no
+HTTP/browser/file-protocol execution/capture, protected mutation, cleanup/deletion/
+restart or approval bypass occurs. New builds/evidence stay on the provisioned
+scratch drive; concurrent milestone/reference/browser-compiler planning stays separate.
+
+The declaration arena now retains closed TNyxPascalOperatorKind metadata while
+keeping operators as routines for existing consumers. Symbolic/named family
+identity stays separate from original spelling, arity, parameters and result.
+Qualified implementations retain their owner and exact operator token. Global
+FPC declarations retain a named result in their local scope. Unknown spellings
+retain unsafe-scope diagnostics. Optional INyxPascalOperatorSyntax indexes typed
+families independently of ordinary names, including a method called Add beside
+its named operator. Ordinary member pages exclude operators. No synthetic source
+identifier, rewritten buffer or expression overload choice is introduced.
+
+Optional INyxPascalOperatorQueries returns bounded record/operator alternatives
+through existing world/site/type/visibility/generic/cancellation guards. Stale
+handles and exhausted limits refuse atomically. Original interfaces/GUIDs and
+the MCP tool/schema inventory remain unchanged. Family equality does not prove
+compiler eligibility, conversion/type equivalence, target coherence or a callable
+expression. The controlled query worlds retain the explicit low-level symbolic
+compatibility policy; no synthetic RTL exports replace actual compiler-unit scope.
+
+Accepted composite evidence is in the ignored record-operators-20261018-044121
+packet, located by .local/record-operators-paths-private.json:
+
+- Eighteen portable native checks qualify distinct named/symbolic families and
+  ordinary methods/pages, alternative/result handles, explicit conversion,
+  visibility, cancellation, stale worlds, closed family and candidate limits,
+  unsupported spellings/punctuation and private index-key isolation.
+- Sixteen whole handwritten native compiler/source checks execute symbolic/named/
+  unary/equality/implicit/explicit operators and ordinary Add, returning 30.
+  Delphi-mode record operations and a separate ObjFPC global operator both compile
+  and execute. Exact included prototype tokens after supplementary Unicode,
+  qualified implementation scopes and the global named result remain preserved.
+  An actual configured FPC probe supplies analysis context. These source/result
+  inspections do not establish expression-call inference or whole RTL semantics.
+- Fifteen actual Windows checks retain 498,239 tokens/23 visits and zero
+  translation diagnostics. Typed syntax and compiler-unit-policy inspection find
+  real TSize equality at the original typshrdh.inc token, without synthetic
+  implicit units. The complete syntax capture changes 7,574/32 declarations/
+  diagnostics to 7,614/18. Ordinary indexed completion still loads the root once
+  and refuses unsupported scope with two modules/one load. Remaining failures
+  begin with variant record fields and declaration hints, not record operators.
+- Maintained native structured types/syntax/binding/generics/conditional/
+  dependency/owned checks pass 367/7,632/62/127/10/48/86. The syntax corpus is five
+  actual inputs/3,727 declarations, not every source file. Production in-process
+  semantic completion and actual configured profile checks pass 84/74, retaining
+  original SysUtils/implicit-unit prerequisites. Counts overlap earlier evidence.
+  All twelve accepted native consumers have clean heaps.
+- Twenty accepted final compiler logs have zero owned warnings and 35 upstream
+  pas2js RTL warnings. Four browser consumers, both Studios/backend/worker compile
+  as applicable. Browser products/consumers execute nowhere here; no HTTP/
+  authenticated/observing/input or complete parity claim follows.
+- Eight focused pins, all 621 src/studio Pascal/include files, 97 original RTL
+  inputs and three configured compiler inputs stay exact after final readers.
+  All 48 exported SysUtils include packets match original bytes. Five protected
+  files/nine complete contexts and all 349 frozen 7422453 artifacts remain exact.
+  Readers/compiler families join; no Studio listener remains and LAN stays
+  offline. Final compiler/native/input/include/protected receipts and the final
+  checkpoint own source/remote identity. Native Nyx chat tools remain absent;
+  no host retry or configuration mutation occurs to refresh them.
+
+Retained preparations are not accepted final evidence. The first portable fixture
+used obsolete member-page Count/Item access rather than ResultSet. The first global
+operator oracle put FPC's global form in Delphi mode, which this configured compiler
+rejects; the unchanged intended global behavior now has a separate ObjFPC input,
+while the record input stays Delphi. Candidate checks remain retained. A final
+three-blank-line style repair is followed by a fresh frozen compiler/consumer
+batch; accepted ledgers select only the final outputs, not mixed source snapshots.
+Earlier retained failures stay in prior packets; no uninterrupted historical-green
+or complete-SDK claim is made.
+
+Next useful deliverable: retain actual variant-record selector/arm/field structure
+and declaration hints through existing syntax/type/binder ownership. Use the
+unchanged real geometry/Win32 records and handwritten compiled/executed input;
+reassess the remaining 18 diagnostics at that boundary. Return to actual System/
+ObjPas/imports, SysUtils's six semantic conditions, full language/canonical/
+expression meaning, incremental budgets and ordinary editor/input/navigation/
+quality/parity/delivery. Stop operator/token/fixture/compiler variants; no user
+decision is missing and no original acceptance scope is narrowed.
+
+## Earlier integration: Procedural type source boundaries — 2026-10-18
 
 Previous turn is progress: pushed 84ea322 captures complete original Windows
 input and exposes its actual grammar prerequisite. This batch follows that

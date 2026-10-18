@@ -4,7 +4,30 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source procedural declarations retain supported calling/varargs/inline
+Current-source operator declarations retain typed families, original tokens,
+qualified owners and routine parameter/result scopes. Optional syntax/world
+operator queries keep ordinary names/member pages independent, with bounded
+alternatives, visibility, cancellation and exact-world guards. Native controlled/
+whole compiler invocation/actual Windows checks pass 18/16/15; Delphi record and
+ObjFPC global forms execute, without claiming expression overload selection.
+Actual TSize equality keeps its original shared include token under compiler-unit
+lookup policy. Whole Windows has 7,614 declarations/18 diagnostics (previous
+7,574/32); ordinary indexed completion still refuses unsupported scope after one
+real load. Maintained 367/7,632/62/127/10/48/86/84/74 pass; twelve native consumers
+have clean heaps. Twenty accepted final logs have zero owned warnings (35 upstream);
+four browser consumers and both Studios/backend/worker compile only as applicable.
+Eight focused/621 complete src+studio/97 RTL/three compiler pins, 48 include packets,
+five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact.
+Readers join; LAN is offline. Original interfaces/GUIDs and MCP tool/schema inventory
+stay unchanged; new optional capabilities are in process only. WORK.md owns retained
+member-page/dialect/style preparation, final source/remote identity and the next
+actual variant-field/declaration-hint prerequisite under existing owners. At least
+nine documented unclosed batches retain full criterion two; no original criterion/
+task/counter/credit/DONE/tool/schema/adoption/parity/delivery closes. Stop operator/
+token/fixture/compiler variants. No HTTP retry, protected mutation, cleanup/deletion/
+restart bypass or sub-agents. Preserve concurrent planning files.
+
+Earlier procedural declarations retain supported calling/varargs/inline
 suffixes across semicolons in aliases, inline fields and variables. Exact authored/
 include/scalar origins survive; escaped declaration names remain independent and
 escaped conventions/conflicts refuse typed inference. Native structured types/

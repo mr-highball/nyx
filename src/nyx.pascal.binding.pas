@@ -257,6 +257,15 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570E0A}']
     function Total: Integer;
   end;
+  { Optional bounded record/class operator lookup. Returned alternatives retain
+    existing visibility, source-world, generic and cancellation guards. This
+    selects a declared family, never an overload for operand values or a call. }
+  INyxPascalOperatorQueries = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E0C}']
+    function OperatorMembers(const AType: INyxPascalSemanticType;
+      const ASite: INyxPascalBindingSite; AKind: TNyxPascalOperatorKind;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
+  end;
   { Persistent module world, independent of DOM/LCL, an editor or compiler process.
     Modules have explicit captured translation contexts; their source views are
     immutable. Replacement detaches the vector and invalidates old site/symbol
@@ -414,7 +423,8 @@ type
   end;
   { Owns a detached module vector/name index. Published worlds never mutate;
     each query has its own counters, alias/member trails and temporary type data. }
-  TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld, INyxPascalMemberQueries)
+  TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld,
+    INyxPascalMemberQueries, INyxPascalOperatorQueries)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
@@ -441,6 +451,9 @@ type
     function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AQuery: TNyxPascalMemberQuery;
       const ACancellation: INyxCancellationScope): INyxPascalMemberPage;
+    function OperatorMembers(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
+      AKind: TNyxPascalOperatorKind;
+      const ACancellation: INyxCancellationScope): INyxPascalResolution;
   end;
   { Per-call query owner. Cancellation/steps/depth and recursion trails cannot
     leak into another query or mutate shared sources. No authored code executes. }
@@ -470,7 +483,7 @@ type
     function ContextAt(const ASite: INyxPascalBindingSite): INyxPascalCompilerContext;
     function SafeScope(AModule, AScope, ACaret: Integer): Boolean;
     function Exact(AModule, AScope, ACaret: Integer; const AName: TNyxText;
-      AExternal: Boolean): INyxPascalResolution;
+      AExternal: Boolean; AOperator: TNyxPascalOperatorKind = pokNone): INyxPascalResolution;
     function Single(const ASite: INyxPascalBindingSite; const AName: TNyxText;
       AImports: Boolean): INyxPascalResolution;
     function Imports(const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
@@ -511,7 +524,8 @@ type
     function Lookup(const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
     function TypeOfSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
     function Member(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
-      const AName: TNyxText; AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+      const AName: TNyxText; AAccess: TNyxPascalMemberAccess;
+      AOperator: TNyxPascalOperatorKind = pokNone): INyxPascalResolution;
     function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AQuery: TNyxPascalMemberQuery): INyxPascalMemberPage;
   end;
@@ -1444,7 +1458,7 @@ begin
 end;
 
 function TBindingQuery.Exact(AModule, AScope, ACaret: Integer; const AName: TNyxText;
-  AExternal: Boolean): INyxPascalResolution;
+  AExternal: Boolean; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
 var
   LSyntax: INyxPascalSyntaxSnapshot;
   LAt: Integer;
@@ -1454,6 +1468,7 @@ var
   LFullType: Integer;
   LForwardForm: TNyxPascalSyntaxTypeForm;
   LCompletion: Integer;
+  LOperators: INyxPascalOperatorSyntax;
 begin
   Tick;
   LSyntax := FWorld.ModuleAt(AModule).Syntax;
@@ -1462,7 +1477,20 @@ begin
   begin
     Exit(Answer(pbsUnresolved, pbiUnsupportedScope));
   end;
-  LAt := LSyntax.Named(AScope, AName);
+
+  if AOperator = pokNone then
+  begin
+    LAt := LSyntax.Named(AScope, AName);
+  end
+  else
+  begin
+
+    if not Supports(LSyntax, INyxPascalOperatorSyntax, LOperators) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiUnsupportedScope));
+    end;
+    LAt := LOperators.NamedOperator(AScope, AOperator);
+  end;
   LCount := 0;
   LFullType := -1;
   SetLength(LSymbols, 0);
@@ -3063,7 +3091,7 @@ end;
 
 function TBindingQuery.Member(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite; const AName: TNyxText;
-  AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+  AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
 var
   LType: INyxPascalSemanticType;
   LOwner: INyxPascalBoundSymbol;
@@ -3085,7 +3113,16 @@ begin
   Enter;
   try
     CheckSite(ASite);
-    NyxPascalBindingName(AName);
+
+    if AOperator = pokNone then
+    begin
+      NyxPascalBindingName(AName);
+    end
+    else if (Ord(AOperator) <= Ord(pokUnknown)) or
+      (Ord(AOperator) > Ord(High(TNyxPascalOperatorKind))) then
+    begin
+      raise ENyxPascalBinding.Create('Select one supported typed operator family');
+    end;
 
     if (AType = nil) or (AType.World <> FWorld) then
     begin
@@ -3125,7 +3162,7 @@ begin
       Exit(Answer(pbsUnresolved, pbiIncompleteSource));
     end;
     LSyntax := FWorld.ModuleAt(LOwner.ModuleIndex).Syntax;
-    LFound := Exact(LOwner.ModuleIndex, LScope, LSyntax.Scope(LScope).Span.Finish, AName, False);
+    LFound := Exact(LOwner.ModuleIndex, LScope, LSyntax.Scope(LScope).Span.Finish, AName, False, AOperator);
     SetLength(LSymbols, 0);
     LCount := 0;
     LOverload := False;
@@ -3192,7 +3229,7 @@ begin
         begin
           Exit(LBase);
         end;
-        LBase := Member(LBase.BoundType, ASite, AName, AAccess);
+        LBase := Member(LBase.BoundType, ASite, AName, AAccess, AOperator);
 
         if LBase.Status in [pbsBound, pbsOverloads] then
         begin
@@ -3292,6 +3329,12 @@ begin
     while LDeclaration >= 0 do
     begin
       Tick;
+
+      if LSyntax.Declaration(LDeclaration).OperatorKind <> pokNone then
+      begin
+        LDeclaration := LSyntax.Declaration(LDeclaration).Next;
+        Continue;
+      end;
       LName := LSyntax.Declaration(LDeclaration).Name;
       LKey := NyxPascalASCIIKey(LName);
 
@@ -3491,6 +3534,25 @@ begin
   LQuery := TBindingQuery.Create(Self, ACancellation);
   try
     Result := LQuery.Member(AType, ASite, AName.Name, AAccess);
+  finally
+    LQuery.Free;
+  end;
+end;
+
+function TSemanticWorld.OperatorMembers(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite; AKind: TNyxPascalOperatorKind;
+  const ACancellation: INyxCancellationScope): INyxPascalResolution;
+var
+  LQuery: TBindingQuery;
+begin
+
+  if (Ord(AKind) <= Ord(pokUnknown)) or (Ord(AKind) > Ord(High(TNyxPascalOperatorKind))) then
+  begin
+    raise ENyxPascalBinding.Create('Select one supported typed operator family');
+  end;
+  LQuery := TBindingQuery.Create(Self, ACancellation);
+  try
+    Result := LQuery.Member(AType, ASite, '', pmaType, AKind);
   finally
     LQuery.Free;
   end;
