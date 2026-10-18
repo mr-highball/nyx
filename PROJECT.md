@@ -88,8 +88,10 @@ now reuse validated unbound grammar through a bounded synchronized memo, with
 current-source result views. [Execution scopes](docs/pascal-projects.md#actual-analysis-work-admission)
 now admit real repeated scans, copies, parser/type/binding and evaluator work
 before execution. Existing numeric ceilings stay unchanged; original RTL still
-refuses within those ceilings. Repeated prefix validation, diagnostic copying,
-full engine/editor quality and adoption remain required.
+refuses within those ceilings. [Sealed prefix summaries](docs/pascal-projects.md#sealed-frozen-prefix-summaries)
+now validate only appended token rows at exact owned boundaries; arbitrary cuts
+retain complete validation. Directive/diagnostic copying, metadata costs and full
+engine/editor quality and adoption remain required.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

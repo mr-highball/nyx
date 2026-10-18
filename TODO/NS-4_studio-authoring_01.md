@@ -9,7 +9,36 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Actual-work prerequisite (2026-10-18): the ordinary semantic conditional reader
+Frozen-prefix prerequisite (2026-10-18): exact owned freezes now prepare immutable
+token-domain summaries by validating only appended rows and copying occurrence
+offsets. Source-free summaries retain no source/context/reader/callback/previous
+summary. The construction cache retires on every exit; detached windows remain
+independent. Private exact history/boundary proof alone avoids the wrapper's full
+token scan. Public receipts, nested/alternate sources and arbitrary cut points
+retain full validation. Directive/diagnostic/offset copying remains admitted.
+Native focused storage/summary checks pass 787 with clean heap, including full
+scan comparison, zero-token prefixes, repeated/empty includes, unknown activity,
+recoverable diagnostics and the correct missing-include capture refusal. Exact
+192-unit guarded construction and all 191 smaller allowances preserve atomicity.
+The controlled 13-window stream prepares 1,673 token rows across 12,993 public
+prefix rows; no timing/full-RTL performance claim follows. The maintained work
+consumer passes 496, including its updated actual 456-unit exact fit. WORK.md owns
+the frozen wider qualification, retained fixture/interruption evidence, source/
+remote identity and remaining real metadata/parser costs. Full original criterion/
+task/credit/DONE/editor/input/quality/parity/adoption/delivery remain open.
+
+Final qualification is composite after the context refresh: completed jobs are
+retained, three partial logs stay separate and only unfinished jobs resume. All
+40 maintained native consumers and 81 accepted successful compiler jobs pass
+with zero owned warnings; browser consumers compile only. The original RTL still
+refuses at four million admitted units, round six/metadata-node, clean heap. Four
+protected baseline files/nine project contexts and all 349 release artifacts stay
+exact. An external Codex user-configuration change is recorded and retained;
+the original full five-file preservation gate stays failed. No restoration,
+configuration retry, delivery or original acceptance closure follows. WORK.md
+owns exact source/remote identity and the return to real metadata access costs.
+
+Historical actual-work prerequisite (2026-10-18): the ordinary semantic conditional reader
 now admits real work through an explicit caller-owned execution budget before
 scanning/copying/parsing/binding/evaluation. This includes the frozen-prefix
 wrapper's repeated token/directive/diagnostic validation; shared storage does not

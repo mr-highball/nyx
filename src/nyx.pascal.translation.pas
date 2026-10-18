@@ -387,6 +387,18 @@ type
     ['{239856F3-7EA2-4C53-81AB-0EBA32B4505E}']
     procedure AdmitToken(ATokensBefore, AViewLimit: Integer);
   end;
+  { Detached token-validation receipt for one prefix. PreparedTokens includes
+    newly examined rows in its owned freeze, or the full arbitrary-source scan.
+    RetainedTokens describes earlier rows proven by the same private builder;
+    ReusedTokens describes the wrapper's exact summary use. Counts confer no
+    lineage/proof, compiler meaning or reduced work authority on an alternate
+    implementation. Directive/diagnostic/offset copies remain separate work. }
+  INyxPascalPrefixValidationWork = interface(IInterface)
+    ['{8E33BB40-8028-4E18-8382-6C53290D1CAD}']
+    function PreparedTokens: Integer;
+    function RetainedTokens: Integer;
+    function ReusedTokens: Integer;
+  end;
 
 { Effective tokens may come from a replacement fragment; their Span is relative
   to that fragment. PhysicalToken/Text still describe the exact invocation.
@@ -456,7 +468,8 @@ type
     Lexical: INyxPascalLexicalSnapshot;
     Ambiguous: Boolean;
   end;
-  { Borrowed only by synchronous token visitors while construction is active. }
+  { Forward source owner. Token visitors and summary constructors borrow it
+    synchronously; published summaries never retain a constructing owner. }
   TTranslation = class;
   { Private in-unit proof of one immutable append history. Identity is an empty
     value lease with no source/reader back link; alternate translators do not
@@ -464,6 +477,55 @@ type
   ITranslationLineage = interface(IInterface)
     ['{787C7FD7-1308-4E79-BF9A-9E81F5DC9CF5}']
     function LineageIdentity: IInterface;
+  end;
+  { Immutable token-domain facts only. Offset rows and an opaque lineage stamp
+    retain no source, context, reader, callback or predecessor summary. A summary
+    stops before one exact boundary token; diagnostics still filter separately. }
+  IPrefixTokenSummary = interface(IInterface)
+    function Count: Integer;
+    function LineageIdentity: IInterface;
+    function Occurrences: Integer;
+    function MaximumOccurrence: Integer;
+    function MaximumState: Integer;
+    function MaximumExpansion: Integer;
+    function Resolved: Boolean;
+    function LastOffset(AOccurrence: Integer): Integer;
+    function PreparedTokens: Integer;
+    function RetainedTokens: Integer;
+  end;
+  { In-unit authority exposed only by detached owned freezes. Public storage/
+    work receipts or equal source text cannot substitute for this exact proof. }
+  IFrozenPrefixProof = interface(IInterface)
+    ['{323C8BA7-1CB2-49FB-A20C-AFD4D398C02B}']
+    function PrefixSummary(ABeforeToken: Integer): IPrefixTokenSummary;
+  end;
+  { Validates appended tokens against a fully detached frozen source, then owns
+    copied occurrence offsets and scalar facts. Construction borrows that source
+    only; successful values never retain it or the previous summary. }
+  TPrefixTokenSummary = class(TInterfacedObject, IPrefixTokenSummary)
+  private
+    FCount: Integer;
+    FLineage: IInterface;
+    FOffsets: array of Integer;
+    FMaximumOccurrence: Integer;
+    FMaximumState: Integer;
+    FMaximumExpansion: Integer;
+    FResolved: Boolean;
+    FPrepared: Integer;
+    FRetained: Integer;
+  public
+    constructor Create(ASource: TTranslation; const APrevious: IPrefixTokenSummary;
+      const ACancellation: INyxCancellationScope);
+    function Count: Integer;
+    function LineageIdentity: IInterface;
+    function Occurrences: Integer;
+    function MaximumOccurrence: Integer;
+    function MaximumState: Integer;
+    function MaximumExpansion: Integer;
+    function Resolved: Boolean;
+    function LastOffset(AOccurrence: Integer): Integer;
+    function PreparedTokens: Integer;
+    function RetainedTokens: Integer;
   end;
   { Owns one immutable completed source, bounded prefix ordinals, copied emission
     intents and diagnostic indices. Outward references retain original files and
@@ -473,7 +535,7 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives, ITranslationLineage)
+    INyxPascalEmissionDirectives, ITranslationLineage, INyxPascalPrefixValidationWork)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -483,6 +545,9 @@ type
     FOccurrences: Integer;
     FExpansion: Integer;
     FResolved: Boolean;
+    FPreparedTokens: Integer;
+    FRetainedTokens: Integer;
+    FReusedTokens: Integer;
     FDiagnostics: array of Integer;
     FUnresolved: INyxPascalUnresolvedConditions;
     FUnresolvedRows: array of Integer;
@@ -532,6 +597,9 @@ type
     function EmissionDirectiveCount: Integer;
     function EmissionDirectiveAt(AIndex: Integer): TNyxPascalEmissionDirective;
     function LineageIdentity: IInterface;
+    function PreparedTokens: Integer;
+    function RetainedTokens: Integer;
+    function ReusedTokens: Integer;
   end;
   { Advertises storage only when the retained source actually supplies its
     immutable arena receipt. Exclusive source bounds remain with the base view;
@@ -638,6 +706,9 @@ type
     FPrefixBlocks: TTranslatedTokenBlocks;
     FIsFrozen: Boolean;
     FSharedRows: Integer;
+    { Live construction keeps only its latest pure summary and retires it on
+      every exit. A detached freeze owns its immutable summary independently. }
+    FTokenSummary: IPrefixTokenSummary;
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
     FMacroStates: array of INyxPascalMacroEnvironment;
@@ -744,13 +815,188 @@ type
   end;
   { Only this detached construction exposes a token-storage receipt. All token
     rows, directories and physical windows are immutable and retain no reader. }
-  TFrozenTranslation = class(TTranslation, INyxPascalPrefixTokenStorage)
+  TFrozenTranslation = class(TTranslation, INyxPascalPrefixTokenStorage,
+    IFrozenPrefixProof)
   public
+    function PrefixSummary(ABeforeToken: Integer): IPrefixTokenSummary;
     function TokenRows: Integer;
     function CopiedTokenRows: Integer;
     function SharedTokenRows: Integer;
     function DirectoryEntries: Integer;
   end;
+
+constructor TPrefixTokenSummary.Create(ASource: TTranslation;
+  const APrevious: IPrefixTokenSummary; const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+  LToken: TNyxPascalTranslatedToken;
+  LBoundary: TNyxPascalTranslatedToken;
+  LSpan: TNyxPascalSpan;
+
+  procedure Check;
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Frozen token summary cancelled');
+    end;
+    NyxPascalAdmitAnalysis(ACancellation, papFrozenRow);
+  end;
+
+begin
+  inherited Create;
+  Check;
+
+  if (ASource = nil) or not ASource.FIsFrozen or (ASource.FTokenCount < 1) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('Token summaries need a detached owned boundary');
+  end;
+  FCount := ASource.FTokenCount - 1;
+  FLineage := ASource.FLineage;
+  FMaximumOccurrence := -1;
+  FMaximumState := -1;
+  FMaximumExpansion := -1;
+  FResolved := True;
+  LBoundary := ASource.Token(FCount);
+
+  if (LBoundary.State < 0) or (LBoundary.State >= ASource.FStateCount) or
+    (LBoundary.Occurrence < 0) or (LBoundary.Occurrence >= ASource.FOccurrenceCount) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('A frozen summary boundary lost its exact owner');
+  end;
+
+  if APrevious <> nil then
+  begin
+
+    if (APrevious.LineageIdentity <> FLineage) or (APrevious.Count > FCount) or
+      (APrevious.Occurrences > ASource.FOccurrenceCount) or
+      (APrevious.MaximumState > LBoundary.State) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('A token summary cannot cross source history or state order');
+    end;
+    FRetained := APrevious.Count;
+    FMaximumOccurrence := APrevious.MaximumOccurrence;
+    FMaximumState := APrevious.MaximumState;
+    FMaximumExpansion := APrevious.MaximumExpansion;
+    FResolved := APrevious.Resolved;
+  end;
+  SetLength(FOffsets, ASource.FOccurrenceCount);
+  for LAt := 0 to High(FOffsets) do
+  begin
+    Check;
+    FOffsets[LAt] := -1;
+
+    if (APrevious <> nil) and (LAt < APrevious.Occurrences) then
+    begin
+      FOffsets[LAt] := APrevious.LastOffset(LAt);
+    end;
+  end;
+  for LAt := FRetained to FCount - 1 do
+  begin
+    Check;
+    LToken := ASource.Token(LAt);
+
+    if (LToken.Occurrence < 0) or (LToken.Occurrence >= Length(FOffsets)) or
+      (LToken.State < 0) or (LToken.State > LBoundary.State) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Frozen summary tokens have invalid state or occurrence ownership');
+    end;
+    LSpan := ASource.PhysicalToken(LAt).Span;
+
+    if LSpan.Start > FOffsets[LToken.Occurrence] then
+    begin
+      FOffsets[LToken.Occurrence] := LSpan.Start;
+    end;
+
+    if LToken.Occurrence > FMaximumOccurrence then
+    begin
+      FMaximumOccurrence := LToken.Occurrence;
+    end;
+
+    if LToken.State > FMaximumState then
+    begin
+      FMaximumState := LToken.State;
+    end;
+
+    if LToken.Activity = ppkUnknown then
+    begin
+      FResolved := False;
+    end;
+
+    if LToken.Expanded and (LToken.Expansion > FMaximumExpansion) then
+    begin
+      FMaximumExpansion := LToken.Expansion;
+    end;
+    Inc(FPrepared);
+  end;
+end;
+
+function TPrefixTokenSummary.Count: Integer;
+begin
+  Result := FCount;
+end;
+
+function TPrefixTokenSummary.LineageIdentity: IInterface;
+begin
+  Result := FLineage;
+end;
+
+function TPrefixTokenSummary.Occurrences: Integer;
+begin
+  Result := Length(FOffsets);
+end;
+
+function TPrefixTokenSummary.MaximumOccurrence: Integer;
+begin
+  Result := FMaximumOccurrence;
+end;
+
+function TPrefixTokenSummary.MaximumState: Integer;
+begin
+  Result := FMaximumState;
+end;
+
+function TPrefixTokenSummary.MaximumExpansion: Integer;
+begin
+  Result := FMaximumExpansion;
+end;
+
+function TPrefixTokenSummary.Resolved: Boolean;
+begin
+  Result := FResolved;
+end;
+
+function TPrefixTokenSummary.LastOffset(AOccurrence: Integer): Integer;
+begin
+
+  if (AOccurrence < 0) or (AOccurrence >= Length(FOffsets)) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('An occurrence is outside its frozen token summary');
+  end;
+  Result := FOffsets[AOccurrence];
+end;
+
+function TPrefixTokenSummary.PreparedTokens: Integer;
+begin
+  Result := FPrepared;
+end;
+
+function TPrefixTokenSummary.RetainedTokens: Integer;
+begin
+  Result := FRetained;
+end;
+
+function TFrozenTranslation.PrefixSummary(ABeforeToken: Integer): IPrefixTokenSummary;
+begin
+  Result := nil;
+
+  if (FTokenSummary <> nil) and (ABeforeToken = FTokenCount - 1) and
+    (FTokenSummary.Count = ABeforeToken) and
+    (FTokenSummary.LineageIdentity = FLineage) then
+  begin
+    Result := FTokenSummary;
+  end;
+end;
 
 function TTranslatedTokenBlock.Token(AIndex: Integer): TNyxPascalTranslatedToken;
 begin
@@ -1035,6 +1281,7 @@ begin
     FPrefixConditions := nil;
     FWork := nil;
     FPrefixBlocks := nil;
+    FTokenSummary := nil;
   end;
 end;
 
@@ -1185,6 +1432,13 @@ begin
       end;
     end;
   end;
+  { Physical windows now exist, including unfinished active readers. Validate
+    only the suffix after the prior exact boundary; neither summary retains
+    this snapshot or its producer. Publish the new construction cache last. }
+  FTokenSummary := TPrefixTokenSummary.Create(Self, ASource.FTokenSummary,
+    ASource.FCancellation);
+  ASource.CheckCancellation;
+  ASource.FTokenSummary := FTokenSummary;
 end;
 
 destructor TTranslation.Destroy;
@@ -3797,6 +4051,9 @@ var
   LEmissions: INyxPascalEmissionDirectives;
   LEmission: TNyxPascalEmissionDirective;
   LEmissionCount: Integer;
+  LProof: IFrozenPrefixProof;
+  LSummary: IPrefixTokenSummary;
+  LLastOffset: Integer;
 
   procedure Check;
   begin
@@ -3805,8 +4062,8 @@ var
     begin
       raise ENyxPascalAnalysisCancelled.Create('Translation prefix cancelled');
     end;
-    { This wrapper still validates earlier tokens/directive rows. Storage reuse
-      does not exempt that real repeated work from the caller's allowance. }
+    { Arbitrary token scans and remaining directive/diagnostic rows remain real
+      admitted work. Only an exact private frozen summary avoids token rescans. }
     NyxPascalAdmitAnalysis(LCancellation, papFrozenRow);
   end;
 
@@ -4039,42 +4296,73 @@ begin
   FOccurrences := LToken.Occurrence + 1;
   FExpansion := -1;
   FResolved := True;
-  SetLength(LLast, LOccurrences);
-  for LAt := 0 to LOccurrences - 1 do
+
+  if Supports(FSource, IFrozenPrefixProof, LProof) then
   begin
-    Check;
-    LLast[LAt] := -1;
+    LSummary := LProof.PrefixSummary(FCount);
   end;
-  for LAt := 0 to FCount - 1 do
+
+  if LSummary <> nil then
   begin
     Check;
-    LToken := FSource.Token(LAt);
 
-    if (LToken.Occurrence < 0) or (LToken.Occurrence >= LOccurrences) or
-      (LToken.State < 0) or (LToken.State >= FStates) then
+    if (LSummary.Occurrences <> LOccurrences) or
+      (LSummary.MaximumState >= FStates) or
+      (LSummary.MaximumOccurrence >= LOccurrences) then
     begin
-      raise ENyxPascalContext.Create('Translation prefix tokens have invalid state/order');
+      raise ENyxPascalTranslationLimit.Create('A frozen token summary lost its bounded source authority');
     end;
 
-    if LToken.Occurrence >= FOccurrences then
+    if LSummary.MaximumOccurrence >= FOccurrences then
     begin
-      FOccurrences := LToken.Occurrence + 1;
+      FOccurrences := LSummary.MaximumOccurrence + 1;
     end;
-    LSpan := FSource.PhysicalToken(LAt).Span;
-
-    if LSpan.Start > LLast[LToken.Occurrence] then
+    FExpansion := LSummary.MaximumExpansion;
+    FResolved := LSummary.Resolved;
+    FPreparedTokens := LSummary.PreparedTokens;
+    FRetainedTokens := LSummary.RetainedTokens;
+    FReusedTokens := FCount;
+  end
+  else
+  begin
+    SetLength(LLast, LOccurrences);
+    for LAt := 0 to LOccurrences - 1 do
     begin
-      LLast[LToken.Occurrence] := LSpan.Start;
+      Check;
+      LLast[LAt] := -1;
     end;
-
-    if LToken.Activity = ppkUnknown then
+    for LAt := 0 to FCount - 1 do
     begin
-      FResolved := False;
-    end;
+      Check;
+      LToken := FSource.Token(LAt);
 
-    if LToken.Expanded and (LToken.Expansion > FExpansion) then
-    begin
-      FExpansion := LToken.Expansion;
+      if (LToken.Occurrence < 0) or (LToken.Occurrence >= LOccurrences) or
+        (LToken.State < 0) or (LToken.State >= FStates) then
+      begin
+        raise ENyxPascalContext.Create('Translation prefix tokens have invalid state/order');
+      end;
+
+      if LToken.Occurrence >= FOccurrences then
+      begin
+        FOccurrences := LToken.Occurrence + 1;
+      end;
+      LSpan := FSource.PhysicalToken(LAt).Span;
+
+      if LSpan.Start > LLast[LToken.Occurrence] then
+      begin
+        LLast[LToken.Occurrence] := LSpan.Start;
+      end;
+
+      if LToken.Activity = ppkUnknown then
+      begin
+        FResolved := False;
+      end;
+
+      if LToken.Expanded and (LToken.Expansion > FExpansion) then
+      begin
+        FExpansion := LToken.Expansion;
+      end;
+      Inc(FPreparedTokens);
     end;
   end;
   SetLength(FDiagnostics, LDiagnostics);
@@ -4089,7 +4377,16 @@ begin
       raise ENyxPascalContext.Create('Translation diagnostic has invalid occurrence ownership');
     end;
 
-    if LDiagnostic.Span.Start <= LLast[LDiagnostic.Occurrence] then
+    if LSummary <> nil then
+    begin
+      LLastOffset := LSummary.LastOffset(LDiagnostic.Occurrence);
+    end
+    else
+    begin
+      LLastOffset := LLast[LDiagnostic.Occurrence];
+    end;
+
+    if LDiagnostic.Span.Start <= LLastOffset then
     begin
       FResolved := False;
       FDiagnostics[LUsed] := LAt;
@@ -4103,6 +4400,21 @@ end;
 function TTranslationPrefix.Files: INyxPascalFileCatalog;
 begin
   Result := FSource.Files;
+end;
+
+function TTranslationPrefix.PreparedTokens: Integer;
+begin
+  Result := FPreparedTokens;
+end;
+
+function TTranslationPrefix.RetainedTokens: Integer;
+begin
+  Result := FRetainedTokens;
+end;
+
+function TTranslationPrefix.ReusedTokens: Integer;
+begin
+  Result := FReusedTokens;
 end;
 
 function TTranslationPrefix.InitialContext: INyxPascalCompilerContext;

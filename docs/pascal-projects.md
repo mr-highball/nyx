@@ -2328,8 +2328,9 @@ Owned consumers admit logical operations before executing them: physical and
 projected lexical tokens, frozen/append/filter/origin rows, syntax lookahead,
 metadata tree/value operations, diagnostic rows, type grammar/proofs, module
 boundary scans, binding steps, condition input and constant planning/evaluation.
-The frozen-prefix wrapper's complete validation pass remains charged even when
-token blocks are shared. Repeated lookahead and copied diagnostics remain work.
+The frozen-prefix wrapper's arbitrary-source validation remains charged even when
+token blocks are shared. Exact owned summaries admit their actual preparation
+instead, as described below. Repeated lookahead and copied diagnostics remain work.
 Unbound grammar reuse avoids parsing only after exact owned proof validation;
 memo telemetry and inherited candidates themselves confer no budget authority.
 The bounded memo admission happens outside its mutex, preserving cancellation
@@ -2368,6 +2369,43 @@ WORK.md owns the native exact-fit/exhaustive-refusal/cancellation/ownership
 qualification, compiled-only browser consumers and retained original RTL failure.
 The original source, probes and numeric limits are unchanged. Full RTL meaning,
 incremental editor integration, both-target execution/quality and delivery stay open.
+
+## Sealed frozen-prefix summaries
+
+An owned translation reader retains one immutable token-domain summary at its
+latest exact freeze. The next freeze first constructs detached physical windows,
+copies per-occurrence offsets into a fresh array, then validates only appended
+token rows. An opaque source-history marker, exact boundary count and checked
+state order preserve reuse authority. A successful summary owns only numbers,
+Boolean knowledge, offsets and that empty marker; it retains no source, compiler
+context, reader, callback, cancellation scope or predecessor summary. The live
+reader retires its construction cache on every exit. Published snapshots retain
+their own immutable facts and survive later includes, settings changes and failure.
+
+Only detached owned freezes expose the private proof, and only for the exact
+pre-directive boundary they prepared. `NewNyxPascalTranslationPrefix` consumes
+that proof for token facts while retaining its original occurrence/state limits,
+macro expansion bounds and per-occurrence diagnostic filtering. Directive rows,
+diagnostics and copied offsets remain actual admitted work. Ordinary completed
+translations, alternate translators, nested public prefixes and other cut points
+still scan and validate their entire requested token domain. Public lineage or
+telemetry never substitutes for the private exact proof.
+
+Optional `INyxPascalPrefixValidationWork` returns detached scalar counts:
+`PreparedTokens` is newly examined token work, `RetainedTokens` is the exact
+earlier domain retained by the same builder, and `ReusedTokens` is the wrapper's
+summary-backed domain. These values describe preparation, not elapsed time,
+compiler acceptance or a general incremental editing engine. In the controlled
+13-window native stream, 1,673 rows are examined once across 12,993 public prefix
+rows (13,006 frozen rows including exclusive boundaries). All other real parser,
+metadata, copy and binding work remains independently admitted.
+
+WORK.md owns exact/full-scan comparisons, empty/repeated includes, unknown and
+diagnostic paths, the zero-token prefix, retirement and exhaustive budget refusal.
+Missing include authority still stops prefix capture. Browser consumers compile
+only, and the unchanged full RTL qualification still refuses at its existing
+aggregate ceiling. Full language/editor/incremental/input/quality/parity/adoption/
+delivery remain open.
 
 ## Declaration-bound constant expressions
 

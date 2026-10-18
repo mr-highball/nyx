@@ -23,7 +23,7 @@ program nyx_pascal_prefix_storage_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
-  nyx.pascal.files, nyx.pascal.translation, nyx.pascal.macros;
+  nyx.pascal.files, nyx.pascal.translation, nyx.pascal.macros, nyx.pascal.work;
 
 type
   { Retains detached windows and a revocable lexical borrow. Deliberate failure
@@ -50,6 +50,7 @@ type
     AbortAfter: Integer;
     CancelAfter: Integer;
     Cancellation: INyxCancellationScope;
+    UnknownAfter: Integer;
     function PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
       const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): Boolean;
     function EvaluatePrefix(const AOrigin: TNyxPascalConditionOrigin;
@@ -233,6 +234,11 @@ begin
     Cancellation.Cancel;
   end;
   Result := ppkTrue;
+
+  if (UnknownAfter > 0) and (Length(Windows) >= UnknownAfter) then
+  begin
+    Result := ppkUnknown;
+  end;
 end;
 
 function TTranslationCollector.Evaluate(const AOrigin: TNyxPascalConditionOrigin;
@@ -266,6 +272,12 @@ var
   LFinalSettings: INyxPascalTranslationSettings;
   LMacros: INyxPascalTranslationMacros;
   LFinalMacros: INyxPascalTranslationMacros;
+  LValidation: INyxPascalPrefixValidationWork;
+  LFullValidation: INyxPascalPrefixValidationWork;
+  LFull: INyxPascalTranslation;
+  LNested: INyxPascalTranslation;
+  LPreviousCount: Integer;
+  LPreparedCount: Integer;
   LAt: Integer;
   LRow: Integer;
   LState: Integer;
@@ -314,10 +326,34 @@ begin
   Supports(LSnapshot, INyxPascalTranslationMacros, LFinalMacros);
   LLogical := 0;
   LCopied := 0;
+  LPreviousCount := 0;
+  LPreparedCount := 0;
   SetLength(LSaved, Length(LProbe.Windows));
   for LAt := 0 to High(LProbe.Windows) do
   begin
     LSaved[LAt] := LProbe.Windows[LAt];
+    Check(Supports(LSaved[LAt], INyxPascalPrefixValidationWork, LValidation) and
+      (LValidation.PreparedTokens = LSaved[LAt].Count - LPreviousCount) and
+      (LValidation.RetainedTokens = LPreviousCount) and
+      (LValidation.ReusedTokens = LSaved[LAt].Count),
+      'An owned exact boundary prepares only newly appended token facts');
+    Inc(LPreparedCount, LValidation.PreparedTokens);
+    LPreviousCount := LSaved[LAt].Count;
+    LFull := NewNyxPascalTranslationPrefix(LSnapshot, LSaved[LAt].Count,
+      TNyxPascalTranslationOptions.Defaults);
+    Check(Supports(LFull, INyxPascalPrefixValidationWork, LFullValidation) and
+      (LFullValidation.PreparedTokens = LFull.Count) and
+      (LFullValidation.RetainedTokens = 0) and (LFullValidation.ReusedTokens = 0) and
+      (LFull.Resolved = LSaved[LAt].Resolved) and
+      (LFull.StateCount = LSaved[LAt].StateCount) and
+      (LFull.OccurrenceCount = LSaved[LAt].OccurrenceCount) and
+      (LFull.DiagnosticCount = LSaved[LAt].DiagnosticCount),
+      'A fresh full scan independently agrees with the exact owned summary');
+    LNested := NewNyxPascalTranslationPrefix(LSaved[LAt], LSaved[LAt].Count - 1,
+      TNyxPascalTranslationOptions.Defaults);
+    Check(Supports(LNested, INyxPascalPrefixValidationWork, LFullValidation) and
+      (LFullValidation.PreparedTokens = LNested.Count) and (LFullValidation.ReusedTokens = 0),
+      'Public lineage and reuse receipts cannot donate private authority at another cut');
     Check(Supports(LSaved[LAt], INyxPascalPrefixTokenStorage, LStorage) and
       (LStorage.TokenRows = LSaved[LAt].Count + 1) and
       (LStorage.TokenRows = LStorage.CopiedTokenRows + LStorage.SharedTokenRows),
@@ -360,6 +396,9 @@ begin
   end;
   Check((LCopied < LLogical div 2) and (LStorage.SharedTokenRows > 0),
     'Growing translated windows share earlier immutable rows without a recursive owner chain');
+  Check((LPreparedCount = LPreviousCount) and (LPreparedCount < LLogical div 2),
+    'Chronological token validation examines each earlier token once, independently of storage sharing');
+  WriteLn('owned prefix validation / prepared=', LPreparedCount, ' full-window tokens=', LLogical);
   GCollectorRetired := False;
   LOwner := nil;
   Check(GCollectorRetired and (LSaved[0].Files.TextAt(0) = LText),
@@ -395,10 +434,205 @@ begin
   end;
 end;
 
+{ Compare independently validated public windows, including include bounds and
+  diagnostic ownership. Physical lexical windows may differ in unseen suffix
+  length; every exposed token/origin/state remains exact. }
+procedure EqualPrefix(const ALeft, ARight: INyxPascalTranslation);
+var
+  LAt: Integer;
+  LLeftToken: TNyxPascalTranslatedToken;
+  LRightToken: TNyxPascalTranslatedToken;
+  LLeftInclusion: TNyxPascalInclusion;
+  LRightInclusion: TNyxPascalInclusion;
+  LLeftDiagnostic: TNyxPascalTranslationDiagnostic;
+  LRightDiagnostic: TNyxPascalTranslationDiagnostic;
+  LEqual: Boolean;
+begin
+  LEqual := (ALeft.Count = ARight.Count) and (ALeft.StateCount = ARight.StateCount) and
+    (ALeft.OccurrenceCount = ARight.OccurrenceCount) and
+    (ALeft.DiagnosticCount = ARight.DiagnosticCount) and (ALeft.Resolved = ARight.Resolved);
+  Check(LEqual, 'Exact summary and independent full scan expose identical prefix domains');
+  for LAt := 0 to ALeft.Count - 1 do
+  begin
+    LLeftToken := ALeft.Token(LAt);
+    LRightToken := ARight.Token(LAt);
+    LEqual := LEqual and (LLeftToken.Occurrence = LRightToken.Occurrence) and
+      (LLeftToken.PhysicalToken = LRightToken.PhysicalToken) and
+      (LLeftToken.State = LRightToken.State) and (LLeftToken.Activity = LRightToken.Activity) and
+      (LLeftToken.Expanded = LRightToken.Expanded) and
+      (LLeftToken.Expansion = LRightToken.Expansion) and
+      (LLeftToken.ExpansionToken = LRightToken.ExpansionToken) and
+      SameToken(ALeft.PhysicalToken(LAt), ARight.PhysicalToken(LAt)) and
+      (ALeft.Text(LAt) = ARight.Text(LAt)) and
+      (NyxPascalEffectiveText(ALeft, LAt) = NyxPascalEffectiveText(ARight, LAt));
+  end;
+  Check(LEqual, 'Token, macro and original physical Unicode values agree after continuation');
+  for LAt := 0 to ALeft.StateCount - 1 do
+  begin
+    LEqual := LEqual and ALeft.State(LAt).SameFacts(ARight.State(LAt));
+  end;
+  Check(LEqual, 'Captured settings and state visibility do not advance past the boundary');
+  for LAt := 0 to ALeft.OccurrenceCount - 1 do
+  begin
+    LLeftInclusion := ALeft.Occurrence(LAt);
+    LRightInclusion := ARight.Occurrence(LAt);
+    LEqual := LEqual and (LLeftInclusion.FileIndex = LRightInclusion.FileIndex) and
+      (LLeftInclusion.Parent = LRightInclusion.Parent) and
+      (LLeftInclusion.IncludeSpan.Start = LRightInclusion.IncludeSpan.Start) and
+      (LLeftInclusion.IncludeSpan.Length = LRightInclusion.IncludeSpan.Length) and
+      (LLeftInclusion.FirstToken = LRightInclusion.FirstToken) and
+      (LLeftInclusion.TokenCount = LRightInclusion.TokenCount) and
+      (LLeftInclusion.EntryState = LRightInclusion.EntryState) and
+      (LLeftInclusion.ExitState = LRightInclusion.ExitState);
+  end;
+  Check(LEqual, 'Empty and repeated include occurrences preserve independent exact bounds');
+  for LAt := 0 to ALeft.DiagnosticCount - 1 do
+  begin
+    LLeftDiagnostic := ALeft.Diagnostic(LAt);
+    LRightDiagnostic := ARight.Diagnostic(LAt);
+    LEqual := LEqual and (LLeftDiagnostic.Issue = LRightDiagnostic.Issue) and
+      (LLeftDiagnostic.Occurrence = LRightDiagnostic.Occurrence) and
+      (LLeftDiagnostic.Span.Start = LRightDiagnostic.Span.Start) and
+      (LLeftDiagnostic.Span.Length = LRightDiagnostic.Span.Length) and
+      (LLeftDiagnostic.MessageText = LRightDiagnostic.MessageText);
+  end;
+  Check(LEqual, 'Diagnostics remain filtered by exact per-occurrence physical offsets');
+end;
+
+procedure SummaryBoundaries;
+var
+  LFiles: INyxPascalFileCatalog;
+  LProbe: TTranslationCollector;
+  LOwner: INyxPascalConditionalFacts;
+  LSnapshot: INyxPascalTranslation;
+  LFull: INyxPascalTranslation;
+  LBudget: INyxPascalAnalysisBudget;
+  LValidation: INyxPascalPrefixValidationWork;
+  LFacts: INyxPascalCompilerContext;
+  LText: TNyxText;
+  LMode: Integer;
+  LAt: Integer;
+  LCount: Integer;
+  LLimit: Integer;
+  LRejected: Boolean;
+begin
+  LFacts := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).CompleteDefines(True);
+  for LMode := 0 to 4 do
+  begin
+    LText := 'unit Summary; {$macro on}{$define VALUE:=42} interface ' +
+      '{ original 🚀 ' + #0 + ' } const Anchor=VALUE; {$include empty.inc}' +
+      '{$if declared(Anchor)}{$endif}{$include part.inc}' +
+      '{$if declared(Anchor)}{$endif}{$include part.inc}' +
+      '{$if declared(Anchor)}{$endif} implementation end.';
+
+    if LMode = 2 then
+    begin
+      LText := 'unit Summary; interface 🚀 ' +
+        '{$if declared(Anchor)}{$endif}{$if declared(Anchor)}{$endif} implementation end.';
+    end;
+
+    if LMode = 3 then
+    begin
+      LText := 'unit Summary; interface {$include missing.inc} ' +
+        '{$if declared(Anchor)}{$endif}{$if declared(Anchor)}{$endif} implementation end.';
+    end;
+
+    if LMode = 4 then
+    begin
+      LText := '{$if declared(First)}{$endif}unit Summary; interface ' +
+        '{$if declared(Later)}{$endif} implementation end.';
+    end;
+    LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('root.pas'), LText)
+      .WithFile(NyxPascalPhysicalFile('empty.inc'), '')
+      .WithFile(NyxPascalPhysicalFile('part.inc'), '{$push}{$H-} const Part=VALUE; {$pop}');
+    LProbe := TTranslationCollector.Create;
+    LOwner := LProbe;
+
+    if LMode = 1 then
+    begin
+      LProbe.UnknownAfter := 1;
+    end;
+    LSnapshot := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'),
+      LFacts, TNyxPascalTranslationOptions.Defaults, nil, LOwner);
+    WriteLn('summary stream / mode=', LMode, ' windows=', Length(LProbe.Windows),
+      ' resolved=', LSnapshot.Resolved);
+
+    if LMode = 3 then
+    begin
+      Check((Length(LProbe.Windows) = 0) and (LSnapshot.DiagnosticCount > 0) and
+        not LSnapshot.Resolved, 'A missing include refuses later prefix capture instead of donating guessed authority');
+      LFull := NewNyxPascalTranslationPrefix(LSnapshot, LSnapshot.Count - 1,
+        TNyxPascalTranslationOptions.Defaults);
+      Check(Supports(LFull, INyxPascalPrefixValidationWork, LValidation) and
+        (LValidation.PreparedTokens = LFull.Count) and (LValidation.ReusedTokens = 0) and
+        not LFull.Resolved, 'An explicitly inspected failed source retains full validation and diagnostics');
+      LOwner := nil;
+      Continue;
+    end;
+    Check(Length(LProbe.Windows) >= 2,
+      'Resolved, unknown and diagnostic streams retain distinct chronological boundaries');
+    for LAt := 0 to High(LProbe.Windows) do
+    begin
+      LFull := NewNyxPascalTranslationPrefix(LSnapshot, LProbe.Windows[LAt].Count,
+        TNyxPascalTranslationOptions.Defaults);
+      EqualPrefix(LProbe.Windows[LAt], LFull);
+      Check(Supports(LProbe.Windows[LAt], INyxPascalPrefixValidationWork, LValidation) and
+        (LValidation.ReusedTokens = LProbe.Windows[LAt].Count),
+        'Only exact owned frozen boundaries reuse prepared facts across these streams');
+    end;
+    Check((LMode in [0, 4]) = LSnapshot.Resolved,
+      'Summary reuse preserves explicit unknown activity and encountered diagnostic failure');
+    LOwner := nil;
+  end;
+
+  LText := 'unit Budget; interface const Anchor=1; ' +
+    '{$if declared(Anchor)}const First=1;{$endif}' +
+    '{$if declared(Anchor)}const Second=2;{$endif} implementation end.';
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('root.pas'), LText);
+  LProbe := TTranslationCollector.Create;
+  LOwner := LProbe;
+  LBudget := NewNyxPascalAnalysisBudget(1000000);
+  LSnapshot := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'), LFacts,
+    TNyxPascalTranslationOptions.Defaults, LBudget, LOwner);
+  LCount := LBudget.Receipt.Total;
+  Check(LSnapshot.Resolved and (Length(LProbe.Windows) = 2),
+    'The complete guarded source uses both ordinary summary-backed questions');
+  LBudget.Retire;
+  LOwner := nil;
+  for LLimit := 1 to LCount do
+  begin
+    LProbe := TTranslationCollector.Create;
+    LOwner := LProbe;
+    LBudget := NewNyxPascalAnalysisBudget(LLimit);
+    LFull := nil;
+    LRejected := False;
+    try
+      LFull := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'), LFacts,
+        TNyxPascalTranslationOptions.Defaults, LBudget, LOwner);
+    except
+      on ENyxPascalAnalysisWorkLimit do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check((LBudget.Receipt.Total <= LLimit) and
+      (((LLimit < LCount) and LRejected and (LFull = nil)) or
+      ((LLimit = LCount) and not LRejected and (LFull.Count = LSnapshot.Count))),
+      'Every smaller source allowance refuses atomically; only the exact whole allowance completes');
+    LBudget.Retire;
+    LOwner := nil;
+  end;
+  Check((LFiles.TextAt(0) = LText) and LSnapshot.Resolved,
+    'Exhaustive summary preparation refusal preserves input and the earlier completed source');
+  WriteLn('guarded summary source units / ', LCount, ' / exhaustive smaller limits / ', LCount - 1);
+end;
+
 begin
   try
     LexicalStorage;
     TranslationStorage;
+    SummaryBoundaries;
     WriteLn('PASS ', GChecks, ' immutable prefix token storage checks');
   except
     on LError: Exception do

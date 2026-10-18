@@ -33,7 +33,114 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Actual analysis work admission — 2026-10-18
+## Current integration: Sealed frozen-prefix token summaries — 2026-10-18
+
+b9c756e qualifies actual phase-work admission but still validates every earlier
+token at each frozen-prefix boundary. Reassessment after forty-four unclosed
+authoring batches follows that concrete criterion-two prerequisite: prepare
+exact source-free token summaries once along the producing reader's immutable
+history, then consume their private boundary proof in the ordinary conditional
+reader. Complete original resolver/editor acceptance remains the owner; no
+smaller criterion, quota change or counter-based discount substitutes for it.
+
+Each owned freeze first creates detached physical windows, then copies prior
+per-occurrence scalar offsets and validates only tokens appended after the last
+exact boundary. Source history, boundary count and state order stay checked.
+Immutable summaries contain numbers, knowledge, an offset vector and an opaque
+empty history marker; no source/context/reader/callback/cancellation/predecessor
+summary is retained. The builder keeps only the latest pure value and retires
+its cache on success, refusal and cancellation. Published frozen windows retain
+independent facts and no reverse owner chain.
+
+Only owned detached freezes implement the private exact proof. The public prefix
+wrapper consumes it for token facts, preserving current boundary state, visible
+occurrences, expansion limits and physical diagnostic filtering. Arbitrary cuts,
+ordinary completed sources and nested public prefixes retain complete token
+validation; public lineage/storage/work receipts confer no proof. New optional
+library receipts describe prepared/retained/reused token rows, with no MCP tool,
+wire/schema or persistence change. Directive/diagnostic/offset copying and all
+remaining parser/metadata/type/binding work stay admitted before execution.
+
+Native focused storage/summary checks pass 787, clean heap. Thirteen chronological
+windows prepare 1,673 token rows across 12,993 public prefix rows (13,006 frozen
+rows including boundaries); this is preparation work, not timing, full RTL or
+editor latency. Independent full scans retain token/physical/macro/state meaning,
+occurrence bounds and diagnostic membership. Empty/repeated includes, supplementary
+Unicode/NUL, unknown activity, recoverable lexical errors, a zero-token boundary
+and exceptional builder retirement preserve ownership. The exact 192-unit guarded
+source succeeds; all 191 smaller allowances refuse without an ordinary result.
+The maintained actual-work consumer passes 496 with an actual 456-unit exact fit
+and all 455 smaller limits, preserving its original numeric ceilings.
+
+Retained preflight failures: a new fixture incorrectly expects later callbacks
+after a missing include. The existing translator correctly produces no frozen
+windows on that path. A bounded diagnostic run identifies that fixture assumption;
+the corrected input separately qualifies recoverable lexical diagnostics and the
+explicit missing-include capture refusal. Both failed runs have clean heaps and
+are excluded from accepted evidence. Existing full source and the original RTL
+consumer/oracle remain unchanged. The historical emission compiler log remains
+a read-only test input. Two final-byte functional sources freeze before wider
+qualification, with no later source/layout overlay. The ignored packet located
+by `.local/prefix-summary-paths-private.json` owns exact evidence and identity.
+
+The context refresh interrupts native/regression/product batches after some jobs
+complete. Their old handles are missing, matching packet processes are absent,
+and partial logs lack completion. Completed jobs are reused; incomplete logs are
+retained byte-for-byte and only unfinished jobs resume. The partial profile uses
+a fresh runtime directory, preserving its earlier scratch input/output. The extra
+group and original RTL have terminal receipts and are not rerun. Accepted evidence
+is composite across the interruption, not an uninterrupted batch.
+
+The unchanged original RTL reader still refuses atomically with clean heap:
+metadata-node phase, used 4,000,000/requested one/limit 4,000,000, translated 55,279,
+logical round six. It publishes no final System/ObjPas semantic/indexed result.
+Original source/consumer, five initial queries, explicit Word job, symbol
+preparation three/eight, generic fact ceiling eight and 2M view/4M aggregate/
+64 rounds stay exact. This qualifies actual reuse without completing the real
+RTL gate. The metadata-node refusal names the exhausted operation, not a complete
+CPU-cost profile. Repeated construction-time metadata lookup/traversal is the
+next concrete ownership-aware prerequisite; no guessed discount or fixed fact
+is admitted. Broader parser/type/module/editor meaning remains open.
+
+All 40 maintained native consumers plus summary/storage 787, work 496, type-plan
+209, checkpoint 4,391 and projection 2,480 pass, clean heaps. Actual-source lexing
+passes 568 across 501 files/2,318,215 lossless tokens; syntax passes 7,934 across
+five inputs/3,865 declarations. Counts overlap; 46 passing native logs include
+the separate source read. All 81 accepted successful top-level compiler jobs have
+zero owned warnings/182 upstream RTL warnings. Both Studios, backend/worker and
+33 browser consumers compile as applicable; browser execution/parity remain open.
+The two final-byte functional sources stay exact through composite qualification
+and commit, with no post-freeze source/layout overlay.
+
+All 660 unrelated prior sources and maintained inventory 661 remain exact, as do
+97 RTL/24 compiler inputs plus three inspected compiler sources, 156 original
+unit packets, 48 retained includes, 13 concurrent planning files and 349 frozen
+7422453 artifacts. Four protected baseline files, including the complete nine-
+project checkpoint/history/drafts and profile, remain exact. The fifth file,
+Codex's user configuration, changes outside this work during the context refresh.
+Its actor is unattributed; no owned command writes that path. The original strict
+preservation check fails and is retained. A separate read-only observation records
+and preserves its current bytes without restoration; it does not make the full
+five-file baseline or preserving-delivery gate pass. No configuration/enrollment
+retry occurs. The final receipt explicitly retains that baseline difference.
+
+Resumed native/regression/products sessions 53813/78063/98046 and extra group
+10806 are terminal success; original reader 46033 has terminal exit one. Earlier
+pre-refresh handles are historical/missing. No owned packet process or Studio
+listener remains. Three interrupted logs remain separate from accepted results;
+the resumed profile uses fresh retained input/output. The final ignored packet
+owns source/remote, composite qualification and scoped preservation receipts.
+
+Stop summary/fixture/oracle/compiler/capture variants after this frozen batch.
+Reassess actual construction-only metadata access reuse through existing syntax/
+binding owners, preserving COW stamps, checkpoint/root identity, retirement,
+cancellation and both-target source meaning. Full language/editor/incremental/
+input/quality/parity/adoption/delivery and every original criterion/task/credit/
+DONE remain open across at least forty-five batches. LAN stays offline. No host/
+config retry, protected mutation, browser/HTTP/file execution/capture, cleanup/
+restart, approval bypass, new MCP tool/schema/rollout or sub-agent occurs.
+
+## Previous integration: Actual analysis work admission — 2026-10-18
 
 41b57bd qualifies genuine lexical/filter/metadata/type-plan reuse but still
 charges complete prefix size at every semantic question. Reassessment after
