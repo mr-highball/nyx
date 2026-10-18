@@ -33,7 +33,90 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Hints before variable initializers — 2026-10-18
+## Current integration: Declared constant and runtime intrinsics — 2026-10-18
+
+Reassessment: a1fde1e is progress, retaining at least nineteen documented unclosed
+batches and the complete original authoring criterion two. The existing linkage/
+parser owner now distinguishes declared constant/runtime intrinsic roles. Appended
+plfConstantIntrinsic does not acquire bodyless runtime-intrinsic behavior. Optional
+INyxPascalIntrinsicSyntax retains checked, value-owned entries with exact key,
+operand and annotation spans, owning declaration, ordered links and syntactic
+completeness. Source operands remain unevaluated; no compiler eligibility, ABI or
+folding authority is inferred. Missing delimiters/operands preserve incomplete
+declarations and separated interface siblings; unknown attributes stay unsupported.
+
+New entries share the existing declaration metadata quota and atomic construction
+contract. No record owns interfaces. Existing GUIDs/enum ordinals remain intact;
+the optional capability is new and the expanded declaration record/flag set is
+qualified by rebuilding affected consumers. No MCP schema/tool inventory changes.
+
+Accepted evidence is in ignored intrinsic-attributes-20261018-074207, located by
+.local/intrinsic-attributes-paths-private.json:
+
+- Twenty-five focused native checks qualify constant/runtime roles, exact symbolic
+  expression/key spans, ordered declaration ownership, body and sibling retention,
+  missing colon/operand/bracket, unknown attributes, checked getters, node-budget
+  exhaustion, cancellation and supplementary physical origins. The declaration
+  reader does not evaluate a compiler-specific operand expression.
+- The whole authored Delphi-mode companion compiles with its direct suffix and
+  remains byte-exact during whole-source inspection. On the pinned configured FPC,
+  a constant use of its declared word-swap intrinsic folds to 513 without entering
+  the body; runtime input 42 returns 10,752 and enters the ordinary body exactly
+  once. Source inspection retains the symbolic CWordSwapIntrinsic operand. This
+  qualifies that compiler/example, not a Nyx constant evaluator or general compiler
+  eligibility. The ID is tied to the retained configured innr.inc source pin.
+- Twenty-nine actual module checks preserve all 156 original byte packets/47
+  namespaces and existing budgets. Original System Swap retains constant role,
+  fpc_in_const_swap_word operand and systemh.inc owner. Its syntax diagnostics drop
+  28→13 with 2,554 declarations and four semantic answers. The next unsupported
+  declaration is rtlproc on fpc_setstring_ansistr_pansichar, systemh.inc scalar
+  46,333. Char remains pending with pbiUnsupportedScope; ObjPas/indexed loading
+  retain their genuine gaps, three modules/two loads/no invented suggestions. Raw
+  System remains 36,104 tokens/19 visits/five probes/six diagnostics/five requests.
+  Whole RTL binding and the later WARN effect remain open.
+- Maintained initializer/open-scope/bootstrap ownership/native capture/linkage/
+  region/lexical/policy/operator/variant/anonymous/planner/translation/macro/type/
+  syntax/Windows/binding/generic/condition/dependency/owned/profile/production-
+  semantic checks pass 29/30/18/17/26/28/49/73/18/22/52/14/157/38/367/7,671/26/62/
+  127/10/48/86/74/84. All 26 regular native consumers have clean heaps; the syntax
+  corpus remains five actual inputs/3,748 declarations. Counts overlap prior work.
+- Forty-two regular accepted compiler logs have zero owned warnings and 84
+  upstream pas2js RTL warnings. Both Studios/backend/worker and twelve browser
+  consumers compile as applicable. Browser consumers/products compile only; no
+  execution/input/observing, full parity, default engine adoption or delivery
+  follows. The retained separate native hint-use oracle again returns 42 with a
+  clean heap and its three exact expected marked-symbol warnings, without warning
+  suppression; it stays outside the regular build-warning ledger.
+- Four focused/628 product/97 prior RTL/six compiler/config/source pins, all 48
+  SysUtils includes and 156 overlapping original unit packets verify exact. Five
+  protected files/nine complete contexts and 349 frozen 7422453 artifacts remain
+  exact. Thirteen concurrent planning files retain baseline bytes outside the
+  owned six-line README insertion. Readers join, no Studio listener exists, LAN
+  remains offline and native Nyx chat tools remain absent. Final private receipts/
+  checkpoint own source/remote identity. No host/configuration retry, protected
+  mutation, cleanup/deletion/restart, approval bypass or sub-agents occur.
+
+Retained preparations are not accepted evidence. Initial GUID review found the
+suggested ordinal already used by a lexical capability; the new capability uses
+its own distinct GUID before compilation. The first native fixture tried two MODE
+directives and FPC refused the second. The final whole fixture uses one Delphi
+mode with a compiler-accepted direct suffix; the original RTL bracket source is
+qualified independently. A projected operand comparison mistook synthetic token
+separators for authored whitespace. The corrected physical-occurrence comparison
+preserves exact source spelling. Final frozen source passes its own complete
+regular compiler/native batch; no uninterrupted all-preparations-green history or
+browser execution is claimed.
+
+Next useful deliverable: declared RTL procedure role/suffix ownership, beginning
+with the exact rtlproc boundary, under existing parser/linkage ownership. Preserve
+compilerproc adjacency, body rules and original signatures; compiler eligibility
+and complete execution semantics retain their owners. Stop intrinsic/operand/
+fixture/compiler/capture variants at this different prerequisite. Warning effects
+and full language/canonical type/incremental/editor/input/navigation/quality/
+parity/adoption/delivery remain required. No full criterion/task/counter/credit/
+DONE or rollout closes; the original goal remains active.
+
+## Earlier integration: Hints before variable initializers — 2026-10-18
 
 Reassessment: 216b000 is progress, retaining at least eighteen documented unclosed
 batches and the full original authoring criterion two. The exact real NoErrMsg

@@ -158,6 +158,9 @@ var
   LHints: INyxPascalHintSyntax;
   LHintOrigin: Integer;
   LNoErrSeen: Boolean;
+  LIntrinsics: INyxPascalIntrinsicSyntax;
+  LIntrinsic: TNyxPascalIntrinsicDeclaration;
+  LWordSwapSeen: Boolean;
   LQuestionPrefix: INyxPascalTranslation;
   LQuestionView: INyxPascalTranslatedSyntax;
   LQuestionScope: Integer;
@@ -319,10 +322,26 @@ begin
       LPublicVariable := False;
       LInterfaceRoutine := False;
       LNoErrSeen := False;
+      LWordSwapSeen := False;
       Supports(LView.Syntax, INyxPascalHintSyntax, LHints);
+      Supports(LView.Syntax, INyxPascalIntrinsicSyntax, LIntrinsics);
       for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
       begin
         LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if not LWordSwapSeen and (NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('swap')) and
+          (plfConstantIntrinsic in LDeclaration.Linkage) then
+        begin
+          LWordSwapSeen := True;
+          LIntrinsic := LIntrinsics.IntrinsicAt(LDeclaration.FirstIntrinsic);
+          Check((LIntrinsic.Kind = pikConstant) and LIntrinsic.Complete and
+            (LView.Syntax.Lexical.Slice(LIntrinsic.OperandSpan) = TNyxText('fpc_in_const_swap_word')),
+            'The original System Swap keeps its typed constant role and compiler-specific symbolic operand');
+          LHintOrigin := LView.OriginAt(LIntrinsic.KeySpan.Start);
+          Check((LHintOrigin >= 0) and
+            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = TNyxText('rtl/inc/systemh.inc')),
+            'Actual constant intrinsic metadata retains its exact original source owner');
+        end;
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('noerrmsg') then
         begin
@@ -374,6 +393,7 @@ begin
       end;
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
       Check(LNoErrSeen, 'The unchanged whole System view contains its hinted initialized NoErrMsg declaration');
+      Check(LWordSwapSeen, 'The unchanged whole System view contains the attributed Swap routine');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
       LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
         LModule.Translation);

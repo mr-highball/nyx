@@ -4,6 +4,38 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source constant/runtime intrinsics retain distinct declared roles. Appended
+plfConstantIntrinsic preserves ordinary implementation bodies; runtime intrinsics
+keep their bodyless behavior. Optional INyxPascalIntrinsicSyntax exposes checked
+value-owned key/operand/annotation spans, ordered declaration links and syntactic
+completeness. No operand evaluation/eligibility/ABI/folding authority is inferred.
+Nodes share the construction quota; missing delimiters/operands and unknown
+attributes retain refusal. Existing GUIDs/enum ordinals stay intact; a distinct
+optional GUID and expanded declaration layout are qualified by rebuilt consumers.
+Focused/native module checks pass 25/29. Exact whole Delphi-mode compiler source
+qualifies folded constant/no body entry and runtime 42→10,752/one body entry on
+the pinned toolchain. Original RTL Swap keeps its symbolic operation and owner.
+System has 2,554 declarations/13 diagnostics/four answers; next unsupported rtlproc
+is in systemh.inc scalar 46,333, with genuine Char/ObjPas/indexed gaps retained.
+All 26 regular native consumers have clean heaps; 42 regular compiler logs have
+zero owned warnings/84 upstream. Both Studios/backend/worker and twelve browser
+consumers compile as applicable; browser execution/input/observing/parity/adoption/
+delivery stay open. The separate retained hint-use compiler oracle keeps its clean
+heap/three exact expected warnings without suppression. Four focused/628 product/
+97 prior RTL/six compiler/config/source pins, 156 unit packets/48 includes, five
+protected files/nine contexts and 349 frozen 7422453 artifacts remain exact.
+Thirteen concurrent planning files retain baseline outside the owned README block.
+Readers join; LAN offline, native Nyx tools absent, no host/configuration retry.
+WORK.md owns GUID/two-MODE/projected-span preparations, final complete frozen
+qualification and exact source/remote identity. At least nineteen documented
+unclosed batches retain original criterion two; no criterion/task/counter/credit/
+DONE/schema/adoption/parity/delivery closes. Stop intrinsic/operand/fixture/compiler/
+capture variants. Next follow declared RTL procedure role/suffix ownership through
+existing parser/linkage owners, preserving compilerproc adjacency and body rules.
+Warning effects and full resolver/editor/incremental/input/navigation/quality/
+parity/delivery stay open. No protected mutation, cleanup/deletion/restart, host
+retry, approval bypass or sub-agents. Preserve concurrent planning.
+
 Current-source hinted variables retain separate type, ordered hint/message and
 initializer ranges. Independent group hint links follow both positions; explicit
 missing values stay incomplete and refuse binding without consuming separated

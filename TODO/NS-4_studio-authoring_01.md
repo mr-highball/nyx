@@ -9,6 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Intrinsic-attribute continuation (2026-10-18): a1fde1e is progress, retaining at
+least nineteen documented unclosed batches and full original criterion two.
+Follow the actual internconst suffix through existing linkage/parser ownership:
+retain distinct constant/runtime intent, operand/source spans and subsequent
+routine/body ownership. Syntax grants no folding/execution/eligibility authority.
+Portable refusal/budget cases, whole compiled authored behavior and one prepared/
+final unchanged RTL route decide the boundary. Stop at a different genuine source
+requirement. Full language/incremental/editor/input/navigation/quality/parity/
+adoption/delivery remain required without new criterion/task/credit closure.
+
+The qualified boundary passes 25 focused and 29 actual module checks. Optional
+typed intrinsic metadata preserves source operands/body ownership; whole compiled
+Delphi-mode source independently qualifies constant folding without body entry
+and one runtime body entry. All 26 regular native consumers have clean heaps;
+42 regular compiler logs have zero owned warnings, with browser consumers/products
+compiled only. System reaches 2,554 declarations/13 diagnostics and the distinct
+rtlproc boundary, retaining four answers and its explicit remaining scope refusal.
+Follow RTL procedure role/signature ownership under existing parser/linkage owners;
+stop intrinsic/operand/fixture/compiler/capture variants. WORK.md owns exact frozen
+qualification, preparation failures, separate compiler-oracle warnings and limits.
+
 Hinted-initializer continuation (2026-10-18): 216b000 is progress, retaining at
 least eighteen documented unclosed batches and complete original criterion two.
 Follow NoErrMsg's hint-before-initializer syntax through existing parser/hint/

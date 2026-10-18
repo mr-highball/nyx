@@ -150,10 +150,36 @@ type
     These flags describe source syntax, not linker/ABI admission or resolution
     of an alias, library expression or compiler intrinsic. }
   TNyxPascalLinkageFlag = (plfPublic, plfExport, plfExternal, plfAlias,
-    plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes);
+    plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes,
+    plfConstantIntrinsic);
   { Independent value set; source ranges retain operands without mutable arrays,
     interfaces or fabricated external names. }
   TNyxPascalLinkageFlags = set of TNyxPascalLinkageFlag;
+  { Declared intrinsic role, without evaluating its compiler-specific numeric
+    operand. Constant annotations retain ordinary authored implementation bodies. }
+  TNyxPascalIntrinsicKind = (pikRuntime, pikConstant);
+  { Value-owned intrinsic source entry. Declaration/NextIntrinsic are local
+    ordinals; spans belong to the same lexical snapshot and map through its
+    translated origins. Complete proves only source delimiters/nonempty operand,
+    never an integer value, compiler eligibility or actual constant folding. }
+  TNyxPascalIntrinsicDeclaration = record
+  private
+    FDeclaration: Integer;
+    FKind: TNyxPascalIntrinsicKind;
+    FSpan: TNyxPascalSpan;
+    FKey: TNyxPascalSpan;
+    FOperand: TNyxPascalSpan;
+    FNext: Integer;
+    FComplete: Boolean;
+  public
+    property DeclarationIndex: Integer read FDeclaration;
+    property Kind: TNyxPascalIntrinsicKind read FKind;
+    property Span: TNyxPascalSpan read FSpan;
+    property KeySpan: TNyxPascalSpan read FKey;
+    property OperandSpan: TNyxPascalSpan read FOperand;
+    property NextIntrinsic: Integer read FNext;
+    property Complete: Boolean read FComplete;
+  end;
   { Scoped structural failure/context requirement, separate from lexical issues.
     Consumers must inspect both diagnostic collections, never infer compilation. }
   TNyxPascalSyntaxIssue = (psiExpectedName, psiExpectedSeparator, psiUnclosedScope,
@@ -228,6 +254,8 @@ type
     FAnonymous: Boolean;
     FLinkage: TNyxPascalLinkageFlags;
     FLinkageSpan: TNyxPascalSpan;
+    FFirstIntrinsic: Integer;
+    FLastIntrinsic: Integer;
   public
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
@@ -255,6 +283,9 @@ type
       translated snapshot's origin table supplies its actual physical ranges. }
     property Linkage: TNyxPascalLinkageFlags read FLinkage;
     property LinkageSpan: TNyxPascalSpan read FLinkageSpan;
+    { -1 means no declared intrinsic. Follow checked local links in the optional
+      INyxPascalIntrinsicSyntax; an entry's operand is never an evaluated value. }
+    property FirstIntrinsic: Integer read FFirstIntrinsic;
     property NameSpan: TNyxPascalSpan read FNameSpan;
     property HeaderSpan: TNyxPascalSpan read FHeaderSpan;
     property TypeSpan: TNyxPascalSpan read FTypeSpan;
@@ -370,6 +401,15 @@ type
     function HintCount: Integer;
     function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
   end;
+  { Optional immutable intrinsic entries over the same owned declaration arena.
+    Queries own no editor/compiler and share the declaration metadata budget. }
+  INyxPascalIntrinsicSyntax = interface(IInterface)
+    ['{C2FB8E45-8349-4E77-A33B-A0BCA035B871}']
+    { Count of explicit runtime/constant annotations, including incomplete entries. }
+    function IntrinsicCount: Integer;
+    { Return one checked value entry; invalid ordinals refuse. }
+    function IntrinsicAt(AIndex: Integer): TNyxPascalIntrinsicDeclaration;
+  end;
   { Exact structured-type source index over this immutable declaration arena.
     Both named and anonymous bodies keep ordinary type declarations/member scopes;
     TypeAt accepts a lexical scalar start (including authored packing), returns -1
@@ -400,7 +440,7 @@ type
     provider or cancellation borrow survives publication. }
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
-    INyxPascalStructuredSyntax)
+    INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -415,6 +455,7 @@ type
     FArms: array of TNyxPascalVariantArm;
     FLabels: array of TNyxPascalVariantLabel;
     FHints: array of TNyxPascalSyntaxHint;
+    FIntrinsics: array of TNyxPascalIntrinsicDeclaration;
     FScopeCount: Integer;
     FDeclarationCount: Integer;
     FImportCount: Integer;
@@ -423,6 +464,7 @@ type
     FArmCount: Integer;
     FLabelCount: Integer;
     FHintCount: Integer;
+    FIntrinsicCount: Integer;
     FActiveArm: Integer;
     FNames: TNyxTextIndex;
     { Owned source-position index, separate from exported/lexical names. }
@@ -464,6 +506,10 @@ type
     function AtHint(AExpressionStart: Integer): Boolean;
     procedure DeclarationHints(ADeclaration: Integer);
     procedure CloneDeclarationHints(AFrom, ATo: Integer);
+    { Append one value entry after its source envelope has been scanned. Missing
+      colon/value retains an incomplete declaration and explicit diagnostic. }
+    procedure IntrinsicDeclaration(ADeclaration: Integer; AKind: TNyxPascalIntrinsicKind;
+      const AKey, AOperand: TNyxPascalSpan; AEnvelope: Boolean);
     { Consume only declaration suffixes. Class-member visibility remains owned
       by Declarations; unknown platform attributes retain explicit uncertainty. }
     function DeclarationLinkage(ADeclaration: Integer; ARoutine: Boolean): Boolean;
@@ -514,6 +560,8 @@ type
     function LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
     function HintCount: Integer;
     function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
+    function IntrinsicCount: Integer;
+    function IntrinsicAt(AIndex: Integer): TNyxPascalIntrinsicDeclaration;
     function TypeAt(AStart: Integer): Integer;
     function ImportCount: Integer;
     function ImportAt(AIndex: Integer): TNyxPascalSyntaxImport;
@@ -781,7 +829,7 @@ end;
 procedure TSyntaxSnapshot.NodeBudget;
 begin
 
-  if FDeclarationCount + FSelectorCount + FArmCount + FLabelCount + FHintCount >=
+  if FDeclarationCount + FSelectorCount + FArmCount + FLabelCount + FHintCount + FIntrinsicCount >=
     FOptions.MaximumDeclarations then
   begin
     raise ENyxPascalSyntaxLimit.Create('Declarations and structural metadata exceed their shared node budget');
@@ -868,6 +916,8 @@ begin
   FDeclarations[Result].FVariantArm := -1;
   FDeclarations[Result].FFirstHint := -1;
   FDeclarations[Result].FLastHint := -1;
+  FDeclarations[Result].FFirstIntrinsic := -1;
+  FDeclarations[Result].FLastIntrinsic := -1;
   FDeclarations[Result].FAnonymous := AAnonymous;
 
   if (AKind = psdkField) and (FActiveArm >= 0) and
@@ -1174,9 +1224,51 @@ begin
   begin
     AFlag := plfIntrinsic;
   end
+  else if AName = 'internconst' then
+  begin
+    AFlag := plfConstantIntrinsic;
+  end
   else
   begin
     Result := False;
+  end;
+end;
+
+procedure TSyntaxSnapshot.IntrinsicDeclaration(ADeclaration: Integer;
+  AKind: TNyxPascalIntrinsicKind; const AKey, AOperand: TNyxPascalSpan; AEnvelope: Boolean);
+var
+  LAt: Integer;
+begin
+  NodeBudget;
+  LAt := FIntrinsicCount;
+
+  if LAt = Length(FIntrinsics) then
+  begin
+    SetLength(FIntrinsics, Capacity(LAt, FOptions.MaximumDeclarations));
+  end;
+  Inc(FIntrinsicCount);
+  FIntrinsics[LAt].FDeclaration := ADeclaration;
+  FIntrinsics[LAt].FKind := AKind;
+  FIntrinsics[LAt].FKey := AKey;
+  FIntrinsics[LAt].FOperand := AOperand;
+  FIntrinsics[LAt].FSpan := SpanFrom(AKey.Start);
+  FIntrinsics[LAt].FNext := -1;
+  FIntrinsics[LAt].FComplete := AEnvelope and (AOperand.Length > 0);
+
+  if FDeclarations[ADeclaration].FFirstIntrinsic < 0 then
+  begin
+    FDeclarations[ADeclaration].FFirstIntrinsic := LAt;
+  end
+  else
+  begin
+    FIntrinsics[FDeclarations[ADeclaration].FLastIntrinsic].FNext := LAt;
+  end;
+  FDeclarations[ADeclaration].FLastIntrinsic := LAt;
+
+  if not FIntrinsics[LAt].Complete then
+  begin
+    Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+    Problem(psiExpectedSeparator, 'An intrinsic attribute needs a colon and operand', AKey);
   end;
 end;
 
@@ -1185,6 +1277,11 @@ var
   LStart: Integer;
   LFlag: TNyxPascalLinkageFlag;
   LBracket: Boolean;
+  LIntrinsic: Boolean;
+  LKind: TNyxPascalIntrinsicKind;
+  LKey: TNyxPascalSpan;
+  LOperand: Integer;
+  LColon: Boolean;
 begin
   Result := False;
   LStart := Tok.Span.Start;
@@ -1204,7 +1301,7 @@ begin
     Exit;
   end;
 
-  if not ARoutine and (LFlag in [plfCompilerHelper, plfIntrinsic]) then
+  if not ARoutine and (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic]) then
   begin
     Exit;
   end;
@@ -1214,13 +1311,17 @@ begin
   begin
     Include(FDeclarations[ADeclaration].FLinkage, plfPlatformAttributes);
     Step;
-    while not EOF and not Sym(psoCloseBracket) do
+    while not EOF and not Sym(psoCloseBracket) and not Sym(psoSemicolon) and
+      not Word(pkwBegin) and not Word(pkwEnd) and not Word(pkwImplementation) do
     begin
+      LIntrinsic := False;
+      LKey := Tok.Span;
 
       if (Tok.Kind = ptkWord) and not Tok.Escaped and
         LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
       begin
         Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+        LIntrinsic := LFlag in [plfIntrinsic, plfConstantIntrinsic];
       end
       else
       begin
@@ -1229,8 +1330,17 @@ begin
         Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
       end;
       Step;
+      LColon := False;
+
+      if LIntrinsic and Sym(psoColon) then
+      begin
+        LColon := True;
+        Step;
+      end;
+      LOperand := FPosition;
       while not EOF and not Sym(psoComma) and not Sym(psoCloseBracket) and
-        not Word(pkwBegin) and not Word(pkwEnd) do
+        not Sym(psoSemicolon) and not Word(pkwBegin) and not Word(pkwEnd) and
+        not Word(pkwImplementation) do
       begin
 
         if Sym(psoOpenParen) then
@@ -1245,6 +1355,18 @@ begin
         begin
           Step;
         end;
+      end;
+
+      if LIntrinsic then
+      begin
+        LKind := pikRuntime;
+
+        if LFlag = plfConstantIntrinsic then
+        begin
+          LKind := pikConstant;
+        end;
+        IntrinsicDeclaration(ADeclaration, LKind, LKey, Range(LOperand, FPosition),
+          LColon and (Sym(psoComma) or Sym(psoCloseBracket)));
       end;
 
       if not Sym(psoComma) then
@@ -1267,8 +1389,29 @@ begin
   else
   begin
     Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+    LKey := Tok.Span;
     Step;
+    LColon := False;
+
+    if (LFlag in [plfIntrinsic, plfConstantIntrinsic]) and Sym(psoColon) then
+    begin
+      LColon := True;
+      Step;
+    end;
+    LOperand := FPosition;
     Expression(psoSemicolon);
+
+    if LFlag in [plfIntrinsic, plfConstantIntrinsic] then
+    begin
+      LKind := pikRuntime;
+
+      if LFlag = plfConstantIntrinsic then
+      begin
+        LKind := pikConstant;
+      end;
+      IntrinsicDeclaration(ADeclaration, LKind, LKey, Range(LOperand, FPosition),
+        LColon and Sym(psoSemicolon));
+    end;
   end;
 
   if not Sym(psoSemicolon) then
@@ -3284,6 +3427,21 @@ begin
     raise ENyxPascalLexical.Create('Declaration hint index is outside its syntax snapshot');
   end;
   Result := FHints[AIndex];
+end;
+
+function TSyntaxSnapshot.IntrinsicCount: Integer;
+begin
+  Result := FIntrinsicCount;
+end;
+
+function TSyntaxSnapshot.IntrinsicAt(AIndex: Integer): TNyxPascalIntrinsicDeclaration;
+begin
+
+  if (AIndex < 0) or (AIndex >= FIntrinsicCount) then
+  begin
+    raise ENyxPascalLexical.Create('Intrinsic entry index is outside its syntax snapshot');
+  end;
+  Result := FIntrinsics[AIndex];
 end;
 
 function TSyntaxSnapshot.TypeAt(AStart: Integer): Integer;

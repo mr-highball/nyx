@@ -138,6 +138,12 @@ Grouped declarations retain independent metadata; missing values stay incomplete
 Ordinary completion/navigation consumes the resulting types, while complete
 language, editor adoption and both-target qualification remain required.
 
+The [declared-intrinsic layer](docs/pascal-projects.md#declared-constant-and-runtime-intrinsics)
+distinguishes runtime intrinsic declarations from constant annotations that retain
+ordinary implementation bodies. Typed optional metadata preserves exact symbolic
+operands and source ownership without evaluating compiler operations. Full source/
+compiler meaning and ordinary editor adoption remain required.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

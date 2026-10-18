@@ -1686,6 +1686,41 @@ claim. WORK.md owns final receipts, explicit expected compiler diagnostics and
 the existing linkage/parser return path. Full language/incremental/editor/input/
 navigation/quality/parity/adoption/delivery remain open.
 
+## Declared constant and runtime intrinsics
+
+`plfConstantIntrinsic` is an appended linkage flag for an authored `internconst`
+annotation. It stays distinct from the existing runtime `plfIntrinsic`
+(`internproc`) flag. A constant annotation preserves an ordinary implementation
+body; the runtime annotation retains its bodyless declaration behavior. This
+classification is declared source intent, not compiler eligibility or execution.
+
+Optional `INyxPascalIntrinsicSyntax` exposes checked value-owned entries through
+`IntrinsicCount`/`IntrinsicAt`. A declaration's `FirstIntrinsic` and each entry's
+`NextIntrinsic` retain source order. `TNyxPascalIntrinsicDeclaration` supplies the
+closed role, exact key/operand/attribute spans and owning declaration ordinal.
+Operands stay source expressions, including symbolic compiler operations; the
+reader never converts them to an evaluated integer or executes the operation.
+Ranges use the same lexical snapshot and existing physical origin table.
+
+`Complete` establishes source delimiters and a nonempty operand, not a valid
+compiler operation or constant expression. Missing colon/value/closing bracket
+retains incomplete declaration diagnostics; unknown attributes remain unsupported.
+Attribute and declaration entries share one construction quota, and cancellation/
+exhaustion publishes no partial snapshot. No record stores interface references.
+Existing interface GUIDs and enum ordinals remain intact; the additional optional
+capability and expanded declaration record are qualified by rebuilding consumers
+on both targets. No MCP wire/schema or installed inventory changes.
+
+The whole authored Delphi-mode compiler companion uses a direct suffix and
+retains its ordinary body. On the pinned native compiler, a constant use folds
+without entering that body, while a runtime input enters it exactly once. That is
+specific compiler evidence; Nyx's declaration metadata does not supply a constant
+evaluator. The unchanged RTL's bracket form separately retains Swap's symbolic
+operand and original included-file owner. Its remaining syntax diagnostics drop
+to 13, with the next unsupported `rtlproc` declaration still explicit. Browser
+consumers/products compile only. WORK.md owns the final source, compiler evidence,
+remaining original grammar/editor/parity/delivery requirements and return path.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.
