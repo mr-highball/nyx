@@ -106,6 +106,12 @@ Native compiler behavior is separate from declaration metadata; unknown/malforme
 attributes retain refusal. Full source/compiler/editor/parity/delivery stay under
 original criterion two, with exact unchanged RTL evidence and gaps in WORK.md.
 
+The [RTL procedure layer](../docs/pascal-projects.md#declared-rtl-procedure-roles)
+retains typed RTL/helper roles, original signatures and ordinary body ownership.
+Callable native behavior remains separate from hidden compiler helpers and
+compiler-specific matching. Full source/compiler/editor/parity/delivery stay
+under original criterion two; WORK.md owns exact unchanged RTL evidence and gaps.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

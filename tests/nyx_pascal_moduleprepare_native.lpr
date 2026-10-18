@@ -161,6 +161,8 @@ var
   LIntrinsics: INyxPascalIntrinsicSyntax;
   LIntrinsic: TNyxPascalIntrinsicDeclaration;
   LWordSwapSeen: Boolean;
+  LRTLProcedureSeen: Boolean;
+  LRTLParameter: TNyxPascalSyntaxDeclaration;
   LQuestionPrefix: INyxPascalTranslation;
   LQuestionView: INyxPascalTranslatedSyntax;
   LQuestionScope: Integer;
@@ -323,11 +325,29 @@ begin
       LInterfaceRoutine := False;
       LNoErrSeen := False;
       LWordSwapSeen := False;
+      LRTLProcedureSeen := False;
       Supports(LView.Syntax, INyxPascalHintSyntax, LHints);
       Supports(LView.Syntax, INyxPascalIntrinsicSyntax, LIntrinsics);
       for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
       begin
         LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('fpc_setstring_ansistr_pansichar') then
+        begin
+          LRTLProcedureSeen := True;
+          Check((LDeclaration.Linkage = [plfRTLProcedure, plfCompilerHelper]) and
+            not (psdfForward in LDeclaration.Flags),
+            'The original System RTL/helper roles do not imply a bodyless runtime intrinsic');
+          LRTLParameter := LView.Syntax.Declaration(
+            LView.Syntax.Named(LDeclaration.NestedScope, 'S'));
+          Check((LRTLParameter.ParameterMode = pspmOut) and
+            (LView.Syntax.Lexical.Slice(LRTLParameter.TypeSpan) = TNyxText('RawByteString')),
+            'The actual RTL helper preserves its out parameter and authored byte-string type');
+          LHintOrigin := LView.OriginAt(LDeclaration.LinkageSpan.Start);
+          Check((LHintOrigin >= 0) and
+            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = TNyxText('rtl/inc/systemh.inc')),
+            'The actual RTL/helper suffix retains its original included source owner');
+        end;
 
         if not LWordSwapSeen and (NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('swap')) and
           (plfConstantIntrinsic in LDeclaration.Linkage) then
@@ -394,6 +414,7 @@ begin
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
       Check(LNoErrSeen, 'The unchanged whole System view contains its hinted initialized NoErrMsg declaration');
       Check(LWordSwapSeen, 'The unchanged whole System view contains the attributed Swap routine');
+      Check(LRTLProcedureSeen, 'The unchanged whole System view contains the declared RTL helper');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
       LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
         LModule.Translation);

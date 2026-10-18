@@ -148,10 +148,11 @@ type
   { Authored platform/linker intent, distinct from Pascal member visibility.
     Public symbols do not turn subsequent unit declarations into class members.
     These flags describe source syntax, not linker/ABI admission or resolution
-    of an alias, library expression or compiler intrinsic. }
+    of an alias, library expression or compiler intrinsic. RTL procedure intent
+    does not supply the compiler's special parameter-matching rules. }
   TNyxPascalLinkageFlag = (plfPublic, plfExport, plfExternal, plfAlias,
     plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes,
-    plfConstantIntrinsic);
+    plfConstantIntrinsic, plfRTLProcedure);
   { Independent value set; source ranges retain operands without mutable arrays,
     interfaces or fabricated external names. }
   TNyxPascalLinkageFlags = set of TNyxPascalLinkageFlag;
@@ -1220,6 +1221,10 @@ begin
   begin
     AFlag := plfCompilerHelper;
   end
+  else if AName = 'rtlproc' then
+  begin
+    AFlag := plfRTLProcedure;
+  end
   else if AName = 'internproc' then
   begin
     AFlag := plfIntrinsic;
@@ -1301,7 +1306,8 @@ begin
     Exit;
   end;
 
-  if not ARoutine and (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic]) then
+  if not ARoutine and
+    (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic, plfRTLProcedure]) then
   begin
     Exit;
   end;
@@ -1315,6 +1321,9 @@ begin
       not Word(pkwBegin) and not Word(pkwEnd) and not Word(pkwImplementation) do
     begin
       LIntrinsic := False;
+      { An unknown neighboring key must not inherit the preceding key's
+        operand rules while its unsupported source remains preserved. }
+      LFlag := plfPlatformAttributes;
       LKey := Tok.Span;
 
       if (Tok.Kind = ptkWord) and not Tok.Escaped and
@@ -1331,6 +1340,13 @@ begin
       end;
       Step;
       LColon := False;
+
+      if (LFlag = plfRTLProcedure) and not (Sym(psoComma) or Sym(psoCloseBracket)) then
+      begin
+        Unsupported(FDeclarations[ADeclaration].Scope,
+          'An RTL procedure marker has no operand', Tok.Span);
+        Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+      end;
 
       if LIntrinsic and Sym(psoColon) then
       begin
@@ -1392,6 +1408,13 @@ begin
     LKey := Tok.Span;
     Step;
     LColon := False;
+
+    if (LFlag = plfRTLProcedure) and not Sym(psoSemicolon) then
+    begin
+      Unsupported(FDeclarations[ADeclaration].Scope,
+        'An RTL procedure marker has no operand', Tok.Span);
+      Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+    end;
 
     if (LFlag in [plfIntrinsic, plfConstantIntrinsic]) and Sym(psoColon) then
     begin

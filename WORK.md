@@ -33,7 +33,85 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declared constant and runtime intrinsics — 2026-10-18
+## Current integration: Declared RTL procedure roles — 2026-10-18
+
+Reassessment: 3be4254 is progress, retaining at least twenty documented unclosed
+batches and complete original authoring criterion two. Follow actual rtlproc
+through existing parser/linkage ownership. Deliver distinct typed RTL intent,
+compilerproc adjacency, exact signatures/suffixes and ordinary body ownership;
+do not infer compiler parameter matching, aliases or general eligibility from a
+source flag. Qualify a whole compiled authored caller, portable uncertainty/body/
+scope cases and one prepared/final unchanged System route at existing budgets.
+Stop at the next different genuine source prerequisite. Full language/canonical
+type/incremental/editor/input/navigation/quality/parity/adoption/delivery remain
+required; no full criterion/task/counter/credit/DONE or rollout closes. Preserve
+protected/foreign inputs and offline LAN. Native execution/browser compilation
+only, without host/configuration retries, cleanup/deletion/restarts or agents.
+
+Appended plfRTLProcedure now preserves the authored RTL role independently of
+compiler helpers and bodyless runtime intrinsics. Direct/bracket suffixes retain
+their original ranges, parameter modes and ordinary bodies. Operand-bearing RTL
+markers and unknown neighboring attributes retain unsupported syntax. Each
+bracket key starts fresh rather than inheriting the preceding role's operand
+rules. Existing enum ordinals, interfaces and record layouts stay intact; the
+existing flag set still fits its original storage. No new tool/schema is added.
+
+Accepted evidence is in ignored rtl-procedures-20261018-075343, located by
+.local/rtl-procedures-paths-private.json:
+
+- Twenty-three focused native checks qualify separate RTL/helper roles, exact
+  suffix/signature ownership, out/const modes, independent bodies/siblings, class
+  visibility, direct/bracket malformed operands, unknown neighbors, cancellation
+  and supplementary physical origins. Whole original Delphi-mode source compiles
+  four independent bodies. Calls through the RTL-only helper and following routine
+  return 42; the separate compiler helper's signature/body compile, without a
+  claim that ordinary Pascal can call that hidden name.
+- Thirty-three actual module checks retain 156 exact original packets/47
+  namespaces at existing budgets. The original System byte-string helper retains
+  both roles, its out RawByteString parameter and systemh.inc owner. System stays
+  at 2,554 declarations, with syntax diagnostics 13→6 and four semantic answers.
+  The next unsupported suffix is noreturn on RunError, systemh.inc scalar 68,436.
+  Char remains pending with pbiUnsupportedScope; ObjPas/indexed loading retain
+  three modules/two loads/no invented suggestions. Raw System remains 36,104
+  tokens/19 visits/five probes/six diagnostics/five requirements. Later WARN and
+  complete compiler parameter/alias/visibility/type behavior remain open.
+- All 27 regular native consumers pass with clean heaps, retaining the existing
+  initializer/scope/bootstrap/lexical/type/syntax/binding/completion and production
+  semantic checks. The syntax corpus remains five actual inputs/3,748 declarations.
+  Forty-four regular compiler logs have zero owned warnings and 91 upstream
+  pas2js RTL warnings. Both Studios/backend/worker and thirteen browser consumers
+  compile as applicable. Browser consumers/products compile only; no browser
+  execution/input/observing, full parity, default adoption or delivery follows.
+  The separate retained hint-use oracle returns 42 with clean heap and its three
+  exact expected marked-symbol warnings, without suppression or ledger dilution.
+- Four focused/628 product/97 prior RTL/seven compiler/config/source pins, 48
+  SysUtils includes and the overlapping 156 unit packets verify exact. Five
+  protected files/nine complete contexts and 349 frozen 7422453 artifacts remain
+  exact. Thirteen concurrent planning files retain baseline outside the owned
+  six-line README insertion. Readers join; no Studio listener exists, LAN remains
+  offline and native Nyx tools remain absent. Final private receipts/checkpoint
+  own source/remote identity. No protected mutation, host/configuration retry,
+  cleanup/deletion/restart, approval bypass or sub-agents occur.
+
+Retained preparation failures are not accepted evidence. The first fixture used
+the reserved namespace segment procedure, which FPC rejected. The renamed unit
+then tried an ordinary call to its compilerproc helper; FPC correctly hid that
+name and the failed call produced a consequential uninitialized-value warning.
+The final fixture separates callable RTL-only behavior from compiled hidden-helper
+signature/body evidence. No alias workaround, warning suppression or upstream
+source modification is used. Final frozen sources pass their own complete batch;
+the earlier successful boundary read is preparation, not a substitute for it.
+
+Next useful deliverable: typed non-returning routine intent and original suffix/
+body ownership under existing parser/linkage owners, beginning with actual
+noreturn. Preserve compiler behavior and diagnostics independently of a source
+classification. Stop RTL/helper/fixture/compiler/capture variants at this different
+prerequisite. At least twenty documented unclosed batches retain original authoring
+criterion two. Full language/canonical type/incremental/editor/input/navigation/
+quality/parity/adoption/delivery remain required; no full criterion/task/counter/
+credit/DONE or rollout closes. The original goal remains active.
+
+## Earlier integration: Declared constant and runtime intrinsics — 2026-10-18
 
 Reassessment: a1fde1e is progress, retaining at least nineteen documented unclosed
 batches and the complete original authoring criterion two. The existing linkage/

@@ -144,6 +144,12 @@ ordinary implementation bodies. Typed optional metadata preserves exact symbolic
 operands and source ownership without evaluating compiler operations. Full source/
 compiler meaning and ordinary editor adoption remain required.
 
+The [RTL procedure layer](docs/pascal-projects.md#declared-rtl-procedure-roles)
+preserves typed RTL/compiler-helper roles, original parameter signatures and
+ordinary bodies. Native callable behavior stays separate from compiler-helper
+visibility and special matching rules. Unchanged RTL inspection advances to its
+next genuine suffix prerequisite; full resolver/editor adoption remains open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

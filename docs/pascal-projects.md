@@ -1717,9 +1717,37 @@ without entering that body, while a runtime input enters it exactly once. That i
 specific compiler evidence; Nyx's declaration metadata does not supply a constant
 evaluator. The unchanged RTL's bracket form separately retains Swap's symbolic
 operand and original included-file owner. Its remaining syntax diagnostics drop
-to 13, with the next unsupported `rtlproc` declaration still explicit. Browser
-consumers/products compile only. WORK.md owns the final source, compiler evidence,
+to 13 at that checkpoint; the RTL-procedure continuation below advances that
+source boundary. Browser consumers/products compile only. WORK.md owns the final
+source, compiler evidence,
 remaining original grammar/editor/parity/delivery requirements and return path.
+
+## Declared RTL procedure roles
+
+Appended `plfRTLProcedure` retains the authored `rtlproc` role independently of
+`plfCompilerHelper`, constant annotations and bodyless runtime intrinsics. Both
+direct and bracket suffixes preserve original `LinkageSpan` ownership. An RTL
+marker has no operand; an authored operand remains unsupported rather than being
+silently admitted. Unknown neighboring keys retain their own uncertainty.
+
+The role leaves parameter modes/types, following declarations, class visibility
+and ordinary implementation bodies intact. It does not provide the compiler's
+special string-codepage parameter matching, aliases, eligibility or runtime
+behavior. Existing enum ordinals, interfaces and record layouts stay intact;
+affected consumers are rebuilt together. There is no MCP schema change.
+
+The whole Delphi-mode native companion compiles four independent routine bodies.
+Calls to its RTL-only helper and following routine return 42. Its separate
+`rtlproc; compilerproc` routine compiles and retains exact source/signature/body
+metadata; the pinned FPC hides that compiler helper from ordinary Pascal name
+lookup, so it is not included in the callable-behavior claim.
+
+Unchanged System source retains the original byte-string helper's RTL/compiler
+roles, out parameter and physical include owner. Its declaration count stays
+2,554 while syntax diagnostics fall from 13 to 6. The next unsupported suffix is
+`noreturn`; remaining conditional, ObjPas and broader binding requirements stay
+explicit. Browser consumers/products compile only. WORK.md owns exact evidence,
+retained preparations and the return to full resolver/editor/parity requirements.
 
 ## Scoped name and type binding
 

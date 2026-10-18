@@ -9,6 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+RTL-procedure continuation (2026-10-18): 3be4254 is progress, retaining at least
+twenty documented unclosed batches and complete original criterion two. Follow
+the actual rtlproc boundary through existing parser/linkage ownership, preserving
+typed role, compilerproc adjacency, original signatures/suffixes and bodies.
+Source classification grants no compiler alias/parameter/eligibility authority.
+Whole compiled authored behavior, portable refusal/scope cases and one prepared/
+final unchanged RTL route decide this boundary. Stop at a different genuine
+prerequisite with full language/incremental/editor/input/navigation/quality/
+parity/adoption/delivery still required and no new task/credit closure.
+
+The qualified boundary passes 23 focused native and 33 actual module checks.
+Typed RTL/helper roles retain exact signatures, physical suffix ownership and
+independent bodies; whole compiled callable RTL-only behavior returns 42, while
+compiler helpers remain separate hidden-name compilation evidence. System stays
+at 2,554 declarations with syntax diagnostics 13→6 and four answers. All 27
+regular native consumers have clean heaps; 44 regular compiler logs have zero
+owned warnings. Browser consumers/products compile only. Next follow actual
+noreturn through existing routine/linkage ownership; stop RTL/helper/fixture/
+compiler/capture variants. WORK.md owns exact preservation, retained preparations
+and remaining full source/editor/parity/adoption/delivery requirements.
+
 Intrinsic-attribute continuation (2026-10-18): a1fde1e is progress, retaining at
 least nineteen documented unclosed batches and full original criterion two.
 Follow the actual internconst suffix through existing linkage/parser ownership:

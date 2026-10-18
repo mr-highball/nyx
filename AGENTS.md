@@ -4,6 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source RTL procedures retain distinct plfRTLProcedure/helper roles,
+original signatures/suffixes and ordinary body ownership. Operand-bearing markers
+and unknown keys retain refusal; source roles grant no special compiler matching,
+alias or eligibility rules. Existing ordinals/interfaces/layouts stay intact.
+Focused native/module checks pass 23/33; four whole compiled bodies remain exact.
+Callable RTL-only behavior returns 42; the separate compiler helper compiles but
+is hidden from ordinary calls on the pinned FPC. System retains 2,554 declarations,
+13→6 syntax diagnostics/four answers; next unsupported noreturn is systemh.inc
+scalar 68,436, with genuine Char/ObjPas/indexed gaps retained. All 27 regular native
+consumers have clean heaps; 44 regular compiler logs have zero owned warnings/91
+upstream. Both Studios/backend/worker and thirteen browser consumers compile as
+applicable; browser execution/input/observing/parity/adoption/delivery stay open.
+Separate hint-use oracle retains clean heap/three exact expected warnings without
+suppression. Four focused/628 product/97 prior RTL/seven compiler/config/source
+pins, 156 unit packets/48 includes, five protected files/nine contexts and 349
+frozen 7422453 artifacts remain exact. Thirteen concurrent planning files stay
+exact outside the owned README block. Readers join; LAN offline, native Nyx tools
+absent, no host/configuration retry. WORK.md owns reserved-namespace/hidden-helper
+preparations, final frozen qualification and exact source/remote identity. At least
+twenty documented unclosed batches retain original criterion two; no full
+criterion/task/counter/credit/DONE/schema/adoption/parity/delivery closes. Stop
+RTL/helper/fixture/compiler/capture variants. Next follow typed non-returning
+routine intent/suffix/body ownership through existing parser/linkage owners.
+Full source/canonical type/incremental/editor/input/navigation/quality/parity/
+delivery stay open. No protected mutation, cleanup/deletion/restart, host retry,
+approval bypass or sub-agents. Preserve concurrent planning.
+
 Current-source constant/runtime intrinsics retain distinct declared roles. Appended
 plfConstantIntrinsic preserves ordinary implementation bodies; runtime intrinsics
 keep their bodyless behavior. Optional INyxPascalIntrinsicSyntax exposes checked
