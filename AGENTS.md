@@ -4,7 +4,35 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source optimization intent adds symbolic ON/OFF/DEFAULT resets and 29
+Current-source known-include planning traverses captured literal links once,
+preserving speculative file/span origins, cycles, opaque/missing input and exact
+source packets. Ordinary planning stays explicit; native preparation charges the
+pool once and preserves required-first selection and all existing quotas. More
+than one job's actual requirements retain their full plan while selecting bounded
+256-name cohorts. Native focused 19, unchanged RTL 50 and all 39 native consumers
+pass with clean heaps. System preparation now uses three jobs within the unchanged
+eight ceiling; initial five primitive probes and the single Word job stay exact.
+System reaches 7,712 declarations/two syntax diagnostics/twelve semantic answers,
+pending an authoritative compiler-root Longint measurement for ValSint. ObjPas
+stays 209/four/one. Exact indexed Free/FreeInstance navigation/insertion is ready;
+this does not establish full RTL meaning. All 67 compiler logs have zero owned
+warnings/161 upstream. Both Studios/backend/worker and twenty-four browser
+consumers compile as applicable; no browser execution/parity/adoption/delivery
+closes. Four focused/649 maintained/97 RTL/23 compiler inputs, 156 packets/48
+includes, five protected files/nine contexts, 349 frozen 7422453 artifacts and
+thirteen concurrent planning files stay exact. Readers joined; LAN offline;
+native Nyx tools absent. WORK.md owns retained expression-oracle failures, the
+previous eight-job failure, exact source/remote identity and next reassessment:
+generic bounded fulfillment of existing typed primitive requirements through
+compiler-scope/requirement/native-host ownership. Do not add fixed initial probes,
+infer target widths or bypass captured ownership. Stop include/cohort/compiler/
+capture variants. Full source/type/module/incremental/editor/input/quality/parity/
+adoption/delivery stays open across at least thirty-one documented unclosed
+batches; no original criterion/task/credit/DONE/new tool/schema/rollout closes.
+No host/config retry, protected mutation, capture, cleanup/restart, approval
+bypass or sub-agents. Preserve concurrent work.
+
+Previously qualified optimization intent adds symbolic ON/OFF/DEFAULT resets and 29
 typed pass toggles with exact source/include receipts, conditional activity and
 immutable context capture/identity/local PUSH/POP. Mode copies retain requests;
 unknown effects revoke knowledge. Pending/effective passes and target support

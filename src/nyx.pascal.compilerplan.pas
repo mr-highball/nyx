@@ -25,7 +25,7 @@ unit nyx.pascal.compilerplan;
 interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
-  nyx.pascal.translation, nyx.pascal.compilertrace;
+  nyx.pascal.files, nyx.pascal.translation, nyx.pascal.compilertrace;
 
 type
   { Independent positive work/output quotas. Optional lookahead proposes only
@@ -47,6 +47,33 @@ type
     property MaximumConditions: Integer read FConditions;
     property MaximumTokens: Integer read FTokens;
     property IncludeConditionalLookahead: Boolean read FLookahead;
+  end;
+  { Physical origin of a speculative name, without an active include occurrence
+    or source state. It owns no interface and never authorizes branch/type facts. }
+  TNyxPascalCompilerCandidateOrigin = record
+    FileReference: TNyxPascalPhysicalFile;
+    Span: TNyxPascalSpan;
+  end;
+  { Immutable literal-include proposal pool. Files retain the exact captured
+    bytes/views/search order; no disk fallback, decoding or macro expansion occurs.
+    Names are pristine compiler query candidates, not source requirements. Missing
+    includes/opaque files stay explicit statistics and remain ordinary translation
+    gaps when selected. Repeated/cyclic physical files are scanned once. }
+  INyxPascalCompilerIncludeCandidates = interface(IInterface)
+    ['{A641A251-2A66-407F-B8F9-6835BB8644D4}']
+    function Files: INyxPascalFileCatalog;
+    function Root: TNyxPascalPhysicalFile;
+    function Count: Integer;
+    { Checked original first-use values; no source occurrence is fabricated. }
+    function CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+    function OriginAt(AIndex: Integer): TNyxPascalCompilerCandidateOrigin;
+    function FilesVisited: Integer;
+    function MissingIncludes: Integer;
+    function OpaqueFiles: Integer;
+    function Truncated: Boolean;
+    { Lexical input/visited token rows plus condition scalars, bounded by the
+      supplied planning work quota. A preparation charges this once per pool. }
+    function WorkUnits: Integer;
   end;
   { Frozen unknown-condition requirements tied to exact physical occurrences and
     pre-token states. Needs retains separate compiler symbols, source sizeof and
@@ -85,12 +112,57 @@ type
 function PlanNyxPascalCompilerRequirements(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalCompilerPlanOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerPlan;
+{ Follow only captured literal include links under one explicit lexical envelope.
+  All branches may propose names; source declarations/sizeof and macro evaluation
+  remain outside this pool. MaximumConditions bounds unique names independently
+  of each job's unchanged 256-symbol ceiling. Quotas/cancellation refuse atomically. }
+function PlanNyxPascalCompilerIncludeCandidates(const AFiles: INyxPascalFileCatalog;
+  const ARoot: TNyxPascalPhysicalFile; const ALexical: TNyxPascalLexicalOptions;
+  const AOptions: TNyxPascalCompilerPlanOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerIncludeCandidates;
+{ Explicitly add speculative pool names after actual requirements and retained-
+  row lookahead. Freeze bounded alternate names without retaining their producer;
+  existing CandidateCount still describes retained-row proposals only. Pool names
+  grant no source/target authority. WorkUnits also charges their enumeration. }
+function PlanNyxPascalCompilerRequirementsWithIncludes(const ASource: INyxPascalTranslation;
+  const AOptions: TNyxPascalCompilerPlanOptions;
+  const AIncludes: INyxPascalCompilerIncludeCandidates;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerPlan;
 
 implementation
 
 uses SysUtils, nyx.text.index, nyx.editing;
 
 type
+  { Owns frozen virtual files and detached scalar/name vectors. Construction uses
+    a bounded physical-file queue and releases all lexer/cancellation leases before
+    publication. No compiler/source-state/editor or producer points back here. }
+  TIncludeCandidates = class(TInterfacedObject, INyxPascalCompilerIncludeCandidates)
+  private
+    FFiles: INyxPascalFileCatalog;
+    FRoot: TNyxPascalPhysicalFile;
+    FNames: array of TNyxPascalDefineRef;
+    FOrigins: array of TNyxPascalCompilerCandidateOrigin;
+    FVisited: Integer;
+    FMissing: Integer;
+    FOpaque: Integer;
+    FTruncated: Boolean;
+    FWork: Integer;
+  public
+    constructor Create(const AFiles: INyxPascalFileCatalog;
+      const ARoot: TNyxPascalPhysicalFile; const ALexical: TNyxPascalLexicalOptions;
+      const AOptions: TNyxPascalCompilerPlanOptions; const ACancellation: INyxCancellationScope);
+    function Files: INyxPascalFileCatalog;
+    function Root: TNyxPascalPhysicalFile;
+    function Count: Integer;
+    function CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+    function OriginAt(AIndex: Integer): TNyxPascalCompilerCandidateOrigin;
+    function FilesVisited: Integer;
+    function MissingIncludes: Integer;
+    function OpaqueFiles: Integer;
+    function Truncated: Boolean;
+    function WorkUnits: Integer;
+  end;
   { Construction owns detached vectors and a temporary cancellation lease.
     Published needs are separately owned interfaces in a class vector, never
     interface fields in records. Source data points only toward immutable inputs. }
@@ -102,12 +174,14 @@ type
     FExpressions: array of TNyxText;
     FNeeds: array of INyxPascalConditionNeeds;
     FCandidates: array of TNyxPascalDefineRef;
+    FIncludeCandidates: array of TNyxPascalDefineRef;
     FTruncated: Boolean;
     FWork: Integer;
     procedure CheckIndex(AIndex: Integer);
   public
     constructor Create(const ASource: INyxPascalTranslation;
-      const AOptions: TNyxPascalCompilerPlanOptions; const ACancellation: INyxCancellationScope);
+      const AOptions: TNyxPascalCompilerPlanOptions; const ACancellation: INyxCancellationScope;
+      const AIncludes: INyxPascalCompilerIncludeCandidates = nil);
     function Source: INyxPascalTranslation;
     function Count: Integer;
     function Origin(AIndex: Integer): TNyxPascalConditionOrigin;
@@ -169,8 +243,262 @@ begin
   end;
 end;
 
-constructor TCompilerPlan.Create(const ASource: INyxPascalTranslation;
+constructor TIncludeCandidates.Create(const AFiles: INyxPascalFileCatalog;
+  const ARoot: TNyxPascalPhysicalFile; const ALexical: TNyxPascalLexicalOptions;
   const AOptions: TNyxPascalCompilerPlanOptions; const ACancellation: INyxCancellationScope);
+var
+  LQueue: array of Integer;
+  LQueued: array of Boolean;
+  LRead: Integer;
+  LUsed: Integer;
+  LFile: Integer;
+  LAt: Integer;
+  LIndex: Integer;
+  LSymbol: Integer;
+  LOffset: Integer;
+  LLimit: Integer;
+  LText: TNyxText;
+  LName: TNyxText;
+  LValue: TNyxText;
+  LLexical: INyxPascalLexicalSnapshot;
+  LToken: TNyxPascalToken;
+  LOptions: TNyxPascalLexicalOptions;
+  LNeeds: INyxPascalConditionNeeds;
+  LCandidate: TNyxPascalDefineRef;
+  LNames: TNyxTextIndex;
+  LUnknown: INyxPascalCompilerContext;
+
+  procedure Charge(AValue: Integer);
+  begin
+
+    if (AValue < 0) or (AValue > AOptions.MaximumTokens - FWork) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Known-include compiler proposals exceed their work budget');
+    end;
+    Inc(FWork, AValue);
+  end;
+
+  procedure Enqueue(AFile: Integer);
+  begin
+
+    if AFile < 0 then
+    begin
+      Inc(FMissing);
+      Exit;
+    end;
+
+    if not LQueued[AFile] then
+    begin
+      LQueued[AFile] := True;
+      LQueue[LUsed] := AFile;
+      Inc(LUsed);
+    end;
+  end;
+
+begin
+  inherited Create;
+  AOptions.Validate;
+  ALexical.Validate;
+  CheckCancellation(ACancellation);
+  FFiles := CaptureNyxPascalFiles(AFiles);
+  LFile := FFiles.Find(ARoot);
+
+  if LFile < 0 then
+  begin
+    raise ENyxPascalContext.Create('Known-include proposals need an exact captured root');
+  end;
+  FRoot := FFiles.FileAt(LFile);
+  SetLength(LQueue, FFiles.Count);
+  SetLength(LQueued, FFiles.Count);
+  LRead := 0;
+  LUsed := 0;
+  Enqueue(LFile);
+  LUnknown := NewNyxPascalCompilerContext(ppcUnknown,
+    TNyxPascalCompilerVersion.Create(0, 0, 0), ppmUnknown);
+  LNames := TNyxTextIndex.Create;
+  try
+    while LRead < LUsed do
+    begin
+      CheckCancellation(ACancellation);
+      LFile := LQueue[LRead];
+      Inc(LRead);
+      Inc(FVisited);
+      try
+        LText := FFiles.TextAt(LFile);
+      except
+        on ENyxPascalSourceEncoding do
+        begin
+          Inc(FOpaque);
+          Continue;
+        end;
+      end;
+      { Account for the lexical input and its traversal. The independent file/
+        source-byte quotas still bound text validation and lexer allocation. }
+      LLimit := (AOptions.MaximumTokens - FWork) div 2;
+
+      if LLimit < 1 then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Known-include lexical input exceeds its work budget');
+      end;
+      LOptions := ALexical;
+
+      if LOptions.MaximumTokens > LLimit then
+      begin
+        LOptions := LOptions.UpToTokens(LLimit);
+      end;
+      LLexical := NewNyxPascalLexicalSnapshot(LText, LOptions, ACancellation);
+      Charge(LLexical.Count * 2);
+      for LAt := 0 to LLexical.Count - 1 do
+      begin
+        CheckCancellation(ACancellation);
+        LToken := LLexical.Token(LAt);
+
+        if (LToken.Kind <> ptkDirective) or not LToken.Complete then
+        begin
+          Continue;
+        end;
+        NyxPascalDirectiveParts(LLexical.Slice(LToken.Span), LName, LValue, LOffset);
+        Charge(NyxTextScalarCount(LValue));
+
+        if (LName = 'include') or ((LName = 'i') and
+          (LValue <> '+') and (LValue <> '-')) then
+        begin
+
+          if (Length(LValue) >= 2) and (LValue[1] = #39) and
+            (LValue[Length(LValue)] = #39) then
+          begin
+            LValue := Copy(LValue, 2, Length(LValue) - 2);
+          end;
+          LIndex := -1;
+          try
+            LIndex := FFiles.ResolveInclude(FFiles.FileAt(LFile), LValue);
+          except
+            on ENyxPascalContext do
+            begin
+              { Invalid/dynamic names grant no path or macro authority. Actual
+                selected-source translation retains its own explicit refusal. }
+            end;
+          end;
+          Enqueue(LIndex);
+          Continue;
+        end;
+
+        if not ((LName = 'if') or (LName = 'elseif') or
+          (LName = 'ifdef') or (LName = 'ifndef')) then
+        begin
+          Continue;
+        end;
+
+        if (LName = 'ifdef') or (LName = 'ifndef') then
+        begin
+          try
+            LCandidate := NyxPascalDefine(LValue);
+          except
+            on ENyxPascalContext do
+            begin
+              Continue;
+            end;
+          end;
+          LValue := 'defined(' + LCandidate.Name + ')';
+        end;
+        LNeeds := PlanNyxPascalCondition(LUnknown, LValue);
+
+        if not LNeeds.SyntaxSupported then
+        begin
+          Continue;
+        end;
+        for LSymbol := 0 to LNeeds.SymbolCount - 1 do
+        begin
+          LCandidate := LNeeds.Symbol(LSymbol);
+
+          if LNames.IndexOf(LCandidate.Name) >= 0 then
+          begin
+            Continue;
+          end;
+
+          if Length(FNames) >= AOptions.MaximumConditions then
+          begin
+            FTruncated := True;
+            Continue;
+          end;
+          LIndex := Length(FNames);
+          LNames.AddFirst(LCandidate.Name, LIndex);
+          SetLength(FNames, LIndex + 1);
+          SetLength(FOrigins, LIndex + 1);
+          FNames[LIndex] := LCandidate;
+          FOrigins[LIndex].FileReference := FFiles.FileAt(LFile);
+          FOrigins[LIndex].Span := LToken.Span;
+        end;
+      end;
+    end;
+  finally
+    LNames.Free;
+  end;
+end;
+
+function TIncludeCandidates.Files: INyxPascalFileCatalog;
+begin
+  Result := FFiles;
+end;
+
+function TIncludeCandidates.Root: TNyxPascalPhysicalFile;
+begin
+  Result := FRoot;
+end;
+
+function TIncludeCandidates.Count: Integer;
+begin
+  Result := Length(FNames);
+end;
+
+function TIncludeCandidates.CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxPascalContext.Create('An include candidate index is outside its immutable pool');
+  end;
+  Result := FNames[AIndex];
+end;
+
+function TIncludeCandidates.OriginAt(AIndex: Integer): TNyxPascalCompilerCandidateOrigin;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxPascalContext.Create('An include candidate origin is outside its immutable pool');
+  end;
+  Result := FOrigins[AIndex];
+end;
+
+function TIncludeCandidates.FilesVisited: Integer;
+begin
+  Result := FVisited;
+end;
+
+function TIncludeCandidates.MissingIncludes: Integer;
+begin
+  Result := FMissing;
+end;
+
+function TIncludeCandidates.OpaqueFiles: Integer;
+begin
+  Result := FOpaque;
+end;
+
+function TIncludeCandidates.Truncated: Boolean;
+begin
+  Result := FTruncated;
+end;
+
+function TIncludeCandidates.WorkUnits: Integer;
+begin
+  Result := FWork;
+end;
+
+constructor TCompilerPlan.Create(const ASource: INyxPascalTranslation;
+  const AOptions: TNyxPascalCompilerPlanOptions; const ACancellation: INyxCancellationScope;
+  const AIncludes: INyxPascalCompilerIncludeCandidates);
 var
   LInputs: INyxPascalUnresolvedConditions;
   LAt: Integer;
@@ -186,6 +514,7 @@ var
   LNeeds: INyxPascalConditionNeeds;
   LSymbol: Integer;
   LCandidate: TNyxPascalDefineRef;
+  LIncludeCount: Integer;
 
   procedure Charge(AValue: Integer);
   begin
@@ -212,6 +541,24 @@ begin
     raise ENyxPascalTranslationLimit.Create('Compiler requirement input exceeds its work budget');
   end;
   FWork := FSource.Count;
+
+  if AIncludes <> nil then
+  begin
+    LIncludeCount := AIncludes.Count;
+
+    if (LIncludeCount < 0) or (LIncludeCount > AOptions.MaximumConditions) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Include proposals exceed their explicit name quota');
+    end;
+    Charge(LIncludeCount);
+    SetLength(FIncludeCandidates, LIncludeCount);
+    for LAt := 0 to LIncludeCount - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      LCandidate := AIncludes.CandidateAt(LAt);
+      FIncludeCandidates[LAt] := NyxPascalDefine(LCandidate.Name);
+    end;
+  end;
 
   if AOptions.IncludeConditionalLookahead then
   begin
@@ -428,6 +775,13 @@ begin
 
       if FSource.InitialContext.Symbol(FNeeds[LAt].Symbol(LSymbol)).Kind = ppdUnknown then
       begin
+
+        if Result.Count >= 256 then
+        begin
+          { Remaining requirements stay in this immutable plan. A later measured
+            context can request the next cohort without enlarging one job. }
+          Exit;
+        end;
         Result := Result.WithSymbol(FNeeds[LAt].Symbol(LSymbol));
       end;
     end;
@@ -441,6 +795,19 @@ begin
     end;
     Result := Result.WithSymbol(FCandidates[LAt]);
   end;
+  for LAt := 0 to High(FIncludeCandidates) do
+  begin
+
+    if Result.Count >= 256 then
+    begin
+      Break;
+    end;
+
+    if FSource.InitialContext.Symbol(FIncludeCandidates[LAt]).Kind = ppdUnknown then
+    begin
+      Result := Result.WithSymbol(FIncludeCandidates[LAt]);
+    end;
+  end;
 end;
 
 function PlanNyxPascalCompilerRequirements(const ASource: INyxPascalTranslation;
@@ -448,6 +815,27 @@ function PlanNyxPascalCompilerRequirements(const ASource: INyxPascalTranslation;
   const ACancellation: INyxCancellationScope): INyxPascalCompilerPlan;
 begin
   Result := TCompilerPlan.Create(ASource, AOptions, ACancellation);
+end;
+
+function PlanNyxPascalCompilerIncludeCandidates(const AFiles: INyxPascalFileCatalog;
+  const ARoot: TNyxPascalPhysicalFile; const ALexical: TNyxPascalLexicalOptions;
+  const AOptions: TNyxPascalCompilerPlanOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalCompilerIncludeCandidates;
+begin
+  Result := TIncludeCandidates.Create(AFiles, ARoot, ALexical, AOptions, ACancellation);
+end;
+
+function PlanNyxPascalCompilerRequirementsWithIncludes(const ASource: INyxPascalTranslation;
+  const AOptions: TNyxPascalCompilerPlanOptions;
+  const AIncludes: INyxPascalCompilerIncludeCandidates;
+  const ACancellation: INyxCancellationScope): INyxPascalCompilerPlan;
+begin
+
+  if AIncludes = nil then
+  begin
+    raise ENyxPascalContext.Create('Include-aware planning needs its explicit speculative pool');
+  end;
+  Result := TCompilerPlan.Create(ASource, AOptions, ACancellation, AIncludes);
 end;
 
 end.

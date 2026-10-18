@@ -126,6 +126,12 @@ origins and saved settings retain exact authored intent without fabricating targ
 defaults or effective optimizer behavior. Broader compiler/language meaning and
 ordinary editor adoption remain open under the full original authoring criterion.
 
+Explicit [known-include candidates](docs/pascal-projects.md#bounded-compiler-query-cohorts)
+now let native preparation collect speculative compiler names across captured
+literal links before deeper branches become active. Exact source provenance and
+unchanged work/query/job ceilings separate proposals from verified source meaning.
+This supports the Nyx-owned resolver; full language/editor adoption remains open.
+
 The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
 separates linker suffixes from class visibility and retains typed declaration
 flags/ranges. Known layout directives retain explanatory trailing text without

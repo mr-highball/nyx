@@ -1920,6 +1920,35 @@ Native module preparation enables lookahead by default; callers can supply a
 minimal plan explicitly. The expanded options record requires affected callers to
 be rebuilt together.
 
+`PlanNyxPascalCompilerIncludeCandidates` optionally builds a separate immutable
+proposal pool from a captured root and literal include links. It follows all
+branches speculatively under one explicit lexical envelope, scans each reachable
+physical file once, terminates cycles and excludes unrelated captured units.
+Names retain exact first scanned file/span origins without fabricated source
+occurrences or compiler states. Missing/dynamic include links and opaque byte
+files remain visible statistics; no disk lookup, guessed decoding or macro
+expansion occurs. Named sizeof/declared operands remain source requirements.
+
+The existing `MaximumConditions` bounds unique pool names; truncation is explicit.
+Lexical input/traversal rows and directive-value scalars charge the existing
+planning work budget. Quotas and cancellation publish no partial pool. The pool
+retains exact files/search order; immutable copies survive caller changes.
+`PlanNyxPascalCompilerRequirementsWithIncludes` explicitly freezes pool names after
+actual requirements and retained-row lookahead. An alternate producer grants no
+source authority and is not retained. `CandidateCount` still describes retained-
+row proposals; the separate pool exposes its own count/origins/statistics.
+
+Native preparation enables this known-include pool when conditional lookahead is
+enabled. `LookAheadKnownIncludes(False)` selects retained-row-only behavior; a
+minimal plan also avoids speculative traversal. Preparation builds/charges a pool
+once, then charges each round's bounded name enumeration against the aggregate
+allowance. Required-first cohort selection retains every source requirement while
+obeying the unchanged 256-symbol job ceiling. Later measured contexts can request
+remaining names without repeating already captured pristine facts. No fixed SDK
+list, extra initial primitive probes, raised work/job limit or source mutation
+substitutes for the planning algorithm. WORK.md owns exact native RTL results and
+remaining language/editor/parity requirements.
+
 `ReadNyxFPCCompilerCapture` and its native host counterpart retain the complete
 transcript gate plus a separate observed-default packet before explicit query
 replies. Optional `INyxFPCCompilerCapture.Merge` freezes alternate producers,

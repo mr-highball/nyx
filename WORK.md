@@ -33,7 +33,89 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Authored optimization requests — 2026-10-18
+## Current integration: Known-include compiler candidates — 2026-10-18
+
+91f07da is progress across at least thirty documented unclosed batches, retaining
+full original authoring criterion two. The unchanged RTL preparation fails the
+existing eight-probe ceiling because retained-token lookahead discovers successive
+include cohorts. Follow compilerplan/native preparation ownership: build one
+bounded pool from explicit captured literal include links, preserving exact file/
+span provenance, cycles, unreadable/missing input and cancellation. These are
+speculative compiler-symbol proposals, never active requirements, branch/source
+facts, macro expansion, named sizeof/declared meaning or filesystem authority.
+Ordinary plans retain their current behavior; native preparation explicitly
+consumes the pool, charges its work once and preserves existing work/job/query
+quotas and required-first priority. No fixed SDK list, raised limit or broader
+capture substitutes for planning. Portable ownership/quota/refusal cases, native
+preparation, maintained consumers and one unchanged RTL route decide this
+boundary. Stop at a different prerequisite, retaining failures and full source/
+type/module/incremental/editor/input/quality/parity/adoption/delivery requirements.
+Browser consumers compile only. Preserve protected/concurrent work, original
+packets and 349 frozen artifacts; LAN stays offline. No host/config retry,
+HTTP/browser/file execution/capture, protected mutation, cleanup/restart, approval
+bypass or sub-agents; no original criterion/task/credit/DONE/new tool/rollout closes.
+
+The new immutable pool follows captured literal include links through a bounded
+physical-file queue. It scans reachable files once, terminates cycles, excludes
+unrelated files and retains exact first scanned file/span origins without active
+occurrences/states. Missing/dynamic links and opaque bytes remain explicit
+statistics; no host lookup, guessed decoding or macro evaluation occurs. Source
+sizeof/declared operands never become pristine symbol queries. Explicit pool
+names freeze independently of mutable producers. Ordinary source requirements
+and retained-row CandidateCount keep their prior meaning.
+
+Native preparation builds/charges one pool when conditional lookahead is enabled;
+callers can select retained-only or minimal planning. Input/traversal token rows,
+directive-value scalars and per-round enumeration consume existing work limits.
+Required-first selection now retains even more than 256 actual requirements while
+choosing a bounded job; later measured contexts request the remaining names.
+No SDK list, extra initial measurements, query/work/job ceiling or broader capture
+was added. Quota/cancellation/alternate-getter failure preserves publication.
+
+Focused portable/native checks pass 19 with clean heap, including reachable and
+inactive links, cycles, unrelated/opaque/missing files, exact origins, independent
+files/producers, source-vs-pristine separation, truncation, cancellation and
+required-first multi-job selection. Two retained preparations used an invalid
+Boolean/sizeof test expression; the corrected Pascal expression adds parentheses,
+without relaxing parser precedence or changing the production conditional grammar.
+Per-type/public-contract and blank-line review precedes the final source freeze;
+all accepted groups use that exact source. The original real-RTL consumer remains
+byte-identical to the prior checkpoint.
+
+The unchanged RTL consumer passes 50 with clean heap. System preparation now uses
+three native jobs within its original eight ceiling; the original five bootstrap
+primitive probes, one explicit Word job and all work limits remain unchanged.
+System reaches 7,712 declarations/two body/terminator syntax diagnostics/twelve
+semantic answers. It reports pending compiler-root Longint size evidence for
+ValSint in sstrings.inc; three comparisons and the resulting ERROR directive
+remain explicit rather than guessing widths. ObjPas stays 209/four/one. Ordinary
+indexed Free/FreeInstance lookup/navigation and exact detached insertion remain
+ready through original objpash.inc. This bounded success does not establish
+complete RTL/type meaning or erase the retained previous eight-job failure.
+
+All 39 native consumers pass with clean heaps. The 67 accepted compiler logs have
+zero owned warnings and 161 upstream pas2js Classes warnings. Both Studios/backend/
+worker and twenty-four browser consumers compile as applicable; browser execution,
+input/observing/parity/adoption/delivery remain open. Four focused/649 maintained
+source/97 RTL/23 compiler inputs stay pinned. All 156 original compiler-unit
+packets, 48 SysUtils includes, five protected files/nine complete contexts, 349
+frozen 7422453 artifacts and thirteen concurrent planning files stay exact.
+Owned readers are joined; listeners/LAN remain offline. Native Nyx tools are
+absent and no HTTP/host/config retry is attempted.
+
+Private pointer `.local/include-candidates-paths-private.json` locates exact
+compiler/native/input/preservation receipts, retained failures and final committed/
+remote identity. Stop include/cohort/compiler/capture variants. Next reassess
+generic bounded fulfillment of the existing typed primitive requirements through
+compiler-scope/requirement/native-host owners. Preserve exact captured context,
+source identity, independent bootstrap provenance, cancellation and quotas;
+do not add a fixed initial probe list, infer target sizes or weaken refusal.
+Full original criterion two and source/canonical type/module/incremental/editor/
+input/navigation/quality/parity/adoption/delivery remain open across at least
+thirty-one documented unclosed batches. No original criterion/task/credit/DONE,
+new tool/schema or rollout closes.
+
+## Previous integration: Authored optimization requests — 2026-10-18
 
 6423b8c is progress across at least twenty-nine documented unclosed batches;
 complete original authoring criterion two remains open. The next RTL prerequisite

@@ -32,7 +32,8 @@ type
   { Copied limits for explicit native module preparation. Probe/translation work
     is bounded across the whole operation, while each compiler retains its own
     timeout/transcript limits. Default plans prefetch bounded conditional-symbol
-    candidates; callers may supply minimal plans. No host/interface borrow lives here. }
+    candidates, including one captured literal-include pool; callers may select
+    retained-only/minimal plans. No host/interface borrow lives here. }
   TNyxFPCModulePreparationOptions = record
   private
     FDefined: Boolean;
@@ -40,6 +41,7 @@ type
     FTokens: Integer;
     FTimeout: Cardinal;
     FPlan: TNyxPascalCompilerPlanOptions;
+    FIncludes: Boolean;
     FTrace: TNyxPascalCompilerTraceOptions;
   public
     class function Defaults: TNyxFPCModulePreparationOptions; static;
@@ -47,6 +49,9 @@ type
     function UpToTokens(AValue: Integer): TNyxFPCModulePreparationOptions;
     function TimeoutMilliseconds(AValue: Cardinal): TNyxFPCModulePreparationOptions;
     function WithPlan(const AValue: TNyxPascalCompilerPlanOptions): TNyxFPCModulePreparationOptions;
+    { Build a speculative captured-include pool once when conditional lookahead
+      is enabled. False retains the previous translated-row-only preparation. }
+    function LookAheadKnownIncludes(AValue: Boolean): TNyxFPCModulePreparationOptions;
     function WithTrace(const AValue: TNyxPascalCompilerTraceOptions): TNyxFPCModulePreparationOptions;
     procedure Validate;
   end;
@@ -371,6 +376,7 @@ begin
   Result.FTokens := 4000000;
   Result.FTimeout := 30000;
   Result.FPlan := TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True);
+  Result.FIncludes := True;
   Result.FTrace := TNyxPascalCompilerTraceOptions.Defaults;
 end;
 
@@ -410,6 +416,14 @@ function TNyxFPCModulePreparationOptions.WithPlan(const AValue: TNyxPascalCompil
 begin
   Result := Self;
   Result.FPlan := AValue;
+  Result.Validate;
+end;
+
+function TNyxFPCModulePreparationOptions.LookAheadKnownIncludes(
+  AValue: Boolean): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FIncludes := AValue;
   Result.Validate;
 end;
 
@@ -482,6 +496,7 @@ var
   LFresh: INyxFPCCompilerCapture;
   LAccumulated: INyxFPCCompilerCapture;
   LDirectory: TNyxText;
+  LIncludes: INyxPascalCompilerIncludeCandidates;
 
   function MissingFacts(const AProbe: INyxPascalCompilerProbe): Boolean;
   var
@@ -540,6 +555,22 @@ begin
   LRemaining := AOptions.FTokens;
   LOwner := TPreparedModule.Create;
   LLease := LOwner;
+  LIncludes := nil;
+
+  if AOptions.FIncludes and AOptions.FPlan.IncludeConditionalLookahead then
+  begin
+    LPlanOptions := AOptions.FPlan;
+
+    if LPlanOptions.MaximumTokens > LRemaining then
+    begin
+      LPlanOptions := LPlanOptions.UpToTokens(LRemaining);
+    end;
+    LIncludes := PlanNyxPascalCompilerIncludeCandidates(LFiles, LModule.Root,
+      LModule.Translation.LexicalOptions, LPlanOptions, LCancel);
+    { The pool is built/charged once. Per-round plans charge enumeration and
+      observed requirements separately under the existing aggregate allowance. }
+    Dec(LRemaining, LIncludes.WorkUnits);
+  end;
   while True do
   begin
     CheckCancellation(LCancel);
@@ -563,7 +594,16 @@ begin
     begin
       LPlanOptions := LPlanOptions.UpToTokens(LOwner.Translation.Count + LRemaining);
     end;
-    LOwner.Plan := PlanNyxPascalCompilerRequirements(LOwner.Translation, LPlanOptions, LCancel);
+
+    if LIncludes = nil then
+    begin
+      LOwner.Plan := PlanNyxPascalCompilerRequirements(LOwner.Translation, LPlanOptions, LCancel);
+    end
+    else
+    begin
+      LOwner.Plan := PlanNyxPascalCompilerRequirementsWithIncludes(LOwner.Translation,
+        LPlanOptions, LIncludes, LCancel);
+    end;
 
     if Supports(LOwner.Plan, INyxPascalCompilerCandidates, LCandidates) then
     begin

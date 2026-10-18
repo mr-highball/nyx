@@ -9,6 +9,33 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Known-include planning prerequisite (2026-10-18): build bounded speculative
+compiler-symbol candidates from explicitly captured literal include links through
+existing compilerplan/native preparation owners. Preserve file/span origins,
+cycles/opaque/missing input, cancellation, required-first priority and unchanged
+work/job/query quotas. Ordinary planning stays explicit; no candidate grants
+source/macro/branch/type meaning or filesystem authority. One unchanged RTL route
+must confront the retained eight-probe failure without fixed lists, raised limits,
+capture variants or a weaker oracle. 91f07da remains progress across at least
+thirty unclosed batches; full original criterion two and editor/language/quality/
+parity/adoption/delivery stay open. WORK.md owns exact evidence and the return path.
+
+Known-include planning passes 19 focused native, 50 unchanged RTL and all 39 native
+consumers with clean heaps. System preparation needs three jobs under the original
+eight ceiling, retaining five initial measurements and one Word job. System now
+has 7,712 declarations/two syntax diagnostics/twelve answers, pending compiler-root
+Longint size evidence for ValSint; ObjPas stays 209/four/one. Exact indexed Free/
+FreeInstance navigation/insertion is ready. All 67 compiler logs have zero owned
+warnings; both Studios/backend/worker and twenty-four browser consumers compile
+as applicable. WORK.md retains oracle/previous budget failures and exact receipts.
+Stop include/cohort/compiler/capture variants; reassess generic bounded fulfillment
+of existing typed primitive requirements under compiler-scope/requirement/native
+host ownership, preserving capture/source identity and bootstrap provenance. No
+fixed initial probes, inferred widths or weaker refusal substitutes for evidence.
+Full original criterion two/source/type/editor/quality/parity/adoption/delivery
+remain open across at least thirty-one unclosed batches; no original criterion/
+task/credit/DONE/new tool/schema/rollout closes.
+
 Optimization prerequisite (2026-10-18): retain closed typed ON/OFF/DEFAULT and
 named toggle requests, exact include origins/conditional activity and local
 settings lifetime through existing compiler context/translation owners. Capture,
