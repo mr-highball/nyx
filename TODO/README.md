@@ -17,6 +17,14 @@ dynamic lexical/compiler/SDK context, translated type syntax/binding and existin
 provider/editor/incremental/navigation/quality/parity requirements stay with the
 original authoring/service owners; no criterion/counter/credit closes.
 
+The owned [type/origin layer](../docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
+now retains structured type expressions and known-active included declarations
+with exact physical file/occurrence/state mapping. This is syntax, not resolved
+type identity or a default completion engine. Scoped name/alias/member binding
+and full grammar/context/incremental/navigation/quality/parity remain under
+original authoring criterion two; WORK.md owns native evidence separately from
+browser compilation and installation. No criterion/counter/credit closes.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).

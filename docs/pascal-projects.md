@@ -862,6 +862,57 @@ project-scale cancellation/budgets. Structured type expressions, semantic bindin
 provider/editor adoption and full platform/quality/delivery remain open. No MCP
 tool/schema, default engine or active design is changed by these primitives.
 
+## Structured type syntax and physical origins
+
+`nyx.pascal.types` parses a bounded lexical window into an immutable typed arena.
+Nodes describe names/qualification, generic bases/arguments, pointers, arrays and
+dimensions, sets, files, short strings, class references, distinct aliases,
+enumerations/subranges and procedural/function-reference signatures. Parameter
+groups retain names, passing modes and one type child; defaults/bounds retain exact
+opaque syntax for later constant binding. ABI, method/nested/packing and explicit
+specialization qualifiers are typed values. No constant or authored code executes.
+
+Nested generic closers split `>>`/`>=` contextually without mutating lexical tokens.
+The declaration parser also preserves the split between `TBox<T>` and the adjacent
+alias equals sign in `TBox<T>=class`. Native qualification includes an actual
+compiler declaration with that spelling. Unsupported/incomplete grammar stays
+diagnostic; `Complete` means recognized type syntax, not compiler eligibility,
+resolved type identity, generic substitution or successful application compilation.
+Structured class/member bodies remain with their owning declaration scopes.
+
+`nyx.pascal.syntax.translated` exposes known-active declarations across captured
+includes. It creates an **analysis-only projection** with explicit separators
+between significant tokens. That text must never replace authored buffers or be
+submitted as a source edit. The exact original files remain in `Source`. Every
+projected token maps to physical file/scalar span, inclusion occurrence and its
+pre-token compiler state. `OriginAt` refuses synthetic separators/EOF; `Part`
+maps an intersected range without rounding Unicode or compound-symbol boundaries.
+Repeated inclusions retain independent identities. The first significant unknown
+participant ends a visible incomplete prefix instead of selecting a guessed branch.
+
+```pascal
+LDeclared := NewNyxPascalTranslatedSyntax(LTranslation,
+  TNyxPascalSyntaxOptions.Defaults);
+LDeclaration := LDeclared.Syntax.Named(0, 'TReply');
+
+if LDeclaration >= 0 then
+begin
+  LType := LDeclared.TypeOfDeclaration(LDeclaration,
+    TNyxPascalTypeOptions.Defaults, LCancellation);
+  { Inspect typed nodes; retain LDeclared for their physical origin mapping. }
+end;
+```
+
+Type windows allocate their own token interval rather than the remainder of an
+owning unit. Node/depth/diagnostic budgets and cancellation refuse complete
+candidates; no truncated arena escapes. No editor/UI/compiler capability is retained.
+WORK.md records real controls/include declaration and specialized interface result/
+parameter evidence, exact supplementary-scalar mapping and native compiler oracles.
+Browser consumers compile only. This adds no Studio/default provider/MCP mode or
+source edit. Scoped name/alias/member/inheritance/interface/generic/overload/helper
+binding, broader grammar/context, incremental budgets/navigation and full platform/
+quality/delivery remain with the original authoring/service owners.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

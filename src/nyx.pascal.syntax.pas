@@ -197,7 +197,9 @@ type
     property MaximumDepth: Integer read FDepth;
     property MaximumDiagnostics: Integer read FDiagnostics;
   end;
-  { Immutable recoverable declared structure over one physical lexical snapshot.
+  { Immutable recoverable declared structure over one lexical snapshot. Ordinary
+    source positions are physical; translated adapters retain an explicit origin
+    map for their analysis projection, which must never replace authored text.
     Types/ancestors/generic arguments remain exact syntax, not bound compiler
     types. Includes/conditions/unsupported constructs remain explicit diagnostics.
     There is no source execution, compiler provenance, editor or document borrow. }
@@ -258,6 +260,9 @@ type
     FDiagnosticCount: Integer;
     FNames: TNyxTextIndex;
     FPosition: Integer;
+    { A generic header may end in the physical >= token. Only its > belongs
+      to the header; the residual equals sign stays for the alias declaration. }
+    FPartialEqual: Boolean;
     FDepth: Integer;
     function Tok(AOffset: Integer = 0): TNyxPascalToken;
     function Word(AWord: TNyxPascalWord; AOffset: Integer = 0): Boolean;
@@ -431,6 +436,11 @@ end;
 function TSyntaxSnapshot.Sym(ASymbol: TNyxPascalSymbol; AOffset: Integer): Boolean;
 begin
   Result := (Tok(AOffset).Kind = ptkSymbol) and (Tok(AOffset).Symbol = ASymbol);
+
+  if (AOffset = 0) and FPartialEqual then
+  begin
+    Result := ASymbol = psoEqual;
+  end;
 end;
 
 function TSyntaxSnapshot.EOF: Boolean;
@@ -458,6 +468,7 @@ begin
 
   if FPosition < High(FTokens) then
   begin
+    FPartialEqual := False;
     Inc(FPosition);
   end;
 end;
@@ -466,7 +477,11 @@ function TSyntaxSnapshot.EndOffset: Integer;
 begin
   Result := 0;
 
-  if FPosition > 0 then
+  if FPartialEqual then
+  begin
+    Result := Tok.Span.Start + 1;
+  end
+  else if FPosition > 0 then
   begin
     Result := FLexical.Token(FTokens[FPosition - 1]).Span.Finish;
   end;
@@ -481,7 +496,11 @@ function TSyntaxSnapshot.Range(AStart, AEnd: Integer): TNyxPascalSpan;
 begin
   Result := NyxPascalSpan(FLexical.Token(FTokens[AStart]).Span.Start, 0);
 
-  if AEnd > AStart then
+  if (AEnd = FPosition) and FPartialEqual then
+  begin
+    Result := NyxPascalSpan(Result.Start, EndOffset - Result.Start);
+  end
+  else if AEnd > AStart then
   begin
     Result := NyxPascalSpan(Result.Start,
       FLexical.Token(FTokens[AEnd - 1]).Span.Finish - Result.Start);
@@ -728,6 +747,12 @@ begin
     else if Sym(psoShiftRight) then
     begin
       Dec(LDepth, 2);
+    end
+    else if Sym(psoGreaterEqual) then
+    begin
+      Dec(LDepth);
+      FPartialEqual := True;
+      Break;
     end;
     Step;
   end;

@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Captured Pascal compiler/include context — 2026-10-17
+## Current integration: Structured types and translated physical origins — 2026-10-17
+
+Previous goal turn is progress: pushed 4989ad9 captures compiler/include context.
+This batch advances its next type/syntax prerequisite under original NS-4 authoring
+criterion two and existing service ownership. The full fresh MIT resolver and
+original language/editor/navigation/quality scope remain the destination.
+
+New nyx.pascal.types owns immutable structured type arenas over exact lexical
+windows. Named/qualified/generic types, pointers, arrays/dimensions, sets/files,
+strings, class references, distinct aliases, enum/subranges and procedural/function-
+reference signatures retain typed child roles and scalar spans. Grouped parameters
+retain names, passing modes and one type child. Bound/default expressions remain
+exact opaque syntax for later constant binding. ABI/method/nested/packing/explicit
+specialization qualifiers are typed values, never inferred compiler eligibility.
+No names, aliases, generic substitutions or application code execute or resolve.
+
+Type windows allocate their own token interval, not the entire remaining owning
+unit. Node/depth/diagnostic budgets and cooperative cancellation refuse complete
+candidates. Escaped identifiers cannot become compiler modifiers. Unfinished
+comments/tokens remain uncertainty. Contextual generic >>/>= splitting retains
+the original lexical stream. The existing declaration parser now retains the >
+and residual equals independently in TBox<T>=class; no lexer or authored text is
+rewritten. Exact raw ranges include just the corresponding token part.
+
+New nyx.pascal.syntax.translated consumes known-active captured tokens through an
+analysis-only projection with explicit separators. This is never authored source,
+an editor replacement or a source-admission candidate. Every significant mapped
+token retains its physical file/scalar span, occurrence and pre-token context.
+Exact logical lookup refuses synthetic separators/EOF; partial range intersections
+retain Unicode and compound-symbol boundaries. Repeated includes stay distinct.
+Unknown significant participation stops a visible incomplete prefix instead of
+choosing a branch. The declaration/type consumer shares the public parser and
+retains its original physical source via explicit mapping ownership.
+
+Evidence behind ignored .local/pascal-types-paths-private.json:
+
+- source-pins-final-private.json pins four changed Pascal inputs and the maintained
+  syntax consumer before the accepted compiler/runtime batch. Seven unchanged
+  actual callback/control/include inputs are pinned against committed baseline
+  blobs in actual-input-pins-final-private.json. No input edits occur while owned
+  compiler/runtime/helper readers are live; every reader joins.
+- logs/types-final-run.log passes 357 native assertions, clean heap. Counts include
+  per-node/fixture-token ownership and mapping invariants. Nested generics/qualified
+  bases, pointers/multidimensional arrays, grouped constref/var/out parameters,
+  untyped var, specialized interface results, ABI/method/nested/reference qualifiers,
+  opaque default/bounds, packing/string/enum/subrange syntax, specialization, invalid/
+  incomplete recovery, budget and cancellation checks pass. Ordinary compiled native
+  array/pointer/callback and adjacent generic-header declarations provide actual
+  compiler oracles; type-parser syntax alone grants no compiler acceptance.
+- The actual complete nyx.controls source and five includes produce 4,540 declared
+  entries and 42,008 mapped tokens. The single initialization/finalization grammar
+  diagnostic stays explicit. The real INyxBadge.WithText result/AText parameter
+  parse as INyxBadge/TNyxText and map to nyx.controls.types.inc. This is selected
+  real-member origin/type syntax evidence, not exhaustive binding or an assertion
+  that every actual mapping/declaration has been semantically qualified.
+- Known-active repeated include selection, exact mapped fixture-token round trips,
+  supplementary-scalar partial ranges, the > half of >=, synthetic separator refusal,
+  unknown-prefix preservation and projection byte refusal pass. No source buffer,
+  accepted pair or active Studio document is changed.
+- logs/syntax-final-run.log retains 7,602 native assertions across five actual inputs
+  and 3,707 declarations, clean heap. Ten prior syntax/context diagnostics remain
+  explicit. Counts overlap earlier qualifications and per-entry invariants.
+- Four final compiler logs (types-final, types-browser-final, syntax-final,
+  syntax-browser-final) pass with zero owned warnings/fourteen upstream pas2js RTL
+  warnings. Both browser consumers compile only; no record/Unicode/mapping execution
+  or browser parity is inferred. Existing Studio/backend/default provider remain
+  untouched consumers of their prior contracts.
+
+Retained preparations: types-1 native passes 339; its browser fixture incorrectly
+declares the native pointer oracle, which pas2js does not support. The oracle is
+then explicitly native-only while the portable parser still analyzes pointers.
+types-2 native passes 354 and both consumers compile. Final review fixes escaped
+modifier interpretation, incomplete trailing-comment uncertainty and small-window
+allocation, adds diagnostic refusal and propagates optional helper cancellation.
+Only the final compiler/runtime receipts are accepted; preparations remain retained.
+
+Five protected files/nine complete contexts/history/drafts/profile and 349 frozen
+7422453 artifacts remain exact. Native Nyx tools remain absent; no active design
+changes. LAN remains offline. There is no HTTP/browser execution, capture,
+protected configuration/enrollment/cleanup retry, approval bypass, deletion or
+sub-agent. Tools stay 24/frozen 23, Pascal modes eighteen. No new MCP schema/kind,
+original full criterion/task/counter/credit/DONE, engine/parity or rollout closes.
+Final-checkpoint-private.json owns source/remote, accepted logs, terminal, pin and
+preservation receipts. The original full Nyx/Studio goal remains active.
+
+Stop type/projection/fixture/compiler variants. Next build real scoped declaration/
+name/type/alias/member binding over the owned translated syntax, compiler facts
+and type arenas, retaining physical locations and existing provider/editor/source
+admission guards. Full inheritance/interface/generic/overload/helper meaning,
+dynamic lexical/compiler/SDK context, broader grammar, dependency invalidation,
+incremental/project-scale cancellation/budgets and complete editor/navigation/
+input/accessibility/visual/parity/delivery remain original requirements.
+
+## Prior integration: Captured Pascal compiler/include context — 2026-10-17
 
 Previous goal turn is progress: pushed 68a07e6 establishes the owned lexical and
 scope foundation. This batch advances its required captured translation context

@@ -28,7 +28,7 @@ now preserves lossless physical tokens and typed, recoverable declarations/scope
 Native qualification includes actual Nyx interfaces; browser consumers compile
 only. It deliberately leaves the admission lexer and existing outline unchanged.
 The captured translation layer below now advances include/conditional context;
-complete compiler/mode coverage and structured type expressions/binding remain
+complete compiler/mode/type grammar and semantic binding remain
 prerequisites to the existing provider. Generic token context, anonymous/inline/variant scopes,
 aliases/inheritance/overloads/helpers, dependency invalidation and full editor/
 navigation/quality/budgets remain open. No original criterion/counter/credit closes.
@@ -43,6 +43,17 @@ general compiler expressions/macros and complete SDK/host capture remain open.
 Next connect translated token/context locations to structured type expressions
 and real semantic binding through the existing provider. Preserve all original
 scope, source-admission independence and incremental/navigation/quality requirements.
+
+The [structured type/origin consumer](../docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
+now parses known-active translated declarations, structured type/signature nodes
+and exact physical mappings through includes. An analysis-only projection keeps
+coordinates distinct and stops before unknown significant participation. Real
+Nyx controls expose badge result/parameter syntax at the actual include; this
+does not resolve those names or prove a general compiler grammar. Next scoped
+name/alias/type/member binding must consume these owners and preserve existing
+provider/editor/source-admission guards. Full dynamic lexical/compiler/SDK capture,
+alias/inheritance/interface/generic/overload/helper meaning, incremental budgets,
+navigation, ordinary editor and both-target quality remain original requirements.
 
 Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now uses shared recent-file timelines in both adapters. Native keyboard/context

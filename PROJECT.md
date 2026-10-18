@@ -42,6 +42,12 @@ Native checks exercise the real callback gate; browser consumers compile only.
 Dynamic lexical contexts, complete compiler/SDK capture and type/member resolution
 remain prerequisites to a general language engine and its Studio adoption.
 
+The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
+now reads declared types and known-active included declarations without changing
+authored files. Native checks follow the actual badge result/parameter back to its
+physical include; browser consumers compile only. Scoped semantic binding and
+full provider/editor/grammar/context/quality/parity remain open.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

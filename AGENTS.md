@@ -4,6 +4,23 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source structured types and translated declarations retain exact physical
+file/occurrence/context origins through analysis-only projection. Native type/origin
+357 and maintained syntax 7,602 pass, clean heaps. Actual controls/five includes
+produce 4,540 declarations/42,008 mapped tokens; one grammar diagnostic remains.
+Selected real badge result/parameter types map to the actual include. No full
+binding or exhaustive mapping claim follows. Four accepted compiler logs have zero
+owned warnings (14 upstream RTL); browser consumers compile only. Five parser/
+consumer pins and seven committed actual inputs stay exact, as do five protected
+files/nine complete contexts and 349 frozen 7422453 artifacts; LAN stays offline.
+WORK.md owns receipts/failures and original authoring/service ownership. Stop type/
+projection/fixture/compiler variants; next real scoped name/type/alias/member binding
+over existing owned context/syntax/type arenas. Full generic/inheritance/interface/
+overload/helper meaning, dynamic compiler/SDK context, incremental/budget/editor/
+navigation/quality/parity/delivery stay open. No original criterion/task/counter/
+credit/DONE/MCP schema/engine/rollout closes. No HTTP retry, protected configuration/
+cleanup bypass, deletion or sub-agents.
+
 Current-source Pascal translation captures compiler facts, virtual files and
 physical include occurrences with three-valued conditional participation. Native
 209 checks, including the actual Nyx callback gate/native compiler assertion,
