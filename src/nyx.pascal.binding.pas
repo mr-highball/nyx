@@ -437,6 +437,7 @@ type
     function OneSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
     function SymbolAnswer(const ASymbols: array of INyxPascalBoundSymbol): INyxPascalResolution;
     function InterfaceEnd(AModule: Integer): Integer;
+    function ExportsKnown(AModule: Integer): Boolean;
     function ContextAt(const ASite: INyxPascalBindingSite): INyxPascalCompilerContext;
     function SafeScope(AModule, AScope, ACaret: Integer): Boolean;
     function Exact(AModule, AScope, ACaret: Integer; const AName: TNyxText;
@@ -983,7 +984,8 @@ begin
       begin
 
         if (LLex.Token(LTokenIndex).Kind = ptkWord) and
-          (LLex.Token(LTokenIndex).Word = pkwImplementation) then
+          (LLex.Token(LTokenIndex).Word = pkwImplementation) and
+          not LLex.Token(LTokenIndex).Escaped then
         begin
           LCopy.FInterfaceEnds[LAt] := LLex.Token(LTokenIndex).Span.Start;
           Break;
@@ -1176,6 +1178,31 @@ function TBindingQuery.InterfaceEnd(AModule: Integer): Integer;
 begin
   Tick;
   Result := FWorld.InterfaceBoundary(AModule);
+end;
+
+function TBindingQuery.ExportsKnown(AModule: Integer): Boolean;
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LBoundary: Integer;
+  LAt: Integer;
+begin
+  LSyntax := FWorld.ModuleAt(AModule).Syntax;
+  LBoundary := InterfaceEnd(AModule);
+  Result := (LBoundary < LSyntax.Lexical.Scalars) and (LSyntax.ScopeAt(LBoundary) = 0);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to LSyntax.DiagnosticCount - 1 do
+  begin
+    Tick;
+
+    if LSyntax.Diagnostic(LAt).Span.Start <= LBoundary then
+    begin
+      Exit(False);
+    end;
+  end;
 end;
 
 function TBindingQuery.SameBinding(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
@@ -1456,6 +1483,14 @@ begin
       end;
     end;
     Exit(OneSymbol(LSymbols[LFullType]));
+  end;
+  { An unknown/unfinished imported interface cannot prove a name is absent.
+    Returning Missing here would silently choose an earlier import or intrinsic.
+    Known declarations stay usable; full overload/grammar meaning remains separate. }
+  if AExternal and (LCount = 0) and (AScope = 0) and
+    not ExportsKnown(AModule) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiIncompleteSource, LSyntax.Scope(0).Name));
   end;
   Result := SymbolAnswer(LSymbols);
 end;

@@ -68,6 +68,13 @@ supported declared receivers and a real SDK record member; browser consumers
 compile only. Full SDK capture, expression meaning, incremental work, default
 Studio adoption and complete input/navigation/quality/parity/delivery remain open.
 
+The [SDK module/dependency layer](docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
+now captures actual source files and loads indexed imports on demand, preserving
+Pascal lookup order and refusing false absence in incomplete interfaces. Native
+checks cover the real Nyx tree, real RTL prerequisite and production semantic/
+private-editor paths; browser consumers compile only. Full RTL/compiler context,
+language/incremental/quality/parity and default Studio adoption stay open.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

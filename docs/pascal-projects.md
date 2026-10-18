@@ -1113,6 +1113,76 @@ default Studio adoption and complete input/navigation/quality/parity/delivery re
 required. Four browser consumers compile only. No default provider, new MCP tool/
 schema, active-project mutation or installed release is implied by this factory.
 
+## Captured SDK modules and dependency loading
+
+`nyx.pascal.modules` supplies an immutable namespace-to-root catalog independent
+of disk paths and compiler-project admission. A module descriptor inherits the
+completion profile or owns explicitly captured per-unit compiler facts and
+translation options. Catalog replacement retains earlier snapshots. Capture
+requires actual frozen files, bounded unique namespaces and no implicit physical
+root aliases; declared identity is checked again when a root is translated.
+
+```pascal
+LModules := NewNyxPascalModuleCatalog.WithModule(
+  NewNyxPascalModuleSource(NyxPascalModule('example.widgets'),
+    NyxPascalPhysicalFile('sdk/widgets.pp')));
+LProvider := NewNyxIndexedPascalCompletionProvider(LFacts, LFiles, LModules,
+  TNyxOwnedPascalCompletionOptions.Defaults.UpToDependencyLoads(128));
+```
+
+The indexed provider initially parses project roots. A typed missing-module
+response loads only that explicit indexed root and restarts binding with fresh
+world-bound handles. Earlier parsed roots and aggregate token/dependency counters
+remain; the receiver expression is parsed once. No retry loads a previously
+loaded/unindexed root or searches the filesystem. Reverse direct-import order,
+qualification and alias/generic meaning remain the original binder's decisions.
+Unused SDK metadata can therefore describe roots that are never parsed.
+
+Absence requires more evidence than a missing entry in a partial AST. An imported
+interface with unknown/unfinished participation cannot fall through to an earlier
+unit or intrinsic. The binder checks a real unescaped implementation boundary,
+root-scope placement and interface diagnostics before publishing export absence.
+Known prefix declarations remain usable; this does not claim full grammar or
+overload completeness in unfinished source.
+
+Optional `INyxPascalCompletionAnalysis` retains detached loaded namespace/root
+locations, translated-token accounting and successful dependency-load count.
+These are in-process receipts, not new wire fields or execution provenance.
+Existing source/revision/permission/preview/Undo and response limits stay owned
+by their previous contracts. No default provider or MCP schema is installed.
+
+The native-only `nyx.pascal.files.native` adapter reads explicitly selected
+directories into frozen files/module metadata. It uses byte streams, strict UTF-8,
+Unicode Windows file paths and per-file read leases, without global codepage
+changes. It scans bounded unit headers rather than guessing names from filenames;
+program/unknown roots remain explicitly unindexed. The caller serializes SDK edits
+across the multi-file capture. Recursion, depth, file/byte/enumeration/header work
+are explicit; linked entries, identity changes, unsupported byte encodings and
+IO/budget/cancellation failures refuse without mutating seed captures. Native host
+paths and read handles do not enter the returned catalog. Other source encodings
+and broader filesystem/platform qualification remain open. Header recognition is
+metadata preparation under the current default lexer, not conditional-wrapper or
+mode-aware declaration proof; loaded root identity remains independently checked.
+
+WORK.md records 31 native dependency checks, 20 native SDK/file checks and 81
+production in-process semantic/private-editor checks. The actual repository
+capture has 490 files/378 modules. A badge query loads `nyx.controls` and
+`nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
+Windows RTL files supplies that root (510 files/383 modules), but its current
+fixed lexical context leaves an incomplete interface. This remains a typed
+prerequisite; no export stubs turn it into readiness. The language's differing
+[nested-comment modes](https://docs.freepascal.org/daily/doc/ref/refse2.html)
+remain part of complete compiler/lexical context, not a source-rewriting shortcut.
+
+The real `TNyxPascalCompilerVersion.FullNumber` record member resolves through the
+indexed production semantic/private-editor paths. Maintained provider 86, binding
+62 and generic 127 checks pass, clean native heaps; three browser consumers compile
+only. Full RTL lexical/default/define/include capture, complete grammar and useful
+expression meaning, dependency invalidation/caching, measured project-scale work,
+default Studio adoption and complete input/navigation/quality/parity/delivery
+remain required. This directory capture is source input preparation, not browser
+rendering, HTTP execution, source admission or an observing release.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

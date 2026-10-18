@@ -4,6 +4,26 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source SDK module capture/indexed provider loads explicit captured imports
+on demand with fresh world handles, retained parse/counters and one receiver parse.
+Incomplete/malformed imported interfaces cannot prove export absence or select an
+earlier unit. Native 31 dependency, 20 directory/actual-SDK and 81 production
+in-process semantic/private-editor checks pass; maintained 86/62/127 pass, clean
+heaps. Actual Nyx 490 files/378 modules advances the badge through nyx.model to
+SysUtils. Adding 20 exact real RTL files supplies SysUtils but retains its fixed
+lexical-context incomplete-interface gate (510 files/383 modules); no fabricated
+exports or source rewriting grants readiness. Nine compiler logs have zero owned
+warnings (21 upstream RTL); three browser consumers compile only. Thirteen focused
+pins, all 510 captured inputs, five protected files/nine complete contexts and 349
+frozen 7422453 files stay exact; all readers join, LAN offline. WORK.md owns receipts,
+failures and never-listening isolated-engine limits. Stop basic index/capture/
+fixture/compiler variants; next real RTL lexical/default/define/include context,
+retaining full grammar/expression/helper/overload/constraint/incremental/budget/
+default adoption/editor/input/navigation/quality/parity/delivery requirements.
+No original criterion/task/counter/credit/DONE/new tool/schema/rollout closes.
+No HTTP retry, protected configuration/cleanup bypass, deletion or sub-agents.
+Preserve concurrent milestone/catalog/new task edits outside this checkpoint.
+
 Current-source owned completion provider connects frozen compiler/SDK inputs and
 declared member binding to existing provider/wire/menu and production in-process
 semantic/private-editor paths. Native 86/81 and maintained 209/127/23 pass, clean

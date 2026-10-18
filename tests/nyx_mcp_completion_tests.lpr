@@ -27,6 +27,7 @@ program nyx_mcp_completion_tests;
 uses Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.editing,
   nyx.pascal.completion, nyx.pascal.sources, nyx.pascal.drafts,
   nyx.pascal.completion.owned, nyx.pascal.context, nyx.pascal.files, nyx.pascal.binding,
+  nyx.pascal.modules, nyx.pascal.files.native,
   nyx.studio.completion.native, nyx.studio.completion, nyx.studio.mcp, nyx.studio.session,
   nyx.studio.projects, nyx.studio.directories, nyx.studio.agents, nyx.studio.outputs,
   nyx.studio.reviews, nyx.studio.workspaces;
@@ -66,6 +67,8 @@ type
 const
   { Command-line selection is an orchestration boundary, never editor behavior. }
   COwnedProviderArgument = '--owned';
+  { Indexed mode qualifies actual directory capture without starting a server. }
+  CIndexedProviderArgument = '--indexed';
   COwner: TNyxText = 'completion-owned-transport';
   CActor: TNyxText = 'Scooty';
   CDeclarationTail: TNyxText = ';' + #10 +
@@ -275,10 +278,10 @@ begin
   end;
 end;
 
-{ Capture only the exact SDK inputs needed by this native semantic consumer.
-  System is controlled minimal root data; the real controls/includes stay exact.
-  No compiler/helper process, network or protected enrollment is involved. }
-function OwnedProvider(const ARepository: String): INyxPascalCompletionProvider;
+{ Indexed mode captures the actual source directory and leaves unknown compiler
+  facts open. Legacy owned mode retains its explicitly controlled minimal System
+  data. Neither starts a compiler/helper, network or protected enrollment. }
+function OwnedProvider(const ARepository: String; AIndexed: Boolean): INyxPascalCompletionProvider;
 const
   CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
     'nyx.controls.types.inc', 'nyx.controls.factories.inc', 'nyx.controls.implementation.inc',
@@ -287,7 +290,22 @@ var
   LFiles: INyxPascalFileCatalog;
   LFacts: INyxPascalCompilerContext;
   LAt: Integer;
+  LCapture: INyxPascalDirectoryCapture;
 begin
+  LFacts := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithSymbol(NyxPascalDefine('FPC'), ppdDefined)
+    .WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdInteger, 30301);
+
+  if AIndexed then
+  begin
+    LCapture := CaptureNyxPascalSourceDirectory(TNyxText(IncludeTrailingPathDelimiter(ARepository)) + 'src',
+      NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
+      TNyxPascalDirectoryOptions.Defaults.Under('sdk'));
+    LFacts := LFacts.WithSymbol(NyxPascalDefine('PAS2JS'), ppdUndefined).CompleteDefines(False);
+    Exit(NewNyxIndexedPascalCompletionProvider(LFacts, LCapture.Files, LCapture.Modules,
+      TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000)));
+  end;
   LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('system.pas'),
     'unit System; {$mode delphi} interface type TObject=class end; IInterface=interface end; implementation end.')
     .WithFile(NyxPascalPhysicalFile('nyx.pascal.context.pas'),
@@ -297,11 +315,7 @@ begin
     LFiles := LFiles.WithFile(NyxPascalPhysicalFile(TNyxText(CFiles[LAt])),
       ReadText(IncludeTrailingPathDelimiter(ARepository) + 'src/' + CFiles[LAt]));
   end;
-  LFacts := NewNyxPascalCompilerContext(ppcFPC,
-    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
-    .WithSymbol(NyxPascalDefine('FPC'), ppdDefined)
-    .WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdInteger, 30301)
-    .CompleteDefines(True);
+  LFacts := LFacts.CompleteDefines(True);
   Result := NewNyxOwnedPascalCompletionProvider(LFacts, LFiles,
     [NyxPascalPhysicalFile('system.pas'), NyxPascalPhysicalFile('nyx.controls.pas'),
       NyxPascalPhysicalFile('nyx.pascal.context.pas')],
@@ -363,7 +377,7 @@ begin
     LExpectedName := 'WithText';
     LMisspelling := 'WithTexx';
 
-    if ParamStr(4) = COwnedProviderArgument then
+    if (ParamStr(4) = COwnedProviderArgument) or (ParamStr(4) = CIndexedProviderArgument) then
     begin
       { The exact real SDK record has a fully captured member graph. The badge's
         additional dependency gap is asserted separately below and remains open;
@@ -418,9 +432,9 @@ begin
       NyxField('executable', NyxData('untrusted'))]), 'Wire callers cannot configure host executables');
 
     GStage := 'real SDK provider';
-    if ParamStr(4) = COwnedProviderArgument then
+    if (ParamStr(4) = COwnedProviderArgument) or (ParamStr(4) = CIndexedProviderArgument) then
     begin
-      LNative := OwnedProvider(ParamStr(1));
+      LNative := OwnedProvider(ParamStr(1), ParamStr(4) = CIndexedProviderArgument);
       LGapSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
         .WithBuffer(TNyxPascalSourceRef.Main, TNyxText('unit ') +
           LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail + CSuffix);

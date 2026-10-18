@@ -26,7 +26,7 @@ interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.binding, nyx.pascal.sources, nyx.pascal.completion;
+  nyx.pascal.binding, nyx.pascal.modules, nyx.pascal.sources, nyx.pascal.completion;
 
 type
   { Independent copied analysis budgets. Per-module translation/syntax and
@@ -40,6 +40,7 @@ type
     FBinding: TNyxPascalBindingOptions;
     FTokens: Integer;
     FReceiverTokens: Integer;
+    FDependencyLoads: Integer;
     FDefined: Boolean;
   public
     class function Defaults: TNyxOwnedPascalCompletionOptions; static;
@@ -48,12 +49,15 @@ type
     function WithBinding(const AValue: TNyxPascalBindingOptions): TNyxOwnedPascalCompletionOptions;
     function UpToTokens(AValue: Integer): TNyxOwnedPascalCompletionOptions;
     function UpToReceiverTokens(AValue: Integer): TNyxOwnedPascalCompletionOptions;
+    { Limit successful on-demand module additions across the entire request. }
+    function UpToDependencyLoads(AValue: Integer): TNyxOwnedPascalCompletionOptions;
     procedure Validate;
     property Translation: TNyxPascalTranslationOptions read FTranslation;
     property Syntax: TNyxPascalSyntaxOptions read FSyntax;
     property Binding: TNyxPascalBindingOptions read FBinding;
     property AggregateTokens: Integer read FTokens;
     property ReceiverTokens: Integer read FReceiverTokens;
+    property DependencyLoads: Integer read FDependencyLoads;
   end;
   { Closed assistance gaps, independent of compiler diagnostics or admission.
     Binding preserves its own typed issue/related name for focused context capture. }
@@ -88,6 +92,17 @@ type
     function CompleteWithCancellation(const ARequest: INyxPascalCompletionRequest;
       const ACancellation: INyxCancellationScope): INyxPascalCompletionResult;
   end;
+  { Optional detached analysis receipt, independent of wire schemas and source
+    publication. Includes every actually translated project/SDK root in insertion
+    order; indexed but unused modules are absent. No world/provider is retained. }
+  INyxPascalCompletionAnalysis = interface(IInterface)
+    ['{170458CB-C602-4E28-84F0-E90C2408EE03}']
+    function ModuleCount: Integer;
+    function ModuleName(AIndex: Integer): TNyxPascalModuleRef;
+    function ModuleRoot(AIndex: Integer): TNyxPascalPhysicalFile;
+    function TranslatedTokens: Integer;
+    function DependencyLoads: Integer;
+  end;
 
 { Capture explicit SDK files/roots and compiler facts once. Requests overlay all
   exact project buffers, preserving accepted membership and include ownership.
@@ -99,6 +114,14 @@ type
   This factory installs no default provider or Studio configuration. }
 function NewNyxOwnedPascalCompletionProvider(const AContext: INyxPascalCompilerContext;
   const AFiles: INyxPascalFileCatalog; const ASDKRoots: array of TNyxPascalPhysicalFile;
+  const AOptions: TNyxOwnedPascalCompletionOptions): INyxPascalCompletionProvider;
+{ Capture an explicit module index instead of eagerly translating SDK roots.
+  Missing-module binding replies load only that indexed captured source, then
+  restart semantic queries with fresh exact-world handles. Parsed earlier roots
+  and aggregate counters survive retries. Unindexed/partial/context-incompatible
+  inputs refuse; nothing searches the filesystem or fabricates export knowledge. }
+function NewNyxIndexedPascalCompletionProvider(const AContext: INyxPascalCompilerContext;
+  const AFiles: INyxPascalFileCatalog; const AModules: INyxPascalModuleCatalog;
   const AOptions: TNyxOwnedPascalCompletionOptions): INyxPascalCompletionProvider;
 
 implementation
@@ -118,13 +141,22 @@ type
   end;
   { Value-only row locations, detached from parser/world lifetimes. }
   TDefinitionVector = array of TNyxPascalCompletionDefinition;
+  { Value-owned analysis location; interfaces live only in the owning classes. }
+  TModuleLocation = record
+    Name: TNyxPascalModuleRef;
+    Root: TNyxPascalPhysicalFile;
+  end;
   { Delegates guarded insertion/preview to the original result owner. Only
     source-location values and typed gap metadata are added, without a cycle. }
-  TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult, INyxOwnedPascalCompletionResult)
+  TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult,
+    INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
     DefinitionSources: array of INyxPascalLexicalSnapshot;
+    Modules: array of TModuleLocation;
+    Tokens: Integer;
+    Loads: Integer;
     GapValue: TNyxOwnedPascalCompletionGap;
     IssueValue: TNyxPascalBindingIssue;
     RelatedValue: TNyxText;
@@ -143,6 +175,11 @@ type
     function RelatedName: TNyxText;
     function Definition(AIndex: Integer): TNyxPascalCompletionDefinition;
     function DefinitionSource(AIndex: Integer): INyxPascalLexicalSnapshot;
+    function ModuleCount: Integer;
+    function ModuleName(AIndex: Integer): TNyxPascalModuleRef;
+    function ModuleRoot(AIndex: Integer): TNyxPascalPhysicalFile;
+    function TranslatedTokens: Integer;
+    function DependencyLoads: Integer;
   end;
   { Frozen, read-only configuration. Each call owns its own sources/world/counters;
     concurrent readers share no mutable query cache or application state. }
@@ -152,6 +189,7 @@ type
     Context: INyxPascalCompilerContext;
     Files: INyxPascalFileCatalog;
     Roots: array of TNyxPascalPhysicalFile;
+    Modules: INyxPascalModuleCatalog;
     Options: TNyxOwnedPascalCompletionOptions;
     function Complete(const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
     function CompleteWithCancellation(const ARequest: INyxPascalCompletionRequest;
@@ -170,10 +208,21 @@ type
     FOwner: Integer;
     FTokens: Integer;
     FScan: Integer;
+    FLoads: Integer;
+    FReceiverReady: Boolean;
+    FReceiverName: TNyxText;
+    FReceiverPrefix: TNyxText;
+    FReceiverExpected: TNyxText;
+    FReceiverStart: Integer;
+    FReceiverDot: Integer;
     procedure Check;
     procedure Scan;
-    procedure AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText);
+    procedure AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText;
+      const AContext: INyxPascalCompilerContext = nil;
+      const ADescriptor: INyxPascalModuleSource = nil);
     procedure BuildWorld;
+    function LoadDependency(const AName: TNyxText): Boolean;
+    procedure CaptureAnalysis(AResult: TOwnedResult);
     function Previous(const ALexical: INyxPascalLexicalSnapshot; AIndex: Integer): Integer;
     function Receiver(const ALexical: INyxPascalLexicalSnapshot;
       out AStart, ADot: Integer; out AExpected, APrefix: TNyxText): TNyxText;
@@ -193,12 +242,13 @@ begin
   Result.FBinding := TNyxPascalBindingOptions.Defaults;
   Result.FTokens := 1000000;
   Result.FReceiverTokens := 128;
+  Result.FDependencyLoads := 128;
 end;
 
 procedure TNyxOwnedPascalCompletionOptions.Validate;
 begin
 
-  if not FDefined or (FTokens < 1) or (FReceiverTokens < 1) then
+  if not FDefined or (FTokens < 1) or (FReceiverTokens < 1) or (FDependencyLoads < 1) then
   begin
     raise ENyxPascalBinding.Create('Use explicit positive owned completion budgets');
   end;
@@ -242,6 +292,13 @@ function TNyxOwnedPascalCompletionOptions.UpToReceiverTokens(AValue: Integer): T
 begin
   Result := Self;
   Result.FReceiverTokens := AValue;
+  Result.Validate;
+end;
+
+function TNyxOwnedPascalCompletionOptions.UpToDependencyLoads(AValue: Integer): TNyxOwnedPascalCompletionOptions;
+begin
+  Result := Self;
+  Result.FDependencyLoads := AValue;
   Result.Validate;
 end;
 
@@ -327,6 +384,37 @@ begin
   Result := DefinitionSources[AIndex];
 end;
 
+function TOwnedResult.ModuleCount: Integer;
+begin
+  Result := Length(Modules);
+end;
+
+function TOwnedResult.ModuleName(AIndex: Integer): TNyxPascalModuleRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Modules)) then
+  begin
+    raise ENyxPascalContext.Create('Analysis module index is outside its receipt');
+  end;
+  Result := Modules[AIndex].Name;
+end;
+
+function TOwnedResult.ModuleRoot(AIndex: Integer): TNyxPascalPhysicalFile;
+begin
+  ModuleName(AIndex);
+  Result := Modules[AIndex].Root;
+end;
+
+function TOwnedResult.TranslatedTokens: Integer;
+begin
+  Result := Tokens;
+end;
+
+function TOwnedResult.DependencyLoads: Integer;
+begin
+  Result := Loads;
+end;
+
 constructor TAnalysis.Create(AProvider: TOwnedProvider;
   const ARequest: INyxPascalCompletionRequest; const ACancellation: INyxCancellationScope);
 begin
@@ -356,15 +444,35 @@ begin
   Inc(FScan);
 end;
 
-procedure TAnalysis.AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText);
+procedure TAnalysis.AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText;
+  const AContext: INyxPascalCompilerContext; const ADescriptor: INyxPascalModuleSource);
 var
   LView: INyxPascalTranslatedSyntax;
   LSource: INyxPascalTranslation;
   LName: TNyxText;
+  LFacts: INyxPascalCompilerContext;
+  LOptions: TNyxPascalTranslationOptions;
 begin
   Check;
-  LSource := NewNyxPascalTranslation(FFiles, AFile, FProvider.Context,
-    FProvider.Options.Translation, FCancel);
+  LFacts := AContext;
+  LOptions := FProvider.Options.Translation;
+
+  if LFacts = nil then
+  begin
+    LFacts := FProvider.Context;
+  end
+  else if ADescriptor <> nil then
+  begin
+    LOptions := ADescriptor.Translation;
+  end;
+
+  if (LFacts.Family <> FProvider.Context.Family) or
+    (LFacts.Version.FullNumber <> FProvider.Context.Version.FullNumber) then
+  begin
+    raise EOwnedGap.CreateGap(pcgBinding, 'This indexed module needs a compatible captured compiler identity',
+      pbiCompilerContext, AExpected);
+  end;
+  LSource := NewNyxPascalTranslation(FFiles, AFile, LFacts, LOptions, FCancel);
 
   if LSource.Count > FProvider.Options.AggregateTokens - FTokens then
   begin
@@ -401,6 +509,11 @@ var
   LExpected: TNyxText;
 begin
   Check;
+
+  if FWorld <> nil then
+  begin
+    Exit;
+  end;
   FFiles := FProvider.Files;
   for LAt := 0 to FRequest.Sources.Count - 1 do
   begin
@@ -449,6 +562,57 @@ begin
   if FOwner < 0 then
   begin
     raise EOwnedGap.CreateGap(pcgSourceIdentity, 'The explicit completion owner has no captured module');
+  end;
+end;
+
+function TAnalysis.LoadDependency(const AName: TNyxText): Boolean;
+var
+  LAt: Integer;
+  LSource: INyxPascalModuleSource;
+begin
+  Check;
+  Result := False;
+
+  if (FProvider.Modules = nil) or (FWorld = nil) or (FWorld.FindModule(AName) >= 0) then
+  begin
+    Exit;
+  end;
+  LAt := FProvider.Modules.Find(NyxPascalModule(AName));
+
+  if LAt < 0 then
+  begin
+    Exit;
+  end;
+
+  if (FLoads >= FProvider.Options.DependencyLoads) or
+    (FWorld.Count >= FProvider.Options.Binding.MaximumModules) then
+  begin
+    raise EOwnedGap.CreateGap(pcgBudget, 'The query exceeds its indexed dependency-load budget');
+  end;
+  LSource := FProvider.Modules.Entry(LAt);
+  AddModule(LSource.Root, LSource.Name.Name, LSource.Context, LSource);
+  Inc(FLoads);
+  Result := True;
+end;
+
+procedure TAnalysis.CaptureAnalysis(AResult: TOwnedResult);
+var
+  LAt: Integer;
+  LView: INyxPascalTranslatedSyntax;
+begin
+  AResult.Tokens := FTokens;
+  AResult.Loads := FLoads;
+
+  if FWorld = nil then
+  begin
+    Exit;
+  end;
+  SetLength(AResult.Modules, FWorld.Count);
+  for LAt := 0 to FWorld.Count - 1 do
+  begin
+    LView := FWorld.ModuleAt(LAt);
+    AResult.Modules[LAt].Name := NyxPascalModule(LView.Syntax.Scope(0).Name);
+    AResult.Modules[LAt].Root := LView.Source.Files.FileAt(LView.Source.Occurrence(0).FileIndex);
   end;
 end;
 
@@ -695,7 +859,17 @@ begin
       raise EOwnedGap.CreateGap(pcgPhysicalContext, 'The requested file has no active captured inclusion');
     end;
   end;
-  LName := Receiver(LLex, LStart, LDot, LExpected, LPrefix);
+  if not FReceiverReady then
+  begin
+    FReceiverName := Receiver(LLex, FReceiverStart, FReceiverDot,
+      FReceiverExpected, FReceiverPrefix);
+    FReceiverReady := True;
+  end;
+  LName := FReceiverName;
+  LStart := FReceiverStart;
+  LDot := FReceiverDot;
+  LExpected := FReceiverExpected;
+  LPrefix := FReceiverPrefix;
   LSite := Caller(LFile, LDot);
   LBinding := FWorld.Lookup(LSite, NyxPascalBindingName(LName), FCancel);
 
@@ -764,6 +938,7 @@ begin
   Check;
   LResult.Base := NewNyxPascalCompletionResult(FRequest, pcsReady, '',
     LStart, LExpected, LRows, LTotal.Total);
+  CaptureAnalysis(LResult);
 end;
 
 function TAnalysis.Complete: INyxPascalCompletionResult;
@@ -772,7 +947,23 @@ var
 begin
   try
     Check;
-    Exit(Run);
+    while True do
+    begin
+      try
+        Exit(Run);
+      except
+        on LGap: EOwnedGap do
+        begin
+
+          if (LGap.GapKind = pcgBinding) and (LGap.Issue = pbiMissingModule) and
+            (LGap.Related <> '') and LoadDependency(LGap.Related) then
+          begin
+            Continue;
+          end;
+          raise;
+        end;
+      end;
+    end;
   except
     on LError: EOwnedGap do
     begin
@@ -812,6 +1003,7 @@ begin
       end;
     end;
   end;
+  CaptureAnalysis(LReply);
 end;
 
 function TOwnedProvider.Complete(const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
@@ -869,5 +1061,20 @@ begin
       end;
     end;
   end;
+end;
+
+function NewNyxIndexedPascalCompletionProvider(const AContext: INyxPascalCompilerContext;
+  const AFiles: INyxPascalFileCatalog; const AModules: INyxPascalModuleCatalog;
+  const AOptions: TNyxOwnedPascalCompletionOptions): INyxPascalCompletionProvider;
+var
+  LProvider: TOwnedProvider;
+begin
+  AOptions.Validate;
+  LProvider := TOwnedProvider.Create;
+  Result := LProvider;
+  LProvider.Context := CaptureNyxPascalCompilerContext(AContext);
+  LProvider.Files := CaptureNyxPascalFiles(AFiles);
+  LProvider.Modules := CaptureNyxPascalModules(AModules, LProvider.Files);
+  LProvider.Options := AOptions;
 end;
 end.

@@ -9,6 +9,16 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
+now maps explicit namespace/root/context captures and loads missing imports on
+demand. Native 31/20/81 and maintained 86/62/127 pass, clean heaps; three browser
+consumers compile only. The actual Nyx tree advances the badge dependency through
+nyx.model; real SysUtils capture exposes the existing fixed lexical-context gate
+as an incomplete interface. Next qualify real RTL lexical/default/define/include
+context without export stubs or source rewriting. Full expression/grammar/helpers/
+overloads/constraints, incremental/project-scale work, default Studio adoption and
+complete input/navigation/quality/parity/delivery remain required. No credit closes.
+
 The [owned completion provider](../docs/pascal-projects.md#nyx-owned-completion-provider)
 now returns guarded declared-receiver suggestions through the existing wire/menu
 and production in-process semantic/private-editor paths. Native 86/81 and maintained

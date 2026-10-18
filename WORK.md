@@ -33,7 +33,126 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Owned completion provider and production boundaries — 2026-10-17
+## Current integration: Captured SDK modules and lazy dependencies — 2026-10-17
+
+Previous goal turn is progress: pushed aa02178 connects the first owned provider.
+This continuation addresses its retained nyx.model dependency gap under original
+NS-4 authoring criterion two and service/editor ownership. The full Nyx-owned MIT
+resolver, compiler context, incremental work and modern editing experience remain
+the destination. No original criterion/task/counter/credit/DONE, target/product
+completion or default Studio adoption is claimed.
+
+New nyx.pascal.modules supplies immutable typed namespace/root associations with
+optional independently captured unit facts/translation policy. Files and namespace
+maps stay distinct; no filename convention, implicit alias or disk search supplies
+meaning. Catalog copies preserve earlier metadata. Alternate capture validates
+bounded unique namespaces/actual files and refuses physical-root aliases. Loaded
+source must still declare its expected namespace and compatible compiler identity.
+
+The indexed provider initially translates project roots. A typed missing-module
+reply loads only that explicit indexed source and restarts binding with fresh
+world-bound sites/types/symbols. Previously parsed views, aggregate tokens and
+dependency-load counters survive; the physical receiver is parsed once. Unindexed
+or already-loaded gaps cannot loop/retry. Unused metadata does not force malformed
+or unrelated SDK modules to parse. Optional analysis receipts retain only loaded
+namespace/root locations and counters, without provider/world cycles or wire fields.
+
+Imported export absence now requires an actual unescaped implementation boundary
+at the declared root scope, with no earlier syntax diagnostics. An unfinished or
+unknown interface, escaped implementation name or boundary inside an unclosed
+member scope cannot fall through to an earlier import/intrinsic. Known prefix
+declarations remain usable; complete overload/grammar meaning stays required.
+This repairs a genuine partial-capture correctness gap, not merely a retry policy.
+
+New native-only nyx.pascal.files.native captures explicitly selected source
+directories into portable frozen files/index metadata. Byte streams preserve exact
+UTF-8 and Unicode Windows paths; a read lease denies writers for each file, while
+the caller serializes edits across the entire capture. Header scans are bounded,
+do not guess names from leaves and retain unknown/program roots as unindexed.
+Recursion, depth, source count/bytes, enumeration and header work are explicit.
+Cancellation/IO/encoding/identity/alias/budget failures retain seed snapshots.
+Linked entries refuse. Native paths/handles and cancellation borrows do not survive
+capture. Other byte encodings/declared encoding semantics and non-Win32 filesystem
+qualification remain open; no global codepage or dependency source changes.
+The bounded native header scan currently uses the default lexical profile; it does
+not establish conditional-wrapper/mode-aware header meaning. Per-unit translation
+overrides apply when a descriptor loads, and actual declared identity still guards
+that boundary. Broader header/encoding context remains with the next RTL owner.
+
+Evidence behind ignored .local/sdk-dependencies-paths-private.json:
+
+- source-pins-final-private.json pins 13 focused compiler/runtime inputs before
+  nine final compilers and execution. nyx-sdk-inputs-final-private.json pins all
+  490 actual src .pas/.pp/.inc files; rtl-sdk-inputs-final-private.json pins all
+  20 selected real RTL win-directory sources. All 510 remain exact after readers
+  join. Capture/analysis reads actual current files, not rewritten export fixtures.
+- logs/dependencies-final-run.log passes 31 native assertions, clean heap. Catalog
+  persistence/case identity, generic property continuation, required-root order,
+  untouched malformed unused root, detached receipts/definitions, aggregate tokens/
+  load budgets, reverse direct imports, explicit qualification, unindexed later
+  refusal, unknown/incomplete interface/escaped boundary/unclosed member refusal,
+  independent unit facts, compiler-version mismatch and root-alias refusal pass.
+- logs/sdk-final-run.log passes 20 native file/SDK checks, clean heap. Unicode
+  host leaf/text, exact UTF-8 bytes, program/unindexed roots, explicit recursion,
+  empty directories, cancellation and count/byte/enumeration/depth/encoding refusal
+  preserve original seeds. The actual repository capture is 490 files/378 modules.
+  The badge query loads Consumer, nyx.controls and nyx.model only (100,788 tokens),
+  then names SysUtils. No synthetic System/export module is used in this journey.
+- That same consumer adds 20 exact actual Windows RTL sources, yielding 510 files/
+  383 modules and 113,802 translated tokens. SysUtils is now found; its interface
+  remains incomplete under the current fixed lexical context. The actual source
+  requests ObjFPC mode, whose comment defaults are not handled by this profile.
+  The incomplete-export guard reports SysUtils instead of assuming absent exports.
+  Raw nondotted RTL build identity is explicit; other unprovided compiler facts
+  remain open. This is qualified prerequisite evidence, not complete RTL capture,
+  successful badge enumeration, compiler admission or SDK parity.
+- logs/semantic-final-run.log passes all 81 production semantic/private-editor
+  checks in --indexed mode, clean heap. Actual source-directory capture feeds the
+  ordinary owned provider; the real FullNumber SDK record member resolves through
+  both paths, and the badge's SysUtils prerequisite remains typed. Existing revision/
+  permission/provider/review retirement, activity/concurrent observation and exact
+  paired state guards remain. The fresh E: production engine never starts/listens;
+  joined query threads/destructor retire normally. This is not HTTP authentication,
+  ordinary rendered input, observing browser or an installed/default engine receipt.
+- Maintained native owned-provider 86, scoped binder 62 and generic 127 pass with
+  clean heaps. Existing exact SDK badge/member/result and compiled generic/badge
+  continuation remain qualified separately from whole SDK member enumeration.
+  These counts overlap prior evidence and do not add original task credit.
+- Nine accepted compiler logs cover six native consumers and three browser
+  consumers (dependencies, owned provider, scoped binder), zero owned warnings.
+  21 unchanged upstream pas2js RTL case warnings remain. Browser consumers compile
+  only; native IO is a target adapter, not a browser implementation. No HTTP/file/
+  browser execution, physical input, full parity or both-Studios delivery follows.
+- logs/frozen-final.log verifies 349 frozen 7422453 artifacts, clean heap. Five
+  protected files/nine complete contexts/history/drafts/profile stay exact. No
+  native Nyx semantic tool is exposed in this chat; no active design or browser
+  automation substitutes. Tool inventory stays source 24/frozen 23, Pascal modes
+  18. No MCP tool/schema, protected enrollment, launch authority or rollout changes.
+
+Retained preparations are not accepted final receipts. indexed-unit-1 compiles
+the new provider/index. dependencies-native-1 corrects a missing scalar-helper
+unit import; dependencies-native-2 passes 28. capture-unit-1 finds no Sort on the
+portable text collection; bounded iterative heap ordering replaces that call,
+capture-unit-2 compiles. sdk-native-1 corrects fixture helper/exception/issue imports;
+its absent executable is not runtime evidence (the attempted launch fails).
+sdk-native-2 passes 14 on the actual Nyx tree; sdk-native-3 passes 18 with further
+IO budgets, indexed-semantic-1 passes 81. sdk-native-4 passes 20 after the actual
+RTL probe is added. Earlier browser preparation compiles only. Final guards also
+reject malformed root boundaries and distinguish enumeration errors from empty
+directories. Only final reader-pinned compiler/runtime receipts are accepted.
+
+Concurrent browser-compiler/reference tasks and milestone/catalog planning remain
+outside this checkpoint. Stage only the SDK paragraph in the shared catalog. Solo;
+no HTTP-host/restart/protected configuration/enrollment/cleanup/deletion retry or
+approval bypass occurs. All evidence/artifacts remain on E:, LAN stays offline.
+Stop basic index/directory/fixture/compiler variants. Next qualify real RTL lexical
+mode/default/define/include context without source rewriting or export stubs.
+Full target/compiler coherence, grammar/expression/helper/overload/constraint meaning,
+incremental dependency invalidation/caching, measured project-scale budgets,
+default Studio adoption and complete input/navigation/quality/parity/delivery stay
+with their original owners. The whole goal remains active.
+
+## Previous integration: Owned completion provider and production boundaries — 2026-10-17
 
 Previous goal turn is progress: pushed 641d194 carries concrete generic/member
 meaning. This continuation connects those owners to the existing completion
