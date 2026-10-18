@@ -94,6 +94,12 @@ Ordinary bounded completion/navigation uses this lookup; uncertain ancestors and
 incomplete receiver types retain refusal. Full resolver/editor/parity/delivery
 remain under original criterion two, with exact real RTL gaps in WORK.md.
 
+The [hinted-initializer continuation](../docs/pascal-projects.md#hints-before-variable-initializers)
+retains separate type/hint/value ranges and independent grouped metadata.
+Ordinary binding/completion follows the original included declarations; missing
+values retain typed refusal. Whole RTL/compiler/editor/parity/delivery requirements
+remain under original criterion two, with exact evidence and gaps in WORK.md.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

@@ -9,6 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Hinted-initializer continuation (2026-10-18): 216b000 is progress, retaining at
+least eighteen documented unclosed batches and complete original criterion two.
+Follow NoErrMsg's hint-before-initializer syntax through existing parser/hint/
+linkage owners. Preserve exact type, ordered hint and value ranges, independent
+group metadata, later siblings and physical includes; missing values must remain
+explicitly incomplete. Whole compiled authored behavior, ordinary binding/
+completion and one prepared/final unchanged RTL continuation decide this boundary.
+Stop at the next different source prerequisite with full language/incremental/
+editor/input/navigation/quality/parity/adoption/delivery requirements unchanged.
+
+The qualified boundary passes 29 focused native checks and 26 actual module checks.
+Whole original source/include binding/completion retains exact physical origins;
+the separate native compiler-use oracle returns 42 and retains three deliberately
+asserted marked-symbol warnings without suppression. Forty regular compiler logs
+have zero owned warnings and all 25 regular native consumers have clean heaps.
+Browser consumers/products compile only. System now has 2,554 declarations/28
+diagnostics and advances to internconst on Swap(Word), with four semantic answers
+and broader source/refusal guards retained. Follow that existing linkage/parser
+prerequisite; stop initializer/fixture/compiler/capture variants. WORK.md owns
+retained invalid-separator/warning preparations, exact frozen evidence and limits.
+
 Open-scope continuation (2026-10-18): d910754 is progress, retaining at least
 seventeen documented unclosed batches and complete original criterion two. Follow
 the actual unfinished TObject conditional through existing lexical/binding owners.

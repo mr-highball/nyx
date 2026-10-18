@@ -1651,6 +1651,41 @@ WORK.md owns final receipts, retained preparations and the return to that existi
 parser owner. Full language/incremental/editor/input/navigation/quality/parity/
 adoption/delivery remain required; no new MCP schema or installed engine follows.
 
+## Hints before variable initializers
+
+The declaration reader accepts hints between a variable's declared type and its
+initial value, such as `Flag: Boolean platform = False`. `TypeSpan` remains the
+type, ordered `INyxPascalHintSyntax` nodes retain hint/message spans, and
+`ExpressionSpan` contains only the value. Existing trailing hint inspection stays
+available. A grouped structural declaration receives independent hint links after
+both positions have been read; neither group entry owns the other's metadata.
+Structural recovery does not establish compiler acceptance of every spelling.
+
+Hint-like identifiers in qualified or operand expressions retain value meaning.
+Labels inside record initializers stay inside their grouped expression. Named
+callback signatures keep calling directives separate from variable hints; a
+calling-convention separator is not silently reinterpreted to attach a following
+declaration to that variable. An explicit initializer with no value has an
+incomplete flag and diagnostic, so ordinary binding refuses it while a following
+separated sibling remains visible. Hint nodes retain the existing construction
+budget and atomic failure contract. No public interface/enum or wire schema changes.
+
+The native compiler oracle compiles the whole original unit/include and executes
+its hinted initial values, returning 42. It intentionally references marked
+symbols: one deprecated and two platform warnings are exact expected evidence,
+retained separately without suppressing warning categories. Regular parser/product
+builds do not import that compiler-only oracle. Whole-source inspection preserves
+all original text and physical include origins; ordinary bounded completion and
+detached navigation follow the initialized record to its included member.
+
+Actual System now retains NoErrMsg's Boolean type, platform hint and False value
+at its original systemh.inc declaration. The first unsupported syntax before the
+Char query advances to `internconst` at scalar 27,733; source meaning is still
+incomplete. Browser consumers/products compile only, with no execution/parity
+claim. WORK.md owns final receipts, explicit expected compiler diagnostics and
+the existing linkage/parser return path. Full language/incremental/editor/input/
+navigation/quality/parity/adoption/delivery remain open.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Lexical names in unfinished structured scopes — 2026-10-18
+## Current integration: Hints before variable initializers — 2026-10-18
+
+Reassessment: 216b000 is progress, retaining at least eighteen documented unclosed
+batches and the full original authoring criterion two. The exact real NoErrMsg
+declaration now retains separate Boolean type syntax, platform hint and False
+initializer through existing parser/hint/linkage ownership. Hints are read before
+checking for the initial value; any supported trailing hints retain their original
+order. Group entries receive independent hint links after both positions are read.
+An explicit empty initializer has a diagnostic/incomplete flag and cannot acquire
+a successful bound type. Later separated siblings remain available. No public
+interface/GUID/enum or transport inventory changes.
+
+Accepted evidence is in ignored hint-initializer-20261018-072805, located by
+.local/hint-initializer-paths-private.json:
+
+- Twenty-nine focused native checks qualify separate type/value/hint/message
+  ranges, supplementary Unicode, ordered independent group metadata, value operands
+  and nested record labels named like hints, procedural/named callback boundaries,
+  missing-value binding refusal, subsequent sibling recovery and atomic hint-node
+  exhaustion. Whole original unit/include inspection retains every source scalar
+  and physical include owner. Ordinary bounded completion and detached navigation
+  follow the hinted initialized record into its actual included member.
+- A separate native compiler-use oracle compiles the exact whole authored fixture
+  and executes its hinted initial values, returning 42 with a clean heap. It
+  intentionally references LegacyCount, LegacyFlag and CurrentData: exactly one
+  deprecated and two platform warnings are asserted and retained. No warning
+  category is suppressed. Regular parser/product test builds do not import that
+  compiler-only unit; these three expected diagnostics are outside their warning
+  ledger. This qualifies real compiler acceptance/value behavior and marked-symbol
+  diagnostics, not general initializer expression execution by the resolver.
+- Twenty-six actual module checks retain all 156 original byte packets/47
+  namespaces and original budgets. System's NoErrMsg type/value and hint origin
+  are exact. Its first unsupported syntax before the Char question advances to
+  internconst on the Swap(Word) routine in systemh.inc scalar 27,733. The original
+  System view now has 2,554 declarations/28 retained syntax diagnostics, removing
+  the spurious platform declaration and three diagnostics. Four semantic answers
+  and typed pbiUnsupportedScope remain; ObjPas/indexed loading keep their genuine
+  gaps, three modules/two loads/no invented suggestions. Raw System still has
+  36,104 tokens/19 visits/five probes/six diagnostics/five requirements. Whole RTL
+  meaning, the later WARN directive and general intrinsic semantics remain open.
+- Maintained open-scope/bootstrap ownership/native capture/linkage/region/lexical/
+  policy/operator/variant/anonymous/planner/translation/macro/type/syntax/Windows/
+  binding/generic/condition/dependency/owned/profile/production-semantic checks pass
+  30/18/17/26/28/49/73/18/22/52/14/157/38/367/7,671/26/62/127/10/48/86/74/84.
+  All 25 regular native consumers have clean heaps, separately from the compiler
+  oracle's clean heap. The syntax corpus stays five actual inputs/3,748
+  declarations; counts overlap prior evidence.
+- Forty regular accepted compiler logs have zero owned warnings and 77 upstream
+  pas2js RTL warnings. Both Studios/backend/worker and eleven browser consumers
+  compile as applicable. The native compiler-use oracle separately retains its
+  three exact expected warnings. Browser consumers/products compile only; no
+  browser execution/input/observing, full parity, engine adoption or delivery is
+  inferred. The final regular batch uses the final frozen source throughout.
+- Six focused/628 product/97 prior RTL/four compiler/config/source inputs, 48 SysUtils
+  includes and 156 overlapping original unit packets verify exact. Five protected
+  files/nine complete contexts and all 349 frozen 7422453 artifacts remain exact.
+  Thirteen concurrent planning files retain their baseline outside this owned
+  six-line README insertion. All readers join; no Studio listener exists, LAN
+  remains offline and native Nyx chat tools remain absent. Final private receipts/
+  checkpoint own exact source/remote identity. No host/configuration retry,
+  protected mutation, cleanup/deletion/restart or approval bypass occurs.
+
+Retained preparations are not accepted final evidence. The first combined parser
+fixture exposed a procedural separator assumption, rather than a failure of its
+qualified operand expression. An attempted semicolon lookahead would have admitted
+that form; the actual native compiler refused it with an expected-colon error.
+That lookahead is removed. A named callback with its own calling convention is
+compiler-accepted, while negative inspection retains the invalid form's diagnostic
+and keeps a later variable named platform independent. Structural grouped/trailing
+hint tests do not claim compiler admission for every inspected spelling.
+
+The first parser program imported the compiler-use unit and therefore emitted
+the three marked-symbol warnings. The final separate compiler oracle deliberately
+asserts those diagnostics; normal parser/product programs no longer import it.
+The final native oracle and regular compiler/consumer batch use the same frozen
+fixture bytes. Preparations remain retained rather than presenting an
+uninterrupted all-attempts-green history or suppressing compiler diagnostics.
+
+Next useful deliverable: declared compile-time intrinsic attributes, beginning
+with the exact internconst routine suffix, under the existing linkage/parser
+owner. Preserve declared identity, operand/routine ranges and subsequent siblings;
+do not infer actual constant folding, execution, compiler eligibility or full ABI
+meaning from syntax. Warning effects and other real grammar gaps retain their
+context/parser owners. Stop hinted-initializer/fixture/compiler/capture variants.
+Full language/canonical type/incremental/editor/input/navigation/quality/parity/
+adoption/delivery remain required; no full criterion/task/counter/credit/DONE,
+schema or rollout closes. The original goal stays active.
+
+## Earlier integration: Lexical names in unfinished structured scopes — 2026-10-18
 
 Reassessment: d910754 is progress without closing original authoring criterion two.
 The documented consecutive unclosed lower bound is at least seventeen, retaining

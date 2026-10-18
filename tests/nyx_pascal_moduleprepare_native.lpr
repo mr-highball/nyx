@@ -155,6 +155,9 @@ var
   LAnswer: INyxPascalResolution;
   LType: INyxPascalSemanticType;
   LIdentity: INyxPascalIntrinsicIdentity;
+  LHints: INyxPascalHintSyntax;
+  LHintOrigin: Integer;
+  LNoErrSeen: Boolean;
   LQuestionPrefix: INyxPascalTranslation;
   LQuestionView: INyxPascalTranslatedSyntax;
   LQuestionScope: Integer;
@@ -315,9 +318,23 @@ begin
         'The original System declaration view no longer exhausts syntax depth after native linkage');
       LPublicVariable := False;
       LInterfaceRoutine := False;
+      LNoErrSeen := False;
+      Supports(LView.Syntax, INyxPascalHintSyntax, LHints);
       for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
       begin
         LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('noerrmsg') then
+        begin
+          LNoErrSeen := True;
+          Check((LView.Syntax.Lexical.Slice(LDeclaration.TypeSpan) = TNyxText('Boolean')) and
+            (LView.Syntax.Lexical.Slice(LDeclaration.ExpressionSpan) = TNyxText('False')),
+            'Actual NoErrMsg retains separate Boolean type and False initializer');
+          LHintOrigin := LView.OriginAt(LHints.HintAt(LDeclaration.FirstHint).Span.Start);
+          Check((LHints.HintAt(LDeclaration.FirstHint).Kind = phkPlatform) and (LHintOrigin >= 0) and
+            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = TNyxText('rtl/inc/systemh.inc')),
+            'Actual NoErrMsg platform metadata retains the original included source owner');
+        end;
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('char') then
         begin
@@ -356,6 +373,7 @@ begin
         end;
       end;
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
+      Check(LNoErrSeen, 'The unchanged whole System view contains its hinted initialized NoErrMsg declaration');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
       LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
         LModule.Translation);

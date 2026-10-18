@@ -1910,6 +1910,7 @@ var
   LTypeSpan: TNyxPascalSpan;
   LExpressionSpan: TNyxPascalSpan;
   LForm: TNyxPascalSyntaxTypeForm;
+  LInitialized: Boolean;
 begin
   LStart := Tok.Span.Start;
   LEntries := nil;
@@ -1939,6 +1940,7 @@ begin
   LTypeSpan := NyxPascalSpan(Tok.Span.Start, 0);
   LExpressionSpan := LTypeSpan;
   LForm := pstfNone;
+  LInitialized := False;
 
   if Sym(psoColon) then
   begin
@@ -1962,12 +1964,26 @@ begin
     Problem(psiExpectedSeparator, 'A variable needs a declared type or explicit initializer', Tok.Span);
   end;
 
+  { Native Pascal admits hints between the declared type and its initializer.
+    Consume them before checking '='; retain one ordered owner until any trailing
+    hints have also been captured and the group can receive independent links. }
+  if Length(LEntries) > 0 then
+  begin
+    DeclarationHints(LEntries[0]);
+  end;
+
   if Sym(psoEqual) or Sym(psoAssign) then
   begin
+    LInitialized := True;
     Step;
     LExpression := FPosition;
     Expression(psoSemicolon, False, True, AArmEnd);
     LExpressionSpan := Range(LExpression, FPosition);
+
+    if LExpressionSpan.Length = 0 then
+    begin
+      Problem(psiExpectedName, 'Add a value after the variable initializer', Tok.Span);
+    end;
   end;
   for LAt := 0 to High(LEntries) do
   begin
@@ -1976,7 +1992,8 @@ begin
     FDeclarations[LEntry].FExpressionSpan := LExpressionSpan;
     FDeclarations[LEntry].FForm := LForm;
 
-    if (LTypeSpan.Length = 0) and (LExpressionSpan.Length = 0) then
+    if ((LTypeSpan.Length = 0) and (LExpressionSpan.Length = 0)) or
+      (LInitialized and (LExpressionSpan.Length = 0)) then
     begin
       Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
     end;

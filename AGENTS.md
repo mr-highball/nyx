@@ -4,6 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source hinted variables retain separate type, ordered hint/message and
+initializer ranges. Independent group hint links follow both positions; explicit
+missing values stay incomplete and refuse binding without consuming separated
+siblings. Native focused 29/module 26 qualify whole original unit/include origins,
+ordinary bounded member completion/navigation and exact source preservation.
+A separate native compiler-use oracle executes the authored hinted values as 42,
+retaining exactly three expected deprecated/platform warnings without suppression.
+Regular parser/product programs do not import that oracle. All 25 regular native
+consumers have clean heaps; 40 regular compiler logs have zero owned warnings,
+77 upstream. The oracle's clean heap/three expected warnings stay separate.
+Both Studios/backend/worker and eleven browser consumers compile as applicable;
+browser execution/input/observing/adoption/parity/delivery stay open. Actual System
+NoErrMsg keeps Boolean/platform/False and its physical owner. The first unsupported
+syntax advances to internconst on Swap(Word), systemh.inc scalar 27,733; System
+has 2,554 declarations/28 diagnostics/four answers, with genuine ObjPas/indexed
+gaps retained. Six focused/628 product/97 prior RTL/four compiler/config/source inputs,
+156 unit packets/48 includes, five protected files/nine contexts and all 349 frozen
+7422453 artifacts remain exact. Thirteen concurrent planning files retain baseline
+outside the owned README block. Readers join; LAN offline, native Nyx tools absent,
+no host/configuration retry. WORK.md owns invalid procedural-separator/lookahead
+and compiler-warning preparations, final frozen qualification and source/remote
+identity. At least eighteen documented unclosed batches retain original criterion
+two; no criterion/task/counter/credit/DONE/schema/adoption/parity/delivery closes.
+Stop initializer/fixture/compiler/capture variants. Next follow compile-time
+intrinsic suffix identity/operands through existing linkage/parser owners; do not
+infer constant folding/execution/eligibility/ABI from declared syntax. Warning
+effects and full resolver/editor/incremental/input/navigation/quality/parity/
+delivery remain open. No protected mutation, cleanup/deletion/restart, host retry,
+approval bypass or sub-agents. Preserve concurrent planning.
+
 Current-source lexical lookup follows validated open structured headers without
 admitting incomplete receiver types. Each enclosing scope retains its owner,
 known names stay ordered at the caller caret and uncertain/missing ancestors

@@ -132,6 +132,12 @@ typed. Declaration order, uncertain ancestors and incomplete receiver refusals
 remain explicit. Ordinary bounded completion/navigation consumes that lookup;
 full language, editor adoption and both-target qualification remain required.
 
+The [hinted-initializer continuation](docs/pascal-projects.md#hints-before-variable-initializers)
+keeps declared types, ordered hints and initial values in separate source ranges.
+Grouped declarations retain independent metadata; missing values stay incomplete.
+Ordinary completion/navigation consumes the resulting types, while complete
+language, editor adoption and both-target qualification remain required.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
