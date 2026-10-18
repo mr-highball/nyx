@@ -4,7 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source primitive fulfillment preflights generic typed requests against
+Current-source short-switch translation ties FPC annotation/immediate-comma grammar
+to captured FPC only; other families retain strict prior behavior. Native focused
+45, repaired original RTL 56 and all 40 native consumers pass with clean heaps.
+The stronger RTL oracle qualifies one exact interface helper in systemh.inc plus
+one implementation in astrings.inc, preserving both roles/parameters/owners. Its
+first name-only failure stays retained; only that native fixture changes after
+the three-source product/focused freeze, so final qualification is composite.
+Original text/Unicode, atomic malformed groups, uncertainty, includes and saved
+settings retain their contracts. System reaches 8,918 declarations/zero syntax
+diagnostics/fourteen answers/no pending fact; ObjPas stays 209/four/one. Exact
+Free/FreeInstance completion/navigation/insertion is ready. Source.Resolved still
+refuses the later WARNINGS OFF in rtl/inc/ustrings.inc; full RTL meaning remains
+open. All 69 accepted compiler logs have zero owned warnings/168 upstream. Both
+Studios/backend/worker and twenty-five browser consumers compile as applicable,
+without browser execution/input/parity/adoption/delivery. Four focused/653
+maintained/97 RTL/24 compiler inputs, 156 packets/48 includes, five protected
+files/nine contexts, 349 frozen 7422453 artifacts and thirteen concurrent planning
+files stay exact. Readers joined; LAN offline; native Nyx tools absent. All old
+pending/wait identities are historical; WORK.md and ignored
+.local/short-switch-paths-private.json own terminal/source/remote receipts and
+retained failures. Stop annotation/oracle/compiler/capture variants. Next
+reassess typed diagnostic-emission masks through existing warning/context/settings
+owners, preserving captured defaults, conditional participation and local lifetime;
+do not ignore directives or infer facts. Full source/type/module/incremental/
+editor/input/quality/parity/adoption/delivery and original criterion/task/credit/
+DONE remain open across at least thirty-three documented unclosed batches. No new
+tool/schema/rollout. No host/config retry, protected mutation, cleanup/restart,
+approval bypass or sub-agents. Preserve concurrent work.
+
+Previously qualified primitive fulfillment preflights generic typed requests against
 exact capture/module/source owners, deduplicates jobs and atomically merges only
 validated one-fact replies. Shared matching bootstrap contexts advance together;
 unrelated/pristine/source-local scopes retain their boundaries. Native focused

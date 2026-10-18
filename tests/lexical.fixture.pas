@@ -34,6 +34,36 @@ const
   CGroupedVar = {$ifopt V-}True{$else}False{$endif};
 {$pop}
 
+{ Actual native FPC IFOPT observations distinguish a completed switch's annotation
+  from an immediate comma continuation. The pas2js compiler has a different
+  directive scanner, so it only compiles the portable translation checks; these
+  constants grant no browser oracle. PUSH/POP retains this unit's settings. }
+{$ifndef PAS2JS}
+{$push}{$Q+,H+,I+,R+,V+}
+{$Q- no overflow checking }
+const
+  CAnnotatedOverflow = {$ifopt Q-}True{$else}False{$endif};
+{$H- string storage, Q+ is explanatory text}
+const
+  CAnnotatedStrings = {$ifopt H-}True{$else}False{$endif};
+  CCommentCommaIgnored = {$ifopt Q-}True{$else}False{$endif};
+{$I- ,Q+}
+const
+  CSpaceEndsGroup = {$ifopt I-}True{$else}False{$endif};
+  CSpaceCommaIgnored = {$ifopt Q-}True{$else}False{$endif};
+{$V-H+}
+const
+  CAdjacentTailIgnored = {$ifopt V-}True{$else}False{$endif};
+  CAdjacentStringsUnchanged = {$ifopt H-}True{$else}False{$endif};
+{$I+,Q+}
+{$I-,Q- annotation, H+}
+const
+  CAnnotatedGroupIO = {$ifopt I-}True{$else}False{$endif};
+  CAnnotatedGroupOverflow = {$ifopt Q-}True{$else}False{$endif};
+  CAnnotatedGroupTailIgnored = {$ifopt H-}True{$else}False{$endif};
+{$pop}
+{$endif}
+
 { A real compiled function qualifies the register/operand lexical envelope. Its
   i386 assembly is executed only by the configured native qualification target;
   the browser consumer compiles the portable branch without an execution claim. }

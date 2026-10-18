@@ -175,7 +175,9 @@ var
   LIntrinsics: INyxPascalIntrinsicSyntax;
   LIntrinsic: TNyxPascalIntrinsicDeclaration;
   LWordSwapSeen: Boolean;
-  LRTLProcedureSeen: Boolean;
+  LRTLInterfaceCount: Integer;
+  LRTLImplementationCount: Integer;
+  LRTLSource: TNyxText;
   LRTLParameter: TNyxPascalSyntaxDeclaration;
   LNoReturnSeen: Boolean;
   LUnsupportedSyntax: Boolean;
@@ -465,7 +467,8 @@ begin
       LInterfaceRoutine := False;
       LNoErrSeen := False;
       LWordSwapSeen := False;
-      LRTLProcedureSeen := False;
+      LRTLInterfaceCount := 0;
+      LRTLImplementationCount := 0;
       LNoReturnSeen := False;
       Supports(LView.Syntax, INyxPascalHintSyntax, LHints);
       Supports(LView.Syntax, INyxPascalIntrinsicSyntax, LIntrinsics);
@@ -492,7 +495,23 @@ begin
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('fpc_setstring_ansistr_pansichar') then
         begin
-          LRTLProcedureSeen := True;
+          { The complete body adds the actual implementation of this same named
+            helper. Qualify both exact owners; a name-only interface oracle must
+            neither mislabel the implementation nor silently skip its metadata. }
+          LRTLSource := '';
+
+          if LDeclaration.Visibility = psavInterface then
+          begin
+            Inc(LRTLInterfaceCount);
+            LRTLSource := 'rtl/inc/systemh.inc';
+          end
+          else if LDeclaration.Visibility = psavImplementation then
+          begin
+            Inc(LRTLImplementationCount);
+            LRTLSource := 'rtl/inc/astrings.inc';
+          end;
+          Check((LDeclaration.Scope = 0) and (LRTLSource <> ''),
+            'Each actual RTL helper belongs to its declared module interface or implementation');
           Check((LDeclaration.Linkage = [plfRTLProcedure, plfCompilerHelper]) and
             not (psdfForward in LDeclaration.Flags),
             'The original System RTL/helper roles do not imply a bodyless runtime intrinsic');
@@ -503,8 +522,8 @@ begin
             'The actual RTL helper preserves its out parameter and authored byte-string type');
           LHintOrigin := LView.OriginAt(LDeclaration.LinkageSpan.Start);
           Check((LHintOrigin >= 0) and
-            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = TNyxText('rtl/inc/systemh.inc')),
-            'The actual RTL/helper suffix retains its original included source owner');
+            (LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name = LRTLSource),
+            'Each actual RTL/helper suffix retains its own original included source owner');
         end;
 
         if not LWordSwapSeen and (NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('swap')) and
@@ -575,7 +594,8 @@ begin
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
       Check(LNoErrSeen, 'The unchanged whole System view contains its hinted initialized NoErrMsg declaration');
       Check(LWordSwapSeen, 'The unchanged whole System view contains the attributed Swap routine');
-      Check(LRTLProcedureSeen, 'The unchanged whole System view contains the declared RTL helper');
+      Check(LRTLInterfaceCount = 1, 'The unchanged whole System view contains exactly one interface RTL helper');
+      Check(LRTLImplementationCount = 1, 'The unchanged whole System view contains exactly one implementation RTL helper');
       Check(LNoReturnSeen, 'The unchanged whole System view contains the non-returning RunError overload');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
       { The former Char query inside TObject remains answered. Reading more

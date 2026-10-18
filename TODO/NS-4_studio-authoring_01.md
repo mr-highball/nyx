@@ -64,6 +64,31 @@ Full original criterion two/source/type/editor/quality/parity/adoption/delivery
 remain open across at least thirty-one unclosed batches; no original criterion/
 task/credit/DONE/new tool/schema/rollout closes.
 
+Short-switch prerequisite (2026-10-18): follow the existing translation/settings
+owner from the actual int64p.inc Q- annotation. Captured FPC contexts distinguish
+an immediate comma continuation from ordinary trailing comment text. Correct the
+old synthetic whitespace-group assumption against independent native IFOPT
+observations and preserve exact source/include positions, conditional uncertainty,
+PUSH/POP and atomic refusal of committed malformed groups. Other compiler
+families retain their existing strict behavior; no FPC annotation assumption may
+be promoted to pas2js knowledge. Focused native 45, repaired original RTL 56 and
+all 40 native consumers pass with clean heaps. All 69 accepted compiler logs have
+zero owned warnings; browser consumers compile only. The first name-only owner
+failure remains retained: the real implementation in astrings.inc and header in
+systemh.inc both carry the same helper. The stronger existing native fixture
+requires one exact interface and one implementation, with both original owners,
+roles and parameters. Only that fixture changes after the product/focused freeze;
+final qualification is composite. System reaches 8,918/zero/fourteen/no pending,
+ObjPas 209/four/one, and exact Free/FreeInstance completion/navigation/insertion
+remains ready. Source.Resolved still refuses later `{$warnings off}` in ustrings.inc.
+Reassess typed diagnostic-emission masks through existing warning/context/settings
+owners, preserving exact defaults/source/conditional activity/local lifetime.
+Stop annotation/oracle/compiler/capture variants; do not ignore directives or
+infer facts. This remains progress across at least thirty-three unclosed batches;
+original criterion two/source/type/incremental/editor/input/quality/parity/adoption/delivery
+stay open. WORK.md owns terminal evidence and the next genuine prerequisite.
+No original criterion/task/credit/DONE/new tool/schema/rollout closes.
+
 Optimization prerequisite (2026-10-18): retain closed typed ON/OFF/DEFAULT and
 named toggle requests, exact include origins/conditional activity and local
 settings lifetime through existing compiler context/translation owners. Capture,

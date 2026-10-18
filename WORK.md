@@ -33,7 +33,127 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Bounded primitive fulfillment — 2026-10-18
+## Current integration: Short-switch annotation grammar — 2026-10-18
+
+Final composite qualification passes focused native 45, repaired original RTL 56
+and all 40 native consumers with clean heaps. All 69 accepted compiler logs have
+zero owned warnings/168 upstream. System reaches 8,918 declarations/zero
+declaration-syntax diagnostics/fourteen answers/no pending fact; ObjPas stays
+209/four/one. Exact indexed Free/FreeInstance completion, original objpash.inc
+navigation and detached insertion remain ready (status/gap/issue zero, three
+modules/two dependency loads). Source.Resolved still refuses a different later
+directive, `{$warnings off}` in ustrings.inc. No full RTL, language-engine/editor
+adoption, browser execution/parity or original criterion/task/credit/DONE closes.
+This is progress across at least thirty-three documented unclosed batches.
+
+The starting 7fd438d checkpoint retains full original authoring criterion two
+across at least thirty-two documented unclosed batches. Its actual RTL refusal
+at `{$Q- no overflow checking }` in int64p.inc is addressed through the existing
+translation/settings owner, installed FPC scanner and actual compiled IFOPT
+observations. The scanner continues a
+short-switch group only at an immediate comma after its sign; other trailing
+text remains a comment. A previously accepted synthetic whitespace-group oracle
+did not match that compiler boundary and is corrected against native observations.
+Exact source/include spans, uncertainty and PUSH/POP lifetimes remain preserved;
+committed malformed groups still refuse atomically. No directive skipping,
+inferred facts, fixed probe additions or raised work limits occur. The original
+RTL route exposes and retains its old owner-oracle failure before the repaired
+composite result. LAN remains offline; no host/config retry, browser/HTTP/file
+execution/capture, protected mutation, cleanup/restart, approval bypass or
+sub-agents occur. Full source/type/module/incremental/editor/input/quality/parity/
+adoption/delivery and original criterion/task/credit/DONE remain open.
+
+The implementation and focused fixture now pass 45 native checks with a clean
+heap. Three product/focused source files were initially frozen; the maintained inventory is 653 unique paths
+(the two existing region/fixture paths are newly included in this inventory),
+with 97 retained RTL and 24 compiler-source inputs. Actual IFOPT observes the
+unmodified Q- annotation, prose commas, whitespace-ended groups, adjacent tails
+and annotated complete groups. Translation checks retain exact source text,
+detached prefix ownership, conditional uncertainty, include propagation and
+saved-settings lifetime. FPC-only interpretation leaves other families' previous
+strict contract unchanged. Malformed committed groups still publish no prefix.
+
+All 69 compiler logs pass with zero owned warnings and 168 upstream pas2js Classes
+warnings. Both Studios/backend/worker and twenty-five browser consumers compile
+as applicable. All 40 native consumers pass with clean heaps, including actual
+profile 74 and production semantic completion 84. The first unchanged full RTL
+consumer terminated with a retained source-owner oracle failure, separately from
+the accepted repaired result. Browser execution/input/observing/parity/adoption/
+delivery remain unqualified.
+
+Read-only continuation confirms why incremental qualification stays separate:
+the existing ordered conditional loop constructs a translation and parses a
+frozen syntax prefix for each new semantic question, while the native caller
+explicitly reconstructs after a fulfilled fact. This is code inspection, not a
+profile establishing a dominant cost. Any future reuse must preserve exact
+source/context/ordered-prefix identity, conditional activity, cancellation and
+aggregate quotas. No performance optimization is mixed into this frozen grammar
+batch. The same original native process advanced from Word through requested
+Longint and Int64 across verified observation waits before its terminal assertion.
+
+The retained full RTL failure reaches 8,918 System declarations/zero declaration-
+syntax diagnostics/fourteen answers/no pending measurement, with a clean heap.
+Opening the formerly rejected body exposes both the real helper declaration in
+systemh.inc and its implementation in astrings.inc. The existing name-only oracle
+incorrectly required the header file for both. Original captured/upstream lines
+confirm the two independent owners; no product mapping is changed to satisfy the
+oracle. The repaired existing consumer now checks module scope, exact visibility/
+file ownership, RTL/helper roles and out RawByteString parameter for each, and
+requires exactly one interface plus one implementation. It retains the full
+original source, probes, quotas and other assertions. This is a stronger scope-
+aware oracle, not a skipped implementation. Only that native fixture changes
+after the product freeze; final qualification is composite and retains the
+first failed runtime/compiler artifacts. The repaired consumer passes 56 with
+clean heap. Terminal authority is `module-repaired-terminal-private.json` in that
+packet; all pending/verified-wait/process receipts are historical snapshots.
+The repaired compiled reader was launched after terminal/idle checks, into fresh
+runtime output. All 653 maintained inputs are compared across the two freezes:
+652 stay exact and only that native consumer changes. Its successful compilation
+replaces the failed consumer's build in the current 69-log compiler inventory;
+the retained failure stays separate. This is not an uninterrupted full run.
+
+The final repaired consumer passes both exact helper-owner checks and reaches
+System 8,918 declarations/zero declaration-syntax diagnostics/fourteen answers/no
+pending fact, then ObjPas 209/four/one. It retains one different source refusal:
+`{$warnings off}` in rtl/inc/ustrings.inc (ptiUnsupportedDirective). Source.Resolved
+remains false. The Q- annotation no longer owns that refusal; exact later source
+is now exposed. Final indexed Free/FreeInstance/navigation/insertion and clean
+heap pass in that same repaired process. After this frozen qualification,
+reassess a typed diagnostic-emission mask through the existing
+warning/context/settings owners; do not ignore the directive, infer a compiler
+default or start another annotation/compiler/capture variant. Full source/type/
+incremental/editor/quality/parity/adoption/delivery and original criterion two
+remain open.
+
+Retain three corrected preparation failures separately from accepted evidence:
+the focused fixture initially used a nonexistent scalar helper name; native FPC
+oracle directives exposed two owned pas2js warnings before being correctly
+separated from portable browser checks; and the first original RTL invocation
+omitted the repository argument, refused its initial ParamCount check and exited
+before creating runtime scratch. Its terminal handle was consumed; the same
+compiled consumer was then launched with all four required arguments into fresh
+owned output. No live process was restarted or replaced. The original RTL run's
+five initial measurements, Word job, three/eight symbol jobs, dynamic fact limits
+and source quotas remain unchanged. Pending identity records are snapshots only;
+inspect the actual process/handle before acting.
+
+Thirteen concurrent planning files, all five protected files/nine contexts, 156
+original unit packets and 349 frozen 7422453 artifacts remain exact. Final four
+focused/653 maintained/97 RTL/24 compiler inputs and all 48 retained SysUtils
+includes remain pinned; the one native-fixture change is proved separately from
+652 unchanged maintained sources. No host/config retry or protected mutation
+occurs; LAN remains offline and native Nyx tools are
+absent. Ignored `.local/short-switch-paths-private.json` locates source pins,
+compiler/runtime logs, corrected failures and final committed/remote identity.
+Readers are joined and the terminal receipt supersedes every live-reader snapshot.
+The accepted full consumer allocates/frees 43,346,397 blocks /54,042,693,480 bytes
+cumulatively with zero unfreed blocks; this is not an incremental-performance
+claim. Stop annotation/oracle/compiler/capture variants. This batch remains under
+original authoring criterion two, returning to the typed warning-policy
+prerequisite above. No full criterion/task/credit/DONE or
+new tool/schema/rollout closes.
+
+## Previous integration: Bounded primitive fulfillment — 2026-10-18
 
 f51f58a is progress across at least thirty-one documented unclosed batches;
 complete original authoring criterion two remains open. The current System source

@@ -1448,16 +1448,27 @@ var
   LValues: array['A'..'Z'] of TNyxPascalKnowledge;
   LValue: TNyxPascalKnowledge;
   LCandidate: INyxPascalCompilerContext;
+  LFPC: Boolean;
 begin
-  { Validate the complete group before creating at most 26 context copies. Last
-    authored write wins for repeated letters; a malformed tail publishes neither
-    a partially applied prefix nor a saved historical state for that prefix. }
+  { Captured FPC contexts continue only at a comma immediately after the sign.
+    Other trailing characters, including whitespace followed by a comma, remain
+    comment text; never interpret a later comma inside that annotation. Other
+    compiler families retain strict separated groups, without assuming FPC's
+    annotation rule or claiming their scanner has been qualified here.
+    A committed comma still needs another complete supported switch. Validate
+    that whole group before creating at most 26 context copies: last authored
+    write wins, while a malformed group publishes no partial historical state. }
   LSeen := [];
+  LFPC := FContext.Family = ppcFPC;
   LAt := 1;
   repeat
-    while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+
+    if not LFPC then
     begin
-      Inc(LAt);
+      while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+      begin
+        Inc(LAt);
+      end;
     end;
 
     if (LAt > Length(AText)) or not (AText[LAt] in ['a'..'z', 'A'..'Z']) then
@@ -1497,9 +1508,13 @@ begin
     Include(LSeen, LLetter);
     LValues[LLetter] := LValue;
     Inc(LAt);
-    while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+
+    if not LFPC then
     begin
-      Inc(LAt);
+      while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+      begin
+        Inc(LAt);
+      end;
     end;
 
     if LAt > Length(AText) then
@@ -1509,6 +1524,11 @@ begin
 
     if AText[LAt] <> ',' then
     begin
+
+      if LFPC then
+      begin
+        Break;
+      end;
       raise ENyxPascalContext.Create('Short switches need comma separators');
     end;
     Inc(LAt);

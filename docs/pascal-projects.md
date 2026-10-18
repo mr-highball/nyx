@@ -1966,6 +1966,33 @@ browser consumers compile only. Full RTL grammar/type meaning, incremental/edito
 adoption, interaction, parity and delivery remain under original authoring criterion
 two, with no new MCP tool or schema.
 
+## Short-switch annotations
+
+For captured FPC contexts, the existing translation reader treats a completed
+short switch as followed by either an immediate comma or comment text. For
+example, `{$Q- no overflow checking }` applies the Boolean request and retains
+the entire original annotation. `{$I-,Q- explanation, H-}` applies I/Q only;
+the later comma is already part of its comment. Whitespace before a comma has
+also ended the group: `{$I- ,H-}` leaves H unchanged.
+
+An immediate comma commits another complete supported switch. A missing letter,
+sign or unsupported mode-dependent alignment refuses the entire group before
+any historical context publishes a partial prefix. Whitespace after that comma
+does not invent another FPC switch. Case and repeated valid switches retain
+authored order. This corrects the earlier synthetic whitespace-group assumption
+against the installed compiler's scanner and independent compiled IFOPT values.
+Other compiler families retain their previous strict group parser; FPC evidence
+does not grant pas2js-scanner semantics.
+
+Ordinary include propagation, inactive/uncertain branches, PUSH/POP restoration
+and bounded detached prefixes share this interpretation. No source text is
+rewritten, no compiler facts are inferred and no callback/editor adoption is
+implied. Exact alternative delimiters and supplementary text remain lexical
+input, without a broader claim about which delimiters each compiler accepts.
+Native FPC observations are separated from the browser consumer, which compiles
+the portable checks. WORK.md owns qualification, retained failures and the next
+real RTL boundary; full grammar/type/incremental/editor/parity remains open.
+
 ## Atomic primitive fulfillment
 
 `nyx.pascal.fulfillment` consumes existing typed compiler requirements through a

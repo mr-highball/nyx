@@ -40,7 +40,10 @@ begin
   end;
 end;
 
-function Translate(const AText: TNyxText; const AInclude: TNyxText = ''): INyxPascalTranslation;
+{ Each fixture selects its compiler family independently of the executing host.
+  FPC-scanner observations cannot silently become pas2js compiler knowledge. }
+function Translate(const AText: TNyxText; const AInclude: TNyxText = '';
+  AFamily: TNyxPascalCompilerFamily = ppcFPC): INyxPascalTranslation;
 var
   LFiles: INyxPascalFileCatalog;
   LContext: INyxPascalCompilerContext;
@@ -48,7 +51,7 @@ begin
   LFiles := NewNyxPascalFileCatalog(pfcExact)
     .WithFile(NyxPascalPhysicalFile('main.pas'), AText)
     .WithFile(NyxPascalPhysicalFile('body.inc'), AInclude);
-  LContext := NewNyxPascalCompilerContext(ppcFPC,
+  LContext := NewNyxPascalCompilerContext(AFamily,
     TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
     .WithOption('I', ppkTrue).WithOption('H', ppkTrue)
     .WithSymbol(NyxPascalDefine('NO'), ppdUndefined);
@@ -87,9 +90,9 @@ begin
     (LState.Option('V') = ppkFalse), 'Grouped I switches are settings, never include filenames');
   Check((StateAt(LSource, 'Restored').Option('I') = ppkTrue) and
     (StateAt(LSource, 'Restored').Option('H') = ppkTrue), 'PUSH/POP retains the pre-group context');
-  LSource := Translate('{$i-, q+,h- ,i+} Ordered');
+  LSource := Translate('{$i-,q+,h-,i+} Ordered');
   Check(LSource.Resolved and (StateAt(LSource, 'Ordered').Option('I') = ppkTrue) and
-    (StateAt(LSource, 'Ordered').Option('Q') = ppkTrue), 'Case, whitespace and repeated switches retain authored order');
+    (StateAt(LSource, 'Ordered').Option('Q') = ppkTrue), 'Case and repeated immediate-comma switches retain authored order');
   LSource := Translate('{$I body.inc} Parent', '{$H-,I-} Included');
   Check(LSource.Resolved and (LSource.OccurrenceCount = 2) and
     (StateAt(LSource, 'Parent').Option('H') = ppkFalse), 'Ordinary includes still propagate grouped options');
@@ -114,6 +117,96 @@ begin
   LSource := Translate('{$H-,A+} Unsupported');
   Check(not LSource.Resolved and (LSource.DiagnosticCount > 0),
     'Mode-dependent alignment cannot masquerade as a captured Boolean option');
+end;
+
+{ Compare source interpretation with independent compiled switch observations.
+  Exact annotations remain in physical tokens; unknown branches and include/
+  saved-setting lifetimes still use the ordinary immutable translation route. }
+procedure AnnotatedSwitches;
+var
+  LSource: INyxPascalTranslation;
+  LPrefix: INyxPascalTranslation;
+  LText: TNyxText;
+  LJoined: TNyxText;
+  LAt: Integer;
+  LMarker: Integer;
+begin
+  {$ifndef PAS2JS}
+  Check(CAnnotatedOverflow and CAnnotatedStrings and CCommentCommaIgnored and
+    CSpaceEndsGroup and CSpaceCommaIgnored and CAdjacentTailIgnored and
+    CAdjacentStringsUnchanged and CAnnotatedGroupIO and CAnnotatedGroupOverflow and
+    CAnnotatedGroupTailIgnored, 'Actual compiled IFOPT observes annotation and immediate-comma boundaries');
+  {$endif}
+  LText := '{$Q+}{$push}{$Q- no overflow checking } Changed {$pop} Restored';
+  LSource := Translate(LText);
+  Check(LSource.Resolved and (StateAt(LSource, 'Changed').Option('Q') = ppkFalse) and
+    (StateAt(LSource, 'Restored').Option('Q') = ppkTrue),
+    'The exact RTL annotation applies Q- and PUSH/POP restores its prior value');
+  LJoined := '';
+  LMarker := -1;
+  for LAt := 0 to LSource.Count - 1 do
+  begin
+    LJoined := LJoined + LSource.Text(LAt);
+
+    if LSource.Text(LAt) = 'Changed' then
+    begin
+      LMarker := LAt;
+    end;
+  end;
+  Check((LJoined = LText) and (LMarker >= 0), 'All original annotation and source bytes remain exact');
+  LPrefix := NewNyxPascalTranslationPrefix(LSource, LMarker + 1,
+    TNyxPascalTranslationOptions.Defaults);
+  LSource := nil;
+  Check(StateAt(LPrefix, 'Changed').Option('Q') = ppkFalse,
+    'A detached bounded prefix retains its annotated context and source lease');
+  LSource := Translate('{$Q- note, H- and I- are prose} Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('Q') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue) and
+    (StateAt(LSource, 'Marker').Option('I') = ppkTrue), 'A comma inside explanatory text cannot resume a switch group');
+  LSource := Translate('{$I- ,H-} Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue), 'Whitespace before a comma already ended the group');
+  LSource := Translate('{$I-H-} Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue), 'An adjacent non-comma tail stays comment text');
+  LSource := Translate('{$I-,Q- note, H-} Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('Q') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue), 'A complete group may end with an annotation');
+  LSource := Translate('{$I-,' + #9 + 'H-} Invalid');
+  Check(not LSource.Resolved and (LSource.Diagnostic(0).Issue = ptiMalformedDirective),
+    'Whitespace after a committed comma is not another short switch');
+  for LAt := 0 to LSource.StateCount - 1 do
+  begin
+
+    if LSource.State(LAt).Option('I') = ppkFalse then
+    begin
+      raise Exception.Create('An invalid whitespace group published its prefix');
+    end;
+  end;
+  Check(True, 'A malformed committed group retains atomic historical states');
+  LSource := Translate('{$I-,H} Invalid');
+  Check(not LSource.Resolved and (LSource.Diagnostic(0).Issue = ptiMalformedDirective),
+    'A committed final letter still requires its sign');
+  LSource := Translate('{$ifdef NO}{$I- annotation, H-}{$endif} Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkTrue),
+    'Known inactive annotations have no setting effect');
+  LSource := Translate('{$if UNKNOWN}{$I- annotation, H-}{$endif} Marker');
+  Check(not LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkUnknown) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue), 'Unknown activity affects the switch, never names in its annotation');
+  LSource := Translate('{$I body.inc} Parent', '{$I- note, H-} Included');
+  Check(LSource.Resolved and (LSource.OccurrenceCount = 2) and
+    (StateAt(LSource, 'Parent').Option('I') = ppkFalse) and
+    (StateAt(LSource, 'Parent').Option('H') = ppkTrue), 'An annotated I switch is not an include and its value propagates outward');
+  LSource := Translate('(*$Q- ' + NyxScalarText($1F680) + ', H-*) Marker');
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('Q') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkTrue), 'Alternative comment delimiters and supplementary annotation text retain the same boundary');
+  LSource := Translate('{$Q- annotation} Marker', '', ppcPas2JS);
+  Check(not LSource.Resolved and (LSource.Diagnostic(0).Issue = ptiMalformedDirective),
+    'A different compiler family cannot inherit FPC annotation knowledge');
+  LSource := Translate('{$I-, H-} Marker', '', ppcPas2JS);
+  Check(LSource.Resolved and (StateAt(LSource, 'Marker').Option('I') = ppkFalse) and
+    (StateAt(LSource, 'Marker').Option('H') = ppkFalse), 'Other families retain their existing strict separated-group contract');
 end;
 
 procedure Regions;
@@ -208,6 +301,7 @@ end;
 begin
   try
     Switches;
+    AnnotatedSwitches;
     Regions;
     WriteLn('PASS ', GChecks, ' compiler switch and assembly region checks');
   except
