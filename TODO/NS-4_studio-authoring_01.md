@@ -161,6 +161,32 @@ context/parser ownership. No synthetic exports, shortened inputs or higher ceili
 substitute for full resolver/editor/incremental/input/navigation/quality/parity/
 delivery acceptance. WORK.md owns exact evidence, limits and retained failures.
 
+Linkage/argument continuation: a45eb85 is progress, retaining at least fifteen
+documented unclosed batches and complete original criterion two. Follow actual
+layout-directive prose and System declaration recovery through existing context/
+parser owners. Native PUBLIC/NAME belongs to its declaration, not the unit's
+subsequent member visibility; retain typed flags/ranges and preserve class sections.
+Qualify whole compiled handwritten Delphi input, its explicit CVAR grammar switch,
+bounded sibling depth and the complete real System route at the original parser
+ceiling. Additional exposed compiler facts use an explicit bounded eight-probe
+qualification allowance; the product default remains four and its earlier refusal
+stays retained. This work does not establish all linkage forms, compiler intrinsic/
+ABI meaning, general source/refactoring or ordinary editor adoption. Follow the
+next real full-source/type/import prerequisite, with complete incremental/input/
+navigation/quality/parity/delivery scope unchanged. WORK.md owns final evidence,
+retained preparation failures and the unchanged protected/foreign boundaries.
+
+The qualified boundary now passes 26 focused and 18 real module checks. System
+constructs 2,556 declarations with 31 retained syntax diagnostics at the original
+ceiling, and exact public-variable/following-routine interface membership survives.
+Additional compiler facts use five of the explicit eight qualification probes;
+the product default remains four. Source Char and warning effects stay genuine
+prerequisites, with incomplete objpas source still explicit in indexed loading.
+Return to source/compiler intrinsic identity, authored shadowing and the remaining
+actual diagnostics under existing binding/context/parser owners. Stop linkage/
+layout/fixture/compiler/capture variants. No full criterion/credit/adoption/parity/
+delivery closes; WORK.md owns the final source/remote/preservation evidence.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

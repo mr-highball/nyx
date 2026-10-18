@@ -77,6 +77,11 @@ retains exact routine-register requests and local assembler-reader settings.
 Whole compiled input and the wider original System route qualify distinct policy
 lifetimes, while actual grammar/depth and full resolver/editor outcomes stay open.
 
+The [native linkage continuation](../docs/pascal-projects.md#native-linkage-and-layout-directive-values)
+isolates linker intent from member visibility and retains exact declaration ranges.
+Layout policy readers admit their leading value with trailing explanatory text.
+Full source/type/editor/parity/delivery stays under original authoring criterion two.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

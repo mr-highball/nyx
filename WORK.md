@@ -33,7 +33,108 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Routine-codegen requests and local readers — 2026-10-18
+## Current integration: Native linkage and layout argument grammar — 2026-10-18
+
+Previous turn is progress: pushed a45eb85 supplies routine-codegen requests and
+local reader policies, exposing actual System declaration recovery. This batch
+follows that context/parser prerequisite under original authoring criterion two.
+The documented consecutive unclosed lower bound is at least fifteen, retaining
+older evidence. Full fresh MIT Nyx-owned resolver scope, project/incremental work,
+ordinary editor adoption, input/navigation/quality/parity and delivery remain
+required. No original criterion/task/counter/credit/DONE, tool/schema or rollout
+closes. Execution stays solo; scratch remains on the provisioned drive. No host
+retry, HTTP/browser/file-protocol execution/capture, protected mutation, cleanup/
+deletion/restart or approval bypass occurs. Concurrent planning stays separate.
+
+The declaration parser now separates native linkage suffixes from member
+visibility. System's PUBLIC NAME variable suffix previously changed the unit's
+visibility and made following prototypes look like nested implementations.
+Typed declaration linkage flags/ranges retain direct and bracket suffix intent,
+while actual class visibility sections stay owned by member scopes. Unknown
+platform attributes and malformed grouped suffixes retain uncertainty on their
+declarations. Original names and alias/library/intrinsic operands stay source
+syntax, not fabricated compiler or linker meaning. Snapshot spans map through
+the existing origin table; synthetic separators never become authored text.
+
+Layout policy readers now consume their whitespace-delimited leading argument
+without discarding the exact trailing prose. MINENUMSIZE/PACKENUM/Z, record
+alignment and set packing retain closed typed values; conditions/macros/includes
+are never truncated by this rule. The explicit CVAR language feature admits the
+controlled Delphi fixture's native grammar switch, without guessing compiler
+defaults. Original interface GUIDs and existing enum ordinals remain unchanged;
+metadata operates in process with no MCP wire/schema or installed inventory change.
+
+Accepted evidence is in ignored source-grammar-20261018-062211, located by
+.local/source-grammar-paths-private.json:
+
+- Twenty-six native linkage/layout checks qualify typed suffix intent, exact
+  Unicode physical origins, sibling scopes, member visibility, unknown/malformed
+  recovery, existing Z aliases, cancellation and a 512-prototype interface at
+  structural depth 16. The whole unchanged handwritten Delphi unit compiles and
+  executes public variable/routine behavior returning 42. Actual compiler sizes
+  are 1/4/5/1 for the four enum/record/set layout examples carrying explanatory
+  prose. This is fixture/compiler behavior, not general resolver ABI inference.
+- Eighteen actual module checks retain all 156 original byte packets/47 indexed
+  namespaces and the explicit complete Win32 include search. Actual System now
+  reaches 36,104 tokens/19 visits with five compiler probes, preserving its active
+  zero-register intent. The raw six diagnostics comprise four declared() needs,
+  one scoped sizeof(Char) need and unsupported WARN 3018 OFF. Semantic refinement
+  answers four conditions and constructs 2,556 declarations with 31 retained
+  syntax diagnostics, without hitting the original depth ceiling. Actual ExitCode
+  keeps public linker intent/interface membership; Prefetch stays an interface
+  sibling with intrinsic syntax. The remaining source/Char meaning is not
+  successful whole RTL binding. ObjPas remains pending at Char. Indexed loading
+  reaches three modules/two loads and typed incomplete objpas source, with no
+  invented suggestions or synthetic exports.
+- Maintained region/lexical/policy/operator/variant/anonymous/planner/translation/
+  macro/type/syntax/Windows/binding/generic/condition/dependency/owned/profile/
+  production-semantic checks pass 28/49/73/18/22/52/14/157/38/367/7,671/26/62/127/
+  10/48/86/74/84. The syntax corpus remains five actual inputs/3,748 declarations.
+  Windows retains 29,823 declarations/zero supported syntax diagnostics and ready
+  wYear completion/navigation; field types still require actual ObjPas meaning.
+  All twenty-one native consumers have clean heaps; counts overlap prior evidence.
+- Thirty-three accepted compiler logs have zero owned warnings and 63 upstream
+  pas2js RTL warnings. Eight browser consumers, both Studios/backend/worker compile
+  as applicable. Browser products/consumers compile only; no observing/input,
+  application execution, full parity/adoption or delivery claim follows.
+- Thirty-two focused pins, all 628 src/studio Pascal/include/program files,
+  97 prior RTL/three compiler inputs stay exact after final readers. All 48
+  SysUtils include packets and 156 overlapping actual unit packets match their
+  originals. Five protected files/nine complete contexts and 349 frozen 7422453
+  artifacts stay exact. Readers join; LAN remains offline. Native Nyx chat tools
+  remain absent, with no host/configuration retry. Final private ledgers/checkpoint
+  own the final qualified source/remote identity and exact preservation receipts.
+
+Preparations remain separate. The initial whole native fixture omitted CVAR and
+then used legacy bracket syntax under Delphi mode; the final owned fixture uses
+an explicit CVAR switch and modern PUBLIC NAME. Controlled bracket input states
+its own ObjFPC dialect and grants no Delphi compiler-admission claim. A constant
+SizeOf branch produced an owned unreachable-code warning; ordinary compiler-size
+return values remove that warning without suppressing it. The first origin oracle
+mistook projection separators for authored source, and an unparenthesized Boolean
+condition assumed the wrong precedence. Both are corrected using actual origins
+and explicit Pascal grouping. The original four-probe preparation refused once
+more RTL exposed additional facts. Qualification now explicitly permits eight
+bounded probes and uses five; the product default remains four, and the parser
+ceiling is unchanged. None of these failures is accepted final evidence.
+
+The initial full source batch passed, but final review found Z aliases comparing
+the complete comment instead of the parsed argument. The aliases and focused
+cases are corrected; a fresh complete qualified compiler/native batch runs from
+the final frozen source. Initial source pins/logs remain retained. No uninterrupted
+all-preparations-green or complete RTL/resolver outcome is claimed.
+
+Next useful deliverable: follow actual source-scoped Char/compiler-intrinsic
+identity and the remaining real System diagnostics under existing binding/context/
+parser owners. Preserve bootstrap/import identity and authored shadowing; a
+pristine System.Char measurement must not invent an authored declaration. Warning
+directive effects and the 31 actual syntax diagnostics retain their existing
+owners. Full grammar/argument/linkage eligibility, type/canonical meaning,
+incremental budgets, ordinary editor/input/navigation/quality/parity/delivery
+remain open. Stop linkage/layout/fixture/compiler/capture variants; no guessed
+exports, shortened source, parser budget inflation or rejected host retry.
+
+## Earlier integration: Routine-codegen requests and local readers — 2026-10-18
 
 Previous turn is progress: pushed 0ac6388 supplies atomic short-switch groups and
 typed assembly envelopes. This batch follows the actual System compiler-policy

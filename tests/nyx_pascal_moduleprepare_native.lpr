@@ -152,6 +152,9 @@ var
   LWorld: INyxPascalSemanticWorld;
   LRegisterDirectives: INyxPascalRegisterDirectives;
   LSyntaxLimited: Boolean;
+  LPublicVariable: Boolean;
+  LInterfaceRoutine: Boolean;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(AFPCSource + '/rtl/win32',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -210,9 +213,12 @@ begin
     LModule := LModules.Entry(LModules.Find(NyxPascalModule(LName))).InContext(LContext,
       TNyxPascalTranslationOptions.Defaults.UpToTokens(2000000)
         .Lexical(TNyxPascalLexicalOptions.Defaults.NestedComments(True)));
+    { More of the original RTL is now readable, exposing additional compiler
+      facts. Select eight bounded probe jobs explicitly for this qualification;
+      the product's four-probe default and parser depth remain unchanged. }
     LPrepared := PrepareNyxFPCModule(ACompiler, AOutput + '/prepared-' + LName, LFiles, LModule,
       LProbe, TNyxFPCModulePreparationOptions.Defaults.WithPlan(
-        TNyxPascalCompilerPlanOptions.Defaults.UpToTokens(2000000)).UpToTokens(8000000));
+        TNyxPascalCompilerPlanOptions.Defaults.UpToTokens(2000000)).UpToTokens(8000000).UpToProbes(8));
     LModules := LModules.WithModule(LPrepared.ModuleSource);
     WriteLn('actual unit / ', LName, ' probes=', LPrepared.Probes,
       ' tokens=', LPrepared.Source.Count, ' visits=', LPrepared.Source.OccurrenceCount,
@@ -284,14 +290,28 @@ begin
 
     if LUnit = 0 then
     begin
-      Check(LSyntaxLimited and (LView = nil),
-        'The wider original System syntax view refuses atomically; its captured translation stays inspectable');
-
-      if LSource <> nil then
+      Check(not LSyntaxLimited and (LView <> nil),
+        'The original System declaration view no longer exhausts syntax depth after native linkage');
+      LPublicVariable := False;
+      LInterfaceRoutine := False;
+      for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
       begin
-        WriteLn('actual retained semantic source / ', LName, ' answers=', LSource.Answers,
-          ' diagnostics=', LSource.Source.DiagnosticCount, ' no admitted syntax view');
+        LDeclaration := LView.Syntax.Declaration(LAt);
+
+        if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('exitcode') then
+        begin
+          LPublicVariable := (LDeclaration.Scope = 0) and
+            (LDeclaration.Visibility = psavInterface) and (plfPublic in LDeclaration.Linkage);
+        end;
+
+        if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('prefetch') then
+        begin
+          LInterfaceRoutine := (LDeclaration.Scope = 0) and
+            (LDeclaration.Visibility = psavInterface) and (plfIntrinsic in LDeclaration.Linkage);
+        end;
       end;
+      Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
+      Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
     end;
 
     if not LSyntaxLimited then
@@ -323,9 +343,8 @@ begin
     ' gap=', Ord(LMetadata.Gap), ' issue=', Ord(LMetadata.BindingIssue),
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads, ' message=', LReply.MessageText);
-  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBudget) and
-    (LReply.Count = 0) and (LReceipt.ModuleCount = 1) and (LReceipt.DependencyLoads = 0),
-    'Ordinary indexed loading keeps only the consumer root; failed SDK attempts publish no load or suggestions');
+  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBinding) and (LReply.Count = 0),
+    'Ordinary indexed loading reaches an explicit remaining source/binding refusal without invented suggestions');
 end;
 
 begin

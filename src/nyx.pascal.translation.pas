@@ -1448,7 +1448,7 @@ function FeatureNamed(const AName: TNyxText; out AFeature: TNyxPascalLanguageFea
 const
   CNames: array[TNyxPascalLanguageFeature] of TNyxText =
     ('advancedrecords', 'nestedprocvars', 'anonymousfunctions', 'functionreferences',
-      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '', 'class');
+      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '', 'class', 'cvar');
 var
   LFeature: TNyxPascalLanguageFeature;
 begin
@@ -1483,6 +1483,22 @@ begin
     end;
   end;
   Result := False;
+end;
+
+{ Layout directives consume one whitespace-delimited value; subsequent prose
+  remains part of the exact directive comment. This is deliberately local to
+  these closed policy readers, never a truncation rule for conditions, macros,
+  quoted include paths or arbitrary directives. }
+function LayoutDirectiveValue(const AValue: TNyxText): TNyxText;
+var
+  LAt: Integer;
+begin
+  LAt := 1;
+  while (LAt <= Length(AValue)) and not (AValue[LAt] in [#9..#13, ' ']) do
+  begin
+    Inc(LAt);
+  end;
+  Result := NyxPascalASCIIKey(Copy(AValue, 1, LAt - 1));
 end;
 
 function RecordAlignmentNamed(const AValue: TNyxText): TNyxPascalRecordAlignment;
@@ -1904,7 +1920,7 @@ begin
     if (LName = 'packrecords') or (LName = 'align') or
       ((LName = 'a') and not (LValue = '+') and not (LValue = '-')) then
     begin
-      LAlignment := RecordAlignmentNamed(NyxPascalASCIIKey(LValue));
+      LAlignment := RecordAlignmentNamed(LayoutDirectiveValue(LValue));
 
       if (LAlignment = praUnknown) or
         ((LName <> 'packrecords') and (LAlignment in [praC, praDefault])) then
@@ -1924,13 +1940,13 @@ begin
 
     if (LName = 'packenum') or (LName = 'minenumsize') or (LName = 'z') then
     begin
-      LArgument := NyxPascalASCIIKey(LValue);
+      LArgument := LayoutDirectiveValue(LValue);
 
-      if (LName = 'z') and (LValue = '+') then
+      if (LName = 'z') and (LArgument = '+') then
       begin
         LArgument := '4';
       end
-      else if (LName = 'z') and (LValue = '-') then
+      else if (LName = 'z') and (LArgument = '-') then
       begin
         LArgument := '1';
       end;
@@ -1953,7 +1969,7 @@ begin
 
     if LName = 'packset' then
     begin
-      LSetPacking := SetPackingNamed(NyxPascalASCIIKey(LValue));
+      LSetPacking := SetPackingNamed(LayoutDirectiveValue(LValue));
 
       if LSetPacking = pspUnknown then
       begin

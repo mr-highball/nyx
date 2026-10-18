@@ -47,7 +47,7 @@ type
   TNyxPascalLanguageFeature = (ppfAdvancedRecords, ppfNestedProcVars,
     ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
     ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings, ppfOutParameters,
-    ppfReplacementMacros, ppfClasses);
+    ppfReplacementMacros, ppfClasses, ppfCVariables);
   { Symbolic record policy, not a computed ABI layout. Default and C retain
     target-dependent intent; an unknown policy never supplies guessed offsets. }
   TNyxPascalRecordAlignment = (praUnknown, praDefault, praC,
@@ -67,7 +67,8 @@ type
     This value proves neither target availability nor instruction admission. }
   TNyxPascalAssemblerReader = (parUnknown, parDefault, parIntel, parATT);
   { Authored routine-codegen request, not a source type size or effective global
-    register allocation. DEFAULT/NORMAL share one policy; Unknown is never zero.
+    register allocation. DEFAULT/NORMAL share one policy; Unknown never implies
+    a zero-register request.
     Eight is retained for explicitly qualified FPC 3.3.1-or-newer contexts. }
   TNyxPascalFPURegisterPolicy = (pfrUnknown, pfrDefault, pfr0, pfr1, pfr2,
     pfr3, pfr4, pfr5, pfr6, pfr7, pfr8);

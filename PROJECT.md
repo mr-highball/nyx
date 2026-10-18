@@ -114,6 +114,12 @@ retains routine register requests at their exact source sites and restores local
 assembler-reader intent through PUSH/POP. Actual System now exposes broader
 directive/declaration grammar gaps; implicit-unit meaning and editor adoption stay open.
 
+The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
+separates linker suffixes from class visibility and retains typed declaration
+flags/ranges. Known layout directives retain explanatory trailing text without
+truncating conditions or include paths. Full source/type/incremental/editor and
+both-target qualification remain required under the original authoring task.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

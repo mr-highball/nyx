@@ -4,6 +4,40 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source native linkage is distinct from member visibility: PUBLIC NAME
+suffixes no longer change the unit's scope or recurse through following prototypes.
+Typed flags/ranges retain direct/bracket intents; class visibility stays scoped,
+unknown/malformed attributes retain uncertainty, and origins preserve authored
+Unicode rather than projection separators. CVAR is an explicit grammar feature.
+Layout policy values retain trailing prose and existing Z aliases; conditions,
+macros and include paths are not truncated. Native focused checks pass 26, with
+whole unchanged compiled Delphi behavior returning 42, actual layout sizes 1/4/5/1,
+and 512 sibling prototypes at depth 16. Actual System now reaches 36,104 tokens/
+19 visits/five probes and constructs 2,556 declarations/31 retained syntax
+diagnostics at the original ceiling. ExitCode/Prefetch retain interface scope and
+typed linkage. Raw Char/WARN requirements remain; semantic refinement answers four
+conditions, then source Char stays pending. Indexed loading reaches three modules/
+two loads and typed incomplete objpas source, with no invented suggestions.
+Eighteen module checks qualify this boundary, not whole RTL meaning. Twenty-one
+native consumers pass with clean heaps; maintained 28/49/73/18/22/52/14/157/38/367/
+7,671/26/62/127/10/48/86/74/84 remain qualified. Thirty-three accepted final logs
+have zero owned warnings, 63 upstream; eight browser consumers and products compile
+only as applicable. Thirty-two focused/628 complete src+studio/97 prior RTL/three
+compiler pins, 156 overlapping original packets, 48 SysUtils includes, five
+protected files/nine contexts and 349 frozen 7422453 artifacts stay exact. Readers
+join; LAN stays offline. Existing interface GUIDs/enum ordinals and MCP inventory
+are retained, with no schema or rollout. WORK.md owns dialect/origin/precedence/
+constant-warning/probe-budget preparations and the final fresh qualified batch.
+The explicit qualification allows eight probes and uses five; the product default
+stays four. At least fifteen documented unclosed batches retain full criterion two;
+no criterion/task/counter/credit/DONE/adoption/parity/delivery closes. Stop linkage/
+layout/fixture/compiler/capture variants. Next follow actual compiler/source Char
+identity and remaining diagnostics under existing binding/context/parser owners,
+preserving bootstrap/import identity and authored shadowing; pristine measurements
+cannot invent declarations. Full language/incremental/editor/input/navigation/
+quality/parity/delivery stays open. No host retry, protected mutation, cleanup/
+deletion/restart bypass or sub-agents. Preserve concurrent planning files.
+
 Current-source routine-codegen requests retain exact typed register intent,
 occurrence/span/pre-state and activity without a stale effective global limit.
 Optional prefix queries retain only earlier requests; no record owns interfaces.

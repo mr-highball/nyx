@@ -145,6 +145,15 @@ type
     psdfClassMember, psdfOverload, psdfUnsupported);
   { Value-owned flag set with no mutable storage or target-specific state. }
   TNyxPascalSyntaxFlags = set of TNyxPascalSyntaxFlag;
+  { Authored platform/linker intent, distinct from Pascal member visibility.
+    Public symbols do not turn subsequent unit declarations into class members.
+    These flags describe source syntax, not linker/ABI admission or resolution
+    of an alias, library expression or compiler intrinsic. }
+  TNyxPascalLinkageFlag = (plfPublic, plfExport, plfExternal, plfAlias,
+    plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes);
+  { Independent value set; source ranges retain operands without mutable arrays,
+    interfaces or fabricated external names. }
+  TNyxPascalLinkageFlags = set of TNyxPascalLinkageFlag;
   { Scoped structural failure/context requirement, separate from lexical issues.
     Consumers must inspect both diagnostic collections, never infer compilation. }
   TNyxPascalSyntaxIssue = (psiExpectedName, psiExpectedSeparator, psiUnclosedScope,
@@ -217,6 +226,8 @@ type
     FFirstHint: Integer;
     FLastHint: Integer;
     FAnonymous: Boolean;
+    FLinkage: TNyxPascalLinkageFlags;
+    FLinkageSpan: TNyxPascalSpan;
   public
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
@@ -238,6 +249,12 @@ type
     property Visibility: TNyxPascalSyntaxVisibility read FVisibility;
     property ParameterMode: TNyxPascalSyntaxParameterMode read FParameterMode;
     property Flags: TNyxPascalSyntaxFlags read FFlags;
+    { LinkageSpan encloses the authored suffixes, including their operands and
+      intervening routine modifiers; an empty span means no linkage suffix.
+      Like other declaration spans, it belongs to this syntax snapshot. A
+      translated snapshot's origin table supplies its actual physical ranges. }
+    property Linkage: TNyxPascalLinkageFlags read FLinkage;
+    property LinkageSpan: TNyxPascalSpan read FLinkageSpan;
     property NameSpan: TNyxPascalSpan read FNameSpan;
     property HeaderSpan: TNyxPascalSpan read FHeaderSpan;
     property TypeSpan: TNyxPascalSpan read FTypeSpan;
@@ -447,6 +464,9 @@ type
     function AtHint(AExpressionStart: Integer): Boolean;
     procedure DeclarationHints(ADeclaration: Integer);
     procedure CloneDeclarationHints(AFrom, ATo: Integer);
+    { Consume only declaration suffixes. Class-member visibility remains owned
+      by Declarations; unknown platform attributes retain explicit uncertainty. }
+    function DeclarationLinkage(ADeclaration: Integer; ARoutine: Boolean): Boolean;
     procedure VariantPart(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure VariantFields(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     { Reuse declared-body grammar and ownership for named and inline types. }
@@ -1118,6 +1138,150 @@ begin
     FDeclarations[ATo].FLastHint := LAt;
     LFrom := FHints[LFrom].NextHint;
   end;
+end;
+
+{ Only contextual platform suffix keys enter this classification. Their values
+  remain exact source syntax; no assembler symbol or intrinsic body is invented. }
+function LinkageFlagNamed(const AName: TNyxText; out AFlag: TNyxPascalLinkageFlag): Boolean;
+begin
+  Result := True;
+
+  if AName = 'public' then
+  begin
+    AFlag := plfPublic;
+  end
+  else if AName = 'export' then
+  begin
+    AFlag := plfExport;
+  end
+  else if AName = 'external' then
+  begin
+    AFlag := plfExternal;
+  end
+  else if AName = 'alias' then
+  begin
+    AFlag := plfAlias;
+  end
+  else if AName = 'cvar' then
+  begin
+    AFlag := plfCVariable;
+  end
+  else if AName = 'compilerproc' then
+  begin
+    AFlag := plfCompilerHelper;
+  end
+  else if AName = 'internproc' then
+  begin
+    AFlag := plfIntrinsic;
+  end
+  else
+  begin
+    Result := False;
+  end;
+end;
+
+function TSyntaxSnapshot.DeclarationLinkage(ADeclaration: Integer; ARoutine: Boolean): Boolean;
+var
+  LStart: Integer;
+  LFlag: TNyxPascalLinkageFlag;
+  LBracket: Boolean;
+begin
+  Result := False;
+  LStart := Tok.Span.Start;
+  LFlag := plfPlatformAttributes;
+  LBracket := ARoutine and Sym(psoOpenBracket);
+
+  if not LBracket and ((Tok.Kind <> ptkWord) or Tok.Escaped or
+    not LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag)) then
+  begin
+    Exit;
+  end;
+  { A PUBLIC after a class method belongs to the next visibility section. }
+
+  if not LBracket and (LFlag = plfPublic) and
+    (FScopes[FDeclarations[ADeclaration].Scope].Kind = psskMembers) then
+  begin
+    Exit;
+  end;
+
+  if not ARoutine and (LFlag in [plfCompilerHelper, plfIntrinsic]) then
+  begin
+    Exit;
+  end;
+  Result := True;
+
+  if LBracket then
+  begin
+    Include(FDeclarations[ADeclaration].FLinkage, plfPlatformAttributes);
+    Step;
+    while not EOF and not Sym(psoCloseBracket) do
+    begin
+
+      if (Tok.Kind = ptkWord) and not Tok.Escaped and
+        LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
+      begin
+        Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+      end
+      else
+      begin
+        Unsupported(FDeclarations[ADeclaration].Scope,
+          'This platform declaration attribute needs explicit meaning', Tok.Span);
+        Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+      end;
+      Step;
+      while not EOF and not Sym(psoComma) and not Sym(psoCloseBracket) and
+        not Word(pkwBegin) and not Word(pkwEnd) do
+      begin
+
+        if Sym(psoOpenParen) then
+        begin
+          Groups(psoOpenParen, psoCloseParen);
+        end
+        else if Sym(psoOpenBracket) then
+        begin
+          Groups(psoOpenBracket, psoCloseBracket);
+        end
+        else
+        begin
+          Step;
+        end;
+      end;
+
+      if not Sym(psoComma) then
+      begin
+        Break;
+      end;
+      Step;
+    end;
+
+    if Sym(psoCloseBracket) then
+    begin
+      Step;
+    end
+    else
+    begin
+      Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+      Problem(psiUnclosedScope, 'Finish this platform declaration attribute', Tok.Span);
+    end;
+  end
+  else
+  begin
+    Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+    Step;
+    Expression(psoSemicolon);
+  end;
+
+  if not Sym(psoSemicolon) then
+  begin
+    Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+  end;
+  Separator;
+
+  if FDeclarations[ADeclaration].FLinkageSpan.Length > 0 then
+  begin
+    LStart := FDeclarations[ADeclaration].FLinkageSpan.Start;
+  end;
+  FDeclarations[ADeclaration].FLinkageSpan := SpanFrom(LStart);
 end;
 
 procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean;
@@ -1832,6 +1996,24 @@ begin
   begin
     Separator;
   end;
+
+  if (Length(LEntries) > 0) and (AKind <> psdkField) then
+  begin
+    while DeclarationLinkage(LEntries[0], False) do
+    begin
+      { One authored group owns the same suffix for each independent entry. }
+    end;
+    for LAt := 1 to High(LEntries) do
+    begin
+      FDeclarations[LEntries[LAt]].FLinkage := FDeclarations[LEntries[0]].FLinkage;
+      FDeclarations[LEntries[LAt]].FLinkageSpan := FDeclarations[LEntries[0]].FLinkageSpan;
+
+      if psdfIncomplete in FDeclarations[LEntries[0]].Flags then
+      begin
+        Include(FDeclarations[LEntries[LAt]].FFlags, psdfIncomplete);
+      end;
+    end;
+  end;
   for LAt := 0 to High(LEntries) do
   begin
     FDeclarations[LEntries[LAt]].FHeaderSpan := SpanFrom(LStart);
@@ -1872,6 +2054,10 @@ begin
   end;
   DeclarationHints(LEntry);
   Separator;
+  while DeclarationLinkage(LEntry, False) do
+  begin
+    { Typed constants may also carry native linkage without changing visibility. }
+  end;
   FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
 end;
 
@@ -2289,8 +2475,25 @@ begin
     Separator;
     LHasBody := not (AVisibility in [psavInterface]) and
       (FScopes[AScope].Kind <> psskMembers);
-    while RoutineModifier(Tok.Word) or HintWord(LHint) do
+    while not EOF do
     begin
+
+      if DeclarationLinkage(LEntry, True) then
+      begin
+
+        if (plfExternal in FDeclarations[LEntry].Linkage) or
+          (plfIntrinsic in FDeclarations[LEntry].Linkage) then
+        begin
+          LHasBody := False;
+          Include(FDeclarations[LEntry].FFlags, psdfForward);
+        end;
+        Continue;
+      end;
+
+      if not RoutineModifier(Tok.Word) and not HintWord(LHint) then
+      begin
+        Break;
+      end;
 
       if HintWord(LHint) then
       begin
@@ -2501,8 +2704,8 @@ begin
         LSection := Tok.Word;
         Step;
       end
-      else if Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
-        pkwAutomated, pkwStrict] then
+      else if AMembers and (Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
+        pkwAutomated, pkwStrict]) then
       begin
         LStrict := Word(pkwStrict);
 
@@ -2546,6 +2749,13 @@ begin
             Problem(psiExpectedName, 'Strict visibility needs private or protected', Tok.Span);
           end;
         end;
+        Step;
+        LSection := pkwNone;
+      end
+      else if Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
+        pkwAutomated, pkwStrict] then
+      begin
+        Unsupported(AScope, 'Visibility sections require an enclosing member scope', Tok.Span);
         Step;
         LSection := pkwNone;
       end

@@ -1525,6 +1525,46 @@ partial suggestions. No source truncation, synthetic exports or increased ceilin
 supplies complete RTL meaning. Full grammar/context/incremental/adoption/input/
 navigation/quality/parity/delivery remain open under original authoring criterion two.
 
+## Native linkage and layout directive values
+
+`TNyxPascalSyntaxDeclaration.Linkage` separates declared object/linker intent from
+Pascal member visibility. The typed flags cover PUBLIC, EXPORT, EXTERNAL, ALIAS,
+CVAR, compiler helpers/intrinsics and bracket platform syntax. Known suffixes stay
+attached to their variable, constant or routine; they cannot turn later unit
+prototypes into nested bodies or consume the next class visibility section.
+Grouped declarations own independent metadata values. Unknown platform attributes
+retain explicit unsupported syntax, and malformed suffixes retain incomplete
+declarations rather than authorizing successful inference.
+
+`LinkageSpan` preserves the suffix range, including operands and intervening
+modifiers. As with other declaration spans, it belongs to the syntax snapshot.
+A translated view's origin table maps it back to exact physical tokens, including
+Unicode spelling and repeated includes; synthetic token separators never become
+authored source. Multiple original occurrences require separate mapped parts.
+The metadata does not decode an external name into a Pascal declaration name,
+validate a linker target or supply an intrinsic implementation. Full argument,
+pre-separator/dialect eligibility and ABI rules remain with the original parser/
+compiler/type requirements. FPC documents the distinct [PUBLIC modifier](https://docs.freepascal.org/daily/doc/ref/refsu94.html)
+and [alias meaning](https://docs.freepascal.org/docs-html/current/ref/refsu72.html).
+
+An explicit `ppfCVariables` grammar feature retains `{$modeswitch cvar}` without
+borrowing the analyzer compiler's defaults. The whole owned fixture remains in
+Delphi mode and enables that native grammar explicitly. Bracket examples retain
+their stated source dialect; parsing them does not claim Delphi compiler admission.
+The layout-policy readers (record alignment, enum storage including
+MINENUMSIZE and set packing) consume one whitespace-delimited value and retain
+the rest as explanatory comment text. Invalid leading values still refuse.
+This rule never truncates conditions, macro replacements, quoted include names
+or arbitrary directives; broader directive argument syntax stays open.
+
+Native qualification executes the whole unchanged unit's public variable/routine
+behavior and reads actual compiler-produced sizes for all four layout examples.
+The original bytes also pass ordinary translation and syntax. A 512-routine
+interface stress case stays at structural depth 16; class visibility remains
+independent. Browser consumers compile only. WORK.md owns the complete real RTL
+continuation and exact remaining gaps, with full source/type/incremental/editor/
+input/navigation/quality/parity/delivery still under original authoring criterion two.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.
