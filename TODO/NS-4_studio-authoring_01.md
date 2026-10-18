@@ -11,14 +11,20 @@ prerequisites; it adds no completion credit or independent percentage.
 
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
-demand. Native 31/22/81 and maintained 86/62/127 pass, clean heaps; three browser
-consumers compile only. The actual Nyx tree advances the badge dependency through
+demand. Current native dependency/SDK/semantic checks pass 31/22/82, clean heaps;
+two current browser consumers compile only. Prior binding/generic evidence stays
+in WORK.md. The actual Nyx tree advances the badge dependency through
 nyx.model. [Ordered lexical contexts](../docs/pascal-projects.md#ordered-lexical-mode-and-include-contexts)
 now pass 41 native checks and five independent compiler-mode jobs, preserving
 per-occurrence source identity. Real SysUtils passes ObjFPC/OUT and reaches its
-uncaptured sysutilh.inc; its interface remains explicitly incomplete. Next qualify
-real RTL include/default/target/define context without export stubs or source
-rewriting. Full expression/grammar/helpers/
+uncaptured sysutilh.inc; its interface remains explicitly incomplete.
+[Configured compiler facts](../docs/pascal-projects.md#capturing-facts-from-a-configured-fpc-compiler)
+now replace hard-coded indexed semantic metadata: portable protocol 24, actual
+profile 18 and production semantic 82 pass, clean native heaps; two current browser
+consumers compile only. Actual include-directory capture refuses strg.inc's
+non-UTF-8 bytes atomically. Next support explicit source encoding/original byte
+origins, retaining full real RTL include/default/target/define context without
+export stubs or source rewriting. Full expression/grammar/helpers/
 overloads/constraints, incremental/project-scale work, default Studio adoption and
 complete input/navigation/quality/parity/delivery remain required. No credit closes.
 

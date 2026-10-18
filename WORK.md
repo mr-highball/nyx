@@ -33,7 +33,109 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered RTL lexical contexts — 2026-10-17
+## Current integration: Configured FPC facts and RTL encoding boundary — 2026-10-18
+
+Previous goal turn is progress: pushed 29c5bb5 qualifies ordered lexical contexts.
+This turn supplies actual configured compiler facts to the Nyx-owned resolver and
+follows the next real RTL include prerequisite. Original NS-4 authoring criterion
+two and its service/editor owners retain full language meaning, modern editing,
+compiler/target/context, incremental work, quality/budgets/parity and delivery.
+No original criterion/task/counter/credit/DONE, default Studio adoption, installed
+schema/new MCP tool or rollout closes. Solo; no HTTP/browser/file-protocol input,
+capture, protected configuration mutation, cleanup/deletion/restart or review
+bypass occurs. All new build/evidence paths are on the provisioned scratch drive.
+
+New nyx.pascal.compilertrace owns persistent typed symbol-query/source-mode
+requests and a bounded portable transcript reader. Generated input forces implicit
+System setup before queries; no application source or external include enters it.
+Actual define/undef/numeric events preserve exact signed-32 facts; larger and
+replacement values remain defined without invented numeric meaning. Eight mode/
+identity guards, ordered unique source-owned notes, H state, consistent numeric
+versions, compiler completion and zero terminal exit are required. Unknown future
+symbols stay unknown: the define set is never sealed from observed output.
+
+Native nyx.studio.pascalprofiles uses the existing compiler-process family owner,
+fresh private directories and a source read lease. Structured -s/-Cn/-vc/-vi/-vn/
+-vq input captures the configured default target under the selected source mode,
+without running the generated program, assembler or linker. Defaults bound output
+to four MiB and compiler time to 30 seconds. Cancellation, output refusal and
+deadline retirement join the exact family before return. Inline cancellation
+interfaces are pinned through cleanup. This explicit synchronous primitive needs
+an owning worker for UI use; full application options/ABI/default adoption remain
+open. The production indexed semantic consumer now uses this real profile.
+
+The installed Windows RTL build specifies rtl/objpas/sysutils as SysUtils' include
+directory. Actual complete-directory capture encounters non-UTF-8 strg.inc, so it
+refuses atomically. New ENyxPascalSourceEncoding retains the exact virtual file,
+inherits ENyxBytes and exposes no private host path. No guessed ANSI codepage,
+partial directory, source rewriting or fabricated export catalog is admitted.
+SysUtils consequently still reports uncaptured sysutilh.inc at scalar 1860; full
+RTL capture and replacement-macro/grammar meaning remain open requirements.
+
+Evidence behind ignored .local/rtl-profile-paths-private.json:
+
+- Fifteen focused pins, 491 current Nyx source files, 20 win RTL files and all 48
+  sysutils-directory source files remain exact after readers join. Configured
+  compiler/front-end/configuration files also remain exact. Native probes compile
+  their own immutable source in fresh directories, never application programs.
+- logs/trace-bounded-run.log passes 24 portable-protocol checks, clean heap:
+  persistent queries, exact integers/overflow refusal, observed versus unqueried
+  facts, wrong/missing/duplicate/foreign/order/version/failed/truncated replies,
+  source-mode mismatch, dependency rebuild, limits and cancellation. An alternate
+  producer's excess count refuses before enumerating any element.
+- logs/profile-bounded-run.log passes 18 actual native compiler/RTL checks,
+  clean heap. The selected FPC reports version 30301, 99 observed facts and 13
+  explicit queries. Win32/i386, nondotted/non-Unicode RTL identity, differing
+  ObjFPC/H state, retained unknowns and source-lease release pass. Five real
+  compiler invocations cover Delphi/ObjFPC success plus post-launch cancellation,
+  output-budget refusal and a deadline; each owns/joins its exact family.
+- That same consumer attempts complete actual include capture and reports
+  rtl/objpas/sysutils/strg.inc without changing prior 511-file/384-module seeds.
+  The full real badge query stays unavailable at the incomplete SysUtils
+  interface. This expected refusal is not successful full-RTL capture.
+- logs/semantic-bounded-run.log passes 82 production semantic/private-editor
+  checks, clean heap, including a sixth actual configured compiler invocation.
+  Real TNyxPascalCompilerVersion.FullNumber binding, revision/permission/context,
+  model-guard release, concurrency/activity/workspace/source-pair preservation
+  retain their existing boundaries. The owned engine never listens. Native chat
+  Nyx tools are absent; no HTTP/authentication/browser-observation claim follows.
+- SDK 22, dependencies 31, owned provider 86 and modes 41 pass, clean native heaps.
+  logs/sdk-bounded-run.log reads final source bytes using its unchanged native
+  decoder binary. Actual SDK is now 491 files/379 modules; plus real win RTL is
+  511/384. Existing aggregate token counts remain 100,788/113,802. Broader prior
+  grammar/binding/source evidence is retained, not rerun or recredited here.
+- compiler-qualified-private.json selects nine accepted current compiler logs,
+  zero owned warnings and seven upstream pas2js RTL warnings. Two browser
+  consumers compile only. The generated alias purpose comment and final alternate-
+  count guard cause dependent compiler/consumer rechecks and new SDK reads;
+  earlier *-final, *-qualified and preparation outputs remain retained. This is
+  composite evidence, not a claim of one uninterrupted execution batch.
+- Complete frozen 7422453 verifier passes 349 files. Five protected files/nine
+  complete contexts remain exact; all owned readers/compiler families join and
+  LAN remains offline. terminal-qualified-private.json owns this boundary;
+  final-checkpoint-private.json records the final source/remote identity.
+
+Retained corrections: trace-tests-1 expected unnormalized uppercase names;
+profile-tests-1 used a misspelled FCL pipe flag. profile-tests-2 exposed that FPC
+info 2027 omits source locations; actual source-qualified note 2025 now owns query
+rows. profile-tests-3 exposed the real strg.inc encoding and an inline cancellation
+temporary lifetime leak; the native host now pins that interface, and later
+native heaps are clean. The first browser trace compile warned about unsupported
+Int64; guarded signed-32 negative accumulation replaces it on both targets.
+These failed/earlier receipts remain excluded from accepted current evidence.
+
+Next useful action: support original source bytes and explicit encoding with
+exact scalar/byte origins through the existing immutable file/capture owners.
+Do not infer strg.inc's intended encoding or drop problematic/unneeded files to
+claim full capture. Then resume real RTL includes/default/target/define and
+replacement-macro/grammar prerequisites. Profile caching/invalidation, custom
+application configuration, complete language meaning, default Studio adoption,
+input/navigation/quality/parity and delivery remain required. No more probe/
+protocol/compiler/capture variants. Concurrent MILESTONES/catalog/new reference/
+browser-compiler task edits remain outside this checkpoint; original counters
+are unchanged.
+
+## Previous integration: Ordered RTL lexical contexts — 2026-10-17
 
 Previous goal turn is progress: pushed c05db64 supplies captured SDK namespaces
 and lazy dependency loading. This continuation addresses the real SysUtils

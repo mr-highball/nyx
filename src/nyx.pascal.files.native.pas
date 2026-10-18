@@ -24,10 +24,21 @@ unit nyx.pascal.files.native;
 
 interface
 
-uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
+uses nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.modules, nyx.pascal.translation;
 
 type
+  { Exact virtual origin for an undecodable external source. Original bytes are
+    neither replaced nor interpreted under the analyzer's ANSI codepage. The
+    inherited byte-error contract remains catchable; no private host path is
+    retained. A future explicit encoding/byte-origin contract owns admission. }
+  ENyxPascalSourceEncoding = class(ENyxBytes)
+  private
+    FFile: TNyxPascalPhysicalFile;
+  public
+    constructor CreateForFile(const AFile: TNyxPascalPhysicalFile);
+    property FileReference: TNyxPascalPhysicalFile read FFile;
+  end;
   { Copied native capture policy, separate from application compilation and
     portable source admission. Prefix is virtual; the real directory is supplied
     only to Capture. Budgets include seed files, not just newly read entries.
@@ -83,7 +94,7 @@ function CaptureNyxPascalSourceDirectory(const ADirectory: TNyxText;
 
 implementation
 
-uses Classes, SysUtils, LazFileUtils, nyx.bytes, nyx.pascal.lexing
+uses Classes, SysUtils, LazFileUtils, nyx.pascal.lexing
   {$ifdef windows}, Windows{$endif};
 
 type
@@ -148,6 +159,12 @@ begin
   Result := Self;
   Result.FPrefix := APrefix;
   Result.Validate;
+end;
+
+constructor ENyxPascalSourceEncoding.CreateForFile(const AFile: TNyxPascalPhysicalFile);
+begin
+  inherited Create('An SDK source requires an explicit encoding beyond strict UTF-8');
+  FFile := AFile;
 end;
 
 function TNyxPascalDirectoryOptions.Recursively(AValue: Boolean): TNyxPascalDirectoryOptions;
@@ -499,7 +516,14 @@ begin
       begin
         raise ENyxPascalContext.Create('SDK capture exceeds its file-count budget');
       end;
-      LText := Read(LPath, ACancellation);
+      try
+        LText := Read(LPath, ACancellation);
+      except
+        on ENyxBytes do
+        begin
+          raise ENyxPascalSourceEncoding.CreateForFile(LFile);
+        end;
+      end;
       FFiles := FFiles.WithFile(LFile, LText);
 
       if FFiles.ByteCount > FOptions.FBytes then

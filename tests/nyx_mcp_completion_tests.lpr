@@ -27,7 +27,8 @@ program nyx_mcp_completion_tests;
 uses Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.editing,
   nyx.pascal.completion, nyx.pascal.sources, nyx.pascal.drafts,
   nyx.pascal.completion.owned, nyx.pascal.context, nyx.pascal.files, nyx.pascal.binding,
-  nyx.pascal.modules, nyx.pascal.files.native,
+  nyx.pascal.modules, nyx.pascal.files.native, nyx.pascal.compilertrace,
+  nyx.studio.pascalprofiles,
   nyx.studio.completion.native, nyx.studio.completion, nyx.studio.mcp, nyx.studio.session,
   nyx.studio.projects, nyx.studio.directories, nyx.studio.agents, nyx.studio.outputs,
   nyx.studio.reviews, nyx.studio.workspaces;
@@ -278,10 +279,12 @@ begin
   end;
 end;
 
-{ Indexed mode captures the actual source directory and leaves unknown compiler
-  facts open. Legacy owned mode retains its explicitly controlled minimal System
-  data. Neither starts a compiler/helper, network or protected enrollment. }
-function OwnedProvider(const ARepository: String; AIndexed: Boolean): INyxPascalCompletionProvider;
+{ Indexed mode queries the explicitly configured compiler in a fresh owned child
+  directory, then captures real SDK sources. Unqueried facts remain open. Legacy
+  owned mode retains its controlled minimal System data. No application program,
+  network listener or protected enrollment is started by either branch. }
+function OwnedProvider(const ARepository, ACompiler, ARuntime: String;
+  AIndexed: Boolean): INyxPascalCompletionProvider;
 const
   CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
     'nyx.controls.types.inc', 'nyx.controls.factories.inc', 'nyx.controls.implementation.inc',
@@ -299,10 +302,21 @@ begin
 
   if AIndexed then
   begin
+    LFacts := CaptureNyxFPCCompilerContext(TNyxText(ACompiler),
+      TNyxText(IncludeTrailingPathDelimiter(ARuntime)) + 'compiler-facts',
+      NewNyxFPCCompilerProbe(NyxPascalDefine('SEMANTIC_INDEXED'))
+        .WithSymbol(NyxPascalDefine('PAS2JS'))
+        .WithSymbol(NyxPascalDefine('FPC_DOTTEDUNITS'))
+        .WithSymbol(NyxPascalDefine('UNICODERTL')),
+      TNyxPascalCompilerTraceOptions.Defaults);
+    Check((LFacts.Version.FullNumber > 0) and not LFacts.DefinesComplete and
+      (LFacts.Symbol(NyxPascalDefine('PAS2JS')).IsDefined = ppkFalse),
+      'Indexed semantic completion uses actual compiler facts without sealing unknown names');
+    WriteLn('semantic compiler profile / version=', LFacts.Version.FullNumber,
+      ' observed=', LFacts.SymbolCount);
     LCapture := CaptureNyxPascalSourceDirectory(TNyxText(IncludeTrailingPathDelimiter(ARepository)) + 'src',
       NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
       TNyxPascalDirectoryOptions.Defaults.Under('sdk'));
-    LFacts := LFacts.WithSymbol(NyxPascalDefine('PAS2JS'), ppdUndefined).CompleteDefines(False);
     Exit(NewNyxIndexedPascalCompletionProvider(LFacts, LCapture.Files, LCapture.Modules,
       TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000)));
   end;
@@ -434,7 +448,8 @@ begin
     GStage := 'real SDK provider';
     if (ParamStr(4) = COwnedProviderArgument) or (ParamStr(4) = CIndexedProviderArgument) then
     begin
-      LNative := OwnedProvider(ParamStr(1), ParamStr(4) = CIndexedProviderArgument);
+      LNative := OwnedProvider(ParamStr(1), String(LTools.Field('FPC').AsText),
+        ParamStr(3), ParamStr(4) = CIndexedProviderArgument);
       LGapSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
         .WithBuffer(TNyxPascalSourceRef.Main, TNyxText('unit ') +
           LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail + CSuffix);

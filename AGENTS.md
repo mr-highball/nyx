@@ -4,6 +4,28 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source compiler probes capture actual FPC define/undef/numeric facts and
+explicit queried absences into open immutable contexts. Numbered source-owned
+query notes, exact version/mode/row/H/completion and successful terminal checks
+guard publication. A fresh native host uses the existing process-family owner,
+source lease, bounded pipes/deadline/cancellation and preserves evidence; no probe
+program/assembler/linker runs. Protocol/profile/production semantic 24/18/82 and
+maintained SDK/dependency/owned/modes 22/31/86/41 pass, clean native heaps. Six
+configured compiler invocations qualify three successes and three controlled
+refusals. Nine accepted compiler logs have zero owned warnings (seven upstream);
+two browser consumers compile only. Actual capture is 491 Nyx plus 20 win RTL
+files / 384 modules; full include capture refuses non-UTF-8 strg.inc with a typed
+virtual-file origin, preserving seeds. SysUtils still lacks sysutilh.inc at scalar
+1860. Fifteen focused pins, 559 source/RTL inputs, compiler/configuration bytes,
+five protected files/nine contexts and 349 frozen 7422453 artifacts stay exact;
+all readers join, LAN offline. WORK.md owns receipts/corrections and the return
+to explicit source encoding/original byte origins, then complete RTL/default/
+target/include/macro/language/incremental/adoption/input/quality/parity/delivery.
+Stop probe/protocol/compiler/capture variants; do not infer encoding or rewrite
+external source. No criterion/task/counter/credit/DONE/new tool/schema/rollout
+closes. No HTTP retry, protected configuration/cleanup bypass, deletion or agents.
+Preserve concurrent planning changes outside this checkpoint.
+
 Current-source ordered lexical construction follows known source-mode/comment
 changes through textual includes without rewriting physical text. Each occurrence
 owns its detached lexical view; legacy file-only access refuses ambiguity, while

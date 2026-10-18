@@ -900,6 +900,67 @@ byte, depth, occurrence, state and diagnostic budgets and cancellation still abo
 the unpublished candidate. Full RTL/default/target/include capture, broader modes,
 incremental work, language meaning and Studio input/navigation/parity remain open.
 
+## Capturing facts from a configured FPC compiler
+
+`nyx.pascal.compilertrace` provides an immutable `INyxPascalCompilerProbe` for a
+selected source mode and up to 256 explicit symbol queries, including its eight
+identity/mode guards. Names use `NyxPascalDefine`; persistent additions preserve
+earlier requests. Generated input forces implicit System setup before its query
+block and contains no application source or external includes. It is compiled
+for observation; its program, assembler and linker script are never run.
+
+```pascal
+LProbe := NewNyxFPCCompilerProbe(NyxPascalDefine('SDK_CONTEXT'))
+  .WithSymbol(NyxPascalDefine('PAS2JS'))
+  .WithSymbol(NyxPascalDefine('FPC_DOTTEDUNITS'))
+  .WithSymbol(NyxPascalDefine('UNICODERTL'));
+LFacts := CaptureNyxFPCCompilerContext(LConfiguredCompiler, LFreshPrivateDirectory,
+  LProbe, TNyxPascalCompilerTraceOptions.Defaults);
+```
+
+The native `nyx.studio.pascalprofiles` host uses the existing compiler-process
+family adapter, a fresh private directory, a source read lease, structured
+parameters, `-s -Cn` and numbered English messages. It preserves source/log/
+intermediates and leaves existing directories untouched. Output defaults to
+4 MiB and compiler time to 30 seconds. Cancellation, deadline, excess output and
+failures retire and join the exact process family before returning. A caller's
+inline cancellation interface is retained through retirement. The operation is
+synchronous and opt-in; UI callers need an owning worker. It neither selects an
+application output nor changes Studio/project/compiler configuration. Current
+native qualification is Win32/i386/FPC 3.3.1; the existing process adapter owns
+other-host limits.
+
+The portable reader interprets actual define/undef/value events and explicit
+source-owned query replies. It requires consistent four-part numeric version
+facts, FPC identity, matching mode guards, ordered unique query rows, the H-option
+reply, a successful completion message and terminal zero exit. Failed, truncated,
+foreign, duplicate or contradictory replies refuse atomically. Query notes use
+the compiler's source-qualified message 2025; generic info output lacks those
+positions. Compiler [feedback options](https://www.freepascal.org/docs-html/current/user/usersu13.html)
+describe the selected message classes. Exact signed-32 values use guarded
+arithmetic on both targets; replacements/oversized values remain defined with
+unknown numeric meaning. Source-mode defaults restore only independently
+qualified features, never closure enablement from version capability alone.
+
+`DefinesComplete` stays false. Observed positives and explicitly queried
+absences do not prove the absence of unqueried future symbols. The transcript
+parser is not an authority or execution receipt: its caller owns the actual
+compiler invocation and exact source/job association. Full target/ABI/options,
+custom application configuration, broader compiler/message compatibility and
+default Studio adoption remain required.
+
+Actual SDK continuation also identifies a source-encoding prerequisite:
+`rtl/objpas/sysutils/strg.inc` contains bytes rejected by the current strict UTF-8
+capture. `ENyxPascalSourceEncoding` preserves its virtual file reference while
+remaining an `ENyxBytes` failure; private host paths and guessed ANSI conversion
+are excluded. The complete directory capture refuses without changing prior
+files/modules. The actual RTL build's include path points to that directory,
+but it cannot be published until explicit source encoding and original byte/
+scalar origins are supported. SysUtils therefore still reports its missing
+`sysutilh.inc`, and its interface remains incomplete. This is an open requirement,
+not a reduced SDK target or a successful full-RTL capture. Its replacement-macro
+syntax and broader grammar also remain open.
+
 ## Structured type syntax and physical origins
 
 `nyx.pascal.types` parses a bounded lexical window into an immutable typed arena.
@@ -1202,20 +1263,23 @@ and broader filesystem/platform qualification remain open. Header recognition is
 metadata preparation under the current default lexer, not conditional-wrapper or
 mode-aware declaration proof; loaded root identity remains independently checked.
 
-WORK.md records 31 native dependency checks, 22 native SDK/file checks and 81
+WORK.md records 31 native dependency checks, 22 native SDK/file checks and 82
 production in-process semantic/private-editor checks. The actual repository
-capture has 490 files/378 modules. A badge query loads `nyx.controls` and
+capture has 491 files/379 modules. A badge query loads `nyx.controls` and
 `nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
-Windows RTL files supplies that root (510 files/383 modules). Ordered lexical
+Windows RTL files supplies that root (511 files/384 modules). Ordered lexical
 translation now passes its ObjFPC/OUT setup and reaches the uncaptured
 `sysutilh.inc` at physical scalar 1860. The imported interface remains incomplete;
-explicit real include/default/define capture is the next prerequisite. No export
+explicit encoding/byte origins and real include/default/define capture remain
+prerequisites. No export
 stub or source rewriting turns this qualified boundary into readiness.
 
 The real `TNyxPascalCompilerVersion.FullNumber` record member resolves through the
-indexed production semantic/private-editor paths. Maintained provider 86, binding
-62 and generic 127 checks pass, clean native heaps; three browser consumers compile
-only. Full RTL lexical/default/define/include capture, complete grammar and useful
+indexed production semantic/private-editor paths, now using the configured
+compiler's captured facts. Current protocol/profile checks pass 24/18, with 82
+semantic checks and maintained provider/dependency/modes 86/31/41, clean native
+heaps; two browser consumers compile only. Earlier binding/generic receipts remain
+in WORK.md. Full RTL lexical/default/define/include capture, complete grammar and useful
 expression meaning, dependency invalidation/caching, measured project-scale work,
 default Studio adoption and complete input/navigation/quality/parity/delivery
 remain required. This directory capture is source input preparation, not browser

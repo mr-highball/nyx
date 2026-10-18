@@ -44,6 +44,13 @@ includes, with exact occurrence views and explicit uncertainty. Complete compile
 SDK capture and type/member resolution remain prerequisites to a general language
 engine and its Studio adoption.
 
+An explicit [configured FPC probe](docs/pascal-projects.md#capturing-facts-from-a-configured-fpc-compiler)
+now supplies observed compiler facts and queried absences to the indexed semantic
+consumer without sealing future names. Its native host owns/joins compiler jobs;
+the portable reader also compiles for pas2js. Actual RTL source capture identifies
+an unsupported encoding in strg.inc, requiring original bytes and explicit source
+encoding before full include capture. Default Studio adoption remains open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
