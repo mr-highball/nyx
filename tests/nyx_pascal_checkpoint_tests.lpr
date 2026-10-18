@@ -401,6 +401,13 @@ var
   LBefore: TNyxText;
   LLeftBefore: TNyxText;
   LWork: INyxPascalSyntaxMetadataWork;
+  LAccess: INyxPascalSyntaxMetadataLookupWork;
+  LLookups: Integer;
+  LHits: Integer;
+  LTreeReads: Integer;
+  LLastBaseRun: Integer;
+  LBaseIdentity: IInterface;
+  LReadsValid: Boolean;
   LFamily: Integer;
   LCount: Integer;
 begin
@@ -414,6 +421,32 @@ begin
   LBaseLexical := NewNyxPascalAppendLexical(LText, TNyxPascalLexicalOptions.Defaults);
   LBase := NewNyxPascalSyntaxFromLexical(LBaseLexical, TNyxPascalSyntaxOptions.Defaults);
   LBefore := SnapshotText(LBase);
+  Check(Supports(LBase, INyxPascalSyntaxMetadataLookupWork, LAccess) and
+    (LAccess.MetadataLookups > LAccess.MetadataLookupHits) and
+    (LAccess.MetadataLookupHits > 0) and (LAccess.MetadataLookupTreeReads > 0) and
+    (LAccess.MetadataLookupPeak = 8) and (LAccess.RetainedMetadataLookups = 0),
+    'The large constructor exercises bounded lookup hits, eviction and complete publication retirement');
+  LLookups := LAccess.MetadataLookups;
+  LHits := LAccess.MetadataLookupHits;
+  LTreeReads := LAccess.MetadataLookupTreeReads;
+  LReadsValid := True;
+  for LAt := 1 to 80 do
+  begin
+    LFamily := LBase.Named(0, 'T' + TNyxText(IntToStr(LAt)));
+    LReadsValid := LReadsValid and (LFamily >= 0) and
+      (LBase.Declaration(LFamily).Name = 'T' + TNyxText(IntToStr(LAt))) and
+      (LBase.Named(0, 'Missing' + TNyxText(IntToStr(LAt))) = -1);
+  end;
+  Check(LReadsValid, 'Published reads retain every distinct declared type and exact absent name');
+  Check((LAccess.MetadataLookups = LLookups) and (LAccess.MetadataLookupHits = LHits) and
+    (LAccess.MetadataLookupTreeReads = LTreeReads) and (LAccess.RetainedMetadataLookups = 0),
+    'Published queries cannot refill constructor entries or mutate construction receipts');
+  LLastBaseRun := LBase.Named(0, 'Run');
+  while LBase.Declaration(LLastBaseRun).NextNamed >= 0 do
+  begin
+    LLastBaseRun := LBase.Declaration(LLastBaseRun).NextNamed;
+  end;
+  LBaseIdentity := NyxPascalDeclarationIdentity(LBase, LLastBaseRun);
   LLeftLexical := AppendNyxPascalLexical(LBaseLexical,
     'procedure Run(A:Byte); overload; implementation end.');
   LLeft := AppendNyxPascalSyntax(LBase, LLeftLexical, TNyxPascalSyntaxOptions.Defaults);
@@ -421,6 +454,14 @@ begin
   LRightLexical := AppendNyxPascalLexical(LBaseLexical,
     'procedure Run(A:Word); overload; implementation end.');
   LRight := AppendNyxPascalSyntax(LBase, LRightLexical, TNyxPascalSyntaxOptions.Defaults);
+  Check((LBaseIdentity <> nil) and
+    (NyxPascalDeclarationIdentity(LBase, LLastBaseRun) = LBaseIdentity) and
+    (NyxPascalDeclarationIdentity(LLeft, LLastBaseRun) <> LBaseIdentity) and
+    (NyxPascalDeclarationIdentity(LRight, LLastBaseRun) <> LBaseIdentity) and
+    (NyxPascalDeclarationIdentity(LLeft, LLastBaseRun) <>
+      NyxPascalDeclarationIdentity(LRight, LLastBaseRun)) and
+    (LBase.Declaration(LLastBaseRun).NextNamed = -1),
+    'A cached old row still detaches under a new COW stamp independently in each sibling');
   Check((SnapshotText(LBase) = LBefore) and (SnapshotText(LLeft) = LLeftBefore),
     'A sibling parser cannot mutate earlier declaration/scope/overload links or indexes');
   Check(SnapshotText(LLeft) = SnapshotText(NewNyxPascalSyntaxSnapshot(LText +
@@ -444,6 +485,12 @@ begin
     (LWork.RetainedMetadataValues > LRight.DeclarationCount) and
     (LWork.CopiedMetadataValues < 20) and (LWork.MetadataTreeHeight < 32),
     'Distant overload links copy only affected rows without rebuilding retained indexes');
+  Check(Supports(LRight, INyxPascalSyntaxMetadataLookupWork, LAccess) and
+    (LAccess.MetadataLookupHits > 0) and (LAccess.MetadataLookupPeak <= 8) and
+    (LAccess.RetainedMetadataLookups = 0),
+    'Resumed construction uses only its own bounded entries and retires every row lease');
+  WriteLn('metadata access / lookups=', LLookups, ' hits=', LHits,
+    ' tree-reads=', LTreeReads, ' peak=8 retained=0');
 end;
 
 procedure FilterSeams;

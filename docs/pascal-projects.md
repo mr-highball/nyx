@@ -2407,6 +2407,43 @@ only, and the unchanged full RTL qualification still refuses at its existing
 aggregate ceiling. Full language/editor/incremental/input/quality/parity/adoption/
 delivery remain open.
 
+## Construction-only metadata lookups
+
+The owned parser's metadata constructor retains at most eight exact namespaced
+key/value results, including known absence. A lookup admits its bounded probe
+before examining slots; a miss still admits every real tree-node visit. Root
+insertion prepares an immutable candidate, admits the bounded root/cache update,
+then refreshes that exact key. Other key values remain unchanged. A cached nil
+therefore cannot mask a newly inserted row or name index.
+
+Lookup reuse grants no mutation rights. Capturing a checkpoint still rotates the
+independent COW stamp; editing a cached earlier value detaches it under the new
+stamp and updates the corresponding root/cache entry. Resumed parsers start with
+their own empty lookup slots. Constructor failure publishes no partial snapshot.
+Publication clears every key/value lease and its execution scope; subsequent and
+concurrent queries read immutable tree data without refilling slots or changing
+construction receipts. Private mutation/capture helpers refuse after retirement.
+The cache contains no source/world/reader back reference and is not shared across
+constructors or exposed as a user-facing configuration choice.
+
+Optional `INyxPascalSyntaxMetadataLookupWork` reports construction lookups, hits,
+tree visits, peak entries and retained entries. The counters describe work and
+lifetime, not reuse authority, compiler facts, elapsed time or editor latency.
+The controlled native constructor performs 12,918 lookups with 11,642 hits and
+10,707 actual lookup-tree visits; peak retention is eight and publication leaves
+zero. Distinct positive/negative published queries preserve those counters.
+Sibling overload branches retain independent row identities and unchanged COW
+allocation results. The unchanged small semantic fixture admits 439 work units
+versus the prior 456; all 438 smaller allowances still refuse atomically.
+
+WORK.md owns current-source qualification and limits. Browser consumers compile
+only. The unchanged real RTL run advances beyond the previous round-six refusal,
+through Word and source-driven Longint/Int64 requests, then refuses at the same
+four-million allowance at round 15/lexical-row. It publishes no final System/ObjPas
+semantic/indexed result. Complete language/editor/incremental/input/quality/parity/
+adoption/delivery remain open, with duplicated lexical materialization the next
+concrete preparation concern.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

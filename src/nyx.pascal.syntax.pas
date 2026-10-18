@@ -446,6 +446,20 @@ type
     function CopiedDiagnosticRows: Integer;
     function MetadataTreeHeight: Integer;
   end;
+  { Immutable construction-access receipt. An unpublished parser alone may
+    reuse at most eight exact key/value lookups, including known absence. Each
+    root write refreshes that key; COW stamps independently gate mutation.
+    Publication drops all cached leases. Later/concurrent snapshot reads change
+    none of these counters and retain zero cache entries. These values grant
+    no reuse authority, discounted work, compiler meaning or latency guarantee. }
+  INyxPascalSyntaxMetadataLookupWork = interface(IInterface)
+    ['{0E819411-4909-4447-B541-28AEFB824C72}']
+    function MetadataLookups: Integer;
+    function MetadataLookupHits: Integer;
+    function MetadataLookupTreeReads: Integer;
+    function MetadataLookupPeak: Integer;
+    function RetainedMetadataLookups: Integer;
+  end;
   { Optional declaration-label metadata, with checked snapshot-local ordinals.
     Metadata and typed declarations consume the shared node quota. Lexical lookup
     retains labels for shadowing/DECLARED; value-type/member inference refuses.
@@ -545,6 +559,9 @@ uses nyx.pascal.lexing.append, nyx.pascal.work;
 const
   { Bounded private partial copying; the directory stays flat across appends. }
   CFilterBlockRows = 256;
+  { One bounded probe/update operation covers at most these exact key slots.
+    Entries exist only in the unpublished metadata constructor. }
+  CMetadataReadSlots = 8;
 
 type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
@@ -662,9 +679,11 @@ type
     function Height: Integer;
     function Count: Integer;
   end;
-  { A parser's private root over immutable balanced nodes. Capture is O(1) and
-    rotates the write stamp. Later writes detach only their value/path; published
-    readers and checkpoint roots never change. No owner chain is retained. }
+  { A parser's private root over immutable balanced nodes. Unpublished lookup
+    entries retain exact value/absence results only until retirement. Root writes
+    refresh their key; Capture rotates the COW stamp independently. Later writes
+    still detach their value/path. Published readers use immutable tree reads,
+    with no cache mutation, execution lease or source/owner chain. }
   TMetadataMap = class
   private
     FRoot: IMetadataNode;
@@ -674,6 +693,18 @@ type
     FNodes: Integer;
     { Construction-only outward admission lease, cleared before publication. }
     FExecution: INyxCancellationScope;
+    FConstructing: Boolean;
+    FReadKeys: array of TNyxText;
+    FReadValues: array of IMetadataValue;
+    FReadCount: Integer;
+    FReadNext: Integer;
+    FReadLookups: Integer;
+    FReadHits: Integer;
+    FReadTreeVisits: Integer;
+    FReadPeak: Integer;
+    procedure RequireConstruction;
+    procedure RememberRead(const AKey: TNyxText; const AValue: IMetadataValue);
+    procedure Store(const AKey: TNyxText; const AValue: IMetadataValue);
     function NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
       const ALeft, ARight: IMetadataNode): IMetadataNode;
     function Balance(const AKey: TNyxText; const AValue: IMetadataValue;
@@ -694,6 +725,11 @@ type
     property Copied: Integer read FCopied;
     property Created: Integer read FCreated;
     property AllocatedNodes: Integer read FNodes;
+    property ReadLookups: Integer read FReadLookups;
+    property ReadHits: Integer read FReadHits;
+    property ReadTreeVisits: Integer read FReadTreeVisits;
+    property ReadPeak: Integer read FReadPeak;
+    property RetainedReads: Integer read FReadCount;
   end;
   { Significant lexical ordinal and its raw conditional participation. No source,
     interface or mutable collection is retained in a row. }
@@ -792,7 +828,7 @@ type
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
     INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
     INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork,
-    INyxPascalSyntaxMetadataWork, ISyntaxOwner)
+    INyxPascalSyntaxMetadataWork, INyxPascalSyntaxMetadataLookupWork, ISyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -955,6 +991,11 @@ type
     function AllocatedMetadataNodes: Integer;
     function CopiedDiagnosticRows: Integer;
     function MetadataTreeHeight: Integer;
+    function MetadataLookups: Integer;
+    function MetadataLookupHits: Integer;
+    function MetadataLookupTreeReads: Integer;
+    function MetadataLookupPeak: Integer;
+    function RetainedMetadataLookups: Integer;
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -1263,15 +1304,87 @@ begin
   NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
   FRoot := ARoot;
   FStamp := TInterfacedObject.Create;
+  SetLength(FReadKeys, CMetadataReadSlots);
+  SetLength(FReadValues, CMetadataReadSlots);
+  FConstructing := True;
 end;
 
 procedure TMetadataMap.RetireExecution;
 begin
+  FConstructing := False;
+  SetLength(FReadKeys, 0);
+  SetLength(FReadValues, 0);
+  FReadCount := 0;
+  FReadNext := 0;
   FExecution := nil;
+end;
+
+procedure TMetadataMap.RequireConstruction;
+begin
+
+  if not FConstructing then
+  begin
+    raise ENyxPascalLexical.Create('Published metadata cannot acquire construction rights');
+  end;
+end;
+
+{ Only construction calls this helper. The exact counter refuses overflow;
+  published reads never advance access receipts or touch lookup slots. }
+procedure IncrementMetadataAccess(var ACount: Integer);
+begin
+
+  if ACount = High(Integer) then
+  begin
+    raise ENyxPascalSyntaxLimit.Create('Metadata access exceeds its exact counter domain');
+  end;
+  Inc(ACount);
+end;
+
+procedure TMetadataMap.RememberRead(const AKey: TNyxText; const AValue: IMetadataValue);
+var
+  LAt: Integer;
+begin
+  RequireConstruction;
+  { The caller already admitted its bounded lookup or root-application step.
+    Updating a changed key also replaces a previously cached absence. Other
+    cached values remain exact because a root insertion changes that key only. }
+  for LAt := 0 to FReadCount - 1 do
+  begin
+
+    if FReadKeys[LAt] = AKey then
+    begin
+      FReadValues[LAt] := AValue;
+      Exit;
+    end;
+  end;
+  FReadKeys[FReadNext] := AKey;
+  FReadValues[FReadNext] := AValue;
+  FReadNext := (FReadNext + 1) mod CMetadataReadSlots;
+
+  if FReadCount < CMetadataReadSlots then
+  begin
+    Inc(FReadCount);
+    FReadPeak := FReadCount;
+  end;
+end;
+
+procedure TMetadataMap.Store(const AKey: TNyxText; const AValue: IMetadataValue);
+var
+  LCandidate: IMetadataNode;
+begin
+  RequireConstruction;
+  LCandidate := Insert(FRoot, AKey, AValue);
+  { Tree preparation was admitted at its actual nodes. Admit the bounded root/
+    lookup update before applying either one; failure keeps the earlier root
+    and every cached value exact. No observer can see this unpublished owner. }
+  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+  FRoot := LCandidate;
+  RememberRead(AKey, AValue);
 end;
 
 function TMetadataMap.Capture: IMetadataNode;
 begin
+  RequireConstruction;
   NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
   Result := FRoot;
   FStamp := TInterfacedObject.Create;
@@ -1377,11 +1490,35 @@ end;
 function TMetadataMap.Find(const AKey: TNyxText): IMetadataValue;
 var
   LNode: IMetadataNode;
+  LAt: Integer;
 begin
+  Result := nil;
+
+  if FConstructing then
+  begin
+    { One bounded probe includes at most eight exact comparisons and one slot
+      update. Tree misses still admit every visited node independently. }
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+    IncrementMetadataAccess(FReadLookups);
+    for LAt := 0 to FReadCount - 1 do
+    begin
+
+      if FReadKeys[LAt] = AKey then
+      begin
+        IncrementMetadataAccess(FReadHits);
+        Exit(FReadValues[LAt]);
+      end;
+    end;
+  end;
   LNode := FRoot;
   while LNode <> nil do
   begin
-    NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+
+    if FConstructing then
+    begin
+      NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
+      IncrementMetadataAccess(FReadTreeVisits);
+    end;
 
     if AKey < LNode.Key then
     begin
@@ -1393,10 +1530,15 @@ begin
     end
     else
     begin
-      Exit(LNode.Value);
+      Result := LNode.Value;
+      Break;
     end;
   end;
-  Result := nil;
+
+  if FConstructing then
+  begin
+    RememberRead(AKey, Result);
+  end;
 end;
 
 function MetadataKey(AKind: TMetadataKind; const AKey: TNyxText): TNyxText;
@@ -1423,6 +1565,7 @@ var
   LValue: IMetadataValue;
   LCreated: TMetadataValue;
 begin
+  RequireConstruction;
 
   if AIndex < 0 then
   begin
@@ -1476,14 +1619,14 @@ begin
     end;
     LValue := LCreated;
     LCreated.OwnerStamp := FStamp;
-    FRoot := Insert(FRoot, LKey, LValue);
+    Store(LKey, LValue);
     Inc(FCreated);
   end
   else if LValue.Stamp <> FStamp then
   begin
     NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
     LValue := LValue.Detach(FStamp);
-    FRoot := Insert(FRoot, LKey, LValue);
+    Store(LKey, LValue);
     Inc(FCopied);
   end;
   Result := LValue.Borrow;
@@ -1508,6 +1651,7 @@ var
   LValue: TOrdinalValue;
   LLease: IMetadataValue;
 begin
+  RequireConstruction;
   LKey := MetadataKey(AKind, AKey);
 
   if Find(LKey) <> nil then
@@ -1519,7 +1663,7 @@ begin
   LLease := LValue;
   LValue.OwnerStamp := FStamp;
   LValue.Value := AValue;
-  FRoot := Insert(FRoot, LKey, LLease);
+  Store(LKey, LLease);
   Inc(FCreated);
 end;
 
@@ -5202,6 +5346,31 @@ end;
 function TSyntaxSnapshot.MetadataTreeHeight: Integer;
 begin
   Result := FMetadata.Height;
+end;
+
+function TSyntaxSnapshot.MetadataLookups: Integer;
+begin
+  Result := FMetadata.ReadLookups;
+end;
+
+function TSyntaxSnapshot.MetadataLookupHits: Integer;
+begin
+  Result := FMetadata.ReadHits;
+end;
+
+function TSyntaxSnapshot.MetadataLookupTreeReads: Integer;
+begin
+  Result := FMetadata.ReadTreeVisits;
+end;
+
+function TSyntaxSnapshot.MetadataLookupPeak: Integer;
+begin
+  Result := FMetadata.ReadPeak;
+end;
+
+function TSyntaxSnapshot.RetainedMetadataLookups: Integer;
+begin
+  Result := FMetadata.RetainedReads;
 end;
 
 function NyxPascalDeclarationIdentity(const ASource: INyxPascalSyntaxSnapshot;

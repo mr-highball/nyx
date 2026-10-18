@@ -9,7 +9,30 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Frozen-prefix prerequisite (2026-10-18): exact owned freezes now prepare immutable
+Metadata-access prerequisite (2026-10-18): an unpublished parser now retains at
+most eight exact lookup results, including absence, while root writes refresh
+the changed key. Independent COW stamps still detach cached earlier rows before
+mutation. Publication clears all key/value/execution leases; published/concurrent
+reads remain immutable and cannot refill entries or alter receipts. Probes, root
+application and remaining tree visits are admitted before execution. Native
+checkpoint/cache checks pass 4,396, including distinct positive/negative reads,
+bounded eviction, exact sibling identity/ownership and original differential/
+refusal coverage. The controlled constructor has 12,918 lookups/11,642 hits/
+10,707 lookup-tree reads, peak eight/retained zero; COW allocations stay unchanged.
+Unchanged work checks pass 479 with an actual 439-unit exact fit and all 438
+smaller allowances; the earlier exact fit was 456. These are actual work receipts,
+not CPU/latency or full engine completion. The unchanged original RTL advances
+through Word/Longint/Int64 requests, then refuses at four million units, round 15/
+lexical-row with clean heap and no final semantic/indexed result. WORK.md owns
+frozen wider/remote/preservation evidence and the return to duplicated lexical
+materialization through existing lexing/append owners. All 40 maintained native
+consumers and 81 accepted compiler jobs pass with zero owned warnings; browser
+consumers compile only. Current-start protected bytes/nine contexts/349 artifacts
+stay exact; the prior external configuration delta remains outside an original
+five-file preservation pass. Full original criterion/task/credit/DONE/editor/input/
+quality/parity/adoption/delivery remain open.
+
+Historical frozen-prefix prerequisite (2026-10-18): exact owned freezes now prepare immutable
 token-domain summaries by validating only appended rows and copying occurrence
 offsets. Source-free summaries retain no source/context/reader/callback/previous
 summary. The construction cache retires on every exit; detached windows remain
@@ -27,7 +50,7 @@ the frozen wider qualification, retained fixture/interruption evidence, source/
 remote identity and remaining real metadata/parser costs. Full original criterion/
 task/credit/DONE/editor/input/quality/parity/adoption/delivery remain open.
 
-Final qualification is composite after the context refresh: completed jobs are
+That historical qualification is composite after the context refresh: completed jobs are
 retained, three partial logs stay separate and only unfinished jobs resume. All
 40 maintained native consumers and 81 accepted successful compiler jobs pass
 with zero owned warnings; browser consumers compile only. The original RTL still

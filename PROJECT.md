@@ -90,8 +90,10 @@ now admit real repeated scans, copies, parser/type/binding and evaluator work
 before execution. Existing numeric ceilings stay unchanged; original RTL still
 refuses within those ceilings. [Sealed prefix summaries](docs/pascal-projects.md#sealed-frozen-prefix-summaries)
 now validate only appended token rows at exact owned boundaries; arbitrary cuts
-retain complete validation. Directive/diagnostic copying, metadata costs and full
-engine/editor quality and adoption remain required.
+retain complete validation. [Construction-only metadata lookups](docs/pascal-projects.md#construction-only-metadata-lookups)
+now reuse exact key results until publication, with independent COW stamps and
+no mutable cache in published readers. Duplicated lexical materialization,
+directive/diagnostic copying and full engine/editor quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Sealed frozen-prefix token summaries — 2026-10-18
+## Current integration: Construction-only metadata lookup reuse — 2026-10-18
+
+bb4791a removes repeated exact prefix-token validation while the original RTL
+still exhausts metadata-node admission at round six/55,279 translated tokens.
+Reassessment after forty-five unclosed authoring batches follows repeated
+construction-time metadata lookup through existing syntax/binding ownership.
+Each root insertion changes one key; an unpublished constructor can retain exact
+results for that current map without sharing mutable lookup state with a snapshot.
+This concrete prerequisite serves original criterion two; no smaller criterion,
+numeric quota change or guessed telemetry discount replaces the full outcome.
+
+The constructor now retains at most eight exact namespaced key/value results,
+including nil. Lookups admit a bounded probe; misses still admit every real tree
+visit. A root write prepares its immutable candidate, then admits and applies
+the bounded root/cache update together. Changed keys replace cached absence or
+older rows; unrelated cached values remain exact. Capture still rotates the COW
+stamp independently, so a cached earlier row must detach before mutation. Each
+resumed constructor starts empty. Publication clears all cached key/value leases
+and execution scope; later/concurrent readers traverse immutable data without
+cache writes or mutable counters. Private write/capture helpers refuse after
+retirement. No source/world/reader owner chain or public cache configuration is
+introduced. Optional library receipts expose immutable construction counts only;
+no MCP tool/schema or persistence format changes.
+
+Final native checkpoint/cache checks pass 4,396, clean heap. The controlled large
+constructor performs 12,918 lookups/11,642 hits/10,707 lookup-tree visits, peak
+eight/retained zero. Distinct positive/negative public reads leave these counters
+unchanged. Independent sibling overload branches detach the cached earlier row
+under their own stamps while retaining the base identity and exact whole-source
+meaning; their predecessor can retire independently. Existing every-scalar
+append, rich metadata, Unicode, cancellation and quota differential checks stay
+intact. COW preparation remains 481 retained/six copied/four created values and
+100 versus 6,241 fresh tree allocations, height ten. Lookup reuse changes no
+underlying tree allocation/result contract. The work fixture's source is unchanged:
+479 checks pass at an actual 439-unit exact fit versus prior 456, with all 438
+smaller allowances refusing. Counts vary with actual admitted work, not removed
+cases. These receipts qualify preparation, not CPU time or editor latency.
+
+Preflight native consumers and browser compilation pass without a product/test
+failure. The final test consolidates repeated read assertions into one check over
+distinct declared/absent names; no original acceptance oracle or original RTL
+consumer changes. Two functional sources freeze before wider qualification; no
+later source/layout overlay is accepted. The historical emission compiler log
+stays a read-only input. The ignored packet located by
+`.local/metadata-readcache-paths-private.json` owns exact receipts and identity.
+
+The unchanged real RTL reader advances beyond the prior round-six stop to its
+existing Word measurement and source-driven Longint then Int64 requests. It still
+refuses atomically, clean heap: lexical-row phase, used 4,000,000/requested one/
+limit 4,000,000, translated 224,739, logical round 15. No final System/ObjPas
+semantic/indexed result is published. Original source/consumer, five initial
+queries, explicit Word job, symbol preparation three/eight, generic fact ceiling
+eight and 2M view/4M aggregate/64 rounds remain unchanged. The exhausted operation
+is an admission boundary, not a complete CPU profile. Existing append construction
+materializes lexical rows from an already completed scanner result; eliminating
+that duplicate preparation is the next concrete lexing/append prerequisite.
+Delegated or lazy work must remain admitted rather than merely moving cost past
+the guard. Complete language/type/module/editor meaning remains open.
+
+Final frozen qualification accepts 81 successful compiler logs with zero owned
+warnings/182 unchanged upstream warnings. All 40 maintained native consumers,
+five additional focused consumers and the actual-source lexical read pass with
+clean heaps: 46 passing logs. Native syntax covers 7,934 checks/five actual inputs/
+3,865 declarations; the lexical corpus retains 501 actual files/2,319,128 lossless
+tokens. Both Studios/backend/worker and 33 browser consumers compile as applicable;
+browser execution, input and parity remain unqualified. Every qualification group
+joins normally without an interrupted/resumed overlay. The separate original RTL
+failure above remains a failed acceptance gate, excluded from passing totals.
+
+Two focused/661 maintained/97 RTL/24 compiler inputs plus three inspected compiler
+inputs remain pinned; 660 unrelated maintained sources stay exact. All 156 original
+unit packets/48 retained includes, nine project contexts, 349 frozen 7422453
+artifacts and thirteen concurrent planning files remain exact. All five protected
+files retain this batch's starting bytes with no new configuration delta. The prior
+external Codex configuration change still differs from the original baseline;
+its retained failure is not a full five-file preservation pass. Terminal receipts
+show zero packet readers/Studio listeners and no native Nyx MCP tools. The packet's
+final checkpoint owns qualified working/committed blob identity, branch/remote
+receipt and next action; only the six owned files belong to this checkpoint.
+
+Stop cache/fixture/oracle/compiler/capture variants after this frozen batch.
+Reassess direct immutable lexical-row preparation through existing lexing/append/
+projection owners, preserving scalar/byte/storage origins, lookahead repair,
+diagnostics, ownership/retirement, source/context identity, cancellation and both
+caps. Full language/editor/incremental/input/quality/parity/adoption/delivery and
+every original criterion/task/credit/DONE remain open across at least forty-six
+batches. LAN stays offline. No host/config retry, protected writes, browser/HTTP/
+file execution/capture, cleanup/restart, approval bypass, new MCP tool/schema/
+rollout or sub-agent occurs. The prior external Codex configuration delta remains
+recorded; no restoration or original five-file preservation closure is implied.
+
+## Previous integration: Sealed frozen-prefix token summaries — 2026-10-18
 
 b9c756e qualifies actual phase-work admission but still validates every earlier
 token at each frozen-prefix boundary. Reassessment after forty-four unclosed
