@@ -214,6 +214,34 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
+  { Detached tokens already scanned at a construction boundary. The exact source
+    is retained, but its unseen suffix grants no lexical authority. There is no
+    manufactured EOF and this deliberately is not a complete lexical snapshot.
+    Frozen values own no reader, visitor, cancellation scope or mutable vector. }
+  INyxPascalLexicalPrefix = interface(IInterface)
+    ['{5BA41120-48A0-4B45-B021-71F0517C6980}']
+    function Source: TNyxText;
+    function ScannedScalars: Integer;
+    function Count: Integer;
+    function Token(AIndex: Integer): TNyxPascalToken;
+    function Text(AIndex: Integer): TNyxText;
+    function DiagnosticCount: Integer;
+    function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
+  end;
+  { Revocable construction borrow. Freeze copies the already scanned prefix at
+    the current synchronous callback; after the reader retires, Freeze refuses.
+    Retaining this capability does not keep its borrowed lexer alive. }
+  INyxPascalLexicalPrefixCapture = interface(IInterface)
+    ['{16A6A7AC-A9B2-4375-84A1-47B64F0E47C8}']
+    function Freeze: INyxPascalLexicalPrefix;
+  end;
+  { Optional visitor lifecycle, used only by source-aware translation. The
+    capture may be retained during synchronous token visits; detached prefixes
+    survive independently. Ordinary observers keep their existing contract. }
+  INyxPascalLexicalConstructionObserver = interface(IInterface)
+    ['{40EF33CA-E132-4504-9275-0550630BF134}']
+    procedure BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
+  end;
   { Synchronous construction-only visitor. Each complete token (including EOF)
     arrives once before scanning its successor. A translator may change the next
     block comment's nesting policy after a directive or textual include. The
@@ -355,6 +383,31 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
+  { Copies only admitted token/diagnostic rows while the source is paused. Full
+    source storage is immutable; a later scan cannot extend or alter this view. }
+  TFrozenLexicalPrefix = class(TInterfacedObject, INyxPascalLexicalPrefix)
+  private
+    FSource: TNyxText;
+    FScalars: Integer;
+    FTokens: array of TNyxPascalToken;
+    FDiagnostics: array of TNyxPascalLexicalDiagnostic;
+  public
+    constructor Create(AReader: TLexicalSnapshot);
+    function Source: TNyxText;
+    function ScannedScalars: Integer;
+    function Count: Integer;
+    function Token(AIndex: Integer): TNyxPascalToken;
+    function Text(AIndex: Integer): TNyxText;
+    function DiagnosticCount: Integer;
+    function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
+  end;
+  { Owns no lexer reference. The constructor's local lease guarantees this
+    bridge is detached on success and every exception path before retirement. }
+  TLexicalPrefixCapture = class(TInterfacedObject, INyxPascalLexicalPrefixCapture)
+  public
+    Reader: TLexicalSnapshot;
+    function Freeze: INyxPascalLexicalPrefix;
+  end;
 
 var
   { Initialized once, then read-only. Tables own only immutable syntax spellings
@@ -469,6 +522,10 @@ end;
 constructor TLexicalSnapshot.Create(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope;
   const AObserver: INyxPascalLexicalObserver);
+var
+  LObserver: INyxPascalLexicalConstructionObserver;
+  LCapture: TLexicalPrefixCapture;
+  LLease: INyxPascalLexicalPrefixCapture;
 begin
   inherited Create;
   AOptions.Validate;
@@ -494,13 +551,107 @@ begin
   FStorage := 1;
   FLine := 1;
   FColumn := 1;
+  LCapture := nil;
   try
+
+    if Supports(AObserver, INyxPascalLexicalConstructionObserver, LObserver) then
+    begin
+      LCapture := TLexicalPrefixCapture.Create;
+      LLease := LCapture;
+      LCapture.Reader := Self;
+      LObserver.BeginRead(LLease);
+    end;
     Build;
   finally
+
+    if LCapture <> nil then
+    begin
+      LCapture.Reader := nil;
+    end;
     FCancellation := nil;
     FObserver := nil;
     FRegionObserver := nil;
   end;
+end;
+
+constructor TFrozenLexicalPrefix.Create(AReader: TLexicalSnapshot);
+var
+  LAt: Integer;
+begin
+  inherited Create;
+  AReader.CheckCancellation;
+  FSource := AReader.FSource;
+  FScalars := AReader.FOffset;
+  SetLength(FTokens, AReader.FTokenCount);
+  for LAt := 0 to High(FTokens) do
+  begin
+    AReader.CheckCancellation;
+    FTokens[LAt] := AReader.FTokens[LAt];
+  end;
+  SetLength(FDiagnostics, AReader.FDiagnosticCount);
+  for LAt := 0 to High(FDiagnostics) do
+  begin
+    AReader.CheckCancellation;
+    FDiagnostics[LAt] := AReader.FDiagnostics[LAt];
+  end;
+end;
+
+function TLexicalPrefixCapture.Freeze: INyxPascalLexicalPrefix;
+begin
+
+  if Reader = nil then
+  begin
+    raise ENyxPascalLexical.Create('The lexical construction borrow has retired');
+  end;
+  Result := TFrozenLexicalPrefix.Create(Reader);
+end;
+
+function TFrozenLexicalPrefix.Source: TNyxText;
+begin
+  Result := FSource;
+end;
+
+function TFrozenLexicalPrefix.ScannedScalars: Integer;
+begin
+  Result := FScalars;
+end;
+
+function TFrozenLexicalPrefix.Count: Integer;
+begin
+  Result := Length(FTokens);
+end;
+
+function TFrozenLexicalPrefix.Token(AIndex: Integer): TNyxPascalToken;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FTokens)) then
+  begin
+    raise ENyxPascalLexical.Create('Token index is outside the frozen lexical prefix');
+  end;
+  Result := FTokens[AIndex];
+end;
+
+function TFrozenLexicalPrefix.Text(AIndex: Integer): TNyxText;
+var
+  LToken: TNyxPascalToken;
+begin
+  LToken := Token(AIndex);
+  Result := Copy(FSource, LToken.FStorage, LToken.FStorageLength);
+end;
+
+function TFrozenLexicalPrefix.DiagnosticCount: Integer;
+begin
+  Result := Length(FDiagnostics);
+end;
+
+function TFrozenLexicalPrefix.Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FDiagnostics)) then
+  begin
+    raise ENyxPascalLexical.Create('Diagnostic index is outside the frozen lexical prefix');
+  end;
+  Result := FDiagnostics[AIndex];
 end;
 
 procedure TLexicalSnapshot.CheckCancellation;

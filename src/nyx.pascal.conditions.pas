@@ -29,6 +29,33 @@ uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.binding;
 
 type
+  { Stage whose next real work could not be admitted. A source token, frozen/
+    parsed prefix token and constant-evaluation step use the same aggregate
+    allowance; none is discounted merely because its source was seen earlier. }
+  TNyxPascalConditionalWorkPhase = (pcwpTranslation, pcwpPrefix, pcwpConstant);
+  { Atomic streaming-work refusal. Counters describe the failed admission, not
+    an estimated completed pass. Values own no partial source or callback. The
+    separate ENyxPascalTokenLimit still identifies the unchanged full-view cap. }
+  ENyxPascalConditionalWorkLimit = class(ENyxPascalTranslationLimit)
+  private
+    FPhase: TNyxPascalConditionalWorkPhase;
+    FWorkBefore: Integer;
+    FRequested: Integer;
+    FMaximum: Integer;
+    FTranslated: Integer;
+    FRound: Integer;
+  public
+    { Counts are nonnegative and the aggregate maximum is positive. Requested
+      work exceeds the remaining allowance; the refinement round is one-based. }
+    constructor Create(APhase: TNyxPascalConditionalWorkPhase; AWorkBefore,
+      ARequested, AMaximum, ATranslated, ARound: Integer); reintroduce;
+    property Phase: TNyxPascalConditionalWorkPhase read FPhase;
+    property WorkBefore: Integer read FWorkBefore;
+    property Requested: Integer read FRequested;
+    property Maximum: Integer read FMaximum;
+    property Translated: Integer read FTranslated;
+    property RefinementRound: Integer read FRound;
+  end;
   { Which unchanged ceiling selected the failed translation's active cap. A tie
     retains both constraints; it is never mislabeled as a measured bottleneck. }
   TNyxPascalConditionalTokenScope = (pctsView, pctsAggregate, pctsViewAndAggregate);
@@ -74,7 +101,9 @@ type
     property MaximumTokens: Integer read FTokens;
   end;
   { Detached construction receipt. Source owns the exact final frozen files and
-    ordinary translation diagnostics. Work counts every pass and parsed prefix;
+    ordinary translation diagnostics. Work counts newly translated tokens,
+    frozen/parsed prefixes and constant steps. Passes retains the logical
+    refinement-round count (Answers + 1), not physical source traversal count;
     Pending identifies unresolved semantic authority, not compiler admission.
     Neither input world nor temporary binding sites survive this result. }
   INyxPascalSemanticTranslation = interface(IInterface)
@@ -88,10 +117,21 @@ type
     function BindingIssue: TNyxPascalBindingIssue;
     function RelatedName: TNyxText;
   end;
+  { Detached actual admission totals. TranslationTokens counts newly stored
+    source tokens once, PrefixTokens counts each frozen/parsed analysis prefix,
+    and ConstantSteps counts the evaluator's admitted steps. Their sum equals
+    WorkTokens. No timing, incremental-edit or compiler-execution claim follows. }
+  INyxPascalSemanticWork = interface(IInterface)
+    ['{E861FCCE-26B8-4CE1-AC36-C4717D79272B}']
+    function TranslationTokens: Integer;
+    function PrefixTokens: Integer;
+    function ConstantSteps: Integer;
+  end;
 
-{ Refine the first unknown conditional using only its already translated prefix.
-  Every accepted answer is replayed at the exact site/expression/context on the
-  next pass over the same frozen input. No authored text or closing syntax is
+{ Resolve source-scoped conditions during one ordered traversal, using detached
+  frozen pre-directive tokens and exact context at each synchronous source site.
+  The first unanswered query blocks later source answers; no unseen declaration
+  or unknown suffix state grants authority. No authored text or closing syntax is
   manufactured. Imported meanings come only from the supplied immutable world;
   missing modules/types/measurements remain explicit. Cancellation and resource
   refusal publish no partial receipt. World and context must belong to the same
@@ -110,36 +150,16 @@ uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.values,
   nyx.pascal.requirements;
 
 type
-  { One sealed source query/answer. Context is owned in this class, never in a
-    record/static interface vector. It retains no translation, world or callback. }
-  TConditionalAnswer = class
-    Origin: TNyxPascalConditionOrigin;
-    Context: INyxPascalCompilerContext;
-    Expression: TNyxText;
-    Truth: TNyxPascalKnowledge;
-  end;
-  { Construction-only replay authority. Earlier decisions are immutable and
-    checked in order. The first unanswered query is owned once; later unknown
-    branches cannot donate declarations to that earlier query. }
-  TConditionalReplay = class(TInterfacedObject, INyxPascalConditionalFacts)
-  public
-    Values: array of TConditionalAnswer;
-    Next: Integer;
-    Question: TConditionalAnswer;
-    destructor Destroy; override;
-    procedure BeginPass;
-    procedure EndPass;
-    procedure Accept(ATruth: TNyxPascalKnowledge);
-    function Evaluate(const AOrigin: TNyxPascalConditionOrigin;
-      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): TNyxPascalKnowledge;
-  end;
   { Owns final data only. Publication happens after construction/checks; failure
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
-    INyxPascalCompilerRequirements)
+    INyxPascalCompilerRequirements, INyxPascalSemanticWork)
   public
     Snapshot: INyxPascalTranslation;
     Tokens: Integer;
+    SourceWork: Integer;
+    PrefixWork: Integer;
+    ConstantWork: Integer;
     Rounds: Integer;
     Accepted: Integer;
     HasQuestion: Boolean;
@@ -149,6 +169,9 @@ type
     Requirements: INyxPascalCompilerRequirements;
     function Source: INyxPascalTranslation;
     function WorkTokens: Integer;
+    function TranslationTokens: Integer;
+    function PrefixTokens: Integer;
+    function ConstantSteps: Integer;
     function Passes: Integer;
     function Answers: Integer;
     function Pending: Boolean;
@@ -173,6 +196,62 @@ type
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
   end;
+  { Synchronous source authority during one traversal. Data is borrowed from the
+    factory's live result lease; frozen prefix worlds point outward to immutable
+    values and are released after each query. The first unanswered condition
+    blocks later source answers. No published result retains this authority. }
+  TConditionalReader = class(TInterfacedObject, INyxPascalConditionalFacts,
+    INyxPascalPrefixConditionalFacts, INyxPascalTranslationWork)
+  private
+    FPrepared: Boolean;
+    FLegacy: Boolean;
+    FContext: INyxPascalCompilerContext;
+    FExpression: TNyxText;
+    FOrigin: TNyxPascalConditionOrigin;
+    FPlan: INyxPascalConstantPlan;
+    procedure CheckCancellation;
+    procedure Admit(AWork: Integer; APhase: TNyxPascalConditionalWorkPhase);
+  public
+    Data: TSemanticTranslation;
+    World: INyxPascalSemanticWorld;
+    Options: TNyxPascalConditionalOptions;
+    SyntaxOptions: TNyxPascalSyntaxOptions;
+    Cancellation: INyxCancellationScope;
+    procedure AdmitToken(ATokensBefore, AViewLimit: Integer);
+    function PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): Boolean;
+    function EvaluatePrefix(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+      const APrefix: INyxPascalTranslation): TNyxPascalKnowledge;
+    function Evaluate(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): TNyxPascalKnowledge;
+  end;
+
+constructor ENyxPascalConditionalWorkLimit.Create(APhase: TNyxPascalConditionalWorkPhase;
+  AWorkBefore, ARequested, AMaximum, ATranslated, ARound: Integer);
+const
+  CPhases: array[TNyxPascalConditionalWorkPhase] of String =
+    ('translation', 'prefix', 'constant');
+begin
+
+  if (Ord(APhase) < Ord(Low(TNyxPascalConditionalWorkPhase))) or
+    (Ord(APhase) > Ord(High(TNyxPascalConditionalWorkPhase))) or
+    (AMaximum < 1) or (AWorkBefore < 0) or (AWorkBefore > AMaximum) or
+    (ARequested < 1) or (ARequested <= AMaximum - AWorkBefore) or
+    (ATranslated < 0) or (ARound < 1) then
+  begin
+    raise ENyxPascalContext.Create('Conditional work refusal needs exact exhausted admission counts');
+  end;
+  inherited CreateFmt('Ordered conditional work exceeds its aggregate budget ' +
+    '[phase=%s used=%d requested=%d limit=%d translated=%d round=%d]',
+    [CPhases[APhase], AWorkBefore, ARequested, AMaximum, ATranslated, ARound]);
+  FPhase := APhase;
+  FWorkBefore := AWorkBefore;
+  FRequested := ARequested;
+  FMaximum := AMaximum;
+  FTranslated := ATranslated;
+  FRound := ARound;
+end;
 
 constructor ENyxPascalConditionalTokenLimit.Create(ATokenCount, AActiveLimit,
   AUsedBeforePass, AAggregateLimit, AViewLimit, APassIndex: Integer);
@@ -252,82 +331,6 @@ begin
   Result.Validate;
 end;
 
-destructor TConditionalReplay.Destroy;
-var
-  LAt: Integer;
-begin
-  Question.Free;
-  for LAt := 0 to High(Values) do
-  begin
-    Values[LAt].Free;
-  end;
-  inherited Destroy;
-end;
-
-procedure TConditionalReplay.BeginPass;
-begin
-  Question.Free;
-  Question := nil;
-  Next := 0;
-end;
-
-procedure TConditionalReplay.EndPass;
-begin
-
-  if Next <> Length(Values) then
-  begin
-    raise ENyxPascalTranslationLimit.Create('A sealed conditional answer was not consumed in order');
-  end;
-end;
-
-procedure TConditionalReplay.Accept(ATruth: TNyxPascalKnowledge);
-var
-  LAt: Integer;
-begin
-
-  if (Question = nil) or not (ATruth in [ppkFalse, ppkTrue]) then
-  begin
-    raise ENyxPascalTranslationLimit.Create('Only a known owned conditional answer can be sealed');
-  end;
-  Question.Truth := ATruth;
-  LAt := Length(Values);
-  SetLength(Values, LAt + 1);
-  Values[LAt] := Question;
-  Question := nil;
-end;
-
-function TConditionalReplay.Evaluate(const AOrigin: TNyxPascalConditionOrigin;
-  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): TNyxPascalKnowledge;
-var
-  LExpected: TConditionalAnswer;
-begin
-  Result := ppkUnknown;
-
-  if Next < Length(Values) then
-  begin
-    LExpected := Values[Next];
-
-    if (LExpected.Origin.FileReference.Name <> AOrigin.FileReference.Name) or
-      (LExpected.Origin.Occurrence <> AOrigin.Occurrence) or
-      (LExpected.Origin.Span.Start <> AOrigin.Span.Start) or
-      (LExpected.Origin.Span.Length <> AOrigin.Span.Length) or
-      (LExpected.Origin.PrefixCount <> AOrigin.PrefixCount) or
-      (LExpected.Expression <> AExpression) or not LExpected.Context.SameFacts(AContext) then
-    begin
-      raise ENyxPascalTranslationLimit.Create('A sealed conditional answer lost exact source authority');
-    end;
-    Inc(Next);
-    Exit(LExpected.Truth);
-  end;
-
-  if Question = nil then
-  begin
-    Question := TConditionalAnswer.Create;
-    Question.Origin := AOrigin;
-    Question.Context := AContext;
-    Question.Expression := AExpression;
-  end;
-end;
 
 function TSemanticTranslation.Source: INyxPascalTranslation;
 begin
@@ -337,6 +340,21 @@ end;
 function TSemanticTranslation.WorkTokens: Integer;
 begin
   Result := Tokens;
+end;
+
+function TSemanticTranslation.TranslationTokens: Integer;
+begin
+  Result := SourceWork;
+end;
+
+function TSemanticTranslation.PrefixTokens: Integer;
+begin
+  Result := PrefixWork;
+end;
+
+function TSemanticTranslation.ConstantSteps: Integer;
+begin
+  Result := ConstantWork;
 end;
 
 function TSemanticTranslation.Passes: Integer;
@@ -499,223 +517,266 @@ begin
   end;
 end;
 
+
+procedure TConditionalReader.CheckCancellation;
+begin
+
+  if (Cancellation <> nil) and Cancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Semantic conditional analysis cancelled');
+  end;
+end;
+
+procedure TConditionalReader.Admit(AWork: Integer; APhase: TNyxPascalConditionalWorkPhase);
+begin
+  CheckCancellation;
+
+  if AWork < 0 then
+  begin
+    raise ENyxPascalContext.Create('Conditional work cannot be negative');
+  end;
+
+  if AWork > Options.MaximumTokens - Data.Tokens then
+  begin
+    raise ENyxPascalConditionalWorkLimit.Create(APhase, Data.Tokens,
+      AWork, Options.MaximumTokens, Data.SourceWork, Data.Rounds);
+  end;
+  Inc(Data.Tokens, AWork);
+  case APhase of
+    pcwpTranslation: Inc(Data.SourceWork, AWork);
+    pcwpPrefix: Inc(Data.PrefixWork, AWork);
+    pcwpConstant: Inc(Data.ConstantWork, AWork);
+  end;
+end;
+
+procedure TConditionalReader.AdmitToken(ATokensBefore, AViewLimit: Integer);
+begin
+
+  if (ATokensBefore <> Data.SourceWork) or (ATokensBefore >= AViewLimit) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('Conditional token admission lost its single-traversal identity');
+  end;
+  Admit(1, pcwpTranslation);
+end;
+
+function TConditionalReader.PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
+  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): Boolean;
+var
+  LNeeds: INyxPascalConditionNeeds;
+  LDeclarations: INyxPascalConditionDeclarations;
+begin
+  CheckCancellation;
+  Result := False;
+
+  if Data.HasQuestion then
+  begin
+    Exit;
+  end;
+
+  if FPrepared or (AOrigin.PrefixCount <> Data.SourceWork - 1) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('Conditional prefix preparation lost its ordered source site');
+  end;
+  Data.HasQuestion := True;
+  Data.Site := AOrigin;
+  Data.Issue := pbiCompilerContext;
+  Data.Related := '';
+  Data.Requirements := nil;
+  LNeeds := PlanNyxPascalCondition(AContext, AExpression);
+  Supports(LNeeds, INyxPascalConditionDeclarations, LDeclarations);
+  FLegacy := LNeeds.SyntaxSupported and (LNeeds.SymbolCount = 0) and
+    ((LNeeds.SizeCount > 0) or ((LDeclarations <> nil) and
+      (LDeclarations.DeclarationCount > 0)));
+  FPlan := nil;
+
+  if not FLegacy then
+  begin
+
+    if AContext.Family <> ppcFPC then
+    begin
+      Exit;
+    end;
+    FPlan := PlanNyxPascalConstant(AExpression,
+      TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional), Cancellation);
+
+    if not FPlan.SyntaxSupported then
+    begin
+      Exit;
+    end;
+  end;
+  Admit(AOrigin.PrefixCount, pcwpPrefix);
+  FOrigin := AOrigin;
+  FContext := AContext;
+  FExpression := AExpression;
+  FPrepared := True;
+  Result := True;
+end;
+
+function TConditionalReader.EvaluatePrefix(const AOrigin: TNyxPascalConditionOrigin;
+  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+  const APrefix: INyxPascalTranslation): TNyxPascalKnowledge;
+var
+  LView: INyxPascalTranslatedSyntax;
+  LWorld: INyxPascalSemanticWorld;
+  LMeanings: TScopeMeanings;
+  LSemanticOwner: INyxPascalConditionSemantics;
+  LName: TNyxText;
+  LModule: Integer;
+  LCaret: Integer;
+  LScope: Integer;
+  LAnalysis: TNyxPascalConditionResult;
+  LOptions: TNyxPascalConstantOptions;
+  LValue: INyxPascalConstantResult;
+  LRemaining: Integer;
+  LBoolean: Boolean;
+begin
+  CheckCancellation;
+  Result := ppkUnknown;
+
+  if not FPrepared or (APrefix = nil) or
+    (APrefix.Count <> FOrigin.PrefixCount) or
+    (AOrigin.FileReference.Name <> FOrigin.FileReference.Name) or
+    (AOrigin.Occurrence <> FOrigin.Occurrence) or
+    (AOrigin.Span.Start <> FOrigin.Span.Start) or
+    (AOrigin.Span.Length <> FOrigin.Span.Length) or
+    (AOrigin.PrefixCount <> FOrigin.PrefixCount) or
+    (AExpression <> FExpression) or not FContext.SameFacts(AContext) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('A frozen conditional prefix lost its exact prepared authority');
+  end;
+  try
+
+    if not APrefix.Resolved then
+    begin
+      Data.Issue := pbiIncompleteSource;
+      Exit;
+    end;
+    LView := NewNyxPascalTranslatedSyntax(APrefix, SyntaxOptions, Cancellation);
+    LName := LView.Syntax.Scope(0).Name;
+
+    if (LName = '') or not LView.CompleteTranslation then
+    begin
+      Data.Issue := pbiIncompleteSource;
+      Exit;
+    end;
+    LWorld := World.WithModule(LView);
+    LModule := LWorld.FindModule(LName);
+    LCaret := LView.Syntax.Lexical.Scalars;
+    LScope := LView.Syntax.ScopeAt(LCaret);
+    LMeanings := TScopeMeanings.Create;
+    LSemanticOwner := LMeanings;
+    LMeanings.Site := LWorld.At(LModule, LScope, LCaret);
+    LMeanings.Cancellation := Cancellation;
+
+    if FLegacy then
+    begin
+      LAnalysis := AnalyzeNyxPascalCondition(AContext, AExpression, LSemanticOwner);
+      Result := LAnalysis.Truth;
+      Data.Issue := LMeanings.Issue;
+      Data.Related := LMeanings.Related;
+      Data.Requirements := LMeanings.Requirements;
+    end
+    else
+    begin
+      LRemaining := Options.MaximumTokens - Data.Tokens;
+
+      if LRemaining < 1 then
+      begin
+        raise ENyxPascalConditionalWorkLimit.Create(pcwpConstant, Data.Tokens,
+          1, Options.MaximumTokens, Data.SourceWork, Data.Rounds);
+      end;
+      LOptions := TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional);
+
+      if LRemaining < LOptions.MaximumSteps then
+      begin
+        LOptions := LOptions.UpToSteps(LRemaining);
+      end;
+      LValue := FPlan.Evaluate(LMeanings.Site, LOptions, Cancellation);
+      Admit(LValue.WorkUnits, pcwpConstant);
+      Data.Issue := LValue.Issue;
+      Data.Related := LValue.RelatedName;
+      Data.Requirements := CaptureNyxPascalRequirements(LValue);
+
+      if LValue.Value.TryTruth(LBoolean) then
+      begin
+        Result := ppkFalse;
+
+        if LBoolean then
+        begin
+          Result := ppkTrue;
+        end;
+      end
+      else if Data.Issue = pbiNone then
+      begin
+        Data.Issue := pbiUnsupportedType;
+      end;
+    end;
+
+    if Result <> ppkUnknown then
+    begin
+
+      if Data.Rounds >= Options.MaximumPasses then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Ordered conditional refinement exceeds its work budget');
+      end;
+      Inc(Data.Accepted);
+      Inc(Data.Rounds);
+      Data.HasQuestion := False;
+      Data.Issue := pbiNone;
+      Data.Related := '';
+      Data.Requirements := nil;
+    end;
+  finally
+    FPrepared := False;
+    FContext := nil;
+    FExpression := '';
+    FPlan := nil;
+  end;
+end;
+
+function TConditionalReader.Evaluate(const AOrigin: TNyxPascalConditionOrigin;
+  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): TNyxPascalKnowledge;
+begin
+  Result := ppkUnknown;
+  raise ENyxPascalTranslationLimit.Create('This source authority requires its frozen pre-directive prefix');
+end;
+
 function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AWorld: INyxPascalSemanticWorld; const ATranslation: TNyxPascalTranslationOptions;
   const ASyntax: TNyxPascalSyntaxOptions; const AOptions: TNyxPascalConditionalOptions;
   const ACancellation: INyxCancellationScope): INyxPascalSemanticTranslation;
 var
-  LFiles: INyxPascalFileCatalog;
-  LContext: INyxPascalCompilerContext;
-  LWorld: INyxPascalSemanticWorld;
-  LPrefixWorld: INyxPascalSemanticWorld;
-  LPrefix: INyxPascalTranslation;
-  LView: INyxPascalTranslatedSyntax;
-  LCache: TConditionalReplay;
-  LAuthority: INyxPascalConditionalFacts;
-  LResult: TSemanticTranslation;
+  LData: TSemanticTranslation;
   LOwner: INyxPascalSemanticTranslation;
-  LMeanings: TScopeMeanings;
-  LSemanticOwner: INyxPascalConditionSemantics;
-  LNeeds: INyxPascalConditionNeeds;
-  LDeclarations: INyxPascalConditionDeclarations;
-  LAnalysis: TNyxPascalConditionResult;
-  LName: TNyxText;
-  LModule: Integer;
-  LCaret: Integer;
-  LScope: Integer;
-  LRemaining: Integer;
-  LPassOptions: TNyxPascalTranslationOptions;
-  LCancellation: INyxCancellationScope;
-  LLegacyEligible: Boolean;
-  LConstantPlan: INyxPascalConstantPlan;
-  LConstantResult: INyxPascalConstantResult;
-  LConstantOptions: TNyxPascalConstantOptions;
-  LTruth: TNyxPascalKnowledge;
-  LBoolean: Boolean;
+  LReader: TConditionalReader;
+  LAuthority: INyxPascalConditionalFacts;
 begin
   AOptions.Validate;
   ATranslation.Validate;
   ASyntax.Validate;
-  LCancellation := ACancellation;
-  LFiles := CaptureNyxPascalFiles(AFiles);
-  LContext := CaptureNyxPascalCompilerContext(AContext);
-  LWorld := AWorld;
+  LData := TSemanticTranslation.Create;
+  LOwner := LData;
+  LData.Rounds := 1;
+  LReader := TConditionalReader.Create;
+  LAuthority := LReader;
+  LReader.Data := LData;
+  LReader.World := AWorld;
 
-  if LWorld = nil then
+  if LReader.World = nil then
   begin
-    LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults
+    LReader.World := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults
       .WithImplicitScopes(pispCompilerUnits));
   end;
-  LCache := TConditionalReplay.Create;
-  LAuthority := LCache;
-  LResult := TSemanticTranslation.Create;
-  LOwner := LResult;
-  while True do
+  LReader.Options := AOptions;
+  LReader.SyntaxOptions := ASyntax;
+  LReader.Cancellation := ACancellation;
+  LData.Snapshot := NewNyxPascalTranslation(AFiles, ARoot, AContext,
+    ATranslation, ACancellation, LAuthority);
+
+  if LData.SourceWork <> LData.Snapshot.Count then
   begin
-
-    if (LCancellation <> nil) and LCancellation.Cancelled then
-    begin
-      raise ENyxPascalAnalysisCancelled.Create('Semantic conditional analysis cancelled');
-    end;
-    LRemaining := AOptions.MaximumTokens - LResult.Tokens;
-
-    if (LResult.Rounds >= AOptions.MaximumPasses) or (LRemaining < 1) then
-    begin
-      raise ENyxPascalTranslationLimit.Create('Ordered conditional refinement exceeds its work budget');
-    end;
-    LPassOptions := ATranslation;
-
-    if LRemaining < ATranslation.MaximumTokens then
-    begin
-      LPassOptions := LPassOptions.UpToTokens(LRemaining);
-    end;
-    LCache.BeginPass;
-    try
-      LResult.Snapshot := NewNyxPascalTranslation(LFiles, ARoot, LContext,
-        LPassOptions, LCancellation, LAuthority);
-    except
-      on LLimit: ENyxPascalTokenLimit do
-      begin
-        { Copy evidence before the RTL releases the original exception. A failed
-          pass still publishes no source/result and charges no invented work. }
-        raise ENyxPascalConditionalTokenLimit.Create(LLimit.TokenCount,
-          LLimit.TokenLimit, LResult.Tokens, AOptions.MaximumTokens,
-          ATranslation.MaximumTokens, LResult.Rounds + 1);
-      end;
-    end;
-    Inc(LResult.Tokens, LResult.Snapshot.Count);
-    Inc(LResult.Rounds);
-    LCache.EndPass;
-    LResult.Accepted := Length(LCache.Values);
-
-    if LCache.Question = nil then
-    begin
-      Break;
-    end;
-    LResult.HasQuestion := True;
-    LResult.Site := LCache.Question.Origin;
-    LResult.Issue := pbiCompilerContext;
-    LResult.Requirements := nil;
-    LNeeds := PlanNyxPascalCondition(LCache.Question.Context, LCache.Question.Expression);
-    Supports(LNeeds, INyxPascalConditionDeclarations, LDeclarations);
-
-    LLegacyEligible := LNeeds.SyntaxSupported and (LNeeds.SymbolCount = 0) and
-      ((LNeeds.SizeCount > 0) or (LDeclarations.DeclarationCount > 0));
-    LConstantPlan := nil;
-
-    if not LLegacyEligible then
-    begin
-
-      if LCache.Question.Context.Family <> ppcFPC then
-      begin
-        Break;
-      end;
-
-      { A constant-expression plan supplies a separate typed source authority.
-        Unsupported syntax still stops here; no compiler symbol becomes a
-        declaration value merely because an earlier reader could not parse it. }
-      LConstantPlan := PlanNyxPascalConstant(LCache.Question.Expression,
-        TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional), LCancellation);
-
-      if not LConstantPlan.SyntaxSupported then
-      begin
-        Break;
-      end;
-    end;
-
-    if LResult.Site.PrefixCount > AOptions.MaximumTokens - LResult.Tokens then
-    begin
-      raise ENyxPascalTranslationLimit.Create('Conditional syntax prefixes exceed the aggregate token budget');
-    end;
-    Inc(LResult.Tokens, LResult.Site.PrefixCount);
-    LPrefix := NewNyxPascalTranslationPrefix(LResult.Snapshot,
-      LResult.Site.PrefixCount, ATranslation, LCancellation);
-
-    if not LPrefix.Resolved then
-    begin
-      LResult.Issue := pbiIncompleteSource;
-      Break;
-    end;
-    LView := NewNyxPascalTranslatedSyntax(LPrefix, ASyntax, LCancellation);
-    LName := LView.Syntax.Scope(0).Name;
-
-    if (LName = '') or not LView.CompleteTranslation then
-    begin
-      LResult.Issue := pbiIncompleteSource;
-      Break;
-    end;
-    LPrefixWorld := LWorld.WithModule(LView);
-    LModule := LPrefixWorld.FindModule(LName);
-    LCaret := LView.Syntax.Lexical.Scalars;
-    { EOF belongs to an unfinished scope, including a newly opened empty body.
-      Moving back one scalar could select its outer scope or a finished method. }
-    LScope := LView.Syntax.ScopeAt(LCaret);
-    LMeanings := TScopeMeanings.Create;
-    LSemanticOwner := LMeanings;
-    LMeanings.Site := LPrefixWorld.At(LModule, LScope, LCaret);
-    LMeanings.Cancellation := LCancellation;
-    LTruth := ppkUnknown;
-
-    if LLegacyEligible then
-    begin
-      LAnalysis := AnalyzeNyxPascalCondition(LCache.Question.Context,
-        LCache.Question.Expression, LSemanticOwner);
-      LTruth := LAnalysis.Truth;
-      LResult.Issue := LMeanings.Issue;
-      LResult.Related := LMeanings.Related;
-      LResult.Requirements := LMeanings.Requirements;
-    end
-    else
-    begin
-      LRemaining := AOptions.MaximumTokens - LResult.Tokens;
-
-      if LRemaining < 1 then
-      begin
-        raise ENyxPascalTranslationLimit.Create('Constant conditions exhaust the aggregate work budget');
-      end;
-      LConstantOptions := TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional);
-
-      if LConstantOptions.MaximumSteps > LRemaining then
-      begin
-        LConstantOptions := LConstantOptions.UpToSteps(LRemaining);
-      end;
-      LConstantResult := LConstantPlan.Evaluate(LMeanings.Site, LConstantOptions, LCancellation);
-      Inc(LResult.Tokens, LConstantResult.WorkUnits);
-      LResult.Issue := LConstantResult.Issue;
-      LResult.Related := LConstantResult.RelatedName;
-      LResult.Requirements := CaptureNyxPascalRequirements(LConstantResult);
-
-      if LConstantResult.Value.TryTruth(LBoolean) then
-      begin
-        LTruth := ppkFalse;
-
-        if LBoolean then
-        begin
-          LTruth := ppkTrue;
-        end;
-      end
-      else if LResult.Issue = pbiNone then
-      begin
-        LResult.Issue := pbiUnsupportedType;
-      end;
-    end;
-
-    if LTruth = ppkUnknown then
-    begin
-      Break;
-    end;
-    LCache.Accept(LTruth);
-    LResult.HasQuestion := False;
-    LResult.Issue := pbiNone;
-    LResult.Related := '';
-    LResult.Requirements := nil;
-    LSemanticOwner := nil;
-    LPrefixWorld := nil;
-    LView := nil;
-    LPrefix := nil;
-    LConstantResult := nil;
-    LConstantPlan := nil;
+    raise ENyxPascalTranslationLimit.Create('Conditional work lost its final source-token identity');
   end;
   Result := LOwner;
 end;

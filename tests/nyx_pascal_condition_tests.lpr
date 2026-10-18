@@ -175,41 +175,38 @@ begin
   Check(LRejected and (LResult = nil), 'Cancellation retains no partial semantic result');
 end;
 
-{ Compare the failed pass's observed counters against independently counted
-  source, without changing either ceiling or publishing the private candidate. }
+{ Both unchanged ceilings refuse atomically; streaming work records the actual
+  failing admission instead of assigning it to a reconstructed whole pass. }
 procedure ExpectTokenLimit(const AFiles: INyxPascalFileCatalog;
   const AWorld: INyxPascalSemanticWorld; AViewLimit, AAggregateLimit,
-  AUsedBefore, APass: Integer; AScope: TNyxPascalConditionalTokenScope);
+  AWorkBefore, ASourceBefore, ARound: Integer; AViewFailure: Boolean;
+  APhase: TNyxPascalConditionalWorkPhase = pcwpTranslation);
 var
   LResult: INyxPascalSemanticTranslation;
   LRejected: Boolean;
-  LActive: Integer;
 begin
   LResult := nil;
   LRejected := False;
-  LActive := AViewLimit;
-
-  if AAggregateLimit - AUsedBefore < LActive then
-  begin
-    LActive := AAggregateLimit - AUsedBefore;
-  end;
   try
     LResult := NewNyxPascalSemanticTranslation(AFiles, NyxPascalPhysicalFile('case.pas'),
       Facts, AWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(AViewLimit),
       TNyxPascalSyntaxOptions.Defaults,
       TNyxPascalConditionalOptions.Defaults.UpToTokens(AAggregateLimit));
   except
-    on LLimit: ENyxPascalConditionalTokenLimit do
+    on LLimit: ENyxPascalTokenLimit do
     begin
       LRejected := True;
-      Check((LLimit.TokenCount = LActive) and (LLimit.TokenLimit = LActive),
-        'The attempted next token reports the unchanged reached active ceiling');
-      Check((LLimit.UsedBeforePass = AUsedBefore) and
-        (LLimit.AggregateLimit = AAggregateLimit) and (LLimit.ViewLimit = AViewLimit) and
-        (LLimit.RemainingBeforePass = AAggregateLimit - AUsedBefore),
-        'The refusal retains exact pre-pass aggregate work and both configured ceilings');
-      Check((LLimit.Scope = AScope) and (LLimit.PassIndex = APass),
-        'The refusal distinguishes view, aggregate and tied constraints on the actual replay pass');
+      Check(AViewFailure and (LLimit.TokenCount = AViewLimit) and
+        (LLimit.TokenLimit = AViewLimit), 'The unchanged whole-view ceiling still bounds all logical tokens');
+    end;
+    on LLimit: ENyxPascalConditionalWorkLimit do
+    begin
+      LRejected := True;
+      Check(not AViewFailure and (LLimit.Phase = APhase) and
+        (LLimit.WorkBefore = AWorkBefore) and (LLimit.Maximum = AAggregateLimit) and
+        (LLimit.Translated = ASourceBefore) and (LLimit.RefinementRound = ARound) and
+        (LLimit.Requested > LLimit.Maximum - LLimit.WorkBefore),
+        'Aggregate refusal retains the exact real stage, work and ordered source boundary');
     end;
   end;
   Check(LRejected and (LResult = nil), 'Typed work diagnostics publish no partial semantic result');
@@ -220,6 +217,8 @@ const
   CPlain: TNyxText = 'unit BudgetCase; interface implementation end.';
   CReplay: TNyxText = 'unit BudgetCase; interface type Owned=Byte; ' +
     '{$if declared(Owned)}const Yes=1;{$endif} implementation end.';
+  CConstant: TNyxText = 'unit BudgetCase; interface const Amount=2; ' +
+    '{$if Amount=2}const Yes=1;{$endif} implementation end.';
 var
   LFiles: INyxPascalFileCatalog;
   LRaw: INyxPascalTranslation;
@@ -227,6 +226,7 @@ var
   LUnresolved: INyxPascalUnresolvedConditions;
   LWorld: INyxPascalSemanticWorld;
   LResult: INyxPascalSemanticTranslation;
+  LWork: INyxPascalSemanticWork;
   LCount: Integer;
   LPrefix: Integer;
   LRejected: Boolean;
@@ -254,9 +254,9 @@ begin
   LLimited := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
     Facts, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount));
   Check(LLimited.Count = LCount, 'An exactly fitting translation still succeeds at its original ceiling');
-  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount * 4, 0, 1, pctsView);
-  ExpectTokenLimit(LFiles, LWorld, LCount + 1, LCount - 1, 0, 1, pctsAggregate);
-  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount - 1, 0, 1, pctsViewAndAggregate);
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount * 4, 0, 0, 1, True);
+  ExpectTokenLimit(LFiles, LWorld, LCount + 1, LCount - 1, LCount - 1, LCount - 1, 1, False);
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount - 1, 0, 0, 1, True);
   Check(LFiles.TextAt(0) = CPlain, 'Failure observations leave the exact captured source unchanged');
 
   LFiles := NewNyxPascalFileCatalog(pfcExact)
@@ -267,17 +267,92 @@ begin
     (LUnresolved.UnresolvedCount = 1), 'The replay case has one independently observed semantic question');
   LCount := LRaw.Count;
   LPrefix := LUnresolved.UnresolvedAt(0).Origin.PrefixCount;
-  ExpectTokenLimit(LFiles, LWorld, LCount + 1, 2 * LCount + LPrefix - 1,
-    LCount + LPrefix, 2, pctsAggregate);
+  ExpectTokenLimit(LFiles, LWorld, LCount, LCount + LPrefix - 1,
+    LCount + LPrefix - 1, LCount - 1, 2, False);
+  ExpectTokenLimit(LFiles, LWorld, LCount, 2 * LPrefix,
+    LPrefix + 1, LPrefix + 1, 1, False, pcwpPrefix);
   LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
     Facts, LWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount),
     TNyxPascalSyntaxOptions.Defaults,
-    TNyxPascalConditionalOptions.Defaults.UpToTokens(2 * LCount + LPrefix));
+    TNyxPascalConditionalOptions.Defaults.UpToTokens(LCount + LPrefix));
   Check((LResult.Passes = 2) and (LResult.Answers = 1) and LResult.Source.Resolved and
-    (LResult.WorkTokens = 2 * LCount + LPrefix),
-    'An exactly fitting replay charges both full translations and its parsed prefix');
+    (LResult.WorkTokens = LCount + LPrefix),
+    'An exactly fitting traversal charges the actual source once and its parsed prefix');
+  Check(Supports(LResult, INyxPascalSemanticWork, LWork) and
+    (LWork.TranslationTokens = LResult.Source.Count) and
+    (LWork.PrefixTokens = LPrefix) and (LWork.ConstantSteps = 0),
+    'Detached work receipts identify genuine single-traversal source reuse');
   Check((LFiles.TextAt(0) = CReplay) and (LResult.Source.Files.TextAt(0) = CReplay),
     'A failed attempt followed by admission preserves every original source scalar');
+
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('case.pas'), CConstant);
+  LRaw := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, TNyxPascalTranslationOptions.Defaults);
+  Check(Supports(LRaw, INyxPascalUnresolvedConditions, LUnresolved) and
+    (LUnresolved.UnresolvedCount = 1), 'The constant case has one exact source-scoped condition');
+  LPrefix := LUnresolved.UnresolvedAt(0).Origin.PrefixCount;
+  ExpectTokenLimit(LFiles, LWorld, LRaw.Count, 2 * LPrefix + 1,
+    2 * LPrefix + 1, LPrefix + 1, 1, False, pcwpConstant);
+  LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, LWorld, TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  Check(LResult.Source.Resolved and (LResult.Answers = 1) and
+    Supports(LResult, INyxPascalSemanticWork, LWork) and (LWork.ConstantSteps > 0) and
+    (LResult.WorkTokens = LWork.TranslationTokens + LWork.PrefixTokens + LWork.ConstantSteps),
+    'Successful constant evaluation retains all three actual work charges');
+end;
+
+procedure OrderedReaderState;
+const
+  CRoot: TNyxText = 'unit ReaderState; {$push}{$H-}{$macro on}' +
+    '{$define SharedByte:=Byte}{$if not declared(TFuture)}' +
+    '{$modeswitch nestedcomments}{$endif} interface ' +
+    '{$include parts.inc} type TFuture=SharedByte; {$include parts.inc}' +
+    '{ outer { inner } tail } {$pop} implementation end.';
+  CPart: TNyxText = '{$if declared(TFuture)}{$define SAW_AFTER}' +
+    '{$ifopt H-}{$define SAVED_POLICY}{$endif}' +
+    '{$push}{$H+}{$pop}{$else}{$define SAW_BEFORE}{$endif}';
+var
+  LFiles: INyxPascalFileCatalog;
+  LResult: INyxPascalSemanticTranslation;
+  LWork: INyxPascalSemanticWork;
+  LState: INyxPascalCompilerContext;
+  LSettings: INyxPascalTranslationSettings;
+begin
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('case.pas'), CRoot)
+    .WithFile(NyxPascalPhysicalFile('parts.inc'), CPart);
+  LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts.WithOption('H', ppkTrue).WithFeature(ppfNestedComments, ppkFalse), World,
+    TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  LState := LResult.Source.State(LResult.Source.StateCount - 1);
+  Check(LResult.Source.Resolved and not LResult.Pending and (LResult.Answers = 3) and
+    (LResult.Source.OccurrenceCount = 3),
+    'One live reader resolves separate visits to an include against their actual preceding declarations');
+  Check((LState.Symbol(NyxPascalDefine('SAW_BEFORE')).IsDefined = ppkTrue) and
+    (LState.Symbol(NyxPascalDefine('SAW_AFTER')).IsDefined = ppkTrue) and
+    (LState.Symbol(NyxPascalDefine('SAVED_POLICY')).IsDefined = ppkTrue),
+    'Source conditions and included option checks retain chronological branch authority');
+  Check((LState.Option('H') = ppkTrue) and (LState.Feature(ppfNestedComments) = ppkTrue) and
+    Supports(LResult.Source, INyxPascalTranslationSettings, LSettings) and
+    (LSettings.SettingsDepth(LResult.Source.StateCount - 1) = 0),
+    'Source-aware prefix evaluation keeps module lexing while restoring complete local settings lifetime');
+  Check(Supports(LResult, INyxPascalSemanticWork, LWork) and
+    (LWork.TranslationTokens = LResult.Source.Count) and
+    (LResult.WorkTokens = LWork.TranslationTokens + LWork.PrefixTokens + LWork.ConstantSteps) and
+    (LResult.Source.Files.TextAt(0) = CRoot) and (LResult.Source.Files.TextAt(1) = CPart),
+    'Whole source and actual accounting remain exact across repeated include callbacks');
+  LResult := Analyze('unit Unanswered; interface type TRecord=record X:Byte; end; ' +
+    '{$if sizeof(TRecord)=1}const Maybe=1;{$endif}' +
+    '{$if declared(TRecord)}{$define LATER}{$endif} implementation end.',
+    World, TNyxPascalConditionalOptions.Defaults);
+  Check(LResult.Pending and (LResult.Answers = 0) and
+    (LResult.BindingIssue = pbiUnsupportedType) and
+    (LResult.Source.State(LResult.Source.StateCount - 1).Symbol(
+      NyxPascalDefine('LATER')).IsDefined = ppkUnknown),
+    'An unanswered earlier condition prevents later source-scoped guesses and branch donation');
 end;
 
 begin
@@ -285,6 +360,7 @@ begin
     Prefixes;
     Refusals;
     TokenBudgets;
+    OrderedReaderState;
     WriteLn('PASS ', GChecks, ' ordered semantic conditional checks');
   except
     on LError: Exception do

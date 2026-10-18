@@ -9,7 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Conditional budget diagnosis (2026-10-18) now identifies the unchanged RTL
+Ordered frozen-prefix traversal (2026-10-18) now avoids whole-translation replay
+within the existing conditional constructor. Each source token is admitted once;
+each detached analyzed prefix and constant step remains charged. Revocable lexer
+borrows cannot expose mutable/unfinished ordinary snapshots. Exact include,
+branch, macro, lexical and local-settings state stays live in its original call
+stack; the first unanswered query blocks later answers. All 40 maintained native
+consumers, focused 37 and the whole FPC companion 14 pass with clean heaps. All 73
+compiler jobs have zero owned warnings; final evidence is composite as detailed
+in WORK.md. The unchanged RTL consumer now
+passes 56 under the original 2M view/4M aggregate/64-round and probe ceilings,
+reaching System 22 answers/10,878 declarations/six syntax diagnostics with a pending
+record-scoped VarSizeQuant condition. Indexed Free/FreeInstance remains ready.
+Full RTL/source/type/incremental/editor/quality/parity/adoption/delivery and
+original criterion/task/credit/DONE remain open. Browser consumers compile only.
+Stop prefix/window/fixture/compiler/capture variants after the frozen qualification;
+reassess the actual record-scoped constant typing/evaluation through existing
+binding/constant/syntax owners. Retain strict FPC placement/replacement-condition
+gaps discovered by early invalid companion inputs. WORK.md owns complete receipts,
+retained failures, preservation and the next prerequisite.
+
+Historical conditional budget diagnosis (2026-10-18) identifies the earlier RTL
 refusal precisely: pass 15 starts after 3,760,614 aggregate work units and reaches
 its remaining 239,386-token cap, below the unchanged 2M view limit. Focused native
 33 and maintained translation/compiler/owned-provider 209/9/86 pass, clean heaps;

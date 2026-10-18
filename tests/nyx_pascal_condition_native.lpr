@@ -22,7 +22,7 @@
 program nyx_pascal_condition_native;
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Classes, SysUtils, LazFileUtils, condition.fixture, nyx.text, nyx.bytes,
+uses Classes, SysUtils, LazFileUtils, condition.fixture, ordered.reader.fixture, nyx.text, nyx.bytes,
   nyx.pascal.lexing, nyx.pascal.context, nyx.pascal.compilertrace,
   nyx.studio.pascalprofiles, nyx.pascal.files, nyx.pascal.translation,
   nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.pascal.binding,
@@ -73,6 +73,8 @@ var
   LSecond: System.LongInt;
   LRoot: TNyxText;
   LPart: TNyxText;
+  LWork: INyxPascalSemanticWork;
+  LFinal: INyxPascalCompilerContext;
 begin
   Check(ParamCount = 3, 'Supply repository, selected FPC and fresh owned runtime');
   Check(not DirectoryExistsUTF8(ParamStr(3)) and CreateDirUTF8(ParamStr(3)),
@@ -138,6 +140,27 @@ begin
     end;
   end;
   Check((LFirst >= 0) and (LSecond >= 0), 'Final ordinary syntax contains the actual selected declarations');
+  Check(RunOrderedReaderFixture = 42,
+    'The whole compiler companion executes after repeated includes and local POP with persistent module lexing');
+  LRoot := ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/ordered.reader.fixture.pas');
+  LPart := ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/ordered.reader.fixture.inc');
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('fixtures/ordered.reader.fixture.pas'), LRoot)
+    .WithFile(NyxPascalPhysicalFile('fixtures/ordered.reader.fixture.inc'), LPart);
+  LResult := NewNyxPascalSemanticTranslation(LFiles,
+    NyxPascalPhysicalFile('fixtures/ordered.reader.fixture.pas'), LRootContext,
+    LWorld, TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  LFinal := LResult.Source.State(LResult.Source.StateCount - 1);
+  Check(LResult.Source.Resolved and not LResult.Pending and (LResult.Answers = 3) and
+    (LFinal.Option('H') = ppkTrue) and (LFinal.Feature(ppfNestedComments) = ppkTrue) and
+    (LFinal.Symbol(NyxPascalDefine('SAW_BEFORE')).IsDefined = ppkTrue) and
+    (LFinal.Symbol(NyxPascalDefine('SAW_AFTER')).IsDefined = ppkTrue),
+    'Owned analysis agrees with the independent compiler on include order and local/module settings lifetime');
+  Check(Supports(LResult, INyxPascalSemanticWork, LWork) and
+    (LWork.TranslationTokens = LResult.Source.Count) and
+    (LResult.Source.Files.TextAt(0) = LRoot) and (LResult.Source.Files.TextAt(1) = LPart),
+    'Actual compiled companion bytes remain exact through one semantic source traversal');
 end;
 
 begin

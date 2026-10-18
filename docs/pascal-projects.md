@@ -2475,7 +2475,8 @@ remains under the original authoring owners. Browser evidence here is compilatio
 
 `nyx.pascal.conditions` connects source scopes to the conditional reader.
 `NewNyxPascalSemanticTranslation` owns frozen files and initial context, then
-refines the first unknown expression from its preceding token prefix. It returns
+resolves supported source expressions during one ordered traversal. Each query
+uses only its detached pre-directive token prefix. It returns
 an immutable `INyxPascalSemanticTranslation` with the final ordinary translation,
 work/pass/answer counts and a bounded pending site, binding issue and related name.
 This is source analysis, not compiler admission or application execution.
@@ -2497,13 +2498,25 @@ the unseen suffix cannot provide declarations to the prefix. Ordinary syntax
 recovery supplies an analysis projection, never an edited or compiler candidate
 buffer. Repeated visits to an include retain separate occurrence identities.
 
-Each accepted answer is sealed in construction order with its file, occurrence,
-physical span, prefix token count, expanded expression and compiler facts.
-The next pass reads the same frozen inputs and checks that exact authority before
-using an answer. A changed or unconsumed answer refuses the construction. No
-translation retains the callback afterward, and receipts retain no binding world
-or temporary scope authority. Records contain no interfaces; owned class graphs
-point outward to immutable source/context data.
+Each query prepares its exact file, occurrence, physical span, token count,
+expanded expression and compiler context. A detached prefix is checked against
+that prepared authority before its answer can select the next branch. The live
+include/branch/macro/lexical/settings state continues in its original call stack;
+no earlier translation or unknown suffix is replayed. The first unanswered query
+blocks later source answers. No translation retains the callback afterward, and
+receipts retain no binding world or temporary scope authority. Records contain
+no interfaces; owned class graphs point outward to immutable source/context data.
+
+`INyxPascalLexicalPrefixCapture` is a revocable construction borrow. Its frozen
+`INyxPascalLexicalPrefix` owns copied admitted rows and exact source, with no
+invented EOF or authority over unscanned suffix tokens. It does not implement
+`INyxPascalLexicalSnapshot`. Active readers' complete-lexical getters refuse in
+the detached translation prefix; ordinary finished translations still expose
+their completed occurrence views. A retained capture refuses after success,
+callback failure or cancellation, while previously frozen values remain valid.
+The portable optional `INyxPascalPrefixConditionalFacts` and
+`INyxPascalTranslationWork` extend existing serialized construction callbacks;
+neither callback can mutate the producer through a prefix.
 
 Declaration presence follows real scope lookup, including missing import and
 unsupported-scope refusals. Size lookup follows bound aliases/distinct types to
@@ -2514,24 +2527,27 @@ provide no answer. The supplied world and context must belong to the same
 captured compiler/output configuration; this factory does not establish full
 SDK/target coherence. General layouts, canonical typing and expressions stay open.
 
-`TNyxPascalConditionalOptions` defaults to 64 passes and four million cumulative
+`TNyxPascalConditionalOptions` defaults to 64 logical refinement rounds and four million cumulative
 work units: translation/prefix tokens and constant-evaluation steps.
-Caller-selected translation/syntax/binding limits
-still apply. Exhaustion and cancellation publish no partial construction receipt.
+Caller-selected full-view translation/syntax/binding limits still apply. Passes
+retains Answers + 1 for refinement accounting, rather than counting physical
+traversals. `INyxPascalSemanticWork` separately exposes actual newly translated
+tokens, analyzed prefix tokens and constant steps, whose sum equals WorkTokens.
+Exhaustion and cancellation publish no partial construction receipt.
 This is bounded refinement; incremental/project-scale performance is unqualified.
 
-An `AddToken` refusal now carries `ENyxPascalTokenLimit` with the admitted token
-count and reached active limit. Ordered refinement adds
-`ENyxPascalConditionalTokenLimit`: the one-based attempted pass, work already
-charged before it, original view/aggregate limits and aggregate remainder.
-`TNyxPascalConditionalTokenScope` distinguishes the view, aggregate remainder
-and a tie. Both exceptions retain the original translation-limit category and
-own only scalar observations; no partial source or semantic result escapes.
-Other budget failures retain their existing categories. These observations
-change no quotas or accounting and do not establish a reuse/performance fix.
+An `AddToken` full-view refusal carries `ENyxPascalTokenLimit` with its admitted
+token count and reached cap. Streaming aggregate refusal uses
+`ENyxPascalConditionalWorkLimit`: the translation/prefix/constant phase, admitted
+work, next request, aggregate cap, source tokens and logical round. Both retain
+the original translation-limit category and own only scalar observations. The
+earlier replay-specific `ENyxPascalConditionalTokenLimit` value shape remains
+available for existing callers; the streaming constructor does not emit it.
+No source truncation, ignored directive, fixed compiler probe or raised quota
+substitutes for actual avoided translation work.
 
 Owned and indexed completion use this constructor by default, through typed
-`WithConditions` options. Every pass/prefix consumes the ordinary aggregate token
+`WithConditions` options. Every new source token/prefix consumes the ordinary aggregate
 budget. Missing semantic imports use the captured dependency loader; active root
 cycles refuse. Once all supplied roots exist, conditional exports are revisited
 under the same limits. Another sweep requires fewer unresolved conditions, so
@@ -2540,9 +2556,13 @@ and editor history/source publication remain independent operations.
 
 The exact whole handwritten native companion and selected-compiler measurements
 qualify forward visibility, one physical include visited twice, source-local and
-System aliases, nested shadowing and unchanged source/scalar positions. Small
+System aliases, nested shadowing and unchanged source/scalar positions. A further
+whole FPC companion qualifies header-scoped module lexing, local restoration,
+type replacement and separate scope at repeated includes. Small
 explicit System/ObjPas scope models isolate the rules; they are not a replacement
-SDK. The real SysUtils construction still reports its external scope prerequisite
+SDK. The unchanged full RTL consumer passes under its original budgets and reaches
+22 System answers, retaining a pending record-scoped constant in heap.inc.
+The real SysUtils construction still reports its external scope prerequisite
 and the full six size/declared decisions remain open. WORK.md owns exact current
 native/semantic evidence and retained failures. Browser consumers compile only;
 full RTL/grammar/incremental/default-adoption/input/navigation/quality/parity/

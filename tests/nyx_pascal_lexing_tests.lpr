@@ -35,6 +35,21 @@ type
     procedure Cancel;
     function GetCancelled: Boolean;
   end;
+  { Retains only revocable construction authority and detached frozen windows.
+    Abort/cancellation exercise retirement while the complete snapshot refuses;
+    neither window points back to this visitor or the producing lexer. }
+  TPrefixProbe = class(TInterfacedObject, INyxPascalLexicalObserver,
+    INyxPascalLexicalConstructionObserver)
+  public
+    Capture: INyxPascalLexicalPrefixCapture;
+    First: INyxPascalLexicalPrefix;
+    Second: INyxPascalLexicalPrefix;
+    AbortAtBoundary: Boolean;
+    CancelAtBoundary: INyxCancellationScope;
+    procedure BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
+    procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
+      const AText: TNyxText; var AAllowNestedComments: Boolean);
+  end;
 
 var
   GChecks: Integer;
@@ -60,6 +75,156 @@ begin
   begin
     raise Exception.Create(AReason);
   end;
+end;
+
+procedure TPrefixProbe.BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
+begin
+  Capture := ACapture;
+end;
+
+procedure TPrefixProbe.AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
+  const AText: TNyxText; var AAllowNestedComments: Boolean);
+begin
+
+  if AToken.Kind <> ptkDirective then
+  begin
+    Exit;
+  end;
+
+  if First = nil then
+  begin
+    First := Capture.Freeze;
+  end
+  else
+  begin
+    Second := Capture.Freeze;
+  end;
+
+  if CancelAtBoundary <> nil then
+  begin
+    CancelAtBoundary.Cancel;
+  end;
+
+  if AbortAtBoundary then
+  begin
+    raise EAbort.Create('Deliberate construction callback retirement');
+  end;
+end;
+
+procedure FrozenPrefixes;
+const
+  CText: TNyxText = 'unit PrefixCase; { packed 🚀 ' + #0 + ' text } ' +
+    '{$define FIRST} var Value:Integer; {$define SECOND} implementation end.';
+var
+  LProbe: TPrefixProbe;
+  LObserver: INyxPascalLexicalObserver;
+  LSnapshot: INyxPascalLexicalSnapshot;
+  LUnexpected: INyxPascalLexicalSnapshot;
+  LFirst: INyxPascalLexicalPrefix;
+  LSecond: INyxPascalLexicalPrefix;
+  LRetired: INyxPascalLexicalPrefix;
+  LAt: Integer;
+  LRejected: Boolean;
+  LCount: Integer;
+begin
+  LProbe := TPrefixProbe.Create;
+  LObserver := LProbe;
+  LSnapshot := NewNyxPascalContextualLexicalSnapshot(CText,
+    TNyxPascalLexicalOptions.Defaults, LObserver);
+  LFirst := LProbe.First;
+  LSecond := LProbe.Second;
+  LCount := LFirst.Count;
+  Check((LFirst.Source = CText) and (LSecond.Source = CText) and
+    (LFirst.Count < LSecond.Count) and (LSecond.Count < LSnapshot.Count),
+    'Frozen windows retain exact Unicode/NUL source with separately bounded admitted tokens');
+  Check(not Supports(LFirst, INyxPascalLexicalSnapshot, LUnexpected) and
+    (LFirst.Token(LFirst.Count - 1).Kind = ptkDirective) and
+    (LFirst.ScannedScalars = LFirst.Token(LFirst.Count - 1).Span.Finish),
+    'A frozen prefix advertises no completed ordinary snapshot or manufactured EOF');
+  for LAt := 0 to LFirst.Count - 1 do
+  begin
+    Check((LFirst.Text(LAt) = LSnapshot.Text(LAt)) and
+      (LFirst.Token(LAt).Span.Start = LSnapshot.Token(LAt).Span.Start) and
+      (LFirst.Token(LAt).Span.Length = LSnapshot.Token(LAt).Span.Length),
+      'Every retained prefix token keeps its exact complete-source spelling and scalar position');
+  end;
+  LRejected := False;
+  try
+    LFirst.Token(LFirst.Count);
+  except
+    on ENyxPascalLexical do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Unseen suffix tokens remain unavailable despite exact full-source retention');
+  LRejected := False;
+  LRetired := nil;
+  try
+    LRetired := LProbe.Capture.Freeze;
+  except
+    on ENyxPascalLexical do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LRetired = nil), 'Successful completion revokes retained construction authority');
+  LObserver := nil;
+  LProbe := nil;
+  LSnapshot := nil;
+  Check((LFirst.Count = LCount) and (LFirst.Source = CText) and
+    (LSecond.Count > LFirst.Count), 'Frozen rows survive independent producer/visitor retirement');
+
+  LProbe := TPrefixProbe.Create;
+  LObserver := LProbe;
+  LProbe.AbortAtBoundary := True;
+  LRejected := False;
+  try
+    LSnapshot := NewNyxPascalContextualLexicalSnapshot(CText,
+      TNyxPascalLexicalOptions.Defaults, LObserver);
+  except
+    on EAbort do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LSnapshot = nil) and (LProbe.First.Source = CText),
+    'A callback abort publishes no ordinary snapshot but preserves independently frozen prior rows');
+  LRejected := False;
+  try
+    LRetired := LProbe.Capture.Freeze;
+  except
+    on ENyxPascalLexical do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LRetired = nil), 'Callback failure revokes the borrowed lexer before freeing it');
+  LProbe := TPrefixProbe.Create;
+  LObserver := LProbe;
+  LProbe.CancelAtBoundary := NewNyxCancellationScope;
+  LRejected := False;
+  try
+    LSnapshot := NewNyxPascalContextualLexicalSnapshot(CText,
+      TNyxPascalLexicalOptions.Defaults, LObserver, LProbe.CancelAtBoundary);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LSnapshot = nil) and (LProbe.First.Source = CText),
+    'Cancellation retires the producer while preserving only explicitly frozen prefix values');
+  LRejected := False;
+  try
+    LRetired := LProbe.Capture.Freeze;
+  except
+    on ENyxPascalLexical do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LRetired = nil), 'Cancellation also revokes retained construction authority');
 end;
 
 procedure Coverage(const ASnapshot: INyxPascalLexicalSnapshot);
@@ -387,6 +552,7 @@ end;
 begin
   try
     Core;
+    FrozenPrefixes;
     {$ifndef PAS2JS}Corpus;{$endif}
     WriteLn('PASS ', GChecks, ' owned lexical checks; ', GCorpusFiles,
       ' actual source files / ', GCorpusTokens, ' lossless tokens');

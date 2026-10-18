@@ -67,8 +67,8 @@ substitutes for a local/imported declaration. Full RTL and conditional semantic
 binding, canonical type rules and ordinary editor adoption remain open.
 
 [Ordered semantic conditions](docs/pascal-projects.md#ordered-semantic-conditions)
-now resolve supported source-scope `declared`/`sizeof` decisions through frozen
-prefixes and checked replay. Ordinary owned/indexed completion consumes this
+now resolve supported source-scope `declared`/`sizeof` decisions during one
+ordered traversal through detached frozen prefixes. Ordinary owned/indexed completion consumes this
 bounded refinement with exact source preservation. Full RTL import/layout/
 grammar meaning, target coherence and ordinary editor adoption remain open.
 

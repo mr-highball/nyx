@@ -33,7 +33,72 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Conditional token-budget diagnosis — 2026-10-18
+## Current integration: Ordered frozen-prefix traversal — 2026-10-18
+
+3b3d438 established that pass 15 exhausted the original 4M aggregate remainder,
+with 3,760,614 already charged and 239,386 remaining. Current work replaces full
+translation replay with one synchronous traversal. Each supported source query
+receives a detached pre-directive token prefix; the live include/branch/macro/
+lexical/settings state continues in its original call stack. Frozen lexical
+windows expose no completed ordinary snapshot or invented EOF, and retained
+construction borrows revoke on success, callback failure and cancellation.
+The first unanswered query still blocks later source answers. Aggregate admission
+charges each new source token, every frozen/parsed prefix and constant step;
+the independent full logical-view limit is unchanged. Passes retains logical
+refinement rounds (Answers + 1); it no longer describes repeated traversals.
+No incremental-edit/default-editor/whole-language performance claim follows.
+
+The original unchanged RTL consumer passes 56 under the same 2M full-view/4M
+aggregate/64-round and probe ceilings. System reaches 22 answers, 10,878 recovered
+declarations and six syntax diagnostics; record-scoped VarSizeQuant in heap.inc
+remains pending with pbiUnsupportedType. ObjPas remains 209/four/one. Exact indexed
+Free/FreeInstance navigation/insertion is ready. This clears the measured aggregate
+refusal, not full RTL/source/type meaning. Stop prefix/window/fixture/compiler/
+capture variants. Next reassess that actual record-scoped constant typing/value
+prerequisite through existing binding/constant/syntax owners, retaining all six
+syntax diagnostics. No fixed source facts, SDK stubs, skipped directives, raised
+quotas or weaker full-consumer oracle may substitute for the actual source.
+
+All 40 maintained native consumers pass, plus the original RTL 56 and whole FPC
+companion 14, with clean heaps. Focused conditions pass 37; actual lexical/window/
+corpus reading passes 566 across 499 files/2,288,218 lossless tokens, and final
+syntax reading passes 7,807 across five inputs/3,802 declarations. These counts
+overlap. Seventy-three compiler jobs have zero owned warnings/175 upstream;
+both Studios/backend/worker and 29 browser products/consumers compile as applicable.
+Browser execution remains unqualified. Final evidence is explicitly composite:
+eight functional sources are frozen, followed only by one preferred blank line
+and a corrected public comment in two files. Exact pre-overlay bytes/diffs are
+retained, and final current-source corpus/syntax readings pass. No runtime behavior
+changed after the functional freeze; no uninterrupted final-byte full run is claimed.
+
+The ignored `.local/ordered-prefix-paths-private.json` locates receipts and exact
+qualified/final source identities. Session 2159/PID 12264 is terminal exit zero;
+native/regression/products sessions 36282/37590/53570 also completed. Do not treat
+those records as live handles. Eight focused sources, 652 unchanged prior sources,
+97 RTL/24 compiler inputs, all 156 raw unit packets and 48 retained includes stay
+exact; current maintained inventory is 657 including two added companion files.
+Five protected files/nine complete contexts, 349 frozen 7422453 artifacts and
+13 concurrent planning files remain exact. Native Nyx MCP handles remain absent;
+no fallback transport or host retry occurs. LAN stays offline. No browser/HTTP/file
+execution/capture, protected mutation, cleanup/restart, approval bypass or sub-agents.
+Full original criterion/task/credit/DONE and language/incremental/editor/input/
+quality/parity/adoption/delivery remain open across at least thirty-five unclosed
+batches. This checkpoint does not install an editor engine or a new tool/schema.
+
+Retained development failures are excluded from accepted evidence: the first
+streaming build's unset-result warning is corrected; its first refusal test still
+expected replay-specific diagnostics. The synthetic settings assertion wrongly
+expected POP to restore a module feature. Early companion construction also
+copied an extra unit header, used unsupported bare NESTEDCOMMENTS spelling,
+placed a global mode switch after the interface, and tried a replacement macro
+as a Boolean IF operand. The actual compiler rejected/ignored those forms. The
+accepted companion uses a header-scoped MODESWITCH, direct declared() queries and
+ordinary type replacement. Its intentional nested-comment warning 2005 is scoped
+off with a real declaration barrier, matching FPC's delayed request handling.
+Broader FPC directive-placement/replacement-condition fidelity remains with the
+existing context/translation owners; no product repair of those gaps is claimed.
+
+## Previous integration: Conditional token-budget diagnosis — 2026-10-18
 
 The unchanged original RTL consumer now identifies its exact failure: attempted
 pass 15 has already charged 3,760,614 cumulative work units. The remaining

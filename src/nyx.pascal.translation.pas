@@ -365,6 +365,27 @@ type
     function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
   end;
+  { Optional construction-only source authority. Prepare admits the exact prefix
+    work before any copying; EvaluatePrefix receives a detached pre-directive
+    translation, never the live builder. Active physical readers expose frozen
+    tokens only, so their ordinary completed-lexical getters refuse. Full source,
+    origins, contexts and saved settings remain exact. No callback is retained by
+    either the prefix or the final ordinary translation. }
+  INyxPascalPrefixConditionalFacts = interface(IInterface)
+    ['{E62BB77C-36B8-4A68-A664-BCB392FAF8D9}']
+    function PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): Boolean;
+    function EvaluatePrefix(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+      const APrefix: INyxPascalTranslation): TNyxPascalKnowledge;
+  end;
+  { Optional synchronous aggregate admission beside the unchanged full-view cap.
+    Called once before storing each newly translated token, including trivia and
+    EOF. It grants no access to mutable source and is released after construction. }
+  INyxPascalTranslationWork = interface(IInterface)
+    ['{239856F3-7EA2-4C53-81AB-0EBA32B4505E}']
+    procedure AdmitToken(ATokensBefore, AViewLimit: Integer);
+  end;
 
 { Effective tokens may come from a replacement fragment; their Span is relative
   to that fragment. PhysicalToken/Text still describe the exact invocation.
@@ -494,11 +515,12 @@ type
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
   TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver,
-    INyxPascalLexicalRegionObserver)
+    INyxPascalLexicalRegionObserver, INyxPascalLexicalConstructionObserver)
   public
     Owner: TTranslation;
     Occurrence: Integer;
     Included: Boolean;
+    procedure BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText; var AAllowNestedComments: Boolean);
     function InitialRegion: TNyxPascalLexicalRegion;
@@ -557,6 +579,10 @@ type
     FOptions: TNyxPascalTranslationOptions;
     FPhysical: array of TPhysicalCache;
     FLexical: array of INyxPascalLexicalSnapshot;
+    { Live revocable captures are construction-only. Detached prefix windows
+      instead own copied rows and never retain these borrowed capabilities. }
+    FCaptures: array of INyxPascalLexicalPrefixCapture;
+    FWindows: array of INyxPascalLexicalPrefix;
     FTokens: array of TNyxPascalTranslatedToken;
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
@@ -596,6 +622,8 @@ type
     FModeSeen: Boolean;
     FCancellation: INyxCancellationScope;
     FConditions: INyxPascalConditionalFacts;
+    FPrefixConditions: INyxPascalPrefixConditionalFacts;
+    FWork: INyxPascalTranslationWork;
     procedure CheckCancellation;
     procedure Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
       const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
@@ -621,6 +649,9 @@ type
       const AOptions: TNyxPascalTranslationOptions;
       const ACancellation: INyxCancellationScope;
       const AConditions: INyxPascalConditionalFacts);
+    { Freeze current admitted data, including the directive token used only as
+      the subsequent prefix's exclusive boundary. No live callback is copied. }
+    constructor CreatePrefix(ASource: TTranslation);
     destructor Destroy; override;
     function Files: INyxPascalFileCatalog;
     function InitialContext: INyxPascalCompilerContext;
@@ -770,6 +801,8 @@ begin
   FOptions := AOptions;
   FCancellation := ACancellation;
   FConditions := AConditions;
+  Supports(AConditions, INyxPascalPrefixConditionalFacts, FPrefixConditions);
+  Supports(AConditions, INyxPascalTranslationWork, FWork);
   CheckCancellation;
   try
     FFiles := CaptureNyxPascalFiles(AFiles);
@@ -830,6 +863,91 @@ begin
   finally
     FCancellation := nil;
     FConditions := nil;
+    FPrefixConditions := nil;
+    FWork := nil;
+  end;
+end;
+
+constructor TTranslation.CreatePrefix(ASource: TTranslation);
+var
+  LAt: Integer;
+  LDiagnostic: Integer;
+  LFrame: TCompilerSettingsStack;
+begin
+  inherited Create;
+  FOptions := ASource.FOptions;
+  FFiles := ASource.FFiles;
+  FInitial := ASource.FInitial;
+  FContext := ASource.FContext;
+  FResolved := ASource.FResolved;
+  FTokenCount := ASource.FTokenCount;
+  FOccurrenceCount := ASource.FOccurrenceCount;
+  FStateCount := ASource.FStateCount;
+  FDiagnosticCount := ASource.FDiagnosticCount;
+  SetLength(FTokens, FTokenCount);
+  for LAt := 0 to FTokenCount - 1 do
+  begin
+    ASource.CheckCancellation;
+    FTokens[LAt] := ASource.FTokens[LAt];
+  end;
+  FStates := Copy(ASource.FStates, 0, FStateCount);
+  FMacroStates := Copy(ASource.FMacroStates, 0, FStateCount);
+  FExpansions := Copy(ASource.FExpansions, 0, Length(ASource.FExpansions));
+  FDiagnostics := Copy(ASource.FDiagnostics, 0, FDiagnosticCount);
+  FUnresolvedCount := ASource.FUnresolvedCount;
+  FUnresolved := Copy(ASource.FUnresolved, 0, FUnresolvedCount);
+  FEmissionCount := ASource.FEmissionCount;
+  FEmissionDirectives := Copy(ASource.FEmissionDirectives, 0, FEmissionCount);
+  FRegisterCount := ASource.FRegisterCount;
+  FRegisterDirectives := Copy(ASource.FRegisterDirectives, 0, FRegisterCount);
+  FWarningCount := ASource.FWarningCount;
+  FWarningDirectives := Copy(ASource.FWarningDirectives, 0, FWarningCount);
+  FCodeAlignmentCount := ASource.FCodeAlignmentCount;
+  FCodeAlignmentDirectives := Copy(ASource.FCodeAlignmentDirectives, 0, FCodeAlignmentCount);
+  FOptimizationCount := ASource.FOptimizationCount;
+  FOptimizationDirectives := Copy(ASource.FOptimizationDirectives, 0, FOptimizationCount);
+  SetLength(FSettingsStates, FStateCount);
+  for LAt := 0 to FStateCount - 1 do
+  begin
+    ASource.CheckCancellation;
+    LFrame := TCompilerSettingsStack.Create;
+    FSettingsStates[LAt] := LFrame;
+    LFrame.Known := ASource.FSettingsStates[LAt].Known;
+    LFrame.Frames := Copy(ASource.FSettingsStates[LAt].Frames, 0,
+      Length(ASource.FSettingsStates[LAt].Frames));
+  end;
+  SetLength(FPhysical, FFiles.Count);
+  for LAt := 0 to High(FPhysical) do
+  begin
+    ASource.CheckCancellation;
+
+    if ASource.FPhysical[LAt] <> nil then
+    begin
+      FPhysical[LAt] := TPhysicalCache.Create;
+      FPhysical[LAt].Lexical := ASource.FPhysical[LAt].Lexical;
+      FPhysical[LAt].Ambiguous := ASource.FPhysical[LAt].Ambiguous;
+    end;
+  end;
+  FLexical := Copy(ASource.FLexical, 0, FOccurrenceCount);
+  SetLength(FWindows, FOccurrenceCount);
+  SetLength(FOccurrences, FOccurrenceCount);
+  for LAt := 0 to FOccurrenceCount - 1 do
+  begin
+    ASource.CheckCancellation;
+    FOccurrences[LAt] := ASource.FOccurrences[LAt];
+
+    if ASource.FCaptures[LAt] <> nil then
+    begin
+      FWindows[LAt] := ASource.FCaptures[LAt].Freeze;
+      FOccurrences[LAt].FCount := FTokenCount - FOccurrences[LAt].FFirst;
+      FOccurrences[LAt].FExit := FStateCount - 1;
+      for LDiagnostic := 0 to FWindows[LAt].DiagnosticCount - 1 do
+      begin
+        ASource.CheckCancellation;
+        Problem(ptiLexicalIssue, LAt, FWindows[LAt].Diagnostic(LDiagnostic).Span,
+          FWindows[LAt].Diagnostic(LDiagnostic).MessageText);
+      end;
+    end;
   end;
 end;
 
@@ -946,6 +1064,11 @@ begin
   if FTokenCount >= FOptions.MaximumTokens then
   begin
     raise ENyxPascalTokenLimit.Create(FTokenCount, FOptions.MaximumTokens);
+  end;
+
+  if FWork <> nil then
+  begin
+    FWork.AdmitToken(FTokenCount, FOptions.MaximumTokens);
   end;
 
   if FTokenCount = Length(FTokens) then
@@ -1168,6 +1291,11 @@ begin
   AAllowNestedComments := Owner.FNested;
 end;
 
+procedure TTranslationReader.BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
+begin
+  Owner.FCaptures[Occurrence] := ACapture;
+end;
+
 function TTranslationReader.InitialRegion: TNyxPascalLexicalRegion;
 begin
   Result := Owner.FScanRegion;
@@ -1286,6 +1414,7 @@ begin
   begin
     SetLength(FOccurrences, Capacity(LOccurrence, FOptions.MaximumOccurrences));
     SetLength(FLexical, Length(FOccurrences));
+    SetLength(FCaptures, Length(FOccurrences));
   end;
   FOccurrences[LOccurrence].FFile := AFile;
   FOccurrences[LOccurrence].FParent := AParent;
@@ -1323,6 +1452,7 @@ begin
     FOccurrences[LOccurrence].FCount := FTokenCount - FOccurrences[LOccurrence].FFirst;
     FOccurrences[LOccurrence].FExit := FStateCount - 1;
   finally
+    FCaptures[LOccurrence] := nil;
     Dec(FDepth);
   end;
 end;
@@ -1376,6 +1506,8 @@ var
   LOrigin: TNyxPascalConditionOrigin;
   LPlannable: Boolean;
   LAnalysis: TNyxPascalConditionResult;
+  LSnapshot: INyxPascalTranslation;
+  LPrefix: INyxPascalTranslation;
 begin
   Result := ppkUnknown;
   LValue := AValue;
@@ -1431,7 +1563,35 @@ begin
         LOrigin.Occurrence := AOccurrence;
         LOrigin.Span := ASpan;
         LOrigin.PrefixCount := FTokenCount - 1;
-        Result := FConditions.Evaluate(LOrigin, FContext, LValue);
+        if FPrefixConditions <> nil then
+        begin
+          try
+
+            if FPrefixConditions.PreparePrefix(LOrigin, FContext, LValue) then
+            begin
+              LSnapshot := TTranslation.CreatePrefix(Self);
+              LPrefix := NewNyxPascalTranslationPrefix(LSnapshot,
+                LOrigin.PrefixCount, FOptions, FCancellation);
+              Result := FPrefixConditions.EvaluatePrefix(LOrigin, FContext, LValue, LPrefix);
+            end;
+          except
+            on LError: ENyxPascalTranslationLimit do
+            begin
+              raise;
+            end;
+            on LError: ENyxPascalContext do
+            begin
+              { Internal prefix authority cannot become an authored malformed
+                condition and leave a partially admitted reader running. }
+              raise ENyxPascalTranslationLimit.Create(
+                'Conditional prefix authority refused: ' + LError.Message);
+            end;
+          end;
+        end
+        else
+        begin
+          Result := FConditions.Evaluate(LOrigin, FContext, LValue);
+        end;
 
         if (Ord(Result) < Ord(Low(TNyxPascalKnowledge))) or
           (Ord(Result) > Ord(High(TNyxPascalKnowledge))) then
@@ -3049,6 +3209,11 @@ var
   LToken: TNyxPascalTranslatedToken;
 begin
   LToken := Token(AIndex);
+
+  if (LToken.Occurrence < Length(FWindows)) and (FWindows[LToken.Occurrence] <> nil) then
+  begin
+    Exit(FWindows[LToken.Occurrence].Token(LToken.PhysicalToken));
+  end;
   Result := OccurrenceLexical(LToken.Occurrence).Token(LToken.PhysicalToken);
 end;
 
@@ -3057,6 +3222,11 @@ var
   LToken: TNyxPascalTranslatedToken;
 begin
   LToken := Token(AIndex);
+
+  if (LToken.Occurrence < Length(FWindows)) and (FWindows[LToken.Occurrence] <> nil) then
+  begin
+    Exit(FWindows[LToken.Occurrence].Text(LToken.PhysicalToken));
+  end;
   Result := OccurrenceLexical(LToken.Occurrence).Text(LToken.PhysicalToken);
 end;
 
@@ -3174,6 +3344,11 @@ function TTranslation.OccurrenceLexical(AOccurrence: Integer): INyxPascalLexical
 begin
   Occurrence(AOccurrence);
   Result := FLexical[AOccurrence];
+
+  if Result = nil then
+  begin
+    raise ENyxPascalContext.Create('This frozen prefix has no completed lexical view for its active reader');
+  end;
 end;
 
 function NyxPascalOccurrenceLexical(const ATranslation: INyxPascalTranslation;
