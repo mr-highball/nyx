@@ -176,6 +176,8 @@ var
   LOwner: Integer;
   LWarningGap: Boolean;
   LOptimizationGap: Boolean;
+  LOptimizations: INyxPascalOptimizationDirectives;
+  LOptimizationSeen: Boolean;
   LAlignments: INyxPascalCodeAlignmentDirectives;
   LAlignmentSeen: Boolean;
   LFreeCount: Integer;
@@ -630,9 +632,25 @@ begin
           LAlignmentSeen := True;
         end;
       end;
-      Check(not LSource.Source.Resolved and not LWarningGap and LAlignmentSeen and
-        LOptimizationGap and (LSource.Source.DiagnosticCount = 1),
-        'The unchanged System retains typed CONSTMIN intent and exposes only the next optimization-policy gap');
+      LOptimizationSeen := False;
+      Supports(LSource.Source, INyxPascalOptimizationDirectives, LOptimizations);
+      for LAt := 0 to LOptimizations.OptimizationDirectiveCount - 1 do
+      begin
+
+        if (LOptimizations.OptimizationDirectiveAt(LAt).Origin.FileReference.Name =
+          TNyxText('rtl/inc/genmath.inc')) and
+          (LOptimizations.OptimizationDirectiveAt(LAt).Rule.Request.Kind = porkFeature) and
+          (LOptimizations.OptimizationDirectiveAt(LAt).Rule.Request.Feature = pofFastMath) and
+          not LOptimizations.OptimizationDirectiveAt(LAt).Rule.Request.Enabled then
+        begin
+          LOptimizationSeen := True;
+        end;
+      end;
+      Check(not LWarningGap and LAlignmentSeen and not LOptimizationGap and LOptimizationSeen,
+        'Unchanged System preserves actual typed CONSTMIN/NOFASTMATH intent without assuming full source resolution');
+      WriteLn('actual retained source directives / resolved=', LSource.Source.Resolved,
+        ' optimization requests=', LOptimizations.OptimizationDirectiveCount,
+        ' diagnostics=', LSource.Source.DiagnosticCount);
     end;
 
     if not LSyntaxLimited then

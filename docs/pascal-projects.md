@@ -1862,6 +1862,47 @@ Native whole-unit execution and compiler refusals qualify syntax/ownership;
 browser consumers compile only. Complete RTL meaning, full type/layout analysis,
 editor adoption and both-target input/quality remain separate in WORK.md.
 
+## Authored optimization requests
+
+`TNyxPascalOptimizationRequest` separates symbolic ON/OFF/DEFAULT resets from
+individual typed pass toggles. `pomLevelTwo` requests FPC's target-dependent
+level-two set; `pomDisabled` requests an empty set; `pomInitial` requests the
+compiler's initial settings. None expands into analyzer-guessed target defaults.
+The 29 recognized `TNyxPascalOptimizationFeature` selectors retain individual
+flags, including level flags, without claiming compiler/target availability or
+effective generated instructions. Whole-program optimization remains separate.
+
+```pascal
+LContext := NyxPascalWithOptimization(LContext,
+  TNyxPascalOptimizationRequest.Select(pomInitial));
+LContext := NyxPascalOptimizations(LContext).WithOptimization(
+  TNyxPascalOptimizationRequest.Toggle(pofFastMath, False));
+```
+
+Optional `INyxPascalContextOptimizations` owns an immutable ordered vector of
+requests and independent conditional activity. Capture, exact context identity,
+mode copies and local PUSH/POP preserve that vector. Unknown textual effects
+revoke current knowledge; inactive source branches add nothing. The independent
+2,048-row quota, checked ordinals and validated alternate getters refuse
+atomically. No record owns an interface, producer, compiler, source or editor.
+Reset/toggle accessors refuse the other variant; zero initialization cannot
+silently request OFF.
+
+FPC's source OPTIMIZATION scanner reads one ASCII selector, rather than the
+command-line comma list. Translation retains that boundary: ON/OFF/DEFAULT or
+a recognized feature, optionally prefixed by NO. Trailing text/commas stay in the
+exact source receipt without applying another setting. Unknown selectors and
+compiler-family mismatches remain visible refusals. Optional
+`INyxPascalOptimizationDirectives` retains each physical include occurrence/span,
+pre-directive state and authored rule; prefixes expose only visited requests.
+Historical receipts survive POP, while current authored settings restore.
+
+Pending application of optimizer flags remains compiler-owned. These contracts
+preserve authored intent without predicting target support, precise activation
+timing, layout or ABI. The whole native unit/include qualifies all pass spellings
+and ordinary execution; browser consumers compile only. WORK.md owns unchanged
+RTL evidence and the remaining full language/editor/parity requirements.
+
 ## Bounded compiler query cohorts
 
 General compiler requirement plans stay minimal. Optional

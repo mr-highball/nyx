@@ -129,6 +129,28 @@ type
     { Checked ordinal access; returned values retain no mutable external owner. }
     function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
   end;
+  { One authored optimizer reset/toggle at its physical include occurrence.
+    State precedes the directive. Activity and exact scalar request survive POP
+    in this historical receipt; no compiler/source/interface is held by value. }
+  TNyxPascalOptimizationDirective = record
+  private
+    FOrigin: TNyxPascalConditionOrigin;
+    FState: Integer;
+    FRule: TNyxPascalOptimizationRule;
+  public
+    property Origin: TNyxPascalConditionOrigin read FOrigin;
+    property State: Integer read FState;
+    property Rule: TNyxPascalOptimizationRule read FRule;
+  end;
+  { Optional bounded immutable optimizer receipts. Prefixes retain only visited
+    sites with original pre-state; missing alternate-source support refuses. }
+  INyxPascalOptimizationDirectives = interface(IInterface)
+    ['{7D51CDE4-EAE6-40DE-A74A-DB2C9D2DB427}']
+    { Count selected/uncertain source requests in physical traversal order. }
+    function OptimizationDirectiveCount: Integer;
+    { Checked access; a returned value cannot change the owning translation. }
+    function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
+  end;
   { Optional synchronous facts for a still-unknown expression. Ordered semantic
     refinement supplies sealed answers, never mutable editor state. Origin,
     expanded expression and context belong to this exact construction. The
@@ -368,7 +390,7 @@ type
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
-    INyxPascalCodeAlignmentDirectives)
+    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -387,6 +409,8 @@ type
     FWarningRows: array of Integer;
     FCodeAlignmentDirectives: INyxPascalCodeAlignmentDirectives;
     FCodeAlignmentRows: array of Integer;
+    FOptimizationDirectives: INyxPascalOptimizationDirectives;
+    FOptimizationRows: array of Integer;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -419,6 +443,8 @@ type
     function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
     function CodeAlignmentDirectiveCount: Integer;
     function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
+    function OptimizationDirectiveCount: Integer;
+    function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -475,7 +501,7 @@ type
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
-    INyxPascalCodeAlignmentDirectives)
+    INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -502,6 +528,8 @@ type
     FWarningCount: Integer;
     FCodeAlignmentDirectives: array of TNyxPascalCodeAlignmentDirective;
     FCodeAlignmentCount: Integer;
+    FOptimizationDirectives: array of TNyxPascalOptimizationDirective;
+    FOptimizationCount: Integer;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
     FOccurrenceCount: Integer;
@@ -575,6 +603,8 @@ type
     function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
     function CodeAlignmentDirectiveCount: Integer;
     function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
+    function OptimizationDirectiveCount: Integer;
+    function OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -1768,6 +1798,65 @@ begin
   end;
 end;
 
+{ FPC's source directive reads one ASCII selector with readid, not the command-
+  line comma list. Keep the original span, but never apply trailing selectors or
+  explanatory text. Presets remain symbolic; named passes grant no target support. }
+function ParseOptimizationRequest(const AValue: TNyxText): TNyxPascalOptimizationRequest;
+const
+  Names: array[TNyxPascalOptimizationFeature] of String = ('level1', 'level2', 'level3',
+    'level4', 'regvar', 'uncertain', 'size', 'stackframe', 'peephole', 'loopunroll',
+    'tailrec', 'cse', 'dfa', 'strength', 'schedule', 'autoinline', 'useebp', 'userbp',
+    'orderfields', 'fastmath', 'deadvalues', 'removeemptyprocs', 'constprop', 'deadstore',
+    'forcenostackframe', 'useloadmodifystore', 'unusedpara', 'consts', 'forloop');
+var
+  LAt: Integer;
+  LName: TNyxText;
+  LEnabled: Boolean;
+  LFeature: TNyxPascalOptimizationFeature;
+begin
+  LAt := 1;
+  while (LAt <= Length(AValue)) and (AValue[LAt] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+  begin
+    Inc(LAt);
+  end;
+
+  if (LAt = 1) or (LAt > 256) then
+  begin
+    raise ENyxPascalContext.Create('An optimization directive needs one bounded ASCII selector');
+  end;
+  LName := NyxPascalASCIIKey(Copy(AValue, 1, LAt - 1));
+
+  if LName = 'on' then
+  begin
+    Exit(TNyxPascalOptimizationRequest.Select(pomLevelTwo));
+  end;
+
+  if LName = 'off' then
+  begin
+    Exit(TNyxPascalOptimizationRequest.Select(pomDisabled));
+  end;
+
+  if LName = 'default' then
+  begin
+    Exit(TNyxPascalOptimizationRequest.Select(pomInitial));
+  end;
+  LEnabled := Copy(LName, 1, 2) <> TNyxText('no');
+
+  if not LEnabled then
+  begin
+    LName := Copy(LName, 3, Length(LName) - 2);
+  end;
+  for LFeature := Low(TNyxPascalOptimizationFeature) to High(TNyxPascalOptimizationFeature) do
+  begin
+
+    if LName = TNyxText(Names[LFeature]) then
+    begin
+      Exit(TNyxPascalOptimizationRequest.Toggle(LFeature, LEnabled));
+    end;
+  end;
+  raise ENyxPascalContext.Create('This optimizer selector needs explicit compiler-policy support');
+end;
+
 { Persistence boundary for the supported signed-decimal CODEALIGN spelling.
   Keep assignments in source order: FPC applies a temporary packet per directive,
   and duplicate/minimum/maximum assignments are not a flat last-value map.
@@ -1893,6 +1982,9 @@ var
   LCodeAlignment: TNyxPascalCodeAlignmentRequest;
   LCodeAlignments: INyxPascalContextCodeAlignments;
   LAlignedContext: INyxPascalCompilerContext;
+  LOptimization: TNyxPascalOptimizationRequest;
+  LOptimizations: INyxPascalContextOptimizations;
+  LOptimizedContext: INyxPascalCompilerContext;
 begin
   NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
@@ -2039,6 +2131,45 @@ begin
       FWarningDirectives[FWarningCount].FRule := LWarnings.WarningAt(LWarnings.WarningCount - 1);
       Inc(FWarningCount);
       FContext := LWarningContext;
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'optimization' then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Optimization requests need an explicit FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+      LOptimization := ParseOptimizationRequest(LValue);
+      LOptimizations := NyxPascalOptimizations(FContext);
+
+      if (LOptimizations.OptimizationCount >= NyxPascalOptimizationRuleLimit) or
+        (FOptimizationCount >= FOptions.MaximumTokens) then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Optimizer requests exceed their construction budget');
+      end;
+      LOptimizedContext := LOptimizations.WithOptimization(LOptimization, FActive);
+
+      if FOptimizationCount = Length(FOptimizationDirectives) then
+      begin
+        SetLength(FOptimizationDirectives, Capacity(FOptimizationCount, FOptions.MaximumTokens));
+      end;
+      FOptimizationDirectives[FOptimizationCount].FOrigin.FileReference :=
+        FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+      FOptimizationDirectives[FOptimizationCount].FOrigin.Occurrence := AOccurrence;
+      FOptimizationDirectives[FOptimizationCount].FOrigin.Span := AToken.Span;
+      FOptimizationDirectives[FOptimizationCount].FOrigin.PrefixCount := FTokenCount - 1;
+      FOptimizationDirectives[FOptimizationCount].FState := FTokens[FTokenCount - 1].State;
+      LOptimizations := NyxPascalOptimizations(LOptimizedContext);
+      FOptimizationDirectives[FOptimizationCount].FRule :=
+        LOptimizations.OptimizationAt(LOptimizations.OptimizationCount - 1);
+      Inc(FOptimizationCount);
+      FContext := LOptimizedContext;
       SaveState;
       Exit;
     end;
@@ -2955,6 +3086,21 @@ begin
   Result := FUnresolvedCount;
 end;
 
+function TTranslation.OptimizationDirectiveCount: Integer;
+begin
+  Result := FOptimizationCount;
+end;
+
+function TTranslation.OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= FOptimizationCount) then
+  begin
+    raise ENyxPascalContext.Create('Optimizer directive index is outside its translation');
+  end;
+  Result := FOptimizationDirectives[AIndex];
+end;
+
 function TTranslation.CodeAlignmentDirectiveCount: Integer;
 begin
   Result := FCodeAlignmentCount;
@@ -3027,6 +3173,7 @@ var
   LSpan: TNyxPascalSpan;
   LWarning: TNyxPascalWarningDirective;
   LAlignment: TNyxPascalCodeAlignmentDirective;
+  LOptimization: TNyxPascalOptimizationDirective;
 
   procedure Check;
   begin
@@ -3067,6 +3214,39 @@ begin
   Supports(FSource, INyxPascalRegisterDirectives, FRegisterDirectives);
   Supports(FSource, INyxPascalWarningDirectives, FWarningDirectives);
   Supports(FSource, INyxPascalCodeAlignmentDirectives, FCodeAlignmentDirectives);
+  Supports(FSource, INyxPascalOptimizationDirectives, FOptimizationDirectives);
+
+  if FOptimizationDirectives <> nil then
+  begin
+
+    if (FOptimizationDirectives.OptimizationDirectiveCount < 0) or
+      (FOptimizationDirectives.OptimizationDirectiveCount > AOptions.MaximumTokens) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Optimizer prefix directives exceed their input budget');
+    end;
+    SetLength(FOptimizationRows, FOptimizationDirectives.OptimizationDirectiveCount);
+    LUsed := 0;
+    for LAt := 0 to FOptimizationDirectives.OptimizationDirectiveCount - 1 do
+    begin
+      Check;
+      LOptimization := FOptimizationDirectives.OptimizationDirectiveAt(LAt);
+      LOptimization.Rule.Request.Validate;
+
+      if (LOptimization.Origin.PrefixCount < 0) or (LOptimization.Origin.PrefixCount >= LSourceCount) or
+        (LOptimization.State < 0) or (LOptimization.State >= LStates) or
+        (LOptimization.Origin.Occurrence < 0) or (LOptimization.Origin.Occurrence >= LOccurrences) then
+      begin
+        raise ENyxPascalContext.Create('An optimizer receipt is outside its owning source');
+      end;
+
+      if LOptimization.Origin.PrefixCount < FCount then
+      begin
+        FOptimizationRows[LUsed] := LAt;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FOptimizationRows, LUsed);
+  end;
 
   if FCodeAlignmentDirectives <> nil then
   begin
@@ -3369,6 +3549,26 @@ begin
     raise ENyxPascalContext.Create('This alternate source has no retained condition planning inputs');
   end;
   Result := Length(FUnresolvedRows);
+end;
+
+function TTranslationPrefix.OptimizationDirectiveCount: Integer;
+begin
+
+  if FOptimizationDirectives = nil then
+  begin
+    raise ENyxPascalContext.Create('This alternate source has no retained optimizer directive inputs');
+  end;
+  Result := Length(FOptimizationRows);
+end;
+
+function TTranslationPrefix.OptimizationDirectiveAt(AIndex: Integer): TNyxPascalOptimizationDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= OptimizationDirectiveCount) then
+  begin
+    raise ENyxPascalContext.Create('Optimizer directive index is outside this prefix');
+  end;
+  Result := FOptimizationDirectives.OptimizationDirectiveAt(FOptimizationRows[AIndex]);
 end;
 
 function TTranslationPrefix.CodeAlignmentDirectiveCount: Integer;

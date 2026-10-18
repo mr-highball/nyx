@@ -33,7 +33,89 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Authored code-alignment requests — 2026-10-18
+## Current integration: Authored optimization requests — 2026-10-18
+
+6423b8c is progress across at least twenty-nine documented unclosed batches;
+complete original authoring criterion two remains open. The next RTL prerequisite
+is OPTIMIZATION NOFASTMATH. Follow existing policy/context/translation ownership:
+retain closed typed reset/toggle requests, exact source/include origins,
+conditional activity, capture/identity and local PUSH/POP lifetime. ON's target-
+dependent level-two set and DEFAULT's initial compiler set must remain symbolic;
+do not infer effective passes, target support, instruction selection or ABI.
+The source scanner reads one selector, independently of command-line list syntax.
+Whole native compiler behavior, portable ownership/refusal/prefix cases, affected
+consumers and one unchanged RTL continuation decide this boundary. Stop at a
+different prerequisite without hiding deeper syntax exposure or claiming full
+RTL/editor meaning. Browser consumers compile only. Preserve protected/concurrent
+work and 349 frozen artifacts; LAN stays offline. No host/config retry, HTTP/
+browser/file execution/capture, protected mutation, cleanup/restart, approval
+bypass or sub-agents. Full criterion/task/credit/DONE/parity/adoption/delivery stays
+open; this is work toward the original full Nyx-owned resolver/editor outcome.
+
+Typed optimization requests now distinguish symbolic resets from individual
+Boolean pass toggles. The closed 29-selector catalog does not expand presets or
+assert target/compiler availability. Immutable context capture, exact ordered
+identity, source-mode copies and local saved settings retain authored history;
+unknown effects revoke knowledge. Source receipts retain complete original
+include occurrence/span, pre-directive state and conditional activity. Prefixes
+expose only visited requests. Empty/invalid variants, unknown selectors, family
+mismatch, alternate getters, quotas and cancellation preserve atomic publication.
+No record owns an interface. Native FPC remains responsible for pending flag
+activation, target pass membership, emitted instructions and ABI.
+
+The focused native consumer passes 66 with clean heap. Its whole original
+unit/include compiles and executes ordinary Pascal; 62 source requests cover all
+29 selectors in both directions plus resets and the first-selector source
+boundary. An independent negative compiler build rejects NYX_UNKNOWN_PASS.
+The source-mode directive is single and legal; no preparation failures occur in
+this focused path. Type/public-method, ownership and blank-line review precedes
+the final source freeze. Context/source changes, maintained tests and all products
+remain at that one frozen source.
+
+The required unchanged RTL consumer fails before semantic source publication:
+FPC module preparation exhausts its existing eight-job ceiling. All eight native
+compiler jobs succeeded, and the failed consumer has a clean heap. The retained
+query cohorts contain 99/26/35/43/41/123/13/61 symbols, below the existing per-job
+256-name bound. Conditional candidate planning currently sees only already
+retained translated rows; later include cohorts appear over successive rounds.
+This is a different preparation prerequisite. The budget is not raised, probes
+are not seeded/repeated, source/fixture/capture is not varied, and the failed
+oracle is not weakened to produce a green RTL run. Current full-RTL continuation
+is unqualified. Previous alignment System 7030/two syntax diagnostics/eleven
+answers, ObjPas 209/four/one and ready indexed Free/FreeInstance belong to the
+previous checkpoint; they are not reused as current-source RTL success.
+
+The other native/regression groups pass: 37 successful native consumers with
+clean heaps, including owned completion, actual profile/Windows and production
+semantic completion. All 65 successful compiler logs have zero owned warnings
+and 161 upstream pas2js Classes warnings. That compilation count includes the
+separately failed RTL runtime's successful compilation. Both Studios/backend/
+worker and twenty-three browser consumers compile as applicable; browser
+execution/input/observing/parity/adoption/delivery remain open. No current-source
+full RTL/type/editor success follows from these partial passing boundaries.
+
+Six focused/648 maintained source/97 RTL/23 compiler inputs remain pinned. All
+156 original unit packets, 48 retained SysUtils includes, five protected files/
+nine complete contexts, 349 frozen 7422453 artifacts and thirteen concurrent
+planning files stay exact. Readers are joined; LAN/listeners stay offline. Native
+Nyx tools are absent and no HTTP/host/config retry occurs. Private pointer
+`.local/optimization-paths-private.json` locates source/compiler/native/preservation
+receipts, negative oracle, the retained failed RTL run and cohort inspection,
+and final committed/remote identity. Passing and failed runtime receipts stay
+separate; the failed route is required evidence, not an accepted outcome.
+
+Stop optimization/selector/compiler/capture variants. Next reassess bounded
+candidate planning across known includes through existing compilerplan/native
+module-preparation owners. Preserve pristine facts versus source-local meaning,
+typed identities, cancellation, exact packets and existing work/job/query quotas;
+do not substitute a fixed SDK list, broader capture or raised budget. Full
+original criterion two and source/canonical type/module/incremental/editor/input/
+navigation/quality/parity/adoption/delivery remain open across at least thirty
+documented unclosed batches. No original criterion/task/credit/DONE or new tool/
+schema/rollout closes. The optimizer boundary is implemented/locally qualified;
+the original real-RTL integration requirement remains failed and owned.
+
+## Previous integration: Authored code-alignment requests — 2026-10-18
 
 58ee95b is progress across at least twenty-eight documented unclosed batches;
 full original authoring criterion two remains open. The next prerequisite is the

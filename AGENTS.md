@@ -4,7 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source CODEALIGN retains eleven closed selectors, exact ordered assignment
+Current-source optimization intent adds symbolic ON/OFF/DEFAULT resets and 29
+typed pass toggles with exact source/include receipts, conditional activity and
+immutable context capture/identity/local PUSH/POP. Mode copies retain requests;
+unknown effects revoke knowledge. Pending/effective passes and target support
+remain compiler-owned. The whole native unit/include covers 62 requests; focused
+66 and 37 passing native consumers have clean heaps. All 65 compiler logs are
+successful with zero owned warnings/161 upstream; both Studios/backend/worker
+and twenty-three browser consumers compile as applicable. One separate required
+unchanged RTL run FAILS its existing eight-probe ceiling before semantic source
+publication. Its clean-heap failure and eight exact native jobs are retained;
+no budget/probe/fixture/capture variant or weaker oracle replaces that result.
+The 7030/2/11 System and indexed Free/FreeInstance success below is the previous
+alignment checkpoint, not current-source RTL evidence. WORK.md owns the distinct
+success/failure receipts and next reassessment: bounded candidate planning across
+known includes through existing compilerplan/module-preparation owners, preserving
+source/pristine meaning, cancellation and existing quotas. Stop optimization/
+selector/compiler/capture variants; do not add a fixed SDK probe list or raise
+the job budget. Six focused/648 maintained sources/97 RTL/23 compiler inputs,
+156 original packets/48 includes, five protected files/nine contexts, 349 frozen
+7422453 artifacts and thirteen concurrent planning files stay exact. Readers
+joined; LAN offline; native Nyx tools absent. Full source/type/module/incremental/
+editor/input/quality/parity/adoption/delivery remains open across at least thirty
+documented unclosed batches; no original criterion/task/credit/DONE, new tool/
+schema or rollout closes. No host/config retry, protected mutation, capture,
+cleanup/restart, approval bypass or sub-agents. Preserve concurrent work.
+
+Previously qualified CODEALIGN retains eleven closed selectors, exact ordered assignment
 groups, source/include origins and conditional activity through immutable context
 capture/identity and local PUSH/POP. Mode changes retain requests; unknown effects
 revoke knowledge. No target defaults/offsets/ABI are inferred. Native focused 45,

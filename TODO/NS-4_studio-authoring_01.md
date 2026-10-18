@@ -9,6 +9,34 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Optimization prerequisite (2026-10-18): retain closed typed ON/OFF/DEFAULT and
+named toggle requests, exact include origins/conditional activity and local
+settings lifetime through existing compiler context/translation owners. Capture,
+identity and bounded prefixes must preserve authored intent without inferring
+target defaults, effective optimizer passes or compiler availability. Native
+whole-compiler syntax/behavior, portable refusal/ownership and affected consumers
+plus one unchanged RTL route decide the boundary. 6423b8c remains progress across
+at least twenty-nine unclosed batches; stop at a different prerequisite, retaining
+body diagnostics and complete original criterion two. Browser consumers compile
+only; no original criterion/task/credit/DONE/parity/adoption/delivery closes.
+WORK.md owns exact evidence, failures, preservation and the editor return path.
+
+Focused native optimization passes 66; its whole compiler unit/include qualifies
+62 requests/all 29 pass selectors. Thirty-seven native consumers pass with clean
+heaps; 65 compiler logs succeed with zero owned warnings. Both Studios/backend/
+worker and twenty-three browser consumers compile as applicable. The separate
+required unchanged RTL run fails its existing eight-probe ceiling before semantic
+source publication. Retain that failure and eight successful compiler jobs; do
+not raise limits, add fixed SDK probes, vary capture/fixtures or weaken the oracle.
+Prior System/ObjPas/indexed RTL success remains historical to the alignment
+checkpoint. Stop optimization/selector/compiler/capture variants and reassess
+bounded known-include candidate planning through existing compilerplan/native
+module-preparation owners, preserving pristine/source meaning and quotas. Full
+criterion two and language/type/module/incremental/editor/input/quality/parity/
+adoption/delivery remain open across at least thirty unclosed batches. This is
+implemented/local qualification with failed original RTL integration, not full
+criterion/task/credit/DONE or a new tool/schema/rollout. WORK.md owns exact receipts.
+
 Code-alignment prerequisite (2026-10-18): retain exact typed CODEALIGN assignment
 groups and source/conditional activity through existing context/translation
 ownership, including capture, identity and local PUSH/POP lifetime. FPC applies

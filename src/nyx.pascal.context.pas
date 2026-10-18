@@ -35,6 +35,9 @@ const
     bound analyzer storage, not the configured compiler's source language. }
   NyxPascalCodeAlignmentAssignmentLimit = 64;
   NyxPascalCodeAlignmentRuleLimit = 2048;
+  { Independent quota for authored optimization requests; this bounds analyzer
+    storage without asserting a compiler's accepted source size or pass set. }
+  NyxPascalOptimizationRuleLimit = 2048;
 
 type
   { Invalid captured facts are caller contract failures, never compiler errors.
@@ -128,6 +131,61 @@ type
     FActivity: TNyxPascalKnowledge;
   public
     property Request: TNyxPascalCodeAlignmentRequest read FRequest;
+    property Activity: TNyxPascalKnowledge read FActivity;
+  end;
+  { Symbolic FPC optimizer resets. LevelTwo is ON, Disabled is OFF, Initial is
+    DEFAULT. Target-specific membership and command-line initial flags remain
+    compiler-owned; Unknown cannot construct an authored reset request. }
+  TNyxPascalOptimizationMode = (pomUnknown, pomLevelTwo, pomDisabled, pomInitial);
+  { Closed recognized FPC pass selectors, independent of target implementation
+    and compiler admission. Level selectors toggle individual compiler flags;
+    they do not expand into a preset. Whole-program optimization is separate. }
+  TNyxPascalOptimizationFeature = (pofLevel1, pofLevel2, pofLevel3, pofLevel4,
+    pofRegisterVariables, pofUncertain, pofSize, pofStackFrames, pofPeephole,
+    pofLoopUnrolling, pofTailRecursion, pofCommonSubexpressions, pofDataFlow,
+    pofLoopStrength, pofInstructionScheduling, pofAutomaticInlining, pofUseEBP,
+    pofUseRBP, pofReorderFields, pofFastMath, pofDeadValues, pofRemoveEmptyProcedures,
+    pofConstantPropagation, pofDeadStores, pofForceNoStackFrame, pofLoadModifyStore,
+    pofUnusedParameters, pofConstants, pofForLoops);
+  { Reset and single-pass toggle are distinct operations. Unknown keeps an
+    unconstructed zero record invalid instead of silently requesting OFF. }
+  TNyxPascalOptimizationRequestKind = (porkUnknown, porkMode, porkFeature);
+  { Value-only authored optimizer operation. Checked accessors refuse the other
+    variant; no target pass set, compiler, source or interface is retained. }
+  TNyxPascalOptimizationRequest = record
+  private
+    FKind: TNyxPascalOptimizationRequestKind;
+    FMode: TNyxPascalOptimizationMode;
+    FFeature: TNyxPascalOptimizationFeature;
+    FEnabled: Boolean;
+  public
+    { Construct a validated symbolic reset, independent of target defaults. }
+    class function Select(AMode: TNyxPascalOptimizationMode): TNyxPascalOptimizationRequest; static;
+    { Construct one typed pass request; false is an explicit disable request. }
+    class function Toggle(AFeature: TNyxPascalOptimizationFeature;
+      AEnabled: Boolean): TNyxPascalOptimizationRequest; static;
+    { Refuse an empty/invalid variant or noncanonical unused fields. }
+    procedure Validate;
+    { Exact request identity, without inferring equivalent generated code. }
+    function SameRequest(const AOther: TNyxPascalOptimizationRequest): Boolean;
+    { Checked variant access; a toggle has no reset mode. }
+    function RequestedMode: TNyxPascalOptimizationMode;
+    { Checked variant access; a reset has no pass selector or enable value. }
+    function Feature: TNyxPascalOptimizationFeature;
+    { Checked explicit toggle value; a reset never supplies a fabricated flag. }
+    function Enabled: Boolean;
+    property Kind: TNyxPascalOptimizationRequestKind read FKind;
+  end;
+  { An exact optimizer request and conditional activity, retaining chronology
+    through immutable context snapshots. Pending compiler activation and effective
+    pass selection remain compiler-owned. Unknown activity grants no effective
+    selection. Source positions belong to translation receipts. }
+  TNyxPascalOptimizationRule = record
+  private
+    FRequest: TNyxPascalOptimizationRequest;
+    FActivity: TNyxPascalKnowledge;
+  public
+    property Request: TNyxPascalOptimizationRequest read FRequest;
     property Activity: TNyxPascalKnowledge read FActivity;
   end;
   { Compiler evidence namespace. Bootstrap facts precede authored System aliases;
@@ -393,7 +451,7 @@ type
     Replacement freezes an alternate producer and retains no producer lease. }
   INyxPascalContextCodeAlignments = interface(IInterface)
     ['{2706046A-DAD3-48E8-BA46-C0B9663C7493}']
-    { Number of active/uncertain authored groups; absence grants no defaults. }
+    { Number of retained authored groups; absence grants no defaults. }
     function CodeAlignmentCount: Integer;
     { Checked ordinal access to an immutable, value-owned rule. }
     function CodeAlignmentAt(AIndex: Integer): TNyxPascalCodeAlignmentRule;
@@ -403,6 +461,23 @@ type
     { Freeze and replace the full vector atomically, never retain its producer. }
     function WithCodeAlignmentRules(
       const ASource: INyxPascalContextCodeAlignments): INyxPascalCompilerContext;
+  end;
+  { Optional immutable optimizer request history, bounded independently to 2048
+    rows. PUSH/POP restores it; mode copies retain it; unknown effects revoke it.
+    Requests remain symbolic, including ON/DEFAULT resets and uncertain writes.
+    Freezing an alternate producer retains no producer/source/editor reference. }
+  INyxPascalContextOptimizations = interface(IInterface)
+    ['{519A22BF-6AE1-40A8-957F-D41E547E09C4}']
+    { Retained authored rows; absence grants no effective optimizer defaults. }
+    function OptimizationCount: Integer;
+    { Checked ordinal access to an independent immutable value. }
+    function OptimizationAt(AIndex: Integer): TNyxPascalOptimizationRule;
+    { Append one validated typed request atomically in a new context. }
+    function WithOptimization(const ARequest: TNyxPascalOptimizationRequest;
+      AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
+    { Freeze and replace the complete vector; failures preserve this owner. }
+    function WithOptimizationRules(
+      const ASource: INyxPascalContextOptimizations): INyxPascalCompilerContext;
   end;
   { Optional named-size evidence retains exact measurement scope and ordered
     query identity. It does not export a fabricated System symbol catalog or
@@ -479,13 +554,22 @@ function NyxPascalCodeAlignments(
 function NyxPascalWithCodeAlignment(const AContext: INyxPascalCompilerContext;
   const ARequest: TNyxPascalCodeAlignmentRequest;
   AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
+{ Retain immutable authored optimizer requests. A legacy context supplies an empty
+  detached capture without inventing target defaults or effective pass membership. }
+function NyxPascalOptimizations(
+  const AContext: INyxPascalCompilerContext): INyxPascalContextOptimizations;
+{ Freeze the caller's facts and append one typed request without retaining an
+  alternate producer or changing independent context snapshots. }
+function NyxPascalWithOptimization(const AContext: INyxPascalCompilerContext;
+  const ARequest: TNyxPascalOptimizationRequest;
+  AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
 { Friendly closed short-switch mapping; parsing source spelling is a separate
   boundary. Unknown remains a valid explicitly captured fact. }
 function NyxPascalLocalSwitchOption(AValue: TNyxPascalLocalSwitch): Char;
 function NyxPascalWithLocalSwitch(const AContext: INyxPascalCompilerContext;
   ASwitch: TNyxPascalLocalSwitch; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
 { Restore local policies/short switches/scoped-enum state and authored warning/
-  alignment requests. Preserve current symbol facts, global mode/features and macros.
+  alignment/optimizer requests. Keep current symbol facts, global mode/features and macros.
   Warning requests do not predict compiler-specific delayed message activation;
   emitted diagnostics remain compiler-owned. No replacement table is restored. }
 function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompilerContext): INyxPascalCompilerContext;
@@ -545,6 +629,8 @@ var
   LTargetWarnings: INyxPascalContextWarnings;
   LAlignments: INyxPascalContextCodeAlignments;
   LTargetAlignments: INyxPascalContextCodeAlignments;
+  LOptimizations: INyxPascalContextOptimizations;
+  LTargetOptimizations: INyxPascalContextOptimizations;
 begin
 
   if AContext = nil then
@@ -600,6 +686,12 @@ begin
     LCaptured := LTargetAlignments.WithCodeAlignmentRules(LAlignments);
   end;
 
+  if Supports(AContext, INyxPascalContextOptimizations, LOptimizations) then
+  begin
+    Supports(LCaptured, INyxPascalContextOptimizations, LTargetOptimizations);
+    LCaptured := LTargetOptimizations.WithOptimizationRules(LOptimizations);
+  end;
+
   if Supports(AContext, INyxPascalContextSizes, LSizes) then
   begin
     LSizeCount := LSizes.SizeCount;
@@ -645,11 +737,11 @@ type
   end;
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance.
-    Warning/alignment requests own ordered values without producer/source back
-    references. CODEALIGN groups survive grammar mode changes through Clone. }
+    Warning/alignment/optimizer requests own ordered values without producer/
+    source back references. These requests survive mode changes through Clone. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
     INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
-    INyxPascalContextCodeAlignments)
+    INyxPascalContextCodeAlignments, INyxPascalContextOptimizations)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -662,6 +754,7 @@ type
     FPolicies: TNyxPascalCompilerPolicies;
     FWarnings: array of TNyxPascalWarningRule;
     FCodeAlignments: array of TNyxPascalCodeAlignmentRule;
+    FOptimizations: array of TNyxPascalOptimizationRule;
     FSizes: array of TCapturedSize;
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
@@ -701,6 +794,12 @@ type
       AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
     function WithCodeAlignmentRules(
       const ASource: INyxPascalContextCodeAlignments): INyxPascalCompilerContext;
+    function OptimizationCount: Integer;
+    function OptimizationAt(AIndex: Integer): TNyxPascalOptimizationRule;
+    function WithOptimization(const ARequest: TNyxPascalOptimizationRequest;
+      AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function WithOptimizationRules(
+      const ASource: INyxPascalContextOptimizations): INyxPascalCompilerContext;
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
     function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
@@ -932,6 +1031,11 @@ begin
     begin
       Result.FCodeAlignments[LAt] := FCodeAlignments[LAt];
     end;
+    SetLength(Result.FOptimizations, Length(FOptimizations));
+    for LAt := 0 to High(FOptimizations) do
+    begin
+      Result.FOptimizations[LAt] := FOptimizations[LAt];
+    end;
     Result.FSizes := Copy(FSizes);
     Result.FCaptureScope := FCaptureScope;
     Result.FBootstrap := FBootstrap;
@@ -1157,6 +1261,8 @@ var
   LWarning: TNyxPascalWarningRule;
   LAlignments: INyxPascalContextCodeAlignments;
   LAlignment: TNyxPascalCodeAlignmentRule;
+  LOptimizations: INyxPascalContextOptimizations;
+  LOptimization: TNyxPascalOptimizationRule;
 begin
   Result := False;
 
@@ -1237,6 +1343,29 @@ begin
     end;
   end
   else if Length(FCodeAlignments) <> 0 then
+  begin
+    Exit;
+  end;
+
+  if Supports(AOther, INyxPascalContextOptimizations, LOptimizations) then
+  begin
+
+    if LOptimizations.OptimizationCount <> Length(FOptimizations) then
+    begin
+      Exit;
+    end;
+    for LAt := 0 to High(FOptimizations) do
+    begin
+      LOptimization := LOptimizations.OptimizationAt(LAt);
+
+      if not FOptimizations[LAt].Request.SameRequest(LOptimization.Request) or
+        (FOptimizations[LAt].Activity <> LOptimization.Activity) then
+      begin
+        Exit;
+      end;
+    end;
+  end
+  else if Length(FOptimizations) <> 0 then
   begin
     Exit;
   end;
@@ -1770,6 +1899,198 @@ begin
   Result.FActivity := AActivity;
 end;
 
+class function TNyxPascalOptimizationRequest.Select(
+  AMode: TNyxPascalOptimizationMode): TNyxPascalOptimizationRequest;
+begin
+  Result := Default(TNyxPascalOptimizationRequest);
+  Result.FKind := porkMode;
+  Result.FMode := AMode;
+  Result.Validate;
+end;
+
+class function TNyxPascalOptimizationRequest.Toggle(AFeature: TNyxPascalOptimizationFeature;
+  AEnabled: Boolean): TNyxPascalOptimizationRequest;
+begin
+  Result := Default(TNyxPascalOptimizationRequest);
+  Result.FKind := porkFeature;
+  Result.FFeature := AFeature;
+  Result.FEnabled := AEnabled;
+  Result.Validate;
+end;
+
+procedure TNyxPascalOptimizationRequest.Validate;
+begin
+
+  if (FKind = porkMode) and (Ord(FMode) > Ord(pomUnknown)) and
+    (Ord(FMode) <= Ord(High(TNyxPascalOptimizationMode))) and
+    (FFeature = Low(TNyxPascalOptimizationFeature)) and not FEnabled then
+  begin
+    Exit;
+  end;
+
+  if (FKind = porkFeature) and (FMode = pomUnknown) and
+    (Ord(FFeature) >= Ord(Low(TNyxPascalOptimizationFeature))) and
+    (Ord(FFeature) <= Ord(High(TNyxPascalOptimizationFeature))) then
+  begin
+    Exit;
+  end;
+  raise ENyxPascalContext.Create('An optimizer request needs a valid typed reset or pass toggle');
+end;
+
+function TNyxPascalOptimizationRequest.SameRequest(
+  const AOther: TNyxPascalOptimizationRequest): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := (FKind = AOther.FKind) and (FMode = AOther.FMode) and
+    (FFeature = AOther.FFeature) and (FEnabled = AOther.FEnabled);
+end;
+
+function TNyxPascalOptimizationRequest.RequestedMode: TNyxPascalOptimizationMode;
+begin
+  Validate;
+
+  if FKind <> porkMode then
+  begin
+    raise ENyxPascalContext.Create('A pass toggle has no optimizer reset mode');
+  end;
+  Result := FMode;
+end;
+
+function TNyxPascalOptimizationRequest.Feature: TNyxPascalOptimizationFeature;
+begin
+  Validate;
+
+  if FKind <> porkFeature then
+  begin
+    raise ENyxPascalContext.Create('An optimizer reset has no pass selector');
+  end;
+  Result := FFeature;
+end;
+
+function TNyxPascalOptimizationRequest.Enabled: Boolean;
+begin
+  Validate;
+
+  if FKind <> porkFeature then
+  begin
+    raise ENyxPascalContext.Create('An optimizer reset has no individual enable value');
+  end;
+  Result := FEnabled;
+end;
+
+{ Validate before cloning/publishing a context. Records retain only scalar intent
+  and activity; no configured compiler or alternate producer survives capture. }
+function ValidatedOptimizationRule(const ARequest: TNyxPascalOptimizationRequest;
+  AActivity: TNyxPascalKnowledge): TNyxPascalOptimizationRule;
+begin
+  ARequest.Validate;
+
+  if (Ord(AActivity) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AActivity) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('An optimizer request has invalid conditional activity');
+  end;
+  Result.FRequest := ARequest;
+  Result.FActivity := AActivity;
+end;
+
+function TCompilerContext.OptimizationCount: Integer;
+begin
+  Result := Length(FOptimizations);
+end;
+
+function TCompilerContext.OptimizationAt(AIndex: Integer): TNyxPascalOptimizationRule;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FOptimizations)) then
+  begin
+    raise ENyxPascalContext.Create('An optimizer request index is outside its exact context');
+  end;
+  Result := FOptimizations[AIndex];
+end;
+
+function TCompilerContext.WithOptimization(const ARequest: TNyxPascalOptimizationRequest;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LRule: TNyxPascalOptimizationRule;
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LCount: Integer;
+begin
+  LRule := ValidatedOptimizationRule(ARequest, AActivity);
+  LCount := Length(FOptimizations);
+
+  if LCount >= NyxPascalOptimizationRuleLimit then
+  begin
+    raise ENyxPascalContext.Create('Optimizer requests exceed their bounded context vector');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FOptimizations, LCount + 1);
+  LCopy.FOptimizations[LCount] := LRule;
+  Result := LOwner;
+end;
+
+function TCompilerContext.WithOptimizationRules(
+  const ASource: INyxPascalContextOptimizations): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LCount: Integer;
+  LAt: Integer;
+  LRule: TNyxPascalOptimizationRule;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('Capturing optimizer requests needs an explicit source');
+  end;
+  LCount := ASource.OptimizationCount;
+
+  if (LCount < 0) or (LCount > NyxPascalOptimizationRuleLimit) then
+  begin
+    raise ENyxPascalContext.Create('Captured optimizer requests exceed their bounded vector');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FOptimizations, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    LRule := ASource.OptimizationAt(LAt);
+    LCopy.FOptimizations[LAt] := ValidatedOptimizationRule(LRule.Request, LRule.Activity);
+  end;
+  Result := LOwner;
+end;
+
+function NyxPascalOptimizations(
+  const AContext: INyxPascalCompilerContext): INyxPascalContextOptimizations;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Optimizer requests need their compiler context');
+  end;
+
+  if not Supports(AContext, INyxPascalContextOptimizations, Result) then
+  begin
+    LCaptured := CaptureNyxPascalCompilerContext(AContext);
+    Supports(LCaptured, INyxPascalContextOptimizations, Result);
+  end;
+end;
+
+function NyxPascalWithOptimization(const AContext: INyxPascalCompilerContext;
+  const ARequest: TNyxPascalOptimizationRequest;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+  LCaptured := CaptureNyxPascalCompilerContext(AContext);
+  Result := NyxPascalOptimizations(LCaptured).WithOptimization(ARequest, AActivity);
+end;
+
 { Keep target requests exact, including zero and signed constraint values. Only
   the three code-label selectors have a closed power-of-two admission domain. }
 procedure ValidateCodeAlignmentAssignment(ASubject: TNyxPascalCodeAlignmentSubject;
@@ -2167,7 +2488,8 @@ begin
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
     .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested));
   LCurrent := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
-  Result := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));
+  LCurrent := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));
+  Result := NyxPascalOptimizations(LCurrent).WithOptimizationRules(NyxPascalOptimizations(LSaved));
 end;
 
 function UnknownValue: TConditionValue;

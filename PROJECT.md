@@ -120,6 +120,12 @@ through context capture, identity and local settings lifetime. This preserves FP
 code-generation intent without inferring target defaults, offsets or ABI layout.
 Full RTL/type meaning, ordinary editor adoption and both-target quality stay open.
 
+[Authored optimization requests](docs/pascal-projects.md#authored-optimization-requests)
+now distinguish symbolic resets from typed pass toggles. Capture, source/include
+origins and saved settings retain exact authored intent without fabricating target
+defaults or effective optimizer behavior. Broader compiler/language meaning and
+ordinary editor adoption remain open under the full original authoring criterion.
+
 The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
 separates linker suffixes from class visibility and retains typed declaration
 flags/ranges. Known layout directives retain explanatory trailing text without
