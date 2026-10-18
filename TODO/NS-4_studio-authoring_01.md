@@ -9,7 +9,34 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Metadata-access prerequisite (2026-10-18): an unpublished parser now retains at
+Direct lexical prerequisite (2026-10-18): the existing fixed-policy scanner now
+emits final append token/diagnostic rows through a synchronous typed receiver,
+without an intermediate scanner vector, later import or Unicode byte recount.
+Exact scalar/byte/storage origins and source-start/assembly/comment policies stay
+independent; published blocks retain no receiver/reader/execution borrow. The
+private owner borrow revokes on success/refusal/cancellation, including EOF
+cancellation. Actual retained directory/partial-row/diagnostic copies remain
+admitted. Native append checks pass 2,555 with independent full scans, every-scalar
+seams and exact nine/23-unit fits/all smaller allowances. Work checks pass 460 at
+an actual 421-unit semantic fit versus prior 439, with all 420 smaller budgets
+refusing. The obsolete assertion requiring a duplicate fresh-import charge fails
+once, clean heap, then is replaced with a strict zero-import assertion while
+retaining other phase checks and explicit retained-copy coverage. WORK.md owns
+that retained failure and frozen wider/source/remote evidence. The unchanged
+original RTL still fails at round 15/224,739 tokens/four-million aggregate units,
+now metadata-node instead of lexical-row, with clean heap and no final semantic/
+indexed result. Next reassess typed ordinal metadata storage: Row/Edit currently
+encode numeric row ordinals as text and traverse/rebuild the mixed-key AVL tree.
+Preserve exact textual indexes, COW/root/sibling ownership, admitted directory/row
+copies, cancellation and both caps; do not extend cache/fixture/probe variants.
+All 40 maintained native consumers and 81 accepted compiler jobs pass, zero owned
+warnings. Browser consumers compile only; current-start protected bytes/nine
+contexts/349 artifacts remain exact. The historical configuration delta and
+original full preservation failure remain retained without restoration.
+Full original criterion/task/credit/DONE/editor/input/quality/parity/adoption/
+delivery remain open; no probe, numeric quota, MCP tool/schema or rollout changes.
+
+Historical metadata-access prerequisite (2026-10-18): an unpublished parser now retains at
 most eight exact lookup results, including absence, while root writes refresh
 the changed key. Independent COW stamps still detach cached earlier rows before
 mutation. Publication clears all key/value/execution leases; published/concurrent

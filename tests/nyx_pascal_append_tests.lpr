@@ -25,9 +25,25 @@ program nyx_pascal_append_tests;
 uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler,
   nyx.pascal.lexing, nyx.pascal.lexing.append, nyx.pascal.syntax,
   nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation,
-  nyx.pascal.syntax.translated, nyx.pascal.binding;
+  nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.work;
 
 type
+  { Value-only capture of synchronous scan emission. Test controls may cancel
+    or raise during a callback; the receiver never borrows a scanner/source.
+    Its vectors deliberately belong to the destination, not a scanner buffer. }
+  TScanReceiver = class(TInterfacedObject, INyxPascalLexicalFragmentReceiver)
+  public
+    Tokens: array of TNyxPascalToken;
+    Spellings: array of TNyxText;
+    ByteStarts, StorageStarts: array of Integer;
+    Diagnostics: array of TNyxPascalLexicalDiagnostic;
+    AbortAfter: Integer;
+    CancelAfter: Integer;
+    Cancellation: INyxCancellationScope;
+    procedure ReceiveToken(const AToken: TNyxPascalToken; const ASpelling: TNyxText;
+      AByteStart, AStorageStart: Integer);
+    procedure ReceiveDiagnostic(const ADiagnostic: TNyxPascalLexicalDiagnostic);
+  end;
   { Fixture-only source truth. Each callback compares an appended projection
     with independent complete projection/parsing while an enclosing type/routine
     remains unfinished. Neither projection may retain this callback owner. }
@@ -91,6 +107,239 @@ begin
     (ALeft.Column = ARight.Column) and (ALeft.Complete = ARight.Complete) and
     (ALeft.Escaped = ARight.Escaped) and (ALeft.RealNumber = ARight.RealNumber) and
     (ALeft.Region = ARight.Region);
+end;
+
+procedure TScanReceiver.ReceiveToken(const AToken: TNyxPascalToken;
+  const ASpelling: TNyxText; AByteStart, AStorageStart: Integer);
+var
+  LAt: Integer;
+begin
+  LAt := Length(Tokens);
+  SetLength(Tokens, LAt + 1);
+  SetLength(Spellings, LAt + 1);
+  SetLength(ByteStarts, LAt + 1);
+  SetLength(StorageStarts, LAt + 1);
+  Tokens[LAt] := AToken;
+  Spellings[LAt] := ASpelling;
+  ByteStarts[LAt] := AByteStart;
+  StorageStarts[LAt] := AStorageStart;
+
+  if (CancelAfter > 0) and (LAt + 1 = CancelAfter) then
+  begin
+    Cancellation.Cancel;
+  end;
+
+  if (AbortAfter > 0) and (LAt + 1 = AbortAfter) then
+  begin
+    raise EAbort.Create('Deliberate direct scan receiver failure');
+  end;
+end;
+
+procedure TScanReceiver.ReceiveDiagnostic(const ADiagnostic: TNyxPascalLexicalDiagnostic);
+var
+  LAt: Integer;
+begin
+  LAt := Length(Diagnostics);
+  SetLength(Diagnostics, LAt + 1);
+  Diagnostics[LAt] := ADiagnostic;
+end;
+
+procedure DirectScan;
+const
+  CText: TNyxText = '﻿unit Direct; // 🚀' + #13#10 +
+    'const café=''𐐷''; {$if A} asm mov ax, 42 end; ' + #0 + ' ''unfinished';
+var
+  LReceiver: TScanReceiver;
+  LLease: INyxPascalLexicalFragmentReceiver;
+  LWhole: INyxPascalLexicalSnapshot;
+  LPolicy: TNyxPascalLexicalOptions;
+  LScan: TNyxPascalLexicalScanReceipt;
+  LScope: INyxCancellationScope;
+  LAt, LBytes, LStorage, LMode: Integer;
+  LEqual, LReturned, LRefused: Boolean;
+begin
+  LPolicy := TNyxPascalLexicalOptions.Defaults.UnicodeIdentifiers(True);
+  for LMode := 0 to 2 do
+  begin
+    LReceiver := TScanReceiver.Create;
+    LLease := LReceiver;
+
+    if LMode = 0 then
+    begin
+      LWhole := NewNyxPascalLexicalSnapshot(CText, LPolicy);
+      LScan := ScanNyxPascalLexicalFragment(CText, LPolicy, plrPascal, True, LLease);
+    end
+    else
+    begin
+      { A continuation BOM is an ordinary invalid scalar; an assembly fragment
+        has opaque operands and retains its initial envelope until END. }
+      LWhole := NewNyxPascalLexicalFragment(CText, LPolicy,
+        TNyxPascalLexicalRegion(LMode - 1), False);
+      LScan := ScanNyxPascalLexicalFragment(CText, LPolicy,
+        TNyxPascalLexicalRegion(LMode - 1), False, LLease);
+    end;
+    LBytes := 0;
+    LStorage := 0;
+    LEqual := (Length(LReceiver.Tokens) = LWhole.Count) and
+      (Length(LReceiver.Diagnostics) = LWhole.DiagnosticCount);
+    for LAt := 0 to High(LReceiver.Tokens) do
+    begin
+      LEqual := LEqual and SameToken(LReceiver.Tokens[LAt], LWhole.Token(LAt)) and
+        (LReceiver.Spellings[LAt] = LWhole.Text(LAt)) and
+        (LReceiver.ByteStarts[LAt] = LBytes) and
+        (LReceiver.StorageStarts[LAt] = LStorage);
+      Inc(LBytes, NyxUTF8ByteCount(LReceiver.Spellings[LAt]));
+      Inc(LStorage, Length(LReceiver.Spellings[LAt]));
+    end;
+    for LAt := 0 to High(LReceiver.Diagnostics) do
+    begin
+      LEqual := LEqual and (LReceiver.Diagnostics[LAt].Issue = LWhole.Diagnostic(LAt).Issue) and
+        (LReceiver.Diagnostics[LAt].Span.Start = LWhole.Diagnostic(LAt).Span.Start) and
+        (LReceiver.Diagnostics[LAt].Span.Length = LWhole.Diagnostic(LAt).Span.Length);
+    end;
+    Check(LEqual and (LScan.Tokens = LWhole.Count) and
+      (LScan.Diagnostics = LWhole.DiagnosticCount) and (LScan.Scalars = LWhole.Scalars) and
+      (LScan.UTF8Bytes = LBytes) and (LScan.StorageUnits = LStorage) and
+      (LScan.BufferedTokenRows = 0) and (LScan.BufferedDiagnosticRows = 0),
+      'Direct scan matches whole token/diagnostic spelling and separate origins with zero intermediate rows');
+  end;
+  LReturned := False;
+  LRefused := False;
+  try
+    LScan := ScanNyxPascalLexicalFragment('', LPolicy, plrPascal, True, nil);
+    LReturned := True;
+  except
+    on ENyxPascalLexical do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and not LReturned, 'Direct emission requires an explicit destination');
+  for LMode := 0 to 2 do
+  begin
+    LReceiver := TScanReceiver.Create;
+    LLease := LReceiver;
+    LScope := NewNyxCancellationScope;
+    LReceiver.Cancellation := LScope;
+
+    if LMode = 0 then
+    begin
+      LReceiver.AbortAfter := 2;
+    end
+    else if LMode = 1 then
+    begin
+      LReceiver.CancelAfter := 2;
+    end
+    else
+    begin
+      LReceiver.CancelAfter := 1;
+    end;
+    LReturned := False;
+    LRefused := False;
+    try
+
+      if LMode = 2 then
+      begin
+        LScan := ScanNyxPascalLexicalFragment('', LPolicy, plrPascal, True, LLease, LScope);
+      end
+      else
+      begin
+        LScan := ScanNyxPascalLexicalFragment(CText, LPolicy, plrPascal, True, LLease, LScope);
+      end;
+      LReturned := True;
+    except
+      on EAbort do
+      begin
+        LRefused := LMode = 0;
+      end;
+      on ENyxPascalAnalysisCancelled do
+      begin
+        LRefused := LMode > 0;
+      end;
+    end;
+    Check(LRefused and not LReturned and
+      (((LMode < 2) and (Length(LReceiver.Tokens) = 2)) or
+       ((LMode = 2) and (Length(LReceiver.Tokens) = 1))),
+      'Callback failure/cancellation stops further emission and returns no completed receipt');
+    LReceiver.Cancellation := nil;
+    LLease := nil;
+  end;
+end;
+
+procedure DirectAdmission;
+const
+  CText: TNyxText = 'a:=42; // 🚀' + #13#10 + 'b';
+var
+  LBudget: INyxPascalAnalysisBudget;
+  LBase, LValue: INyxPascalLexicalSnapshot;
+  LReceipt: TNyxPascalAnalysisReceipt;
+  LMaximum, LAt, LMode: Integer;
+  LRefused: Boolean;
+begin
+  LBase := NewNyxPascalAppendLexical('a ' + #0 + ' c; d; ',
+    TNyxPascalLexicalOptions.Defaults);
+  for LMode := 0 to 1 do
+  begin
+    LBudget := NewNyxPascalAnalysisBudget(100000);
+
+    if LMode = 0 then
+    begin
+      LValue := NewNyxPascalAppendLexical(CText, TNyxPascalLexicalOptions.Defaults, LBudget);
+    end
+    else
+    begin
+      LValue := AppendNyxPascalLexical(LBase, CText, LBudget);
+    end;
+    LReceipt := LBudget.Receipt;
+    LMaximum := LReceipt.Total;
+
+    if LMode = 0 then
+    begin
+      Check((LReceipt.Used(papLexicalToken) = LValue.Count) and
+        (LReceipt.Used(papLexicalRow) = 0) and (LReceipt.Total = LValue.Count),
+        'Fresh scan emits each final row once under token admission with no duplicate import');
+    end
+    else
+    begin
+      Check((LReceipt.Used(papLexicalRow) > 0) and (LReceipt.Used(papDiagnosticRow) > 0),
+        'Append still admits actual retained row/directory/diagnostic copies');
+    end;
+    LBudget.Retire;
+    Check((LValue.Source <> '') and (LValue.Count > 0) and
+      (LValue.TokenAt(LValue.Scalars) = LValue.Count - 1) and
+      (LBudget.Receipt.Total = LMaximum),
+      'Published final rows remain complete/readable after retirement without deferred construction work');
+    for LAt := 1 to LMaximum do
+    begin
+      LBudget := NewNyxPascalAnalysisBudget(LAt);
+      LValue := nil;
+      LRefused := False;
+      try
+
+        if LMode = 0 then
+        begin
+          LValue := NewNyxPascalAppendLexical(CText, TNyxPascalLexicalOptions.Defaults, LBudget);
+        end
+        else
+        begin
+          LValue := AppendNyxPascalLexical(LBase, CText, LBudget);
+        end;
+      except
+        on ENyxPascalAnalysisWorkLimit do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(((LAt = LMaximum) and not LRefused and (LValue <> nil)) or
+        ((LAt < LMaximum) and LRefused and (LValue = nil)),
+        'Every smaller direct construction allowance refuses and the exact fit succeeds atomically');
+      Check((LBudget.Receipt.Total <= LAt) and (LBase.Source = 'a ' + #0 + ' c; d; '),
+        'Direct emission never overspends or changes its earlier immutable predecessor');
+      LBudget.Retire;
+    end;
+    WriteLn('direct lexical admitted units / mode=', LMode, ' exact=', LMaximum,
+      ' smaller=', LMaximum - 1);
+  end;
 end;
 
 procedure EqualLexical(const ALeft, ARight: INyxPascalLexicalSnapshot);
@@ -610,6 +859,8 @@ end;
 
 begin
   try
+    DirectScan;
+    DirectAdmission;
     Splits;
     OwnershipAndSlices;
     Refusals;

@@ -2433,16 +2433,60 @@ The controlled native constructor performs 12,918 lookups with 11,642 hits and
 10,707 actual lookup-tree visits; peak retention is eight and publication leaves
 zero. Distinct positive/negative published queries preserve those counters.
 Sibling overload branches retain independent row identities and unchanged COW
-allocation results. The unchanged small semantic fixture admits 439 work units
+allocation results. At the 14f3a8a checkpoint, the small semantic fixture admits 439 work units
 versus the prior 456; all 438 smaller allowances still refuse atomically.
 
 WORK.md owns current-source qualification and limits. Browser consumers compile
-only. The unchanged real RTL run advances beyond the previous round-six refusal,
+only. That checkpoint's unchanged real RTL run advances beyond the previous round-six refusal,
 through Word and source-driven Longint/Int64 requests, then refuses at the same
 four-million allowance at round 15/lexical-row. It publishes no final System/ObjPas
 semantic/indexed result. Complete language/editor/incremental/input/quality/parity/
-adoption/delivery remain open, with duplicated lexical materialization the next
-concrete preparation concern.
+adoption/delivery remain open. The following direct-emission work addresses its
+duplicated lexical materialization concern.
+
+## Direct lexical append preparation
+
+`ScanNyxPascalLexicalFragment` uses the same fixed-policy scanner as complete
+lexical snapshots, with an explicit `INyxPascalLexicalFragmentReceiver`. Each
+final token and spelling arrives once with its local scalar token span, zero-based
+UTF-8 byte start and target String storage start. Those coordinate domains stay
+independent. The scanner performs Unicode validation and exact byte accounting
+while consuming scalars; no second spelling/tail walk recounts them. Diagnostics
+may arrive before their enclosing token. Entry region, original-start BOM rules,
+comment policies, recovery and source/token/diagnostic/depth quotas stay exact.
+
+Direct emission constructs no temporary token or diagnostic vector. Its value-only
+`TNyxPascalLexicalScanReceipt` reports completed coordinate/count facts and zero
+scanner-buffer rows, independently of destination storage. The receiver is borrowed
+synchronously and released on every exit. Callbacks remain provisional until
+success; an exception or cancellation, including cancellation during EOF emission,
+returns no completed receipt. A receiver stages any externally observable work
+under its own ownership. No observer, prefix capture, context authority or mutable
+scanner can be obtained through this fixed-policy destination contract.
+
+Owned append construction uses a private receiver to fill final immutable blocks
+and diagnostics directly. Its raw owner borrow is revoked in `finally`; the local
+interface lease covers that whole call. Scalar/storage/line/column rebasing and
+byte starts come from the scanner's exact local coordinates. Existing two-token
+lookahead repair, independently shared full blocks, partial-tail copies, diagnostic
+replacement, sealed lineage and independent predecessor retirement are preserved.
+Published getters read completed rows and hold no scanner/receiver/execution lease;
+eliminated preparation is not deferred to a getter or future caller.
+
+Token admission covers scanning and emitting that final row; diagnostic admission
+covers its direct emission. Retained block-directory, partial-row and earlier
+diagnostic copies still admit their actual operations. No numeric cap or source
+probe changes. Native append checks cover independent whole-source comparisons,
+Unicode/BOM/assembly/diagnostics, every-scalar seams, callback cancellation/failure,
+retirement and exact work fits of nine/fresh and 23/append units with all smaller
+allowances refusing. The small semantic fixture now admits 421 units versus 439,
+with all 420 smaller budgets refusing. Its assertion explicitly requires zero
+duplicate lexical import work; it retains all other exercised phase checks.
+
+WORK.md owns frozen maintained/original RTL results and their limits. Work counts
+describe actual logical preparation, not CPU time or editor latency. Native
+execution and browser compilation alone do not establish complete source meaning,
+editor integration, input quality, both-target parity, adoption or delivery.
 
 ## Declaration-bound constant expressions
 

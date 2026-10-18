@@ -112,6 +112,7 @@ type
     FOptions: TNyxPascalLexicalOptions;
     FBlocks: array of IAppendBlock;
     FDiagnostics: array of TNyxPascalLexicalDiagnostic;
+    FDiagnosticCount: Integer;
     FCount: Integer;
     FScalars: Integer;
     FBytes: Integer;
@@ -123,9 +124,11 @@ type
     FPrevious: IInterface;
     FWriting: TAppendBlock;
     procedure Add(const ARow: TAppendRow);
-    procedure Import(const ASource: INyxPascalLexicalSnapshot;
+    procedure AddDiagnostic(const AValue: TNyxPascalLexicalDiagnostic);
+    function Scan(const AText: TNyxText; const APolicy: TNyxPascalLexicalOptions;
+      ARegion: TNyxPascalLexicalRegion;
       AScalarBase, AStorageBase, AByteBase, ALineBase, AColumnBase: Integer;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope): TNyxPascalLexicalScanReceipt;
   public
     constructor Create(const AText: TNyxText; const AOptions: TNyxPascalLexicalOptions;
       const ACancellation: INyxCancellationScope);
@@ -153,6 +156,18 @@ type
     function SharedTokens: Integer;
     function CopiedTokens: Integer;
   end;
+  { Synchronous final-row destination. Its raw owner is borrowed only while
+    Scan holds a local interface lease; finally revokes it on every exit. The
+    scanner supplies local exact byte/storage origins, avoiding any spelling
+    recount or intermediate token vector. It owns no reader/execution scope. }
+  TAppendReceiver = class(TInterfacedObject, INyxPascalLexicalFragmentReceiver)
+  public
+    Owner: TAppendLexical;
+    ScalarBase, StorageBase, ByteBase, LineBase, ColumnBase: Integer;
+    procedure ReceiveToken(const AToken: TNyxPascalToken; const ASpelling: TNyxText;
+      AByteStart, AStorageStart: Integer);
+    procedure ReceiveDiagnostic(const ADiagnostic: TNyxPascalLexicalDiagnostic);
+  end;
 
 procedure CheckCancellation(const ACancellation: INyxCancellationScope);
 begin
@@ -160,62 +175,6 @@ begin
   if (ACancellation <> nil) and ACancellation.Cancelled then
   begin
     raise ENyxPascalAnalysisCancelled.Create('Append lexical analysis cancelled');
-  end;
-end;
-
-{ Count exact boundary bytes with bounded cancellation polls. Resource codecs'
-  exception family and uncancellable whole-text counting do not cross this
-  lexical factory's failure/lifetime contract. }
-function CheckedBytes(const AText: TNyxText; AMaximum: Integer;
-  const ACancellation: INyxCancellationScope): Integer;
-var
-  LAt: Integer;
-  LScalar: Integer;
-  LBytes: Integer;
-  LPolls: Integer;
-begin
-  CheckCancellation(ACancellation);
-
-  if Length(AText) > AMaximum then
-  begin
-    raise ENyxPascalLexicalLimit.Create('Append source exceeds its UTF-8 byte budget');
-  end;
-  Result := 0;
-  LAt := 1;
-  LPolls := 0;
-  while LAt <= Length(AText) do
-  begin
-
-    if LPolls mod 256 = 0 then
-    begin
-      CheckCancellation(ACancellation);
-    end;
-    Inc(LPolls);
-
-    if not NyxNextScalar(AText, LAt, LScalar) then
-    begin
-      raise ENyxPascalLexical.Create('Appended source contains malformed Unicode');
-    end;
-    LBytes := 1;
-
-    if LScalar > $FFFF then
-    begin
-      LBytes := 4;
-    end
-    else if LScalar > $7FF then
-    begin
-      LBytes := 3;
-    end
-    else if LScalar > $7F then
-    begin
-      LBytes := 2;
-    end;
-
-    if LBytes > AMaximum - Result then
-    begin
-      raise ENyxPascalLexicalLimit.Create('Append source exceeds its UTF-8 byte budget');
-    end;
-    Inc(Result, LBytes);
   end;
 end;
 
@@ -255,61 +214,98 @@ begin
   Inc(FCount);
 end;
 
-procedure TAppendLexical.Import(const ASource: INyxPascalLexicalSnapshot;
-  AScalarBase, AStorageBase, AByteBase, ALineBase, AColumnBase: Integer;
-  const ACancellation: INyxCancellationScope);
+procedure TAppendLexical.AddDiagnostic(const AValue: TNyxPascalLexicalDiagnostic);
 var
-  LAt: Integer;
-  LRow: TAppendRow;
-  LBytes: Integer;
-  LStorage: Integer;
+  LCapacity: Integer;
 begin
-  LBytes := AByteBase;
-  LStorage := AStorageBase;
-  for LAt := 0 to ASource.Count - 1 do
+
+  if FDiagnosticCount >= FOptions.MaximumDiagnostics then
   begin
-    CheckCancellation(ACancellation);
-    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
-    LRow.Value := ASource.Token(LAt).Rebased(AScalarBase, AStorageBase, ALineBase, AColumnBase);
-    LRow.Spelling := ASource.Text(LAt);
-    LRow.ByteStart := LBytes;
-    LRow.StorageStart := LStorage;
-    Inc(LBytes, CheckedBytes(LRow.Spelling, FBytes - LBytes, ACancellation));
-    Inc(LStorage, Length(LRow.Spelling));
-    Add(LRow);
+    raise ENyxPascalLexicalLimit.Create('Append diagnostics exceed the global lexical budget');
   end;
 
-  if (LBytes <> FBytes) or (LStorage <> FStorage) then
+  if FDiagnosticCount = Length(FDiagnostics) then
   begin
-    raise ENyxPascalLexical.Create('Append source lost its byte/storage accounting');
+    LCapacity := FOptions.MaximumDiagnostics;
+
+    if 16 <= FOptions.MaximumDiagnostics - FDiagnosticCount then
+    begin
+      LCapacity := FDiagnosticCount + 16;
+    end;
+    SetLength(FDiagnostics, LCapacity);
   end;
-  FWriting := nil;
+  FDiagnostics[FDiagnosticCount] := AValue;
+  Inc(FDiagnosticCount);
+end;
+
+procedure TAppendReceiver.ReceiveToken(const AToken: TNyxPascalToken;
+  const ASpelling: TNyxText; AByteStart, AStorageStart: Integer);
+var
+  LRow: TAppendRow;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxPascalLexical.Create('Append scan receiver has retired');
+  end;
+  LRow.Value := AToken.Rebased(ScalarBase, StorageBase, LineBase, ColumnBase);
+  LRow.Spelling := ASpelling;
+  LRow.ByteStart := ByteBase + AByteStart;
+  LRow.StorageStart := StorageBase + AStorageStart;
+  Owner.Add(LRow);
+end;
+
+procedure TAppendReceiver.ReceiveDiagnostic(const ADiagnostic: TNyxPascalLexicalDiagnostic);
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxPascalLexical.Create('Append scan receiver has retired');
+  end;
+  Owner.AddDiagnostic(ADiagnostic.Rebased(ScalarBase));
+end;
+
+function TAppendLexical.Scan(const AText: TNyxText;
+  const APolicy: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
+  AScalarBase, AStorageBase, AByteBase, ALineBase, AColumnBase: Integer;
+  const ACancellation: INyxCancellationScope): TNyxPascalLexicalScanReceipt;
+var
+  LReceiver: TAppendReceiver;
+  LLease: INyxPascalLexicalFragmentReceiver;
+begin
+  LReceiver := TAppendReceiver.Create;
+  LLease := LReceiver;
+  LReceiver.Owner := Self;
+  LReceiver.ScalarBase := AScalarBase;
+  LReceiver.StorageBase := AStorageBase;
+  LReceiver.ByteBase := AByteBase;
+  LReceiver.LineBase := ALineBase;
+  LReceiver.ColumnBase := AColumnBase;
+  try
+    Result := ScanNyxPascalLexicalFragment(AText, APolicy, ARegion,
+      AScalarBase = 0, LLease, ACancellation);
+  finally
+    LReceiver.Owner := nil;
+    FWriting := nil;
+  end;
 end;
 
 constructor TAppendLexical.Create(const AText: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope);
 var
-  LSource: INyxPascalLexicalSnapshot;
-  LAt: Integer;
+  LScan: TNyxPascalLexicalScanReceipt;
 begin
   inherited Create;
   CheckCancellation(ACancellation);
   AOptions.Validate;
   FOptions := AOptions;
   FIdentity := TInterfacedObject.Create;
-  LSource := NewNyxPascalLexicalSnapshot(AText, AOptions, ACancellation);
-  FScalars := LSource.Scalars;
-  FBytes := CheckedBytes(AText, FOptions.MaximumSourceBytes, ACancellation);
-  FStorage := Length(AText);
-  FLexed := LSource.Count;
-  Import(LSource, 0, 0, 0, 0, 0, ACancellation);
-  SetLength(FDiagnostics, LSource.DiagnosticCount);
-  for LAt := 0 to High(FDiagnostics) do
-  begin
-    CheckCancellation(ACancellation);
-    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
-    FDiagnostics[LAt] := LSource.Diagnostic(LAt);
-  end;
+  LScan := Scan(AText, AOptions, plrPascal, 0, 0, 0, 0, 0, ACancellation);
+  FScalars := LScan.Scalars;
+  FBytes := LScan.UTF8Bytes;
+  FStorage := LScan.StorageUnits;
+  FLexed := LScan.Tokens;
+  SetLength(FDiagnostics, FDiagnosticCount);
 end;
 
 constructor TAppendLexical.CreateAppend(const APrevious: INyxPascalLexicalSnapshot;
@@ -320,23 +316,23 @@ var
   LDiagnostics: Integer;
   LPrefix: TAppendRow;
   LParts: TNyxStrings;
-  LSource: INyxPascalLexicalSnapshot;
+  LScan: TNyxPascalLexicalScanReceipt;
   LPolicy: TNyxPascalLexicalOptions;
   LDiagnostic: TNyxPascalLexicalDiagnostic;
-  LTailBytes: Integer;
 begin
   inherited Create;
   CheckCancellation(ACancellation);
   FOptions := APrevious.Options;
   FIdentity := TInterfacedObject.Create;
   FPrevious := ABase.Identity;
-  LTailBytes := CheckedBytes(ATail, FOptions.MaximumSourceBytes - ABase.Bytes, ACancellation);
+  { Storage length is a cheap UTF-8 lower bound. The one fragment scan validates
+    Unicode/counts exact bytes under the remaining global allowance; no separate
+    tail/spelling walk duplicates that work. Earlier bytes are already captured. }
 
-  if LTailBytes > FOptions.MaximumSourceBytes - ABase.Bytes then
+  if Length(ATail) > FOptions.MaximumSourceBytes - ABase.Bytes then
   begin
     raise ENyxPascalLexicalLimit.Create('Append source exceeds the global byte budget');
   end;
-  FBytes := ABase.Bytes + LTailBytes;
   FStorage := ABase.StorageUnits + Length(ATail);
   FRetained := APrevious.Count - 3;
 
@@ -360,26 +356,6 @@ begin
     NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
     Add(ABase.Row(LAt));
   end;
-  LParts := TNyxStrings.Create;
-  try
-    for LAt := FRetained to APrevious.Count - 2 do
-    begin
-      CheckCancellation(ACancellation);
-      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
-      LParts.Add(ABase.Row(LAt).Spelling);
-    end;
-    LParts.Add(ATail);
-    LPolicy := FOptions.UpToTokens(FOptions.MaximumTokens - FRetained)
-      .UpToSourceBytes(FOptions.MaximumSourceBytes - LPrefix.ByteStart);
-    LSource := NewNyxPascalLexicalFragment(LParts.Join, LPolicy,
-      LPrefix.Value.Region, LPrefix.Value.Span.Start = 0, ACancellation);
-  finally
-    LParts.Free;
-  end;
-  FScalars := LPrefix.Value.Span.Start + LSource.Scalars;
-  FLexed := LSource.Count;
-  Import(LSource, LPrefix.Value.Span.Start, LPrefix.StorageStart,
-    LPrefix.ByteStart, LPrefix.Value.Line - 1, LPrefix.Value.Column - 1, ACancellation);
   LDiagnostics := 0;
   for LAt := 0 to APrevious.DiagnosticCount - 1 do
   begin
@@ -394,11 +370,7 @@ begin
     end;
   end;
 
-  if LSource.DiagnosticCount > FOptions.MaximumDiagnostics - LDiagnostics then
-  begin
-    raise ENyxPascalLexicalLimit.Create('Append diagnostics exceed the global lexical budget');
-  end;
-  SetLength(FDiagnostics, LDiagnostics + LSource.DiagnosticCount);
+  SetLength(FDiagnostics, LDiagnostics);
   LDiagnostics := 0;
   for LAt := 0 to APrevious.DiagnosticCount - 1 do
   begin
@@ -413,12 +385,33 @@ begin
       Inc(LDiagnostics);
     end;
   end;
-  for LAt := 0 to LSource.DiagnosticCount - 1 do
-  begin
-    CheckCancellation(ACancellation);
-    NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
-    FDiagnostics[LDiagnostics + LAt] := LSource.Diagnostic(LAt).Rebased(LPrefix.Value.Span.Start);
+  FDiagnosticCount := LDiagnostics;
+  LParts := TNyxStrings.Create;
+  try
+    for LAt := FRetained to APrevious.Count - 2 do
+    begin
+      CheckCancellation(ACancellation);
+      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+      LParts.Add(ABase.Row(LAt).Spelling);
+    end;
+    LParts.Add(ATail);
+    LPolicy := FOptions.UpToTokens(FOptions.MaximumTokens - FRetained)
+      .UpToSourceBytes(FOptions.MaximumSourceBytes - LPrefix.ByteStart);
+    LScan := Scan(LParts.Join, LPolicy, LPrefix.Value.Region,
+      LPrefix.Value.Span.Start, LPrefix.StorageStart, LPrefix.ByteStart,
+      LPrefix.Value.Line - 1, LPrefix.Value.Column - 1, ACancellation);
+  finally
+    LParts.Free;
   end;
+
+  if LPrefix.StorageStart + LScan.StorageUnits <> FStorage then
+  begin
+    raise ENyxPascalLexical.Create('Append source lost its byte/storage accounting');
+  end;
+  FBytes := LPrefix.ByteStart + LScan.UTF8Bytes;
+  FScalars := LPrefix.Value.Span.Start + LScan.Scalars;
+  FLexed := LScan.Tokens;
+  SetLength(FDiagnostics, FDiagnosticCount);
 end;
 
 function TAppendLexical.Row(AIndex: Integer): TAppendRow;

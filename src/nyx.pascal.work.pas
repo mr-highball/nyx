@@ -28,7 +28,9 @@ uses SysUtils, nyx.scheduler;
 
 type
   { Logical bounded work boundaries, not elapsed time or scalar/CPU instructions.
-    A token is admitted before scanning/reading; a row before copying/creating.
+    A token is admitted before scanning/reading, including direct emission of
+    its final lexical row. A separate row is admitted before a later copy;
+    direct emission creates no intermediate vector/import to charge again.
     Metadata tree nodes and binding/evaluator steps have their own charges.
     A memo operation is bounded to its fixed 64-entry/8192-node implementation;
     proof traversal is separately admitted per examined node. Existing source,

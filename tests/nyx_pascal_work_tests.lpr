@@ -232,13 +232,17 @@ begin
     (LCompatibility.TranslationTokens = LBaseline.Source.Count) and
     (LSum = LCompatibility.TranslationTokens + LCompatibility.PrefixTokens +
       LCompatibility.ConstantSteps), 'Exact phase totals retain one emitted-token identity and no double charging');
+  { This fixture builds fresh prefix arenas. Direct emission admits each final
+    lexical row with its scan and performs no second import. Actual retained
+    append copies keep separate row admission in nyx_pascal_append_tests. }
   Check((LReceipt.Used(papFrozenRow) > 0) and (LReceipt.Used(papProjectionToken) > 0) and
-    (LReceipt.Used(papLexicalToken) > 0) and (LReceipt.Used(papLexicalRow) > 0) and
+    (LReceipt.Used(papLexicalToken) > 0) and (LReceipt.Used(papLexicalRow) = 0) and
     (LReceipt.Used(papFilterToken) > 0) and (LReceipt.Used(papSyntaxToken) > 0) and
     (LReceipt.Used(papMetadataNode) > 0) and (LReceipt.Used(papMetadataValue) > 0) and
     (LReceipt.Used(papWorldToken) > 0) and (LReceipt.Used(papWorldEntry) > 0) and
     (LReceipt.Used(papBindingStep) > 0) and (LReceipt.Used(papConstantPlan) > 0) and
-    (LReceipt.Used(papConstantStep) > 0), 'Ordinary construction charges real scans, copies, metadata, binding and evaluation');
+    (LReceipt.Used(papConstantStep) > 0),
+    'Ordinary construction charges actual scans, copies, metadata, binding and evaluation without duplicate lexical imports');
   LResult := Analyze(LFiles, LSum);
   Check(LResult.Source.Resolved and (LResult.WorkTokens = LSum),
     'The exact measured cold-construction allowance succeeds without a guessed discount');

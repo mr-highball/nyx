@@ -33,7 +33,108 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Construction-only metadata lookup reuse — 2026-10-18
+## Current integration: Direct lexical append preparation — 2026-10-18
+
+14f3a8a is qualified and pushed: bounded metadata lookup reuse advances the
+unchanged real RTL to round 15/224,739 translated tokens before its four-million
+lexical-row admission refusal. That is progress, not full original criterion-two
+acceptance. Reassessment after forty-six unclosed batches follows a concrete
+remaining prerequisite: append construction currently creates a full scanner
+vector, then copies every token into final append rows while recounting each
+spelling's UTF-8 bytes. The next deliverable removes that duplicate materialization
+through the existing lexical scanner/append owners, rather than shifting unadmitted
+work to public getters or changing any ceiling.
+
+The bounded hypothesis is synchronous direct emission of final rows/diagnostics
+under the scanner's admitted token/diagnostic operations, retaining independent
+scalar/UTF-8-byte/target-storage origins and exact scanner policies. Existing
+retained block/directory copies still require row admission. Evidence must cover
+whole-source differential results, every-scalar append seams, Unicode/BOM/assembly/
+comment state, diagnostics, predecessor retirement, cancellation and exhaustive
+smaller work allowances, then the unchanged real RTL and maintained consumers.
+No source fixture, query, cap or required oracle is weakened. Stop after one
+frozen qualification and original RTL run; retain any failure and reassess its
+actual owner. Full language/editor/input/quality/parity/adoption/delivery remains
+required. The ignored `.local/lexical-direct-paths-private.json` owns this packet,
+its current-start/historical preservation distinction and exact return path.
+LAN stays offline; no new MCP tool/schema, host/config retry, protected mutation,
+cleanup/restart, browser/HTTP/file execution/capture or sub-agent is authorized.
+
+Implementation now streams through the existing fixed-policy scanner with an
+explicit typed destination. The scanner owns no intermediate token/diagnostic
+vectors in this path. Each emitted final row uses the already admitted token
+scan; each direct diagnostic uses its existing admitted issue. Scalar/byte/storage
+starts are captured at consumption, not recounted from spellings. Initial source
+and append tails have no second byte walk; exact remaining global-byte allowance
+still guards the rescan. Existing retained block-directory/partial-row and prior
+diagnostic copies stay admitted before execution. Two-token lookahead repair,
+exact entry region/BOM/comment policy and provisional diagnostic replacement stay
+unchanged. The append destination borrows a raw owner only under its local
+interface lease, then revokes that borrow in finally. Published values retain
+neither receiver nor scanner/execution and perform no deferred construction.
+
+Native direct/append/projection checks pass 2,555 with clean heap, including
+independent full-scan results, exact Unicode byte/storage/scalar origins, original
+every-scalar split matrix, diagnostic/source/token limits, retained predecessors,
+receiver failure and cancellation during ordinary/EOF callbacks. Fresh/fork
+construction has exact nine/23-unit fits and all eight/22 smaller allowances
+refuse atomically. The semantic work consumer passes 460, actual 421 units versus
+prior 439, with all 420 smaller allowances refusing. Its first preflight retains
+one clean-heap failure: the obsolete assertion required a fresh lexical-import
+charge. Only that assertion is corrected to require zero duplicate-import charge;
+all other phase checks/limits and the independent retained-copy checks remain.
+This is an actual eliminated vector/import/byte pass, not elapsed-time or editor
+latency qualification. Final native/browser preflights pass. Five functional
+sources freeze before maintained qualification, with no later functional overlay.
+The original RTL consumer and compiler/source/probe inputs remain unchanged.
+
+The unchanged original RTL run still fails its four-million aggregate admission
+at round 15/224,739 translated tokens, now metadata-node rather than lexical-row.
+Its exit-one/clean-heap failure is retained separately; no final System/ObjPas
+semantic/indexed result is published. This is not a later round/token boundary or
+full RTL success. Original five initial queries, explicit Word measurement, three/
+eight symbol preparation, generic fact ceiling eight, source-driven Longint then
+Int64 requests and 2M view/4M aggregate/64-round ceilings stay exact.
+
+Source inspection identifies a distinct structural metadata prerequisite:
+TMetadataMap.Row/Edit convert typed ordinal rows into namespaced decimal text,
+then search/rebuild the same immutable AVL tree used for true textual indexes.
+Insert admits both visited tree nodes and constructed path nodes; bounded lookup
+reuse does not eliminate those required writes or miss paths. Next reassess
+typed ordinal metadata storage through existing syntax/metadata/index owners,
+keeping textual indexes exact and independent. Directory/row copying and real
+lookups must stay admitted, COW stamps/root/sibling identity and detached ownership
+must survive, and negative/out-of-range/refusal/cancellation must remain exact.
+No cache variant, guessed cost discount, larger quota or fixed fact replaces that
+structural work. The exhausted operation is an admission boundary, not a complete
+CPU profile. Full original criterion/task/credit/DONE/source/type/module/incremental/
+editor/input/quality/parity/adoption/delivery remains open across at least forty-
+seven batches. Stop direct-emission/fixture/compiler/oracle/capture variants after
+this frozen qualification.
+
+Final frozen qualification accepts 81 successful compiler jobs with zero owned
+warnings/182 unchanged upstream warnings. All 40 maintained native consumers,
+five focused consumers and the actual-source lexical read pass with clean heaps:
+46 successful logs. Native syntax covers 7,991 checks/five actual inputs/3,908
+declarations; the lexical corpus retains 501 actual files/2,319,747 lossless tokens.
+Both Studios/backend/worker and 33 browser consumers compile as applicable;
+browser execution/input/parity remain unqualified. All groups join normally;
+there is no interrupted/resumed overlay. The original RTL failure above remains
+a separate failed gate, excluded from passing totals.
+
+Five focused/661 maintained/97 RTL/24 compiler inputs plus three inspected compiler
+inputs remain pinned; 658 unrelated maintained sources stay exact. All 156 original
+unit packets/48 retained includes, nine project contexts, 349 frozen 7422453
+artifacts and thirteen concurrent planning files remain exact. All five protected
+files retain this batch's starting bytes with no new configuration delta. The
+prior external Codex configuration delta still differs from the original baseline;
+the original full five-file preservation gate remains failed without restoration.
+Terminal receipts show zero packet readers/Studio listeners and native Nyx MCP
+tools remain absent. The packet's final checkpoint owns exact qualified working/
+committed blobs and branch/remote identity. Only nine owned files belong to this
+checkpoint. LAN remains offline; the full goal stays active.
+
+## Previous integration: Construction-only metadata lookup reuse — 2026-10-18
 
 bb4791a removes repeated exact prefix-token validation while the original RTL
 still exhausts metadata-node admission at round six/55,279 translated tokens.

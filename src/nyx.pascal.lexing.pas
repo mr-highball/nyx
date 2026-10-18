@@ -282,6 +282,36 @@ type
     function InitialRegion: TNyxPascalLexicalRegion;
     function NextRegion: TNyxPascalLexicalRegion;
   end;
+  { Fixed-policy synchronous scan destination. Each token, including EOF, is
+    emitted once with its exact local spelling and zero-based UTF-8 byte/storage
+    starts. Diagnostics may arrive before their enclosing token. The scanner's
+    token/diagnostic admission covers producing this final row; a receiver that
+    performs additional work owns its separate admission. Callbacks are provisional
+    until the scan returns successfully and may abort by raising. No reader,
+    context, capture, mutable vector or policy authority crosses this boundary. }
+  INyxPascalLexicalFragmentReceiver = interface(IInterface)
+    ['{32CFE8F1-B75E-477D-9AC5-0AF7C5230E48}']
+    procedure ReceiveToken(const AToken: TNyxPascalToken; const ASpelling: TNyxText;
+      AByteStart, AStorageStart: Integer);
+    procedure ReceiveDiagnostic(const ADiagnostic: TNyxPascalLexicalDiagnostic);
+  end;
+  { Completed fixed-policy scan facts. Coordinates remain separate domains;
+    counts include EOF. Buffered rows describe only the scanner's own vectors,
+    not any receiver storage. Direct emission retains zero such rows, and this
+    value holds no receiver, source, execution scope or reusable scan authority. }
+  TNyxPascalLexicalScanReceipt = record
+  private
+    FScalars, FBytes, FStorage, FTokens, FDiagnostics: Integer;
+    FBufferedTokens, FBufferedDiagnostics: Integer;
+  public
+    property Scalars: Integer read FScalars;
+    property UTF8Bytes: Integer read FBytes;
+    property StorageUnits: Integer read FStorage;
+    property Tokens: Integer read FTokens;
+    property Diagnostics: Integer read FDiagnostics;
+    property BufferedTokenRows: Integer read FBufferedTokens;
+    property BufferedDiagnosticRows: Integer read FBufferedDiagnostics;
+  end;
 
 { Construct a checked nonnegative scalar range without associating a source. }
 function NyxPascalSpan(AStart, ALength: Integer): TNyxPascalSpan;
@@ -312,6 +342,15 @@ function NewNyxPascalLexicalFragment(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
   ASourceStart: Boolean;
   const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
+
+{ Scan directly into an explicit receiver without constructing intermediate
+  token/diagnostic vectors. Uses exactly the fixed-policy fragment scanner,
+  source-start/region rules and quotas above. The receiver is borrowed only for
+  this call, including refusal/cancellation. No partial receipt is returned. }
+function ScanNyxPascalLexicalFragment(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
+  ASourceStart: Boolean; const AReceiver: INyxPascalLexicalFragmentReceiver;
+  const ACancellation: INyxCancellationScope = nil): TNyxPascalLexicalScanReceipt;
 
 implementation
 
@@ -394,12 +433,16 @@ type
     FLine: Integer;
     FColumn: Integer;
     FBytes: Integer;
+    FTokenByteStart: Integer;
     FPreviousCR: Boolean;
     FSourceStart: Boolean;
     FNested: Boolean;
     FObserver: INyxPascalLexicalObserver;
     FRegionObserver: INyxPascalLexicalRegionObserver;
     FRegion: TNyxPascalLexicalRegion;
+    { An alternative construction destination; it never coexists with observers
+      or prefix capture and retires on every constructor exit. }
+    FReceiver: INyxPascalLexicalFragmentReceiver;
     FCancellation: INyxCancellationScope;
     function Current: Integer;
     function NextASCII(AChar: Char): Boolean;
@@ -420,7 +463,8 @@ type
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalLexicalOptions;
       const ACancellation: INyxCancellationScope;
       const AObserver: INyxPascalLexicalObserver = nil;
-      ARegion: TNyxPascalLexicalRegion = plrPascal; ASourceStart: Boolean = True);
+      ARegion: TNyxPascalLexicalRegion = plrPascal; ASourceStart: Boolean = True;
+      const AReceiver: INyxPascalLexicalFragmentReceiver = nil);
     function Source: TNyxText;
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
@@ -609,7 +653,7 @@ end;
 constructor TLexicalSnapshot.Create(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope;
   const AObserver: INyxPascalLexicalObserver; ARegion: TNyxPascalLexicalRegion;
-  ASourceStart: Boolean);
+  ASourceStart: Boolean; const AReceiver: INyxPascalLexicalFragmentReceiver);
 var
   LObserver: INyxPascalLexicalConstructionObserver;
   LCapture: TLexicalPrefixCapture;
@@ -617,6 +661,12 @@ var
 begin
   inherited Create;
   AOptions.Validate;
+
+  if (AReceiver <> nil) and (AObserver <> nil) then
+  begin
+    raise ENyxPascalLexical.Create('Direct lexical emission cannot borrow an observer');
+  end;
+  FReceiver := AReceiver;
   FOptions := AOptions;
   FNested := AOptions.AllowNestedComments;
   FSourceStart := ASourceStart;
@@ -662,6 +712,7 @@ begin
     FCancellation := nil;
     FObserver := nil;
     FRegionObserver := nil;
+    FReceiver := nil;
   end;
 end;
 
@@ -952,12 +1003,22 @@ end;
 procedure TLexicalSnapshot.Issue(AIssue: TNyxPascalLexicalIssue; AStart: Integer);
 var
   LCapacity: Integer;
+  LDiagnostic: TNyxPascalLexicalDiagnostic;
 begin
   NyxPascalAdmitAnalysis(FCancellation, papDiagnosticRow);
 
   if FDiagnosticCount >= FOptions.MaximumDiagnostics then
   begin
     raise ENyxPascalLexicalLimit.Create('Pascal diagnostics exceed their lexical budget');
+  end;
+
+  if FReceiver <> nil then
+  begin
+    LDiagnostic.FIssue := AIssue;
+    LDiagnostic.FSpan := NyxPascalSpan(AStart, FOffset - AStart);
+    Inc(FDiagnosticCount);
+    FReceiver.ReceiveDiagnostic(LDiagnostic);
+    Exit;
   end;
 
   if FDiagnosticCount = Length(FDiagnostics) then
@@ -985,18 +1046,30 @@ begin
     raise ENyxPascalLexicalLimit.Create('Pascal tokens exceed their lexical budget');
   end;
 
-  if FTokenCount = Length(FTokens) then
+  if FReceiver <> nil then
   begin
-    LCapacity := FOptions.MaximumTokens;
+    { Build admitted this scan before classification. Its final row goes to
+      the receiver directly; no temporary token-vector row is created/copied. }
+    Inc(FTokenCount);
+    FReceiver.ReceiveToken(AToken, Copy(FSource, AToken.FStorage,
+      AToken.FStorageLength), FTokenByteStart, AToken.FStorage - 1);
+  end
+  else
+  begin
 
-    if 256 + FTokenCount div 2 <= FOptions.MaximumTokens - FTokenCount then
+    if FTokenCount = Length(FTokens) then
     begin
-      LCapacity := FTokenCount + 256 + FTokenCount div 2;
+      LCapacity := FOptions.MaximumTokens;
+
+      if 256 + FTokenCount div 2 <= FOptions.MaximumTokens - FTokenCount then
+      begin
+        LCapacity := FTokenCount + 256 + FTokenCount div 2;
+      end;
+      SetLength(FTokens, LCapacity);
     end;
-    SetLength(FTokens, LCapacity);
+    FTokens[FTokenCount] := AToken;
+    Inc(FTokenCount);
   end;
-  FTokens[FTokenCount] := AToken;
-  Inc(FTokenCount);
 
   if FObserver <> nil then
   begin
@@ -1323,6 +1396,7 @@ begin
   repeat
     CheckCancellation;
     NyxPascalAdmitAnalysis(FCancellation, papLexicalToken);
+    FTokenByteStart := FBytes;
     LScalar := Current;
     LToken := Default(TNyxPascalToken);
     LToken.FSpan := NyxPascalSpan(FOffset, 0);
@@ -1455,8 +1529,19 @@ begin
     LToken.FStorageLength := FStorage - LToken.FStorage;
     Add(LToken);
   until False;
-  SetLength(FTokens, FTokenCount);
-  SetLength(FDiagnostics, FDiagnosticCount);
+
+  if FReceiver <> nil then
+  begin
+    { A receiver may cancel during EOF emission as well as earlier callbacks.
+      Completion cannot publish success after that final cancellation. }
+    CheckCancellation;
+  end;
+
+  if FReceiver = nil then
+  begin
+    SetLength(FTokens, FTokenCount);
+    SetLength(FDiagnostics, FDiagnosticCount);
+  end;
 end;
 
 function TLexicalSnapshot.Source: TNyxText;
@@ -1617,6 +1702,34 @@ function NewNyxPascalLexicalFragment(const ASource: TNyxText;
   ASourceStart: Boolean; const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
 begin
   Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, nil, ARegion, ASourceStart);
+end;
+
+function ScanNyxPascalLexicalFragment(const ASource: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions; ARegion: TNyxPascalLexicalRegion;
+  ASourceStart: Boolean; const AReceiver: INyxPascalLexicalFragmentReceiver;
+  const ACancellation: INyxCancellationScope): TNyxPascalLexicalScanReceipt;
+var
+  LReader: TLexicalSnapshot;
+begin
+
+  if AReceiver = nil then
+  begin
+    raise ENyxPascalLexical.Create('Direct lexical scanning needs an explicit receiver');
+  end;
+  LReader := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, nil,
+    ARegion, ASourceStart, AReceiver);
+  try
+    Result := Default(TNyxPascalLexicalScanReceipt);
+    Result.FScalars := LReader.FOffset;
+    Result.FBytes := LReader.FBytes;
+    Result.FStorage := LReader.FStorage - 1;
+    Result.FTokens := LReader.FTokenCount;
+    Result.FDiagnostics := LReader.FDiagnosticCount;
+    Result.FBufferedTokens := Length(LReader.FTokens);
+    Result.FBufferedDiagnostics := Length(LReader.FDiagnostics);
+  finally
+    LReader.Free;
+  end;
 end;
 
 procedure InitializeVocabulary;

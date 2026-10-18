@@ -92,8 +92,10 @@ refuses within those ceilings. [Sealed prefix summaries](docs/pascal-projects.md
 now validate only appended token rows at exact owned boundaries; arbitrary cuts
 retain complete validation. [Construction-only metadata lookups](docs/pascal-projects.md#construction-only-metadata-lookups)
 now reuse exact key results until publication, with independent COW stamps and
-no mutable cache in published readers. Duplicated lexical materialization,
-directive/diagnostic copying and full engine/editor quality/adoption remain open.
+no mutable cache in published readers. [Direct lexical preparation](docs/pascal-projects.md#direct-lexical-append-preparation)
+now emits final append rows from the existing scanner without an intermediate
+vector or byte recount. Remaining copy/parser costs and full engine/editor
+quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured
