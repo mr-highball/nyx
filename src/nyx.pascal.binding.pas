@@ -271,7 +271,9 @@ type
     Modules have explicit captured translation contexts; their source views are
     immutable. Replacement detaches the vector and invalidates old site/symbol
     ownership for the new world. No provider or filesystem fallback is installed.
-    Queries are read-only/cancellable and share only constructed immutable inputs. }
+    Queries keep source/module data read-only and return current-world results.
+    Source views may synchronize bounded retention of immutable unbound plans;
+    no resolved query result is retained back inside its owning world. }
   INyxPascalSemanticWorld = interface(IInterface)
     ['{98349E7C-C0ED-48DE-A518-427A04570E05}']
     function Options: TNyxPascalBindingOptions;

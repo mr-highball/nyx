@@ -33,7 +33,101 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Persistent checkpoint metadata and indexes — 2026-10-18
+## Current integration: Source-free type plans and synchronized memos — 2026-10-18
+
+c30ff74 supplies shared checkpoint metadata/index roots. Reassessment after
+forty-two unclosed authoring batches identifies repeated type grammar as the
+next concrete prerequisite under original criterion two. Resolved types own
+their world outward and cannot safely be cached back inside it. This batch
+instead separates pure grammar from its current source view, then qualifies one
+bounded memo in the ordinary translated/binding consumers. No smaller acceptance
+criterion replaces the complete resolver/editor outcome.
+
+Owned type parsers seal their exact node/diagnostic arrays and retire temporary
+token ordinals. Capture retains those immutable values plus source-free opaque
+declaring-row and structured declaration/member-scope markers, never a source,
+world, parser or cancellation callback. COW metadata detachment renews its marker,
+conservatively refusing a stale plan. Apply checks exact current owned identities,
+window, structured registration and node/depth/diagnostic policies. A hit creates
+a new view owning current declarations/lexical data. Foreign/alternate/standalone
+syntax cannot fabricate proof; incomplete grammar keeps its ordinary diagnostics.
+Names still bind in each exact current world, with no cached resolved result.
+
+Ordinary translated TypeOfDeclaration now owns a synchronized memo of at most
+64 plans/8,192 retained nodes. Caller-owned views are separate. Entry/node eviction
+and oversized-plan nonretention cannot narrow a caller's permitted grammar result.
+Appending copies only bounded pure candidates into the private new constructor;
+every use still validates identity. Native RTL mutexes cover memo metadata only;
+browser copies complete in their synchronous turn. Parsing, validation and user
+cancellation happen outside the lock. Duplicate misses may prepare equivalent
+independent plans. Optional receipts atomically report exact retention and
+saturating hit/miss counters without changing source/history/document state.
+
+Focused native checks pass 209, clean heap. Exact whole-grammar comparison covers
+node roles/spans/parents/children/ABI flags, nested structured identities, Unicode,
+source retirement, changed policies, prior cancellation and foreign/alternate
+authority. Three actual chronological source callbacks qualify inherited hits,
+new current-source views and bound current-world results. Eight native reader
+instances run in two four-thread journeys: parent reads during inheritance, then
+1,024 mixed-declaration queries under miss/admission/eviction contention, with
+atomic bounded receipts and exact completed hit/miss accounting. Separate entry/
+aggregate-node eviction, recoverable grammar and an allowed oversized type result
+retain their original parsing guards. Browser consumers compile only; no thread,
+browser execution, UI latency or full-parity conclusion follows from compilation.
+
+Retained preflight failure: pas2js crashes its converter on a private out parameter
+whose alias contains an interface array. The corrected implementation copies
+bounded parent memo fields into the still-private constructor under one lock;
+no compiler, dependency source or package is changed. That failed compiler log is
+excluded from accepted evidence. Five functional sources freeze before wider
+qualification after per-type comment, ownership and layout review. Preflight runs
+are separate; the historical emission log stays an unchanged read-only input.
+The ignored packet located by `.local/type-plans-paths-private.json` owns current
+compiler/run/process, exact preservation and final source/remote receipts.
+
+All 40 maintained native consumers, focused plan 209/metadata 4,391/projection
+2,480/storage 336 pass, clean heaps. Actual-source lexing passes 567 across
+500 files/2,313,002 lossless tokens; syntax passes 7,934 across five inputs/3,865
+declarations. Counts overlap; 45 passing native logs include the separate source
+read. All 79 successful current compiler jobs have zero owned warnings/175
+upstream RTL warnings; the additional compiled browser fixture imports existing
+Classes diagnostics, with dependency bytes unchanged. Both Studios/backend/worker
+and 32 browser consumers compile as applicable. All five final-byte functional
+sources remain exact through qualification and commit, without a layout overlay.
+Preflight failures/runs remain excluded from accepted compiler/run counts.
+
+The unchanged original RTL gate still exits one with clean heap: prefix phase,
+logical round 26, used 3,971,021/requested 268,501/limit 4,000,000, translated
+268,502. It reaches the same Longint/Int64/Pointer binding-derived requests and
+publishes no final System/ObjPas semantic/indexed result. Original consumer/source,
+five initial queries, explicit Word job, symbol preparation three/eight, generic
+fact ceiling eight and 2M view/4M aggregate/64-round limits stay unchanged. Genuine
+reuse exists, but complete actual phase-work admission is not yet integrated;
+the conservative complete-prefix charge remains. Neither memo counters nor an
+inherited candidate alone authorizes discounted work. Diagnostic copying remains.
+
+Original reader session 5629/PID 1352 is terminal exit one. Native/regression/
+products/extra sessions 89344/86409/51067/1180 and the focused plan script are
+terminal exit zero. No owned reader or Studio listener remains. Five frozen
+sources, 656 unrelated prior sources and maintained inventory 660 stay exact.
+So do 97 RTL/24 compiler inputs and three additionally inspected compiler sources,
+156 original unit packets, 48 retained includes, five protected files/nine complete
+contexts, 349 frozen 7422453 artifacts and 13 concurrent planning files. No protected
+checkpoint, history, profile, enrollment or configuration is rewritten.
+
+Stop type-plan/memo/thread/fixture/oracle/compiler/capture variants. Next integrate
+complete actual phase-work admission through existing conditions/translation/
+lexical/syntax/types/binding owners, using proven source/metadata/plan identity
+and real work before admission, not guessed telemetry discounts. Preserve exact
+source/context/include/branch/macro/settings, provisional owners, both caps,
+original probe/job/round ceilings, cancellation and atomic refusal. Full language/
+editor/incremental/input/quality/parity/adoption/delivery and all original criterion/
+task/credit/DONE remain open across at least forty-three batches. LAN stays offline.
+No host/configuration retry, protected mutation, browser/HTTP/file execution/capture,
+cleanup/restart, approval bypass, tool/schema or sub-agent occurs. Native Nyx tools
+remain absent; no fallback transport occurs.
+
+## Previous integration: Persistent checkpoint metadata and indexes — 2026-10-18
 
 97b60a9 removes repeated filter/origin and module-boundary scans, while restoring
 every declaration/scope/structural row and rebuilding indexes still copies the

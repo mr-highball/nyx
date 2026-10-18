@@ -527,6 +527,17 @@ function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
   const ALexical: INyxPascalLexicalSnapshot; const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot;
 
+{ Opaque identity for an owned immutable metadata value, nil on an alternate
+  snapshot. Owned ordinals are checked. A detached row receives a new identity;
+  equal text/records confer none. Tokens retain no source, row or constructor
+  and grant no visibility, editing, binding or arbitrary-source reuse authority. }
+function NyxPascalDeclarationIdentity(const ASource: INyxPascalSyntaxSnapshot;
+  AIndex: Integer): IInterface;
+{ The same source-free proof for a scope row. Complete structured-body plans
+  validate this separately from their declaring row; alternate owners yield nil. }
+function NyxPascalScopeIdentity(const ASource: INyxPascalSyntaxSnapshot;
+  AIndex: Integer): IInterface;
+
 implementation
 
 uses nyx.pascal.lexing.append;
@@ -558,17 +569,22 @@ type
     function Stamp: IInterface;
     function Detach(const AStamp: IInterface): IMetadataValue; virtual; abstract;
   end;
-  { Open scope ends adapt at public read time to the owning snapshot, without
-    changing a retained scope's source-local ordinals, text or stored boundary. }
+  { Open scope ends adapt at public read time without changing the retained row.
+    Identity is a source-free opaque marker; detaching any row renews it. }
   TScopeValue = class(TMetadataValue)
   public
+    Identity: IInterface;
     Value: TNyxPascalSyntaxScope;
+    constructor Create;
     function Detach(const AStamp: IInterface): IMetadataValue; override;
   end;
-  { A declaration row detaches before later scope/overload links can change it. }
+  { A declaration detaches before later scope/overload writes. Its opaque marker
+    renews on every detach, conservatively invalidating dependent type plans. }
   TDeclarationValue = class(TMetadataValue)
   public
+    Identity: IInterface;
     Value: TNyxPascalSyntaxDeclaration;
+    constructor Create;
     function Detach(const AStamp: IInterface): IMetadataValue; override;
   end;
   { Import entries retain exact local source identity, never a source-world. }
@@ -732,7 +748,7 @@ type
     an explicit types fragment does not gain a declaration-section caller. }
   TParserResume = (prDeclarations, prTypes, prTypesFragment);
   { Value-only rollback point before a root declaration. Counts exclude the
-    provisional suffix; Root retains pre-suffix flags and source identity.
+    provisional suffix; its companion metadata root retains exact prior rows.
     ReadThrough includes every parser lookahead dependency, independently of
     Position. No interface, mutable vector or prior snapshot is retained. }
   TParserCheckpoint = record
@@ -1071,6 +1087,18 @@ end;
 function TMetadataValue.Stamp: IInterface;
 begin
   Result := OwnerStamp;
+end;
+
+constructor TScopeValue.Create;
+begin
+  inherited Create;
+  Identity := TInterfacedObject.Create;
+end;
+
+constructor TDeclarationValue.Create;
+begin
+  inherited Create;
+  Identity := TInterfacedObject.Create;
 end;
 
 function TScopeValue.Detach(const AStamp: IInterface): IMetadataValue;
@@ -5138,6 +5166,34 @@ end;
 function TSyntaxSnapshot.MetadataTreeHeight: Integer;
 begin
   Result := FMetadata.Height;
+end;
+
+function NyxPascalDeclarationIdentity(const ASource: INyxPascalSyntaxSnapshot;
+  AIndex: Integer): IInterface;
+var
+  LOwner: ISyntaxOwner;
+begin
+  Result := nil;
+
+  if Supports(ASource, ISyntaxOwner, LOwner) then
+  begin
+    ASource.Declaration(AIndex);
+    Result := LOwner.Snapshot.Entry(AIndex).Identity;
+  end;
+end;
+
+function NyxPascalScopeIdentity(const ASource: INyxPascalSyntaxSnapshot;
+  AIndex: Integer): IInterface;
+var
+  LOwner: ISyntaxOwner;
+begin
+  Result := nil;
+
+  if Supports(ASource, ISyntaxOwner, LOwner) then
+  begin
+    ASource.Scope(AIndex);
+    Result := LOwner.Snapshot.Frame(AIndex).Identity;
+  end;
 end;
 
 end.

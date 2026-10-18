@@ -9,7 +9,33 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Persistent metadata prerequisite (2026-10-18): all scope/declaration/import and
+Type-plan prerequisite (2026-10-18): source-free immutable grammar plans now
+retain opaque owned declaration/structured-body identities and no source/world/
+parser/cancellation owner. Applying a plan validates exact current identities,
+window and type policies, then returns a current-source view. Ordinary translated
+type queries use a synchronized memo bounded to 64 entries/8,192 nodes; eviction
+and oversized results cannot narrow caller-permitted parsing. Names/types still
+bind in each exact current world. Native focused qualification passes 209 with
+eight reader instances across two four-thread journeys, including 1,024 mixed
+queries under admission/eviction contention, clean heaps. Recovery, Unicode,
+foreign/alternate authority, policy/limit/cancellation and whole grammar equality
+retain original guards. Browser consumers compile only. One retained pas2js
+out-interface-array converter failure is corrected through bounded constructor
+copies, without dependency edits. The original full-prefix charge and RTL oracle
+stay unchanged; complete actual phase-work admission and diagnostic copying
+remain open. WORK.md owns frozen maintained/RTL results, preservation/source/
+remote identity and the return to work admission through existing owners.
+Stop type-plan/memo/thread/fixture/oracle/compiler/capture variants after the
+qualified batch. No original criterion/task/credit/DONE or full language/editor/
+incremental/input/quality/parity/adoption/delivery closes.
+All 40 maintained native consumers plus metadata 4,391/projection 2,480/storage
+336 pass, clean heaps; 79 successful current compiler jobs have zero owned
+warnings. Five frozen sources remain exact without an overlay. The unchanged
+RTL gate retains its exact round-26 prefix-budget failure, clean heap and no
+final semantic/indexed result. WORK.md owns complete receipts, the retained
+converter failure, protected/concurrent preservation and final source/remote identity.
+
+Historical persistent metadata prerequisite (2026-10-18): all scope/declaration/import and
 structural metadata plus name/overload/anonymous-structure indexes now share the
 sealed checkpoint's immutable balanced root. Independent construction markers
 detach a changed row/path before mutation; provisional suffix entries cannot

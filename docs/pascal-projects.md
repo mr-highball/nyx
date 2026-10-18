@@ -2098,8 +2098,9 @@ advertise frozen-arena storage.
 This is a prerequisite to genuine incremental analysis. Storage sharing alone
 does not avoid complete-prefix analysis; the declaration checkpoints below now
 reuse safe parser work. Persistent filters/origins below now share completed rows;
-checkpoint metadata below now shares exact rows/indexes. Type-plan construction
-and diagnostic copying still repeat; the original aggregate charge remains
+checkpoint metadata below now shares exact rows/indexes. Type plans can reuse
+unbound grammar through the memo below; diagnostic copying and complete actual
+work admission remain open. The original aggregate charge remains
 unchanged. Storage counters
 do not authorize discounting repeated work. Checkpoints and binding reuse must
 preserve unfinished declaration owners,
@@ -2149,7 +2150,7 @@ charge unchanged.
 
 WORK.md owns native differential checks against fresh whole scans/parsing,
 unchanged RTL integration and compiled-only browser evidence. Further binding/
-type-plan continuation and actual incremental work admission, broader grammar/quality/parity,
+actual incremental work admission, broader grammar/quality/parity,
 default Studio adoption and delivery remain open. This API appends exact source;
 it does not yet implement arbitrary buffer edits or grant compiler admission.
 
@@ -2190,7 +2191,7 @@ filtered tokens, parser token reads and the restart token. These describe actual
 construction, not total CPU cost or binding reuse. `FilteredTokens` retains the
 complete logical lexical domain; the separate filter receipt below measures its
 actual token reads. Changed metadata values, new immutable tree paths, diagnostic
-copies and type-plan construction remain real work.
+copies and type-plan construction/validation remain real work.
 The original aggregate charge remains unchanged until that real work is avoided
 or accounted for through its existing owners. WORK.md retains the unchanged RTL
 gate, native differential checks and browser compilation separately; full
@@ -2231,9 +2232,9 @@ restarts from the captured base instead of retaining a ghost earlier root.
 Actual lookup/type results remain query-local and retain their exact current
 world. None of this grants a cached semantic result, guessed compiler fact,
 reduced aggregate charge or arbitrary edit support. Declaration/scope metadata
-and name indexes now use the persistent checkpoint root below. Type plans and
-diagnostic rows still rebuild/copy; further type preparation and complete actual
-work admission remain prerequisites. WORK.md owns native
+and name indexes now use the persistent checkpoint root below. Type plans can
+reuse validated pure grammar; diagnostic rows still copy and complete actual
+work admission remains a prerequisite. WORK.md owns native
 input/origin/cancellation checks, compiled-only browser results and the unchanged
 full RTL gate. Full language/editor/incremental/quality/parity/adoption/delivery
 remain open.
@@ -2253,7 +2254,7 @@ tree path to it. Other rows and subtrees remain shared. Later overload and scope
 links therefore belong to the new parser, including siblings that extend the
 same family differently. Cells retain only value-owned records and an opaque
 marker; nodes retain immutable children and no parent, parser or earlier owner.
-Published reads do not populate a mutable cache or hold a previous-snapshot chain.
+Metadata reads do not populate a mutable cache or hold a previous-snapshot chain.
 
 Incomplete scope end spans adapt to the current snapshot's lexical end during
 public reads. Their stored boundary never mutates an earlier row. Completed
@@ -2267,11 +2268,51 @@ include transient nodes constructed during balancing. `CopiedEntries` now counts
 actual detached metadata values plus diagnostic copies; it no longer describes
 an unavoidable full-prefix copy. These receipts do not grant reduced charging.
 The original node/scope/diagnostic/depth limits and atomic cancellation/refusal
-remain required. Diagnostic rows and query type plans still copy/rebuild; actual
-phase work admission and further type preparation remain open before changing
+remain required. Diagnostic rows still copy; type plans can reuse pure grammar
+through the bounded memo below. Complete actual phase work admission remains open before changing
 the aggregate accounting. WORK.md owns native differential/sibling/lifetime
 checks, compiled-only browser evidence and the unchanged original RTL gate.
 Full language/editor/incremental/quality/parity/adoption/delivery remain open.
+
+## Source-free type plans and bounded memos
+
+`CaptureNyxPascalTypePlan` retains complete owned declaration-parser grammar in
+an immutable `INyxPascalTypePlan`. Its node/diagnostic arenas and process-local
+opaque identities retain no lexical snapshot, declaration tree, world, parser or
+cancellation callback. Standalone, alternate, incomplete and mismatched windows
+yield no plan. This captures unbound syntax, never a resolved type or compiler fact.
+
+`ApplyNyxPascalTypePlan` requires the exact current owned declaring-row identity,
+window and node/depth/diagnostic policies. Every structured leaf additionally
+validates its registered body declaration and member-scope identities. Foreign
+source with equal text confers no proof; a changed row conservatively misses.
+Incompatibility returns nil for ordinary fresh parsing. A hit creates a new
+read-only view with the current lexical/declaration lease. Binding continues to
+construct current-world results, so a source never caches a type pointing back
+to its own world. Opaque markers themselves retain no row/source and confer no
+visibility, editing or cross-process authority.
+
+Ordinary translated `TypeOfDeclaration` uses this path through a private memo
+bounded to 64 entries and 8,192 retained nodes. FIFO eviction and oversized-plan
+refusal affect retention only: caller-permitted larger grammar still returns a
+fresh ordinary result, with the original type budgets enforced. Recoverable
+grammar keeps its diagnostics and reparses normally. Caller-owned result views
+are outside memo retention counts.
+
+Appending a projection atomically copies bounded pure candidates, then validates
+each against the new source when queried. Native RTL critical sections cover
+memo metadata and admission; browser copies complete synchronously within their
+turn. Parsing, proof validation and cancellation callbacks run outside the lock.
+Duplicate concurrent misses can prepare equivalent independent plans without
+changing source state. Optional `INyxPascalTypeMemoWork` returns one atomic value
+receipt of entries, nodes, hits/misses and inherited candidates. Inheritance alone
+grants no reuse authority; hit/miss counters saturate at High(Integer).
+
+WORK.md owns portable grammar/source checks, both native four-thread journeys,
+compiled-only browser consumers and retained compiler failures. The original
+complete-prefix aggregate charge and RTL oracle remain unchanged until complete
+actual phase-work admission is qualified. Full language/editor/incremental/
+quality/parity/adoption/delivery remain open.
 
 ## Declaration-bound constant expressions
 

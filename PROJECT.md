@@ -83,9 +83,11 @@ owners. [Persistent filters and source indexes](docs/pascal-projects.md#persiste
 now share completed filter/origin blocks and continue exact module-boundary scans.
 [Persistent checkpoint metadata](docs/pascal-projects.md#persistent-checkpoint-metadata)
 now shares declaration/scope/structural rows and name indexes, detaching changed
-rows before mutation. Query type plans and diagnostic rows still rebuild/copy;
-the existing complete-prefix charge stays unchanged. Actual work admission and
-further type preparation/quality remain required before engine adoption.
+rows before mutation. [Source-free type plans](docs/pascal-projects.md#source-free-type-plans-and-bounded-memos)
+now reuse validated unbound grammar through a bounded synchronized memo, with
+current-source result views. Diagnostic copying and complete actual work admission
+remain open; the existing complete-prefix charge stays unchanged. Full engine/
+editor quality and adoption remain required.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

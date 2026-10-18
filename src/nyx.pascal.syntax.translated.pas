@@ -77,9 +77,10 @@ type
     { Intersect a logical declaration/type span with one mapped token. Refuses
       an empty intersection; callers page Origin records to retain multiple files. }
     function Part(AIndex: Integer; const ASpan: TNyxPascalSpan): TNyxPascalSyntaxOrigin;
-    { Parse a declaration's retained type/result syntax. The returned type tree
-      owns its projection lexical data; retain this interface for physical mapping.
-      Structured class/member scopes remain with Syntax, never re-inferred here. }
+    { Parse a declaration's retained type/result syntax, optionally reusing a
+      validated source-free plan. The returned tree owns the current lexical/
+      declaration lease; retain this interface for physical mapping. Structured
+      scopes remain with Syntax; no resolved type/world enters the memo. }
     function TypeOfDeclaration(AIndex: Integer;
       const AOptions: TNyxPascalTypeOptions;
       const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
@@ -92,6 +93,30 @@ type
     function SharedOriginRows: Integer;
     function CopiedOriginRows: Integer;
     function OriginDirectoryEntries: Integer;
+  end;
+  { Atomic memo telemetry, independent of source/document state and quotas.
+    Caller-owned result views are outside the memo retention count. Inherited
+    candidates still require identity validation. Hits/misses saturate
+    at High(Integer); retained node/entry counts remain exact and bounded. }
+  TNyxPascalTypeMemoReceipt = record
+  private
+    FEntries: Integer;
+    FNodes: Integer;
+    FHits: Integer;
+    FMisses: Integer;
+    FInherited: Integer;
+  public
+    property Entries: Integer read FEntries;
+    property RetainedNodes: Integer read FNodes;
+    property Hits: Integer read FHits;
+    property Misses: Integer read FMisses;
+    property InheritedCandidates: Integer read FInherited;
+  end;
+  { Optional synchronized read-only work receipt. A memo holds pure unbound
+    plans only; its private eviction cannot edit a source or preserve a world. }
+  INyxPascalTypeMemoWork = interface(IInterface)
+    ['{B54A2B1A-268A-4E4E-A220-44A70307E265}']
+    function TypeMemoReceipt: TNyxPascalTypeMemoReceipt;
   end;
 
 { Freeze a declared view of known-active tokens under the existing grammar options.
@@ -119,8 +144,16 @@ uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append;
 const
   { Complete mapping rows share by value; at most one partial block copies. }
   COriginBlockRows = 256;
+  { Retention bounds do not alter type-analysis node/depth/diagnostic quotas.
+    Oversized plans remain ordinary fresh query results instead of cache entries. }
+  CTypeMemoEntries = 64;
+  CTypeMemoNodes = 8192;
 
 type
+  { Parallel private memo identities; no interface appears in a copied record. }
+  TTypePlanOrdinals = array of Integer;
+  { Reference-counted source-free grammar plans; this vector retains no views. }
+  TTypePlanValues = array of INyxPascalTypePlan;
   { Read-only origin values with no source, projection or predecessor reference. }
   IOriginBlock = interface(IInterface)
     function Row(AIndex: Integer): TNyxPascalSyntaxOrigin;
@@ -140,10 +173,12 @@ type
     ['{7B440252-DB39-4370-A7EC-D51E2BE12FB9}']
     function Projection: TTranslatedSyntax;
   end;
-  { Owns its input translation, projection parser and flat origin-block directory.
-    Cancellation exists during construction only; no document/editor cycle occurs. }
+  { Owns immutable input/projection/origins plus a bounded synchronized memo of
+    pure plans. Queries mutate memo metadata only, never source or syntax. Native
+    RTL critical sections cover bounded copies/admission; browser turns are
+    synchronous. Parsing, proof validation and cancellation run outside the lock. }
   TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax,
-    INyxPascalProjectionStorage, IProjectionOwner)
+    INyxPascalProjectionStorage, INyxPascalTypeMemoWork, IProjectionOwner)
   private
     FSource: INyxPascalTranslation;
     FSyntax: INyxPascalSyntaxSnapshot;
@@ -155,6 +190,27 @@ type
     FBlocked: Integer;
     FBytes: Integer;
     FOptions: TNyxPascalSyntaxOptions;
+    FPlanIndices: TTypePlanOrdinals;
+    FPlans: TTypePlanValues;
+    FPlanCount: Integer;
+    FPlanNodes: Integer;
+    FPlanHits: Integer;
+    FPlanMisses: Integer;
+    FInheritedPlans: Integer;
+    {$ifndef PAS2JS}
+    { Owned RTL mutex; initialized before construction can publish any memo. }
+    FPlanLock: TRTLCriticalSection;
+    FPlanLockReady: Boolean;
+    {$endif}
+    procedure EnterMemo;
+    procedure LeaveMemo;
+    procedure CopyMemoTo(ATarget: TTranslatedSyntax);
+    procedure InheritMemo(APrevious: TTranslatedSyntax;
+      const ACancellation: INyxCancellationScope);
+    function FindPlan(ADeclaration: Integer): INyxPascalTypePlan;
+    procedure RemovePlan(AIndex: Integer);
+    procedure AdmitPlan(ADeclaration: Integer; const APlan: INyxPascalTypePlan);
+    procedure RecordMemo(AHit: Boolean);
     procedure AddOrigin(const AOrigin: TNyxPascalSyntaxOrigin);
     procedure Build(const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
@@ -162,6 +218,8 @@ type
     constructor Create(const ASource: INyxPascalTranslation;
       const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax = nil);
+    destructor Destroy; override;
+    function TypeMemoReceipt: TNyxPascalTypeMemoReceipt;
     function Projection: TTranslatedSyntax;
     function Source: INyxPascalTranslation;
     function Syntax: INyxPascalSyntaxSnapshot;
@@ -211,6 +269,12 @@ constructor TTranslatedSyntax.Create(const ASource: INyxPascalTranslation;
   const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
 begin
   inherited Create;
+  {$ifndef PAS2JS}
+  InitCriticalSection(FPlanLock);
+  FPlanLockReady := True;
+  {$endif}
+  SetLength(FPlanIndices, CTypeMemoEntries);
+  SetLength(FPlans, CTypeMemoEntries);
 
   if ASource = nil then
   begin
@@ -221,6 +285,178 @@ begin
   FSource := ASource;
   FBlocked := -1;
   Build(AOptions, ACancellation, APrevious);
+  InheritMemo(APrevious, ACancellation);
+end;
+
+destructor TTranslatedSyntax.Destroy;
+begin
+  {$ifndef PAS2JS}
+
+  if FPlanLockReady then
+  begin
+    DoneCriticalSection(FPlanLock);
+  end;
+  {$endif}
+  inherited Destroy;
+end;
+
+procedure TTranslatedSyntax.EnterMemo;
+begin
+  {$ifndef PAS2JS}EnterCriticalSection(FPlanLock);{$endif}
+end;
+
+procedure TTranslatedSyntax.LeaveMemo;
+begin
+  {$ifndef PAS2JS}LeaveCriticalSection(FPlanLock);{$endif}
+end;
+
+procedure TTranslatedSyntax.CopyMemoTo(ATarget: TTranslatedSyntax);
+var
+  LAt: Integer;
+begin
+  EnterMemo;
+  try
+    { Target is still private in its constructor, with allocated bounded slots.
+      No second lock or caller code runs while the parent memo is captured.
+      Direct field copies also avoid pas2js's out-interface-array converter bug. }
+    for LAt := 0 to FPlanCount - 1 do
+    begin
+      ATarget.FPlanIndices[LAt] := FPlanIndices[LAt];
+      ATarget.FPlans[LAt] := FPlans[LAt];
+    end;
+    ATarget.FPlanCount := FPlanCount;
+    ATarget.FPlanNodes := FPlanNodes;
+    ATarget.FInheritedPlans := FPlanCount;
+  finally
+    LeaveMemo;
+  end;
+end;
+
+procedure TTranslatedSyntax.InheritMemo(APrevious: TTranslatedSyntax;
+  const ACancellation: INyxCancellationScope);
+begin
+
+  if APrevious = nil then
+  begin
+    Exit;
+  end;
+  APrevious.CopyMemoTo(Self);
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Type memo inheritance cancelled');
+  end;
+end;
+
+function TTranslatedSyntax.FindPlan(ADeclaration: Integer): INyxPascalTypePlan;
+var
+  LAt: Integer;
+begin
+  Result := nil;
+  EnterMemo;
+  try
+    for LAt := 0 to FPlanCount - 1 do
+    begin
+
+      if FPlanIndices[LAt] = ADeclaration then
+      begin
+        Exit(FPlans[LAt]);
+      end;
+    end;
+  finally
+    LeaveMemo;
+  end;
+end;
+
+procedure TTranslatedSyntax.RemovePlan(AIndex: Integer);
+var
+  LAt: Integer;
+begin
+  { Caller already owns the memo lock; entries are private owned pure plans. }
+  Dec(FPlanNodes, FPlans[AIndex].Count);
+  for LAt := AIndex + 1 to FPlanCount - 1 do
+  begin
+    FPlanIndices[LAt - 1] := FPlanIndices[LAt];
+    FPlans[LAt - 1] := FPlans[LAt];
+  end;
+  Dec(FPlanCount);
+  FPlans[FPlanCount] := nil;
+end;
+
+procedure TTranslatedSyntax.AdmitPlan(ADeclaration: Integer; const APlan: INyxPascalTypePlan);
+var
+  LAt: Integer;
+  LNodes: Integer;
+begin
+
+  if APlan = nil then
+  begin
+    Exit;
+  end;
+  LNodes := APlan.Count;
+
+  if LNodes > CTypeMemoNodes then
+  begin
+    Exit;
+  end;
+  EnterMemo;
+  try
+    for LAt := 0 to FPlanCount - 1 do
+    begin
+
+      if FPlanIndices[LAt] = ADeclaration then
+      begin
+        RemovePlan(LAt);
+        Break;
+      end;
+    end;
+    while (FPlanCount >= CTypeMemoEntries) or (FPlanNodes > CTypeMemoNodes - LNodes) do
+    begin
+      RemovePlan(0);
+    end;
+    FPlanIndices[FPlanCount] := ADeclaration;
+    FPlans[FPlanCount] := APlan;
+    Inc(FPlanCount);
+    Inc(FPlanNodes, LNodes);
+  finally
+    LeaveMemo;
+  end;
+end;
+
+procedure TTranslatedSyntax.RecordMemo(AHit: Boolean);
+begin
+  EnterMemo;
+  try
+
+    if AHit then
+    begin
+
+      if FPlanHits < High(Integer) then
+      begin
+        Inc(FPlanHits);
+      end;
+    end
+    else if FPlanMisses < High(Integer) then
+    begin
+      Inc(FPlanMisses);
+    end;
+  finally
+    LeaveMemo;
+  end;
+end;
+
+function TTranslatedSyntax.TypeMemoReceipt: TNyxPascalTypeMemoReceipt;
+begin
+  EnterMemo;
+  try
+    Result.FEntries := FPlanCount;
+    Result.FNodes := FPlanNodes;
+    Result.FHits := FPlanHits;
+    Result.FMisses := FPlanMisses;
+    Result.FInherited := FInheritedPlans;
+  finally
+    LeaveMemo;
+  end;
 end;
 
 procedure TTranslatedSyntax.Build(const AOptions: TNyxPascalSyntaxOptions;
@@ -519,9 +755,29 @@ end;
 function TTranslatedSyntax.TypeOfDeclaration(AIndex: Integer;
   const AOptions: TNyxPascalTypeOptions;
   const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+var
+  LWindow: TNyxPascalSpan;
+  LPlan: INyxPascalTypePlan;
 begin
-  Result := NewNyxPascalDeclaredTypeSyntax(FSyntax, FSyntax.Declaration(AIndex).TypeSpan,
-    AOptions, ACancellation);
+  LWindow := FSyntax.Declaration(AIndex).TypeSpan;
+  AOptions.Validate;
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Pascal type analysis cancelled');
+  end;
+  LPlan := FindPlan(AIndex);
+  Result := ApplyNyxPascalTypePlan(LPlan, FSyntax, AIndex, AOptions, ACancellation);
+
+  if Result <> nil then
+  begin
+    RecordMemo(True);
+    Exit;
+  end;
+  RecordMemo(False);
+  Result := NewNyxPascalDeclaredTypeSyntax(FSyntax, LWindow, AOptions, ACancellation);
+  LPlan := CaptureNyxPascalTypePlan(Result, AIndex, ACancellation);
+  AdmitPlan(AIndex, LPlan);
 end;
 
 function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;

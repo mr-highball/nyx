@@ -142,6 +142,14 @@ type
     function Declarations: INyxPascalSyntaxSnapshot;
     function DeclarationOf(ANode: Integer): Integer;
   end;
+  { Source-free immutable type grammar. Nodes/spans and opaque metadata markers
+    retain no lexical snapshot, declarations, world, parser or cancellation.
+    This is unbound syntax only; Count is retained node storage, not authority. }
+  INyxPascalTypePlan = interface(IInterface)
+    ['{AD61C267-9FE8-4943-9CCB-1AF6824FA536}']
+    function Window: TNyxPascalSpan;
+    function Count: Integer;
+  end;
 
 { Parse an exact scalar window without copying/relexing its text. Bounds cannot
   cut a significant token. Nested generic closers split >> and >= contextually;
@@ -159,13 +167,85 @@ function NewNyxPascalDeclaredTypeSyntax(const ADeclarations: INyxPascalSyntaxSna
   const AWindow: TNyxPascalSpan; const AOptions: TNyxPascalTypeOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
 
+{ Capture a complete owned declaration-parser result without copying/reparsing its node
+  arena. Nil means unsupported/unowned/incomplete syntax or a different window.
+  Invalid owned ordinals and cancellation still refuse. The result owns no source. }
+function CaptureNyxPascalTypePlan(const ASyntax: INyxPascalTypeSyntax;
+  ADeclaration: Integer;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTypePlan;
+
+{ Rehost only after exact owned declaration, window, policy and structured-body
+  identities match. Nil is a normal incompatibility miss, requiring fresh parsing.
+  A hit returns a new view owning the current declaration/lexical snapshot; names
+  remain unbound. Cancellation is polled outside any caller's memo lock. }
+function ApplyNyxPascalTypePlan(const APlan: INyxPascalTypePlan;
+  const ADeclarations: INyxPascalSyntaxSnapshot; ADeclaration: Integer;
+  const AOptions: TNyxPascalTypeOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
+
 implementation
 
 type
+  { Borrowed in-unit builder authority, valid only under its interface lease. }
+  TTypeSyntax = class;
+  { Alternate public type implementations cannot grant capture authority. }
+  ITypeSyntaxOwner = interface(IInterface)
+    ['{4835469E-09C0-4823-A593-B91B7C22E40D}']
+    function TypeSyntax: TTypeSyntax;
+  end;
+  { Forward immutable plan owner, borrowed under the private interface below. }
+  TTypePlan = class;
+  { Sealed plan data authority; public Count/Window implementations confer none. }
+  ITypePlanOwner = interface(IInterface)
+    ['{4FB51AD6-F818-44E4-86C2-C9C4AE7F6045}']
+    function Plan: TTypePlan;
+  end;
+  { Pure value arena shared only after the parser retires its construction state.
+    Parallel vectors keep interfaces out of records. Identity markers contain no
+    source or owner links; dependencies cover every structured leaf consulted. }
+  TTypePlan = class(TInterfacedObject, INyxPascalTypePlan, ITypePlanOwner)
+  public
+    Nodes: array of TNyxPascalTypeNode;
+    Diagnostics: array of TNyxPascalTypeDiagnostic;
+    NodeCount: Integer;
+    DiagnosticCount: Integer;
+    RootNode: Integer;
+    SourceWindow: TNyxPascalSpan;
+    Policy: TNyxPascalTypeOptions;
+    DeclarationIdentity: IInterface;
+    DependencyNodes: array of Integer;
+    DependencyDeclarations: array of IInterface;
+    DependencyScopes: array of IInterface;
+    function Window: TNyxPascalSpan;
+    function Count: Integer;
+    function Plan: TTypePlan;
+  end;
+  { A source-specific read-only view over pure grammar data. References point
+    outward to its current declarations and plan; neither points back here. }
+  TPlannedTypeSyntax = class(TInterfacedObject, INyxPascalTypeSyntax,
+    INyxPascalDeclaredTypeSyntax)
+  public
+    DataLease: INyxPascalTypePlan;
+    Data: TTypePlan;
+    Source: INyxPascalSyntaxSnapshot;
+    function Lexical: INyxPascalLexicalSnapshot;
+    function Window: TNyxPascalSpan;
+    function Root: Integer;
+    function Complete: Boolean;
+    function Count: Integer;
+    function Node(AIndex: Integer): TNyxPascalTypeNode;
+    function Child(AParent: Integer; ARole: TNyxPascalTypeRole;
+      AOrdinal: Integer): Integer;
+    function DiagnosticCount: Integer;
+    function Diagnostic(AIndex: Integer): TNyxPascalTypeDiagnostic;
+    function Declarations: INyxPascalSyntaxSnapshot;
+    function DeclarationOf(ANode: Integer): Integer;
+  end;
   { Builder owns an immutable lexical snapshot, local ordinal vectors and a
     temporary cancellation lease. Partial compound symbols are cursor state only;
     no source token is mutated or shared with another parser. }
-  TTypeSyntax = class(TInterfacedObject, INyxPascalTypeSyntax, INyxPascalDeclaredTypeSyntax)
+  TTypeSyntax = class(TInterfacedObject, INyxPascalTypeSyntax,
+    INyxPascalDeclaredTypeSyntax, ITypeSyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FDeclarations: INyxPascalSyntaxSnapshot;
@@ -222,6 +302,7 @@ type
     function Diagnostic(AIndex: Integer): TNyxPascalTypeDiagnostic;
     function Declarations: INyxPascalSyntaxSnapshot;
     function DeclarationOf(ANode: Integer): Integer;
+    function TypeSyntax: TTypeSyntax;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -292,6 +373,10 @@ begin
   try
     CheckCancellation;
     Build;
+    CheckCancellation;
+    SetLength(FNodes, FCount);
+    SetLength(FDiagnostics, FDiagnosticCount);
+    FTokens := nil;
   finally
     FCancellation := nil;
   end;
@@ -1348,6 +1433,265 @@ begin
     raise ENyxPascalLexical.Create('Declared type syntax needs its exact source snapshot');
   end;
   Result := TTypeSyntax.Create(ADeclarations.Lexical, AWindow, AOptions, ACancellation, ADeclarations);
+end;
+
+function TTypeSyntax.TypeSyntax: TTypeSyntax;
+begin
+  Result := Self;
+end;
+
+function TTypePlan.Window: TNyxPascalSpan;
+begin
+  Result := SourceWindow;
+end;
+
+function TTypePlan.Count: Integer;
+begin
+  Result := NodeCount;
+end;
+
+function TTypePlan.Plan: TTypePlan;
+begin
+  Result := Self;
+end;
+
+procedure CheckPlanCancellation(const ACancellation: INyxCancellationScope);
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Pascal type-plan construction cancelled');
+  end;
+end;
+
+function CaptureNyxPascalTypePlan(const ASyntax: INyxPascalTypeSyntax;
+  ADeclaration: Integer; const ACancellation: INyxCancellationScope): INyxPascalTypePlan;
+var
+  LOwner: ITypeSyntaxOwner;
+  LType: TTypeSyntax;
+  LPlan: TTypePlan;
+  LLease: INyxPascalTypePlan;
+  LIdentity: IInterface;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LAt: Integer;
+  LDependency: Integer;
+  LScopeIdentity: IInterface;
+begin
+  CheckPlanCancellation(ACancellation);
+  Result := nil;
+
+  if not Supports(ASyntax, ITypeSyntaxOwner, LOwner) or not ASyntax.Complete then
+  begin
+    Exit;
+  end;
+  LType := LOwner.TypeSyntax;
+
+  if LType.FDeclarations = nil then
+  begin
+    Exit;
+  end;
+  LDeclaration := LType.FDeclarations.Declaration(ADeclaration);
+  LIdentity := NyxPascalDeclarationIdentity(LType.FDeclarations, ADeclaration);
+
+  if (LIdentity = nil) or (LDeclaration.TypeSpan.Start <> LType.FWindow.Start) or
+    (LDeclaration.TypeSpan.Length <> LType.FWindow.Length) then
+  begin
+    Exit;
+  end;
+  LPlan := TTypePlan.Create;
+  LLease := LPlan;
+  LPlan.Nodes := LType.FNodes;
+  LPlan.Diagnostics := LType.FDiagnostics;
+  LPlan.NodeCount := LType.FCount;
+  LPlan.DiagnosticCount := LType.FDiagnosticCount;
+  LPlan.RootNode := LType.FRoot;
+  LPlan.SourceWindow := LType.FWindow;
+  LPlan.Policy := LType.FOptions;
+  LPlan.DeclarationIdentity := LIdentity;
+  for LAt := 0 to LPlan.NodeCount - 1 do
+  begin
+    CheckPlanCancellation(ACancellation);
+
+    if LPlan.Nodes[LAt].FDeclaration < 0 then
+    begin
+      Continue;
+    end;
+    LDeclaration := LType.FDeclarations.Declaration(LPlan.Nodes[LAt].FDeclaration);
+
+    if LDeclaration.NestedScope < 0 then
+    begin
+      Exit;
+    end;
+    LIdentity := NyxPascalDeclarationIdentity(LType.FDeclarations, LPlan.Nodes[LAt].FDeclaration);
+    LScopeIdentity := NyxPascalScopeIdentity(LType.FDeclarations, LDeclaration.NestedScope);
+
+    if (LIdentity = nil) or (LScopeIdentity = nil) then
+    begin
+      Exit;
+    end;
+    LDependency := Length(LPlan.DependencyNodes);
+    SetLength(LPlan.DependencyNodes, LDependency + 1);
+    SetLength(LPlan.DependencyDeclarations, LDependency + 1);
+    SetLength(LPlan.DependencyScopes, LDependency + 1);
+    LPlan.DependencyNodes[LDependency] := LAt;
+    LPlan.DependencyDeclarations[LDependency] := LIdentity;
+    LPlan.DependencyScopes[LDependency] := LScopeIdentity;
+  end;
+  CheckPlanCancellation(ACancellation);
+  Result := LLease;
+end;
+
+function ApplyNyxPascalTypePlan(const APlan: INyxPascalTypePlan;
+  const ADeclarations: INyxPascalSyntaxSnapshot; ADeclaration: Integer;
+  const AOptions: TNyxPascalTypeOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+var
+  LOwner: ITypePlanOwner;
+  LPlan: TTypePlan;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LStructures: INyxPascalStructuredSyntax;
+  LAt: Integer;
+  LNode: TNyxPascalTypeNode;
+  LView: TPlannedTypeSyntax;
+begin
+  AOptions.Validate;
+  CheckPlanCancellation(ACancellation);
+  Result := nil;
+
+  if (ADeclarations = nil) or not Supports(APlan, ITypePlanOwner, LOwner) then
+  begin
+    Exit;
+  end;
+  LPlan := LOwner.Plan;
+  LDeclaration := ADeclarations.Declaration(ADeclaration);
+
+  if (NyxPascalDeclarationIdentity(ADeclarations, ADeclaration) <> LPlan.DeclarationIdentity) or
+    (LDeclaration.TypeSpan.Start <> LPlan.SourceWindow.Start) or
+    (LDeclaration.TypeSpan.Length <> LPlan.SourceWindow.Length) or
+    (AOptions.MaximumNodes <> LPlan.Policy.MaximumNodes) or
+    (AOptions.MaximumDepth <> LPlan.Policy.MaximumDepth) or
+    (AOptions.MaximumDiagnostics <> LPlan.Policy.MaximumDiagnostics) then
+  begin
+    Exit;
+  end;
+
+  if (Length(LPlan.DependencyNodes) > 0) and
+    not Supports(ADeclarations, INyxPascalStructuredSyntax, LStructures) then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to High(LPlan.DependencyNodes) do
+  begin
+    CheckPlanCancellation(ACancellation);
+    LNode := LPlan.Nodes[LPlan.DependencyNodes[LAt]];
+
+    if LStructures.TypeAt(LNode.Span.Start) <> LNode.FDeclaration then
+    begin
+      Exit;
+    end;
+    LDeclaration := ADeclarations.Declaration(LNode.FDeclaration);
+
+    if (LDeclaration.NestedScope < 0) or
+      (NyxPascalDeclarationIdentity(ADeclarations, LNode.FDeclaration) <>
+        LPlan.DependencyDeclarations[LAt]) or
+      (NyxPascalScopeIdentity(ADeclarations, LDeclaration.NestedScope) <>
+        LPlan.DependencyScopes[LAt]) then
+    begin
+      Exit;
+    end;
+  end;
+  CheckPlanCancellation(ACancellation);
+  LView := TPlannedTypeSyntax.Create;
+  Result := LView;
+  LView.DataLease := APlan;
+  LView.Data := LPlan;
+  LView.Source := ADeclarations;
+end;
+
+function TPlannedTypeSyntax.Lexical: INyxPascalLexicalSnapshot;
+begin
+  Result := Source.Lexical;
+end;
+
+function TPlannedTypeSyntax.Window: TNyxPascalSpan;
+begin
+  Result := DataLease.Window;
+end;
+
+function TPlannedTypeSyntax.Root: Integer;
+begin
+  Result := Data.RootNode;
+end;
+
+function TPlannedTypeSyntax.Complete: Boolean;
+begin
+  Result := Data.DiagnosticCount = 0;
+end;
+
+function TPlannedTypeSyntax.Count: Integer;
+begin
+  Result := DataLease.Count;
+end;
+
+function TPlannedTypeSyntax.Node(AIndex: Integer): TNyxPascalTypeNode;
+begin
+
+  if (AIndex < 0) or (AIndex >= Data.NodeCount) then
+  begin
+    raise ENyxPascalLexical.Create('Type node index is outside its immutable plan');
+  end;
+  Result := Data.Nodes[AIndex];
+end;
+
+function TPlannedTypeSyntax.Child(AParent: Integer; ARole: TNyxPascalTypeRole;
+  AOrdinal: Integer): Integer;
+begin
+
+  if AOrdinal < 0 then
+  begin
+    raise ENyxPascalLexical.Create('A type child ordinal cannot be negative');
+  end;
+  Result := Node(AParent).FirstChild;
+  while Result >= 0 do
+  begin
+
+    if Node(Result).Role = ARole then
+    begin
+
+      if AOrdinal = 0 then
+      begin
+        Exit;
+      end;
+      Dec(AOrdinal);
+    end;
+    Result := Node(Result).NextSibling;
+  end;
+end;
+
+function TPlannedTypeSyntax.DiagnosticCount: Integer;
+begin
+  Result := Data.DiagnosticCount;
+end;
+
+function TPlannedTypeSyntax.Diagnostic(AIndex: Integer): TNyxPascalTypeDiagnostic;
+begin
+
+  if (AIndex < 0) or (AIndex >= Data.DiagnosticCount) then
+  begin
+    raise ENyxPascalLexical.Create('Type diagnostic index is outside its immutable plan');
+  end;
+  Result := Data.Diagnostics[AIndex];
+end;
+
+function TPlannedTypeSyntax.Declarations: INyxPascalSyntaxSnapshot;
+begin
+  Result := Source;
+end;
+
+function TPlannedTypeSyntax.DeclarationOf(ANode: Integer): Integer;
+begin
+  Node(ANode);
+  Result := Data.Nodes[ANode].FDeclaration;
 end;
 
 end.
