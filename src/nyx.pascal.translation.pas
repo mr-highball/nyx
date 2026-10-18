@@ -46,6 +46,24 @@ type
     Span: TNyxPascalSpan;
     PrefixCount: Integer;
   end;
+  { One retained unresolved condition after actual ordered macro expansion.
+    Plannable is false after malformed syntax, failed expansion or an IFOPT
+    request. Origin/State belong to this immutable translation; records contain
+    no interface/callback and never grant compiler or source-edit authority. }
+  TNyxPascalUnresolvedCondition = record
+    Origin: TNyxPascalConditionOrigin;
+    State: Integer;
+    Expression: TNyxText;
+    Plannable: Boolean;
+  end;
+  { Optional exact planning inputs. Expressions are captured by the owning
+    translator, never reconstructed against a later macro environment. Prefix
+    views expose only sites already inside their retained token interval. }
+  INyxPascalUnresolvedConditions = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C14}']
+    function UnresolvedCount: Integer;
+    function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+  end;
   { Optional synchronous facts for a still-unknown expression. Ordered semantic
     refinement supplies sealed answers, never mutable editor state. Origin,
     expanded expression and context belong to this exact construction. The
@@ -277,7 +295,7 @@ type
     constructing visitor, callback, editor or mutable source buffer. }
   TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
-    INyxPascalTranslationSettings)
+    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -288,6 +306,8 @@ type
     FExpansion: Integer;
     FResolved: Boolean;
     FDiagnostics: array of Integer;
+    FUnresolved: INyxPascalUnresolvedConditions;
+    FUnresolvedRows: array of Integer;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -312,6 +332,8 @@ type
     function SettingsDepth(AState: Integer): Integer;
     function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
+    function UnresolvedCount: Integer;
+    function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -361,7 +383,7 @@ type
     all published references point outward to data, never back to a document. }
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
-    INyxPascalTranslationSettings)
+    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -380,6 +402,8 @@ type
     FExpansions: array of INyxPascalMacroExpansion;
     FBoundaryViews: array of INyxPascalSourceView;
     FDiagnostics: array of TNyxPascalTranslationDiagnostic;
+    FUnresolved: array of TNyxPascalUnresolvedCondition;
+    FUnresolvedCount: Integer;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
     FOccurrenceCount: Integer;
@@ -440,6 +464,8 @@ type
     function SettingsKnown(AState: Integer): Boolean;
     function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
+    function UnresolvedCount: Integer;
+    function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -1099,22 +1125,29 @@ var
   LExpanded: INyxPascalMacroExpansion;
   LValue: TNyxText;
   LOrigin: TNyxPascalConditionOrigin;
+  LPlannable: Boolean;
+  LAnalysis: TNyxPascalConditionResult;
 begin
   Result := ppkUnknown;
+  LValue := AValue;
+  LPlannable := True;
   try
 
     if (AKind = 'ifdef') or (AKind = 'ifndef') then
     begin
       LName := NyxPascalDefine(AValue);
+      LValue := 'defined(' + LName.Name + ')';
       Result := FContext.Symbol(LName).IsDefined;
 
       if AKind = 'ifndef' then
       begin
+        LValue := 'not ' + LValue;
         Result := NyxPascalNot(Result);
       end;
     end
     else if AKind = 'ifopt' then
     begin
+      LPlannable := False;
 
       if (Length(AValue) = 2) and (AValue[2] in ['+', '-']) then
       begin
@@ -1139,7 +1172,9 @@ begin
         Inc(FBytes, LExpanded.WorkBytes);
         LValue := LExpanded.Joined;
       end;
-      Result := AnalyzeNyxPascalCondition(FContext, LValue).Truth;
+      LAnalysis := AnalyzeNyxPascalCondition(FContext, LValue);
+      Result := LAnalysis.Truth;
+      LPlannable := LAnalysis.Issue in [pciNone, pciUnknownSymbol];
 
       if (Result = ppkUnknown) and (FConditions <> nil) then
       begin
@@ -1170,7 +1205,30 @@ begin
       { A malformed authored condition still owns its structural frame. Do not
         accidentally consume the enclosing conditional's endif during recovery. }
       Result := ppkUnknown;
+      LPlannable := False;
     end;
+  end;
+
+  if Result = ppkUnknown then
+  begin
+
+    if FUnresolvedCount >= FOptions.MaximumDiagnostics then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Unresolved conditions exceed their source diagnostic budget');
+    end;
+
+    if FUnresolvedCount = Length(FUnresolved) then
+    begin
+      SetLength(FUnresolved, Capacity(FUnresolvedCount, FOptions.MaximumDiagnostics));
+    end;
+    FUnresolved[FUnresolvedCount].Origin.FileReference := FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+    FUnresolved[FUnresolvedCount].Origin.Occurrence := AOccurrence;
+    FUnresolved[FUnresolvedCount].Origin.Span := ASpan;
+    FUnresolved[FUnresolvedCount].Origin.PrefixCount := FTokenCount - 1;
+    FUnresolved[FUnresolvedCount].State := FTokens[FTokenCount - 1].State;
+    FUnresolved[FUnresolvedCount].Expression := LValue;
+    FUnresolved[FUnresolvedCount].Plannable := LPlannable;
+    Inc(FUnresolvedCount);
   end;
 end;
 
@@ -2243,6 +2301,21 @@ begin
   Result := FDiagnostics[AIndex];
 end;
 
+function TTranslation.UnresolvedCount: Integer;
+begin
+  Result := FUnresolvedCount;
+end;
+
+function TTranslation.UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+begin
+
+  if (AIndex < 0) or (AIndex >= FUnresolvedCount) then
+  begin
+    raise ENyxPascalContext.Create('Unresolved condition index is outside its translation');
+  end;
+  Result := FUnresolved[AIndex];
+end;
+
 constructor TTranslationPrefix.Create(const ASource: INyxPascalTranslation;
   ABeforeToken: Integer; const AOptions: TNyxPascalTranslationOptions;
   const ACancellation: INyxCancellationScope);
@@ -2295,6 +2368,30 @@ begin
   Supports(FSource, INyxPascalTranslationMacros, FMacros);
   Supports(FSource, INyxPascalTranslationSettings, FSettings);
   FCount := ABeforeToken;
+  Supports(FSource, INyxPascalUnresolvedConditions, FUnresolved);
+
+  if FUnresolved <> nil then
+  begin
+
+    if (FUnresolved.UnresolvedCount < 0) or
+      (FUnresolved.UnresolvedCount > AOptions.MaximumDiagnostics) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Unresolved prefix conditions exceed their input budget');
+    end;
+    SetLength(FUnresolvedRows, FUnresolved.UnresolvedCount);
+    LUsed := 0;
+    for LAt := 0 to FUnresolved.UnresolvedCount - 1 do
+    begin
+      Check;
+
+      if FUnresolved.UnresolvedAt(LAt).Origin.PrefixCount < FCount then
+      begin
+        FUnresolvedRows[LUsed] := LAt;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FUnresolvedRows, LUsed);
+  end;
   LToken := FSource.Token(ABeforeToken);
 
   if (LToken.State < 0) or (LToken.State >= LStates) or
@@ -2477,6 +2574,26 @@ begin
     raise ENyxPascalContext.Create('A diagnostic lies outside this translation prefix');
   end;
   Result := FSource.Diagnostic(FDiagnostics[AIndex]);
+end;
+
+function TTranslationPrefix.UnresolvedCount: Integer;
+begin
+
+  if FUnresolved = nil then
+  begin
+    raise ENyxPascalContext.Create('This alternate source has no retained condition planning inputs');
+  end;
+  Result := Length(FUnresolvedRows);
+end;
+
+function TTranslationPrefix.UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FUnresolvedRows)) then
+  begin
+    raise ENyxPascalContext.Create('Unresolved condition index is outside its source prefix');
+  end;
+  Result := FUnresolved.UnresolvedAt(FUnresolvedRows[AIndex]);
 end;
 
 function TTranslationPrefix.Expansion(AIndex: Integer): INyxPascalMacroExpansion;

@@ -33,7 +33,108 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Anonymous structured type ownership — 2026-10-18
+## Current integration: Compiler requirements and module preparation — 2026-10-18
+
+Previous turn is progress: pushed 62e3335 supplies anonymous type ownership and
+ready real Windows member navigation, while field type binding requires actual
+implicit units. This batch follows that source/context prerequisite under original
+authoring criterion two. The documented consecutive unclosed lower bound is at
+least twelve, with older evidence retained. Full fresh MIT Nyx-owned resolver
+scope, incremental/project-scale work, ordinary Studio adoption and complete
+input/navigation/quality/parity/delivery remain required. No original criterion/
+task/counter/credit/DONE, new tool/schema or rollout closes. Solo; no HTTP/browser/
+file-protocol execution/capture, protected mutation, cleanup/deletion/restart or
+approval bypass occurs. Scratch stays on the provisioned drive; concurrent
+milestone/reference/browser-compiler planning remains separate.
+
+Optional INyxPascalUnresolvedConditions retains actual expanded expressions with
+original occurrence/span, pre-token state and prefix identity. Failed expansion,
+malformed conditions and IFOPT remain explicitly unplannable. Prefixes expose
+only earlier sites; alternate sources without retained inputs refuse enumeration.
+The portable compilerplan owner checks each original row and returns separate
+compiler symbol/source sizeof/source declared requirements. Probe extension keeps
+existing measurements/order, adds compiler symbols only and preserves the original
+256-name bound. No later macro state or pristine measurement supplies guessed
+authored-scope meaning; no source/editor/compiler callback borrow survives.
+
+Opt-in native PrepareNyxFPCModule freezes files/descriptor/context before using a
+fresh private scratch directory. New compiler-symbol requests trigger joined
+captures; aggregate probe/token and per-job timeout/transcript limits plus family/
+version/mode guards remain explicit. Its copied fluent options retain no host
+configuration. Prepared descriptors and exact remaining source requirements feed
+the existing indexed loader. Includes/scoped binding/unsupported grammar stay
+unresolved, with no application compilation/execution provenance. Original
+interfaces/GUIDs and MCP tool/schema inventory remain unchanged. Maintained
+SysUtils requirement capture now consumes this public planner instead of a
+separate directive/token correlation implementation.
+
+Accepted composite evidence is in the ignored implicit-units-20261018-052911
+packet, located by .local/implicit-units-paths-private.json:
+
+- Fourteen native portable checks qualify repeated include states, exact ordered
+  macro-expanded requirements, distinct sizeof/declared/IFOPT needs, probe order/
+  existing size retention, idempotence, prefix filtering, macro-cycle refusal,
+  checked ordinals, output limits and cancellation. Scope meaning is not inferred.
+- Fifteen native module preparation checks execute whole original handwritten
+  unit/include code returning 23. One symbol probe resolves its actual selected
+  branch; the prepared descriptor serves ordinary indexed member completion.
+  Reuse launches no new job, and token/cancellation failures publish no partial
+  result. Directory creation is IO preflight, not additional assertion credit.
+- Complete actual Win32/i386 inputs retain 156 original byte packets/47 indexed
+  namespaces, verified separately against their originals. System and ObjPas each
+  use one additional symbol probe with independent FPC/ObjFPC contexts. System
+  retains 15,817 tokens/two visits/50 diagnostics and zero remaining condition
+  requests: its grouped I-,Q-,H-,R-,V- switch is wrongly read as an include, and
+  percent-register assembly text is lexed as binary literals. This is incomplete
+  source context, not a successfully bound System unit. ObjPas retains 2,908
+  tokens/one visit/one source-scoped sizeof(Char) requirement despite a pristine
+  System.Char measurement. Semantic construction remains pending with incomplete
+  System source. Prepared indexed loading reaches three modules/two loads and
+  refuses typed incomplete objpas source; no synthetic implicit exports appear.
+- Maintained native translation/macros/operator/variant/anonymous/types/syntax/
+  binding/generics/condition/dependency/owned checks pass
+  157/38/18/22/52/367/7,632/62/127/10/48/86. The translation consumer omits its
+  optional external callback-input argument; the syntax corpus remains five
+  actual inputs/3,727 declarations. Configured profile and production in-process
+  semantic completion pass 74/84, retaining SysUtils's six scoped conditions.
+  Counts overlap earlier evidence. All seventeen native consumers have clean heaps.
+- Twenty-five final compiler logs have zero owned warnings and 35 upstream
+  pas2js RTL warnings. Four browser consumers, both Studios/backend/worker compile
+  as applicable. Browser products/consumers execute nowhere here; no HTTP/
+  authenticated/observing/input or full parity claim follows from compilation.
+- Twenty-two focused pins, all 628 src/studio Pascal/include/program files,
+  97 prior RTL inputs and three configured compiler inputs remain exact after
+  final readers. The new 156-input inventory overlaps earlier RTL evidence;
+  it is not additive coverage credit. All 48 exported SysUtils includes match
+  original bytes. Five protected files/nine complete contexts and all 349 frozen
+  7422453 artifacts remain exact. Reader/compiler groups join; no Studio listener
+  remains and LAN stays offline. Final ledgers/checkpoint own source/remote
+  identity. Native Nyx chat tools remain absent; no host/configuration retry occurs.
+
+Retained preparations are not accepted final evidence. The first planner fixture
+expected original-case canonical references, omitted built-in probe guards from
+its count and compared a normalized size name with mixed case. The first native
+consumer omitted the byte-span unit. A later indexed fixture inherited an ObjFPC
+context with a contradictory comment policy, returning pcgInternal; private
+diagnostic instrumentation identified that setup mismatch and was removed before
+the frozen final batch. Explicit matching lexical policy now reaches the real
+typed refusal. Earlier file-output directory checks are excluded from final
+assertion counts. Final metadata review also makes malformed expressions
+unplannable at the retained source boundary itself. A fresh frozen settled
+compiler/native batch qualifies that public flag; before-public-flag snapshots
+and ledgers remain separate. Accepted selectors use only settled outputs.
+These failures/logs remain retained; no uninterrupted green,
+complete implicit-unit binding or full SDK claim is made.
+
+Next useful deliverable: correctly distinguish grouped short compiler switches
+from include directives and honor assembly lexical regions in the existing
+compiler-context/lexer owners. Use actual System/ObjPas through these prepared
+descriptors, then reassess field types, actual Windows/SysUtils and complete
+language/canonical/expression meaning, incremental budgets and ordinary editor/
+input/navigation/quality/parity/delivery. Stop requirement/probe/fixture/compiler/
+capture variants; no user decision is missing and no original scope is narrowed.
+
+## Previous integration: Anonymous structured type ownership — 2026-10-18
 
 Previous turn is progress: pushed ad308b0 retains variant records/hints and
 exposes INPUT_RECORD's actual inline Event body. This batch follows that source

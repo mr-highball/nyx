@@ -1400,6 +1400,51 @@ are supplied. Full compiler/import/RTL/canonical/expression meaning, incremental
 budgets and ordinary editor/input/navigation/quality/parity/delivery remain open.
 WORK.md owns exact native evidence and browser compilation only.
 
+## Compiler requirements and module preparation
+
+Optional `INyxPascalUnresolvedConditions` retains the expression actually evaluated
+after ordered macro expansion, plus its original occurrence/span, pre-token state
+and prefix position. Unsupported expansion and IFOPT remain unplannable. Prefixes
+retain only earlier sites and preserve their immutable source owner; alternate
+sources without these receipts refuse planning rather than reconstructing meaning.
+
+`PlanNyxPascalCompilerRequirements` returns a bounded immutable plan with separate
+compiler symbols, source sizeof operands and source declared names. It checks each
+site against its owning row. Repeated includes retain distinct states. Extending
+a frozen compiler probe adds symbols in first-use order and preserves existing
+requests/measurements; it never converts scoped sizes to pristine compiler facts.
+The original 256-symbol probe bound and plan input/output/cancellation guards
+remain explicit. No source, compiler process, editor or project is mutated here.
+
+Native `PrepareNyxFPCModule` freezes explicit files/descriptor/context and uses a
+fresh caller-owned scratch directory. New symbol requests trigger joined compiler
+probes, with aggregate token/probe limits, per-job timeout/transcript limits and
+compiler family/version/mode guards. Its fluent value options are independent of
+the exported design. The returned descriptor and exact remaining requirements
+feed the existing indexed loader. Preparation leaves scoped conditions, includes
+and unsupported source unresolved; it proves neither binding nor application
+compilation/execution. No working toolchain or default Studio setup is replaced.
+
+```pascal
+LPrepared := PrepareNyxFPCModule(LCompiler, LFreshDirectory, LFiles, LModule,
+  LBaseProbe, TNyxFPCModulePreparationOptions.Defaults.UpToProbes(4));
+LModules := LModules.WithModule(LPrepared.ModuleSource);
+```
+
+Whole handwritten unit/include compilation executes the real selected branch and
+its record access; the prepared descriptor supplies ordinary indexed completion.
+Already prepared inputs need no new probe. The actual Win32/i386 System and ObjPas
+inputs retain all 156 original byte packets, independent FPC/ObjFPC modes and one
+new symbol probe per unit. System still exposes a grouped-switch-as-include gap
+and percent-register assembly lexical errors. ObjPas retains its source-scoped
+sizeof(Char) requirement despite a pristine System.Char measurement. Indexed
+loading reaches both real units and returns typed incomplete ObjPas source after
+two loads; no synthetic exports authorize a successful type result. Maintained
+SysUtils requirement capture also consumes this public planner. Full source/
+compiler/import/RTL/canonical/expression meaning, incremental budgets, ordinary
+editor/input/navigation/quality/parity/delivery remain open. WORK.md owns exact
+native evidence, retained failed preparations and browser compilation only.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

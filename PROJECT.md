@@ -100,6 +100,12 @@ Nested/container/generic fields feed existing member completion and exact origin
 navigation. Whole Windows declaration syntax now passes and its wYear completion
 is ready; actual implicit-unit/full type meaning and editor adoption remain open.
 
+The [compiler requirement/module preparation layer](docs/pascal-projects.md#compiler-requirements-and-module-preparation)
+now retains exact expanded unresolved conditions, separates compiler queries from
+source binding, and prepares per-unit descriptors with bounded native probes.
+Real System/ObjPas roots reach indexed loading with explicit remaining grammar/
+scope failures; preparation does not establish complete RTL or editor adoption.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

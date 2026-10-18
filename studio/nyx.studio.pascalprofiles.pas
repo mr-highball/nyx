@@ -24,7 +24,41 @@ unit nyx.studio.pascalprofiles;
 
 interface
 
-uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.compilertrace;
+uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.compilertrace,
+  nyx.pascal.files, nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.compilerplan;
+
+type
+  { Copied limits for explicit native module preparation. Probe/translation work
+    is bounded across the whole operation, while each compiler retains its own
+    timeout/transcript limits. No host paths or interface borrows live in this value. }
+  TNyxFPCModulePreparationOptions = record
+  private
+    FDefined: Boolean;
+    FProbes: Integer;
+    FTokens: Integer;
+    FTimeout: Cardinal;
+    FPlan: TNyxPascalCompilerPlanOptions;
+    FTrace: TNyxPascalCompilerTraceOptions;
+  public
+    class function Defaults: TNyxFPCModulePreparationOptions; static;
+    function UpToProbes(AValue: Integer): TNyxFPCModulePreparationOptions;
+    function UpToTokens(AValue: Integer): TNyxFPCModulePreparationOptions;
+    function TimeoutMilliseconds(AValue: Cardinal): TNyxFPCModulePreparationOptions;
+    function WithPlan(const AValue: TNyxPascalCompilerPlanOptions): TNyxFPCModulePreparationOptions;
+    function WithTrace(const AValue: TNyxPascalCompilerTraceOptions): TNyxFPCModulePreparationOptions;
+    procedure Validate;
+  end;
+  { Immutable prepared descriptor plus exact remaining source requirements.
+    Probes counts only jobs launched here. Unresolved scoped sizeof/declared,
+    includes and unsupported syntax remain explicit; preparation is neither
+    successful type binding nor application compilation/execution provenance. }
+  INyxFPCModulePreparation = interface(IInterface)
+    ['{814416FA-B8F7-45DC-B6AC-83D29D238905}']
+    function ModuleSource: INyxPascalModuleSource;
+    function Source: INyxPascalTranslation;
+    function Requirements: INyxPascalCompilerPlan;
+    function Probes: Integer;
+  end;
 
 { Explicit synchronous native compiler capture; a caller uses a worker when UI
   responsiveness matters. The fresh directory is a caller-authorized private
@@ -43,6 +77,19 @@ function CaptureNyxFPCCompilerContext(const ACompiler, AFreshDirectory: TNyxText
   const ACancellation: INyxCancellationScope = nil;
   ATimeoutMilliseconds: Cardinal = 30000): INyxPascalCompilerContext;
 
+{ Opt-in synchronous host operation, intended for an owning worker. Inputs are
+  frozen before writing a fresh caller-owned scratch directory. The descriptor
+  must supply a real FPC context compatible with the base probe's starting mode.
+  Only newly requested compiler symbols trigger another joined capture; scoped
+  conditions never become pristine size queries. Complete current requests or
+  preserve their remaining source gaps. Limit/cancellation/IO/identity failure
+  publishes no partial result and retains scratch evidence. No Studio/project
+  configuration, SDK bytes, installed service or application compiler job changes. }
+function PrepareNyxFPCModule(const ACompiler, AFreshDirectory: TNyxText;
+  const AFiles: INyxPascalFileCatalog; const AModule: INyxPascalModuleSource;
+  const ABaseProbe: INyxPascalCompilerProbe; const AOptions: TNyxFPCModulePreparationOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxFPCModulePreparation;
+
 implementation
 
 uses Classes, SysUtils, Process, LazFileUtils, nyx.bytes, nyx.pascal.lexing,
@@ -51,6 +98,21 @@ uses Classes, SysUtils, Process, LazFileUtils, nyx.bytes, nyx.pascal.lexing,
 
 const
   CProbeFile: TNyxText = 'nyxcompilercontext.pas';
+
+type
+  { Published data owns only portable snapshots and a detached descriptor.
+    Temporary compiler/cancellation/directory owners stay on the host stack. }
+  TPreparedModule = class(TInterfacedObject, INyxFPCModulePreparation)
+  public
+    Descriptor: INyxPascalModuleSource;
+    Translation: INyxPascalTranslation;
+    Plan: INyxPascalCompilerPlan;
+    ProbeCount: Integer;
+    function ModuleSource: INyxPascalModuleSource;
+    function Source: INyxPascalTranslation;
+    function Requirements: INyxPascalCompilerPlan;
+    function Probes: Integer;
+  end;
 
 procedure CheckCancellation(const ACancellation: INyxCancellationScope);
 begin
@@ -228,4 +290,170 @@ begin
   end;
 end;
 
+function TPreparedModule.ModuleSource: INyxPascalModuleSource;
+begin
+  Result := Descriptor;
+end;
+
+function TPreparedModule.Source: INyxPascalTranslation;
+begin
+  Result := Translation;
+end;
+
+function TPreparedModule.Requirements: INyxPascalCompilerPlan;
+begin
+  Result := Plan;
+end;
+
+function TPreparedModule.Probes: Integer;
+begin
+  Result := ProbeCount;
+end;
+
+class function TNyxFPCModulePreparationOptions.Defaults: TNyxFPCModulePreparationOptions;
+begin
+  Result := Default(TNyxFPCModulePreparationOptions);
+  Result.FDefined := True;
+  Result.FProbes := 4;
+  Result.FTokens := 4000000;
+  Result.FTimeout := 30000;
+  Result.FPlan := TNyxPascalCompilerPlanOptions.Defaults;
+  Result.FTrace := TNyxPascalCompilerTraceOptions.Defaults;
+end;
+
+procedure TNyxFPCModulePreparationOptions.Validate;
+begin
+  FPlan.Validate;
+  FTrace.Validate;
+
+  if not FDefined or (FProbes < 1) or (FTokens < 1) or (FTimeout = 0) then
+  begin
+    raise ENyxPascalContext.Create('Use explicit positive FPC module preparation limits');
+  end;
+end;
+
+function TNyxFPCModulePreparationOptions.UpToProbes(AValue: Integer): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FProbes := AValue;
+  Result.Validate;
+end;
+
+function TNyxFPCModulePreparationOptions.UpToTokens(AValue: Integer): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FTokens := AValue;
+  Result.Validate;
+end;
+
+function TNyxFPCModulePreparationOptions.TimeoutMilliseconds(AValue: Cardinal): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FTimeout := AValue;
+  Result.Validate;
+end;
+
+function TNyxFPCModulePreparationOptions.WithPlan(const AValue: TNyxPascalCompilerPlanOptions): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FPlan := AValue;
+  Result.Validate;
+end;
+
+function TNyxFPCModulePreparationOptions.WithTrace(const AValue: TNyxPascalCompilerTraceOptions): TNyxFPCModulePreparationOptions;
+begin
+  Result := Self;
+  Result.FTrace := AValue;
+  Result.Validate;
+end;
+function PrepareNyxFPCModule(const ACompiler, AFreshDirectory: TNyxText;
+  const AFiles: INyxPascalFileCatalog; const AModule: INyxPascalModuleSource;
+  const ABaseProbe: INyxPascalCompilerProbe; const AOptions: TNyxFPCModulePreparationOptions;
+  const ACancellation: INyxCancellationScope): INyxFPCModulePreparation;
+var
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LModule: INyxPascalModuleSource;
+  LProbe: INyxPascalCompilerProbe;
+  LNext: INyxPascalCompilerProbe;
+  LContext: INyxPascalCompilerContext;
+  LInitial: INyxPascalCompilerContext;
+  LCancel: INyxCancellationScope;
+  LOwner: TPreparedModule;
+  LLease: INyxFPCModulePreparation;
+  LOptions: TNyxPascalTranslationOptions;
+  LRemaining: Integer;
+  LPlanOptions: TNyxPascalCompilerPlanOptions;
+  LDirectory: TNyxText;
+begin
+  AOptions.Validate;
+  LCancel := ACancellation;
+  CheckCancellation(LCancel);
+  LFiles := CaptureNyxPascalFiles(AFiles);
+  LProbe := CaptureNyxFPCCompilerProbe(ABaseProbe);
+  LModules := CaptureNyxPascalModules(NewNyxPascalModuleCatalog.WithModule(AModule), LFiles);
+  LModule := LModules.Entry(0);
+  LInitial := LModule.Context;
+
+  if (LInitial = nil) or (LInitial.Family <> ppcFPC) or (LInitial.Mode <> LProbe.Mode) or
+    (LInitial.Version.FullNumber = 0) or not FileExistsUTF8(ACompiler) or
+    (Pos(#0, ACompiler) > 0) or (Pos(#0, AFreshDirectory) > 0) or
+    (AFreshDirectory = '') or DirectoryExistsUTF8(AFreshDirectory) or FileExistsUTF8(AFreshDirectory) then
+  begin
+    raise ENyxPascalContext.Create('FPC module preparation needs explicit compatible facts and fresh scratch');
+  end;
+  LDirectory := IncludeTrailingPathDelimiter(ExpandFileNameUTF8(AFreshDirectory));
+
+  if not CreateDirUTF8(LDirectory) then
+  begin
+    raise ENyxPascalContext.Create('The private FPC module preparation directory could not be created');
+  end;
+  LContext := LInitial;
+  LRemaining := AOptions.FTokens;
+  LOwner := TPreparedModule.Create;
+  LLease := LOwner;
+  while True do
+  begin
+    CheckCancellation(LCancel);
+    LOptions := LModule.Translation;
+
+    if LRemaining < 1 then
+    begin
+      raise ENyxPascalTranslationLimit.Create('FPC module preparation exhausted its aggregate token budget');
+    end;
+
+    if LOptions.MaximumTokens > LRemaining then
+    begin
+      LOptions := LOptions.UpToTokens(LRemaining);
+    end;
+    LOwner.Translation := NewNyxPascalTranslation(LFiles, LModule.Root, LContext, LOptions, LCancel);
+    Dec(LRemaining, LOwner.Translation.Count);
+    LPlanOptions := AOptions.FPlan;
+    LOwner.Plan := PlanNyxPascalCompilerRequirements(LOwner.Translation, LPlanOptions, LCancel);
+    LNext := LOwner.Plan.CompilerProbe(LProbe);
+
+    if LNext.Count = LProbe.Count then
+    begin
+      Break;
+    end;
+
+    if LOwner.ProbeCount >= AOptions.FProbes then
+    begin
+      raise ENyxPascalContext.Create('FPC module preparation exhausted its compiler probe budget');
+    end;
+    LProbe := LNext;
+    LContext := CaptureNyxFPCCompilerContext(ACompiler,
+      LDirectory + 'probe-' + TNyxText(IntToStr(LOwner.ProbeCount + 1)), LProbe,
+      AOptions.FTrace, LCancel, AOptions.FTimeout);
+    Inc(LOwner.ProbeCount);
+
+    if (LContext.Family <> LInitial.Family) or
+      (LContext.Version.FullNumber <> LInitial.Version.FullNumber) or (LContext.Mode <> LInitial.Mode) then
+    begin
+      raise ENyxPascalContext.Create('The module probe changed its captured compiler identity');
+    end;
+  end;
+  LOwner.Descriptor := LModule.InContext(LContext, LModule.Translation);
+  Result := LLease;
+end;
 end.

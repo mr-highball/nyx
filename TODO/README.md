@@ -60,6 +60,13 @@ wYear suggestions/navigation qualify that boundary. Implicit-unit/type meaning,
 full language/editor/parity/delivery remain under original authoring criterion two;
 WORK.md owns receipts without original completion credit or default adoption.
 
+The [compiler requirement/module preparation layer](../docs/pascal-projects.md#compiler-requirements-and-module-preparation)
+now retains ordered expanded conditions and separates compiler symbols from
+source-scoped requirements. Bounded native preparation supplies real System/ObjPas
+descriptors to indexed loading, retaining genuine grammar/scope failures. Full
+language/editor/parity/delivery stays under original authoring criterion two;
+WORK.md owns evidence without original completion credit or default adoption.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

@@ -23,7 +23,7 @@ program nyx_pascal_profile_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.editing, nyx.scheduler,
-  nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.compilertrace, nyx.pascal.encoding,
+  nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.compilertrace, nyx.pascal.compilerplan, nyx.pascal.encoding,
   nyx.studio.pascalprofiles, nyx.pascal.files, nyx.pascal.files.native,
   nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.names, nyx.pascal.syntax,
   nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources,
@@ -190,78 +190,21 @@ end;
   recorded scope gaps, never automatic aliases of pristine compiler facts. }
 function RTLRequests(const ATranslation: INyxPascalTranslation): INyxPascalCompilerProbe;
 var
+  LPlan: INyxPascalCompilerPlan;
   LAt: Integer;
-  LToken: Integer;
-  LNameAt: Integer;
-  LName: TNyxText;
-  LText: TNyxText;
-  LBody: TNyxText;
-  LDiagnostic: TNyxPascalTranslationDiagnostic;
-  LRow: TNyxPascalTranslatedToken;
   LNeeds: INyxPascalConditionNeeds;
-  LQuery: Integer;
-  LContext: INyxPascalCompilerContext;
 begin
-  Result := Probe('RTL_REQUIREMENTS');
-  for LAt := 0 to ATranslation.DiagnosticCount - 1 do
+  LPlan := PlanNyxPascalCompilerRequirements(ATranslation, TNyxPascalCompilerPlanOptions.Defaults);
+  for LAt := 0 to LPlan.Count - 1 do
   begin
-    LDiagnostic := ATranslation.Diagnostic(LAt);
-
-    if LDiagnostic.Issue <> ptiUnknownCondition then
-    begin
-      Continue;
-    end;
-    LContext := nil;
-    for LToken := 0 to ATranslation.Count - 1 do
-    begin
-      LRow := ATranslation.Token(LToken);
-
-      if (LRow.Occurrence = LDiagnostic.Occurrence) and
-        (ATranslation.PhysicalToken(LToken).Span.Start = LDiagnostic.Span.Start) then
-      begin
-        LContext := ATranslation.State(LRow.State);
-        Break;
-      end;
-    end;
-    Check(LContext <> nil, 'An actual unresolved condition retains its exact pre-token compiler state');
-    LText := NyxPascalOccurrenceLexical(ATranslation, LDiagnostic.Occurrence).Slice(LDiagnostic.Span);
-
-    if Copy(LText, 1, 2) = '{$' then
-    begin
-      LBody := Copy(LText, 3, Length(LText) - 3);
-    end
-    else
-    begin
-      Check(Copy(LText, 1, 3) = '(*$', 'Only an actual compiler-directive token enters planning');
-      LBody := Copy(LText, 4, Length(LText) - 5);
-    end;
-    LBody := TNyxText(Trim(LBody));
-    LNameAt := 1;
-    while (LNameAt <= Length(LBody)) and not (LBody[LNameAt] in [#9, #10, #13, ' ']) do
-    begin
-      Inc(LNameAt);
-    end;
-    LName := NyxPascalASCIIKey(Copy(LBody, 1, LNameAt - 1));
-    LBody := TNyxText(Trim(Copy(LBody, LNameAt, Length(LBody))));
-
-    if (LName = 'ifdef') or (LName = 'ifndef') then
-    begin
-      LBody := 'defined(' + LBody + ')';
-    end
-    else if (LName <> 'if') and (LName <> 'elseif') then
-    begin
-      Continue;
-    end;
-    LNeeds := PlanNyxPascalCondition(LContext, LBody);
+    Check(LPlan.Source.State(LPlan.State(LAt)) <> nil,
+      'An actual unresolved condition retains its exact pre-token compiler state');
+    LNeeds := LPlan.Needs(LAt);
     WriteLn('actual request / supported=', LNeeds.SyntaxSupported, ' symbols=',
-      LNeeds.SymbolCount, ' scoped sizes=', LNeeds.SizeCount, ' ', LBody);
-    for LQuery := 0 to LNeeds.SymbolCount - 1 do
-    begin
-      Result := Result.WithSymbol(LNeeds.Symbol(LQuery));
-    end;
+      LNeeds.SymbolCount, ' scoped sizes=', LNeeds.SizeCount, ' ', LPlan.Expression(LAt));
   end;
+  Result := LPlan.CompilerProbe(Probe('RTL_REQUIREMENTS'));
 end;
-
 procedure ActualRTL(const ARoot, ACompiler, ASourceRoot, AArtifacts: TNyxText;
   const AContext: INyxPascalCompilerContext);
 var

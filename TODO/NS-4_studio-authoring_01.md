@@ -108,6 +108,26 @@ loader, then reassess actual System/Windows/SysUtils and full resolver/editor
 gates. WORK.md owns final compiler/native/preservation receipts; full criterion
 two and all original acceptance requirements remain open.
 
+Implicit-unit continuation: 62e3335 is progress, retaining at least twelve
+documented unclosed batches and complete original criterion two. Follow actual
+ObjPas/System dependencies through typed unresolved compiler requirements and
+bounded source-module preparation using their real compiler/source contexts.
+Keep scoped sizeof/declared and unsupported conditions separate from compiler
+symbol requests; supply the prepared descriptors to the existing indexed loader.
+Use unchanged whole RTL/Windows inputs and compiled handwritten interaction, then
+stop at a genuinely different language/import prerequisite. Full language/
+incremental/adoption/input/navigation/quality/parity/delivery remains required;
+no original criterion/task/credit or new tool/schema closes from preparation.
+
+The qualified compiler requirement/preparation boundary passes 14 portable and
+15 native compiler/source checks, preserving 156 complete original input packets.
+Prepared actual System/ObjPas descriptors reach the indexed loader and retain
+typed incomplete objpas source after two loads. System exposes grouped-switch/
+include disambiguation and assembly lexing prerequisites; ObjPas's scoped Char
+size remains unresolved. Follow those actual context/lexer failures next, then
+reassess full type/import/Windows/SysUtils meaning and original resolver/editor
+acceptance. WORK.md owns final receipts; criterion two and original credit stay open.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

@@ -4,7 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source anonymous structured types have owned unnamed declaration identity
+Current-source compiler requirements retain actual ordered expanded expressions,
+original occurrence/span/pre-token state and prefix ownership. Scoped sizeof/
+declared and unplannable IFOPT/failed expansion stay separate from compiler symbol
+queries. Bounded native module preparation freezes inputs and owns/joins new
+compiler probes with aggregate limits and explicit context identity guards; its
+descriptor/remaining requirements feed the existing indexed loader. Native portable/
+whole compiled source/preparation checks pass 14/15, clean heaps. Actual System/
+ObjPas retain 156 exact original packets/47 namespaces and one additional symbol
+probe per unit with FPC/ObjFPC modes. System still has 15,817 tokens/two visits/
+50 diagnostics at grouped-switch/include and percent-register assembly lexing;
+ObjPas retains source sizeof(Char), despite a pristine System.Char measurement.
+Indexed loading reaches three modules/two loads and refuses incomplete objpas
+source. Maintained 157/38/18/22/52/367/7,632/62/127/10/48/86/74/84 pass; seventeen
+native consumers have clean heaps. Twenty-five final compiler logs have zero
+owned warnings (35 upstream); four browser consumers and both Studios/backend/
+worker compile only as applicable. Twenty-two focused/628 complete src+studio/
+97 prior RTL/three compiler pins, 156 overlapping new original packets, 48 SysUtils
+includes, five protected files/nine contexts and 349 frozen 7422453 artifacts stay
+exact. Readers join; LAN is offline. Original interfaces/GUIDs and MCP tool/schema
+inventory are unchanged; capabilities operate in process. WORK.md owns canonical-
+name/count/import/lexical-fixture failures and final source/remote identity. At
+least twelve documented unclosed batches retain full criterion two; no original
+criterion/task/counter/credit/DONE/tool/schema/adoption/parity/delivery closes.
+Stop requirement/probe/fixture/compiler/capture variants. Next distinguish grouped
+short switches from includes and honor assembly lexical regions under existing
+context/lexer ownership, then reassess actual System/ObjPas/Windows/SysUtils and
+full resolver/editor gates. No HTTP retry, protected mutation, cleanup/deletion/
+restart bypass or sub-agents. Preserve concurrent planning files.
+
+Earlier anonymous structured types have owned unnamed declaration identity
 and member scopes, shared by grouped declarations and independent across nested
 bodies. Optional source-position/type-leaf capabilities retain exact immutable
 owners through ordinary arrays/aliases/generic environments/member completion;
