@@ -164,8 +164,8 @@ begin
     LResult := NewNyxPascalSemanticTranslation(NewNyxPascalFileCatalog(pfcExact)
       .WithFile(NyxPascalPhysicalFile('case.pas'), 'unit ConditionCase; interface implementation end.'),
       NyxPascalPhysicalFile('case.pas'), Facts, World,
-      TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
-      TNyxPascalConditionalOptions.Defaults, LCancellation);
+      TNyxPascalTranslationOptions.Defaults.UpToTokens(1), TNyxPascalSyntaxOptions.Defaults,
+      TNyxPascalConditionalOptions.Defaults.UpToTokens(1), LCancellation);
   except
     on ENyxPascalAnalysisCancelled do
     begin
@@ -175,10 +175,116 @@ begin
   Check(LRejected and (LResult = nil), 'Cancellation retains no partial semantic result');
 end;
 
+{ Compare the failed pass's observed counters against independently counted
+  source, without changing either ceiling or publishing the private candidate. }
+procedure ExpectTokenLimit(const AFiles: INyxPascalFileCatalog;
+  const AWorld: INyxPascalSemanticWorld; AViewLimit, AAggregateLimit,
+  AUsedBefore, APass: Integer; AScope: TNyxPascalConditionalTokenScope);
+var
+  LResult: INyxPascalSemanticTranslation;
+  LRejected: Boolean;
+  LActive: Integer;
+begin
+  LResult := nil;
+  LRejected := False;
+  LActive := AViewLimit;
+
+  if AAggregateLimit - AUsedBefore < LActive then
+  begin
+    LActive := AAggregateLimit - AUsedBefore;
+  end;
+  try
+    LResult := NewNyxPascalSemanticTranslation(AFiles, NyxPascalPhysicalFile('case.pas'),
+      Facts, AWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(AViewLimit),
+      TNyxPascalSyntaxOptions.Defaults,
+      TNyxPascalConditionalOptions.Defaults.UpToTokens(AAggregateLimit));
+  except
+    on LLimit: ENyxPascalConditionalTokenLimit do
+    begin
+      LRejected := True;
+      Check((LLimit.TokenCount = LActive) and (LLimit.TokenLimit = LActive),
+        'The attempted next token reports the unchanged reached active ceiling');
+      Check((LLimit.UsedBeforePass = AUsedBefore) and
+        (LLimit.AggregateLimit = AAggregateLimit) and (LLimit.ViewLimit = AViewLimit) and
+        (LLimit.RemainingBeforePass = AAggregateLimit - AUsedBefore),
+        'The refusal retains exact pre-pass aggregate work and both configured ceilings');
+      Check((LLimit.Scope = AScope) and (LLimit.PassIndex = APass),
+        'The refusal distinguishes view, aggregate and tied constraints on the actual replay pass');
+    end;
+  end;
+  Check(LRejected and (LResult = nil), 'Typed work diagnostics publish no partial semantic result');
+end;
+
+procedure TokenBudgets;
+const
+  CPlain: TNyxText = 'unit BudgetCase; interface implementation end.';
+  CReplay: TNyxText = 'unit BudgetCase; interface type Owned=Byte; ' +
+    '{$if declared(Owned)}const Yes=1;{$endif} implementation end.';
+var
+  LFiles: INyxPascalFileCatalog;
+  LRaw: INyxPascalTranslation;
+  LLimited: INyxPascalTranslation;
+  LUnresolved: INyxPascalUnresolvedConditions;
+  LWorld: INyxPascalSemanticWorld;
+  LResult: INyxPascalSemanticTranslation;
+  LCount: Integer;
+  LPrefix: Integer;
+  LRejected: Boolean;
+begin
+  LWorld := World;
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('case.pas'), CPlain);
+  LRaw := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, TNyxPascalTranslationOptions.Defaults);
+  LCount := LRaw.Count;
+  LLimited := nil;
+  LRejected := False;
+  try
+    LLimited := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+      Facts, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount - 1));
+  except
+    on LLimit: ENyxPascalTokenLimit do
+    begin
+      LRejected := True;
+      Check((LLimit.TokenCount = LCount - 1) and (LLimit.TokenLimit = LCount - 1),
+        'Plain translation retains exact admitted work without conditional metadata');
+    end;
+  end;
+  Check(LRejected and (LLimited = nil), 'Plain token exhaustion retains atomic refusal');
+  LLimited := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount));
+  Check(LLimited.Count = LCount, 'An exactly fitting translation still succeeds at its original ceiling');
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount * 4, 0, 1, pctsView);
+  ExpectTokenLimit(LFiles, LWorld, LCount + 1, LCount - 1, 0, 1, pctsAggregate);
+  ExpectTokenLimit(LFiles, LWorld, LCount - 1, LCount - 1, 0, 1, pctsViewAndAggregate);
+  Check(LFiles.TextAt(0) = CPlain, 'Failure observations leave the exact captured source unchanged');
+
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('case.pas'), CReplay);
+  LRaw := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, TNyxPascalTranslationOptions.Defaults);
+  Check(Supports(LRaw, INyxPascalUnresolvedConditions, LUnresolved) and
+    (LUnresolved.UnresolvedCount = 1), 'The replay case has one independently observed semantic question');
+  LCount := LRaw.Count;
+  LPrefix := LUnresolved.UnresolvedAt(0).Origin.PrefixCount;
+  ExpectTokenLimit(LFiles, LWorld, LCount + 1, 2 * LCount + LPrefix - 1,
+    LCount + LPrefix, 2, pctsAggregate);
+  LResult := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('case.pas'),
+    Facts, LWorld, TNyxPascalTranslationOptions.Defaults.UpToTokens(LCount),
+    TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults.UpToTokens(2 * LCount + LPrefix));
+  Check((LResult.Passes = 2) and (LResult.Answers = 1) and LResult.Source.Resolved and
+    (LResult.WorkTokens = 2 * LCount + LPrefix),
+    'An exactly fitting replay charges both full translations and its parsed prefix');
+  Check((LFiles.TextAt(0) = CReplay) and (LResult.Source.Files.TextAt(0) = CReplay),
+    'A failed attempt followed by admission preserves every original source scalar');
+end;
+
 begin
   try
     Prefixes;
     Refusals;
+    TokenBudgets;
     WriteLn('PASS ', GChecks, ' ordered semantic conditional checks');
   except
     on LError: Exception do

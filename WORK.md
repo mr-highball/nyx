@@ -33,7 +33,52 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed diagnostic emission — 2026-10-18
+## Current integration: Conditional token-budget diagnosis — 2026-10-18
+
+The unchanged original RTL consumer now identifies its exact failure: attempted
+pass 15 has already charged 3,760,614 cumulative work units. The remaining
+239,386 selects its AddToken cap and is exhausted; the configured view limit is
+still 2,000,000 and aggregate limit 4,000,000. This proves which ceiling caused
+this refusal, not that a complete final view would fit. Word/Longint/Int64 requests,
+original sources, initial five queries, symbol preparation three/eight, generic
+fact-job eight and pass ceiling 64 stay unchanged. No final System/ObjPas semantic
+or indexed result is produced; the full integration remains failed, with a clean
+heap. Stop budget-diagnostic/fixture/compiler/capture variants.
+
+Typed scalar exceptions retain admitted tokens, active cap, pre-pass aggregate
+work, both configured ceilings, one-based pass and closed view/aggregate/tied
+scope. Existing translation-limit catchers still handle them; neither partial
+results nor producer/context/callback leases escape. Focused native 33 distinguishes
+all three scopes, later replay, exact-fit success and cancellation. Maintained
+translation 209, actual compiler/whole companion nine and owned completion 86
+pass with clean heaps. Twelve compiler logs have zero owned warnings/35 upstream.
+Five browser consumers include Studio/worker; native Studio/backend compile
+without launching. Browser execution remains unqualified. These counts overlap; this diagnosis
+does not reduce analysis work or close original criterion/task/credit/DONE.
+
+Next implement genuine ordered prefix reuse through existing conditions/
+translation/lexical/syntax owners. Reuse must avoid revisiting tokens, retaining
+exact immutable source/context/ordered-answer identity and saved include, branch,
+macro, lexical and settings state. Charge actual new translation and prefix/
+constant work; sharing must not merely relabel repeatedly performed work as free.
+Preserve the full logical-view cap, cumulative cap, pass/probe ceilings, cancellation
+and atomic refusal. A resumable checkpoint must not expose a mutable/unfinished
+ordinary lexical snapshot or trust suffix state from an earlier unknown branch.
+Qualify the original RTL route without shortening source, adding fixed probes,
+ignoring directives or raising quotas. Full language/type/module/incremental/editor/
+input/quality/parity/adoption/delivery remain open across at least thirty-four
+unclosed batches; this is prerequisite diagnosis, not another completion credit.
+
+The ignored `.local/conditional-budget-paths-private.json` locates exact receipts.
+Native reader session 61306/PID 6808 is terminal exit 1, not a live handle. Three
+focused sources stay frozen; 653 other maintained sources, 97 RTL/24 compiler
+inputs and all 156 retained raw unit packets stay exact. Five protected files/
+nine complete contexts and 349 frozen 7422453 artifacts remain exact, along with
+13 concurrent planning files. Native Nyx MCP handles remain absent; no fallback
+transport or host retry occurs. LAN stays offline. No browser/HTTP/file execution/
+capture, protected mutation, cleanup/restart, approval bypass or sub-agents.
+
+## Previous integration: Typed diagnostic emission — 2026-10-18
 
 Focused native 37 and all 40 maintained native consumers pass with clean heaps;
 71 main compiler logs have zero owned warnings/168 upstream. The independent

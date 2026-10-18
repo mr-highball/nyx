@@ -2515,9 +2515,20 @@ captured compiler/output configuration; this factory does not establish full
 SDK/target coherence. General layouts, canonical typing and expressions stay open.
 
 `TNyxPascalConditionalOptions` defaults to 64 passes and four million cumulative
-translation/prefix tokens. Caller-selected translation/syntax/binding limits
+work units: translation/prefix tokens and constant-evaluation steps.
+Caller-selected translation/syntax/binding limits
 still apply. Exhaustion and cancellation publish no partial construction receipt.
 This is bounded refinement; incremental/project-scale performance is unqualified.
+
+An `AddToken` refusal now carries `ENyxPascalTokenLimit` with the admitted token
+count and reached active limit. Ordered refinement adds
+`ENyxPascalConditionalTokenLimit`: the one-based attempted pass, work already
+charged before it, original view/aggregate limits and aggregate remainder.
+`TNyxPascalConditionalTokenScope` distinguishes the view, aggregate remainder
+and a tie. Both exceptions retain the original translation-limit category and
+own only scalar observations; no partial source or semantic result escapes.
+Other budget failures retain their existing categories. These observations
+change no quotas or accounting and do not establish a reuse/performance fix.
 
 Owned and indexed completion use this constructor by default, through typed
 `WithConditions` options. Every pass/prefix consumes the ordinary aggregate token

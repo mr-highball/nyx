@@ -9,6 +9,20 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Conditional budget diagnosis (2026-10-18) now identifies the unchanged RTL
+refusal precisely: pass 15 starts after 3,760,614 aggregate work units and reaches
+its remaining 239,386-token cap, below the unchanged 2M view limit. Focused native
+33 and maintained translation/compiler/owned-provider 209/9/86 pass, clean heaps;
+12 compiler logs have zero owned warnings. Browser consumers compile only. The
+whole RTL integration still fails with no final semantic/indexed result. This
+diagnosis grants no criterion/task/credit/DONE or performance completion. Stop
+diagnostic variants; implement actual ordered prefix reuse under the existing
+conditions/translation/lexical/syntax owners. Preserve exact saved source/context/
+answer/include/branch/macro/lexical/settings state, both caps, all pass/probe limits,
+cancellation and atomic refusal. Avoid repeated work rather than discounting it;
+unfinished mutable lexical views and earlier unknown suffix state grant no reuse
+authority. WORK.md owns the exact receipts, preservation and original RTL gate.
+
 Primitive fulfillment prerequisite (2026-10-18): consume existing typed requests
 through a generic bounded batch over exact captured owners/modules. Preflight
 before native jobs, preserve one-fact guards and source identity, merge replies

@@ -32,6 +32,20 @@ type
   { Translation resource refusal is atomic. It differs from a recoverable missing
     include/unknown condition, which remains visible in the returned diagnostics. }
   ENyxPascalTranslationLimit = class(ENyxPascalContext);
+  { Exact AddToken refusal: Count tokens were admitted, and the next token would
+    exceed Limit. Inherits the existing atomic-refusal category for compatibility.
+    Counts are validated scalar observations; this exception owns no partial
+    translation, compiler context, callback or source lease. }
+  ENyxPascalTokenLimit = class(ENyxPascalTranslationLimit)
+  private
+    FTokenCount: Integer;
+    FTokenLimit: Integer;
+  public
+    { Requires a positive limit already reached by the observed count. }
+    constructor Create(ATokenCount, ATokenLimit: Integer); reintroduce;
+    property TokenCount: Integer read FTokenCount;
+    property TokenLimit: Integer read FTokenLimit;
+  end;
   { Explicit captured-context gaps; none is disguised as an inactive branch or a
     successful compiler/type-resolution result. Positions are always physical. }
   TNyxPascalTranslationIssue = (ptiUnknownCondition, ptiMissingInclude,
@@ -653,6 +667,19 @@ begin
   end;
 end;
 
+constructor ENyxPascalTokenLimit.Create(ATokenCount, ATokenLimit: Integer);
+begin
+
+  if (ATokenLimit < 1) or (ATokenCount < ATokenLimit) then
+  begin
+    raise ENyxPascalContext.Create('A token-budget refusal needs its reached positive limit');
+  end;
+  inherited CreateFmt('Pascal translated tokens exceed their budget [used=%d limit=%d]',
+    [ATokenCount, ATokenLimit]);
+  FTokenCount := ATokenCount;
+  FTokenLimit := ATokenLimit;
+end;
+
 class function TNyxPascalTranslationOptions.Defaults: TNyxPascalTranslationOptions;
 begin
   Result := Default(TNyxPascalTranslationOptions);
@@ -918,7 +945,7 @@ begin
 
   if FTokenCount >= FOptions.MaximumTokens then
   begin
-    raise ENyxPascalTranslationLimit.Create('Pascal translated tokens exceed their budget');
+    raise ENyxPascalTokenLimit.Create(FTokenCount, FOptions.MaximumTokens);
   end;
 
   if FTokenCount = Length(FTokens) then

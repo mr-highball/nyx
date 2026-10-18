@@ -29,6 +29,33 @@ uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.binding;
 
 type
+  { Which unchanged ceiling selected the failed translation's active cap. A tie
+    retains both constraints; it is never mislabeled as a measured bottleneck. }
+  TNyxPascalConditionalTokenScope = (pctsView, pctsAggregate, pctsViewAndAggregate);
+  { Exact context for a token refusal during one ordered replay pass. All data
+    are copied numbers observed before that attempted pass; no partial source,
+    semantic world, replay authority or inner exception is retained. Existing
+    ENyxPascalTranslationLimit/TokenLimit catchers continue to handle this type. }
+  ENyxPascalConditionalTokenLimit = class(ENyxPascalTokenLimit)
+  private
+    FUsedBeforePass: Integer;
+    FAggregateLimit: Integer;
+    FViewLimit: Integer;
+    FPassIndex: Integer;
+    FRemaining: Integer;
+    FScope: TNyxPascalConditionalTokenScope;
+  public
+    { Validate the active cap equals min(view limit, aggregate remainder).
+      The attempted pass is one-based; refusal changes no quota or accounting. }
+    constructor Create(ATokenCount, AActiveLimit, AUsedBeforePass,
+      AAggregateLimit, AViewLimit, APassIndex: Integer); reintroduce;
+    property UsedBeforePass: Integer read FUsedBeforePass;
+    property AggregateLimit: Integer read FAggregateLimit;
+    property ViewLimit: Integer read FViewLimit;
+    property PassIndex: Integer read FPassIndex;
+    property RemainingBeforePass: Integer read FRemaining;
+    property Scope: TNyxPascalConditionalTokenScope read FScope;
+  end;
   { Copied construction quotas. Refinement never silently truncates work or
     assumes a result after reaching a limit. These records contain no interfaces. }
   TNyxPascalConditionalOptions = record
@@ -146,6 +173,53 @@ type
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
   end;
+
+constructor ENyxPascalConditionalTokenLimit.Create(ATokenCount, AActiveLimit,
+  AUsedBeforePass, AAggregateLimit, AViewLimit, APassIndex: Integer);
+const
+  ScopeNames: array[TNyxPascalConditionalTokenScope] of String =
+    ('translation view', 'conditional aggregate remainder', 'view and aggregate');
+var
+  LRemaining: Integer;
+  LExpected: Integer;
+begin
+
+  if (AUsedBeforePass < 0) or (AAggregateLimit <= AUsedBeforePass) or
+    (AViewLimit < 1) or (APassIndex < 1) then
+  begin
+    raise ENyxPascalContext.Create('Conditional token diagnostics need valid observed work limits');
+  end;
+  LRemaining := AAggregateLimit - AUsedBeforePass;
+  LExpected := AViewLimit;
+
+  if LRemaining < LExpected then
+  begin
+    LExpected := LRemaining;
+  end;
+
+  if AActiveLimit <> LExpected then
+  begin
+    raise ENyxPascalContext.Create('An active token cap must match its observed view and aggregate limits');
+  end;
+  inherited Create(ATokenCount, AActiveLimit);
+  FUsedBeforePass := AUsedBeforePass;
+  FAggregateLimit := AAggregateLimit;
+  FViewLimit := AViewLimit;
+  FPassIndex := APassIndex;
+  FRemaining := LRemaining;
+  FScope := pctsView;
+
+  if LRemaining < AViewLimit then
+  begin
+    FScope := pctsAggregate;
+  end
+  else if LRemaining = AViewLimit then
+  begin
+    FScope := pctsViewAndAggregate;
+  end;
+  Message := Message + Format(' [scope=%s pass=%d aggregate-used=%d aggregate-limit=%d view-limit=%d]',
+    [ScopeNames[FScope], FPassIndex, FUsedBeforePass, FAggregateLimit, FViewLimit]);
+end;
 
 class function TNyxPascalConditionalOptions.Defaults: TNyxPascalConditionalOptions;
 begin
@@ -497,8 +571,19 @@ begin
       LPassOptions := LPassOptions.UpToTokens(LRemaining);
     end;
     LCache.BeginPass;
-    LResult.Snapshot := NewNyxPascalTranslation(LFiles, ARoot, LContext,
-      LPassOptions, LCancellation, LAuthority);
+    try
+      LResult.Snapshot := NewNyxPascalTranslation(LFiles, ARoot, LContext,
+        LPassOptions, LCancellation, LAuthority);
+    except
+      on LLimit: ENyxPascalTokenLimit do
+      begin
+        { Copy evidence before the RTL releases the original exception. A failed
+          pass still publishes no source/result and charges no invented work. }
+        raise ENyxPascalConditionalTokenLimit.Create(LLimit.TokenCount,
+          LLimit.TokenLimit, LResult.Tokens, AOptions.MaximumTokens,
+          ATranslation.MaximumTokens, LResult.Rounds + 1);
+      end;
+    end;
     Inc(LResult.Tokens, LResult.Snapshot.Count);
     Inc(LResult.Rounds);
     LCache.EndPass;
