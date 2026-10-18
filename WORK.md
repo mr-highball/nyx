@@ -33,7 +33,68 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered frozen-prefix traversal — 2026-10-18
+## Current integration: Exact constant-domain shifts — 2026-10-18
+
+6e3aa4f reached VarSizeQuant in the actual HeapInc object. Source inspection and
+a failed direct `1 shl 5` test show the first cause is missing expression grammar,
+not a proved object/record scope-typing failure. Current implementation adds
+closed explicit 64-bit shift operations and a portable exact decimal path for
+logical zero-fill, discarded high bits and retained left-side signed/unsigned
+intent. Counts 0..63 admit; undefined counts and incompatible kinds stay Unknown.
+Source evaluation requires captured FPC/version authority. SHL/SHR work in the
+Pascal and FPC-conditional dialects; symbolic aliases remain ordinary Pascal only.
+No runtime register width, implicit integer promotion or other compiler's shift
+semantics is inferred. Integer and/or/xor/not and scalar casts remain separate.
+
+Five functional sources are frozen in the ignored packet located by
+`.local/integer-operators-paths-private.json`. Focused native source/value tests
+pass 114 with the whole compiled object/record companion, including six actual
+source conditions and exact original values. An independent FPC oracle passes
+18, zero warnings and clean heap. Early broader observational probes retain
+undefined-count outputs and four warnings; those are not normative or accepted
+evidence. The first source test fails before implementation. An initial companion
+also exposed unsupported symbolic shift syntax in FPC IF, and its first filename
+collided with the predefined Integer type. Both fixture failures are retained.
+A proposed narrow-bound retag is reverted: FPC's unsigned left-shift pattern
+differs from ordinary arithmetic promotion. Existing conservative arithmetic
+guards remain; no narrow/runtime type-rule repair is claimed.
+
+The unchanged original RTL consumer passes 56 with the same 2M view/4M aggregate/
+64-round and probe ceilings. VarSizeQuant and the following shifted comparison
+resolve; System advances to 24 answers/10,888 declarations, retaining six syntax
+diagnostics. The first pending condition is now MaxVarChunkSize in heap.inc; its
+initializer combines shifts with integer AND and a negative mask. That meaning
+remains pbiUnsupportedType. ObjPas stays 209/four/one; exact indexed Free/FreeInstance
+navigation/insertion remains ready. Stop shift/oracle/fixture/compiler/capture
+variants. Next reassess generic integer bit-pattern operations under existing
+value/constant/type owners, including dialect, signedness and masked arithmetic;
+do not patch a specific RTL value or infer runtime widths. Full canonical typing,
+casts, layout and all six System syntax diagnostics stay retained prerequisites.
+
+All 40 maintained native consumers, the original RTL 56 and independent compiler
+18 pass with clean heaps. Seventy-two current compiler logs have zero owned
+warnings/168 upstream. Both Studios/backend/worker and 28 browser consumers compile
+as applicable; browser execution stays unqualified. Final current-source reading
+passes lexical 566 across 499 files/2,289,021 lossless tokens and syntax 7,807 across
+five inputs/3,802 declarations. Counts overlap. Evidence is composite only for
+layout after the five-source functional freeze: one preferred blank line and
+trailing blank removal in the two new companion files. Exact prior bytes/diffs
+and final source readings are retained. No runtime behavior changed
+after the freeze and no uninterrupted final-byte full run is claimed.
+
+Original reader session 80287/PID 9536 and native/regression/products sessions
+12130/81616/81563 are terminal exit zero, not live handles. Five focused sources,
+655 other prior sources, 97 RTL/24 compiler inputs, all 156 original unit packets
+and 48 retained includes stay exact; current maintained inventory is 658. Five
+protected files/nine contexts, 349 frozen 7422453 artifacts and 13 concurrent
+planning files remain exact. Native Nyx MCP handles remain absent. LAN stays
+offline. No fallback transport or host/config retry, browser/HTTP/file execution/
+capture, protected mutation, cleanup/restart, approval bypass or sub-agents occurs.
+Full original criterion/task/credit/DONE and language/incremental/editor/input/
+quality/parity/adoption/delivery remain open across at least thirty-six unclosed
+batches; no new tool/schema or editor engine is installed.
+
+## Previous integration: Ordered frozen-prefix traversal — 2026-10-18
 
 3b3d438 established that pass 15 exhausted the original 4M aggregate remainder,
 with 3,760,614 already charged and 239,386 remaining. Current work replaces full

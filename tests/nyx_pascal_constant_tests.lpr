@@ -27,7 +27,7 @@ uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.constants,
   nyx.pascal.values, nyx.pascal.conditions
   {$ifndef PAS2JS}, nyx.pascal.files.native, nyx.pascal.modules,
-  constant.meaning.fixture{$endif};
+  constant.meaning.fixture, shift.meaning.fixture{$endif};
 
 var
   GChecks: Integer;
@@ -133,6 +133,21 @@ begin
   Number(LSite, '%101010', '42');
   Number(LSite, '&52', '42');
   Number(LSite, '2+5*8', '42');
+  Number(LSite, '1 shl 5', '32');
+  Number(LSite, '128 shr 2', '32');
+  Number(LSite, '1 << 5', '32');
+  Number(LSite, '128 >> 2', '32');
+  Number(LSite, '1 shl 5 + 1', '33');
+  Number(LSite, '128 shr 2 div 2', '16');
+  Number(LSite, '9007199254740993 shl 1', '18014398509481986');
+  Number(LSite, '1 shl 63', '-9223372036854775808');
+  Number(LSite, '(1 shl 63) shl 1', '0');
+  Number(LSite, '(-1) shr 1', '9223372036854775807');
+  Number(LSite, '(-1) shr 63', '1');
+  Number(LSite, 'High(QWord) shr 63', '1');
+  Number(LSite, 'High(QWord) shl 1', '18446744073709551614');
+  Number(LSite, 'High(Word) shl 48', '18446462598732840960');
+  Number(LSite, '(1 shl 5) shl 0', '32');
   Number(LSite, '-19 div 3', '-6');
   Number(LSite, '-19 mod 3', '-1');
   Number(LSite, '19 div -3', '-6');
@@ -209,6 +224,52 @@ begin
     (LResult.Dependency(0).World.ModuleAt(0).Syntax.Lexical.Slice(
       LResult.Dependency(0).Declaration.NameSpan) = TNyxText('SourceValue')),
     'Exact original supplementary text and declaration navigation remain source-owned');
+end;
+
+procedure ShiftContracts;
+const
+  CUnknown: array[0..7] of TNyxText = ('1 shl -1', '1 shl 64', '1 shr 65',
+    '1 shl 9007199254740993', 'true shl 1', '1 shl true', 'first shl 1',
+    '1 shr first');
+var
+  LSite: INyxPascalBindingSite;
+  LResult: INyxPascalConstantResult;
+  LValue: TNyxPascalConstantValue;
+  LOriginal: TNyxPascalConstantValue;
+  LAt: Integer;
+begin
+  LSite := Site('unit ShiftGuard; interface type TChoice=(first,last); implementation end.', Facts);
+  for LAt := Low(CUnknown) to High(CUnknown) do
+  begin
+    LResult := Evaluate(LSite, CUnknown[LAt]);
+    Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue <> pbiNone),
+      'Undefined shifts and incompatible operands refuse: ' + String(CUnknown[LAt]));
+  end;
+  LOriginal := TNyxPascalConstantValue.IntegerValue(-1);
+  LValue := LOriginal.Shifted64(psdRight, TNyxPascalConstantValue.IntegerValue(1).AsUnsigned);
+  Check((LValue.Number.ToText = TNyxText('9223372036854775807')) and
+    not LValue.IsUnsigned and (LOriginal.Number.ToText = TNyxText('-1')),
+    'The count does not donate signedness or mutate the original record');
+  LOriginal := TNyxPascalConstantValue.IntegerValue(1).AsUnsigned;
+  LValue := LOriginal.Shifted64(psdLeft, TNyxPascalConstantValue.IntegerValue(63));
+  Check(LValue.IsUnsigned and (LValue.Number.ToText = TNyxText('9223372036854775808')) and
+    (LOriginal.Number.ToText = TNyxText('1')), 'Explicit unsigned-64 intent survives a high-bit shift independently');
+  LValue := LValue.Shifted64(psdRight, TNyxPascalConstantValue.IntegerValue(63));
+  Check(LValue.IsUnsigned and (LValue.Number.ToText = TNyxText('1')),
+    'Small results retain explicit unsigned-64 value intent');
+  LSite := Site('unit Uncaptured; interface implementation end.',
+    NewNyxPascalCompilerContext(ppcFPC, TNyxPascalCompilerVersion.Create(0, 0, 0), ppmDelphi));
+  LResult := Evaluate(LSite, '1 shl 5');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue = pbiCompilerContext),
+    'A missing compiler version cannot borrow this build host''s constant-folding domain');
+  LSite := Site('unit OtherCompiler; interface implementation end.',
+    NewNyxPascalCompilerContext(ppcPas2JS, TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi));
+  LResult := Evaluate(LSite, '1 shl 5');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue = pbiCompilerContext),
+    'Another source compiler requires its own qualified shift semantics');
+  Check(not PlanNyxPascalConstant('1 << 5', TNyxPascalConstantOptions.Defaults
+    .InDialect(pcdFPCConditional)).SyntaxSupported,
+    'Ordinary Pascal symbolic shifts do not expand FPC conditional grammar');
 end;
 
 procedure Refusals;
@@ -369,6 +430,7 @@ var
   LView: INyxPascalTranslatedSyntax;
   LWorld: INyxPascalSemanticWorld;
   LSite: INyxPascalBindingSite;
+  LSemantic: INyxPascalSemanticTranslation;
 begin
   Check(NativeConstantMeaning(StrToInt('45')) = 42,
     'The whole authored companion executes its compiler-evaluated values');
@@ -385,12 +447,32 @@ begin
   Number(LSite, 'LastOrdinal', '9');
   Number(LSite, 'NegativeQuotient', '-6');
   Number(LSite, 'NegativeRemainder', '-1');
+  Check(NativeShiftMeaning, 'The exact whole object/record companion executes its compiler-folded shifts');
+  LCapture := CaptureNyxPascalSourceDirectory(ARepo + '/tests', NewNyxPascalFileCatalog(pfcExact),
+    NewNyxPascalModuleCatalog, TNyxPascalDirectoryOptions.Defaults.OnlyFile('shift.meaning.fixture.pas'));
+  LSemantic := NewNyxPascalSemanticTranslation(LCapture.Files, LCapture.Modules.Entry(0).Root,
+    Facts, NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults),
+    TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  WriteLn('whole shift companion / answers=', LSemantic.Answers, ' pending=', LSemantic.Pending,
+    ' issue=', Ord(LSemantic.BindingIssue), ' ', LSemantic.RelatedName);
+  Check(LSemantic.Source.Resolved and not LSemantic.Pending and (LSemantic.Answers = 6),
+    'Unfinished object/record prefixes resolve local shifts without future declarations or synthetic closings');
+  LView := NewNyxPascalTranslatedSyntax(LSemantic.Source, TNyxPascalSyntaxOptions.Defaults);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LSite := LWorld.At(0, 0, LView.Syntax.Lexical.Scalars);
+  Number(LSite, 'TShiftedObject.Quantum', '32');
+  Number(LSite, 'TShiftedRecord.Quantum', '8');
+  Number(LSite, 'TShiftedObject.Wide', '18014398509481986');
+  Number(LSite, 'Wrapped', '-9223372036854775808');
+  Number(LSite, 'ZeroFilled', '9223372036854775807');
 end;
 {$endif}
 
 begin
   try
     ValuesAndScopes;
+    ShiftContracts;
     Refusals;
     OrderedConditions;
     {$ifndef PAS2JS}

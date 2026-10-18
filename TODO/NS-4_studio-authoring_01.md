@@ -9,7 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Ordered frozen-prefix traversal (2026-10-18) now avoids whole-translation replay
+Constant-shift prerequisite (2026-10-18): the actual HeapInc VarSizeQuant failure
+is first a missing SHL expression plan, not a proved structural scope failure.
+Extend existing exact values/plans with explicit 64-bit shifts, captured compiler
+authority, dialect-specific symbolic aliases and unchanged work/cancellation/
+ownership guards. Preserve signed/unsigned intent and values beyond 2^53 without
+native/JavaScript bitwise coercion. Undefined counts remain Unknown, and unrelated
+type promotions/bitwise/cast/layout meaning retain their existing owners. Whole
+FPC companions and the unchanged RTL consumer must decide the boundary; no fixed
+source facts, source truncation, probe additions or raised quotas. Current evidence
+and the next genuine prerequisite belong to WORK.md; no original criterion/task/
+credit/DONE/parity/adoption/delivery closes. Native source/value 114, independent
+compiler 18, all 40 maintained native consumers and unchanged RTL 56 pass, clean
+heaps. All 72 current compiler jobs have zero owned warnings. System reaches
+24 answers/10,888 declarations with six syntax diagnostics; MaxVarChunkSize's
+integer AND/mask initializer is the next pending meaning. Indexed Free/FreeInstance
+remains ready. Browser consumers compile only; final evidence is composite for
+layout-only changes as recorded in WORK.md. Stop shift/oracle/fixture/compiler/capture
+variants; reassess generic bit-pattern operations through existing value/constant/
+type owners, retaining dialect, signedness, work limits and exact source ownership.
+
+Historical ordered frozen-prefix traversal (2026-10-18) avoids whole-translation replay
 within the existing conditional constructor. Each source token is admitted once;
 each detached analyzed prefix and constant step remains charged. Revocable lexer
 borrows cannot expose mutable/unfinished ordinary snapshots. Exact include,

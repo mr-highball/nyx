@@ -526,6 +526,24 @@ begin
           AOperation := pvoMultiply;
           Result := 40;
         end;
+      psoShiftLeft:
+        begin
+
+          if FOptions.Dialect = pcdPascal then
+          begin
+            AOperation := pvoShiftLeft64;
+            Result := 40;
+          end;
+        end;
+      psoShiftRight:
+        begin
+
+          if FOptions.Dialect = pcdPascal then
+          begin
+            AOperation := pvoShiftRight64;
+            Result := 40;
+          end;
+        end;
       psoEqual:
         begin
           AOperation := pvoEqual;
@@ -573,6 +591,16 @@ begin
       pkwMod:
         begin
           AOperation := pvoRemainder;
+          Result := 40;
+        end;
+      pkwShl:
+        begin
+          AOperation := pvoShiftLeft64;
+          Result := 40;
+        end;
+      pkwShr:
+        begin
+          AOperation := pvoShiftRight64;
           Result := 40;
         end;
       pkwAnd:
@@ -1314,6 +1342,18 @@ begin
         end;
       cnBinary:
         begin
+
+          if LNode.Operation in [pvoShiftLeft64, pvoShiftRight64] then
+          begin
+            LContext := ContextAt(ASite);
+
+            if (LContext = nil) or (LContext.Family <> ppcFPC) or
+              (LContext.Version.FullNumber = 0) then
+            begin
+              Refuse(pbiCompilerContext);
+              Exit;
+            end;
+          end;
           LLeft := NodeValue(APlan, LNode.Left, ASite);
           LRight := NodeValue(APlan, LNode.Right, ASite);
           Result := LLeft.Operate(LNode.Operation, LRight);

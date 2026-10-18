@@ -2081,7 +2081,7 @@ the actual results, retained failures and remaining type/editor/parity gates.
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.
 Integers use the existing exact decimal arithmetic through the signed/unsigned
 64-bit domain, preserving values above 2^53 on both targets without floating-point
-conversion. Unsigned intent survives small results; wrapping, signed overflow and
+conversion. Unsigned intent survives small results; arithmetic wrapping, signed overflow and
 uncertain mixed-sign coercion refuse. Enum ordinals remain distinct and require
 explicit `Ord` before ordinary integer arithmetic. This is bounded constant
 meaning, not full compiler overload, nominal-type or expression checking.
@@ -2113,6 +2113,30 @@ literals, unary signs, Boolean operations/comparisons, arithmetic `+`, `-`, `*`,
 constants, real/string/cast/width-sensitive bitwise meaning and unsupported layout
 remain unknown. Checked getters refuse incompatible kinds; there is no application,
 filesystem, network, script or UI invocation.
+
+`Shifted64(TNyxPascalShiftDirection, ACount)` explicitly selects logical movement
+inside the value's 64-bit two's-complement constant domain. The appended closed
+operations `pvoShiftLeft64`/`pvoShiftRight64` use the same implementation. Exact
+decimal steps discard high bits on a left shift and zero-fill a right shift;
+the left value retains its signed/unsigned-64 intent, including small results.
+The count contributes no signedness. Integer counts 0..63 admit; other counts,
+Boolean values and unprojected enum ordinals return Unknown. This selects neither
+a machine register width nor runtime integer promotion. The
+[FPC logical-operator reference](https://www.freepascal.org/daily/doc/ref/refsu48.html)
+identifies shifts as logical operations without overflow checking and leaves
+negative/out-of-width counts undefined. Exploratory compiler outputs for those
+undefined cases are retained observations, not portable value authority.
+
+Source plans admit `shl`/`shr` at multiplicative precedence, left-associatively.
+Ordinary Pascal also admits `<<`/`>>`; FPC's separate IF grammar does not gain
+those aliases. Source evaluation requires a captured FPC family and nonzero
+version. Another source compiler or missing authority refuses instead of borrowing
+this analyzer build's operators. Declaration initializers retain their ordinary
+Pascal dialect even when used by a source condition. Whole compiled object/record
+companions qualify earlier local constants, repeated names in distinct owners,
+values beyond 2^53 and logical shifts of negative values. This is a constant-fold
+facility; integer and/or/xor/not, casts, narrower arithmetic promotions and runtime
+width rules retain their existing separate prerequisites.
 
 `TNyxPascalConstantOptions.InDialect` distinguishes ordinary Pascal from FPC's
 separate conditional expression language. Parsed plans cannot change dialect at

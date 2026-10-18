@@ -33,11 +33,15 @@ type
   { Constant knowledge, independent of a host Variant or runtime data binding.
     Integer admits exactly [-2^63, 2^64-1]; wider compiler domains stay unknown. }
   TNyxPascalValueKind = (pvvUnknown, pvvBoolean, pvvInteger, pvvOrdinal);
-  { Width-independent supported integer/Boolean operations. Integer bitwise
-    operators, casts and real arithmetic require separate compiler type rules. }
+  { Closed logical movement inside the explicit 64-bit constant-value domain.
+    This does not describe a platform register or a typed runtime shift. }
+  TNyxPascalShiftDirection = (psdLeft, psdRight);
+  { Supported integer/Boolean operations. Shift names explicitly select the
+    value's 64-bit constant domain. Integer and/or/xor/not, casts and runtime
+    width/promotion rules remain separate compiler type prerequisites. }
   TNyxPascalValueOperation = (pvoAdd, pvoSubtract, pvoMultiply, pvoDivide,
     pvoRemainder, pvoEqual, pvoNotEqual, pvoLess, pvoLessEqual, pvoGreater,
-    pvoGreaterEqual, pvoAnd, pvoOr, pvoXor);
+    pvoGreaterEqual, pvoAnd, pvoOr, pvoXor, pvoShiftLeft64, pvoShiftRight64);
   { A copied exact value, with no interfaces or mutable owner. Decimal arithmetic
     provides integer arithmetic without browser floating-point rounding. Default
     is Unknown. Checked getters refuse an incompatible kind. }
@@ -64,9 +68,20 @@ type
       only explicit Ord projects its exact ordinal into integer arithmetic. }
     function AsOrdinal: TNyxPascalConstantValue;
     function OrdValue: TNyxPascalConstantValue;
-    { Negation/operations refuse unsupported kinds, zero division or overflow
-      by returning Unknown. No modular wrapping or guessed width is applied. }
+    { Arithmetic refuses unsupported kinds, zero division and overflow. Only
+      the explicitly named 64-bit shifts select modular bit-pattern movement;
+      no target register width or runtime integer promotion is inferred. }
     function Negated: TNyxPascalConstantValue;
+    { Exact logical zero-fill on a 64-bit two's-complement pattern. Left shift
+      discards high bits and retains the left value's signed/unsigned-64 intent;
+      the count contributes no signedness. Only integer counts 0..63 admit.
+      Undefined/out-of-domain counts, ordinals and Boolean operands return
+      Unknown. Decimal steps avoid native overflow and browser 32/53-bit limits. }
+    function Shifted64(ADirection: TNyxPascalShiftDirection;
+      const ACount: TNyxPascalConstantValue): TNyxPascalConstantValue;
+    { Apply one closed operation. Arithmetic keeps its checked value domain;
+      explicitly named shifts delegate to Shifted64 and Boolean logic remains
+      distinct from integer bitwise operators requiring further type rules. }
     function Operate(AOperation: TNyxPascalValueOperation;
       const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
     { True only for known Boolean or the exact integers zero/one. }
@@ -320,6 +335,77 @@ begin
   end;
 end;
 
+function TNyxPascalConstantValue.Shifted64(ADirection: TNyxPascalShiftDirection;
+  const ACount: TNyxPascalConstantValue): TNyxPascalConstantValue;
+var
+  LCount: Integer;
+  LAt: Integer;
+  LText: TNyxText;
+  LBits: TNyxDecimalNumber;
+  LModulus: TNyxDecimalNumber;
+  LSign: TNyxDecimalNumber;
+  LQuotient: TNyxDecimalNumber;
+  LRemainder: TNyxDecimalNumber;
+begin
+  Result := Unknown;
+
+  if (Ord(ADirection) < Ord(Low(TNyxPascalShiftDirection))) or
+    (Ord(ADirection) > Ord(High(TNyxPascalShiftDirection))) or
+    (FKind <> pvvInteger) or (ACount.FKind <> pvvInteger) then
+  begin
+    Exit;
+  end;
+
+  if ACount.FNumber.Negative or
+    (ACount.FNumber.CompareTo(TNyxDecimalNumber.FromInteger(63)) > 0) then
+  begin
+    Exit;
+  end;
+  LCount := 0;
+  LText := ACount.FNumber.ToText;
+  for LAt := 1 to Length(LText) do
+  begin
+    LCount := LCount * 10 + Ord(LText[LAt]) - Ord('0');
+  end;
+  LModulus := Exact('18446744073709551616');
+  LSign := Exact('9223372036854775808');
+  LBits := FNumber;
+
+  if LBits.Negative then
+  begin
+    LBits := LBits.Add(LModulus);
+  end;
+  for LAt := 1 to LCount do
+  begin
+
+    if ADirection = psdLeft then
+    begin
+      LBits := LBits.Add(LBits);
+
+      if LBits.CompareTo(LModulus) >= 0 then
+      begin
+        LBits := LBits.Subtract(LModulus);
+      end;
+    end
+    else
+    begin
+      Divide(LBits, TNyxDecimalNumber.FromInteger(2), LQuotient, LRemainder);
+      LBits := LQuotient;
+    end;
+  end;
+
+  if not FUnsigned and (LBits.CompareTo(LSign) >= 0) then
+  begin
+    LBits := LBits.Subtract(LModulus);
+  end;
+  Result := ExactInteger(LBits);
+
+  if FUnsigned then
+  begin
+    Result := Result.AsUnsigned;
+  end;
+end;
+
 function TNyxPascalConstantValue.Operate(AOperation: TNyxPascalValueOperation;
   const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
 var
@@ -329,6 +415,16 @@ var
   LRemainder: TNyxDecimalNumber;
 begin
   Result := Unknown;
+
+  if AOperation = pvoShiftLeft64 then
+  begin
+    Exit(Shifted64(psdLeft, AOther));
+  end;
+
+  if AOperation = pvoShiftRight64 then
+  begin
+    Exit(Shifted64(psdRight, AOther));
+  end;
 
   if (FKind = pvvUnknown) or (AOther.FKind = pvvUnknown) then
   begin

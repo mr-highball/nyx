@@ -72,6 +72,12 @@ ordered traversal through detached frozen prefixes. Ordinary owned/indexed compl
 bounded refinement with exact source preservation. Full RTL import/layout/
 grammar meaning, target coherence and ordinary editor adoption remain open.
 
+Declaration-bound [constant shifts](docs/pascal-projects.md#declaration-bound-constant-expressions)
+now retain exact 64-bit patterns through SHL/SHR and ordinary symbolic aliases.
+Compiler authority and dialect remain explicit; undefined counts and other
+compiler/runtime type rules stay unknown. This is source constant analysis,
+with native qualification and browser compilation, not default editor adoption.
+
 The [actual Windows capture](docs/pascal-projects.md#actual-windows-namespace-capture)
 now reaches ordinary indexed completion through exact source selection and typed
 header policies. Complete translation exposes remaining SDK grammar
