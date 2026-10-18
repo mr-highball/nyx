@@ -33,7 +33,159 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Non-returning routine intent — 2026-10-18
+## Current integration: Ordered per-warning compiler policies — 2026-10-18
+
+Previous goal turn is progress: committed/pushed 9359fec qualifies non-returning
+intent and original RTL TObject completion/navigation. At least twenty-two
+documented unclosed batches retain complete original authoring criterion two.
+Reassessment follows the distinct WARN compiler-context prerequisite under existing
+context/translation ownership. Deliver typed numeric/named selectors and closed
+actions, ordered conditional requests, detached context capture/identity, exact
+directive receipts and PUSH/POP restoration. Named groups and numeric IDs retain
+their order without guessed alias membership or effective diagnostic levels.
+Whole compiled native warning behavior, portable refusal/ownership/budget cases
+and one prepared/final unchanged RTL route at existing budgets decide this boundary.
+Stop at a different genuine prerequisite. Full compiler/type/incremental/editor/
+input/navigation/quality/parity/adoption/delivery remain required without original
+criterion/task/credit/DONE closure. Preserve concurrent/protected inputs and offline
+LAN; native execution/browser compilation only. No host/configuration retry,
+protected mutation, cleanup/deletion/restart, approval bypass or sub-agents.
+
+Qualification reassessment: the warning implementation passes 44 native ownership/
+source checks with clean heap and zero owned warnings. Independent configured FPC
+oracles preserve three normal marked-symbol warnings, one promoted error plus one
+warning, and four warnings with an unknown selector; successful runs return 84
+with clean heaps. The compiler saves pending message chains at PUSH, so these
+authored request snapshots deliberately do not predict delayed message activation.
+Initial misplaced include CODEPAGE and capture-only mock result warnings are fixed
+in owned source, without suppressing unrelated warnings.
+
+Unchanged real RTL preparation now reaches its existing eight-probe limit after
+WARN becomes readable. The joined failure and all eight compiler transcripts stay
+retained. Stop warning implementation here and follow the concrete compiler-plan
+prerequisite under its existing owner: optional bounded conditional-symbol lookahead
+over already retained directive rows. Ordinary requirement plans remain minimal;
+native preparation enables this optimization. Observed expanded requirements keep
+priority, candidates never become branch/type/alias facts, and actual FPC must
+verify every queried presence/absence. Keep the 256-symbol, eight-probe and aggregate
+work quotas; no broader SDK fixture or raised budget is substituted. Qualify the
+portable candidate/refusal/ownership contract and the unchanged real RTL route;
+stop at a different genuine source prerequisite. At least twenty-three documented
+unclosed batches retain full original criterion two and all broader acceptance.
+
+The first lookahead route joins six compiler jobs, then exposes the old cumulative
+256-name request vector. Keep both resource failures and stop tuning lookahead or
+probe ceilings. Follow the same preparation prerequisite with verified cohort
+merging: preserve a separate observed-default packet before explicit replies,
+require exact default/compiler/mode/scope compatibility, reject conflicting shared
+facts/sizes and preserve richer exact values. Query new cohorts against the original
+base request while accumulating only verified immutable facts. Per-job 256 names,
+aggregate context/work limits and the eight-job qualification ceiling stay exact.
+This is a change to preparation ownership and progress, not a larger limit or a
+replacement SDK. Required and optional missing-pristine queries remain distinct
+from source-local uncertainty, and real compiler evidence decides the route.
+
+The qualified portable boundary now uses optional INyxPascalContextWarnings and
+INyxPascalWarningDirectives: positive signed-32-bit numeric IDs, canonical open
+ASCII group names, closed On/Off/Error/Unknown actions and independent conditional
+activity. Exact order participates in detached capture/equality/source-mode copies;
+unknown effects clear it and local restoration recovers authored requests while
+preserving later definitions/global state. Prefix receipts retain original physical
+include/occurrence/span/pre-state ownership. Malformed selectors/actions, unsupported
+compiler families, alternate-producer failures, quota exhaustion and cancellation
+publish no partial candidate. There is no message catalog, guessed alias map,
+effective warning level or compiler execution authority.
+
+General compiler plans remain minimal; native preparation enables optional bounded
+retained-row lookahead. Observed expanded requirements retain priority, failed macro
+sites cannot become raw symbol queries, and source-local uncertainty cannot trigger
+re-query of a known pristine fact. Candidate rows/scalars consume the same aggregate
+work quota. The native host captures verified cohorts against the original base,
+merging exact immutable facts only with the same observed defaults/compiler/mode/
+scope/options/features/policies. Conflicting presence/integers/sizes refuse; richer
+integers survive. Initial observations are a compatibility anchor, not source-mode
+facts. The 256-name job limit, bounded aggregate context/source/work, eight-job real
+qualification ceiling and parser depth remain unchanged. Expanded plan option
+records require callers rebuilt together; existing interfaces stay stable with
+optional capability interfaces, and no MCP tool/schema changes.
+
+Ignored warning-policy-20261018-082250 is located by
+.local/warning-policy-paths-private.json. Accepted final-source evidence is composite:
+native-final/regression-final/products-final joined with exit 0, then the corrected
+whole-source frontier consumer joined separately. Fifty regular compiler logs have
+zero owned warnings and 105 separately identified upstream pas2js Classes warnings.
+Thirty native consumers have clean heaps. Focused warning/planner/protocol checks
+pass 44/30/38, source/translation 157, owned syntax 7,671, structured types 367,
+binding 62, generic binding 127, indexed dependencies 48, owned completion 86,
+actual compiler/RTL profile 74, actual Windows SDK 26 and production semantic
+completion 84. Other maintained lexical/policy/region/macro/linkage/bootstrap/
+intrinsic/RTL/non-returning consumers pass their retained assertions. Both Studios,
+backend, browser worker and sixteen browser consumers compile as applicable;
+browser execution/input/observation/parity/adoption/delivery are not established.
+
+The exact real-module frontier passes 45. All 156 original compiler-unit packets
+stay byte-exact. System preparation joins eight probes and retains 135,763 tokens,
+37 visits, twelve diagnostics and eleven requirements. Ordered source refinement
+answers six conditions; the resulting 5,631 declarations/seven syntax diagnostics
+retain the next pending pbiCompilerContext at rtl/inc/system.inc scalar 1051:
+High(errorcode)<>maxExitCode. Remaining actual source includes class/property
+grammar in objpash.inc, compilerproc sequencing in compproc.inc, CODEALIGN in
+math.inc and later semantic conditions. ObjPas remains 209 declarations/four syntax
+diagnostics/one semantic answer/no pending query. Ordinary indexed TObject.Fr
+still returns exactly Free/FreeInstance, with original objpash.inc name tokens,
+navigation after provider retirement and an exact detached Free insertion. Ready
+known members do not imply the entire dependency has complete compiler meaning.
+The consumer checks the numeric WARN 3018 Off receipt at its original include owner
+and confirms that directive is no longer an unsupported source diagnostic.
+
+Retained failures: initial misplaced include CODEPAGE/two mock-result warnings were
+repaired in owned source; the first native oracle disproved a naive two-warning
+expectation without moving its PUSH. Missing scalar-count dependency and an empty-
+base-probe test assumption were corrected. Whole-RTL preparation first hit eight
+probes, then cumulative requests hit 256 after six joined jobs; both failures and
+their transcripts remain excluded from acceptance. Compatible cohorts solve that
+ownership problem without higher caps. The first completed expanded-source check
+then let a later local ExitCode overwrite the correct public root match; the
+maintained consumer now retains any exact root match and records the subsequent
+real source gaps. The final frontier explicitly expects six answers plus its later
+pending condition rather than preserving a false old five-answer/no-pending claim.
+The capture's managed accumulator is initialized explicitly; its initial warning
+is retained but excluded from the final zero-warning ledger. The final receipt's
+run-log mapping was corrected without rerunning or rewriting accepted logs.
+
+Separate configured native warning oracles preserve exact diagnostic text and
+their expected exits: three LegacyValue marked warnings normally; one promoted
+marked error plus one warning with no executable in error mode; three marked
+warnings plus one exact unknown-selector warning in unknown mode. Successful runs
+return 84 and have clean heaps. Pinned scandir/verbose/switches/message sources
+explain FPC's pending-chain PUSH behavior; authored request restoration deliberately
+does not promise effective warning timing. The unchanged independent hinted-value
+oracle remains reused only with exact source/compiler provenance, outside the
+regular warning ledger.
+
+Final inventories verify twelve focused source files, 628 product sources, 97
+prior RTL pins and fourteen compiler/config/source pins; 48 retained SysUtils
+includes and 156 original unit packets are exact. All five protected files/nine
+complete retained contexts and thirteen concurrent planning files remain exact
+outside this turn's six-line README addition. The read-only frozen verifier passes
+349 files at 7422453 with a clean heap. Readers joined and ports 8088–8093 have no
+listeners. Native Nyx tools remain absent; no service/configuration retry, browser/
+HTTP/file-protocol execution/capture, protected mutation, cleanup/deletion/restart
+or approval bypass occurred. Qualification and log hashes are in the private packet;
+final Git/remote identity is recorded after checkpoint publication.
+
+Stop warning/lookahead/cohort/fixture/compiler/capture variants. Reassess supported
+constant-condition semantics and class/property declaration grammar through the
+existing condition/parser owners before the next batch. The High comparison is
+the actual next semantic question, not permission to hardcode its compiler answer.
+Full grammar/canonical type/module coherence/incremental budgets/ordinary editor
+input/navigation/visual quality/browser-LCL parity/adoption/delivery remain required.
+At least twenty-three documented unclosed batches retain complete original
+criterion two; no original criterion/task/counter/credit/DONE closes. Goal active,
+solo. The new concurrent browser-compiler/reference catalogs remain independently
+owned and are neither staged nor implemented by this batch.
+
+## Earlier integration: Non-returning routine intent — 2026-10-18
 
 Previous goal turn is progress: committed/pushed 7355559 qualifies typed RTL role,
 original signatures/bodies and unchanged-source advancement to noreturn. At least

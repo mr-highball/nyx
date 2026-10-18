@@ -41,6 +41,18 @@ type
     function Source: TNyxText;
   end;
 
+  { Foreign capture producer for conflict and detachment checks. It owns its
+    supplied snapshots only; merging must copy them and must not retain this
+    wrapper or treat metadata as an application-execution receipt. }
+  TCaptureOverride = class(TInterfacedObject, INyxFPCCompilerCapture)
+  public
+    Base: INyxFPCCompilerCapture;
+    Value: INyxPascalCompilerContext;
+    function Context: INyxPascalCompilerContext;
+    function ObservedDefaults: INyxPascalCompilerContext;
+    function Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+  end;
+
 const
   CFile: TNyxText = 'probe.pas';
   CPrefix: TNyxText = 'NYX_CONTEXT_qualify_';
@@ -57,6 +69,22 @@ var
 function TExcessProbe.Identity: TNyxPascalDefineRef;
 begin
   Result := Base.Identity;
+end;
+
+function TCaptureOverride.Context: INyxPascalCompilerContext;
+begin
+  Result := Value;
+end;
+
+function TCaptureOverride.ObservedDefaults: INyxPascalCompilerContext;
+begin
+  Result := Base.ObservedDefaults;
+end;
+
+function TCaptureOverride.Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+begin
+  Result := nil;
+  raise ENyxPascalContext.Create('This qualification wrapper supplies capture only');
 end;
 
 function TExcessProbe.Mode: TNyxPascalLanguageMode;
@@ -281,9 +309,163 @@ begin
     'Excess query vectors refuse without changing retained requests');
 end;
 
+{ Independent protocol packets qualify value/cohort behavior. Actual configured
+  compiler/SDK jobs remain the separate native preparation qualification. }
+procedure CohortMerging;
+var
+  LFirst: INyxFPCCompilerCapture;
+  LNext: INyxFPCCompilerCapture;
+  LMerged: INyxFPCCompilerCapture;
+  LWithSize: INyxFPCCompilerCapture;
+  LOverride: TCaptureOverride;
+  LForeign: INyxFPCCompilerCapture;
+  LFirstProbe: INyxPascalCompilerProbe;
+  LNextProbe: INyxPascalCompilerProbe;
+  LText: TNyxText;
+  LAt: Integer;
+  LRejected: Boolean;
+
+  function ExtraReply(const AReply: TNyxText; const AObserved: TNyxText = ''): TNyxText;
+  var
+    LFrame: TNyxText;
+    LInsert: Integer;
+  begin
+    LFrame := Frame(AObserved);
+    LInsert := Pos(Message('H_TRUE'), LFrame);
+    Result := Copy(LFrame, 1, LInsert - 1) + Message(AReply) +
+      Copy(LFrame, LInsert, Length(LFrame) - LInsert + 1);
+  end;
+
+begin
+  LFirstProbe := Probe.WithSymbol(NyxPascalDefine('ALPHA'));
+  LNextProbe := Probe.WithSymbol(NyxPascalDefine('BETA'));
+  LFirst := ReadNyxFPCCompilerCapture(LFirstProbe, CFile, ExtraReply('U_9'), 0,
+    TNyxPascalCompilerTraceOptions.Defaults);
+  LNext := ReadNyxFPCCompilerCapture(LNextProbe, CFile, ExtraReply('D_9'), 0,
+    TNyxPascalCompilerTraceOptions.Defaults);
+  Check((LFirst.Context.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUndefined) and
+    (LFirst.ObservedDefaults.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUnknown),
+    'Explicit verified absences stay separate from the observed-default anchor');
+  Check((LFirst.ObservedDefaults.Symbol(NyxPascalDefine('FPC_DELPHI')).Kind = ppdUnknown) and
+    (LFirst.Context.Symbol(NyxPascalDefine('FPC_DELPHI')).IsDefined = ppkTrue),
+    'Explicit source-mode guard replies do not become initial macro observations');
+  LMerged := LFirst.Merge(LNext);
+  Check((LMerged.Context.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUndefined) and
+    (LMerged.Context.Symbol(NyxPascalDefine('BETA')).IsDefined = ppkTrue),
+    'Independent query cohorts retain old verified absences and new presences together');
+  Check((LFirst.Context.Symbol(NyxPascalDefine('BETA')).Kind = ppdUnknown) and
+    (LNext.Context.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUnknown),
+    'Cohort merging preserves both original immutable captures');
+  Check(LMerged.ObservedDefaults.SameFacts(LFirst.ObservedDefaults),
+    'Merged facts retain the exact independent compiler compatibility anchor');
+  LNext := ReadNyxFPCCompilerCapture(LFirstProbe, CFile, ExtraReply('D_9'), 0,
+    TNyxPascalCompilerTraceOptions.Defaults);
+  LRejected := False;
+  try
+    LMerged := LMerged.Merge(LNext);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LMerged.Context.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUndefined),
+    'A conflicting explicit presence refuses before replacing the accumulated packet');
+  LNext := ReadNyxFPCCompilerCapture(LNextProbe, CFile,
+    ExtraReply('D_9', '(3101) Macro defined: OTHER_TARGET'#10), 0,
+    TNyxPascalCompilerTraceOptions.Defaults);
+  LRejected := False;
+  try
+    LMerged := LMerged.Merge(LNext);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Changed compiler defaults refuse even with the same version and source mode');
+  LText := ExtraReply('D_9');
+  LAt := Pos(Message('D_1'), LText);
+  LText := Copy(LText, 1, LAt - 1) + Message('U_1') +
+    Copy(LText, LAt + Length(Message('D_1')), Length(LText));
+  LAt := Pos(Message('U_2'), LText);
+  LText := Copy(LText, 1, LAt - 1) + Message('D_2') +
+    Copy(LText, LAt + Length(Message('U_2')), Length(LText));
+  LNext := ReadNyxFPCCompilerCapture(NewNyxFPCCompilerProbe(NyxPascalDefine('QUALIFY'), ppmObjFPC)
+    .WithSymbol(NyxPascalDefine('FPC_DOTTEDUNITS')).WithSymbol(NyxPascalDefine('BETA')),
+    CFile, LText, 0, TNyxPascalCompilerTraceOptions.Defaults);
+  LRejected := False;
+  try
+    LMerged := LMerged.Merge(LNext);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Different source-mode captures cannot be merged through matching ordinary symbols');
+  LOverride := TCaptureOverride.Create;
+  LForeign := LOverride;
+  LOverride.Base := LMerged;
+  LOverride.Value := LMerged.Context.WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdDefined);
+  LWithSize := LMerged.Merge(LForeign);
+  Check(LWithSize.Context.Symbol(NyxPascalDefine('FPC_FULLVERSION')).IntegerValue = 30301,
+    'A presence-only cohort reply cannot erase an already captured exact integer');
+  LOverride.Value := LMerged.Context.WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdInteger, 30302);
+  LRejected := False;
+  try
+    LMerged := LMerged.Merge(LForeign);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and
+    (LMerged.Context.Symbol(NyxPascalDefine('FPC_FULLVERSION')).IntegerValue = 30301),
+    'Conflicting exact integer evidence refuses atomically');
+  LOverride.Value := NyxPascalWithCapturedSize(LMerged.Context, NyxPascalSizeReference('Measured'),
+    NyxPascalSizeFact(pssKnown, ppmDelphi, ppkTrue, 1));
+  LWithSize := LMerged.Merge(LForeign);
+  Check(NyxPascalCapturedSize(LWithSize.Context, NyxPascalSizeReference('Measured')).Bytes = 1,
+    'New exact size evidence survives a compatible immutable cohort merge');
+  LOverride.Value := NyxPascalWithCapturedSize(LMerged.Context, NyxPascalSizeReference('Measured'),
+    NyxPascalSizeFact(pssKnown, ppmDelphi, ppkTrue, 2));
+  LRejected := False;
+  try
+    LWithSize := LWithSize.Merge(LForeign);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and
+    (NyxPascalCapturedSize(LWithSize.Context, NyxPascalSizeReference('Measured')).Bytes = 1),
+    'Conflicting size evidence refuses atomically');
+  LOverride.Value := NyxPascalWithWarning(LMerged.Context, NyxPascalWarningNumber(42), pwaOff);
+  LRejected := False;
+  try
+    LMerged := LMerged.Merge(LForeign);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Authored source-warning state cannot masquerade as a pristine compiler cohort');
+  LForeign := nil;
+  LFirst := nil;
+  LNext := nil;
+  Check((LMerged.Context.Symbol(NyxPascalDefine('ALPHA')).Kind = ppdUndefined) and
+    (LMerged.Context.Symbol(NyxPascalDefine('BETA')).IsDefined = ppkTrue),
+    'Merged portable values outlive their original captures and foreign producer');
+end;
+
 begin
   try
     Protocol;
+    CohortMerging;
     WriteLn('PASS ', GChecks, ' portable compiler fact protocol checks');
   except
     on LError: Exception do

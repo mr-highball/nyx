@@ -160,9 +160,152 @@ begin
     'Malformed syntax is unplannable at the retained source boundary itself');
 end;
 
+{ Lookahead proposes compiler measurements from existing directive rows. It
+  never changes source participation, manufactures type sizes or admits syntax. }
+procedure ConditionalLookahead;
+const
+  CSource: TNyxText = 'unit Ahead; interface {$if defined(NEEDED)}{$endif}' +
+    '{$NYX_CAPTURE_BOUNDARY ON}{$if defined(FUTURE_NAME)}{$endif}' +
+    '{$if sizeof(TLocal)=4}{$endif}{$if declared(TSome)}{$endif}{$ifopt R+}{$endif}' +
+    'const S=''{$if defined(STRING_FAKE)}'';' + #10 +
+    '// {$if defined(COMMENT_FAKE)}' + #10 + 'implementation end.';
+var
+  LContext: INyxPascalCompilerContext;
+  LFiles: INyxPascalFileCatalog;
+  LSource: INyxPascalTranslation;
+  LPlan: INyxPascalCompilerPlan;
+  LCandidates: INyxPascalCompilerCandidates;
+  LProbe: INyxPascalCompilerProbe;
+  LBase: INyxPascalCompilerProbe;
+  LSizes: INyxPascalSizeProbe;
+  LCancel: INyxCancellationScope;
+  LFailed: Boolean;
+  LAt: Integer;
+  LMany: TNyxText;
+  LBefore: Integer;
+begin
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmObjFPC);
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('ahead.pas'), CSource);
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('ahead.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource, TNyxPascalCompilerPlanOptions.Defaults);
+  Supports(LPlan, INyxPascalCompilerCandidates, LCandidates);
+  Check((LPlan.Count = 1) and (LCandidates.CandidateCount = 0) and
+    (LCandidates.WorkUnits = LSource.Count), 'General plans keep minimal observed requirements by default');
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Supports(LPlan, INyxPascalCompilerCandidates, LCandidates);
+  Check((LPlan.Count = 1) and (LCandidates.CandidateCount = 1) and not LCandidates.CandidatesTruncated,
+    'Lookahead keeps proposals separate from actual unresolved requirements');
+  Check((LCandidates.CandidateAt(0).Name = TNyxText('future_name')) and
+    (LCandidates.WorkUnits > LSource.Count),
+    'Only the retained future directive proposes a missing compiler symbol');
+  LBase := NyxFPCProbeSizeOf(NewNyxFPCCompilerProbe(NyxPascalDefine('AHEAD'), ppmObjFPC),
+    NyxPascalSizeReference('System.Char'));
+  LBefore := LBase.Count;
+  LProbe := LPlan.CompilerProbe(LBase);
+  Supports(LProbe, INyxPascalSizeProbe, LSizes);
+  Check((LProbe.Count = LBefore + 2) and (LProbe.Symbol(LBefore).Name = TNyxText('needed')) and
+    (LProbe.Symbol(LBefore + 1).Name = TNyxText('future_name')) and (LSizes.SizeCount = 1),
+    'Observed expanded needs precede optional candidates while preserving explicit size requests');
+  Check(not LSource.Resolved and
+    (LSource.InitialContext.Symbol(NyxPascalDefine('FUTURE_NAME')).Kind = ppdUnknown),
+    'Unmeasured candidates neither become facts nor resolve an unknown source effect');
+  Check(LSource.Files.TextAt(0) = CSource, 'Lookahead retains the entire original source packet');
+  LBase := NewNyxFPCCompilerProbe(NyxPascalDefine('QUOTA'), ppmObjFPC);
+  for LAt := LBase.Count to 254 do
+  begin
+    LBase := LBase.WithSymbol(NyxPascalDefine('BASE_' + TNyxText(IntToStr(LAt))));
+  end;
+  LProbe := LPlan.CompilerProbe(LBase);
+  Check((LProbe.Count = 256) and (LProbe.Symbol(255).Name = TNyxText('needed')),
+    'Required queries retain priority at the existing 256-symbol ceiling');
+  LFailed := False;
+  try
+    LCandidates.CandidateAt(1);
+  except
+    on ENyxPascalContext do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed, 'Candidate getters retain checked snapshot-local bounds');
+  LPlan := nil;
+  Check(LCandidates.CandidateAt(0).Name = TNyxText('future_name'),
+    'The detached candidate capability owns its immutable plan after another handle retires');
+  LFailed := False;
+  try
+    LPlan := PlanNyxPascalCompilerRequirements(LSource,
+      TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True).UpToTokens(LSource.Count));
+  except
+    on ENyxPascalTranslationLimit do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LPlan = nil), 'Lookahead work exhaustion publishes no partial plan');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LFailed := False;
+  try
+    LPlan := PlanNyxPascalCompilerRequirements(LSource,
+      TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True), LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LFailed := True;
+    end;
+  end;
+  Check(LFailed and (LPlan = nil), 'Cancelled lookahead publishes no partial candidate owner');
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('ahead.pas'),
+    LContext.WithSymbol(NyxPascalDefine('FUTURE_NAME'), ppdUndefined),
+    TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Supports(LPlan, INyxPascalCompilerCandidates, LCandidates);
+  Check(LCandidates.CandidateCount = 0,
+    'A known pristine absence is not queried again after a source-context uncertainty');
+  LSource := NewNyxPascalTranslation(LFiles.WithFile(NyxPascalPhysicalFile('ahead.pas'),
+    'unit Scoped; interface {$ifdef CONTROL}{$define KNOWN}{$endif}' +
+    '{$ifdef KNOWN}const V=1;{$endif} implementation end.'), NyxPascalPhysicalFile('ahead.pas'),
+    LContext.WithSymbol(NyxPascalDefine('KNOWN'), ppdUndefined),
+    TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource, TNyxPascalCompilerPlanOptions.Defaults);
+  LBase := NewNyxFPCCompilerProbe(NyxPascalDefine('SCOPED'), ppmObjFPC);
+  LProbe := LPlan.CompilerProbe(LBase);
+  Check((LPlan.Count = 2) and (LPlan.Needs(1).SymbolCount = 1) and
+    (LProbe.Count = LBase.Count + 1) and (LProbe.Symbol(LBase.Count).Name = TNyxText('control')),
+    'Source-local uncertainty about a known pristine name is not another compiler query');
+  LSource := NewNyxPascalTranslation(LFiles.WithFile(NyxPascalPhysicalFile('ahead.pas'),
+    'unit Cycle; {$macro on}{$define LOOP:=LOOP} interface {$if LOOP}{$endif} implementation end.'),
+    NyxPascalPhysicalFile('ahead.pas'), LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Supports(LPlan, INyxPascalCompilerCandidates, LCandidates);
+  Check((LCandidates.CandidateCount = 0) and not LPlan.Needs(0).SyntaxSupported,
+    'A retained failed macro site is never recast as a raw external candidate');
+  LMany := 'unit Many; interface {$NYX_CAPTURE_BOUNDARY ON}';
+  for LAt := 0 to 256 do
+  begin
+    LMany := LMany + '{$ifdef FUTURE_' + TNyxText(IntToStr(LAt)) + '}{$endif}';
+  end;
+  LMany := LMany + ' implementation end.';
+  LSource := NewNyxPascalTranslation(LFiles.WithFile(NyxPascalPhysicalFile('ahead.pas'), LMany),
+    NyxPascalPhysicalFile('ahead.pas'), LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Supports(LPlan, INyxPascalCompilerCandidates, LCandidates);
+  Check((LCandidates.CandidateCount = 256) and LCandidates.CandidatesTruncated,
+    'Extra proposals stop explicitly at their existing compiler-query ceiling');
+  Check(LPlan.CompilerProbe(NewNyxFPCCompilerProbe(NyxPascalDefine('MANY'), ppmObjFPC)).Count = 256,
+    'Truncated lookahead never exceeds the compiler probe name quota');
+end;
+
 begin
   try
     OrderedRequirements;
+    ConditionalLookahead;
     WriteLn('PASS ', GChecks, ' compiler requirement planning checks');
   except
     on LError: Exception do

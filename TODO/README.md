@@ -118,6 +118,12 @@ termination is qualified independently of source metadata and compiler eligibili
 Original criterion two retains full language/editor/incremental/parity/delivery;
 WORK.md owns unchanged RTL continuation and its warning-policy context gap.
 
+The [ordered warning and query layer](../docs/pascal-projects.md#ordered-warning-requests)
+retains typed settings requests, exact origins and compatible verified compiler
+cohorts under unchanged quotas. Real RTL integration retains explicit source gaps.
+Original criterion two keeps full compiler/editor/incremental/parity/delivery;
+WORK.md owns qualified checks, retained failures and the next source prerequisite.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

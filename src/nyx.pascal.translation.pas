@@ -83,6 +83,28 @@ type
     function RegisterDirectiveCount: Integer;
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
   end;
+  { One authored per-warning request at its exact physical include occurrence.
+    State is the pre-directive context and PrefixCount excludes the directive.
+    The rule preserves conditional activity without resolving compiler aliases;
+    values own no source/context/interface and grant no compilation authority. }
+  TNyxPascalWarningDirective = record
+  private
+    FOrigin: TNyxPascalConditionOrigin;
+    FState: Integer;
+    FRule: TNyxPascalWarningRule;
+  public
+    property Origin: TNyxPascalConditionOrigin read FOrigin;
+    property State: Integer read FState;
+    property Rule: TNyxPascalWarningRule read FRule;
+  end;
+  { Optional checked warning receipts. Prefixes expose only already visited
+    directives, retaining their original owning source and pre-directive state.
+    A missing alternate-source capability refuses instead of fabricating rows. }
+  INyxPascalWarningDirectives = interface(IInterface)
+    ['{7C8B3428-B4AF-4D69-89FD-86AF17B25D00}']
+    function WarningDirectiveCount: Integer;
+    function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
+  end;
   { Optional synchronous facts for a still-unknown expression. Ordered semantic
     refinement supplies sealed answers, never mutable editor state. Origin,
     expanded expression and context belong to this exact construction. The
@@ -266,6 +288,12 @@ function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
 function NyxPascalEffectiveText(const ASource: INyxPascalTranslation;
   AIndex: Integer): TNyxText;
 
+{ Decompose an existing complete directive token without interpreting it.
+  The value offset uses Unicode scalars in that token's original storage;
+  ASCII whitespace trimming preserves UTF-8 include/condition spelling. }
+procedure NyxPascalDirectiveParts(const AText: TNyxText; out AName, AValue: TNyxText;
+  out AValueOffset: Integer);
+
 { Read exact occurrence tokens, with legacy file-only fallback for alternate
   translators which have not exposed contextual lexing. Indices remain checked. }
 function NyxPascalOccurrenceLexical(const ATranslation: INyxPascalTranslation;
@@ -315,7 +343,7 @@ type
   TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
-    INyxPascalRegisterDirectives)
+    INyxPascalRegisterDirectives, INyxPascalWarningDirectives)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -330,6 +358,8 @@ type
     FUnresolvedRows: array of Integer;
     FRegisterDirectives: INyxPascalRegisterDirectives;
     FRegisterRows: array of Integer;
+    FWarningDirectives: INyxPascalWarningDirectives;
+    FWarningRows: array of Integer;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -358,6 +388,8 @@ type
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
     function RegisterDirectiveCount: Integer;
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
+    function WarningDirectiveCount: Integer;
+    function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -413,7 +445,7 @@ type
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
-    INyxPascalRegisterDirectives)
+    INyxPascalRegisterDirectives, INyxPascalWarningDirectives)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -436,6 +468,8 @@ type
     FUnresolvedCount: Integer;
     FRegisterDirectives: array of TNyxPascalRegisterDirective;
     FRegisterCount: Integer;
+    FWarningDirectives: array of TNyxPascalWarningDirective;
+    FWarningCount: Integer;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
     FOccurrenceCount: Integer;
@@ -505,6 +539,8 @@ type
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
     function RegisterDirectiveCount: Integer;
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
+    function WarningDirectiveCount: Integer;
+    function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -1164,7 +1200,7 @@ begin
   end;
 end;
 
-procedure SplitDirective(const AText: TNyxText; out AName, AValue: TNyxText;
+procedure NyxPascalDirectiveParts(const AText: TNyxText; out AName, AValue: TNyxText;
   out AValueOffset: Integer);
 var
   LAt: Integer;
@@ -1606,6 +1642,98 @@ begin
   end;
 end;
 
+{ FPC consumes one selector and action, including adjacent +/- spelling.
+  Explanatory trailing text stays in the physical directive receipt. Numeric and
+  named selectors are not collapsed through a guessed compiler message catalog. }
+procedure ParseWarningRequest(const AValue: TNyxText;
+  out AReference: TNyxPascalWarningRef; out AAction: TNyxPascalWarningAction);
+var
+  LAt: Integer;
+  LStart: Integer;
+  LSelector: TNyxText;
+  LAction: TNyxText;
+  LNumber: Integer;
+  LDigit: Integer;
+  LNumeric: Boolean;
+begin
+  LAt := 1;
+  while (LAt <= Length(AValue)) and (AValue[LAt] in [#9, #10, #13, ' ']) do
+  begin
+    Inc(LAt);
+  end;
+  LStart := LAt;
+  LNumeric := True;
+  while (LAt <= Length(AValue)) and
+    (AValue[LAt] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+  begin
+    LNumeric := LNumeric and (AValue[LAt] in ['0'..'9']);
+    Inc(LAt);
+  end;
+  LSelector := Copy(AValue, LStart, LAt - LStart);
+
+  if LSelector = '' then
+  begin
+    raise ENyxPascalContext.Create('A warning directive needs a numeric or named selector');
+  end;
+
+  if LNumeric then
+  begin
+    LNumber := 0;
+    for LStart := 1 to Length(LSelector) do
+    begin
+      LDigit := Ord(LSelector[LStart]) - Ord('0');
+
+      if LNumber > (High(Integer) - LDigit) div 10 then
+      begin
+        raise ENyxPascalContext.Create('A warning message ID exceeds the signed-32 domain');
+      end;
+      LNumber := LNumber * 10 + LDigit;
+    end;
+    AReference := NyxPascalWarningNumber(LNumber);
+  end
+  else
+  begin
+    AReference := NyxPascalWarningName(LSelector);
+  end;
+  while (LAt <= Length(AValue)) and (AValue[LAt] in [#9, #10, #13, ' ']) do
+  begin
+    Inc(LAt);
+  end;
+  LStart := LAt;
+
+  if (LAt <= Length(AValue)) and (AValue[LAt] in ['+', '-']) then
+  begin
+    Inc(LAt);
+  end
+  else
+  begin
+    while (LAt <= Length(AValue)) and
+      (AValue[LAt] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) do
+    begin
+      Inc(LAt);
+    end;
+  end;
+  LAction := NyxPascalASCIIKey(Copy(AValue, LStart, LAt - LStart));
+  AAction := pwaUnknown;
+
+  if (LAction = 'on') or (LAction = '+') then
+  begin
+    AAction := pwaOn;
+  end
+  else if (LAction = 'off') or (LAction = '-') then
+  begin
+    AAction := pwaOff;
+  end
+  else if LAction = 'error' then
+  begin
+    AAction := pwaError;
+  end
+  else
+  begin
+    raise ENyxPascalContext.Create('A warning directive needs on, off or error');
+  end;
+end;
+
 procedure TTranslation.Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
@@ -1628,11 +1756,15 @@ var
   LSwitch: TNyxPascalLocalSwitch;
   LSaved: TSavedCompilerSettings;
   LSavedLease: INyxSavedCompilerSettings;
+  LWarningRef: TNyxPascalWarningRef;
+  LWarningAction: TNyxPascalWarningAction;
+  LWarningContext: INyxPascalCompilerContext;
+  LWarnings: INyxPascalContextWarnings;
   LRegister: TNyxPascalFPURegisterPolicy;
   LRegisterValue: Integer;
   LReader: TNyxPascalAssemblerReader;
 begin
-  SplitDirective(AText, LName, LValue, LOffset);
+  NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
 
     if (LName = 'ifdef') or (LName = 'ifndef') or (LName = 'if') or (LName = 'ifopt') then
@@ -1740,6 +1872,44 @@ begin
 
     if FActive = ppkFalse then
     begin
+      Exit;
+    end;
+
+    if LName = 'warn' then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Per-warning source policies need an explicit FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+      ParseWarningRequest(LValue, LWarningRef, LWarningAction);
+      LWarnings := NyxPascalWarnings(FContext);
+
+      if (LWarnings.WarningCount >= NyxPascalWarningRuleLimit) or
+        (FWarningCount >= FOptions.MaximumTokens) then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Warning requests exceed their construction budget');
+      end;
+      LWarningContext := LWarnings.WithWarning(LWarningRef, LWarningAction, FActive);
+
+      if FWarningCount = Length(FWarningDirectives) then
+      begin
+        SetLength(FWarningDirectives, Capacity(FWarningCount, FOptions.MaximumTokens));
+      end;
+      FWarningDirectives[FWarningCount].FOrigin.FileReference :=
+        FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+      FWarningDirectives[FWarningCount].FOrigin.Occurrence := AOccurrence;
+      FWarningDirectives[FWarningCount].FOrigin.Span := AToken.Span;
+      FWarningDirectives[FWarningCount].FOrigin.PrefixCount := FTokenCount - 1;
+      FWarningDirectives[FWarningCount].FState := FTokens[FTokenCount - 1].State;
+      LWarnings := NyxPascalWarnings(LWarningContext);
+      FWarningDirectives[FWarningCount].FRule := LWarnings.WarningAt(LWarnings.WarningCount - 1);
+      Inc(FWarningCount);
+      FContext := LWarningContext;
+      SaveState;
       Exit;
     end;
 
@@ -2598,6 +2768,21 @@ begin
   Result := FUnresolvedCount;
 end;
 
+function TTranslation.WarningDirectiveCount: Integer;
+begin
+  Result := FWarningCount;
+end;
+
+function TTranslation.WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= FWarningCount) then
+  begin
+    raise ENyxPascalContext.Create('Warning directive index is outside its translation');
+  end;
+  Result := FWarningDirectives[AIndex];
+end;
+
 function TTranslation.RegisterDirectiveCount: Integer;
 begin
   Result := FRegisterCount;
@@ -2638,6 +2823,7 @@ var
   LToken: TNyxPascalTranslatedToken;
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LSpan: TNyxPascalSpan;
+  LWarning: TNyxPascalWarningDirective;
 
   procedure Check;
   begin
@@ -2676,6 +2862,38 @@ begin
   Supports(FSource, INyxPascalTranslationSettings, FSettings);
   FCount := ABeforeToken;
   Supports(FSource, INyxPascalRegisterDirectives, FRegisterDirectives);
+  Supports(FSource, INyxPascalWarningDirectives, FWarningDirectives);
+
+  if FWarningDirectives <> nil then
+  begin
+
+    if (FWarningDirectives.WarningDirectiveCount < 0) or
+      (FWarningDirectives.WarningDirectiveCount > AOptions.MaximumTokens) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Warning prefix directives exceed their input budget');
+    end;
+    SetLength(FWarningRows, FWarningDirectives.WarningDirectiveCount);
+    LUsed := 0;
+    for LAt := 0 to FWarningDirectives.WarningDirectiveCount - 1 do
+    begin
+      Check;
+      LWarning := FWarningDirectives.WarningDirectiveAt(LAt);
+
+      if (LWarning.Origin.PrefixCount < 0) or (LWarning.Origin.PrefixCount >= LSourceCount) or
+        (LWarning.State < 0) or (LWarning.State >= LStates) or
+        (LWarning.Origin.Occurrence < 0) or (LWarning.Origin.Occurrence >= LOccurrences) then
+      begin
+        raise ENyxPascalContext.Create('A warning receipt is outside its owning source');
+      end;
+
+      if LWarning.Origin.PrefixCount < FCount then
+      begin
+        FWarningRows[LUsed] := LAt;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FWarningRows, LUsed);
+  end;
 
   if FRegisterDirectives <> nil then
   begin
@@ -2915,6 +3133,26 @@ begin
     raise ENyxPascalContext.Create('This alternate source has no retained condition planning inputs');
   end;
   Result := Length(FUnresolvedRows);
+end;
+
+function TTranslationPrefix.WarningDirectiveCount: Integer;
+begin
+
+  if FWarningDirectives = nil then
+  begin
+    raise ENyxPascalContext.Create('This alternate source has no retained warning directive inputs');
+  end;
+  Result := Length(FWarningRows);
+end;
+
+function TTranslationPrefix.WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= WarningDirectiveCount) then
+  begin
+    raise ENyxPascalContext.Create('Warning directive index is outside this prefix');
+  end;
+  Result := FWarningDirectives.WarningDirectiveAt(FWarningRows[AIndex]);
 end;
 
 function TTranslationPrefix.RegisterDirectiveCount: Integer;

@@ -9,6 +9,41 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Per-warning continuation (2026-10-18): 9359fec is progress, retaining at least
+twenty-two documented unclosed batches and complete original criterion two.
+Follow real WARN through existing context/translation ownership with typed open
+numeric/named selectors, closed actions, ordered conditional intent, detached
+capture/identity, source receipts and local-stack restoration. Preserve unknown
+alias membership and compiler-specific effective diagnostic behavior. Native
+compiler oracles, portable ownership/refusal/budget cases and one prepared/final
+unchanged RTL route decide the boundary. Stop at a different genuine prerequisite;
+full compiler/editor/incremental/input/navigation/quality/parity/adoption/delivery
+stay required without original criterion/task/credit/DONE closure.
+
+During qualification, the warning API passes 44 native ownership/source checks and
+configured compiler oracles retain their exact normal/error/unknown diagnostics.
+Real RTL preparation then exhausts its unchanged eight-probe budget. Follow the
+existing compiler-plan prerequisite with bounded candidate-symbol lookahead over
+retained directive rows, preserving required-query priority, verified actual FPC
+facts and existing quotas. General plans stay minimal; native preparation opts in.
+Candidates grant no source/type/branch meaning. At least twenty-three documented
+unclosed batches retain full original criterion two; WORK.md owns the retained
+failure, bounded implementation/evidence policy and unchanged wider scope.
+
+The qualified warning/planner/protocol boundary passes 44/30/38 native checks;
+the unchanged-source real-module frontier passes 45. System advances to 5,631
+declarations/seven syntax diagnostics/six source answers, explicitly retaining
+High(errorcode)<>maxExitCode and class-property/compilerproc/CODEALIGN gaps.
+ObjPas remains 209/four/one; exact ordinary Free/FreeInstance completion,
+navigation and detached insertion still pass. Thirty native consumers have clean
+heaps; fifty regular compiler logs have zero owned warnings. Browser consumers/
+products compile only. Compatible verified cohorts preserve the existing 256-name,
+context/work and eight-probe limits; compiler defaults stay a separate anchor.
+Reassess constant-condition semantics and property grammar through existing
+owners; stop warning/lookahead/cohort/fixture/compiler/capture variants. WORK.md
+owns composite accepted evidence, both retained resource failures, corrected
+last-name/pending assertions and full source/editor/parity/adoption requirements.
+
 Non-returning continuation (2026-10-18): 7355559 is progress, retaining at least
 twenty-one documented unclosed batches and complete original criterion two.
 Follow actual noreturn through existing routine/linkage ownership with distinct

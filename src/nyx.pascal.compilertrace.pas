@@ -60,6 +60,17 @@ type
     ['{814416FA-B8F7-45DC-B6AC-83D29D238906}']
     function CaptureScope: TNyxPascalCompilerScope;
   end;
+  { Immutable terminal facts plus a separate compatibility anchor. The anchor
+    retains observations before explicit replies and qualified mode/H metadata;
+    it is not source-mode binding evidence. Merge requires exact anchors, rejects
+    conflicting shared facts/sizes and retains richer values. No process/source
+    producer is owned and no application-execution authority follows. }
+  INyxFPCCompilerCapture = interface(IInterface)
+    ['{8ABB58C3-4976-4AC6-8A81-372787583658}']
+    function Context: INyxPascalCompilerContext;
+    function ObservedDefaults: INyxPascalCompilerContext;
+    function Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+  end;
 
 { Add a checked reference while preserving ordinary define queries. Legacy
   alternate probes are frozen into the owned request before this extension. }
@@ -115,12 +126,31 @@ function ReadNyxFPCCompilerContext(const AProbe: INyxPascalCompilerProbe;
   const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerContext;
+{ Same complete transcript gate, retaining the separate pre-reply observations
+  needed to merge query cohorts. A changed anchor refuses; no partial capture is
+  published. Callers still own exact source/process/transcript verification. }
+function ReadNyxFPCCompilerCapture(const AProbe: INyxPascalCompilerProbe;
+  const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxFPCCompilerCapture;
 
 implementation
 
 uses SysUtils, nyx.bytes, nyx.pascal.lexing;
 
 type
+  { Owns only immutable portable snapshots. Cohort merging copies alternate
+    producers before reading them, so no mutable capture or host is retained. }
+  TCompilerCapture = class(TInterfacedObject, INyxFPCCompilerCapture)
+  private
+    FContext: INyxPascalCompilerContext;
+    FDefaults: INyxPascalCompilerContext;
+  public
+    constructor Create(const AContext, ADefaults: INyxPascalCompilerContext);
+    function Context: INyxPascalCompilerContext;
+    function ObservedDefaults: INyxPascalCompilerContext;
+    function Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+  end;
   { Owns a detached query vector. Source is rebuilt from checked closed mode
     spellings and ASCII names; caller text cannot inject compiler directives. }
   TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe, INyxPascalSizeProbe,
@@ -155,6 +185,7 @@ type
   private
     FProbe: INyxPascalCompilerProbe;
     FContext: INyxPascalCompilerContext;
+    FObserved: INyxPascalCompilerContext;
     FOptions: TNyxPascalCompilerTraceOptions;
     FCancellation: INyxCancellationScope;
     FFile: TNyxText;
@@ -176,6 +207,7 @@ type
     procedure Reply(const AReply: TNyxText);
     procedure Macro(const ABody: TNyxText; ACode: Integer);
   public
+    CapturedDefaults: INyxPascalCompilerContext;
     function Read(const AProbe: INyxPascalCompilerProbe;
       const AFile, AText: TNyxText; AExitCode: Integer;
       const AOptions: TNyxPascalCompilerTraceOptions;
@@ -710,6 +742,7 @@ begin
       raise ENyxPascalContext.Create('Compiler query start is duplicated or out of order');
     end;
     FStarted := True;
+    FObserved := FContext;
     Exit;
   end;
 
@@ -933,6 +966,8 @@ var
   LInteger: Integer;
   LName: TNyxPascalDefineRef;
   LCaptured: INyxPascalCompilerContext;
+  LDefaults: INyxPascalCompilerContext;
+  LFeature: TNyxPascalLanguageFeature;
 begin
   AOptions.Validate;
   FOptions := AOptions;
@@ -963,6 +998,8 @@ begin
   FPrefix := 'NYX_CONTEXT_' + FProbe.Identity.Name + '_';
   FContext := NewNyxPascalCompilerContext(ppcFPC,
     TNyxPascalCompilerVersion.Create(0, 0, 0), FProbe.Mode, FScope);
+  FObserved := nil;
+  CapturedDefaults := nil;
   LStart := 1;
   LAt := 1;
   LLines := 0;
@@ -1081,7 +1118,30 @@ begin
     LCaptured := NyxPascalWithCapturedSize(LCaptured, FSizeProbe.SizeName(LAt),
       NyxPascalSizeFact(FSizes[LAt].State, FProbe.Mode, LCaptured.Option('H'), FSizes[LAt].Bytes));
   end;
+  { Initial observations can differ from explicit source-mode guard replies.
+    Retain them as a compatibility anchor, never merge them into source facts. }
+  LDefaults := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode, FScope);
+  for LAt := 0 to FObserved.SymbolCount - 1 do
+  begin
+    LName := FObserved.SymbolName(LAt);
+    LInteger := 0;
+
+    if FObserved.Symbol(LName).Kind = ppdInteger then
+    begin
+      LInteger := FObserved.Symbol(LName).IntegerValue;
+    end;
+    LDefaults := LDefaults.WithSymbol(LName, FObserved.Symbol(LName).Kind, LInteger);
+  end;
+  for LAt := Ord('A') to Ord('Z') do
+  begin
+    LDefaults := LDefaults.WithOption(Chr(LAt), LCaptured.Option(Chr(LAt)));
+  end;
+  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+  begin
+    LDefaults := LDefaults.WithFeature(LFeature, LCaptured.Feature(LFeature));
+  end;
   Check;
+  CapturedDefaults := LDefaults;
   Result := LCaptured;
 end;
 
@@ -1089,15 +1149,167 @@ function ReadNyxFPCCompilerContext(const AProbe: INyxPascalCompilerProbe;
   const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope): INyxPascalCompilerContext;
+begin
+  Result := ReadNyxFPCCompilerCapture(AProbe, AProbeFile, ATranscript, AExitCode,
+    AOptions, ACancellation).Context;
+end;
+
+function ReadNyxFPCCompilerCapture(const AProbe: INyxPascalCompilerProbe;
+  const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope): INyxFPCCompilerCapture;
 var
   LReader: TTraceReader;
+  LContext: INyxPascalCompilerContext;
 begin
   LReader := TTraceReader.Create;
   try
-    Result := LReader.Read(AProbe, AProbeFile, ATranscript, AExitCode, AOptions, ACancellation);
+    LContext := LReader.Read(AProbe, AProbeFile, ATranscript, AExitCode, AOptions, ACancellation);
+    Result := TCompilerCapture.Create(LContext, LReader.CapturedDefaults);
   finally
     LReader.Free;
   end;
+end;
+
+constructor TCompilerCapture.Create(const AContext, ADefaults: INyxPascalCompilerContext);
+begin
+  inherited Create;
+
+  if (AContext = nil) or (ADefaults = nil) or (AContext.Family <> ppcFPC) or
+    (ADefaults.Family <> ppcFPC) or (AContext.Version.FullNumber = 0) or
+    (AContext.Version.FullNumber <> ADefaults.Version.FullNumber) or
+    (AContext.Mode <> ADefaults.Mode) or
+    (NyxPascalCompilerScope(AContext) <> NyxPascalCompilerScope(ADefaults)) or
+    (NyxPascalBootstrapContext(AContext) <> nil) or
+    (NyxPascalBootstrapContext(ADefaults) <> nil) or
+    AContext.DefinesComplete or ADefaults.DefinesComplete or
+    (NyxPascalWarnings(AContext).WarningCount <> 0) or
+    (NyxPascalWarnings(ADefaults).WarningCount <> 0) then
+  begin
+    raise ENyxPascalContext.Create('Compiler capture facts and compatibility anchor disagree');
+  end;
+  FContext := AContext;
+  FDefaults := ADefaults;
+end;
+
+function TCompilerCapture.Context: INyxPascalCompilerContext;
+begin
+  Result := FContext;
+end;
+
+function TCompilerCapture.ObservedDefaults: INyxPascalCompilerContext;
+begin
+  Result := FDefaults;
+end;
+
+function TCompilerCapture.Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+var
+  LNext: INyxPascalCompilerContext;
+  LDefaults: INyxPascalCompilerContext;
+  LValidated: INyxFPCCompilerCapture;
+  LMerged: INyxPascalCompilerContext;
+  LName: TNyxPascalDefineRef;
+  LOld: TNyxPascalDefineValue;
+  LNew: TNyxPascalDefineValue;
+  LInteger: Integer;
+  LAt: Integer;
+  LSizes: INyxPascalContextSizes;
+  LSizeName: TNyxPascalSizeReference;
+  LOldSize: TNyxPascalSizeFact;
+  LNewSize: TNyxPascalSizeFact;
+  LFeature: TNyxPascalLanguageFeature;
+begin
+
+  if ANext = nil then
+  begin
+    raise ENyxPascalContext.Create('Merging compiler cohorts needs the next complete capture');
+  end;
+  LNext := CaptureNyxPascalCompilerContext(ANext.Context);
+  LDefaults := CaptureNyxPascalCompilerContext(ANext.ObservedDefaults);
+  LValidated := TCompilerCapture.Create(LNext, LDefaults);
+  LNext := LValidated.Context;
+  LDefaults := LValidated.ObservedDefaults;
+
+  if not FDefaults.SameFacts(LDefaults) then
+  begin
+    raise ENyxPascalContext.Create('Compiler cohorts have different observed defaults or source modes');
+  end;
+  for LAt := Ord('A') to Ord('Z') do
+  begin
+
+    if FContext.Option(Chr(LAt)) <> LNext.Option(Chr(LAt)) then
+    begin
+      raise ENyxPascalContext.Create('Compiler cohorts have different option evidence');
+    end;
+  end;
+  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+  begin
+
+    if FContext.Feature(LFeature) <> LNext.Feature(LFeature) then
+    begin
+      raise ENyxPascalContext.Create('Compiler cohorts have different grammar evidence');
+    end;
+  end;
+
+  if not NyxPascalCompilerPolicies(FContext).SamePolicies(NyxPascalCompilerPolicies(LNext)) or
+    (NyxPascalWarnings(FContext).WarningCount <> NyxPascalWarnings(LNext).WarningCount) then
+  begin
+    raise ENyxPascalContext.Create('Compiler cohorts have different policy evidence');
+  end;
+  LMerged := CaptureNyxPascalCompilerContext(FContext);
+  for LAt := 0 to LNext.SymbolCount - 1 do
+  begin
+    LName := LNext.SymbolName(LAt);
+    LOld := LMerged.Symbol(LName);
+    LNew := LNext.Symbol(LName);
+
+    if LNew.Kind = ppdUnknown then
+    begin
+      Continue;
+    end;
+
+    if ((LOld.Kind <> ppdUnknown) and (LOld.IsDefined <> LNew.IsDefined)) or
+      ((LOld.Kind = ppdInteger) and (LNew.Kind = ppdInteger) and
+        (LOld.IntegerValue <> LNew.IntegerValue)) then
+    begin
+      raise ENyxPascalContext.Create('Compiler cohorts disagree about a captured symbol');
+    end;
+
+    if (LOld.Kind = ppdInteger) and (LNew.Kind = ppdDefined) then
+    begin
+      Continue;
+    end;
+    LInteger := 0;
+
+    if LNew.Kind = ppdInteger then
+    begin
+      LInteger := LNew.IntegerValue;
+    end;
+    LMerged := LMerged.WithSymbol(LName, LNew.Kind, LInteger);
+  end;
+
+  if Supports(LNext, INyxPascalContextSizes, LSizes) then
+  begin
+    for LAt := 0 to LSizes.SizeCount - 1 do
+    begin
+      LSizeName := LSizes.SizeName(LAt);
+      LOldSize := NyxPascalCapturedSize(LMerged, LSizeName);
+      LNewSize := LSizes.SizeFact(LSizeName);
+
+      if (LNewSize.ProbeMode <> LNext.Mode) or
+        (LNewSize.ProbeLongStrings <> LNext.Option('H')) then
+      begin
+        raise ENyxPascalContext.Create('A cohort size belongs to another mode or string policy');
+      end;
+
+      if (LOldSize.State <> pssUnknown) and not LOldSize.SameFact(LNewSize) then
+      begin
+        raise ENyxPascalContext.Create('Compiler cohorts disagree about a captured size');
+      end;
+      LMerged := NyxPascalWithCapturedSize(LMerged, LSizeName, LNewSize);
+    end;
+  end;
+  Result := TCompilerCapture.Create(LMerged, FDefaults);
 end;
 
 end.

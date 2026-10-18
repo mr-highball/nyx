@@ -30,7 +30,8 @@ uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.compilertrace,
 type
   { Copied limits for explicit native module preparation. Probe/translation work
     is bounded across the whole operation, while each compiler retains its own
-    timeout/transcript limits. No host paths or interface borrows live in this value. }
+    timeout/transcript limits. Default plans prefetch bounded conditional-symbol
+    candidates; callers may supply minimal plans. No host/interface borrow lives here. }
   TNyxFPCModulePreparationOptions = record
   private
     FDefined: Boolean;
@@ -78,11 +79,20 @@ function CaptureNyxFPCCompilerContext(const ACompiler, AFreshDirectory: TNyxText
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope = nil;
   ATimeoutMilliseconds: Cardinal = 30000): INyxPascalCompilerContext;
+{ The same owned process/source/transcript gate, retaining a separate observed
+  compatibility anchor for verified cohort merging. Both snapshots publish only
+  after exact compiler-family retirement; no host or producer lease survives. }
+function CaptureNyxFPCCompilerCapture(const ACompiler, AFreshDirectory: TNyxText;
+  const AProbe: INyxPascalCompilerProbe;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope = nil;
+  ATimeoutMilliseconds: Cardinal = 30000): INyxFPCCompilerCapture;
 
 { Opt-in synchronous host operation, intended for an owning worker. Inputs are
   frozen before writing a fresh caller-owned scratch directory. The descriptor
   must supply a real FPC context compatible with the base probe's starting mode.
-  Only newly requested compiler symbols trigger another joined capture; scoped
+  Only newly requested compiler symbols trigger another joined capture, including
+  optional retained-directive candidates measured by the actual compiler; scoped
   conditions never become pristine size queries. Complete current requests or
   preserve their remaining source gaps. Limit/cancellation/IO/identity failure
   publishes no partial result and retains scratch evidence. No Studio/project
@@ -160,6 +170,16 @@ function CaptureNyxFPCCompilerContext(const ACompiler, AFreshDirectory: TNyxText
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope;
   ATimeoutMilliseconds: Cardinal): INyxPascalCompilerContext;
+begin
+  Result := CaptureNyxFPCCompilerCapture(ACompiler, AFreshDirectory, AProbe,
+    AOptions, ACancellation, ATimeoutMilliseconds).Context;
+end;
+
+function CaptureNyxFPCCompilerCapture(const ACompiler, AFreshDirectory: TNyxText;
+  const AProbe: INyxPascalCompilerProbe;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope;
+  ATimeoutMilliseconds: Cardinal): INyxFPCCompilerCapture;
 var
   LProbe: INyxPascalCompilerProbe;
   LCancellation: INyxCancellationScope;
@@ -176,6 +196,7 @@ var
   LCode: Integer;
   LStart: QWord;
   LSourceHandle: THandle;
+  LResult: INyxFPCCompilerCapture;
 
   procedure CheckDeadline;
   begin
@@ -292,7 +313,7 @@ begin
     LCode := LProcess.ExitStatus;
     LLog := NyxDecodeUTF8(LBytes);
     WriteFresh(LDirectory + 'compiler-profile.log', LBytes);
-    Result := ReadNyxFPCCompilerContext(LProbe, LProbeFile, LLog, LCode,
+    LResult := ReadNyxFPCCompilerCapture(LProbe, LProbeFile, LLog, LCode,
       AOptions, LCancellation);
   finally
 
@@ -306,6 +327,7 @@ begin
     end;
     FileClose(LSourceHandle);
   end;
+  Result := LResult;
 end;
 
 function TPreparedModule.ModuleSource: INyxPascalModuleSource;
@@ -335,7 +357,7 @@ begin
   Result.FProbes := 4;
   Result.FTokens := 4000000;
   Result.FTimeout := 30000;
-  Result.FPlan := TNyxPascalCompilerPlanOptions.Defaults;
+  Result.FPlan := TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True);
   Result.FTrace := TNyxPascalCompilerTraceOptions.Defaults;
 end;
 
@@ -402,7 +424,38 @@ var
   LOptions: TNyxPascalTranslationOptions;
   LRemaining: Integer;
   LPlanOptions: TNyxPascalCompilerPlanOptions;
+  LCandidates: INyxPascalCompilerCandidates;
+  LFresh: INyxFPCCompilerCapture;
+  LAccumulated: INyxFPCCompilerCapture;
   LDirectory: TNyxText;
+
+  function MissingFacts(const AProbe: INyxPascalCompilerProbe): Boolean;
+  var
+    LAt: Integer;
+    LSizes: INyxPascalSizeProbe;
+  begin
+    for LAt := 0 to AProbe.Count - 1 do
+    begin
+
+      if LContext.Symbol(AProbe.Symbol(LAt)).Kind = ppdUnknown then
+      begin
+        Exit(True);
+      end;
+    end;
+
+    if Supports(AProbe, INyxPascalSizeProbe, LSizes) then
+    begin
+      for LAt := 0 to LSizes.SizeCount - 1 do
+      begin
+
+        if NyxPascalCapturedSize(LContext, LSizes.SizeName(LAt)).State = pssUnknown then
+        begin
+          Exit(True);
+        end;
+      end;
+    end;
+    Result := False;
+  end;
 begin
   AOptions.Validate;
   LCancel := ACancellation;
@@ -429,6 +482,7 @@ begin
     raise ENyxPascalContext.Create('The private FPC module preparation directory could not be created');
   end;
   LContext := LInitial;
+  LAccumulated := nil;
   LRemaining := AOptions.FTokens;
   LOwner := TPreparedModule.Create;
   LLease := LOwner;
@@ -449,10 +503,23 @@ begin
     LOwner.Translation := NewNyxPascalTranslation(LFiles, LModule.Root, LContext, LOptions, LCancel);
     Dec(LRemaining, LOwner.Translation.Count);
     LPlanOptions := AOptions.FPlan;
+
+    if (LPlanOptions.MaximumTokens >= LOwner.Translation.Count) and
+      (LPlanOptions.MaximumTokens - LOwner.Translation.Count > LRemaining) then
+    begin
+      LPlanOptions := LPlanOptions.UpToTokens(LOwner.Translation.Count + LRemaining);
+    end;
     LOwner.Plan := PlanNyxPascalCompilerRequirements(LOwner.Translation, LPlanOptions, LCancel);
+
+    if Supports(LOwner.Plan, INyxPascalCompilerCandidates, LCandidates) then
+    begin
+      { Input rows were already charged above. Candidate work consumes the same
+        aggregate budget, so prefetch cannot hide a second unbounded scan. }
+      Dec(LRemaining, LCandidates.WorkUnits - LOwner.Translation.Count);
+    end;
     LNext := LOwner.Plan.CompilerProbe(LProbe);
 
-    if LNext.Count = LProbe.Count then
+    if not MissingFacts(LNext) then
     begin
       Break;
     end;
@@ -461,11 +528,20 @@ begin
     begin
       raise ENyxPascalContext.Create('FPC module preparation exhausted its compiler probe budget');
     end;
-    LProbe := LNext;
-    LContext := CaptureNyxFPCCompilerContext(ACompiler,
-      LDirectory + 'probe-' + TNyxText(IntToStr(LOwner.ProbeCount + 1)), LProbe,
+    LFresh := CaptureNyxFPCCompilerCapture(ACompiler,
+      LDirectory + 'probe-' + TNyxText(IntToStr(LOwner.ProbeCount + 1)), LNext,
       AOptions.FTrace, LCancel, AOptions.FTimeout);
     Inc(LOwner.ProbeCount);
+
+    if LAccumulated = nil then
+    begin
+      LAccumulated := LFresh;
+    end
+    else
+    begin
+      LAccumulated := LAccumulated.Merge(LFresh);
+    end;
+    LContext := LAccumulated.Context;
 
     if (LContext.Family <> LInitial.Family) or
       (LContext.Version.FullNumber <> LInitial.Version.FullNumber) or (LContext.Mode <> LInitial.Mode) then

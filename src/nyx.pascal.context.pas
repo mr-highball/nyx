@@ -27,6 +27,11 @@ interface
 
 uses SysUtils, nyx.text, nyx.pascal.lexing;
 
+const
+  { Ordered warning requests have a separate bounded capture quota. This is not
+    a warning catalog or a claim that the configured compiler accepts every ID. }
+  NyxPascalWarningRuleLimit = 2048;
+
 type
   { Invalid captured facts are caller contract failures, never compiler errors.
     Construction and fluent changes perform no I/O or source execution. }
@@ -38,6 +43,40 @@ type
     output/compiler configuration; this analyzer never borrows its own compiler's
     conditional symbols or assumes these metadata grant execution. }
   TNyxPascalCompilerFamily = (ppcUnknown, ppcFPC, ppcPas2JS);
+  { Numeric message IDs and named warning groups are distinct open namespaces.
+    A group may map to several numeric messages in a particular compiler. }
+  TNyxPascalWarningReferenceKind = (pwrNumber, pwrName);
+  { Validated warning selector, not a compiler-catalog membership assertion.
+    Names are canonical ASCII identifiers; Number refuses for a named group.
+    The default empty record is invalid until created by a typed constructor. }
+  TNyxPascalWarningRef = record
+  private
+    FKind: TNyxPascalWarningReferenceKind;
+    FName: TNyxText;
+    FNumber: Integer;
+  public
+    procedure Validate;
+    function Number: Integer;
+    function SameReference(const AOther: TNyxPascalWarningRef): Boolean;
+    property Kind: TNyxPascalWarningReferenceKind read FKind;
+    property Name: TNyxText read FName;
+  end;
+  { Authored per-warning request. Unknown records missing knowledge; none of
+    these values computes effective verbosity or compiler alias membership. }
+  TNyxPascalWarningAction = (pwaUnknown, pwaOn, pwaOff, pwaError);
+  { Ordered value-only request. Activity preserves uncertain conditional writes
+    without replacing the authored action. No source/context/interface is owned;
+    source locations belong to a translation's separate directive receipts. }
+  TNyxPascalWarningRule = record
+  private
+    FReference: TNyxPascalWarningRef;
+    FAction: TNyxPascalWarningAction;
+    FActivity: TNyxPascalKnowledge;
+  public
+    property Reference: TNyxPascalWarningRef read FReference;
+    property Action: TNyxPascalWarningAction read FAction;
+    property Activity: TNyxPascalKnowledge read FActivity;
+  end;
   { Compiler evidence namespace. Bootstrap facts precede authored System aliases;
     pristine programs may already import those aliases. This provenance grants
     no source-edit, compiler-admission or application-execution authority. }
@@ -276,6 +315,19 @@ type
     function Policies: TNyxPascalCompilerPolicies;
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
   end;
+  { Optional immutable ordered warning requests. Repeated and overlapping named/
+    numeric selectors retain chronology; this is not an effective-level map.
+    Updates own detached bounded vectors. WithWarningRules freezes the producer's
+    complete vector during the caller-serialized call and retains no producer. }
+  INyxPascalContextWarnings = interface(IInterface)
+    ['{276363B7-C055-4197-BB64-70BE562E2287}']
+    function WarningCount: Integer;
+    function WarningAt(AIndex: Integer): TNyxPascalWarningRule;
+    function WithWarning(const AReference: TNyxPascalWarningRef;
+      AAction: TNyxPascalWarningAction;
+      AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
+    function WithWarningRules(const ASource: INyxPascalContextWarnings): INyxPascalCompilerContext;
+  end;
   { Optional named-size evidence retains exact measurement scope and ordered
     query identity. It does not export a fabricated System symbol catalog or
     authorize unqualified lookups in an application's different lexical scope. }
@@ -330,14 +382,27 @@ function NyxPascalWithCapturedSize(const AContext: INyxPascalCompilerContext;
 function NyxPascalCompilerPolicies(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerPolicies;
 function NyxPascalWithCompilerPolicies(const AContext: INyxPascalCompilerContext;
   const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+{ Positive signed-32 message ID; membership stays with the configured compiler. }
+function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;
+{ Canonical open named group, bounded like compiler symbols. No alias expansion. }
+function NyxPascalWarningName(const AName: TNyxText): TNyxPascalWarningRef;
+{ Retain the immutable warning capability. Legacy contexts supply an empty
+  detached capture; absence grants no default effective diagnostic level. }
+function NyxPascalWarnings(const AContext: INyxPascalCompilerContext): INyxPascalContextWarnings;
+{ Freeze the context and append one typed request atomically; no caller changes.
+  Order is preserved even when a named selector could overlap a numeric one. }
+function NyxPascalWithWarning(const AContext: INyxPascalCompilerContext;
+  const AReference: TNyxPascalWarningRef; AAction: TNyxPascalWarningAction;
+  AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
 { Friendly closed short-switch mapping; parsing source spelling is a separate
   boundary. Unknown remains a valid explicitly captured fact. }
 function NyxPascalLocalSwitchOption(AValue: TNyxPascalLocalSwitch): Char;
 function NyxPascalWithLocalSwitch(const AContext: INyxPascalCompilerContext;
   ASwitch: TNyxPascalLocalSwitch; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
-{ Restore supported local policies/short switches/scoped-enum state. Preserve
-  current symbol facts, global mode/features and macro enablement. The actual
-  compiler oracle qualifies this distinction; no replacement table is restored. }
+{ Restore local policies/short switches/scoped-enum state and authored warning
+  requests. Preserve current symbol facts, global mode/features and macros.
+  Warning requests do not predict compiler-specific delayed message activation;
+  emitted diagnostics remain compiler-owned. No replacement table is restored. }
 function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompilerContext): INyxPascalCompilerContext;
 
 { Reject empty/over-128/non-ASCII names and identifiers starting with a digit. }
@@ -391,6 +456,8 @@ var
   LSizeCount: Integer;
   LSizeName: TNyxPascalSizeReference;
   LBootstrap: INyxPascalCompilerContext;
+  LWarnings: INyxPascalContextWarnings;
+  LTargetWarnings: INyxPascalContextWarnings;
 begin
 
   if AContext = nil then
@@ -433,6 +500,12 @@ begin
   end;
   Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
   LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
+
+  if Supports(AContext, INyxPascalContextWarnings, LWarnings) then
+  begin
+    Supports(LCaptured, INyxPascalContextWarnings, LTargetWarnings);
+    LCaptured := LTargetWarnings.WithWarningRules(LWarnings);
+  end;
 
   if Supports(AContext, INyxPascalContextSizes, LSizes) then
   begin
@@ -478,9 +551,10 @@ type
     Value: TNyxPascalSizeFact;
   end;
   { Persistent context implementation. Its index/vectors are detached on every
-    change; readers may share only a fully constructed immutable instance. }
+    change; readers may share only a fully constructed immutable instance.
+    Warning requests own ordered values without producer/source back references. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
-    INyxPascalContextSizes, INyxPascalCompilerScope)
+    INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -491,6 +565,7 @@ type
     FOptions: array[0..25] of TNyxPascalKnowledge;
     FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
     FPolicies: TNyxPascalCompilerPolicies;
+    FWarnings: array of TNyxPascalWarningRule;
     FSizes: array of TCapturedSize;
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
@@ -518,6 +593,12 @@ type
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
     function Policies: TNyxPascalCompilerPolicies;
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+    function WarningCount: Integer;
+    function WarningAt(AIndex: Integer): TNyxPascalWarningRule;
+    function WithWarning(const AReference: TNyxPascalWarningRef;
+      AAction: TNyxPascalWarningAction;
+      AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function WithWarningRules(const ASource: INyxPascalContextWarnings): INyxPascalCompilerContext;
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
     function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
@@ -739,6 +820,11 @@ begin
     Result.FMode := FMode;
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
+    SetLength(Result.FWarnings, Length(FWarnings));
+    for LAt := 0 to High(FWarnings) do
+    begin
+      Result.FWarnings[LAt] := FWarnings[LAt];
+    end;
     Result.FSizes := Copy(FSizes);
     Result.FCaptureScope := FCaptureScope;
     Result.FBootstrap := FBootstrap;
@@ -959,6 +1045,8 @@ var
   LOther: TNyxPascalDefineValue;
   LSizes: INyxPascalContextSizes;
   LBootstrap: INyxPascalCompilerContext;
+  LWarnings: INyxPascalContextWarnings;
+  LWarning: TNyxPascalWarningRule;
 begin
   Result := False;
 
@@ -992,6 +1080,30 @@ begin
   end;
 
   if not FPolicies.SamePolicies(NyxPascalCompilerPolicies(AOther)) then
+  begin
+    Exit;
+  end;
+
+  if Supports(AOther, INyxPascalContextWarnings, LWarnings) then
+  begin
+
+    if LWarnings.WarningCount <> Length(FWarnings) then
+    begin
+      Exit;
+    end;
+    for LAt := 0 to High(FWarnings) do
+    begin
+      LWarning := LWarnings.WarningAt(LAt);
+
+      if not FWarnings[LAt].Reference.SameReference(LWarning.Reference) or
+        (FWarnings[LAt].Action <> LWarning.Action) or
+        (FWarnings[LAt].Activity <> LWarning.Activity) then
+      begin
+        Exit;
+      end;
+    end;
+  end
+  else if Length(FWarnings) <> 0 then
   begin
     Exit;
   end;
@@ -1435,6 +1547,183 @@ begin
     (FAssembler = AOther.FAssembler);
 end;
 
+function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;
+begin
+
+  if AValue < 1 then
+  begin
+    raise ENyxPascalContext.Create('A warning message ID needs a positive signed-32 value');
+  end;
+  Result := Default(TNyxPascalWarningRef);
+  Result.FKind := pwrNumber;
+  Result.FNumber := AValue;
+  Result.FName := TNyxText(IntToStr(AValue));
+end;
+
+function NyxPascalWarningName(const AName: TNyxText): TNyxPascalWarningRef;
+begin
+  Result := Default(TNyxPascalWarningRef);
+  Result.FKind := pwrName;
+  Result.FName := NyxPascalASCIIKey(NyxPascalDefine(AName).Name);
+end;
+
+procedure TNyxPascalWarningRef.Validate;
+begin
+
+  if (Ord(FKind) < Ord(Low(TNyxPascalWarningReferenceKind))) or
+    (Ord(FKind) > Ord(High(TNyxPascalWarningReferenceKind))) then
+  begin
+    raise ENyxPascalContext.Create('A warning selector is outside its closed namespaces');
+  end;
+
+  if FKind = pwrNumber then
+  begin
+
+    if (FNumber < 1) or (FName <> TNyxText(IntToStr(FNumber))) then
+    begin
+      raise ENyxPascalContext.Create('A numeric warning selector is not a canonical positive ID');
+    end;
+  end
+  else if (FNumber <> 0) or (FName <> NyxPascalWarningName(FName).Name) then
+  begin
+    raise ENyxPascalContext.Create('A named warning selector is not canonical');
+  end;
+end;
+
+function TNyxPascalWarningRef.Number: Integer;
+begin
+  Validate;
+
+  if FKind <> pwrNumber then
+  begin
+    raise ENyxPascalContext.Create('A named warning group has no captured numeric message ID');
+  end;
+  Result := FNumber;
+end;
+
+function TNyxPascalWarningRef.SameReference(const AOther: TNyxPascalWarningRef): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := (FKind = AOther.FKind) and (FName = AOther.FName);
+end;
+
+{ Validate before publishing or changing any context. Requests preserve their
+  conditional activity separately from the authored action and alias namespace. }
+function ValidatedWarningRule(const AReference: TNyxPascalWarningRef;
+  AAction: TNyxPascalWarningAction; AActivity: TNyxPascalKnowledge): TNyxPascalWarningRule;
+begin
+  AReference.Validate;
+
+  if (Ord(AAction) < Ord(Low(TNyxPascalWarningAction))) or
+    (Ord(AAction) > Ord(High(TNyxPascalWarningAction))) or
+    (Ord(AActivity) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AActivity) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('A warning request needs a known action/activity domain');
+  end;
+  Result := Default(TNyxPascalWarningRule);
+  Result.FReference := AReference;
+  Result.FAction := AAction;
+  Result.FActivity := AActivity;
+end;
+
+function TCompilerContext.WarningCount: Integer;
+begin
+  Result := Length(FWarnings);
+end;
+
+function TCompilerContext.WarningAt(AIndex: Integer): TNyxPascalWarningRule;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FWarnings)) then
+  begin
+    raise ENyxPascalContext.Create('A warning request index is outside its exact context');
+  end;
+  Result := FWarnings[AIndex];
+end;
+
+function TCompilerContext.WithWarning(const AReference: TNyxPascalWarningRef;
+  AAction: TNyxPascalWarningAction;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LRule: TNyxPascalWarningRule;
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LAt: Integer;
+begin
+  LRule := ValidatedWarningRule(AReference, AAction, AActivity);
+  LAt := Length(FWarnings);
+
+  if LAt >= NyxPascalWarningRuleLimit then
+  begin
+    raise ENyxPascalContext.Create('Ordered warning requests exceed their bounded context vector');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FWarnings, LAt + 1);
+  LCopy.FWarnings[LAt] := LRule;
+  Result := LOwner;
+end;
+
+function TCompilerContext.WithWarningRules(
+  const ASource: INyxPascalContextWarnings): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LCount: Integer;
+  LAt: Integer;
+  LRule: TNyxPascalWarningRule;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('Capturing warning rules needs an explicit source');
+  end;
+  LCount := ASource.WarningCount;
+
+  if (LCount < 0) or (LCount > NyxPascalWarningRuleLimit) then
+  begin
+    raise ENyxPascalContext.Create('Captured warning requests exceed their bounded vector');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FWarnings, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    LRule := ASource.WarningAt(LAt);
+    LCopy.FWarnings[LAt] := ValidatedWarningRule(LRule.Reference, LRule.Action, LRule.Activity);
+  end;
+  Result := LOwner;
+end;
+
+function NyxPascalWarnings(const AContext: INyxPascalCompilerContext): INyxPascalContextWarnings;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Warning policies need their compiler context');
+  end;
+
+  if not Supports(AContext, INyxPascalContextWarnings, Result) then
+  begin
+    LCaptured := CaptureNyxPascalCompilerContext(AContext);
+    Supports(LCaptured, INyxPascalContextWarnings, Result);
+  end;
+end;
+
+function NyxPascalWithWarning(const AContext: INyxPascalCompilerContext;
+  const AReference: TNyxPascalWarningRef; AAction: TNyxPascalWarningAction;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+  LCaptured := CaptureNyxPascalCompilerContext(AContext);
+  Result := NyxPascalWarnings(LCaptured).WithWarning(AReference, AAction, AActivity);
+end;
+
 function TCompilerContext.Policies: TNyxPascalCompilerPolicies;
 begin
   Result := FPolicies;
@@ -1528,8 +1817,9 @@ begin
   end;
   LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
   Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
-  Result := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
+  LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested));
+  Result := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
 end;
 
 function UnknownValue: TConditionValue;

@@ -1773,7 +1773,8 @@ the deliberate `Halt`. The normal analysis run inspects the unchanged source and
 executes the following routine independently; source inspection grants no
 termination authority. Browser consumers/products compile only.
 
-Original System `RunError` retains its effect role, value parameter and physical
+At that non-returning checkpoint, original System `RunError` retains its effect
+role, value parameter and physical
 include owner. Ordered source binding now answers the former `Char` condition
 inside `TObject`; there is no pending-site location to query after that answer.
 System reaches 2,723 declarations with zero syntax diagnostics and five answers;
@@ -1785,6 +1786,79 @@ objpash.inc remains an explicit compiler-context gap; these known members preced
 that gap and do not establish complete RTL meaning.
 WORK.md owns exact unchanged-source evidence, retained preparations and the next
 warning-policy prerequisite, with full resolver/editor/parity/adoption still open.
+
+## Ordered warning requests
+
+`INyxPascalContextWarnings` adds optional, immutable per-warning requests without
+changing the base compiler-context interface. `NyxPascalWarningNumber` validates
+positive signed-32-bit message IDs; `NyxPascalWarningName` validates open ASCII
+group names. Neither constructor asserts membership in a compiler's catalog.
+`pwaOn`, `pwaOff`, `pwaError` and `pwaUnknown` are closed action choices, while
+three-valued activity independently retains a conditional write's uncertainty.
+
+```pascal
+LContext := NyxPascalWithWarning(LContext,
+  NyxPascalWarningName('SYMBOL_DEPRECATED'), pwaOff);
+LContext := NyxPascalWarnings(LContext).WithWarning(
+  NyxPascalWarningNumber(5066), pwaError);
+```
+
+Requests retain order, including repeated and overlapping numeric/named selectors.
+There is no fabricated alias map or effective-level lookup. Capturing, equality,
+source-mode copies and local PUSH/POP snapshots preserve the detached vector;
+unknown-context invalidation clears it. Checked getters, the independent 2,048-row
+quota, invalid selectors and alternate-producer failures refuse atomically. Records
+hold values only; no record owns an interface or editor reference.
+
+FPC translation accepts `WARN selector ON/OFF/ERROR` and adjacent `+`/`-` forms,
+including numeric leading zeros and explanatory trailing text. Optional
+`INyxPascalWarningDirectives` retains the exact physical include/occurrence/span
+and pre-directive state beside each ordered request. Prefix views expose only
+earlier receipts and retain the source owner after callers release the translation.
+Inactive directives have no effect; uncertain branches retain uncertain activity.
+Malformed or unsupported-family directives preserve explicit uncertainty.
+
+These are authored settings requests, not predictions of when FPC applies messages.
+The configured native compiler's PUSH saves its pending message chain, which can
+differ from an already active setting. The unchanged compiler oracle deliberately
+retains that behavior: three marked-symbol warnings normally, one promoted error
+plus one warning in error mode, and four warnings with an unknown selector. Successful
+runs return 84. Warning counts alone do not establish directive timing or validity;
+WORK.md owns exact diagnostics and the remaining real-RTL source gaps.
+
+## Bounded compiler query cohorts
+
+General compiler requirement plans stay minimal. Optional
+`TNyxPascalCompilerPlanOptions.LookAheadConditions(True)` proposes missing compiler
+symbols from already retained conditional directive rows. Required expanded queries
+keep priority. Macro expansions and unresolved sites retain their existing owner;
+proposals do not become branch, source-type or alias facts. Already known pristine
+facts are not queried again to try to repair source-local uncertainty.
+
+`INyxPascalCompilerCandidates` exposes bounded candidates, explicit truncation and
+work accounting. Input rows, lookahead rows and expression scalars consume the
+existing work quota; cancellation or exhaustion publishes no partial plan. The
+256-symbol per-job quota and aggregate context/source limits remain unchanged.
+Native module preparation enables lookahead by default; callers can supply a
+minimal plan explicitly. The expanded options record requires affected callers to
+be rebuilt together.
+
+`ReadNyxFPCCompilerCapture` and its native host counterpart retain the complete
+transcript gate plus a separate observed-default packet before explicit query
+replies. Optional `INyxFPCCompilerCapture.Merge` freezes alternate producers,
+requires the same defaults/compiler/mode/scope/options/features/policies, rejects
+conflicting presence, exact integers or sizes, and preserves richer integer facts.
+Observed defaults are a compatibility anchor: initial command-line observations
+can differ from a source-mode guard and are never substituted for source facts.
+
+Preparation queries each new cohort against the original base request and retains
+only merged verified facts, rather than growing a single cumulative request list.
+The native host owns and joins each compiler process before publishing a capture.
+This metadata grants no application execution or admission authority. Portable
+planner/protocol checks and real native preparation remain separate evidence;
+browser consumers compile only. Full RTL grammar/type meaning, incremental/editor
+adoption, interaction, parity and delivery remain under original authoring criterion
+two, with no new MCP tool or schema.
 
 ## Scoped name and type binding
 

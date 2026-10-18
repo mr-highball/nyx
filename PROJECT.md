@@ -153,8 +153,16 @@ next genuine suffix prerequisite; full resolver/editor adoption remains open.
 The [non-returning routine layer](docs/pascal-projects.md#non-returning-routine-intent)
 retains typed effect intent and ordinary signatures/bodies without inferring
 control-flow correctness. Whole compiled native termination is checked separately
-from source metadata; actual RTL continuation reaches the warning-policy context
-prerequisite. Full compiler meaning and ordinary editor adoption remain required.
+from source metadata; that checkpoint's RTL continuation reaches the warning-policy
+context prerequisite. Full compiler meaning and ordinary editor adoption remain required.
+
+The [ordered warning layer](docs/pascal-projects.md#ordered-warning-requests)
+retains typed numeric/named selectors and conditional requests with exact include
+origins. Authored settings remain distinct from compiler message activation.
+[Bounded query cohorts](docs/pascal-projects.md#bounded-compiler-query-cohorts)
+retain verified facts across compatible compiler captures under unchanged quotas.
+Real RTL integration still exposes source prerequisites; full resolver/editor
+adoption, both-target quality and delivery remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

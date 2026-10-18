@@ -172,6 +172,9 @@ var
   LPreview: INyxPascalSourceSnapshot;
   LNewCaret: Integer;
   LRegisterDirectives: INyxPascalRegisterDirectives;
+  LWarnings: INyxPascalWarningDirectives;
+  LWarning: TNyxPascalWarningDirective;
+  LWarningSeen: Boolean;
   LSyntaxLimited: Boolean;
   LPublicVariable: Boolean;
   LInterfaceRoutine: Boolean;
@@ -243,12 +246,13 @@ begin
     LModule := LModules.Entry(LModules.Find(NyxPascalModule(LName))).InContext(LContext,
       TNyxPascalTranslationOptions.Defaults.UpToTokens(2000000)
         .Lexical(TNyxPascalLexicalOptions.Defaults.NestedComments(True)));
-    { More of the original RTL is now readable, exposing additional compiler
-      facts. Select eight bounded probe jobs explicitly for this qualification;
-      the product's four-probe default and parser depth remain unchanged. }
+    { Prefetch candidates from retained conditional directives under the existing
+      eight-job qualification ceiling. General plans remain minimal and native
+      preparation enables lookahead by default; parser depth stays unchanged. }
     LPrepared := PrepareNyxFPCModule(ACompiler, AOutput + '/prepared-' + LName, LFiles, LModule,
       LProbe, TNyxFPCModulePreparationOptions.Defaults.WithPlan(
-        TNyxPascalCompilerPlanOptions.Defaults.UpToTokens(2000000)).UpToTokens(8000000).UpToProbes(8));
+        TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True)
+          .UpToTokens(2000000)).UpToTokens(8000000).UpToProbes(8));
     LModules := LModules.WithModule(LPrepared.ModuleSource);
     Check(NyxPascalBootstrapContext(LPrepared.ModuleSource.Context).SameFacts(LBootstrap),
       'Every pristine symbol capture retains the independent measured compiler-root packet');
@@ -258,6 +262,26 @@ begin
 
     if LUnit = 0 then
     begin
+      LWarningSeen := False;
+      Supports(LPrepared.Source, INyxPascalWarningDirectives, LWarnings);
+
+      if LWarnings <> nil then
+      begin
+        for LAt := 0 to LWarnings.WarningDirectiveCount - 1 do
+        begin
+          LWarning := LWarnings.WarningDirectiveAt(LAt);
+
+          if (LWarning.Origin.FileReference.Name = TNyxText('rtl/inc/objpash.inc')) and
+            (LWarning.Rule.Reference.Kind = pwrNumber) and
+            (LWarning.Rule.Reference.Number = 3018) and
+            (LWarning.Rule.Action = pwaOff) and (LWarning.Rule.Activity = ppkTrue) then
+          begin
+            LWarningSeen := True;
+          end;
+        end;
+      end;
+      Check(LWarningSeen,
+        'Whole original System retains the active numeric warning request at its exact include owner');
       Supports(LPrepared.Source, INyxPascalRegisterDirectives, LRegisterDirectives);
       Check(not LPrepared.Source.Resolved and (LPrepared.Probes > 0) and
         (LRegisterDirectives <> nil) and (LRegisterDirectives.RegisterDirectiveCount > 0) and
@@ -324,6 +348,21 @@ begin
     begin
       Check(not LSyntaxLimited and (LView <> nil),
         'The original System declaration view no longer exhausts syntax depth after native linkage');
+      WriteLn('actual semantic frontier / answers=', LSource.Answers, ' pending=', LSource.Pending,
+        ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName,
+        ' declarations=', LView.Syntax.DeclarationCount, ' diagnostics=', LView.Syntax.DiagnosticCount);
+      for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
+      begin
+        LHintOrigin := LView.OriginAt(LView.Syntax.Diagnostic(LAt).Span.Start);
+        Write('actual syntax gap / issue=', Ord(LView.Syntax.Diagnostic(LAt).Issue),
+          ' / ', LView.Syntax.Diagnostic(LAt).MessageText, ' / ');
+
+        if LHintOrigin >= 0 then
+        begin
+          Write(LView.Source.Files.FileAt(LView.Origin(LHintOrigin).FileIndex).Name, ' / ');
+        end;
+        WriteLn(LView.Syntax.Lexical.Slice(LView.Syntax.Diagnostic(LAt).Span));
+      end;
       LPublicVariable := False;
       LInterfaceRoutine := False;
       LNoErrSeen := False;
@@ -422,14 +461,17 @@ begin
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('exitcode') then
         begin
-          LPublicVariable := (LDeclaration.Scope = 0) and
-            (LDeclaration.Visibility = psavInterface) and (plfPublic in LDeclaration.Linkage);
+          WriteLn('actual ExitCode declaration / scope=', LDeclaration.Scope,
+            ' visibility=', Ord(LDeclaration.Visibility), ' public=', plfPublic in LDeclaration.Linkage,
+            ' name=', LDeclaration.Name);
+          LPublicVariable := LPublicVariable or ((LDeclaration.Scope = 0) and
+            (LDeclaration.Visibility = psavInterface) and (plfPublic in LDeclaration.Linkage));
         end;
 
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('prefetch') then
         begin
-          LInterfaceRoutine := (LDeclaration.Scope = 0) and
-            (LDeclaration.Visibility = psavInterface) and (plfIntrinsic in LDeclaration.Linkage);
+          LInterfaceRoutine := LInterfaceRoutine or ((LDeclaration.Scope = 0) and
+            (LDeclaration.Visibility = psavInterface) and (plfIntrinsic in LDeclaration.Linkage));
         end;
       end;
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
@@ -438,22 +480,27 @@ begin
       Check(LRTLProcedureSeen, 'The unchanged whole System view contains the declared RTL helper');
       Check(LNoReturnSeen, 'The unchanged whole System view contains the non-returning RunError overload');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
-      { The former Char query inside TObject now resolves. Origin is a checked
-        pending-site getter and must not be called after its question is answered. }
+      { The former Char query inside TObject remains answered. Reading more
+        unchanged RTL now reaches a later compiler-context requirement; this
+        consumer qualifies the explicit frontier, not complete RTL meaning. }
       WriteLn('actual semantic continuation / answers=', LSource.Answers, ' pending=', LSource.Pending,
         ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName);
-      Check(not LSource.Pending and (LSource.BindingIssue = pbiNone) and (LSource.Answers = 5),
-        'Original source binding now answers the Char condition inside TObject without a pending site');
+      Check(LSource.Pending and (LSource.BindingIssue = pbiCompilerContext) and (LSource.Answers = 6),
+        'Original source binding answers six conditions and explicitly retains the next compiler-context requirement');
+      WriteLn('actual pending condition / ', LSource.Origin.FileReference.Name,
+        ' / scalar=', LSource.Origin.Span.Start);
       LUnsupportedSyntax := False;
       for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
       begin
 
-        if LView.Syntax.Diagnostic(LAt).Issue = psiUnsupportedSyntax then
+        if (LView.Syntax.Diagnostic(LAt).Issue = psiUnsupportedSyntax) and
+          (LView.Syntax.Lexical.Slice(LView.Syntax.Diagnostic(LAt).Span) = TNyxText('property')) then
         begin
           LUnsupportedSyntax := True;
         end;
       end;
-      Check(not LUnsupportedSyntax, 'The actual known System prefix retains no unsupported declarations');
+      Check(LUnsupportedSyntax,
+        'The expanded original System view explicitly retains its class-property grammar prerequisite');
       LWarningGap := False;
       for LAt := 0 to LSource.Source.DiagnosticCount - 1 do
       begin
@@ -471,8 +518,8 @@ begin
           LWarningGap := True;
         end;
       end;
-      Check(not LSource.Source.Resolved and LWarningGap,
-        'The original warning directive remains an explicit compiler-context prerequisite');
+      Check(not LSource.Source.Resolved and not LWarningGap,
+        'The original warning directive is understood while broader source requirements remain explicit');
     end;
 
     if not LSyntaxLimited then
@@ -504,6 +551,17 @@ begin
     ' gap=', Ord(LMetadata.Gap), ' issue=', Ord(LMetadata.BindingIssue),
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads, ' message=', LReply.MessageText);
+
+  if LReply.Status <> pcsReady then
+  begin
+    { The loader must refuse an incomplete original dependency rather than turn
+      recovered declarations into ready completion. Earlier successful prefix
+      evidence remains historical; neither route proves full RTL adoption. }
+    Check((LReply.Count = 0) and (LMetadata.Gap <> pcgNone) and
+      (LMetadata.BindingIssue <> pbiNone),
+      'Broader original RTL requirements refuse indexed completion without fabricated members');
+    Exit;
+  end;
   Check((LReply.Status = pcsReady) and (LMetadata.Gap = pcgNone) and
     (LMetadata.BindingIssue = pbiNone) and (LReply.Count = 2) and
     (LReceipt.ModuleCount = 3) and (LReceipt.DependencyLoads = 2),

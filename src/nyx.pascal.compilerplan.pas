@@ -28,20 +28,25 @@ uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.translation, nyx.pascal.compilertrace;
 
 type
-  { Independent positive work/output quotas. Refusal publishes no partial plan;
-    these values never increase the owning translation's own resource limits. }
+  { Independent positive work/output quotas. Optional lookahead proposes only
+    compiler-symbol queries from retained directive rows, never source meaning.
+    Its work charge includes input/visited rows and candidate expression scalars.
+    Refusal is atomic and never increases the translation's resource limits. }
   TNyxPascalCompilerPlanOptions = record
   private
     FDefined: Boolean;
     FConditions: Integer;
     FTokens: Integer;
+    FLookahead: Boolean;
   public
     class function Defaults: TNyxPascalCompilerPlanOptions; static;
     function UpToConditions(AValue: Integer): TNyxPascalCompilerPlanOptions;
     function UpToTokens(AValue: Integer): TNyxPascalCompilerPlanOptions;
+    function LookAheadConditions(AValue: Boolean): TNyxPascalCompilerPlanOptions;
     procedure Validate;
     property MaximumConditions: Integer read FConditions;
     property MaximumTokens: Integer read FTokens;
+    property IncludeConditionalLookahead: Boolean read FLookahead;
   end;
   { Frozen unknown-condition requirements tied to exact physical occurrences and
     pre-token states. Needs retains separate compiler symbols, source sizeof and
@@ -55,10 +60,22 @@ type
     function State(AIndex: Integer): Integer;
     function Expression(AIndex: Integer): TNyxText;
     function Needs(AIndex: Integer): INyxPascalConditionNeeds;
-    { Freeze the base probe and add compiler symbols only, preserving first-use
-      order and its existing size requests. Its 256-symbol quota still applies.
-      This method launches nothing and makes no authored-scope size assertion. }
+    { Freeze the base and add only compiler symbols missing from the pristine
+      initial packet. Source-local uncertainty cannot be repaired by re-querying
+      an already captured pristine name. Preserve base order/size requests and
+      give observed needs priority within the existing 256-symbol job quota. }
     function CompilerProbe(const ABase: INyxPascalCompilerProbe): INyxPascalCompilerProbe;
+  end;
+  { Optional bounded proposals beyond actual expanded requirements. Candidates
+    are not requirements or verified facts; the real compiler must measure them.
+    CompilerProbe gives observed requirements priority within its existing quota.
+    WorkUnits counts input rows plus lookahead rows/expression scalars. }
+  INyxPascalCompilerCandidates = interface(IInterface)
+    ['{F2C43341-73F5-4B1A-81B0-324519854A73}']
+    function CandidateCount: Integer;
+    function CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+    function CandidatesTruncated: Boolean;
+    function WorkUnits: Integer;
   end;
 
 { Inspect only retained unknown conditions and their owning translated rows,
@@ -71,19 +88,22 @@ function PlanNyxPascalCompilerRequirements(const ASource: INyxPascalTranslation;
 
 implementation
 
-uses SysUtils;
+uses SysUtils, nyx.text.index, nyx.editing;
 
 type
   { Construction owns detached vectors and a temporary cancellation lease.
     Published needs are separately owned interfaces in a class vector, never
     interface fields in records. Source data points only toward immutable inputs. }
-  TCompilerPlan = class(TInterfacedObject, INyxPascalCompilerPlan)
+  TCompilerPlan = class(TInterfacedObject, INyxPascalCompilerPlan, INyxPascalCompilerCandidates)
   private
     FSource: INyxPascalTranslation;
     FOrigins: array of TNyxPascalConditionOrigin;
     FStates: array of Integer;
     FExpressions: array of TNyxText;
     FNeeds: array of INyxPascalConditionNeeds;
+    FCandidates: array of TNyxPascalDefineRef;
+    FTruncated: Boolean;
+    FWork: Integer;
     procedure CheckIndex(AIndex: Integer);
   public
     constructor Create(const ASource: INyxPascalTranslation;
@@ -95,6 +115,10 @@ type
     function Expression(AIndex: Integer): TNyxText;
     function Needs(AIndex: Integer): INyxPascalConditionNeeds;
     function CompilerProbe(const ABase: INyxPascalCompilerProbe): INyxPascalCompilerProbe;
+    function CandidateCount: Integer;
+    function CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+    function CandidatesTruncated: Boolean;
+    function WorkUnits: Integer;
   end;
 
 class function TNyxPascalCompilerPlanOptions.Defaults: TNyxPascalCompilerPlanOptions;
@@ -128,6 +152,14 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPlanOptions.LookAheadConditions(
+  AValue: Boolean): TNyxPascalCompilerPlanOptions;
+begin
+  Result := Self;
+  Result.FLookahead := AValue;
+  Result.Validate;
+end;
+
 procedure CheckCancellation(const AValue: INyxCancellationScope);
 begin
 
@@ -145,6 +177,25 @@ var
   LCount: Integer;
   LInput: TNyxPascalUnresolvedCondition;
   LRow: TNyxPascalTranslatedToken;
+  LRequiredRows: array of Boolean;
+  LToken: TNyxPascalToken;
+  LName: TNyxText;
+  LValue: TNyxText;
+  LOffset: Integer;
+  LNames: TNyxTextIndex;
+  LNeeds: INyxPascalConditionNeeds;
+  LSymbol: Integer;
+  LCandidate: TNyxPascalDefineRef;
+
+  procedure Charge(AValue: Integer);
+  begin
+
+    if (AValue < 0) or (AValue > AOptions.MaximumTokens - FWork) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Compiler candidate lookahead exceeds its work budget');
+    end;
+    Inc(FWork, AValue);
+  end;
 begin
   inherited Create;
   AOptions.Validate;
@@ -156,9 +207,15 @@ begin
   end;
   FSource := ASource;
 
-  if FSource.Count > AOptions.MaximumTokens then
+  if (FSource.Count < 0) or (FSource.Count > AOptions.MaximumTokens) then
   begin
     raise ENyxPascalTranslationLimit.Create('Compiler requirement input exceeds its work budget');
+  end;
+  FWork := FSource.Count;
+
+  if AOptions.IncludeConditionalLookahead then
+  begin
+    SetLength(LRequiredRows, FSource.Count);
   end;
 
   if not Supports(FSource, INyxPascalUnresolvedConditions, LInputs) then
@@ -196,6 +253,11 @@ begin
       raise ENyxPascalContext.Create('An unresolved condition differs from its owning source row');
     end;
     FOrigins[LAt] := LInput.Origin;
+
+    if AOptions.IncludeConditionalLookahead then
+    begin
+      LRequiredRows[LInput.Origin.PrefixCount] := True;
+    end;
     FStates[LAt] := LInput.State;
     FExpressions[LAt] := LInput.Expression;
 
@@ -210,7 +272,106 @@ begin
       FNeeds[LAt] := PlanNyxPascalCondition(FSource.State(LInput.State), '');
     end;
   end;
+
+  if not AOptions.IncludeConditionalLookahead then
+  begin
+    Exit;
+  end;
+  LNames := TNyxTextIndex.Create;
+  try
+    for LAt := 0 to FSource.Count - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      Charge(1);
+      LRow := FSource.Token(LAt);
+
+      if LRequiredRows[LAt] or (LRow.Expansion >= 0) then
+      begin
+        Continue;
+      end;
+      LToken := FSource.PhysicalToken(LAt);
+
+      if (LToken.Kind <> ptkDirective) or not LToken.Complete then
+      begin
+        Continue;
+      end;
+      NyxPascalDirectiveParts(FSource.Text(LAt), LName, LValue, LOffset);
+
+      if not ((LName = 'if') or (LName = 'elseif') or
+        (LName = 'ifdef') or (LName = 'ifndef')) then
+      begin
+        Continue;
+      end;
+      Charge(NyxTextScalarCount(LValue));
+
+      if (LName = 'ifdef') or (LName = 'ifndef') then
+      begin
+        try
+          LCandidate := NyxPascalDefine(LValue);
+        except
+          on ENyxPascalContext do
+          begin
+            Continue;
+          end;
+        end;
+        LValue := 'defined(' + LCandidate.Name + ')';
+      end;
+      LNeeds := PlanNyxPascalCondition(FSource.State(LRow.State), LValue);
+
+      if not LNeeds.SyntaxSupported then
+      begin
+        Continue;
+      end;
+      for LSymbol := 0 to LNeeds.SymbolCount - 1 do
+      begin
+        LCandidate := LNeeds.Symbol(LSymbol);
+
+        if (FSource.InitialContext.Symbol(LCandidate).Kind <> ppdUnknown) or
+          (LNames.IndexOf(LCandidate.Name) >= 0) then
+        begin
+          Continue;
+        end;
+
+        if Length(FCandidates) = 256 then
+        begin
+          FTruncated := True;
+          Exit;
+        end;
+        LNames.AddFirst(LCandidate.Name, Length(FCandidates));
+        SetLength(FCandidates, Length(FCandidates) + 1);
+        FCandidates[High(FCandidates)] := LCandidate;
+      end;
+    end;
+  finally
+    LNames.Free;
+  end;
 end;
+
+function TCompilerPlan.CandidateCount: Integer;
+begin
+  Result := Length(FCandidates);
+end;
+
+function TCompilerPlan.CandidateAt(AIndex: Integer): TNyxPascalDefineRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FCandidates)) then
+  begin
+    raise ENyxPascalContext.Create('Compiler candidate index is outside its exact plan');
+  end;
+  Result := FCandidates[AIndex];
+end;
+
+function TCompilerPlan.CandidatesTruncated: Boolean;
+begin
+  Result := FTruncated;
+end;
+
+function TCompilerPlan.WorkUnits: Integer;
+begin
+  Result := FWork;
+end;
+
 procedure TCompilerPlan.CheckIndex(AIndex: Integer);
 begin
 
@@ -264,8 +425,21 @@ begin
   begin
     for LSymbol := 0 to FNeeds[LAt].SymbolCount - 1 do
     begin
-      Result := Result.WithSymbol(FNeeds[LAt].Symbol(LSymbol));
+
+      if FSource.InitialContext.Symbol(FNeeds[LAt].Symbol(LSymbol)).Kind = ppdUnknown then
+      begin
+        Result := Result.WithSymbol(FNeeds[LAt].Symbol(LSymbol));
+      end;
     end;
+  end;
+  for LAt := 0 to High(FCandidates) do
+  begin
+
+    if Result.Count >= 256 then
+    begin
+      Break;
+    end;
+    Result := Result.WithSymbol(FCandidates[LAt]);
   end;
 end;
 

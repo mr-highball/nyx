@@ -4,7 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source non-returning routines retain typed plfNoReturn intent with exact
+Current-source ordered warning requests use typed numeric/named selectors and
+closed actions with independent conditional activity, detached capture/identity,
+physical include receipts and authored PUSH/POP scopes. They do not predict FPC's
+pending message activation or group aliases. Focused warning/planner/protocol
+native checks pass 44/30/38. Native preparation now uses bounded conditional
+lookahead and compatible verified query cohorts; initial default observations
+remain separate from source-mode replies. Existing per-job/context/work/probe
+limits remain unchanged. Actual module frontier passes 45: System reaches 5,631
+declarations/seven syntax diagnostics/six semantic answers, then explicitly needs
+High(errorcode)<>maxExitCode at system.inc scalar 1051. ObjPas remains 209/four/one
+with no pending query. Exact Free/FreeInstance completion/navigation/insertion still
+passes. Class-property grammar, compilerproc sequencing, CODEALIGN and broader
+source/type meaning remain open; these frontier assertions do not qualify full RTL.
+All 30 accepted native consumers have clean heaps; 50 accepted compiler logs have
+zero owned warnings/105 upstream. Browser products and sixteen consumers compile
+only. Independent native warning oracles retain their expected diagnostics/errors.
+Twelve focused/628 product/97 RTL/14 compiler pins, 156 byte packets/48 includes,
+five protected files/nine contexts, 349 frozen 7422453 artifacts and thirteen
+concurrent planning files remain exact. Readers joined; LAN offline, no native
+Nyx tools. WORK.md owns composite evidence, retained resource/obsolete-assertion/
+warning preparations and final source/remote identity. At least twenty-three
+documented unclosed batches retain original criterion two; no full criterion/task/
+credit/DONE/tool/schema/adoption/parity/delivery closes. Stop warning/lookahead/
+cohort/fixture/compiler/capture variants; reassess supported constant conditions
+and class/property grammar through existing condition/parser owners before the
+next batch, preserving full source/type/incremental/editor/input/navigation/
+quality/parity/delivery. No protected mutation, cleanup/deletion/restart, HTTP-host
+retry or capture, approval bypass or sub-agents. Preserve concurrent planning.
+
+Earlier non-returning checkpoint retains typed plfNoReturn intent with exact
 suffix/signature/body ownership. Operand-bearing markers and unknown neighbors
 retain refusal; ordinary/escaped names stay contextual. Source metadata grants
 no compiler control-flow/exception/eligibility authority. Existing enum ordinals,
