@@ -126,6 +126,12 @@ root evidence survives source-mode changes and ordinary symbol preparation; loca
 declarations and incomplete imports retain precedence. Actual compiler capture and
 source binding qualify this boundary, with full resolver/editor adoption still open.
 
+The [unfinished-scope continuation](docs/pascal-projects.md#lexical-names-in-unfinished-structured-scopes)
+resolves prior lexical names and captured ancestors while a class body is being
+typed. Declaration order, uncertain ancestors and incomplete receiver refusals
+remain explicit. Ordinary bounded completion/navigation consumes that lookup;
+full language, editor adoption and both-target qualification remain required.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

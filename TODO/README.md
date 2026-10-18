@@ -88,6 +88,12 @@ Exact compiler-root packets feed existing binding and conditional readers while
 local shadowing and incomplete imports retain their guards. Unfinished class scope
 and full resolver/editor/parity/delivery remain under original criterion two.
 
+The [unfinished-scope continuation](../docs/pascal-projects.md#lexical-names-in-unfinished-structured-scopes)
+preserves prior lexical names and captured ancestry while a class is being typed.
+Ordinary bounded completion/navigation uses this lookup; uncertain ancestors and
+incomplete receiver types retain refusal. Full resolver/editor/parity/delivery
+remain under original criterion two, with exact real RTL gaps in WORK.md.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

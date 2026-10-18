@@ -9,6 +9,26 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Open-scope continuation (2026-10-18): d910754 is progress, retaining at least
+seventeen documented unclosed batches and complete original criterion two. Follow
+the actual unfinished TObject conditional through existing lexical/binding owners.
+Resolve known prior names and captured ancestors without granting a complete type
+to unfinished declarations, admitting later names, or skipping uncertain ancestors.
+A whole compiled authored companion, bounded completion/refusal cases and one
+prepared/final unchanged real RTL continuation decide this boundary. Stop at a
+different genuine source requirement. Full language/incremental/editor/input/
+navigation/quality/parity/adoption/delivery remain required with no new credit.
+
+The qualified boundary passes 30 focused native checks, whole compiled behavior
+42 and independent earlier/later alias sizes 1/2. Ordinary inherited completion
+and detached navigation use the same lookup. All 24 native consumers have clean
+heaps; 38 accepted compiler logs have zero owned warnings, with browser consumers/
+products compiled only. System advances past the incomplete-owner refusal and
+retains earlier unsupported module syntax at NoErrMsg: Boolean platform = False.
+Follow that hint-before-initializer boundary under the existing parser/hint owner;
+stop open-scope/ancestor/fixture/compiler/capture variants. WORK.md owns exact
+preservation, separate corrected native/browser companion evidence and limits.
+
 Compiler-bootstrap continuation (2026-10-18): ce5237a is progress; original
 criterion two remains open across at least sixteen documented batches, retaining
 all older evidence. Compiler-root capture must establish presence before authored

@@ -506,12 +506,9 @@ begin
     LPrefixWorld := LWorld.WithModule(LView);
     LModule := LPrefixWorld.FindModule(LName);
     LCaret := LView.Syntax.Lexical.Scalars;
-    LScope := 0;
-
-    if LCaret > 0 then
-    begin
-      LScope := LView.Syntax.ScopeAt(LCaret - 1);
-    end;
+    { EOF belongs to an unfinished scope, including a newly opened empty body.
+      Moving back one scalar could select its outer scope or a finished method. }
+    LScope := LView.Syntax.ScopeAt(LCaret);
     LMeanings := TScopeMeanings.Create;
     LSemanticOwner := LMeanings;
     LMeanings.Site := LPrefixWorld.At(LModule, LScope, LCaret);

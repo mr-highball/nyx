@@ -1609,6 +1609,48 @@ checks establish precedence/ownership algorithms, separately from that real RTL
 evidence. Browser consumers/products compile only. Full language/incremental/
 editor/input/navigation/quality/parity/adoption/delivery remain open in WORK.md.
 
+## Lexical names in unfinished structured scopes
+
+Existing `INyxPascalSemanticWorld.Lookup` now searches prior lexical names through
+the header of an enclosing unfinished class, interface, object or record. The
+owned body must reach EOF with a validated header and complete translated input;
+earlier syntax/conditional uncertainty still refuses. No complete receiver type
+is constructed for that open body. `TypeOfSymbol` retains its incomplete-type
+refusal, and external incomplete imports do not gain absence authority.
+
+Each enclosing member scope supplies its own owner. Own declarations are searched
+at the exact caret before ancestors; a later nested declaration cannot change an
+earlier field's resolved type, even when the inspected class is now complete.
+Out-of-line implementations retain their ordinary full receiver visibility.
+Ancestor traversal shares the existing member/overload merge, detached candidate
+vector, exact generic environments, recursion checks and step/candidate budgets.
+A selected explicit ancestor that cannot bind returns a missing-type gap, rather
+than the Missing sentinel which ends a completed base list. Missing modules,
+unbound generics, malformed headers and inaccessible/uncertain bases still refuse.
+
+The ordered conditional reader uses `ScopeAt` at the actual EOF caret. Moving
+back one scalar could select the outer scope of an empty new body or a completed
+method. This matters for both inherited declaration questions and source-alias
+size questions; replay still retains the exact original source and origin.
+
+Native qualification compiles and executes the whole authored descendant example,
+returning 42 through its inherited nested alias. Actual compiler sizes 1/2 keep
+the earlier global Byte field and later nested Word alias distinct. The same
+unchanged unit passes whole-source conditional, syntax and field-type inspection.
+Its native compiler-only `declared()`/`SizeOf` oracles are explicitly excluded from
+pas2js compilation; inherited aliases and runtime source remain shared. Nyx's own
+conditional-reader cases compile for both source targets. Ordinary completion
+returns a bounded inherited factory type with detached physical navigation, while
+source, cancellation, step budgets and malformed/unknown ancestry retain guards.
+
+Actual System now passes the unfinished-owner lookup and retains an earlier
+unsupported module-syntax refusal at its Char question. The first retained gap is
+the hinted initializer `NoErrMsg: Boolean platform = False` in systemh.inc; whole
+RTL/source grammar is still incomplete. Browser consumers/products compile only.
+WORK.md owns final receipts, retained preparations and the return to that existing
+parser owner. Full language/incremental/editor/input/navigation/quality/parity/
+adoption/delivery remain required; no new MCP schema or installed engine follows.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

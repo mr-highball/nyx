@@ -4,6 +4,36 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source lexical lookup follows validated open structured headers without
+admitting incomplete receiver types. Each enclosing scope retains its owner,
+known names stay ordered at the caller caret and uncertain/missing ancestors
+refuse. Shared inherited traversal preserves exact environments, overload merge,
+detached candidates, recursion and budgets. Empty-body EOF scope now stays active
+in conditional replay; later nested types never reassign an earlier field.
+Native focused 30, module 23 and all 24 consumers pass with clean heaps. Whole
+compiled authored behavior returns 42, compiler alias sizes 1/2 and bounded
+inherited completion/navigation remain exact. Actual System passes its unfinished-
+owner refusal but retains pbiUnsupportedScope at earlier NoErrMsg: Boolean platform
+= False in systemh.inc scalar 21,675. Four answers/2,555 declarations/31 syntax
+diagnostics and pending ObjPas/indexed refusal remain; whole RTL is not bound.
+Thirty-eight accepted compiler logs have zero owned warnings/70 upstream. Both
+Studios/backend/worker and ten browser consumers compile as applicable; browser
+execution/input/observing/parity/adoption/delivery remain separate. FPC-only
+declared()/SizeOf compiler oracles are explicitly native-only; inherited/runtime
+source and Nyx's own conditional reader compile on both targets. Five focused/628
+product/97 prior RTL/three compiler inputs, 156 unit packets/48 includes, five
+protected files/nine contexts and 349 frozen 7422453 artifacts stay exact. Thirteen
+concurrent planning files retain their baseline outside the owned README block.
+Readers join; LAN remains offline, native Nyx tools absent, no host/config retry.
+WORK.md owns retained API/caret/RTL-oracle/browser-compiler failures, final exact
+companion/tail evidence and current source/remote identity. At least seventeen
+documented unclosed batches retain original criterion two; no criterion/task/
+counter/credit/DONE/schema/adoption/parity/delivery closes. Stop open-scope/
+ancestor/fixture/compiler/capture variants. Next follow hinted initialized-variable
+ownership under existing parser/hint/linkage owners; warning effects and full
+resolver/editor/incremental/input/navigation/quality/parity/delivery remain open.
+No protected mutation, cleanup/deletion/restart, host retry, bypass or sub-agents.
+
 Current-source compiler bootstrap captures pre-alias primitive presence/size in
 an independent immutable context. Empty System/TYPE plus -Us intentionally stops
 after complete owned replies; exit 1 requires exact fatal/abort receipts and never

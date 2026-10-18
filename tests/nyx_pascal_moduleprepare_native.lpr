@@ -159,6 +159,7 @@ var
   LQuestionView: INyxPascalTranslatedSyntax;
   LQuestionScope: Integer;
   LQuestionOwner: Integer;
+  LQuestionOrigin: Integer;
   LRegisterDirectives: INyxPascalRegisterDirectives;
   LSyntaxLimited: Boolean;
   LPublicVariable: Boolean;
@@ -359,7 +360,7 @@ begin
       LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
         LModule.Translation);
       LQuestionView := NewNyxPascalTranslatedSyntax(LQuestionPrefix, TNyxPascalSyntaxOptions.Defaults);
-      LQuestionScope := LQuestionView.Syntax.ScopeAt(LQuestionView.Syntax.Lexical.Scalars - 1);
+      LQuestionScope := LQuestionView.Syntax.ScopeAt(LQuestionView.Syntax.Lexical.Scalars);
       LQuestionOwner := -1;
       while LQuestionScope >= 0 do
       begin
@@ -373,11 +374,32 @@ begin
         end;
         LQuestionScope := LQuestionView.Syntax.Scope(LQuestionScope).Parent;
       end;
-      Check(LSource.Pending and (LSource.BindingIssue = pbiIncompleteSource) and
+      WriteLn('actual enclosing query / answers=', LSource.Answers, ' pending=', LSource.Pending,
+        ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName);
+      for LAt := 0 to LQuestionView.Syntax.DiagnosticCount - 1 do
+      begin
+
+        if LQuestionView.Syntax.Diagnostic(LAt).Issue = psiUnsupportedSyntax then
+        begin
+          LQuestionOrigin := LQuestionView.OriginAt(LQuestionView.Syntax.Diagnostic(LAt).Span.Start);
+          WriteLn('actual enclosing diagnostic / issue=', Ord(LQuestionView.Syntax.Diagnostic(LAt).Issue),
+            ' / ', LQuestionView.Syntax.Diagnostic(LAt).MessageText, ' / ',
+            LQuestionView.Syntax.Lexical.Slice(LQuestionView.Syntax.Diagnostic(LAt).Span));
+
+          if LQuestionOrigin >= 0 then
+          begin
+            WriteLn('actual enclosing physical / ', LQuestionView.Source.Files.FileAt(
+              LQuestionView.Origin(LQuestionOrigin).FileIndex).Name, ' / scalar=',
+              LQuestionView.Origin(LQuestionOrigin).PhysicalSpan.Start);
+          end;
+          Break;
+        end;
+      end;
+      Check(LSource.Pending and (LSource.BindingIssue = pbiUnsupportedScope) and (LSource.Answers = 4) and
         (LQuestionOwner >= 0) and
         (NyxPascalASCIIKey(LQuestionView.Syntax.Declaration(LQuestionOwner).Name) = TNyxText('tobject')) and
         (psdfIncomplete in LQuestionView.Syntax.Declaration(LQuestionOwner).Flags),
-        'The next actual Char query is inside unfinished TObject scope, a separate binding prerequisite');
+        'The open TObject query now retains the earlier real unsupported module syntax prerequisite');
     end;
 
     if not LSyntaxLimited then

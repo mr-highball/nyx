@@ -33,7 +33,104 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler bootstrap and authored alias identity — 2026-10-18
+## Current integration: Lexical names in unfinished structured scopes — 2026-10-18
+
+Reassessment: d910754 is progress without closing original authoring criterion two.
+The documented consecutive unclosed lower bound is at least seventeen, retaining
+the full resolver/editor/incremental/input/navigation/quality/parity/delivery scope.
+The concrete prerequisite was the real System conditional inside unfinished
+TObject. The deliverable now uses validated enclosing headers and shared inherited
+member resolution without constructing a complete receiver for an unfinished
+declaration. Earlier syntax/conditional uncertainty, malformed headers, absent
+ancestors/modules and unbound generics retain typed refusals. Known prior lexical
+names stay visible; every enclosing member scope supplies its own actual owner.
+Complete class declarations also retain caller-position ordering, so a later
+nested name cannot change an earlier field's binding. Out-of-line methods retain
+their existing full receiver visibility.
+
+Inherited traversal now shares detached seeds, exact environments, deduplication,
+candidate/step limits and balanced recursion trails with ordinary member lookup.
+A selected explicit ancestor that fails to bind is a missing-type gap, not the
+Missing sentinel marking the end of the base list. The conditional reader uses
+the exact EOF scope, including empty open bodies; its old one-scalar retreat
+could bypass such a body or select a finished method. Existing public interfaces,
+GUIDs, enum ordinals and transport inventory stay unchanged.
+
+Accepted evidence is in ignored open-class-20261018-070945, located by
+.local/open-class-paths-private.json:
+
+- Thirty focused native checks qualify prior/inherited/global names, each nested
+  owner, open and complete source ordering, strict incomplete receiver refusal,
+  absent/malformed/imported/generic ancestors, earlier malformed members,
+  cancellation and step exhaustion. Ordered condition replay reaches a source
+  Char alias from an open compiler-root class and preserves the empty-body EOF
+  scope for refusal. Controlled modules establish algorithms, not SDK exports.
+- The whole unchanged authored companion compiles and executes inherited/member
+  behavior returning 42. Actual compiler sizes 1/2 distinguish the earlier global
+  Byte field from a later nested Word alias. Exact whole-source conditional,
+  syntax and both field/alias bindings agree; no source closing text is invented.
+  Ordinary bounded completion returns one inherited factory type and retains
+  its exact detached physical navigation and unfinished source bytes.
+- Twenty-three actual module checks retain all 156 original byte packets/47
+  namespaces and captured compiler-root identity. The System query now passes
+  the unfinished-owner refusal, reaching typed pbiUnsupportedScope at the earlier
+  module syntax: NoErrMsg: Boolean platform = False, systemh.inc scalar 21,675.
+  This is a hint-before-initializer parser prerequisite. System keeps four answers,
+  2,555 declarations/31 syntax diagnostics; raw translation remains 36,104 tokens/
+  19 visits/five probes/six diagnostics/five requirements. ObjPas and indexed
+  loading retain their explicit gaps, with three modules/two loads/no suggestions.
+  Whole RTL meaning is not established.
+- Maintained bootstrap ownership/native capture/linkage/region/lexical/policy/
+  operator/variant/anonymous/planner/translation/macro/type/syntax/Windows/binding/
+  generic/condition/dependency/owned/profile/production-semantic checks pass
+  18/17/26/28/49/73/18/22/52/14/157/38/367/7,671/26/62/127/10/48/86/74/84.
+  All 24 native consumers have clean heaps. The syntax corpus stays five actual
+  inputs/3,748 declarations; evidence overlaps earlier work.
+- Thirty-eight accepted compiler logs have zero owned warnings and 70 upstream
+  pas2js RTL warnings. Both Studios/backend/worker and ten browser consumers
+  compile as applicable. The authored inheritance/runtime source compiles on
+  both targets. Its additional native compiler declared()/SizeOf oracles are
+  explicitly native-only; Nyx's own conditional-reader checks compile on both.
+  Browser consumers/products compile only, with no input/execution/observing,
+  complete parity, default engine adoption or delivery claim.
+- Five final focused/628 product/97 prior RTL/three compiler inputs, all 48
+  SysUtils includes and 156 overlapping original unit packets verify exact. Five
+  protected files/nine complete contexts and all 349 frozen 7422453 artifacts stay
+  exact. Thirteen concurrent planning files retain their baseline bytes outside
+  the owned six-line README insertion. Readers join; no Studio listener exists,
+  LAN remains offline and native Nyx chat tools remain absent. Final private
+  receipts/checkpoint own source/remote identity. No host/configuration retry,
+  protected mutation, cleanup/deletion/restart or approval bypass occurs.
+
+Retained preparations are not accepted evidence. The new test initially used
+wrong/missing imports and guessed completion method names; it now consumes the
+actual published contracts. Its first missing-ancestor oracle selected the outer
+scope one scalar before an empty body's EOF; the corrected exact caret exposed
+the same conditional-reader defect, which is fixed in product code. Qualified
+missing-module input now declares its uses dependency. The initial real RTL
+oracle expected Char resolution before seeing earlier unsupported module syntax;
+the exact retained origin establishes the next parser prerequisite instead. Its
+guard is preserved, not weakened into confident binding.
+
+The first browser companion compilation refused FPC-only declared() directives;
+the next exposed unavailable SizeOf. Those additional native compiler oracles
+are now explicitly scoped, preserving the inherited alias and runtime example
+on both source targets. Their final native/browser compiles and native whole-
+source execution use the exact final companion bytes. Earlier successful frozen
+product readers and the product tail remain accepted separately; ledgers select
+the corrected companion logs. This is not an uninterrupted all-preparations-green
+run, and browser execution is not inferred from native or compilation evidence.
+
+Next useful deliverable: hinted initialized variable declaration ranges through
+the existing parser/hint/linkage owner, beginning with the exact NoErrMsg source
+boundary. Preserve hint/initializer ownership, subsequent siblings and physical
+origins. Warning effects and the other actual syntax diagnostics keep their
+existing context/parser owners. Stop open-scope/ancestor/fixture/compiler/capture
+variants and reassess the remaining whole RTL/canonical type/incremental/editor/
+input/navigation/quality/parity/adoption/delivery requirements. No full criterion,
+task, counter, credit, DONE, schema or rollout closes; the original goal is active.
+
+## Earlier integration: Compiler bootstrap and authored alias identity — 2026-10-18
 
 Previous turn is progress: pushed ce5237a preserves native linkage/layout grammar
 and exposes actual source Char meaning. This batch follows that context/binding

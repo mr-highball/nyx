@@ -490,6 +490,16 @@ type
     function UnitVisible(const ASite: INyxPascalBindingSite; const AName: TNyxText): Boolean;
     function UsesObjPas(const ASite: INyxPascalBindingSite): TNyxPascalKnowledge;
     function CurrentClass(const ASite: INyxPascalBindingSite): INyxPascalBoundSymbol;
+    { Lookup through a validated open enclosing header, after exact prior lexical
+      members have been searched. Never constructs/adopts an incomplete receiver. }
+    function OpenScopeInherited(const AOwner: INyxPascalBoundSymbol;
+      const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
+    { Shared ancestor traversal owns a detached seed vector and recursion trail.
+      Unknown/inaccessible bases refuse the whole answer, preserving overloads. }
+    function InheritedMembers(const AOwner: INyxPascalBoundSymbol;
+      const ASite: INyxPascalBindingSite; const AName: TNyxText;
+      AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind;
+      const AOwn: array of INyxPascalBoundSymbol): INyxPascalResolution;
     function Descends(const AChild, AParent: INyxPascalBoundSymbol;
       out AUnresolved: Boolean): Boolean;
     function Access(const AMember, AOwner: INyxPascalBoundSymbol;
@@ -1808,17 +1818,50 @@ begin
     if (LSyntax.Scope(LScope).Kind = psskMembers) or
       ((LOwner >= 0) and (LSyntax.Declaration(LOwner).OwnerName <> '')) then
     begin
-      LClass := CurrentClass(ASite);
+      if LSyntax.Scope(LScope).Kind = psskMembers then
+      begin
+
+        if LOwner < 0 then
+        begin
+          Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+        end;
+        { Each nested member scope owns its own header. Reusing the innermost
+          CurrentClass while climbing would search that class repeatedly. }
+        LClass := FWorld.Symbol(ASite.ModuleIndex, LOwner);
+      end
+      else
+      begin
+        LClass := CurrentClass(ASite);
+      end;
 
       if LClass <> nil then
       begin
-        LClassType := TypeOfSymbol(InEnvironment(LClass, FEnvironment));
+        LClass := InEnvironment(LClass, FEnvironment);
 
-        if LClassType.Status <> pbsBound then
+        if psdfIncomplete in LClass.Declaration.Flags then
         begin
-          Exit(LClassType);
+          Result := OpenScopeInherited(LClass, ASite, AName);
+        end
+        else
+        begin
+          LClassType := TypeOfSymbol(LClass);
+
+          if LClassType.Status <> pbsBound then
+          begin
+            Exit(LClassType);
+          end;
+
+          if LSyntax.Scope(LScope).Kind = psskMembers then
+          begin
+            { Own lexical names were searched before this caret. A complete
+              receiver search would incorrectly donate later nested names. }
+            Result := InheritedMembers(LClass, ASite, AName, pmaInstance, pokNone, []);
+          end
+          else
+          begin
+            Result := Member(LClassType.BoundType, ASite, AName, pmaInstance);
+          end;
         end;
-        Result := Member(LClassType.BoundType, ASite, AName, pmaInstance);
 
         if Result.Status <> pbsMissing then
         begin
@@ -2976,7 +3019,15 @@ begin
         begin
           Exit(Answer(pbsUnresolved, pbiUnsupportedType));
         end;
-        Exit(BindNode(FWorld.At(AOwner.ModuleIndex, LDecl.Scope, LWindow.Start), LType, LType.Root));
+        LFound := BindNode(FWorld.At(AOwner.ModuleIndex, LDecl.Scope, LWindow.Start), LType, LType.Root);
+
+        if LFound.Status = pbsMissing then
+        begin
+          { A selected explicit ancestor exists syntactically. Failure to bind it
+            is not the end-of-base-list sentinel and cannot prove absence. }
+          Exit(Answer(pbsUnresolved, pbiMissingType, LLex.Slice(LWindow)));
+        end;
+        Exit(LFound);
       end;
       Inc(LCount);
       LStart := LAt + 1;
@@ -3137,6 +3188,172 @@ begin
   Result := ppkFalse;
 end;
 
+function TBindingQuery.OpenScopeInherited(const AOwner: INyxPascalBoundSymbol;
+  const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
+var
+  LView: INyxPascalTranslatedSyntax;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LScope: TNyxPascalSyntaxScope;
+  LAt: Integer;
+  LLast: TNyxPascalToken;
+begin
+  Tick;
+  LView := FWorld.ModuleAt(AOwner.ModuleIndex);
+  LSyntax := LView.Syntax;
+  LDeclaration := AOwner.Declaration;
+
+  if (AOwner.ModuleIndex <> ASite.ModuleIndex) or not LView.CompleteTranslation or
+    (LDeclaration.Kind <> psdkType) or
+    not (LDeclaration.TypeForm in [pstfClass, pstfInterface, pstfObject, pstfRecord]) or
+    (LDeclaration.NestedScope < 0) or
+    (LDeclaration.Flags * [psdfConditional, psdfUnsupported, psdfForward] <> []) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  end;
+  LScope := LSyntax.Scope(LDeclaration.NestedScope);
+
+  if LScope.Complete or (LScope.Kind <> psskMembers) or
+    (LScope.Span.Finish <> LSyntax.Lexical.Scalars) or
+    (ASite.Caret < LScope.Span.Start) or (ASite.Caret > LScope.Span.Finish) or
+    not SafeScope(AOwner.ModuleIndex, LDeclaration.NestedScope, ASite.Caret) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  end;
+  { A missing final END/semicolon at EOF does not obscure the earlier header.
+    Any actual earlier syntax error can obscure shadowing and must still refuse. }
+  for LAt := 0 to LSyntax.DiagnosticCount - 1 do
+  begin
+    Tick;
+
+    if (LSyntax.Diagnostic(LAt).Span.Start >= LDeclaration.NameSpan.Start) and
+      (LSyntax.Diagnostic(LAt).Span.Start < ASite.Caret) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    end;
+  end;
+
+  if LDeclaration.AncestorSpan.Length > 0 then
+  begin
+    LAt := LSyntax.Lexical.TokenAt(LDeclaration.AncestorSpan.Finish - 1);
+    LLast := LSyntax.Lexical.Token(LAt);
+    while (LAt > 0) and (LLast.Kind in [ptkWhitespace, ptkComment, ptkDirective]) do
+    begin
+      Tick;
+      Dec(LAt);
+      LLast := LSyntax.Lexical.Token(LAt);
+    end;
+
+    if (LLast.Kind <> ptkSymbol) or (LLast.Symbol <> psoCloseParen) or
+      (LLast.Span.Start < LDeclaration.AncestorSpan.Start) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    end;
+  end;
+  { Own members were searched at the caller's exact caret. Search only bases
+    now, so later members cannot be donated by a full-source receiver lookup. }
+  Result := InheritedMembers(AOwner, ASite, AName, pmaInstance, pokNone, []);
+end;
+
+function TBindingQuery.InheritedMembers(const AOwner: INyxPascalBoundSymbol;
+  const ASite: INyxPascalBindingSite; const AName: TNyxText;
+  AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind;
+  const AOwn: array of INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LSymbols: array of INyxPascalBoundSymbol;
+  LBase: INyxPascalResolution;
+  LSymbol: INyxPascalBoundSymbol;
+  LAt: Integer;
+  LCount: Integer;
+  LTrailCount: Integer;
+  LSeen: Integer;
+  LCompare: Integer;
+  LDuplicate: Boolean;
+begin
+  Tick;
+  LCount := Length(AOwn);
+
+  if LCount > FLimits.MaximumCandidates then
+  begin
+    raise ENyxPascalBindingLimit.Create('Inherited seed candidates exceed their query budget');
+  end;
+  SetLength(LSymbols, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    Tick;
+    LSymbols[LAt] := AOwn[LAt];
+  end;
+  LTrailCount := Length(FMembers);
+  for LAt := 0 to LTrailCount - 1 do
+  begin
+    Tick;
+
+    if SameSymbol(FMembers[LAt], AOwner) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiRecursiveType));
+    end;
+  end;
+  SetLength(FMembers, LTrailCount + 1);
+  FMembers[LTrailCount] := AOwner;
+  try
+    LAt := 0;
+    while True do
+    begin
+      LBase := Bases(AOwner, LAt);
+
+      if LBase.Status = pbsMissing then
+      begin
+        Break;
+      end;
+
+      if LBase.Status <> pbsBound then
+      begin
+        Exit(LBase);
+      end;
+      LBase := Member(LBase.BoundType, ASite, AName, AAccess, AOperator);
+
+      if LBase.Status in [pbsBound, pbsOverloads] then
+      begin
+        for LSeen := 0 to LBase.Count - 1 do
+        begin
+          Tick;
+          LSymbol := LBase.SymbolAt(LSeen);
+          LDuplicate := False;
+          for LCompare := 0 to LCount - 1 do
+          begin
+            Tick;
+
+            if SameBinding(LSymbols[LCompare], LSymbol) then
+            begin
+              LDuplicate := True;
+            end;
+          end;
+
+          if not LDuplicate then
+          begin
+
+            if LCount >= FLimits.MaximumCandidates then
+            begin
+              raise ENyxPascalBindingLimit.Create('Inherited member candidates exceed their query budget');
+            end;
+            SetLength(LSymbols, LCount + 1);
+            LSymbols[LCount] := LSymbol;
+            Inc(LCount);
+          end;
+        end;
+      end
+      else if LBase.Status <> pbsMissing then
+      begin
+        Exit(LBase);
+      end;
+      Inc(LAt);
+    end;
+    Result := SymbolAnswer(LSymbols);
+  finally
+    SetLength(FMembers, LTrailCount);
+  end;
+end;
+
 function TBindingQuery.Member(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite; const AName: TNyxText;
   AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
@@ -3145,11 +3362,8 @@ var
   LOwner: INyxPascalBoundSymbol;
   LScope: Integer;
   LFound: INyxPascalResolution;
-  LBase: INyxPascalResolution;
   LAt: Integer;
   LCount: Integer;
-  LTrailCount: Integer;
-  LSeen: Integer;
   LSymbol: INyxPascalBoundSymbol;
   LSymbols: array of INyxPascalBoundSymbol;
   LVisible: TNyxPascalKnowledge;
@@ -3259,64 +3473,7 @@ begin
     begin
       Exit(SymbolAnswer(LSymbols));
     end;
-    LTrailCount := Length(FMembers);
-    SetLength(FMembers, LTrailCount + 1);
-    FMembers[LTrailCount] := LOwner;
-    try
-      LAt := 0;
-      while True do
-      begin
-        LBase := Bases(LOwner, LAt);
-
-        if LBase.Status = pbsMissing then
-        begin
-          Break;
-        end;
-
-        if LBase.Status <> pbsBound then
-        begin
-          Exit(LBase);
-        end;
-        LBase := Member(LBase.BoundType, ASite, AName, AAccess, AOperator);
-
-        if LBase.Status in [pbsBound, pbsOverloads] then
-        begin
-          for LSeen := 0 to LBase.Count - 1 do
-          begin
-            LSymbol := LBase.SymbolAt(LSeen);
-            LVisible := ppkTrue;
-            for LScope := 0 to LCount - 1 do
-            begin
-
-              if SameBinding(LSymbols[LScope], LSymbol) then
-              begin
-                LVisible := ppkFalse;
-              end;
-            end;
-
-            if LVisible = ppkTrue then
-            begin
-
-              if LCount >= FLimits.MaximumCandidates then
-              begin
-                raise ENyxPascalBindingLimit.Create('Inherited member candidates exceed their query budget');
-              end;
-              SetLength(LSymbols, LCount + 1);
-              LSymbols[LCount] := LSymbol;
-              Inc(LCount);
-            end;
-          end;
-        end
-        else if LBase.Status <> pbsMissing then
-        begin
-          Exit(LBase);
-        end;
-        Inc(LAt);
-      end;
-      Result := SymbolAnswer(LSymbols);
-    finally
-      SetLength(FMembers, LTrailCount);
-    end;
+    Result := InheritedMembers(LOwner, ASite, AName, AAccess, AOperator, LSymbols);
   finally
     Leave;
   end;
