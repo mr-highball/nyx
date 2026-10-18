@@ -1079,6 +1079,16 @@ are strongly typed, independent copies. Unknown is distinct from Default or C;
 the latter preserve target/mode intent without supplying an invented ABI size,
 field offset or procedural-type compatibility result.
 
+Set packing is separately typed as `TNyxPascalSetPacking`. `PackSets` retains
+one/two/four/eight-byte allocation granularity or the explicit historical Fixed
+policy; it does not calculate a set's size. `RequestSmartLinking` records a
+module-level request independently of effective linker support/output. The
+reader handles PACKSET, SMARTLINK ON/OFF and the CLASS mode feature. Unknown
+conditional writes revoke only their captured knowledge. POP restores local set
+packing while preserving module-link intent and global class features. A source
+mode reset revokes packing and retains link intent. Actual compiler input checks
+set packing before/inside/after POP; broader ABI and directive placement stay open.
+
 ```pascal
 LContext := NyxPascalWithCompilerPolicies(LContext,
   TNyxPascalCompilerPolicies.Unknown
@@ -1630,6 +1640,33 @@ expression meaning, dependency invalidation/caching, measured project-scale work
 default Studio adoption and complete input/navigation/quality/parity/delivery
 remain required. This directory capture is source input preparation, not browser
 rendering, HTTP execution, source admission or an observing release.
+
+## Actual Windows namespace capture
+
+`TNyxPascalDirectoryOptions.OnlyFile` selects one exact checked Pascal source
+leaf inside the explicitly supplied native directory. It retains original bytes
+and the ordinary header/module/encoding/read-lease contracts without reading or
+indexing other files. Enumeration, payload and cancellation budgets still apply.
+An absent leaf refuses atomically; recursive selection and directory paths refuse.
+This prepares explicit inputs, not an implicit filesystem dependency search.
+
+The configured Win32 SDK consumer captures the whole Windows root and wininc
+directory, then selects its two actual shared RTL includes. Forty-seven explicit
+compiler queries leave the future define set open. The unchanged 28-file capture
+translates all 498,239 tokens across 23 include visits with zero translation
+diagnostics. Its recoverable syntax contains 7,652 declarations and 110 grammar
+diagnostics; this does not establish complete namespace/type meaning.
+
+The same capture feeds ordinary indexed completion with its explicit per-unit
+context/options. The real Windows root loads once beside the consumer, then
+refuses with typed unsupported-scope metadata. It no longer reports an uncaptured
+Windows unit or obtains members from export stubs. Handwritten compiled input
+separately executes the real `Windows.TSystemTime.wYear` member; it does not prove
+resolver completion. The first retained grammar diagnostics concern procedural
+type declaration boundaries around trailing calling directives. Full remaining
+grammar, actual implicit System/ObjPas scope and SysUtils's six semantic
+conditions remain original authoring prerequisites. WORK.md owns current receipts,
+retained failures and the return path; browser evidence remains compilation only.
 
 ## Replaceable Pascal completion providers
 

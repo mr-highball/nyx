@@ -31,7 +31,7 @@ uses SysUtils;
 
 {$R-}{$Q-}{$H+}{$macro on}{$scopedenums off}
 {$define RETAINED_VALUE:=11}
-{$packrecords 1}{$packenum 1}{$calling cdecl}
+{$packrecords 1}{$packenum 1}{$packset 1}{$calling cdecl}
 type
   { This grammar remains enabled after POP because the mode switch is global. }
   TNestedCallback = procedure is nested;
@@ -42,12 +42,14 @@ type
   end;
   { Enumeration storage before the settings frame. }
   TBeforeEnum = (BeforeValue);
+  { One-bit set before the local settings frame. }
+  TBeforeSet = set of 0..0;
   { A compiler-checked cdecl signature, independent of the ambient default. }
   TCdeclProc = procedure; cdecl;
   { A compiler-checked stdcall signature for the nested default. }
   TStdCallProc = procedure; stdcall;
 {$push}
-{$R+}{$Q+}{$H-}{$inline on}{$packrecords 8}{$packenum 4}{$calling stdcall}
+{$R+}{$Q+}{$H-}{$inline on}{$packrecords 8}{$packenum 4}{$packset 8}{$calling stdcall}
 {$scopedenums on}
 {$define RETAINED_VALUE:=13}
 type
@@ -58,6 +60,8 @@ type
   end;
   { Local minimum enumeration width is four bytes. }
   TInsideEnum = (InsideValue);
+  { The compiler allocates the inner set with eight-byte granularity. }
+  TInsideSet = set of 0..0;
 
 procedure Inside;
 begin
@@ -76,6 +80,8 @@ type
   end;
   { Enum packing and unscoped-name policy after the frame. }
   TAfterEnum = (AfterValue);
+  { POP must restore the original one-byte set policy. }
+  TAfterSet = set of 0..0;
 
 procedure After;
 begin
@@ -105,6 +111,9 @@ begin
   Check(SizeOf(TBeforeEnum) = 1);
   Check(SizeOf(TInsideEnum) = 4);
   Check(SizeOf(TAfterEnum) = 1);
+  Check(SizeOf(TBeforeSet) = 1);
+  Check(SizeOf(TInsideSet) = 8);
+  Check(SizeOf(TAfterSet) = 1);
   LEnum := AfterValue;
   Check(LEnum = AfterValue);
   LCdecl := @After;

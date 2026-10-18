@@ -935,7 +935,8 @@ begin
   { Only mode defaults already independently compiler-qualified are restored.
     Neither version capability macros nor this analyzer's build enables closures. }
   LCaptured := LCaptured.WithFeature(ppfNestedComments, ppkFalse)
-    .WithFeature(ppfUnicodeStrings, ppkFalse).WithFeature(ppfOutParameters, ppkFalse);
+    .WithFeature(ppfUnicodeStrings, ppkFalse).WithFeature(ppfOutParameters, ppkFalse)
+    .WithFeature(ppfClasses, ppkFalse);
 
   if FProbe.Mode in [ppmFPC, ppmObjFPC] then
   begin
@@ -949,7 +950,8 @@ begin
 
   if FProbe.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode] then
   begin
-    LCaptured := LCaptured.WithFeature(ppfOutParameters, ppkTrue);
+    LCaptured := LCaptured.WithFeature(ppfOutParameters, ppkTrue)
+      .WithFeature(ppfClasses, ppkTrue);
   end;
   for LAt := 0 to High(FSizes) do
   begin

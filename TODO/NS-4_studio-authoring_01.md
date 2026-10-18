@@ -40,6 +40,17 @@ prefix/replay/fixture variants after qualification and follow that actual
 dependency under the existing SDK/compiler/language owners. Full criterion two,
 incremental budgets, adoption/input/navigation/quality/parity/delivery stay open.
 
+Actual-SDK continuation: 39b04d1 is progress without closing criterion two.
+The current batch captures the complete real Windows input, including selected
+shared includes, and feeds its ordinary indexed loader through typed header
+policies. The documented unclosed lower bound is now at least seven, with prior
+evidence retained. Complete translation reaches a genuine procedural-type grammar
+prerequisite; 110 recovered syntax diagnostics are not successful type meaning.
+Stop header/capture/fixture variants after qualification and follow the first
+actual declaration-boundary failure under the existing parser/binder owner, then
+reassess the remaining actual SDK/System/ObjPas/SysUtils dependencies. Full
+language/incremental/adoption/input/navigation/quality/parity/delivery stay open.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

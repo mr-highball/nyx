@@ -202,6 +202,44 @@ begin
     end;
   end;
   Check(LRejected, 'Unsupported source encoding refuses without silently rewriting captured bytes');
+  LCapture := CaptureNyxPascalSourceDirectory(ADirectory, LSeed, LModules,
+    TNyxPascalDirectoryOptions.Defaults.Under('selected').OnlyFile(CUnicodeLeaf));
+  Check((LCapture.Files.Count = 1) and (LCapture.Modules.Count = 1) and
+    (LCapture.Files.TextAt(0) = CUnit) and (LSeed.Count = 0),
+    'One Unicode source leaf is captured exactly without reading an unrelated invalid byte file');
+  LRejected := False;
+  LCapture := nil;
+  try
+    LCapture := CaptureNyxPascalSourceDirectory(ADirectory, LSeed, LModules,
+      TNyxPascalDirectoryOptions.Defaults.OnlyFile('absent.inc'));
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LCapture = nil) and (LSeed.Count = 0) and (LModules.Count = 0),
+    'An absent selected leaf refuses without publishing a misleading empty capture or changing seeds');
+  LRejected := False;
+  try
+    TNyxPascalDirectoryOptions.Defaults.OnlyFile('child/extra.pas');
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'A selected source is a leaf rather than a hidden traversal path');
+  LRejected := False;
+  try
+    TNyxPascalDirectoryOptions.Defaults.OnlyFile(CUnicodeLeaf).Recursively;
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'Single-leaf selection and recursive directory capture refuse contradictory intent');
 end;
 
 procedure ActualSDK(const ARepository: TNyxText);

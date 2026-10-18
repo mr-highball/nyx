@@ -37,7 +37,8 @@ type
   { Copied native capture policy, separate from application compilation and
     portable source admission. Prefix is virtual; the real directory is supplied
     only to Capture. Budgets include seed files, not just newly read entries.
-    Recursion is explicit and bounded; links inside the directory refuse. }
+    Recursion is explicit and bounded; selected links refuse. An optional exact
+    leaf selection reads/indexes only that file and requires it to be present. }
   TNyxPascalDirectoryOptions = record
   private
     FDefined: Boolean;
@@ -50,10 +51,15 @@ type
     FEntries: Integer;
     FTranslation: TNyxPascalTranslationOptions;
     FSourcePolicy: TNyxPascalSourceCapturePolicy;
+    FOnlyFile: TNyxText;
   public
     class function Defaults: TNyxPascalDirectoryOptions; static;
     function Under(const APrefix: TNyxText): TNyxPascalDirectoryOptions;
     function Recursively(AValue: Boolean = True): TNyxPascalDirectoryOptions;
+    { Select one checked .pas/.pp/.inc leaf in this explicit directory. Other
+      files are never read/indexed. Missing selection refuses; recursion and
+      single-file selection are mutually exclusive. Enumeration stays bounded. }
+    function OnlyFile(const AName: TNyxText): TNyxPascalDirectoryOptions;
     function UpToFiles(AValue: Integer): TNyxPascalDirectoryOptions;
     function UpToBytes(AValue: Integer): TNyxPascalDirectoryOptions;
     function UpToDepth(AValue: Integer): TNyxPascalDirectoryOptions;
@@ -106,6 +112,7 @@ type
     FUnindexed: array of TNyxPascalPhysicalFile;
     FOptions: TNyxPascalDirectoryOptions;
     FVisited: Integer;
+    FSelected: Boolean;
     procedure Check(const ACancellation: INyxCancellationScope);
     function Read(const APath: TNyxText;
       const ACancellation: INyxCancellationScope): INyxPascalSourceBytes;
@@ -135,6 +142,7 @@ begin
   Result.FEntries := 65536;
   Result.FTranslation := TNyxPascalTranslationOptions.Defaults;
   Result.FSourcePolicy := pscpStrictUTF8;
+  Result.FOnlyFile := '';
 end;
 
 procedure TNyxPascalDirectoryOptions.Validate;
@@ -153,10 +161,33 @@ begin
   end;
   FTranslation.Validate;
 
+  if FRecursive and (FOnlyFile <> '') then
+  begin
+    raise ENyxPascalContext.Create('Single-file source capture cannot recurse');
+  end;
+
   if not (FSourcePolicy in [pscpStrictUTF8, pscpUTF8ViewsWithOpaqueBytes]) then
   begin
     raise ENyxPascalContext.Create('The source capture policy is outside its closed choices');
   end;
+end;
+
+function TNyxPascalDirectoryOptions.OnlyFile(const AName: TNyxText): TNyxPascalDirectoryOptions;
+var
+  LFile: TNyxPascalPhysicalFile;
+  LExtension: TNyxText;
+begin
+  LFile := NyxPascalPhysicalFile(AName);
+  LExtension := NyxPascalASCIIKey(ExtractFileExt(LFile.Name));
+
+  if (Pos('/', LFile.Name) > 0) or
+    ((LExtension <> '.pas') and (LExtension <> '.pp') and (LExtension <> '.inc')) then
+  begin
+    raise ENyxPascalContext.Create('Select one Pascal source leaf without a directory');
+  end;
+  Result := Self;
+  Result.FOnlyFile := LFile.Name;
+  Result.Validate;
 end;
 
 function TNyxPascalDirectoryOptions.Under(const APrefix: TNyxText): TNyxPascalDirectoryOptions;
@@ -492,6 +523,11 @@ begin
     for LAt := 0 to LNames.Count - 1 do
     begin
       Check(ACancellation);
+
+      if (FOptions.FOnlyFile <> '') and (LNames[LAt] <> FOptions.FOnlyFile) then
+      begin
+        Continue;
+      end;
       LPath := IncludeTrailingPathDelimiter(ADirectory) + LNames[LAt];
       LRelative := ARelative + LNames[LAt];
 
@@ -522,6 +558,7 @@ begin
         LVirtual := FOptions.FPrefix + '/' + LRelative;
       end;
       LFile := NyxPascalPhysicalFile(LVirtual);
+      FSelected := True;
 
       if (FFiles.Find(LFile) < 0) and (FFiles.Count >= FOptions.FFiles) then
       begin
@@ -634,6 +671,11 @@ begin
     raise ENyxPascalContext.Create('A source directory must be explicit, existing and unlinked');
   end;
   Walk(LDirectory, '', 1, LFacts, ACancellation);
+
+  if (FOptions.FOnlyFile <> '') and not FSelected then
+  begin
+    raise ENyxPascalContext.Create('The selected Pascal source file is absent');
+  end;
   FModules := CaptureNyxPascalModules(FModules, FFiles);
 end;
 

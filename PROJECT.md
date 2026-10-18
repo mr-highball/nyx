@@ -72,6 +72,12 @@ prefixes and checked replay. Ordinary owned/indexed completion consumes this
 bounded refinement with exact source preservation. Full RTL import/layout/
 grammar meaning, target coherence and ordinary editor adoption remain open.
 
+The [actual Windows capture](docs/pascal-projects.md#actual-windows-namespace-capture)
+now reaches ordinary indexed completion through exact source selection and typed
+header policies. Complete translation exposes the real procedural-type grammar
+prerequisite; recovered declarations do not establish full SDK meaning. Native
+evidence and browser compilation remain separate in WORK.md.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

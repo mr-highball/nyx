@@ -47,7 +47,7 @@ type
   TNyxPascalLanguageFeature = (ppfAdvancedRecords, ppfNestedProcVars,
     ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
     ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings, ppfOutParameters,
-    ppfReplacementMacros);
+    ppfReplacementMacros, ppfClasses);
   { Symbolic record policy, not a computed ABI layout. Default and C retain
     target-dependent intent; an unknown policy never supplies guessed offsets. }
   TNyxPascalRecordAlignment = (praUnknown, praDefault, praC,
@@ -55,6 +55,9 @@ type
   { Minimum enum storage, distinct from an enumeration's actual required size.
     Default retains mode/target intent until the compiler context resolves it. }
   TNyxPascalEnumStorage = (pesUnknown, pesDefault, pes1, pes2, pes4);
+  { Declared set-allocation granularity. Fixed retains the compiler's historical
+    small/large-set policy; these values do not compute any target set layout. }
+  TNyxPascalSetPacking = (pspUnknown, pspFixed, psp1, psp2, psp4, psp8);
   { Declared default convention only. Recording it proves neither target support
     nor binary compatibility between two procedural types. }
   TNyxPascalCallingConvention = (pccUnknown, pccDefault, pccRegister,
@@ -64,7 +67,7 @@ type
   TNyxPascalLocalSwitch = (plsBooleanEvaluation, plsAssertions, plsLongStrings,
     plsIOChecks, plsWritableConstants, plsOverflowChecks, plsRangeChecks,
     plsStackChecks, plsTypedAddress, plsVarStrings, plsStackFrames);
-  { Value-owned local compiler policies, independent of renderer/ABI types.
+  { Value-owned local and module policies, independent of renderer/ABI types.
     Zero initialization means unknown. Fluent copies retain exact symbolic
     values; they never infer a compiler's defaults or target capabilities. }
   TNyxPascalCompilerPolicies = record
@@ -72,19 +75,27 @@ type
     FInlining: TNyxPascalKnowledge;
     FRecords: TNyxPascalRecordAlignment;
     FEnums: TNyxPascalEnumStorage;
+    FSets: TNyxPascalSetPacking;
     FCalling: TNyxPascalCallingConvention;
+    FSmartLinking: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     function AlignRecords(AValue: TNyxPascalRecordAlignment): TNyxPascalCompilerPolicies;
     function StoreEnums(AValue: TNyxPascalEnumStorage): TNyxPascalCompilerPolicies;
+    function PackSets(AValue: TNyxPascalSetPacking): TNyxPascalCompilerPolicies;
     function CallBy(AValue: TNyxPascalCallingConvention): TNyxPascalCompilerPolicies;
+    { Module-level request; neither PUSH/POP nor a source mode change restores
+      it. This records intent, not linker availability or the effective output. }
+    function RequestSmartLinking(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
     property RecordAlignment: TNyxPascalRecordAlignment read FRecords;
     property EnumStorage: TNyxPascalEnumStorage read FEnums;
+    property SetPacking: TNyxPascalSetPacking read FSets;
     property CallingConvention: TNyxPascalCallingConvention read FCalling;
+    property SmartLinkingRequested: TNyxPascalKnowledge read FSmartLinking;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -469,7 +480,7 @@ type
     Number: Integer;
   end;
   { Owns value-only request vectors for a single expression. Unsupported syntax
-    clears both vectors; checked getters cannot expose mutable backing storage. }
+    clears all vectors; checked getters cannot expose mutable backing storage. }
   TConditionNeeds = class(TInterfacedObject, INyxPascalConditionNeeds, INyxPascalConditionDeclarations)
   private
     FSupported: Boolean;
@@ -844,7 +855,8 @@ begin
   begin
     SetLength(LCopy.FSizes, 0);
   end;
-  LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown;
+  LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown
+    .RequestSmartLinking(FPolicies.SmartLinkingRequested);
   for LAt := 0 to High(LCopy.FOptions) do
   begin
     LCopy.FOptions[LAt] := ppkUnknown;
@@ -1185,6 +1197,10 @@ begin
     (Ord(FRecords) > Ord(High(TNyxPascalRecordAlignment))) or
     (Ord(FEnums) < Ord(Low(TNyxPascalEnumStorage))) or
     (Ord(FEnums) > Ord(High(TNyxPascalEnumStorage))) or
+    (Ord(FSets) < Ord(Low(TNyxPascalSetPacking))) or
+    (Ord(FSets) > Ord(High(TNyxPascalSetPacking))) or
+    (Ord(FSmartLinking) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FSmartLinking) > Ord(High(TNyxPascalKnowledge))) or
     (Ord(FCalling) < Ord(Low(TNyxPascalCallingConvention))) or
     (Ord(FCalling) > Ord(High(TNyxPascalCallingConvention))) then
   begin
@@ -1213,6 +1229,20 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPolicies.PackSets(AValue: TNyxPascalSetPacking): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FSets := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.RequestSmartLinking(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FSmartLinking := AValue;
+  Result.Validate;
+end;
+
 function TNyxPascalCompilerPolicies.CallBy(AValue: TNyxPascalCallingConvention): TNyxPascalCompilerPolicies;
 begin
   Result := Self;
@@ -1225,7 +1255,8 @@ begin
   Validate;
   AOther.Validate;
   Result := (FInlining = AOther.FInlining) and (FRecords = AOther.FRecords) and
-    (FEnums = AOther.FEnums) and (FCalling = AOther.FCalling);
+    (FEnums = AOther.FEnums) and (FSets = AOther.FSets) and
+    (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking);
 end;
 
 function TCompilerContext.Policies: TNyxPascalCompilerPolicies;
@@ -1321,7 +1352,8 @@ begin
   end;
   LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
   Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
-  Result := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved));
+  Result := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
+    .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested));
 end;
 
 function UnknownValue: TConditionValue;

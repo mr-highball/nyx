@@ -28,6 +28,12 @@ Compiler-backed whole-source evidence and the retained actual RTL import gap
 stay in WORK.md; full language/SDK/layout/incremental/adoption/parity/delivery
 remain under original authoring criterion two.
 
+The [actual Windows namespace capture](../docs/pascal-projects.md#actual-windows-namespace-capture)
+now feeds whole original SDK input into ordinary indexed completion. Translation
+passes while real procedural-type grammar still refuses; WORK.md owns the exact
+distinction and retained failures. Full language/SDK/incremental/adoption/parity/
+delivery remain under original authoring criterion two.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

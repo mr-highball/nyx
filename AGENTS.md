@@ -4,7 +4,27 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source ordered semantic conditions use exact frozen prefixes and checked
+Current-source actual Windows input uses typed set-packing, module smart-link
+request and class-feature capture, plus native OnlyFile source selection. Native
+policy/oracle/capture/Windows checks pass 47/12/26/9; whole unchanged SDK input
+translates 498,239 tokens/23 visits with zero translation diagnostics. Recovered
+syntax has 7,652 declarations/110 diagnostics. Ordinary indexed completion loads
+the real Windows root once and retains pcgBinding/pbiUnsupportedScope, two modules/
+one load; this is not completed SDK meaning or a resolver suggestion. Maintained
+24/34/209/41/10/48/86/84/74 pass; thirteen native consumers have clean heaps. Twenty
+accepted logs have zero owned warnings (28 upstream); three browser consumers and
+both Studios/backend/worker compile only as applicable. Eight focused/621 complete
+src+studio/97 original RTL/three compiler pins, 48 include packets, five protected
+files/nine contexts and 349 frozen 7422453 artifacts stay exact. Readers join; LAN
+stays offline. WORK.md owns retained consumer/lexical/include/receipt failures,
+source/remote identity and the next actual procedural-type directive boundary
+under existing parser/binder owners. At least seven documented unclosed batches
+retain full criterion two; no original criterion/task/counter/credit/DONE/tool/
+schema/adoption/parity/delivery closes. Stop header/capture/fixture variants. No
+HTTP retry, protected mutation, cleanup/deletion/restart bypass or sub-agents.
+Preserve concurrent planning files.
+
+Earlier ordered semantic conditions use exact frozen prefixes and checked
 site/expression/context replay. Typed declared/sizeof meaning follows the ordinary
 binder; missing imports/layout/measurements remain unknown. Owned/indexed completion
 charges full pass/prefix work and revisits supplied roots without a root-order

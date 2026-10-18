@@ -1218,7 +1218,7 @@ function FeatureNamed(const AName: TNyxText; out AFeature: TNyxPascalLanguageFea
 const
   CNames: array[TNyxPascalLanguageFeature] of TNyxText =
     ('advancedrecords', 'nestedprocvars', 'anonymousfunctions', 'functionreferences',
-      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '');
+      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '', 'class');
 var
   LFeature: TNyxPascalLanguageFeature;
 begin
@@ -1333,6 +1333,33 @@ begin
   Result := pccUnknown;
 end;
 
+{ FPC's accepted set-packing spellings denote intent, not computed byte size. }
+function SetPackingNamed(const AValue: TNyxText): TNyxPascalSetPacking;
+begin
+  Result := pspUnknown;
+
+  if (AValue = 'fixed') or (AValue = 'default') or (AValue = 'normal') then
+  begin
+    Result := pspFixed;
+  end
+  else if AValue = '1' then
+  begin
+    Result := psp1;
+  end
+  else if AValue = '2' then
+  begin
+    Result := psp2;
+  end
+  else if AValue = '4' then
+  begin
+    Result := psp4;
+  end
+  else if AValue = '8' then
+  begin
+    Result := psp8;
+  end;
+end;
+
 procedure TTranslation.Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
@@ -1350,6 +1377,7 @@ var
   LPolicies: TNyxPascalCompilerPolicies;
   LAlignment: TNyxPascalRecordAlignment;
   LStorage: TNyxPascalEnumStorage;
+  LSetPacking: TNyxPascalSetPacking;
   LCalling: TNyxPascalCallingConvention;
   LSwitch: TNyxPascalLocalSwitch;
   LSaved: TSavedCompilerSettings;
@@ -1585,6 +1613,53 @@ begin
       Exit;
     end;
 
+    if LName = 'packset' then
+    begin
+      LSetPacking := SetPackingNamed(NyxPascalASCIIKey(LValue));
+
+      if LSetPacking = pspUnknown then
+      begin
+        raise ENyxPascalContext.Create('This set packing needs a supported explicit value');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LSetPacking := pspUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).PackSets(LSetPacking));
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'smartlink' then
+    begin
+      LArgument := NyxPascalASCIIKey(LValue);
+      LCondition := ppkUnknown;
+
+      if LArgument = 'on' then
+      begin
+        LCondition := ppkTrue;
+      end
+      else if LArgument = 'off' then
+      begin
+        LCondition := ppkFalse;
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('Smart linking needs on or off');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LCondition := ppkUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).RequestSmartLinking(LCondition));
+      SaveState;
+      Exit;
+    end;
+
     if LName = 'calling' then
     begin
       LCalling := CallingNamed(NyxPascalASCIIKey(LValue));
@@ -1776,7 +1851,8 @@ begin
             remain unknown until explicitly captured or switched in source. }
           FContext := FContext.WithOption('H', ppkFalse)
             .WithFeature(ppfUnicodeStrings, ppkFalse)
-            .WithFeature(ppfOutParameters, ppkFalse);
+            .WithFeature(ppfOutParameters, ppkFalse)
+            .WithFeature(ppfClasses, ppkFalse);
 
           if LMode in [ppmDelphi, ppmDelphiUnicode] then
           begin
@@ -1790,7 +1866,8 @@ begin
 
           if LMode in [ppmDelphi, ppmDelphiUnicode, ppmObjFPC] then
           begin
-            FContext := FContext.WithFeature(ppfOutParameters, ppkTrue);
+            FContext := FContext.WithFeature(ppfOutParameters, ppkTrue)
+              .WithFeature(ppfClasses, ppkTrue);
           end;
           FContext := FContext.WithSymbol(NyxPascalDefine('FPC_DELPHI'), ppdUndefined)
             .WithSymbol(NyxPascalDefine('FPC_OBJFPC'), ppdUndefined)

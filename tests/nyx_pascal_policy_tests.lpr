@@ -296,12 +296,56 @@ begin
   Check(LRejected and (LSource = nil), 'Stack-only state transitions cannot bypass the retained-state budget');
 end;
 
+procedure SetAndModulePolicies;
+var
+  LSource: INyxPascalTranslation;
+  LBefore: INyxPascalCompilerContext;
+  LPolicies: TNyxPascalCompilerPolicies;
+begin
+  LBefore := NyxPascalWithCompilerPolicies(Facts,
+    TNyxPascalCompilerPolicies.Unknown.PackSets(psp1).RequestSmartLinking(ppkFalse));
+  Check(CaptureNyxPascalCompilerContext(LBefore).SameFacts(LBefore),
+    'Set allocation and smart-link intent survive detached context capture');
+  Check(not LBefore.SameFacts(NyxPascalWithCompilerPolicies(LBefore,
+    NyxPascalCompilerPolicies(LBefore).PackSets(psp8))),
+    'Set packing participates in compiler context identity');
+  LPolicies := NyxPascalCompilerPolicies(LBefore.InMode(ppmObjFPC));
+  Check((LPolicies.SetPacking = pspUnknown) and
+    (LPolicies.SmartLinkingRequested = ppkFalse),
+    'Mode reset revokes local packing while retaining the module-level link request');
+  LSource := Translate('unit Main; interface {$packset 1}{$smartlink off}' +
+    '{$push}{$packset 8}{$smartlink on}{$modeswitch class-} type TInside=Byte;' +
+    '{$pop} type TAfter=Byte; implementation end.');
+  Check(LSource.Resolved, 'Supported set/module policies do not poison later source participation');
+  LPolicies := NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'TInside')));
+  Check((LPolicies.SetPacking = psp8) and (LPolicies.SmartLinkingRequested = ppkTrue),
+    'The inner settings frame retains both exact authored policies');
+  LPolicies := NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'TAfter')));
+  Check((LPolicies.SetPacking = psp1) and (LPolicies.SmartLinkingRequested = ppkTrue) and
+    (LSource.State(StateAt(LSource, 'TAfter')).Feature(ppfClasses) = ppkFalse),
+    'POP restores set packing while preserving global class and module-link intent');
+  LSource := Translate('unit Main; {$mode objfpc} interface type TAfter=class end; implementation end.');
+  Check(LSource.Resolved and
+    (LSource.State(StateAt(LSource, 'TAfter')).Feature(ppfClasses) = ppkTrue),
+    'Supported FPC object mode captures its class-model default');
+  LSource := Translate('unit Main; interface {$if defined(UNKNOWN)}{$packset 2}' +
+    '{$smartlink on}{$endif} type TAfter=Byte; implementation end.');
+  LPolicies := NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'TAfter')));
+  Check(not LSource.Resolved and (LPolicies.SetPacking = pspUnknown) and
+    (LPolicies.SmartLinkingRequested = ppkUnknown),
+    'Conditional set/link changes retain uncertainty');
+  LSource := Translate('unit Main; interface {$packset 16} type TAfter=Byte; implementation end.');
+  Check(not LSource.Resolved and (LSource.DiagnosticCount = 1),
+    'Unsupported set allocation refuses without accepting a guessed layout');
+end;
+
 begin
   try
     ValuesAndRestore;
     SourceScopes;
     AliasesAndRefusals;
     Budgets;
+    SetAndModulePolicies;
     WriteLn('PASS ', GChecks, ' typed compiler policy checks');
   except
     on LError: Exception do

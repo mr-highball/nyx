@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered source-scope conditions — 2026-10-18
+## Current integration: Actual Windows SDK input — 2026-10-18
+
+Previous turn is progress: pushed 39b04d1 integrates ordered semantic conditions
+into ordinary owned/indexed completion. This continuation follows the retained
+actual Windows import prerequisite under original authoring criterion two.
+The documented consecutive unclosed lower bound is now at least seven batches;
+older evidence remains retained. Full fresh MIT Nyx-owned resolver scope,
+incremental/project-scale budgets, ordinary Studio adoption and complete input/
+navigation/quality/parity/delivery remain required. No original criterion/task/
+counter/credit/DONE, tool/schema or rollout closes. Solo; no HTTP/browser/file-
+protocol execution/capture, protected mutation, cleanup/deletion/restart or
+approval bypass occurs. New build/evidence stays on the provisioned scratch
+drive; concurrent milestone/reference/browser-compiler planning remains separate.
+
+The actual Windows header needs typed PACKSET, SMARTLINK and CLASS facts.
+TNyxPascalSetPacking records explicit allocation granularity or Fixed intent,
+without computing a layout. Module smart-link request is independent of effective
+linker support; it survives source mode reset and local POP. Set packing restores
+locally and becomes unknown after an uncaptured mode default. Class feature
+capture follows supported FPC object-mode defaults/explicit source switches;
+global mode features survive POP. Unknown writes and invalid values retain the
+ordinary refusal contract. Existing interfaces/GUIDs stay intact.
+
+Native source capture now supports typed OnlyFile selection in an explicit
+directory. It reads/indexes one exact checked Pascal leaf, retaining original
+bytes, Unicode paths, encoding policy, read leases and budgets. Missing selection
+refuses atomically; paths and recursive selection refuse. This does not add an
+implicit filesystem dependency search or read unrelated source contents.
+
+Accepted composite evidence is in the ignored windows-sdk-20261018-041833 packet,
+located by .local/windows-sdk-paths-private.json:
+
+- Forty-seven native policy checks cover copied context identity, local set
+  restoration, module/global persistence, conditional uncertainty and refusal.
+  The independent configured native oracle passes twelve checks, including actual
+  one/eight/one-byte sets before/inside/after POP. These concrete observations
+  do not establish another target's ABI or effective smart-link output.
+- Native directory/SDK capture passes 26 checks, including selecting a Unicode
+  source beside an unrelated invalid byte file, absent-leaf atomic refusal and
+  contradictory/path selection refusal. The previous broad directory contracts
+  remain exercised. Exact source selection never changes the input seeds.
+- Nine actual Windows checks capture its complete root/wininc directory and two
+  selected shared RTL includes: 28 files/10 modules, 47 explicit compiler-symbol
+  queries, 498,239 translated tokens/23 visits and zero translation diagnostics.
+  The future define set remains open. Recoverable syntax contains 7,652
+  declarations and 110 diagnostics; this is not complete export/type meaning.
+  Whole-source indexed completion loads Windows once beside its consumer, then
+  retains pcgBinding/pbiUnsupportedScope, two modules/one dependency load. It
+  advances past the missing-unit boundary without stubs or source rewriting.
+  Separate handwritten compiled input executes Windows.TSystemTime.wYear;
+  that compiler observation is not a successful resolver suggestion.
+- Maintained native trace/target-request/translation/mode/conditional checks pass
+  24/34/209/41/10; indexed dependencies/owned completion pass 48/86. Production
+  in-process semantic completion and actual configured profile checks pass 84/74.
+  The latter retain their independent compiler/cancellation/deadline ownership
+  and original SysUtils frontier. Counts overlap earlier evidence. All thirteen
+  accepted native consumers have clean heaps.
+- Twenty accepted compiler logs have zero owned warnings and 28 upstream pas2js
+  RTL warnings. Three browser consumers, both Studios, backend and worker compile
+  as applicable. Browser products/consumers execute nowhere in this checkpoint;
+  no HTTP/authenticated/observing/input or installed-schema claim follows.
+- Eight focused pins, all 621 src/studio Pascal/include files, 97 original RTL
+  inputs and three configured compiler inputs stay exact after readers. All 48
+  exported SysUtils include packets match original bytes. Five protected files/
+  nine complete contexts and all 349 frozen 7422453 artifacts remain exact. All
+  compiler/readers join; no Studio listener remains and LAN stays offline. The
+  accepted compiler/native/input/include/protected receipts and final checkpoint
+  own source/remote identity. Native Nyx chat tools remain absent; no host retry
+  occurs to refresh them.
+
+Retained preparation failures do not count as accepted evidence: the native SDK
+consumer first omitted explicit context factory arguments, selected the wrong
+lexical setter and omitted its scalar-coordinate unit. A known ObjFPC comment
+policy/default-option mismatch refused before source traversal, then was supplied
+explicitly. Actual traversal discovered two omitted shared includes in struct.inc;
+both original inputs are now captured selectively after inspecting the whole
+include list. Native fixtures and final readers use separate fresh output.
+An initial receipt wrapper misread a stale shell LASTEXITCODE after successful
+PowerShell hashing; terminal logs/receipts and direct guards verify the result.
+No failed preparation output is promoted to an uninterrupted green run.
+
+Next useful deliverable: fix actual procedural type declaration boundaries around
+trailing calling directives (the first retained base.inc grammar failures), then
+reassess the remaining 110 actual Windows syntax issues through the existing
+parser/binder owner. Return to real System/ObjPas/SDK scope and SysUtils's six
+semantic conditions, then full language/canonical/expression meaning, incremental
+budgets and ordinary editor/input/navigation/quality/parity/delivery. Stop header/
+capture/fixture variants. No user decision is missing; the fresh Nyx-owned resolver
+direction remains authoritative.
+
+## Earlier integration: Ordered source-scope conditions — 2026-10-18
 
 Previous turn is progress: pushed eaa136e supplies compiler scope lookup and
 intrinsic identity. This batch connects that prerequisite to ordinary owned/
