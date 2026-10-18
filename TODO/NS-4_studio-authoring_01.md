@@ -30,9 +30,12 @@ encode numeric row ordinals as text and traverse/rebuild the mixed-key AVL tree.
 Preserve exact textual indexes, COW/root/sibling ownership, admitted directory/row
 copies, cancellation and both caps; do not extend cache/fixture/probe variants.
 All 40 maintained native consumers and 81 accepted compiler jobs pass, zero owned
-warnings. Browser consumers compile only; current-start protected bytes/nine
-contexts/349 artifacts remain exact. The historical configuration delta and
-original full preservation failure remain retained without restoration.
+warnings. Browser consumers compile only; nine contexts/349 artifacts remain
+exact. Qualification-time starting bytes are retained in their receipt, but strict
+post-push verification detects another concurrent Codex global configuration
+delta. The first refusal and both historical/current full preservation failures
+remain retained without restoration. A documentation-only correction changes no
+qualified code; exact source/remote identity does not close the preservation gate.
 Full original criterion/task/credit/DONE/editor/input/quality/parity/adoption/
 delivery remain open; no probe, numeric quota, MCP tool/schema or rollout changes.
 

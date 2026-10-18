@@ -125,14 +125,22 @@ a separate failed gate, excluded from passing totals.
 Five focused/661 maintained/97 RTL/24 compiler inputs plus three inspected compiler
 inputs remain pinned; 658 unrelated maintained sources stay exact. All 156 original
 unit packets/48 retained includes, nine project contexts, 349 frozen 7422453
-artifacts and thirteen concurrent planning files remain exact. All five protected
-files retain this batch's starting bytes with no new configuration delta. The
-prior external Codex configuration delta still differs from the original baseline;
-the original full five-file preservation gate remains failed without restoration.
-Terminal receipts show zero packet readers/Studio listeners and native Nyx MCP
-tools remain absent. The packet's final checkpoint owns exact qualified working/
-committed blobs and branch/remote identity. Only nine owned files belong to this
-checkpoint. LAN remains offline; the full goal stays active.
+artifacts and thirteen concurrent planning files remain exact. At qualification
+time all five protected files retain this batch's starting bytes with no new
+delta; that time-specific receipt remains immutable. After the first source push
+85b4c51, strict final verification fails: Codex's global user configuration has
+another concurrent delta (mtime 2026-10-18T22:21:18.5307235Z). No owned command
+writes/restores that file; the actor is unattributed. The four other protected
+files/nine contexts remain exact. Both this new failure and the earlier original-
+baseline configuration failure stay retained; no full preservation pass follows.
+The documentation correction records that temporal distinction without changing
+any frozen functional source or qualification result. Private post-push failure/
+observed-delta receipts retain the first strict refusal. Final source/remote
+receipts qualify only committed code identity and retained non-config inputs;
+the strict complete preserving gate remains failed. Terminal receipts show zero
+packet readers/Studio listeners and native Nyx MCP tools remain absent. Only nine
+owned files belong to this checkpoint. LAN remains offline; the full goal stays
+active.
 
 ## Previous integration: Construction-only metadata lookup reuse — 2026-10-18
 
