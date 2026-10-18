@@ -33,7 +33,103 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler scopes and intrinsic identity — 2026-10-18
+## Current integration: Ordered source-scope conditions — 2026-10-18
+
+Previous turn is progress: pushed eaa136e supplies compiler scope lookup and
+intrinsic identity. This batch connects that prerequisite to ordinary owned/
+indexed completion under original authoring criterion two. The documented
+consecutive unclosed lower bound is now at least six batches; earlier evidence
+is retained, not reset. Full fresh MIT Nyx-owned language/compiler semantics,
+incremental/project-scale budgets, default Studio adoption and complete input/
+navigation/quality/parity/delivery remain required. No original criterion/task/
+counter/credit/DONE, new tool/schema or rollout closes. Solo; no HTTP/browser/
+file-protocol execution/capture, protected mutation, cleanup/deletion/restart or
+approval bypass occurs. All new build/evidence files use the provisioned scratch
+drive. Concurrent planning files remain outside this source checkpoint.
+
+The new public nyx.pascal.conditions constructor refines the first unresolved
+expression through an exact preceding token prefix. Typed declaration requests
+remain separate from compiler defines and size operands. Scope lookup supplies
+supported declared/sizeof meaning through the existing binder; missing imports,
+unsupported layouts and unknown measurements refuse instead of guessing. Every
+accepted answer replays only at its exact file/occurrence/span/prefix/expression/
+context, in construction order, over the same frozen files. Prefixes fabricate
+no closing syntax or authored EOF and preserve physical/scalar/include origins.
+Construction callbacks/worlds are released before the detached receipt survives.
+
+Owned/indexed completion now uses that construction with typed conditional
+limits. Every full pass and prefix charges its ordinary aggregate token budget;
+missing semantic imports use the existing bounded loader. After supplied roots
+exist, another refinement sweep requires fewer unresolved conditions. Supported
+conditional exports therefore do not require callers to arrange SDK root order.
+Cancellation/exhaustion publish no partial result. This is bounded refinement,
+not accepted incremental or project-scale performance. The supplied world/context
+must come from the same captured compiler/output configuration: trusted size
+facts do not establish complete SDK/target coherence or canonical typing.
+
+Accepted composite evidence is in the ignored conditional-scopes-20261018-033705
+packet, located by .local/conditional-scopes-paths-private.json:
+
+- Ten native controlled checks qualify typed/deduplicated requests, future-name
+  invisibility, source aliases, exact bytes, missing implicit scope, unsupported
+  layout, cancellation and pass/token refusal. Small System/ObjPas views isolate
+  these rules; they are not actual SDK exports or a replacement RTL.
+- Nine selected-compiler/native companion checks compile the whole handwritten
+  unit/include unchanged and execute its root/nested functions. Five decisions
+  resolve in six passes: future declaration absence, the same physical include
+  before/after declaration, source-local Integer versus qualified System.Integer,
+  and nested shadowing. Actual selected FPC measurements of System.Byte/SmallInt/
+  QWord supply the explicit small scope model; no host ABI substitution occurs.
+  A supplementary Unicode source comment retains exact scalar/source identity.
+- Indexed dependency checks pass 48, including ordinary selected-member results,
+  analysis/load receipts, conditional budget refusal and two explicit root orders.
+  Production in-process semantic completion passes 84; owned completion remains
+  86. These qualify supported integration, not HTTP/authenticated/observing input.
+- Actual configured profile/RTL checks pass 74 with six owned compiler jobs and
+  their cancellation/output/deadline guards. Capture contains 562 files/387
+  modules. The earlier targeted compiler query still reduces SysUtils unknown
+  conditions 38 to six; no further compiler-symbol query is needed. A direct
+  semantic construction with an explicitly empty auxiliary world accepts zero
+  answers and reports pbiMissingModule/windows. This qualifies the retained scope
+  prerequisite, not completed actual RTL semantics. Full indexed completion
+  separately retains its outer SysUtils gap. All 48 exported include byte packets,
+  including opaque strg.inc, match the original source exactly.
+- Maintained native target requests/translation/macros/policies/modes pass
+  34/209/38/38/41; binding/generics pass 62/127. All thirteen accepted native
+  consumers have clean heaps. Counts overlap prior evidence and are not summed
+  into completion credit.
+- Twenty accepted compiler logs have zero owned warnings and 28 upstream pas2js
+  RTL warnings. Three browser consumers, both Studios, backend and worker compile
+  as applicable; browser consumers/products execute nowhere in this checkpoint.
+- Twelve focused pins, 494 Nyx inputs, 68 earlier RTL inputs plus whole ObjPas,
+  and three configured compiler inputs stay exact after all readers. Five
+  protected files/nine complete contexts and all 349 frozen 7422453 artifacts
+  remain exact. Final process/listener receipts show no owned readers or Studio
+  listener; LAN stays offline. Compiler/native/input/include/protected receipts
+  and the final checkpoint own source/remote identity. The chat still advertises
+  no native Nyx tools; no host is launched to refresh them.
+
+Retained failures are excluded from acceptance. A first controlled compile omitted
+the lexical cancellation exception's unit; a profile compile omitted syntax
+options' unit. Both missing uses were corrected. Importing the whole companion
+also imports its deliberate Integer=Byte alias: the first test counter used that
+alias with -1 and failed compilation. Test control counters now use System.LongInt;
+the source fixture and observed compiler rule stay unchanged. The old negative
+declared-expression test now uses an actually unsupported function because
+declared is supported. A synthetic reserved namespace was corrected. An early
+prefix implementation placement was repaired before compiler consumption. These
+are retained preparation failures/corrections, not one uninterrupted green run.
+
+Next useful deliverable: capture and bind the actual Windows namespace/import
+context needed by the real SysUtils prefix, through the existing SDK/compiler/
+language owners, without synthetic exports or source rewriting. Return from that
+prerequisite to actual System/ObjPas/intrinsic layouts and the six real conditions,
+then full grammar/canonical/expression meaning, incremental budgets, ordinary
+editor adoption and complete input/navigation/quality/parity/delivery. Stop
+prefix/replay/fixture variants. No user direction is missing; the original fresh
+Nyx-owned resolver decision remains authoritative.
+
+## Earlier integration: Compiler scopes and intrinsic identity — 2026-10-18
 
 Previous turn is progress: pushed 7a092e2 captures measurements and targeted
 conditional requests without pretending they bind authored names. This batch

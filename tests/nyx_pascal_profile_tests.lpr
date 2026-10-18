@@ -25,9 +25,9 @@ program nyx_pascal_profile_tests;
 uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.editing, nyx.scheduler,
   nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.compilertrace, nyx.pascal.encoding,
   nyx.studio.pascalprofiles, nyx.pascal.files, nyx.pascal.files.native,
-  nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.names,
+  nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.names, nyx.pascal.syntax,
   nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources,
-  nyx.pascal.binding, nyx.pascal.completion, nyx.pascal.completion.owned;
+  nyx.pascal.binding, nyx.pascal.completion, nyx.pascal.completion.owned, nyx.pascal.conditions;
 
 type
   { Cancels at the first post-launch poll. The host must join its exact compiler
@@ -295,6 +295,7 @@ var
   LRequested: INyxPascalCompilerProbe;
   LVerified: INyxPascalCompilerContext;
   LRemaining: Integer;
+  LScoped: INyxPascalSemanticTranslation;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(ARoot + '/src',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -435,6 +436,13 @@ begin
       NyxPascalDefine('BU')).Replacement = TNyxText('baseunix')),
     'Actual nondotted RTL retains both unconditional ordered replacement bodies');
   WriteLn('actual capture / files=', LFiles.Count, ' modules=', LCapture.Modules.Count);
+  LScoped := NewNyxPascalSemanticTranslation(LFiles, LRoot, LVerified, nil,
+    TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  WriteLn('actual RTL scoped frontier / answers=', LScoped.Answers,
+    ' pending=', LScoped.Pending, ' issue=', Ord(LScoped.BindingIssue), ' ', LScoped.RelatedName);
+  Check(LScoped.Pending and not LScoped.Source.Resolved,
+    'Actual RTL with an empty auxiliary world retains its scope/import prerequisites without choosing a guessed branch');
   LProvider := NewNyxIndexedPascalCompletionProvider(LVerified, LFiles, LCapture.Modules,
     TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000));
   LPrefix := 'unit Consumer; {$mode delphi} interface uses nyx.controls; implementation ' +

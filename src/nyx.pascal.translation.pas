@@ -38,6 +38,23 @@ type
     ptiIncludeCycle, ptiUnbalancedConditional, ptiUnsupportedDirective,
     ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding,
     ptiMacroContext, ptiMacroCycle, ptiCompilerSettings);
+  { Exact pre-condition source site. PrefixCount excludes this directive;
+    occurrence distinguishes repeated includes. Records retain no interfaces. }
+  TNyxPascalConditionOrigin = record
+    FileReference: TNyxPascalPhysicalFile;
+    Occurrence: Integer;
+    Span: TNyxPascalSpan;
+    PrefixCount: Integer;
+  end;
+  { Optional synchronous facts for a still-unknown expression. Ordered semantic
+    refinement supplies sealed answers, never mutable editor state. Origin,
+    expanded expression and context belong to this exact construction. The
+    translator owns this callback only until construction returns or refuses. }
+  INyxPascalConditionalFacts = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C13}']
+    function Evaluate(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): TNyxPascalKnowledge;
+  end;
   { Immutable physical diagnostic. Occurrence distinguishes repeated includes;
     text is English guidance with no machine paths or borrowed exceptions. }
   TNyxPascalTranslationDiagnostic = record
@@ -230,6 +247,16 @@ function NyxPascalOriginalSpan(const ATranslation: INyxPascalTranslation;
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AOptions: TNyxPascalTranslationOptions;
+  const ACancellation: INyxCancellationScope = nil;
+  const AConditions: INyxPascalConditionalFacts = nil): INyxPascalTranslation;
+
+{ Immutable analysis prefix before an existing translation token. It invents no
+  closing syntax or authored EOF token. State/occurrence exits stop at the site;
+  full physical views remain exact for navigation. Known prefix participation
+  and prior diagnostics determine Resolved independently of the unseen suffix.
+  Input budgets/cancellation refuse atomically; no source/provider is mutated. }
+function NewNyxPascalTranslationPrefix(const ASource: INyxPascalTranslation;
+  ABeforeToken: Integer; const AOptions: TNyxPascalTranslationOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslation;
 
 implementation
@@ -245,6 +272,47 @@ type
   end;
   { Borrowed only by synchronous token visitors while construction is active. }
   TTranslation = class;
+  { Owns one immutable completed source, bounded prefix ordinals and diagnostic
+    indices. All outward references retain original files/contexts, never a
+    constructing visitor, callback, editor or mutable source buffer. }
+  TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
+    INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
+    INyxPascalTranslationSettings)
+  private
+    FSource: INyxPascalTranslation;
+    FMacros: INyxPascalTranslationMacros;
+    FSettings: INyxPascalTranslationSettings;
+    FCount: Integer;
+    FStates: Integer;
+    FOccurrences: Integer;
+    FExpansion: Integer;
+    FResolved: Boolean;
+    FDiagnostics: array of Integer;
+  public
+    constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
+      const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
+    function Files: INyxPascalFileCatalog;
+    function InitialContext: INyxPascalCompilerContext;
+    function Resolved: Boolean;
+    function Count: Integer;
+    function Token(AIndex: Integer): TNyxPascalTranslatedToken;
+    function PhysicalToken(AIndex: Integer): TNyxPascalToken;
+    function Text(AIndex: Integer): TNyxText;
+    function Physical(AFile: Integer): INyxPascalLexicalSnapshot;
+    function OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
+    function OccurrenceCount: Integer;
+    function Occurrence(AIndex: Integer): TNyxPascalInclusion;
+    function StateCount: Integer;
+    function State(AIndex: Integer): INyxPascalCompilerContext;
+    function DiagnosticCount: Integer;
+    function Diagnostic(AIndex: Integer): TNyxPascalTranslationDiagnostic;
+    function Expansion(AIndex: Integer): INyxPascalMacroExpansion;
+    function StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+    function SettingsKnown(AState: Integer): Boolean;
+    function SettingsDepth(AState: Integer): Integer;
+    function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
+    function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
+  end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
   TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver)
@@ -325,6 +393,7 @@ type
     FNested: Boolean;
     FModeSeen: Boolean;
     FCancellation: INyxCancellationScope;
+    FConditions: INyxPascalConditionalFacts;
     procedure CheckCancellation;
     procedure Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
       const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
@@ -338,7 +407,8 @@ type
     procedure Visit(AFile, AParent: Integer; const AInclude: TNyxPascalSpan);
     procedure Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText);
-    function Condition(const AKind, AValue: TNyxText): TNyxPascalKnowledge;
+    function Condition(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+      const AKind, AValue: TNyxText): TNyxPascalKnowledge;
     procedure ChangeSymbol(const AName: TNyxText; AKind: TNyxPascalDefineKind);
     procedure ChangeOption(AName: Char; AValue: TNyxPascalKnowledge);
     procedure UnknownEffect;
@@ -346,7 +416,8 @@ type
     constructor Create(const AFiles: INyxPascalFileCatalog;
       const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
       const AOptions: TNyxPascalTranslationOptions;
-      const ACancellation: INyxCancellationScope);
+      const ACancellation: INyxCancellationScope;
+      const AConditions: INyxPascalConditionalFacts);
     destructor Destroy; override;
     function Files: INyxPascalFileCatalog;
     function InitialContext: INyxPascalCompilerContext;
@@ -459,7 +530,8 @@ end;
 constructor TTranslation.Create(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AOptions: TNyxPascalTranslationOptions;
-  const ACancellation: INyxCancellationScope);
+  const ACancellation: INyxCancellationScope;
+  const AConditions: INyxPascalConditionalFacts);
 var
   LRoot: Integer;
   LAt: Integer;
@@ -469,6 +541,7 @@ begin
   AOptions.Validate;
   FOptions := AOptions;
   FCancellation := ACancellation;
+  FConditions := AConditions;
   CheckCancellation;
   try
     FFiles := CaptureNyxPascalFiles(AFiles);
@@ -528,6 +601,7 @@ begin
     end;
   finally
     FCancellation := nil;
+    FConditions := nil;
   end;
 end;
 
@@ -1017,12 +1091,14 @@ begin
   AValueOffset := NyxTextScalarCount(Copy(AText, 1, LAt - 1));
 end;
 
-function TTranslation.Condition(const AKind, AValue: TNyxText): TNyxPascalKnowledge;
+function TTranslation.Condition(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+  const AKind, AValue: TNyxText): TNyxPascalKnowledge;
 var
   LName: TNyxPascalDefineRef;
   LOption: TNyxPascalKnowledge;
   LExpanded: INyxPascalMacroExpansion;
   LValue: TNyxText;
+  LOrigin: TNyxPascalConditionOrigin;
 begin
   Result := ppkUnknown;
   try
@@ -1064,8 +1140,27 @@ begin
         LValue := LExpanded.Joined;
       end;
       Result := AnalyzeNyxPascalCondition(FContext, LValue).Truth;
+
+      if (Result = ppkUnknown) and (FConditions <> nil) then
+      begin
+        LOrigin.FileReference := FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+        LOrigin.Occurrence := AOccurrence;
+        LOrigin.Span := ASpan;
+        LOrigin.PrefixCount := FTokenCount - 1;
+        Result := FConditions.Evaluate(LOrigin, FContext, LValue);
+
+        if (Ord(Result) < Ord(Low(TNyxPascalKnowledge))) or
+          (Ord(Result) > Ord(High(TNyxPascalKnowledge))) then
+        begin
+          raise ENyxPascalTranslationLimit.Create('Conditional authority returned invalid knowledge');
+        end;
+      end;
     end;
   except
+    on ENyxPascalTranslationLimit do
+    begin
+      raise;
+    end;
     on ENyxPascalMacroLimit do
     begin
       raise;
@@ -1274,7 +1369,7 @@ begin
 
       if FActive <> ppkFalse then
       begin
-        LCondition := Condition(LName, LValue);
+        LCondition := Condition(AOccurrence, AToken.Span, LName, LValue);
 
         if LCondition = ppkUnknown then
         begin
@@ -1335,7 +1430,7 @@ begin
           end
           else
           begin
-            LCondition := Condition('if', LValue);
+            LCondition := Condition(AOccurrence, AToken.Span, 'if', LValue);
 
             if LCondition = ppkUnknown then
             begin
@@ -2071,12 +2166,310 @@ begin
   Result := FDiagnostics[AIndex];
 end;
 
+constructor TTranslationPrefix.Create(const ASource: INyxPascalTranslation;
+  ABeforeToken: Integer; const AOptions: TNyxPascalTranslationOptions;
+  const ACancellation: INyxCancellationScope);
+var
+  LCancellation: INyxCancellationScope;
+  LSourceCount: Integer;
+  LOccurrences: Integer;
+  LStates: Integer;
+  LDiagnostics: Integer;
+  LLast: array of Integer;
+  LAt: Integer;
+  LUsed: Integer;
+  LToken: TNyxPascalTranslatedToken;
+  LDiagnostic: TNyxPascalTranslationDiagnostic;
+  LSpan: TNyxPascalSpan;
+
+  procedure Check;
+  begin
+
+    if (LCancellation <> nil) and LCancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Translation prefix cancelled');
+    end;
+  end;
+
+begin
+  inherited Create;
+  LCancellation := ACancellation;
+  AOptions.Validate;
+  Check;
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('A translation prefix needs its immutable source');
+  end;
+  LSourceCount := ASource.Count;
+  LOccurrences := ASource.OccurrenceCount;
+  LStates := ASource.StateCount;
+  LDiagnostics := ASource.DiagnosticCount;
+
+  if (LSourceCount < 1) or (LSourceCount > AOptions.MaximumTokens) or
+    (ABeforeToken < 0) or (ABeforeToken >= LSourceCount) or
+    (LOccurrences < 1) or (LOccurrences > AOptions.MaximumOccurrences) or
+    (LStates < 1) or (LStates > AOptions.MaximumStates) or
+    (LDiagnostics < 0) or (LDiagnostics > AOptions.MaximumDiagnostics) then
+  begin
+    raise ENyxPascalTranslationLimit.Create('Translation prefix input exceeds its explicit bounds');
+  end;
+  FSource := ASource;
+  Supports(FSource, INyxPascalTranslationMacros, FMacros);
+  Supports(FSource, INyxPascalTranslationSettings, FSettings);
+  FCount := ABeforeToken;
+  LToken := FSource.Token(ABeforeToken);
+
+  if (LToken.State < 0) or (LToken.State >= LStates) or
+    (LToken.Occurrence < 0) or (LToken.Occurrence >= LOccurrences) then
+  begin
+    raise ENyxPascalContext.Create('Translation prefix site has invalid ownership');
+  end;
+  FStates := LToken.State + 1;
+  FOccurrences := LToken.Occurrence + 1;
+  FExpansion := -1;
+  FResolved := True;
+  SetLength(LLast, LOccurrences);
+  for LAt := 0 to LOccurrences - 1 do
+  begin
+    LLast[LAt] := -1;
+  end;
+  for LAt := 0 to FCount - 1 do
+  begin
+    Check;
+    LToken := FSource.Token(LAt);
+
+    if (LToken.Occurrence < 0) or (LToken.Occurrence >= LOccurrences) or
+      (LToken.State < 0) or (LToken.State >= FStates) then
+    begin
+      raise ENyxPascalContext.Create('Translation prefix tokens have invalid state/order');
+    end;
+
+    if LToken.Occurrence >= FOccurrences then
+    begin
+      FOccurrences := LToken.Occurrence + 1;
+    end;
+    LSpan := FSource.PhysicalToken(LAt).Span;
+
+    if LSpan.Start > LLast[LToken.Occurrence] then
+    begin
+      LLast[LToken.Occurrence] := LSpan.Start;
+    end;
+
+    if LToken.Activity = ppkUnknown then
+    begin
+      FResolved := False;
+    end;
+
+    if LToken.Expanded and (LToken.Expansion > FExpansion) then
+    begin
+      FExpansion := LToken.Expansion;
+    end;
+  end;
+  SetLength(FDiagnostics, LDiagnostics);
+  LUsed := 0;
+  for LAt := 0 to LDiagnostics - 1 do
+  begin
+    Check;
+    LDiagnostic := FSource.Diagnostic(LAt);
+
+    if (LDiagnostic.Occurrence < 0) or (LDiagnostic.Occurrence >= LOccurrences) then
+    begin
+      raise ENyxPascalContext.Create('Translation diagnostic has invalid occurrence ownership');
+    end;
+
+    if LDiagnostic.Span.Start <= LLast[LDiagnostic.Occurrence] then
+    begin
+      FResolved := False;
+      FDiagnostics[LUsed] := LAt;
+      Inc(LUsed);
+    end;
+  end;
+  SetLength(FDiagnostics, LUsed);
+  Check;
+end;
+
+function TTranslationPrefix.Files: INyxPascalFileCatalog;
+begin
+  Result := FSource.Files;
+end;
+
+function TTranslationPrefix.InitialContext: INyxPascalCompilerContext;
+begin
+  Result := FSource.InitialContext;
+end;
+
+function TTranslationPrefix.Resolved: Boolean;
+begin
+  Result := FResolved;
+end;
+
+function TTranslationPrefix.Count: Integer;
+begin
+  Result := FCount;
+end;
+
+function TTranslationPrefix.Token(AIndex: Integer): TNyxPascalTranslatedToken;
+begin
+
+  if (AIndex < 0) or (AIndex >= FCount) then
+  begin
+    raise ENyxPascalContext.Create('A token lies outside this translation prefix');
+  end;
+  Result := FSource.Token(AIndex);
+end;
+
+function TTranslationPrefix.PhysicalToken(AIndex: Integer): TNyxPascalToken;
+begin
+  Token(AIndex);
+  Result := FSource.PhysicalToken(AIndex);
+end;
+
+function TTranslationPrefix.Text(AIndex: Integer): TNyxText;
+begin
+  Token(AIndex);
+  Result := FSource.Text(AIndex);
+end;
+
+function TTranslationPrefix.Physical(AFile: Integer): INyxPascalLexicalSnapshot;
+begin
+  Result := FSource.Physical(AFile);
+end;
+
+function TTranslationPrefix.OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
+begin
+  Occurrence(AOccurrence);
+  Result := NyxPascalOccurrenceLexical(FSource, AOccurrence);
+end;
+
+function TTranslationPrefix.OccurrenceCount: Integer;
+begin
+  Result := FOccurrences;
+end;
+
+function TTranslationPrefix.Occurrence(AIndex: Integer): TNyxPascalInclusion;
+begin
+
+  if (AIndex < 0) or (AIndex >= FOccurrences) then
+  begin
+    raise ENyxPascalContext.Create('An inclusion lies outside this translation prefix');
+  end;
+  Result := FSource.Occurrence(AIndex);
+
+  if Result.FFirst > FCount then
+  begin
+    raise ENyxPascalContext.Create('A prefix inclusion starts beyond its token window');
+  end;
+
+  if Result.FCount > FCount - Result.FFirst then
+  begin
+    Result.FCount := FCount - Result.FFirst;
+  end;
+
+  if Result.FExit >= FStates then
+  begin
+    Result.FExit := FStates - 1;
+  end;
+end;
+
+function TTranslationPrefix.StateCount: Integer;
+begin
+  Result := FStates;
+end;
+
+function TTranslationPrefix.State(AIndex: Integer): INyxPascalCompilerContext;
+begin
+
+  if (AIndex < 0) or (AIndex >= FStates) then
+  begin
+    raise ENyxPascalContext.Create('A compiler state lies outside this translation prefix');
+  end;
+  Result := FSource.State(AIndex);
+end;
+
+function TTranslationPrefix.DiagnosticCount: Integer;
+begin
+  Result := Length(FDiagnostics);
+end;
+
+function TTranslationPrefix.Diagnostic(AIndex: Integer): TNyxPascalTranslationDiagnostic;
+begin
+
+  if (AIndex < 0) or (AIndex >= DiagnosticCount) then
+  begin
+    raise ENyxPascalContext.Create('A diagnostic lies outside this translation prefix');
+  end;
+  Result := FSource.Diagnostic(FDiagnostics[AIndex]);
+end;
+
+function TTranslationPrefix.Expansion(AIndex: Integer): INyxPascalMacroExpansion;
+begin
+
+  if (FMacros = nil) or (AIndex < 0) or (AIndex > FExpansion) then
+  begin
+    raise ENyxPascalContext.Create('A macro expansion lies outside this translation prefix');
+  end;
+  Result := FMacros.Expansion(AIndex);
+end;
+
+function TTranslationPrefix.StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+begin
+  State(AIndex);
+
+  if FMacros = nil then
+  begin
+    raise ENyxPascalContext.Create('This source has no captured macro state');
+  end;
+  Result := FMacros.StateMacros(AIndex);
+end;
+
+function TTranslationPrefix.SettingsKnown(AState: Integer): Boolean;
+begin
+  State(AState);
+  Result := False;
+
+  if FSettings <> nil then
+  begin
+    Result := FSettings.SettingsKnown(AState);
+  end;
+end;
+
+function TTranslationPrefix.SettingsDepth(AState: Integer): Integer;
+begin
+
+  if not SettingsKnown(AState) then
+  begin
+    raise ENyxPascalContext.Create('This prefix has no known settings stack');
+  end;
+  Result := FSettings.SettingsDepth(AState);
+end;
+
+function TTranslationPrefix.SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
+begin
+  SettingsDepth(AState);
+  Result := FSettings.SavedSettings(AState, ALevel);
+end;
+
+function TTranslationPrefix.SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
+begin
+  SettingsDepth(AState);
+  Result := FSettings.SettingsOrigin(AState, ALevel);
+end;
+
+function NewNyxPascalTranslationPrefix(const ASource: INyxPascalTranslation;
+  ABeforeToken: Integer; const AOptions: TNyxPascalTranslationOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslation;
+begin
+  Result := TTranslationPrefix.Create(ASource, ABeforeToken, AOptions, ACancellation);
+end;
+
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AOptions: TNyxPascalTranslationOptions;
-  const ACancellation: INyxCancellationScope): INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope;
+  const AConditions: INyxPascalConditionalFacts): INyxPascalTranslation;
 begin
-  Result := TTranslation.Create(AFiles, ARoot, AContext, AOptions, ACancellation);
+  Result := TTranslation.Create(AFiles, ARoot, AContext, AOptions, ACancellation, AConditions);
 end;
 
 end.

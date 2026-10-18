@@ -24,7 +24,7 @@ program nyx_pascal_dependencies_tests;
 uses SysUtils, nyx.text, nyx.editing, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.binding,
   nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources,
-  nyx.pascal.completion, nyx.pascal.completion.owned;
+  nyx.pascal.completion, nyx.pascal.completion.owned, nyx.pascal.conditions;
 const
   CBase: TNyxText = 'unit Consumer; interface implementation end.';
 var
@@ -238,6 +238,62 @@ begin
     'Missing implicit capture stays an actionable namespace gap without source fabrication');
 end;
 
+procedure ConditionalDeclarations;
+var
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LProvider: INyxPascalCompletionProvider;
+  LReply: INyxPascalCompletionResult;
+  LRoots: array of TNyxPascalPhysicalFile;
+begin
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('sdk/conditional.pp'),
+      'unit Conditional; {$mode delphi} interface type TKnown=Byte; ' +
+      '{$if declared(TKnown)}type TVisible=record Field:Byte; end;{$endif}' +
+      'implementation end.');
+  LModules := NewNyxPascalModuleCatalog.WithModule(Root('Conditional', 'sdk/conditional.pp'));
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
+    TNyxOwnedPascalCompletionOptions.Defaults);
+  LReply := LProvider.Complete(Query('Conditional', 'TVisible', 'Current.Fi'));
+  Check((LReply.Status = pcsReady) and (LReply.Count = 1) and
+    (LReply.Item(0).Name = TNyxText('Field')),
+    'Ordinary indexed completion sees a declaration selected by its actual preceding source scope');
+  Check((Analysis(LReply).ModuleCount = 2) and (Analysis(LReply).DependencyLoads = 1),
+    'Semantic source refinement preserves ordinary module ownership and analysis receipts');
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
+    TNyxOwnedPascalCompletionOptions.Defaults.WithConditions(
+      TNyxPascalConditionalOptions.Defaults.UpToPasses(1)));
+  LReply := LProvider.Complete(Query('Conditional', 'TVisible', 'Current.Fi'));
+  Check((LReply.Status = pcsUnavailable) and (Gap(LReply).Gap = pcgBudget),
+    'A caller-selected refinement limit stays a typed ordinary completion budget refusal');
+  LFiles := LFiles.WithFile(NyxPascalPhysicalFile('sdk/conditional.pp'),
+    'unit Conditional; {$mode delphi} interface ' +
+    '{$if not declared(TAbsent)}type TVisible=record Field:Byte; end;{$endif}' +
+    'implementation end.')
+    .WithFile(NyxPascalPhysicalFile('sdk/system.pp'),
+      'unit System; {$mode delphi} interface implementation end.')
+    .WithFile(NyxPascalPhysicalFile('sdk/objpas.pp'),
+      'unit ObjPas; {$mode objfpc} interface implementation end.');
+  SetLength(LRoots, 3);
+  LRoots[0] := NyxPascalPhysicalFile('sdk/conditional.pp');
+  LRoots[1] := NyxPascalPhysicalFile('sdk/system.pp');
+  LRoots[2] := NyxPascalPhysicalFile('sdk/objpas.pp');
+  LProvider := NewNyxOwnedPascalCompletionProvider(Facts, LFiles, LRoots,
+    TNyxOwnedPascalCompletionOptions.Defaults);
+  LReply := LProvider.Complete(Query('Conditional', 'TVisible', 'Current.Fi'));
+  Check((LReply.Status = pcsReady) and (LReply.Count = 1) and
+    (LReply.Item(0).Name = TNyxText('Field')),
+    'Supplied root order is not a hidden prerequisite for conditional declaration absence');
+  LRoots[0] := NyxPascalPhysicalFile('sdk/objpas.pp');
+  LRoots[1] := NyxPascalPhysicalFile('sdk/conditional.pp');
+  LRoots[2] := NyxPascalPhysicalFile('sdk/system.pp');
+  LProvider := NewNyxOwnedPascalCompletionProvider(Facts, LFiles, LRoots,
+    TNyxOwnedPascalCompletionOptions.Defaults);
+  LReply := LProvider.Complete(Query('Conditional', 'TVisible', 'Current.Fi'));
+  Check((LReply.Status = pcsReady) and (LReply.Item(0).Name = TNyxText('Field')),
+    'A second explicit root order preserves the same source-scoped completion result');
+end;
+
 procedure UnitContexts;
 var
   LFiles: INyxPascalFileCatalog;
@@ -288,6 +344,7 @@ begin
     LazyWorld;
     ImportAuthority;
     CompilerImplicitImports;
+    ConditionalDeclarations;
     UnitContexts;
     WriteLn('PASS ', GChecks, ' indexed dependency checks');
   except

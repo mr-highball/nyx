@@ -96,6 +96,14 @@ type
   public
     property Name: TNyxText read FName;
   end;
+  { Unqualified declaration name for conditional declared(). It is distinct
+    from a compiler define and admits no expression, qualification or escape. }
+  TNyxPascalDeclarationRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
   { No captured result, an absent name, a measured size, or a size beyond the
     portable signed-32 domain. Undeclared is not a zero-byte type. }
   TNyxPascalSizeState = (pssUnknown, pssUndeclared, pssKnown, pssOutOfRange);
@@ -177,6 +185,22 @@ type
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
   end;
+  { Optional declaration requests supplement the original planning interface.
+    Names retain first-use order; unsupported expressions expose no requests. }
+  INyxPascalConditionDeclarations = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C11}']
+    function DeclarationCount: Integer;
+    function DeclarationName(AIndex: Integer): TNyxPascalDeclarationRef;
+  end;
+  { A construction-local semantic authority bound to one immutable source site.
+    It resolves names through actual scope, not pristine measurement spelling.
+    Unknown is explicit; returned sizes must have verified bound-type provenance.
+    The parser retains this authority only until its synchronous call returns. }
+  INyxPascalConditionSemantics = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C12}']
+    function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
+    function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+  end;
   { Immutable captured compiler facts. Missing symbols are unknown until the
     caller explicitly seals the entire define set. Short options/features have
     separate knowledge, never guessed defaults. Each fluent change owns detached
@@ -235,6 +259,9 @@ type
   end;
 
 function NyxPascalSizeReference(const AName: TNyxText): TNyxPascalSizeReference;
+{ Validate one bounded ASCII declaration identifier, without compiler-symbol or
+  member-expression meaning. Reserved grammar words refuse. }
+function NyxPascalDeclaration(const AName: TNyxText): TNyxPascalDeclarationRef;
 function NyxPascalSizeFact(AState: TNyxPascalSizeState;
   AMode: TNyxPascalLanguageMode = ppmUnknown; ALongStrings: TNyxPascalKnowledge = ppkUnknown;
   ABytes: Integer = 0): TNyxPascalSizeFact;
@@ -278,10 +305,12 @@ function NyxPascalAnd(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
 function NyxPascalOr(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
 { Bounded condition grammar: defined(), exact integer comparisons, parentheses,
   Boolean not/and/or/xor and unary signs, with Pascal operator precedence.
-  General macros, declared()/sizeof(), strings and arithmetic stay unsupported.
+  Named declared()/sizeof() use an explicit site-bound semantic authority;
+  without it their meaning stays unknown. General expressions stay unsupported.
   At most 16 KiB/512 tokens/64 nesting levels; hard lexical quotas still refuse. }
 function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
-  const AExpression: TNyxText): TNyxPascalConditionResult;
+  const AExpression: TNyxText;
+  const ASemantics: INyxPascalConditionSemantics = nil): TNyxPascalConditionResult;
 { Plans only the supported conditional grammar above plus simple named sizeof
   operands. This does not evaluate sizeof, bind a type or select a branch.
   Symbols are deduplicated in first-use order, at most 256; size operands at
@@ -441,19 +470,23 @@ type
   end;
   { Owns value-only request vectors for a single expression. Unsupported syntax
     clears both vectors; checked getters cannot expose mutable backing storage. }
-  TConditionNeeds = class(TInterfacedObject, INyxPascalConditionNeeds)
+  TConditionNeeds = class(TInterfacedObject, INyxPascalConditionNeeds, INyxPascalConditionDeclarations)
   private
     FSupported: Boolean;
     FSymbols: array of TNyxPascalDefineRef;
     FSizes: array of TNyxPascalSizeReference;
+    FDeclarations: array of TNyxPascalDeclarationRef;
     procedure NeedSymbol(const AName: TNyxPascalDefineRef);
     procedure NeedSize(const AName: TNyxPascalSizeReference);
+    procedure NeedDeclaration(const AName: TNyxPascalDeclarationRef);
   public
     function SyntaxSupported: Boolean;
     function SymbolCount: Integer;
     function Symbol(AIndex: Integer): TNyxPascalDefineRef;
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
+    function DeclarationCount: Integer;
+    function DeclarationName(AIndex: Integer): TNyxPascalDeclarationRef;
   end;
   { Owns one temporary lexical snapshot and borrows an immutable context for this
     call only. Depth/steps are bounded and no provider or file lookup occurs. }
@@ -465,6 +498,7 @@ type
     FDepth: Integer;
     FIssue: TNyxPascalConditionIssue;
     FNeeds: TConditionNeeds;
+    FSemantics: INyxPascalConditionSemantics;
     function Tok: TNyxPascalToken;
     procedure Step;
     procedure Issue(AValue: TNyxPascalConditionIssue);
@@ -515,6 +549,22 @@ end;
 function TNyxPascalCompilerVersion.FullNumber: Integer;
 begin
   Result := FMajor * 10000 + FMinor * 100 + FPatch;
+end;
+
+function NyxPascalDeclaration(const AName: TNyxText): TNyxPascalDeclarationRef;
+var
+  LChecked: TNyxPascalDefineRef;
+  LLexical: INyxPascalLexicalSnapshot;
+begin
+  LChecked := NyxPascalDefine(AName);
+  LLexical := NewNyxPascalLexicalSnapshot(LChecked.Name, TNyxPascalLexicalOptions.Defaults);
+
+  if (LLexical.Count <> 2) or (LLexical.Token(0).Kind <> ptkWord) or
+    (LLexical.Token(0).Word <> pkwNone) then
+  begin
+    raise ENyxPascalContext.Create('A declaration request needs one ordinary identifier');
+  end;
+  Result.FName := LChecked.Name;
 end;
 
 function TNyxPascalDefineValue.IsDefined: TNyxPascalKnowledge;
@@ -1281,6 +1331,12 @@ end;
 
 function TruthValue(AValue: TNyxPascalKnowledge): TConditionValue;
 begin
+
+  if (Ord(AValue) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AValue) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('Conditional semantic knowledge is outside its closed values');
+  end;
   Result := Default(TConditionValue);
   Result.Kind := pcvBoolean;
   Result.Truth := AValue;
@@ -1350,6 +1406,8 @@ var
   LBase: Integer;
   LNegative: Boolean;
   LSize: TNyxPascalSizeReference;
+  LDeclaration: TNyxPascalDeclarationRef;
+  LMeasurement: TNyxPascalSizeFact;
 begin
   Result := UnknownValue;
   Inc(FDepth);
@@ -1518,7 +1576,59 @@ begin
           end;
         end;
       end
-      else if (LName = 'sizeof') and (FNeeds <> nil) then
+      else if LName = 'declared' then
+      begin
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoOpenParen) then
+        begin
+          Issue(pciMalformed);
+          Exit;
+        end;
+        Step;
+
+        if (Tok.Kind <> ptkWord) or Tok.Escaped then
+        begin
+          Issue(pciUnsupported);
+          Exit;
+        end;
+        try
+          LDeclaration := NyxPascalDeclaration(FLexical.Identifier(FAt));
+        except
+          on ENyxPascalContext do
+          begin
+            Issue(pciUnsupported);
+            Exit;
+          end;
+        end;
+        Step;
+
+        if (Tok.Kind <> ptkSymbol) or (Tok.Symbol <> psoCloseParen) then
+        begin
+          Issue(pciUnsupported);
+          Exit;
+        end;
+        Step;
+
+        if FNeeds <> nil then
+        begin
+          FNeeds.NeedDeclaration(LDeclaration);
+        end;
+
+        if FSemantics <> nil then
+        begin
+          Result := TruthValue(FSemantics.IsDeclared(LDeclaration));
+        end;
+
+        if Result.Kind = pcvUnknown then
+        begin
+          Issue(pciUnknownSymbol);
+        end
+        else if Result.Truth = ppkUnknown then
+        begin
+          Issue(pciUnknownSymbol);
+        end;
+      end
+      else if LName = 'sizeof' then
       begin
         { Planning names is deliberately independent of evaluating types. A
           pristine compiler probe cannot establish this authored scope's binding. }
@@ -1536,6 +1646,7 @@ begin
           if Tok.Escaped then
           begin
             Issue(pciUnsupported);
+            Exit;
           end;
           LName := LName + FLexical.Identifier(FAt);
           Step;
@@ -1563,8 +1674,26 @@ begin
             Exit;
           end;
         end;
-        FNeeds.NeedSize(LSize);
-        Issue(pciUnknownSymbol);
+
+        if FNeeds <> nil then
+        begin
+          FNeeds.NeedSize(LSize);
+        end;
+
+        if FSemantics <> nil then
+        begin
+          LMeasurement := FSemantics.SizeOfName(LSize);
+
+          if LMeasurement.State = pssKnown then
+          begin
+            Result := NumberValue(LMeasurement.Bytes);
+          end;
+        end;
+
+        if Result.Kind = pcvUnknown then
+        begin
+          Issue(pciUnknownSymbol);
+        end;
       end
       else if (LName = 'true') or (LName = 'false') then
       begin
@@ -1778,12 +1907,14 @@ begin
 end;
 
 function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
-  const AExpression: TNyxText): TNyxPascalConditionResult;
+  const AExpression: TNyxText;
+  const ASemantics: INyxPascalConditionSemantics): TNyxPascalConditionResult;
 var
   LParser: TConditionParser;
 begin
   LParser := TConditionParser.Create;
   try
+    LParser.FSemantics := ASemantics;
     Result := LParser.Analyze(AContext, AExpression);
   finally
     LParser.Free;
@@ -1869,6 +2000,43 @@ begin
   FSizes[LAt] := AName;
 end;
 
+function TConditionNeeds.DeclarationCount: Integer;
+begin
+  Result := Length(FDeclarations);
+end;
+
+function TConditionNeeds.DeclarationName(AIndex: Integer): TNyxPascalDeclarationRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= DeclarationCount) then
+  begin
+    raise ENyxPascalContext.Create('A declaration request is outside this plan');
+  end;
+  Result := FDeclarations[AIndex];
+end;
+
+procedure TConditionNeeds.NeedDeclaration(const AName: TNyxPascalDeclarationRef);
+var
+  LAt: Integer;
+begin
+  for LAt := 0 to High(FDeclarations) do
+  begin
+
+    if FDeclarations[LAt].Name = AName.Name then
+    begin
+      Exit;
+    end;
+  end;
+
+  if DeclarationCount >= 64 then
+  begin
+    raise ENyxPascalContext.Create('Conditional declaration requests exceed 64');
+  end;
+  LAt := DeclarationCount;
+  SetLength(FDeclarations, LAt + 1);
+  FDeclarations[LAt] := AName;
+end;
+
 function PlanNyxPascalCondition(const AContext: INyxPascalCompilerContext;
   const AExpression: TNyxText): INyxPascalConditionNeeds;
 var
@@ -1889,6 +2057,7 @@ begin
     begin
       SetLength(LNeeds.FSymbols, 0);
       SetLength(LNeeds.FSizes, 0);
+      SetLength(LNeeds.FDeclarations, 0);
     end;
     Result := LOwner;
   finally

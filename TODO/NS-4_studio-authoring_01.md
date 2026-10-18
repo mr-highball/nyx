@@ -30,6 +30,16 @@ refusal is retained, not promoted to RTL binding. Stop namespace/oracle variants
 at that boundary and return to ordered source-scope conditional semantics, then
 full language/incremental/adoption/input/navigation/quality/parity/delivery.
 
+Ordered-condition continuation: eaa136e is progress, not closure. The current
+batch integrates exact prefix scope, checked answer replay and bounded source
+refinement into ordinary owned/indexed completion, with a whole compiled and
+executed companion. This raises the documented unclosed lower bound to at least
+six while retaining earlier evidence. Its one real RTL frontier preserves the
+external scope/SDK prerequisite rather than adopting synthetic exports. Stop
+prefix/replay/fixture variants after qualification and follow that actual
+dependency under the existing SDK/compiler/language owners. Full criterion two,
+incremental budgets, adoption/input/navigation/quality/parity/delivery stay open.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

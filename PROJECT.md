@@ -66,6 +66,12 @@ Intrinsic identities preserve namespace and declaring context; no measurement
 substitutes for a local/imported declaration. Full RTL and conditional semantic
 binding, canonical type rules and ordinary editor adoption remain open.
 
+[Ordered semantic conditions](docs/pascal-projects.md#ordered-semantic-conditions)
+now resolve supported source-scope `declared`/`sizeof` decisions through frozen
+prefixes and checked replay. Ordinary owned/indexed completion consumes this
+bounded refinement with exact source preservation. Full RTL import/layout/
+grammar meaning, target coherence and ordinary editor adoption remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

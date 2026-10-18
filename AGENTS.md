@@ -4,7 +4,29 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source owned completion selects typed compiler-unit lookup: lexical and
+Current-source ordered semantic conditions use exact frozen prefixes and checked
+site/expression/context replay. Typed declared/sizeof meaning follows the ordinary
+binder; missing imports/layout/measurements remain unknown. Owned/indexed completion
+charges full pass/prefix work and revisits supplied roots without a root-order
+prerequisite; cancellation/budget refusal publishes no partial receipt. Native
+controlled/whole executed companion/dependency/semantic/profile checks pass
+10/9/48/84/74; the companion resolves five decisions in six passes. Maintained
+34/209/38/38/41/86/62/127 pass; all thirteen native consumers have clean heaps.
+Twenty accepted logs have zero owned warnings (28 upstream); three browser
+consumers and both Studios/backend/worker compile only as applicable. Real SysUtils
+still has six size/declared sites; the empty-auxiliary-world semantic construction
+reports missing windows with zero answers, not full RTL binding. Twelve focused/
+494 Nyx/69 RTL/three compiler pins, 48 include byte packets, five protected files/
+nine contexts and 349 frozen 7422453 artifacts stay exact. All readers join; LAN
+is offline. World/context coherence is a caller precondition, not full SDK/target
+proof. WORK.md owns retained preparation failures, final source/remote identity
+and the next actual Windows namespace/import prerequisite under existing owners.
+At least six documented unclosed batches retain full criterion two; no original
+criterion/task/counter/credit/DONE/new tool/schema/adoption/parity/delivery closes.
+Stop prefix/replay/fixture variants. No HTTP retry, protected mutation, cleanup/
+deletion/restart bypass or sub-agents. Preserve concurrent planning files.
+
+Earlier owned completion selects typed compiler-unit lookup: lexical and
 explicit imports precede captured implicit ObjPas/System as appropriate; missing
 implicit units use the existing bounded loader and refusal. Low-level declaration
 worlds retain symbolic compatibility. Intrinsic reference/origin/context identity

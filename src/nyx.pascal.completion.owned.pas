@@ -27,7 +27,7 @@ interface
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
   nyx.pascal.binding, nyx.pascal.modules, nyx.pascal.sources, nyx.pascal.completion,
-  nyx.pascal.encoding;
+  nyx.pascal.encoding, nyx.pascal.conditions;
 
 type
   { Independent copied analysis budgets. Per-module translation/syntax and
@@ -39,6 +39,7 @@ type
     FTranslation: TNyxPascalTranslationOptions;
     FSyntax: TNyxPascalSyntaxOptions;
     FBinding: TNyxPascalBindingOptions;
+    FConditions: TNyxPascalConditionalOptions;
     FTokens: Integer;
     FReceiverTokens: Integer;
     FDependencyLoads: Integer;
@@ -48,6 +49,8 @@ type
     function WithTranslation(const AValue: TNyxPascalTranslationOptions): TNyxOwnedPascalCompletionOptions;
     function WithSyntax(const AValue: TNyxPascalSyntaxOptions): TNyxOwnedPascalCompletionOptions;
     function WithBinding(const AValue: TNyxPascalBindingOptions): TNyxOwnedPascalCompletionOptions;
+    { Bound ordered semantic work within each root as well as AggregateTokens. }
+    function WithConditions(const AValue: TNyxPascalConditionalOptions): TNyxOwnedPascalCompletionOptions;
     function UpToTokens(AValue: Integer): TNyxOwnedPascalCompletionOptions;
     function UpToReceiverTokens(AValue: Integer): TNyxOwnedPascalCompletionOptions;
     { Limit successful on-demand module additions across the entire request. }
@@ -56,6 +59,7 @@ type
     property Translation: TNyxPascalTranslationOptions read FTranslation;
     property Syntax: TNyxPascalSyntaxOptions read FSyntax;
     property Binding: TNyxPascalBindingOptions read FBinding;
+    property Conditions: TNyxPascalConditionalOptions read FConditions;
     property AggregateTokens: Integer read FTokens;
     property ReceiverTokens: Integer read FReceiverTokens;
     property DependencyLoads: Integer read FDependencyLoads;
@@ -219,6 +223,7 @@ type
     FCancel: INyxCancellationScope;
     FFiles: INyxPascalFileCatalog;
     FWorld: INyxPascalSemanticWorld;
+    FBuilding: array of TNyxText;
     FOwner: Integer;
     FTokens: Integer;
     FScan: Integer;
@@ -233,8 +238,9 @@ type
     procedure Scan;
     procedure AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText;
       const AContext: INyxPascalCompilerContext = nil;
-      const ADescriptor: INyxPascalModuleSource = nil);
+      const ADescriptor: INyxPascalModuleSource = nil; AReplace: Boolean = False);
     procedure BuildWorld;
+    procedure RefineWorld;
     function LoadDependency(const AName: TNyxText): Boolean;
     procedure CaptureAnalysis(AResult: TOwnedResult);
     function Previous(const ALexical: INyxPascalLexicalSnapshot; AIndex: Integer): Integer;
@@ -254,6 +260,7 @@ begin
   Result.FTranslation := TNyxPascalTranslationOptions.Defaults;
   Result.FSyntax := TNyxPascalSyntaxOptions.Defaults;
   Result.FBinding := TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits);
+  Result.FConditions := TNyxPascalConditionalOptions.Defaults;
   Result.FTokens := 1000000;
   Result.FReceiverTokens := 128;
   Result.FDependencyLoads := 128;
@@ -269,6 +276,7 @@ begin
   FTranslation.Validate;
   FSyntax.Validate;
   FBinding.Validate;
+  FConditions.Validate;
 end;
 
 function TNyxOwnedPascalCompletionOptions.WithTranslation(
@@ -292,6 +300,14 @@ function TNyxOwnedPascalCompletionOptions.WithBinding(
 begin
   Result := Self;
   Result.FBinding := AValue;
+  Result.Validate;
+end;
+
+function TNyxOwnedPascalCompletionOptions.WithConditions(
+  const AValue: TNyxPascalConditionalOptions): TNyxOwnedPascalCompletionOptions;
+begin
+  Result := Self;
+  Result.FConditions := AValue;
   Result.Validate;
 end;
 
@@ -471,13 +487,19 @@ begin
 end;
 
 procedure TAnalysis.AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText;
-  const AContext: INyxPascalCompilerContext; const ADescriptor: INyxPascalModuleSource);
+  const AContext: INyxPascalCompilerContext; const ADescriptor: INyxPascalModuleSource;
+  AReplace: Boolean);
 var
   LView: INyxPascalTranslatedSyntax;
   LSource: INyxPascalTranslation;
   LName: TNyxText;
   LFacts: INyxPascalCompilerContext;
   LOptions: TNyxPascalTranslationOptions;
+  LConstruction: INyxPascalSemanticTranslation;
+  LConditions: TNyxPascalConditionalOptions;
+  LAt: Integer;
+  LDepth: Integer;
+  LRemaining: Integer;
 begin
   Check;
   LFacts := AContext;
@@ -504,13 +526,58 @@ begin
     raise EOwnedGap.CreateGap(pcgBinding, 'This captured module needs an explicit readable source encoding',
       pbiCompilerContext, AExpected);
   end;
-  LSource := NewNyxPascalTranslation(FFiles, AFile, LFacts, LOptions, FCancel);
-
-  if LSource.Count > FProvider.Options.AggregateTokens - FTokens then
+  for LAt := 0 to High(FBuilding) do
   begin
-    raise EOwnedGap.CreateGap(pcgBudget, 'Captured analysis roots exceed the aggregate token budget');
+
+    if FBuilding[LAt] = AFile.Name then
+    begin
+      raise EOwnedGap.CreateGap(pcgBinding, 'Conditional imports need a still-constructing source root',
+        pbiIncompleteSource, AExpected);
+    end;
   end;
-  Inc(FTokens, LSource.Count);
+
+  if Length(FBuilding) >= FProvider.Options.Binding.MaximumModules then
+  begin
+    raise EOwnedGap.CreateGap(pcgBudget, 'Conditional dependency construction exceeds its depth budget');
+  end;
+  LDepth := Length(FBuilding);
+  SetLength(FBuilding, LDepth + 1);
+  FBuilding[LDepth] := AFile.Name;
+  try
+    while True do
+    begin
+      Check;
+      LRemaining := FProvider.Options.AggregateTokens - FTokens;
+
+      if LRemaining < 1 then
+      begin
+        raise EOwnedGap.CreateGap(pcgBudget, 'Semantic source roots exceed the aggregate token budget');
+      end;
+      LConditions := FProvider.Options.Conditions;
+
+      if LRemaining < LConditions.MaximumTokens then
+      begin
+        LConditions := LConditions.UpToTokens(LRemaining);
+      end;
+      LConstruction := NewNyxPascalSemanticTranslation(FFiles, AFile, LFacts,
+        FWorld, LOptions, FProvider.Options.Syntax, LConditions, FCancel);
+      Inc(FTokens, LConstruction.WorkTokens);
+      LSource := LConstruction.Source;
+
+      if not LConstruction.Pending or (LConstruction.BindingIssue <> pbiMissingModule) or
+        (LConstruction.RelatedName = '') then
+      begin
+        Break;
+      end;
+
+      if not LoadDependency(LConstruction.RelatedName) then
+      begin
+        Break;
+      end;
+    end;
+  finally
+    SetLength(FBuilding, LDepth);
+  end;
   LView := NewNyxPascalTranslatedSyntax(LSource, FProvider.Options.Syntax, FCancel);
   LName := LView.Syntax.Scope(0).Name;
 
@@ -524,9 +591,16 @@ begin
     raise EOwnedGap.CreateGap(pcgSourceIdentity, 'This declared module differs from its project membership', pbiNone, AFile.Name);
   end;
 
-  if FWorld.FindModule(LName) >= 0 then
+  LAt := FWorld.FindModule(LName);
+
+  if LAt >= 0 then
   begin
-    raise EOwnedGap.CreateGap(pcgSourceIdentity, 'Two captured roots declare the same module', pbiNone, AFile.Name);
+
+    if not AReplace or (FWorld.ModuleAt(LAt).Source.Files.FileAt(
+      FWorld.ModuleAt(LAt).Source.Occurrence(0).FileIndex).Name <> AFile.Name) then
+    begin
+      raise EOwnedGap.CreateGap(pcgSourceIdentity, 'Two captured roots declare the same module', pbiNone, AFile.Name);
+    end;
   end;
   FWorld := FWorld.WithModule(LView);
 end;
@@ -588,6 +662,7 @@ begin
       AddModule(NyxPascalProjectPhysicalFile(FRequest.Sources, LSource), LExpected);
     end;
   end;
+  RefineWorld;
   LExpected := NyxPascalProjectUnit(FRequest.Sources, FRequest.Owner).Name;
   FOwner := FWorld.FindModule(LExpected);
 
@@ -595,6 +670,84 @@ begin
   begin
     raise EOwnedGap.CreateGap(pcgSourceIdentity, 'The explicit completion owner has no captured module');
   end;
+end;
+
+procedure TAnalysis.RefineWorld;
+var
+  LAt: Integer;
+  LPass: Integer;
+  LBefore: Integer;
+  LAfter: Integer;
+  LDescriptorAt: Integer;
+  LView: INyxPascalTranslatedSyntax;
+  LDescriptor: INyxPascalModuleSource;
+  LRoot: TNyxPascalPhysicalFile;
+  LName: TNyxText;
+  LChanged: Boolean;
+
+  function Unknowns(const ASource: INyxPascalTranslation): Integer;
+  var
+    LDiagnostic: Integer;
+  begin
+    Result := 0;
+    for LDiagnostic := 0 to ASource.DiagnosticCount - 1 do
+    begin
+
+      if ASource.Diagnostic(LDiagnostic).Issue = ptiUnknownCondition then
+      begin
+        Inc(Result);
+      end;
+    end;
+  end;
+
+begin
+  { All supplied roots now exist. Revisit conditional exports without making
+    caller root order a prerequisite. Only a reduction in unresolved conditions
+    permits another sweep; ordinary token/pass/load budgets still own all work. }
+  LPass := 0;
+  repeat
+    Check;
+    LChanged := False;
+    Inc(LPass);
+    LAt := 0;
+    while LAt < FWorld.Count do
+    begin
+      Check;
+      LView := FWorld.ModuleAt(LAt);
+      LBefore := Unknowns(LView.Source);
+
+      if LBefore > 0 then
+      begin
+        LRoot := LView.Source.Files.FileAt(LView.Source.Occurrence(0).FileIndex);
+        LName := LView.Syntax.Scope(0).Name;
+        LDescriptor := nil;
+
+        if FProvider.Modules <> nil then
+        begin
+          LDescriptorAt := FProvider.Modules.Find(NyxPascalModule(LName));
+
+          if LDescriptorAt >= 0 then
+          begin
+            LDescriptor := FProvider.Modules.Entry(LDescriptorAt);
+
+            if LDescriptor.Root.Name <> LRoot.Name then
+            begin
+              LDescriptor := nil;
+            end;
+          end;
+        end;
+        AddModule(LRoot, LName, LView.Source.InitialContext, LDescriptor, True);
+        LAfter := Unknowns(FWorld.ModuleAt(LAt).Source);
+        LChanged := LChanged or (LAfter < LBefore);
+      end;
+      Inc(LAt);
+    end;
+
+    if LChanged and (LPass >= FProvider.Options.Conditions.MaximumPasses) then
+    begin
+      raise EOwnedGap.CreateGap(pcgBudget, 'Conditional module refinement exceeds its pass budget');
+    end;
+  until not LChanged;
 end;
 
 function TAnalysis.LoadDependency(const AName: TNyxText): Boolean;
@@ -624,6 +777,11 @@ begin
   LSource := FProvider.Modules.Entry(LAt);
   AddModule(LSource.Root, LSource.Name.Name, LSource.Context, LSource);
   Inc(FLoads);
+
+  if Length(FBuilding) = 0 then
+  begin
+    RefineWorld;
+  end;
   Result := True;
 end;
 

@@ -22,6 +22,12 @@ and preserves intrinsic namespace/context identity. Whole actual RTL binding and
 ordered source-conditional semantics remain open under original authoring
 criterion two; WORK.md owns qualification and retained failures.
 
+The [ordered conditional reader](../docs/pascal-projects.md#ordered-semantic-conditions)
+now uses exact source-prefix binding and checked replay in ordinary completion.
+Compiler-backed whole-source evidence and the retained actual RTL import gap
+stay in WORK.md; full language/SDK/layout/incremental/adoption/parity/delivery
+remain under original authoring criterion two.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

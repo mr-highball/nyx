@@ -107,7 +107,6 @@ var
   LSourcePath: TNyxText;
   LLog: TNyxText;
   LCount: Integer;
-  LAt: Integer;
   LBefore: Integer;
   LCode: Integer;
   LStart: QWord;

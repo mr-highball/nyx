@@ -251,7 +251,7 @@ begin
     (LNeeds.SizeName(0).Name = TNyxText('integer')) and
     (LNeeds.SizeName(1).Name = TNyxText('system.integer')),
     'Named size requirements never become compiler defines or lose their qualification');
-  LNeeds := PlanNyxPascalCondition(LContext, 'defined(Future) and declared(TThing)');
+  LNeeds := PlanNyxPascalCondition(LContext, 'defined(Future) and unsupported(TThing)');
   Check(not LNeeds.SyntaxSupported and (LNeeds.SymbolCount = 0) and (LNeeds.SizeCount = 0),
     'An unsupported function cannot publish a speculative partial request');
   LNeeds := PlanNyxPascalCondition(LContext, 'sizeof(Thing[0])=4');

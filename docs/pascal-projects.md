@@ -1360,6 +1360,72 @@ visibility, imports, source positions and unknown settings effects. Do not infer
 grammar/incremental/default-adoption/input/navigation/quality/parity/delivery
 remains under the original authoring owners. Browser evidence here is compilation.
 
+## Ordered semantic conditions
+
+`nyx.pascal.conditions` connects source scopes to the conditional reader.
+`NewNyxPascalSemanticTranslation` owns frozen files and initial context, then
+refines the first unknown expression from its preceding token prefix. It returns
+an immutable `INyxPascalSemanticTranslation` with the final ordinary translation,
+work/pass/answer counts and a bounded pending site, binding issue and related name.
+This is source analysis, not compiler admission or application execution.
+
+`TNyxPascalDeclarationRef` distinguishes unqualified declaration names from
+compiler defines and named size operands. `AnalyzeNyxPascalCondition` optionally
+uses `INyxPascalConditionSemantics` for named `declared()` and `sizeof()` queries.
+Without semantic authority their meaning stays unknown. Qualified/escaped
+declaration expressions and general size expressions remain unsupported.
+The original planning interface stays intact; optional
+`INyxPascalConditionDeclarations` exposes deduplicated declaration requests.
+Malformed/unsupported expressions publish no speculative partial request list.
+
+`NewNyxPascalTranslationPrefix` retains original physical files, lexical views,
+macro expansions and state provenance while bounding tokens, occurrences and
+state/occurrence exits at an exact source site. It adds no closing syntax or
+authored EOF token. Prior diagnostics and unknown participation remain explicit;
+the unseen suffix cannot provide declarations to the prefix. Ordinary syntax
+recovery supplies an analysis projection, never an edited or compiler candidate
+buffer. Repeated visits to an include retain separate occurrence identities.
+
+Each accepted answer is sealed in construction order with its file, occurrence,
+physical span, prefix token count, expanded expression and compiler facts.
+The next pass reads the same frozen inputs and checks that exact authority before
+using an answer. A changed or unconsumed answer refuses the construction. No
+translation retains the callback afterward, and receipts retain no binding world
+or temporary scope authority. Records contain no interfaces; owned class graphs
+point outward to immutable source/context data.
+
+Declaration presence follows real scope lookup, including missing import and
+unsupported-scope refusals. Size lookup follows bound aliases/distinct types to
+an intrinsic's checked reference and declaring context, accepting only its
+explicit captured measurement with matching mode/H policy. Host `SizeOf`, raw
+name-to-width tables, opaque record layouts and pristine alias substitutions
+provide no answer. The supplied world and context must belong to the same
+captured compiler/output configuration; this factory does not establish full
+SDK/target coherence. General layouts, canonical typing and expressions stay open.
+
+`TNyxPascalConditionalOptions` defaults to 64 passes and four million cumulative
+translation/prefix tokens. Caller-selected translation/syntax/binding limits
+still apply. Exhaustion and cancellation publish no partial construction receipt.
+This is bounded refinement; incremental/project-scale performance is unqualified.
+
+Owned and indexed completion use this constructor by default, through typed
+`WithConditions` options. Every pass/prefix consumes the ordinary aggregate token
+budget. Missing semantic imports use the captured dependency loader; active root
+cycles refuse. Once all supplied roots exist, conditional exports are revisited
+under the same limits. Another sweep requires fewer unresolved conditions, so
+caller root ordering does not become a configuration prerequisite. Compilation
+and editor history/source publication remain independent operations.
+
+The exact whole handwritten native companion and selected-compiler measurements
+qualify forward visibility, one physical include visited twice, source-local and
+System aliases, nested shadowing and unchanged source/scalar positions. Small
+explicit System/ObjPas scope models isolate the rules; they are not a replacement
+SDK. The real SysUtils construction still reports its external scope prerequisite
+and the full six size/declared decisions remain open. WORK.md owns exact current
+native/semantic evidence and retained failures. Browser consumers compile only;
+full RTL/grammar/incremental/default-adoption/input/navigation/quality/parity/
+delivery remain required under the original authoring owners.
+
 ## Concrete generic binding and member pages
 
 The binding kernel now carries immutable concrete arguments through supported
