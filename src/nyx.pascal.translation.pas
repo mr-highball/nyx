@@ -26,7 +26,7 @@ unit nyx.pascal.translation;
 interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context, nyx.pascal.files,
-  nyx.pascal.encoding;
+  nyx.pascal.encoding, nyx.pascal.macros;
 
 type
   { Translation resource refusal is atomic. It differs from a recoverable missing
@@ -36,7 +36,8 @@ type
     successful compiler/type-resolution result. Positions are always physical. }
   TNyxPascalTranslationIssue = (ptiUnknownCondition, ptiMissingInclude,
     ptiIncludeCycle, ptiUnbalancedConditional, ptiUnsupportedDirective,
-    ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding);
+    ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding,
+    ptiMacroContext, ptiMacroCycle);
   { Immutable physical diagnostic. Occurrence distinguishes repeated includes;
     text is English guidance with no machine paths or borrowed exceptions. }
   TNyxPascalTranslationDiagnostic = record
@@ -82,11 +83,20 @@ type
     FPhysicalToken: Integer;
     FState: Integer;
     FActivity: TNyxPascalKnowledge;
+    FExpansion: Integer;
+    FExpansionToken: Integer;
+    FExpanded: Boolean;
   public
     property Occurrence: Integer read FOccurrence;
     property PhysicalToken: Integer read FPhysicalToken;
     property State: Integer read FState;
     property Activity: TNyxPascalKnowledge read FActivity;
+    { -1 for authored tokens. Expanded rows keep the original invocation's
+      occurrence/token; effective spelling and recursive origins are separate. }
+    property Expansion: Integer read FExpansion;
+    property ExpansionToken: Integer read FExpansionToken;
+    { False in legacy zero-initialized token records as well as authored rows. }
+    property Expanded: Boolean read FExpanded;
   end;
   { Independent analysis budgets. Expanded bytes count repeated physical reads;
     token budgets include trivia/directives and only the root EOF. No limit
@@ -111,13 +121,15 @@ type
     function Lexical(const AValue: TNyxPascalLexicalOptions): TNyxPascalTranslationOptions;
     { Includes trivia/directives and the root EOF, across repeated includes. }
     function UpToTokens(AValue: Integer): TNyxPascalTranslationOptions;
-    { UTF-8 bytes of physical reads, including every repeated inclusion. }
+    { Physical reads plus replacement, re-tokenization and boundary work bytes;
+      repeated inclusions/expansions are charged independently. }
     function UpToExpandedBytes(AValue: Integer): TNyxPascalTranslationOptions;
-    { Bounds both recursive inclusions and the conditional frame stack. }
+    { Bounds recursive inclusions, replacement ancestry and conditional frames. }
     function UpToIncludeDepth(AValue: Integer): TNyxPascalTranslationOptions;
-    { The root counts once; repeated files receive independent occurrences. }
+    { The root counts once; repeated files receive independent occurrences.
+      Outer replacement packets have a separate collection with this same cap. }
     function UpToOccurrences(AValue: Integer): TNyxPascalTranslationOptions;
-    { Limits retained immutable compiler states; adjacent equal states coalesce. }
+    { Limits retained immutable compiler/replacement pairs; adjacent equal pairs coalesce. }
     function UpToStates(AValue: Integer): TNyxPascalTranslationOptions;
     { Excess unresolved constructs refuse instead of silently dropping guidance. }
     function UpToDiagnostics(AValue: Integer): TNyxPascalTranslationOptions;
@@ -162,6 +174,23 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570C04}']
     function OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
   end;
+  { Optional effective-token/recursive-origin owner. The original translation
+    methods continue to expose authored invocation tokens. A saved state also
+    retains its exact immutable replacement table, independent of compiler facts. }
+  INyxPascalTranslationMacros = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C06}']
+    function Expansion(AIndex: Integer): INyxPascalMacroExpansion;
+    function StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+  end;
+
+{ Effective tokens may come from a replacement fragment; their Span is relative
+  to that fragment. PhysicalToken/Text still describe the exact invocation.
+  Callers retain the expansion trace for definition origins, never infer them
+  from the length of the substituted spelling. Legacy translators pass through. }
+function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxPascalToken;
+function NyxPascalEffectiveText(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxText;
 
 { Read exact occurrence tokens, with legacy file-only fallback for alternate
   translators which have not exposed contextual lexing. Indices remain checked. }
@@ -185,7 +214,7 @@ function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
 
 implementation
 
-uses SysUtils, nyx.bytes;
+uses SysUtils, nyx.bytes, nyx.editing;
 
 type
   { File-only compatibility view. The first immutable occurrence is retained;
@@ -218,7 +247,7 @@ type
   { Owns every cache/immutable vector. Construction alone retains cancellation;
     all published references point outward to data, never back to a document. }
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
-    INyxPascalTranslationLexicalContexts)
+    INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -229,6 +258,10 @@ type
     FTokens: array of TNyxPascalTranslatedToken;
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
+    FMacroStates: array of INyxPascalMacroEnvironment;
+    FMacros: INyxPascalMacroEnvironment;
+    FExpansions: array of INyxPascalMacroExpansion;
+    FBoundaryViews: array of INyxPascalSourceView;
     FDiagnostics: array of TNyxPascalTranslationDiagnostic;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
@@ -247,7 +280,12 @@ type
     procedure Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
       const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
     procedure SaveState;
-    procedure AddToken(AOccurrence, AToken: Integer);
+    procedure AddToken(AOccurrence, AToken: Integer; AExpansion: Integer = -1;
+      AExpansionToken: Integer = -1);
+    procedure Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
+      const AText: TNyxText);
+    procedure VerifyBoundary(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+      const AExpansion: INyxPascalMacroExpansion);
     procedure Visit(AFile, AParent: Integer; const AInclude: TNyxPascalSpan);
     procedure Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText);
@@ -276,6 +314,8 @@ type
     function State(AIndex: Integer): INyxPascalCompilerContext;
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalTranslationDiagnostic;
+    function Expansion(AIndex: Integer): INyxPascalMacroExpansion;
+    function StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -370,6 +410,7 @@ constructor TTranslation.Create(const AFiles: INyxPascalFileCatalog;
 var
   LRoot: Integer;
   LAt: Integer;
+  LDefinition: TNyxPascalMacroDefinition;
 begin
   inherited Create;
   AOptions.Validate;
@@ -380,6 +421,21 @@ begin
     FFiles := CaptureNyxPascalFiles(AFiles);
     FInitial := CaptureNyxPascalCompilerContext(AContext);
     FContext := FInitial;
+    FMacros := NewNyxPascalMacroEnvironment;
+    for LAt := 0 to FInitial.SymbolCount - 1 do
+    begin
+
+      if FInitial.Symbol(FInitial.SymbolName(LAt)).Kind = ppdInteger then
+      begin
+        LDefinition := Default(TNyxPascalMacroDefinition);
+        LDefinition.Name := FInitial.SymbolName(LAt);
+        LDefinition.Replacement := TNyxText(IntToStr(FInitial.Symbol(LDefinition.Name).IntegerValue));
+        LDefinition.Occurrence := -1;
+        LDefinition.Span := NyxPascalSpan(0, NyxTextScalarCount(LDefinition.Replacement));
+        LDefinition.Known := True;
+        FMacros := FMacros.WithDefinition(LDefinition);
+      end;
+    end;
     FNested := FOptions.LexicalOptions.AllowNestedComments;
 
     if (FInitial.Feature(ppfNestedComments) <> ppkUnknown) and
@@ -389,6 +445,7 @@ begin
       raise ENyxPascalContext.Create('Captured comment facts disagree with the lexical policy');
     end;
     SetLength(FPhysical, FFiles.Count);
+    SetLength(FBoundaryViews, FFiles.Count);
     LRoot := FFiles.Find(ARoot);
 
     if LRoot < 0 then
@@ -457,7 +514,8 @@ end;
 procedure TTranslation.SaveState;
 begin
 
-  if (FStateCount > 0) and FStates[FStateCount - 1].SameFacts(FContext) then
+  if (FStateCount > 0) and FStates[FStateCount - 1].SameFacts(FContext) and
+    FMacroStates[FStateCount - 1].SameMacros(FMacros) then
   begin
     Exit;
   end;
@@ -470,12 +528,15 @@ begin
   if FStateCount = Length(FStates) then
   begin
     SetLength(FStates, Capacity(FStateCount, FOptions.MaximumStates));
+    SetLength(FMacroStates, Length(FStates));
   end;
   FStates[FStateCount] := FContext;
+  FMacroStates[FStateCount] := FMacros;
   Inc(FStateCount);
 end;
 
-procedure TTranslation.AddToken(AOccurrence, AToken: Integer);
+procedure TTranslation.AddToken(AOccurrence, AToken: Integer; AExpansion: Integer;
+  AExpansionToken: Integer);
 begin
   CheckCancellation;
 
@@ -492,6 +553,9 @@ begin
   FTokens[FTokenCount].FPhysicalToken := AToken;
   FTokens[FTokenCount].FState := FStateCount - 1;
   FTokens[FTokenCount].FActivity := FActive;
+  FTokens[FTokenCount].FExpansion := AExpansion;
+  FTokens[FTokenCount].FExpansionToken := AExpansionToken;
+  FTokens[FTokenCount].FExpanded := AExpansion >= 0;
 
   if FBlocked then
   begin
@@ -500,12 +564,144 @@ begin
   Inc(FTokenCount);
 end;
 
+procedure TTranslation.Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
+  const AText: TNyxText);
+var
+  LExpansion: INyxPascalMacroExpansion;
+  LIndex: Integer;
+  LAt: Integer;
+  LName: TNyxPascalDefineRef;
+begin
+
+  try
+    LName := NyxPascalDefine(AText);
+  except
+    on ENyxPascalContext do
+    begin
+      { Extended Unicode/long Pascal identifiers need not be macro symbols. }
+      AddToken(AOccurrence, AIndex);
+      Exit;
+    end;
+  end;
+
+  if (FActive <> ppkTrue) or FBlocked or AToken.Escaped or
+    (AToken.Word <> pkwNone) or not FMacros.Has(LName) or
+    (FContext.Feature(ppfReplacementMacros) = ppkFalse) then
+  begin
+    AddToken(AOccurrence, AIndex);
+    Exit;
+  end;
+  try
+
+    if FContext.Feature(ppfReplacementMacros) = ppkUnknown then
+    begin
+      raise ENyxPascalMacro.Create('Replacement enablement is not captured');
+    end;
+    LExpansion := FMacros.Expand(AText, pmuSource, FOptions.LexicalOptions.NestedComments(FNested),
+      FOptions.MaximumExpandedBytes - FBytes, FOptions.MaximumTokens - FTokenCount,
+      FOptions.MaximumIncludeDepth, FCancellation);
+    VerifyBoundary(AOccurrence, AToken.Span, LExpansion);
+
+    if Length(FExpansions) >= FOptions.MaximumOccurrences then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Replacement invocations exceed their occurrence budget');
+    end;
+    Inc(FBytes, LExpansion.WorkBytes);
+    LIndex := Length(FExpansions);
+    SetLength(FExpansions, LIndex + 1);
+    FExpansions[LIndex] := LExpansion;
+    for LAt := 0 to LExpansion.Count - 1 do
+    begin
+      AddToken(AOccurrence, AIndex, LIndex, LAt);
+    end;
+  except
+    on LError: ENyxPascalMacroCycle do
+    begin
+      Problem(ptiMacroCycle, AOccurrence, AToken.Span, TNyxText(LError.Message));
+      UnknownEffect;
+      AddToken(AOccurrence, AIndex);
+    end;
+    on LError: ENyxPascalMacro do
+    begin
+      Problem(ptiMacroContext, AOccurrence, AToken.Span, TNyxText(LError.Message));
+      UnknownEffect;
+      AddToken(AOccurrence, AIndex);
+    end;
+  end;
+end;
+
+procedure TTranslation.VerifyBoundary(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+  const AExpansion: INyxPascalMacroExpansion);
+var
+  LFile: Integer;
+  LView: INyxPascalSourceView;
+  LStart: Integer;
+  LFinish: Integer;
+  LLeft: TNyxText;
+  LRight: TNyxText;
+  LJoined: TNyxText;
+  LLexical: INyxPascalLexicalSnapshot;
+  LAt: Integer;
+  LSpan: TNyxPascalSpan;
+begin
+  LFile := FOccurrences[AOccurrence].FileIndex;
+
+  if FBoundaryViews[LFile] = nil then
+  begin
+    { One canonical UTF-8 boundary map per visited file avoids rescanning the
+      entire prefix at every use. It is private analysis data, not external-byte
+      provenance; the catalog continues to own the exact original encoding. }
+    FBoundaryViews[LFile] := DecodeNyxPascalSource(NewNyxPascalSourceBytes(
+      NyxEncodeUTF8(FFiles.TextAt(LFile)), pboAuthoringUTF8), NyxPascalUTF8Codec, FCancellation);
+  end;
+  LView := FBoundaryViews[LFile];
+  LStart := ASpan.Start - 8;
+
+  if LStart < 0 then
+  begin
+    LStart := 0;
+  end;
+  LFinish := ASpan.Finish + 8;
+
+  if LFinish > LView.Scalars then
+  begin
+    LFinish := LView.Scalars;
+  end;
+  LLeft := NyxDecodeUTF8(LView.Original.Slice(LView.OriginalSpan(
+    NyxPascalSpan(LStart, ASpan.Start - LStart))));
+  LRight := NyxDecodeUTF8(LView.Original.Slice(LView.OriginalSpan(
+    NyxPascalSpan(ASpan.Finish, LFinish - ASpan.Finish))));
+  LJoined := LLeft + AExpansion.Joined + LRight;
+
+  if NyxUTF8ByteCount(LJoined) > FOptions.MaximumExpandedBytes - FBytes - AExpansion.WorkBytes then
+  begin
+    raise ENyxPascalMacroLimit.Create('Replacement boundary work exceeds its byte budget');
+  end;
+  Inc(FBytes, NyxUTF8ByteCount(LJoined));
+  LLexical := NewNyxPascalLexicalSnapshot(LJoined,
+    FOptions.LexicalOptions.NestedComments(FNested), FCancellation);
+  LStart := ASpan.Start - LStart;
+  LFinish := LStart + NyxTextScalarCount(AExpansion.Joined);
+  for LAt := 0 to LLexical.Count - 2 do
+  begin
+    LSpan := LLexical.Token(LAt).Span;
+
+    if (LLexical.Token(LAt).Kind <> ptkWhitespace) and
+      (((LSpan.Start < LStart) and (LSpan.Finish > LStart)) or
+       ((LSpan.Start < LFinish) and (LSpan.Finish > LFinish))) then
+    begin
+      raise ENyxPascalMacro.Create('A replacement joins surrounding source tokens; textual reader composition is required');
+    end;
+  end;
+end;
+
 procedure TTranslation.UnknownEffect;
 begin
   { An unknown textual effect may also change comment/string lexing. Keep the
     remaining physical capture for inspection, but do not interpret another
     directive using stale lexical defaults or manufacture unclosed-frame errors. }
   FContext := FContext.UnknownState;
+  FMacros := FMacros.UnknownState;
   FBlocked := True;
   SaveState;
 end;
@@ -516,7 +712,15 @@ begin
 
   if not Included or (AToken.Kind <> ptkEOF) then
   begin
-    Owner.AddToken(Occurrence, AIndex);
+
+    if AToken.Kind = ptkWord then
+    begin
+      Owner.Word(Occurrence, AIndex, AToken, AText);
+    end
+    else
+    begin
+      Owner.AddToken(Occurrence, AIndex);
+    end;
 
     if (AToken.Kind = ptkDirective) and not Owner.FBlocked then
     begin
@@ -672,7 +876,8 @@ begin
   end;
 end;
 
-procedure SplitDirective(const AText: TNyxText; out AName, AValue: TNyxText);
+procedure SplitDirective(const AText: TNyxText; out AName, AValue: TNyxText;
+  out AValueOffset: Integer);
 var
   LAt: Integer;
   LStart: Integer;
@@ -707,12 +912,15 @@ begin
     Dec(LFinish);
   end;
   AValue := Copy(AText, LAt, LFinish - LAt + 1);
+  AValueOffset := NyxTextScalarCount(Copy(AText, 1, LAt - 1));
 end;
 
 function TTranslation.Condition(const AKind, AValue: TNyxText): TNyxPascalKnowledge;
 var
   LName: TNyxPascalDefineRef;
   LOption: TNyxPascalKnowledge;
+  LExpanded: INyxPascalMacroExpansion;
+  LValue: TNyxText;
 begin
   Result := ppkUnknown;
   try
@@ -743,9 +951,23 @@ begin
     end
     else
     begin
-      Result := AnalyzeNyxPascalCondition(FContext, AValue).Truth;
+      LValue := AValue;
+
+      if (FContext.Feature(ppfReplacementMacros) = ppkTrue) and (FMacros.Count > 0) then
+      begin
+        LExpanded := FMacros.Expand(AValue, pmuCondition,
+          FOptions.LexicalOptions.NestedComments(FNested), FOptions.MaximumExpandedBytes - FBytes,
+          FOptions.MaximumTokens - FTokenCount, FOptions.MaximumIncludeDepth, FCancellation);
+        Inc(FBytes, LExpanded.WorkBytes);
+        LValue := LExpanded.Joined;
+      end;
+      Result := AnalyzeNyxPascalCondition(FContext, LValue).Truth;
     end;
   except
+    on ENyxPascalMacroLimit do
+    begin
+      raise;
+    end;
     on ENyxPascalContext do
     begin
       { A malformed authored condition still owns its structural frame. Do not
@@ -799,14 +1021,14 @@ function FeatureNamed(const AName: TNyxText; out AFeature: TNyxPascalLanguageFea
 const
   CNames: array[TNyxPascalLanguageFeature] of TNyxText =
     ('advancedrecords', 'nestedprocvars', 'anonymousfunctions', 'functionreferences',
-      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out');
+      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '');
 var
   LFeature: TNyxPascalLanguageFeature;
 begin
   for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
   begin
 
-    if CNames[LFeature] = AName then
+    if (CNames[LFeature] <> '') and (CNames[LFeature] = AName) then
     begin
       AFeature := LFeature;
       Exit(True);
@@ -826,8 +1048,11 @@ var
   LFrame: TConditionalFrame;
   LMode: TNyxPascalLanguageMode;
   LFeature: TNyxPascalLanguageFeature;
+  LOffset: Integer;
+  LSeparator: Integer;
+  LDefinition: TNyxPascalMacroDefinition;
 begin
-  SplitDirective(AText, LName, LValue);
+  SplitDirective(AText, LName, LValue, LOffset);
   try
 
     if (LName = 'ifdef') or (LName = 'ifndef') or (LName = 'if') or (LName = 'ifopt') then
@@ -930,22 +1155,81 @@ begin
 
     if (LName = 'define') or (LName = 'undef') then
     begin
+      LSeparator := Pos(':=', LValue);
+      LArgument := LValue;
 
-      if Pos(':=', LValue) > 0 then
+      if (LName = 'define') and (LSeparator > 0) then
       begin
-        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
-          'Replacement macros require explicit expansion support');
-        UnknownEffect;
-        FBlocked := True;
+        LArgument := Trim(Copy(LValue, 1, LSeparator - 1));
+        LDefinition := Default(TNyxPascalMacroDefinition);
+        LDefinition.Name := NyxPascalDefine(LArgument);
+        LDefinition.Replacement := Copy(LValue, LSeparator + 2, Length(LValue));
+        LDefinition.Occurrence := AOccurrence;
+        LDefinition.Span := NyxPascalSpan(AToken.Span.Start + LOffset +
+          NyxTextScalarCount(Copy(LValue, 1, LSeparator + 1)),
+          NyxTextScalarCount(LDefinition.Replacement));
+        LDefinition.Known := (FActive = ppkTrue) and
+          (FContext.Feature(ppfReplacementMacros) = ppkTrue);
+        FMacros := FMacros.WithDefinition(LDefinition);
+        ChangeSymbol(LArgument, ppdDefined);
       end
-      else if LName = 'define' then
+      else if LName = 'undef' then
       begin
-        ChangeSymbol(LValue, ppdDefined);
+
+        if FActive = ppkTrue then
+        begin
+          FMacros := FMacros.Without(NyxPascalDefine(LValue));
+        end
+        else
+        begin
+          LDefinition := Default(TNyxPascalMacroDefinition);
+          LDefinition.Name := NyxPascalDefine(LValue);
+          LDefinition.Occurrence := AOccurrence;
+          LDefinition.Span := NyxPascalSpan(AToken.Span.Start, 0);
+          FMacros := FMacros.WithDefinition(LDefinition);
+        end;
+        ChangeSymbol(LValue, ppdUndefined);
       end
       else
       begin
-        ChangeSymbol(LValue, ppdUndefined);
+
+        if FMacros.Has(NyxPascalDefine(LValue)) then
+        begin
+          LDefinition := Default(TNyxPascalMacroDefinition);
+          LDefinition.Name := NyxPascalDefine(LValue);
+          LDefinition.Occurrence := AOccurrence;
+          LDefinition.Span := NyxPascalSpan(AToken.Span.Start, 0);
+          LDefinition.Known := FActive = ppkTrue;
+          FMacros := FMacros.WithDefinition(LDefinition);
+        end;
+        ChangeSymbol(LValue, ppdDefined);
       end;
+      Exit;
+    end;
+
+    if LName = 'macro' then
+    begin
+      LArgument := NyxPascalASCIIKey(LValue);
+
+      if LArgument = 'on' then
+      begin
+        LCondition := ppkTrue;
+      end
+      else if LArgument = 'off' then
+      begin
+        LCondition := ppkFalse;
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('MACRO needs on or off');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LCondition := ppkUnknown;
+      end;
+      FContext := FContext.WithFeature(ppfReplacementMacros, LCondition);
+      SaveState;
       Exit;
     end;
 
@@ -1152,6 +1436,10 @@ begin
       'This directive needs explicit compiler-context support');
     UnknownEffect;
   except
+    on LError: ENyxPascalMacroLimit do
+    begin
+      raise;
+    end;
     on LError: ENyxPascalTranslationLimit do
     begin
       raise;
@@ -1214,6 +1502,68 @@ var
 begin
   LToken := Token(AIndex);
   Result := OccurrenceLexical(LToken.Occurrence).Text(LToken.PhysicalToken);
+end;
+
+function TTranslation.Expansion(AIndex: Integer): INyxPascalMacroExpansion;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FExpansions)) then
+  begin
+    raise ENyxPascalContext.Create('Replacement invocation is outside its translation');
+  end;
+  Result := FExpansions[AIndex];
+end;
+
+function TTranslation.StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+begin
+  State(AIndex);
+  Result := FMacroStates[AIndex];
+end;
+
+function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxPascalToken;
+var
+  LMacros: INyxPascalTranslationMacros;
+  LToken: TNyxPascalTranslatedToken;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('Effective tokens need their owning translation');
+  end;
+  LToken := ASource.Token(AIndex);
+
+  if LToken.Expanded and Supports(ASource, INyxPascalTranslationMacros, LMacros) then
+  begin
+    Result := LMacros.Expansion(LToken.Expansion).Token(LToken.ExpansionToken);
+  end
+  else
+  begin
+    Result := ASource.PhysicalToken(AIndex);
+  end;
+end;
+
+function NyxPascalEffectiveText(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxText;
+var
+  LMacros: INyxPascalTranslationMacros;
+  LToken: TNyxPascalTranslatedToken;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('Effective text needs its owning translation');
+  end;
+  LToken := ASource.Token(AIndex);
+
+  if LToken.Expanded and Supports(ASource, INyxPascalTranslationMacros, LMacros) then
+  begin
+    Result := LMacros.Expansion(LToken.Expansion).Text(LToken.ExpansionToken);
+  end
+  else
+  begin
+    Result := ASource.Text(AIndex);
+  end;
 end;
 
 function TTranslation.Physical(AFile: Integer): INyxPascalLexicalSnapshot;

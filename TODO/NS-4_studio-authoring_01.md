@@ -12,7 +12,7 @@ prerequisites; it adds no completion credit or independent percentage.
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;
-four current browser consumers compile only. Prior binding/generic evidence stays
+three current browser consumers compile only. Prior binding/generic evidence stays
 in WORK.md. The actual Nyx tree advances the badge dependency through
 nyx.model. [Ordered lexical contexts](../docs/pascal-projects.md#ordered-lexical-mode-and-include-contexts)
 now pass 41 native checks and five independent compiler-mode jobs, preserving
@@ -20,13 +20,16 @@ per-occurrence source identity. Real SysUtils passes ObjFPC/OUT and reaches its
 sysutilh.inc; its interface remains explicitly incomplete.
 [Configured compiler facts](../docs/pascal-projects.md#capturing-facts-from-a-configured-fpc-compiler)
 now replace hard-coded indexed semantic metadata: portable protocol 24, actual
-profile 22 and production semantic 84 pass, clean native heaps.
+profile 23 and production semantic 84 pass, clean native heaps.
 [Original bytes and explicit views](../docs/pascal-projects.md#original-source-bytes-and-explicit-decoding)
 now preserve exact scalar/byte origins, including detached completion definitions.
-Native byte checks pass 43; four current browser consumers compile only. All 48
+Prior native byte checks retain 43 passes; current browser evidence is compilation only. All 48
 actual include-directory files retain exact bytes, with strg.inc explicitly opaque;
-SysUtils now reaches MACRO ON in sysutilh.inc. Next support ordered replacement
-macros and continue full real RTL/default/target/define context without export
+The [ordered replacement layer](../docs/pascal-projects.md#ordered-replacement-macros)
+now feeds syntax and declared-member completion with distinct invocation/definition
+origins. Native macro/oracle checks pass 38/11; three current browser consumers
+compile only. SysUtils now passes MACRO ON and both selected definitions, reaching
+its inlining-policy gap. Continue full real RTL/default/target/define context without export
 stubs, guessed encodings or source rewriting. Full expression/grammar/helpers/
 overloads/constraints, incremental/project-scale work, default Studio adoption and
 complete input/navigation/quality/parity/delivery remain required. No credit closes.

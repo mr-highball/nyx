@@ -50,8 +50,10 @@ consumer without sealing future names. Its native host owns/joins compiler jobs;
 the portable reader also compiles for pas2js. The [source-byte layer](docs/pascal-projects.md#original-source-bytes-and-explicit-decoding)
 retains original packets, explicit decoded views and exact scalar/byte origins.
 Actual RTL include capture now retains undecodable strg.inc without inventing
-text; translation reaches the explicit replacement-macro gap in sysutilh.inc.
-Complete RTL meaning and default Studio adoption remain open.
+text. [Ordered replacements](docs/pascal-projects.md#ordered-replacement-macros)
+now feed syntax and declared-member completion while preserving invocation and
+recursive definition origins. Real RTL translation reaches its inlining-policy
+gap in sysutilh.inc. Complete RTL meaning and default Studio adoption remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

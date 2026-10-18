@@ -176,8 +176,9 @@ var
   LAttempt: INyxPascalDirectoryCapture;
   LFiles: INyxPascalFileCatalog;
   LTranslation: INyxPascalTranslation;
+  LMacroContext: INyxPascalTranslationMacros;
   LAt: Integer;
-  LUnsupportedMacro: Boolean;
+  LUnsupportedInline: Boolean;
   LMissing: Boolean;
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LFile: TNyxPascalPhysicalFile;
@@ -262,22 +263,28 @@ begin
   LTranslation := NewNyxPascalTranslation(LFiles, LFile, AContext,
     TNyxPascalTranslationOptions.Defaults);
   LMissing := False;
-  LUnsupportedMacro := False;
+  LUnsupportedInline := False;
   for LAt := 0 to LTranslation.DiagnosticCount - 1 do
   begin
     LDiagnostic := LTranslation.Diagnostic(LAt);
     LMissing := LMissing or (LDiagnostic.Issue = ptiMissingInclude);
     LFile := LTranslation.Files.FileAt(LTranslation.Occurrence(LDiagnostic.Occurrence).FileIndex);
-    LUnsupportedMacro := LUnsupportedMacro or
+    LUnsupportedInline := LUnsupportedInline or
       ((LDiagnostic.Issue = ptiUnsupportedDirective) and
       (LFile.Name = TNyxText('rtl/objpas/sysutils/sysutilh.inc')) and
       (NyxPascalOccurrenceLexical(LTranslation, LDiagnostic.Occurrence).Slice(
-        LDiagnostic.Span) = TNyxText('{$MACRO ON}')));
+        LDiagnostic.Span) = TNyxText('{$inline on}')));
     WriteLn('actual RTL / ', LFile.Name, ':', LDiagnostic.Span.Start,
       ' issue=', Ord(LDiagnostic.Issue), ' ', LDiagnostic.MessageText);
   end;
-  Check((LTranslation.OccurrenceCount = 2) and not LMissing and LUnsupportedMacro,
-    'Actual compiler facts and complete byte capture reach the real RTL replacement-macro boundary');
+  Check((LTranslation.OccurrenceCount = 2) and not LMissing and LUnsupportedInline,
+    'Actual compiler facts pass replacement setup and reach the real inline-policy boundary');
+  Check(Supports(LTranslation, INyxPascalTranslationMacros, LMacroContext) and
+    (LMacroContext.StateMacros(LTranslation.StateCount - 1).Definition(
+      NyxPascalDefine('SUT')).Replacement = TNyxText('sysutils')) and
+    (LMacroContext.StateMacros(LTranslation.StateCount - 1).Definition(
+      NyxPascalDefine('BU')).Replacement = TNyxText('baseunix')),
+    'Actual nondotted RTL alternatives retain their exact ordered replacement bodies');
   WriteLn('actual capture / files=', LFiles.Count, ' modules=', LCapture.Modules.Count);
   LProvider := NewNyxIndexedPascalCompletionProvider(AContext, LFiles, LCapture.Modules,
     TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000));

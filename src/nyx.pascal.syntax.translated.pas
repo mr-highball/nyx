@@ -40,6 +40,7 @@ type
     FOccurrence: Integer;
     FToken: Integer;
     FState: Integer;
+    FExpansion: Integer;
   public
     property VirtualSpan: TNyxPascalSpan read FVirtual;
     property PhysicalSpan: TNyxPascalSpan read FPhysical;
@@ -47,6 +48,9 @@ type
     property Occurrence: Integer read FOccurrence;
     property TranslationToken: Integer read FToken;
     property State: Integer read FState;
+    { -1 is a linear authored token. Replacement parts retain their complete
+      invocation span; use Source's macro trace for definition fragment origins. }
+    property Expansion: Integer read FExpansion;
   end;
   { Owns a frozen translation and a declared-syntax projection. Projection text
     separates significant tokens explicitly and is analysis-only: never authored
@@ -150,6 +154,7 @@ var
   LText: TNyxText;
   LToken: TNyxPascalTranslatedToken;
   LPhysical: TNyxPascalToken;
+  LEffective: TNyxPascalToken;
   LOrigin: TNyxPascalSyntaxOrigin;
   LCapacity: Integer;
 begin
@@ -166,8 +171,9 @@ begin
       end;
       LToken := FSource.Token(LAt);
       LPhysical := FSource.PhysicalToken(LAt);
+      LEffective := NyxPascalEffectiveToken(FSource, LAt);
 
-      if LPhysical.Kind in [ptkWhitespace, ptkComment, ptkDirective, ptkEOF] then
+      if LEffective.Kind in [ptkWhitespace, ptkComment, ptkDirective, ptkEOF] then
       begin
         Continue;
       end;
@@ -182,7 +188,7 @@ begin
         FBlocked := LAt;
         Break;
       end;
-      LText := FSource.Text(LAt);
+      LText := NyxPascalEffectiveText(FSource, LAt);
       LTokenBytes := NyxUTF8ByteCount(LText);
 
       if FCount > 0 then
@@ -202,12 +208,18 @@ begin
         Inc(LOffset);
       end;
       LOrigin := Default(TNyxPascalSyntaxOrigin);
-      LOrigin.FVirtual := NyxPascalSpan(LOffset, LPhysical.Span.Length);
+      LOrigin.FVirtual := NyxPascalSpan(LOffset, LEffective.Span.Length);
       LOrigin.FPhysical := LPhysical.Span;
       LOrigin.FFile := FSource.Occurrence(LToken.Occurrence).FileIndex;
       LOrigin.FOccurrence := LToken.Occurrence;
       LOrigin.FToken := LAt;
       LOrigin.FState := LToken.State;
+      LOrigin.FExpansion := -1;
+
+      if LToken.Expanded then
+      begin
+        LOrigin.FExpansion := LToken.Expansion;
+      end;
 
       if FCount = Length(FOrigins) then
       begin
@@ -221,7 +233,7 @@ begin
       end;
       FOrigins[FCount] := LOrigin;
       Inc(FCount);
-      Inc(LOffset, LPhysical.Span.Length);
+      Inc(LOffset, LEffective.Span.Length);
       LParts.Add(LText);
     end;
     FSyntax := NewNyxPascalSyntaxSnapshot(LParts.Join, AOptions, ACancellation);
@@ -315,6 +327,13 @@ begin
       (APhysicalOffset >= FOrigins[LAt].PhysicalSpan.Start) and
       (APhysicalOffset < FOrigins[LAt].PhysicalSpan.Finish) then
     begin
+
+      if FOrigins[LAt].Expansion >= 0 then
+      begin
+        { One invocation can produce many unrelated lengths/tokens. A scalar
+          caret cannot choose a unique expanded character without new intent. }
+        Exit(-1);
+      end;
       Exit(FOrigins[LAt].VirtualSpan.Start + APhysicalOffset - FOrigins[LAt].PhysicalSpan.Start);
     end;
   end;
@@ -349,8 +368,12 @@ begin
   begin
     raise ENyxPascalLexical.Create('A logical range does not intersect this physical token');
   end;
-  Result.FPhysical := NyxPascalSpan(Result.PhysicalSpan.Start + LStart - Result.VirtualSpan.Start,
-    LFinish - LStart);
+
+  if Result.Expansion < 0 then
+  begin
+    Result.FPhysical := NyxPascalSpan(Result.PhysicalSpan.Start + LStart - Result.VirtualSpan.Start,
+      LFinish - LStart);
+  end;
   Result.FVirtual := NyxPascalSpan(LStart, LFinish - LStart);
 end;
 

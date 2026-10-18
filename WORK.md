@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Original bytes and explicit source views — 2026-10-18
+## Current integration: Ordered replacements and physical origins — 2026-10-18
+
+Previous goal turn is progress: pushed 5cb242e retains original bytes and explicit
+source views. This turn adds real ordered replacement meaning to the wholly
+Nyx-owned resolver, its syntax projection and declared-member completion. Original
+NS-4 authoring criterion two/service/editor owners retain full compiler/RTL/
+language meaning, incremental/project-scale budgets, modern editing/navigation,
+quality/parity and delivery. No original criterion/task/counter/credit/DONE,
+default Studio adoption, new MCP tool/schema or rollout closes. Solo; no HTTP/
+browser/file-protocol input/capture, protected mutation, cleanup/deletion/restart
+or review bypass occurs. New builds/evidence remain on the provisioned drive.
+
+New nyx.pascal.macros owns immutable typed replacement tables and detached
+effective tokens/recursive definition traces. Aliases resolve at use, redefining
+returns independent tables, undef removes replacement status, and escaped names/
+keywords/literals/comments are not substituted. Conditions protect defined()
+arguments. MACRO ON/OFF and definitions flow through textual includes; saved
+states pair exact compiler facts with replacement tables, so equal Boolean
+defines do not collapse different bodies. Uncertain writes/effects revoke
+replacement knowledge while retaining source evidence. Compiler defaults,
+uncaptured external replacement text and disabled assignment semantics are not
+guessed. Tables cap names/bytes, and expansion charges recursive work, tokenization
+and physical boundary checks to bounded translation budgets. Cycles diagnose;
+cancellation/quotas refuse without partial packets.
+
+PhysicalToken/Text retain the authored invocation. Optional expansion packets
+and effective-token helpers supply semantic spelling without rewriting files.
+Syntax consumes these tokens with nonlinear origin markers: partial virtual
+slices retain the complete invocation range; a caret inside a substitution has
+no invented expanded character. Completion binds a replacement-generated record
+member and preserves the actual invocation as its physical definition. Recursive
+traces separately retain exact definition occurrences/spans, including Unicode.
+Replacement directives, invalid fragments and token-joining effects needing
+original-reader composition refuse explicitly; full textual macros stay open.
+
+Evidence behind ignored .local/macros-paths-private.json:
+
+- Thirteen focused pins, all 493 current source inputs, 68 actual RTL inputs and
+  three compiler/configuration inputs remain exact. No dependency source changes.
+- logs/macro-qualified-run.log passes 38 native checks, clean heap: late binding,
+  recursive provenance, independent states, conditional effects/revocation,
+  Unicode spans, source/effective distinction, nonlinear mapping, guarded member
+  completion, cycles, quotas/cancellation and textual-boundary refusal.
+- logs/oracle-run.log passes 11 independent handwritten FPC macro checks, clean
+  heap, including a compiler-created record member. These exact original bytes
+  are compiled/executed independently of any Nyx projection. Literal/escaped
+  and redefinition behavior are not inferred from Nyx's own fixtures.
+- logs/profile-qualified-run.log passes 23 actual compiler/RTL checks, clean
+  heap. Its five joined compiler jobs retain two successes and cancellation/
+  output/deadline refusal. Full capture now has 561 files/386 modules: 493 Nyx,
+  20 win RTL and all 48 SysUtils-directory source files. All 48 exported packets
+  hash exactly to originals; strg.inc remains opaque. SysUtils passes MACRO ON
+  and exact selected SUT/BU bodies, then reaches INLINE ON at physical scalar
+  786. Its imported interface remains incomplete; no export stub is admitted.
+- logs/semantic-qualified-run.log passes 84 production semantic/private-editor
+  checks, clean heap, including the sixth qualifying configured FPC query.
+  Existing revision/permission/context/concurrency/activity/workspace and exact
+  source-pair protection remain intact. The engine never listens; native chat
+  Nyx tools are absent. No HTTP/ordinary-editor/authentication claim follows.
+- Maintained current native owned/dependency/translation/type-origin/mode checks
+  pass 86/31/209/357/41, clean heaps. Prior SDK/byte/binding evidence stays retained;
+  counts overlap. compiler-qualified-private.json selects twelve accepted logs,
+  zero owned warnings and 21 upstream pas2js RTL warnings. Three browser consumers
+  compile only; none executes. The final revocation change causes the qualified
+  dependent rechecks; earlier *-native/preparation receipts remain retained.
+- Complete frozen 7422453 verifier passes 349 files. Five protected files/nine
+  complete contexts remain exact; owned readers/families join and LAN stays
+  offline. terminal-qualified-private.json owns final boundaries and
+  final-checkpoint-private.json records final source/remote identity.
+
+Retained corrections: the first independent oracle assumed escaped identifiers
+expanded and that a plain redefinition preserved text. Actual compiler evidence
+corrects both assumptions. A disabled assignment probe also produces warning
+2057 and different semantics; that case stays unqualified rather than guessed.
+Early preparation missed byte/scalar helper imports and the extended enum's
+closed name-array entry, then used a misspelled completion field in a fixture.
+These failed/preparation outputs remain excluded. Final review also identifies
+and repairs replacement-knowledge revocation after unknown effects, with a new
+regression and complete dependent rechecks. Evidence is composite, not one
+uninterrupted batch. Final blank-line/type-purpose/license review and whitespace
+checks are separate source hygiene, without additional runtime/parity claims.
+
+Next useful action: reassess the real RTL's inlining and remaining compiler-policy
+prerequisites as one coherent context batch, then continue includes/default/
+target/define/codepage/language meaning. Stop replacement/oracle/compiler/capture
+variants here. Full textual-reader composition, external macro capture, complete
+expressions/helpers/overloads/constraints, incremental caching/invalidation/budgets,
+default adoption and actual input/navigation/parity/quality/delivery remain with
+their original owners. Preserve concurrent planning changes outside this commit.
+
+## Previous integration: Original bytes and explicit source views — 2026-10-18
 
 Previous goal turn is progress: pushed 0556360 supplies actual configured FPC
 facts. This turn completes the bounded original-byte/decoded-view prerequisite

@@ -954,9 +954,9 @@ Actual SDK continuation identifies a source-encoding prerequisite:
 `ENyxPascalSourceEncoding` preserves its virtual file reference while remaining
 an `ENyxBytes` failure; private host paths and guessed ANSI conversion are
 excluded. The explicit byte/view contract below now permits retaining this whole
-directory with an opaque file. SysUtils reaches `sysutilh.inc` and its unsupported
-`{$MACRO ON}` directive, rather than a fabricated missing include. The intended
-legacy encoding, replacement-macro meaning, broader grammar and complete RTL
+directory with an opaque file. SysUtils passes `sysutilh.inc`'s MACRO ON and both
+selected replacement definitions, then reaches its unsupported `{$inline on}`
+policy. The intended legacy encoding, full textual-macro effects, broader grammar and complete RTL
 interface remain open requirements.
 
 ## Original source bytes and explicit decoding
@@ -1005,9 +1005,69 @@ it does not drop them or guess another encoding. Reached opaque includes stop
 certainty with `ptiSourceEncoding`; opaque indexed roots return a typed compiler-
 context gap. An authored CODEPAGE directive cannot silently contradict its view.
 The actual 48-file SysUtils directory retains every byte, including one opaque
-file. This advances include capture, while macro/default/target/define/language
+file. This advances include capture, while complete macro/default/target/define/language
 meaning, incremental budgets, editor adoption/input, full parity and delivery
 remain under the original resolver owners. WORK.md owns bounded evidence.
+
+## Ordered replacement macros
+
+`nyx.pascal.macros` owns immutable replacement environments and detached expanded
+tokens. The [FPC macro contract](https://www.freepascal.org/docs-html/prog/progse5.html)
+is the language reference; an independent handwritten native compiler oracle
+qualifies the supported cases separately from Nyx's own output. The browser
+build of this analyzer can interpret captured FPC source; compilation of that
+analyzer is not admission or execution of a macro-authored pas2js application.
+
+`TNyxPascalMacroDefinition` retains a typed symbol, exact replacement text and its
+physical occurrence/scalar span. Explicit host integer facts use occurrence -1;
+no file location is invented. Names compare without ASCII case. Redefinition
+returns a new table, aliases resolve at each use, and undef removes replacement
+status. The environment belongs to one translation unit, with textual include
+side effects and independently retained historical states; imported units do
+not inherit each other's source definitions.
+
+`ppfReplacementMacros` has three-valued enablement. Known MACRO ON/OFF and active
+definitions flow in source order. Uncertain writes retain unknown replacement
+meaning, never a chosen body. An unavailable include or unknown textual effect
+revokes retained replacement knowledge while preserving its source evidence.
+No compiler/version/build-target default is guessed.
+Assignment definitions made while macro support is disabled remain unqualified
+and cannot later authorize expansion without a known replacement definition.
+Plain redefinition of an existing replacement clears its text, retaining its
+replacement status. Escaped identifiers, reserved words, strings and comments
+are not substituted. Supported condition expressions expand aliases recursively
+while protecting `defined()`'s symbol argument.
+
+`INyxPascalMacroExpansion` owns effective fragment tokens and recursive traces.
+Each trace retains the exact definition and its parent use. Construction alone
+borrows cancellation and the environment; detached results retain neither.
+Cycles diagnose distinctly, and quotas/cancellation refuse without a partial
+published packet. Tables cap at 2048 names/four MiB of replacement text. The
+owning translation charges invocation, replacement, re-tokenization and boundary
+work bytes against its expanded-input limit; token, depth, state and occurrence
+limits bound the other collections, including empty replacements.
+
+`INyxPascalTranslationMacros` retains expansion packets and exact replacement
+tables beside saved compiler states. Equal Boolean define facts do not collapse
+different replacement bodies. `PhysicalToken` and `Text` retain the authored
+invocation, while `NyxPascalEffectiveToken/Text` supply the replacement's spelling
+and token family. The existing syntax projection consumes effective tokens;
+its `TNyxPascalSyntaxOrigin.Expansion` identifies nonlinear origins. Partial
+projection slices retain the complete invocation span. A caret inside a macro
+invocation returns no invented expanded character position. Completion can bind
+replacement-generated record members and returns the exact authored invocation
+as its physical definition; the translation trace separately retains where that
+replacement body was defined.
+
+The current token bridge refuses replacement directives, invalid fragments and
+cross-boundary token joining that need composition with the original reader.
+It re-tokenizes joined fragments and guards nearby physical boundaries with a
+cached canonical UTF-8 map, without replacing the original source bytes. These
+are explicit remaining full textual-macro requirements, alongside broader
+compiler/codepage/default/target/define context and language/editor/parity work.
+The actual RTL now reaches INLINE ON at scalar 786 in sysutilh.inc with its exact
+SUT/BU definitions retained. This is a bounded resolver prerequisite, not complete
+RTL meaning, a default Studio engine, an MCP schema change or delivered parity.
 
 ## Structured type syntax and physical origins
 
@@ -1314,12 +1374,12 @@ mode-aware declaration proof; loaded root identity remains independently checked
 
 WORK.md records 31 native dependency checks, 22 native SDK/file checks and 84
 production in-process semantic/private-editor checks. The actual repository
-capture has 492 files/380 modules. A badge query loads `nyx.controls` and
+capture has 493 files/381 modules. A badge query loads `nyx.controls` and
 `nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
-Windows RTL files supplies that root (512 files/385 modules). Capturing all 48
-SysUtils include files with the explicit opaque policy gives 560 files; translation
-passes ObjFPC/OUT and reaches `sysutilh.inc`'s MACRO ON at physical scalar 560.
-The imported interface remains incomplete; replacement macros, other actual
+Windows RTL files supplies that root (513 files/386 modules). Capturing all 48
+SysUtils include files with the explicit opaque policy gives 561 files; translation
+passes ObjFPC/OUT/MACRO ON and reaches `sysutilh.inc`'s INLINE ON at physical scalar 786.
+The imported interface remains incomplete; full textual macros, other actual
 encoding/default/target/define/grammar meaning remain prerequisites. No export
 stub or source rewriting turns this qualified boundary into readiness.
 

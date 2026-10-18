@@ -4,6 +4,26 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source ordered replacement environments feed effective syntax and
+declared-member completion while preserving authored invocation and recursive
+definition origins. Historical states distinguish replacement bodies; unknown
+effects revoke knowledge without discarding source evidence. Native macro/oracle/
+actual-profile/production semantic 38/11/23/84 and maintained owned/dependency/
+translation/origin/mode 86/31/209/357/41 pass, clean heaps. Twelve accepted compiler
+logs have zero owned warnings (21 upstream); three browser consumers compile
+only. Actual RTL passes MACRO ON/selected SUT/BU definitions and reaches INLINE ON
+at sysutilh.inc scalar 786; imported meaning stays incomplete. All 48 include
+packets remain exact, one opaque; full capture is 561 files/386 modules. Thirteen
+focused pins, 493 Nyx/68 RTL inputs, three compiler/configuration inputs, five
+protected files/nine contexts and 349 frozen 7422453 artifacts stay exact. All
+readers join; LAN offline. WORK.md owns receipts, retained failures and return to
+a coherent real RTL compiler-policy/context batch, followed by full textual
+reader/external macro/default/target/define/codepage/language/incremental/adoption/
+input/navigation/quality/parity/delivery. Stop replacement/oracle/compiler/capture
+variants. No original criterion/task/counter/credit/DONE/new tool/schema/rollout
+closes. No HTTP retry, protected mutation/cleanup bypass, deletion or sub-agents.
+Preserve concurrent planning changes outside this checkpoint.
+
 Current-source byte/view capture retains immutable original packets, explicit
 codecs, exact scalar/byte partitions and detached completion definition bytes.
 Opaque fallback is opt-in, never a guessed encoding or a budget/cancellation
