@@ -81,9 +81,11 @@ with sealed source lineage and exact lexical tail repair. Safe
 now reuse completed root declarations while reparsing provisional enclosing
 owners. [Persistent filters and source indexes](docs/pascal-projects.md#persistent-filters-and-source-indexes)
 now share completed filter/origin blocks and continue exact module-boundary scans.
-Declaration metadata/name indexes and actual type binding still rebuild; the
-existing complete-prefix charge stays unchanged. Further reuse and wider quality
-remain required before engine adoption.
+[Persistent checkpoint metadata](docs/pascal-projects.md#persistent-checkpoint-metadata)
+now shares declaration/scope/structural rows and name indexes, detaching changed
+rows before mutation. Query type plans and diagnostic rows still rebuild/copy;
+the existing complete-prefix charge stays unchanged. Actual work admission and
+further type preparation/quality remain required before engine adoption.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

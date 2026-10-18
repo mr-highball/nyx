@@ -327,6 +327,8 @@ var
   LNextWork: INyxPascalSyntaxWork;
   LWholeWork: INyxPascalSyntaxWork;
   LFilterWork: INyxPascalSyntaxFilterWork;
+  LMetadataWork: INyxPascalSyntaxMetadataWork;
+  LWholeMetadataWork: INyxPascalSyntaxMetadataWork;
   LBefore: TNyxText;
   LCancellation: INyxCancellationScope;
   LCancelled: Boolean;
@@ -351,8 +353,18 @@ begin
     (LNextWork.ParserTokenReads < LWholeWork.ParserTokenReads div 4),
     'The parser actually skips completed bodies rather than only reporting a compatible fresh result');
   Check((LNextWork.FilteredTokens = LNextLexical.Count) and
-    (LNextWork.CopiedEntries >= LNextWork.ReusedDeclarations),
-    'The full lexical domain and copied metadata remain visible despite parser reuse');
+    (LNextWork.CopiedEntries > 0) and (LNextWork.CopiedEntries < LNextWork.ReusedDeclarations div 4),
+    'The logical lexical domain stays exact while only affected retained metadata detaches');
+  Check(Supports(LNext, INyxPascalSyntaxMetadataWork, LMetadataWork) and
+    Supports(LWhole, INyxPascalSyntaxMetadataWork, LWholeMetadataWork) and
+    (LMetadataWork.RetainedMetadataValues >= LNextWork.ReusedDeclarations) and
+    (LMetadataWork.AllocatedMetadataNodes < LWholeMetadataWork.AllocatedMetadataNodes div 4) and
+    (LMetadataWork.MetadataTreeHeight <= 24),
+    'Checkpoint metadata and name/structure indexes actually share a balanced immutable root');
+  WriteLn('metadata work / retained=', LMetadataWork.RetainedMetadataValues,
+    ' copied=', LMetadataWork.CopiedMetadataValues, ' created=', LMetadataWork.CreatedMetadataValues,
+    ' nodes=', LMetadataWork.AllocatedMetadataNodes, '/', LWholeMetadataWork.AllocatedMetadataNodes,
+    ' height=', LMetadataWork.MetadataTreeHeight);
   Check(Supports(LNext, INyxPascalSyntaxFilterWork, LFilterWork) and
     (LFilterWork.FilteredTokenReads < LNextLexical.Count div 4) and
     (LFilterWork.FilteredTokenReads + LFilterWork.ReusedFilterTokens = LNextLexical.Count) and
@@ -374,6 +386,64 @@ begin
   end;
   Check(LCancelled and (LRejected = nil) and (SnapshotText(LBase) = LBefore),
     'Cancellation during actual shared filter construction preserves its immutable predecessor');
+end;
+
+procedure MetadataBranches;
+var
+  LText: TNyxText;
+  LAt: Integer;
+  LBaseLexical: INyxPascalLexicalSnapshot;
+  LLeftLexical: INyxPascalLexicalSnapshot;
+  LRightLexical: INyxPascalLexicalSnapshot;
+  LBase: INyxPascalSyntaxSnapshot;
+  LLeft: INyxPascalSyntaxSnapshot;
+  LRight: INyxPascalSyntaxSnapshot;
+  LBefore: TNyxText;
+  LLeftBefore: TNyxText;
+  LWork: INyxPascalSyntaxMetadataWork;
+  LFamily: Integer;
+  LCount: Integer;
+begin
+  LText := 'unit Branches; interface ';
+  for LAt := 1 to 80 do
+  begin
+    LText := LText + 'type T' + TNyxText(IntToStr(LAt)) + '=record Value:Byte; end; ' +
+      'procedure Run(A:T' + TNyxText(IntToStr(LAt)) + '); overload; ';
+  end;
+  LText := LText + 'const Boundary=1; ';
+  LBaseLexical := NewNyxPascalAppendLexical(LText, TNyxPascalLexicalOptions.Defaults);
+  LBase := NewNyxPascalSyntaxFromLexical(LBaseLexical, TNyxPascalSyntaxOptions.Defaults);
+  LBefore := SnapshotText(LBase);
+  LLeftLexical := AppendNyxPascalLexical(LBaseLexical,
+    'procedure Run(A:Byte); overload; implementation end.');
+  LLeft := AppendNyxPascalSyntax(LBase, LLeftLexical, TNyxPascalSyntaxOptions.Defaults);
+  LLeftBefore := SnapshotText(LLeft);
+  LRightLexical := AppendNyxPascalLexical(LBaseLexical,
+    'procedure Run(A:Word); overload; implementation end.');
+  LRight := AppendNyxPascalSyntax(LBase, LRightLexical, TNyxPascalSyntaxOptions.Defaults);
+  Check((SnapshotText(LBase) = LBefore) and (SnapshotText(LLeft) = LLeftBefore),
+    'A sibling parser cannot mutate earlier declaration/scope/overload links or indexes');
+  Check(SnapshotText(LLeft) = SnapshotText(NewNyxPascalSyntaxSnapshot(LText +
+    'procedure Run(A:Byte); overload; implementation end.')),
+    'The left overload branch equals an independent complete parse');
+  Check(SnapshotText(LRight) = SnapshotText(NewNyxPascalSyntaxSnapshot(LText +
+    'procedure Run(A:Word); overload; implementation end.')),
+    'The right overload branch equals an independent complete parse');
+  LBase := nil;
+  LBaseLexical := nil;
+  LFamily := LRight.Named(0, 'Run');
+  LCount := 0;
+  while LFamily >= 0 do
+  begin
+    Inc(LCount);
+    LFamily := LRight.Declaration(LFamily).NextNamed;
+  end;
+  Check((LCount = 81) and (SnapshotText(LLeft) = LLeftBefore),
+    'Detached branches retain their own complete overload families after their predecessor retires');
+  Check(Supports(LRight, INyxPascalSyntaxMetadataWork, LWork) and
+    (LWork.RetainedMetadataValues > LRight.DeclarationCount) and
+    (LWork.CopiedMetadataValues < 20) and (LWork.MetadataTreeHeight < 32),
+    'Distant overload links copy only affected rows without rebuilding retained indexes');
 end;
 
 procedure FilterSeams;
@@ -560,6 +630,7 @@ begin
     Differential;
     FilterSeams;
     ActualReuse;
+    MetadataBranches;
     RetainedMetadata;
     Refusals;
     WriteLn('PASS ', GChecks, ' declaration checkpoint checks');

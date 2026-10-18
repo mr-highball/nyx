@@ -407,8 +407,9 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
   end;
-  { Construction-only work receipt retained as immutable values. Reused
-    declarations still require copied/reindexed metadata; FilteredTokens counts
+  { Construction-only work receipt retained as immutable values. Changed rows
+    detach from checkpoint metadata; CopiedEntries includes those rows and
+    diagnostic copies. FilteredTokens counts
     the complete lexical domain and ParserTokenReads includes actual lookahead.
     These counters grant neither reduced aggregate charging nor binding reuse.
     An unchanged returned snapshot keeps its original construction receipt. }
@@ -431,6 +432,19 @@ type
     function SharedFilterRows: Integer;
     function CopiedFilterRows: Integer;
     function FilterDirectoryEntries: Integer;
+  end;
+  { Actual metadata/index construction. Retained values come from the sealed
+    checkpoint tree; copied values detach before mutation. Created values and
+    allocated tree nodes remain real work, independently of logical quotas.
+    Diagnostic copying is separate. Counters grant no reuse/charging authority. }
+  INyxPascalSyntaxMetadataWork = interface(IInterface)
+    ['{C084FD4E-13F9-4E25-B9D8-E55D12961977}']
+    function RetainedMetadataValues: Integer;
+    function CopiedMetadataValues: Integer;
+    function CreatedMetadataValues: Integer;
+    function AllocatedMetadataNodes: Integer;
+    function CopiedDiagnosticRows: Integer;
+    function MetadataTreeHeight: Integer;
   end;
   { Optional declaration-label metadata, with checked snapshot-local ordinals.
     Metadata and typed declarations consume the shared node quota. Lexical lookup
@@ -505,7 +519,8 @@ function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot
 { Continue an owned parser along exact sealed lexical append lineage and
   identical policies. Completed declarations may be restored before a safe
   checkpoint; provisional tails and diagnostics are parsed afresh. Filtering
-  shares completed rows; metadata indexes still rebuild. Alternate/foreign histories
+  shares completed rows; metadata/index roots retain exact checkpoint identity.
+  Alternate/foreign histories
   or changed options refuse; absent safe checkpoints fall back to a whole parse.
   Cancellation/failure publishes no candidate and never mutates APrevious. }
 function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
@@ -514,7 +529,7 @@ function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
 
 implementation
 
-uses nyx.text.index, nyx.pascal.lexing.append;
+uses nyx.pascal.lexing.append;
 
 const
   { Bounded private partial copying; the directory stays flat across appends. }
@@ -524,6 +539,142 @@ type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
     without putting interfaces or shared mutable arrays in published records. }
   TOrdinals = array of Integer;
+  { Closed namespaces separate row identities from authored source names. }
+  TMetadataKind = (mkScope, mkDeclaration, mkImport, mkSelector, mkArm,
+    mkVariantLabel, mkStatementLabel, mkHint, mkIntrinsic, mkName, mkStructure);
+  { Borrow is usable only under its tree/constructor lease. Detach returns a
+    private value; the ownership stamp contains no owner or history link. }
+  IMetadataValue = interface(IInterface)
+    function Borrow: TObject;
+    function Stamp: IInterface;
+    function Detach(const AStamp: IInterface): IMetadataValue;
+  end;
+  { Published values never edit. A later constructor must detach before acquiring
+    its own write rights; ownership markers contain no parser/source reference. }
+  TMetadataValue = class(TInterfacedObject, IMetadataValue)
+  public
+    OwnerStamp: IInterface;
+    function Borrow: TObject;
+    function Stamp: IInterface;
+    function Detach(const AStamp: IInterface): IMetadataValue; virtual; abstract;
+  end;
+  { Open scope ends adapt at public read time to the owning snapshot, without
+    changing a retained scope's source-local ordinals, text or stored boundary. }
+  TScopeValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalSyntaxScope;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { A declaration row detaches before later scope/overload links can change it. }
+  TDeclarationValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalSyntaxDeclaration;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Import entries retain exact local source identity, never a source-world. }
+  TImportValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalSyntaxImport;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Variant selector membership remains snapshot-local across checkpoint forks. }
+  TSelectorValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalVariantSelector;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Arm boundaries and label links detach before a constructing parser update. }
+  TArmValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalVariantArm;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Variant labels retain exact source spans and local next-label ordinals. }
+  TVariantLabelValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalVariantLabel;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Statement-label text is value-owned, with no binding/world reference. }
+  TStatementLabelValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalStatementLabel;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Hint source/next links survive independently of a suffix parse. }
+  THintValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalSyntaxHint;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Intrinsic annotations preserve authored syntax, never evaluated facts. }
+  TIntrinsicValue = class(TMetadataValue)
+  public
+    Value: TNyxPascalIntrinsicDeclaration;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Name/structure indexes contain scalar ordinals, never mutable row objects. }
+  TOrdinalValue = class(TMetadataValue)
+  public
+    Value: Integer;
+    function Detach(const AStamp: IInterface): IMetadataValue; override;
+  end;
+  { Immutable AVL node. Children/value point outward; no parent, parser,
+    snapshot or preceding root survives. Exact target-local text ordering never
+    determines public declaration order, which remains in explicit ordinals. }
+  IMetadataNode = interface(IInterface)
+    function Key: TNyxText;
+    function Value: IMetadataValue;
+    function Left: IMetadataNode;
+    function Right: IMetadataNode;
+    function Height: Integer;
+    function Count: Integer;
+  end;
+  { Fields initialize once through the private balanced-tree constructor. }
+  TMetadataNode = class(TInterfacedObject, IMetadataNode)
+  public
+    KeyValue: TNyxText;
+    Payload: IMetadataValue;
+    LeftValue: IMetadataNode;
+    RightValue: IMetadataNode;
+    HeightValue: Integer;
+    CountValue: Integer;
+    function Key: TNyxText;
+    function Value: IMetadataValue;
+    function Left: IMetadataNode;
+    function Right: IMetadataNode;
+    function Height: Integer;
+    function Count: Integer;
+  end;
+  { A parser's private root over immutable balanced nodes. Capture is O(1) and
+    rotates the write stamp. Later writes detach only their value/path; published
+    readers and checkpoint roots never change. No owner chain is retained. }
+  TMetadataMap = class
+  private
+    FRoot: IMetadataNode;
+    FStamp: IInterface;
+    FCopied: Integer;
+    FCreated: Integer;
+    FNodes: Integer;
+    function NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
+      const ALeft, ARight: IMetadataNode): IMetadataNode;
+    function Balance(const AKey: TNyxText; const AValue: IMetadataValue;
+      const ALeft, ARight: IMetadataNode): IMetadataNode;
+    function Insert(const ANode: IMetadataNode; const AKey: TNyxText;
+      const AValue: IMetadataValue): IMetadataNode;
+  public
+    constructor Create(const ARoot: IMetadataNode);
+    function Capture: IMetadataNode;
+    function Find(const AKey: TNyxText): IMetadataValue;
+    function Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
+    function Row(AKind: TMetadataKind; AIndex: Integer): TObject;
+    function Index(AKind: TMetadataKind; const AKey: TNyxText): Integer;
+    procedure AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
+    function Height: Integer;
+    property Copied: Integer read FCopied;
+    property Created: Integer read FCreated;
+    property AllocatedNodes: Integer read FNodes;
+  end;
   { Significant lexical ordinal and its raw conditional participation. No source,
     interface or mutable collection is retained in a row. }
   TFilterRow = record
@@ -595,7 +746,6 @@ type
     Visibility: TNyxPascalSyntaxVisibility;
     Members: Boolean;
     Section: TNyxPascalWord;
-    Root: TNyxPascalSyntaxScope;
     Scopes: Integer;
     Declarations: Integer;
     Imports: Integer;
@@ -621,7 +771,8 @@ type
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
     INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
-    INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork, ISyntaxOwner)
+    INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork,
+    INyxPascalSyntaxMetadataWork, ISyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -630,16 +781,10 @@ type
     FFilterCheckpoint: TFilterCheckpoint;
     FFilteredReads: Integer;
     FFilterRetained: Integer;
-    FScopes: array of TNyxPascalSyntaxScope;
-    FDeclarations: array of TNyxPascalSyntaxDeclaration;
-    FImports: array of TNyxPascalSyntaxImport;
+    FMetadata: TMetadataMap;
+    FCheckpointMetadata: IMetadataNode;
+    FRetainedMetadata: Integer;
     FDiagnostics: array of TNyxPascalSyntaxDiagnostic;
-    FSelectors: array of TNyxPascalVariantSelector;
-    FArms: array of TNyxPascalVariantArm;
-    FLabels: array of TNyxPascalVariantLabel;
-    FStatementLabels: array of TNyxPascalStatementLabel;
-    FHints: array of TNyxPascalSyntaxHint;
-    FIntrinsics: array of TNyxPascalIntrinsicDeclaration;
     FScopeCount: Integer;
     FDeclarationCount: Integer;
     FImportCount: Integer;
@@ -651,9 +796,6 @@ type
     FHintCount: Integer;
     FIntrinsicCount: Integer;
     FActiveArm: Integer;
-    FNames: TNyxTextIndex;
-    { Owned source-position index, separate from exported/lexical names. }
-    FStructures: TNyxTextIndex;
     FPosition: Integer;
     { A generic header may end in the physical >= token. Only its > belongs
       to the header; the residual equals sign stays for the alias declaration. }
@@ -666,6 +808,26 @@ type
     FReused: Integer;
     FCopied: Integer;
     FRestart: Integer;
+    { Read accessors borrow under FMetadata. Only construction calls Edit:
+      each changed row detaches before a caller receives mutable field access. }
+    function Frame(AIndex: Integer): TScopeValue;
+    function EditFrame(AIndex: Integer): TScopeValue;
+    function Entry(AIndex: Integer): TDeclarationValue;
+    function EditEntry(AIndex: Integer): TDeclarationValue;
+    function ImportRow(AIndex: Integer): TImportValue;
+    function EditImportRow(AIndex: Integer): TImportValue;
+    function SelectorRow(AIndex: Integer): TSelectorValue;
+    function EditSelectorRow(AIndex: Integer): TSelectorValue;
+    function ArmRow(AIndex: Integer): TArmValue;
+    function EditArmRow(AIndex: Integer): TArmValue;
+    function VariantLabelRow(AIndex: Integer): TVariantLabelValue;
+    function EditVariantLabelRow(AIndex: Integer): TVariantLabelValue;
+    function StatementLabelRow(AIndex: Integer): TStatementLabelValue;
+    function EditStatementLabelRow(AIndex: Integer): TStatementLabelValue;
+    function HintRow(AIndex: Integer): THintValue;
+    function EditHintRow(AIndex: Integer): THintValue;
+    function IntrinsicRow(AIndex: Integer): TIntrinsicValue;
+    function EditIntrinsicRow(AIndex: Integer): TIntrinsicValue;
     procedure CheckCancellation;
     function ReadToken(AIndex: Integer): TNyxPascalToken;
     procedure Remember(AResume: TParserResume; AVisibility: TNyxPascalSyntaxVisibility;
@@ -767,6 +929,12 @@ type
     function SharedFilterRows: Integer;
     function CopiedFilterRows: Integer;
     function FilterDirectoryEntries: Integer;
+    function RetainedMetadataValues: Integer;
+    function CopiedMetadataValues: Integer;
+    function CreatedMetadataValues: Integer;
+    function AllocatedMetadataNodes: Integer;
+    function CopiedDiagnosticRows: Integer;
+    function MetadataTreeHeight: Integer;
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -794,6 +962,519 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
   end;
+
+function TSyntaxSnapshot.Frame(AIndex: Integer): TScopeValue;
+begin
+  Result := TScopeValue(FMetadata.Row(mkScope, AIndex));
+end;
+
+function TSyntaxSnapshot.EditFrame(AIndex: Integer): TScopeValue;
+begin
+  CheckCancellation;
+  Result := TScopeValue(FMetadata.Edit(mkScope, AIndex));
+end;
+
+function TSyntaxSnapshot.Entry(AIndex: Integer): TDeclarationValue;
+begin
+  Result := TDeclarationValue(FMetadata.Row(mkDeclaration, AIndex));
+end;
+
+function TSyntaxSnapshot.EditEntry(AIndex: Integer): TDeclarationValue;
+begin
+  CheckCancellation;
+  Result := TDeclarationValue(FMetadata.Edit(mkDeclaration, AIndex));
+end;
+
+function TSyntaxSnapshot.ImportRow(AIndex: Integer): TImportValue;
+begin
+  Result := TImportValue(FMetadata.Row(mkImport, AIndex));
+end;
+
+function TSyntaxSnapshot.EditImportRow(AIndex: Integer): TImportValue;
+begin
+  CheckCancellation;
+  Result := TImportValue(FMetadata.Edit(mkImport, AIndex));
+end;
+
+function TSyntaxSnapshot.SelectorRow(AIndex: Integer): TSelectorValue;
+begin
+  Result := TSelectorValue(FMetadata.Row(mkSelector, AIndex));
+end;
+
+function TSyntaxSnapshot.EditSelectorRow(AIndex: Integer): TSelectorValue;
+begin
+  CheckCancellation;
+  Result := TSelectorValue(FMetadata.Edit(mkSelector, AIndex));
+end;
+
+function TSyntaxSnapshot.ArmRow(AIndex: Integer): TArmValue;
+begin
+  Result := TArmValue(FMetadata.Row(mkArm, AIndex));
+end;
+
+function TSyntaxSnapshot.EditArmRow(AIndex: Integer): TArmValue;
+begin
+  CheckCancellation;
+  Result := TArmValue(FMetadata.Edit(mkArm, AIndex));
+end;
+
+function TSyntaxSnapshot.VariantLabelRow(AIndex: Integer): TVariantLabelValue;
+begin
+  Result := TVariantLabelValue(FMetadata.Row(mkVariantLabel, AIndex));
+end;
+
+function TSyntaxSnapshot.EditVariantLabelRow(AIndex: Integer): TVariantLabelValue;
+begin
+  CheckCancellation;
+  Result := TVariantLabelValue(FMetadata.Edit(mkVariantLabel, AIndex));
+end;
+
+function TSyntaxSnapshot.StatementLabelRow(AIndex: Integer): TStatementLabelValue;
+begin
+  Result := TStatementLabelValue(FMetadata.Row(mkStatementLabel, AIndex));
+end;
+
+function TSyntaxSnapshot.EditStatementLabelRow(AIndex: Integer): TStatementLabelValue;
+begin
+  CheckCancellation;
+  Result := TStatementLabelValue(FMetadata.Edit(mkStatementLabel, AIndex));
+end;
+
+function TSyntaxSnapshot.HintRow(AIndex: Integer): THintValue;
+begin
+  Result := THintValue(FMetadata.Row(mkHint, AIndex));
+end;
+
+function TSyntaxSnapshot.EditHintRow(AIndex: Integer): THintValue;
+begin
+  CheckCancellation;
+  Result := THintValue(FMetadata.Edit(mkHint, AIndex));
+end;
+
+function TSyntaxSnapshot.IntrinsicRow(AIndex: Integer): TIntrinsicValue;
+begin
+  Result := TIntrinsicValue(FMetadata.Row(mkIntrinsic, AIndex));
+end;
+
+function TSyntaxSnapshot.EditIntrinsicRow(AIndex: Integer): TIntrinsicValue;
+begin
+  CheckCancellation;
+  Result := TIntrinsicValue(FMetadata.Edit(mkIntrinsic, AIndex));
+end;
+
+
+function TMetadataValue.Borrow: TObject;
+begin
+  Result := Self;
+end;
+
+function TMetadataValue.Stamp: IInterface;
+begin
+  Result := OwnerStamp;
+end;
+
+function TScopeValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TScopeValue;
+begin
+  LCopy := TScopeValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TDeclarationValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TDeclarationValue;
+begin
+  LCopy := TDeclarationValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TImportValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TImportValue;
+begin
+  LCopy := TImportValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TSelectorValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TSelectorValue;
+begin
+  LCopy := TSelectorValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TArmValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TArmValue;
+begin
+  LCopy := TArmValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TVariantLabelValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TVariantLabelValue;
+begin
+  LCopy := TVariantLabelValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TStatementLabelValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TStatementLabelValue;
+begin
+  LCopy := TStatementLabelValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function THintValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: THintValue;
+begin
+  LCopy := THintValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TIntrinsicValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TIntrinsicValue;
+begin
+  LCopy := TIntrinsicValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TOrdinalValue.Detach(const AStamp: IInterface): IMetadataValue;
+var
+  LCopy: TOrdinalValue;
+begin
+  LCopy := TOrdinalValue.Create;
+  Result := LCopy;
+  LCopy.OwnerStamp := AStamp;
+  LCopy.Value := Value;
+end;
+
+function TMetadataNode.Key: TNyxText;
+begin
+  Result := KeyValue;
+end;
+
+function TMetadataNode.Value: IMetadataValue;
+begin
+  Result := Payload;
+end;
+
+function TMetadataNode.Left: IMetadataNode;
+begin
+  Result := LeftValue;
+end;
+
+function TMetadataNode.Right: IMetadataNode;
+begin
+  Result := RightValue;
+end;
+
+function TMetadataNode.Height: Integer;
+begin
+  Result := HeightValue;
+end;
+
+function TMetadataNode.Count: Integer;
+begin
+  Result := CountValue;
+end;
+
+function NodeHeight(const ANode: IMetadataNode): Integer;
+begin
+  Result := 0;
+
+  if ANode <> nil then
+  begin
+    Result := ANode.Height;
+  end;
+end;
+
+function NodeCount(const ANode: IMetadataNode): Integer;
+begin
+  Result := 0;
+
+  if ANode <> nil then
+  begin
+    Result := ANode.Count;
+  end;
+end;
+
+constructor TMetadataMap.Create(const ARoot: IMetadataNode);
+begin
+  inherited Create;
+  FRoot := ARoot;
+  FStamp := TInterfacedObject.Create;
+end;
+
+function TMetadataMap.Capture: IMetadataNode;
+begin
+  Result := FRoot;
+  FStamp := TInterfacedObject.Create;
+end;
+
+function TMetadataMap.Height: Integer;
+begin
+  Result := NodeHeight(FRoot);
+end;
+
+function TMetadataMap.NewNode(const AKey: TNyxText; const AValue: IMetadataValue;
+  const ALeft, ARight: IMetadataNode): IMetadataNode;
+var
+  LNode: TMetadataNode;
+  LLeftCount: Integer;
+  LRightCount: Integer;
+begin
+  LLeftCount := NodeCount(ALeft);
+  LRightCount := NodeCount(ARight);
+
+  if (FNodes = High(Integer)) or (LLeftCount > High(Integer) - 1 - LRightCount) then
+  begin
+    raise ENyxPascalSyntaxLimit.Create('Metadata construction exceeds its exact counter domain');
+  end;
+  LNode := TMetadataNode.Create;
+  Result := LNode;
+  LNode.KeyValue := AKey;
+  LNode.Payload := AValue;
+  LNode.LeftValue := ALeft;
+  LNode.RightValue := ARight;
+  LNode.HeightValue := NodeHeight(ALeft);
+
+  if NodeHeight(ARight) > LNode.HeightValue then
+  begin
+    LNode.HeightValue := NodeHeight(ARight);
+  end;
+  Inc(LNode.HeightValue);
+  LNode.CountValue := 1 + LLeftCount + LRightCount;
+  Inc(FNodes);
+end;
+
+function TMetadataMap.Balance(const AKey: TNyxText; const AValue: IMetadataValue;
+  const ALeft, ARight: IMetadataNode): IMetadataNode;
+var
+  LMiddle: IMetadataNode;
+begin
+
+  if NodeHeight(ALeft) > NodeHeight(ARight) + 1 then
+  begin
+
+    if NodeHeight(ALeft.Left) >= NodeHeight(ALeft.Right) then
+    begin
+      Exit(NewNode(ALeft.Key, ALeft.Value, ALeft.Left,
+        NewNode(AKey, AValue, ALeft.Right, ARight)));
+    end;
+    LMiddle := ALeft.Right;
+    Exit(NewNode(LMiddle.Key, LMiddle.Value,
+      NewNode(ALeft.Key, ALeft.Value, ALeft.Left, LMiddle.Left),
+      NewNode(AKey, AValue, LMiddle.Right, ARight)));
+  end;
+
+  if NodeHeight(ARight) > NodeHeight(ALeft) + 1 then
+  begin
+
+    if NodeHeight(ARight.Right) >= NodeHeight(ARight.Left) then
+    begin
+      Exit(NewNode(ARight.Key, ARight.Value,
+        NewNode(AKey, AValue, ALeft, ARight.Left), ARight.Right));
+    end;
+    LMiddle := ARight.Left;
+    Exit(NewNode(LMiddle.Key, LMiddle.Value,
+      NewNode(AKey, AValue, ALeft, LMiddle.Left),
+      NewNode(ARight.Key, ARight.Value, LMiddle.Right, ARight.Right)));
+  end;
+  Result := NewNode(AKey, AValue, ALeft, ARight);
+end;
+
+function TMetadataMap.Insert(const ANode: IMetadataNode; const AKey: TNyxText;
+  const AValue: IMetadataValue): IMetadataNode;
+begin
+
+  if ANode = nil then
+  begin
+    Exit(NewNode(AKey, AValue, nil, nil));
+  end;
+
+  if AKey < ANode.Key then
+  begin
+    Result := Balance(ANode.Key, ANode.Value, Insert(ANode.Left, AKey, AValue), ANode.Right);
+  end
+  else if AKey > ANode.Key then
+  begin
+    Result := Balance(ANode.Key, ANode.Value, ANode.Left, Insert(ANode.Right, AKey, AValue));
+  end
+  else
+  begin
+    Result := NewNode(AKey, AValue, ANode.Left, ANode.Right);
+  end;
+end;
+
+function TMetadataMap.Find(const AKey: TNyxText): IMetadataValue;
+var
+  LNode: IMetadataNode;
+begin
+  LNode := FRoot;
+  while LNode <> nil do
+  begin
+
+    if AKey < LNode.Key then
+    begin
+      LNode := LNode.Left;
+    end
+    else if AKey > LNode.Key then
+    begin
+      LNode := LNode.Right;
+    end
+    else
+    begin
+      Exit(LNode.Value);
+    end;
+  end;
+  Result := nil;
+end;
+
+function MetadataKey(AKind: TMetadataKind; const AKey: TNyxText): TNyxText;
+begin
+  Result := TNyxText(IntToStr(Ord(AKind))) + ':' + AKey;
+end;
+
+function TMetadataMap.Row(AKind: TMetadataKind; AIndex: Integer): TObject;
+var
+  LValue: IMetadataValue;
+begin
+  LValue := Find(MetadataKey(AKind, TNyxText(IntToStr(AIndex))));
+
+  if LValue = nil then
+  begin
+    raise ENyxPascalLexical.Create('Metadata row is outside its immutable tree');
+  end;
+  Result := LValue.Borrow;
+end;
+
+function TMetadataMap.Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
+var
+  LKey: TNyxText;
+  LValue: IMetadataValue;
+  LCreated: TMetadataValue;
+begin
+
+  if AIndex < 0 then
+  begin
+    raise ENyxPascalLexical.Create('A metadata row needs a nonnegative source ordinal');
+  end;
+  LKey := MetadataKey(AKind, TNyxText(IntToStr(AIndex)));
+  LValue := Find(LKey);
+
+  if LValue = nil then
+  begin
+    case AKind of
+      mkScope:
+        begin
+          LCreated := TScopeValue.Create;
+        end;
+      mkDeclaration:
+        begin
+          LCreated := TDeclarationValue.Create;
+        end;
+      mkImport:
+        begin
+          LCreated := TImportValue.Create;
+        end;
+      mkSelector:
+        begin
+          LCreated := TSelectorValue.Create;
+        end;
+      mkArm:
+        begin
+          LCreated := TArmValue.Create;
+        end;
+      mkVariantLabel:
+        begin
+          LCreated := TVariantLabelValue.Create;
+        end;
+      mkStatementLabel:
+        begin
+          LCreated := TStatementLabelValue.Create;
+        end;
+      mkHint:
+        begin
+          LCreated := THintValue.Create;
+        end;
+      mkIntrinsic:
+        begin
+          LCreated := TIntrinsicValue.Create;
+        end;
+    else
+      raise ENyxPascalLexical.Create('Scalar indexes cannot acquire mutable row rights');
+    end;
+    LValue := LCreated;
+    LCreated.OwnerStamp := FStamp;
+    FRoot := Insert(FRoot, LKey, LValue);
+    Inc(FCreated);
+  end
+  else if LValue.Stamp <> FStamp then
+  begin
+    LValue := LValue.Detach(FStamp);
+    FRoot := Insert(FRoot, LKey, LValue);
+    Inc(FCopied);
+  end;
+  Result := LValue.Borrow;
+end;
+
+function TMetadataMap.Index(AKind: TMetadataKind; const AKey: TNyxText): Integer;
+var
+  LValue: IMetadataValue;
+begin
+  LValue := Find(MetadataKey(AKind, AKey));
+  Result := -1;
+
+  if LValue <> nil then
+  begin
+    Result := TOrdinalValue(LValue.Borrow).Value;
+  end;
+end;
+
+procedure TMetadataMap.AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
+var
+  LKey: TNyxText;
+  LValue: TOrdinalValue;
+  LLease: IMetadataValue;
+begin
+  LKey := MetadataKey(AKind, AKey);
+
+  if Find(LKey) <> nil then
+  begin
+    Exit;
+  end;
+  LValue := TOrdinalValue.Create;
+  LLease := LValue;
+  LValue.OwnerStamp := FStamp;
+  LValue.Value := AValue;
+  FRoot := Insert(FRoot, LKey, LLease);
+  Inc(FCreated);
+end;
 
 function TFilterBlock.Row(AIndex: Integer): TFilterRow;
 begin
@@ -963,8 +1644,7 @@ begin
   AOptions.Validate;
   FOptions := AOptions;
   FCancellation := ACancellation;
-  FNames := TNyxTextIndex.Create;
-  FStructures := TNyxTextIndex.Create;
+  FMetadata := TMetadataMap.Create(nil);
   FActiveArm := -1;
   try
     FLexical := NewNyxPascalLexicalSnapshot(ASource, AOptions.LexicalOptions, ACancellation);
@@ -1007,8 +1687,7 @@ begin
   end;
   FOptions := AOptions;
   FCancellation := ACancellation;
-  FNames := TNyxTextIndex.Create;
-  FStructures := TNyxTextIndex.Create;
+  FMetadata := TMetadataMap.Create(nil);
   FActiveArm := -1;
   try
     FLexical := ALexical;
@@ -1021,8 +1700,7 @@ end;
 destructor TSyntaxSnapshot.Destroy;
 begin
   FTokens.Free;
-  FStructures.Free;
-  FNames.Free;
+  FMetadata.Free;
   inherited Destroy;
 end;
 
@@ -1075,7 +1753,7 @@ begin
   FCheckpoint.Visibility := AVisibility;
   FCheckpoint.Members := AMembers;
   FCheckpoint.Section := ASection;
-  FCheckpoint.Root := FScopes[0];
+  FCheckpointMetadata := FMetadata.Capture;
   FCheckpoint.Scopes := FScopeCount;
   FCheckpoint.Declarations := FDeclarationCount;
   FCheckpoint.Imports := FImportCount;
@@ -1109,87 +1787,13 @@ begin
   FReadThrough := FCheckpoint.ReadThrough;
   FReused := FDeclarationCount;
   FRestart := FTokens[FPosition];
-  FCopied := FScopeCount + FDeclarationCount + FImportCount + FSelectorCount +
-    FArmCount + FLabelCount + FStatementLabelCount + FHintCount + FIntrinsicCount +
-    FCheckpoint.ParserDiagnostics;
-  SetLength(FScopes, FScopeCount);
-  for LAt := 0 to FScopeCount - 1 do
-  begin
-    CheckCancellation;
-    FScopes[LAt] := APrevious.FScopes[LAt];
-
-    if LAt = 0 then
-    begin
-      FScopes[LAt] := FCheckpoint.Root;
-    end;
-    { Unclosed recovered scopes originally reach their lexical source end,
-      even when recovery allowed later declarations to be inspected. }
-
-    if not FScopes[LAt].Complete then
-    begin
-      FScopes[LAt].FSpan := NyxPascalSpan(FScopes[LAt].Span.Start,
-        FLexical.Scalars - FScopes[LAt].Span.Start);
-    end;
-    FScopes[LAt].FFirst := -1;
-    FScopes[LAt].FLast := -1;
-    FScopes[LAt].FCount := 0;
-  end;
-  SetLength(FDeclarations, FDeclarationCount);
-  for LAt := 0 to FDeclarationCount - 1 do
-  begin
-    CheckCancellation;
-    FDeclarations[LAt] := APrevious.FDeclarations[LAt];
-    LinkDeclaration(LAt);
-
-    if (FDeclarations[LAt].Kind = psdkType) and
-      (FDeclarations[LAt].TypeForm in [pstfClass, pstfInterface, pstfRecord, pstfObject]) then
-    begin
-      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LAt].TypeSpan.Start)), LAt);
-    end;
-  end;
-  SetLength(FImports, FImportCount);
-  for LAt := 0 to FImportCount - 1 do
-  begin
-    CheckCancellation;
-    FImports[LAt] := APrevious.FImports[LAt];
-  end;
-  SetLength(FSelectors, FSelectorCount);
-  for LAt := 0 to FSelectorCount - 1 do
-  begin
-    CheckCancellation;
-    FSelectors[LAt] := APrevious.FSelectors[LAt];
-  end;
-  SetLength(FArms, FArmCount);
-  for LAt := 0 to FArmCount - 1 do
-  begin
-    CheckCancellation;
-    FArms[LAt] := APrevious.FArms[LAt];
-  end;
-  SetLength(FLabels, FLabelCount);
-  for LAt := 0 to FLabelCount - 1 do
-  begin
-    CheckCancellation;
-    FLabels[LAt] := APrevious.FLabels[LAt];
-  end;
-  SetLength(FStatementLabels, FStatementLabelCount);
-  for LAt := 0 to FStatementLabelCount - 1 do
-  begin
-    CheckCancellation;
-    FStatementLabels[LAt] := APrevious.FStatementLabels[LAt];
-  end;
-  SetLength(FHints, FHintCount);
-  for LAt := 0 to FHintCount - 1 do
-  begin
-    CheckCancellation;
-    FHints[LAt] := APrevious.FHints[LAt];
-  end;
-  SetLength(FIntrinsics, FIntrinsicCount);
-  for LAt := 0 to FIntrinsicCount - 1 do
-  begin
-    CheckCancellation;
-    FIntrinsics[LAt] := APrevious.FIntrinsics[LAt];
-  end;
-  { Filter diagnostics belong to the new complete filter pass. Only parser
+  FreeAndNil(FMetadata);
+  FCheckpointMetadata := APrevious.FCheckpointMetadata;
+  FMetadata := TMetadataMap.Create(FCheckpointMetadata);
+  FRetainedMetadata := NodeCount(FCheckpointMetadata);
+  EditFrame(0).Value.FSpan := NyxPascalSpan(Frame(0).Value.Span.Start,
+    FLexical.Scalars - Frame(0).Value.Span.Start);
+  { Filter diagnostics belong to the current exact filter. Only parser
     diagnostics before the rollback point survive from the previous snapshot. }
   LFilterCount := FDiagnosticCount;
 
@@ -1203,6 +1807,7 @@ begin
     CheckCancellation;
     FDiagnostics[LFilterCount + LAt] :=
       APrevious.FDiagnostics[APrevious.FFilterDiagnostics + LAt];
+    Inc(FCopied);
   end;
   FDiagnosticCount := Length(FDiagnostics);
 end;
@@ -1347,14 +1952,14 @@ begin
   LScope := AScope;
   while LScope >= 0 do
   begin
-    FScopes[LScope].FUnsupported := True;
+    EditFrame(LScope).Value.FUnsupported := True;
 
-    if FScopes[LScope].OwnerDeclaration >= 0 then
+    if Frame(LScope).Value.OwnerDeclaration >= 0 then
     begin
-      Include(FDeclarations[FScopes[LScope].OwnerDeclaration].FFlags, psdfUnsupported);
+      Include(EditEntry(Frame(LScope).Value.OwnerDeclaration).Value.FFlags, psdfUnsupported);
       Break;
     end;
-    LScope := FScopes[LScope].Parent;
+    LScope := Frame(LScope).Value.Parent;
   end;
 end;
 
@@ -1394,27 +1999,24 @@ begin
     raise ENyxPascalSyntaxLimit.Create('Pascal syntax scopes exceed their budget');
   end;
 
-  if Result = Length(FScopes) then
-  begin
-    SetLength(FScopes, Capacity(Result, FOptions.MaximumScopes));
-  end;
-  FScopes[Result].FKind := AKind;
-  FScopes[Result].FParent := AParent;
-  FScopes[Result].FOwner := AOwner;
-  FScopes[Result].FFirst := -1;
-  FScopes[Result].FLast := -1;
-  FScopes[Result].FSpan := NyxPascalSpan(AStart, FLexical.Scalars - AStart);
-  FScopes[Result].FName := AName;
+
+  EditFrame(Result).Value.FKind := AKind;
+  EditFrame(Result).Value.FParent := AParent;
+  EditFrame(Result).Value.FOwner := AOwner;
+  EditFrame(Result).Value.FFirst := -1;
+  EditFrame(Result).Value.FLast := -1;
+  EditFrame(Result).Value.FSpan := NyxPascalSpan(AStart, FLexical.Scalars - AStart);
+  EditFrame(Result).Value.FName := AName;
   Inc(FScopeCount);
 end;
 
 procedure TSyntaxSnapshot.FinishScope(AScope: Integer; AComplete: Boolean);
 begin
-  FScopes[AScope].FComplete := AComplete;
+  EditFrame(AScope).Value.FComplete := AComplete;
 
   if AComplete then
   begin
-    FScopes[AScope].FSpan := SpanFrom(FScopes[AScope].Span.Start);
+    EditFrame(AScope).Value.FSpan := SpanFrom(Frame(AScope).Value.Span.Start);
   end;
 end;
 
@@ -1433,49 +2035,46 @@ begin
   end;
   LToken := ReadToken(FTokens[AName]);
 
-  if Result = Length(FDeclarations) then
-  begin
-    SetLength(FDeclarations, Capacity(Result, FOptions.MaximumDeclarations));
-  end;
+
 
   if AAnonymous then
   begin
-    FDeclarations[Result].FName := '';
+    EditEntry(Result).Value.FName := '';
   end
   else if (AOperator = pokNone) and not ((AKind = psdkLabel) and (LToken.Kind = ptkNumber)) then
   begin
-    FDeclarations[Result].FName := FLexical.Identifier(FTokens[AName]);
+    EditEntry(Result).Value.FName := FLexical.Identifier(FTokens[AName]);
   end
   else
   begin
-    FDeclarations[Result].FName := FLexical.Text(FTokens[AName]);
+    EditEntry(Result).Value.FName := FLexical.Text(FTokens[AName]);
   end;
-  FDeclarations[Result].FKind := AKind;
-  FDeclarations[Result].FOperator := AOperator;
-  FDeclarations[Result].FVisibility := AVisibility;
-  FDeclarations[Result].FNameSpan := LToken.Span;
-  FDeclarations[Result].FScope := AScope;
-  FDeclarations[Result].FNestedScope := -1;
-  FDeclarations[Result].FNext := -1;
-  FDeclarations[Result].FNextNamed := -1;
-  FDeclarations[Result].FLastNamed := Result;
-  FDeclarations[Result].FVariantArm := -1;
-  FDeclarations[Result].FFirstHint := -1;
-  FDeclarations[Result].FLastHint := -1;
-  FDeclarations[Result].FFirstIntrinsic := -1;
-  FDeclarations[Result].FLastIntrinsic := -1;
-  FDeclarations[Result].FAnonymous := AAnonymous;
+  EditEntry(Result).Value.FKind := AKind;
+  EditEntry(Result).Value.FOperator := AOperator;
+  EditEntry(Result).Value.FVisibility := AVisibility;
+  EditEntry(Result).Value.FNameSpan := LToken.Span;
+  EditEntry(Result).Value.FScope := AScope;
+  EditEntry(Result).Value.FNestedScope := -1;
+  EditEntry(Result).Value.FNext := -1;
+  EditEntry(Result).Value.FNextNamed := -1;
+  EditEntry(Result).Value.FLastNamed := Result;
+  EditEntry(Result).Value.FVariantArm := -1;
+  EditEntry(Result).Value.FFirstHint := -1;
+  EditEntry(Result).Value.FLastHint := -1;
+  EditEntry(Result).Value.FFirstIntrinsic := -1;
+  EditEntry(Result).Value.FLastIntrinsic := -1;
+  EditEntry(Result).Value.FAnonymous := AAnonymous;
 
   if (AKind = psdkField) and (FActiveArm >= 0) and
-    (FSelectors[FArms[FActiveArm].SelectorIndex].RecordScope = AScope) then
+    (SelectorRow(ArmRow(FActiveArm).Value.SelectorIndex).Value.RecordScope = AScope) then
   begin
-    FDeclarations[Result].FVariantArm := FActiveArm;
+    EditEntry(Result).Value.FVariantArm := FActiveArm;
   end;
   Inc(FDeclarationCount);
 
   if FTokens.IsConditional(AName) then
   begin
-    Include(FDeclarations[Result].FFlags, psdfConditional);
+    Include(EditEntry(Result).Value.FFlags, psdfConditional);
   end;
 
   LinkDeclaration(Result);
@@ -1487,43 +2086,43 @@ var
   LKey: TNyxText;
   LFirst: Integer;
 begin
-  LScope := FDeclarations[AIndex].Scope;
-  FDeclarations[AIndex].FNext := -1;
-  FDeclarations[AIndex].FNextNamed := -1;
-  FDeclarations[AIndex].FLastNamed := AIndex;
+  LScope := Entry(AIndex).Value.Scope;
+  EditEntry(AIndex).Value.FNext := -1;
+  EditEntry(AIndex).Value.FNextNamed := -1;
+  EditEntry(AIndex).Value.FLastNamed := AIndex;
 
-  if FScopes[LScope].FLast >= 0 then
+  if Frame(LScope).Value.FLast >= 0 then
   begin
-    FDeclarations[FScopes[LScope].FLast].FNext := AIndex;
+    EditEntry(Frame(LScope).Value.FLast).Value.FNext := AIndex;
   end
   else
   begin
-    FScopes[LScope].FFirst := AIndex;
+    EditFrame(LScope).Value.FFirst := AIndex;
   end;
-  FScopes[LScope].FLast := AIndex;
-  Inc(FScopes[LScope].FCount);
+  EditFrame(LScope).Value.FLast := AIndex;
+  Inc(EditFrame(LScope).Value.FCount);
 
-  if FDeclarations[AIndex].Anonymous then
+  if Entry(AIndex).Value.Anonymous then
   begin
     Exit;
   end;
-  LKey := TNyxText(IntToStr(LScope)) + ':' + NyxPascalASCIIKey(FDeclarations[AIndex].Name);
+  LKey := TNyxText(IntToStr(LScope)) + ':' + NyxPascalASCIIKey(Entry(AIndex).Value.Name);
 
-  if FDeclarations[AIndex].OperatorKind <> pokNone then
+  if Entry(AIndex).Value.OperatorKind <> pokNone then
   begin
     LKey := TNyxText(IntToStr(LScope)) + ':operator#' +
-      TNyxText(IntToStr(Ord(FDeclarations[AIndex].OperatorKind)));
+      TNyxText(IntToStr(Ord(Entry(AIndex).Value.OperatorKind)));
   end;
-  LFirst := FNames.IndexOf(LKey);
+  LFirst := FMetadata.Index(mkName, LKey);
 
   if LFirst < 0 then
   begin
-    FNames.AddFirst(LKey, AIndex);
+    FMetadata.AddFirst(mkName, LKey, AIndex);
   end
   else
   begin
-    FDeclarations[FDeclarations[LFirst].FLastNamed].FNextNamed := AIndex;
-    FDeclarations[LFirst].FLastNamed := AIndex;
+    EditEntry(Entry(LFirst).Value.FLastNamed).Value.FNextNamed := AIndex;
+    EditEntry(LFirst).Value.FLastNamed := AIndex;
   end;
 end;
 
@@ -1688,10 +2287,7 @@ begin
     NodeBudget;
     LAt := FHintCount;
 
-    if LAt = Length(FHints) then
-    begin
-      SetLength(FHints, Capacity(LAt, FOptions.MaximumDeclarations));
-    end;
+
     Inc(FHintCount);
     LStart := Tok.Span.Start;
     Step;
@@ -1700,21 +2296,21 @@ begin
     begin
       Step;
     end;
-    FHints[LAt].FDeclaration := ADeclaration;
-    FHints[LAt].FKind := LKind;
-    FHints[LAt].FMessage := Range(LMessage, FPosition);
-    FHints[LAt].FSpan := SpanFrom(LStart);
-    FHints[LAt].FNext := -1;
+    EditHintRow(LAt).Value.FDeclaration := ADeclaration;
+    EditHintRow(LAt).Value.FKind := LKind;
+    EditHintRow(LAt).Value.FMessage := Range(LMessage, FPosition);
+    EditHintRow(LAt).Value.FSpan := SpanFrom(LStart);
+    EditHintRow(LAt).Value.FNext := -1;
 
-    if FDeclarations[ADeclaration].FFirstHint < 0 then
+    if Entry(ADeclaration).Value.FFirstHint < 0 then
     begin
-      FDeclarations[ADeclaration].FFirstHint := LAt;
+      EditEntry(ADeclaration).Value.FFirstHint := LAt;
     end
     else
     begin
-      FHints[FDeclarations[ADeclaration].FLastHint].FNext := LAt;
+      EditHintRow(Entry(ADeclaration).Value.FLastHint).Value.FNext := LAt;
     end;
-    FDeclarations[ADeclaration].FLastHint := LAt;
+    EditEntry(ADeclaration).Value.FLastHint := LAt;
   end;
 end;
 
@@ -1723,31 +2319,28 @@ var
   LFrom: Integer;
   LAt: Integer;
 begin
-  LFrom := FDeclarations[AFrom].FirstHint;
+  LFrom := Entry(AFrom).Value.FirstHint;
   while LFrom >= 0 do
   begin
     NodeBudget;
     LAt := FHintCount;
 
-    if LAt = Length(FHints) then
-    begin
-      SetLength(FHints, Capacity(LAt, FOptions.MaximumDeclarations));
-    end;
-    Inc(FHintCount);
-    FHints[LAt] := FHints[LFrom];
-    FHints[LAt].FDeclaration := ATo;
-    FHints[LAt].FNext := -1;
 
-    if FDeclarations[ATo].FFirstHint < 0 then
+    Inc(FHintCount);
+    EditHintRow(LAt).Value := HintRow(LFrom).Value;
+    EditHintRow(LAt).Value.FDeclaration := ATo;
+    EditHintRow(LAt).Value.FNext := -1;
+
+    if Entry(ATo).Value.FFirstHint < 0 then
     begin
-      FDeclarations[ATo].FFirstHint := LAt;
+      EditEntry(ATo).Value.FFirstHint := LAt;
     end
     else
     begin
-      FHints[FDeclarations[ATo].FLastHint].FNext := LAt;
+      EditHintRow(Entry(ATo).Value.FLastHint).Value.FNext := LAt;
     end;
-    FDeclarations[ATo].FLastHint := LAt;
-    LFrom := FHints[LFrom].NextHint;
+    EditEntry(ATo).Value.FLastHint := LAt;
+    LFrom := HintRow(LFrom).Value.NextHint;
   end;
 end;
 
@@ -1833,7 +2426,7 @@ begin
     if (AScope >= 0) and (LFlag = plfPublic) then
     begin
 
-      if FScopes[AScope].Kind = psskMembers then
+      if Frame(AScope).Value.Kind = psskMembers then
       begin
         Result := False;
       end;
@@ -1849,32 +2442,29 @@ begin
   NodeBudget;
   LAt := FIntrinsicCount;
 
-  if LAt = Length(FIntrinsics) then
-  begin
-    SetLength(FIntrinsics, Capacity(LAt, FOptions.MaximumDeclarations));
-  end;
-  Inc(FIntrinsicCount);
-  FIntrinsics[LAt].FDeclaration := ADeclaration;
-  FIntrinsics[LAt].FKind := AKind;
-  FIntrinsics[LAt].FKey := AKey;
-  FIntrinsics[LAt].FOperand := AOperand;
-  FIntrinsics[LAt].FSpan := SpanFrom(AKey.Start);
-  FIntrinsics[LAt].FNext := -1;
-  FIntrinsics[LAt].FComplete := AEnvelope and (AOperand.Length > 0);
 
-  if FDeclarations[ADeclaration].FFirstIntrinsic < 0 then
+  Inc(FIntrinsicCount);
+  EditIntrinsicRow(LAt).Value.FDeclaration := ADeclaration;
+  EditIntrinsicRow(LAt).Value.FKind := AKind;
+  EditIntrinsicRow(LAt).Value.FKey := AKey;
+  EditIntrinsicRow(LAt).Value.FOperand := AOperand;
+  EditIntrinsicRow(LAt).Value.FSpan := SpanFrom(AKey.Start);
+  EditIntrinsicRow(LAt).Value.FNext := -1;
+  EditIntrinsicRow(LAt).Value.FComplete := AEnvelope and (AOperand.Length > 0);
+
+  if Entry(ADeclaration).Value.FFirstIntrinsic < 0 then
   begin
-    FDeclarations[ADeclaration].FFirstIntrinsic := LAt;
+    EditEntry(ADeclaration).Value.FFirstIntrinsic := LAt;
   end
   else
   begin
-    FIntrinsics[FDeclarations[ADeclaration].FLastIntrinsic].FNext := LAt;
+    EditIntrinsicRow(Entry(ADeclaration).Value.FLastIntrinsic).Value.FNext := LAt;
   end;
-  FDeclarations[ADeclaration].FLastIntrinsic := LAt;
+  EditEntry(ADeclaration).Value.FLastIntrinsic := LAt;
 
-  if not FIntrinsics[LAt].Complete then
+  if not IntrinsicRow(LAt).Value.Complete then
   begin
-    Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+    Include(EditEntry(ADeclaration).Value.FFlags, psdfIncomplete);
     Problem(psiExpectedSeparator, 'An intrinsic attribute needs a colon and operand', AKey);
   end;
 end;
@@ -1903,7 +2493,7 @@ begin
   { A PUBLIC after a class method belongs to the next visibility section. }
 
   if not LBracket and (LFlag = plfPublic) and
-    (FScopes[FDeclarations[ADeclaration].Scope].Kind = psskMembers) then
+    (Frame(Entry(ADeclaration).Value.Scope).Value.Kind = psskMembers) then
   begin
     Exit;
   end;
@@ -1918,7 +2508,7 @@ begin
 
   if LBracket then
   begin
-    Include(FDeclarations[ADeclaration].FLinkage, plfPlatformAttributes);
+    Include(EditEntry(ADeclaration).Value.FLinkage, plfPlatformAttributes);
     Step;
     while not EOF and not Sym(psoCloseBracket) and not Sym(psoSemicolon) and
       not Word(pkwBegin) and not Word(pkwEnd) and not Word(pkwImplementation) do
@@ -1932,14 +2522,14 @@ begin
       if (Tok.Kind = ptkWord) and not Tok.Escaped and
         LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
       begin
-        Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+        Include(EditEntry(ADeclaration).Value.FLinkage, LFlag);
         LIntrinsic := LFlag in [plfIntrinsic, plfConstantIntrinsic];
       end
       else
       begin
-        Unsupported(FDeclarations[ADeclaration].Scope,
+        Unsupported(Entry(ADeclaration).Value.Scope,
           'This platform declaration attribute needs explicit meaning', Tok.Span);
-        Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+        Include(EditEntry(ADeclaration).Value.FFlags, psdfUnsupported);
       end;
       Step;
       LColon := False;
@@ -1947,9 +2537,9 @@ begin
       if (LFlag in [plfRTLProcedure, plfNoReturn]) and
         not (Sym(psoComma) or Sym(psoCloseBracket)) then
       begin
-        Unsupported(FDeclarations[ADeclaration].Scope,
+        Unsupported(Entry(ADeclaration).Value.Scope,
           'This routine declaration marker has no operand', Tok.Span);
-        Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+        Include(EditEntry(ADeclaration).Value.FFlags, psdfUnsupported);
       end;
 
       if LIntrinsic and Sym(psoColon) then
@@ -2002,23 +2592,23 @@ begin
     end
     else
     begin
-      Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+      Include(EditEntry(ADeclaration).Value.FFlags, psdfIncomplete);
       Problem(psiUnclosedScope, 'Finish this platform declaration attribute', Tok.Span);
     end;
   end
   else
   begin
-    Include(FDeclarations[ADeclaration].FLinkage, LFlag);
+    Include(EditEntry(ADeclaration).Value.FLinkage, LFlag);
     LKey := Tok.Span;
     Step;
     LColon := False;
 
     if (LFlag in [plfRTLProcedure, plfNoReturn]) and not Sym(psoSemicolon) and
-      not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
+      not (ARoutine and RoutineClause(Entry(ADeclaration).Value.Scope)) then
     begin
-      Unsupported(FDeclarations[ADeclaration].Scope,
+      Unsupported(Entry(ADeclaration).Value.Scope,
         'This routine declaration marker has no operand', Tok.Span);
-      Include(FDeclarations[ADeclaration].FFlags, psdfUnsupported);
+      Include(EditEntry(ADeclaration).Value.FFlags, psdfUnsupported);
     end;
 
     if (LFlag in [plfIntrinsic, plfConstantIntrinsic]) and Sym(psoColon) then
@@ -2030,7 +2620,7 @@ begin
 
     if not (ARoutine and
       (LFlag in [plfRTLProcedure, plfNoReturn, plfCompilerHelper]) and
-      RoutineClause(FDeclarations[ADeclaration].Scope)) then
+      RoutineClause(Entry(ADeclaration).Value.Scope)) then
     begin
       Expression(psoSemicolon, False, False, False, False, ARoutine);
     end;
@@ -2044,25 +2634,25 @@ begin
         LKind := pikConstant;
       end;
       IntrinsicDeclaration(ADeclaration, LKind, LKey, Range(LOperand, FPosition),
-        LColon and (Sym(psoSemicolon) or (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope))));
+        LColon and (Sym(psoSemicolon) or (ARoutine and RoutineClause(Entry(ADeclaration).Value.Scope))));
     end;
   end;
 
-  if not Sym(psoSemicolon) and not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
+  if not Sym(psoSemicolon) and not (ARoutine and RoutineClause(Entry(ADeclaration).Value.Scope)) then
   begin
-    Include(FDeclarations[ADeclaration].FFlags, psdfIncomplete);
+    Include(EditEntry(ADeclaration).Value.FFlags, psdfIncomplete);
   end;
 
-  if Sym(psoSemicolon) or not (ARoutine and RoutineClause(FDeclarations[ADeclaration].Scope)) then
+  if Sym(psoSemicolon) or not (ARoutine and RoutineClause(Entry(ADeclaration).Value.Scope)) then
   begin
     Separator;
   end;
 
-  if FDeclarations[ADeclaration].FLinkageSpan.Length > 0 then
+  if Entry(ADeclaration).Value.FLinkageSpan.Length > 0 then
   begin
-    LStart := FDeclarations[ADeclaration].FLinkageSpan.Start;
+    LStart := Entry(ADeclaration).Value.FLinkageSpan.Start;
   end;
-  FDeclarations[ADeclaration].FLinkageSpan := SpanFrom(LStart);
+  EditEntry(ADeclaration).Value.FLinkageSpan := SpanFrom(LStart);
 end;
 
 procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean;
@@ -2267,16 +2857,13 @@ begin
     NodeBudget;
     LEntry := FStatementLabelCount;
 
-    if LEntry = Length(FStatementLabels) then
-    begin
-      SetLength(FStatementLabels, Capacity(LEntry, FOptions.MaximumDeclarations));
-    end;
-    FStatementLabels[LEntry].FKind := LKind;
-    FStatementLabels[LEntry].FDeclaration := LDeclaration;
-    FStatementLabels[LEntry].FName := LName;
-    FStatementLabels[LEntry].FScope := AScope;
-    FStatementLabels[LEntry].FNameSpan := Tok.Span;
-    FStatementLabels[LEntry].FConditional := FTokens.IsConditional(FPosition);
+
+    EditStatementLabelRow(LEntry).Value.FKind := LKind;
+    EditStatementLabelRow(LEntry).Value.FDeclaration := LDeclaration;
+    EditStatementLabelRow(LEntry).Value.FName := LName;
+    EditStatementLabelRow(LEntry).Value.FScope := AScope;
+    EditStatementLabelRow(LEntry).Value.FNameSpan := Tok.Span;
+    EditStatementLabelRow(LEntry).Value.FConditional := FTokens.IsConditional(FPosition);
     Inc(FStatementLabelCount);
     Step;
 
@@ -2298,14 +2885,14 @@ begin
   end;
   for LAt := LFirst to FStatementLabelCount - 1 do
   begin
-    FStatementLabels[LAt].FSectionSpan := SpanFrom(LStart);
-    FStatementLabels[LAt].FComplete := LComplete;
-    LDeclaration := FStatementLabels[LAt].DeclarationIndex;
-    FDeclarations[LDeclaration].FHeaderSpan := FStatementLabels[LAt].SectionSpan;
+    EditStatementLabelRow(LAt).Value.FSectionSpan := SpanFrom(LStart);
+    EditStatementLabelRow(LAt).Value.FComplete := LComplete;
+    LDeclaration := StatementLabelRow(LAt).Value.DeclarationIndex;
+    EditEntry(LDeclaration).Value.FHeaderSpan := StatementLabelRow(LAt).Value.SectionSpan;
 
     if not LComplete then
     begin
-      Include(FDeclarations[LDeclaration].FFlags, psdfIncomplete);
+      Include(EditEntry(LDeclaration).Value.FFlags, psdfIncomplete);
     end;
   end;
 end;
@@ -2329,7 +2916,7 @@ begin
 
     if Sym(psoSemicolon) then
     begin
-      Include(FDeclarations[AOwner].FFlags, psdfForward);
+      Include(EditEntry(AOwner).Value.FFlags, psdfForward);
       Exit;
     end;
 
@@ -2337,17 +2924,17 @@ begin
     begin
       LAncestor := FPosition;
       Groups(psoOpenParen, psoCloseParen);
-      FDeclarations[AOwner].FAncestorSpan := Range(LAncestor, FPosition);
+      EditEntry(AOwner).Value.FAncestorSpan := Range(LAncestor, FPosition);
     end;
     LMemberScope := AddScope(psskMembers, AScope, AOwner, Tok.Span.Start,
-      FDeclarations[AOwner].Name);
-    FDeclarations[AOwner].FNestedScope := LMemberScope;
+      Entry(AOwner).Value.Name);
+    EditEntry(AOwner).Value.FNestedScope := LMemberScope;
 
-    if (FDeclarations[AOwner].TypeForm = pstfClass) and Sym(psoSemicolon) then
+    if (Entry(AOwner).Value.TypeForm = pstfClass) and Sym(psoSemicolon) then
     begin
       { Delphi's empty descendant spelling class(TAncestor) has no end. }
-      FScopes[LMemberScope].FComplete := True;
-      FScopes[LMemberScope].FSpan := NyxPascalSpan(Tok.Span.Start, 0);
+      EditFrame(LMemberScope).Value.FComplete := True;
+      EditFrame(LMemberScope).Value.FSpan := NyxPascalSpan(Tok.Span.Start, 0);
     end
     else
     begin
@@ -2360,7 +2947,7 @@ begin
       end
       else
       begin
-        Include(FDeclarations[AOwner].FFlags, psdfIncomplete);
+        Include(EditEntry(AOwner).Value.FFlags, psdfIncomplete);
         Problem(psiUnclosedScope, 'Finish this structured type with end', Tok.Span);
         FinishScope(LMemberScope, False);
       end;
@@ -2405,11 +2992,11 @@ begin
       (Word(pkwClass) and not Word(pkwOf, 1)) then
     begin
       LOwner := AddDeclaration(AScope, psdkType, AVisibility, FPosition, pokNone, True);
-      FDeclarations[LOwner].FForm := Form;
+      EditEntry(LOwner).Value.FForm := Form;
       StructuredBody(AScope, LOwner);
-      FDeclarations[LOwner].FTypeSpan := Range(LBodyStart, FPosition);
-      FDeclarations[LOwner].FHeaderSpan := FDeclarations[LOwner].TypeSpan;
-      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LOwner].TypeSpan.Start)), LOwner);
+      EditEntry(LOwner).Value.FTypeSpan := Range(LBodyStart, FPosition);
+      EditEntry(LOwner).Value.FHeaderSpan := Entry(LOwner).Value.TypeSpan;
+      FMetadata.AddFirst(mkStructure, TNyxText(IntToStr(Entry(LOwner).Value.TypeSpan.Start)), LOwner);
     end
     else if Sym(psoOpenParen) then
     begin
@@ -2449,12 +3036,12 @@ begin
     begin
       LGenericStart := FPosition;
       Angles;
-      FDeclarations[LEntry].FGenericSpan := Range(LGenericStart, FPosition);
+      EditEntry(LEntry).Value.FGenericSpan := Range(LGenericStart, FPosition);
     end;
 
     if not Sym(psoEqual) then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+      Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
       Problem(psiExpectedSeparator, 'Add an equals sign and type expression', Tok.Span);
       Separator;
       Exit;
@@ -2464,11 +3051,11 @@ begin
 
     if EOF or Sym(psoSemicolon) then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+      Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
       Problem(psiExpectedName, 'Add a type expression after the equals sign', Tok.Span);
-      FDeclarations[LEntry].FTypeSpan := Range(LTypeStart, FPosition);
+      EditEntry(LEntry).Value.FTypeSpan := Range(LTypeStart, FPosition);
       Separator;
-      FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
+      EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
       Exit;
     end;
 
@@ -2477,7 +3064,7 @@ begin
       Step;
     end;
     LForm := Form;
-    FDeclarations[LEntry].FForm := LForm;
+    EditEntry(LEntry).Value.FForm := LForm;
 
     if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
     begin
@@ -2493,7 +3080,7 @@ begin
         begin
           LEnum := AddDeclaration(AScope, psdkEnumValue, AVisibility, FPosition);
           Step;
-          FDeclarations[LEnum].FTypeSpan := FDeclarations[LEntry].NameSpan;
+          EditEntry(LEnum).Value.FTypeSpan := Entry(LEntry).Value.NameSpan;
 
           if Sym(psoEqual) or Sym(psoAssign) then
           begin
@@ -2523,7 +3110,7 @@ begin
       end
       else
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
         Problem(psiUnclosedScope, 'Finish this enumeration', Tok.Span);
       end;
     end
@@ -2536,15 +3123,15 @@ begin
         RoutineTypeSuffix;
       end;
     end;
-    FDeclarations[LEntry].FTypeSpan := Range(LTypeStart, FPosition);
+    EditEntry(LEntry).Value.FTypeSpan := Range(LTypeStart, FPosition);
 
     if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
     begin
-      FStructures.AddFirst(TNyxText(IntToStr(FDeclarations[LEntry].TypeSpan.Start)), LEntry);
+      FMetadata.AddFirst(mkStructure, TNyxText(IntToStr(Entry(LEntry).Value.TypeSpan.Start)), LEntry);
     end;
     DeclarationHints(LEntry);
     Separator;
-    FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
+    EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
   finally
     Leave;
   end;
@@ -2653,22 +3240,19 @@ begin
     NodeBudget;
     LSelector := FSelectorCount;
 
-    if LSelector = Length(FSelectors) then
-    begin
-      SetLength(FSelectors, Capacity(LSelector, FOptions.MaximumDeclarations));
-    end;
+
     Inc(FSelectorCount);
-    FSelectors[LSelector].FScope := AScope;
-    FSelectors[LSelector].FParent := LParent;
-    FSelectors[LSelector].FTag := -1;
-    FSelectors[LSelector].FFirstArm := -1;
-    FSelectors[LSelector].FLastArm := -1;
+    EditSelectorRow(LSelector).Value.FScope := AScope;
+    EditSelectorRow(LSelector).Value.FParent := LParent;
+    EditSelectorRow(LSelector).Value.FTag := -1;
+    EditSelectorRow(LSelector).Value.FFirstArm := -1;
+    EditSelectorRow(LSelector).Value.FLastArm := -1;
     Step;
 
     if (Tok.Kind = ptkWord) and Sym(psoColon, 1) then
     begin
       LTag := AddDeclaration(AScope, psdkField, AVisibility, FPosition);
-      FSelectors[LSelector].FTag := LTag;
+      EditSelectorRow(LSelector).Value.FTag := LTag;
       Step;
       Step;
     end;
@@ -2677,21 +3261,21 @@ begin
     begin
       Step;
     end;
-    FSelectors[LSelector].FType := Range(LType, FPosition);
+    EditSelectorRow(LSelector).Value.FType := Range(LType, FPosition);
 
-    if FSelectors[LSelector].FTag >= 0 then
+    if SelectorRow(LSelector).Value.FTag >= 0 then
     begin
-      LTag := FSelectors[LSelector].FTag;
-      FDeclarations[LTag].FTypeSpan := FSelectors[LSelector].TypeSpan;
-      FDeclarations[LTag].FHeaderSpan := NyxPascalSpan(FDeclarations[LTag].NameSpan.Start,
-        EndOffset - FDeclarations[LTag].NameSpan.Start);
-      FDeclarations[LTag].FForm := pstfNamed;
+      LTag := SelectorRow(LSelector).Value.FTag;
+      EditEntry(LTag).Value.FTypeSpan := SelectorRow(LSelector).Value.TypeSpan;
+      EditEntry(LTag).Value.FHeaderSpan := NyxPascalSpan(Entry(LTag).Value.NameSpan.Start,
+        EndOffset - Entry(LTag).Value.NameSpan.Start);
+      EditEntry(LTag).Value.FForm := pstfNamed;
     end;
 
-    if not Word(pkwOf) or (FSelectors[LSelector].TypeSpan.Length = 0) then
+    if not Word(pkwOf) or (SelectorRow(LSelector).Value.TypeSpan.Length = 0) then
     begin
       Unsupported(AScope, 'A variant selector needs its type and of keyword', Tok.Span);
-      FSelectors[LSelector].FSpan := SpanFrom(LStart);
+      EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
       Exit;
     end;
     Step;
@@ -2700,25 +3284,22 @@ begin
       NodeBudget;
       LArm := FArmCount;
 
-      if LArm = Length(FArms) then
-      begin
-        SetLength(FArms, Capacity(LArm, FOptions.MaximumDeclarations));
-      end;
-      Inc(FArmCount);
-      FArms[LArm].FSelector := LSelector;
-      FArms[LArm].FFirstLabel := -1;
-      FArms[LArm].FLastLabel := -1;
-      FArms[LArm].FNext := -1;
 
-      if FSelectors[LSelector].FFirstArm < 0 then
+      Inc(FArmCount);
+      EditArmRow(LArm).Value.FSelector := LSelector;
+      EditArmRow(LArm).Value.FFirstLabel := -1;
+      EditArmRow(LArm).Value.FLastLabel := -1;
+      EditArmRow(LArm).Value.FNext := -1;
+
+      if SelectorRow(LSelector).Value.FFirstArm < 0 then
       begin
-        FSelectors[LSelector].FFirstArm := LArm;
+        EditSelectorRow(LSelector).Value.FFirstArm := LArm;
       end
       else
       begin
-        FArms[FSelectors[LSelector].FLastArm].FNext := LArm;
+        EditArmRow(SelectorRow(LSelector).Value.FLastArm).Value.FNext := LArm;
       end;
-      FSelectors[LSelector].FLastArm := LArm;
+      EditSelectorRow(LSelector).Value.FLastArm := LArm;
       LLabelStart := Tok.Span.Start;
       repeat
         LType := FPosition;
@@ -2727,31 +3308,28 @@ begin
         if LType = FPosition then
         begin
           Unsupported(AScope, 'A variant alternative needs a label expression', Tok.Span);
-          FArms[LArm].FSpan := SpanFrom(LLabelStart);
-          FSelectors[LSelector].FSpan := SpanFrom(LStart);
+          EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
+          EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
           Exit;
         end;
         NodeBudget;
         LLabel := FLabelCount;
 
-        if LLabel = Length(FLabels) then
-        begin
-          SetLength(FLabels, Capacity(LLabel, FOptions.MaximumDeclarations));
-        end;
-        Inc(FLabelCount);
-        FLabels[LLabel].FArm := LArm;
-        FLabels[LLabel].FSpan := Range(LType, FPosition);
-        FLabels[LLabel].FNext := -1;
 
-        if FArms[LArm].FFirstLabel < 0 then
+        Inc(FLabelCount);
+        EditVariantLabelRow(LLabel).Value.FArm := LArm;
+        EditVariantLabelRow(LLabel).Value.FSpan := Range(LType, FPosition);
+        EditVariantLabelRow(LLabel).Value.FNext := -1;
+
+        if ArmRow(LArm).Value.FFirstLabel < 0 then
         begin
-          FArms[LArm].FFirstLabel := LLabel;
+          EditArmRow(LArm).Value.FFirstLabel := LLabel;
         end
         else
         begin
-          FLabels[FArms[LArm].FLastLabel].FNext := LLabel;
+          EditVariantLabelRow(ArmRow(LArm).Value.FLastLabel).Value.FNext := LLabel;
         end;
-        FArms[LArm].FLastLabel := LLabel;
+        EditArmRow(LArm).Value.FLastLabel := LLabel;
 
         if not Sym(psoComma) then
         begin
@@ -2763,8 +3341,8 @@ begin
       if not Sym(psoColon) then
       begin
         Unsupported(AScope, 'Finish variant labels with a colon', Tok.Span);
-        FArms[LArm].FSpan := SpanFrom(LLabelStart);
-        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
+        EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
         Exit;
       end;
       Step;
@@ -2772,8 +3350,8 @@ begin
       if not Sym(psoOpenParen) then
       begin
         Unsupported(AScope, 'A variant arm needs parenthesized fields', Tok.Span);
-        FArms[LArm].FSpan := SpanFrom(LLabelStart);
-        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
+        EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
         Exit;
       end;
       Step;
@@ -2787,23 +3365,23 @@ begin
       if not Sym(psoCloseParen) then
       begin
         Unsupported(AScope, 'Finish this variant arm with )', Tok.Span);
-        FArms[LArm].FSpan := SpanFrom(LLabelStart);
-        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
+        EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
         Exit;
       end;
       Step;
-      FArms[LArm].FComplete := True;
-      FArms[LArm].FSpan := SpanFrom(LLabelStart);
+      EditArmRow(LArm).Value.FComplete := True;
+      EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
 
       if Sym(psoSemicolon) then
       begin
         Step;
       end;
     end;
-    FSelectors[LSelector].FComplete := FSelectors[LSelector].FirstArm >= 0;
-    FSelectors[LSelector].FSpan := SpanFrom(LStart);
+    EditSelectorRow(LSelector).Value.FComplete := SelectorRow(LSelector).Value.FirstArm >= 0;
+    EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
 
-    if not FSelectors[LSelector].Complete then
+    if not SelectorRow(LSelector).Value.Complete then
     begin
       Unsupported(AScope, 'A variant selector needs at least one alternative', Tok.Span);
     end;
@@ -2842,7 +3420,7 @@ begin
 
     if AClass then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfClassMember);
+      Include(EditEntry(LEntry).Value.FFlags, psdfClassMember);
     end;
     Step;
 
@@ -2906,14 +3484,14 @@ begin
   for LAt := 0 to High(LEntries) do
   begin
     LEntry := LEntries[LAt];
-    FDeclarations[LEntry].FTypeSpan := LTypeSpan;
-    FDeclarations[LEntry].FExpressionSpan := LExpressionSpan;
-    FDeclarations[LEntry].FForm := LForm;
+    EditEntry(LEntry).Value.FTypeSpan := LTypeSpan;
+    EditEntry(LEntry).Value.FExpressionSpan := LExpressionSpan;
+    EditEntry(LEntry).Value.FForm := LForm;
 
     if ((LTypeSpan.Length = 0) and (LExpressionSpan.Length = 0)) or
       (LInitialized and (LExpressionSpan.Length = 0)) then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+      Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
     end;
   end;
 
@@ -2940,18 +3518,18 @@ begin
     end;
     for LAt := 1 to High(LEntries) do
     begin
-      FDeclarations[LEntries[LAt]].FLinkage := FDeclarations[LEntries[0]].FLinkage;
-      FDeclarations[LEntries[LAt]].FLinkageSpan := FDeclarations[LEntries[0]].FLinkageSpan;
+      EditEntry(LEntries[LAt]).Value.FLinkage := Entry(LEntries[0]).Value.FLinkage;
+      EditEntry(LEntries[LAt]).Value.FLinkageSpan := Entry(LEntries[0]).Value.FLinkageSpan;
 
-      if psdfIncomplete in FDeclarations[LEntries[0]].Flags then
+      if psdfIncomplete in Entry(LEntries[0]).Value.Flags then
       begin
-        Include(FDeclarations[LEntries[LAt]].FFlags, psdfIncomplete);
+        Include(EditEntry(LEntries[LAt]).Value.FFlags, psdfIncomplete);
       end;
     end;
   end;
   for LAt := 0 to High(LEntries) do
   begin
-    FDeclarations[LEntries[LAt]].FHeaderSpan := SpanFrom(LStart);
+    EditEntry(LEntries[LAt]).Value.FHeaderSpan := SpanFrom(LStart);
   end;
 end;
 
@@ -2972,7 +3550,7 @@ begin
     Step;
     LType := FPosition;
     TypeExpression(AScope, AVisibility, psoEqual);
-    FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
+    EditEntry(LEntry).Value.FTypeSpan := Range(LType, FPosition);
   end;
 
   if Sym(psoEqual) then
@@ -2980,11 +3558,11 @@ begin
     Step;
     LExpression := FPosition;
     Expression(psoSemicolon, False, True);
-    FDeclarations[LEntry].FExpressionSpan := Range(LExpression, FPosition);
+    EditEntry(LEntry).Value.FExpressionSpan := Range(LExpression, FPosition);
   end
   else
   begin
-    Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+    Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
     Problem(psiExpectedSeparator, 'A constant needs its value expression', Tok.Span);
   end;
   DeclarationHints(LEntry);
@@ -2993,7 +3571,7 @@ begin
   begin
     { Typed constants may also carry native linkage without changing visibility. }
   end;
-  FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
+  EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
 end;
 
 procedure TSyntaxSnapshot.Parameters(AScope: Integer);
@@ -3044,7 +3622,7 @@ begin
         Break;
       end;
       LEntry := AddDeclaration(AScope, psdkParameter, psavLocal, FPosition);
-      FDeclarations[LEntry].FParameterMode := LMode;
+      EditEntry(LEntry).Value.FParameterMode := LMode;
       SetLength(LEntries, Length(LEntries) + 1);
       LEntries[High(LEntries)] := LEntry;
       Step;
@@ -3082,7 +3660,7 @@ begin
       end;
       for LAt := 0 to High(LEntries) do
       begin
-        FDeclarations[LEntries[LAt]].FTypeSpan := Range(LType, FPosition);
+        EditEntry(LEntries[LAt]).Value.FTypeSpan := Range(LType, FPosition);
       end;
     end;
 
@@ -3350,30 +3928,30 @@ begin
       end;
     end;
     LEntry := AddDeclaration(AScope, psdkRoutine, AVisibility, LFinalName, LOperator);
-    FDeclarations[LEntry].FGenericSpan := LGenericSpan;
-    FDeclarations[LEntry].FOwnerName := LOwner;
+    EditEntry(LEntry).Value.FGenericSpan := LGenericSpan;
+    EditEntry(LEntry).Value.FOwnerName := LOwner;
 
     if not LIsOperator then
     begin
-      FDeclarations[LEntry].FNameSpan := Range(LName, FPosition);
+      EditEntry(LEntry).Value.FNameSpan := Range(LName, FPosition);
     end;
 
     if LIsOperator then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfOverload);
+      Include(EditEntry(LEntry).Value.FFlags, psdfOverload);
 
       if LOperator = pokUnknown then
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfUnsupported);
+        Include(EditEntry(LEntry).Value.FFlags, psdfUnsupported);
       end;
     end;
 
     if AClass then
     begin
-      Include(FDeclarations[LEntry].FFlags, psdfClassMember);
+      Include(EditEntry(LEntry).Value.FFlags, psdfClassMember);
     end;
     LScope := AddScope(psskRoutine, AScope, LEntry, LStart, LFullName);
-    FDeclarations[LEntry].FNestedScope := LScope;
+    EditEntry(LEntry).Value.FNestedScope := LScope;
 
     if Sym(psoOpenParen) then
     begin
@@ -3391,11 +3969,11 @@ begin
       Step;
       LType := FPosition;
       Expression(psoSemicolon, False, True, False, False, True);
-      FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
+      EditEntry(LEntry).Value.FTypeSpan := Range(LType, FPosition);
 
       if LResultEntry >= 0 then
       begin
-        FDeclarations[LResultEntry].FTypeSpan := FDeclarations[LEntry].FTypeSpan;
+        EditEntry(LResultEntry).Value.FTypeSpan := Entry(LEntry).Value.FTypeSpan;
       end;
     end;
     DeclarationHints(LEntry);
@@ -3405,23 +3983,23 @@ begin
 
       if not Sym(psoSemicolon) then
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
       end;
       Separator;
     end;
     LHasBody := not (AVisibility in [psavInterface]) and
-      (FScopes[AScope].Kind <> psskMembers);
+      (Frame(AScope).Value.Kind <> psskMembers);
     while not EOF do
     begin
 
       if DeclarationLinkage(LEntry, True) then
       begin
 
-        if (plfExternal in FDeclarations[LEntry].Linkage) or
-          (plfIntrinsic in FDeclarations[LEntry].Linkage) then
+        if (plfExternal in Entry(LEntry).Value.Linkage) or
+          (plfIntrinsic in Entry(LEntry).Value.Linkage) then
         begin
           LHasBody := False;
-          Include(FDeclarations[LEntry].FFlags, psdfForward);
+          Include(EditEntry(LEntry).Value.FFlags, psdfForward);
         end;
         Continue;
       end;
@@ -3441,12 +4019,12 @@ begin
       if Word(pkwForward) or Word(pkwExternal) or Word(pkwAbstract) then
       begin
         LHasBody := False;
-        Include(FDeclarations[LEntry].FFlags, psdfForward);
+        Include(EditEntry(LEntry).Value.FFlags, psdfForward);
       end;
 
       if Word(pkwOverload) then
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfOverload);
+        Include(EditEntry(LEntry).Value.FFlags, psdfOverload);
       end;
       Step;
 
@@ -3456,11 +4034,11 @@ begin
       end
       else if not RoutineClause(AScope) and not Sym(psoOpenBracket) then
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
         Separator;
       end;
     end;
-    FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
+    EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
 
     if LHasBody then
     begin
@@ -3471,17 +4049,17 @@ begin
 
         if not Block(LScope) then
         begin
-          Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+          Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
         end;
         Separator;
       end
       else
       begin
-        Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
         Problem(psiUnclosedScope, 'Finish this routine implementation', Tok.Span);
       end;
     end;
-    FinishScope(LScope, not (psdfIncomplete in FDeclarations[LEntry].Flags));
+    FinishScope(LScope, not (psdfIncomplete in Entry(LEntry).Value.Flags));
   finally
     Leave;
   end;
@@ -3508,7 +4086,7 @@ begin
 
   if AClass then
   begin
-    Include(FDeclarations[LEntry].FFlags, psdfClassMember);
+    Include(EditEntry(LEntry).Value.FFlags, psdfClassMember);
   end;
   Step;
 
@@ -3540,8 +4118,8 @@ begin
         Step;
       end;
     end;
-    FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
-    FDeclarations[LEntry].FForm := pstfNamed;
+    EditEntry(LEntry).Value.FTypeSpan := Range(LType, FPosition);
+    EditEntry(LEntry).Value.FForm := pstfNamed;
   end;
   DeclarationHints(LEntry);
   Expression(psoSemicolon, False, True);
@@ -3553,7 +4131,7 @@ begin
     Step;
     Separator;
   end;
-  FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
+  EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
 end;
 
 procedure TSyntaxSnapshot.Imports(AScope: Integer);
@@ -3581,14 +4159,11 @@ begin
       raise ENyxPascalSyntaxLimit.Create('Pascal import syntax exceeds its budget');
     end;
 
-    if LEntry = Length(FImports) then
-    begin
-      SetLength(FImports, Capacity(LEntry, FOptions.MaximumDeclarations));
-    end;
-    FImports[LEntry].FName := LName;
-    FImports[LEntry].FSpan := Range(LStart, FPosition);
-    FImports[LEntry].FScope := AScope;
-    FImports[LEntry].FConditional := FTokens.IsConditional(LStart);
+
+    EditImportRow(LEntry).Value.FName := LName;
+    EditImportRow(LEntry).Value.FSpan := Range(LStart, FPosition);
+    EditImportRow(LEntry).Value.FScope := AScope;
+    EditImportRow(LEntry).Value.FConditional := FTokens.IsConditional(LStart);
     Inc(FImportCount);
 
     if Word(pkwIn) then
@@ -3774,8 +4349,8 @@ begin
       else if AMembers and Word(pkwCase) then
       begin
 
-        if (FScopes[AScope].OwnerDeclaration >= 0) and
-          (FDeclarations[FScopes[AScope].OwnerDeclaration].TypeForm = pstfRecord) then
+        if (Frame(AScope).Value.OwnerDeclaration >= 0) and
+          (Entry(Frame(AScope).Value.OwnerDeclaration).Value.TypeForm = pstfRecord) then
         begin
           VariantPart(AScope, AVisibility);
         end
@@ -3888,9 +4463,9 @@ begin
       Step;
     end;
     FinishScope(LScope, (LDepth = 0) and (LRepeat = 0));
-    Result := FScopes[LScope].Complete;
+    Result := Frame(LScope).Value.Complete;
 
-    if not FScopes[LScope].Complete then
+    if not Frame(LScope).Value.Complete then
     begin
       Problem(psiUnclosedScope, 'Finish this Pascal body', Tok.Span);
     end;
@@ -3965,6 +4540,7 @@ begin
     begin
       CheckCancellation;
       FDiagnostics[LAt] := APrevious.FDiagnostics[LAt];
+      Inc(FCopied);
     end;
   end;
   FTokens := TFilteredTokens.Create(LPrevious, LRetainedRows, FCancellation);
@@ -4110,7 +4686,7 @@ begin
       LModule := LModule + '.' + Name;
       Step;
     end;
-    FScopes[LModuleScope].FName := LModule;
+    EditFrame(LModuleScope).Value.FName := LModule;
 
     if Sym(psoOpenParen) then
     begin
@@ -4165,11 +4741,11 @@ begin
 
   if FOptions.StartingContext <> psfModule then
   begin
-    FScopes[0].FComplete := EOF;
+    EditFrame(0).Value.FComplete := EOF;
   end
   else
   begin
-    FScopes[0].FComplete :=
+    EditFrame(0).Value.FComplete :=
       (Word(pkwEnd) and Sym(psoDot, 1) and (Tok(2).Kind = ptkEOF)) or
       (LBodyClosed and Sym(psoDot) and (Tok(1).Kind = ptkEOF));
   end;
@@ -4192,7 +4768,12 @@ begin
   begin
     raise ENyxPascalLexical.Create('Pascal scope index is outside its syntax snapshot');
   end;
-  Result := FScopes[AIndex];
+  Result := Frame(AIndex).Value;
+
+  if not Result.Complete then
+  begin
+    Result.FSpan := NyxPascalSpan(Result.Span.Start, FLexical.Scalars - Result.Span.Start);
+  end;
 end;
 
 function TSyntaxSnapshot.ScopeAt(AOffset: Integer): Integer;
@@ -4201,6 +4782,7 @@ var
   LDepth: Integer;
   LBestDepth: Integer;
   LParent: Integer;
+  LScope: TNyxPascalSyntaxScope;
 begin
 
   if (AOffset < 0) or (AOffset > FLexical.Scalars) then
@@ -4211,17 +4793,18 @@ begin
   LBestDepth := 0;
   for LAt := 1 to FScopeCount - 1 do
   begin
+    LScope := Scope(LAt);
 
-    if (AOffset >= FScopes[LAt].Span.Start) and
-      ((AOffset < FScopes[LAt].Span.Finish) or
-        ((AOffset = FLexical.Scalars) and not FScopes[LAt].Complete)) then
+    if (AOffset >= LScope.Span.Start) and
+      ((AOffset < LScope.Span.Finish) or
+        ((AOffset = FLexical.Scalars) and not LScope.Complete)) then
     begin
       LDepth := 0;
       LParent := LAt;
       while LParent >= 0 do
       begin
         Inc(LDepth);
-        LParent := FScopes[LParent].Parent;
+        LParent := Frame(LParent).Value.Parent;
       end;
 
       if LDepth > LBestDepth then
@@ -4245,15 +4828,15 @@ begin
   begin
     raise ENyxPascalLexical.Create('Pascal declaration index is outside its syntax snapshot');
   end;
-  Result := FDeclarations[AIndex];
+  Result := Entry(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.Named(AScope: Integer; const AName: TNyxText): Integer;
 begin
   Scope(AScope);
-  Result := FNames.IndexOf(TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(AName));
+  Result := FMetadata.Index(mkName, TNyxText(IntToStr(AScope)) + ':' + NyxPascalASCIIKey(AName));
 
-  if (Result >= 0) and (FDeclarations[Result].OperatorKind <> pokNone) then
+  if (Result >= 0) and (Entry(Result).Value.OperatorKind <> pokNone) then
   begin
     Result := -1;
   end;
@@ -4267,7 +4850,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Select one supported typed operator family');
   end;
-  Result := FNames.IndexOf(TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AKind))));
+  Result := FMetadata.Index(mkName, TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AKind))));
 end;
 
 function TSyntaxSnapshot.SelectorCount: Integer;
@@ -4282,7 +4865,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Variant selector index is outside its syntax snapshot');
   end;
-  Result := FSelectors[AIndex];
+  Result := SelectorRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.ArmCount: Integer;
@@ -4297,7 +4880,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Variant arm index is outside its syntax snapshot');
   end;
-  Result := FArms[AIndex];
+  Result := ArmRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.LabelCount: Integer;
@@ -4312,7 +4895,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Variant label index is outside its syntax snapshot');
   end;
-  Result := FLabels[AIndex];
+  Result := VariantLabelRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.StatementLabelCount: Integer;
@@ -4327,7 +4910,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Statement label index is outside its syntax snapshot');
   end;
-  Result := FStatementLabels[AIndex];
+  Result := StatementLabelRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.HintCount: Integer;
@@ -4342,7 +4925,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Declaration hint index is outside its syntax snapshot');
   end;
-  Result := FHints[AIndex];
+  Result := HintRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.IntrinsicCount: Integer;
@@ -4357,7 +4940,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Intrinsic entry index is outside its syntax snapshot');
   end;
-  Result := FIntrinsics[AIndex];
+  Result := IntrinsicRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.TypeAt(AStart: Integer): Integer;
@@ -4367,7 +4950,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Structured type position is outside its syntax snapshot');
   end;
-  Result := FStructures.IndexOf(TNyxText(IntToStr(AStart)));
+  Result := FMetadata.Index(mkStructure, TNyxText(IntToStr(AStart)));
 end;
 
 function TSyntaxSnapshot.ImportCount: Integer;
@@ -4382,7 +4965,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Pascal import index is outside its syntax snapshot');
   end;
-  Result := FImports[AIndex];
+  Result := ImportRow(AIndex).Value;
 end;
 
 function TSyntaxSnapshot.DiagnosticCount: Integer;
@@ -4484,7 +5067,7 @@ end;
 
 function TSyntaxSnapshot.CopiedEntries: Integer;
 begin
-  Result := FCopied;
+  Result := FCopied + FMetadata.Copied;
 end;
 
 function TSyntaxSnapshot.FilteredTokens: Integer;
@@ -4525,6 +5108,36 @@ end;
 function TSyntaxSnapshot.FilterDirectoryEntries: Integer;
 begin
   Result := FTokens.DirectoryEntries;
+end;
+
+function TSyntaxSnapshot.RetainedMetadataValues: Integer;
+begin
+  Result := FRetainedMetadata;
+end;
+
+function TSyntaxSnapshot.CopiedMetadataValues: Integer;
+begin
+  Result := FMetadata.Copied;
+end;
+
+function TSyntaxSnapshot.CreatedMetadataValues: Integer;
+begin
+  Result := FMetadata.Created;
+end;
+
+function TSyntaxSnapshot.AllocatedMetadataNodes: Integer;
+begin
+  Result := FMetadata.AllocatedNodes;
+end;
+
+function TSyntaxSnapshot.CopiedDiagnosticRows: Integer;
+begin
+  Result := FCopied;
+end;
+
+function TSyntaxSnapshot.MetadataTreeHeight: Integer;
+begin
+  Result := FMetadata.Height;
 end;
 
 end.

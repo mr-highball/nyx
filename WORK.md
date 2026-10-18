@@ -33,7 +33,94 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Persistent filtering, origins and module preparation — 2026-10-18
+## Current integration: Persistent checkpoint metadata and indexes — 2026-10-18
+
+97b60a9 removes repeated filter/origin and module-boundary scans, while restoring
+every declaration/scope/structural row and rebuilding indexes still copies the
+preceding prefix. Reassessment after forty-one unclosed authoring batches finds
+that suffix scope/overload writes can change earlier rows, so sharing the old
+arrays is insufficient. This batch follows original authoring criterion two's
+concrete prerequisite: exact persistent checkpoint metadata, then one frozen
+integrated qualification. It grants no smaller substitute acceptance criterion.
+
+Current source captures one immutable balanced root at each safe checkpoint.
+Scope/declaration/import, variant selector/arm/label, statement-label, hint and
+intrinsic rows share that root with name/overload/anonymous-structure indexes.
+Construction markers contain no owner/history link. A later write detaches its
+value and tree path before changing it; untouched rows and subtrees remain exact.
+Restoring the captured root avoids prefix row loops and index reconstruction.
+Provisional suffix keys, flags and links are excluded at capture. Public open
+scope ends adapt to current lexical length without changing retained metadata.
+Published reads have no mutable cache; nodes retain no parent/parser/old owner.
+Binding still produces results owned by the exact current world.
+
+Native focused checks pass 4,391, clean heap. Every scalar-append module/fragment
+case compares complete public rows, links, indexes, diagnostics and Unicode with
+fresh whole parsing. Sibling source branches extend the same distant overload
+family differently, preserve earlier snapshots exactly and survive predecessor
+retirement. Original cancellation and node/scope/diagnostic/depth refusals remain.
+The controlled fixture retains 481 values, copies six, creates four and allocates
+100 tree nodes versus 6,241 for fresh parsing; height is ten. These are actual
+construction receipts, not editor latency or total CPU comparisons. Balanced
+node allocations include transient rotations. Actual diagnostic copying remains
+separate. Existing append/projection 2,480 passes during integration; browser
+consumers compile only.
+
+A one-shot Pascal migration helper updates internal record reads/writes to typed
+private accessors; its byte input/output and checked compiler/run remain in the
+ignored packet. Every owned value/node/namespace/bridge type receives a purpose
+comment. The first focused run passes differential meaning then fails the old
+work assertion requiring a full retained-row copy. That failed run is retained,
+clean heap, and excluded from accepted evidence. Its replacement requires actual
+sharing, fewer new tree allocations and sibling isolation; source equality and
+all original limits remain unchanged. Two final-byte functional sources freeze
+before wider qualification; preflight runs are not counted again. The historical
+emission compiler log remains an unchanged read-only test input. The ignored
+packet located by `.local/metadata-tree-paths-private.json` owns exact compiler/
+run/process, preservation and final source/remote identity receipts.
+
+All 40 maintained native consumers, focused metadata 4,391, projection 2,480
+and storage 336 pass, clean heaps. Actual-source lexing passes 567 across 500
+files/2,308,970 lossless tokens; syntax passes 7,934 across five inputs/3,865
+declarations. Counts overlap; 44 passing native logs include the separate source
+read. All 77 successful current compiler jobs have zero owned warnings/168
+unchanged upstream RTL warnings. Both Studios/backend/worker and 31 browser
+consumers compile as applicable; browser execution/parity remains unqualified.
+Both final-byte functional sources stay exact through qualification and commit,
+without a post-freeze overlay. No preflight failure grants accepted evidence.
+
+The unchanged original RTL gate still exits one with clean heap: prefix phase,
+logical round 26, used 3,971,021/requested 268,501/limit 4,000,000, translated
+268,502. It reaches Longint/Int64/Pointer binding-derived requests and publishes
+no final System/ObjPas semantic/indexed result. Original source/consumer, five
+initial queries, explicit Word job, symbol preparation three/eight, generic fact
+ceiling eight, 2M view/4M aggregate/64 rounds remain unchanged. The complete-prefix
+charge stays conservative and unchanged: query type plans and diagnostic rows
+still rebuild/copy, and complete phase-work admission has not been integrated.
+Neither an immutable root nor a counter alone authorizes discounted work.
+
+Original reader session 46481/PID 8120 is terminal exit one. Native/regression/
+products/extra sessions 38035/56353/23899/45775 are terminal exit zero. No owned
+reader or Studio listener remains. Two frozen sources, 659 unrelated prior
+sources and maintained inventory 660 remain exact. So do 97 RTL/24 compiler inputs
+and three additionally inspected compiler sources, 156 original unit packets,
+48 retained includes, five protected files/nine complete contexts, 349 frozen
+7422453 artifacts and 13 concurrent planning files. No protected checkpoint,
+history, profile, enrollment or configuration is rewritten.
+
+Stop metadata/tree/fixture/oracle/compiler/capture variants. Next advance reusable
+type-plan preparation and actual phase-work admission through existing types/
+binding/conditions owners. Preserve exact declaration/lexical/context/include/
+branch/macro/settings identity, current-world results, provisional owners,
+cancellation and atomic refusal. Do not store resolved types with a cycle back
+to their world, guess reuse authority, relax caps or add fixed compiler facts.
+Full language/editor/incremental/input/quality/parity/adoption/delivery and all
+original criterion/task/credit/DONE remain open across at least forty-two batches.
+LAN remains offline. No host/configuration retry, protected mutation, browser/
+HTTP/file execution/capture, cleanup/restart, approval bypass, tool/schema or
+sub-agent occurs. Native Nyx tools remain absent; no fallback transport occurs.
+
+## Previous integration: Persistent filtering, origins and module preparation — 2026-10-18
 
 57a1f7b supplies safe declaration parser checkpoints. Current source removes
 additional repeated work underneath binding: significant-token ordinals and raw

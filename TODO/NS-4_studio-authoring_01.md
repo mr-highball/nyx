@@ -9,7 +9,32 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Persistent filtering/index prerequisite (2026-10-18): significant-token filters
+Persistent metadata prerequisite (2026-10-18): all scope/declaration/import and
+structural metadata plus name/overload/anonymous-structure indexes now share the
+sealed checkpoint's immutable balanced root. Independent construction markers
+detach a changed row/path before mutation; provisional suffix entries cannot
+leak into restoration. Public incomplete-scope spans adapt without modifying
+earlier rows. Native focused checks pass 4,391, clean heap, including exact whole
+metadata comparison at scalar seams, sibling overload families, predecessor
+retirement and cancellation/budgets. The controlled reuse fixture retains 481
+values, copies six and allocates 100 tree nodes versus 6,241 for a fresh parse;
+this is preparation work, not an editor latency claim. Existing projection checks
+pass 2,480 during integration; browser consumers compile only. Diagnostic copying,
+query type-plan construction and complete actual work admission remain open;
+the original complete-prefix charge and RTL oracle stay unchanged. WORK.md owns
+frozen maintained/RTL results and exact preservation/source/remote identity.
+Stop metadata/tree/fixture/oracle/compiler/capture variants after qualification;
+return to reusable type-plan preparation and actual work admission through their
+existing owners. No original criterion/task/credit/DONE or full language/editor/
+incremental/input/quality/parity/adoption/delivery closes.
+All 40 maintained native consumers, projection 2,480 and storage 336 pass,
+clean heaps; 77 successful current compiler jobs have zero owned warnings.
+Two frozen sources remain exact without an overlay. The unchanged RTL gate
+retains its exact round-26 prefix-budget failure, clean heap and no final
+semantic/indexed result. WORK.md owns all receipts, protected/concurrent
+preservation, failed old-copy expectation and final source/remote identity.
+
+Historical persistent filtering/index prerequisite (2026-10-18): significant-token filters
 and physical origins now share immutable complete blocks with independent partial
 tails and flat directories. Exact filter state before lexical repair preserves
 conditional/include diagnostics and retires provisional EOF diagnostics. Semantic
