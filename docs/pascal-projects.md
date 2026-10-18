@@ -1826,6 +1826,42 @@ plus one warning in error mode, and four warnings with an unknown selector. Succ
 runs return 84. Warning counts alone do not establish directive timing or validity;
 WORK.md owns exact diagnostics and the remaining real-RTL source gaps.
 
+## Authored code-alignment requests
+
+`TNyxPascalCodeAlignmentRequest` fluently retains an ordered group of closed
+`TNyxPascalCodeAlignmentSubject` assignments. The optional
+`INyxPascalContextCodeAlignments` capability owns an immutable sequence of these
+groups and their conditional activity. Capture, exact identity and local
+PUSH/POP preserve it; source mode changes retain it and unknown textual effects
+revoke it. Checked ordinals, 64 assignments per group and 2,048 groups per context
+bound storage. Alternate-producer failures preserve the existing publication.
+
+```pascal
+LRequest := Default(TNyxPascalCodeAlignmentRequest)
+  .Add(pcaConstantMinimum, 16)
+  .Add(pcaConstantMaximum, 32);
+LContext := NyxPascalWithCodeAlignment(LContext, LRequest);
+```
+
+The eleven selectors cover procedure/jump/loop labels and constant/variable/local/
+record minima/maxima. Zero is an explicit request. Label selectors accept zero or
+powers of two through 256; constraint selectors preserve signed-32 values. These
+are FPC-authored code-generation requests, distinct from PACKRECORDS, measured
+type sizes and effective target layout. FPC builds a temporary constraint packet
+per directive, so grouping, duplicate selectors and assignment order stay exact.
+Nyx does not merge requests into invented defaults, offsets or ABI conclusions.
+
+Translation accepts the supported `CODEALIGN selector=signed-decimal,...` source
+boundary only in an explicit FPC context. Alternate numeric notation, unknown
+selectors, malformed values and overflow refuse visibly without partial groups.
+Inactive branches add nothing; unknown activity remains explicit.
+`INyxPascalCodeAlignmentDirectives` exposes each original include occurrence/span,
+pre-directive state and typed rule. Prefixes expose only visited receipts, and
+POP retains historical receipts while restoring current authored settings.
+Native whole-unit execution and compiler refusals qualify syntax/ownership;
+browser consumers compile only. Complete RTL meaning, full type/layout analysis,
+editor adoption and both-target input/quality remain separate in WORK.md.
+
 ## Bounded compiler query cohorts
 
 General compiler requirement plans stay minimal. Optional

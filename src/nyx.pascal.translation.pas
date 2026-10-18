@@ -105,6 +105,30 @@ type
     function WarningDirectiveCount: Integer;
     function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
   end;
+  { One complete typed CODEALIGN request at its physical include occurrence.
+    State precedes the directive; the rule preserves assignment grouping and
+    conditional activity. No context/interface or target-layout authority lives
+    in this value. Restoring settings never removes the historical receipt. }
+  TNyxPascalCodeAlignmentDirective = record
+  private
+    FOrigin: TNyxPascalConditionOrigin;
+    FState: Integer;
+    FRule: TNyxPascalCodeAlignmentRule;
+  public
+    property Origin: TNyxPascalConditionOrigin read FOrigin;
+    property State: Integer read FState;
+    property Rule: TNyxPascalCodeAlignmentRule read FRule;
+  end;
+  { Optional checked source receipts. Prefixes retain only visited sites and
+    their original pre-state; a missing alternate-source capability refuses.
+    The source owns immutable requests and retains no constructing visitor. }
+  INyxPascalCodeAlignmentDirectives = interface(IInterface)
+    ['{33241969-5958-4630-80D3-966E134495CE}']
+    { Number of visited complete directive groups, including uncertain branches. }
+    function CodeAlignmentDirectiveCount: Integer;
+    { Checked ordinal access; returned values retain no mutable external owner. }
+    function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
+  end;
   { Optional synchronous facts for a still-unknown expression. Ordered semantic
     refinement supplies sealed answers, never mutable editor state. Origin,
     expanded expression and context belong to this exact construction. The
@@ -343,7 +367,8 @@ type
   TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
-    INyxPascalRegisterDirectives, INyxPascalWarningDirectives)
+    INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
+    INyxPascalCodeAlignmentDirectives)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -360,6 +385,8 @@ type
     FRegisterRows: array of Integer;
     FWarningDirectives: INyxPascalWarningDirectives;
     FWarningRows: array of Integer;
+    FCodeAlignmentDirectives: INyxPascalCodeAlignmentDirectives;
+    FCodeAlignmentRows: array of Integer;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -390,6 +417,8 @@ type
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
     function WarningDirectiveCount: Integer;
     function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
+    function CodeAlignmentDirectiveCount: Integer;
+    function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -445,7 +474,8 @@ type
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
-    INyxPascalRegisterDirectives, INyxPascalWarningDirectives)
+    INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
+    INyxPascalCodeAlignmentDirectives)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -470,6 +500,8 @@ type
     FRegisterCount: Integer;
     FWarningDirectives: array of TNyxPascalWarningDirective;
     FWarningCount: Integer;
+    FCodeAlignmentDirectives: array of TNyxPascalCodeAlignmentDirective;
+    FCodeAlignmentCount: Integer;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
     FOccurrenceCount: Integer;
@@ -541,6 +573,8 @@ type
     function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
     function WarningDirectiveCount: Integer;
     function WarningDirectiveAt(AIndex: Integer): TNyxPascalWarningDirective;
+    function CodeAlignmentDirectiveCount: Integer;
+    function CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -1734,6 +1768,99 @@ begin
   end;
 end;
 
+{ Persistence boundary for the supported signed-decimal CODEALIGN spelling.
+  Keep assignments in source order: FPC applies a temporary packet per directive,
+  and duplicate/minimum/maximum assignments are not a flat last-value map.
+  Alternate integer notation and malformed/unknown selectors refuse explicitly. }
+function ParseCodeAlignmentRequest(const AValue: TNyxText): TNyxPascalCodeAlignmentRequest;
+const
+  Names: array[TNyxPascalCodeAlignmentSubject] of String = ('proc', 'jump', 'loop',
+    'constmin', 'constmax', 'varmin', 'varmax', 'localmin', 'localmax', 'recordmin', 'recordmax');
+var
+  LAt: Integer;
+  LStart: Integer;
+  LName: TNyxText;
+  LSubject: TNyxPascalCodeAlignmentSubject;
+  LCandidate: TNyxPascalCodeAlignmentSubject;
+  LFound: Boolean;
+  LNegative: Boolean;
+  LNumber: Integer;
+  LDigit: Integer;
+begin
+  Result := Default(TNyxPascalCodeAlignmentRequest);
+  LAt := 1;
+  repeat
+    while (LAt <= Length(AValue)) and (AValue[LAt] in [#9..#13, ' ']) do
+    begin
+      Inc(LAt);
+    end;
+    LStart := LAt;
+    while (LAt <= Length(AValue)) and (AValue[LAt] in ['a'..'z', 'A'..'Z']) do
+    begin
+      Inc(LAt);
+    end;
+    LName := NyxPascalASCIIKey(Copy(AValue, LStart, LAt - LStart));
+    LFound := False;
+    LSubject := pcaProcedure;
+    for LCandidate := Low(TNyxPascalCodeAlignmentSubject) to High(TNyxPascalCodeAlignmentSubject) do
+    begin
+
+      if LName = TNyxText(Names[LCandidate]) then
+      begin
+        LSubject := LCandidate;
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound or (LAt > Length(AValue)) or (AValue[LAt] <> '=') then
+    begin
+      raise ENyxPascalContext.Create('CODEALIGN needs a supported selector followed by equals');
+    end;
+    Inc(LAt);
+    LNegative := False;
+
+    if (LAt <= Length(AValue)) and (AValue[LAt] in ['+', '-']) then
+    begin
+      LNegative := AValue[LAt] = '-';
+      Inc(LAt);
+    end;
+    LStart := LAt;
+    LNumber := 0;
+    while (LAt <= Length(AValue)) and (AValue[LAt] in ['0'..'9']) do
+    begin
+      LDigit := Ord(AValue[LAt]) - Ord('0');
+      { Accumulate negatively so the exact signed-32 minimum never overflows. }
+
+      if LNumber < (Low(Integer) + LDigit) div 10 then
+      begin
+        raise ENyxPascalContext.Create('A code-alignment request exceeds signed-32');
+      end;
+      LNumber := LNumber * 10 - LDigit;
+      Inc(LAt);
+    end;
+
+    if (LAt = LStart) or ((LAt <= Length(AValue)) and (AValue[LAt] <> ',')) or
+      (not LNegative and (LNumber = Low(Integer))) then
+    begin
+      raise ENyxPascalContext.Create('A code-alignment request needs an exact signed-decimal integer');
+    end;
+
+    if not LNegative then
+    begin
+      LNumber := -LNumber;
+    end;
+    Result := Result.Add(LSubject, LNumber);
+
+    if LAt > Length(AValue) then
+    begin
+      Break;
+    end;
+    Inc(LAt);
+  until False;
+  Result.Validate;
+end;
+
 procedure TTranslation.Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
@@ -1763,6 +1890,9 @@ var
   LRegister: TNyxPascalFPURegisterPolicy;
   LRegisterValue: Integer;
   LReader: TNyxPascalAssemblerReader;
+  LCodeAlignment: TNyxPascalCodeAlignmentRequest;
+  LCodeAlignments: INyxPascalContextCodeAlignments;
+  LAlignedContext: INyxPascalCompilerContext;
 begin
   NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
@@ -1909,6 +2039,45 @@ begin
       FWarningDirectives[FWarningCount].FRule := LWarnings.WarningAt(LWarnings.WarningCount - 1);
       Inc(FWarningCount);
       FContext := LWarningContext;
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'codealign' then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Code-alignment requests need an explicit FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+      LCodeAlignment := ParseCodeAlignmentRequest(LValue);
+      LCodeAlignments := NyxPascalCodeAlignments(FContext);
+
+      if (LCodeAlignments.CodeAlignmentCount >= NyxPascalCodeAlignmentRuleLimit) or
+        (FCodeAlignmentCount >= FOptions.MaximumTokens) then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Code-alignment requests exceed their construction budget');
+      end;
+      LAlignedContext := LCodeAlignments.WithCodeAlignment(LCodeAlignment, FActive);
+
+      if FCodeAlignmentCount = Length(FCodeAlignmentDirectives) then
+      begin
+        SetLength(FCodeAlignmentDirectives, Capacity(FCodeAlignmentCount, FOptions.MaximumTokens));
+      end;
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.FileReference :=
+        FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.Occurrence := AOccurrence;
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.Span := AToken.Span;
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.PrefixCount := FTokenCount - 1;
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FState := FTokens[FTokenCount - 1].State;
+      LCodeAlignments := NyxPascalCodeAlignments(LAlignedContext);
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FRule :=
+        LCodeAlignments.CodeAlignmentAt(LCodeAlignments.CodeAlignmentCount - 1);
+      Inc(FCodeAlignmentCount);
+      FContext := LAlignedContext;
       SaveState;
       Exit;
     end;
@@ -2786,6 +2955,21 @@ begin
   Result := FUnresolvedCount;
 end;
 
+function TTranslation.CodeAlignmentDirectiveCount: Integer;
+begin
+  Result := FCodeAlignmentCount;
+end;
+
+function TTranslation.CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= FCodeAlignmentCount) then
+  begin
+    raise ENyxPascalContext.Create('Code-alignment directive index is outside its translation');
+  end;
+  Result := FCodeAlignmentDirectives[AIndex];
+end;
+
 function TTranslation.WarningDirectiveCount: Integer;
 begin
   Result := FWarningCount;
@@ -2842,6 +3026,7 @@ var
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LSpan: TNyxPascalSpan;
   LWarning: TNyxPascalWarningDirective;
+  LAlignment: TNyxPascalCodeAlignmentDirective;
 
   procedure Check;
   begin
@@ -2881,6 +3066,39 @@ begin
   FCount := ABeforeToken;
   Supports(FSource, INyxPascalRegisterDirectives, FRegisterDirectives);
   Supports(FSource, INyxPascalWarningDirectives, FWarningDirectives);
+  Supports(FSource, INyxPascalCodeAlignmentDirectives, FCodeAlignmentDirectives);
+
+  if FCodeAlignmentDirectives <> nil then
+  begin
+
+    if (FCodeAlignmentDirectives.CodeAlignmentDirectiveCount < 0) or
+      (FCodeAlignmentDirectives.CodeAlignmentDirectiveCount > AOptions.MaximumTokens) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Alignment prefix directives exceed their input budget');
+    end;
+    SetLength(FCodeAlignmentRows, FCodeAlignmentDirectives.CodeAlignmentDirectiveCount);
+    LUsed := 0;
+    for LAt := 0 to FCodeAlignmentDirectives.CodeAlignmentDirectiveCount - 1 do
+    begin
+      Check;
+      LAlignment := FCodeAlignmentDirectives.CodeAlignmentDirectiveAt(LAt);
+      LAlignment.Rule.Request.Validate;
+
+      if (LAlignment.Origin.PrefixCount < 0) or (LAlignment.Origin.PrefixCount >= LSourceCount) or
+        (LAlignment.State < 0) or (LAlignment.State >= LStates) or
+        (LAlignment.Origin.Occurrence < 0) or (LAlignment.Origin.Occurrence >= LOccurrences) then
+      begin
+        raise ENyxPascalContext.Create('An alignment receipt is outside its owning source');
+      end;
+
+      if LAlignment.Origin.PrefixCount < FCount then
+      begin
+        FCodeAlignmentRows[LUsed] := LAt;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FCodeAlignmentRows, LUsed);
+  end;
 
   if FWarningDirectives <> nil then
   begin
@@ -3151,6 +3369,26 @@ begin
     raise ENyxPascalContext.Create('This alternate source has no retained condition planning inputs');
   end;
   Result := Length(FUnresolvedRows);
+end;
+
+function TTranslationPrefix.CodeAlignmentDirectiveCount: Integer;
+begin
+
+  if FCodeAlignmentDirectives = nil then
+  begin
+    raise ENyxPascalContext.Create('This alternate source has no retained alignment directive inputs');
+  end;
+  Result := Length(FCodeAlignmentRows);
+end;
+
+function TTranslationPrefix.CodeAlignmentDirectiveAt(AIndex: Integer): TNyxPascalCodeAlignmentDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= CodeAlignmentDirectiveCount) then
+  begin
+    raise ENyxPascalContext.Create('Code-alignment directive index is outside this prefix');
+  end;
+  Result := FCodeAlignmentDirectives.CodeAlignmentDirectiveAt(FCodeAlignmentRows[AIndex]);
 end;
 
 function TTranslationPrefix.WarningDirectiveCount: Integer;

@@ -4,7 +4,31 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source routine boundaries retain configured-FPC adjacent first directives,
+Current-source CODEALIGN retains eleven closed selectors, exact ordered assignment
+groups, source/include origins and conditional activity through immutable context
+capture/identity and local PUSH/POP. Mode changes retain requests; unknown effects
+revoke knowledge. No target defaults/offsets/ABI are inferred. Native focused 45,
+unchanged RTL 50 and all 37 native consumers pass with clean heaps; 63 accepted
+compiler logs have zero owned warnings/154 upstream. Both Studios/backend/worker
+and twenty-two browser consumers compile as applicable; no browser execution or
+parity/adoption/delivery is claimed. Actual System advances to 7,030 declarations/
+two body/terminator syntax diagnostics/eleven semantic answers; ObjPas stays
+209/four/one. Exact indexed Free/FreeInstance remains ready. Source.Resolved now
+refuses OPTIMIZATION NOFASTMATH in genmath.inc, rather than CODEALIGN. Retain this
+new policy prerequisite and deeper syntax exposure; do not claim full RTL meaning.
+WORK.md owns the retained failed mode/oracle expectations and composite evidence:
+only the real-RTL consumer changed after the production freeze. Six focused/645
+unique product/97 RTL/23 compiler pins, 156 unit packets/48 includes, five protected
+files/nine contexts, 349 frozen 7422453 artifacts and thirteen concurrent planning
+files stay exact. Readers joined; LAN offline; native Nyx tools absent. Stop
+alignment/fixture/compiler/capture variants; reassess optimization intent through
+existing policy/context/translation owners. Full canonical type/module/incremental/
+editor/input/navigation/quality/parity/adoption/delivery stays open across at least
+twenty-nine documented unclosed batches. No original criterion/task/credit/DONE,
+new tool/schema or rollout closes. No host/config retry, capture, protected
+mutation, cleanup/restart, approval bypass or sub-agents. Preserve concurrent work.
+
+Previously qualified routine boundaries retain configured-FPC adjacent first directives,
 separate result types and closed neighboring modifier/role clauses. Escaped/
 qualified/generic names and member visibility retain their own roles; genuine
 terminator/operand errors remain explicit. Native focused 29 and unchanged RTL

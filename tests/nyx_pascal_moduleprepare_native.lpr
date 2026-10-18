@@ -175,6 +175,9 @@ var
   LGenericClassCount: Integer;
   LOwner: Integer;
   LWarningGap: Boolean;
+  LOptimizationGap: Boolean;
+  LAlignments: INyxPascalCodeAlignmentDirectives;
+  LAlignmentSeen: Boolean;
   LFreeCount: Integer;
   LFreeInstanceCount: Integer;
   LFreeAt: Integer;
@@ -587,6 +590,7 @@ begin
       Check(LGenericClassCount >= 2,
         'Actual TMarshal generic-class methods retain their own signatures and class intent');
       LWarningGap := False;
+      LOptimizationGap := False;
       for LAt := 0 to LSource.Source.DiagnosticCount - 1 do
       begin
         LDiagnostic := LSource.Source.Diagnostic(LAt);
@@ -602,9 +606,33 @@ begin
         begin
           LWarningGap := True;
         end;
+
+        if (LDiagnostic.Issue = ptiUnsupportedDirective) and
+          (LSource.Source.Files.FileAt(LSource.Source.Occurrence(LDiagnostic.Occurrence).FileIndex).Name =
+            TNyxText('rtl/inc/genmath.inc')) and
+          (NyxPascalOccurrenceLexical(LSource.Source, LDiagnostic.Occurrence).Slice(LDiagnostic.Span) =
+            TNyxText('{$optimization nofastmath}')) then
+        begin
+          LOptimizationGap := True;
+        end;
       end;
-      Check(not LSource.Source.Resolved and not LWarningGap,
-        'The original warning directive is understood while broader source requirements remain explicit');
+      LAlignmentSeen := False;
+      Supports(LSource.Source, INyxPascalCodeAlignmentDirectives, LAlignments);
+      for LAt := 0 to LAlignments.CodeAlignmentDirectiveCount - 1 do
+      begin
+
+        if (LAlignments.CodeAlignmentDirectiveAt(LAt).Origin.FileReference.Name =
+          TNyxText('rtl/i386/math.inc')) and
+          (LAlignments.CodeAlignmentDirectiveAt(LAt).Rule.Request.Assignment(0).Subject =
+            pcaConstantMinimum) and
+          (LAlignments.CodeAlignmentDirectiveAt(LAt).Rule.Request.Assignment(0).Value = 16) then
+        begin
+          LAlignmentSeen := True;
+        end;
+      end;
+      Check(not LSource.Source.Resolved and not LWarningGap and LAlignmentSeen and
+        LOptimizationGap and (LSource.Source.DiagnosticCount = 1),
+        'The unchanged System retains typed CONSTMIN intent and exposes only the next optimization-policy gap');
     end;
 
     if not LSyntaxLimited then

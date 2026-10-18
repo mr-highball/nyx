@@ -33,7 +33,78 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Routine directive boundaries — 2026-10-18
+## Current integration: Authored code-alignment requests — 2026-10-18
+
+58ee95b is progress across at least twenty-eight documented unclosed batches;
+full original authoring criterion two remains open. The next prerequisite is the
+actual RTL CODEALIGN directive. Retain closed typed selectors and exact ordered
+assignment groups, source/include occurrence, conditional activity and saved
+settings through existing compiler-context/translation owners. FPC accumulates
+alignment constraints against target defaults; Nyx must not invent those defaults,
+normalize independent groups together, infer effective layout/ABI or silently
+ignore the directive. Whole native compiler syntax, portable capture/lifetime/
+prefix/refusal tests, affected consumers and one unchanged RTL continuation decide
+this boundary. Stop at a different prerequisite. Browser consumers compile only;
+full language/editor/input/quality/parity/adoption/delivery and original criterion/
+task/credit/DONE remain open. Preserve concurrent planning, five protected files/
+nine contexts and 349 frozen artifacts. Solo; no host/config retry, HTTP/browser/
+file execution/capture, protected mutation, cleanup/restart or approval bypass.
+
+The value-owned request supports eleven closed selectors and exact ordered
+assignment groups, including duplicates, explicit zero and signed-32 constraint
+values. Label requests have a validated power-of-two domain. Context capture,
+identity, mode copies and local settings restoration preserve immutable vectors;
+unknown effects revoke knowledge. Typed optional source receipts preserve exact
+physical include occurrence/span, pre-directive state and activity. Prefixes
+expose only visited sites. Invalid input, family mismatch, quotas and alternate
+getter/cancellation failures publish no partial group. Decimal source spelling is
+qualified; alternate numeric notation refuses explicitly. No compiler target
+default, merged effective alignment, type size, record offset or ABI is inferred.
+
+Focused native qualification passes 45 with clean heap. The whole original
+unit/include compiles and executes ordinary Pascal; two negative compiler oracles
+reject an invalid power and disabled MAXCRECORD selector. FPC accepts all eleven
+selectors, zero and signed constraint input. The retained two failed preparations
+put a second MODE in a unit; compiler source establishes only one is permitted.
+The accepted companion retains CODEALIGN before its sole Delphi-mode directive.
+Every owned declaration/public contract comment and blank-line review precedes
+the final production freeze.
+
+The unchanged RTL consumer passes 50 with clean heap and original probe/budget
+limits. Actual System advances from 6,906 declarations to 7,030, with eleven
+semantic answers/no pending semantic requirement. Deeper retained source now has
+two body/terminator syntax diagnostics; ObjPas remains 209/four/one. Exact ordinary
+indexed Free/FreeInstance navigation/insertion remains ready through original
+objpash.inc. Source.Resolved still refuses: the newly exposed directive is
+OPTIMIZATION NOFASTMATH in genmath.inc. A retained failed oracle incorrectly
+predicted CODEALIGN was the final source gap. Only that real-RTL consumer changed
+after the production freeze, to assert positive typed CONSTMIN intent and the
+exact next independent refusal. A fresh compiled consumer/runtime supplies its
+accepted evidence; all other frozen product/test sources remain exact. This
+composite boundary does not hide the newly exposed syntax diagnostics or imply
+complete RTL/type meaning.
+
+All 37 native consumers pass with clean heaps. The 63 accepted compiler logs have
+zero owned warnings and 154 upstream pas2js Classes warnings. Both Studios,
+backend, worker and twenty-two browser consumers compile as applicable; browser
+execution/input/observing/parity/adoption/delivery remain unqualified here. Six
+focused/645 unique product/97 RTL/23 compiler inputs stay pinned. All 156 original
+unit packets, 48 SysUtils includes, five protected files/nine complete contexts,
+349 frozen 7422453 artifacts and thirteen concurrent planning files stay exact.
+Owned readers are joined, Studio listeners absent and LAN offline. Native Nyx
+tools remain absent; no host/config retry or alternate transport is attempted.
+
+Private pointer `.local/alignment-paths-private.json` locates frozen source,
+compiler/native/input receipts, negative-oracle and retained-failure records,
+composite source correction, preservation and final committed/remote identity.
+Stop alignment/fixture/compiler/capture variants. Next reassess OPTIMIZATION intent
+through existing compiler-policy/context/translation ownership, keeping settings
+lifetime, exact source origins, uncertainty and target facts explicit. Broader
+canonical type/module/incremental/editor/input/navigation/quality/parity/adoption/
+delivery remains open across at least twenty-nine documented unclosed batches.
+No original criterion/task/credit/DONE or new tool/schema/rollout closes.
+
+## Previous integration: Routine directive boundaries — 2026-10-18
 
 Previous goal turn is progress: committed/pushed 9fc23fd qualifies class-member
 families across at least twenty-seven documented unclosed batches, retaining

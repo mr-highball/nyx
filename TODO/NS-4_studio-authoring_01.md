@@ -9,6 +9,31 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Code-alignment prerequisite (2026-10-18): retain exact typed CODEALIGN assignment
+groups and source/conditional activity through existing context/translation
+ownership, including capture, identity and local PUSH/POP lifetime. FPC applies
+requests against target defaults; do not infer effective offsets/ABI or discard
+group boundaries. Native compiler syntax, portable refusal/lifetime/prefix cases,
+maintained consumers and one unchanged RTL continuation decide this boundary.
+58ee95b remains progress across at least twenty-eight unclosed batches; stop on
+a different prerequisite without full criterion/task/credit/DONE/parity/adoption/
+delivery closure. Browser consumers compile only; WORK.md owns exact receipts.
+
+The final alignment boundary passes 45 focused native, 50 unchanged RTL and all
+37 native consumers with clean heaps. Sixty-three accepted compiler logs have zero
+owned warnings; both Studios/backend/worker and twenty-two browser consumers
+compile as applicable. System advances to 7,030 declarations/two body/terminator
+syntax diagnostics/eleven answers; ObjPas stays 209/four/one. Exact indexed Free/
+FreeInstance navigation/insertion remains ready. Source.Resolved now refuses the
+independent OPTIMIZATION NOFASTMATH request in genmath.inc. WORK.md retains the
+failed prediction and accepted composite evidence: only the real-RTL consumer
+changed after the production freeze. Stop alignment/fixture/compiler/capture
+variants; reassess that next policy prerequisite through existing owners without
+hiding deeper syntax exposure. Full criterion two, source/type/incremental/editor/
+input/navigation/quality/parity/adoption/delivery remain open across at least
+twenty-nine documented unclosed batches; no original criterion/task/credit/DONE
+closes. Preserve protected/concurrent work and the offline LAN.
+
 Routine-clause continuation (2026-10-18): 9fc23fd is progress across at least
 twenty-seven documented unclosed batches, retaining full original criterion two.
 The configured FPC accepts the exact remaining adjacent compilerproc spelling.

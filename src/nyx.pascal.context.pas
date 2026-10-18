@@ -31,6 +31,10 @@ const
   { Ordered warning requests have a separate bounded capture quota. This is not
     a warning catalog or a claim that the configured compiler accepts every ID. }
   NyxPascalWarningRuleLimit = 2048;
+  { Independent construction quotas for exact authored CODEALIGN groups. These
+    bound analyzer storage, not the configured compiler's source language. }
+  NyxPascalCodeAlignmentAssignmentLimit = 64;
+  NyxPascalCodeAlignmentRuleLimit = 2048;
 
 type
   { Invalid captured facts are caller contract failures, never compiler errors.
@@ -75,6 +79,55 @@ type
   public
     property Reference: TNyxPascalWarningRef read FReference;
     property Action: TNyxPascalWarningAction read FAction;
+    property Activity: TNyxPascalKnowledge read FActivity;
+  end;
+  { Closed FPC CODEALIGN selectors. Record minimum/maximum code-generation
+    requests are distinct from PACKRECORDS and do not measure a record ABI. }
+  TNyxPascalCodeAlignmentSubject = (pcaProcedure, pcaJump, pcaLoop,
+    pcaConstantMinimum, pcaConstantMaximum, pcaVariableMinimum, pcaVariableMaximum,
+    pcaLocalMinimum, pcaLocalMaximum, pcaRecordMinimum, pcaRecordMaximum);
+  { One exact signed-32 assignment. Zero is an authored value, never unknown.
+    The compiler owns its eventual interpretation against target defaults. }
+  TNyxPascalCodeAlignmentAssignment = record
+  private
+    FSubject: TNyxPascalCodeAlignmentSubject;
+    FValue: Integer;
+  public
+    property Subject: TNyxPascalCodeAlignmentSubject read FSubject;
+    property Value: Integer read FValue;
+  end;
+  { Immutable value-owned assignment group for one CODEALIGN request. Add copies
+    its private scalar vector; duplicate selectors and order remain exact because
+    FPC builds a temporary constraint packet separately for every directive.
+    At most 64 assignments; an empty group cannot enter a context. No interfaces,
+    source, compiler or effective layout is retained. }
+  TNyxPascalCodeAlignmentRequest = record
+  private
+    FAssignments: array of TNyxPascalCodeAlignmentAssignment;
+  public
+    { Append one typed assignment. Procedure/jump/loop accept zero or powers of
+      two through 256; other subjects preserve the compiler's signed-32 domain.
+      Invalid values/subjects and excess assignments refuse before publication. }
+    function Add(ASubject: TNyxPascalCodeAlignmentSubject;
+      AValue: Integer): TNyxPascalCodeAlignmentRequest;
+    { Number of authored assignments, including repeated selectors. }
+    function Count: Integer;
+    { Checked ordinal access; returned scalar values cannot mutate this group. }
+    function Assignment(AIndex: Integer): TNyxPascalCodeAlignmentAssignment;
+    { Exact ordered identity; empty/invalid groups refuse. }
+    function SameRequest(const AOther: TNyxPascalCodeAlignmentRequest): Boolean;
+    { Refuse an empty, excess or invalid request without changing its values. }
+    procedure Validate;
+  end;
+  { Ordered authored request and conditional activity. Unknown activity retains
+    both possible executions without claiming an effective alignment. Values
+    contain no interface; the translation owns physical source receipts. }
+  TNyxPascalCodeAlignmentRule = record
+  private
+    FRequest: TNyxPascalCodeAlignmentRequest;
+    FActivity: TNyxPascalKnowledge;
+  public
+    property Request: TNyxPascalCodeAlignmentRequest read FRequest;
     property Activity: TNyxPascalKnowledge read FActivity;
   end;
   { Compiler evidence namespace. Bootstrap facts precede authored System aliases;
@@ -333,6 +386,24 @@ type
       AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
     function WithWarningRules(const ASource: INyxPascalContextWarnings): INyxPascalCompilerContext;
   end;
+  { Optional immutable CODEALIGN request history, bounded to 2048 groups.
+    Local PUSH/POP restores this vector; source mode changes retain it and unknown
+    side effects revoke it. Group boundaries, assignment order and conditional
+    activity are exact context identity, not a computed target constraint map.
+    Replacement freezes an alternate producer and retains no producer lease. }
+  INyxPascalContextCodeAlignments = interface(IInterface)
+    ['{2706046A-DAD3-48E8-BA46-C0B9663C7493}']
+    { Number of active/uncertain authored groups; absence grants no defaults. }
+    function CodeAlignmentCount: Integer;
+    { Checked ordinal access to an immutable, value-owned rule. }
+    function CodeAlignmentAt(AIndex: Integer): TNyxPascalCodeAlignmentRule;
+    { Append a validated complete group in a new context; preserve this owner. }
+    function WithCodeAlignment(const ARequest: TNyxPascalCodeAlignmentRequest;
+      AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
+    { Freeze and replace the full vector atomically, never retain its producer. }
+    function WithCodeAlignmentRules(
+      const ASource: INyxPascalContextCodeAlignments): INyxPascalCompilerContext;
+  end;
   { Optional named-size evidence retains exact measurement scope and ordered
     query identity. It does not export a fabricated System symbol catalog or
     authorize unqualified lookups in an application's different lexical scope. }
@@ -399,13 +470,22 @@ function NyxPascalWarnings(const AContext: INyxPascalCompilerContext): INyxPasca
 function NyxPascalWithWarning(const AContext: INyxPascalCompilerContext;
   const AReference: TNyxPascalWarningRef; AAction: TNyxPascalWarningAction;
   AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
+{ Retain the immutable authored alignment capability. Legacy contexts have an
+  empty detached vector, which grants no target-default/effective-layout facts. }
+function NyxPascalCodeAlignments(
+  const AContext: INyxPascalCompilerContext): INyxPascalContextCodeAlignments;
+{ Freeze the context and append one whole typed request atomically. Existing
+  requests, caller-owned target facts and independent snapshots remain exact. }
+function NyxPascalWithCodeAlignment(const AContext: INyxPascalCompilerContext;
+  const ARequest: TNyxPascalCodeAlignmentRequest;
+  AActivity: TNyxPascalKnowledge = ppkTrue): INyxPascalCompilerContext;
 { Friendly closed short-switch mapping; parsing source spelling is a separate
   boundary. Unknown remains a valid explicitly captured fact. }
 function NyxPascalLocalSwitchOption(AValue: TNyxPascalLocalSwitch): Char;
 function NyxPascalWithLocalSwitch(const AContext: INyxPascalCompilerContext;
   ASwitch: TNyxPascalLocalSwitch; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
-{ Restore local policies/short switches/scoped-enum state and authored warning
-  requests. Preserve current symbol facts, global mode/features and macros.
+{ Restore local policies/short switches/scoped-enum state and authored warning/
+  alignment requests. Preserve current symbol facts, global mode/features and macros.
   Warning requests do not predict compiler-specific delayed message activation;
   emitted diagnostics remain compiler-owned. No replacement table is restored. }
 function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompilerContext): INyxPascalCompilerContext;
@@ -463,6 +543,8 @@ var
   LBootstrap: INyxPascalCompilerContext;
   LWarnings: INyxPascalContextWarnings;
   LTargetWarnings: INyxPascalContextWarnings;
+  LAlignments: INyxPascalContextCodeAlignments;
+  LTargetAlignments: INyxPascalContextCodeAlignments;
 begin
 
   if AContext = nil then
@@ -512,6 +594,12 @@ begin
     LCaptured := LTargetWarnings.WithWarningRules(LWarnings);
   end;
 
+  if Supports(AContext, INyxPascalContextCodeAlignments, LAlignments) then
+  begin
+    Supports(LCaptured, INyxPascalContextCodeAlignments, LTargetAlignments);
+    LCaptured := LTargetAlignments.WithCodeAlignmentRules(LAlignments);
+  end;
+
   if Supports(AContext, INyxPascalContextSizes, LSizes) then
   begin
     LSizeCount := LSizes.SizeCount;
@@ -557,9 +645,11 @@ type
   end;
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance.
-    Warning requests own ordered values without producer/source back references. }
+    Warning/alignment requests own ordered values without producer/source back
+    references. CODEALIGN groups survive grammar mode changes through Clone. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
-    INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings)
+    INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
+    INyxPascalContextCodeAlignments)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -571,6 +661,7 @@ type
     FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
     FPolicies: TNyxPascalCompilerPolicies;
     FWarnings: array of TNyxPascalWarningRule;
+    FCodeAlignments: array of TNyxPascalCodeAlignmentRule;
     FSizes: array of TCapturedSize;
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
@@ -604,6 +695,12 @@ type
       AAction: TNyxPascalWarningAction;
       AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
     function WithWarningRules(const ASource: INyxPascalContextWarnings): INyxPascalCompilerContext;
+    function CodeAlignmentCount: Integer;
+    function CodeAlignmentAt(AIndex: Integer): TNyxPascalCodeAlignmentRule;
+    function WithCodeAlignment(const ARequest: TNyxPascalCodeAlignmentRequest;
+      AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+    function WithCodeAlignmentRules(
+      const ASource: INyxPascalContextCodeAlignments): INyxPascalCompilerContext;
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
     function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
@@ -830,6 +927,11 @@ begin
     begin
       Result.FWarnings[LAt] := FWarnings[LAt];
     end;
+    SetLength(Result.FCodeAlignments, Length(FCodeAlignments));
+    for LAt := 0 to High(FCodeAlignments) do
+    begin
+      Result.FCodeAlignments[LAt] := FCodeAlignments[LAt];
+    end;
     Result.FSizes := Copy(FSizes);
     Result.FCaptureScope := FCaptureScope;
     Result.FBootstrap := FBootstrap;
@@ -1053,6 +1155,8 @@ var
   LBootstrap: INyxPascalCompilerContext;
   LWarnings: INyxPascalContextWarnings;
   LWarning: TNyxPascalWarningRule;
+  LAlignments: INyxPascalContextCodeAlignments;
+  LAlignment: TNyxPascalCodeAlignmentRule;
 begin
   Result := False;
 
@@ -1110,6 +1214,29 @@ begin
     end;
   end
   else if Length(FWarnings) <> 0 then
+  begin
+    Exit;
+  end;
+
+  if Supports(AOther, INyxPascalContextCodeAlignments, LAlignments) then
+  begin
+
+    if LAlignments.CodeAlignmentCount <> Length(FCodeAlignments) then
+    begin
+      Exit;
+    end;
+    for LAt := 0 to High(FCodeAlignments) do
+    begin
+      LAlignment := LAlignments.CodeAlignmentAt(LAt);
+
+      if not FCodeAlignments[LAt].Request.SameRequest(LAlignment.Request) or
+        (FCodeAlignments[LAt].Activity <> LAlignment.Activity) then
+      begin
+        Exit;
+      end;
+    end;
+  end
+  else if Length(FCodeAlignments) <> 0 then
   begin
     Exit;
   end;
@@ -1643,6 +1770,210 @@ begin
   Result.FActivity := AActivity;
 end;
 
+{ Keep target requests exact, including zero and signed constraint values. Only
+  the three code-label selectors have a closed power-of-two admission domain. }
+procedure ValidateCodeAlignmentAssignment(ASubject: TNyxPascalCodeAlignmentSubject;
+  AValue: Integer);
+begin
+
+  if (Ord(ASubject) < Ord(Low(TNyxPascalCodeAlignmentSubject))) or
+    (Ord(ASubject) > Ord(High(TNyxPascalCodeAlignmentSubject))) then
+  begin
+    raise ENyxPascalContext.Create('A code-alignment subject is outside its closed choices');
+  end;
+
+  if (ASubject in [pcaProcedure, pcaJump, pcaLoop]) and
+    not (AValue in [0, 1, 2, 4, 8, 16, 32, 64, 128]) and (AValue <> 256) then
+  begin
+    raise ENyxPascalContext.Create('A code-label alignment needs zero or a power of two through 256');
+  end;
+end;
+
+function TNyxPascalCodeAlignmentRequest.Add(ASubject: TNyxPascalCodeAlignmentSubject;
+  AValue: Integer): TNyxPascalCodeAlignmentRequest;
+var
+  LCount: Integer;
+begin
+  ValidateCodeAlignmentAssignment(ASubject, AValue);
+  LCount := Length(FAssignments);
+
+  if LCount >= NyxPascalCodeAlignmentAssignmentLimit then
+  begin
+    raise ENyxPascalContext.Create('One code-alignment group exceeds 64 assignments');
+  end;
+  Result.FAssignments := Copy(FAssignments, 0, LCount);
+  SetLength(Result.FAssignments, LCount + 1);
+  Result.FAssignments[LCount].FSubject := ASubject;
+  Result.FAssignments[LCount].FValue := AValue;
+end;
+
+function TNyxPascalCodeAlignmentRequest.Count: Integer;
+begin
+  Result := Length(FAssignments);
+end;
+
+function TNyxPascalCodeAlignmentRequest.Assignment(AIndex: Integer): TNyxPascalCodeAlignmentAssignment;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FAssignments)) then
+  begin
+    raise ENyxPascalContext.Create('An alignment assignment index is outside its exact group');
+  end;
+  Result := FAssignments[AIndex];
+end;
+
+procedure TNyxPascalCodeAlignmentRequest.Validate;
+var
+  LAt: Integer;
+begin
+
+  if (Count < 1) or (Count > NyxPascalCodeAlignmentAssignmentLimit) then
+  begin
+    raise ENyxPascalContext.Create('A code-alignment group needs one through 64 assignments');
+  end;
+  for LAt := 0 to Count - 1 do
+  begin
+    ValidateCodeAlignmentAssignment(FAssignments[LAt].Subject, FAssignments[LAt].Value);
+  end;
+end;
+
+function TNyxPascalCodeAlignmentRequest.SameRequest(
+  const AOther: TNyxPascalCodeAlignmentRequest): Boolean;
+var
+  LAt: Integer;
+begin
+  Validate;
+  AOther.Validate;
+  Result := False;
+
+  if Count <> AOther.Count then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to Count - 1 do
+  begin
+
+    if (FAssignments[LAt].Subject <> AOther.FAssignments[LAt].Subject) or
+      (FAssignments[LAt].Value <> AOther.FAssignments[LAt].Value) then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+{ Atomic validation for both ordinary append and alternate-producer capture.
+  The private request vector is immutable, so sharing it retains no mutable host. }
+function ValidatedCodeAlignmentRule(const ARequest: TNyxPascalCodeAlignmentRequest;
+  AActivity: TNyxPascalKnowledge): TNyxPascalCodeAlignmentRule;
+begin
+  ARequest.Validate;
+
+  if (Ord(AActivity) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(AActivity) > Ord(High(TNyxPascalKnowledge))) then
+  begin
+    raise ENyxPascalContext.Create('A code-alignment rule has invalid conditional activity');
+  end;
+  Result.FRequest := ARequest;
+  Result.FActivity := AActivity;
+end;
+
+function TCompilerContext.CodeAlignmentCount: Integer;
+begin
+  Result := Length(FCodeAlignments);
+end;
+
+function TCompilerContext.CodeAlignmentAt(AIndex: Integer): TNyxPascalCodeAlignmentRule;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FCodeAlignments)) then
+  begin
+    raise ENyxPascalContext.Create('A code-alignment index is outside its exact context');
+  end;
+  Result := FCodeAlignments[AIndex];
+end;
+
+function TCompilerContext.WithCodeAlignment(const ARequest: TNyxPascalCodeAlignmentRequest;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LRule: TNyxPascalCodeAlignmentRule;
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LCount: Integer;
+begin
+  LRule := ValidatedCodeAlignmentRule(ARequest, AActivity);
+  LCount := Length(FCodeAlignments);
+
+  if LCount >= NyxPascalCodeAlignmentRuleLimit then
+  begin
+    raise ENyxPascalContext.Create('Code-alignment requests exceed 2048 groups');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FCodeAlignments, LCount + 1);
+  LCopy.FCodeAlignments[LCount] := LRule;
+  Result := LOwner;
+end;
+
+function TCompilerContext.WithCodeAlignmentRules(
+  const ASource: INyxPascalContextCodeAlignments): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LCount: Integer;
+  LAt: Integer;
+  LRule: TNyxPascalCodeAlignmentRule;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('Capturing alignment requests needs an explicit source');
+  end;
+  LCount := ASource.CodeAlignmentCount;
+
+  if (LCount < 0) or (LCount > NyxPascalCodeAlignmentRuleLimit) then
+  begin
+    raise ENyxPascalContext.Create('Captured alignment requests exceed their bounded vector');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+  SetLength(LCopy.FCodeAlignments, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    LRule := ASource.CodeAlignmentAt(LAt);
+    LCopy.FCodeAlignments[LAt] := ValidatedCodeAlignmentRule(LRule.Request, LRule.Activity);
+  end;
+  Result := LOwner;
+end;
+
+function NyxPascalCodeAlignments(
+  const AContext: INyxPascalCompilerContext): INyxPascalContextCodeAlignments;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Code-alignment requests need their compiler context');
+  end;
+
+  if not Supports(AContext, INyxPascalContextCodeAlignments, Result) then
+  begin
+    LCaptured := CaptureNyxPascalCompilerContext(AContext);
+    Supports(LCaptured, INyxPascalContextCodeAlignments, Result);
+  end;
+end;
+
+function NyxPascalWithCodeAlignment(const AContext: INyxPascalCompilerContext;
+  const ARequest: TNyxPascalCodeAlignmentRequest;
+  AActivity: TNyxPascalKnowledge): INyxPascalCompilerContext;
+var
+  LCaptured: INyxPascalCompilerContext;
+begin
+  LCaptured := CaptureNyxPascalCompilerContext(AContext);
+  Result := NyxPascalCodeAlignments(LCaptured).WithCodeAlignment(ARequest, AActivity);
+end;
+
 function TCompilerContext.WarningCount: Integer;
 begin
   Result := Length(FWarnings);
@@ -1835,7 +2166,8 @@ begin
   LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
     .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested));
-  Result := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
+  LCurrent := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
+  Result := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));
 end;
 
 function UnknownValue: TConditionValue;

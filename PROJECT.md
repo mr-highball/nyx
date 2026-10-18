@@ -114,6 +114,12 @@ retains routine register requests at their exact source sites and restores local
 assembler-reader intent through PUSH/POP. Actual System now exposes broader
 directive/declaration grammar gaps; implicit-unit meaning and editor adoption stay open.
 
+[Authored code-alignment requests](docs/pascal-projects.md#authored-code-alignment-requests)
+now retain typed assignment groups, conditional activity and exact include origins
+through context capture, identity and local settings lifetime. This preserves FPC
+code-generation intent without inferring target defaults, offsets or ABI layout.
+Full RTL/type meaning, ordinary editor adoption and both-target quality stay open.
+
 The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
 separates linker suffixes from class visibility and retains typed declaration
 flags/ranges. Known layout directives retain explanatory trailing text without
