@@ -32,6 +32,14 @@ complete compiler/SDK/grammar meaning, paged candidate queries, existing provide
 editor adoption and full incremental/navigation/quality/parity remain open.
 WORK.md owns the native/compiled-browser distinction; no original credit closes.
 
+The [generic/member-page continuation](../docs/pascal-projects.md#concrete-generic-binding-and-member-pages)
+now carries concrete unconstrained arguments into aliases, ancestors and member
+types, with bounded visible candidate pages. Native actual compiled generics and
+Nyx badge continuation pass; both browser consumers compile only. This remains
+original authoring criterion two: existing provider/editor adoption, full compiler/
+SDK/grammar/constraint/helper/overload/expression meaning, incremental/navigation/
+budgets and complete quality/parity/delivery remain open. No original credit closes.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).

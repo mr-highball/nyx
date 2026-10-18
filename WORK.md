@@ -33,7 +33,105 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Owned scoped name/type/member binding — 2026-10-17
+## Current integration: Concrete generic binding and bounded member pages — 2026-10-17
+
+Previous goal turn is progress: pushed a1aa549 provides the first owned scoped
+binding kernel. This continuation keeps the full user-selected MIT resolver and
+original NS-4 criterion-two/service/editor destination. No historical CodeTools
+helper is adopted. General language/compiler context, modern provider/editor/
+navigation and complete quality/parity remain required; no criterion/task/counter/
+credit/DONE or product/target completion is claimed.
+
+The same portable kernel now builds immutable concrete generic environments for
+supported unconstrained classes/records and aliases. Arguments survive fields,
+properties, method results, self specialization, nested ordinary aliases/records,
+callable signatures and generic ancestry. Separate instances never share mutable
+substitution state. Returned member handles expose optional substituted-symbol
+context and retain exact source-world/declaration/physical-origin identity.
+Frames own raw declaration handles and already-built arguments outward; worlds
+retain no frame/type/query backreference. Alias/ancestor recursion, cancellation
+and existing step/depth/candidate budgets remain enforced. No authored code runs
+during analysis, no external engine or filesystem fallback is introduced.
+
+Generic placeholders cannot bind to same-named outer types. Concrete arguments
+are resolved in the caller, other names in the template's declaration scope.
+Arity mismatch and unsupported constraints have distinct typed issues. This is
+analysis, not complete constraint/assignment compatibility or compiler admission.
+The actual FPC oracle rejects declaring a generic inside another generic. The
+resolver now refuses that form explicitly; ordinary nested types capture the
+outer argument. Generic routines, overload/arity selection and full expression/
+helper meaning remain open. This does not claim the whole generic language.
+
+Optional INyxPascalMemberQueries leaves the original exact-name interface intact.
+Fluent prefix/offset/limit/receiver requests return at most 50 rows, constrained
+also by the world's candidate budget. Names sort by ASCII-folded identifier;
+overload rows preserve declaration order. Offsets count visible candidates only.
+The captured ancestor graph is checked before publication; missing/ambiguous
+context publishes zero rows and retains its focused related name. HasMore means
+one further visible row was checked, not an invented total. Concrete environment
+identity participates in inherited overload deduplication. No new MCP tool/schema,
+completion-provider adoption, Studio/backend or installed release changes.
+
+Evidence behind ignored .local/pascal-generics-paths-private.json:
+
+- source-pins-final-private.json pins six compiler/runtime inputs before all four
+  final compilers and native execution. actual-input-pins-final-private.json
+  preserves six actual controls/include inputs at their prior committed hashes.
+  Every exact reader handle joins before source changes; terminal readers are zero.
+- logs/generics-final-run.log passes 127 native assertions with a clean heap.
+  Independent concrete instances, qualified/nested arguments, fluent same/different
+  self types, generic aliases/cycles/ancestors, callable signatures, nested ordinary
+  capture, physical origin and cross-world refusal pass. Pages qualify filtering,
+  visible offsets, continuation, overload rows, type/instance access, cancellation,
+  empty replies, limits/overflow, missing context and ambiguity without leaked rows.
+- tests/binding.fixture.generics.pas is compiled into that same executable and
+  captured byte-for-byte. Ordinary native constructors/properties/methods, generic
+  record/alias/nested type and independent Boolean/Integer values execute. The
+  real TBindingBox<INyxBadge> continuation constructs a Nyx badge and preserves
+  interface identity/text. Analysis follows its Value type to INyxBadge, WithText
+  back to that exact definition and controls.types.inc. This is selected real
+  SDK continuation, not exhaustive SDK/grammar/dependencies or an authored app run.
+- logs/binding-final-run.log retains all 62 previous native binding/visibility/
+  actual-SDK checks, clean heap. The earlier generic refusal assertion now checks
+  concrete binding; the unbound-placeholder guard remains required.
+- logs/generics-final-compile.log, generics-browser-final-compile.log,
+  binding-final-compile.log and binding-browser-final-compile.log pass with zero
+  owned warnings. Fourteen pas2js RTL case warnings are upstream and unchanged.
+  Both browser consumers/fixture units compile only; no HTTP/file/browser execution
+  or ownership/parity proof follows. Notes are retained, not counted as warnings.
+- logs/frozen-final.log verifies all 349 frozen 7422453 artifacts with clean heap.
+  Five protected files/nine complete contexts/history/drafts/profile remain exact.
+  No native Nyx semantic tool is available in this chat; no active design operation
+  or browser automation is substituted. Current-source inventory remains 24/frozen
+  23 and Pascal modes 18; no provider/default engine or schema is installed.
+
+Retained preparations are not final acceptance: binding-prep-native-1 exposes an
+unretained temporary symbol during optional interface inspection (access violation,
+clean failure heap); an explicit interface lease fixes lifetime before publication.
+binding-prep-native-2 passes 39 without optional repository fixtures. generics-
+native-1 fails on a copied unit-name line in the new file header; the full MIT
+notice remains and that accidental declaration is removed. generics-native-2
+passes 72; generics-browser-1 compiles only. generics-native-3 compiles before the
+page consumer is added. generics-native-4 rejects a nested generic at the actual
+FPC compiler, retained as the unsupported-language oracle. generics-native-5
+corrects the consumer's cancellation exception name. generics-native-6 exposes an
+overbroad nested-generic guard on a self specialization, with clean heap; stripping
+the prototype's own frame before checking outer context fixes it. generics-native-7
+passes 98, generics-native-8 passes 119 including the real badge. Only the final
+four compiler logs and 127/62 native runtime receipts are accepted here.
+
+Concurrent browser-compiler/reference task, milestone and catalog edits are outside
+this checkpoint and left untouched. Only the resolver's catalog paragraph is
+staged here. This chat uses no sub-agents. No HTTP-host/restart/configuration/
+cleanup/deletion retry occurs. LAN remains offline. Storage/evidence stays on E:.
+Stop generic/page/fixture/compiler variants after this checkpoint. Next connect
+owned candidate pages and physical origins to the existing completion provider
+for supported receiver expressions, preserving explicit captured-context gaps.
+Full constraints/helpers/overloads/expression/compiler/SDK/grammar meaning,
+incremental dependencies/project-scale budgets and ordinary editor/navigation/
+quality/parity/delivery stay with their original owners. The goal remains active.
+
+## Previous integration: Owned scoped name/type/member binding — 2026-10-17
 
 Previous goal turn is progress: pushed 0285470 establishes structured types and
 translated physical origins. New nyx.pascal.binding now connects those owned

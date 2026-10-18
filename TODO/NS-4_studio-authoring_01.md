@@ -9,6 +9,16 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Current-source [concrete generics and member pages](../docs/pascal-projects.md#concrete-generic-binding-and-member-pages)
+now preserve supported receiver substitutions through aliases, ancestors and
+members, with bounded visibility-aware pages. Native 127 plus maintained 62 pass,
+including exact compiled generics and a real Nyx badge continuation, clean heaps;
+browser consumers compile only. Next connect these owned answers/origins to the
+existing completion provider for supported receiver expressions and explicit
+captured-context gaps. Full constraints/helpers/overloads/expression meaning,
+compiler/SDK/grammar capture, incremental dependencies/budgets and complete editor/
+navigation/quality/parity/delivery stay required. No criterion/counter/credit closes.
+
 The required end state includes lossless Unicode/include coordinates, lexical and
 syntactic recovery in unfinished buffers, scoped units/namespaces/declarations,
 type/member/inheritance/interface/generic/overload/helper resolution, FPC/Delphi

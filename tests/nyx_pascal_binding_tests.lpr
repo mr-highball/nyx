@@ -218,7 +218,8 @@ begin
     'unit Generic; {$mode delphi} interface type T=record Value:Integer; end; ' +
     'TBox<T>=class public Value:T; end; var Box:TBox<Integer>; implementation end.'));
   LResult := LChanged.TypeOfSymbol(NamedSymbol(LChanged, 4, 'Box'));
-  Check(LResult.Issue = pbiGenericContext, 'Unbound generic substitutions stay explicit rather than faking a concrete type');
+  Check((LResult.Status = pbsBound) and (LResult.BoundType.Kind = pstDeclared),
+    'A concrete generic argument binds its supported declared receiver');
   LAt := LChanged.ModuleAt(4).Syntax.Named(0, 'TBox');
   LScope := LChanged.ModuleAt(4).Syntax.Declaration(LAt).NestedScope;
   LResult := LChanged.Lookup(LChanged.At(4, LScope,

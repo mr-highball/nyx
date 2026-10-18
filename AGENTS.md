@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source concrete Pascal generic binding retains immutable arguments through
+supported unconstrained classes/records, aliases, ancestors, fields/properties,
+method results and nested ordinary types/callables. Optional bounded member pages
+preserve visibility, physical origins and concrete overload context; unresolved
+graphs publish no partial rows. Native 127 and maintained binding 62 pass, clean
+heaps, including the exact compiled generic fixture and real TBindingBox<INyxBadge>
+continuation. Both browser consumers compile only. Four accepted compiler logs
+have zero owned warnings (14 upstream RTL). Six reader pins, six exact SDK inputs,
+five protected files/nine complete contexts and 349 frozen 7422453 files stay exact;
+LAN remains offline. WORK.md owns receipts and retained failures, including the
+compiler's nested-generic rejection; constraints/unsupported forms refuse rather
+than claiming compatibility. Stop generic/page/fixture/compiler variants. Next
+connect owned answers/origins to the existing completion provider for supported
+receiver expressions and explicit context gaps. Full compiler/SDK/grammar/helper/
+overload/expression/constraint/incremental/budget/editor/navigation/quality/parity/
+delivery remain open. No original criterion/task/counter/credit/DONE/new MCP schema/
+default engine/rollout closes. Solo; no HTTP retry, configuration/cleanup bypass,
+deletion or sub-agents. Preserve concurrent task/milestone/catalog edits.
+
 Current-source owned scoped Pascal binding resolves supported lexical/direct-unit
 names, aliases/forward identities and ordinary members/ancestors with caller
 visibility and exact-world handle guards. Native 62 checks pass, clean heap,

@@ -54,6 +54,13 @@ members/ancestors with exact-world handle guards. Native checks bind the real
 badge's member/result identity; browser consumer compiles only. General generic/
 helper/overload meaning and full provider/editor/context/quality/parity stay open.
 
+The owned [generic binding/member pages](docs/pascal-projects.md#concrete-generic-binding-and-member-pages)
+now preserve concrete receiver arguments through supported aliases, ancestors and
+members, including an actual Nyx badge continuation. Small prefix-filtered member
+pages retain exact origins and visibility. Native checks execute; browser consumers
+compile only. Constraints/general language meaning, provider/editor adoption and
+complete context/incremental/navigation/quality/parity/delivery remain open.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

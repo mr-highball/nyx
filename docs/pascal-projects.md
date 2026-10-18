@@ -937,8 +937,8 @@ Names inside callback parameters/results bind through the same scopes. Language
 intrinsics carry typed identities; sizes, ABI/layout and opaque bounds/defaults
 are not inferred. Default string meaning requires captured option/feature facts.
 This is declaration/name binding, not complete compiler type checking or source
-admission. Generic substitution, general expression/call inference and overload
-selection still return explicit unresolved states.
+admission. Concrete unconstrained generic substitution is described below;
+general expression/call inference and overload selection remain explicit gaps.
 
 Ordinary member lookup follows supported class/interface/record/object ancestors
 with cycle/depth guards and an explicit instance/type receiver mode. Private is
@@ -978,10 +978,75 @@ WORK.md records native binding and exact compiled fixture behavior, plus selecte
 real badge/ancestor/member/result binding at original physical declarations. A
 handwritten minimal System fixture isolates ordinary root/import behavior; it is
 not a captured real SDK or full System qualification. Browser consumer compiles
-only. There is no default-provider/Studio/MCP rollout here. General generic/helper/
-overload meaning, complete compiler/SDK/grammar capture, paged completion candidates,
+only. There is no default-provider/Studio/MCP rollout here. General constraint/helper/
+overload meaning, complete compiler/SDK/grammar capture, completion-provider adoption,
 incremental dependencies/budgets and full editor/navigation/quality/parity/delivery
 remain under original authoring/service ownership.
+
+## Concrete generic binding and member pages
+
+The binding kernel now carries immutable concrete arguments through supported
+unconstrained generic classes/records, aliases, ancestors, fields/properties,
+method results, nested ordinary aliases/records and callable signatures. A member
+handle retains its receiver's substitutions across later `TypeOfSymbol` queries;
+the original declaration and physical include origin stay unchanged. Different
+specializations of the same declaration have independent frames. A fluent self
+result can retain its arguments or explicitly select different ones.
+
+Names other than placeholders still bind in the template's declaration scope,
+following FPC's [generic scope contract](https://www.freepascal.org/docs-html/current/ref/refse59.html).
+Generic aliases own a parameter scope even without a nested member scope. An
+unbound placeholder cannot fall through to a same-named outer declaration.
+`INyxPascalSubstitutedSymbol` optionally exposes the retained frame as
+`INyxPascalGenericEnvironment`; its arguments are semantic types. Frames point
+outward to raw declarations, earlier frames and existing arguments. The world
+caches none of them, preserving reference-counted ownership without cycles.
+
+Argument-count mismatch reports `pbiGenericArity`; unmodeled constraint headers
+report `pbiGenericConstraint`. Constraints are never assumed satisfied. Generic
+routine inference, overloaded generic names/arity selection and complete
+compatibility/constraint checking remain open. The current native compiler
+rejects a generic declaration inside another generic; this resolver explicitly
+refuses that form. An ordinary nested type can still capture the outer argument.
+The kernel is analysis, not a substitute for compiler admission.
+
+`INyxPascalMemberQueries` is an optional world capability; it leaves the existing
+exact-name interface intact. Queries return 20 rows by default, at most 50 and
+no more than the world's candidate budget. Prefix matching uses Pascal ASCII
+case folding. Ordering is folded name, then declaration order within a resolved
+overload family. Offsets count visible rows; hidden fields and wrong receiver
+categories do not consume them.
+
+```pascal
+if Supports(LWorld, INyxPascalMemberQueries, LQueries) then
+begin
+  LPage := LQueries.Members(LReceiver, LCaller,
+    TNyxPascalMemberQuery.Defaults.Matching('With').Take(10));
+
+  if LPage.ResultSet.Status = pbsBound then
+  begin
+    // Each row retains its exact declaration, physical origin and substitutions.
+    // Use NextOffset only in this same immutable world when HasMore is true.
+  end;
+end;
+```
+
+The captured inheritance graph is checked before publishing a page. Missing or
+ambiguous ancestor context produces no partial rows; a required module name stays
+available for focused capture. `HasMore` means a further visible candidate was
+checked, not a guessed total. Empty successful pages are distinct from unresolved
+queries. Step/depth/candidate budgets, cancellation and exact-world handles apply
+to enumeration as well as exact lookup. Inherited overload deduplication includes
+concrete argument context rather than declaration identity alone.
+
+WORK.md records 127 native generic/page checks plus 62 maintained binding checks,
+all with clean heaps. The exact compiled generic fixture and a real
+`TBindingBox<INyxBadge>` continuation execute natively; the badge result still
+navigates into `nyx.controls.types.inc`. Both browser consumers compile only.
+No default provider/editor/MCP integration or installed release changes here.
+Complete helper/overload/expression/compiler/SDK/grammar meaning, incremental
+dependencies, project-scale budgets and full ordinary-editor/navigation/parity/
+quality/delivery remain under the original authoring/service requirements.
 
 ## Replaceable Pascal completion providers
 

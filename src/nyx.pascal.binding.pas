@@ -44,7 +44,8 @@ type
   TNyxPascalBindingIssue = (pbiNone, pbiMissingName, pbiMissingModule,
     pbiVisibility, pbiUnsupportedScope, pbiIncompleteSource, pbiUnsupportedType,
     pbiGenericContext, pbiMissingType, pbiRecursiveType, pbiCompilerContext,
-    pbiWrongMemberKind, pbiAmbiguousName, pbiOverloadContext);
+    pbiWrongMemberKind, pbiAmbiguousName, pbiOverloadContext,
+    pbiGenericArity, pbiGenericConstraint);
   { Type definitions and constructed shapes remain distinct. Alias and distinct
     wrappers preserve declared identity; Target retains the underlying shape.
     Numeric bounds/defaults, layout and assignment compatibility are not inferred. }
@@ -102,6 +103,51 @@ type
   INyxPascalSemanticType = interface;
   { Forward response contract; no response is cached back into its source world. }
   INyxPascalResolution = interface;
+  { Forward immutable substitution frame. Frames and arguments point outward;
+    definitions/worlds never retain a frame that refers back to them. }
+  INyxPascalGenericEnvironment = interface;
+
+  { Concrete arguments for one exact generic declaration, with an optional outer
+    lexical frame for nested types. Owner is an unspecialized declaration handle.
+    No constraints are assumed satisfied: unsupported constraint headers refuse
+    before a frame is published. Arguments are semantic types, not source strings. }
+  INyxPascalGenericEnvironment = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E06}']
+    function Owner: INyxPascalBoundSymbol;
+    function Parent: INyxPascalGenericEnvironment;
+    function Count: Integer;
+    function Name(AIndex: Integer): TNyxText;
+    function Argument(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { Optional symbol capability retaining concrete receiver substitutions across
+    separate member and type queries. The original declaration/origin is unchanged.
+    A nil frame means the declaration has no concrete generic context. }
+  INyxPascalSubstitutedSymbol = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E07}']
+    function Environment: INyxPascalGenericEnvironment;
+  end;
+  { Bounded member-page request. Prefix is empty or an ASCII identifier prefix;
+    ordering is case-folded name then declaration order within an overload family.
+    Offset counts visible candidate rows, not hidden/private declarations. }
+  TNyxPascalMemberQuery = record
+  private
+    FDefined: Boolean;
+    FPrefix: TNyxText;
+    FOffset: Integer;
+    FCount: Integer;
+    FAccess: TNyxPascalMemberAccess;
+  public
+    class function Defaults: TNyxPascalMemberQuery; static;
+    function Matching(const AValue: TNyxText): TNyxPascalMemberQuery;
+    function Skip(AValue: Integer): TNyxPascalMemberQuery;
+    function Take(AValue: Integer): TNyxPascalMemberQuery;
+    function ForAccess(AValue: TNyxPascalMemberAccess): TNyxPascalMemberQuery;
+    procedure Validate;
+    property Prefix: TNyxText read FPrefix;
+    property Offset: Integer read FOffset;
+    property Limit: Integer read FCount;
+    property Access: TNyxPascalMemberAccess read FAccess;
+  end;
 
   { Checked caller position in one exact immutable world. Caret is in the declared
     analysis projection; use the view's origin map for physical editing/navigation. }
@@ -158,6 +204,24 @@ type
     function SymbolAt(AIndex: Integer): INyxPascalBoundSymbol;
     function BoundType: INyxPascalSemanticType;
   end;
+  { Small read-only member result tied to an exact world. A failed graph capture
+    publishes no partial candidates. HasMore means at least one further visible
+    row was checked; no guessed total or exhaustive SDK claim is exposed. }
+  INyxPascalMemberPage = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E08}']
+    function ResultSet: INyxPascalResolution;
+    function HasMore: Boolean;
+    function NextOffset: Integer;
+  end;
+  { Optional world capability leaves the original exact-name interface intact.
+    Walks supported captured ancestors and applies the same visibility/shadowing
+    rules as Member. No expression inference, helper lookup or editor IO occurs. }
+  INyxPascalMemberQueries = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E09}']
+    function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
+      const AQuery: TNyxPascalMemberQuery;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalMemberPage;
+  end;
   { Persistent module world, independent of DOM/LCL, an editor or compiler process.
     Modules have explicit captured translation contexts; their source views are
     immutable. Replacement detaches the vector and invalidates old site/symbol
@@ -183,8 +247,8 @@ type
       uncaptured later imports refuse rather than guessing an earlier meaning. }
     function Lookup(const ASite: INyxPascalBindingSite; const AName: TNyxPascalBindingName;
       const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
-    { Bind an explicitly inspected declaration's retained type/result. Generic
-      substitution, expression/call inference and compiler admission stay distinct. }
+    { Bind an explicitly inspected declaration's retained type/result, retaining
+      concrete generic receiver arguments. Call inference/admission stay separate. }
     function TypeOfSymbol(const ASymbol: INyxPascalBoundSymbol;
       const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
     { Search the supported ordinary member/inheritance graph from this caller;
@@ -219,17 +283,36 @@ type
     function Caret: Integer;
   end;
   { Immutable declaration handle; every getter reuses its own world's snapshot. }
-  TBoundSymbol = class(TInterfacedObject, INyxPascalBoundSymbol)
+  TBoundSymbol = class(TInterfacedObject, INyxPascalBoundSymbol, INyxPascalSubstitutedSymbol)
   public
     Owner: INyxPascalSemanticWorld;
     ModuleOrdinal: Integer;
     DeclarationOrdinal: Integer;
+    Bindings: INyxPascalGenericEnvironment;
     function World: INyxPascalSemanticWorld;
     function ModuleIndex: Integer;
     function DeclarationIndex: Integer;
     function Declaration: TNyxPascalSyntaxDeclaration;
     function Origin: TNyxPascalSyntaxOrigin;
+    function Environment: INyxPascalGenericEnvironment;
   end;
+  { Immutable concrete lexical frame, built completely before publication. Its
+    owner is raw, its parent is an earlier outer frame and its arguments already
+    exist; this direction prevents recursive class/member reference cycles. }
+  TGenericEnvironment = class(TInterfacedObject, INyxPascalGenericEnvironment)
+  public
+    DeclarationOwner: INyxPascalBoundSymbol;
+    Outer: INyxPascalGenericEnvironment;
+    Names: array of TNyxText;
+    Types: array of INyxPascalSemanticType;
+    function Owner: INyxPascalBoundSymbol;
+    function Parent: INyxPascalGenericEnvironment;
+    function Count: Integer;
+    function Name(AIndex: Integer): TNyxText;
+    function Argument(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { Query-local identifier vector; it holds no interfaces or mutable source. }
+  TGenericNames = array of TNyxText;
   { Builder-owned semantic shape. Published instances are read-only; interface
     vectors live in the class and point only to other immutable shapes/worlds. }
   TSemanticType = class(TInterfacedObject, INyxPascalSemanticType)
@@ -275,9 +358,20 @@ type
     function SymbolAt(AIndex: Integer): INyxPascalBoundSymbol;
     function BoundType: INyxPascalSemanticType;
   end;
+  { Holds only the bounded reply and continuation offset. Like ordinary query
+    results it points outward to its world without any reverse cache. }
+  TMemberPage = class(TInterfacedObject, INyxPascalMemberPage)
+  public
+    Reply: INyxPascalResolution;
+    More: Boolean;
+    Following: Integer;
+    function ResultSet: INyxPascalResolution;
+    function HasMore: Boolean;
+    function NextOffset: Integer;
+  end;
   { Owns a detached module vector/name index. Published worlds never mutate;
     each query has its own counters, alias/member trails and temporary type data. }
-  TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld)
+  TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld, INyxPascalMemberQueries)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
@@ -301,6 +395,9 @@ type
     function Member(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AName: TNyxPascalBindingName; AAccess: TNyxPascalMemberAccess;
       const ACancellation: INyxCancellationScope): INyxPascalResolution;
+    function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
+      const AQuery: TNyxPascalMemberQuery;
+      const ACancellation: INyxCancellationScope): INyxPascalMemberPage;
   end;
   { Per-call query owner. Cancellation/steps/depth and recursion trails cannot
     leak into another query or mutate shared sources. No authored code executes. }
@@ -313,6 +410,8 @@ type
     FDepth: Integer;
     FAliases: array of INyxPascalBoundSymbol;
     FMembers: array of INyxPascalBoundSymbol;
+    FEnvironment: INyxPascalGenericEnvironment;
+    FTypeOwner: INyxPascalBoundSymbol;
     procedure Tick;
     procedure Enter;
     procedure Leave;
@@ -344,6 +443,23 @@ type
     function Bases(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
     function SameSymbol(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
     function Unwrap(const AType: INyxPascalSemanticType): INyxPascalSemanticType;
+    function GenericNames(const ASymbol: INyxPascalBoundSymbol;
+      out ANames: TGenericNames): TNyxPascalBindingIssue;
+    function InEnvironment(const ASymbol: INyxPascalBoundSymbol;
+      const AEnvironment: INyxPascalGenericEnvironment): INyxPascalBoundSymbol;
+    function ParameterAt(const ASite: INyxPascalBindingSite; AScope: Integer;
+      const AName: TNyxText): INyxPascalResolution;
+    function Specialize(const ASite: INyxPascalBindingSite;
+      const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
+    function TypeDeclaration(const ASite: INyxPascalBindingSite;
+      const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
+    function TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+    function BasesCore(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
+    function CollectMemberNames(const AType: INyxPascalSemanticType;
+      const APrefix: TNyxText; var ANames: TGenericNames): INyxPascalResolution;
+    function SameEnvironment(const ALeft, ARight: INyxPascalGenericEnvironment): Boolean;
+    function SameType(const ALeft, ARight: INyxPascalSemanticType): Boolean;
+    function SameBinding(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
   public
     constructor Create(const AWorld: INyxPascalSemanticWorld;
       const ACancellation: INyxCancellationScope);
@@ -351,6 +467,8 @@ type
     function TypeOfSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
     function Member(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AName: TNyxText; AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+    function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
+      const AQuery: TNyxPascalMemberQuery): INyxPascalMemberPage;
   end;
 
 function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
@@ -442,6 +560,63 @@ begin
   Result.Validate;
 end;
 
+class function TNyxPascalMemberQuery.Defaults: TNyxPascalMemberQuery;
+begin
+  Result.FDefined := True;
+  Result.FPrefix := '';
+  Result.FOffset := 0;
+  Result.FCount := 20;
+  Result.FAccess := pmaInstance;
+end;
+
+procedure TNyxPascalMemberQuery.Validate;
+begin
+
+  if not FDefined or (FOffset < 0) or (FCount < 1) or (FCount > 50) or
+    (FOffset > High(Integer) - FCount - 1) then
+  begin
+    raise ENyxPascalBinding.Create('Use a positive member page of at most 50 rows and a bounded offset');
+  end;
+
+  if FPrefix <> '' then
+  begin
+    NyxPascalBindingName(FPrefix);
+
+    if Pos('.', FPrefix) > 0 then
+    begin
+      raise ENyxPascalBinding.Create('A member prefix belongs to one receiver, not a qualified path');
+    end;
+  end;
+end;
+
+function TNyxPascalMemberQuery.Matching(const AValue: TNyxText): TNyxPascalMemberQuery;
+begin
+  Result := Self;
+  Result.FPrefix := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalMemberQuery.Skip(AValue: Integer): TNyxPascalMemberQuery;
+begin
+  Result := Self;
+  Result.FOffset := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalMemberQuery.Take(AValue: Integer): TNyxPascalMemberQuery;
+begin
+  Result := Self;
+  Result.FCount := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalMemberQuery.ForAccess(AValue: TNyxPascalMemberAccess): TNyxPascalMemberQuery;
+begin
+  Result := Self;
+  Result.FAccess := AValue;
+  Result.Validate;
+end;
+
 function TBindingSite.World: INyxPascalSemanticWorld;
 begin
   Result := Owner;
@@ -488,6 +663,54 @@ var
 begin
   LView := Owner.ModuleAt(ModuleOrdinal);
   Result := LView.Origin(LView.OriginAt(Declaration.NameSpan.Start));
+end;
+
+function TBoundSymbol.Environment: INyxPascalGenericEnvironment;
+begin
+  Result := Bindings;
+end;
+
+function TGenericEnvironment.Owner: INyxPascalBoundSymbol;
+begin
+  Result := DeclarationOwner;
+end;
+
+function TGenericEnvironment.Parent: INyxPascalGenericEnvironment;
+begin
+  Result := Outer;
+end;
+
+function TGenericEnvironment.Count: Integer;
+begin
+  Result := Length(Names);
+end;
+
+function TGenericEnvironment.Name(AIndex: Integer): TNyxText;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxPascalBinding.Create('Generic argument index is outside its frame');
+  end;
+  Result := Names[AIndex];
+end;
+
+function TGenericEnvironment.Argument(AIndex: Integer): INyxPascalSemanticType;
+begin
+  Name(AIndex);
+  Result := Types[AIndex];
+end;
+
+function EnvironmentOf(const ASymbol: INyxPascalBoundSymbol): INyxPascalGenericEnvironment;
+var
+  LCapability: INyxPascalSubstitutedSymbol;
+begin
+  Result := nil;
+
+  if (ASymbol <> nil) and Supports(ASymbol, INyxPascalSubstitutedSymbol, LCapability) then
+  begin
+    Result := LCapability.Environment;
+  end;
 end;
 
 function TSemanticType.World: INyxPascalSemanticWorld;
@@ -557,6 +780,21 @@ begin
   Result := Types[AIndex];
 end;
 
+function TMemberPage.ResultSet: INyxPascalResolution;
+begin
+  Result := Reply;
+end;
+
+function TMemberPage.HasMore: Boolean;
+begin
+  Result := More;
+end;
+
+function TMemberPage.NextOffset: Integer;
+begin
+  Result := Following;
+end;
+
 function TResolution.World: INyxPascalSemanticWorld;
 begin
   Result := Owner;
@@ -592,7 +830,9 @@ const
       'Additional captured compiler facts are required',
       'This member is unavailable for this receiver category',
       'Multiple declarations require disambiguation',
-      'Overload or inherited overload meaning needs additional context');
+      'Overload or inherited overload meaning needs additional context',
+      'The generic argument count differs from its declaration',
+      'Generic constraints need additional semantic checking');
 begin
   Result := CMessages[Reason];
 end;
@@ -911,6 +1151,114 @@ begin
   Result := FWorld.InterfaceBoundary(AModule);
 end;
 
+function TBindingQuery.SameBinding(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
+begin
+  Result := SameSymbol(ALeft, ARight) and
+    SameEnvironment(EnvironmentOf(ALeft), EnvironmentOf(ARight));
+end;
+
+function TBindingQuery.SameEnvironment(const ALeft, ARight: INyxPascalGenericEnvironment): Boolean;
+var
+  LAt: Integer;
+begin
+  Enter;
+  try
+
+    if ALeft = ARight then
+    begin
+      Exit(True);
+    end;
+
+    if (ALeft = nil) or (ARight = nil) then
+    begin
+      Exit(False);
+    end;
+
+    if not SameSymbol(ALeft.Owner, ARight.Owner) or (ALeft.Count <> ARight.Count) or
+      not SameEnvironment(ALeft.Parent, ARight.Parent) then
+    begin
+      Exit(False);
+    end;
+    for LAt := 0 to ALeft.Count - 1 do
+    begin
+
+      if not SameType(ALeft.Argument(LAt), ARight.Argument(LAt)) then
+      begin
+        Exit(False);
+      end;
+    end;
+    Result := True;
+  finally
+    Leave;
+  end;
+end;
+
+function TBindingQuery.SameType(const ALeft, ARight: INyxPascalSemanticType): Boolean;
+var
+  LAt: Integer;
+begin
+  Enter;
+  try
+
+    if ALeft = ARight then
+    begin
+      Exit(True);
+    end;
+
+    if (ALeft = nil) or (ARight = nil) then
+    begin
+      Exit(False);
+    end;
+
+    if (ALeft.Kind <> ARight.Kind) or (ALeft.Builtin <> ARight.Builtin) then
+    begin
+      Exit(False);
+    end;
+
+    if (ALeft.Definition <> nil) or (ARight.Definition <> nil) then
+    begin
+      Exit(SameBinding(ALeft.Definition, ARight.Definition));
+    end;
+    { Anonymous bounds/conventions cannot be declared equivalent merely because
+      their element types agree. Retain their exact lexical node identity. }
+    if (ALeft.Syntax <> nil) or (ARight.Syntax <> nil) then
+    begin
+
+      if (ALeft.Syntax = nil) or (ARight.Syntax = nil) then
+      begin
+        Exit(False);
+      end;
+
+      if (ALeft.Syntax.Lexical <> ARight.Syntax.Lexical) or
+        (ALeft.SyntaxNode <> ARight.SyntaxNode) or
+        (ALeft.Syntax.Window.Start <> ARight.Syntax.Window.Start) or
+        (ALeft.Syntax.Window.Length <> ARight.Syntax.Window.Length) then
+      begin
+        Exit(False);
+      end;
+    end;
+
+    if not SameType(ALeft.Target, ARight.Target) or
+      (ALeft.ParameterCount <> ARight.ParameterCount) then
+    begin
+      Exit(False);
+    end;
+    for LAt := 0 to ALeft.ParameterCount - 1 do
+    begin
+
+      if (ALeft.ParameterName(LAt) <> ARight.ParameterName(LAt)) or
+        (ALeft.ParameterMode(LAt) <> ARight.ParameterMode(LAt)) or
+        not SameType(ALeft.ParameterType(LAt), ARight.ParameterType(LAt)) then
+      begin
+        Exit(False);
+      end;
+    end;
+    Result := True;
+  finally
+    Leave;
+  end;
+end;
+
 function TBindingQuery.ContextAt(const ASite: INyxPascalBindingSite): INyxPascalCompilerContext;
 var
   LView: INyxPascalTranslatedSyntax;
@@ -1001,7 +1349,7 @@ begin
         raise ENyxPascalBindingLimit.Create('Pascal declaration candidates exceed their query budget');
       end;
       SetLength(LSymbols, LCount + 1);
-      LSymbols[LCount] := FWorld.Symbol(AModule, LAt);
+      LSymbols[LCount] := InEnvironment(FWorld.Symbol(AModule, LAt), FEnvironment);
 
       if (LDecl.Kind = psdkType) and (LDecl.NestedScope >= 0) and
         not (psdfForward in LDecl.Flags) then
@@ -1062,7 +1410,7 @@ begin
 
       if LCompletion >= 0 then
       begin
-        Exit(OneSymbol(FWorld.Symbol(AModule, LCompletion)));
+        Exit(OneSymbol(InEnvironment(FWorld.Symbol(AModule, LCompletion), FEnvironment)));
       end;
     end;
   end;
@@ -1178,6 +1526,12 @@ begin
   while LScope >= 0 do
   begin
     Tick;
+    Result := ParameterAt(ASite, LScope, AName);
+
+    if Result <> nil then
+    begin
+      Exit;
+    end;
     Result := Exact(ASite.ModuleIndex, LScope, ASite.Caret, AName, False);
 
     if Result.Status <> pbsMissing then
@@ -1186,7 +1540,8 @@ begin
     end;
     LOwner := LSyntax.Scope(LScope).OwnerDeclaration;
 
-    if (LOwner >= 0) and (LSyntax.Declaration(LOwner).GenericSpan.Length > 0) then
+    if (LOwner >= 0) and (LSyntax.Declaration(LOwner).GenericSpan.Length > 0) and
+      (FEnvironment = nil) then
     begin
       Exit(Answer(pbsUnresolved, pbiGenericContext));
     end;
@@ -1196,7 +1551,7 @@ begin
     begin
       { An enclosing class/interface's own name is already in its lexical scope;
         an uncaptured ancestor cannot shadow that declaration with a nested type. }
-      Exit(OneSymbol(FWorld.Symbol(ASite.ModuleIndex, LOwner)));
+      Exit(OneSymbol(InEnvironment(FWorld.Symbol(ASite.ModuleIndex, LOwner), FEnvironment)));
     end;
 
     if (LSyntax.Scope(LScope).Kind = psskMembers) or
@@ -1206,7 +1561,7 @@ begin
 
       if LClass <> nil then
       begin
-        LClassType := TypeOfSymbol(LClass);
+        LClassType := TypeOfSymbol(InEnvironment(LClass, FEnvironment));
 
         if LClassType.Status <> pbsBound then
         begin
@@ -1485,7 +1840,212 @@ begin
   end;
 end;
 
+function TBindingQuery.GenericNames(const ASymbol: INyxPascalBoundSymbol;
+  out ANames: TGenericNames): TNyxPascalBindingIssue;
+var
+  LLex: INyxPascalLexicalSnapshot;
+  LSpan: TNyxPascalSpan;
+  LToken: TNyxPascalToken;
+  LAt: Integer;
+  LSeen: Integer;
+  LName: TNyxText;
+  LExpectName: Boolean;
+begin
+  SetLength(ANames, 0);
+  LSpan := ASymbol.Declaration.GenericSpan;
+
+  if LSpan.Length = 0 then
+  begin
+    Exit(pbiNone);
+  end;
+  LLex := FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax.Lexical;
+  LAt := LLex.TokenAt(LSpan.Start);
+
+  if LLex.Token(LAt).Symbol <> psoLess then
+  begin
+    Exit(pbiGenericContext);
+  end;
+  Inc(LAt);
+  LExpectName := True;
+  while LAt < LLex.Count do
+  begin
+    Tick;
+    LToken := LLex.Token(LAt);
+
+    if LToken.Span.Start >= LSpan.Finish then
+    begin
+      Break;
+    end;
+
+    if not (LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective]) then
+    begin
+
+      if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoColon) then
+      begin
+        Exit(pbiGenericConstraint);
+      end;
+
+      if LExpectName then
+      begin
+
+        if (LToken.Kind <> ptkWord) or
+          ((LToken.Word <> pkwNone) and not LToken.Escaped) then
+        begin
+          Exit(pbiGenericContext);
+        end;
+        LName := LLex.Identifier(LAt);
+        for LSeen := 0 to High(ANames) do
+        begin
+          Tick;
+
+          if NyxPascalASCIIKey(ANames[LSeen]) = NyxPascalASCIIKey(LName) then
+          begin
+            Exit(pbiGenericContext);
+          end;
+        end;
+        SetLength(ANames, Length(ANames) + 1);
+        ANames[High(ANames)] := LName;
+        LExpectName := False;
+      end
+      else if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoComma) then
+      begin
+        LExpectName := True;
+      end
+      else if (LToken.Kind = ptkSymbol) and
+        (LToken.Symbol in [psoGreater, psoGreaterEqual]) and
+        (LToken.Span.Start + 1 = LSpan.Finish) then
+      begin
+        Exit(pbiNone);
+      end
+      else
+      begin
+        Exit(pbiGenericContext);
+      end;
+    end;
+    Inc(LAt);
+  end;
+  Result := pbiGenericContext;
+end;
+
+function TBindingQuery.InEnvironment(const ASymbol: INyxPascalBoundSymbol;
+  const AEnvironment: INyxPascalGenericEnvironment): INyxPascalBoundSymbol;
+var
+  LFrame: INyxPascalGenericEnvironment;
+  LScope: Integer;
+  LOwner: INyxPascalBoundSymbol;
+  LSymbol: TBoundSymbol;
+  LNested: Boolean;
+begin
+  Result := ASymbol;
+  LFrame := AEnvironment;
+  while LFrame <> nil do
+  begin
+    Tick;
+    LOwner := LFrame.Owner;
+    LNested := SameSymbol(ASymbol, LOwner);
+
+    if ASymbol.ModuleIndex = LOwner.ModuleIndex then
+    begin
+      LScope := ASymbol.Declaration.Scope;
+      while LScope >= 0 do
+      begin
+        Tick;
+        LNested := LNested or (LScope = LOwner.Declaration.NestedScope);
+        LScope := FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax.Scope(LScope).Parent;
+      end;
+    end;
+
+    if LNested then
+    begin
+      LSymbol := TBoundSymbol.Create;
+      LSymbol.Owner := FWorld;
+      LSymbol.ModuleOrdinal := ASymbol.ModuleIndex;
+      LSymbol.DeclarationOrdinal := ASymbol.DeclarationIndex;
+      LSymbol.Bindings := LFrame;
+      Exit(LSymbol);
+    end;
+    LFrame := LFrame.Parent;
+  end;
+end;
+
+function TBindingQuery.ParameterAt(const ASite: INyxPascalBindingSite;
+  AScope: Integer; const AName: TNyxText): INyxPascalResolution;
+var
+  LOwner: INyxPascalBoundSymbol;
+  LNames: TGenericNames;
+  LIssue: TNyxPascalBindingIssue;
+  LFrame: INyxPascalGenericEnvironment;
+  LAt: Integer;
+  LDecl: Integer;
+begin
+  Result := nil;
+  LOwner := nil;
+  LDecl := FWorld.ModuleAt(ASite.ModuleIndex).Syntax.Scope(AScope).OwnerDeclaration;
+
+  if LDecl >= 0 then
+  begin
+    LOwner := FWorld.Symbol(ASite.ModuleIndex, LDecl);
+  end;
+  { Alias expressions and ancestor clauses use the declaration's outer scope,
+    yet their placeholders belong to the declaration currently being bound. }
+  if (FTypeOwner <> nil) and (FTypeOwner.ModuleIndex = ASite.ModuleIndex) and
+    (FTypeOwner.Declaration.Scope = AScope) and
+    (FTypeOwner.Declaration.GenericSpan.Length > 0) then
+  begin
+    LOwner := FTypeOwner;
+  end;
+
+  if (LOwner = nil) or (LOwner.Declaration.GenericSpan.Length = 0) then
+  begin
+    Exit;
+  end;
+  LIssue := GenericNames(LOwner, LNames);
+
+  if LIssue <> pbiNone then
+  begin
+    Exit(Answer(pbsUnresolved, LIssue));
+  end;
+  for LAt := 0 to High(LNames) do
+  begin
+    Tick;
+
+    if NyxPascalASCIIKey(LNames[LAt]) = NyxPascalASCIIKey(AName) then
+    begin
+      LFrame := FEnvironment;
+      while LFrame <> nil do
+      begin
+        Tick;
+
+        if SameSymbol(LFrame.Owner, LOwner) then
+        begin
+          Exit(TypeAnswer(LFrame.Argument(LAt)));
+        end;
+        LFrame := LFrame.Parent;
+      end;
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+    end;
+  end;
+end;
+
 function TBindingQuery.TypeOfSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LEnvironment: INyxPascalGenericEnvironment;
+  LOwner: INyxPascalBoundSymbol;
+begin
+  CheckSymbol(ASymbol);
+  LEnvironment := FEnvironment;
+  LOwner := FTypeOwner;
+  FEnvironment := EnvironmentOf(ASymbol);
+  FTypeOwner := ASymbol;
+  try
+    Result := TypeOfSymbolCore(ASymbol);
+  finally
+    FEnvironment := LEnvironment;
+    FTypeOwner := LOwner;
+  end;
+end;
+
+function TBindingQuery.TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
 var
   LDecl: TNyxPascalSyntaxDeclaration;
   LType: TSemanticType;
@@ -1495,6 +2055,9 @@ var
   LCount: Integer;
   LScope: Integer;
   LSite: INyxPascalBindingSite;
+  LFrame: INyxPascalGenericEnvironment;
+  LNames: TGenericNames;
+  LIssue: TNyxPascalBindingIssue;
 begin
   Enter;
   try
@@ -1508,7 +2071,23 @@ begin
 
     if (LDecl.GenericSpan.Length > 0) then
     begin
-      Exit(Answer(pbsUnresolved, pbiGenericContext));
+      LIssue := GenericNames(ASymbol, LNames);
+
+      if LIssue <> pbiNone then
+      begin
+        Exit(Answer(pbsUnresolved, LIssue));
+      end;
+      LFrame := FEnvironment;
+      while (LFrame <> nil) and not SameSymbol(LFrame.Owner, ASymbol) do
+      begin
+        Tick;
+        LFrame := LFrame.Parent;
+      end;
+
+      if LFrame = nil then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      end;
     end;
 
     if LDecl.Kind = psdkType then
@@ -1593,29 +2172,20 @@ begin
   end;
 end;
 
-function TBindingQuery.BindNode(const ASite: INyxPascalBindingSite;
+function TBindingQuery.TypeDeclaration(const ASite: INyxPascalBindingSite;
   const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
 var
-  LNode: TNyxPascalTypeNode;
-  LType: TSemanticType;
-  LLease: INyxPascalSemanticType;
   LResolved: INyxPascalResolution;
-  LChild: Integer;
-  LGroup: Integer;
-  LName: Integer;
-  LAt: Integer;
-  LFullName: TNyxText;
-  LMode: TNyxPascalSyntaxParameterMode;
-  LContext: INyxPascalCompilerContext;
-  LOrigin: Integer;
-  LCurrent: Integer;
+  LBase: Integer;
+  LMember: Integer;
+  LName: TNyxText;
 
-  { Only name-only qualification is flattened. Constructed/generic qualification
-    must retain a real semantic environment, not an invented dotted string. }
-  function QualifiedName(AIndex: Integer): TNyxText;
+  { A unit-qualified prototype remains a lexical name. A constructed receiver
+    must first bind its own arguments before looking up the nested declaration. }
+  function FlatName(AIndex: Integer): TNyxText;
   var
-    LBase: Integer;
-    LMember: Integer;
+    LLeft: TNyxText;
+    LRight: Integer;
   begin
     Enter;
     try
@@ -1628,15 +2198,13 @@ var
 
       if AType.Node(AIndex).Kind = ptxQualified then
       begin
-        LBase := AType.Child(AIndex, ptrBase);
-        LMember := AType.Child(AIndex, ptrMember);
-        Result := QualifiedName(LBase);
+        LLeft := FlatName(AType.Child(AIndex, ptrBase));
+        LRight := AType.Child(AIndex, ptrMember);
 
-        if (Result = '') or (AType.Node(LMember).Kind <> ptxName) then
+        if (LLeft <> '') and (AType.Node(LRight).Kind = ptxName) then
         begin
-          Exit('');
+          Result := LLeft + '.' + AType.Node(LRight).Name;
         end;
-        Result := Result + '.' + AType.Node(LMember).Name;
       end;
     finally
       Leave;
@@ -1646,17 +2214,152 @@ var
 begin
   Enter;
   try
+    LName := FlatName(ANode);
+
+    if LName <> '' then
+    begin
+      Exit(Lookup(ASite, LName));
+    end;
+
+    if AType.Node(ANode).Kind <> ptxQualified then
+    begin
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+    end;
+    LBase := AType.Child(ANode, ptrBase);
+    LMember := AType.Child(ANode, ptrMember);
+
+    if AType.Node(LMember).Kind <> ptxName then
+    begin
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+    end;
+    LResolved := BindNode(ASite, AType, LBase);
+
+    if LResolved.Status <> pbsBound then
+    begin
+      Exit(LResolved);
+    end;
+    Result := Member(LResolved.BoundType, ASite, AType.Node(LMember).Name, pmaType);
+  finally
+    Leave;
+  end;
+end;
+
+function TBindingQuery.Specialize(const ASite: INyxPascalBindingSite;
+  const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
+var
+  LResolved: INyxPascalResolution;
+  LPrototype: INyxPascalBoundSymbol;
+  LFrame: TGenericEnvironment;
+  LLease: INyxPascalGenericEnvironment;
+  LNames: TGenericNames;
+  LIssue: TNyxPascalBindingIssue;
+  LChild: Integer;
+  LAt: Integer;
+  LSymbol: TBoundSymbol;
+  LSymbolLease: INyxPascalBoundSymbol;
+  LOuter: INyxPascalGenericEnvironment;
+begin
+  LResolved := TypeDeclaration(ASite, AType, AType.Child(ANode, ptrBase));
+
+  if LResolved.Status <> pbsBound then
+  begin
+    Exit(LResolved);
+  end;
+
+  if (LResolved.Count <> 1) or (LResolved.SymbolAt(0).Declaration.Kind <> psdkType) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  end;
+  LPrototype := LResolved.SymbolAt(0);
+  LOuter := EnvironmentOf(LPrototype);
+
+  if (LOuter <> nil) and SameSymbol(LOuter.Owner, LPrototype) then
+  begin
+    LOuter := LOuter.Parent;
+  end;
+  { The supported compiler oracle rejects a generic declaration inside another
+    generic. Ordinary nested types may capture the outer frame; creating another
+    parameter frame here remains explicitly unsupported rather than simulated. }
+  if (LOuter <> nil) and
+    (LPrototype.Declaration.GenericSpan.Length > 0) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  end;
+  LIssue := GenericNames(LPrototype, LNames);
+
+  if LIssue <> pbiNone then
+  begin
+    Exit(Answer(pbsUnresolved, LIssue));
+  end;
+
+  if Length(LNames) = 0 then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericArity));
+  end;
+  LFrame := TGenericEnvironment.Create;
+  LLease := LFrame;
+  LFrame.DeclarationOwner := FWorld.Symbol(LPrototype.ModuleIndex, LPrototype.DeclarationIndex);
+  LFrame.Outer := LOuter;
+  LFrame.Names := LNames;
+  SetLength(LFrame.Types, Length(LNames));
+  LChild := AType.Child(ANode, ptrArgument);
+  LAt := 0;
+  while (LChild >= 0) and (AType.Node(LChild).Role = ptrArgument) do
+  begin
+    Tick;
+
+    if LAt >= Length(LNames) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiGenericArity));
+    end;
+    LResolved := BindNode(ASite, AType, LChild);
+
+    if LResolved.Status <> pbsBound then
+    begin
+      Exit(LResolved);
+    end;
+    LFrame.Types[LAt] := LResolved.BoundType;
+    Inc(LAt);
+    LChild := AType.Node(LChild).NextSibling;
+  end;
+
+  if LAt <> Length(LNames) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericArity));
+  end;
+  LSymbol := TBoundSymbol.Create;
+  LSymbolLease := LSymbol;
+  LSymbol.Owner := FWorld;
+  LSymbol.ModuleOrdinal := LPrototype.ModuleIndex;
+  LSymbol.DeclarationOrdinal := LPrototype.DeclarationIndex;
+  LSymbol.Bindings := LLease;
+  Result := TypeOfSymbol(LSymbolLease);
+end;
+
+function TBindingQuery.BindNode(const ASite: INyxPascalBindingSite;
+  const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
+var
+  LNode: TNyxPascalTypeNode;
+  LType: TSemanticType;
+  LLease: INyxPascalSemanticType;
+  LResolved: INyxPascalResolution;
+  LChild: Integer;
+  LGroup: Integer;
+  LName: Integer;
+  LAt: Integer;
+  LMode: TNyxPascalSyntaxParameterMode;
+  LContext: INyxPascalCompilerContext;
+  LOrigin: Integer;
+  LCurrent: Integer;
+
+begin
+  Enter;
+  try
     LNode := AType.Node(ANode);
 
     if LNode.Kind in [ptxName, ptxQualified] then
     begin
-      LFullName := QualifiedName(ANode);
-
-      if LFullName = '' then
-      begin
-        Exit(Answer(pbsUnresolved, pbiGenericContext));
-      end;
-      LResolved := Lookup(ASite, LFullName);
+      LResolved := TypeDeclaration(ASite, AType, ANode);
 
       if LResolved.Status <> pbsBound then
       begin
@@ -1677,7 +2380,7 @@ begin
 
     if LNode.Kind = ptxGeneric then
     begin
-      Exit(Answer(pbsUnresolved, pbiGenericContext));
+      Exit(Specialize(ASite, AType, ANode));
     end;
     LType := TSemanticType.Create;
     LLease := LType;
@@ -1842,6 +2545,24 @@ begin
 end;
 
 function TBindingQuery.Bases(const AOwner: INyxPascalBoundSymbol;
+  AOrdinal: Integer): INyxPascalResolution;
+var
+  LEnvironment: INyxPascalGenericEnvironment;
+  LOwner: INyxPascalBoundSymbol;
+begin
+  LEnvironment := FEnvironment;
+  LOwner := FTypeOwner;
+  FEnvironment := EnvironmentOf(AOwner);
+  FTypeOwner := AOwner;
+  try
+    Result := BasesCore(AOwner, AOrdinal);
+  finally
+    FEnvironment := LEnvironment;
+    FTypeOwner := LOwner;
+  end;
+end;
+
+function TBindingQuery.BasesCore(const AOwner: INyxPascalBoundSymbol;
   AOrdinal: Integer): INyxPascalResolution;
 var
   LDecl: TNyxPascalSyntaxDeclaration;
@@ -2169,6 +2890,8 @@ begin
     begin
       Tick;
       LSymbol := LFound.SymbolAt(LAt);
+      LSymbol := InEnvironment(FWorld.Symbol(LSymbol.ModuleIndex, LSymbol.DeclarationIndex),
+        EnvironmentOf(LOwner));
       LVisible := Access(LSymbol, LOwner, ASite);
 
       if LVisible = ppkUnknown then
@@ -2232,7 +2955,7 @@ begin
             for LScope := 0 to LCount - 1 do
             begin
 
-              if SameSymbol(LSymbols[LScope], LSymbol) then
+              if SameBinding(LSymbols[LScope], LSymbol) then
               begin
                 LVisible := ppkFalse;
               end;
@@ -2263,6 +2986,215 @@ begin
     end;
   finally
     Leave;
+  end;
+end;
+
+function TBindingQuery.CollectMemberNames(const AType: INyxPascalSemanticType;
+  const APrefix: TNyxText; var ANames: TGenericNames): INyxPascalResolution;
+var
+  LType: INyxPascalSemanticType;
+  LOwner: INyxPascalBoundSymbol;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LBase: INyxPascalResolution;
+  LAt: Integer;
+  LTrail: Integer;
+  LScope: Integer;
+  LDeclaration: Integer;
+  LName: TNyxText;
+  LKey: TNyxText;
+  LPosition: Integer;
+  LCopy: Integer;
+begin
+  Enter;
+  try
+    LType := Unwrap(AType);
+
+    if (LType <> nil) and (LType.Kind = pstClassOf) then
+    begin
+      LType := Unwrap(LType.Target);
+    end;
+
+    if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    end;
+    LOwner := LType.Definition;
+    for LAt := 0 to High(FMembers) do
+    begin
+      Tick;
+
+      if SameSymbol(FMembers[LAt], LOwner) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiRecursiveType));
+      end;
+    end;
+    LScope := LOwner.Declaration.NestedScope;
+
+    if LScope < 0 then
+    begin
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    end;
+    LSyntax := FWorld.ModuleAt(LOwner.ModuleIndex).Syntax;
+
+    if not SafeScope(LOwner.ModuleIndex, LScope, LSyntax.Scope(LScope).Span.Finish) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiUnsupportedScope));
+    end;
+    LDeclaration := LSyntax.Scope(LScope).FirstDeclaration;
+    while LDeclaration >= 0 do
+    begin
+      Tick;
+      LName := LSyntax.Declaration(LDeclaration).Name;
+      LKey := NyxPascalASCIIKey(LName);
+
+      if Copy(LKey, 1, Length(APrefix)) = APrefix then
+      begin
+        LPosition := 0;
+        while (LPosition < Length(ANames)) and
+          (NyxPascalASCIIKey(ANames[LPosition]) < LKey) do
+        begin
+          Tick;
+          Inc(LPosition);
+        end;
+
+        if (LPosition = Length(ANames)) or
+          (NyxPascalASCIIKey(ANames[LPosition]) <> LKey) then
+        begin
+          SetLength(ANames, Length(ANames) + 1);
+          for LCopy := High(ANames) downto LPosition + 1 do
+          begin
+            Tick;
+            ANames[LCopy] := ANames[LCopy - 1];
+          end;
+          ANames[LPosition] := LName;
+        end;
+      end;
+      LDeclaration := LSyntax.Declaration(LDeclaration).Next;
+    end;
+    LTrail := Length(FMembers);
+    SetLength(FMembers, LTrail + 1);
+    FMembers[LTrail] := LOwner;
+    try
+      LAt := 0;
+      while True do
+      begin
+        LBase := Bases(LOwner, LAt);
+
+        if LBase.Status = pbsMissing then
+        begin
+          Break;
+        end;
+
+        if LBase.Status <> pbsBound then
+        begin
+          Exit(LBase);
+        end;
+        Result := CollectMemberNames(LBase.BoundType, APrefix, ANames);
+
+        if Result <> nil then
+        begin
+          Exit;
+        end;
+        Inc(LAt);
+      end;
+      Result := nil;
+    finally
+      SetLength(FMembers, LTrail);
+    end;
+  finally
+    Leave;
+  end;
+end;
+
+function TBindingQuery.Members(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite; const AQuery: TNyxPascalMemberQuery): INyxPascalMemberPage;
+var
+  LPage: TMemberPage;
+  LReply: TResolution;
+  LReplyLease: INyxPascalResolution;
+  LNames: TGenericNames;
+  LFound: INyxPascalResolution;
+  LAt: Integer;
+  LAlternative: Integer;
+  LVisible: Integer;
+begin
+  CheckSite(ASite);
+  AQuery.Validate;
+
+  if (AType = nil) or (AType.World <> FWorld) then
+  begin
+    raise ENyxPascalBinding.Create('This receiver type belongs to another semantic source world');
+  end;
+
+  if AQuery.Limit > FLimits.MaximumCandidates then
+  begin
+    raise ENyxPascalBindingLimit.Create('Member page exceeds the world candidate budget');
+  end;
+  LPage := TMemberPage.Create;
+  Result := LPage;
+  LPage.Following := AQuery.Offset;
+  LFound := CollectMemberNames(AType, NyxPascalASCIIKey(AQuery.Prefix), LNames);
+
+  if LFound <> nil then
+  begin
+    LPage.Reply := Answer(LFound.Status, LFound.Issue, LFound.RelatedName);
+    Exit;
+  end;
+  LReply := TResolution.Create;
+  LReplyLease := LReply;
+  LReply.Owner := FWorld;
+  LReply.Outcome := pbsBound;
+  LReply.Reason := pbiNone;
+  LVisible := 0;
+  for LAt := 0 to High(LNames) do
+  begin
+    LFound := Member(AType, ASite, LNames[LAt], AQuery.Access);
+
+    if LFound.Status in [pbsInaccessible, pbsMissing] then
+    begin
+      Continue;
+    end;
+
+    if not (LFound.Status in [pbsBound, pbsOverloads]) then
+    begin
+      LPage.Reply := Answer(LFound.Status, LFound.Issue, LFound.RelatedName);
+      Exit;
+    end;
+    for LAlternative := 0 to LFound.Count - 1 do
+    begin
+      Tick;
+
+      if LVisible >= AQuery.Offset then
+      begin
+
+        if Length(LReply.Symbols) = AQuery.Limit then
+        begin
+          LPage.More := True;
+          LPage.Reply := LReplyLease;
+          LPage.Following := AQuery.Offset + Length(LReply.Symbols);
+          Exit;
+        end;
+        SetLength(LReply.Symbols, Length(LReply.Symbols) + 1);
+        LReply.Symbols[High(LReply.Symbols)] := LFound.SymbolAt(LAlternative);
+      end;
+      Inc(LVisible);
+    end;
+  end;
+  LPage.Reply := LReplyLease;
+  LPage.Following := AQuery.Offset + Length(LReply.Symbols);
+end;
+
+function TSemanticWorld.Members(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite; const AQuery: TNyxPascalMemberQuery;
+  const ACancellation: INyxCancellationScope): INyxPascalMemberPage;
+var
+  LQuery: TBindingQuery;
+begin
+  LQuery := TBindingQuery.Create(Self, ACancellation);
+  try
+    Result := LQuery.Members(AType, ASite, AQuery);
+  finally
+    LQuery.Free;
   end;
 end;
 
