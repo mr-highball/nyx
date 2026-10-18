@@ -128,6 +128,25 @@ size remains unresolved. Follow those actual context/lexer failures next, then
 reassess full type/import/Windows/SysUtils meaning and original resolver/editor
 acceptance. WORK.md owns final receipts; criterion two and original credit stay open.
 
+Lexical-envelope continuation: d99a8c2 is progress, retaining at least thirteen
+documented unclosed batches and complete original criterion two. Follow grouped
+short settings and assembly lexical regions under existing context/lexer owners,
+using actual System/ObjPas preparation and compiled handwritten input. Preserve
+inactive/uncertain branches, textual includes, exact spans and original Pascal
+literal errors. Stop at the next distinct compiler/language/import prerequisite;
+do not manufacture implicit exports or claim whole resolver/editor adoption.
+Full language, incremental budgets, input/navigation, parity/quality and delivery
+remain required. WORK.md owns final source, evidence and return path.
+
+The qualified lexical/settings boundary passes 28 native checks, executes the
+whole handwritten assembly fixture and preserves actual five-switch compiler
+values. System clears the grouped-include/register failures and retains exactly
+one unsupported MAXFPUREGISTERS policy; ObjPas's scoped Char need stays separate.
+Return to actual compiler-policy effects under existing context ownership, then
+reassess genuine source/import/type and full resolver/editor prerequisites.
+WORK.md owns the final compiler/native/preservation evidence and retained failures;
+no original criterion, completion credit or ordinary adoption closes here.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

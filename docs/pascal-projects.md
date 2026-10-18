@@ -1435,8 +1435,9 @@ Whole handwritten unit/include compilation executes the real selected branch and
 its record access; the prepared descriptor supplies ordinary indexed completion.
 Already prepared inputs need no new probe. The actual Win32/i386 System and ObjPas
 inputs retain all 156 original byte packets, independent FPC/ObjFPC modes and one
-new symbol probe per unit. System still exposes a grouped-switch-as-include gap
-and percent-register assembly lexical errors. ObjPas retains its source-scoped
+new symbol probe per unit. System now clears grouped-switch/include ambiguity
+and assembly register lexical errors, retaining MAXFPUREGISTERS as an unsupported
+compiler policy. ObjPas retains its source-scoped
 sizeof(Char) requirement despite a pristine System.Char measurement. Indexed
 loading reaches both real units and returns typed incomplete ObjPas source after
 two loads; no synthetic exports authorize a successful type result. Maintained
@@ -1444,6 +1445,44 @@ SysUtils requirement capture also consumes this public planner. Full source/
 compiler/import/RTL/canonical/expression meaning, incremental budgets, ordinary
 editor/input/navigation/quality/parity/delivery remain open. WORK.md owns exact
 native evidence, retained failed preparations and browser compilation only.
+
+## Assembly regions and grouped settings
+
+Short switch groups such as `{$I-,Q-,H-,R-,V-}` are settings rather than include
+filenames. Translation validates the entire group before publishing one context
+state; repeated letters keep their last authored value. At most 26 immutable
+context copies are needed, regardless of repetition. Malformed tails and unresolved
+mode-dependent alignment aliases refuse without a partially applied prefix.
+PUSH/POP and known/unknown conditional activity keep their existing contracts.
+Ordinary `$I filename` and `$INCLUDE filename` retain textual include behavior.
+
+`TNyxPascalToken.Region` records the entry envelope (`plrPascal` or `plrAssembly`).
+ASM enters assembly for its successor; its unquoted END returns to Pascal.
+Instruction operands have `ptkAssembly` rather than Pascal word/number meaning;
+strings, comments, directives, whitespace and original scalar/storage coordinates
+remain lossless. The x86 Intel/AT&T envelope handles backslash-escaped assembly
+quotes without interpreting instructions, registers, ABI layout or operand types.
+It follows FPC's documented [assembly block contract](https://docs.freepascal.org/docs-html/current/prog/progse9.html)
+and retained installed-reader inputs; other assembler dialects require their own
+comment/register-list qualification. Invalid binary literals outside ASM still
+produce ordinary Pascal diagnostics.
+
+The optional `INyxPascalLexicalRegionObserver` extends the construction-only
+visitor without replacing its original interface. Translation controls selected
+and physical branch regions separately, so discarded ASM/END tokens cannot alter
+the selected source. Includes may open, continue or close an assembly envelope;
+the whole root owns its EOF diagnostic. Unknown boundary activity remains an
+explicit refusal. No source, editor or callback borrow survives construction.
+Original token-family ordinals and existing interface GUIDs remain unchanged.
+
+Native qualification executes a whole handwritten assembly function and observes
+all five compiled switch values, alongside branch/include/quote/span/limit and
+cancellation cases. Actual original System advances from 50 diagnostics to one,
+at `{$maxfpuregisters 0}`; no unsupported policy is ignored to force a resolved
+unit. ObjPas source-scoped Char binding and complete implicit-unit meaning stay
+open. Browser consumers compile only; this is neither browser execution nor
+ordinary Studio adoption, parity or delivery. WORK.md owns final evidence and
+the original authoring criterion's remaining outcome.
 
 ## Scoped name and type binding
 

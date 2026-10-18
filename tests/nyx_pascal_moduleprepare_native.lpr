@@ -220,8 +220,11 @@ begin
     begin
       Check(not LPrepared.Source.Resolved and (LPrepared.Probes = 1) and
         (LPrepared.Requirements.Count = 0) and
-        (LPrepared.Source.Diagnostic(0).Issue = ptiMissingInclude),
-        'Compiler symbol preparation retains the actual grouped-switch/assembly source frontier');
+        (LPrepared.Source.DiagnosticCount = 1) and
+        (LPrepared.Source.Diagnostic(0).Issue = ptiUnsupportedDirective) and
+        (NyxPascalOccurrenceLexical(LPrepared.Source, LPrepared.Source.Diagnostic(0).Occurrence)
+          .Slice(LPrepared.Source.Diagnostic(0).Span) = TNyxText('{$maxfpuregisters 0}')),
+        'Actual System clears grouped-switch/register errors and retains the next explicit compiler policy');
     end
     else
     begin

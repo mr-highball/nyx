@@ -89,16 +89,24 @@ type
     psoMultiplyAssign, psoDivideAssign, psoRange, psoAlternateOpenBracket, psoAlternateCloseBracket,
     psoCommentClose);
   { Lossless token families include every whitespace/comment/directive and one
-    zero-length EOF. An invalid scalar remains visible rather than disappearing. }
+    zero-length EOF. Assembly operands stay opaque rather than acquiring Pascal
+    number/word semantics. Invalid Pascal scalars remain visible. }
   TNyxPascalTokenKind = (ptkWord, ptkNumber, ptkString, ptkCharacter,
-    ptkSymbol, ptkWhitespace, ptkComment, ptkDirective, ptkInvalid, ptkEOF);
+    ptkSymbol, ptkWhitespace, ptkComment, ptkDirective, ptkInvalid, ptkEOF,
+    ptkAssembly);
+  { Lexical envelope, not instruction semantics. Assembly bodies retain opaque
+    spelling while Pascal comments/directives and the terminating END stay
+    visible. The current envelope follows FPC's x86 Intel/AT&T readers; other
+    assembler comment/register-list dialects need explicit qualification. }
+  TNyxPascalLexicalRegion = (plrPascal, plrAssembly);
   { Numeric spelling only, never a lossy machine-number conversion or compiler
     admission. Decimal exponents/fractions are marked separately on their token. }
   TNyxPascalNumberBase = (pnbDecimal, pnbHexadecimal, pnbOctal, pnbBinary);
   { Closed recoverable lexical failures. Messages are stable English guidance;
     the exact source and scalar span remain available separately. }
   TNyxPascalLexicalIssue = (pliUnexpectedScalar, pliUnterminatedString,
-    pliUnterminatedComment, pliMissingDigits, pliInvalidDigit, pliMissingExponent);
+    pliUnterminatedComment, pliMissingDigits, pliInvalidDigit, pliMissingExponent,
+    pliUnterminatedAssembly);
   { Detached diagnostic for one source span. It owns no source or mutable array. }
   TNyxPascalLexicalDiagnostic = record
   private
@@ -165,6 +173,7 @@ type
     FComplete: Boolean;
     FEscaped: Boolean;
     FReal: Boolean;
+    FRegion: TNyxPascalLexicalRegion;
   public
     property Span: TNyxPascalSpan read FSpan;
     property Kind: TNyxPascalTokenKind read FKind;
@@ -176,6 +185,9 @@ type
     property Complete: Boolean read FComplete;
     property Escaped: Boolean read FEscaped;
     property RealNumber: Boolean read FReal;
+    { Region on entry to this token; ASM enters assembly for its successor and
+      terminating END leaves assembly for its successor. Includes retain this. }
+    property Region: TNyxPascalLexicalRegion read FRegion;
   end;
   { Owns exact physical text and ordered immutable tokens/diagnostics. Every
     storage unit belongs to a token; EOF has no units. Getters borrow no caller,
@@ -212,6 +224,16 @@ type
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText; var AAllowNestedComments: Boolean);
   end;
+  { Optional construction-only region authority on the same borrowed observer.
+    Textual include fragments may start/end inside assembly. A translator owns
+    branch activity and selects the next region after its ordinary token visit;
+    absent this capability the lexer follows physical ASM/END boundaries itself.
+    No mutable snapshot or source text escapes through this capability. }
+  INyxPascalLexicalRegionObserver = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B07}']
+    function InitialRegion: TNyxPascalLexicalRegion;
+    function NextRegion: TNyxPascalLexicalRegion;
+  end;
 
 { Construct a checked nonnegative scalar range without associating a source. }
 function NyxPascalSpan(AStart, ALength: Integer): TNyxPascalSpan;
@@ -221,7 +243,9 @@ function NyxPascalASCIIKey(const AText: TNyxText): TNyxText;
 { Build a detached complete token stream. Cancellation is borrowed only during
   construction and checked at entry, each token and bounded scalar intervals.
   Malformed Unicode and quotas are hard failures; unfinished strings recover at
-  the next physical newline, unfinished comments retain the remaining source. }
+  the next physical newline, unfinished comments retain the remaining source.
+  Physical ASM/END regions retain opaque operands and ordinary Pascal comments/
+  directives; instruction validation and target assembly semantics stay separate. }
 function NewNyxPascalLexicalSnapshot(const ASource: TNyxText): INyxPascalLexicalSnapshot; overload;
 function NewNyxPascalLexicalSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions;
@@ -297,18 +321,22 @@ type
     FPreviousCR: Boolean;
     FNested: Boolean;
     FObserver: INyxPascalLexicalObserver;
+    FRegionObserver: INyxPascalLexicalRegionObserver;
+    FRegion: TNyxPascalLexicalRegion;
     FCancellation: INyxCancellationScope;
     function Current: Integer;
     function NextASCII(AChar: Char): Boolean;
     function IdentifierStart(AScalar: Integer): Boolean;
     function IdentifierPart(AScalar: Integer): Boolean;
     procedure CheckCancellation;
+    procedure SetRegion(AValue: TNyxPascalLexicalRegion);
     procedure Consume;
     procedure Issue(AIssue: TNyxPascalLexicalIssue; AStart: Integer);
     procedure Add(const AToken: TNyxPascalToken);
     procedure WordToken(var AToken: TNyxPascalToken);
     procedure NumberToken(var AToken: TNyxPascalToken; ACharacter: Boolean);
     procedure StringToken(var AToken: TNyxPascalToken);
+    procedure AssemblyToken(var AToken: TNyxPascalToken);
     procedure CommentToken(var AToken: TNyxPascalToken; ADelimiter: TCommentDelimiter);
     procedure Build;
   public
@@ -370,7 +398,8 @@ const
   CMessages: array[TNyxPascalLexicalIssue] of TNyxText = (
     'Unrecognized Pascal scalar', 'Finish this Pascal string before the newline',
     'Finish this Pascal block comment', 'Add digits after the numeric prefix',
-    'This digit is outside the literal base', 'Add digits to this exponent');
+    'This digit is outside the literal base', 'Add digits to this exponent',
+    'Finish this assembly block with END');
 begin
   Result := CMessages[FIssue];
 end;
@@ -446,6 +475,12 @@ begin
   FOptions := AOptions;
   FNested := AOptions.AllowNestedComments;
   FObserver := AObserver;
+  Supports(AObserver, INyxPascalLexicalRegionObserver, FRegionObserver);
+
+  if FRegionObserver <> nil then
+  begin
+    SetRegion(FRegionObserver.InitialRegion);
+  end;
   FCancellation := ACancellation;
   CheckCancellation;
   { Target storage length is a cheap lower bound for UTF-8 byte length. Exact
@@ -464,6 +499,7 @@ begin
   finally
     FCancellation := nil;
     FObserver := nil;
+    FRegionObserver := nil;
   end;
 end;
 
@@ -474,6 +510,17 @@ begin
   begin
     raise ENyxPascalAnalysisCancelled.Create('Pascal analysis cancelled');
   end;
+end;
+
+procedure TLexicalSnapshot.SetRegion(AValue: TNyxPascalLexicalRegion);
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxPascalLexicalRegion))) or
+    (Ord(AValue) > Ord(High(TNyxPascalLexicalRegion))) then
+  begin
+    raise ENyxPascalLexical.Create('The lexical observer returned an invalid source region');
+  end;
+  FRegion := AValue;
 end;
 
 function TLexicalSnapshot.Current: Integer;
@@ -633,6 +680,71 @@ begin
   if FObserver <> nil then
   begin
     FObserver.AfterToken(FTokenCount - 1, AToken, Text(FTokenCount - 1), FNested);
+  end;
+
+  if FRegionObserver <> nil then
+  begin
+    SetRegion(FRegionObserver.NextRegion);
+  end
+  else if AToken.Word = pkwAsm then
+  begin
+    FRegion := plrAssembly;
+  end
+  else if AToken.Word = pkwEnd then
+  begin
+    FRegion := plrPascal;
+  end;
+end;
+
+procedure TLexicalSnapshot.AssemblyToken(var AToken: TNyxPascalToken);
+var
+  LQuote: Integer;
+begin
+  { Instruction operands are intentionally opaque, including register prefixes,
+    target-specific numbers and punctuation. Retain word boundaries solely to
+    recognize the unquoted END delimiter; comments/directives are scanned first. }
+  AToken.FKind := ptkAssembly;
+
+  if IdentifierStart(Current) then
+  begin
+    WordToken(AToken);
+
+    if AToken.Word <> pkwEnd then
+    begin
+      AToken.FKind := ptkAssembly;
+      AToken.FWord := pkwNone;
+    end;
+    Exit;
+  end;
+  LQuote := Current;
+  Consume;
+
+  if LQuote in [34, 39] then
+  begin
+    while (Current >= 0) and not (Current in [10, 13]) do
+    begin
+
+      if Current = LQuote then
+      begin
+        Consume;
+        Exit;
+      end;
+
+      if Current = Ord('\') then
+      begin
+        { FPC's x86 assembly readers escape the following character in either
+          quote style; Pascal doubled-quote rules do not apply in this envelope. }
+        Consume;
+
+        if (Current < 0) or (Current in [10, 13]) then
+        begin
+          Break;
+        end;
+      end;
+      Consume;
+    end;
+    AToken.FComplete := False;
+    Issue(pliUnterminatedString, AToken.FSpan.Start);
   end;
 end;
 
@@ -896,9 +1008,17 @@ begin
     LToken.FLine := FLine;
     LToken.FColumn := FColumn;
     LToken.FComplete := True;
+    LToken.FRegion := FRegion;
 
     if LScalar < 0 then
     begin
+      { Textual include fragments may legitimately end in assembly; their
+        translator validates the complete root rather than each physical EOF. }
+
+      if (FRegion = plrAssembly) and (FRegionObserver = nil) then
+      begin
+        Issue(pliUnterminatedAssembly, FOffset);
+      end;
       LToken.FKind := ptkEOF;
       Add(LToken);
       Break;
@@ -916,6 +1036,12 @@ begin
       repeat
         Consume;
       until not (Current in [9, 10, 11, 12, 13, 32]);
+    end
+    else if (FRegion = plrAssembly) and (LScalar <> Ord('{')) and
+      not ((LScalar = Ord('(')) and NextASCII('*')) and
+      not ((LScalar = Ord('/')) and NextASCII('/')) then
+    begin
+      AssemblyToken(LToken);
     end
     else if IdentifierStart(LScalar) then
     begin

@@ -33,7 +33,90 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler requirements and module preparation — 2026-10-18
+## Current integration: Grouped settings and assembly envelopes — 2026-10-18
+
+Previous turn is progress: pushed d99a8c2 supplies retained compiler requirements
+and bounded real-unit preparation. This batch follows its actual System lexical/
+context prerequisite under original authoring criterion two. The documented
+consecutive unclosed lower bound is at least thirteen, with older evidence kept.
+The whole fresh MIT Nyx-owned resolver, incremental/project-scale budgets,
+ordinary editor adoption, input/navigation/quality/parity and delivery remain
+required. No original criterion/task/counter/credit/DONE, new tool/schema or
+rollout closes. Solo; scratch stays on the provisioned drive. No host retry,
+HTTP/browser/file-protocol execution/capture, protected mutation, cleanup/deletion/
+restart or approval bypass occurs. Concurrent milestone/reference/browser-compiler
+planning remains separate.
+
+Grouped short settings validate completely before one historical publication.
+Repeated letters retain the last authored value with at most 26 context copies;
+malformed tails and unresolved Boolean alignment aliases publish no prefix.
+I-,Q-,H-,R-,V- cannot become an include filename. Ordinary includes, PUSH/POP and
+three-valued activity retain their contracts. Value arrays retain no interfaces.
+
+The portable lexer appends typed assembly family/region/unfinished-region values,
+preserving original ordinals and interface GUIDs. Opaque instruction operands keep
+Pascal literal/type meaning separate. Exact text/scalar coordinates, comments,
+directives, quoted END/escaped quotes and ordinary Pascal diagnostics survive.
+The optional construction-only region observer shares include boundaries while
+the translator isolates discarded branches from selected ASM/END state. Unknown
+boundary activity refuses; one whole-root EOF owns unfinished assembly diagnostics.
+The x86 Intel/AT&T lexical envelope is not instruction/ABI/operand binding or
+qualification of another assembler dialect. No borrowed editor/source callback
+survives construction; no GPL helper or dependency-source change is introduced.
+
+Accepted composite evidence is in ignored lexical-regions-20261018-055500,
+located by .local/lexical-regions-paths-private.json:
+
+- Twenty-eight native checks qualify grouped settings/order/history/whole refusal,
+  branch/include/quote/scalar/limit/cancellation behavior and unclosed regions.
+  The whole handwritten fixture executes native i386 operands returning 42 and
+  supplies all five actual compiler-selected switch values. Browser compiles its
+  portable branch only, with no execution claim.
+- Fifteen real module preparation checks retain all 156 original input packets
+  and 47 indexed namespaces. Actual System now has 15,820 tokens/two visits/one
+  diagnostic, down from 50: the remaining unsupported policy is exactly
+  {$maxfpuregisters 0}. It still has no admitted declaration view. ObjPas retains
+  2,908 tokens/one visit/one scoped sizeof(Char) need despite pristine System.Char
+  capture. Indexed loading reaches three modules/two loads and refuses incomplete
+  objpas source. No synthetic implicit exports or successful RTL binding appear.
+- Maintained native lexical/policy/operator/variant/anonymous/planner/translation/
+  macro/type/syntax/Windows/binding/generic/condition/dependency/owned/profile/
+  production-semantic checks pass 49/47/18/22/52/14/157/38/367/7,671/26/62/127/10/
+  48/86/74/84. The syntax corpus remains five actual inputs, now 3,748 declarations
+  from current source; this count change is not additional corpus coverage.
+  Counts overlap previous evidence. All twenty native consumers have clean heaps.
+- Thirty-one accepted final compiler logs have zero owned warnings, 49 upstream
+  pas2js RTL warnings. Seven browser consumers, both Studios/backend/worker compile
+  as applicable. Browser products and consumers execute nowhere here; compilation
+  supplies no observing/input/full parity or delivery evidence.
+- Twenty-seven focused pins, all 628 src/studio Pascal/include/program files,
+  97 prior RTL inputs and three configured compiler inputs stay exact after final
+  readers. All 48 SysUtils include byte packets and the 156 overlapping actual
+  compiler-unit packets match their originals. Five protected files/nine complete
+  contexts and 349 frozen 7422453 artifacts stay exact. Final reader/compiler
+  groups join; no Studio listener remains and LAN stays offline. Native Nyx chat
+  tools remain absent; no host/configuration retry occurs. Final private ledgers
+  and checkpoint own current source/remote identity.
+
+Retained preparations are not final accepted evidence. The first real-unit run
+correctly failed its obsolete grouped-include frontier assertion after source
+advanced. The first handwritten compiler fixture omitted explicit AT&T mode under
+the configured Delphi default; the next omitted the scalar-count helper import.
+Both are repaired before the frozen batch. The broad syntax assertion count is
+read from its actual passing current-source corpus, rather than retaining the
+older declaration count. Failed preparations/logs stay retained; no uninterrupted
+green or complete RTL/resolver outcome is claimed.
+
+Next useful deliverable: reassess and model the actual remaining compiler-policy
+effects under existing compiler-context ownership, starting with MAXFPUREGISTERS.
+Preserve conservative refusal where effects remain uncaptured, then use the same
+System/ObjPas/Windows/SysUtils route to reassess genuine scoped binding/import/
+language prerequisites. Full canonical/expression meaning, incremental budgets,
+ordinary editor/input/navigation/quality/parity/delivery remain required. Stop
+switch/assembly/fixture/compiler/capture variants; do not add alternate exports,
+ignore unknown settings or retry the rejected host path.
+
+## Earlier integration: Compiler requirements and module preparation — 2026-10-18
 
 Previous turn is progress: pushed 62e3335 supplies anonymous type ownership and
 ready real Windows member navigation, while field type binding requires actual

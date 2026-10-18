@@ -4,6 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source grouped settings validate the whole candidate before one context
+publication; repeated letters keep the last write with at most 26 copies. Bad
+tails/alignment aliases retain no partial prefix. Typed assembly family/region
+and optional construction observer preserve exact text/spans and isolate selected
+versus discarded conditional/include envelopes. Native region/lexical/policy
+checks pass 28/49/47; whole handwritten assembly executes 42 and all five compiled
+switch values match. Actual System now retains 15,820 tokens/two visits/one
+unsupported MAXFPUREGISTERS policy instead of 50 diagnostics; no System declaration
+view is admitted. Actual ObjPas scoped Char and indexed incomplete objpas refusal
+remain. Fifteen real module checks and maintained 18/22/52/14/157/38/367/7,671/26/
+62/127/10/48/86/74/84 pass; twenty native consumers have clean heaps. Thirty-one
+final compiler logs have zero owned warnings, 49 upstream; seven browser consumers
+and both Studios/backend/worker compile only as applicable. Twenty-seven focused/
+628 complete src+studio/97 prior RTL/three compiler pins, 156 overlapping actual
+unit packets, 48 SysUtils includes, five protected files/nine complete contexts and
+349 frozen 7422453 artifacts stay exact. Readers join; LAN remains offline.
+The lexical envelope qualifies x86 Intel/AT&T spelling, not instruction semantics
+or another assembler dialect. Original interface GUIDs/token ordinals and MCP
+inventory remain unchanged. WORK.md owns retained obsolete-frontier/mode/import
+failures, final receipts and remote identity. At least thirteen documented unclosed
+batches retain full original criterion two; no criterion/task/counter/credit/DONE/
+tool/schema/adoption/parity/delivery closes. Stop switch/assembly/fixture/compiler/
+capture variants. Next reassess remaining compiler policy effects under existing
+context ownership, starting with MAXFPUREGISTERS, then genuine scoped binding/
+import/language and full resolver/editor gates. No host retry, protected mutation,
+cleanup/deletion/restart bypass or sub-agents. Preserve concurrent planning files.
+
 Current-source compiler requirements retain actual ordered expanded expressions,
 original occurrence/span/pre-token state and prefix ownership. Scoped sizeof/
 declared and unplannable IFOPT/failed expansion stay separate from compiler symbol

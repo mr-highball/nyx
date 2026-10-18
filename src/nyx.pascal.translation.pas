@@ -337,22 +337,27 @@ type
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
-  TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver)
+  TTranslationReader = class(TInterfacedObject, INyxPascalLexicalObserver,
+    INyxPascalLexicalRegionObserver)
   public
     Owner: TTranslation;
     Occurrence: Integer;
     Included: Boolean;
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText; var AAllowNestedComments: Boolean);
+    function InitialRegion: TNyxPascalLexicalRegion;
+    function NextRegion: TNyxPascalLexicalRegion;
   end;
   { One conditional frame may cross include boundaries. Taken is three-valued;
-    an unknown branch's writes revoke facts rather than merging a guessed path. }
+    an unknown branch's writes revoke facts rather than merging a guessed path.
+    EntryRegion isolates the lexical envelope of discarded alternate branches. }
   TConditionalFrame = record
     Parent: TNyxPascalKnowledge;
     Taken: TNyxPascalKnowledge;
     HasElse: Boolean;
     Occurrence: Integer;
     Span: TNyxPascalSpan;
+    EntryRegion: TNyxPascalLexicalRegion;
   end;
   { Immutable private frame shares only an owned compiler snapshot and value
     origin. Historical/live vectors may retain it without a translation back link. }
@@ -415,6 +420,10 @@ type
     FResolved: Boolean;
     FBlocked: Boolean;
     FNested: Boolean;
+    { The selected assembly envelope and current physical branch differ while
+      scanning discarded conditionals; includes share both without a back link. }
+    FRegion: TNyxPascalLexicalRegion;
+    FScanRegion: TNyxPascalLexicalRegion;
     FModeSeen: Boolean;
     FCancellation: INyxCancellationScope;
     FConditions: INyxPascalConditionalFacts;
@@ -435,6 +444,7 @@ type
       const AKind, AValue: TNyxText): TNyxPascalKnowledge;
     procedure ChangeSymbol(const AName: TNyxText; AKind: TNyxPascalDefineKind);
     procedure ChangeOption(AName: Char; AValue: TNyxPascalKnowledge);
+    procedure ChangeOptions(const AText: TNyxText);
     procedure UnknownEffect;
   public
     constructor Create(const AFiles: INyxPascalFileCatalog;
@@ -915,6 +925,31 @@ begin
   if not Included or (AToken.Kind <> ptkEOF) then
   begin
 
+    if AToken.Word in [pkwAsm, pkwEnd] then
+    begin
+
+      if AToken.Word = pkwAsm then
+      begin
+        Owner.FScanRegion := plrAssembly;
+      end
+      else
+      begin
+        Owner.FScanRegion := plrPascal;
+      end;
+
+      if Owner.FActive = ppkTrue then
+      begin
+        Owner.FRegion := Owner.FScanRegion;
+      end
+      else if (Owner.FActive = ppkUnknown) and
+        (Owner.FRegion <> Owner.FScanRegion) and not Owner.FBlocked then
+      begin
+        Owner.Problem(ptiLexicalPolicyChange, Occurrence, AToken.Span,
+          'A conditional assembly boundary needs resolved branch activity');
+        Owner.UnknownEffect;
+      end;
+    end;
+
     if AToken.Kind = ptkWord then
     begin
       Owner.Word(Occurrence, AIndex, AToken, AText);
@@ -928,10 +963,27 @@ begin
     begin
       Owner.Directive(Occurrence, AToken, AText);
     end;
+
+    if (AToken.Kind = ptkEOF) and not Owner.FBlocked and
+      (Owner.FRegion = plrAssembly) then
+    begin
+      Owner.Problem(ptiLexicalIssue, Occurrence, AToken.Span,
+        'Finish this assembly block with END');
+    end;
   end;
   { Includes share the caller's compiler state. In particular a nested include
     may change the policy used for this reader's very next physical token. }
   AAllowNestedComments := Owner.FNested;
+end;
+
+function TTranslationReader.InitialRegion: TNyxPascalLexicalRegion;
+begin
+  Result := Owner.FScanRegion;
+end;
+
+function TTranslationReader.NextRegion: TNyxPascalLexicalRegion;
+begin
+  Result := Owner.FScanRegion;
 end;
 
 function SameLexicalView(const ALeft, ARight: INyxPascalLexicalSnapshot;
@@ -962,6 +1014,11 @@ begin
 
     if (LLeft.Kind <> LRight.Kind) or (LLeft.Span.Start <> LRight.Span.Start) or
       (LLeft.Span.Length <> LRight.Span.Length) or (LLeft.Complete <> LRight.Complete) then
+    begin
+      Exit;
+    end;
+
+    if LLeft.Region <> LRight.Region then
     begin
       Exit;
     end;
@@ -1254,6 +1311,92 @@ begin
   SaveState;
 end;
 
+procedure TTranslation.ChangeOptions(const AText: TNyxText);
+var
+  LAt: Integer;
+  LLetter: Char;
+  LSeen: set of 'A'..'Z';
+  LValues: array['A'..'Z'] of TNyxPascalKnowledge;
+  LValue: TNyxPascalKnowledge;
+  LCandidate: INyxPascalCompilerContext;
+begin
+  { Validate the complete group before creating at most 26 context copies. Last
+    authored write wins for repeated letters; a malformed tail publishes neither
+    a partially applied prefix nor a saved historical state for that prefix. }
+  LSeen := [];
+  LAt := 1;
+  repeat
+    while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+    begin
+      Inc(LAt);
+    end;
+
+    if (LAt > Length(AText)) or not (AText[LAt] in ['a'..'z', 'A'..'Z']) then
+    begin
+      raise ENyxPascalContext.Create('A short switch needs one letter');
+    end;
+    LLetter := AText[LAt];
+
+    if LLetter in ['a'..'z'] then
+    begin
+      LLetter := Chr(Ord(LLetter) - 32);
+    end;
+    Inc(LAt);
+
+    if (LAt > Length(AText)) or not (AText[LAt] in ['+', '-']) then
+    begin
+      raise ENyxPascalContext.Create('A short switch needs plus or minus');
+    end;
+    LValue := ppkFalse;
+
+    if AText[LAt] = '+' then
+    begin
+      LValue := ppkTrue;
+    end;
+
+    if FActive = ppkUnknown then
+    begin
+      LValue := ppkUnknown;
+    end;
+
+    if LLetter in ['a', 'A'] then
+    begin
+      { Boolean alignment aliases have mode-specific meanings. No independent
+        Boolean option may replace that unresolved structured compiler policy. }
+      raise ENyxPascalContext.Create('Boolean alignment needs mode-specific capture');
+    end;
+    Include(LSeen, LLetter);
+    LValues[LLetter] := LValue;
+    Inc(LAt);
+    while (LAt <= Length(AText)) and (AText[LAt] in [#9..#13, ' ']) do
+    begin
+      Inc(LAt);
+    end;
+
+    if LAt > Length(AText) then
+    begin
+      Break;
+    end;
+
+    if AText[LAt] <> ',' then
+    begin
+      raise ENyxPascalContext.Create('Short switches need comma separators');
+    end;
+    Inc(LAt);
+  until False;
+  LCandidate := FContext;
+  for LLetter := 'A' to 'Z' do
+  begin
+
+    if LLetter in LSeen then
+    begin
+      LCandidate := LCandidate.WithOption(LLetter, LValues[LLetter]);
+    end;
+  end;
+  FContext := LCandidate;
+  SaveState;
+end;
+
 function ModeNamed(const AName: TNyxText): TNyxPascalLanguageMode;
 const
   CNames: array[TNyxPascalLanguageMode] of TNyxText =
@@ -1468,6 +1611,7 @@ begin
       LFrame.Taken := LCondition;
       LFrame.Occurrence := AOccurrence;
       LFrame.Span := AToken.Span;
+      LFrame.EntryRegion := FScanRegion;
       LAt := Length(FFrames);
       SetLength(FFrames, LAt + 1);
       FFrames[LAt] := LFrame;
@@ -1491,11 +1635,20 @@ begin
 
       if (LName = 'endif') or (LName = 'ifend') then
       begin
+        FScanRegion := FRegion;
+
+        if LFrame.Parent = ppkFalse then
+        begin
+          FScanRegion := LFrame.EntryRegion;
+        end;
         FActive := LFrame.Parent;
         SetLength(FFrames, LAt);
       end
       else
       begin
+        { Each discarded branch is scanned from its own entry envelope. Only
+          selected tokens change FRegion; an inactive END cannot close live ASM. }
+        FScanRegion := LFrame.EntryRegion;
 
         if LFrame.HasElse then
         begin
@@ -1817,6 +1970,14 @@ begin
       Exit;
     end;
 
+    if (Length(LName) = 1) and (Length(LValue) > 0) and
+      (LValue[1] in ['+', '-']) and not
+      ((LName = 'a') and ((LValue = '+') or (LValue = '-'))) then
+    begin
+      ChangeOptions(LName + LValue);
+      Exit;
+    end;
+
     if (LName = 'include') or ((LName = 'i') and not ((LValue = '+') or (LValue = '-'))) then
     begin
       LArgument := LValue;
@@ -1854,18 +2015,6 @@ begin
       Problem(ptiCompilerSettings, AOccurrence, AToken.Span,
         'Boolean alignment aliases need their mode-specific policy; use an explicit captured alignment');
       UnknownEffect;
-      Exit;
-    end;
-
-    if (Length(LName) = 1) and ((LValue = '+') or (LValue = '-')) then
-    begin
-      LCondition := ppkFalse;
-
-      if LValue = '+' then
-      begin
-        LCondition := ppkTrue;
-      end;
-      ChangeOption(LName[1], LCondition);
       Exit;
     end;
 

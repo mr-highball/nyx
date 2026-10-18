@@ -106,6 +106,12 @@ source binding, and prepares per-unit descriptors with bounded native probes.
 Real System/ObjPas roots reach indexed loading with explicit remaining grammar/
 scope failures; preparation does not establish complete RTL or editor adoption.
 
+The [assembly/settings lexical layer](docs/pascal-projects.md#assembly-regions-and-grouped-settings)
+keeps grouped short switches atomic and assembly operands separate from Pascal
+literal meaning. Selected/inactive branches and textual includes retain their
+own region boundaries. Actual System now stops at MAXFPUREGISTERS; full compiler
+policy, implicit-unit binding and ordinary editor adoption remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
