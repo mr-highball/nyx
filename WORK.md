@@ -33,7 +33,102 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed ordinal metadata storage — 2026-10-18
+## Current integration: Single-read syntax predicates — 2026-10-18
+
+40be79e is qualified and pushed: typed ordinal metadata advances the unchanged
+real RTL to round 19/236,257 translated tokens, then syntax-token admission still
+exhausts the original four-million aggregate allowance. Reassessment after forty-
+eight unclosed authoring batches follows original criterion two's remaining real
+read work. Pure predicates repeatedly fetch the same token's kind/word/escape/
+completion fields before any cursor change. The bounded deliverable materializes
+one local immutable token in Word/Sym, hint/routine-clause and nested modifier/
+label predicates, preserving all calls that represent separate helper operations.
+
+This removes real duplicate source reads, not their admission or telemetry alone.
+Offset clamping, maximum read frontier, partial-equal override, source identity,
+original language rules and cancellation remain exact. No cross-call/source cache,
+mode authority, quota, probe, fixture or new fact substitutes for that behavior.
+Existing full differential, every-scalar append, hint/label/procedural-type/operator,
+cancellation and exhaustive work-refusal consumers cover the changed predicates;
+no implementation-mirroring test is added. One frozen maintained qualification and
+unchanged real RTL run decide the batch, then stop predicate/compiler/oracle/
+fixture/capture variants and follow the next concrete owner. No original criterion/
+task/credit/DONE or full source/type/module/incremental/editor/input/quality/parity/
+adoption/delivery closes from this prerequisite. The ignored
+`.local/syntax-predicates-paths-private.json` owns receipts, retained historical
+preservation failures and the exact return path. No host/config retry, protected
+write, cleanup/restart, browser/HTTP/file execution/capture, new MCP tool/schema/
+rollout or sub-agent is authorized. LAN remains offline.
+
+Six predicates now retain one local TNyxPascalToken value for their own kind/
+word/escape/completion checks: Word, Sym, HintWord, RoutineClause, the procedural
+type's Modifier and statement labels' LabelName. No Step or source/cursor change
+occurs between those field checks. Independent Name/HintWord helper calls retain
+their original reads. Sym still fetches its ordinary token before applying the
+current-position partial-equal override. Tok/ReadToken and their offset clamping,
+frontier, cancellation and actual read admission remain untouched. The maximum
+observed read position stays exact; only duplicate reads of that same position
+are eliminated. No mutable cache, additional receipt/type/API or source condition
+is introduced.
+
+Native preflight passes unchanged 4,416 checkpoint checks and 428 work checks,
+clean heaps. The unchanged semantic fixture needs 389 actual admitted units versus
+414, with all 388 smaller allowances refusing. Controlled metadata counts remain
+exact: 481/six/four retained/copied/created values, 55/3,683 allocated nodes,
+12,918 lookups/11,642 hits/6,153 tree reads; the large ordinal fixture retains its
+33,082/5,158/11,597/1,103/six/42 preparation receipt. Existing tests are unchanged;
+lower loop-driven counts reflect fewer actual units, not removed cases. Browser
+preflight compiles only. The one functional source freezes before maintained
+qualification, with no later functional/layout overlay.
+
+The unchanged original RTL run advances from round 19/236,257 translated tokens
+to round 21/267,316, then refuses the same four-million aggregate allowance in
+prefix/lexical-token admission, requested one. Exit one/clean heap is retained as
+a failed gate, with no final System/ObjPas semantic/indexed result. Original source/
+consumer, five initial queries, explicit Word measurement, three/eight symbol
+preparation, generic fact ceiling eight, Longint then Int64 fulfillment and 2M
+view/4M aggregate/64-round limits stay exact. No source, directive, probe or
+ordered answer is omitted or fabricated. The failing admission is a boundary,
+not a complete CPU profile.
+
+Source inspection finds the next distinct lexical prerequisite: translated
+projection Build already obtains each effective token/text and its physical/
+macro/include origin, builds a spaced synthetic text, then sends that text to
+the append lexer for another classification pass. Reassess exact token/row reuse
+through existing projection/append/scanner owners. Incomplete/error recovery,
+assembly envelopes, inserted whitespace, Unicode, lookahead seams and token
+reclassification still require independent full-scan meaning; raw token fields or
+public counters alone grant no reuse authority. Remaining visits/copies/scans
+must stay admitted, with exact identity/cancellation and both caps. Stop predicate/
+fixture/compiler/oracle/capture variants after this frozen qualification. Full
+original criterion/task/credit/DONE/source/type/module/incremental/editor/input/
+quality/parity/adoption/delivery remains open across at least forty-nine unclosed
+batches.
+
+Final frozen qualification accepts 81 successful compiler jobs, zero owned
+warnings/182 unchanged upstream warnings. All 40 maintained native consumers,
+five focused consumers and the actual-source lexical read pass with clean heaps:
+46 successful logs. Native syntax retains 7,991 checks/five actual inputs/3,908
+declarations; the lexical corpus retains 501 actual files/2,322,978 lossless tokens.
+Both Studios/backend/worker and 33 browser consumers compile as applicable;
+browser execution/input/parity remains unqualified. Every group joins normally,
+with no interrupted/resumed or functional-overlay qualification. The original
+RTL exit-one remains a separate failed gate, excluded from passing totals.
+
+One focused/661 maintained/97 RTL/24 compiler inputs plus three inspected compiler
+inputs stay pinned; 660 unrelated maintained sources remain exact. All 156 original
+unit packets/48 retained includes, nine project contexts, 349 frozen 7422453
+artifacts and thirteen concurrent planning files remain exact. Five current-start
+protected files remain exact with no new configuration delta. The earlier original-
+baseline and post-push configuration failures remain historical/retained without
+owned writes/restoration; no original complete preserving gate passes. Terminal
+receipts show zero packet readers/Studio listeners and native Nyx MCP tools remain
+absent. The packet owns exact qualified working/committed source, branch/remote
+identity, final observed protected bytes and next reassessment. Only five owned
+files belong to this checkpoint; concurrent planning stays unstaged. LAN remains
+offline and the full goal remains active.
+
+## Previous integration: Typed ordinal metadata storage — 2026-10-18
 
 176a9de retains qualified direct lexical emission plus the strict post-push
 configuration failure; source/remote identity is exact, original acceptance stays

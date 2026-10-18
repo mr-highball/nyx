@@ -2480,13 +2480,22 @@ begin
 end;
 
 function TSyntaxSnapshot.Word(AWord: TNyxPascalWord; AOffset: Integer): Boolean;
+var
+  LToken: TNyxPascalToken;
 begin
-  Result := (Tok(AOffset).Kind = ptkWord) and (Tok(AOffset).Word = AWord);
+  { Kind and payload belong to one immutable token at this unchanged offset.
+    One real read retains admission/frontier tracking; no shared cursor cache
+    or skipped read charge is introduced. }
+  LToken := Tok(AOffset);
+  Result := (LToken.Kind = ptkWord) and (LToken.Word = AWord);
 end;
 
 function TSyntaxSnapshot.Sym(ASymbol: TNyxPascalSymbol; AOffset: Integer): Boolean;
+var
+  LToken: TNyxPascalToken;
 begin
-  Result := (Tok(AOffset).Kind = ptkSymbol) and (Tok(AOffset).Symbol = ASymbol);
+  LToken := Tok(AOffset);
+  Result := (LToken.Kind = ptkSymbol) and (LToken.Symbol = ASymbol);
 
   if (AOffset = 0) and FPartialEqual then
   begin
@@ -2872,11 +2881,13 @@ end;
 function TSyntaxSnapshot.HintWord(out AKind: TNyxPascalHintKind): Boolean;
 var
   LKey: TNyxText;
+  LToken: TNyxPascalToken;
 begin
   Result := False;
   AKind := phkDeprecated;
+  LToken := Tok;
 
-  if (Tok.Kind <> ptkWord) or Tok.Escaped then
+  if (LToken.Kind <> ptkWord) or LToken.Escaped then
   begin
     Exit;
   end;
@@ -3060,14 +3071,16 @@ function TSyntaxSnapshot.RoutineClause(AScope: Integer): Boolean;
 var
   LFlag: TNyxPascalLinkageFlag;
   LHint: TNyxPascalHintKind;
+  LToken: TNyxPascalToken;
 begin
   Result := False;
+  LToken := Tok;
 
-  if (Tok.Kind <> ptkWord) or Tok.Escaped then
+  if (LToken.Kind <> ptkWord) or LToken.Escaped then
   begin
     Exit;
   end;
-  Result := RoutineModifier(Tok.Word) or HintWord(LHint);
+  Result := RoutineModifier(LToken.Word) or HintWord(LHint);
 
   if LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
   begin
@@ -3421,9 +3434,12 @@ end;
 procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean; AInitializerBoundary: Boolean);
 
   function Modifier(AOffset: Integer): Boolean;
+  var
+    LToken: TNyxPascalToken;
   begin
-    Result := (Tok(AOffset).Kind = ptkWord) and not Tok(AOffset).Escaped and
-      ((Tok(AOffset).Word in [pkwCdecl, pkwStdcall, pkwPascal, pkwSafecall,
+    LToken := Tok(AOffset);
+    Result := (LToken.Kind = ptkWord) and not LToken.Escaped and
+      ((LToken.Word in [pkwCdecl, pkwStdcall, pkwPascal, pkwSafecall,
         pkwRegister, pkwVarargs, pkwInline]) or
         (NyxPascalASCIIKey(Name(AOffset)) = 'syscall') or
         (NyxPascalASCIIKey(Name(AOffset)) = 'vectorcall'));
@@ -3456,10 +3472,12 @@ var
   var
     LText: TNyxText;
     LScalar: Integer;
+    LToken: TNyxPascalToken;
   begin
     { Contextual words may be identifiers. Declaration/body boundaries are never
       consumed as recovery labels; complete compiler keyword admission is separate. }
-    Result := (Tok.Kind = ptkWord) and not (Tok.Word in [pkwBegin, pkwEnd,
+    LToken := Tok;
+    Result := (LToken.Kind = ptkWord) and not (LToken.Word in [pkwBegin, pkwEnd,
       pkwImplementation, pkwInterface, pkwInitialization, pkwFinalization,
       pkwVar, pkwThreadvar, pkwConst, pkwType, pkwResourcestring, pkwLabel,
       pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor, pkwClass,
@@ -3471,7 +3489,7 @@ var
       LName := Name;
       Exit;
     end;
-    Result := (Tok.Kind = ptkNumber) and Tok.Complete;
+    Result := (LToken.Kind = ptkNumber) and LToken.Complete;
 
     if not Result then
     begin

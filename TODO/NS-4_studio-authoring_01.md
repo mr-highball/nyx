@@ -9,7 +9,33 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Typed ordinal prerequisite (2026-10-18): nine numeric row families now use
+Single-read predicate prerequisite (2026-10-18): Word/Sym, hint/routine-clause
+and nested procedural-modifier/statement-label predicates inspect one local
+immutable token value at an unchanged offset. Tok/ReadToken retain ordinary
+clamping, maximum read frontier, cancellation and actual admission. Sym retains
+its initial read before the current-position partial-equal override; independent
+helper calls keep their reads. No cross-call/source cache, fact, quota or language
+rule changes. Unchanged native checkpoint/work preflights pass 4,416/428 with
+clean heaps; the semantic fit falls from 414 to 389 actual units and all 388
+smaller allowances refuse. WORK.md owns the single frozen source, maintained/
+original RTL outcomes, exact preservation/source/remote receipts and return path.
+The unchanged original RTL advances round 19 to 21/267,316 translated tokens,
+then retains a failed four-million aggregate lexical-token gate, clean heap and
+no final semantic/indexed result. Stop predicate/fixture/compiler/oracle/capture
+variants. Next reassess translated projection lexical re-materialization through
+existing projection/append/scanner owners: effective tokens become spaced text
+then are scanned again. Any typed row reuse must preserve independent fresh-scan
+recovery/assembly/Unicode/seam/origin meaning, exact identity, cancellation and
+all actual remaining admission. Raw token classifications grant no authority.
+Full original criterion/task/credit/DONE/source/type/module/incremental/editor/
+input/quality/parity/adoption/delivery remain open.
+All 40 maintained native consumers and 81 accepted compiler jobs pass, zero owned
+warnings; browser consumers compile only. Five current-start protected files/nine
+contexts/349 frozen artifacts remain exact. Historical configuration failures stay
+retained with no original preservation/delivery closure; WORK.md owns final exact
+source/remote identity and the next lexical reuse reassessment.
+
+Historical typed ordinal prerequisite (2026-10-18): nine numeric row families now use
 persistent four-slot pages independently of the exact textual indexes. A compound
 checkpoint seals both root families, with payload COW stamps still gating writes.
 Visited/copied/allocated nodes and bounded directory/root application stay admitted;

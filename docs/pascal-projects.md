@@ -2535,6 +2535,31 @@ These values describe preparation, not CPU time or editor latency. WORK.md owns
 frozen native/compiled-only browser qualification, the unchanged real RTL result,
 preservation failures, source/remote identity and the remaining full outcome.
 
+## Single-read syntax predicates
+
+Pure syntax predicates materialize one immutable token record within their own
+call before inspecting its kind/word/escape/completion fields. This applies to
+Word/Sym, HintWord/RoutineClause and the procedural-type modifier/statement-label
+predicates. These field checks do not move the cursor or change source/context.
+Independent helper calls such as Name or HintWord retain their own reads; no
+token value is shared across a call boundary, parser, source or compiler mode.
+
+Tok/ReadToken retain the same offset clamping, cancellation/admission and maximum
+read frontier. Sym still reads its ordinary token before the current-position
+partial-equal override. No language rule, returned token, conditional answer,
+diagnostic span or structural identity changes. Every remaining source read stays
+admitted; the eliminated work is the duplicate retrieval itself, not a guessed
+telemetry discount or larger budget. The stack-local token retains no source,
+execution capability, callback or mutable cache after the predicate returns.
+
+The existing full/every-scalar append, metadata identity, hint, label, procedural
+type, operator/generic and work-refusal consumers qualify these paths. Their
+sources stay unchanged. The small semantic fixture admits 389 units versus the
+prior 414, with all 388 smaller allowances refusing atomically. Work counts describe
+logical preparation, not CPU time or editor latency. WORK.md owns the frozen
+maintained/unchanged real RTL outcomes, source/remote identity, preservation
+boundaries and the remaining full language/editor/parity/adoption/delivery scope.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

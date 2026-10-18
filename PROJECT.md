@@ -96,8 +96,9 @@ no mutable cache in published readers. [Direct lexical preparation](docs/pascal-
 now emits final append rows from the existing scanner without an intermediate
 vector or byte recount. [Typed ordinal metadata](docs/pascal-projects.md#typed-ordinal-metadata-storage)
 now separates numeric row pages from textual indexes while sealing both in an
-independent checkpoint root. Remaining copy/parser costs and full engine/editor
-quality/adoption remain open.
+independent checkpoint root. [Single-read predicates](docs/pascal-projects.md#single-read-syntax-predicates)
+now inspect one local token value within each pure classification call. Remaining
+copy/parser costs and full engine/editor quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured
