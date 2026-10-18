@@ -9,7 +9,28 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Constant-shift prerequisite (2026-10-18): the actual HeapInc VarSizeQuant failure
+Integer-pattern prerequisite (2026-10-18): exact 64-bit AND/OR/XOR and explicit
+value complement now use bounded byte lanes over existing exact decimal storage.
+Captured FPC/version authority selects ordinary/conditional source integer masks
+and high-bit radix interpretation. Raw token values stay mathematical; source NOT,
+casts and runtime promotion remain separate. Focused native source/value 405 and
+independent compiled FPC 15 pass with clean heaps, including whole object/record
+companions and every bit position. The unchanged original RTL run advances to a
+third binding-derived Pointer measurement, then fails the existing aggregate
+budget at round 26: prefix phase, used 3,971,021/requested 268,501/limit 4,000,000.
+It publishes no final semantic/indexed result and is retained as a failed gate.
+All 40 maintained native consumers pass and 72 current compiler jobs have zero
+owned warnings; browser consumers compile only. All five frozen sources and
+protected/concurrent bytes stay exact, as recorded in WORK.md.
+Do not increase quotas, discount repeated work, add probes or replace SDK facts.
+Stop mask/oracle/fixture/capture variants; reassess genuine incremental reuse of
+preceding syntax/binding prefixes through existing conditions/lexical/syntax/
+binding owners. Preserve exact include/branch/macro/settings state, unfinished
+scope ownership, cancellation and atomic refusal. Full original criterion/task/
+credit/DONE/parity/adoption/delivery remains open. WORK.md owns complete current
+compiler/regression receipts, preservation, failures and the next prerequisite.
+
+Historical constant-shift prerequisite (2026-10-18): the actual HeapInc VarSizeQuant failure
 is first a missing SHL expression plan, not a proved structural scope failure.
 Extend existing exact values/plans with explicit 64-bit shifts, captured compiler
 authority, dialect-specific symbolic aliases and unchanged work/cancellation/

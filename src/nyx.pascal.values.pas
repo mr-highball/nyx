@@ -36,9 +36,12 @@ type
   { Closed logical movement inside the explicit 64-bit constant-value domain.
     This does not describe a platform register or a typed runtime shift. }
   TNyxPascalShiftDirection = (psdLeft, psdRight);
+  { Closed binary operations on the value's explicit 64-bit pattern. Boolean
+    logic is a separate kind; no host register width participates. }
+  TNyxPascalBitwiseOperation = (pbwAnd, pbwOr, pbwXor);
   { Supported integer/Boolean operations. Shift names explicitly select the
-    value's 64-bit constant domain. Integer and/or/xor/not, casts and runtime
-    width/promotion rules remain separate compiler type prerequisites. }
+    value's 64-bit constant domain. AND/OR/XOR select Boolean logic or fixed
+    integer patterns by operand kind; casts and runtime widths stay separate. }
   TNyxPascalValueOperation = (pvoAdd, pvoSubtract, pvoMultiply, pvoDivide,
     pvoRemainder, pvoEqual, pvoNotEqual, pvoLess, pvoLessEqual, pvoGreater,
     pvoGreaterEqual, pvoAnd, pvoOr, pvoXor, pvoShiftLeft64, pvoShiftRight64);
@@ -68,9 +71,9 @@ type
       only explicit Ord projects its exact ordinal into integer arithmetic. }
     function AsOrdinal: TNyxPascalConstantValue;
     function OrdValue: TNyxPascalConstantValue;
-    { Arithmetic refuses unsupported kinds, zero division and overflow. Only
-      the explicitly named 64-bit shifts select modular bit-pattern movement;
-      no target register width or runtime integer promotion is inferred. }
+    { Arithmetic sign change within the checked constant domain. Unsupported
+      kinds and an unrepresentable signed result return Unknown; this does not
+      select modular bit-pattern behavior or infer a target register width. }
     function Negated: TNyxPascalConstantValue;
     { Exact logical zero-fill on a 64-bit two's-complement pattern. Left shift
       discards high bits and retains the left value's signed/unsigned-64 intent;
@@ -79,9 +82,19 @@ type
       Unknown. Decimal steps avoid native overflow and browser 32/53-bit limits. }
     function Shifted64(ADirection: TNyxPascalShiftDirection;
       const ACount: TNyxPascalConstantValue): TNyxPascalConstantValue;
+    { Exact two's-complement pattern combination. A result retains unsigned-64
+      intent when either nonnegative operand supplies it. Uncertain mixed
+      negative/unsigned inputs, Booleans and nominal ordinals return Unknown.
+      Decimal conversion and bounded byte lanes avoid whole-value browser
+      bitwise/number coercion; each native logical operand is at most 255. }
+    function Bitwise64(AOperation: TNyxPascalBitwiseOperation;
+      const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
+    { Explicit 64-bit complement retaining this value's interpretation. This
+      API does not infer the width/promotion of Pascal's source-level NOT. }
+    function Complemented64: TNyxPascalConstantValue;
     { Apply one closed operation. Arithmetic keeps its checked value domain;
-      explicitly named shifts delegate to Shifted64 and Boolean logic remains
-      distinct from integer bitwise operators requiring further type rules. }
+      explicitly named shifts delegate to Shifted64. Boolean logic remains
+      distinct from fixed-domain integer AND/OR/XOR; runtime rules stay separate. }
     function Operate(AOperation: TNyxPascalValueOperation;
       const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
     { True only for known Boolean or the exact integers zero/one. }
@@ -406,6 +419,127 @@ begin
   end;
 end;
 
+function TNyxPascalConstantValue.Bitwise64(AOperation: TNyxPascalBitwiseOperation;
+  const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
+const
+  CHexDigits: TNyxText = '0123456789abcdef';
+var
+  LLeft: TNyxDecimalNumber;
+  LRight: TNyxDecimalNumber;
+  LResult: TNyxDecimalNumber;
+  LModulus: TNyxDecimalNumber;
+  LQuotient: TNyxDecimalNumber;
+  LRemainder: TNyxDecimalNumber;
+  LLeftByte: Integer;
+  LRightByte: Integer;
+  LResultByte: Integer;
+  LHex: TNyxText;
+  LUnsigned: Boolean;
+  LAt: Integer;
+begin
+  Result := Unknown;
+
+  if (Ord(AOperation) < Ord(Low(TNyxPascalBitwiseOperation))) or
+    (Ord(AOperation) > Ord(High(TNyxPascalBitwiseOperation))) or
+    (FKind <> pvvInteger) or (AOther.FKind <> pvvInteger) then
+  begin
+    Exit;
+  end;
+  LUnsigned := FUnsigned or AOther.FUnsigned;
+
+  if LUnsigned and (FNumber.Negative or AOther.FNumber.Negative) then
+  begin
+    Exit;
+  end;
+  LModulus := Exact('18446744073709551616');
+  LLeft := FNumber;
+  LRight := AOther.FNumber;
+
+  if LLeft.Negative then
+  begin
+    LLeft := LLeft.Add(LModulus);
+  end;
+
+  if LRight.Negative then
+  begin
+    LRight := LRight.Add(LModulus);
+  end;
+  LHex := '';
+  for LAt := 0 to 7 do
+  begin
+    { Each exact remainder is proven in 0..255 before narrowing. Pascal/JS
+      integer logical operators therefore cannot truncate a significant bit.
+      The assembled hexadecimal packet stays textual until exact decoding. }
+    Divide(LLeft, TNyxDecimalNumber.FromInteger(256), LQuotient, LRemainder);
+    LLeft := LQuotient;
+    LLeftByte := StrToInt(String(LRemainder.ToText));
+    Divide(LRight, TNyxDecimalNumber.FromInteger(256), LQuotient, LRemainder);
+    LRight := LQuotient;
+    LRightByte := StrToInt(String(LRemainder.ToText));
+    LResultByte := 0;
+    case AOperation of
+      pbwAnd:
+        begin
+          LResultByte := LLeftByte and LRightByte;
+        end;
+      pbwOr:
+        begin
+          LResultByte := LLeftByte or LRightByte;
+        end;
+      pbwXor:
+        begin
+          LResultByte := LLeftByte xor LRightByte;
+        end;
+    end;
+    LHex := CHexDigits[LResultByte div 16 + 1] +
+      CHexDigits[LResultByte mod 16 + 1] + LHex;
+  end;
+  LResult := NyxPascalIntegerToken('$' + LHex, 16).Number;
+
+  if not LUnsigned and (LResult.CompareTo(Exact('9223372036854775808')) >= 0) then
+  begin
+    LResult := LResult.Subtract(LModulus);
+  end;
+  Result := ExactInteger(LResult);
+
+  if LUnsigned then
+  begin
+    Result := Result.AsUnsigned;
+  end;
+end;
+
+function TNyxPascalConstantValue.Complemented64: TNyxPascalConstantValue;
+var
+  LBits: TNyxDecimalNumber;
+  LModulus: TNyxDecimalNumber;
+begin
+  Result := Unknown;
+
+  if FKind <> pvvInteger then
+  begin
+    Exit;
+  end;
+  LModulus := Exact('18446744073709551616');
+  LBits := FNumber;
+
+  if LBits.Negative then
+  begin
+    LBits := LBits.Add(LModulus);
+  end;
+  LBits := Exact('18446744073709551615').Subtract(LBits);
+
+  if not FUnsigned and (LBits.CompareTo(Exact('9223372036854775808')) >= 0) then
+  begin
+    LBits := LBits.Subtract(LModulus);
+  end;
+  Result := ExactInteger(LBits);
+
+  if FUnsigned then
+  begin
+    Result := Result.AsUnsigned;
+  end;
+end;
+
 function TNyxPascalConstantValue.Operate(AOperation: TNyxPascalValueOperation;
   const AOther: TNyxPascalConstantValue): TNyxPascalConstantValue;
 var
@@ -463,6 +597,21 @@ begin
   if (FKind <> pvvInteger) or (AOther.FKind <> pvvInteger) then
   begin
     Exit;
+  end;
+
+  if AOperation = pvoAnd then
+  begin
+    Exit(Bitwise64(pbwAnd, AOther));
+  end;
+
+  if AOperation = pvoOr then
+  begin
+    Exit(Bitwise64(pbwOr, AOther));
+  end;
+
+  if AOperation = pvoXor then
+  begin
+    Exit(Bitwise64(pbwXor, AOther));
   end;
 
   if ((FUnsigned or AOther.FUnsigned) and

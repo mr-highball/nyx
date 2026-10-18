@@ -33,7 +33,84 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Exact constant-domain shifts — 2026-10-18
+## Current integration: Exact integer masks and source-radix meaning — 2026-10-18
+
+16d6f35 reached HeapInc's MaxVarChunkSize initializer, which combines shifted
+arithmetic with integer AND and a negative mask. Existing exact constant values
+now support closed AND/OR/XOR operations and an explicit 64-bit complement.
+Eight byte lanes combine only proven 0..255 values; complete patterns remain in
+exact decimal/text storage, preserving every bit beyond browser number precision.
+Signed interpretation and unsigned-64 intent survive small/zero results. Uncertain
+negative/unsigned mixtures refuse; Boolean logic and nominal ordinals stay distinct.
+Source evaluation requires captured FPC/version authority. Ordinary high-bit radix
+literals now retain FPC's signed interpretation, while decimal UInt64 and the raw
+mathematical integer-token contract remain separate. Source integer NOT, casts,
+narrow/runtime promotion and other compilers' rules remain unqualified.
+
+Five focused sources are frozen before the maintained qualification, located by
+the ignored `.local/integer-masks-paths-private.json` packet. Native source/value
+checks pass 405, including whole compiled object/record masks, six ordered source
+conditions and identities across all 64 bit positions. An independent actual FPC
+oracle passes 15. Both heaps are clean. Early mixed negative/UInt64 observational
+expressions are rejected by FPC and retained as failures; an orchestration attempt
+against a missing executable after that rejected build is not execution evidence.
+Guarded subsequent observation succeeds. The first value implementation also
+emitted an owned partial-case warning, repaired before the freeze. Replacing its
+bitwise conversion with byte lanes reduces allocation on the same 148-check input
+from 3,101,524 blocks/53,076,547 bytes to 883,842/21,911,602, both clean; this is a
+focused observation, not a general performance or browser-execution claim.
+
+The unchanged original RTL consumer is a retained failed gate, terminal exit one
+with a clean heap. It reaches a third generic binding-derived Pointer measurement
+after Longint/Int64, then exhausts the unchanged 4M aggregate at logical round 26:
+prefix phase, 3,971,021 used, 268,501 requested, 268,502 translated tokens. The
+remaining allowance is 28,979; the independent full-view cap remains 2M and the
+round ceiling 64. No final System/ObjPas semantic or indexed completion result is
+published. Prior successful indexed Free/FreeInstance evidence remains historical;
+it is not a successful current full RTL result. No quota, probe, source packet,
+directive or expected full-consumer oracle changes to pass this boundary.
+
+Stop mask/oracle/fixture/compiler/capture variants after this qualification. Next
+reassess actual reuse of preceding syntax/binding prefixes through the existing
+conditions/lexical/syntax/binding owners. One source traversal still reparses
+growing frozen prefixes for successive questions; repeated work remains charged.
+Incremental reuse must preserve exact physical origins, include/branch/macro/
+lexical/settings state, unfinished enclosing declarations, source/context identity,
+work accounting, cancellation and atomic refusal. Do not discount repeated work,
+infer fixed SDK facts, skip conditions or raise the original limits. Full canonical
+typing/layout, retained syntax diagnostics, incremental/editor/input/quality/parity/
+adoption/delivery and original criterion/task/credit/DONE remain open. No new tool,
+schema, helper process or Studio engine is installed. Execution remains solo;
+browser products compile only and LAN remains offline.
+
+All 40 maintained native consumers and the independent compiler oracle pass with
+clean heaps. The additional actual-source reading passes lexical 566 across 499
+files/2,290,249 lossless tokens; ordinary syntax passes 7,807 across five inputs/
+3,802 declarations. Counts overlap. All 72 current compiler jobs succeed with
+zero owned warnings/168 upstream. Both Studios/backend/worker and 28 browser
+consumers compile as applicable. The historical diagnostic-emission compiler log
+is an exact read-only test input, excluded from those current jobs. The failed
+original RTL run remains separate from the 42 passing native log receipts. All
+five frozen source bytes remain unchanged through qualification; no post-freeze
+layout overlay or uninterrupted full-RTL success is claimed. The original five
+primitive queries, explicit Word job, symbol preparation three/eight ceilings and
+generic fact-job ceiling eight remain unchanged.
+
+Original reader session 64078/PID 4216 is terminal exit one; native/regression/
+products sessions 73792/99820/11887 are terminal exit zero. None is a live handle.
+Five focused sources, 656 unchanged prior maintained sources, 97 RTL/24 retained
+compiler inputs and three additional inspected compiler sources remain exact;
+current maintained inventory is 659. All 156 original unit packets, 48 retained
+includes, five protected files/nine complete contexts, 349 frozen 7422453 artifacts
+and 13 concurrent planning files remain exact. Native Nyx MCP handles remain
+absent. No fallback transport, host/config retry, browser/HTTP/file execution/
+capture, protected mutation, cleanup/restart, approval bypass or sub-agents occurs.
+Full original criterion/task/credit/DONE and language/incremental/editor/input/
+quality/parity/adoption/delivery remain open across at least thirty-seven unclosed
+batches. The current failure makes genuine prefix-analysis reuse the next gate;
+do not substitute more masking fixtures or a relaxed integration oracle.
+
+## Previous integration: Exact constant-domain shifts — 2026-10-18
 
 6e3aa4f reached VarSizeQuant in the actual HeapInc object. Source inspection and
 a failed direct `1 shl 5` test show the first cause is missing expression grammar,

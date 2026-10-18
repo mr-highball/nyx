@@ -98,11 +98,13 @@ type
     Array indexing, casts and ordinary function invocation are not evaluated. }
   TConstantNodeKind = (cnValue, cnName, cnPositive, cnNegative, cnNot, cnBinary,
     cnLow, cnHigh, cnSize, cnDeclared, cnDefined, cnOrd);
-  { Value-only node with snapshot-local child ordinals. No interface fields or
-    target pointer survives in a plan's copied arena. }
+  { Value-only node with snapshot-local child ordinals. Literal radix remains
+    syntax provenance, allowing evaluation in its actual compiler context.
+    No interface fields or target pointer survives in a plan's copied arena. }
   TConstantNode = record
     Kind: TConstantNodeKind;
     Literal: TNyxPascalConstantValue;
+    LiteralBase: TNyxPascalNumberBase;
     Name: TNyxText;
     Left: Integer;
     Right: Integer;
@@ -344,6 +346,7 @@ begin
         FSupported := False;
       end;
       try
+        FNodes[Result].LiteralBase := Tok.NumberBase;
         FNodes[Result].Literal := NyxPascalIntegerToken(FLexical.Text(FAt), LBase);
 
         if (FOptions.Dialect = pcdFPCConditional) and (LBase <> 10) and
@@ -1309,6 +1312,25 @@ begin
       cnValue:
         begin
           Result := LNode.Literal;
+
+          if (Result.Kind = pvvInteger) and (LNode.LiteralBase <> pnbDecimal) and
+            (Result.Number.CompareTo(TNyxDecimalNumber.FromDecimal(
+              NyxDecimal('9223372036854775807'))) > 0) then
+          begin
+            LContext := ContextAt(ASite);
+
+            if (LContext = nil) or (LContext.Family <> ppcFPC) or
+              (LContext.Version.FullNumber = 0) then
+            begin
+              Refuse(pbiCompilerContext);
+              Exit(TNyxPascalConstantValue.Unknown);
+            end;
+            { Ordinary FPC source also interprets a high-bit radix token as a
+              signed pattern. Keep raw token interchange mathematical; only
+              this compiler-bound source evaluation selects that projection. }
+            Result := TNyxPascalConstantValue.ExactInteger(Result.Number.Subtract(
+              TNyxDecimalNumber.FromDecimal(NyxDecimal('18446744073709551616'))));
+          end;
         end;
       cnPositive, cnNegative, cnNot:
         begin
@@ -1356,6 +1378,19 @@ begin
           end;
           LLeft := NodeValue(APlan, LNode.Left, ASite);
           LRight := NodeValue(APlan, LNode.Right, ASite);
+
+          if (LLeft.Kind = pvvInteger) and (LRight.Kind = pvvInteger) and
+            (LNode.Operation in [pvoAnd, pvoOr, pvoXor]) then
+          begin
+            LContext := ContextAt(ASite);
+
+            if (LContext = nil) or (LContext.Family <> ppcFPC) or
+              (LContext.Version.FullNumber = 0) then
+            begin
+              Refuse(pbiCompilerContext);
+              Exit;
+            end;
+          end;
           Result := LLeft.Operate(LNode.Operation, LRight);
         end;
       cnDefined:

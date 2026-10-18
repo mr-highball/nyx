@@ -27,7 +27,7 @@ uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.constants,
   nyx.pascal.values, nyx.pascal.conditions
   {$ifndef PAS2JS}, nyx.pascal.files.native, nyx.pascal.modules,
-  constant.meaning.fixture, shift.meaning.fixture{$endif};
+  constant.meaning.fixture, shift.meaning.fixture, mask.meaning.fixture{$endif};
 
 var
   GChecks: Integer;
@@ -129,7 +129,7 @@ begin
   Number(LSite, 'Low(Int64)', '-9223372036854775808');
   Number(LSite, 'High(QWord)', '18446744073709551615');
   Number(LSite, '9007199254740993+2', '9007199254740995');
-  Number(LSite, '$ffffffffffffffff', '18446744073709551615');
+  Number(LSite, '$ffffffffffffffff', '-1');
   Number(LSite, '%101010', '42');
   Number(LSite, '&52', '42');
   Number(LSite, '2+5*8', '42');
@@ -272,6 +272,81 @@ begin
     'Ordinary Pascal symbolic shifts do not expand FPC conditional grammar');
 end;
 
+procedure IntegerMasks;
+var
+  LSite: INyxPascalBindingSite;
+  LResult: INyxPascalConstantResult;
+  LOriginal: TNyxPascalConstantValue;
+  LValue: TNyxPascalConstantValue;
+  LBit: TNyxPascalConstantValue;
+  LAll: TNyxPascalConstantValue;
+  LAt: Integer;
+begin
+  LSite := Site('unit MaskValues; interface implementation end.', Facts);
+  Number(LSite, '63 and 42', '42');
+  Number(LSite, '32 or 10', '42');
+  Number(LSite, '63 xor 21', '42');
+  Number(LSite, '(-1) and 42', '42');
+  Number(LSite, '(-64) or 42', '-22');
+  Number(LSite, '(-1) xor 42', '-43');
+  Number(LSite, '(416 + (1 shl 10 - 1) shl 10) and -32', '1047968');
+  Number(LSite, 'High(QWord) and High(QWord)', '18446744073709551615');
+  Number(LSite, 'High(QWord) or 0', '18446744073709551615');
+  Number(LSite, 'High(QWord) xor High(QWord)', '0');
+  Number(LSite, '$8000000000000001', '-9223372036854775807');
+  Number(LSite, '$8000000000000001 and $f000000000000003', '-9223372036854775807');
+  Number(LSite, '9223372036854775809 and 17293822569102704643', '9223372036854775809');
+  Number(LSite, '9007199254740993 xor 1', '9007199254740992');
+  Number(LSite, '(-1) xor (-1)', '0');
+  LOriginal := TNyxPascalConstantValue.IntegerValue(42);
+  LValue := LOriginal.Complemented64;
+  Check((LValue.Number.ToText = TNyxText('-43')) and not LValue.IsUnsigned and
+    (LOriginal.Number.ToText = TNyxText('42')), 'Explicit signed complement preserves its independent operand');
+  Check(LValue.Complemented64.Number.ToText = TNyxText('42'),
+    'Double explicit complement restores the exact signed pattern');
+  LValue := TNyxPascalConstantValue.IntegerValue(1).AsUnsigned.Complemented64;
+  Check(LValue.IsUnsigned and (LValue.Number.ToText = TNyxText('18446744073709551614')),
+    'Explicit unsigned complement retains all 64 bits beyond browser native operators');
+  LValue := LValue.Bitwise64(pbwAnd, TNyxPascalConstantValue.IntegerValue(0));
+  Check(LValue.IsUnsigned and (LValue.Number.ToText = TNyxText('0')),
+    'A cleared result still retains explicit unsigned-64 intent');
+  LAll := NyxPascalIntegerToken('$ffffffffffffffff', 16);
+  for LAt := 0 to 63 do
+  begin
+    LBit := TNyxPascalConstantValue.IntegerValue(1).AsUnsigned.Shifted64(psdLeft,
+      TNyxPascalConstantValue.IntegerValue(LAt));
+    Check(LBit.Bitwise64(pbwAnd, LAll).Number.ToText = LBit.Number.ToText,
+      'Every bit position survives the all-ones identity across byte boundaries');
+    Check(LBit.Bitwise64(pbwXor, LBit).Number.ToText = TNyxText('0'),
+      'Every bit position cancels under self XOR');
+    Check(LBit.Bitwise64(pbwOr, TNyxPascalConstantValue.IntegerValue(0)).Number.ToText =
+      LBit.Number.ToText, 'Every bit position survives the zero OR identity');
+    Check(LBit.Complemented64.Complemented64.Number.ToText = LBit.Number.ToText,
+      'Complement involution preserves every explicit unsigned bit position');
+  end;
+  Check(TNyxPascalConstantValue.BooleanValue(True).Complemented64.Kind = pvvUnknown,
+    'Explicit integer complement cannot silently accept a Boolean');
+  LValue := NyxPascalIntegerToken('$ffffffffffffffff', 16);
+  Check(LValue.IsUnsigned and (LValue.Number.ToText = TNyxText('18446744073709551615')),
+    'Raw integer-token interchange remains mathematical independently of compiler source interpretation');
+  LResult := Evaluate(LSite, 'not 1');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue <> pbiNone),
+    'Source NOT retains its separate width/promotion prerequisite');
+  LSite := Site('unit OtherMasks; interface implementation end.',
+    NewNyxPascalCompilerContext(ppcPas2JS, TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi));
+  LResult := Evaluate(LSite, '63 and 42');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue = pbiCompilerContext),
+    'Integer masking cannot borrow another compiler family from the analyzer host');
+  LResult := Evaluate(LSite, '$ffffffffffffffff');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue = pbiCompilerContext),
+    'A high-bit source radix token requires its actual compiler authority');
+  LSite := Site('unit MissingMaskAuthority; interface implementation end.',
+    NewNyxPascalCompilerContext(ppcFPC, TNyxPascalCompilerVersion.Create(0, 0, 0), ppmDelphi));
+  LResult := Evaluate(LSite, '63 and 42');
+  Check((LResult.Value.Kind = pvvUnknown) and (LResult.Issue = pbiCompilerContext),
+    'An unknown compiler version cannot acquire integer pattern semantics');
+end;
+
 procedure Refusals;
 var
   LSite: INyxPascalBindingSite;
@@ -283,11 +358,12 @@ var
   LValue: TNyxPascalConstantValue;
   LConditional: TNyxPascalConstantOptions;
 const
-  CUnknown: array[0..13] of TNyxText = ('Loop', 'Variable', '1 div 0',
+  CUnknown: array[0..15] of TNyxText = ('Loop', 'Variable', '1 div 0',
     '18446744073709551615+1', '-9223372036854775808-1',
-    '2 and 1', 'not 1', 'Ord(true)+High(Word)+High(QWord)', 'Missing',
+    'High(QWord) and (-1)', 'not 1', 'Ord(true)+High(Word)+High(QWord)', 'Missing',
     '(High(QWord)-High(QWord))-1', '9223372036854775807+1',
-    '-9223372036854775808 div -1', '-1<High(QWord)', '-Low(Int64)');
+    '-9223372036854775808 div -1', '-1<High(QWord)', '-Low(Int64)',
+    'High(QWord) or (-1)', 'High(QWord) xor (-1)');
 begin
   LSite := Site('unit Refusal; interface const Loop=Loop+1; ' +
     'var Variable:Word; implementation end.', Facts);
@@ -466,6 +542,24 @@ begin
   Number(LSite, 'TShiftedObject.Wide', '18014398509481986');
   Number(LSite, 'Wrapped', '-9223372036854775808');
   Number(LSite, 'ZeroFilled', '9223372036854775807');
+  Check(NativeMaskMeaning, 'The whole FPC companion independently executes signed and unsigned source masks');
+  LCapture := CaptureNyxPascalSourceDirectory(ARepo + '/tests', NewNyxPascalFileCatalog(pfcExact),
+    NewNyxPascalModuleCatalog, TNyxPascalDirectoryOptions.Defaults.OnlyFile('mask.meaning.fixture.pas'));
+  LSemantic := NewNyxPascalSemanticTranslation(LCapture.Files, LCapture.Modules.Entry(0).Root,
+    Facts, NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults),
+    TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+    TNyxPascalConditionalOptions.Defaults);
+  Check(LSemantic.Source.Resolved and not LSemantic.Pending and (LSemantic.Answers = 6),
+    'Unfinished object/record masks and source radix values resolve from exact preceding declarations');
+  LView := NewNyxPascalTranslatedSyntax(LSemantic.Source, TNyxPascalSyntaxOptions.Defaults);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LSite := LWorld.At(0, 0, LView.Syntax.Lexical.Scalars);
+  Number(LSite, 'TMaskedObject.Maximum', '1047968');
+  Number(LSite, 'TMaskedRecord.Maximum', '48');
+  Number(LSite, 'Wide', '9007199254740992');
+  Number(LSite, 'Pattern', '-9223372036854775807');
+  Number(LSite, 'UnsignedMask', '18446744073709551615');
+  Number(LSite, 'DecimalPattern', '9223372036854775809');
 end;
 {$endif}
 
@@ -473,6 +567,7 @@ begin
   try
     ValuesAndScopes;
     ShiftContracts;
+    IntegerMasks;
     Refusals;
     OrderedConditions;
     {$ifndef PAS2JS}

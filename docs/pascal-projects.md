@@ -2135,8 +2135,28 @@ this analyzer build's operators. Declaration initializers retain their ordinary
 Pascal dialect even when used by a source condition. Whole compiled object/record
 companions qualify earlier local constants, repeated names in distinct owners,
 values beyond 2^53 and logical shifts of negative values. This is a constant-fold
-facility; integer and/or/xor/not, casts, narrower arithmetic promotions and runtime
-width rules retain their existing separate prerequisites.
+facility; casts, narrower arithmetic promotions and runtime width rules retain
+their existing separate prerequisites.
+
+`Bitwise64(TNyxPascalBitwiseOperation, AOther)` combines exact 64-bit integer
+patterns through closed AND/OR/XOR choices. `Operate` selects these patterns for
+integer operands and keeps Boolean logic separate. Eight bounded byte lanes
+combine only values 0..255; the complete operand/result never enters a native
+register or JavaScript bitwise/number conversion. Signed operands use two's-
+complement interpretation. Explicit unsigned-64 intent survives small/zero results;
+uncertain negative/unsigned mixtures, Booleans and nominal ordinals refuse.
+`Complemented64` is an explicit value-domain operation; it does not implement
+source-level integer NOT, whose width/promotion semantics remain unqualified.
+
+Source integer AND/OR/XOR requires captured FPC/version authority in both supported
+source dialects. Radix syntax also retains compiler meaning: ordinary FPC and
+conditional high-bit radix literals use signed-64 interpretation, while decimal
+UInt64 values remain distinct. The raw `NyxPascalIntegerToken` entry keeps its
+mathematical value independently of that compiler-bound source projection. Whole
+compiled object/record companions exercise actual mask/flag initializers and six
+ordered conditions; an independent native compiler oracle checks the same
+language boundary. WORK.md records the unchanged RTL consumer's actual frontier,
+native qualification and browser compilation without claiming browser execution.
 
 `TNyxPascalConstantOptions.InDialect` distinguishes ordinary Pascal from FPC's
 separate conditional expression language. Parsed plans cannot change dialect at
