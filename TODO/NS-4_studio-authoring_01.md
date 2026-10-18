@@ -55,6 +55,17 @@ provider/editor/source-admission guards. Full dynamic lexical/compiler/SDK captu
 alias/inheritance/interface/generic/overload/helper meaning, incremental budgets,
 navigation, ordinary editor and both-target quality remain original requirements.
 
+The first [owned scoped binding kernel](../docs/pascal-projects.md#scoped-name-and-type-binding)
+now resolves supported lexical/direct-unit names, explicit aliases/forward types
+and ordinary members/ancestors with caller visibility and exact-world handles.
+Native tests bind actual badge/member/result identity and execute the exact
+compiled visibility fixtures; browser consumer compiles only. This is not general
+type checking or a provider rollout. Next generic environments/substitution,
+complete helper/overload/expression meaning and bounded candidate enumeration must
+advance the existing completion boundary. Complete SDK/compiler/grammar capture,
+incremental/project-scale budgets, editor/navigation and full quality/parity/delivery
+remain original scope; no full criterion/task/counter/credit closes.
+
 Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now uses shared recent-file timelines in both adapters. Native keyboard/context
 Undo, readonly/recreation/modal and stale-source journeys are qualified; browser

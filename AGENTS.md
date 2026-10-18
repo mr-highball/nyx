@@ -4,6 +4,23 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source owned scoped Pascal binding resolves supported lexical/direct-unit
+names, aliases/forward identities and ordinary members/ancestors with caller
+visibility and exact-world handle guards. Native 62 checks pass, clean heap,
+including exact compiled fixture units and selected real badge/ancestor/result
+binding at physical SDK declarations. The minimal System fixture is controlled
+data, not real SDK qualification. Two final compiler logs have zero owned warnings
+(seven upstream RTL); browser consumer/fixtures compile only. Four new input pins,
+six committed actual controls inputs, five protected files/nine complete contexts
+and 349 frozen 7422453 artifacts stay exact; LAN remains offline. WORK.md owns
+receipts/failures and original authoring/service scope. Stop basic binding/visibility/
+fixture/compiler variants; next generic environments/substitution and bounded
+member/completion candidates through the existing provider. Full helper/overload/
+expression/compiler/SDK/grammar/incremental/budget/editor/navigation/quality/parity/
+delivery stay open. No full criterion/task/counter/credit/DONE/MCP schema/engine/
+rollout closes. No HTTP retry, protected configuration/cleanup bypass, deletion
+or sub-agents.
+
 Current-source structured types and translated declarations retain exact physical
 file/occurrence/context origins through analysis-only projection. Native type/origin
 357 and maintained syntax 7,602 pass, clean heaps. Actual controls/five includes

@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Structured types and translated physical origins — 2026-10-17
+## Current integration: Owned scoped name/type/member binding — 2026-10-17
+
+Previous goal turn is progress: pushed 0285470 establishes structured types and
+translated physical origins. New nyx.pascal.binding now connects those owned
+layers into real supported semantic lookup under original NS-4 authoring criterion
+two and existing service ownership. The full modern resolver/editor/quality scope
+is unchanged; no historical CodeTools helper is adopted or executed.
+
+The immutable module world owns translated source views, cached interface
+boundaries and explicit compiler-family/version metadata. Replacement detaches
+the vector; sites, declaration handles and receiver types retain their exact
+world and refuse cross-world reuse. Results point outward into those worlds;
+worlds cache no query/type/site backreferences. No editor/document cycle or
+filesystem/provider fallback is introduced.
+
+Name binding implements supported lexical shadowing, declaration order, direct
+unit exports/reverse uses order and exact qualification. Implementation globals
+stay private to the unit; own-unit qualification keeps caller-position visibility.
+Missing later imports stop search instead of choosing an earlier export, with a
+related unit name for focused capture. Forward type identity joins its later
+completion even when the original reference preceded it. Explicit aliases and
+distinct identities retain their wrapper/underlying meanings.
+
+Supported declared/constructed/procedural types bind names in parameters/results
+through the same scopes. Language intrinsic identity is separate from inferred
+size/layout, ABI, bounds/default evaluation and assignment compatibility. Ordinary
+members/ancestors use caller unit/class visibility, explicit instance/type receiver
+intent, inherited candidate/cycle checks and source origins. The owning class's
+name remains lexical; unmodeled generic placeholders cannot bind to outer names.
+Generic environments, helper rules, general expression inference and overload call
+selection remain explicit gaps; alternatives are never presented as one selected
+call. This is not a complete compiler type checker or admission boundary.
+
+Evidence behind ignored .local/pascal-binding-paths-private.json:
+
+- source-pins-final-private.json pins the new kernel, two exact compiled fixture
+  units and the maintained consumer before final compilers/runtime. Six unchanged
+  actual Nyx controls/include files are pinned against committed baseline blobs
+  in actual-input-pins-final-private.json. Every owned reader joins; no source
+  changes while a compiler/runtime/helper reads it.
+- logs/binding-final-run.log passes 62 native assertions, clean heap. Direct use
+  order, qualification, implementation exports, aliases/distinct types, forward
+  completion, callback parameter/result binding, nested parameter shadowing,
+  exact-world symbol/site/type refusal, inherited/member visibility, ambiguous
+  names, explicit overload families, alias cycles, missing-unit context and
+  module/step/depth/candidate/pre-cancellation refusal pass.
+- tests/binding.fixture.base.pas and binding.fixture.child.pas are both compiled
+  into that actual program and captured byte-for-byte for analysis. Their native
+  ordinary constructor/fluent/protected/strict-protected/private behavior executes.
+  Selected supported caller access decisions agree with those compiler oracles;
+  no complete receiver/helper/overload/visibility parity is claimed.
+- A handwritten minimal System source fixture isolates implicit roots/imports.
+  It is controlled test data, not the real System unit, an installed SDK resolver
+  or proof of complete SDK capture. General builtin layout/ABI remains unclaimed.
+- Actual nyx.controls and five includes bind INyxBadge's forward/full identity,
+  its own WithText member and that member's result back to the same declaration.
+  GetContent resolves through INyxControl. Bound definition origins remain the
+  real controls.types.inc and controls.pas respectively. This is real selected
+  SDK binding, not full SDK grammar/dependencies or every member/type qualified.
+- logs/binding-final-compile.log and binding-browser-final-compile.log pass with
+  zero owned warnings/seven upstream pas2js RTL warnings. The browser consumer
+  and fixture units compile only; their execution/ownership/parity stays separate.
+  No prior product unit changes. Studio/backend/default provider are unchanged.
+
+Retained preparations: binding-unit-1 compiles the kernel. binding-1 compiles on
+both targets, then native callback binding incorrectly traverses a signature's
+result sibling as another parameter group and refuses on an invalid node index.
+Native failure cleanup is heap-clean; nothing is published to an editor. Typed
+sibling-role guards fix the traversal and preserve grouped parameter counts.
+binding-2 passes 52; review adds focused gap names, own-unit/System qualification,
+exact-world receiver checks and ambiguity/candidate tests. binding-3 passes 59.
+Final contracts clarify explicit inspection versus authored caller access, intrinsic
+syntax-node absence and independent module/depth refusal. Only final compiler/
+runtime receipts are accepted; preparatory failures/receipts remain retained.
+
+Five protected files/nine complete contexts/history/drafts/profile and 349 frozen
+7422453 artifacts remain exact. Native Nyx tools remain absent; no active design
+changes. LAN stays offline. No HTTP/browser execution, capture, protected
+configuration/enrollment/cleanup retry, approval bypass, deletion or sub-agent
+occurs. Tools stay 24/frozen 23 and eighteen Pascal modes. No new MCP schema/kind,
+original full criterion/task/counter/credit/DONE, full resolver/parity or rollout
+closes. Final-checkpoint-private.json owns exact source/remote, terminal, pin,
+compiler and preservation receipts. The original full Nyx/Studio goal stays active.
+
+Stop basic-binding/visibility/fixture/compiler variants. Next implement generic
+parameter environments/substitution and bounded member/completion candidates
+through the existing typed provider seam. Full helper/inherited-overload/expression
+meaning, target/compiler/default/SDK coherence, broader incomplete grammar, query
+text/transport budgets, incremental/cancellable world construction/dependencies,
+project-scale performance, editor/navigation/input/accessibility/visual/parity and
+preserving delivery remain original requirements. Existing source admission and
+revision/permission guards stay independent of semantic suggestions.
+
+## Prior integration: Structured types and translated physical origins — 2026-10-17
 
 Previous goal turn is progress: pushed 4989ad9 captures compiler/include context.
 This batch advances its next type/syntax prerequisite under original NS-4 authoring

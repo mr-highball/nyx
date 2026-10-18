@@ -48,6 +48,12 @@ authored files. Native checks follow the actual badge result/parameter back to i
 physical include; browser consumers compile only. Scoped semantic binding and
 full provider/editor/grammar/context/quality/parity remain open.
 
+The first owned [scoped binding kernel](docs/pascal-projects.md#scoped-name-and-type-binding)
+now follows lexical/direct-unit names, aliases, forward definitions and supported
+members/ancestors with exact-world handle guards. Native checks bind the real
+badge's member/result identity; browser consumer compiles only. General generic/
+helper/overload meaning and full provider/editor/context/quality/parity stay open.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

@@ -913,6 +913,76 @@ source edit. Scoped name/alias/member/inheritance/interface/generic/overload/hel
 binding, broader grammar/context, incremental budgets/navigation and full platform/
 quality/delivery remain with the original authoring/service owners.
 
+## Scoped name and type binding
+
+`nyx.pascal.binding` owns a persistent module world over captured translated views.
+Exact-world interfaces retain caller sites, declarations, types and bounded
+responses. Replacement detaches the module vector; old handles keep their original
+world and refuse use in the new one. No result/type/site is cached back into its
+world, so reference-counting graphs retain no reverse cycle to an editor/document.
+The world accepts matching compiler family/version metadata; complete target/default/
+SDK coherence remains part of the broader context requirement.
+
+Lookup preserves lexical shadowing, visible declaration order, direct unit exports
+and reverse `uses` order. Qualified units do not gain visibility merely by existing
+in the capture. Implementation-only globals remain unavailable to another unit;
+own-unit qualification retains caller-position visibility. A later uncaptured
+import refuses rather than selecting an earlier candidate, and `RelatedName`
+identifies the needed unit for focused capture. These choices follow FPC's
+[unit-scope rules](https://docs.freepascal.org/daily/doc/ref/refsu108.html).
+
+Type binding follows explicit aliases, distinct wrappers, visible forward identities
+and their later completion, and supported structured/constructed/procedural shapes.
+Names inside callback parameters/results bind through the same scopes. Language
+intrinsics carry typed identities; sizes, ABI/layout and opaque bounds/defaults
+are not inferred. Default string meaning requires captured option/feature facts.
+This is declaration/name binding, not complete compiler type checking or source
+admission. Generic substitution, general expression/call inference and overload
+selection still return explicit unresolved states.
+
+Ordinary member lookup follows supported class/interface/record/object ancestors
+with cycle/depth guards and an explicit instance/type receiver mode. Private is
+unit-scoped, strict private is restricted to its owning class, and protected forms
+use the caller's class/ancestry. Supported checks follow the documented
+[class visibility rules](https://docs.freepascal.org/docs-html/current/ref/refse35.html).
+Unmodeled scopes, missing ancestors, compiler context and ambiguous declarations
+stay explicit. Complete helper/receiver-specific visibility, inherited overload
+and generic rules remain qualification requirements, not implied compiler parity.
+
+```pascal
+LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults)
+  .WithModule(LDeclared);
+LCaller := LWorld.At(0, 0, LWorld.InterfaceBoundary(0));
+LFound := LWorld.Lookup(LCaller, NyxPascalBindingName('INyxBadge'));
+
+if (LFound.Status = pbsBound) and (LFound.Count = 1) then
+begin
+  LType := LWorld.TypeOfSymbol(LFound.SymbolAt(0));
+
+  if LType.Status = pbsBound then
+  begin
+    LMember := LWorld.Member(LType.BoundType, LCaller,
+      NyxPascalBindingName('WithText'));
+  end;
+end;
+```
+
+Explicit declaration inspection does not confer program visibility or source edit
+permission. Lookup/member queries make supported caller decisions; compiler-backed
+admission and the host's revision/permission guards remain independent. Per-query
+steps/depth/candidates and world-module budgets refuse without truncated responses;
+cancellation retains no partial publication. Cached interface boundaries avoid
+rescanning an entire unit for every imported-name query. No authored code executes.
+
+WORK.md records native binding and exact compiled fixture behavior, plus selected
+real badge/ancestor/member/result binding at original physical declarations. A
+handwritten minimal System fixture isolates ordinary root/import behavior; it is
+not a captured real SDK or full System qualification. Browser consumer compiles
+only. There is no default-provider/Studio/MCP rollout here. General generic/helper/
+overload meaning, complete compiler/SDK/grammar capture, paged completion candidates,
+incremental dependencies/budgets and full editor/navigation/quality/parity/delivery
+remain under original authoring/service ownership.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

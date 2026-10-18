@@ -25,6 +25,13 @@ and full grammar/context/incremental/navigation/quality/parity remain under
 original authoring criterion two; WORK.md owns native evidence separately from
 browser compilation and installation. No criterion/counter/credit closes.
 
+The new [scoped binding kernel](../docs/pascal-projects.md#scoped-name-and-type-binding)
+now performs real supported name/type/alias/member binding over those owners.
+This remains under original authoring criterion two: generic/helper/overload and
+complete compiler/SDK/grammar meaning, paged candidate queries, existing provider/
+editor adoption and full incremental/navigation/quality/parity remain open.
+WORK.md owns the native/compiled-browser distinction; no original credit closes.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).
