@@ -323,47 +323,6 @@ begin
   Result.Validate;
 end;
 
-function FreezeContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
-var
-  LAt: Integer;
-  LName: TNyxPascalDefineRef;
-  LValue: TNyxPascalDefineValue;
-  LNumber: Integer;
-  LFeature: TNyxPascalLanguageFeature;
-begin
-
-  if (AContext = nil) or (AContext.SymbolCount < 0) or (AContext.SymbolCount > 2048) then
-  begin
-    raise ENyxPascalContext.Create('Translation needs bounded captured compiler facts');
-  end;
-  Result := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode);
-  for LAt := 0 to AContext.SymbolCount - 1 do
-  begin
-    LName := AContext.SymbolName(LAt);
-    LValue := AContext.Symbol(LName);
-    LNumber := 0;
-
-    if LValue.Kind = ppdInteger then
-    begin
-      LNumber := LValue.IntegerValue;
-    end;
-    Result := Result.WithSymbol(LName, LValue.Kind, LNumber);
-
-    if Result.SymbolCount <> LAt + 1 then
-    begin
-      raise ENyxPascalContext.Create('An alternate compiler context contains duplicate symbol names');
-    end;
-  end;
-  Result := Result.CompleteDefines(AContext.DefinesComplete);
-  for LAt := Ord('A') to Ord('Z') do
-  begin
-    Result := Result.WithOption(Chr(LAt), AContext.Option(Chr(LAt)));
-  end;
-  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
-  begin
-    Result := Result.WithFeature(LFeature, AContext.Feature(LFeature));
-  end;
-end;
 
 constructor TTranslation.Create(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
@@ -380,7 +339,7 @@ begin
   CheckCancellation;
   try
     FFiles := CaptureNyxPascalFiles(AFiles);
-    FInitial := FreezeContext(AContext);
+    FInitial := CaptureNyxPascalCompilerContext(AContext);
     FContext := FInitial;
 
     if (FInitial.Feature(ppfNestedComments) <> ppkUnknown) and

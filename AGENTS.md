@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source owned completion provider connects frozen compiler/SDK inputs and
+declared member binding to existing provider/wire/menu and production in-process
+semantic/private-editor paths. Native 86/81 and maintained 209/127/23 pass, clean
+heaps; four browser consumers compile only. Exact totals use bounded CountAll;
+typed gaps and captured physical definition text retain their own lifetimes.
+Auxiliary selectors already include .pas; bridge/namespace conversion is fixed.
+The real SDK FullNumber record member resolves; real badge enumeration retains
+its nyx.model capture gap, never fabricated exports. Nine accepted compiler logs
+have zero owned warnings (28 upstream RTL). Eleven reader pins, six unchanged SDK
+inputs, five protected files/nine complete contexts and 349 frozen 7422453 files
+stay exact; all owned readers join and LAN remains offline. WORK.md owns receipts,
+failures and the never-listening isolated engine distinction. Stop basic provider/
+fixture/compiler variants; next explicit compiler/SDK dependency capture and useful
+receiver expressions, retaining full incremental/budget/editor/navigation/input/
+quality/parity/delivery and default adoption prerequisites. No original criterion/
+task/counter/credit/DONE/new tool/schema/default engine/rollout closes. No HTTP
+retry, protected configuration/cleanup bypass, deletion or sub-agents. Preserve
+concurrent milestone/catalog/new task work outside this checkpoint.
+
 Current-source concrete Pascal generic binding retains immutable arguments through
 supported unconstrained classes/records, aliases, ancestors, fields/properties,
 method results and nested ordinary types/callables. Optional bounded member pages

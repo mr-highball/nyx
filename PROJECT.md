@@ -61,6 +61,13 @@ pages retain exact origins and visibility. Native checks execute; browser consum
 compile only. Constraints/general language meaning, provider/editor adoption and
 complete context/incremental/navigation/quality/parity/delivery remain open.
 
+The [Nyx-owned completion adapter](docs/pascal-projects.md#nyx-owned-completion-provider)
+now connects captured files/facts and bound member pages to the existing provider,
+wire/menu and production semantic/private-editor contracts. Native checks qualify
+supported declared receivers and a real SDK record member; browser consumers
+compile only. Full SDK capture, expression meaning, incremental work, default
+Studio adoption and complete input/navigation/quality/parity/delivery remain open.
+
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
 consumer. Ordinary Studio now hosts that card in public Nyx popovers; native input

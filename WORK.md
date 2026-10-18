@@ -33,7 +33,118 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Concrete generic binding and bounded member pages — 2026-10-17
+## Current integration: Owned completion provider and production boundaries — 2026-10-17
+
+Previous goal turn is progress: pushed 641d194 carries concrete generic/member
+meaning. This continuation connects those owners to the existing completion
+contract under original NS-4 authoring criterion two and service/editor ownership.
+The user's wholly Nyx-owned MIT resolver remains the destination. Full modern
+language/compiler context, incremental/navigation/editor/input/quality/parity and
+delivery stay required; no original criterion/task/counter/credit/DONE closes.
+
+New nyx.pascal.completion.owned captures explicit compiler facts, virtual SDK files
+and module roots once. Every call freezes the full current project pair, overlays
+all current buffers and owns an independent semantic world. Supported lexical
+dotted receivers/property chains retain generic meaning. Caret/replacement remain
+physical scalars and the caller anchors at the exact mapped member dot. Whole
+identifier tails and escaped keywords survive insertion. Includes require their
+explicit unit owner; repeated occurrences refuse, inactive/unknown contexts never
+borrow another occurrence. Namespace mismatch/duplicate roots refuse atomically.
+No filesystem/compiler/author application, mutable editor or global query cache
+is retained. Hosts own worker scheduling; this factory installs no default engine.
+
+The public compiler-context capture is extracted from translation's existing
+freeze, preserving the same facts/unknowns/limits. The actual helper journey finds
+the earlier file bridge appended .pas to an already suffixed unit selector.
+Physical leaf mapping now retains that selector; separate typed namespace
+conversion strips only its validated final suffix and refuses standalone includes.
+Current auxiliary drafts and accepted comparison bytes remain independent.
+
+Optional CountAll/member-total capability computes the existing completion API's
+exact Total under the same query budget, with no additional response rows. The
+ordinary early-stop member page still reports no invented total. Aggregate tokens,
+receiver scan and per-module syntax/translation/binding limits plus cancellation
+publish no partial insertion. Original request/result/codec/menu guards remain
+owners of exact membership/text/caret matching, detached Preview and ordinary text
+Undo/Redo. No new MCP tool/schema or private editor wire fields are introduced.
+
+Optional owned-result metadata retains typed gaps/related names and physical
+root/file/span/occurrence values. Ready definitions also own their exact physical
+lexical text, avoiding a reopened/replaced SDK source after provider retirement.
+This is in-process navigation data, not filesystem/edit permission or a wire
+definition feature. Existing wire messages retain bounded related virtual names.
+Calls/indexing/constructed receivers, intrinsic helper meaning and further
+expression/constraint/overload/general language interpretation remain explicit gaps.
+
+Evidence behind ignored .local/owned-completion-paths-private.json:
+
+- source-pins-final-private.json pins eleven compiler/runtime inputs before all
+  nine final compilers and execution. Six actual controls/include inputs retain
+  their previous committed hashes in actual-input-pins-final-private.json. The
+  changed context unit is a reader-pinned current input, not an unchanged SDK file.
+  All exact compiler/runtime/helper readers join; zero owned readers remain.
+- logs/owned-final-run.log passes 86 native checks, clean heap. Middle-word/scalar
+  replacement, Unicode/NUL/physical suffix and accepted ownership, SDK include
+  definitions after provider retirement, generic property chains, exact pages,
+  type/instance access, escaped insertion, include/main/auxiliary owners, repeated/
+  inactive/unknown contexts, current helper/unfinished routine binding, stale
+  helper/main refusal, budgets/cancellation and focused gaps pass. Original wire
+  roundtrip and the public menu's one ordinary text Undo/Redo transaction pass.
+  This is model/menu behavior, not actual rendered Studio input or a new release.
+- logs/semantic-final-run.log passes 81 production semantic/private-editor checks,
+  clean heap, in --owned mode. The exact real TNyxPascalCompilerVersion.FullNumber
+  record member resolves through nyx_pascal and private operator completion.
+  Existing revision/permission/provider/review retirement, guard-released analysis,
+  concurrent observation, activity, workspace scope and complete pair retention
+  assertions remain. The explicitly fresh E: engine is never started/listening;
+  its joined threads and destructor retire normally. This is not HTTP transport,
+  socket authentication, observing browser or a default installed provider receipt.
+- The original real badge query with this partial SDK capture remains unavailable
+  at nyx.model, recorded as an asserted typed capture gap. The supported real record
+  is separately qualified; no missing exports are replaced by synthetic modules.
+  The minimal System root is controlled data, not complete real RTL/SDK evidence.
+  The original badge/helper-provider mode is retained but never invoked here;
+  no historical CodeTools helper process runs or becomes the production direction.
+- Maintained native context 209, generic 127 and original completion boundary 23
+  pass with clean heaps. The generic consumer still executes its real compiled
+  fixture and Nyx badge continuation; exact member binding is distinct from full
+  SDK member enumeration/dependency capture. Counts overlap earlier evidence.
+- Nine accepted compiler logs cover those five native consumers and four browser
+  consumers (owned, translation, generic, original completion). Zero owned warnings;
+  28 upstream pas2js RTL case warnings remain unchanged. Browser products here
+  compile only: no HTTP/file/browser execution, interaction or parity follows.
+  No rendered UI, both-Studios delivery, source admission or application build is
+  implied by analysis. compiler-final-private.json records exact log hashes.
+- logs/frozen-final.log verifies all 349 frozen 7422453 artifacts, clean heap.
+  Five protected files/nine complete contexts/history/drafts/profile remain exact.
+  Native Nyx tools remain absent in this chat; no active design operation or browser
+  automation substitutes for semantic tools. Source inventory remains 24/frozen 23,
+  Pascal modes 18. No launch authority/configuration or observing artifact changes.
+
+Retained preparations are excluded from final acceptance. owned-unit-1 compiles
+with an exhaustive-enum unreachable fallback warning, removed. owned-native-1
+reports two unsafe Unicode fixture concatenation warnings and a wrong expected
+prefix count (WithT also matches WithTone), with clean failure heap. Explicit
+TNyxText literals and the intended WithTe caret fix that oracle; owned-native-2
+passes 58. owned-native-3/4 fail the current-helper namespace journey, clean heaps;
+more focused identity diagnostics identify Helper.pas.pas and lead to the bridge
+repair. semantic-native-1/2 retain the genuine badge missing-import refusal instead
+of claiming readiness. owned-native-5 and semantic-native-3 pass 81 each before
+definition-source retirement/intrinsic-gap checks complete the final 86/81. Earlier
+browser preparations compile only. Only final reader-pinned receipts are accepted.
+
+Concurrent browser-compiler/reference task, milestone and catalog work remains
+outside this checkpoint; stage only this resolver's catalog paragraph. Solo; no
+HTTP-host/restart/protected-enrollment/configuration/cleanup/deletion retry or
+approval bypass occurs. Evidence/artifacts remain on E:, LAN stays offline.
+Stop basic provider/fixture/compiler variants. Next address explicit compiler/SDK
+dependency capture (including the retained nyx.model gap) and useful receiver
+expression meaning through these existing boundaries. Complete target/default/SDK
+coherence, lazy/incremental dependencies, helpers/overloads/constraints/full grammar,
+project-scale budgets, default Studio adoption and full ordinary input/navigation/
+quality/parity/delivery stay with their original owners. The goal remains active.
+
+## Previous integration: Concrete generic binding and bounded member pages — 2026-10-17
 
 Previous goal turn is progress: pushed a1aa549 provides the first owned scoped
 binding kernel. This continuation keeps the full user-selected MIT resolver and

@@ -136,17 +136,22 @@ type
     FOffset: Integer;
     FCount: Integer;
     FAccess: TNyxPascalMemberAccess;
+    FCountAll: Boolean;
   public
     class function Defaults: TNyxPascalMemberQuery; static;
     function Matching(const AValue: TNyxText): TNyxPascalMemberQuery;
     function Skip(AValue: Integer): TNyxPascalMemberQuery;
     function Take(AValue: Integer): TNyxPascalMemberQuery;
     function ForAccess(AValue: TNyxPascalMemberAccess): TNyxPascalMemberQuery;
+    { Opt in to counting all matching visible rows within the same work budget.
+      Responses remain bounded; failure while counting publishes no page. }
+    function CountAll(AValue: Boolean = True): TNyxPascalMemberQuery;
     procedure Validate;
     property Prefix: TNyxText read FPrefix;
     property Offset: Integer read FOffset;
     property Limit: Integer read FCount;
     property Access: TNyxPascalMemberAccess read FAccess;
+    property IncludesTotal: Boolean read FCountAll;
   end;
 
   { Checked caller position in one exact immutable world. Caret is in the declared
@@ -221,6 +226,13 @@ type
     function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AQuery: TNyxPascalMemberQuery;
       const ACancellation: INyxCancellationScope = nil): INyxPascalMemberPage;
+  end;
+  { Optional exact count. Total is -1 when a bounded page stopped after proving
+    HasMore or when analysis failed; otherwise it counts all visible matches.
+    CountAll requests require an exact successful total without extra rows. }
+  INyxPascalMemberTotal = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570E0A}']
+    function Total: Integer;
   end;
   { Persistent module world, independent of DOM/LCL, an editor or compiler process.
     Modules have explicit captured translation contexts; their source views are
@@ -360,14 +372,16 @@ type
   end;
   { Holds only the bounded reply and continuation offset. Like ordinary query
     results it points outward to its world without any reverse cache. }
-  TMemberPage = class(TInterfacedObject, INyxPascalMemberPage)
+  TMemberPage = class(TInterfacedObject, INyxPascalMemberPage, INyxPascalMemberTotal)
   public
     Reply: INyxPascalResolution;
     More: Boolean;
     Following: Integer;
+    TotalValue: Integer;
     function ResultSet: INyxPascalResolution;
     function HasMore: Boolean;
     function NextOffset: Integer;
+    function Total: Integer;
   end;
   { Owns a detached module vector/name index. Published worlds never mutate;
     each query has its own counters, alias/member trails and temporary type data. }
@@ -567,6 +581,7 @@ begin
   Result.FOffset := 0;
   Result.FCount := 20;
   Result.FAccess := pmaInstance;
+  Result.FCountAll := False;
 end;
 
 procedure TNyxPascalMemberQuery.Validate;
@@ -614,6 +629,13 @@ function TNyxPascalMemberQuery.ForAccess(AValue: TNyxPascalMemberAccess): TNyxPa
 begin
   Result := Self;
   Result.FAccess := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalMemberQuery.CountAll(AValue: Boolean): TNyxPascalMemberQuery;
+begin
+  Result := Self;
+  Result.FCountAll := AValue;
   Result.Validate;
 end;
 
@@ -783,6 +805,11 @@ end;
 function TMemberPage.ResultSet: INyxPascalResolution;
 begin
   Result := Reply;
+end;
+
+function TMemberPage.Total: Integer;
+begin
+  Result := TotalValue;
 end;
 
 function TMemberPage.HasMore: Boolean;
@@ -3133,6 +3160,7 @@ begin
   LPage := TMemberPage.Create;
   Result := LPage;
   LPage.Following := AQuery.Offset;
+  LPage.TotalValue := -1;
   LFound := CollectMemberNames(AType, NyxPascalASCIIKey(AQuery.Prefix), LNames);
 
   if LFound <> nil then
@@ -3157,6 +3185,7 @@ begin
 
     if not (LFound.Status in [pbsBound, pbsOverloads]) then
     begin
+      LPage.More := False;
       LPage.Reply := Answer(LFound.Status, LFound.Issue, LFound.RelatedName);
       Exit;
     end;
@@ -3170,18 +3199,26 @@ begin
         if Length(LReply.Symbols) = AQuery.Limit then
         begin
           LPage.More := True;
-          LPage.Reply := LReplyLease;
-          LPage.Following := AQuery.Offset + Length(LReply.Symbols);
-          Exit;
+
+          if not AQuery.IncludesTotal then
+          begin
+            LPage.Reply := LReplyLease;
+            LPage.Following := AQuery.Offset + Length(LReply.Symbols);
+            Exit;
+          end;
+        end
+        else
+        begin
+          SetLength(LReply.Symbols, Length(LReply.Symbols) + 1);
+          LReply.Symbols[High(LReply.Symbols)] := LFound.SymbolAt(LAlternative);
         end;
-        SetLength(LReply.Symbols, Length(LReply.Symbols) + 1);
-        LReply.Symbols[High(LReply.Symbols)] := LFound.SymbolAt(LAlternative);
       end;
       Inc(LVisible);
     end;
   end;
   LPage.Reply := LReplyLease;
   LPage.Following := AQuery.Offset + Length(LReply.Symbols);
+  LPage.TotalValue := LVisible;
 end;
 
 function TSemanticWorld.Members(const AType: INyxPascalSemanticType;

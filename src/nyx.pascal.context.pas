@@ -143,6 +143,11 @@ function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
 function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
   const AVersion: TNyxPascalCompilerVersion;
   AMode: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+{ Freeze caller-serialized alternate facts without retaining their producer.
+  Preserve explicit unknowns, ordered symbols, option/feature values and identity;
+  duplicate names or excess facts refuse before publication. No host facts enter. }
+function CaptureNyxPascalCompilerContext(
+  const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
 { Explicit truth operations preserve unknown state without target Boolean casts. }
 function NyxPascalNot(AValue: TNyxPascalKnowledge): TNyxPascalKnowledge;
 function NyxPascalAnd(ALeft, ARight: TNyxPascalKnowledge): TNyxPascalKnowledge;
@@ -157,6 +162,48 @@ function AnalyzeNyxPascalCondition(const AContext: INyxPascalCompilerContext;
 implementation
 
 uses nyx.text.index;
+
+function CaptureNyxPascalCompilerContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+var
+  LAt: Integer;
+  LName: TNyxPascalDefineRef;
+  LValue: TNyxPascalDefineValue;
+  LNumber: Integer;
+  LFeature: TNyxPascalLanguageFeature;
+begin
+
+  if (AContext = nil) or (AContext.SymbolCount < 0) or (AContext.SymbolCount > 2048) then
+  begin
+    raise ENyxPascalContext.Create('This capture needs bounded compiler facts');
+  end;
+  Result := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode);
+  for LAt := 0 to AContext.SymbolCount - 1 do
+  begin
+    LName := AContext.SymbolName(LAt);
+    LValue := AContext.Symbol(LName);
+    LNumber := 0;
+
+    if LValue.Kind = ppdInteger then
+    begin
+      LNumber := LValue.IntegerValue;
+    end;
+    Result := Result.WithSymbol(LName, LValue.Kind, LNumber);
+
+    if Result.SymbolCount <> LAt + 1 then
+    begin
+      raise ENyxPascalContext.Create('An alternate compiler context contains duplicate symbol names');
+    end;
+  end;
+  Result := Result.CompleteDefines(AContext.DefinesComplete);
+  for LAt := Ord('A') to Ord('Z') do
+  begin
+    Result := Result.WithOption(Chr(LAt), AContext.Option(Chr(LAt)));
+  end;
+  for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+  begin
+    Result := Result.WithFeature(LFeature, AContext.Feature(LFeature));
+  end;
+end;
 
 type
   { Owned name/value pair with no interfaces or mutable external data. }

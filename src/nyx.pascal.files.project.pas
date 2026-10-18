@@ -25,10 +25,10 @@ unit nyx.pascal.files.project;
 
 interface
 
-uses nyx.pascal.files, nyx.pascal.sources, nyx.pascal.drafts;
+uses nyx.pascal.files, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.names;
 
 { Capture current project/editing membership through its existing immutable owner.
-  Logical main/unit filenames append .pas; includes keep their admitted leaf.
+  Main metadata gains .pas; auxiliary unit/include selectors already own leaves.
   SDK files may subsequently be explicitly added without entering source admission.
   This bridge keeps project/code-generation dependencies outside the analysis core.
   Caller serializes alternate source providers during this one-time freeze. }
@@ -38,6 +38,11 @@ function CaptureNyxPascalProjectFiles(const ASources: INyxPascalSourceSnapshot;
   This mapping grants no filesystem, compiler or editor mutation capability. }
 function NyxPascalProjectPhysicalFile(const ASources: INyxPascalSourceSnapshot;
   const AFile: TNyxPascalSourceRef): TNyxPascalPhysicalFile;
+{ Resolve a main/unit selector to its typed namespace, removing only the unit
+  selector's validated final .pas suffix. Includes have no independent namespace
+  and refuse; callers must provide their explicit main/unit owner instead. }
+function NyxPascalProjectUnit(const ASources: INyxPascalSourceSnapshot;
+  const AFile: TNyxPascalSourceRef): TNyxPascalUnitRef;
 
 implementation
 
@@ -59,13 +64,35 @@ begin
   begin
     Result := NyxPascalPhysicalFile(ASources.MainUnit.Name + '.pas');
   end
-  else if AFile.Role = npsUnit then
-  begin
-    Result := NyxPascalPhysicalFile(AFile.Name + '.pas');
-  end
   else
   begin
     Result := NyxPascalPhysicalFile(AFile.Name);
+  end;
+end;
+
+function NyxPascalProjectUnit(const ASources: INyxPascalSourceSnapshot;
+  const AFile: TNyxPascalSourceRef): TNyxPascalUnitRef;
+begin
+
+  if ASources = nil then
+  begin
+    raise ENyxPascalContext.Create('A source owner needs its captured project');
+  end;
+  AFile.Validate;
+  ASources.Text(AFile);
+  case AFile.Role of
+    npsMain:
+      begin
+        Result := ASources.MainUnit;
+      end;
+    npsUnit:
+      begin
+        Result := NyxPascalUnit(Copy(AFile.Name, 1, Length(AFile.Name) - 4));
+      end;
+    npsInclude:
+      begin
+        raise ENyxPascalContext.Create('An include needs an explicit main/unit namespace owner');
+      end;
   end;
 end;
 

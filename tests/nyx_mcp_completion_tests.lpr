@@ -26,6 +26,7 @@ program nyx_mcp_completion_tests;
 
 uses Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.editing,
   nyx.pascal.completion, nyx.pascal.sources, nyx.pascal.drafts,
+  nyx.pascal.completion.owned, nyx.pascal.context, nyx.pascal.files, nyx.pascal.binding,
   nyx.studio.completion.native, nyx.studio.completion, nyx.studio.mcp, nyx.studio.session,
   nyx.studio.projects, nyx.studio.directories, nyx.studio.agents, nyx.studio.outputs,
   nyx.studio.reviews, nyx.studio.workspaces;
@@ -63,6 +64,8 @@ type
   end;
 
 const
+  { Command-line selection is an orchestration boundary, never editor behavior. }
+  COwnedProviderArgument = '--owned';
   COwner: TNyxText = 'completion-owned-transport';
   CActor: TNyxText = 'Scooty';
   CDeclarationTail: TNyxText = ';' + #10 +
@@ -272,6 +275,39 @@ begin
   end;
 end;
 
+{ Capture only the exact SDK inputs needed by this native semantic consumer.
+  System is controlled minimal root data; the real controls/includes stay exact.
+  No compiler/helper process, network or protected enrollment is involved. }
+function OwnedProvider(const ARepository: String): INyxPascalCompletionProvider;
+const
+  CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
+    'nyx.controls.types.inc', 'nyx.controls.factories.inc', 'nyx.controls.implementation.inc',
+    'nyx.controls.facades.implementation.inc');
+var
+  LFiles: INyxPascalFileCatalog;
+  LFacts: INyxPascalCompilerContext;
+  LAt: Integer;
+begin
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('system.pas'),
+    'unit System; {$mode delphi} interface type TObject=class end; IInterface=interface end; implementation end.')
+    .WithFile(NyxPascalPhysicalFile('nyx.pascal.context.pas'),
+      ReadText(IncludeTrailingPathDelimiter(ARepository) + 'src/nyx.pascal.context.pas'));
+  for LAt := Low(CFiles) to High(CFiles) do
+  begin
+    LFiles := LFiles.WithFile(NyxPascalPhysicalFile(TNyxText(CFiles[LAt])),
+      ReadText(IncludeTrailingPathDelimiter(ARepository) + 'src/' + CFiles[LAt]));
+  end;
+  LFacts := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithSymbol(NyxPascalDefine('FPC'), ppdDefined)
+    .WithSymbol(NyxPascalDefine('FPC_FULLVERSION'), ppdInteger, 30301)
+    .CompleteDefines(True);
+  Result := NewNyxOwnedPascalCompletionProvider(LFacts, LFiles,
+    [NyxPascalPhysicalFile('system.pas'), NyxPascalPhysicalFile('nyx.controls.pas'),
+      NyxPascalPhysicalFile('nyx.pascal.context.pas')],
+    TNyxOwnedPascalCompletionOptions.Defaults);
+end;
+
 procedure Run;
 var
   LLocal: TNyxStudioSession;
@@ -302,6 +338,12 @@ var
   LRoleQuery: INyxPascalCompletionRequest;
   LRoleResult: INyxPascalCompletionResult;
   LRejected: Boolean;
+  LExpectedName: TNyxText;
+  LMisspelling: TNyxText;
+  LSuffix: TNyxText;
+  LGapSources: INyxPascalSourceSnapshot;
+  LGapResult: INyxPascalCompletionResult;
+  LGapMetadata: INyxOwnedPascalCompletionResult;
 begin
   LLocal := nil;
   LProfile := nil;
@@ -311,14 +353,31 @@ begin
 
     if (ParamCount <> 5) or DirectoryExists(ParamStr(3)) then
     begin
-      raise Exception.Create('Supply repository, toolchain JSON, fresh owned runtime, optional helper and FPC source root');
+      raise Exception.Create('Supply repository, toolchain JSON, fresh owned runtime, --owned or optional helper, and FPC source root');
     end;
     GStage := 'prepare owned inputs';
     LTools := TNyxDataValue.ParseJSON(ReadText(ParamStr(2)));
     LLocal := TNyxStudioSession.Create;
     LPrefix := TNyxText('unit ') + LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail;
+    LSuffix := CSuffix;
+    LExpectedName := 'WithText';
+    LMisspelling := 'WithTexx';
+
+    if ParamStr(4) = COwnedProviderArgument then
+    begin
+      { The exact real SDK record has a fully captured member graph. The badge's
+        additional dependency gap is asserted separately below and remains open;
+        no missing imported module is replaced by a fabricated export catalog. }
+      LPrefix := TNyxText('unit ') + LLocal.AcceptedPascalProject.MainUnit.Name +
+        '; {$mode delphi}{$H+}{$codepage utf8} interface uses nyx.pascal.context; ' +
+        'procedure Run; implementation procedure Run; var LVersion:TNyxPascalCompilerVersion; ' +
+        'begin // Dedicated Unicode qualification ' + TNyxText('🚀 𐐷') + #10 + 'LVersion.';
+      LExpectedName := 'FullNumber';
+      LMisspelling := 'FullNumxx';
+      LSuffix := LMisspelling + '; end; end.';
+    end;
     LCaret := NyxTextScalarCount(LPrefix) + 6;
-    LLocal.SetSourceDraft(LPrefix + CSuffix);
+    LLocal.SetSourceDraft(LPrefix + LSuffix);
     LDirectories := TNyxStudioDirectories.ForRepository(TNyxText(ParamStr(1)))
       .RunningIn(TNyxText(ParamStr(3))).EnrollingProject(TNyxText(ParamStr(3)));
     { Construct the production engine suspended; no Start or HTTP request occurs.
@@ -352,27 +411,46 @@ begin
     Refuse(Args(GRevision - 1, LCaret), 'Stale revisions refuse before dispatch');
     Refuse(NyxObject([NyxField('mode', NyxData('complete')), NyxField('caret', NyxData(LCaret))]),
       'Missing revision refuses even when completion is read-only');
-    Refuse(Args(GRevision, NyxTextScalarCount(LPrefix + CSuffix) + 1),
+    Refuse(Args(GRevision, NyxTextScalarCount(LPrefix + LSuffix) + 1),
       'Caret outside its exact buffer refuses before dispatch');
     Refuse(NyxObject([NyxField('mode', NyxData('complete')),
       NyxField('expectedRevision', NyxData(GRevision)), NyxField('caret', NyxData(LCaret)),
       NyxField('executable', NyxData('untrusted'))]), 'Wire callers cannot configure host executables');
 
     GStage := 'real SDK provider';
-    LNative := NewNyxNativePascalCompletionProvider(TNyxPascalCompletionHost.Using(
-      ParamStr(4), ParamStr(1), String(LTools.Field('FPC').AsText),
-      ParamStr(5), String(LTools.Field('LAZARUS').AsText),
-      IncludeTrailingPathDelimiter(ParamStr(3)) + 'completion-queries'));
+    if ParamStr(4) = COwnedProviderArgument then
+    begin
+      LNative := OwnedProvider(ParamStr(1));
+      LGapSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
+        .WithBuffer(TNyxPascalSourceRef.Main, TNyxText('unit ') +
+          LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail + CSuffix);
+      LGapResult := LNative.Complete(NewNyxPascalCompletionRequest(LGapSources)
+        .At(TNyxPascalSourceRef.Main, NyxTextScalarCount(TNyxText('unit ') +
+          LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail) + 6));
+      Check(Supports(LGapResult, INyxOwnedPascalCompletionResult, LGapMetadata) and
+        (LGapResult.Status = pcsUnavailable) and (LGapResult.Count = 0) and
+        (LGapMetadata.BindingIssue = pbiMissingModule) and (LGapMetadata.RelatedName <> ''),
+        'Real badge enumeration retains its uncaptured dependency as a typed gap');
+      WriteLn('Owned SDK capture gap / ', LGapMetadata.RelatedName);
+    end
+    else
+    begin
+      LNative := NewNyxNativePascalCompletionProvider(TNyxPascalCompletionHost.Using(
+        ParamStr(4), ParamStr(1), String(LTools.Field('FPC').AsText),
+        ParamStr(5), String(LTools.Field('LAZARUS').AsText),
+        IncludeTrailingPathDelimiter(ParamStr(3)) + 'completion-queries'));
+    end;
     GEngine.ConfigureCompletionProvider(LNative);
     Permission('readOnly');
     LBefore := Observe;
     LReply := GEngine.InvokeTool('nyx_pascal', COwner, CActor, Args(GRevision, LCaret));
     Check((LReply.Field('status').AsText = 'ready') and
       (LReply.Field('items').Count = 1) and
-      (LReply.Field('items').Item(0).Field('name').AsText = 'WithText') and
+      (LReply.Field('items').Item(0).Field('name').AsText = LExpectedName) and
       (LReply.Field('items').Item(0).Field('kind').AsText = 'method'),
-      'Read-only semantic completion resolves the real specialized SDK interface');
-    Check((LReply.Field('replacement').Field('expected').AsText = 'WithTexx') and
+      'Read-only semantic completion resolves its real captured SDK member: ' +
+      LReply.Field('status').AsText + ' / ' + LReply.Field('message').AsText);
+    Check((LReply.Field('replacement').Field('expected').AsText = LMisspelling) and
       (LReply.Field('replacement').Field('offset').AsInteger = NyxTextScalarCount(LPrefix)) and
       LReply.Field('inspectionOnly').AsBoolean and LReply.Field('pendingDrafts').AsBoolean,
       'Semantic rows retain exact scalar replacement metadata and the unfinished-draft boundary');
@@ -466,7 +544,7 @@ begin
     LOperatorPage := ReadNyxStudioCompletionEnvelope(LReply,
       'owned-operator-completion', NyxPrimaryWorkspace, GRevision, LOperatorQuery);
     Check((LOperatorPage.Status = pcsReady) and (LOperatorPage.Count = 1) and
-      (LOperatorPage.Item(0).Name = 'WithText'),
+      (LOperatorPage.Item(0).Name = LExpectedName),
       'Authenticated operator completion resolves real SDK members while agents are disabled');
     Refuse(Args(GRevision, LCaret), 'Private completion cannot change agent access');
     Retained(LBefore, 'Private operator completion');

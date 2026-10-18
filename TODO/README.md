@@ -40,6 +40,14 @@ original authoring criterion two: existing provider/editor adoption, full compil
 SDK/grammar/constraint/helper/overload/expression meaning, incremental/navigation/
 budgets and complete quality/parity/delivery remain open. No original credit closes.
 
+The [owned completion provider](../docs/pascal-projects.md#nyx-owned-completion-provider)
+now serves supported declared receivers through existing wire/menu and production
+in-process semantic/private-editor paths. Native provider/integration and maintained
+contracts pass; four browser consumers compile only. Compiler/SDK dependency gaps,
+full expression/helper/overload meaning, incremental work, default Studio adoption
+and complete input/navigation/budget/quality/parity/delivery remain open under
+original authoring/service ownership. No original credit closes.
+
 Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
 now connects the retained editor to shared keyboard/platform history and typed
 [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text).

@@ -1048,6 +1048,71 @@ Complete helper/overload/expression/compiler/SDK/grammar meaning, incremental
 dependencies, project-scale budgets and full ordinary-editor/navigation/parity/
 quality/delivery remain under the original authoring/service requirements.
 
+## Nyx-owned completion provider
+
+`nyx.pascal.completion.owned` now connects the owned lexer/context/syntax/binding
+layers to `INyxPascalCompletionProvider`. It captures explicit compiler facts,
+virtual SDK files and module roots once. Each call overlays all exact current
+project buffers, including independently edited units/includes, then creates its
+own immutable semantic world. Nothing reads host files, starts a compiler or
+executes an authored application. The host runs this synchronous adapter on its
+existing worker/service boundary; no output selection is required by the API.
+
+```pascal
+LProvider := NewNyxOwnedPascalCompletionProvider(LFacts, LCapturedFiles,
+  LSDKRoots, TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(1000000));
+LReply := LProvider.Complete(LQuery);
+```
+
+Supported receiver queries cover lexical dotted names and declared property
+chains, including concrete generic results. The caret/replacement stays in exact
+physical scalar coordinates; the semantic caller uses the member dot's explicitly
+mapped occurrence. An identifier tail after a middle caret is replaced whole.
+Escaped keywords retain legal escaped insertion. Literal/comment/directive
+interiors, unmodeled calls/indexing/constructed expressions and unresolved type/
+helper context produce no insertion rows. This is a supported declared-receiver
+provider, not the complete expression/language engine.
+
+Project units keep their already admitted `.pas` leaf. `NyxPascalProjectUnit`
+separately derives the typed namespace; includes require an explicit main/unit
+owner. A repeated include in that owner refuses because the existing request has
+no occurrence selector. Inactive/unknown participation cannot borrow another
+context. Declared namespaces must match captured project membership; duplicate
+module identities refuse. Drafts are inspected without acquiring compiler
+admission or changing accepted comparison text.
+
+Member pages opt into `CountAll` under the same semantic work budget, retaining
+the completion contract's exact `Total` without extra response rows. The optional
+`INyxPascalMemberTotal` reports -1 when the ordinary early-stop page has no exact
+total. Aggregate translated-token, receiver-scan, per-module syntax/translation
+and existing binding budgets all refuse atomically. The optional
+`INyxCancellablePascalCompletionProvider` supports call-scoped cancellation.
+
+`INyxOwnedPascalCompletionResult` exposes typed gaps, binding issues/related names,
+and physical definition locations. Each ready row retains its immutable physical
+lexical source through `DefinitionSource`, so a later provider replacement does
+not reopen changed SDK bytes. Definition roots/files/occurrences confer no edit
+permission. The existing result/wire factories still guard complete source
+identity, middle-word replacement, 50-row/128 KiB limits and detached Preview.
+These optional origin/gap capabilities are in-process; the existing wire schema
+does not transport them. Its bounded message includes the related virtual name.
+
+WORK.md records 86 native provider/menu checks and 81 production in-process
+semantic/private-editor checks. Exact helper/Unicode/NUL buffers, include ownership,
+generic property chains, paged totals, source-location lifetime, ordinary text
+Undo/Redo, permissions, revision/provider retirement and concurrent observation
+are qualified. The production engine is explicitly owned and never listens;
+these are not HTTP authentication or ordinary rendered-input receipts.
+
+The real captured `TNyxPascalCompilerVersion.FullNumber` record member resolves
+through both production paths. Enumerating the real badge with the supplied
+partial capture still requires `nyx.model`; that retained typed gap is not repaired
+with fabricated exports. Complete compiler/SDK dependency capture, lazy/incremental
+invalidation, full expressions/helpers/overloads/constraints, project-scale budgets,
+default Studio adoption and complete input/navigation/quality/parity/delivery remain
+required. Four browser consumers compile only. No default provider, new MCP tool/
+schema, active-project mutation or installed release is implied by this factory.
+
 ## Replaceable Pascal completion providers
 
 The user selected a **fresh, wholly Nyx-owned Pascal resolver** on 2026-10-17.

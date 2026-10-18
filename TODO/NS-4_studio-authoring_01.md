@@ -9,6 +9,15 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+The [owned completion provider](../docs/pascal-projects.md#nyx-owned-completion-provider)
+now returns guarded declared-receiver suggestions through the existing wire/menu
+and production in-process semantic/private-editor paths. Native 86/81 and maintained
+209/127/23 pass, clean heaps; four browser consumers compile only. A real SDK record
+resolves; full badge enumeration retains its `nyx.model` capture gap. Next address
+compiler/SDK dependency capture and useful expression receivers before default
+Studio adoption, retaining full incremental/navigation/budget/input/quality/parity/
+delivery requirements. No original criterion/counter/credit closes.
+
 Current-source [concrete generics and member pages](../docs/pascal-projects.md#concrete-generic-binding-and-member-pages)
 now preserve supported receiver substitutions through aliases, ancestors and
 members, with bounded visibility-aware pages. Native 127 plus maintained 62 pass,
