@@ -42,7 +42,8 @@ type
   { Declared intent only. A typed variable/property preserves its type expression;
     a routine preserves its complete signature, result, parameters and owner name. }
   TNyxPascalSyntaxDeclarationKind = (psdkType, psdkConstant, psdkVariable,
-    psdkField, psdkParameter, psdkProperty, psdkRoutine, psdkEnumValue, psdkResourceString);
+    psdkField, psdkParameter, psdkProperty, psdkRoutine, psdkEnumValue, psdkResourceString,
+    psdkLabel);
   { Closed operator family, independent of its authored symbolic/named spelling.
     None is an ordinary declaration; Unknown retains unsupported operator syntax.
     Arity, operand/result types and compiler eligibility remain separate facts;
@@ -138,6 +139,36 @@ type
     property ArmIndex: Integer read FArm;
     property Span: TNyxPascalSpan read FSpan;
     property NextLabel: Integer read FNext;
+  end;
+  { A declared statement target's lexical spelling. Decimal labels are kept as
+    text, without a host-number conversion or a claim about compiler limits. }
+  TNyxPascalStatementLabelKind = (pslkIdentifier, pslkDecimal);
+  { One label in its owning module/routine, distinct from record-variant labels.
+    DeclarationIndex retains its typed lexical symbol, so labels can shadow names
+    and answer DECLARED without acquiring a value type. Spans belong to this syntax;
+    SectionSpan includes LABEL and the shared list terminator when present.
+    Complete describes list syntax only, never GOTO legality, target existence,
+    cross-routine jumps, compiler dialect admission or control-flow effects. }
+  TNyxPascalStatementLabel = record
+  private
+    FKind: TNyxPascalStatementLabelKind;
+    FDeclaration: Integer;
+    FName: TNyxText;
+    FScope: Integer;
+    FNameSpan: TNyxPascalSpan;
+    FSectionSpan: TNyxPascalSpan;
+    FComplete: Boolean;
+    FConditional: Boolean;
+  public
+    property Kind: TNyxPascalStatementLabelKind read FKind;
+    property DeclarationIndex: Integer read FDeclaration;
+    property Name: TNyxText read FName;
+    property Scope: Integer read FScope;
+    property NameSpan: TNyxPascalSpan read FNameSpan;
+    property SectionSpan: TNyxPascalSpan read FSectionSpan;
+    property Complete: Boolean read FComplete;
+    { Raw/unfinished conditional syntax confers no active-label authority. }
+    property Conditional: Boolean read FConditional;
   end;
   { Explicit uncertainty and declaration modifiers. Unsupported/recovered scopes
     grant no successful type inference, compilation or source editing authority. }
@@ -332,7 +363,7 @@ type
     function Fragment(AValue: TNyxPascalSyntaxFragment): TNyxPascalSyntaxOptions;
     { Copy the complete lexical policy, including Unicode/comment handling. }
     function Lexical(const AValue: TNyxPascalLexicalOptions): TNyxPascalSyntaxOptions;
-    { Bounds declarations plus their variant-selector/arm/label and hint entries
+    { Bounds declarations plus their variant-selector/arm/label, statement-label and hint entries
       across all scopes. Metadata cannot grow outside this aggregate quota. }
     function UpToDeclarations(AValue: Integer): TNyxPascalSyntaxOptions;
     { Includes the physical module/fragment scope and routine/member/body scopes. }
@@ -375,6 +406,15 @@ type
     function ImportAt(AIndex: Integer): TNyxPascalSyntaxImport;
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
+  end;
+  { Optional declaration-label metadata, with checked snapshot-local ordinals.
+    Metadata and typed declarations consume the shared node quota. Lexical lookup
+    retains labels for shadowing/DECLARED; value-type/member inference refuses.
+    Retaining this capability retains only its immutable syntax. }
+  INyxPascalStatementLabelSyntax = interface(IInterface)
+    ['{3D6A9D7B-7F12-4E16-A8F7-6C3F65C715B4}']
+    function StatementLabelCount: Integer;
+    function StatementLabelAt(AIndex: Integer): TNyxPascalStatementLabel;
   end;
 
   { Optional typed operator index over the same immutable declaration arena.
@@ -442,7 +482,7 @@ type
     provider or cancellation borrow survives publication. }
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
-    INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax)
+    INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -456,6 +496,7 @@ type
     FSelectors: array of TNyxPascalVariantSelector;
     FArms: array of TNyxPascalVariantArm;
     FLabels: array of TNyxPascalVariantLabel;
+    FStatementLabels: array of TNyxPascalStatementLabel;
     FHints: array of TNyxPascalSyntaxHint;
     FIntrinsics: array of TNyxPascalIntrinsicDeclaration;
     FScopeCount: Integer;
@@ -465,6 +506,7 @@ type
     FSelectorCount: Integer;
     FArmCount: Integer;
     FLabelCount: Integer;
+    FStatementLabelCount: Integer;
     FHintCount: Integer;
     FIntrinsicCount: Integer;
     FActiveArm: Integer;
@@ -503,7 +545,7 @@ type
     procedure Groups(AOpen, AClose: TNyxPascalSymbol);
     procedure Angles;
     procedure Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean = False;
-      AHints: Boolean = False; AArmEnd: Boolean = False);
+      AHints: Boolean = False; AArmEnd: Boolean = False; AInitializerBoundary: Boolean = False);
     function HintWord(out AKind: TNyxPascalHintKind): Boolean;
     function AtHint(AExpressionStart: Integer): Boolean;
     procedure DeclarationHints(ADeclaration: Integer);
@@ -524,7 +566,10 @@ type
     function Form: TNyxPascalSyntaxTypeForm;
     { Extend a procedural expression across only its supported trailing directive
       separators. Never consume an escaped/contextual name beginning a new type. }
-    procedure RoutineTypeSuffix(AArmEnd: Boolean = False);
+    procedure RoutineTypeSuffix(AArmEnd: Boolean = False; AInitializerBoundary: Boolean = False);
+    { Retain declaration labels with their typed lexical symbols. Malformed lists
+      mark their owner unsupported; recovery leaves the next body/section intact. }
+    procedure StatementLabels(AScope: Integer);
     procedure ParseType(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure TypeSection(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
@@ -560,6 +605,8 @@ type
     function ArmAt(AIndex: Integer): TNyxPascalVariantArm;
     function LabelCount: Integer;
     function LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
+    function StatementLabelCount: Integer;
+    function StatementLabelAt(AIndex: Integer): TNyxPascalStatementLabel;
     function HintCount: Integer;
     function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
     function IntrinsicCount: Integer;
@@ -831,7 +878,8 @@ end;
 procedure TSyntaxSnapshot.NodeBudget;
 begin
 
-  if FDeclarationCount + FSelectorCount + FArmCount + FLabelCount + FHintCount + FIntrinsicCount >=
+  if FDeclarationCount + FSelectorCount + FArmCount + FLabelCount + FStatementLabelCount +
+    FHintCount + FIntrinsicCount >=
     FOptions.MaximumDeclarations then
   begin
     raise ENyxPascalSyntaxLimit.Create('Declarations and structural metadata exceed their shared node budget');
@@ -898,7 +946,7 @@ begin
   begin
     FDeclarations[Result].FName := '';
   end
-  else if AOperator = pokNone then
+  else if (AOperator = pokNone) and not ((AKind = psdkLabel) and (LToken.Kind = ptkNumber)) then
   begin
     FDeclarations[Result].FName := FLexical.Identifier(FTokens[AName]);
   end
@@ -1458,12 +1506,13 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean;
-  AHints: Boolean; AArmEnd: Boolean);
+  AHints: Boolean; AArmEnd: Boolean; AInitializerBoundary: Boolean);
 var
   LStart: Integer;
 begin
   LStart := FPosition;
   while not EOF and not Sym(AStop) and not (AAlsoComma and Sym(psoComma)) and
+    not (AInitializerBoundary and (Sym(psoEqual) or Sym(psoAssign))) and
     not (AArmEnd and Sym(psoCloseParen)) and
     not (AArmEnd and Sym(psoSemicolon)) and
     not Word(pkwEnd) and not Word(pkwImplementation) and not Word(pkwBegin) do
@@ -1558,7 +1607,7 @@ begin
   end;
 end;
 
-procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean);
+procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean; AInitializerBoundary: Boolean);
 
   function Modifier(AOffset: Integer): Boolean;
   begin
@@ -1571,13 +1620,122 @@ procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean);
 
 begin
   while Sym(psoSemicolon) and Modifier(1) and
-    not Sym(psoEqual, 2) and not Sym(psoLess, 2) and
+    (AInitializerBoundary or not Sym(psoEqual, 2)) and not Sym(psoLess, 2) and
     not Sym(psoColon, 2) and not Sym(psoComma, 2) do
   begin
     { Keep the separator inside the type's range. The structured type parser
       owns qualifier validation/conflicts; this scanner owns declaration bounds. }
     Step;
-    Expression(psoSemicolon, False, True, AArmEnd);
+    Expression(psoSemicolon, False, True, AArmEnd, AInitializerBoundary);
+  end;
+end;
+
+procedure TSyntaxSnapshot.StatementLabels(AScope: Integer);
+var
+  LStart: Integer;
+  LFirst: Integer;
+  LAt: Integer;
+  LEntry: Integer;
+  LDeclaration: Integer;
+  LComplete: Boolean;
+  LKind: TNyxPascalStatementLabelKind;
+  LName: TNyxText;
+
+  function LabelName: Boolean;
+  var
+    LText: TNyxText;
+    LScalar: Integer;
+  begin
+    { Contextual words may be identifiers. Declaration/body boundaries are never
+      consumed as recovery labels; complete compiler keyword admission is separate. }
+    Result := (Tok.Kind = ptkWord) and not (Tok.Word in [pkwBegin, pkwEnd,
+      pkwImplementation, pkwInterface, pkwInitialization, pkwFinalization,
+      pkwVar, pkwThreadvar, pkwConst, pkwType, pkwResourcestring, pkwLabel,
+      pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor, pkwClass,
+      pkwUses, pkwUnit, pkwProgram, pkwLibrary, pkwPackage, pkwAsm]);
+
+    if Result then
+    begin
+      LKind := pslkIdentifier;
+      LName := Name;
+      Exit;
+    end;
+    Result := (Tok.Kind = ptkNumber) and Tok.Complete;
+
+    if not Result then
+    begin
+      Exit;
+    end;
+    LText := FLexical.Text(FTokens[FPosition]);
+    for LScalar := 1 to Length(LText) do
+    begin
+
+      if not (LText[LScalar] in ['0'..'9']) then
+      begin
+        Exit(False);
+      end;
+    end;
+    LKind := pslkDecimal;
+    LName := LText;
+  end;
+
+begin
+  LStart := Tok.Span.Start;
+  LFirst := FStatementLabelCount;
+  LComplete := True;
+  Step;
+  repeat
+
+    if not LabelName then
+    begin
+      Unsupported(AScope, 'A label list needs an identifier or decimal label', Tok.Span);
+      LComplete := False;
+      Break;
+    end;
+    LDeclaration := AddDeclaration(AScope, psdkLabel, psavLocal, FPosition);
+    NodeBudget;
+    LEntry := FStatementLabelCount;
+
+    if LEntry = Length(FStatementLabels) then
+    begin
+      SetLength(FStatementLabels, Capacity(LEntry, FOptions.MaximumDeclarations));
+    end;
+    FStatementLabels[LEntry].FKind := LKind;
+    FStatementLabels[LEntry].FDeclaration := LDeclaration;
+    FStatementLabels[LEntry].FName := LName;
+    FStatementLabels[LEntry].FScope := AScope;
+    FStatementLabels[LEntry].FNameSpan := Tok.Span;
+    FStatementLabels[LEntry].FConditional := FConditional[FPosition];
+    Inc(FStatementLabelCount);
+    Step;
+
+    if not Sym(psoComma) then
+    begin
+      Break;
+    end;
+    Step;
+  until False;
+
+  if Sym(psoSemicolon) then
+  begin
+    Step;
+  end
+  else
+  begin
+    Unsupported(AScope, 'Finish this label list with a semicolon', Tok.Span);
+    LComplete := False;
+  end;
+  for LAt := LFirst to FStatementLabelCount - 1 do
+  begin
+    FStatementLabels[LAt].FSectionSpan := SpanFrom(LStart);
+    FStatementLabels[LAt].FComplete := LComplete;
+    LDeclaration := FStatementLabels[LAt].DeclarationIndex;
+    FDeclarations[LDeclaration].FHeaderSpan := FStatementLabels[LAt].SectionSpan;
+
+    if not LComplete then
+    begin
+      Include(FDeclarations[LDeclaration].FFlags, psdfIncomplete);
+    end;
   end;
 end;
 
@@ -2123,8 +2281,10 @@ begin
 
     if Word(pkwProcedure) or Word(pkwFunction) or Word(pkwReference) then
     begin
-      Expression(psoSemicolon, False, True, AArmEnd);
-      RoutineTypeSuffix(AArmEnd);
+      { Parameter defaults stay inside their groups. Only an outer initializer
+        ends the type, including after a calling-convention separator. }
+      Expression(psoSemicolon, False, True, AArmEnd, True);
+      RoutineTypeSuffix(AArmEnd, True);
     end
     else
     begin
@@ -2140,6 +2300,7 @@ begin
   { Native Pascal admits hints between the declared type and its initializer.
     Consume them before checking '='; retain one ordered owner until any trailing
     hints have also been captured and the group can receive independent links. }
+
   if Length(LEntries) > 0 then
   begin
     DeclarationHints(LEntries[0]);
@@ -2894,6 +3055,11 @@ begin
         LSection := Tok.Word;
         Step;
       end
+      else if Word(pkwLabel) and not AMembers then
+      begin
+        StatementLabels(AScope);
+        LSection := pkwNone;
+      end
       else if AMembers and (Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
         pkwAutomated, pkwStrict]) then
       begin
@@ -3442,6 +3608,21 @@ begin
     raise ENyxPascalLexical.Create('Variant label index is outside its syntax snapshot');
   end;
   Result := FLabels[AIndex];
+end;
+
+function TSyntaxSnapshot.StatementLabelCount: Integer;
+begin
+  Result := FStatementLabelCount;
+end;
+
+function TSyntaxSnapshot.StatementLabelAt(AIndex: Integer): TNyxPascalStatementLabel;
+begin
+
+  if (AIndex < 0) or (AIndex >= FStatementLabelCount) then
+  begin
+    raise ENyxPascalLexical.Create('Statement label index is outside its syntax snapshot');
+  end;
+  Result := FStatementLabels[AIndex];
 end;
 
 function TSyntaxSnapshot.HintCount: Integer;

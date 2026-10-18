@@ -33,7 +33,103 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed missing compiler facts — 2026-10-18
+## Current integration: Statement labels and procedural initializers — 2026-10-18
+
+Previous goal turn is progress: committed/pushed 5102b9e qualifies typed missing
+compiler facts while preserving original authoring criterion two across at least
+twenty-five documented unclosed batches. Reassessment identifies actual module
+LABEL sections as scope uncertainty and initialized procedural-variable suffixes
+as lost declaration boundaries. Follow these existing parser/binding prerequisites
+with distinct immutable label roles, bounded metadata and precise outer
+initializer boundaries. Preserve declaration ownership, original ranges, recovery,
+node/work/cancellation quotas and exact compiler/source packets. Actual compiled
+Pascal behavior, portable ownership/refusal checks, maintained affected consumers
+and one unchanged real-RTL continuation decide the boundary. Stop on a materially
+different prerequisite; do not add fact/probe/fixture/capture variants or raise
+budgets. Full grammar/canonical type/module/incremental/editor/input/navigation/
+quality/parity/adoption/delivery and original criterion/task/credit/DONE remain
+open. Solo; native execution/browser compile only. Preserve concurrent planning,
+protected files/nine complete contexts, frozen release and offline LAN. No host/
+config retry, browser/HTTP/file execution/capture, protected mutation, cleanup/
+deletion/restart or approval bypass.
+
+The public optional INyxPascalStatementLabelSyntax retains named/decimal targets,
+exact name/list ranges, checked lexical declaration identity and module/nested
+routine ownership. Appended psdkLabel preserves existing declaration ordinals.
+Labels share lexical lookup for shadowing/DECLARED, while TypeOfSymbol and member
+completion refuse to invent a value receiver. Malformed/unfinished/conditional
+lists retain scoped uncertainty; label metadata and declarations consume the
+existing aggregate quota. No records contain interfaces. Original source and
+translated physical include origins remain separate from projection separators.
+
+Procedural variable signatures and calling-convention suffixes now stop at the
+outer initializer; grouped parameters and existing sibling/type-alias guards
+retain their boundaries. The ordinary type reader sees the convention without
+the value. Typed module RequestGoto retains exact context identity, source
+on/off intent, unknown-state revocation and current module value across local
+PUSH/POP. FPC mode behavior follows the pinned compiler's source; complete mode
+placement/admission remains outside structural/intent evidence.
+
+Retained preparations include mistaken test factory names caught by compilation,
+an oracle comparing projection spacing to authored ranges, the fixture's initially
+unsupported GOTO directive, a compiler-refused duplicate source MODE, and a bare
+unknown conditional mistaken for an inactive IFDEF. Corrections retain each failed
+log. Source review additionally proves FPC inserts labels in its lexical table;
+the initial metadata-only namespace was corrected before final qualification so
+DECLARED/shadowing cannot confidently return false or donate an outer value.
+The earlier full regression/module packet remains distinct from final source.
+It is not final-source evidence for the later typed-label correction.
+
+Final focused native qualification passes 53 checks with clean heap: exact lexical
+label identity, independent nested owners, value shadowing, refused value/member
+inference, ordered DECLARED, physical include navigation, incomplete/conditional
+recovery, checked ordinals, shared quota and cancellation. The whole compiled
+unit/include executes labelled bodies, a conditional selected by the native
+compiler, initialized procedural callbacks and module switch PUSH/POP behavior.
+The native companion and its exact original source are both exercised; this does
+not prove general statement binding, GOTO legality or mode placement/admission.
+
+One unchanged final RTL journey passes 48 with clean heap. Existing preparation
+retains the original five initial probes, eight-capped symbol preparation and
+one separately explicit binding-produced Word requirement job. Budgets and source
+bytes are unchanged. System reaches 6,902 declarations/seven syntax diagnostics/
+eleven answered semantic conditions with no pending semantic query. ObjPas reaches
+209 declarations/four syntax diagnostics/one answer. Ordinary indexed TObject.Fr
+again returns exactly Free and FreeInstance, exact original objpash.inc navigation
+and detached insertion. This final ready result supersedes the prior incomplete
+ObjPas refusal for this expanded source; it does not establish complete RTL meaning.
+Class/property syntax and compilerproc remain among the seven System diagnostics;
+CODEALIGN retains its independent source-context refusal. Stop label/suffix/module/
+fixture/compiler/capture variants; reassess the actual class/property prerequisite
+through existing syntax/type/binding owners before another feature batch.
+
+Ignored body-scope-20261018-100240 is located by .local/body-scope-paths-private.json.
+All four final compiler/native groups join with exit 0. Fifty-seven accepted
+compiler logs have zero owned warnings and 133 separately identified upstream
+pas2js Classes warnings. Thirty-four native consumers have clean heaps. Both
+Studios, backend/worker and nineteen browser consumers compile as applicable;
+browser execution/input/observing/parity/adoption/delivery remain open. Maintained
+constant/warning/trace/planner/translation/syntax/type/binding/generic/dependency/
+owned completion/profile/SDK/production semantic consumers retain their checks;
+counts overlap prior qualification and are not new full-language acceptance.
+
+Final style/comment review precedes final compilation; no owned source changes
+after the last freeze. All eight focused sources, 634 product files, 97 original
+RTL pins and nineteen compiler/primary-source pins verify. All 156 original unit
+packets and 48 retained SysUtils includes stay byte-exact. Five protected files/
+nine complete contexts, 349 frozen 7422453 artifacts and thirteen independently
+owned planning files remain exact. Final readers are joined and ports 8088–8093
+have no listeners; native Nyx tools remain absent. No host/config retry, browser/
+HTTP/file execution/capture, protected mutation, cleanup/deletion/restart or
+approval bypass occurred. Final source/remote identity is retained in this private
+packet after publication. Concurrent planning stays unstaged.
+
+At least twenty-six documented unclosed batches retain full original criterion
+two and complete language/canonical type/module/incremental/editor/input/
+navigation/quality/parity/adoption/delivery requirements. No original criterion/
+task/counter/credit/DONE closes. Goal active; execution remains solo.
+
+## Earlier integration: Typed missing compiler facts — 2026-10-18
 
 Previous goal turn is progress: committed/pushed b3e0ff2 qualifies exact constants,
 explicit dialects and the unchanged RTL's concrete missing Word packet. At least

@@ -1010,6 +1010,12 @@ begin
       begin
         Result := pckConstant;
       end;
+    psdkLabel:
+      begin
+        { Label navigation needs a statement context. A label cannot be emitted
+          as an ordinary expression-member completion row. }
+        raise ENyxPascalBinding.Create('A statement label is not a value member');
+      end;
   end;
 end;
 

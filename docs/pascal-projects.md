@@ -1995,6 +1995,63 @@ canonical types, module coherence, incremental budgets, ordinary editor/input/
 navigation, quality, browser/LCL parity, adoption and delivery stay under original
 authoring criterion two.
 
+## Statement labels and initialized procedural variables
+
+`nyx.pascal.syntax` retains statement-label declarations through optional
+`INyxPascalStatementLabelSyntax`. Each immutable value has its lexical kind,
+exact name spelling, module/routine scope, name/list spans and a checked
+`DeclarationIndex` into the same syntax snapshot. Named and decimal labels are
+distinct; decimal text keeps leading zeros without host numeric conversion.
+Nested same-spelling labels retain independent owners. Record-variant labels
+remain an entirely different existing contract.
+
+The appended `psdkLabel` declaration role preserves the compiler's lexical
+namespace: labels can shadow outer names and answer ordered `declared(...)`.
+Ordinary binding returns their exact typed symbol and physical origin. Asking
+for a label's value type or expression-member receiver refuses explicitly;
+member completion cannot emit a label as a variable. Existing declaration-kind
+ordinals and original result interfaces remain intact. This does not implement
+GOTO target completion, statement reference binding or control-flow validation.
+
+```pascal
+if Supports(LSourceSyntax, INyxPascalStatementLabelSyntax, LStatementLabels) then
+begin
+  LTarget := LStatementLabels.StatementLabelAt(0);
+  LTargetDeclaration := LSourceSyntax.Declaration(LTarget.DeclarationIndex);
+end;
+```
+
+Ordinals are zero-based and checked. Retaining the optional interface retains
+only its immutable syntax, with no editor or query cycle. Declaration and label
+metadata share the existing node quota. Missing names/separators and unfinished
+lists retain incomplete entries and scoped uncertainty, leaving subsequent bodies
+and declarations available for recovery. Conditional entries retain their
+uncertainty. `Complete` proves list delimiters only, never compiler keyword/range
+admission, a target definition, a legal jump or runtime effects.
+
+`TNyxPascalCompilerPolicies.RequestGoto` carries a typed module request.
+`{$goto on/off}` participates in exact detached context identity and unknown-state
+revocation. Local `PUSH`/`POP` preserves its current module value. Supported FPC
+source modes retain the compiler's module-switch behavior; placement/eligibility
+and other compilers remain compiler-admission questions. The analysis service
+does not infer that a parsed label or GOTO is legal from this request alone.
+
+Initialized procedural variables keep their type and outer initial value in
+separate ranges, including `function(...): ResultType; stdcall = @Handler`.
+Grouped parameter syntax owns its nested separators; calling conventions remain
+part of the type. Existing sibling and type-alias delimiter guards stay active.
+The ordinary declared-type reader consumes the complete convention without
+receiving the initial value as a qualifier.
+
+The maintained whole native unit/include executes named/numeric/nested labels,
+initialized callbacks, a label-dependent conditional and module switch lifetime.
+Its original source is separately analyzed with exact include navigation.
+WORK.md owns the portable/refusal/regression and unchanged actual-RTL evidence.
+Browser consumers compile only; complete grammar/canonical types, module and
+incremental coherence, editor/input/navigation, quality, parity, adoption and
+delivery remain under original authoring criterion two. This adds no MCP tool,
+schema or installed resolver.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

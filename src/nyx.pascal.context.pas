@@ -131,6 +131,7 @@ type
     FSets: TNyxPascalSetPacking;
     FCalling: TNyxPascalCallingConvention;
     FSmartLinking: TNyxPascalKnowledge;
+    FGoto: TNyxPascalKnowledge;
     FAssembler: TNyxPascalAssemblerReader;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
@@ -142,6 +143,9 @@ type
     { Module-level request; neither PUSH/POP nor a source mode change restores
       it. This records intent, not linker availability or the effective output. }
     function RequestSmartLinking(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { Module GOTO/LABEL request, independent of local PUSH/POP. Unknown grants
+      no dialect admission; this is not proof that a jump has a legal target. }
+    function RequestGoto(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     { Local reader intent participates in saved settings. No instruction parser
       or compiler callback is retained by this independent value copy. }
     function ReadAssemblyBy(AValue: TNyxPascalAssemblerReader): TNyxPascalCompilerPolicies;
@@ -153,6 +157,7 @@ type
     property SetPacking: TNyxPascalSetPacking read FSets;
     property CallingConvention: TNyxPascalCallingConvention read FCalling;
     property SmartLinkingRequested: TNyxPascalKnowledge read FSmartLinking;
+    property GotoRequested: TNyxPascalKnowledge read FGoto;
     property AssemblerReader: TNyxPascalAssemblerReader read FAssembler;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
@@ -1000,7 +1005,8 @@ begin
     SetLength(LCopy.FSizes, 0);
   end;
   LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown
-    .RequestSmartLinking(FPolicies.SmartLinkingRequested);
+    .RequestSmartLinking(FPolicies.SmartLinkingRequested)
+    .RequestGoto(FPolicies.GotoRequested);
   for LAt := 0 to High(LCopy.FOptions) do
   begin
     LCopy.FOptions[LAt] := ppkUnknown;
@@ -1479,6 +1485,8 @@ begin
     (Ord(FSets) > Ord(High(TNyxPascalSetPacking))) or
     (Ord(FSmartLinking) < Ord(Low(TNyxPascalKnowledge))) or
     (Ord(FSmartLinking) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FGoto) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FGoto) > Ord(High(TNyxPascalKnowledge))) or
     (Ord(FAssembler) < Ord(Low(TNyxPascalAssemblerReader))) or
     (Ord(FAssembler) > Ord(High(TNyxPascalAssemblerReader))) or
     (Ord(FCalling) < Ord(Low(TNyxPascalCallingConvention))) or
@@ -1523,6 +1531,13 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPolicies.RequestGoto(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FGoto := AValue;
+  Result.Validate;
+end;
+
 function TNyxPascalCompilerPolicies.CallBy(AValue: TNyxPascalCallingConvention): TNyxPascalCompilerPolicies;
 begin
   Result := Self;
@@ -1544,7 +1559,7 @@ begin
   Result := (FInlining = AOther.FInlining) and (FRecords = AOther.FRecords) and
     (FEnums = AOther.FEnums) and (FSets = AOther.FSets) and
     (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking) and
-    (FAssembler = AOther.FAssembler);
+    (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto);
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;
@@ -1818,7 +1833,8 @@ begin
   LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
   Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
   LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
-    .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested));
+    .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
+    .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested));
   Result := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
 end;
 

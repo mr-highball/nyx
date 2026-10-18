@@ -9,6 +9,31 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Declaration/scope continuation (2026-10-18): 5102b9e is progress across at least
+twenty-five documented unclosed batches, retaining full original criterion two.
+Reassessment follows actual LABEL ownership and initialized procedural-variable
+boundaries through existing parser/binding owners. Deliver bounded independent
+label syntax and exact type/value ranges, retaining malformed-source refusal,
+original origins, quotas and cancellation. Whole compiled native behavior,
+portable cases, maintained affected consumers and one unchanged RTL continuation
+decide this boundary; stop at a different prerequisite without fact/probe/fixture/
+capture variants, raised budgets or original criterion/task/credit/DONE/parity/
+adoption/delivery closure. WORK.md owns evidence and the full editor return path.
+
+The final boundary qualifies 53 focused native and 48 unchanged real-RTL checks,
+both with clean heaps. Typed labels retain lexical shadowing/DECLARED and refuse
+value inference; whole compiled source/include preserves exact origins. System
+reaches 6,902 declarations/seven syntax diagnostics/eleven semantic answers,
+ObjPas 209/four/one. Exact indexed Free/FreeInstance completion/navigation/insertion
+is ready again, with full RTL grammar/type meaning still open. Existing five
+initial/eight-capped symbol probes and one explicit Word request job stay unchanged.
+Stop label/suffix/module/fixture/compiler/capture variants; reassess the actual
+class/property prerequisite through existing parser/type/binding ownership.
+At least twenty-six documented unclosed batches retain full original criterion
+two, broader editor/incremental/input/navigation/quality/parity/adoption/delivery
+and no original criterion/task/credit/DONE closure. WORK.md owns final receipts,
+retained preparations and source/remote identity; browser consumers compile only.
+
 Fact-request continuation (2026-10-18): b3e0ff2 is progress, retaining at least
 twenty-four documented unclosed batches and full original criterion two. Follow
 the actual missing compiler-root Word fact through typed binding/context requests,

@@ -2464,6 +2464,13 @@ begin
       Exit(Answer(pbsUnresolved, pbiIncompleteSource));
     end;
 
+    if LDecl.Kind = psdkLabel then
+    begin
+      { Labels inhabit the lexical namespace (including DECLARED and shadowing),
+        but cannot donate a variable/type or an expression-member receiver. }
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType, LDecl.Name));
+    end;
+
     if (LDecl.GenericSpan.Length > 0) then
     begin
       LIssue := GenericNames(ASymbol, LNames);

@@ -176,6 +176,12 @@ An explicit native host can fulfill a matching request and apply only that fact
 to an unchanged module snapshot. Missing compiler metadata never borrows a host
 ABI or diagnostic string; full resolver/editor/parity/adoption remain open.
 
+The [statement-label and initialized-callback layer](docs/pascal-projects.md#statement-labels-and-initialized-procedural-variables)
+retains typed lexical label symbols, nested ownership and exact source origins.
+Labels participate in shadowing and `declared` while refusing value-type inference.
+Module GOTO requests and procedural type/value boundaries retain their own typed
+contracts; full language, editor adoption and both-target quality remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

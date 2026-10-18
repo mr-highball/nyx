@@ -4,7 +4,31 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source typed compiler requirements retain exact context owner, observing
+Current-source statement labels retain typed lexical symbols, checked metadata,
+module/nested owners and exact source origins. DECLARED and shadowing preserve
+label identity; value-type/member inference refuses. Typed module GOTO requests
+survive local PUSH/POP; procedural signatures/conventions retain outer initializer
+boundaries. Final native focused 53 and unchanged RTL 48 pass with clean heaps.
+System reaches 6,902 declarations/seven syntax diagnostics/eleven answers; ObjPas
+209/four/one. Exact indexed Free/FreeInstance navigation/insertion is ready again,
+without full RTL meaning. Original five initial/eight-capped symbol probes and
+one explicit Word request job stay unchanged. Thirty-four native consumers have
+clean heaps; 57 compiler logs have zero owned warnings/133 upstream. Both Studios,
+backend/worker and nineteen browser consumers compile as applicable; browser
+execution/input/observing/parity/adoption/delivery remain open. Eight focused/634
+product/97 RTL/19 compiler pins, 156 unit packets/48 includes, five protected files/
+nine contexts, 349 frozen 7422453 artifacts and thirteen concurrent planning files
+stay exact. Readers joined; LAN offline, native Nyx tools absent. WORK.md owns
+receipts, retained preparations and final source/remote identity. Stop label/suffix/
+module/fixture/compiler/capture variants; reassess actual class/property grammar
+through existing parser/type/binding owners. Compilerproc/CODEALIGN and complete
+canonical types/module/incremental/editor/input/navigation/quality/parity/adoption/
+delivery stay open across at least twenty-six documented unclosed batches. No
+original criterion/task/credit/DONE/new tool/schema/rollout closes. No host/config
+retry or capture, protected mutation, cleanup/deletion/restart, approval bypass or
+sub-agents. Preserve concurrent work.
+
+Earlier typed compiler requirements retain exact context owner, observing
 source and checked state/origin independently of diagnostic text. Optional bounded
 capabilities propagate through binding, constants and legacy/ordered conditions.
 Explicit native fulfillment requires an exact owning capture and default anchor;

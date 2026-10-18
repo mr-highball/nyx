@@ -2156,7 +2156,7 @@ begin
       Exit;
     end;
 
-    if LName = 'smartlink' then
+    if (LName = 'smartlink') or (LName = 'goto') then
     begin
       LArgument := NyxPascalASCIIKey(LValue);
       LCondition := ppkUnknown;
@@ -2171,15 +2171,24 @@ begin
       end
       else
       begin
-        raise ENyxPascalContext.Create('Smart linking needs on or off');
+        raise ENyxPascalContext.Create('A module switch needs on or off');
       end;
 
       if FActive = ppkUnknown then
       begin
         LCondition := ppkUnknown;
       end;
-      FContext := NyxPascalWithCompilerPolicies(FContext,
-        NyxPascalCompilerPolicies(FContext).RequestSmartLinking(LCondition));
+
+      if LName = 'goto' then
+      begin
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).RequestGoto(LCondition));
+      end
+      else
+      begin
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).RequestSmartLinking(LCondition));
+      end;
       SaveState;
       Exit;
     end;
@@ -2373,6 +2382,15 @@ begin
             .WithFeature(ppfUnicodeStrings, ppkFalse)
             .WithFeature(ppfOutParameters, ppkFalse)
             .WithFeature(ppfClasses, ppkFalse);
+
+          if LMode in [ppmDelphi, ppmDelphiUnicode, ppmTP, ppmMacPas, ppmISO,
+            ppmExtendedPascal] then
+          begin
+            { FPC mode handling enables this module switch; later FPC/ObjFPC
+              mode changes preserve it rather than restoring a local default. }
+            FContext := NyxPascalWithCompilerPolicies(FContext,
+              NyxPascalCompilerPolicies(FContext).RequestGoto(ppkTrue));
+          end;
 
           if LMode in [ppmDelphi, ppmDelphiUnicode] then
           begin
