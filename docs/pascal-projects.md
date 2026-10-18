@@ -2560,6 +2560,50 @@ logical preparation, not CPU time or editor latency. WORK.md owns the frozen
 maintained/unchanged real RTL outcomes, source/remote identity, preservation
 boundaries and the remaining full language/editor/parity/adoption/delivery scope.
 
+## Prepared projection atoms
+
+The owned scanner and frozen lexical prefixes can return a detached
+`TNyxPascalPreparedToken`: the exact immutable token, spelling and identifier
+policy, with no source, reader, translation, context or execution lease. Its
+private preparation state comes only from those producers. Public classifications
+and equal text supplied by alternate implementations cannot donate this proof.
+Default values are unavailable. Existing token layouts/interfaces stay unchanged.
+
+Owned macro expansions and chronological translation prefixes map their exact
+effective ordinals back to this preparation. Complete Pascal words, numbers,
+characters, strings and symbols qualify when the target identifier policy matches.
+ASM/envelope changes, bare ampersands, malformed/incomplete/opaque tokens and
+trivia keep ordinary scanning. Complete atoms separated by the projection's
+literal ASCII spaces preserve their classification; those exclusions protect
+recovery, lookahead and assembly behavior. Source/macro/include origins still
+come from the current translated view independently of the virtual lexical rows.
+
+`TryNyxPascalPreparedProjection` consumes an immutable typed input synchronously.
+It produces checked scalar/storage/line/column positions, spaces and EOF, sharing
+complete predecessor blocks and copying an owned partial tail. Unowned/unsafe
+predecessor boundaries return False for ordinary scanner fallback. Supplied atoms
+without matching preparation, changed predecessor policy, cancellation and all
+byte/token/work limits refuse atomically. A completed result retains no input
+provider or earlier lexical owner. Newly produced atom/gap/EOF rows, copied
+directory/tail rows and diagnostics remain admitted. `PreparedTokens` describes
+actual classification reuse; `LexedTokens = 0` does not make produced rows free.
+
+Translated syntax delays origin-directory/tail copying until a real code delta
+arrives. A zero-code continuation shares the entire immutable directory, including
+its partial final block, together with the lexical/syntax values already reused
+by their factories. A later real append allocates its own directory and tail.
+The new translated view still owns its current source, blocked position, compiler
+state and binding world; no previous answer/context is substituted.
+
+Native differential checks compare fast and fallback paths with independent whole
+lexical/syntax scans, Unicode, macro/include origins, every-scalar seams, invalid
+input, assembly, unsafe predecessor boundaries, retirement and cancellation. The
+prepared twelve-atom case admits exactly 24 units and all 23 smaller allowances
+refuse without publication. The small semantic fixture remains at 389 units;
+avoiding classification is not a timing claim or a guessed budget discount.
+WORK.md owns frozen maintained/unchanged RTL evidence, preservation distinctions,
+source/remote identity and the remaining full language/editor/parity/delivery scope.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

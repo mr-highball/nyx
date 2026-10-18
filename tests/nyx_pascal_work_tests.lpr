@@ -232,11 +232,11 @@ begin
     (LCompatibility.TranslationTokens = LBaseline.Source.Count) and
     (LSum = LCompatibility.TranslationTokens + LCompatibility.PrefixTokens +
       LCompatibility.ConstantSteps), 'Exact phase totals retain one emitted-token identity and no double charging');
-  { This fixture builds fresh prefix arenas. Direct emission admits each final
-    lexical row with its scan and performs no second import. Actual retained
-    append copies keep separate row admission in nyx_pascal_append_tests. }
+  { Physical source scanning emits its own final rows once. Prepared projection
+    atoms avoid another classification pass but still admit every produced
+    virtual row; they are not a free copy or a guessed work discount. }
   Check((LReceipt.Used(papFrozenRow) > 0) and (LReceipt.Used(papProjectionToken) > 0) and
-    (LReceipt.Used(papLexicalToken) > 0) and (LReceipt.Used(papLexicalRow) = 0) and
+    (LReceipt.Used(papLexicalToken) > 0) and (LReceipt.Used(papLexicalRow) > 0) and
     (LReceipt.Used(papFilterToken) > 0) and (LReceipt.Used(papSyntaxToken) > 0) and
     (LReceipt.Used(papMetadataNode) > 0) and (LReceipt.Used(papMetadataValue) > 0) and
     (LReceipt.Used(papWorldToken) > 0) and (LReceipt.Used(papWorldEntry) > 0) and

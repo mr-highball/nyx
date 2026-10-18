@@ -408,6 +408,10 @@ function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
   AIndex: Integer): TNyxPascalToken;
 function NyxPascalEffectiveText(const ASource: INyxPascalTranslation;
   AIndex: Integer): TNyxText;
+{ Only an owned translation can bind an effective ordinal to prepared lexical
+  proof. The detached value owns no translation, occurrence, macro or context. }
+function NyxPascalPreparedEffectiveToken(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxPascalPreparedToken;
 
 { Exact common leading token count for snapshots from one owned chronological
   translation, -1 for unrelated/alternate sources. Immutable construction stamps
@@ -462,6 +466,12 @@ const
   CTranslationPrefixBlockSize = 256;
 
 type
+  { Sealed bridge through exact occurrence/expansion storage. Public token
+    fields, equal text and lineage counters do not confer this capability. }
+  IPreparedTranslation = interface(IInterface)
+    ['{36D80CB5-6EF1-4CCB-BE1B-56C409DA8D21}']
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+  end;
   { File-only compatibility view. The first immutable occurrence is retained;
     differing later policies/tokens revoke ambiguous legacy access. }
   TPhysicalCache = class
@@ -535,7 +545,8 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives, ITranslationLineage, INyxPascalPrefixValidationWork)
+    INyxPascalEmissionDirectives, ITranslationLineage, INyxPascalPrefixValidationWork,
+    IPreparedTranslation)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -600,6 +611,7 @@ type
     function PreparedTokens: Integer;
     function RetainedTokens: Integer;
     function ReusedTokens: Integer;
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
   end;
   { Advertises storage only when the retained source actually supplies its
     immutable arena receipt. Exclusive source bounds remain with the base view;
@@ -685,7 +697,7 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives, ITranslationLineage)
+    INyxPascalEmissionDirectives, ITranslationLineage, IPreparedTranslation)
   private
     FLineage: IInterface;
     FFiles: INyxPascalFileCatalog;
@@ -787,6 +799,7 @@ type
     function Text(AIndex: Integer): TNyxText;
     function Physical(AFile: Integer): INyxPascalLexicalSnapshot;
     function OccurrenceLexical(AOccurrence: Integer): INyxPascalLexicalSnapshot;
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
     function OccurrenceCount: Integer;
     function Occurrence(AIndex: Integer): TNyxPascalInclusion;
     function StateCount: Integer;
@@ -3719,6 +3732,24 @@ begin
   Result := OccurrenceLexical(LToken.Occurrence).Token(LToken.PhysicalToken);
 end;
 
+function TTranslation.PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LToken: TNyxPascalTranslatedToken;
+begin
+  LToken := Token(AIndex);
+
+  if LToken.Expanded then
+  begin
+    Exit(NyxPascalPreparedMacroToken(Expansion(LToken.Expansion), LToken.ExpansionToken));
+  end;
+
+  if (LToken.Occurrence < Length(FWindows)) and (FWindows[LToken.Occurrence] <> nil) then
+  begin
+    Exit(NyxPascalPreparedToken(FWindows[LToken.Occurrence], LToken.PhysicalToken));
+  end;
+  Result := NyxPascalPreparedToken(OccurrenceLexical(LToken.Occurrence), LToken.PhysicalToken);
+end;
+
 function TTranslation.Text(AIndex: Integer): TNyxText;
 var
   LToken: TNyxPascalTranslatedToken;
@@ -3800,6 +3831,19 @@ begin
   else
   begin
     Result := ASource.PhysicalToken(AIndex);
+  end;
+end;
+
+function NyxPascalPreparedEffectiveToken(const ASource: INyxPascalTranslation;
+  AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LOwner: IPreparedTranslation;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if Supports(ASource, IPreparedTranslation, LOwner) then
+  begin
+    Result := LOwner.PreparedToken(AIndex);
   end;
 end;
 
@@ -4446,6 +4490,12 @@ function TTranslationPrefix.PhysicalToken(AIndex: Integer): TNyxPascalToken;
 begin
   Token(AIndex);
   Result := FSource.PhysicalToken(AIndex);
+end;
+
+function TTranslationPrefix.PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+begin
+  Token(AIndex);
+  Result := NyxPascalPreparedEffectiveToken(FSource, AIndex);
 end;
 
 function TTranslationPrefix.Text(AIndex: Integer): TNyxText;

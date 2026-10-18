@@ -38,6 +38,20 @@ type
     function SharedTokens: Integer;
     function CopiedTokens: Integer;
   end;
+  { Borrowed immutable sequence of detached prepared atoms. The projection
+    owner supplies it synchronously; completed lexical values retain no input
+    provider, translation, callback or source. Each atom must be eligible for
+    the target policy. Spaces are inserted by the factory, never by the caller. }
+  INyxPascalPreparedProjectionInput = interface(IInterface)
+    function Count: Integer;
+    function Prepared(AIndex: Integer): TNyxPascalPreparedToken;
+  end;
+  { Immutable receipt of actual classification reuse. Produced gap/EOF/atom rows
+    remain charged as rows; avoiding a scan is not a logical quota discount. }
+  INyxPascalPreparedProjectionWork = interface(IInterface)
+    ['{4F6E2897-B311-4748-A22D-8716F0CB1952}']
+    function PreparedTokens: Integer;
+  end;
 
 { Start a fixed-policy append arena with ordinary complete lexical semantics.
   Segmented immutable storage supports later appends without joining old text.
@@ -63,9 +77,17 @@ function AppendNyxPascalLexical(const APrevious: INyxPascalLexicalSnapshot;
 function NyxPascalRetainedLexicalTokens(const APrevious,
   ACurrent: INyxPascalLexicalSnapshot): Integer;
 
+{ Construct a spaced projection from owned prepared atoms, or return False for
+  an unowned/unsafe predecessor boundary. Ineligible atoms/policy/budgets refuse
+  atomically. Callers keep the ordinary scanner for inputs lacking proof. }
+function TryNyxPascalPreparedProjection(const APrevious: INyxPascalLexicalSnapshot;
+  const AInput: INyxPascalPreparedProjectionInput; const AOptions: TNyxPascalLexicalOptions;
+  out AResult: INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope = nil): Boolean;
+
 implementation
 
-uses SysUtils, nyx.pascal.work;
+uses SysUtils, nyx.pascal.work, nyx.bytes;
 
 const
   { Bounds partial-tail copying while complete directories share value blocks. }
@@ -107,7 +129,7 @@ type
     identity. Construction alone may fill its private partial block; published
     snapshots retain neither cancellation nor an earlier arena/reader. }
   TAppendLexical = class(TInterfacedObject, INyxPascalLexicalSnapshot,
-    INyxPascalLexicalAppendWork, IAppendArena)
+    INyxPascalLexicalAppendWork, IAppendArena, INyxPascalPreparedProjectionWork)
   private
     FOptions: TNyxPascalLexicalOptions;
     FBlocks: array of IAppendBlock;
@@ -123,6 +145,7 @@ type
     FIdentity: IInterface;
     FPrevious: IInterface;
     FWriting: TAppendBlock;
+    FPrepared: Integer;
     procedure Add(const ARow: TAppendRow);
     procedure AddDiagnostic(const AValue: TNyxPascalLexicalDiagnostic);
     function Scan(const AText: TNyxText; const APolicy: TNyxPascalLexicalOptions;
@@ -135,6 +158,10 @@ type
     constructor CreateAppend(const APrevious: INyxPascalLexicalSnapshot;
       const ABase: IAppendArena; const ATail: TNyxText;
       const ACancellation: INyxCancellationScope);
+    constructor CreatePrepared(const APrevious: INyxPascalLexicalSnapshot;
+      const ABase: IAppendArena; const AEnd: TNyxPascalToken;
+      const AInput: INyxPascalPreparedProjectionInput;
+      const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope);
     function Source: TNyxText;
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
@@ -155,6 +182,7 @@ type
     function LexedTokens: Integer;
     function SharedTokens: Integer;
     function CopiedTokens: Integer;
+    function PreparedTokens: Integer;
   end;
   { Synchronous final-row destination. Its raw owner is borrowed only while
     Scan holds a local interface lease; finally revokes it on every exit. The
@@ -414,6 +442,126 @@ begin
   SetLength(FDiagnostics, FDiagnosticCount);
 end;
 
+constructor TAppendLexical.CreatePrepared(const APrevious: INyxPascalLexicalSnapshot;
+  const ABase: IAppendArena; const AEnd: TNyxPascalToken;
+  const AInput: INyxPascalPreparedProjectionInput;
+  const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope);
+var
+  LAt, LCount, LLine, LColumn, LBytes, LAtomBytes: Integer;
+  LAtom: TNyxPascalPreparedToken;
+  LRow: TAppendRow;
+  LGap: Boolean;
+begin
+  inherited Create;
+  FOptions := AOptions;
+  FIdentity := TInterfacedObject.Create;
+  LLine := AEnd.Line;
+  LColumn := AEnd.Column;
+
+  if APrevious <> nil then
+  begin
+    FPrevious := ABase.Identity;
+    FScalars := APrevious.Scalars;
+    FBytes := ABase.Bytes;
+    FStorage := ABase.StorageUnits;
+    FRetained := APrevious.Count - 1;
+    FShared := FRetained div CBlockSize * CBlockSize;
+    SetLength(FBlocks, FShared div CBlockSize);
+    for LAt := 0 to High(FBlocks) do
+    begin
+      CheckCancellation(ACancellation);
+      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+      FBlocks[LAt] := ABase.BlockAt(LAt);
+    end;
+    FCount := FShared;
+    for LAt := FShared to FRetained - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+      Add(ABase.Row(LAt));
+    end;
+    FDiagnosticCount := APrevious.DiagnosticCount;
+    SetLength(FDiagnostics, FDiagnosticCount);
+    for LAt := 0 to FDiagnosticCount - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      NyxPascalAdmitAnalysis(ACancellation, papDiagnosticRow);
+      FDiagnostics[LAt] := APrevious.Diagnostic(LAt);
+    end;
+  end;
+  LCount := AInput.Count;
+
+  if LCount < 0 then
+  begin
+    raise ENyxPascalLexical.Create('Prepared projection has an invalid count');
+  end;
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    { This real row read/production is still admitted. Only classification is
+      reused; no counter pretends a newly produced atom row is free. }
+    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+    LAtom := AInput.Prepared(LAt);
+
+    if not LAtom.Eligible(FOptions) then
+    begin
+      raise ENyxPascalLexical.Create('Projection atom has no matching owned preparation');
+    end;
+    LGap := FScalars > 0;
+    LAtomBytes := NyxUTF8ByteCount(LAtom.Text);
+    LBytes := LAtomBytes;
+
+    if LGap then
+    begin
+
+      if LBytes = High(Integer) then
+      begin
+        raise ENyxPascalLexicalLimit.Create('Prepared projection exceeds its byte domain');
+      end;
+      Inc(LBytes);
+    end;
+
+    if LBytes > FOptions.MaximumSourceBytes - FBytes then
+    begin
+      raise ENyxPascalLexicalLimit.Create('Prepared projection exceeds its source byte budget');
+    end;
+
+    if LGap then
+    begin
+      NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+      LRow.Value := NyxPascalProjectionBoundaryToken(ppbSpace,
+        FScalars, FStorage, LLine, LColumn);
+      LRow.Spelling := ' ';
+      LRow.ByteStart := FBytes;
+      LRow.StorageStart := FStorage;
+      Add(LRow);
+      Inc(FScalars);
+      Inc(FBytes);
+      Inc(FStorage);
+      Inc(LColumn);
+    end;
+    LRow.Value := LAtom.AtPosition(FScalars, FStorage, LLine, LColumn, FOptions);
+    LRow.Spelling := LAtom.Text;
+    LRow.ByteStart := FBytes;
+    LRow.StorageStart := FStorage;
+    Add(LRow);
+    Inc(FScalars, LAtom.Token.Span.Length);
+    Inc(FBytes, LAtomBytes);
+    Inc(FStorage, Length(LAtom.Text));
+    Inc(LColumn, LAtom.Token.Span.Length);
+    Inc(FPrepared);
+  end;
+  CheckCancellation(ACancellation);
+  NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+  LRow.Value := NyxPascalProjectionBoundaryToken(ppbEOF,
+    FScalars, FStorage, LLine, LColumn);
+  LRow.Spelling := '';
+  LRow.ByteStart := FBytes;
+  LRow.StorageStart := FStorage;
+  Add(LRow);
+  FWriting := nil;
+end;
+
 function TAppendLexical.Row(AIndex: Integer): TAppendRow;
 begin
 
@@ -628,6 +776,81 @@ end;
 function TAppendLexical.CopiedTokens: Integer;
 begin
   Result := FCount - FShared;
+end;
+
+function TAppendLexical.PreparedTokens: Integer;
+begin
+  Result := FPrepared;
+end;
+
+function TryNyxPascalPreparedProjection(const APrevious: INyxPascalLexicalSnapshot;
+  const AInput: INyxPascalPreparedProjectionInput; const AOptions: TNyxPascalLexicalOptions;
+  out AResult: INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope): Boolean;
+var
+  LBase: IAppendArena;
+  LEnd, LLast: TNyxPascalToken;
+  LPolicy: TNyxPascalLexicalOptions;
+begin
+  AResult := nil;
+  Result := False;
+  CheckCancellation(ACancellation);
+  AOptions.Validate;
+
+  if AInput = nil then
+  begin
+    raise ENyxPascalLexical.Create('Prepared projection needs its immutable input');
+  end;
+  LEnd := NyxPascalProjectionBoundaryToken(ppbEOF, 0, 0, 1, 1);
+
+  if APrevious <> nil then
+  begin
+
+    if not Supports(APrevious, IAppendArena, LBase) then
+    begin
+      Exit;
+    end;
+    LPolicy := APrevious.Options;
+
+    if (LPolicy.AllowUnicodeIdentifiers <> AOptions.AllowUnicodeIdentifiers) or
+      (LPolicy.AllowNestedComments <> AOptions.AllowNestedComments) or
+      (LPolicy.MaximumSourceBytes <> AOptions.MaximumSourceBytes) or
+      (LPolicy.MaximumTokens <> AOptions.MaximumTokens) or
+      (LPolicy.MaximumDiagnostics <> AOptions.MaximumDiagnostics) or
+      (LPolicy.MaximumCommentDepth <> AOptions.MaximumCommentDepth) then
+    begin
+      raise ENyxPascalLexical.Create('Prepared projection cannot change predecessor policy');
+    end;
+
+    if AInput.Count = 0 then
+    begin
+      AResult := APrevious;
+      Exit(True);
+    end;
+    { One bounded boundary check reads EOF and at most one preceding row.
+      Unsafe recovery/envelope/EOF lookahead remains with the ordinary scanner. }
+    NyxPascalAdmitAnalysis(ACancellation, papLexicalRow);
+    LEnd := APrevious.Token(APrevious.Count - 1);
+
+    if LEnd.Region <> plrPascal then
+    begin
+      Exit;
+    end;
+
+    if APrevious.Count > 1 then
+    begin
+      LLast := APrevious.Token(APrevious.Count - 2);
+
+      if not LLast.Complete or (LLast.Region <> plrPascal) or
+        not (LLast.Kind in [ptkWord, ptkNumber, ptkCharacter, ptkString, ptkSymbol]) or
+        (LLast.Word = pkwAsm) or (LLast.Symbol = psoAmpersand) then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+  AResult := TAppendLexical.CreatePrepared(APrevious, LBase, LEnd, AInput, AOptions, ACancellation);
+  Result := True;
 end;
 
 function NewNyxPascalAppendLexical(const AText: TNyxText;

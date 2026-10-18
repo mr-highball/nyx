@@ -97,8 +97,14 @@ now emits final append rows from the existing scanner without an intermediate
 vector or byte recount. [Typed ordinal metadata](docs/pascal-projects.md#typed-ordinal-metadata-storage)
 now separates numeric row pages from textual indexes while sealing both in an
 independent checkpoint root. [Single-read predicates](docs/pascal-projects.md#single-read-syntax-predicates)
-now inspect one local token value within each pure classification call. Remaining
-copy/parser costs and full engine/editor quality/adoption remain open.
+now inspect one local token value within each pure classification call.
+[Prepared projection atoms](docs/pascal-projects.md#prepared-projection-atoms)
+now carry detached owned scanner proof through macro/include translation, so
+eligible spaced code can reuse classification. Produced/copied rows still count;
+unsafe boundaries keep the scanner. Zero-code continuations share their immutable
+origin directory as well as the existing lexical/syntax values, retaining current
+translation/context ownership. Remaining copy/parser costs and full engine/editor
+quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

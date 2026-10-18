@@ -9,7 +9,32 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Single-read predicate prerequisite (2026-10-18): Word/Sym, hint/routine-clause
+Prepared projection prerequisite (2026-10-18): detached owned scanner/prefix proof
+binds complete Pascal atoms to exact spelling and identifier policy. Macro/include
+translation carries the same proof; spaced projection copies eligible rows under
+real admission. Unowned/incomplete/invalid/assembly/ampersand inputs and unsafe
+predecessor boundaries retain the ordinary scanner. Zero-code continuation shares
+the immutable origin directory, retaining current translation/context/binding
+ownership; lexical/syntax factories already shared exact unchanged values.
+Native preflight passes 2,613 append/projection checks with clean heap, independent
+whole scans, cancellation/retirement and exact 24-unit/twelve-atom preparation:
+all 23 smaller allowances refuse. The obsolete zero-row assertion fails once with
+clean heap, then requires positive row admission; no produced row becomes free.
+The semantic fit remains 389 units and all 388 smaller allowances refuse.
+WORK.md owns seven frozen product/test sources, maintained/original RTL outcomes,
+historical/current-start preservation and exact source/remote return receipts.
+All 40 maintained native consumers and 81 compiler jobs pass, zero owned warnings;
+33 browser consumers compile only. The unchanged RTL retains the same failed
+round 21/267,316 lexical-token/four-million aggregate gate, clean heap and no
+final semantic/indexed result. Stop prepared-row/fixture/compiler/oracle/capture
+variants. Next distinguish actual lexical refusal provenance across contextual
+physical scanning, macro fragments/boundaries and projected fallback through
+existing work/lexing/translation/conditions owners. Its shared phase label alone
+does not identify a culprit; no guessed quota discount or new probe follows.
+Full original criterion/task/credit/DONE/editor/input/quality/parity/adoption/
+delivery remain open; no quota, probe, host/config or MCP schema change occurs.
+
+Historical single-read predicate prerequisite (2026-10-18): Word/Sym, hint/routine-clause
 and nested procedural-modifier/statement-label predicates inspect one local
 immutable token value at an unchanged offset. Tok/ReadToken retain ordinary
 clamping, maximum read frontier, cancellation and actual admission. Sym retains

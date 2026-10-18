@@ -28,6 +28,18 @@ uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.work;
 
 type
+  { Immutable test adapter over owned scalar-scanner rows. It stores only source
+    and significant-token ordinals; output snapshots must not retain this owner.
+    Missing proof deliberately exercises refusal without forging token fields. }
+  TPreparedInput = class(TInterfacedObject, INyxPascalPreparedProjectionInput)
+  public
+    Source: INyxPascalLexicalSnapshot;
+    Ordinals: array of Integer;
+    Missing: Boolean;
+    constructor Create(const AText: TNyxText; const AOptions: TNyxPascalLexicalOptions);
+    function Count: Integer;
+    function Prepared(AIndex: Integer): TNyxPascalPreparedToken;
+  end;
   { Value-only capture of synchronous scan emission. Test controls may cancel
     or raise during a callback; the receiver never borrows a scanner/source.
     Its vectors deliberately belong to the destination, not a scanner buffer. }
@@ -54,6 +66,8 @@ type
     First: INyxPascalTranslatedSyntax;
     PreviousWorld: INyxPascalSemanticWorld;
     Calls: Integer;
+    NoCodeQueries: Integer;
+    PreparedQueries: Integer;
     AbortAfter: Integer;
     function PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
       const AContext: INyxPascalCompilerContext; const AExpression: TNyxText): Boolean;
@@ -368,6 +382,201 @@ begin
   Check(LEqual, 'Append differs from an independent whole-source scan: '+String(ARight.Source));
 end;
 
+constructor TPreparedInput.Create(const AText: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions);
+var
+  LAt, LCount: Integer;
+begin
+  inherited Create;
+  Source := NewNyxPascalLexicalSnapshot(AText, AOptions);
+  LCount := 0;
+  SetLength(Ordinals, Source.Count);
+  for LAt := 0 to Source.Count - 1 do
+  begin
+
+    if not (Source.Token(LAt).Kind in [ptkWhitespace, ptkComment, ptkDirective, ptkEOF]) then
+    begin
+      Ordinals[LCount] := LAt;
+      Inc(LCount);
+    end;
+  end;
+  SetLength(Ordinals, LCount);
+end;
+
+function TPreparedInput.Count: Integer;
+begin
+  Result := Length(Ordinals);
+end;
+
+function TPreparedInput.Prepared(AIndex: Integer): TNyxPascalPreparedToken;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if not Missing then
+  begin
+    Result := NyxPascalPreparedToken(Source, Ordinals[AIndex]);
+  end;
+end;
+
+procedure PreparedProjection;
+const
+  CText: TNyxText = 'café:=42; Caption=''🚀''; &type:=#$1F;';
+var
+  LInput: TPreparedInput;
+  LLease: INyxPascalPreparedProjectionInput;
+  LValue, LNext, LRejected, LUnsafe: INyxPascalLexicalSnapshot;
+  LWork: INyxPascalPreparedProjectionWork;
+  LAppend: INyxPascalLexicalAppendWork;
+  LBudget: INyxPascalAnalysisBudget;
+  LOptions: TNyxPascalLexicalOptions;
+  LText: TNyxText;
+  LMaximum, LAt, LMode: Integer;
+  LRefused: Boolean;
+begin
+  LOptions := TNyxPascalLexicalOptions.Defaults.UnicodeIdentifiers(True);
+  LInput := TPreparedInput.Create(CText, LOptions);
+  LLease := LInput;
+  LText := '';
+  for LAt := 0 to LInput.Count - 1 do
+  begin
+
+    if LAt > 0 then
+    begin
+      LText := LText + ' ';
+    end;
+    LText := LText + LInput.Source.Text(LInput.Ordinals[LAt]);
+  end;
+  LBudget := NewNyxPascalAnalysisBudget(100000);
+  Check(TryNyxPascalPreparedProjection(nil, LLease, LOptions, LValue, LBudget),
+    'Owned complete Pascal atoms create a direct prepared projection');
+  LMaximum := LBudget.Receipt.Total;
+  EqualLexical(LValue, NewNyxPascalLexicalSnapshot(LText, LOptions));
+  Check(Supports(LValue, INyxPascalPreparedProjectionWork, LWork) and
+    (LWork.PreparedTokens = LInput.Count) and
+    Supports(LValue, INyxPascalLexicalAppendWork, LAppend) and (LAppend.LexedTokens = 0) and
+    (LBudget.Receipt.Used(papLexicalToken) = 0) and
+    (LBudget.Receipt.Used(papLexicalRow) = LValue.Count),
+    'Classification is reused while each actual atom/gap/EOF row is admitted');
+  LBudget.Retire;
+  for LAt := 1 to LMaximum do
+  begin
+    LBudget := NewNyxPascalAnalysisBudget(LAt);
+    LRejected := nil;
+    LRefused := False;
+    try
+      TryNyxPascalPreparedProjection(nil, LLease, LOptions, LRejected, LBudget);
+    except
+      on ENyxPascalAnalysisWorkLimit do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(((LAt < LMaximum) and LRefused and (LRejected = nil)) or
+      ((LAt = LMaximum) and not LRefused and (LRejected <> nil)),
+      'Every smaller prepared-row allowance refuses and its exact fit succeeds atomically');
+    LBudget.Retire;
+  end;
+  Check(TryNyxPascalPreparedProjection(LValue, LLease, LOptions, LNext),
+    'A proved closed predecessor permits a spaced prepared append');
+  EqualLexical(LNext, NewNyxPascalLexicalSnapshot(LText + ' ' + LText, LOptions));
+  Check(NyxPascalRetainedLexicalTokens(LValue, LNext) = LValue.Count - 1,
+    'Prepared append preserves every earlier non-EOF token under sealed lineage');
+  for LMode := 0 to 3 do
+  begin
+    LRefused := False;
+    LRejected := nil;
+    LBudget := NewNyxPascalAnalysisBudget(100000);
+    try
+      case LMode of
+        0:
+          begin
+            LInput.Missing := True;
+            TryNyxPascalPreparedProjection(nil, LLease, LOptions, LRejected, LBudget);
+          end;
+        1: TryNyxPascalPreparedProjection(nil, LLease, LOptions.UnicodeIdentifiers(False), LRejected, LBudget);
+        2: TryNyxPascalPreparedProjection(nil, LLease, LOptions.UpToTokens(2), LRejected, LBudget);
+        3: TryNyxPascalPreparedProjection(nil, LLease, LOptions.UpToSourceBytes(2), LRejected, LBudget);
+      end;
+    except
+      on ENyxPascalLexical do
+      begin
+        LRefused := True;
+      end;
+    end;
+    LInput.Missing := False;
+    Check(LRefused and (LRejected = nil) and (LValue.Source = LText),
+      'Unavailable proof, policy mismatch and unchanged token/byte caps preserve the prior snapshot');
+    LBudget.Retire;
+  end;
+  LBudget := NewNyxPascalAnalysisBudget(100000);
+  LBudget.Cancel;
+  LRefused := False;
+  try
+    TryNyxPascalPreparedProjection(LValue, LLease, LOptions, LRejected, LBudget);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LRejected = nil), 'Prepared continuation retains entry cancellation');
+  LBudget.Retire;
+  for LMode := 0 to 2 do
+  begin
+    case LMode of
+      0: LUnsafe := NewNyxPascalAppendLexical('&', LOptions);
+      1: LUnsafe := NewNyxPascalAppendLexical('asm mov ax,1', LOptions);
+      2: LUnsafe := NewNyxPascalAppendLexical('''unfinished', LOptions);
+    end;
+    Check(not TryNyxPascalPreparedProjection(LUnsafe, LLease, LOptions, LRejected) and
+      (LRejected = nil), 'EOF-sensitive, assembly and recovery tails keep ordinary scanner repair');
+  end;
+  WriteLn('prepared rows / tokens=', LInput.Count, ' exact=', LMaximum,
+    ' smaller=', LMaximum - 1, ' scanner=0');
+  LInput := nil;
+  LLease := nil;
+  LValue := nil;
+  LWork := nil;
+  LAppend := nil;
+  Check(LNext.Source = LText + ' ' + LText, 'Prepared output retains no input provider or earlier owner');
+end;
+
+procedure EqualSyntax(const ALeft, ARight: INyxPascalSyntaxSnapshot); forward;
+
+procedure PreparedFallbacks;
+const
+  CCases: array[0..4] of TNyxText = (
+    'unit Safe; interface const Title=''🚀''; implementation end.',
+    'unit Amp; interface const Value=&; implementation end.',
+    'unit Broken; interface const Value=''unfinished' + #13#10 + 'Other=42; implementation end.',
+    'unit AssemblyCase; interface procedure Run; implementation procedure Run; asm mov ax,42 end; end.',
+    'unit InvalidCase; interface const Value=' + #0 + '; implementation end.');
+var
+  LAt: Integer;
+  LFiles: INyxPascalFileCatalog;
+  LContext: INyxPascalCompilerContext;
+  LSource: INyxPascalTranslation;
+  LView: INyxPascalTranslatedSyntax;
+  LWork: INyxPascalPreparedProjectionWork;
+begin
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).CompleteDefines(True);
+  for LAt := Low(CCases) to High(CCases) do
+  begin
+    LFiles := NewNyxPascalFileCatalog(pfcExact)
+      .WithFile(NyxPascalPhysicalFile('projection.pas'), CCases[LAt]);
+    LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('projection.pas'),
+      LContext, TNyxPascalTranslationOptions.Defaults);
+    LView := NewNyxPascalTranslatedSyntax(LSource, TNyxPascalSyntaxOptions.Defaults);
+    EqualLexical(LView.Syntax.Lexical, NewNyxPascalLexicalSnapshot(LView.Syntax.Lexical.Source));
+    EqualSyntax(LView.Syntax, NewNyxPascalSyntaxSnapshot(LView.Syntax.Lexical.Source));
+    Check(Supports(LView.Syntax.Lexical, INyxPascalPreparedProjectionWork, LWork) and
+      (((LAt = 0) and (LWork.PreparedTokens > 0)) or
+       ((LAt > 0) and (LWork.PreparedTokens = 0))),
+      'Safe owned code reuses classification; incomplete/invalid/assembly/ampersand code keeps whole scanner behavior');
+  end;
+end;
+
 procedure Splits;
 const
   CCases: array[0..20] of TNyxText = (
@@ -652,6 +861,7 @@ var
   LWorldWork: INyxPascalWorldBuildWork;
   LFreshWork: INyxPascalWorldBuildWork;
   LAnswer: INyxPascalResolution;
+  LPreparedWork: INyxPascalPreparedProjectionWork;
 begin
   Inc(Calls);
   LWhole := NewNyxPascalTranslatedSyntax(APrefix, TNyxPascalSyntaxOptions.Defaults);
@@ -672,6 +882,21 @@ begin
       (LStorage.SharedOriginRows + LStorage.CopiedOriginRows = Previous.OriginCount) and
       (LStorage.OriginDirectoryEntries = (LNext.OriginCount + 255) div 256),
       'Exact physical mapping shares complete blocks and copies only a bounded independent partial tail');
+  end;
+  if (Previous <> nil) and (LNext.OriginCount = Previous.OriginCount) then
+  begin
+    Check((LNext.Syntax = Previous.Syntax) and (LNext.Source = APrefix) and
+      (LNext.Source <> Previous.Source) and
+      Supports(LNext, INyxPascalProjectionStorage, LStorage) and
+      (LStorage.SharedOriginRows = Previous.OriginCount) and (LStorage.CopiedOriginRows = 0),
+      'A no-code continuation shares immutable syntax/mapping but keeps the exact current translation');
+    Inc(NoCodeQueries);
+  end;
+
+  if Supports(LNext.Syntax.Lexical, INyxPascalPreparedProjectionWork, LPreparedWork) and
+    (LPreparedWork.PreparedTokens > 0) then
+  begin
+    Inc(PreparedQueries);
   end;
   EqualLexical(LNext.Syntax.Lexical,
     NewNyxPascalLexicalSnapshot(LWhole.Syntax.Lexical.Source));
@@ -774,6 +999,10 @@ begin
     LFacts, TNyxPascalTranslationOptions.Defaults, nil, LOwner);
   Check(LSource.Resolved and (LCollector.Calls = 7) and (LSource.OccurrenceCount = 3),
     'Seven actual source callbacks include unfinished class/record/routine owners and repeated includes');
+  Check((LCollector.NoCodeQueries > 0) and (LCollector.PreparedQueries > 0),
+    'Real source callbacks exercise both exact zero-code reuse and owned macro/include token preparation');
+  WriteLn('prepared projection / reused-queries=', LCollector.PreparedQueries,
+    ' zero-code=', LCollector.NoCodeQueries);
   LFirst := LCollector.First;
   LLast := LCollector.Previous;
   LFinal := AppendNyxPascalTranslatedSyntax(LLast, LSource, TNyxPascalSyntaxOptions.Defaults);
@@ -861,6 +1090,8 @@ begin
   try
     DirectScan;
     DirectAdmission;
+    PreparedProjection;
+    PreparedFallbacks;
     Splits;
     OwnershipAndSlices;
     Refusals;

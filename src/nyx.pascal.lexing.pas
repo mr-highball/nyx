@@ -196,6 +196,28 @@ type
       terminating END leaves assembly for its successor. Includes retain this. }
     property Region: TNyxPascalLexicalRegion read FRegion;
   end;
+  { Detached proof binding one owned scanner token to its exact spelling and
+    identifier policy. Only complete self-contained Pascal atoms qualify; ASM,
+    invalid/incomplete tokens and EOF-sensitive ampersands keep normal scanning.
+    No source/reader/interface survives in this value. Default means unavailable,
+    and raw token fields or another implementation's counters cannot create it. }
+  TNyxPascalPreparedToken = record
+  private
+    FToken: TNyxPascalToken;
+    FText: TNyxText;
+    FUnicode: Boolean;
+    FReady: Boolean;
+  public
+    function Eligible(const AOptions: TNyxPascalLexicalOptions): Boolean;
+    function AtPosition(AScalar, AStorage, ALine, AColumn: Integer;
+      const AOptions: TNyxPascalLexicalOptions): TNyxPascalToken;
+    property Available: Boolean read FReady;
+    property Token: TNyxPascalToken read FToken;
+    property Text: TNyxText read FText;
+  end;
+  { Projection introduces only a single ASCII space or zero-length EOF. These
+    closed boundary kinds cannot classify caller-supplied text or source code. }
+  TNyxPascalProjectionBoundary = (ppbSpace, ppbEOF);
   { Owns exact physical text and ordered immutable tokens/diagnostics. Every
     storage unit belongs to a token; EOF has no units. Getters borrow no caller,
     cancellation scope, file, GUI or mutable buffer. Returned records are values. }
@@ -318,6 +340,15 @@ function NyxPascalSpan(AStart, ALength: Integer): TNyxPascalSpan;
 { Exact ASCII canonicalization for Pascal syntax words. Non-ASCII storage remains
   untouched; optional Unicode identifier equivalence is a separate semantic policy. }
 function NyxPascalASCIIKey(const AText: TNyxText): TNyxText;
+{ Owned scanner/prefix producers alone bind classification to spelling. Unknown
+  implementations return an unavailable value and retain ordinary scanning. }
+function NyxPascalPreparedToken(const ASource: INyxPascalLexicalSnapshot;
+  AIndex: Integer): TNyxPascalPreparedToken; overload;
+function NyxPascalPreparedToken(const ASource: INyxPascalLexicalPrefix;
+  AIndex: Integer): TNyxPascalPreparedToken; overload;
+{ Construct a known literal boundary at checked virtual coordinates. }
+function NyxPascalProjectionBoundaryToken(AKind: TNyxPascalProjectionBoundary;
+  AScalar, AStorage, ALine, AColumn: Integer): TNyxPascalToken;
 { Build a detached complete token stream. Cancellation is borrowed only during
   construction and checked at entry, each token and bounded scalar intervals.
   Malformed Unicode and quotas are hard failures; unfinished strings recover at
@@ -399,6 +430,12 @@ const
 type
   { Active nested block-comment delimiter, never a compiler conditional scope. }
   TCommentDelimiter = (pcdBrace, pcdParenthesis);
+  { In-unit ownership proof. A prepared value is read from the same immutable
+    token/text storage, never supplied by a public classification counter. }
+  IPreparedTokenOwner = interface(IInterface)
+    ['{BF95FB2D-A625-491F-A895-3DF2182A6931}']
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+  end;
   { Private immutable block owner. Its value rows contain no interfaces and
     never refer back to a lexer, visitor or mutable token vector. }
   ILexicalTokenBlock = interface(IInterface)
@@ -417,7 +454,7 @@ type
   { Owns exact text/vectors. Cursor and observer/cancellation borrows exist only
     during Build; publication retains initial options and contextually scanned
     tokens, releasing both external interfaces. No partial snapshot escapes. }
-  TLexicalSnapshot = class(TInterfacedObject, INyxPascalLexicalSnapshot)
+  TLexicalSnapshot = class(TInterfacedObject, INyxPascalLexicalSnapshot, IPreparedTokenOwner)
   private
     FSource: TNyxText;
     FOptions: TNyxPascalLexicalOptions;
@@ -476,14 +513,16 @@ type
     function Slice(const ASpan: TNyxPascalSpan): TNyxText;
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
   end;
   { Retains admitted rows through shared complete blocks and one private tail.
     The directory and diagnostics are detached; later scanning cannot change
     this view, and indexed access has no recursive snapshot-chain cost. }
   TFrozenLexicalPrefix = class(TInterfacedObject, INyxPascalLexicalPrefix,
-    INyxPascalPrefixTokenStorage)
+    INyxPascalPrefixTokenStorage, IPreparedTokenOwner)
   private
     FSource: TNyxText;
+    FOptions: TNyxPascalLexicalOptions;
     FScalars: Integer;
     FBlocks: TLexicalTokenBlocks;
     FCount: Integer;
@@ -502,6 +541,7 @@ type
     function CopiedTokenRows: Integer;
     function SharedTokenRows: Integer;
     function DirectoryEntries: Integer;
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
   end;
   { Owns no lexer reference. The constructor's local lease guarantees this
     bridge is detached on success and every exception path before retirement. }
@@ -531,6 +571,125 @@ end;
 function TNyxPascalSpan.Finish: Integer;
 begin
   Result := FStart + FLength;
+end;
+
+function TNyxPascalPreparedToken.Eligible(const AOptions: TNyxPascalLexicalOptions): Boolean;
+begin
+  AOptions.Validate;
+  Result := FReady and (FUnicode = AOptions.AllowUnicodeIdentifiers);
+end;
+
+function TNyxPascalPreparedToken.AtPosition(AScalar, AStorage, ALine,
+  AColumn: Integer; const AOptions: TNyxPascalLexicalOptions): TNyxPascalToken;
+begin
+
+  if not Eligible(AOptions) or (AScalar < 0) or (AStorage < 0) or
+    (ALine < 1) or (AColumn < 1) or (AStorage >= High(Integer)) or
+    (Length(FText) > High(Integer) - AStorage) or
+    (FToken.Span.Length > High(Integer) - AColumn) then
+  begin
+    raise ENyxPascalLexical.Create('Prepared token needs matching policy and checked coordinates');
+  end;
+  Result := FToken;
+  Result.FSpan := NyxPascalSpan(AScalar, FToken.Span.Length);
+  Result.FStorage := AStorage + 1;
+  Result.FStorageLength := Length(FText);
+  Result.FLine := ALine;
+  Result.FColumn := AColumn;
+end;
+
+function NyxPascalProjectionBoundaryToken(AKind: TNyxPascalProjectionBoundary;
+  AScalar, AStorage, ALine, AColumn: Integer): TNyxPascalToken;
+var
+  LLength: Integer;
+begin
+  LLength := 0;
+
+  if AKind = ppbSpace then
+  begin
+    LLength := 1;
+  end
+  else if AKind <> ppbEOF then
+  begin
+    raise ENyxPascalLexical.Create('Unknown projection boundary kind');
+  end;
+
+  if (AStorage < 0) or (AStorage >= High(Integer)) or (ALine < 1) or (AColumn < 1) or
+    (LLength > High(Integer) - AColumn) then
+  begin
+    raise ENyxPascalLexical.Create('Projection boundary coordinates are outside their domain');
+  end;
+  Result := Default(TNyxPascalToken);
+  Result.FSpan := NyxPascalSpan(AScalar, LLength);
+  Result.FStorage := AStorage + 1;
+  Result.FStorageLength := LLength;
+  Result.FLine := ALine;
+  Result.FColumn := AColumn;
+  Result.FComplete := True;
+  Result.FRegion := plrPascal;
+  Result.FKind := ptkEOF;
+
+  if AKind = ppbSpace then
+  begin
+    Result.FKind := ptkWhitespace;
+  end;
+end;
+
+{ Complete Pascal atoms are stable when separated by ASCII spaces. ASM changes
+  the envelope; a bare ampersand changes family when a suffix appears after EOF.
+  All recovery/opaque/trivia tokens retain the scanner's full seam behavior. }
+function PrepareOwnedToken(const AToken: TNyxPascalToken; const AText: TNyxText;
+  const AOptions: TNyxPascalLexicalOptions): TNyxPascalPreparedToken;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if not AToken.Complete or (AToken.Region <> plrPascal) or
+    (AToken.Span.Length = 0) or
+    not (AToken.Kind in [ptkWord, ptkNumber, ptkCharacter, ptkString, ptkSymbol]) or
+    (AToken.Word = pkwAsm) or (AToken.Symbol = psoAmpersand) then
+  begin
+    Exit;
+  end;
+  Result.FToken := AToken;
+  Result.FText := AText;
+  Result.FUnicode := AOptions.AllowUnicodeIdentifiers;
+  Result.FReady := True;
+end;
+
+function TLexicalSnapshot.PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+begin
+  Result := PrepareOwnedToken(Token(AIndex), Text(AIndex), FOptions);
+end;
+
+function TFrozenLexicalPrefix.PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+begin
+  Result := PrepareOwnedToken(Token(AIndex), Text(AIndex), FOptions);
+end;
+
+function NyxPascalPreparedToken(const ASource: INyxPascalLexicalSnapshot;
+  AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LOwner: IPreparedTokenOwner;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if Supports(ASource, IPreparedTokenOwner, LOwner) then
+  begin
+    Result := LOwner.PreparedToken(AIndex);
+  end;
+end;
+
+function NyxPascalPreparedToken(const ASource: INyxPascalLexicalPrefix;
+  AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LOwner: IPreparedTokenOwner;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if Supports(ASource, IPreparedTokenOwner, LOwner) then
+  begin
+    Result := LOwner.PreparedToken(AIndex);
+  end;
 end;
 
 function TNyxPascalToken.Rebased(AScalarOffset, AStorageOffset, ALineOffset,
@@ -728,6 +887,7 @@ begin
   inherited Create;
   AReader.CheckCancellation;
   FSource := AReader.FSource;
+  FOptions := AReader.FOptions;
   FScalars := AReader.FOffset;
   FCount := AReader.FTokenCount;
   FShared := Length(AReader.FPrefixBlocks) * CLexicalPrefixBlockSize;

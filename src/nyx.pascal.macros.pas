@@ -93,12 +93,22 @@ type
   end;
 
 function NewNyxPascalMacroEnvironment: INyxPascalMacroEnvironment;
+{ Owned expansion views may donate detached scanner proof for a complete atom.
+  Alternate expansion implementations retain ordinary projection scanning. }
+function NyxPascalPreparedMacroToken(const AExpansion: INyxPascalMacroExpansion;
+  AIndex: Integer): TNyxPascalPreparedToken;
 
 implementation
 
 uses SysUtils, nyx.text.index, nyx.bytes, nyx.editing;
 
 type
+  { Private binding from an expansion ordinal to its owned lexical fragment.
+    Returned values retain neither expansion, trace nor source reader. }
+  IPreparedExpansion = interface(IInterface)
+    ['{D6C0241E-734E-4B8C-B015-532967EDC039}']
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+  end;
   { Immutable table owns a detached value vector and ordinal index. Construction
     publishes only after validation; strings are managed immutable values. }
   TEnvironment = class(TInterfacedObject, INyxPascalMacroEnvironment)
@@ -129,7 +139,7 @@ type
   end;
   { Construction owns callback leases; publication drops them. Trace/value/token
     vectors and lexical fragments remain detached and have no parent back links. }
-  TExpansion = class(TInterfacedObject, INyxPascalMacroExpansion)
+  TExpansion = class(TInterfacedObject, INyxPascalMacroExpansion, IPreparedExpansion)
   private
     FEnvironment: INyxPascalMacroEnvironment;
     FCancellation: INyxCancellationScope;
@@ -161,6 +171,7 @@ type
     function Trace(AIndex: Integer): TNyxPascalMacroTrace;
     function WorkBytes: Integer;
     function Joined: TNyxText;
+    function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
   end;
 
 constructor TEnvironment.Create;
@@ -548,6 +559,27 @@ var
 begin
   LEntry := Entry(AIndex);
   Result := FViews[LEntry.View].Token(LEntry.Token);
+end;
+
+function TExpansion.PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LEntry: TExpandedToken;
+begin
+  LEntry := Entry(AIndex);
+  Result := NyxPascalPreparedToken(FViews[LEntry.View], LEntry.Token);
+end;
+
+function NyxPascalPreparedMacroToken(const AExpansion: INyxPascalMacroExpansion;
+  AIndex: Integer): TNyxPascalPreparedToken;
+var
+  LOwner: IPreparedExpansion;
+begin
+  Result := Default(TNyxPascalPreparedToken);
+
+  if Supports(AExpansion, IPreparedExpansion, LOwner) then
+  begin
+    Result := LOwner.PreparedToken(AIndex);
+  end;
 end;
 
 function TExpansion.Text(AIndex: Integer): TNyxText;

@@ -86,8 +86,9 @@ type
       const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
   end;
   { Immutable origin-storage construction receipt. Complete value blocks are
-    shared without retaining earlier projection owners; partial rows copy into
-    the new result. This describes mapping storage, not binding/work authority. }
+    shared without earlier projection owners; changed tails copy. A zero-code
+    continuation shares the entire read-only directory, including its last
+    partial block. This is storage telemetry, not binding/work authority. }
   INyxPascalProjectionStorage = interface(IInterface)
     ['{8BAA1452-F777-41B9-AF23-9938C32006B7}']
     function SharedOriginRows: Integer;
@@ -214,6 +215,8 @@ type
     procedure AdmitPlan(ADeclaration: Integer; const APlan: INyxPascalTypePlan);
     procedure RecordMemo(AHit: Boolean);
     procedure AddOrigin(const AOrigin: TNyxPascalSyntaxOrigin);
+    procedure InheritOrigins(APrevious: TTranslatedSyntax;
+      const ACancellation: INyxCancellationScope);
     procedure Build(const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
   public
@@ -238,6 +241,16 @@ type
     function TypeOfDeclaration(AIndex: Integer;
       const AOptions: TNyxPascalTypeOptions;
       const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+  end;
+  { Synchronous bridge to already prepared effective atoms at new origin rows.
+    A local interface lease covers its raw constructor-owner borrow; finally
+    revokes it. Completed lexical values retain neither bridge nor translation. }
+  TProjectionPreparedInput = class(TInterfacedObject, INyxPascalPreparedProjectionInput)
+  public
+    Owner: TTranslatedSyntax;
+    First: Integer;
+    function Count: Integer;
+    function Prepared(AIndex: Integer): TNyxPascalPreparedToken;
   end;
 
 function TOriginBlock.Row(AIndex: Integer): TNyxPascalSyntaxOrigin;
@@ -463,6 +476,57 @@ begin
   end;
 end;
 
+function TProjectionPreparedInput.Count: Integer;
+begin
+
+  if Owner = nil then
+  begin
+    raise ENyxPascalLexical.Create('Prepared projection input has retired');
+  end;
+  Result := Owner.FCount - First;
+end;
+
+function TProjectionPreparedInput.Prepared(AIndex: Integer): TNyxPascalPreparedToken;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxPascalLexical.Create('Prepared projection input index is outside its origins');
+  end;
+  Result := NyxPascalPreparedEffectiveToken(Owner.FSource, Owner.Origin(First + AIndex).TranslationToken);
+end;
+
+procedure TTranslatedSyntax.InheritOrigins(APrevious: TTranslatedSyntax;
+  const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+begin
+  FSharedOrigins := APrevious.FCount div COriginBlockRows * COriginBlockRows;
+  SetLength(FBlocks, FSharedOrigins div COriginBlockRows);
+  for LAt := 0 to High(FBlocks) do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Translated origin continuation cancelled');
+    end;
+    NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
+    FBlocks[LAt] := APrevious.FBlocks[LAt];
+  end;
+  FCount := FSharedOrigins;
+  for LAt := FSharedOrigins to APrevious.FCount - 1 do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Translated partial origin continuation cancelled');
+    end;
+    NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
+    AddOrigin(APrevious.Origin(LAt));
+    Inc(FCopiedOrigins);
+  end;
+end;
+
 procedure TTranslatedSyntax.Build(const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
 var
@@ -477,40 +541,28 @@ var
   LEffective: TNyxPascalToken;
   LOrigin: TNyxPascalSyntaxOrigin;
   LFirst: Integer;
+  LOriginFirst: Integer;
   LLexical: INyxPascalLexicalSnapshot;
+  LPrepared: TNyxPascalPreparedToken;
+  LAllPrepared, LInherited, LUsedPrepared: Boolean;
+  LInput: TProjectionPreparedInput;
+  LInputLease: INyxPascalPreparedProjectionInput;
 begin
   LParts := TNyxStrings.Create;
   try
     LOffset := 0;
     LBytes := 0;
     LFirst := 0;
+    LOriginFirst := 0;
+    LAllPrepared := True;
+    LInherited := APrevious = nil;
 
     if APrevious <> nil then
     begin
-      FSharedOrigins := APrevious.FCount div COriginBlockRows * COriginBlockRows;
-      SetLength(FBlocks, FSharedOrigins div COriginBlockRows);
-      for LAt := 0 to High(FBlocks) do
-      begin
-
-        if (ACancellation <> nil) and ACancellation.Cancelled then
-        begin
-          raise ENyxPascalAnalysisCancelled.Create('Translated origin continuation cancelled');
-        end;
-        NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
-        FBlocks[LAt] := APrevious.FBlocks[LAt];
-      end;
-      FCount := FSharedOrigins;
-      for LAt := FSharedOrigins to APrevious.FCount - 1 do
-      begin
-
-        if (ACancellation <> nil) and ACancellation.Cancelled then
-        begin
-          raise ENyxPascalAnalysisCancelled.Create('Translated partial origin continuation cancelled');
-        end;
-        NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
-        AddOrigin(APrevious.Origin(LAt));
-        Inc(FCopiedOrigins);
-      end;
+      { Count/coordinates are immutable scalar facts. Delay any directory/tail
+        copying until a new effective atom actually needs a writable tail. }
+      FCount := APrevious.FCount;
+      LOriginFirst := FCount;
       LFirst := APrevious.FSource.Count;
       LOffset := APrevious.FSyntax.Lexical.Scalars;
       LBytes := APrevious.FBytes;
@@ -525,7 +577,16 @@ begin
       NyxPascalAdmitAnalysis(ACancellation, papProjectionToken);
       LToken := FSource.Token(LAt);
       LPhysical := FSource.PhysicalToken(LAt);
-      LEffective := NyxPascalEffectiveToken(FSource, LAt);
+      LPrepared := NyxPascalPreparedEffectiveToken(FSource, LAt);
+
+      if LPrepared.Available then
+      begin
+        LEffective := LPrepared.Token;
+      end
+      else
+      begin
+        LEffective := NyxPascalEffectiveToken(FSource, LAt);
+      end;
 
       if LEffective.Kind in [ptkWhitespace, ptkComment, ptkDirective, ptkEOF] then
       begin
@@ -542,7 +603,15 @@ begin
         FBlocked := LAt;
         Break;
       end;
-      LText := NyxPascalEffectiveText(FSource, LAt);
+      if LPrepared.Eligible(AOptions.LexicalOptions) then
+      begin
+        LText := LPrepared.Text;
+      end
+      else
+      begin
+        LAllPrepared := False;
+        LText := NyxPascalEffectiveText(FSource, LAt);
+      end;
       LTokenBytes := NyxUTF8ByteCount(LText);
 
       if FCount > 0 then
@@ -575,19 +644,62 @@ begin
         LOrigin.FExpansion := LToken.Expansion;
       end;
 
+      if not LInherited then
+      begin
+        InheritOrigins(APrevious, ACancellation);
+        LInherited := True;
+      end;
       AddOrigin(LOrigin);
       Inc(LOffset, LEffective.Span.Length);
       LParts.Add(LText);
     end;
     FBytes := LBytes;
 
-    if APrevious <> nil then
+    if not LInherited then
     begin
-      LLexical := AppendNyxPascalLexical(APrevious.FSyntax.Lexical, LParts.Join, ACancellation);
-    end
-    else
+      { No virtual text/origin changed. The directory is immutable after each
+        constructor; a later real append still copies its own partial tail. }
+      FBlocks := APrevious.FBlocks;
+      FSharedOrigins := FCount;
+      FSyntax := APrevious.FSyntax;
+      Exit;
+    end;
+    LUsedPrepared := False;
+
+    if LAllPrepared then
     begin
-      LLexical := NewNyxPascalAppendLexical(LParts.Join, AOptions.LexicalOptions, ACancellation);
+      LInput := TProjectionPreparedInput.Create;
+      LInputLease := LInput;
+      LInput.Owner := Self;
+      LInput.First := LOriginFirst;
+      try
+
+        if APrevious <> nil then
+        begin
+          LUsedPrepared := TryNyxPascalPreparedProjection(APrevious.FSyntax.Lexical,
+            LInputLease, AOptions.LexicalOptions, LLexical, ACancellation);
+        end
+        else
+        begin
+          LUsedPrepared := TryNyxPascalPreparedProjection(nil,
+            LInputLease, AOptions.LexicalOptions, LLexical, ACancellation);
+        end;
+      finally
+        LInput.Owner := nil;
+      end;
+    end;
+
+    if not LUsedPrepared then
+    begin
+
+      if APrevious <> nil then
+      begin
+        LLexical := AppendNyxPascalLexical(APrevious.FSyntax.Lexical, LParts.Join, ACancellation);
+      end
+      else
+      begin
+        LLexical := NewNyxPascalAppendLexical(LParts.Join, AOptions.LexicalOptions, ACancellation);
+      end;
     end;
 
     if APrevious <> nil then

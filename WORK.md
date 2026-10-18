@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Single-read syntax predicates — 2026-10-18
+## Current integration: Prepared projection atoms — 2026-10-18
+
+cdaecf4 is qualified and pushed, advancing unchanged RTL to round 21/267,316
+translated tokens before lexical-token admission exhausts the same aggregate.
+Reassessment after forty-nine unclosed authoring batches follows original
+criterion two's projection reclassification. Broad copying of raw effective
+token fields is unsafe: incomplete strings, assembly and lookahead seams can
+change after projection inserts spaces. The deliverable uses owned scanner/
+prefix/macro/translation proof binding complete eligible Pascal atoms to exact
+spelling/policy; other inputs retain the ordinary scanner. Every produced/copied
+row remains admitted, so avoiding classification is not a guessed quota discount
+and may not advance the same logical work gate.
+
+Lexical/syntax factories already reuse exact unchanged input. Projection still
+copies its immutable origin directory/tail before discovering that a continuation
+adds no effective token. Delay that preparation until a real code atom arrives;
+empty-delta views can share immutable lexical/syntax/mapping values while retaining
+their new translation, state, diagnostics and binding owner. No context/fact is
+borrowed from a prior view. Both fast and scanner paths must match independent
+whole scans, including Unicode, macro/include origins, assembly, malformed input,
+seams, options, cancellation, retirement and every smaller work allowance.
+
+Implementation freezes five product and two focused test sources. The value-only
+proof retains no source/interface/execution capability; private producer bridges
+bind owned token/text storage to exact effective ordinals. Projection copies
+eligible atoms with checked scalar/storage/line/column coordinates and known
+space/EOF boundaries. Unknown providers, unsafe predecessor seams and malformed/
+assembly/ampersand input retain ordinary scanning. Invalid supplied proof, changed
+policy, cancellation and limits refuse atomically. Origin-directory copying is
+lazy; zero-code views share the whole immutable directory without earlier owners.
+Existing token/interface layouts remain intact; optional proof/receipt types add
+no MCP/wire contract or compiler fact authority. Every new type has an individual
+purpose/ownership comment.
+
+The first work preflight fails its obsolete assertion that lexical rows must be
+zero, with a clean heap. Prepared production creates real rows, so the corrected
+test requires positive row admission while preserving physical scans and all
+other phases. Both that failure and subsequent preparations remain retained.
+Native append/projection now passes 2,613 checks, comparing independent whole
+scans/syntax on safe and unsafe input, every-scalar seams, Unicode, macro/include
+origins, retirement and cancellation. The twelve-atom prepared fixture admits
+exactly 24 units with zero scanner tokens; all 23 smaller allowances refuse.
+Seven chronological queries reuse classification and one zero-code query shares
+all origin rows/current source. This receipt describes reuse, not newly produced
+work on every query. The semantic fixture remains at 389 units, all 388 smaller
+allowances refusing; work checks pass 429. No timing gain is established.
+
+All seven final-byte sources are frozen before one uninterrupted wider run.
+All 81 compiler jobs succeed, with zero owned warnings and 182 upstream warnings.
+All 40 maintained native consumers, five focused consumers and one actual-source
+read pass with clean heaps (46 pass logs). Checkpoint/storage/type-plan checks
+remain 4,416/787/209. Actual-source syntax passes 8,113 checks/five inputs/3,978
+declarations; lexical checks pass 568/501 files/2,327,129 lossless tokens. Both
+Studios, backend and worker compile as applicable; 33 browser consumers compile
+only. No browser execution/input/observing/parity/adoption/delivery is established.
+
+The unchanged original RTL consumer still FAILS, with clean heap, after Longint
+and Int64 requests: phase=prefix, used=4,000,000, requested=1, limit=4,000,000,
+translated=267,316, round=21, analysis=lexical-token. This is the same original
+frontier as cdaecf4, not a logical improvement. No final System/ObjPas semantic or
+indexed result is published. Five initial probes, Word's separate job, symbol
+preparation three/eight, generic-fact ceiling eight, two-million view cap,
+four-million aggregate and 64-round ceiling all remain unchanged. The exact
+failed log/input/launch and prior source results remain distinct.
+
+Stop prepared-row/fixture/compiler/oracle/capture variants. Reassessment after
+fifty documented unclosed authoring batches must identify the precise lexical
+scan owner before choosing another optimization. The same papLexicalToken phase
+is used by physical contextual scanning, macro fragments/boundary checks and
+ordinary projected fallback. The retained conditional wrapper identifies the
+phase but not which scan consumed the last unit; no culprit is inferred. Follow
+existing work/lexing/translation/conditions ownership, preserving exact input/
+context/ordered-answer identity, cancellation, atomic refusal and actual remaining
+admission. No row discount, larger limit, skipped source/directive, new compiler
+probe or guessed fact substitutes for this diagnosis.
+
+No original criterion/task/credit/DONE or full source/type/module/incremental/
+editor/input/quality/parity/adoption/delivery closes. All five current-start
+protected files/nine contexts, 349 frozen artifacts, 97 RTL/24 compiler/three
+additional inspected compiler inputs, 156 exact source packets, 48 includes and
+thirteen concurrent planning files remain exact. The maintained inventory is
+661 sources, with 656 unrelated sources unchanged. All owned readers are joined;
+Studio listeners and native Nyx MCP tools remain absent. The ignored
+`.local/projection-prepared-paths-private.json` owns the scoped final source/remote
+receipt, exact input/preservation checks, retained preparations/failure and return
+path. Historical original-baseline and prior postpush concurrent global Codex
+configuration failures remain retained, actor unattributed, without restoration
+or an original full preservation/delivery pass. No host/config retry, protected
+write, cleanup/restart, browser/HTTP/file execution/capture, new MCP tool/schema/
+rollout or sub-agent is authorized. LAN remains offline.
+
+## Previous integration: Single-read syntax predicates — 2026-10-18
 
 40be79e is qualified and pushed: typed ordinal metadata advances the unchanged
 real RTL to round 19/236,257 translated tokens, then syntax-token admission still
