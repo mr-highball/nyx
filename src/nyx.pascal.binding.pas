@@ -302,6 +302,14 @@ type
       const AName: TNyxPascalBindingName; AAccess: TNyxPascalMemberAccess = pmaInstance;
       const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
   end;
+  { Actual last module-admission boundary scan. Reused tokens are previously
+    examined lexical ordinals proven unchanged by sealed append lineage; they
+    do not grant cached resolutions, compiler facts or discounted query steps. }
+  INyxPascalWorldBuildWork = interface(IInterface)
+    ['{2764EE62-014B-4C9E-B1CB-F29AEF3B7BD0}']
+    function BoundaryTokenReads: Integer;
+    function ReusedBoundaryTokens: Integer;
+  end;
 
 { Validate up to 1024 ASCII identifier/dot characters; each segment is nonempty
   and starts with a letter/underscore. No keyword/member catalog is hardcoded. }
@@ -317,7 +325,7 @@ function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
 implementation
 
-uses nyx.text.index;
+uses nyx.text.index, nyx.pascal.lexing.append;
 
 type
   { Immutable checked caller, retaining its world without any reverse cache. }
@@ -433,11 +441,14 @@ type
   { Owns a detached module vector/name index. Published worlds never mutate;
     each query has its own counters, alias/member trails and temporary type data. }
   TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld,
-    INyxPascalMemberQueries, INyxPascalOperatorQueries)
+    INyxPascalMemberQueries, INyxPascalOperatorQueries, INyxPascalWorldBuildWork)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
     FInterfaceEnds: array of Integer;
+    FInterfaceTokens: array of Integer;
+    FBoundaryReads: Integer;
+    FBoundaryReused: Integer;
     FNames: TNyxTextIndex;
   public
     constructor Create(const AOptions: TNyxPascalBindingOptions);
@@ -447,6 +458,8 @@ type
     function ModuleAt(AIndex: Integer): INyxPascalTranslatedSyntax;
     function FindModule(const AName: TNyxText): Integer;
     function InterfaceBoundary(AModule: Integer): Integer;
+    function BoundaryTokenReads: Integer;
+    function ReusedBoundaryTokens: Integer;
     function WithModule(const AView: INyxPascalTranslatedSyntax): INyxPascalSemanticWorld;
     function At(AModule, AScope, ACaret: Integer): INyxPascalBindingSite;
     function Symbol(AModule, ADeclaration: Integer): INyxPascalBoundSymbol;
@@ -1046,6 +1059,16 @@ begin
   Result := FInterfaceEnds[AModule];
 end;
 
+function TSemanticWorld.BoundaryTokenReads: Integer;
+begin
+  Result := FBoundaryReads;
+end;
+
+function TSemanticWorld.ReusedBoundaryTokens: Integer;
+begin
+  Result := FBoundaryReused;
+end;
+
 function TSemanticWorld.WithModule(const AView: INyxPascalTranslatedSyntax): INyxPascalSemanticWorld;
 var
   LCopy: TSemanticWorld;
@@ -1055,6 +1078,10 @@ var
   LName: TNyxText;
   LLex: INyxPascalLexicalSnapshot;
   LTokenIndex: Integer;
+  LRetained: Integer;
+  LFirst: Integer;
+  LKnownBoundary: Integer;
+  LToken: TNyxPascalToken;
 begin
 
   if (AView = nil) or (AView.Syntax.ScopeCount = 0) or
@@ -1088,6 +1115,7 @@ begin
   Result := LCopy;
   SetLength(LCopy.FModules, LCount);
   SetLength(LCopy.FInterfaceEnds, LCount);
+  SetLength(LCopy.FInterfaceTokens, LCount);
   for LAt := 0 to LCount - 1 do
   begin
 
@@ -1096,14 +1124,43 @@ begin
       LCopy.FModules[LAt] := AView;
       LLex := AView.Syntax.Lexical;
       LCopy.FInterfaceEnds[LAt] := LLex.Scalars;
-      for LTokenIndex := 0 to LLex.Count - 1 do
-      begin
+      LCopy.FInterfaceTokens[LAt] := -1;
+      LFirst := 0;
+      LKnownBoundary := -1;
 
-        if (LLex.Token(LTokenIndex).Kind = ptkWord) and
-          (LLex.Token(LTokenIndex).Word = pkwImplementation) and
-          not LLex.Token(LTokenIndex).Escaped then
+      if LTarget < Count then
+      begin
+        LRetained := NyxPascalRetainedLexicalTokens(FModules[LTarget].Syntax.Lexical, LLex);
+
+        if LRetained >= 0 then
         begin
-          LCopy.FInterfaceEnds[LAt] := LLex.Token(LTokenIndex).Span.Start;
+          LFirst := LRetained;
+
+          if (FInterfaceTokens[LTarget] >= 0) and
+            (FInterfaceTokens[LTarget] < LRetained) then
+          begin
+            LKnownBoundary := FInterfaceTokens[LTarget];
+            LFirst := LKnownBoundary + 1;
+          end;
+          LCopy.FBoundaryReused := LFirst;
+        end;
+      end;
+
+      if LKnownBoundary >= 0 then
+      begin
+        LCopy.FInterfaceEnds[LAt] := FInterfaceEnds[LTarget];
+        LCopy.FInterfaceTokens[LAt] := LKnownBoundary;
+        LFirst := LLex.Count;
+      end;
+      for LTokenIndex := LFirst to LLex.Count - 1 do
+      begin
+        Inc(LCopy.FBoundaryReads);
+        LToken := LLex.Token(LTokenIndex);
+
+        if (LToken.Kind = ptkWord) and (LToken.Word = pkwImplementation) and not LToken.Escaped then
+        begin
+          LCopy.FInterfaceEnds[LAt] := LToken.Span.Start;
+          LCopy.FInterfaceTokens[LAt] := LTokenIndex;
           Break;
         end;
       end;
@@ -1112,6 +1169,7 @@ begin
     begin
       LCopy.FModules[LAt] := FModules[LAt];
       LCopy.FInterfaceEnds[LAt] := FInterfaceEnds[LAt];
+      LCopy.FInterfaceTokens[LAt] := FInterfaceTokens[LAt];
     end;
     LCopy.FNames.AddFirst(NyxPascalASCIIKey(LCopy.FModules[LAt].Syntax.Scope(0).Name), LAt);
   end;

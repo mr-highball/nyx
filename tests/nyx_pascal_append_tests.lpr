@@ -25,7 +25,7 @@ program nyx_pascal_append_tests;
 uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler,
   nyx.pascal.lexing, nyx.pascal.lexing.append, nyx.pascal.syntax,
   nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation,
-  nyx.pascal.syntax.translated;
+  nyx.pascal.syntax.translated, nyx.pascal.binding;
 
 type
   { Fixture-only source truth. Each callback compares an appended projection
@@ -36,6 +36,7 @@ type
   public
     Previous: INyxPascalTranslatedSyntax;
     First: INyxPascalTranslatedSyntax;
+    PreviousWorld: INyxPascalSemanticWorld;
     Calls: Integer;
     AbortAfter: Integer;
     function PreparePrefix(const AOrigin: TNyxPascalConditionOrigin;
@@ -396,6 +397,12 @@ var
   LRight: TNyxPascalSyntaxOrigin;
   LEqual: Boolean;
   LWork: INyxPascalLexicalAppendWork;
+  LStorage: INyxPascalProjectionStorage;
+  LWorld: INyxPascalSemanticWorld;
+  LFreshWorld: INyxPascalSemanticWorld;
+  LWorldWork: INyxPascalWorldBuildWork;
+  LFreshWork: INyxPascalWorldBuildWork;
+  LAnswer: INyxPascalResolution;
 begin
   Inc(Calls);
   LWhole := NewNyxPascalTranslatedSyntax(APrefix, TNyxPascalSyntaxOptions.Defaults);
@@ -411,6 +418,11 @@ begin
     Check(Supports(LNext.Syntax.Lexical, INyxPascalLexicalAppendWork, LWork) and
       (LWork.RetainedFrom(Previous.Syntax.Lexical) > 0),
       'Chronological translated queries actually consume append lexical authority');
+    Check(Supports(LNext, INyxPascalProjectionStorage, LStorage) and
+      (LStorage.SharedOriginRows >= 256) and (LStorage.CopiedOriginRows < 256) and
+      (LStorage.SharedOriginRows + LStorage.CopiedOriginRows = Previous.OriginCount) and
+      (LStorage.OriginDirectoryEntries = (LNext.OriginCount + 255) div 256),
+      'Exact physical mapping shares complete blocks and copies only a bounded independent partial tail');
   end;
   EqualLexical(LNext.Syntax.Lexical,
     NewNyxPascalLexicalSnapshot(LWhole.Syntax.Lexical.Source));
@@ -431,6 +443,30 @@ begin
       (LNext.OriginAt(LLeft.VirtualSpan.Start) = LWhole.OriginAt(LRight.VirtualSpan.Start));
   end;
   Check(LEqual, 'Appended origins retain exact occurrence, pre-state, macro trace and virtual/physical mapping');
+  LFreshWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LWhole);
+
+  if PreviousWorld = nil then
+  begin
+    LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LNext);
+  end
+  else
+  begin
+    LWorld := PreviousWorld.WithModule(LNext);
+    Check(Supports(LWorld, INyxPascalWorldBuildWork, LWorldWork) and
+      Supports(LFreshWorld, INyxPascalWorldBuildWork, LFreshWork) and
+      (LWorldWork.ReusedBoundaryTokens > 0) and
+      (LWorldWork.BoundaryTokenReads < LFreshWork.BoundaryTokenReads),
+      'Binding module preparation actually skips its proven unchanged lexical prefix');
+  end;
+  Check((LWorld.Count = LFreshWorld.Count) and
+    (LWorld.InterfaceBoundary(0) = LFreshWorld.InterfaceBoundary(0)),
+    'Continued module boundaries match independent whole preparation at each actual source callback');
+  LAnswer := LWorld.Lookup(LWorld.At(0, 0, LNext.Syntax.Lexical.Scalars),
+    NyxPascalBindingName('TBox'));
+  Check((LAnswer.Status = pbsBound) and (LAnswer.Count = 1) and
+    (LAnswer.World = LWorld) and (LAnswer.SymbolAt(0).World = LWorld),
+    'Resolutions retain the exact current world rather than a cached earlier binding result');
+  PreviousWorld := LWorld;
   Previous := LNext;
 
   if (AbortAfter > 0) and (Calls >= AbortAfter) then
@@ -465,6 +501,9 @@ var
   LRejected: INyxPascalTranslatedSyntax;
   LRefused: Boolean;
   LCase: Integer;
+  LWorld: INyxPascalSemanticWorld;
+  LWorldWork: INyxPascalWorldBuildWork;
+  LCancellation: INyxCancellationScope;
 begin
   LText := 'unit ProjectionCase; {$macro on}{$define VALUE:=42}{$push}{$H-} interface type TBox=class const ';
   for LAt := 1 to 100 do
@@ -489,6 +528,10 @@ begin
   LFirst := LCollector.First;
   LLast := LCollector.Previous;
   LFinal := AppendNyxPascalTranslatedSyntax(LLast, LSource, TNyxPascalSyntaxOptions.Defaults);
+  LWorld := LCollector.PreviousWorld.WithModule(LFinal);
+  Check(Supports(LWorld, INyxPascalWorldBuildWork, LWorldWork) and
+    (LWorldWork.BoundaryTokenReads = 0) and (LWorldWork.ReusedBoundaryTokens > 0),
+    'An unchanged closed interface boundary requires no lexical rescan after its module body grows');
   EqualSyntax(LFinal.Syntax, NewNyxPascalSyntaxSnapshot(LFinal.Syntax.Lexical.Source));
   LOwner := nil;
   Check(LFinal.Syntax.Scope(0).Complete and not LFirst.Syntax.Scope(0).Complete and
@@ -500,6 +543,11 @@ begin
     LFacts, TNyxPascalTranslationOptions.Defaults, nil, LOwner);
   Check(NyxPascalSharedTranslationTokens(LSource, LForeign) = -1,
     'Identical source and compiler facts from another construction do not invent shared lineage');
+  LWorld := LWorld.WithModule(NewNyxPascalTranslatedSyntax(LForeign,
+    TNyxPascalSyntaxOptions.Defaults));
+  Check(Supports(LWorld, INyxPascalWorldBuildWork, LWorldWork) and
+    (LWorldWork.ReusedBoundaryTokens = 0) and (LWorldWork.BoundaryTokenReads > 0),
+    'An identical foreign module receives a fresh boundary scan rather than guessed append authority');
   for LCase := 0 to 2 do
   begin
     LRefused := False;
@@ -527,6 +575,19 @@ begin
     end;
     Check(LRefused and (LRejected = nil), 'Foreign lineage, backwards source and changed options refuse without mutation');
   end;
+  LCancellation := TCountingCancellation.Create;
+  LRefused := False;
+  try
+    LRejected := AppendNyxPascalTranslatedSyntax(LLast, LSource,
+      TNyxPascalSyntaxOptions.Defaults, LCancellation);
+  except
+    on LError: ENyxPascalAnalysisCancelled do
+    begin
+      LRefused := Pos('Translated ', LError.Message) = 1;
+    end;
+  end;
+  Check(LRefused and (LRejected = nil) and (LLast.Source.Files.TextAt(0) = LText),
+    'Cancellation during origin block construction publishes no candidate and preserves exact source');
   LOwner := nil;
   LCollector := TProjectionCollector.Create;
   LOwner := LCollector;

@@ -2097,8 +2097,9 @@ advertise frozen-arena storage.
 
 This is a prerequisite to genuine incremental analysis. Storage sharing alone
 does not avoid complete-prefix analysis; the declaration checkpoints below now
-reuse safe parser work. Full filtering, metadata copying and binding still
-rebuild, and the original aggregate charge remains unchanged. Storage counters
+reuse safe parser work. Persistent filters/origins below now share completed rows;
+declaration metadata copying and binding still rebuild, and the original aggregate
+charge remains unchanged. Storage counters
 do not authorize discounting repeated work. Checkpoints and binding reuse must
 preserve unfinished declaration owners,
 physical origins, exact compiler/source context, cancellation and atomic refusal.
@@ -2138,15 +2139,16 @@ identical syntax/lexical options and chronological continuity. The translation
 owner's private identity proves its exact immutable token history; equal text
 and equal compiler facts from another construction grant no continuity. Appended
 significant tokens retain exact physical occurrence, pre-state and macro origins.
-Earlier origin rows are still copied. The lexical overload reads the retained
+Earlier origin rows now share completed immutable blocks, with a detached partial
+tail. The lexical overload reads the retained
 arena without joining/relexing old text; parser continuation now uses the safe
 declaration checkpoints below. Ordinary ordered semantic conditions use this
 continuation during their one source traversal, with their existing full-prefix
 charge unchanged.
 
 WORK.md owns native differential checks against fresh whole scans/parsing,
-unchanged RTL integration and compiled-only browser evidence. Binding continuation,
-filter/origin reuse and actual incremental work accounting, broader grammar/quality/parity,
+unchanged RTL integration and compiled-only browser evidence. Further binding/
+metadata/index continuation and actual incremental work accounting, broader grammar/quality/parity,
 default Studio adoption and delivery remain open. This API appends exact source;
 it does not yet implement arbitrary buffer edits or grant compiler admission.
 
@@ -2178,18 +2180,61 @@ enclosing ownership rather than retaining provisional child declarations.
 Retained scopes and declaration/variant/hint/label/intrinsic rows are copied into
 independent arrays. Name, overload, scope and anonymous-structure indexes rebuild
 without mutating the earlier snapshot. The complete token filter supplies fresh
-conditional/include diagnostics; only parser diagnostics before the checkpoint
+conditional/include diagnostics through the persistent filter below; only parser diagnostics before the checkpoint
 survive. Cancellation and the original shared node/scope/diagnostic/depth limits
 still refuse atomically. Ordinary translated semantic queries use this same path.
 
 Optional `INyxPascalSyntaxWork` reports reused declarations, copied metadata,
 filtered tokens, parser token reads and the restart token. These describe actual
-construction, not total CPU cost or binding reuse. Filtering, copied/reindexed
-metadata, translated origin rows and binding still do complete-prefix work.
+construction, not total CPU cost or binding reuse. `FilteredTokens` retains the
+complete logical lexical domain; the separate filter receipt below measures its
+actual token reads. Copied/reindexed declaration metadata and type binding still
+do complete-prefix work.
 The original aggregate charge remains unchanged until that real work is avoided
 or accounted for through its existing owners. WORK.md retains the unchanged RTL
 gate, native differential checks and browser compilation separately; full
 language/editor/incremental/quality/parity/adoption/delivery remain open.
+
+## Persistent filters and source indexes
+
+The existing append factories now continue raw syntax filtering along sealed
+lexical lineage. One value-only state before tail repair retains conditional
+depth, first conditional/include diagnostic state and the stable diagnostic
+count. Earlier significant ordinals and conditional flags share immutable blocks;
+the partial block copies independently and repaired tokens scan afresh. The
+provisional unmatched-conditional EOF diagnostic is always replaced. A merged
+tail whose next checkpoint would move behind the retained filter state takes a
+fresh filter path. Byte/token/depth/diagnostic limits and cancellation stay exact.
+
+`INyxPascalSyntaxFilterWork` separates actual `FilteredTokenReads` from
+`ReusedFilterTokens`, `SharedFilterRows`, `CopiedFilterRows` and
+`FilterDirectoryEntries`. These are construction receipts, never reuse authority.
+They do not change the logical domain reported by `INyxPascalSyntaxWork`.
+
+Physical origins now use a flat block directory as well. Complete immutable
+blocks carry exact physical/include occurrence, pre-state, macro expansion and
+virtual positions without retaining earlier projection owners. Only the partial
+tail copies. `INyxPascalProjectionStorage` reports shared/copied origin rows and
+directory entries. Existing `Origin`, `OriginAt`, `VirtualAt` and `Part` semantics
+remain exact; synthetic separators gain no authored affinity.
+
+Semantic worlds reuse interface-boundary preparation only when the lexical owner
+proves the exact retained prefix. An already encountered boundary needs no scan
+when its token is retained; otherwise only the repaired/appended interval scans.
+Equal foreign text receives a fresh scan. `INyxPascalWorldBuildWork` exposes
+boundary token reads and reused ordinals. Ordinary conditional construction now
+replaces its prior prefix module in an immutable world while retaining captured
+dependencies. If an unfinished qualified module header changes its name, it
+restarts from the captured base instead of retaining a ghost earlier root.
+
+Actual lookup/type results remain query-local and retain their exact current
+world. None of this grants a cached semantic result, guessed compiler fact,
+reduced aggregate charge or arbitrary edit support. Declaration/scope metadata,
+name indexes and type plans still copy/rebuild; further persistent preparation
+and complete actual work accounting remain prerequisites. WORK.md owns native
+input/origin/cancellation checks, compiled-only browser results and the unchanged
+full RTL gate. Full language/editor/incremental/quality/parity/adoption/delivery
+remain open.
 
 ## Declaration-bound constant expressions
 

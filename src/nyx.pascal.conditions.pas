@@ -209,10 +209,13 @@ type
     FExpression: TNyxText;
     FOrigin: TNyxPascalConditionOrigin;
     FPlan: INyxPascalConstantPlan;
-    { Construction-only detached projection. Its lexical blocks may be reused
-      by the next exact chronological prefix; syntax/binding still rebuild and
-      their existing full-prefix charge remains unchanged. }
+    { Construction-only detached projection and immutable prefix world. Blocks,
+      filter state and module boundary scans may continue along exact lineage;
+      metadata indexes and actual resolutions still rebuild. No query result
+      points back here, and the existing full-prefix charge stays unchanged. }
     FProjection: INyxPascalTranslatedSyntax;
+    FPrefixWorld: INyxPascalSemanticWorld;
+    FPrefixModuleName: TNyxText;
     procedure CheckCancellation;
     procedure Admit(AWork: Integer; APhase: TNyxPascalConditionalWorkPhase);
   public
@@ -672,7 +675,21 @@ begin
       Data.Issue := pbiIncompleteSource;
       Exit;
     end;
-    LWorld := World.WithModule(LView);
+    { An unfinished qualified unit header can still extend its module name.
+      Restart from the captured base in that case, avoiding a ghost earlier
+      root in the dependency namespace. Ordinary same-name prefixes replace
+      only their own module and retain immutable dependency views. }
+
+    if (FPrefixWorld <> nil) and (FPrefixModuleName = LName) then
+    begin
+      LWorld := FPrefixWorld.WithModule(LView);
+    end
+    else
+    begin
+      LWorld := World.WithModule(LView);
+    end;
+    FPrefixWorld := LWorld;
+    FPrefixModuleName := LName;
     LModule := LWorld.FindModule(LName);
     LCaret := LView.Syntax.Lexical.Scalars;
     LScope := LView.Syntax.ScopeAt(LCaret);

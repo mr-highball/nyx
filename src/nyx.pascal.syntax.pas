@@ -409,7 +409,7 @@ type
   end;
   { Construction-only work receipt retained as immutable values. Reused
     declarations still require copied/reindexed metadata; FilteredTokens counts
-    the complete lexical filter and ParserTokenReads includes actual lookahead.
+    the complete lexical domain and ParserTokenReads includes actual lookahead.
     These counters grant neither reduced aggregate charging nor binding reuse.
     An unchanged returned snapshot keeps its original construction receipt. }
   INyxPascalSyntaxWork = interface(IInterface)
@@ -419,6 +419,18 @@ type
     function FilteredTokens: Integer;
     function ParserTokenReads: Integer;
     function RestartToken: Integer;
+  end;
+  { Actual filter construction, separate from the logical domain above. Retained
+    lexical tokens require no reread; complete significant-row blocks are shared,
+    partial rows copied. Directories and diagnostics remain independent work.
+    These receipts grant no authority or reduced aggregate charging. }
+  INyxPascalSyntaxFilterWork = interface(IInterface)
+    ['{AA2EFED7-6FBD-41E4-93B2-22D8ED2C7BC2}']
+    function FilteredTokenReads: Integer;
+    function ReusedFilterTokens: Integer;
+    function SharedFilterRows: Integer;
+    function CopiedFilterRows: Integer;
+    function FilterDirectoryEntries: Integer;
   end;
   { Optional declaration-label metadata, with checked snapshot-local ordinals.
     Metadata and typed declarations consume the shared node quota. Lexical lookup
@@ -492,8 +504,8 @@ function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot
 
 { Continue an owned parser along exact sealed lexical append lineage and
   identical policies. Completed declarations may be restored before a safe
-  checkpoint; provisional tails and diagnostics are parsed afresh. The complete
-  token filter and metadata indexes still rebuild. Alternate/foreign histories
+  checkpoint; provisional tails and diagnostics are parsed afresh. Filtering
+  shares completed rows; metadata indexes still rebuild. Alternate/foreign histories
   or changed options refuse; absent safe checkpoints fall back to a whole parse.
   Cancellation/failure publishes no candidate and never mutates APrevious. }
 function AppendNyxPascalSyntax(const APrevious: INyxPascalSyntaxSnapshot;
@@ -504,10 +516,66 @@ implementation
 
 uses nyx.text.index, nyx.pascal.lexing.append;
 
+const
+  { Bounded private partial copying; the directory stays flat across appends. }
+  CFilterBlockRows = 256;
+
 type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
     without putting interfaces or shared mutable arrays in published records. }
   TOrdinals = array of Integer;
+  { Significant lexical ordinal and its raw conditional participation. No source,
+    interface or mutable collection is retained in a row. }
+  TFilterRow = record
+    Token: Integer;
+    Conditional: Boolean;
+  end;
+  { Immutable row block with no predecessor, source or parser back reference. }
+  IFilterBlock = interface(IInterface)
+    function Row(AIndex: Integer): TFilterRow;
+  end;
+  { Only an unpublished filter may fill this block. Sharing a complete block
+    never grants the new builder permission to overwrite it. }
+  TFilterBlock = class(TInterfacedObject, IFilterBlock)
+  public
+    Rows: array of TFilterRow;
+    function Row(AIndex: Integer): TFilterRow;
+  end;
+  { Owns a flat immutable-block directory. The partial final block is detached
+    during continuation; Seal retires the sole construction-only write borrow.
+    Rows and directory counts remain bounded by the lexical token quota. }
+  TFilteredTokens = class
+  private
+    FBlocks: array of IFilterBlock;
+    FWriting: TFilterBlock;
+    FCount: Integer;
+    FShared: Integer;
+    FCopied: Integer;
+    function Token(AIndex: Integer): Integer;
+    function Row(AIndex: Integer): TFilterRow;
+  public
+    constructor Create(APrevious: TFilteredTokens; ACount: Integer;
+      const ACancellation: INyxCancellationScope);
+    procedure Add(AToken: Integer; AConditional: Boolean);
+    procedure Seal;
+    function IsConditional(AIndex: Integer): Boolean;
+    function DirectoryEntries: Integer;
+    property Count: Integer read FCount;
+    property Shared: Integer read FShared;
+    property Copied: Integer read FCopied;
+    property Tokens[AIndex: Integer]: Integer read Token; default;
+  end;
+  { Value-only filter state immediately before lexical tail repair. Diagnostics
+    excludes the provisional EOF diagnostic; the parser's own suffix is separate.
+    SignificantCount addresses immutable rows, never an earlier parser owner. }
+  TFilterCheckpoint = record
+    Lexical: Integer;
+    SignificantCount: Integer;
+    Depth: Integer;
+    ConditionalReported: Boolean;
+    IncludeReported: Boolean;
+    Diagnostics: Integer;
+  end;
   { Closed continuation positions in the root declaration grammar. A type
     section nested in root declarations must return to that caller's grammar;
     an explicit types fragment does not gain a declaration-section caller. }
@@ -553,13 +621,15 @@ type
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
     INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
-    INyxPascalSyntaxWork, ISyntaxOwner)
+    INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork, ISyntaxOwner)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
     FCancellation: INyxCancellationScope;
-    FTokens: TOrdinals;
-    FConditional: array of Boolean;
+    FTokens: TFilteredTokens;
+    FFilterCheckpoint: TFilterCheckpoint;
+    FFilteredReads: Integer;
+    FFilterRetained: Integer;
     FScopes: array of TNyxPascalSyntaxScope;
     FDeclarations: array of TNyxPascalSyntaxDeclaration;
     FImports: array of TNyxPascalSyntaxImport;
@@ -676,7 +746,7 @@ type
     procedure Declarations(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
       AMembers: Boolean; ASection: TNyxPascalWord = pkwNone);
     function Block(AScope: Integer): Boolean;
-    procedure BuildTokens;
+    procedure BuildTokens(APrevious: TSyntaxSnapshot; ARetained: Integer);
     procedure Build(APrevious: TSyntaxSnapshot = nil; ARetained: Integer = -1);
     procedure ParseRoot;
     procedure FinishRoot;
@@ -692,6 +762,11 @@ type
     function FilteredTokens: Integer;
     function ParserTokenReads: Integer;
     function RestartToken: Integer;
+    function FilteredTokenReads: Integer;
+    function ReusedFilterTokens: Integer;
+    function SharedFilterRows: Integer;
+    function CopiedFilterRows: Integer;
+    function FilterDirectoryEntries: Integer;
     destructor Destroy; override;
     function Lexical: INyxPascalLexicalSnapshot;
     function ScopeCount: Integer;
@@ -719,6 +794,101 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalSyntaxDiagnostic;
   end;
+
+function TFilterBlock.Row(AIndex: Integer): TFilterRow;
+begin
+  Result := Rows[AIndex];
+end;
+
+constructor TFilteredTokens.Create(APrevious: TFilteredTokens; ACount: Integer;
+  const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+  LRow: TFilterRow;
+begin
+  inherited Create;
+
+  if (ACount < 0) or ((ACount > 0) and
+    ((APrevious = nil) or (ACount > APrevious.Count))) then
+  begin
+    raise ENyxPascalLexical.Create('Filter continuation exceeds its retained rows');
+  end;
+  FShared := ACount div CFilterBlockRows * CFilterBlockRows;
+  SetLength(FBlocks, FShared div CFilterBlockRows);
+  for LAt := 0 to High(FBlocks) do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Filter directory continuation cancelled');
+    end;
+    FBlocks[LAt] := APrevious.FBlocks[LAt];
+  end;
+  FCount := FShared;
+  for LAt := FShared to ACount - 1 do
+  begin
+
+    if (LAt mod 128 = 0) and (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Filter partial-row continuation cancelled');
+    end;
+    LRow := APrevious.Row(LAt);
+    Add(LRow.Token, LRow.Conditional);
+    Inc(FCopied);
+  end;
+end;
+
+function TFilteredTokens.Row(AIndex: Integer): TFilterRow;
+begin
+
+  if (AIndex < 0) or (AIndex >= FCount) then
+  begin
+    raise ENyxPascalLexical.Create('Significant token is outside its immutable filter');
+  end;
+  Result := FBlocks[AIndex div CFilterBlockRows].Row(AIndex mod CFilterBlockRows);
+end;
+
+function TFilteredTokens.Token(AIndex: Integer): Integer;
+begin
+  Result := Row(AIndex).Token;
+end;
+
+function TFilteredTokens.IsConditional(AIndex: Integer): Boolean;
+begin
+  Result := Row(AIndex).Conditional;
+end;
+
+function TFilteredTokens.DirectoryEntries: Integer;
+begin
+  Result := Length(FBlocks);
+end;
+
+procedure TFilteredTokens.Add(AToken: Integer; AConditional: Boolean);
+var
+  LBlock: TFilterBlock;
+  LLease: IFilterBlock;
+  LAt: Integer;
+begin
+
+  if FCount mod CFilterBlockRows = 0 then
+  begin
+    LBlock := TFilterBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, CFilterBlockRows);
+    LAt := Length(FBlocks);
+    SetLength(FBlocks, LAt + 1);
+    FBlocks[LAt] := LLease;
+    FWriting := LBlock;
+  end;
+  FWriting.Rows[FCount mod CFilterBlockRows].Token := AToken;
+  FWriting.Rows[FCount mod CFilterBlockRows].Conditional := AConditional;
+  Inc(FCount);
+end;
+
+procedure TFilteredTokens.Seal;
+begin
+  FWriting := nil;
+end;
 
 class function TNyxPascalSyntaxOptions.Defaults: TNyxPascalSyntaxOptions;
 begin
@@ -850,6 +1020,7 @@ end;
 
 destructor TSyntaxSnapshot.Destroy;
 begin
+  FTokens.Free;
   FStructures.Free;
   FNames.Free;
   inherited Destroy;
@@ -1047,9 +1218,9 @@ begin
     LAt := 0;
   end;
 
-  if LAt >= Length(FTokens) then
+  if LAt >= FTokens.Count then
   begin
-    LAt := High(FTokens);
+    LAt := FTokens.Count - 1;
   end;
   Result := ReadToken(FTokens[LAt]);
 end;
@@ -1092,7 +1263,7 @@ begin
     raise ENyxPascalAnalysisCancelled.Create('Pascal syntax analysis cancelled');
   end;
 
-  if FPosition < High(FTokens) then
+  if FPosition < FTokens.Count - 1 then
   begin
     FPartialEqual := False;
     Inc(FPosition);
@@ -1302,7 +1473,7 @@ begin
   end;
   Inc(FDeclarationCount);
 
-  if FConditional[AName] then
+  if FTokens.IsConditional(AName) then
   begin
     Include(FDeclarations[Result].FFlags, psdfConditional);
   end;
@@ -2105,7 +2276,7 @@ begin
     FStatementLabels[LEntry].FName := LName;
     FStatementLabels[LEntry].FScope := AScope;
     FStatementLabels[LEntry].FNameSpan := Tok.Span;
-    FStatementLabels[LEntry].FConditional := FConditional[FPosition];
+    FStatementLabels[LEntry].FConditional := FTokens.IsConditional(FPosition);
     Inc(FStatementLabelCount);
     Step;
 
@@ -3417,7 +3588,7 @@ begin
     FImports[LEntry].FName := LName;
     FImports[LEntry].FSpan := Range(LStart, FPosition);
     FImports[LEntry].FScope := AScope;
-    FImports[LEntry].FConditional := FConditional[LStart];
+    FImports[LEntry].FConditional := FTokens.IsConditional(LStart);
     Inc(FImportCount);
 
     if Word(pkwIn) then
@@ -3752,30 +3923,71 @@ begin
   end;
 end;
 
-procedure TSyntaxSnapshot.BuildTokens;
+procedure TSyntaxSnapshot.BuildTokens(APrevious: TSyntaxSnapshot; ARetained: Integer);
 var
   LAt: Integer;
-  LCount: Integer;
+  LFirst: Integer;
+  LSafe: Integer;
+  LPrevious: TFilteredTokens;
+  LRetainedRows: Integer;
   LDepth: Integer;
   LDirective: TNyxText;
   LToken: TNyxPascalToken;
   LConditionalReported: Boolean;
   LIncludeReported: Boolean;
 begin
-  SetLength(FTokens, FLexical.Count);
-  SetLength(FConditional, FLexical.Count);
-  LCount := 0;
+  LFirst := 0;
+  LSafe := FLexical.Count - 3;
+
+  if LSafe < 0 then
+  begin
+    LSafe := 0;
+  end;
+  LPrevious := nil;
+  LRetainedRows := 0;
   LDepth := 0;
   LConditionalReported := False;
   LIncludeReported := False;
-  for LAt := 0 to FLexical.Count - 1 do
+
+  if (APrevious <> nil) and
+    (APrevious.FFilterCheckpoint.Lexical <= ARetained) and
+    (APrevious.FFilterCheckpoint.Lexical <= LSafe) then
+  begin
+    LFirst := APrevious.FFilterCheckpoint.Lexical;
+    LPrevious := APrevious.FTokens;
+    LRetainedRows := APrevious.FFilterCheckpoint.SignificantCount;
+    LDepth := APrevious.FFilterCheckpoint.Depth;
+    LConditionalReported := APrevious.FFilterCheckpoint.ConditionalReported;
+    LIncludeReported := APrevious.FFilterCheckpoint.IncludeReported;
+    FDiagnosticCount := APrevious.FFilterCheckpoint.Diagnostics;
+    SetLength(FDiagnostics, FDiagnosticCount);
+    for LAt := 0 to FDiagnosticCount - 1 do
+    begin
+      CheckCancellation;
+      FDiagnostics[LAt] := APrevious.FDiagnostics[LAt];
+    end;
+  end;
+  FTokens := TFilteredTokens.Create(LPrevious, LRetainedRows, FCancellation);
+  FFilterRetained := LFirst;
+  for LAt := LFirst to FLexical.Count - 1 do
   begin
 
-    if (LAt mod 1024 = 0) and (FCancellation <> nil) and FCancellation.Cancelled then
+    if ((LAt - LFirst) mod 1024 = 0) and (FCancellation <> nil) and FCancellation.Cancelled then
     begin
       raise ENyxPascalAnalysisCancelled.Create('Pascal syntax analysis cancelled');
     end;
+
+    if LAt = LSafe then
+    begin
+      FFilterCheckpoint.Lexical := LAt;
+      FFilterCheckpoint.SignificantCount := FTokens.Count;
+      FFilterCheckpoint.Depth := LDepth;
+      FFilterCheckpoint.ConditionalReported := LConditionalReported;
+      FFilterCheckpoint.IncludeReported := LIncludeReported;
+      FFilterCheckpoint.Diagnostics := FDiagnosticCount;
+    end;
     LToken := FLexical.Token(LAt);
+    Inc(FFilteredReads);
 
     if LToken.Kind = ptkDirective then
     begin
@@ -3819,26 +4031,23 @@ begin
     end
     else if not (LToken.Kind in [ptkWhitespace, ptkComment]) then
     begin
-      FTokens[LCount] := LAt;
-      FConditional[LCount] := LDepth > 0;
-      Inc(LCount);
+      FTokens.Add(LAt, LDepth > 0);
     end;
   end;
 
   if LDepth > 0 then
   begin
     Problem(psiUnterminatedConditional, 'Finish this conditional compilation block',
-      FLexical.Token(FLexical.Count - 1).Span);
+      LToken.Span);
   end;
-  SetLength(FTokens, LCount);
-  SetLength(FConditional, LCount);
+  FTokens.Seal;
 end;
 
 procedure TSyntaxSnapshot.Build(APrevious: TSyntaxSnapshot; ARetained: Integer);
 var
   LResume: TParserCheckpoint;
 begin
-  BuildTokens;
+  BuildTokens(APrevious, ARetained);
   FFilterDiagnostics := FDiagnosticCount;
   FReadThrough := -1;
 
@@ -4291,6 +4500,31 @@ end;
 function TSyntaxSnapshot.RestartToken: Integer;
 begin
   Result := FRestart;
+end;
+
+function TSyntaxSnapshot.FilteredTokenReads: Integer;
+begin
+  Result := FFilteredReads;
+end;
+
+function TSyntaxSnapshot.ReusedFilterTokens: Integer;
+begin
+  Result := FFilterRetained;
+end;
+
+function TSyntaxSnapshot.SharedFilterRows: Integer;
+begin
+  Result := FTokens.Shared;
+end;
+
+function TSyntaxSnapshot.CopiedFilterRows: Integer;
+begin
+  Result := FTokens.Copied;
+end;
+
+function TSyntaxSnapshot.FilterDirectoryEntries: Integer;
+begin
+  Result := FTokens.DirectoryEntries;
 end;
 
 end.

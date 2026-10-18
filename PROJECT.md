@@ -79,9 +79,11 @@ Detached tails, physical origins and retirement remain exact. Chronological quer
 with sealed source lineage and exact lexical tail repair. Safe
 [declaration parser checkpoints](docs/pascal-projects.md#declaration-parser-checkpoints)
 now reuse completed root declarations while reparsing provisional enclosing
-owners. Full filtering, copied metadata/origins and binding still rebuild; the
-existing complete-prefix charge stays unchanged. Binding continuation and wider
-quality remain required before engine adoption.
+owners. [Persistent filters and source indexes](docs/pascal-projects.md#persistent-filters-and-source-indexes)
+now share completed filter/origin blocks and continue exact module-boundary scans.
+Declaration metadata/name indexes and actual type binding still rebuild; the
+existing complete-prefix charge stays unchanged. Further reuse and wider quality
+remain required before engine adoption.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

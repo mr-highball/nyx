@@ -9,7 +9,31 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Declaration-checkpoint prerequisite (2026-10-18): the owned parser now resumes
+Persistent filtering/index prerequisite (2026-10-18): significant-token filters
+and physical origins now share immutable complete blocks with independent partial
+tails and flat directories. Exact filter state before lexical repair preserves
+conditional/include diagnostics and retires provisional EOF diagnostics. Semantic
+module-boundary scans continue only across sealed lexical lineage; ordinary
+conditional construction retains immutable captured dependencies and replaces its
+prior prefix module without caching old-world resolutions. Native parser/filter
+checks pass 4,385 and projection/origin/module checks 2,480, clean heaps. Existing
+conditional checks pass 37 during integration. Cancellation during actual shared
+construction, foreign histories, repeated includes/macros, current-world query
+ownership and independent whole comparisons retain their original guards.
+Declaration/scope metadata, name indexes and type binding still copy/rebuild;
+the complete-prefix aggregate charge remains unchanged. WORK.md owns wider
+maintained/RTL results, preservation and next persistent metadata/index/type-plan
+preparation. No original criterion/task/credit/DONE or full language/editor/
+incremental/input/quality/parity/adoption/delivery closes. Stop filter/mapping/
+boundary/oracle/fixture/compiler/capture variants after frozen qualification.
+All 40 maintained native consumers and storage 336 pass, clean heaps; 77
+successful current compiler jobs have zero owned warnings. Six frozen sources
+remain exact without an overlay. The unchanged RTL gate retains its exact
+round-26 prefix-budget failure, clean heap and no final semantic/indexed result.
+WORK.md owns receipts, protected/concurrent preservation and final source/remote
+identity; the retained test-local declaration compile failure grants no evidence.
+
+Historical declaration-checkpoint prerequisite (2026-10-18): the owned parser resumes
 completed root declarations along sealed exact lexical append lineage and
 identical policies. A bounded value-only checkpoint retains lookahead dependencies,
 root grammar/visibility/depth and metadata counts. Provisional enclosing owners

@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declaration parser checkpoint reuse — 2026-10-18
+## Current integration: Persistent filtering, origins and module preparation — 2026-10-18
+
+57a1f7b supplies safe declaration parser checkpoints. Current source removes
+additional repeated work underneath binding: significant-token ordinals and raw
+conditional flags share immutable complete blocks, physical origin mapping uses
+the same flat-directory ownership, and semantic module boundaries continue from
+proven unchanged lexical ordinals. Each new partial block is independent; no
+block retains a parser, projection, earlier owner or recursive history chain.
+Construction write borrows retire before publication and on exceptions.
+
+One value-only filter state before lexical tail repair retains conditional depth,
+first conditional/include diagnostic state and stable diagnostic count. Repaired
+tokens scan afresh; provisional unmatched-conditional EOF diagnostics never
+survive. A merge that moves the next checkpoint behind retained filter state
+takes a fresh filter path. Optional receipts separate logical lexical domain,
+actual filter reads, reused ordinals, shared/copied rows and directory entries.
+Original byte/token/depth/diagnostic limits and cancellation remain unchanged.
+Exact Origin/OriginAt/VirtualAt/Part mapping and macro/include pre-state remain
+owned by each immutable source; only complete value blocks share.
+
+World.WithModule reuses boundary preparation only along sealed lexical lineage.
+A retained implementation token needs no new scan; otherwise the repaired/new
+interval scans. Equal foreign text receives a whole scan. Ordinary conditional
+construction now replaces its own preceding prefix module in an immutable world,
+retaining captured dependencies. If an unfinished qualified root header changes
+its name, construction restarts from the captured base, avoiding a ghost earlier
+module. Actual resolutions remain query-local and own their exact current world;
+neither a world nor this continuation retains a result pointing back to itself.
+
+Focused native parser/filter checks pass 4,385 and append/projection/module checks
+2,480, clean heaps. Full public metadata compares with independent whole parsing
+at every scalar append through nested/malformed/raw conditional, include, comment
+and string seams. Completed filter/origin blocks share with bounded partial
+copies; physical occurrence/state/expansion mappings compare at actual callbacks
+through repeated includes/macros and unfinished owners. Real cancellation during
+filter-directory and origin construction preserves exact predecessors. Continued
+boundaries equal independent whole preparation, retained closed boundaries read
+zero tokens, foreign modules scan afresh and returned symbols own the current
+world. The maintained cancellation during parser restoration still passes.
+Original node/scope/diagnostic/depth refusal coverage remains intact.
+
+Six functional sources freeze before wider qualification, after per-type comment,
+layout and ownership review. An early projection test compile fails because its
+new local declarations were placed in an earlier routine; corrected scope precedes
+the freeze. That failed compiler log is retained, not executed or counted as
+accepted evidence. Preflight runs are separate from frozen qualification. The
+historical emission compiler log remains an unchanged read-only test input.
+The ignored packet located by `.local/filter-index-paths-private.json` owns exact
+logs, process receipts, preservation and final committed/remote identity.
+
+All 40 maintained native consumers and focused parser 4,385/projection 2,480/
+storage 336 pass, clean heaps. Actual-source lexical reading passes 567 across
+500 files/2,304,398 lossless tokens; syntax passes 7,934 across five inputs/3,865
+declarations. Counts overlap; 44 passing native logs include the separate source
+read. All 77 successful current compiler jobs have zero owned warnings and 168
+unchanged upstream RTL warnings. Both Studios/backend/worker and 31 browser
+consumers compile as applicable; no browser execution/parity claim follows.
+All six final-byte sources stay exact through qualification and commit, with no
+post-freeze overlay. The retained preflight compiler failure is excluded.
+
+The unchanged original RTL gate still exits one, clean heap: prefix phase,
+logical round 26, used 3,971,021/requested 268,501/limit 4,000,000, translated
+268,502. It reaches the same Longint/Int64/Pointer binding-derived requests and
+publishes no final System/ObjPas semantic/indexed result. All original consumer/
+source/probe/job/round ceilings, 2M view and 4M aggregate limits remain unchanged.
+The complete-prefix charge deliberately remains: declaration/scope metadata,
+name indexes and query type-plan construction still copy/rebuild. New storage/
+boundary receipts do not authorize discounted work or cached semantic results.
+
+Original reader session 59016/PID 13324 is terminal exit one; native/regression/
+products/extra sessions 72944/77573/41378/23563 are terminal exit zero. No owned
+reader or Studio listener remains. Six frozen sources, 656 unrelated prior
+sources, maintained inventory 660, 97 RTL/24 compiler inputs and three additionally
+inspected compiler sources remain exact. All 156 original unit packets, 48 retained
+includes, five protected files/nine complete contexts, 349 frozen 7422453 artifacts
+and 13 concurrent planning files remain exact. No protected checkpoint, history,
+profile, enrollment or configuration is rewritten.
+
+Stop filter/mapping/boundary/oracle/fixture/compiler/capture variants. Next
+reassess genuine persistent declaration/scope/name-index continuation and reusable
+type-plan preparation through existing syntax/types/binding owners, with complete
+actual work accounting. Preserve exact source/context/include/branch/macro/
+settings identity, unfinished owners, current-world results, cancellation and
+atomic refusal. Do not relax caps, add fixed facts or hide remaining copied work.
+Full language/editor/incremental/input/quality/parity/adoption/delivery and all
+original criterion/task/credit/DONE remain open across at least forty-one batches.
+LAN stays offline; no host/configuration retry, protected mutation, browser/HTTP/
+file execution/capture, cleanup/restart, approval bypass, tool/schema or sub-agent
+occurs. Native Nyx tools remain absent; no fallback transport occurs.
+
+## Previous integration: Declaration parser checkpoint reuse — 2026-10-18
 
 8cc52f2 supplies exact append-only lexical/projection lineage. Current source
 adds real declaration parser continuation through the existing syntax owner;

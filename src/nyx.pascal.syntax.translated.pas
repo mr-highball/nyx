@@ -84,6 +84,15 @@ type
       const AOptions: TNyxPascalTypeOptions;
       const ACancellation: INyxCancellationScope = nil): INyxPascalTypeSyntax;
   end;
+  { Immutable origin-storage construction receipt. Complete value blocks are
+    shared without retaining earlier projection owners; partial rows copy into
+    the new result. This describes mapping storage, not binding/work authority. }
+  INyxPascalProjectionStorage = interface(IInterface)
+    ['{8BAA1452-F777-41B9-AF23-9938C32006B7}']
+    function SharedOriginRows: Integer;
+    function CopiedOriginRows: Integer;
+    function OriginDirectoryEntries: Integer;
+  end;
 
 { Freeze a declared view of known-active tokens under the existing grammar options.
   Unknown significant participation stops at a visible incomplete prefix. Physical
@@ -96,7 +105,8 @@ function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
 { Continue an owned, unblocked projection along the same captured translation
   lineage with exactly matching options. Existing physical origins stay exact;
   only new significant source tokens extend the lexical projection. The parser
-  still reconstructs declarations and no reduced work charge is implied.
+  resumes safe declaration checkpoints; metadata indexes and binding still
+  rebuild and no reduced work charge is implied.
   Unrelated, shorter, alternate or uncertain predecessors refuse atomically. }
 function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
   const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
@@ -106,7 +116,22 @@ implementation
 
 uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append;
 
+const
+  { Complete mapping rows share by value; at most one partial block copies. }
+  COriginBlockRows = 256;
+
 type
+  { Read-only origin values with no source, projection or predecessor reference. }
+  IOriginBlock = interface(IInterface)
+    function Row(AIndex: Integer): TNyxPascalSyntaxOrigin;
+  end;
+  { Filled only by an unpublished projection. Complete shared blocks are never
+    overwritten; the constructing projection retires its write borrow on exit. }
+  TOriginBlock = class(TInterfacedObject, IOriginBlock)
+  public
+    Rows: array of TNyxPascalSyntaxOrigin;
+    function Row(AIndex: Integer): TNyxPascalSyntaxOrigin;
+  end;
   { Forward owner for the private borrowed construction seed below. }
   TTranslatedSyntax = class;
   { In-unit immutable projection authority. The pointer is borrowed only while
@@ -115,17 +140,22 @@ type
     ['{7B440252-DB39-4370-A7EC-D51E2BE12FB9}']
     function Projection: TTranslatedSyntax;
   end;
-  { Owns its input translation, projection parser and detached origin vector.
+  { Owns its input translation, projection parser and flat origin-block directory.
     Cancellation exists during construction only; no document/editor cycle occurs. }
-  TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax, IProjectionOwner)
+  TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax,
+    INyxPascalProjectionStorage, IProjectionOwner)
   private
     FSource: INyxPascalTranslation;
     FSyntax: INyxPascalSyntaxSnapshot;
-    FOrigins: array of TNyxPascalSyntaxOrigin;
+    FBlocks: array of IOriginBlock;
+    FWriting: TOriginBlock;
+    FSharedOrigins: Integer;
+    FCopiedOrigins: Integer;
     FCount: Integer;
     FBlocked: Integer;
     FBytes: Integer;
     FOptions: TNyxPascalSyntaxOptions;
+    procedure AddOrigin(const AOrigin: TNyxPascalSyntaxOrigin);
     procedure Build(const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
   public
@@ -138,6 +168,9 @@ type
     function CompleteTranslation: Boolean;
     function BlockedAt: Integer;
     function OriginCount: Integer;
+    function SharedOriginRows: Integer;
+    function CopiedOriginRows: Integer;
+    function OriginDirectoryEntries: Integer;
     function Origin(AIndex: Integer): TNyxPascalSyntaxOrigin;
     function OriginAt(AVirtualOffset: Integer): Integer;
     function VirtualAt(AOccurrence, APhysicalOffset: Integer): Integer;
@@ -146,6 +179,32 @@ type
       const AOptions: TNyxPascalTypeOptions;
       const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
   end;
+
+function TOriginBlock.Row(AIndex: Integer): TNyxPascalSyntaxOrigin;
+begin
+  Result := Rows[AIndex];
+end;
+
+procedure TTranslatedSyntax.AddOrigin(const AOrigin: TNyxPascalSyntaxOrigin);
+var
+  LAt: Integer;
+  LBlock: TOriginBlock;
+  LLease: IOriginBlock;
+begin
+
+  if FCount mod COriginBlockRows = 0 then
+  begin
+    LBlock := TOriginBlock.Create;
+    LLease := LBlock;
+    SetLength(LBlock.Rows, COriginBlockRows);
+    LAt := Length(FBlocks);
+    SetLength(FBlocks, LAt + 1);
+    FBlocks[LAt] := LLease;
+    FWriting := LBlock;
+  end;
+  FWriting.Rows[FCount mod COriginBlockRows] := AOrigin;
+  Inc(FCount);
+end;
 
 constructor TTranslatedSyntax.Create(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalSyntaxOptions;
@@ -177,7 +236,6 @@ var
   LPhysical: TNyxPascalToken;
   LEffective: TNyxPascalToken;
   LOrigin: TNyxPascalSyntaxOrigin;
-  LCapacity: Integer;
   LFirst: Integer;
   LLexical: INyxPascalLexicalSnapshot;
 begin
@@ -189,16 +247,27 @@ begin
 
     if APrevious <> nil then
     begin
-      FCount := APrevious.FCount;
-      SetLength(FOrigins, FCount);
-      for LAt := 0 to FCount - 1 do
+      FSharedOrigins := APrevious.FCount div COriginBlockRows * COriginBlockRows;
+      SetLength(FBlocks, FSharedOrigins div COriginBlockRows);
+      for LAt := 0 to High(FBlocks) do
       begin
 
         if (ACancellation <> nil) and ACancellation.Cancelled then
         begin
           raise ENyxPascalAnalysisCancelled.Create('Translated origin continuation cancelled');
         end;
-        FOrigins[LAt] := APrevious.FOrigins[LAt];
+        FBlocks[LAt] := APrevious.FBlocks[LAt];
+      end;
+      FCount := FSharedOrigins;
+      for LAt := FSharedOrigins to APrevious.FCount - 1 do
+      begin
+
+        if (ACancellation <> nil) and ACancellation.Cancelled then
+        begin
+          raise ENyxPascalAnalysisCancelled.Create('Translated partial origin continuation cancelled');
+        end;
+        AddOrigin(APrevious.Origin(LAt));
+        Inc(FCopiedOrigins);
       end;
       LFirst := APrevious.FSource.Count;
       LOffset := APrevious.FSyntax.Lexical.Scalars;
@@ -263,18 +332,7 @@ begin
         LOrigin.FExpansion := LToken.Expansion;
       end;
 
-      if FCount = Length(FOrigins) then
-      begin
-        LCapacity := FSource.Count;
-
-        if 128 + FCount div 2 <= FSource.Count - FCount then
-        begin
-          LCapacity := FCount + 128 + FCount div 2;
-        end;
-        SetLength(FOrigins, LCapacity);
-      end;
-      FOrigins[FCount] := LOrigin;
-      Inc(FCount);
+      AddOrigin(LOrigin);
       Inc(LOffset, LEffective.Span.Length);
       LParts.Add(LText);
     end;
@@ -298,6 +356,7 @@ begin
       FSyntax := NewNyxPascalSyntaxFromLexical(LLexical, AOptions, ACancellation);
     end;
   finally
+    FWriting := nil;
     LParts.Free;
   end;
 end;
@@ -332,6 +391,21 @@ begin
   Result := FCount;
 end;
 
+function TTranslatedSyntax.SharedOriginRows: Integer;
+begin
+  Result := FSharedOrigins;
+end;
+
+function TTranslatedSyntax.CopiedOriginRows: Integer;
+begin
+  Result := FCopiedOrigins;
+end;
+
+function TTranslatedSyntax.OriginDirectoryEntries: Integer;
+begin
+  Result := Length(FBlocks);
+end;
+
 function TTranslatedSyntax.Origin(AIndex: Integer): TNyxPascalSyntaxOrigin;
 begin
 
@@ -339,7 +413,7 @@ begin
   begin
     raise ENyxPascalLexical.Create('Syntax origin index is outside its immutable projection');
   end;
-  Result := FOrigins[AIndex];
+  Result := FBlocks[AIndex div COriginBlockRows].Row(AIndex mod COriginBlockRows);
 end;
 
 function TTranslatedSyntax.OriginAt(AVirtualOffset: Integer): Integer;
@@ -360,11 +434,11 @@ begin
   begin
     LMid := LLow + (LHigh - LLow) div 2;
 
-    if AVirtualOffset < FOrigins[LMid].VirtualSpan.Start then
+    if AVirtualOffset < Origin(LMid).VirtualSpan.Start then
     begin
       LHigh := LMid - 1;
     end
-    else if AVirtualOffset >= FOrigins[LMid].VirtualSpan.Finish then
+    else if AVirtualOffset >= Origin(LMid).VirtualSpan.Finish then
     begin
       LLow := LMid + 1;
     end
@@ -388,18 +462,18 @@ begin
   for LAt := 0 to FCount - 1 do
   begin
 
-    if (FOrigins[LAt].Occurrence = AOccurrence) and
-      (APhysicalOffset >= FOrigins[LAt].PhysicalSpan.Start) and
-      (APhysicalOffset < FOrigins[LAt].PhysicalSpan.Finish) then
+    if (Origin(LAt).Occurrence = AOccurrence) and
+      (APhysicalOffset >= Origin(LAt).PhysicalSpan.Start) and
+      (APhysicalOffset < Origin(LAt).PhysicalSpan.Finish) then
     begin
 
-      if FOrigins[LAt].Expansion >= 0 then
+      if Origin(LAt).Expansion >= 0 then
       begin
         { One invocation can produce many unrelated lengths/tokens. A scalar
           caret cannot choose a unique expanded character without new intent. }
         Exit(-1);
       end;
-      Exit(FOrigins[LAt].VirtualSpan.Start + APhysicalOffset - FOrigins[LAt].PhysicalSpan.Start);
+      Exit(Origin(LAt).VirtualSpan.Start + APhysicalOffset - Origin(LAt).PhysicalSpan.Start);
     end;
   end;
   Result := -1;

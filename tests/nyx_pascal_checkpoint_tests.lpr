@@ -26,14 +26,16 @@ uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing,
   nyx.pascal.lexing.append, nyx.pascal.syntax;
 
 type
-  { Cancels after the complete token filter has run, while restoration copies
-    retained scopes. An explicit interface lease owns this fixture across the
-    deliberate exception; it retains neither parser nor caller. }
+  { Cancels at an explicit cooperative-work poll, during filter directory copying
+    or retained metadata restoration. An interface lease owns this fixture across
+    deliberate exceptions; it retains neither parser nor caller. }
   TRestoreCancellation = class(TInterfacedObject, INyxCancellationScope)
   private
     FPolls: Integer;
+    FAfter: Integer;
     FCancelled: Boolean;
   public
+    constructor Create(AAfter: Integer = 20);
     procedure Cancel;
     function GetCancelled: Boolean;
   end;
@@ -56,10 +58,16 @@ begin
   FCancelled := True;
 end;
 
+constructor TRestoreCancellation.Create(AAfter: Integer);
+begin
+  inherited Create;
+  FAfter := AAfter;
+end;
+
 function TRestoreCancellation.GetCancelled: Boolean;
 begin
   Inc(FPolls);
-  Result := FCancelled or (FPolls >= 20);
+  Result := FCancelled or (FPolls >= FAfter);
 end;
 
 { Deterministic full public metadata, including all optional tables and derived
@@ -318,7 +326,11 @@ var
   LWhole: INyxPascalSyntaxSnapshot;
   LNextWork: INyxPascalSyntaxWork;
   LWholeWork: INyxPascalSyntaxWork;
+  LFilterWork: INyxPascalSyntaxFilterWork;
   LBefore: TNyxText;
+  LCancellation: INyxCancellationScope;
+  LCancelled: Boolean;
+  LRejected: INyxPascalSyntaxSnapshot;
 begin
   LText := 'unit ReuseCase; interface type ';
   for LAt := 1 to 80 do
@@ -340,10 +352,49 @@ begin
     'The parser actually skips completed bodies rather than only reporting a compatible fresh result');
   Check((LNextWork.FilteredTokens = LNextLexical.Count) and
     (LNextWork.CopiedEntries >= LNextWork.ReusedDeclarations),
-    'Full filtering and copied metadata remain visible work despite parser reuse');
+    'The full lexical domain and copied metadata remain visible despite parser reuse');
+  Check(Supports(LNext, INyxPascalSyntaxFilterWork, LFilterWork) and
+    (LFilterWork.FilteredTokenReads < LNextLexical.Count div 4) and
+    (LFilterWork.FilteredTokenReads + LFilterWork.ReusedFilterTokens = LNextLexical.Count) and
+    (LFilterWork.SharedFilterRows >= 256) and (LFilterWork.CopiedFilterRows < 256),
+    'Completed filter blocks actually share, with only the exact repaired tail rescanned');
   Check((SnapshotText(LBase) = LBefore) and
     (AppendNyxPascalSyntax(LNext, LNextLexical, TNyxPascalSyntaxOptions.Defaults) = LNext),
     'The immutable predecessor stays exact and an unchanged lexical snapshot needs no new parser');
+  LCancellation := TRestoreCancellation.Create(3);
+  LCancelled := False;
+  try
+    LRejected := AppendNyxPascalSyntax(LBase, LNextLexical,
+      TNyxPascalSyntaxOptions.Defaults, LCancellation);
+  except
+    on LError: ENyxPascalAnalysisCancelled do
+    begin
+      LCancelled := LError.Message = 'Filter directory continuation cancelled';
+    end;
+  end;
+  Check(LCancelled and (LRejected = nil) and (SnapshotText(LBase) = LBefore),
+    'Cancellation during actual shared filter construction preserves its immutable predecessor');
+end;
+
+procedure FilterSeams;
+const
+  CCases: array[0..7] of TNyxText = (
+    'unit Raw; interface {$if A}const A=1;{$if B} B=2;{$endif}{$else} C=3;{$ifend}implementation end.',
+    'unit Raw; interface {$endif}const A=1; {$ifdef OPEN} B=2; {$endif} implementation end.',
+    'unit Raw; interface {$i a.inc}const A=1; {$include b.inc} B=2; implementation end.',
+    'unit Raw; interface const A=1; {$if A} B=2; {$if B} C=3; {$endif}',
+    'unit Raw; interface const A=1; (*{$if A}*) B=2; //{$if B}' + #13#10 + 'C=3; implementation end.',
+    'unit Raw; interface const A=1; Caption=''{$ifdef TEXT}''; B=2; implementation end.',
+    'unit Raw; interface type T=record Value:Byte; end; {$ifdef A}const B=2;{$endif} implementation end.',
+    'unit Raw; interface const A=1; {$if A}{ unfinished (* nested *) comment }B=2;{$endif}implementation end.');
+var
+  LAt: Integer;
+begin
+  for LAt := 0 to High(CCases) do
+  begin
+    CompareEveryAppend(CCases[LAt], TNyxPascalSyntaxOptions.Defaults.Lexical(
+      TNyxPascalLexicalOptions.Defaults.NestedComments(True)));
+  end;
 end;
 
 procedure RetainedMetadata;
@@ -507,6 +558,7 @@ end;
 begin
   try
     Differential;
+    FilterSeams;
     ActualReuse;
     RetainedMetadata;
     Refusals;
