@@ -4,6 +4,27 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source typed local policies retain symbolic inlining/layout/calling
+intent, exact optional context capture and historical settings stacks. PUSH/POP
+restores supported local facts while preserving current definitions/global
+mode/macro changes; unknown effects revoke stack knowledge. Native policy/oracle/
+profile/production semantic 38/9/23/84 and maintained trace/owned/dependency/
+translation/origin/mode/macro 24/86/31/209/357/41/38 pass, clean heaps. Fifteen
+accepted compiler logs have zero owned warnings (21 upstream); four browser
+consumers compile only. Actual RTL passes INLINE ON and reaches 20 occurrences,
+38 unresolved conditions and sizeof(Integer)'s unqualified fallback in
+syshelph.inc at scalar 649. Imported meaning remains incomplete. All 48 original
+include packets stay exact, one opaque; full capture remains 561 files/386 modules.
+Thirteen focused pins, 493 Nyx/68 RTL inputs, three compiler/configuration inputs,
+five protected files/nine contexts and 349 frozen 7422453 artifacts remain exact.
+All readers join; LAN offline. WORK.md owns receipts/retained failures and return
+to explicit target/type-size facts and bounded conditional-symbol capture, then
+full compilation-order/default/global-placement/textual-reader/external-macro/
+codepage/language/incremental/adoption/input/navigation/quality/parity/delivery.
+Stop policy/restore/oracle/compiler/capture variants. No original criterion/task/
+counter/credit/DONE/new tool/schema/rollout closes. No HTTP retry, protected
+mutation/cleanup bypass, deletion or sub-agents. Preserve concurrent planning.
+
 Current-source ordered replacement environments feed effective syntax and
 declared-member completion while preserving authored invocation and recursive
 definition origins. Historical states distinguish replacement bodies; unknown

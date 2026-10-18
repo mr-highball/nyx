@@ -12,7 +12,7 @@ prerequisites; it adds no completion credit or independent percentage.
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;
-three current browser consumers compile only. Prior binding/generic evidence stays
+four current browser consumers compile only. Prior binding/generic evidence stays
 in WORK.md. The actual Nyx tree advances the badge dependency through
 nyx.model. [Ordered lexical contexts](../docs/pascal-projects.md#ordered-lexical-mode-and-include-contexts)
 now pass 41 native checks and five independent compiler-mode jobs, preserving
@@ -27,9 +27,12 @@ Prior native byte checks retain 43 passes; current browser evidence is compilati
 actual include-directory files retain exact bytes, with strg.inc explicitly opaque;
 The [ordered replacement layer](../docs/pascal-projects.md#ordered-replacement-macros)
 now feeds syntax and declared-member completion with distinct invocation/definition
-origins. Native macro/oracle checks pass 38/11; three current browser consumers
-compile only. SysUtils now passes MACRO ON and both selected definitions, reaching
-its inlining-policy gap. Continue full real RTL/default/target/define context without export
+origins. Native macro/oracle checks retain 38/11; four current browser consumers
+compile only. [Typed local policies and settings scopes](../docs/pascal-projects.md#typed-local-compiler-policies-and-settings-scopes)
+now pass 38 native checks and nine independent compiler checks. Current browser
+consumers compile only. SysUtils passes inlining and reaches later missing
+conditional/target-size facts, including sizeof(Integer). Continue full real
+RTL/default/target/define context without export
 stubs, guessed encodings or source rewriting. Full expression/grammar/helpers/
 overloads/constraints, incremental/project-scale work, default Studio adoption and
 complete input/navigation/quality/parity/delivery remain required. No credit closes.

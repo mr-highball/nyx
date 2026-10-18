@@ -48,6 +48,44 @@ type
     ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
     ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings, ppfOutParameters,
     ppfReplacementMacros);
+  { Symbolic record policy, not a computed ABI layout. Default and C retain
+    target-dependent intent; an unknown policy never supplies guessed offsets. }
+  TNyxPascalRecordAlignment = (praUnknown, praDefault, praC,
+    pra1, pra2, pra4, pra8, pra16, pra32);
+  { Minimum enum storage, distinct from an enumeration's actual required size.
+    Default retains mode/target intent until the compiler context resolves it. }
+  TNyxPascalEnumStorage = (pesUnknown, pesDefault, pes1, pes2, pes4);
+  { Declared default convention only. Recording it proves neither target support
+    nor binary compatibility between two procedural types. }
+  TNyxPascalCallingConvention = (pccUnknown, pccDefault, pccRegister,
+    pccCdecl, pccPascal, pccSafeCall, pccStdCall, pccOldFPC);
+  { Closed supported local short switches. Global options such as debug output
+    are deliberately outside this restore set; the wire spelling stays private. }
+  TNyxPascalLocalSwitch = (plsBooleanEvaluation, plsAssertions, plsLongStrings,
+    plsIOChecks, plsWritableConstants, plsOverflowChecks, plsRangeChecks,
+    plsStackChecks, plsTypedAddress, plsVarStrings, plsStackFrames);
+  { Value-owned local compiler policies, independent of renderer/ABI types.
+    Zero initialization means unknown. Fluent copies retain exact symbolic
+    values; they never infer a compiler's defaults or target capabilities. }
+  TNyxPascalCompilerPolicies = record
+  private
+    FInlining: TNyxPascalKnowledge;
+    FRecords: TNyxPascalRecordAlignment;
+    FEnums: TNyxPascalEnumStorage;
+    FCalling: TNyxPascalCallingConvention;
+  public
+    class function Unknown: TNyxPascalCompilerPolicies; static;
+    function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    function AlignRecords(AValue: TNyxPascalRecordAlignment): TNyxPascalCompilerPolicies;
+    function StoreEnums(AValue: TNyxPascalEnumStorage): TNyxPascalCompilerPolicies;
+    function CallBy(AValue: TNyxPascalCallingConvention): TNyxPascalCompilerPolicies;
+    function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
+    procedure Validate;
+    property Inlining: TNyxPascalKnowledge read FInlining;
+    property RecordAlignment: TNyxPascalRecordAlignment read FRecords;
+    property EnumStorage: TNyxPascalEnumStorage read FEnums;
+    property CallingConvention: TNyxPascalCallingConvention read FCalling;
+  end;
   { Bounded compiler version, stored without target-dependent floating arithmetic.
     Minor/patch have two decimal digits, matching FPC_FULLVERSION's convention. }
   TNyxPascalCompilerVersion = record
@@ -136,6 +174,28 @@ type
     function SymbolCount: Integer;
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
   end;
+  { Optional typed policy capture keeps the original context interface/GUID
+    intact. Returned values are detached; updates return a new context owner. }
+  INyxPascalContextPolicies = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C07}']
+    function Policies: TNyxPascalCompilerPolicies;
+    function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+  end;
+
+{ Legacy contexts carry unknown policies. Alternate values are validated before
+  capture; no default is borrowed from the analyzer's own build. }
+function NyxPascalCompilerPolicies(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerPolicies;
+function NyxPascalWithCompilerPolicies(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+{ Friendly closed short-switch mapping; parsing source spelling is a separate
+  boundary. Unknown remains a valid explicitly captured fact. }
+function NyxPascalLocalSwitchOption(AValue: TNyxPascalLocalSwitch): Char;
+function NyxPascalWithLocalSwitch(const AContext: INyxPascalCompilerContext;
+  ASwitch: TNyxPascalLocalSwitch; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+{ Restore supported local policies/short switches/scoped-enum state. Preserve
+  current symbol facts, global mode/features and macro enablement. The actual
+  compiler oracle qualifies this distinction; no replacement table is restored. }
+function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompilerContext): INyxPascalCompilerContext;
 
 { Reject empty/over-128/non-ASCII names and identifiers starting with a digit. }
 function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
@@ -171,14 +231,23 @@ var
   LValue: TNyxPascalDefineValue;
   LNumber: Integer;
   LFeature: TNyxPascalLanguageFeature;
+  LCaptured: INyxPascalCompilerContext;
+  LPolicies: INyxPascalContextPolicies;
+  LCount: Integer;
 begin
 
-  if (AContext = nil) or (AContext.SymbolCount < 0) or (AContext.SymbolCount > 2048) then
+  if AContext = nil then
   begin
     raise ENyxPascalContext.Create('This capture needs bounded compiler facts');
   end;
-  Result := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode);
-  for LAt := 0 to AContext.SymbolCount - 1 do
+  LCount := AContext.SymbolCount;
+
+  if (LCount < 0) or (LCount > 2048) then
+  begin
+    raise ENyxPascalContext.Create('This capture needs bounded compiler facts');
+  end;
+  LCaptured := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode);
+  for LAt := 0 to LCount - 1 do
   begin
     LName := AContext.SymbolName(LAt);
     LValue := AContext.Symbol(LName);
@@ -188,22 +257,27 @@ begin
     begin
       LNumber := LValue.IntegerValue;
     end;
-    Result := Result.WithSymbol(LName, LValue.Kind, LNumber);
+    LCaptured := LCaptured.WithSymbol(LName, LValue.Kind, LNumber);
 
-    if Result.SymbolCount <> LAt + 1 then
+    if LCaptured.SymbolCount <> LAt + 1 then
     begin
       raise ENyxPascalContext.Create('An alternate compiler context contains duplicate symbol names');
     end;
   end;
-  Result := Result.CompleteDefines(AContext.DefinesComplete);
+  LCaptured := LCaptured.CompleteDefines(AContext.DefinesComplete);
   for LAt := Ord('A') to Ord('Z') do
   begin
-    Result := Result.WithOption(Chr(LAt), AContext.Option(Chr(LAt)));
+    LCaptured := LCaptured.WithOption(Chr(LAt), AContext.Option(Chr(LAt)));
   end;
   for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
   begin
-    Result := Result.WithFeature(LFeature, AContext.Feature(LFeature));
+    LCaptured := LCaptured.WithFeature(LFeature, AContext.Feature(LFeature));
   end;
+  Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
+  LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
+  { Native managed result storage may alias the caller's target. Publish only
+    after every alternate getter and policy validation has succeeded. }
+  Result := LCaptured;
 end;
 
 type
@@ -214,7 +288,7 @@ type
   end;
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance. }
-  TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext)
+  TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -224,6 +298,7 @@ type
     FNames: TNyxTextIndex;
     FOptions: array[0..25] of TNyxPascalKnowledge;
     FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
+    FPolicies: TNyxPascalCompilerPolicies;
     function Clone: TCompilerContext;
   public
     constructor Create;
@@ -246,6 +321,8 @@ type
     function SameFacts(const AOther: INyxPascalCompilerContext): Boolean;
     function SymbolCount: Integer;
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
+    function Policies: TNyxPascalCompilerPolicies;
+    function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
   end;
   { Evaluator-only value domain, never a Pascal runtime expression or macro. }
   TConditionValueKind = (pcvUnknown, pcvBoolean, pcvInteger);
@@ -420,6 +497,7 @@ begin
     Result.FVersion := FVersion;
     Result.FMode := FMode;
     Result.FComplete := FComplete;
+    Result.FPolicies := FPolicies;
     SetLength(Result.FSymbols, Length(FSymbols));
     for LAt := 0 to High(FSymbols) do
     begin
@@ -586,6 +664,7 @@ begin
   LCopy := Clone;
   Result := LCopy;
   LCopy.FMode := AValue;
+  LCopy.FPolicies := TNyxPascalCompilerPolicies.Unknown;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
     LCopy.FOptions[LAt] := ppkUnknown;
@@ -633,6 +712,11 @@ begin
   if (AOther = nil) or (AOther.Family <> FFamily) or
     (AOther.Version.FullNumber <> FVersion.FullNumber) or (AOther.Mode <> FMode) or
     (AOther.DefinesComplete <> FComplete) or (AOther.SymbolCount <> SymbolCount) then
+  begin
+    Exit;
+  end;
+
+  if not FPolicies.SamePolicies(NyxPascalCompilerPolicies(AOther)) then
   begin
     Exit;
   end;
@@ -691,6 +775,159 @@ begin
   LContext.FFamily := AFamily;
   LContext.FVersion := AVersion;
   LContext.FMode := AMode;
+end;
+
+class function TNyxPascalCompilerPolicies.Unknown: TNyxPascalCompilerPolicies;
+begin
+  Result := Default(TNyxPascalCompilerPolicies);
+end;
+
+procedure TNyxPascalCompilerPolicies.Validate;
+begin
+
+  if (Ord(FInlining) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FInlining) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FRecords) < Ord(Low(TNyxPascalRecordAlignment))) or
+    (Ord(FRecords) > Ord(High(TNyxPascalRecordAlignment))) or
+    (Ord(FEnums) < Ord(Low(TNyxPascalEnumStorage))) or
+    (Ord(FEnums) > Ord(High(TNyxPascalEnumStorage))) or
+    (Ord(FCalling) < Ord(Low(TNyxPascalCallingConvention))) or
+    (Ord(FCalling) > Ord(High(TNyxPascalCallingConvention))) then
+  begin
+    raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
+  end;
+end;
+
+function TNyxPascalCompilerPolicies.WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FInlining := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.AlignRecords(AValue: TNyxPascalRecordAlignment): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FRecords := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.StoreEnums(AValue: TNyxPascalEnumStorage): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FEnums := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.CallBy(AValue: TNyxPascalCallingConvention): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FCalling := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := (FInlining = AOther.FInlining) and (FRecords = AOther.FRecords) and
+    (FEnums = AOther.FEnums) and (FCalling = AOther.FCalling);
+end;
+
+function TCompilerContext.Policies: TNyxPascalCompilerPolicies;
+begin
+  Result := FPolicies;
+end;
+
+function TCompilerContext.WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+var
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+begin
+  AValue.Validate;
+  LCopy := Clone;
+  LOwner := LCopy;
+  LCopy.FPolicies := AValue;
+  Result := LOwner;
+end;
+
+function NyxPascalCompilerPolicies(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerPolicies;
+var
+  LPolicies: INyxPascalContextPolicies;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Compiler policies need their context');
+  end;
+  Result := TNyxPascalCompilerPolicies.Unknown;
+
+  if Supports(AContext, INyxPascalContextPolicies, LPolicies) then
+  begin
+    Result := LPolicies.Policies;
+    Result.Validate;
+  end;
+end;
+
+function NyxPascalWithCompilerPolicies(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+var
+  LContext: INyxPascalCompilerContext;
+  LPolicies: INyxPascalContextPolicies;
+begin
+  AValue.Validate;
+  LContext := CaptureNyxPascalCompilerContext(AContext);
+  Supports(LContext, INyxPascalContextPolicies, LPolicies);
+  Result := LPolicies.WithPolicies(AValue);
+end;
+
+function NyxPascalLocalSwitchOption(AValue: TNyxPascalLocalSwitch): Char;
+const
+  COptions: array[TNyxPascalLocalSwitch] of Char = ('B', 'C', 'H', 'I', 'J', 'Q', 'R', 'S', 'T', 'V', 'W');
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxPascalLocalSwitch))) or
+    (Ord(AValue) > Ord(High(TNyxPascalLocalSwitch))) then
+  begin
+    raise ENyxPascalContext.Create('Local compiler switch is outside its closed domain');
+  end;
+  Result := COptions[AValue];
+end;
+
+function NyxPascalWithLocalSwitch(const AContext: INyxPascalCompilerContext;
+  ASwitch: TNyxPascalLocalSwitch; AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('A local switch needs its compiler context');
+  end;
+  Result := AContext.WithOption(NyxPascalLocalSwitchOption(ASwitch), AValue);
+end;
+
+function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompilerContext): INyxPascalCompilerContext;
+var
+  LCurrent: INyxPascalCompilerContext;
+  LSaved: INyxPascalCompilerContext;
+  LSwitch: TNyxPascalLocalSwitch;
+  LPolicies: INyxPascalContextPolicies;
+begin
+  LCurrent := CaptureNyxPascalCompilerContext(ACurrent);
+  LSaved := CaptureNyxPascalCompilerContext(ASaved);
+
+  if (LCurrent.Family <> LSaved.Family) or
+    (LCurrent.Version.FullNumber <> LSaved.Version.FullNumber) then
+  begin
+    raise ENyxPascalContext.Create('Local settings belong to another compiler identity');
+  end;
+  for LSwitch := Low(TNyxPascalLocalSwitch) to High(TNyxPascalLocalSwitch) do
+  begin
+    LCurrent := NyxPascalWithLocalSwitch(LCurrent, LSwitch,
+      LSaved.Option(NyxPascalLocalSwitchOption(LSwitch)));
+  end;
+  LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
+  Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
+  Result := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved));
 end;
 
 function UnknownValue: TConditionValue;

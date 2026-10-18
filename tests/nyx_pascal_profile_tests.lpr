@@ -178,7 +178,9 @@ var
   LTranslation: INyxPascalTranslation;
   LMacroContext: INyxPascalTranslationMacros;
   LAt: Integer;
-  LUnsupportedInline: Boolean;
+  LTargetContextGap: Boolean;
+  LInliningReached: Boolean;
+  LConditions: Integer;
   LMissing: Boolean;
   LDiagnostic: TNyxPascalTranslationDiagnostic;
   LFile: TNyxPascalPhysicalFile;
@@ -263,22 +265,37 @@ begin
   LTranslation := NewNyxPascalTranslation(LFiles, LFile, AContext,
     TNyxPascalTranslationOptions.Defaults);
   LMissing := False;
-  LUnsupportedInline := False;
+  LTargetContextGap := False;
+  LInliningReached := False;
+  LConditions := 0;
   for LAt := 0 to LTranslation.DiagnosticCount - 1 do
   begin
     LDiagnostic := LTranslation.Diagnostic(LAt);
     LMissing := LMissing or (LDiagnostic.Issue = ptiMissingInclude);
     LFile := LTranslation.Files.FileAt(LTranslation.Occurrence(LDiagnostic.Occurrence).FileIndex);
-    LUnsupportedInline := LUnsupportedInline or
+
+    if LDiagnostic.Issue = ptiUnknownCondition then
+    begin
+      Inc(LConditions);
+    end;
+    LTargetContextGap := LTargetContextGap or
       ((LDiagnostic.Issue = ptiUnsupportedDirective) and
-      (LFile.Name = TNyxText('rtl/objpas/sysutils/sysutilh.inc')) and
+      (LFile.Name = TNyxText('rtl/objpas/sysutils/syshelph.inc')) and
       (NyxPascalOccurrenceLexical(LTranslation, LDiagnostic.Occurrence).Slice(
-        LDiagnostic.Span) = TNyxText('{$inline on}')));
+        LDiagnostic.Span) = TNyxText('{$fatal Unsupported Integer type size}')));
     WriteLn('actual RTL / ', LFile.Name, ':', LDiagnostic.Span.Start,
       ' issue=', Ord(LDiagnostic.Issue), ' ', LDiagnostic.MessageText);
   end;
-  Check((LTranslation.OccurrenceCount = 2) and not LMissing and LUnsupportedInline,
-    'Actual compiler facts pass replacement setup and reach the real inline-policy boundary');
+  for LAt := 0 to LTranslation.StateCount - 1 do
+  begin
+    LInliningReached := LInliningReached or
+      (NyxPascalCompilerPolicies(LTranslation.State(LAt)).Inlining = ppkTrue);
+  end;
+  Check((LTranslation.OccurrenceCount > 2) and not LMissing and LInliningReached and
+    LTargetContextGap and (LConditions = 38),
+    'Actual policies reach the retained target-size/conditional context gaps without invented branch choices');
+  WriteLn('actual RTL context / occurrences=', LTranslation.OccurrenceCount,
+    ' unknown conditions=', LConditions);
   Check(Supports(LTranslation, INyxPascalTranslationMacros, LMacroContext) and
     (LMacroContext.StateMacros(LTranslation.StateCount - 1).Definition(
       NyxPascalDefine('SUT')).Replacement = TNyxText('sysutils')) and

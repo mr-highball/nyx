@@ -33,7 +33,93 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered replacements and physical origins — 2026-10-18
+## Current integration: Typed compiler policies and scoped settings — 2026-10-18
+
+Previous goal turn is progress: pushed b1d8b56 supplies ordered replacements and
+physical origins. This batch adds the coherent local-policy/restore prerequisite
+under original NS-4 authoring criterion two and its service/editor owners. Full
+compiler/RTL/language meaning, incremental/project-scale budgets, modern editing/
+navigation, quality/parity and delivery remain required. No original criterion/
+task/counter/credit/DONE, default Studio adoption, new MCP tool/schema or rollout
+closes. Solo; no HTTP/browser/file-protocol input/capture, protected mutation,
+cleanup/deletion/restart or approval bypass occurs. Builds/evidence use the
+provisioned scratch drive; working compilers/dependencies remain unchanged.
+
+New value-owned compiler policies retain typed inlining knowledge, symbolic record
+alignment, minimum enum storage and default calling convention. Unknown stays
+distinct from C/default intent; no byte size, field offset or target ABI is
+invented. Optional policy capture preserves the original context GUID and feeds
+capture/equality/fluent copies/mode resets/unknown effects. Alternate context
+capture bounds its symbol count once and publishes only a fully validated result.
+Typed local-switch helpers share source long/short aliases and IFOPT facts.
+
+Local PUSH/POP preserves current definitions/replacement bodies, macro enablement
+and global mode switches, while restoring supported local policies/short switches
+and scoped-enum state. Textual includes share this stack. Historical states own
+independent immutable frame vectors and PUSH origins; stack-only changes cannot
+coalesce identical current facts. Unknown textual effects revoke stack-shape
+knowledge; getters refuse unknown stacks while earlier known states remain owned.
+Settings depth and retained-state limits refuse atomically. Uncaptured inherited
+POP or beyond-unit stack continuation remains a context gap, not an invented
+compiler error or a claim of complete compilation-order support.
+
+Evidence behind ignored .local/compiler-policies-paths-private.json:
+
+- Thirteen focused pins, all 493 Nyx source files, 68 actual RTL inputs and three
+  compiler/configuration inputs stay exact. No dependency source is edited.
+- logs/policy-run.log passes 38 native checks, clean heap: symbolic typed values,
+  exact capture/equality, independent restoration, global/local distinctions,
+  include scopes, historical stack shape/origins, unknown-effect revocation,
+  aliases, incomplete-context refusals and atomic depth/state budgets.
+- logs/oracle-run.log passes nine independent handwritten FPC checks, clean heap.
+  Concrete Win32/i386 record/enum sizes, compiler-checked calling signatures,
+  restored IFOPT flags, scoped enum names and persisted global grammar/macro
+  behavior come from exact original input, not a Nyx-generated projection. This
+  does not prove another target ABI or actual inlining/code-generation behavior.
+- logs/profile-run.log passes 23 configured compiler/RTL checks, clean heap. Its
+  five qualifying compiler jobs retain two successes and cancellation/output/
+  deadline refusals with exact joins/source-lease release. Complete capture stays
+  561 files/386 modules; all 48 original include packets hash exactly and strg.inc
+  remains opaque. RTL traversal now reaches 20 occurrences, retains 38 unresolved
+  conditions and passes INLINE ON. syshelph.inc's sizeof(Integer) branches lack
+  target-size facts; their unresolved FATAL fallback at scalar 649 remains explicit.
+  No host-sized branch or complete imported interface is fabricated.
+- logs/semantic-run.log passes 84 production semantic/private-editor checks,
+  clean heap, including the sixth qualifying configured compiler query. Existing
+  revision/permission/context, concurrency/activity/workspace and exact pair
+  protection remain intact. The engine never listens; native chat Nyx tools stay
+  absent. No HTTP/ordinary-editor/authentication claim follows.
+- Maintained current native trace/owned/dependency/translation/origin/mode/macro
+  checks pass 24/86/31/209/357/41/38, clean heaps; counts overlap prior evidence.
+  compiler-qualified-private.json selects fifteen accepted logs, zero owned
+  warnings and 21 upstream pas2js RTL warnings. Four browser consumers compile
+  only; none executes. Prior SDK/byte/binding evidence remains retained.
+- Complete frozen 7422453 verification passes 349 files. Five protected files/
+  nine complete contexts remain exact. Owned readers/families join and LAN stays
+  offline. terminal-qualified-private.json owns final boundaries;
+  final-checkpoint-private.json records final source/remote identity.
+
+Retained corrections: the first independent oracle placed a global mode switch
+after declarations and assumed local POP restored macro enablement. Actual FPC
+evidence corrects source placement and the global/local distinction. A fixture
+check was initially inserted before its declaration and fixed before acceptance;
+the nested-comment probe also retained its scanner warning and is excluded.
+profile-prep-1 correctly advances to later headers but fails its obsolete INLINE
+assertion; the final fixture checks the observed conditional/target-size boundary
+instead. Review adds explicit stack-knowledge revocation and quota checks before
+final input pinning. Failed/preparation receipts stay excluded from accepted
+evidence; this is composite qualification, not one uninterrupted batch.
+
+Next useful action: capture explicit target/type-size facts and bounded missing
+conditional-symbol queries for the observed RTL headers; extend condition meaning
+without using this analyzer's host ABI or sealing unqueried names. Stop local-
+policy/restore/oracle/compiler/capture variants here. Compilation-order stack
+continuation, wider policies/global placement/defaults, full textual-reader and
+external macro/codepage/language meaning, complete expressions/helpers/overloads/
+constraints, incremental budgets, default adoption, actual input/navigation/parity/
+quality/delivery retain their existing owners. Preserve concurrent planning files.
+
+## Previous integration: Ordered replacements and physical origins — 2026-10-18
 
 Previous goal turn is progress: pushed 5cb242e retains original bytes and explicit
 source views. This turn adds real ordered replacement meaning to the wholly

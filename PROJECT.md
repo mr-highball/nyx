@@ -52,8 +52,10 @@ retains original packets, explicit decoded views and exact scalar/byte origins.
 Actual RTL include capture now retains undecodable strg.inc without inventing
 text. [Ordered replacements](docs/pascal-projects.md#ordered-replacement-macros)
 now feed syntax and declared-member completion while preserving invocation and
-recursive definition origins. Real RTL translation reaches its inlining-policy
-gap in sysutilh.inc. Complete RTL meaning and default Studio adoption remain open.
+recursive definition origins. [Typed local policies](docs/pascal-projects.md#typed-local-compiler-policies-and-settings-scopes)
+now retain inlining, layout and calling intent beside historical settings stacks.
+Real RTL translation passes inlining and reaches missing conditional/target-size
+facts in later headers. Complete RTL meaning and default Studio adoption remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

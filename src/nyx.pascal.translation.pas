@@ -37,7 +37,7 @@ type
   TNyxPascalTranslationIssue = (ptiUnknownCondition, ptiMissingInclude,
     ptiIncludeCycle, ptiUnbalancedConditional, ptiUnsupportedDirective,
     ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding,
-    ptiMacroContext, ptiMacroCycle);
+    ptiMacroContext, ptiMacroCycle, ptiCompilerSettings);
   { Immutable physical diagnostic. Occurrence distinguishes repeated includes;
     text is English guidance with no machine paths or borrowed exceptions. }
   TNyxPascalTranslationDiagnostic = record
@@ -124,12 +124,14 @@ type
     { Physical reads plus replacement, re-tokenization and boundary work bytes;
       repeated inclusions/expansions are charged independently. }
     function UpToExpandedBytes(AValue: Integer): TNyxPascalTranslationOptions;
-    { Bounds recursive inclusions, replacement ancestry and conditional frames. }
+    { Bounds recursive inclusions, replacement ancestry, conditional frames and
+      the explicitly captured local compiler settings stack. }
     function UpToIncludeDepth(AValue: Integer): TNyxPascalTranslationOptions;
     { The root counts once; repeated files receive independent occurrences.
       Outer replacement packets have a separate collection with this same cap. }
     function UpToOccurrences(AValue: Integer): TNyxPascalTranslationOptions;
-    { Limits retained immutable compiler/replacement pairs; adjacent equal pairs coalesce. }
+    { Limits retained compiler/replacement/settings-stack triples; only adjacent
+      equal triples coalesce, including unchanged values behind a changed stack. }
     function UpToStates(AValue: Integer): TNyxPascalTranslationOptions;
     { Excess unresolved constructs refuse instead of silently dropping guidance. }
     function UpToDiagnostics(AValue: Integer): TNyxPascalTranslationOptions;
@@ -181,6 +183,24 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570C06}']
     function Expansion(AIndex: Integer): INyxPascalMacroExpansion;
     function StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+  end;
+  { Physical PUSH origin. The stack owns no document or renderer; an entry is
+    identified by its inclusion and scalar range, including cross-include scopes. }
+  TNyxPascalSettingsOrigin = record
+    Occurrence: Integer;
+    Span: TNyxPascalSpan;
+  end;
+  { Optional exact local-settings stack beside each historical state. Returned
+    contexts are immutable captured values. Stack shape is part of state identity
+    even when the current option values happen to match another state. }
+  INyxPascalTranslationSettings = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C08}']
+    { Unknown textual effects can change stack shape. Other getters refuse that
+      state rather than presenting the previously captured frames as current. }
+    function SettingsKnown(AState: Integer): Boolean;
+    function SettingsDepth(AState: Integer): Integer;
+    function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
+    function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
   end;
 
 { Effective tokens may come from a replacement fragment; their Span is relative
@@ -244,10 +264,36 @@ type
     Occurrence: Integer;
     Span: TNyxPascalSpan;
   end;
+  { Immutable private frame shares only an owned compiler snapshot and value
+    origin. Historical/live vectors may retain it without a translation back link. }
+  INyxSavedCompilerSettings = interface(IInterface)
+    function Context: INyxPascalCompilerContext;
+    function Origin: TNyxPascalSettingsOrigin;
+  end;
+  { Independent dynamic vectors retain immutable frames; no record contains an
+    interface and no published vector shares mutable slots with the live stack. }
+  TCompilerSettingsFrames = array of INyxSavedCompilerSettings;
+  { Constructed once before entering the live stack, then never mutated. }
+  TSavedCompilerSettings = class(TInterfacedObject, INyxSavedCompilerSettings)
+  public
+    Saved: INyxPascalCompilerContext;
+    Site: TNyxPascalSettingsOrigin;
+    function Context: INyxPascalCompilerContext;
+    function Origin: TNyxPascalSettingsOrigin;
+  end;
+  { Each historical state owns its copied frame vector. Frame interfaces point
+    outward to immutable snapshots, never back into translation or source owners. }
+  TCompilerSettingsStack = class
+  public
+    Frames: TCompilerSettingsFrames;
+    Known: Boolean;
+    function SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
+  end;
   { Owns every cache/immutable vector. Construction alone retains cancellation;
     all published references point outward to data, never back to a document. }
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
-    INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros)
+    INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
+    INyxPascalTranslationSettings)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -259,6 +305,9 @@ type
     FOccurrences: array of TNyxPascalInclusion;
     FStates: array of INyxPascalCompilerContext;
     FMacroStates: array of INyxPascalMacroEnvironment;
+    FSettingsStates: array of TCompilerSettingsStack;
+    FCompilerFrames: TCompilerSettingsFrames;
+    FSettingsKnown: Boolean;
     FMacros: INyxPascalMacroEnvironment;
     FExpansions: array of INyxPascalMacroExpansion;
     FBoundaryViews: array of INyxPascalSourceView;
@@ -316,6 +365,10 @@ type
     function Diagnostic(AIndex: Integer): TNyxPascalTranslationDiagnostic;
     function Expansion(AIndex: Integer): INyxPascalMacroExpansion;
     function StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
+    function SettingsDepth(AState: Integer): Integer;
+    function SettingsKnown(AState: Integer): Boolean;
+    function SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
+    function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -453,6 +506,7 @@ begin
       raise ENyxPascalContext.Create('The explicit translation root was not captured');
     end;
     FResolved := True;
+    FSettingsKnown := True;
     FActive := ppkTrue;
     SaveState;
     Visit(LRoot, -1, NyxPascalSpan(0, 0));
@@ -463,6 +517,13 @@ begin
       begin
         Problem(ptiUnbalancedConditional, FFrames[LAt].Occurrence, FFrames[LAt].Span,
           'Finish this captured conditional block');
+      end;
+
+      if Length(FCompilerFrames) > 0 then
+      begin
+        Problem(ptiCompilerSettings, FCompilerFrames[0].Origin.Occurrence,
+          FCompilerFrames[0].Origin.Span,
+          'This settings stack continues beyond the unit; its next-unit continuation needs explicit capture');
       end;
     end;
   finally
@@ -477,6 +538,10 @@ begin
   for LAt := 0 to High(FPhysical) do
   begin
     FPhysical[LAt].Free;
+  end;
+  for LAt := 0 to High(FSettingsStates) do
+  begin
+    FSettingsStates[LAt].Free;
   end;
   inherited Destroy;
 end;
@@ -515,7 +580,8 @@ procedure TTranslation.SaveState;
 begin
 
   if (FStateCount > 0) and FStates[FStateCount - 1].SameFacts(FContext) and
-    FMacroStates[FStateCount - 1].SameMacros(FMacros) then
+    FMacroStates[FStateCount - 1].SameMacros(FMacros) and
+    FSettingsStates[FStateCount - 1].SameStack(FCompilerFrames, FSettingsKnown) then
   begin
     Exit;
   end;
@@ -529,10 +595,45 @@ begin
   begin
     SetLength(FStates, Capacity(FStateCount, FOptions.MaximumStates));
     SetLength(FMacroStates, Length(FStates));
+    SetLength(FSettingsStates, Length(FStates));
   end;
   FStates[FStateCount] := FContext;
   FMacroStates[FStateCount] := FMacros;
+  FSettingsStates[FStateCount] := TCompilerSettingsStack.Create;
+  FSettingsStates[FStateCount].Frames := Copy(FCompilerFrames);
+  FSettingsStates[FStateCount].Known := FSettingsKnown;
   Inc(FStateCount);
+end;
+
+function TSavedCompilerSettings.Context: INyxPascalCompilerContext;
+begin
+  Result := Saved;
+end;
+
+function TSavedCompilerSettings.Origin: TNyxPascalSettingsOrigin;
+begin
+  Result := Site;
+end;
+
+function TCompilerSettingsStack.SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
+var
+  LAt: Integer;
+begin
+  Result := False;
+
+  if (Known <> AKnown) or (Length(Frames) <> Length(AOther)) then
+  begin
+    Exit;
+  end;
+  for LAt := 0 to High(Frames) do
+  begin
+
+    if Frames[LAt] <> AOther[LAt] then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
 end;
 
 procedure TTranslation.AddToken(AOccurrence, AToken: Integer; AExpansion: Integer;
@@ -702,6 +803,7 @@ begin
     directive using stale lexical defaults or manufacture unclosed-frame errors. }
   FContext := FContext.UnknownState;
   FMacros := FMacros.UnknownState;
+  FSettingsKnown := False;
   FBlocked := True;
   SaveState;
 end;
@@ -1037,6 +1139,105 @@ begin
   Result := False;
 end;
 
+function LocalSwitchNamed(const AName: TNyxText; out ASwitch: TNyxPascalLocalSwitch): Boolean;
+const
+  CNames: array[TNyxPascalLocalSwitch] of TNyxText =
+    ('booleval', 'assertions', 'longstrings', 'iochecks', 'writeableconst',
+      'overflowchecks', 'rangechecks', 'stackchecking', 'typedaddress',
+      'varstringchecks', 'stackframes');
+var
+  LSwitch: TNyxPascalLocalSwitch;
+begin
+  for LSwitch := Low(TNyxPascalLocalSwitch) to High(TNyxPascalLocalSwitch) do
+  begin
+
+    if CNames[LSwitch] = AName then
+    begin
+      ASwitch := LSwitch;
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function RecordAlignmentNamed(const AValue: TNyxText): TNyxPascalRecordAlignment;
+begin
+  Result := praUnknown;
+
+  if (AValue = 'default') or (AValue = 'normal') or (AValue = '0') then
+  begin
+    Result := praDefault;
+  end
+  else if AValue = 'c' then
+  begin
+    Result := praC;
+  end
+  else if AValue = '1' then
+  begin
+    Result := pra1;
+  end
+  else if AValue = '2' then
+  begin
+    Result := pra2;
+  end
+  else if AValue = '4' then
+  begin
+    Result := pra4;
+  end
+  else if AValue = '8' then
+  begin
+    Result := pra8;
+  end
+  else if AValue = '16' then
+  begin
+    Result := pra16;
+  end
+  else if AValue = '32' then
+  begin
+    Result := pra32;
+  end;
+end;
+
+function EnumStorageNamed(const AValue: TNyxText): TNyxPascalEnumStorage;
+begin
+  Result := pesUnknown;
+
+  if (AValue = 'default') or (AValue = 'normal') or (AValue = '0') then
+  begin
+    Result := pesDefault;
+  end
+  else if AValue = '1' then
+  begin
+    Result := pes1;
+  end
+  else if AValue = '2' then
+  begin
+    Result := pes2;
+  end
+  else if AValue = '4' then
+  begin
+    Result := pes4;
+  end;
+end;
+
+function CallingNamed(const AValue: TNyxText): TNyxPascalCallingConvention;
+const
+  CNames: array[TNyxPascalCallingConvention] of TNyxText =
+    ('', 'default', 'register', 'cdecl', 'pascal', 'safecall', 'stdcall', 'oldfpccall');
+var
+  LConvention: TNyxPascalCallingConvention;
+begin
+  for LConvention := pccDefault to High(TNyxPascalCallingConvention) do
+  begin
+
+    if CNames[LConvention] = AValue then
+    begin
+      Exit(LConvention);
+    end;
+  end;
+  Result := pccUnknown;
+end;
+
 procedure TTranslation.Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
@@ -1051,6 +1252,13 @@ var
   LOffset: Integer;
   LSeparator: Integer;
   LDefinition: TNyxPascalMacroDefinition;
+  LPolicies: TNyxPascalCompilerPolicies;
+  LAlignment: TNyxPascalRecordAlignment;
+  LStorage: TNyxPascalEnumStorage;
+  LCalling: TNyxPascalCallingConvention;
+  LSwitch: TNyxPascalLocalSwitch;
+  LSaved: TSavedCompilerSettings;
+  LSavedLease: INyxSavedCompilerSettings;
 begin
   SplitDirective(AText, LName, LValue, LOffset);
   try
@@ -1150,6 +1358,154 @@ begin
 
     if FActive = ppkFalse then
     begin
+      Exit;
+    end;
+
+    if (LName = 'push') or (LName = 'pop') then
+    begin
+
+      if (LValue <> '') or (FActive <> ppkTrue) or (FContext.Family <> ppcFPC) then
+      begin
+        Problem(ptiCompilerSettings, AOccurrence, AToken.Span,
+          'This settings-stack effect needs an unconditional captured FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+
+      if LName = 'push' then
+      begin
+
+        if Length(FCompilerFrames) >= FOptions.MaximumIncludeDepth then
+        begin
+          raise ENyxPascalTranslationLimit.Create('Compiler settings stack exceeds its depth budget');
+        end;
+        LSaved := TSavedCompilerSettings.Create;
+        LSavedLease := LSaved;
+        LSaved.Saved := FContext;
+        LSaved.Site.Occurrence := AOccurrence;
+        LSaved.Site.Span := AToken.Span;
+        SetLength(FCompilerFrames, Length(FCompilerFrames) + 1);
+        FCompilerFrames[High(FCompilerFrames)] := LSavedLease;
+      end
+      else
+      begin
+
+        if Length(FCompilerFrames) = 0 then
+        begin
+          Problem(ptiCompilerSettings, AOccurrence, AToken.Span,
+            'No saved settings frame was captured for this POP');
+          UnknownEffect;
+          Exit;
+        end;
+        FContext := RestoreNyxPascalLocalSettings(FContext,
+          FCompilerFrames[High(FCompilerFrames)].Context);
+        SetLength(FCompilerFrames, Length(FCompilerFrames) - 1);
+      end;
+      SaveState;
+      Exit;
+    end;
+
+    if (LName = 'inline') or LocalSwitchNamed(LName, LSwitch) then
+    begin
+      LArgument := NyxPascalASCIIKey(LValue);
+
+      if LArgument = 'on' then
+      begin
+        LCondition := ppkTrue;
+      end
+      else if LArgument = 'off' then
+      begin
+        LCondition := ppkFalse;
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('A Boolean compiler policy needs on or off');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LCondition := ppkUnknown;
+      end;
+
+      if LName = 'inline' then
+      begin
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).WithInlining(LCondition));
+        SaveState;
+      end
+      else
+      begin
+        ChangeOption(NyxPascalLocalSwitchOption(LSwitch), LCondition);
+      end;
+      Exit;
+    end;
+
+    if (LName = 'packrecords') or (LName = 'align') or
+      ((LName = 'a') and not (LValue = '+') and not (LValue = '-')) then
+    begin
+      LAlignment := RecordAlignmentNamed(NyxPascalASCIIKey(LValue));
+
+      if (LAlignment = praUnknown) or
+        ((LName <> 'packrecords') and (LAlignment in [praC, praDefault])) then
+      begin
+        raise ENyxPascalContext.Create('This record alignment needs an explicit supported value');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LAlignment := praUnknown;
+      end;
+      LPolicies := NyxPascalCompilerPolicies(FContext).AlignRecords(LAlignment);
+      FContext := NyxPascalWithCompilerPolicies(FContext, LPolicies);
+      SaveState;
+      Exit;
+    end;
+
+    if (LName = 'packenum') or (LName = 'minenumsize') or (LName = 'z') then
+    begin
+      LArgument := NyxPascalASCIIKey(LValue);
+
+      if (LName = 'z') and (LValue = '+') then
+      begin
+        LArgument := '4';
+      end
+      else if (LName = 'z') and (LValue = '-') then
+      begin
+        LArgument := '1';
+      end;
+      LStorage := EnumStorageNamed(LArgument);
+
+      if LStorage = pesUnknown then
+      begin
+        raise ENyxPascalContext.Create('This enumeration storage policy needs a supported value');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LStorage := pesUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).StoreEnums(LStorage));
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'calling' then
+    begin
+      LCalling := CallingNamed(NyxPascalASCIIKey(LValue));
+
+      if LCalling = pccUnknown then
+      begin
+        raise ENyxPascalContext.Create('This calling convention needs a supported declared value');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LCalling := pccUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).CallBy(LCalling));
+      SaveState;
       Exit;
     end;
 
@@ -1262,6 +1618,14 @@ begin
       begin
         Visit(LAt, AOccurrence, AToken.Span);
       end;
+      Exit;
+    end;
+
+    if (LName = 'a') and ((LValue = '+') or (LValue = '-')) then
+    begin
+      Problem(ptiCompilerSettings, AOccurrence, AToken.Span,
+        'Boolean alignment aliases need their mode-specific policy; use an explicit captured alignment');
+      UnknownEffect;
       Exit;
     end;
 
@@ -1518,6 +1882,38 @@ function TTranslation.StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
 begin
   State(AIndex);
   Result := FMacroStates[AIndex];
+end;
+
+function TTranslation.SettingsDepth(AState: Integer): Integer;
+begin
+
+  if not SettingsKnown(AState) then
+  begin
+    raise ENyxPascalContext.Create('This compiler settings stack has unknown textual effects');
+  end;
+  Result := Length(FSettingsStates[AState].Frames);
+end;
+
+function TTranslation.SettingsKnown(AState: Integer): Boolean;
+begin
+  State(AState);
+  Result := FSettingsStates[AState].Known;
+end;
+
+function TTranslation.SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
+begin
+
+  if (ALevel < 0) or (ALevel >= SettingsDepth(AState)) then
+  begin
+    raise ENyxPascalContext.Create('Saved local settings are outside this historical stack');
+  end;
+  Result := FSettingsStates[AState].Frames[ALevel].Context;
+end;
+
+function TTranslation.SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
+begin
+  SavedSettings(AState, ALevel);
+  Result := FSettingsStates[AState].Frames[ALevel].Origin;
 end;
 
 function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;

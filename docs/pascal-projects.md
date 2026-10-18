@@ -955,8 +955,9 @@ Actual SDK continuation identifies a source-encoding prerequisite:
 an `ENyxBytes` failure; private host paths and guessed ANSI conversion are
 excluded. The explicit byte/view contract below now permits retaining this whole
 directory with an opaque file. SysUtils passes `sysutilh.inc`'s MACRO ON and both
-selected replacement definitions, then reaches its unsupported `{$inline on}`
-policy. The intended legacy encoding, full textual-macro effects, broader grammar and complete RTL
+selected replacement definitions and explicit inlining policy, then reaches
+missing conditional/target-size facts in later headers. The intended legacy
+encoding, full textual-macro effects, broader grammar and complete RTL
 interface remain open requirements.
 
 ## Original source bytes and explicit decoding
@@ -1065,9 +1066,72 @@ It re-tokenizes joined fragments and guards nearby physical boundaries with a
 cached canonical UTF-8 map, without replacing the original source bytes. These
 are explicit remaining full textual-macro requirements, alongside broader
 compiler/codepage/default/target/define context and language/editor/parity work.
-The actual RTL now reaches INLINE ON at scalar 786 in sysutilh.inc with its exact
-SUT/BU definitions retained. This is a bounded resolver prerequisite, not complete
+The actual RTL now passes INLINE ON in sysutilh.inc with its exact SUT/BU
+definitions retained, then reaches missing conditional/target-size facts in later
+headers. This is a bounded resolver prerequisite, not complete
 RTL meaning, a default Studio engine, an MCP schema change or delivered parity.
+
+## Typed local compiler policies and settings scopes
+
+`TNyxPascalCompilerPolicies` records explicit inlining knowledge, symbolic record
+alignment, minimum enum storage and declared default calling convention. Values
+are strongly typed, independent copies. Unknown is distinct from Default or C;
+the latter preserve target/mode intent without supplying an invented ABI size,
+field offset or procedural-type compatibility result.
+
+```pascal
+LContext := NyxPascalWithCompilerPolicies(LContext,
+  TNyxPascalCompilerPolicies.Unknown
+    .WithInlining(ppkTrue)
+    .AlignRecords(praC)
+    .StoreEnums(pes4)
+    .CallBy(pccCdecl));
+LContext := NyxPascalWithLocalSwitch(LContext, plsRangeChecks, ppkTrue);
+```
+
+Optional `INyxPascalContextPolicies` keeps the original compiler-context GUID
+unchanged. Capturing a legacy context supplies unknown policies. Capture,
+SameFacts, immutable fluent updates, mode resets and unknown effects preserve or
+revoke this metadata explicitly. Alternate capture checks a bounded symbol count
+once and publishes only after all getters/policy validation succeed.
+
+The source boundary recognizes INLINE ON/OFF, PACKRECORDS numeric/C/default,
+numeric ALIGN/A aliases, PACKENUM/MINENUMSIZE/Z values, CALLING and supported long
+Boolean aliases. Long forms share the corresponding short-switch facts, including
+IFOPT behavior. Invalid values diagnose; uncertain writes revoke their particular
+policy. Mode-dependent Boolean A aliases remain an explicit gap. No compiler's
+defaults are borrowed from the analyzer's own build.
+
+`RestoreNyxPascalLocalSettings` restores supported local short switches, symbolic
+policies and scoped-enum state. Current defines, replacement bodies, macro
+enablement and global mode features survive. This follows the
+[local settings contract](https://www.freepascal.org/docs-html/current/prog/progsu62.html)
+with the installed compiler's behavior independently checked by handwritten input:
+record/enum sizes, compatible calling signatures, conditional short flags and
+global mode/macro persistence. That native oracle is specific to this configured
+Win32/i386 compiler; it does not prove another target's ABI or actual inlining.
+
+PUSH/POP flow across textual includes. Each historical translation state owns its
+independent stack of immutable saved contexts and physical PUSH origins, alongside
+current compiler facts and replacement tables. A stack change cannot coalesce
+states merely because their current option values match. Optional
+`INyxPascalTranslationSettings` exposes bounded state/depth/frame/origin reads.
+Unknown textual effects revoke stack-shape knowledge; callers inspect SettingsKnown,
+and the remaining stack getters refuse unknown states. Earlier known states stay
+readable. Stack depth and retained-state quotas refuse atomically.
+
+FPC can carry a settings stack across compilation units. The current translator
+does not invent an inherited frame: an uncaptured POP or a stack continuing beyond
+the unit remains a context gap with retained source evidence. Conditional unknown
+stack effects refuse rather than guessing shape. Complete compilation-order
+continuation, target/ABI/type-size facts, wider policies, global directive placement
+and full language/editor/parity/delivery remain under their original owners.
+
+The real SysUtils continuation now traverses later headers and retains 38 unknown
+conditional decisions. `sizeof(Integer)` lacks explicit target type-size facts;
+the unresolved fallback FATAL in syshelph.inc is a context diagnostic, not a chosen
+compiler error. No branch is selected from the analyzer's host integer size.
+WORK.md owns exact native evidence separately from browser compilation.
 
 ## Structured type syntax and physical origins
 
@@ -1378,7 +1442,8 @@ capture has 493 files/381 modules. A badge query loads `nyx.controls` and
 `nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
 Windows RTL files supplies that root (513 files/386 modules). Capturing all 48
 SysUtils include files with the explicit opaque policy gives 561 files; translation
-passes ObjFPC/OUT/MACRO ON and reaches `sysutilh.inc`'s INLINE ON at physical scalar 786.
+passes ObjFPC/OUT/MACRO ON/INLINE ON and reaches later conditional/target-size gaps,
+including sizeof(Integer) and its unresolved FATAL fallback in syshelph.inc.
 The imported interface remains incomplete; full textual macros, other actual
 encoding/default/target/define/grammar meaning remain prerequisites. No export
 stub or source rewriting turns this qualified boundary into readiness.
