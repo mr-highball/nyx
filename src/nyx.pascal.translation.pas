@@ -25,7 +25,8 @@ unit nyx.pascal.translation;
 
 interface
 
-uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context, nyx.pascal.files;
+uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context, nyx.pascal.files,
+  nyx.pascal.encoding;
 
 type
   { Translation resource refusal is atomic. It differs from a recoverable missing
@@ -35,7 +36,7 @@ type
     successful compiler/type-resolution result. Positions are always physical. }
   TNyxPascalTranslationIssue = (ptiUnknownCondition, ptiMissingInclude,
     ptiIncludeCycle, ptiUnbalancedConditional, ptiUnsupportedDirective,
-    ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange);
+    ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding);
   { Immutable physical diagnostic. Occurrence distinguishes repeated includes;
     text is English guidance with no machine paths or borrowed exceptions. }
   TNyxPascalTranslationDiagnostic = record
@@ -166,6 +167,10 @@ type
   translators which have not exposed contextual lexing. Indices remain checked. }
 function NyxPascalOccurrenceLexical(const ATranslation: INyxPascalTranslation;
   AOccurrence: Integer): INyxPascalLexicalSnapshot;
+{ Map a decoded physical scalar range to its exact original source bytes.
+  Occurrence identity is retained; no byte offset is inferred from UTF-8 text. }
+function NyxPascalOriginalSpan(const ATranslation: INyxPascalTranslation;
+  AOccurrence: Integer; const ASpan: TNyxPascalSpan): TNyxPascalByteSpan;
 
 { Freeze caller-serialized alternate inputs once and traverse only captured files.
   Root must name an explicit captured unit/program file; no include owner is guessed.
@@ -565,6 +570,7 @@ var
   LAncestor: Integer;
   LBytes: Integer;
   LLexical: INyxPascalLexicalSnapshot;
+  LView: INyxPascalSourceView;
   LReader: TTranslationReader;
   LObserver: INyxPascalLexicalObserver;
 begin
@@ -593,7 +599,26 @@ begin
     end;
     LAncestor := FOccurrences[LAncestor].Parent;
   end;
-  LBytes := NyxUTF8ByteCount(FFiles.TextAt(AFile));
+  LView := NyxPascalSourceViewAt(FFiles, AFile);
+
+  if LView = nil then
+  begin
+
+    if AParent < 0 then
+    begin
+      raise ENyxPascalSourceEncoding.CreateForFile(FFiles.FileAt(AFile));
+    end;
+    Problem(ptiSourceEncoding, AParent, AInclude,
+      'This captured include needs an explicit readable encoding: ' + FFiles.FileAt(AFile).Name);
+    UnknownEffect;
+    Exit;
+  end;
+  LBytes := NyxUTF8ByteCount(LView.Text);
+
+  if LView.Original.Count > LBytes then
+  begin
+    LBytes := LView.Original.Count;
+  end;
 
   if LBytes > FOptions.MaximumExpandedBytes - FBytes then
   begin
@@ -621,7 +646,7 @@ begin
     LReader.Owner := Self;
     LReader.Occurrence := LOccurrence;
     LReader.Included := AParent >= 0;
-    LLexical := NewNyxPascalContextualLexicalSnapshot(FFiles.TextAt(AFile),
+    LLexical := NewNyxPascalContextualLexicalSnapshot(LView.Text,
       FOptions.LexicalOptions.NestedComments(FNested), LObserver, FCancellation);
     FLexical[LOccurrence] := LLexical;
     for LAt := 0 to LLexical.DiagnosticCount - 1 do
@@ -1114,6 +1139,13 @@ begin
 
     if (LName = 'codepage') and (NyxPascalASCIIKey(LValue) = 'utf8') then
     begin
+
+      if NyxPascalSourceViewAt(FFiles, FOccurrences[AOccurrence].FileIndex).Kind <> psekUTF8 then
+      begin
+        Problem(ptiSourceEncoding, AOccurrence, AToken.Span,
+          'The source CODEPAGE directive disagrees with its explicit decoded byte view');
+        UnknownEffect;
+      end;
       Exit;
     end;
     Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
@@ -1225,6 +1257,27 @@ begin
   begin
     Result := ATranslation.Physical(ATranslation.Occurrence(AOccurrence).FileIndex);
   end;
+end;
+
+function NyxPascalOriginalSpan(const ATranslation: INyxPascalTranslation;
+  AOccurrence: Integer; const ASpan: TNyxPascalSpan): TNyxPascalByteSpan;
+var
+  LFile: Integer;
+  LView: INyxPascalSourceView;
+begin
+
+  if ATranslation = nil then
+  begin
+    raise ENyxPascalContext.Create('Original coordinates need their owning translation');
+  end;
+  LFile := ATranslation.Occurrence(AOccurrence).FileIndex;
+  LView := NyxPascalSourceViewAt(ATranslation.Files, LFile);
+
+  if LView = nil then
+  begin
+    raise ENyxPascalSourceEncoding.CreateForFile(ATranslation.Files.FileAt(LFile));
+  end;
+  Result := LView.OriginalSpan(ASpan);
 end;
 
 function TTranslation.OccurrenceCount: Integer;

@@ -26,7 +26,8 @@ interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.binding, nyx.pascal.modules, nyx.pascal.sources, nyx.pascal.completion;
+  nyx.pascal.binding, nyx.pascal.modules, nyx.pascal.sources, nyx.pascal.completion,
+  nyx.pascal.encoding;
 
 type
   { Independent copied analysis budgets. Per-module translation/syntax and
@@ -83,6 +84,15 @@ type
     function RelatedName: TNyxText;
     function Definition(AIndex: Integer): TNyxPascalCompletionDefinition;
     function DefinitionSource(AIndex: Integer): INyxPascalLexicalSnapshot;
+  end;
+  { Optional original-byte navigation for a ready row. The detached readable
+    view retains exact bytes/encoding after provider/world retirement. Its origin
+    distinguishes external bytes from canonical authoring UTF-8. No wire schema
+    or file/process authority follows from these in-process coordinates. }
+  INyxPascalCompletionByteOrigins = interface(IInterface)
+    ['{170458CB-C602-4E28-84F0-E90C2408EE04}']
+    function DefinitionView(AIndex: Integer): INyxPascalSourceView;
+    function DefinitionByteSpan(AIndex: Integer): TNyxPascalByteSpan;
   end;
   { Optional synchronous cancellation for worker owners. Cancellation is borrowed
     only during this call and publishes a detached cancelled response, no rows.
@@ -149,11 +159,13 @@ type
   { Delegates guarded insertion/preview to the original result owner. Only
     source-location values and typed gap metadata are added, without a cycle. }
   TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult,
-    INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis)
+    INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis,
+    INyxPascalCompletionByteOrigins)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
     DefinitionSources: array of INyxPascalLexicalSnapshot;
+    DefinitionViews: array of INyxPascalSourceView;
     Modules: array of TModuleLocation;
     Tokens: Integer;
     Loads: Integer;
@@ -175,6 +187,8 @@ type
     function RelatedName: TNyxText;
     function Definition(AIndex: Integer): TNyxPascalCompletionDefinition;
     function DefinitionSource(AIndex: Integer): INyxPascalLexicalSnapshot;
+    function DefinitionView(AIndex: Integer): INyxPascalSourceView;
+    function DefinitionByteSpan(AIndex: Integer): TNyxPascalByteSpan;
     function ModuleCount: Integer;
     function ModuleName(AIndex: Integer): TNyxPascalModuleRef;
     function ModuleRoot(AIndex: Integer): TNyxPascalPhysicalFile;
@@ -384,6 +398,18 @@ begin
   Result := DefinitionSources[AIndex];
 end;
 
+function TOwnedResult.DefinitionView(AIndex: Integer): INyxPascalSourceView;
+begin
+  Item(AIndex);
+  Result := DefinitionViews[AIndex];
+end;
+
+function TOwnedResult.DefinitionByteSpan(AIndex: Integer): TNyxPascalByteSpan;
+begin
+  Item(AIndex);
+  Result := DefinitionViews[AIndex].OriginalSpan(Definitions[AIndex].Span);
+end;
+
 function TOwnedResult.ModuleCount: Integer;
 begin
   Result := Length(Modules);
@@ -470,6 +496,12 @@ begin
     (LFacts.Version.FullNumber <> FProvider.Context.Version.FullNumber) then
   begin
     raise EOwnedGap.CreateGap(pcgBinding, 'This indexed module needs a compatible captured compiler identity',
+      pbiCompilerContext, AExpected);
+  end;
+
+  if NyxPascalSourceViewAt(FFiles, FFiles.Find(AFile)) = nil then
+  begin
+    raise EOwnedGap.CreateGap(pcgBinding, 'This captured module needs an explicit readable source encoding',
       pbiCompilerContext, AExpected);
   end;
   LSource := NewNyxPascalTranslation(FFiles, AFile, LFacts, LOptions, FCancel);
@@ -859,6 +891,7 @@ begin
       raise EOwnedGap.CreateGap(pcgPhysicalContext, 'The requested file has no active captured inclusion');
     end;
   end;
+
   if not FReceiverReady then
   begin
     FReceiverName := Receiver(LLex, FReceiverStart, FReceiverDot,
@@ -913,6 +946,7 @@ begin
   SetLength(LRows, LPage.ResultSet.Count);
   SetLength(LResult.Definitions, Length(LRows));
   SetLength(LResult.DefinitionSources, Length(LRows));
+  SetLength(LResult.DefinitionViews, Length(LRows));
   for LAt := 0 to High(LRows) do
   begin
     Check;
@@ -935,6 +969,7 @@ begin
     LResult.Definitions[LAt].Occurrence := LOrigin.Occurrence;
     LResult.DefinitionSources[LAt] := NyxPascalOccurrenceLexical(
       LView.Source, LOrigin.Occurrence);
+    LResult.DefinitionViews[LAt] := NyxPascalSourceViewAt(LView.Source.Files, LOrigin.FileIndex);
   end;
   Check;
   LResult.Base := NewNyxPascalCompletionResult(FRequest, pcsReady, '',

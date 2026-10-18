@@ -22,8 +22,8 @@
 program nyx_pascal_profile_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.editing, nyx.scheduler,
-  nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.compilertrace,
+uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.editing, nyx.scheduler,
+  nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.compilertrace, nyx.pascal.encoding,
   nyx.studio.pascalprofiles, nyx.pascal.files, nyx.pascal.files.native,
   nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.names,
   nyx.pascal.project, nyx.pascal.drafts, nyx.pascal.sources,
@@ -169,10 +169,11 @@ begin
   ReleasedSource(ADirectory + '/deadline');
 end;
 
-procedure ActualRTL(const ARoot, ASourceRoot: TNyxText;
+procedure ActualRTL(const ARoot, ASourceRoot, AArtifacts: TNyxText;
   const AContext: INyxPascalCompilerContext);
 var
   LCapture: INyxPascalDirectoryCapture;
+  LAttempt: INyxPascalDirectoryCapture;
   LFiles: INyxPascalFileCatalog;
   LTranslation: INyxPascalTranslation;
   LAt: Integer;
@@ -188,6 +189,12 @@ var
   LEncodingRefused: Boolean;
   LBeforeFiles: Integer;
   LBeforeModules: Integer;
+  LByteFiles: INyxPascalByteFileCatalog;
+  LOpaque: Integer;
+  LRaw: INyxPascalSourceBytes;
+  LExport: TFileStream;
+  LOutput: TNyxBytes;
+  LDirectory: TNyxText;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(ARoot + '/src',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -198,7 +205,7 @@ begin
   LBeforeModules := LCapture.Modules.Count;
   LEncodingRefused := False;
   try
-    LCapture := CaptureNyxPascalSourceDirectory(ASourceRoot + '/rtl/objpas/sysutils',
+    LAttempt := CaptureNyxPascalSourceDirectory(ASourceRoot + '/rtl/objpas/sysutils',
       LCapture.Files, LCapture.Modules,
       TNyxPascalDirectoryOptions.Defaults.Under('rtl/objpas/sysutils'));
   except
@@ -210,9 +217,46 @@ begin
       WriteLn('actual RTL encoding gap / ', LEncoding.FileReference.Name);
     end;
   end;
-  Check(LEncodingRefused and (LCapture.Files.Count = LBeforeFiles) and
+  Check(LEncodingRefused and (LAttempt = nil) and (LCapture.Files.Count = LBeforeFiles) and
     (LCapture.Modules.Count = LBeforeModules),
     'The actual legacy include directory refuses atomically without rewriting bytes or seeds');
+  LCapture := CaptureNyxPascalSourceDirectory(ASourceRoot + '/rtl/objpas/sysutils',
+    LCapture.Files, LCapture.Modules, TNyxPascalDirectoryOptions.Defaults
+      .Under('rtl/objpas/sysutils').WithSourcePolicy(pscpUTF8ViewsWithOpaqueBytes));
+  Supports(LCapture.Files, INyxPascalByteFileCatalog, LByteFiles);
+  LDirectory := AArtifacts + '/retained-includes';
+  Check(not DirectoryExistsUTF8(LDirectory) and CreateDirUTF8(LDirectory),
+    'Whole original include bytes are exported only into a fresh owned evidence directory');
+  LOpaque := 0;
+  for LAt := LBeforeFiles to LCapture.Files.Count - 1 do
+  begin
+    LRaw := LByteFiles.SourceBytesAt(LAt);
+    LOutput := LRaw.Slice(NyxPascalByteSpan(0, LRaw.Count));
+    LExport := TFileStream.Create(String(LDirectory + '/' +
+      ExtractFileName(LCapture.Files.FileAt(LAt).Name) + '.bin'), fmCreate);
+    try
+
+      if Length(LOutput) > 0 then
+      begin
+        LExport.WriteBuffer(LOutput[0], Length(LOutput));
+      end;
+    finally
+      LExport.Free;
+    end;
+
+    if LByteFiles.SourceViewAt(LAt) = nil then
+    begin
+      Inc(LOpaque);
+      Check(LCapture.Files.FileAt(LAt).Name = TNyxText('rtl/objpas/sysutils/strg.inc'),
+        'The complete real include capture reports the original uninterpreted source');
+      LRaw := LByteFiles.SourceBytesAt(LAt);
+      Check((LRaw.Count = 1239) and (LRaw.ByteAt($39F) = $81),
+        'Real non-UTF-8 string bytes survive without any guessed decoding');
+    end;
+  end;
+  Check((LCapture.Files.Count = LBeforeFiles + 48) and
+    (LCapture.Modules.Count = LBeforeModules) and (LOpaque = 1),
+    'All 48 actual include sources are retained; an opaque view does not drop its file');
   LFiles := LCapture.Files.WithIncludeDirectory('rtl/objpas/sysutils');
   LFile := LCapture.Modules.Entry(LCapture.Modules.Find(NyxPascalModule('SysUtils'))).Root;
   LTranslation := NewNyxPascalTranslation(LFiles, LFile, AContext,
@@ -232,8 +276,8 @@ begin
     WriteLn('actual RTL / ', LFile.Name, ':', LDiagnostic.Span.Start,
       ' issue=', Ord(LDiagnostic.Issue), ' ', LDiagnostic.MessageText);
   end;
-  Check((LTranslation.OccurrenceCount = 1) and LMissing and not LUnsupportedMacro,
-    'Actual compiler facts pass RTL configuration; refused encoded includes remain unavailable');
+  Check((LTranslation.OccurrenceCount = 2) and not LMissing and LUnsupportedMacro,
+    'Actual compiler facts and complete byte capture reach the real RTL replacement-macro boundary');
   WriteLn('actual capture / files=', LFiles.Count, ' modules=', LCapture.Modules.Count);
   LProvider := NewNyxIndexedPascalCompletionProvider(AContext, LFiles, LCapture.Modules,
     TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(4000000));
@@ -255,7 +299,7 @@ begin
     Check(ParamCount = 4, 'Supply repository, configured FPC, FPC source root and fresh E: runtime');
     Check(not DirectoryExistsUTF8(ParamStr(4)) and CreateDirUTF8(ParamStr(4)),
       'The native profile consumer owns a fresh explicit runtime');
-    ActualRTL(TNyxText(ParamStr(1)), TNyxText(ParamStr(3)),
+    ActualRTL(TNyxText(ParamStr(1)), TNyxText(ParamStr(3)), TNyxText(ParamStr(4)),
       NativeProfiles(TNyxText(ParamStr(2)), TNyxText(ParamStr(4))));
     WriteLn('PASS ', GChecks, ' actual compiler/RTL profile checks');
   except

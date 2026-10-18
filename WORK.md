@@ -33,7 +33,94 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Configured FPC facts and RTL encoding boundary — 2026-10-18
+## Current integration: Original bytes and explicit source views — 2026-10-18
+
+Previous goal turn is progress: pushed 0556360 supplies actual configured FPC
+facts. This turn completes the bounded original-byte/decoded-view prerequisite
+for the wholly Nyx-owned resolver. Original NS-4 authoring criterion two and its
+service/editor owners retain complete language, compiler/SDK context,
+incremental/project-scale budgets, modern editing/navigation, quality/parity and
+delivery. No original criterion/task/counter/credit/DONE, default Studio adoption,
+new MCP tool/schema or rollout closes. Solo; no HTTP/browser/file-protocol input,
+capture, protected mutation, cleanup/deletion/restart or review bypass occurs.
+
+New nyx.pascal.encoding owns immutable original packets, explicit UTF-8/UTF-16/
+supplied single-byte/alternate codecs and detached Unicode views. No host ANSI
+default or encoding guess is selected. BOM/NUL/CRLF/supplementary scalars retain
+exact originals. Typed byte spans stay distinct from scalar spans; compact
+fixed-stride or byte-width/128-scalar-checkpoint maps support exact boundaries,
+interior-byte refusal and EOF. Alternate providers detach at construction;
+codecs/cancellation are not retained. Original and decoded UTF-8 each cap at four
+MiB. Decode errors retain exact byte offsets; budget/cancellation failures cannot
+become opaque fallback. Factories publish only complete owned results.
+
+Optional INyxPascalByteFileCatalog preserves original packets and nullable views
+without changing the prior catalog GUID. Legacy/WithFile text is explicitly
+canonical authoring UTF-8, not external-byte evidence. Per-file work charges the
+larger original/decoded size. Native capture defaults to strict UTF-8; explicit
+pscpUTF8ViewsWithOpaqueBytes retains undecodable files without text. Reached opaque
+includes stop certainty; opaque indexed roots return compiler-context gaps.
+Translation and optional INyxPascalCompletionByteOrigins retain exact original
+definition ranges after provider/world retirement. No wire/schema changes follow.
+
+Evidence behind ignored .local/source-bytes-paths-private.json:
+
+- Fourteen focused inputs, all 525 src entries (492 captured source files), 68
+  actual RTL source inputs and three compiler/configuration inputs stay exact.
+  Input hashes are in input-verification-private.json and the four pin manifests.
+- logs/bytes-run.log passes 43 native checks: strict Unicode/UTF-16, custom codec
+  retirement, alternate producer copying/bounds, invalid sequences, exact spans,
+  compact checkpoints, cancellation, decoded expansion quota, opaque catalog/
+  traversal, CODEPAGE mismatch, detached completion origins and failed-publication
+  isolation. Native heap is clean. UTF-16 mapping is not FPC admission evidence.
+- logs/profile-run.log passes 22 actual configured-compiler/RTL checks, clean
+  heap. The existing five compiler jobs retain two successes and cancellation/
+  output/deadline refusals, exact family joins and source-lease release. All 48
+  actual SysUtils-directory files now retain bytes; independent SHA-256 comparison
+  of every Pascal-exported packet matches its original. strg.inc remains the one
+  opaque file, with no guessed codepage. The full capture is 560 files/385 modules.
+  SysUtils reaches sysutilh.inc MACRO ON at scalar 560 with an explicit unsupported
+  directive, no missing include. Its interface stays incomplete.
+- logs/semantic-run.log passes 84 production semantic/private-editor checks,
+  clean heap, including a sixth actual compiler query. Actual SDK FullNumber
+  definition bytes are exact and marked captured. Revision/permission/context,
+  concurrent model-guard release/activity/workspace/pair protection retain their
+  existing contract. This owned engine never listens; native chat Nyx tools are
+  absent. No HTTP/authentication/ordinary-editor observation claim follows.
+- Maintained SDK/dependency/owned/mode/translation/type-origin checks pass
+  22/31/86/41/209/357, clean heaps. The narrower SDK fixture deliberately omits
+  include-directory capture and still reports missing sysutilh.inc; the profile
+  consumer separately owns the complete 48-file continuation. Actual Nyx capture
+  is 492 files/380 modules, plus win RTL 512/385. Counts overlap prior evidence.
+- compiler-qualified-private.json selects thirteen accepted compiler logs, zero
+  owned warnings and 28 upstream pas2js RTL warnings. Four browser consumers
+  compile only; none executes. Complete frozen 7422453 verifier passes 349 files;
+  five protected files/nine complete contexts remain exact. All readers/families
+  join; LAN stays offline. terminal-qualified-private.json owns final boundaries;
+  final-checkpoint-private.json records final source/remote identity.
+- Final style review inserts five blank lines above if blocks. Compiled-input
+  manifests remain retained; formatting-verified-private.json proves no nonempty
+  source line changed. Final pin manifests cover the formatted bytes. No compiler
+  repetition is needed for these blank-line-only edits.
+
+Retained corrections: early preparation had an untyped interface/self comparison,
+three native literal-concatenation warnings and a native partial-result exposure.
+The first profile preparation consequently miscounted opaque views. Typed self
+comparisons, explicit portable literal operands and late owned-result publication
+repair these causes; the failed/preparation logs stay excluded from accepted final
+evidence. A private receipt parser initially recorded zero counts after overwriting
+its regex capture; it was corrected from the unchanged terminal logs without
+rerunning consumers. This is composite qualification, not an uninterrupted batch.
+
+Next useful action: implement explicit ordered replacement-macro context for the
+real sysutilh.inc prerequisite, then continue its includes/default/target/define/
+codepage/grammar meaning. Stop byte/codec/probe/compiler/capture variants here.
+No external source is rewritten, dropped or assigned a guessed alphabet. Full
+expressions/helpers/overloads/constraints, incremental caching/invalidation and
+budgets, default adoption, actual input/navigation/parity/quality/delivery retain
+their original owners. Preserve concurrent planning changes outside this commit.
+
+## Previous integration: Configured FPC facts and RTL encoding boundary — 2026-10-18
 
 Previous goal turn is progress: pushed 29c5bb5 qualifies ordered lexical contexts.
 This turn supplies actual configured compiler facts to the Nyx-owned resolver and

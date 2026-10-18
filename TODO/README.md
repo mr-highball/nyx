@@ -51,11 +51,13 @@ original authoring/service ownership. No original credit closes.
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now captures real source files and loads explicit indexed imports on demand.
 Native dependency/capture/production semantic checks and maintained contracts
-pass; two current browser consumers compile only. Ordered mode/comment contexts now
+pass; four current browser consumers compile only. Ordered mode/comment contexts now
 retain exact repeated-include tokens; configured FPC queries now supply real
-facts to indexed semantic completion. SysUtils reaches uncaptured sysutilh.inc;
-strg.inc's non-UTF-8 bytes require explicit encoding/original byte origins before
-full RTL capture. Complete compiler context, language meaning, incremental work,
+facts to indexed semantic completion. The [source-byte layer](../docs/pascal-projects.md#original-source-bytes-and-explicit-decoding)
+now retains original packets, explicit views and detached definition byte origins.
+All 48 SysUtils include files retain their bytes, with strg.inc explicitly opaque;
+translation reaches MACRO ON in sysutilh.inc. Complete encoding/macro/compiler
+context, language meaning, incremental work,
 default Studio adoption and full input/navigation/budget/quality/parity/delivery
 remain under original authoring/service ownership. No original credit closes.
 

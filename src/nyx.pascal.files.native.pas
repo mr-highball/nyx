@@ -25,20 +25,15 @@ unit nyx.pascal.files.native;
 interface
 
 uses nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
-  nyx.pascal.modules, nyx.pascal.translation;
+  nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.encoding;
 
 type
-  { Exact virtual origin for an undecodable external source. Original bytes are
-    neither replaced nor interpreted under the analyzer's ANSI codepage. The
-    inherited byte-error contract remains catchable; no private host path is
-    retained. A future explicit encoding/byte-origin contract owns admission. }
-  ENyxPascalSourceEncoding = class(ENyxBytes)
-  private
-    FFile: TNyxPascalPhysicalFile;
-  public
-    constructor CreateForFile(const AFile: TNyxPascalPhysicalFile);
-    property FileReference: TNyxPascalPhysicalFile read FFile;
-  end;
+  { Compatibility alias retains the former native exception spelling while
+    original-byte catalogs and traversal share its portable virtual origin. }
+  ENyxPascalSourceEncoding = nyx.pascal.files.ENyxPascalSourceEncoding;
+  { Explicit UTF-8 policy. Opaque fallback retains every original byte where
+    UTF-8 fails; it never selects another encoding or supplies invented text. }
+  TNyxPascalSourceCapturePolicy = (pscpStrictUTF8, pscpUTF8ViewsWithOpaqueBytes);
   { Copied native capture policy, separate from application compilation and
     portable source admission. Prefix is virtual; the real directory is supplied
     only to Capture. Budgets include seed files, not just newly read entries.
@@ -54,6 +49,7 @@ type
     FHeader: Integer;
     FEntries: Integer;
     FTranslation: TNyxPascalTranslationOptions;
+    FSourcePolicy: TNyxPascalSourceCapturePolicy;
   public
     class function Defaults: TNyxPascalDirectoryOptions; static;
     function Under(const APrefix: TNyxText): TNyxPascalDirectoryOptions;
@@ -64,6 +60,7 @@ type
     function HeaderScalars(AValue: Integer): TNyxPascalDirectoryOptions;
     function UpToDirectoryEntries(AValue: Integer): TNyxPascalDirectoryOptions;
     function WithTranslation(const AValue: TNyxPascalTranslationOptions): TNyxPascalDirectoryOptions;
+    function WithSourcePolicy(AValue: TNyxPascalSourceCapturePolicy): TNyxPascalDirectoryOptions;
     procedure Validate;
   end;
   { Native read result owns frozen files/index and explicit unindexed roots.
@@ -78,9 +75,10 @@ type
     function Unindexed(AIndex: Integer): TNyxPascalPhysicalFile;
   end;
 
-{ Read only .pas/.pp/.inc from an explicit native directory. Byte streams decode
-  strict UTF-8 without changing global codepages or authored text. Alternate
-  encodings refuse and require an explicit future encoding contract. Windows
+{ Read only .pas/.pp/.inc from an explicit native directory. Every file retains
+  its original bytes. Strict UTF-8 is the default; the explicit opaque policy
+  retains undecodable files without exposing text or selecting another codec.
+  Neither policy changes global codepages or authored text. Windows
   opens Unicode paths with a read lease denying writers; other native hosts use
   their byte-path API. Each file is stable during its read; the caller serializes
   SDK edits across this multi-file capture. Cancellation/budget/IO failure
@@ -109,7 +107,8 @@ type
     FOptions: TNyxPascalDirectoryOptions;
     FVisited: Integer;
     procedure Check(const ACancellation: INyxCancellationScope);
-    function Read(const APath: TNyxText; const ACancellation: INyxCancellationScope): TNyxText;
+    function Read(const APath: TNyxText;
+      const ACancellation: INyxCancellationScope): INyxPascalSourceBytes;
     function Header(const AText: TNyxText; const ACancellation: INyxCancellationScope): TNyxText;
     procedure SortNames(ANames: TNyxStrings; const ACancellation: INyxCancellationScope);
     procedure Walk(const ADirectory, ARelative: TNyxText; ADepth: Integer;
@@ -135,6 +134,7 @@ begin
   Result.FHeader := 8192;
   Result.FEntries := 65536;
   Result.FTranslation := TNyxPascalTranslationOptions.Defaults;
+  Result.FSourcePolicy := pscpStrictUTF8;
 end;
 
 procedure TNyxPascalDirectoryOptions.Validate;
@@ -152,6 +152,11 @@ begin
     NyxPascalPhysicalFile(FPrefix);
   end;
   FTranslation.Validate;
+
+  if not (FSourcePolicy in [pscpStrictUTF8, pscpUTF8ViewsWithOpaqueBytes]) then
+  begin
+    raise ENyxPascalContext.Create('The source capture policy is outside its closed choices');
+  end;
 end;
 
 function TNyxPascalDirectoryOptions.Under(const APrefix: TNyxText): TNyxPascalDirectoryOptions;
@@ -161,10 +166,12 @@ begin
   Result.Validate;
 end;
 
-constructor ENyxPascalSourceEncoding.CreateForFile(const AFile: TNyxPascalPhysicalFile);
+function TNyxPascalDirectoryOptions.WithSourcePolicy(
+  AValue: TNyxPascalSourceCapturePolicy): TNyxPascalDirectoryOptions;
 begin
-  inherited Create('An SDK source requires an explicit encoding beyond strict UTF-8');
-  FFile := AFile;
+  Result := Self;
+  Result.FSourcePolicy := AValue;
+  Result.Validate;
 end;
 
 function TNyxPascalDirectoryOptions.Recursively(AValue: Boolean): TNyxPascalDirectoryOptions;
@@ -227,7 +234,7 @@ begin
 end;
 
 function TDirectoryCapture.Read(const APath: TNyxText;
-  const ACancellation: INyxCancellationScope): TNyxText;
+  const ACancellation: INyxCancellationScope): INyxPascalSourceBytes;
 var
   LHandle: THandle;
   LStream: THandleStream;
@@ -284,7 +291,7 @@ begin
     begin
       raise ENyxPascalContext.Create('The configured source changed during capture');
     end;
-    Result := NyxDecodeUTF8(LBytes);
+    Result := NewNyxPascalSourceBytes(LBytes, pboCapturedBytes, ACancellation);
   finally
     LStream.Free;
     FileClose(LHandle);
@@ -437,6 +444,9 @@ var
   LIndex: Integer;
   LExisting: Integer;
   LStatus: Integer;
+  LBytes: INyxPascalSourceBytes;
+  LView: INyxPascalSourceView;
+  LByteFiles: INyxPascalByteFileCatalog;
 begin
   Check(ACancellation);
 
@@ -473,6 +483,7 @@ begin
     end;
     { FPC's directory API uses the native/DOS no-match/no-more-files statuses.
       Other errors must not turn an unreadable directory into an empty SDK. }
+
     if not (LStatus in [2, 18]) or not DirectoryExistsUTF8(ADirectory) then
     begin
       raise ENyxPascalContext.Create('The configured SDK directory could not be completely enumerated');
@@ -516,15 +527,23 @@ begin
       begin
         raise ENyxPascalContext.Create('SDK capture exceeds its file-count budget');
       end;
+      LBytes := Read(LPath, ACancellation);
+      LView := nil;
       try
-        LText := Read(LPath, ACancellation);
+        LView := DecodeNyxPascalSource(LBytes, NyxPascalUTF8Codec, ACancellation);
       except
-        on ENyxBytes do
+        on ENyxPascalSourceDecodeError do
         begin
-          raise ENyxPascalSourceEncoding.CreateForFile(LFile);
+          LView := nil;
+
+          if FOptions.FSourcePolicy = pscpStrictUTF8 then
+          begin
+            raise ENyxPascalSourceEncoding.CreateForFile(LFile);
+          end;
         end;
       end;
-      FFiles := FFiles.WithFile(LFile, LText);
+      Supports(FFiles, INyxPascalByteFileCatalog, LByteFiles);
+      FFiles := LByteFiles.WithByteSource(LFile, LBytes, LView);
 
       if FFiles.ByteCount > FOptions.FBytes then
       begin
@@ -535,7 +554,13 @@ begin
       begin
         Continue;
       end;
-      LName := Header(LText, ACancellation);
+      LName := '';
+
+      if LView <> nil then
+      begin
+        LText := LView.Text;
+        LName := Header(LText, ACancellation);
+      end;
       for LExisting := 0 to FModules.Count - 1 do
       begin
         Check(ACancellation);
@@ -643,9 +668,13 @@ function CaptureNyxPascalSourceDirectory(const ADirectory: TNyxText;
   const ACancellation: INyxCancellationScope): INyxPascalDirectoryCapture;
 var
   LCapture: TDirectoryCapture;
+  LOwner: INyxPascalDirectoryCapture;
 begin
   LCapture := TDirectoryCapture.Create;
-  Result := LCapture;
+  LOwner := LCapture;
   LCapture.Build(ADirectory, AFiles, AModules, AOptions, AContext, ACancellation);
+  { A native managed result may alias the receiver. Failed construction must
+    leave that receiver unpublished, including a caught encoding refusal. }
+  Result := LOwner;
 end;
 end.

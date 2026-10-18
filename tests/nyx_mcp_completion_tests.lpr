@@ -27,7 +27,7 @@ program nyx_mcp_completion_tests;
 uses Classes, SysUtils, SyncObjs, nyx.text, nyx.bytes, nyx.data, nyx.editing,
   nyx.pascal.completion, nyx.pascal.sources, nyx.pascal.drafts,
   nyx.pascal.completion.owned, nyx.pascal.context, nyx.pascal.files, nyx.pascal.binding,
-  nyx.pascal.modules, nyx.pascal.files.native, nyx.pascal.compilertrace,
+  nyx.pascal.modules, nyx.pascal.files.native, nyx.pascal.compilertrace, nyx.pascal.encoding,
   nyx.studio.pascalprofiles,
   nyx.studio.completion.native, nyx.studio.completion, nyx.studio.mcp, nyx.studio.session,
   nyx.studio.projects, nyx.studio.directories, nyx.studio.agents, nyx.studio.outputs,
@@ -372,6 +372,7 @@ var
   LGapSources: INyxPascalSourceSnapshot;
   LGapResult: INyxPascalCompletionResult;
   LGapMetadata: INyxOwnedPascalCompletionResult;
+  LByteOrigins: INyxPascalCompletionByteOrigins;
 begin
   LLocal := nil;
   LProfile := nil;
@@ -446,10 +447,26 @@ begin
       NyxField('executable', NyxData('untrusted'))]), 'Wire callers cannot configure host executables');
 
     GStage := 'real SDK provider';
+
     if (ParamStr(4) = COwnedProviderArgument) or (ParamStr(4) = CIndexedProviderArgument) then
     begin
       LNative := OwnedProvider(ParamStr(1), String(LTools.Field('FPC').AsText),
         ParamStr(3), ParamStr(4) = CIndexedProviderArgument);
+      LGapSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
+        .WithBuffer(TNyxPascalSourceRef.Main, LPrefix + LSuffix);
+      LGapResult := LNative.Complete(NewNyxPascalCompletionRequest(LGapSources)
+        .At(TNyxPascalSourceRef.Main, LCaret));
+      Check((LGapResult.Status = pcsReady) and (LGapResult.Count = 1) and
+        Supports(LGapResult, INyxPascalCompletionByteOrigins, LByteOrigins) and
+        (NyxDecodeUTF8(LByteOrigins.DefinitionView(0).Original.Slice(
+          LByteOrigins.DefinitionByteSpan(0))) = TNyxText('FullNumber')),
+        'The actual SDK definition retains its exact original byte coordinates');
+
+      if ParamStr(4) = CIndexedProviderArgument then
+      begin
+        Check(LByteOrigins.DefinitionView(0).Original.Origin = pboCapturedBytes,
+          'Native directory capture retains external bytes rather than a text reconstruction');
+      end;
       LGapSources := CaptureNyxPascalSources(LLocal.AcceptedPascalProject)
         .WithBuffer(TNyxPascalSourceRef.Main, TNyxText('unit ') +
           LLocal.AcceptedPascalProject.MainUnit.Name + CDeclarationTail + CSuffix);

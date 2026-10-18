@@ -47,9 +47,11 @@ engine and its Studio adoption.
 An explicit [configured FPC probe](docs/pascal-projects.md#capturing-facts-from-a-configured-fpc-compiler)
 now supplies observed compiler facts and queried absences to the indexed semantic
 consumer without sealing future names. Its native host owns/joins compiler jobs;
-the portable reader also compiles for pas2js. Actual RTL source capture identifies
-an unsupported encoding in strg.inc, requiring original bytes and explicit source
-encoding before full include capture. Default Studio adoption remains open.
+the portable reader also compiles for pas2js. The [source-byte layer](docs/pascal-projects.md#original-source-bytes-and-explicit-decoding)
+retains original packets, explicit decoded views and exact scalar/byte origins.
+Actual RTL include capture now retains undecodable strg.inc without inventing
+text; translation reaches the explicit replacement-macro gap in sysutilh.inc.
+Complete RTL meaning and default Studio adoption remain open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

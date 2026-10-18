@@ -949,17 +949,65 @@ compiler invocation and exact source/job association. Full target/ABI/options,
 custom application configuration, broader compiler/message compatibility and
 default Studio adoption remain required.
 
-Actual SDK continuation also identifies a source-encoding prerequisite:
-`rtl/objpas/sysutils/strg.inc` contains bytes rejected by the current strict UTF-8
-capture. `ENyxPascalSourceEncoding` preserves its virtual file reference while
-remaining an `ENyxBytes` failure; private host paths and guessed ANSI conversion
-are excluded. The complete directory capture refuses without changing prior
-files/modules. The actual RTL build's include path points to that directory,
-but it cannot be published until explicit source encoding and original byte/
-scalar origins are supported. SysUtils therefore still reports its missing
-`sysutilh.inc`, and its interface remains incomplete. This is an open requirement,
-not a reduced SDK target or a successful full-RTL capture. Its replacement-macro
-syntax and broader grammar also remain open.
+Actual SDK continuation identifies a source-encoding prerequisite:
+`rtl/objpas/sysutils/strg.inc` contains bytes rejected by strict UTF-8 capture.
+`ENyxPascalSourceEncoding` preserves its virtual file reference while remaining
+an `ENyxBytes` failure; private host paths and guessed ANSI conversion are
+excluded. The explicit byte/view contract below now permits retaining this whole
+directory with an opaque file. SysUtils reaches `sysutilh.inc` and its unsupported
+`{$MACRO ON}` directive, rather than a fabricated missing include. The intended
+legacy encoding, replacement-macro meaning, broader grammar and complete RTL
+interface remain open requirements.
+
+## Original source bytes and explicit decoding
+
+`nyx.pascal.encoding` separates immutable `INyxPascalSourceBytes` from a readable
+`INyxPascalSourceView`. Neither opens files or grants compiler/process authority.
+`TNyxPascalByteOrigin` distinguishes captured bytes from canonical authoring UTF-8;
+it is descriptive metadata, not disk-I/O provenance. Returned slices are mutable
+copies. The view owns its exact original packet, Unicode text, codec identity and
+complete scalar partition after the codec/caller/provider has retired.
+
+Callers choose a typed codec object: strict UTF-8, explicit little/big-endian
+UTF-16, a supplied single-byte Unicode map, or an alternate interface. No ANSI
+default, encoding sniff or replacement-character fallback is selected. BOMs are
+retained as U+FEFF; NUL, CR/LF and supplementary scalars preserve exact bytes.
+An encoding reference names the supplied interpretation, without dispatching a
+decoder by string. Decoding a source does not establish that FPC accepts that
+encoding or an application's source-codepage configuration.
+
+`TNyxPascalByteSpan` is distinct from scalar spans. `ByteOffset`,
+`ScalarBoundaryAt` and `OriginalSpan` translate checked boundaries, including EOF;
+an interior encoded-byte position returns -1 rather than rounding. Fixed-width
+input needs no mapping vectors; variable widths use byte widths and checkpoints
+every 128 scalars. `NyxPascalOriginalSpan` retains the translation occurrence.
+Ready owned completion results optionally expose `INyxPascalCompletionByteOrigins`,
+so navigation can retain the source packet and exact definition bytes without
+reopening a changed file. This is an in-process capability, not a wire addition.
+
+Original and decoded UTF-8 each have a four-MiB limit. Capturing alternate
+implementations validates bounds before enumeration and detaches their bytes,
+text and complete partition. Codec callbacks consume 1..255 bytes per valid
+scalar and cannot discard bytes. Cancellation, budget and callback/IO failures
+publish no partial view. Undecodable input has a typed error and byte offset;
+decode-budget failure is separate and must never become an opaque fallback.
+
+`INyxPascalByteFileCatalog` adds immutable original packets and optional views to
+the existing catalog without changing its original GUID. `WithByteSource` checks
+that a supplied view belongs to the exact bytes/origin. `TextAt` refuses opaque
+files with their virtual reference. `WithFile` and legacy text-only catalogs
+create explicitly marked authoring UTF-8, never reconstructed external evidence.
+Per-file/catalog work charges the larger of original bytes and decoded UTF-8.
+
+Native directory capture defaults to `pscpStrictUTF8`. Explicit
+`pscpUTF8ViewsWithOpaqueBytes` retains undecodable packets with no readable view;
+it does not drop them or guess another encoding. Reached opaque includes stop
+certainty with `ptiSourceEncoding`; opaque indexed roots return a typed compiler-
+context gap. An authored CODEPAGE directive cannot silently contradict its view.
+The actual 48-file SysUtils directory retains every byte, including one opaque
+file. This advances include capture, while macro/default/target/define/language
+meaning, incremental budgets, editor adoption/input, full parity and delivery
+remain under the original resolver owners. WORK.md owns bounded evidence.
 
 ## Structured type syntax and physical origins
 
@@ -1251,27 +1299,28 @@ Existing source/revision/permission/preview/Undo and response limits stay owned
 by their previous contracts. No default provider or MCP schema is installed.
 
 The native-only `nyx.pascal.files.native` adapter reads explicitly selected
-directories into frozen files/module metadata. It uses byte streams, strict UTF-8,
+directories into frozen files/module metadata. It uses byte streams, explicit decoding,
 Unicode Windows file paths and per-file read leases, without global codepage
 changes. It scans bounded unit headers rather than guessing names from filenames;
 program/unknown roots remain explicitly unindexed. The caller serializes SDK edits
 across the multi-file capture. Recursion, depth, file/byte/enumeration/header work
-are explicit; linked entries, identity changes, unsupported byte encodings and
-IO/budget/cancellation failures refuse without mutating seed captures. Native host
-paths and read handles do not enter the returned catalog. Other source encodings
-and broader filesystem/platform qualification remain open. Header recognition is
+are explicit; linked entries, identity changes and IO/budget/cancellation failures
+refuse without mutating seed captures. Strict UTF-8 refuses undecodable input;
+the optional opaque policy retains its original bytes without text. Native host
+paths and read handles do not enter the returned catalog. Selecting other actual
+SDK encodings and broader filesystem/platform qualification remain open. Header recognition is
 metadata preparation under the current default lexer, not conditional-wrapper or
 mode-aware declaration proof; loaded root identity remains independently checked.
 
-WORK.md records 31 native dependency checks, 22 native SDK/file checks and 82
+WORK.md records 31 native dependency checks, 22 native SDK/file checks and 84
 production in-process semantic/private-editor checks. The actual repository
-capture has 491 files/379 modules. A badge query loads `nyx.controls` and
+capture has 492 files/380 modules. A badge query loads `nyx.controls` and
 `nyx.model`, then names the missing `SysUtils` dependency. Adding 20 exact real
-Windows RTL files supplies that root (511 files/384 modules). Ordered lexical
-translation now passes its ObjFPC/OUT setup and reaches the uncaptured
-`sysutilh.inc` at physical scalar 1860. The imported interface remains incomplete;
-explicit encoding/byte origins and real include/default/define capture remain
-prerequisites. No export
+Windows RTL files supplies that root (512 files/385 modules). Capturing all 48
+SysUtils include files with the explicit opaque policy gives 560 files; translation
+passes ObjFPC/OUT and reaches `sysutilh.inc`'s MACRO ON at physical scalar 560.
+The imported interface remains incomplete; replacement macros, other actual
+encoding/default/target/define/grammar meaning remain prerequisites. No export
 stub or source rewriting turns this qualified boundary into readiness.
 
 The real `TNyxPascalCompilerVersion.FullNumber` record member resolves through the

@@ -4,6 +4,25 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source byte/view capture retains immutable original packets, explicit
+codecs, exact scalar/byte partitions and detached completion definition bytes.
+Opaque fallback is opt-in, never a guessed encoding or a budget/cancellation
+fallback. Native byte/profile/production semantic 43/22/84 and maintained SDK/
+dependency/owned/mode/translation/origin 22/31/86/41/209/357 pass, clean heaps.
+All 48 actual SysUtils include packets hash exactly to originals, one remains
+opaque. Capture is 560 files/385 modules; SysUtils now reaches MACRO ON in
+sysutilh.inc at scalar 560 with incomplete meaning, not a missing include. Thirteen
+accepted compiler logs have zero owned warnings (28 upstream); four browser
+consumers compile only. Fourteen focused pins, all 525 src entries/68 RTL inputs,
+three compiler/configuration inputs, five protected files/nine contexts and 349
+frozen 7422453 artifacts stay exact. All readers join, LAN offline. WORK.md owns
+receipts/corrections and return to ordered replacement macros, then full actual
+RTL/default/target/define/codepage/grammar/incremental/adoption/input/navigation/
+quality/parity/delivery. Stop byte/codec/probe/compiler/capture variants; do not
+rewrite/drop external source or guess an alphabet. No original criterion/task/
+counter/credit/DONE/new MCP tool/schema/rollout closes. No HTTP retry, protected
+configuration/cleanup bypass, deletion or agents. Preserve concurrent planning.
+
 Current-source compiler probes capture actual FPC define/undef/numeric facts and
 explicit queried absences into open immutable contexts. Numbered source-owned
 query notes, exact version/mode/row/H/completion and successful terminal checks
