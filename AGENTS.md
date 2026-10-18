@@ -4,6 +4,26 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source ordinary Studio source input owns shared keyboard/platform text
+history through public Nyx contracts. Native context query/Undo use a leased
+Common Controls subclass, with pre-edit caret capture, NCDESTROY/recreation and
+exception boundaries; an optional interface preserves the old observer contract.
+Authored baseline bytes and mixed physical line endings stay distinct. Actual
+ordinary Win32 Studio passes 31 per native width 1280/390; maintained completion
+controls pass 24 per width and ordinary editing 117, clean heaps. Six accepted
+compiler logs have zero owned warnings (14 upstream RTL); both Studios and the
+browser regression compile, without browser execution. Ten Pascal pins, five
+protected files/nine contexts and 349 frozen 7422453 artifacts stay exact; LAN is
+offline. WORK.md owns retained failures, including the corrected compact fixture's
+visible Actions -> View -> Pascal path. Stop history/mount/menu-fixture/compiler
+variants. Next ordinary completion adoption needs exact acknowledged sources and
+typed authored/physical position/replacement projection. No popup/default helper
+is installed; engine choice remains pending. Multi-file/project/eviction, full
+IME/input/visual/accessibility/performance/parity and delivery remain open. Source
+tools stay 24/frozen 23, eighteen Pascal modes. No new tool/schema/kind or original
+criterion/task/counter/credit/DONE closes. No host/browser/capture, protected
+configuration/enrollment/cleanup retry, approval bypass, deletion or sub-agents.
+
 Current-source private operator completion uses the existing authenticated editor
 exchange independently of agent enablement/output selection. Guard-released reads
 revalidate trusted role, exact source/context/revision and provider generation;

@@ -89,6 +89,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentbridge,
+  nyx.studio.sourceinput, nyx.editing, nyx.editing.history,
   nyx.studio.agentview,
   nyx.studio.agents,
   nyx.studio.view, nyx.view.recovery,
@@ -168,6 +169,11 @@ type
       its realization and never borrows nodes from the shell or design. }
     FCodeDocument: TNyxDocument;
     FCodeRenderer: TNyxBrowserRenderer;
+    { Shared selected-file timelines outlive chrome/modal movement. Its managed
+      input leases detach before renderer/session teardown, without a DOM cycle. }
+    FSourceInput: TNyxStudioSourceInput;
+    { Keep presentation writes outside physical edit/history observation. }
+    FSourceInputWriting: Boolean;
     { Independent ordinary Nyx source chrome moves with its retained editor.
       The modal owns only a platform host; these documents own all UI controls. }
     FSourcePaneDocument: TNyxDocument;
@@ -396,6 +402,8 @@ type
       Async failure preserves complete input for retry, resolution or export. }
     procedure ProjectOpened;
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
+    function ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+    procedure WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure ImagePicked(AStatus: TNyxImagePickStatus;
       const ASource: TNyxImageSource; const AError: TNyxText);
@@ -479,8 +487,7 @@ uses
   nyx.codegen, nyx.collections.query.editor,
   nyx.codec,
   nyx.json,
-  nyx.source,
-  nyx.editing,
+  nyx.source, nyx.interaction,
   nyx.editing.browser, nyx.studio.exchange.browser, nyx.files.browser;
 
 type
@@ -802,6 +809,7 @@ begin
   FDesignerPlacement := nplInside;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
+  FSourceInput := TNyxStudioSourceInput.Create(FCodeRenderer.Events, @ReadSourceInput, @WriteSourceInput);
   FSourcePaneRenderer := TNyxBrowserRenderer.Create;
   FSourcePaneRenderer.OnEvent := HandleShell;
   FSourceModal := NewNyxBrowserModalHost;
@@ -964,6 +972,7 @@ begin
   begin
     FSourceModal.OnDismiss := nil;
   end;
+  FreeAndNil(FSourceInput);
   FCodeRenderer.Free;
   FCodeDocument.Free;
   FSourcePaneRenderer.Free;
@@ -1917,6 +1926,8 @@ begin
       FCodeRenderer.Sync;
       FCodeRenderer.MoveHost(LCodeHost);
     end;
+    FSourceInput.Bind;
+    FCodeRenderer.BindTextHistory('studio-code', FSourceInput.Commands);
   end
   else
   begin
@@ -3725,7 +3736,7 @@ begin
     { The editor is a normal Nyx control. Retain its live DOM, cursor and scroll
       while typing; applying is one explicit atomic command, not a remount per
       keystroke. Pending drafts remain visible across shell/viewport changes. }
-    RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
+    FSourceInput.Change(ANode, AEvent.Trigger);
     LCompilerPanel := FShellRenderer.Root.Find(NyxStudioCompilerDiagnosticsID);
 
     if LCompilerPanel <> nil then
@@ -5203,6 +5214,45 @@ begin
   if not FProjectFiles.ExportFiles(LFiles) then
   begin
     raise ENyxFile.Create('The host cancelled the text-file export');
+  end;
+end;
+
+function TNyxStudio.ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+begin
+  ASession := FSession;
+  Result := Default(TNyxEditingSnapshot);
+
+  if (FCodeRenderer <> nil) and (FCodeRenderer.Root <> nil) and
+    not FSourceInputWriting and NyxInteractionPolicy(FCodeRenderer.Root).CanEditValue then
+  begin
+    Result := FCodeRenderer.EditingFor('studio-code');
+  end;
+end;
+
+procedure TNyxStudio.WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
+begin
+  FSourceInputWriting := True;
+  try
+    FCodeRenderer.Root.Configure.Value(AFrame.Text).Done;
+    FCodeRenderer.Sync;
+
+    if AFrame.Selection.Defined then
+    begin
+      FCodeRenderer.SetTextSelection('studio-code', AFrame.Selection);
+    end;
+  finally
+    FSourceInputWriting := False;
+  end;
+
+  if not AChanged then
+  begin
+    Exit;
+  end;
+  FStatus := 'Pascal draft / apply when ready';
+
+  if FAgents <> nil then
+  begin
+    FAgents.RecordDraft;
   end;
 end;
 

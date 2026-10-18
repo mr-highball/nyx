@@ -31,13 +31,18 @@ compiler context and observing delivery remain open.
 
 The public [completion view and editing timeline](docs/pascal-projects.md#shared-editing-history-and-completion-presentation)
 now compose Nyx controls and preserve exact completion/typing Undo in a real native
-consumer. Studio adoption and complete platform-history/input/visual qualification
+consumer. Studio completion-menu adoption and complete platform input/visual qualification
 remain separate; browser consumers compile only.
 
 The private [operator completion channel](docs/pascal-projects.md#private-operator-completion-channel)
 now keeps asynchronous editor queries independent of agent enablement and output
 selection. Exact acknowledged sources and stale-result checks remain required;
 ordinary Studio frontend adoption and complete input/parity/delivery stay open.
+
+Ordinary [source input ownership](docs/pascal-projects.md#studio-source-input-ownership)
+now connects the shared text timeline to both Studio adapters. Native keyboard/
+context history and retained modal/recreation journeys are qualified; browser
+consumers compile only. Completion projection/presentation and full parity remain open.
 
 ## Decisions
 

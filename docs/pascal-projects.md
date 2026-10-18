@@ -904,6 +904,54 @@ Ordinary retained-editor adoption must still connect synchronization, mount/read
 only and caret guards, the public menu and **all** platform history producers.
 WORK.md owns evidence, engine-selection status and the delivery boundary.
 
+## Studio source input ownership
+
+Current source connects `TNyxStudioSourceInput` to both Studio adapters' retained
+Nyx code-editor view. The controller owns bounded recent-file text timelines and
+managed callback leases, while borrowing the current authoring session and target
+reader/presenter. It owns no widgets or document tree. Source/project/load identity,
+accepted inputs, selected file and the known draft must still match before an
+input command may publish. An independently changed draft refuses old commands
+until ordinary rendering reconciles a fresh baseline.
+
+Keyboard Undo/Redo and platform history requests share `INyxTextHistoryCommands`.
+The optional renderer `BindTextHistory` installs that managed authority for one
+physical mount. `BeforeEdit` captures the preceding text/caret before keyboard,
+clipboard or range replacement moves them. Composition observations retain one
+transaction. Exhausted history commands remain consumed. Paired design/source
+history stays separate: typing does not add design commands, and explicit Restore
+accepted resets the local text timeline through ordinary reconciliation.
+
+The Win32 adapter uses a retirement-aware Common Controls subclass because native
+edit messages can bypass LCL's ordinary window callback. Its context-menu query and
+Undo messages use the same timeline; handle destruction removes the subclass and
+rebinding admits a recreated handle. An optional observer capability preserves the
+original editing-observer interface. Exceptions stay within the native callback
+boundary. Other widgetsets retain their existing editing behavior pending their
+own admitted bridge. See Microsoft's [subclassing contract](https://learn.microsoft.com/en-us/windows/win32/controls/subclassing-overview).
+
+Native physical frames and authored baseline bytes remain distinct. Returning to
+the original physical text restores its original authored line endings. The
+explicit Unicode restore bridge preserves mixed physical line endings/caret across
+Undo and handle/modal movement, without publishing a draft merely to repair a
+presentation. Native NUL projection refuses before writing. Ordinary changed drafts
+otherwise retain physical text as before; this is not a complete authored/physical
+range projection for arbitrary edits or completion proposals.
+
+The browser adapter captures `beforeinput`, consumes cancelable history requests
+and routes noncancelable history `input` through the owner before admitting the
+platform stack's value. Programmatic presentation is kept outside physical history
+observation. The browser implementation is compiled only in this packet.
+
+WORK.md owns actual native Studio keyboard/context/readonly/recreation/modal/stale
+input evidence at two host widths and the ordinary editing regression. Recent-file
+eviction/multi-project journeys, hardware/IME/assistive technology, broader budgets,
+other widgetsets and full browser/parity/delivery remain open. The completion menu
+and private query channel are not yet connected to this controller. That adoption
+must preserve exact acknowledged sources and correctly project authored/physical
+positions and replacements when target line endings differ. No default helper,
+MCP tool/schema or observing release is installed by this source change.
+
 ## Shared editing history and completion presentation
 
 `nyx.editing.history` supplies an independent `INyxTextEditHistory` for one

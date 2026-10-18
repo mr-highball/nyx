@@ -52,17 +52,24 @@ type
       const AExecution: INyxExecution); override;
   end;
   {$ifdef PAS2JS}
+  { Synthetic InputEvent constructor maps the browser's standard API. Events
+    own their data through JS GC and borrow a target only during dispatch. }
   TInputEvent = class external name 'InputEvent' (TNyxDOMInputEvent)
     constructor new(const AType: String; AOptions: TJSObject); reintroduce;
   end;
+  { Synthetic CompositionEvent bridge for dedicated IME qualification, without
+    claiming hardware composition. Browser capability is exercised separately. }
   TCompositionEvent = class external name 'CompositionEvent' (TNyxDOMCompositionEvent)
     constructor new(const AType: String; AOptions: TJSObject); reintroduce;
   end;
   {$else}
+  { UI exception receiver outlives the independent native fixture's callbacks. }
   TNativeFailure = class
     procedure Failed(ASender: TObject; AException: Exception);
   end;
-  TAccess = class(TWinControl);
+  { Exposes the actual memo's inherited key slot without an unrelated sibling
+    class cast. The borrowed memo remains renderer-owned. }
+  TNativeMemoInput = class(TMemo);
   {$endif}
 
 const
@@ -280,7 +287,7 @@ begin
   LText := 'replaced';
   Check(LCopy.HasEditing and LCopy.Editing.Defined and
     (LCopy.Editing.Text = TNyxText('A🌙é漢') + #13#10 + #0) and
-    (LCopy.Editing.Data = '👩‍💻') and LCopy.Editing.Selection.SameRange(LSelection),
+    (LCopy.Editing.Data = TNyxText('👩‍💻')) and LCopy.Editing.Selection.SameRange(LSelection),
     'retained context owns exact text, data and range');
   LSnapshot := NyxEditingSnapshot(nepBeforeEdit, neiUnknown, '', '', False,
     Default(TNyxTextSelection), False, False, 'future-edit');
@@ -503,7 +510,7 @@ var
     LInput.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'Enter', [nmControl], False));
     {$else}
     LKey := 13;
-    TAccess(LInput).OnKeyDown(LInput, LKey, [ssCtrl]);
+    TNativeMemoInput(LInput).OnKeyDown(LInput, LKey, [ssCtrl]);
     {$endif}
   end;
 
@@ -622,10 +629,10 @@ begin
       (LRenderer.Root.Find('reply-memo').Prop('value') = CInitial),
       'IME draft has no premature accepted edit');
     Check(LRenderer.EditingFor('reply-memo').Composing and
-      (LRenderer.EditingFor('reply-memo').Text = '中🌙 / draft'),
+      (LRenderer.EditingFor('reply-memo').Text = TNyxText('中🌙 / draft')),
       'physical draft is queryable independently of accepted state');
     LRenderer.Sync;
-    Check(PhysicalText = '中🌙 / draft', 'state refresh cannot overwrite an active composition');
+    Check(PhysicalText = TNyxText('中🌙 / draft'), 'state refresh cannot overwrite an active composition');
     Check((LProbe.Counts[ntCompositionUpdate] = 1) and
       LProbe.Last[ntCompositionUpdate].Editing.Composing,
       'composition update preserves owned context');
@@ -664,7 +671,7 @@ begin
       (LProbe.Counts[ntTextInput] = 0) and
       LProbe.Last[ntAfterTextInput].DefaultPrevented,
       'final model refusal restores accepted text without admitting the draft');
-    Check((LProbe.Last[ntCompositionEnd].Editing.Text = '拒否 🌙') and
+    Check((LProbe.Last[ntCompositionEnd].Editing.Text = TNyxText('拒否 🌙')) and
       not LProbe.Last[ntCompositionEnd].Editing.CanCancel,
       'refused final result remains an honest physical observation');
     LProbe.Reset;
@@ -673,7 +680,7 @@ begin
     Draft('Navigation draft 🌙', True);
     Composition(nepCompositionUpdate, 'Navigation draft 🌙');
     Check((LProbe.Counts[ntCompositionUpdate] = 1) and
-      (LProbe.Last[ntCompositionUpdate].Editing.Text = 'Navigation draft 🌙'),
+      (LProbe.Last[ntCompositionUpdate].Editing.Text = TNyxText('Navigation draft 🌙')),
       'composition callback can unmount its actual producer safely');
     Mount;
     Check(PhysicalText = CInitial, 'remount has no leaked composition guard or draft');
@@ -686,7 +693,7 @@ begin
       .Policy(neUIQueue).Subscribe(GQueuedOwner);
     Composition(nepCompositionUpdate, 'queued');
     LRenderer.Unmount;
-    Check(LRetained.Editing.Text = '中🌙 / draft',
+    Check(LRetained.Editing.Text = TNyxText('中🌙 / draft'),
       'retained composition survives producer unmount');
     Check(TNyxCodec.Encode(LDocument) = LWire, 'physical runtime journeys never alter authored document');
     Mount;

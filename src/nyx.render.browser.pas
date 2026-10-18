@@ -53,6 +53,7 @@ uses
   nyx.containers,
   nyx.interaction,
   nyx.editing,
+  nyx.editing.commands,
   nyx.editing.browser,
   nyx.gestures,
   nyx.designer.input,
@@ -150,6 +151,9 @@ type
     procedure SyncImage;
     procedure ImageSignal;
     FComposing: Boolean;
+    { Optional input-owned timeline port. The binding retains no owner pointer;
+      its managed receiver revokes borrowed application state before retirement. }
+    FHistory: INyxTextHistoryCommands;
     FEditingSelection: TNyxTextSelection;
     { Capture IDs are host observations/requests for this exact mounted face.
       Teardown removes listeners before releasing any outstanding capture. }
@@ -477,6 +481,10 @@ type
     function TextSelectionFor(const AID: TNyxText): TNyxTextSelection;
     function EditingFor(const AID: TNyxText): TNyxEditingSnapshot;
     procedure SetTextSelection(const AID: TNyxText; const ASelection: TNyxTextSelection);
+    { Opt into one managed history authority for this exact physical mount.
+      Browser history intents, including noncancelable input, share that owner. }
+    procedure BindTextHistory(const AID: TNyxText;
+      const ACommands: INyxTextHistoryCommands);
     { Read current local CSS-pixel offsets without changing state/selection.
       Signed offsets preserve the browser's RTL and overscroll conventions. }
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
@@ -4614,6 +4622,27 @@ begin
   SelectNyxBrowserText(InputFor(AID), ASelection);
 end;
 
+procedure TNyxBrowserRenderer.BindTextHistory(const AID: TNyxText;
+  const ACommands: INyxTextHistoryCommands);
+var
+  LInput: TJSHTMLElement;
+  LIndex: Integer;
+begin
+  FEvents.Scheduler.RequireUI;
+  LInput := InputFor(AID);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if (FBindings[LIndex].FInput = LInput) and
+      NyxSupportsTextInput(FBindings[LIndex].FNode) then
+    begin
+      FBindings[LIndex].FHistory := ACommands;
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Text history requires a current text input');
+end;
+
 function TNyxBrowserBinding.EditingEvent(AEvent: TEventListenerEvent;
   ATrigger: TNyxTrigger; APhase: TNyxEditingPhase): Boolean;
 var
@@ -4646,6 +4675,8 @@ var
   LRevision: Integer;
   LDispatch: TNyxDispatch;
   LConsumed: Boolean;
+  LHistory: INyxTextHistoryCommands;
+  LIntent: TNyxEditIntent;
 begin
   Result := True;
   LEvents := FRenderer.FEvents;
@@ -4654,14 +4685,46 @@ begin
   if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
     FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
     not NyxInteractionPolicy(FNode).CanEditValue or
-    AEvent.defaultPrevented or not LEvents.HasSubscribers(ntBeforeEdit) then
+    AEvent.defaultPrevented then
   begin
     Exit;
   end;
   LDispatch := FRenderer.FLiveBindings.Signal(FNode, ntBeforeEdit);
   LDispatch.Info.HasEditing := True;
   LDispatch.Info.Editing := CaptureNyxBrowserEditing(FInput, nepBeforeEdit, AEvent, FComposing);
-  LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
+  LIntent := LDispatch.Info.Editing.Intent;
+  LHistory := FHistory;
+  LConsumed := False;
+
+  if LHistory <> nil then
+  begin
+    LHistory.BeforeEdit(LDispatch.Info.Editing);
+  end;
+
+  if (LEvents.ViewRevision = LRevision) and LEvents.HasSubscribers(ntBeforeEdit) then
+  begin
+    LConsumed := DispatchNyxInput(LEvents, FNode, LDispatch);
+  end;
+
+  if not LConsumed and (LEvents.ViewRevision = LRevision) and
+    (LHistory <> nil) and LDispatch.Info.Editing.CanCancel and
+    not LDispatch.Info.Editing.Composing and
+    (LIntent in [neiHistoryUndo, neiHistoryRedo]) then
+  begin
+    { Cancel first: a receiver may retire its input while handling the command.
+      Noncancelable history waits for the actual input notification below. }
+    AEvent.preventDefault;
+    LConsumed := True;
+
+    if LIntent = neiHistoryUndo then
+    begin
+      LHistory.Execute(nhcUndo);
+    end
+    else
+    begin
+      LHistory.Execute(nhcRedo);
+    end;
+  end;
 
   if LConsumed and LDispatch.Info.Editing.CanCancel then
   begin
@@ -4766,6 +4829,7 @@ var
   LRevision: Integer;
   LConsumed: Boolean;
   LEditing: TNyxEditingSnapshot;
+  LHistory: INyxTextHistoryCommands;
 begin
   Result := True;
 
@@ -4860,6 +4924,25 @@ begin
       FRenderer.OnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
     end;
     Exit;
+  end;
+  LHistory := FHistory;
+
+  if (LHistory <> nil) and LEditing.Defined and
+    (LEditing.Intent in [neiHistoryUndo, neiHistoryRedo]) then
+  begin
+    { Some browser/OS producers cannot cancel beforeinput. Never admit the
+      platform stack's value into bindings/history: the owning timeline writes
+      its exact result back through this retained input instead. }
+
+    if LEditing.Intent = neiHistoryUndo then
+    begin
+      LHistory.Execute(nhcUndo);
+    end
+    else
+    begin
+      LHistory.Execute(nhcRedo);
+    end;
+    Exit(False);
   end;
   { A platform change event with the already accepted value carries no edit. }
 

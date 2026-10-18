@@ -69,6 +69,7 @@ uses
   nyx.layout.viewport,
   nyx.interaction,
   nyx.editing,
+  nyx.editing.commands,
   nyx.editing.lcl,
   nyx.accessibility.lcl,
   nyx.gestures,
@@ -653,6 +654,10 @@ type
     function TextSelectionFor(const AID: TNyxText): TNyxTextSelection;
     function EditingFor(const AID: TNyxText): TNyxEditingSnapshot;
     procedure SetTextSelection(const AID: TNyxText; const ASelection: TNyxTextSelection);
+    { Install optional managed history ownership for this physical text mount.
+      Rebind after replacement; ordinary reparent/publication preserves the port. }
+    procedure BindTextHistory(const AID: TNyxText;
+      const ACommands: INyxTextHistoryCommands);
     { Read actual offsets without changing document state or selection.
       Units belong to each axis; native widget ranges are never labeled pixels. }
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
@@ -7034,6 +7039,32 @@ begin
     raise ENyxModel.Create('The mounted component has no text-selection input');
   end;
   SelectNyxLCLText(TWinControl(LInput), ASelection);
+end;
+
+procedure TNyxLCLRenderer.BindTextHistory(const AID: TNyxText;
+  const ACommands: INyxTextHistoryCommands);
+var
+  LInput: TControl;
+  LIndex: Integer;
+  LHistory: INyxLCLTextHistoryObserver;
+begin
+  FEvents.Scheduler.RequireUI;
+  LInput := InputFor(AID);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FInput = LInput then
+    begin
+
+      if not Supports(FEditingObserver, INyxLCLTextHistoryObserver, LHistory) then
+      begin
+        raise ENyxModel.Create('This editing observer has no text history capability');
+      end;
+      LHistory.BindHistory(FBindings[LIndex].FNode.ID, ACommands);
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Text history requires a current text input');
 end;
 
 procedure TNyxLCLRenderer.EditingChanged(const AOriginID: TNyxText;

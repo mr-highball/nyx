@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Private operator completion channel — 2026-10-17
+## Current integration: Ordinary source text history — 2026-10-17
+
+Previous goal turn is progress: pushed c7d6787 qualifies the private operator
+completion channel. Ordinary retained-editor adoption first needs every history
+producer to share one timeline. This batch integrates that existing public Nyx
+timeline into actual Studio source input under NS-4 authoring criterion two;
+the completion menu/channel hookup itself remains open.
+
+The shared controller borrows its current session and platform reader/presenter,
+owning managed revocable callbacks and eight recent file timelines. Project/load,
+accepted identity, active file and known draft guard every command. Physical
+selection/composition and typing share the text history; explicit paired Restore
+resets it through ordinary reconciliation. Typing adds no paired design command.
+Native/browser adapters consume managed typed history commands, including empty
+commands, and capture pre-edit text/caret before physical replacement moves them.
+
+Actual Win32 edit messages bypass LCL's usual WindowProc. A Common Controls
+subclass now handles context-menu query/Undo with the same managed lease and
+retirement depth, removes itself on NCDESTROY/disconnect and rebinds recreated
+handles. Pascal exceptions remain within the OS callback. An optional capability
+preserves the original editing-observer interface. Other widgetsets retain their
+existing path pending their own bridge. Browser beforeinput and noncancelable
+history input route through the owner before native-stack values enter bindings;
+that adapter is compiled only here.
+
+Initial authored bytes remain separate from physical line endings. Returning to
+the original physical text restores its exact original authoring baseline. Native
+frame restoration uses Unicode text without LCL's newline normalization, preserving
+mixed physical line endings and scalar caret through Undo/recreation/modal moves.
+Presentation-only repair adds no draft notification. NUL projection refuses before
+writing. Ordinary changed drafts otherwise retain physical text as before; general
+authored/physical edit/range projection is still needed for completion integration.
+
+Evidence behind ignored .local/studio-completion-paths-private.json is pinned to
+ten final Pascal inputs in source-pins-10-private.json:
+
+- logs/source-input-7-1280-run.log and source-input-7-390-run.log pass 31 actual
+  ordinary native Studio checks each, clean heaps. The independent English project
+  uses no service or compiler. Actual retained key slots and Win32 messages qualify
+  typing, Ctrl+Z/redo, context query/Undo, exhaustion, readonly refusal, mixed-line-
+  ending handle recreation, exact initial authored baseline, same memo/modal/Redo,
+  explicit Restore, stale independent draft refusal and pre-write NUL refusal.
+  Compact setup uses the visible Actions -> View -> Pascal keyboard menu. Host
+  widths 1280/390 are native controls, not an executed browser or physical phone.
+- logs/controls-4-1280-run.log and controls-4-390-run.log pass 24 maintained native
+  completion/history checks each, extending the preceding 20 (counts overlap).
+  Actual optional SDK analysis and public completion-button input retain their
+  exact text/caret journey; real native context messages now share it. Both helper
+  processes join with clean heaps. This companion is not an ordinary Studio popup.
+- logs/editing-2-run.log passes 117 existing native editing checks, clean heap.
+  Its seven compiler warnings exposed implicit Unicode literal comparisons and
+  an unrelated-sibling memo access cast. Explicit TNyxText literals and a memo-
+  specialized access type preserve every assertion. Matching browser regression
+  and Studio compile only; native Studio also compiles. Six accepted compiler
+  logs have zero owned warnings and fourteen upstream pas2js RTL warnings.
+
+Retained failures: controls-1 exposes the insufficient LCL-only native interception;
+source-input-1/2 expose physical newline normalization even though the session draft
+was correct. Native/browser product preparation retains a missing interface import;
+studio-browser-3 exposes pas2js's unsupported static COM-interface array (now
+dynamic). The compact source-input-5/6 failure clicked a deliberately hidden header
+face; the corrected consumer navigates its actual visible managed menu and retains
+all original input assertions. editing-1 retains the seven preexisting warnings.
+These preparations are excluded from final acceptance. One diagnostic consumer
+launch preceded acknowledgement of its completed compiler handle; both joined and
+final qualification starts only after explicit terminal joins. No input changes
+occur while an owned compiler/runtime/helper reads them.
+
+All final readers join. Five protected files/nine complete contexts/history/drafts/
+profile and all 349 frozen 7422453 artifacts remain exact. LAN stays offline. No
+HTTP/browser execution/capture, protected configuration/enrollment/cleanup retry,
+approval bypass, deletion or sub-agents occurs. Native Nyx tools remain absent;
+these are the necessary owned native input harnesses, not active-design mutations.
+Source tools stay 24/frozen 23 with eighteen Pascal modes; no new tool/schema/kind,
+original full criterion/task/counter/credit/DONE, full parity or rollout closes.
+
+The packet's final-checkpoint-private.json owns exact source/remote, accepted log,
+pin and terminal/protection receipts. Stop history/mount/menu-fixture/compiler
+variants. Next connect completion to this ordinary retained controller with exact
+source acknowledgement and typed authored/physical position/replacement projection.
+Default engine choice stays pending; no helper is installed. Multi-file/project
+history/eviction journeys, full input/IME/visual/accessibility/performance, browser/
+other-widgetset parity and preserving delivery remain under their existing owners.
+
+## Prior integration: Private operator completion channel — 2026-10-17
 
 Previous goal turn is progress: pushed ab5eb66 supplies the public Nyx completion
 card/text timeline. Ordinary Studio adoption still needs a private operator channel:

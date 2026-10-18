@@ -53,6 +53,7 @@ uses
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.sourceconfiguration,
   nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
+  nyx.studio.sourceinput, nyx.editing, nyx.editing.history,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.studio.sourcecompilation, nyx.modal, nyx.modal.lcl,
@@ -215,6 +216,11 @@ type
     FDesignerResize: TNyxStudioResize;
     FDesignerMove: TNyxStudioMove;
     FCodeView: TNyxLCLRenderer;
+    { Owns source timelines/callback leases; detach before the retained view and
+      project sessions retire. The controller never owns native controls. }
+    FSourceInput: TNyxStudioSourceInput;
+    { Programmatic frame restoration must not be observed as physical typing. }
+    FSourceInputWriting: Boolean;
     FCanvasParking: TPanel;
     FCodeParking: TPanel;
     FState: TNyxStudioViewState;
@@ -293,6 +299,8 @@ type
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    function ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+    procedure WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
     procedure RenderStudioCanvas(AHost: TWinControl);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
@@ -440,7 +448,7 @@ type
 implementation
 
 uses
-  StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
+  StdCtrls, nyx.editing.lcl, nyx.interaction, nyx.contract, nyx.source,
   nyx.collections.query.editor,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.sourcefiles,
@@ -972,6 +980,11 @@ begin
   FShellView.OnEvent := ShellEvent;
   FCanvasView.OnEvent := CanvasEvent;
   FCodeView.OnEvent := SourceEvent;
+
+  if NyxLCLTextHistorySupported then
+  begin
+    FSourceInput := TNyxStudioSourceInput.Create(FCodeView.Events, ReadSourceInput, WriteSourceInput);
+  end;
   FCanvasParking := TPanel.Create(nil);
   FCanvasParking.Parent := FHost;
   FCanvasParking.Visible := False;
@@ -1076,6 +1089,7 @@ begin
     FSourceModal.OnDismiss := nil;
     FSourceModal.Hide;
   end;
+  FreeAndNil(FSourceInput);
   FCodeView.Free;
   FSourcePaneView.Free;
 
@@ -3257,6 +3271,12 @@ begin
         FCodeView.Sync;
         FCodeView.MoveHost(LCodeHost);
       end;
+
+      if FSourceInput <> nil then
+      begin
+        FSourceInput.Bind;
+        FCodeView.BindTextHistory('studio-code', FSourceInput.Commands);
+      end;
       { This temporary empty parking host must leave the modal before a later
         MoveHost admission requires its target to contain no other controls. }
       FCodeParking.Parent := FHost;
@@ -3602,7 +3622,8 @@ begin
   end;
   try
 
-    if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) then
+    if ((FSourceInput <> nil) and FSourceInput.Change(ANode, AEvent.Trigger)) or
+      ((FSourceInput = nil) and RouteNyxStudioSource(FSession, ANode, AEvent.Trigger)) then
     begin
       FState.Status := 'Pascal draft / apply when ready';
       { The session owns text immediately. The bridge's project-owned timer
@@ -3622,6 +3643,51 @@ begin
   end;
 end;
 
+function TNyxNativeStudio.ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+begin
+  ASession := FSession;
+  Result := Default(TNyxEditingSnapshot);
+
+  if (FCodeView <> nil) and (FCodeView.Root <> nil) and
+    not FSourceInputWriting and NyxInteractionPolicy(FCodeView.Root).CanEditValue then
+  begin
+    Result := FCodeView.EditingFor('studio-code');
+  end;
+end;
+
+procedure TNyxNativeStudio.WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
+var
+  LPainting: Boolean;
+begin
+  LPainting := FPainting;
+  FPainting := True;
+  FSourceInputWriting := True;
+  try
+    FCodeView.Root.Configure.Value(FSession.ActiveSourceText).Done;
+    FCodeView.Sync;
+    RestoreNyxLCLInputText(TWinControl(FCodeView.InputFor('studio-code')), AFrame.Text);
+
+    if AFrame.Selection.Defined then
+    begin
+      FCodeView.SetTextSelection('studio-code', AFrame.Selection);
+    end;
+  finally
+    FSourceInputWriting := False;
+    FPainting := LPainting;
+  end;
+
+  if not AChanged then
+  begin
+    Exit;
+  end;
+  FState.Status := 'Pascal draft / apply when ready';
+
+  if CurrentBridge <> nil then
+  begin
+    CurrentBridge.RecordDraft;
+  end;
+end;
+
 procedure TNyxNativeStudio.UpdateTitleAndSource;
 begin
   FPainting := True;
@@ -3631,6 +3697,11 @@ begin
     begin
       FCodeView.Root.Configure.Value(FSession.ActiveSourceText).Done;
       FCodeView.Sync;
+
+      if FSourceInput <> nil then
+      begin
+        FSourceInput.Bind;
+      end;
     end;
 
     if FShellView.Root <> nil then

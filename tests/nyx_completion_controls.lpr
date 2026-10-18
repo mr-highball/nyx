@@ -23,10 +23,10 @@
 program nyx_completion_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Interfaces, Classes, SysUtils, SyncObjs, Forms, Controls, StdCtrls, ExtCtrls,
+uses Interfaces, Classes, SysUtils, SyncObjs, Forms, Controls, StdCtrls, ExtCtrls, Windows,
   LCLType, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.theme, nyx.render.lcl, nyx.editing.lcl, nyx.widgets.lcl,
-  nyx.editing, nyx.editing.history, nyx.pascal.names, nyx.pascal.project,
+  nyx.editing, nyx.editing.history, nyx.editing.commands, nyx.pascal.names, nyx.pascal.project,
   nyx.pascal.drafts, nyx.pascal.sources, nyx.pascal.completion,
   nyx.pascal.completion.view, nyx.studio.completion.native, nyx.events,
   nyx.scheduler, nyx.behavior;
@@ -56,6 +56,16 @@ type
   { Forward declaration for a borrowed fixture receiver, never a public API. }
   THarness = class;
 
+  { Managed mounted-input port borrows only this fixture. The owner detaches
+    before renderer teardown; the native adapter owns its independent lease. }
+  THistoryPort = class(TInterfacedObject, INyxTextHistoryCommands)
+  public
+    Owner: THarness;
+    function CanExecute(ACommand: TNyxTextHistoryCommand): Boolean;
+    procedure Execute(ACommand: TNyxTextHistoryCommand);
+    procedure BeforeEdit(const AEditing: TNyxEditingSnapshot);
+  end;
+
   { Sequential key callback borrows the fixture until explicit detach/cancel.
     It owns no renderer/state back-reference and never survives fixture teardown. }
   TKeyCallback = class(TNyxEventCallback)
@@ -78,6 +88,8 @@ type
     CodeDocument: TNyxDocument;
     MenuDocument: TNyxDocument;
     History: INyxTextEditHistory;
+    HistoryPort: THistoryPort;
+    HistoryLease: INyxTextHistoryCommands;
     Menu: INyxPascalCompletionMenu;
     Sources: INyxPascalSourceSnapshot;
     Input: TMemoInput;
@@ -155,6 +167,66 @@ begin
   end;
 end;
 
+function THistoryPort.CanExecute(ACommand: TNyxTextHistoryCommand): Boolean;
+begin
+  Result := False;
+
+  if Owner <> nil then
+  begin
+
+    if ACommand = nhcUndo then
+    begin
+      Result := Owner.History.CanUndo;
+    end
+    else
+    begin
+      Result := Owner.History.CanRedo;
+    end;
+  end;
+end;
+
+procedure THistoryPort.BeforeEdit(const AEditing: TNyxEditingSnapshot);
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.ObservePhysical;
+  end;
+end;
+
+procedure THistoryPort.Execute(ACommand: TNyxTextHistoryCommand);
+var
+  LFrame: TNyxTextEditorFrame;
+  LCandidate: INyxPascalSourceSnapshot;
+begin
+
+  if (Owner = nil) or not CanExecute(ACommand) then
+  begin
+    Exit;
+  end;
+
+  if ACommand = nhcUndo then
+  begin
+    Owner.History.UndoFrame(LFrame);
+  end
+  else
+  begin
+    Owner.History.RedoFrame(LFrame);
+  end;
+  LCandidate := Owner.Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.Text);
+
+  if ACommand = nhcUndo then
+  begin
+    Owner.History.Undo;
+  end
+  else
+  begin
+    Owner.History.Redo;
+  end;
+  Owner.Sources := LCandidate;
+  Owner.Publish;
+end;
+
 constructor THarness.Create(AWidth: Integer);
 var
   LCode: INyxCodeEditor;
@@ -193,6 +265,10 @@ begin
   CodeView.SetTextSelection('code', NyxTextSelection(LText, LCaret, LCaret));
   LEditing := CodeView.EditingFor('code');
   History := NewNyxTextEditHistory(NyxTextEditorFrame(LEditing.Text, LEditing.Selection));
+  HistoryPort := THistoryPort.Create;
+  HistoryLease := HistoryPort;
+  HistoryPort.Owner := Self;
+  CodeView.BindTextHistory('code', HistoryPort);
   Sources := CaptureNyxPascalSources(NewNyxPascalProject(NyxPascalUnit('completion.control'), CSource))
     .WithBuffer(TNyxPascalSourceRef.Main, LEditing.Text);
   CodeView.Root.Configure.Value(LEditing.Text).Done;
@@ -204,6 +280,11 @@ end;
 
 destructor THarness.Destroy;
 begin
+
+  if HistoryPort <> nil then
+  begin
+    HistoryPort.Owner := nil;
+  end;
 
   if Callback <> nil then
   begin
@@ -471,6 +552,17 @@ begin
       'Undo of later typing retains completion and the same physical control');
     Check(LHost.Sources.AcceptedText(TNyxPascalSourceRef.Main) = CSource,
       'The complete physical journey never admits authored source');
+    Check(Windows.SendMessageW(LHost.Input.Handle, EM_CANUNDO, 0, 0) <> 0,
+      'The physical native context-menu query sees the owned completion Undo');
+    Windows.SendMessageW(LHost.Input.Handle, WM_UNDO, 0, 0);
+    Check((NyxLCLInputText(LHost.Input) = LBefore.Text) and
+      LHost.History.Current.SameValue(LBefore),
+      'Actual WM_UNDO shares the exact completion timeline and caret');
+    Check(Windows.SendMessageW(LHost.Input.Handle, EM_CANUNDO, 0, 0) = 0,
+      'The physical native query reports the exhausted owned timeline');
+    Windows.SendMessageW(LHost.Input.Handle, EM_UNDO, 0, 0);
+    Check(NyxLCLInputText(LHost.Input) = LBefore.Text,
+      'An exhausted native Undo cannot fall through to the stale widget stack');
   finally
 
     if LWorker <> nil then

@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input-ownership)
+now uses shared recent-file timelines in both adapters. Native keyboard/context
+Undo, readonly/recreation/modal and stale-source journeys are qualified; browser
+paths compile only. Full input/IME/multi-file/budget/parity and original criterion
+two stay open. Next completion adoption must project exact authored/physical
+positions and replacements while preserving complete source acknowledgement.
+
 The private [operator completion client](../docs/pascal-projects.md#private-operator-completion-channel)
 now supplies an asynchronous, revision-correlated channel independent of agent
 permission and selected output. The source editor must still require its exact

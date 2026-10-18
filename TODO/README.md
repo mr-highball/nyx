@@ -3,6 +3,12 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+Ordinary [source history ownership](../docs/pascal-projects.md#studio-source-input-ownership)
+now connects the retained editor to shared keyboard/platform history. WORK.md owns
+native ordinary-input evidence separately from compiled-only browser paths. Exact
+authored/physical completion projection, menu integration and full original quality/
+parity/delivery remain under the existing authoring/service owners.
+
 The private [operator completion channel](../docs/pascal-projects.md#private-operator-completion-channel)
 now qualifies asynchronous bounded queries independently of agent enablement and
 output selection. Ordinary retained-editor adoption, all platform history/input
