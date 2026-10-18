@@ -33,7 +33,88 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Known-include compiler candidates — 2026-10-18
+## Current integration: Bounded primitive fulfillment — 2026-10-18
+
+f51f58a is progress across at least thirty-one documented unclosed batches;
+complete original authoring criterion two remains open. The current System source
+reports an exact compiler-root Longint requirement. Follow existing requirement/
+capture/module/native-host ownership with generic bounded batch fulfillment,
+not a fixed initial probe list or inferred target width. Preflight every captured
+request/owner/module before compiler work; preserve one-fact reply guards, exact
+source identity, independent input snapshots and shared bootstrap dependencies.
+Merge verified replies atomically and keep replay explicit under existing source
+quotas; no compiler output is application-execution evidence. Portable ownership/
+refusal/propagation, actual native jobs, maintained consumers and the original RTL
+route decide the boundary. Stop at a different prerequisite without hiding source
+syntax/type gaps or raising established limits. Browser consumers compile only.
+Preserve protected/concurrent work, original packets and 349 frozen artifacts;
+LAN stays offline. No host/config retry, HTTP/browser/file execution/capture,
+protected mutation, cleanup/restart, approval bypass or sub-agents. Full source/
+type/module/incremental/editor/input/quality/parity/adoption/delivery and original
+criterion/task/credit/DONE/new tool/schema/rollout remain open.
+
+The portable fulfillment contract now freezes typed requests and exact capture/
+module/source owners, preflights every unique job, and validates all one-fact
+replies before publishing any updated catalog. Exact duplicates share one job;
+compatible replies merge into their original captures. Modules sharing the exact
+old bootstrap packet advance together without changing each unit's mode or any
+source byte. Unrelated captures stay independent, pristine scope stays pristine,
+and source-local contexts cannot become defaults. Late invalid replies, stale
+owners, quotas and cancellation preserve the last complete result and inputs.
+No record/static array owns an interface; class-owned dynamic vectors retain
+only frozen outward leases. The native batch host performs host-capability
+preflight before creating scratch and delegates each serial job to the original
+joined capture gate. Empty batches need no compiler or directory. No generated
+probe program, project/source/configuration/service mutation or rollout occurs.
+
+Focused native qualification passes 22 with clean heap, including actual joined
+compiler jobs, duplicate removal, independent merged replies, shared bootstrap
+propagation, unchanged unrelated contexts, pristine/source-local boundaries,
+stale/unregistered owner refusal, late failure, explicit job limits, cancellation
+before scratch and empty unconfigured operation. One retained failed preparation
+omitted the test's lexical-exception unit import; the corrected test retains its
+full source scope. Type/public-method and blank-line review precedes the final
+freeze; every accepted compiler/runtime group uses that exact source.
+
+The extended original RTL consumer passes 50 with clean heap after its same
+native process is observed across verified waits, without restart/replacement.
+The original five initial primitive queries, explicit Word job, symbol preparation
+three jobs within eight, exact source inputs and per-construction semantic limits
+remain unchanged. A separate explicit eight-job fact allowance consumes actual
+binding requests, with no fixed name list: Longint then Int64, two joined jobs.
+Each verified result updates captured owners before explicit replay. System
+reaches 7,800 declarations/zero declaration-syntax diagnostics/fourteen semantic
+answers/no pending measurement. ObjPas stays 209/four/one. Exact indexed Free/
+FreeInstance navigation and detached insertion remain ready through objpash.inc.
+Source.Resolved still refuses the independent `{$Q- no overflow checking }`
+directive in int64p.inc. Zero declaration-syntax diagnostics do not establish full
+RTL meaning. Replay reconstructs the source/world and remains costly; no
+incremental-performance, ordinary editor adoption or full-source quality claim
+follows from this qualification.
+
+All 40 native consumers pass with clean heaps. The 69 accepted compiler logs have
+zero owned warnings and 168 upstream pas2js Classes warnings. Both Studios/backend/
+worker and twenty-five browser consumers compile as applicable; browser execution,
+input/observing/parity/adoption/delivery remain open. Five focused/651 maintained
+source/97 RTL/23 compiler inputs remain pinned. All 156 original compiler-unit
+packets, 48 SysUtils includes, five protected files/nine complete contexts, 349
+frozen 7422453 artifacts and thirteen concurrent planning files stay exact.
+Readers are joined, listeners/LAN offline and native Nyx tools absent. No HTTP/
+host/config retry occurs. Private pointer `.local/primitive-fulfillment-paths-private.json`
+locates final source/compiler/native/input/preservation receipts, retained
+preparation/wait records and committed/remote identity. Pending-process records
+are historical after the terminal native receipt; never treat them as live handles.
+
+Stop batch/primitive/probe/replay/compiler/capture variants. Next reassess the
+short-switch trailing annotation versus grouped-switch grammar through existing
+lexical/settings/translation ownership. Preserve genuine malformed-setting
+refusal, exact spans, conditional uncertainty, atomic groups and local lifetimes;
+do not ignore a directive or infer compiler facts. Full original criterion two
+and source/canonical type/module/incremental/editor/input/navigation/quality/parity/
+adoption/delivery remain open across at least thirty-two documented unclosed
+batches. No original criterion/task/credit/DONE/new tool/schema/rollout closes.
+
+## Previous integration: Known-include compiler candidates — 2026-10-18
 
 91f07da is progress across at least thirty documented unclosed batches, retaining
 full original authoring criterion two. The unchanged RTL preparation fails the

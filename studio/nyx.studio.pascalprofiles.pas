@@ -26,7 +26,7 @@ interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.compilertrace,
   nyx.pascal.files, nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.compilerplan,
-  nyx.pascal.requirements;
+  nyx.pascal.requirements, nyx.pascal.fulfillment;
 
 type
   { Copied limits for explicit native module preparation. Probe/translation work
@@ -105,6 +105,19 @@ function FulfillNyxFPCCompilerRequirement(const ACompiler, AFreshDirectory: TNyx
   const AOwner: INyxFPCCompilerCapture; const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope = nil;
   ATimeoutMilliseconds: Cardinal = 30000): INyxFPCCompilerCapture;
+{ Preflight all unique typed jobs and exact source/capture owners before creating
+  one fresh private batch directory. Explicit one-through-64 job allowance is
+  separate from symbol preparation. Serial joined jobs retain partial scratch on
+  failure, but publish updated modules/captures only after every one-fact reply
+  validates. Empty requests need no compiler/directory. The caller owns replay
+  and worker scheduling; no project, source byte, target configuration or service
+  is changed and no compiled probe program is executed. }
+function FulfillNyxFPCCompilerRequirements(const ACompiler, AFreshDirectory: TNyxText;
+  const AFiles: INyxPascalFileCatalog; const AModules: INyxPascalModuleCatalog;
+  const AResponse: IInterface; const ACaptures: INyxPascalCompilerCaptures;
+  AMaximumJobs: Integer; const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope = nil;
+  ATimeoutMilliseconds: Cardinal = 30000): INyxPascalCompilerFulfillment;
 
 { Opt-in synchronous host operation, intended for an owning worker. Inputs are
   frozen before writing a fresh caller-owned scratch directory. The descriptor
@@ -434,6 +447,33 @@ begin
   Result.Validate;
 end;
 
+{ The same host-capability preflight serves single and batch operations. Building
+  a typed probe performs no file/process effect and cannot retag source contexts. }
+function RequiredFactProbe(const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner: INyxFPCCompilerCapture): INyxPascalCompilerProbe;
+begin
+
+  if not AOwner.Context.SameFacts(ARequirement.Context) then
+  begin
+    raise ENyxPascalContext.Create('A compiler requirement needs its exact owning capture');
+  end;
+
+  if NyxPascalCompilerScope(ARequirement.Context) = pcsoSystemBootstrap then
+  begin
+
+    if ARequirement.Context.Mode <> ppmFPC then
+    begin
+      raise ENyxPascalContext.Create('This host qualifies compiler-root requests in FPC mode');
+    end;
+    Result := NewNyxFPCSystemBootstrapProbe(NyxPascalDefine('NYX_REQUIRED_FACT'));
+  end
+  else
+  begin
+    Result := NewNyxFPCCompilerProbe(NyxPascalDefine('NYX_REQUIRED_FACT'), ARequirement.Context.Mode);
+  end;
+  Result := NyxFPCProbeSizeOf(Result, ARequirement.Reference);
+end;
+
 function FulfillNyxFPCCompilerRequirement(const ACompiler, AFreshDirectory: TNyxText;
   const ARequirement: INyxPascalCompilerRequirement;
   const AOwner: INyxFPCCompilerCapture; const AOptions: TNyxPascalCompilerTraceOptions;
@@ -450,28 +490,61 @@ begin
   LRequirement := CaptureNyxPascalRequirement(ARequirement);
   LOwner := FreezeNyxFPCCompilerCapture(AOwner);
 
-  if not LOwner.Context.SameFacts(LRequirement.Context) then
-  begin
-    raise ENyxPascalContext.Create('A compiler requirement needs its exact owning capture');
-  end;
-
-  if NyxPascalCompilerScope(LRequirement.Context) = pcsoSystemBootstrap then
-  begin
-
-    if LRequirement.Context.Mode <> ppmFPC then
-    begin
-      raise ENyxPascalContext.Create('This host qualifies compiler-root requests in FPC mode');
-    end;
-    LProbe := NewNyxFPCSystemBootstrapProbe(NyxPascalDefine('NYX_REQUIRED_FACT'));
-  end
-  else
-  begin
-    LProbe := NewNyxFPCCompilerProbe(NyxPascalDefine('NYX_REQUIRED_FACT'), LRequirement.Context.Mode);
-  end;
-  LProbe := NyxFPCProbeSizeOf(LProbe, LRequirement.Reference);
+  LProbe := RequiredFactProbe(LRequirement, LOwner);
   LFresh := CaptureNyxFPCCompilerCapture(ACompiler, AFreshDirectory, LProbe,
     AOptions, ACancellation, ATimeoutMilliseconds);
   Result := MergeNyxFPCSizeCapture(LOwner, LFresh, LRequirement.Reference);
+end;
+
+function FulfillNyxFPCCompilerRequirements(const ACompiler, AFreshDirectory: TNyxText;
+  const AFiles: INyxPascalFileCatalog; const AModules: INyxPascalModuleCatalog;
+  const AResponse: IInterface; const ACaptures: INyxPascalCompilerCaptures;
+  AMaximumJobs: Integer; const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope;
+  ATimeoutMilliseconds: Cardinal): INyxPascalCompilerFulfillment;
+var
+  LPlan: INyxPascalCompilerFulfillmentPlan;
+  LReplies: INyxPascalCompilerCaptures;
+  LDirectory: TNyxText;
+  LAt: Integer;
+begin
+  AOptions.Validate;
+  CheckCancellation(ACancellation);
+  LPlan := PlanNyxPascalCompilerFulfillment(AFiles, AModules, AResponse,
+    ACaptures, AMaximumJobs, ACancellation);
+  for LAt := 0 to LPlan.Count - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    RequiredFactProbe(LPlan.RequirementAt(LAt), LPlan.OwnerAt(LAt));
+  end;
+  LReplies := NewNyxPascalCompilerCaptures;
+
+  if LPlan.Count = 0 then
+  begin
+    Exit(LPlan.ApplyReplies(LReplies, ACancellation));
+  end;
+
+  if not FileExistsUTF8(ACompiler) or (Pos(#0, ACompiler) > 0) or
+    (AFreshDirectory = '') or (Pos(#0, AFreshDirectory) > 0) or
+    DirectoryExistsUTF8(AFreshDirectory) or FileExistsUTF8(AFreshDirectory) or
+    (ATimeoutMilliseconds = 0) then
+  begin
+    raise ENyxPascalContext.Create('Primitive batches need a configured compiler and fresh private scratch');
+  end;
+  LDirectory := IncludeTrailingPathDelimiter(ExpandFileNameUTF8(AFreshDirectory));
+
+  if not CreateDirUTF8(LDirectory) then
+  begin
+    raise ENyxPascalContext.Create('The primitive batch directory could not be created');
+  end;
+  for LAt := 0 to LPlan.Count - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LReplies := LReplies.WithCapture(FulfillNyxFPCCompilerRequirement(ACompiler,
+      LDirectory + 'fact-' + TNyxText(IntToStr(LAt + 1)), LPlan.RequirementAt(LAt),
+      LPlan.OwnerAt(LAt), AOptions, ACancellation, ATimeoutMilliseconds));
+  end;
+  Result := LPlan.ApplyReplies(LReplies, ACancellation);
 end;
 
 function PrepareNyxFPCModule(const ACompiler, AFreshDirectory: TNyxText;

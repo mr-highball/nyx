@@ -1966,6 +1966,46 @@ browser consumers compile only. Full RTL grammar/type meaning, incremental/edito
 adoption, interaction, parity and delivery remain under original authoring criterion
 two, with no new MCP tool or schema.
 
+## Atomic primitive fulfillment
+
+`nyx.pascal.fulfillment` consumes existing typed compiler requirements through a
+preflighted immutable batch. `INyxPascalCompilerCaptures` retains ordered frozen
+fact/default packets with checked access and exact-context lookup; conflicting
+default anchors for identical facts refuse. No context is promoted between
+pristine, source-local and compiler-root namespaces.
+
+`PlanNyxPascalCompilerFulfillment` requires an explicit one-through-64 job limit.
+It freezes files, module descriptors, requests and capture owners, verifies every
+source/context association, and deduplicates exact repeated jobs. This performs
+no compiler or filesystem operation. Empty request capabilities remain empty
+instead of inferring missing facts from diagnostic text.
+
+`ApplyReplies` validates every reply through the existing exact one-fact guards
+against unchanged inputs before publishing anything. Compatible replies merge
+into their original capture owners. Registered modules sharing an exact old
+bootstrap packet receive its verified new packet together, preserving each unit's
+mode and source bytes. Unrelated contexts remain unchanged. A pristine module
+update retains pristine identity; source-local settings cannot become defaults.
+Late invalid replies, stale owners, quotas and cancellation preserve the previous
+complete result and independent inputs. Interfaces live in class-owned dynamic
+vectors, never records or static arrays.
+
+The native `FulfillNyxFPCCompilerRequirements` host preflights the whole batch and
+its host-supported probe modes before creating fresh caller-owned scratch. It
+delegates each bounded job to the existing joined single-request capture gate,
+retains partial scratch on failure, and applies replies only after all validate.
+An empty batch needs no configured compiler or scratch directory. This host runs
+no generated program, edits no project/service/configuration, and grants no
+application execution provenance. The caller owns background scheduling and
+explicit source/world replay; this is not default Studio engine adoption.
+
+The real-RTL qualification leaves the five initial primitive probes, symbol-job
+ceiling and per-construction semantic limits unchanged. A separate explicit
+eight-job fact campaign consumes successive binding-derived requests; it does not
+seed a fixed list or infer target widths. Replaying larger source remains a
+bounded full construction, not an incremental-performance claim. WORK.md owns
+the actual results, retained failures and remaining type/editor/parity gates.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

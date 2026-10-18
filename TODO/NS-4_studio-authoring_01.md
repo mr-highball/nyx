@@ -9,6 +9,34 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Primitive fulfillment prerequisite (2026-10-18): consume existing typed requests
+through a generic bounded batch over exact captured owners/modules. Preflight
+before native jobs, preserve one-fact guards and source identity, merge replies
+atomically, and propagate shared bootstrap evidence without retagging foreign/
+source-local contexts. Replay stays explicit and bounded; no fixed initial probes
+or inferred target widths substitutes for evidence. Portable/native refusal and
+ownership plus the original RTL route decide the boundary. f51f58a is progress
+across at least thirty-one unclosed batches; full original criterion two and
+language/editor/quality/parity/adoption/delivery remain open. WORK.md owns receipts,
+remaining prerequisites and the return path; no full task/credit/DONE closes.
+
+Primitive fulfillment now passes 22 focused native, 50 extended original RTL and
+all 40 native consumers with clean heaps. Two generic binding-derived jobs measure
+Longint then Int64, preserving the five initial queries, Word job, three/eight
+symbol preparation and per-construction source quotas. System reaches 7,800
+declarations/zero declaration-syntax diagnostics/fourteen answers/no pending
+measurement; ObjPas stays 209/four/one. Exact indexed Free/FreeInstance navigation/
+insertion remains ready. Source.Resolved still refuses Q- trailing prose in
+int64p.inc; full reconstruction is not incremental editor performance. All 69
+compiler logs have zero owned warnings; both Studios/backend/worker and twenty-five
+browser consumers compile as applicable. WORK.md owns same-process wait/failure/
+preservation/source/remote evidence. Stop batch/primitive/probe/replay/compiler/
+capture variants; reassess short-switch annotations versus grouped settings through
+existing lexical/settings/translation owners without hiding malformed groups or
+inferring facts. Full original criterion two/source/type/editor/quality/parity/
+adoption/delivery remain open across at least thirty-two unclosed batches; no
+original criterion/task/credit/DONE/new tool/schema/rollout closes.
+
 Known-include planning prerequisite (2026-10-18): build bounded speculative
 compiler-symbol candidates from explicitly captured literal include links through
 existing compilerplan/native preparation owners. Preserve file/span origins,

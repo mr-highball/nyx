@@ -132,6 +132,12 @@ literal links before deeper branches become active. Exact source provenance and
 unchanged work/query/job ceilings separate proposals from verified source meaning.
 This supports the Nyx-owned resolver; full language/editor adoption remains open.
 
+[Atomic primitive fulfillment](docs/pascal-projects.md#atomic-primitive-fulfillment)
+now preflights typed requirements against exact compiler/module owners, merges
+verified one-fact replies and propagates shared bootstrap packets atomically.
+The native host retains explicit job allowances and source replay; no target
+width is guessed and full language/editor adoption remains open.
+
 The [native linkage continuation](docs/pascal-projects.md#native-linkage-and-layout-directive-values)
 separates linker suffixes from class visibility and retains typed declaration
 flags/ranges. Known layout directives retain explanatory trailing text without

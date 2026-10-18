@@ -29,7 +29,7 @@ uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.scheduler,
   nyx.pascal.binding, nyx.studio.pascalprofiles, nyx.pascal.lexing,
   nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts, nyx.pascal.sources,
   nyx.pascal.completion, nyx.pascal.completion.owned, nyx.editing, preparation.fixture,
-  nyx.pascal.requirements;
+  nyx.pascal.requirements, nyx.pascal.fulfillment;
 var
   GChecks: Integer;
 
@@ -125,6 +125,10 @@ end;
 { Whole real RTL roots retain their original bytes and explicit per-unit modes.
   Remaining scoped/compiler-private grammar is printed, never replaced by stubs. }
 procedure ActualUnits(const ACompiler, AFPCSource, AOutput: TNyxText);
+const
+  { Separate explicit qualification allowance for on-demand fact jobs. Symbol
+    preparation and each semantic construction retain their original quotas. }
+  CMaximumFactJobs = 8;
 var
   LCapture: INyxPascalDirectoryCapture;
   LFiles: INyxPascalFileCatalog;
@@ -134,6 +138,10 @@ var
   LFactReply: INyxFPCCompilerCapture;
   LRequirements: INyxPascalCompilerRequirements;
   LRequirement: INyxPascalCompilerRequirement;
+  LFactCaptures: INyxPascalCompilerCaptures;
+  LFactBatch: INyxPascalCompilerFulfillment;
+  LFactJobs: Integer;
+  LFactOwner: Integer;
   LResolvedModule: INyxPascalModuleSource;
   LProbe: INyxPascalCompilerProbe;
   LPrepared: INyxFPCModulePreparation;
@@ -380,6 +388,46 @@ begin
           LResolvedModule.Context, LWorld, LResolvedModule.Translation,
           TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
           TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+        LFactCaptures := NewNyxPascalCompilerCaptures.WithCapture(LBootstrapCapture);
+        LFactJobs := 0;
+        while LSource.Pending do
+        begin
+          LRequirements := CaptureNyxPascalRequirements(LSource);
+
+          if LRequirements.RequirementCount = 0 then
+          begin
+            Break;
+          end;
+
+          if LFactJobs >= CMaximumFactJobs then
+          begin
+            raise ENyxPascalContext.Create('The explicit semantic fact campaign exhausted its job allowance');
+          end;
+          WriteLn('actual dynamic primitive request / ', LRequirements.RequirementAt(0).Reference.Name,
+            ' / completed jobs=', LFactJobs);
+          LFactBatch := FulfillNyxFPCCompilerRequirements(ACompiler,
+            AOutput + '/semantic-facts-' + TNyxText(IntToStr(LFactJobs + 1)), LFiles,
+            LModules, LSource, LFactCaptures, CMaximumFactJobs - LFactJobs,
+            TNyxPascalCompilerTraceOptions.Defaults);
+          Inc(LFactJobs, LFactBatch.Jobs);
+          LFactCaptures := LFactBatch.Captures;
+          LModules := LFactBatch.Modules;
+          LResolvedModule := LModules.Entry(LModules.Find(NyxPascalModule(LName)));
+          LBootstrap := NyxPascalBootstrapContext(LResolvedModule.Context);
+          LFactOwner := LFactCaptures.Find(LBootstrap);
+
+          if LFactOwner < 0 then
+          begin
+            raise ENyxPascalContext.Create('The fulfilled compiler-root owner was not retained');
+          end;
+          LBootstrapCapture := LFactCaptures.CaptureAt(LFactOwner);
+          LSource := NewNyxPascalSemanticTranslation(LFiles, LResolvedModule.Root,
+            LResolvedModule.Context, LWorld, LResolvedModule.Translation,
+            TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
+            TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+        end;
+        WriteLn('actual dynamic primitive jobs / ', LFactJobs,
+          ' / initial primitive probes=5 / symbol preparation jobs=', LPrepared.Probes);
       end;
       LView := NewNyxPascalTranslatedSyntax(LSource.Source,
         TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));

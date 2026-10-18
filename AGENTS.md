@@ -4,7 +4,35 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source known-include planning traverses captured literal links once,
+Current-source primitive fulfillment preflights generic typed requests against
+exact capture/module/source owners, deduplicates jobs and atomically merges only
+validated one-fact replies. Shared matching bootstrap contexts advance together;
+unrelated/pristine/source-local scopes retain their boundaries. Native focused
+22, extended original RTL 50 and all 40 native consumers pass with clean heaps.
+The real source requests Longint then Int64 through two bounded generic jobs;
+five initial primitive queries, one Word job, symbol preparation three/eight and
+per-construction semantic limits stay unchanged. System reaches 7,800 declarations/
+zero declaration-syntax diagnostics/fourteen answers/no pending measurement;
+ObjPas stays 209/four/one. Exact indexed Free/FreeInstance navigation/insertion
+is ready. Source.Resolved still refuses the separate Q- trailing-prose directive
+in int64p.inc; full RTL meaning is not established. Replay is full reconstruction,
+not an incremental-performance claim. All 69 compiler logs have zero owned
+warnings/168 upstream; both Studios/backend/worker and twenty-five browser
+consumers compile as applicable, without browser execution/parity/adoption/delivery.
+Five focused/651 maintained/97 RTL/23 compiler inputs, 156 packets/48 includes,
+five protected files/nine contexts, 349 frozen 7422453 artifacts and thirteen
+concurrent planning files stay exact. Readers joined; LAN offline; native Nyx
+tools absent. WORK.md owns the same-process wait, final evidence/source/remote
+identity and next reassessment: short-switch trailing annotation versus grouped
+switch grammar through existing lexical/settings/translation owners. Stop batch/
+primitive/probe/replay/compiler/capture variants; do not erase real malformed
+settings or infer context facts. Full source/type/module/incremental/editor/input/
+quality/parity/adoption/delivery stays open across at least thirty-two documented
+unclosed batches; no original criterion/task/credit/DONE/new tool/schema/rollout
+closes. No host/config retry, protected mutation, cleanup/restart, approval bypass
+or sub-agents. Preserve concurrent work.
+
+Previously qualified known-include planning traverses captured literal links once,
 preserving speculative file/span origins, cycles, opaque/missing input and exact
 source packets. Ordinary planning stays explicit; native preparation charges the
 pool once and preserves required-first selection and all existing quotas. More

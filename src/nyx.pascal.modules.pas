@@ -82,6 +82,13 @@ function CaptureNyxPascalModules(const AModules: INyxPascalModuleCatalog;
 function ResolveNyxPascalModuleRequirement(const AFiles: INyxPascalFileCatalog;
   const AModule: INyxPascalModuleSource; const ARequirement: INyxPascalCompilerRequirement;
   const AOwner, AReply: INyxFPCCompilerCapture): INyxPascalModuleSource;
+{ Freeze and preflight the unchanged module/source/context ownership of a typed
+  requirement before delegated compiler work. Bootstrap requests must match the
+  module's independent root packet; source-local facts cannot become pristine
+  defaults. No reply, source mutation, compiler or filesystem operation occurs. }
+function CaptureNyxPascalRequirementModule(const AFiles: INyxPascalFileCatalog;
+  const AModule: INyxPascalModuleSource;
+  const ARequirement: INyxPascalCompilerRequirement): INyxPascalModuleSource;
 
 implementation
 
@@ -293,6 +300,45 @@ begin
     Result := Result.WithModule(LSource);
   end;
 end;
+function CaptureNyxPascalRequirementModule(const AFiles: INyxPascalFileCatalog;
+  const AModule: INyxPascalModuleSource;
+  const ARequirement: INyxPascalCompilerRequirement): INyxPascalModuleSource;
+var
+  LFiles: INyxPascalFileCatalog;
+  LModule: INyxPascalModuleSource;
+  LRequirement: INyxPascalCompilerRequirement;
+  LExpected: INyxPascalCompilerContext;
+  LRoot: TNyxPascalPhysicalFile;
+begin
+  LFiles := CaptureNyxPascalFiles(AFiles);
+  LModule := CaptureNyxPascalModules(NewNyxPascalModuleCatalog.WithModule(AModule), LFiles).Entry(0);
+  LRequirement := CaptureNyxPascalRequirement(ARequirement);
+  LRoot := LRequirement.OwnerSource.Source.Files.FileAt(
+    LRequirement.OwnerSource.Source.Occurrence(0).FileIndex);
+
+  if not LFiles.SameFiles(LRequirement.OwnerSource.Source.Files) or
+    (LModule.Root.Name <> LRoot.Name) or
+    (NyxPascalASCIIKey(LModule.Name.Name) <>
+      NyxPascalASCIIKey(LRequirement.OwnerSource.Syntax.Scope(0).Name)) or
+    (LModule.Context = nil) or
+    not LModule.Context.SameFacts(LRequirement.OwnerSource.Source.InitialContext) then
+  begin
+    raise ENyxPascalContext.Create('A compiler requirement has stale or foreign module source ownership');
+  end;
+  LExpected := LModule.Context;
+
+  if NyxPascalCompilerScope(LRequirement.Context) = pcsoSystemBootstrap then
+  begin
+    LExpected := NyxPascalBootstrapContext(LExpected);
+  end;
+
+  if (LExpected = nil) or not LExpected.SameFacts(LRequirement.Context) then
+  begin
+    raise ENyxPascalContext.Create('A source-local or changed context cannot become captured module defaults');
+  end;
+  Result := LModule;
+end;
+
 function ResolveNyxPascalModuleRequirement(const AFiles: INyxPascalFileCatalog;
   const AModule: INyxPascalModuleSource; const ARequirement: INyxPascalCompilerRequirement;
   const AOwner, AReply: INyxFPCCompilerCapture): INyxPascalModuleSource;
@@ -308,7 +354,7 @@ var
   LRoot: TNyxPascalPhysicalFile;
 begin
   LFiles := CaptureNyxPascalFiles(AFiles);
-  LModule := CaptureNyxPascalModules(NewNyxPascalModuleCatalog.WithModule(AModule), LFiles).Entry(0);
+  LModule := CaptureNyxPascalRequirementModule(LFiles, AModule, ARequirement);
   LRequirement := CaptureNyxPascalRequirement(ARequirement);
   LReply := FreezeNyxFPCCompilerCapture(AReply);
   LOwner := FreezeNyxFPCCompilerCapture(AOwner);
