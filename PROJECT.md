@@ -170,6 +170,12 @@ declaration sites. Typed ordinary-Pascal/FPC-conditional dialects retain actual
 compiler differences; missing primitive facts and unsigned/nominal uncertainty
 remain explicit. Full language, editor adoption and both-target quality remain open.
 
+The [typed compiler requirements](docs/pascal-projects.md#typed-missing-compiler-requirements)
+now carry exact context/source ownership through binding and condition results.
+An explicit native host can fulfill a matching request and apply only that fact
+to an unchanged module snapshot. Missing compiler metadata never borrows a host
+ABI or diagnostic string; full resolver/editor/parity/adoption remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

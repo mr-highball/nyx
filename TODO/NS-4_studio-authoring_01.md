@@ -9,6 +9,32 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Fact-request continuation (2026-10-18): b3e0ff2 is progress, retaining at least
+twenty-four documented unclosed batches and full original criterion two. Follow
+the actual missing compiler-root Word fact through typed binding/context requests,
+constant/conditional propagation and explicit coherent native fulfillment. Preserve
+exact context/source ownership, stale/mismatch/cancel refusal and existing budgets;
+one explicit requirement job remains separate from eight-capped symbol preparation.
+Portable contracts and one unchanged RTL route decide the boundary. Stop at a
+different genuine prerequisite without a fixed fixture query, diagnostic-string
+dispatch, full criterion/task/credit/DONE/parity/adoption/delivery closure. WORK.md
+owns evidence and the complete compiler/editor return path.
+
+The qualified request boundary passes 41 native checks across both scopes and
+actual absence, plus 43 unchanged real-module frontier checks. Word fulfillment
+advances System to 6,246 declarations/fifteen syntax diagnostics/eight answers,
+then an explicit unsupported scope at CompareByte_Impl. Dependent ObjPas retains
+three declarations/zero syntax diagnostics/zero answers; ordinary indexed querying
+refuses its incomplete import with no fabricated members. Thirty-three native
+consumers have clean heaps; 55 compiler logs have zero owned warnings. Browser
+consumers/products compile only. Existing preparation remains capped at eight;
+one separate typed fact job is explicit. Reassess label/body-scope and newly read
+variable declaration grammar through existing parser/binding owners; stop request/
+fixture/compiler/capture variants. Full language/editor/incremental/input/navigation/
+quality/parity/adoption/delivery and original criterion two stay open across at
+least twenty-five documented unclosed batches. WORK.md owns exact receipts,
+retained preparations and source-only qualification without completion credit.
+
 Constant-meaning continuation (2026-10-18): 20cec00 is progress, retaining at least
 twenty-three documented unclosed batches and full original criterion two. Follow
 the actual High(errorcode)<>maxExitCode condition through existing constant/binding

@@ -4,7 +4,38 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source declaration-bound constants use exact signed/unsigned values,
+Current-source typed compiler requirements retain exact context owner, observing
+source and checked state/origin independently of diagnostic text. Optional bounded
+capabilities propagate through binding, constants and legacy/ordered conditions.
+Explicit native fulfillment requires an exact owning capture and default anchor;
+module application checks unchanged files/root/context and a single-fact delta.
+Source-local facts are never retagged as pristine/bootstrap. Focused native 41
+and unchanged real-module frontier 43 pass with clean heaps. Five focused native
+compiler jobs qualify both scopes/absence and preflight refusal; the RTL retains
+its original five initial probes/eight-capped symbol preparation plus one separate
+typed requirement job. System reaches 6,246 declarations/fifteen syntax diagnostics/
+eight answers, then unsupported scope at CompareByte_Impl, i386.inc scalar 71215.
+ObjPas retains three declarations/zero syntax diagnostics/zero answers with its
+dependent Char refusal; indexed TObject.Fr refuses incomplete ObjPas without
+fabricated members. Earlier ready-prefix evidence is historical. All 33 native
+consumers have clean heaps; 55 compiler logs have zero owned warnings/126 upstream.
+Both Studios/backend/worker and eighteen browser consumers compile as applicable;
+browser execution/observing/input/parity/adoption/delivery remain open. Nine
+focused/631 product/97 RTL/15 compiler pins, 156 exact unit packets/48 includes,
+five protected files/nine contexts, 349 frozen 7422453 artifacts and thirteen
+concurrent planning files remain exact. Readers joined; LAN offline, Nyx tools
+absent. WORK.md owns receipts, retained preparations and final source/remote
+identity. At least twenty-five documented unclosed batches retain full original
+criterion two; no full criterion/task/credit/DONE/tool/schema/parity/adoption/
+delivery closes. Stop requirement/fixture/compiler/capture variants; reassess
+declaration/body-scope classification, including label sections and sysos variable
+declarations, through existing parser/binding owners before another batch. Class/
+property/compilerproc/CODEALIGN, complete canonical types/module/incremental/
+editor/input/navigation/quality/parity/adoption/delivery remain open. No host/
+config retry or capture, protected mutation, cleanup/deletion/restart, approval
+bypass or sub-agents. Preserve concurrent work.
+
+Earlier declaration-bound constants use exact signed/unsigned values,
 distinct enum ordinals, reusable immutable plans and retained source dependencies.
 Names bind at their declaration sites; source aliases/inline ranges keep their
 own lexical arena. Primitive bounds require matching captured FPC facts. Explicit

@@ -25,7 +25,8 @@ unit nyx.pascal.constants;
 interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
-  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.binding, nyx.pascal.values;
+  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.binding, nyx.pascal.values,
+  nyx.pascal.requirements;
 
 type
   { Exhaustion/cancellation refuses the complete value query; semantic unknown
@@ -136,19 +137,22 @@ type
   end;
   { Final owned result. Only the query writes these fields before publication;
     checked dependency access cannot expose mutable vectors or a live evaluator. }
-  TConstantResult = class(TInterfacedObject, INyxPascalConstantResult)
+  TConstantResult = class(TInterfacedObject, INyxPascalConstantResult, INyxPascalCompilerRequirements)
   public
     Answer: TNyxPascalConstantValue;
     Reason: TNyxPascalBindingIssue;
     Related: TNyxText;
     Work: Integer;
     Dependencies: array of INyxPascalBoundSymbol;
+    Requirements: INyxPascalCompilerRequirements;
     function Value: TNyxPascalConstantValue;
     function Issue: TNyxPascalBindingIssue;
     function RelatedName: TNyxText;
     function WorkUnits: Integer;
     function DependencyCount: Integer;
     function Dependency(AIndex: Integer): INyxPascalBoundSymbol;
+    function RequirementCount: Integer;
+    function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
   end;
   { Synchronous bounded source query. Active declaration keys detect recursion;
     result dependencies own immutable worlds without pointing back to this owner. }
@@ -162,6 +166,8 @@ type
     procedure Tick(AWork: Integer = 1);
     procedure Refuse(AIssue: TNyxPascalBindingIssue; const AName: TNyxText = '');
     procedure RefuseBinding(const AAnswer: INyxPascalResolution; const AName: TNyxText);
+    procedure RequirePrimitiveSize(const AType: INyxPascalSemanticType;
+      const ASite: INyxPascalBindingSite);
     procedure Depend(const ASymbol: INyxPascalBoundSymbol);
     function ContextAt(const ASite: INyxPascalBindingSite): INyxPascalCompilerContext;
     function Resolve(const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
@@ -686,6 +692,26 @@ function TConstantResult.DependencyCount: Integer;
 begin
   Result := Length(Dependencies);
 end;
+
+function TConstantResult.RequirementCount: Integer;
+begin
+  Result := 0;
+
+  if Requirements <> nil then
+  begin
+    Result := Requirements.RequirementCount;
+  end;
+end;
+
+function TConstantResult.RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
+begin
+
+  if Requirements = nil then
+  begin
+    raise ENyxPascalContext.Create('This constant result has no compiler requirement');
+  end;
+  Result := Requirements.RequirementAt(AIndex);
+end;
 function TConstantResult.Dependency(AIndex: Integer): INyxPascalBoundSymbol;
 begin
 
@@ -760,6 +786,11 @@ procedure TConstantQuery.RefuseBinding(const AAnswer: INyxPascalResolution;
 var
   LRelated: TNyxText;
 begin
+
+  if FResult.Reason = pbiNone then
+  begin
+    FResult.Requirements := CaptureNyxPascalRequirements(AAnswer);
+  end;
   LRelated := AAnswer.RelatedName;
 
   if LRelated = '' then
@@ -788,6 +819,17 @@ begin
   end;
 end;
 
+procedure TConstantQuery.RequirePrimitiveSize(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite);
+begin
+
+  if (FResult.Reason <> pbiCompilerContext) or
+    ((FResult.Requirements <> nil) and (FResult.Requirements.RequirementCount > 0)) then
+  begin
+    Exit;
+  end;
+  FResult.Requirements := NewNyxPascalRequirements(NyxPascalPrimitiveRequirement(AType, ASite));
+end;
 function TConstantQuery.Resolve(const ASite: INyxPascalBindingSite;
   const AName: TNyxText): INyxPascalResolution;
 begin
@@ -997,6 +1039,7 @@ begin
 
     { The anchor must own this exact lexical arena. A structural resemblance or
       a generic projection from another owner cannot supply declaration scope. }
+
     if not LSyntax.Complete or (LSyntax.Lexical <>
       LDefinition.World.ModuleAt(LDefinition.ModuleIndex).Syntax.Lexical) then
     begin
@@ -1344,6 +1387,11 @@ begin
             else
             begin
               Result := OrdinalValue(LType, LSource, LNode.Kind = cnHigh);
+            end;
+
+            if Result.Kind = pvvUnknown then
+            begin
+              RequirePrimitiveSize(LType, ASite);
             end;
           end;
         end;

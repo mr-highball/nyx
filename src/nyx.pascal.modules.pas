@@ -24,7 +24,8 @@ unit nyx.pascal.modules;
 
 interface
 
-uses nyx.text, nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation;
+uses nyx.text, nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation,
+  nyx.pascal.requirements, nyx.pascal.compilertrace;
 
 type
   { Open Pascal namespace for analysis, distinct from a physical file and the
@@ -74,6 +75,13 @@ function NewNyxPascalModuleCatalog: INyxPascalModuleCatalog;
   root identity is checked again when its translated source is actually loaded. }
 function CaptureNyxPascalModules(const AModules: INyxPascalModuleCatalog;
   const AFiles: INyxPascalFileCatalog): INyxPascalModuleCatalog;
+{ Apply one exact fact reply to its unchanged captured module owner. Files,
+  namespace, prior context and the reply's single-fact delta must still agree.
+  Bootstrap facts update that independent packet, never the unit's source mode.
+  Failure publishes no descriptor and edits no source, catalog, project or host. }
+function ResolveNyxPascalModuleRequirement(const AFiles: INyxPascalFileCatalog;
+  const AModule: INyxPascalModuleSource; const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner, AReply: INyxFPCCompilerCapture): INyxPascalModuleSource;
 
 implementation
 
@@ -285,4 +293,78 @@ begin
     Result := Result.WithModule(LSource);
   end;
 end;
+function ResolveNyxPascalModuleRequirement(const AFiles: INyxPascalFileCatalog;
+  const AModule: INyxPascalModuleSource; const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner, AReply: INyxFPCCompilerCapture): INyxPascalModuleSource;
+var
+  LFiles: INyxPascalFileCatalog;
+  LModule: INyxPascalModuleSource;
+  LRequirement: INyxPascalCompilerRequirement;
+  LReply: INyxFPCCompilerCapture;
+  LOwner: INyxFPCCompilerCapture;
+  LFact: TNyxPascalSizeFact;
+  LExpected: INyxPascalCompilerContext;
+  LContext: INyxPascalCompilerContext;
+  LRoot: TNyxPascalPhysicalFile;
+begin
+  LFiles := CaptureNyxPascalFiles(AFiles);
+  LModule := CaptureNyxPascalModules(NewNyxPascalModuleCatalog.WithModule(AModule), LFiles).Entry(0);
+  LRequirement := CaptureNyxPascalRequirement(ARequirement);
+  LReply := FreezeNyxFPCCompilerCapture(AReply);
+  LOwner := FreezeNyxFPCCompilerCapture(AOwner);
+
+  if not LOwner.Context.SameFacts(LRequirement.Context) then
+  begin
+    raise ENyxPascalContext.Create('A fact reply needs its exact previous capture and default anchor');
+  end;
+  LOwner := MergeNyxFPCSizeCapture(LOwner, LReply, LRequirement.Reference);
+  LRoot := LRequirement.OwnerSource.Source.Files.FileAt(
+    LRequirement.OwnerSource.Source.Occurrence(0).FileIndex);
+
+  if not LFiles.SameFiles(LRequirement.OwnerSource.Source.Files) or
+    (LModule.Root.Name <> LRoot.Name) or
+    (NyxPascalASCIIKey(LModule.Name.Name) <>
+      NyxPascalASCIIKey(LRequirement.OwnerSource.Syntax.Scope(0).Name)) or
+    (LModule.Context = nil) or
+    not LModule.Context.SameFacts(LRequirement.OwnerSource.Source.InitialContext) then
+  begin
+    raise ENyxPascalContext.Create('A compiler fact reply has stale or foreign module source ownership');
+  end;
+  LFact := NyxPascalCapturedSize(LReply.Context, LRequirement.Reference);
+
+  if (LFact.State = pssUnknown) or (LFact.ProbeMode <> LRequirement.Context.Mode) or
+    (LFact.ProbeLongStrings <> LRequirement.Context.Option('H')) then
+  begin
+    raise ENyxPascalContext.Create('A compiler fact reply does not resolve the requested mode and reference');
+  end;
+  LExpected := LOwner.Context;
+
+  if not LExpected.SameFacts(LReply.Context) then
+  begin
+    raise ENyxPascalContext.Create('A compiler fact reply changed more than its requested fact');
+  end;
+  LContext := LModule.Context;
+
+  if NyxPascalCompilerScope(LRequirement.Context) = pcsoSystemBootstrap then
+  begin
+    LExpected := NyxPascalBootstrapContext(LContext);
+
+    if (LExpected = nil) or not LExpected.SameFacts(LRequirement.Context) then
+    begin
+      raise ENyxPascalContext.Create('The module compiler-root packet changed before fact application');
+    end;
+    LContext := NyxPascalWithBootstrapContext(LContext, LReply.Context);
+  end
+  else
+  begin
+
+    if not LContext.SameFacts(LRequirement.Context) then
+    begin
+      raise ENyxPascalContext.Create('Source-local facts cannot be applied as pristine module defaults');
+    end;
+    LContext := LReply.Context;
+  end;
+  Result := LModule.InContext(LContext, LModule.Translation);
+end;
+
 end.

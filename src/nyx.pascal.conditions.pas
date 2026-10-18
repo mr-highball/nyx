@@ -79,7 +79,8 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
 
 implementation
 
-uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.values;
+uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.values,
+  nyx.pascal.requirements;
 
 type
   { One sealed source query/answer. Context is owned in this class, never in a
@@ -107,7 +108,8 @@ type
   end;
   { Owns final data only. Publication happens after construction/checks; failure
     cleanup releases the source and all temporary authorities independently. }
-  TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation)
+  TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
+    INyxPascalCompilerRequirements)
   public
     Snapshot: INyxPascalTranslation;
     Tokens: Integer;
@@ -117,6 +119,7 @@ type
     Site: TNyxPascalConditionOrigin;
     Issue: TNyxPascalBindingIssue;
     Related: TNyxText;
+    Requirements: INyxPascalCompilerRequirements;
     function Source: INyxPascalTranslation;
     function WorkTokens: Integer;
     function Passes: Integer;
@@ -125,6 +128,8 @@ type
     function Origin: TNyxPascalConditionOrigin;
     function BindingIssue: TNyxPascalBindingIssue;
     function RelatedName: TNyxText;
+    function RequirementCount: Integer;
+    function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
   end;
   { A synchronous site-bound semantic authority. The site owns its prefix world
     outward; no result retains this object. Named size resolution follows bound
@@ -136,6 +141,7 @@ type
     Cancellation: INyxCancellationScope;
     Issue: TNyxPascalBindingIssue;
     Related: TNyxText;
+    Requirements: INyxPascalCompilerRequirements;
     procedure Remember(const AAnswer: INyxPascalResolution; const AName: TNyxText);
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
@@ -294,6 +300,26 @@ begin
   Result := Related;
 end;
 
+function TSemanticTranslation.RequirementCount: Integer;
+begin
+  Result := 0;
+
+  if Requirements <> nil then
+  begin
+    Result := Requirements.RequirementCount;
+  end;
+end;
+
+function TSemanticTranslation.RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
+begin
+
+  if Requirements = nil then
+  begin
+    raise ENyxPascalContext.Create('This conditional result has no compiler requirement');
+  end;
+  Result := Requirements.RequirementAt(AIndex);
+end;
+
 procedure TScopeMeanings.Remember(const AAnswer: INyxPascalResolution; const AName: TNyxText);
 begin
 
@@ -301,6 +327,7 @@ begin
   begin
     Exit;
   end;
+  Requirements := CaptureNyxPascalRequirements(AAnswer);
   Issue := AAnswer.Issue;
 
   if Issue = pbiNone then
@@ -389,8 +416,13 @@ begin
     Exit;
   end;
   Result := NyxPascalSizeFact(pssUnknown);
-  Issue := pbiCompilerContext;
-  Related := LIdentity.IntrinsicReference.Name;
+
+  if Issue = pbiNone then
+  begin
+    Issue := pbiCompilerContext;
+    Related := LIdentity.IntrinsicReference.Name;
+    Requirements := NewNyxPascalRequirements(NyxPascalPrimitiveRequirement(LType, Site));
+  end;
 end;
 
 function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
@@ -479,6 +511,7 @@ begin
     LResult.HasQuestion := True;
     LResult.Site := LCache.Question.Origin;
     LResult.Issue := pbiCompilerContext;
+    LResult.Requirements := nil;
     LNeeds := PlanNyxPascalCondition(LCache.Question.Context, LCache.Question.Expression);
     Supports(LNeeds, INyxPascalConditionDeclarations, LDeclarations);
 
@@ -546,6 +579,7 @@ begin
       LTruth := LAnalysis.Truth;
       LResult.Issue := LMeanings.Issue;
       LResult.Related := LMeanings.Related;
+      LResult.Requirements := LMeanings.Requirements;
     end
     else
     begin
@@ -565,6 +599,7 @@ begin
       Inc(LResult.Tokens, LConstantResult.WorkUnits);
       LResult.Issue := LConstantResult.Issue;
       LResult.Related := LConstantResult.RelatedName;
+      LResult.Requirements := CaptureNyxPascalRequirements(LConstantResult);
 
       if LConstantResult.Value.TryTruth(LBoolean) then
       begin
@@ -589,6 +624,7 @@ begin
     LResult.HasQuestion := False;
     LResult.Issue := pbiNone;
     LResult.Related := '';
+    LResult.Requirements := nil;
     LSemanticOwner := nil;
     LPrefixWorld := nil;
     LView := nil;

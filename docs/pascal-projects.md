@@ -1927,6 +1927,74 @@ class/property grammar and full source/type/incremental/editor/input/navigation/
 quality/parity/adoption/delivery remain under original authoring criterion two.
 This adds no MCP tool/schema or observing release.
 
+## Typed missing compiler requirements
+
+`nyx.pascal.requirements` separates a compiler evidence request from a diagnostic.
+Optional `INyxPascalCompilerRequirements` is available on owned binding, constant
+and ordered conditional results. It exposes bounded read-only requests; absent
+capability means no request. Agents or hosts never dispatch from `RelatedName` or
+English message text. Existing result interfaces and wire/tool inventory stay
+unchanged.
+
+An `INyxPascalCompilerRequirement` retains a typed primitive size/presence
+reference, detached exact compiler context, context-owning source and observing
+source. These sources can differ when an imported compiler-root primitive is
+needed by a consumer. `ContextState = -1` identifies the owner's independent
+bootstrap packet; other ordinals select exact retained source states. Virtual EOF
+is a valid observing position and honestly has `OriginIndex = -1`. No physical
+token or context authority is fabricated. Source leases remain immutable and point
+outward, with no editor/query reference cycle.
+
+Factories reject known facts, unsupported compiler identity, invalid source/state
+ranges and context/owner mismatch. Alternate collection capture retains at most
+64 complete requests in order, detaches producers and refuses atomically on an
+invalid getter. Incomplete output metadata continues to return an inspection gap
+without creating an invalid native job. Missing bound primitive facts also flow
+through the older source `SizeOf` path.
+
+The explicit native `FulfillNyxFPCCompilerRequirement` freezes the request and its
+owning `INyxFPCCompilerCapture`, requiring exact prior facts before scratch is
+created. It queries the selected bootstrap/pristine scope through the existing
+configured compiler process/transcript gate. `MergeNyxFPCSizeCapture` verifies the
+same observed default anchor, rejects incompatible/conflicting cohorts and adds
+only the requested fact to the previous context. Verified absence is a valid reply;
+it never invents a type. Source-local contexts cannot silently acquire pristine
+or bootstrap provenance. The probe's output application is not executed.
+
+```pascal
+LRequests := CaptureNyxPascalRequirements(LConditionalSource);
+
+if LRequests.RequirementCount > 0 then
+begin
+  LRequest := LRequests.RequirementAt(0);
+  LReply := FulfillNyxFPCCompilerRequirement(LCompiler, LFreshScratch,
+    LRequest, LOwnerCapture, TNyxPascalCompilerTraceOptions.Defaults);
+  LModule := ResolveNyxPascalModuleRequirement(LFiles, LModule,
+    LRequest, LOwnerCapture, LReply);
+end;
+```
+
+Run this synchronous operation on an owning worker when UI responsiveness matters.
+It is one explicit additional request job, separate from bounded symbol preparation;
+it does not enlarge that operation's probe allowance. No compiler is required just
+to launch Studio or inspect source. This source addition installs no compiler host,
+MCP schema, default resolver or observing release.
+
+`ResolveNyxPascalModuleRequirement` requires unchanged files/search order/bytes,
+namespace/root and prior module context, plus an exact coherent single-fact delta.
+It returns an independent descriptor. Compiler-root replies change the detached
+bootstrap packet while preserving the unit's own mode/settings. Wrong owners,
+changed defaults, stale source/context and unrelated reply changes refuse without
+publishing a module. Original files, captures, descriptors and active projects
+remain independently owned.
+
+WORK.md owns portable/native fulfillment evidence and the unchanged real-RTL route:
+the original probe list is retained, a binding-produced request advances the High
+condition, and later declaration/scope failures remain explicit. Full grammar,
+canonical types, module coherence, incremental budgets, ordinary editor/input/
+navigation, quality, browser/LCL parity, adoption and delivery stay under original
+authoring criterion two.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

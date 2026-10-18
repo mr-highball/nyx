@@ -28,7 +28,8 @@ uses Classes, SysUtils, LazFileUtils, nyx.text, nyx.bytes, nyx.scheduler,
   nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.pascal.conditions,
   nyx.pascal.binding, nyx.studio.pascalprofiles, nyx.pascal.lexing,
   nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts, nyx.pascal.sources,
-  nyx.pascal.completion, nyx.pascal.completion.owned, nyx.editing, preparation.fixture;
+  nyx.pascal.completion, nyx.pascal.completion.owned, nyx.editing, preparation.fixture,
+  nyx.pascal.requirements;
 var
   GChecks: Integer;
 
@@ -129,6 +130,11 @@ var
   LFiles: INyxPascalFileCatalog;
   LContext: INyxPascalCompilerContext;
   LBootstrap: INyxPascalCompilerContext;
+  LBootstrapCapture: INyxFPCCompilerCapture;
+  LFactReply: INyxFPCCompilerCapture;
+  LRequirements: INyxPascalCompilerRequirements;
+  LRequirement: INyxPascalCompilerRequirement;
+  LResolvedModule: INyxPascalModuleSource;
   LProbe: INyxPascalCompilerProbe;
   LPrepared: INyxFPCModulePreparation;
   LModule: INyxPascalModuleSource;
@@ -223,8 +229,9 @@ begin
   LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Char'));
   LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Comp'));
   LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Byte'));
-  LBootstrap := CaptureNyxFPCCompilerContext(ACompiler, AOutput + '/compiler-root',
+  LBootstrapCapture := CaptureNyxFPCCompilerCapture(ACompiler, AOutput + '/compiler-root',
     LProbe, TNyxPascalCompilerTraceOptions.Defaults);
+  LBootstrap := LBootstrapCapture.Context;
   for LUnit := 0 to 1 do
   begin
     LName := 'System';
@@ -331,6 +338,41 @@ begin
       LSource := NewNyxPascalSemanticTranslation(LFiles, LModule.Root, LPrepared.ModuleSource.Context,
         LWorld, LModule.Translation, TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
         TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+
+      if LUnit = 0 then
+      begin
+        LRequirements := CaptureNyxPascalRequirements(LSource);
+        Check(LSource.Pending and (LSource.BindingIssue = pbiCompilerContext) and
+          (LRequirements.RequirementCount = 1),
+          'The unchanged RTL publishes one exact typed missing compiler-root requirement');
+        LRequirement := LRequirements.RequirementAt(0);
+        Check((NyxPascalASCIIKey(LRequirement.Reference.Name) = TNyxText('word')) and
+          LRequirement.Context.SameFacts(LBootstrapCapture.Context),
+          'The actual missing requirement names its independent owning compiler packet');
+        { This is one explicit semantic-fact job, separate from the unchanged
+          eight-capped symbol preparation above. No name is added to the probe
+          fixture; the host consumes the typed request supplied by binding. }
+        LFactReply := FulfillNyxFPCCompilerRequirement(ACompiler,
+          AOutput + '/required-fact', LRequirement, LBootstrapCapture,
+          TNyxPascalCompilerTraceOptions.Defaults);
+        LResolvedModule := ResolveNyxPascalModuleRequirement(LFiles,
+          LPrepared.ModuleSource, LRequirement, LBootstrapCapture, LFactReply);
+        Check((LResolvedModule.Context.Mode = LPrepared.ModuleSource.Context.Mode) and
+          (NyxPascalCapturedSize(LBootstrapCapture.Context, LRequirement.Reference).State = pssUnknown) and
+          (NyxPascalCapturedSize(LFactReply.Context, LRequirement.Reference).State = pssKnown),
+          'Actual required-fact fulfillment preserves the prior owner and independent unit mode');
+        WriteLn('actual required fact / jobs=1 scope=', Ord(NyxPascalCompilerScope(LFactReply.Context)),
+          ' reference=', LRequirement.Reference.Name,
+          ' bytes=', NyxPascalCapturedSize(LFactReply.Context, LRequirement.Reference).Bytes,
+          ' symbol preparation probes=', LPrepared.Probes);
+        LBootstrapCapture := LFactReply;
+        LBootstrap := LFactReply.Context;
+        LModules := LModules.WithModule(LResolvedModule);
+        LSource := NewNyxPascalSemanticTranslation(LFiles, LResolvedModule.Root,
+          LResolvedModule.Context, LWorld, LResolvedModule.Translation,
+          TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
+          TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+      end;
       LView := NewNyxPascalTranslatedSyntax(LSource.Source,
         TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
     except
@@ -485,12 +527,14 @@ begin
         consumer qualifies the explicit frontier, not complete RTL meaning. }
       WriteLn('actual semantic continuation / answers=', LSource.Answers, ' pending=', LSource.Pending,
         ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName);
-      Check(LSource.Pending and (LSource.BindingIssue = pbiCompilerContext) and (LSource.Answers = 6),
-        'Original source binding answers six conditions and explicitly retains the next compiler-context requirement');
-      Check(NyxPascalASCIIKey(LSource.RelatedName) = TNyxText('word'),
-        'The evaluated High condition identifies missing compiler-root Word facts instead of inventing its bound');
-      WriteLn('actual pending condition / ', LSource.Origin.FileReference.Name,
-        ' / scalar=', LSource.Origin.Span.Start);
+      Check(LSource.Answers >= 7,
+        'The requested compiler-root fact advances actual source refinement beyond the original High condition');
+
+      if LSource.Pending then
+      begin
+        WriteLn('actual pending condition / ', LSource.Origin.FileReference.Name,
+          ' / scalar=', LSource.Origin.Span.Start);
+      end;
       LUnsupportedSyntax := False;
       for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
       begin

@@ -33,7 +33,116 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declaration-bound constant meaning — 2026-10-18
+## Current integration: Typed missing compiler facts — 2026-10-18
+
+Previous goal turn is progress: committed/pushed b3e0ff2 qualifies exact constants,
+explicit dialects and the unchanged RTL's concrete missing Word packet. At least
+twenty-four documented unclosed batches retain complete original authoring
+criterion two. Reassessment follows the materially different typed request/
+fulfillment prerequisite through existing binding/context/preparation ownership.
+Deliver immutable missing-primitive requirements with their exact compiler context,
+context-owning source and observing source site, propagate them through constant
+and conditional results, and fulfill an explicit request only against a matching
+owned capture/default anchor. Native fulfillment joins one additional explicit
+request job; it does not silently enlarge or reuse the existing module preparation
+probe allowance. Existing symbol preparation remains capped at eight in the real
+consumer, with unchanged source/semantic budgets. Qualify portable ownership,
+stale/mismatch/refusal/cancellation and actual native compiler fulfillment plus
+one unchanged RTL continuation. No fixed Word fixture query or diagnostic-string
+dispatch is permitted. Stop at a different genuine prerequisite. Full source/type/
+incremental/editor/input/navigation/quality/parity/adoption/delivery and original
+criterion/task/credit/DONE remain open. Preserve protected/concurrent inputs and
+offline LAN; native execution/browser compilation only. No host/config retry,
+browser/HTTP/file execution/capture, protected mutation, cleanup/deletion/restart,
+approval bypass or sub-agents.
+
+The public nyx.pascal.requirements boundary now carries closed primitive-size/
+presence requests independently of diagnostic strings. Requests retain detached
+exact compiler facts, separate context-owner and observing source leases, a checked
+owner state (-1 for bootstrap) and a virtual observing position with honest unmapped
+EOF. Optional bounded capabilities propagate through owned binding, constant and
+ordered conditional results, including the legacy SizeOf route. Alternate capture
+detaches producers and refuses malformed/oversized collections atomically. Unknown
+compiler metadata keeps an inspection gap without producing an invalid host job.
+
+FreezeNyxFPCCompilerCapture detaches alternate capture/default producers.
+FulfillNyxFPCCompilerRequirement validates one exact request/owner pair before any
+scratch creation, selects its typed bootstrap/pristine scope and joins the existing
+configured compiler gate. MergeNyxFPCSizeCapture verifies default-anchor/cohort
+compatibility and projects only the requested fact onto prior facts. Verified
+absence remains absence. ResolveNyxPascalModuleRequirement additionally checks exact
+files/search/bytes, namespace/root, prior context and one-fact delta before returning
+an independent descriptor. Bootstrap replies replace only that detached packet;
+unit source mode and earlier snapshots remain intact. Source-local state is not
+silently retagged as pristine defaults. No new MCP tool/schema or installed host.
+
+Focused native qualification passes 41 checks, including importing-observer versus
+System context ownership, binding/constant/legacy-size propagation, checked source
+positions and collection bounds, detached producer lifetimes, stale source/context,
+unrelated reply changes/default-anchor mismatch, incomplete compiler metadata,
+actual bootstrap/pristine measurements, actual absence, cancellation and mismatch
+preflight with no output directory. The focused native host uses two owner captures
+and three explicit requirement jobs; this count is separate from real SDK symbol
+preparation. Browser consumers compile only; native execution does not prove parity.
+
+The unchanged RTL route retains its original initial five primitive probes and
+eight-capped symbol preparation. It obtains the actual Word request from source
+binding, joins one separate explicit requirement job and applies the reply through
+the public unchanged-module boundary. System advances to 6,246 declarations/fifteen
+syntax diagnostics/eight answered conditions. Its next pending site is an explicit
+unsupported scope at CompareByte_Impl in rtl/i386/i386.inc scalar 71215. Newly read
+source exposes labels in fastmove/i386, variable declaration syntax in sysos.inc,
+and existing class/property/compilerproc/CODEALIGN gaps. ObjPas now retains three
+declarations/zero syntax diagnostics/zero answers with a dependent unsupported Char
+lookup. Ordinary indexed TObject.Fr consequently refuses the incomplete ObjPas
+dependency with no fabricated member page. Earlier ready-prefix evidence stays
+historical; deeper reading does not prove complete RTL or preserve a false ready
+claim. The maintained frontier qualifies this explicit refusal, not full completion.
+
+Retained preparations include a missing test uses entry and an incorrectly scoped
+guard insertion caught by compilation before execution; both were corrected in
+owned source. The final incomplete-metadata case prevents the new request factory
+from turning an ordinary context gap into a contract exception. No compiler source,
+fixture probe list or budget was altered to hide the remaining grammar failure.
+All new/changed owned types retain individual purpose/ownership comments; records
+contain no interfaces and source/controller leases remain independent.
+
+Ignored fact-requests-20261018-094017 is located by
+.local/fact-requests-paths-private.json. All final frozen-source native/regression/
+product groups and the separate unchanged-module consumer join with exit 0.
+Fifty-five accepted compiler logs have zero owned warnings and 126 separately
+identified upstream pas2js Classes warnings. Thirty-three native consumers have
+clean heaps. The real-module frontier passes 43; its lower assertion count reflects
+the explicitly qualified incomplete-dependency refusal rather than the earlier ready
+member path. Both Studios, backend, worker and eighteen browser consumers compile
+as applicable; no browser execution/input/observing/parity or delivery is claimed.
+
+The same source ledger retains constant 78, independent compiler oracle 42,
+warning/planner/protocol 44/30/38, translation 157, syntax 7,671, types 367, binding
+62, generic binding 127, dependencies 48, owned completion 86, compiler/RTL profile
+74, actual Windows SDK 26 and production semantic completion 84. These counts
+overlap earlier qualification. Final metadata/style/comment review precedes the
+final compiler batch; no owned source changes after freezing. All nine focused
+source files, 631 product files, 97 prior RTL pins and fifteen compiler/config/
+source pins verify. All 156 original unit byte packets and 48 retained SysUtils
+includes remain exact. The read-only frozen verifier passes 349 files at 7422453
+with clean heap. All five protected files/nine complete contexts and thirteen
+concurrent planning files remain exact outside this turn's six-line README addition.
+Readers joined; ports 8088–8093 have no listeners and native Nyx tools remain absent.
+No HTTP/host/config retry or capture, active project mutation, cleanup/deletion/
+restart or approval bypass occurred. Final Git/remote identity is recorded in the
+private packet after publication; independently owned new planning stays unstaged.
+
+Stop requirement/fixture/compiler/capture variants after qualification. Reassess the
+actual declaration/body-scope prerequisite at CompareByte_Impl through existing
+parser/binding owners, including label sections and the newly visible declaration
+errors before deciding the next batch. Full canonical type/module/incremental/
+editor/input/navigation/quality/parity/adoption/delivery requirements remain open.
+At least twenty-five documented unclosed batches retain complete original authoring
+criterion two; no original criterion/task/counter/credit/DONE closes. Goal active,
+solo; protected and concurrent work remains independently owned.
+
+## Earlier integration: Declaration-bound constant meaning — 2026-10-18
 
 Previous goal turn is progress: committed/pushed 20cec00 qualifies ordered warning
 intent, coherent compiler cohorts and the expanded unchanged RTL frontier. At least

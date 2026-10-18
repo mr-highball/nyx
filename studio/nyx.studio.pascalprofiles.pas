@@ -25,7 +25,8 @@ unit nyx.studio.pascalprofiles;
 interface
 
 uses nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.compilertrace,
-  nyx.pascal.files, nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.compilerplan;
+  nyx.pascal.files, nyx.pascal.modules, nyx.pascal.translation, nyx.pascal.compilerplan,
+  nyx.pascal.requirements;
 
 type
   { Copied limits for explicit native module preparation. Probe/translation work
@@ -85,6 +86,18 @@ function CaptureNyxFPCCompilerContext(const ACompiler, AFreshDirectory: TNyxText
 function CaptureNyxFPCCompilerCapture(const ACompiler, AFreshDirectory: TNyxText;
   const AProbe: INyxPascalCompilerProbe;
   const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope = nil;
+  ATimeoutMilliseconds: Cardinal = 30000): INyxFPCCompilerCapture;
+
+{ Fulfill one explicit typed primitive request against its exact owning capture.
+  Preflight freezes both producers and refuses context mismatch before creating
+  scratch. The ordinary capture gate joins the configured compiler; a compatible
+  reply adds only the requested size/presence fact. Source-local contexts cannot
+  be silently retagged as pristine or bootstrap. This is one separate opt-in job,
+  not an implicit increase of module preparation's compiler allowance. }
+function FulfillNyxFPCCompilerRequirement(const ACompiler, AFreshDirectory: TNyxText;
+  const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner: INyxFPCCompilerCapture; const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope = nil;
   ATimeoutMilliseconds: Cardinal = 30000): INyxFPCCompilerCapture;
 
@@ -406,6 +419,47 @@ begin
   Result.FTrace := AValue;
   Result.Validate;
 end;
+
+function FulfillNyxFPCCompilerRequirement(const ACompiler, AFreshDirectory: TNyxText;
+  const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner: INyxFPCCompilerCapture; const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope;
+  ATimeoutMilliseconds: Cardinal): INyxFPCCompilerCapture;
+var
+  LRequirement: INyxPascalCompilerRequirement;
+  LOwner: INyxFPCCompilerCapture;
+  LProbe: INyxPascalCompilerProbe;
+  LFresh: INyxFPCCompilerCapture;
+begin
+  AOptions.Validate;
+  CheckCancellation(ACancellation);
+  LRequirement := CaptureNyxPascalRequirement(ARequirement);
+  LOwner := FreezeNyxFPCCompilerCapture(AOwner);
+
+  if not LOwner.Context.SameFacts(LRequirement.Context) then
+  begin
+    raise ENyxPascalContext.Create('A compiler requirement needs its exact owning capture');
+  end;
+
+  if NyxPascalCompilerScope(LRequirement.Context) = pcsoSystemBootstrap then
+  begin
+
+    if LRequirement.Context.Mode <> ppmFPC then
+    begin
+      raise ENyxPascalContext.Create('This host qualifies compiler-root requests in FPC mode');
+    end;
+    LProbe := NewNyxFPCSystemBootstrapProbe(NyxPascalDefine('NYX_REQUIRED_FACT'));
+  end
+  else
+  begin
+    LProbe := NewNyxFPCCompilerProbe(NyxPascalDefine('NYX_REQUIRED_FACT'), LRequirement.Context.Mode);
+  end;
+  LProbe := NyxFPCProbeSizeOf(LProbe, LRequirement.Reference);
+  LFresh := CaptureNyxFPCCompilerCapture(ACompiler, AFreshDirectory, LProbe,
+    AOptions, ACancellation, ATimeoutMilliseconds);
+  Result := MergeNyxFPCSizeCapture(LOwner, LFresh, LRequirement.Reference);
+end;
+
 function PrepareNyxFPCModule(const ACompiler, AFreshDirectory: TNyxText;
   const AFiles: INyxPascalFileCatalog; const AModule: INyxPascalModuleSource;
   const ABaseProbe: INyxPascalCompilerProbe; const AOptions: TNyxFPCModulePreparationOptions;

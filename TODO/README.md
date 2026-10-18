@@ -130,6 +130,12 @@ Typed source/conditional dialects preserve actual compiler distinctions; missing
 primitive facts remain explicit. Original criterion two keeps full language,
 editor/incremental/parity/delivery; WORK.md owns evidence and the next prerequisite.
 
+The [typed compiler requirements](../docs/pascal-projects.md#typed-missing-compiler-requirements)
+retain exact context/source ownership through binding and conditional results.
+Explicit coherent fulfillment and unchanged-module application preserve scope
+without fixed fixture queries. Original criterion two keeps full language,
+editor/incremental/parity/adoption/delivery; WORK.md owns the next grammar boundary.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

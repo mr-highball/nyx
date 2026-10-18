@@ -133,6 +133,13 @@ function ReadNyxFPCCompilerCapture(const AProbe: INyxPascalCompilerProbe;
   const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope = nil): INyxFPCCompilerCapture;
+{ Copy an alternate complete capture/default anchor, retaining no mutable
+  producer. This is metadata validation, not new execution provenance. }
+function FreezeNyxFPCCompilerCapture(const ASource: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+{ Verify cohort coherence, then publish exactly the requested missing size on
+  the prior context. Unrelated new observations do not widen the reply. }
+function MergeNyxFPCSizeCapture(const APrevious, AFresh: INyxFPCCompilerCapture;
+  const AReference: TNyxPascalSizeReference): INyxFPCCompilerCapture;
 
 implementation
 
@@ -273,6 +280,7 @@ begin
       raise ENyxPascalContext.Create('An alternate probe exceeds its size-query budget');
     end;
   end;
+
   if NyxFPCProbeScope(AProbe) = pcsoSystemBootstrap then
   begin
     LProbe := NewNyxFPCSystemBootstrapProbe(AProbe.Identity);
@@ -1310,6 +1318,44 @@ begin
     end;
   end;
   Result := TCompilerCapture.Create(LMerged, FDefaults);
+end;
+
+function FreezeNyxFPCCompilerCapture(const ASource: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
+var
+  LContext: INyxPascalCompilerContext;
+  LDefaults: INyxPascalCompilerContext;
+begin
+
+  if ASource = nil then
+  begin
+    raise ENyxPascalContext.Create('A complete compiler capture is required');
+  end;
+  LContext := CaptureNyxPascalCompilerContext(ASource.Context);
+  LDefaults := CaptureNyxPascalCompilerContext(ASource.ObservedDefaults);
+  Result := TCompilerCapture.Create(LContext, LDefaults);
+end;
+
+function MergeNyxFPCSizeCapture(const APrevious, AFresh: INyxFPCCompilerCapture;
+  const AReference: TNyxPascalSizeReference): INyxFPCCompilerCapture;
+var
+  LPrevious: INyxFPCCompilerCapture;
+  LFresh: INyxFPCCompilerCapture;
+  LCoherent: INyxFPCCompilerCapture;
+  LFact: TNyxPascalSizeFact;
+begin
+  LPrevious := FreezeNyxFPCCompilerCapture(APrevious);
+  LFresh := FreezeNyxFPCCompilerCapture(AFresh);
+  LCoherent := LPrevious.Merge(LFresh);
+  LFact := NyxPascalCapturedSize(LFresh.Context, AReference);
+
+  if (NyxPascalCapturedSize(LPrevious.Context, AReference).State <> pssUnknown) or
+    (LFact.State = pssUnknown) or (LFact.ProbeMode <> LPrevious.Context.Mode) or
+    (LFact.ProbeLongStrings <> LPrevious.Context.Option('H')) then
+  begin
+    raise ENyxPascalContext.Create('A size reply must resolve one exact missing fact in its captured mode');
+  end;
+  Result := TCompilerCapture.Create(NyxPascalWithCapturedSize(LPrevious.Context,
+    AReference, LFact), LCoherent.ObservedDefaults);
 end;
 
 end.

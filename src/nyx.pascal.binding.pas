@@ -26,7 +26,8 @@ unit nyx.pascal.binding;
 interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
-  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.syntax.translated;
+  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.syntax.translated,
+  nyx.pascal.requirements;
 
 type
   { Invalid snapshot/site references are caller failures. Semantic missing or
@@ -309,6 +310,11 @@ function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
   project until the caller explicitly supplies an already constructed source view. }
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
 
+{ Request a missing bound primitive's exact compiler evidence. Source ownership,
+  origin and selected context are retained independently. Known/inconsistent facts
+  or unqualified source provenance yield nil, never a guessed host request. }
+function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
 implementation
 
 uses nyx.text.index;
@@ -391,7 +397,7 @@ type
   end;
   { One constructed response; the world retains no results. Symbols and types
     own their source world outward, preventing editor/model reference cycles. }
-  TResolution = class(TInterfacedObject, INyxPascalResolution)
+  TResolution = class(TInterfacedObject, INyxPascalResolution, INyxPascalCompilerRequirements)
   public
     Owner: INyxPascalSemanticWorld;
     Outcome: TNyxPascalBindingStatus;
@@ -399,6 +405,7 @@ type
     Related: TNyxText;
     Symbols: array of INyxPascalBoundSymbol;
     TypeValue: INyxPascalSemanticType;
+    Requirements: INyxPascalCompilerRequirements;
     function World: INyxPascalSemanticWorld;
     function Status: TNyxPascalBindingStatus;
     function Issue: TNyxPascalBindingIssue;
@@ -407,6 +414,8 @@ type
     function Count: Integer;
     function SymbolAt(AIndex: Integer): INyxPascalBoundSymbol;
     function BoundType: INyxPascalSemanticType;
+    function RequirementCount: Integer;
+    function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
   end;
   { Holds only the bounded reply and continuation offset. Like ordinary query
     results it points outward to its world without any reverse cache. }
@@ -474,7 +483,8 @@ type
     procedure CheckSite(const ASite: INyxPascalBindingSite);
     procedure CheckSymbol(const ASymbol: INyxPascalBoundSymbol);
     function Answer(AStatus: TNyxPascalBindingStatus;
-      AIssue: TNyxPascalBindingIssue; const ARelated: TNyxText = ''): INyxPascalResolution;
+      AIssue: TNyxPascalBindingIssue; const ARelated: TNyxText = '';
+      const ARequirement: INyxPascalCompilerRequirement = nil): INyxPascalResolution;
     function TypeAnswer(const AType: INyxPascalSemanticType): INyxPascalResolution;
     function OneSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
     function SymbolAnswer(const ASymbols: array of INyxPascalBoundSymbol): INyxPascalResolution;
@@ -929,6 +939,26 @@ begin
   Result := Related;
 end;
 
+function TResolution.RequirementCount: Integer;
+begin
+  Result := 0;
+
+  if Requirements <> nil then
+  begin
+    Result := Requirements.RequirementCount;
+  end;
+end;
+
+function TResolution.RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
+begin
+
+  if Requirements = nil then
+  begin
+    raise ENyxPascalContext.Create('This binding result has no compiler requirement');
+  end;
+  Result := Requirements.RequirementAt(AIndex);
+end;
+
 function TResolution.MessageText: TNyxText;
 const
   CMessages: array[TNyxPascalBindingIssue] of TNyxText =
@@ -1180,7 +1210,8 @@ begin
 end;
 
 function TBindingQuery.Answer(AStatus: TNyxPascalBindingStatus;
-  AIssue: TNyxPascalBindingIssue; const ARelated: TNyxText): INyxPascalResolution;
+  AIssue: TNyxPascalBindingIssue; const ARelated: TNyxText;
+  const ARequirement: INyxPascalCompilerRequirement): INyxPascalResolution;
 var
   LResult: TResolution;
 begin
@@ -1190,6 +1221,11 @@ begin
   LResult.Outcome := AStatus;
   LResult.Reason := AIssue;
   LResult.Related := ARelated;
+
+  if ARequirement <> nil then
+  begin
+    LResult.Requirements := NewNyxPascalRequirements(ARequirement);
+  end;
 end;
 
 function TBindingQuery.TypeAnswer(const AType: INyxPascalSemanticType): INyxPascalResolution;
@@ -1818,6 +1854,7 @@ begin
     if (LSyntax.Scope(LScope).Kind = psskMembers) or
       ((LOwner >= 0) and (LSyntax.Declaration(LOwner).OwnerName <> '')) then
     begin
+
       if LSyntax.Scope(LScope).Kind = psskMembers then
       begin
 
@@ -2154,7 +2191,17 @@ begin
 
       if LFact.State = pssUnknown then
       begin
-        Exit(Answer(pbsUnresolved, pbiCompilerContext, AName));
+
+        if (LBootstrap.Family <> ppcFPC) or (LBootstrap.Version.FullNumber = 0) or
+          (LBootstrap.Mode = ppmUnknown) then
+        begin
+          { Incomplete output metadata still permits source inspection. It
+            supplies a typed context gap, never an invalid native request. }
+          Exit(Answer(pbsUnresolved, pbiCompilerContext, AName));
+        end;
+        Exit(Answer(pbsUnresolved, pbiCompilerContext, AName,
+          NewNyxPascalPrimitiveRequirement(LBootstrap, NyxPascalSizeReference(AName),
+            FWorld.ModuleAt(LSystem), FWorld.ModuleAt(ASite.ModuleIndex), -1, ASite.Caret)));
       end;
       LContext := LBootstrap;
     end;
@@ -3768,4 +3815,81 @@ function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): IN
 begin
   Result := TSemanticWorld.Create(AOptions);
 end;
+
+function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
+var
+  LIdentity: INyxPascalIntrinsicIdentity;
+  LContext: INyxPascalCompilerContext;
+  LExpected: INyxPascalCompilerContext;
+  LOwner: INyxPascalTranslatedSyntax;
+  LModule: Integer;
+  LState: Integer;
+  LOffset: Integer;
+begin
+  Result := nil;
+
+  if (ASite = nil) or (ASite.World = nil) then
+  begin
+    Exit;
+  end;
+
+  if (AType <> nil) and (AType.World <> ASite.World) then
+  begin
+    raise ENyxPascalBinding.Create('A primitive requirement cannot borrow another source world');
+  end;
+
+  if (AType = nil) or (AType.Kind <> pstBuiltin) or
+    not Supports(AType, INyxPascalIntrinsicIdentity, LIdentity) then
+  begin
+    Exit;
+  end;
+
+  LContext := LIdentity.IntrinsicContext;
+
+  if (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber = 0) or
+    (NyxPascalCapturedSize(LContext, LIdentity.IntrinsicReference).State <> pssUnknown) then
+  begin
+    Exit;
+  end;
+  LModule := ASite.ModuleIndex;
+  LOffset := ASite.Caret;
+
+  if LIdentity.IntrinsicOrigin in [pioSystem, pioSystemBootstrap] then
+  begin
+    LModule := ASite.World.FindModule('System');
+
+    if LModule < 0 then
+    begin
+      Exit;
+    end;
+    LOffset := ASite.World.InterfaceBoundary(LModule);
+  end;
+  LOwner := ASite.World.ModuleAt(LModule);
+
+  if LIdentity.IntrinsicOrigin = pioSystemBootstrap then
+  begin
+    LState := -1;
+    LExpected := NyxPascalBootstrapContext(LOwner.Source.InitialContext);
+  end
+  else
+  begin
+    LState := NyxPascalContextStateAt(LOwner, LOffset);
+    LExpected := nil;
+
+    if LState >= 0 then
+    begin
+      LExpected := LOwner.Source.State(LState);
+    end;
+  end;
+
+  if (LExpected = nil) or not LExpected.SameFacts(LContext) then
+  begin
+    Exit;
+  end;
+  Result := NewNyxPascalPrimitiveRequirement(
+    LContext, LIdentity.IntrinsicReference, LOwner,
+    ASite.World.ModuleAt(ASite.ModuleIndex), LState, ASite.Caret);
+end;
+
 end.
