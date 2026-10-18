@@ -59,14 +59,14 @@ type
     pbbNativeUInt, pbbBoolean, pbbByteBool, pbbWordBool, pbbLongBool,
     pbbChar, pbbAnsiChar, pbbWideChar, pbbSingle, pbbDouble, pbbExtended,
     pbbReal, pbbCurrency, pbbPointer, pbbAnsiString, pbbUTF8String,
-    pbbUnicodeString, pbbWideString, pbbShortString);
+    pbbUnicodeString, pbbWideString, pbbShortString, pbbComp);
   { Declaration-only callers may retain symbolic intrinsic classification.
     Compiler-unit policy instead resolves the implicit import chain, refusing a
     missing unit exactly like a missing explicit import. No SDK stub is created. }
   TNyxPascalImplicitScopePolicy = (pispDeclarationNames, pispCompilerUnits);
-  { An unqualified symbolic name or an intrinsic supplied
-    in System's scope. Equal spelling/category alone does not establish identity. }
-  TNyxPascalIntrinsicOrigin = (pioUnqualified, pioSystem);
+  { Symbolic, imported-System or compiler-root identity. Bootstrap evidence
+    precedes authored aliases; equal spelling/category never establishes identity. }
+  TNyxPascalIntrinsicOrigin = (pioUnqualified, pioSystem, pioSystemBootstrap);
   { Explicit receiver intent; resolving a type name never grants instance access
     to an instance field through a class reference. }
   TNyxPascalMemberAccess = (pmaInstance, pmaType);
@@ -2062,11 +2062,13 @@ const
       'int64', 'qword', 'nativeint', 'nativeuint', 'boolean', 'bytebool', 'wordbool',
       'longbool', 'char', 'ansichar', 'widechar', 'single', 'double', 'extended',
       'real', 'currency', 'pointer', 'ansistring', 'utf8string', 'unicodestring',
-      'widestring', 'shortstring');
+      'widestring', 'shortstring', 'comp');
 var
   LValue: TNyxPascalBuiltin;
   LType: TSemanticType;
   LContext: INyxPascalCompilerContext;
+  LBootstrap: INyxPascalCompilerContext;
+  LFact: TNyxPascalSizeFact;
   LSystem: Integer;
 begin
   Result := Answer(pbsMissing, pbiMissingName);
@@ -2079,6 +2081,7 @@ begin
       Continue;
     end;
     LContext := ContextAt(ASite);
+    LBootstrap := nil;
 
     if ASystem then
     begin
@@ -2086,10 +2089,31 @@ begin
 
       if LSystem >= 0 then
       begin
+        { Only the actual System owner supplies compiler-root facts. Consumer
+          modes, aliases and ordinary System.X measurements cannot manufacture
+          pre-alias presence. Missing/imported source still refuses in lookup
+          before reaching this fallback. }
+        LBootstrap := NyxPascalBootstrapContext(FWorld.ModuleAt(LSystem).Source.InitialContext);
         { A terminal System primitive belongs to that unit's source context.
           The consumer or an ObjPas alias must not reassign its mode/identity. }
         LContext := ContextAt(FWorld.At(LSystem, 0, InterfaceEnd(LSystem)));
       end;
+    end;
+
+    if LBootstrap <> nil then
+    begin
+      LFact := NyxPascalCapturedSize(LBootstrap, NyxPascalSizeReference(AName));
+
+      if LFact.State = pssUndeclared then
+      begin
+        Exit(Result);
+      end;
+
+      if LFact.State = pssUnknown then
+      begin
+        Exit(Answer(pbsUnresolved, pbiCompilerContext, AName));
+      end;
+      LContext := LBootstrap;
     end;
 
     if (LContext = nil) or (LContext.Family = ppcUnknown) or (LContext.Mode = ppmUnknown) then
@@ -2107,6 +2131,12 @@ begin
     begin
       LType.IntrinsicScope := pioSystem;
       LType.IntrinsicName := NyxPascalSizeReference('System.' + AName);
+    end;
+
+    if LBootstrap <> nil then
+    begin
+      LType.IntrinsicScope := pioSystemBootstrap;
+      LType.IntrinsicName := NyxPascalSizeReference(AName);
     end;
     LType.IntrinsicFacts := LContext;
     Result := TypeAnswer(LType);

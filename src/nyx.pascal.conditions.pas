@@ -373,6 +373,14 @@ begin
     Exit;
   end;
   LContext := LIdentity.IntrinsicContext;
+
+  if ((LIdentity.IntrinsicOrigin = pioSystemBootstrap) <>
+    (NyxPascalCompilerScope(LContext) = pcsoSystemBootstrap)) then
+  begin
+    Issue := pbiCompilerContext;
+    Related := LIdentity.IntrinsicReference.Name;
+    Exit;
+  end;
   Result := NyxPascalCapturedSize(LContext, LIdentity.IntrinsicReference);
 
   if (Result.State = pssKnown) and

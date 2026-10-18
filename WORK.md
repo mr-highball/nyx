@@ -33,7 +33,106 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Native linkage and layout argument grammar — 2026-10-18
+## Current integration: Compiler bootstrap and authored alias identity — 2026-10-18
+
+Previous turn is progress: pushed ce5237a preserves native linkage/layout grammar
+and exposes actual source Char meaning. This batch follows that context/binding
+prerequisite under original authoring criterion two. The documented consecutive
+unclosed lower bound is at least sixteen, retaining older evidence. Full fresh
+MIT Nyx-owned resolver scope, incremental/project budgets, ordinary editor/input/
+navigation/quality/parity/adoption/delivery remain required; no criterion/task/
+counter/credit/DONE closes. Concurrent reference/browser-compiler planning remains
+foreign work and is preserved exactly outside this checkpoint.
+
+Optional compiler-scope capabilities distinguish pristine programs from pre-alias
+System bootstrap facts without changing existing interface GUIDs or enum ordinals.
+The native host owns an empty System type section and uses -Us. TYPE triggers
+compiler setup before the ordered presence/size replies; a unique fatal stops
+before any replacement System unit is emitted. Only the complete packet, exact
+owned stop/abort receipts and exit 1 admit bootstrap facts. Ordinary probes still
+require exit zero. No generated assembler, linker or application is run.
+
+An ordinary source context retains one detached compiler-root context through a
+one-way class field. Capture/equality preserve it; source MODE/H changes retain
+primitive identity, unknown state drops it, and nested/reverse or mismatched
+compiler-version attachment refuses. Ordinary symbol preparation retains that
+packet across captures and refuses bootstrap input as a module baseline. Existing
+SDK/target/configuration coherence requirements remain unchanged.
+
+The binder first follows source declarations/imports, then consults System's
+compiler-root evidence. Queried absence stays Missing; unqueried primitives refuse
+with a compiler-context gap. Comp has an appended builtin category. Primitive
+identity records its bootstrap namespace, unqualified reference and independent
+context; source aliases unwrap through that identity. Conditional size reads check
+the namespace instead of borrowing an ordinary System.Char measurement.
+
+Accepted evidence is in ignored bootstrap-types-20261018-064518, located by
+.local/bootstrap-types-paths-private.json:
+
+- Eighteen portable native checks qualify immutable context attachment/freezing,
+  mode/string-policy independence, absent/unknown names, actual source ordering,
+  aliases, local shadows, explicit qualification and later missing-import refusal.
+  These controlled inputs establish algorithms, not an invented SDK export set.
+- Seventeen actual native compiler checks capture the configured Win32/i386 FPC
+  3.3.1 bootstrap. AnsiChar/WideChar/Comp/LongInt/Pointer are present with sizes
+  1/2/8/4/4; Char/Integer/NativeInt/UTF8String are absent before source declarations.
+  Exact replay, no emitted System PPU, wrong exits, foreign/duplicate termination,
+  foreign source, missing abort, extra errors and truncation qualify admission.
+  These facts describe this compiler; no other compiler/version/target claim follows.
+- Twenty-three actual module checks retain all 156 original byte packets and 47
+  namespaces, with independent root evidence preserved through five System and
+  one ObjPas symbol captures. System's original Char alias binds at its exact
+  declaration site to measured AnsiChar. Four semantic answers now use correct
+  Comp presence; the original System view has 2,555 declarations/31 retained syntax
+  diagnostics. The subsequent sizeof(Char) query remains inside unfinished TObject
+  scope and refuses. ObjPas also remains pending; indexed loading still reaches
+  three modules/two loads and typed incomplete objpas source with zero suggestions.
+  Raw System remains 36,104 tokens/19 visits/six diagnostics/five requirements,
+  including unsupported WARN 3018 OFF. These are not successful whole RTL binding.
+- Maintained linkage/region/lexical/policy/operator/variant/anonymous/planner/
+  translation/macro/type/syntax/Windows/binding/generic/condition/dependency/owned/
+  profile/production-semantic checks pass 26/28/49/73/18/22/52/14/157/38/367/7,671/
+  26/62/127/10/48/86/74/84. All 23 native consumers have clean heaps. The syntax
+  corpus remains five actual inputs/3,748 declarations; counts overlap prior work.
+- Thirty-six accepted compiler logs have zero owned warnings and 63 upstream
+  pas2js RTL warnings. Both Studios/backend/worker and nine browser consumers
+  compile as applicable. Browser products/consumers compile only; no browser input,
+  application execution, observing adoption, full parity or delivery follows.
+- Eight final focused pins, all 628 product Pascal/include/program files, 97 prior
+  RTL/three compiler inputs, 48 SysUtils include packets and 156 overlapping whole
+  unit packets verify exact. Five protected files/nine complete contexts and 349
+  frozen 7422453 artifacts stay exact. Thirteen concurrent planning files retain
+  their original bytes, excluding only this checkpoint's six-line README addition.
+  All readers join; Studio listeners remain absent and LAN stays offline. Native
+  Nyx chat tools remain absent; no host/configuration refresh is attempted.
+
+Preparations and retained failures are separate. A directive-only System probe
+queried before compiler setup and incorrectly observed every name absent; it is
+not accepted origin evidence. The owned TYPE anchor fixes that timing without
+declaring an alias. The first portable undeclared-size input omitted required
+mode/H metadata and refused as designed. A native corruption oracle used uppercase
+probe identity instead of its canonical lowercase spelling; exact checked identity
+now precedes mutations. The first scope oracle inspected only the immediate method
+owner; the corrected bounded parent walk identifies unfinished TObject. A fresh
+output guard rejected one orchestration attempt that named an existing directory;
+the final execution uses new owned output. None is accepted success evidence.
+
+Product/source readers use the frozen final code. The corrected module consumer
+has its own final compile/execution, followed by the maintained Windows/binding/
+generic tail. Earlier successful readers retain exact bytes; ledgers select only
+their accepted logs and the corrected module log. This is not an uninterrupted
+all-preparations-green run. Final private ledgers/checkpoint own source/remote
+identity and exact preservation receipts.
+
+Next useful deliverable: unfinished enclosing-class source lookup at the actual
+TObject conditional, preserving unknown ancestors/members and declaration order
+under existing binder/scope owners. Warning effects and the 31 actual syntax
+diagnostics retain their existing context/parser owners. Stop bootstrap/capture/
+fixture/compiler variants; do not invent SDK exports, shorten whole-source input,
+inflate parser limits or retry the rejected HTTP host. Full language/canonical
+type/incremental/editor/input/navigation/quality/parity/adoption/delivery stay open.
+
+## Earlier integration: Native linkage and layout argument grammar — 2026-10-18
 
 Previous turn is progress: pushed a45eb85 supplies routine-codegen requests and
 local reader policies, exposing actual System declaration recovery. This batch

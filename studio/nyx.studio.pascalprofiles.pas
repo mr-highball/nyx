@@ -70,7 +70,9 @@ type
   or project setting is changed. Numbered English FPC messages are required.
   Timeout/cancellation/output/IO failure retires and joins this exact compiler
   family before raising. The ordinary compiler adapter's native platform limits
-  apply. This opt-in primitive is not default Studio adoption or a build job. }
+  apply. Bootstrap requests use -Us and stop intentionally only after their full
+  packet; exit 1 is admitted solely with the exact owned fatal/abort receipts.
+  This opt-in primitive is not default Studio adoption or a build job. }
 function CaptureNyxFPCCompilerContext(const ACompiler, AFreshDirectory: TNyxText;
   const AProbe: INyxPascalCompilerProbe;
   const AOptions: TNyxPascalCompilerTraceOptions;
@@ -167,6 +169,7 @@ var
   LSource: TNyxText;
   LDirectory: TNyxText;
   LSourcePath: TNyxText;
+  LProbeFile: TNyxText;
   LLog: TNyxText;
   LCount: Integer;
   LBefore: Integer;
@@ -229,7 +232,13 @@ begin
   begin
     raise ENyxPascalContext.Create('The private compiler profile directory could not be created');
   end;
-  LSourcePath := LDirectory + CProbeFile;
+  LProbeFile := CProbeFile;
+
+  if NyxFPCProbeScope(LProbe) = pcsoSystemBootstrap then
+  begin
+    LProbeFile := 'system.pp';
+  end;
+  LSourcePath := LDirectory + LProbeFile;
   WriteFresh(LSourcePath, NyxEncodeUTF8(LSource));
   {$ifdef windows}
   LSourceHandle := CreateFileW(PWideChar(UTF8Decode(LSourcePath)), GENERIC_READ,
@@ -248,7 +257,16 @@ begin
     LProcess.Executable := String(ACompiler);
     LProcess.CurrentDirectory := String(LDirectory);
     LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
-    LProcess.Parameters.Add('-Mdelphi');
+
+    if NyxFPCProbeScope(LProbe) = pcsoSystemBootstrap then
+    begin
+      LProcess.Parameters.Add('-Mfpc');
+      LProcess.Parameters.Add('-Us');
+    end
+    else
+    begin
+      LProcess.Parameters.Add('-Mdelphi');
+    end;
     LProcess.Parameters.Add('-s');
     LProcess.Parameters.Add('-Cn');
     LProcess.Parameters.Add('-v0');
@@ -258,7 +276,7 @@ begin
     LProcess.Parameters.Add('-vq');
     LProcess.Parameters.Add('-FU' + String(LDirectory));
     LProcess.Parameters.Add('-FE' + String(LDirectory));
-    LProcess.Parameters.Add(String(CProbeFile));
+    LProcess.Parameters.Add(String(LProbeFile));
     LStart := GetTickCount64;
     CheckCancellation(LCancellation);
     LProcess.Execute;
@@ -274,7 +292,7 @@ begin
     LCode := LProcess.ExitStatus;
     LLog := NyxDecodeUTF8(LBytes);
     WriteFresh(LDirectory + 'compiler-profile.log', LBytes);
-    Result := ReadNyxFPCCompilerContext(LProbe, CProbeFile, LLog, LCode,
+    Result := ReadNyxFPCCompilerContext(LProbe, LProbeFile, LLog, LCode,
       AOptions, LCancellation);
   finally
 
@@ -396,6 +414,8 @@ begin
   LInitial := LModule.Context;
 
   if (LInitial = nil) or (LInitial.Family <> ppcFPC) or (LInitial.Mode <> LProbe.Mode) or
+    (NyxFPCProbeScope(LProbe) <> pcsoPristine) or
+    (NyxPascalCompilerScope(LInitial) <> pcsoPristine) or
     (LInitial.Version.FullNumber = 0) or not FileExistsUTF8(ACompiler) or
     (Pos(#0, ACompiler) > 0) or (Pos(#0, AFreshDirectory) > 0) or
     (AFreshDirectory = '') or DirectoryExistsUTF8(AFreshDirectory) or FileExistsUTF8(AFreshDirectory) then
@@ -452,6 +472,10 @@ begin
     begin
       raise ENyxPascalContext.Create('The module probe changed its captured compiler identity');
     end;
+    { Symbol captures are pristine program evidence. Retain the independent
+      compiler-root packet supplied by this module's owner across every probe;
+      source MODE/H changes never recapture or reassign those primitive facts. }
+    LContext := NyxPascalWithBootstrapContext(LContext, NyxPascalBootstrapContext(LInitial));
   end;
   LOwner.Descriptor := LModule.InContext(LContext, LModule.Translation);
   Result := LLease;

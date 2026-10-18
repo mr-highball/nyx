@@ -9,6 +9,18 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Compiler-bootstrap continuation (2026-10-18): ce5237a is progress; original
+criterion two remains open across at least sixteen documented batches, retaining
+all older evidence. Compiler-root capture must establish presence before authored
+System aliases, retain a detached immutable identity across source-mode changes,
+and preserve lexical/import precedence. The native consumer binds original System
+Char to the measured primitive at its source site. The subsequent conditional
+inside unfinished TObject retains an explicit class-scope refusal; that is the
+next existing binder prerequisite, alongside actual diagnostic/syntax ownership.
+Stop bootstrap/capture/fixture variants after qualification. Full language, project/
+incremental budgets, ordinary editor/input/navigation/quality/parity/delivery stay
+required; no original criterion/task/counter/credit/DONE or default adoption closes.
+
 Checkpoint reassessment (2026-10-18): at least the last three handoffs leave
 original criterion two open; earlier unclosed evidence is retained, not reset.
 The next batch follows a concrete compiler-context prerequisite, combining

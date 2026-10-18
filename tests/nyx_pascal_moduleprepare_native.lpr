@@ -128,6 +128,7 @@ var
   LCapture: INyxPascalDirectoryCapture;
   LFiles: INyxPascalFileCatalog;
   LContext: INyxPascalCompilerContext;
+  LBootstrap: INyxPascalCompilerContext;
   LProbe: INyxPascalCompilerProbe;
   LPrepared: INyxFPCModulePreparation;
   LModule: INyxPascalModuleSource;
@@ -150,6 +151,14 @@ var
   LView: INyxPascalTranslatedSyntax;
   LSource: INyxPascalSemanticTranslation;
   LWorld: INyxPascalSemanticWorld;
+  LInspection: INyxPascalSemanticWorld;
+  LAnswer: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+  LIdentity: INyxPascalIntrinsicIdentity;
+  LQuestionPrefix: INyxPascalTranslation;
+  LQuestionView: INyxPascalTranslatedSyntax;
+  LQuestionScope: Integer;
+  LQuestionOwner: Integer;
   LRegisterDirectives: INyxPascalRegisterDirectives;
   LSyntaxLimited: Boolean;
   LPublicVariable: Boolean;
@@ -193,6 +202,14 @@ begin
     end;
   end;
   LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits));
+  LProbe := NewNyxFPCSystemBootstrapProbe(NyxPascalDefine('ACTUAL_SYSTEM_ROOT'));
+  LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('AnsiChar'));
+  LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('WideChar'));
+  LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Char'));
+  LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Comp'));
+  LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('Byte'));
+  LBootstrap := CaptureNyxFPCCompilerContext(ACompiler, AOutput + '/compiler-root',
+    LProbe, TNyxPascalCompilerTraceOptions.Defaults);
   for LUnit := 0 to 1 do
   begin
     LName := 'System';
@@ -207,6 +224,7 @@ begin
     LProbe := NyxFPCProbeSizeOf(LProbe, NyxPascalSizeReference('System.Char'));
     LContext := CaptureNyxFPCCompilerContext(ACompiler, AOutput + '/base-' + LName,
       LProbe, TNyxPascalCompilerTraceOptions.Defaults);
+    LContext := NyxPascalWithBootstrapContext(LContext, LBootstrap);
     Check((LContext.Symbol(NyxPascalDefine('CPUI386')).IsDefined = ppkTrue) and
       (LContext.Symbol(NyxPascalDefine('WIN32')).IsDefined = ppkTrue),
       'The explicitly selected source roots match the actual configured Win32/i386 compiler');
@@ -220,6 +238,8 @@ begin
       LProbe, TNyxFPCModulePreparationOptions.Defaults.WithPlan(
         TNyxPascalCompilerPlanOptions.Defaults.UpToTokens(2000000)).UpToTokens(8000000).UpToProbes(8));
     LModules := LModules.WithModule(LPrepared.ModuleSource);
+    Check(NyxPascalBootstrapContext(LPrepared.ModuleSource.Context).SameFacts(LBootstrap),
+      'Every pristine symbol capture retains the independent measured compiler-root packet');
     WriteLn('actual unit / ', LName, ' probes=', LPrepared.Probes,
       ' tokens=', LPrepared.Source.Count, ' visits=', LPrepared.Source.OccurrenceCount,
       ' diagnostics=', LPrepared.Source.DiagnosticCount, ' remaining=', LPrepared.Requirements.Count);
@@ -298,6 +318,30 @@ begin
       begin
         LDeclaration := LView.Syntax.Declaration(LAt);
 
+        if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('char') then
+        begin
+          WriteLn('actual Char declaration / scope=', LDeclaration.Scope,
+            ' incomplete=', psdfIncomplete in LDeclaration.Flags,
+            ' conditional=', psdfConditional in LDeclaration.Flags,
+            ' unsupported=', psdfUnsupported in LDeclaration.Flags,
+            ' type=', LView.Syntax.Lexical.Slice(LDeclaration.TypeSpan));
+          LInspection := LWorld.WithModule(LView);
+          LAnswer := LInspection.Lookup(LInspection.At(LInspection.FindModule('System'),
+            LDeclaration.Scope, LDeclaration.TypeSpan.Finish), NyxPascalBindingName('Char'));
+          Check((LAnswer.Status = pbsBound) and (LAnswer.Count = 1),
+            'Original System Char is an authored declaration at its exact source site');
+          LAnswer := LInspection.TypeOfSymbol(LAnswer.SymbolAt(0));
+          LType := LAnswer.BoundType;
+          while (LType <> nil) and (LType.Kind in [pstAlias, pstDistinct]) do
+          begin
+            LType := LType.Target;
+          end;
+          Check((LAnswer.Status = pbsBound) and Supports(LType, INyxPascalIntrinsicIdentity, LIdentity) and
+            (LIdentity.IntrinsicOrigin = pioSystemBootstrap) and
+            (NyxPascalCapturedSize(LIdentity.IntrinsicContext, LIdentity.IntrinsicReference).Bytes = 1),
+            'The unchanged actual System alias binds to the separately measured compiler primitive');
+        end;
+
         if NyxPascalASCIIKey(LDeclaration.Name) = TNyxText('exitcode') then
         begin
           LPublicVariable := (LDeclaration.Scope = 0) and
@@ -312,6 +356,28 @@ begin
       end;
       Check(LPublicVariable, 'Actual public ExitCode retains unit-interface membership and declared linker intent');
       Check(LInterfaceRoutine, 'Actual following intrinsic routines remain interface siblings rather than nested bodies');
+      LQuestionPrefix := NewNyxPascalTranslationPrefix(LSource.Source, LSource.Origin.PrefixCount,
+        LModule.Translation);
+      LQuestionView := NewNyxPascalTranslatedSyntax(LQuestionPrefix, TNyxPascalSyntaxOptions.Defaults);
+      LQuestionScope := LQuestionView.Syntax.ScopeAt(LQuestionView.Syntax.Lexical.Scalars - 1);
+      LQuestionOwner := -1;
+      while LQuestionScope >= 0 do
+      begin
+        LAt := LQuestionView.Syntax.Scope(LQuestionScope).OwnerDeclaration;
+
+        if (LAt >= 0) and
+          (NyxPascalASCIIKey(LQuestionView.Syntax.Declaration(LAt).Name) = TNyxText('tobject')) then
+        begin
+          LQuestionOwner := LAt;
+          Break;
+        end;
+        LQuestionScope := LQuestionView.Syntax.Scope(LQuestionScope).Parent;
+      end;
+      Check(LSource.Pending and (LSource.BindingIssue = pbiIncompleteSource) and
+        (LQuestionOwner >= 0) and
+        (NyxPascalASCIIKey(LQuestionView.Syntax.Declaration(LQuestionOwner).Name) = TNyxText('tobject')) and
+        (psdfIncomplete in LQuestionView.Syntax.Declaration(LQuestionOwner).Flags),
+        'The next actual Char query is inside unfinished TObject scope, a separate binding prerequisite');
     end;
 
     if not LSyntaxLimited then

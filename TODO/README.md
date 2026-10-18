@@ -82,6 +82,12 @@ isolates linker intent from member visibility and retains exact declaration rang
 Layout policy readers admit their leading value with trailing explanatory text.
 Full source/type/editor/parity/delivery stays under original authoring criterion two.
 
+The [compiler bootstrap continuation](../docs/pascal-projects.md#compiler-bootstrap-and-authored-alias-identity)
+distinguishes pre-alias compiler primitives from authored System declarations.
+Exact compiler-root packets feed existing binding and conditional readers while
+local shadowing and incomplete imports retain their guards. Unfinished class scope
+and full resolver/editor/parity/delivery remain under original criterion two.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

@@ -4,6 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source compiler bootstrap captures pre-alias primitive presence/size in
+an independent immutable context. Empty System/TYPE plus -Us intentionally stops
+after complete owned replies; exit 1 requires exact fatal/abort receipts and never
+emits a replacement SDK unit. Ordinary probes still require success. Source MODE/H
+and symbol preparation retain root evidence; unknown state drops it and reverse/
+nested/version-mismatched attachment refuses. Source/import precedence stays first;
+unknown primitive names refuse and Comp has typed classification. Portable/native
+bootstrap checks pass 18/17, actual module checks 23; original System Char binds
+at its source site to measured AnsiChar. Subsequent sizeof(Char) remains inside
+unfinished TObject scope; System has 2,555 declarations/31 syntax diagnostics and
+four semantic answers, ObjPas remains pending, indexed completion still refuses.
+All 23 native consumers have clean heaps; 36 accepted compiler logs have zero owned
+warnings, 63 upstream. Browser consumers/products compile only. Eight focused/628
+product/97 prior RTL/three compiler pins, 156 whole packets, 48 includes, five
+protected files/nine contexts and 349 frozen 7422453 artifacts stay exact. Thirteen
+concurrent planning files retain their bytes outside the owned README insertion.
+Readers join; LAN stays offline, native Nyx tools absent, no host/config retry.
+WORK.md owns retained timing/metadata/identity/scope-oracle/fresh-output failures,
+separate corrected final module/tail evidence and final source/remote identity.
+At least sixteen documented unclosed batches retain original criterion two; no
+criterion/task/counter/credit/DONE/adoption/parity/delivery closes. Stop bootstrap/
+capture/fixture/compiler variants. Next follow actual unfinished enclosing-class
+lookup, preserving unknown ancestors/members/order, under existing binder/scope
+owners; warning effects, real syntax gaps and full resolver/editor/incremental/
+input/navigation/quality/parity/delivery stay open. No protected mutation, cleanup/
+deletion/restart, approval bypass, HTTP-host retry or sub-agents. Preserve planning.
+
 Current-source native linkage is distinct from member visibility: PUBLIC NAME
 suffixes no longer change the unit's scope or recurse through following prototypes.
 Typed flags/ranges retain direct/bracket intents; class visibility stays scoped,

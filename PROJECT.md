@@ -120,6 +120,12 @@ flags/ranges. Known layout directives retain explanatory trailing text without
 truncating conditions or include paths. Full source/type/incremental/editor and
 both-target qualification remain required under the original authoring task.
 
+The [compiler bootstrap continuation](docs/pascal-projects.md#compiler-bootstrap-and-authored-alias-identity)
+separates compiler-provided primitives from later System aliases. Optional immutable
+root evidence survives source-mode changes and ordinary symbol preparation; local
+declarations and incomplete imports retain precedence. Actual compiler capture and
+source binding qualify this boundary, with full resolver/editor adoption still open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its

@@ -1565,6 +1565,50 @@ independent. Browser consumers compile only. WORK.md owns the complete real RTL
 continuation and exact remaining gaps, with full source/type/incremental/editor/
 input/navigation/quality/parity/delivery still under original authoring criterion two.
 
+## Compiler bootstrap and authored alias identity
+
+`TNyxPascalCompilerScope` distinguishes an ordinary pristine program packet from
+`pcsoSystemBootstrap` evidence collected before authored System aliases exist.
+`NewNyxFPCSystemBootstrapProbe` emits an owned empty System type section: the TYPE
+token forces compiler setup before the query directives are scanned. It declares
+no substitute SDK exports. Unqualified presence/size requests retain the existing
+query/byte/line budgets; dotted references refuse at this boundary.
+
+The native capture host runs the configured compiler with `-Us`, without running
+an assembler, linker or application. The probe intentionally stops after its
+complete ordered replies. Only exit 1, its exact owned fatal stop and the compiler
+abort receipt together admit the packet. Ordinary program probes still require
+exit zero. Unexpected errors, missing/foreign/duplicate stops, incomplete packets
+and source-identity mismatches publish no partial facts. This is compiler evidence,
+not successful System compilation or application execution provenance.
+
+Optional `INyxPascalCompilerScope` retains a detached root context on the ordinary
+source context through `NyxPascalWithBootstrapContext`. Attachment validates
+family/version and rejects reverse/nested leases; contexts store the interface in
+an owning class field. Capture/equality retain both namespaces. Source MODE/H
+changes preserve the independent root packet, while unknown conditional state
+drops it. Module preparation retains that packet across its ordinary symbol
+captures and refuses bootstrap requests as a replacement source baseline. Full
+target/SDK/configuration coherence remains the caller's broader context contract.
+
+Binding first resolves authored declarations and imports. Only System's owner
+can supply the final compiler-root fallback. Measured absence returns Missing;
+unqueried names retain an explicit compiler-context gap. A bound primitive has
+`pioSystemBootstrap`, its unqualified measured reference and its own immutable
+context. The conditional reader checks that namespace before using sizes; authored
+aliases unwrap through their actual source targets. `Comp` has its own appended
+builtin category. No existing enum ordinal or interface GUID changes.
+
+The configured Win32/i386 FPC 3.3.1 capture provides AnsiChar, WideChar and Comp
+before source aliases; Char, Integer, NativeInt and UTF8String are absent there.
+Those are facts of this measured compiler, not universal FPC defaults. The whole
+original System source binds its Char alias to the measured AnsiChar at the exact
+declaration site. Its later sizeof(Char) query remains blocked inside unfinished
+TObject scope; original warning/syntax gaps remain visible. Portable controlled
+checks establish precedence/ownership algorithms, separately from that real RTL
+evidence. Browser consumers/products compile only. Full language/incremental/
+editor/input/navigation/quality/parity/adoption/delivery remain open in WORK.md.
+
 ## Scoped name and type binding
 
 `nyx.pascal.binding` owns a persistent module world over captured translated views.

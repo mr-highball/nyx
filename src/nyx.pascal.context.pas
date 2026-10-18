@@ -38,6 +38,10 @@ type
     output/compiler configuration; this analyzer never borrows its own compiler's
     conditional symbols or assumes these metadata grant execution. }
   TNyxPascalCompilerFamily = (ppcUnknown, ppcFPC, ppcPas2JS);
+  { Compiler evidence namespace. Bootstrap facts precede authored System aliases;
+    pristine programs may already import those aliases. This provenance grants
+    no source-edit, compiler-admission or application-execution authority. }
+  TNyxPascalCompilerScope = (pcsoPristine, pcsoSystemBootstrap);
   { Explicit language grammar. Unknown preserves an unsupported source mode;
     source directives may change it independently of the analyzer's compiler. }
   TNyxPascalLanguageMode = (ppmUnknown, ppmFPC, ppmObjFPC, ppmDelphi,
@@ -284,6 +288,29 @@ type
       const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
   end;
 
+type
+  { Optional immutable compiler-root evidence. Source contexts may retain one
+    detached bootstrap context; bootstrap contexts cannot retain another context.
+    This one-way class-owned lease survives grammar mode changes without
+    reassigning primitive identity to an alias's or consumer's source settings. }
+  INyxPascalCompilerScope = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C16}']
+    { Namespace of this packet, independent of its current source mode. }
+    function CaptureScope: TNyxPascalCompilerScope;
+    { Retain the immutable detached root packet, or nil when not supplied. }
+    function BootstrapContext: INyxPascalCompilerContext;
+    { Clone with one matching root packet; nil detaches, reverse/nested leases refuse. }
+    function WithBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+  end;
+
+{ Legacy contexts report pristine; invalid namespace values refuse. }
+function NyxPascalCompilerScope(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerScope;
+{ Retain the immutable root packet; legacy contexts have none. }
+function NyxPascalBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+{ Freeze and attach distinct matching root evidence; nested/cyclic leases refuse.
+  This does not establish SDK/target coherence beyond supplied captured facts. }
+function NyxPascalWithBootstrapContext(const AContext, ABootstrap: INyxPascalCompilerContext): INyxPascalCompilerContext;
+
 function NyxPascalSizeReference(const AName: TNyxText): TNyxPascalSizeReference;
 { Validate one bounded ASCII declaration identifier, without compiler-symbol or
   member-expression meaning. Reserved grammar words refuse. }
@@ -291,8 +318,8 @@ function NyxPascalDeclaration(const AName: TNyxText): TNyxPascalDeclarationRef;
 function NyxPascalSizeFact(AState: TNyxPascalSizeState;
   AMode: TNyxPascalLanguageMode = ppmUnknown; ALongStrings: TNyxPascalKnowledge = ppkUnknown;
   ABytes: Integer = 0): TNyxPascalSizeFact;
-{ Read/write explicit pristine measurements; neither helper resolves an authored
-  type binding. Legacy contexts have no captured sizes. }
+{ Read/write measurements in the context's explicit evidence namespace; neither
+  helper resolves an authored type binding. Legacy contexts have no captured sizes. }
 function NyxPascalCapturedSize(const AContext: INyxPascalCompilerContext;
   const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
 function NyxPascalWithCapturedSize(const AContext: INyxPascalCompilerContext;
@@ -319,7 +346,8 @@ function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
   No implicit FPC/PAS2JS/platform/version define is read from this build process. }
 function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
   const AVersion: TNyxPascalCompilerVersion;
-  AMode: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+  AMode: TNyxPascalLanguageMode;
+  AScope: TNyxPascalCompilerScope = pcsoPristine): INyxPascalCompilerContext;
 { Freeze caller-serialized alternate facts without retaining their producer.
   Preserve explicit unknowns, ordered symbols, option/feature values and identity;
   duplicate names or excess facts refuse before publication. No host facts enter. }
@@ -362,6 +390,7 @@ var
   LTargetSizes: INyxPascalContextSizes;
   LSizeCount: Integer;
   LSizeName: TNyxPascalSizeReference;
+  LBootstrap: INyxPascalCompilerContext;
 begin
 
   if AContext = nil then
@@ -374,7 +403,8 @@ begin
   begin
     raise ENyxPascalContext.Create('This capture needs bounded compiler facts');
   end;
-  LCaptured := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode);
+  LCaptured := NewNyxPascalCompilerContext(AContext.Family, AContext.Version, AContext.Mode,
+    NyxPascalCompilerScope(AContext));
   for LAt := 0 to LCount - 1 do
   begin
     LName := AContext.SymbolName(LAt);
@@ -425,6 +455,12 @@ begin
       end;
     end;
   end;
+  LBootstrap := NyxPascalBootstrapContext(AContext);
+
+  if LBootstrap <> nil then
+  begin
+    LCaptured := NyxPascalWithBootstrapContext(LCaptured, LBootstrap);
+  end;
   { Native managed result storage may alias the caller's target. Publish only
     after every alternate getter and policy validation has succeeded. }
   Result := LCaptured;
@@ -444,7 +480,7 @@ type
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
-    INyxPascalContextSizes)
+    INyxPascalContextSizes, INyxPascalCompilerScope)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -456,6 +492,8 @@ type
     FFeatures: array[TNyxPascalLanguageFeature] of TNyxPascalKnowledge;
     FPolicies: TNyxPascalCompilerPolicies;
     FSizes: array of TCapturedSize;
+    FCaptureScope: TNyxPascalCompilerScope;
+    FBootstrap: INyxPascalCompilerContext;
     function Clone: TCompilerContext;
   public
     constructor Create;
@@ -485,6 +523,9 @@ type
     function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
     function WithSizeFact(const AName: TNyxPascalSizeReference;
       const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+    function CaptureScope: TNyxPascalCompilerScope;
+    function BootstrapContext: INyxPascalCompilerContext;
+    function WithBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
   end;
   { Evaluator-only value domain, never a Pascal runtime expression or macro. }
   TConditionValueKind = (pcvUnknown, pcvBoolean, pcvInteger);
@@ -699,6 +740,8 @@ begin
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
     Result.FSizes := Copy(FSizes);
+    Result.FCaptureScope := FCaptureScope;
+    Result.FBootstrap := FBootstrap;
     SetLength(Result.FSymbols, Length(FSymbols));
     for LAt := 0 to High(FSymbols) do
     begin
@@ -891,6 +934,7 @@ begin
   LCopy.FFamily := FFamily;
   LCopy.FVersion := FVersion;
   LCopy.FMode := ppmUnknown;
+  LCopy.FCaptureScope := FCaptureScope;
 end;
 
 function TCompilerContext.SymbolCount: Integer;
@@ -914,6 +958,7 @@ var
   LFeature: TNyxPascalLanguageFeature;
   LOther: TNyxPascalDefineValue;
   LSizes: INyxPascalContextSizes;
+  LBootstrap: INyxPascalCompilerContext;
 begin
   Result := False;
 
@@ -922,6 +967,28 @@ begin
     (AOther.DefinesComplete <> FComplete) or (AOther.SymbolCount <> SymbolCount) then
   begin
     Exit;
+  end;
+
+  if NyxPascalCompilerScope(AOther) <> FCaptureScope then
+  begin
+    Exit;
+  end;
+  LBootstrap := NyxPascalBootstrapContext(AOther);
+
+  if (LBootstrap = nil) <> (FBootstrap = nil) then
+  begin
+    Exit;
+  end;
+
+  if FBootstrap <> nil then
+  begin
+
+    if (NyxPascalCompilerScope(LBootstrap) <> pcsoSystemBootstrap) or
+      (NyxPascalBootstrapContext(LBootstrap) <> nil) or
+      not FBootstrap.SameFacts(LBootstrap) then
+    begin
+      Exit;
+    end;
   end;
 
   if not FPolicies.SamePolicies(NyxPascalCompilerPolicies(AOther)) then
@@ -988,7 +1055,7 @@ end;
 
 function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
   const AVersion: TNyxPascalCompilerVersion;
-  AMode: TNyxPascalLanguageMode): INyxPascalCompilerContext;
+  AMode: TNyxPascalLanguageMode; AScope: TNyxPascalCompilerScope): INyxPascalCompilerContext;
 var
   LContext: TCompilerContext;
 begin
@@ -996,7 +1063,10 @@ begin
   if (Ord(AFamily) < Ord(Low(TNyxPascalCompilerFamily))) or
     (Ord(AFamily) > Ord(High(TNyxPascalCompilerFamily))) or
     (Ord(AMode) < Ord(Low(TNyxPascalLanguageMode))) or
-    (Ord(AMode) > Ord(High(TNyxPascalLanguageMode))) then
+    (Ord(AMode) > Ord(High(TNyxPascalLanguageMode))) or
+    (Ord(AScope) < Ord(Low(TNyxPascalCompilerScope))) or
+    (Ord(AScope) > Ord(High(TNyxPascalCompilerScope))) or
+    ((AScope = pcsoSystemBootstrap) and (AFamily <> ppcFPC)) then
   begin
     raise ENyxPascalContext.Create('Captured compiler identity is outside its closed choices');
   end;
@@ -1005,6 +1075,87 @@ begin
   LContext.FFamily := AFamily;
   LContext.FVersion := AVersion;
   LContext.FMode := AMode;
+  LContext.FCaptureScope := AScope;
+end;
+
+function NyxPascalCompilerScope(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerScope;
+var
+  LScope: INyxPascalCompilerScope;
+begin
+  Result := pcsoPristine;
+
+  if Supports(AContext, INyxPascalCompilerScope, LScope) then
+  begin
+    Result := LScope.CaptureScope;
+  end;
+
+  if (Ord(Result) < Ord(Low(TNyxPascalCompilerScope))) or
+    (Ord(Result) > Ord(High(TNyxPascalCompilerScope))) then
+  begin
+    raise ENyxPascalContext.Create('Compiler evidence has an invalid capture scope');
+  end;
+end;
+
+function NyxPascalBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+var
+  LScope: INyxPascalCompilerScope;
+begin
+  Result := nil;
+
+  if Supports(AContext, INyxPascalCompilerScope, LScope) then
+  begin
+    Result := LScope.BootstrapContext;
+  end;
+end;
+
+function NyxPascalWithBootstrapContext(const AContext, ABootstrap: INyxPascalCompilerContext): INyxPascalCompilerContext;
+var
+  LScope: INyxPascalCompilerScope;
+  LCaptured: INyxPascalCompilerContext;
+begin
+  LCaptured := AContext;
+
+  if not Supports(LCaptured, INyxPascalCompilerScope, LScope) then
+  begin
+    LCaptured := CaptureNyxPascalCompilerContext(AContext);
+    Supports(LCaptured, INyxPascalCompilerScope, LScope);
+  end;
+  Result := LScope.WithBootstrapContext(ABootstrap);
+end;
+
+function TCompilerContext.CaptureScope: TNyxPascalCompilerScope;
+begin
+  Result := FCaptureScope;
+end;
+
+function TCompilerContext.BootstrapContext: INyxPascalCompilerContext;
+begin
+  Result := FBootstrap;
+end;
+
+function TCompilerContext.WithBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+var
+  LCaptured: INyxPascalCompilerContext;
+  LCopy: TCompilerContext;
+begin
+  LCaptured := nil;
+
+  if AContext <> nil then
+  begin
+
+    if (FCaptureScope <> pcsoPristine) or
+      (NyxPascalCompilerScope(AContext) <> pcsoSystemBootstrap) or
+      (NyxPascalBootstrapContext(AContext) <> nil) or
+      (AContext.Family <> FFamily) or
+      (AContext.Version.FullNumber <> FVersion.FullNumber) then
+    begin
+      raise ENyxPascalContext.Create('Bootstrap evidence needs a distinct matching compiler-root context');
+    end;
+    LCaptured := CaptureNyxPascalCompilerContext(AContext);
+  end;
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FBootstrap := LCaptured;
 end;
 
 function NyxPascalSizeReference(const AName: TNyxText): TNyxPascalSizeReference;

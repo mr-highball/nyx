@@ -53,6 +53,13 @@ type
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
     function WithSizeOf(const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
   end;
+  { Optional probe provenance. Bootstrap input uses an empty System type section
+    and intentionally stops after complete replies; it cannot emit an SDK unit.
+    Ordinary probes still require a successful compiler exit. }
+  INyxPascalCompilerProbeScope = interface(IInterface)
+    ['{814416FA-B8F7-45DC-B6AC-83D29D238906}']
+    function CaptureScope: TNyxPascalCompilerScope;
+  end;
 
 { Add a checked reference while preserving ordinary define queries. Legacy
   alternate probes are frozen into the owned request before this extension. }
@@ -86,14 +93,23 @@ type
   At most 256 explicit name queries keep generated source/row work bounded. }
 function NewNyxFPCCompilerProbe(const AIdentity: TNyxPascalDefineRef;
   AMode: TNyxPascalLanguageMode = ppmDelphi): INyxPascalCompilerProbe;
+{ Query only compiler-provided names before authored System aliases. Size names
+  must be unqualified, and source mode is explicitly FPC. A TYPE token forces
+  compiler bootstrap before replies; no declaration/export is invented. }
+function NewNyxFPCSystemBootstrapProbe(const AIdentity: TNyxPascalDefineRef): INyxPascalCompilerProbe;
+{ Legacy probes are pristine; invalid namespace values refuse. }
+function NyxFPCProbeScope(const AProbe: INyxPascalCompilerProbe): TNyxPascalCompilerScope;
 
-{ Interpret a terminal successful compiler transcript for the exact probe file.
+{ Interpret a terminal compiler transcript for the exact probe file. Ordinary
+  probes require successful compilation. Bootstrap probes require exit 1 and the
+  unique owned fatal marker after the complete packet plus compiler abort receipt;
+  this establishes pre-alias facts without emitting a replacement System unit.
   The host must supply -vc -vi -vn -vq, English numbered messages and the exact source
   bytes. Initial macro define/undef/set events supply observed facts; explicit
   source IFDEF/note replies establish only requested absences. The define set
   remains open. Four consistent integer version macros and FPC identity, ordered
   unique begin/rows/H/end replies and the source's compilation marker are required.
-  Malformed, incomplete, foreign, failed, excess or cancelled input publishes no
+  Malformed, incomplete, foreign, unexpectedly failed, excess or cancelled input publishes no
   partial facts. This parser launches/reads/writes no process or filesystem. }
 function ReadNyxFPCCompilerContext(const AProbe: INyxPascalCompilerProbe;
   const AProbeFile, ATranscript: TNyxText; AExitCode: Integer;
@@ -107,10 +123,12 @@ uses SysUtils, nyx.bytes, nyx.pascal.lexing;
 type
   { Owns a detached query vector. Source is rebuilt from checked closed mode
     spellings and ASCII names; caller text cannot inject compiler directives. }
-  TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe, INyxPascalSizeProbe)
+  TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe, INyxPascalSizeProbe,
+    INyxPascalCompilerProbeScope)
   public
     ProbeID: TNyxPascalDefineRef;
     SourceMode: TNyxPascalLanguageMode;
+    EvidenceScope: TNyxPascalCompilerScope;
     Names: array of TNyxPascalDefineRef;
     SizeNames: array of TNyxPascalSizeReference;
     function Identity: TNyxPascalDefineRef;
@@ -122,6 +140,7 @@ type
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
     function WithSizeOf(const AName: TNyxPascalSizeReference): INyxPascalCompilerProbe;
+    function CaptureScope: TNyxPascalCompilerScope;
   end;
   { Construction-only size status/bit accumulator. Probe mode and H knowledge
     are attached only after the complete transcript's remaining guards succeed. }
@@ -150,6 +169,8 @@ type
     FSizes: array of TPendingSize;
     FSizeNext: Integer;
     FSizeBit: Integer;
+    FScope: TNyxPascalCompilerScope;
+    FAborted: Boolean;
     procedure Check;
     procedure Line(const ALine: TNyxText);
     procedure Reply(const AReply: TNyxText);
@@ -220,7 +241,14 @@ begin
       raise ENyxPascalContext.Create('An alternate probe exceeds its size-query budget');
     end;
   end;
-  LProbe := NewNyxFPCCompilerProbe(AProbe.Identity, AProbe.Mode);
+  if NyxFPCProbeScope(AProbe) = pcsoSystemBootstrap then
+  begin
+    LProbe := NewNyxFPCSystemBootstrapProbe(AProbe.Identity);
+  end
+  else
+  begin
+    LProbe := NewNyxFPCCompilerProbe(AProbe.Identity, AProbe.Mode);
+  end;
   for LAt := 0 to LCount - 1 do
   begin
     LProbe := LProbe.WithSymbol(AProbe.Symbol(LAt));
@@ -232,7 +260,8 @@ begin
   end;
   Supports(LProbe, INyxPascalSizeProbe, LTargetSizes);
 
-  if (LProbe.Count <> LCount) or (LTargetSizes.SizeCount <> LSizeCount) or
+  if (LProbe.Mode <> AProbe.Mode) or (LProbe.Count <> LCount) or
+    (LTargetSizes.SizeCount <> LSizeCount) or
     (LProbe.Source <> AProbe.Source) then
   begin
     raise ENyxPascalContext.Create('An alternate compiler probe changed its checked source/query');
@@ -289,6 +318,7 @@ begin
   Result := LCopy;
   LCopy.ProbeID := ProbeID;
   LCopy.SourceMode := SourceMode;
+  LCopy.EvidenceScope := EvidenceScope;
   LCopy.SizeNames := Copy(SizeNames);
   SetLength(LCopy.Names, Count + 1);
   for LAt := 0 to Count - 1 do
@@ -310,10 +340,20 @@ begin
   LPrefix := 'NYX_CONTEXT_' + ProbeID.Name + '_';
   LParts := TNyxStrings.Create;
   try
-    LParts.Add('program NyxCompilerContext;'#10'{$mode ' + ModeName(SourceMode) +
-      '}{$codepage utf8}'#10 +
-      '{ This declaration forces implicit System setup before fact queries. }'#10 +
-      'type TNyxContextMarker = Byte;'#10'{$note ' + LPrefix + 'BEGIN}'#10);
+
+    if EvidenceScope = pcsoSystemBootstrap then
+    begin
+      LParts.Add('unit System;'#10'{$mode fpc}{$codepage utf8}'#10'interface'#10 +
+        '{ TYPE forces compiler setup before the next directive is scanned. }'#10 +
+        'type'#10'{$note ' + LPrefix + 'BEGIN}'#10);
+    end
+    else
+    begin
+      LParts.Add('program NyxCompilerContext;'#10'{$mode ' + ModeName(SourceMode) +
+        '}{$codepage utf8}'#10 +
+        '{ This declaration forces implicit System setup before fact queries. }'#10 +
+        'type TNyxContextMarker = Byte;'#10'{$note ' + LPrefix + 'BEGIN}'#10);
+    end;
     for LAt := 0 to Count - 1 do
     begin
       LParts.Add('{$ifdef ' + Names[LAt].Name + '}'#10'{$note ' + LPrefix +
@@ -350,7 +390,16 @@ begin
     end;
     LParts.Add('{$ifopt H+}'#10'{$note ' + LPrefix + 'H_TRUE}'#10 +
       '{$else}'#10'{$note ' + LPrefix + 'H_FALSE}'#10'{$endif}'#10 +
-      '{$note ' + LPrefix + 'END}'#10'begin'#10'end.'#10);
+      '{$note ' + LPrefix + 'END}'#10);
+
+    if EvidenceScope = pcsoSystemBootstrap then
+    begin
+      LParts.Add('{$fatal ' + LPrefix + 'BOOTSTRAP_STOP}'#10);
+    end
+    else
+    begin
+      LParts.Add('begin'#10'end.'#10);
+    end;
     Result := LParts.Join;
   finally
     LParts.Free;
@@ -378,6 +427,11 @@ var
   LAt: Integer;
   LOwner: INyxPascalCompilerProbe;
 begin
+
+  if (EvidenceScope = pcsoSystemBootstrap) and (Pos('.', AName.Name) > 0) then
+  begin
+    raise ENyxPascalContext.Create('Compiler bootstrap queries need unqualified names before source aliases');
+  end;
   NyxPascalSizeReference(AName.Name);
   for LAt := 0 to High(SizeNames) do
   begin
@@ -396,6 +450,7 @@ begin
   LOwner := LCopy;
   LCopy.ProbeID := ProbeID;
   LCopy.SourceMode := SourceMode;
+  LCopy.EvidenceScope := EvidenceScope;
   LCopy.Names := Copy(Names);
   LCopy.SizeNames := Copy(SizeNames);
   SetLength(LCopy.SizeNames, SizeCount + 1);
@@ -424,8 +479,10 @@ begin
   Result := LSizes.WithSizeOf(AName);
 end;
 
-function NewNyxFPCCompilerProbe(const AIdentity: TNyxPascalDefineRef;
-  AMode: TNyxPascalLanguageMode): INyxPascalCompilerProbe;
+{ Both evidence scopes share one bounded query vocabulary and immutable clone
+  path. Only the generated root/terminal contract differs. }
+function NewCompilerProbe(const AIdentity: TNyxPascalDefineRef;
+  AMode: TNyxPascalLanguageMode; AScope: TNyxPascalCompilerScope): INyxPascalCompilerProbe;
 const
   CGuards: array[0..7] of TNyxText = ('FPC', 'FPC_DELPHI', 'FPC_OBJFPC', 'FPC_TP',
     'FPC_MACPAS', 'FPC_ISO', 'FPC_EXTENDEDPASCAL', 'FPC_UNICODESTRINGS');
@@ -438,10 +495,45 @@ begin
   Result := LProbe;
   LProbe.ProbeID := NyxPascalDefine(AIdentity.Name);
   LProbe.SourceMode := AMode;
+  LProbe.EvidenceScope := AScope;
   SetLength(LProbe.Names, Length(CGuards));
   for LAt := 0 to High(CGuards) do
   begin
     LProbe.Names[LAt] := NyxPascalDefine(CGuards[LAt]);
+  end;
+end;
+
+function NewNyxFPCCompilerProbe(const AIdentity: TNyxPascalDefineRef;
+  AMode: TNyxPascalLanguageMode): INyxPascalCompilerProbe;
+begin
+  Result := NewCompilerProbe(AIdentity, AMode, pcsoPristine);
+end;
+
+function NewNyxFPCSystemBootstrapProbe(const AIdentity: TNyxPascalDefineRef): INyxPascalCompilerProbe;
+begin
+  Result := NewCompilerProbe(AIdentity, ppmFPC, pcsoSystemBootstrap);
+end;
+
+function TCompilerProbe.CaptureScope: TNyxPascalCompilerScope;
+begin
+  Result := EvidenceScope;
+end;
+
+function NyxFPCProbeScope(const AProbe: INyxPascalCompilerProbe): TNyxPascalCompilerScope;
+var
+  LScope: INyxPascalCompilerProbeScope;
+begin
+  Result := pcsoPristine;
+
+  if Supports(AProbe, INyxPascalCompilerProbeScope, LScope) then
+  begin
+    Result := LScope.CaptureScope;
+  end;
+
+  if (Ord(Result) < Ord(Low(TNyxPascalCompilerScope))) or
+    (Ord(Result) > Ord(High(TNyxPascalCompilerScope))) then
+  begin
+    raise ENyxPascalContext.Create('The compiler probe has an invalid evidence scope');
   end;
 end;
 
@@ -738,6 +830,32 @@ var
 begin
   Check;
 
+  if (FScope = pcsoSystemBootstrap) and
+    (Pos('Fatal: (2022) User defined: ' + FPrefix + 'BOOTSTRAP_STOP', ALine) > 0) then
+  begin
+
+    if not FEnded or FCompleted or
+      (Copy(ALine, 1, Length(FFile) + 1) <> FFile + '(') or
+      (Copy(ALine, Length(ALine) - Length(FPrefix + 'BOOTSTRAP_STOP') + 1,
+        Length(FPrefix + 'BOOTSTRAP_STOP')) <> FPrefix + 'BOOTSTRAP_STOP') then
+    begin
+      raise ENyxPascalContext.Create('Compiler bootstrap termination has invalid order or source ownership');
+    end;
+    FCompleted := True;
+    Exit;
+  end;
+
+  if (FScope = pcsoSystemBootstrap) and (ALine = 'Fatal: (1018) Compilation aborted') then
+  begin
+
+    if not FCompleted or FAborted then
+    begin
+      raise ENyxPascalContext.Create('Compiler bootstrap abort is missing its unique terminal receipt');
+    end;
+    FAborted := True;
+    Exit;
+  end;
+
   if (Pos('Error: (', ALine) > 0) or (Pos('Fatal: (', ALine) > 0) then
   begin
     raise ENyxPascalContext.Create('A failed compiler message cannot supply context');
@@ -746,7 +864,7 @@ begin
   if (Copy(ALine, 1, 7) = '(1008) ') and (Pos(' lines compiled', ALine) > 7) then
   begin
 
-    if not FEnded or FCompleted then
+    if (FScope = pcsoSystemBootstrap) or not FEnded or FCompleted then
     begin
       raise ENyxPascalContext.Create('Compiler completion is duplicated or precedes query completion');
     end;
@@ -821,10 +939,14 @@ begin
   FCancellation := ACancellation;
   Check;
 
-  if (AProbe = nil) or (AExitCode <> 0) or (AFile = '') or
+  FScope := NyxFPCProbeScope(AProbe);
+
+  if (AProbe = nil) or
+    ((FScope = pcsoPristine) and (AExitCode <> 0)) or
+    ((FScope = pcsoSystemBootstrap) and (AExitCode <> 1)) or (AFile = '') or
     (Pos(#10, AFile) > 0) or (Pos(#13, AFile) > 0) then
   begin
-    raise ENyxPascalContext.Create('Compiler facts require an explicit successful owned probe');
+    raise ENyxPascalContext.Create('Compiler facts require the exact terminal status of the owned probe');
   end;
 
   if NyxUTF8ByteCount(AText) > FOptions.MaximumBytes then
@@ -840,7 +962,7 @@ begin
   FFile := AFile;
   FPrefix := 'NYX_CONTEXT_' + FProbe.Identity.Name + '_';
   FContext := NewNyxPascalCompilerContext(ppcFPC,
-    TNyxPascalCompilerVersion.Create(0, 0, 0), FProbe.Mode);
+    TNyxPascalCompilerVersion.Create(0, 0, 0), FProbe.Mode, FScope);
   LStart := 1;
   LAt := 1;
   LLines := 0;
@@ -869,6 +991,7 @@ begin
   end;
 
   if not FCompiled or not FStarted or not FEnded or not FCompleted or not FOption or
+    ((FScope = pcsoSystemBootstrap) and not FAborted) or
     (FNext <> FProbe.Count) or (FSizeNext <> Length(FSizes)) or
     (FContext.Symbol(NyxPascalDefine('FPC')).IsDefined <> ppkTrue) then
   begin
@@ -919,7 +1042,7 @@ begin
   begin
     raise ENyxPascalContext.Create('Compiler Unicode defaults differ from the selected source mode');
   end;
-  LCaptured := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode);
+  LCaptured := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode, FScope);
   for LAt := 0 to FContext.SymbolCount - 1 do
   begin
     LName := FContext.SymbolName(LAt);
