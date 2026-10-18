@@ -142,6 +142,10 @@ var
   LOperatorQueries: INyxPascalOperatorQueries;
   LRecordType: INyxPascalSemanticType;
   LOperatorReply: INyxPascalResolution;
+  LVariantSyntax: INyxPascalVariantSyntax;
+  LHintSyntax: INyxPascalHintSyntax;
+  LField: Integer;
+  LSelector: Integer;
   LRecordScope: Integer;
 begin
   LTime.wYear := 2026;
@@ -222,10 +226,41 @@ begin
   Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/inc/typshrdh.inc')) and
     (LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan) = TNyxText('=')),
     'The actual operator declaration retains its original physical include token');
+  Supports(LView.Syntax, INyxPascalVariantSyntax, LVariantSyntax);
+  LAt := LView.Syntax.Named(0, 'TRect');
+  LRecordScope := LView.Syntax.Declaration(LAt).NestedScope;
+  LField := LView.Syntax.Named(LRecordScope, 'Left');
+  LSelector := LVariantSyntax.ArmAt(LView.Syntax.Declaration(LField).VariantArm).SelectorIndex;
+  Check(LVariantSyntax.SelectorAt(LSelector).Complete and
+    (LVariantSyntax.SelectorAt(LSelector).TagDeclaration = -1) and
+    (LView.Syntax.Named(LRecordScope, 'TopLeft') >= 0) and
+    (LView.Syntax.Named(LRecordScope, 'Vector') >= 0),
+    'The original TRect retains all three alternatives without inventing a tag field');
+  LRecordType := LOperatorWorld.TypeOfSymbol(LOperatorWorld.Symbol(0, LAt)).BoundType;
+  LOperatorReply := LOperatorWorld.Member(LRecordType,
+    LOperatorWorld.At(0, 0, LView.Syntax.Lexical.Scalars), NyxPascalBindingName('Left'));
+  Check((LOperatorReply.Status = pbsBound) and (LOperatorReply.Count = 1),
+    'Exact captured geometry-record inspection reaches an ordinary variant field');
+  LOrigin := LOperatorReply.SymbolAt(0).Origin;
+  Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/inc/typshrdh.inc')) and
+    (NyxPascalASCIIKey(LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan)) = TNyxText('left')),
+    'The real variant field preserves its original physical include/token origin');
+  Supports(LView.Syntax, INyxPascalHintSyntax, LHintSyntax);
+  LAt := LView.Syntax.Named(0, 'BROWSEINFO');
+  LField := LView.Syntax.Declaration(LAt).FirstHint;
+  Check((LField >= 0) and (LHintSyntax.HintAt(LField).Kind = phkDeprecated),
+    'The actual SDK declaration retains its deprecated hint separately from record syntax');
+  LOrigin := LView.Origin(LView.OriginAt(LHintSyntax.HintAt(LField).Span.Start));
+  Check((LFiles.FileAt(LOrigin.FileIndex).Name = TNyxText('rtl/win/wininc/struct.inc')) and
+    (LSource.Physical(LOrigin.FileIndex).Slice(LOrigin.PhysicalSpan) = TNyxText('deprecated')),
+    'The SDK hint retains its authored physical token instead of a rewritten type');
+  WriteLn('actual Windows metadata / selectors=', LVariantSyntax.SelectorCount,
+    ' arms=', LVariantSyntax.ArmCount, ' labels=', LVariantSyntax.LabelCount,
+    ' hints=', LHintSyntax.HintCount);
   for LAt := 0 to LView.Syntax.DiagnosticCount - 1 do
   begin
 
-    if LAt >= 8 then
+    if LAt >= 16 then
     begin
       Break;
     end;
@@ -258,9 +293,9 @@ begin
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads);
   Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBinding) and
-    (LMetadata.BindingIssue = pbiUnsupportedScope) and (LReceipt.ModuleCount = 2) and
+    (LMetadata.BindingIssue = pbiIncompleteSource) and (LReceipt.ModuleCount = 2) and
     (LReceipt.DependencyLoads = 1),
-    'Ordinary loading reaches the real Windows grammar boundary rather than inventing exports or reporting an uncaptured unit');
+    'Ordinary loading retains the anonymous structured-field boundary as incomplete source without inventing SDK exports');
 end;
 
 begin

@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed record operator declarations — 2026-10-18
+## Current integration: Variant records and declaration hints — 2026-10-18
+
+Previous turn is progress: pushed 1de68c7 retains typed record operators and
+exposes the real variant-field/hint prerequisite. This batch follows that boundary
+under original authoring criterion two. The documented consecutive unclosed lower
+bound is at least ten, with older evidence retained. Full fresh MIT Nyx-owned
+resolver scope, incremental/project-scale work, ordinary Studio adoption and
+complete input/navigation/quality/parity/delivery remain required. No original
+criterion/task/counter/credit/DONE, new tool/schema or rollout closes. Solo; no
+HTTP/browser/file-protocol execution/capture, protected mutation, cleanup/deletion/
+restart or approval bypass occurs. Builds/evidence stay on the provisioned scratch
+drive; concurrent milestone/reference/browser-compiler planning remains separate.
+
+Optional INyxPascalVariantSyntax retains immutable selector/arm/label values beside
+the existing declaration arena. Named tags are real fields; unnamed types never
+become fields. Nested selectors retain their parent arm, and every alternative's
+fields stay in the record's ordinary member scope with VariantArm metadata.
+Grouped fields/labels, signed/range labels and empty arms retain source ranges.
+Ordinary alias/member binding and bounded completion pages see all alternatives.
+No active arm, constant-label meaning, storage offset or ABI eligibility is
+inferred. Incomplete alternatives retain unsafe scopes and incomplete metadata.
+
+Optional INyxPascalHintSyntax separates closed standard hint intent and exact
+unevaluated string/character message spans from declaration type/value expressions.
+Types, fields/variables, constants, routines and properties retain ordered hint
+links; grouped declarations own independent entries. Escaped names and expression
+operands remain identifiers. Hints emit no compiler diagnostic or type change.
+All metadata shares the existing declaration budget, checked getters and atomic
+cancellation/limit construction. Original interfaces/GUIDs and MCP tool/schema
+inventory remain unchanged; these optional capabilities operate in process only.
+
+Accepted composite evidence is in the ignored variant-records-20261018-045837
+packet, located by .local/variant-records-paths-private.json:
+
+- Twenty-two portable native checks qualify named/unnamed/nested/empty variants,
+  real tag and grouped-field membership, exact signed/range labels, typed ordered
+  hints/messages and escaped names, ordinary alias/member pages, unsafe unfinished
+  arms, metadata bounds, aggregate budgets and cancellation.
+- Twelve whole handwritten native source/compiler checks execute ordinary/nested
+  fields and overlapping ordinal views in Delphi mode, returning 34. An actual
+  configured compiler probe supplies analysis context. Whole original unit/include
+  analysis preserves field/hint tokens after supplementary Unicode; hinted aliases
+  retain complete type syntax and ordinary member lookup. The controlled symbolic
+  lookup world does not replace actual System/ObjPas or infer compiler storage.
+- Twenty unchanged actual Windows checks retain 498,239 tokens/23 include visits
+  and zero translation diagnostics. Syntax advances from 7,614/18 declarations/
+  diagnostics to 10,571/12, retaining 11 selectors/30 arms/30 labels and ten hints.
+  Exact TRect variant-member and BROWSEINFO hint inspection preserve original
+  shared/Win32 include tokens without synthetic compiler units. Ordinary indexed
+  completion still refuses after two modules/one load, now pbiIncompleteSource.
+  Remaining diagnostics follow INPUT_RECORD's anonymous Event record field;
+  recovered declaration counts do not prove complete SDK meaning.
+- Maintained native operator/types/syntax/binding/generics/conditions/dependencies/
+  owned checks pass 18/367/7,632/62/127/10/48/86. The syntax corpus remains five
+  actual inputs/3,727 declarations, not every source file. Actual configured
+  profile and production in-process semantic completion pass 74/84, retaining
+  their real import/conditional prerequisites. Counts overlap earlier evidence.
+  All thirteen accepted native consumers have clean heaps.
+- Twenty-one final compiler logs have zero owned warnings and 35 upstream
+  pas2js RTL warnings. Four browser consumers, both Studios/backend/worker compile
+  as applicable. Browser products/consumers execute nowhere here; no HTTP/
+  authenticated/observing/input or full parity claim follows from compilation.
+- Sixteen focused pins, all 627 src/studio Pascal/include/program files, 97
+  original RTL inputs and three configured compiler inputs remain exact after
+  final readers. The source inventory extends the previous 621 unit/include pins
+  with six programs. All 48 exported SysUtils include packets match original
+  bytes. Five protected files/nine complete contexts and all 349 frozen 7422453
+  artifacts remain exact. Reader/compiler groups join; no Studio listener remains
+  and LAN stays offline. Final compiler/native/input/include/protected receipts
+  and the final checkpoint own source/remote identity. Native Nyx chat tools remain
+  absent; no host retry or configuration mutation occurs to refresh them.
+
+Retained preparations are not accepted final evidence. The first portable fixture
+used nonexistent ScopeIndex instead of the declaration's Scope. Its first label
+oracle compared contiguous authored spelling against the deliberately spaced
+translation projection; direct syntax spans and whole-source physical include
+origins now qualify their distinct contracts. The first Windows consumer retained
+its previous unsupported-scope expectation; its actual new refusal is incomplete
+source at the anonymous structured-field boundary. These failures remain in the
+packet. Accepted ledgers select only the final frozen source/compiler batch;
+no uninterrupted historical-green or complete-Windows claim is made.
+
+Next useful deliverable: retain anonymous structured type/field ownership and
+boundaries through existing syntax/type/binder owners, using the real nested
+INPUT_RECORD Event record and whole compiled handwritten interaction. Reassess
+remaining SDK/import failures at that boundary. Return to actual System/ObjPas,
+SysUtils's six semantic conditions, full language/canonical/expression meaning,
+incremental budgets and ordinary editor/input/navigation/quality/parity/delivery.
+Stop variant/hint/fixture/compiler/capture variants; no user decision is missing
+and no original acceptance scope is narrowed.
+
+## Previous integration: Typed record operator declarations — 2026-10-18
 
 Previous turn is progress: pushed 5ead679 repairs procedural type ranges and
 exposes actual geometry-record operators. This batch follows that prerequisite

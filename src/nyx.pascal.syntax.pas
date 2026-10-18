@@ -65,6 +65,80 @@ type
     psavPublic, psavPublished, psavAutomated);
   { Pascal parameter passing syntax, copied into each grouped parameter entry. }
   TNyxPascalSyntaxParameterMode = (pspmValue, pspmConst, pspmVar, pspmOut, pspmConstRef);
+  { Standard source hint intent. Messages remain exact source expressions;
+    presence does not emit compiler diagnostics or change type identity. }
+  TNyxPascalHintKind = (phkDeprecated, phkPlatform, phkExperimental, phkUnimplemented);
+  { One value-owned hint attached to a declaration. Spans address this snapshot's
+    lexical source; -1 ends its declaration's linked hint list. No decoded or
+    executed message, editor reference or mutable backing storage is retained. }
+  TNyxPascalSyntaxHint = record
+  private
+    FDeclaration: Integer;
+    FKind: TNyxPascalHintKind;
+    FSpan: TNyxPascalSpan;
+    FMessage: TNyxPascalSpan;
+    FNext: Integer;
+  public
+    property DeclarationIndex: Integer read FDeclaration;
+    property Kind: TNyxPascalHintKind read FKind;
+    property Span: TNyxPascalSpan read FSpan;
+    property MessageSpan: TNyxPascalSpan read FMessage;
+    property NextHint: Integer read FNext;
+  end;
+  { A record's variant selector. ParentArm is -1 at the record level; a named
+    selector is a real field declaration, while an unnamed selector has -1.
+    Type/label expressions remain source syntax, never evaluated constants or
+    inferred layout. Ordinals belong only to this immutable snapshot. }
+  TNyxPascalVariantSelector = record
+  private
+    FScope: Integer;
+    FParent: Integer;
+    FTag: Integer;
+    FType: TNyxPascalSpan;
+    FSpan: TNyxPascalSpan;
+    FFirstArm: Integer;
+    FLastArm: Integer;
+    FComplete: Boolean;
+  public
+    property RecordScope: Integer read FScope;
+    property ParentArm: Integer read FParent;
+    property TagDeclaration: Integer read FTag;
+    property TypeSpan: TNyxPascalSpan read FType;
+    property Span: TNyxPascalSpan read FSpan;
+    property FirstArm: Integer read FFirstArm;
+    property Complete: Boolean read FComplete;
+  end;
+  { One alternative, retaining its labels/body range and selector relationship.
+    Fields remain ordinary members of the enclosing record and carry this arm's
+    ordinal. Nested selectors point back here; no active-arm or offset is guessed. }
+  TNyxPascalVariantArm = record
+  private
+    FSelector: Integer;
+    FSpan: TNyxPascalSpan;
+    FFirstLabel: Integer;
+    FLastLabel: Integer;
+    FNext: Integer;
+    FComplete: Boolean;
+  public
+    property SelectorIndex: Integer read FSelector;
+    property Span: TNyxPascalSpan read FSpan;
+    property FirstLabel: Integer read FFirstLabel;
+    property NextArm: Integer read FNext;
+    property Complete: Boolean read FComplete;
+  end;
+  { Exact unevaluated label/range expression, linked within one variant arm.
+    Its span preserves signs, qualified names and numeric spelling without
+    converting them to host numbers or selecting a runtime alternative. }
+  TNyxPascalVariantLabel = record
+  private
+    FArm: Integer;
+    FSpan: TNyxPascalSpan;
+    FNext: Integer;
+  public
+    property ArmIndex: Integer read FArm;
+    property Span: TNyxPascalSpan read FSpan;
+    property NextLabel: Integer read FNext;
+  end;
   { Explicit uncertainty and declaration modifiers. Unsupported/recovered scopes
     grant no successful type inference, compilation or source editing authority. }
   TNyxPascalSyntaxFlag = (psdfIncomplete, psdfConditional, psdfForward,
@@ -139,6 +213,9 @@ type
     FNext: Integer;
     FNextNamed: Integer;
     FLastNamed: Integer;
+    FVariantArm: Integer;
+    FFirstHint: Integer;
+    FLastHint: Integer;
   public
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
@@ -146,6 +223,12 @@ type
     { Operators remain routines for existing consumers, with their own typed
       lookup family. Name/NameSpan retain the exact authored operator token. }
     property OperatorKind: TNyxPascalOperatorKind read FOperator;
+    { -1 means a fixed field or non-field declaration. Variant fields still
+      inhabit the record's ordinary member scope, rather than hidden subscopes. }
+    property VariantArm: Integer read FVariantArm;
+    { -1 means no standard hint. Follow NextHint only in this snapshot's optional
+      INyxPascalHintSyntax; each grouped declaration owns its own list. }
+    property FirstHint: Integer read FFirstHint;
     property TypeForm: TNyxPascalSyntaxTypeForm read FForm;
     property Visibility: TNyxPascalSyntaxVisibility read FVisibility;
     property ParameterMode: TNyxPascalSyntaxParameterMode read FParameterMode;
@@ -194,7 +277,8 @@ type
     function Fragment(AValue: TNyxPascalSyntaxFragment): TNyxPascalSyntaxOptions;
     { Copy the complete lexical policy, including Unicode/comment handling. }
     function Lexical(const AValue: TNyxPascalLexicalOptions): TNyxPascalSyntaxOptions;
-    { Bounds entries across grouped names, parameters and all nested scopes. }
+    { Bounds declarations plus their variant-selector/arm/label and hint entries
+      across all scopes. Metadata cannot grow outside this aggregate quota. }
     function UpToDeclarations(AValue: Integer): TNyxPascalSyntaxOptions;
     { Includes the physical module/fragment scope and routine/member/body scopes. }
     function UpToScopes(AValue: Integer): TNyxPascalSyntaxOptions;
@@ -245,6 +329,25 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570B03}']
     function NamedOperator(AScope: Integer; AKind: TNyxPascalOperatorKind): Integer;
   end;
+  { Optional structural metadata over the same immutable declaration/source arena.
+    All ordinals/getters are checked. Counts share declaration budgets; no layout,
+    evaluated labels or runtime arm selection is supplied by these value records. }
+  INyxPascalVariantSyntax = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B04}']
+    function SelectorCount: Integer;
+    function SelectorAt(AIndex: Integer): TNyxPascalVariantSelector;
+    function ArmCount: Integer;
+    function ArmAt(AIndex: Integer): TNyxPascalVariantArm;
+    function LabelCount: Integer;
+    function LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
+  end;
+  { Optional standard hint metadata. Each declaration's FirstHint/NextHint links
+    stay snapshot-local; messages preserve original source and are never executed. }
+  INyxPascalHintSyntax = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570B05}']
+    function HintCount: Integer;
+    function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
+  end;
 
 { Pure analysis on copied text. Unknown/missing syntax retains preceding
   declarations and physical spans with explicit recovery issues. Quotas and
@@ -265,7 +368,8 @@ type
   { Owned parser builder becomes the immutable snapshot after construction.
     Significant-token ordinals keep lossless trivia on Lexical. No raw source
     provider or cancellation borrow survives publication. }
-  TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot, INyxPascalOperatorSyntax)
+  TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
+    INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax)
   private
     FLexical: INyxPascalLexicalSnapshot;
     FOptions: TNyxPascalSyntaxOptions;
@@ -276,10 +380,19 @@ type
     FDeclarations: array of TNyxPascalSyntaxDeclaration;
     FImports: array of TNyxPascalSyntaxImport;
     FDiagnostics: array of TNyxPascalSyntaxDiagnostic;
+    FSelectors: array of TNyxPascalVariantSelector;
+    FArms: array of TNyxPascalVariantArm;
+    FLabels: array of TNyxPascalVariantLabel;
+    FHints: array of TNyxPascalSyntaxHint;
     FScopeCount: Integer;
     FDeclarationCount: Integer;
     FImportCount: Integer;
     FDiagnosticCount: Integer;
+    FSelectorCount: Integer;
+    FArmCount: Integer;
+    FLabelCount: Integer;
+    FHintCount: Integer;
+    FActiveArm: Integer;
     FNames: TNyxTextIndex;
     FPosition: Integer;
     { A generic header may end in the physical >= token. Only its > belongs
@@ -301,6 +414,8 @@ type
       const ASpan: TNyxPascalSpan);
     procedure Enter;
     procedure Leave;
+    { Metadata and declarations consume one common node quota. }
+    procedure NodeBudget;
     function AddScope(AKind: TNyxPascalSyntaxScopeKind; AParent, AOwner: Integer;
       AStart: Integer; const AName: TNyxText): Integer;
     procedure FinishScope(AScope: Integer; AComplete: Boolean);
@@ -310,15 +425,23 @@ type
     procedure Separator;
     procedure Groups(AOpen, AClose: TNyxPascalSymbol);
     procedure Angles;
-    procedure Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean = False);
+    procedure Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean = False;
+      AHints: Boolean = False; AArmEnd: Boolean = False);
+    function HintWord(out AKind: TNyxPascalHintKind): Boolean;
+    function AtHint(AExpressionStart: Integer): Boolean;
+    procedure DeclarationHints(ADeclaration: Integer);
+    procedure CloneDeclarationHints(AFrom, ATo: Integer);
+    procedure VariantPart(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
+    procedure VariantFields(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     function Form: TNyxPascalSyntaxTypeForm;
     { Extend a procedural expression across only its supported trailing directive
       separators. Never consume an escaped/contextual name beginning a new type. }
-    procedure RoutineTypeSuffix;
+    procedure RoutineTypeSuffix(AArmEnd: Boolean = False);
     procedure ParseType(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure TypeSection(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
-      AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean = False);
+      AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean = False;
+      AArmEnd: Boolean = False);
     procedure Constants(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
       AVisibility: TNyxPascalSyntaxVisibility);
     procedure Parameters(AScope: Integer);
@@ -343,6 +466,14 @@ type
     function Declaration(AIndex: Integer): TNyxPascalSyntaxDeclaration;
     function Named(AScope: Integer; const AName: TNyxText): Integer;
     function NamedOperator(AScope: Integer; AKind: TNyxPascalOperatorKind): Integer;
+    function SelectorCount: Integer;
+    function SelectorAt(AIndex: Integer): TNyxPascalVariantSelector;
+    function ArmCount: Integer;
+    function ArmAt(AIndex: Integer): TNyxPascalVariantArm;
+    function LabelCount: Integer;
+    function LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
+    function HintCount: Integer;
+    function HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
     function ImportCount: Integer;
     function ImportAt(AIndex: Integer): TNyxPascalSyntaxImport;
     function DiagnosticCount: Integer;
@@ -423,6 +554,7 @@ begin
   FOptions := AOptions;
   FCancellation := ACancellation;
   FNames := TNyxTextIndex.Create;
+  FActiveArm := -1;
   try
     FLexical := NewNyxPascalLexicalSnapshot(ASource, AOptions.LexicalOptions, ACancellation);
     Build;
@@ -603,6 +735,16 @@ begin
   Dec(FDepth);
 end;
 
+procedure TSyntaxSnapshot.NodeBudget;
+begin
+
+  if FDeclarationCount + FSelectorCount + FArmCount + FLabelCount + FHintCount >=
+    FOptions.MaximumDeclarations then
+  begin
+    raise ENyxPascalSyntaxLimit.Create('Declarations and structural metadata exceed their shared node budget');
+  end;
+end;
+
 function TSyntaxSnapshot.AddScope(AKind: TNyxPascalSyntaxScopeKind;
   AParent, AOwner: Integer; AStart: Integer; const AName: TNyxText): Integer;
 begin
@@ -645,6 +787,7 @@ var
   LKey: TNyxText;
   LFirst: Integer;
 begin
+  NodeBudget;
   Result := FDeclarationCount;
 
   if Result >= FOptions.MaximumDeclarations then
@@ -675,6 +818,15 @@ begin
   FDeclarations[Result].FNext := -1;
   FDeclarations[Result].FNextNamed := -1;
   FDeclarations[Result].FLastNamed := Result;
+  FDeclarations[Result].FVariantArm := -1;
+  FDeclarations[Result].FFirstHint := -1;
+  FDeclarations[Result].FLastHint := -1;
+
+  if (AKind = psdkField) and (FActiveArm >= 0) and
+    (FSelectors[FArms[FActiveArm].SelectorIndex].RecordScope = AScope) then
+  begin
+    FDeclarations[Result].FVariantArm := FActiveArm;
+  end;
   Inc(FDeclarationCount);
 
   if FConditional[AName] then
@@ -804,11 +956,153 @@ begin
   end;
 end;
 
-procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean);
+function TSyntaxSnapshot.HintWord(out AKind: TNyxPascalHintKind): Boolean;
+var
+  LKey: TNyxText;
 begin
+  Result := False;
+  AKind := phkDeprecated;
+
+  if (Tok.Kind <> ptkWord) or Tok.Escaped then
+  begin
+    Exit;
+  end;
+  LKey := NyxPascalASCIIKey(Name);
+
+  if LKey = 'deprecated' then
+  begin
+    AKind := phkDeprecated;
+  end
+  else if LKey = 'platform' then
+  begin
+    AKind := phkPlatform;
+  end
+  else if LKey = 'experimental' then
+  begin
+    AKind := phkExperimental;
+  end
+  else if LKey = 'unimplemented' then
+  begin
+    AKind := phkUnimplemented;
+  end
+  else
+  begin
+    Exit;
+  end;
+  Result := True;
+end;
+
+function TSyntaxSnapshot.AtHint(AExpressionStart: Integer): Boolean;
+var
+  LKind: TNyxPascalHintKind;
+  LPrevious: TNyxPascalToken;
+begin
+  Result := False;
+
+  if (FPosition <= AExpressionStart) or not HintWord(LKind) then
+  begin
+    Exit;
+  end;
+  { Hint words are also legal identifiers. An expression operand, qualified
+    member or escaped name must not be mistaken for a trailing declaration hint. }
+  LPrevious := Tok(-1);
+  Result := ((LPrevious.Kind in [ptkWord, ptkNumber, ptkString, ptkCharacter]) and
+    not (LPrevious.Word in [pkwOf, pkwTo, pkwNot, pkwAnd, pkwOr, pkwXor,
+      pkwDiv, pkwMod, pkwIn, pkwAs, pkwIs, pkwShl, pkwShr, pkwType, pkwPacked])) or
+    (LPrevious.Symbol in [psoCloseParen, psoCloseBracket, psoGreater, psoShiftRight]);
+end;
+
+procedure TSyntaxSnapshot.DeclarationHints(ADeclaration: Integer);
+var
+  LKind: TNyxPascalHintKind;
+  LAt: Integer;
+  LStart: Integer;
+  LMessage: Integer;
+begin
+  while HintWord(LKind) do
+  begin
+    NodeBudget;
+    LAt := FHintCount;
+
+    if LAt = Length(FHints) then
+    begin
+      SetLength(FHints, Capacity(LAt, FOptions.MaximumDeclarations));
+    end;
+    Inc(FHintCount);
+    LStart := Tok.Span.Start;
+    Step;
+    LMessage := FPosition;
+    while Tok.Kind in [ptkString, ptkCharacter] do
+    begin
+      Step;
+    end;
+    FHints[LAt].FDeclaration := ADeclaration;
+    FHints[LAt].FKind := LKind;
+    FHints[LAt].FMessage := Range(LMessage, FPosition);
+    FHints[LAt].FSpan := SpanFrom(LStart);
+    FHints[LAt].FNext := -1;
+
+    if FDeclarations[ADeclaration].FFirstHint < 0 then
+    begin
+      FDeclarations[ADeclaration].FFirstHint := LAt;
+    end
+    else
+    begin
+      FHints[FDeclarations[ADeclaration].FLastHint].FNext := LAt;
+    end;
+    FDeclarations[ADeclaration].FLastHint := LAt;
+  end;
+end;
+
+procedure TSyntaxSnapshot.CloneDeclarationHints(AFrom, ATo: Integer);
+var
+  LFrom: Integer;
+  LAt: Integer;
+begin
+  LFrom := FDeclarations[AFrom].FirstHint;
+  while LFrom >= 0 do
+  begin
+    NodeBudget;
+    LAt := FHintCount;
+
+    if LAt = Length(FHints) then
+    begin
+      SetLength(FHints, Capacity(LAt, FOptions.MaximumDeclarations));
+    end;
+    Inc(FHintCount);
+    FHints[LAt] := FHints[LFrom];
+    FHints[LAt].FDeclaration := ATo;
+    FHints[LAt].FNext := -1;
+
+    if FDeclarations[ATo].FFirstHint < 0 then
+    begin
+      FDeclarations[ATo].FFirstHint := LAt;
+    end
+    else
+    begin
+      FHints[FDeclarations[ATo].FLastHint].FNext := LAt;
+    end;
+    FDeclarations[ATo].FLastHint := LAt;
+    LFrom := FHints[LFrom].NextHint;
+  end;
+end;
+
+procedure TSyntaxSnapshot.Expression(AStop: TNyxPascalSymbol; AAlsoComma: Boolean;
+  AHints: Boolean; AArmEnd: Boolean);
+var
+  LStart: Integer;
+begin
+  LStart := FPosition;
   while not EOF and not Sym(AStop) and not (AAlsoComma and Sym(psoComma)) and
+    not (AArmEnd and Sym(psoCloseParen)) and
+    not (AArmEnd and Sym(psoSemicolon)) and
     not Word(pkwEnd) and not Word(pkwImplementation) and not Word(pkwBegin) do
   begin
+
+    if AHints and AtHint(LStart) then
+    begin
+      Break;
+    end;
 
     if not Tok.Complete then
     begin
@@ -894,7 +1188,7 @@ begin
   end;
 end;
 
-procedure TSyntaxSnapshot.RoutineTypeSuffix;
+procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean);
 
   function Modifier(AOffset: Integer): Boolean;
   begin
@@ -913,7 +1207,7 @@ begin
     { Keep the separator inside the type's range. The structured type parser
       owns qualifier validation/conflicts; this scanner owns declaration bounds. }
     Step;
-    Expression(psoSemicolon);
+    Expression(psoSemicolon, False, True, AArmEnd);
   end;
 end;
 
@@ -1064,7 +1358,7 @@ begin
     end
     else
     begin
-      Expression(psoSemicolon);
+      Expression(psoSemicolon, False, True);
 
       if LForm = pstfRoutine then
       begin
@@ -1072,6 +1366,7 @@ begin
       end;
     end;
     FDeclarations[LEntry].FTypeSpan := Range(LTypeStart, FPosition);
+    DeclarationHints(LEntry);
     Separator;
     FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
   finally
@@ -1118,8 +1413,219 @@ begin
   end;
 end;
 
+procedure TSyntaxSnapshot.VariantFields(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
+var
+  LBefore: Integer;
+begin
+  while not EOF and not Sym(psoCloseParen) and not Word(pkwEnd) do
+  begin
+    LBefore := FPosition;
+
+    if Word(pkwCase) then
+    begin
+      VariantPart(AScope, AVisibility);
+    end
+    else if Sym(psoSemicolon) then
+    begin
+      Step;
+    end
+    else if Tok.Kind = ptkWord then
+    begin
+      Variables(AScope, psdkField, AVisibility, False, True);
+    end
+    else
+    begin
+      Unsupported(AScope, 'A variant arm needs fields or a nested selector', Tok.Span);
+      Step;
+    end;
+
+    if FPosition = LBefore then
+    begin
+      Step;
+    end;
+  end;
+end;
+
+procedure TSyntaxSnapshot.VariantPart(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
+var
+  LSelector: Integer;
+  LArm: Integer;
+  LLabel: Integer;
+  LStart: Integer;
+  LType: Integer;
+  LLabelStart: Integer;
+  LParent: Integer;
+  LTag: Integer;
+begin
+  Enter;
+  try
+    LParent := FActiveArm;
+    LStart := Tok.Span.Start;
+    NodeBudget;
+    LSelector := FSelectorCount;
+
+    if LSelector = Length(FSelectors) then
+    begin
+      SetLength(FSelectors, Capacity(LSelector, FOptions.MaximumDeclarations));
+    end;
+    Inc(FSelectorCount);
+    FSelectors[LSelector].FScope := AScope;
+    FSelectors[LSelector].FParent := LParent;
+    FSelectors[LSelector].FTag := -1;
+    FSelectors[LSelector].FFirstArm := -1;
+    FSelectors[LSelector].FLastArm := -1;
+    Step;
+
+    if (Tok.Kind = ptkWord) and Sym(psoColon, 1) then
+    begin
+      LTag := AddDeclaration(AScope, psdkField, AVisibility, FPosition);
+      FSelectors[LSelector].FTag := LTag;
+      Step;
+      Step;
+    end;
+    LType := FPosition;
+    while not EOF and not Word(pkwOf) and not Word(pkwEnd) and not Sym(psoCloseParen) do
+    begin
+      Step;
+    end;
+    FSelectors[LSelector].FType := Range(LType, FPosition);
+
+    if FSelectors[LSelector].FTag >= 0 then
+    begin
+      LTag := FSelectors[LSelector].FTag;
+      FDeclarations[LTag].FTypeSpan := FSelectors[LSelector].TypeSpan;
+      FDeclarations[LTag].FHeaderSpan := NyxPascalSpan(FDeclarations[LTag].NameSpan.Start,
+        EndOffset - FDeclarations[LTag].NameSpan.Start);
+      FDeclarations[LTag].FForm := pstfNamed;
+    end;
+
+    if not Word(pkwOf) or (FSelectors[LSelector].TypeSpan.Length = 0) then
+    begin
+      Unsupported(AScope, 'A variant selector needs its type and of keyword', Tok.Span);
+      FSelectors[LSelector].FSpan := SpanFrom(LStart);
+      Exit;
+    end;
+    Step;
+    while not EOF and not Word(pkwEnd) and not Sym(psoCloseParen) do
+    begin
+      NodeBudget;
+      LArm := FArmCount;
+
+      if LArm = Length(FArms) then
+      begin
+        SetLength(FArms, Capacity(LArm, FOptions.MaximumDeclarations));
+      end;
+      Inc(FArmCount);
+      FArms[LArm].FSelector := LSelector;
+      FArms[LArm].FFirstLabel := -1;
+      FArms[LArm].FLastLabel := -1;
+      FArms[LArm].FNext := -1;
+
+      if FSelectors[LSelector].FFirstArm < 0 then
+      begin
+        FSelectors[LSelector].FFirstArm := LArm;
+      end
+      else
+      begin
+        FArms[FSelectors[LSelector].FLastArm].FNext := LArm;
+      end;
+      FSelectors[LSelector].FLastArm := LArm;
+      LLabelStart := Tok.Span.Start;
+      repeat
+        LType := FPosition;
+        Expression(psoColon, True, False, True);
+
+        if LType = FPosition then
+        begin
+          Unsupported(AScope, 'A variant alternative needs a label expression', Tok.Span);
+          FArms[LArm].FSpan := SpanFrom(LLabelStart);
+          FSelectors[LSelector].FSpan := SpanFrom(LStart);
+          Exit;
+        end;
+        NodeBudget;
+        LLabel := FLabelCount;
+
+        if LLabel = Length(FLabels) then
+        begin
+          SetLength(FLabels, Capacity(LLabel, FOptions.MaximumDeclarations));
+        end;
+        Inc(FLabelCount);
+        FLabels[LLabel].FArm := LArm;
+        FLabels[LLabel].FSpan := Range(LType, FPosition);
+        FLabels[LLabel].FNext := -1;
+
+        if FArms[LArm].FFirstLabel < 0 then
+        begin
+          FArms[LArm].FFirstLabel := LLabel;
+        end
+        else
+        begin
+          FLabels[FArms[LArm].FLastLabel].FNext := LLabel;
+        end;
+        FArms[LArm].FLastLabel := LLabel;
+
+        if not Sym(psoComma) then
+        begin
+          Break;
+        end;
+        Step;
+      until EOF;
+
+      if not Sym(psoColon) then
+      begin
+        Unsupported(AScope, 'Finish variant labels with a colon', Tok.Span);
+        FArms[LArm].FSpan := SpanFrom(LLabelStart);
+        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        Exit;
+      end;
+      Step;
+
+      if not Sym(psoOpenParen) then
+      begin
+        Unsupported(AScope, 'A variant arm needs parenthesized fields', Tok.Span);
+        FArms[LArm].FSpan := SpanFrom(LLabelStart);
+        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        Exit;
+      end;
+      Step;
+      FActiveArm := LArm;
+      try
+        VariantFields(AScope, AVisibility);
+      finally
+        FActiveArm := LParent;
+      end;
+
+      if not Sym(psoCloseParen) then
+      begin
+        Unsupported(AScope, 'Finish this variant arm with )', Tok.Span);
+        FArms[LArm].FSpan := SpanFrom(LLabelStart);
+        FSelectors[LSelector].FSpan := SpanFrom(LStart);
+        Exit;
+      end;
+      Step;
+      FArms[LArm].FComplete := True;
+      FArms[LArm].FSpan := SpanFrom(LLabelStart);
+
+      if Sym(psoSemicolon) then
+      begin
+        Step;
+      end;
+    end;
+    FSelectors[LSelector].FComplete := FSelectors[LSelector].FirstArm >= 0;
+    FSelectors[LSelector].FSpan := SpanFrom(LStart);
+
+    if not FSelectors[LSelector].Complete then
+    begin
+      Unsupported(AScope, 'A variant selector needs at least one alternative', Tok.Span);
+    end;
+  finally
+    FActiveArm := LParent;
+    Leave;
+  end;
+end;
+
 procedure TSyntaxSnapshot.Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
-  AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean);
+  AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean; AArmEnd: Boolean);
 var
   LEntries: TOrdinals;
   LEntry: Integer;
@@ -1168,14 +1674,20 @@ begin
 
     if Word(pkwProcedure) or Word(pkwFunction) or Word(pkwReference) then
     begin
-      Expression(psoSemicolon);
-      RoutineTypeSuffix;
+      Expression(psoSemicolon, False, True, AArmEnd);
+      RoutineTypeSuffix(AArmEnd);
     end
     else
     begin
       while not EOF and not Sym(psoSemicolon) and not Sym(psoEqual) and
-        not Sym(psoAssign) and not SectionBoundary(Tok.Word) do
+        not Sym(psoAssign) and not SectionBoundary(Tok.Word) and
+        not (AArmEnd and Sym(psoCloseParen)) do
       begin
+
+        if AtHint(LType) then
+        begin
+          Break;
+        end;
 
         if Sym(psoOpenParen) then
         begin
@@ -1206,7 +1718,7 @@ begin
   begin
     Step;
     LExpression := FPosition;
-    Expression(psoSemicolon);
+    Expression(psoSemicolon, False, True, AArmEnd);
     LExpressionSpan := Range(LExpression, FPosition);
   end;
   for LAt := 0 to High(LEntries) do
@@ -1221,7 +1733,20 @@ begin
       Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
     end;
   end;
-  Separator;
+
+  if Length(LEntries) > 0 then
+  begin
+    DeclarationHints(LEntries[0]);
+    for LAt := 1 to High(LEntries) do
+    begin
+      CloneDeclarationHints(LEntries[0], LEntries[LAt]);
+    end;
+  end;
+
+  if not (AArmEnd and Sym(psoCloseParen)) then
+  begin
+    Separator;
+  end;
   for LAt := 0 to High(LEntries) do
   begin
     FDeclarations[LEntries[LAt]].FHeaderSpan := SpanFrom(LStart);
@@ -1264,7 +1789,7 @@ begin
   begin
     Step;
     LExpression := FPosition;
-    Expression(psoSemicolon);
+    Expression(psoSemicolon, False, True);
     FDeclarations[LEntry].FExpressionSpan := Range(LExpression, FPosition);
   end
   else
@@ -1272,6 +1797,7 @@ begin
     Include(FDeclarations[LEntry].FFlags, psdfIncomplete);
     Problem(psiExpectedSeparator, 'A constant needs its value expression', Tok.Span);
   end;
+  DeclarationHints(LEntry);
   Separator;
   FDeclarations[LEntry].FHeaderSpan := SpanFrom(LStart);
 end;
@@ -1566,6 +2092,7 @@ var
   LFullName: TNyxText;
   LOwner: TNyxText;
   LGenericSpan: TNyxPascalSpan;
+  LHint: TNyxPascalHintKind;
 begin
   Enter;
   try
@@ -1677,7 +2204,7 @@ begin
     begin
       Step;
       LType := FPosition;
-      Expression(psoSemicolon);
+      Expression(psoSemicolon, False, True);
       FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
 
       if LResultEntry >= 0 then
@@ -1685,11 +2212,19 @@ begin
         FDeclarations[LResultEntry].FTypeSpan := FDeclarations[LEntry].FTypeSpan;
       end;
     end;
+    DeclarationHints(LEntry);
     Separator;
     LHasBody := not (AVisibility in [psavInterface]) and
       (FScopes[AScope].Kind <> psskMembers);
-    while RoutineModifier(Tok.Word) do
+    while RoutineModifier(Tok.Word) or HintWord(LHint) do
     begin
+
+      if HintWord(LHint) then
+      begin
+        DeclarationHints(LEntry);
+        Separator;
+        Continue;
+      end;
 
       if Word(pkwForward) or Word(pkwExternal) or Word(pkwAbstract) then
       begin
@@ -1766,6 +2301,11 @@ begin
         pkwImplements, pkwIndex, pkwDispid]) and not Word(pkwEnd) do
     begin
 
+      if AtHint(LType) then
+      begin
+        Break;
+      end;
+
       if Sym(psoLess) then
       begin
         Angles;
@@ -1778,7 +2318,9 @@ begin
     FDeclarations[LEntry].FTypeSpan := Range(LType, FPosition);
     FDeclarations[LEntry].FForm := pstfNamed;
   end;
-  Expression(psoSemicolon);
+  DeclarationHints(LEntry);
+  Expression(psoSemicolon, False, True);
+  DeclarationHints(LEntry);
   Separator;
 
   if Word(pkwDefault) or Word(pkwNodefault) then
@@ -1972,9 +2514,18 @@ begin
       end
       else if AMembers and Word(pkwCase) then
       begin
-        Unsupported(AScope, 'Variant record fields need a dedicated case-field model', Tok.Span);
-        Expression(psoSemicolon);
-        Separator;
+
+        if (FScopes[AScope].OwnerDeclaration >= 0) and
+          (FDeclarations[FScopes[AScope].OwnerDeclaration].TypeForm = pstfRecord) then
+        begin
+          VariantPart(AScope, AVisibility);
+        end
+        else
+        begin
+          Unsupported(AScope, 'Variant parts require their enclosing record context', Tok.Span);
+          Expression(psoSemicolon);
+          Separator;
+        end;
       end
       else if Tok.Kind = ptkWord then
       begin
@@ -2373,6 +2924,66 @@ begin
     raise ENyxPascalLexical.Create('Select one supported typed operator family');
   end;
   Result := FNames.IndexOf(TNyxText(IntToStr(AScope)) + ':operator#' + TNyxText(IntToStr(Ord(AKind))));
+end;
+
+function TSyntaxSnapshot.SelectorCount: Integer;
+begin
+  Result := FSelectorCount;
+end;
+
+function TSyntaxSnapshot.SelectorAt(AIndex: Integer): TNyxPascalVariantSelector;
+begin
+
+  if (AIndex < 0) or (AIndex >= FSelectorCount) then
+  begin
+    raise ENyxPascalLexical.Create('Variant selector index is outside its syntax snapshot');
+  end;
+  Result := FSelectors[AIndex];
+end;
+
+function TSyntaxSnapshot.ArmCount: Integer;
+begin
+  Result := FArmCount;
+end;
+
+function TSyntaxSnapshot.ArmAt(AIndex: Integer): TNyxPascalVariantArm;
+begin
+
+  if (AIndex < 0) or (AIndex >= FArmCount) then
+  begin
+    raise ENyxPascalLexical.Create('Variant arm index is outside its syntax snapshot');
+  end;
+  Result := FArms[AIndex];
+end;
+
+function TSyntaxSnapshot.LabelCount: Integer;
+begin
+  Result := FLabelCount;
+end;
+
+function TSyntaxSnapshot.LabelAt(AIndex: Integer): TNyxPascalVariantLabel;
+begin
+
+  if (AIndex < 0) or (AIndex >= FLabelCount) then
+  begin
+    raise ENyxPascalLexical.Create('Variant label index is outside its syntax snapshot');
+  end;
+  Result := FLabels[AIndex];
+end;
+
+function TSyntaxSnapshot.HintCount: Integer;
+begin
+  Result := FHintCount;
+end;
+
+function TSyntaxSnapshot.HintAt(AIndex: Integer): TNyxPascalSyntaxHint;
+begin
+
+  if (AIndex < 0) or (AIndex >= FHintCount) then
+  begin
+    raise ENyxPascalLexical.Create('Declaration hint index is outside its syntax snapshot');
+  end;
+  Result := FHints[AIndex];
 end;
 
 function TSyntaxSnapshot.ImportCount: Integer;

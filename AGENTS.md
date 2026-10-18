@@ -4,7 +4,33 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source operator declarations retain typed families, original tokens,
+Current-source variant records retain typed selectors/arms/labels, real tag
+fields, nested relationships and ordinary record member scope with per-field arm
+metadata. Optional hint syntax separates closed hint intent/ordered messages from
+type/value expressions; grouped declarations own independent links. Aggregate
+budgets, checked metadata queries, cancellation and unsafe incomplete scopes
+remain explicit. Native portable/whole compiled source/actual Windows pass
+22/12/20, clean heaps. Actual TRect fields/BROWSEINFO hints keep original include
+tokens without synthetic implicit units. Whole Windows has 10,571 declarations/
+12 diagnostics (previous 7,614/18), 11 selectors/30 arms/30 labels/ten hints;
+ordinary indexed loading now refuses incomplete source at INPUT_RECORD's anonymous
+Event record. Maintained 18/367/7,632/62/127/10/48/86/74/84 pass; thirteen native
+consumers have clean heaps. Twenty-one accepted final logs have zero owned warnings
+(35 upstream); four browser consumers and both Studios/backend/worker compile only
+as applicable. Sixteen focused/627 complete src+studio Pascal/include/program/97
+RTL/three compiler pins, 48 include packets, five protected files/nine contexts and
+349 frozen 7422453 artifacts remain exact. Readers join; LAN is offline. Original
+interfaces/GUIDs and MCP tool/schema inventory stay unchanged; capabilities operate
+in process. WORK.md owns retained fixture/projection/refusal failures and final
+source/remote identity. At least ten documented unclosed batches retain full
+criterion two; no original criterion/task/counter/credit/DONE/tool/schema/adoption/
+parity/delivery closes. Stop variant/hint/fixture/compiler/capture variants. Next
+follow anonymous structured type/field ownership through existing syntax/type/
+binder owners, then reassess actual SDK/import/RTL and full resolver/editor gates.
+No HTTP retry, protected mutation, cleanup/deletion/restart bypass or sub-agents.
+Preserve concurrent milestone/reference/browser-compiler planning files.
+
+Earlier operator declarations retain typed families, original tokens,
 qualified owners and routine parameter/result scopes. Optional syntax/world
 operator queries keep ordinary names/member pages independent, with bounded
 alternatives, visibility, cancellation and exact-world guards. Native controlled/

@@ -71,6 +71,23 @@ no expression overload selection, full SDK meaning, new transport schema or
 original task/credit closure; full language/incremental/adoption/input/navigation/
 quality/parity/delivery acceptance remains unchanged.
 
+Variant-record continuation: 1de68c7 is progress, retaining at least ten
+documented unclosed batches and complete original criterion two. Follow the real
+variant-field/declaration-hint prerequisite through owned selector/arm/label/field
+membership and typed hint metadata, with bounded ordinary binding/completion,
+compiled handwritten field interaction and one prepared/final unchanged Windows
+continuation. Stop at a genuinely different remaining grammar/import prerequisite;
+do not infer active arms, ABI layout, constant-label meaning or full SDK exports
+from syntax. Full language/incremental/adoption/input/navigation/quality/parity/
+delivery acceptance remains required; no original credit or task closes.
+
+The qualified variant/hint boundary now passes 22 portable/12 whole compiled
+source/20 actual Windows checks, with ordinary member access and original include
+tokens. Windows advances to 10,571 declarations/12 diagnostics and retains typed
+incomplete-source refusal at INPUT_RECORD's anonymous Event record. Follow that
+distinct structured-field ownership/boundary prerequisite next; WORK.md owns the
+final compiler/native/preservation receipts and unchanged full acceptance scope.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

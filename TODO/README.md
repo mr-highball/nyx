@@ -46,6 +46,13 @@ binding queries and exact source origins. Actual compiler invocation and Windows
 record inspection retain the remaining full grammar/SDK/editor requirements under
 original authoring criterion two; WORK.md owns evidence and the next prerequisite.
 
+The [variant-record continuation](../docs/pascal-projects.md#variant-records-and-declaration-hints)
+now retains selectors/arms/labels, ordinary field membership and typed hints with
+compiled handwritten interaction and exact actual Windows record origins. The
+next anonymous structured-field boundary and full grammar/SDK/editor/parity/
+delivery requirements remain under original authoring criterion two; WORK.md
+owns evidence without original completion credit or default editor adoption.
+
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include
 occurrences through a standalone Pascal core and project-buffer bridge. Full

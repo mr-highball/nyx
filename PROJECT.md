@@ -88,6 +88,12 @@ declared families, signatures and original tokens through optional bounded
 queries. Compiled invocation and exact Windows record inspection qualify this
 source boundary; expression overload selection and full SDK/editor meaning stay open.
 
+The [variant-record continuation](docs/pascal-projects.md#variant-records-and-declaration-hints)
+now retains selectors, alternatives, field membership and typed declaration hints.
+Ordinary declared-member lookup reaches nested variant fields with exact include
+origins. Compiled examples qualify source behavior; anonymous structured fields,
+full compiler meaning and ordinary editor adoption remain open.
+
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing
 authored files. Native checks follow the actual badge result/parameter back to its
