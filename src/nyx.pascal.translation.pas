@@ -38,7 +38,7 @@ type
     ptiIncludeCycle, ptiUnbalancedConditional, ptiUnsupportedDirective,
     ptiMalformedDirective, ptiLexicalIssue, ptiLexicalPolicyChange, ptiSourceEncoding,
     ptiMacroContext, ptiMacroCycle, ptiCompilerSettings);
-  { Exact pre-condition source site. PrefixCount excludes this directive;
+  { Exact pre-directive source site. PrefixCount excludes this directive;
     occurrence distinguishes repeated includes. Records retain no interfaces. }
   TNyxPascalConditionOrigin = record
     FileReference: TNyxPascalPhysicalFile;
@@ -63,6 +63,25 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570C14}']
     function UnresolvedCount: Integer;
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+  end;
+  { One authored MAXFPUREGISTERS request at its exact source occurrence and
+    pre-token state. The request belongs to routine code generation; it is not
+    an effective global setting or a source type/ABI measurement. Unknown branch
+    activity stays explicit. Values own no interface, source or callback. }
+  TNyxPascalRegisterDirective = record
+    Origin: TNyxPascalConditionOrigin;
+    State: Integer;
+    Activity: TNyxPascalKnowledge;
+    Policy: TNyxPascalFPURegisterPolicy;
+  end;
+  { Optional immutable authored codegen intents. Includes retain their distinct
+    occurrences; prefixes expose only already visited sites. These receipts do
+    not synthesize a procedure's effective register allocation or extend its
+    lifetime through POP/end-of-procedure. Checked ordinals refuse. }
+  INyxPascalRegisterDirectives = interface(IInterface)
+    ['{98349E7C-C0ED-48DE-A518-427A04570C15}']
+    function RegisterDirectiveCount: Integer;
+    function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
   end;
   { Optional synchronous facts for a still-unknown expression. Ordered semantic
     refinement supplies sealed answers, never mutable editor state. Origin,
@@ -295,7 +314,8 @@ type
     constructing visitor, callback, editor or mutable source buffer. }
   TTranslationPrefix = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
-    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions)
+    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
+    INyxPascalRegisterDirectives)
   private
     FSource: INyxPascalTranslation;
     FMacros: INyxPascalTranslationMacros;
@@ -308,6 +328,8 @@ type
     FDiagnostics: array of Integer;
     FUnresolved: INyxPascalUnresolvedConditions;
     FUnresolvedRows: array of Integer;
+    FRegisterDirectives: INyxPascalRegisterDirectives;
+    FRegisterRows: array of Integer;
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
@@ -334,6 +356,8 @@ type
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
     function UnresolvedCount: Integer;
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+    function RegisterDirectiveCount: Integer;
+    function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
   end;
   { One lexical construction's visitor. Owner is borrowed, never reference counted
     back to its translation; recursive includes get independent visitors. }
@@ -388,7 +412,8 @@ type
     all published references point outward to data, never back to a document. }
   TTranslation = class(TInterfacedObject, INyxPascalTranslation,
     INyxPascalTranslationLexicalContexts, INyxPascalTranslationMacros,
-    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions)
+    INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
+    INyxPascalRegisterDirectives)
   private
     FFiles: INyxPascalFileCatalog;
     FInitial: INyxPascalCompilerContext;
@@ -409,6 +434,8 @@ type
     FDiagnostics: array of TNyxPascalTranslationDiagnostic;
     FUnresolved: array of TNyxPascalUnresolvedCondition;
     FUnresolvedCount: Integer;
+    FRegisterDirectives: array of TNyxPascalRegisterDirective;
+    FRegisterCount: Integer;
     FFrames: array of TConditionalFrame;
     FTokenCount: Integer;
     FOccurrenceCount: Integer;
@@ -476,6 +503,8 @@ type
     function SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
     function UnresolvedCount: Integer;
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
+    function RegisterDirectiveCount: Integer;
+    function RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
   end;
 
 function Capacity(ACount, AMaximum: Integer): Integer;
@@ -1583,6 +1612,9 @@ var
   LSwitch: TNyxPascalLocalSwitch;
   LSaved: TSavedCompilerSettings;
   LSavedLease: INyxSavedCompilerSettings;
+  LRegister: TNyxPascalFPURegisterPolicy;
+  LRegisterValue: Integer;
+  LReader: TNyxPascalAssemblerReader;
 begin
   SplitDirective(AText, LName, LValue, LOffset);
   try
@@ -1692,6 +1724,101 @@ begin
 
     if FActive = ppkFalse then
     begin
+      Exit;
+    end;
+
+    if LName = 'maxfpuregisters' then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        raise ENyxPascalContext.Create('Register directives need an explicit FPC context');
+      end;
+      LArgument := NyxPascalASCIIKey(LValue);
+      LRegister := pfrDefault;
+
+      if (LArgument <> 'normal') and (LArgument <> 'default') then
+      begin
+        LRegisterValue := 0;
+
+        if LArgument = '' then
+        begin
+          raise ENyxPascalContext.Create('A register directive needs a count or default policy');
+        end;
+        for LAt := 1 to Length(LArgument) do
+        begin
+
+          if not (LArgument[LAt] in ['0'..'9']) then
+          begin
+            raise ENyxPascalContext.Create('A register limit needs decimal digits');
+          end;
+          LRegisterValue := LRegisterValue * 10 + Ord(LArgument[LAt]) - Ord('0');
+
+          if (LRegisterValue > 8) or ((LRegisterValue = 8) and
+            (FContext.Version.FullNumber < 30301)) then
+          begin
+            raise ENyxPascalContext.Create('This register count needs a qualified compiler context');
+          end;
+        end;
+        LRegister := TNyxPascalFPURegisterPolicy(Ord(pfr0) + LRegisterValue);
+      end;
+
+      if FRegisterCount >= FOptions.MaximumTokens then
+      begin
+        raise ENyxPascalTranslationLimit.Create('Register directive intents exceed the token budget');
+      end;
+
+      if FRegisterCount = Length(FRegisterDirectives) then
+      begin
+        SetLength(FRegisterDirectives, Capacity(FRegisterCount, FOptions.MaximumTokens));
+      end;
+      FRegisterDirectives[FRegisterCount].Origin.FileReference :=
+        FFiles.FileAt(FOccurrences[AOccurrence].FileIndex);
+      FRegisterDirectives[FRegisterCount].Origin.Occurrence := AOccurrence;
+      FRegisterDirectives[FRegisterCount].Origin.Span := AToken.Span;
+      FRegisterDirectives[FRegisterCount].Origin.PrefixCount := FTokenCount - 1;
+      FRegisterDirectives[FRegisterCount].State := FTokens[FTokenCount - 1].State;
+      FRegisterDirectives[FRegisterCount].Activity := FActive;
+      FRegisterDirectives[FRegisterCount].Policy := LRegister;
+      Inc(FRegisterCount);
+      Exit;
+    end;
+
+    if LName = 'asmmode' then
+    begin
+
+      if (FContext.Family <> ppcFPC) or (FRegion = plrAssembly) then
+      begin
+        raise ENyxPascalContext.Create('Assembler reader changes need an FPC boundary outside ASM');
+      end;
+      LArgument := NyxPascalASCIIKey(LValue);
+      LReader := parUnknown;
+
+      if LArgument = 'att' then
+      begin
+        LReader := parATT;
+      end
+      else if LArgument = 'intel' then
+      begin
+        LReader := parIntel;
+      end
+      else if LArgument = 'default' then
+      begin
+        LReader := parDefault;
+      end;
+
+      if LReader = parUnknown then
+      begin
+        raise ENyxPascalContext.Create('This assembler reader needs explicit support');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LReader := parUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).ReadAssemblyBy(LReader));
+      SaveState;
       Exit;
     end;
 
@@ -2455,6 +2582,21 @@ begin
   Result := FUnresolvedCount;
 end;
 
+function TTranslation.RegisterDirectiveCount: Integer;
+begin
+  Result := FRegisterCount;
+end;
+
+function TTranslation.RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= FRegisterCount) then
+  begin
+    raise ENyxPascalContext.Create('Register directive index is outside its translation');
+  end;
+  Result := FRegisterDirectives[AIndex];
+end;
+
 function TTranslation.UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
 begin
 
@@ -2517,6 +2659,30 @@ begin
   Supports(FSource, INyxPascalTranslationMacros, FMacros);
   Supports(FSource, INyxPascalTranslationSettings, FSettings);
   FCount := ABeforeToken;
+  Supports(FSource, INyxPascalRegisterDirectives, FRegisterDirectives);
+
+  if FRegisterDirectives <> nil then
+  begin
+
+    if (FRegisterDirectives.RegisterDirectiveCount < 0) or
+      (FRegisterDirectives.RegisterDirectiveCount > AOptions.MaximumTokens) then
+    begin
+      raise ENyxPascalTranslationLimit.Create('Register prefix directives exceed their input budget');
+    end;
+    SetLength(FRegisterRows, FRegisterDirectives.RegisterDirectiveCount);
+    LUsed := 0;
+    for LAt := 0 to FRegisterDirectives.RegisterDirectiveCount - 1 do
+    begin
+      Check;
+
+      if FRegisterDirectives.RegisterDirectiveAt(LAt).Origin.PrefixCount < FCount then
+      begin
+        FRegisterRows[LUsed] := LAt;
+        Inc(LUsed);
+      end;
+    end;
+    SetLength(FRegisterRows, LUsed);
+  end;
   Supports(FSource, INyxPascalUnresolvedConditions, FUnresolved);
 
   if FUnresolved <> nil then
@@ -2733,6 +2899,26 @@ begin
     raise ENyxPascalContext.Create('This alternate source has no retained condition planning inputs');
   end;
   Result := Length(FUnresolvedRows);
+end;
+
+function TTranslationPrefix.RegisterDirectiveCount: Integer;
+begin
+
+  if FRegisterDirectives = nil then
+  begin
+    raise ENyxPascalContext.Create('This alternate source has no retained register directive inputs');
+  end;
+  Result := Length(FRegisterRows);
+end;
+
+function TTranslationPrefix.RegisterDirectiveAt(AIndex: Integer): TNyxPascalRegisterDirective;
+begin
+
+  if (AIndex < 0) or (AIndex >= RegisterDirectiveCount) then
+  begin
+    raise ENyxPascalContext.Create('Register directive index is outside this prefix');
+  end;
+  Result := FRegisterDirectives.RegisterDirectiveAt(FRegisterRows[AIndex]);
 end;
 
 function TTranslationPrefix.UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;

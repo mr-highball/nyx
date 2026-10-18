@@ -69,8 +69,13 @@ WORK.md owns evidence without original completion credit or default adoption.
 
 The [assembly/settings lexical layer](../docs/pascal-projects.md#assembly-regions-and-grouped-settings)
 adds atomic grouped short switches and explicit assembly envelopes across branches
-and includes. Actual System retains its next compiler-policy refusal. Full
+and includes. Actual System retains genuine directive/declaration grammar gaps. Full
 resolver/editor scope remains under original criterion two; WORK.md owns evidence.
+
+The [codegen policy continuation](../docs/pascal-projects.md#local-assembler-readers-and-routine-register-directives)
+retains exact routine-register requests and local assembler-reader settings.
+Whole compiled input and the wider original System route qualify distinct policy
+lifetimes, while actual grammar/depth and full resolver/editor outcomes stay open.
 
 The new [captured context layer](../docs/pascal-projects.md#captured-compiler-and-include-context)
 now retains explicit compiler facts, conditional participation and physical include

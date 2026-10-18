@@ -147,6 +147,20 @@ reassess genuine source/import/type and full resolver/editor prerequisites.
 WORK.md owns the final compiler/native/preservation evidence and retained failures;
 no original criterion, completion credit or ordinary adoption closes here.
 
+Codegen-policy continuation: 0ac6388 is progress, retaining at least fourteen
+documented unclosed batches and complete original criterion two. Follow genuine
+remaining compiler-policy effects through existing context/source owners, keeping
+routine codegen intent separate from effective global settings and preserving
+local reader/PUSH/POP identity. Qualify whole compiled handwritten source and one
+prepared/final actual System/ObjPas route. Correct the consumer's omitted captured
+Win32 root search directory; do not treat that setup gap as a missing file.
+The wider original source now exposes trailing directive prose and a declaration
+path that exceeds the unchanged syntax-depth budget. Stop codegen/fixture/compiler/
+capture variants and follow those real argument/grammar boundaries under existing
+context/parser ownership. No synthetic exports, shortened inputs or higher ceiling
+substitute for full resolver/editor/incremental/input/navigation/quality/parity/
+delivery acceptance. WORK.md owns exact evidence, limits and retained failures.
+
 The [SDK dependency layer](../docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now maps explicit namespace/root/context captures and loads missing imports on
 demand. Current native dependency/SDK/semantic checks pass 31/22/84, clean heaps;

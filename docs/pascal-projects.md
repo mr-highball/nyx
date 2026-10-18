@@ -1435,9 +1435,10 @@ Whole handwritten unit/include compilation executes the real selected branch and
 its record access; the prepared descriptor supplies ordinary indexed completion.
 Already prepared inputs need no new probe. The actual Win32/i386 System and ObjPas
 inputs retain all 156 original byte packets, independent FPC/ObjFPC modes and one
-new symbol probe per unit. System now clears grouped-switch/include ambiguity
-and assembly register lexical errors, retaining MAXFPUREGISTERS as an unsupported
-compiler policy. ObjPas retains its source-scoped
+new symbol probe per unit in that preparation checkpoint. The codegen continuation
+now retains System's routine register intent and advances its complete captured
+Win32 include search, exposing genuine directive/declaration grammar limits.
+ObjPas retains its source-scoped
 sizeof(Char) requirement despite a pristine System.Char measurement. Indexed
 loading reaches both real units and returns typed incomplete ObjPas source after
 two loads; no synthetic exports authorize a successful type result. Maintained
@@ -1477,12 +1478,52 @@ Original token-family ordinals and existing interface GUIDs remain unchanged.
 
 Native qualification executes a whole handwritten assembly function and observes
 all five compiled switch values, alongside branch/include/quote/span/limit and
-cancellation cases. Actual original System advances from 50 diagnostics to one,
-at `{$maxfpuregisters 0}`; no unsupported policy is ignored to force a resolved
-unit. ObjPas source-scoped Char binding and complete implicit-unit meaning stay
+cancellation cases. That checkpoint advanced actual original System from 50
+diagnostics to one at `{$maxfpuregisters 0}`. The codegen continuation below follows
+that request without ignoring an unknown policy to force a resolved unit.
+ObjPas source-scoped Char binding and complete implicit-unit meaning stay
 open. Browser consumers compile only; this is neither browser execution nor
 ordinary Studio adoption, parity or delivery. WORK.md owns final evidence and
 the original authoring criterion's remaining outcome.
+
+## Local assembler readers and routine register directives
+
+`TNyxPascalCompilerPolicies.ReadAssemblyBy` retains `parDefault`, `parIntel` or
+`parATT` as independent symbolic intent. Unknown never guesses the target's
+default. Reader policy participates in exact compiler-context identity, frozen
+capture and the local settings stack; includes share it and POP restores it.
+Source ASMMODE changes need an explicit FPC context outside ASM. Unsupported
+readers and in-block changes refuse; uncertain activity revokes reader knowledge.
+Recording the reader does not establish target availability or admit instructions.
+
+MAXFPUREGISTERS has a different [routine-codegen lifetime](https://www.freepascal.org/docs-html/current/prog/progsu49.html).
+The resolver retains it through optional `INyxPascalRegisterDirectives`, with
+typed `TNyxPascalFPURegisterPolicy`, original occurrence/span/pre-token state and
+three-valued authored activity. NORMAL/DEFAULT retain a default request rather
+than an invented effective count. Decimal counts are checked before publication;
+the documented range 0..7 remains available, while eight requires an explicit
+3.3.1-or-newer FPC context and is compiler-qualified by the native fixture.
+This is a conservative capture rule, not an execution claim for older compilers.
+
+These are point-in-source requests, not an effective global register setting.
+The resolver does not extend them into another routine or synthesize a POP
+restoration that FPC's local settings stack does not own. Immutable prefix views
+expose only earlier requests, and preserve exact repeated-include ownership.
+Records contain no interfaces; token budgets, checked ordinals and cancellation
+still govern construction. Original context/translation interfaces keep their
+GUIDs; the optional query is in process, with no MCP tool or schema change.
+
+The whole handwritten unit compiles and executes both assembly readers, actual
+POP restoration and floating-point code, including a compiled eight-register
+request. Its exact original bytes also feed ordinary translation and syntax.
+That establishes admission and behavior of the fixture, not a particular register
+allocation. Browser consumers compile only. The real System route retains all
+original captured bytes and now searches the explicit Win32 root directory too.
+It exposes trailing directive prose and declaration nesting at the unchanged
+parser ceiling; ordinary indexed completion returns a budget refusal with no
+partial suggestions. No source truncation, synthetic exports or increased ceiling
+supplies complete RTL meaning. Full grammar/context/incremental/adoption/input/
+navigation/quality/parity/delivery remain open under original authoring criterion two.
 
 ## Scoped name and type binding
 

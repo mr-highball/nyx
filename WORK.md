@@ -33,7 +33,94 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Grouped settings and assembly envelopes — 2026-10-18
+## Current integration: Routine-codegen requests and local readers — 2026-10-18
+
+Previous turn is progress: pushed 0ac6388 supplies atomic short-switch groups and
+typed assembly envelopes. This batch follows the actual System compiler-policy
+prerequisite under original authoring criterion two. The documented consecutive
+unclosed lower bound is at least fourteen; older evidence remains retained.
+The complete fresh MIT Nyx-owned resolver, project/incremental budgets, ordinary
+editor adoption, input/navigation/quality/parity and delivery remain required.
+No original criterion/task/counter/credit/DONE, tool/schema or rollout closes.
+Execution stays solo, with scratch on the provisioned drive. No host retry,
+HTTP/browser/file-protocol execution/capture, protected mutation, cleanup/deletion/
+restart or approval bypass occurs. Concurrent planning files remain separate.
+
+Typed assembler-reader intent participates in frozen compiler-context identity
+and local PUSH/POP restoration. Default retains target intent, not a guessed
+reader. Source reader changes require explicit FPC context outside ASM; unknown
+activity revokes knowledge, and unsupported readers refuse. MAXFPUREGISTERS has
+its own routine-codegen lifetime: optional INyxPascalRegisterDirectives retains
+exact authored policy, occurrence/span/pre-token state and activity. It never
+creates a stale effective global limit or a fabricated POP restoration. Prefixes
+expose only earlier sites; repeated includes retain independent ownership. Counts
+are checked before publication, with eight conservatively gated to explicit
+3.3.1-or-newer FPC contexts. Records retain no interfaces; input/token/cancellation
+and ordinal guards remain intact. Existing interfaces/GUIDs and MCP inventory
+remain unchanged; the added query is in process, with no installed schema.
+
+Composite current-source evidence is in ignored compiler-policies-20261018-060546,
+located by .local/compiler-policies-paths-private.json:
+
+- Native policy checks pass 73, including the exact whole handwritten fixture's
+  ordinary translation/syntax and compiled execution returning 33. Real Intel and
+  AT&T bodies, compiler POP restoration, floating-point code and a compiled
+  eight-register directive are exercised. The result does not prove a particular
+  register allocation. Older-context refusal is simulated metadata, not execution
+  on an older compiler. Prefix/branch/include/lifetime and malformed/cancellation
+  cases retain exact source contracts.
+- The actual module consumer retains all 156 original byte packets/47 namespaces.
+  It now includes the already captured Win32 root in its explicit include search.
+  System requires four bounded symbol probes, reaches 28,232 tokens/18 visits,
+  and retains its exact active zero-register request. Four source declared()
+  conditions and MINENUMSIZE with trailing prose remain in the raw five diagnostics.
+  Semantic refinement answers the four conditions; the resulting complete source
+  still exceeds the unchanged syntax-depth ceiling before a syntax view can be
+  admitted. The captured translation remains inspectable. ObjPas's scoped Char
+  need and full implicit-unit meaning stay open. Ordinary indexed loading exposes
+  pcgBudget with zero suggestions; no exports, shorter input or larger ceiling
+  manufacture a usable System root. Sixteen module checks qualify these boundaries,
+  including the retained syntax refusal, not successful whole RTL binding.
+- Maintained region/lexical/operator/variant/anonymous/planner/translation/macro/
+  type/syntax/Windows/binding/generic/condition/dependency/owned/profile/production-
+  semantic checks pass 28/49/18/22/52/14/157/38/367/7,671/26/62/127/10/48/86/74/84.
+  The syntax corpus remains five actual inputs/3,748 declarations. All twenty
+  native consumers have clean heaps; counts overlap previous evidence.
+- Thirty-one accepted compiler logs have zero owned warnings; 56 upstream pas2js
+  RTL warnings remain separately recorded. Seven browser consumers, both Studios/
+  backend/worker compile as applicable. All browser consumers/products compile
+  only; no observing/input/parity/adoption or delivery claim follows.
+- Twenty-nine focused pins, all 628 src/studio Pascal/include/program files,
+  97 prior RTL/three compiler inputs remain exact after final readers. All 48
+  exported SysUtils include packets and 156 overlapping actual compiler-unit
+  packets match their originals. Five protected files/nine complete contexts and
+  349 frozen 7422453 artifacts stay exact. Readers join; LAN remains offline.
+  Native Nyx chat tools remain absent, with no host/configuration retry. Final
+  private ledgers/checkpoint own the accepted composite and current remote identity.
+
+Retained preparations are not accepted final evidence. The initial consumer
+omitted Win32 from include search although rtldefs.inc was already captured; its
+214-declaration result is not the accepted complete-context continuation. Correct
+search exposes trailing directive prose and actual declaration-depth refusal.
+The first grouped final consumer also incorrectly expected a failed syntax-view
+constructor to erase the separately returned immutable semantic translation.
+That oracle is corrected, as is its assumption that an attempted failed SDK load
+must increment the receipt's admitted-load count. The final receipt keeps only
+the consumer root, with zero SDK loads and zero suggestions. Product sources and
+parser ceiling remain unchanged. Its fresh compiler/native tail and the remaining
+unrun native jobs complete the composite. Failed logs and initial source pins remain retained;
+there is no uninterrupted full-green batch or complete RTL claim.
+
+Next useful deliverable: follow the real directive argument/declaration grammar
+boundaries under existing compiler-context/parser ownership. Respect supported
+trailing directive prose and investigate System's routine/declaration recovery
+at the unchanged depth limit, then use the same complete original inputs to
+reassess scoped Char/import/type meaning. Full resolver/editor/incremental/input/
+navigation/quality/parity/delivery remain open. Stop codegen/reader/fixture/compiler/
+capture variants; no guessed exports, source truncation, budget inflation or
+rejected host-path retry substitutes for that work.
+
+## Earlier integration: Grouped settings and assembly envelopes — 2026-10-18
 
 Previous turn is progress: pushed d99a8c2 supplies retained compiler requirements
 and bounded real-unit preparation. This batch follows its actual System lexical/

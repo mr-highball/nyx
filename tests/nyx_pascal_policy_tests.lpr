@@ -22,8 +22,9 @@
 program nyx_pascal_policy_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.pascal.context, nyx.pascal.files,
-  nyx.pascal.lexing, nyx.pascal.translation, nyx.pascal.macros;
+uses SysUtils, Classes, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context,
+  nyx.pascal.files, nyx.pascal.lexing, nyx.pascal.translation, nyx.pascal.macros,
+  nyx.pascal.syntax, nyx.pascal.syntax.translated, codegen.fixture;
 
 var
   GChecks: Integer;
@@ -339,6 +340,170 @@ begin
     'Unsupported set allocation refuses without accepting a guessed layout');
 end;
 
+{ Source intents are qualified separately from effective routine allocation.
+  No global context field may leak the last register request into another body. }
+procedure CodeGenerationPolicies;
+var
+  LSource: INyxPascalTranslation;
+  LPrefix: INyxPascalTranslation;
+  LIntents: INyxPascalRegisterDirectives;
+  LPrefixIntents: INyxPascalRegisterDirectives;
+  LIntent: TNyxPascalRegisterDirective;
+  LSaved: INyxPascalCompilerContext;
+  LChanged: INyxPascalCompilerContext;
+  LCancel: INyxCancellationScope;
+  LRefused: Boolean;
+begin
+  Check(CompilerPolicyValue = 33, 'Whole native input executes Intel/AT&T, actual POP and floating-point code');
+  LSaved := NyxPascalWithCompilerPolicies(Facts,
+    TNyxPascalCompilerPolicies.Unknown.ReadAssemblyBy(parATT));
+  LChanged := NyxPascalWithCompilerPolicies(LSaved,
+    NyxPascalCompilerPolicies(LSaved).ReadAssemblyBy(parIntel));
+  Check(not LSaved.SameFacts(LChanged) and CaptureNyxPascalCompilerContext(LSaved).SameFacts(LSaved),
+    'Reader changes affect exact immutable identity and survive capture');
+  Check(NyxPascalCompilerPolicies(RestoreNyxPascalLocalSettings(LChanged, LSaved)).AssemblerReader = parATT,
+    'Local restoration restores reader intent rather than keeping the later style');
+  Check((NyxPascalCompilerPolicies(LSaved.UnknownState).AssemblerReader = parUnknown) and
+    (NyxPascalCompilerPolicies(Facts).AssemblerReader = parUnknown), 'Unknown/default input never invents an assembler reader');
+  LSource := Translate('{$asmmode att}{$push}{$I part.inc} Inside {$pop} Outside', '{$asmmode intel}');
+  Check(LSource.Resolved and
+    (NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'Inside'))).AssemblerReader = parIntel) and
+    (NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'Outside'))).AssemblerReader = parATT),
+    'Textual includes and PUSH/POP share exact reader policy');
+  LSource := Translate('{$asmmode default} Marker');
+  Check(LSource.Resolved and
+    (NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'Marker'))).AssemblerReader = parDefault),
+    'Default reader retains configured-target intent');
+  LSource := Translate('{$asmmode att}{$if UNKNOWN}{$asmmode intel}{$endif} Marker');
+  Check(not LSource.Resolved and
+    (NyxPascalCompilerPolicies(LSource.State(StateAt(LSource, 'Marker'))).AssemblerReader = parUnknown),
+    'Uncertain reader changes revoke that policy without selecting a style');
+  LSource := Translate('asm {$asmmode att} end;');
+  Check(not LSource.Resolved, 'Reader changes inside ASM refuse instead of claiming instruction semantics');
+  LSource := Translate('{$asmmode invented}');
+  Check(not LSource.Resolved, 'An unsupported reader cannot enter the policy set');
+  LSource := Translate('{$maxfpuregisters 0} {$I part.inc} {$I part.inc} ' +
+    '{$if UNKNOWN}{$maxfpuregisters default}{$endif} Marker', '{$maxfpuregisters 7}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check((LIntents <> nil) and (LIntents.RegisterDirectiveCount = 4), 'Exact register requests are retained as bounded immutable source intents');
+  LIntent := LIntents.RegisterDirectiveAt(0);
+  Check((LIntent.Policy = pfr0) and (LIntent.Activity = ppkTrue) and
+    (LIntent.Origin.Occurrence = 0) and (LIntent.Origin.PrefixCount = 0) and
+    (LIntent.State = LSource.Token(0).State) and
+    (LSource.PhysicalToken(0).Span.Start = LIntent.Origin.Span.Start),
+    'A zero register request retains exact original token, pre-state and authored activity');
+  Check((LIntents.RegisterDirectiveAt(1).Origin.Occurrence <> LIntents.RegisterDirectiveAt(2).Origin.Occurrence) and
+    (LIntents.RegisterDirectiveAt(1).Policy = pfr7) and
+    (LIntents.RegisterDirectiveAt(2).Policy = pfr7), 'Repeated includes retain independent directive occurrences');
+  Check((LIntents.RegisterDirectiveAt(3).Activity = ppkUnknown) and
+    (LIntents.RegisterDirectiveAt(3).Policy = pfrDefault),
+    'An uncertain request remains authored intent rather than effective allocation');
+  LPrefix := NewNyxPascalTranslationPrefix(LSource,
+    LIntents.RegisterDirectiveAt(2).Origin.PrefixCount, TNyxPascalTranslationOptions.Defaults);
+  Supports(LPrefix, INyxPascalRegisterDirectives, LPrefixIntents);
+  Check(LPrefixIntents.RegisterDirectiveCount = 2, 'A source prefix exposes only earlier original requests');
+  LSource := nil;
+  Check((LIntents.RegisterDirectiveCount = 4) and (LPrefixIntents.RegisterDirectiveCount = 2),
+    'Detached full and prefix leases keep their immutable source ownership');
+  LRefused := False;
+  try
+    LIntent := LIntents.RegisterDirectiveAt(4);
+  except
+    on ENyxPascalContext do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'Checked intent ordinals never expose an uninitialized value');
+  LSource := Translate('{$ifdef NEVER}{$maxfpuregisters bad}{$endif}{$maxfpuregisters normal}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(LSource.Resolved and (LIntents.RegisterDirectiveCount = 1) and
+    (LIntents.RegisterDirectiveAt(0).Policy = pfrDefault),
+    'Inactive requests are skipped; NORMAL retains default intent');
+  LSource := Translate('{$maxfpuregisters 8}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(LSource.Resolved and (LIntents.RegisterDirectiveAt(0).Policy = pfr8),
+    'The explicit FPC 3.3.1 context admits its qualified eight-register request');
+  LSource := NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('old.pas'), '{$maxfpuregisters 8}'),
+    NyxPascalPhysicalFile('old.pas'), NewNyxPascalCompilerContext(ppcFPC,
+      TNyxPascalCompilerVersion.Create(3, 2, 2), ppmDelphi), TNyxPascalTranslationOptions.Defaults);
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(not LSource.Resolved and (LIntents.RegisterDirectiveCount = 0),
+    'The older explicit context never borrows this analyzer compiler eight-register extension');
+  LSource := Translate('{$maxfpuregisters 0007}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(LSource.Resolved and (LIntents.RegisterDirectiveAt(0).Policy = pfr7),
+    'Decimal leading zeroes preserve their exact numeric intent');
+  LSource := Translate('{$maxfpuregisters 999999999999999999999999999999}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(not LSource.Resolved and (LIntents.RegisterDirectiveCount = 0),
+    'An out-of-domain count refuses before overflow or publication');
+  LSource := Translate('{$maxfpuregisters 7 extra}');
+  Check(not LSource.Resolved, 'A malformed directive tail is not silently accepted');
+  LSource := Translate('{$maxfpuregisters 0}{$push}{$maxfpuregisters 7}{$pop}');
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  Check(LSource.Resolved and (LIntents.RegisterDirectiveCount = 2) and
+    (LIntents.RegisterDirectiveAt(1).Policy = pfr7),
+    'POP does not synthesize a restored FPU request that the compiler settings stack does not own');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRefused := False;
+  try
+    LPrefix := NewNyxPascalTranslationPrefix(LPrefix, 0, TNyxPascalTranslationOptions.Defaults, LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'Intent prefix capture preserves cooperative cancellation');
+end;
+
+{$ifndef PAS2JS}
+{ Read the exact whole compiled fixture through a bounded byte boundary. The
+  syntax consumer sees the same directives and function bodies as native FPC. }
+procedure WholeCodeGenerationInput;
+var
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+  LText: TNyxText;
+  LSource: INyxPascalTranslation;
+  LView: INyxPascalTranslatedSyntax;
+  LIntents: INyxPascalRegisterDirectives;
+begin
+
+  if ParamCount = 0 then
+  begin
+    Exit;
+  end;
+  LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
+    'tests/codegen.fixture.pas', fmOpenRead or fmShareDenyWrite);
+  try
+
+    if (LStream.Size < 1) or (LStream.Size > 65536) then
+    begin
+      raise Exception.Create('The whole handwritten fixture exceeds its input budget');
+    end;
+    SetLength(LBytes, LStream.Size);
+    LStream.ReadBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
+  end;
+  LText := NyxDecodeUTF8(LBytes);
+  LSource := Translate(LText);
+  Supports(LSource, INyxPascalRegisterDirectives, LIntents);
+  LView := NewNyxPascalTranslatedSyntax(LSource, TNyxPascalSyntaxOptions.Defaults);
+  Check(LSource.Resolved and (LIntents.RegisterDirectiveCount = 4) and
+    (LView.Syntax.DiagnosticCount = 0) and (LView.Syntax.DeclarationCount >= 5),
+    'The whole original compiled source passes ordinary translation and declaration/body syntax');
+  Check((LIntents.RegisterDirectiveAt(0).Policy = pfr0) and
+    (LIntents.RegisterDirectiveAt(1).Policy = pfr7) and
+    (LIntents.RegisterDirectiveAt(2).Policy = pfrDefault) and
+    (LIntents.RegisterDirectiveAt(3).Policy = pfr8), 'Whole input retains each routine request without a global effective limit');
+end;
+{$endif}
+
 begin
   try
     ValuesAndRestore;
@@ -346,6 +511,8 @@ begin
     AliasesAndRefusals;
     Budgets;
     SetAndModulePolicies;
+    CodeGenerationPolicies;
+    {$ifndef PAS2JS}WholeCodeGenerationInput;{$endif}
     WriteLn('PASS ', GChecks, ' typed compiler policy checks');
   except
     on LError: Exception do

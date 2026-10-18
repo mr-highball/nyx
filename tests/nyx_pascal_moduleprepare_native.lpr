@@ -150,6 +150,8 @@ var
   LView: INyxPascalTranslatedSyntax;
   LSource: INyxPascalSemanticTranslation;
   LWorld: INyxPascalSemanticWorld;
+  LRegisterDirectives: INyxPascalRegisterDirectives;
+  LSyntaxLimited: Boolean;
 begin
   LCapture := CaptureNyxPascalSourceDirectory(AFPCSource + '/rtl/win32',
     NewNyxPascalFileCatalog(pfcExact), NewNyxPascalModuleCatalog,
@@ -163,7 +165,7 @@ begin
   LCapture := CaptureNyxPascalSourceDirectory(AFPCSource + '/rtl/objpas', LCapture.Files, LCapture.Modules,
     TNyxPascalDirectoryOptions.Defaults.Under('rtl/objpas').OnlyFile('objpas.pp'));
   LFiles := LCapture.Files.WithIncludeDirectory('rtl/i386').WithIncludeDirectory('rtl/win')
-    .WithIncludeDirectory('rtl/inc');
+    .WithIncludeDirectory('rtl/inc').WithIncludeDirectory('rtl/win32');
   LModules := LCapture.Modules;
   WriteLn('actual compiler units / files=', LFiles.Count, ' modules=', LModules.Count);
   Supports(LFiles, INyxPascalByteFileCatalog, LByteFiles);
@@ -218,13 +220,14 @@ begin
 
     if LUnit = 0 then
     begin
-      Check(not LPrepared.Source.Resolved and (LPrepared.Probes = 1) and
-        (LPrepared.Requirements.Count = 0) and
-        (LPrepared.Source.DiagnosticCount = 1) and
-        (LPrepared.Source.Diagnostic(0).Issue = ptiUnsupportedDirective) and
-        (NyxPascalOccurrenceLexical(LPrepared.Source, LPrepared.Source.Diagnostic(0).Occurrence)
-          .Slice(LPrepared.Source.Diagnostic(0).Span) = TNyxText('{$maxfpuregisters 0}')),
-        'Actual System clears grouped-switch/register errors and retains the next explicit compiler policy');
+      Supports(LPrepared.Source, INyxPascalRegisterDirectives, LRegisterDirectives);
+      Check(not LPrepared.Source.Resolved and (LPrepared.Probes > 0) and
+        (LRegisterDirectives <> nil) and (LRegisterDirectives.RegisterDirectiveCount > 0) and
+        (LRegisterDirectives.RegisterDirectiveAt(0).Policy = pfr0) and
+        (LRegisterDirectives.RegisterDirectiveAt(0).Activity = ppkTrue) and
+        (LRegisterDirectives.RegisterDirectiveAt(0).Origin.FileReference.Name =
+          TNyxText('rtl/inc/systemh.inc')),
+        'Actual System retains its exact routine-register intent and advances to genuine remaining source gaps');
     end
     else
     begin
@@ -259,15 +262,45 @@ begin
         ' symbols=', LPrepared.Requirements.Needs(LAt).SymbolCount,
         ' sizes=', LPrepared.Requirements.Needs(LAt).SizeCount, ' / ', LPrepared.Requirements.Expression(LAt));
     end;
-    LSource := NewNyxPascalSemanticTranslation(LFiles, LModule.Root, LPrepared.ModuleSource.Context,
-      LWorld, LModule.Translation, TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
-      TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
-    LView := NewNyxPascalTranslatedSyntax(LSource.Source,
-      TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
-    WriteLn('actual semantic unit / ', LName, ' answers=', LSource.Answers,
-      ' pending=', LSource.Pending, ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName,
-      ' declarations=', LView.Syntax.DeclarationCount, ' syntax diagnostics=', LView.Syntax.DiagnosticCount);
-    LWorld := LWorld.WithModule(LView);
+    LSource := nil;
+    LView := nil;
+    LSyntaxLimited := False;
+    try
+      LSource := NewNyxPascalSemanticTranslation(LFiles, LModule.Root, LPrepared.ModuleSource.Context,
+        LWorld, LModule.Translation, TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
+        TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+      LView := NewNyxPascalTranslatedSyntax(LSource.Source,
+        TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
+    except
+      on LError: ENyxPascalSyntaxLimit do
+      begin
+        { The unchanged parser ceiling exposes the next real source-language
+          prerequisite. No synthetic root, shortened input or increased ceiling
+          is used to turn this failed whole-source construction into success. }
+        LSyntaxLimited := True;
+        WriteLn('actual semantic unit gap / ', LName, ' / ', LError.Message);
+      end;
+    end;
+
+    if LUnit = 0 then
+    begin
+      Check(LSyntaxLimited and (LView = nil),
+        'The wider original System syntax view refuses atomically; its captured translation stays inspectable');
+
+      if LSource <> nil then
+      begin
+        WriteLn('actual retained semantic source / ', LName, ' answers=', LSource.Answers,
+          ' diagnostics=', LSource.Source.DiagnosticCount, ' no admitted syntax view');
+      end;
+    end;
+
+    if not LSyntaxLimited then
+    begin
+      WriteLn('actual semantic unit / ', LName, ' answers=', LSource.Answers,
+        ' pending=', LSource.Pending, ' issue=', Ord(LSource.BindingIssue), ' related=', LSource.RelatedName,
+        ' declarations=', LView.Syntax.DeclarationCount, ' syntax diagnostics=', LView.Syntax.DiagnosticCount);
+      LWorld := LWorld.WithModule(LView);
+    end;
   end;
   Check((LModules.Entry(LModules.Find(NyxPascalModule('System'))).Context.Mode = ppmFPC) and
     (LModules.Entry(LModules.Find(NyxPascalModule('ObjPas'))).Context.Mode = ppmObjFPC),
@@ -290,11 +323,9 @@ begin
     ' gap=', Ord(LMetadata.Gap), ' issue=', Ord(LMetadata.BindingIssue),
     ' related=', LMetadata.RelatedName, ' modules=', LReceipt.ModuleCount,
     ' loads=', LReceipt.DependencyLoads, ' message=', LReply.MessageText);
-  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBinding) and
-    (LMetadata.BindingIssue = pbiIncompleteSource) and
-    (NyxPascalASCIIKey(LMetadata.RelatedName) = TNyxText('objpas')) and
-    (LReceipt.ModuleCount = 3) and (LReceipt.DependencyLoads = 2),
-    'Actual prepared roots retain their remaining source-language refusal rather than synthetic exports');
+  Check((LReply.Status = pcsUnavailable) and (LMetadata.Gap = pcgBudget) and
+    (LReply.Count = 0) and (LReceipt.ModuleCount = 1) and (LReceipt.DependencyLoads = 0),
+    'Ordinary indexed loading keeps only the consumer root; failed SDK attempts publish no load or suggestions');
 end;
 
 begin

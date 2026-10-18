@@ -62,6 +62,15 @@ type
     nor binary compatibility between two procedural types. }
   TNyxPascalCallingConvention = (pccUnknown, pccDefault, pccRegister,
     pccCdecl, pccPascal, pccSafeCall, pccStdCall, pccOldFPC);
+  { Declared assembler reader intent. Default retains the configured target's
+    selection rather than guessing Intel/AT&T from this analyzer's compiler.
+    This value proves neither target availability nor instruction admission. }
+  TNyxPascalAssemblerReader = (parUnknown, parDefault, parIntel, parATT);
+  { Authored routine-codegen request, not a source type size or effective global
+    register allocation. DEFAULT/NORMAL share one policy; Unknown is never zero.
+    Eight is retained for explicitly qualified FPC 3.3.1-or-newer contexts. }
+  TNyxPascalFPURegisterPolicy = (pfrUnknown, pfrDefault, pfr0, pfr1, pfr2,
+    pfr3, pfr4, pfr5, pfr6, pfr7, pfr8);
   { Closed supported local short switches. Global options such as debug output
     are deliberately outside this restore set; the wire spelling stays private. }
   TNyxPascalLocalSwitch = (plsBooleanEvaluation, plsAssertions, plsLongStrings,
@@ -78,6 +87,7 @@ type
     FSets: TNyxPascalSetPacking;
     FCalling: TNyxPascalCallingConvention;
     FSmartLinking: TNyxPascalKnowledge;
+    FAssembler: TNyxPascalAssemblerReader;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -88,6 +98,9 @@ type
     { Module-level request; neither PUSH/POP nor a source mode change restores
       it. This records intent, not linker availability or the effective output. }
     function RequestSmartLinking(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { Local reader intent participates in saved settings. No instruction parser
+      or compiler callback is retained by this independent value copy. }
+    function ReadAssemblyBy(AValue: TNyxPascalAssemblerReader): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -96,6 +109,7 @@ type
     property SetPacking: TNyxPascalSetPacking read FSets;
     property CallingConvention: TNyxPascalCallingConvention read FCalling;
     property SmartLinkingRequested: TNyxPascalKnowledge read FSmartLinking;
+    property AssemblerReader: TNyxPascalAssemblerReader read FAssembler;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -1201,6 +1215,8 @@ begin
     (Ord(FSets) > Ord(High(TNyxPascalSetPacking))) or
     (Ord(FSmartLinking) < Ord(Low(TNyxPascalKnowledge))) or
     (Ord(FSmartLinking) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FAssembler) < Ord(Low(TNyxPascalAssemblerReader))) or
+    (Ord(FAssembler) > Ord(High(TNyxPascalAssemblerReader))) or
     (Ord(FCalling) < Ord(Low(TNyxPascalCallingConvention))) or
     (Ord(FCalling) > Ord(High(TNyxPascalCallingConvention))) then
   begin
@@ -1250,13 +1266,21 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPolicies.ReadAssemblyBy(AValue: TNyxPascalAssemblerReader): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FAssembler := AValue;
+  Result.Validate;
+end;
+
 function TNyxPascalCompilerPolicies.SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
 begin
   Validate;
   AOther.Validate;
   Result := (FInlining = AOther.FInlining) and (FRecords = AOther.FRecords) and
     (FEnums = AOther.FEnums) and (FSets = AOther.FSets) and
-    (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking);
+    (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking) and
+    (FAssembler = AOther.FAssembler);
 end;
 
 function TCompilerContext.Policies: TNyxPascalCompilerPolicies;

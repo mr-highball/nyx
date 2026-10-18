@@ -109,8 +109,10 @@ scope failures; preparation does not establish complete RTL or editor adoption.
 The [assembly/settings lexical layer](docs/pascal-projects.md#assembly-regions-and-grouped-settings)
 keeps grouped short switches atomic and assembly operands separate from Pascal
 literal meaning. Selected/inactive branches and textual includes retain their
-own region boundaries. Actual System now stops at MAXFPUREGISTERS; full compiler
-policy, implicit-unit binding and ordinary editor adoption remain open.
+own region boundaries. The [codegen policy continuation](docs/pascal-projects.md#local-assembler-readers-and-routine-register-directives)
+retains routine register requests at their exact source sites and restores local
+assembler-reader intent through PUSH/POP. Actual System now exposes broader
+directive/declaration grammar gaps; implicit-unit meaning and editor adoption stay open.
 
 The [structured type and physical-origin layer](docs/pascal-projects.md#structured-type-syntax-and-physical-origins)
 now reads declared types and known-active included declarations without changing

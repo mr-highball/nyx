@@ -4,6 +4,37 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source routine-codegen requests retain exact typed register intent,
+occurrence/span/pre-state and activity without a stale effective global limit.
+Optional prefix queries retain only earlier requests; no record owns interfaces.
+Assembler-reader intent participates in exact capture and local PUSH/POP; unknown
+activity revokes it and unsupported/in-block reader changes refuse. Native policy
+checks pass 73, including exact whole compiled input, both readers/POP/float
+execution returning 33 and the configured compiler's eight-register request.
+The corrected explicit Win32 search uses the same 156 original packets/47
+namespaces. System now reaches 28,232 tokens/18 visits/four probes; four raw
+source declared() needs refine to answers, retaining MINENUMSIZE trailing prose
+and actual declaration-depth refusal at the unchanged ceiling. Its translation
+stays inspectable; no syntax root is admitted. Indexed completion exposes
+pcgBudget with zero suggestions/SDK loads and only the consumer root. Sixteen
+module checks qualify that refusal, not whole RTL meaning; ObjPas Char stays open.
+Maintained 28/49/18/22/52/14/157/38/367/7,671/26/62/127/10/48/86/74/84 pass;
+twenty native consumers have clean heaps. Thirty-one accepted compiler logs have
+zero owned warnings, 56 upstream; browser products/seven consumers compile only. Twenty-nine
+focused/628 complete src+studio/97 prior RTL/three compiler pins, 156 overlapping
+actual packets, 48 SysUtils includes, five protected files/nine contexts and 349
+frozen 7422453 artifacts stay exact. Readers join; LAN remains offline. Existing
+interfaces/GUIDs and MCP inventory stay unchanged; no tool/schema or rollout.
+WORK.md owns the omitted-search and syntax-view/load-count oracle corrections,
+separate accepted tail, retained failures and current remote identity. At least
+fourteen documented unclosed batches retain full original criterion two; no
+criterion/task/counter/credit/DONE/adoption/parity/delivery closes. Stop codegen/
+reader/fixture/compiler/capture variants. Next follow trailing directive argument
+prose and System's actual declaration recovery under existing context/parser
+owners at the unchanged depth ceiling, then source Char/import/type and complete
+resolver/editor/incremental/input/navigation/quality/parity/delivery. No host retry,
+protected mutation, cleanup/deletion/restart bypass or sub-agents. Preserve planning.
+
 Current-source grouped settings validate the whole candidate before one context
 publication; repeated letters keep the last write with at most 26 copies. Bad
 tails/alignment aliases retain no partial prefix. Typed assembly family/region
