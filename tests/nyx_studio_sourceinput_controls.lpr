@@ -178,6 +178,7 @@ procedure Run;
 const
   CFirst: TNyxText = #10 + '// First input 🚀 𐐷';
   CSecond: TNyxText = #10 + '// Second input';
+  CComposition: TNyxText = #10 + '// Composition 🚀 𐐷';
 var
   LDocument: TNyxDocument;
   LPage: INyxPage;
@@ -186,10 +187,13 @@ var
   LOriginal: TNyxText;
   LFirst: TNyxText;
   LSecond: TNyxText;
+  LFirstAuthor: TNyxText;
+  LSecondAuthor: TNyxText;
   LSelection: TNyxTextSelection;
   LRejected: Boolean;
   LExternal: TNyxText;
   LHost: TControl;
+  LComposed: TNyxText;
 begin
 
   if (ParamCount <> 2) or DirectoryExists(ParamStr(1)) then
@@ -254,14 +258,16 @@ begin
   LMemo.SelText := String(CFirst);
   Pump;
   LFirst := LMemo.Text;
-  Check((GStudio.Session.DraftSource = LFirst) and (LFirst <> LOriginal),
-    'Ordinary typing publishes the physical UTF-8 draft to the same session');
+  LFirstAuthor := LPair.Source + CFirst;
+  Check((GStudio.Session.DraftSource = LFirstAuthor) and (LFirst <> LOriginal),
+    'Ordinary typing preserves every untouched authored newline and Unicode byte');
   Check(not GStudio.Session.CanUndo, 'Text typing does not manufacture paired design history');
   LMemo.SelText := String(CSecond);
   Pump;
   LSecond := LMemo.Text;
+  LSecondAuthor := LFirstAuthor + CSecond;
   HistoryKey(LMemo);
-  Check((LMemo.Text = LFirst) and (GStudio.Session.DraftSource = LFirst),
+  Check((LMemo.Text = LFirst) and (GStudio.Session.DraftSource = LFirstAuthor),
     'Ordinary Studio Ctrl+Z restores its preceding typed draft');
   HistoryKey(LMemo, True);
   Check(LMemo.Text = LSecond, 'Ordinary Studio redo restores its second input');
@@ -269,7 +275,7 @@ begin
   GStudio.CodeView.Sync;
   Windows.SendMessageW(LMemo.Handle, WM_UNDO, 0, 0);
   HistoryKey(LMemo);
-  Check((LMemo.Text = LSecond) and (GStudio.Session.DraftSource = LSecond),
+  Check((LMemo.Text = LSecond) and (GStudio.Session.DraftSource = LSecondAuthor),
     'Readonly presentation refuses both native and keyboard history commands');
   GStudio.CodeView.Root.Configure.ReadOnly(False).Done;
   GStudio.CodeView.Sync;
@@ -282,7 +288,7 @@ begin
     'The ordinary native edit menu queries the shared source timeline');
   Windows.SendMessageW(LMemo.Handle, WM_UNDO, 0, 0);
   Pump;
-  Check((LMemo.Text = LFirst) and (GStudio.Session.DraftSource = LFirst),
+  Check((LMemo.Text = LFirst) and (GStudio.Session.DraftSource = LFirstAuthor),
     'Actual native context Undo uses the same session/draft timeline');
   Windows.SendMessageW(LMemo.Handle, EM_UNDO, 0, 0);
   Pump;
@@ -312,6 +318,33 @@ begin
   HistoryKey(LMemo);
   Check(not GStudio.Session.SourceDraftPending,
     'A reset text timeline cannot silently undo the explicit paired Restore command');
+  GStudio.CodeView.SetTextSelection('studio-code', NyxTextSelection(LOriginal,
+    NyxTextScalarCount(LOriginal), NyxTextScalarCount(LOriginal)));
+  LMemo.Perform(WM_IME_STARTCOMPOSITION, 0, 0);
+  LMemo.SelText := String(CComposition);
+  Check(not GStudio.Session.SourceDraftPending,
+    'Synthetic native composition keeps its projected draft outside authored source');
+  LMemo.Perform(WM_IME_ENDCOMPOSITION, 0, 0);
+  Application.Idle(False);
+  Pump;
+  LComposed := LMemo.Text;
+  Check(GStudio.Session.DraftSource = LPair.Source + CComposition,
+    'Composition commit preserves the original authored newline spelling');
+  HistoryKey(LMemo);
+  Check(not GStudio.Session.SourceDraftPending and (LMemo.Text = LOriginal),
+    'Projected composition commits one undoable authored/physical transaction');
+  LMemo.Perform(WM_IME_STARTCOMPOSITION, 0, 0);
+  LMemo.SelText := String(CComposition);
+  RestoreNyxLCLInputText(LMemo, LOriginal);
+  LMemo.Perform(WM_IME_ENDCOMPOSITION, 0, 0);
+  Application.Idle(False);
+  Pump;
+  Check(not GStudio.Session.SourceDraftPending,
+    'Cancelled composition restores the exact authored baseline');
+  HistoryKey(LMemo, True);
+  Check((LMemo.Text = LComposed) and (GStudio.Session.DraftSource = LPair.Source + CComposition),
+    'Cancelled projected composition retains the earlier Redo frame');
+  Click('action-reset-source');
   LExternal := LPair.Source + CSecond;
   GStudio.Session.SetSourceDraft(LExternal);
   HistoryKey(LMemo);

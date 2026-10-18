@@ -904,6 +904,56 @@ Ordinary retained-editor adoption must still connect synchronization, mount/read
 only and caret guards, the public menu and **all** platform history producers.
 WORK.md owns evidence, engine-selection status and the delivery boundary.
 
+## Authored and presented text
+
+`nyx.text.projection` separates exact authored Pascal from the text a target
+control displays. `NewNyxTextProjection` freezes both complete texts and permits
+only CR/LF/CRLF spelling differences. Unicode scalars, supplementary characters,
+combining sequences and NUL remain exact in the portable model; native widgets
+retain their own explicit NUL limitation. No identifier/case/grapheme normalization
+is inferred. The projection owns no editor, source session or document.
+
+A sparse ordered newline-width map translates scalar boundaries in either
+direction. A CRLF interior without a one-scalar counterpart refuses under default
+`npaExact`; callers may explicitly choose `npaBefore` or `npaAfter`. Defined
+selections preserve direction; unavailable selections remain unavailable. Typed
+`TNyxTextInsertion` values carry authored/displayed bytes independently and fluent
+`UsingLineEndings` accepts `ntePreserve`, `nteLF`, `nteCRLF` or `nteCR`.
+
+```pascal
+LProjection := NewNyxTextProjection(LAuthoredText, LDisplayedText);
+LAuthoredCaret := LProjection.ToAuthored(LSelection.Finish);
+LFrame := NyxProjectedTextEditorFrame(LProjection, LSelection, nteLF);
+
+LChanged := LProjection.ReplacePresented(LStart, LExpectedDisplayedText,
+  NyxTextInsertion(LInsertedPascal).UsingLineEndings(nteLF));
+```
+
+Exact `ReplacePresented` preserves the untouched authored prefix/suffix. When a
+physical input producer supplies only complete text, `ObservePresented` finds one
+contiguous delta using common scalar prefix/suffix and expands indivisible CRLF
+edges. Ambiguous repeated content is attributed after the longest common prefix;
+this is not semantic multi-edit provenance. Pure target-only newline respelling
+preserves the authored text. Explicit replacement remains available for deliberate
+authored newline changes. Complete validation precedes publishing a new projection.
+
+Projected history frames own both strings and an insertion presentation policy,
+with no interfaces in records. Distinct authored bytes count in addition to
+physical bytes under the existing retention budget. Authored-only changes remain
+undoable even when displayed text is identical. `INyxProjectedTextHistory` marks
+alternative implementations which preserve this contract. The expanded returned
+frame record versions `INyxTextEditHistory`'s native IID; native consumers must be
+rebuilt together rather than mixing old binaries. This changes no persistence,
+MCP tool inventory or wire schema.
+
+The public completion menu converts its physical collapsed caret to authored
+coordinates for a query, stages the complete authored proposal, then maps the
+exact replacement back to displayed coordinates for one history transaction.
+Projected frames require the optional history capability. Tickets, exact sources,
+generation/caret guards and stale-result refusal remain unchanged. WORK.md owns
+native model/control evidence separately from compiled-only browser consumers;
+ordinary Studio popup/channel adoption and full quality/parity remain open.
+
 ## Studio source input ownership
 
 Current source connects `TNyxStudioSourceInput` to both Studio adapters' retained
@@ -930,13 +980,15 @@ original editing-observer interface. Exceptions stay within the native callback
 boundary. Other widgetsets retain their existing editing behavior pending their
 own admitted bridge. See Microsoft's [subclassing contract](https://learn.microsoft.com/en-us/windows/win32/controls/subclassing-overview).
 
-Native physical frames and authored baseline bytes remain distinct. Returning to
-the original physical text restores its original authored line endings. The
-explicit Unicode restore bridge preserves mixed physical line endings/caret across
-Undo and handle/modal movement, without publishing a draft merely to repair a
-presentation. Native NUL projection refuses before writing. Ordinary changed drafts
-otherwise retain physical text as before; this is not a complete authored/physical
-range projection for arbitrary edits or completion proposals.
+Each physical frame now owns its exact authored projection. Ordinary contiguous
+edits preserve all untouched source bytes rather than rewriting the entire buffer
+using the widget's line endings. A cancelled composition restores its exact authored
+base and preserves Redo. The explicit Unicode restore bridge retains mixed physical
+line endings/caret across Undo and handle/modal movement, without publishing a
+draft merely to repair presentation. Native NUL projection refuses before writing.
+Native insertion presentation defaults to Preserve; the browser source owner
+explicitly chooses LF. This is the bounded projection contract above, not arbitrary
+semantic multi-edit provenance.
 
 The browser adapter captures `beforeinput`, consumes cancelable history requests
 and routes noncancelable history `input` through the owner before admitting the
@@ -944,18 +996,20 @@ platform stack's value. Programmatic presentation is kept outside physical histo
 observation. The browser implementation is compiled only in this packet.
 
 WORK.md owns actual native Studio keyboard/context/readonly/recreation/modal/stale
-input evidence at two host widths and the ordinary editing regression. Recent-file
-eviction/multi-project journeys, hardware/IME/assistive technology, broader budgets,
+input evidence at two host widths and the ordinary editing regression. Synthetic
+native composition covers commit/cancelled-base ownership, not hardware/IME.
+Recent-file eviction/multi-project journeys, assistive technology, broader budgets,
 other widgetsets and full browser/parity/delivery remain open. The completion menu
 and private query channel are not yet connected to this controller. That adoption
-must preserve exact acknowledged sources and correctly project authored/physical
-positions and replacements when target line endings differ. No default helper,
+must preserve exact acknowledged sources and consume the typed authored/physical
+position/replacement projection when target line endings differ. No default helper,
 MCP tool/schema or observing release is installed by this source change.
 
 ## Shared editing history and completion presentation
 
 `nyx.editing.history` supplies an independent `INyxTextEditHistory` for one
-physical buffer. Immutable frames contain exact text and scalar selection,
+physical buffer. Immutable frames contain exact physical/authored text, insertion
+presentation policy and scalar selection,
 including unavailable selection rather than an inferred caret. Ordinary physical
 observations and programmatic replacements share the same timeline. Each accepted
 physical text change is one entry; composition drafts retain a separate base and
@@ -963,7 +1017,8 @@ commit one entry at genuine composition end. Returning to that base adds no entr
 and preserves Redo. Selection-only observations also preserve Redo.
 
 The retention limits are copied fluent values. Defaults keep 128 entries and
-16 MiB across both stacks, accounting UTF-8 text plus 32 bytes per frame. This is
+16 MiB across both stacks, accounting physical UTF-8 text, distinct authored UTF-8
+text and 32 bytes per frame. This is
 a portable accounting budget, not a heap measurement; Current and a live composition
 base are excluded. Physical edits remain real input even when their previous
 frames cannot be retained; `Truncated` reports eviction. Programmatic replacement

@@ -26,26 +26,34 @@ unit nyx.editing.history;
 
 interface
 
-uses SysUtils, nyx.text, nyx.editing;
+uses SysUtils, nyx.text, nyx.editing, nyx.text.projection;
 
 type
   { Invalid/stale editing transactions refuse before changing text or either
     stack. Ordinary physical observation may evict old entries within its budget. }
   ENyxTextHistory = class(Exception);
 
-  { Detached immutable physical text/selection. Undefined selection is preserved
-    as unavailable, never guessed. Text retains exact Unicode and line endings. }
+  { Detached immutable physical text/selection with exact authored bytes.
+    Plain frames use the same text for both. Projected frames preserve different
+    line endings without COM-interface fields in records. Selection counts
+    physical scalars; unavailable selection stays unavailable. }
   TNyxTextEditorFrame = record
   private
     FDefined: Boolean;
     FText: TNyxText;
+    FAuthoredText: TNyxText;
+    FPresentation: TNyxTextLineEndings;
     FSelection: TNyxTextSelection;
     FScalars: Integer;
     FBytes: Integer;
   public
     procedure Validate;
     function SameValue(const AOther: TNyxTextEditorFrame): Boolean;
+    { Reconstruct an immutable checked projection, borrowing no frame storage. }
+    function Projection: INyxTextProjection;
     property Text: TNyxText read FText;
+    property AuthoredText: TNyxText read FAuthoredText;
+    property Presentation: TNyxTextLineEndings read FPresentation;
     property Selection: TNyxTextSelection read FSelection;
     property Scalars: Integer read FScalars;
     property RetainedBytes: Integer read FBytes;
@@ -53,6 +61,7 @@ type
 
   { Copied runtime retention policy. Both stacks count UTF-8 text plus 32 bytes
     per frame, excluding Current; this is accounting, not heap measurement.
+    Distinct authored text is accounted in addition to physical text.
     Defaults retain 128 entries/16 MiB; zero entries
     disables retention. No editor/widget/session or timing policy is retained. }
   TNyxTextHistoryLimits = record
@@ -69,14 +78,24 @@ type
     property MaximumBytes: Integer read FBytes;
   end;
 
+  { Optional implementation capability: projected frames, authored byte/policy
+    equality and replacement/retention are preserved through every operation.
+    The source-level history methods remain compatible; native identity below
+    is versioned because returned frame records now carry authored state. }
+  INyxProjectedTextHistory = interface(IInterface)
+    ['{809BF35A-BA27-4CA7-A8E7-0C45E9EC8091}']
+  end;
+
   { A UI-thread-owned independent editing timeline. Observe admits actual physical
     edits; composition drafts update Current but commit one history entry at end.
     Selection-only observations preserve Redo. Replace requires an exact current
     frame and room for its immediate Undo/Redo states; it never silently loses
     that command. No platform default, control, application or document is owned.
     Hosts render Current and publish their ordinary draft notification separately. }
+  { Version-two native identity accompanies the expanded returned frame record.
+    Rebuild native consumers together; never mix this layout with the old IID. }
   INyxTextEditHistory = interface(IInterface)
-    ['{F45DC5F0-1679-4905-BBB9-FF012CD6A6C1}']
+    ['{167F84E3-D535-4AD1-90A1-A8847BB84702}']
     function Current: TNyxTextEditorFrame;
     function Composing: Boolean;
     function CanUndo: Boolean;
@@ -92,9 +111,11 @@ type
     function Truncated: Boolean;
     procedure Reset(const AFrame: TNyxTextEditorFrame);
     procedure Observe(const AFrame: TNyxTextEditorFrame; AComposing: Boolean = False);
-    { Scalar replacement inside the exact current text. All validation/allocation
+    { Scalar replacement inside the exact current physical text. Insertion is
+      authored text, presented using the frame's explicit newline policy.
+      Projected histories preserve untouched authored bytes. All validation/allocation
       precedes stack publication; composition, stale frames and budgets refuse.
-      Equal text only changes selection and preserves history/Redo. }
+      Equal authored/displayed text only changes selection and preserves Redo. }
     procedure Replace(const AExpected: TNyxTextEditorFrame; AStart: Integer;
       const AExpectedText, AInsertion: TNyxText);
     { Return False for an empty stack; composing refuses without ending the IME.
@@ -109,6 +130,11 @@ type
 
 function NyxTextEditorFrame(const AText: TNyxText;
   const ASelection: TNyxTextSelection): TNyxTextEditorFrame;
+{ Capture both complete immutable texts. Native raw presentation defaults to
+  Preserve; a browser textarea owner explicitly supplies LF for new insertions. }
+function NyxProjectedTextEditorFrame(const AProjection: INyxTextProjection;
+  const ASelection: TNyxTextSelection;
+  APresentation: TNyxTextLineEndings = ntePreserve): TNyxTextEditorFrame;
 function NewNyxTextEditHistory(const AInitial: TNyxTextEditorFrame): INyxTextEditHistory; overload;
 function NewNyxTextEditHistory(const AInitial: TNyxTextEditorFrame;
   const ALimits: TNyxTextHistoryLimits): INyxTextEditHistory; overload;
@@ -124,7 +150,7 @@ type
 
   { Independent value timeline; arrays never escape. The composition base remains
     separate from live intermediate text, so cancellation back to it adds no entry. }
-  TTextHistory = class(TInterfacedObject, INyxTextEditHistory)
+  TTextHistory = class(TInterfacedObject, INyxTextEditHistory, INyxProjectedTextHistory)
   private
     FLimits: TNyxTextHistoryLimits;
     FCurrent: TNyxTextEditorFrame;
@@ -171,10 +197,53 @@ begin
     raise ENyxTextHistory.Create('Text frame exceeds its byte accounting range');
   end;
   Result.FText := AText;
+  Result.FAuthoredText := AText;
+  Result.FPresentation := ntePreserve;
   Result.FSelection := ASelection;
   Result.FBytes := LBytes + 32;
   Result.FDefined := True;
   Result.Validate;
+end;
+
+function NyxProjectedTextEditorFrame(const AProjection: INyxTextProjection;
+  const ASelection: TNyxTextSelection;
+  APresentation: TNyxTextLineEndings): TNyxTextEditorFrame;
+var
+  LProjection: INyxTextProjection;
+  LBytes: TNyxTextBytes;
+begin
+
+  if AProjection = nil then
+  begin
+    raise ENyxTextHistory.Create('Projected text frame requires complete text');
+  end;
+  LProjection := NewNyxTextProjection(AProjection.Authored, AProjection.Presented);
+  NyxPresentText('', APresentation);
+  Result.FText := LProjection.Presented;
+  Result.FAuthoredText := LProjection.Authored;
+  Result.FPresentation := APresentation;
+  Result.FScalars := LProjection.PresentedScalars;
+  Result.FSelection := ASelection;
+  LBytes := NyxUTF8ByteCount(Result.FText);
+
+  if Result.FAuthoredText <> Result.FText then
+  begin
+    LBytes := LBytes + NyxUTF8ByteCount(Result.FAuthoredText);
+  end;
+
+  if LBytes > High(Integer) - 32 then
+  begin
+    raise ENyxTextHistory.Create('Projected frame exceeds its byte accounting range');
+  end;
+  Result.FBytes := Integer(LBytes) + 32;
+  Result.FDefined := True;
+  Result.Validate;
+end;
+
+function TNyxTextEditorFrame.Projection: INyxTextProjection;
+begin
+  Validate;
+  Result := NewNyxTextProjection(FAuthoredText, FText);
 end;
 
 procedure TNyxTextEditorFrame.Validate;
@@ -190,7 +259,8 @@ function TNyxTextEditorFrame.SameValue(const AOther: TNyxTextEditorFrame): Boole
 begin
   Validate;
   AOther.Validate;
-  Result := (FText = AOther.FText) and FSelection.SameRange(AOther.FSelection);
+  Result := (FText = AOther.FText) and (FAuthoredText = AOther.FAuthoredText) and
+    (FPresentation = AOther.FPresentation) and FSelection.SameRange(AOther.FSelection);
 end;
 
 class function TNyxTextHistoryLimits.Defaults: TNyxTextHistoryLimits;
@@ -375,7 +445,8 @@ var
   LTruncated: Boolean;
 begin
 
-  if ABefore.Text = AAfter.Text then
+  if (ABefore.Text = AAfter.Text) and (ABefore.AuthoredText = AAfter.AuthoredText) and
+    (ABefore.Presentation = AAfter.Presentation) then
   begin
     FCurrent := AAfter;
     Exit;
@@ -426,38 +497,14 @@ begin
   Inc(FGeneration);
 end;
 
-{ Scalar-to-storage conversion rejects offsets outside exact immutable text.
-  Both native UTF-8 and browser UTF-16 keep scalar boundaries indivisible. }
-function StorageAt(const AText: TNyxText; AOffset: Integer): Integer;
-var
-  LAt: Integer;
-  LScalar: Integer;
-begin
-
-  if AOffset < 0 then
-  begin
-    raise ENyxTextHistory.Create('Replacement offset cannot be negative');
-  end;
-  Result := 1;
-  for LAt := 1 to AOffset do
-  begin
-
-    if not NyxNextScalar(AText, Result, LScalar) then
-    begin
-      raise ENyxTextHistory.Create('Replacement range is outside the current text');
-    end;
-  end;
-end;
-
 procedure TTextHistory.Replace(const AExpected: TNyxTextEditorFrame;
   AStart: Integer; const AExpectedText, AInsertion: TNyxText);
 var
-  LStart: Integer;
-  LEnd: Integer;
   LExpectedScalars: Integer;
-  LText: TNyxText;
   LAfter: TNyxTextEditorFrame;
   LCaret: Integer;
+  LInsertion: TNyxTextInsertion;
+  LProjection: INyxTextProjection;
 begin
   RequireGeneration;
 
@@ -472,19 +519,20 @@ begin
   begin
     raise ENyxTextHistory.Create('Replacement range is outside the current text');
   end;
-  LStart := StorageAt(FCurrent.Text, AStart);
-  LEnd := StorageAt(FCurrent.Text, AStart + LExpectedScalars);
-
-  if Copy(FCurrent.Text, LStart, LEnd - LStart) <> AExpectedText then
-  begin
-    raise ENyxTextHistory.Create('Replacement expected text no longer matches');
+  try
+    LInsertion := NyxTextInsertion(AInsertion).UsingLineEndings(FCurrent.Presentation);
+    LProjection := FCurrent.Projection.ReplacePresented(AStart, AExpectedText, LInsertion);
+  except
+    on LException: ENyxTextProjection do
+    begin
+      raise ENyxTextHistory.Create(LException.Message);
+    end;
   end;
-  LCaret := AStart + NyxTextScalarCount(AInsertion);
-  LText := Copy(FCurrent.Text, 1, LStart - 1) + AInsertion +
-    Copy(FCurrent.Text, LEnd, MaxInt);
-  LAfter := NyxTextEditorFrame(LText, NyxTextSelection(LText, LCaret, LCaret));
+  LCaret := AStart + NyxTextScalarCount(LInsertion.Presented);
+  LAfter := NyxProjectedTextEditorFrame(LProjection,
+    NyxTextSelection(LProjection.Presented, LCaret, LCaret), FCurrent.Presentation);
 
-  if (LAfter.Text <> FCurrent.Text) and
+  if ((LAfter.Text <> FCurrent.Text) or (LAfter.AuthoredText <> FCurrent.AuthoredText)) and
     ((FLimits.MaximumEntries = 0) or
       (FCurrent.RetainedBytes > FLimits.MaximumBytes) or
       (LAfter.RetainedBytes > FLimits.MaximumBytes)) then

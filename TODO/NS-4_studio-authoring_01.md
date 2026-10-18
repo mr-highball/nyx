@@ -6,8 +6,10 @@ Ordinary [source input ownership](../docs/pascal-projects.md#studio-source-input
 now uses shared recent-file timelines in both adapters. Native keyboard/context
 Undo, readonly/recreation/modal and stale-source journeys are qualified; browser
 paths compile only. Full input/IME/multi-file/budget/parity and original criterion
-two stay open. Next completion adoption must project exact authored/physical
-positions and replacements while preserving complete source acknowledgement.
+two stay open. Typed [authored/physical projection](../docs/pascal-projects.md#authored-and-presented-text)
+now preserves untouched source bytes through ordinary input and projects the public
+completion menu's ranges. Ordinary popup/private-channel adoption must still preserve
+complete source acknowledgement, current mount/caret and retained widget ownership.
 
 The private [operator completion client](../docs/pascal-projects.md#private-operator-completion-channel)
 now supplies an asynchronous, revision-correlated channel independent of agent

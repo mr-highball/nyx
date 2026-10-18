@@ -42,7 +42,10 @@ ordinary Studio frontend adoption and complete input/parity/delivery stay open.
 Ordinary [source input ownership](docs/pascal-projects.md#studio-source-input-ownership)
 now connects the shared text timeline to both Studio adapters. Native keyboard/
 context history and retained modal/recreation journeys are qualified; browser
-consumers compile only. Completion projection/presentation and full parity remain open.
+consumers compile only. Typed [authored/displayed text projection](docs/pascal-projects.md#authored-and-presented-text)
+now preserves untouched authored bytes through ordinary edits and projects completion
+ranges through the public menu/history. Studio popup/channel adoption and full parity
+remain open.
 
 ## Decisions
 

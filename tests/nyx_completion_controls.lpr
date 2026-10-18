@@ -26,7 +26,7 @@ program nyx_completion_controls;
 uses Interfaces, Classes, SysUtils, SyncObjs, Forms, Controls, StdCtrls, ExtCtrls, Windows,
   LCLType, nyx.text, nyx.bytes, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.theme, nyx.render.lcl, nyx.editing.lcl, nyx.widgets.lcl,
-  nyx.editing, nyx.editing.history, nyx.editing.commands, nyx.pascal.names, nyx.pascal.project,
+  nyx.editing, nyx.editing.history, nyx.editing.commands, nyx.text.projection, nyx.pascal.names, nyx.pascal.project,
   nyx.pascal.drafts, nyx.pascal.sources, nyx.pascal.completion,
   nyx.pascal.completion.view, nyx.studio.completion.native, nyx.events,
   nyx.scheduler, nyx.behavior;
@@ -97,6 +97,7 @@ type
     Callback: TKeyCallback;
     Failure: TNyxText;
     Notifications: Integer;
+    Publishing: Boolean;
     LastAction: TNyxPascalCompletionAction;
     KeySeen: Boolean;
     GenerationBeforeKey: Integer;
@@ -188,7 +189,7 @@ end;
 procedure THistoryPort.BeforeEdit(const AEditing: TNyxEditingSnapshot);
 begin
 
-  if Owner <> nil then
+  if (Owner <> nil) and not Owner.Publishing then
   begin
     Owner.ObservePhysical;
   end;
@@ -213,7 +214,7 @@ begin
   begin
     Owner.History.RedoFrame(LFrame);
   end;
-  LCandidate := Owner.Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.Text);
+  LCandidate := Owner.Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.AuthoredText);
 
   if ACommand = nhcUndo then
   begin
@@ -264,14 +265,15 @@ begin
   LCaret := NyxTextScalarCount(Copy(LText, 1, Pos('WithTexx', LText) - 1)) + 6;
   CodeView.SetTextSelection('code', NyxTextSelection(LText, LCaret, LCaret));
   LEditing := CodeView.EditingFor('code');
-  History := NewNyxTextEditHistory(NyxTextEditorFrame(LEditing.Text, LEditing.Selection));
+  History := NewNyxTextEditHistory(NyxProjectedTextEditorFrame(
+    NewNyxTextProjection(CBuffer, LEditing.Text), LEditing.Selection));
   HistoryPort := THistoryPort.Create;
   HistoryLease := HistoryPort;
   HistoryPort.Owner := Self;
   CodeView.BindTextHistory('code', HistoryPort);
   Sources := CaptureNyxPascalSources(NewNyxPascalProject(NyxPascalUnit('completion.control'), CSource))
-    .WithBuffer(TNyxPascalSourceRef.Main, LEditing.Text);
-  CodeView.Root.Configure.Value(LEditing.Text).Done;
+    .WithBuffer(TNyxPascalSourceRef.Main, CBuffer);
+  CodeView.Root.Configure.Value(CBuffer).Done;
   Menu := NewNyxPascalCompletionMenu(History);
   Callback := TKeyCallback.Create;
   Callback.Owner := Self;
@@ -308,17 +310,31 @@ end;
 procedure THarness.ObservePhysical;
 var
   LEditing: TNyxEditingSnapshot;
+  LFrame: TNyxTextEditorFrame;
 begin
+
+  if Publishing then
+  begin
+    Exit;
+  end;
   LEditing := CodeView.EditingFor('code');
-  History.Observe(NyxTextEditorFrame(LEditing.Text, LEditing.Selection), LEditing.Composing);
-  Sources := Sources.WithBuffer(TNyxPascalSourceRef.Main, LEditing.Text);
+  LFrame := NyxProjectedTextEditorFrame(History.Current.Projection.ObservePresented(LEditing.Text),
+    LEditing.Selection);
+  History.Observe(LFrame, LEditing.Composing);
+  Sources := Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.AuthoredText);
 end;
 
 procedure THarness.Publish;
 begin
-  CodeView.Root.Configure.Value(History.Current.Text).Done;
-  CodeView.Sync;
-  CodeView.SetTextSelection('code', History.Current.Selection);
+  Publishing := True;
+  try
+    CodeView.Root.Configure.Value(History.Current.AuthoredText).Done;
+    CodeView.Sync;
+    RestoreNyxLCLInputText(Input, History.Current.Text);
+    CodeView.SetTextSelection('code', History.Current.Selection);
+  finally
+    Publishing := False;
+  end;
   Inc(Notifications);
 end;
 
@@ -413,7 +429,7 @@ begin
           Exit;
         end;
       end;
-      LCandidate := Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.Text);
+      LCandidate := Sources.WithBuffer(TNyxPascalSourceRef.Main, LFrame.AuthoredText);
 
       if LAction = pcaUndo then
       begin
@@ -527,6 +543,9 @@ begin
       'Actual SDK produces the view input');
     Check(LHost.Menu.Present(LTicket, LWorker.Reply, LHost.Sources),
       'Current reply reaches the public completion view');
+    Check((LWorker.Query.Sources.Text(TNyxPascalSourceRef.Main) = CBuffer) and
+      (LHost.History.Current.AuthoredText = CBuffer),
+      'Actual SDK completion uses exact authored LF bytes despite native CRLF presentation');
     LHost.RebuildMenu;
     Check(LHost.MenuView.Root.Find('completion-row-0-choose').Prop('text') = 'WithText',
       'The ordinary Nyx button displays the real specialized member');

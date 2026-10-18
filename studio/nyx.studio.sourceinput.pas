@@ -27,7 +27,7 @@ unit nyx.studio.sourceinput;
 interface
 
 uses nyx.text, nyx.model, nyx.types, nyx.events, nyx.behavior, nyx.scheduler, nyx.editing,
-  nyx.editing.commands, nyx.editing.history, nyx.pascal.project,
+  nyx.editing.commands, nyx.editing.history, nyx.text.projection, nyx.pascal.project,
   nyx.pascal.sources, nyx.pascal.drafts, nyx.studio.session;
 
 type
@@ -43,16 +43,15 @@ type
   { Forward owner for managed input callbacks; the full class owns timelines and
     subscriptions, while the callback only borrows it until explicit detach. }
   TNyxStudioSourceInput = class;
-  { One selected-file timeline. AuthorText detects external paired/draft changes
-    independently of physical native line-ending normalization. }
+  { One selected-file projected timeline. AuthorText detects external changes;
+    each history frame owns exact authored/displayed bytes independently. The
+    temporary composition base restores cancelled authored bytes exactly. }
   TNyxStudioSourceBuffer = class
   public
     FileReference: TNyxPascalSourceRef;
     AuthorText: TNyxText;
-    { Initial authored bytes may use different line endings from their physical
-      native projection. Returning to that text restores the original bytes. }
-    BaselineAuthor: TNyxText;
-    Baseline: TNyxTextEditorFrame;
+    CompositionBase: TNyxTextEditorFrame;
+    HasCompositionBase: Boolean;
     History: INyxTextEditHistory;
   end;
   { Revocable mounted-input command/key receiver. Renderer/subscriptions retain
@@ -80,11 +79,14 @@ type
     FProject: INyxPascalProject;
     FBuffers: array of TNyxStudioSourceBuffer;
     FActive: TNyxStudioSourceBuffer;
+    FPresentation: TNyxTextLineEndings;
     FPort: TNyxStudioSourceInputPort;
     FLease: INyxTextHistoryCommands;
     FSubscriptions: array of INyxEventSubscription;
     procedure Clear;
     function Current(out AEditing: TNyxEditingSnapshot): Boolean;
+    function NextFrame(const AEditing: TNyxEditingSnapshot): TNyxTextEditorFrame;
+    procedure Observe(const AEditing: TNyxEditingSnapshot);
     procedure Event(const AEvent: TNyxEventInfo; const AExecution: INyxExecution);
     function CanExecute(ACommand: TNyxTextHistoryCommand): Boolean;
     procedure Execute(ACommand: TNyxTextHistoryCommand);
@@ -92,7 +94,8 @@ type
     { Subscribe only to the retained source view; callbacks are UI-thread only.
       The host methods outlive this controller and must identify their live mount. }
     constructor Create(const AEvents: INyxEvents;
-      ARead: TNyxStudioSourceRead; AWrite: TNyxStudioSourceWrite);
+      ARead: TNyxStudioSourceRead; AWrite: TNyxStudioSourceWrite;
+      APresentation: TNyxTextLineEndings = ntePreserve);
     destructor Destroy; override;
     { Reconcile after ordinary source render/reparent/navigation. Capture the
       physical baseline without publishing a draft merely for native formatting. }
@@ -142,13 +145,13 @@ begin
   if (Owner <> nil) and Owner.Current(LCurrent) and
     (LCurrent.Text = AEditing.Text) and LCurrent.Selection.SameRange(AEditing.Selection) then
   begin
-    Owner.FActive.History.Observe(NyxTextEditorFrame(LCurrent.Text, LCurrent.Selection),
-      LCurrent.Composing);
+    Owner.Observe(LCurrent);
   end;
 end;
 
 constructor TNyxStudioSourceInput.Create(const AEvents: INyxEvents;
-  ARead: TNyxStudioSourceRead; AWrite: TNyxStudioSourceWrite);
+  ARead: TNyxStudioSourceRead; AWrite: TNyxStudioSourceWrite;
+  APresentation: TNyxTextLineEndings);
 var
   LTarget: TNyxEventTarget;
 begin
@@ -159,6 +162,8 @@ begin
     raise EArgumentException.Create('Source input requires its retained view and UI owner');
   end;
   AEvents.Scheduler.RequireUI;
+  NyxPresentText('', APresentation);
+  FPresentation := APresentation;
   FRead := ARead;
   FWrite := AWrite;
   FPort := TNyxStudioSourceInputPort.Create;
@@ -254,9 +259,8 @@ begin
     try
       LBuffer.FileReference := FSession.ActiveSourceFile;
       LBuffer.AuthorText := FSession.ActiveSourceText;
-      LBuffer.BaselineAuthor := LBuffer.AuthorText;
-      LBuffer.Baseline := NyxTextEditorFrame(LEditing.Text, LEditing.Selection);
-      LBuffer.History := NewNyxTextEditHistory(NyxTextEditorFrame(LEditing.Text, LEditing.Selection));
+      LBuffer.History := NewNyxTextEditHistory(NyxProjectedTextEditorFrame(
+        NewNyxTextProjection(LBuffer.AuthorText, LEditing.Text), LEditing.Selection, FPresentation));
 
       if Length(FBuffers) = 8 then
       begin
@@ -285,16 +289,51 @@ begin
 
   if FActive.AuthorText <> FSession.ActiveSourceText then
   begin
-    FActive.History.Reset(NyxTextEditorFrame(LEditing.Text, LEditing.Selection));
+    FActive.History.Reset(NyxProjectedTextEditorFrame(
+      NewNyxTextProjection(FSession.ActiveSourceText, LEditing.Text), LEditing.Selection, FPresentation));
     FActive.AuthorText := FSession.ActiveSourceText;
-    FActive.BaselineAuthor := FActive.AuthorText;
-    FActive.Baseline := FActive.History.Current;
+    FActive.HasCompositionBase := False;
   end
   else if not LEditing.Composing and (FActive.History.Current.Text <> LEditing.Text) then
   begin
     { Reparenting may recreate a native handle and normalize its line endings.
       Restore the owned physical frame without publishing another draft. }
     FWrite(FActive.History.Current, False);
+  end;
+end;
+
+function TNyxStudioSourceInput.NextFrame(const AEditing: TNyxEditingSnapshot): TNyxTextEditorFrame;
+var
+  LBefore: TNyxTextEditorFrame;
+  LProjection: INyxTextProjection;
+begin
+  LBefore := FActive.History.Current;
+
+  if AEditing.Composing and not FActive.History.Composing then
+  begin
+    FActive.CompositionBase := LBefore;
+    FActive.HasCompositionBase := True;
+  end;
+
+  if not AEditing.Composing and FActive.History.Composing and FActive.HasCompositionBase and
+    (AEditing.Text = FActive.CompositionBase.Text) then
+  begin
+    LProjection := FActive.CompositionBase.Projection;
+  end
+  else
+  begin
+    LProjection := LBefore.Projection.ObservePresented(AEditing.Text);
+  end;
+  Result := NyxProjectedTextEditorFrame(LProjection, AEditing.Selection, FPresentation);
+end;
+
+procedure TNyxStudioSourceInput.Observe(const AEditing: TNyxEditingSnapshot);
+begin
+  FActive.History.Observe(NextFrame(AEditing), AEditing.Composing);
+
+  if not AEditing.Composing then
+  begin
+    FActive.HasCompositionBase := False;
   end;
 end;
 
@@ -313,7 +352,7 @@ end;
 function TNyxStudioSourceInput.Change(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
 var
   LEditing: TNyxEditingSnapshot;
-  LText: TNyxText;
+  LFrame: TNyxTextEditorFrame;
 begin
   Result := (ANode <> nil) and (ANode.ID = 'studio-code') and (ATrigger = ntChange);
 
@@ -326,15 +365,15 @@ begin
   begin
     raise ENyxTextHistory.Create('Source input changed; reconcile its current source before editing');
   end;
-  LText := LEditing.Text;
-
-  if LText = FActive.Baseline.Text then
-  begin
-    LText := FActive.BaselineAuthor;
-  end;
-  FSession.SetFileDraft(FActive.FileReference, LText);
+  LFrame := NextFrame(LEditing);
+  FSession.SetFileDraft(FActive.FileReference, LFrame.AuthoredText);
   FActive.AuthorText := FSession.ActiveSourceText;
-  FActive.History.Observe(NyxTextEditorFrame(LEditing.Text, LEditing.Selection), LEditing.Composing);
+  FActive.History.Observe(LFrame, LEditing.Composing);
+
+  if not LEditing.Composing then
+  begin
+    FActive.HasCompositionBase := False;
+  end;
 end;
 
 procedure TNyxStudioSourceInput.Event(const AEvent: TNyxEventInfo;
@@ -353,7 +392,7 @@ begin
     end;
     Exit;
   end;
-  FActive.History.Observe(NyxTextEditorFrame(LEditing.Text, LEditing.Selection), LEditing.Composing);
+  Observe(LEditing);
 
   if AEvent.HasKeyboard and not LEditing.Composing and
     TryNyxTextHistoryKey(AEvent.Keyboard, LCommand) then
@@ -407,7 +446,6 @@ procedure TNyxStudioSourceInput.Execute(ACommand: TNyxTextHistoryCommand);
 var
   LFrame: TNyxTextEditorFrame;
   LCandidate: INyxPascalSourceSnapshot;
-  LText: TNyxText;
 begin
 
   if not CanExecute(ACommand) then
@@ -424,13 +462,7 @@ begin
     FActive.History.RedoFrame(LFrame);
   end;
   { Stage complete source/budget admission before moving either text stack. }
-  LText := LFrame.Text;
-
-  if LText = FActive.Baseline.Text then
-  begin
-    LText := FActive.BaselineAuthor;
-  end;
-  LCandidate := Sources.WithBuffer(FActive.FileReference, LText);
+  LCandidate := Sources.WithBuffer(FActive.FileReference, LFrame.AuthoredText);
   FSession.SetFileDraft(FActive.FileReference, LCandidate.Text(FActive.FileReference));
   FActive.AuthorText := FSession.ActiveSourceText;
 

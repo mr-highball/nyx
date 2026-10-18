@@ -33,7 +33,92 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordinary source text history — 2026-10-17
+## Current integration: Authored/physical source projection — 2026-10-17
+
+Previous goal turn is progress: pushed bc3423d connects ordinary source input to
+shared history. Completion adoption next needs exact authored/physical coordinates:
+native controls may display CRLF and browser textareas LF while accepted/draft
+Pascal must retain its own untouched bytes. This batch serves that prerequisite
+under original NS-4 authoring criterion two; it does not install a Studio popup.
+
+The new public nyx.text.projection owns immutable exact texts and a sparse
+newline-width map. Default exact scalar mapping refuses ambiguous CRLF interiors;
+explicit affinities choose complete newline edges. Typed fluent insertions carry
+separate authored/displayed bytes and an enum presentation policy. Non-newline
+Unicode remains exact. Whole-input observation attributes one contiguous delta
+after the longest common prefix/suffix, expanding CRLF boundaries; it is not
+semantic provenance for arbitrary multiple edits. Explicit expected-range
+replacement preserves all untouched authored bytes.
+
+History frames now own both texts without interfaces in records. Distinct authored
+bytes count against retention; authored-only edits remain undoable. The native
+INyxTextEditHistory IID is versioned for the expanded returned record ABI, and an
+optional INyxProjectedTextHistory marks compatible alternative implementations.
+Native consumers must be rebuilt together; no persistence/wire schema changes.
+The public completion menu queries authored coordinates, prepares the complete
+authored candidate and maps its replacement into one physical history command.
+Existing ticket/source/generation/caret guards remain intact.
+
+Ordinary Studio input now observes those projected frames and publishes authored
+draft text. Undo/recreation/modal presentation retain physical text/caret separately.
+Native presentation defaults to Preserve, browser insertions explicitly use LF.
+A temporary composition base preserves authored bytes/Redo when cancelled. Known
+session/source guards and paired design history remain unchanged.
+
+Evidence behind ignored .local/source-projection-paths-private.json, with eight
+final Pascal inputs in source-pins-2-private.json, unchanged through all readers:
+
+- logs/contracts-3-runtime.log: 159 native projection/history/completion checks,
+  clean heap. Mixed CR/LF/CRLF, supplementary Unicode/NUL, all presentation-policy
+  pair boundaries, exact/explicit affinity, selection, untouched source edits,
+  explicit replacements, non-equivalent inputs, authored-only history
+  and atomic retention refusal are covered. A real public completion proposal
+  preserves authored CRLF while its physical frame inserts LF, with exact Undo/
+  Redo. The matching browser consumer compiles only.
+- logs/source-input-3-1280-runtime.log and source-input-3-390-runtime.log: 38 each
+  ordinary native Studio checks, clean heaps, extending the prior 31. Actual
+  keyboard/context Undo, readonly/recreation/modal/stale-source/NUL checks remain;
+  edited drafts now assert every untouched authored byte. Synthetic native IME
+  start/end messages additionally cover one-entry commit, exact cancelled base and
+  retained Redo. These are native host widths, not a browser or physical phone,
+  and simulated composition does not qualify hardware/IME implementations.
+- logs/controls-1-1280-runtime.log and controls-1-390-runtime.log: 25 each actual
+  native completion/history checks, clean heaps, extending the prior 24. The
+  optional joined SDK worker receives exact authored LF while the memo displays
+  CRLF; retained native key/button/context input owns the same projected timeline.
+  This independent component consumer is not ordinary Studio popup integration.
+- logs/view-2-runtime.log and editing-1-runtime.log: maintained native 40/117
+  checks, clean heaps. Both Studios and the browser editing regression compile.
+  Nine accepted compiler logs have zero owned warnings and 21 upstream pas2js RTL
+  warnings. No browser runtime or authored application execution is claimed.
+
+Retained preparations: projection-1 passes 148 but contains an owned unreachable
+formatter warning; enum-domain validation removes it before final qualification.
+contracts-1 exposes native/pas2js rejection of a typed-constant concatenation;
+explicit literal composition repairs the fixture. contracts-2 passes 159 before
+the final native IID/capability change; final contracts-3 rebuilds that identity.
+These preparatory logs are not final accepted compiler evidence. No reader is
+left live, and no Pascal input changes while an owned compiler/runtime/helper
+reads it. No additional history/fixture/compiler variants are needed now.
+
+Five protected files/nine complete contexts/history/drafts/profile and all 349
+frozen 7422453 artifacts remain exact. LAN stays offline. No HTTP/browser/capture,
+protected configuration/enrollment/cleanup retry, approval bypass, deletion or
+sub-agents occurs. Native Nyx tools remain absent; necessary owned native input
+harnesses change no active design. Source tools remain 24/frozen 23, eighteen
+Pascal modes. No new tool/schema/kind, original full criterion/task/counter/credit/
+DONE, full parity or rollout closes. Final-checkpoint-private.json owns exact
+source/remote, pin, accepted-log, terminal and preservation receipts.
+
+Stop projection/history/fixture/compiler variants. Next connect the existing
+private operator completion channel and public Nyx card to the ordinary retained
+source editor, requiring exact acknowledged context and revocable mount/caret/
+history guards. Default engine choice remains pending; no helper is installed.
+Multi-file/project/eviction journeys, full compiler context/input/IME/visual/
+accessibility/performance/budgets, browser/other-widgetset parity and preserving
+delivery remain with their existing owners. The original goal stays active.
+
+## Prior integration: Ordinary source text history — 2026-10-17
 
 Previous goal turn is progress: pushed c7d6787 qualifies the private operator
 completion channel. Ordinary retained-editor adoption first needs every history

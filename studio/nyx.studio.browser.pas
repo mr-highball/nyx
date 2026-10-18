@@ -89,7 +89,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics, nyx.studio.builddiagnostics,
   nyx.studio.agentbridge,
-  nyx.studio.sourceinput, nyx.editing, nyx.editing.history,
+  nyx.studio.sourceinput, nyx.editing, nyx.editing.history, nyx.text.projection,
   nyx.studio.agentview,
   nyx.studio.agents,
   nyx.studio.view, nyx.view.recovery,
@@ -809,7 +809,7 @@ begin
   FDesignerPlacement := nplInside;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
-  FSourceInput := TNyxStudioSourceInput.Create(FCodeRenderer.Events, @ReadSourceInput, @WriteSourceInput);
+  FSourceInput := TNyxStudioSourceInput.Create(FCodeRenderer.Events, @ReadSourceInput, @WriteSourceInput, nteLF);
   FSourcePaneRenderer := TNyxBrowserRenderer.Create;
   FSourcePaneRenderer.OnEvent := HandleShell;
   FSourceModal := NewNyxBrowserModalHost;

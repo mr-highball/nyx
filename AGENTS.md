@@ -4,6 +4,26 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
+Current-source typed authored/physical projection preserves untouched Pascal bytes
+through ordinary Studio input and public completion/history ranges. Sparse newline
+maps refuse ambiguous exact CRLF interiors; inserted presentation uses an enum.
+Frames own both texts without interface record fields, and the expanded native
+history ABI has a new IID: rebuild consumers together. Native projection 159,
+ordinary Studio 38 per width 1280/390, SDK completion controls 25 per width and
+maintained view/editing 40/117 pass with clean heaps. Composition uses synthetic
+native messages, not hardware/IME qualification. Both Studios and browser consumers
+compile only where stated. Nine accepted compiler logs have zero owned warnings
+(21 upstream RTL). Eight pinned Pascal inputs, five protected files/nine complete
+contexts and 349 frozen 7422453 artifacts stay exact; LAN remains offline. WORK.md
+owns receipts and retained preparations. Stop projection/history/fixture/compiler
+variants; next connect the private completion channel and public card to the
+ordinary retained editor with exact acknowledged source/context and stale-safe
+mount/caret guards. No popup/default helper is installed; engine choice remains
+pending. Full input/quality/budgets/parity/delivery and original criteria/credit/
+DONE remain open. Tools stay 24/frozen 23, eighteen Pascal modes. No host/browser/
+capture, protected configuration/enrollment/cleanup retry, approval bypass,
+deletion or sub-agents.
+
 Current-source ordinary Studio source input owns shared keyboard/platform text
 history through public Nyx contracts. Native context query/Undo use a leased
 Common Controls subclass, with pre-edit caret capture, NCDESTROY/recreation and

@@ -27,7 +27,7 @@ unit nyx.pascal.completion.view;
 interface
 
 uses nyx.text, nyx.types, nyx.controls, nyx.model, nyx.editing.history,
-  nyx.editing, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion;
+  nyx.editing, nyx.text.projection, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion;
 
 type
   { Closed presentation actions. Request/page actions delegate asynchronous work;
@@ -157,6 +157,8 @@ function TCompletionMenu.BeginQuery(const ASources: INyxPascalSourceSnapshot;
 var
   LFrame: TNyxTextEditorFrame;
   LRequest: INyxPascalCompletionRequest;
+  LProjection: INyxTextProjection;
+  LProjectedHistory: INyxProjectedTextHistory;
 begin
   ATicket := Default(TNyxPascalCompletionTicket);
   LFrame := FHistory.Current;
@@ -165,10 +167,17 @@ begin
   begin
     raise ENyxPascalProject.Create('Completion needs a known collapsed caret outside composition');
   end;
-  LRequest := CaptureNyxPascalCompletionRequest(NewNyxPascalCompletionRequest(ASources)
-    .At(AFile, LFrame.Selection.Start).From(AOwner).Skip(AOffset).Take(ALimit));
+  LProjection := LFrame.Projection;
 
-  if LRequest.Sources.Text(AFile) <> LFrame.Text then
+  if ((LFrame.AuthoredText <> LFrame.Text) or (LFrame.Presentation <> ntePreserve)) and
+    not Supports(FHistory, INyxProjectedTextHistory, LProjectedHistory) then
+  begin
+    raise ENyxPascalProject.Create('This history implementation does not admit projected completion edits');
+  end;
+  LRequest := CaptureNyxPascalCompletionRequest(NewNyxPascalCompletionRequest(ASources)
+    .At(AFile, LProjection.ToAuthored(LFrame.Selection.Start)).From(AOwner).Skip(AOffset).Take(ALimit));
+
+  if LRequest.Sources.Text(AFile) <> LFrame.AuthoredText then
   begin
     raise ENyxPascalProject.Create('Completion buffer does not match the current source snapshot');
   end;
@@ -531,6 +540,10 @@ function TCompletionMenu.Accept(
 var
   LCandidate: INyxPascalSourceSnapshot;
   LCaret: Integer;
+  LProjection: INyxTextProjection;
+  LStart: Integer;
+  LEnd: Integer;
+  LExpected: TNyxText;
 begin
 
   if not Current(ACurrentSources) or (FState <> pcvReady) or
@@ -539,7 +552,11 @@ begin
     raise ENyxPascalProject.Create('Completion suggestion is no longer current');
   end;
   LCandidate := FResult.Preview(FSelected, ACurrentSources, LCaret);
-  FHistory.Replace(FFrame, FResult.ReplaceStart, FResult.ExpectedText,
+  LProjection := FFrame.Projection;
+  LStart := LProjection.ToPresented(FResult.ReplaceStart);
+  LEnd := LProjection.ToPresented(FResult.ReplaceStart + NyxTextScalarCount(FResult.ExpectedText));
+  LExpected := LProjection.PresentedSlice(LStart, LEnd - LStart);
+  FHistory.Replace(FFrame, LStart, LExpected,
     FResult.Item(FSelected).InsertText);
   Result := LCandidate;
   Dismiss;
