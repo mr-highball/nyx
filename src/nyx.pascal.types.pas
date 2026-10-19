@@ -44,10 +44,25 @@ type
   TNyxPascalTypeRole = (ptrRoot, ptrBase, ptrMember, ptrArgument, ptrPointee,
     ptrElement, ptrDimension, ptrLength, ptrTarget, ptrParameter, ptrParameterName,
     ptrParameterType, ptrResult, ptrDefault, ptrLowerBound, ptrUpperBound, ptrEnumMember);
-  { Distinct procedural ABI spellings; Default means no convention is authored.
-    Platform/compiler eligibility remains part of later semantic qualification. }
-  TNyxPascalCallingConvention = (pccDefault, pccRegister, pccCdecl, pccStdcall,
-    pccPascal, pccSafecall, pccSyscall, pccVectorcall);
+  { Source-compatible name for the shared declaration/type request contract.
+    Existing qualified enum spellings and ordinals remain available below;
+    Winapi retains intent without resolving a target-specific ABI alias. }
+  TNyxPascalCallingConvention = nyx.pascal.syntax.TNyxPascalRoutineConvention;
+
+const
+  { Preserve this unit's exported source names while the single enum owner also
+    serves routine declarations. These are compile-time values, never globals. }
+  pccDefault = nyx.pascal.syntax.prcDefault;
+  pccRegister = nyx.pascal.syntax.prcRegister;
+  pccCdecl = nyx.pascal.syntax.prcCdecl;
+  pccStdcall = nyx.pascal.syntax.prcStdcall;
+  pccPascal = nyx.pascal.syntax.prcPascal;
+  pccSafecall = nyx.pascal.syntax.prcSafecall;
+  pccSyscall = nyx.pascal.syntax.prcSyscall;
+  pccVectorcall = nyx.pascal.syntax.prcVectorcall;
+  pccWinapi = nyx.pascal.syntax.prcWinapi;
+
+type
   { Authored packing and procedural qualifiers, independent of inferred defaults. }
   TNyxPascalTypeFlag = (ptfPacked, ptfBitPacked, ptfOfObject, ptfNested, ptfVarargs,
     ptfInline, ptfSpecialize);
@@ -762,11 +777,6 @@ begin
 end;
 
 function TTypeSyntax.Convention(out AConvention: TNyxPascalCallingConvention): Boolean;
-const
-  CNames: array[TNyxPascalCallingConvention] of TNyxText =
-    ('', 'register', 'cdecl', 'stdcall', 'pascal', 'safecall', 'syscall', 'vectorcall');
-var
-  LValue: TNyxPascalCallingConvention;
 begin
   AConvention := pccDefault;
 
@@ -774,17 +784,7 @@ begin
   begin
     Exit(False);
   end;
-  for LValue := Succ(Low(TNyxPascalCallingConvention)) to High(TNyxPascalCallingConvention) do
-  begin
-
-    if Key = CNames[LValue] then
-    begin
-      AConvention := LValue;
-      Exit(True);
-    end;
-  end;
-  AConvention := pccDefault;
-  Result := False;
+  Result := NyxPascalCallingConventionNamed(Key, AConvention);
 end;
 
 procedure TTypeSyntax.Parameters(AParent: Integer);
@@ -944,8 +944,11 @@ begin
       if FNodes[Result].FConvention <> pccDefault then
       begin
         Problem(ptiUnsupportedType, 'A procedural type has conflicting calling conventions');
+      end
+      else
+      begin
+        FNodes[Result].FConvention := LConvention;
       end;
-      FNodes[Result].FConvention := LConvention;
       Step;
     end
     else if Word(pkwVarargs) or Word(pkwInline) then

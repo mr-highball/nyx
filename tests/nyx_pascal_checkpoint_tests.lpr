@@ -138,6 +138,8 @@ begin
       Number(Ord(LEntry.TypeForm));
       Number(Ord(LEntry.Visibility));
       Number(Ord(LEntry.ParameterMode));
+      Number(Ord(LEntry.CallingConvention));
+      Span(LEntry.CallingConventionSpan);
       for LFlag := Low(TNyxPascalSyntaxFlag) to High(TNyxPascalSyntaxFlag) do
       begin
         Number(Ord(LFlag in LEntry.Flags));
@@ -308,6 +310,11 @@ begin
   CompareEveryAppend('unit Phases; interface var X:Integer; implementation ' +
     'initialization repeat Inc(X); until X=2; try X:=42; finally X:=42; end; ' +
     'finalization begin X:=0; end; end.', LOptions);
+  CompareEveryAppend('unit ABIRequests; interface type TCall=function(A:LongInt):LongInt; winapi; ' +
+    'TNext=LongInt; var Direct:procedure; winapi = nil; After:LongInt; ' +
+    'procedure Run; winapi; implementation procedure Run; winapi; begin end; end.', LOptions);
+  CompareEveryAppend('unit ABIConflict; interface procedure Run; [winapi,cdecl]; ' +
+    'procedure Next; implementation end.', LOptions);
   CompareEveryAppend('unit OldPhase; interface implementation begin ' +
     'case 1 of 1:begin end; end; end.', LOptions);
   CompareEveryAppend('unit MissingPhase; interface implementation initialization ' +

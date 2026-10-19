@@ -25,7 +25,7 @@ unit nyx.pascal.syntax;
 
 interface
 
-uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing;
+uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.conventions;
 
 type
   { Scope/entry/diagnostic/depth quotas refuse the complete candidate rather than
@@ -69,6 +69,25 @@ type
     psavPublic, psavPublished, psavAutomated);
   { Pascal parameter passing syntax, copied into each grouped parameter entry. }
   TNyxPascalSyntaxParameterMode = (pspmValue, pspmConst, pspmVar, pspmOut, pspmConstRef);
+  { Declaration-facing alias for the shared authored-request value. Distinct
+    source names below avoid shadowing the compiler-context policy enum. The
+    original procedural-type RTTI names/ordinals remain owned by conventions. }
+  TNyxPascalRoutineConvention = nyx.pascal.conventions.TNyxPascalCallingConvention;
+
+const
+  { Compile-time names for declaration callers. There is one enum value owner;
+    these names introduce no runtime state or compiler default. }
+  prcDefault = nyx.pascal.conventions.pccDefault;
+  prcRegister = nyx.pascal.conventions.pccRegister;
+  prcCdecl = nyx.pascal.conventions.pccCdecl;
+  prcStdcall = nyx.pascal.conventions.pccStdcall;
+  prcPascal = nyx.pascal.conventions.pccPascal;
+  prcSafecall = nyx.pascal.conventions.pccSafecall;
+  prcSyscall = nyx.pascal.conventions.pccSyscall;
+  prcVectorcall = nyx.pascal.conventions.pccVectorcall;
+  prcWinapi = nyx.pascal.conventions.pccWinapi;
+
+type
   { Standard source hint intent. Messages remain exact source expressions;
     presence does not emit compiler diagnostics or change type identity. }
   TNyxPascalHintKind = (phkDeprecated, phkPlatform, phkExperimental, phkUnimplemented);
@@ -296,6 +315,8 @@ type
     FLinkageSpan: TNyxPascalSpan;
     FFirstIntrinsic: Integer;
     FLastIntrinsic: Integer;
+    FConvention: TNyxPascalRoutineConvention;
+    FConventionSpan: TNyxPascalSpan;
   public
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
@@ -316,6 +337,11 @@ type
     property TypeForm: TNyxPascalSyntaxTypeForm read FForm;
     property Visibility: TNyxPascalSyntaxVisibility read FVisibility;
     property ParameterMode: TNyxPascalSyntaxParameterMode read FParameterMode;
+    { First authored routine request and its exact keyword. Default/empty means
+      absent, not an effective default. Conflicting requests retain Unsupported;
+      consumers must respect declaration/scope uncertainty before inference. }
+    property CallingConvention: TNyxPascalRoutineConvention read FConvention;
+    property CallingConventionSpan: TNyxPascalSpan read FConventionSpan;
     property Flags: TNyxPascalSyntaxFlags read FFlags;
     { LinkageSpan encloses the authored suffixes, including their operands and
       intervening routine modifiers; an empty span means no linkage suffix.
@@ -538,6 +564,12 @@ type
 { Pure analysis on copied text. Unknown/missing syntax retains preceding
   declarations and physical spans with explicit recovery issues. Quotas and
   cancellation refuse the complete candidate; no parser result admits source. }
+{ Closed source-spelling lookup shared by declaration and type readers. Callers
+  separately enforce lexical kind/escaping/context. Unknown names return false
+  with Default, never a guessed platform alias or compiler default. }
+function NyxPascalCallingConventionNamed(const AName: TNyxText;
+  out AConvention: TNyxPascalRoutineConvention): Boolean;
+
 function NewNyxPascalSyntaxSnapshot(const ASource: TNyxText): INyxPascalSyntaxSnapshot; overload;
 function NewNyxPascalSyntaxSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalSyntaxOptions;
@@ -1035,6 +1067,9 @@ type
     { Closed routine clause lookahead; escaped/contextual type names keep their
       source role, and member PUBLIC remains a visibility section. }
     function RoutineClause(AScope: Integer = -1): Boolean;
+    function RoutineConvention(out AConvention: TNyxPascalRoutineConvention): Boolean;
+    procedure SetRoutineConvention(ADeclaration: Integer;
+      AConvention: TNyxPascalRoutineConvention; const ASpan: TNyxPascalSpan);
     function HintWord(out AKind: TNyxPascalHintKind): Boolean;
     function AtHint(AExpressionStart: Integer): Boolean;
     procedure DeclarationHints(ADeclaration: Integer);
@@ -2845,6 +2880,8 @@ begin
   LEntry.Value.FLastHint := -1;
   LEntry.Value.FFirstIntrinsic := -1;
   LEntry.Value.FLastIntrinsic := -1;
+  LEntry.Value.FConvention := prcDefault;
+  LEntry.Value.FConventionSpan := NyxPascalSpan(0, 0);
   LEntry.Value.FAnonymous := AAnonymous;
 
   if (AKind = psdkField) and (FActiveArm >= 0) and
@@ -3141,6 +3178,53 @@ begin
   end;
 end;
 
+function NyxPascalCallingConventionNamed(const AName: TNyxText;
+  out AConvention: TNyxPascalRoutineConvention): Boolean;
+const
+  CNames: array[TNyxPascalRoutineConvention] of TNyxText =
+    ('', 'register', 'cdecl', 'stdcall', 'pascal', 'safecall', 'syscall', 'vectorcall', 'winapi');
+var
+  LKey: TNyxText;
+  LValue: TNyxPascalRoutineConvention;
+begin
+  LKey := NyxPascalASCIIKey(AName);
+  for LValue := Succ(Low(TNyxPascalRoutineConvention)) to High(TNyxPascalRoutineConvention) do
+  begin
+
+    if LKey = CNames[LValue] then
+    begin
+      AConvention := LValue;
+      Exit(True);
+    end;
+  end;
+  AConvention := prcDefault;
+  Result := False;
+end;
+
+function TSyntaxSnapshot.RoutineConvention(out AConvention: TNyxPascalRoutineConvention): Boolean;
+var
+  LToken: TNyxPascalToken;
+begin
+  AConvention := prcDefault;
+  LToken := Tok;
+  Result := (LToken.Kind = ptkWord) and not LToken.Escaped and
+    NyxPascalCallingConventionNamed(Name, AConvention);
+end;
+
+procedure TSyntaxSnapshot.SetRoutineConvention(ADeclaration: Integer;
+  AConvention: TNyxPascalRoutineConvention; const ASpan: TNyxPascalSpan);
+begin
+
+  if Entry(ADeclaration).Value.CallingConvention <> prcDefault then
+  begin
+    Unsupported(Entry(ADeclaration).Value.Scope, 'This routine has conflicting calling conventions', ASpan);
+    Include(EditEntry(ADeclaration).Value.FFlags, psdfUnsupported);
+    Exit;
+  end;
+  EditEntry(ADeclaration).Value.FConvention := AConvention;
+  EditEntry(ADeclaration).Value.FConventionSpan := ASpan;
+end;
+
 { Modifier spellings shared by lookahead and the plain zero-operand path.
   Hints and platform/linker clauses use their own operand readers first. }
 function RoutineModifier(AWord: TNyxPascalWord): Boolean;
@@ -3212,6 +3296,7 @@ var
   LFlag: TNyxPascalLinkageFlag;
   LHint: TNyxPascalHintKind;
   LToken: TNyxPascalToken;
+  LConvention: TNyxPascalRoutineConvention;
 begin
   Result := False;
   LToken := Tok;
@@ -3220,7 +3305,7 @@ begin
   begin
     Exit;
   end;
-  Result := RoutineModifier(LToken.Word) or HintWord(LHint);
+  Result := RoutineModifier(LToken.Word) or HintWord(LHint) or RoutineConvention(LConvention);
 
   if LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
   begin
@@ -3282,6 +3367,8 @@ var
   LKey: TNyxPascalSpan;
   LOperand: Integer;
   LColon: Boolean;
+  LIsConvention: Boolean;
+  LConvention: TNyxPascalRoutineConvention;
 begin
   Result := False;
   LStart := Tok.Span.Start;
@@ -3321,8 +3408,13 @@ begin
         operand rules while its unsupported source remains preserved. }
       LFlag := plfPlatformAttributes;
       LKey := Tok.Span;
+      LIsConvention := RoutineConvention(LConvention);
 
-      if (Tok.Kind = ptkWord) and not Tok.Escaped and
+      if LIsConvention then
+      begin
+        SetRoutineConvention(ADeclaration, LConvention, LKey);
+      end
+      else if (Tok.Kind = ptkWord) and not Tok.Escaped and
         LinkageFlagNamed(NyxPascalASCIIKey(Name), LFlag) then
       begin
         Include(EditEntry(ADeclaration).Value.FLinkage, LFlag);
@@ -3337,7 +3429,7 @@ begin
       Step;
       LColon := False;
 
-      if (LFlag in [plfRTLProcedure, plfNoReturn, plfIOCheck]) and
+      if (LIsConvention or (LFlag in [plfRTLProcedure, plfNoReturn, plfIOCheck])) and
         not (Sym(psoComma) or Sym(psoCloseBracket)) then
       begin
         Unsupported(Entry(ADeclaration).Value.Scope,
@@ -3576,13 +3668,12 @@ procedure TSyntaxSnapshot.RoutineTypeSuffix(AArmEnd: Boolean; AInitializerBounda
   function Modifier(AOffset: Integer): Boolean;
   var
     LToken: TNyxPascalToken;
+    LConvention: TNyxPascalRoutineConvention;
   begin
     LToken := Tok(AOffset);
     Result := (LToken.Kind = ptkWord) and not LToken.Escaped and
-      ((LToken.Word in [pkwCdecl, pkwStdcall, pkwPascal, pkwSafecall,
-        pkwRegister, pkwVarargs, pkwInline]) or
-        (NyxPascalASCIIKey(Name(AOffset)) = 'syscall') or
-        (NyxPascalASCIIKey(Name(AOffset)) = 'vectorcall'));
+      ((LToken.Word in [pkwVarargs, pkwInline]) or
+        NyxPascalCallingConventionNamed(Name(AOffset), LConvention));
   end;
 
 begin
@@ -4670,6 +4761,8 @@ var
   LOwner: TNyxText;
   LGenericSpan: TNyxPascalSpan;
   LHint: TNyxPascalHintKind;
+  LConvention: TNyxPascalRoutineConvention;
+  LIsConvention: Boolean;
 begin
   Enter;
   try
@@ -4817,7 +4910,9 @@ begin
         Continue;
       end;
 
-      if not RoutineModifier(Tok.Word) and not HintWord(LHint) then
+      LIsConvention := RoutineConvention(LConvention);
+
+      if not RoutineModifier(Tok.Word) and not HintWord(LHint) and not LIsConvention then
       begin
         Break;
       end;
@@ -4838,6 +4933,11 @@ begin
       if Word(pkwOverload) then
       begin
         Include(EditEntry(LEntry).Value.FFlags, psdfOverload);
+      end;
+
+      if LIsConvention then
+      begin
+        SetRoutineConvention(LEntry, LConvention, Tok.Span);
       end;
       Step;
 

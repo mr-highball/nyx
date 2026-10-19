@@ -33,7 +33,92 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed module lifecycle scopes — 2026-10-19
+## Current integration: Shared authored calling conventions; resolved RTL structure — 2026-10-19
+
+The previous turn is verified progress: f07bdce is qualified and pushed. This
+continuation follows the actual VirtualAlloc2 winapi suffix through existing
+declaration/type/context/binding owners. Inspected FPC pdecsub maps the routine
+modifier through its target, while globals/switches use a different closed table
+for global CALLING defaults. Nyx retains the request without inferring that target
+mapping or falsely admitting CALLING WINAPI. The full library/Studio/resolver
+outcome stays active; no full criterion, task, counter, credit, DONE, parity,
+adoption or delivery closes.
+
+The value-only conventions unit owns the shared enum. Procedural types retain
+their existing qualified API, ordinals, native RTTI type name and old enumerator
+spellings; declaration-facing aliases avoid shadowing the separate compiler-policy
+enum. Appended Winapi stays distinct from cdecl/stdcall. One closed spelling reader
+serves both declaration and type parsing. Routine declarations retain the first
+typed request and exact keyword span independently of parameters, result type,
+linkage, body and global defaults. Bracket metadata retains intent without asserting
+native mode eligibility. The declaration value gains scalar/span fields, requiring
+matched consumers to rebuild; no public interface GUID changes or binary/RTTI
+unit-identity interoperability qualification is claimed.
+
+Unknown names/attributes, operands and conflicting requests retain diagnostics/
+refusal. Conflicts preserve the first request rather than supplying an effective
+winner. Escaped names, contextual alias/variable names and qualified result names
+keep their original roles. Type, initializer and following-declaration boundaries
+remain separate. No interface enters a record/static array. Native execution of
+the whole independent Delphi-mode unit/include returns 42 through named, inline
+variable and record callbacks. The compiler owns its actual ABI; this proves no
+other target's alias or calling compatibility.
+
+All eight owned Pascal inputs are frozen before final qualification. Expanded
+types/origins pass 420 native checks; binding passes 73, retaining the symbolic
+request through ordinary inline and alias type queries without mutating captured
+global policy. Expanded append/checkpoint comparison passes 6,526, including the
+new fields/spans in every immutable snapshot comparison. Existing policy passes
+115, syntax 8,191, prefix storage 1,265, source storage 207 and work admission 411.
+All have clean heaps. A deliberate pre-fix RTTI check fails with clean heap and
+remains retained. A shared enum owner fixes its observed name regression; the
+accepted native checks preserve both old enum/type RTTI names and ordinals.
+
+The required unchanged original RTL consumer PASSES all 56 native checks with
+clean heap. System Source.Resolved remains TRUE with zero translation diagnostics:
+13,101 declarations/zero syntax diagnostics/31 answers/no pending query. The one
+removed declaration was the spurious winapi variable. ObjPas remains 209/zero/one
+with no pending query. Exact indexed Free/FreeInstance completion, original
+objpash.inc token navigation after provider retirement and detached insertion
+remain ready. These results qualify the original structural frontier, not complete
+canonical types, language meaning, whole-module coherence or the original criterion.
+
+Five initial queries, one explicit Word job, three-of-eight symbol preparation,
+six dynamic jobs inside eight, two-million view/four-million aggregate caps,
+64 rounds and exact ordered input/context/answer identity remain. All 88 main
+compiler jobs succeed with zero owned warnings/210 upstream; the deliberate
+emission-oracle warning stays separate. All forty maintained/seven additional
+native consumers plus the actual 504-file/2,361,074-token corpus pass: 49 accepted
+native logs including RTL, all clean heaps. Thirty-eight browser compilations
+include both newly direct type/binding consumers and Studio/worker; native Studio/
+backend compile as applicable. Browser execution, physical editor/input,
+whole-resolver latency, full component breadth, parity, adoption and delivery
+remain unqualified here.
+
+Preservation retains 675 unrelated/683 maintained-source pins, 97 RTL/24 compiler
+inputs plus previous and four current compiler inspections, 156 original unit
+packets/48 includes, 349 frozen release artifacts, nine prior contexts, thirteen
+foreign planning files and five exact current-start protected files. Historical
+global-configuration preservation failure remains retained and false; no restoration
+occurs. All owned processes/readers are terminal and joined; LAN stays offline
+and native Nyx tools absent. No host/config retry, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema/rollout or sub-agent occurs. Ignored
+`.local/winapi-request-paths-private.json` owns frozen inputs, retained failures,
+qualification, preservation and final source/remote receipts.
+
+Stop convention/RTTI/fixture/compiler/capture variants. Reassess the complete
+canonical type/module and incremental requirements against the original authoring
+criterion before choosing another parser change. Use the now-resolved original
+System/ObjPas input through existing type/binding/proof/provider owners to locate
+a concrete remaining semantic mismatch. Zero structural diagnostics and the
+two-member prefix are not a substitute for full language/compiler meaning or
+editor adoption. Preserve original input/context/ordered-answer identity, budgets,
+probes, cancellation and atomic refusal. Full statement/expression meaning,
+canonical identity/module coherence/incremental budgets/editor/input/navigation/
+quality/component breadth/native-browser parity/adoption/delivery and the original
+criterion stay open; the goal remains active.
+
+## Previous integration: Typed module lifecycle scopes — 2026-10-19
 
 The previous turn is verified progress: 9ccff26 is qualified and pushed. The
 remaining original diagnostics locate ten entries around System's initialization

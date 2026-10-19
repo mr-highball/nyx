@@ -26,7 +26,8 @@ program nyx_pascal_types_tests;
 
 uses SysUtils, Classes, nyx.text, nyx.scheduler, nyx.pascal.lexing,
   nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.types, nyx.pascal.syntax.translated;
+  nyx.pascal.types, nyx.pascal.syntax.translated, nyx.bytes
+  {$ifndef PAS2JS}, TypInfo, calling.winapi.fixture{$endif};
 
 type
   {$ifndef PAS2JS}
@@ -344,6 +345,177 @@ begin
   Check(not LType.Complete, 'Conflicting procedural conventions remain explicit type diagnostics');
 end;
 
+{ Declaration and procedural-type requests share a closed source contract.
+  This checks authored intent and ownership, independently of compiler admission
+  and the separate global CALLING policy domain. }
+procedure WinapiRequests;
+const
+  CSource: TNyxText = 'unit ABIRequests; interface type ' +
+    'TCall=function(A:LongInt):LongInt; WiNaPi; ' +
+    'TSlots=record Callback:procedure; winapi; After:LongInt; end; ' +
+    'TLast=procedure; &winapi=LongInt; ' +
+    'var Direct:function(A:LongInt):LongInt; winapi = nil; After:LongInt; ' +
+    'procedure Output(const Value:LongInt); winapi; ' +
+    'function Answer:LongInt winapi; implementation ' +
+    'procedure Output(const Value:LongInt); winapi; begin end; ' +
+    'function Answer:LongInt; winapi; begin Result:=42; end; end.';
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LType: INyxPascalTypeSyntax;
+  LDecl: TNyxPascalSyntaxDeclaration;
+  LAt: Integer;
+  LMembers: Integer;
+  LConvention: TNyxPascalCallingConvention;
+  LSource: INyxPascalTranslation;
+begin
+  Check((Ord(pccDefault) = 0) and (Ord(pccCdecl) = 2) and
+    (Ord(pccVectorcall) = 7) and (Ord(pccWinapi) = 8),
+    'The shared convention contract preserves procedural-type ordinals');
+  {$ifndef PAS2JS}
+  Check(GetEnumName(TypeInfo(TNyxPascalCallingConvention), Ord(pccCdecl)) = 'pccCdecl',
+    'The shared owner preserves the original native RTTI enum spellings');
+  Check(PTypeInfo(TypeInfo(TNyxPascalCallingConvention))^.Name = 'TNyxPascalCallingConvention',
+    'The compatibility type preserves its original native RTTI type name');
+  {$endif}
+  LConvention := nyx.pascal.syntax.prcWinapi;
+  Check((LConvention = nyx.pascal.types.pccWinapi) and
+    NyxPascalCallingConventionNamed('WiNaPi', LConvention),
+    'The old qualified type API and declaration API share the same typed request');
+  Check(not NyxPascalCallingConventionNamed('future_call', LConvention) and (LConvention = pccDefault),
+    'Unknown spellings return no guessed convention');
+  LSyntax := NewNyxPascalSyntaxSnapshot(CSource);
+  Check(LSyntax.DiagnosticCount = 0, 'Winapi suffixes preserve complete declaration structure');
+  LAt := LSyntax.Named(0, 'TCall');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccWinapi),
+    'Mixed-case authored Winapi stays distinct from stdcall and cdecl');
+  Validate(LType);
+  LMembers := LSyntax.Declaration(LSyntax.Named(0, 'TSlots')).NestedScope;
+  LAt := LSyntax.Named(LMembers, 'Callback');
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LSyntax.Declaration(LAt).TypeSpan,
+    TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccWinapi) and
+    (LSyntax.Named(LMembers, 'After') >= 0), 'Record callback modifiers preserve the next field');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'Direct'));
+  LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LDecl.TypeSpan, TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccWinapi) and
+    (LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')) and (LSyntax.Named(0, 'After') >= 0),
+    'The procedural variable owns Winapi while its initializer and sibling remain separate');
+  Check((LSyntax.Named(0, 'winapi') >= 0) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(LSyntax.Named(0, 'TLast')).TypeSpan) = TNyxText('procedure')),
+    'An escaped contextual type name cannot become a preceding modifier');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'Output'));
+  Check((LDecl.CallingConvention = prcWinapi) and
+    (LSyntax.Lexical.Slice(LDecl.CallingConventionSpan) = TNyxText('winapi')),
+    'An ordinary routine exposes its typed request and exact keyword span');
+  Check(LSyntax.Declaration(LSyntax.Named(LDecl.NestedScope, 'Value')).ParameterMode = pspmConst,
+    'The convention preserves the original routine parameter mode');
+  LDecl := LSyntax.Declaration(LDecl.NextNamed);
+  Check((LDecl.CallingConvention = prcWinapi) and LSyntax.Scope(LDecl.NestedScope).Complete and
+    not (psdfForward in LDecl.Flags), 'The implementation keeps its request and ordinary body');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'Answer'));
+  Check((LDecl.CallingConvention = prcWinapi) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('LongInt')),
+    'An adjacent first modifier stays outside the routine result type');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Names; interface type TPlain=procedure; ' +
+    'winapi=LongInt; function Value:Names.winapi; implementation end.');
+  Check((LSyntax.DiagnosticCount = 0) and (LSyntax.Named(0, 'winapi') >= 0) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(LSyntax.Named(0, 'TPlain')).TypeSpan) = TNyxText('procedure')),
+    'A contextual alias name retains its own equals-sign boundary');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'Value'));
+  Check((LDecl.CallingConvention = prcDefault) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('Names.winapi')),
+    'A qualified result name cannot impersonate a following calling modifier');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Variables; interface var Plain:procedure; ' +
+    'winapi:LongInt; After:LongInt; implementation end.');
+  Check((LSyntax.DiagnosticCount = 0) and (LSyntax.Named(0, 'winapi') >= 0) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(LSyntax.Named(0, 'Plain')).TypeSpan) = TNyxText('procedure')),
+    'A following contextual variable name retains its own colon and type');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Bracket; interface procedure P; [WiNaPi]; implementation end.');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'P'));
+  Check((LSyntax.DiagnosticCount = 0) and (LDecl.CallingConvention = prcWinapi) and
+    (LSyntax.Lexical.Slice(LDecl.CallingConventionSpan) = TNyxText('WiNaPi')),
+    'Bracket classification preserves intent without asserting native mode eligibility');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Conflict; interface procedure P; cdecl; winapi; implementation end.');
+  LDecl := LSyntax.Declaration(LSyntax.Named(0, 'P'));
+  Check((LSyntax.DiagnosticCount > 0) and (psdfUnsupported in LDecl.Flags) and
+    (LDecl.CallingConvention = prcCdecl), 'Conflicting routine requests retain the first spelling and explicit refusal');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Operand; interface procedure P; [winapi:42]; implementation end.');
+  Check((LSyntax.DiagnosticCount > 0) and
+    (psdfUnsupported in LSyntax.Declaration(LSyntax.Named(0, 'P')).Flags),
+    'A convention marker cannot acquire an operand');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Unknown; interface procedure P; [winapi,future_call]; implementation end.');
+  Check((LSyntax.DiagnosticCount > 0) and
+    (psdfUnsupported in LSyntax.Declaration(LSyntax.Named(0, 'P')).Flags),
+    'An unknown neighboring attribute keeps its uncertainty');
+  LType := Parse('procedure; winapi; cdecl');
+  Check(not LType.Complete and (LType.Node(LType.Root).CallingConvention = pccWinapi),
+    'Conflicting procedural-type requests retain the first request without admission');
+  LType := Parse('procedure; &winapi');
+  Check(not LType.Complete, 'An escaped name is not a standalone calling modifier');
+  LType := Parse('procedure; future_call');
+  Check(not LType.Complete, 'Unknown procedural modifiers remain explicit type failures');
+  LSource := NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact).WithFile(
+    NyxPascalPhysicalFile('global.pas'), '{$calling winapi}'), NyxPascalPhysicalFile('global.pas'),
+    Facts, TNyxPascalTranslationOptions.Defaults);
+  Check(not LSource.Resolved, 'The separate global CALLING table cannot silently admit the routine-only alias');
+end;
+
+{$ifndef PAS2JS}
+{ Read the entire independently compiled native unit/include. Source inspection
+  and actual callback execution qualify different contracts; neither computes a
+  portable mapping from Winapi to another convention. }
+procedure WholeWinapiInput;
+var
+  LFiles: INyxPascalFileCatalog;
+  LName: TNyxText;
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+  LView: INyxPascalTranslatedSyntax;
+  LDecl: TNyxPascalSyntaxDeclaration;
+  LType: INyxPascalTypeSyntax;
+  LOrigin: TNyxPascalSyntaxOrigin;
+  LAt: Integer;
+begin
+  Check(CompilerWinapiValue = 42, 'The native compiler executes named, variable and record Winapi callbacks');
+
+  if ParamCount = 0 then Exit;
+  LFiles := NewNyxPascalFileCatalog(pfcExact);
+  for LAt := 0 to 1 do
+  begin
+    LName := 'calling.winapi.fixture.pas';
+
+    if LAt = 1 then LName := 'calling.winapi.fixture.inc';
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/' + String(LName),
+      fmOpenRead or fmShareDenyWrite);
+    try
+      Check((LStream.Size > 0) and (LStream.Size < 65536), 'The whole Winapi source packet is bounded');
+      SetLength(LBytes, LStream.Size);
+      LStream.ReadBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+    LFiles := LFiles.WithFile(NyxPascalPhysicalFile(LName), NyxDecodeUTF8(LBytes));
+  end;
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+    NyxPascalPhysicalFile('calling.winapi.fixture.pas'), Facts, TNyxPascalTranslationOptions.Defaults),
+    TNyxPascalSyntaxOptions.Defaults);
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The complete native unit/include retain resolved translation and declaration syntax');
+  LDecl := LView.Syntax.Declaration(LView.Syntax.Named(0, 'IncrementApi'));
+  Check((LDecl.CallingConvention = prcWinapi) and LView.Syntax.Scope(LDecl.NestedScope).Complete,
+    'The native ordinary implementation retains its request and complete body');
+  LOrigin := LView.Origin(LView.OriginAt(LDecl.CallingConventionSpan.Start));
+  Check(LView.Source.Files.FileAt(LView.Source.Occurrence(LOrigin.Occurrence).FileIndex).Name =
+    TNyxText('calling.winapi.fixture.inc'), 'Convention navigation retains the original include');
+  LDecl := LView.Syntax.Declaration(LView.Syntax.Named(0, 'Direct'));
+  LType := NewNyxPascalTypeSyntax(LView.Syntax.Lexical, LDecl.TypeSpan, TNyxPascalTypeOptions.Defaults);
+  Check(LType.Complete and (LType.Node(LType.Root).CallingConvention = pccWinapi) and
+    (LView.Syntax.Named(0, 'AfterValue') >= 0), 'The compiled initialized callback retains its typed request and sibling');
+end;
+{$endif}
+
 procedure Projection;
 const
   CRoot = 'unit Demo; interface const Caption = ''Ready 🐾''#0; type TBox<T>=class end; ' +
@@ -525,9 +697,11 @@ begin
   try
     Types;
     ProceduralDeclarations;
+    WinapiRequests;
     Projection;
     {$ifndef PAS2JS}
     ActualControls;
+    WholeWinapiInput;
     {$endif}
     WriteLn('PASS ', GChecks, ' structured-type/physical-origin checks');
   except

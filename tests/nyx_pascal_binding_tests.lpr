@@ -141,6 +141,44 @@ begin
     'An unsupported inline shadow cannot grant false outer-scope lookup');
 end;
 
+{ Typed procedural requests survive ordinary semantic binding and aliases.
+  The caller's captured global default is a separate fact and is never replaced
+  by a platform-specific request authored on one declaration. }
+procedure WinapiBinding;
+var
+  LContext: INyxPascalCompilerContext;
+  LBefore: INyxPascalCompilerContext;
+  LView: INyxPascalTranslatedSyntax;
+  LWorld: INyxPascalSemanticWorld;
+  LType: INyxPascalSemanticType;
+  LFiles: INyxPascalFileCatalog;
+begin
+  LContext := NyxPascalWithCompilerPolicies(Facts,
+    TNyxPascalCompilerPolicies.Unknown.CallBy(pccCdecl));
+  LBefore := CaptureNyxPascalCompilerContext(LContext);
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('abibindings.pas'),
+    'unit ABIBindings; interface type TResult=record end; ' +
+    'TCallback=function(AValue:TResult):TResult; winapi; ' +
+    'var Direct:function(AValue:TResult):TResult; winapi; Named:TCallback; implementation end.');
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+    NyxPascalPhysicalFile('abibindings.pas'), LContext, TNyxPascalTranslationOptions.Defaults),
+    TNyxPascalSyntaxOptions.Defaults);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LType := Shape(LWorld, NamedSymbol(LWorld, 0, 'Direct'));
+  Check((LType.Kind = pstFunction) and
+    (LType.Syntax.Node(LType.SyntaxNode).CallingConvention = prcWinapi),
+    'An inline callback retains the symbolic Winapi request through ordinary type binding');
+  Check((LType.ParameterCount = 1) and (LType.ParameterName(0) = TNyxText('AValue')),
+    'Convention binding preserves the original parameter signature');
+  LType := TerminalType(Shape(LWorld, NamedSymbol(LWorld, 0, 'Named')));
+  Check((LType.Kind = pstFunction) and
+    (LType.Syntax.Node(LType.SyntaxNode).CallingConvention = prcWinapi),
+    'A named callback alias retains the same typed request');
+  Check(LContext.SameFacts(LBefore) and
+    (NyxPascalCompilerPolicies(LView.Source.State(LView.Source.StateCount - 1)).CallingConvention = pccCdecl),
+    'Authored routine conventions do not mutate or replace captured global calling policy');
+end;
+
 procedure Basic;
 var
   LWorld: INyxPascalSemanticWorld;
@@ -483,6 +521,7 @@ begin
   try
     Basic;
     LifecycleBinding;
+    WinapiBinding;
     {$ifndef PAS2JS}
     CompiledFixtures;
     ActualControls;
