@@ -33,7 +33,78 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declaration-size binding proof; RTL work refusal — 2026-10-19
+## Current integration: Shared compiler-state history; unchanged RTL work refusal — 2026-10-19
+
+The previous turn is verified progress: 2c01170 is qualified and pushed. This
+continuation identified repeated copying of append-only context, macro-state and
+saved-settings vectors in existing translation freezes. The original complete
+library/Studio/resolver outcome remains active. No criterion, task, counter,
+credit, DONE, parity, adoption or delivery closes.
+
+Private immutable state rows now capture their context, macro environment, saved
+settings frames and knownness once. Completed 32-row pages are shared by independent
+frozen directories; each unfinished tail remains private to its snapshot. No
+mutable directory slots, producer/reader/budget/callback/predecessor ownership or
+interfaces in records/static arrays are introduced. Saved frames retain exact
+identity and physical origins. Ordinary source reads use the live append vector;
+frozen reads use pages without an owner chain. Construction caches retire on
+success, failure and cancellation. State capture and each explicit page/directory
+reference copy enter the existing analysis budget before performed work. Public
+interfaces, input/context/ordered-answer identity and all quotas remain unchanged.
+
+The existing prefix-storage consumer gains growing state-page/tail comparisons
+against the complete vector, nested saved settings, macro writes, observer failure,
+cancellation and post-retirement checks. A retained old-product regression fails
+with clean heap: 64 questions over 1,025 states consume 276,685 frozen-row units.
+The same source and assertion pass at 21,683 units, including token/directory work:
+about 92% fewer units in this controlled workload. This is not a whole-resolver
+speed, latency or incremental-replay claim. The final consumer passes 1,258 checks
+with clean heap. Its final source differs from the first freeze by one style-only
+blank line above an if block; both final native/browser compilations are retained
+separately, alongside the earlier evidence. Production source stays frozen.
+
+All forty maintained and seven additional native consumers pass, plus the actual
+503-file/2,358,089-token lexical corpus: 48 passing native logs with clean heaps.
+All 86 accepted main compiler jobs succeed with zero owned warnings/196 upstream
+warnings. The separate emission oracle retains its deliberate warning outside
+product debt. Thirty-six browser compilations include Studio and its worker;
+native Studio/backend also compile. Browser execution, physical editor/input,
+parity, performance, adoption and delivery remain unqualified by this packet.
+
+The separate required unchanged original RTL run still FAILS with clean heap at
+the exact prior aggregate refusal: phase=prefix, used=4000000, requested=1,
+limit=4000000, translated=286684, round=30, analysis=frozen-row. The focused sharing
+improvement does not move this real integration frontier. Longint, Int64, Pointer,
+VarHeader, CommonHeader and FreeChunk remain six dynamic jobs inside the existing
+eight ceiling; five initial queries, one Word job and three-of-eight symbol
+preparation stay exact. No final semantic/indexed receipt follows the refusal.
+Earlier System/ObjPas/Free/FreeInstance successes remain historical, not current
+RTL success or proof of full source meaning.
+
+Preservation retains 666 unrelated/668 maintained-source pins, 97 RTL/24 compiler
+inputs plus retained inspections, 156 original unit packets/48 includes, 349 frozen
+release artifacts, nine prior contexts, thirteen foreign planning files and five
+exact current-start protected files. The earlier global-configuration preservation
+failure remains retained and false; no restoration occurs. All owned process and
+reader handles are terminal and joined. LAN stays offline and native Nyx tools
+absent. No host/config retry, protected mutation, cleanup/restart, approval bypass,
+new tool/schema/rollout or sub-agent occurs. Ignored
+`.local/frozen-states-paths-private.json` owns frozen inputs, distinct passing/failed
+qualification, preservation, retained preparations and final source/remote receipts.
+
+Stop state-page/storage-fixture/compiler/capture variants. Reassess the remaining
+actual frozen-row work through existing conditions/translation/lexical owners:
+physical lexical directories, occurrence/file caches, policy/expansion rows and
+repeated source reconstruction are candidates, not established dominant causes.
+Identify the repeated work that exhausts the real unchanged run before another
+change. Preserve all performed-work admission, cancellation, atomic refusal, exact
+ordered input/context/answer identity, two-/four-million caps, 64 rounds and
+compiler/probe quotas. No truncation, skipped directives, guessed facts, added
+probes, weakened original assertions or new tool/schema replaces that failure.
+Full canonical types/modules/incremental budgets/editor/input/navigation/quality/
+component breadth/native-browser parity/adoption/delivery remain required.
+
+## Previous integration: Declaration-size binding proof; RTL work refusal — 2026-10-19
 
 The previous turn is verified progress: 498b372 is qualified and pushed. This
 continuation revalidated it and followed the actual CommonHeaderSize prerequisite

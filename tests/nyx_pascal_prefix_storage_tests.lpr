@@ -628,11 +628,252 @@ begin
   WriteLn('guarded summary source units / ', LCount, ' / exhaustive smaller limits / ', LCount - 1);
 end;
 
+{ Grow state history through several complete pages and every intervening tail.
+  Retained windows must agree after later PUSH/POP/macro writes, an observer
+  failure, or cancellation destroys the producer and its completed-page cache. }
+procedure StateBoundaries;
+var
+  LText: TNyxText;
+  LFiles: INyxPascalFileCatalog;
+  LFacts: INyxPascalCompilerContext;
+  LProbe: TTranslationCollector;
+  LOwner: INyxPascalConditionalFacts;
+  LSnapshot: INyxPascalTranslation;
+  LReference: array of INyxPascalTranslation;
+  LSettings: INyxPascalTranslationSettings;
+  LExpectedSettings: INyxPascalTranslationSettings;
+  LMacros: INyxPascalTranslationMacros;
+  LExpectedMacros: INyxPascalTranslationMacros;
+  LCancellation: INyxCancellationScope;
+  LMode: Integer;
+  LAt: Integer;
+  LState: Integer;
+  LFrame: Integer;
+  LRejected: Boolean;
+  LEqual: Boolean;
+begin
+  LText := 'unit StateBoundaries; {$macro on} interface const Anchor=1;';
+  for LAt := 0 to 65 do
+  begin
+
+    if LAt mod 16 = 0 then
+    begin
+      LText := LText + '{$push}';
+    end;
+
+    if Odd(LAt) then
+    begin
+      LText := LText + '{$H+}';
+    end
+    else
+    begin
+      LText := LText + '{$H-}';
+    end;
+    LText := LText + '{$define VALUE:=' + TNyxText(IntToStr(LAt)) + '}' +
+      '{$if declared(Anchor)}{$endif}';
+  end;
+  LText := LText + '{$pop}{$pop}{$pop}{$pop}{$pop} implementation end.';
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('root.pas'), LText);
+  LFacts := NewNyxPascalCompilerContext(ppcFPC, TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithOption('H', ppkTrue).WithFeature(ppfNestedComments, ppkFalse);
+  for LMode := 0 to 2 do
+  begin
+    LCancellation := NewNyxCancellationScope;
+    LProbe := TTranslationCollector.Create;
+    LOwner := LProbe;
+    LProbe.Cancellation := LCancellation;
+
+    if LMode = 1 then
+    begin
+      LProbe.AbortAfter := 35;
+    end;
+
+    if LMode = 2 then
+    begin
+      LProbe.CancelAfter := 35;
+    end;
+    LSnapshot := nil;
+    LRejected := False;
+    try
+      LSnapshot := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'), LFacts,
+        TNyxPascalTranslationOptions.Defaults, LCancellation, LOwner);
+    except
+      on EAbort do
+      begin
+        LRejected := True;
+      end;
+      on ENyxPascalAnalysisCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(((LMode = 0) and not LRejected and LSnapshot.Resolved and
+      (Length(LProbe.Windows) = 66)) or ((LMode > 0) and LRejected and
+      (LSnapshot = nil) and (Length(LProbe.Windows) = 35)),
+      'State-page producers complete or refuse atomically at the exact observer boundary');
+
+    if LMode = 0 then
+    begin
+      { The ordinary final source reads its live append vector, independently of
+        frozen page lookup. Check all cuts before retiring that source. }
+      Supports(LSnapshot, INyxPascalTranslationSettings, LExpectedSettings);
+      Supports(LSnapshot, INyxPascalTranslationMacros, LExpectedMacros);
+      for LAt := 0 to High(LProbe.Windows) do
+      begin
+        Supports(LProbe.Windows[LAt], INyxPascalTranslationSettings, LSettings);
+        Supports(LProbe.Windows[LAt], INyxPascalTranslationMacros, LMacros);
+        LEqual := True;
+        for LState := 0 to LProbe.Windows[LAt].StateCount - 1 do
+        begin
+          LEqual := LEqual and LProbe.Windows[LAt].State(LState).SameFacts(LSnapshot.State(LState)) and
+            LMacros.StateMacros(LState).SameMacros(LExpectedMacros.StateMacros(LState)) and
+            (LSettings.SettingsDepth(LState) = LExpectedSettings.SettingsDepth(LState));
+          for LFrame := 0 to LSettings.SettingsDepth(LState) - 1 do
+          begin
+            LEqual := LEqual and LSettings.SavedSettings(LState, LFrame).SameFacts(
+              LExpectedSettings.SavedSettings(LState, LFrame)) and
+              (LSettings.SettingsOrigin(LState, LFrame).Span.Start =
+                LExpectedSettings.SettingsOrigin(LState, LFrame).Span.Start);
+          end;
+        end;
+        Check(LEqual, 'Every growing frozen page agrees with the independent complete state vector');
+      end;
+      LExpectedSettings := nil;
+      LExpectedMacros := nil;
+      LReference := Copy(LProbe.Windows);
+    end;
+    LSnapshot := nil;
+    for LAt := 0 to High(LProbe.Windows) do
+    begin
+      LSnapshot := LProbe.Windows[LAt];
+      Supports(LSnapshot, INyxPascalTranslationSettings, LSettings);
+      Supports(LReference[LAt], INyxPascalTranslationSettings, LExpectedSettings);
+      Supports(LSnapshot, INyxPascalTranslationMacros, LMacros);
+      Supports(LReference[LAt], INyxPascalTranslationMacros, LExpectedMacros);
+      LEqual := (LSnapshot.StateCount = LReference[LAt].StateCount) and
+        (LSnapshot.Count = LReference[LAt].Count);
+      for LState := 0 to LSnapshot.StateCount - 1 do
+      begin
+        LEqual := LEqual and LSnapshot.State(LState).SameFacts(LReference[LAt].State(LState)) and
+          LMacros.StateMacros(LState).SameMacros(LExpectedMacros.StateMacros(LState)) and
+          LSettings.SettingsKnown(LState) and
+          (LSettings.SettingsDepth(LState) = LExpectedSettings.SettingsDepth(LState));
+        for LFrame := 0 to LSettings.SettingsDepth(LState) - 1 do
+        begin
+          LEqual := LEqual and LSettings.SavedSettings(LState, LFrame).SameFacts(
+            LExpectedSettings.SavedSettings(LState, LFrame)) and
+            (LSettings.SettingsOrigin(LState, LFrame).Occurrence =
+              LExpectedSettings.SettingsOrigin(LState, LFrame).Occurrence) and
+            (LSettings.SettingsOrigin(LState, LFrame).Span.Start =
+              LExpectedSettings.SettingsOrigin(LState, LFrame).Span.Start);
+        end;
+      end;
+      Check(LEqual, 'Shared completed states and private growing tails retain every historical lease');
+    end;
+    LOwner := nil;
+  end;
+end;
+
+{ A long immutable settings history followed by many semantic questions should
+  retain that history without copying every context, macro and saved-stack slot
+  again. The ordinary analysis receipt counts all actual frozen-row work, so the
+  assertion includes token tails/directories rather than hiding their cost. }
+procedure StateSharing;
+var
+  LText: TNyxText;
+  LFiles: INyxPascalFileCatalog;
+  LFacts: INyxPascalCompilerContext;
+  LProbe: TTranslationCollector;
+  LOwner: INyxPascalConditionalFacts;
+  LSnapshot: INyxPascalTranslation;
+  LFirst: INyxPascalTranslation;
+  LSettings: INyxPascalTranslationSettings;
+  LFirstSettings: INyxPascalTranslationSettings;
+  LMacros: INyxPascalTranslationMacros;
+  LFirstMacros: INyxPascalTranslationMacros;
+  LBudget: INyxPascalAnalysisBudget;
+  LAt: Integer;
+  LState: Integer;
+  LLogical: Integer;
+  LWork: Integer;
+  LEqual: Boolean;
+begin
+  LText := 'unit StateHistory; interface const Anchor=1; {$push}';
+  for LAt := 1 to 1024 do
+  begin
+
+    if Odd(LAt) then
+    begin
+      LText := LText + '{$H+}';
+    end
+    else
+    begin
+      LText := LText + '{$H-}';
+    end;
+  end;
+  for LAt := 1 to 64 do
+  begin
+    LText := LText + '{$if declared(Anchor)}{$endif}';
+  end;
+  LText := LText + '{$pop} implementation end.';
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('root.pas'), LText);
+  LFacts := NewNyxPascalCompilerContext(ppcFPC, TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithOption('H', ppkTrue).WithFeature(ppfNestedComments, ppkFalse);
+  LProbe := TTranslationCollector.Create;
+  LOwner := LProbe;
+  LBudget := NewNyxPascalAnalysisBudget(1000000);
+  LSnapshot := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'), LFacts,
+    TNyxPascalTranslationOptions.Defaults, LBudget, LOwner);
+  Check(LSnapshot.Resolved and (Length(LProbe.Windows) = 64),
+    'Repeated semantic questions retain the complete admitted settings history');
+  LWork := LBudget.Receipt.Used(papFrozenRow);
+  LBudget.Retire;
+  LBudget := nil;
+  LSnapshot := nil;
+  LFirst := LProbe.Windows[0];
+  Supports(LFirst, INyxPascalTranslationSettings, LFirstSettings);
+  Supports(LFirst, INyxPascalTranslationMacros, LFirstMacros);
+  LLogical := 0;
+  for LAt := 0 to High(LProbe.Windows) do
+  begin
+    LSnapshot := LProbe.Windows[LAt];
+    Inc(LLogical, LSnapshot.StateCount);
+    Supports(LSnapshot, INyxPascalTranslationSettings, LSettings);
+    Supports(LSnapshot, INyxPascalTranslationMacros, LMacros);
+    LEqual := LSnapshot.StateCount = LFirst.StateCount;
+    for LState := 0 to LSnapshot.StateCount - 1 do
+    begin
+      LEqual := LEqual and LSnapshot.State(LState).SameFacts(LFirst.State(LState)) and
+        LMacros.StateMacros(LState).SameMacros(LFirstMacros.StateMacros(LState)) and
+        LSettings.SettingsKnown(LState) and
+        (LSettings.SettingsDepth(LState) = LFirstSettings.SettingsDepth(LState));
+
+      if LSettings.SettingsDepth(LState) > 0 then
+      begin
+        LEqual := LEqual and LSettings.SavedSettings(LState, 0).SameFacts(
+          LFirstSettings.SavedSettings(LState, 0)) and
+          (LSettings.SettingsOrigin(LState, 0).Occurrence =
+            LFirstSettings.SettingsOrigin(LState, 0).Occurrence) and
+          (LSettings.SettingsOrigin(LState, 0).Span.Start =
+            LFirstSettings.SettingsOrigin(LState, 0).Span.Start);
+      end;
+    end;
+    Check(LEqual, 'Historical context, macros and saved origins survive producer and budget retirement');
+  end;
+  WriteLn('state history / windows=', Length(LProbe.Windows), ' / states=', LFirst.StateCount,
+    ' / logical references=', LLogical, ' / all frozen work=', LWork);
+  Check(LWork < LLogical,
+    'All frozen work stays below even one full state-vector copy per semantic question');
+  LOwner := nil;
+end;
+
 begin
   try
     LexicalStorage;
     TranslationStorage;
     SummaryBoundaries;
+    StateBoundaries;
+    StateSharing;
     WriteLn('PASS ', GChecks, ' immutable prefix token storage checks');
   except
     on LError: Exception do

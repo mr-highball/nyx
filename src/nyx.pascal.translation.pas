@@ -464,6 +464,9 @@ uses SysUtils, nyx.bytes, nyx.editing, nyx.pascal.work;
 const
   { Immutable blocks bound each partial-tail copy and keep indexed reads flat. }
   CTranslationPrefixBlockSize = 256;
+  { Compiler states carry several immutable leases. Small pages bound the
+    private tail copied by each freeze without changing any analysis quota. }
+  CTranslationStateBlockSize = 32;
 
 type
   { Sealed bridge through exact occurrence/expansion storage. Public token
@@ -682,13 +685,56 @@ type
     function Context: INyxPascalCompilerContext;
     function Origin: TNyxPascalSettingsOrigin;
   end;
-  { Each historical state owns its copied frame vector. Frame interfaces point
-    outward to immutable snapshots, never back into translation or source owners. }
-  TCompilerSettingsStack = class
-  public
-    Frames: TCompilerSettingsFrames;
-    Known: Boolean;
+  { One append-only compiler state owns context/macros and a copied saved-stack
+    vector. Its leases point outward to immutable values only; published state
+    rows retain no producer, reader, callback, budget or predecessor. }
+  ITranslatedCompilerState = interface(IInterface)
+    function Context: INyxPascalCompilerContext;
+    function Macros: INyxPascalMacroEnvironment;
+    function SettingsKnown: Boolean;
+    function SettingsDepth: Integer;
+    function SavedFrame(AIndex: Integer): INyxSavedCompilerSettings;
     function SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
+  end;
+  { Dynamic interface slots belong to a class owner. Live append slots are never
+    aliased by frozen snapshots, and no interface enters a record/static array. }
+  TTranslatedCompilerStates = array of ITranslatedCompilerState;
+  { Captures a state once, before its row is published. All fields stay private;
+    consumers can inspect immutable leases but cannot replace saved frame slots. }
+  TTranslatedCompilerState = class(TInterfacedObject, ITranslatedCompilerState)
+  private
+    FContext: INyxPascalCompilerContext;
+    FMacros: INyxPascalMacroEnvironment;
+    FFrames: TCompilerSettingsFrames;
+    FKnown: Boolean;
+  public
+    constructor Create(const AContext: INyxPascalCompilerContext;
+      const AMacros: INyxPascalMacroEnvironment; const AFrames: TCompilerSettingsFrames;
+      AKnown: Boolean);
+    function Context: INyxPascalCompilerContext;
+    function Macros: INyxPascalMacroEnvironment;
+    function SettingsKnown: Boolean;
+    function SettingsDepth: Integer;
+    function SavedFrame(AIndex: Integer): INyxSavedCompilerSettings;
+    function SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
+  end;
+  { A page owns only immutable state leases. Completed pages can be shared by
+    unrelated frozen directories without retaining the live append vector. }
+  ITranslatedStateBlock = interface(IInterface)
+    function State(AIndex: Integer): ITranslatedCompilerState;
+  end;
+  { Each owner has independent directory slots; a partial last page belongs only
+    to that freeze and is never extended after publication. }
+  TTranslatedStateBlocks = array of ITranslatedStateBlock;
+  { Construction admits every copied lease before copying it. Cancellation is
+    borrowed only for construction and cannot outlive this immutable page. }
+  TTranslatedStateBlock = class(TInterfacedObject, ITranslatedStateBlock)
+  private
+    FRows: TTranslatedCompilerStates;
+  public
+    constructor Create(const ARows: TTranslatedCompilerStates; AFirst, ACount: Integer;
+      const ACancellation: INyxCancellationScope);
+    function State(AIndex: Integer): ITranslatedCompilerState;
   end;
   { Owns every cache/immutable vector. Construction alone retains cancellation;
     all published references point outward to data, never back to a document. }
@@ -722,9 +768,10 @@ type
       every exit. A detached freeze owns its immutable summary independently. }
     FTokenSummary: IPrefixTokenSummary;
     FOccurrences: array of TNyxPascalInclusion;
-    FStates: array of INyxPascalCompilerContext;
-    FMacroStates: array of INyxPascalMacroEnvironment;
-    FSettingsStates: array of TCompilerSettingsStack;
+    { Only the live translation appends rows. Frozen views retain immutable
+      pages; their completed-page cache retires with construction on every exit. }
+    FStateRows: TTranslatedCompilerStates;
+    FStateBlocks: TTranslatedStateBlocks;
     FCompilerFrames: TCompilerSettingsFrames;
     FSettingsKnown: Boolean;
     FMacros: INyxPascalMacroEnvironment;
@@ -765,6 +812,7 @@ type
     procedure Problem(AIssue: TNyxPascalTranslationIssue; AOccurrence: Integer;
       const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
     procedure SaveState;
+    function CompilerState(AIndex: Integer): ITranslatedCompilerState;
     procedure AddToken(AOccurrence, AToken: Integer; AExpansion: Integer = -1;
       AExpansionToken: Integer = -1);
     procedure Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
@@ -1294,6 +1342,7 @@ begin
     FPrefixConditions := nil;
     FWork := nil;
     FPrefixBlocks := nil;
+    FStateBlocks := nil;
     FTokenSummary := nil;
   end;
 end;
@@ -1307,7 +1356,6 @@ var
   LBlock: TTranslatedTokenBlock;
   LLease: ITranslatedTokenBlock;
   LDiagnostic: Integer;
-  LFrame: TCompilerSettingsStack;
 begin
   inherited Create;
 
@@ -1371,10 +1419,34 @@ begin
     end;
     FPrefixBlocks[LCount] := LLease;
   end;
-  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FStateCount);
-  FStates := Copy(ASource.FStates, 0, FStateCount);
-  NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FStateCount);
-  FMacroStates := Copy(ASource.FMacroStates, 0, FStateCount);
+  { Append history never changes earlier state rows. Cache completed pages once,
+    then copy only directory leases and the private unfinished tail. Even these
+    remaining copies are admitted; sharing does not discount performed work. }
+  while Length(ASource.FStateBlocks) < FStateCount div CTranslationStateBlockSize do
+  begin
+    LAt := Length(ASource.FStateBlocks);
+    LFirst := LAt * CTranslationStateBlockSize;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
+    SetLength(ASource.FStateBlocks, LAt + 1);
+    ASource.FStateBlocks[LAt] := TTranslatedStateBlock.Create(ASource.FStateRows,
+      LFirst, CTranslationStateBlockSize, ASource.FCancellation);
+  end;
+  LCount := Length(ASource.FStateBlocks);
+  SetLength(FStateBlocks, LCount + Ord(FStateCount mod CTranslationStateBlockSize <> 0));
+  for LAt := 0 to LCount - 1 do
+  begin
+    ASource.CheckCancellation;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
+    FStateBlocks[LAt] := ASource.FStateBlocks[LAt];
+  end;
+
+  if FStateCount mod CTranslationStateBlockSize <> 0 then
+  begin
+    LFirst := LCount * CTranslationStateBlockSize;
+    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
+    FStateBlocks[LCount] := TTranslatedStateBlock.Create(ASource.FStateRows,
+      LFirst, FStateCount - LFirst, ASource.FCancellation);
+  end;
   NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, Length(ASource.FExpansions));
   FExpansions := Copy(ASource.FExpansions, 0, Length(ASource.FExpansions));
   NyxPascalAdmitAnalysis(ASource.FCancellation, papDiagnosticRow, FDiagnosticCount);
@@ -1397,18 +1469,6 @@ begin
   FOptimizationCount := ASource.FOptimizationCount;
   NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow, FOptimizationCount);
   FOptimizationDirectives := Copy(ASource.FOptimizationDirectives, 0, FOptimizationCount);
-  SetLength(FSettingsStates, FStateCount);
-  for LAt := 0 to FStateCount - 1 do
-  begin
-    ASource.CheckCancellation;
-    NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow,
-      1 + Length(ASource.FSettingsStates[LAt].Frames));
-    LFrame := TCompilerSettingsStack.Create;
-    FSettingsStates[LAt] := LFrame;
-    LFrame.Known := ASource.FSettingsStates[LAt].Known;
-    LFrame.Frames := Copy(ASource.FSettingsStates[LAt].Frames, 0,
-      Length(ASource.FSettingsStates[LAt].Frames));
-  end;
   SetLength(FPhysical, FFiles.Count);
   for LAt := 0 to High(FPhysical) do
   begin
@@ -1462,10 +1522,6 @@ begin
   begin
     FPhysical[LAt].Free;
   end;
-  for LAt := 0 to High(FSettingsStates) do
-  begin
-    FSettingsStates[LAt].Free;
-  end;
   inherited Destroy;
 end;
 
@@ -1503,9 +1559,9 @@ end;
 procedure TTranslation.SaveState;
 begin
 
-  if (FStateCount > 0) and FStates[FStateCount - 1].SameFacts(FContext) and
-    FMacroStates[FStateCount - 1].SameMacros(FMacros) and
-    FSettingsStates[FStateCount - 1].SameStack(FCompilerFrames, FSettingsKnown) then
+  if (FStateCount > 0) and FStateRows[FStateCount - 1].Context.SameFacts(FContext) and
+    FStateRows[FStateCount - 1].Macros.SameMacros(FMacros) and
+    FStateRows[FStateCount - 1].SameStack(FCompilerFrames, FSettingsKnown) then
   begin
     Exit;
   end;
@@ -1515,18 +1571,93 @@ begin
     raise ENyxPascalTranslationLimit.Create('Pascal translation states exceed their budget');
   end;
 
-  if FStateCount = Length(FStates) then
+  { Capture the context, macro, row slot and saved frame leases once. Pages and
+    frozen directories separately admit every reference that they actually copy. }
+  NyxPascalAdmitAnalysis(FCancellation, papFrozenRow, 3 + Length(FCompilerFrames));
+
+  if FStateCount = Length(FStateRows) then
   begin
-    SetLength(FStates, Capacity(FStateCount, FOptions.MaximumStates));
-    SetLength(FMacroStates, Length(FStates));
-    SetLength(FSettingsStates, Length(FStates));
+    SetLength(FStateRows, Capacity(FStateCount, FOptions.MaximumStates));
   end;
-  FStates[FStateCount] := FContext;
-  FMacroStates[FStateCount] := FMacros;
-  FSettingsStates[FStateCount] := TCompilerSettingsStack.Create;
-  FSettingsStates[FStateCount].Frames := Copy(FCompilerFrames);
-  FSettingsStates[FStateCount].Known := FSettingsKnown;
+  FStateRows[FStateCount] := TTranslatedCompilerState.Create(FContext, FMacros,
+    FCompilerFrames, FSettingsKnown);
   Inc(FStateCount);
+end;
+
+function TTranslation.CompilerState(AIndex: Integer): ITranslatedCompilerState;
+begin
+
+  if (AIndex < 0) or (AIndex >= FStateCount) then
+  begin
+    raise ENyxPascalContext.Create('Compiler state is outside its translation');
+  end;
+
+  if FIsFrozen then
+  begin
+    Exit(FStateBlocks[AIndex div CTranslationStateBlockSize].State(
+      AIndex mod CTranslationStateBlockSize));
+  end;
+  Result := FStateRows[AIndex];
+end;
+
+constructor TTranslatedCompilerState.Create(const AContext: INyxPascalCompilerContext;
+  const AMacros: INyxPascalMacroEnvironment; const AFrames: TCompilerSettingsFrames;
+  AKnown: Boolean);
+begin
+  inherited Create;
+  FContext := AContext;
+  FMacros := AMacros;
+  FFrames := Copy(AFrames);
+  FKnown := AKnown;
+end;
+
+function TTranslatedCompilerState.Context: INyxPascalCompilerContext;
+begin
+  Result := FContext;
+end;
+
+function TTranslatedCompilerState.Macros: INyxPascalMacroEnvironment;
+begin
+  Result := FMacros;
+end;
+
+function TTranslatedCompilerState.SettingsKnown: Boolean;
+begin
+  Result := FKnown;
+end;
+
+function TTranslatedCompilerState.SettingsDepth: Integer;
+begin
+  Result := Length(FFrames);
+end;
+
+function TTranslatedCompilerState.SavedFrame(AIndex: Integer): INyxSavedCompilerSettings;
+begin
+  Result := FFrames[AIndex];
+end;
+
+constructor TTranslatedStateBlock.Create(const ARows: TTranslatedCompilerStates;
+  AFirst, ACount: Integer; const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+begin
+  inherited Create;
+  SetLength(FRows, ACount);
+  for LAt := 0 to ACount - 1 do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+    begin
+      raise ENyxPascalAnalysisCancelled.Create('Pascal state-page construction cancelled');
+    end;
+    NyxPascalAdmitAnalysis(ACancellation, papFrozenRow);
+    FRows[LAt] := ARows[AFirst + LAt];
+  end;
+end;
+
+function TTranslatedStateBlock.State(AIndex: Integer): ITranslatedCompilerState;
+begin
+  Result := FRows[AIndex];
 end;
 
 function TSavedCompilerSettings.Context: INyxPascalCompilerContext;
@@ -1539,20 +1670,20 @@ begin
   Result := Site;
 end;
 
-function TCompilerSettingsStack.SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
+function TTranslatedCompilerState.SameStack(const AOther: TCompilerSettingsFrames; AKnown: Boolean): Boolean;
 var
   LAt: Integer;
 begin
   Result := False;
 
-  if (Known <> AKnown) or (Length(Frames) <> Length(AOther)) then
+  if (FKnown <> AKnown) or (Length(FFrames) <> Length(AOther)) then
   begin
     Exit;
   end;
-  for LAt := 0 to High(Frames) do
+  for LAt := 0 to High(FFrames) do
   begin
 
-    if Frames[LAt] <> AOther[LAt] then
+    if FFrames[LAt] <> AOther[LAt] then
     begin
       Exit;
     end;
@@ -1879,7 +2010,7 @@ begin
   begin
 
     if (FOccurrences[LAncestor].FileIndex = AFile) and
-      FStates[FOccurrences[LAncestor].EntryState].SameFacts(FContext) then
+      CompilerState(FOccurrences[LAncestor].EntryState).Context.SameFacts(FContext) then
     begin
       Problem(ptiIncludeCycle, AParent, AInclude,
         'This include repeats without changing its captured compiler state');
@@ -3775,8 +3906,7 @@ end;
 
 function TTranslation.StateMacros(AIndex: Integer): INyxPascalMacroEnvironment;
 begin
-  State(AIndex);
-  Result := FMacroStates[AIndex];
+  Result := CompilerState(AIndex).Macros;
 end;
 
 function TTranslation.SettingsDepth(AState: Integer): Integer;
@@ -3786,13 +3916,12 @@ begin
   begin
     raise ENyxPascalContext.Create('This compiler settings stack has unknown textual effects');
   end;
-  Result := Length(FSettingsStates[AState].Frames);
+  Result := CompilerState(AState).SettingsDepth;
 end;
 
 function TTranslation.SettingsKnown(AState: Integer): Boolean;
 begin
-  State(AState);
-  Result := FSettingsStates[AState].Known;
+  Result := CompilerState(AState).SettingsKnown;
 end;
 
 function TTranslation.SavedSettings(AState, ALevel: Integer): INyxPascalCompilerContext;
@@ -3802,13 +3931,13 @@ begin
   begin
     raise ENyxPascalContext.Create('Saved local settings are outside this historical stack');
   end;
-  Result := FSettingsStates[AState].Frames[ALevel].Context;
+  Result := CompilerState(AState).SavedFrame(ALevel).Context;
 end;
 
 function TTranslation.SettingsOrigin(AState, ALevel: Integer): TNyxPascalSettingsOrigin;
 begin
   SavedSettings(AState, ALevel);
-  Result := FSettingsStates[AState].Frames[ALevel].Origin;
+  Result := CompilerState(AState).SavedFrame(ALevel).Origin;
 end;
 
 function NyxPascalEffectiveToken(const ASource: INyxPascalTranslation;
@@ -3966,7 +4095,7 @@ begin
   begin
     raise ENyxPascalContext.Create('Compiler-state index is outside its translation');
   end;
-  Result := FStates[AIndex];
+  Result := CompilerState(AIndex).Context;
 end;
 
 function TTranslation.DiagnosticCount: Integer;
