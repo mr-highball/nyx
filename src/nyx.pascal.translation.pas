@@ -3194,6 +3194,16 @@ var
   LChannel: TNyxPascalDiagnosticChannel;
   LEmissionEnabled: Boolean;
   LInterfaces: TNyxPascalInterfaceStyle;
+  LFPU, LPreviousFPU: TNyxPascalFPUReference;
+  function QualifiedI386FPU(const AName: TNyxText): Boolean;
+  begin
+    { The captured FPC 3.3.1 i386 selector table is closed. Open public selector
+      atoms cannot grant support for a different compiler or target. }
+    Result := (AName = 'none') or (AName = 'x87') or (AName = 'sse') or
+      (AName = 'sse2') or (AName = 'sse3') or (AName = 'ssse3') or
+      (AName = 'sse41') or (AName = 'sse42') or (AName = 'avx') or
+      (AName = 'fma') or (AName = 'avx2') or (AName = 'avx512f');
+  end;
 begin
   NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
@@ -3303,6 +3313,57 @@ begin
 
     if FActive = ppkFalse then
     begin
+      Exit;
+    end;
+
+    if LName = 'fputype' then
+    begin
+      { Qualify against the immutable initial target/profile. A source DEFINE
+        cannot impersonate either target support or the previously selected FPU.
+        FPC consumes the complete argument; trailing prose is not an annotation. }
+      LFPU := NyxPascalFPU(LValue);
+
+      if (FInitial.Family <> ppcFPC) or (FInitial.Version.FullNumber <> 30301) or
+        (FInitial.Symbol(NyxPascalDefine('CPUI386')).IsDefined <> ppkTrue) or
+        not QualifiedI386FPU(NyxPascalConfiguredFPU(FInitial).Name) or
+        not QualifiedI386FPU(LFPU.Name) then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'FPU selection needs its qualified FPC i386 target and initial profile');
+        UnknownEffect;
+        Exit;
+      end;
+      LPreviousFPU := NyxPascalSelectedFPU(FContext);
+
+      if FBlocked or not QualifiedI386FPU(LPreviousFPU.Name) then
+      begin
+        Problem(ptiCompilerSettings, AOccurrence, AToken.Span,
+          'The previous FPU selection is unknown; its selector effects cannot be reconstructed');
+        UnknownEffect;
+        Exit;
+      end;
+      LArgument := 'FPU' + LPreviousFPU.Name;
+
+      if FActive = ppkTrue then
+        FMacros := FMacros.Without(NyxPascalDefine(LArgument))
+      else
+      begin
+        LDefinition := Default(TNyxPascalMacroDefinition);
+        LDefinition.Name := NyxPascalDefine(LArgument);
+        LDefinition.Occurrence := AOccurrence;
+        LDefinition.Span := NyxPascalSpan(AToken.Span.Start, 0);
+        FMacros := FMacros.WithDefinition(LDefinition);
+      end;
+      ChangeSymbol(LArgument, ppdUndefined);
+      { FPC's def_system_macro retains an existing replacement buffer for the
+        new name. Only undef_system_macro clears its own old-name buffer. }
+      ChangeSymbol('FPU' + LFPU.Name, ppdDefined);
+
+      if FActive = ppkTrue then
+        FContext := NyxPascalWithSourceFPU(FContext,TNyxPascalSourceFPUSelection.Select(LFPU))
+      else
+        FContext := NyxPascalWithSourceFPU(FContext,TNyxPascalSourceFPUSelection.Unknown);
+      SaveState;
       Exit;
     end;
 

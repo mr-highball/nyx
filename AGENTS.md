@@ -4,7 +4,46 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source configured FPU metadata has an open typed selector reference and
+Current-source FPU history has separate configured, selected and unknown states
+through a new optional context capability. Missing legacy capabilities convey
+unknown history. Fluent copies/capture/modes retain it; unknown source effects
+revoke selection without falling back to initial metadata. FPC local PUSH/POP
+retains the current selection. Exact context/storage identities distinguish
+unknown/selected history while configured fallback retains the previous key
+form. Existing interfaces/GUIDs/enum ordinals/public record layouts remain exact.
+The qualified FPC 3.3.1 i386 scanner consumes the complete FPUTYPE argument and
+changes only the actual old/new selector symbols. Undefining the old name clears
+its replacement buffer; defining the new name preserves an existing one.
+Authored defines cannot impersonate the previous selection or initial target.
+Unknown old/blocked/conditional/unsupported effects retain conservative refusal.
+The original whole native witness observes Extended/Double/Double/Extended/
+Extended independently of source interpretation. Native focused 102/47 has clean
+heap; every smaller work allowance refuses atomically, with include/prefix/
+settings/macro/storage/cancellation boundaries retained. The baseline translation
+failure/five exact inputs and initial unreachable-warning preparation stay
+retained without suppression. All 46 current main compiler logs have zero owned
+warnings/84 upstream; thirty native runs have clean heaps, fourteen browser
+consumers compile only, and both Studios/backend/worker compile as applicable.
+Unchanged RTL passes 56: System 13,101/zero syntax/31 answers, ObjPas 209/zero/one,
+neither pending, exact Free/FreeInstance navigation/insertion ready. Original
+2M/4M/64-round, initial5/Word1/symbol3of8/dynamic6of8 stay exact. All 733 maintained/
+728 unrelated, five frozen inputs/five initial source copies/five prior copies,
+97 RTL/24 compiler pins/all earlier inspections plus source-selector owners,
+156 unit packets/48 historical includes/two profile inputs/349 frozen artifacts/
+nine contexts/five protected files/thirteen concurrent files remain exact.
+Readers joined; LAN offline; native Nyx tools absent. Historical global-config
+failure keeps full preservation false. WORK.md and ignored
+.local/source-fpu-paths-private.json own final receipts/return path. Stop source
+selector/macro-lifetime/fixture/compiler variants. Reassess canonical compiler-root
+float representation/alias identity through existing type/binding/context/
+requirement owners before expression promotion. Selector/precision/name/byte size
+alone is insufficient; preserve quotas/probes, activation and missing facts.
+Full language/editor/incremental/input/quality/parity/adoption/delivery and the
+original goal remain open. No host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new tool/schema, rollout or sub-agents.
+Preserve concurrent work and all historical evidence.
+
+Previously qualified configured FPU metadata has an open typed selector reference and
 optional context capability. It is an initial compiler-profile observation,
 separate from authored defines, current source settings, target support and
 floating representation. Automatic import requires the actual qualified FPC

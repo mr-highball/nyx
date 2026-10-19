@@ -65,6 +65,24 @@ type
     function Known: Boolean;
     property Name: TNyxText read FName;
   end;
+  { Source selection history is distinct from configured-profile history.
+    Configured means no authored selection yet; Unknown revokes that fallback. }
+  TNyxPascalSourceFPUKind = (pfsUnknown, pfsConfigured, pfsSelected);
+  { Value-only selection, owning no interfaces or execution state. Its selected
+    atom records context/source meaning, not target support or a float format. }
+  TNyxPascalSourceFPUSelection = record
+  private
+    FKind: TNyxPascalSourceFPUKind;
+    FReference: TNyxPascalFPUReference;
+  public
+    class function Unknown: TNyxPascalSourceFPUSelection; static;
+    class function Configured: TNyxPascalSourceFPUSelection; static;
+    class function Select(const AReference: TNyxPascalFPUReference): TNyxPascalSourceFPUSelection; static;
+    procedure Validate;
+    function SameSelection(const AOther: TNyxPascalSourceFPUSelection): Boolean;
+    property Kind: TNyxPascalSourceFPUKind read FKind;
+    property Reference: TNyxPascalFPUReference read FReference;
+  end;
   { Numeric message IDs and named warning groups are distinct open namespaces.
     A group may map to several numeric messages in a particular compiler. }
   TNyxPascalWarningReferenceKind = (pwrNumber, pwrName);
@@ -528,6 +546,13 @@ type
     function ConfiguredFPU: TNyxPascalFPUReference;
     function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
   end;
+  { Optional source-selection lifetime, independent of initial configuration.
+    Values are detached; a missing capability conveys unknown source history. }
+  INyxPascalContextSourceFPU = interface(IInterface)
+    ['{0FC29C44-72EF-496A-B062-2AC770E3426A}']
+    function SourceFPU: TNyxPascalSourceFPUSelection;
+    function WithSourceFPU(const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
+  end;
   { Optional typed policy capture keeps the original context interface/GUID
     intact. Returned values are detached; updates return a new context owner. }
   INyxPascalContextPolicies = interface(IInterface)
@@ -716,6 +741,12 @@ function NyxPascalFPU(const AName: TNyxText): TNyxPascalFPUReference;
 function NyxPascalConfiguredFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
 function NyxPascalWithConfiguredFPU(const AContext: INyxPascalCompilerContext;
   const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+{ Read source history, not an authored define's spelling. Resolving Configured
+  uses the separate initial snapshot; Unknown never borrows that fallback. }
+function NyxPascalSourceFPU(const AContext: INyxPascalCompilerContext): TNyxPascalSourceFPUSelection;
+function NyxPascalSelectedFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
+function NyxPascalWithSourceFPU(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
 
 function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
   const AVersion: TNyxPascalCompilerVersion;
@@ -816,6 +847,7 @@ begin
   Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
   LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
   LCaptured := NyxPascalWithConfiguredFPU(LCaptured, NyxPascalConfiguredFPU(AContext));
+  LCaptured := NyxPascalWithSourceFPU(LCaptured, NyxPascalSourceFPU(AContext));
 
   if Supports(AContext, INyxPascalContextWarnings, LWarnings) then
   begin
@@ -912,7 +944,7 @@ type
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
     INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
     INyxPascalContextCodeAlignments, INyxPascalContextOptimizations, INyxPascalContextStorage,
-    INyxPascalContextConfiguredFPU)
+    INyxPascalContextConfiguredFPU, INyxPascalContextSourceFPU)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -931,6 +963,7 @@ type
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
     FConfiguredFPU: TNyxPascalFPUReference;
+    FSourceFPU: TNyxPascalSourceFPUSelection;
     function Clone: TCompilerContext;
   public
     constructor Create;
@@ -957,6 +990,8 @@ type
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
     function ConfiguredFPU: TNyxPascalFPUReference;
     function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+    function SourceFPU: TNyxPascalSourceFPUSelection;
+    function WithSourceFPU(const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
     function WarningCount: Integer;
     function WarningAt(AIndex: Integer): TNyxPascalWarningRule;
     function WithWarning(const AReference: TNyxPascalWarningRef;
@@ -1181,6 +1216,7 @@ end;
 constructor TCompilerContext.Create;
 begin
   inherited Create;
+  FSourceFPU := TNyxPascalSourceFPUSelection.Configured;
   FNames := TNyxTextIndex.Create;
 end;
 
@@ -1203,6 +1239,7 @@ begin
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
     Result.FConfiguredFPU := FConfiguredFPU;
+    Result.FSourceFPU := FSourceFPU;
     SetLength(Result.FWarnings, Length(FWarnings));
     for LAt := 0 to High(FWarnings) do
     begin
@@ -1440,6 +1477,7 @@ begin
   { Initial profile metadata is not a current source setting. Unknown source
     effects revoke mutable knowledge without changing this earlier observation. }
   LCopy.FConfiguredFPU := FConfiguredFPU;
+  LCopy.FSourceFPU := TNyxPascalSourceFPUSelection.Unknown;
 end;
 
 function TCompilerContext.SymbolCount: Integer;
@@ -1486,6 +1524,7 @@ begin
     Exit;
   end;
   if NyxPascalConfiguredFPU(AOther).Name <> FConfiguredFPU.Name then Exit;
+  if not FSourceFPU.SameSelection(NyxPascalSourceFPU(AOther)) then Exit;
   LBootstrap := NyxPascalBootstrapContext(AOther);
 
   if (LBootstrap = nil) <> (FBootstrap = nil) then
@@ -2922,6 +2961,102 @@ end;
 function TNyxPascalFPUReference.Known: Boolean;
 begin
   Result := FName <> '';
+end;
+
+class function TNyxPascalSourceFPUSelection.Unknown: TNyxPascalSourceFPUSelection;
+begin
+  Result := Default(TNyxPascalSourceFPUSelection);
+end;
+
+class function TNyxPascalSourceFPUSelection.Configured: TNyxPascalSourceFPUSelection;
+begin
+  Result := Unknown;
+  Result.FKind := pfsConfigured;
+end;
+
+class function TNyxPascalSourceFPUSelection.Select(
+  const AReference: TNyxPascalFPUReference): TNyxPascalSourceFPUSelection;
+begin
+  Result := Unknown;
+  Result.FReference := NyxPascalFPU(AReference.Name);
+  Result.FKind := pfsSelected;
+end;
+
+procedure TNyxPascalSourceFPUSelection.Validate;
+begin
+
+  if (Ord(FKind) < Ord(Low(TNyxPascalSourceFPUKind))) or
+    (Ord(FKind) > Ord(High(TNyxPascalSourceFPUKind))) then
+  begin
+    raise ENyxPascalContext.Create('Source FPU history is outside its closed states');
+  end;
+  case FKind of
+    pfsUnknown,pfsConfigured:
+
+      if FReference.Known then raise ENyxPascalContext.Create('Unselected FPU history cannot retain a selector');
+    pfsSelected: NyxPascalFPU(FReference.Name);
+  end;
+end;
+
+function TNyxPascalSourceFPUSelection.SameSelection(
+  const AOther: TNyxPascalSourceFPUSelection): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := (FKind = AOther.FKind) and (FReference.Name = AOther.FReference.Name);
+end;
+
+function NyxPascalSourceFPU(const AContext: INyxPascalCompilerContext): TNyxPascalSourceFPUSelection;
+var LSource: INyxPascalContextSourceFPU;
+begin
+  Result := TNyxPascalSourceFPUSelection.Unknown;
+
+  if Supports(AContext,INyxPascalContextSourceFPU,LSource) then Result := LSource.SourceFPU;
+  Result.Validate;
+end;
+
+function NyxPascalSelectedFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
+var LSelection: TNyxPascalSourceFPUSelection;
+begin
+  Result := Default(TNyxPascalFPUReference);
+  LSelection := NyxPascalSourceFPU(AContext);
+  case LSelection.Kind of
+    pfsUnknown: Exit;
+    pfsConfigured: Result := NyxPascalConfiguredFPU(AContext);
+    pfsSelected: Result := LSelection.Reference;
+  end;
+end;
+
+function NyxPascalWithSourceFPU(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
+var
+  LSource: INyxPascalCompilerContext;
+  LTarget: INyxPascalContextSourceFPU;
+begin
+
+  if AContext = nil then raise ENyxPascalContext.Create('Source FPU history needs its context');
+  LSource := AContext;
+
+  if not Supports(LSource,INyxPascalContextSourceFPU,LTarget) then
+  begin
+    LSource := CaptureNyxPascalCompilerContext(LSource);
+    Supports(LSource,INyxPascalContextSourceFPU,LTarget);
+  end;
+  Result := LTarget.WithSourceFPU(AValue);
+end;
+
+function TCompilerContext.SourceFPU: TNyxPascalSourceFPUSelection;
+begin
+  Result := FSourceFPU;
+end;
+
+function TCompilerContext.WithSourceFPU(const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
+var LCopy: TCompilerContext;
+begin
+  AValue.Validate;
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FSourceFPU := AValue;
 end;
 
 function NyxPascalFPU(const AName: TNyxText): TNyxPascalFPUReference;

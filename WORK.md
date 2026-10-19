@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Owned configured FPU snapshots — 2026-10-19
+## Current integration: Typed source FPU selection — 2026-10-19
+
+The preceding user-status turn restated the checkpoint and is classified as no
+goal progress. Its source state and the fff39aa remote checkpoint are revalidated
+before continuing the recorded source-selection dependency. The complete Nyx
+library, authoring and Studio outcome remains open; this is language-engine work.
+
+A new value-owned source history distinguishes untouched configured selection,
+explicit selection and unknown history. Its optional context capability preserves
+existing interfaces/GUIDs/enum ordinals/public record layouts. Fluent copies,
+capture, mode copies and exact context identity retain the history; unknown source
+effects revoke current selection without erasing the initial configured snapshot.
+Legacy producers without the capability convey unknown history. Local PUSH/POP
+retains the current FPU rather than restoring the saved selection. Structural
+identity tags explicit/unknown source history separately; untouched configured
+history retains the preceding key form.
+
+The original whole native witness independently observes Extended/Double/Double/
+Extended/Extended across X87, SSE2, POP, authored selector defines and reassertion.
+Only actual old/new selector symbols change. The pinned scanner/symbol owners
+also distinguish retiring the old replacement buffer from preserving an existing
+new-name buffer; reasserting the same selector still retires its old buffer first.
+The complete fixture failed translation before repair, with clean heap; its five
+exact initial source inputs and failure remain. The initial context preparation
+also exposed one unreachable-code warning; the closed-state validation is repaired
+without suppressing diagnostics, and that preparation remains separate.
+
+Source FPUTYPE handling requires the qualified FPC 3.3.1 i386 initial target and
+configured profile, using the closed compiler selector table and the complete
+argument. Source DEFINEs cannot retarget that initial qualification or impersonate
+the previous selection. Inactive directives are ignored as inactive source;
+uncertain participation revokes selection and the affected symbols. Unknown old
+selection, unsupported targets/versions/selectors and blocked effects refuse
+reconstruction. This does not establish floating representation, alias identity,
+precision activation or general floating-expression types.
+
+Focused native preparation passes 102 with clean heap and first fit 47; every
+smaller allowance refuses atomically. Complete fixture chronology, physical
+includes, retained prefix state, saved settings, macro buffers, storage identity,
+state limits and cancellation retain their contracts. The browser consumer
+compiles only. Five source inputs are frozen for the existing current regressions,
+both Studios/backend/worker compilation and unchanged real RTL qualification.
+Ignored .local/source-fpu-paths-private.json owns receipts and retained inputs.
+All original quotas/probes, source/SDK/protected/frozen/concurrent files remain
+required. This paragraph records preparation, not final qualification or delivery.
+
+The frozen qualification now passes: 46 current main compiler logs have zero
+owned warnings/84 upstream. Thirty native runs have clean heaps; fourteen browser
+consumers compile only. Both Studios/backend/worker compile as applicable. Source
+FPU 102/47, configured profile 50/11, precision 70/33, policy 115, emission 37,
+protocol 42, storage 207, constants 405, translation 209 and the existing expression/
+generic/completion consumers retain their accepted assertions. Corpus checks
+remain 572 across 505 actual source files and 2,429,861 lossless tokens. The
+unchanged independent compiler-only emission fixture retains one intentional
+warning outside the product-warning count; no hidden marker becomes visible.
+
+The unchanged original RTL consumer passes 56: System remains 13,101 declarations/
+zero translation and syntax diagnostics/31 answers; ObjPas 209/zero/one. Neither
+has a pending query. Exact Free/FreeInstance original-include navigation and
+detached insertion remain ready. Original 2M/4M/64-round limits, initial five
+queries, one Word job, symbol three of eight and six exact ordered dynamic
+primitive jobs within eight are unchanged. This is not a full floating-language
+or incremental-performance qualification.
+
+All 733 maintained/728 unrelated sources, five frozen inputs, five initial
+source/witness copies, five preceding source copies, 97 RTL/24 base compiler pins,
+all earlier inspection manifests plus scanner/symbol-owner inspections, two
+retained profile inputs, 156 unit packets/48 historical include packets, 349
+frozen artifacts/nine contexts/five current-start protected files and thirteen
+concurrent planning files stay exact. Every reader joined. Retained initial
+failures and the historical global-config failure remain; the latter keeps the
+full preservation gate false. No protected file is restored or changed. There
+is no host/config retry, new SDK capture, cleanup/restart, rollout, new MCP tool/
+schema or sub-agent. LAN remains offline and native Nyx tools remain absent.
+
+Stop source-selector/macro-lifetime/fixture/compiler variants. Next reassess
+canonical compiler-root floating representation and alias identity through the
+existing intrinsic type/binding/context/requirement owners before expression
+promotion. A selected instruction family, precision request, type name or byte
+size alone cannot prove primitive identity. Preserve original quotas/probes,
+source activation, captured target ownership and explicit missing facts. Full
+language/type/module/incremental/editor/input/quality/performance/parity/adoption/
+delivery and the complete original criterion/task/goal remain open.
+
+## Previous integration: Owned configured FPU snapshots — 2026-10-19
 
 The preceding goal turn makes source/qualification/remote progress in 8e49849.
 Current source/remote and all 729 previously qualified inputs are revalidated.

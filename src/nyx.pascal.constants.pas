@@ -1992,6 +1992,7 @@ var
     LFact: TNyxPascalSizeFact;
     LBootstrap: INyxPascalCompilerContext;
     LFPU: TNyxPascalFPUReference;
+    LSourceFPU: TNyxPascalSourceFPUSelection;
   begin
 
     if (AContext = nil) or (ADepth > 1) then
@@ -2055,6 +2056,16 @@ var
         Source defines or later local settings cannot impersonate this field. }
       Part('configured-fpu-v1');
       Part(LFPU.Name);
+    end;
+    LSourceFPU := NyxPascalSourceFPU(AContext);
+
+    if LSourceFPU.Kind <> pfsConfigured then
+    begin
+      { The configured fallback keeps the original key form. Unknown source
+        history must not collide with it or with an explicit selection. }
+      Part('source-fpu-selection-v1');
+      Number(Ord(LSourceFPU.Kind));
+      Part(LSourceFPU.Reference.Name);
     end;
     Number(LWarnings.WarningCount);
     for LIndex := 0 to LWarnings.WarningCount - 1 do
