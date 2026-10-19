@@ -33,7 +33,90 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: I/O-check routine intent; original parser recovery — 2026-10-19
+## Current integration: Typed module lifecycle scopes — 2026-10-19
+
+The previous turn is verified progress: 9ccff26 is qualified and pushed. The
+remaining original diagnostics locate ten entries around System's initialization
+region and one at the VirtualAlloc2 procedural variable in sysheap.inc. The
+declaration loop had consumed lifecycle keywords before FinishRoot could see
+them. This continuation fixes executable-region ownership; the separate winapi
+calling-convention prerequisite remains. The complete library/Studio/resolver
+outcome stays active; no full criterion, task, counter, credit, DONE, parity,
+adoption or delivery closes.
+
+Appended psskInitialization/psskFinalization scope roles preserve old ordinals.
+Explicit unit/implementation authority travels through immutable append checkpoints.
+Declarations stop at lifecycle boundaries; modern sections and the old unit BEGIN
+spelling retain distinct executable scopes rather than fabricated declarations.
+Program bodies keep their block role. Non-unit headers, missing implementation
+and declaration fragments grant no lifecycle authority. Complete remains a
+structural-boundary fact, not full statement grammar or compiler eligibility.
+
+A bounded value-only delimiter stack retains compound block parents, ordered
+BEGIN/CASE/TRY/REPEAT/ASM closers, expression groups and separate phase boundaries.
+Assembly stays opaque to Pascal body words. Strings/escaped names cannot become
+section markers. Missing/mismatched closers, repeated/nested lifecycle markers,
+invalid handlers and empty UNTIL conditions retain diagnostics. Unsupported
+inline/anonymous declarations retain refusal; no outer variable is fabricated or
+silently selected. Existing token/metadata admission, scope/depth ceilings,
+cancellation and atomic refusal remain. No interface enters a record/static array;
+no public interface GUID changes.
+
+All six owned Pascal inputs are frozen before final qualification. The expanded
+syntax consumer passes 8,191 checks with clean heap, including exact lifecycle
+containment, malformed inputs, source roles and existing scope/depth refusal.
+Append/checkpoint checks increase to 5,902, comparing every append with independent
+whole parsing while preserving predecessors. Binding passes 65: initialization
+selects the module variable rather than a previous routine local; finalization
+sees its implementation variable; an unsupported inline shadow refuses lookup.
+The complete independently compiled Delphi-mode unit/include actually initializes
+to 42 before the program body. A fresh child observes initialization before
+finalization and exits with a clean heap. Both phase keywords navigate to the
+original include. Initial preparation's two nonexhaustive CASE warnings remain
+retained; explicit ordinary-token branches remove them without suppression.
+
+The required unchanged original RTL consumer PASSES all 56 native checks with
+clean heap. System remains 13,102 declarations/31 answers/no pending query and
+Source.Resolved TRUE/zero translation diagnostics; syntax diagnostics fall from
+eleven to one. ObjPas remains 209 declarations/one answer/no pending query and
+now has zero syntax diagnostics. Exact indexed Free/FreeInstance completion,
+original objpash.inc token navigation after provider retirement and detached
+insertion remain ready. The remaining sysheap.inc diagnostic is retained; zero
+ObjPas syntax diagnostics do not establish complete source/type/module meaning.
+
+Five initial queries, one explicit Word job, three-of-eight symbol preparation,
+six dynamic jobs inside eight, two-million view/four-million aggregate caps,
+64 rounds and ordered input/context/answer identity stay unchanged. All 86 main
+compiler jobs succeed with zero owned warnings/196 upstream; the deliberate
+emission-oracle warning stays separate. All forty maintained/seven additional
+native consumers plus the 503-file/2,360,275-token corpus pass: 49 accepted native
+logs including RTL, all clean heaps. Thirty-six browser compilations include
+Studio/worker; native Studio/backend compile as applicable. Browser execution,
+physical editor/input, whole-resolver latency, full component breadth, parity,
+adoption and delivery remain unqualified here.
+
+Preservation retains 673 unrelated/679 maintained-source pins, 97 RTL/24 compiler
+inputs plus previous and one module-grammar compiler inspection, 156 original
+unit packets/48 includes, 349 frozen release artifacts, nine prior contexts,
+thirteen foreign planning files and five exact current-start protected files.
+Historical global-configuration preservation failure remains retained and false;
+no restoration occurs. All owned processes/readers are terminal and joined; LAN
+stays offline and native Nyx tools absent. No host/config retry, protected mutation,
+cleanup/restart, approval bypass, new tool/schema/rollout or sub-agent occurs.
+Ignored `.local/module-bodies-paths-private.json` owns the frozen input,
+qualification, preservation, retained preparations and final source/remote receipts.
+
+Stop lifecycle/delimiter/fixture/compiler/capture variants. Reassess the actual
+VirtualAlloc2 procedural-variable winapi suffix through existing routine-type,
+calling-convention, compiler-context and binding owners. Preserve exact type/
+initializer/declaration boundaries and original source; do not map it to an
+assumed target convention or silently admit unknown modifiers. Keep the unchanged
+RTL consumer and all existing budgets/probes. Full statement/expression meaning,
+canonical types/module coherence/incremental budgets/editor/input/navigation/
+quality/component breadth/native-browser parity/adoption/delivery and the original
+criterion remain open; the goal stays active.
+
+## Previous integration: I/O-check routine intent; original parser recovery — 2026-10-19
 
 The previous checkpoint 678a884 is qualified and pushed. This continuation uses
 its existing original RTL diagnostic log: 119 IOCheck occurrences and subsequent

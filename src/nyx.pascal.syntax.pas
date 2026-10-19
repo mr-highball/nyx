@@ -37,8 +37,11 @@ type
     psfInterfaceDeclarations);
   { Lexical containment, independent of resolved symbols or runtime ownership.
     Routine scopes include parameters/locals. Statement blocks retain boundaries;
-    inline declarations and anonymous scopes explicitly require richer analysis. }
-  TNyxPascalSyntaxScopeKind = (psskModule, psskMembers, psskRoutine, psskBlock);
+    inline declarations and anonymous scopes explicitly require richer analysis.
+    Unit lifecycle scopes retain distinct executable regions, never declarations
+    or inferred runtime ordering/effects. Existing scope ordinals stay stable. }
+  TNyxPascalSyntaxScopeKind = (psskModule, psskMembers, psskRoutine, psskBlock,
+    psskInitialization, psskFinalization);
   { Declared intent only. A typed variable/property preserves its type expression;
     a routine preserves its complete signature, result, parameters and owner name. }
   TNyxPascalSyntaxDeclarationKind = (psdkType, psdkConstant, psdkVariable,
@@ -882,7 +885,8 @@ type
   { Value-only rollback point before a root declaration. Counts exclude the
     provisional suffix; its companion metadata root retains exact prior rows.
     ReadThrough includes every parser lookahead dependency, independently of
-    Position. No interface, mutable vector or prior snapshot is retained. }
+    Position. Unit/implementation authority resumes with the same declaration
+    boundary. No interface, mutable vector or prior snapshot is retained. }
   TParserCheckpoint = record
     Valid: Boolean;
     Resume: TParserResume;
@@ -890,6 +894,8 @@ type
     ReadThrough: Integer;
     Depth: Integer;
     PartialEqual: Boolean;
+    ModuleUnit: Boolean;
+    ImplementationSeen: Boolean;
     ActiveArm: Integer;
     Visibility: TNyxPascalSyntaxVisibility;
     Members: Boolean;
@@ -904,6 +910,16 @@ type
     StatementLabels: Integer;
     Hints: Integer;
     Intrinsics: Integer;
+  end;
+  { Construction-only delimiter frame for a unit executable region. Groups have
+    no declaration scope; compound statements retain lexical block boundaries.
+    Values own no interfaces, source buffers or mutable snapshot references. }
+  TExecutableFrame = record
+    OpenWord: TNyxPascalWord;
+    CloseSymbol: TNyxPascalSymbol;
+    Scope: Integer;
+    ParentScope: Integer;
+    HandlerSeen: Boolean;
   end;
   { Forward owner for the private immutable construction seed. }
   TSyntaxSnapshot = class;
@@ -949,6 +965,8 @@ type
     { A generic header may end in the physical >= token. Only its > belongs
       to the header; the residual equals sign stays for the alias declaration. }
     FPartialEqual: Boolean;
+    FModuleUnit: Boolean;
+    FImplementationSeen: Boolean;
     FDepth: Integer;
     FCheckpoint: TParserCheckpoint;
     FFilterDiagnostics: Integer;
@@ -1063,6 +1081,7 @@ type
     procedure Build(APrevious: TSyntaxSnapshot = nil; ARetained: Integer = -1);
     procedure ParseRoot;
     procedure FinishRoot;
+    function ModuleSection(AKind: TNyxPascalSyntaxScopeKind): Boolean;
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalSyntaxOptions;
       const ACancellation: INyxCancellationScope);
@@ -2461,6 +2480,8 @@ begin
   FCheckpoint.ReadThrough := FReadThrough;
   FCheckpoint.Depth := FDepth;
   FCheckpoint.PartialEqual := FPartialEqual;
+  FCheckpoint.ModuleUnit := FModuleUnit;
+  FCheckpoint.ImplementationSeen := FImplementationSeen;
   FCheckpoint.ActiveArm := FActiveArm;
   FCheckpoint.Visibility := AVisibility;
   FCheckpoint.Members := AMembers;
@@ -2495,6 +2516,8 @@ begin
   FIntrinsicCount := FCheckpoint.Intrinsics;
   FPosition := FCheckpoint.Position;
   FPartialEqual := FCheckpoint.PartialEqual;
+  FModuleUnit := FCheckpoint.ModuleUnit;
+  FImplementationSeen := FCheckpoint.ImplementationSeen;
   FActiveArm := FCheckpoint.ActiveArm;
   FReadThrough := FCheckpoint.ReadThrough;
   FReused := FDeclarationCount;
@@ -4983,7 +5006,8 @@ begin
   Enter;
   try
     LSection := ASection;
-    while not EOF and not Word(pkwEnd) and not Word(pkwBegin) and not Word(pkwAsm) do
+    while not EOF and not Word(pkwEnd) and not Word(pkwBegin) and not Word(pkwAsm) and
+      not Word(pkwInitialization) and not Word(pkwFinalization) do
     begin
       LBefore := FPosition;
 
@@ -5006,6 +5030,7 @@ begin
           Break;
         end;
         AVisibility := psavImplementation;
+        FImplementationSeen := True;
         LSection := pdsNone;
         Step;
       end
@@ -5499,6 +5524,7 @@ begin
   if (FOptions.StartingContext = psfModule) and
     (Tok.Word in [pkwUnit, pkwProgram, pkwLibrary, pkwPackage]) then
   begin
+    FModuleUnit := Word(pkwUnit);
     Step;
     LModule := Name;
     Step;
@@ -5539,27 +5565,261 @@ begin
   end;
 end;
 
+{ Structural executable ownership shares the ordinary scope/metadata and token
+  admission owners. It does not evaluate expressions or admit compiler-specific
+  inline/anonymous declarations. Unlike a counter-only scan, the bounded stack
+  preserves delimiter order, separate lifecycle regions and exact group failures. }
+function TSyntaxSnapshot.ModuleSection(AKind: TNyxPascalSyntaxScopeKind): Boolean;
+var
+  LFrames: array of TExecutableFrame;
+  LCount: Integer;
+  LSection: Integer;
+  LScope: Integer;
+  LToken: TNyxPascalToken;
+  LTop: TExecutableFrame;
+  LAt: Integer;
+
+  procedure Push(AWord: TNyxPascalWord; AClose: TNyxPascalSymbol);
+  var
+    LCapacity: Integer;
+    LNewScope: Integer;
+  begin
+
+    if LCount >= FOptions.MaximumDepth then
+    begin
+      raise ENyxPascalSyntaxLimit.Create('Pascal module body nesting exceeds its budget');
+    end;
+
+    if LCount = Length(LFrames) then
+    begin
+      LCapacity := Length(LFrames);
+
+      if LCapacity = 0 then LCapacity := 1
+      else if LCapacity > FOptions.MaximumDepth div 2 then LCapacity := FOptions.MaximumDepth
+      else LCapacity := LCapacity * 2;
+      SetLength(LFrames, LCapacity);
+    end;
+    LNewScope := -1;
+
+    if AWord <> pkwNone then
+    begin
+      LNewScope := AddScope(psskBlock, LScope, -1, LToken.Span.Start, '');
+    end;
+    LFrames[LCount].OpenWord := AWord;
+    LFrames[LCount].CloseSymbol := AClose;
+    LFrames[LCount].Scope := LNewScope;
+    LFrames[LCount].ParentScope := LScope;
+    LFrames[LCount].HandlerSeen := False;
+    Inc(LCount);
+
+    if LNewScope >= 0 then
+    begin
+      LScope := LNewScope;
+    end;
+    Step;
+  end;
+
+  procedure Pop;
+  begin
+    Dec(LCount);
+
+    if LFrames[LCount].Scope >= 0 then
+    begin
+      FinishScope(LFrames[LCount].Scope, True);
+    end;
+    LScope := LFrames[LCount].ParentScope;
+  end;
+
+begin
+  Enter;
+  try
+    Result := False;
+    LCount := 0;
+    LSection := AddScope(AKind, 0, -1, Tok.Span.Start, '');
+    LScope := LSection;
+    Step;
+    while not EOF do
+    begin
+      LToken := Tok;
+
+      if (LCount > 0) and (LFrames[LCount - 1].OpenWord = pkwAsm) then
+      begin
+        { Assembly text is opaque to Pascal statement keywords. Only its END
+          closes this frame; strings and escaped words cannot impersonate it. }
+        Step;
+
+        if (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwEnd) then
+        begin
+          Pop;
+        end;
+        Continue;
+      end;
+
+      if LToken.Kind = ptkSymbol then
+      begin
+        case LToken.Symbol of
+          psoOpenParen: begin Push(pkwNone, psoCloseParen); Continue; end;
+          psoOpenBracket: begin Push(pkwNone, psoCloseBracket); Continue; end;
+          psoAlternateOpenBracket: begin Push(pkwNone, psoAlternateCloseBracket); Continue; end;
+          psoCloseParen, psoCloseBracket, psoAlternateCloseBracket:
+            begin
+
+              if (LCount = 0) or (LFrames[LCount - 1].CloseSymbol <> LToken.Symbol) then
+              begin
+                Problem(psiUnclosedScope, 'This closing group does not match its module body opener', LToken.Span);
+                Break;
+              end;
+              Step;
+              Pop;
+              Continue;
+            end;
+        else
+          begin
+            { Ordinary expression punctuation leaves the delimiter stack intact. }
+          end;
+        end;
+      end;
+
+      if (LToken.Kind = ptkWord) and not LToken.Escaped then
+      begin
+
+        if LToken.Word in [pkwInitialization, pkwFinalization] then
+        begin
+
+          if (LCount = 0) and (AKind = psskInitialization) and (LToken.Word = pkwFinalization) then
+          begin
+            Result := True;
+          end
+          else
+          begin
+            Unsupported(LScope, 'A lifecycle section cannot repeat or occur inside another executable construct', LToken.Span);
+          end;
+          Break;
+        end;
+        case LToken.Word of
+          pkwBegin, pkwCase, pkwTry, pkwRepeat, pkwAsm:
+            begin
+              Push(LToken.Word, psoNone);
+              Continue;
+            end;
+          pkwEnd, pkwUntil:
+            begin
+
+              if (LCount = 0) and (LToken.Word = pkwEnd) then
+              begin
+                Result := True;
+                Break;
+              end;
+
+              if LCount = 0 then
+              begin
+                Problem(psiUnclosedScope, 'UNTIL needs its enclosing REPEAT', LToken.Span);
+                Break;
+              end;
+              LTop := LFrames[LCount - 1];
+
+              if (LTop.CloseSymbol <> psoNone) or
+                ((LTop.OpenWord = pkwRepeat) <> (LToken.Word = pkwUntil)) then
+              begin
+                Problem(psiUnclosedScope, 'This executable closer does not match its module body opener', LToken.Span);
+                Break;
+              end;
+
+              if (LTop.OpenWord = pkwTry) and not LTop.HandlerSeen then
+              begin
+                Unsupported(LScope, 'TRY needs its EXCEPT or FINALLY handler', LToken.Span);
+              end;
+              Step;
+              Pop;
+
+              if LToken.Word = pkwUntil then
+              begin
+
+                if EOF or Word(pkwEnd) or Word(pkwInitialization) or Word(pkwFinalization) or
+                  Sym(psoSemicolon) then
+                begin
+                  Problem(psiExpectedName, 'UNTIL needs its condition expression', Tok.Span);
+                end;
+              end;
+              Continue;
+            end;
+          pkwExcept, pkwFinally:
+            begin
+
+              if (LCount = 0) or (LFrames[LCount - 1].OpenWord <> pkwTry) or
+                LFrames[LCount - 1].HandlerSeen then
+              begin
+                Unsupported(LScope, 'An exception handler needs its own unmatched TRY', LToken.Span);
+              end
+              else
+              begin
+                LFrames[LCount - 1].HandlerSeen := True;
+              end;
+            end;
+          pkwProcedure, pkwFunction, pkwVar, pkwConst, pkwType, pkwLabel, pkwThreadvar,
+          pkwResourcestring, pkwInterface, pkwImplementation:
+            begin
+              Unsupported(LScope, 'Declarations inside executable regions need statement/expression context', LToken.Span);
+            end;
+        else
+          begin
+            { References and expression words do not declare module symbols. }
+          end;
+        end;
+      end;
+      Step;
+    end;
+    for LAt := 0 to LCount - 1 do
+    begin
+
+      if LFrames[LAt].Scope >= 0 then
+      begin
+        FinishScope(LFrames[LAt].Scope, False);
+      end;
+    end;
+    FinishScope(LSection, Result);
+
+    if not Result then
+    begin
+      Problem(psiUnclosedScope, 'Finish this module executable section and its nested constructs', Tok.Span);
+    end;
+  finally
+    Leave;
+  end;
+end;
+
 procedure TSyntaxSnapshot.FinishRoot;
 var
-  LStart: Integer;
   LBodyClosed: Boolean;
+  LSectionClosed: Boolean;
 begin
   LBodyClosed := False;
 
-  if Word(pkwBegin) or Word(pkwAsm) then
+  if FModuleUnit and FImplementationSeen and
+    (Word(pkwBegin) or Word(pkwInitialization) or Word(pkwFinalization)) then
+  begin
+    LSectionClosed := True;
+
+    if not Word(pkwFinalization) then
+    begin
+      LSectionClosed := ModuleSection(psskInitialization);
+    end;
+
+    if LSectionClosed and Word(pkwFinalization) then
+    begin
+      ModuleSection(psskFinalization);
+    end;
+  end
+  else if Word(pkwBegin) or Word(pkwAsm) then
   begin
     LBodyClosed := Block(0);
   end
   else if Word(pkwInitialization) or Word(pkwFinalization) then
   begin
-    { Initialization/finalization statements remain opaque until statement/expression
-      scopes are modeled; they must not become fake unit declarations. }
-    LStart := Tok.Span.Start;
-    Unsupported(0, 'Initialization/finalization bodies need statement analysis',
-      NyxPascalSpan(LStart, FLexical.Scalars - LStart));
+    Unsupported(0, 'Lifecycle sections require an explicit unit implementation context', Tok.Span);
   end;
   { A physical fragment closes at EOF. A complete module needs its final end-dot
-    boundary; skipped initialization statements cannot grant closed structure. }
+    boundary. Structural closure grants no statement meaning or compiler admission. }
 
   if FOptions.StartingContext <> psfModule then
   begin

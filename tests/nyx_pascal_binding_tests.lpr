@@ -102,6 +102,45 @@ begin
   end;
 end;
 
+{ Executable lifecycle scopes bind through their own module, never through a
+  preceding routine's locals. Unsupported inline declarations retain the same
+  refusal as other executable constructs, without fabricating a shadow. }
+procedure LifecycleBinding;
+var
+  LText: TNyxText;
+  LView: INyxPascalTranslatedSyntax;
+  LWorld: INyxPascalSemanticWorld;
+  LResult: INyxPascalResolution;
+  LAt: Integer;
+  LScope: Integer;
+begin
+  LText := 'unit Phases; interface var Shared:Integer; implementation var PrivateValue:Integer; ' +
+    'procedure Previous; var Shared:Byte; begin Shared:=0; end; ' +
+    'initialization begin Shared:=42; end; finalization PrivateValue:=0; end.';
+  LView := View('phases.pas', LText);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LAt := Pos(TNyxText('Shared:=42'), LText) - 1;
+  LScope := LView.Syntax.ScopeAt(LAt);
+  LResult := LWorld.Lookup(LWorld.At(0, LScope, LAt), NyxPascalBindingName('Shared'));
+  Check((LResult.Status = pbsBound) and (LResult.Count = 1) and
+    (LResult.SymbolAt(0).DeclarationIndex = LView.Syntax.Named(0, 'Shared')),
+    'Initialization binds the module variable rather than a previous routine local');
+  LAt := Pos(TNyxText('PrivateValue:=0'), LText) - 1;
+  LScope := LView.Syntax.ScopeAt(LAt);
+  LResult := LWorld.Lookup(LWorld.At(0, LScope, LAt), NyxPascalBindingName('PrivateValue'));
+  Check((LResult.Status = pbsBound) and (LResult.Count = 1) and
+    (LResult.SymbolAt(0).Declaration.Visibility = psavImplementation),
+    'Finalization can bind its own implementation variable');
+  LText := 'unit BadPhase; interface var Shared:Integer; implementation ' +
+    'initialization var Shared:Byte; Shared:=1; end.';
+  LView := View('badphase.pas', LText);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LAt := Pos(TNyxText('Shared:=1'), LText) - 1;
+  LResult := LWorld.Lookup(LWorld.At(0, LView.Syntax.ScopeAt(LAt), LAt), NyxPascalBindingName('Shared'));
+  Check((LResult.Status = pbsUnresolved) and (LResult.Issue = pbiUnsupportedScope),
+    'An unsupported inline shadow cannot grant false outer-scope lookup');
+end;
+
 procedure Basic;
 var
   LWorld: INyxPascalSemanticWorld;
@@ -443,6 +482,7 @@ end;
 begin
   try
     Basic;
+    LifecycleBinding;
     {$ifndef PAS2JS}
     CompiledFixtures;
     ActualControls;

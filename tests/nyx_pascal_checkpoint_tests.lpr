@@ -305,6 +305,13 @@ begin
   begin
     CompareEveryAppend(CModules[LAt], LOptions);
   end;
+  CompareEveryAppend('unit Phases; interface var X:Integer; implementation ' +
+    'initialization repeat Inc(X); until X=2; try X:=42; finally X:=42; end; ' +
+    'finalization begin X:=0; end; end.', LOptions);
+  CompareEveryAppend('unit OldPhase; interface implementation begin ' +
+    'case 1 of 1:begin end; end; end.', LOptions);
+  CompareEveryAppend('unit MissingPhase; interface implementation initialization ' +
+    'repeat begin X:=1; end; finalization X:=0; end.', LOptions);
   CompareEveryAppend('unit ThreadStorage; interface threadvar First,Second:Integer; ' +
     'Third:Integer; var Plain:Integer; type T=class public class threadvar Local:Integer; ' +
     'Continued:Integer; class var Shared:Integer; const Offset=2; public Field:Integer; end; implementation end.',
