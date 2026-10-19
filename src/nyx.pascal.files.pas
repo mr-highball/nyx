@@ -25,7 +25,7 @@ unit nyx.pascal.files;
 
 interface
 
-uses nyx.text, nyx.bytes, nyx.pascal.context, nyx.pascal.encoding;
+uses nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context, nyx.pascal.encoding;
 
 type
   { Captured virtual-file comparison is explicit, independent of the machine
@@ -39,6 +39,22 @@ type
     FName: TNyxText;
   public
     property Name: TNyxText read FName;
+  end;
+  { One immutable validated physical source. Optional decoding remains tied to
+    these exact original bytes; this data grants no compiler or source meaning. }
+  INyxPascalFilePacket = interface(IInterface)
+    ['{2C2CB2F8-0C77-4B99-A1AA-3A530ACC7B8C}']
+    function FileReference: TNyxPascalPhysicalFile;
+    function Original: INyxPascalSourceBytes;
+    function Decoded: INyxPascalSourceView;
+  end;
+  { Bounded ordered source producer, borrowed only during atomic overlay. The
+    caller serializes mutable implementations; no producer survives publication.
+    Each normalized name occurs once, independently of replacements in the seed. }
+  INyxPascalFilePackets = interface(IInterface)
+    ['{19C979C0-75B6-4185-84FB-45A2505E4E33}']
+    function Count: Integer;
+    function Packet(AIndex: Integer): INyxPascalFilePacket;
   end;
   { Exact virtual origin of a source whose bytes have no admitted text view.
     Kept portable so traversal can report an opaque include without opening a
@@ -103,6 +119,19 @@ function NewNyxPascalFileCatalog(ACase: TNyxPascalFileCase): INyxPascalFileCatal
   returns that same owner without rebuilding file/search vectors. Fluent edits
   still obtain a new owner/identity; sharing grants no prior semantic answers. }
 function CaptureNyxPascalFiles(const AFiles: INyxPascalFileCatalog): INyxPascalFileCatalog; overload;
+{ Freeze one source packet with the existing four-MiB byte/view bound. Alternate
+  bytes/views undergo complete capture; a view must match the supplied bytes. }
+function NewNyxPascalFilePacket(const AFile: TNyxPascalPhysicalFile;
+  const ABytes: INyxPascalSourceBytes; const AView: INyxPascalSourceView = nil;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalFilePacket;
+{ Apply all packets to one unpublished clone, retaining seed order/directories
+  and appending new names in packet order. Duplicate packet names, case aliases,
+  invalid data, quota/cancellation or callback failures publish nothing. Existing
+  file/byte limits remain unchanged. Actual clone rows and packets are admitted
+  through an optional current analysis work scope, never through stored counters. }
+function OverlayNyxPascalFilePackets(const AFiles: INyxPascalFileCatalog;
+  const APackets: INyxPascalFilePackets;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalFileCatalog;
 { Process-local identity of an owned immutable input set. Detached captures of
   that exact owner retain it; fluent edits obtain a new identity. It is not a
   content hash, disk receipt or authority supplied by alternate providers. }
@@ -115,7 +144,7 @@ function NyxPascalSourceViewAt(const AFiles: INyxPascalFileCatalog;
   AIndex: Integer): INyxPascalSourceView;
 implementation
 
-uses SysUtils, nyx.text.index, nyx.pascal.lexing;
+uses SysUtils, nyx.text.index, nyx.pascal.lexing, nyx.pascal.work;
 
 type
   { Copied virtual identity/cached text/accounting. Byte/view interfaces live in
@@ -124,6 +153,17 @@ type
     FileReference: TNyxPascalPhysicalFile;
     Text: TNyxText;
     Bytes: Integer;
+  end;
+  { Sealed prepared data owns byte/view interfaces in the class, not its value
+    record. Only its canonical ordinary interface may bypass repeated capture. }
+  TFilePacket = class(TInterfacedObject, INyxPascalFilePacket)
+  public
+    Entry: TPhysicalEntry;
+    Source: INyxPascalSourceBytes;
+    View: INyxPascalSourceView;
+    function FileReference: TNyxPascalPhysicalFile;
+    function Original: INyxPascalSourceBytes;
+    function Decoded: INyxPascalSourceView;
   end;
   { Forward catalog implementation, borrowed only while its interface is held. }
   TFileCatalog = class;
@@ -148,7 +188,15 @@ type
     FSources: array of INyxPascalSourceBytes;
     FViews: array of INyxPascalSourceView;
     function Key(const AName: TNyxText): TNyxText;
-    function Clone: TFileCatalog;
+    function Clone(const ACancellation: INyxCancellationScope = nil): TFileCatalog;
+    procedure ValidatePacket(AData: TFilePacket; ALiveCount: Integer;
+      out AIndex, ATotal: Integer);
+    procedure StorePacket(AData: TFilePacket; AIndex, ATotal: Integer;
+      var ALiveCount: Integer);
+    function WithPacket(AData: TFilePacket;
+      const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
+    function WithDirectory(const ADirectory: TNyxText;
+      const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
   public
     constructor Create(ACase: TNyxPascalFileCase);
     function CatalogOwner: TFileCatalog;
@@ -174,6 +222,92 @@ type
       const ABytes: INyxPascalSourceBytes;
       const AView: INyxPascalSourceView = nil): INyxPascalFileCatalog;
   end;
+
+{ Metadata admission owns real copied rows/packets. Byte/scalar bounds remain
+  independent; a stored catalog or packet never retains this execution scope. }
+procedure CheckPreparation(const ACancellation: INyxCancellationScope; AUnits: Integer = 0);
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Source preparation cancelled');
+
+  if AUnits > 0 then NyxPascalAdmitAnalysis(ACancellation, papSourceProof, AUnits);
+end;
+
+function CaptureFilesScoped(const AFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog; forward;
+
+function TFilePacket.FileReference: TNyxPascalPhysicalFile;
+begin Result := Entry.FileReference; end;
+function TFilePacket.Original: INyxPascalSourceBytes;
+begin Result := Source; end;
+function TFilePacket.Decoded: INyxPascalSourceView;
+begin Result := View; end;
+
+function NewNyxPascalFilePacket(const AFile: TNyxPascalPhysicalFile;
+  const ABytes: INyxPascalSourceBytes; const AView: INyxPascalSourceView;
+  const ACancellation: INyxCancellationScope): INyxPascalFilePacket;
+var
+  LData: TFilePacket;
+  LOwner: INyxPascalFilePacket;
+  LBytes: INyxPascalSourceBytes;
+  LView: INyxPascalSourceView;
+  LExecution: INyxCancellationScope;
+  LFile: TNyxPascalPhysicalFile;
+begin
+  LFile := AFile;
+  LBytes := ABytes;
+  LView := AView;
+  LExecution := ACancellation;
+  CheckPreparation(LExecution);
+  LData := TFilePacket.Create;
+  LOwner := LData;
+  LData.Entry.FileReference := NyxPascalPhysicalFile(LFile.Name);
+
+  if LView <> nil then
+  begin
+    LData.View := CaptureNyxPascalSourceView(LView, LExecution);
+    LData.Source := LData.View.Original;
+
+    if not LData.Source.SameBytes(LBytes) then
+      raise ENyxPascalContext.Create('A decoded view belongs to different original bytes');
+    LData.Entry.Text := LData.View.Text;
+  end
+  else
+    LData.Source := CaptureNyxPascalSourceBytes(LBytes, LExecution);
+  LData.Entry.Bytes := LData.Source.Count;
+
+  if (LData.View <> nil) and (NyxUTF8ByteCount(LData.Entry.Text) > LData.Entry.Bytes) then
+    LData.Entry.Bytes := NyxUTF8ByteCount(LData.Entry.Text);
+
+  if LData.Entry.Bytes > 4 * 1024 * 1024 then
+    raise ENyxPascalContext.Create('A captured physical source exceeds four MiB');
+  CheckPreparation(LExecution);
+  Result := LOwner;
+end;
+
+{ Alternate packets may own mutable callbacks. Read/capture their fields before
+  touching the unpublished catalog; only exact concrete immutable data leases. }
+function CapturePacket(const APacket: INyxPascalFilePacket;
+  const ACancellation: INyxCancellationScope): INyxPascalFilePacket;
+var
+  LInput: INyxPascalFilePacket;
+  LFile: TNyxPascalPhysicalFile;
+  LBytes: INyxPascalSourceBytes;
+  LView: INyxPascalSourceView;
+begin
+  LInput := APacket;
+  CheckPreparation(ACancellation);
+
+  if LInput = nil then raise ENyxPascalContext.Create('A source packet is required');
+
+  if (LInput is TFilePacket) and
+    (((LInput as TFilePacket) as INyxPascalFilePacket) = LInput) then Exit(LInput);
+  LFile := LInput.FileReference;
+  LBytes := LInput.Original;
+  LView := LInput.Decoded;
+  Result := NewNyxPascalFilePacket(LFile, LBytes, LView, ACancellation);
+end;
 
 procedure CheckPathText(const AName: TNyxText);
 var
@@ -301,10 +435,11 @@ begin
   end;
 end;
 
-function TFileCatalog.Clone: TFileCatalog;
+function TFileCatalog.Clone(const ACancellation: INyxCancellationScope): TFileCatalog;
 var
   LAt: Integer;
 begin
+  CheckPreparation(ACancellation, 1);
   Result := TFileCatalog.Create(FCase);
   try
     Result.FBytes := FBytes;
@@ -314,6 +449,7 @@ begin
     SetLength(Result.FViews, Length(FFiles));
     for LAt := 0 to High(FFiles) do
     begin
+      CheckPreparation(ACancellation, 1);
       Result.FFiles[LAt] := FFiles[LAt];
       Result.FSources[LAt] := FSources[LAt];
       Result.FViews[LAt] := FViews[LAt];
@@ -322,6 +458,7 @@ begin
     SetLength(Result.FDirectories, Length(FDirectories));
     for LAt := 0 to High(FDirectories) do
     begin
+      CheckPreparation(ACancellation, 1);
       Result.FDirectories[LAt] := FDirectories[LAt];
     end;
   except
@@ -410,99 +547,103 @@ function TFileCatalog.WithByteSource(const AFile: TNyxPascalPhysicalFile;
   const ABytes: INyxPascalSourceBytes;
   const AView: INyxPascalSourceView): INyxPascalFileCatalog;
 var
-  LAt: Integer;
-  LBytes: Integer;
-  LTotal: Integer;
-  LCopy: TFileCatalog;
-  LSource: INyxPascalSourceBytes;
-  LView: INyxPascalSourceView;
-  LOwner: INyxPascalFileCatalog;
+  LPacket: INyxPascalFilePacket;
+  LLease: INyxPascalFileCatalog;
 begin
-  LAt := Find(AFile);
-  LView := nil;
+  { Alternate byte/view callbacks can retire the caller's interface variable.
+    The current immutable seed must survive until its new result is complete. }
+  LLease := Self;
+  LPacket := NewNyxPascalFilePacket(AFile, ABytes, AView);
+  Result := (LLease as TFileCatalog).WithPacket(LPacket as TFilePacket, nil);
+end;
 
-  if AView <> nil then
-  begin
-    LView := CaptureNyxPascalSourceView(AView);
-    LSource := LView.Original;
+procedure TFileCatalog.ValidatePacket(AData: TFilePacket; ALiveCount: Integer;
+  out AIndex, ATotal: Integer);
+begin
+  AIndex := Find(AData.Entry.FileReference);
 
-    if not LSource.SameBytes(ABytes) then
-    begin
-      raise ENyxPascalContext.Create('A decoded view belongs to different original bytes');
-    end;
-  end
-  else
-  begin
-    LSource := CaptureNyxPascalSourceBytes(ABytes);
-  end;
-  LBytes := LSource.Count;
-
-  if (LView <> nil) and (NyxUTF8ByteCount(LView.Text) > LBytes) then
-  begin
-    LBytes := NyxUTF8ByteCount(LView.Text);
-  end;
-
-  if LBytes > 4 * 1024 * 1024 then
-  begin
-    raise ENyxPascalContext.Create('A captured physical source exceeds four MiB');
-  end;
-
-  if (LAt < 0) and (Count >= 4096) then
+  if (AIndex < 0) and (ALiveCount >= 4096) then
   begin
     raise ENyxPascalContext.Create('A captured source catalog exceeds 4096 files');
   end;
-  LTotal := FBytes;
+  ATotal := FBytes;
 
-  if LAt >= 0 then
+  if AIndex >= 0 then
   begin
-    LTotal := LTotal - FFiles[LAt].Bytes;
+    ATotal := ATotal - FFiles[AIndex].Bytes;
 
-    if FFiles[LAt].FileReference.Name <> AFile.Name then
+    if FFiles[AIndex].FileReference.Name <> AData.Entry.FileReference.Name then
     begin
       raise ENyxPascalContext.Create('A captured source case alias is ambiguous');
     end;
   end;
 
-  if LBytes > 256 * 1024 * 1024 - LTotal then
+  if AData.Entry.Bytes > 256 * 1024 * 1024 - ATotal then
   begin
     raise ENyxPascalContext.Create('A captured source catalog exceeds 256 MiB');
   end;
-  LCopy := Clone;
+end;
+
+procedure TFileCatalog.StorePacket(AData: TFilePacket; AIndex, ATotal: Integer;
+  var ALiveCount: Integer);
+begin
+
+  if AIndex < 0 then
+  begin
+    AIndex := ALiveCount;
+    Inc(ALiveCount);
+
+    if ALiveCount > Length(FFiles) then
+    begin
+      SetLength(FFiles, ALiveCount);
+      SetLength(FSources, ALiveCount);
+      SetLength(FViews, ALiveCount);
+    end;
+    FNames.AddFirst(Key(AData.Entry.FileReference.Name), AIndex);
+  end;
+
+  if FSources[AIndex] <> nil then
+  begin
+    Dec(FOriginalBytes, FSources[AIndex].Count);
+  end;
+  FFiles[AIndex] := AData.Entry;
+  FSources[AIndex] := AData.Source;
+  FViews[AIndex] := AData.View;
+  Inc(FOriginalBytes, AData.Source.Count);
+  FBytes := ATotal + AData.Entry.Bytes;
+end;
+
+function TFileCatalog.WithPacket(AData: TFilePacket;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
+var
+  LAt, LTotal, LCount: Integer;
+  LCopy: TFileCatalog;
+  LOwner: INyxPascalFileCatalog;
+begin
+  CheckPreparation(ACancellation);
+  LCount := Count;
+  ValidatePacket(AData, LCount, LAt, LTotal);
+  LCopy := Clone(ACancellation);
   LOwner := LCopy;
-
-  if LAt < 0 then
-  begin
-    LAt := Length(LCopy.FFiles);
-    SetLength(LCopy.FFiles, LAt + 1);
-    SetLength(LCopy.FSources, LAt + 1);
-    SetLength(LCopy.FViews, LAt + 1);
-    LCopy.FNames.AddFirst(Key(AFile.Name), LAt);
-  end;
-  LCopy.FFiles[LAt].FileReference := AFile;
-  LCopy.FFiles[LAt].Text := '';
-
-  if LView <> nil then
-  begin
-    LCopy.FFiles[LAt].Text := LView.Text;
-  end;
-
-  if LCopy.FSources[LAt] <> nil then
-  begin
-    Dec(LCopy.FOriginalBytes, LCopy.FSources[LAt].Count);
-  end;
-  LCopy.FSources[LAt] := LSource;
-  LCopy.FViews[LAt] := LView;
-  Inc(LCopy.FOriginalBytes, LSource.Count);
-  LCopy.FFiles[LAt].Bytes := LBytes;
-  LCopy.FBytes := LTotal + LBytes;
+  CheckPreparation(ACancellation, 1);
+  LCopy.StorePacket(AData, LAt, LTotal, LCount);
+  CheckPreparation(ACancellation);
   Result := LOwner;
 end;
 
 function TFileCatalog.WithIncludeDirectory(const ADirectory: TNyxText): INyxPascalFileCatalog;
+begin
+  Result := WithDirectory(ADirectory, nil);
+end;
+
+function TFileCatalog.WithDirectory(const ADirectory: TNyxText;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
 var
   LAt: Integer;
   LCopy: TFileCatalog;
+  LOwner: INyxPascalFileCatalog;
 begin
+  CheckPreparation(ACancellation);
 
   if ADirectory <> '' then
   begin
@@ -510,6 +651,7 @@ begin
   end;
   for LAt := 0 to High(FDirectories) do
   begin
+    CheckPreparation(ACancellation, 1);
 
     if Key(FDirectories[LAt]) = Key(ADirectory) then
     begin
@@ -521,11 +663,13 @@ begin
   begin
     raise ENyxPascalContext.Create('Captured include directories exceed 256 entries');
   end;
-  LCopy := Clone;
-  Result := LCopy;
+  LCopy := Clone(ACancellation);
+  LOwner := LCopy;
   LAt := Length(LCopy.FDirectories);
   SetLength(LCopy.FDirectories, LAt + 1);
   LCopy.FDirectories[LAt] := ADirectory;
+  CheckPreparation(ACancellation);
+  Result := LOwner;
 end;
 
 function TFileCatalog.DirectoryCount: Integer;
@@ -699,21 +843,26 @@ begin
   Result := TFileCatalog.Create(ACase);
 end;
 
-function CaptureNyxPascalFiles(const AFiles: INyxPascalFileCatalog): INyxPascalFileCatalog;
+function CaptureFilesScoped(const AFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
 var
   LAt: Integer;
   LCount: Integer;
   LDirectories: Integer;
   LByteFiles: INyxPascalByteFileCatalog;
-  LTarget: INyxPascalByteFileCatalog;
   LCaptured: INyxPascalFileCatalog;
   LInput: INyxPascalFileCatalog;
   LOwned: TFileCatalog;
+  LPacket: INyxPascalFilePacket;
+  LFile: TNyxPascalPhysicalFile;
+  LSource: INyxPascalSourceBytes;
+  LView: INyxPascalSourceView;
 begin
   { Keep the input alive before touching the possibly aliased managed result.
     Only the concrete catalog's sealed receipt plus exact ordinary-interface
     identity admits this path. Alternate getters/counters cannot claim it. }
   LInput := AFiles;
+  CheckPreparation(ACancellation);
 
   if LInput = nil then
   begin
@@ -738,30 +887,106 @@ begin
   Supports(LInput, INyxPascalByteFileCatalog, LByteFiles);
   for LAt := 0 to LCount - 1 do
   begin
+    CheckPreparation(ACancellation, 1);
+    LFile := LInput.FileAt(LAt);
 
-    if LCaptured.Find(LInput.FileAt(LAt)) >= 0 then
+    if LCaptured.Find(LFile) >= 0 then
     begin
       raise ENyxPascalContext.Create('An alternate file catalog contains duplicate names');
     end;
 
     if LByteFiles <> nil then
     begin
-      Supports(LCaptured, INyxPascalByteFileCatalog, LTarget);
-      LCaptured := LTarget.WithByteSource(LInput.FileAt(LAt),
-        LByteFiles.SourceBytesAt(LAt), LByteFiles.SourceViewAt(LAt));
+      LPacket := NewNyxPascalFilePacket(LFile, LByteFiles.SourceBytesAt(LAt),
+        LByteFiles.SourceViewAt(LAt), ACancellation);
     end
     else
     begin
-      LCaptured := LCaptured.WithFile(LInput.FileAt(LAt), LInput.TextAt(LAt));
+      LSource := NewNyxPascalSourceBytes(NyxEncodeUTF8(LInput.TextAt(LAt)), pboAuthoringUTF8,
+        ACancellation);
+      LView := DecodeNyxPascalSource(LSource, NyxPascalUTF8Codec, ACancellation);
+      LPacket := NewNyxPascalFilePacket(LFile, LSource, LView, ACancellation);
     end;
+    LCaptured := (LCaptured as TFileCatalog).WithPacket(LPacket as TFilePacket, ACancellation);
   end;
   for LAt := 0 to LDirectories - 1 do
   begin
-    LCaptured := LCaptured.WithIncludeDirectory(LInput.DirectoryAt(LAt));
+    CheckPreparation(ACancellation, 1);
+    LCaptured := (LCaptured as TFileCatalog).WithDirectory(LInput.DirectoryAt(LAt), ACancellation);
   end;
   { Alternate callbacks can fail at any entry. Only a complete immutable
     capture may enter the caller's potentially aliased managed result. }
+  CheckPreparation(ACancellation);
   Result := LCaptured;
+end;
+
+function CaptureNyxPascalFiles(const AFiles: INyxPascalFileCatalog): INyxPascalFileCatalog;
+begin
+  Result := CaptureFilesScoped(AFiles, nil);
+end;
+
+function OverlayNyxPascalFilePackets(const AFiles: INyxPascalFileCatalog;
+  const APackets: INyxPascalFilePackets;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
+var
+  LBase, LOwner: INyxPascalFileCatalog;
+  LInput: INyxPascalFilePackets;
+  LPacket: INyxPascalFilePacket;
+  LCopy: TFileCatalog;
+  LData: TFilePacket;
+  LSeen: TNyxTextIndex;
+  LAt, LCount, LLive, LCapacity, LIndex, LTotal: Integer;
+  LKey: TNyxText;
+  LExecution: INyxCancellationScope;
+begin
+  { Lease both inputs before any possibly aliased result assignment. Source
+    callbacks see no candidate, including its temporarily reserved unused slots. }
+  LBase := AFiles;
+  LInput := APackets;
+  LExecution := ACancellation;
+  CheckPreparation(LExecution);
+
+  if LInput = nil then raise ENyxPascalContext.Create('A source packet producer is required');
+  LCount := LInput.Count;
+
+  if (LCount < 0) or (LCount > 4096) then
+    raise ENyxPascalContext.Create('Source packets exceed their 4096-file bound');
+  LBase := CaptureFilesScoped(LBase, LExecution);
+
+  if LCount = 0 then Exit(LBase);
+  LLive := LBase.Count;
+  LCopy := (LBase as TFileCatalog).Clone(LExecution);
+  LOwner := LCopy;
+  LCapacity := LLive + LCount;
+
+  if LCapacity > 4096 then LCapacity := 4096;
+  SetLength(LCopy.FFiles, LCapacity);
+  SetLength(LCopy.FSources, LCapacity);
+  SetLength(LCopy.FViews, LCapacity);
+  LSeen := TNyxTextIndex.Create;
+  try
+    for LAt := 0 to LCount - 1 do
+    begin
+      CheckPreparation(LExecution, 1);
+      LPacket := CapturePacket(LInput.Packet(LAt), LExecution);
+      LData := LPacket as TFilePacket;
+      LKey := LCopy.Key(LData.Entry.FileReference.Name);
+
+      if LSeen.IndexOf(LKey) >= 0 then
+        raise ENyxPascalContext.Create('Source packets contain duplicate names');
+      LSeen.AddFirst(LKey, LAt);
+      LCopy.ValidatePacket(LData, LLive, LIndex, LTotal);
+      LCopy.StorePacket(LData, LIndex, LTotal, LLive);
+    end;
+    { Only real rows may be visible through Count/FileAt after publication. }
+    SetLength(LCopy.FFiles, LLive);
+    SetLength(LCopy.FSources, LLive);
+    SetLength(LCopy.FViews, LLive);
+    CheckPreparation(LExecution);
+    Result := LOwner;
+  finally
+    LSeen.Free;
+  end;
 end;
 
 function NyxPascalSourceBytesAt(const AFiles: INyxPascalFileCatalog;

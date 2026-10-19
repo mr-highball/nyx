@@ -33,7 +33,93 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Constructor receiver contracts — 2026-10-19
+## Current integration: Single-pass project preparation — 2026-10-19
+
+The preceding goal turn made authoritative source/qualification/remote progress
+in d51e680. Original NS-4_studio-authoring_01 criterion two still owns practical
+code editing, complete language/type meaning, incrementality and editor adoption.
+Reassessment finds ordinary BuildWorld repeatedly cloning the SDK/project file
+catalog for each project buffer. Owned immutable source snapshots are also copied
+and Unicode-validated again before this preparation. This repeats before the
+already-qualified token/source/syntax reuse can begin.
+
+The concrete deliverable is one atomic current-project overlay: lease exact owned
+immutable source snapshots, capture typed immutable source packets and apply the
+whole project to one unpublished catalog candidate. Existing byte/view validation,
+case/name ownership, directory order, file/byte limits and current input identity
+remain exact. Alternate providers retain bounded full validation. Account copied
+catalog rows and applied packets through the existing analysis work scope; current
+compiler, semantic-world and conditional-answer proofs remain independent.
+
+Use one unchanged controlled native before/after preparation harness, then focused
+project/provider/refusal/cancellation/concurrency checks and required wider builds.
+Stop preparation/fixture/compiler/capture variants after qualification. This is
+source preparation, not full incremental translation or whole-editor performance.
+No criterion/task/credit/DONE/full goal closes. No host/config retry, SDK capture,
+protected mutation, cleanup/restart, new MCP tool/schema/rollout or sub-agents.
+Ignored .local/project-preparation-paths-private.json owns the packet/return path;
+preserve unrelated planning work.
+
+The controlled same-source native harness prepares 32 physical files 64 times,
+retaining identical 15,977-byte output. Before: 202,473 allocated blocks /
+37,866,729 allocated bytes; the first after run: 49,193 / 31,420,345, both clean
+heap. This is allocation churn for this operation only, not editor latency or
+whole-application memory. The unchanged harness reproduces exactly those after
+figures on the final frozen source after the selected-ref ownership correction;
+the earlier after log stays retained separately.
+
+Focused native checks pass 50 with clean heap, including exact sequential-overlay
+equivalence, original bytes/lexical owners, trimming reserved slots, aliased input/
+output, late producer/packet failures, reentrant retirement of caller variables,
+entry/last-packet cancellation, parent budgets and the exact nine-unit fit (all
+smaller allowances refuse). Original 4096-file, four-MiB physical source and
+256-MiB catalog limits remain exercised, including shared storage at the byte
+ceiling. Sixty-four independent concurrent overlays join. Byte-origin checks pass
+43/clean heap and contextual source reuse retains 985/clean heap. The new browser
+consumer compiles only. Preparatory missing-import/origin-name errors and the
+first overly narrow byte-limit exception expectation remain retained.
+
+Ordinary completion now admits six actual preparation operations in the maintained
+request: source work is cold 3415/warm 761, and the exhaustive parent fit is 3205
+with every smaller allowance refusing. The unchanged consumer therefore reports
+3400 checks and 128 joined concurrent requests. This replaces the old 3409/755/
+3199 observation through accounting for new real work, without raising any cap,
+skipping a source or changing that consumer.
+
+All six production/fixture inputs remain frozen throughout wider qualification.
+All 121 main compiler logs succeed with zero owned warnings and 308 upstream;
+the unchanged independent emission oracle retains its three deliberate visible
+markers separately. All 65 native run logs have clean heaps. Fifty-five browser
+consumers compile only, including Studio/worker; native Studio/backend compile
+as applicable. Maintained constructor/contextual/byte-origin checks retain
+624/985/43, and prior parser/filter/revision/semantic-replay measurements stay
+exact. The controlled final preparation measurement has its own source hash,
+native compiler/output receipts and clean-heap before/final allocation logs.
+
+The unchanged original RTL fixture passes 56 at the original 2M view/4M aggregate/
+64-round limits. Actual System resolves with zero translation diagnostics, 13,101
+declarations, zero syntax diagnostics and 31 semantic answers; ObjPas retains
+209/zero/one, both without pending query. Indexed Free/FreeInstance navigation and
+detached insertion keep exact original include origins. Five initial queries,
+one Word job, symbol three/eight and six/eight ordered Longint/Int64/Pointer/
+VarHeader/CommonHeader/FreeChunk jobs stay exact. The corpus passes 571 checks
+over 504 source files and 2,405,635 lossless tokens.
+
+712 maintained sources/706 unrelated, 97 RTL/24 compiler inputs, 156 original unit
+packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files remain exact. All readers
+are terminal/joined. Historical catalog allocation evidence remains historical;
+it is independent of this preparation measurement. The full historical
+preservation gate remains false. LAN stays offline; native Nyx tools are absent.
+Full language/type meaning, changed-text/dependency incrementality, project-scale
+latency, editor/input/navigation quality, browser execution, parity, adoption and
+delivery remain open. No original criterion/task/credit/DONE or full goal closes.
+Stop preparation/fixture/compiler/capture variants. Return to the remaining
+canonical language/type and actual integrated editor requirements through their
+existing owners, preserving current source/context/ordered-answer identity,
+numeric limits, cancellation and atomic refusal.
+
+## Previous integration: Constructor receiver contracts — 2026-10-19
 
 The preceding goal turn made source/qualification/remote progress in 628a591.
 Original NS-4_studio-authoring_01 criterion two still owns useful code editing,

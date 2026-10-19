@@ -3790,6 +3790,41 @@ full dependency-aware incremental/editor adoption, language, input and parity sc
 
 ### Reusing projections after source edits
 
+Owned source snapshots now lease their exact immutable owner through
+`CaptureNyxPascalSources`; alternate providers still undergo complete bounded
+capture of names, accepted/editing roles and Unicode text. A caller-supplied
+owner receipt or equal text grants no authority. Fluent buffer edits retain a
+new snapshot and preserve unchanged per-buffer text ownership.
+
+`WithNyxPascalProjectFiles` overlays the complete current project onto one
+unpublished catalog clone. `CaptureNyxPascalProjectFiles` uses the same path from
+an empty captured seed. Existing SDK bytes, physical ordering and include search
+directories remain exact; new files append in project order. Each buffer becomes
+one canonical authoring UTF-8 packet retaining its immutable lexical input owner.
+
+The lower-level `INyxPascalFilePacket` and `INyxPascalFilePackets` support other
+typed source producers. `NewNyxPascalFilePacket` freezes original bytes and any
+matching decoded view. `OverlayNyxPascalFilePackets` captures alternate packets,
+refuses duplicate names/case aliases and applies all updates before publishing.
+Producers, callbacks and execution scopes never survive in the result. Reserved
+unused slots are trimmed before any public Count/FileAt access. Late failure,
+quota or cancellation preserves an aliased caller's earlier catalog.
+
+The ordinary completion provider charges actual preparation copies and packets
+against its existing aggregate allowance. A clone admits its header, copied files
+and directories; each applied packet is admitted before reading its producer.
+Scoped alternate seed capture also accounts its actual persistent-copy work.
+Parent scopes retain their independent ceilings. The existing 4096-file,
+four-MiB physical-source and 256-MiB catalog limits remain unchanged, including
+when multiple logical files share one immutable byte value. Byte/scalar capture
+keeps its independent bounds and cancellation checks.
+
+This removes repeated catalog rebuilding and owned-snapshot validation during
+source preparation. Current UTF-8 view creation, translation, directives,
+conditional queries and semantic proofs retain their own work and ownership.
+WORK.md separates the controlled native allocation measurement from whole-editor
+performance and browser execution, neither of which is established by that test.
+
 Translation preparation first freezes the current virtual input catalog.
 `CaptureNyxPascalFiles` returns the same owner when its sealed Nyx catalog receipt
 and ordinary interface identity match. Such a catalog already owns validated

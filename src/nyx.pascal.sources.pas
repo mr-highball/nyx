@@ -60,7 +60,8 @@ function CaptureNyxPascalSources(const AProject: INyxPascalProject): INyxPascalS
 { Freeze an alternate inspection provider once before lexical reads. Validate
   encoding, role/name uniqueness, main position and budgets without parsing draft
   syntax or opening includes. The caller serializes mutable providers during this
-  call; returned getters never consult them afterward. }
+  call; returned getters never consult them afterward. An exact already-owned
+  immutable snapshot retains its canonical ordinary interface without recopying. }
 function CaptureNyxPascalSources(const ASources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot; overload;
 { Exact per-buffer immutable text owner for this unit's captured snapshots.
   Unchanged files keep it across copies/other-file edits. Alternate providers
@@ -288,6 +289,11 @@ begin
   begin
     raise ENyxPascalProject.Create('Inspection requires captured Pascal sources');
   end;
+  { The exact immutable snapshot has already validated every text/role/bound.
+    Its canonical ordinary interface is the ownership proof, not equal values
+    or a provider-supplied receipt. Hold LInput before the aliased result. }
+
+  if LOwnedSource <> nil then Exit(LInput);
   LCopy := TSourceSnapshot.Create;
   LOwner := LCopy;
   LCopy.FKind := LInput.Kind;
@@ -342,10 +348,7 @@ begin
       raise ENyxPascalProject.Create('Inspected source pairs exceed the project byte budget');
     end;
 
-    if LOwnedSource <> nil then
-      LCopy.FInputs[LIndex] := LOwnedSource.FInputs[LIndex]
-    else
-      LCopy.FInputs[LIndex] := NewNyxPascalLexicalInput(LCopy.FFiles[LIndex].Buffer);
+    LCopy.FInputs[LIndex] := NewNyxPascalLexicalInput(LCopy.FFiles[LIndex].Buffer);
   end;
   Result := LOwner;
 end;

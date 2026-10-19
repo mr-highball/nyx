@@ -25,7 +25,8 @@ unit nyx.pascal.files.project;
 
 interface
 
-uses nyx.pascal.files, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.names;
+uses nyx.pascal.files, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.names,
+  nyx.scheduler;
 
 { Capture current project/editing membership through its existing immutable owner.
   Main metadata gains .pas; auxiliary unit/include selectors already own leaves.
@@ -39,6 +40,12 @@ function CaptureNyxPascalProjectFiles(const ASources: INyxPascalSourceSnapshot;
   byte/view validation remain with the existing source/catalog owners. }
 function WithNyxPascalProjectFile(const AFiles: INyxPascalFileCatalog;
   const ASources: INyxPascalSourceSnapshot; const AFile: TNyxPascalSourceRef): INyxPascalFileCatalog;
+{ One atomic current-project overlay. It clones the captured seed once, keeps
+  unchanged SDK bytes/directories and retains per-buffer immutable text owners.
+  Existing quotas and optional current work/cancellation apply throughout. }
+function WithNyxPascalProjectFiles(const AFiles: INyxPascalFileCatalog;
+  const ASources: INyxPascalSourceSnapshot;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalFileCatalog;
 { Map a project selector to a logical file, retaining main/unit/include ownership.
   This mapping grants no filesystem, compiler or editor mutation capability. }
 function NyxPascalProjectPhysicalFile(const ASources: INyxPascalSourceSnapshot;
@@ -52,6 +59,69 @@ function NyxPascalProjectUnit(const ASources: INyxPascalSourceSnapshot;
 implementation
 
 uses SysUtils, nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.encoding;
+
+type
+  { Construction-only adapter prepares each requested buffer once. The result
+    catalog keeps exact bytes/views, never this source provider or work scope. }
+  TProjectPackets = class(TInterfacedObject, INyxPascalFilePackets)
+  public
+    Sources: INyxPascalSourceSnapshot;
+    Cancellation: INyxCancellationScope;
+    Single: Boolean;
+    Selected: TNyxPascalSourceRef;
+    function Count: Integer;
+    function Packet(AIndex: Integer): INyxPascalFilePacket;
+  end;
+
+function TProjectPackets.Count: Integer;
+begin
+
+  if Single then Result := 1 else Result := Sources.Count;
+end;
+
+function TProjectPackets.Packet(AIndex: Integer): INyxPascalFilePacket;
+var
+  LFile: TNyxPascalSourceRef;
+  LView: INyxPascalSourceView;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+    raise ENyxPascalContext.Create('A project packet index is outside its captured source');
+
+  if Single then LFile := Selected else LFile := Sources.FileReference(AIndex);
+  LView := NyxPascalSourceViewFromLexicalInput(NyxPascalSourcesLexicalInput(Sources, LFile), Cancellation);
+  Result := NewNyxPascalFilePacket(NyxPascalProjectPhysicalFile(Sources, LFile),
+    LView.Original, LView, Cancellation);
+end;
+
+function OverlayProject(const AFiles: INyxPascalFileCatalog;
+  const ASources: INyxPascalSourceSnapshot; ASingle: Boolean;
+  const ASelected: TNyxPascalSourceRef;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
+var
+  LSource: INyxPascalSourceSnapshot;
+  LBase: INyxPascalFileCatalog;
+  LExecution: INyxCancellationScope;
+  LReader: TProjectPackets;
+  LPackets: INyxPascalFilePackets;
+  LSelected: TNyxPascalSourceRef;
+begin
+  LSelected := ASelected;
+  LBase := AFiles;
+  LSource := ASources;
+  LExecution := ACancellation;
+
+  if (LExecution <> nil) and LExecution.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Project source preparation cancelled');
+  LSource := CaptureNyxPascalSources(LSource);
+  LReader := TProjectPackets.Create;
+  LPackets := LReader;
+  LReader.Sources := LSource;
+  LReader.Cancellation := LExecution;
+  LReader.Single := ASingle;
+  LReader.Selected := LSelected;
+  Result := OverlayNyxPascalFilePackets(LBase, LPackets, LExecution);
+end;
 
 function NyxPascalProjectPhysicalFile(const ASources: INyxPascalSourceSnapshot;
   const AFile: TNyxPascalSourceRef): TNyxPascalPhysicalFile;
@@ -103,41 +173,22 @@ end;
 
 function CaptureNyxPascalProjectFiles(const ASources: INyxPascalSourceSnapshot;
   ACase: TNyxPascalFileCase): INyxPascalFileCatalog;
-var
-  LSource: INyxPascalSourceSnapshot;
-  LAt: Integer;
-  LFile: TNyxPascalSourceRef;
 begin
-  LSource := CaptureNyxPascalSources(ASources);
-  Result := NewNyxPascalFileCatalog(ACase).WithIncludeDirectory('');
-  for LAt := 0 to LSource.Count - 1 do
-  begin
-    LFile := LSource.FileReference(LAt);
-    Result := WithNyxPascalProjectFile(Result, LSource, LFile);
-  end;
+  Result := WithNyxPascalProjectFiles(NewNyxPascalFileCatalog(ACase)
+    .WithIncludeDirectory(''), ASources);
 end;
 
 function WithNyxPascalProjectFile(const AFiles: INyxPascalFileCatalog;
   const ASources: INyxPascalSourceSnapshot; const AFile: TNyxPascalSourceRef): INyxPascalFileCatalog;
-var
-  LSource: INyxPascalSourceSnapshot;
-  LInput: INyxPascalLexicalInput;
-  LFiles: INyxPascalFileCatalog;
-  LBytes: INyxPascalByteFileCatalog;
-  LView: INyxPascalSourceView;
 begin
-  LSource := ASources;
-  LInput := NyxPascalSourcesLexicalInput(LSource, AFile);
+  Result := OverlayProject(AFiles, ASources, True, AFile, nil);
+end;
 
-  if LInput = nil then
-  begin
-    LSource := CaptureNyxPascalSources(LSource);
-    LInput := NyxPascalSourcesLexicalInput(LSource, AFile);
-  end;
-  LFiles := CaptureNyxPascalFiles(AFiles);
-  Supports(LFiles, INyxPascalByteFileCatalog, LBytes);
-  LView := NyxPascalSourceViewFromLexicalInput(LInput);
-  Result := LBytes.WithByteSource(NyxPascalProjectPhysicalFile(LSource, AFile), LView.Original, LView);
+function WithNyxPascalProjectFiles(const AFiles: INyxPascalFileCatalog;
+  const ASources: INyxPascalSourceSnapshot;
+  const ACancellation: INyxCancellationScope): INyxPascalFileCatalog;
+begin
+  Result := OverlayProject(AFiles, ASources, False, TNyxPascalSourceRef.Main, ACancellation);
 end;
 
 end.

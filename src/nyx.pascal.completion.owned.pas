@@ -1270,6 +1270,7 @@ var
   LSource: TNyxPascalSourceRef;
   LProjectRoot: Boolean;
   LExpected: TNyxText;
+  LPreparation: INyxPascalAnalysisBudget;
 begin
   Check;
 
@@ -1278,11 +1279,15 @@ begin
     Exit;
   end;
   FFiles := FProvider.Files;
-  for LAt := 0 to FRequest.Sources.Count - 1 do
-  begin
-    Check;
-    LSource := FRequest.Sources.FileReference(LAt);
-    FFiles := WithNyxPascalProjectFile(FFiles, FRequest.Sources, LSource);
+
+  if FTokens >= FProvider.Options.AggregateTokens then
+    raise EOwnedGap.CreateGap(pcgBudget, 'No work allowance remains for current source preparation');
+  LPreparation := NewNyxPascalAnalysisBudget(FProvider.Options.AggregateTokens - FTokens, FCancel);
+  try
+    FFiles := WithNyxPascalProjectFiles(FFiles, FRequest.Sources, LPreparation);
+  finally
+    Inc(FTokens, LPreparation.Receipt.Total);
+    LPreparation.Retire;
   end;
   FWorld := NewNyxPascalSemanticWorld(FProvider.Options.Binding);
   for LAt := 0 to High(FProvider.Roots) do

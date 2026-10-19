@@ -148,7 +148,8 @@ function NyxPascalSourceLexicalInput(const AView: INyxPascalSourceView): INyxPas
 { Canonical authoring UTF-8 from one captured immutable text owner. Encoding and
   decoding validate that owner's actual text; the resulting view shares only
   its lexical text identity, never a caller-supplied byte/provenance claim. }
-function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalSourceView;
+function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSourceView;
 
 implementation
 
@@ -933,17 +934,23 @@ begin
   end;
 end;
 
-function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalSourceView;
+function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput;
+  const ACancellation: INyxCancellationScope): INyxPascalSourceView;
 var
   LInput: INyxPascalLexicalInput;
   LView: INyxPascalSourceView;
+  LExecution: INyxCancellationScope;
 begin
-  LInput := CaptureNyxPascalLexicalInput(AInput);
+  LInput := AInput;
+  LExecution := ACancellation;
+  Check(LExecution);
+  LInput := CaptureNyxPascalLexicalInput(LInput);
   LView := DecodeNyxPascalSource(NewNyxPascalSourceBytes(NyxEncodeUTF8(LInput.Text),
-    pboAuthoringUTF8), NyxPascalUTF8Codec);
+    pboAuthoringUTF8, LExecution), NyxPascalUTF8Codec, LExecution);
   { This fresh view has not escaped. Its bytes/text were built solely from this
     exact owned input; there is no independent caller text to compare or trust. }
   (LView as TSourceView).LexicalInput := LInput;
+  Check(LExecution);
   Result := LView;
 end;
 
