@@ -3454,14 +3454,33 @@ LProvider := NewNyxOwnedPascalCompletionProvider(LFacts, LCapturedFiles,
 LReply := LProvider.Complete(LQuery);
 ```
 
-Supported receiver queries cover lexical dotted names and declared property
-chains, including concrete generic results. The caret/replacement stays in exact
-physical scalar coordinates; the semantic caller uses the member dot's explicitly
-mapped occurrence. An identifier tail after a middle caret is replaced whole.
-Escaped keywords retain legal escaped insertion. Literal/comment/directive
-interiors, unmodeled calls/indexing/constructed expressions and unresolved type/
-helper context produce no insertion rows. This is a supported declared-receiver
-provider, not the complete expression/language engine.
+Supported receiver queries cover lexical dotted names, declared property chains,
+fluent calls, grouping, typed pointer dereferences and declared array elements,
+including concrete generic results. The caret/replacement stays in exact physical
+scalar coordinates; both receiver boundaries and the member dot map through their
+explicit source occurrence. An identifier tail after a middle caret is replaced
+whole. Escaped keywords retain legal escaped insertion. Literal/comment/directive
+interiors and unsupported expression/type/helper context produce no insertion
+rows. This remains a declared-contract provider; complete expression typing and
+compiler-call admission remain separate.
+
+The optional `INyxPascalExpressionQueries.ExpressionType` accepts a scalar window
+in its exact world's module lexical view and returns the declared result contract
+plus typed instance/type access. The ordinary completion provider consumes this
+same query. The caller site supplies lookup/visibility; completion derives that
+site from the exact mapped member dot. Parentheses retain that access role: grouping a type cannot grant its
+instance members. Arrays consume their complete authored dimensions before
+yielding an element; nested arrays support repeated or combined index lists.
+Pointers follow their declared target without reading an address.
+
+Calls inspect every visible routine alternative's return type. A common exact
+contract is usable without selecting an overload; different or unsupported
+results refuse, even when an argument literal might tempt a guess. Function
+values follow their declared result. Argument/index expressions are bounded,
+balanced opaque windows: no factory, getter, callback or index expression runs,
+and no claim is made about arity, argument conversions, bounds or call legality.
+Casts, helpers, default indexed properties, partially consumed multidimensional
+arrays, generic-routine inference and general operator inference remain open.
 
 Project units keep their already admitted `.pas` leaf. `NyxPascalProjectUnit`
 separately derives the typed namespace; includes require an explicit main/unit
@@ -3487,12 +3506,21 @@ identity, middle-word replacement, 50-row/128 KiB limits and detached Preview.
 These optional origin/gap capabilities are in-process; the existing wire schema
 does not transport them. Its bounded message includes the related virtual name.
 
-WORK.md records 86 native provider/menu checks and 81 production in-process
-semantic/private-editor checks. Exact helper/Unicode/NUL buffers, include ownership,
+Earlier WORK.md checkpoints record 86 native provider/menu checks and 81
+production in-process semantic/private-editor checks. Exact helper/Unicode/NUL
+buffers, include ownership,
 generic property chains, paged totals, source-location lifetime, ordinary text
 Undo/Redo, permissions, revision/provider retirement and concurrent observation
 are qualified. The production engine is explicitly owned and never listens;
 these are not HTTP authentication or ordinary rendered-input receipts.
+
+The postfix checkpoint qualifies 410 focused native checks, ninety maintained
+provider checks and eighty-four production in-process semantic checks. Its full
+native fixture executes legal fluent/generic/array/pointer calls to 42; source
+queries leave the independent runtime invocation counter unchanged. Exhaustive
+smaller work allowances refuse atomically. Both Studio targets compile; browser
+execution, ordinary rendered input and full language/adoption/parity qualification
+remain open. WORK.md retains final source/remote identity and earlier failures.
 
 The real captured `TNyxPascalCompilerVersion.FullNumber` record member resolves
 through both production paths. Enumerating the real badge with the supplied

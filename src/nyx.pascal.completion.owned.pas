@@ -122,8 +122,10 @@ type
   exact project buffers, preserving accepted membership and include ownership.
   The provider reads no disk, starts no compiler, executes no authored code and
   retains no editor. Hosts run synchronous analysis on their scheduler/worker.
-  Supported receivers are lexical dotted names and declared property chains;
-  calls/indexing/casts/helpers/inference remain explicit unavailable gaps.
+  Receivers use source-owned postfix contracts: dotted names, declared fluent
+  call results, grouping, pointers and array elements. Calls require every visible
+  result to agree; argument admission, casts, helpers and general inference remain
+  separate. No authored expression, callback, getter or factory executes.
   Repeated occurrences of the requested include refuse rather than choosing one.
   This factory installs no default provider or Studio configuration. }
 function NewNyxOwnedPascalCompletionProvider(const AContext: INyxPascalCompilerContext;
@@ -229,7 +231,7 @@ type
     FScan: Integer;
     FLoads: Integer;
     FReceiverReady: Boolean;
-    FReceiverName: TNyxText;
+    FReceiverExpressionStart: Integer;
     FReceiverPrefix: TNyxText;
     FReceiverExpected: TNyxText;
     FReceiverStart: Integer;
@@ -244,9 +246,10 @@ type
     function LoadDependency(const AName: TNyxText): Boolean;
     procedure CaptureAnalysis(AResult: TOwnedResult);
     function Previous(const ALexical: INyxPascalLexicalSnapshot; AIndex: Integer): Integer;
-    function Receiver(const ALexical: INyxPascalLexicalSnapshot;
-      out AStart, ADot: Integer; out AExpected, APrefix: TNyxText): TNyxText;
-    function Caller(const AFile: TNyxPascalPhysicalFile; ADot: Integer): INyxPascalBindingSite;
+    procedure Receiver(const ALexical: INyxPascalLexicalSnapshot;
+      out AStart, ADot, AExpressionStart: Integer; out AExpected, APrefix: TNyxText);
+    function Caller(const AFile: TNyxPascalPhysicalFile; ADot, AExpressionStart: Integer;
+      out AExpressionWindow: TNyxPascalSpan): INyxPascalBindingSite;
     function Run: INyxPascalCompletionResult;
   public
     constructor Create(AProvider: TOwnedProvider;
@@ -821,14 +824,100 @@ begin
   end;
 end;
 
-function TAnalysis.Receiver(const ALexical: INyxPascalLexicalSnapshot;
-  out AStart, ADot: Integer; out AExpected, APrefix: TNyxText): TNyxText;
+procedure TAnalysis.Receiver(const ALexical: INyxPascalLexicalSnapshot;
+  out AStart, ADot, AExpressionStart: Integer; out AExpected, APrefix: TNyxText);
 var
   LAt: Integer;
   LToken: TNyxPascalToken;
   LWord: Integer;
   LPrevious: Integer;
-  LName: TNyxText;
+  LDepth: Integer;
+
+  { Find the whole preceding postfix receiver. Balanced windows remain opaque;
+    source-owned semantic binding below decides what their result can mean. }
+  function Tail(AIndex: Integer): Integer;
+  var
+    LStack: array of TNyxPascalSymbol;
+    LCount: Integer;
+    LClose: TNyxPascalSymbol;
+    LPart: TNyxPascalToken;
+    LCall: Boolean;
+  begin
+    Inc(LDepth);
+    try
+
+      if LDepth > FProvider.Options.Binding.MaximumDepth then
+        raise EOwnedGap.CreateGap(pcgBudget, 'Receiver nesting exceeds its configured depth');
+
+      if AIndex < 0 then
+        raise EOwnedGap.CreateGap(pcgExpression, 'A postfix receiver is incomplete');
+      LPart := ALexical.Token(AIndex);
+
+      if LPart.Kind = ptkWord then
+      begin
+        AExpressionStart := LPart.Span.Start;
+        Result := Previous(ALexical, AIndex - 1);
+      end
+      else if (LPart.Kind = ptkSymbol) and (LPart.Symbol = psoCaret) then
+      begin
+        Result := Tail(Previous(ALexical, AIndex - 1));
+      end
+      else if (LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoCloseParen, psoCloseBracket]) then
+      begin
+        LCall := LPart.Symbol = psoCloseBracket;
+        LCount := 1;
+        SetLength(LStack, 1);
+        LStack[0] := LPart.Symbol;
+        while LCount > 0 do
+        begin
+          AIndex := Previous(ALexical, AIndex - 1);
+
+          if AIndex < 0 then
+            raise EOwnedGap.CreateGap(pcgExpression, 'A postfix group is unfinished');
+          LPart := ALexical.Token(AIndex);
+
+          if LPart.Kind <> ptkSymbol then Continue;
+
+          if LPart.Symbol in [psoCloseParen, psoCloseBracket] then
+          begin
+
+            if LCount >= FProvider.Options.Binding.MaximumDepth then
+              raise EOwnedGap.CreateGap(pcgBudget, 'Receiver group nesting exceeds its configured depth');
+            SetLength(LStack, LCount + 1);
+            LStack[LCount] := LPart.Symbol;
+            Inc(LCount);
+          end
+          else if LPart.Symbol in [psoOpenParen, psoOpenBracket] then
+          begin
+            LClose := psoCloseParen;
+
+            if LPart.Symbol = psoOpenBracket then LClose := psoCloseBracket;
+
+            if LStack[LCount - 1] <> LClose then
+              raise EOwnedGap.CreateGap(pcgExpression, 'Postfix delimiters are crossed');
+            Dec(LCount);
+          end;
+        end;
+        AExpressionStart := LPart.Span.Start;
+        Result := Previous(ALexical, AIndex - 1);
+
+        if Result >= 0 then
+        begin
+          LPart := ALexical.Token(Result);
+          LCall := LCall or ((LPart.Kind = ptkWord) and (LPart.Word = pkwNone)) or
+            ((LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoCloseParen, psoCloseBracket, psoCaret]));
+        end;
+
+        if LCall then Result := Tail(Result);
+      end
+      else raise EOwnedGap.CreateGap(pcgExpression, 'This receiver needs further expression inference');
+
+      if (Result >= 0) and (ALexical.Token(Result).Symbol = psoDot) then
+        Result := Tail(Previous(ALexical, Result - 1));
+    finally
+      Dec(LDepth);
+    end;
+  end;
 begin
   AStart := FRequest.Caret;
   AExpected := '';
@@ -872,73 +961,30 @@ begin
     raise EOwnedGap.CreateGap(pcgExpression, 'This query needs a supported declared receiver before a member dot');
   end;
   ADot := ALexical.Token(LAt).Span.Start;
-  Result := '';
-  while True do
-  begin
-    LAt := Previous(ALexical, LAt - 1);
+  LDepth := 0;
+  LPrevious := Tail(Previous(ALexical, LAt - 1));
 
-    if (LAt < 0) or (ALexical.Token(LAt).Kind <> ptkWord) then
-    begin
-      raise EOwnedGap.CreateGap(pcgExpression, 'Calls, indexing and constructed receiver expressions need further inference');
-    end;
-    LName := ALexical.Identifier(LAt);
-    try
-      NyxPascalBindingName(LName);
-    except
-      on ENyxPascalBinding do
-      begin
-        raise EOwnedGap.CreateGap(pcgExpression, 'This receiver identifier needs unsupported language-name rules');
-      end;
-    end;
-
-    if Result = '' then
-    begin
-      Result := LName;
-    end
-    else
-    begin
-      Result := LName + '.' + Result;
-    end;
-    LPrevious := Previous(ALexical, LAt - 1);
-
-    if (LPrevious >= 0) and (ALexical.Token(LPrevious).Symbol = psoDot) then
-    begin
-      LAt := LPrevious;
-    end
-    else
-    begin
-
-      if (LPrevious >= 0) and (ALexical.Token(LPrevious).Kind = ptkSymbol) and
-        (ALexical.Token(LPrevious).Symbol in [psoCloseParen, psoCloseBracket,
-          psoCaret, psoAt, psoPlus, psoMinus]) then
-      begin
-        raise EOwnedGap.CreateGap(pcgExpression, 'This receiver prefix needs expression inference');
-      end;
-      Break;
-    end;
-  end;
-  try
-    NyxPascalBindingName(Result);
-  except
-    on ENyxPascalBinding do
-    begin
-      raise EOwnedGap.CreateGap(pcgExpression, 'This qualified receiver exceeds supported name rules');
-    end;
-  end;
+  if (LPrevious >= 0) and (ALexical.Token(LPrevious).Kind = ptkSymbol) and
+    (ALexical.Token(LPrevious).Symbol in [psoCloseParen, psoCloseBracket,
+      psoCaret, psoAt, psoPlus, psoMinus]) then
+    raise EOwnedGap.CreateGap(pcgExpression, 'This receiver prefix needs expression inference');
 end;
 
-function TAnalysis.Caller(const AFile: TNyxPascalPhysicalFile; ADot: Integer): INyxPascalBindingSite;
+function TAnalysis.Caller(const AFile: TNyxPascalPhysicalFile; ADot, AExpressionStart: Integer;
+  out AExpressionWindow: TNyxPascalSpan): INyxPascalBindingSite;
 var
   LView: INyxPascalTranslatedSyntax;
   LAt: Integer;
   LFile: Integer;
   LOffset: Integer;
   LFound: Integer;
+  LStart: Integer;
 begin
   LView := FWorld.ModuleAt(FOwner);
   LFile := LView.Source.Files.Find(AFile);
   LFound := -1;
   LOffset := -1;
+  LStart := -1;
   for LAt := 0 to LView.Source.OccurrenceCount - 1 do
   begin
     Check;
@@ -952,13 +998,15 @@ begin
       end;
       LFound := LAt;
       LOffset := LView.VirtualAt(LAt, ADot);
+      LStart := LView.VirtualAt(LAt, AExpressionStart);
     end;
   end;
 
-  if LOffset < 0 then
+  if (LOffset < 0) or (LStart < 0) or (LStart >= LOffset) then
   begin
     raise EOwnedGap.CreateGap(pcgPhysicalContext, 'The member dot has no known-active physical context in its explicit owner');
   end;
+  AExpressionWindow := NyxPascalSpan(LStart, LOffset - LStart);
   Result := FWorld.At(FOwner, LView.Syntax.ScopeAt(LOffset), LOffset);
 end;
 
@@ -1024,7 +1072,6 @@ var
   LFile: TNyxPascalPhysicalFile;
   LLex: INyxPascalLexicalSnapshot;
   LSite: INyxPascalBindingSite;
-  LName: TNyxText;
   LPrefix: TNyxText;
   LExpected: TNyxText;
   LStart: Integer;
@@ -1043,6 +1090,8 @@ var
   LResult: TOwnedResult;
   LInsert: TNyxText;
   LNameLex: INyxPascalLexicalSnapshot;
+  LExpressions: INyxPascalExpressionQueries;
+  LExpressionWindow: TNyxPascalSpan;
 begin
   BuildWorld;
   LFile := NyxPascalProjectPhysicalFile(FRequest.Sources, FRequest.FileReference);
@@ -1058,36 +1107,17 @@ begin
 
   if not FReceiverReady then
   begin
-    FReceiverName := Receiver(LLex, FReceiverStart, FReceiverDot,
+    Receiver(LLex, FReceiverStart, FReceiverDot, FReceiverExpressionStart,
       FReceiverExpected, FReceiverPrefix);
     FReceiverReady := True;
   end;
-  LName := FReceiverName;
   LStart := FReceiverStart;
   LDot := FReceiverDot;
   LExpected := FReceiverExpected;
   LPrefix := FReceiverPrefix;
-  LSite := Caller(LFile, LDot);
-  LBinding := FWorld.Lookup(LSite, NyxPascalBindingName(LName), FCancel);
-
-  if LBinding.Status <> pbsBound then
-  begin
-    raise EOwnedGap.CreateGap(pcgBinding, LBinding.MessageText,
-      LBinding.Issue, LBinding.RelatedName);
-  end;
-
-  if LBinding.Count <> 1 then
-  begin
-    raise EOwnedGap.CreateGap(pcgBinding, 'This receiver requires additional type/helper support',
-      pbiUnsupportedType, LName);
-  end;
-  LAccess := pmaInstance;
-
-  if LBinding.SymbolAt(0).Declaration.Kind = psdkType then
-  begin
-    LAccess := pmaType;
-  end;
-  LBinding := FWorld.TypeOfSymbol(LBinding.SymbolAt(0), FCancel);
+  LSite := Caller(LFile, LDot, FReceiverExpressionStart, LExpressionWindow);
+  Supports(FWorld, INyxPascalExpressionQueries, LExpressions);
+  LBinding := LExpressions.ExpressionType(LSite, LExpressionWindow, LAccess, FCancel);
 
   if LBinding.Status <> pbsBound then
   begin

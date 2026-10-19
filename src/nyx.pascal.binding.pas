@@ -273,6 +273,18 @@ type
       const AQuery: TNyxPascalMemberQuery;
       const ACancellation: INyxCancellationScope = nil): INyxPascalMemberPage;
   end;
+  { Optional source-owned postfix contracts. The window belongs to the site's
+    module lexical view and ends no later than its caret. Calls inspect every
+    declared alternative's result without selecting an overload or validating
+    opaque argument expressions. Different/unsupported results refuse. No code,
+    getter, index expression or callback executes. Access is valid only on a
+    bound result; old Lookup/Member interfaces and ordinals stay unchanged. }
+  INyxPascalExpressionQueries = interface(IInterface)
+    ['{212ABC97-1934-42FA-A8EC-147F6D9F4DEA}']
+    function ExpressionType(const ASite: INyxPascalBindingSite;
+      const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
+  end;
   { Optional exact count. Total is -1 when a bounded page stopped after proving
     HasMore or when analysis failed; otherwise it counts all visible matches.
     CountAll requests require an exact successful total without extra rows. }
@@ -548,7 +560,7 @@ type
     each query has its own counters, alias/member trails and temporary type data. }
   TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld,
     INyxPascalMemberQueries, INyxPascalOperatorQueries, INyxPascalWorldBuildWork,
-    INyxPascalWorldAdmission)
+    INyxPascalWorldAdmission, INyxPascalExpressionQueries)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
@@ -582,6 +594,9 @@ type
     function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AQuery: TNyxPascalMemberQuery;
       const ACancellation: INyxCancellationScope): INyxPascalMemberPage;
+    function ExpressionType(const ASite: INyxPascalBindingSite;
+      const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess;
+      const ACancellation: INyxCancellationScope): INyxPascalResolution;
     function OperatorMembers(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       AKind: TNyxPascalOperatorKind;
       const ACancellation: INyxCancellationScope): INyxPascalResolution;
@@ -703,6 +718,8 @@ type
       AOperator: TNyxPascalOperatorKind = pokNone): INyxPascalResolution;
     function Members(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AQuery: TNyxPascalMemberQuery): INyxPascalMemberPage;
+    function ExpressionType(const ASite: INyxPascalBindingSite;
+      const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
   end;
 
 function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
@@ -5107,6 +5124,345 @@ begin
   LPage.Following := AQuery.Offset + Length(LReply.Symbols);
   LPage.TotalValue := LVisible;
   Result := LPageLease;
+end;
+
+function TBindingQuery.ExpressionType(const ASite: INyxPascalBindingSite;
+  const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+var
+  LLex: INyxPascalLexicalSnapshot;
+  LAt: Integer;
+  LToken: TNyxPascalToken;
+  LAvailable: Boolean;
+  LBadBoundary: Boolean;
+  LAccess: TNyxPascalMemberAccess;
+  LAnswer: INyxPascalResolution;
+
+  procedure ReadToken;
+  begin
+    while LAt < LLex.Count do
+    begin
+      Tick;
+      LToken := LLex.Token(LAt);
+      LAvailable := LToken.Span.Start < AWindow.Finish;
+
+      if not LAvailable then Exit;
+
+      if (LToken.Span.Start < AWindow.Start) or (LToken.Span.Finish > AWindow.Finish) then
+      begin
+        LBadBoundary := True;
+        LAvailable := False;
+        Exit;
+      end;
+
+      if not (LToken.Kind in [ptkWhitespace, ptkComment]) then Exit;
+      Inc(LAt);
+    end;
+    LAvailable := False;
+  end;
+
+  procedure Next;
+  begin
+    Inc(LAt);
+    ReadToken;
+  end;
+
+  function IsSymbol(AValue: TNyxPascalSymbol): Boolean;
+  begin
+    Result := LAvailable and (LToken.Kind = ptkSymbol) and (LToken.Symbol = AValue);
+  end;
+
+  { Only result contracts are compared. Arguments stay opaque and no candidate
+    is dropped by guessed conversions, arity, defaults or runtime values. }
+  function ValueOf(const AFound: INyxPascalResolution; ACall: Boolean;
+    out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+  var
+    LIndex: Integer;
+    LResolved: INyxPascalResolution;
+    LCommon, LValue: INyxPascalSemanticType;
+    LSymbol: INyxPascalBoundSymbol;
+  begin
+    AValueAccess := pmaInstance;
+
+    if not (AFound.Status in [pbsBound, pbsOverloads]) then Exit(AFound);
+
+    if ACall and (AFound.Count > 0) and
+      (AFound.SymbolAt(0).Declaration.Kind = psdkRoutine) then
+    begin
+      LCommon := nil;
+      for LIndex := 0 to AFound.Count - 1 do
+      begin
+        Tick;
+        LSymbol := AFound.SymbolAt(LIndex);
+
+        if LSymbol.Declaration.Kind <> psdkRoutine then Exit(Answer(pbsUnresolved, pbiOverloadContext));
+        LResolved := TypeOfSymbol(LSymbol);
+
+        if LResolved.Status <> pbsBound then Exit(LResolved);
+
+        if LCommon = nil then LCommon := LResolved.BoundType
+        else if not SameType(LCommon, LResolved.BoundType) then Exit(Answer(pbsUnresolved, pbiOverloadContext));
+      end;
+      Exit(TypeAnswer(LCommon));
+    end;
+
+    if AFound.BoundType <> nil then LResolved := AFound
+    else
+    begin
+
+      if AFound.Count <> 1 then Exit(Answer(pbsUnresolved, pbiOverloadContext));
+
+      if AFound.SymbolAt(0).Declaration.Kind = psdkType then AValueAccess := pmaType;
+      LResolved := TypeOfSymbol(AFound.SymbolAt(0));
+    end;
+
+    if (LResolved.Status <> pbsBound) or not ACall then Exit(LResolved);
+
+    if AValueAccess = pmaType then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LValue := Unwrap(LResolved.BoundType);
+
+    if (LValue <> nil) and (LValue.Kind = pstReference) then LValue := Unwrap(LValue.Target);
+
+    if (LValue = nil) or (LValue.Kind <> pstFunction) or (LValue.Target = nil) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    Result := TypeAnswer(LValue.Target);
+  end;
+
+  { Bounded balanced argument/index windows preserve strings and nested groups.
+    Empty/trailing list entries and crossed delimiters refuse. This deliberately
+    supplies no argument expression typing or compiler-call admission. }
+  function Arguments: Integer;
+  var
+    LStack: array of TNyxPascalSymbol;
+    LDepth: Integer;
+    LCount: Integer;
+    LContent: Boolean;
+    LClose: TNyxPascalSymbol;
+  begin
+    Result := -1;
+    LDepth := 1;
+    SetLength(LStack, 1);
+    LStack[0] := LToken.Symbol;
+    LCount := 0;
+    LContent := False;
+    Next;
+    while LAvailable do
+    begin
+      Tick;
+
+      if IsSymbol(psoOpenParen) or IsSymbol(psoOpenBracket) then
+      begin
+
+        if LDepth >= FLimits.MaximumDepth then
+          raise ENyxPascalBindingLimit.Create('Postfix argument nesting exceeds its budget');
+        SetLength(LStack, LDepth + 1);
+        LStack[LDepth] := LToken.Symbol;
+        Inc(LDepth);
+        LContent := True;
+      end
+      else if IsSymbol(psoCloseParen) or IsSymbol(psoCloseBracket) then
+      begin
+        LClose := psoCloseParen;
+
+        if LStack[LDepth - 1] = psoOpenBracket then LClose := psoCloseBracket;
+
+        if LToken.Symbol <> LClose then Exit;
+        Dec(LDepth);
+
+        if LDepth = 0 then
+        begin
+
+          if LContent then Inc(LCount)
+          else if LCount > 0 then Exit;
+          Next;
+          Exit(LCount);
+        end;
+      end
+      else if IsSymbol(psoComma) and (LDepth = 1) then
+      begin
+
+        if not LContent then Exit;
+        Inc(LCount);
+        LContent := False;
+      end
+      else
+      begin
+
+        if LToken.Kind in [ptkDirective, ptkInvalid, ptkAssembly, ptkEOF] then Exit;
+        LContent := True;
+      end;
+      Next;
+    end;
+  end;
+
+  { Recursive grouping shares this query's token/depth/work scope. }
+  function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution; forward;
+
+  function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+  var
+    LFound, LValue: INyxPascalResolution;
+    LType: INyxPascalSemanticType;
+    LName: TNyxText;
+    LCount: Integer;
+    LDimensions: Integer;
+    LDimension: Integer;
+    LInnerAccess: TNyxPascalMemberAccess;
+  begin
+    Enter;
+    try
+      AValueAccess := pmaInstance;
+
+      if IsSymbol(psoOpenParen) then
+      begin
+        Next;
+        LFound := Postfix(LInnerAccess);
+
+        if not IsSymbol(psoCloseParen) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+        Next;
+        AValueAccess := LInnerAccess;
+      end
+      else if LAvailable and (LToken.Kind = ptkWord) then
+      begin
+        LName := LLex.Identifier(LAt);
+        Next;
+        while IsSymbol(psoDot) do
+        begin
+          Next;
+
+          if not LAvailable or (LToken.Kind <> ptkWord) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LName := LName + '.' + LLex.Identifier(LAt);
+          Next;
+        end;
+        LFound := Lookup(ASite, LName);
+      end
+      else Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      while LAvailable do
+      begin
+
+        if IsSymbol(psoOpenParen) then
+        begin
+
+          if (LFound.BoundType <> nil) and (AValueAccess = pmaType) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+          if Arguments < 0 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LFound := ValueOf(LFound, True, AValueAccess);
+        end
+        else if IsSymbol(psoOpenBracket) then
+        begin
+
+          if (LFound.BoundType <> nil) and (AValueAccess = pmaType) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LCount := Arguments;
+
+          if LCount < 1 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LValue := ValueOf(LFound, False, LInnerAccess);
+
+          if LValue.Status <> pbsBound then Exit(LValue);
+          LType := Unwrap(LValue.BoundType);
+          while LCount > 0 do
+          begin
+            Tick;
+
+            if (LType = nil) or (LType.Kind <> pstArray) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+            LDimensions := 0;
+
+            if LType.Syntax <> nil then
+            begin
+              LDimension := LType.Syntax.Child(LType.SyntaxNode, ptrDimension);
+              while LDimension >= 0 do
+              begin
+                Tick;
+
+                if LType.Syntax.Node(LDimension).Role = ptrDimension then Inc(LDimensions);
+                LDimension := LType.Syntax.Node(LDimension).NextSibling;
+              end;
+            end;
+
+            if LDimensions = 0 then LDimensions := 1;
+
+            if LCount < LDimensions then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+            Dec(LCount, LDimensions);
+            LType := Unwrap(LType.Target);
+          end;
+          LFound := TypeAnswer(LType);
+          AValueAccess := pmaInstance;
+        end
+        else if IsSymbol(psoCaret) then
+        begin
+
+          if (LFound.BoundType <> nil) and (AValueAccess = pmaType) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LValue := ValueOf(LFound, False, LInnerAccess);
+
+          if LValue.Status <> pbsBound then Exit(LValue);
+          LType := Unwrap(LValue.BoundType);
+
+          if (LType = nil) or (LType.Kind <> pstPointer) or (LType.Target = nil) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LFound := TypeAnswer(LType.Target);
+          AValueAccess := pmaInstance;
+          Next;
+        end
+        else if IsSymbol(psoDot) then
+        begin
+          LValue := ValueOf(LFound, False, LInnerAccess);
+
+          { Grouping retains the receiver's type/instance role even when its
+            inner expression has already been reduced to a type-only answer. }
+
+          if LFound.BoundType <> nil then LInnerAccess := AValueAccess;
+
+          if LValue.Status <> pbsBound then Exit(LValue);
+          Next;
+
+          if not LAvailable or (LToken.Kind <> ptkWord) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LFound := Member(LValue.BoundType, ASite, LLex.Identifier(LAt), LInnerAccess);
+          Next;
+        end
+        else Break;
+
+        if not (LFound.Status in [pbsBound, pbsOverloads]) then Exit(LFound);
+      end;
+      Result := ValueOf(LFound, False, LInnerAccess);
+
+      if (Result.Status = pbsBound) and (LFound.BoundType = nil) then AValueAccess := LInnerAccess;
+    finally
+      Leave;
+    end;
+  end;
+begin
+  CheckSite(ASite);
+  AAccess := pmaInstance;
+  LLex := FWorld.ModuleAt(ASite.ModuleIndex).Syntax.Lexical;
+
+  if (AWindow.Length < 1) or (AWindow.Start < 0) or (AWindow.Finish > ASite.Caret) or
+    (AWindow.Finish > LLex.Scalars) then
+    raise ENyxPascalBinding.Create('An expression needs an exact earlier window in its source module');
+  LAt := LLex.TokenAt(AWindow.Start);
+  LBadBoundary := False;
+  ReadToken;
+  LAnswer := Postfix(LAccess);
+
+  if LAnswer.Status <> pbsBound then Exit(LAnswer);
+
+  if LAvailable or LBadBoundary then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+  if LAnswer.Status = pbsBound then AAccess := LAccess;
+  Result := LAnswer;
+end;
+
+function TSemanticWorld.ExpressionType(const ASite: INyxPascalBindingSite;
+  const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess;
+  const ACancellation: INyxCancellationScope): INyxPascalResolution;
+var
+  LQuery: TBindingQuery;
+begin
+  LQuery := TBindingQuery.Create(Self, ACancellation);
+  try
+    Result := LQuery.ExpressionType(ASite, AWindow, AAccess);
+  finally
+    LQuery.Free;
+  end;
 end;
 
 function TSemanticWorld.Members(const AType: INyxPascalSemanticType;

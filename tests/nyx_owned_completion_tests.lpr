@@ -286,12 +286,14 @@ begin
   LProvider := Provider(TNyxOwnedPascalCompletionOptions.Defaults);
   LSources := SourceFor('Badge.WithText(''hello'').Wi');
   LReply := LProvider.Complete(AtExpression(LSources, 'Badge.WithText(''hello'').Wi', 26));
-  Check((LReply.Status = pcsUnavailable) and (LReply.Count = 0) and
-    (Metadata(LReply).Gap = pcgExpression), 'Call inference gaps never resolve a misleading tail identifier');
+  Ready(LReply, 2, 2);
+  Check((LReply.Item(0).Name = TNyxText('WithText')) and (LReply.Item(1).Name = TNyxText('WithTone')),
+    'A fluent call follows the declared result and preserves both exact member rows');
   LSources := SourceFor('Box[0].Wi');
   LReply := LProvider.Complete(AtExpression(LSources, 'Box[0].Wi', 9));
   Check((LReply.Status = pcsUnavailable) and (LReply.Count = 0) and
-    (Metadata(LReply).Gap = pcgExpression), 'Indexing remains an explicit inference gap');
+    (Metadata(LReply).Gap = pcgBinding) and (Metadata(LReply).BindingIssue = pbiUnsupportedType),
+    'Indexing a non-array retains an explicit semantic gap without invented elements');
   LSources := SourceFor('Badge.Wi');
   LQuery := AtExpression(LSources, 'Badge.Wi', 8);
   LProvider := Provider(TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(1));

@@ -33,7 +33,86 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Interface style and implicit roots — 2026-10-19
+## Current integration: Source-owned postfix contracts — 2026-10-19
+
+The interface checkpoint 78c189a is qualified and pushed. This solo continuation
+addresses an actual fluent-authoring gap: the completion provider rejected calls
+at their parentheses before semantic binding. The existing binding owner now
+offers an optional typed source-window expression capability, consumed by that
+same provider without a new MCP tool, wire schema, host/configuration retry or
+observing rollout. Existing interface GUIDs/ordinals remain unchanged.
+
+Declared return contracts follow calls, grouping, pointer dereferences and full
+array dimensions, including generic receiver substitutions. Every visible
+overload result must agree; argument literals never guess a selected overload.
+Procedural function values retain their own result. Argument/index windows stay
+bounded/balanced and opaque; these source queries execute no factory, getter,
+callback or index expression and confer no compiler-call admission. Different
+results, casts, unsupported shapes and incomplete lists retain refusal. Grouped
+type receivers retain type access rather than borrowing instance members. The
+physical completion receiver maps both endpoints through its original occurrence;
+navigation and whole-word insertion continue through the ordinary guarded result.
+
+Focused preflight passes 410 native checks/clean heap, including a complete
+independent native fixture executing actual fluent/generic/array/pointer calls to
+42. Its separate invocation counter stays unchanged during source queries.
+Actual query work first fits at 202 units; all smaller allowances refuse
+atomically, with retained results usable after retirement. Source replacement,
+cancellation, malformed lists and split-token windows retain refusal. Existing
+provider checks now pass ninety: the old blanket call refusal is replaced by
+exact positive member rows while non-array indexing retains an explicit no-row
+semantic refusal. Earlier compiler-template/private-counter and test-import/
+Preview/window preparations are retained, including the failed physical-versus-
+spaced-projection substring attempts. Original source boundaries are now mapped,
+not reconstructed. No production input is relaxed for those test preparations.
+
+Five final Pascal inputs freeze before the accepted full batch; every accepted
+consumer retains those exact production/test bytes. All 93 main compiler logs
+pass with zero owned warnings/231 upstream pas2js Classes warnings. The deliberate
+emission oracle stays separate. All forty-two maintained native consumers and
+seven additional consumers pass, alongside the separately executed corpus and
+unchanged original RTL consumer: fifty-one native logs have clean heaps. Native
+Studio/backend and forty-one browser compilations, including Studio/worker, pass.
+Browser execution/physical input/adoption/parity/delivery remain unqualified.
+The corpus retains 504 files/2,375,454 lossless tokens/571 checks. Provider and
+production in-process semantic checks pass 90/84; the previous interface/generic/
+binding/type/syntax/checkpoint checks retain 149/948/74/448/8191/6526. Actual class/
+ancestry/formal/interface first fits retain 96/352/75/57.
+
+The unchanged original RTL consumer passes 56 checks/clean heap. Actual System
+source remains Resolved/zero translation diagnostics, 13,101 declarations/zero
+syntax diagnostics/thirty-one answers/no pending fact. ObjPas retains 209/zero/
+one/no pending. Exact indexed Free/FreeInstance completion, original include-token
+navigation after provider retirement and detached insertion remain ready. These
+frontier assertions do not establish full RTL or expression/type meaning. Initial
+five queries, one Word job, three/eight symbol jobs, six/eight dynamic jobs and
+two-million view/four-million aggregate token caps/sixty-four rounds stay exact.
+No added probe, changed original fixture, weaker oracle or inferred default.
+
+Five focused/693 maintained pins, including 688 unrelated exact sources, retain
+their frozen bytes. The inherited inventory omitted the existing maintained
+completion consumer; its unchanged baseline Git identity and new explicit pin
+are recorded alongside the two genuinely new files. The first verifier's assumed
+692/687 inventory refusal is retained; correcting that accounting changes no
+source or preservation rule. All 97 RTL/24 compiler inputs, prior inspected sets
+and one additional assessed compiler input remain exact, as do 156 unit packets/
+48 includes, thirteen concurrent planning files, five current-start protected
+files/nine contexts and 349 frozen release artifacts. Historical global-config
+preservation remains false, independently of current exact bytes. No restoration
+or protected mutation is performed. Readers are terminal/joined; LAN stays offline
+and native Nyx tools absent.
+
+Ignored `.local/postfix-contracts-paths-private.json` owns final qualification,
+retained preparations, source/remote receipts and return path. All previous
+handles are historical. Stop postfix/routine/fixture/compiler/capture variants;
+next reassess remaining canonical type/module-coherence and call-context
+prerequisites through existing owners before broader ordinary editor adoption.
+Argument admission, casts/helpers/default indexers, generic-routine inference,
+automatic initial-interface-style capture, incremental budgets, ordinary editor/
+input, quality/parity/adoption/delivery and the original criterion/task/credit/
+DONE remain open. No new tool/schema or rollout closes.
+
+## Previous integration: Interface style and implicit roots — 2026-10-19
 
 The source-owned formal checkpoint b950fa8 is qualified and pushed. This solo
 continuation follows captured/source-authored interface meaning through existing
