@@ -106,7 +106,11 @@ origin directory as well as the existing lexical/syntax values, retaining curren
 translation/context ownership. [Body dispatch](docs/pascal-projects.md#single-read-body-dispatch)
 now examines one local typed token across structural keyword alternatives,
 preserving EOF/checkpoint boundaries and ordinary escape/assembly rules.
-Remaining copy/parser costs and full engine/editor quality/adoption remain open.
+[Metadata operations](docs/pascal-projects.md#coalesced-metadata-operations) now
+initialize/link through bounded row borrows and combine first-name lookup with
+persistent insertion. COW stamps, root publication, the eight-slot cache and all
+remaining admission stay explicit. Remaining copy/parser costs and full engine/
+editor quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

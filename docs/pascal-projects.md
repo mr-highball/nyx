@@ -2627,6 +2627,35 @@ qualification. WORK.md records the native debugger's independent refusal origin,
 the frozen product source, current evidence and remaining full resolver/editor/
 parity/adoption/delivery scope. Logical work receipts are not CPU/latency claims.
 
+## Coalesced metadata operations
+
+Scope/declaration initialization and declaration linking use one checked row
+borrow per fixed field group. Names and immutable scalar fields are captured
+before unrelated link edits. No metadata call or checkpoint capture intervenes
+while those fields are written; later row/variant/conditional/overload operations
+reacquire and check the current stamp. Scope finalization uses only lexical span
+reads inside its bounded update. A local raw borrow is never reused after another
+operation can detach/capture that row, nor retained in a published snapshot.
+
+The private FindOrAddFirst operation replaces a name query followed by a separate
+first insertion query. It probes the original shared eight-slot cache once and
+combines uncached search/insertion in one AVL descent. Only an absent leaf creates
+an ordinal value. Existing keys keep their first value and immutable root. New
+candidate paths remain private until the root/cache application is admitted;
+refusal cannot mutate an earlier/sibling root. Cached absences still execute a
+real insertion walk, and every visited/copied/allocated node remains charged.
+
+This adds no cache slot, public type/interface layout, language rule or binding
+authority. Read-only published queries still change no counters/cache and retain
+no execution lease. Existing exact source/name/overload, sibling COW, every-scalar
+append, structural/ordinal boundaries, retirement and cancellation consumers
+qualify the operations. The small semantic fixture now admits 360 units versus
+389, with all 359 smaller allowances refusing atomically. Controlled metadata
+lookups fall from 12,918 to 4,328 while node/copy/tree-read receipts remain exact.
+These are preparation counts, not time/latency measurements. WORK.md owns frozen
+maintained/unchanged real RTL evidence, preservation/source/remote receipts and
+the remaining full resolver/editor/input/parity/adoption/delivery scope.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

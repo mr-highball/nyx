@@ -9,7 +9,37 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Body-dispatch prerequisite (2026-10-18): one unchanged-executable native debugger
+Metadata-operation prerequisite (2026-10-18): fixed scope/declaration/link groups
+use one checked row borrow with no intervening metadata call or capture. Later
+independent edits reacquire the current COW stamp. One private FindOrAddFirst
+replaces the name query/insertion query with one cache probe and one persistent
+search/insertion path. Existing first values/roots stay exact; new candidate
+roots apply only after admitted publication. No larger cache or discounted node
+replaces work: all remaining probes/visited/copied/allocated nodes are admitted.
+Unchanged native preflights pass 4,416 checkpoint/400 work checks, clean heaps.
+Metadata lookups fall 12,918 to 4,328 with node/copy/tree reads unchanged. The
+semantic fit falls 389 to 360 units, all 359 smaller limits refusing. The cache
+remains eight slots and retires completely. WORK.md owns the one-source freeze,
+unchanged tests/consumers, final wider/original RTL result, exact preservation/
+source/remote receipts and next owner. Full original criterion/task/credit/DONE/
+editor/input/quality/parity/adoption/delivery remain open. No host/config retry,
+new compiler probe, browser execution, schema or rollout follows.
+All 81 compiler jobs pass with zero owned warnings; 40 maintained native consumers
+and five focused/one source reading have clean heaps. The unchanged original
+consumer also passes 56/clean heap: System reaches 10,925 declarations/six syntax
+diagnostics/25 answers, pending VarHeader record-size meaning; ObjPas retains
+209/four/one. Its existing generic mechanism now fulfills a third Pointer request,
+within the unchanged eight-job ceiling, with no new fixed probe. Exact indexed
+Free/FreeInstance navigation and detached insertion are ready again, but source
+Resolved remains false. Stop metadata-operation/fixture/compiler/oracle/capture/
+debugger variants. Next follow declaration-bound record layout through existing
+syntax/type/binding/compiler-policy owners, preserving captured packing/alignment/
+field facts and exact conditional scope. Authored expected size eight is no ABI
+measurement; no VarHeader-specific probe, guessed size or skipped source follows.
+Full original criterion and engine/editor/incremental/parity/adoption/delivery stay
+open; WORK.md owns exact scoped source/remote and historical preservation receipts.
+
+Historical body-dispatch prerequisite (2026-10-18): one unchanged-executable native debugger
 replay identifies the round 21/267,316 four-million refusal inside the ordinary
 projected append fragment scanner, at heap.inc's sizeof(pointer)>4 condition.
 It does not measure aggregate phase dominance or the fallback's eligibility/

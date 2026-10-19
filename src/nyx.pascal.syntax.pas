@@ -768,9 +768,9 @@ type
     FReadPeak: Integer;
     FOrdinalLookups, FOrdinalReads, FOrdinalNodes, FCaptures: Integer;
     procedure RequireConstruction;
+    function TryReadCache(const AKey: TNyxText; out AValue: IMetadataValue): Boolean;
     procedure RememberRead(const AKey: TNyxText; const AValue: IMetadataValue);
     procedure RememberRow(AKind: TMetadataKind; AIndex: Integer; const AValue: IMetadataValue);
-    procedure Store(const AKey: TNyxText; const AValue: IMetadataValue);
     function FindRow(AKind: TMetadataKind; AIndex: Integer): IMetadataValue;
     procedure StoreRow(AKind: TMetadataKind; AIndex: Integer; const AValue: IMetadataValue);
     function NewRowNode(const APrevious: IMetadataRowNode; ALevel, ASlot: Integer;
@@ -781,8 +781,9 @@ type
       const ALeft, ARight: IMetadataNode): IMetadataNode;
     function Balance(const AKey: TNyxText; const AValue: IMetadataValue;
       const ALeft, ARight: IMetadataNode): IMetadataNode;
-    function Insert(const ANode: IMetadataNode; const AKey: TNyxText;
-      const AValue: IMetadataValue): IMetadataNode;
+    function InsertFirst(const ANode: IMetadataNode; const AKey: TNyxText;
+      AOrdinal: Integer; AReadLookup: Boolean; out AValue: IMetadataValue;
+      out AInserted: Boolean): IMetadataNode;
   public
     constructor Create(const ARoot: IMetadataRoot;
       const AExecution: INyxCancellationScope);
@@ -792,6 +793,10 @@ type
     function Edit(AKind: TMetadataKind; AIndex: Integer): TObject;
     function Row(AKind: TMetadataKind; AIndex: Integer): TObject;
     function Index(AKind: TMetadataKind; const AKey: TNyxText): Integer;
+    { One bounded lookup/insertion, returning True only for an existing first
+      ordinal. The candidate path stays private until admitted root application. }
+    function FindOrAddFirst(AKind: TMetadataKind; const AKey: TNyxText;
+      AValue: Integer; out AFirst: Integer): Boolean;
     procedure AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
     function Height: Integer;
     function OrdinalDepth: Integer;
@@ -1562,20 +1567,6 @@ begin
   end;
 end;
 
-procedure TMetadataMap.Store(const AKey: TNyxText; const AValue: IMetadataValue);
-var
-  LCandidate: IMetadataNode;
-begin
-  RequireConstruction;
-  LCandidate := Insert(FRoot, AKey, AValue);
-  { Tree preparation was admitted at its actual nodes. Admit the bounded root/
-    lookup update before applying either one; failure keeps the earlier root
-    and every cached value exact. No observer can see this unpublished owner. }
-  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
-  FRoot := LCandidate;
-  RememberRead(AKey, AValue);
-end;
-
 function TMetadataMap.Capture: IMetadataRoot;
 var
   LRoot: TMetadataRoot;
@@ -1904,36 +1895,69 @@ begin
   Result := NewNode(AKey, AValue, ALeft, ARight);
 end;
 
-function TMetadataMap.Insert(const ANode: IMetadataNode; const AKey: TNyxText;
-  const AValue: IMetadataValue): IMetadataNode;
+function TMetadataMap.InsertFirst(const ANode: IMetadataNode; const AKey: TNyxText;
+  AOrdinal: Integer; AReadLookup: Boolean; out AValue: IMetadataValue;
+  out AInserted: Boolean): IMetadataNode;
+var
+  LChild: IMetadataNode;
+  LCreated: TOrdinalValue;
 begin
+  { Search and persistent insertion follow one path. A cached absence still
+    needs that insertion walk, but does not become a second lookup receipt.
+    Every visited/prepared node remains admitted, including the empty leaf. }
   NyxPascalAdmitAnalysis(FExecution, papMetadataNode);
 
   if ANode = nil then
   begin
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+    LCreated := TOrdinalValue.Create;
+    AValue := LCreated;
+    LCreated.OwnerStamp := FStamp;
+    LCreated.Value := AOrdinal;
+    AInserted := True;
     Exit(NewNode(AKey, AValue, nil, nil));
+  end;
+
+  if AReadLookup then
+  begin
+    IncrementMetadataAccess(FReadTreeVisits);
   end;
 
   if AKey < ANode.Key then
   begin
-    Result := Balance(ANode.Key, ANode.Value, Insert(ANode.Left, AKey, AValue), ANode.Right);
+    LChild := InsertFirst(ANode.Left, AKey, AOrdinal, AReadLookup, AValue, AInserted);
+
+    if not AInserted then
+    begin
+      Exit(ANode);
+    end;
+    Result := Balance(ANode.Key, ANode.Value, LChild, ANode.Right);
   end
   else if AKey > ANode.Key then
   begin
-    Result := Balance(ANode.Key, ANode.Value, ANode.Left, Insert(ANode.Right, AKey, AValue));
+    LChild := InsertFirst(ANode.Right, AKey, AOrdinal, AReadLookup, AValue, AInserted);
+
+    if not AInserted then
+    begin
+      Exit(ANode);
+    end;
+    Result := Balance(ANode.Key, ANode.Value, ANode.Left, LChild);
   end
   else
   begin
-    Result := NewNode(AKey, AValue, ANode.Left, ANode.Right);
+    AValue := ANode.Value;
+    AInserted := False;
+    Result := ANode;
   end;
 end;
 
-function TMetadataMap.Find(const AKey: TNyxText): IMetadataValue;
+function TMetadataMap.TryReadCache(const AKey: TNyxText;
+  out AValue: IMetadataValue): Boolean;
 var
-  LNode: IMetadataNode;
   LAt: Integer;
 begin
-  Result := nil;
+  Result := False;
+  AValue := nil;
 
   if FConstructing then
   begin
@@ -1947,9 +1971,21 @@ begin
       if (FReadOrdinals[LAt] < 0) and (FReadKeys[LAt] = AKey) then
       begin
         IncrementMetadataAccess(FReadHits);
-        Exit(FReadValues[LAt]);
+        AValue := FReadValues[LAt];
+        Exit(True);
       end;
     end;
+  end;
+end;
+
+function TMetadataMap.Find(const AKey: TNyxText): IMetadataValue;
+var
+  LNode: IMetadataNode;
+begin
+
+  if TryReadCache(AKey, Result) then
+  begin
+    Exit;
   end;
   LNode := FRoot;
   while LNode <> nil do
@@ -2084,26 +2120,47 @@ begin
   end;
 end;
 
-procedure TMetadataMap.AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
+function TMetadataMap.FindOrAddFirst(AKind: TMetadataKind; const AKey: TNyxText;
+  AValue: Integer; out AFirst: Integer): Boolean;
 var
   LKey: TNyxText;
-  LValue: TOrdinalValue;
   LLease: IMetadataValue;
+  LCandidate: IMetadataNode;
+  LCached, LInserted: Boolean;
 begin
   RequireConstruction;
+  AFirst := -1;
   LKey := MetadataKey(AKind, AKey);
+  LCached := TryReadCache(LKey, LLease);
 
-  if Find(LKey) <> nil then
+  if LCached and (LLease <> nil) then
   begin
-    Exit;
+    AFirst := TOrdinalValue(LLease.Borrow).Value;
+    Exit(True);
   end;
-  NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
-  LValue := TOrdinalValue.Create;
-  LLease := LValue;
-  LValue.OwnerStamp := FStamp;
-  LValue.Value := AValue;
-  Store(LKey, LLease);
-  Inc(FCreated);
+  LCandidate := InsertFirst(FRoot, LKey, AValue, not LCached, LLease, LInserted);
+  Result := not LInserted;
+
+  if LInserted then
+  begin
+    { Candidate values/nodes are owned locally. Admit the bounded root/cache
+      update before publication; refusal cannot alter the old root or a sibling. }
+    NyxPascalAdmitAnalysis(FExecution, papMetadataValue);
+    FRoot := LCandidate;
+    Inc(FCreated);
+  end
+  else
+  begin
+    AFirst := TOrdinalValue(LLease.Borrow).Value;
+  end;
+  RememberRead(LKey, LLease);
+end;
+
+procedure TMetadataMap.AddFirst(AKind: TMetadataKind; const AKey: TNyxText; AValue: Integer);
+var
+  LFirst: Integer;
+begin
+  FindOrAddFirst(AKind, AKey, AValue, LFirst);
 end;
 
 function TFilterBlock.Row(AIndex: Integer): TFilterRow;
@@ -2650,6 +2707,9 @@ end;
 
 function TSyntaxSnapshot.AddScope(AKind: TNyxPascalSyntaxScopeKind;
   AParent, AOwner: Integer; AStart: Integer; const AName: TNyxText): Integer;
+var
+  LFrame: TScopeValue;
+  LSpan: TNyxPascalSpan;
 begin
   Result := FScopeCount;
 
@@ -2657,25 +2717,33 @@ begin
   begin
     raise ENyxPascalSyntaxLimit.Create('Pascal syntax scopes exceed their budget');
   end;
-
-
-  EditFrame(Result).Value.FKind := AKind;
-  EditFrame(Result).Value.FParent := AParent;
-  EditFrame(Result).Value.FOwner := AOwner;
-  EditFrame(Result).Value.FFirst := -1;
-  EditFrame(Result).Value.FLast := -1;
-  EditFrame(Result).Value.FSpan := NyxPascalSpan(AStart, FLexical.Scalars - AStart);
-  EditFrame(Result).Value.FName := AName;
+  LSpan := NyxPascalSpan(AStart, FLexical.Scalars - AStart);
+  { One owner-checked borrow covers this fixed initialization. No metadata call
+    or checkpoint capture intervenes before the last assignment. Later edits
+    still reacquire the row and independently check its current COW stamp. }
+  LFrame := EditFrame(Result);
+  LFrame.Value.FKind := AKind;
+  LFrame.Value.FParent := AParent;
+  LFrame.Value.FOwner := AOwner;
+  LFrame.Value.FFirst := -1;
+  LFrame.Value.FLast := -1;
+  LFrame.Value.FSpan := LSpan;
+  LFrame.Value.FName := AName;
   Inc(FScopeCount);
 end;
 
 procedure TSyntaxSnapshot.FinishScope(AScope: Integer; AComplete: Boolean);
+var
+  LFrame: TScopeValue;
 begin
-  EditFrame(AScope).Value.FComplete := AComplete;
+  LFrame := EditFrame(AScope);
+  LFrame.Value.FComplete := AComplete;
 
   if AComplete then
   begin
-    EditFrame(AScope).Value.FSpan := SpanFrom(Frame(AScope).Value.Span.Start);
+    { SpanFrom reads lexical coordinates only; it neither captures metadata nor
+      changes the stamp protecting this bounded scope update. }
+    LFrame.Value.FSpan := SpanFrom(LFrame.Value.Span.Start);
   end;
 end;
 
@@ -2684,6 +2752,8 @@ function TSyntaxSnapshot.AddDeclaration(AScope: Integer;
   AName: Integer; AOperator: TNyxPascalOperatorKind; AAnonymous: Boolean): Integer;
 var
   LToken: TNyxPascalToken;
+  LName: TNyxText;
+  LEntry: TDeclarationValue;
 begin
   NodeBudget;
   Result := FDeclarationCount;
@@ -2694,35 +2764,38 @@ begin
   end;
   LToken := ReadToken(FTokens[AName]);
 
-
-
   if AAnonymous then
   begin
-    EditEntry(Result).Value.FName := '';
+    LName := '';
   end
   else if (AOperator = pokNone) and not ((AKind = psdkLabel) and (LToken.Kind = ptkNumber)) then
   begin
-    EditEntry(Result).Value.FName := FLexical.Identifier(FTokens[AName]);
+    LName := FLexical.Identifier(FTokens[AName]);
   end
   else
   begin
-    EditEntry(Result).Value.FName := FLexical.Text(FTokens[AName]);
+    LName := FLexical.Text(FTokens[AName]);
   end;
-  EditEntry(Result).Value.FKind := AKind;
-  EditEntry(Result).Value.FOperator := AOperator;
-  EditEntry(Result).Value.FVisibility := AVisibility;
-  EditEntry(Result).Value.FNameSpan := LToken.Span;
-  EditEntry(Result).Value.FScope := AScope;
-  EditEntry(Result).Value.FNestedScope := -1;
-  EditEntry(Result).Value.FNext := -1;
-  EditEntry(Result).Value.FNextNamed := -1;
-  EditEntry(Result).Value.FLastNamed := Result;
-  EditEntry(Result).Value.FVariantArm := -1;
-  EditEntry(Result).Value.FFirstHint := -1;
-  EditEntry(Result).Value.FLastHint := -1;
-  EditEntry(Result).Value.FFirstIntrinsic := -1;
-  EditEntry(Result).Value.FLastIntrinsic := -1;
-  EditEntry(Result).Value.FAnonymous := AAnonymous;
+  { Initialize the new declaration through one checked mutable row. This fixed
+    group performs no metadata lookup/capture/callback and retains no borrow in
+    the published value. Conditional/variant/link updates reacquire afterward. }
+  LEntry := EditEntry(Result);
+  LEntry.Value.FName := LName;
+  LEntry.Value.FKind := AKind;
+  LEntry.Value.FOperator := AOperator;
+  LEntry.Value.FVisibility := AVisibility;
+  LEntry.Value.FNameSpan := LToken.Span;
+  LEntry.Value.FScope := AScope;
+  LEntry.Value.FNestedScope := -1;
+  LEntry.Value.FNext := -1;
+  LEntry.Value.FNextNamed := -1;
+  LEntry.Value.FLastNamed := Result;
+  LEntry.Value.FVariantArm := -1;
+  LEntry.Value.FFirstHint := -1;
+  LEntry.Value.FLastHint := -1;
+  LEntry.Value.FFirstIntrinsic := -1;
+  LEntry.Value.FLastIntrinsic := -1;
+  LEntry.Value.FAnonymous := AAnonymous;
 
   if (AKind = psdkField) and (FActiveArm >= 0) and
     (SelectorRow(ArmRow(FActiveArm).Value.SelectorIndex).Value.RecordScope = AScope) then
@@ -2744,41 +2817,54 @@ var
   LScope: Integer;
   LKey: TNyxText;
   LFirst: Integer;
+  LLast: Integer;
+  LName: TNyxText;
+  LAnonymous: Boolean;
+  LOperator: TNyxPascalOperatorKind;
+  LDeclaration: TDeclarationValue;
+  LFrame: TScopeValue;
 begin
-  LScope := Entry(AIndex).Value.Scope;
-  EditEntry(AIndex).Value.FNext := -1;
-  EditEntry(AIndex).Value.FNextNamed := -1;
-  EditEntry(AIndex).Value.FLastNamed := AIndex;
+  { Capture immutable fields before any edit. Subsequent writes below affect
+    links only; none can change these scalar/name values or rotate a stamp. }
+  LDeclaration := Entry(AIndex);
+  LScope := LDeclaration.Value.Scope;
+  LName := LDeclaration.Value.Name;
+  LAnonymous := LDeclaration.Value.Anonymous;
+  LOperator := LDeclaration.Value.OperatorKind;
+  LDeclaration := EditEntry(AIndex);
+  LDeclaration.Value.FNext := -1;
+  LDeclaration.Value.FNextNamed := -1;
+  LDeclaration.Value.FLastNamed := AIndex;
+  LLast := Frame(LScope).Value.FLast;
 
-  if Frame(LScope).Value.FLast >= 0 then
+  if LLast >= 0 then
   begin
-    EditEntry(Frame(LScope).Value.FLast).Value.FNext := AIndex;
-  end
-  else
-  begin
-    EditFrame(LScope).Value.FFirst := AIndex;
+    EditEntry(LLast).Value.FNext := AIndex;
   end;
-  EditFrame(LScope).Value.FLast := AIndex;
-  Inc(EditFrame(LScope).Value.FCount);
+  { Reacquire only after the other row's update. This fixed scope-link group
+    performs no further metadata call or checkpoint capture while borrowed. }
+  LFrame := EditFrame(LScope);
 
-  if Entry(AIndex).Value.Anonymous then
+  if LLast < 0 then
+  begin
+    LFrame.Value.FFirst := AIndex;
+  end;
+  LFrame.Value.FLast := AIndex;
+  Inc(LFrame.Value.FCount);
+
+  if LAnonymous then
   begin
     Exit;
   end;
-  LKey := TNyxText(IntToStr(LScope)) + ':' + NyxPascalASCIIKey(Entry(AIndex).Value.Name);
+  LKey := TNyxText(IntToStr(LScope)) + ':' + NyxPascalASCIIKey(LName);
 
-  if Entry(AIndex).Value.OperatorKind <> pokNone then
+  if LOperator <> pokNone then
   begin
     LKey := TNyxText(IntToStr(LScope)) + ':operator#' +
-      TNyxText(IntToStr(Ord(Entry(AIndex).Value.OperatorKind)));
+      TNyxText(IntToStr(Ord(LOperator)));
   end;
-  LFirst := FMetadata.Index(mkName, LKey);
 
-  if LFirst < 0 then
-  begin
-    FMetadata.AddFirst(mkName, LKey, AIndex);
-  end
-  else
+  if FMetadata.FindOrAddFirst(mkName, LKey, AIndex, LFirst) then
   begin
     EditEntry(Entry(LFirst).Value.FLastNamed).Value.FNextNamed := AIndex;
     EditEntry(LFirst).Value.FLastNamed := AIndex;

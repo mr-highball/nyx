@@ -33,7 +33,115 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Body dispatch and native refusal provenance — 2026-10-18
+## Current integration: Coalesced metadata operations — 2026-10-18
+
+The previous goal turn made concrete progress: 8f249fe is qualified and pushed.
+The original RTL passes its earlier projected scan but still exhausts four million
+units in metadata-value at round 21/267,316 translated tokens. Reassessment after
+fifty-one unclosed authoring batches follows actual repeated metadata work. No
+debugger/compiler/capture variant or new phase is introduced. The phase alone
+does not identify a particular metadata operation or cumulative dominance.
+
+Scoped initialization previously reacquired the same new scope/declaration for
+each individual field, and linking repeatedly retrieved unchanged name/scope/
+operator values. Use one checked mutable borrow for each fixed initialization or
+link group, with no intervening metadata call/capture. Later conditional, variant,
+overload and independent row updates reacquire under the current COW stamp. Names
+and immutable scalar fields are captured before linking changes their unrelated
+links. Scope finalization reads lexical coordinates only during its fixed update.
+No borrow is used across a checkpoint capture or retained in a published result.
+
+Name linking previously queried Index and then AddFirst, whose Find could query
+the same key again before Store traversed its insertion path. FindOrAddFirst now
+combines the private operation: the same original eight-slot cache is probed once;
+an uncached key is searched/inserted in one persistent AVL descent. A missing
+ordinal is allocated only at the absent leaf. Existing keys retain their original
+first value and root; new candidate paths apply only after admitted root/cache
+publication. Cached absences still require their real insertion walk. Every
+visited/copied/allocated node and remaining lookup/root operation stays admitted.
+No larger cache, node discount, guessed fact or changed name/overload policy is
+used. Published readers retain no mutable cache/execution lease. Public record/
+interface layouts and all source/conditional language rules remain unchanged.
+
+Unchanged native preflights pass 4,416 checkpoint and 400 work checks with clean
+heaps, no warnings. The controlled metadata case keeps 481 retained/six copied/
+four created values, 55/3,683 nodes, height nine and the same 6,153 tree reads;
+actual metadata lookups fall from 12,918 to 4,328 (hits 11,642 to 3,052). The
+1,100-name ordinal case keeps 5,158 page reads/11,597 pages/1,103 roots/depth six/
+42 append pages, while lookups fall from 33,082 to 8,824. The cache still peaks at
+eight and retains zero entries after publication. Exact small semantic admission
+falls from 389 to 360 units; every one of the 359 smaller allowances refuses.
+These are actual preparation receipts, not CPU/latency claims. Browser preflight
+compiles only. Existing sibling identity/overload/retirement/cancellation/whole-
+source/every-scalar checks remain the oracle; no fixture is changed to fit.
+
+One final-byte product source is frozen before focused/maintained qualification
+and one unchanged original RTL run. All test/consumer inputs stay unchanged.
+The ignored `.local/metadata-operations-paths-private.json` owns evidence, retained
+preparations, final source/remote identity and return path. Stop metadata-operation/
+fixture/compiler/oracle/capture/debugger variants after that run, retaining its
+actual outcome before selecting another owner. Full original criterion/task/
+credit/DONE/source/type/module/incremental/editor/input/quality/parity/adoption/
+delivery remain open. No host/config retry, protected mutation, cleanup/restart,
+browser/HTTP/file execution/capture, new MCP tool/schema/rollout or sub-agent is
+authorized. Historical preservation failures remain retained without restoration.
+LAN remains offline; native Nyx MCP tools remain absent.
+
+Frozen qualification completes without an interrupted overlay. All 81 compiler
+jobs succeed with zero owned warnings and 182 upstream warnings. All 40 maintained
+native consumers, five focused consumers and one actual-source reading pass with
+clean heaps (46 logs), plus the unchanged original native consumer passes 56 checks
+with clean heap (47 total native pass logs). Checkpoint/append/storage/type-plan/
+work checks are 4,416/2,613/787/209/400. Actual-source syntax passes 8,113/five inputs/
+3,978 declarations; lexical checks pass 568/501 files/2,327,568 lossless tokens.
+Both Studios/backend/worker compile as applicable, with 33 browser consumers
+compiled only. No browser execution/input/observing/parity/adoption/delivery is
+established by this qualification.
+
+The unchanged original passes its earlier work gate and reaches a new semantic
+frontier. The existing requirement mechanism now completes Longint, Int64 and a
+third Pointer job within its unchanged eight-job ceiling; no fixed probe is added.
+Five initial primitive queries, one separate Word job, symbol preparation three/
+eight, view cap two million, aggregate four million and 64-round ceiling remain
+exact. These are separate unchanged fact-context reconstructions, not an
+incremental replay or total-across-all-reconstructions timing claim.
+
+System reaches 10,925 declarations/six syntax diagnostics/25 semantic answers,
+then retains a pending pbiUnsupportedType VarHeader query at heap.inc scalar
+18,785: sizeof(VarHeader)<>8. VarHeader is a declaration-bound record with int32
+and uint32 fields. Its authored expected size is a check, not measured layout
+authority. The source remains Resolved=False, retaining that conditional gap and
+its dependent error directive. ObjPas retains 209 declarations/four syntax
+diagnostics/one answer with no pending question. These are bounded frontier
+results, not full original RTL meaning or canonical type correctness.
+
+The ordinary indexed query is ready again: exactly Free and FreeInstance from
+the original objpash.inc, three modules/two dependency loads, no binding gap.
+The unchanged fixture verifies exact definition spans after provider retirement
+and an exact detached Free insertion without altering the caller. This recovers
+the real bounded completion/navigation/insertion result; it does not establish
+full source resolution, default Studio adoption or observing delivery.
+
+One focused source/661 maintained sources (660 unrelated unchanged), 97 RTL/24
+compiler/three additional inspected inputs, 156 original packets/48 includes,
+five current-start protected files/nine contexts, 349 frozen artifacts and
+thirteen concurrent planning files remain exact. Readers are joined; LAN stays
+offline and native Nyx tools absent. Historical original-baseline/prior postpush
+global Codex configuration failures remain retained, actor unattributed, without
+restoration or a full preservation/delivery pass. The new observed-original pass
+receipt is distinct from the retained prior metadata-value failure.
+
+Stop metadata-operation/fixture/compiler/oracle/capture/debugger variants.
+Reassessment after fifty-two documented unclosed authoring batches follows
+declaration-bound record size/layout through existing syntax/type/binding/compiler-
+policy ownership. Preserve lexical class/type scope, aliases, captured primitive
+facts, packing/alignment and conditional activity; return typed requirements or
+refusal when layout is unknown. Do not infer an ABI, use authored size eight as
+authority, patch in a VarHeader probe or skip the remaining genuine syntax gaps.
+Full original source/canonical type/module/incremental/editor/input/quality/parity/
+adoption/delivery and original criterion/task/credit/DONE remain open.
+
+## Previous integration: Body dispatch and native refusal provenance — 2026-10-18
 
 The previous goal turn made concrete progress: 8545d6e and its exact seven-source
 qualification are pushed. The restarted goal needs no user decision. The original
