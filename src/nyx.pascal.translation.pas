@@ -2925,6 +2925,7 @@ var
   LOptimizedContext: INyxPascalCompilerContext;
   LChannel: TNyxPascalDiagnosticChannel;
   LEmissionEnabled: Boolean;
+  LInterfaces: TNyxPascalInterfaceStyle;
 begin
   NyxPascalDirectiveParts(AText, LName, LValue, LOffset);
   try
@@ -3389,6 +3390,36 @@ begin
       end;
       FContext := NyxPascalWithCompilerPolicies(FContext,
         NyxPascalCompilerPolicies(FContext).RequestPointerChecking(LPointerChecking));
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'interfaces' then
+    begin
+      LArgument := NyxPascalASCIIKey(LValue);
+
+      if LArgument = 'com' then
+      begin
+        LInterfaces := pifsCOM;
+      end
+      else if LArgument = 'corba' then
+      begin
+        LInterfaces := pifsCORBA;
+      end
+      else if LArgument = 'default' then
+      begin
+        { DEFAULT means this capture's initial setting, not the analyzer's
+          compiler or an assumption based on the current source MODE. }
+        LInterfaces := NyxPascalCompilerPolicies(FInitial).InterfaceStyle;
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('Interface style needs COM, CORBA or DEFAULT');
+      end;
+
+      if (FActive <> ppkTrue) or FBlocked then LInterfaces := pifsUnknown;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).UseInterfaces(LInterfaces));
       SaveState;
       Exit;
     end;

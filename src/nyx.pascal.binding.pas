@@ -127,8 +127,9 @@ type
     definitions/worlds never retain a frame that refers back to them. }
   INyxPascalGenericEnvironment = interface;
 
-  { Concrete arguments for one exact generic declaration, with an optional outer
+  { Typed arguments for one exact generic declaration, with an optional outer
     lexical frame for nested types. Owner is an unspecialized declaration handle.
+    Arguments can be concrete specializations or source-owned formal contracts.
     No constraints are assumed satisfied: unsupported constraint headers refuse
     before a frame is published. Arguments are semantic types, not source strings. }
   INyxPascalGenericEnvironment = interface(IInterface)
@@ -604,6 +605,9 @@ type
     FBindingConstraint: Boolean;
     { Owner-name lookup must not recursively re-enter the same method header. }
     FResolvingImplementationOwner: Boolean;
+    { A query-local candidate is used only to prove absence for every possible
+      interface style. It never changes or publishes a captured default. }
+    FConsideringInterfaceRoot: Boolean;
     FEnvironment: INyxPascalGenericEnvironment;
     FTypeOwner: INyxPascalBoundSymbol;
     procedure Tick;
@@ -648,6 +652,7 @@ type
     function BindNode(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function Bases(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
+    function InterfaceStyleOf(const AOwner: INyxPascalBoundSymbol): TNyxPascalInterfaceStyle;
     function SameSymbol(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
     function Unwrap(const AType: INyxPascalSemanticType): INyxPascalSemanticType;
     function GenericNames(const ASymbol: INyxPascalBoundSymbol;
@@ -3228,11 +3233,6 @@ begin
     SetLength(FConstraintPath, LTrail + 1);
     FConstraintPath[LTrail] := AActual;
     try
-      { No implicit interface root is invented: INTERFACES/mode ownership needs
-        its own captured proof. Explicit inherited interface edges remain usable. }
-
-      if (LActualForm = pstfInterface) and
-        (AActual.Definition.Declaration.AncestorSpan.Length = 0) then Exit(ppkUnknown);
       LAt := 0;
       LHasClass := False;
       LUnknown := False;
@@ -4159,6 +4159,23 @@ begin
   end;
 end;
 
+function TBindingQuery.InterfaceStyleOf(const AOwner: INyxPascalBoundSymbol): TNyxPascalInterfaceStyle;
+var
+  LContext: INyxPascalCompilerContext;
+begin
+  Tick;
+  LContext := ContextAt(FWorld.At(AOwner.ModuleIndex, AOwner.Declaration.Scope,
+    AOwner.Declaration.TypeSpan.Start));
+  Result := pifsUnknown;
+
+  if (LContext <> nil) and (LContext.Family = ppcFPC) and
+    (LContext.Version.FullNumber = 30301) and
+    (LContext.Mode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+  begin
+    Result := NyxPascalCompilerPolicies(LContext).InterfaceStyle;
+  end;
+end;
+
 function TBindingQuery.BasesCore(const AOwner: INyxPascalBoundSymbol;
   AOrdinal: Integer): INyxPascalResolution;
 var
@@ -4176,6 +4193,8 @@ var
   LImplicit: TNyxText;
   LModule: Integer;
   LFound: INyxPascalResolution;
+  LContext: INyxPascalCompilerContext;
+  LStyle: TNyxPascalInterfaceStyle;
 begin
   Tick;
   LDecl := AOwner.Declaration;
@@ -4197,7 +4216,38 @@ begin
     end
     else if LDecl.TypeForm = pstfInterface then
     begin
-      LImplicit := 'IInterface';
+      { FPC registers the root IUnknown while compiling System and gives that
+        exact root no parent. CORBA/Java interfaces also get no implicit parent.
+        This qualified compiler-owned role is independent of a missing default. }
+
+      if (LDecl.Scope = 0) and (LDecl.GenericSpan.Length = 0) and
+        (NyxPascalASCIIKey(LView.Syntax.Scope(0).Name) = 'system') then
+      begin
+
+        if NyxPascalASCIIKey(LDecl.Name) = 'iinterface' then Exit(Answer(pbsMissing, pbiMissingName));
+        LContext := ContextAt(FWorld.At(AOwner.ModuleIndex, LDecl.Scope, LDecl.TypeSpan.Start));
+
+        if (LContext <> nil) and (LContext.Family = ppcFPC) and
+          (LContext.Version.FullNumber = 30301) and
+          (NyxPascalASCIIKey(LDecl.Name) = 'iunknown') then Exit(Answer(pbsMissing, pbiMissingName));
+      end;
+      LStyle := InterfaceStyleOf(AOwner);
+      case LStyle of
+        pifsCORBA: Exit(Answer(pbsMissing, pbiMissingName));
+        pifsCOM: LImplicit := 'IUnknown';
+      else
+        begin
+          LContext := ContextAt(FWorld.At(AOwner.ModuleIndex, LDecl.Scope, LDecl.TypeSpan.Start));
+
+          if not FConsideringInterfaceRoot or (LContext = nil) or
+            (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber <> 30301) or
+            not (LContext.Mode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+          begin
+            Exit(Answer(pbsUnresolved, pbiCompilerContext));
+          end;
+          LImplicit := 'IUnknown';
+        end;
+      end;
     end;
 
     if (LImplicit = '') or
@@ -4213,6 +4263,15 @@ begin
       Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
     end;
     LFound := Exact(LModule, 0, InterfaceEnd(LModule), LImplicit, True);
+
+    if (LFound.Status = pbsMissing) and (LImplicit = 'IUnknown') and
+      (FLimits.ImplicitScopes = pispDeclarationNames) then
+    begin
+      { The explicit declaration-only scope policy permits a symbolic IInterface
+        root in small caller-owned models. Compiler-unit policy requires the
+        actual FPC IUnknown declaration and never uses this symbolic substitute. }
+      LFound := Exact(LModule, 0, InterfaceEnd(LModule), 'IInterface', True);
+    end;
 
     if (LFound.Status <> pbsBound) or (LFound.Count <> 1) then
     begin
@@ -4508,6 +4567,8 @@ var
   LTrailCount: Integer;
   LSeen: Integer;
   LCompare: Integer;
+  LPossible: INyxPascalResolution;
+  LConsidering: Boolean;
   LDuplicate: Boolean;
 begin
   Tick;
@@ -4548,6 +4609,33 @@ begin
 
       if LBase.Status <> pbsBound then
       begin
+        { With an unknown style, a source name can still be absent from every
+          possible parent. CORBA/Java contribute no implicit parent; only the
+          inspected COM root needs checking. Never publish its positive members
+          unless the actual style is known. All extra reads use the same budget. }
+
+        if (LAt = 0) and (LBase.Issue = pbiCompilerContext) and
+          (AOwner.Declaration.TypeForm = pstfInterface) and
+          (AOwner.Declaration.AncestorSpan.Length = 0) and
+          (InterfaceStyleOf(AOwner) = pifsUnknown) then
+        begin
+          LConsidering := FConsideringInterfaceRoot;
+          FConsideringInterfaceRoot := True;
+          try
+            LPossible := Bases(AOwner, 0);
+          finally
+            FConsideringInterfaceRoot := LConsidering;
+          end;
+
+          if LPossible.Status = pbsMissing then Break;
+
+          if LPossible.Status = pbsBound then
+          begin
+            LPossible := Member(LPossible.BoundType, ASite, AName, AAccess, AOperator);
+
+            if LPossible.Status = pbsMissing then Break;
+          end;
+        end;
         Exit(LBase);
       end;
       LBase := Member(LBase.BoundType, ASite, AName, AAccess, AOperator);
@@ -4606,7 +4694,6 @@ var
   LSymbols: array of INyxPascalBoundSymbol;
   LSymbol: INyxPascalBoundSymbol;
   LDuplicate: Boolean;
-  LView: INyxPascalTranslatedSyntax;
 begin
   SetLength(LSymbols, 0);
   for LAt := 0 to AFormal.BoundCount - 1 do
@@ -4614,27 +4701,6 @@ begin
     Tick;
     LBound := AFormal.BoundType(LAt);
 
-    if (LBound.Definition.Declaration.TypeForm = pstfInterface) and
-      (LBound.Definition.Declaration.AncestorSpan.Length = 0) then
-    begin
-      LView := FWorld.ModuleAt(LBound.Definition.ModuleIndex);
-
-      if not ((NyxPascalASCIIKey(LView.Syntax.Scope(0).Name) = 'system') and
-        (NyxPascalASCIIKey(LBound.Definition.Declaration.Name) = 'iinterface')) then
-      begin
-        { Own non-overloaded members do not depend on an implicit interface
-          style. An inherited/overloaded answer still needs captured root proof. }
-        LFound := Exact(LBound.Definition.ModuleIndex, LBound.Definition.Declaration.NestedScope,
-          LView.Syntax.Scope(LBound.Definition.Declaration.NestedScope).Span.Finish,
-          AName, False, AOperator);
-
-        if (LFound.Status <> pbsBound) or (LFound.Count <> 1) or
-          (psdfOverload in LFound.SymbolAt(0).Declaration.Flags) then
-        begin
-          Exit(Answer(pbsUnresolved, pbiGenericContext));
-        end;
-      end;
-    end;
     LFound := Member(LBound, ASite, AName, AAccess, AOperator);
 
     if LFound.Status = pbsMissing then Continue;
@@ -4841,13 +4907,6 @@ begin
         Tick;
         LBound := LFormal.BoundType(LAt);
 
-        if (LBound.Definition.Declaration.TypeForm = pstfInterface) and
-          (LBound.Definition.Declaration.AncestorSpan.Length = 0) and
-          not ((NyxPascalASCIIKey(FWorld.ModuleAt(LBound.Definition.ModuleIndex).Syntax.Scope(0).Name) = 'system') and
-            (NyxPascalASCIIKey(LBound.Definition.Declaration.Name) = 'iinterface')) then
-        begin
-          Exit(Answer(pbsUnresolved, pbiGenericContext));
-        end;
         Result := CollectMemberNames(LBound, APrefix, ANames);
 
         if Result <> nil then Exit;
@@ -4958,6 +5017,7 @@ function TBindingQuery.Members(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite; const AQuery: TNyxPascalMemberQuery): INyxPascalMemberPage;
 var
   LPage: TMemberPage;
+  LPageLease: INyxPascalMemberPage;
   LReply: TResolution;
   LReplyLease: INyxPascalResolution;
   LNames: TGenericNames;
@@ -4979,7 +5039,10 @@ begin
     raise ENyxPascalBindingLimit.Create('Member page exceeds the world candidate budget');
   end;
   LPage := TMemberPage.Create;
-  Result := LPage;
+  { Keep the constructing page private. Native interface function results can
+    share their caller's destination; assigning Result now would expose an
+    unfinished page if any later budget/cancellation check raises. }
+  LPageLease := LPage;
   LPage.Following := AQuery.Offset;
   LPage.TotalValue := -1;
   LFound := CollectMemberNames(AType, NyxPascalASCIIKey(AQuery.Prefix), LNames);
@@ -4987,6 +5050,7 @@ begin
   if LFound <> nil then
   begin
     LPage.Reply := Answer(LFound.Status, LFound.Issue, LFound.RelatedName);
+    Result := LPageLease;
     Exit;
   end;
   LReply := TResolution.Create;
@@ -5008,6 +5072,7 @@ begin
     begin
       LPage.More := False;
       LPage.Reply := Answer(LFound.Status, LFound.Issue, LFound.RelatedName);
+      Result := LPageLease;
       Exit;
     end;
     for LAlternative := 0 to LFound.Count - 1 do
@@ -5025,6 +5090,7 @@ begin
           begin
             LPage.Reply := LReplyLease;
             LPage.Following := AQuery.Offset + Length(LReply.Symbols);
+            Result := LPageLease;
             Exit;
           end;
         end
@@ -5040,6 +5106,7 @@ begin
   LPage.Reply := LReplyLease;
   LPage.Following := AQuery.Offset + Length(LReply.Symbols);
   LPage.TotalValue := LVisible;
+  Result := LPageLease;
 end;
 
 function TSemanticWorld.Members(const AType: INyxPascalSemanticType;

@@ -33,7 +33,75 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned formal generic contracts — 2026-10-19
+## Current integration: Interface style and implicit roots — 2026-10-19
+
+The source-owned formal checkpoint b950fa8 is qualified and pushed. This solo
+continuation follows captured/source-authored interface meaning through existing
+policy, context, translation, binding and storage-key owners. It adds no fixed
+compiler probes, protocol/schema, host/configuration retry, rollout or completion
+credit. Automatic compiler-profile initial-style capture remains open.
+
+Typed Unknown/COM/CORBA values survive immutable capture and exact fact/key
+identity. Authored COM/CORBA/DEFAULT requests retain physical token/include state;
+DEFAULT returns to the supplied initial value, not an inferred COM default.
+Inspection of seven pinned FPC compiler files and an independent complete native
+fixture qualify MODE retention and the separate module lifetime across PUSH/POP.
+Known COM uses actual System.IUnknown; CORBA has no implicit root. Unknown styles
+cannot donate COM members or publish a complete page. Narrow negative lookup may
+prove a name absent from all possible roots without choosing one. Formal bounds
+use those same source-owned rules rather than a special guessed parent.
+
+The focused preflight passes 149 checks and an independently executed raw/COM
+fixture returns 42 with actual reference-count calls. Member traversal first fits
+at 57 work units; every smaller allowance refuses. This exposed an existing
+native interface-result issue: constructing pages were assigned to Result before
+budget/cancellation checks finished. A private construction lease now publishes
+only a completed page. The initial failed runtime and test-compilation preparation
+remain retained separately; successful focused checks have clean heaps. Source
+replacement/cancellation, unknown formal pages, original type-keyword setting
+sites, include origins and retained prefix history are covered.
+
+Six final Pascal inputs freeze before the accepted full batch; production and
+consumers retain those exact bytes throughout. All 91 main compiler logs pass
+with zero owned warnings/224 upstream pas2js Classes warnings. The independent
+emission oracle's deliberate warning stays separate from product warning debt.
+All 41 maintained native consumers and seven additional consumers pass, as do
+the separately executed corpus and original RTL consumer: fifty accepted native
+logs have clean heaps. The corpus retains 504 files/2,372,123 lossless tokens and
+571 checks. Generic/binding/type/syntax/checkpoint checks retain 948/74/448/8191/
+6526; the previous class/ancestry/formal first fits remain 96/352/75. Native Studio/
+backend and forty browser compilations, including Studio/worker, pass; browser
+execution, physical input, parity, adoption and delivery are not qualified here.
+
+The unchanged original RTL consumer passes 56 checks with clean heap. Its actual
+System source remains Resolved/zero translation diagnostics, 13,101 declarations,
+zero syntax diagnostics/thirty-one answers/no pending fact. ObjPas retains 209/
+zero/one/no pending. Indexed Free/FreeInstance completion, original include-token
+navigation after provider retirement and detached insertion remain exact. These
+are the existing real-source frontier assertions, not full RTL/type meaning.
+Initial five queries, one Word job, three/eight symbol jobs and six/eight dynamic
+jobs (Longint, Int64, Pointer, VarHeader, CommonHeader, FreeChunk), two-million view/
+four-million aggregate token caps and sixty-four rounds are unchanged. No fixed
+probe, guessed default, fixture edit or weaker integration oracle is introduced.
+
+Six focused/690 maintained inputs, including 684 unrelated sources, 97 RTL/24
+compiler inputs and seven new compiler inspections retain exact pins, alongside
+the prior inspected sets. All 156 unit packets/48 includes, thirteen foreign
+planning files, five protected current-start files/nine contexts and 349 frozen
+release artifacts remain exact. Readers are terminal/joined; LAN stays offline,
+native Nyx MCP tools remain absent. Historical global-configuration preservation
+remains false; current byte equality does not rewrite that failure.
+
+Ignored `.local/interface-style-paths-private.json` owns accepted qualification,
+retained preparations, final source/remote receipts and return path. Stop
+interface/fixture/compiler/capture variants. Next reassess remaining source/type
+and module-coherence prerequisites for ordinary owned completion through existing
+owners; unknown initial styles remain explicit until authoritative captured facts
+are available. Full canonical types/module meaning, incremental budgets, editor/
+physical input, quality/parity/adoption/delivery and the original criterion/task/
+credit/DONE remain open. No new tool/schema or rollout closes.
+
+## Previous integration: Source-owned formal generic contracts — 2026-10-19
 
 The previous checkpoint 534687a is qualified and pushed. This continuation keeps
 the full library/Studio/resolver outcome active and executes solo. Native FPC

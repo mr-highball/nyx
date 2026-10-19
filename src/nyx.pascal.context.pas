@@ -244,6 +244,9 @@ type
     initial setting, not a guessed Boolean. Unknown also covers uncertain source
     effects; no value proves target support, pointer validity or emitted checks. }
   TNyxPascalPointerCheckingRequest = (ppcrUnknown, ppcrDefault, ppcrOff, ppcrOn);
+  { Captured or explicitly authored interface contract. Unknown is not a COM
+    default; target support, ABI and reference-count execution stay separate. }
+  TNyxPascalInterfaceStyle = (pifsUnknown, pifsCOM, pifsCORBA);
   { Value-owned local and module policies, independent of renderer/ABI types.
     Zero initialization means unknown. Fluent copies retain exact symbolic
     values; they never infer a compiler's defaults or target capabilities.
@@ -263,6 +266,7 @@ type
     FHints: TNyxPascalKnowledge;
     FNotes: TNyxPascalKnowledge;
     FPointerChecking: TNyxPascalPointerCheckingRequest;
+    FInterfaces: TNyxPascalInterfaceStyle;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -290,6 +294,9 @@ type
     { Local intent participates in capture, exact identity and saved settings.
       Pending activation and the meaning of Default remain compiler-owned. }
     function RequestPointerChecking(AValue: TNyxPascalPointerCheckingRequest): TNyxPascalCompilerPolicies;
+    { An independent source/capture value. In the inspected FPC this module
+      setting survives MODE and local PUSH/POP; missing defaults stay unknown. }
+    function UseInterfaces(AValue: TNyxPascalInterfaceStyle): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -301,6 +308,7 @@ type
     property GotoRequested: TNyxPascalKnowledge read FGoto;
     property AssemblerReader: TNyxPascalAssemblerReader read FAssembler;
     property PointerCheckingRequested: TNyxPascalPointerCheckingRequest read FPointerChecking;
+    property InterfaceStyle: TNyxPascalInterfaceStyle read FInterfaces;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -1362,7 +1370,9 @@ begin
       { This scanner flushes pending locals before changing mode, and neither
         mode handler replaces cs_checkpointer. Retain the authored request only
         for this inspected compiler/version; this supplies no effective flag. }
-      .RequestPointerChecking(FPolicies.PointerCheckingRequested);
+      .RequestPointerChecking(FPolicies.PointerCheckingRequested)
+      { The same scanner does not replace its independent interface setting. }
+      .UseInterfaces(FPolicies.InterfaceStyle);
   end;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
@@ -2146,7 +2156,9 @@ begin
     (Ord(FNotes) < Ord(Low(TNyxPascalKnowledge))) or
     (Ord(FNotes) > Ord(High(TNyxPascalKnowledge))) or
     (Ord(FPointerChecking) < Ord(Low(TNyxPascalPointerCheckingRequest))) or
-    (Ord(FPointerChecking) > Ord(High(TNyxPascalPointerCheckingRequest))) then
+    (Ord(FPointerChecking) > Ord(High(TNyxPascalPointerCheckingRequest))) or
+    (Ord(FInterfaces) < Ord(Low(TNyxPascalInterfaceStyle))) or
+    (Ord(FInterfaces) > Ord(High(TNyxPascalInterfaceStyle))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2257,6 +2269,13 @@ begin
   Result.Validate;
 end;
 
+function TNyxPascalCompilerPolicies.UseInterfaces(AValue: TNyxPascalInterfaceStyle): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FInterfaces := AValue;
+  Result.Validate;
+end;
+
 function TNyxPascalCompilerPolicies.SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
 begin
   Validate;
@@ -2266,7 +2285,8 @@ begin
     (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking) and
     (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto) and
     (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
-    (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking);
+    (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
+    (FInterfaces = AOther.FInterfaces);
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;
@@ -2919,6 +2939,7 @@ var
   LSaved: INyxPascalCompilerContext;
   LSwitch: TNyxPascalLocalSwitch;
   LPolicies: INyxPascalContextPolicies;
+  LInterfaces: TNyxPascalInterfaceStyle;
 begin
   LCurrent := CaptureNyxPascalCompilerContext(ACurrent);
   LSaved := CaptureNyxPascalCompilerContext(ASaved);
@@ -2934,10 +2955,19 @@ begin
       LSaved.Option(NyxPascalLocalSwitchOption(LSwitch)));
   end;
   LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
+  LInterfaces := pifsUnknown;
+
+  if (LCurrent.Family = ppcFPC) and (LCurrent.Version.FullNumber = 30301) then
+  begin
+    { FPC's local settings stack does not store interfacetype. Restoring local
+      switches cannot restore an earlier module-level interface request. }
+    LInterfaces := NyxPascalCompilerPolicies(LCurrent).InterfaceStyle;
+  end;
   Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
   LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
-    .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested));
+    .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested)
+    .UseInterfaces(LInterfaces));
   LCurrent := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
   LCurrent := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));
   Result := NyxPascalOptimizations(LCurrent).WithOptimizationRules(NyxPascalOptimizations(LSaved));

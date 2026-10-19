@@ -3403,6 +3403,41 @@ Full canonical types, generic-routine inference, implicit interface-style captur
 incremental/editor/physical input qualification and ordinary Studio adoption remain
 required. Current qualification and retained failures are recorded in WORK.md.
 
+### Captured and authored interface styles
+
+`TNyxPascalCompilerPolicies.UseInterfaces` accepts the closed `pifsCOM`,
+`pifsCORBA` and `pifsUnknown` choices. Complete context capture, exact facts and
+storage evidence keys retain this independent value. Unknown stays distinct
+from COM; neither a source mode nor the analyzer's executing compiler supplies
+a project's missing initial default.
+
+The translator interprets authored `{$INTERFACES COM}`, `CORBA` and `DEFAULT`
+requests at their physical token/include sites. DEFAULT restores the supplied
+initial context's style. On the inspected FPC 3.3.1, MODE retains the setting
+and local PUSH/POP does not save or restore it. Historical saved frames still
+retain their original facts. Inactive requests have no effect; uncertain or
+unsupported effects revoke knowledge. Other compiler families/versions do not
+borrow these qualified lifetime or implicit-root rules.
+
+Known COM interfaces without an explicit parent use the captured System.IUnknown
+declaration; known CORBA interfaces have no implicit COM parent. Ordinary member
+queries, formal guarantees and bounded member pages share this rule. A missing
+default cannot donate COM members or claim a complete member page. A narrow name
+query can nevertheless prove absence from every possible parent before falling
+through to an outer declaration. All such reads retain the same cancellation,
+work and candidate limits. A constructing page remains private until a complete
+answer is ready, including when a work limit raises during traversal.
+
+The explicit `pispDeclarationNames` policy also permits the existing symbolic
+System.IInterface fallback in small caller-owned declaration models. Compiler-unit
+scope policy requires the actual IUnknown declaration and does not use that fallback.
+
+The native fixture independently observes its compiler invocation's initial
+style and executes raw/COM calls and reference counts. That observation is used
+explicitly by its source-model checks; automatic native compiler-profile default
+capture is still required. This source contract supplies no interface ABI,
+runtime refcount execution, compiler-call eligibility or cross-platform parity.
+
 ## Nyx-owned completion provider
 
 `nyx.pascal.completion.owned` now connects the owned lexer/context/syntax/binding

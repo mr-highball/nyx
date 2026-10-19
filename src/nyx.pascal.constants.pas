@@ -2030,6 +2030,14 @@ var
       Part('pointer-check-request-v1');
       Number(Ord(LPolicy.PointerCheckingRequested));
     end;
+
+    if LPolicy.InterfaceStyle <> pifsUnknown then
+    begin
+      { Keep unspecified contexts' exact prior identity while distinguishing
+        each captured/authored style from every following numeric field. }
+      Part('interface-style-v1');
+      Number(Ord(LPolicy.InterfaceStyle));
+    end;
     LWarnings := NyxPascalWarnings(AContext);
     Number(LWarnings.WarningCount);
     for LIndex := 0 to LWarnings.WarningCount - 1 do
