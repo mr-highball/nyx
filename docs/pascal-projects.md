@@ -3561,6 +3561,44 @@ default Studio adoption and complete input/navigation/quality/parity/delivery re
 required. Four browser consumers compile only. No default provider, new MCP tool/
 schema, active-project mutation or installed release is implied by this factory.
 
+### Implicit routine receivers and results
+
+Owned lookup and ordinary member completion now understand source-owned `Self`
+and `Result` in captured FPC 3.3.1 ObjFPC/Delphi/DelphiUnicode method bodies. The
+syntax declaration retains a typed routine keyword and the authored `STATIC`
+modifier independently of its name. Existing interface GUIDs and enum ordinals
+remain stable; consumers rebuild for the expanded declaration record.
+
+Instance methods, constructors, destructors, records and old-style objects retain
+their declared receiver. A class method's `Self` is a class reference, so it cannot
+donate instance fields. Static methods acquire no implicit `Self`: the resolver
+reads the owning member declaration because implementations normally omit that
+suffix. Class constructors/destructors also have no implicit receiver; CLASS in
+their lifecycle declaration does not create a metaclass parameter. Generic
+receivers/results retain their formal parameter owners. Nested
+procedures can capture an outer function's result, while nested functions own
+their own result. Explicit lexical declarations retain priority.
+
+These expressions carry types with zero synthetic declaration symbols. Actual
+member suggestions still navigate to real source tokens and use existing exact
+insertion/retirement contracts. A complete result header remains useful while
+its method body is unfinished. Malformed headers, conditional/unsupported source,
+unknown modes and unmodeled switches cannot acquire guessed implicit storage.
+All visible owner prototypes must agree on receiver storage before it is shared;
+mixed static/class/instance overload contracts require further signature matching.
+Operator results, function-name result aliases, general method admission and
+broader compiler/mode-switch semantics remain open.
+
+The native focused witness qualifies 444 checks with a clean heap, including an
+independent whole Pascal unit that executes to 42. Its unchanged source expressions
+also bind through Nyx. A separate native compiler input rejects class-constructor
+Self explicitly; its source/log and the first batch that missed this case remain
+retained. Every work allowance below the measured first fit refuses
+atomically. Ordinary completion follows `Result.Val` inside an unfinished method,
+retains real `Value` navigation after provider retirement and previews the exact
+insertion. These are local semantic/provider checks; browser execution and
+ordinary rendered editor adoption/parity/delivery remain separate requirements.
+
 ## Captured SDK modules and dependency loading
 
 `nyx.pascal.modules` supplies an immutable namespace-to-root catalog independent

@@ -47,6 +47,11 @@ type
   TNyxPascalSyntaxDeclarationKind = (psdkType, psdkConstant, psdkVariable,
     psdkField, psdkParameter, psdkProperty, psdkRoutine, psdkEnumValue, psdkResourceString,
     psdkLabel);
+  { The authored routine keyword, independent of its identifier or result type.
+    None belongs to non-routines; constructors/destructors must not acquire a
+    function result merely because their implementation has an instance Self. }
+  TNyxPascalRoutineKind = (prkNone, prkProcedure, prkFunction, prkConstructor,
+    prkDestructor, prkOperator);
   { Closed operator family, independent of its authored symbolic/named spelling.
     None is an ordinary declaration; Unknown retains unsupported operator syntax.
     Arity, operand/result types and compiler eligibility remain separate facts;
@@ -194,10 +199,12 @@ type
   end;
   { Explicit uncertainty and declaration modifiers. ThreadLocal retains authored
     storage duration independently of ClassMember, not an inferred TLS address
-    or synchronization guarantee. Unsupported/recovered scopes grant no
+    or synchronization guarantee. Static preserves the declared absence of an
+    implicit receiver; an implementation need not repeat that suffix.
+    Unsupported/recovered scopes grant no
     successful type inference, compilation or source editing authority. }
   TNyxPascalSyntaxFlag = (psdfIncomplete, psdfConditional, psdfForward,
-    psdfClassMember, psdfOverload, psdfUnsupported, psdfThreadLocal);
+    psdfClassMember, psdfOverload, psdfUnsupported, psdfThreadLocal, psdfStatic);
   { Value-owned flag set with no mutable storage or target-specific state. }
   TNyxPascalSyntaxFlags = set of TNyxPascalSyntaxFlag;
   { Authored platform/linker intent, distinct from Pascal member visibility.
@@ -291,6 +298,7 @@ type
     FName: TNyxText;
     FOwnerName: TNyxText;
     FKind: TNyxPascalSyntaxDeclarationKind;
+    FRoutineKind: TNyxPascalRoutineKind;
     FOperator: TNyxPascalOperatorKind;
     FForm: TNyxPascalSyntaxTypeForm;
     FVisibility: TNyxPascalSyntaxVisibility;
@@ -321,6 +329,7 @@ type
     property Name: TNyxText read FName;
     property OwnerName: TNyxText read FOwnerName;
     property Kind: TNyxPascalSyntaxDeclarationKind read FKind;
+    property RoutineKind: TNyxPascalRoutineKind read FRoutineKind;
     { Operators remain routines for existing consumers, with their own typed
       lookup family. Name/NameSpan retain the exact authored operator token. }
     property OperatorKind: TNyxPascalOperatorKind read FOperator;
@@ -2867,6 +2876,7 @@ begin
   LEntry := EditEntry(Result);
   LEntry.Value.FName := LName;
   LEntry.Value.FKind := AKind;
+  LEntry.Value.FRoutineKind := prkNone;
   LEntry.Value.FOperator := AOperator;
   LEntry.Value.FVisibility := AVisibility;
   LEntry.Value.FNameSpan := LToken.Span;
@@ -4755,6 +4765,7 @@ var
   LHasBody: Boolean;
   LIsFunction: Boolean;
   LIsOperator: Boolean;
+  LRoutineKind: TNyxPascalRoutineKind;
   LOperator: TNyxPascalOperatorKind;
   LResultEntry: Integer;
   LFullName: TNyxText;
@@ -4769,6 +4780,15 @@ begin
     LStart := Tok.Span.Start;
     LIsFunction := Word(pkwFunction);
     LIsOperator := Word(pkwOperator);
+    LRoutineKind := prkProcedure;
+
+    if LIsFunction then LRoutineKind := prkFunction;
+
+    if LIsOperator then LRoutineKind := prkOperator;
+
+    if Word(pkwConstructor) then LRoutineKind := prkConstructor;
+
+    if Word(pkwDestructor) then LRoutineKind := prkDestructor;
     LOperator := pokNone;
     LResultEntry := -1;
     Step;
@@ -4840,6 +4860,7 @@ begin
     LEntry := AddDeclaration(AScope, psdkRoutine, AVisibility, LFinalName, LOperator);
     EditEntry(LEntry).Value.FGenericSpan := LGenericSpan;
     EditEntry(LEntry).Value.FOwnerName := LOwner;
+    EditEntry(LEntry).Value.FRoutineKind := LRoutineKind;
 
     if not LIsOperator then
     begin
@@ -4937,6 +4958,11 @@ begin
       if Word(pkwOverload) then
       begin
         Include(EditEntry(LEntry).Value.FFlags, psdfOverload);
+      end;
+
+      if Word(pkwStatic) then
+      begin
+        Include(EditEntry(LEntry).Value.FFlags, psdfStatic);
       end;
 
       if LIsConvention then

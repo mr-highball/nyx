@@ -131,6 +131,7 @@ begin
       Text(LEntry.Name);
       Text(LEntry.OwnerName);
       Number(Ord(LEntry.Kind));
+      Number(Ord(LEntry.RoutineKind));
       Number(Ord(LEntry.OperatorKind));
       Number(LEntry.VariantArm);
       Number(LEntry.FirstHint);

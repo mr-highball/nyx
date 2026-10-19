@@ -33,7 +33,99 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Captured module evidence coherence — 2026-10-19
+## Current integration: Implicit method receivers and function results — 2026-10-19
+
+The ea40d95 captured-module checkpoint is qualified and pushed. The preceding
+user-facing status turn changed no product state; this continuation makes the
+next concrete authoring improvement through existing syntax/binding/completion
+owners. Typed routine keywords and an appended STATIC flag now retain declared
+receiver intent independently of identifiers and implementation spelling.
+Existing enum ordinals and interface GUIDs remain unchanged; the expanded
+declaration record requires rebuilt consumers.
+
+Source-owned Self/Result expressions return types without fabricated declaration
+symbols. Instance/constructor/destructor, record/object and generic owner contexts
+retain their exact identity. Class methods get class-reference access; STATIC is
+read from the owner's actual member declarations, where the compiler stores it.
+All candidate declarations must agree on that storage contract; conflicting
+overloads refuse instead of selecting a signature by name. Nested procedures
+can capture an outer function result; nested functions retain their own result.
+Explicit lexical names retain priority. A complete header remains usable inside
+an unfinished body, while earlier malformed/conditional/unsupported syntax refuses.
+
+This contract is qualified for captured FPC 3.3.1 ObjFPC/Delphi/DelphiUnicode modes.
+Other/unknown compiler modes and unmodeled result switches retain refusal, not
+borrowed defaults. General implementation/prototype signature matching, operator
+result storage, function-name result aliases and arbitrary mode-switch semantics
+remain open. This does not admit a whole method body as legal compiler input.
+Qualified type-only receivers use the existing member binder, and generic-method
+visibility checks follow the original owner header. No new MCP tool/schema,
+compiler probe protocol, host/config retry, runtime listener or editor rollout.
+
+Focused native preflight passes 438 checks/clean heap. An independent whole
+Delphi-mode unit executes real Self/Result/nested/generic/class/record/object
+behavior to 42; source queries then bind its unchanged expressions. The ordinary
+completion provider completes Result.Val inside an unfinished method and retains
+real Value navigation and exact detached insertion after provider retirement.
+Checkpoint append retains the new typed metadata. Query work first fits at 268
+units, and every smaller allowance refuses atomically; cancellation/replacement
+retain old-world boundaries. Five Pascal inputs freeze before broad native,
+browser/product compilation and unchanged original RTL qualification.
+Initial test API/name and marker-origin corrections remain retained preparations;
+no existing check, cap, probe, fixture or compiler input is weakened.
+
+The first full batch passes its existing native/browser/compiler/RTL checks but
+is rejected after review finds an uncovered class-lifecycle case. An independent
+native compiler input explicitly rejects Self in a class constructor; CLASS
+constructor/destructor bodies have no metaclass parameter. The five first frozen
+inputs, complete passing batch and exact negative compiler source/log remain in
+the rejected packet. Every first-batch reader is terminal and joined before the
+repair. The implicit lookup now distinguishes class lifecycle routines from
+ordinary instance constructors and class methods. The repaired focused suite
+passes 444 checks/clean heap with the unchanged 268-unit first fit. Five repaired
+inputs freeze before a fresh complete qualification batch. This is a semantic
+correction, not a weakened fixture or a claim that the first green batch covered
+the missing behavior.
+
+The repaired complete batch passes 97 main compiler jobs with zero owned warnings
+and 245 upstream pas2js Classes warnings, separately from the deliberate emission
+oracle and retained expected class-constructor compiler error. Forty-four
+maintained native consumers and seven additional consumers pass; the separately
+executed corpus and unchanged original RTL consumer bring the accepted native
+logs to fifty-three, all with clean heaps. Both Studios/backend/worker and
+forty-three browser compilations pass as applicable. No browser execution,
+physical input, observing rollout, parity, adoption or delivery is qualified.
+Maintained completion/production semantic checks remain 90/84; generic/binding/
+type/syntax/checkpoint checks remain 948/74/448/8191/6526. The lossless corpus
+retains 504 files/2,379,252 tokens/571 checks.
+
+The unchanged original RTL consumer passes 56 checks/clean heap. System remains
+Source.Resolved/zero translation diagnostics with 13,101 declarations/zero syntax
+diagnostics/thirty-one answers/no pending fact; ObjPas remains 209/zero/one/no
+pending. Exact indexed Free/FreeInstance completion, original include-token
+navigation after provider retirement and detached insertion remain ready.
+Initial five queries, one Word job, three/eight symbol jobs and the exact ordered
+six/eight dynamic jobs remain unchanged. The two-million view/four-million
+aggregate work/token caps and sixty-four rounds are unchanged. These assertions
+do not prove full RTL/type meaning or general routine/call admission.
+
+Five focused/697 maintained pins, including 692 unrelated exact sources, retain
+their frozen bytes. All 97 RTL/24 compiler inputs, prior inspected sets and four
+read-only compiler-source inspections remain exact. All 156 unit packets/48
+includes, thirteen concurrent planning files, five current-start protected files/
+nine contexts and 349 frozen release artifacts remain exact. Historical global-
+config preservation remains false; current equality does not erase that failure.
+Every rejected and accepted reader is terminal and joined. Stop method/lifecycle/
+fixture/compiler/capture variants; reassess remaining canonical type/routine/
+module/incremental/editor requirements through existing owners before adoption.
+
+Ignored .local/method-receivers-paths-private.json owns this packet, its source
+freeze, rejected/accepted evidence, prior accepted packet and return path. LAN stays
+offline; native Nyx MCP
+tools remain absent. Full compiler/type/module/incremental/editor/input/quality/
+parity/adoption/delivery and the original criterion/task/credit/DONE remain open.
+
+## Previous integration: Captured module evidence coherence — 2026-10-19
 
 The postfix checkpoint 66df314 is qualified and pushed. This solo continuation
 addresses a real global-context gap: matching compiler family/version did not

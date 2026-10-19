@@ -700,6 +700,12 @@ type
     function FormalReceiver(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
     function GenericImplementationOwner(const ASite: INyxPascalBindingSite;
       const ARoutine: INyxPascalBoundSymbol): INyxPascalResolution;
+    { Implicit storage is a type-only expression contract, never a fabricated
+      declaration/navigation target. A nil answer lets outer lexical scopes run. }
+    function ImplicitRoutine(const ASite: INyxPascalBindingSite; AScope: Integer;
+      const AName: TNyxText): INyxPascalResolution;
+    function MethodReceiver(const ASite: INyxPascalBindingSite;
+      const ARoutine: INyxPascalBoundSymbol; out AHasSelf: Boolean): INyxPascalResolution;
     function FormalMember(const AFormal: INyxPascalFormalParameter;
       const ASite: INyxPascalBindingSite; const AName: TNyxText;
       AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
@@ -2320,6 +2326,9 @@ begin
     begin
       Exit;
     end;
+    Result := ImplicitRoutine(ASite, LScope, AName);
+
+    if Result <> nil then Exit;
     LOwner := LSyntax.Scope(LScope).OwnerDeclaration;
 
     if (LOwner >= 0) and (LSyntax.Declaration(LOwner).GenericSpan.Length > 0) and
@@ -2530,17 +2539,19 @@ begin
     begin
       Tick;
 
-      if LLocal.Count <> 1 then
+      if (LLocal.BoundType = nil) and (LLocal.Count <> 1) then
       begin
         Exit(Answer(pbsUnresolved, pbiOverloadContext));
       end;
       LAccess := pmaInstance;
 
-      if LLocal.SymbolAt(0).Declaration.Kind = psdkType then
+      if (LLocal.Count = 1) and (LLocal.SymbolAt(0).Declaration.Kind = psdkType) then
       begin
         LAccess := pmaType;
       end;
-      LType := TypeOfSymbol(LLocal.SymbolAt(0));
+      LType := LLocal;
+
+      if LLocal.BoundType = nil then LType := TypeOfSymbol(LLocal.SymbolAt(0));
 
       if LType.Status <> pbsBound then
       begin
@@ -2598,6 +2609,14 @@ begin
 
       if LSyntax.Declaration(LOwner).OwnerName <> '' then
       begin
+        LFound := GenericImplementationOwner(ASite, FWorld.Symbol(ASite.ModuleIndex, LOwner));
+
+        if LFound <> nil then
+        begin
+
+          if (LFound.Status = pbsBound) and (LFound.Count = 1) then Exit(LFound.SymbolAt(0));
+          Exit;
+        end;
         LFound := Lookup(FWorld.At(ASite.ModuleIndex, 0,
           LSyntax.Declaration(LOwner).HeaderSpan.Start), LSyntax.Declaration(LOwner).OwnerName);
 
@@ -3666,6 +3685,200 @@ begin
   { An exact declaration and ordered plain formal names qualify this header.
     A constructed owner with literals or renamed/missing parameters does not. }
   Result := LFound;
+end;
+
+function TBindingQuery.MethodReceiver(const ASite: INyxPascalBindingSite;
+  const ARoutine: INyxPascalBoundSymbol; out AHasSelf: Boolean): INyxPascalResolution;
+var
+  LOwner, LPrototype: INyxPascalBoundSymbol;
+  LFound, LReceiver: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+  LClassReference: TSemanticType;
+  LAt: Integer;
+  LClass, LStatic: Boolean;
+  LSyntax: INyxPascalSyntaxSnapshot;
+begin
+  AHasSelf := False;
+  LFound := GenericImplementationOwner(ASite, ARoutine);
+
+  if LFound = nil then
+  begin
+    LFound := Lookup(FWorld.At(ARoutine.ModuleIndex, 0,
+      ARoutine.Declaration.HeaderSpan.Start), ARoutine.Declaration.OwnerName);
+  end;
+
+  if (LFound.Status <> pbsBound) or (LFound.Count <> 1) then Exit(LFound);
+  LOwner := LFound.SymbolAt(0);
+
+  if (LOwner.Declaration.GenericSpan.Length > 0) and (EnvironmentOf(LOwner) = nil) then
+  begin
+    LReceiver := FormalReceiver(LOwner);
+  end
+  else
+  begin
+    LReceiver := TypeOfSymbol(LOwner);
+  end;
+
+  if LReceiver.Status <> pbsBound then Exit(LReceiver);
+  LType := Unwrap(LReceiver.BoundType);
+
+  if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) or
+    not (LType.Definition.Declaration.TypeForm in [pstfClass, pstfRecord, pstfObject]) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  end;
+  LOwner := LType.Definition;
+  LSyntax := FWorld.ModuleAt(LOwner.ModuleIndex).Syntax;
+  { STATIC belongs to the member declaration and is normally omitted from the
+    implementation header. Inspect the exact owner's own declaration set. We
+    do not choose an overload by its name or infer parameter compatibility: all
+    candidates must agree on receiver storage before sharing this one fact. }
+  LFound := Exact(LOwner.ModuleIndex, LOwner.Declaration.NestedScope,
+    LSyntax.Scope(LOwner.Declaration.NestedScope).Span.Finish, ARoutine.Declaration.Name, False);
+
+  if not (LFound.Status in [pbsBound, pbsOverloads]) then Exit(LFound);
+  LClass := False;
+  LStatic := False;
+  for LAt := 0 to LFound.Count - 1 do
+  begin
+    Tick;
+    LPrototype := LFound.SymbolAt(LAt);
+
+    if (LPrototype.Declaration.Kind <> psdkRoutine) or
+      (LPrototype.Declaration.RoutineKind <> ARoutine.Declaration.RoutineKind) or
+      (LPrototype.Declaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> []) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    end;
+
+    if (LAt > 0) and
+      ((LClass <> (psdfClassMember in LPrototype.Declaration.Flags)) or
+       (LStatic <> (psdfStatic in LPrototype.Declaration.Flags))) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiOverloadContext));
+    end;
+    LClass := psdfClassMember in LPrototype.Declaration.Flags;
+    LStatic := psdfStatic in LPrototype.Declaration.Flags;
+  end;
+
+  if (LFound.Count = 0) or (LClass <> (psdfClassMember in ARoutine.Declaration.Flags)) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  end;
+  AHasSelf := not LStatic;
+
+  if LClass and not LStatic then
+  begin
+
+    if LOwner.Declaration.TypeForm <> pstfClass then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LClassReference := TSemanticType.Create;
+    LClassReference.Owner := FWorld;
+    LClassReference.TypeKind := pstClassOf;
+    LClassReference.Element := LReceiver.BoundType;
+    Exit(TypeAnswer(LClassReference));
+  end;
+  Result := LReceiver;
+end;
+
+function TBindingQuery.ImplicitRoutine(const ASite: INyxPascalBindingSite;
+  AScope: Integer; const AName: TNyxText): INyxPascalResolution;
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LRoutine: INyxPascalBoundSymbol;
+  LOwner, LAt: Integer;
+  LKey: TNyxText;
+  LContext, LHeaderContext: INyxPascalCompilerContext;
+  LParsed: INyxPascalTypeSyntax;
+  LEnvironment: INyxPascalGenericEnvironment;
+  LTypeOwner: INyxPascalBoundSymbol;
+  LHasSelf: Boolean;
+begin
+  Result := nil;
+  LKey := NyxPascalASCIIKey(AName);
+
+  if (LKey <> 'self') and (LKey <> 'result') then Exit;
+  LSyntax := FWorld.ModuleAt(ASite.ModuleIndex).Syntax;
+  LOwner := LSyntax.Scope(AScope).OwnerDeclaration;
+
+  if LOwner < 0 then Exit;
+  LRoutine := FWorld.Symbol(ASite.ModuleIndex, LOwner);
+
+  if (LRoutine.Declaration.Kind <> psdkRoutine) or
+    (ASite.Caret < LRoutine.Declaration.HeaderSpan.Finish) then Exit;
+
+  if (LKey = 'self') and (LRoutine.Declaration.OwnerName = '') then Exit;
+
+  if (LKey = 'result') and (LRoutine.Declaration.RoutineKind <> prkFunction) then Exit;
+  { A complete header remains useful while its body is being typed. Earlier
+    malformed/conditional/unsupported syntax must still refuse; the missing
+    final body terminator alone does not erase its declared result contract. }
+
+  if LRoutine.Declaration.Flags * [psdfConditional, psdfUnsupported, psdfForward] <> [] then
+  begin
+    Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  end;
+  for LAt := 0 to LSyntax.DiagnosticCount - 1 do
+  begin
+    Tick;
+
+    if (LSyntax.Diagnostic(LAt).Span.Start >= LRoutine.Declaration.HeaderSpan.Start) and
+      (LSyntax.Diagnostic(LAt).Span.Start < LRoutine.Declaration.HeaderSpan.Finish) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    end;
+  end;
+  LContext := ContextAt(ASite);
+
+  if (LContext = nil) and (ASite.Caret > 0) then
+  begin
+    { Completion carets may sit just after an identifier, before a synthetic
+      separator introduced for a removed comment. Only its immediately owned
+      preceding scalar can supply that same expression's source context. }
+    LContext := ContextAt(FWorld.At(ASite.ModuleIndex, AScope, ASite.Caret - 1));
+  end;
+  LHeaderContext := ContextAt(FWorld.At(ASite.ModuleIndex, LRoutine.Declaration.Scope,
+    LRoutine.Declaration.HeaderSpan.Start));
+
+  if (LContext = nil) or (LHeaderContext = nil) or
+    (LContext.Family <> ppcFPC) or (LHeaderContext.Family <> ppcFPC) or
+    (LContext.Version.FullNumber <> 30301) or (LHeaderContext.Version.FullNumber <> 30301) or
+    not (LContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) or
+    not (LHeaderContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiCompilerContext));
+  end;
+
+  if LKey = 'self' then
+  begin
+    { Class lifecycle routines are static initialization/finalization bodies,
+      not class methods with a metaclass parameter. Their CLASS keyword alone
+      cannot grant either an instance or a class-reference Self. Ordinary lexical
+      lookup may still find an explicitly declared name in an outer scope. }
+
+    if (psdfClassMember in LRoutine.Declaration.Flags) and
+      (LRoutine.Declaration.RoutineKind in [prkConstructor, prkDestructor]) then Exit;
+    Result := MethodReceiver(ASite, LRoutine, LHasSelf);
+
+    if (Result.Status = pbsBound) and not LHasSelf then Result := nil;
+    Exit;
+  end;
+
+  if LRoutine.Declaration.TypeSpan.Length = 0 then Exit(Answer(pbsUnresolved, pbiMissingType));
+  LParsed := FWorld.ModuleAt(ASite.ModuleIndex).TypeOfDeclaration(LOwner,
+    TNyxPascalTypeOptions.Defaults, FCancel);
+
+  if not LParsed.Complete then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  LEnvironment := FEnvironment;
+  LTypeOwner := FTypeOwner;
+  FEnvironment := EnvironmentOf(LRoutine);
+  FTypeOwner := LRoutine;
+  try
+    Result := BindNode(FWorld.At(ASite.ModuleIndex, LRoutine.Declaration.NestedScope,
+      LRoutine.Declaration.TypeSpan.Start), LParsed, LParsed.Root);
+  finally
+    FEnvironment := LEnvironment;
+    FTypeOwner := LTypeOwner;
+  end;
 end;
 
 function TBindingQuery.ParameterAt(const ASite: INyxPascalBindingSite;
