@@ -33,7 +33,75 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Shared compiler-state history; unchanged RTL work refusal — 2026-10-19
+## Current integration: Original RTL work attribution — 2026-10-19
+
+The previous turn is verified progress: 895a3de is qualified and pushed. This
+continuation makes no product/test/compiler change. Two read-only debugger runs
+use that exact already-qualified native executable and the unchanged original RTL
+consumer with fresh owned outputs. They preserve the original inputs, context
+ownership, ordered answers, six dynamic jobs, five initial queries, one Word job,
+three-of-eight symbol preparation, both caps, all quotas and 64-round ceiling.
+No original criterion, task, counter, credit, DONE, parity, adoption or delivery
+closes; the full library/Studio/resolver outcome remains active.
+
+Both inferior processes still FAIL with clean heaps at the identical four-million
+aggregate refusal: used=4000000, requested=1, translated=286684, round=30,
+analysis=frozen-row. The debugger exits normally after each failed inferior; its
+exit code zero is not an RTL pass. The original two-million view cap is unchanged.
+The exact stack identifies TPrefixTokenSummary.Create's newly appended token loop,
+before evaluating the heap.inc condition
+defined(HAS_SYSOSFREE) and declared(SysOSAllocZeroesIfAtLeast), occurrence 59.
+This is required suffix validation, not a rescan of the prior summary's tokens.
+No final source semantic/indexed receipt follows the refusal.
+
+Existing budget counters sum exactly to four million and match in all 21 phases
+between both traces. Metadata-node work is 773,634 (19.34%), syntax-token work
+685,272 (17.13%), and frozen-row work 677,897 (16.95%). Lexical-token work is
+475,231; source/projection/filter-token work is 286,684/282,249/273,226. A last
+failed frozen-row admission therefore does not establish copying as the dominant
+whole-pipeline cost. The complete exact vector is retained privately.
+
+Existing construction receipts from the final unchanged analysis contain 27
+retired metadata maps: 316,683 allocated nodes, including 153,146 ordinal pages;
+293,413 lookup-tree reads, including 142,011 ordinal reads; 4,109 root captures;
+148,477 bounded lookups/112,952 hits; and 26,406 created/9,265 detached values.
+The remaining 163,538 metadata-node units include other admitted operations;
+they must not be relabeled as allocations or unmeasured copying. The fixed
+eight-entry lookup cache and four-slot persistent page policy are unchanged.
+
+One concrete duplication is established independently of that mixed metadata
+cost. By this failure, the translator has completed its freeze before entering
+summary validation. Its existing full-block copy loop has copied at least
+286,464 translated token rows (floor(286684/256)*256) from live storage into
+immutable blocks, plus partial tails. These rows were already written once by
+source-token admission. Assess direct creation of sealable live token pages
+through the existing translation/lexical owners next: completed pages could be
+shared without that initial duplicate copy, while unpublished partial tails stay
+private. This is an implementation candidate, not a measured improvement or a
+claim that it will make the original run pass. Required summary/syntax/metadata
+work must remain accounted; no speculative allocation discount is justified.
+
+All 668 qualified source pins, thirteen foreign planning files, five current-start
+protected files, retained compiler/RTL/include inputs, both exact sets of 156
+original unit packets and all 349 frozen release artifacts remain exact. The
+historical global-configuration preservation failure remains retained and false;
+no restoration occurs. Prior 86-compiler/48-passing-native qualification is reused
+only because its product/test source and executable remain exact, not presented
+as newly rerun checks. The two new original RTL failures are separate evidence.
+All owned debugger/compiler/reader handles are terminal and joined; LAN stays
+offline and native Nyx tools absent. No host/config retry, protected mutation,
+cleanup/restart, new public tool/schema/rollout, approval bypass or sub-agent occurs.
+Ignored `.local/prefix-trace-paths-private.json` owns executable/source identity,
+both original failed traces, exact phase and metadata counters, preservation and
+source/remote return receipts. Stop debugger/compiler/fixture/capture variants;
+the measurement now identifies the cap, failing operation and concrete duplicate
+token storage. Preserve exact source/context/ordered-answer identity, cancellation,
+atomic refusal, all performed-work admission and existing limits in the next
+product change. Complete canonical types/modules/incremental budgets/editor/input/
+navigation/quality/component breadth/native-browser parity/adoption/delivery
+remain open.
+
+## Previous integration: Shared compiler-state history; unchanged RTL work refusal — 2026-10-19
 
 The previous turn is verified progress: 2c01170 is qualified and pushed. This
 continuation identified repeated copying of append-only context, macro-state and
