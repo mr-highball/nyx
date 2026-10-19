@@ -33,7 +33,106 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Formal-dependent argument answers — 2026-10-19
+## Current integration: Declared operator and address expressions — 2026-10-19
+
+The previous goal turn makes source/qualification/remote progress in b5522fb.
+This turn follows the recorded operator/reference prerequisite through existing
+lexical, declared-signature, operator-family, source-context and binding owners.
+The full original authoring/library/Studio outcome remains open.
+
+The baseline whole handwritten companion executes six real operator bodies and
+typed-address expressions to 42; the unchanged resolver refuses (Left + Right).
+That clean-heap failure, exact fixture/test and three prior qualified source
+copies remain retained. Subsequent preparation follows actual native results:
+source precedence/overloaded results first, then the separately missing address
+contract. A wrong T- test initially expected address-taking itself to fail; the
+correct test refuses dereferencing that untyped address, preserving its earlier
+positive Pointer assertion. Its failed clean-heap run remains retained.
+
+Expression parsing now retains factor/term/additive/relation precedence. Visible
+operator declarations from both operands retain privacy/generic/source refusal
+and deduplicate by binding identity. The inspected FPC candidate ranking gives
+exact signatures priority over conversions; only exact ordered operand matches
+contribute, and conflicting exact results refuse. No ordinal promotion,
+conversion-based selection or commutative permutation is guessed. The new
+read-only htypechk inspection joins the earlier compiler input pins.
+
+Qualified Boolean AND/OR/XOR/NOT preserve Boolean result identity and remove
+operand literal evidence. Address expressions describe named storage without
+obtaining a machine address. Explicit T+ retains the pointed-to semantic type;
+T- retains Pointer, and unobserved policy refuses. Each dotted receiver retains
+its storage/property/heap role. General routine/index/temporary-address and
+numeric result rules remain open. No public interface/GUID/layout or MCP schema
+changes, and no source or callback body executes during queries.
+
+Focused preparation passes 470 with a clean heap, first fit 381, every smaller
+allowance refusing atomically and 64 joined readers. The final whole native
+companion executes nine operator/generic bodies to 42, including two overloads
+with different result classes, precedence, Boolean expressions and typed data
+addresses. A generic call consumes the operator result; ordinary completion
+retains exact member navigation and detached insertion after provider retirement.
+
+Freeze the three Pascal inputs for targeted expression/inference/completion,
+both-target compilation and unchanged original RTL qualification. Preserve all
+other maintained source, compiler/RTL pins, retained/frozen/protected artifacts
+and thirteen concurrent planning files. No host/config retry, capture, cleanup/
+restart, rollout, new tool/schema or sub-agents. LAN stays offline; native Nyx
+tools remain absent. Ignored .local/operator-expressions-paths-private.json owns
+the current packet. Preparation is not final qualification or a pushed change;
+full language/incremental/editor/input/performance/parity/adoption/delivery and
+the original goal stay open.
+
+The first frozen operator batch exposes a real refusal regression in the
+unchanged cast consumer: the single `<>` token in `(Badge as TBox<>)` is read
+as a relational operator after the cast has already failed, replacing the
+original unsupported-type refusal with a generic-context answer. Preserve that
+failed clean-heap run and all three frozen source copies. Its other native
+checks, both-target products and original RTL pass belong to that failed source
+snapshot, not the repaired qualification. Every old reader joined before repair.
+
+The precedence levels now return immediately after a failed operand/result.
+The unchanged cast consumer again passes 401/274, and the operator companion
+retains 470/381 with a clean heap. No assertion, quota or input is weakened.
+Repaired validation uses a fresh packet; the original failed packet and its
+successful RTL evidence stay retained separately through explicit lineage.
+
+The repaired three-source freeze now qualifies: 26 current compiler logs have
+zero owned warnings/42 upstream; eighteen native runs have clean heaps and six
+browser consumers compile only. Both Studios, backend and worker compile as
+applicable. Operator 470/381, argument 489/384, both literal modes 635/193,
+implicit inference 679/461, explicit applications 620, signatures 236,
+constructors 624, casts 401/274, indexed properties 413, routine receivers 444,
+generic binding 948, scoped binding 74, ordinary completion 90, operator
+declarations 18 and provider reuse 3,400 retain their accepted contracts. The
+corpus passes 571 over 504 files and 2,421,785 lossless tokens.
+
+The unchanged original RTL consumer passes 56 again on the repaired source:
+System retains 13,101 declarations, zero translation/declaration-syntax
+diagnostics and 31 answers; ObjPas retains 209/zero/one. Neither has a pending
+query. Exact Free/FreeInstance include navigation/insertion remains ready.
+Original 2M view/4M aggregate/64-round limits, five initial queries, one Word job,
+symbol ceiling eight and six exact ordered primitive jobs within eight remain.
+
+Three Pascal inputs stay frozen. All 724 maintained sources/721 unrelated,
+97 RTL/24 compiler pins and earlier inspections plus htypechk, three retained
+prior source copies, all failed frozen source receipts, 156 current unit packets,
+48 historical retained includes, 349 frozen artifacts, nine contexts, five
+current-start protected files and thirteen concurrent planning files stay exact.
+Every reader joined. The historical global-config failure remains retained and
+the full preservation gate stays false; no restoration, host/config retry,
+capture, cleanup/restart or rollout occurs. LAN stays offline and native Nyx
+tools remain absent. No browser execution, default editor installation, full
+language/operator/reference/incremental/input/performance/parity/adoption/delivery
+or original task/criterion/goal closes.
+
+Stop operator/address/fixture/compiler variants. Next reassess canonical builtin
+numeric expression rules and primary routine/generic-angle disambiguation through
+the existing lexical/value/type/context/binding owners, retaining exact source
+roles, missing facts, non-execution and original quotas. General conversion,
+commutative and routine/index/temporary-address meaning remains open. The ignored
+operator packet owns final qualification/source/remote receipts and return path.
+
+## Previous integration: Formal-dependent argument answers — 2026-10-19
 
 The preceding goal turn makes authoritative source/qualification/remote progress
 in bb135dc. Its complete 130-compiler/70-native/59-browser qualification stays

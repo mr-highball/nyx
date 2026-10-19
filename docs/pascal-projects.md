@@ -3693,6 +3693,35 @@ postfix attempt and syntax walk; no rollback resets their work receipts. Boolean
 spelling checks inspect only four/five scalar tokens before folding case, while
 longer identifiers and shadowed Boolean names retain ordinary lookup ownership.
 
+### Declared operator and data-address expressions
+
+Expression queries parse prefix, multiplicative, additive and relational
+precedence. Under the qualified FPC 3.3.1 Delphi/DelphiUnicode context, source
+operator families from both operands supply their declared signatures. Exact
+ordered operand matches take priority over conversions, matching the inspected
+compiler rule. Duplicate bindings are coalesced; conflicting exact result
+contracts refuse. Visibility, generic frames and incomplete source retain their
+ordinary guards. Numeric promotion, conversion-based ranking and commutative
+argument permutation remain open.
+
+A record operator can return a different fluent type. For example,
+`KeepOperator(Left * Right + Right).Value` follows the multiplication, addition
+and generic result declarations through ordinary completion/navigation. Source
+operator and callback bodies never execute while resolving this expression.
+Boolean `and`, `or`, `xor` and `not` retain the qualified Boolean result type;
+an operand's literal value is never attached to the operator result.
+
+Named data addresses retain the actual source `$T` setting. With known `T+`,
+`@Value` describes a pointer to the storage's semantic type, so
+`(@Value)^.Member` can follow that type. Known `T-` retains `Pointer` with no
+invented element type. Unknown policy refuses. This describes a type and source
+storage role; it does not obtain a machine address or infer pointer size.
+Each dotted receiver preserves its variable/parameter/field, property or heap
+role. General routine, index and temporary-address rules remain separate and
+unsupported until qualified. Existing query work/depth/candidate limits,
+cancellation, current-world ownership and atomic refusal cover the whole parse.
+Native witnesses qualify the supported paths; browser consumers compile only.
+
 ### Source-owned routine signatures
 
 The optional `INyxPascalRoutineQueries.RoutineSignature` accepts an exact bound
