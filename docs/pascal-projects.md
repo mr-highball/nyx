@@ -3661,10 +3661,37 @@ Inferred call results retain only the specialization type, never the argument's
 constant value. For example, `BoxLiteral(42).Value` follows the declared generic
 field through ordinary completion/navigation; its value is not evaluated.
 Real/nil expression types, operators, conversions and full compiler call admission
-remain open. Real/nil literals can still occupy opaque non-deduction argument
-slots. Existing work limits, cancellation, immutable worlds and atomic refusal
+remain open. Closed expressions can occupy opaque non-deduction argument slots,
+as described below. Existing work limits, cancellation, immutable worlds and atomic refusal
 apply to decoding and inference. Native compiler witnesses qualify both modes;
 browser consumers compile only, with runtime/editor parity still open.
+
+### Formal-dependent argument answers
+
+Generic correspondence distinguishes complete argument syntax from the type facts
+needed to deduce a formal parameter. For `WithText<T>(AValue: T; AText: UnicodeString)`,
+`WithText(Badge, 'λ').Value` can retain the badge result when the text's
+compiler encoding is unknown: only `AValue` determines `T`. A required unknown type
+keeps its original refusal and compiler requirements; the resolver never guesses
+that type, drops a conflicting candidate or selects an overload by conversions.
+
+The query retains immutable argument answers until the source-owned signature
+decides which positions require their types. When ordinary postfix typing cannot
+describe a closed literal expression, a bounded syntax walk can still establish
+its argument boundary. Grouping, adjacent quoted/character fragments and standard
+unary, term, additive and relational boundaries are recognized without evaluating
+operators or assigning their result types. For example, ordinary slots can retain
+`(('a' + #0 + 'b'))`, `-(1.5 + 2.5)` or grouped `nil`. General identifier/operator
+expressions remain with the normal expression-typing path. Missing operands,
+crossed groups, separated string fragments and extra/missing arguments refuse.
+
+This is result-contract knowledge, independently of whether the compiler admits
+the call's operand conversions or value operations. Syntax-only arithmetic never
+executes during completion, even when the source contains division by zero.
+The existing work, recursion, candidate and cancellation limits cover both the
+postfix attempt and syntax walk; no rollback resets their work receipts. Boolean
+spelling checks inspect only four/five scalar tokens before folding case, while
+longer identifiers and shadowed Boolean names retain ordinary lookup ownership.
 
 ### Source-owned routine signatures
 

@@ -33,7 +33,86 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned literal expression types — 2026-10-19
+## Current integration: Formal-dependent argument answers — 2026-10-19
+
+The preceding goal turn makes authoritative source/qualification/remote progress
+in bb135dc. Its complete 130-compiler/70-native/59-browser qualification stays
+historical to that exact source. This turn follows the recorded argument-boundary
+and work-admission reassessment; the original full authoring criterion stays open.
+
+The baseline whole native companion executes three legal generic calls to 42,
+while the unchanged resolver loses WithText(Badge,'lambda').Value when the
+ordinary string's compiler encoding is unknown. The actual source uses a Greek
+scalar to expose the missing encoding fact. Its clean-heap failure, exact new
+fixture/test and four previous qualified source copies are retained in the new
+packet before repairs.
+
+Private argument vectors now retain immutable resolution answers, separating
+complete argument syntax from type evidence. Exact source-formal correspondence
+consumes an answer only when that position determines a generic argument. A
+required unavailable type keeps its original refusal/requirements; all candidates
+must still agree, with unchanged signature/arity/constraint/world rules. This
+does not select overload eligibility, convert operands or execute arguments.
+
+A bounded closed-expression syntax path preserves grouping, adjacent physical/
+effective macro fragments, standard factor/term/simple/relation boundaries and
+missing-operand refusal without inferring operator types. It shares the existing
+work, recursion and candidate ceilings. Boolean spelling recognition is bounded
+to four/five scalar tokens before case folding; longer identifiers keep ordinary
+lookup. No public interface/GUID/layout, context/probe policy or MCP schema changes.
+
+Focused preparation passes 489 with a clean heap, first fit 384, every smaller
+allowance refusing atomically, and 64 joined readers. A whole handwritten native
+companion executes four legal calls to 42, including string concatenation,
+grouped real arithmetic, nil and Boolean expressions. Required opaque arguments
+still refuse; explicit UTF-8 evidence recovers the required WideChar type. The
+ordinary completion provider retains exact field navigation and detached insertion.
+Invalid call admission is not claimed, and operator result typing stays open.
+
+Next freeze these three Pascal inputs and qualify the changed expression/inference/
+completion consumers, both compiler targets and the unchanged RTL integration.
+The bb135dc broad batch is not a current-source count. Preserve all other source,
+compiler/RTL pins, frozen/protected artifacts and thirteen concurrent planning
+files. LAN remains offline; no native Nyx tools, host/config retry, capture,
+cleanup/restart, rollout, new tool/schema or sub-agents. Ignored
+.local/argument-boundaries-paths-private.json owns the packet/return path. New
+sources are local and not yet frozen, fully qualified or pushed. Full language/
+incremental/editor/input/performance/parity/adoption/delivery and the goal stay open.
+
+Targeted frozen-source qualification now passes: 24 current compiler logs have
+zero owned warnings/35 upstream, seventeen native runs have clean heaps, and five
+browser consumers compile only. The new argument companion retains 489/384 and
+64 joined readers. Unchanged literal/Unicode companions retain 635/193 each,
+implicit inference 679/461, signature 236, explicit applications 620, constructors
+624, casts 401, indexed properties 413, routine receivers 444, generic binding
+948, scoped binding 74, ordinary completion 90, operator declarations 18 and
+provider reuse 3,400. Both Studios/backend/worker compile as applicable. The
+corpus retains 571 checks over 504 files and 2,418,296 lossless tokens.
+
+The unchanged original RTL run passes 56: System retains 13,101 declarations,
+zero translation/declaration-syntax diagnostics and 31 answers; ObjPas retains
+209/zero/one. Both finish without pending queries, and exact Free/FreeInstance
+include navigation/insertion remains ready. The 2M view/4M aggregate/64-round
+limits, five initial queries, Word job, symbol ceiling eight and six exact
+ordered dynamic primitive jobs within eight stay unchanged.
+
+All three Pascal inputs stay frozen. All 722 maintained sources/719 unrelated,
+97 RTL/24 compiler pins and earlier read-only inspections, four retained prior
+source copies, 156 current unit packets, 48 historical retained include packets,
+349 frozen artifacts, nine contexts, five current-start protected files and
+thirteen concurrent planning files remain exact. Every reader has joined and
+LAN is offline. The historical global-config failure remains retained and the
+full preservation gate stays false; no restoration or host/config retry occurs.
+
+This is targeted current-source qualification, not a rerun or replacement of
+bb135dc's full broad batch. Stop argument/fixture/compiler variants. Next extend
+operator and reference expression typing through the existing lexical/value/type/
+binding owners, preserving declared versus literal meaning, exact scope/context,
+non-execution, original refusals and quotas. No full language/inference/editor/
+input/performance/parity/adoption/delivery or original criterion/task/goal closes.
+The ignored argument packet owns terminal/source/remote receipts and return path.
+
+## Previous integration: Source-owned literal expression types — 2026-10-19
 
 The previous checkpoint 7838cf8 qualifies source-owned implicit generic argument
 correspondence. This turn follows the value-expression prerequisite through the

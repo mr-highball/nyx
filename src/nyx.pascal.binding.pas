@@ -508,9 +508,10 @@ type
   end;
   { Query-local identifier vector; it holds no interfaces or mutable source. }
   TGenericNames = array of TNyxText;
-  { Query-local argument types. Nil entries are closed opaque literal windows,
-    which can occupy ordinary slots but never supply an invented generic type. }
-  TInferredArgumentTypes = array of INyxPascalSemanticType;
+  { Query-owned argument answers preserve unavailable type facts separately
+    from complete argument syntax. Only a formal-dependent position consumes
+    its type answer; ordinary positions grant no compiler-call eligibility. }
+  TInferredArgumentAnswers = array of INyxPascalResolution;
   { Authored eligibility requests from the inspected FPC grammar. Constructor
     intent is not proof that any particular constructor invocation will bind. }
   TGenericRequirement = TNyxPascalGenericRequirement;
@@ -834,7 +835,7 @@ type
       ANode: Integer): INyxPascalResolution;
     function InferRoutineArguments(const ASite: INyxPascalBindingSite;
       const AFound: INyxPascalResolution;
-      const AArguments: TInferredArgumentTypes): INyxPascalResolution;
+      const AArguments: TInferredArgumentAnswers): INyxPascalResolution;
     function TypeDeclaration(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
@@ -4805,7 +4806,7 @@ end;
 
 function TBindingQuery.InferRoutineArguments(const ASite: INyxPascalBindingSite;
   const AFound: INyxPascalResolution;
-  const AArguments: TInferredArgumentTypes): INyxPascalResolution;
+  const AArguments: TInferredArgumentAnswers): INyxPascalResolution;
 var
   LContext: INyxPascalCompilerContext;
   LPrototype: INyxPascalBoundSymbol;
@@ -4819,6 +4820,8 @@ var
   LSyntax: INyxPascalSyntaxSnapshot;
   LIssue: TNyxPascalBindingIssue;
   LToken: TNyxPascalToken;
+  LArgumentType: INyxPascalSemanticType;
+  LLiteral: INyxPascalLiteralType;
 
   { Inspect only formal positions owned by this exact routine. A class member's
     fields are not traversed and other declarations' formals are not captured. }
@@ -5034,8 +5037,17 @@ begin
     begin
       Tick;
 
-      if NeedsArgument(LSignature.BoundType.ParameterType(LArgument)) and
-        not MatchArgument(LSignature.BoundType.ParameterType(LArgument), AArguments[LArgument]) then
+      if not NeedsArgument(LSignature.BoundType.ParameterType(LArgument)) then Continue;
+
+      if AArguments[LArgument] = nil then Exit(Answer(pbsUnresolved, pbiGenericContext));
+
+      if AArguments[LArgument].Status <> pbsBound then Exit(AArguments[LArgument]);
+      LArgumentType := AArguments[LArgument].BoundType;
+
+      if Supports(LArgumentType, INyxPascalLiteralType, LLiteral) then
+        LArgumentType := LLiteral.SpecializationType;
+
+      if not MatchArgument(LSignature.BoundType.ParameterType(LArgument), LArgumentType) then
         Exit(Answer(pbsUnresolved, pbiGenericContext));
     end;
     for LArgument := 0 to High(LFrame.Types) do
@@ -6846,6 +6858,31 @@ var
   { Recursive grouping shares this query's token/depth/work scope. }
   function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution; forward;
 
+  { Both typed decoding and opaque syntax require the same authored/effective
+    adjacency proof. Projection separators never concatenate source literals. }
+  function AdjacentFragments(const APrevious: TNyxPascalSyntaxOrigin): Boolean;
+  var
+    LView: INyxPascalTranslatedSyntax;
+    LCurrent: TNyxPascalSyntaxOrigin;
+    LPreviousToken, LCurrentToken: TNyxPascalToken;
+  begin
+    Result := False;
+
+    if not LAvailable or not (LToken.Kind in [ptkString, ptkCharacter]) then Exit;
+    LView := FWorld.ModuleAt(ASite.ModuleIndex);
+    LCurrent := LView.Origin(LView.OriginAt(LToken.Span.Start));
+
+    if APrevious.Occurrence <> LCurrent.Occurrence then Exit;
+
+    if (APrevious.Expansion < 0) and (LCurrent.Expansion < 0) then
+      Exit(APrevious.PhysicalSpan.Finish = LCurrent.PhysicalSpan.Start);
+
+    if (APrevious.Expansion < 0) or (APrevious.Expansion <> LCurrent.Expansion) then Exit;
+    LPreviousToken := NyxPascalEffectiveToken(LView.Source, APrevious.TranslationToken);
+    LCurrentToken := NyxPascalEffectiveToken(LView.Source, LCurrent.TranslationToken);
+    Result := LPreviousToken.Span.Finish = LCurrentToken.Span.Start;
+  end;
+
   { Decode closed literals through the existing exact-value owner. Compiler
     range/specialization rules require their qualified source context; source
     origins, not the projection's inserted spaces, decide fragment adjacency. }
@@ -6866,7 +6903,6 @@ var
     LView: INyxPascalTranslatedSyntax;
     LStart, LFinish, LAtBound, LIndex, LScalar, LUnitCount, LBase, LCode: Integer;
     LPrevious: TNyxPascalSyntaxOrigin;
-    LCurrent: TNyxPascalSyntaxOrigin;
     LSpelling, LName, LPrimitive: TNyxText;
     LNegative, LSigned, LUTF8Checked, LUTF8: Boolean;
     LValue, LLower: TNyxPascalConstantValue;
@@ -7015,33 +7051,14 @@ var
       LLiteral.FWide := True;
     end;
 
-    function Adjacent: Boolean;
-    var
-      LPreviousToken, LCurrentToken: TNyxPascalToken;
-    begin
-      Result := False;
-
-      if not LAvailable or not (LToken.Kind in [ptkString, ptkCharacter]) then Exit;
-      LCurrent := LView.Origin(LView.OriginAt(LToken.Span.Start));
-
-      if LPrevious.Occurrence <> LCurrent.Occurrence then Exit;
-
-      if (LPrevious.Expansion < 0) and (LCurrent.Expansion < 0) then
-        Exit(LPrevious.PhysicalSpan.Finish = LCurrent.PhysicalSpan.Start);
-
-      if (LPrevious.Expansion < 0) or (LPrevious.Expansion <> LCurrent.Expansion) then Exit;
-      LPreviousToken := NyxPascalEffectiveToken(LView.Source, LPrevious.TranslationToken);
-      LCurrentToken := NyxPascalEffectiveToken(LView.Source, LCurrent.TranslationToken);
-      Result := LPreviousToken.Span.Finish = LCurrentToken.Span.Start;
-    end;
-
   begin
     ACandidate := LAvailable and (LToken.Kind in [ptkNumber, ptkString, ptkCharacter]);
     LSigned := IsSymbol(psoPlus) or IsSymbol(psoMinus);
     ACandidate := ACandidate or LSigned;
     LName := '';
 
-    if LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped then
+    if LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped and
+      (LToken.Span.Length in [4, 5]) then
     begin
       LName := NyxPascalASCIIKey(LLex.Identifier(LAt));
 
@@ -7197,7 +7214,7 @@ var
         end;
         LPrevious := LView.Origin(LView.OriginAt(LToken.Span.Start));
         Next;
-      until not Adjacent;
+      until not AdjacentFragments(LPrevious);
       SetLength(LLiteral.FUnits, LUnitCount);
 
       if LUnitCount = 1 then
@@ -7282,19 +7299,141 @@ var
     end;
   end;
 
-  { Postfix owns nested calls and their explicit generic commas. Qualified
-    literals contribute only their specialization type, never a constant value
-    for the call result. Real/nil literals retain their earlier opaque slots
-    until their compiler-dependent expression rules have been qualified. }
+  { A closed literal expression has unambiguous argument boundaries without
+    knowing its compiler type. This syntax-only path admits no general names,
+    calls, generic angles or conversions. Boolean spellings keep ordinary
+    lookup ownership. Standard factor/term/simple/relation
+    boundaries preserve groups and missing operands; no operator is evaluated
+    and no result type or compiler-call eligibility is inferred. }
+  function ClosedArgumentSyntax: Boolean;
+
+    function Factor: Boolean;
+    var
+      LPrevious: TNyxPascalSyntaxOrigin;
+      LName: TNyxText;
+    begin
+      Enter;
+      try
+        Result := False;
+
+        if not LAvailable or not LToken.Complete then Exit;
+
+        if IsSymbol(psoPlus) or IsSymbol(psoMinus) or
+          ((LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwNot)) then
+        begin
+          Next;
+          Exit(Factor);
+        end;
+
+        if IsSymbol(psoOpenParen) then
+        begin
+          Next;
+
+          if not ClosedArgumentSyntax or not IsSymbol(psoCloseParen) then Exit;
+          Next;
+          Exit(True);
+        end;
+
+        if LToken.Kind = ptkNumber then
+        begin
+          Next;
+          Exit(True);
+        end;
+
+        if (LToken.Kind = ptkWord) and not LToken.Escaped then
+        begin
+
+          if LToken.Word = pkwNil then
+          begin
+            Next;
+            Exit(True);
+          end;
+
+          if LToken.Span.Length in [4, 5] then
+          begin
+            LName := NyxPascalASCIIKey(LLex.Identifier(LAt));
+
+            if (LName = 'true') or (LName = 'false') then
+            begin
+              { This is only an atom boundary. A declaration shadowing these
+                spellings keeps its original type answer in deduction. }
+              Next;
+              Exit(True);
+            end;
+          end;
+        end;
+
+        if not (LToken.Kind in [ptkString, ptkCharacter]) then Exit;
+        repeat
+
+          if not LToken.Complete then Exit;
+          LPrevious := FWorld.ModuleAt(ASite.ModuleIndex).Origin(
+            FWorld.ModuleAt(ASite.ModuleIndex).OriginAt(LToken.Span.Start));
+          Next;
+        until not AdjacentFragments(LPrevious);
+        Result := True;
+      finally
+        Leave;
+      end;
+    end;
+
+    function Term: Boolean;
+    begin
+      Result := False;
+
+      if not Factor then Exit;
+      while IsSymbol(psoStar) or IsSymbol(psoSlash) or
+        (LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped and
+          (LToken.Word in [pkwAnd, pkwDiv, pkwMod, pkwShl, pkwShr])) do
+      begin
+        Next;
+
+        if not Factor then Exit;
+      end;
+      Result := True;
+    end;
+
+    function Simple: Boolean;
+    begin
+      Result := False;
+
+      if not Term then Exit;
+      while IsSymbol(psoPlus) or IsSymbol(psoMinus) or
+        (LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped and
+          (LToken.Word in [pkwOr, pkwXor])) do
+      begin
+        Next;
+
+        if not Term then Exit;
+      end;
+      Result := True;
+    end;
+
+  begin
+    Result := False;
+
+    if not Simple then Exit;
+
+    if IsSymbol(psoEqual) or IsSymbol(psoNotEqual) or IsSymbol(psoLess) or
+      IsSymbol(psoGreater) or IsSymbol(psoLessEqual) or IsSymbol(psoGreaterEqual) then
+    begin
+      Next;
+
+      if not Simple then Exit;
+    end;
+    Result := True;
+  end;
+
+  { Postfix owns nested calls and their explicit generic commas. An unavailable
+    closed argument retains its original type refusal alongside complete syntax.
+    The routine's formal correspondence decides whether that type is required;
+    result typing never selects overload eligibility or executes an argument. }
   function InferredCall(const AFound: INyxPascalResolution): INyxPascalResolution;
   var
-    LArguments: TInferredArgumentTypes;
+    LArguments: TInferredArgumentAnswers;
     LValue: INyxPascalResolution;
-    LArgumentType: INyxPascalSemanticType;
     LArgumentAccess: TNyxPascalMemberAccess;
     LCount: Integer;
-    LOpaque: Boolean;
-    LLiteral: INyxPascalLiteralType;
     LSavedAt: Integer;
   begin
     SetLength(LArguments, 0);
@@ -7308,46 +7447,27 @@ var
     while LAvailable do
     begin
       Tick;
-      LArgumentType := nil;
-      LOpaque := (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwNil);
+      LSavedAt := LAt;
+      LValue := Postfix(LArgumentAccess);
 
-      if IsSymbol(psoPlus) or IsSymbol(psoMinus) then
+      if (LValue.Status <> pbsBound) or not (IsSymbol(psoComma) or IsSymbol(psoCloseParen)) then
       begin
-        LSavedAt := LAt;
-        Next;
 
-        if not LAvailable or (LToken.Kind <> ptkNumber) then
-          Exit(Answer(pbsUnresolved, pbiUnsupportedType));
-        LOpaque := LToken.RealNumber;
+        if LValue.Status = pbsBound then LValue := Answer(pbsUnresolved, pbiUnsupportedType);
         LAt := LSavedAt;
         ReadToken;
+
+        if not ClosedArgumentSyntax or not (IsSymbol(psoComma) or IsSymbol(psoCloseParen)) then Exit(LValue);
       end;
-      LOpaque := LOpaque or ((LToken.Kind = ptkNumber) and LToken.RealNumber);
 
-      if LOpaque then
-      begin
-
-        if IsSymbol(psoPlus) or IsSymbol(psoMinus) then Next;
-        Next;
-      end
-      else
-      begin
-        LValue := Postfix(LArgumentAccess);
-
-        if LValue.Status <> pbsBound then Exit(LValue);
-
-        if LArgumentAccess <> pmaInstance then Exit(Answer(pbsUnresolved, pbiGenericContext));
-        LArgumentType := LValue.BoundType;
-
-        if Supports(LArgumentType, INyxPascalLiteralType, LLiteral) then
-          LArgumentType := LLiteral.SpecializationType;
-      end;
+      if (LValue.Status = pbsBound) and (LArgumentAccess <> pmaInstance) then
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
       LCount := Length(LArguments);
 
       if LCount >= FLimits.MaximumCandidates then
         raise ENyxPascalBindingLimit.Create('Inferred call arguments exceed their query budget');
       SetLength(LArguments, LCount + 1);
-      LArguments[LCount] := LArgumentType;
+      LArguments[LCount] := LValue;
 
       if IsSymbol(psoCloseParen) then
       begin
