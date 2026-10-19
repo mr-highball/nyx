@@ -28,7 +28,8 @@ uses SysUtils, Classes, nyx.text, nyx.bytes, nyx.editing, nyx.scheduler,
   nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.pascal.types,
   nyx.pascal.binding, nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts,
   nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.completion.owned
-  {$ifndef PAS2JS}, member.classes.fixture, member.generics.fixture{$endif};
+  {$ifndef PAS2JS}, member.classes.fixture, member.generics.fixture,
+  member.threadvars.fixture{$endif};
 
 var
   GChecks: Integer;
@@ -177,6 +178,74 @@ begin
     'A local receiver still shadows the imported class before qualified fallback');
 end;
 
+procedure ThreadStorageRoles;
+const
+  CText: TNyxText = 'unit Storage; interface threadvar GlobalFirst,GlobalSecond:LongInt; ' +
+    'GlobalThird:LongInt; var Ordinary:LongInt; type TStore=class public ' +
+    'class threadvar First,Second:LongInt; Third:LongInt; class var Shared:LongInt; ' +
+    'class threadvar Other:LongInt; const Offset=2; public InstanceField:LongInt; ' +
+    'class procedure Touch; static; end; implementation end.';
+var
+  LView: INyxPascalTranslatedSyntax;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LWorld: INyxPascalSemanticWorld;
+  LSite: INyxPascalBindingSite;
+  LType: INyxPascalSemanticType;
+  LAnswer: INyxPascalResolution;
+  LNode: TNyxPascalSyntaxDeclaration;
+  LNames: array[0..2] of TNyxText;
+  LAt, LScope, LClass: Integer;
+begin
+  LView := View(CText);
+  LSyntax := LView.Syntax;
+  Check(LSyntax.DiagnosticCount = 0, 'Global and class threadvar sections retain complete declaration grammar');
+  LNames[0] := 'GlobalFirst'; LNames[1] := 'GlobalSecond'; LNames[2] := 'GlobalThird';
+  for LAt := 0 to 2 do
+  begin
+    LNode := LSyntax.Declaration(LSyntax.Named(0, LNames[LAt]));
+    Check((LNode.Kind = psdkVariable) and (psdfThreadLocal in LNode.Flags) and
+      not (psdfClassMember in LNode.Flags), 'Grouped/continued global threadvars retain thread-local storage without a class owner');
+  end;
+  LNode := LSyntax.Declaration(LSyntax.Named(0, 'Ordinary'));
+  Check(not (psdfThreadLocal in LNode.Flags), 'An ordinary var section ends global thread-local storage intent');
+  LClass := LSyntax.Named(0, 'TStore');
+  LScope := LSyntax.Declaration(LClass).NestedScope;
+  LNames[0] := 'First'; LNames[1] := 'Second'; LNames[2] := 'Third';
+  for LAt := 0 to 2 do
+  begin
+    LNode := LSyntax.Declaration(LSyntax.Named(LScope, LNames[LAt]));
+    Check((LNode.Kind = psdkField) and (LNode.Flags * [psdfClassMember, psdfThreadLocal] =
+      [psdfClassMember, psdfThreadLocal]), 'Every grouped/continued class threadvar retains both independent flags');
+  end;
+  LNode := LSyntax.Declaration(LSyntax.Named(LScope, 'Shared'));
+  Check((psdfClassMember in LNode.Flags) and not (psdfThreadLocal in LNode.Flags),
+    'A following class var retains shared class storage without thread-local leakage');
+  LNode := LSyntax.Declaration(LSyntax.Named(LScope, 'Offset'));
+  Check((LNode.Kind = psdkConstant) and not (psdfThreadLocal in LNode.Flags),
+    'A following constant remains owned by the intact class scope');
+  LNode := LSyntax.Declaration(LSyntax.Named(LScope, 'InstanceField'));
+  Check((LNode.Flags * [psdfClassMember, psdfThreadLocal]) = [],
+    'Visibility restores ordinary instance-member intent');
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LSite := LWorld.At(0, 0, LSyntax.Lexical.Scalars);
+  LAnswer := LWorld.TypeOfSymbol(LWorld.Symbol(0, LClass));
+  LType := LAnswer.BoundType;
+  LAnswer := LWorld.Member(LType, LSite, NyxPascalBindingName('Third'), pmaType);
+  Check((LAnswer.Status = pbsBound) and (psdfThreadLocal in LAnswer.SymbolAt(0).Declaration.Flags),
+    'Type-member binding preserves continued thread-local class fields');
+  LAnswer := LWorld.Member(LType, LSite, NyxPascalBindingName('InstanceField'), pmaType);
+  Check(LAnswer.Issue = pbiWrongMemberKind, 'Thread-local sections cannot authorize later instance access through the type');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Broken; interface class threadvar Bad:LongInt; implementation end.');
+  Check((LSyntax.DiagnosticCount > 0) and (LSyntax.Named(0, 'Bad') < 0),
+    'A unit-level class threadvar cannot fabricate a member scope');
+  LSyntax := NewNyxPascalSyntaxSnapshot('class threadvar First:LongInt; Next:LongInt; class var Shared:LongInt;',
+    TNyxPascalSyntaxOptions.Defaults.Fragment(psfMembers));
+  LNode := LSyntax.Declaration(LSyntax.Named(0, 'Next'));
+  Check((LSyntax.DiagnosticCount = 0) and
+    (LNode.Flags * [psdfClassMember, psdfThreadLocal] = [psdfClassMember, psdfThreadLocal]),
+    'Explicit member fragments retain continued class thread-local section state');
+end;
+
 procedure RecoveryAndLimits;
 var
   LSyntax: INyxPascalSyntaxSnapshot;
@@ -269,9 +338,40 @@ var
   LText: TNyxText;
   LInclude: TNyxText;
   LGeneric: TNyxText;
+  LThreadView: INyxPascalTranslatedSyntax;
+  LThreadText, LThreadInclude: TNyxText;
+  LNode: TNyxPascalSyntaxDeclaration;
+  LThreadAnswer: INyxPascalResolution;
 begin
   Check((ClassMemberValue = 42) and (GenericMemberValue = 42),
     'The actual compiler executes class properties/storage and both generic-class method specializations');
+  Check(ThreadStorageValue = 42,
+    'Actual native threadvars start independently, preserve the caller and share ordinary class storage after join');
+  LThreadText := ReadSource(ARoot + '/tests/member.threadvars.fixture.pas');
+  LThreadInclude := ReadSource(ARoot + '/tests/member.threadvars.fixture.inc');
+  LThreadView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(
+    NewNyxPascalFileCatalog(pfcExact)
+      .WithFile(NyxPascalPhysicalFile('member.threadvars.fixture.pas'), LThreadText)
+      .WithFile(NyxPascalPhysicalFile('member.threadvars.fixture.inc'), LThreadInclude),
+    NyxPascalPhysicalFile('member.threadvars.fixture.pas'), Facts,
+    TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+  Check(LThreadView.CompleteTranslation and (LThreadView.Syntax.DiagnosticCount = 0),
+    'The same whole compiled unit/include retains complete thread-local declaration syntax');
+  LOwner := LThreadView.Syntax.Named(0, 'TThreadLocalSettings');
+  LScope := LThreadView.Syntax.Declaration(LOwner).NestedScope;
+  LNode := LThreadView.Syntax.Declaration(LThreadView.Syntax.Named(LScope, 'LocalThird'));
+  Check((LNode.Flags * [psdfClassMember, psdfThreadLocal]) = [psdfClassMember, psdfThreadLocal],
+    'The whole compiled continued field preserves both class and thread storage');
+  LAt := LThreadView.OriginAt(LNode.NameSpan.Start);
+  Check((LAt >= 0) and (LThreadView.Source.Files.FileAt(LThreadView.Origin(LAt).FileIndex).Name =
+    'member.threadvars.fixture.inc'), 'Thread-local field navigation keeps its original include origin');
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LThreadView);
+  LThreadAnswer := LWorld.TypeOfSymbol(LWorld.Symbol(0, LOwner));
+  LThreadAnswer := LWorld.Member(LThreadAnswer.BoundType,
+    LWorld.At(0, 0, LThreadView.Syntax.Lexical.Scalars), NyxPascalBindingName('LocalThird'), pmaType);
+  Check((LThreadAnswer.Status = pbsBound) and
+    (psdfThreadLocal in LThreadAnswer.SymbolAt(0).Declaration.Flags),
+    'Actual compiled continued threadvars bind through their declaring type with the original storage intent');
   LText := ReadSource(ARoot + '/tests/member.classes.fixture.pas');
   LInclude := ReadSource(ARoot + '/tests/member.classes.fixture.inc');
   LGeneric := ReadSource(ARoot + '/tests/member.generics.fixture.pas');
@@ -351,6 +451,7 @@ end;
 begin
   try
     RolesAndBinding;
+    ThreadStorageRoles;
     RecoveryAndLimits;
     {$ifndef PAS2JS}
     Check(ParamCount = 1, 'Supply the repository root for exact compiled companions');

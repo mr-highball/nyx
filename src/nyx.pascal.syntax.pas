@@ -170,10 +170,12 @@ type
     { Raw/unfinished conditional syntax confers no active-label authority. }
     property Conditional: Boolean read FConditional;
   end;
-  { Explicit uncertainty and declaration modifiers. Unsupported/recovered scopes
-    grant no successful type inference, compilation or source editing authority. }
+  { Explicit uncertainty and declaration modifiers. ThreadLocal retains authored
+    storage duration independently of ClassMember, not an inferred TLS address
+    or synchronization guarantee. Unsupported/recovered scopes grant no
+    successful type inference, compilation or source editing authority. }
   TNyxPascalSyntaxFlag = (psdfIncomplete, psdfConditional, psdfForward,
-    psdfClassMember, psdfOverload, psdfUnsupported);
+    psdfClassMember, psdfOverload, psdfUnsupported, psdfThreadLocal);
   { Value-owned flag set with no mutable storage or target-specific state. }
   TNyxPascalSyntaxFlags = set of TNyxPascalSyntaxFlag;
   { Authored platform/linker intent, distinct from Pascal member visibility.
@@ -869,6 +871,12 @@ type
     section nested in root declarations must return to that caller's grammar;
     an explicit types fragment does not gain a declaration-section caller. }
   TParserResume = (prDeclarations, prTypes, prTypesFragment);
+  { Declaration-section intent, distinct from lexical words. Class threadvars
+    retain both type-member access and per-thread storage across every name
+    group; ordinary threadvars never acquire a class owner. Checkpoints copy
+    this closed value rather than reconstructing it from the previous token. }
+  TDeclarationSection = (pdsNone, pdsVariables, pdsThreadVariables,
+    pdsConstants, pdsResources, pdsClassVariables, pdsClassThreadVariables);
   { Value-only rollback point before a root declaration. Counts exclude the
     provisional suffix; its companion metadata root retains exact prior rows.
     ReadThrough includes every parser lookahead dependency, independently of
@@ -883,7 +891,7 @@ type
     ActiveArm: Integer;
     Visibility: TNyxPascalSyntaxVisibility;
     Members: Boolean;
-    Section: TNyxPascalWord;
+    Section: TDeclarationSection;
     Scopes: Integer;
     Declarations: Integer;
     Imports: Integer;
@@ -970,7 +978,7 @@ type
     procedure CheckCancellation;
     function ReadToken(AIndex: Integer): TNyxPascalToken;
     procedure Remember(AResume: TParserResume; AVisibility: TNyxPascalSyntaxVisibility;
-      AMembers: Boolean; ASection: TNyxPascalWord);
+      AMembers: Boolean; ASection: TDeclarationSection);
     procedure Restore(APrevious: TSyntaxSnapshot);
     procedure LinkDeclaration(AIndex: Integer);
     function Tok(AOffset: Integer = 0): TNyxPascalToken;
@@ -1035,7 +1043,7 @@ type
     procedure TypeSection(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     procedure Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
       AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean = False;
-      AArmEnd: Boolean = False);
+      AArmEnd: Boolean = False; AThreadLocal: Boolean = False);
     procedure Constants(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
       AVisibility: TNyxPascalSyntaxVisibility);
     procedure Parameters(AScope: Integer);
@@ -1047,7 +1055,7 @@ type
       AClass: Boolean = False);
     procedure Imports(AScope: Integer);
     procedure Declarations(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
-      AMembers: Boolean; ASection: TNyxPascalWord = pkwNone);
+      AMembers: Boolean; ASection: TDeclarationSection = pdsNone);
     function Block(AScope: Integer): Boolean;
     procedure BuildTokens(APrevious: TSyntaxSnapshot; ARetained: Integer);
     procedure Build(APrevious: TSyntaxSnapshot = nil; ARetained: Integer = -1);
@@ -2432,7 +2440,7 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Remember(AResume: TParserResume;
-  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TNyxPascalWord);
+  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TDeclarationSection);
 var
   LSafe: Integer;
 begin
@@ -3944,11 +3952,11 @@ begin
 
       if FOptions.StartingContext = psfTypes then
       begin
-        Remember(prTypesFragment, AVisibility, False, pkwNone);
+        Remember(prTypesFragment, AVisibility, False, pdsNone);
       end
       else
       begin
-        Remember(prTypes, AVisibility, FOptions.StartingContext = psfMembers, pkwNone);
+        Remember(prTypes, AVisibility, FOptions.StartingContext = psfMembers, pdsNone);
       end;
     end;
     ParseType(AScope, AVisibility);
@@ -4163,7 +4171,7 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Variables(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
-  AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean; AArmEnd: Boolean);
+  AVisibility: TNyxPascalSyntaxVisibility; AClass: Boolean; AArmEnd: Boolean; AThreadLocal: Boolean);
 var
   LEntries: TOrdinals;
   LEntry: Integer;
@@ -4192,6 +4200,11 @@ begin
     if AClass then
     begin
       Include(EditEntry(LEntry).Value.FFlags, psdfClassMember);
+    end;
+
+    if AThreadLocal then
+    begin
+      Include(EditEntry(LEntry).Value.FFlags, psdfThreadLocal);
     end;
     Step;
 
@@ -4953,9 +4966,9 @@ begin
 end;
 
 procedure TSyntaxSnapshot.Declarations(AScope: Integer;
-  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TNyxPascalWord);
+  AVisibility: TNyxPascalSyntaxVisibility; AMembers: Boolean; ASection: TDeclarationSection);
 var
-  LSection: TNyxPascalWord;
+  LSection: TDeclarationSection;
   LBefore: Integer;
   LClass: Boolean;
   LGeneric: Boolean;
@@ -4976,7 +4989,7 @@ begin
       if Word(pkwInterface) then
       begin
         AVisibility := psavInterface;
-        LSection := pkwNone;
+        LSection := pdsNone;
         Step;
       end
       else if Word(pkwImplementation) then
@@ -4987,7 +5000,7 @@ begin
           Break;
         end;
         AVisibility := psavImplementation;
-        LSection := pkwNone;
+        LSection := pdsNone;
         Step;
       end
       else if Tok.Word in [pkwUses, pkwRequires, pkwContains] then
@@ -4998,17 +5011,21 @@ begin
       begin
         Step;
         TypeSection(AScope, AVisibility);
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if Tok.Word in [pkwVar, pkwThreadvar, pkwConst, pkwResourcestring] then
       begin
-        LSection := Tok.Word;
+
+        if Word(pkwVar) then LSection := pdsVariables
+        else if Word(pkwThreadvar) then LSection := pdsThreadVariables
+        else if Word(pkwConst) then LSection := pdsConstants
+        else LSection := pdsResources;
         Step;
       end
       else if Word(pkwLabel) and not AMembers then
       begin
         StatementLabels(AScope);
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if AMembers and (Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
         pkwAutomated, pkwStrict]) then
@@ -5056,19 +5073,19 @@ begin
           end;
         end;
         Step;
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if Tok.Word in [pkwPrivate, pkwProtected, pkwPublic, pkwPublished,
         pkwAutomated, pkwStrict] then
       begin
         Unsupported(AScope, 'Visibility sections require an enclosing member scope', Tok.Span);
         Step;
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if Word(pkwProperty) then
       begin
         PropertyDeclaration(AScope, AVisibility);
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if Tok.Word in [pkwProcedure, pkwFunction, pkwOperator, pkwConstructor, pkwDestructor,
         pkwClass, pkwGeneric] then
@@ -5088,13 +5105,16 @@ begin
           Step;
         end;
 
-        if Word(pkwVar) and LClass and not LGeneric and AMembers then
+        if (Word(pkwVar) or Word(pkwThreadvar)) and LClass and not LGeneric and AMembers then
         begin
+          LSection := pdsClassVariables;
+
+          if Word(pkwThreadvar) then LSection := pdsClassThreadVariables;
           Step;
-          Variables(AScope, psdkField, AVisibility, True);
+          Variables(AScope, psdkField, AVisibility, True, False,
+            LSection = pdsClassThreadVariables);
           { The whole section owns this modifier, not just its first name group.
             Visibility, another section or a routine ends the section normally. }
-          LSection := pkwClass;
           Continue;
         end
         else if Word(pkwProperty) and LClass and not LGeneric and AMembers then
@@ -5111,7 +5131,7 @@ begin
           Expression(psoSemicolon);
           Separator;
         end;
-        LSection := pkwNone;
+        LSection := pdsNone;
       end
       else if Sym(psoOpenBracket) then
       begin
@@ -5135,19 +5155,21 @@ begin
       else if Tok.Kind = ptkWord then
       begin
         case LSection of
-          pkwClass:
+          pdsClassVariables, pdsClassThreadVariables:
             begin
-              Variables(AScope, psdkField, AVisibility, True);
+              Variables(AScope, psdkField, AVisibility, True, False,
+                LSection = pdsClassThreadVariables);
             end;
-          pkwVar, pkwThreadvar:
+          pdsVariables, pdsThreadVariables:
             begin
-              Variables(AScope, psdkVariable, AVisibility);
+              Variables(AScope, psdkVariable, AVisibility, False, False,
+                LSection = pdsThreadVariables);
             end;
-          pkwConst:
+          pdsConstants:
             begin
               Constants(AScope, psdkConstant, AVisibility);
             end;
-          pkwResourcestring:
+          pdsResources:
             begin
               Constants(AScope, psdkResourceString, AVisibility);
             end;

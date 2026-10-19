@@ -305,6 +305,12 @@ begin
   begin
     CompareEveryAppend(CModules[LAt], LOptions);
   end;
+  CompareEveryAppend('unit ThreadStorage; interface threadvar First,Second:Integer; ' +
+    'Third:Integer; var Plain:Integer; type T=class public class threadvar Local:Integer; ' +
+    'Continued:Integer; class var Shared:Integer; const Offset=2; public Field:Integer; end; implementation end.',
+    LOptions);
+  CompareEveryAppend('class threadvar First,Second:Integer; Third:Integer; class var Shared:Integer; ' +
+    'class threadvar Next:Integer; const Offset=2; public Field:Integer;', LOptions.Fragment(psfMembers));
   CompareEveryAppend('T=record X:Integer; end; U=class procedure Run; end; V=array of T;',
     LOptions.Fragment(psfTypes));
   CompareEveryAppend('private F:Integer; public const A=1; class var X:Integer; procedure Run; overload; property P:Integer read F;',

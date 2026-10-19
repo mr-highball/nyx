@@ -33,7 +33,81 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Native source-size fulfillment — 2026-10-19
+## Current integration: Thread-local member scope — 2026-10-19
+
+The previous turn is verified progress: 51b76ff is qualified and pushed. This
+continuation revalidated its source/foreign inputs and followed the actual class
+threadvar grammar through existing parser, member-binding and checkpoint owners.
+The original full library/Studio/resolver outcome remains active; no criterion,
+task, counter, credit, DONE, parity, adoption or delivery closes.
+
+Private declaration sections now use a closed typed enum, separating ordinary
+variables, thread variables, class variables and class thread variables from
+lexical words. The parser/checkpoint retains that intent for grouped/continued
+names and resets it at normal visibility/section/routine boundaries. Appended
+psdfThreadLocal preserves prior flag ordinals and remains independent of
+psdfClassMember. It describes authored storage duration, not a TLS address,
+locking, scheduler safety or compiler admission. Source flags retain existing
+type/visibility/name/hint/initializer/origin behavior. No record/static-array
+interface ownership is introduced and no public GUID changes.
+
+The whole new Delphi-mode unit/include is compiled into the native consumer and
+inspected from its exact original bytes. A joined native worker proves fresh
+class/global thread variables, caller isolation, continued class fields, a later
+class constant and shared ordinary class storage; it returns 42. Actual included
+field metadata binds through its declaring type and navigates to the original
+include. Portable controls exercise grouped names, ordinary/class resets, member
+fragments and refusal of ownerless class threadvars. Character-by-character
+append comparisons retain exact fresh metadata and prior snapshots, including
+global threadvar and class-threadvar member fragments. Existing node/depth/work/
+cancellation/refinement quotas remain unchanged. This native runtime qualification
+is the pinned Win32/i386 compiler, not a cross-platform threading/parity claim.
+
+All five owned Pascal inputs are frozen before final qualification. Class-member
+checks pass 68; checkpoint checks pass 5216. Forty maintained/seven additional
+native consumers, the unchanged original RTL 56 and actual 503-file/2,355,629-token
+lexical corpus pass with clean heaps: 49 accepted native logs. All 86 accepted
+main compiler jobs have zero owned warnings/196 upstream warnings. The separate
+diagnostic compiler oracle retains its deliberate warning outside product debt.
+Both Studios/backend/worker and 36 browser consumers compile as applicable,
+without browser execution, physical editor/input/parity, performance, adoption
+or delivery qualification. The initial nonexhaustive parser case warning is
+retained in preparation; final source uses the closed branch without suppression.
+
+The unchanged System run now retains the class scope: 11,030 declarations/six
+syntax diagnostics/27 answers, replacing the prior 11,029/seven/27 and unsupported
+MinFixedChunkSize scope. It reaches the independent CommonHeader compiler-context
+prerequisite inside the earlier CommonHeaderSize constant at the same heap.inc
+scalar-29082 conditional. The current source witness correctly refuses to borrow
+that earlier declaration site's binding authority. Source.Resolved remains false;
+full RTL/type meaning is not established. ObjPas stays 209/four/one; exact indexed
+Free/FreeInstance completion, objpash.inc navigation and detached insertion remain
+ready. Five initial queries/one Word job/three-of-eight symbol jobs/four-of-eight
+dynamic jobs, two-million view/four-million aggregate/64-round ceilings stay exact.
+
+Preservation retains 662 unrelated prior pins/667 maintained-source receipts
+(the existing checkpoint consumer is newly pinned alongside the two new fixture
+files), 97 RTL and 24 compiler inputs plus retained inspections, 156 original unit
+packets/48 includes, 349 frozen release artifacts, nine prior contexts, thirteen
+foreign planning files and five exact current-start protected files. Historical
+global-configuration preservation failures remain retained and false. There is
+no restoration, cleanup/restart, host/config retry, protected mutation, approval
+bypass, MCP tool/schema/rollout or sub-agent. LAN stays offline; native Nyx tools
+remain absent. All owned readers and process handles are terminal and joined.
+Ignored `.local/thread-storage-paths-private.json` owns exact source/qualification/
+preservation/remote receipts, retained preparations and the return path.
+
+Stop threadvar/fixture/compiler variants. Follow declaration-bound SizeOf through
+existing constant/binding/source-request ownership: establish exact nominal and
+visible binding equality before using a current native witness for an earlier
+constant initializer. Preserve declaration contexts, shadowing, compiler-input
+ownership, cancellation and every existing quota. Do not relax the site check,
+invent a width/default, add fixed CommonHeader/FreeChunk probes, patch the unchanged
+RTL consumer or claim complete source meaning. Broader canonical types/modules/
+incremental budgets/editor/input/navigation/quality/component breadth/native-
+browser parity/adoption/delivery remain required.
+
+## Previous integration: Native source-size fulfillment — 2026-10-19
 
 The intervening human-status turn made no product progress. This continuation
 revalidated 2d6a7a8 and completed the first configured-native source-size path
