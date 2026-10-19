@@ -3756,6 +3756,49 @@ input mismatches. These observations grant no authority on their own.
 WORK.md owns qualification evidence and remaining
 full dependency-aware incremental/editor adoption, language, input and parity scope.
 
+### Reusing projections after source edits
+
+When a used root/include changes, translation and conditional evaluation still run
+on the current inputs. The provider can then revise the previous projection using
+the newly published translation. It rebuilds every physical origin and effective
+atom before proving an unchanged leading logical token sequence. No old compiler
+state or conditional answer crosses an unproved edit.
+
+`LinkNyxPascalLexicalRevision` accepts only completed arenas owned by
+`nyx.pascal.lexing.append` with identical policies. It compares exact spelling,
+coordinates, token classification/region and the diagnostic boundary, then leases
+the current immutable rows without relexing. Public work counters and foreign
+producers confer no continuity. `AppendNyxPascalSyntax` independently checks that
+its saved checkpoint read frontier precedes the changed region. If it does not,
+the parser starts normally; no earlier checkpoint is guessed.
+
+```pascal
+LCurrent := ReviseNyxPascalTranslatedSyntax(LPrevious, LCurrentTranslation,
+  TNyxPascalSyntaxOptions.Defaults, LCancellation);
+```
+
+The projection factory returns nil for foreign/unpublished inputs or changed
+policies. A successful result sees the current source and freshly built physical
+origin map. A late body edit can retain earlier immutable declaration identities.
+A physical comment or compiler-directive change can share complete logical syntax
+when all logical rows/diagnostics remain identical; binding still reads the new
+source's compiler contexts and origins.
+
+Provider defaults enable this path. Set
+`TNyxPascalSourceReuseOptions.Defaults.WithSyntaxRevision(False)` to keep cold
+projection construction after edits while retaining ordinary source reuse. Actual
+revision construction consumes the remaining module/request work allowance;
+cancellation or quota refusal cannot fall through to an unmetered retry. Optional
+cache publication also deducts revision work before using that same allowance.
+`INyxPascalCompletionRevision` reports revised modules, proved prefix token totals
+and whole-syntax sharing; `INyxPascalProjectionRevisionWork` gives per-view prefix/
+whole observations. These do not grant compiler or semantic authority.
+
+This is projection/checkpoint reuse. Translation still reconstructs the current
+root, and edits earlier than the latest safe parser checkpoint can require full
+parsing. Full changed-root incremental analysis, editor rollout and browser input/
+parity qualification remain open; WORK.md owns measurements and validation.
+
 ## Captured SDK modules and dependency loading
 
 `nyx.pascal.modules` supplies an immutable namespace-to-root catalog independent

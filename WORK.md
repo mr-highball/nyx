@@ -33,7 +33,102 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Ordered semantic revalidation — 2026-10-19
+## Current integration: Changed-root checkpoint reuse — 2026-10-19
+
+The preceding 64a85a3 ordered-revalidation checkpoint is qualified and pushed;
+the previous goal turn made source/qualification/remote progress. Current evidence
+shows changed used roots still take full translation and full final projection
+parsing. The existing parser can resume its latest safe metadata checkpoint only
+under a sealed lexical predecessor proof; arbitrary edits currently have none.
+
+Follow the existing owners: prove exact leading rows between two completed owned
+fixed-policy lexical arenas, including spelling, coordinates, classification,
+region and diagnostics. The resulting value must retain current immutable rows,
+not old source owners, compiler facts or a semantic world. Public counters and
+alternate implementations confer no predecessor authority. Comparison/copy work
+is admitted and cancellable before atomic publication; in-place calls keep inputs
+alive. Let the existing parser independently check its checkpoint read frontier;
+edits before it must take the ordinary full parse. No guessed earlier checkpoint.
+
+Then integrate current-source projection construction with that lexical revision
+proof and the bounded provider directory. Translation/conditional decisions must
+come from the current source and current world; old metadata may share only after
+proven unchanged parser input. Origins/source context remain current. Account new
+revision work under unchanged quotas and expose actual reuse without claiming a
+translation speedup. Qualify cold/revised equivalence, early/late edits, lexical
+seams/recovery, Unicode/CRLF, fake provenance, diagnostics, budgets, cancellation,
+retirement and concurrent callers before broader maintained/original RTL checks.
+
+Ignored .local/lexical-revision-paths-private.json owns this packet/return path.
+Do not narrow full changed-root editing, canonical language, editor/input/quality/
+parity/adoption/delivery requirements to this checkpoint layer. Full goal/criterion/
+task/credit/DONE remain open. LAN stays offline; native Nyx tools absent. No host/
+config retry, protected mutation, capture, cleanup/restart, new MCP tool/schema,
+rollout or sub-agents. Preserve concurrent work and retained historical failures.
+
+Implemented current-root revision through the existing lexical/projection/parser
+owners. The sealed lexical link compares exact leading rows and spellings under
+the same lexical policy, clips continuity at any differing diagnostic, and leases
+the complete current arena. It retains no earlier compiler facts or semantic
+world. The current published translation supplies all effective tokens, origins
+and settings. Equal whole parser input may share immutable syntax; otherwise the
+existing parser independently checks its latest saved read frontier. An edit before
+that frontier takes a full parse. Type-plan inheritance still requires its own
+declaration/scope identity proof. Alternate producers grant no lineage authority.
+
+The bounded completion provider now tries that current-source revision after an
+ordinary cache miss. Translation and ordered conditional answers remain current.
+Revision comparison, projection and parser work consume the remaining module and
+aggregate allowances; optional directory retention deducts the revision work too.
+Exhaustion refuses atomically rather than retrying cold without a budget. The
+copied WithSyntaxRevision option can disable this path, and optional in-process
+receipts distinguish lexical continuity, revised modules and whole syntax sharing.
+No wire schema or editor installation changes.
+
+Frozen final-source qualification: 1,039 revision checks and 3,394 maintained
+provider checks pass with clean heaps. Exact cold/revised public metadata matches
+across early/late edits, physical-only changes, fresh compiler settings, lexical
+seams/recovery, CRLF and Unicode. Foreign provenance, differing policies, in-place
+ownership, diagnostic boundaries, cancellation and every smaller allowance below
+the lexical/projection first fits of 29/436 are qualified. Sixty-four concurrent
+projection revisions join. The representative late-body projection uses 5,325
+work units against the independent cold construction's 11,641; this measures
+projection/parser work, not elapsed time or translation incrementality. Earlier
+source-rebind 193, ordered-replay 323, provider 128 concurrent requests and ordered
+replay 96 concurrent revalidations retain their original bounded results.
+
+All 109 main compiler logs succeed with zero owned warnings and 280 upstream;
+the separate unchanged emission oracle retains its three deliberate visible
+markers. All 59 native run logs have clean heaps. Forty-nine browser consumers
+compile only, including Studio/worker; native Studio/backend compile as applicable.
+The unchanged original RTL fixture passes 56: actual System source is resolved,
+with zero translation diagnostics, 13,101 declarations, zero syntax diagnostics
+and 31 semantic answers; ObjPas retains 209/zero/one. Both have no pending query.
+Exact indexed Free/FreeInstance navigation/insertion retains original include
+origins. Initial five queries, one Word job, symbol three/eight and the six/eight
+ordered dynamic requests remain exact. View/aggregate/round caps stay 2M/4M/64.
+The corpus passes 571 checks over 504 files and 2,395,637 lossless tokens.
+
+Six frozen source inputs, 706 maintained sources/700 unrelated, 97 RTL/24 compiler
+pins, 156 original unit packets/48 includes, 349 artifacts, nine contexts, five
+current-start protected files and thirteen concurrent planning files stay exact.
+All readers are terminal/joined. The historical global-config preservation gate
+remains false and its original failure stays retained; matching current-start
+bytes neither repairs nor supersedes it. No restoration, host/config retry,
+cleanup, server restart or browser execution occurred. Ignored packet receipts
+own exact source hashes, compiler/native results, preservation and final remote
+identity; this is local qualification, not preserving delivery.
+
+Stop lexical-revision/projection/fixture/compiler variants. Next reassess safe
+earlier parser/filter checkpoint retention and actual translation repeated work
+through their existing owners, preserving exact input/context/ordered-answer
+identity, quotas, cancellation and atomic refusal. Current projection still
+reconstructs its origins/effective arena; translation still runs in full. Early
+edits, full incremental performance, canonical language meaning, default editor
+adoption, input/navigation quality, browser execution, native/browser parity and
+delivery remain open. No original criterion/task/credit/DONE or full goal closes.
+
+## Previous integration: Ordered semantic revalidation — 2026-10-19
 
 The preceding 05789ff independent-source reuse checkpoint is qualified and pushed;
 the previous goal turn made source/qualification/remote progress. This continuation

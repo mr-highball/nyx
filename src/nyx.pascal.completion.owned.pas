@@ -42,6 +42,7 @@ type
     FTokens: Integer;
     FBytes: Integer;
     FSemanticReplay: Boolean;
+    FSyntaxRevision: Boolean;
   public
     { Defaults enable ordered semantic revalidation and retain at most 16 modules,
       one million tokens and 64 MiB of catalog input, including retained prefixes.
@@ -53,11 +54,15 @@ type
     { Recheck retained ordered semantic answers against each request's world.
       False keeps world-dependent modules cold while independent reuse remains. }
     function WithSemanticReplay(AValue: Boolean): TNyxPascalSourceReuseOptions;
+    { Rebuild current projection origins, then reuse only proved lexical/parser
+      prefixes after edits. False retains ordinary cold projection construction. }
+    function WithSyntaxRevision(AValue: Boolean): TNyxPascalSourceReuseOptions;
     procedure Validate;
     property MaximumModules: Integer read FModules;
     property MaximumTokens: Integer read FTokens;
     property MaximumCatalogBytes: Integer read FBytes;
     property SemanticReplay: Boolean read FSemanticReplay;
+    property SyntaxRevision: Boolean read FSyntaxRevision;
   end;
   { Independent copied analysis budgets. Per-module translation/syntax and
     semantic query limits retain their existing contracts; AggregateTokens caps
@@ -183,6 +188,15 @@ type
     function RevalidatedAnswers: Integer;
     function RevalidationDeclines: Integer;
   end;
+  { Detached observations of current-source projection revisions after a cache
+    miss. Prefix counts report lexical proof, not automatic parser restoration;
+    parser checkpoints independently decide which metadata can remain. }
+  INyxPascalCompletionRevision = interface(IInterface)
+    ['{AE0EC959-8BE8-4A5E-8A7E-624868A95834}']
+    function RevisedModules: Integer;
+    function RevisionRetainedTokens: Integer;
+    function SharedSyntaxModules: Integer;
+  end;
 
 { Capture explicit SDK files/roots and compiler facts once. Requests overlay all
   exact project buffers, preserving accepted membership and include ownership.
@@ -258,7 +272,7 @@ type
   TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult,
     INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis,
     INyxPascalCompletionByteOrigins, INyxPascalCompletionReuse,
-    INyxPascalCompletionRevalidation)
+    INyxPascalCompletionRevalidation, INyxPascalCompletionRevision)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
@@ -273,6 +287,9 @@ type
     ValidatedModules: Integer;
     ValidatedAnswers: Integer;
     ValidationDeclines: Integer;
+    Revised: Integer;
+    RevisionTokens: Integer;
+    SharedSyntax: Integer;
     GapValue: TNyxOwnedPascalCompletionGap;
     IssueValue: TNyxPascalBindingIssue;
     RelatedValue: TNyxText;
@@ -304,6 +321,9 @@ type
     function RevalidatedModules: Integer;
     function RevalidatedAnswers: Integer;
     function RevalidationDeclines: Integer;
+    function RevisedModules: Integer;
+    function RevisionRetainedTokens: Integer;
+    function SharedSyntaxModules: Integer;
   end;
   { Frozen configuration plus a bounded immutable-source directory. Every call
     owns its own world/counters. The native mutex guards only fixed slot leases
@@ -331,7 +351,7 @@ type
       const ATranslation: TNyxPascalTranslationOptions;
       const AWorld: INyxPascalSemanticWorld; const AConditions: TNyxPascalConditionalOptions;
       const ACancel: INyxCancellationScope; out AValidatedModules, AValidatedAnswers,
-      ADeclines: Integer): INyxPascalTranslatedSyntax;
+      ADeclines: Integer; out APrevious: INyxPascalTranslatedSyntax): INyxPascalTranslatedSyntax;
     procedure RememberModule(const AView: INyxPascalTranslatedSyntax;
       const AConstruction: INyxPascalSemanticTranslation;
       const ATranslation: TNyxPascalTranslationOptions;
@@ -371,6 +391,9 @@ type
     FValidatedModules: Integer;
     FValidatedAnswers: Integer;
     FValidationDeclines: Integer;
+    FRevised: Integer;
+    FRevisionTokens: Integer;
+    FSharedSyntax: Integer;
     FReceiverReady: Boolean;
     FReceiverExpressionStart: Integer;
     FReceiverPrefix: TNyxText;
@@ -405,6 +428,7 @@ begin
   Result.FTokens := 1000000;
   Result.FBytes := 64 * 1024 * 1024;
   Result.FSemanticReplay := True;
+  Result.FSyntaxRevision := True;
 end;
 
 procedure TNyxPascalSourceReuseOptions.Validate;
@@ -443,6 +467,13 @@ function TNyxPascalSourceReuseOptions.WithSemanticReplay(AValue: Boolean): TNyxP
 begin
   Result := Self;
   Result.FSemanticReplay := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalSourceReuseOptions.WithSyntaxRevision(AValue: Boolean): TNyxPascalSourceReuseOptions;
+begin
+  Result := Self;
+  Result.FSyntaxRevision := AValue;
   Result.Validate;
 end;
 
@@ -681,6 +712,13 @@ begin Result := ValidatedAnswers; end;
 function TOwnedResult.RevalidationDeclines: Integer;
 begin Result := ValidationDeclines; end;
 
+function TOwnedResult.RevisedModules: Integer;
+begin Result := Revised; end;
+function TOwnedResult.RevisionRetainedTokens: Integer;
+begin Result := RevisionTokens; end;
+function TOwnedResult.SharedSyntaxModules: Integer;
+begin Result := SharedSyntax; end;
+
 function TModuleMemoEntry.View: INyxPascalTranslatedSyntax;
 begin
   Result := Snapshot;
@@ -790,7 +828,7 @@ function TOwnedProvider.ReuseModule(const AFile: TNyxPascalPhysicalFile;
   const ATranslation: TNyxPascalTranslationOptions;
   const AWorld: INyxPascalSemanticWorld; const AConditions: TNyxPascalConditionalOptions;
   const ACancel: INyxCancellationScope; out AValidatedModules, AValidatedAnswers,
-  ADeclines: Integer): INyxPascalTranslatedSyntax;
+  ADeclines: Integer; out APrevious: INyxPascalTranslatedSyntax): INyxPascalTranslatedSyntax;
 var
   LEntries: TModuleMemoEntries;
   LView: INyxPascalTranslatedSyntax;
@@ -802,6 +840,7 @@ begin
   AValidatedModules := 0;
   AValidatedAnswers := 0;
   ADeclines := 0;
+  APrevious := nil;
 
   if Length(FMemo) = 0 then Exit;
   LEntries := MemoEntries(ACancel);
@@ -815,6 +854,8 @@ begin
     if (LView.Source.Files.FileAt(LView.Source.Occurrence(0).FileIndex).Name <> AFile.Name) or
       not SameTranslationOptions(LEntries[LAt].Translation, ATranslation) or
       not LView.Source.InitialContext.SameFacts(AContext) then Continue;
+
+    if Options.SourceReuse.SyntaxRevision then APrevious := LView;
     { Examine the newest matching key only. A used-file mismatch returns to the
       cold path rather than repeatedly proving older source generations. }
     LQueries := LEntries[LAt].Semantic;
@@ -963,6 +1004,9 @@ var
   LRetainAllowance: Integer;
   LValidatedModules, LValidatedAnswers, LDeclines: Integer;
   LRetainedReplay: INyxPascalSemanticReplay;
+  LPreviousView: INyxPascalTranslatedSyntax;
+  LRevision: INyxPascalProjectionRevisionWork;
+  LRevisionWork: Integer;
   LAt: Integer;
   LDepth: Integer;
   LRemaining: Integer;
@@ -1009,6 +1053,7 @@ begin
   LDepth := Length(FBuilding);
   LView := nil;
   LConstruction := nil;
+  LRevisionWork := 0;
   SetLength(FBuilding, LDepth + 1);
   FBuilding[LDepth] := AFile.Name;
   try
@@ -1039,7 +1084,7 @@ begin
         LProof := NewNyxPascalAnalysisBudget(LConditions.MaximumTokens, FCancel);
         try
           LView := FProvider.ReuseModule(AFile, FFiles, LFacts, LOptions,
-            FWorld, LConditions, LProof, LValidatedModules, LValidatedAnswers, LDeclines);
+            FWorld, LConditions, LProof, LValidatedModules, LValidatedAnswers, LDeclines, LPreviousView);
           Inc(FValidatedModules, LValidatedModules);
           Inc(FValidatedAnswers, LValidatedAnswers);
           Inc(FValidationDeclines, LDeclines);
@@ -1082,6 +1127,35 @@ begin
     SetLength(FBuilding, LDepth);
   end;
 
+  if (LView = nil) and (LPreviousView <> nil) then
+  begin
+    LRetainAllowance := LConditions.MaximumTokens - LConstruction.WorkTokens;
+    LRemaining := FProvider.Options.AggregateTokens - FTokens;
+
+    if LRemaining < LRetainAllowance then LRetainAllowance := LRemaining;
+
+    if LRetainAllowance < 1 then
+      raise EOwnedGap.CreateGap(pcgBudget, 'Current source revision exceeds the remaining analysis allowance');
+    LProof := NewNyxPascalAnalysisBudget(LRetainAllowance, FCancel);
+    try
+      LView := ReviseNyxPascalTranslatedSyntax(LPreviousView, LSource, FProvider.Options.Syntax, LProof);
+
+      if LView <> nil then
+      begin
+        Supports(LView, INyxPascalProjectionRevisionWork, LRevision);
+        Inc(FRevised);
+        Inc(FRevisionTokens, LRevision.RevisionRetainedTokens);
+
+        if LRevision.WholeSyntaxShared then Inc(FSharedSyntax);
+      end;
+    finally
+      LRevisionWork := LProof.Receipt.Total;
+      Inc(FTokens, LProof.Receipt.Total);
+      Inc(FReuseWork, LProof.Receipt.Total);
+      LProof.Retire;
+    end;
+  end;
+
   if LView = nil then
     LView := NewNyxPascalTranslatedSyntax(LSource, FProvider.Options.Syntax, FCancel);
   LName := LView.Syntax.Scope(0).Name;
@@ -1121,7 +1195,7 @@ begin
         LRetainedReplay.ReplayAvailable)) and
     (FProvider.Options.SourceReuse.MaximumModules > 0) then
   begin
-    LRetainAllowance := LConditions.MaximumTokens - LConstruction.WorkTokens;
+    LRetainAllowance := LConditions.MaximumTokens - LConstruction.WorkTokens - LRevisionWork;
     LRemaining := FProvider.Options.AggregateTokens - FTokens;
 
     if LRemaining < LRetainAllowance then LRetainAllowance := LRemaining;
@@ -1335,6 +1409,9 @@ begin
   AResult.ValidatedModules := FValidatedModules;
   AResult.ValidatedAnswers := FValidatedAnswers;
   AResult.ValidationDeclines := FValidationDeclines;
+  AResult.Revised := FRevised;
+  AResult.RevisionTokens := FRevisionTokens;
+  AResult.SharedSyntax := FSharedSyntax;
 
   if FWorld = nil then
   begin

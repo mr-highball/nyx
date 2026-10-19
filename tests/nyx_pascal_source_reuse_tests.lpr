@@ -149,6 +149,11 @@ begin
   Check(Supports(AReply, INyxPascalCompletionRevalidation, Result), 'Current-world semantic revalidation has detached counters');
 end;
 
+function Revision(const AReply: INyxPascalCompletionResult): INyxPascalCompletionRevision;
+begin
+  Check(Supports(AReply, INyxPascalCompletionRevision, Result), 'Current-source revisions have detached observations');
+end;
+
 function Location(const AReply: INyxPascalCompletionResult): INyxOwnedPascalCompletionResult;
 begin
   Check(Supports(AReply, INyxOwnedPascalCompletionResult, Result), 'The ready row retains its physical definition source');
@@ -203,11 +208,15 @@ begin
   LReply := LProvider.Complete(RequestOf(LChanged));
   Ready(LReply, 'ValueChanged');
   Check((Reuse(LReply).ReusedModules = 2) and (Reuse(LReply).ConstructedModules = 1), 'Editing a used include invalidates its consuming root');
+  Check((Revision(LReply).RevisedModules = 1) and (Revision(LReply).RevisionRetainedTokens > 0),
+    'A used include edit rebuilds current origins and proves only unchanged leading parser input');
   Check(Location(LReply).DefinitionSource(0) <> Location(LCold).DefinitionSource(0), 'A changed include gets a new navigation owner');
   LChanged := LChanged.WithBuffer(TNyxPascalSourceRef.Main, CMain + ' // current root edit');
   LReply := LProvider.Complete(RequestOf(LChanged));
   Ready(LReply, 'ValueChanged');
   Check((Reuse(LReply).ReusedModules = 2) and (Reuse(LReply).ConstructedModules = 1), 'Editing the main root leaves unrelated analysis reusable');
+  Check((Revision(LReply).RevisedModules = 1) and (Revision(LReply).SharedSyntaxModules = 1),
+    'A physical-only root edit can share complete logical syntax with current source ownership');
   LExpanded := CaptureNyxPascalSources(NewNyxPascalProject(NyxPascalUnit('Consumer'), CMain)
     .WithUnit(NyxPascalUnit('Extra'), CExtra).WithUnit(NyxPascalUnit('Added'),
       'unit Added; interface implementation end.')

@@ -463,6 +463,10 @@ function RebindNyxPascalTranslation(const ASource: INyxPascalTranslation;
   This proves input correspondence, not unchanged semantic conditional answers. }
 function NyxPascalTranslationReboundFrom(const ACurrent,
   APrevious: INyxPascalTranslation): Boolean;
+{ True only for this unit's fully published root constructor, including an
+  explicitly unresolved result. Prefixes/live/alternate producers do not grant
+  current-input revision authority. This says nothing about semantic readiness. }
+function NyxPascalPublishedTranslation(const ASource: INyxPascalTranslation): Boolean;
 { Rebase one immutable construction-time freeze only through its exact full
   source's successful input-rebind link. Earlier semantic answers must still be
   revalidated in order before the caller uses this hypothetical prefix. Nil
@@ -5223,6 +5227,17 @@ begin
   LCandidate := TTranslation.CreateRebound(LSource, LFiles, ACancellation);
   Proof;
   Result := LCandidate;
+end;
+
+function NyxPascalPublishedTranslation(const ASource: INyxPascalTranslation): Boolean;
+var
+  LSource: TTranslation;
+begin
+  Result := False;
+
+  if not (ASource is TTranslation) then Exit;
+  LSource := ASource as TTranslation;
+  Result := LSource.FPublished and not LSource.FIsFrozen;
 end;
 
 function NyxPascalTranslationReboundFrom(const ACurrent,

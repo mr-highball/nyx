@@ -119,6 +119,15 @@ type
     ['{B54A2B1A-268A-4E4E-A220-44A70307E265}']
     function TypeMemoReceipt: TNyxPascalTypeMemoReceipt;
   end;
+  { Actual current-projection revision observation. Lexical continuity grants
+    only the proved leading token count; the parser separately decides whether
+    its checkpoint can resume. WholeSyntaxShared means all logical input and
+    diagnostics matched, not that physical origins or compiler meaning match. }
+  INyxPascalProjectionRevisionWork = interface(IInterface)
+    ['{D7131B46-6AF2-46CC-A1B9-9A1DA2DE72AD}']
+    function RevisionRetainedTokens: Integer;
+    function WholeSyntaxShared: Boolean;
+  end;
 
 { Freeze a declared view of known-active tokens under the existing grammar options.
   Unknown significant participation stops at a visible incomplete prefix. Physical
@@ -159,6 +168,14 @@ function RebindNyxPascalTranslatedSource(const APrevious: INyxPascalTranslatedSy
   Syntax/origins stay immutable; the prefix sees the current file catalog. }
 function RebindNyxPascalFrozenProjection(const APrevious: INyxPascalTranslatedSyntax;
   const AReboundSource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
+
+{ Build every origin/effective atom from a newly published current translation,
+  then prove lexical continuity with an owned previous projection. Only safe
+  parser checkpoints may reuse metadata; no previous source state or semantic
+  answer is carried forward. Different policies/foreign producers return nil. }
+function ReviseNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
 
 implementation
@@ -203,7 +220,8 @@ type
     RTL critical sections cover bounded copies/admission; browser turns are
     synchronous. Parsing, proof validation and cancellation run outside the lock. }
   TTranslatedSyntax = class(TInterfacedObject, INyxPascalTranslatedSyntax,
-    INyxPascalProjectionStorage, INyxPascalTypeMemoWork, IProjectionOwner)
+    INyxPascalProjectionStorage, INyxPascalTypeMemoWork, IProjectionOwner,
+    INyxPascalProjectionRevisionWork)
   private
     FSource: INyxPascalTranslation;
     FSyntax: INyxPascalSyntaxSnapshot;
@@ -212,6 +230,8 @@ type
     FSharedOrigins: Integer;
     FCopiedOrigins: Integer;
     FCount: Integer;
+    FRevisionRetained: Integer;
+    FWholeSyntaxShared: Boolean;
     FBlocked: Integer;
     FBytes: Integer;
     FOptions: TNyxPascalSyntaxOptions;
@@ -240,17 +260,21 @@ type
     procedure InheritOrigins(APrevious: TTranslatedSyntax;
       const ACancellation: INyxCancellationScope);
     procedure Build(const AOptions: TNyxPascalSyntaxOptions;
-      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
+      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax;
+      ARevision: TTranslatedSyntax = nil);
   public
     constructor Create(const ASource: INyxPascalTranslation;
       const AOptions: TNyxPascalSyntaxOptions;
-      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax = nil);
+      const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax = nil;
+      ARevision: TTranslatedSyntax = nil);
     { Only immutable syntax/origin storage is shared; the new source/catalog and
       its query-local source-free type memo have independent lifetimes. }
     constructor CreateRebound(APrevious: TTranslatedSyntax;
       const ASource: INyxPascalTranslation; const ACancellation: INyxCancellationScope);
     destructor Destroy; override;
     function TypeMemoReceipt: TNyxPascalTypeMemoReceipt;
+    function RevisionRetainedTokens: Integer;
+    function WholeSyntaxShared: Boolean;
     function Projection: TTranslatedSyntax;
     function Source: INyxPascalTranslation;
     function Syntax: INyxPascalSyntaxSnapshot;
@@ -307,7 +331,8 @@ end;
 
 constructor TTranslatedSyntax.Create(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalSyntaxOptions;
-  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
+  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax;
+  ARevision: TTranslatedSyntax);
 begin
   inherited Create;
   {$ifndef PAS2JS}
@@ -325,10 +350,12 @@ begin
   FOptions := AOptions;
   FSource := ASource;
   FBlocked := -1;
-  Build(AOptions, ACancellation, APrevious);
+  Build(AOptions, ACancellation, APrevious, ARevision);
   { Admission/cancellation remains outside the bounded memo mutex. }
   NyxPascalAdmitAnalysis(ACancellation, papTypeMemo);
-  InheritMemo(APrevious, ACancellation);
+
+  if ARevision <> nil then InheritMemo(ARevision, ACancellation)
+  else InheritMemo(APrevious, ACancellation);
 end;
 
 constructor TTranslatedSyntax.CreateRebound(APrevious: TTranslatedSyntax;
@@ -524,6 +551,12 @@ begin
   end;
 end;
 
+function TTranslatedSyntax.RevisionRetainedTokens: Integer;
+begin Result := FRevisionRetained; end;
+
+function TTranslatedSyntax.WholeSyntaxShared: Boolean;
+begin Result := FWholeSyntaxShared; end;
+
 function TProjectionPreparedInput.Count: Integer;
 begin
 
@@ -576,7 +609,8 @@ begin
 end;
 
 procedure TTranslatedSyntax.Build(const AOptions: TNyxPascalSyntaxOptions;
-  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax);
+  const ACancellation: INyxCancellationScope; APrevious: TTranslatedSyntax;
+  ARevision: TTranslatedSyntax);
 var
   LParts: TNyxStrings;
   LAt: Integer;
@@ -591,6 +625,7 @@ var
   LFirst: Integer;
   LOriginFirst: Integer;
   LLexical: INyxPascalLexicalSnapshot;
+  LRevision: INyxPascalLexicalSnapshot;
   LPrepared: TNyxPascalPreparedToken;
   LAllPrepared, LInherited, LUsedPrepared: Boolean;
   LInput: TProjectionPreparedInput;
@@ -750,7 +785,23 @@ begin
       end;
     end;
 
-    if APrevious <> nil then
+    if ARevision <> nil then
+    begin
+      LRevision := LinkNyxPascalLexicalRevision(ARevision.FSyntax.Lexical, LLexical, ACancellation);
+
+      if LRevision <> nil then
+      begin
+        FRevisionRetained := NyxPascalRetainedLexicalTokens(ARevision.FSyntax.Lexical, LRevision);
+        FWholeSyntaxShared := (FRevisionRetained = ARevision.FSyntax.Lexical.Count) and
+          (FRevisionRetained = LRevision.Count);
+
+        if FWholeSyntaxShared then FSyntax := ARevision.FSyntax
+        else FSyntax := AppendNyxPascalSyntax(ARevision.FSyntax, LRevision, AOptions, ACancellation);
+      end
+      else
+        FSyntax := NewNyxPascalSyntaxFromLexical(LLexical, AOptions, ACancellation);
+    end
+    else if APrevious <> nil then
     begin
       FSyntax := AppendNyxPascalSyntax(APrevious.FSyntax, LLexical, AOptions, ACancellation);
     end
@@ -1054,6 +1105,33 @@ begin
     (LLeft.MaximumCommentDepth = LRight.MaximumCommentDepth) and
     (LLeft.AllowNestedComments = LRight.AllowNestedComments) and
     (LLeft.AllowUnicodeIdentifiers = LRight.AllowUnicodeIdentifiers);
+end;
+
+function ReviseNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation; const AOptions: TNyxPascalSyntaxOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
+var
+  LPrevious, LCandidate: INyxPascalTranslatedSyntax;
+  LOwner: TTranslatedSyntax;
+begin
+  LPrevious := APrevious;
+  Result := nil;
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Current source revision cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  AOptions.Validate;
+
+  if not (LPrevious is TTranslatedSyntax) or not NyxPascalPublishedTranslation(ASource) then Exit;
+  LOwner := LPrevious as TTranslatedSyntax;
+
+  if not SameOptions(LOwner.FOptions, AOptions) then Exit;
+  LCandidate := TTranslatedSyntax.Create(ASource, AOptions, ACancellation, nil, LOwner);
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Current source revision publication cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  Result := LCandidate;
 end;
 
 function AppendNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;

@@ -327,6 +327,14 @@ Caller retention limits/disablement, actual work accounting, cancelled no-row
 replies and native directory synchronization remain explicit. Default editor
 installation and full incremental performance remain open; WORK.md owns checks.
 
+The [current-source revision layer](docs/pascal-projects.md#reusing-projections-after-source-edits)
+now rebuilds current projection origins after an edit and proves exact leading
+lexical input before the existing parser considers its safe checkpoint. Unchanged
+metadata can retain identity; changed/uncertain regions are parsed normally.
+Compiler state and conditional evaluation still come from current translation.
+Typed disablement and actual work/cancellation boundaries remain explicit. This
+does not establish incremental translation or complete edited-root performance.
+
 The [SDK module/dependency layer](docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now captures actual source files and loads indexed imports on demand, preserving
 Pascal lookup order and refusing false absence in incomplete interfaces. Native

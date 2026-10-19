@@ -71,6 +71,16 @@ function AppendNyxPascalLexical(const APrevious: INyxPascalLexicalSnapshot;
   const ATail: TNyxText;
   const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
 
+{ Link two completed owned fixed-policy arenas after proving their unchanged
+  leading token rows, exact spelling/coordinates/classification and diagnostic
+  boundary. Current rows remain authoritative and are leased without relexing.
+  This permits the existing parser to check its own safe checkpoint after edits;
+  it grants no compiler context, translation or semantic-answer reuse. Foreign
+  producers or differing policies return nil. Failure publishes no candidate. }
+function LinkNyxPascalLexicalRevision(const APrevious,
+  ACurrent: INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
+
 { Sealed lexical continuity for parser construction. Returns the unchanged
   leading token count for an owned direct predecessor/self, -1 otherwise.
   An alternate implementation's public work counters grant no authority. }
@@ -157,6 +167,8 @@ type
       const ACancellation: INyxCancellationScope);
     constructor CreateAppend(const APrevious: INyxPascalLexicalSnapshot;
       const ABase: IAppendArena; const ATail: TNyxText;
+      const ACancellation: INyxCancellationScope);
+    constructor CreateLinked(APrevious, ACurrent: TAppendLexical;
       const ACancellation: INyxCancellationScope);
     constructor CreatePrepared(const APrevious: INyxPascalLexicalSnapshot;
       const ABase: IAppendArena; const AEnd: TNyxPascalToken;
@@ -440,6 +452,117 @@ begin
   FScalars := LPrefix.Value.Span.Start + LScan.Scalars;
   FLexed := LScan.Tokens;
   SetLength(FDiagnostics, FDiagnosticCount);
+end;
+
+constructor TAppendLexical.CreateLinked(APrevious, ACurrent: TAppendLexical;
+  const ACancellation: INyxCancellationScope);
+var
+  LAt, LUnit, LLimit, LDiagnostics, LCutoff: Integer;
+  LOld, LNew: TAppendRow;
+  LOldDiagnostic, LNewDiagnostic: TNyxPascalLexicalDiagnostic;
+  LEqual, LHasOld, LHasNew: Boolean;
+
+  procedure Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer = 1);
+  begin
+    CheckCancellation(ACancellation);
+    NyxPascalAdmitAnalysis(ACancellation, APhase, AUnits);
+  end;
+begin
+  inherited Create;
+  Admit(papSourceProof);
+  FIdentity := TInterfacedObject.Create;
+  FPrevious := APrevious.FIdentity;
+  FOptions := ACurrent.FOptions;
+  FCount := ACurrent.FCount;
+  FScalars := ACurrent.FScalars;
+  FStorage := ACurrent.FStorage;
+  FBytes := ACurrent.FBytes;
+  LLimit := APrevious.FCount;
+
+  if ACurrent.FCount < LLimit then LLimit := ACurrent.FCount;
+  for LAt := 0 to LLimit - 1 do
+  begin
+    Admit(papLexicalRow, 2);
+    LOld := APrevious.Row(LAt);
+    LNew := ACurrent.Row(LAt);
+    LEqual := (LOld.ByteStart = LNew.ByteStart) and (LOld.StorageStart = LNew.StorageStart) and
+      (LOld.Value.Span.Start = LNew.Value.Span.Start) and
+      (LOld.Value.Span.Length = LNew.Value.Span.Length) and
+      (LOld.Value.Kind = LNew.Value.Kind) and (LOld.Value.Word = LNew.Value.Word) and
+      (LOld.Value.Symbol = LNew.Value.Symbol) and (LOld.Value.NumberBase = LNew.Value.NumberBase) and
+      (LOld.Value.Line = LNew.Value.Line) and (LOld.Value.Column = LNew.Value.Column) and
+      (LOld.Value.Complete = LNew.Value.Complete) and (LOld.Value.Escaped = LNew.Value.Escaped) and
+      (LOld.Value.RealNumber = LNew.Value.RealNumber) and (LOld.Value.Region = LNew.Value.Region) and
+      (Length(LOld.Spelling) = Length(LNew.Spelling));
+
+    if not LEqual then Break;
+    for LUnit := 1 to Length(LOld.Spelling) do
+    begin
+      Admit(papSourceProof);
+
+      if LOld.Spelling[LUnit] <> LNew.Spelling[LUnit] then
+      begin
+        LEqual := False;
+        Break;
+      end;
+    end;
+
+    if not LEqual then Break;
+    Inc(FRetained);
+  end;
+  { A changed diagnostic cannot validate a parser prefix at/after its origin,
+    even if token payloads happen to agree. Matching earlier diagnostics remain
+    exact; tail recovery can still preserve rows strictly before the boundary. }
+  LCutoff := High(Integer);
+  LDiagnostics := APrevious.FDiagnosticCount;
+
+  if ACurrent.FDiagnosticCount > LDiagnostics then LDiagnostics := ACurrent.FDiagnosticCount;
+  for LAt := 0 to LDiagnostics - 1 do
+  begin
+    LHasOld := LAt < APrevious.FDiagnosticCount;
+    LHasNew := LAt < ACurrent.FDiagnosticCount;
+
+    if LHasOld then
+    begin
+      Admit(papDiagnosticRow);
+      LOldDiagnostic := APrevious.FDiagnostics[LAt];
+    end;
+
+    if LHasNew then
+    begin
+      Admit(papDiagnosticRow);
+      LNewDiagnostic := ACurrent.FDiagnostics[LAt];
+    end;
+    LEqual := LHasOld and LHasNew;
+
+    if LEqual then
+      LEqual := (LOldDiagnostic.Issue = LNewDiagnostic.Issue) and
+        (LOldDiagnostic.Span.Start = LNewDiagnostic.Span.Start) and
+        (LOldDiagnostic.Span.Length = LNewDiagnostic.Span.Length);
+
+    if LEqual then Continue;
+
+    if LHasOld and (LOldDiagnostic.Span.Start < LCutoff) then LCutoff := LOldDiagnostic.Span.Start;
+
+    if LHasNew and (LNewDiagnostic.Span.Start < LCutoff) then LCutoff := LNewDiagnostic.Span.Start;
+  end;
+  while FRetained > 0 do
+  begin
+    Admit(papLexicalRow);
+    LOld := APrevious.Row(FRetained - 1);
+
+    if (LOld.Value.Span.Start < LCutoff) and (LOld.Value.Span.Finish <= LCutoff) then Break;
+    Dec(FRetained);
+  end;
+  { These are current completed rows, not a chain of lexical snapshot owners.
+    Linking performs no scan and allocates no token rows; parser continuity is
+    separately limited to FRetained's checked direct-predecessor prefix. }
+  Admit(papLexicalRow);
+  FBlocks := ACurrent.FBlocks;
+  Admit(papDiagnosticRow);
+  FDiagnostics := ACurrent.FDiagnostics;
+  FDiagnosticCount := ACurrent.FDiagnosticCount;
+  FShared := FCount;
 end;
 
 constructor TAppendLexical.CreatePrepared(const APrevious: INyxPascalLexicalSnapshot;
@@ -867,10 +990,44 @@ var
 begin
   Result := -1;
 
+  if not (APrevious is TAppendLexical) or not (ACurrent is TAppendLexical) then Exit;
+
   if Supports(ACurrent, IAppendArena, LCurrent) then
   begin
     Result := LCurrent.RetainedFrom(APrevious);
   end;
+end;
+
+function LinkNyxPascalLexicalRevision(const APrevious,
+  ACurrent: INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope): INyxPascalLexicalSnapshot;
+var
+  LPriorOwner, LCurrentOwner, LCandidate: INyxPascalLexicalSnapshot;
+  LPrevious, LCurrent: TAppendLexical;
+  LBefore, LAfter: TNyxPascalLexicalOptions;
+begin
+  LPriorOwner := APrevious;
+  LCurrentOwner := ACurrent;
+  Result := nil;
+  CheckCancellation(ACancellation);
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+
+  if not (LPriorOwner is TAppendLexical) or not (LCurrentOwner is TAppendLexical) then Exit;
+  LPrevious := LPriorOwner as TAppendLexical;
+  LCurrent := LCurrentOwner as TAppendLexical;
+  LBefore := LPrevious.FOptions;
+  LAfter := LCurrent.FOptions;
+
+  if (LBefore.AllowNestedComments <> LAfter.AllowNestedComments) or
+    (LBefore.AllowUnicodeIdentifiers <> LAfter.AllowUnicodeIdentifiers) or
+    (LBefore.MaximumSourceBytes <> LAfter.MaximumSourceBytes) or
+    (LBefore.MaximumTokens <> LAfter.MaximumTokens) or
+    (LBefore.MaximumDiagnostics <> LAfter.MaximumDiagnostics) or
+    (LBefore.MaximumCommentDepth <> LAfter.MaximumCommentDepth) then Exit;
+  LCandidate := TAppendLexical.CreateLinked(LPrevious, LCurrent, ACancellation);
+  CheckCancellation(ACancellation);
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  Result := LCandidate;
 end;
 
 function AppendNyxPascalLexical(const APrevious: INyxPascalLexicalSnapshot;
