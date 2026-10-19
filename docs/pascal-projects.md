@@ -3593,6 +3593,43 @@ include a whole compiled handwritten unit, exact detached completion/navigation,
 exhaustive smaller allowances and joined concurrent queries. The browser consumer
 compiles only; full language coverage and editor adoption remain open in WORK.md.
 
+### Implicit generic call contracts
+
+Captured FPC 3.3.1 Delphi/DelphiUnicode calls can deduce routine arguments from
+declared value types when `ppfImplicitFunctionSpecialization` is known true at
+both the caller and declaration. For example, `KeepValue(Badge).Value` follows
+the badge's type, while `TakeValue(Box)` can recover it from the exact named
+`TBox<TBadge>` frame. Named generic callback aliases use the same correspondence
+without invoking a callback. Ordinary completion and navigation consume this
+expression result directly.
+
+The source switch `{$modeswitch implicitfunctionspecialization+}` must be
+effective in the qualified module header. The scanner's immediate lookahead
+position remains part of that header window; later switches are ignored while
+their original text remains captured. Effective macro tokens and repeated
+include occurrences retain that boundary. Header proof leases existing bounded
+lexical prefixes and admits their reads through the normal work owner. It adds
+no persistent phase cache. PUSH/POP does not restore this module switch; mode
+reset and absent observations retain unknown defaults.
+
+Routine signatures supply positional parameters and trailing defaults. A formal
+belongs to its exact declaration, and every supplied occurrence must agree.
+Named generic frames require the same prototype/owners and recursively matching
+arguments. Unapplied signatures can resolve external names only in their owning
+type header; this permission does not extend into a generic body. All considered
+result contracts must agree, independently of runtime overload selection.
+
+Closed literal arguments may occupy ordinary slots but supply no guessed literal
+type. A required literal type, conflicting formal values, missing arguments,
+unmodeled expressions, varargs, incompatible frames or uncertain policy refuse
+atomically. This path does not infer conversions, inheritance-based matches,
+anonymous structural equivalence or result-context arguments, evaluate defaults,
+or establish compiler-call eligibility. Existing work/candidate/depth limits,
+current-world identity and cancellation remain unchanged. The native fixture
+executes twelve legal calls to 42; semantic reads leave that count unchanged.
+Browser consumers compile only; full inference/language/editor/adoption/parity
+qualification remains open in WORK.md.
+
 ### Source-owned routine signatures
 
 The optional `INyxPascalRoutineQueries.RoutineSignature` accepts an exact bound

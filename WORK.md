@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned routine signatures — 2026-10-19
+## Current integration: Implicit generic argument correspondence — 2026-10-19
+
+The previous goal turn makes authoritative source/qualification/remote progress
+in 8fc153f. Original NS-4_studio-authoring_01 criterion two remains open. This
+turn follows the declared-signature prerequisite into source-qualified implicit
+specialization and actual argument correspondence through the existing generic
+environment and ordinary expression/completion paths.
+
+The native whole handwritten unit executes twelve legal implicit applications
+to 42. Compiler-only controls independently accept header enablement and the
+immediate INTERFACE lookahead position, reject implicit calls after header
+PUSH/OFF/POP, and accept a late OFF only with the expected ignored-global-switch
+warning. The initial unit with two misplaced switches, its exact source and
+warning log remain retained. These are compiler controls, not added primitive
+probes or SDK captures; final exact-source qualification is still pending.
+
+An appended typed feature preserves unknown defaults, capture/identity and
+source conditional participation. The qualified header proof follows effective
+tokens through the existing lexical prefix owners, accounting for the first
+lookahead token and retaining ignored directive text. It stores no mutable phase
+cache. The first leading-policy failure came from reading an occurrence before
+its completed lexical view existed; bounded per-call prefix leases repair that
+ownership mismatch. The initial failed test's immediate Halt also left its live
+exception/global input allocated; the harness now returns normally with ExitCode
+and subsequent retained failures have clean heaps.
+
+Current focused source-policy/inference tests pass 679 with a clean heap. Named
+generic results, callback aliases, static/instance methods, constraints, optional
+arguments, repeated formals and common result alternatives flow through ordinary
+completion. Inference first fit is 461; module-header proof first fit is 52,
+with every smaller allowance refusing atomically. Sixty-four concurrent readers
+join and application invocation count remains twelve. Includes/macros retain the
+actual header boundary and retired work leaves no execution lease in results.
+
+The constructed-result failure was a signature lookup guard: it admitted the
+routine's formal T but refused an external type name in that same unapplied
+header. Exact type-position lookup now follows the owning routine/parameter's
+header span; a separate body query still requires the original missing-frame
+refusal. The original failed call/chain and explicit-call control stay retained.
+One test-site
+failure was an unmapped synthetic projection gap and is retained; current sites
+map the following physical semicolon, matching existing expression consumers.
+New deduction only admits matching formal identities and exact named generic
+frames. Literal types, conversions, inheritance inference, anonymous structural
+equivalence and compiler overload admission must not be guessed. All relevant
+contracts must agree; no callback or application body may execute during reads.
+
+Preserve cancellation/quotas/probe counts and exact source/context identity. No
+original criterion/task/credit/DONE/full goal closes. No host/config retry, SDK
+capture, protected mutation, cleanup/restart, new MCP tool/schema/rollout or
+sub-agents. LAN remains offline; native Nyx tools remain absent. Preserve the
+thirteen concurrent planning files and historical preservation failures. Ignored
+.local/routine-inference-paths-private.json owns current packet/return state;
+the feature remains pending final-source wider qualification and is not pushed.
+
+Frozen-source local qualification now passes: 127 main compiler logs contain
+zero owned warnings/329 upstream; 68 native logs have clean heaps and 58 browser
+consumers compile only. Both Studios, backend and worker compile as applicable.
+The four terminal compiler controls use the exact final handwritten unit: two
+clean accepts, one deliberate eleven-call refusal after header PUSH/OFF/POP,
+and one accept with its single deliberate ignored-switch warning. That warning
+remains independent of product warning debt. Earlier failed/preparation inputs
+and logs remain retained; no fixture/probe/quota was weakened to gain success.
+
+The unchanged original RTL consumer passes 56 at the original 2M view/4M
+aggregate/64-round limits. Actual System resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one. Neither has a pending query. Exact indexed
+Free/FreeInstance include navigation and detached insertion remain ready. The
+five initial queries, one Word job, symbol three/eight and six/eight ordered
+Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact. The corpus
+passes 571 checks over 504 files and 2,413,238 lossless tokens.
+
+Five final Pascal inputs stay frozen throughout the complete batch. All 718
+maintained sources/713 unrelated, 97 RTL/24 compiler inputs, four prior inference
+and three new read-only boundary inspections, 156 unit packets/48 includes,
+349 frozen artifacts, nine contexts, five current-start protected files and
+thirteen concurrent planning files retain their required identities. Every
+reader is terminal/joined. Historical global-configuration preservation failure
+remains retained; the full preservation gate stays false while current-start
+protected bytes are exact. Prior allocation measurements stay historical. LAN
+remains offline; native Nyx tools remain absent. The ignored packet owns final
+qualification and source/remote identity.
+
+Stop this inference/header/control/fixture/compiler/capture batch after the
+checkpoint. Next reassess value-expression typing, including source-owned
+literal identity and operator/reference rules, through existing lexical/type/
+constant/context/binding owners. Do not guess target widths, literal defaults,
+conversions or overload eligibility. Full canonical language/type/incremental/
+editor/input/quality/parity/adoption/delivery and original criterion/task/credit/
+DONE/full goal remain open. No new tool/schema, installed editor or host/config
+change follows from this local declared-contract capability.
+
+## Previous integration: Source-owned routine signatures — 2026-10-19
 
 The preceding goal turn makes authoritative source/qualification/remote progress
 in 18bc702. Reassessment follows routine argument inference and signature identity

@@ -871,6 +871,9 @@ type
       const ASpan: TNyxPascalSpan; const AMessage: TNyxText);
     procedure SaveState;
     function CompilerState(AIndex: Integer): ITranslatedCompilerState;
+    { Reconstruct the compiler-qualified global header boundary from admitted
+      effective tokens. No mutable phase/cache survives a prefix or include. }
+    function GlobalModeHeader: TNyxPascalKnowledge;
     procedure AddToken(AOccurrence, AToken: Integer; AExpansion: Integer = -1;
       AExpansionToken: Integer = -1);
     procedure Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
@@ -2605,7 +2608,8 @@ function FeatureNamed(const AName: TNyxText; out AFeature: TNyxPascalLanguageFea
 const
   CNames: array[TNyxPascalLanguageFeature] of TNyxText =
     ('advancedrecords', 'nestedprocvars', 'anonymousfunctions', 'functionreferences',
-      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '', 'class', 'cvar');
+      'typehelpers', 'nestedcomments', 'scopedenums', 'unicodestrings', 'out', '', 'class', 'cvar',
+      'implicitfunctionspecialization');
 var
   LFeature: TNyxPascalLanguageFeature;
 begin
@@ -3045,6 +3049,111 @@ begin
   Result.Validate;
 end;
 
+function TTranslation.GlobalModeHeader: TNyxPascalKnowledge;
+var
+  LAt: Integer;
+  LRow: TNyxPascalTranslatedToken;
+  LToken: TNyxPascalToken;
+  LCode, LInterface, LSemicolon: TNyxPascalKnowledge;
+  LHasInterface, LHasSemicolon: Boolean;
+  LWindows: array of INyxPascalLexicalPrefix;
+
+  function BeforeNextCode(AValue: TNyxPascalKnowledge): TNyxPascalKnowledge;
+  begin
+    Result := ppkUnknown;
+
+    if AValue = ppkFalse then Result := ppkTrue
+    else if AValue = ppkTrue then Result := ppkFalse;
+  end;
+begin
+  LCode := ppkFalse;
+  LInterface := ppkUnknown;
+  LSemicolon := ppkUnknown;
+  LHasInterface := False;
+  LHasSemicolon := False;
+  { The current directive was just admitted by the lexical observer. Its
+    occurrence is still under construction, so public completed-file accessors
+    cannot read it. Lease the existing bounded prefix capture once per visited
+    occurrence; skip this directive's own row when proving its pre-state. }
+  NyxPascalAdmitAnalysis(FCancellation, papFrozenRow, FOccurrenceCount);
+  SetLength(LWindows, FOccurrenceCount);
+  for LAt := FTokenCount - 2 downto 0 do
+  begin
+    CheckCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+    LRow := Token(LAt);
+
+    if LRow.Activity = ppkFalse then Continue;
+    { Prepared emission rows intentionally omit trivia; their default token
+      cannot classify a directive/header boundary. Read the actual effective
+      token, preserving macro expansion and occurrence ownership. }
+    if LRow.Expanded then
+      LToken := Expansion(LRow.Expansion).Token(LRow.ExpansionToken)
+    else
+    begin
+
+      if FCaptures[LRow.Occurrence] <> nil then
+      begin
+
+        if LWindows[LRow.Occurrence] = nil then
+          LWindows[LRow.Occurrence] := FCaptures[LRow.Occurrence].Freeze;
+        LToken := LWindows[LRow.Occurrence].Token(LRow.PhysicalToken);
+      end
+      else
+      begin
+
+        if FLexical[LRow.Occurrence] = nil then
+          raise ENyxPascalContext.Create('Module header proof needs its exact physical prefix');
+        LToken := FLexical[LRow.Occurrence].Token(LRow.PhysicalToken);
+      end;
+    end;
+
+    if LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective, ptkEOF] then Continue;
+
+    if (LToken.Kind = ptkWord) and not LToken.Escaped then
+    begin
+
+      if LToken.Word in [pkwUnit, pkwProgram, pkwLibrary, pkwPackage] then
+      begin
+
+        if LRow.Activity <> ppkTrue then Exit(ppkUnknown);
+
+        if LToken.Word = pkwUnit then
+        begin
+
+          if LHasInterface then Exit(LInterface);
+          Exit(ppkTrue);
+        end;
+
+        if LHasSemicolon then Exit(LSemicolon);
+        Exit(ppkTrue);
+      end;
+
+      if LToken.Word = pkwInterface then
+      begin
+        LHasInterface := True;
+        LInterface := ppkUnknown;
+
+        if LRow.Activity = ppkTrue then LInterface := BeforeNextCode(LCode);
+      end;
+    end;
+
+    if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoSemicolon) then
+    begin
+      LHasSemicolon := True;
+      LSemicolon := ppkUnknown;
+
+      if LRow.Activity = ppkTrue then LSemicolon := BeforeNextCode(LCode);
+    end;
+
+    if LRow.Activity = ppkTrue then LCode := ppkTrue
+    else if LCode = ppkFalse then LCode := ppkUnknown;
+  end;
+  Result := ppkUnknown;
+
+  if LCode = ppkFalse then Result := ppkTrue;
+end;
+
 procedure TTranslation.Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
@@ -3056,6 +3165,7 @@ var
   LFrame: TConditionalFrame;
   LMode: TNyxPascalLanguageMode;
   LFeature: TNyxPascalLanguageFeature;
+  LGlobal: TNyxPascalKnowledge;
   LOffset: Integer;
   LSeparator: Integer;
   LDefinition: TNyxPascalMacroDefinition;
@@ -4002,6 +4112,31 @@ begin
       if FActive = ppkUnknown then
       begin
         LCondition := ppkUnknown;
+      end;
+
+      if LFeature = ppfImplicitFunctionSpecialization then
+      begin
+        { The inspected scanner accepts module switches only through the first
+          lookahead token after the module header. Later directives are ignored.
+          A type's INTERFACE keyword is not the earlier unit boundary; the
+          reconstruction retains the earliest boundary before reaching UNIT. }
+        if (FContext.Family <> ppcFPC) or (FContext.Version.FullNumber <> 30301) then
+          LGlobal := ppkUnknown
+        else LGlobal := GlobalModeHeader;
+
+        if LGlobal = ppkFalse then
+        begin
+          SaveState;
+          Exit;
+        end;
+
+        if LGlobal = ppkUnknown then
+        begin
+          Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+            'Implicit specialization needs a qualified module header boundary');
+          UnknownEffect;
+          Exit;
+        end;
       end;
 
       if (LFeature = ppfNestedComments) and

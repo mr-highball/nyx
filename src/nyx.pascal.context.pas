@@ -203,10 +203,14 @@ type
     ppmDelphiUnicode, ppmTP, ppmMacPas, ppmISO, ppmExtendedPascal);
   { Grammar-sensitive switches with independently known on/off values. This list
     does not pretend to enumerate every FPC switch; unknown directives diagnose. }
+  { Implicit specialization remains unknown until supplied by an exact capture
+    or a qualified effective source directive; compiler capability/version alone
+    does not enable it. Its module lifetime is separate from local settings. }
   TNyxPascalLanguageFeature = (ppfAdvancedRecords, ppfNestedProcVars,
     ppfAnonymousFunctions, ppfFunctionReferences, ppfTypeHelpers,
     ppfNestedComments, ppfScopedEnums, ppfUnicodeStrings, ppfOutParameters,
-    ppfReplacementMacros, ppfClasses, ppfCVariables);
+    ppfReplacementMacros, ppfClasses, ppfCVariables,
+    ppfImplicitFunctionSpecialization);
   { Symbolic record policy, not a computed ABI layout. Default and C retain
     target-dependent intent; an unknown policy never supplies guessed offsets. }
   TNyxPascalRecordAlignment = (praUnknown, praDefault, praC,
