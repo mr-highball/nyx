@@ -1180,6 +1180,8 @@ begin
 end;
 
 constructor TCompilerCapture.Create(const AContext, ADefaults: INyxPascalCompilerContext);
+var
+  LStorage: INyxPascalContextStorage;
 begin
   inherited Create;
 
@@ -1195,6 +1197,11 @@ begin
     (NyxPascalWarnings(ADefaults).WarningCount <> 0) then
   begin
     raise ENyxPascalContext.Create('Compiler capture facts and compatibility anchor disagree');
+  end;
+
+  if Supports(ADefaults, INyxPascalContextStorage, LStorage) and (LStorage.StorageCount <> 0) then
+  begin
+    raise ENyxPascalContext.Create('Observed defaults cannot contain structural measurement replies');
   end;
   FContext := AContext;
   FDefaults := ADefaults;
@@ -1226,6 +1233,9 @@ var
   LOldSize: TNyxPascalSizeFact;
   LNewSize: TNyxPascalSizeFact;
   LFeature: TNyxPascalLanguageFeature;
+  LStorage: INyxPascalContextStorage;
+  LStorageKey: TNyxPascalStorageKey;
+  LOldStorage, LNewStorage: TNyxPascalStorageFact;
 begin
 
   if ANext = nil then
@@ -1315,6 +1325,24 @@ begin
         raise ENyxPascalContext.Create('Compiler cohorts disagree about a captured size');
       end;
       LMerged := NyxPascalWithCapturedSize(LMerged, LSizeName, LNewSize);
+    end;
+  end;
+
+  if Supports(LNext, INyxPascalContextStorage, LStorage) then
+  begin
+    for LAt := 0 to LStorage.StorageCount - 1 do
+    begin
+      LStorageKey := LStorage.StorageKey(LAt);
+      LNewStorage := LStorage.StorageValueAt(LAt);
+
+      if LNewStorage.State = psfsUnknown then Continue;
+      LOldStorage := NyxPascalCapturedStorage(LMerged, LStorageKey);
+
+      if (LOldStorage.State <> psfsUnknown) and not LOldStorage.SameFact(LNewStorage) then
+      begin
+        raise ENyxPascalContext.Create('Compiler cohorts disagree about structural evidence');
+      end;
+      LMerged := NyxPascalWithCapturedStorage(LMerged, LStorageKey, LNewStorage);
     end;
   end;
   Result := TCompilerCapture.Create(LMerged, FDefaults);

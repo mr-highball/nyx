@@ -121,6 +121,10 @@ mode changes retain authored record packing, including a pending request before
 MODE; unknown initial packing remains unknown. A pending shape grants
 no measured ABI or type identity: distinct layout evidence, native fulfillment
 and the existing VarHeader source gap remain open.
+Typed structural size receipts now live separately from primitive-name facts.
+Source expressions and ordered conditions consume exact matching declaration/
+context receipts; native record/array fixtures qualify the consumption path.
+Automatic configured-compiler layout fulfillment remains in progress.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

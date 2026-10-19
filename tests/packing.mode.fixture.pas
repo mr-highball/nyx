@@ -40,10 +40,18 @@ type
     Lead: Byte;
     Value: Longint;
   end;
+  { A static array retains the element record's declared storage and the full
+    signed index extent. Its actual size remains owned by the native compiler. }
+  TInheritedPackingArray = array[-2..2] of TInheritedPacking;
 
 { Native proof uses actual sizeof for both independently declared types. It
   establishes this mode transition, not an initial target packing/default ABI. }
 function PackingPreserved: Boolean;
+{ Independent native sizeof result for the exact handwritten declaration. This
+  is fixture evidence only; no production default or fixed byte count is added. }
+function PackingMeasuredBytes: Integer;
+{ Actual native array sizeof, independently of analyzer range/record arithmetic. }
+function PackingArrayMeasuredBytes: Integer;
 
 implementation
 
@@ -54,6 +62,16 @@ implementation
 function PackingPreserved: Boolean;
 begin
   Result := SizeOf(TInheritedPacking) = SizeOf(TExplicitPacking);
+end;
+
+function PackingMeasuredBytes: Integer;
+begin
+  Result := SizeOf(TInheritedPacking);
+end;
+
+function PackingArrayMeasuredBytes: Integer;
+begin
+  Result := SizeOf(TInheritedPackingArray);
 end;
 
 end.

@@ -2731,6 +2731,46 @@ these boundaries and both conditional paths; browser consumers compile only.
 Configured-compiler layout evidence, fulfillment and source truth remain in
 progress under the same original authoring requirement.
 
+### Structural size receipts
+
+`INyxPascalContextStorage` holds typed `TNyxPascalStorageKey` and
+`TNyxPascalStorageFact` values separately from named primitive sizes. Facts are
+Unknown, Known or OutOfRange; a known zero-byte empty record is valid. Captures
+retain at most 64 ordered receipts, one MiB per key and four MiB of key text in
+total. Invalid/duplicate/excess alternate captures refuse atomically. Values
+contain no interfaces, source worlds, parent contexts or execution callbacks.
+
+A pending `INyxPascalConstantStorageIdentity` supplies the complete key after
+actual binding and supported shape capture. Its eager, length-framed ASCII data
+retains the storage shape, ordered per-node compiler facts, primitive origin and
+reference, policies and warning/alignment/optimizer history, including independent
+bootstrap metadata. Stored structural answers are excluded from key construction
+to avoid recursive identity changes. Key construction, validation and candidate
+comparison enter the existing constant/aggregate budgets. Published getters do
+no deferred work through a retired execution scope.
+
+Source SizeOf consumes an exact receipt from its declaration's module/root
+context. Missing initial packing, unknown compiler environments, uncertain
+CODEALIGN/optimizer activity and unsupported source still refuse. Different
+settings do not reuse an earlier receipt. Context capture/equality and native
+cohort merging preserve structural data and reject conflicting observations;
+module/root conflicts refuse in either construction order. An observed-default
+anchor cannot contain structural replies.
+
+Both constant expressions and legacy conditions consume the source-validated
+value. The optional `INyxPascalConditionByteSizes` capability avoids fabricating
+a single primitive probe mode/H for a record with distinct per-node contexts.
+Existing legacy providers retain their original interface. A successful record
+value exposes no pending shape that could suppress a later primitive request.
+
+These are explicit captured-data APIs. Their constructors and merge checks do
+not establish compiler-execution provenance. Native qualification consumes actual
+compiler sizes of the same complete handwritten record/array source; portable
+fixtures separately qualify controlled data. Automatic configured-native layout
+measurement/requirement fulfillment and compiler-initial environment authority
+remain required. No target ABI, field offset, nominal identity or full RTL meaning
+is inferred from a structural size receipt.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

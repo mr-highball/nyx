@@ -48,6 +48,7 @@ type
   public
     Base: INyxFPCCompilerCapture;
     Value: INyxPascalCompilerContext;
+    Defaults: INyxPascalCompilerContext;
     function Context: INyxPascalCompilerContext;
     function ObservedDefaults: INyxPascalCompilerContext;
     function Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
@@ -78,6 +79,8 @@ end;
 
 function TCaptureOverride.ObservedDefaults: INyxPascalCompilerContext;
 begin
+
+  if Defaults <> nil then Exit(Defaults);
   Result := Base.ObservedDefaults;
 end;
 
@@ -317,6 +320,8 @@ var
   LNext: INyxFPCCompilerCapture;
   LMerged: INyxFPCCompilerCapture;
   LWithSize: INyxFPCCompilerCapture;
+  LWithStorage: INyxFPCCompilerCapture;
+  LStorageKey: TNyxPascalStorageKey;
   LOverride: TCaptureOverride;
   LForeign: INyxFPCCompilerCapture;
   LFirstProbe: INyxPascalCompilerProbe;
@@ -443,6 +448,38 @@ begin
   Check(LRejected and
     (NyxPascalCapturedSize(LWithSize.Context, NyxPascalSizeReference('Measured')).Bytes = 1),
     'Conflicting size evidence refuses atomically');
+  { Foreign metadata checks qualify copy/merge only, never a new native compiler
+    execution receipt. Structural keys cannot enter the primitive-name vector. }
+  LStorageKey := NyxPascalStorageKey('nyx.storage.1|cohort');
+  LOverride.Value := NyxPascalWithCapturedStorage(LMerged.Context, LStorageKey,
+    NyxPascalStorageFact(psfsKnown, 7));
+  LWithStorage := LMerged.Merge(LForeign);
+  Check((NyxPascalCapturedStorage(LWithStorage.Context, LStorageKey).Bytes = 7) and
+    (NyxPascalCapturedStorage(LMerged.Context, LStorageKey).State = psfsUnknown),
+    'Structural cohort evidence merges without changing the previous owner');
+  Check(FreezeNyxFPCCompilerCapture(LWithStorage).Context.SameFacts(LWithStorage.Context),
+    'Freezing a complete capture preserves detached structural receipts');
+  LOverride.Value := NyxPascalWithCapturedStorage(LMerged.Context, LStorageKey,
+    NyxPascalStorageFact(psfsKnown, 8));
+  LRejected := False;
+  try
+    LWithStorage := LWithStorage.Merge(LForeign);
+  except
+    on ENyxPascalContext do LRejected := True;
+  end;
+  Check(LRejected and (NyxPascalCapturedStorage(LWithStorage.Context, LStorageKey).Bytes = 7),
+    'A conflicting structural observation refuses atomically');
+  LOverride.Value := LMerged.Context;
+  LOverride.Defaults := NyxPascalWithCapturedStorage(LMerged.ObservedDefaults, LStorageKey,
+    NyxPascalStorageFact(psfsKnown, 7));
+  LRejected := False;
+  try
+    LWithStorage := LWithStorage.Merge(LForeign);
+  except
+    on ENyxPascalContext do LRejected := True;
+  end;
+  Check(LRejected, 'A structural reply cannot masquerade as an observed-default anchor');
+  LOverride.Defaults := nil;
   LOverride.Value := NyxPascalWithWarning(LMerged.Context, NyxPascalWarningNumber(42), pwaOff);
   LRejected := False;
   try

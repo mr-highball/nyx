@@ -38,6 +38,11 @@ const
   { Independent quota for authored optimization requests; this bounds analyzer
     storage without asserting a compiler's accepted source size or pass set. }
   NyxPascalOptimizationRuleLimit = 2048;
+  { Structural measurements have their own bounded namespace. A key is data,
+    never a Pascal identifier or permission to compile caller-supplied source. }
+  NyxPascalStorageFactLimit = 64;
+  NyxPascalStorageKeyLimit = 1048576;
+  NyxPascalStorageKeysLimit = 4194304;
 
 type
   { Invalid captured facts are caller contract failures, never compiler errors.
@@ -325,6 +330,33 @@ type
     property ProbeMode: TNyxPascalLanguageMode read FMode;
     property ProbeLongStrings: TNyxPascalKnowledge read FLongStrings;
   end;
+  { Exact structural/context receipt, separate from named primitive queries.
+    Its bounded printable ASCII value contains no executable-source authority.
+    Default/empty is invalid; construction validates before publication. }
+  TNyxPascalStorageKey = record
+  private
+    FValue: TNyxText;
+  public
+    procedure Validate;
+    function SameKey(const AOther: TNyxPascalStorageKey): Boolean;
+    property Value: TNyxText read FValue;
+  end;
+  { A complete bound shape cannot be absent like a pristine name. Unknown and
+    out-of-range remain distinct from a measured zero-byte empty record. }
+  TNyxPascalStorageFactState = (psfsUnknown, psfsKnown, psfsOutOfRange);
+  { Copied measurement only. Per-node environments belong to its separate key;
+    one fabricated global mode/H cannot stand in for those distinct settings.
+    No source/context/interface or earlier evidence owner is retained. }
+  TNyxPascalStorageFact = record
+  private
+    FState: TNyxPascalStorageFactState;
+    FBytes: Integer;
+  public
+    procedure Validate;
+    function Bytes: Integer;
+    function SameFact(const AOther: TNyxPascalStorageFact): Boolean;
+    property State: TNyxPascalStorageFactState read FState;
+  end;
   { Bounded compiler version, stored without target-dependent floating arithmetic.
     Minor/patch have two decimal digits, matching FPC_FULLVERSION's convention. }
   TNyxPascalCompilerVersion = record
@@ -402,6 +434,14 @@ type
     ['{98349E7C-C0ED-48DE-A518-427A04570C12}']
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+  end;
+  { Optional source-validated byte value for a conditional expression. It carries
+    no synthetic pristine name or single global probe mode/H. Providers validate
+    actual primitive or structural provenance before returning Known. Legacy
+    providers keep their original interface and measurement validation contract. }
+  INyxPascalConditionByteSizes = interface(IInterface)
+    ['{CC12ECAC-1959-4BD8-A232-192BE42BF470}']
+    function SizeOfBytes(const AName: TNyxPascalSizeReference): TNyxPascalStorageFact;
   end;
   { Immutable captured compiler facts. Missing symbols are unknown until the
     caller explicitly seals the entire define set. Short options/features have
@@ -509,6 +549,19 @@ type
     function WithSizeFact(const AName: TNyxPascalSizeReference;
       const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
   end;
+  { Optional structural evidence, independent of the primitive-name namespace.
+    Exact ordered values participate in capture/identity. Mode/local-setting
+    changes retain the evidence; applicability still requires the entire key.
+    Unknown effects revoke it. Alternate getters are frozen before publication. }
+  INyxPascalContextStorage = interface(IInterface)
+    ['{E7B10976-32B5-4CC8-872A-448E98CC9E02}']
+    function StorageCount: Integer;
+    function StorageKey(AIndex: Integer): TNyxPascalStorageKey;
+    function StorageValueAt(AIndex: Integer): TNyxPascalStorageFact;
+    function StorageFact(const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
+    function WithStorageFact(const AKey: TNyxPascalStorageKey;
+      const AValue: TNyxPascalStorageFact): INyxPascalCompilerContext;
+  end;
 
 type
   { Optional immutable compiler-root evidence. Source contexts may retain one
@@ -546,6 +599,19 @@ function NyxPascalCapturedSize(const AContext: INyxPascalCompilerContext;
   const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
 function NyxPascalWithCapturedSize(const AContext: INyxPascalCompilerContext;
   const AName: TNyxPascalSizeReference; const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+{ Validate detached receipt data. These constructors make no compiler/provenance
+  claim; an explicit host/caller must supply the actual matching measurement. }
+function NyxPascalStorageKey(const AValue: TNyxText): TNyxPascalStorageKey;
+function NyxPascalStorageFact(AState: TNyxPascalStorageFactState;
+  ABytes: Integer = 0): TNyxPascalStorageFact;
+{ An absent structural capability is Unknown, never a name-keyed fallback. }
+function NyxPascalCapturedStorage(const AContext: INyxPascalCompilerContext;
+  const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
+{ Atomically add/replace one exact structural measurement in a new context.
+  This is explicit captured data, not native fulfillment or compiler execution. }
+function NyxPascalWithCapturedStorage(const AContext: INyxPascalCompilerContext;
+  const AKey: TNyxPascalStorageKey;
+  const AValue: TNyxPascalStorageFact): INyxPascalCompilerContext;
 
 { Legacy contexts carry unknown policies. Alternate values are validated before
   capture; no default is borrowed from the analyzer's own build. }
@@ -650,6 +716,9 @@ var
   LTargetAlignments: INyxPascalContextCodeAlignments;
   LOptimizations: INyxPascalContextOptimizations;
   LTargetOptimizations: INyxPascalContextOptimizations;
+  LStorage: INyxPascalContextStorage;
+  LTargetStorage: INyxPascalContextStorage;
+  LStorageKey: TNyxPascalStorageKey;
 begin
 
   if AContext = nil then
@@ -732,6 +801,27 @@ begin
       end;
     end;
   end;
+  if Supports(AContext, INyxPascalContextStorage, LStorage) then
+  begin
+    LSizeCount := LStorage.StorageCount;
+
+    if (LSizeCount < 0) or (LSizeCount > NyxPascalStorageFactLimit) then
+    begin
+      raise ENyxPascalContext.Create('Structural evidence exceeds its bounded collection');
+    end;
+    for LAt := 0 to LSizeCount - 1 do
+    begin
+      LStorageKey := LStorage.StorageKey(LAt);
+      Supports(LCaptured, INyxPascalContextStorage, LTargetStorage);
+      LCaptured := LTargetStorage.WithStorageFact(LStorageKey, LStorage.StorageValueAt(LAt));
+      Supports(LCaptured, INyxPascalContextStorage, LTargetStorage);
+
+      if LTargetStorage.StorageCount <> LAt + 1 then
+      begin
+        raise ENyxPascalContext.Create('Captured structural evidence contains duplicate keys');
+      end;
+    end;
+  end;
   LBootstrap := NyxPascalBootstrapContext(AContext);
 
   if LBootstrap <> nil then
@@ -754,13 +844,19 @@ type
     Name: TNyxPascalSizeReference;
     Value: TNyxPascalSizeFact;
   end;
+  { Ordered value-only structural receipt. Managed key text is immutable; this
+    record contains no interface or reverse link to a source/measurement owner. }
+  TCapturedStorage = record
+    Key: TNyxPascalStorageKey;
+    Value: TNyxPascalStorageFact;
+  end;
   { Persistent context implementation. Its index/vectors are detached on every
     change; readers may share only a fully constructed immutable instance.
     Warning/alignment/optimizer requests own ordered values without producer/
     source back references. These requests survive mode changes through Clone. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
     INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
-    INyxPascalContextCodeAlignments, INyxPascalContextOptimizations)
+    INyxPascalContextCodeAlignments, INyxPascalContextOptimizations, INyxPascalContextStorage)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -775,6 +871,7 @@ type
     FCodeAlignments: array of TNyxPascalCodeAlignmentRule;
     FOptimizations: array of TNyxPascalOptimizationRule;
     FSizes: array of TCapturedSize;
+    FStorage: array of TCapturedStorage;
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
     function Clone: TCompilerContext;
@@ -824,6 +921,12 @@ type
     function SizeFact(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
     function WithSizeFact(const AName: TNyxPascalSizeReference;
       const AValue: TNyxPascalSizeFact): INyxPascalCompilerContext;
+    function StorageCount: Integer;
+    function StorageKey(AIndex: Integer): TNyxPascalStorageKey;
+    function StorageValueAt(AIndex: Integer): TNyxPascalStorageFact;
+    function StorageFact(const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
+    function WithStorageFact(const AKey: TNyxPascalStorageKey;
+      const AValue: TNyxPascalStorageFact): INyxPascalCompilerContext;
     function CaptureScope: TNyxPascalCompilerScope;
     function BootstrapContext: INyxPascalCompilerContext;
     function WithBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
@@ -1056,6 +1159,7 @@ begin
       Result.FOptimizations[LAt] := FOptimizations[LAt];
     end;
     Result.FSizes := Copy(FSizes);
+    Result.FStorage := Copy(FStorage);
     Result.FCaptureScope := FCaptureScope;
     Result.FBootstrap := FBootstrap;
     SetLength(Result.FSymbols, Length(FSymbols));
@@ -1297,6 +1401,7 @@ var
   LAlignment: TNyxPascalCodeAlignmentRule;
   LOptimizations: INyxPascalContextOptimizations;
   LOptimization: TNyxPascalOptimizationRule;
+  LStorage: INyxPascalContextStorage;
 begin
   Result := False;
 
@@ -1425,6 +1530,27 @@ begin
   begin
     Exit;
   end;
+  if Supports(AOther, INyxPascalContextStorage, LStorage) then
+  begin
+
+    if LStorage.StorageCount <> Length(FStorage) then
+    begin
+      Exit;
+    end;
+    for LAt := 0 to High(FStorage) do
+    begin
+
+      if (FStorage[LAt].Key.Value <> LStorage.StorageKey(LAt).Value) or
+        not FStorage[LAt].Value.SameFact(LStorage.StorageValueAt(LAt)) then
+      begin
+        Exit;
+      end;
+    end;
+  end
+  else if Length(FStorage) <> 0 then
+  begin
+    Exit;
+  end;
   for LAt := 0 to SymbolCount - 1 do
   begin
     { Enumeration is part of exact capture identity, including explicitly
@@ -1545,6 +1671,8 @@ function TCompilerContext.WithBootstrapContext(const AContext: INyxPascalCompile
 var
   LCaptured: INyxPascalCompilerContext;
   LCopy: TCompilerContext;
+  LAt: Integer;
+  LFact: TNyxPascalStorageFact;
 begin
   LCaptured := nil;
 
@@ -1560,6 +1688,16 @@ begin
       raise ENyxPascalContext.Create('Bootstrap evidence needs a distinct matching compiler-root context');
     end;
     LCaptured := CaptureNyxPascalCompilerContext(AContext);
+    for LAt := 0 to High(FStorage) do
+    begin
+      LFact := NyxPascalCapturedStorage(LCaptured, FStorage[LAt].Key);
+
+      if (LFact.State <> psfsUnknown) and (FStorage[LAt].Value.State <> psfsUnknown) and
+        not LFact.SameFact(FStorage[LAt].Value) then
+      begin
+        raise ENyxPascalContext.Create('Root and module structural evidence conflict');
+      end;
+    end;
   end;
   LCopy := Clone;
   Result := LCopy;
@@ -1755,6 +1893,213 @@ begin
   LContext := CaptureNyxPascalCompilerContext(AContext);
   Supports(LContext, INyxPascalContextSizes, LSizes);
   Result := LSizes.WithSizeFact(AName, AValue);
+end;
+
+procedure TNyxPascalStorageKey.Validate;
+var
+  LAt: Integer;
+begin
+
+  if (Length(FValue) < 15) or (Length(FValue) > NyxPascalStorageKeyLimit) or
+    (Copy(FValue, 1, 14) <> 'nyx.storage.1|') then
+  begin
+    raise ENyxPascalContext.Create('A structural key needs a complete bounded receipt');
+  end;
+  for LAt := 1 to Length(FValue) do
+  begin
+
+    if (Ord(FValue[LAt]) < 32) or (Ord(FValue[LAt]) > 126) then
+    begin
+      raise ENyxPascalContext.Create('Structural keys contain printable ASCII data only');
+    end;
+  end;
+end;
+
+function NyxPascalStorageKey(const AValue: TNyxText): TNyxPascalStorageKey;
+var
+  LKey: TNyxPascalStorageKey;
+begin
+  LKey.FValue := AValue;
+  LKey.Validate;
+  Result := LKey;
+end;
+
+function TNyxPascalStorageKey.SameKey(const AOther: TNyxPascalStorageKey): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := FValue = AOther.FValue;
+end;
+
+procedure TNyxPascalStorageFact.Validate;
+begin
+
+  if (Ord(FState) < Ord(Low(TNyxPascalStorageFactState))) or
+    (Ord(FState) > Ord(High(TNyxPascalStorageFactState))) or
+    (FBytes < 0) or ((FState <> psfsKnown) and (FBytes <> 0)) then
+  begin
+    raise ENyxPascalContext.Create('A structural measurement needs canonical checked values');
+  end;
+end;
+
+function NyxPascalStorageFact(AState: TNyxPascalStorageFactState;
+  ABytes: Integer): TNyxPascalStorageFact;
+var
+  LFact: TNyxPascalStorageFact;
+begin
+  LFact.FState := AState;
+  LFact.FBytes := ABytes;
+  LFact.Validate;
+  Result := LFact;
+end;
+
+function TNyxPascalStorageFact.Bytes: Integer;
+begin
+  Validate;
+
+  if FState <> psfsKnown then
+  begin
+    raise ENyxPascalContext.Create('An unmeasured structural result has no byte value');
+  end;
+  Result := FBytes;
+end;
+
+function TNyxPascalStorageFact.SameFact(const AOther: TNyxPascalStorageFact): Boolean;
+begin
+  Validate;
+  AOther.Validate;
+  Result := (FState = AOther.FState) and (FBytes = AOther.FBytes);
+end;
+
+function TCompilerContext.StorageCount: Integer;
+begin Result := Length(FStorage); end;
+
+function TCompilerContext.StorageKey(AIndex: Integer): TNyxPascalStorageKey;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FStorage)) then
+  begin
+    raise ENyxPascalContext.Create('Structural evidence index is outside its context');
+  end;
+  Result := FStorage[AIndex].Key;
+end;
+
+function TCompilerContext.StorageFact(const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
+var
+  LAt: Integer;
+begin
+  AKey.Validate;
+  Result := NyxPascalStorageFact(psfsUnknown);
+  for LAt := 0 to High(FStorage) do
+  begin
+
+    if FStorage[LAt].Key.FValue = AKey.FValue then
+    begin
+      Exit(FStorage[LAt].Value);
+    end;
+  end;
+end;
+
+function TCompilerContext.StorageValueAt(AIndex: Integer): TNyxPascalStorageFact;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FStorage)) then
+  begin
+    raise ENyxPascalContext.Create('Structural evidence index is outside its context');
+  end;
+  Result := FStorage[AIndex].Value;
+end;
+
+function TCompilerContext.WithStorageFact(const AKey: TNyxPascalStorageKey;
+  const AValue: TNyxPascalStorageFact): INyxPascalCompilerContext;
+var
+  LAt, LIndex, LBytes: Integer;
+  LCopy: TCompilerContext;
+  LOwner: INyxPascalCompilerContext;
+  LRootFact: TNyxPascalStorageFact;
+begin
+  AKey.Validate;
+  AValue.Validate;
+
+  if FBootstrap <> nil then
+  begin
+    LRootFact := NyxPascalCapturedStorage(FBootstrap, AKey);
+
+    if (LRootFact.State <> psfsUnknown) and (AValue.State <> psfsUnknown) and
+      not LRootFact.SameFact(AValue) then
+    begin
+      raise ENyxPascalContext.Create('Module and root structural evidence conflict');
+    end;
+  end;
+  LIndex := -1;
+  LBytes := Length(AKey.FValue);
+  for LAt := 0 to High(FStorage) do
+  begin
+
+    if FStorage[LAt].Key.FValue = AKey.FValue then
+    begin
+      LIndex := LAt;
+    end
+    else
+    begin
+
+      if Length(FStorage[LAt].Key.FValue) > NyxPascalStorageKeysLimit - LBytes then
+      begin
+        raise ENyxPascalContext.Create('Structural keys exceed their aggregate context budget');
+      end;
+      Inc(LBytes, Length(FStorage[LAt].Key.FValue));
+    end;
+  end;
+
+  if (LIndex < 0) and (Length(FStorage) >= NyxPascalStorageFactLimit) then
+  begin
+    raise ENyxPascalContext.Create('Structural evidence exceeds 64 context entries');
+  end;
+  LCopy := Clone;
+  LOwner := LCopy;
+
+  if LIndex < 0 then
+  begin
+    LIndex := Length(FStorage);
+    SetLength(LCopy.FStorage, LIndex + 1);
+  end;
+  LCopy.FStorage[LIndex].Key := AKey;
+  LCopy.FStorage[LIndex].Value := AValue;
+  Result := LOwner;
+end;
+
+function NyxPascalCapturedStorage(const AContext: INyxPascalCompilerContext;
+  const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
+var
+  LStorage: INyxPascalContextStorage;
+begin
+  AKey.Validate;
+
+  if AContext = nil then
+  begin
+    raise ENyxPascalContext.Create('Structural evidence needs its captured context');
+  end;
+  Result := NyxPascalStorageFact(psfsUnknown);
+
+  if Supports(AContext, INyxPascalContextStorage, LStorage) then
+  begin
+    Result := LStorage.StorageFact(AKey);
+    Result.Validate;
+  end;
+end;
+
+function NyxPascalWithCapturedStorage(const AContext: INyxPascalCompilerContext;
+  const AKey: TNyxPascalStorageKey;
+  const AValue: TNyxPascalStorageFact): INyxPascalCompilerContext;
+var
+  LContext: INyxPascalCompilerContext;
+  LStorage: INyxPascalContextStorage;
+begin
+  AKey.Validate;
+  AValue.Validate;
+  LContext := CaptureNyxPascalCompilerContext(AContext);
+  Supports(LContext, INyxPascalContextStorage, LStorage);
+  Result := LStorage.WithStorageFact(AKey, AValue);
 end;
 
 class function TNyxPascalCompilerPolicies.Unknown: TNyxPascalCompilerPolicies;
@@ -2659,6 +3004,8 @@ var
   LSize: TNyxPascalSizeReference;
   LDeclaration: TNyxPascalDeclarationRef;
   LMeasurement: TNyxPascalSizeFact;
+  LByteSizes: INyxPascalConditionByteSizes;
+  LByteSize: TNyxPascalStorageFact;
 begin
   Result := UnknownValue;
   Inc(FDepth);
@@ -2933,11 +3280,18 @@ begin
 
         if FSemantics <> nil then
         begin
-          LMeasurement := FSemantics.SizeOfName(LSize);
-
-          if LMeasurement.State = pssKnown then
+          if Supports(FSemantics, INyxPascalConditionByteSizes, LByteSizes) then
           begin
-            Result := NumberValue(LMeasurement.Bytes);
+            LByteSize := LByteSizes.SizeOfBytes(LSize);
+            LByteSize.Validate;
+
+            if LByteSize.State = psfsKnown then Result := NumberValue(LByteSize.Bytes);
+          end
+          else
+          begin
+            LMeasurement := FSemantics.SizeOfName(LSize);
+
+            if LMeasurement.State = pssKnown then Result := NumberValue(LMeasurement.Bytes);
           end;
         end;
 

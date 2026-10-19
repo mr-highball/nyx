@@ -237,6 +237,10 @@ var
   LStream: TFileStream;
   LBytes: TNyxBytes;
   LStorage: INyxPascalConstantStorage;
+  LIdentity: INyxPascalConstantStorageIdentity;
+  LContext: INyxPascalCompilerContext;
+  LAnswer: INyxPascalConstantResult;
+  LText: TNyxText;
 begin
 
   if ParamCount < 1 then
@@ -258,14 +262,253 @@ begin
   finally
     LStream.Free;
   end;
-  LStorage := Storage(Site(NyxDecodeUTF8(LBytes), Facts), 'sizeof(TInheritedPacking)');
+  LText := NyxDecodeUTF8(LBytes);
+  LStorage := Storage(Site(LText, Facts), 'sizeof(TInheritedPacking)');
   Check((LStorage.StoragePlan.Shape.Alignment = psa1) and
     (LStorage.StoragePlan.Shape.Form = psfOrdinary) and
     (LStorage.StoragePlan.Shape.Count = 2) and
     (LStorage.StorageDefinition(2).Declaration.Name = 'TInheritedPacking'),
     'The whole original compiler input retains its actual record and pre-MODE packing owner');
+  Check(Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity),
+    'A complete source-bound shape exposes its separate structural receipt');
+  LContext := NyxPascalWithCapturedStorage(Facts, LIdentity.StorageKey,
+    NyxPascalStorageFact(psfsKnown, PackingMeasuredBytes));
+  LAnswer := Evaluate(Site(LText, LContext), 'sizeof(TInheritedPacking)');
+  Check((LAnswer.Issue = pbiNone) and (LAnswer.Value.Kind = pvvInteger) and
+    (LAnswer.Value.Number.ToText = TNyxText(IntToStr(PackingMeasuredBytes))),
+    'The actual compiled handwritten declaration supplies the matching source sizeof value');
+  Check(NyxPascalCapturedSize(LContext, NyxPascalSizeReference('TInheritedPacking')).State = pssUnknown,
+    'A measured source record never becomes a pristine name-keyed primitive fact');
+  LStorage := Storage(Site(LText, Facts), 'sizeof(TInheritedPackingArray)');
+  Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+  LContext := NyxPascalWithCapturedStorage(Facts, LIdentity.StorageKey,
+    NyxPascalStorageFact(psfsKnown, PackingArrayMeasuredBytes));
+  LAnswer := Evaluate(Site(LText, LContext), 'sizeof(TInheritedPackingArray)');
+  Check((LAnswer.Issue = pbiNone) and
+    (LAnswer.Value.Number.ToText = TNyxText(IntToStr(PackingArrayMeasuredBytes))),
+    'The actual compiler supplies the array size without analyzer layout arithmetic');
 end;
 {$endif}
+
+procedure StructuralEvidence;
+const
+  CSource: TNyxText = 'unit Measure; interface {$packrecords 1} ' +
+    'type TTarget=record Value:Byte; end; implementation end.';
+var
+  LStorage: INyxPascalConstantStorage;
+  LIdentity: INyxPascalConstantStorageIdentity;
+  LKey: TNyxPascalStorageKey;
+  LContext, LMissing, LOther: INyxPascalCompilerContext;
+  LValues: INyxPascalContextStorage;
+  LAnswer: INyxPascalConstantResult;
+  LRequests: INyxPascalCompilerRequirements;
+  LFiles: INyxPascalFileCatalog;
+  LSemantic: INyxPascalSemanticTranslation;
+  LAt: Integer;
+  LExpression: TNyxText;
+  LFailed: Boolean;
+begin
+  LStorage := Storage(Site(CSource, Facts), 'sizeof(TTarget)');
+  Check(Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity),
+    'Complete pending storage has a checked detached identity');
+  LKey := LIdentity.StorageKey;
+  { Controlled metadata exercises consumption, not native host fulfillment.
+    The separate whole handwritten input supplies actual compiled evidence. }
+  LContext := NyxPascalWithCapturedStorage(Facts, LKey, NyxPascalStorageFact(psfsKnown, 1));
+  LAnswer := Evaluate(Site(CSource, LContext), 'sizeof(TTarget)');
+  Check((LAnswer.Issue = pbiNone) and (LAnswer.Value.Number.ToText = '1') and
+    (LAnswer.DependencyCount > 0), 'A matching receipt answers only after actual source binding');
+  Check(CaptureNyxPascalCompilerContext(LContext).SameFacts(LContext) and
+    not Facts.SameFacts(LContext), 'Structural evidence participates in detached capture and exact identity');
+  Supports(LContext, INyxPascalContextStorage, LValues);
+  Check((LValues.StorageCount = 1) and LValues.StorageKey(0).SameKey(LKey) and
+    (NyxPascalCapturedStorage(Facts, LKey).State = psfsUnknown),
+    'The independent parent context acquires no structural evidence');
+  Check((NyxPascalCapturedStorage(LContext.UnknownState, LKey).State = psfsUnknown) and
+    (NyxPascalCapturedSize(LContext, NyxPascalSizeReference('TTarget')).State = pssUnknown),
+    'Unknown effects revoke structural evidence and user type names stay out of primitive facts');
+  LOther := RestoreNyxPascalLocalSettings(LContext.WithOption('R', ppkTrue), Facts);
+  Check(NyxPascalCapturedStorage(LOther, LKey).State = psfsKnown,
+    'Local settings restoration does not discard independent captured evidence');
+  LAnswer := Evaluate(Site(StringReplace(String(CSource), '{$packrecords 1}',
+    '{$packrecords 2}', []), LContext), 'sizeof(TTarget)');
+  Check((LAnswer.Value.Kind = pvvUnknown) and (LAnswer.Issue = pbiCompilerContext),
+    'Different declaration packing cannot reuse a structurally similar receipt');
+  LAnswer := Evaluate(Site(StringReplace(String(CSource), '{$packrecords 1}', '', []),
+    LContext), 'sizeof(TTarget)');
+  Check((LAnswer.Value.Kind = pvvUnknown) and (LAnswer.Issue = pbiCompilerContext),
+    'An earlier known receipt cannot supply an uncaptured initial packing policy');
+  LAnswer := Evaluate(Site(CSource, LContext.WithOption('R', ppkTrue)), 'sizeof(TTarget)');
+  Check(LAnswer.Value.Kind = pvvUnknown, 'Different captured context facts invalidate the exact receipt');
+  LOther := NyxPascalWithCapturedStorage(Facts, LKey, NyxPascalStorageFact(psfsOutOfRange));
+  LAnswer := Evaluate(Site(CSource, LOther), 'sizeof(TTarget)');
+  Check((LAnswer.Value.Kind = pvvUnknown) and (LAnswer.Issue = pbiCompilerContext),
+    'An out-of-range observation supplies no truncated source integer');
+  LOther := NyxPascalWithCodeAlignment(Facts,
+    Default(TNyxPascalCodeAlignmentRequest).Add(pcaRecordMaximum, 8), ppkUnknown);
+  LStorage := Storage(Site(CSource, LOther), 'sizeof(TTarget)');
+  Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+  LOther := NyxPascalWithCapturedStorage(LOther, LIdentity.StorageKey,
+    NyxPascalStorageFact(psfsKnown, 1));
+  LAnswer := Evaluate(Site(CSource, LOther), 'sizeof(TTarget)');
+  Check((LAnswer.Issue = pbiCompilerContext) and (LAnswer.Value.Kind = pvvUnknown),
+    'A receipt cannot select an uncertain CODEALIGN execution branch');
+  for LAt := 0 to 1 do
+  begin
+    LExpression := 'sizeof(TTarget)=1';
+
+    if LAt = 1 then LExpression := 'sizeof(TTarget)+1=2';
+    LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('measured.pas'),
+      'unit Measure; interface {$packrecords 1} type TTarget=record Value:Byte; end; ' +
+      '{$if ' + LExpression + '} const Accepted=1; {$endif} implementation end.');
+    LSemantic := NewNyxPascalSemanticTranslation(LFiles, NyxPascalPhysicalFile('measured.pas'),
+      LContext, NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults),
+      TNyxPascalTranslationOptions.Defaults, TNyxPascalSyntaxOptions.Defaults,
+      TNyxPascalConditionalOptions.Defaults);
+    Check(not LSemantic.Pending and (LSemantic.Answers = 1) and LSemantic.Source.Resolved,
+      'Both legacy and expression condition paths consume the exact structural value');
+  end;
+  LMissing := NyxPascalWithCapturedSize(Facts, NyxPascalSizeReference('Longint'),
+    NyxPascalSizeFact(pssUnknown, ppmDelphi, ppkTrue));
+  LStorage := Storage(Site(CSource, LMissing), 'sizeof(TTarget)');
+  Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+  LMissing := NyxPascalWithCapturedStorage(LMissing, LIdentity.StorageKey,
+    NyxPascalStorageFact(psfsKnown, 1));
+  LAnswer := Evaluate(Site(CSource, LMissing), 'sizeof(TTarget)+sizeof(Longint)');
+  Supports(LAnswer, INyxPascalCompilerRequirements, LRequests);
+  Supports(LAnswer, INyxPascalConstantStorage, LStorage);
+  Check((LAnswer.Value.Kind = pvvUnknown) and (LRequests.RequirementCount = 1) and
+    (NyxPascalASCIIKey(LRequests.RequirementAt(0).Reference.Name) = 'longint') and
+    (LStorage.StoragePlan = nil), 'A known record cannot hide a later missing primitive request');
+  LOther := Facts;
+  for LAt := 1 to NyxPascalStorageFactLimit do
+  begin
+    LOther := NyxPascalWithCapturedStorage(LOther,
+      NyxPascalStorageKey('nyx.storage.1|fixture-' + TNyxText(IntToStr(LAt))),
+      NyxPascalStorageFact(psfsKnown, LAt));
+  end;
+  LFailed := False;
+  try
+    LOther := NyxPascalWithCapturedStorage(LOther, LKey, NyxPascalStorageFact(psfsKnown, 1));
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Supports(LOther, INyxPascalContextStorage, LValues);
+  Check(LFailed and (LValues.StorageCount = NyxPascalStorageFactLimit),
+    'An excess structural receipt refuses atomically without replacing the caller target');
+end;
+
+procedure StructuralBounds;
+var
+  LContext: INyxPascalCompilerContext;
+  LRoot, LOther: INyxPascalCompilerContext;
+  LValues: INyxPascalContextStorage;
+  LKey: TNyxPascalStorageKey;
+  LFact: TNyxPascalStorageFact;
+  LAt: Integer;
+  LFailed: Boolean;
+begin
+  LFailed := False;
+  try
+    LKey := NyxPascalStorageKey('nyx.storage.1|');
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed, 'An empty structural receipt refuses before publication');
+  LFailed := False;
+  try
+    LKey := NyxPascalStorageKey('nyx.storage.1|bad'#10'key');
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed, 'Control characters cannot enter structural identity data');
+  LFact := NyxPascalStorageFact(psfsKnown, 0);
+  Check((LFact.State = psfsKnown) and (LFact.Bytes = 0),
+    'A measured empty record is distinct from an unknown measurement');
+  LFailed := False;
+  try
+    LFact := NyxPascalStorageFact(psfsUnknown, 1);
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed and (LFact.State = psfsKnown) and (LFact.Bytes = 0),
+    'An invalid measurement preserves the previous value through native result aliasing');
+  LContext := Facts;
+  for LAt := 1 to 4 do
+  begin
+    LKey := NyxPascalStorageKey('nyx.storage.1|' +
+      TNyxText(StringOfChar('x', NyxPascalStorageKeyLimit - 15)) + TNyxText(IntToStr(LAt)));
+    Supports(LContext, INyxPascalContextStorage, LValues);
+    LContext := LValues.WithStorageFact(LKey, LFact);
+  end;
+  Supports(LContext, INyxPascalContextStorage, LValues);
+  Check(LValues.StorageCount = 4, 'Exact key-byte allowance admits four complete maximum receipts');
+  LFailed := False;
+  try
+    LContext := LValues.WithStorageFact(NyxPascalStorageKey('nyx.storage.1|extra'), LFact);
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Supports(LContext, INyxPascalContextStorage, LValues);
+  Check(LFailed and (LValues.StorageCount = 4), 'Aggregate key-byte excess refuses atomically');
+  LFailed := False;
+  try
+    LFact := LValues.StorageValueAt(4);
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed and (LFact.Bytes = 0), 'Checked structural ordinals preserve the previous result on refusal');
+  LKey := NyxPascalStorageKey('nyx.storage.1|root-overlap');
+  LRoot := NyxPascalWithCapturedStorage(NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmFPC, pcsoSystemBootstrap),
+    LKey, NyxPascalStorageFact(psfsKnown, 1));
+  LContext := NyxPascalWithBootstrapContext(Facts, LRoot);
+  LFailed := False;
+  try
+    LContext := NyxPascalWithCapturedStorage(LContext, LKey, NyxPascalStorageFact(psfsKnown, 2));
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed and (NyxPascalCapturedStorage(LContext, LKey).State = psfsUnknown),
+    'A conflicting module receipt cannot override its existing compiler-root observation');
+  LOther := NyxPascalWithCapturedStorage(Facts, LKey, NyxPascalStorageFact(psfsKnown, 2));
+  LFailed := False;
+  try
+    LOther := NyxPascalWithBootstrapContext(LOther, LRoot);
+  except
+    on ENyxPascalContext do LFailed := True;
+  end;
+  Check(LFailed and (NyxPascalBootstrapContext(LOther) = nil),
+    'Attaching a conflicting compiler root refuses without publishing a partial context');
+end;
+
+procedure MixedStorageEvidence;
+const
+  CSource: TNyxText = 'unit MixedEvidence; interface {$packrecords 1} ' +
+    'type TTarget=record Value:System.Byte; end; implementation end.';
+var
+  LRoot, LContext: INyxPascalCompilerContext;
+  LStorage: INyxPascalConstantStorage;
+  LIdentity: INyxPascalConstantStorageIdentity;
+  LAnswer: INyxPascalConstantResult;
+begin
+  LRoot := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmFPC, pcsoSystemBootstrap)
+    .WithOption('H', ppkFalse);
+  LRoot := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('Byte'),
+    NyxPascalSizeFact(pssKnown, ppmFPC, ppkFalse, 1));
+  LContext := NyxPascalWithBootstrapContext(Facts, LRoot);
+  LStorage := Storage(Site(CSource, LContext), 'sizeof(TTarget)');
+  Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+  LRoot := NyxPascalWithCapturedStorage(LRoot, LIdentity.StorageKey,
+    NyxPascalStorageFact(psfsKnown, 1));
+  LContext := NyxPascalWithBootstrapContext(Facts, LRoot);
+  LAnswer := Evaluate(Site(CSource, LContext), 'sizeof(TTarget)');
+  Check((LAnswer.Issue = pbiNone) and (LAnswer.Value.Number.ToText = '1') and
+    (LRoot.Mode = ppmFPC) and (LRoot.Option('H') = ppkFalse) and
+    (LContext.Mode = ppmDelphi) and (LContext.Option('H') = ppkTrue),
+    'Root-owned structural evidence retains mixed per-node mode/H without retagging a primitive');
+end;
 
 procedure ArraysAndForms;
 var
@@ -434,6 +677,7 @@ var
   LAnswer, LRejected: INyxPascalConstantResult;
   LStorage: INyxPascalConstantStorage;
   LScope: TCancelAt;
+  LIdentity: INyxPascalConstantStorageIdentity;
   LLease: INyxCancellationScope;
   LBudget: INyxPascalAnalysisBudget;
   LCalls, LAt, LStop: Integer;
@@ -452,6 +696,9 @@ begin
     (LStorage.StoragePlan.Shape.Child(0).ArrayLength = 3) and
     (LStorage.StorageNodeCount = 3) and (LScope.Calls = LCalls),
     'Published storage getters do no work through their retired cancellation scope');
+  Check(Supports(LAnswer, INyxPascalConstantStorageIdentity, LIdentity) and
+    (Length(LIdentity.StorageKey.Value) > 0) and (LScope.Calls = LCalls),
+    'Published identity getters borrow validated values without deferred work or cancellation');
   for LAt := 0 to 3 do
   begin
     LScope := TCancelAt.Create;
@@ -494,6 +741,9 @@ begin
     QualifiedFields;
     ModePackingProvenance;
     {$ifndef PAS2JS}WholeModePackingInput;{$endif}
+    StructuralEvidence;
+    StructuralBounds;
+    MixedStorageEvidence;
     ArraysAndForms;
     NonStorageMembersAndRootIdentity;
     ConditionalPropagation;

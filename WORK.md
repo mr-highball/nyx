@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Record packing provenance, measurement open — 2026-10-18
+## Current integration: Structural size receipts, native fulfillment open — 2026-10-19
+
+The previous goal turn is progress: 11d3c85 is qualified and pushed. This turn
+revalidated its exact source/worktree before continuing the same record-layout
+feature through context-owned evidence and source consumption. Initial compiler
+environment authority and automatic configured-native fulfillment remain required;
+this is not a replacement criterion or completion credit.
+
+INyxPascalContextStorage adds a distinct typed structural namespace, without
+reusing user type names as pristine primitive facts. Immutable value-only keys/
+facts retain no source/world/older-context/callback/interface record field.
+Unknown/Known/OutOfRange preserve measured zero; capture and fluent updates
+enforce 64 entries, one MiB per printable key and four MiB aggregate key data.
+All existing compiler/probe/view/semantic construction limits remain unchanged.
+Capture/equality includes exact ordered receipts; unknown effects revoke them.
+Local restore/mode copies retain data whose applicability still requires its full
+key. Module/root conflicts refuse in both attachment orders; native cohort
+metadata merges retain values, refuse conflicts and forbid replies in an
+observed-default anchor. These operations grant no native execution authority.
+
+A complete pending shape now eagerly supplies an optional structural identity.
+Length-framed ASCII retains the shape and ordered per-node compiler metadata,
+primitive reference/origin, all captured scalar/policy/symbol/size facts and
+warning/alignment/optimizer histories, including independent bootstrap context.
+Structural answers themselves are excluded, preventing recursive key growth or
+parent-context chains. Key construction/validation/comparison enter the same
+constant/aggregate admission. Published getters prepare no work and retain no
+cancellation lease. Primitive scope/mode/H is not collapsed into a record's
+single global setting. Unsupported/uncertain source still supplies no guessed
+layout, initial packing or field-size sum.
+
+Source SizeOf consumes only the exact key in its declaration's module/root
+context. Unknown packing/environments or uncertain alignment/optimizer activity
+still refuse, even with an injected receipt. Both full expressions and legacy
+conditions consume applicable values; an optional byte-value semantic capability
+avoids retagging a structural proof as a single-mode primitive fact. Successful
+records retain no pending shape that could hide a later primitive requirement.
+Native checks consume actual sizeof of the same whole handwritten record and
+static array compiled into the consumer. Controlled portable data separately
+tests identity, limits, capture, uncertainty, cross-scope settings and refusal.
+No new compiler job, fixed probe, native measurement protocol, tool or wire
+schema is introduced. Production native measurement/fulfillment is still open.
+
+All seven source inputs are frozen before final qualification. Source checks
+pass 181 and compiler-capture metadata checks 42 with clean heaps. All 86 accepted
+compiler jobs have zero owned warnings/196 upstream warnings. Forty maintained/
+seven additional native consumers, the actual 502-file/2,344,211-token corpus and
+unchanged original RTL 56 pass with clean heaps: 49 accepted native logs. Both
+Studios/backend/worker and 36 browser consumers compile as applicable, without
+browser execution or physical parity. No source changes after the final freeze;
+all owned process handles are terminal and joined. Preparation receipts remain
+separate from final evidence.
+
+System stays 10,925 declarations/six syntax diagnostics/25 answers, pending the
+same VarHeader compiler-context prerequisite. ObjPas stays 209/four/one; exact
+Free/FreeInstance indexed completion, objpash.inc navigation and detached insertion
+remain ready. The original five queries/Word job/symbol three-of-eight/dynamic
+Longint/Int64/Pointer three-of-eight and all view/construction/refinement ceilings
+remain unchanged. Native automatic layout fulfillment and initial packing are
+not qualified; full source resolution/RTL meaning remains false.
+
+Preservation retains 658 unrelated/663 maintained sources, 97 RTL inputs, 24
+compiler inputs plus the earlier/packing/additional inspected files, 156 exact
+unit packets/48 includes, 349 frozen release artifacts, nine prior contexts and
+thirteen concurrent planning files. All five current-start protected files remain
+exact. Historical global configuration deltas are retained, never restored or
+reclassified as full preservation/delivery success. The ignored
+`.local/storage-evidence-paths-private.json` owns source/qualification/preservation
+receipts, retained preparations and the return path.
+
+Continue toward provenance-backed compiler-initial environment and generic
+configured-native layout requirement/measurement/fulfillment, using these exact
+context values and existing capture/module owners. Evidence must reach the module
+context already observed by the unchanged LWorld replay. Preserve per-node
+primitive scope/mode/H, record/CODEALIGN and captured-default ownership, original
+five initial queries/Word job/symbol three-of-eight/dynamic three-of-eight and
+two-million view/four-million construction/64-round limits. Do not substitute
+more standalone key/receipt/fixture/capture variants, promote Unknown to Default,
+raise quotas or manufacture synthetic user-name primitive facts. Full original
+criterion/task/credit/DONE/source/type/incremental/editor/browser/input/quality/
+parity/adoption/delivery remains open. No host/config retry, protected mutation,
+cleanup/restart, new MCP tool/schema, approval bypass or sub-agent is introduced.
+Historical global configuration preservation failures remain retained and false.
+
+## Previous integration: Record packing provenance, measurement open — 2026-10-18
 
 The intervening user-status turn did not change product state. This continuation
 revalidated d07a1ce and the unchanged thirteen concurrent planning files before

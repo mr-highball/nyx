@@ -9,6 +9,16 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Structural evidence continuation (2026-10-18): typed context-owned size receipts
+now remain separate from primitive names and preserve exact per-node settings.
+Both expression and legacy conditions consume matching source-bound values;
+the same complete handwritten record/array supplies actual native compiler sizes.
+Context capture, identity, bounded data, uncertain settings and conflicting module/
+root/cohort observations retain atomic refusal. This is the consumption/data
+boundary, with automatic native measurement/fulfillment and initial-environment
+authority still required in this same feature. No original authoring criterion,
+full resolver/editor, browser interaction, parity/adoption/delivery closes.
+
 Record-layout provenance continuation (2026-10-18): qualified FPC 3.3.1 mode
 copies now preserve the preceding symbolic record-packing request. The actual
 compiler flushes pending PACKRECORDS before selecting enum/set mode defaults;

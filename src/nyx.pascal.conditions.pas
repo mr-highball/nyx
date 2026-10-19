@@ -170,7 +170,8 @@ type
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
     INyxPascalCompilerRequirements, INyxPascalSemanticWork,
-    INyxPascalSemanticAnalysisWork, INyxPascalConstantStorage)
+    INyxPascalSemanticAnalysisWork, INyxPascalConstantStorage,
+    INyxPascalConstantStorageIdentity)
   public
     Snapshot: INyxPascalTranslation;
     Tokens: Integer;
@@ -201,6 +202,7 @@ type
     function RequirementCount: Integer;
     function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
     function StoragePlan: INyxPascalStoragePlan;
+    function StorageKey: TNyxPascalStorageKey;
     function StorageNodeCount: Integer;
     function StorageNode(AIndex: Integer): INyxPascalStorageShape;
     function StorageContext(AIndex: Integer): INyxPascalCompilerContext;
@@ -211,8 +213,11 @@ type
   { A synchronous site-bound semantic authority. The site owns its prefix world
     outward; no result retains this object. Named size resolution follows bound
     aliases to a captured intrinsic with matching measurement mode/H policy.
-    General layouts/expressions remain unknown, never inferred from a host ABI. }
-  TScopeMeanings = class(TInterfacedObject, INyxPascalConditionSemantics)
+    The byte-value capability consumes exact structural receipts independently
+    of that legacy single-mode interface. Unmeasured layouts remain unknown;
+    no value is inferred from the analyzer host ABI. }
+  TScopeMeanings = class(TInterfacedObject, INyxPascalConditionSemantics,
+    INyxPascalConditionByteSizes)
   public
     Site: INyxPascalBindingSite;
     Cancellation: INyxCancellationScope;
@@ -220,9 +225,11 @@ type
     Related: TNyxText;
     Requirements: INyxPascalCompilerRequirements;
     Storage: INyxPascalConstantStorage;
+    ByteSize: TNyxPascalStorageFact;
     procedure Remember(const AAnswer: INyxPascalResolution; const AName: TNyxText);
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
+    function SizeOfBytes(const AName: TNyxPascalSizeReference): TNyxPascalStorageFact;
   end;
   { Synchronous source authority during one traversal. Data is borrowed from the
     factory's live result lease; frozen prefix worlds point outward to immutable
@@ -516,6 +523,18 @@ begin
   Result := Storage.StorageContext(AIndex);
 end;
 
+function TSemanticTranslation.StorageKey: TNyxPascalStorageKey;
+var
+  LIdentity: INyxPascalConstantStorageIdentity;
+begin
+
+  if not Supports(Storage, INyxPascalConstantStorageIdentity, LIdentity) then
+  begin
+    raise ENyxPascalBinding.Create('No complete pending structural receipt is available');
+  end;
+  Result := LIdentity.StorageKey;
+end;
+
 function TSemanticTranslation.StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
 begin
   StorageNode(AIndex);
@@ -572,6 +591,17 @@ begin
   end;
 end;
 
+function TScopeMeanings.SizeOfBytes(const AName: TNyxPascalSizeReference): TNyxPascalStorageFact;
+var
+  LNamed: TNyxPascalSizeFact;
+begin
+  ByteSize := NyxPascalStorageFact(psfsUnknown);
+  LNamed := SizeOfName(AName);
+  Result := ByteSize;
+
+  if LNamed.State = pssKnown then Result := NyxPascalStorageFact(psfsKnown, LNamed.Bytes);
+end;
+
 function TScopeMeanings.SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
 var
   LAnswer: INyxPascalResolution;
@@ -582,6 +612,7 @@ var
   LStorage: INyxPascalConstantStorage;
   LOptions: TNyxPascalConstantOptions;
   LAt: Integer;
+  LBytes: Integer;
 begin
   Result := NyxPascalSizeFact(pssUnknown);
   LAnswer := Site.World.Lookup(Site, NyxPascalBindingName(AName.Name), Cancellation);
@@ -623,6 +654,14 @@ begin
       Issue := LValue.Issue;
       Related := LValue.RelatedName;
       Requirements := CaptureNyxPascalRequirements(LValue);
+
+      if (LValue.Issue = pbiNone) and (LValue.Value.Kind = pvvInteger) and
+        TryStrToInt(String(LValue.Value.Number.ToText), LBytes) and (LBytes >= 0) then
+      begin
+        { This is already a source-validated conditional value. Do not retag its
+          per-node layout provenance as a pristine single-mode size fact. }
+        ByteSize := NyxPascalStorageFact(psfsKnown, LBytes);
+      end;
 
       if Supports(LValue, INyxPascalConstantStorage, LStorage) and
         (LStorage.StoragePlan <> nil) then
