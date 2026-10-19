@@ -181,7 +181,9 @@ begin
   Refusal('Vary(True)', pbiOverloadContext);
   Refusal('NoResult()', pbiMissingType);
   Refusal('Badge()');
-  Refusal('TBadge(Badge)');
+  { The independent cast witness now qualifies this formerly refused source
+    contract. Operand compatibility and runtime conversion remain separate. }
+  Shape('TBadge(Badge)');
   Refusal('(TBadge).Value', pbiWrongMemberKind);
   Refusal('(TRows)[0]');
   Refusal('(PBadge)^');

@@ -33,7 +33,88 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed indexed property receivers — 2026-10-19
+## Current integration: Declared cast target contracts — 2026-10-19
+
+The preceding 6d401e3 indexed-property checkpoint is qualified and pushed; the
+previous goal turn made concrete source/qualification/remote progress. Source
+adoption review confirms the ordinary editor bridge and explicit provider seams
+exist, while native host integration still names an optional helper and owned
+TAnalysis.BuildWorld reconstructs the captured project/SDK world per request.
+No provider installation, host/config retry or rollout is implied by this work.
+The remaining dependency-aware incremental performance requirement is material,
+not accepted by these local expression improvements.
+
+This continuation follows a common UI-authoring gap through existing binding,
+type syntax and completion owners: explicit Pascal casts and checked AS targets
+now retain their declared result, including qualified names, generic receivers,
+interfaces, aliases and pointer/array continuations. Explicit operands remain
+balanced opaque windows with one authored operand; checked assertions require a
+supported reference-valued source and a declared class/interface target. No
+operand, getter, assertion or callback executes. Runtime success, representation/
+conversion safety and full compiler eligibility are not inferred. Captured FPC
+3.3.1 ObjFPC/Delphi/DelphiUnicode modes qualify the contract; unknown modes refuse.
+
+Type-target lookup must not treat type-only expression answers as type names.
+Its query-local guard retains real formal parameters while excluding implicit
+Self/Result values, including generic argument positions. Grouped type names do
+not acquire instance authority. A bounded generic-callee scanner retains the
+entire physical receiver and leaves type grammar to the existing typed owner.
+Real member navigation, expected prefix and detached insertion keep their old
+contracts; existing interface GUIDs/wire schema and numerical caps stay unchanged.
+
+An independent complete Delphi-mode unit executes class/interface/checked/generic/
+pointer cast behavior to 42. Its actual source supplies both class and named
+interface results; source queries leave its operand counter unchanged. Initial
+native errors retain the compiler's interface-name requirement and generic-cast
+parenthesis distinction. The formerly blanket maintained TBadge(Badge) refusal
+is retained as a clean-heap failure, then changed to a positive declared-contract
+assertion under that independent witness. Other refusal and compiler-admission
+boundaries remain. Focused qualification passes 401 native checks/clean heap at
+a 274-unit first fit; all smaller allowances refuse atomically. Cancellation,
+replacement and provider retirement/insertion remain covered.
+
+Five Pascal inputs freeze before the complete maintained/native/browser/original
+RTL batch. The complete qualification passes 101 main compiler jobs with zero
+owned warnings and 259 upstream pas2js Classes warnings, separately from the
+deliberate emission oracle. Forty-six maintained native consumers and seven
+additional consumers pass. The separate corpus and unchanged original RTL run
+bring accepted native logs to fifty-five, all with clean heaps. Both Studios/
+backend/worker and forty-five browser compilations pass as applicable; no browser
+execution, ordinary rendered input, observing rollout, parity/adoption/delivery
+is qualified. Existing completion/production semantic checks remain 90/84;
+method/indexer/postfix/generic/binding/type/syntax/checkpoint checks retain
+444/413/411/948/74/448/8197/6526. The maintained postfix first fit remains 202.
+The corpus retains 504 files/2,383,087 lossless tokens/571 checks.
+
+The unchanged original RTL consumer passes 56 checks/clean heap. Actual System
+remains Source.Resolved/zero translation diagnostics with 13,101 declarations/
+zero syntax diagnostics/thirty-one answers/no pending fact; ObjPas stays 209/
+zero/one/no pending. Exact indexed Free/FreeInstance completion, original include-
+token navigation after provider retirement and detached insertion remain ready.
+Initial five queries, one Word job, three/eight symbol jobs and exact ordered
+six/eight dynamic jobs remain unchanged. Two-million view/four-million aggregate
+work/token caps and sixty-four rounds remain unchanged; full RTL/type meaning
+and general cast/call eligibility do not follow from these assertions.
+
+Five focused/701 maintained pins, including 696 unrelated exact sources, retain
+their bytes. All 97 RTL/24 compiler inputs and prior read-only inspected sets stay
+exact. All 156 unit packets/48 includes, thirteen concurrent planning files, five
+current-start protected files/nine contexts and 349 frozen release artifacts stay
+exact. Historical global-config preservation remains false; current equality
+does not erase that failure. All readers are terminal and joined. Stop cast/
+fixture/compiler/capture variants. Ignored .local/cast-contracts-paths-private.json owns this
+packet, source freeze, prior accepted checkpoint and return path. After this
+qualification, reassess exact dependency/ordered-answer/context-aware reuse through
+existing condition/translation/module/source owners before ordinary adoption.
+A retained final world must not silently donate a previously loaded module or
+compiler-root fact to another query. Do not add probes, guess missing meaning,
+raise budgets, replace the original RTL fixture or equate paging reuse with full
+incremental editing. LAN stays offline; native Nyx tools remain absent. No new
+tool/schema, capture, protected mutation, cleanup/restart, sub-agent or rollout.
+Full source/type/routine/module/incremental/editor/input/quality/parity/adoption/
+delivery and original criterion/task/credit/DONE remain open.
+
+## Previous integration: Typed indexed property receivers — 2026-10-19
 
 The preceding d590b43 method-receiver checkpoint is qualified and pushed: the
 previous goal turn made concrete source/qualification/remote progress. This solo

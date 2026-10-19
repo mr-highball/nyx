@@ -633,6 +633,9 @@ type
     FBindingConstraint: Boolean;
     { Owner-name lookup must not recursively re-enter the same method header. }
     FResolvingImplementationOwner: Boolean;
+    { Type-target lookup may see source formals, but never implicit Self/Result
+      values merely because those expressions also have type-only answers. }
+    FBindingTypeTarget: Boolean;
     { A query-local candidate is used only to prove absence for every possible
       interface style. It never changes or publishes a captured default. }
     FConsideringInterfaceRoot: Boolean;
@@ -3809,6 +3812,8 @@ begin
   Result := nil;
   LKey := NyxPascalASCIIKey(AName);
 
+  if FBindingTypeTarget then Exit;
+
   if (LKey <> 'self') and (LKey <> 'result') then Exit;
   LSyntax := FWorld.ModuleAt(ASite.ModuleIndex).Syntax;
   LOwner := LSyntax.Scope(AScope).OwnerDeclaration;
@@ -5837,6 +5842,69 @@ var
     end;
   end;
 
+  { A cast follows an authored type contract. It neither performs an unsafe
+    conversion nor predicts whether a checked assertion will succeed at runtime. }
+  function CastContext: Boolean;
+  var
+    LContext: INyxPascalCompilerContext;
+  begin
+    LContext := ContextAt(ASite);
+    Result := (LContext <> nil) and (LContext.Family = ppcFPC) and
+      (LContext.Version.FullNumber = 30301) and
+      (LContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]);
+  end;
+
+  function ReadTypeTarget: INyxPascalResolution;
+  var
+    LStart, LFinish, LAngle: Integer;
+    LParsed: INyxPascalTypeSyntax;
+    LWasTypeTarget: Boolean;
+  begin
+    LStart := LToken.Span.Start;
+    LFinish := LStart;
+    repeat
+
+      if not LAvailable or (LToken.Kind <> ptkWord) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      LFinish := LToken.Span.Finish;
+      Next;
+
+      if IsSymbol(psoLess) then
+      begin
+        LAngle := 1;
+        Next;
+        while LAvailable and (LAngle > 0) do
+        begin
+
+          if IsSymbol(psoLess) then Inc(LAngle)
+          else if IsSymbol(psoGreater) then Dec(LAngle)
+          else if IsSymbol(psoShiftRight) then Dec(LAngle, 2);
+
+          if (LAngle < 0) or (LAngle > FLimits.MaximumDepth) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LFinish := LToken.Span.Finish;
+          Next;
+        end;
+
+        if LAngle <> 0 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      end;
+
+      if not IsSymbol(psoDot) then Break;
+      Next;
+    until False;
+    LParsed := NewNyxPascalTypeSyntax(LLex, NyxPascalSpan(LStart, LFinish - LStart),
+      TNyxPascalTypeOptions.Defaults, FCancel);
+
+    if not LParsed.Complete or not (LParsed.Node(LParsed.Root).Kind in [ptxName, ptxQualified, ptxGeneric]) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LWasTypeTarget := FBindingTypeTarget;
+    FBindingTypeTarget := True;
+    try
+      Result := BindNode(ASite, LParsed, LParsed.Root);
+    finally
+      FBindingTypeTarget := LWasTypeTarget;
+    end;
+  end;
+
   { Recursive grouping shares this query's token/depth/work scope. }
   function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution; forward;
 
@@ -5849,6 +5917,9 @@ var
     LDimensions: Integer;
     LDimension: Integer;
     LInnerAccess: TNyxPascalMemberAccess;
+    LTypeStart: Integer;
+    LTypeCallee: Boolean;
+    LFormal: INyxPascalFormalParameter;
   begin
     Enter;
     try
@@ -5865,6 +5936,7 @@ var
       end
       else if LAvailable and (LToken.Kind = ptkWord) then
       begin
+        LTypeStart := LToken.Span.Start;
         LName := LLex.Identifier(LAt);
         Next;
         while IsSymbol(psoDot) do
@@ -5876,6 +5948,15 @@ var
           Next;
         end;
         LFound := Lookup(ASite, LName);
+
+        if IsSymbol(psoLess) and (LFound.Count = 1) and
+          (LFound.SymbolAt(0).Declaration.Kind = psdkType) then
+        begin
+          LAt := LLex.TokenAt(LTypeStart);
+          ReadToken;
+          LFound := ReadTypeTarget;
+          AValueAccess := pmaType;
+        end;
       end
       else Exit(Answer(pbsUnresolved, pbiUnsupportedType));
       while LAvailable do
@@ -5883,6 +5964,31 @@ var
 
         if IsSymbol(psoOpenParen) then
         begin
+          LTypeCallee := ((LFound.Count = 1) and (LFound.SymbolAt(0).Declaration.Kind = psdkType)) or
+            ((LFound.BoundType <> nil) and (AValueAccess = pmaType));
+
+          if not LTypeCallee and (LFound.Count = 0) and (LFound.BoundType <> nil) then
+          begin
+            LTypeCallee := Supports(LFound.BoundType, INyxPascalFormalParameter, LFormal) and
+              (NyxPascalASCIIKey(LFormal.Name) = NyxPascalASCIIKey(LName));
+
+            if not LTypeCallee and (LFound.BoundType.Kind = pstBuiltin) then
+            begin
+              LValue := BuiltinType(ASite, LName);
+              LTypeCallee := LValue.Status = pbsBound;
+            end;
+          end;
+
+          if LTypeCallee then
+          begin
+
+            if not CastContext then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+
+            if Arguments <> 1 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+            LFound := ValueOf(LFound, False, LInnerAccess);
+            AValueAccess := pmaInstance;
+            Continue;
+          end;
 
           if (LFound.BoundType <> nil) and (AValueAccess = pmaType) then
             Exit(Answer(pbsUnresolved, pbiUnsupportedType));
@@ -5965,6 +6071,32 @@ var
           LFound := TypeAnswer(LType.Target);
           AValueAccess := pmaInstance;
           Next;
+        end
+        else if LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwAs) then
+        begin
+          LValue := ValueOf(LFound, False, LInnerAccess);
+
+          if LValue.Status <> pbsBound then Exit(LValue);
+
+          if LFound.BoundType <> nil then LInnerAccess := AValueAccess;
+          LType := Unwrap(LValue.BoundType);
+
+          if (LInnerAccess = pmaType) or (LType = nil) or (LType.Kind <> pstDeclared) or
+            (LType.Definition = nil) or
+            not (LType.Definition.Declaration.TypeForm in [pstfClass, pstfInterface]) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+          if not CastContext then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+          Next;
+          LFound := ReadTypeTarget;
+
+          if LFound.Status <> pbsBound then Exit(LFound);
+          LType := Unwrap(LFound.BoundType);
+
+          if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) or
+            not (LType.Definition.Declaration.TypeForm in [pstfClass, pstfInterface]) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          AValueAccess := pmaInstance;
         end
         else if IsSymbol(psoDot) then
         begin

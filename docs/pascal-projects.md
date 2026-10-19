@@ -3509,7 +3509,7 @@ results refuse, even when an argument literal might tempt a guess. Function
 values follow their declared result. Argument/index expressions are bounded,
 balanced opaque windows: no factory, getter, callback or index expression runs,
 and no claim is made about arity, argument conversions, bounds or call legality.
-Casts, helpers, partially consumed multidimensional
+Helpers, partially consumed multidimensional
 arrays, generic-routine inference and general operator inference remain open.
 
 Project units keep their already admitted `.pas` leaf. `NyxPascalProjectUnit`
@@ -3638,6 +3638,41 @@ The repaired complete batch qualifies 99 compiler jobs with zero Nyx-owned
 warnings and 54 native logs with clean heaps, including the unchanged original
 RTL consumer. Both Studio targets and 44 browser compilations pass as applicable;
 browser execution and ordinary editor adoption remain unqualified.
+
+### Declared cast targets
+
+Source-owned receiver expressions now follow explicit `TView(Operand)` casts and
+checked `(Source as IView)` assertions through their declared target. Qualified
+and generic targets use the existing type grammar/binder; aliases and declared
+pointer/array targets keep ordinary continuations. Checked assertions require
+reference-valued source contracts and class/interface targets. Captured FPC 3.3.1
+ObjFPC/Delphi/DelphiUnicode modes qualify this behavior; unknown modes refuse.
+
+Explicit cast operands remain balanced opaque source windows and require one
+authored operand. Their declared target is not a claim about operand compatibility,
+representation safety, compiler eligibility or runtime success. Nothing executes:
+an independent complete native unit evaluates legal casts to 42, while source
+queries leave its separate operand counter unchanged. The native witness retains
+the compiler's named-interface requirement and parenthesized generic-cast spelling.
+
+Type-target lookup distinguishes source type declarations/formals from type-only
+value answers. `Result` cannot become a type name in `as Result` or `TBox<Result>`;
+grouping a type cannot donate instance members. Generic callee scanning retains
+the full original physical receiver under existing token/depth limits. Member
+navigation and exact detached insertion keep real declaring tokens after provider
+retirement. No wire schema or default engine installation changes.
+
+Focused qualification passes 401 native checks/clean heap at a 274-unit first fit,
+with every smaller allowance refusing atomically. WORK.md owns final wider/native
+RTL qualification, retained preparations and remaining full language/editor/
+incremental/adoption/parity/delivery scope. The provider still rebuilds its captured
+world per call; dependency-aware reuse remains required for ordinary editor
+performance and is not established by expression support.
+
+The complete batch passes 101 compiler jobs with zero Nyx-owned warnings and
+55 native logs with clean heaps, including the unchanged original RTL consumer.
+Both Studio targets and 45 browser compilations pass as applicable; browser
+execution and ordinary editor adoption remain unqualified.
 
 ## Captured SDK modules and dependency loading
 

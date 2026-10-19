@@ -863,6 +863,37 @@ var
       begin
         Result := Tail(Previous(ALexical, AIndex - 1));
       end
+      else if (LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoGreater, psoShiftRight]) then
+      begin
+        { A generic callee's closed type arguments belong to its name. The
+          semantic type parser validates their grammar; this scan only keeps
+          the entire physical receiver instead of dropping its cast target. }
+        LCount := 1;
+
+        if LPart.Symbol = psoShiftRight then LCount := 2;
+        while LCount > 0 do
+        begin
+          AIndex := Previous(ALexical, AIndex - 1);
+
+          if AIndex < 0 then raise EOwnedGap.CreateGap(pcgExpression, 'A generic receiver target is unfinished');
+          LPart := ALexical.Token(AIndex);
+
+          if LPart.Kind = ptkSymbol then
+          begin
+            case LPart.Symbol of
+              psoGreater: Inc(LCount);
+              psoShiftRight: Inc(LCount, 2);
+              psoLess: Dec(LCount);
+            else
+              { Type syntax, separators and bounds retain their own owner. }
+            end;
+          end;
+
+          if LCount > FProvider.Options.Binding.MaximumDepth then
+            raise EOwnedGap.CreateGap(pcgBudget, 'Generic receiver nesting exceeds its configured depth');
+        end;
+        Result := Tail(Previous(ALexical, AIndex - 1));
+      end
       else if (LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoCloseParen, psoCloseBracket]) then
       begin
         LCall := LPart.Symbol = psoCloseBracket;
@@ -906,7 +937,8 @@ var
         begin
           LPart := ALexical.Token(Result);
           LCall := LCall or ((LPart.Kind = ptkWord) and (LPart.Word = pkwNone)) or
-            ((LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoCloseParen, psoCloseBracket, psoCaret]));
+            ((LPart.Kind = ptkSymbol) and (LPart.Symbol in [psoCloseParen, psoCloseBracket, psoCaret,
+              psoGreater, psoShiftRight]));
         end;
 
         if LCall then Result := Tail(Result);
