@@ -495,7 +495,9 @@ begin
     Contract('RepeatedValue(Badge,Badge)');
     Contract('KeepValue(PairValue(Number,Badge).Value)');
     Contract('KeepValue(PairValue<LongInt,TInferredBadge>(Number,Badge).Value)');
-    Refusal('KeepValue(42)');
+    { Literal inference now has its own native-witness qualification. Reals
+      still retain the original explicit missing-type refusal here. }
+    Refusal('KeepValue(1.5)');
     Refusal('ConstrainedValue(Number)');
     Refusal('RepeatedValue(Badge,Number)');
     Refusal('KeepValue(TInferredBadge)');

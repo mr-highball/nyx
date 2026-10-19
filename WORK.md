@@ -33,7 +33,83 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Implicit generic argument correspondence — 2026-10-19
+## Current integration: Source-owned literal expression types — 2026-10-19
+
+The previous checkpoint 7838cf8 qualifies source-owned implicit generic argument
+correspondence. This turn follows the value-expression prerequisite through the
+existing exact-value, lexical, context, translated-origin and binding owners.
+The original authoring criterion and full library/Studio outcome remain open.
+
+A whole handwritten native unit records 54 actual generic specializations in
+each Delphi/Unicode mode. The 53 supported observations agree with ordinary
+resolver queries; real and nil expression types remain explicit gaps. Exact
+integer values never pass through browser Number. Optional literal evidence keeps
+source module/span/context and byte or UTF-16 code units, including NUL and
+surrogates. Raw constant-string arrays retain their separate generic deduction
+type. A generic result receives only that type, never the argument's constant
+value. Local True/False declarations retain normal lookup ownership.
+
+The final focused preparation passes 635 with a clean heap, first fit 193 and
+64 joined concurrent readers. Exact included/macro fragments, native materialized
+UTF-16 units and a compiled constructed result returning 42 qualify the source
+contract. Ordinary completion follows BoxLiteral(42).Val into the real Value
+declaration; retained navigation and detached insertion survive provider retirement.
+Earlier compiler
+errors, the ANSI test-file decoding failure and the context/projection assertion
+failures remain in the new packet; no final wider qualification is claimed yet.
+The test reader now loads exact UTF-8 bytes instead of reinterpreting source with
+an ANSI TStringList. Compiler controls independently accept nil specialization
+and reject whitespace-separated string fragments. They do not establish the
+still-open nil/real expression contract. The original observer source is retained.
+
+Four Pascal inputs now freeze for maintained consumer qualification. Existing limits, compiler
+probes, SDK inputs, protected/frozen artifacts and foreign planning stay intact.
+No host/config retry, capture, cleanup/restart, rollout, new MCP schema or
+sub-agents. LAN remains offline; browser execution/parity/adoption/delivery and
+the full goal remain open. Ignored .local/literal-types-paths-private.json owns
+the current packet; new sources are local and not qualified or pushed.
+
+Frozen-source qualification now passes: 130 main compiler logs have zero owned
+warnings/343 upstream; 70 native logs have clean heaps and 59 browser consumers
+compile only. Both Studios, backend and worker compile as applicable. Both native
+literal modes pass 635 with 54 observations/53 matched specialization types,
+first fit 193 and 64 joined readers. The original inference companion retains
+679/461, 52 header work and twelve runtime invocations. The corpus retains 571
+checks over 504 library files and 2,417,506 lossless tokens.
+
+The unchanged original RTL consumer passes 56: System retains 13,101 declarations,
+zero translation/declaration-syntax diagnostics and 31 semantic answers; ObjPas
+retains 209/zero/one. Both finish with no pending query. Exact indexed
+Free/FreeInstance include navigation/insertion remains ready. The 2M view/4M
+aggregate/64-round limits, five initial queries, one Word job, symbol three/eight
+and six ordered dynamic primitive jobs within eight remain unchanged.
+
+The first native group stopped because its warning-policy consumer's independent
+compiler transcript had not yet been staged. The failed clean-heap run stays
+retained. The existing unchanged oracle was then compiled with its required
+ObjFPC starting mode; its earlier default-mode preparation is retained separately.
+The corrected transcript has zero hidden and three restored visible markers.
+The native consumer passes 37; its deliberate warning is outside product debt.
+Resume retained all completed frozen-source compiler/run evidence and joined
+every remaining reader, without source edits, raised limits or host retries.
+
+Four Pascal inputs remain frozen. All 720 maintained sources/716 unrelated,
+97 RTL/24 compiler pins, seven new compiler inspections and earlier inspections,
+156 source packets/48 includes, 349 frozen artifacts, nine protected contexts,
+five current-start protected files and thirteen foreign planning files remain
+exact. The historical global-configuration preservation failure remains retained;
+the full preservation gate stays false while current-start checks pass. No
+configuration restoration is performed. LAN remains offline; native Nyx tools
+remain absent. Browser execution, default editor installation, full inference/
+language/input/performance/parity/adoption/delivery and the original goal stay open.
+
+Stop literal/fixture/compiler variants. Next reassess expression argument
+boundaries, opaque ordinary slots and source-work admission before extending
+operator/reference typing through the existing lexical/value/context/binding
+owners. No new MCP tool/schema, guessed conversion or relaxed quota. Final
+qualification and source/remote receipts belong to the ignored literal packet.
+
+## Previous integration: Implicit generic argument correspondence — 2026-10-19
 
 The previous goal turn makes authoritative source/qualification/remote progress
 in 8fc153f. Original NS-4_studio-authoring_01 criterion two remains open. This

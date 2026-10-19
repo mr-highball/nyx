@@ -27,7 +27,7 @@ interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.syntax.translated,
-  nyx.pascal.requirements;
+  nyx.pascal.requirements, nyx.pascal.values;
 
 type
   { Invalid snapshot/site references are caller failures. Semantic missing or
@@ -83,6 +83,10 @@ type
   { Symbolic, imported-System or compiler-root identity. Bootstrap evidence
     precedes authored aliases; equal spelling/category never establishes identity. }
   TNyxPascalIntrinsicOrigin = (pioUnqualified, pioSystem, pioSystemBootstrap);
+  { Literal value families are distinct from their expression types. A string
+    constant can have an anonymous array type yet specialize a generic as a
+    managed string; neither fact is an assignment-conversion permission. }
+  TNyxPascalLiteralKind = (plkInteger, plkBoolean, plkCharacter, plkString);
   { Explicit receiver intent; resolving a type name never grants instance access
     to an instance field through a class reference. }
   TNyxPascalMemberAccess = (pmaInstance, pmaType);
@@ -232,6 +236,26 @@ type
     function IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
     function IntrinsicReference: TNyxPascalSizeReference;
     function IntrinsicContext: INyxPascalCompilerContext;
+  end;
+  { Optional source-owned literal evidence. Span is in ModuleIndex's analysis
+    projection; its world retains the exact physical/include/macro origins.
+    Code units are bytes for narrow constants and UTF-16 units for wide ones,
+    preserving NUL and individual surrogates without a host-string conversion.
+    Value is exact integer/Boolean/character ordinal, otherwise Unknown.
+    SpecializationType is a qualified generic argument type, never a promise
+    that a routine receiving this literal returns its value. Nil means unknown.
+    Results retain no query budget, mutable source or execution callback. }
+  INyxPascalLiteralType = interface(IInterface)
+    ['{A4B85D43-01E9-4F15-A018-B88103632951}']
+    function LiteralKind: TNyxPascalLiteralKind;
+    function ModuleIndex: Integer;
+    function Span: TNyxPascalSpan;
+    function Context: INyxPascalCompilerContext;
+    function Value: TNyxPascalConstantValue;
+    function Wide: Boolean;
+    function UnitCount: Integer;
+    function CodeUnit(AIndex: Integer): Integer;
+    function SpecializationType: INyxPascalSemanticType;
   end;
   { Optional first-class formal identity. Bound entries are source-resolved
     guaranteed member contracts, including an implied class root when qualified.
@@ -414,7 +438,8 @@ function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
 implementation
 
-uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work;
+uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work,
+  nyx.pascal.translation;
 
 const
   { Keep implementation spellings local while the public typed request owns
@@ -537,6 +562,29 @@ type
     function ParameterName(AIndex: Integer): TNyxText;
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { Query-local literal proof extends an ordinary shape, with separately owned
+    exact values, source context and deduction type. Its primitive child has no
+    literal evidence, so generic result types cannot inherit a constant value. }
+  TLiteralType = class(TSemanticType, INyxPascalLiteralType)
+  public
+    FLiteralKind: TNyxPascalLiteralKind;
+    FModule: Integer;
+    FSpan: TNyxPascalSpan;
+    FContext: INyxPascalCompilerContext;
+    FValue: TNyxPascalConstantValue;
+    FWide: Boolean;
+    FUnits: array of Integer;
+    FDeduction: INyxPascalSemanticType;
+    function LiteralKind: TNyxPascalLiteralKind;
+    function ModuleIndex: Integer;
+    function Span: TNyxPascalSpan;
+    function Context: INyxPascalCompilerContext;
+    function Value: TNyxPascalConstantValue;
+    function Wide: Boolean;
+    function UnitCount: Integer;
+    function CodeUnit(AIndex: Integer): Integer;
+    function SpecializationType: INyxPascalSemanticType;
   end;
   { A complete source routine header shares the ordinary semantic signature
     shape, retaining real parameter symbols instead of synthesized declarations.
@@ -1158,6 +1206,54 @@ function TSemanticType.ParameterType(AIndex: Integer): INyxPascalSemanticType;
 begin
   ParameterName(AIndex);
   Result := Types[AIndex];
+end;
+
+function TLiteralType.LiteralKind: TNyxPascalLiteralKind;
+begin
+  Result := FLiteralKind;
+end;
+
+function TLiteralType.ModuleIndex: Integer;
+begin
+  Result := FModule;
+end;
+
+function TLiteralType.Span: TNyxPascalSpan;
+begin
+  Result := FSpan;
+end;
+
+function TLiteralType.Context: INyxPascalCompilerContext;
+begin
+  Result := FContext;
+end;
+
+function TLiteralType.Value: TNyxPascalConstantValue;
+begin
+  Result := FValue;
+end;
+
+function TLiteralType.Wide: Boolean;
+begin
+  Result := FWide;
+end;
+
+function TLiteralType.UnitCount: Integer;
+begin
+  Result := Length(FUnits);
+end;
+
+function TLiteralType.CodeUnit(AIndex: Integer): Integer;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FUnits)) then
+    raise ENyxPascalBinding.Create('A literal code-unit ordinal is outside its source value');
+  Result := FUnits[AIndex];
+end;
+
+function TLiteralType.SpecializationType: INyxPascalSemanticType;
+begin
+  Result := FDeduction;
 end;
 
 function TDeclaredSignature.ParameterDeclaration(AIndex: Integer): INyxPascalBoundSymbol;
@@ -1927,6 +2023,7 @@ var
   LRightIntrinsic: INyxPascalIntrinsicIdentity;
   LLeftFormal: INyxPascalFormalParameter;
   LRightFormal: INyxPascalFormalParameter;
+  LLeftLiteral, LRightLiteral: INyxPascalLiteralType;
 begin
   Enter;
   try
@@ -1950,6 +2047,19 @@ begin
     if (ALeft.Kind <> ARight.Kind) or (ALeft.Builtin <> ARight.Builtin) then
     begin
       Exit(False);
+    end;
+
+    if (ALeft.Kind = pstArray) and
+      (Supports(ALeft, INyxPascalLiteralType, LLeftLiteral) or
+       Supports(ARight, INyxPascalLiteralType, LRightLiteral)) then
+    begin
+      { A constant array's bound is part of its type. The general anonymous
+        shape comparison cannot discard that bound or equate a source array
+        declaration with compiler constant-string storage. }
+      Exit(Supports(ALeft, INyxPascalLiteralType, LLeftLiteral) and
+        Supports(ARight, INyxPascalLiteralType, LRightLiteral) and
+        (LLeftLiteral.UnitCount = LRightLiteral.UnitCount) and
+        (LLeftLiteral.Wide = LRightLiteral.Wide) and SameType(ALeft.Target, ARight.Target));
     end;
 
     if ALeft.Kind = pstFormal then
@@ -6736,6 +6846,415 @@ var
   { Recursive grouping shares this query's token/depth/work scope. }
   function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution; forward;
 
+  { Decode closed literals through the existing exact-value owner. Compiler
+    range/specialization rules require their qualified source context; source
+    origins, not the projection's inserted spaces, decide fragment adjacency. }
+  function LiteralPrimary(out ACandidate: Boolean): INyxPascalResolution;
+  const
+    CTrueLiteral: TNyxText = 'true';
+    CFalseLiteral: TNyxText = 'false';
+    CUpper: array[0..7] of TNyxText = ('127','255','32767','65535',
+      '2147483647','4294967295','9223372036854775807','18446744073709551615');
+    CLower: array[0..7] of TNyxText = ('128','0','32768','0',
+      '2147483648','0','9223372036854775808','0');
+    CIntegerNames: array[0..7] of TNyxText = ('shortint','byte','smallint','word',
+      'longint','longword','int64','qword');
+  var
+    LLiteral: TLiteralType;
+    LLease: INyxPascalSemanticType;
+    LContext: INyxPascalCompilerContext;
+    LView: INyxPascalTranslatedSyntax;
+    LStart, LFinish, LAtBound, LIndex, LScalar, LUnitCount, LBase, LCode: Integer;
+    LPrevious: TNyxPascalSyntaxOrigin;
+    LCurrent: TNyxPascalSyntaxOrigin;
+    LSpelling, LName, LPrimitive: TNyxText;
+    LNegative, LSigned, LUTF8Checked, LUTF8: Boolean;
+    LValue, LLower: TNyxPascalConstantValue;
+    LTypeAnswer: INyxPascalResolution;
+    LIdentity: INyxPascalIntrinsicIdentity;
+
+    function Primitive(const AName: TNyxText): INyxPascalResolution;
+    begin
+      Tick;
+
+      if (FLimits.ImplicitScopes = pispCompilerUnits) and (FWorld.FindModule('System') < 0) then
+        Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
+      Result := BuiltinType(FWorld.At(ASite.ModuleIndex, ASite.ScopeIndex, LStart),
+        AName, FLimits.ImplicitScopes = pispCompilerUnits);
+    end;
+
+    { An explicit decoded UTF-8 file alone does not establish the compiler's
+      source codepage. Follow earlier authored requests in translation order,
+      including include occurrences and uncertain conditional participation. }
+    function UTF8Source: Boolean;
+    var
+      LSource: INyxPascalTranslation;
+      LRow: TNyxPascalTranslatedToken;
+      LAt, LOffset: Integer;
+      LDirective, LArgument: TNyxText;
+    begin
+
+      if LUTF8Checked then Exit(LUTF8);
+      LUTF8Checked := True;
+      LUTF8 := False;
+      LSource := LView.Source;
+      for LAt := 0 to LView.Origin(LView.OriginAt(LStart)).TranslationToken - 1 do
+      begin
+        Tick;
+        LRow := LSource.Token(LAt);
+
+        { Unknown textual effects revoke encoding evidence as well as ordinary
+          language settings. A later MODE cannot resurrect an earlier codepage
+          proof; an authored UTF8 request must establish it again. }
+        if (LRow.Activity = ppkUnknown) or (LSource.State(LRow.State).Mode = ppmUnknown) then
+          LUTF8 := False;
+
+        if (LRow.Activity = ppkFalse) or (LSource.PhysicalToken(LAt).Kind <> ptkDirective) then Continue;
+        NyxPascalDirectiveParts(LSource.Text(LAt), LDirective, LArgument, LOffset);
+
+        if LDirective = 'codepage' then
+          LUTF8 := (LRow.Activity = ppkTrue) and (NyxPascalASCIIKey(LArgument) = 'utf8');
+      end;
+      Result := LUTF8;
+    end;
+
+    procedure AppendUnit(AValue: Integer);
+    var
+      LCapacity: Integer;
+    begin
+      Tick;
+
+      if LUnitCount = Length(LLiteral.FUnits) then
+      begin
+        LCapacity := Length(LLiteral.FUnits);
+
+        if LCapacity > High(Integer) div 2 then
+          raise ENyxPascalBindingLimit.Create('Literal code units exceed their bounded vector');
+
+        if LCapacity = 0 then LCapacity := 16 else LCapacity := LCapacity * 2;
+        NyxPascalAdmitAnalysis(FCancel, papFrozenRow, LCapacity - Length(LLiteral.FUnits));
+        SetLength(LLiteral.FUnits, LCapacity);
+      end;
+      LLiteral.FUnits[LUnitCount] := AValue;
+      Inc(LUnitCount);
+    end;
+
+    procedure AppendScalar(AValue: Integer);
+    begin
+
+      if AValue <= $ffff then AppendUnit(AValue)
+      else
+      begin
+        Dec(AValue, $10000);
+        AppendUnit($d800 + (AValue shr 10));
+        AppendUnit($dc00 + (AValue and $3ff));
+      end;
+    end;
+
+    { Prior byte escapes are decoded together when the compiler promotes a
+      literal to wide storage. Invalid UTF-8 stays an explicit unsupported
+      conversion; no replacement character or host ANSI policy is guessed. }
+    function MakeWide: Boolean;
+    var
+      LRead, LWrite, LLead, LTails, LMin, LValue, LTail: Integer;
+    begin
+      Result := True;
+
+      if LLiteral.FWide then Exit;
+      LRead := 0;
+      LWrite := 0;
+      while LRead < LUnitCount do
+      begin
+        Tick;
+        LLead := LLiteral.FUnits[LRead];
+        Inc(LRead);
+        LValue := LLead;
+        LTails := 0;
+        LMin := 0;
+
+        if LLead >= $80 then
+        begin
+
+          if not UTF8Source then Exit(False);
+
+          if (LLead >= $c2) and (LLead <= $df) then
+          begin LTails := 1; LValue := LLead and $1f; LMin := $80; end
+          else if (LLead >= $e0) and (LLead <= $ef) then
+          begin LTails := 2; LValue := LLead and $f; LMin := $800; end
+          else if (LLead >= $f0) and (LLead <= $f4) then
+          begin LTails := 3; LValue := LLead and $7; LMin := $10000; end
+          else Exit(False);
+          while LTails > 0 do
+          begin
+            Tick;
+
+            if LRead >= LUnitCount then Exit(False);
+            LTail := LLiteral.FUnits[LRead];
+
+            if (LTail < $80) or (LTail > $bf) then Exit(False);
+            LValue := LValue * 64 + (LTail and $3f);
+            Inc(LRead);
+            Dec(LTails);
+          end;
+
+          if (LValue < LMin) or (LValue > $10ffff) or
+            ((LValue >= $d800) and (LValue <= $dfff)) then Exit(False);
+        end;
+
+        if LValue > $ffff then
+        begin
+          Dec(LValue, $10000);
+          LLiteral.FUnits[LWrite] := $d800 + (LValue shr 10);
+          Inc(LWrite);
+          LValue := $dc00 + (LValue and $3ff);
+        end;
+        LLiteral.FUnits[LWrite] := LValue;
+        Inc(LWrite);
+      end;
+      LUnitCount := LWrite;
+      LLiteral.FWide := True;
+    end;
+
+    function Adjacent: Boolean;
+    var
+      LPreviousToken, LCurrentToken: TNyxPascalToken;
+    begin
+      Result := False;
+
+      if not LAvailable or not (LToken.Kind in [ptkString, ptkCharacter]) then Exit;
+      LCurrent := LView.Origin(LView.OriginAt(LToken.Span.Start));
+
+      if LPrevious.Occurrence <> LCurrent.Occurrence then Exit;
+
+      if (LPrevious.Expansion < 0) and (LCurrent.Expansion < 0) then
+        Exit(LPrevious.PhysicalSpan.Finish = LCurrent.PhysicalSpan.Start);
+
+      if (LPrevious.Expansion < 0) or (LPrevious.Expansion <> LCurrent.Expansion) then Exit;
+      LPreviousToken := NyxPascalEffectiveToken(LView.Source, LPrevious.TranslationToken);
+      LCurrentToken := NyxPascalEffectiveToken(LView.Source, LCurrent.TranslationToken);
+      Result := LPreviousToken.Span.Finish = LCurrentToken.Span.Start;
+    end;
+
+  begin
+    ACandidate := LAvailable and (LToken.Kind in [ptkNumber, ptkString, ptkCharacter]);
+    LSigned := IsSymbol(psoPlus) or IsSymbol(psoMinus);
+    ACandidate := ACandidate or LSigned;
+    LName := '';
+
+    if LAvailable and (LToken.Kind = ptkWord) and not LToken.Escaped then
+    begin
+      LName := NyxPascalASCIIKey(LLex.Identifier(LAt));
+
+      if (LName = CTrueLiteral) or (LName = CFalseLiteral) then
+      begin
+        Result := Lookup(ASite, LName);
+
+        if (Result.Status <> pbsMissing) or (Result.Issue <> pbiMissingName) then
+        begin
+          ACandidate := Result.Status <> pbsBound;
+          Exit;
+        end;
+        ACandidate := True;
+      end;
+    end;
+    Result := nil;
+
+    if not ACandidate then Exit;
+    Result := Answer(pbsUnresolved, pbiUnsupportedType);
+    LStart := LToken.Span.Start;
+    LView := FWorld.ModuleAt(ASite.ModuleIndex);
+    LContext := ContextAt(FWorld.At(ASite.ModuleIndex, ASite.ScopeIndex, LStart));
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
+      Exit(Answer(pbsUnresolved, pbiCompilerContext));
+    LLiteral := TLiteralType.Create;
+    LLease := LLiteral;
+    LLiteral.Owner := FWorld;
+    LLiteral.FContext := LContext;
+    LLiteral.FModule := ASite.ModuleIndex;
+    LPrimitive := '';
+    LNegative := IsSymbol(psoMinus);
+
+    if LSigned then Next;
+
+    if not LAvailable or not LToken.Complete then Exit;
+    LFinish := LToken.Span.Finish;
+
+    if LToken.Kind = ptkNumber then
+    begin
+
+      if LToken.RealNumber then Exit;
+      LBase := 10;
+      case LToken.NumberBase of
+        pnbDecimal: LBase := 10;
+        pnbHexadecimal: LBase := 16;
+        pnbOctal: LBase := 8;
+        pnbBinary: LBase := 2;
+      end;
+      try
+        LSpelling := LLex.Text(LAt);
+        NyxPascalAdmitAnalysis(FCancel, papSourceProof, Length(LSpelling));
+        LValue := NyxPascalIntegerToken(LSpelling, LBase);
+
+        if LNegative then LValue := LValue.Negated;
+      except
+        on ENyxPascalValue do Exit;
+      end;
+
+      if LValue.Kind <> pvvInteger then Exit;
+      for LAtBound := 0 to High(CUpper) do
+      begin
+        Tick;
+        LLower := NyxPascalIntegerToken(CLower[LAtBound], 10).Negated;
+
+        if (LValue.Number.CompareTo(LLower.Number) >= 0) and
+          (LValue.Number.CompareTo(NyxPascalIntegerToken(CUpper[LAtBound], 10).Number) <= 0) then
+        begin
+          LPrimitive := CIntegerNames[LAtBound];
+          Break;
+        end;
+      end;
+      LLiteral.FLiteralKind := plkInteger;
+      LLiteral.FValue := LValue;
+      Next;
+    end
+    else if LSigned then Exit
+    else if (LName = CTrueLiteral) or (LName = CFalseLiteral) then
+    begin
+      LLiteral.FLiteralKind := plkBoolean;
+      LLiteral.FValue := TNyxPascalConstantValue.BooleanValue(LName = CTrueLiteral);
+      LPrimitive := 'boolean';
+      Next;
+    end
+    else if LToken.Kind in [ptkString, ptkCharacter] then
+    begin
+      LUnitCount := 0;
+      LUTF8Checked := False;
+      LUTF8 := False;
+      repeat
+
+        if not LToken.Complete then Exit;
+        LSpelling := LLex.Text(LAt);
+        LFinish := LToken.Span.Finish;
+
+        if LToken.Kind = ptkCharacter then
+        begin
+          LSpelling := Copy(LSpelling, 2, Length(LSpelling));
+          LBase := 10;
+
+          if Length(LSpelling) = 0 then Exit;
+          case LSpelling[1] of
+            '$': LBase := 16;
+            '&': LBase := 8;
+            '%': LBase := 2;
+          end;
+          try
+            NyxPascalAdmitAnalysis(FCancel, papSourceProof, Length(LSpelling));
+            LValue := NyxPascalIntegerToken(LSpelling, LBase);
+          except
+            on ENyxPascalValue do Exit;
+          end;
+
+          if LValue.Number.CompareTo(TNyxPascalConstantValue.IntegerValue($10ffff).Number) > 0 then Exit;
+          LCode := StrToInt(String(LValue.Number.ToText));
+
+          if (LCode > 255) or (Length(LSpelling) > 3) then
+          begin
+
+            if not MakeWide then Exit;
+          end
+          else if LLiteral.FWide and (LCode >= $80) and not UTF8Source then
+            Exit(Answer(pbsUnresolved, pbiCompilerContext));
+          AppendScalar(LCode);
+        end
+        else
+        begin
+          LSpelling := Copy(LSpelling, 2, Length(LSpelling) - 2);
+          LIndex := 1;
+          while LIndex <= Length(LSpelling) do
+          begin
+            Tick;
+
+            if not NyxNextScalar(LSpelling, LIndex, LScalar) then Exit;
+
+            if LScalar = 39 then
+            begin
+
+              if (LIndex > Length(LSpelling)) or (LSpelling[LIndex] <> '''') then Exit;
+              Inc(LIndex);
+            end;
+
+            if LScalar >= $80 then
+            begin
+
+              if not UTF8Source then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+
+              if not MakeWide then Exit;
+            end;
+            AppendScalar(LScalar);
+          end;
+        end;
+        LPrevious := LView.Origin(LView.OriginAt(LToken.Span.Start));
+        Next;
+      until not Adjacent;
+      SetLength(LLiteral.FUnits, LUnitCount);
+
+      if LUnitCount = 1 then
+      begin
+        LLiteral.FLiteralKind := plkCharacter;
+        LLiteral.FValue := TNyxPascalConstantValue.IntegerValue(LLiteral.FUnits[0]).AsOrdinal;
+
+        if LLiteral.FWide then LPrimitive := 'widechar' else LPrimitive := 'ansichar';
+      end
+      else
+      begin
+        LLiteral.FLiteralKind := plkString;
+
+        if LLiteral.FWide then LPrimitive := 'unicodestring'
+        else
+        begin
+          LLiteral.TypeKind := pstArray;
+          LTypeAnswer := Primitive('ansichar');
+
+          if LTypeAnswer.Status <> pbsBound then Exit(LTypeAnswer);
+          LLiteral.Element := LTypeAnswer.BoundType;
+
+          if LContext.Option('H') = ppkFalse then LPrimitive := 'shortstring'
+          else if LContext.Option('H') = ppkTrue then
+          begin
+
+            if LContext.Feature(ppfUnicodeStrings) = ppkTrue then LPrimitive := 'unicodestring'
+            else if LContext.Feature(ppfUnicodeStrings) = ppkFalse then LPrimitive := 'ansistring';
+          end;
+        end;
+      end;
+    end
+    else Exit;
+    LLiteral.FSpan := NyxPascalSpan(LStart, LFinish - LStart);
+
+    if (LPrimitive = '') and (LLiteral.TypeKind <> pstArray) then Exit;
+
+    if LPrimitive <> '' then
+    begin
+      LTypeAnswer := Primitive(LPrimitive);
+
+      if LTypeAnswer.Status <> pbsBound then Exit(LTypeAnswer);
+      LLiteral.FDeduction := LTypeAnswer.BoundType;
+
+      if LLiteral.TypeKind <> pstArray then
+      begin
+        LLiteral.TypeKind := pstBuiltin;
+        LLiteral.Intrinsic := LTypeAnswer.BoundType.Builtin;
+        Supports(LTypeAnswer.BoundType, INyxPascalIntrinsicIdentity, LIdentity);
+        LLiteral.IntrinsicScope := LIdentity.IntrinsicOrigin;
+        LLiteral.IntrinsicName := LIdentity.IntrinsicReference;
+        LLiteral.IntrinsicFacts := LIdentity.IntrinsicContext;
+      end;
+    end;
+    Result := TypeAnswer(LLease);
+  end;
+
   function WantsInference(const AFound: INyxPascalResolution): Boolean;
   var
     LContext: INyxPascalCompilerContext;
@@ -6763,22 +7282,20 @@ var
     end;
   end;
 
-  { Postfix owns nested calls and their explicit generic commas. Argument
-    boundaries are never guessed by treating every '<' as a type delimiter.
-    Closed literals remain opaque: they can occupy ordinary slots but cannot
-    donate a compiler-dependent literal type. Unsupported expressions refuse. }
+  { Postfix owns nested calls and their explicit generic commas. Qualified
+    literals contribute only their specialization type, never a constant value
+    for the call result. Real/nil literals retain their earlier opaque slots
+    until their compiler-dependent expression rules have been qualified. }
   function InferredCall(const AFound: INyxPascalResolution): INyxPascalResolution;
-  const
-    CTrueLiteral: TNyxText = 'true';
-    CFalseLiteral: TNyxText = 'false';
   var
     LArguments: TInferredArgumentTypes;
     LValue: INyxPascalResolution;
     LArgumentType: INyxPascalSemanticType;
     LArgumentAccess: TNyxPascalMemberAccess;
     LCount: Integer;
-    LLiteral: Boolean;
-    LName: TNyxText;
+    LOpaque: Boolean;
+    LLiteral: INyxPascalLiteralType;
+    LSavedAt: Integer;
   begin
     SetLength(LArguments, 0);
     Next;
@@ -6792,24 +7309,27 @@ var
     begin
       Tick;
       LArgumentType := nil;
-      LLiteral := LToken.Kind in [ptkNumber, ptkString, ptkCharacter];
-
-      if (LToken.Kind = ptkWord) and not LToken.Escaped then
-      begin
-        LName := NyxPascalASCIIKey(LLex.Identifier(LAt));
-        LLiteral := (LToken.Word = pkwNil) or (LName = CTrueLiteral) or (LName = CFalseLiteral);
-      end;
+      LOpaque := (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwNil);
 
       if IsSymbol(psoPlus) or IsSymbol(psoMinus) then
       begin
+        LSavedAt := LAt;
         Next;
 
         if not LAvailable or (LToken.Kind <> ptkNumber) then
           Exit(Answer(pbsUnresolved, pbiUnsupportedType));
-        LLiteral := True;
+        LOpaque := LToken.RealNumber;
+        LAt := LSavedAt;
+        ReadToken;
       end;
+      LOpaque := LOpaque or ((LToken.Kind = ptkNumber) and LToken.RealNumber);
 
-      if LLiteral then Next
+      if LOpaque then
+      begin
+
+        if IsSymbol(psoPlus) or IsSymbol(psoMinus) then Next;
+        Next;
+      end
       else
       begin
         LValue := Postfix(LArgumentAccess);
@@ -6818,6 +7338,9 @@ var
 
         if LArgumentAccess <> pmaInstance then Exit(Answer(pbsUnresolved, pbiGenericContext));
         LArgumentType := LValue.BoundType;
+
+        if Supports(LArgumentType, INyxPascalLiteralType, LLiteral) then
+          LArgumentType := LLiteral.SpecializationType;
       end;
       LCount := Length(LArguments);
 
@@ -6849,13 +7372,21 @@ var
     LInnerAccess: TNyxPascalMemberAccess;
     LTypeStart: Integer;
     LTypeCallee: Boolean;
+    LIsLiteral: Boolean;
     LFormal: INyxPascalFormalParameter;
   begin
     Enter;
     try
       AValueAccess := pmaInstance;
+      LName := '';
+      LFound := LiteralPrimary(LIsLiteral);
 
-      if IsSymbol(psoOpenParen) then
+      if LIsLiteral then
+      begin
+
+        if LFound.Status <> pbsBound then Exit(LFound);
+      end
+      else if IsSymbol(psoOpenParen) then
       begin
         Next;
         LFound := Postfix(LInnerAccess);

@@ -3619,8 +3619,8 @@ arguments. Unapplied signatures can resolve external names only in their owning
 type header; this permission does not extend into a generic body. All considered
 result contracts must agree, independently of runtime overload selection.
 
-Closed literal arguments may occupy ordinary slots but supply no guessed literal
-type. A required literal type, conflicting formal values, missing arguments,
+Qualified literal arguments now contribute their compiler specialization type.
+Conflicting formal values, missing arguments,
 unmodeled expressions, varargs, incompatible frames or uncertain policy refuse
 atomically. This path does not infer conversions, inheritance-based matches,
 anonymous structural equivalence or result-context arguments, evaluate defaults,
@@ -3629,6 +3629,42 @@ current-world identity and cancellation remain unchanged. The native fixture
 executes twelve legal calls to 42; semantic reads leave that count unchanged.
 Browser consumers compile only; full inference/language/editor/adoption/parity
 qualification remains open in WORK.md.
+
+### Source-owned literal expressions
+
+Ordinary expression queries recognize integer, Boolean, character and string
+literals under the qualified FPC 3.3.1 Delphi/DelphiUnicode source context.
+Integer ranges use exact decimal-backed values through both signed and unsigned
+64-bit boundaries, including radix spellings and unary signs. Neither the
+browser's numeric representation nor the analyzer's native register width chooses
+their type. Visible declarations named `True` or `False` retain ordinary lookup;
+a local type named `ShortInt` cannot redefine a compiler literal's intrinsic type.
+
+The optional `INyxPascalLiteralType` retains the literal family, module/projection
+span, captured source context and exact integer/Boolean/character value. String
+and character code units are exposed with checked `UnitCount`/`CodeUnit` access:
+bytes for narrow constants and UTF-16 units for wide constants. NUL, astral pairs
+and individual numeric surrogates remain representable without host ANSI or
+Unicode-string normalization. Physical origins remain available through the
+owning world's source map. Adjacent quoted/character fragments use physical or
+effective macro adjacency, rather than the analysis projection's inserted spaces.
+
+Raw narrow constant strings retain their anonymous array shape and character
+element type. `SpecializationType` separately describes the generic argument type
+selected by the known `H` and Unicode-string settings. Thus a raw `'ab'` constant
+can specialize as `AnsiString`, `UnicodeString` or `ShortString` without pretending
+those are the same source expression type. Unobserved settings stay unknown.
+Non-ASCII quoted text also requires an earlier effective UTF-8 source request;
+unknown textual effects cannot restore an earlier encoding proof through MODE.
+
+Inferred call results retain only the specialization type, never the argument's
+constant value. For example, `BoxLiteral(42).Value` follows the declared generic
+field through ordinary completion/navigation; its value is not evaluated.
+Real/nil expression types, operators, conversions and full compiler call admission
+remain open. Real/nil literals can still occupy opaque non-deduction argument
+slots. Existing work limits, cancellation, immutable worlds and atomic refusal
+apply to decoding and inference. Native compiler witnesses qualify both modes;
+browser consumers compile only, with runtime/editor parity still open.
 
 ### Source-owned routine signatures
 
