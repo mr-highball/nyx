@@ -4,7 +4,46 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source excess-precision policy is typed three-valued local intent,
+Current-source configured FPU metadata has an open typed selector reference and
+optional context capability. It is an initial compiler-profile observation,
+separate from authored defines, current source settings, target support and
+floating representation. Automatic import requires the actual qualified FPC
+3.3.1 i386 banner plus its unique compiler-refreshed selector namespace. Missing/
+duplicate banners, spoofable CPU defines, arbitrary FPU-prefixed names, conflicting
+selectors and unqualified targets remain uncaptured. No new compiler probe/job
+is added. Mutable alternate producers are copied once and released; source/mode/
+unknown-state/local-restore operations cannot import another initial profile.
+Context/storage identity retains known observations via an optional tag, keeping
+unspecified keys exact. Existing GUIDs/enum ordinals/record layouts stay intact;
+a new optional GUID is qualified through rebuilt consumers. Native focused
+50/11 has clean heap, all smaller budgets refuse atomically and cancellation
+publishes no partial snapshot. A whole native witness proves macro spoofing
+does not change division behavior; an existing byte-exact real control profile
+is replayed read-only. The initial wrong five-query reconstruction and exact
+five inputs/logs remain retained. All 44 current main compiler logs have zero
+owned warnings/77 upstream; twenty-nine native runs have clean heaps and thirteen
+browser consumers compile only. Both Studios/backend/worker compile as applicable.
+The unchanged RTL consumer passes 56: System 13,101/zero syntax/31 answers;
+ObjPas 209/zero/one, neither pending, with exact Free/FreeInstance navigation/
+insertion. Original 2M/4M/64-round, initial5/Word1/symbol3of8/dynamic6of8 stay exact.
+All 731 maintained/726 unrelated sources, five frozen inputs, 97 RTL/24 base
+compiler pins and prior plus two FPU inspections, five previous source copies,
+retained failures and two profile inputs, 156 unit packets/48 historical includes,
+349 frozen artifacts/nine contexts/five protected files/thirteen concurrent
+planning files stay exact. Readers joined; LAN offline; native Nyx tools absent.
+The historical global-config failure keeps the full preservation gate false.
+WORK.md and ignored .local/configured-fpu-paths-private.json own final receipts/
+return path. Stop configured-snapshot/target-banner/profile-replay/fixture/compiler
+variants. Reassess effective source FPU selection and canonical compiler-root
+float representation/alias identity through existing type/context/requirement
+owners. Initial selectors, precision intent or byte size alone are insufficient.
+Preserve source activation, target qualification, missing facts and all probes/
+quotas. Full language/floating/editor/incremental/input/performance/parity/adoption/
+delivery and the original task/goal remain open. No host/config retry, new SDK
+capture, protected mutation, cleanup/restart, approval bypass, new MCP tool/schema,
+rollout or sub-agents. Preserve concurrent work and historical evidence.
+
+Previously qualified excess-precision policy is typed three-valued local intent,
 independent of target FPU/representation/effective activation. Fluent copies,
 capture/SameFacts, saved settings and bounded prefixes preserve it; mode changes
 and unknown effects revoke knowledge. Physical Boolean directive text/includes

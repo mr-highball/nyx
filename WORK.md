@@ -33,7 +33,103 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed excess-precision policy — 2026-10-19
+## Current integration: Owned configured FPU snapshots — 2026-10-19
+
+The preceding goal turn makes source/qualification/remote progress in 8e49849.
+Current source/remote and all 729 previously qualified inputs are revalidated.
+This turn follows its exact configured-FPU/type-context prerequisite; the full
+Nyx library, authoring and Studio outcome remains open.
+
+Retained compiler profiles already contain initial FPU observations. Pinned FPC
+options code refreshes its own selector namespace after configuration/arguments;
+authored source defines remain a different operation. A new copied selector
+reference and optional context capability retain initial configured metadata
+without changing existing GUIDs, enum ordinals or public record layouts. Legacy
+capabilities default to uncaptured. Explicit fluent updates, complete capture,
+mode copies, unknown-state history and local restore preserve ownership without
+borrowing a mutable producer. The profile participates in exact context and
+optional tagged structural identity; unspecified keys retain their old form.
+
+Automatic import is qualified only by the actual FPC 3.3.1 i386 banner plus its
+closed refreshed selector namespace. Spoofable CPU defines alone, missing or
+duplicate target banners, conflicting selectors, arbitrary FPU-prefixed user
+names and unqualified targets cannot select a profile. Other import targets stay
+uncaptured. This is initial metadata, not current source selection, effective
+precision, target support or primitive floating representation. No new probe,
+query list, SDK capture or MCP schema/tool is added.
+
+Focused native preparation passes 50 with clean heap, first fit 11, every smaller
+allowance refusing atomically, cancellation, alternate-producer retirement and
+context/storage identity checks. The new classification scan and two published
+profile values admit existing analysis work. The whole native witness records
+the actual initial x87 choice, then independently returns Extended for division
+after authored defines pretend to select SSE2. Context/transcript queries invoke
+no application body. A retained real profile is replayed only after its source
+is byte-exact to the owned rendering. Both source/log inputs are pinned; no
+compiler process is launched for that replay.
+
+Retained preparation: the first replay mistakenly reconstructed the original
+RTL five-query probe against the separate control profile, which has no extra
+size queries. Its exact five source inputs and clean-heap failure remain. The
+correct control-profile rendering retains every original byte and the unchanged
+probe count. Early compile-only preparations also exposed a typed constant used
+as a default parameter, missing exception/work imports, and their logs remain.
+No accepted assertion is weakened or compiler input replaced.
+
+Five Pascal inputs are frozen for current context/trace/policy/storage/
+expression/completion regressions, both Studios/backend/worker compilation and
+unchanged RTL qualification. Three prior sources change; two maintained inputs
+are new. Ignored .local/configured-fpu-paths-private.json owns current receipts
+and retained inputs. No product input changes while readers run. This is
+preparation, not final qualification or a pushed implementation. Original
+probes/quotas and all protected/frozen/SDK/concurrent inputs remain required.
+LAN stays offline; native Nyx tools are absent. Full language/floating types/
+incremental/editor/input/performance/parity/adoption/delivery and the original
+goal remain open.
+
+The five-source freeze now qualifies: 44 current main compiler logs have zero
+owned warnings/77 upstream. Twenty-nine native runs have clean heaps; thirteen
+browser consumers compile only. Both Studios/backend/worker compile as
+applicable. Configured FPU 50/11 and retained profile replay pass alongside
+precision 70/33, policy 115, emission 37, protocol 42, source storage 207,
+constants 405, translation 209, macros/conditions 38 each and all current
+expression/signature/generic/completion consumers. Their preceding accepted
+counts remain unchanged. The corpus passes 572 across 505 actual source files
+and 2,428,300 lossless tokens. The unchanged separate emission fixture compiles
+only and retains its one intentional warning outside product debt.
+
+The unchanged original RTL consumer passes 56: System retains 13,101
+declarations/zero translation and syntax diagnostics/31 answers, ObjPas
+209/zero/one, neither pending. Exact Free/FreeInstance include navigation and
+insertion remain ready. The original 2M/4M/64-round limits, initial five queries,
+one Word job, symbol three of eight and the six exact ordered dynamic primitive
+jobs within eight remain unchanged. Replaying the retained control profile adds
+no job to any of those plans.
+
+All 731 maintained sources/726 unrelated, five frozen inputs, 97 RTL/24 base
+compiler pins, earlier plus two FPU source inspections, five previous source
+copies, retained mismatch inputs/logs and exact retained profile source/transcript,
+156 current unit packets/48 historical includes, 349 frozen artifacts/nine
+contexts/five current-start protected files and thirteen concurrent planning
+files stay exact. Every reader joined. The historical global-config failure
+keeps the full preservation gate false. No host/config retry, new SDK capture,
+protected mutation, cleanup/restart, rollout or new MCP tool/schema occurs.
+LAN stays offline; native Nyx tools are absent. No browser execution, effective
+source-FPU/precision/primitive representation, full floating/language/editor/
+incremental/input/performance/parity/adoption/delivery or original task/goal
+closes. The optional capability is qualified through rebuilt consumers; no
+published mixed-binary compatibility claim is added.
+
+Stop configured-snapshot/target-banner/profile-replay/fixture/compiler variants.
+Next reassess effective source FPU selection and canonical compiler-root float
+representation/alias identity through existing type/context/requirement owners.
+An initial configured selector is not a current setting, and neither precision
+intent nor byte size alone supplies effective arithmetic authority. Preserve
+source activation, target qualification, missing facts and all quotas/probes.
+The configured-FPU packet owns final qualification/source/remote receipts and
+the return path. The complete Nyx/Studio outcome remains open.
+
+## Previous integration: Typed excess-precision policy — 2026-10-19
 
 The previous goal turn makes authoritative source/qualification/remote progress
 in d47fe76. Current-source/remote identity and all 727 qualified sources are

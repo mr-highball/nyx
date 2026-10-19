@@ -55,6 +55,16 @@ type
     output/compiler configuration; this analyzer never borrows its own compiler's
     conditional symbols or assumes these metadata grant execution. }
   TNyxPascalCompilerFamily = (ppcUnknown, ppcFPC, ppcPas2JS);
+  { Copied initial compiler-profile FPU selector. Empty means uncaptured.
+    A name is a bounded compiler selector atom, not permission to choose instructions,
+    an effective source setting, target support or a floating representation. }
+  TNyxPascalFPUReference = record
+  private
+    FName: TNyxText;
+  public
+    function Known: Boolean;
+    property Name: TNyxText read FName;
+  end;
   { Numeric message IDs and named warning groups are distinct open namespaces.
     A group may map to several numeric messages in a particular compiler. }
   TNyxPascalWarningReferenceKind = (pwrNumber, pwrName);
@@ -510,6 +520,14 @@ type
     function SymbolCount: Integer;
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
   end;
+  { Optional immutable compiler-profile observation, separate from mutable
+    source defines and local settings. Replacing it is an explicit caller fact;
+    this capability captures no host, producer or compiler process authority. }
+  INyxPascalContextConfiguredFPU = interface(IInterface)
+    ['{F309D792-7293-4315-B75D-78A6D6B9F8F2}']
+    function ConfiguredFPU: TNyxPascalFPUReference;
+    function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+  end;
   { Optional typed policy capture keeps the original context interface/GUID
     intact. Returned values are detached; updates return a new context owner. }
   INyxPascalContextPolicies = interface(IInterface)
@@ -690,6 +708,15 @@ function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompile
 function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
 { Pure metadata constructor with unknown options/features and an open define set.
   No implicit FPC/PAS2JS/platform/version define is read from this build process. }
+{ An explicit bounded selector, normalized like other compiler references.
+  Default(TNyxPascalFPUReference) is the separate uncaptured value. }
+function NyxPascalFPU(const AName: TNyxText): TNyxPascalFPUReference;
+{ Legacy/absent capabilities return uncaptured. A present alternate value is
+  validated and copied before publication, without retaining its producer. }
+function NyxPascalConfiguredFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
+function NyxPascalWithConfiguredFPU(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+
 function NewNyxPascalCompilerContext(AFamily: TNyxPascalCompilerFamily;
   const AVersion: TNyxPascalCompilerVersion;
   AMode: TNyxPascalLanguageMode;
@@ -788,6 +815,7 @@ begin
   end;
   Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
   LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
+  LCaptured := NyxPascalWithConfiguredFPU(LCaptured, NyxPascalConfiguredFPU(AContext));
 
   if Supports(AContext, INyxPascalContextWarnings, LWarnings) then
   begin
@@ -883,7 +911,8 @@ type
     source back references. These requests survive mode changes through Clone. }
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
     INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
-    INyxPascalContextCodeAlignments, INyxPascalContextOptimizations, INyxPascalContextStorage)
+    INyxPascalContextCodeAlignments, INyxPascalContextOptimizations, INyxPascalContextStorage,
+    INyxPascalContextConfiguredFPU)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -901,6 +930,7 @@ type
     FStorage: array of TCapturedStorage;
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
+    FConfiguredFPU: TNyxPascalFPUReference;
     function Clone: TCompilerContext;
   public
     constructor Create;
@@ -925,6 +955,8 @@ type
     function SymbolName(AIndex: Integer): TNyxPascalDefineRef;
     function Policies: TNyxPascalCompilerPolicies;
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
+    function ConfiguredFPU: TNyxPascalFPUReference;
+    function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
     function WarningCount: Integer;
     function WarningAt(AIndex: Integer): TNyxPascalWarningRule;
     function WithWarning(const AReference: TNyxPascalWarningRef;
@@ -1170,6 +1202,7 @@ begin
     Result.FMode := FMode;
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
+    Result.FConfiguredFPU := FConfiguredFPU;
     SetLength(Result.FWarnings, Length(FWarnings));
     for LAt := 0 to High(FWarnings) do
     begin
@@ -1404,6 +1437,9 @@ begin
   LCopy.FVersion := FVersion;
   LCopy.FMode := ppmUnknown;
   LCopy.FCaptureScope := FCaptureScope;
+  { Initial profile metadata is not a current source setting. Unknown source
+    effects revoke mutable knowledge without changing this earlier observation. }
+  LCopy.FConfiguredFPU := FConfiguredFPU;
 end;
 
 function TCompilerContext.SymbolCount: Integer;
@@ -1449,6 +1485,7 @@ begin
   begin
     Exit;
   end;
+  if NyxPascalConfiguredFPU(AOther).Name <> FConfiguredFPU.Name then Exit;
   LBootstrap := NyxPascalBootstrapContext(AOther);
 
   if (LBootstrap = nil) <> (FBootstrap = nil) then
@@ -2880,6 +2917,73 @@ var
 begin
   LCaptured := CaptureNyxPascalCompilerContext(AContext);
   Result := NyxPascalWarnings(LCaptured).WithWarning(AReference, AAction, AActivity);
+end;
+
+function TNyxPascalFPUReference.Known: Boolean;
+begin
+  Result := FName <> '';
+end;
+
+function NyxPascalFPU(const AName: TNyxText): TNyxPascalFPUReference;
+var LAt: Integer;
+begin
+
+  if (Length(AName) = 0) or (Length(AName) > 64) then
+    raise ENyxPascalContext.Create('An FPU selector needs a bounded compiler atom');
+  for LAt := 1 to Length(AName) do
+  begin
+
+    if not (AName[LAt] in ['a'..'z','A'..'Z','_','0'..'9']) then
+      raise ENyxPascalContext.Create('An FPU selector is compiler data, not source text');
+  end;
+  Result.FName := NyxPascalASCIIKey(AName);
+end;
+
+function NyxPascalConfiguredFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
+var LSource: INyxPascalContextConfiguredFPU;
+begin
+  Result := Default(TNyxPascalFPUReference);
+
+  if not Supports(AContext,INyxPascalContextConfiguredFPU,LSource) then Exit;
+  Result := LSource.ConfiguredFPU;
+
+  if Result.Known then Result := NyxPascalFPU(Result.Name);
+end;
+
+function NyxPascalWithConfiguredFPU(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+var
+  LSource: INyxPascalCompilerContext;
+  LTarget: INyxPascalContextConfiguredFPU;
+begin
+
+  if AContext = nil then raise ENyxPascalContext.Create('An FPU observation needs its compiler context');
+  LSource := AContext;
+
+  if not Supports(LSource,INyxPascalContextConfiguredFPU,LTarget) then
+  begin
+    LSource := CaptureNyxPascalCompilerContext(LSource);
+    Supports(LSource,INyxPascalContextConfiguredFPU,LTarget);
+  end;
+  Result := LTarget.WithConfiguredFPU(AValue);
+end;
+
+function TCompilerContext.ConfiguredFPU: TNyxPascalFPUReference;
+begin
+  Result := FConfiguredFPU;
+end;
+
+function TCompilerContext.WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+var
+  LValue: TNyxPascalFPUReference;
+  LCopy: TCompilerContext;
+begin
+  LValue := Default(TNyxPascalFPUReference);
+
+  if AValue.Known then LValue := NyxPascalFPU(AValue.Name);
+  LCopy := Clone;
+  Result := LCopy;
+  LCopy.FConfiguredFPU := LValue;
 end;
 
 function TCompilerContext.Policies: TNyxPascalCompilerPolicies;

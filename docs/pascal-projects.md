@@ -3794,6 +3794,45 @@ effective activation, a target best-real type, precision/rounding, constant
 folding or legal conversions. Floating expression inference remains explicitly
 unqualified while those compiler facts are missing. Browser checks compile only.
 
+### Configured FPU snapshots
+
+`NyxPascalConfiguredFPU(LContext)` returns a typed
+`TNyxPascalFPUReference`. Its empty value is uncaptured; a known `Name` identifies
+an initial compiler-profile observation. It is separate from source defines,
+current source selection, target capabilities and floating representation.
+Explicit callers can record owned metadata through:
+
+```pascal
+LContext := NyxPascalWithConfiguredFPU(LContext, NyxPascalFPU('X87'));
+```
+
+This call configures no host or compiler. Selector atoms are bounded and
+normalized; numeric names such as `68881` are valid data without implying target
+support. The optional `INyxPascalContextConfiguredFPU` capability retains the
+existing base context interfaces, GUIDs, enum ordinals and record layouts.
+Capturing an alternate producer copies its value and retains no producer lease.
+
+The qualified FPC 3.3.1 i386 transcript path requires one matching compiler
+target banner and a unique observation from the compiler-refreshed selector
+namespace. Raw CPU defines, arbitrary FPU-prefixed names, conflicting selectors,
+missing/duplicated banners and unqualified targets cannot manufacture this
+snapshot. Other target import paths remain uncaptured until qualified. The
+decoder consumes existing observations; no initial probe or compiler job is
+added. Both the ordinary context and its separate default anchor own the value.
+
+Later `{$define FPUSSE2}` or `{$undef FPUX87}` statements affect the source
+namespace without rewriting the earlier configured FPU. Mode changes, unknown
+source effects and local settings restore likewise cannot import a different
+initial profile. Exact context and structural storage identity distinguish
+known snapshots through an optional tag; unspecified keys keep their prior form.
+
+The native witness confirms that spoofing macro spelling does not change actual
+division behavior. A separate check replays an existing, byte-exact retained
+control profile without launching a new compiler job. This initial observation
+still does not establish effective later FPU selection, excess-precision
+activation, primitive alias identity or floating expression types. Those remain
+separate gates. WORK.md owns qualification; browser consumers compile only.
+
 ### Source-owned routine signatures
 
 The optional `INyxPascalRoutineQueries.RoutineSignature` accepts an exact bound

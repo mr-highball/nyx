@@ -1991,6 +1991,7 @@ var
     LSizes: INyxPascalContextSizes;
     LFact: TNyxPascalSizeFact;
     LBootstrap: INyxPascalCompilerContext;
+    LFPU: TNyxPascalFPUReference;
   begin
 
     if (AContext = nil) or (ADepth > 1) then
@@ -2046,6 +2047,15 @@ var
       Number(Ord(LPolicy.ExcessPrecisionRequested));
     end;
     LWarnings := NyxPascalWarnings(AContext);
+    LFPU := NyxPascalConfiguredFPU(AContext);
+
+    if LFPU.Known then
+    begin
+      { Initial profile metadata has a separate optional identity namespace.
+        Source defines or later local settings cannot impersonate this field. }
+      Part('configured-fpu-v1');
+      Part(LFPU.Name);
+    end;
     Number(LWarnings.WarningCount);
     for LIndex := 0 to LWarnings.WarningCount - 1 do
     begin

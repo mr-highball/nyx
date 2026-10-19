@@ -154,7 +154,7 @@ function MergeNyxFPCStorageCapture(const APrevious, AFresh: INyxFPCCompilerCaptu
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.pascal.lexing;
+uses SysUtils, nyx.bytes, nyx.pascal.lexing, nyx.pascal.work;
 
 type
   { Owns only immutable portable snapshots. Cohort merging copies alternate
@@ -211,6 +211,8 @@ type
     FStarted: Boolean;
     FEnded: Boolean;
     FCompiled: Boolean;
+    FTargetBanners: Integer;
+    FI386Target: Boolean;
     FCompleted: Boolean;
     FOption: Boolean;
     FNext: Integer;
@@ -875,12 +877,27 @@ begin
 end;
 
 procedure TTraceReader.Line(const ALine: TNyxText);
+const
+  CBanner: TNyxText = 'Free Pascal Compiler version ';
+  CQualified: TNyxText = 'Free Pascal Compiler version 3.3.1';
+  CTarget: TNyxText = ' for i386';
 var
   LAt: Integer;
   LMacro: Integer;
   LBody: TNyxText;
 begin
   Check;
+
+  if Copy(ALine,1,Length(CBanner)) = CBanner then
+  begin
+    Inc(FTargetBanners);
+    FI386Target := False;
+
+    if (FTargetBanners = 1) and (Length(ALine) > Length(CQualified)) then
+      FI386Target := (Copy(ALine,1,Length(CQualified)) = CQualified) and
+        (ALine[Length(CQualified)+1] in ['-',' ','[']) and
+        (Copy(ALine,Length(ALine)-Length(CTarget)+1,Length(CTarget)) = CTarget);
+  end;
 
   if (FScope = pcsoSystemBootstrap) and
     (Pos('Fatal: (2022) User defined: ' + FPrefix + 'BOOTSTRAP_STOP', ALine) > 0) then
@@ -977,6 +994,12 @@ function TTraceReader.Read(const AProbe: INyxPascalCompilerProbe;
   const AFile, AText: TNyxText; AExitCode: Integer;
   const AOptions: TNyxPascalCompilerTraceOptions;
   const ACancellation: INyxCancellationScope): INyxPascalCompilerContext;
+const
+  { The inspected i386 compiler refreshes exactly this selector namespace.
+    Unknown targets remain uncaptured; arbitrary FPU-prefixed user symbols
+    never become hardware/configuration authority. }
+  CNames: array[0..11] of TNyxText = ('none','x87','sse','sse2','sse3','ssse3',
+    'sse41','sse42','avx','fma','avx2','avx512f');
 var
   LAt: Integer;
   LStart: Integer;
@@ -987,9 +1010,15 @@ var
   LCaptured: INyxPascalCompilerContext;
   LDefaults: INyxPascalCompilerContext;
   LFeature: TNyxPascalLanguageFeature;
+  LFPURows: Integer;
+  LFPUIndex: Integer;
+  LFPUName: TNyxText;
+  LFPU: TNyxPascalFPUReference;
 begin
   AOptions.Validate;
   FOptions := AOptions;
+  FTargetBanners := 0;
+  FI386Target := False;
   FCancellation := ACancellation;
   Check;
 
@@ -1140,8 +1169,13 @@ begin
   { Initial observations can differ from explicit source-mode guard replies.
     Retain them as a compatibility anchor, never merge them into source facts. }
   LDefaults := NewNyxPascalCompilerContext(ppcFPC, LVersion, FProbe.Mode, FScope);
+  LFPURows := 0;
+  LFPUName := '';
   for LAt := 0 to FObserved.SymbolCount - 1 do
   begin
+
+    if FI386Target and (LVersion.FullNumber = 30301) then
+      NyxPascalAdmitAnalysis(FCancellation,papSourceProof);
     LName := FObserved.SymbolName(LAt);
     LInteger := 0;
 
@@ -1150,6 +1184,32 @@ begin
       LInteger := FObserved.Symbol(LName).IntegerValue;
     end;
     LDefaults := LDefaults.WithSymbol(LName, FObserved.Symbol(LName).Kind, LInteger);
+    { Qualify against the actual compiler target, not spoofable CPU defines.
+      Only its closed, compiler-refreshed namespace contributes. Guard replies
+      and unrelated user symbols cannot retarget this initial observation. }
+    if FI386Target and (LVersion.FullNumber = 30301) and (Copy(LName.Name,1,3) = 'fpu') and
+      (FObserved.Symbol(LName).IsDefined = ppkTrue) then
+    begin
+      for LFPUIndex := 0 to High(CNames) do
+      begin
+        NyxPascalAdmitAnalysis(FCancellation,papSourceProof);
+
+        if Copy(LName.Name,4,Length(LName.Name)) <> CNames[LFPUIndex] then Continue;
+        Inc(LFPURows);
+        LFPUName := CNames[LFPUIndex];
+        Break;
+      end;
+    end;
+  end;
+  LFPU := Default(TNyxPascalFPUReference);
+
+  if (LFPURows = 1) and (Length(LFPUName) > 0) and (Length(LFPUName) <= 64) then
+    LFPU := NyxPascalFPU(LFPUName);
+  if LFPU.Known then
+  begin
+    NyxPascalAdmitAnalysis(FCancellation,papFrozenRow,2);
+    LCaptured := NyxPascalWithConfiguredFPU(LCaptured,LFPU);
+    LDefaults := NyxPascalWithConfiguredFPU(LDefaults,LFPU);
   end;
   for LAt := Ord('A') to Ord('Z') do
   begin
