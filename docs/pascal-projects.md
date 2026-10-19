@@ -3761,6 +3761,39 @@ compiler's best-real type. Distinct ordinal types, general conversions,
 constant-name expressions, target float facts and broader overload eligibility
 remain open. WORK.md records qualification; browser consumers compile only.
 
+### Excess-precision policy
+
+`TNyxPascalCompilerPolicies.RequestExcessPrecision` retains a typed local
+request independently of target floating representation and FPU selection:
+
+```pascal
+LPolicies := NyxPascalCompilerPolicies(LContext)
+  .RequestExcessPrecision(ppkFalse);
+LContext := NyxPascalWithCompilerPolicies(LContext, LPolicies);
+```
+
+`ExcessPrecisionRequested` is three-valued. Unknown remains a missing fact;
+it never means the compiler's default. Qualified FPC 3.3.1 source translation
+accepts `{$excessprecision on}`, `off`, `+` and `-` with the compiler's Boolean
+reader boundaries. Physical directive text and include occurrences stay in the
+ordinary source map. Inactive branches do not write the policy; uncertain
+participation and unknown effects revoke knowledge. Local PUSH/POP and bounded
+prefixes retain the exact earlier value. Mode changes conservatively revoke
+precision knowledge until another capture or explicit request supplies it.
+
+Capture and exact context identity include the request. Structural storage keys
+use an optional tagged extension for ON/OFF; unspecified contexts retain their
+prior identity form. The public policy record extends its previous layout, so
+consumers must rebuild together. Existing interface GUIDs and enum ordinals
+remain unchanged; this is not a mixed-binary compatibility claim.
+
+The independent native witness distinguishes OFF's `Single` and mixed `Double`
+results from ON's `Extended`, then verifies that POP restores OFF. Those are
+results of the pinned native compiler. The request alone does not establish
+effective activation, a target best-real type, precision/rounding, constant
+folding or legal conversions. Floating expression inference remains explicitly
+unqualified while those compiler facts are missing. Browser checks compile only.
+
 ### Source-owned routine signatures
 
 The optional `INyxPascalRoutineQueries.RoutineSignature` accepts an exact bound

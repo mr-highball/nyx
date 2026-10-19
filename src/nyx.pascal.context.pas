@@ -271,6 +271,7 @@ type
     FNotes: TNyxPascalKnowledge;
     FPointerChecking: TNyxPascalPointerCheckingRequest;
     FInterfaces: TNyxPascalInterfaceStyle;
+    FExcessPrecision: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -301,6 +302,10 @@ type
     { An independent source/capture value. In the inspected FPC this module
       setting survives MODE and local PUSH/POP; missing defaults stay unknown. }
     function UseInterfaces(AValue: TNyxPascalInterfaceStyle): TNyxPascalCompilerPolicies;
+    { Local requested excess precision, independent of target format/FPU choice
+      and pending activation. PUSH/POP restores it; mode changes revoke this
+      knowledge until a separate capture or explicit request supplies it again. }
+    function RequestExcessPrecision(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -313,6 +318,7 @@ type
     property AssemblerReader: TNyxPascalAssemblerReader read FAssembler;
     property PointerCheckingRequested: TNyxPascalPointerCheckingRequest read FPointerChecking;
     property InterfaceStyle: TNyxPascalInterfaceStyle read FInterfaces;
+    property ExcessPrecisionRequested: TNyxPascalKnowledge read FExcessPrecision;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -2162,7 +2168,9 @@ begin
     (Ord(FPointerChecking) < Ord(Low(TNyxPascalPointerCheckingRequest))) or
     (Ord(FPointerChecking) > Ord(High(TNyxPascalPointerCheckingRequest))) or
     (Ord(FInterfaces) < Ord(Low(TNyxPascalInterfaceStyle))) or
-    (Ord(FInterfaces) > Ord(High(TNyxPascalInterfaceStyle))) then
+    (Ord(FInterfaces) > Ord(High(TNyxPascalInterfaceStyle))) or
+    (Ord(FExcessPrecision) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FExcessPrecision) > Ord(High(TNyxPascalKnowledge))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2290,7 +2298,15 @@ begin
     (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto) and
     (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
     (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
-    (FInterfaces = AOther.FInterfaces);
+    (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision);
+end;
+
+function TNyxPascalCompilerPolicies.RequestExcessPrecision(
+  AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FExcessPrecision := AValue;
+  Result.Validate;
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;

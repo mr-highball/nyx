@@ -2767,11 +2767,11 @@ begin
   end;
 end;
 
-{ FPC's category toggle reader consumes one ON/OFF identifier or one sign.
+{ FPC's Boolean directive reader consumes one ON/OFF identifier or one sign.
   Remaining source belongs to the directive's comment and remains untouched in
   the physical token. Consume the whole identifier so OFFLINE/OFF1 never becomes
   OFF; DEFAULT and per-message ERROR are not category-emission states. }
-function ParseDiagnosticEmission(const AValue: TNyxText): Boolean;
+function ParseFPCBooleanSwitch(const AValue: TNyxText): Boolean;
 var
   LAt: Integer;
   LWord: TNyxText;
@@ -2779,7 +2779,7 @@ begin
 
   if AValue = '' then
   begin
-    raise ENyxPascalContext.Create('A diagnostic category needs ON/OFF or a sign');
+    raise ENyxPascalContext.Create('An FPC Boolean directive needs ON/OFF or a sign');
   end;
 
   if AValue[1] in ['+', '-'] then
@@ -2802,7 +2802,7 @@ begin
   begin
     Exit(False);
   end;
-  raise ENyxPascalContext.Create('A diagnostic category needs ON/OFF or a sign');
+  raise ENyxPascalContext.Create('An FPC Boolean directive needs ON/OFF or a sign');
 end;
 
 { FPC consumes one selector and action, including adjacent +/- spelling.
@@ -3306,6 +3306,26 @@ begin
       Exit;
     end;
 
+    if LName = 'excessprecision' then
+    begin
+
+      if (FContext.Family <> ppcFPC) or (FContext.Version.FullNumber <> 30301) then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Excess precision requests need their qualified FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+
+      if ParseFPCBooleanSwitch(LValue) then LCondition := ppkTrue else LCondition := ppkFalse;
+
+      if (FActive = ppkUnknown) or FBlocked then LCondition := ppkUnknown;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).RequestExcessPrecision(LCondition));
+      SaveState;
+      Exit;
+    end;
+
     if (LName = 'warnings') or (LName = 'hints') or (LName = 'notes') then
     begin
 
@@ -3326,7 +3346,7 @@ begin
       begin
         LChannel := pdcNotes;
       end;
-      LEmissionEnabled := ParseDiagnosticEmission(LValue);
+      LEmissionEnabled := ParseFPCBooleanSwitch(LValue);
       LCondition := ppkFalse;
 
       if LEmissionEnabled then

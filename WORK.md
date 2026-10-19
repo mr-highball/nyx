@@ -33,7 +33,101 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Canonical integer expression contracts — 2026-10-19
+## Current integration: Typed excess-precision policy — 2026-10-19
+
+The previous goal turn makes authoritative source/qualification/remote progress
+in d47fe76. Current-source/remote identity and all 727 qualified sources are
+revalidated before following its floating-fact/context prerequisite. The
+complete Nyx authoring/library/Studio outcome remains open.
+
+Pinned FPC arithmetic source distinguishes local excess precision, actual FPU
+selection and target best-real representation. Existence or byte size of
+Extended alone cannot select every arithmetic result. Existing scalar policy,
+context capture, local-settings and structural-key owners now retain a typed
+three-valued excess-precision request. Fluent copies, complete capture and
+SameFacts preserve it; PUSH/POP restores it. Mode changes conservatively revoke
+this knowledge. No target default, effective activation or floating type is
+inferred. Source translation admits the qualified FPC Boolean reader, preserving
+physical text/includes, inactive and uncertain activity, cancellation and atomic
+work/state refusal. Structural keys append a tagged optional value only when
+known; unspecified context identity retains its existing form.
+
+The public policy record extends its old layout; existing GUIDs and enum
+ordinals remain unchanged. Current consumers must rebuild together. No mixed
+binary compatibility, new MCP schema/tool, compiler probe or rollout is claimed.
+
+Retained preparation: my first whole native witness misplaced MODE requests
+after declarations. FPC ignored them with six warnings; its wrong expectation
+failed with a clean heap. Both exact inputs/logs remain retained. The corrected
+whole source contains legal local ON/OFF/PUSH/POP requests and no misplaced mode
+variant. Its native arithmetic returns Single/Double/Extended/Single in four
+independent generic calls, while the unchanged analyzer refuses its directives.
+That clean-heap baseline and all five exact inputs are retained before repair.
+Storage fixture preparation also lacked a valid H probe scope, then a known
+record packing request; their clean-heap failures remain. Explicit controlled
+H/Byte facts and source packrecords 1 now supply those required inputs, without
+relaxing the complete structural-key assertion.
+
+Focused native preparation passes 70 with a clean heap, first fit 33, every
+smaller work allowance refusing atomically, exact earlier prefix policy and
+state-limit/cancellation refusal. Both target consumers compile as applicable.
+Five Pascal inputs are frozen for current context/policy/emission/capture/
+structural-key/expression/completion regressions, both Studios/backend/worker
+compilation and unchanged original RTL qualification. Three old sources change;
+two maintained inputs are new. Ignored .local/precision-policy-paths-private.json
+owns current receipts and retained preparations. No input changes while readers
+run. This is preparation, not final qualification or a pushed implementation.
+All original quotas/probes and protected/frozen/SDK/concurrent inputs remain
+required. LAN stays offline; native Nyx tools are absent. Full float/language/
+incremental/editor/input/performance/parity/adoption/delivery and the goal remain
+open.
+
+The five-source freeze now qualifies: 42 current main compiler logs have zero
+owned warnings/70 upstream. Twenty-eight native runs have clean heaps; twelve
+browser consumers compile only. Both Studios/backend/worker compile as
+applicable. Precision 70/33, policy 115, emission 37, compiler protocol 42,
+source storage 207, constants 405, translation 209, macros 38 and conditions 38
+pass alongside the unchanged numeric/expression/signature/generic/completion
+consumers. Their earlier accepted counts remain; the corpus passes 572 across
+505 actual files and 2,426,970 lossless tokens.
+
+Two harness failures are separate from source correctness: the orchestration
+omitted the unchanged emission consumer's mandatory compiler transcript, then
+the storage consumer's repository argument. Both failed clean-heap logs remain
+retained with hashes. Correct arguments run the same compiled executables
+against the same frozen source and preserve every assertion. Exact completed
+passes are revalidated before the remaining native queue continues; no live
+handle is restarted or completed compilation repeated. The independent unchanged
+emission fixture compiles only, with zero hidden markers and all three restored
+visible markers. Its one deliberate warning stays outside product warning debt.
+
+The unchanged original RTL consumer passes 56 with the original 2M/4M/64-round
+and initial5/Word1/symbol3of8/dynamic6of8 limits. System retains 13,101
+declarations/zero syntax/31 answers, ObjPas 209/zero/one, neither pending; exact
+Free/FreeInstance include navigation/insertion remains ready. Ordered fact jobs
+and all source/context ownership remain unchanged.
+
+All 729 maintained sources/724 unrelated, five frozen inputs, 97 RTL/24 base
+compiler pins, prior inspections plus scanner/scandir pins, four previous source
+copies, retained preparations/failures, 156 current unit packets/48 historical
+includes, 349 frozen artifacts/nine contexts/five current-start protected files
+and thirteen concurrent planning files stay exact. Every reader joined. The
+historical global-config failure keeps the full preservation gate false. LAN
+stays offline; native Nyx tools are absent. No host/config retry, capture variant,
+protected mutation, cleanup/restart, rollout or new MCP tool/schema occurs.
+No browser execution, effective floating representation, default editor
+installation, full language/incremental/input/performance/parity/adoption/
+delivery or original criterion/task/goal closes.
+
+Stop precision-policy/context/storage/fixture/compiler variants. Reassess exact
+captured FPU selection, effective arithmetic policy and compiler-root primitive
+representation/alias identity through existing context/requirement/type owners.
+Retain missing-fact refusal, all probes/quotas and actual source activation;
+neither requested ON nor Extended's existence/size alone supplies that authority.
+The precision packet owns final qualification/source/remote receipts and return
+path. The full Nyx/Studio outcome remains open.
+
+## Previous integration: Canonical integer expression contracts — 2026-10-19
 
 The preceding source/qualification/remote checkpoint is d299560. The immediate
 status-only goal turn made no authoritative product progress; current work

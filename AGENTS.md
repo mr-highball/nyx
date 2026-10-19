@@ -4,7 +4,43 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source canonical integer expression rules separate fixed ranges,
+Current-source excess-precision policy is typed three-valued local intent,
+independent of target FPU/representation/effective activation. Fluent copies,
+capture/SameFacts, saved settings and bounded prefixes preserve it; mode changes
+and unknown effects revoke knowledge. Physical Boolean directive text/includes
+and conditional participation remain exact. Structural identity uses a tagged
+extension only when known, preserving unspecified keys. The policy record's
+layout extends; current consumers rebuild together without a mixed-binary claim.
+Existing GUIDs/enum ordinals stay intact. Focused native 70/33 has clean heap,
+all smaller budgets refuse atomically and the whole legal native witness
+observes Single/Double/Extended/Single through four real calls. The discarded
+misplaced-MODE preparation, legal baseline and harness failures stay retained.
+Forty-two current main compiler logs have zero owned warnings/70 upstream;
+twenty-eight native consumers have clean heaps and twelve browser consumers
+compile only. Both Studios/backend/worker compile as applicable. The separate
+unchanged emission compiler-only fixture retains zero hidden/three visible
+markers and one intentional warning outside product debt. The unchanged RTL
+consumer passes 56: System 13,101/zero syntax/31 answers; ObjPas 209/zero/one,
+neither pending. Exact Free/FreeInstance include navigation/insertion, original
+2M/4M/64-round limits and initial5/Word1/symbol3of8/dynamic6of8 stay exact.
+All 729 maintained/724 unrelated sources, five frozen inputs, 97 RTL/24 base
+compiler pins and earlier plus scanner/scandir inspections, four prior source
+copies, retained failures, 156 unit packets/48 historical includes, 349 frozen
+artifacts/nine contexts/five protected files/thirteen concurrent planning files
+stay exact. Readers joined; LAN offline; native Nyx tools absent. The historical
+global-config failure keeps the full preservation gate false. WORK.md and ignored
+.local/precision-policy-paths-private.json own final receipts/return path. Stop
+precision-policy/context/storage/fixture/compiler variants. Reassess exact
+captured FPU selection, effective arithmetic policy and compiler-root primitive
+representation/alias identity through existing context/requirement/type owners.
+Requested ON or Extended existence/size alone is insufficient. Preserve missing
+facts, activation, scope and all probes/quotas. Full language/types/incremental/
+editor/input/performance/parity/adoption/delivery and the original criterion/
+task/goal stay open. No host/config retry, capture variant, protected mutation,
+cleanup/restart, approval bypass, new MCP tool/schema, rollout or sub-agents.
+Preserve concurrent work and retained historical evidence.
+
+Previously qualified canonical integer expression rules separate fixed ranges,
 initial captured CPUINT arithmetic width, named native size facts and private
 constant proofs. Generic results retain their type without inheriting argument
 values; real ResetNumeric returns zero and subsequent arithmetic yields one.

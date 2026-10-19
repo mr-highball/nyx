@@ -2038,6 +2038,13 @@ var
       Part('interface-style-v1');
       Number(Ord(LPolicy.InterfaceStyle));
     end;
+    if LPolicy.ExcessPrecisionRequested <> ppkUnknown then
+    begin
+      { Tagged optional extension preserves every prior unspecified identity.
+        ON and OFF cannot collide with each other or the next numeric field. }
+      Part('excess-precision-request-v1');
+      Number(Ord(LPolicy.ExcessPrecisionRequested));
+    end;
     LWarnings := NyxPascalWarnings(AContext);
     Number(LWarnings.WarningCount);
     for LIndex := 0 to LWarnings.WarningCount - 1 do
