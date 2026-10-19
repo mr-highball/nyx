@@ -3701,8 +3701,8 @@ operator families from both operands supply their declared signatures. Exact
 ordered operand matches take priority over conversions, matching the inspected
 compiler rule. Duplicate bindings are coalesced; conflicting exact result
 contracts refuse. Visibility, generic frames and incomplete source retain their
-ordinary guards. Numeric promotion, conversion-based ranking and commutative
-argument permutation remain open.
+ordinary guards. Canonical integer expressions have the separate rules below;
+conversion-based ranking and commutative argument permutation remain open.
 
 A record operator can return a different fluent type. For example,
 `KeepOperator(Left * Right + Right).Value` follows the multiplication, addition
@@ -3721,6 +3721,45 @@ role. General routine, index and temporary-address rules remain separate and
 unsupported until qualified. Existing query work/depth/candidate limits,
 cancellation, current-world ownership and atomic refusal cover the whole parse.
 Native witnesses qualify the supported paths; browser consumers compile only.
+
+### Canonical integer expression contracts
+
+Qualified FPC 3.3.1 Delphi/DelphiUnicode expression queries distinguish exact
+source constants from runtime values. `1 + 2` can specialize a generic as
+`ShortInt`; `LongIntValue + LongIntValue` retains a runtime `LongInt` result.
+Arithmetic, integer division/remainder, bitwise operations, shifts, unary signs,
+integer `not` and comparisons follow the closed integer rules. Precedence and
+parentheses retain the ordinary expression parser's source/work ownership.
+
+`nyx.pascal.numeric` owns fixed integer ranges and checked exact-value operations.
+Its copied operand/result records hold no world, callback or interface. Binding
+supplies the actual captured `CPUINT8/16/32/64` arithmetic width from the initial
+compiler context. Authored `$define`/`$undef` requests cannot change that compiler
+property. Contradictory or missing facts refuse; pointer width and Studio's own
+machine never substitute. `Integer`, `NativeInt` and `NativeUInt` additionally
+need their exact intrinsic size measurement. Existing typed primitive requests
+retain the source/context ownership of any missing named measurement.
+
+Folded expression values use a private proof, separate from
+`INyxPascalLiteralType`. Generic substitution consumes only the ordinary result
+type. Thus `Reset<T>(1 + 2) + 1` cannot be folded from the argument's value:
+the body may return zero or any other value of its declared type. No source
+routine or operator body executes during a query. Constant arithmetic outside
+the supported exact domain, division by zero, uncertain wrap/conversion rules
+and invalid shift counts refuse atomically.
+
+A nongeneric parameterless routine followed by `<` supplies its ordinary result
+to a comparison. It does not acquire a generic argument list from that symbol.
+Actual generic declarations retain the existing explicit application path;
+mixed generic/nongeneric overload disambiguation remains separate work.
+
+The independent whole native witness records 42 outer expressions and 44
+generic invocations, including actual routine comparisons and a function that
+changes its input value. Four floating-point cases remain explicit gaps:
+choosing `Extended` from the analyzer host would not establish the target
+compiler's best-real type. Distinct ordinal types, general conversions,
+constant-name expressions, target float facts and broader overload eligibility
+remain open. WORK.md records qualification; browser consumers compile only.
 
 ### Source-owned routine signatures
 

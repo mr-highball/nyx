@@ -33,7 +33,96 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declared operator and address expressions — 2026-10-19
+## Current integration: Canonical integer expression contracts — 2026-10-19
+
+The preceding source/qualification/remote checkpoint is d299560. The immediate
+status-only goal turn made no authoritative product progress; current work
+revalidates that state and follows the recorded numeric/primary prerequisite.
+The complete Nyx library, authoring and Studio outcome remains open.
+
+An independent whole native RTTI witness first records 36 expression results.
+Its source and initial observer remain retained. A new closed integer rule
+owner separates fixed ranges, captured arithmetic width and exact constant
+proofs from runtime type contracts. Query-private computed values deliberately
+do not implement source-literal evidence. Generic substitution strips the proof
+before constructing any routine result. A real ResetNumeric body returns zero;
+its subsequent arithmetic yields one, proving the value barrier independently.
+
+Initial CPUINT facts supply ALU width, independent of mutable authored defines
+and pointer/native widths. Missing or contradictory facts refuse. Named Integer/
+NativeInt/NativeUInt require separate captured intrinsic size facts; existing
+primitive requirements keep exact source/context owners. Distinct types and
+unsupported conversion/wrap/float rules retain refusal. The public numeric
+records contain no interfaces; cancellation and bounded range/value steps use
+the existing analysis budget. No public binding interface/GUID/layout changes
+or new MCP schema/tool is introduced.
+
+Preparation corrects one mistaken handwritten expected type: Byte plus a signed
+constant promotes to LongInt, independently confirmed by two new whole native
+calls. Its failed clean-heap run and four exact source copies remain retained.
+A separate baseline exposes the actual nongeneric-routine '<' ambiguity: the
+whole compiler accepts NumericValue < U32 while the resolver treats it as type
+arguments. That clean-heap failure and four inputs are retained. Explicit
+routine arguments now require an actual generic declaration. Existing generic
+applications remain accepted; mixed-overload ambiguity remains open.
+
+Final focused preparation passes 803 with clean heap, first fit 198, every
+smaller allowance refusing atomically and 64 joined readers. The whole native
+witness records 42 outer expressions/44 generic invocations plus three real
+routine calls. Four real-number paths remain unsupported; no target best-real
+type is guessed. The unchanged operator consumer retains 470/381; explicit
+applications pass 622/506 with their unchanged twelve native calls. The two
+extra application checks reflect newly charged declaration-role inspections.
+The browser numeric consumer compiles only.
+
+Four Pascal inputs are frozen for targeted expression/generic/completion,
+both-target product and unchanged original RTL qualification. Ignored
+.local/numeric-expressions-paths-private.json owns the active packet and retained
+preparations. No product input changes while those readers run. LAN remains
+offline; native Nyx tools remain absent. All protected/foreign/frozen/SDK inputs
+and original quotas remain required. This is preparation, not final
+qualification or a pushed implementation. Full language/incremental/editor/
+input/performance/parity/adoption/delivery and the original goal remain open.
+
+The four-source freeze now qualifies: 28 current compiler logs have zero owned
+warnings/49 upstream. Nineteen native runs have clean heaps; seven browser
+consumers compile only. Both Studios, backend and worker compile as applicable.
+Numeric 803/198 and its independent 42 outer expressions/44 generic calls/
+three routine calls retain the value barrier. Operator 470/381, argument 489/384,
+both literal modes 635/193, inference 679/461, signatures 236, explicit
+applications 622/506, constructors 624, casts 401/274, properties 413,
+receivers 444, generics 948, scoped binding 74, owned completion 90, operator
+declarations 18 and source reuse 3,400 retain their accepted contracts. The
+corpus passes 572 across 505 actual files and 2,426,662 lossless tokens.
+
+The unchanged original RTL consumer passes 56: System retains 13,101
+declarations, zero translation/declaration-syntax diagnostics and 31 answers;
+ObjPas retains 209/zero/one. Neither has a pending query. Exact Free/FreeInstance
+include navigation and detached insertion remain ready. Original 2M view/4M
+aggregate/64-round limits, five initial queries, one Word job, symbol ceiling
+eight and the six exact ordered primitive jobs within eight remain unchanged.
+
+All 727 maintained sources/723 unrelated, four frozen inputs, 97 RTL/24 base
+compiler pins, prior inspections plus six numeric compiler inspections, three
+prior source copies, retained preparation/failure sources, 156 current unit
+packets, 48 historical includes, 349 frozen artifacts, nine contexts, five
+current-start protected files and thirteen concurrent planning files stay exact.
+All readers joined. The historical global-config failure remains retained and
+the full preservation gate stays false. No host/config retry, capture variant,
+cleanup/restart or rollout occurs. LAN remains offline; native Nyx tools are
+absent. No browser execution, default editor installation, full language/
+incremental/input/performance/parity/adoption/delivery or original criterion/
+task/goal closes.
+
+Stop integer/primary/fixture/compiler variants. Next reassess target-owned
+floating-point expression facts and missing arithmetic-context requests through
+the existing type/context/requirement/preparation owners. Preserve original
+probes/quotas and source/root identity; existence or byte size of Extended is
+not evidence of the compiler's best-real type. Distinct ordinal arithmetic,
+general conversion/admission and mixed generic primary roles remain open.
+The ignored numeric packet owns final source/qualification/remote receipts.
+
+## Previous integration: Declared operator and address expressions — 2026-10-19
 
 The previous goal turn makes source/qualification/remote progress in b5522fb.
 This turn follows the recorded operator/reference prerequisite through existing

@@ -438,7 +438,7 @@ function NyxPascalPrimitiveRequirement(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite): INyxPascalCompilerRequirement;
 implementation
 
-uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work,
+uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work, nyx.pascal.numeric,
   nyx.pascal.translation;
 
 const
@@ -586,6 +586,23 @@ type
     function UnitCount: Integer;
     function CodeUnit(AIndex: Integer): Integer;
     function SpecializationType: INyxPascalSemanticType;
+  end;
+  { Private proof for a folded expression, deliberately separate from source
+    literals. A generic routine consumes only ResultType; argument values never
+    become evidence about a routine body or its returned value. }
+  INumericExpressionValue = interface(IInterface)
+    ['{2B7D1843-83EC-41A6-ACB2-B6ED721281B5}']
+    function ConstantValue: TNyxPascalConstantValue;
+    function ResultType: INyxPascalSemanticType;
+  end;
+  { Query-owned folded builtin shape. The immutable ordinary child carries the
+    exact intrinsic/context identity; no world owns this proof or query budget. }
+  TNumericExpressionType = class(TSemanticType, INumericExpressionValue)
+  public
+    FConstant: TNyxPascalConstantValue;
+    FResult: INyxPascalSemanticType;
+    function ConstantValue: TNyxPascalConstantValue;
+    function ResultType: INyxPascalSemanticType;
   end;
   { A complete source routine header shares the ordinary semantic signature
     shape, retaining real parameter symbols instead of synthesized declarations.
@@ -1255,6 +1272,16 @@ end;
 function TLiteralType.SpecializationType: INyxPascalSemanticType;
 begin
   Result := FDeduction;
+end;
+
+function TNumericExpressionType.ConstantValue: TNyxPascalConstantValue;
+begin
+  Result := FConstant;
+end;
+
+function TNumericExpressionType.ResultType: INyxPascalSemanticType;
+begin
+  Result := FResult;
 end;
 
 function TDeclaredSignature.ParameterDeclaration(AIndex: Integer): INyxPascalBoundSymbol;
@@ -4822,6 +4849,7 @@ var
   LToken: TNyxPascalToken;
   LArgumentType: INyxPascalSemanticType;
   LLiteral: INyxPascalLiteralType;
+  LNumeric: INumericExpressionValue;
 
   { Inspect only formal positions owned by this exact routine. A class member's
     fields are not traversed and other declarations' formals are not captured. }
@@ -5046,6 +5074,9 @@ begin
 
       if Supports(LArgumentType, INyxPascalLiteralType, LLiteral) then
         LArgumentType := LLiteral.SpecializationType;
+
+      if Supports(LArgumentType, INumericExpressionValue, LNumeric) then
+        LArgumentType := LNumeric.ResultType;
 
       if not MatchArgument(LSignature.BoundType.ParameterType(LArgument), LArgumentType) then
         Exit(Answer(pbsUnresolved, pbiGenericContext));
@@ -7579,6 +7610,24 @@ var
     LTypeCallee: Boolean;
     LIsLiteral: Boolean;
     LFormal: INyxPascalFormalParameter;
+
+    { Only an actual generic routine declaration can own explicit type
+      arguments. A nongeneric parameterless function followed by '<' supplies
+      its ordinary result to the relational expression instead. }
+    function GenericRoutine: Boolean;
+    var
+      LIndex: Integer;
+    begin
+      Result := False;
+      for LIndex := 0 to LFound.Count - 1 do
+      begin
+        Tick;
+
+        if (LFound.SymbolAt(LIndex).Declaration.Kind = psdkRoutine) and
+          (LFound.SymbolAt(LIndex).Declaration.GenericSpan.Length > 0) then Exit(True);
+      end;
+    end;
+
   begin
     Enter;
     try
@@ -7646,8 +7695,7 @@ var
       while LAvailable do
       begin
 
-        if IsSymbol(psoLess) and (LFound.Count > 0) and
-          (LFound.SymbolAt(0).Declaration.Kind = psdkRoutine) then
+        if IsSymbol(psoLess) and GenericRoutine then
         begin
           LFound := ReadRoutineArguments(LFound, LTypeStart);
           AValueAccess := pmaInstance;
@@ -7873,6 +7921,7 @@ var
     LSymbols: array of INyxPascalBoundSymbol;
     LFound, LSignature: INyxPascalResolution;
     LLiteral: INyxPascalLiteralType;
+    LNumeric: INumericExpressionValue;
     LAt, LOperand, LArity: Integer;
     LExact, LMatch, LSeen: Boolean;
 
@@ -7882,11 +7931,184 @@ var
 
       if Supports(Result, INyxPascalLiteralType, LLiteral) then
         Result := LLiteral.SpecializationType;
+
+      if Supports(Result, INumericExpressionValue, LNumeric) then
+        Result := LNumeric.ResultType;
       while (Result <> nil) and (Result.Kind = pstAlias) do
       begin
         Tick;
         Result := Result.Target;
       end;
+    end;
+
+    { Numeric rules receive only canonical fixed ranges. Native/Integer widths
+      need their own captured intrinsic measurement; CPUINT controls arithmetic
+      promotion and is not evidence about pointer size or authored RTL aliases. }
+    function NumericResult: INyxPascalResolution;
+    const
+      CBuiltins: array[TNyxPascalIntegerKind] of TNyxPascalBuiltin =
+        (pbbNone,pbbShortInt,pbbByte,pbbSmallInt,pbbWord,pbbLongInt,pbbLongWord,pbbInt64,pbbQWord);
+      CALUNames: array[0..3] of TNyxText = ('CPUINT8','CPUINT16','CPUINT32','CPUINT64');
+      CALUBits: array[0..3] of Integer = (8,16,32,64);
+    var
+      LInitial, LRoot: INyxPascalCompilerContext;
+      LIntegerLeft, LIntegerRight: TNyxPascalIntegerOperand;
+      LOutcome: TNyxPascalIntegerResult;
+      LGap: INyxPascalResolution;
+      LValueType, LLease: INyxPascalSemanticType;
+      LComputed: TNumericExpressionType;
+      LIdentity: INyxPascalIntrinsicIdentity;
+      LWidth, LRootWidth, LSystem: Integer;
+      LSite: INyxPascalBindingSite;
+
+      function CapturedALU(const AContext: INyxPascalCompilerContext): Integer;
+      var
+        LIndex: Integer;
+      begin
+        Result := 0;
+
+        if AContext = nil then Exit;
+        for LIndex := 0 to High(CALUNames) do
+        begin
+          Tick;
+
+          if AContext.Symbol(NyxPascalDefine(CALUNames[LIndex])).IsDefined = ppkTrue then
+          begin
+
+            if Result <> 0 then Exit(-1);
+            Result := CALUBits[LIndex];
+          end;
+        end;
+      end;
+
+      function IntegerKind(const AType: INyxPascalSemanticType): TNyxPascalIntegerKind;
+      var
+        LKind: TNyxPascalIntegerKind;
+        LIntrinsic: INyxPascalIntrinsicIdentity;
+        LFact: TNyxPascalSizeFact;
+        LBytes: Integer;
+        LSigned: Boolean;
+      begin
+        Result := pikNone;
+
+        if (AType = nil) or (AType.Kind <> pstBuiltin) then Exit;
+        for LKind := pikShortInt to pikQWord do
+        begin
+          Tick;
+
+          if AType.Builtin = CBuiltins[LKind] then Exit(LKind);
+        end;
+
+        if not (AType.Builtin in [pbbInteger,pbbNativeInt,pbbNativeUInt]) then Exit;
+
+        if not Supports(AType,INyxPascalIntrinsicIdentity,LIntrinsic) then Exit;
+        LFact := NyxPascalCapturedSize(LIntrinsic.IntrinsicContext,LIntrinsic.IntrinsicReference);
+
+        if LFact.State <> pssKnown then
+        begin
+          LGap := Answer(pbsUnresolved,pbiCompilerContext,LIntrinsic.IntrinsicReference.Name,
+            NyxPascalPrimitiveRequirement(AType,LSite));
+          Exit;
+        end;
+        LBytes := LFact.Bytes;
+        LSigned := AType.Builtin <> pbbNativeUInt;
+        case LBytes of
+          1: Result := pikShortInt;
+          2: Result := pikSmallInt;
+          4: Result := pikLongInt;
+          8: Result := pikInt64;
+        end;
+
+        if not LSigned and (Result <> pikNone) then Result := Succ(Result);
+      end;
+
+      function ConstantOf(const AType: INyxPascalSemanticType): TNyxPascalConstantValue;
+      var
+        LSource: INyxPascalLiteralType;
+        LExpression: INumericExpressionValue;
+      begin
+        Result := TNyxPascalConstantValue.Unknown;
+
+        if Supports(AType,INyxPascalLiteralType,LSource) then Result := LSource.Value
+        else if Supports(AType,INumericExpressionValue,LExpression) then Result := LExpression.ConstantValue;
+      end;
+
+    begin
+      Result := nil;
+      LSite := FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,AOffset);
+      LGap := nil;
+      LIntegerLeft.Kind := IntegerKind(LLeft);
+
+      if LGap <> nil then Exit(LGap);
+      LIntegerLeft.Constant := ConstantOf(ALeft.BoundType);
+      LIntegerRight := Default(TNyxPascalIntegerOperand);
+
+      if not AUnary then
+      begin
+        LIntegerRight.Kind := IntegerKind(LRight);
+
+        if LGap <> nil then Exit(LGap);
+        LIntegerRight.Constant := ConstantOf(ARight.BoundType);
+      end;
+
+      if (LIntegerLeft.Kind = pikNone) or (not AUnary and (LIntegerRight.Kind = pikNone)) then Exit;
+      LInitial := FWorld.ModuleAt(ASite.ModuleIndex).Source.InitialContext;
+      LWidth := CapturedALU(LInitial);
+      LSystem := FWorld.FindModule('System');
+
+      if (FLimits.ImplicitScopes = pispCompilerUnits) and (LSystem < 0) then
+        Exit(Answer(pbsUnresolved,pbiMissingModule,'System'));
+
+      if LSystem >= 0 then
+      begin
+        LRoot := NyxPascalBootstrapContext(FWorld.ModuleAt(LSystem).Source.InitialContext);
+
+        if LRoot <> nil then
+        begin
+          LRootWidth := CapturedALU(LRoot);
+
+          if (LRootWidth < 0) or ((LWidth > 0) and (LRootWidth > 0) and (LWidth <> LRootWidth)) then
+            Exit(Answer(pbsUnresolved,pbiCompilerContext));
+
+          if LWidth = 0 then LWidth := LRootWidth;
+        end;
+      end;
+
+      if LWidth <= 0 then Exit(Answer(pbsUnresolved,pbiCompilerContext,'CPUINT8/16/32/64'));
+      LOutcome := NyxPascalIntegerOperation(AKind,LIntegerLeft,LIntegerRight,AUnary,LWidth,FCancel);
+
+      if LOutcome.BooleanResult then
+        Exit(BuiltinType(LSite,'boolean',FLimits.ImplicitScopes = pispCompilerUnits));
+
+      if LOutcome.Kind = pikNone then Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+      LValueType := nil;
+      case LOutcome.Reuse of
+        pirNone: LValueType := nil;
+        pirLeft: LValueType := LLeft;
+        pirRight: LValueType := LRight;
+      end;
+
+      if LValueType = nil then
+      begin
+        Result := BuiltinType(LSite,NyxPascalIntegerName(LOutcome.Kind),FLimits.ImplicitScopes = pispCompilerUnits);
+
+        if Result.Status <> pbsBound then Exit;
+        LValueType := Result.BoundType;
+      end;
+
+      if LOutcome.Constant.Kind <> pvvInteger then Exit(TypeAnswer(LValueType));
+      LComputed := TNumericExpressionType.Create;
+      LLease := LComputed;
+      LComputed.Owner := FWorld;
+      LComputed.TypeKind := pstBuiltin;
+      LComputed.Intrinsic := LValueType.Builtin;
+      Supports(LValueType,INyxPascalIntrinsicIdentity,LIdentity);
+      LComputed.IntrinsicScope := LIdentity.IntrinsicOrigin;
+      LComputed.IntrinsicName := LIdentity.IntrinsicReference;
+      LComputed.IntrinsicFacts := LIdentity.IntrinsicContext;
+      LComputed.FConstant := LOutcome.Constant;
+      LComputed.FResult := LValueType;
+      Result := TypeAnswer(LLease);
     end;
 
     function Collect(const AType: INyxPascalSemanticType): INyxPascalResolution;
@@ -7951,6 +8173,9 @@ var
         (AKind in [pokAnd, pokOr, pokXor]))) then LBoolean := LLeft;
 
     if LBoolean <> nil then Exit(TypeAnswer(LBoolean));
+    Result := NumericResult;
+
+    if Result <> nil then Exit;
     SetLength(LSymbols, 0);
     Result := Collect(LLeft);
 

@@ -4,7 +4,39 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source diagnostic emission adds closed warning/hint/note channels to
+Current-source canonical integer expression rules separate fixed ranges,
+initial captured CPUINT arithmetic width, named native size facts and private
+constant proofs. Generic results retain their type without inheriting argument
+values; real ResetNumeric returns zero and subsequent arithmetic yields one.
+Source defines cannot retarget the ALU. Nongeneric routine '<' follows the
+ordinary comparison role; actual generic declarations retain explicit arguments.
+Focused native 803/198 and 64 joined readers have clean heaps; the whole native
+witness records 42 outer expressions/44 generic invocations/three routine calls.
+Four floating-point paths remain explicit gaps. All 28 current compiler logs
+have zero owned warnings/49 upstream; nineteen native consumers have clean
+heaps and seven browser consumers compile only. Both Studios/backend/worker
+compile as applicable. The unchanged RTL consumer passes 56: System
+13,101 declarations/zero syntax/31 answers, ObjPas 209/zero/one, neither pending;
+exact Free/FreeInstance include navigation/insertion remains ready. Original
+2M/4M/64-round limits, initial5/Word1/symbol3of8/dynamic6of8 stay exact.
+All 727 maintained/723 unrelated sources, four frozen inputs, 97 RTL/24 base
+compiler pins and prior plus six numeric inspections, three prior source copies,
+retained failures, 156 unit packets/48 historical includes, 349 frozen artifacts,
+nine contexts/five protected files/thirteen concurrent planning files stay exact.
+Readers joined; LAN offline; native Nyx tools absent. The historical global
+config failure keeps the full preservation gate false. WORK.md and ignored
+.local/numeric-expressions-paths-private.json own final receipts/return path.
+Stop integer/primary/fixture/compiler variants. Reassess target-owned floating
+expression facts and missing arithmetic-context requests through existing
+type/context/requirement/preparation owners; neither Extended's existence nor
+byte size establishes best-real identity. No additional fixed initial probes,
+raised quotas, source/root retagging, new MCP tool/schema or rollout. Full
+language/types/incremental/editor/input/performance/parity/adoption/delivery and
+the original criterion/task/goal stay open. No host/config retry, capture variant,
+protected mutation, cleanup/restart, approval bypass or sub-agents. Preserve
+concurrent work and retained historical evidence.
+
+Previously qualified diagnostic emission adds closed warning/hint/note channels to
 existing scalar compiler policies, independent of ordered per-message WARN rules.
 Owned source receipts retain original occurrences, pre-state, authored Boolean
 and conditional activity; prefixes copy bounded earlier values. Capture/identity,
