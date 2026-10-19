@@ -3593,6 +3593,41 @@ include a whole compiled handwritten unit, exact detached completion/navigation,
 exhaustive smaller allowances and joined concurrent queries. The browser consumer
 compiles only; full language coverage and editor adoption remain open in WORK.md.
 
+### Explicit generic routine applications
+
+Expression queries and ordinary completion follow explicit routine type arguments
+through declared results. For example, `KeepValue<TBadge>(Badge).Caption` retains
+`TBadge`, while `BoxValue<TBadge>(Badge).Value.Caption` follows the constructed
+box's substituted field. Global functions, static methods and instance methods
+on nongeneric receivers share the existing immutable generic environments.
+Interface results retain their interface contract and declaration origin.
+
+Type arguments bind at the caller's source site; the callee retains its original
+namespace, visibility and declaration owner. Explicit type-parameter counts and
+known constraints are checked. Ordinary value names and implicit `Self`/`Result`
+storage cannot serve as type arguments. Every remaining visible routine
+alternative must yield the same result contract. Runtime arguments remain opaque:
+this does not infer type arguments, choose an overload, check runtime argument
+conversions or establish compiler-call eligibility.
+
+This path is qualified for captured FPC 3.3.1 Delphi/DelphiUnicode context. The
+independent compiler rejects a generic method inside a generic class with
+"Declaration of generic inside another generic is not allowed"; Nyx retains
+explicit refusal for that source. Unknown/unqualified compiler contexts,
+incomplete lists, repeated application, missing imports and differing result
+contracts also refuse. Query cancellation, current-world identity and existing
+work/candidate/depth limits retain atomic publication.
+
+The focused native fixture executes twelve legal applications to 42. Semantic
+queries leave that invocation count unchanged. Completion retains exact original
+source navigation after provider retirement and previews a detached insertion.
+620 focused checks include every smaller work allowance and 64 joined concurrent
+queries. The minimal completion fixture explicitly uses declaration-name implicit
+scope policy; the default policy still reports its missing `ObjPas` dependency.
+That fixture setting does not qualify a complete SDK or default editor adoption.
+The browser consumer compiles only. Full inference, language coverage, editor
+input and target parity remain open.
+
 ### Implicit routine receivers and results
 
 Owned lookup and ordinary member completion now understand source-owned `Self`

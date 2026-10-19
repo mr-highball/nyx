@@ -33,7 +33,93 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Single-pass project preparation — 2026-10-19
+## Current integration: Explicit generic routine applications — 2026-10-19
+
+The preceding goal turn made authoritative source/qualification/remote progress
+in d1faf64. Original NS-4_studio-authoring_01 criterion two still owns useful
+completion/navigation, full canonical language/type meaning and editor adoption.
+Reassessment now follows a direct fluent/LINQ prerequisite: explicit generic
+function/method calls have no supported application frame in expression queries.
+The pinned native compiler accepts a whole handwritten fixture with global,
+static and instance generic functions, constrained arguments and interface
+results, while the existing resolver refuses its first explicit call.
+
+The deliverable is explicit routine type-argument application through existing
+generic parameters/environments, expression/member and completion consumers.
+Preserve source declaration origins, caller type lookup and receiver frames;
+generic methods must retain distinct outer/inner formals when compiler-qualified.
+All considered result contracts must agree. Type-argument arity/known constraints
+remain checked; runtime arguments stay opaque. No argument-type inference or
+compiler-call/overload eligibility is invented. Unknown context, missing imports,
+malformed/unfinished types, constraints, ambiguity, foreign worlds, cancellation
+and budget refusal retain atomic refusal.
+
+Use this one whole native fixture, focused integrated tests and required wider
+qualification; then stop routine/fixture/compiler/capture variants. No full
+criterion/task/credit/DONE or goal closure follows. No host/config retry, SDK
+capture, protected mutation, cleanup/restart, new MCP tool/schema/rollout or
+sub-agents. Ignored .local/routine-applications-paths-private.json owns the packet
+and return path. Preserve unrelated planning work.
+
+The whole nested-method compiler attempt refuses at TAppliedBox<T>.Rebind<U>:
+the pinned FPC reports "Declaration of generic inside another generic is not
+allowed". Retain that exact source and failed compiler log. The initial legal
+fixture executes six applications to 42 with a clean heap. This batch keeps
+generic-global and nongeneric-receiver method applications; it must preserve
+explicit refusal for unsupported nested generic declarations rather than grant
+them call eligibility. Full fluent generic-class method APIs remain an actual
+compiler/language prerequisite, not silently resolved by the new reader.
+
+The final focused native consumer passes 620 checks with a clean heap. Twelve
+independently compiled legal applications return 42; all later semantic reads
+leave the invocation count unchanged. Explicit global, static and instance
+applications retain constrained, interface, multi-argument and constructed
+results through fluent chains. Ordinary completion retains exact physical
+navigation after provider retirement and detached insertion. Every allowance
+below the first fit of 504 refuses atomically; 64 concurrent queries join.
+The unchanged maintained generic consumer passes 948 with a clean heap.
+
+Retain the initial missing-ObjPas completion failure. The minimal SDK fixture now
+explicitly selects declaration-name implicit scopes, matching its direct semantic
+world; its default-policy negative still requires missing-module/ObjPas refusal.
+This does not fabricate RTL exports or qualify default SDK readiness. Retain the
+maintained consumer's first invocation without its required repository argument;
+the same executable passes with that argument. The browser consumer compiles
+only. Wider frozen-source qualification is pending; no editor/adoption/parity or
+full language claim follows from these focused results.
+
+Frozen-source local qualification now passes: 123 main compiler logs contain
+zero owned warnings/315 upstream; 66 native logs have clean heaps and 56 browser
+consumers compile only. Both Studios, backend and worker compile as applicable.
+The unchanged original RTL consumer passes 56 at the original 2M view/4M
+aggregate/64-round limits. Actual System resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one. Neither has a pending query. Exact indexed
+Free/FreeInstance include navigation and detached insertion remain ready. The
+original five initial queries, one Word job, symbol three/eight and six/eight
+ordered Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact.
+The corpus passes 571 checks over 504 files and 2,407,354 lossless tokens.
+
+Three final Pascal inputs remain frozen throughout this complete batch. All
+714 maintained sources/711 unrelated, 97 RTL/24 compiler inputs, 156 original
+unit packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files retain their required
+identities. All readers are terminal/joined. Historical global-configuration
+preservation failure remains retained and the full preservation gate stays
+false; current-start protected bytes remain exact. Prior preparation/allocation
+measurements remain historical, without a new performance claim. LAN stays
+offline and native Nyx tools remain absent.
+
+Stop explicit-application/routine/fixture/compiler/capture variants after this
+checkpoint. Next reassess remaining routine argument inference and signature
+identity through existing syntax/type/binding owners, preserving the actual
+nested-generic compiler limit and declared-contract versus call-eligibility
+boundary. Full language/type/module/incremental/editor/input/quality/parity/
+adoption/delivery and the original criterion/task/credit/DONE remain open. The
+ignored packet owns qualification, retained failures and final source/remote
+receipts; no tool/schema, installed editor or host/configuration change is made.
+
+## Previous integration: Single-pass project preparation — 2026-10-19
 
 The preceding goal turn made authoritative source/qualification/remote progress
 in d51e680. Original NS-4_studio-authoring_01 criterion two still owns practical

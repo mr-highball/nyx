@@ -744,6 +744,14 @@ type
       const AOwner: INyxPascalBoundSymbol; const AName: TNyxText): INyxPascalResolution;
     function Specialize(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
+    { Explicit arguments bind at the caller while the declaration and its outer
+      receiver frame retain their original owners. No runtime argument is read. }
+    function ApplyGenericArguments(const ASite: INyxPascalBindingSite;
+      const AType: INyxPascalTypeSyntax; ANode: Integer;
+      const APrototype: INyxPascalBoundSymbol): INyxPascalResolution;
+    function ApplyRoutineArguments(const ASite: INyxPascalBindingSite;
+      const AFound: INyxPascalResolution; const AType: INyxPascalTypeSyntax;
+      ANode: Integer): INyxPascalResolution;
     function TypeDeclaration(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
@@ -4274,6 +4282,24 @@ function TBindingQuery.Specialize(const ASite: INyxPascalBindingSite;
   const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
 var
   LResolved: INyxPascalResolution;
+begin
+  LResolved := TypeDeclaration(ASite, AType, AType.Child(ANode, ptrBase));
+
+  if LResolved.Status <> pbsBound then Exit(LResolved);
+
+  if (LResolved.Count <> 1) or (LResolved.SymbolAt(0).Declaration.Kind <> psdkType) then
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  LResolved := ApplyGenericArguments(ASite, AType, ANode, LResolved.SymbolAt(0));
+
+  if LResolved.Status <> pbsBound then Exit(LResolved);
+  Result := TypeOfSymbol(LResolved.SymbolAt(0));
+end;
+
+function TBindingQuery.ApplyGenericArguments(const ASite: INyxPascalBindingSite;
+  const AType: INyxPascalTypeSyntax; ANode: Integer;
+  const APrototype: INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LResolved: INyxPascalResolution;
   LPrototype: INyxPascalBoundSymbol;
   LFrame: TGenericEnvironment;
   LLease: INyxPascalGenericEnvironment;
@@ -4284,19 +4310,9 @@ var
   LSymbol: TBoundSymbol;
   LSymbolLease: INyxPascalBoundSymbol;
   LOuter: INyxPascalGenericEnvironment;
+  LWasTypeTarget: Boolean;
 begin
-  LResolved := TypeDeclaration(ASite, AType, AType.Child(ANode, ptrBase));
-
-  if LResolved.Status <> pbsBound then
-  begin
-    Exit(LResolved);
-  end;
-
-  if (LResolved.Count <> 1) or (LResolved.SymbolAt(0).Declaration.Kind <> psdkType) then
-  begin
-    Exit(Answer(pbsUnresolved, pbiGenericContext));
-  end;
-  LPrototype := LResolved.SymbolAt(0);
+  LPrototype := APrototype;
   LOuter := EnvironmentOf(LPrototype);
 
   if (LOuter <> nil) and SameSymbol(LOuter.Owner, LPrototype) then
@@ -4340,7 +4356,15 @@ begin
     begin
       Exit(Answer(pbsUnresolved, pbiGenericArity));
     end;
-    LResolved := BindNode(ASite, AType, LChild);
+    { Explicit generic arguments name types, including real formal parameters.
+      Implicit Self/Result storage must not masquerade as a type argument. }
+    LWasTypeTarget := FBindingTypeTarget;
+    FBindingTypeTarget := True;
+    try
+      LResolved := BindNode(ASite, AType, LChild);
+    finally
+      FBindingTypeTarget := LWasTypeTarget;
+    end;
 
     if LResolved.Status <> pbsBound then
     begin
@@ -4361,7 +4385,99 @@ begin
   LSymbol.ModuleOrdinal := LPrototype.ModuleIndex;
   LSymbol.DeclarationOrdinal := LPrototype.DeclarationIndex;
   LSymbol.Bindings := LLease;
-  Result := TypeOfSymbol(LSymbolLease);
+  Result := OneSymbol(LSymbolLease);
+end;
+
+function TBindingQuery.ApplyRoutineArguments(const ASite: INyxPascalBindingSite;
+  const AFound: INyxPascalResolution; const AType: INyxPascalTypeSyntax;
+  ANode: Integer): INyxPascalResolution;
+var
+  LContext: INyxPascalCompilerContext;
+  LArguments, LChild, LAt, LCount, LScope, LOwner: Integer;
+  LParameters: TGenericParameters;
+  LPrototype: INyxPascalBoundSymbol;
+  LApplied: INyxPascalResolution;
+  LSymbols: array of INyxPascalBoundSymbol;
+  LIssue: TNyxPascalBindingIssue;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LGeneric: Boolean;
+  LExisting: INyxPascalGenericEnvironment;
+begin
+
+  if not (AFound.Status in [pbsBound, pbsOverloads]) then Exit(AFound);
+  LContext := ContextAt(ASite);
+
+  if (LContext = nil) or (LContext.Family <> ppcFPC) or
+    (LContext.Version.FullNumber <> 30301) or
+    not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
+    Exit(Answer(pbsUnresolved, pbiCompilerContext));
+  LArguments := 0;
+  LChild := AType.Child(ANode, ptrArgument);
+  while LChild >= 0 do
+  begin
+    Tick;
+
+    if AType.Node(LChild).Role <> ptrArgument then Break;
+    Inc(LArguments);
+    LChild := AType.Node(LChild).NextSibling;
+  end;
+  LGeneric := False;
+  SetLength(LSymbols, 0);
+  for LAt := 0 to AFound.Count - 1 do
+  begin
+    Tick;
+    LPrototype := AFound.SymbolAt(LAt);
+
+    if LPrototype.Declaration.Kind <> psdkRoutine then
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+
+    if LPrototype.Declaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> [] then
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+
+    if LPrototype.Declaration.GenericSpan.Length = 0 then Continue;
+    LGeneric := True;
+    LExisting := EnvironmentOf(LPrototype);
+
+    if (LExisting <> nil) and SameSymbol(LExisting.Owner, LPrototype) then
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+    { The compiler rejects a generic declaration inside another generic. An
+      unbound/formal outer receiver cannot turn that source into an eligible call. }
+    LSyntax := FWorld.ModuleAt(LPrototype.ModuleIndex).Syntax;
+    LScope := LPrototype.Declaration.Scope;
+    while LScope >= 0 do
+    begin
+      Tick;
+      LOwner := LSyntax.Scope(LScope).OwnerDeclaration;
+
+      if (LOwner >= 0) and (LSyntax.Declaration(LOwner).GenericSpan.Length > 0) then
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      LScope := LSyntax.Scope(LScope).Parent;
+    end;
+    LIssue := GenericParameters(LPrototype, LParameters);
+
+    if LIssue <> pbiNone then Exit(Answer(pbsUnresolved, LIssue));
+    { Explicit type-argument arity is source syntax. Runtime parameter count,
+      defaults, conversions and value-based overload selection remain opaque. }
+
+    if Length(LParameters) <> LArguments then Continue;
+    LApplied := ApplyGenericArguments(ASite, AType, ANode, LPrototype);
+
+    if LApplied.Status <> pbsBound then Exit(LApplied);
+    LCount := Length(LSymbols);
+
+    if LCount >= FLimits.MaximumCandidates then
+      raise ENyxPascalBindingLimit.Create('Generic routine alternatives exceed their query budget');
+    SetLength(LSymbols, LCount + 1);
+    LSymbols[LCount] := LApplied.SymbolAt(0);
+  end;
+
+  if Length(LSymbols) = 0 then
+  begin
+
+    if LGeneric then Exit(Answer(pbsUnresolved, pbiGenericArity));
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  end;
+  Result := SymbolAnswer(LSymbols);
 end;
 
 function TBindingQuery.BindNode(const ASite: INyxPascalBindingSite;
@@ -6079,6 +6195,82 @@ var
     Result := BindCurrent;
   end;
 
+  { Explicit routine arguments use the existing type arena, with balanced group
+    boundaries so a relational operator inside a bound cannot close the list.
+    Only argument children bind; the already-resolved callee owns its namespace,
+    visibility and receiver environment independently of this syntactic base. }
+  function ReadRoutineArguments(const AFound: INyxPascalResolution;
+    ANameStart: Integer): INyxPascalResolution;
+  var
+    LAngle, LDepth, LFinish: Integer;
+    LStack: array of TNyxPascalSymbol;
+    LClose: TNyxPascalSymbol;
+    LClosed: Boolean;
+    LParsed: INyxPascalTypeSyntax;
+  begin
+    LAngle := 0;
+    LDepth := 0;
+    LFinish := ANameStart;
+    LClosed := False;
+    while LAvailable do
+    begin
+      Tick;
+
+      if IsSymbol(psoOpenParen) or IsSymbol(psoOpenBracket) then
+      begin
+
+        if LDepth >= FLimits.MaximumDepth then
+          raise ENyxPascalBindingLimit.Create('Generic argument groups exceed their query depth');
+        SetLength(LStack, LDepth + 1);
+        LStack[LDepth] := LToken.Symbol;
+        Inc(LDepth);
+      end
+      else if IsSymbol(psoCloseParen) or IsSymbol(psoCloseBracket) then
+      begin
+
+        if LDepth = 0 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+        LClose := psoCloseParen;
+
+        if LStack[LDepth - 1] = psoOpenBracket then LClose := psoCloseBracket;
+
+        if LToken.Symbol <> LClose then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+        Dec(LDepth);
+      end
+      else if LDepth = 0 then
+      begin
+
+        if IsSymbol(psoLess) then Inc(LAngle)
+        else if IsSymbol(psoGreater) then Dec(LAngle)
+        else if IsSymbol(psoShiftRight) then Dec(LAngle, 2);
+
+        if LAngle < 0 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+        if LAngle > FLimits.MaximumDepth then
+          raise ENyxPascalBindingLimit.Create('Generic arguments exceed their query depth');
+
+        if LAngle = 0 then
+        begin
+          LFinish := LToken.Span.Finish;
+          LClosed := True;
+          Next;
+          Break;
+        end;
+      end;
+
+      if LToken.Kind in [ptkDirective, ptkInvalid, ptkAssembly, ptkEOF] then
+        Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      Next;
+    end;
+
+    if not LClosed or (LDepth <> 0) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LParsed := NewNyxPascalTypeSyntax(LLex, NyxPascalSpan(ANameStart, LFinish - ANameStart),
+      TNyxPascalTypeOptions.Defaults, FCancel);
+
+    if not LParsed.Complete or (LParsed.Node(LParsed.Root).Kind <> ptxGeneric) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    Result := ApplyRoutineArguments(ASite, AFound, LParsed, LParsed.Root);
+  end;
+
   { Recursive grouping shares this query's token/depth/work scope. }
   function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution; forward;
 
@@ -6136,7 +6328,13 @@ var
       while LAvailable do
       begin
 
-        if IsSymbol(psoOpenParen) then
+        if IsSymbol(psoLess) and (LFound.Count > 0) and
+          (LFound.SymbolAt(0).Declaration.Kind = psdkRoutine) then
+        begin
+          LFound := ReadRoutineArguments(LFound, LTypeStart);
+          AValueAccess := pmaInstance;
+        end
+        else if IsSymbol(psoOpenParen) then
         begin
           LTypeCallee := ((LFound.Count = 1) and (LFound.SymbolAt(0).Declaration.Kind = psdkType)) or
             ((LFound.BoundType <> nil) and (AValueAccess = pmaType));
@@ -6285,6 +6483,7 @@ var
           Next;
 
           if not LAvailable or (LToken.Kind <> ptkWord) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LTypeStart := LToken.Span.Start;
           LFound := Member(LValue.BoundType, ASite, LLex.Identifier(LAt), LInnerAccess);
           Next;
         end
