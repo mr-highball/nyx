@@ -23,8 +23,8 @@ program nyx_pascal_generic_binding_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 uses SysUtils, Classes, nyx.text, nyx.scheduler, nyx.pascal.context,
   nyx.pascal.lexing, nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.syntax.translated, nyx.pascal.binding, binding.fixture.generics
-  {$ifndef PAS2JS}, nyx.controls{$endif};
+  nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.work, binding.fixture.generics
+  {$ifndef PAS2JS}, nyx.controls, constraints.fixture{$endif};
 var
   GChecks: Integer;
 
@@ -105,6 +105,167 @@ begin
     .WithModule(View('system.pas',
       'unit System; {$mode delphi} interface type TObject=class end; ' +
       'IInterface=interface end; implementation end.'));
+end;
+
+{ A compiler-admitted constrained receiver must retain the same concrete field
+  type through the ordinary query path. Constraint failures still refuse rather
+  than admitting an invalid specialization. }
+procedure ConstraintAdmission;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LType: INyxPascalSemanticType;
+  LResult: INyxPascalResolution;
+  LAt: Integer;
+  LNames: array[0..4] of TNyxText;
+  LRejected: Boolean;
+  LCancel: INyxCancellationScope;
+  LBefore: INyxPascalSemanticWorld;
+begin
+  {$ifndef PAS2JS}
+  Check(CompilerConstraintValue = 42, 'The independent compiler executes class/record/scalar constrained fields');
+  {$endif}
+  LWorld := EmptyWorld.WithModule(View('constraints.pas',
+    'unit Constraints; {$mode delphi} interface type TItem=class end; ' +
+    'TClassBox<T:class>=class public Item:T; end; ' +
+    'TValueBox<T:record>=class public Item:T; end; ' +
+    'TPair<T,U:class; V:record>=class public First:T; Second:U; Value:V; end; ' +
+    'TAlias=TItem; TRow=record Value:LongInt; end; ' +
+    'TConstructed<T:class,constructor>=class end; TAncestry<T:TItem>=class end; ' +
+    'var Accepted:TClassBox<TItem>; AliasValue:TClassBox<TAlias>; ' +
+    'Row:TValueBox<TRow>; Scalar:TValueBox<LongInt>; Pair:TPair<TItem,TAlias,TRow>; ' +
+    'Rejected:TClassBox<Integer>; Reference:TValueBox<TItem>; ' +
+    'Text:TValueBox<String>; Address:TValueBox<Pointer>; Sequence:TValueBox<array of LongInt>; ' +
+    'ConstructorPending:TConstructed<TItem>; AncestorPending:TAncestry<TItem>; implementation end.'));
+  LType := NamedType(LWorld, 'Accepted');
+  Check(TerminalType(MemberType(LWorld, LType, 'Item')).Definition.Declaration.Name = TNyxText('TItem'),
+    'A valid class-constrained receiver binds its concrete field');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'AliasValue'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TItem'), 'A transparent class alias retains valid constraint admission');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'Row'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TRow'), 'A declared record satisfies the value constraint');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'Scalar'), 'Item')).Builtin = pbbLongInt,
+    'Delphi-mode scalar value constraints retain the original builtin classification');
+  LType := NamedType(LWorld, 'Pair');
+  Check((TerminalType(MemberType(LWorld, LType, 'First')).Definition.Declaration.Name = TNyxText('TItem')) and
+    (TerminalType(MemberType(LWorld, LType, 'Second')).Definition.Declaration.Name = TNyxText('TItem')) and
+    (TerminalType(MemberType(LWorld, LType, 'Value')).Definition.Declaration.Name = TNyxText('TRow')),
+    'Grouped names and semicolon-separated constraint groups retain independent concrete fields');
+  for LAt := 0 to 6 do
+  begin
+    case LAt of
+      0: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Rejected'));
+      1: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Reference'));
+      2: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Text'));
+      3: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Address'));
+      4: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Sequence'));
+      5: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('ConstructorPending'));
+      6: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('AncestorPending'));
+    end;
+    Check((LResult.Status = pbsBound) and
+      (LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint),
+      'Invalid or unqualified constraint families retain refusal '+IntToStr(LAt));
+  end;
+  LWorld := EmptyWorld.WithModule(View('foreign.pas',
+    'unit Foreign; {$mode objfpc} interface type generic TValueBox<T:record>=class public Item:T; end; implementation end.'))
+    .WithModule(View('caller.pas', 'unit Caller; {$mode delphi} interface uses Foreign; ' +
+    'var Accepted:TValueBox<LongInt>; implementation end.'));
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'Accepted'), 'Item')).Builtin = pbbLongInt,
+    'The actual Delphi specialization site governs a foreign ObjFPC value constraint');
+  LWorld := EmptyWorld.WithModule(View('foreign.pas',
+    'unit Foreign; {$mode delphi} interface type TValueBox<T:record>=class public Item:T; end; implementation end.'))
+    .WithModule(View('caller.pas', 'unit Caller; {$mode objfpc} interface uses Foreign; ' +
+    'type TRow=record Value:LongInt; end; var Rejected:specialize TValueBox<LongInt>; ' +
+    'Accepted:specialize TValueBox<TRow>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Rejected'));
+  Check((LResult.Status = pbsBound) and
+    (LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint),
+    'An ObjFPC caller cannot inherit the declaration unit''s Delphi scalar admission');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'Accepted'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TRow'), 'The ObjFPC caller still admits a real declared record');
+  LNames[0] := 'T,U:class';
+  LNames[1] := 'T:class,record';
+  LNames[2] := 'T,T:class';
+  LNames[3] := 'T:class,constructor';
+  LNames[4] := 'T:IInterface';
+  for LAt := 0 to High(LNames) do
+  begin
+    LWorld := EmptyWorld.WithModule(View('bad.pas', 'unit Bad; {$mode delphi} interface ' +
+      'type TBox<' + LNames[LAt] + '>=class end; var Value:TBox<TObject>; implementation end.'));
+    LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+    LResult := LWorld.TypeOfSymbol(LResult.SymbolAt(0));
+    Check((LResult.Status = pbsUnresolved) and
+      (LResult.Issue in [pbiGenericArity, pbiGenericConstraint, pbiGenericContext]),
+      'Wrong arity, malformed groups and unimplemented constraint families publish no bound type');
+  end;
+  LWorld := EmptyWorld.WithModule(View('budget.pas', 'unit Budget; {$mode delphi} interface ' +
+    'type TBox<T:class>=class public Item:T; end; var Value:TBox<TObject>; implementation end.'));
+  LBefore := LWorld;
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try
+    LWorld.TypeOfSymbol(LResult.SymbolAt(0), LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do LRejected := True;
+  end;
+  Check(LRejected and (LWorld = LBefore), 'Cancelled constraint checking cannot mutate or publish another world');
+end;
+
+{ Find the actual constrained-query allowance with every smaller allowance
+  refusing atomically. The accepted value must remain usable after the borrowed
+  budget retires, without retaining a cancellation/execution capability. }
+procedure ConstraintWorkAdmission;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LLookup: INyxPascalResolution;
+  LAttempt: INyxPascalResolution;
+  LAccepted: INyxPascalResolution;
+  LBudget: INyxPascalAnalysisBudget;
+  LAt: Integer;
+  LFit: Integer;
+  LRefused: Boolean;
+begin
+  LWorld := EmptyWorld.WithModule(View('work.pas', 'unit Work; {$mode delphi} interface ' +
+    'type TBox<T:class>=class public Item:T; end; var Value:TBox<TObject>; implementation end.'));
+  LLookup := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check((LLookup.Status = pbsBound) and (LLookup.Count = 1), 'The constraint allowance starts from one exact symbol');
+  LAccepted := nil;
+  LFit := 0;
+  for LAt := 1 to 4096 do
+  begin
+    LBudget := NewNyxPascalAnalysisBudget(LAt);
+    LAttempt := nil;
+    LRefused := False;
+    try
+      try
+        LAttempt := LWorld.TypeOfSymbol(LLookup.SymbolAt(0), LBudget);
+      except
+        on ENyxPascalAnalysisWorkLimit do LRefused := True;
+      end;
+
+      if LRefused then
+      begin
+        Check((LAttempt = nil) and (LBudget.Receipt.Total <= LAt),
+          'A smaller constrained-query allowance publishes no partial result');
+      end
+      else
+      begin
+        Check((LAttempt.Status = pbsBound) and (LAttempt.BoundType <> nil),
+          'The first sufficient allowance produces the constrained type');
+        LAccepted := LAttempt;
+        LFit := LAt;
+      end;
+    finally
+      LBudget.Retire;
+    end;
+
+    if LAccepted <> nil then Break;
+  end;
+  Check((LFit > 0) and (LAccepted <> nil), 'The constrained query fits its existing bounded work domain');
+  Check(TerminalType(MemberType(LWorld, LAccepted.BoundType, 'Item')).Definition.Declaration.Name = TNyxText('TObject'),
+    'A constrained type stays usable after execution-budget retirement');
+  WriteLn('constraint work / first fit=', LFit, ' every smaller allowance refused');
 end;
 
 procedure Substitution;
@@ -427,6 +588,60 @@ begin
   end;
 end;
 
+{ Bind the same complete compiler-admitted units, preserving both declaration
+  modes and actual local specialization sites. No generated header/extracted
+  class replaces either original unit; native execution is checked separately. }
+procedure WholeConstraintInputs;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LAt: Integer;
+  LScope: Integer;
+  LNames: array[0..3] of TNyxText;
+  LResult: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+begin
+
+  if ParamCount = 0 then Exit;
+  LWorld := EmptyWorld.WithModule(View('constraints.objfpc.fixture.pas',
+    ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/constraints.objfpc.fixture.pas')));
+  LView := View('constraints.fixture.pas',
+    ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/constraints.fixture.pas'));
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The whole native constrained companion retains resolved declaration syntax');
+  LWorld := LWorld.WithModule(LView);
+  LAt := LView.Syntax.Named(0, 'CompilerConstraintValue');
+  while (LAt >= 0) and (LView.Syntax.Declaration(LAt).Visibility <> psavImplementation) do
+  begin
+    LAt := LView.Syntax.Declaration(LAt).NextNamed;
+  end;
+  Check(LAt >= 0, 'The original compiled implementation is present');
+  LScope := LView.Syntax.Declaration(LAt).NestedScope;
+  LNames[0] := 'LClass';
+  LNames[1] := 'LRecord';
+  LNames[2] := 'LScalar';
+  LNames[3] := 'LForeign';
+  for LAt := 0 to High(LNames) do
+  begin
+    LResult := LWorld.Lookup(LWorld.At(2, LScope, LView.Syntax.Scope(LScope).Span.Finish - 1),
+      NyxPascalBindingName(LNames[LAt]));
+    Check((LResult.Status = pbsBound) and (LResult.Count = 1),
+      'The actual compiled local specialization retains its declaration');
+    LType := Bound(LWorld.TypeOfSymbol(LResult.SymbolAt(0)));
+    LType := TerminalType(MemberType(LWorld, LType, 'Item'));
+
+    if LAt < 2 then
+    begin
+      Check((LType.Definition <> nil) and
+        (LType.Definition.Origin.FileIndex = 0), 'The actual class/record argument keeps its defining source');
+    end
+    else
+    begin
+      Check(LType.Builtin = pbbLongInt, 'Both actual scalar specializations retain their compiler-language type');
+    end;
+  end;
+end;
+
 procedure ActualBadge;
 const
   CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
@@ -491,9 +706,12 @@ end;
 begin
   try
     Substitution;
+    ConstraintAdmission;
+    ConstraintWorkAdmission;
     MemberPages;
     {$ifndef PAS2JS}
     CompiledFixture;
+    WholeConstraintInputs;
     ActualBadge;
     {$endif}
     WriteLn('PASS ', GChecks, ' concrete generic binding checks');

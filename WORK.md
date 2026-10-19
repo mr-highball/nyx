@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Shared authored calling conventions; resolved RTL structure — 2026-10-19
+## Current integration: Constraint-aware generic class/value admission — 2026-10-19
+
+The previous turn is verified progress: 509a234 is qualified and pushed. The
+semantic audit finds an actual mismatch beyond grammar: GenericNames rejected
+every constraint colon, so an independently compiled/executed valid T:class
+receiver failed ordinary field binding. Its original clean-heap refusal remains
+retained. This continuation begins the generic-constraint feature through existing
+binding/type/context owners. Constructor/named/interface ancestry constraints,
+full canonical types/module coherence/incremental/editor/parity/adoption/delivery
+remain required; the full library/Studio/resolver goal is not narrowed or closed.
+No full criterion, task, counter, credit, DONE, parity, adoption or delivery closes.
+
+A bounded value-only parameter plan retains names, grouped class/value requirements
+and original shared spans. Comma-grouped names and semicolon-separated groups
+remain distinct. Duplicate names, malformed/mixed constraints, wrong arity and
+unsupported families retain explicit refusal. No colon is discarded to simulate
+an unconstrained parameter. Matching generic frames check owner/name/count/world
+before publishing a constrained type. Class and value requirements inspect the
+actual semantic argument while preserving its alias and source identity.
+
+Inspected FPC pgenutil checks constraints before replaying the generic body.
+Its Delphi value rule therefore belongs to the specialization site, not the
+declaration unit. An in-unit provenance capability retains that exact immutable
+site outward to the same world; no interface enters a record/static array and
+the world never retains its argument frames. The qualified rules require captured
+FPC 3.3.1/known supported modes. Unknown/foreign compiler context cannot certify
+eligibility. Delphi admits the inspected scalar/object value categories; ObjFPC
+still needs a real record. Storage size, ABI and general type validity are not
+inferred from this classification. Constructor and named/interface ancestry
+requirements still return their existing uncertainty instead of partial success.
+
+All four owned Pascal inputs are frozen before final qualification. Expanded
+generic binding passes 310 native checks/clean heap: accepted class/record/scalar
+fields, transparent aliases, grouped parameters, invalid arguments, unsupported
+families, cancellation and cross-mode source ownership. The complete independent
+Delphi/ObjFPC compiler units execute their four actual fields to 42 and enter the
+ordinary binder unchanged, including their real local specialization sites.
+The actual ObjFPC declaration/Delphi caller qualifies scalar admission; the reverse
+model retains scalar refusal while admitting a record. A missing TYPE in two
+handwritten mode-model strings caused a retained preparation failure; corrected
+complete units preserve the assertions and independent compiler behavior.
+
+The actual constrained-query first fit is 102 work units. Every one of the 101
+smaller allowances refuses without a partial result; its accepted type remains
+usable after the borrowed execution budget retires. All existing query/candidate/
+depth limits, cancellation and atomic publication remain. Parameter-plan reads,
+checks and name copies use existing admitted binding work; no larger cache,
+discounted work, fixed compiler query or wider quota replaces the operation.
+
+The required unchanged original RTL consumer PASSES all 56 native checks with
+clean heap. System retains Source.Resolved TRUE/zero translation diagnostics,
+13,101 declarations/zero syntax diagnostics/31 answers/no pending query. ObjPas
+remains 209/zero/one with no pending query. Exact indexed Free/FreeInstance,
+original include-token navigation after provider retirement and detached insertion
+remain ready. Five initial queries, one explicit Word job, three-of-eight symbol
+preparation, six-of-eight dynamic jobs, two-million view/four-million aggregate
+caps, 64 rounds and ordered input/context/answer identity stay unchanged.
+
+All 89 main compiler jobs succeed with zero owned warnings/217 upstream; the
+deliberate emission-oracle warning stays separate. All forty maintained/seven
+additional native consumers plus the actual 504-file/2,362,648-token corpus pass:
+49 accepted native logs including RTL, all clean heaps. Thirty-nine browser
+compilations include the directly affected generic consumer and Studio/worker;
+native Studio/backend compile as applicable. Browser execution, physical editor/
+input, whole-resolver latency, complete constraint/type coverage, component
+breadth, parity, adoption and delivery remain unqualified here.
+
+Preservation retains 682 unrelated/686 maintained-source pins, 97 RTL/24 compiler
+inputs plus previous and two current compiler inspections, 156 original packets/
+48 includes, 349 frozen release artifacts, nine prior contexts, thirteen foreign
+planning files and five exact current-start protected files. Historical global-
+configuration preservation failure remains retained and false; no restoration
+occurs. All owned processes/readers are terminal and joined; LAN stays offline and
+native Nyx tools absent. No host/config retry, protected mutation, cleanup/restart,
+approval bypass, new MCP tool/schema/rollout or sub-agent occurs. Ignored
+`.local/generic-constraints-paths-private.json` owns frozen inputs, retained failures,
+qualification, preservation and final source/remote receipts.
+
+Continue this same constraint feature through existing binding/type/visibility/
+proof owners: constructor and named/interface ancestry requirements must be
+validated with exact source/caller context and canonical argument identity before
+admission. Do not infer constructors, ancestor relationships, interface implementation
+or target facts from names alone, and do not remove old refusal checks to pass.
+Stop class/value/mode/oracle/compiler/capture variants at this qualified boundary.
+Full statement/expression meaning, canonical identity/module coherence/incremental
+budgets/editor/input/navigation/quality/component breadth/native-browser parity/
+adoption/delivery and the original criterion remain open; the goal stays active.
+
+## Previous integration: Shared authored calling conventions; resolved RTL structure — 2026-10-19
 
 The previous turn is verified progress: f07bdce is qualified and pushed. This
 continuation follows the actual VirtualAlloc2 winapi suffix through existing

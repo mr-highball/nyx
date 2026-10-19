@@ -381,15 +381,23 @@ type
     function Origin: TNyxPascalSyntaxOrigin;
     function Environment: INyxPascalGenericEnvironment;
   end;
+  { In-unit provenance for the actual specialization site. A declaration's mode
+    cannot substitute for the caller's mode-sensitive constraint semantics. }
+  IGenericApplication = interface(IInterface)
+    ['{7B228571-495B-4A0C-96CC-61036B15358C}']
+    function Site: INyxPascalBindingSite;
+  end;
   { Immutable concrete lexical frame, built completely before publication. Its
     owner is raw, its parent is an earlier outer frame and its arguments already
     exist; this direction prevents recursive class/member reference cycles. }
-  TGenericEnvironment = class(TInterfacedObject, INyxPascalGenericEnvironment)
+  TGenericEnvironment = class(TInterfacedObject, INyxPascalGenericEnvironment, IGenericApplication)
   public
     DeclarationOwner: INyxPascalBoundSymbol;
     Outer: INyxPascalGenericEnvironment;
     Names: array of TNyxText;
     Types: array of INyxPascalSemanticType;
+    ApplicationSite: INyxPascalBindingSite;
+    function Site: INyxPascalBindingSite;
     function Owner: INyxPascalBoundSymbol;
     function Parent: INyxPascalGenericEnvironment;
     function Count: Integer;
@@ -398,6 +406,21 @@ type
   end;
   { Query-local identifier vector; it holds no interfaces or mutable source. }
   TGenericNames = array of TNyxText;
+  { Closed argument requirements currently admitted from the inspected FPC
+    class/value constraint families. Other constraint forms still refuse. }
+  TGenericRequirement = (gcrClass, gcrRecord);
+  { Independent value flags; never a compiler-default or runtime type test. }
+  TGenericRequirements = set of TGenericRequirement;
+  { One declaration-owned parameter and its original shared requirement range.
+    Grouped names get independent values. No interface occurs in this record. }
+  TGenericParameter = record
+    Name: TNyxText;
+    Requirements: TGenericRequirements;
+    RequirementSpan: TNyxPascalSpan;
+  end;
+  { Query-local plan is bounded by existing candidate/work limits. Its entries
+    retain source coordinates and strings, without a world or caller lease. }
+  TGenericParameters = array of TGenericParameter;
   { Builder-owned semantic shape. Published instances are read-only; interface
     vectors live in the class and point only to other immutable shapes/worlds. }
   TSemanticType = class(TInterfacedObject, INyxPascalSemanticType, INyxPascalIntrinsicIdentity)
@@ -566,6 +589,11 @@ type
     function Unwrap(const AType: INyxPascalSemanticType): INyxPascalSemanticType;
     function GenericNames(const ASymbol: INyxPascalBoundSymbol;
       out ANames: TGenericNames): TNyxPascalBindingIssue;
+    function GenericParameters(const ASymbol: INyxPascalBoundSymbol;
+      out AParameters: TGenericParameters): TNyxPascalBindingIssue;
+    function CheckGenericRequirements(const ASymbol: INyxPascalBoundSymbol;
+      const AFrame: INyxPascalGenericEnvironment;
+      const AParameters: TGenericParameters): TNyxPascalBindingIssue;
     function InEnvironment(const ASymbol: INyxPascalBoundSymbol;
       const AEnvironment: INyxPascalGenericEnvironment): INyxPascalBoundSymbol;
     function ParameterAt(const ASite: INyxPascalBindingSite; AScope: Integer;
@@ -2358,15 +2386,54 @@ end;
 function TBindingQuery.GenericNames(const ASymbol: INyxPascalBoundSymbol;
   out ANames: TGenericNames): TNyxPascalBindingIssue;
 var
+  LParameters: TGenericParameters;
+  LAt: Integer;
+begin
+  SetLength(ANames, 0);
+  Result := GenericParameters(ASymbol, LParameters);
+
+  if Result <> pbiNone then Exit;
+  SetLength(ANames, Length(LParameters));
+  for LAt := 0 to High(LParameters) do
+  begin
+    Tick;
+    ANames[LAt] := LParameters[LAt].Name;
+  end;
+end;
+
+function TBindingQuery.GenericParameters(const ASymbol: INyxPascalBoundSymbol;
+  out AParameters: TGenericParameters): TNyxPascalBindingIssue;
+var
   LLex: INyxPascalLexicalSnapshot;
   LSpan: TNyxPascalSpan;
   LToken: TNyxPascalToken;
   LAt: Integer;
   LSeen: Integer;
   LName: TNyxText;
-  LExpectName: Boolean;
+  LFirst: Integer;
+  LRequirement: TGenericRequirement;
+  LRequirements: TGenericRequirements;
+  LRequirementStart: Integer;
+
+  procedure Next;
+  begin
+    repeat
+      Inc(LAt);
+      Tick;
+
+      if LAt >= LLex.Count then Exit;
+      LToken := LLex.Token(LAt);
+    until not (LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective]);
+  end;
+
+  function Closing: Boolean;
+  begin
+    Result := (LToken.Kind = ptkSymbol) and
+      (LToken.Symbol in [psoGreater, psoGreaterEqual]) and
+      (LToken.Span.Start + 1 = LSpan.Finish);
+  end;
 begin
-  SetLength(ANames, 0);
+  SetLength(AParameters, 0);
   LSpan := ASymbol.Declaration.GenericSpan;
 
   if LSpan.Length = 0 then
@@ -2376,70 +2443,185 @@ begin
   LLex := FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax.Lexical;
   LAt := LLex.TokenAt(LSpan.Start);
 
-  if LLex.Token(LAt).Symbol <> psoLess then
+  Tick;
+  LToken := LLex.Token(LAt);
+
+  if (LToken.Kind <> ptkSymbol) or (LToken.Symbol <> psoLess) then
   begin
     Exit(pbiGenericContext);
   end;
-  Inc(LAt);
-  LExpectName := True;
-  while LAt < LLex.Count do
+  Next;
+  while (LAt < LLex.Count) and (LToken.Span.Start < LSpan.Finish) do
   begin
-    Tick;
-    LToken := LLex.Token(LAt);
+    LFirst := Length(AParameters);
+    repeat
 
-    if LToken.Span.Start >= LSpan.Finish then
-    begin
-      Break;
-    end;
-
-    if not (LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective]) then
-    begin
-
-      if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoColon) then
-      begin
-        Exit(pbiGenericConstraint);
-      end;
-
-      if LExpectName then
-      begin
-
-        if (LToken.Kind <> ptkWord) or
-          ((LToken.Word <> pkwNone) and not LToken.Escaped) then
-        begin
-          Exit(pbiGenericContext);
-        end;
-        LName := LLex.Identifier(LAt);
-        for LSeen := 0 to High(ANames) do
-        begin
-          Tick;
-
-          if NyxPascalASCIIKey(ANames[LSeen]) = NyxPascalASCIIKey(LName) then
-          begin
-            Exit(pbiGenericContext);
-          end;
-        end;
-        SetLength(ANames, Length(ANames) + 1);
-        ANames[High(ANames)] := LName;
-        LExpectName := False;
-      end
-      else if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoComma) then
-      begin
-        LExpectName := True;
-      end
-      else if (LToken.Kind = ptkSymbol) and
-        (LToken.Symbol in [psoGreater, psoGreaterEqual]) and
-        (LToken.Span.Start + 1 = LSpan.Finish) then
-      begin
-        Exit(pbiNone);
-      end
-      else
+      if (LToken.Kind <> ptkWord) or
+        ((LToken.Word <> pkwNone) and not LToken.Escaped) then
       begin
         Exit(pbiGenericContext);
       end;
+      LName := LLex.Identifier(LAt);
+      for LSeen := 0 to High(AParameters) do
+      begin
+        Tick;
+
+        if NyxPascalASCIIKey(AParameters[LSeen].Name) = NyxPascalASCIIKey(LName) then
+        begin
+          Exit(pbiGenericContext);
+        end;
+      end;
+
+      if Length(AParameters) >= FLimits.MaximumCandidates then
+      begin
+        raise ENyxPascalBindingLimit.Create('Generic parameters exceed their query budget');
+      end;
+      SetLength(AParameters, Length(AParameters) + 1);
+      AParameters[High(AParameters)].Name := LName;
+      Next;
+
+      if (LToken.Kind <> ptkSymbol) or (LToken.Symbol <> psoComma) then Break;
+      Next;
+    until False;
+    LRequirements := [];
+
+    if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoColon) then
+    begin
+      Next;
+      LRequirementStart := LToken.Span.Start;
+      repeat
+
+        if (LToken.Kind <> ptkWord) or LToken.Escaped then Exit(pbiGenericConstraint);
+        case LToken.Word of
+          pkwClass: LRequirement := gcrClass;
+          pkwRecord: LRequirement := gcrRecord;
+        else
+          { Constructor and named/interface ancestry require their own semantic
+            evidence; they cannot fall through as an unconstrained parameter. }
+          Exit(pbiGenericConstraint);
+        end;
+
+        if LRequirements <> [] then Exit(pbiGenericConstraint);
+        Include(LRequirements, LRequirement);
+        Next;
+
+        if (LToken.Kind <> ptkSymbol) or (LToken.Symbol <> psoComma) then Break;
+        Next;
+      until False;
+      for LSeen := LFirst to High(AParameters) do
+      begin
+        Tick;
+        AParameters[LSeen].Requirements := LRequirements;
+        AParameters[LSeen].RequirementSpan := NyxPascalSpan(LRequirementStart,
+          LToken.Span.Start - LRequirementStart);
+      end;
     end;
-    Inc(LAt);
+
+    if Closing then Exit(pbiNone);
+
+    if (LToken.Kind <> ptkSymbol) or (LToken.Symbol <> psoSemicolon) then Exit(pbiGenericContext);
+    Next;
   end;
   Result := pbiGenericContext;
+end;
+
+function TGenericEnvironment.Site: INyxPascalBindingSite;
+begin
+  Result := ApplicationSite;
+end;
+
+function TBindingQuery.CheckGenericRequirements(const ASymbol: INyxPascalBoundSymbol;
+  const AFrame: INyxPascalGenericEnvironment;
+  const AParameters: TGenericParameters): TNyxPascalBindingIssue;
+var
+  LAt: Integer;
+  LType: INyxPascalSemanticType;
+  LView: INyxPascalTranslatedSyntax;
+  LOrigin: Integer;
+  LContext: INyxPascalCompilerContext;
+  LForm: TNyxPascalSyntaxTypeForm;
+  LValue: Boolean;
+  LApplication: IGenericApplication;
+  LSite: INyxPascalBindingSite;
+begin
+  Result := pbiNone;
+
+  if (AFrame = nil) or (AFrame.Count <> Length(AParameters)) then Exit(pbiGenericArity);
+  if not SameSymbol(AFrame.Owner, ASymbol) then Exit(pbiGenericContext);
+  LView := FWorld.ModuleAt(ASymbol.ModuleIndex);
+  for LAt := 0 to High(AParameters) do
+  begin
+    Tick;
+
+    if (NyxPascalASCIIKey(AFrame.Name(LAt)) <> NyxPascalASCIIKey(AParameters[LAt].Name)) or
+      (AFrame.Argument(LAt) = nil) or (AFrame.Argument(LAt).World <> FWorld) then
+    begin
+      Exit(pbiGenericContext);
+    end;
+
+    if AParameters[LAt].Requirements = [] then Continue;
+    LOrigin := LView.OriginAt(AParameters[LAt].RequirementSpan.Start);
+
+    if LOrigin < 0 then Exit(pbiCompilerContext);
+    LContext := LView.Source.State(LView.Origin(LOrigin).State);
+    { The mode-sensitive value rule is qualified to the inspected compiler.
+      No foreign/future compiler or unknown mode inherits its eligibility. }
+
+    if (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber <> 30301) or
+      not (LContext.Mode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+    begin
+      Exit(pbiCompilerContext);
+    end;
+    { Mode-sensitive checks run before FPC replays the generic body. Preserve
+      that actual caller origin; an alternate frame without it cannot certify
+      a constrained specialization. The site points outward to the same world. }
+
+    if not Supports(AFrame, IGenericApplication, LApplication) then Exit(pbiCompilerContext);
+    LSite := LApplication.Site;
+
+    if LSite = nil then Exit(pbiCompilerContext);
+    CheckSite(LSite);
+    LContext := ContextAt(LSite);
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber <> 30301) or
+      not (LContext.Mode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+    begin
+      Exit(pbiCompilerContext);
+    end;
+    LType := Unwrap(AFrame.Argument(LAt));
+
+    if (LType = nil) or (LType.World <> FWorld) then Exit(pbiGenericConstraint);
+    LForm := pstfNone;
+
+    if (LType.Kind = pstDeclared) and (LType.Definition <> nil) then
+    begin
+      LForm := LType.Definition.Declaration.TypeForm;
+    end;
+
+    if gcrClass in AParameters[LAt].Requirements then
+    begin
+
+      if LForm <> pstfClass then Exit(pbiGenericConstraint);
+    end;
+
+    if gcrRecord in AParameters[LAt].Requirements then
+    begin
+      LValue := LForm = pstfRecord;
+
+      if LContext.Mode in [ppmDelphi, ppmDelphiUnicode] then
+      begin
+        LValue := LValue or (LForm = pstfObject) or (LType.Kind in [pstEnumeration, pstSubrange]) or
+          ((LType.Kind = pstBuiltin) and (LType.Builtin in [pbbInteger, pbbByte, pbbWord,
+            pbbSmallInt, pbbShortInt, pbbLongInt, pbbLongWord, pbbInt64, pbbQWord,
+            pbbNativeInt, pbbNativeUInt, pbbBoolean, pbbByteBool, pbbWordBool,
+            pbbLongBool, pbbChar, pbbAnsiChar, pbbWideChar, pbbSingle, pbbDouble,
+            pbbExtended, pbbReal, pbbCurrency, pbbComp]));
+      end;
+
+      if not LValue then Exit(pbiGenericConstraint);
+    end;
+  end;
 end;
 
 function TBindingQuery.InEnvironment(const ASymbol: INyxPascalBoundSymbol;
@@ -2572,8 +2754,8 @@ var
   LScope: Integer;
   LSite: INyxPascalBindingSite;
   LFrame: INyxPascalGenericEnvironment;
-  LNames: TGenericNames;
   LIssue: TNyxPascalBindingIssue;
+  LParameters: TGenericParameters;
 begin
   Enter;
   try
@@ -2594,7 +2776,7 @@ begin
 
     if (LDecl.GenericSpan.Length > 0) then
     begin
-      LIssue := GenericNames(ASymbol, LNames);
+      LIssue := GenericParameters(ASymbol, LParameters);
 
       if LIssue <> pbiNone then
       begin
@@ -2611,6 +2793,9 @@ begin
       begin
         Exit(Answer(pbsUnresolved, pbiGenericContext));
       end;
+      LIssue := CheckGenericRequirements(ASymbol, LFrame, LParameters);
+
+      if LIssue <> pbiNone then Exit(Answer(pbsUnresolved, LIssue));
     end;
 
     if LDecl.Kind = psdkType then
@@ -2824,6 +3009,7 @@ begin
   LLease := LFrame;
   LFrame.DeclarationOwner := FWorld.Symbol(LPrototype.ModuleIndex, LPrototype.DeclarationIndex);
   LFrame.Outer := LOuter;
+  LFrame.ApplicationSite := ASite;
   LFrame.Names := LNames;
   SetLength(LFrame.Types, Length(LNames));
   LChild := AType.Child(ANode, ptrArgument);
