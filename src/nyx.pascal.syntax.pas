@@ -4813,6 +4813,10 @@ begin
       LOwner := LFullName;
       LFullName := LFullName + '.' + FLexical.Text(FTokens[FPosition]);
       LFinalName := FPosition;
+      { A qualifier's arguments belong to that owner, not to the routine's own
+        parameter declaration. Only angles after the final name occupy this
+        role; the complete qualified spelling remains in NameSpan/HeaderSpan. }
+      LGenericSpan := NyxPascalSpan(Tok.Span.Start, 0);
       Step;
 
       if Sym(psoLess) then

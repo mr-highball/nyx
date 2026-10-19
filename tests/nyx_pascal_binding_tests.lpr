@@ -192,6 +192,7 @@ var
   LScope: Integer;
   LRejected: Boolean;
   LCancel: INyxCancellationScope;
+  LFormal: INyxPascalFormalParameter;
 begin
   LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults)
     .WithModule(View('system.pas',
@@ -301,8 +302,17 @@ begin
   LScope := LChanged.ModuleAt(4).Syntax.Declaration(LAt).NestedScope;
   LResult := LChanged.Lookup(LChanged.At(4, LScope,
     LChanged.ModuleAt(4).Syntax.Scope(LScope).Span.Finish - 1), NyxPascalBindingName('T'));
-  Check(LResult.Issue = pbiGenericContext,
-    'An unresolved generic placeholder cannot bind to a same-named outer type');
+  Check((LResult.Status = pbsBound) and (LResult.BoundType <> nil) and
+    (LResult.BoundType.Kind = pstFormal) and (LResult.BoundType.Definition = nil) and
+    Supports(LResult.BoundType, INyxPascalFormalParameter, LFormal) and
+    (LFormal.DeclarationOwner.ModuleIndex = 4) and
+    (LFormal.DeclarationOwner.Declaration.Name = TNyxText('TBox')) and
+    (LFormal.Name = TNyxText('T')) and (LFormal.ParameterIndex = 0) and (LFormal.BoundCount = 0),
+    'An unapplied parameter keeps its own formal identity instead of the same-named outer record');
+  LResult := LChanged.Member(LResult.BoundType, EndSite(LChanged, 4), NyxPascalBindingName('Value'));
+  Check((LResult.Status = pbsUnresolved) and (LResult.Issue = pbiGenericContext) and
+    (LResult.Count = 0) and (LResult.BoundType = nil),
+    'An unconstrained formal still refuses the outer record''s field without a guaranteed contract');
 
   LChanged := LWorld.WithModule(View('cyca.pas',
     'unit CycleA; {$mode delphi} interface uses CycleB; type TA=CycleB.TB; implementation end.'))

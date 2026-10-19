@@ -33,7 +33,114 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Constructor intent and exact generic ancestry — 2026-10-19
+## Current integration: Source-owned formal generic contracts — 2026-10-19
+
+The previous checkpoint 534687a is qualified and pushed. This continuation keeps
+the full library/Studio/resolver outcome active and executes solo. Native FPC
+rejects a parameter name used directly in another constraint: the exploratory
+complete source fails first at TDependent's T reference. Its three retained
+attempt logs share that first prerequisite failure; they do not independently
+qualify the later nominal branch. No dependent-constraint admission is invented.
+
+The independent valid complete unit compiles generic class/interface/value method
+bodies, checks nested bounded relay fields and executes three real calls to 42.
+The source now has a distinct appended pstFormal shape and optional typed
+parameter capability: exact source owner/ordinal/name/ranges/origin/context,
+authored requirement set and bounded immutable member contracts. No interface
+enters a record/static array; worlds never retain frames or returned type graphs.
+Formal identity differs from equal bounds or later supplied arguments. Ordinary
+members/pages use only guaranteed contracts, preserving strict-private access,
+unknown roots and atomic refusal. Entailment retains nominal interface-entry
+rules and the definition/caller distinction for value constraints.
+
+Nested source receivers use formal argument frames through existing bounded
+lookup/substitution, not a concrete instantiation. Exact qualified implementation
+headers prove their original owner and ordered plain formal names. A discovered
+parser ownership bug classified TBox<T>.Read's owner arguments as Read's own
+parameters. Existing syntax ownership now keeps the final routine's parameters
+separate while retaining complete NameSpan/HeaderSpan; real compiled parameter
+and return queries assert the original declaring class. Early source-namespace,
+header-role and managed-vector warning preparations remain retained separately.
+
+Focused native qualification passes 948 generic checks with clean heap. Actual
+class/ancestry/formal operations first fit at 96/352/75 units, with every smaller
+allowance refusing atomically and retained types usable after budget retirement.
+The complete compiler unit and all four real implementation headers qualify;
+bad literal/renamed/wrong-arity owners, weak formals, unknown interface roots,
+source replacement and cancellation retain refusal. Own routine parameters have
+inner lexical priority while class parameters retain their separate owner;
+the combined-header checks establish structured identity, not native compiler
+call eligibility. Original compiled method prefixes also qualify parameters and
+members while their bodies remain explicitly unfinished. No full criterion, task,
+counter, credit, DONE, parity, adoption or delivery closes.
+
+The initial full batch is rejected and retained: original RTL printed PASS 56,
+but System regressed to unresolved/9,435 declarations/two syntax diagnostics/
+nineteen answers/pending Char, and the maintained open-scope consumer failed its
+existing unbound-incomplete-generic refusal. The new owner helper had confused
+whole-body incompleteness with header authority, including nongeneric prefixes.
+Qualification therefore checks the real resolved semantic state as well as the
+original test exit status. That unchanged test is never weakened or replaced.
+The repaired helper qualifies only the complete owner header and retains ordinary
+nongeneric lookup; incomplete generic outer-name lookup keeps its existing
+refusal. The unchanged open-scope consumer now passes all thirty checks/clean heap.
+An omitted repository argument and a duplicate local in preparation tests stay
+retained separately. All first-batch handles are terminal/joined and historical.
+
+Final qualification is composite and accepted. Four Pascal inputs, including
+both production units, freeze before the repaired full batch. One maintained
+binding consumer still expected every unapplied parameter to fail. Its update
+instead requires the exact TBox-owned formal/ordinal, no concrete definition or
+invented bound, and still refuses the same-named outer record's field. This is
+stronger shadowing evidence, not donation of that record. The failed expectation
+and earlier browser compilation stay retained outside accepted logs. Only that
+consumer changes after the production freeze; its native/browser builds are
+replaced under distinct fresh names. All other completed checks keep the same
+exact final production bytes. Five final Pascal inputs are pinned; the consumer
+update receipt records the timing and composite evidence explicitly.
+
+Current generic binding passes 948 native checks; maintained binding passes 74.
+The unchanged original RTL consumer passes 56 with clean heap and the real source
+integration is restored: System Source.Resolved TRUE/zero translation diagnostics,
+13,101 declarations/zero syntax diagnostics/31 answers/no pending query; ObjPas
+209/zero/one with no pending query. Exact indexed Free/FreeInstance, original
+include-token navigation after provider retirement and detached insertion remain
+ready. Original five initial queries, one separate Word job, three-of-eight symbol
+jobs, six-of-eight dynamic jobs, two-million view/four-million aggregate caps,
+64 rounds and ordered input/context/answer identity remain unchanged. A separate
+receipt now rejects a regressed semantic state even if the original test exits 0.
+
+All 89 accepted main compiler jobs succeed with zero owned warnings/217 upstream;
+the deliberate emission-oracle warning and rejected preparation jobs stay
+separate. Forty maintained/seven additional native consumers plus the actual
+504-file/2,371,238-token corpus pass: 49 accepted native logs including RTL, all
+clean heaps. Thirty-nine browser consumers compile, including direct type,
+binding/generic readers and Studio/worker; native Studio/backend compile as
+applicable. No browser execution, physical editor/input, general type validity,
+generic-call/overload eligibility, whole-resolver latency, parity, adoption or
+delivery is established. Original criterion/task/counter/credit/DONE and the full
+library/Studio/resolver goal remain open.
+
+Preservation retains 683 unrelated/688 maintained-source pins, 97 RTL/24 compiler
+inputs and prior inspected compiler sets, 156 original packets/48 includes,
+349 frozen artifacts, nine prior contexts, thirteen foreign planning files and
+five exact current-start protected files. The historical failed global-configuration
+preservation gate stays false without restoration. All owned process/tool handles
+are terminal and joined; old live-handle identities are historical. Ignored
+`.local/formal-bounds-paths-private.json` owns the accepted packet, rejected
+preparation packet, composite consumer qualification, exact frozen inputs and
+final source/remote receipts. LAN remains offline and native Nyx tools absent.
+No host/config retry, protected mutation, cleanup/restart, approval bypass, new
+MCP tool/schema/rollout or sub-agent occurs.
+
+Continue semantic context/type ownership: implicit interface roots require
+captured style and lifetime, not guessed COM/CORBA defaults. Generic routine
+prototype/call distinction, combined-scope native eligibility, canonical identity,
+module coherence, incremental budgets/editor/input/navigation/quality/component
+breadth/native-browser parity/adoption/delivery remain required. Stop formal/
+owner-header/prefix/oracle/compiler/capture variants at this qualified boundary.
+
+## Previous integration: Constructor intent and exact generic ancestry — 2026-10-19
 
 The previous checkpoint 3a785aa is qualified and pushed. This continuation is
 solo and preserves the whole library/Studio/resolver outcome. An independent

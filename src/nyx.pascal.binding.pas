@@ -52,7 +52,12 @@ type
     Numeric bounds/defaults, layout and assignment compatibility are not inferred. }
   TNyxPascalSemanticTypeKind = (pstDeclared, pstAlias, pstDistinct, pstPointer,
     pstArray, pstSet, pstFile, pstString, pstClassOf, pstProcedure, pstFunction,
-    pstReference, pstEnumeration, pstSubrange, pstBuiltin, pstUntyped);
+    pstReference, pstEnumeration, pstSubrange, pstBuiltin, pstUntyped, pstFormal);
+  { Authored formal requirements grant only their declared type contract. They
+    do not identify an actual argument, layout or constructor invocation. }
+  TNyxPascalGenericRequirement = (pgrClass, pgrRecord, pgrConstructor);
+  { Independent source requests; an empty set means unconstrained, not TObject. }
+  TNyxPascalGenericRequirements = set of TNyxPascalGenericRequirement;
   { Language intrinsic names only. This never supplies hardcoded SDK members or
     hides a later uncaptured import. Sizes/ABI remain in captured compiler context. }
   TNyxPascalBuiltin = (pbbNone, pbbInteger, pbbByte, pbbWord, pbbSmallInt,
@@ -217,6 +222,22 @@ type
     function IntrinsicReference: TNyxPascalSizeReference;
     function IntrinsicContext: INyxPascalCompilerContext;
   end;
+  { Optional first-class formal identity. Bound entries are source-resolved
+    guaranteed member contracts, including an implied class root when qualified.
+    They are not supplied arguments. No world retains these immutable results. }
+  INyxPascalFormalParameter = interface(IInterface)
+    ['{2E0A155F-9F53-4675-B93E-F746B1BAD0A5}']
+    function DeclarationOwner: INyxPascalBoundSymbol;
+    function ParameterIndex: Integer;
+    function Name: TNyxText;
+    function NameSpan: TNyxPascalSpan;
+    function RequirementSpan: TNyxPascalSpan;
+    function Origin: TNyxPascalSyntaxOrigin;
+    function Requirements: TNyxPascalGenericRequirements;
+    function Context: INyxPascalCompilerContext;
+    function BoundCount: Integer;
+    function BoundType(AIndex: Integer): INyxPascalSemanticType;
+  end;
   { Bounded query result. Symbol alternatives are never silently discarded.
     BoundType may accompany an intrinsic/constructed type with zero symbols.
     Missing/unsupported/inaccessible states retain no guessed type. Call selection,
@@ -354,6 +375,13 @@ implementation
 
 uses nyx.text.index, nyx.pascal.lexing.append, nyx.pascal.work;
 
+const
+  { Keep implementation spellings local while the public typed request owns
+    their stable ordinals and meaning. }
+  gcrClass = pgrClass;
+  gcrRecord = pgrRecord;
+  gcrConstructor = pgrConstructor;
+
 type
   { Immutable checked caller, retaining its world without any reverse cache. }
   TBindingSite = class(TInterfacedObject, INyxPascalBindingSite)
@@ -408,9 +436,9 @@ type
   TGenericNames = array of TNyxText;
   { Authored eligibility requests from the inspected FPC grammar. Constructor
     intent is not proof that any particular constructor invocation will bind. }
-  TGenericRequirement = (gcrClass, gcrRecord, gcrConstructor);
+  TGenericRequirement = TNyxPascalGenericRequirement;
   { Independent value flags; never a compiler-default or runtime type test. }
-  TGenericRequirements = set of TGenericRequirement;
+  TGenericRequirements = TNyxPascalGenericRequirements;
   { Original named requirement windows contain only source coordinates. Nested
     generic arguments keep their own commas and closing-angle ownership. }
   TGenericConstraintSpans = array of TNyxPascalSpan;
@@ -418,6 +446,7 @@ type
     Grouped names get independent values. No interface occurs in this record. }
   TGenericParameter = record
     Name: TNyxText;
+    NameSpan: TNyxPascalSpan;
     Requirements: TGenericRequirements;
     RequirementSpan: TNyxPascalSpan;
     NamedSpans: TGenericConstraintSpans;
@@ -456,6 +485,28 @@ type
     function ParameterName(AIndex: Integer): TNyxText;
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { A source formal owns its parameter identity and bounded immutable contracts.
+    It holds no application frame or execution lease, avoiding recursive frame
+    ownership and keeping parameter and ordinary declared-type identity apart. }
+  TFormalType = class(TSemanticType, INyxPascalFormalParameter)
+  public
+    FDeclarationOwner: INyxPascalBoundSymbol;
+    FIndex: Integer;
+    FParameter: TGenericParameter;
+    FOrigin: TNyxPascalSyntaxOrigin;
+    FContext: INyxPascalCompilerContext;
+    FBounds: array of INyxPascalSemanticType;
+    function DeclarationOwner: INyxPascalBoundSymbol;
+    function ParameterIndex: Integer;
+    function Name: TNyxText;
+    function NameSpan: TNyxPascalSpan;
+    function RequirementSpan: TNyxPascalSpan;
+    function Origin: TNyxPascalSyntaxOrigin;
+    function Requirements: TNyxPascalGenericRequirements;
+    function Context: INyxPascalCompilerContext;
+    function BoundCount: Integer;
+    function BoundType(AIndex: Integer): INyxPascalSemanticType;
   end;
   { One constructed response; the world retains no results. Symbols and types
     own their source world outward, preventing editor/model reference cycles. }
@@ -551,6 +602,8 @@ type
     { A requirement names a formal contract. Until formal parameter bounds own
       their own semantic shapes, a concrete substitution cannot stand in for it. }
     FBindingConstraint: Boolean;
+    { Owner-name lookup must not recursively re-enter the same method header. }
+    FResolvingImplementationOwner: Boolean;
     FEnvironment: INyxPascalGenericEnvironment;
     FTypeOwner: INyxPascalBoundSymbol;
     procedure Tick;
@@ -607,11 +660,23 @@ type
     function CheckNamedGenericRequirements(const ASymbol: INyxPascalBoundSymbol;
       const AFrame: INyxPascalGenericEnvironment; const AParameter: TGenericParameter;
       const AArgument: INyxPascalSemanticType): TNyxPascalBindingIssue;
+    function GenericRequirementType(const ASymbol: INyxPascalBoundSymbol;
+      const AFrame: INyxPascalGenericEnvironment; const ASpan: TNyxPascalSpan): INyxPascalResolution;
+    function FormalParameter(const ASymbol: INyxPascalBoundSymbol; AIndex: Integer;
+      const AParameters: TGenericParameters): INyxPascalResolution;
+    function FormalReceiver(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+    function GenericImplementationOwner(const ASite: INyxPascalBindingSite;
+      const ARoutine: INyxPascalBoundSymbol): INyxPascalResolution;
+    function FormalMember(const AFormal: INyxPascalFormalParameter;
+      const ASite: INyxPascalBindingSite; const AName: TNyxText;
+      AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
     function ConstraintRelated(const AActual, ARequired: INyxPascalSemanticType): TNyxPascalKnowledge;
     function InEnvironment(const ASymbol: INyxPascalBoundSymbol;
       const AEnvironment: INyxPascalGenericEnvironment): INyxPascalBoundSymbol;
     function ParameterAt(const ASite: INyxPascalBindingSite; AScope: Integer;
       const AName: TNyxText): INyxPascalResolution;
+    function ParameterFromOwner(const ASite: INyxPascalBindingSite;
+      const AOwner: INyxPascalBoundSymbol; const AName: TNyxText): INyxPascalResolution;
     function Specialize(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function TypeDeclaration(const ASite: INyxPascalBindingSite;
@@ -982,6 +1047,61 @@ function TSemanticType.ParameterType(AIndex: Integer): INyxPascalSemanticType;
 begin
   ParameterName(AIndex);
   Result := Types[AIndex];
+end;
+
+function TFormalType.DeclarationOwner: INyxPascalBoundSymbol;
+begin
+  Result := FDeclarationOwner;
+end;
+
+function TFormalType.ParameterIndex: Integer;
+begin
+  Result := FIndex;
+end;
+
+function TFormalType.Name: TNyxText;
+begin
+  Result := FParameter.Name;
+end;
+
+function TFormalType.NameSpan: TNyxPascalSpan;
+begin
+  Result := FParameter.NameSpan;
+end;
+
+function TFormalType.RequirementSpan: TNyxPascalSpan;
+begin
+  Result := FParameter.RequirementSpan;
+end;
+
+function TFormalType.Origin: TNyxPascalSyntaxOrigin;
+begin
+  Result := FOrigin;
+end;
+
+function TFormalType.Requirements: TNyxPascalGenericRequirements;
+begin
+  Result := FParameter.Requirements;
+end;
+
+function TFormalType.Context: INyxPascalCompilerContext;
+begin
+  Result := FContext;
+end;
+
+function TFormalType.BoundCount: Integer;
+begin
+  Result := Length(FBounds);
+end;
+
+function TFormalType.BoundType(AIndex: Integer): INyxPascalSemanticType;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FBounds)) then
+  begin
+    raise ENyxPascalBinding.Create('Formal bound index is outside its contract');
+  end;
+  Result := FBounds[AIndex];
 end;
 
 function TMemberPage.ResultSet: INyxPascalResolution;
@@ -1523,6 +1643,8 @@ var
   LAt: Integer;
   LLeftIntrinsic: INyxPascalIntrinsicIdentity;
   LRightIntrinsic: INyxPascalIntrinsicIdentity;
+  LLeftFormal: INyxPascalFormalParameter;
+  LRightFormal: INyxPascalFormalParameter;
 begin
   Enter;
   try
@@ -1546,6 +1668,19 @@ begin
     if (ALeft.Kind <> ARight.Kind) or (ALeft.Builtin <> ARight.Builtin) then
     begin
       Exit(False);
+    end;
+
+    if ALeft.Kind = pstFormal then
+    begin
+      { Separate parameters never become equal because their bounds agree. }
+      Result := Supports(ALeft, INyxPascalFormalParameter, LLeftFormal) and
+        Supports(ARight, INyxPascalFormalParameter, LRightFormal);
+
+      if not Result then Exit;
+      Exit(SameSymbol(LLeftFormal.DeclarationOwner, LRightFormal.DeclarationOwner) and
+        (LLeftFormal.ParameterIndex = LRightFormal.ParameterIndex) and
+        (LLeftFormal.NameSpan.Start = LRightFormal.NameSpan.Start) and
+        (LLeftFormal.NameSpan.Length = LRightFormal.NameSpan.Length));
     end;
 
     if ALeft.Kind = pstBuiltin then
@@ -1993,7 +2128,8 @@ begin
     LOwner := LSyntax.Scope(LScope).OwnerDeclaration;
 
     if (LOwner >= 0) and (LSyntax.Declaration(LOwner).GenericSpan.Length > 0) and
-      (FEnvironment = nil) then
+      ((LSyntax.Declaration(LOwner).Kind <> psdkType) or
+        (psdfIncomplete in LSyntax.Declaration(LOwner).Flags)) and (FEnvironment = nil) then
     begin
       Exit(Answer(pbsUnresolved, pbiGenericContext));
     end;
@@ -2036,7 +2172,14 @@ begin
         end
         else
         begin
-          LClassType := TypeOfSymbol(LClass);
+          if (LClass.Declaration.GenericSpan.Length > 0) and (EnvironmentOf(LClass) = nil) then
+          begin
+            LClassType := FormalReceiver(LClass);
+          end
+          else
+          begin
+            LClassType := TypeOfSymbol(LClass);
+          end;
 
           if LClassType.Status <> pbsBound then
           begin
@@ -2561,6 +2704,7 @@ begin
       end;
       SetLength(AParameters, Length(AParameters) + 1);
       AParameters[High(AParameters)].Name := LName;
+      AParameters[High(AParameters)].NameSpan := LToken.Span;
       Next;
 
       if (LToken.Kind <> ptkSymbol) or (LToken.Symbol <> psoComma) then Break;
@@ -2655,6 +2799,9 @@ var
   LApplication: IGenericApplication;
   LSite: INyxPascalBindingSite;
   LIssue: TNyxPascalBindingIssue;
+  LFormal: INyxPascalFormalParameter;
+  LBoundAt: Integer;
+  LClassGuarantee: Boolean;
 begin
   Result := pbiNone;
 
@@ -2714,6 +2861,34 @@ begin
       LForm := LType.Definition.Declaration.TypeForm;
     end;
 
+    if LType.Kind = pstFormal then
+    begin
+
+      if not Supports(LType, INyxPascalFormalParameter, LFormal) then Exit(pbiGenericContext);
+      LClassGuarantee := False;
+      for LBoundAt := 0 to LFormal.BoundCount - 1 do
+      begin
+        Tick;
+        LClassGuarantee := LClassGuarantee or
+          (LFormal.BoundType(LBoundAt).Definition.Declaration.TypeForm = pstfClass);
+      end;
+
+      if (AParameters[LAt].Requirements * [gcrClass, gcrConstructor] <> []) and
+        not LClassGuarantee then Exit(pbiGenericContext);
+
+      if gcrRecord in AParameters[LAt].Requirements then
+      begin
+
+        if not (pgrRecord in LFormal.Requirements) or
+          (not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) and
+            (LFormal.Context.Mode in [ppmDelphi, ppmDelphiUnicode])) then Exit(pbiGenericContext);
+      end;
+      LIssue := CheckNamedGenericRequirements(ASymbol, AFrame, AParameters[LAt], LType);
+
+      if LIssue <> pbiNone then Exit(LIssue);
+      Continue;
+    end;
+
     if AParameters[LAt].Requirements * [gcrClass, gcrConstructor] <> [] then
     begin
 
@@ -2742,6 +2917,199 @@ begin
   end;
 end;
 
+function TBindingQuery.GenericRequirementType(const ASymbol: INyxPascalBoundSymbol;
+  const AFrame: INyxPascalGenericEnvironment; const ASpan: TNyxPascalSpan): INyxPascalResolution;
+var
+  LSyntax: INyxPascalTypeSyntax;
+  LEnvironment: INyxPascalGenericEnvironment;
+  LOwner: INyxPascalBoundSymbol;
+  LBindingConstraint: Boolean;
+begin
+  LSyntax := NewNyxPascalTypeSyntax(FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax.Lexical,
+    ASpan, TNyxPascalTypeOptions.Defaults, FCancel);
+
+  if not LSyntax.Complete then Exit(Answer(pbsUnresolved, pbiGenericConstraint));
+  LEnvironment := FEnvironment;
+  LOwner := FTypeOwner;
+  LBindingConstraint := FBindingConstraint;
+  FEnvironment := AFrame;
+  FTypeOwner := ASymbol;
+  FBindingConstraint := True;
+  try
+    { The declaration's exact source position owns every name. A supplied
+      argument cannot manufacture a formal contract that FPC cannot declare. }
+    Result := BindNode(FWorld.At(ASymbol.ModuleIndex, ASymbol.Declaration.Scope,
+      ASpan.Start), LSyntax, LSyntax.Root);
+  finally
+    FEnvironment := LEnvironment;
+    FTypeOwner := LOwner;
+    FBindingConstraint := LBindingConstraint;
+  end;
+end;
+
+function TBindingQuery.FormalParameter(const ASymbol: INyxPascalBoundSymbol;
+  AIndex: Integer; const AParameters: TGenericParameters): INyxPascalResolution;
+var
+  LType: TFormalType;
+  LLease: INyxPascalSemanticType;
+  LView: INyxPascalTranslatedSyntax;
+  LOrigin: Integer;
+  LAt: Integer;
+  LClasses: Integer;
+  LInterfaces: Integer;
+  LBound: INyxPascalResolution;
+  LBoundType: INyxPascalSemanticType;
+  LSystem: Integer;
+
+  procedure Append(const AType: INyxPascalSemanticType);
+  begin
+    Tick;
+
+    if Length(LType.FBounds) >= FLimits.MaximumCandidates then
+    begin
+      raise ENyxPascalBindingLimit.Create('Formal bounds exceed their query budget');
+    end;
+    SetLength(LType.FBounds, Length(LType.FBounds) + 1);
+    LType.FBounds[High(LType.FBounds)] := AType;
+  end;
+begin
+  Enter;
+  try
+    LView := FWorld.ModuleAt(ASymbol.ModuleIndex);
+    LOrigin := LView.OriginAt(AParameters[AIndex].NameSpan.Start);
+
+    if LOrigin < 0 then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+    LType := TFormalType.Create;
+    LLease := LType;
+    LType.Owner := FWorld;
+    LType.TypeKind := pstFormal;
+    LType.FDeclarationOwner := FWorld.Symbol(ASymbol.ModuleIndex, ASymbol.DeclarationIndex);
+    LType.FIndex := AIndex;
+    LType.FParameter := AParameters[AIndex];
+    LType.FOrigin := LView.Origin(LOrigin);
+    LType.FContext := LView.Source.State(LType.FOrigin.State);
+    LClasses := 0;
+    LInterfaces := 0;
+
+    if (LType.FParameter.Requirements <> []) or (Length(LType.FParameter.NamedSpans) <> 0) then
+    begin
+      LOrigin := LView.OriginAt(LType.FParameter.RequirementSpan.Start);
+
+      if LOrigin < 0 then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+      LType.FContext := LView.Source.State(LView.Origin(LOrigin).State);
+
+      if (LType.FContext.Family <> ppcFPC) or (LType.FContext.Version.FullNumber <> 30301) or
+        not (LType.FContext.Mode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiCompilerContext));
+      end;
+
+      if (gcrConstructor in LType.FParameter.Requirements) and
+        not (LType.FContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericConstraint));
+      end;
+    end;
+    for LAt := 0 to High(LType.FParameter.NamedSpans) do
+    begin
+      Tick;
+      LBound := GenericRequirementType(ASymbol, nil, LType.FParameter.NamedSpans[LAt]);
+
+      if LBound.Status <> pbsBound then Exit(LBound);
+      LBoundType := Unwrap(LBound.BoundType);
+
+      if (LBoundType = nil) or (LBoundType.Kind <> pstDeclared) or
+        (LBoundType.Definition = nil) then Exit(Answer(pbsUnresolved, pbiGenericConstraint));
+      case LBoundType.Definition.Declaration.TypeForm of
+        pstfClass:
+          begin
+            Inc(LClasses);
+
+            if (LClasses > 1) or (gcrClass in LType.FParameter.Requirements) then
+            begin
+              Exit(Answer(pbsUnresolved, pbiGenericConstraint));
+            end;
+          end;
+        pstfInterface: Inc(LInterfaces);
+      else
+        Exit(Answer(pbsUnresolved, pbiGenericConstraint));
+      end;
+      Append(LBoundType);
+    end;
+
+    if (LClasses = 0) and ((LType.FParameter.Requirements * [gcrClass, gcrConstructor] <> []) or
+      (LInterfaces > 1)) then
+    begin
+      LSystem := FWorld.FindModule('System');
+
+      if LSystem < 0 then Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
+      LBound := Exact(LSystem, 0, InterfaceEnd(LSystem), 'TObject', True);
+
+      if (LBound.Status <> pbsBound) or (LBound.Count <> 1) then Exit(LBound);
+      LBound := TypeOfSymbol(LBound.SymbolAt(0));
+
+      if LBound.Status <> pbsBound then Exit(LBound);
+      LBoundType := Unwrap(LBound.BoundType);
+
+      if (LBoundType = nil) or (LBoundType.Kind <> pstDeclared) or
+        (LBoundType.Definition = nil) or (LBoundType.Definition.Declaration.TypeForm <> pstfClass) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      end;
+      Append(LBoundType);
+    end;
+    Result := TypeAnswer(LLease);
+  finally
+    Leave;
+  end;
+end;
+
+function TBindingQuery.FormalReceiver(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LParameters: TGenericParameters;
+  LIssue: TNyxPascalBindingIssue;
+  LFrame: TGenericEnvironment;
+  LLease: INyxPascalGenericEnvironment;
+  LSymbol: TBoundSymbol;
+  LSymbolLease: INyxPascalBoundSymbol;
+  LAt: Integer;
+  LType: INyxPascalResolution;
+begin
+  Enter;
+  try
+    LIssue := GenericParameters(ASymbol, LParameters);
+
+    if LIssue <> pbiNone then Exit(Answer(pbsUnresolved, LIssue));
+    LFrame := TGenericEnvironment.Create;
+    LLease := LFrame;
+    LFrame.DeclarationOwner := FWorld.Symbol(ASymbol.ModuleIndex, ASymbol.DeclarationIndex);
+    LFrame.ApplicationSite := FWorld.At(ASymbol.ModuleIndex, ASymbol.Declaration.Scope,
+      ASymbol.Declaration.TypeSpan.Start);
+    SetLength(LFrame.Names, Length(LParameters));
+    SetLength(LFrame.Types, Length(LParameters));
+    for LAt := 0 to High(LParameters) do
+    begin
+      Tick;
+      LType := FormalParameter(ASymbol, LAt, LParameters);
+
+      if LType.Status <> pbsBound then Exit(LType);
+      LFrame.Names[LAt] := LParameters[LAt].Name;
+      LFrame.Types[LAt] := LType.BoundType;
+    end;
+    LSymbol := TBoundSymbol.Create;
+    LSymbolLease := LSymbol;
+    LSymbol.Owner := FWorld;
+    LSymbol.ModuleOrdinal := ASymbol.ModuleIndex;
+    LSymbol.DeclarationOrdinal := ASymbol.DeclarationIndex;
+    LSymbol.Bindings := LLease;
+    { A source receiver runs through the same bounded requirement checks. Its
+      arguments remain formal shapes; it is never a concrete instantiation. }
+    Result := TypeOfSymbol(LSymbolLease);
+  finally
+    Leave;
+  end;
+end;
+
 function TBindingQuery.CheckNamedGenericRequirements(const ASymbol: INyxPascalBoundSymbol;
   const AFrame: INyxPascalGenericEnvironment; const AParameter: TGenericParameter;
   const AArgument: INyxPascalSemanticType): TNyxPascalBindingIssue;
@@ -2749,13 +3117,11 @@ var
   LAt: Integer;
   LClasses: Integer;
   LInterfaces: Integer;
-  LSyntax: INyxPascalTypeSyntax;
   LResolved: INyxPascalResolution;
   LRequired: INyxPascalSemanticType;
   LEnvironment: INyxPascalGenericEnvironment;
   LOwner: INyxPascalBoundSymbol;
   LRelation: TNyxPascalKnowledge;
-  LBindingConstraint: Boolean;
 begin
   Result := pbiNone;
   LClasses := 0;
@@ -2768,20 +3134,7 @@ begin
     for LAt := 0 to High(AParameter.NamedSpans) do
     begin
       Tick;
-      LSyntax := NewNyxPascalTypeSyntax(FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax.Lexical,
-        AParameter.NamedSpans[LAt], TNyxPascalTypeOptions.Defaults, FCancel);
-
-      if not LSyntax.Complete then Exit(pbiGenericConstraint);
-      { Names bind in the declaration's exact lexical scope with the matching
-        immutable argument frame. Caller shadowing cannot retarget a contract. }
-      LBindingConstraint := FBindingConstraint;
-      FBindingConstraint := True;
-      try
-        LResolved := BindNode(FWorld.At(ASymbol.ModuleIndex, ASymbol.Declaration.Scope,
-          AParameter.NamedSpans[LAt].Start), LSyntax, LSyntax.Root);
-      finally
-        FBindingConstraint := LBindingConstraint;
-      end;
+      LResolved := GenericRequirementType(ASymbol, AFrame, AParameter.NamedSpans[LAt]);
 
       if LResolved.Status <> pbsBound then Exit(LResolved.Issue);
       LRequired := Unwrap(LResolved.BoundType);
@@ -2829,9 +3182,34 @@ var
   LHasClass: Boolean;
   LUnknown: Boolean;
   LSystem: Integer;
+  LFormal: INyxPascalFormalParameter;
 begin
   Enter;
   try
+
+    if (AActual <> nil) and (AActual.Kind = pstFormal) then
+    begin
+
+      if not Supports(AActual, INyxPascalFormalParameter, LFormal) then Exit(ppkUnknown);
+      for LAt := 0 to LFormal.BoundCount - 1 do
+      begin
+        Tick;
+        LType := LFormal.BoundType(LAt);
+        { A class bound guarantees its inherited implementation entries. A lone
+          interface bound can also denote a class implementing only that exact
+          interface, so it cannot manufacture a separate parent entry. }
+
+        if SameType(LType, ARequired) then Exit(ppkTrue);
+
+        if LType.Definition.Declaration.TypeForm = pstfClass then
+        begin
+          LRelated := ConstraintRelated(LType, ARequired);
+
+          if LRelated = ppkTrue then Exit(ppkTrue);
+        end;
+      end;
+      Exit(ppkUnknown);
+    end;
 
     if (AActual = nil) or (AActual.Kind <> pstDeclared) or (AActual.Definition = nil) then Exit(ppkFalse);
     LActualForm := AActual.Definition.Declaration.TypeForm;
@@ -2967,15 +3345,145 @@ begin
   end;
 end;
 
+function TBindingQuery.GenericImplementationOwner(const ASite: INyxPascalBindingSite;
+  const ARoutine: INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LLex: INyxPascalLexicalSnapshot;
+  LAt: Integer;
+  LFirst: Integer;
+  LLast: Integer;
+  LToken: TNyxPascalToken;
+  LType: INyxPascalTypeSyntax;
+  LFound: INyxPascalResolution;
+  LParameters: TGenericParameters;
+  LIssue: TNyxPascalBindingIssue;
+  LArgument: Integer;
+  LResolving: Boolean;
+  LHasArguments: Boolean;
+  LAnyArguments: Boolean;
+  LAngle: Integer;
+
+  procedure Next;
+  begin
+    repeat
+      Inc(LAt);
+      Tick;
+
+      if LAt >= LLex.Count then Exit;
+      LToken := LLex.Token(LAt);
+    until not (LToken.Kind in [ptkWhitespace, ptkComment]);
+  end;
+begin
+  Result := nil;
+
+  if (ARoutine.Declaration.Kind <> psdkRoutine) or (ARoutine.Declaration.OwnerName = '') then Exit;
+
+  LLex := FWorld.ModuleAt(ARoutine.ModuleIndex).Syntax.Lexical;
+  LAt := LLex.TokenAt(ARoutine.Declaration.HeaderSpan.Start) - 1;
+  Next;
+
+  if (LToken.Kind = ptkWord) and not LToken.Escaped and (LToken.Word = pkwClass) then Next;
+
+  if (LToken.Kind <> ptkWord) or LToken.Escaped or
+    not (LToken.Word in [pkwFunction, pkwProcedure, pkwConstructor, pkwDestructor]) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  end;
+  Next;
+  LFirst := LToken.Span.Start;
+  LLast := -1;
+  LHasArguments := False;
+  LAnyArguments := False;
+  LAngle := 0;
+  while (LAt < LLex.Count) and (LToken.Span.Start < ARoutine.Declaration.NameSpan.Finish) do
+  begin
+
+    if LToken.Kind = ptkSymbol then
+    begin
+      case LToken.Symbol of
+        psoLess:
+          begin
+            Inc(LAngle);
+            LAnyArguments := True;
+          end;
+        psoGreater: Dec(LAngle);
+        psoShiftRight: Dec(LAngle, 2);
+        psoDot:
+          begin
+
+            if LAngle = 0 then
+            begin
+              LLast := LAt;
+              LHasArguments := LAnyArguments;
+            end;
+          end;
+      else
+        { Parameter delimiters retain the existing type parser's ownership. }
+      end;
+    end;
+    Next;
+  end;
+
+  if not LHasArguments then Exit;
+
+  if psdfConditional in ARoutine.Declaration.Flags then Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  { A frozen prefix often ends inside a method body. Its complete owner header
+    can still qualify parameters; body incompleteness is not header authority.
+    Nongeneric headers above retain their prior ordinary lookup path. }
+
+  if (LLast < 0) or (LLex.Token(LLast).Kind <> ptkSymbol) or
+    (LLex.Token(LLast).Symbol <> psoDot) then Exit(Answer(pbsUnresolved, pbiGenericContext));
+  LType := NewNyxPascalTypeSyntax(LLex, NyxPascalSpan(LFirst,
+    LLex.Token(LLast).Span.Start - LFirst), TNyxPascalTypeOptions.Defaults, FCancel);
+
+  if not LType.Complete then Exit(Answer(pbsUnresolved, pbiGenericContext));
+
+  if LType.Node(LType.Root).Kind <> ptxGeneric then Exit;
+  LResolving := FResolvingImplementationOwner;
+  FResolvingImplementationOwner := True;
+  try
+    LFound := TypeDeclaration(FWorld.At(ASite.ModuleIndex, 0, LFirst), LType,
+      LType.Child(LType.Root, ptrBase));
+  finally
+    FResolvingImplementationOwner := LResolving;
+  end;
+
+  if (LFound.Status <> pbsBound) or (LFound.Count <> 1) then Exit(LFound);
+
+  if (LFound.SymbolAt(0).Declaration.Kind <> psdkType) or
+    not (LFound.SymbolAt(0).Declaration.TypeForm in [pstfClass, pstfInterface, pstfRecord, pstfObject]) then
+  begin
+    Exit(Answer(pbsUnresolved, pbiGenericContext));
+  end;
+  LIssue := GenericParameters(LFound.SymbolAt(0), LParameters);
+
+  if LIssue <> pbiNone then Exit(Answer(pbsUnresolved, LIssue));
+  LArgument := LType.Child(LType.Root, ptrArgument);
+  for LAt := 0 to High(LParameters) do
+  begin
+    Tick;
+
+    if (LArgument < 0) or (LType.Node(LArgument).Role <> ptrArgument) or
+      (LType.Node(LArgument).Kind <> ptxName) or
+      (NyxPascalASCIIKey(LType.Node(LArgument).Name) <> NyxPascalASCIIKey(LParameters[LAt].Name)) then
+    begin
+      Exit(Answer(pbsUnresolved, pbiGenericContext));
+    end;
+    LArgument := LType.Node(LArgument).NextSibling;
+  end;
+
+  if (Length(LParameters) = 0) or (LArgument >= 0) then Exit(Answer(pbsUnresolved, pbiGenericContext));
+  { An exact declaration and ordered plain formal names qualify this header.
+    A constructed owner with literals or renamed/missing parameters does not. }
+  Result := LFound;
+end;
+
 function TBindingQuery.ParameterAt(const ASite: INyxPascalBindingSite;
   AScope: Integer; const AName: TNyxText): INyxPascalResolution;
 var
   LOwner: INyxPascalBoundSymbol;
-  LNames: TGenericNames;
-  LIssue: TNyxPascalBindingIssue;
-  LFrame: INyxPascalGenericEnvironment;
-  LAt: Integer;
   LDecl: Integer;
+  LImplementation: INyxPascalResolution;
 begin
   Result := nil;
   LOwner := nil;
@@ -2984,49 +3492,104 @@ begin
   if LDecl >= 0 then
   begin
     LOwner := FWorld.Symbol(ASite.ModuleIndex, LDecl);
+
+    if LOwner.Declaration.Kind = psdkRoutine then
+    begin
+      { A method's own parameters shadow its class parameters. Preserve both
+        source owners rather than replacing the inner lexical contract. }
+      Result := ParameterFromOwner(ASite, LOwner, AName);
+
+      if Result <> nil then Exit;
+    end;
+    LImplementation := nil;
+
+    if not FResolvingImplementationOwner then LImplementation := GenericImplementationOwner(ASite, LOwner);
+
+    if LImplementation <> nil then
+    begin
+
+      if (LImplementation.Status <> pbsBound) or (LImplementation.Count <> 1) then Exit(LImplementation);
+      LOwner := LImplementation.SymbolAt(0);
+    end;
+  end;
+  { A routine result is written in the outer scope, yet still belongs to its
+    exact qualified implementation header. Validate that owner independently. }
+
+  if not FResolvingImplementationOwner and (FTypeOwner <> nil) and
+    (FTypeOwner.ModuleIndex = ASite.ModuleIndex) and (FTypeOwner.Declaration.Scope = AScope) and
+    (FTypeOwner.Declaration.Kind = psdkRoutine) and (FTypeOwner.Declaration.OwnerName <> '') then
+  begin
+    Result := ParameterFromOwner(ASite, FTypeOwner, AName);
+
+    if Result <> nil then Exit;
+    LImplementation := GenericImplementationOwner(ASite, FTypeOwner);
+
+    if LImplementation <> nil then
+    begin
+
+      if (LImplementation.Status <> pbsBound) or (LImplementation.Count <> 1) then Exit(LImplementation);
+      LOwner := LImplementation.SymbolAt(0);
+    end;
   end;
   { Alias expressions and ancestor clauses use the declaration's outer scope,
     yet their placeholders belong to the declaration currently being bound. }
 
   if (FTypeOwner <> nil) and (FTypeOwner.ModuleIndex = ASite.ModuleIndex) and
     (FTypeOwner.Declaration.Scope = AScope) and
-    (FTypeOwner.Declaration.GenericSpan.Length > 0) then
+    (FTypeOwner.Declaration.GenericSpan.Length > 0) and
+    ((FTypeOwner.Declaration.Kind <> psdkRoutine) or (FTypeOwner.Declaration.OwnerName = '')) then
   begin
     LOwner := FTypeOwner;
   end;
 
-  if (LOwner = nil) or (LOwner.Declaration.GenericSpan.Length = 0) then
+  Result := ParameterFromOwner(ASite, LOwner, AName);
+end;
+
+function TBindingQuery.ParameterFromOwner(const ASite: INyxPascalBindingSite;
+  const AOwner: INyxPascalBoundSymbol; const AName: TNyxText): INyxPascalResolution;
+var
+  LParameters: TGenericParameters;
+  LIssue: TNyxPascalBindingIssue;
+  LFrame: INyxPascalGenericEnvironment;
+  LAt: Integer;
+begin
+  Result := nil;
+
+  if (AOwner = nil) or (AOwner.Declaration.GenericSpan.Length = 0) then
   begin
     Exit;
   end;
-  LIssue := GenericNames(LOwner, LNames);
+  LIssue := GenericParameters(AOwner, LParameters);
 
   if LIssue <> pbiNone then
   begin
     Exit(Answer(pbsUnresolved, LIssue));
   end;
-  for LAt := 0 to High(LNames) do
+  for LAt := 0 to High(LParameters) do
   begin
     Tick;
 
-    if NyxPascalASCIIKey(LNames[LAt]) = NyxPascalASCIIKey(AName) then
+    if NyxPascalASCIIKey(LParameters[LAt].Name) = NyxPascalASCIIKey(AName) then
     begin
       { Eligibility of a supplied class cannot prove that a formal parameter
         was an inheritable contract at this earlier declaration position. }
 
-      if FBindingConstraint then Exit(Answer(pbsUnresolved, pbiGenericContext));
+      if FBindingConstraint or (ASite.Caret < AOwner.Declaration.GenericSpan.Finish) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      end;
       LFrame := FEnvironment;
       while LFrame <> nil do
       begin
         Tick;
 
-        if SameSymbol(LFrame.Owner, LOwner) then
+        if SameSymbol(LFrame.Owner, AOwner) then
         begin
           Exit(TypeAnswer(LFrame.Argument(LAt)));
         end;
         LFrame := LFrame.Parent;
       end;
-      Exit(Answer(pbsUnresolved, pbiGenericContext));
+      Exit(FormalParameter(AOwner, LAt, LParameters));
     end;
   end;
 end;
@@ -4031,6 +4594,78 @@ begin
   end;
 end;
 
+function TBindingQuery.FormalMember(const AFormal: INyxPascalFormalParameter;
+  const ASite: INyxPascalBindingSite; const AName: TNyxText;
+  AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
+var
+  LAt: Integer;
+  LEntry: Integer;
+  LSeen: Integer;
+  LBound: INyxPascalSemanticType;
+  LFound: INyxPascalResolution;
+  LSymbols: array of INyxPascalBoundSymbol;
+  LSymbol: INyxPascalBoundSymbol;
+  LDuplicate: Boolean;
+  LView: INyxPascalTranslatedSyntax;
+begin
+  SetLength(LSymbols, 0);
+  for LAt := 0 to AFormal.BoundCount - 1 do
+  begin
+    Tick;
+    LBound := AFormal.BoundType(LAt);
+
+    if (LBound.Definition.Declaration.TypeForm = pstfInterface) and
+      (LBound.Definition.Declaration.AncestorSpan.Length = 0) then
+    begin
+      LView := FWorld.ModuleAt(LBound.Definition.ModuleIndex);
+
+      if not ((NyxPascalASCIIKey(LView.Syntax.Scope(0).Name) = 'system') and
+        (NyxPascalASCIIKey(LBound.Definition.Declaration.Name) = 'iinterface')) then
+      begin
+        { Own non-overloaded members do not depend on an implicit interface
+          style. An inherited/overloaded answer still needs captured root proof. }
+        LFound := Exact(LBound.Definition.ModuleIndex, LBound.Definition.Declaration.NestedScope,
+          LView.Syntax.Scope(LBound.Definition.Declaration.NestedScope).Span.Finish,
+          AName, False, AOperator);
+
+        if (LFound.Status <> pbsBound) or (LFound.Count <> 1) or
+          (psdfOverload in LFound.SymbolAt(0).Declaration.Flags) then
+        begin
+          Exit(Answer(pbsUnresolved, pbiGenericContext));
+        end;
+      end;
+    end;
+    LFound := Member(LBound, ASite, AName, AAccess, AOperator);
+
+    if LFound.Status = pbsMissing then Continue;
+    if not (LFound.Status in [pbsBound, pbsOverloads]) then Exit(LFound);
+    for LEntry := 0 to LFound.Count - 1 do
+    begin
+      Tick;
+      LSymbol := LFound.SymbolAt(LEntry);
+      LDuplicate := False;
+      for LSeen := 0 to High(LSymbols) do
+      begin
+        Tick;
+
+        if SameBinding(LSymbols[LSeen], LSymbol) then LDuplicate := True;
+      end;
+
+      if LDuplicate then Continue;
+
+      if Length(LSymbols) >= FLimits.MaximumCandidates then
+      begin
+        raise ENyxPascalBindingLimit.Create('Formal member alternatives exceed their query budget');
+      end;
+      SetLength(LSymbols, Length(LSymbols) + 1);
+      LSymbols[High(LSymbols)] := LSymbol;
+    end;
+  end;
+
+  if Length(LSymbols) = 0 then Exit(Answer(pbsUnresolved, pbiGenericContext));
+  Result := SymbolAnswer(LSymbols);
+end;
+
 function TBindingQuery.Member(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite; const AName: TNyxText;
   AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
@@ -4048,6 +4683,7 @@ var
   LOverload: Boolean;
   LHeader: TNyxPascalToken;
   LSyntax: INyxPascalSyntaxSnapshot;
+  LFormal: INyxPascalFormalParameter;
 begin
   Enter;
   try
@@ -4078,6 +4714,16 @@ begin
     begin
       LType := Unwrap(LType.Target);
       AAccess := pmaType;
+    end;
+
+    if (LType <> nil) and (LType.Kind = pstFormal) then
+    begin
+
+      if not Supports(LType, INyxPascalFormalParameter, LFormal) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      end;
+      Exit(FormalMember(LFormal, ASite, AName, AAccess, AOperator));
     end;
 
     if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) then
@@ -4171,6 +4817,8 @@ var
   LKey: TNyxText;
   LPosition: Integer;
   LCopy: Integer;
+  LFormal: INyxPascalFormalParameter;
+  LBound: INyxPascalSemanticType;
 begin
   Enter;
   try
@@ -4179,6 +4827,32 @@ begin
     if (LType <> nil) and (LType.Kind = pstClassOf) then
     begin
       LType := Unwrap(LType.Target);
+    end;
+
+    if (LType <> nil) and (LType.Kind = pstFormal) then
+    begin
+
+      if not Supports(LType, INyxPascalFormalParameter, LFormal) or (LFormal.BoundCount = 0) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiGenericContext));
+      end;
+      for LAt := 0 to LFormal.BoundCount - 1 do
+      begin
+        Tick;
+        LBound := LFormal.BoundType(LAt);
+
+        if (LBound.Definition.Declaration.TypeForm = pstfInterface) and
+          (LBound.Definition.Declaration.AncestorSpan.Length = 0) and
+          not ((NyxPascalASCIIKey(FWorld.ModuleAt(LBound.Definition.ModuleIndex).Syntax.Scope(0).Name) = 'system') and
+            (NyxPascalASCIIKey(LBound.Definition.Declaration.Name) = 'iinterface')) then
+        begin
+          Exit(Answer(pbsUnresolved, pbiGenericContext));
+        end;
+        Result := CollectMemberNames(LBound, APrefix, ANames);
+
+        if Result <> nil then Exit;
+      end;
+      Exit(nil);
     end;
 
     if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) then

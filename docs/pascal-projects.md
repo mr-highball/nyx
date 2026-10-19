@@ -3372,6 +3372,37 @@ Complete helper/overload/expression/compiler/SDK/grammar meaning, incremental
 dependencies, project-scale budgets and full ordinary-editor/navigation/parity/
 quality/delivery remain under the original authoring/service requirements.
 
+### Formal generic contracts
+
+An unapplied parameter now has its own `pstFormal` semantic shape. The optional
+`INyxPascalFormalParameter` exposes its declaring symbol, ordered parameter index,
+name/source spans, physical origin, captured context, typed requirement set and
+source-resolved member bounds. A formal is distinct from a concrete argument,
+even when both have the same class bound. Different declarations' parameters
+retain different identities; aliases do not erase those owners.
+
+Ordinary member queries and small member pages can inspect guaranteed class and
+explicit interface contracts before specialization. An unconstrained or value
+formal does not acquire guessed fields. A source formal can also flow through
+a constructed field when its declared guarantees satisfy that type's requirements.
+Missing proof retains a generic-context refusal. Class implementation entries
+remain distinct from interface ancestry, and an uncaptured implicit interface
+root cannot produce a complete member page.
+
+Out-of-class generic implementations prove their owner from the original header
+and exact ordered formal names. `TBox<T>.Read` retains `<T>` as owner arguments;
+it does not declare routine parameters. Actual specializations continue to use
+concrete arguments. Routine-owned parameters keep inner lexical priority over
+class-owned parameters; structured header identity does not certify a native
+generic-method call. A complete method header retains its contract when a source
+prefix ends inside its body. This source contract supplies neither layout nor a selected
+constructor/overload, and does not make an unapplied generic name a valid instance.
+The pinned FPC rejects a parameter name used directly as another parameter's
+constraint; actual supplied types cannot override that missing formal declaration.
+Full canonical types, generic-routine inference, implicit interface-style capture,
+incremental/editor/physical input qualification and ordinary Studio adoption remain
+required. Current qualification and retained failures are recorded in WORK.md.
+
 ## Nyx-owned completion provider
 
 `nyx.pascal.completion.owned` now connects the owned lexer/context/syntax/binding

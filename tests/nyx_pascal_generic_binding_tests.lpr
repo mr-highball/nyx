@@ -24,7 +24,8 @@ program nyx_pascal_generic_binding_tests;
 uses SysUtils, Classes, nyx.text, nyx.scheduler, nyx.pascal.context,
   nyx.pascal.lexing, nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.work, binding.fixture.generics
-  {$ifndef PAS2JS}, nyx.controls, constraints.fixture, constraints.ancestry.fixture{$endif};
+  {$ifndef PAS2JS}, nyx.controls, constraints.fixture, constraints.ancestry.fixture,
+  constraints.formal.fixture{$endif};
 var
   GChecks: Integer;
 
@@ -396,6 +397,250 @@ begin
   Check(TerminalType(MemberType(LWorld, LAccepted.BoundType, 'Item')).Definition.Declaration.Name = LExpected,
     'A constrained type stays usable after execution-budget retirement');
   WriteLn('constraint work / ancestry=', AAncestry, ' first fit=', LFit, ' every smaller allowance refused');
+end;
+
+{ Formal identity and guaranteed members are queryable before specialization.
+  Supplied argument types and unrelated parameters must remain distinguishable. }
+procedure FormalContracts;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LOld: INyxPascalSemanticWorld;
+  LType: INyxPascalSemanticType;
+  LOther: INyxPascalSemanticType;
+  LFormal: INyxPascalFormalParameter;
+  LOtherFormal: INyxPascalFormalParameter;
+  LResult: INyxPascalResolution;
+  LQueries: INyxPascalMemberQueries;
+  LPage: INyxPascalMemberPage;
+  LRejected: Boolean;
+
+  function Item(const AName: TNyxText): INyxPascalSemanticType;
+  var
+    LOwner: Integer;
+    LField: Integer;
+  begin
+    LOwner := LWorld.ModuleAt(1).Syntax.Named(0, AName);
+    LField := LWorld.ModuleAt(1).Syntax.Named(LWorld.ModuleAt(1).Syntax.Declaration(LOwner).NestedScope, 'Item');
+    Result := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LField)));
+  end;
+begin
+  {$ifndef PAS2JS}
+  Check(CompilerFormalValue = 42, 'The independent compiler validates and executes actual formal-bound method bodies');
+  {$endif}
+  Check((Ord(pstUntyped) = 15) and (Ord(pstFormal) = 16), 'The new formal shape appends without changing previous kind ordinals');
+  LWorld := EmptyWorld.WithModule(View('formal.pas',
+    'unit Formal; {$mode delphi} interface type ' +
+    'TBase=class public Value:LongInt; function ReadValue:LongInt; strict private Secret:LongInt; end; ' +
+    'IValue=interface(IInterface) function ReadValue:LongInt; end; ' +
+    'TBox<T:TBase>=class Item:T; end; TOther<T:TBase>=class Item:T; end; ' +
+    'TAny<T>=class Item:T; end; TValue<T:record>=class Item:T; end; ' +
+    'TClass<T:class,constructor>=class Item:T; end; TInterface<T:IValue>=class Item:T; end; ' +
+    'TRelay<T:TBase>=class Item:TBox<T>; end; ' +
+    'var Concrete:TBox<TBase>; implementation end.'));
+  LType := Item('TBox');
+  Check((LType.Kind = pstFormal) and (LType.Definition = nil) and (LType.Target = nil) and
+    Supports(LType, INyxPascalFormalParameter, LFormal), 'A formal is a distinct first-class shape with optional typed metadata');
+  Check((LFormal.Name = TNyxText('T')) and (LFormal.ParameterIndex = 0) and
+    (LFormal.DeclarationOwner.Declaration.Name = TNyxText('TBox')) and (LFormal.Requirements = []),
+    'Formal identity keeps the original declaring owner, ordinal and authored requests');
+  Check((LFormal.BoundCount = 1) and
+    (LFormal.BoundType(0).Definition.Declaration.Name = TNyxText('TBase')) and
+    (LFormal.Origin.FileIndex = 0) and (LFormal.Context.Family = ppcFPC),
+    'A named bound retains its original source and captured compiler context');
+  Check(TerminalType(MemberType(LWorld, LType, 'Value')).Builtin = pbbLongInt,
+    'The formal class contract supplies a guaranteed field before any actual argument');
+  Check(TerminalType(MemberType(LWorld, LType, 'ReadValue')).Builtin = pbbLongInt,
+    'The formal class contract supplies a guaranteed routine result');
+  LResult := LWorld.Member(LType, Site(LWorld), NyxPascalBindingName('Secret'));
+  Check(LResult.Status = pbsInaccessible, 'A bound cannot grant strict-private access to its generic consumer');
+  Check(LWorld.Member(LType, Site(LWorld), NyxPascalBindingName('Extra')).Issue = pbiGenericContext,
+    'A future supplied descendant cannot donate members absent from the formal contract');
+  Check(Supports(LWorld, INyxPascalMemberQueries, LQueries), 'The existing member-page capability handles formal receivers');
+  LPage := LQueries.Members(LType, Site(LWorld), TNyxPascalMemberQuery.Defaults.Matching('V'));
+  Check((LPage.ResultSet.Status = pbsBound) and (LPage.ResultSet.Count = 1) and
+    (LPage.ResultSet.SymbolAt(0).Declaration.Name = TNyxText('Value')),
+    'A small formal member page returns only the requested guaranteed context');
+  LOther := Item('TOther');
+  Check(Supports(LOther, INyxPascalFormalParameter, LOtherFormal) and
+    (LFormal.DeclarationOwner.DeclarationIndex <> LOtherFormal.DeclarationOwner.DeclarationIndex),
+    'Equal names and equal bounds do not merge separate formal declarations');
+  LOther := Item('TAny');
+  Check((LOther.Kind = pstFormal) and Supports(LOther, INyxPascalFormalParameter, LOtherFormal) and
+    (LOtherFormal.BoundCount = 0) and (LOtherFormal.Requirements = []),
+    'An unconstrained formal retains identity without an invented TObject bound');
+  Check(LWorld.Member(LOther, Site(LWorld), NyxPascalBindingName('Value')).Issue = pbiGenericContext,
+    'An unconstrained formal cannot manufacture a particular argument member');
+  LOther := Item('TValue');
+  Check(Supports(LOther, INyxPascalFormalParameter, LOtherFormal) and
+    (LOtherFormal.Requirements = [pgrRecord]) and (LOtherFormal.BoundCount = 0),
+    'A formal value request is not a guessed concrete record or scalar');
+  LOther := Item('TClass');
+  Check(Supports(LOther, INyxPascalFormalParameter, LOtherFormal) and
+    (LOtherFormal.Requirements = [pgrClass, pgrConstructor]) and (LOtherFormal.BoundCount = 1) and
+    (LOtherFormal.BoundType(0).Definition.ModuleIndex = 0), 'Class eligibility retains the resolved System root and constructor intent separately');
+  LOther := Item('TInterface');
+  Check(TerminalType(MemberType(LWorld, LOther, 'ReadValue')).Builtin = pbbLongInt,
+    'A formal interface contract supplies its own member result');
+  LOther := MemberType(LWorld, Item('TRelay'), 'Item');
+  Check((LOther.Kind = pstFormal) and Supports(LOther, INyxPascalFormalParameter, LOtherFormal) and
+    (LOtherFormal.DeclarationOwner.Declaration.Name = TNyxText('TRelay')),
+    'A nested constructed field retains the originating formal through its substitution frame');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'Concrete'), 'Item')).Kind = pstDeclared,
+    'An actual supplied argument stays concrete and does not become a formal');
+  LRejected := False;
+  try
+    LFormal.BoundType(LFormal.BoundCount);
+  except
+    on ENyxPascalBinding do LRejected := True;
+  end;
+  Check(LRejected, 'A formal bound getter refuses an invalid ordinal');
+  LOld := LWorld;
+  LWorld := LWorld.WithModule(View('extra.pas', 'unit Extra; interface implementation end.'));
+  LRejected := False;
+  try
+    LWorld.Member(LType, Site(LWorld), NyxPascalBindingName('Value'));
+  except
+    on ENyxPascalBinding do LRejected := True;
+  end;
+  Check(LRejected, 'A formal receiver keeps the exact-world guard after replacement');
+  Check(TerminalType(MemberType(LOld, LType, 'Value')).Builtin = pbbLongInt,
+    'An old immutable formal contract remains usable after world replacement');
+end;
+
+{ Refusals protect against fabricated header ownership or a supplied shape
+  standing in for an unconstrained source formal. }
+procedure FormalRefusals;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LAt: Integer;
+  LMethod: Integer;
+  LParameter: Integer;
+  LOwner: Integer;
+  LField: Integer;
+  LResult: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+  LNames: array[0..2] of TNyxText;
+  LQueries: INyxPascalMemberQueries;
+  LPage: INyxPascalMemberPage;
+  LFormal: INyxPascalFormalParameter;
+begin
+  LNames[0] := 'Integer'; LNames[1] := 'U'; LNames[2] := 'T,T';
+  for LAt := 0 to High(LNames) do
+  begin
+    LView := View('badformal.pas', 'unit BadFormal; {$mode delphi} interface type ' +
+      'TBase=class end; TBox<T:TBase>=class function Read(const AValue:T):LongInt; end; ' +
+      'implementation function TBox<' + LNames[LAt] + '>.Read(const AValue:T):LongInt; begin Result:=0; end; end.');
+    LWorld := EmptyWorld.WithModule(LView);
+    LMethod := LView.Syntax.Named(0, 'Read');
+    Check(LMethod >= 0, 'The malformed owner remains inspectable without supplying formal authority');
+    LParameter := LView.Syntax.Named(LView.Syntax.Declaration(LMethod).NestedScope, 'AValue');
+    LResult := LWorld.TypeOfSymbol(LWorld.Symbol(1, LParameter));
+    Check((LResult.Status = pbsUnresolved) and (LResult.BoundType = nil) and (LResult.Issue = pbiGenericContext),
+      'Literal, renamed and wrong-arity implementation owners cannot borrow another formal contract');
+  end;
+  LView := View('weak.pas', 'unit Weak; {$mode delphi} interface type TBase=class end; ' +
+    'TBox<T:TBase>=class end; TWeak<U>=class Item:TBox<U>; end; ' +
+    'IImplicit=interface function ReadValue:LongInt; end; TContract<T:IImplicit>=class Item:T; end; implementation end.');
+  LWorld := EmptyWorld.WithModule(LView);
+  LOwner := LView.Syntax.Named(0, 'TWeak');
+  LField := LView.Syntax.Named(LView.Syntax.Declaration(LOwner).NestedScope, 'Item');
+  LResult := LWorld.TypeOfSymbol(LWorld.Symbol(1, LField));
+  Check((LResult.Status = pbsUnresolved) and (LResult.BoundType = nil) and (LResult.Issue = pbiGenericContext),
+    'An unconstrained argument cannot satisfy a named class requirement by guesswork');
+  LOwner := LView.Syntax.Named(0, 'TContract');
+  LField := LView.Syntax.Named(LView.Syntax.Declaration(LOwner).NestedScope, 'Item');
+  LType := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LField)));
+  Check(TerminalType(MemberType(LWorld, LType, 'ReadValue')).Builtin = pbbLongInt,
+    'An own interface member needs no guessed implicit root');
+  Check(Supports(LWorld, INyxPascalMemberQueries, LQueries), 'The ordinary page query retains uncertainty atomically');
+  LPage := LQueries.Members(LType, Site(LWorld), TNyxPascalMemberQuery.Defaults.Matching('Read'));
+  Check((LPage.ResultSet.Status = pbsUnresolved) and (LPage.ResultSet.Count = 0) and
+    not LPage.HasMore, 'An uncaptured implicit interface root cannot publish a partial complete member page');
+  LView := View('owners.pas', 'unit Owners; {$mode delphi} interface type TBase=class end; ' +
+    'TBox<T:TBase>=class end; implementation function TBox<T>.Mix<U>(const AInner:U; const AOuter:T):U; ' +
+    'begin Result:=AInner; end; end.');
+  LWorld := EmptyWorld.WithModule(LView);
+  LMethod := LView.Syntax.Named(0, 'Mix');
+  LOwner := LView.Syntax.Declaration(LMethod).NestedScope;
+  LParameter := LView.Syntax.Named(LOwner, 'AInner');
+  LType := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LParameter)));
+  Check(Supports(LType, INyxPascalFormalParameter, LFormal) and
+    (LFormal.Name = TNyxText('U')) and (LFormal.DeclarationOwner.Declaration.Kind = psdkRoutine),
+    'Structured method formals retain their inner lexical identity without claiming compiler call eligibility');
+  LParameter := LView.Syntax.Named(LOwner, 'AOuter');
+  LType := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LParameter)));
+  Check(Supports(LType, INyxPascalFormalParameter, LFormal) and
+    (LFormal.Name = TNyxText('T')) and (LFormal.DeclarationOwner.Declaration.Name = TNyxText('TBox')),
+    'A distinct outer formal remains class-owned after the inner parameter is searched');
+end;
+
+{ Admit every inspection/copy of the actual formal construction. Retiring the
+  borrowed budget must not retire the published source contract. }
+procedure FormalWorkAdmission;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LOwner: Integer;
+  LField: Integer;
+  LAt: Integer;
+  LFit: Integer;
+  LBudget: INyxPascalAnalysisBudget;
+  LAttempt: INyxPascalResolution;
+  LAccepted: INyxPascalResolution;
+  LRefused: Boolean;
+  LCancel: INyxCancellationScope;
+begin
+  LView := View('formalwork.pas', 'unit FormalWork; {$mode delphi} interface type ' +
+    'TBase=class Value:LongInt; end; TBox<T:TBase>=class Item:T; end; implementation end.');
+  LWorld := EmptyWorld.WithModule(LView);
+  LOwner := LView.Syntax.Named(0, 'TBox');
+  LField := LView.Syntax.Named(LView.Syntax.Declaration(LOwner).NestedScope, 'Item');
+  LAccepted := nil;
+  LFit := 0;
+  for LAt := 1 to 4096 do
+  begin
+    LBudget := NewNyxPascalAnalysisBudget(LAt);
+    LAttempt := nil;
+    LRefused := False;
+    try
+      try
+        LAttempt := LWorld.TypeOfSymbol(LWorld.Symbol(1, LField), LBudget);
+      except
+        on ENyxPascalAnalysisWorkLimit do LRefused := True;
+      end;
+
+      if LRefused then
+      begin
+        Check((LAttempt = nil) and (LBudget.Receipt.Total <= LAt), 'A smaller formal allowance publishes no partial type');
+      end
+      else
+      begin
+        Check((LAttempt.Status = pbsBound) and (LAttempt.BoundType.Kind = pstFormal),
+          'The first sufficient formal allowance publishes the actual source contract');
+        LFit := LAt;
+        LAccepted := LAttempt;
+      end;
+    finally
+      LBudget.Retire;
+    end;
+
+    if LAccepted <> nil then Break;
+  end;
+  Check(LFit > 0, 'The formal query fits its existing bounded work domain');
+  Check(TerminalType(MemberType(LWorld, LAccepted.BoundType, 'Value')).Builtin = pbbLongInt,
+    'A source formal remains usable after the borrowed work budget retires');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LAttempt := nil;
+  LRefused := False;
+  try
+    LAttempt := LWorld.TypeOfSymbol(LWorld.Symbol(1, LField), LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do LRefused := True;
+  end;
+  Check(LRefused and (LAttempt = nil), 'Cancellation cannot publish a partially constructed formal');
+  WriteLn('formal work / first fit=', LFit, ' every smaller allowance refused');
 end;
 
 procedure Substitution;
@@ -821,6 +1066,139 @@ begin
     TNyxText('TConstraintTagged'), 'The actual combined alias retains all independent requirements');
 end;
 
+{ A real implementation header must prove its source owner and exact ordered
+  parameter names before an out-of-class method can receive formal bindings. }
+procedure WholeFormalInput;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LAt: Integer;
+  LParameter: Integer;
+  LScope: Integer;
+  LCount: Integer;
+  LResult: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+  LFormal: INyxPascalFormalParameter;
+  LField: Integer;
+  LNames: array[0..2] of TNyxText;
+begin
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults)
+    .WithModule(View('system.pas', 'unit System; {$mode delphi} interface type ' +
+      'TObject=class end; IInterface=interface end; ' +
+      'TInterfacedObject=class(TObject,IInterface) end; implementation end.'));
+  LView := View('constraints.formal.fixture.pas',
+    ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/constraints.formal.fixture.pas'));
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The complete compiler formal unit retains resolved declaration syntax');
+  LWorld := LWorld.WithModule(LView);
+  LCount := 0;
+  for LAt := 0 to LView.Syntax.DeclarationCount - 1 do
+  begin
+
+    if (LView.Syntax.Declaration(LAt).Kind <> psdkRoutine) or
+      (LView.Syntax.Declaration(LAt).OwnerName = '') or
+      (LView.Syntax.Declaration(LAt).NestedScope < 0) then Continue;
+    LScope := LView.Syntax.Declaration(LAt).NestedScope;
+    LParameter := LView.Syntax.Named(LScope, 'AValue');
+
+    if LParameter < 0 then Continue;
+    LResult := LWorld.TypeOfSymbol(LWorld.Symbol(1, LParameter));
+    LType := Bound(LResult);
+    Check((LType.Kind = pstFormal) and Supports(LType, INyxPascalFormalParameter, LFormal),
+      'The actual method implementation parameter keeps formal source identity');
+    Check((LFormal.DeclarationOwner.Declaration.Kind = psdkType) and
+      (LFormal.DeclarationOwner.Declaration.Name = LView.Syntax.Declaration(LAt).OwnerName) and
+      (LView.Syntax.Declaration(LAt).GenericSpan.Length = 0),
+      'Owner arguments cannot impersonate routine parameters or lose their original class bounds');
+
+    if LView.Syntax.Declaration(LAt).Name = TNyxText('Keep') then
+    begin
+      Check(Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LAt))).Kind = pstFormal,
+        'The exact generic implementation return type retains the same formal owner');
+    end;
+
+    if LFormal.DeclarationOwner.Declaration.Name = TNyxText('TFormalClassBox') then
+    begin
+      Check(TerminalType(MemberType(LWorld, LType, 'Value')).Builtin = pbbLongInt,
+        'The real generic method can inspect its compiler-checked base field');
+    end;
+
+    if LFormal.DeclarationOwner.Declaration.Name = TNyxText('TFormalInterfaceBox') then
+    begin
+      Check(TerminalType(MemberType(LWorld, LType, 'ReadValue')).Builtin = pbbLongInt,
+        'The real generic method can inspect its compiler-checked interface member');
+    end;
+    Inc(LCount);
+  end;
+  Check(LCount = 4, 'All four original implementation headers qualify their own formal parameter');
+  LNames[0] := 'TFormalRelay';
+  LNames[1] := 'TFormalInterfaceRelay';
+  LNames[2] := 'TFormalRecordRelay';
+  for LAt := 0 to High(LNames) do
+  begin
+    LScope := LView.Syntax.Declaration(LView.Syntax.Named(0, LNames[LAt])).NestedScope;
+    LField := LView.Syntax.Named(LScope, 'Item');
+    LType := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LField)));
+    Check((LType.Kind = pstDeclared) and (LType.Definition <> nil),
+      'The actual compiler-admitted relay retains its constructed generic type');
+  end;
+end;
+
+{ Editor/condition prefixes end inside real method bodies. Their complete
+  headers keep lexical/type authority without pretending the body is complete. }
+procedure WholeFormalPrefixes;
+var
+  LText: TNyxText;
+  LPrefix: TNyxText;
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LAt: Integer;
+  LMethod: Integer;
+  LScope: Integer;
+  LParameter: Integer;
+  LResult: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+  LFormal: INyxPascalFormalParameter;
+begin
+  LText := ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/constraints.formal.fixture.pas');
+  for LAt := 0 to 1 do
+  begin
+
+    if LAt = 0 then LPrefix := 'Result := Value;' else LPrefix := 'Result := AValue.Value;';
+    LScope := Pos(LPrefix, LText);
+    Check(LScope > 0, 'The prefix ends at an original compiled method statement');
+    LPrefix := Copy(LText, 1, LScope - 1);
+    LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults)
+      .WithModule(View('system.pas', 'unit System; {$mode delphi} interface type ' +
+        'TObject=class end; IInterface=interface end; TInterfacedObject=class(TObject,IInterface) end; implementation end.'));
+    LView := View('constraints.formal.fixture.pas', LPrefix);
+    LWorld := LWorld.WithModule(LView);
+
+    if LAt = 0 then LMethod := LView.Syntax.Named(0, 'ReadValue') else LMethod := LView.Syntax.Named(0, 'Read');
+    Check((LMethod >= 0) and (psdfIncomplete in LView.Syntax.Declaration(LMethod).Flags),
+      'The original prefix explicitly retains its unfinished method body');
+    LScope := LView.Syntax.Declaration(LMethod).NestedScope;
+
+    if LAt = 0 then
+    begin
+      LResult := LWorld.Lookup(LWorld.At(1, LScope, LView.Syntax.Scope(LScope).Span.Finish),
+        NyxPascalBindingName('Value'));
+      Check((LResult.Status = pbsBound) and (LResult.Count = 1),
+        'A nongeneric unfinished body cannot be blocked by unrelated generic-owner validation');
+    end
+    else
+    begin
+      LParameter := LView.Syntax.Named(LScope, 'AValue');
+      LType := Bound(LWorld.TypeOfSymbol(LWorld.Symbol(1, LParameter)));
+      Check(Supports(LType, INyxPascalFormalParameter, LFormal) and
+        (LFormal.DeclarationOwner.Declaration.Name = TNyxText('TFormalClassBox')),
+        'An original complete generic header retains its class contract inside the unfinished body');
+      Check(TerminalType(MemberType(LWorld, LType, 'Value')).Builtin = pbbLongInt,
+        'The frozen generic prefix can inspect its guaranteed field without completing the body');
+    end;
+  end;
+end;
+
 procedure ActualBadge;
 const
   CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
@@ -889,11 +1267,16 @@ begin
     ConstraintAncestry;
     ConstraintWorkAdmission;
     ConstraintWorkAdmission(True);
+    FormalContracts;
+    FormalRefusals;
+    FormalWorkAdmission;
     MemberPages;
     {$ifndef PAS2JS}
     CompiledFixture;
     WholeConstraintInputs;
     WholeAncestryInput;
+    WholeFormalInput;
+    WholeFormalPrefixes;
     ActualBadge;
     {$endif}
     WriteLn('PASS ', GChecks, ' concrete generic binding checks');
