@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Original RTL work attribution — 2026-10-19
+## Current integration: Direct sealed token pages; original RTL frontier restored — 2026-10-19
+
+The previous turn is verified progress: 5964747 records unchanged-executable
+attribution, with production source at 895a3de. This continuation removes the
+identified initial completed-token copy through the existing lexical/translation
+owners. The complete original library/Studio/resolver outcome remains active;
+no full criterion, task, counter, credit, DONE, parity, adoption or delivery closes.
+
+Lexical and translated tokens are created directly in their owned page storage.
+Only one unpublished tail has a borrowed writer; completing a 256-row page
+revokes that writer before observer/conditional callbacks can share it. Frozen
+directories copy their own leases to completed pages and copy only unfinished
+tails. Ordinary snapshots retain their actual pages after construction; this is
+data ownership, not a retained construction cache. Writers/callback/cancellation
+borrows retire on every constructor exit. Directory capacity grows geometrically,
+is bounded by the existing token ceiling, and exposes no unused nil slots.
+Last-page allocation respects the remaining token capacity. No interface enters
+a record/static array, no predecessor/producer chain is retained, and no public
+GUID/interface or input/context/ordered-answer identity changes.
+
+Source/lexical token creation remains admitted once before materialization;
+remaining frozen directory/tail copies and all summary, projection, syntax,
+metadata, binding and evaluator work retain their existing admission. The
+completed-token duplicate operation is removed, not discounted. Direct fragment
+receivers still create no token pages; their zero-buffer receipt now validates
+that observed absence. An EOF observer cancellation regression also exposes an
+inherited completion gap: the final check had covered receivers only. The common
+final check now refuses both receiver/observer cancellation atomically, while
+already retained immutable EOF windows remain valid.
+
+The old-product first-publication regression FAILS with clean heap at 5,142
+lexical/5,135 translated copied rows. Final source passes at 22/15 copied rows,
+exactly the private tails of those same inputs. The full native prefix consumer
+passes 1,265 checks, including complete-page boundaries, growing private tails,
+independent token equality, macro/settings history, failure/cancellation,
+retirement, and exhaustive smaller analysis allowances. A misplaced local-variable
+edit's compiler failure and the pre-fix EOF cancellation failure remain retained
+as preparations; neither supplies accepted evidence. All three owned Pascal
+inputs are frozen before final qualification.
+
+The required unchanged original RTL consumer now PASSES all 56 checks with clean
+heap inside the unchanged two-million view/four-million aggregate budgets and
+64-round ceiling. Five initial queries, one explicit Word job, three-of-eight
+symbol preparation, and the six existing Longint/Int64/Pointer/VarHeader/
+CommonHeader/FreeChunk jobs remain exact inside the dynamic eight-job cap.
+System reaches 12,411 declarations/169 syntax diagnostics/31 conditional answers
+with no pending condition; ObjPas remains 209/four/one with no pending condition.
+Ordinary indexed TObject.Fr is ready with exactly Free and FreeInstance, original
+objpash.inc name-token navigation after provider retirement, and exact detached
+insertion. This restores the actual work-budget frontier; it does not qualify
+complete source/type meaning. Source.Resolved remains FALSE at the independent
+CHECKPOINTER OFF in rtl/inc/isotmp.inc. The deeper 169 syntax diagnostics are real
+remaining grammar/recovery exposure, not a complete System declaration proof.
+
+All forty maintained/seven additional native consumers plus the actual
+503-file/2,358,108-token lexical corpus also pass: 49 accepted native logs including
+the original RTL run, all with clean heaps. All 86 main compiler jobs succeed
+with zero owned warnings/196 upstream warnings; the deliberate emission oracle
+warning stays separate. Thirty-six browser compilations include Studio/worker;
+native Studio/backend compile as applicable. Browser execution, physical editor/
+input, whole-resolver latency, full component breadth, parity, adoption and
+delivery remain open. A controlled copy-count improvement is not a latency claim.
+
+Preservation retains 665 unrelated/668 maintained-source pins, 97 RTL/24 compiler
+inputs plus retained inspections, 156 original unit packets/48 includes, 349 frozen
+release artifacts, nine prior contexts, thirteen foreign planning files and five
+exact current-start protected files. The historical global-configuration
+preservation failure remains retained and false; no restoration occurs. All owned
+process/reader handles are terminal and joined; LAN stays offline and native Nyx
+tools absent. No host/config retry, protected mutation, cleanup/restart, approval
+bypass, new tool/schema/rollout or sub-agent occurs. Ignored
+`.local/sealed-tokens-paths-private.json` owns frozen inputs, retained failures,
+passing qualification, preservation and final source/remote receipts.
+
+Stop token-storage/fixture/compiler/capture variants. Reassess the actual
+CHECKPOINTER source request through existing compiler-policy/context/translation
+owners before another batch, preserving compiler-owned defaults, authored intent,
+conditional participation, settings lifetime and mode/context identity. Do not
+ignore it or infer pointer validity/ABI/target facts. Retain the newly exposed
+syntax diagnostics for separate parser ownership review. Full canonical types,
+module meaning/incremental budgets/editor/input/navigation/quality/component
+breadth/native-browser parity/adoption/delivery and the original criterion remain
+open; the goal stays active.
+
+## Previous integration: Original RTL work attribution — 2026-10-19
 
 The previous turn is verified progress: 895a3de is qualified and pushed. This
 continuation makes no product/test/compiler change. Two read-only debugger runs

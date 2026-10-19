@@ -26,7 +26,8 @@ uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.macros, nyx.pascal.work;
 
 type
-  { Retains detached windows and a revocable lexical borrow. Deliberate failure
+  { Retains detached windows and a revocable lexical borrow. Optional EOF-only
+    capture checks first publication after pages are complete. Deliberate failure
     happens after sharing begins; neither saved window retains this collector. }
   TLexicalCollector = class(TInterfacedObject, INyxPascalLexicalObserver,
     INyxPascalLexicalConstructionObserver)
@@ -35,6 +36,7 @@ type
     Windows: array of INyxPascalLexicalPrefix;
     AbortAfter: Integer;
     CancelAfter: Integer;
+    FreezeOnlyAtEnd: Boolean;
     Cancellation: INyxCancellationScope;
     procedure BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
@@ -97,7 +99,15 @@ var
   LAt: Integer;
 begin
 
-  if not ((AIndex in [0, 1, 254, 255]) or (AIndex mod 257 = 0) or
+  if FreezeOnlyAtEnd then
+  begin
+
+    if AToken.Kind <> ptkEOF then
+    begin
+      Exit;
+    end;
+  end
+  else if not ((AIndex in [0, 1, 254, 255]) or (AIndex mod 257 = 0) or
     (AIndex = 256) or (AIndex = 511) or (AIndex = 512) or
     (AToken.Kind = ptkEOF)) then
   begin
@@ -867,6 +877,83 @@ begin
   LOwner := nil;
 end;
 
+{ The first freeze must share completed source pages, even when no previous
+  snapshot requested them. Only the unfinished tail is copied. Token-row counts
+  include a translation's exclusive directive boundary, exactly as before. }
+procedure FirstPublication;
+var
+  LText: TNyxText;
+  LFiles: INyxPascalFileCatalog;
+  LFacts: INyxPascalCompilerContext;
+  LLexicalProbe: TLexicalCollector;
+  LLexicalOwner: INyxPascalLexicalObserver;
+  LLexical: INyxPascalLexicalSnapshot;
+  LRefusedLexical: INyxPascalLexicalSnapshot;
+  LCancellation: INyxCancellationScope;
+  LTranslationProbe: TTranslationCollector;
+  LTranslationOwner: INyxPascalConditionalFacts;
+  LTranslation: INyxPascalTranslation;
+  LLexicalStorage: INyxPascalPrefixTokenStorage;
+  LTranslationStorage: INyxPascalPrefixTokenStorage;
+  LAt: Integer;
+  LRefused: Boolean;
+begin
+  LText := 'unit FirstPublication; interface const Anchor=1; ';
+  for LAt := 1 to 1024 do
+  begin
+    LText := LText + 'Item' + TNyxText(IntToStr(LAt)) + '=1; ';
+  end;
+  LText := LText + '{$if declared(Anchor)}{$endif} implementation end.';
+  LLexicalProbe := TLexicalCollector.Create;
+  LLexicalOwner := LLexicalProbe;
+  LLexicalProbe.FreezeOnlyAtEnd := True;
+  LLexical := NewNyxPascalContextualLexicalSnapshot(LText,
+    TNyxPascalLexicalOptions.Defaults, LLexicalOwner);
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('root.pas'), LText);
+  LFacts := NewNyxPascalCompilerContext(ppcFPC, TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithFeature(ppfNestedComments, ppkFalse);
+  LTranslationProbe := TTranslationCollector.Create;
+  LTranslationOwner := LTranslationProbe;
+  LTranslation := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('root.pas'), LFacts,
+    TNyxPascalTranslationOptions.Defaults, nil, LTranslationOwner);
+  Check((Length(LLexicalProbe.Windows) = 2) and (Length(LTranslationProbe.Windows) = 1) and
+    LTranslation.Resolved, 'First-publication fixture freezes only the intended lexical and source boundaries');
+  Check(Supports(LLexicalProbe.Windows[0], INyxPascalPrefixTokenStorage, LLexicalStorage) and
+    Supports(LTranslationProbe.Windows[0], INyxPascalPrefixTokenStorage, LTranslationStorage),
+    'First-publication receipts belong to the ordinary owned frozen sources');
+  WriteLn('first publication / lexical copied=', LLexicalStorage.CopiedTokenRows,
+    ' rows=', LLexicalStorage.TokenRows, ' / translated copied=',
+    LTranslationStorage.CopiedTokenRows, ' rows=', LTranslationStorage.TokenRows);
+  Check((LLexicalStorage.TokenRows = LLexical.Count) and
+    (LTranslationStorage.TokenRows = LTranslationProbe.Windows[0].Count + 1),
+    'Shared pages retain complete lexical rows and the exact exclusive translation boundary');
+  Check((LLexicalStorage.CopiedTokenRows = LLexicalStorage.TokenRows mod 256) and
+    (LTranslationStorage.CopiedTokenRows = LTranslationStorage.TokenRows mod 256),
+    'A first freeze copies only unfinished tails, without an initial duplicate of completed rows');
+  LLexicalProbe := TLexicalCollector.Create;
+  LLexicalOwner := LLexicalProbe;
+  LLexicalProbe.FreezeOnlyAtEnd := True;
+  LLexicalProbe.CancelAfter := 2;
+  LCancellation := NewNyxCancellationScope;
+  LLexicalProbe.Cancellation := LCancellation;
+  LRefused := False;
+  LRefusedLexical := nil;
+  try
+    LRefusedLexical := NewNyxPascalContextualLexicalSnapshot(LText,
+      TNyxPascalLexicalOptions.Defaults, LLexicalOwner, LCancellation);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LRefusedLexical = nil) and (Length(LLexicalProbe.Windows) = 2),
+    'Cancellation in the final EOF observer refuses ordinary source publication atomically');
+  Check((LLexicalProbe.Windows[0].Count = LLexical.Count) and
+    SameToken(LLexicalProbe.Windows[0].Token(LLexical.Count - 1), LLexical.Token(LLexical.Count - 1)),
+    'An EOF window already retained before cancellation outlives the revoked producer');
+end;
+
 begin
   try
     LexicalStorage;
@@ -874,6 +961,7 @@ begin
     SummaryBoundaries;
     StateBoundaries;
     StateSharing;
+    FirstPublication;
     WriteLn('PASS ', GChecks, ' immutable prefix token storage checks');
   except
     on LError: Exception do

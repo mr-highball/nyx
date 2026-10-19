@@ -628,16 +628,16 @@ type
     function SharedTokenRows: Integer;
     function DirectoryEntries: Integer;
   end;
-  { Private immutable translated rows; no interface or live-builder pointer is
-    stored in a token value. The block itself owns the value array. }
+  { Read-only translated block lease. The live owner fills an unpublished tail
+    and seals completed pages before sharing; token values own no interfaces. }
   ITranslatedTokenBlock = interface(IInterface)
     function Token(AIndex: Integer): TNyxPascalTranslatedToken;
   end;
   { A snapshot owns its directory slots while completed blocks are shared.
     Mutable array slots are never aliased between builder and frozen snapshots. }
   TTranslatedTokenBlocks = array of ITranslatedTokenBlock;
-  { Filled completely before publication. A private partial block is never
-    extended after another prefix has retained it. }
+  { Direct source-token destination. Completed pages never change; a frozen
+    partial page owns copied rows and is never extended by the live translator. }
   TTranslatedTokenBlock = class(TInterfacedObject, ITranslatedTokenBlock)
   public
     Rows: array of TNyxPascalTranslatedToken;
@@ -758,10 +758,12 @@ type
       instead own copied rows and never retain these borrowed capabilities. }
     FCaptures: array of INyxPascalLexicalPrefixCapture;
     FWindows: array of INyxPascalLexicalPrefix;
-    FTokens: array of TNyxPascalTranslatedToken;
-    { Complete-block cache during ordinary construction; detached directory in
-      a frozen prefix. The live cache retires on success and every failure. }
-    FPrefixBlocks: TTranslatedTokenBlocks;
+    { Actual storage in both live and frozen owners. Directories never alias
+      mutable slots; only sealed full pages may be shared during construction. }
+    FTokenBlocks: TTranslatedTokenBlocks;
+    { Non-owning construction writer. Full-page sealing and constructor
+      retirement revoke it; the directory owns every page lease independently. }
+    FWriting: TTranslatedTokenBlock;
     FIsFrozen: Boolean;
     FSharedRows: Integer;
     { Live construction keeps only its latest pure summary and retires it on
@@ -1131,7 +1133,7 @@ end;
 
 function TFrozenTranslation.DirectoryEntries: Integer;
 begin
-  Result := Length(FPrefixBlocks);
+  Result := Length(FTokenBlocks);
 end;
 
 function TStoredTranslationPrefix.Storage: INyxPascalPrefixTokenStorage;
@@ -1341,7 +1343,7 @@ begin
     FConditions := nil;
     FPrefixConditions := nil;
     FWork := nil;
-    FPrefixBlocks := nil;
+    FWriting := nil;
     FStateBlocks := nil;
     FTokenSummary := nil;
   end;
@@ -1374,35 +1376,21 @@ begin
   FOccurrenceCount := ASource.FOccurrenceCount;
   FStateCount := ASource.FStateCount;
   FDiagnosticCount := ASource.FDiagnosticCount;
-  FSharedRows := Length(ASource.FPrefixBlocks) * CTranslationPrefixBlockSize;
+  FSharedRows := FTokenCount div CTranslationPrefixBlockSize * CTranslationPrefixBlockSize;
 
   if FSharedRows > FTokenCount then
   begin
     raise ENyxPascalContext.Create('Frozen translation blocks exceed their producing reader');
   end;
-  while Length(ASource.FPrefixBlocks) < FTokenCount div CTranslationPrefixBlockSize do
-  begin
-    LFirst := Length(ASource.FPrefixBlocks) * CTranslationPrefixBlockSize;
-    LBlock := TTranslatedTokenBlock.Create;
-    LLease := LBlock;
-    SetLength(LBlock.Rows, CTranslationPrefixBlockSize);
-    for LRow := 0 to CTranslationPrefixBlockSize - 1 do
-    begin
-      ASource.CheckCancellation;
-      NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
-      LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
-    end;
-    LAt := Length(ASource.FPrefixBlocks);
-    SetLength(ASource.FPrefixBlocks, LAt + 1);
-    ASource.FPrefixBlocks[LAt] := LLease;
-  end;
-  LCount := Length(ASource.FPrefixBlocks);
-  SetLength(FPrefixBlocks, LCount + Ord(FTokenCount mod CTranslationPrefixBlockSize <> 0));
+  { Source admission already created each completed page in its final storage.
+    Only directory leases and unfinished tail rows need copying at a freeze. }
+  LCount := FTokenCount div CTranslationPrefixBlockSize;
+  SetLength(FTokenBlocks, LCount + Ord(FTokenCount mod CTranslationPrefixBlockSize <> 0));
   for LAt := 0 to LCount - 1 do
   begin
     ASource.CheckCancellation;
     NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
-    FPrefixBlocks[LAt] := ASource.FPrefixBlocks[LAt];
+    FTokenBlocks[LAt] := ASource.FTokenBlocks[LAt];
   end;
 
   if FTokenCount mod CTranslationPrefixBlockSize <> 0 then
@@ -1415,9 +1403,9 @@ begin
     begin
       ASource.CheckCancellation;
       NyxPascalAdmitAnalysis(ASource.FCancellation, papFrozenRow);
-      LBlock.Rows[LRow] := ASource.FTokens[LFirst + LRow];
+      LBlock.Rows[LRow] := ASource.Token(LFirst + LRow);
     end;
-    FPrefixBlocks[LCount] := LLease;
+    FTokenBlocks[LCount] := LLease;
   end;
   { Append history never changes earlier state rows. Cache completed pages once,
     then copy only directory leases and the private unfinished tail. Even these
@@ -1693,6 +1681,11 @@ end;
 
 procedure TTranslation.AddToken(AOccurrence, AToken: Integer; AExpansion: Integer;
   AExpansionToken: Integer);
+var
+  LAt: Integer;
+  LToken: TNyxPascalTranslatedToken;
+  LBlock: TTranslatedTokenBlock;
+  LLease: ITranslatedTokenBlock;
 begin
   CheckCancellation;
 
@@ -1708,23 +1701,49 @@ begin
     FWork.AdmitToken(FTokenCount, FOptions.MaximumTokens);
   end;
 
-  if FTokenCount = Length(FTokens) then
+  if FTokenCount mod CTranslationPrefixBlockSize = 0 then
   begin
-    SetLength(FTokens, Capacity(FTokenCount, FOptions.MaximumTokens));
+    LBlock := TTranslatedTokenBlock.Create;
+    LLease := LBlock;
+    LAt := FOptions.MaximumTokens - FTokenCount;
+
+    if LAt > CTranslationPrefixBlockSize then
+    begin
+      LAt := CTranslationPrefixBlockSize;
+    end;
+    SetLength(LBlock.Rows, LAt);
+    LAt := FTokenCount div CTranslationPrefixBlockSize;
+
+    if LAt = Length(FTokenBlocks) then
+    begin
+      { Directory capacity grows independently of token count; unused nil slots
+        are private and do not enter any frozen directory or token view. }
+      SetLength(FTokenBlocks, Capacity(LAt,
+        (FOptions.MaximumTokens - 1) div CTranslationPrefixBlockSize + 1));
+    end;
+    FTokenBlocks[LAt] := LLease;
+    FWriting := LBlock;
   end;
-  FTokens[FTokenCount].FOccurrence := AOccurrence;
-  FTokens[FTokenCount].FPhysicalToken := AToken;
-  FTokens[FTokenCount].FState := FStateCount - 1;
-  FTokens[FTokenCount].FActivity := FActive;
-  FTokens[FTokenCount].FExpansion := AExpansion;
-  FTokens[FTokenCount].FExpansionToken := AExpansionToken;
-  FTokens[FTokenCount].FExpanded := AExpansion >= 0;
+  LToken := Default(TNyxPascalTranslatedToken);
+  LToken.FOccurrence := AOccurrence;
+  LToken.FPhysicalToken := AToken;
+  LToken.FState := FStateCount - 1;
+  LToken.FActivity := FActive;
+  LToken.FExpansion := AExpansion;
+  LToken.FExpansionToken := AExpansionToken;
+  LToken.FExpanded := AExpansion >= 0;
 
   if FBlocked then
   begin
-    FTokens[FTokenCount].FActivity := ppkUnknown;
+    LToken.FActivity := ppkUnknown;
   end;
+  FWriting.Rows[FTokenCount mod CTranslationPrefixBlockSize] := LToken;
   Inc(FTokenCount);
+
+  if FTokenCount mod CTranslationPrefixBlockSize = 0 then
+  begin
+    FWriting := nil;
+  end;
 end;
 
 procedure TTranslation.Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
@@ -2271,7 +2290,7 @@ begin
     FUnresolved[FUnresolvedCount].Origin.Occurrence := AOccurrence;
     FUnresolved[FUnresolvedCount].Origin.Span := ASpan;
     FUnresolved[FUnresolvedCount].Origin.PrefixCount := FTokenCount - 1;
-    FUnresolved[FUnresolvedCount].State := FTokens[FTokenCount - 1].State;
+    FUnresolved[FUnresolvedCount].State := Token(FTokenCount - 1).State;
     FUnresolved[FUnresolvedCount].Expression := LValue;
     FUnresolved[FUnresolvedCount].Plannable := LPlannable;
     Inc(FUnresolvedCount);
@@ -3066,7 +3085,7 @@ begin
       FEmissionDirectives[FEmissionCount].FOrigin.Occurrence := AOccurrence;
       FEmissionDirectives[FEmissionCount].FOrigin.Span := AToken.Span;
       FEmissionDirectives[FEmissionCount].FOrigin.PrefixCount := FTokenCount - 1;
-      FEmissionDirectives[FEmissionCount].FState := FTokens[FTokenCount - 1].State;
+      FEmissionDirectives[FEmissionCount].FState := Token(FTokenCount - 1).State;
       FEmissionDirectives[FEmissionCount].FActivity := FActive;
       FEmissionDirectives[FEmissionCount].FChannel := LChannel;
       FEmissionDirectives[FEmissionCount].FEnabled := LEmissionEnabled;
@@ -3105,7 +3124,7 @@ begin
       FWarningDirectives[FWarningCount].FOrigin.Occurrence := AOccurrence;
       FWarningDirectives[FWarningCount].FOrigin.Span := AToken.Span;
       FWarningDirectives[FWarningCount].FOrigin.PrefixCount := FTokenCount - 1;
-      FWarningDirectives[FWarningCount].FState := FTokens[FTokenCount - 1].State;
+      FWarningDirectives[FWarningCount].FState := Token(FTokenCount - 1).State;
       LWarnings := NyxPascalWarnings(LWarningContext);
       FWarningDirectives[FWarningCount].FRule := LWarnings.WarningAt(LWarnings.WarningCount - 1);
       Inc(FWarningCount);
@@ -3143,7 +3162,7 @@ begin
       FOptimizationDirectives[FOptimizationCount].FOrigin.Occurrence := AOccurrence;
       FOptimizationDirectives[FOptimizationCount].FOrigin.Span := AToken.Span;
       FOptimizationDirectives[FOptimizationCount].FOrigin.PrefixCount := FTokenCount - 1;
-      FOptimizationDirectives[FOptimizationCount].FState := FTokens[FTokenCount - 1].State;
+      FOptimizationDirectives[FOptimizationCount].FState := Token(FTokenCount - 1).State;
       LOptimizations := NyxPascalOptimizations(LOptimizedContext);
       FOptimizationDirectives[FOptimizationCount].FRule :=
         LOptimizations.OptimizationAt(LOptimizations.OptimizationCount - 1);
@@ -3182,7 +3201,7 @@ begin
       FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.Occurrence := AOccurrence;
       FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.Span := AToken.Span;
       FCodeAlignmentDirectives[FCodeAlignmentCount].FOrigin.PrefixCount := FTokenCount - 1;
-      FCodeAlignmentDirectives[FCodeAlignmentCount].FState := FTokens[FTokenCount - 1].State;
+      FCodeAlignmentDirectives[FCodeAlignmentCount].FState := Token(FTokenCount - 1).State;
       LCodeAlignments := NyxPascalCodeAlignments(LAlignedContext);
       FCodeAlignmentDirectives[FCodeAlignmentCount].FRule :=
         LCodeAlignments.CodeAlignmentAt(LCodeAlignments.CodeAlignmentCount - 1);
@@ -3242,7 +3261,7 @@ begin
       FRegisterDirectives[FRegisterCount].Origin.Occurrence := AOccurrence;
       FRegisterDirectives[FRegisterCount].Origin.Span := AToken.Span;
       FRegisterDirectives[FRegisterCount].Origin.PrefixCount := FTokenCount - 1;
-      FRegisterDirectives[FRegisterCount].State := FTokens[FTokenCount - 1].State;
+      FRegisterDirectives[FRegisterCount].State := Token(FTokenCount - 1).State;
       FRegisterDirectives[FRegisterCount].Activity := FActive;
       FRegisterDirectives[FRegisterCount].Policy := LRegister;
       Inc(FRegisterCount);
@@ -3839,15 +3858,8 @@ begin
     raise ENyxPascalContext.Create('Translated token index is outside its snapshot');
   end;
 
-  if FIsFrozen then
-  begin
-    Result := FPrefixBlocks[AIndex div CTranslationPrefixBlockSize].Token(
-      AIndex mod CTranslationPrefixBlockSize);
-  end
-  else
-  begin
-    Result := FTokens[AIndex];
-  end;
+  Result := FTokenBlocks[AIndex div CTranslationPrefixBlockSize].Token(
+    AIndex mod CTranslationPrefixBlockSize);
 end;
 
 function TTranslation.PhysicalToken(AIndex: Integer): TNyxPascalToken;

@@ -436,16 +436,16 @@ type
     ['{BF95FB2D-A625-491F-A895-3DF2182A6931}']
     function PreparedToken(AIndex: Integer): TNyxPascalPreparedToken;
   end;
-  { Private immutable block owner. Its value rows contain no interfaces and
-    never refer back to a lexer, visitor or mutable token vector. }
+  { Read-only block lease. A live lexer alone fills its unpublished tail; full
+    blocks seal before sharing. Value rows retain no interfaces or reader. }
   ILexicalTokenBlock = interface(IInterface)
     function Token(AIndex: Integer): TNyxPascalToken;
   end;
   { Independent directories may share completed blocks; their interface slots
     are copied explicitly rather than sharing a mutable dynamic-array vector. }
   TLexicalTokenBlocks = array of ILexicalTokenBlock;
-  { Filled before publication, then read-only. At most 256 token values belong
-    to a block; the last partial block is private to its frozen prefix. }
+  { Written directly during scanning, then sealed before sharing. A frozen
+    partial block is a separate copy, never the lexer's unfinished writer. }
   TLexicalTokenBlock = class(TInterfacedObject, ILexicalTokenBlock)
   public
     Rows: array of TNyxPascalToken;
@@ -458,10 +458,12 @@ type
   private
     FSource: TNyxText;
     FOptions: TNyxPascalLexicalOptions;
-    FTokens: array of TNyxPascalToken;
-    { Construction-only cache of complete immutable blocks. Frozen directories
-      retain their own leases; this cache retires on every constructor exit. }
-    FPrefixBlocks: TLexicalTokenBlocks;
+    { Actual token storage, not a freeze cache. Only the last unpublished page
+      can be written; completed pages are immutable from their first sharing. }
+    FTokenBlocks: TLexicalTokenBlocks;
+    { Borrowed from this owner's directory during construction. Sealing a full
+      page or retiring the reader revokes the only write path to that page. }
+    FWriting: TLexicalTokenBlock;
     FDiagnostics: array of TNyxPascalLexicalDiagnostic;
     FTokenCount: Integer;
     FDiagnosticCount: Integer;
@@ -867,7 +869,7 @@ begin
     begin
       LCapture.Reader := nil;
     end;
-    FPrefixBlocks := nil;
+    FWriting := nil;
     FCancellation := nil;
     FObserver := nil;
     FRegionObserver := nil;
@@ -890,37 +892,22 @@ begin
   FOptions := AReader.FOptions;
   FScalars := AReader.FOffset;
   FCount := AReader.FTokenCount;
-  FShared := Length(AReader.FPrefixBlocks) * CLexicalPrefixBlockSize;
+  FShared := FCount div CLexicalPrefixBlockSize * CLexicalPrefixBlockSize;
 
   if FShared > FCount then
   begin
     raise ENyxPascalLexical.Create('Frozen lexical blocks exceed their producing reader');
   end;
-  { Completed blocks are immutable from their first publication. The producing
-    reader caches only full blocks; a later freeze never extends an old tail. }
-  while Length(AReader.FPrefixBlocks) < FCount div CLexicalPrefixBlockSize do
-  begin
-    LFirst := Length(AReader.FPrefixBlocks) * CLexicalPrefixBlockSize;
-    LBlock := TLexicalTokenBlock.Create;
-    LLease := LBlock;
-    SetLength(LBlock.Rows, CLexicalPrefixBlockSize);
-    for LRow := 0 to CLexicalPrefixBlockSize - 1 do
-    begin
-      AReader.CheckCancellation;
-      NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
-      LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
-    end;
-    LAt := Length(AReader.FPrefixBlocks);
-    SetLength(AReader.FPrefixBlocks, LAt + 1);
-    AReader.FPrefixBlocks[LAt] := LLease;
-  end;
-  LCount := Length(AReader.FPrefixBlocks);
+  { These completed pages were created by admitted lexical scanning. Sharing
+    their leases performs no token-row copy, including on the very first freeze.
+    Every copied directory slot and private tail row still enters the budget. }
+  LCount := FCount div CLexicalPrefixBlockSize;
   SetLength(FBlocks, LCount + Ord(FCount mod CLexicalPrefixBlockSize <> 0));
   for LAt := 0 to LCount - 1 do
   begin
     AReader.CheckCancellation;
     NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
-    FBlocks[LAt] := AReader.FPrefixBlocks[LAt];
+    FBlocks[LAt] := AReader.FTokenBlocks[LAt];
   end;
 
   if FCount mod CLexicalPrefixBlockSize <> 0 then
@@ -933,7 +920,7 @@ begin
     begin
       AReader.CheckCancellation;
       NyxPascalAdmitAnalysis(AReader.FCancellation, papFrozenRow);
-      LBlock.Rows[LRow] := AReader.FTokens[LFirst + LRow];
+      LBlock.Rows[LRow] := AReader.Token(LFirst + LRow);
     end;
     FBlocks[LCount] := LLease;
   end;
@@ -1198,7 +1185,11 @@ end;
 
 procedure TLexicalSnapshot.Add(const AToken: TNyxPascalToken);
 var
+  LAt: Integer;
   LCapacity: Integer;
+  LMaximumPages: Integer;
+  LBlock: TLexicalTokenBlock;
+  LLease: ILexicalTokenBlock;
 begin
 
   if FTokenCount >= FOptions.MaximumTokens then
@@ -1217,18 +1208,43 @@ begin
   else
   begin
 
-    if FTokenCount = Length(FTokens) then
+    if FTokenCount mod CLexicalPrefixBlockSize = 0 then
     begin
-      LCapacity := FOptions.MaximumTokens;
+      LBlock := TLexicalTokenBlock.Create;
+      LLease := LBlock;
+      LAt := FOptions.MaximumTokens - FTokenCount;
 
-      if 256 + FTokenCount div 2 <= FOptions.MaximumTokens - FTokenCount then
+      if LAt > CLexicalPrefixBlockSize then
       begin
-        LCapacity := FTokenCount + 256 + FTokenCount div 2;
+        LAt := CLexicalPrefixBlockSize;
       end;
-      SetLength(FTokens, LCapacity);
+      SetLength(LBlock.Rows, LAt);
+      LAt := FTokenCount div CLexicalPrefixBlockSize;
+
+      if LAt = Length(FTokenBlocks) then
+      begin
+        { Geometric directory growth avoids reallocating all earlier leases for
+          every newly created page. No capacity slot is an admitted token. }
+        LMaximumPages := (FOptions.MaximumTokens - 1) div CLexicalPrefixBlockSize + 1;
+        LCapacity := LMaximumPages;
+
+        if 16 + LAt div 2 <= LMaximumPages - LAt then
+        begin
+          LCapacity := LAt + 16 + LAt div 2;
+        end;
+        SetLength(FTokenBlocks, LCapacity);
+      end;
+      FTokenBlocks[LAt] := LLease;
+      FWriting := LBlock;
     end;
-    FTokens[FTokenCount] := AToken;
+    FWriting.Rows[FTokenCount mod CLexicalPrefixBlockSize] := AToken;
     Inc(FTokenCount);
+
+    if FTokenCount mod CLexicalPrefixBlockSize = 0 then
+    begin
+      { Revoke writing before the observer can freeze this completed page. }
+      FWriting := nil;
+    end;
   end;
 
   if FObserver <> nil then
@@ -1690,16 +1706,13 @@ begin
     Add(LToken);
   until False;
 
-  if FReceiver <> nil then
-  begin
-    { A receiver may cancel during EOF emission as well as earlier callbacks.
-      Completion cannot publish success after that final cancellation. }
-    CheckCancellation;
-  end;
+  { Receivers and ordinary observers may cancel during EOF emission as well as
+    earlier callbacks. Completion cannot publish success after either cancels;
+    already retained immutable windows remain independent of that refusal. }
+  CheckCancellation;
 
   if FReceiver = nil then
   begin
-    SetLength(FTokens, FTokenCount);
     SetLength(FDiagnostics, FDiagnosticCount);
   end;
 end;
@@ -1731,7 +1744,8 @@ begin
   begin
     raise ENyxPascalLexical.Create('Pascal token index is outside its snapshot');
   end;
-  Result := FTokens[AIndex];
+  Result := FTokenBlocks[AIndex div CLexicalPrefixBlockSize].Token(
+    AIndex mod CLexicalPrefixBlockSize);
 end;
 
 function TLexicalSnapshot.Text(AIndex: Integer): TNyxText;
@@ -1778,7 +1792,7 @@ begin
   begin
     LMid := LLow + (LHigh - LLow) div 2;
 
-    if FTokens[LMid].Span.Start <= AOffset then
+    if Token(LMid).Span.Start <= AOffset then
     begin
       Result := LMid;
       LLow := LMid + 1;
@@ -1885,7 +1899,13 @@ begin
     Result.FStorage := LReader.FStorage - 1;
     Result.FTokens := LReader.FTokenCount;
     Result.FDiagnostics := LReader.FDiagnosticCount;
-    Result.FBufferedTokens := Length(LReader.FTokens);
+    { Direct receivers must never acquire the ordinary token-page destination.
+      Validate the observed absence instead of concealing accidental buffering. }
+    if Length(LReader.FTokenBlocks) <> 0 then
+    begin
+      raise ENyxPascalLexical.Create('Direct lexical scanning acquired buffered token pages');
+    end;
+    Result.FBufferedTokens := 0;
     Result.FBufferedDiagnostics := Length(LReader.FDiagnostics);
   finally
     LReader.Free;
