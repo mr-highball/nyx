@@ -3769,8 +3769,9 @@ state or conditional answer crosses an unproved edit.
 coordinates, token classification/region and the diagnostic boundary, then leases
 the current immutable rows without relexing. Public work counters and foreign
 producers confer no continuity. `AppendNyxPascalSyntax` independently checks that
-its saved checkpoint read frontier precedes the changed region. If it does not,
-the parser starts normally; no earlier checkpoint is guessed.
+its saved checkpoint read frontier precedes the changed region. It first tries
+the latest point, then a bounded history of earlier genuine parser boundaries.
+If none is safe, the parser starts normally; no earlier state is guessed.
 
 ```pascal
 LCurrent := ReviseNyxPascalTranslatedSyntax(LPrevious, LCurrentTranslation,
@@ -3794,9 +3795,19 @@ cache publication also deducts revision work before using that same allowance.
 and whole-syntax sharing; `INyxPascalProjectionRevisionWork` gives per-view prefix/
 whole observations. These do not grant compiler or semantic authority.
 
+Each immutable snapshot retains at most 32 sampled parser points and 32 filter
+points, alongside its separate latest repair/parse points. Parser samples spread
+across the file as their directory fills; filter samples preserve conditional
+depth, include reporting and diagnostic boundaries. A revision carries only its
+proved earlier prefix, with sealed COW metadata roots and flat block directories.
+It retains no earlier snapshot, live parser, semantic world or execution lease.
+`INyxPascalSyntaxRestartWork` exposes detached history counts and selection reads.
+History selection, copying, compaction and restoration consume ordinary analysis
+allowances; sampling affects reuse opportunities, never the resulting structure.
+
 This is projection/checkpoint reuse. Translation still reconstructs the current
-root, and edits earlier than the latest safe parser checkpoint can require full
-parsing. Full changed-root incremental analysis, editor rollout and browser input/
+root and projection origins. An edit before every retained safe parser boundary
+requires full parsing. Full changed-root incremental analysis, editor rollout and browser input/
 parity qualification remain open; WORK.md owns measurements and validation.
 
 ## Captured SDK modules and dependency loading

@@ -489,6 +489,17 @@ type
     function CopiedFilterRows: Integer;
     function FilterDirectoryEntries: Integer;
   end;
+  { Bounded immutable restart-history observations. Each directory retains at
+    most 32 sampled genuine boundaries plus its separate latest point. Counts
+    and selection reads confer no lexical lineage or compiler authority; every
+    restored point still requires the owned current-input predecessor proof. }
+  INyxPascalSyntaxRestartWork = interface(IInterface)
+    ['{E9222A63-FEC3-4357-A2B7-FE479BFBF265}']
+    function ParserHistoryCount: Integer;
+    function FilterHistoryCount: Integer;
+    function ParserCheckpointReads: Integer;
+    function FilterCheckpointReads: Integer;
+  end;
   { Actual metadata/index construction. Retained values come from sealed
     checkpoint roots; copied values detach before mutation. Created values and
     allocated nodes (text tree, ordinal pages and compound roots) remain real
@@ -606,7 +617,7 @@ function NewNyxPascalSyntaxFromLexical(const ALexical: INyxPascalLexicalSnapshot
   const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSyntaxSnapshot;
 
-{ Continue an owned parser along exact sealed lexical append lineage and
+{ Continue an owned parser along exact sealed lexical append/revision lineage and
   identical policies. Completed declarations may be restored before a safe
   checkpoint; provisional tails and diagnostics are parsed afresh. Filtering
   shares completed rows; metadata/index roots retain exact checkpoint identity.
@@ -641,6 +652,10 @@ const
   { Two ordinal bits select one of four fixed slots. A page clone copies at
     most four interface leases as one admitted metadata-node operation. }
   CMetadataPageSlots = 4;
+  { Optional reuse storage, not a source/parse quota. Sampling drops only old
+    rollback opportunities; the latest point and complete current result remain.
+    Flat bounded directories never retain a predecessor snapshot chain. }
+  CRestartHistorySlots = 32;
 
 type
   { Source-independent ordinal vector. Temporary lists stage grouped declarations
@@ -916,7 +931,7 @@ type
     property Copied: Integer read FCopied;
     property Tokens[AIndex: Integer]: Integer read Token; default;
   end;
-  { Value-only filter state immediately before lexical tail repair. Diagnostics
+  { Value-only filter state before a sampled lexical boundary or tail repair. Diagnostics
     excludes the provisional EOF diagnostic; the parser's own suffix is separate.
     SignificantCount addresses immutable rows, never an earlier parser owner. }
   TFilterCheckpoint = record
@@ -944,6 +959,7 @@ type
     boundary. No interface, mutable vector or prior snapshot is retained. }
   TParserCheckpoint = record
     Valid: Boolean;
+    Sequence: Integer;
     Resume: TParserResume;
     Position: Integer;
     ReadThrough: Integer;
@@ -965,6 +981,22 @@ type
     StatementLabels: Integer;
     Hints: Integer;
     Intrinsics: Integer;
+  end;
+  { One sealed earlier rollback point and its matching COW root. The value owns
+    no lexical/source/parser/execution lease and no preceding checkpoint. Its
+    state and root are filled together before the directory publishes it. }
+  IParserCheckpoint = interface(IInterface)
+    function State: TParserCheckpoint;
+    function Metadata: IMetadataRoot;
+  end;
+  { Class-owned interfaces keep managed leases out of Pascal records. Sharing
+    this immutable pair never permits a sibling parser to mutate its COW rows. }
+  TParserCheckpointValue = class(TInterfacedObject, IParserCheckpoint)
+  public
+    StateValue: TParserCheckpoint;
+    MetadataValue: IMetadataRoot;
+    function State: TParserCheckpoint;
+    function Metadata: IMetadataRoot;
   end;
   { Construction-only delimiter frame for a unit executable region. Groups have
     no declaration scope; compound statements retain lexical block boundaries.
@@ -990,7 +1022,7 @@ type
   TSyntaxSnapshot = class(TInterfacedObject, INyxPascalSyntaxSnapshot,
     INyxPascalOperatorSyntax, INyxPascalVariantSyntax, INyxPascalHintSyntax,
     INyxPascalStructuredSyntax, INyxPascalIntrinsicSyntax, INyxPascalStatementLabelSyntax,
-    INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork,
+    INyxPascalSyntaxWork, INyxPascalSyntaxFilterWork, INyxPascalSyntaxRestartWork,
     INyxPascalSyntaxMetadataWork, INyxPascalSyntaxMetadataLookupWork,
     INyxPascalSyntaxOrdinalMetadataWork, ISyntaxOwner)
   private
@@ -999,6 +1031,8 @@ type
     FCancellation: INyxCancellationScope;
     FTokens: TFilteredTokens;
     FFilterCheckpoint: TFilterCheckpoint;
+    FFilterHistory: array of TFilterCheckpoint;
+    FFilterCheckpointReads: Integer;
     FFilteredReads: Integer;
     FFilterRetained: Integer;
     FMetadata: TMetadataMap;
@@ -1024,6 +1058,9 @@ type
     FImplementationSeen: Boolean;
     FDepth: Integer;
     FCheckpoint: TParserCheckpoint;
+    FParserHistory: array of IParserCheckpoint;
+    FParserHistoryStride: Integer;
+    FParserCheckpointReads: Integer;
     FFilterDiagnostics: Integer;
     FReadThrough: Integer;
     FParserReads: Integer;
@@ -1051,10 +1088,16 @@ type
     function IntrinsicRow(AIndex: Integer): TIntrinsicValue;
     function EditIntrinsicRow(AIndex: Integer): TIntrinsicValue;
     procedure CheckCancellation;
+    procedure CheckFilterCancellation;
     function ReadToken(AIndex: Integer): TNyxPascalToken;
     procedure Remember(AResume: TParserResume; AVisibility: TNyxPascalSyntaxVisibility;
       AMembers: Boolean; ASection: TDeclarationSection);
-    procedure Restore(APrevious: TSyntaxSnapshot);
+    procedure RetainParserCheckpoint;
+    procedure RetainFilterCheckpoint(const APoint: TFilterCheckpoint);
+    function SelectParserCheckpoint(APrevious: TSyntaxSnapshot; ARetained: Integer;
+      out APoint: TParserCheckpoint; out ARoot: IMetadataRoot): Boolean;
+    procedure Restore(APrevious: TSyntaxSnapshot; const APoint: TParserCheckpoint;
+      const ARoot: IMetadataRoot);
     procedure LinkDeclaration(AIndex: Integer);
     function Tok(AOffset: Integer = 0): TNyxPascalToken;
     function Word(AWord: TNyxPascalWord; AOffset: Integer = 0): Boolean;
@@ -1157,6 +1200,10 @@ type
     function SharedFilterRows: Integer;
     function CopiedFilterRows: Integer;
     function FilterDirectoryEntries: Integer;
+    function ParserHistoryCount: Integer;
+    function FilterHistoryCount: Integer;
+    function ParserCheckpointReads: Integer;
+    function FilterCheckpointReads: Integer;
     function RetainedMetadataValues: Integer;
     function CopiedMetadataValues: Integer;
     function CreatedMetadataValues: Integer;
@@ -2501,6 +2548,13 @@ begin
   end;
 end;
 
+procedure TSyntaxSnapshot.CheckFilterCancellation;
+begin
+
+  if (FCancellation <> nil) and FCancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Filter directory continuation cancelled');
+end;
+
 function TSyntaxSnapshot.ReadToken(AIndex: Integer): TNyxPascalToken;
 begin
   NyxPascalAdmitAnalysis(FCancellation, papSyntaxToken);
@@ -2523,14 +2577,21 @@ procedure TSyntaxSnapshot.Remember(AResume: TParserResume;
 var
   LSafe: Integer;
 begin
-  { Keep only the latest point safe before append's two-token repair window.
-    Actual continuation independently rechecks its retained-token authority.
-    Lookahead reaching provisional EOF invalidates later rollback points. }
+  { Every point is genuine parser state before append's two-token repair window.
+    The bounded history samples these points; the separate latest point remains
+    available. Actual continuation independently checks its lexical read frontier. }
   LSafe := FLexical.Count - 3;
 
   if (FReadThrough >= LSafe) or (FTokens[FPosition] >= LSafe) then
   begin
     Exit;
+  end;
+  if FCheckpoint.Valid then
+  begin
+
+    if FCheckpoint.Sequence = High(Integer) then
+      raise ENyxPascalSyntaxLimit.Create('Parser checkpoint sequence exceeds its exact counter domain');
+    Inc(FCheckpoint.Sequence);
   end;
   FCheckpoint.Valid := True;
   FCheckpoint.Resume := AResume;
@@ -2555,14 +2616,164 @@ begin
   FCheckpoint.StatementLabels := FStatementLabelCount;
   FCheckpoint.Hints := FHintCount;
   FCheckpoint.Intrinsics := FIntrinsicCount;
+  RetainParserCheckpoint;
 end;
 
-procedure TSyntaxSnapshot.Restore(APrevious: TSyntaxSnapshot);
+function TParserCheckpointValue.State: TParserCheckpoint;
+begin
+  Result := StateValue;
+end;
+
+function TParserCheckpointValue.Metadata: IMetadataRoot;
+begin
+  Result := MetadataValue;
+end;
+
+procedure TSyntaxSnapshot.RetainParserCheckpoint;
+var
+  LAt, LCount, LKeep: Integer;
+  LValue: TParserCheckpointValue;
+  LLease: IParserCheckpoint;
+begin
+
+  if FParserHistoryStride = 0 then FParserHistoryStride := 1;
+
+  if FCheckpoint.Sequence mod FParserHistoryStride <> 0 then Exit;
+  LCount := Length(FParserHistory);
+
+  if LCount = CRestartHistorySlots then
+  begin
+    { Keep the first boundary and every other sampled point. Increasing the
+      cadence spreads bounded history across the file instead of retaining only
+      its final declarations. No discarded point affects the parsed result. }
+    LKeep := 0;
+    for LAt := 0 to LCount - 1 do
+    begin
+      CheckCancellation;
+      NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+
+      if LAt mod 2 = 0 then
+      begin
+        FParserHistory[LKeep] := FParserHistory[LAt];
+        Inc(LKeep);
+      end;
+    end;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof, LCount - LKeep);
+    SetLength(FParserHistory, LKeep);
+    FParserHistoryStride := FParserHistoryStride * 2;
+    LCount := LKeep;
+
+    if FCheckpoint.Sequence mod FParserHistoryStride <> 0 then Exit;
+  end;
+  CheckCancellation;
+  NyxPascalAdmitAnalysis(FCancellation, papMetadataNode);
+  LValue := TParserCheckpointValue.Create;
+  LLease := LValue;
+  LValue.StateValue := FCheckpoint;
+  LValue.MetadataValue := FCheckpointMetadata;
+  NyxPascalAdmitAnalysis(FCancellation, papSourceProof, LCount + 1);
+  SetLength(FParserHistory, LCount + 1);
+  FParserHistory[LCount] := LLease;
+end;
+
+procedure TSyntaxSnapshot.RetainFilterCheckpoint(const APoint: TFilterCheckpoint);
+var
+  LAt, LCount, LKeep: Integer;
+begin
+  LCount := Length(FFilterHistory);
+
+  if LCount > 0 then
+  begin
+    CheckFilterCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+
+    if FFilterHistory[LCount - 1].Lexical = APoint.Lexical then Exit;
+  end;
+
+  if LCount = CRestartHistorySlots then
+  begin
+    LKeep := 0;
+    for LAt := 0 to LCount - 1 do
+    begin
+      CheckFilterCancellation;
+      NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+
+      if LAt mod 2 = 0 then
+      begin
+        FFilterHistory[LKeep] := FFilterHistory[LAt];
+        Inc(LKeep);
+      end;
+    end;
+    NyxPascalAdmitAnalysis(FCancellation, papFilterRow, LCount - LKeep);
+    SetLength(FFilterHistory, LKeep);
+    LCount := LKeep;
+  end;
+  CheckFilterCancellation;
+  NyxPascalAdmitAnalysis(FCancellation, papFilterRow, LCount + 1);
+  SetLength(FFilterHistory, LCount + 1);
+  FFilterHistory[LCount] := APoint;
+end;
+
+function TSyntaxSnapshot.SelectParserCheckpoint(APrevious: TSyntaxSnapshot;
+  ARetained: Integer; out APoint: TParserCheckpoint; out ARoot: IMetadataRoot): Boolean;
+var
+  LAt: Integer;
+  LPoint: TParserCheckpoint;
+
+  function Safe: Boolean;
+  begin
+    Result := LPoint.Valid and (LPoint.ReadThrough < ARetained) and
+      (LPoint.Position >= 0) and (LPoint.Position < FTokens.Count);
+
+    if Result then
+    begin
+      NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+      Result := FTokens[LPoint.Position] < ARetained;
+    end;
+  end;
+begin
+  Result := False;
+  APoint := Default(TParserCheckpoint);
+  ARoot := nil;
+
+  if APrevious = nil then Exit;
+  CheckCancellation;
+  NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+  Inc(FParserCheckpointReads);
+  LPoint := APrevious.FCheckpoint;
+
+  if Safe then
+  begin
+    APoint := LPoint;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+    ARoot := APrevious.FCheckpointMetadata;
+    Exit(True);
+  end;
+  for LAt := High(APrevious.FParserHistory) downto 0 do
+  begin
+    CheckCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+    Inc(FParserCheckpointReads);
+    LPoint := APrevious.FParserHistory[LAt].State;
+
+    if Safe then
+    begin
+      APoint := LPoint;
+      NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+      ARoot := APrevious.FParserHistory[LAt].Metadata;
+      Exit(True);
+    end;
+  end;
+end;
+
+procedure TSyntaxSnapshot.Restore(APrevious: TSyntaxSnapshot;
+  const APoint: TParserCheckpoint; const ARoot: IMetadataRoot);
 var
   LAt: Integer;
   LFilterCount: Integer;
+  LPoint: TParserCheckpoint;
 begin
-  FCheckpoint := APrevious.FCheckpoint;
+  FCheckpoint := APoint;
   FScopeCount := FCheckpoint.Scopes;
   FDeclarationCount := FCheckpoint.Declarations;
   FImportCount := FCheckpoint.Imports;
@@ -2581,7 +2792,7 @@ begin
   FReused := FDeclarationCount;
   FRestart := FTokens[FPosition];
   FreeAndNil(FMetadata);
-  FCheckpointMetadata := APrevious.FCheckpointMetadata;
+  FCheckpointMetadata := ARoot;
   FMetadata := TMetadataMap.Create(FCheckpointMetadata, FCancellation);
   FRetainedMetadata := 0;
 
@@ -2609,6 +2820,21 @@ begin
     Inc(FCopied);
   end;
   FDiagnosticCount := Length(FDiagnostics);
+  { Carry only the selected point's earlier immutable pairs. No parser/source
+    owner or suffix checkpoint survives; a following earlier edit can still find
+    a proved prefix after the preceding snapshot has been retired. }
+  FParserHistoryStride := APrevious.FParserHistoryStride;
+  for LAt := 0 to High(APrevious.FParserHistory) do
+  begin
+    CheckCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+    LPoint := APrevious.FParserHistory[LAt].State;
+
+    if LPoint.Sequence > FCheckpoint.Sequence then Break;
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof, Length(FParserHistory) + 1);
+    SetLength(FParserHistory, Length(FParserHistory) + 1);
+    FParserHistory[High(FParserHistory)] := APrevious.FParserHistory[LAt];
+  end;
 end;
 
 function TSyntaxSnapshot.Tok(AOffset: Integer): TNyxPascalToken;
@@ -4231,7 +4457,10 @@ begin
         if LType = FPosition then
         begin
           Unsupported(AScope, 'A variant alternative needs a label expression', Tok.Span);
-          EditArmRow(LArm).Value.FSpan := SpanFrom(LLabelStart);
+          { No label token was consumed. The previous token ends before this
+            position (often at OF), so SpanFrom would invent a negative range.
+            Keep an empty incomplete arm at the actual missing-label boundary. }
+          EditArmRow(LArm).Value.FSpan := NyxPascalSpan(LLabelStart, 0);
           EditSelectorRow(LSelector).Value.FSpan := SpanFrom(LStart);
           Exit;
         end;
@@ -5553,6 +5782,10 @@ var
   LToken: TNyxPascalToken;
   LConditionalReported: Boolean;
   LIncludeReported: Boolean;
+  LPoint: TFilterCheckpoint;
+  LChosen: TFilterCheckpoint;
+  LFound: Boolean;
+  LInterval: Integer;
 begin
   LFirst := 0;
   LSafe := FLexical.Count - 3;
@@ -5567,17 +5800,40 @@ begin
   LConditionalReported := False;
   LIncludeReported := False;
 
-  if (APrevious <> nil) and
-    (APrevious.FFilterCheckpoint.Lexical <= ARetained) and
-    (APrevious.FFilterCheckpoint.Lexical <= LSafe) then
+  LFound := False;
+
+  if APrevious <> nil then
   begin
-    LFirst := APrevious.FFilterCheckpoint.Lexical;
+    CheckFilterCancellation;
+    NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+    Inc(FFilterCheckpointReads);
+    LChosen := APrevious.FFilterCheckpoint;
+    LFound := (LChosen.Lexical <= ARetained) and (LChosen.Lexical <= LSafe);
+
+    if not LFound then
+    begin
+      for LAt := High(APrevious.FFilterHistory) downto 0 do
+      begin
+        CheckFilterCancellation;
+        NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+        Inc(FFilterCheckpointReads);
+        LChosen := APrevious.FFilterHistory[LAt];
+        LFound := (LChosen.Lexical <= ARetained) and (LChosen.Lexical <= LSafe);
+
+        if LFound then Break;
+      end;
+    end;
+  end;
+
+  if LFound then
+  begin
+    LFirst := LChosen.Lexical;
     LPrevious := APrevious.FTokens;
-    LRetainedRows := APrevious.FFilterCheckpoint.SignificantCount;
-    LDepth := APrevious.FFilterCheckpoint.Depth;
-    LConditionalReported := APrevious.FFilterCheckpoint.ConditionalReported;
-    LIncludeReported := APrevious.FFilterCheckpoint.IncludeReported;
-    FDiagnosticCount := APrevious.FFilterCheckpoint.Diagnostics;
+    LRetainedRows := LChosen.SignificantCount;
+    LDepth := LChosen.Depth;
+    LConditionalReported := LChosen.ConditionalReported;
+    LIncludeReported := LChosen.IncludeReported;
+    FDiagnosticCount := LChosen.Diagnostics;
     SetLength(FDiagnostics, FDiagnosticCount);
     for LAt := 0 to FDiagnosticCount - 1 do
     begin
@@ -5586,9 +5842,26 @@ begin
       FDiagnostics[LAt] := APrevious.FDiagnostics[LAt];
       Inc(FCopied);
     end;
+    for LAt := 0 to High(APrevious.FFilterHistory) do
+    begin
+      { This directory has at most 32 value rows. Its bounded prefix copy needs
+        no resampling or per-row cancellation polls; every read/allocation is
+        still admitted, and an attached work budget checks its parent as well. }
+      NyxPascalAdmitAnalysis(FCancellation, papFilterRow);
+      LPoint := APrevious.FFilterHistory[LAt];
+
+      if LPoint.Lexical > LFirst then Break;
+      NyxPascalAdmitAnalysis(FCancellation, papFilterRow, Length(FFilterHistory) + 1);
+      SetLength(FFilterHistory, Length(FFilterHistory) + 1);
+      FFilterHistory[High(FFilterHistory)] := LPoint;
+    end;
   end;
   FTokens := TFilteredTokens.Create(LPrevious, LRetainedRows, FCancellation);
   FFilterRetained := LFirst;
+  { Uniform lexical samples bound cold construction; merging a retained prefix
+    uses the same bounded compaction. The separate latest repair point remains
+    exact even when it falls between sample positions. }
+  LInterval := LSafe div (CRestartHistorySlots - 1) + 1;
   for LAt := LFirst to FLexical.Count - 1 do
   begin
 
@@ -5597,14 +5870,18 @@ begin
       raise ENyxPascalAnalysisCancelled.Create('Pascal syntax analysis cancelled');
     end;
 
-    if LAt = LSafe then
+    if (LAt <= LSafe) and ((LAt = LSafe) or (LAt mod LInterval = 0)) then
     begin
-      FFilterCheckpoint.Lexical := LAt;
-      FFilterCheckpoint.SignificantCount := FTokens.Count;
-      FFilterCheckpoint.Depth := LDepth;
-      FFilterCheckpoint.ConditionalReported := LConditionalReported;
-      FFilterCheckpoint.IncludeReported := LIncludeReported;
-      FFilterCheckpoint.Diagnostics := FDiagnosticCount;
+      LPoint.Lexical := LAt;
+      LPoint.SignificantCount := FTokens.Count;
+      LPoint.Depth := LDepth;
+      LPoint.ConditionalReported := LConditionalReported;
+      LPoint.IncludeReported := LIncludeReported;
+      LPoint.Diagnostics := FDiagnosticCount;
+
+      if LAt = LSafe then FFilterCheckpoint := LPoint;
+
+      if LAt mod LInterval = 0 then RetainFilterCheckpoint(LPoint);
     end;
     NyxPascalAdmitAnalysis(FCancellation, papFilterToken);
     LToken := FLexical.Token(LAt);
@@ -5667,16 +5944,15 @@ end;
 procedure TSyntaxSnapshot.Build(APrevious: TSyntaxSnapshot; ARetained: Integer);
 var
   LResume: TParserCheckpoint;
+  LRoot: IMetadataRoot;
 begin
   BuildTokens(APrevious, ARetained);
   FFilterDiagnostics := FDiagnosticCount;
   FReadThrough := -1;
 
-  if (APrevious <> nil) and APrevious.FCheckpoint.Valid and
-    (APrevious.FCheckpoint.ReadThrough < ARetained) then
+  if SelectParserCheckpoint(APrevious, ARetained, LResume, LRoot) then
   begin
-    Restore(APrevious);
-    LResume := FCheckpoint;
+    Restore(APrevious, LResume, LRoot);
     case LResume.Resume of
       prDeclarations:
         begin
@@ -6388,6 +6664,26 @@ end;
 function TSyntaxSnapshot.FilterDirectoryEntries: Integer;
 begin
   Result := FTokens.DirectoryEntries;
+end;
+
+function TSyntaxSnapshot.ParserHistoryCount: Integer;
+begin
+  Result := Length(FParserHistory);
+end;
+
+function TSyntaxSnapshot.FilterHistoryCount: Integer;
+begin
+  Result := Length(FFilterHistory);
+end;
+
+function TSyntaxSnapshot.ParserCheckpointReads: Integer;
+begin
+  Result := FParserCheckpointReads;
+end;
+
+function TSyntaxSnapshot.FilterCheckpointReads: Integer;
+begin
+  Result := FFilterCheckpointReads;
 end;
 
 function TSyntaxSnapshot.RetainedMetadataValues: Integer;

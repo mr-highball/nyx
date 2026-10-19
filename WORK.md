@@ -33,7 +33,92 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Changed-root checkpoint reuse — 2026-10-19
+## Current integration: Earlier parser/filter restart history — 2026-10-19
+
+The previous turn made authoritative source/qualification/remote progress in
+ed54c76: current-source lexical continuity admitted the latest safe parser point.
+That point could be later than an ordinary middle edit, forcing earlier metadata
+and filter work to repeat. This continuation follows the existing owners, without
+changing input/context/ordered-answer identity or compiler/probe/analysis quotas.
+
+Implemented bounded histories of genuine parser and filter states, each with at
+most 32 sampled entries plus the existing separate latest point. Parser sampling
+coarsens across the file; filter points retain exact conditional depth, include
+reporting and diagnostic count. Selection requires the sealed current lexical
+prefix and independently checks parser lookahead and the current significant-token
+position. Restore carries only proved earlier pairs of value state and immutable
+COW roots, never a predecessor snapshot, semantic world or execution lease.
+Directory visits/copies/compaction and restoration are admitted under the existing
+work accounting. Dropping a sample changes only reuse opportunities; absent safe
+history still takes a whole parse. Optional in-process receipts expose bounded
+history counts/selection reads without changing a tool or wire schema.
+
+The focused consumer now passes 4,878 checks with clean heap. It compares every
+public metadata/index family against independent complete construction across
+middle/early/late edits, branching and retired generations, explicit fragment
+grammars, raw conditional/filter diagnostics, Unicode/CRLF and single-character
+deletion/insertion/quote edits at every position of its recovery fixture. All
+allowances below the measured 2,282 first fit refuse atomically; eighty distinct
+cooperative cancellation positions refuse without publishing. Thirty-two native
+concurrent middle-edit restarts join. A measured representative middle revision
+uses 22,575 work units versus 45,416 for cold parser/filter construction, including
+the revision's prefix comparison/history cost. This is not elapsed-time or full
+translation incrementality evidence.
+
+Retaining history has an explicit cold cost. The unchanged late-body consumer now
+measures cold/revised projection work at 13,456/5,575, versus 11,641/5,325 in the
+preceding checkpoint; its exhaustive revision first fit is now 734. The unchanged
+semantic-replay consumer measures cold/replay work at 1,165/194, versus 771/194
+previously. These are actual construction receipts, not universal speed or memory
+claims. Keep cold directory/retention overhead visible alongside the new middle-edit
+reuse; full performance qualification and future tuning remain required.
+
+Retain the initial cancellation-stage failures: the filter-history phase now uses
+the established filter-directory cancellation diagnostic, and its bounded flat
+prefix copy avoids redundant resampling. The unchanged maintained checkpoint suite
+passes 6,526 with its original phase-specific cancellation assertions. The edit
+sweep also exposed a missing variant-label recovery failure in both the revision
+and independent cold path: a bare colon after OF tried to construct a negative
+arm span. The parser now retains an explicit empty incomplete arm/diagnostic,
+without clamping a real expression or declaring malformed input complete. Both
+original failure stacks and the cold confirmation remain in the ignored packet.
+
+Two final source inputs stayed frozen throughout wider qualification. All 111
+main compiler logs succeed with zero owned warnings and 280 upstream; the separate
+unchanged emission oracle retains its three deliberately visible markers. All
+60 native run logs have clean heaps. Fifty browser consumers compile only,
+including Studio/worker; native Studio/backend compile as applicable. Maintained
+checkpoint/append/work/provider checks pass 6,526/2,613/573/3,394. Ordered semantic
+replay retains 323 checks/194 first fit and 96 joined revalidations; completion
+retains 128 joined requests. Current-source revision passes 1,337/734 first fit
+with 64 joined readers. Current-source replay/revision construction costs above
+are recorded rather than overwritten by earlier measurements.
+
+The unchanged original RTL fixture passes 56 under the original 2M view/4M
+aggregate/64-round ceilings. Actual System source resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one, both without pending query. Exact indexed
+Free/FreeInstance navigation/detached insertion keeps original include positions.
+Initial five queries, one Word job, symbol three/eight and the six/eight ordered
+Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact. The lexical
+corpus passes 571 checks across 504 source files/2,397,606 lossless tokens.
+
+707 maintained sources/705 unrelated, 97 RTL/24 compiler pins, 156 original unit
+packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files remain exact. Every owned
+reader is terminal/joined. Ignored
+.local/checkpoint-history-paths-private.json owns packet/return/source/remote
+receipts, including the five retained pre-freeze failures separately from the
+final-source qualification. The historical global-config preservation gate stays false; no
+restoration or delivery claim follows current-start equality. LAN stays offline,
+native Nyx tools absent. Full canonical meaning, translation incrementality,
+editor/input/navigation/quality, browser execution, native/browser parity,
+adoption/delivery and original criterion/task/credit/DONE/full goal remain open.
+No host/config retry, capture, protected mutation, cleanup/restart, new MCP
+tool/schema, rollout or sub-agents. Stop history/fixture/compiler variants after
+qualification; reassess actual repeated translation work through existing owners.
+
+## Previous integration: Changed-root checkpoint reuse — 2026-10-19
 
 The preceding 64a85a3 ordered-revalidation checkpoint is qualified and pushed;
 the previous goal turn made source/qualification/remote progress. Current evidence
