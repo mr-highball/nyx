@@ -34,6 +34,11 @@ uses nyx.pascal.files, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.names;
   Caller serializes alternate source providers during this one-time freeze. }
 function CaptureNyxPascalProjectFiles(const ASources: INyxPascalSourceSnapshot;
   ACase: TNyxPascalFileCase): INyxPascalFileCatalog;
+{ Overlay the current buffer as canonical authoring UTF-8, preserving its exact
+  immutable text owner for physical lexical reuse. Accepted membership and all
+  byte/view validation remain with the existing source/catalog owners. }
+function WithNyxPascalProjectFile(const AFiles: INyxPascalFileCatalog;
+  const ASources: INyxPascalSourceSnapshot; const AFile: TNyxPascalSourceRef): INyxPascalFileCatalog;
 { Map a project selector to a logical file, retaining main/unit/include ownership.
   This mapping grants no filesystem, compiler or editor mutation capability. }
 function NyxPascalProjectPhysicalFile(const ASources: INyxPascalSourceSnapshot;
@@ -46,7 +51,7 @@ function NyxPascalProjectUnit(const ASources: INyxPascalSourceSnapshot;
 
 implementation
 
-uses nyx.pascal.context;
+uses SysUtils, nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.encoding;
 
 function NyxPascalProjectPhysicalFile(const ASources: INyxPascalSourceSnapshot;
   const AFile: TNyxPascalSourceRef): TNyxPascalPhysicalFile;
@@ -108,8 +113,31 @@ begin
   for LAt := 0 to LSource.Count - 1 do
   begin
     LFile := LSource.FileReference(LAt);
-    Result := Result.WithFile(NyxPascalProjectPhysicalFile(LSource, LFile), LSource.Text(LFile));
+    Result := WithNyxPascalProjectFile(Result, LSource, LFile);
   end;
+end;
+
+function WithNyxPascalProjectFile(const AFiles: INyxPascalFileCatalog;
+  const ASources: INyxPascalSourceSnapshot; const AFile: TNyxPascalSourceRef): INyxPascalFileCatalog;
+var
+  LSource: INyxPascalSourceSnapshot;
+  LInput: INyxPascalLexicalInput;
+  LFiles: INyxPascalFileCatalog;
+  LBytes: INyxPascalByteFileCatalog;
+  LView: INyxPascalSourceView;
+begin
+  LSource := ASources;
+  LInput := NyxPascalSourcesLexicalInput(LSource, AFile);
+
+  if LInput = nil then
+  begin
+    LSource := CaptureNyxPascalSources(LSource);
+    LInput := NyxPascalSourcesLexicalInput(LSource, AFile);
+  end;
+  LFiles := CaptureNyxPascalFiles(AFiles);
+  Supports(LFiles, INyxPascalByteFileCatalog, LBytes);
+  LView := NyxPascalSourceViewFromLexicalInput(LInput);
+  Result := LBytes.WithByteSource(NyxPascalProjectPhysicalFile(LSource, AFile), LView.Original, LView);
 end;
 
 end.

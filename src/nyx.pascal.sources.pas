@@ -25,7 +25,8 @@ unit nyx.pascal.sources;
 
 interface
 
-uses nyx.text, nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts;
+uses nyx.text, nyx.pascal.names, nyx.pascal.project, nyx.pascal.drafts,
+  nyx.pascal.lexing;
 
 type
   { Source origin for inspection only. Editing buffers may be empty, malformed
@@ -61,6 +62,11 @@ function CaptureNyxPascalSources(const AProject: INyxPascalProject): INyxPascalS
   syntax or opening includes. The caller serializes mutable providers during this
   call; returned getters never consult them afterward. }
 function CaptureNyxPascalSources(const ASources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot; overload;
+{ Exact per-buffer immutable text owner for this unit's captured snapshots.
+  Unchanged files keep it across copies/other-file edits. Alternate providers
+  return nil until explicitly captured; no project admission is implied. }
+function NyxPascalSourcesLexicalInput(const ASources: INyxPascalSourceSnapshot;
+  const AFile: TNyxPascalSourceRef): INyxPascalLexicalInput;
 
 implementation
 
@@ -83,6 +89,9 @@ type
     FMain: TNyxPascalUnitRef;
     FLimits: TNyxPascalProjectLimits;
     FFiles: array of TSourceFile;
+    { Independent class-owned interface vector; records retain only values. Each
+      entry owns text alone and has no link to this or a preceding snapshot. }
+    FInputs: array of INyxPascalLexicalInput;
     FBytes: Integer;
     function Find(const AFile: TNyxPascalSourceRef): Integer;
   public
@@ -96,6 +105,18 @@ type
     function WithBuffer(const AFile: TNyxPascalSourceRef;
       const AText: TNyxText): INyxPascalSourceSnapshot;
   end;
+
+{ Only the concrete immutable snapshot's ordinary interface may carry its
+  buffer owners. A proxy's mutable getters cannot borrow another object's data. }
+function OwnedSourceSnapshot(const ASources: INyxPascalSourceSnapshot): TSourceSnapshot;
+begin
+  Result := nil;
+
+  if not (ASources is TSourceSnapshot) then Exit;
+  Result := ASources as TSourceSnapshot;
+
+  if (Result as INyxPascalSourceSnapshot) <> ASources then Result := nil;
+end;
 
 function BufferBytes(const AText: TNyxText): Integer;
 var
@@ -180,28 +201,35 @@ function TSourceSnapshot.WithBuffer(const AFile: TNyxPascalSourceRef;
 var
   LIndex: Integer;
   LBytes: Integer;
-  LCopy: TSourceSnapshot;
+  LCopy, LSource: TSourceSnapshot;
+  LOwner, LLease: INyxPascalSourceSnapshot;
 begin
-  LIndex := Find(AFile);
-  LBytes := FBytes - NyxUTF8ByteCount(FFiles[LIndex].Buffer) + BufferBytes(AText);
+  LLease := Self;
+  LSource := LLease as TSourceSnapshot;
+  LIndex := LSource.Find(AFile);
+  LBytes := LSource.FBytes - NyxUTF8ByteCount(LSource.FFiles[LIndex].Buffer) + BufferBytes(AText);
 
-  if LBytes > FLimits.MaximumBytes then
+  if LBytes > LSource.FLimits.MaximumBytes then
   begin
     raise ENyxPascalProject.Create('Inspected buffers exceed the project byte budget');
   end;
 
-  if (FKind = pssEditing) and (FFiles[LIndex].Buffer = AText) then
+  if (LSource.FKind = pssEditing) and (LSource.FFiles[LIndex].Buffer = AText) then
   begin
-    Exit(Self);
+    Exit(LLease);
   end;
   LCopy := TSourceSnapshot.Create;
-  Result := LCopy;
+  LOwner := LCopy;
   LCopy.FKind := pssEditing;
-  LCopy.FMain := FMain;
-  LCopy.FLimits := FLimits;
+  LCopy.FMain := LSource.FMain;
+  LCopy.FLimits := LSource.FLimits;
   LCopy.FBytes := LBytes;
-  LCopy.FFiles := Copy(FFiles, 0, Length(FFiles));
+  LCopy.FFiles := Copy(LSource.FFiles, 0, Length(LSource.FFiles));
+  LCopy.FInputs := Copy(LSource.FInputs, 0, Length(LSource.FInputs));
+
+  if LSource.FFiles[LIndex].Buffer <> AText then LCopy.FInputs[LIndex] := NewNyxPascalLexicalInput(AText);
   LCopy.FFiles[LIndex].Buffer := AText;
+  Result := LOwner;
 end;
 
 function CaptureNyxPascalSources(const AProject: INyxPascalProject): INyxPascalSourceSnapshot;
@@ -209,17 +237,20 @@ var
   LProject: INyxPascalProject;
   LCopy: TSourceSnapshot;
   LIndex: Integer;
+  LOwner: INyxPascalSourceSnapshot;
 begin
   LProject := CaptureNyxPascalProject(AProject);
   LCopy := TSourceSnapshot.Create;
-  Result := LCopy;
+  LOwner := LCopy;
   LCopy.FMain := LProject.MainUnit;
   LCopy.FLimits := LProject.Limits;
   LCopy.FBytes := LProject.ByteCount;
   SetLength(LCopy.FFiles, LProject.Count + 1);
+  SetLength(LCopy.FInputs, LProject.Count + 1);
   LCopy.FFiles[0].FileReference := TNyxPascalSourceRef.Main;
   LCopy.FFiles[0].Buffer := LProject.Source;
   LCopy.FFiles[0].Accepted := LProject.Source;
+  LCopy.FInputs[0] := NewNyxPascalLexicalInput(LCopy.FFiles[0].Buffer);
   for LIndex := 0 to LProject.Count - 1 do
   begin
 
@@ -235,7 +266,9 @@ begin
     end;
     LCopy.FFiles[LIndex + 1].Buffer := LProject.Input(LIndex).Text;
     LCopy.FFiles[LIndex + 1].Accepted := LProject.Input(LIndex).Text;
+    LCopy.FInputs[LIndex + 1] := NewNyxPascalLexicalInput(LCopy.FFiles[LIndex + 1].Buffer);
   end;
+  Result := LOwner;
 end;
 
 function CaptureNyxPascalSources(const ASources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
@@ -245,19 +278,23 @@ var
   LPrior: Integer;
   LAcceptedBytes: Integer;
   LCount: Integer;
+  LInput, LOwner: INyxPascalSourceSnapshot;
+  LOwnedSource: TSourceSnapshot;
 begin
+  LInput := ASources;
+  LOwnedSource := OwnedSourceSnapshot(LInput);
 
-  if ASources = nil then
+  if LInput = nil then
   begin
     raise ENyxPascalProject.Create('Inspection requires captured Pascal sources');
   end;
   LCopy := TSourceSnapshot.Create;
-  Result := LCopy;
-  LCopy.FKind := ASources.Kind;
-  LCopy.FMain := NyxPascalUnit(ASources.MainUnit.Name);
-  LCopy.FLimits := ASources.Limits;
+  LOwner := LCopy;
+  LCopy.FKind := LInput.Kind;
+  LCopy.FMain := NyxPascalUnit(LInput.MainUnit.Name);
+  LCopy.FLimits := LInput.Limits;
   LCopy.FLimits.Validate;
-  LCount := ASources.Count;
+  LCount := LInput.Count;
 
   if (Ord(LCopy.FKind) < Ord(Low(TNyxPascalSourceSnapshotKind))) or
     (Ord(LCopy.FKind) > Ord(High(TNyxPascalSourceSnapshotKind))) or
@@ -266,10 +303,11 @@ begin
     raise ENyxPascalProject.Create('Inspection has an invalid origin or file count');
   end;
   SetLength(LCopy.FFiles, LCount);
+  SetLength(LCopy.FInputs, LCount);
   LAcceptedBytes := 0;
   for LIndex := 0 to High(LCopy.FFiles) do
   begin
-    LCopy.FFiles[LIndex].FileReference := ASources.FileReference(LIndex);
+    LCopy.FFiles[LIndex].FileReference := LInput.FileReference(LIndex);
     LCopy.FFiles[LIndex].FileReference.Validate;
 
     if (LIndex = 0) <> (LCopy.FFiles[LIndex].FileReference.Role = npsMain) then
@@ -287,8 +325,8 @@ begin
         raise ENyxPascalProject.Create('Inspected filenames have ambiguous ownership');
       end;
     end;
-    LCopy.FFiles[LIndex].Buffer := ASources.Text(LCopy.FFiles[LIndex].FileReference);
-    LCopy.FFiles[LIndex].Accepted := ASources.AcceptedText(LCopy.FFiles[LIndex].FileReference);
+    LCopy.FFiles[LIndex].Buffer := LInput.Text(LCopy.FFiles[LIndex].FileReference);
+    LCopy.FFiles[LIndex].Accepted := LInput.AcceptedText(LCopy.FFiles[LIndex].FileReference);
 
     if (LCopy.FKind = pssAccepted) and
       (LCopy.FFiles[LIndex].Buffer <> LCopy.FFiles[LIndex].Accepted) then
@@ -303,7 +341,26 @@ begin
     begin
       raise ENyxPascalProject.Create('Inspected source pairs exceed the project byte budget');
     end;
+
+    if LOwnedSource <> nil then
+      LCopy.FInputs[LIndex] := LOwnedSource.FInputs[LIndex]
+    else
+      LCopy.FInputs[LIndex] := NewNyxPascalLexicalInput(LCopy.FFiles[LIndex].Buffer);
   end;
+  Result := LOwner;
+end;
+
+function NyxPascalSourcesLexicalInput(const ASources: INyxPascalSourceSnapshot;
+  const AFile: TNyxPascalSourceRef): INyxPascalLexicalInput;
+var
+  LSource: TSourceSnapshot;
+begin
+  Result := nil;
+
+  LSource := OwnedSourceSnapshot(ASources);
+
+  if LSource = nil then Exit;
+  Result := LSource.FInputs[LSource.Find(AFile)];
 end;
 
 end.

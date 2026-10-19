@@ -192,6 +192,15 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
   const AWorld: INyxPascalSemanticWorld; const ATranslation: TNyxPascalTranslationOptions;
   const ASyntax: TNyxPascalSyntaxOptions; const AOptions: TNyxPascalConditionalOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSemanticTranslation;
+{ All current conditional queries run against the current world. The previous
+  source donates only completed physical rows for identical immutable input;
+  every directive/callback, prefix, binding and answer is reconstructed. }
+function ReviseNyxPascalSemanticTranslation(const APrevious: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog; const ARoot: TNyxPascalPhysicalFile;
+  const AContext: INyxPascalCompilerContext; const AWorld: INyxPascalSemanticWorld;
+  const ATranslation: TNyxPascalTranslationOptions; const ASyntax: TNyxPascalSyntaxOptions;
+  const AOptions: TNyxPascalConditionalOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSemanticTranslation;
 
 { Prove full current inputs, then reevaluate every retained semantic query in
   original order against a fresh supplied world, sharing only frozen prefix
@@ -1339,7 +1348,8 @@ begin
   raise ENyxPascalTranslationLimit.Create('This source authority requires its frozen pre-directive prefix');
 end;
 
-function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
+function ConstructSemanticTranslation(const APrevious: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AWorld: INyxPascalSemanticWorld; const ATranslation: TNyxPascalTranslationOptions;
   const ASyntax: TNyxPascalSyntaxOptions; const AOptions: TNyxPascalConditionalOptions;
@@ -1375,8 +1385,12 @@ begin
   LReader.Cancellation := LBudget;
   try
     try
-      LData.Snapshot := NewNyxPascalTranslation(AFiles, ARoot, AContext,
-        ATranslation, LBudget, LAuthority);
+      if APrevious = nil then
+        LData.Snapshot := NewNyxPascalTranslation(AFiles, ARoot, AContext,
+          ATranslation, LBudget, LAuthority)
+      else
+        LData.Snapshot := ReviseNyxPascalTranslation(APrevious, AFiles, ARoot, AContext,
+          ATranslation, LBudget, LAuthority);
     except
       on LLimit: ENyxPascalAnalysisWorkLimit do
       begin
@@ -1398,6 +1412,27 @@ begin
   finally
     LBudget.Retire;
   end;
+end;
+
+function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
+  const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
+  const AWorld: INyxPascalSemanticWorld; const ATranslation: TNyxPascalTranslationOptions;
+  const ASyntax: TNyxPascalSyntaxOptions; const AOptions: TNyxPascalConditionalOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalSemanticTranslation;
+begin
+  Result := ConstructSemanticTranslation(nil, AFiles, ARoot, AContext, AWorld,
+    ATranslation, ASyntax, AOptions, ACancellation);
+end;
+
+function ReviseNyxPascalSemanticTranslation(const APrevious: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog; const ARoot: TNyxPascalPhysicalFile;
+  const AContext: INyxPascalCompilerContext; const AWorld: INyxPascalSemanticWorld;
+  const ATranslation: TNyxPascalTranslationOptions; const ASyntax: TNyxPascalSyntaxOptions;
+  const AOptions: TNyxPascalConditionalOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalSemanticTranslation;
+begin
+  Result := ConstructSemanticTranslation(APrevious, AFiles, ARoot, AContext, AWorld,
+    ATranslation, ASyntax, AOptions, ACancellation);
 end;
 
 function RebindNyxPascalSemanticTranslation(const APrevious: INyxPascalSemanticTranslation;

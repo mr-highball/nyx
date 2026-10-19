@@ -33,7 +33,78 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Immutable input preparation — 2026-10-19
+## Current integration: Contextual physical token reuse — 2026-10-19
+
+The preceding checkpoint made authoritative source/qualification/remote progress
+in 2c2cbab through immutable catalog preparation. This continuation carries
+immutable text ownership through project buffers, captured source snapshots and
+the project-to-analysis file bridge. Unchanged physical files can donate completed
+contextual lexical rows during fresh current translation. A changed text owner
+scans normally. Exact positions, region, actual nesting and fixed scanner policies
+gate each row; diagnosed rows scan again. Every current observer, directive,
+include, macro, settings effect and conditional/semantic query still executes.
+Previous compiler/world/answer state is never substituted for current evaluation.
+
+The focused native consumer passes 985 checks with clean heap. It compares full
+current tokens, diagnostics, occurrences, compiler/settings histories and syntax
+metadata against independent cold construction. It covers changed child includes
+that alter parent comment parsing, changed macros and imported semantic worlds,
+revocable captures, alternate providers, atomic aliased source capture, Unicode/
+CRLF, cancellation and callback failure including EOF. Twenty-five physical rows
+replay with zero scans; the exhaustive physical allowance first fits at 26. The
+current semantic allowance first fits at 423, with every smaller allowance
+refusing atomically. Ordinary edited-project completion scans 46 rows, reuses five
+unchanged include rows and reads five candidates. Sixty-four concurrent contextual
+replays join. These are focused observations, not an editor latency claim or
+complete incremental-translation qualification.
+
+The eight production/fixture inputs remain frozen throughout wider validation.
+All 115 main compiler logs succeed with zero owned warnings and 287 upstream;
+the unchanged independent diagnostic fixture retains its three deliberate visible
+markers separately. All 62 native run logs have clean heaps. Fifty-two browser
+consumers compile only, including Studio and its worker; native Studio/backend
+compile as applicable. The maintained provider, parser/filter history, projection
+revision and ordered semantic replay checks retain their exact results, work
+thresholds, cancellation and joined concurrency observations.
+
+The unchanged original RTL fixture passes 56 with its original 2M view/4M
+aggregate/64-round limits. Actual System resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one, both without a pending query. Indexed Free and
+FreeInstance retain exact original include navigation and detached insertion.
+Initial five queries, one Word job, symbol three/eight and six/eight ordered
+Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact. The corpus
+passes 571 checks over 504 source files and 2,401,758 lossless tokens.
+
+709 maintained sources/701 unrelated, 97 RTL/24 compiler inputs, 156 original unit
+packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files remain exact. All readers
+are terminal/joined. Earlier controlled catalog-before allocation evidence is
+retained as historical in the preceding packet; it is not a new measurement of
+this feature. The current catalog consumer still retains its exact-owner/zero
+retained-delta result.
+
+Retain preparatory compiler failures for missing test imports and the project
+bridge's missing SysUtils import. Retain the initial parent-diagnostic fixture
+failure: a closing brace is a valid symbol, so the final fixture uses an actual
+unterminated quote under the old nesting policy. No original fixture or quota is
+changed. Contextual rows add bounded boundary metadata; ordinary fixed scans do
+not. Every current source-token pass still runs. Full changed-text incrementality,
+canonical language/type meaning, editor/input/navigation quality, both-target
+execution/parity, adoption and delivery remain open. No criterion/task/credit/DONE
+or goal completion is claimed. The historical preservation gate remains false.
+LAN stays offline; native Nyx tools are absent. No host/config retry, SDK capture,
+protected mutation, cleanup/restart, new tool/schema/rollout or sub-agents.
+Ignored .local/contextual-tokens-paths-private.json owns the qualification packet
+and return path. Preserve unrelated planning work.
+Stop contextual/fixture/compiler/capture variants after this qualification.
+Return to remaining dependency-aware source preparation and canonical language/
+type meaning through existing owners, preserving current ordered evaluation,
+source identity, work limits, cancellation and atomic refusal. Full editor
+integration/input/quality remains required; this checkpoint installs no default
+engine or observing release.
+
+## Previous integration: Immutable input preparation — 2026-10-19
 
 The preceding turn made authoritative source/qualification/remote progress in
 cb43b58 through earlier genuine parser/filter histories. This continuation

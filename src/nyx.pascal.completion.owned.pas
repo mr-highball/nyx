@@ -43,6 +43,7 @@ type
     FBytes: Integer;
     FSemanticReplay: Boolean;
     FSyntaxRevision: Boolean;
+    FLexicalReuse: Boolean;
   public
     { Defaults enable ordered semantic revalidation and retain at most 16 modules,
       one million tokens and 64 MiB of catalog input, including retained prefixes.
@@ -57,12 +58,16 @@ type
     { Rebuild current projection origins, then reuse only proved lexical/parser
       prefixes after edits. False retains ordinary cold projection construction. }
     function WithSyntaxRevision(AValue: Boolean): TNyxPascalSourceReuseOptions;
+    { Donate previous physical rows during fresh translation of current inputs.
+      Every current directive/conditional callback still runs. }
+    function WithLexicalReuse(AValue: Boolean): TNyxPascalSourceReuseOptions;
     procedure Validate;
     property MaximumModules: Integer read FModules;
     property MaximumTokens: Integer read FTokens;
     property MaximumCatalogBytes: Integer read FBytes;
     property SemanticReplay: Boolean read FSemanticReplay;
     property SyntaxRevision: Boolean read FSyntaxRevision;
+    property LexicalReuse: Boolean read FLexicalReuse;
   end;
   { Independent copied analysis budgets. Per-module translation/syntax and
     semantic query limits retain their existing contracts; AggregateTokens caps
@@ -197,6 +202,15 @@ type
     function RevisionRetainedTokens: Integer;
     function SharedSyntaxModules: Integer;
   end;
+  { Physical work summed over completed current source constructions, including
+    dependency retries. Semantic/source rebinds perform no physical scanning.
+    These scalar receipts retain no source/world and confer no reuse authority. }
+  INyxPascalCompletionLexicalWork = interface(IInterface)
+    ['{288024D5-B484-4CC4-BD6E-5EA44895661A}']
+    function ScannedLexicalTokens: Integer;
+    function ReusedLexicalTokens: Integer;
+    function LexicalCandidateReads: Integer;
+  end;
 
 { Capture explicit SDK files/roots and compiler facts once. Requests overlay all
   exact project buffers, preserving accepted membership and include ownership.
@@ -272,7 +286,8 @@ type
   TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult,
     INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis,
     INyxPascalCompletionByteOrigins, INyxPascalCompletionReuse,
-    INyxPascalCompletionRevalidation, INyxPascalCompletionRevision)
+    INyxPascalCompletionRevalidation, INyxPascalCompletionRevision,
+    INyxPascalCompletionLexicalWork)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
@@ -290,6 +305,7 @@ type
     Revised: Integer;
     RevisionTokens: Integer;
     SharedSyntax: Integer;
+    ScannedLexical, ReusedLexical, LexicalReads: Integer;
     GapValue: TNyxOwnedPascalCompletionGap;
     IssueValue: TNyxPascalBindingIssue;
     RelatedValue: TNyxText;
@@ -324,6 +340,9 @@ type
     function RevisedModules: Integer;
     function RevisionRetainedTokens: Integer;
     function SharedSyntaxModules: Integer;
+    function ScannedLexicalTokens: Integer;
+    function ReusedLexicalTokens: Integer;
+    function LexicalCandidateReads: Integer;
   end;
   { Frozen configuration plus a bounded immutable-source directory. Every call
     owns its own world/counters. The native mutex guards only fixed slot leases
@@ -394,6 +413,7 @@ type
     FRevised: Integer;
     FRevisionTokens: Integer;
     FSharedSyntax: Integer;
+    FScannedLexical, FReusedLexical, FLexicalReads: Integer;
     FReceiverReady: Boolean;
     FReceiverExpressionStart: Integer;
     FReceiverPrefix: TNyxText;
@@ -429,6 +449,7 @@ begin
   Result.FBytes := 64 * 1024 * 1024;
   Result.FSemanticReplay := True;
   Result.FSyntaxRevision := True;
+  Result.FLexicalReuse := True;
 end;
 
 procedure TNyxPascalSourceReuseOptions.Validate;
@@ -474,6 +495,13 @@ function TNyxPascalSourceReuseOptions.WithSyntaxRevision(AValue: Boolean): TNyxP
 begin
   Result := Self;
   Result.FSyntaxRevision := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalSourceReuseOptions.WithLexicalReuse(AValue: Boolean): TNyxPascalSourceReuseOptions;
+begin
+  Result := Self;
+  Result.FLexicalReuse := AValue;
   Result.Validate;
 end;
 
@@ -718,6 +746,12 @@ function TOwnedResult.RevisionRetainedTokens: Integer;
 begin Result := RevisionTokens; end;
 function TOwnedResult.SharedSyntaxModules: Integer;
 begin Result := SharedSyntax; end;
+function TOwnedResult.ScannedLexicalTokens: Integer;
+begin Result := ScannedLexical; end;
+function TOwnedResult.ReusedLexicalTokens: Integer;
+begin Result := ReusedLexical; end;
+function TOwnedResult.LexicalCandidateReads: Integer;
+begin Result := LexicalReads; end;
 
 function TModuleMemoEntry.View: INyxPascalTranslatedSyntax;
 begin
@@ -855,7 +889,7 @@ begin
       not SameTranslationOptions(LEntries[LAt].Translation, ATranslation) or
       not LView.Source.InitialContext.SameFacts(AContext) then Continue;
 
-    if Options.SourceReuse.SyntaxRevision then APrevious := LView;
+    if Options.SourceReuse.SyntaxRevision or Options.SourceReuse.LexicalReuse then APrevious := LView;
     { Examine the newest matching key only. A used-file mismatch returns to the
       cold path rather than repeatedly proving older source generations. }
     LQueries := LEntries[LAt].Semantic;
@@ -1006,6 +1040,7 @@ var
   LRetainedReplay: INyxPascalSemanticReplay;
   LPreviousView: INyxPascalTranslatedSyntax;
   LRevision: INyxPascalProjectionRevisionWork;
+  LLexicalWork: INyxPascalTranslationLexicalWork;
   LRevisionWork: Integer;
   LAt: Integer;
   LDepth: Integer;
@@ -1106,11 +1141,22 @@ begin
       if LAttemptWork >= LConditions.MaximumTokens then
         raise EOwnedGap.CreateGap(pcgBudget, 'Source input proof consumed the remaining module allowance');
       LConditions := LConditions.UpToTokens(LConditions.MaximumTokens - LAttemptWork);
-      LConstruction := NewNyxPascalSemanticTranslation(FFiles, AFile, LFacts,
-        FWorld, LOptions, FProvider.Options.Syntax, LConditions, FCancel);
+      if (LPreviousView <> nil) and FProvider.Options.SourceReuse.LexicalReuse then
+        LConstruction := ReviseNyxPascalSemanticTranslation(LPreviousView.Source,
+          FFiles, AFile, LFacts, FWorld, LOptions, FProvider.Options.Syntax, LConditions, FCancel)
+      else
+        LConstruction := NewNyxPascalSemanticTranslation(FFiles, AFile, LFacts,
+          FWorld, LOptions, FProvider.Options.Syntax, LConditions, FCancel);
       Inc(FBuilt);
       Inc(FTokens, LConstruction.WorkTokens);
       LSource := LConstruction.Source;
+
+      if Supports(LSource, INyxPascalTranslationLexicalWork, LLexicalWork) then
+      begin
+        Inc(FScannedLexical, LLexicalWork.ScannedLexicalTokens);
+        Inc(FReusedLexical, LLexicalWork.ReusedLexicalTokens);
+        Inc(FLexicalReads, LLexicalWork.LexicalCandidateReads);
+      end;
 
       if not LConstruction.Pending or (LConstruction.BindingIssue <> pbiMissingModule) or
         (LConstruction.RelatedName = '') then
@@ -1127,7 +1173,7 @@ begin
     SetLength(FBuilding, LDepth);
   end;
 
-  if (LView = nil) and (LPreviousView <> nil) then
+  if (LView = nil) and (LPreviousView <> nil) and FProvider.Options.SourceReuse.SyntaxRevision then
   begin
     LRetainAllowance := LConditions.MaximumTokens - LConstruction.WorkTokens;
     LRemaining := FProvider.Options.AggregateTokens - FTokens;
@@ -1236,8 +1282,7 @@ begin
   begin
     Check;
     LSource := FRequest.Sources.FileReference(LAt);
-    FFiles := FFiles.WithFile(NyxPascalProjectPhysicalFile(FRequest.Sources, LSource),
-      FRequest.Sources.Text(LSource));
+    FFiles := WithNyxPascalProjectFile(FFiles, FRequest.Sources, LSource);
   end;
   FWorld := NewNyxPascalSemanticWorld(FProvider.Options.Binding);
   for LAt := 0 to High(FProvider.Roots) do
@@ -1412,6 +1457,9 @@ begin
   AResult.Revised := FRevised;
   AResult.RevisionTokens := FRevisionTokens;
   AResult.SharedSyntax := FSharedSyntax;
+  AResult.ScannedLexical := FScannedLexical;
+  AResult.ReusedLexical := FReusedLexical;
+  AResult.LexicalReads := FLexicalReads;
 
   if FWorld = nil then
   begin

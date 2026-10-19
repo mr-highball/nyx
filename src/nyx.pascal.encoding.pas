@@ -141,6 +141,14 @@ function DecodeNyxPascalSource(const ABytes: INyxPascalSourceBytes;
   interpretation. The host owns its explicit encoding declaration. }
 function CaptureNyxPascalSourceView(const AView: INyxPascalSourceView;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSourceView;
+{ Exact immutable text owner prepared before an owned decoded view publishes.
+  Alternate views return nil; capture them explicitly first. This carries no
+  original-byte/codec/compiler authority into lexical token donation. }
+function NyxPascalSourceLexicalInput(const AView: INyxPascalSourceView): INyxPascalLexicalInput;
+{ Canonical authoring UTF-8 from one captured immutable text owner. Encoding and
+  decoding validate that owner's actual text; the resulting view shares only
+  its lexical text identity, never a caller-supplied byte/provenance claim. }
+function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalSourceView;
 
 implementation
 
@@ -181,6 +189,7 @@ type
     EncodingName: TNyxPascalEncodingRef;
     EncodingKind: TNyxPascalSourceEncodingKind;
     SourceText: TNyxText;
+    LexicalInput: INyxPascalLexicalInput;
     ScalarCount: Integer;
     Stride: Integer;
     Widths: TNyxBytes;
@@ -649,6 +658,7 @@ end;
 
 procedure TSourceView.Finish;
 begin
+  LexicalInput := NewNyxPascalLexicalInput(SourceText);
 
   if Stride > 0 then
   begin
@@ -907,6 +917,34 @@ begin
   { Native managed-result storage can alias the caller's assignment target.
     Publish only after construction; caught failures must expose no partial view. }
   Result := LOwner;
+end;
+
+function NyxPascalSourceLexicalInput(const AView: INyxPascalSourceView): INyxPascalLexicalInput;
+var
+  LView: TSourceView;
+begin
+  Result := nil;
+
+  if AView is TSourceView then
+  begin
+    LView := AView as TSourceView;
+
+    if (LView as INyxPascalSourceView) = AView then Result := LView.LexicalInput;
+  end;
+end;
+
+function NyxPascalSourceViewFromLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalSourceView;
+var
+  LInput: INyxPascalLexicalInput;
+  LView: INyxPascalSourceView;
+begin
+  LInput := CaptureNyxPascalLexicalInput(AInput);
+  LView := DecodeNyxPascalSource(NewNyxPascalSourceBytes(NyxEncodeUTF8(LInput.Text),
+    pboAuthoringUTF8), NyxPascalUTF8Codec);
+  { This fresh view has not escaped. Its bytes/text were built solely from this
+    exact owned input; there is no independent caller text to compare or trust. }
+  (LView as TSourceView).LexicalInput := LInput;
+  Result := LView;
 end;
 
 function CaptureNyxPascalSourceView(const AView: INyxPascalSourceView;

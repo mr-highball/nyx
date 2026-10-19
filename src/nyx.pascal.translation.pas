@@ -380,6 +380,15 @@ type
       const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
       const APrefix: INyxPascalTranslation): TNyxPascalKnowledge;
   end;
+  { Physical construction only. Every replayed row still runs current source
+    callbacks and source-token admission; no old directive/conditional result
+    is reused. Rebound/frozen constructors perform no physical scanning. }
+  INyxPascalTranslationLexicalWork = interface(IInterface)
+    ['{A642996B-1FA2-457E-87C5-41D58FB1BD3D}']
+    function ScannedLexicalTokens: Integer;
+    function ReusedLexicalTokens: Integer;
+    function LexicalCandidateReads: Integer;
+  end;
   { Optional synchronous aggregate admission beside the unchanged full-view cap.
     Called once before storing each newly translated token, including trivia and
     EOF. It grants no access to mutable source and is released after construction. }
@@ -445,6 +454,15 @@ function NyxPascalOriginalSpan(const ATranslation: INyxPascalTranslation;
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AOptions: TNyxPascalTranslationOptions;
+  const ACancellation: INyxCancellationScope = nil;
+  const AConditions: INyxPascalConditionalFacts = nil): INyxPascalTranslation;
+{ Rebuild all current compiler/source/conditional state, donating only completed
+  physical rows from the previous owned source's exact immutable input owners.
+  Current callbacks execute in full order. Foreign/prefix donors are ignored;
+  cancellation/budget refusal publishes no current candidate or cold retry. }
+function ReviseNyxPascalTranslation(const APrevious: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog; const ARoot: TNyxPascalPhysicalFile;
+  const AContext: INyxPascalCompilerContext; const AOptions: TNyxPascalTranslationOptions;
   const ACancellation: INyxCancellationScope = nil;
   const AConditions: INyxPascalConditionalFacts = nil): INyxPascalTranslation;
 
@@ -772,10 +790,15 @@ type
     INyxPascalTranslationSettings, INyxPascalUnresolvedConditions,
     INyxPascalRegisterDirectives, INyxPascalWarningDirectives,
     INyxPascalCodeAlignmentDirectives, INyxPascalOptimizationDirectives,
-    INyxPascalEmissionDirectives, ITranslationLineage, IPreparedTranslation)
+    INyxPascalEmissionDirectives, ITranslationLineage, IPreparedTranslation,
+    INyxPascalTranslationLexicalWork)
   private
     FLineage: IInterface;
     FFiles: INyxPascalFileCatalog;
+    { Construction-only borrow, retained by the public revision factory until
+      this builder retires. Published values retain no previous source owner. }
+    FPrevious: TTranslation;
+    FScannedLexical, FReusedLexical, FLexicalReads: Integer;
     FInitial: INyxPascalCompilerContext;
     FContext: INyxPascalCompilerContext;
     FEmissionDirectives: array of TNyxPascalEmissionDirective;
@@ -868,7 +891,7 @@ type
       const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
       const AOptions: TNyxPascalTranslationOptions;
       const ACancellation: INyxCancellationScope;
-      const AConditions: INyxPascalConditionalFacts);
+      const AConditions: INyxPascalConditionalFacts; APrevious: TTranslation = nil);
     { Freeze current admitted data, including the directive token used only as
       the subsequent prefix's exclusive boundary. No live callback is copied. }
     constructor CreatePrefix(ASource: TTranslation);
@@ -879,6 +902,9 @@ type
     destructor Destroy; override;
     function Files: INyxPascalFileCatalog;
     function InitialContext: INyxPascalCompilerContext;
+    function ScannedLexicalTokens: Integer;
+    function ReusedLexicalTokens: Integer;
+    function LexicalCandidateReads: Integer;
     function Resolved: Boolean;
     function Count: Integer;
     function Token(AIndex: Integer): TNyxPascalTranslatedToken;
@@ -1304,7 +1330,7 @@ constructor TTranslation.Create(const AFiles: INyxPascalFileCatalog;
   const ARoot: TNyxPascalPhysicalFile; const AContext: INyxPascalCompilerContext;
   const AOptions: TNyxPascalTranslationOptions;
   const ACancellation: INyxCancellationScope;
-  const AConditions: INyxPascalConditionalFacts);
+  const AConditions: INyxPascalConditionalFacts; APrevious: TTranslation);
 var
   LRoot: Integer;
   LAt: Integer;
@@ -1314,6 +1340,7 @@ begin
   FLineage := TInterfacedObject.Create;
   AOptions.Validate;
   FOptions := AOptions;
+  FPrevious := APrevious;
   FCancellation := ACancellation;
   FConditions := AConditions;
   Supports(AConditions, INyxPascalPrefixConditionalFacts, FPrefixConditions);
@@ -1383,6 +1410,7 @@ begin
     FWriting := nil;
     FStateBlocks := nil;
     FTokenSummary := nil;
+    FPrevious := nil;
   end;
   FPublished := True;
 end;
@@ -2122,6 +2150,10 @@ var
   LView: INyxPascalSourceView;
   LReader: TTranslationReader;
   LObserver: INyxPascalLexicalObserver;
+  LPrevious: INyxPascalLexicalSnapshot;
+  LInput: INyxPascalLexicalInput;
+  LPreviousFile: Integer;
+  LLexicalWork: INyxPascalContextualLexicalWork;
 begin
   CheckCancellation;
 
@@ -2196,8 +2228,24 @@ begin
     LReader.Owner := Self;
     LReader.Occurrence := LOccurrence;
     LReader.Included := AParent >= 0;
-    LLexical := NewNyxPascalContextualLexicalSnapshot(LView.Text,
-      FOptions.LexicalOptions.NestedComments(FNested), LObserver, FCancellation);
+    LInput := NyxPascalSourceLexicalInput(LView);
+    LPrevious := nil;
+
+    if FPhysical[AFile] <> nil then LPrevious := FPhysical[AFile].Lexical
+    else if FPrevious <> nil then
+    begin
+      NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+      LPreviousFile := FPrevious.FFiles.Find(FFiles.FileAt(AFile));
+
+      if (LPreviousFile >= 0) and (FPrevious.FPhysical[LPreviousFile] <> nil) then
+        LPrevious := FPrevious.FPhysical[LPreviousFile].Lexical;
+    end;
+    LLexical := NewNyxPascalContextualLexicalSnapshot(LInput,
+      FOptions.LexicalOptions.NestedComments(FNested), LObserver, FCancellation, LPrevious);
+    Supports(LLexical, INyxPascalContextualLexicalWork, LLexicalWork);
+    Inc(FScannedLexical, LLexicalWork.ScannedTokens);
+    Inc(FReusedLexical, LLexicalWork.ReusedTokens);
+    Inc(FLexicalReads, LLexicalWork.CandidateReads);
     FLexical[LOccurrence] := LLexical;
     for LAt := 0 to LLexical.DiagnosticCount - 1 do
     begin
@@ -4024,6 +4072,13 @@ begin
   Result := FInitial;
 end;
 
+function TTranslation.ScannedLexicalTokens: Integer;
+begin Result := FScannedLexical; end;
+function TTranslation.ReusedLexicalTokens: Integer;
+begin Result := FReusedLexical; end;
+function TTranslation.LexicalCandidateReads: Integer;
+begin Result := FLexicalReads; end;
+
 function TTranslation.Resolved: Boolean;
 begin
   Result := FResolved;
@@ -5307,6 +5362,29 @@ function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
   const AConditions: INyxPascalConditionalFacts): INyxPascalTranslation;
 begin
   Result := TTranslation.Create(AFiles, ARoot, AContext, AOptions, ACancellation, AConditions);
+end;
+
+function ReviseNyxPascalTranslation(const APrevious: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog; const ARoot: TNyxPascalPhysicalFile;
+  const AContext: INyxPascalCompilerContext; const AOptions: TNyxPascalTranslationOptions;
+  const ACancellation: INyxCancellationScope;
+  const AConditions: INyxPascalConditionalFacts): INyxPascalTranslation;
+var
+  LPrevious: INyxPascalTranslation;
+  LDonor: TTranslation;
+begin
+  LPrevious := APrevious;
+  LDonor := nil;
+
+  if LPrevious is TTranslation then
+  begin
+    LDonor := LPrevious as TTranslation;
+
+    if not LDonor.FPublished or LDonor.FIsFrozen or
+      ((LDonor as INyxPascalTranslation) <> LPrevious) then LDonor := nil;
+  end;
+  Result := TTranslation.Create(AFiles, ARoot, AContext, AOptions,
+    ACancellation, AConditions, LDonor);
 end;
 
 end.

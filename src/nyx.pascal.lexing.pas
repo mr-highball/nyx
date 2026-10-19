@@ -243,6 +243,22 @@ type
     function DiagnosticCount: Integer;
     function Diagnostic(AIndex: Integer): TNyxPascalLexicalDiagnostic;
   end;
+  { Immutable text value with a sealed in-process owner. Equal text from another
+    owner grants no token reuse. This owns no file/codec/compiler facts, observer
+    or execution scope; alternate implementations are copied before scanning. }
+  INyxPascalLexicalInput = interface(IInterface)
+    ['{75E546E7-3056-4149-B2C9-7E434A4A91AA}']
+    function Text: TNyxText;
+  end;
+  { Detached physical construction work. Reused rows still invoke every current
+    observer callback. Reads include rejected candidates; these counters confer
+    neither input authority nor old conditional/compiler meaning. }
+  INyxPascalContextualLexicalWork = interface(IInterface)
+    ['{9AB5903E-04A9-497B-A093-6CF161CD83C4}']
+    function ScannedTokens: Integer;
+    function ReusedTokens: Integer;
+    function CandidateReads: Integer;
+  end;
   { Detached tokens already scanned at a construction boundary. The exact source
     is retained, but its unseen suffix grants no lexical authority. There is no
     manufactured EOF and this deliberately is not a complete lexical snapshot.
@@ -364,7 +380,21 @@ function NewNyxPascalLexicalSnapshot(const ASource: TNyxText;
   The detached result retains neither visitor nor cancellation scope. }
 function NewNyxPascalContextualLexicalSnapshot(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
-  const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalLexicalSnapshot; overload;
+{ Wrap one copied immutable text value. Malformed Unicode and lexical quotas
+  remain scanner-owned; this value alone grants no classified token authority. }
+function NewNyxPascalLexicalInput(const AText: TNyxText): INyxPascalLexicalInput;
+{ Freeze an alternate text provider once; an owned immutable input keeps its
+  exact identity. No token or compiler authority is inferred by this capture. }
+function CaptureNyxPascalLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalLexicalInput;
+{ An exact owned input can donate completed physical rows under matching fixed
+  policies and current per-row nesting/region/position. Diagnostics are rescanned.
+  Every current callback runs; mismatching rows use ordinary scanning, and no old
+  context/answer/observer is retained. Foreign/other input owners donate nothing. }
+function NewNyxPascalContextualLexicalSnapshot(const AInput: INyxPascalLexicalInput;
+  const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
+  const ACancellation: INyxCancellationScope = nil;
+  const APrevious: INyxPascalLexicalSnapshot = nil): INyxPascalLexicalSnapshot; overload;
 
 { Fixed-policy fragment scanner for immutable append continuations. Coordinates
   remain local; the caller supplies the exact entry region and whether a BOM is
@@ -428,6 +458,21 @@ const
     '*)');
 
 type
+  { A read-only text owner, deliberately independent of any byte/source view.
+    Copy-on-write target strings keep later caller edits outside this value. }
+  TLexicalInput = class(TInterfacedObject, INyxPascalLexicalInput)
+  public
+    Value: TNyxText;
+    function Text: TNyxText;
+  end;
+  { Physical cursor after one token plus its entry comment policy. A diagnostic
+    row is never replayed. Values contain no interface, source or reader borrow;
+    token region/starting coordinates remain in the ordinary token itself. }
+  TContextualTokenState = record
+    Bytes, Line, Column: Integer;
+    Nested: Boolean;
+    HasDiagnostics: Boolean;
+  end;
   { Active nested block-comment delimiter, never a compiler conditional scope. }
   TCommentDelimiter = (pcdBrace, pcdParenthesis);
   { In-unit ownership proof. A prepared value is read from the same immutable
@@ -440,6 +485,7 @@ type
     blocks seal before sharing. Value rows retain no interfaces or reader. }
   ILexicalTokenBlock = interface(IInterface)
     function Token(AIndex: Integer): TNyxPascalToken;
+    function State(AIndex: Integer): TContextualTokenState;
   end;
   { Independent directories may share completed blocks; their interface slots
     are copied explicitly rather than sharing a mutable dynamic-array vector. }
@@ -449,14 +495,29 @@ type
   TLexicalTokenBlock = class(TInterfacedObject, ILexicalTokenBlock)
   public
     Rows: array of TNyxPascalToken;
+    { Only complete contextual readers fill these bounded parallel value rows.
+      Frozen partial tails need only tokens and have no replay authority. }
+    States: array of TContextualTokenState;
     function Token(AIndex: Integer): TNyxPascalToken;
+    function State(AIndex: Integer): TContextualTokenState;
   end;
   { Owns exact text/vectors. Cursor and observer/cancellation borrows exist only
     during Build; publication retains initial options and contextually scanned
     tokens, releasing both external interfaces. No partial snapshot escapes. }
-  TLexicalSnapshot = class(TInterfacedObject, INyxPascalLexicalSnapshot, IPreparedTokenOwner)
+  TLexicalSnapshot = class(TInterfacedObject, INyxPascalLexicalSnapshot, IPreparedTokenOwner,
+    INyxPascalContextualLexicalWork)
   private
     FSource: TNyxText;
+    FInput: INyxPascalLexicalInput;
+    { Borrowed only while the factory's previous-snapshot lease remains held.
+      Publication retires this pointer; no predecessor chain survives. }
+    FDonor: TLexicalSnapshot;
+    FDonorAt: Integer;
+    FPublished: Boolean;
+    FRegionControlled: Boolean;
+    FTokenNested: Boolean;
+    FTokenDiagnostics: Integer;
+    FScanned, FReused, FCandidateReads: Integer;
     FOptions: TNyxPascalLexicalOptions;
     { Actual token storage, not a freeze cache. Only the last unpublished page
       can be written; completed pages are immutable from their first sharing. }
@@ -497,13 +558,18 @@ type
     procedure StringToken(var AToken: TNyxPascalToken);
     procedure AssemblyToken(var AToken: TNyxPascalToken);
     procedure CommentToken(var AToken: TNyxPascalToken; ADelimiter: TCommentDelimiter);
+    function TryReuse(out AToken: TNyxPascalToken): Boolean;
     procedure Build;
   public
     constructor Create(const ASource: TNyxText; const AOptions: TNyxPascalLexicalOptions;
       const ACancellation: INyxCancellationScope;
       const AObserver: INyxPascalLexicalObserver = nil;
       ARegion: TNyxPascalLexicalRegion = plrPascal; ASourceStart: Boolean = True;
-      const AReceiver: INyxPascalLexicalFragmentReceiver = nil);
+      const AReceiver: INyxPascalLexicalFragmentReceiver = nil;
+      const AInput: INyxPascalLexicalInput = nil; ADonor: TLexicalSnapshot = nil);
+    function ScannedTokens: Integer;
+    function ReusedTokens: Integer;
+    function CandidateReads: Integer;
     function Source: TNyxText;
     function Options: TNyxPascalLexicalOptions;
     function Scalars: Integer;
@@ -811,10 +877,52 @@ begin
   Result.Validate;
 end;
 
+function TLexicalInput.Text: TNyxText;
+begin
+  Result := Value;
+end;
+
+function NewNyxPascalLexicalInput(const AText: TNyxText): INyxPascalLexicalInput;
+var
+  LInput: TLexicalInput;
+begin
+  LInput := TLexicalInput.Create;
+  Result := LInput;
+  LInput.Value := AText;
+end;
+
+function CaptureNyxPascalLexicalInput(const AInput: INyxPascalLexicalInput): INyxPascalLexicalInput;
+var
+  LInput: INyxPascalLexicalInput;
+begin
+  LInput := AInput;
+
+  if LInput = nil then raise ENyxPascalLexical.Create('Contextual scanning needs an explicit immutable input');
+
+  if LInput is TLexicalInput then
+  begin
+
+    if ((LInput as TLexicalInput) as INyxPascalLexicalInput) = LInput then Exit(LInput);
+  end;
+  Result := NewNyxPascalLexicalInput(LInput.Text);
+end;
+
+function SameContextualPolicy(const ALeft, ARight: TNyxPascalLexicalOptions): Boolean;
+begin
+  { Initial nesting can differ: each candidate checks its actual entry policy.
+    All fixed quotas and identifier classification remain exactly matched. }
+  Result := (ALeft.MaximumSourceBytes = ARight.MaximumSourceBytes) and
+    (ALeft.MaximumTokens = ARight.MaximumTokens) and
+    (ALeft.MaximumDiagnostics = ARight.MaximumDiagnostics) and
+    (ALeft.MaximumCommentDepth = ARight.MaximumCommentDepth) and
+    (ALeft.AllowUnicodeIdentifiers = ARight.AllowUnicodeIdentifiers);
+end;
+
 constructor TLexicalSnapshot.Create(const ASource: TNyxText;
   const AOptions: TNyxPascalLexicalOptions; const ACancellation: INyxCancellationScope;
   const AObserver: INyxPascalLexicalObserver; ARegion: TNyxPascalLexicalRegion;
-  ASourceStart: Boolean; const AReceiver: INyxPascalLexicalFragmentReceiver);
+  ASourceStart: Boolean; const AReceiver: INyxPascalLexicalFragmentReceiver;
+  const AInput: INyxPascalLexicalInput; ADonor: TLexicalSnapshot);
 var
   LObserver: INyxPascalLexicalConstructionObserver;
   LCapture: TLexicalPrefixCapture;
@@ -828,12 +936,14 @@ begin
     raise ENyxPascalLexical.Create('Direct lexical emission cannot borrow an observer');
   end;
   FReceiver := AReceiver;
+  FInput := AInput;
   FOptions := AOptions;
   FNested := AOptions.AllowNestedComments;
   FSourceStart := ASourceStart;
   SetRegion(ARegion);
   FObserver := AObserver;
   Supports(AObserver, INyxPascalLexicalRegionObserver, FRegionObserver);
+  FRegionControlled := FRegionObserver <> nil;
 
   if FRegionObserver <> nil then
   begin
@@ -841,6 +951,16 @@ begin
   end;
   FCancellation := ACancellation;
   CheckCancellation;
+
+  if ADonor <> nil then
+  begin
+    NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+
+    if ADonor.FPublished and (FInput <> nil) and (FInput = ADonor.FInput) and
+      SameContextualPolicy(FOptions, ADonor.FOptions) and
+      (FSourceStart = ADonor.FSourceStart) and
+      (FRegionControlled = ADonor.FRegionControlled) then FDonor := ADonor;
+  end;
   { Target storage length is a cheap lower bound for UTF-8 byte length. Exact
     byte accounting and Unicode validation occur during scalar consumption. }
 
@@ -874,7 +994,9 @@ begin
     FObserver := nil;
     FRegionObserver := nil;
     FReceiver := nil;
+    FDonor := nil;
   end;
+  FPublished := True;
 end;
 
 constructor TFrozenLexicalPrefix.Create(AReader: TLexicalSnapshot);
@@ -942,6 +1064,21 @@ begin
   end;
   Result := Rows[AIndex];
 end;
+
+function TLexicalTokenBlock.State(AIndex: Integer): TContextualTokenState;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(States)) then
+    raise ENyxPascalLexical.Create('A contextual row has no completed physical state');
+  Result := States[AIndex];
+end;
+
+function TLexicalSnapshot.ScannedTokens: Integer;
+begin Result := FScanned; end;
+function TLexicalSnapshot.ReusedTokens: Integer;
+begin Result := FReused; end;
+function TLexicalSnapshot.CandidateReads: Integer;
+begin Result := FCandidateReads; end;
 
 function TFrozenLexicalPrefix.TokenRows: Integer;
 begin
@@ -1219,6 +1356,8 @@ begin
         LAt := CLexicalPrefixBlockSize;
       end;
       SetLength(LBlock.Rows, LAt);
+
+      if FInput <> nil then SetLength(LBlock.States, LAt);
       LAt := FTokenCount div CLexicalPrefixBlockSize;
 
       if LAt = Length(FTokenBlocks) then
@@ -1237,7 +1376,19 @@ begin
       FTokenBlocks[LAt] := LLease;
       FWriting := LBlock;
     end;
-    FWriting.Rows[FTokenCount mod CLexicalPrefixBlockSize] := AToken;
+    LAt := FTokenCount mod CLexicalPrefixBlockSize;
+    FWriting.Rows[LAt] := AToken;
+
+    if FInput <> nil then
+    begin
+      { Final bounded row emission belongs to the scan/copy admission, not
+        another traversal. State precedes the current observer callback. }
+      FWriting.States[LAt].Bytes := FBytes;
+      FWriting.States[LAt].Line := FLine;
+      FWriting.States[LAt].Column := FColumn;
+      FWriting.States[LAt].Nested := FTokenNested;
+      FWriting.States[LAt].HasDiagnostics := FDiagnosticCount <> FTokenDiagnostics;
+    end;
     Inc(FTokenCount);
 
     if FTokenCount mod CLexicalPrefixBlockSize = 0 then
@@ -1561,6 +1712,52 @@ begin
   Issue(pliUnterminatedComment, AToken.FSpan.Start);
 end;
 
+function TLexicalSnapshot.TryReuse(out AToken: TNyxPascalToken): Boolean;
+var
+  LToken: TNyxPascalToken;
+  LState: TContextualTokenState;
+begin
+  Result := False;
+
+  if FDonor = nil then Exit;
+  while FDonorAt < FDonor.FTokenCount do
+  begin
+    CheckCancellation;
+    { One bounded row operation reads the old token/state and, when eligible,
+      emits that value in the new directory. Rejected probes are charged too. }
+    NyxPascalAdmitAnalysis(FCancellation, papLexicalRow);
+    Inc(FCandidateReads);
+    LToken := FDonor.Token(FDonorAt);
+
+    if LToken.FStorage > FStorage then Exit;
+
+    if LToken.FStorage < FStorage then
+    begin
+      Inc(FDonorAt);
+      Continue;
+    end;
+    LState := FDonor.FTokenBlocks[FDonorAt div CLexicalPrefixBlockSize]
+      .State(FDonorAt mod CLexicalPrefixBlockSize);
+    Inc(FDonorAt);
+
+    if LState.HasDiagnostics or (LState.Nested <> FNested) or
+      (LToken.Region <> FRegion) or (LToken.Span.Start <> FOffset) or
+      (LToken.Line <> FLine) or (LToken.Column <> FColumn) then Exit;
+
+    if LState.Bytes > FOptions.MaximumSourceBytes then
+      raise ENyxPascalLexicalLimit.Create('Pascal source exceeds its lexical byte budget');
+    AToken := LToken;
+    FStorage := LToken.FStorage + LToken.FStorageLength;
+    FOffset := LToken.Span.Finish;
+    FBytes := LState.Bytes;
+    FLine := LState.Line;
+    FColumn := LState.Column;
+    FPreviousCR := (FStorage > 1) and (FSource[FStorage - 1] = #13);
+    Inc(FReused);
+    Exit(True);
+  end;
+end;
+
 procedure TLexicalSnapshot.Build;
 var
   LToken: TNyxPascalToken;
@@ -1571,8 +1768,19 @@ var
 begin
   repeat
     CheckCancellation;
-    NyxPascalAdmitAnalysis(FCancellation, papLexicalToken);
     FTokenByteStart := FBytes;
+    FTokenNested := FNested;
+    FTokenDiagnostics := FDiagnosticCount;
+
+    if TryReuse(LToken) then
+    begin
+      Add(LToken);
+
+      if LToken.Kind = ptkEOF then Break;
+      Continue;
+    end;
+    NyxPascalAdmitAnalysis(FCancellation, papLexicalToken);
+    Inc(FScanned);
     LScalar := Current;
     LToken := Default(TNyxPascalToken);
     LToken.FSpan := NyxPascalSpan(FOffset, 0);
@@ -1868,7 +2076,41 @@ begin
   begin
     raise ENyxPascalLexical.Create('Contextual lexical construction needs an explicit observer');
   end;
-  Result := TLexicalSnapshot.Create(ASource, AOptions, ACancellation, AObserver);
+  Result := NewNyxPascalContextualLexicalSnapshot(NewNyxPascalLexicalInput(ASource),
+    AOptions, AObserver, ACancellation);
+end;
+
+function NewNyxPascalContextualLexicalSnapshot(const AInput: INyxPascalLexicalInput;
+  const AOptions: TNyxPascalLexicalOptions; const AObserver: INyxPascalLexicalObserver;
+  const ACancellation: INyxCancellationScope;
+  const APrevious: INyxPascalLexicalSnapshot): INyxPascalLexicalSnapshot;
+var
+  LInput: INyxPascalLexicalInput;
+  LPrevious: INyxPascalLexicalSnapshot;
+  LDonor: TLexicalSnapshot;
+begin
+  LPrevious := APrevious;
+  LInput := AInput;
+  AOptions.Validate;
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Contextual lexical construction cancelled');
+
+  if AObserver = nil then raise ENyxPascalLexical.Create('Contextual lexical construction needs an explicit observer');
+
+  if LInput = nil then raise ENyxPascalLexical.Create('Contextual scanning needs an explicit immutable input');
+
+  LInput := CaptureNyxPascalLexicalInput(LInput);
+  LDonor := nil;
+
+  if LPrevious is TLexicalSnapshot then
+  begin
+    LDonor := LPrevious as TLexicalSnapshot;
+
+    if (LDonor as INyxPascalLexicalSnapshot) <> LPrevious then LDonor := nil;
+  end;
+  Result := TLexicalSnapshot.Create(LInput.Text, AOptions, ACancellation, AObserver,
+    plrPascal, True, nil, LInput, LDonor);
 end;
 
 function NewNyxPascalLexicalFragment(const ASource: TNyxText;

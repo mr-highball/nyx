@@ -3774,6 +3774,44 @@ ordered conditional answers or semantic meaning. Work/translation quotas remain
 unchanged. WORK.md records native allocation evidence separately from browser
 compilation and the remaining incremental-analysis requirements.
 
+Physical contextual scans can also reuse rows from the exact immutable text
+owner. `INyxPascalLexicalInput` owns text only: it conveys no original-byte,
+encoding, compiler-state or semantic authority. Owned project snapshots retain
+one such owner per buffer; editing a buffer replaces only its owner. The project
+file bridge constructs a fresh authoring UTF-8 view from that captured text,
+preserving the owner without trusting independently supplied bytes or text.
+Alternate source snapshots still undergo complete bounded capture. Publication
+is atomic, including when the input and output interface variables alias.
+
+`ReviseNyxPascalTranslation` accepts a completed owned source as a physical-row
+donor. Each candidate must match its current storage/scalar position, line,
+column, region, actual nested-comment policy and fixed scanner options. A
+diagnosed row scans again. A divergent region or comment policy can scan normally
+until a later exact boundary permits reuse. A different text owner scans in full,
+even if its text happens to compare equal. Repeated includes can donate completed
+rows within the current translation under the same checks.
+
+Every accepted row still invokes the current observer. Includes, directives,
+macros, settings scopes, conditional activity and ordered semantic queries run
+again against the current state/world. `ReviseNyxPascalSemanticTranslation` shares
+that physical preparation without reusing an old answer. Current callbacks can
+freeze prefixes, cancel or fail at any row, including EOF; refusal publishes no
+partial result and does not retry without admission. Donor reads and newly
+produced/copied rows retain their existing work/source-token allowances.
+
+Provider defaults enable previous-source physical donation independently of
+syntax revision and ordered semantic replay. Set
+`TNyxPascalSourceReuseOptions.Defaults.WithLexicalReuse(False)` to disable that
+donation. The optional `INyxPascalContextualLexicalWork`,
+`INyxPascalTranslationLexicalWork` and `INyxPascalCompletionLexicalWork` expose
+scanned rows, reused rows and candidate reads at their respective boundaries.
+Completion totals include completed current constructions during dependency
+retries; source rebinds do no physical scanning. These counters confer no reuse
+authority. Contextual snapshots retain small per-row boundary metadata; ordinary
+fixed-policy scans do not allocate that metadata. This reduces repeated physical
+classification, not the required current-root traversal or full source-token
+admission, and is not a whole-editor performance claim.
+
 When a used root/include changes, translation and conditional evaluation still run
 on the current inputs. The provider can then revise the previous projection using
 the newly published translation. It rebuilds every physical origin and effective
