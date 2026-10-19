@@ -33,7 +33,107 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned postfix contracts — 2026-10-19
+## Current integration: Captured module evidence coherence — 2026-10-19
+
+The postfix checkpoint 66df314 is qualified and pushed. This solo continuation
+addresses a real global-context gap: matching compiler family/version did not
+prevent modules from supplying contradictory captured primitive measurements.
+The existing semantic-world owner now preflights shared qualified compiler-root
+size facts and exact structural keys before admitting/replacing a module. It
+does not compare ordinary named source measurements as root facts, merge packets,
+assume target widths, or treat missing evidence as complete target/SDK coherence.
+Different source modes/macros/settings and partial captures keep their own owners.
+
+The previous world remains usable on refusal. A new typed module-context error
+feeds the existing completion gap/related-module metadata instead of an internal
+failure or partial rows. Ordinary completion now passes its call cancellation/
+work scope through existing guarded world admission, and caller work-limit
+exceptions retain budget classification. An exhaustive admission check also
+exposes the same native interface-result hazard in world construction: vector,
+name-index and boundary construction now use a private lease until completion.
+No new MCP tool/schema, compiler protocol, fixed probe or host/configuration retry.
+
+Focused preflight passes 95 native checks/clean heap, with actual admission first
+fitting at 52 units and every smaller allowance refusing atomically. Qualified
+mode/string differences and ordinary aliases remain distinct; storage conflicts,
+unknown facts, replacement, retained worlds, cancellation and the existing indexed
+completion/dependency path are covered. Browser compilation passes. The maintained
+native bootstrap consumer adds four admission checks using its already measured
+packet; its nine query references, generated probe and compiler-job count are
+unchanged. No extra compiler job is introduced by those checks. The actual native
+consumer execution remains part of the full batch now running.
+
+The first full batch is rejected and retained: all maintained consumers pass,
+but the unchanged original RTL run fails its final indexed completion with a
+budget gap, one module and zero dependency loads. System still resolves with
+13,101 declarations/zero syntax diagnostics/thirty-one answers; ObjPas retains
+209/zero/one. No quota, fixture or pending-fact refusal is weakened. Its four
+frozen Pascal inputs are retained exactly in the failed packet. A controlled
+same-context prefix append measured 264 world-entry units/276 total for two
+modules and nine root facts, showing repeated validation despite exact immutable
+context identity. The unchanged original consumer is also being traced under
+GDB with debug symbols, unchanged inputs/limits and a distinct fresh runtime;
+the diagnostic run fails in the same way and has a clean heap. GDB confirms
+ENyxPascalConditionalWorkLimit at the unchanged four-million aggregate cap:
+metadata-node phase, used 4,000,000/requested one, 224,739 translated tokens and
+refinement round fifteen. The debugger and all rejected readers are joined;
+this remains diagnostic evidence, not a replacement accepted oracle.
+
+The repair reuses only a previously checked world's exact immutable initial-
+context object during replacement. It charges one identity proof; independently
+captured value-equal contexts still take every comparison, and new/changed packets
+cannot borrow proof. Prefix views qualify this identity through existing sealed
+translation/projection owners. Controlled admission now charges three world-entry
+units rather than 264; vector/boundary/cancellation budgets remain enforced.
+Focused qualification passes 101 checks/clean heap with the same fresh-admission
+first fit of 52 and all smaller allowances refusing. Four repaired Pascal inputs
+freeze before a fresh complete batch; all accepted consumers retain those exact
+bytes. All 95 main compiler logs pass with zero owned warnings/238 upstream
+pas2js Classes warnings, separately from the deliberate emission oracle. All
+forty-three maintained native consumers and seven additional consumers pass,
+alongside the separately executed corpus and unchanged original RTL consumer:
+fifty-two accepted native logs have clean heaps. Native Studio/backend and
+forty-two browser compilations, including Studio/worker, pass; browser execution,
+physical input, parity/adoption/delivery remain unqualified. The maintained
+bootstrap consumer passes 21 checks with its original nine probe references and
+no added job. Provider/production semantic checks retain 90/84; interface/postfix/
+generic/binding/type/syntax/checkpoint checks retain 149/410/948/74/448/8191/6526.
+The corpus retains 504 files/2,377,046 lossless tokens/571 checks.
+
+The unchanged original RTL consumer now passes 56 checks/clean heap. Actual
+System source is Resolved/zero translation diagnostics, 13,101 declarations/zero
+syntax diagnostics/thirty-one answers/no pending fact; ObjPas retains 209/zero/
+one/no pending. Exact indexed Free/FreeInstance completion, original include-token
+navigation after provider retirement and detached insertion remain ready. Initial
+five queries, one Word job, three/eight symbol jobs, six/eight dynamic jobs,
+two-million view/four-million aggregate work/token caps and sixty-four rounds
+remain unchanged. These frontier assertions establish neither full RTL/type/
+module/target coherence nor complete expression/call admission.
+
+Four focused/695 maintained pins, including 691 unrelated exact sources, retain
+their frozen bytes. The previously unpinned maintained native bootstrap consumer
+gets an explicit final pin alongside the one genuinely new test; its baseline
+Git identity is retained. All 97 RTL/24 compiler inputs and prior inspected sets,
+plus the one read-only exception-hook RTL inspection, stay exact. All 156 unit
+packets/48 includes, thirteen concurrent planning files, five current-start
+protected files/nine contexts and 349 frozen release artifacts stay exact.
+Historical global-config preservation remains false; current byte equality
+does not rewrite that failure. All rejected/debug/accepted readers are terminal
+and joined. LAN remains offline and native Nyx tools absent.
+
+The first focused test's missing import/module-ref mismatch and
+invalid controlled storage-key prefix remain retained preparations; existing
+validation is not relaxed. Ignored `.local/module-coherence-paths-private.json`
+owns final qualification, retained failures, exact source/remote receipts and
+return path. All earlier handles are historical. Stop coherence/prefix/fixture/
+compiler/capture variants. Next reassess the remaining canonical typing/module/
+call-context prerequisites through existing owners before ordinary editor
+adoption. Full target/SDK coherence, call eligibility, automatic initial-interface-
+style capture, incremental budgets, editor/input/quality/parity/adoption/delivery
+and the original criterion/task/credit/DONE remain open. No new tool/schema,
+rollout, protected mutation, cleanup/restart or approval bypass.
+
+## Previous integration: Source-owned postfix contracts — 2026-10-19
 
 The interface checkpoint 78c189a is qualified and pushed. This solo continuation
 addresses an actual fluent-authoring gap: the completion provider rejected calls

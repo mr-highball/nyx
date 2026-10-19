@@ -3094,8 +3094,38 @@ Exact-world interfaces retain caller sites, declarations, types and bounded
 responses. Replacement detaches the module vector; old handles keep their original
 world and refuse use in the new one. No result/type/site is cached back into its
 world, so reference-counting graphs retain no reverse cycle to an editor/document.
-The world accepts matching compiler family/version metadata; complete target/default/
-SDK coherence remains part of the broader context requirement.
+The world requires matching compiler family/version metadata and refuses definite
+contradictions in shared captured measurements. Compiler-root named sizes are
+compared only in their exact probe mode/string scope. Ordinary source measurements
+can denote unit-local aliases and are not retagged as root facts. Structural
+measurements conflict only when their complete source/context/type keys match.
+Unknown values and different questions supply no contradiction or invented fact;
+the world never merges evidence between units. Absence of a detected conflict
+does not establish complete target/default/SDK coherence.
+
+Module admission checks the candidate against retained modules, excluding its
+retired predecessor during replacement. Each fact/key read and bounded lookup
+participates in the existing analysis budget and cancellation scope. Vector,
+namespace index and boundary construction remain private until the complete
+world is ready. Refusal leaves earlier worlds and their symbols usable.
+An already checked immutable parent can reuse its evidence proof when replacement
+retains the exact same initial-context object, as sealed prefix views do. That
+identity proof is charged once; value-equal independent captures still receive
+the complete comparison. Changed contexts never inherit the earlier proof.
+`ENyxPascalModuleContext.RelatedModule` identifies a conflicting captured unit;
+the ordinary completion provider presents this through its existing unavailable
+compiler-context gap with no partial rows. No output choice or complete compiler
+capture is required merely to design or inspect source with unknown evidence.
+
+The coherence checkpoint qualifies 101 focused native checks, including all
+smaller fresh-admission allowances, sealed prefix reuse, independent-capture
+revalidation, replacement/cancellation and the ordinary indexed completion path.
+Four additional checks reuse the native bootstrap consumer's already measured
+packet without adding probes. WORK.md retains an initial real-RTL budget failure,
+its debugger-confirmed four-million-work limit and the final unchanged RTL pass
+after exact context-proof reuse. This is local native qualification and browser
+compilation; complete target/module meaning and ordinary editor/parity/adoption
+remain open.
 
 Lookup preserves lexical shadowing, visible declaration order, direct unit exports
 and reverse `uses` order. Qualified units do not gain visibility merely by existing

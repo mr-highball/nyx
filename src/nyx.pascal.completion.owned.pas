@@ -142,7 +142,8 @@ function NewNyxIndexedPascalCompletionProvider(const AContext: INyxPascalCompile
 
 implementation
 
-uses SysUtils, nyx.pascal.drafts, nyx.pascal.files.project, nyx.pascal.syntax.translated;
+uses SysUtils, nyx.pascal.drafts, nyx.pascal.files.project, nyx.pascal.syntax.translated,
+  nyx.pascal.work;
 
 type
   { An internally raised typed refusal; its bounded English message contains no
@@ -605,7 +606,7 @@ begin
       raise EOwnedGap.CreateGap(pcgSourceIdentity, 'Two captured roots declare the same module', pbiNone, AFile.Name);
     end;
   end;
-  FWorld := FWorld.WithModule(LView);
+  FWorld := WithNyxPascalSemanticModule(FWorld, LView, FCancel);
 end;
 
 procedure TAnalysis.BuildWorld;
@@ -1213,13 +1214,24 @@ begin
       LReply.Base := NewNyxPascalCompletionResult(FRequest, pcsCancelled,
         'Owned Pascal analysis was cancelled', 0, '', [], 0);
     end;
+    on LError: ENyxPascalModuleContext do
+    begin
+      LReply := TOwnedResult.Create;
+      Result := LReply;
+      LReply.GapValue := pcgBinding;
+      LReply.IssueValue := pbiCompilerContext;
+      LReply.RelatedValue := LError.RelatedModule;
+      LReply.Base := NewNyxPascalCompletionResult(FRequest, pcsUnavailable,
+        TNyxText(LError.Message), 0, '', [], 0);
+    end;
     on LError: Exception do
     begin
       LReply := TOwnedResult.Create;
       Result := LReply;
       LReply.GapValue := pcgInternal;
 
-      if (LError is ENyxPascalLexicalLimit) or (LError is ENyxPascalBindingLimit) or
+      if (LError is ENyxPascalAnalysisWorkLimit) or
+        (LError is ENyxPascalLexicalLimit) or (LError is ENyxPascalBindingLimit) or
         (LError is ENyxPascalTranslationLimit) then
       begin
         LReply.GapValue := pcgBudget;

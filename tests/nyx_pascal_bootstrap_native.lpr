@@ -24,7 +24,8 @@ program nyx_pascal_bootstrap_native;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses Classes, SysUtils, nyx.text, nyx.pascal.context, nyx.pascal.compilertrace,
-  nyx.studio.pascalprofiles;
+  nyx.studio.pascalprofiles, nyx.pascal.files, nyx.pascal.translation,
+  nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.pascal.binding;
 
 const
   CNames: array[0..8] of TNyxText = ('Char', 'AnsiChar', 'WideChar', 'Comp',
@@ -121,6 +122,48 @@ begin
     'An ordinary successful-program request cannot admit bootstrap failure evidence');
 end;
 
+{ Reuse the already measured packet: no extra probe or compiler job is added.
+  A deliberately contradictory copy cannot replace the actual root's authority. }
+procedure ModuleEvidence;
+var
+  LInitial, LConflict, LRoot: INyxPascalCompilerContext;
+  LWorld, LAttempt, LAccepted: INyxPascalSemanticWorld;
+  LFact: TNyxPascalSizeFact;
+  LRejected: Boolean;
+
+  function View(const AName: TNyxText; const AContext: INyxPascalCompilerContext): INyxPascalTranslatedSyntax;
+  begin
+    Result := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact)
+      .WithFile(NyxPascalPhysicalFile(AName + '.pas'), 'unit ' + AName + '; interface implementation end.'),
+      NyxPascalPhysicalFile(AName + '.pas'), AContext, TNyxPascalTranslationOptions.Defaults),
+      TNyxPascalSyntaxOptions.Defaults);
+  end;
+begin
+  LRoot := CaptureNyxPascalCompilerContext(GContext);
+  LInitial := NyxPascalWithBootstrapContext(NewNyxPascalCompilerContext(GContext.Family,
+    GContext.Version, ppmFPC), LRoot);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(View('System', LInitial));
+  LFact := NyxPascalCapturedSize(LRoot, NyxPascalSizeReference('AnsiChar'));
+  LConflict := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('AnsiChar'),
+    NyxPascalSizeFact(pssKnown, LFact.ProbeMode, LFact.ProbeLongStrings, LFact.Bytes + 1));
+  LRejected := False;
+  try
+    LAttempt := LWorld.WithModule(View('Consumer', NyxPascalWithBootstrapContext(LInitial, LConflict)));
+  except
+    on E: ENyxPascalModuleContext do LRejected := E.RelatedModule = TNyxText('System');
+  end;
+  Check(LRejected and (LAttempt = nil) and (LWorld.Count = 1),
+    'A contradictory copy of actual native root measurements refuses without a partial world');
+  Check(GContext.SameFacts(LRoot), 'Module refusal does not change the original measured compiler packet');
+  LAccepted := LWorld.WithModule(View('Consumer', LInitial.InMode(ppmDelphi)));
+  Check(LAccepted.Count = 2, 'Different source modes retain compatible actual root evidence');
+  LInitial := NyxPascalWithCapturedSize(LInitial, NyxPascalSizeReference('AnsiChar'),
+    NyxPascalSizeFact(pssKnown, ppmDelphi, ppkTrue, LFact.Bytes + 1));
+  LAccepted := LWorld.WithModule(View('LocalAlias', LInitial));
+  Check((LAccepted.Count = 2) and GContext.SameFacts(LRoot),
+    'An ordinary source-local named measurement is not retagged as a compiler-root contradiction');
+end;
+
 begin
   try
     Check(ParamCount = 2, 'Supply configured FPC and a fresh owned output directory');
@@ -152,6 +195,7 @@ begin
     Check(not FileExists(ParamStr(2) + '/system.ppu'),
       'The bootstrap probe emits no replacement System unit');
     TranscriptGuards;
+    ModuleEvidence;
     WriteLn('PASS ', GChecks, ' native compiler bootstrap checks');
   except
     on LError: Exception do

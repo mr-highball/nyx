@@ -36,6 +36,16 @@ type
   { Query budgets refuse the entire response, independently of missing names.
     No partial symbol list is presented as a complete semantic search. }
   ENyxPascalBindingLimit = class(ENyxPascalBinding);
+  { Definite disagreement between captured module/compiler evidence. This is
+    an unavailable project context, not an internal resolver failure or proof
+    that incomplete snapshots otherwise establish a coherent target/ABI. }
+  ENyxPascalModuleContext = class(ENyxPascalBinding)
+  private
+    FRelatedModule: TNyxText;
+  public
+    constructor Create(const ARelatedModule: TNyxText);
+    property RelatedModule: TNyxText read FRelatedModule;
+  end;
   { Bound establishes supported declaration/name meaning, not successful compiler
     admission. Overloads retain alternatives without selecting a call signature. }
   TNyxPascalBindingStatus = (pbsBound, pbsOverloads, pbsMissing, pbsUnresolved,
@@ -316,8 +326,9 @@ type
     function FindModule(const AName: TNyxText): Integer;
     { Cached interface boundary avoids rescanning a whole unit in each query. }
     function InterfaceBoundary(AModule: Integer): Integer;
-    { Add/replace an exact module view, retaining earlier worlds. Compiler family
-      and version must agree; complete target/default/SDK coherence stays separate. }
+    { Add/replace an exact module view, retaining earlier worlds. Compiler family/
+      version and shared qualified root/structural measurements cannot conflict.
+      Missing evidence supplies no complete target/default/SDK coherence proof. }
     function WithModule(const AView: INyxPascalTranslatedSyntax): INyxPascalSemanticWorld;
     { A site belongs to this exact world and lies inside its declared scope. }
     function At(AModule, AScope, ACaret: Integer): INyxPascalBindingSite;
@@ -569,6 +580,8 @@ type
     FBoundaryReads: Integer;
     FBoundaryReused: Integer;
     FNames: TNyxTextIndex;
+    procedure CheckModuleEvidence(const AView: INyxPascalTranslatedSyntax;
+      AReplacing: Integer; const AExecution: INyxCancellationScope);
   public
     constructor Create(const AOptions: TNyxPascalBindingOptions);
     destructor Destroy; override;
@@ -1236,6 +1249,12 @@ begin
   FNames := TNyxTextIndex.Create;
 end;
 
+constructor ENyxPascalModuleContext.Create(const ARelatedModule: TNyxText);
+begin
+  FRelatedModule := NyxPascalBindingName(ARelatedModule).Name;
+  inherited Create('Captured compiler context conflicts with unit ' + String(FRelatedModule));
+end;
+
 destructor TSemanticWorld.Destroy;
 begin
   FNames.Free;
@@ -1288,10 +1307,160 @@ begin
   Result := WithModuleInScope(AView, nil);
 end;
 
+procedure TSemanticWorld.CheckModuleEvidence(const AView: INyxPascalTranslatedSyntax;
+  AReplacing: Integer; const AExecution: INyxCancellationScope);
+var
+  LInitial, LRoot, LOther, LOtherRoot: INyxPascalCompilerContext;
+  LAt: Integer;
+  LRelated: TNyxText;
+
+  procedure Admit(AUnits: Integer = 1);
+  begin
+
+    if (AExecution <> nil) and AExecution.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Semantic module evidence check cancelled');
+    NyxPascalAdmitAnalysis(AExecution, papWorldEntry, AUnits);
+  end;
+
+  function RootOf(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
+  begin
+    Result := AContext;
+
+    if NyxPascalCompilerScope(AContext) <> pcsoSystemBootstrap then
+      Result := NyxPascalBootstrapContext(AContext);
+  end;
+
+  function HasStorage(const AContext: INyxPascalCompilerContext): Boolean;
+  var
+    LStorage: INyxPascalContextStorage;
+  begin
+    Result := (AContext <> nil) and Supports(AContext, INyxPascalContextStorage, LStorage) and
+      (LStorage.StorageCount > 0);
+  end;
+
+  function HasSizes(const AContext: INyxPascalCompilerContext): Boolean;
+  var
+    LSizes: INyxPascalContextSizes;
+  begin
+    Result := (AContext <> nil) and Supports(AContext, INyxPascalContextSizes, LSizes) and
+      (LSizes.SizeCount > 0);
+  end;
+
+  { Only compiler-root names are comparable across units. Ordinary source-mode
+    names can denote different aliases. Even root answers retain their exact
+    probe mode/string qualifiers: another question cannot contradict this one. }
+  procedure CheckSizes(const ALeft, ARight: INyxPascalCompilerContext);
+  var
+    LLeft, LRight: INyxPascalContextSizes;
+    LIndex, LLeftCount, LRightCount: Integer;
+    LName: TNyxPascalSizeReference;
+    LBefore, LAfter: TNyxPascalSizeFact;
+  begin
+
+    if (ALeft = nil) or (ARight = nil) or (ALeft = ARight) or
+      not Supports(ALeft, INyxPascalContextSizes, LLeft) or
+      not Supports(ARight, INyxPascalContextSizes, LRight) then Exit;
+    LLeftCount := LLeft.SizeCount;
+    LRightCount := LRight.SizeCount;
+
+    if (LLeftCount < 0) or (LLeftCount > 64) or (LRightCount < 0) or (LRightCount > 64) then
+      raise ENyxPascalBindingLimit.Create('Module root evidence exceeds its captured size quota');
+    for LIndex := 0 to LLeftCount - 1 do
+    begin
+      Admit;
+      LName := LLeft.SizeName(LIndex);
+      { Context size lookup is a bounded vector search. Charge its full bound
+        before either lookup rather than concealing repeated comparisons. }
+      Admit(LLeftCount + LRightCount + Length(LName.Name));
+      LBefore := LLeft.SizeFact(LName);
+      LAfter := LRight.SizeFact(LName);
+
+      if (LBefore.State <> pssUnknown) and (LAfter.State <> pssUnknown) and
+        (LBefore.ProbeMode = LAfter.ProbeMode) and
+        (LBefore.ProbeLongStrings = LAfter.ProbeLongStrings) and
+        not LBefore.SameFact(LAfter) then raise ENyxPascalModuleContext.Create(LRelated);
+    end;
+  end;
+
+  { Structural keys already include their full source/context/type identity.
+    Only exact keys may conflict; the world never merges, retags or exports
+    measurements. Every bounded key comparison is charged before reading it. }
+  procedure CheckStorage(const ALeft, ARight: INyxPascalCompilerContext);
+  var
+    LLeft, LRight: INyxPascalContextStorage;
+    LIndex, LOtherIndex, LLeftCount, LRightCount: Integer;
+    LKey, LOtherKey: TNyxPascalStorageKey;
+    LBefore, LAfter: TNyxPascalStorageFact;
+  begin
+
+    if (ALeft = nil) or (ARight = nil) or (ALeft = ARight) or
+      not Supports(ALeft, INyxPascalContextStorage, LLeft) or
+      not Supports(ARight, INyxPascalContextStorage, LRight) then Exit;
+    LLeftCount := LLeft.StorageCount;
+    LRightCount := LRight.StorageCount;
+
+    if (LLeftCount < 0) or (LLeftCount > NyxPascalStorageFactLimit) or
+      (LRightCount < 0) or (LRightCount > NyxPascalStorageFactLimit) then
+      raise ENyxPascalBindingLimit.Create('Module structural evidence exceeds its captured quota');
+    for LIndex := 0 to LLeftCount - 1 do
+    begin
+      Admit;
+      LKey := LLeft.StorageKey(LIndex);
+      LBefore := LLeft.StorageValueAt(LIndex);
+      for LOtherIndex := 0 to LRightCount - 1 do
+      begin
+        Admit;
+        LOtherKey := LRight.StorageKey(LOtherIndex);
+        Admit(Length(LKey.Value) + Length(LOtherKey.Value));
+
+        if not LKey.SameKey(LOtherKey) then Continue;
+        LAfter := LRight.StorageValueAt(LOtherIndex);
+
+        if (LBefore.State <> psfsUnknown) and (LAfter.State <> psfsUnknown) and
+          not LBefore.SameFact(LAfter) then raise ENyxPascalModuleContext.Create(LRelated);
+        Break;
+      end;
+    end;
+  end;
+begin
+  LInitial := AView.Source.InitialContext;
+  LRoot := RootOf(LInitial);
+
+  if not HasSizes(LRoot) and not HasStorage(LInitial) and not HasStorage(LRoot) then Exit;
+
+  if (AReplacing >= 0) and (LInitial = FModules[AReplacing].Source.InitialContext) then
+  begin
+    { This immutable parent world already checked this exact initial packet
+      against every retained module. Source-prefix reconstruction changes the
+      view, not its captured evidence. Charge the identity proof once; a new
+      context object, even value-equal, still takes the complete comparison. }
+    Admit;
+    Exit;
+  end;
+  for LAt := 0 to Count - 1 do
+  begin
+
+    if LAt = AReplacing then Continue;
+    Admit;
+    LOther := FModules[LAt].Source.InitialContext;
+    LOtherRoot := RootOf(LOther);
+    LRelated := FModules[LAt].Syntax.Scope(0).Name;
+    CheckSizes(LRoot, LOtherRoot);
+    CheckStorage(LInitial, LOther);
+
+    if LRoot <> LInitial then CheckStorage(LRoot, LOther);
+
+    if LOtherRoot <> LOther then CheckStorage(LInitial, LOtherRoot);
+
+    if (LRoot <> LInitial) and (LOtherRoot <> LOther) then CheckStorage(LRoot, LOtherRoot);
+  end;
+end;
+
 function TSemanticWorld.WithModuleInScope(const AView: INyxPascalTranslatedSyntax;
   const AExecution: INyxCancellationScope): INyxPascalSemanticWorld;
 var
   LCopy: TSemanticWorld;
+  LLease: INyxPascalSemanticWorld;
   LAt: Integer;
   LTarget: Integer;
   LCount: Integer;
@@ -1316,9 +1485,10 @@ begin
       (AView.Source.InitialContext.Version.FullNumber <>
         FModules[0].Source.InitialContext.Version.FullNumber)) then
   begin
-    raise ENyxPascalBinding.Create('A semantic world cannot mix captured compiler families or versions');
+    raise ENyxPascalModuleContext.Create(FModules[0].Syntax.Scope(0).Name);
   end;
   LTarget := FindModule(LName);
+  CheckModuleEvidence(AView, LTarget, AExecution);
   LCount := Count;
 
   if LTarget < 0 then
@@ -1332,7 +1502,9 @@ begin
     Inc(LCount);
   end;
   LCopy := TSemanticWorld.Create(FLimits);
-  Result := LCopy;
+  { Native interface function results may share their caller's destination.
+    Keep all vector/name/boundary construction private until it succeeds. }
+  LLease := LCopy;
   SetLength(LCopy.FModules, LCount);
   SetLength(LCopy.FInterfaceEnds, LCount);
   SetLength(LCopy.FInterfaceTokens, LCount);
@@ -1405,6 +1577,7 @@ begin
     end;
     LCopy.FNames.AddFirst(NyxPascalASCIIKey(LCopy.FModules[LAt].Syntax.Scope(0).Name), LAt);
   end;
+  Result := LLease;
 end;
 
 function TSemanticWorld.At(AModule, AScope, ACaret: Integer): INyxPascalBindingSite;
