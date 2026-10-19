@@ -207,9 +207,12 @@ type
     or synchronization guarantee. Static preserves the declared absence of an
     implicit receiver; an implementation need not repeat that suffix.
     Unsupported/recovered scopes grant no
-    successful type inference, compilation or source editing authority. }
+    successful type inference, compilation or source editing authority.
+    DefaultArgument retains an authored equals sign even when its value is
+    missing; IncompleteHeader freezes routine-header failure before body edits. }
   TNyxPascalSyntaxFlag = (psdfIncomplete, psdfConditional, psdfForward,
-    psdfClassMember, psdfOverload, psdfUnsupported, psdfThreadLocal, psdfStatic);
+    psdfClassMember, psdfOverload, psdfUnsupported, psdfThreadLocal, psdfStatic,
+    psdfDefaultArgument, psdfIncompleteHeader);
   { Value-owned flag set with no mutable storage or target-specific state. }
   TNyxPascalSyntaxFlags = set of TNyxPascalSyntaxFlag;
   { Authored platform/linker intent, distinct from Pascal member visibility.
@@ -380,6 +383,9 @@ type
     property TypeSpan: TNyxPascalSpan read FTypeSpan;
     property AncestorSpan: TNyxPascalSpan read FAncestorSpan;
     property GenericSpan: TNyxPascalSpan read FGenericSpan;
+    { Parameter defaults retain their exact authored expression, independently
+      of psdfDefaultArgument (which also survives a missing/unfinished value).
+      Other declarations retain their existing initializer/value meaning. }
     property ExpressionSpan: TNyxPascalSpan read FExpressionSpan;
     property Scope: Integer read FScope;
     property NestedScope: Integer read FNestedScope;
@@ -4738,8 +4744,11 @@ var
   LType: Integer;
   LMode: TNyxPascalSyntaxParameterMode;
   LAt: Integer;
+  LDefault: Integer;
+  LComplete: Boolean;
 begin
   Result := False;
+  LComplete := True;
   Step;
   while not EOF and not Sym(AClose) do
   begin
@@ -4777,6 +4786,7 @@ begin
       if Tok.Kind <> ptkWord then
       begin
         Problem(psiExpectedName, 'A parameter needs an identifier', Tok.Span);
+        LComplete := False;
         Break;
       end;
       LEntry := AddDeclaration(AScope, psdkParameter, psavLocal, FPosition);
@@ -4825,6 +4835,7 @@ begin
     if Sym(psoEqual) then
     begin
       Step;
+      LDefault := FPosition;
       while not EOF and not Sym(psoSemicolon) and not Sym(AClose) do
       begin
 
@@ -4837,6 +4848,20 @@ begin
           Step;
         end;
       end;
+      for LAt := 0 to High(LEntries) do
+      begin
+        Include(EditEntry(LEntries[LAt]).Value.FFlags, psdfDefaultArgument);
+        EditEntry(LEntries[LAt]).Value.FExpressionSpan := Range(LDefault, FPosition);
+
+        if FPosition = LDefault then
+        begin
+          Include(EditEntry(LEntries[LAt]).Value.FFlags, psdfIncomplete);
+          LComplete := False;
+        end;
+      end;
+
+      if FPosition = LDefault then
+        Problem(psiExpectedName, 'Add a value after the parameter default', Tok.Span);
     end;
 
     if not Sym(psoSemicolon) then
@@ -4849,7 +4874,7 @@ begin
   if Sym(AClose) then
   begin
     Step;
-    Result := True;
+    Result := LComplete;
   end
   else
   begin
@@ -5131,7 +5156,9 @@ begin
 
     if Sym(psoOpenParen) then
     begin
-      Parameters(LScope);
+
+      if not Parameters(LScope) then
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
     end;
 
     if LIsOperator and (Tok.Kind = ptkWord) and Sym(psoColon, 1) then
@@ -5227,6 +5254,11 @@ begin
       end;
     end;
     EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
+
+    { A complete callable header remains useful while its body is being edited.
+      Freeze header failure now, before body parsing adds psdfIncomplete. }
+    if psdfIncomplete in Entry(LEntry).Value.Flags then
+      Include(EditEntry(LEntry).Value.FFlags, psdfIncompleteHeader);
 
     if LHasBody then
     begin

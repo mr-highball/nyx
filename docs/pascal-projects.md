@@ -3593,6 +3593,37 @@ include a whole compiled handwritten unit, exact detached completion/navigation,
 exhaustive smaller allowances and joined concurrent queries. The browser consumer
 compiles only; full language coverage and editor adoption remain open in WORK.md.
 
+### Source-owned routine signatures
+
+The optional `INyxPascalRoutineQueries.RoutineSignature` accepts an exact bound
+routine symbol from its current world. Its ordinary resolution contains a
+`pstFunction` or `pstProcedure` semantic type with ordered parameter names,
+passing modes and bound types. Functions retain their declared result in
+`Target`; constructor headers have no invented declared return type. Callback
+aliases retain their nested signature. Untyped storage parameters remain
+`pstUntyped`, while untyped value parameters refuse.
+
+`INyxPascalDeclaredSignature` adds the original `ParameterDeclaration` symbols
+and `RequiredParameterCount`. Defaults retain `psdfDefaultArgument` and their
+exact `ExpressionSpan`, including physical include origins through the normal
+source map. An explicit missing value stays marked and incomplete. Nontrailing
+defaults refuse instead of fabricating a minimum count. No default expression
+is evaluated or admitted as a legal compiler constant.
+
+Complete headers remain readable while their bodies are unfinished. The parser
+captures `psdfIncompleteHeader` before body parsing, independently of later
+`psdfIncomplete`; signature queries stop before body-local declarations.
+Unapplied generic routines retain owned formal types, and ordinary methods on
+constructed generic receivers substitute that receiver's exact environment.
+Each overload is queried by its own symbol; this API does not choose a call.
+
+Existing candidate/depth/work limits and current-world cancellation apply to the
+whole result. Parameters and semantic types retain their source world without
+retaining an execution scope. These signatures provide data for argument
+inference and editor signature help; automatic inference, compiler eligibility
+and default editor adoption remain separate work. The browser consumer compiles
+only. WORK.md owns qualification and remaining language/editor scope.
+
 ### Explicit generic routine applications
 
 Expression queries and ordinary completion follow explicit routine type arguments

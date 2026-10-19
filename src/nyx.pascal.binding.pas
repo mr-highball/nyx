@@ -295,6 +295,23 @@ type
       const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess;
       const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
   end;
+  { A declared routine's complete header, independent of call eligibility or
+    overload selection. The ordinary resolution contains a procedure/function
+    semantic type; its parameters include grouped names and source defaults. }
+  INyxPascalRoutineQueries = interface(IInterface)
+    ['{6D246B11-C139-4A30-8F76-89FE1D971D95}']
+    function RoutineSignature(const ARoutine: INyxPascalBoundSymbol;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalResolution;
+  end;
+  { Optional source ownership for a declared signature. Each parameter is its
+    original source symbol, with mode/type/default spans and physical origin.
+    Required count describes the authored trailing-default structure only; it
+    does not prove conversions, default evaluation, varargs or legal calls. }
+  INyxPascalDeclaredSignature = interface(IInterface)
+    ['{0428DD0C-AD63-40E2-9D38-6DEB756D2C79}']
+    function ParameterDeclaration(AIndex: Integer): INyxPascalBoundSymbol;
+    function RequiredParameterCount: Integer;
+  end;
   { Optional exact count. Total is -1 when a bounded page stopped after proving
     HasMore or when analysis failed; otherwise it counts all visible matches.
     CountAll requests require an exact successful total without extra rows. }
@@ -518,6 +535,16 @@ type
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
   end;
+  { A complete source routine header shares the ordinary semantic signature
+    shape, retaining real parameter symbols instead of synthesized declarations.
+    Only this query-owned object retains its vectors; worlds do not own it. }
+  TDeclaredSignature = class(TSemanticType, INyxPascalDeclaredSignature)
+  public
+    Parameters: array of INyxPascalBoundSymbol;
+    RequiredCount: Integer;
+    function ParameterDeclaration(AIndex: Integer): INyxPascalBoundSymbol;
+    function RequiredParameterCount: Integer;
+  end;
   { A source formal owns its parameter identity and bounded immutable contracts.
     It holds no application frame or execution lease, avoiding recursive frame
     ownership and keeping parameter and ordinary declared-type identity apart. }
@@ -579,7 +606,7 @@ type
     each query has its own counters, alias/member trails and temporary type data. }
   TSemanticWorld = class(TInterfacedObject, INyxPascalSemanticWorld,
     INyxPascalMemberQueries, INyxPascalOperatorQueries, INyxPascalWorldBuildWork,
-    INyxPascalWorldAdmission, INyxPascalExpressionQueries)
+    INyxPascalWorldAdmission, INyxPascalExpressionQueries, INyxPascalRoutineQueries)
   private
     FLimits: TNyxPascalBindingOptions;
     FModules: array of INyxPascalTranslatedSyntax;
@@ -617,6 +644,8 @@ type
       const ACancellation: INyxCancellationScope): INyxPascalMemberPage;
     function ExpressionType(const ASite: INyxPascalBindingSite;
       const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess;
+      const ACancellation: INyxCancellationScope): INyxPascalResolution;
+    function RoutineSignature(const ARoutine: INyxPascalBoundSymbol;
       const ACancellation: INyxCancellationScope): INyxPascalResolution;
     function OperatorMembers(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       AKind: TNyxPascalOperatorKind;
@@ -766,6 +795,7 @@ type
       const ACancellation: INyxCancellationScope);
     function Lookup(const ASite: INyxPascalBindingSite; const AName: TNyxText): INyxPascalResolution;
     function TypeOfSymbol(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+    function RoutineSignature(const ARoutine: INyxPascalBoundSymbol): INyxPascalResolution;
     function Member(const AType: INyxPascalSemanticType; const ASite: INyxPascalBindingSite;
       const AName: TNyxText; AAccess: TNyxPascalMemberAccess;
       AOperator: TNyxPascalOperatorKind = pokNone): INyxPascalResolution;
@@ -1122,6 +1152,17 @@ function TSemanticType.ParameterType(AIndex: Integer): INyxPascalSemanticType;
 begin
   ParameterName(AIndex);
   Result := Types[AIndex];
+end;
+
+function TDeclaredSignature.ParameterDeclaration(AIndex: Integer): INyxPascalBoundSymbol;
+begin
+  ParameterName(AIndex);
+  Result := Parameters[AIndex];
+end;
+
+function TDeclaredSignature.RequiredParameterCount: Integer;
+begin
+  Result := RequiredCount;
 end;
 
 function TFormalType.DeclarationOwner: INyxPascalBoundSymbol;
@@ -4069,6 +4110,152 @@ begin
   end;
 end;
 
+function TBindingQuery.RoutineSignature(const ARoutine: INyxPascalBoundSymbol): INyxPascalResolution;
+var
+  LDeclaration, LParameter: TNyxPascalSyntaxDeclaration;
+  LView: INyxPascalTranslatedSyntax;
+  LSignature: TDeclaredSignature;
+  LLease: INyxPascalSemanticType;
+  LResolved: INyxPascalResolution;
+  LTypeSyntax: INyxPascalTypeSyntax;
+  LAt, LCount: Integer;
+  LSymbol: INyxPascalBoundSymbol;
+  LUntyped: TSemanticType;
+  LEnvironment: INyxPascalGenericEnvironment;
+  LOwner: INyxPascalBoundSymbol;
+  LTypeTarget, LDefaultSeen: Boolean;
+  LGeneric: TGenericParameters;
+  LIssue: TNyxPascalBindingIssue;
+begin
+  Enter;
+  try
+    CheckSymbol(ARoutine);
+    LDeclaration := ARoutine.Declaration;
+
+    if LDeclaration.Kind <> psdkRoutine then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+    if (LDeclaration.Flags * [psdfConditional, psdfUnsupported, psdfIncompleteHeader] <> []) or
+      (LDeclaration.HeaderSpan.Length = 0) or (LDeclaration.NestedScope < 0) then
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    LView := FWorld.ModuleAt(ARoutine.ModuleIndex);
+
+    if (LView.Syntax.Scope(LDeclaration.NestedScope).Kind <> psskRoutine) or
+      (LView.Syntax.Scope(LDeclaration.NestedScope).OwnerDeclaration <> ARoutine.DeclarationIndex) then
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+
+    if LDeclaration.GenericSpan.Length > 0 then
+    begin
+      LIssue := GenericParameters(ARoutine, LGeneric);
+
+      if LIssue <> pbiNone then Exit(Answer(pbsUnresolved, LIssue));
+    end;
+    LSignature := TDeclaredSignature.Create;
+    LLease := LSignature;
+    LSignature.Owner := FWorld;
+    LSignature.Declared := ARoutine;
+    LSignature.TypeKind := pstProcedure;
+    LEnvironment := FEnvironment;
+    LOwner := FTypeOwner;
+    LTypeTarget := FBindingTypeTarget;
+    FEnvironment := EnvironmentOf(ARoutine);
+    FTypeOwner := ARoutine;
+    FBindingTypeTarget := True;
+    try
+      { Bind the authored return expression directly, preserving an unapplied
+        generic's formal identities. A signature is not its instantiated call. }
+      if LDeclaration.TypeSpan.Length > 0 then
+      begin
+        LTypeSyntax := LView.TypeOfDeclaration(ARoutine.DeclarationIndex,
+          TNyxPascalTypeOptions.Defaults, FCancel);
+
+        if not LTypeSyntax.Complete then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+        LResolved := BindNode(FWorld.At(ARoutine.ModuleIndex, LDeclaration.NestedScope,
+          LDeclaration.TypeSpan.Start), LTypeSyntax, LTypeSyntax.Root);
+
+        if LResolved.Status <> pbsBound then Exit(LResolved);
+        LSignature.Element := LResolved.BoundType;
+        LSignature.TypeKind := pstFunction;
+      end
+      else if LDeclaration.RoutineKind = prkFunction then
+        Exit(Answer(pbsUnresolved, pbiMissingType));
+      LDefaultSeen := False;
+      LAt := LView.Syntax.Scope(LDeclaration.NestedScope).FirstDeclaration;
+      while LAt >= 0 do
+      begin
+        Tick;
+        LParameter := LView.Syntax.Declaration(LAt);
+
+        { Parameters precede result storage and all body-local declarations.
+          Header queries neither inspect nor pay to walk the routine's body. }
+        if LParameter.Kind <> psdkParameter then Break;
+
+        if LParameter.Scope <> LDeclaration.NestedScope then
+          Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+
+        if (LParameter.Kind = psdkParameter) and
+          (LParameter.Scope = LDeclaration.NestedScope) then
+        begin
+
+          if LParameter.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> [] then
+            Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+          LSymbol := InEnvironment(FWorld.Symbol(ARoutine.ModuleIndex, LAt), FEnvironment);
+
+          if LParameter.TypeSpan.Length > 0 then
+          begin
+            LResolved := TypeOfSymbol(LSymbol);
+
+            if LResolved.Status <> pbsBound then Exit(LResolved);
+          end
+          else
+          begin
+
+            if LParameter.ParameterMode = pspmValue then
+              Exit(Answer(pbsUnresolved, pbiMissingType));
+            LUntyped := TSemanticType.Create;
+            LUntyped.Owner := FWorld;
+            LUntyped.TypeKind := pstUntyped;
+            LResolved := TypeAnswer(LUntyped);
+          end;
+          LCount := Length(LSignature.Names);
+
+          if LCount >= FLimits.MaximumCandidates then
+            raise ENyxPascalBindingLimit.Create('Declared routine parameters exceed their query budget');
+
+          if psdfDefaultArgument in LParameter.Flags then
+          begin
+
+            if LParameter.ExpressionSpan.Length = 0 then
+              Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+            LDefaultSeen := True;
+          end
+          else
+          begin
+
+            if LDefaultSeen then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+            Inc(LSignature.RequiredCount);
+          end;
+          SetLength(LSignature.Names, LCount + 1);
+          SetLength(LSignature.Modes, LCount + 1);
+          SetLength(LSignature.Types, LCount + 1);
+          SetLength(LSignature.Parameters, LCount + 1);
+          LSignature.Names[LCount] := LParameter.Name;
+          LSignature.Modes[LCount] := LParameter.ParameterMode;
+          LSignature.Types[LCount] := LResolved.BoundType;
+          LSignature.Parameters[LCount] := LSymbol;
+        end;
+        LAt := LParameter.Next;
+      end;
+      Result := TypeAnswer(LLease);
+    finally
+      FEnvironment := LEnvironment;
+      FTypeOwner := LOwner;
+      FBindingTypeTarget := LTypeTarget;
+    end;
+  finally
+    Leave;
+  end;
+end;
+
 function TBindingQuery.TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
 var
   LDecl: TNyxPascalSyntaxDeclaration;
@@ -6517,6 +6704,19 @@ begin
 
   if LAnswer.Status = pbsBound then AAccess := LAccess;
   Result := LAnswer;
+end;
+
+function TSemanticWorld.RoutineSignature(const ARoutine: INyxPascalBoundSymbol;
+  const ACancellation: INyxCancellationScope): INyxPascalResolution;
+var
+  LQuery: TBindingQuery;
+begin
+  LQuery := TBindingQuery.Create(Self, ACancellation);
+  try
+    Result := LQuery.RoutineSignature(ARoutine);
+  finally
+    LQuery.Free;
+  end;
 end;
 
 function TSemanticWorld.ExpressionType(const ASite: INyxPascalBindingSite;

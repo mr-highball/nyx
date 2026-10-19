@@ -33,7 +33,79 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Explicit generic routine applications — 2026-10-19
+## Current integration: Source-owned routine signatures — 2026-10-19
+
+The preceding goal turn makes authoritative source/qualification/remote progress
+in 18bc702. Reassessment follows routine argument inference and signature identity
+under original NS-4_studio-authoring_01 criterion two. Existing syntax retains
+ordered parameter names/modes/types but discards defaults; routine TypeOfSymbol
+exposes a result rather than a callable header. Inference therefore lacks a
+source-owned required/optional parameter contract. Inspected native compiler
+sources also gate implicit specialization behind a mode switch not yet modeled
+by the current typed language-feature list. Neither finding grants inference or
+call eligibility.
+
+The concrete prerequisite is now complete declared headers through existing
+syntax/type/binding owners: ordered grouped parameters, typed/default spans,
+callback signatures, unapplied generic formals and substituted receiver frames.
+Two appended flags retain default intent and header incompleteness independently
+of unfinished bodies. Their existing ordinals/GUIDs remain stable; consumers
+rebuild for the expanded flag representation. Optional routine-query/signature
+interfaces add exact parameter symbols and a checked trailing-default count.
+No default executes, overload is selected or compiler eligibility inferred.
+
+The whole handwritten native fixture returns 42 through eight real invocations;
+semantic inspection leaves that counter unchanged. Integrated focused checks
+pass 236 with a clean heap, including exact include-default navigation, generic
+receiver substitution, all passing modes, untyped storage, callbacks, overloads,
+unfinished bodies, malformed defaults, foreign worlds, candidate/cancellation
+refusal and 64 joined readers. Every allowance below first fit 151 refuses
+atomically. Browser compilation passes after guarding the native-only test exit;
+the initial compiler integration failures remain retained. No browser execution
+or editor adoption is claimed. Frozen-source wider qualification is pending.
+
+Use this one whole fixture and required wider qualification, then stop signature/
+fixture/compiler/capture variants. Reassess typed implicit-specialization context
+and argument/type correspondence through existing context/settings/signature/
+binding owners next; automatic inference remains open. Preserve every existing
+quota, probe, exact input/context identity and atomic refusal. No original
+criterion/task/credit/DONE/full goal closes. No host/config retry, SDK capture,
+protected mutation, cleanup/restart, new MCP tool/schema/rollout or sub-agents.
+Ignored .local/routine-signatures-paths-private.json owns the packet and return
+path. Preserve concurrent planning work and historical preservation failures.
+
+Frozen-source local qualification passes: 125 main compiler logs contain zero
+owned warnings/322 upstream; 67 native logs have clean heaps and 57 browser
+consumers compile only. Both Studios, backend and worker compile as applicable.
+The unchanged original RTL consumer passes 56 under the original 2M view/4M
+aggregate/64-round limits. Actual System resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one. Neither has a pending query. Exact indexed
+Free/FreeInstance include navigation and detached insertion remain ready. The
+five initial queries, one Word job, symbol three/eight and six/eight ordered
+Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact.
+The corpus passes 571 checks over 504 files and 2,409,101 lossless tokens.
+
+Unchanged maintained restart/revision consumers pass 4,880/1,338. Current work
+receipts include the new header metadata: restart cold/revised 45,418/22,577 and
+first fit 2,284; projection cold/revised 13,457/5,576 and first fit 735. Every
+smaller allowance still refuses atomically, the 80 restart cancellation boundaries
+remain exact, and no quota or test was changed. Earlier 4,878/1,337 and their work
+figures remain historical. There is no new allocation/latency improvement claim.
+
+Four final Pascal inputs stay frozen throughout this batch. All 716 maintained
+sources/712 unrelated, 97 RTL/24 compiler inputs, four additional read-only
+inference-source inspections, 156 unit packets/48 includes, 349 frozen artifacts,
+nine contexts, five current-start protected files and thirteen concurrent planning
+files retain their required identities. Every reader is terminal/joined. The
+historical global-configuration preservation failure remains retained; the full
+preservation gate stays false although current-start protected bytes are exact.
+Prior allocation measurements remain historical. LAN stays offline and native
+Nyx tools remain absent. The ignored packet owns final qualification and source/
+remote identity. Full inference/editor/input/quality/parity/adoption/delivery and
+the original criterion/task/credit/DONE/full goal remain open.
+
+## Previous integration: Explicit generic routine applications — 2026-10-19
 
 The preceding goal turn made authoritative source/qualification/remote progress
 in d1faf64. Original NS-4_studio-authoring_01 criterion two still owns useful
