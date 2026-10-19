@@ -3669,10 +3669,63 @@ incremental/adoption/parity/delivery scope. The provider still rebuilds its capt
 world per call; dependency-aware reuse remains required for ordinary editor
 performance and is not established by expression support.
 
-The complete batch passes 101 compiler jobs with zero Nyx-owned warnings and
+The preceding cast checkpoint passes 101 compiler jobs with zero Nyx-owned warnings and
 55 native logs with clean heaps, including the unchanged original RTL consumer.
 Both Studio targets and 45 browser compilations pass as applicable; browser
 execution and ordinary editor adoption remain unqualified.
+
+### Bounded source reuse between requests
+
+An owned completion provider retains a bounded directory of completed module
+analysis. Each request still creates a fresh semantic world and applies ordinary
+module coherence, import visibility and logical dependency-load limits. The
+directory retains immutable translation/syntax storage, never a final world,
+bound type, editor, callback or compiler process.
+
+```pascal
+LReuse := TNyxPascalSourceReuseOptions.Defaults
+  .UpToModules(32)
+  .UpToTokens(2000000)
+  .UpToCatalogBytes(128 * 1024 * 1024);
+LOptions := TNyxOwnedPascalCompletionOptions.Defaults.WithSourceReuse(LReuse);
+LProvider := NewNyxOwnedPascalCompletionProvider(LFacts, LCapturedFiles,
+  LSDKRoots, LOptions);
+```
+
+Defaults retain at most 16 modules, one million translated tokens and 64 MiB of
+catalog input. Catalog bytes are conservatively counted per retained entry,
+including shared catalogs; this is not a heap-size estimate. Module, token and
+catalog-byte ceilings apply independently. Set `UpToModules(0)` to disable reuse.
+Entries retire with their provider and may be evicted earlier under pressure.
+
+A hit requires exact initial compiler facts and translation policies, ordered
+catalog names and include search policy, plus identical bytes, byte origin,
+encoding, readable text and scalar/byte coordinates of every visited root/include.
+Changing unrelated text can preserve analysis, but the rebound source exposes the
+current catalog. Editing a used include invalidates its consuming root. Changing
+catalog membership or search order invalidates the input proof. Physical
+navigation still owns the exact declaration source after edits/provider retirement.
+
+The owning conditional traversal must explicitly report that it never consulted
+the input semantic world. Conditions answered through local or imported
+declarations, including false or unanswered queries, keep the cold path. Zero
+accepted answers is not evidence of independence. Replaying dependency-sensitive
+semantic answers across edits remains separate work.
+
+Lookup, input proof and directory publication consume actual admitted work under
+the existing per-construction/aggregate ceilings. A hit does not charge historical
+parsing that did not run. Optional retention may be skipped when its fixed cost
+does not fit; successful logical module loads still consume their ordinary quota.
+Cancellation or resource refusal publishes no partial completion rows. Native
+callers share only short locked directory leases/counters; comparisons, parsing,
+callbacks and cancellation remain outside that lock.
+
+The optional in-process `INyxPascalCompletionReuse` result reports
+`ConstructedModules`, `ReusedModules` and `ReuseWork` for that request. The provider's
+`INyxPascalCompletionReuseStorage.SourceReuseState` returns atomic module/token/
+catalog-byte counters. Neither capability changes the existing wire schema or
+installs a default Studio engine. WORK.md owns qualification evidence and remaining
+full dependency-aware incremental/editor adoption, language, input and parity scope.
 
 ## Captured SDK modules and dependency loading
 

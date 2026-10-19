@@ -89,6 +89,8 @@ var
   LReceipt: INyxPascalCompletionAnalysis;
   LQuery: INyxPascalCompletionRequest;
   LMetadata: INyxOwnedPascalCompletionResult;
+  LColdOptions: TNyxOwnedPascalCompletionOptions;
+  LColdWork: Integer;
 begin
   LFiles := NewNyxPascalFileCatalog(pfcExact)
     .WithFile(NyxPascalPhysicalFile('sdk/system.pp'),
@@ -130,8 +132,18 @@ begin
   Check((LReply.Status = pcsUnavailable) and (LReply.Count = 0) and
     (Gap(LReply).Gap = pcgBudget) and (Analysis(LReply).DependencyLoads = 1),
     'Dependency limits keep aggregate state and publish no partial insertion');
+  { Measure mandatory source work independently of optional cache publication.
+    A smaller allowance may correctly skip retention; that is not a semantic
+    restart resetting its aggregate budget. Warm proof admission is qualified
+    separately by the exhaustive source-reuse completion consumer. }
+  LColdOptions := TNyxOwnedPascalCompletionOptions.Defaults.WithSourceReuse(
+    TNyxPascalSourceReuseOptions.Defaults.UpToModules(0));
+  LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules, LColdOptions);
+  LReply := LProvider.Complete(LQuery);
+  Check((LReply.Status = pcsReady) and (LReply.Count = 1), 'The disabled-cache reference retains the same semantic receiver');
+  LColdWork := Analysis(LReply).TranslatedTokens;
   LProvider := NewNyxIndexedPascalCompletionProvider(Facts, LFiles, LModules,
-    TNyxOwnedPascalCompletionOptions.Defaults.UpToTokens(LReceipt.TranslatedTokens - 1));
+    LColdOptions.UpToTokens(LColdWork - 1));
   LReply := LProvider.Complete(LQuery);
   Check((LReply.Status = pcsUnavailable) and (Gap(LReply).Gap = pcgBudget),
     'Aggregate token accounting survives semantic restarts instead of resetting per dependency');

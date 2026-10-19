@@ -448,6 +448,16 @@ function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;
   const ACancellation: INyxCancellationScope = nil;
   const AConditions: INyxPascalConditionalFacts = nil): INyxPascalTranslation;
 
+{ Rebind only an owned, published, resolved translation to a frozen current input
+  catalog. Ordered names/search policy must match; every visited root/include
+  keeps exact original bytes, origin, encoding, text and scalar/byte coordinates.
+  Unvisited text may change and Files then exposes that current text. Nil means
+  incompatible/unowned source, not a partially rebound result. This proves input
+  equivalence only: semantic-world independence belongs to the condition owner. }
+function RebindNyxPascalTranslation(const ASource: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslation;
+
 { Immutable analysis prefix before an existing translation token. It invents no
   closing syntax or authored EOF token. State/occurrence exits stop at the site;
   full physical views remain exact for navigation. Known prefix participation
@@ -765,6 +775,8 @@ type
       retirement revoke it; the directory owns every page lease independently. }
     FWriting: TTranslatedTokenBlock;
     FIsFrozen: Boolean;
+    { Set only after all construction callbacks/writers retire successfully. }
+    FPublished: Boolean;
     FSharedRows: Integer;
     { Live construction keeps only its latest pure summary and retires it on
       every exit. A detached freeze owns its immutable summary independently. }
@@ -839,6 +851,10 @@ type
     { Freeze current admitted data, including the directive token used only as
       the subsequent prefix's exclusive boundary. No live callback is copied. }
     constructor CreatePrefix(ASource: TTranslation);
+    { Shares sealed managed vectors, with private physical-cache holders and a
+      fresh lineage. It retains no live reader, callback, budget or input world. }
+    constructor CreateRebound(ASource: TTranslation; const AFiles: INyxPascalFileCatalog;
+      const ACancellation: INyxCancellationScope);
     destructor Destroy; override;
     function Files: INyxPascalFileCatalog;
     function InitialContext: INyxPascalCompilerContext;
@@ -1347,6 +1363,71 @@ begin
     FStateBlocks := nil;
     FTokenSummary := nil;
   end;
+  FPublished := True;
+end;
+
+constructor TTranslation.CreateRebound(ASource: TTranslation;
+  const AFiles: INyxPascalFileCatalog; const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+
+  procedure Lease;
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Translation catalog rebind cancelled');
+    NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  end;
+begin
+  inherited Create;
+  Lease;
+  FLineage := TInterfacedObject.Create;
+  FFiles := AFiles;
+  FInitial := ASource.FInitial;
+  FContext := ASource.FContext;
+  FOptions := ASource.FOptions;
+  FResolved := ASource.FResolved;
+  FTokenCount := ASource.FTokenCount;
+  FOccurrenceCount := ASource.FOccurrenceCount;
+  FStateCount := ASource.FStateCount;
+  FDiagnosticCount := ASource.FDiagnosticCount;
+  FBytes := ASource.FBytes;
+  { Published vectors never mutate. Each assignment leases their immutable
+    storage; raw physical-cache holders below are independently owned. }
+  Lease; FTokenBlocks := ASource.FTokenBlocks;
+  Lease; FStateRows := ASource.FStateRows;
+  Lease; FLexical := ASource.FLexical;
+  Lease; FWindows := ASource.FWindows;
+  Lease; FOccurrences := ASource.FOccurrences;
+  Lease; FExpansions := ASource.FExpansions;
+  Lease; FBoundaryViews := ASource.FBoundaryViews;
+  Lease; FDiagnostics := ASource.FDiagnostics;
+  Lease; FUnresolved := ASource.FUnresolved;
+  Lease; FEmissionDirectives := ASource.FEmissionDirectives;
+  Lease; FRegisterDirectives := ASource.FRegisterDirectives;
+  Lease; FWarningDirectives := ASource.FWarningDirectives;
+  Lease; FCodeAlignmentDirectives := ASource.FCodeAlignmentDirectives;
+  Lease; FOptimizationDirectives := ASource.FOptimizationDirectives;
+  FUnresolvedCount := ASource.FUnresolvedCount;
+  FEmissionCount := ASource.FEmissionCount;
+  FRegisterCount := ASource.FRegisterCount;
+  FWarningCount := ASource.FWarningCount;
+  FCodeAlignmentCount := ASource.FCodeAlignmentCount;
+  FOptimizationCount := ASource.FOptimizationCount;
+  SetLength(FPhysical, AFiles.Count);
+  for LAt := 0 to High(FPhysical) do
+  begin
+    Lease;
+
+    if ASource.FPhysical[LAt] <> nil then
+    begin
+      FPhysical[LAt] := TPhysicalCache.Create;
+      FPhysical[LAt].Lexical := ASource.FPhysical[LAt].Lexical;
+      FPhysical[LAt].Ambiguous := ASource.FPhysical[LAt].Ambiguous;
+    end;
+  end;
+  Lease;
+  FPublished := True;
 end;
 
 constructor TTranslation.CreatePrefix(ASource: TTranslation);
@@ -4974,6 +5055,110 @@ begin
   begin
     Result := TTranslationPrefix.Create(ASource, ABeforeToken, AOptions, ACancellation);
   end;
+end;
+
+function RebindNyxPascalTranslation(const ASource: INyxPascalTranslation;
+  const AFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslation;
+var
+  LSource: TTranslation;
+  LFiles: INyxPascalFileCatalog;
+  LSeen: array of Boolean;
+  LAt, LFile, LByte, LScalar: Integer;
+  LOldBytes, LNewBytes: INyxPascalSourceBytes;
+  LOldView, LNewView: INyxPascalSourceView;
+  LOldText, LNewText: TNyxText;
+  LCandidate: INyxPascalTranslation;
+
+  procedure Proof;
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Translation input proof cancelled');
+    NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  end;
+begin
+  Result := nil;
+  Proof;
+
+  if not (ASource is TTranslation) then Exit;
+  LSource := ASource as TTranslation;
+
+  if not LSource.FPublished or not LSource.FResolved or (LSource.FOccurrenceCount < 1) then Exit;
+  LFiles := CaptureNyxPascalFiles(AFiles);
+  Proof;
+
+  if (LFiles.Count <> LSource.FFiles.Count) or
+    (LFiles.CasePolicy <> LSource.FFiles.CasePolicy) or
+    (LFiles.DirectoryCount <> LSource.FFiles.DirectoryCount) then Exit;
+  for LAt := 0 to LFiles.Count - 1 do
+  begin
+    Proof;
+
+    if LFiles.FileAt(LAt).Name <> LSource.FFiles.FileAt(LAt).Name then Exit;
+  end;
+  for LAt := 0 to LFiles.DirectoryCount - 1 do
+  begin
+    Proof;
+
+    if LFiles.DirectoryAt(LAt) <> LSource.FFiles.DirectoryAt(LAt) then Exit;
+  end;
+  SetLength(LSeen, LFiles.Count);
+  for LAt := 0 to LSource.FOccurrenceCount - 1 do
+  begin
+    Proof;
+    LFile := LSource.FOccurrences[LAt].FileIndex;
+
+    if LSeen[LFile] then Continue;
+    LSeen[LFile] := True;
+    LOldBytes := NyxPascalSourceBytesAt(LSource.FFiles, LFile);
+    LNewBytes := NyxPascalSourceBytesAt(LFiles, LFile);
+    LOldView := NyxPascalSourceViewAt(LSource.FFiles, LFile);
+    LNewView := NyxPascalSourceViewAt(LFiles, LFile);
+    Proof;
+
+    if (LOldBytes = nil) or (LNewBytes = nil) or (LOldView = nil) or (LNewView = nil) then Exit;
+
+    if LOldBytes <> LNewBytes then
+    begin
+      Proof;
+
+      if (LOldBytes.Count <> LNewBytes.Count) or (LOldBytes.Origin <> LNewBytes.Origin) then Exit;
+      for LByte := 0 to LOldBytes.Count - 1 do
+      begin
+        Proof;
+
+        if LOldBytes.ByteAt(LByte) <> LNewBytes.ByteAt(LByte) then Exit;
+      end;
+    end;
+
+    if LOldView <> LNewView then
+    begin
+      Proof;
+
+      if (LOldView.Kind <> LNewView.Kind) or (LOldView.Encoding.Name <> LNewView.Encoding.Name) or
+        (LOldView.Scalars <> LNewView.Scalars) then Exit;
+      LOldText := LOldView.Text;
+      LNewText := LNewView.Text;
+
+      if Length(LOldText) <> Length(LNewText) then Exit;
+      for LScalar := 1 to Length(LOldText) do
+      begin
+        Proof;
+
+        if LOldText[LScalar] <> LNewText[LScalar] then Exit;
+      end;
+      for LScalar := 0 to LOldView.Scalars do
+      begin
+        Proof;
+
+        if LOldView.ByteOffset(LScalar) <> LNewView.ByteOffset(LScalar) then Exit;
+      end;
+    end;
+  end;
+  LCandidate := TTranslation.CreateRebound(LSource, LFiles, ACancellation);
+  Proof;
+  Result := LCandidate;
 end;
 
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;

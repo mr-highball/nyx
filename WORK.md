@@ -33,7 +33,136 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declared cast target contracts — 2026-10-19
+## Current integration: Dependency-checked source reuse — 2026-10-19
+
+The preceding 187e80f cast checkpoint is qualified and pushed. The previous goal
+turn made concrete source/qualification progress in the input/condition foundation.
+This continuation follows
+the existing owned provider's repeated BuildWorld work, not another syntax variant.
+The whole final semantic world cannot be shared across different queries: it may
+contain query-specific lazy modules, compiler-root facts and ordered source answers.
+Keep current-world construction/admission and every existing limit intact.
+
+The implementation path is an owned source/view rebind plus a bounded per-provider
+module memo. A reusable module must have completed translation without consulting
+the input semantic world; an explicit condition-owner receipt records that fact.
+Modules needing source-scoped semantic answers keep the ordinary cold path until
+exact dependency/ordered-answer replay is qualified. This is a required layer of
+incremental editing, not acceptance of full world/dependency reuse or editor rollout.
+
+Rebinding must compare case/search policy and the complete ordered name/directory
+set, then exact original bytes, byte origin and readable view of each actually
+visited root/include once. Changed used bytes, include membership/search order or
+context invalidate reuse. Unchanged unrelated buffers may differ, but Source.Files
+must expose the current captured catalog, never an old hidden project buffer.
+Occurrence lexical views, tokens, compiler states, directives/settings, macro
+origins and declaration/origin rows remain immutable. Published owned provenance
+must exclude alternate wrappers and live constructing callbacks. Cancellation and
+all proof/copy/lookup work are admitted before publication; old readers stay usable.
+
+The provider memo must own no editor/world/bound type or callback. Snapshot leases
+cross its short native mutex; comparisons, analysis and cancellation run outside
+that lock. Options bound entry count, source tokens and retained catalog bytes;
+caller disablement remains available. Cache hits rebuild a fresh semantic world,
+retain current source identity and consume actual admitted proof work. No cap is
+raised and successful logical dependency loads still use their existing quota.
+Qualify cold/warm answers, edits to used/unrelated roots/includes, byte/view-only
+changes, mode/context/search/name changes, conflict isolation, cancellation,
+exhaustive proof limits, retirement and native concurrent callers before acceptance.
+
+Ignored .local/source-reuse-paths-private.json owns the new packet and exact return
+path. Start with sealed translation/catalog rebinding and view metadata sharing,
+then condition-owner independence receipt and owned-provider integration. Finish
+with the unchanged original RTL and maintained consumers, exact preservation,
+source/remote receipts. LAN stays offline; native Nyx tools absent. No host/config
+retry, capture, protected mutation, cleanup/restart, new MCP tool/schema, sub-agent
+or rollout. Full source/type/routine/module/incremental/editor/input/quality/parity/
+adoption/delivery and original criterion/task/credit/DONE remain open.
+
+Local implementation checkpoint: owned full translation rebinding now proves
+catalog/search identity plus exact visited bytes, byte origin and readable view,
+then leases immutable token/state/directive storage behind new physical-cache
+holders. Projection rebinding shares immutable syntax/origins and starts its own
+empty type memo/mutex. Both factories publish only after final cancellation/work
+admission; constructing sources, prefixes and alternate wrappers refuse reuse.
+The condition owner now exposes a detached optional ConsultedWorld receipt. It
+marks the first world admission before evaluating a condition, so successful,
+false and unanswered conditions all retain dependency; zero Answers is not used
+as a proxy for independence. No input world survives the receipt.
+
+Focused native source-rebind checks pass 193 with clean heap; every allowance
+below measured source/projection fits 29/33 refuses atomically. Existing ordered
+condition checks pass 38 with clean heap. The focused browser consumer compiles
+only (zero owned warnings/seven upstream Classes warnings), without execution,
+input or editor adoption. Retained earlier failures include the initially missed
+plain cancellation check; the new factories now explicitly check cancellation
+before proof work. This is an intermediate source/condition-owner checkpoint,
+not a final frozen batch or whole-product/RTL regression qualification.
+
+Final provider integration: completion.owned now consumes those rebind factories
+through a bounded per-provider directory. Typed copied retention defaults are
+16 entries/one million translated tokens/64 MiB of catalog bytes, conservatively
+counted per entry. Callers can tune independent ceilings or disable reuse. Native
+mutexes protect fixed slot leases/counters only; every request still constructs
+its own world and applies existing module/context/import admission. No bound type,
+world, editor, callback or native compiler survives a cache publication. New
+optional in-process work/storage receipts change no wire schema or default host.
+
+The ordinary provider integration passes 3,376 native checks/clean heap, including
+used root/include edits, unrelated edits, catalog membership, independent retention
+limits/eviction, indexed logical loads, world-sensitive conditional exports and
+128 joined concurrent requests. The representative source-construction/proof total
+is 3,409 cold/755 warm; this is actual logical work, not elapsed speed or an editor
+latency claim. An externally budgeted warm request needs exactly 3,199 operations;
+every smaller allowance refuses without rows. Mid-proof cancellation leaves the
+immutable directory usable. Existing completion/production semantic consumers
+retain 90/84 checks; source proof checks remain 193 at their 29/33-unit fits.
+
+One maintained dependency assertion originally measured optional retention work
+and assumed a one-unit-smaller budget must fail. Its exact clean-heap failure is
+retained. Only that consumer changes after the seven-input product/core freeze:
+the aggregate-restart assertion now independently measures mandatory cold work
+with reuse disabled, while the exhaustive warm admission test above remains
+separate. The final native/browser dependency consumers were explicitly rebuilt
+after the edit; an initial resume reused the old executable and its failure is
+also retained. Final qualification is composite, not a claim that this edited
+consumer ran before the core freeze. Existing indexed dependency checks now pass
+50 with clean heap. No production source or original RTL fixture changed then.
+
+All 105 main compiler logs succeed with zero owned warnings/273 upstream Classes
+warnings. The unchanged diagnostic-emission compiler oracle retains its deliberate
+warning separately. All 57 native logs have clean heaps; both Studios/backend/
+worker and 47 browser consumers compile as applicable, without browser execution,
+input/parity/adoption/delivery. The corpus retains 504 files/2,388,070 lossless
+tokens/571 checks. The unchanged original RTL passes 56: actual System source is
+resolved with zero translation diagnostics/13,101 declarations/zero syntax
+diagnostics/31 answers/no pending; ObjPas remains 209/zero/one/no pending. Indexed
+Free/FreeInstance retain original include navigation and detached insertion after
+provider retirement. The original five initial requests, one Word job, three of
+eight symbol jobs, six of eight dynamic jobs and exact ordered dynamic answers
+remain unchanged, as do the two-million/four-million/64-round limits.
+
+Eight focused/704 maintained/696 unrelated/97 RTL/24 compiler inputs, 156 byte
+packets/48 includes, 349 frozen artifacts, nine prior contexts, five current-start
+protected files and thirteen concurrent planning files are exact. The dependency
+consumer newly enters this maintained manifest; it was not in the preceding
+701-source subset. Historical global-config preservation remains false, retained
+as a separate failure; nothing restores or rewrites that protected file. Readers
+are joined, LAN offline and native Nyx tools absent. Ignored packet receipts own
+the final source/qualification/remote identity and all retained preparations.
+
+Return path: reassess budget-accounted semantic dependency/ordered-answer replay
+through the existing condition, translation and world owners. World-sensitive
+modules intentionally keep the cold path; full dependency-aware incremental
+performance and ordinary editor adoption are not established by independent
+source reuse. Preserve exact source/context/answer ordering, all quotas,
+cancellation and atomic refusal. Stop cache/fixture/compiler/capture variants.
+Full canonical source/type/routine/module/incremental/editor/input/quality/parity/
+adoption/delivery and the original criterion/task/credit/DONE remain open. No
+host/config retry, protected mutation, cleanup/restart, new MCP tool/schema,
+sub-agent or rollout. Preserve concurrent work.
+
+## Previous integration: Declared cast target contracts — 2026-10-19
 
 The preceding 6d401e3 indexed-property checkpoint is qualified and pushed; the
 previous goal turn made concrete source/qualification/remote progress. Source

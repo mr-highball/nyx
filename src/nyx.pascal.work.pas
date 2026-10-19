@@ -32,14 +32,17 @@ type
     its final lexical row. A separate row is admitted before a later copy;
     direct emission creates no intermediate vector/import to charge again.
     Metadata tree nodes and binding/evaluator steps have their own charges.
-    A memo operation is bounded to its fixed 64-entry/8192-node implementation;
-    proof traversal is separately admitted per examined node. Existing source,
+    A type memo operation is bounded to its fixed 64-entry/8192-node implementation;
+    proof traversal is separately admitted per examined node. Source proof
+    admits each catalog name/directory/occurrence, compared byte or view boundary
+    and bounded immutable vector lease before reuse publishes a result. Existing source,
     token, node, depth and per-query ceilings remain independently enforced. }
   TNyxPascalAnalysisPhase = (papSourceToken, papFrozenRow, papProjectionToken,
     papLexicalToken, papLexicalRow, papFilterToken, papFilterRow, papSyntaxToken,
     papMetadataValue, papMetadataNode, papDiagnosticRow, papTypeToken,
     papTypeNode, papTypeProof, papTypeMemo, papWorldEntry, papWorldToken,
-    papBindingStep, papConditionInput, papConstantPlan, papConstantStep);
+    papBindingStep, papConditionInput, papConstantPlan, papConstantStep,
+    papSourceProof);
 
   { Value-only detached receipt. Each phase counts admitted work, including work
     subsequently abandoned on refusal/cancellation; a failed admission increments
@@ -245,7 +248,7 @@ const
     'projection-token', 'lexical-token', 'lexical-row', 'filter-token', 'filter-row',
     'syntax-token', 'metadata-value', 'metadata-node', 'diagnostic-row', 'type-token',
     'type-node', 'type-proof', 'type-memo', 'world-entry', 'world-token', 'binding-step',
-    'condition-input', 'constant-plan', 'constant-step');
+    'condition-input', 'constant-plan', 'constant-step', 'source-proof');
 begin
 
   if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or

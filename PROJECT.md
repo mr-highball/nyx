@@ -317,6 +317,15 @@ supported declared receivers and a real SDK record member; browser consumers
 compile only. Full SDK capture, expression meaning, incremental work, default
 Studio adoption and complete input/navigation/quality/parity/delivery remain open.
 
+The provider now has [bounded source reuse](docs/pascal-projects.md#bounded-source-reuse-between-requests)
+for completed modules whose owning conditional traversal never consulted the input
+semantic world. Rebinding proves current visited bytes/views, compiler facts,
+policies and catalog/search identity, then shares immutable analysis with a fresh
+world per request. Caller retention limits/disablement, actual work accounting,
+cancelled no-row replies and native directory synchronization remain explicit.
+This does not qualify semantic-answer replay across changed dependencies, default
+editor installation or full incremental performance; WORK.md owns current checks.
+
 The [SDK module/dependency layer](docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now captures actual source files and loads indexed imports on demand, preserving
 Pascal lookup order and refusing false absence in incomplete interfaces. Native

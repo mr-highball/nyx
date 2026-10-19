@@ -143,6 +143,15 @@ type
     ['{628FC50E-DAD2-4BD6-842F-E4D434321126}']
     function AnalysisWork: TNyxPascalAnalysisReceipt;
   end;
+  { Detached dependency receipt from the owning conditional traversal. False
+    means no source condition consulted the supplied semantic world, including
+    failed/unknown queries. It does not certify files, compiler facts or options:
+    reuse must prove those separately and require a complete resolved source.
+    Absence of this capability never grants world independence. }
+  INyxPascalSemanticDependencies = interface(IInterface)
+    ['{D79E7674-6EA8-4B9D-974C-F29389518A46}']
+    function ConsultedWorld: Boolean;
+  end;
 
 { Resolve source-scoped conditions during one ordered traversal, using detached
   frozen pre-directive tokens and exact context at each synchronous source site.
@@ -189,7 +198,7 @@ type
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
     INyxPascalCompilerRequirements, INyxPascalSemanticWork,
-    INyxPascalSemanticAnalysisWork, INyxPascalConstantStorage,
+    INyxPascalSemanticAnalysisWork, INyxPascalSemanticDependencies, INyxPascalConstantStorage,
     INyxPascalConstantStorageIdentity)
   public
     Snapshot: INyxPascalTranslation;
@@ -201,6 +210,7 @@ type
     Rounds: Integer;
     Accepted: Integer;
     HasQuestion: Boolean;
+    WorldConsulted: Boolean;
     Site: TNyxPascalConditionOrigin;
     Issue: TNyxPascalBindingIssue;
     Related: TNyxText;
@@ -212,6 +222,7 @@ type
     function PrefixTokens: Integer;
     function ConstantSteps: Integer;
     function AnalysisWork: TNyxPascalAnalysisReceipt;
+    function ConsultedWorld: Boolean;
     function Passes: Integer;
     function Answers: Integer;
     function Pending: Boolean;
@@ -561,6 +572,11 @@ end;
 function TSemanticTranslation.AnalysisWork: TNyxPascalAnalysisReceipt;
 begin
   Result := WorkReceipt;
+end;
+
+function TSemanticTranslation.ConsultedWorld: Boolean;
+begin
+  Result := WorldConsulted;
 end;
 
 function TSemanticTranslation.Passes: Integer;
@@ -1005,6 +1021,11 @@ begin
       Restart from the captured base in that case, avoiding a ghost earlier
       root in the dependency namespace. Ordinary same-name prefixes replace
       only their own module and retain immutable dependency views. }
+
+    { Mark before first admission to the supplied world's namespace. Even an
+      unanswered query can depend on absence, incomplete imports or a source
+      scope; counting only accepted answers would incorrectly authorize reuse. }
+    Data.WorldConsulted := True;
 
     if (FPrefixWorld <> nil) and (FPrefixModuleName = LName) then
     begin
