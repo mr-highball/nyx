@@ -282,6 +282,8 @@ type
     function AtEnd: Boolean;
     { One real token inspection; repeated lookahead remains separately admitted. }
     function ReadToken(AIndex: Integer): TNyxPascalToken;
+    { Only the first > of an owned two-character closer may end a type window. }
+    function PrefixClose(const AToken: TNyxPascalToken): Boolean;
     function Tok: TNyxPascalToken;
     function Sym(AValue: TNyxPascalSymbol): Boolean;
     function Word(AValue: TNyxPascalWord; ALookAhead: Integer = 0): Boolean;
@@ -420,6 +422,19 @@ begin
   Result := FLexical.Token(AIndex);
 end;
 
+function TTypeSyntax.PrefixClose(const AToken: TNyxPascalToken): Boolean;
+begin
+  { A type can finish at the first > of an original >> or >= token: its
+    neighbour belongs to the containing generic declaration/assignment. Borrow
+    only this exact one-character prefix, retaining the original lexical owner
+    and scalar position. All other significant-token cuts still refuse. }
+
+  Result := AToken.Complete and (AToken.Kind = ptkSymbol) and
+    (AToken.Symbol in [psoShiftRight, psoGreaterEqual]) and
+    (AToken.Span.Start >= FWindow.Start) and (AToken.Span.Start + 1 = FWindow.Finish) and
+    (AToken.Span.Length = 2);
+end;
+
 function TTypeSyntax.Tok: TNyxPascalToken;
 begin
 
@@ -449,22 +464,29 @@ begin
 end;
 
 function TTypeSyntax.Sym(AValue: TNyxPascalSymbol): Boolean;
+var
+  LToken: TNyxPascalToken;
 begin
   Result := False;
 
-  if AtEnd or (Tok.Kind <> ptkSymbol) then
+  if AtEnd then
   begin
     Exit;
   end;
+  LToken := Tok;
+
+  if LToken.Kind <> ptkSymbol then Exit;
 
   if not FSuffix then
   begin
-    Result := Tok.Symbol = AValue;
+
+    if PrefixClose(LToken) then Exit(AValue = psoGreater);
+    Result := LToken.Symbol = AValue;
   end
   else
   begin
-    Result := ((Tok.Symbol = psoShiftRight) and (AValue = psoGreater)) or
-      ((Tok.Symbol = psoGreaterEqual) and (AValue = psoEqual));
+    Result := ((LToken.Symbol = psoShiftRight) and (AValue = psoGreater)) or
+      ((LToken.Symbol = psoGreaterEqual) and (AValue = psoEqual));
   end;
 end;
 
@@ -506,6 +528,8 @@ begin
   if not AtEnd then
   begin
     FLastOffset := Tok.Span.Finish;
+
+    if FLastOffset > FWindow.Finish then FLastOffset := FWindow.Finish;
     Inc(FAt);
     FSuffix := False;
   end;
@@ -1305,7 +1329,8 @@ begin
     if not (LToken.Kind in [ptkWhitespace, ptkComment]) or not LToken.Complete then
     begin
 
-      if (LToken.Span.Start < FWindow.Start) or (LToken.Span.Finish > FWindow.Finish) then
+      if (LToken.Span.Start < FWindow.Start) or
+        ((LToken.Span.Finish > FWindow.Finish) and not PrefixClose(LToken)) then
       begin
         raise ENyxPascalLexical.Create('A type window cannot cut a significant token');
       end;

@@ -33,7 +33,85 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Constraint-aware generic class/value admission — 2026-10-19
+## Current integration: Constructor intent and exact generic ancestry — 2026-10-19
+
+The previous checkpoint 3a785aa is qualified and pushed. This continuation is
+solo and preserves the whole library/Studio/resolver outcome. An independent
+complete compiler unit executes ancestry/generic/constructor-intent fields to 42;
+the original binder's clean-heap refusal is retained. Five independent negative
+compiler builds refuse unrelated ancestry, different generic arguments, absent
+interfaces, scalar constructor arguments and child-only class interface entries.
+The inspected FPC records constructor intent but checks class eligibility at
+specialization; no callable/default/public constructor proof is inferred.
+
+Current source retains grouped value-only named windows, exact constructed
+argument comparison, declaration-owned name lookup and cycle/unknown refusal.
+Transparent aliases compare by their targets; distinct types retain identity.
+Class implementation entries and interface inheritance remain separate rules.
+A type window can borrow only the first closing angle of an original >>/>=
+token, keeping the original lexical owner unchanged. Other significant cuts
+still refuse. Ancestor binding now starts on the real type token rather than
+an inserted separator with no compiler context. Formal parameter bounds and
+implicit interface-style ownership still require semantic/captured proof; actual
+arguments cannot manufacture those facts. Complete constraint/canonical type,
+module coherence/incremental/editor/physical input/navigation/quality/component
+breadth/native-browser parity/adoption/delivery and original criterion remain open.
+
+Five Pascal inputs are frozen before final qualification. Expanded ordinary
+generic binding passes 770 native checks/clean heap, including the complete
+independently executed compiler unit and its original local specializations.
+Type/window/origin checks pass 448. Both actual constrained operations find their
+first sufficient allowance: class 96, constructed ancestry 354. Every one of the
+95/353 smaller allowances refuses atomically, and the accepted types remain usable
+after borrowed-budget retirement. The lower class count follows fewer actual
+symbol inspections; no work phase is discounted or quota enlarged. Alias/source
+identity, missing modules, caller shadowing, malformed combinations, constructor
+mode, cycles, formal-bound uncertainty and implicit-interface uncertainty remain
+checked. Initial old-binder, stale-refusal, private-token-field and origin-context
+preparations stay retained separately; no failed preparation is final evidence.
+
+The required unchanged original RTL consumer PASSES 56 native checks with clean
+heap. System retains Source.Resolved TRUE/zero translation diagnostics, 13,101
+declarations/zero syntax diagnostics/31 answers/no pending query; ObjPas remains
+209/zero/one with no pending query. Exact indexed Free/FreeInstance, original
+include-token navigation after provider retirement and detached insertion remain
+ready. Five initial queries, one explicit Word job, three-of-eight symbol jobs,
+six-of-eight dynamic jobs, two-million view/four-million aggregate caps, 64 rounds
+and exact ordered input/context/answer identity stay unchanged.
+
+All 89 main compiler jobs succeed with zero owned warnings/217 upstream; the
+deliberate emission-oracle warning and five expected negative compiler builds
+stay separate. Forty maintained/seven additional native consumers plus the
+actual 504-file/2,365,546-token corpus pass: 49 accepted native logs including RTL,
+all clean heaps. Thirty-nine browser consumers compile, including the directly
+affected type/generic readers and Studio/worker; native Studio/backend compile
+as applicable. This is source/semantic qualification, without browser execution,
+physical editor/input, general type-validity, whole-resolver latency, parity,
+adoption or delivery claims. All original criterion/task/counter/credit/DONE and
+the full library/Studio/resolver goal remain open.
+
+Preservation retains 682 unrelated/687 maintained-source pins, 97 RTL/24 compiler
+inputs plus previous and five current compiler inspections, 156 original unit
+packets/48 includes, 349 frozen release artifacts, nine prior contexts, thirteen
+foreign planning files and five exact current-start protected files. The
+historical global-configuration preservation failure remains retained and false;
+no restoration occurs. All owned process/tool handles are terminal and joined.
+Ignored `.local/ancestry-constraints-paths-private.json` owns frozen inputs,
+retained failures, qualification, preservation and final source/remote receipts.
+Live-handle identities in that packet are historical. LAN remains offline and
+native Nyx tools absent. No host/config retry, protected mutation, cleanup/restart,
+approval bypass, new MCP tool/schema/rollout or sub-agent occurs.
+
+Continue the semantic type/constraint feature through existing formal-parameter,
+context, type and proof owners. First-class formal bound shapes and exact
+declaration order must precede dependent-constraint admission; actual class
+arguments cannot manufacture a missing formal contract. Implicit interface roots
+need captured style/ownership, not guessed COM/CORBA ancestry. Stop constructor/
+named-ancestry/window/oracle/compiler/capture variants at this qualified boundary.
+Full canonical types/module coherence/incremental budgets/editor/input/navigation/
+quality/component breadth/native-browser parity/adoption/delivery remain required.
+
+## Previous integration: Constraint-aware generic class/value admission — 2026-10-19
 
 The previous turn is verified progress: 509a234 is qualified and pushed. The
 semantic audit finds an actual mismatch beyond grammar: GenericNames rejected

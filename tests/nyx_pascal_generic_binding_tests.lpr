@@ -24,7 +24,7 @@ program nyx_pascal_generic_binding_tests;
 uses SysUtils, Classes, nyx.text, nyx.scheduler, nyx.pascal.context,
   nyx.pascal.lexing, nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.work, binding.fixture.generics
-  {$ifndef PAS2JS}, nyx.controls, constraints.fixture{$endif};
+  {$ifndef PAS2JS}, nyx.controls, constraints.fixture, constraints.ancestry.fixture{$endif};
 var
   GChecks: Integer;
 
@@ -130,7 +130,7 @@ begin
     'TValueBox<T:record>=class public Item:T; end; ' +
     'TPair<T,U:class; V:record>=class public First:T; Second:U; Value:V; end; ' +
     'TAlias=TItem; TRow=record Value:LongInt; end; ' +
-    'TConstructed<T:class,constructor>=class end; TAncestry<T:TItem>=class end; ' +
+    'TConstructed<T:class,constructor>=class Item:T; end; TAncestry<T:TItem>=class Item:T; end; ' +
     'var Accepted:TClassBox<TItem>; AliasValue:TClassBox<TAlias>; ' +
     'Row:TValueBox<TRow>; Scalar:TValueBox<LongInt>; Pair:TPair<TItem,TAlias,TRow>; ' +
     'Rejected:TClassBox<Integer>; Reference:TValueBox<TItem>; ' +
@@ -150,7 +150,11 @@ begin
     (TerminalType(MemberType(LWorld, LType, 'Second')).Definition.Declaration.Name = TNyxText('TItem')) and
     (TerminalType(MemberType(LWorld, LType, 'Value')).Definition.Declaration.Name = TNyxText('TRow')),
     'Grouped names and semicolon-separated constraint groups retain independent concrete fields');
-  for LAt := 0 to 6 do
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'ConstructorPending'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TItem'), 'The formerly refused constructor intent now admits its compiler-eligible class');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'AncestorPending'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TItem'), 'The formerly refused exact ancestry requirement keeps its source identity');
+  for LAt := 0 to 4 do
   begin
     case LAt of
       0: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Rejected'));
@@ -158,8 +162,6 @@ begin
       2: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Text'));
       3: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Address'));
       4: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Sequence'));
-      5: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('ConstructorPending'));
-      6: LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('AncestorPending'));
     end;
     Check((LResult.Status = pbsBound) and
       (LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint),
@@ -185,7 +187,7 @@ begin
   LNames[0] := 'T,U:class';
   LNames[1] := 'T:class,record';
   LNames[2] := 'T,T:class';
-  LNames[3] := 'T:class,constructor';
+  LNames[3] := 'T:constructor,constructor';
   LNames[4] := 'T:IInterface';
   for LAt := 0 to High(LNames) do
   begin
@@ -195,7 +197,7 @@ begin
     LResult := LWorld.TypeOfSymbol(LResult.SymbolAt(0));
     Check((LResult.Status = pbsUnresolved) and
       (LResult.Issue in [pbiGenericArity, pbiGenericConstraint, pbiGenericContext]),
-      'Wrong arity, malformed groups and unimplemented constraint families publish no bound type');
+      'Wrong arity, malformed groups and unsatisfied interfaces publish no bound type');
   end;
   LWorld := EmptyWorld.WithModule(View('budget.pas', 'unit Budget; {$mode delphi} interface ' +
     'type TBox<T:class>=class public Item:T; end; var Value:TBox<TObject>; implementation end.'));
@@ -212,10 +214,125 @@ begin
   Check(LRejected and (LWorld = LBefore), 'Cancelled constraint checking cannot mutate or publish another world');
 end;
 
+{ Independent compiler eligibility precedes semantic admission. These queries
+  must compare exact inherited arguments and nominal interface declarations. }
+procedure ConstraintAncestry;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LType: INyxPascalSemanticType;
+  LResult: INyxPascalResolution;
+  LAt: Integer;
+  LNames: array[0..8] of TNyxText;
+
+  procedure Accepted(const AName, ATypeName: TNyxText);
+  begin
+    LType := MemberType(LWorld, NamedType(LWorld, AName), 'Item');
+    Check(TerminalType(LType).Definition.Declaration.Name = ATypeName,
+      'The constrained field retains its original actual type: ' + String(AName));
+  end;
+begin
+  {$ifndef PAS2JS}
+  Check(CompilerAncestryValue = 42, 'The compiler executes real ancestry and constructor-intent fields');
+  {$endif}
+  LWorld := EmptyWorld.WithModule(View('ancestry.pas',
+    'unit Ancestry; {$mode delphi} interface type TParent=class end; ' +
+    'TChild=class(TParent) end; TUnrelated=class end; TAlias=LongInt; TDistinct=type LongInt; ' +
+    'IBase=interface(IInterface) end; IChild=interface(IBase) end; IOther=interface(IInterface) end; ' +
+    'TTagged=class(TChild,IBase,IOther) end; TOnlyChild=class(TParent,IChild) end; ' +
+    'TImplicit=class(IBase) end; TGeneric<T>=class Value:T; end; ' +
+    'TGenericChild=class(TGeneric<LongInt>) end; ' +
+    'TBox<T:TParent>=class Item:T; end; TExact<T:TGeneric<LongInt>>=class Item:T; end; ' +
+    'TAliasBox<T:TGeneric<TAlias>>=class Item:T; end; ' +
+    'TContract<T:IBase>=class Item:T; end; TMany<T:IBase,IOther>=class Item:T; end; ' +
+    'TClassContract<T:class,IBase>=class Item:T; end; ' +
+    'TCombined<T:TParent,IBase,constructor>=class Item:T; end; ' +
+    'TConstructed<T:constructor>=class Item:T; end; ' +
+    'TRoot<T:TObject>=class Item:T; end; TDuplicate<T:TParent,TParent>=class end; ' +
+    'TClassAndParent<T:class,TParent>=class end; TRecordAndParent<T:record,TParent>=class end; ' +
+    'var Child:TBox<TChild>; Exact:TExact<TGenericChild>; AliasArgument:TAliasBox<TGeneric<LongInt>>; ' +
+    'ClassInterface:TContract<TTagged>; ChildInterface:TContract<IChild>; Multiple:TMany<TTagged>; ' +
+    'Combined:TCombined<TTagged>; ConstructorOnly:TConstructed<TChild>; Root:TRoot<TImplicit>; ' +
+    'BadLineage:TBox<TUnrelated>; BadArgument:TExact<TGeneric<Byte>>; ' +
+    'BadDistinct:TExact<TGeneric<TDistinct>>; BadInterface:TContract<TUnrelated>; ' +
+    'BadConstructor:TConstructed<LongInt>; BadClassInterface:TClassContract<IChild>; ' +
+    'BadDuplicate:TDuplicate<TChild>; BadClassParent:TClassAndParent<TChild>; ' +
+    'BadRecordParent:TRecordAndParent<TChild>; ' +
+    'BadParentInterface:TContract<TOnlyChild>; implementation end.'));
+  Accepted('Child', 'TChild');
+  Accepted('Exact', 'TGenericChild');
+  Accepted('AliasArgument', 'TGeneric');
+  Accepted('ClassInterface', 'TTagged');
+  Accepted('ChildInterface', 'IChild');
+  Accepted('Multiple', 'TTagged');
+  Accepted('Combined', 'TTagged');
+  Accepted('ConstructorOnly', 'TChild');
+  Accepted('Root', 'TImplicit');
+  LNames[0] := 'BadLineage';
+  LNames[1] := 'BadArgument';
+  LNames[2] := 'BadDistinct';
+  LNames[3] := 'BadInterface';
+  LNames[4] := 'BadConstructor';
+  LNames[5] := 'BadClassInterface';
+  LNames[6] := 'BadDuplicate';
+  LNames[7] := 'BadClassParent';
+  LNames[8] := 'BadRecordParent';
+  for LAt := 0 to High(LNames) do
+  begin
+    LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName(LNames[LAt]));
+    Check((LResult.Status = pbsBound) and
+      (LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint),
+      'Invalid ancestry/argument/constructor combinations refuse: ' + String(LNames[LAt]));
+  end;
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('BadParentInterface'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint,
+    'A class implementing only a child interface does not fabricate a parent implementation entry');
+  LWorld := EmptyWorld.WithModule(View('provider.pas',
+    'unit Provider; {$mode delphi} interface type TBase=class end; ' +
+    'TChild=class(TBase) end; TBox<T:TBase>=class Item:T; end; implementation end.'))
+    .WithModule(View('consumer.pas', 'unit Consumer; {$mode delphi} interface uses Provider; ' +
+      'type TBase=class end; var Accepted:Provider.TBox<Provider.TChild>; ' +
+      'Rejected:Provider.TBox<TBase>; implementation end.'));
+  Accepted('Accepted', 'TChild');
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Rejected'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint,
+    'Caller shadowing cannot retarget the declaration-owned ancestor requirement');
+  LWorld := EmptyWorld.WithModule(View('missing.pas',
+    'unit Missing; {$mode delphi} interface type TBase=class end; ' +
+    'TBroken=class(Absent.TParent) end; TBox<T:TBase>=class Item:T; end; ' +
+    'var Value:TBox<TBroken>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericContext,
+    'A missing ancestor module remains unknown rather than proving a relationship');
+  LWorld := EmptyWorld.WithModule(View('formal.pas',
+    'unit Formal; {$mode delphi} interface type TItem=class end; ' +
+    'TBox<T;U:T>=class Item:U; end; var Value:TBox<TItem,TItem>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericContext,
+    'A concrete class cannot manufacture inheritable meaning for an unconstrained formal parameter');
+  LWorld := EmptyWorld.WithModule(View('roots.pas',
+    'unit Roots; {$mode delphi} interface type IRoot=interface end; ' +
+    'TBox<T:IInterface>=class Item:T; end; var Value:TBox<IRoot>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericContext,
+    'An uncaptured implicit interface style cannot fabricate an ancestor edge');
+  LWorld := EmptyWorld.WithModule(View('mode.pas',
+    'unit Mode; {$mode objfpc} interface type generic TBox<T:constructor>=class Item:T; end; ' +
+    'var Value:specialize TBox<TObject>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericConstraint,
+    'Constructor syntax cannot inherit Delphi eligibility in an ObjFPC declaration');
+  LWorld := EmptyWorld.WithModule(View('cycles.pas',
+    'unit Cycles; {$mode delphi} interface type TBase=class end; ' +
+    'TLoop=class(TLoop) end; TBox<T:TBase>=class Item:T; end; var Value:TBox<TLoop>; implementation end.'));
+  LResult := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
+  Check(LWorld.TypeOfSymbol(LResult.SymbolAt(0)).Issue = pbiGenericContext,
+    'An ancestry cycle retains uncertainty without publishing a fabricated relationship');
+end;
+
 { Find the actual constrained-query allowance with every smaller allowance
   refusing atomically. The accepted value must remain usable after the borrowed
   budget retires, without retaining a cancellation/execution capability. }
-procedure ConstraintWorkAdmission;
+procedure ConstraintWorkAdmission(AAncestry: Boolean = False);
 var
   LWorld: INyxPascalSemanticWorld;
   LLookup: INyxPascalResolution;
@@ -225,9 +342,22 @@ var
   LAt: Integer;
   LFit: Integer;
   LRefused: Boolean;
+  LExpected: TNyxText;
 begin
-  LWorld := EmptyWorld.WithModule(View('work.pas', 'unit Work; {$mode delphi} interface ' +
-    'type TBox<T:class>=class public Item:T; end; var Value:TBox<TObject>; implementation end.'));
+  LExpected := 'TObject';
+
+  if AAncestry then
+  begin
+    LWorld := EmptyWorld.WithModule(View('work.pas', 'unit Work; {$mode delphi} interface ' +
+      'type TParent<T>=class end; TChild=class(TParent<LongInt>) end; ' +
+      'TBox<T:TParent<LongInt>>=class public Item:T; end; var Value:TBox<TChild>; implementation end.'));
+    LExpected := 'TChild';
+  end
+  else
+  begin
+    LWorld := EmptyWorld.WithModule(View('work.pas', 'unit Work; {$mode delphi} interface ' +
+      'type TBox<T:class>=class public Item:T; end; var Value:TBox<TObject>; implementation end.'));
+  end;
   LLookup := LWorld.Lookup(Site(LWorld), NyxPascalBindingName('Value'));
   Check((LLookup.Status = pbsBound) and (LLookup.Count = 1), 'The constraint allowance starts from one exact symbol');
   LAccepted := nil;
@@ -263,9 +393,9 @@ begin
     if LAccepted <> nil then Break;
   end;
   Check((LFit > 0) and (LAccepted <> nil), 'The constrained query fits its existing bounded work domain');
-  Check(TerminalType(MemberType(LWorld, LAccepted.BoundType, 'Item')).Definition.Declaration.Name = TNyxText('TObject'),
+  Check(TerminalType(MemberType(LWorld, LAccepted.BoundType, 'Item')).Definition.Declaration.Name = LExpected,
     'A constrained type stays usable after execution-budget retirement');
-  WriteLn('constraint work / first fit=', LFit, ' every smaller allowance refused');
+  WriteLn('constraint work / ancestry=', AAncestry, ' first fit=', LFit, ' every smaller allowance refused');
 end;
 
 procedure Substitution;
@@ -642,6 +772,55 @@ begin
   end;
 end;
 
+{ The independently executed complete unit enters ordinary binding unchanged.
+  A minimal declaration-only System supplies names, never ABI or runtime facts. }
+procedure WholeAncestryInput;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LView: INyxPascalTranslatedSyntax;
+  LAt: Integer;
+  LScope: Integer;
+  LNames: array[0..2] of TNyxText;
+  LExpected: array[0..2] of TNyxText;
+  LResult: INyxPascalResolution;
+  LType: INyxPascalSemanticType;
+begin
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults)
+    .WithModule(View('system.pas', 'unit System; {$mode delphi} interface type ' +
+      'TObject=class end; IInterface=interface end; ' +
+      'TInterfacedObject=class(TObject,IInterface) end; implementation end.'));
+  LView := View('constraints.ancestry.fixture.pas',
+    ReadText(IncludeTrailingPathDelimiter(ParamStr(1)) + 'tests/constraints.ancestry.fixture.pas'));
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The complete compiler ancestry unit retains resolved declaration syntax');
+  LWorld := LWorld.WithModule(LView);
+  LAt := LView.Syntax.Named(0, 'CompilerAncestryValue');
+  while (LAt >= 0) and (LView.Syntax.Declaration(LAt).Visibility <> psavImplementation) do
+  begin
+    LAt := LView.Syntax.Declaration(LAt).NextNamed;
+  end;
+  Check(LAt >= 0, 'The actual compiled ancestry implementation remains present');
+  LScope := LView.Syntax.Declaration(LAt).NestedScope;
+  LNames[0] := 'LAncestry'; LExpected[0] := 'TConstraintTagged';
+  LNames[1] := 'LExact'; LExpected[1] := 'TConstraintGenericChild';
+  LNames[2] := 'LConstructor'; LExpected[2] := 'TConstraintNeedsArgument';
+  for LAt := 0 to High(LNames) do
+  begin
+    LResult := LWorld.Lookup(LWorld.At(1, LScope, LView.Syntax.Scope(LScope).Span.Finish - 1),
+      NyxPascalBindingName(LNames[LAt]));
+    Check((LResult.Status = pbsBound) and (LResult.Count = 1), 'The actual compiled local keeps its source scope');
+    LType := TerminalType(MemberType(LWorld, Bound(LWorld.TypeOfSymbol(LResult.SymbolAt(0))), 'Item'));
+    Check((LType.Definition.Declaration.Name = LExpected[LAt]) and
+      (LType.Definition.ModuleIndex = 1), 'The real constrained field preserves its original argument and module');
+  end;
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'TIntersectionProof'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TConstraintTagged'), 'The actual multi-interface alias keeps its implementing class');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'TInterfaceProof'), 'Item')).Definition.Declaration.Name =
+    TNyxText('IConstraintChild'), 'The actual single-interface alias keeps its related child interface');
+  Check(TerminalType(MemberType(LWorld, NamedType(LWorld, 'TCombinedProof'), 'Item')).Definition.Declaration.Name =
+    TNyxText('TConstraintTagged'), 'The actual combined alias retains all independent requirements');
+end;
+
 procedure ActualBadge;
 const
   CFiles: array[0..5] of String = ('nyx.controls.pas', 'nyx.controls.facades.inc',
@@ -707,11 +886,14 @@ begin
   try
     Substitution;
     ConstraintAdmission;
+    ConstraintAncestry;
     ConstraintWorkAdmission;
+    ConstraintWorkAdmission(True);
     MemberPages;
     {$ifndef PAS2JS}
     CompiledFixture;
     WholeConstraintInputs;
+    WholeAncestryInput;
     ActualBadge;
     {$endif}
     WriteLn('PASS ', GChecks, ' concrete generic binding checks');

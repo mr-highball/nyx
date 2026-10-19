@@ -131,6 +131,50 @@ begin
     .CompleteDefines(True);
 end;
 
+{ Adjacent generic delimiters retain the original immutable token. Only the
+  closed first-angle boundary is admitted; names and other token cuts refuse. }
+procedure GenericCloseWindows;
+var
+  LLexical: INyxPascalLexicalSnapshot;
+  LType: INyxPascalTypeSyntax;
+  LAt: Integer;
+  LToken: Integer;
+  LText: TNyxText;
+  LBefore: TNyxPascalToken;
+  LRejected: Boolean;
+begin
+  for LAt := 0 to 1 do
+  begin
+
+    if LAt = 0 then LText := 'TBox<Integer>>' else LText := 'TBox<Integer>=';
+    LLexical := NewNyxPascalLexicalSnapshot(LText);
+    LToken := LLexical.TokenAt(Length(LText) - 2);
+    LBefore := LLexical.Token(LToken);
+    LType := NewNyxPascalTypeSyntax(LLexical, NyxPascalSpan(0, Length(LText) - 1),
+      TNyxPascalTypeOptions.Defaults);
+    Check(LType.Complete and (LType.Lexical = LLexical),
+      'A borrowed first closing angle retains the original lexical owner');
+    Validate(LType);
+    Check((LType.Node(LType.Root).Span.Finish = Length(LText) - 1) and
+      (LLexical.Token(LToken).Symbol = LBefore.Symbol) and
+      (LLexical.Token(LToken).Span.Length = 2),
+      'The exact window ends before its neighbour without modifying the source token');
+  end;
+  LLexical := NewNyxPascalLexicalSnapshot('TBox<Integer>');
+  LRejected := False;
+  try
+    LType := NewNyxPascalTypeSyntax(LLexical, NyxPascalSpan(0, 8),
+      TNyxPascalTypeOptions.Defaults);
+  except
+    on ENyxPascalLexical do LRejected := True;
+  end;
+  Check(LRejected, 'A significant identifier cut still refuses instead of inventing a prefix type');
+  LLexical := NewNyxPascalLexicalSnapshot('Integer>>');
+  LType := NewNyxPascalTypeSyntax(LLexical, NyxPascalSpan(0, 8),
+    TNyxPascalTypeOptions.Defaults);
+  Check(not LType.Complete, 'An unmatched borrowed closing angle cannot certify an ordinary name');
+end;
+
 procedure Types;
 var
   LType: INyxPascalTypeSyntax;
@@ -696,6 +740,7 @@ end;
 begin
   try
     Types;
+    GenericCloseWindows;
     ProceduralDeclarations;
     WinapiRequests;
     Projection;
