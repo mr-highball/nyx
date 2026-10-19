@@ -103,8 +103,10 @@ now carry detached owned scanner proof through macro/include translation, so
 eligible spaced code can reuse classification. Produced/copied rows still count;
 unsafe boundaries keep the scanner. Zero-code continuations share their immutable
 origin directory as well as the existing lexical/syntax values, retaining current
-translation/context ownership. Remaining copy/parser costs and full engine/editor
-quality/adoption remain open.
+translation/context ownership. [Body dispatch](docs/pascal-projects.md#single-read-body-dispatch)
+now examines one local typed token across structural keyword alternatives,
+preserving EOF/checkpoint boundaries and ordinary escape/assembly rules.
+Remaining copy/parser costs and full engine/editor quality/adoption remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

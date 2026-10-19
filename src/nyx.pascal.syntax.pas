@@ -5084,6 +5084,7 @@ var
   LStart: Integer;
   LDepth: Integer;
   LRepeat: Integer;
+  LToken: TNyxPascalToken;
 begin
   Enter;
   try
@@ -5094,39 +5095,59 @@ begin
     LRepeat := 0;
     while not EOF and (LDepth > 0) do
     begin
+      { All dispatch tests inspect the same cursor before Step. Keep one local
+        value instead of rereading it for each alternative. EOF retains its
+        final lookahead after a closing END; Step retains cursor/cancellation
+        behavior. Checkpoint read frontiers keep their ordinary boundaries. }
+      LToken := Tok;
+      case LToken.Word of
+        pkwBegin, pkwTry, pkwCase, pkwAsm:
+          begin
+            Inc(LDepth);
 
-      if Tok.Word in [pkwBegin, pkwTry, pkwCase, pkwAsm] then
-      begin
-        Inc(LDepth);
+            if LDepth > FOptions.MaximumDepth then
+            begin
+              raise ENyxPascalSyntaxLimit.Create('Pascal body nesting exceeds its budget');
+            end;
+          end;
+        pkwRepeat, pkwUntil, pkwEnd:
+          begin
+            { These alternatives previously used Word rather than the raw word
+              field. Preserve its kind/escape guards independently of the other
+              branches, including opaque assembly and escaped identifiers. }
 
-        if LDepth > FOptions.MaximumDepth then
+            if (LToken.Kind = ptkWord) and not LToken.Escaped then
+            begin
+              case LToken.Word of
+                pkwRepeat: Inc(LRepeat);
+                pkwUntil:
+                  begin
+
+                    if LRepeat > 0 then
+                    begin
+                      Dec(LRepeat);
+                    end;
+                  end;
+                pkwEnd: Dec(LDepth);
+              else
+                begin
+                  { The enclosing dispatch admits only these three words. }
+                end;
+              end;
+            end;
+          end;
+        pkwProcedure, pkwFunction:
+          begin
+            Unsupported(LScope, 'Anonymous routine scopes need expression-context analysis', LToken.Span);
+          end;
+        pkwVar, pkwConst, pkwType:
+          begin
+            Unsupported(LScope, 'Inline declarations need statement-scope analysis', LToken.Span);
+          end;
+      else
         begin
-          raise ENyxPascalSyntaxLimit.Create('Pascal body nesting exceeds its budget');
+          { Ordinary expression tokens leave structural body depth unchanged. }
         end;
-      end
-      else if Word(pkwRepeat) then
-      begin
-        Inc(LRepeat);
-      end
-      else if Word(pkwUntil) then
-      begin
-
-        if LRepeat > 0 then
-        begin
-          Dec(LRepeat);
-        end;
-      end
-      else if Word(pkwEnd) then
-      begin
-        Dec(LDepth);
-      end
-      else if Tok.Word in [pkwProcedure, pkwFunction] then
-      begin
-        Unsupported(LScope, 'Anonymous routine scopes need expression-context analysis', Tok.Span);
-      end
-      else if Tok.Word in [pkwVar, pkwConst, pkwType] then
-      begin
-        Unsupported(LScope, 'Inline declarations need statement-scope analysis', Tok.Span);
       end;
       Step;
     end;

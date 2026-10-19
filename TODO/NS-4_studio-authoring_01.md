@@ -9,7 +9,30 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Prepared projection prerequisite (2026-10-18): detached owned scanner/prefix proof
+Body-dispatch prerequisite (2026-10-18): one unchanged-executable native debugger
+replay identifies the round 21/267,316 four-million refusal inside the ordinary
+projected append fragment scanner, at heap.inc's sizeof(pointer)>4 condition.
+It does not measure aggregate phase dominance or the fallback's eligibility/
+boundary reason. Reassessment follows actual duplicate current-token reads in
+the parser body loop. One local typed dispatch retains raw-vs-Word escape/kind
+rules, EOF lookahead/checkpoint frontier, nesting, unsupported spans and Step's
+cursor/cancellation behavior. No cache, fact, probe, quota or syntax is added.
+The native work preflight passes 429/clean heap at the unchanged 389-unit small
+semantic fit; its two case-coverage warnings are corrected before the one-source
+freeze. WORK.md owns retained preparation/debugger evidence, the final wider/
+original RTL result, exact preservation/source/remote receipts and next owner.
+All 81 compiler jobs and 40 maintained native consumers pass, zero owned warnings;
+33 browser consumers compile only. The original RTL gets past the old projected
+scan and retains a failed metadata-value admission at the same round 21/267,316
+four-million gate, clean heap and no final semantic/indexed result. The old native
+debugger stack does not identify the new metadata operation. Stop body/fixture/
+compiler/oracle/capture/debugger variants. Next reassess actual metadata lookup/
+edit/clone/store/capture and repeated same-owner reads through existing owners,
+preserving COW/checkpoint stamps and every actual remaining admission.
+Full original criterion/task/credit/DONE/editor/input/quality/parity/adoption/
+delivery remain open. No browser execution, host/config retry or rollout follows.
+
+Historical prepared projection prerequisite (2026-10-18): detached owned scanner/prefix proof
 binds complete Pascal atoms to exact spelling and identifier policy. Macro/include
 translation carries the same proof; spaced projection copies eligible rows under
 real admission. Unowned/incomplete/invalid/assembly/ampersand inputs and unsafe

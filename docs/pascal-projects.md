@@ -2604,6 +2604,29 @@ avoiding classification is not a timing claim or a guessed budget discount.
 WORK.md owns frozen maintained/unchanged RTL evidence, preservation distinctions,
 source/remote identity and the remaining full language/editor/parity/delivery scope.
 
+## Single-read body dispatch
+
+The declaration parser's body loop fetches one immutable current token for its
+structural keyword dispatch. BEGIN/TRY/CASE/ASM, repeat nesting, END and unsupported
+anonymous/inline declarations keep their original roles. Former Word branches
+retain their kind/escape guards independently of raw-word branches. Other tokens
+leave structural depth unchanged; this adds no statement/expression grammar.
+
+The loop retains its ordinary EOF operation, including the lookahead after the
+closing END. Step keeps its cursor/cancellation behavior. Eliminated duplicate
+current-position reads cannot extend or shrink the checkpoint's maximum read
+frontier; all remaining reads still pass through Tok/ReadToken and admission.
+The local value is never reused after a cursor change or by an independent helper
+operation. It retains no provider, source, callback, execution capability or cache.
+Current source identity, exact diagnostic spans and nesting limits stay intact.
+
+Existing whole-source/every-scalar append, assembly, unfinished scopes, hint/label,
+metadata checkpoint and exhaustive budget/cancellation consumers cover the body
+owner. No fixture or larger allowance substitutes for the unchanged real RTL
+qualification. WORK.md records the native debugger's independent refusal origin,
+the frozen product source, current evidence and remaining full resolver/editor/
+parity/adoption/delivery scope. Logical work receipts are not CPU/latency claims.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

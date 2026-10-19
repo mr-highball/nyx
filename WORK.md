@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Prepared projection atoms — 2026-10-18
+## Current integration: Body dispatch and native refusal provenance — 2026-10-18
+
+The previous goal turn made concrete progress: 8545d6e and its exact seven-source
+qualification are pushed. The restarted goal needs no user decision. The original
+criterion and full library/Studio outcome remain active; fifty unclosed authoring
+batches do not establish completion.
+
+One native debugger replay uses the already-qualified unchanged executable, its
+original consumer/input/compiler flags and existing probe quotas. No production
+diagnostic/API, compiler variant or source fixture is introduced. The installed
+GDB breaks at the actual four-million analysis refusal and retains its call stack;
+the run then exits one with clean heap and the same round 21/267,316 frontier.
+The failing scan is ScanNyxPascalLexicalFragment through TAppendLexical.CreateAppend
+and TTranslatedSyntax.Build's ordinary fallback at line 697. The condition is
+`sizeof(pointer) > 4` in rtl/inc/heap.inc, occurrence 59, scalar span 5,678/25,
+physical line 189, prefix count 267,315. The virtual append starts at scalar
+530,701. The physical include scanner appears only as an outer caller.
+Uninitialized result/debugger-invalid fields are excluded. The trace identifies
+the refused operation; it does not measure cumulative phase dominance or explain
+which proof/seam condition selected fallback. No assembly culprit is guessed.
+The ignored `.local/scan-provenance-paths-private.json` retains that independent
+unchanged-executable evidence and its exact source/input/terminal identities.
+
+Reassessment follows real repeated work in the existing body parser: one loop
+iteration retrieves the same current token for multiple keyword alternatives.
+Replace those reads with one local typed token and a closed word dispatch. Keep
+the raw-word branches distinct from the former Word kind/escape guards, including
+opaque assembly and escaped names. EOF retains its final lookahead after closing
+END; Step retains cancellation/cursor behavior. Checkpoint read frontiers, source
+identity, nesting/repeat accounting, unsupported-body diagnostics and actual
+remaining admissions stay unchanged. No cross-call cache, new fact, quota, probe,
+tool/schema or source syntax is added.
+
+The first native work preflight passes 429 checks with clean heap and the same
+389-unit fit/all 388 smaller allowances. It contains no measured body-performance
+claim. Two case-coverage warnings in the preparation are retained, then resolved
+with explicit ordinary-expression/unreachable-inner alternatives, without warning
+suppression or changed dispatch meaning. One final-byte product source is frozen
+before focused/maintained consumers and one unchanged original RTL run. Tests and
+all original compiler inputs stay exact. The ignored
+`.local/body-dispatch-paths-private.json` owns this new source qualification and
+return path. Stop body/fixture/compiler/oracle/capture variants after that run;
+retain its outcome before selecting another owner.
+
+Frozen qualification completes without an interrupted overlay. All 81 compiler
+jobs succeed with zero owned warnings and 182 upstream warnings. All 40 maintained
+native consumers, five focused consumers and one actual-source reading pass with
+clean heaps (46 pass logs). Checkpoint/append/storage/type-plan/work checks retain
+4,416/2,613/787/209/429; the semantic fit is still 389, all 388 smaller allowances
+refusing. Actual-source syntax passes 8,113/five inputs/3,978 declarations; lexical
+checks pass 568/501 files/2,327,161 lossless tokens. Both Studios/backend/worker
+compile as applicable, with 33 browser consumers compiled only. No browser/input/
+observing/parity/adoption/delivery is qualified by these builds.
+
+The unchanged original RTL still FAILS with clean heap: phase=prefix, used=
+4,000,000, requested=1, limit=4,000,000, translated=267,316, round=21, analysis=
+metadata-value. The old projected lexical refusal is passed within that prefix;
+the emitted-token frontier and answered-condition round do not advance. Metadata
+access is now the refused operation class. Its label alone distinguishes neither
+lookup/edit/clone/store/capture nor cumulative phase dominance. No new final
+System/ObjPas semantic or indexed result is published. The prior debugger trace
+belongs only to the old executable/lexical refusal, not this new metadata path.
+Five initial primitive queries, one separate Word job, symbol preparation three/
+eight, generic-fact ceiling eight, view cap two million, aggregate four million
+and 64-round ceiling all remain exact. No timing or completed-RTL claim follows.
+
+One focused source/661 maintained sources (660 unrelated unchanged), 97 RTL/24
+compiler/three additionally inspected inputs, 156 original packets/48 includes,
+five current-start protected files/nine contexts, 349 frozen artifacts and
+thirteen concurrent planning files remain exact. All owned readers are joined;
+Studio listeners and native Nyx MCP tools remain absent. The scoped source/remote
+receipt remains separate from historical original-baseline/prior postpush global
+Codex configuration failures. Those failures stay retained, actor unattributed,
+without restoration or an original full preservation/delivery pass.
+
+Stop body/fixture/compiler/oracle/capture/debugger variants. Reassessment after
+fifty-one documented unclosed authoring batches follows actual metadata-value
+access through existing syntax metadata/conditional owners: distinguish lookup,
+edit/clone, store/capture and repeated same-owner retrievals before choosing an
+optimization. Preserve checkpoint/COW stamps, exact input/context/ordered-answer
+identity, cancellation, atomic refusal and all actual remaining admission. No
+larger cache/ceiling, discounted lookup, new compiler probe, skipped directive/
+source or guessed fact substitutes for an eliminated operation.
+
+Full original criterion/task/credit/DONE/source/type/module/incremental/editor/
+input/quality/parity/adoption/delivery remain open. Historical preservation and
+concurrent global Codex configuration failures stay retained without restoration.
+No host/config retry, protected mutation, cleanup/restart, browser/HTTP/file
+execution/capture, new MCP tool/schema/rollout or sub-agent is authorized.
+LAN remains offline; native Nyx MCP tools remain absent.
+
+## Previous integration: Prepared projection atoms — 2026-10-18
 
 cdaecf4 is qualified and pushed, advancing unchanged RTL to round 21/267,316
 translated tokens before lexical-token admission exhausts the same aggregate.
