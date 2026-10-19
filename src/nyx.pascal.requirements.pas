@@ -85,6 +85,13 @@ function NewNyxPascalSourceSizeRequirement(const AReference: TNyxPascalSizeRefer
   unknown and are measured in the actual source; unsupported startup requests
   retain the ordinary structural prerequisite instead of being silently ignored. }
 function NyxPascalSourceWitnessContext(const ASource: INyxPascalTranslatedSyntax): Boolean;
+{ Check the captured pre-conditional replacement environment before rendering
+  a named native expression. An earlier effective name must not be redirected
+  by a later macro, nor may the witness's intrinsic/operator words be replaced.
+  This inspects captured translation data only, never the host configuration. }
+function NyxPascalSourceSizeReferenceSafe(const ASource: INyxPascalTranslatedSyntax;
+  const AName: TNyxPascalSizeReference;
+  const ACancellation: INyxCancellationScope = nil): Boolean;
 { Freeze an alternate requirement once; no producer/callback survives capture. }
 function CaptureNyxPascalRequirement(const ASource: INyxPascalCompilerRequirement): INyxPascalCompilerRequirement;
 { An empty or one-requirement owned response. Nil explicitly means empty. }
@@ -98,6 +105,8 @@ function NyxPascalContextStateAt(const ASource: INyxPascalTranslatedSyntax;
   AOffset: Integer): Integer;
 
 implementation
+
+uses nyx.pascal.macros;
 
 type
   { Forward implementation identity, borrowed only with its ordinary interface. }
@@ -326,6 +335,49 @@ begin
     ASource.OwnerSource, ASource.Source, ASource.ContextState, ASource.SourceOffset);
 end;
 
+function NyxPascalSourceSizeReferenceSafe(const ASource: INyxPascalTranslatedSyntax;
+  const AName: TNyxPascalSizeReference;
+  const ACancellation: INyxCancellationScope): Boolean;
+var
+  LState, LAt, LStart: Integer;
+  LMacros: INyxPascalTranslationMacros;
+  LEnvironment: INyxPascalMacroEnvironment;
+  LContext: INyxPascalCompilerContext;
+  LPart: TNyxText;
+begin
+  NyxPascalAdmitAnalysis(ACancellation, papConstantStep);
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Source-size reference inspection cancelled');
+  Result := False;
+
+  if ASource = nil then Exit;
+  LState := NyxPascalContextStateAt(ASource, ASource.Syntax.Lexical.Scalars);
+
+  if (LState < 0) or not Supports(ASource.Source, INyxPascalTranslationMacros, LMacros) then Exit;
+  LContext := ASource.Source.State(LState);
+
+  if LContext.Feature(ppfReplacementMacros) = ppkFalse then Exit(True);
+  LEnvironment := LMacros.StateMacros(LState);
+
+  if LEnvironment = nil then Exit;
+  NyxPascalAdmitAnalysis(ACancellation, papConstantStep, Length(AName.Name) + 4);
+
+  if LEnvironment.Has(NyxPascalDefine('sizeof')) or LEnvironment.Has(NyxPascalDefine('div')) or
+    LEnvironment.Has(NyxPascalDefine('mod')) or LEnvironment.Has(NyxPascalDefine('or')) then Exit;
+  LStart := 1;
+  for LAt := 1 to Length(AName.Name) + 1 do
+  begin
+
+    if (LAt <= Length(AName.Name)) and (AName.Name[LAt] <> '.') then Continue;
+    LPart := Copy(AName.Name, LStart, LAt - LStart);
+
+    if (Length(LPart) <= 128) and LEnvironment.Has(NyxPascalDefine(LPart)) then Exit;
+    LStart := LAt + 1;
+  end;
+  Result := True;
+end;
+
 function NyxPascalSourceWitnessContext(const ASource: INyxPascalTranslatedSyntax): Boolean;
 var
   LInitial, LRoot: INyxPascalCompilerContext;
@@ -403,6 +455,9 @@ begin
   inherited Create;
   NyxPascalAdmitAnalysis(ACancellation, papConstantStep);
   FReference := NyxPascalSizeReference(AReference.Name);
+
+  if not NyxPascalSourceSizeReferenceSafe(ASource, FReference, ACancellation) then
+    raise ENyxPascalContext.Create('A native source-size reference has no unchanged captured macro spelling');
 
   if not NyxPascalSourceWitnessContext(ASource) or not ASource.Source.Resolved or
     (AOrigin.Occurrence < 0) or (AOrigin.Occurrence >= ASource.Source.OccurrenceCount) or

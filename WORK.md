@@ -33,7 +33,84 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Thread-local member scope — 2026-10-19
+## Current integration: Declaration-size binding proof; RTL work refusal — 2026-10-19
+
+The previous turn is verified progress: 498b372 is qualified and pushed. This
+continuation revalidated it and followed the actual CommonHeaderSize prerequisite
+through existing binding, constant/source-condition and native requirement owners.
+The full original library/Studio/resolver outcome remains active; no criterion,
+task, counter, credit, DONE, parity, adoption or delivery closes.
+
+NyxPascalSameStorageBinding proves one name at two sites in the same immutable
+world. Both ordinary visible lookups must yield the exact same declaration, and
+every named alias/distinct/terminal type definition must retain exact identity.
+Shadowing, a different alias with the same leaf, hidden names, uncertain scopes,
+builtins/anonymous leaves and generic substitutions/owners refuse. Bounded lookup/
+ownership/alias work enters the caller's existing budget; no type size, compiler
+eligibility, equivalent shape or value identity is inferred. The construction-
+only source authority uses that proof before permitting a current native witness
+to serve an earlier constant initializer. Declaration sites remain authoritative;
+same-site/native/primitive owners and their interfaces remain distinct.
+
+Captured macro state also qualifies native spelling. A later replacement must
+not redirect an earlier effective type name or the witness's sizeof/div/mod/or
+tokens. Related active/uncertain replacements and unavailable state refuse;
+inactive and unrelated replacements remain usable. Both source consumption and
+explicit source-requirement construction enforce this through existing translation/
+macro owners. This inspects captured source inputs, not every unobserved compiler
+configuration/default; complete target/startup coherence remains caller-owned.
+No native protocol, MCP tool/schema/rollout, fixed probe or guessed width changes.
+
+All four owned Pascal inputs are frozen before final qualification. Extended
+fulfillment passes 73 native checks with clean heap: two actual SizeOf-containing
+constant initializers replay through the unchanged world after a packing change
+and with an unrelated active macro; independent compiled packed-layout oracles
+agree. Controls qualify exact aliases/namespaces, shadows/hidden names, generic
+and cross-world refusal, cancellation/work admission and active/inactive macro
+effects. Existing 181/39 storage consumers and all forty maintained/seven further
+native consumers pass. The actual 503-file/2,357,303-token lexical corpus passes:
+48 passing native logs in total. All 86 accepted main compiler jobs have zero
+owned warnings/196 upstream warnings; the separate diagnostic oracle retains its
+deliberate warning outside product debt. Both Studios/backend/worker and 36 browser
+consumers compile only. No browser execution, physical editor/input/parity,
+performance, adoption or delivery qualification follows.
+
+The separate required unchanged original RTL run FAILS and is retained with clean
+heap. It performs the existing Longint/Int64/Pointer/VarHeader jobs and now the
+generic CommonHeader and FreeChunk source jobs: six inside the unchanged dynamic
+eight-job allowance. Five initial queries, one separate Word job and three-of-eight
+symbol preparation stay exact. The following full source reconstruction refuses
+at the four-million aggregate cap, not the two-million view cap:
+phase=prefix, used=4000000, requested=1, translated=286684, round=30,
+analysis=frozen-row. No final semantic/indexed receipt is published after that
+refusal. The prior 11,030/six/27 System, 209/four/one ObjPas and indexed
+Free/FreeInstance success remain historical, not current-source RTL success.
+The new measurements are actual native evidence; they do not establish full RTL
+meaning, complete source/type analysis or passage of the original integration.
+
+Preservation retains 663 unrelated/667 maintained-source pins, 97 RTL/24 compiler
+inputs plus retained inspections, 156 original unit packets/48 includes, 349 frozen
+release artifacts, nine prior contexts, thirteen foreign planning files and five
+exact current-start protected files. Historical global-configuration preservation
+failures remain retained and false. All owned readers/process handles are terminal
+and joined. LAN stays offline and native Nyx tools absent. There is no host/config
+retry, protected mutation, cleanup/restart, approval bypass or sub-agent. Ignored
+`.local/declaration-size-paths-private.json` owns frozen source, distinct passing/
+failed qualification, preservation and remote receipts plus retained preparations.
+
+Stop binding/macro/witness/fixture/compiler/capture variants. Reassess actual
+budget-accounted frozen-prefix reuse through existing conditions/translation/
+syntax owners. The active failure is frozen-row admission in round 30; inspect
+repeated directory/state/macro/settings/metadata copying versus real shared suffix
+work before choosing the next change. Retain exact ordered inputs/contexts/answers,
+all actual work admission, cancellation, atomic refusal, two-/four-million caps,
+64 rounds and compiler/probe quotas. Do not discount repeated copies, truncate,
+skip directives, add probes, weaken the original fixture or replace the failed
+result with a smaller oracle. Full canonical types/modules/incremental budgets/
+editor/input/navigation/quality/component breadth/native-browser parity/adoption/
+delivery remain required.
+
+## Previous integration: Thread-local member scope — 2026-10-19
 
 The previous turn is verified progress: 51b76ff is qualified and pushed. This
 continuation revalidated its source/foreign inputs and followed the actual class

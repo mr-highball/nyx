@@ -446,6 +446,7 @@ var
   LKey: TNyxPascalStorageKey;
   LChild: INyxPascalAnalysisBudget;
   LSourceView: INyxPascalSourceView;
+  LCurrentSite: INyxPascalBindingSite;
 begin
   AWork := 0;
   ARequirement := nil;
@@ -456,7 +457,7 @@ begin
     raise ENyxPascalAnalysisCancelled.Create('Source-size scope retired');
   end;
 
-  if (ASite = nil) or (ASite.Caret <> View.Syntax.Lexical.Scalars) or
+  if (ASite = nil) or (ASite.Caret > View.Syntax.Lexical.Scalars) or
     (ASite.ScopeIndex <> View.Syntax.ScopeAt(ASite.Caret)) or
     (ASite.World.ModuleAt(ASite.ModuleIndex) <> View) or
     not NyxPascalSourceWitnessContext(View) then Exit;
@@ -468,6 +469,19 @@ begin
   LChild := NewNyxPascalAnalysisBudget(AMaximumWork, Budget);
   try
     try
+      if not NyxPascalSourceSizeReferenceSafe(View, AName, LChild) then Exit;
+      LCurrentSite := ASite.World.At(ASite.ModuleIndex,
+        View.Syntax.ScopeAt(View.Syntax.Lexical.Scalars), View.Syntax.Lexical.Scalars);
+
+      if (ASite.Caret <> LCurrentSite.Caret) or (ASite.ScopeIndex <> LCurrentSite.ScopeIndex) then
+      begin
+        { Earlier constant initializers retain their own lookup site. A native
+          expression at today's conditional may serve them only after ordinary
+          binding proves the same visible symbol and exact named type chain. }
+
+        if not NyxPascalSameStorageBinding(ASite, LCurrentSite,
+          NyxPascalBindingName(AName.Name), LChild) then Exit;
+      end;
       LFile := View.Source.Occurrence(SiteOrigin.Occurrence).FileIndex;
       LSourceView := NyxPascalSourceViewAt(View.Source.Files, LFile);
 

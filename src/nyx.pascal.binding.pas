@@ -328,6 +328,15 @@ function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
 { Empty persistent source world. Nothing parses, opens, executes or enrolls a
   project until the caller explicitly supplies an already constructed source view. }
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
+{ Conservative correspondence of one visible name at two sites in the same
+  immutable world. Both lookups and named type/alias definitions must retain
+  exact declaration identity. Shadowing, uncertain scopes, anonymous/builtin
+  leaves and generic substitutions/owners refuse. This establishes no size,
+  layout, compiler eligibility or value identity; callers still own the native
+  measurement site/context. All lookup/proof work enters the supplied budget. }
+function NyxPascalSameStorageBinding(const ABefore, ACurrent: INyxPascalBindingSite;
+  const AName: TNyxPascalBindingName;
+  const ACancellation: INyxCancellationScope = nil): Boolean;
 
 { Admit actual boundary scans/module rows while building an immutable candidate.
   A work-bearing scope requires the optional construction capability; ordinary
@@ -4042,6 +4051,106 @@ begin
   Result := NewNyxPascalPrimitiveRequirement(
     LContext, LIdentity.IntrinsicReference, LOwner,
     ASite.World.ModuleAt(ASite.ModuleIndex), LState, ASite.Caret);
+end;
+
+function NyxPascalSameStorageBinding(const ABefore, ACurrent: INyxPascalBindingSite;
+  const AName: TNyxPascalBindingName;
+  const ACancellation: INyxCancellationScope): Boolean;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LBefore, LCurrent, LTyped: INyxPascalResolution;
+  LLeft, LRight: INyxPascalSemanticType;
+  LDepth: Integer;
+
+  procedure Admit;
+  begin
+    NyxPascalAdmitAnalysis(ACancellation, papBindingStep);
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Storage binding correspondence cancelled');
+  end;
+
+  function Stable(const ASymbol: INyxPascalBoundSymbol): Boolean;
+  var
+    LSubstituted: INyxPascalSubstitutedSymbol;
+    LView: INyxPascalTranslatedSyntax;
+    LScope, LOwner, LDepth: Integer;
+  begin
+    Admit;
+    Result := False;
+
+    if (ASymbol = nil) or (ASymbol.World <> LWorld) or
+      (ASymbol.Declaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> []) or
+      (ASymbol.Declaration.GenericSpan.Length <> 0) then Exit;
+
+    if Supports(ASymbol, INyxPascalSubstitutedSymbol, LSubstituted) and
+      (LSubstituted.Environment <> nil) then Exit;
+    LView := LWorld.ModuleAt(ASymbol.ModuleIndex);
+    LScope := ASymbol.Declaration.Scope;
+    LDepth := 0;
+    while LScope >= 0 do
+    begin
+      Admit;
+      Inc(LDepth);
+
+      if LDepth > LWorld.Options.MaximumDepth then
+        raise ENyxPascalBindingLimit.Create('Storage declaration ownership exceeds its depth budget');
+
+      if LView.Syntax.Scope(LScope).UnsupportedSyntax then Exit;
+      LOwner := LView.Syntax.Scope(LScope).OwnerDeclaration;
+
+      if (LOwner >= 0) and (LView.Syntax.Declaration(LOwner).GenericSpan.Length <> 0) then Exit;
+      LScope := LView.Syntax.Scope(LScope).Parent;
+    end;
+    Result := True;
+  end;
+
+  function SameSymbol(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
+  begin
+    Admit;
+    Result := Stable(ALeft) and Stable(ARight) and
+      (ALeft.ModuleIndex = ARight.ModuleIndex) and
+      (ALeft.DeclarationIndex = ARight.DeclarationIndex);
+  end;
+
+begin
+  Admit;
+  Result := False;
+
+  if (ABefore = nil) or (ACurrent = nil) or (ABefore.World <> ACurrent.World) then Exit;
+  LWorld := ABefore.World;
+  LBefore := LWorld.Lookup(ABefore, AName, ACancellation);
+  LCurrent := LWorld.Lookup(ACurrent, AName, ACancellation);
+
+  if (LBefore.Status <> pbsBound) or (LCurrent.Status <> pbsBound) or
+    (LBefore.Count <> 1) or (LCurrent.Count <> 1) or
+    not SameSymbol(LBefore.SymbolAt(0), LCurrent.SymbolAt(0)) then Exit;
+  LTyped := LWorld.TypeOfSymbol(LBefore.SymbolAt(0), ACancellation);
+
+  if LTyped.Status <> pbsBound then Exit;
+  LLeft := LTyped.BoundType;
+  LTyped := LWorld.TypeOfSymbol(LCurrent.SymbolAt(0), ACancellation);
+
+  if LTyped.Status <> pbsBound then Exit;
+  LRight := LTyped.BoundType;
+  LDepth := 0;
+  repeat
+    Admit;
+    Inc(LDepth);
+
+    if LDepth > LWorld.Options.MaximumDepth then
+      raise ENyxPascalBindingLimit.Create('Storage alias correspondence exceeds its depth budget');
+
+    if (LLeft = nil) or (LRight = nil) or (LLeft.Kind <> LRight.Kind) or
+      (LLeft.Kind = pstBuiltin) or not SameSymbol(LLeft.Definition, LRight.Definition) or
+      (LLeft.Definition.Declaration.Kind <> psdkType) or
+      LLeft.Definition.Declaration.Anonymous then Exit;
+
+    if not (LLeft.Kind in [pstAlias, pstDistinct]) then Break;
+    LLeft := LLeft.Target;
+    LRight := LRight.Target;
+  until False;
+  Result := True;
 end;
 
 end.

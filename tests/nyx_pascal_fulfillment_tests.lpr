@@ -183,9 +183,12 @@ begin
       'unit System; interface {$mode objfpc}{$include payload.inc} implementation end.')
     .WithFile(NyxPascalPhysicalFile('fixture/payload.inc'),
       'type TPair=packed record First:Byte; Second:Word; end;'#10 +
-      '{$if sizeof(TPair)>0}const FirstReady=1;{$endif}'#10 +
+      'const PairBytes=sizeof(TPair);'#10 +
+      '{$packrecords 8}{$macro on}{$define UNRELATED_NAME:=Byte}'#10 +
+      '{$if PairBytes>0}const FirstReady=1;{$endif}'#10 +
       'type TEnvelope=packed record Pair:TPair; Last:Byte; end;'#10 +
-      '{$if sizeof(TEnvelope)>0}const SecondReady=1;{$endif}');
+      'const EnvelopeBytes=sizeof(TEnvelope);'#10 +
+      '{$if EnvelopeBytes>0}const SecondReady=1;{$endif}');
 end;
 
 function SourceModules(const AOwner: INyxFPCCompilerCapture): INyxPascalModuleCatalog;
@@ -237,6 +240,125 @@ begin
   end;
   Result := Result + 'payload.inc(1,1) Fatal: (2022) User defined: ' + LPrefix + 'STOP'#10 +
     'Fatal: (1018) Compilation aborted'#10;
+end;
+
+procedure BindingCorrespondence;
+const
+  CText: TNyxText = 'unit System; interface type TObject=class end; ' +
+    'TData=record Value:Byte; end; TAlias=TData; const Earlier=sizeof(TAlias); ' +
+    'type TShadow=class public type TData=record Value:Word; end; const Marker=1; end; ' +
+    'TAliasShadow=class public type TData=System.TData; const Marker=1; end; ' +
+    'THidden=class strict private type TPrivate=record Value:Byte; end; public const Marker=sizeof(TPrivate); end; ' +
+    'TGeneric<T>=class public type TElement=record Value:T; end; const Marker=1; end; ' +
+    'implementation end.';
+var
+  LView: INyxPascalTranslatedSyntax;
+  LWorld, LOtherWorld: INyxPascalSemanticWorld;
+  LBefore, LAfter, LShadow, LAliasShadow, LGeneric: INyxPascalBindingSite;
+  LBudget: INyxPascalAnalysisBudget;
+  LCancel: INyxCancellationScope;
+  LRejected: Boolean;
+
+  function Inside(const AName: TNyxText): INyxPascalBindingSite;
+  var LScope: Integer;
+  begin
+    LScope := LView.Syntax.Declaration(LView.Syntax.Named(0, AName)).NestedScope;
+    Result := LWorld.At(0, LScope, LView.Syntax.Declaration(
+      LView.Syntax.Named(LScope, 'Marker')).ExpressionSpan.Start);
+  end;
+
+begin
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(
+    NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('identity.pas'), CText),
+    NyxPascalPhysicalFile('identity.pas'), NewNyxPascalCompilerContext(ppcFPC,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).CompleteDefines(True),
+    TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+  Check(LView.Syntax.DiagnosticCount = 0, 'The binding correspondence control has complete declared syntax');
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  LBefore := LWorld.At(0, 0, LView.Syntax.Declaration(LView.Syntax.Named(0, 'Earlier')).ExpressionSpan.Start);
+  LAfter := LWorld.At(0, 0, LView.Syntax.Lexical.Scalars);
+  Check(NyxPascalSameStorageBinding(LBefore, LAfter, NyxPascalBindingName('TAlias')),
+    'The same visible name retains its exact alias and nominal definition chain across sites');
+  LShadow := Inside('TShadow');
+  Check(not NyxPascalSameStorageBinding(LBefore, LShadow, NyxPascalBindingName('TData')),
+    'A later same-spelled type with another definition cannot borrow the earlier layout');
+  Check(NyxPascalSameStorageBinding(LBefore, LShadow, NyxPascalBindingName('System.TData')),
+    'Explicit namespace visibility can prove the same definition despite local shadowing');
+  LAliasShadow := Inside('TAliasShadow');
+  Check(not NyxPascalSameStorageBinding(LBefore, LAliasShadow, NyxPascalBindingName('TData')),
+    'A different visible alias cannot pass merely because it reaches the same terminal record');
+  Check(not NyxPascalSameStorageBinding(Inside('THidden'), LAfter, NyxPascalBindingName('TPrivate')),
+    'A name visible only to its earlier declaration scope cannot be emitted at an unrelated current scope');
+  Check(not NyxPascalSameStorageBinding(LBefore, LAfter, NyxPascalBindingName('Byte')),
+    'Pristine builtins do not acquire declared-layout correspondence');
+  LGeneric := Inside('TGeneric');
+  Check(not NyxPascalSameStorageBinding(LGeneric, LGeneric, NyxPascalBindingName('TElement')),
+    'A generic owner cannot acquire an unspecialized storage correspondence');
+  LOtherWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  Check(not NyxPascalSameStorageBinding(LBefore, LOtherWorld.At(0, 0, LView.Syntax.Lexical.Scalars),
+    NyxPascalBindingName('TAlias')), 'Identical ordinals in another world do not establish source identity');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try NyxPascalSameStorageBinding(LBefore, LAfter, NyxPascalBindingName('TAlias'), LCancel);
+  except on ENyxPascalAnalysisCancelled do LRejected := True; end;
+  Check(LRejected, 'Cancelled binding proof returns no affirmative correspondence');
+  LBudget := NewNyxPascalAnalysisBudget(1);
+  LRejected := False;
+  try
+    try NyxPascalSameStorageBinding(LBefore, LAfter, NyxPascalBindingName('TAlias'), LBudget);
+    except on ENyxPascalAnalysisWorkLimit do LRejected := True; end;
+    Check(LRejected and (LBudget.Receipt.Total = 1), 'Binding correspondence admits before its unchanged work ceiling');
+  finally LBudget.Retire; end;
+end;
+
+procedure MacroCorrespondence;
+var
+  LRoot: INyxPascalCompilerContext;
+  LOwner: INyxFPCCompilerCapture;
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LWorld: INyxPascalSemanticWorld;
+  LQuery: INyxPascalSemanticTranslation;
+  LRequests: INyxPascalCompilerRequirements;
+  LAt, LCase: Integer;
+  LMacroName, LTail: TNyxText;
+  LSafe: Boolean;
+begin
+  LRoot := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmFPC, pcsoSystemBootstrap)
+    .WithSymbol(NyxPascalDefine('FPC'), ppdDefined).WithOption('H', ppkFalse);
+  LOwner := Capture(LRoot, LRoot);
+  LModules := SourceModules(LOwner);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits));
+  for LCase := 0 to 5 do
+  begin
+    LTail := '';
+    case LCase of
+      0: LMacroName := 'TPair';
+      1: LMacroName := 'sizeof';
+      2: LMacroName := 'div';
+      3: LMacroName := 'mod';
+      4: LMacroName := 'or';
+      5: begin LMacroName := 'TPair'; LTail := '{$macro off}'; end;
+    end;
+    LFiles := SourceFiles.WithFile(NyxPascalPhysicalFile('fixture/payload.inc'),
+      'type TPair=packed record First:Byte; end; TChanged=packed record First:Word; end;'#10 +
+      'const PairBytes=sizeof(TPair); {$macro on}{$define ' + LMacroName + ':=TChanged}' + LTail + #10 +
+      '{$if PairBytes>0}const Ready=1;{$endif}');
+    LQuery := SourceQuery(LFiles, LModules, LWorld);
+    LRequests := CaptureNyxPascalRequirements(LQuery);
+    LSafe := LQuery.Pending;
+    for LAt := 0 to LRequests.RequirementCount - 1 do
+    begin
+
+      if LCase < 5 then LSafe := LSafe and (LRequests.RequirementAt(LAt).Kind <> pcrSourceSize)
+      else LSafe := LSafe and (LRequests.RequirementAt(LAt).Kind = pcrSourceSize);
+    end;
+
+    if LCase = 5 then LSafe := LSafe and (LRequests.RequirementCount = 1);
+    Check(LSafe, 'Current captured macro activity governs safe native reference/intrinsic/operator spelling');
+  end;
 end;
 
 procedure SourceWitnessPortable;
@@ -657,6 +779,8 @@ begin
     Portable;
     PristineAndLocal;
     SourceWitnessPortable;
+    BindingCorrespondence;
+    MacroCorrespondence;
     {$ifndef PAS2JS}
     Check(ParamCount = 2, 'Supply configured compiler and fresh native scratch root');
     ForceDirectoriesUTF8(ParamStr(2));
