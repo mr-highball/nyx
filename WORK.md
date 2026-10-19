@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Implicit method receivers and function results — 2026-10-19
+## Current integration: Typed indexed property receivers — 2026-10-19
+
+The preceding d590b43 method-receiver checkpoint is qualified and pushed: the
+previous goal turn made concrete source/qualification/remote progress. This solo
+continuation follows an actual authoring gap in Nyx's Children, Items and default
+collection properties through existing syntax/binding/expression/completion owners.
+Property declarations now retain typed accessors, exact parameter spans/scopes
+and the separate default-member directive, without confusing scalar default
+values. Grouped parameters retain independent names/modes/types. Existing enum
+ordinals and interface GUIDs stay stable; declaration records require rebuilding.
+
+Named/default index receiver contracts preserve generic environments, inherited
+declarations, aliases, record/interface owners and ordinary visibility. Native
+compiler evidence establishes that a new same-named property does not replace
+the inherited default identity: Hidden[0] and Hidden.Items[0] can return different
+types. A fresh explicitly default property does replace that inherited selector.
+Unapplied indexed values, explicit write-only reads, wrong parameter shape,
+ambiguous defaults, unknown compiler context and malformed source retain refusal.
+Index expressions stay balanced/opaque; no getter, setter or index expression is
+executed, and no argument-conversion/compiler-call admission is inferred.
+
+An independent complete Delphi-mode unit executes actual generic/named/default/
+inherited/record indexing to 42; its getter counter remains unchanged during
+source queries. Initial template-private-counter and inherited-result compile
+errors stay retained; the accepted native source uses a public template bridge
+and the compiler's actual inherited identity. The first focused preparation's
+contextual Alias variable-name failure also remains retained. Focused native
+qualification passes 412 checks/clean heap, first fitting at 270 units with all
+smaller allowances refusing atomically. Existing provider navigation/retirement/
+exact insertion and appended checkpoint metadata are exercised. Five inputs freeze
+before the complete maintained/native/browser/original-RTL batch now running.
+
+Source review identifies a property-suffix regression in that first frozen input:
+the new accessor scan can consume a trailing declaration hint before its existing
+typed hint owner sees it. The unchanged maintained variant consumer confirms the
+failure at its existing property hint assertion, with a clean heap. The original
+RTL run passes 56 checks/clean heap with the unchanged System/ObjPas/source/indexed
+frontier. The batch is rejected; five exact first inputs, failure log and passing
+original result remain retained. All four readers join before repair.
+
+The scanner restores existing AtHint, incomplete-token, implementation/body and
+alternate-bracket boundaries. The focused suite adds the missing property-hint
+check and passes 413 checks/clean heap at the unchanged 270-unit first fit. Five
+repaired inputs freeze before a fresh complete qualification batch.
+No original fixture, cap, probe or assertion is weakened. Republished property
+signatures, formal-constraint default selection and general argument/call meaning
+remain open. Ignored .local/indexed-properties-paths-private.json owns rejected/
+repaired packets, source freeze, previous accepted checkpoint and return path.
+
+The complete repaired batch passes 99 main compiler jobs with zero owned warnings
+and 252 upstream pas2js Classes warnings, separately from the deliberate emission
+oracle. All forty-five maintained native consumers and seven additional consumers
+pass. The separately executed corpus and unchanged original RTL consumer bring
+accepted native logs to fifty-four, all with clean heaps. Both Studios/backend/
+worker and forty-four browser compilations pass as applicable. Browser execution,
+ordinary rendered input, observing rollout, parity/adoption/delivery stay open.
+Maintained completion/production semantic checks remain 90/84; method/postfix/
+generic/binding/type/checkpoint checks remain 444/410/948/74/448/6526. The unchanged
+syntax consumer now passes 8,197 checks over its same five actual inputs/3,983
+declarations, including one newly retained property parameter. The unchanged
+variant/hint consumer passes its original 22 checks. The corpus retains 504
+files/2,381,611 lossless tokens/571 checks.
+
+The unchanged original RTL consumer passes 56 checks/clean heap. Actual System
+remains Source.Resolved/zero translation diagnostics, 13,101 declarations/zero
+syntax diagnostics/thirty-one answers/no pending fact; ObjPas stays 209/zero/one/
+no pending. Exact indexed Free/FreeInstance completion, original include-token
+navigation after provider retirement and detached insertion remain ready.
+Initial five queries, one Word job, three/eight symbol jobs and exact ordered
+six/eight dynamic jobs stay unchanged. Two-million view/four-million aggregate
+work/token caps and sixty-four rounds stay unchanged. Neither complete RTL/type
+meaning nor general call/argument admission follows from these assertions.
+
+Five focused/699 maintained pins, including 694 unrelated exact sources, retain
+their bytes. All 97 RTL/24 compiler inputs, prior inspected sets and four new
+read-only compiler-source inspections stay exact. All 156 unit packets/48
+includes, thirteen concurrent planning files, five current-start protected files/
+nine contexts and 349 frozen release artifacts stay exact. Historical global-
+config preservation remains false; current equality does not rewrite that failure.
+All rejected and accepted readers are terminal and joined. Stop indexed-property/
+hint/fixture/compiler/capture variants. Reassess remaining canonical type/routine/
+module/incremental/editor requirements through existing owners before adoption.
+
+LAN remains offline and native Nyx tools absent; no host/config retry, capture,
+cleanup/restart, protected mutation, new MCP tool/schema, rollout or sub-agent.
+Full type/routine/module/incremental/editor/input/quality/parity/adoption/delivery
+and original criterion/task/credit/DONE remain open.
+
+## Previous integration: Implicit method receivers and function results — 2026-10-19
 
 The ea40d95 captured-module checkpoint is qualified and pushed. The preceding
 user-facing status turn changed no product state; this continuation makes the

@@ -132,6 +132,10 @@ begin
       Text(LEntry.OwnerName);
       Number(Ord(LEntry.Kind));
       Number(Ord(LEntry.RoutineKind));
+      Span(LEntry.PropertyParameters);
+      Number(Ord(pspaRead in LEntry.PropertyAccess));
+      Number(Ord(pspaWrite in LEntry.PropertyAccess));
+      Number(Ord(LEntry.DefaultProperty));
       Number(Ord(LEntry.OperatorKind));
       Number(LEntry.VariantArm);
       Number(LEntry.FirstHint);

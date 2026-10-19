@@ -41,7 +41,7 @@ type
     Unit lifecycle scopes retain distinct executable regions, never declarations
     or inferred runtime ordering/effects. Existing scope ordinals stay stable. }
   TNyxPascalSyntaxScopeKind = (psskModule, psskMembers, psskRoutine, psskBlock,
-    psskInitialization, psskFinalization);
+    psskInitialization, psskFinalization, psskPropertyParameters);
   { Declared intent only. A typed variable/property preserves its type expression;
     a routine preserves its complete signature, result, parameters and owner name. }
   TNyxPascalSyntaxDeclarationKind = (psdkType, psdkConstant, psdkVariable,
@@ -52,6 +52,11 @@ type
     function result merely because their implementation has an instance Self. }
   TNyxPascalRoutineKind = (prkNone, prkProcedure, prkFunction, prkConstructor,
     prkDestructor, prkOperator);
+  { Authored property accessors, independent of getter/setter implementation or
+    compiler admission. An inherited property redeclaration may omit both. }
+  TNyxPascalPropertyAccess = (pspaRead, pspaWrite);
+  { Value-owned accessor capabilities; no callable or interface is retained. }
+  TNyxPascalPropertyAccesses = set of TNyxPascalPropertyAccess;
   { Closed operator family, independent of its authored symbolic/named spelling.
     None is an ordinary declaration; Unknown retains unsupported operator syntax.
     Arity, operand/result types and compiler eligibility remain separate facts;
@@ -299,6 +304,9 @@ type
     FOwnerName: TNyxText;
     FKind: TNyxPascalSyntaxDeclarationKind;
     FRoutineKind: TNyxPascalRoutineKind;
+    FPropertyParameters: TNyxPascalSpan;
+    FPropertyAccess: TNyxPascalPropertyAccesses;
+    FDefaultProperty: Boolean;
     FOperator: TNyxPascalOperatorKind;
     FForm: TNyxPascalSyntaxTypeForm;
     FVisibility: TNyxPascalSyntaxVisibility;
@@ -330,6 +338,12 @@ type
     property OwnerName: TNyxText read FOwnerName;
     property Kind: TNyxPascalSyntaxDeclarationKind read FKind;
     property RoutineKind: TNyxPascalRoutineKind read FRoutineKind;
+    { Exact bracketed declaration, not a default value/index directive. Its
+      NestedScope contains ordered psdkParameter declarations, including groups. }
+    property PropertyParameters: TNyxPascalSpan read FPropertyParameters;
+    property PropertyAccess: TNyxPascalPropertyAccesses read FPropertyAccess;
+    { Only the separate '; default;' member directive selects unnamed indexing. }
+    property DefaultProperty: Boolean read FDefaultProperty;
     { Operators remain routines for existing consumers, with their own typed
       lookup family. Name/NameSpan retain the exact authored operator token. }
     property OperatorKind: TNyxPascalOperatorKind read FOperator;
@@ -1110,7 +1124,7 @@ type
       AArmEnd: Boolean = False; AThreadLocal: Boolean = False);
     procedure Constants(AScope: Integer; AKind: TNyxPascalSyntaxDeclarationKind;
       AVisibility: TNyxPascalSyntaxVisibility);
-    procedure Parameters(AScope: Integer);
+    function Parameters(AScope: Integer; AClose: TNyxPascalSymbol = psoCloseParen): Boolean;
     procedure Routine(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
       AClass: Boolean = False);
     { A class property retains its ordinary property kind/type plus explicit
@@ -4488,7 +4502,7 @@ begin
   EditEntry(LEntry).Value.FHeaderSpan := SpanFrom(LStart);
 end;
 
-procedure TSyntaxSnapshot.Parameters(AScope: Integer);
+function TSyntaxSnapshot.Parameters(AScope: Integer; AClose: TNyxPascalSymbol): Boolean;
 var
   LEntries: TOrdinals;
   LEntry: Integer;
@@ -4496,8 +4510,9 @@ var
   LMode: TNyxPascalSyntaxParameterMode;
   LAt: Integer;
 begin
+  Result := False;
   Step;
-  while not EOF and not Sym(psoCloseParen) do
+  while not EOF and not Sym(AClose) do
   begin
     LMode := pspmValue;
     case Tok.Word of
@@ -4552,7 +4567,7 @@ begin
     begin
       Step;
       LType := FPosition;
-      while not EOF and not Sym(psoSemicolon) and not Sym(psoCloseParen) and not Sym(psoEqual) do
+      while not EOF and not Sym(psoSemicolon) and not Sym(AClose) and not Sym(psoEqual) do
       begin
 
         if Sym(psoOpenParen) then
@@ -4581,7 +4596,7 @@ begin
     if Sym(psoEqual) then
     begin
       Step;
-      while not EOF and not Sym(psoSemicolon) and not Sym(psoCloseParen) do
+      while not EOF and not Sym(psoSemicolon) and not Sym(AClose) do
       begin
 
         if Sym(psoOpenParen) then
@@ -4602,9 +4617,10 @@ begin
     Step;
   end;
 
-  if Sym(psoCloseParen) then
+  if Sym(AClose) then
   begin
     Step;
+    Result := True;
   end
   else
   begin
@@ -5014,6 +5030,11 @@ var
   LStart: Integer;
   LEntry: Integer;
   LType: Integer;
+  LParameters: Integer;
+  LScope: Integer;
+  LAccessor: TNyxPascalPropertyAccess;
+  LClosed: Boolean;
+  LClauseStart: Integer;
 begin
   LStart := Tok.Span.Start;
   Step;
@@ -5035,7 +5056,14 @@ begin
 
   if Sym(psoOpenBracket) then
   begin
-    Groups(psoOpenBracket, psoCloseBracket);
+    LParameters := FPosition;
+    LScope := AddScope(psskPropertyParameters, AScope, LEntry, Tok.Span.Start, Entry(LEntry).Value.Name);
+    EditEntry(LEntry).Value.FNestedScope := LScope;
+    LClosed := Parameters(LScope, psoCloseBracket);
+    EditEntry(LEntry).Value.FPropertyParameters := Range(LParameters, FPosition);
+    FinishScope(LScope, LClosed);
+
+    if not LClosed then Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
   end;
 
   if Sym(psoColon) then
@@ -5065,12 +5093,52 @@ begin
     EditEntry(LEntry).Value.FForm := pstfNamed;
   end;
   DeclarationHints(LEntry);
-  Expression(psoSemicolon, False, True);
+  LClauseStart := FPosition;
+  while not EOF and not Sym(psoSemicolon) and not Word(pkwEnd) and
+    not Word(pkwImplementation) and not Word(pkwBegin) do
+  begin
+
+    if AtHint(LClauseStart) then Break;
+
+    if not Tok.Complete then
+    begin
+      Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
+      Step;
+      Break;
+    end;
+
+    if Word(pkwRead) or Word(pkwWrite) then
+    begin
+      LAccessor := pspaRead;
+
+      if Word(pkwWrite) then LAccessor := pspaWrite;
+      Include(EditEntry(LEntry).Value.FPropertyAccess, LAccessor);
+      Step;
+
+      if Tok.Kind <> ptkWord then
+      begin
+        Include(EditEntry(LEntry).Value.FFlags, psdfIncomplete);
+        Problem(psiExpectedName, 'A property accessor needs its declared name', Tok.Span);
+        Break;
+      end;
+      Step;
+      while Sym(psoDot) and (Tok(1).Kind = ptkWord) do
+      begin
+        Step;
+        Step;
+      end;
+    end
+    else if Sym(psoOpenParen) then Groups(psoOpenParen, psoCloseParen)
+    else if Sym(psoOpenBracket) then Groups(psoOpenBracket, psoCloseBracket)
+    else if Sym(psoAlternateOpenBracket) then Groups(psoAlternateOpenBracket, psoAlternateCloseBracket)
+    else Step;
+  end;
   DeclarationHints(LEntry);
   Separator;
 
   if Word(pkwDefault) or Word(pkwNodefault) then
   begin
+    EditEntry(LEntry).Value.FDefaultProperty := Word(pkwDefault);
     Step;
     Separator;
   end;

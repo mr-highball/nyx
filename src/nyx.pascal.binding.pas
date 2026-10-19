@@ -706,6 +706,12 @@ type
       const AName: TNyxText): INyxPascalResolution;
     function MethodReceiver(const ASite: INyxPascalBindingSite;
       const ARoutine: INyxPascalBoundSymbol; out AHasSelf: Boolean): INyxPascalResolution;
+    { Index contracts retain the actual default declaration, not a same-named
+      hiding member. Arguments remain opaque and no accessor is executed. }
+    function DefaultProperty(const AType: INyxPascalSemanticType;
+      const ASite: INyxPascalBindingSite; AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+    function IndexedProperty(const ASymbol: INyxPascalBoundSymbol;
+      ACount: Integer): INyxPascalResolution;
     function FormalMember(const AFormal: INyxPascalFormalParameter;
       const ASite: INyxPascalBindingSite; const AName: TNyxText;
       AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
@@ -2538,6 +2544,13 @@ begin
     while LRest <> '' do
     begin
       Tick;
+
+      if (LLocal.Count = 1) and (LLocal.SymbolAt(0).Declaration.Kind = psdkProperty) and
+        ((LLocal.SymbolAt(0).Declaration.PropertyParameters.Length > 0) or
+         (LLocal.SymbolAt(0).Declaration.PropertyAccess = [pspaWrite])) then
+      begin
+        Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      end;
 
       if (LLocal.BoundType = nil) and (LLocal.Count <> 1) then
       begin
@@ -5512,6 +5525,145 @@ begin
   Result := LPageLease;
 end;
 
+function TBindingQuery.DefaultProperty(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite; AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
+var
+  LType: INyxPascalSemanticType;
+  LOwner, LChosen, LCandidate: INyxPascalBoundSymbol;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LContext: INyxPascalCompilerContext;
+  LFound, LBase: INyxPascalResolution;
+  LAt, LTrail, LBaseAt: Integer;
+  LVisible: TNyxPascalKnowledge;
+begin
+  Enter;
+  try
+    LType := Unwrap(AType);
+
+    if (LType <> nil) and (LType.Kind = pstClassOf) then
+    begin
+      LType := Unwrap(LType.Target);
+      AAccess := pmaType;
+    end;
+
+    if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LOwner := LType.Definition;
+    LContext := ContextAt(FWorld.At(LOwner.ModuleIndex, LOwner.Declaration.Scope,
+      LOwner.Declaration.HeaderSpan.Start));
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber <> 30301) or
+      not (LContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+      Exit(Answer(pbsUnresolved, pbiCompilerContext));
+
+    if LOwner.Declaration.NestedScope < 0 then Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    LTrail := Length(FMembers);
+    for LAt := 0 to LTrail - 1 do
+    begin
+      Tick;
+
+      if SameSymbol(FMembers[LAt], LOwner) then Exit(Answer(pbsUnresolved, pbiRecursiveType));
+    end;
+    SetLength(FMembers, LTrail + 1);
+    FMembers[LTrail] := LOwner;
+    try
+      LSyntax := FWorld.ModuleAt(LOwner.ModuleIndex).Syntax;
+      LAt := LSyntax.Scope(LOwner.Declaration.NestedScope).FirstDeclaration;
+      LChosen := nil;
+      while LAt >= 0 do
+      begin
+        Tick;
+        LCandidate := InEnvironment(FWorld.Symbol(LOwner.ModuleIndex, LAt), EnvironmentOf(LOwner));
+
+        if (LCandidate.Declaration.Kind = psdkProperty) and LCandidate.Declaration.DefaultProperty then
+        begin
+
+          if LChosen <> nil then Exit(Answer(pbsAmbiguous, pbiAmbiguousName));
+          LChosen := LCandidate;
+        end;
+        LAt := LCandidate.Declaration.Next;
+      end;
+
+      if LChosen <> nil then
+      begin
+        LVisible := Access(LChosen, LOwner, ASite);
+
+        if LVisible = ppkUnknown then Exit(Answer(pbsUnresolved, pbiCompilerContext));
+
+        if LVisible = ppkFalse then Exit(Answer(pbsInaccessible, pbiVisibility));
+
+        if (AAccess = pmaType) and not (psdfClassMember in LChosen.Declaration.Flags) then
+          Exit(Answer(pbsUnresolved, pbiWrongMemberKind));
+        Exit(OneSymbol(LChosen));
+      end;
+      LBaseAt := 0;
+      while True do
+      begin
+        LBase := Bases(LOwner, LBaseAt);
+
+        if LBase.Status = pbsMissing then Break;
+
+        if LBase.Status <> pbsBound then Exit(LBase);
+        LFound := DefaultProperty(LBase.BoundType, ASite, AAccess);
+
+        if LFound.Status <> pbsMissing then
+        begin
+
+          if (LFound.Status <> pbsBound) or (LFound.Count <> 1) then Exit(LFound);
+          LCandidate := LFound.SymbolAt(0);
+
+          if (LChosen <> nil) and not SameBinding(LChosen, LCandidate) then
+            Exit(Answer(pbsAmbiguous, pbiAmbiguousName));
+          LChosen := LCandidate;
+        end;
+        Inc(LBaseAt);
+      end;
+
+      if LChosen <> nil then Exit(OneSymbol(LChosen));
+      Result := Answer(pbsMissing, pbiMissingName);
+    finally
+      SetLength(FMembers, LTrail);
+    end;
+  finally
+    Leave;
+  end;
+end;
+
+function TBindingQuery.IndexedProperty(const ASymbol: INyxPascalBoundSymbol;
+  ACount: Integer): INyxPascalResolution;
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LAt, LCount: Integer;
+  LDecl: TNyxPascalSyntaxDeclaration;
+begin
+  CheckSymbol(ASymbol);
+  LDecl := ASymbol.Declaration;
+
+  if (LDecl.Kind <> psdkProperty) or (LDecl.PropertyParameters.Length = 0) or
+    (LDecl.NestedScope < 0) or not (pspaRead in LDecl.PropertyAccess) then
+    Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  LSyntax := FWorld.ModuleAt(ASymbol.ModuleIndex).Syntax;
+
+  if not LSyntax.Scope(LDecl.NestedScope).Complete then Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+  LAt := LSyntax.Scope(LDecl.NestedScope).FirstDeclaration;
+  LCount := 0;
+  while LAt >= 0 do
+  begin
+    Tick;
+    LDecl := LSyntax.Declaration(LAt);
+
+    if (LDecl.Kind <> psdkParameter) or (LDecl.TypeSpan.Length = 0) or
+      (LDecl.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> []) then
+      Exit(Answer(pbsUnresolved, pbiIncompleteSource));
+    Inc(LCount);
+    LAt := LDecl.Next;
+  end;
+
+  if (LCount < 1) or (LCount <> ACount) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  Result := TypeOfSymbol(ASymbol);
+end;
+
 function TBindingQuery.ExpressionType(const ASite: INyxPascalBindingSite;
   const AWindow: TNyxPascalSpan; out AAccess: TNyxPascalMemberAccess): INyxPascalResolution;
 var
@@ -5570,6 +5722,11 @@ var
     AValueAccess := pmaInstance;
 
     if not (AFound.Status in [pbsBound, pbsOverloads]) then Exit(AFound);
+
+    if (AFound.Count = 1) and (AFound.SymbolAt(0).Declaration.Kind = psdkProperty) and
+      ((AFound.SymbolAt(0).Declaration.PropertyParameters.Length > 0) or
+       (AFound.SymbolAt(0).Declaration.PropertyAccess = [pspaWrite])) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
 
     if ACall and (AFound.Count > 0) and
       (AFound.SymbolAt(0).Declaration.Kind = psdkRoutine) then
@@ -5741,10 +5898,30 @@ var
           LCount := Arguments;
 
           if LCount < 1 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+          if (LFound.Count = 1) and (LFound.SymbolAt(0).Declaration.Kind = psdkProperty) and
+            (LFound.SymbolAt(0).Declaration.PropertyParameters.Length > 0) then
+          begin
+            LFound := IndexedProperty(LFound.SymbolAt(0), LCount);
+            AValueAccess := pmaInstance;
+            Continue;
+          end;
           LValue := ValueOf(LFound, False, LInnerAccess);
 
           if LValue.Status <> pbsBound then Exit(LValue);
           LType := Unwrap(LValue.BoundType);
+
+          if (LType <> nil) and (LType.Kind in [pstDeclared, pstClassOf]) then
+          begin
+            LValue := DefaultProperty(LType, ASite, LInnerAccess);
+
+            if LValue.Status = pbsMissing then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+            if (LValue.Status <> pbsBound) or (LValue.Count <> 1) then Exit(LValue);
+            LFound := IndexedProperty(LValue.SymbolAt(0), LCount);
+            AValueAccess := pmaInstance;
+            Continue;
+          end;
           while LCount > 0 do
           begin
             Tick;

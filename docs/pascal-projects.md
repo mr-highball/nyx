@@ -3509,7 +3509,7 @@ results refuse, even when an argument literal might tempt a guess. Function
 values follow their declared result. Argument/index expressions are bounded,
 balanced opaque windows: no factory, getter, callback or index expression runs,
 and no claim is made about arity, argument conversions, bounds or call legality.
-Casts, helpers, default indexed properties, partially consumed multidimensional
+Casts, helpers, partially consumed multidimensional
 arrays, generic-routine inference and general operator inference remain open.
 
 Project units keep their already admitted `.pas` leaf. `NyxPascalProjectUnit`
@@ -3598,6 +3598,46 @@ atomically. Ordinary completion follows `Result.Val` inside an unfinished method
 retains real `Value` navigation after provider retirement and previews the exact
 insertion. These are local semantic/provider checks; browser execution and
 ordinary rendered editor adoption/parity/delivery remain separate requirements.
+
+### Indexed and default property contracts
+
+Property syntax retains its bracketed parameter range and a distinct parameter
+scope, typed read/write accessors and the separate `; default;` member directive.
+A scalar `default 7` value does not select unnamed indexing. Grouped parameters
+keep independent names, passing modes and type ranges. These metadata expand the
+declaration record; existing interface GUIDs and enum ordinals remain stable.
+
+Source-owned expressions follow `Container.Items[Index]` and `Container[Index]`
+through the selected property's declared result, preserving receiver arguments,
+aliases, record/interface owners and inherited generic frames. Default selection
+retains the exact declaring property. On the qualified FPC 3.3.1 modes, a child
+can hide `Items` without replacing its parent's default property: named access
+and unnamed access can then have different result types. A new explicit default
+member takes precedence over the inherited selector.
+
+An indexed property requires its declared parameter shape before yielding an
+element. Unapplied indexers, explicit write-only reads, duplicate defaults,
+visibility violations, malformed parameter lists and unknown compiler context
+retain refusal. Index arguments are balanced opaque source windows; neither
+accessors nor index expressions execute, and matching index counts does not
+establish argument type/conversion/bounds or general compiler admission. Full
+constraint/default-argument/helper/operator/call semantics remain open, including
+republished property signatures and default selection from formal constraints.
+
+Focused preflight qualifies 413 native checks/clean heap at a 270-unit first fit,
+with every smaller allowance refusing atomically. An independent complete native
+Pascal unit executes to 42; source inspection leaves its getter counter unchanged.
+Ordinary configured completion retains real member navigation and exact detached
+insertion after provider retirement. The first batch's maintained hint failure
+is retained; the repaired scanner preserves that existing typed hint boundary.
+WORK.md owns final qualification and remaining editor/browser/
+adoption/parity/delivery requirements; this section does not install an engine
+or claim live browser interaction.
+
+The repaired complete batch qualifies 99 compiler jobs with zero Nyx-owned
+warnings and 54 native logs with clean heaps, including the unchanged original
+RTL consumer. Both Studio targets and 44 browser compilations pass as applicable;
+browser execution and ordinary editor adoption remain unqualified.
 
 ## Captured SDK modules and dependency loading
 
