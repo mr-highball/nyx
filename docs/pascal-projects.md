@@ -3758,6 +3758,22 @@ full dependency-aware incremental/editor adoption, language, input and parity sc
 
 ### Reusing projections after source edits
 
+Translation preparation first freezes the current virtual input catalog.
+`CaptureNyxPascalFiles` returns the same owner when its sealed Nyx catalog receipt
+and ordinary interface identity match. Such a catalog already owns validated
+immutable bytes/views, file names and include-search order. Rebuilding it for
+each translation would repeatedly clone growing vectors and lookup indexes.
+Fluent file/search changes still create a new input owner and identity.
+
+Alternate providers retain complete bounded capture, original byte/view
+validation and atomic refusal. A wrapper cannot borrow another catalog's owner
+receipt while providing its own data getters. The input is leased before any
+possibly aliased result assignment, so in-place capture remains safe. This shares
+only immutable input storage; it grants no previous tokens, compiler states,
+ordered conditional answers or semantic meaning. Work/translation quotas remain
+unchanged. WORK.md records native allocation evidence separately from browser
+compilation and the remaining incremental-analysis requirements.
+
 When a used root/include changes, translation and conditional evaluation still run
 on the current inputs. The provider can then revise the previous projection using
 the newly published translation. It rebuilds every physical origin and effective

@@ -33,7 +33,81 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Earlier parser/filter restart history — 2026-10-19
+## Current integration: Immutable input preparation — 2026-10-19
+
+The preceding turn made authoritative source/qualification/remote progress in
+cb43b58 through earlier genuine parser/filter histories. This continuation
+inspected actual repeated translation preparation. CaptureNyxPascalFiles rebuilt
+even an already validated immutable owned catalog using successive persistent
+WithByteSource/WithIncludeDirectory updates. Each update cloned growing vectors
+and rebuilt its name index before translation could begin. This work repeated
+for current requests and prefix construction independently of token parsing.
+
+The existing sealed owner gate now admits that exact immutable catalog directly.
+It requires the real catalog object and exact ordinary interface identity; public
+counters, equal data or a borrowed owner object confer no authority. Hold the
+input interface before touching the possibly aliased output. Fluent edits retain
+their existing new-owner/new-identity behavior. Alternate providers still undergo
+complete bounded capture/byte/view validation and atomic refusal; counterfeit
+ownership refuses before invoking data callbacks. No token, compiler/context,
+conditional-answer, semantic-world or earlier-analysis proof is inferred from
+this storage lease. Compiler/probe/pass/translation/work quotas remain unchanged.
+
+Focused native qualification passes 32 checks with clean heap, including empty
+and edited catalogs, retirement, in-place success/failure, mutable text/byte
+providers, Unicode/CRLF, opaque original bytes, include order/case policy,
+invalid bounds/duplicates, late callback failure, counterfeit owner identity,
+current edited-include translation and 1,024 joined concurrent captures. The
+consumer also compiles for pas2js; no browser execution is claimed. A controlled
+native measurement of 64 retained captures over 128 files shows 653,824 extra
+retained heap bytes before the change versus zero after, with 0 versus 64 exact
+same-owner results. This measures that preparation/storage operation on the
+pinned native runtime, not whole-editor latency or incremental translation.
+
+Retain the first measurement harness's 22-byte temporary leak: its Halt inside
+a managed ParamStr expression skipped temporary finalization. The corrected
+normal-return measurement is separately retained with clean heap before the
+product change, as is the final clean-heap consumer. No leak result qualifies
+product behavior. Two final production/fixture inputs stayed frozen throughout
+wider qualification. All 113 main compiler logs succeed with zero owned warnings
+and 280 upstream; the separate unchanged emission oracle retains its three
+deliberately visible markers. All 61 native run logs have clean heaps. Fifty-one
+browser consumers compile only, including Studio/worker; native Studio/backend
+compile as applicable. Maintained checkpoint/append/work/provider checks retain
+6,526/2,613/573/3,394; earlier restart 4,878, current-source revision 1,337 and
+ordered semantic replay 323 retain their exact results and measured work. Native
+128 completion requests, 96 semantic revalidations, 64 projection revisions and
+32 historical restarts still join independently of the new 1,024 catalog captures.
+
+The unchanged original RTL fixture passes 56 with the original 2M view/4M
+aggregate/64-round limits. Actual System source resolves with zero translation
+diagnostics, 13,101 declarations, zero syntax diagnostics and 31 semantic answers;
+ObjPas retains 209/zero/one, both without pending query. Exact indexed
+Free/FreeInstance navigation/detached insertion retains original include origins.
+Initial five queries, one Word job, symbol three/eight and the ordered six/eight
+Longint/Int64/Pointer/VarHeader/CommonHeader/FreeChunk jobs stay exact. The lexical
+corpus passes 571 checks across 504 source files/2,397,604 lossless tokens.
+
+708 maintained sources/706 unrelated, 97 RTL/24 compiler inputs, 156 original unit
+packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files remain exact. Every owned
+reader is terminal/joined. Ignored .local/catalog-lease-paths-private.json owns the packet,
+return path, measurement and final source/remote receipts. No original fixture,
+compiler input, protected file, artifact or concurrent planning file changes.
+
+Full current-root token translation still runs, and source/context/ordered-answer
+identity checks remain independent. Complete canonical language meaning,
+dependency-aware incrementality, cold retention overhead, editor/input/navigation
+quality, browser execution, native/browser parity, adoption and delivery remain
+open. The original criterion/task/credit/DONE/full goal stays open. Historical
+global-config preservation remains false; current-start equality grants no
+restoration or preserving-delivery claim. LAN stays offline; native Nyx tools are
+absent. No host/config retry, SDK capture, protected mutation, cleanup/restart,
+new tool/schema/rollout or sub-agents. Stop catalog/fixture/compiler variants after
+qualification; return to actual contextual token/translation work through existing
+owners without skipping directives, guessing facts or weakening quotas.
+
+## Previous integration: Earlier parser/filter restart history — 2026-10-19
 
 The previous turn made authoritative source/qualification/remote progress in
 ed54c76: current-source lexical continuity admitted the latest safe parser point.

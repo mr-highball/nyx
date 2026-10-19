@@ -98,7 +98,10 @@ function NyxPascalPhysicalFile(const AName: TNyxText): TNyxPascalPhysicalFile; o
   search directories must be supplied by the host, never inferred from disk. }
 function NewNyxPascalFileCatalog(ACase: TNyxPascalFileCase): INyxPascalFileCatalog;
 { Freeze alternate catalogs once. Caller serializes mutable providers during
-  capture; subsequent reads retain only owned data and exact search order. }
+  capture; subsequent reads retain only owned data and exact search order.
+  An exactly verified Nyx-owned immutable catalog is already frozen: capture
+  returns that same owner without rebuilding file/search vectors. Fluent edits
+  still obtain a new owner/identity; sharing grants no prior semantic answers. }
 function CaptureNyxPascalFiles(const AFiles: INyxPascalFileCatalog): INyxPascalFileCatalog; overload;
 { Process-local identity of an owned immutable input set. Detached captures of
   that exact owner retain it; fluent edits obtain a new identity. It is not a
@@ -704,29 +707,39 @@ var
   LByteFiles: INyxPascalByteFileCatalog;
   LTarget: INyxPascalByteFileCatalog;
   LCaptured: INyxPascalFileCatalog;
+  LInput: INyxPascalFileCatalog;
   LOwned: TFileCatalog;
-  LCopyOwner: TFileCatalog;
 begin
+  { Keep the input alive before touching the possibly aliased managed result.
+    Only the concrete catalog's sealed receipt plus exact ordinary-interface
+    identity admits this path. Alternate getters/counters cannot claim it. }
+  LInput := AFiles;
 
-  if AFiles = nil then
+  if LInput = nil then
   begin
     raise ENyxPascalContext.Create('Source analysis requires a captured file catalog');
   end;
+  LOwned := OwnedCatalog(LInput);
 
-  LCount := AFiles.Count;
-  LDirectories := AFiles.DirectoryCount;
+  if LOwned <> nil then
+  begin
+    Result := LInput;
+    Exit;
+  end;
+  LCount := LInput.Count;
+  LDirectories := LInput.DirectoryCount;
 
   if (LCount < 0) or (LCount > 4096) or
     (LDirectories < 0) or (LDirectories > 256) then
   begin
     raise ENyxPascalContext.Create('An alternate file catalog exceeds its bounds');
   end;
-  LCaptured := NewNyxPascalFileCatalog(AFiles.CasePolicy);
-  Supports(AFiles, INyxPascalByteFileCatalog, LByteFiles);
+  LCaptured := NewNyxPascalFileCatalog(LInput.CasePolicy);
+  Supports(LInput, INyxPascalByteFileCatalog, LByteFiles);
   for LAt := 0 to LCount - 1 do
   begin
 
-    if LCaptured.Find(AFiles.FileAt(LAt)) >= 0 then
+    if LCaptured.Find(LInput.FileAt(LAt)) >= 0 then
     begin
       raise ENyxPascalContext.Create('An alternate file catalog contains duplicate names');
     end;
@@ -734,27 +747,20 @@ begin
     if LByteFiles <> nil then
     begin
       Supports(LCaptured, INyxPascalByteFileCatalog, LTarget);
-      LCaptured := LTarget.WithByteSource(AFiles.FileAt(LAt),
+      LCaptured := LTarget.WithByteSource(LInput.FileAt(LAt),
         LByteFiles.SourceBytesAt(LAt), LByteFiles.SourceViewAt(LAt));
     end
     else
     begin
-      LCaptured := LCaptured.WithFile(AFiles.FileAt(LAt), AFiles.TextAt(LAt));
+      LCaptured := LCaptured.WithFile(LInput.FileAt(LAt), LInput.TextAt(LAt));
     end;
   end;
   for LAt := 0 to LDirectories - 1 do
   begin
-    LCaptured := LCaptured.WithIncludeDirectory(AFiles.DirectoryAt(LAt));
+    LCaptured := LCaptured.WithIncludeDirectory(LInput.DirectoryAt(LAt));
   end;
   { Alternate callbacks can fail at any entry. Only a complete immutable
     capture may enter the caller's potentially aliased managed result. }
-  LOwned := OwnedCatalog(AFiles);
-
-  if LOwned <> nil then
-  begin
-    LCopyOwner := OwnedCatalog(LCaptured);
-    LCopyOwner.FIdentity := LOwned.FIdentity;
-  end;
   Result := LCaptured;
 end;
 
