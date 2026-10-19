@@ -25,7 +25,8 @@ program nyx_pascal_linkage_tests;
 
 uses SysUtils, Classes, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.lexing, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.syntax.translated, linkage.fixture;
+  nyx.pascal.syntax.translated, linkage.fixture
+  {$ifndef PAS2JS}, iocheck.fixture{$endif};
 
 var
   GChecks: Integer;
@@ -175,6 +176,102 @@ begin
   Check(LRefused, 'Declaration linkage preserves atomic analysis cancellation');
 end;
 
+{ IOCheck is a contextual routine marker, distinct from local IOCHECKS policy.
+  Structural classification retains intent and bodies without granting compiler
+  eligibility or predicting a caller's effective I/O-check behavior. }
+procedure IOCheckDeclarations;
+var
+  LView: INyxPascalTranslatedSyntax;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LDecl: TNyxPascalSyntaxDeclaration;
+  LParameter: TNyxPascalSyntaxDeclaration;
+  LScope: Integer;
+  LCancel: INyxCancellationScope;
+  LPartial: INyxPascalTranslatedSyntax;
+  LRefused: Boolean;
+begin
+  Check((Ord(plfNoReturn) = 10) and (Ord(plfIOCheck) = 11),
+    'The new declaration flag preserves every preceding linkage ordinal');
+  LView := View('unit IOIntent; interface procedure WriteValue(var Value:LongInt); ' +
+    'iocheck; procedure After; implementation end.');
+  LSyntax := LView.Syntax;
+  LDecl := Decl(LSyntax, 'WriteValue');
+  Check(LView.CompleteTranslation and (LSyntax.DiagnosticCount = 0),
+    'A bare IOCheck marker preserves complete routine syntax');
+  Check((LDecl.Linkage = [plfIOCheck]) and not (psdfForward in LDecl.Flags) and
+    (LDecl.FirstIntrinsic < 0), 'IOCheck supplies neither intrinsic nor forward ownership');
+  Check(OriginalText(LView, LDecl.LinkageSpan) = TNyxText('iocheck;'),
+    'The bare marker retains its exact authored suffix');
+  LParameter := Decl(LSyntax, 'Value', LDecl.NestedScope);
+  Check((LParameter.ParameterMode = pspmVar) and
+    (OriginalText(LView, LParameter.TypeSpan) = TNyxText('LongInt')),
+    'IOCheck preserves parameter mode and original type');
+  Check(Decl(LSyntax, 'After').Scope = 0, 'The next prototype remains a unit sibling');
+  LView := View('unit IOBodies; interface implementation ' +
+    'function ReadValue:LongInt; [IOCheck]; begin Result:=42; end; ' +
+    'procedure After; begin end; end.');
+  LDecl := Decl(LView.Syntax, 'ReadValue');
+  Check((LView.Syntax.DiagnosticCount = 0) and
+    (LDecl.Linkage = [plfIOCheck, plfPlatformAttributes]) and
+    LView.Syntax.Scope(LDecl.NestedScope).Complete,
+    'Bracket IOCheck preserves a complete ordinary implementation body');
+  Check((OriginalText(LView, LDecl.TypeSpan) = TNyxText('LongInt')) and
+    (OriginalText(LView, LDecl.LinkageSpan) = TNyxText('[IOCheck];')),
+    'Result type and bracket suffix retain distinct original ranges');
+  Check(Decl(LView.Syntax, 'After').Scope = 0, 'The marked body does not consume its sibling');
+  LView := View('unit IOComposite; interface implementation procedure WriteValue; ' +
+    'iocheck; [Public,Alias:''WRITE_VALUE'']; compilerproc; begin end; end.');
+  LDecl := Decl(LView.Syntax, 'WriteValue');
+  Check((LView.Syntax.DiagnosticCount = 0) and
+    (LDecl.Linkage = [plfIOCheck, plfPublic, plfAlias, plfPlatformAttributes, plfCompilerHelper]) and
+    LView.Syntax.Scope(LDecl.NestedScope).Complete,
+    'The original RTL suffix order retains each independent flag and its body');
+  Check(OriginalText(LView, LDecl.LinkageSpan) =
+    TNyxText('iocheck; [Public,Alias:''WRITE_VALUE'']; compilerproc;'),
+    'The full composite suffix retains spelling, operands and order');
+  LView := View('unit IOBad; interface procedure P; iocheck:42; procedure After; implementation end.');
+  Check((LView.Syntax.DiagnosticCount > 0) and
+    (psdfUnsupported in Decl(LView.Syntax, 'P').Flags) and
+    (Decl(LView.Syntax, 'After').Scope = 0),
+    'Bare operands remain unsupported without losing the following routine');
+  LView := View('unit IOBadBracket; interface procedure P; [iocheck:42]; ' +
+    'procedure After; implementation end.');
+  Check((LView.Syntax.DiagnosticCount > 0) and
+    (psdfUnsupported in Decl(LView.Syntax, 'P').Flags) and
+    (Decl(LView.Syntax, 'After').Scope = 0),
+    'Bracket operands remain unsupported with their original sibling boundary');
+  LView := View('unit IOUnknown; interface procedure P; [iocheck,other_effect:1]; implementation end.');
+  Check((LView.Syntax.DiagnosticCount > 0) and
+    (psdfUnsupported in Decl(LView.Syntax, 'P').Flags) and
+    (Decl(LView.Syntax, 'P').Linkage = [plfIOCheck, plfPlatformAttributes]),
+    'An unknown neighboring key cannot borrow IOCheck meaning');
+  LView := View('unit IONames; interface var iocheck:LongInt; procedure &iocheck; ' +
+    'procedure After; implementation end.');
+  LSyntax := LView.Syntax;
+  LDecl := Decl(LSyntax, 'iocheck');
+  Check((LSyntax.DiagnosticCount = 0) and (LDecl.Kind = psdkVariable) and
+    (LDecl.Linkage = []), 'The contextual marker remains an ordinary variable name');
+  LScope := LDecl.NextNamed;
+  Check((LScope >= 0) and (LSyntax.Declaration(LScope).Kind = psdkRoutine) and
+    (LSyntax.Declaration(LScope).Linkage = []), 'An escaped routine name gains no IOCheck intent');
+  LView := View('unit IOMissing; interface procedure P; iocheck implementation end.');
+  Check((LView.Syntax.DiagnosticCount > 0) and
+    (psdfIncomplete in Decl(LView.Syntax, 'P').Flags), 'A missing suffix separator remains incomplete');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LPartial := nil;
+  LRefused := False;
+  try
+    LPartial := NewNyxPascalTranslatedSyntax(LView.Source, TNyxPascalSyntaxOptions.Defaults, LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused and (LPartial = nil), 'Cancellation publishes no partial IOCheck declaration snapshot');
+end;
+
 procedure LayoutArguments;
 var
   LSource: INyxPascalTranslation;
@@ -239,6 +336,81 @@ begin
     (Decl(LView.Syntax, 'FollowingValue').Visibility = psavInterface),
     'Actual public-variable linkage preserves its following interface variable');
 end;
+{ Exact compiler-admitted companion packets enter ordinary translation together.
+  Include suffixes must map to the include occurrence, not reconstructed text. }
+procedure WholeIOCheckInput;
+var
+  LFiles: INyxPascalFileCatalog;
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+  LFile: TNyxPascalPhysicalFile;
+  LView: INyxPascalTranslatedSyntax;
+  LDecl: TNyxPascalSyntaxDeclaration;
+  LOrigin: TNyxPascalSyntaxOrigin;
+  LIndex: Integer;
+  LBodies: Integer;
+begin
+  Check(CompilerIOCheckValue = 42,
+    'Native bare/bracket calls check under I+, retain IOResult under I-, and leave unmarked calls ordinary');
+
+  if ParamCount = 0 then
+  begin
+    Exit;
+  end;
+  LFiles := NewNyxPascalFileCatalog(pfcExact);
+  for LIndex := 0 to 1 do
+  begin
+    LFile := NyxPascalPhysicalFile('iocheck.fixture.pas');
+
+    if LIndex = 1 then
+    begin
+      LFile := NyxPascalPhysicalFile('iocheck.fixture.inc');
+    end;
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
+      'tests/' + String(LFile.Name), fmOpenRead or fmShareDenyWrite);
+    try
+      Check((LStream.Size > 0) and (LStream.Size < 65536), 'The whole native IOCheck packet is bounded');
+      SetLength(LBytes, LStream.Size);
+      LStream.ReadBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+    LFiles := LFiles.WithFile(LFile, NyxDecodeUTF8(LBytes));
+  end;
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+    NyxPascalPhysicalFile('iocheck.fixture.pas'), NewNyxPascalCompilerContext(ppcFPC,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).CompleteDefines(True),
+    TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The whole independently compiled unit/include retain complete translated syntax');
+  LDecl := Decl(LView.Syntax, 'BareIOCheck');
+  Check((LDecl.Linkage = [plfIOCheck]) and
+    (OriginalText(LView, LDecl.LinkageSpan) = TNyxText('iocheck;')),
+    'The compiled bare suffix retains exact intent and spelling');
+  LOrigin := LView.Origin(LView.OriginAt(LDecl.LinkageSpan.Start));
+  Check(LView.Source.Files.FileAt(LView.Source.Occurrence(LOrigin.Occurrence).FileIndex).Name =
+    TNyxText('iocheck.fixture.inc'),
+    'Bare suffix navigation points into the actual retained include');
+  LDecl := Decl(LView.Syntax, 'BracketIOCheck');
+  Check((LDecl.Linkage = [plfIOCheck, plfPlatformAttributes]) and
+    (OriginalText(LView, LDecl.LinkageSpan) = TNyxText('[IOCheck];')),
+    'The compiled bracket suffix retains exact intent and spelling');
+  Check(Decl(LView.Syntax, 'OrdinaryIOResult').Linkage = [],
+    'The unmarked compiler-admitted routine gains no check annotation');
+  LBodies := 0;
+  for LIndex := 0 to LView.Syntax.DeclarationCount - 1 do
+  begin
+    LDecl := LView.Syntax.Declaration(LIndex);
+
+    if (LDecl.Kind = psdkRoutine) and (LDecl.Visibility = psavImplementation) then
+    begin
+      Check(LView.Syntax.Scope(LDecl.NestedScope).Complete and
+        not (psdfForward in LDecl.Flags), 'Every original implementation retains its complete ordinary body');
+      Inc(LBodies);
+    end;
+  end;
+  Check(LBodies = 4, 'Both marked, unmarked and wrapper bodies remain present');
+end;
 {$endif}
 
 begin
@@ -251,8 +423,9 @@ begin
       'Actual compiler sizes agree with all four layout directives that carry trailing prose');
     {$endif}
     LinkageAndScopes;
+    IOCheckDeclarations;
     LayoutArguments;
-    {$ifndef PAS2JS}WholeInput;{$endif}
+    {$ifndef PAS2JS}WholeInput; WholeIOCheckInput;{$endif}
     WriteLn('PASS ', GChecks, ' declaration linkage and layout argument checks');
   except
     on LError: Exception do

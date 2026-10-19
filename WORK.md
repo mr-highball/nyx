@@ -33,7 +33,79 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed pointer-check requests; resolved original source — 2026-10-19
+## Current integration: I/O-check routine intent; original parser recovery — 2026-10-19
+
+The previous checkpoint 678a884 is qualified and pushed. This continuation uses
+its existing original RTL diagnostic log: 119 IOCheck occurrences and subsequent
+compilerproc/attribute recovery account for most of the 205 System diagnostics.
+No new trace, smaller input, relaxed assertion or compiler probe replaces that
+evidence. The full library/Studio/resolver outcome remains active; no full
+criterion, task, counter, credit, DONE, parity, adoption or delivery closes.
+
+Appended plfIOCheck preserves contextual routine intent independently of local
+IOCHECKS policy, compiler-helper/intrinsic roles, linkage and forward ownership.
+Bare and bracket suffixes retain exact spelling/order, parameter/result ranges,
+physical include origins and ordinary implementation bodies. Operand-bearing
+markers, unknown neighboring attributes and missing separators retain explicit
+refusal/incompleteness. Ordinary and escaped names stay names. Existing enum
+ordinals/interface GUIDs remain; no interface enters a record or static array.
+Compiler eligibility, the effective caller policy and actual I/O outcomes are
+not inferred from source metadata.
+
+All four owned Pascal inputs are frozen before final qualification. The expanded
+native linkage consumer passes 57 checks with clean heap. Its independent whole
+unit/include actually executes bare/bracket calls under I+, a marked call under
+I-, and an unmarked call under I+, returning 42 only after all four observations
+agree. The pinned compiler admits the legacy bracket form in ObjFPC mode, while
+Delphi mode enables prefixed attributes and rejects that suffix spelling. The
+initial Delphi rejection and an ignored late mode-change attempt remain retained
+compiler failures; the accepted companion declares its mode at the unit boundary.
+The consumer and product remain in Delphi dialect. Structural source acceptance
+does not assert native admission for another mode/version/target.
+
+The required unchanged original RTL consumer PASSES all 56 native checks with
+clean heap. System retains 13,102 declarations/31 answers/no pending query and
+Source.Resolved TRUE/zero translation diagnostics; syntax diagnostics fall from
+205 to 11. ObjPas retains 209 declarations/one answer/no pending query; its syntax
+diagnostics fall from four to two. Exact indexed Free/FreeInstance completion,
+original objpash.inc token navigation after provider retirement and detached
+insertion remain ready. Ten remaining System diagnostics concern its unit
+initialization region; one concerns a sysheap.inc variable declaration. These
+remaining diagnostics and full source/type/module meaning stay open.
+
+Five initial queries, one explicit Word job, three-of-eight symbol preparation,
+six dynamic jobs inside eight, two-million view/four-million aggregate caps,
+64 rounds, work admission, cancellation and atomic refusal stay unchanged.
+All 86 main compiler jobs succeed with zero owned warnings/196 upstream; the
+deliberate emission-oracle warning remains separate. All forty maintained/seven
+additional native consumers and the actual 503-file/2,358,581-token lexical corpus
+pass: 49 accepted native logs including RTL, all with clean heaps. Thirty-six
+browser compilations include Studio/worker; native Studio/backend compile as
+applicable. Browser execution, physical editor/input, whole-resolver latency,
+component breadth, parity, adoption and delivery remain unqualified here.
+
+Preservation retains 671 unrelated/675 maintained-source pins, 97 RTL/24 compiler
+inputs plus prior and two routine-grammar compiler inspections, 156 original unit
+packets/48 includes, 349 frozen release artifacts, nine prior contexts, thirteen
+foreign planning files and five exact current-start protected files. The historical
+global-configuration preservation failure remains retained and false; no restoration
+occurs. All owned processes/readers are terminal and joined; LAN stays offline and
+native Nyx tools absent. No host/config retry, protected mutation, cleanup/restart,
+approval bypass, new tool/schema/rollout or sub-agent occurs. Ignored
+`.local/iocheck-role-paths-private.json` owns frozen inputs, retained compiler
+failures, qualification, preservation and final source/remote receipts.
+
+Stop IOCheck/fixture/compiler/capture variants. Reassess the remaining original
+module executable-section and variable-declaration boundaries through existing
+lexical/syntax/scope owners, first locating exact physical spans and context.
+Preserve original source, translation resolution, all budgets, input/context/
+ordered-answer identity and the unchanged RTL consumer; do not zero counts,
+skip source, infer missing facts or replace the acceptance oracle. Full canonical
+types/module coherence/incremental budgets/editor/input/navigation/quality/
+component breadth/native-browser parity/adoption/delivery and the original
+criterion remain open; the goal stays active.
+
+## Previous integration: Typed pointer-check requests; resolved original source — 2026-10-19
 
 The previous turn is verified progress: 2452625 is qualified and pushed. This
 continuation follows the actual CHECKPOINTER OFF in isotmp.inc through existing

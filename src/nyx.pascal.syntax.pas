@@ -183,10 +183,12 @@ type
     These flags describe source syntax, not linker/ABI admission or resolution
     of an alias, library expression or compiler intrinsic. RTL procedure intent
     does not supply the compiler's special parameter-matching rules. Non-returning
-    intent preserves a body; it does not prove the body's control-flow effects. }
+    intent preserves a body; it does not prove the body's control-flow effects.
+    I/O-check intent preserves caller-side checking requests without resolving
+    the caller's policy, compiler eligibility or an actual error outcome. }
   TNyxPascalLinkageFlag = (plfPublic, plfExport, plfExternal, plfAlias,
     plfCVariable, plfCompilerHelper, plfIntrinsic, plfPlatformAttributes,
-    plfConstantIntrinsic, plfRTLProcedure, plfNoReturn);
+    plfConstantIntrinsic, plfRTLProcedure, plfNoReturn, plfIOCheck);
   { Independent value set; source ranges retain operands without mutable arrays,
     interfaces or fabricated external names. }
   TNyxPascalLinkageFlags = set of TNyxPascalLinkageFlag;
@@ -3164,6 +3166,10 @@ begin
   begin
     AFlag := plfNoReturn;
   end
+  else if AName = 'iocheck' then
+  begin
+    AFlag := plfIOCheck;
+  end
   else if AName = 'internproc' then
   begin
     AFlag := plfIntrinsic;
@@ -3274,7 +3280,7 @@ begin
 
   if not ARoutine and
     (LFlag in [plfCompilerHelper, plfIntrinsic, plfConstantIntrinsic,
-      plfRTLProcedure, plfNoReturn]) then
+      plfRTLProcedure, plfNoReturn, plfIOCheck]) then
   begin
     Exit;
   end;
@@ -3308,7 +3314,7 @@ begin
       Step;
       LColon := False;
 
-      if (LFlag in [plfRTLProcedure, plfNoReturn]) and
+      if (LFlag in [plfRTLProcedure, plfNoReturn, plfIOCheck]) and
         not (Sym(psoComma) or Sym(psoCloseBracket)) then
       begin
         Unsupported(Entry(ADeclaration).Value.Scope,
@@ -3377,7 +3383,7 @@ begin
     Step;
     LColon := False;
 
-    if (LFlag in [plfRTLProcedure, plfNoReturn]) and not Sym(psoSemicolon) and
+    if (LFlag in [plfRTLProcedure, plfNoReturn, plfIOCheck]) and not Sym(psoSemicolon) and
       not (ARoutine and RoutineClause(Entry(ADeclaration).Value.Scope)) then
     begin
       Unsupported(Entry(ADeclaration).Value.Scope,
@@ -3393,7 +3399,7 @@ begin
     LOperand := FPosition;
 
     if not (ARoutine and
-      (LFlag in [plfRTLProcedure, plfNoReturn, plfCompilerHelper]) and
+      (LFlag in [plfRTLProcedure, plfNoReturn, plfIOCheck, plfCompilerHelper]) and
       RoutineClause(Entry(ADeclaration).Value.Scope)) then
     begin
       Expression(psoSemicolon, False, False, False, False, ARoutine);
