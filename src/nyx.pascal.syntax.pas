@@ -975,6 +975,8 @@ type
     procedure LinkDeclaration(AIndex: Integer);
     function Tok(AOffset: Integer = 0): TNyxPascalToken;
     function Word(AWord: TNyxPascalWord; AOffset: Integer = 0): Boolean;
+    { Packing prefixes are contextual words; escaped identifiers stay names. }
+    function Packing: Boolean;
     function Sym(ASymbol: TNyxPascalSymbol; AOffset: Integer = 0): Boolean;
     function EOF: Boolean;
     function Name(AOffset: Integer = 0): TNyxText;
@@ -2547,6 +2549,21 @@ begin
   Result := (LToken.Kind = ptkWord) and (LToken.Word = AWord);
 end;
 
+function TSyntaxSnapshot.Packing: Boolean;
+var
+  LToken: TNyxPascalToken;
+begin
+  LToken := Tok;
+  Result := False;
+
+  if (LToken.Kind = ptkWord) and not LToken.Escaped then
+  begin
+    Result := (LToken.Word = pkwPacked) or
+      ((LToken.Span.Length = 9) and
+        (NyxPascalASCIIKey(FLexical.Identifier(FTokens[FPosition])) = 'bitpacked'));
+  end;
+end;
+
 function TSyntaxSnapshot.Sym(ASymbol: TNyxPascalSymbol; AOffset: Integer): Boolean;
 var
   LToken: TNyxPascalToken;
@@ -3734,7 +3751,7 @@ begin
     end;
     LBodyStart := FPosition;
 
-    if Word(pkwPacked) and (Word(pkwRecord, 1) or Word(pkwObject, 1)) then
+    if Packing and (Word(pkwRecord, 1) or Word(pkwObject, 1)) then
     begin
       Step;
     end;
@@ -3813,7 +3830,7 @@ begin
       Exit;
     end;
 
-    if Word(pkwPacked) then
+    if Packing then
     begin
       Step;
     end;

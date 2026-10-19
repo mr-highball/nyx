@@ -114,10 +114,11 @@ editor quality/adoption remain open.
 
 The new [storage-plan layer](docs/pascal-projects.md#source-free-storage-plans)
 describes data-only record/array/primitive shapes and builds sterile compiler type
-fragments. Independent native compiler comparisons qualify that representation;
-declaration-bound layout evidence, requirement fulfillment and source sizeof
-integration remain in progress. A storage shape supplies no measured ABI or type
-identity, and the existing VarHeader source gap remains open.
+fragments. Independent native compiler comparisons qualify that representation.
+Source SizeOf/ordered conditions now capture supported declared storage with
+exact field/alias scopes and per-node compiler provenance. A pending shape grants
+no measured ABI or type identity: distinct layout evidence, native fulfillment
+and the existing VarHeader source gap remain open.
 
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured

@@ -24,7 +24,8 @@ program nyx_pascal_condition_tests;
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
-  nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.conditions;
+  nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.conditions,
+  nyx.pascal.constants;
 
 var
   GChecks: Integer;
@@ -123,6 +124,7 @@ var
   LResult: INyxPascalSemanticTranslation;
   LRejected: Boolean;
   LCancellation: INyxCancellationScope;
+  LStorage: INyxPascalConstantStorage;
 begin
   LResult := Analyze('unit ConditionCase; interface {$if declared(TAbsent)}type T=Byte;{$endif}implementation end.',
     nil, TNyxPascalConditionalOptions.Defaults);
@@ -132,8 +134,11 @@ begin
   LResult := Analyze('unit ConditionCase; interface type TRecord=record X:Byte; end; ' +
     '{$if sizeof(TRecord)=1}const Wrong=1;{$endif}implementation end.',
     World, TNyxPascalConditionalOptions.Defaults);
-  Check(LResult.Pending and (LResult.BindingIssue = pbiUnsupportedType) and
-    not LResult.Source.Resolved, 'Unsupported layout does not borrow a host or guessed record size');
+  Check(LResult.Pending and (LResult.BindingIssue = pbiCompilerContext) and
+    not LResult.Source.Resolved, 'Uncaptured record packing does not borrow a host or guessed record size');
+  Check(Supports(LResult, INyxPascalConstantStorage, LStorage) and
+    (LStorage.StoragePlan = nil) and (LStorage.StorageNodeCount = 0),
+    'Unknown packing publishes no DEFAULT-based or partial storage description');
   LResult := nil;
   LRejected := False;
   try
@@ -350,7 +355,7 @@ begin
     '{$if declared(TRecord)}{$define LATER}{$endif} implementation end.',
     World, TNyxPascalConditionalOptions.Defaults);
   Check(LResult.Pending and (LResult.Answers = 0) and
-    (LResult.BindingIssue = pbiUnsupportedType) and
+    (LResult.BindingIssue = pbiCompilerContext) and
     (LResult.Source.State(LResult.Source.StateCount - 1).Symbol(
       NyxPascalDefine('LATER')).IsDefined = ppkUnknown),
     'An unanswered earlier condition prevents later source-scoped guesses and branch donation');

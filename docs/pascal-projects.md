@@ -2686,9 +2686,41 @@ specialized interfaces, refusal/limits and every observed cancellation/work
 boundary. One independent compiler-only program compares seven handwritten
 record/array controls against the generated declarations. Browser tests compile
 only. These comparisons qualify data-shape emission, not target ABI capture or
-the existing source sizeof path. Layout evidence and typed source/host integration
+the existing source sizeof path. Layout evidence and typed native fulfillment
 remain open under original authoring criterion two; WORK.md owns that continuing
 implementation and the existing VarHeader/remaining source-language prerequisites.
+
+### Declaration-bound storage capture
+
+Source constant queries and ordered source conditions optionally expose
+`INyxPascalConstantStorage`. A non-nil `StoragePlan` describes the complete
+supported record/static-array shape. The value remains unknown with a typed
+compiler-context prerequisite until a distinct applicable layout measurement
+exists. A shape never supplies a user-name primitive-size fact.
+
+The child-before-parent node table retains each shape, its exact bound declaration
+and immutable compiler context. Primitive rows additionally retain their bound
+reference and intrinsic origin. Root FPC/H- primitive identity can therefore stay
+distinct from an enclosing Delphi record's context. Every record keeps its own
+packing/CODEALIGN intent. A native host must preserve all of those environments;
+compiling the standalone fragment under one caller mode would not establish that.
+
+Capture follows actual declaration scopes through aliases, grouped/private fields,
+class-local nested types and anonymous structured elements. Methods, properties,
+static fields and type declarations are kept out of the instance field sequence.
+Static-array dimensions evaluate their expressions/named ordinal ranges inside
+the existing constant query, sharing active recursion, dependencies and budgets.
+Packed/bitpacked intent stays distinct, including each multidimensional array.
+The declaration parser now recognizes the same contextual bitpacked prefix as the
+type parser; escaped identifiers keep their ordinary names.
+
+Missing primitive evidence forwards the existing typed request. Unknown packing,
+unsupported variants/generic substitutions/special storage and uncertain source
+publish no partial plan. Neither supported capture nor its read-only getters
+launch a compiler or retain an execution callback. Native source checks qualify
+these boundaries and both conditional paths; browser consumers compile only.
+Configured-compiler layout evidence, fulfillment and source truth remain in
+progress under the same original authoring requirement.
 
 ## Declaration-bound constant expressions
 

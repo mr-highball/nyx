@@ -26,7 +26,7 @@ interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.binding, nyx.pascal.values,
-  nyx.pascal.requirements;
+  nyx.pascal.requirements, nyx.pascal.storage;
 
 type
   { Exhaustion/cancellation refuses the complete value query; semantic unknown
@@ -68,6 +68,24 @@ type
     function WorkUnits: Integer;
     function DependencyCount: Integer;
     function Dependency(AIndex: Integer): INyxPascalBoundSymbol;
+  end;
+  { Optional source-bound storage description for a pending SizeOf. A non-nil
+    plan is a complete data shape, never a measured size or permission to compile
+    it under arbitrary defaults. Nodes are in child-before-parent order; their
+    shape leases identify exact children, including repeated grouped fields.
+    Each node retains its own declaration/context. Primitive identity is separate
+    from record policy, and checked intrinsic getters require a primitive node.
+    No query, mutable provider, cancellation or application callback survives.
+    Native measurement/fulfillment is a separate, still required authority. }
+  INyxPascalConstantStorage = interface(IInterface)
+    ['{4FC1D610-F52B-46CC-B8CE-81C17F953A1D}']
+    function StoragePlan: INyxPascalStoragePlan;
+    function StorageNodeCount: Integer;
+    function StorageNode(AIndex: Integer): INyxPascalStorageShape;
+    function StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+    function StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+    function StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+    function StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
   end;
   { Immutable parsed expression, independent of any application/editor world.
     SyntaxSupported describes this bounded grammar, not value availability.
@@ -139,7 +157,8 @@ type
   end;
   { Final owned result. Only the query writes these fields before publication;
     checked dependency access cannot expose mutable vectors or a live evaluator. }
-  TConstantResult = class(TInterfacedObject, INyxPascalConstantResult, INyxPascalCompilerRequirements)
+  TConstantResult = class(TInterfacedObject, INyxPascalConstantResult,
+    INyxPascalCompilerRequirements, INyxPascalConstantStorage)
   public
     Answer: TNyxPascalConstantValue;
     Reason: TNyxPascalBindingIssue;
@@ -147,6 +166,7 @@ type
     Work: Integer;
     Dependencies: array of INyxPascalBoundSymbol;
     Requirements: INyxPascalCompilerRequirements;
+    Storage: INyxPascalConstantStorage;
     function Value: TNyxPascalConstantValue;
     function Issue: TNyxPascalBindingIssue;
     function RelatedName: TNyxText;
@@ -155,6 +175,40 @@ type
     function Dependency(AIndex: Integer): INyxPascalBoundSymbol;
     function RequirementCount: Integer;
     function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
+    function StoragePlan: INyxPascalStoragePlan;
+    function StorageNodeCount: Integer;
+    function StorageNode(AIndex: Integer): INyxPascalStorageShape;
+    function StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+    function StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+    function StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+    function StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
+  end;
+  { Construction-local storage capture becomes a read-only response only after
+    every child and context has qualified. Parallel dynamic interface vectors
+    retain no earlier builder, parent, active recursion or execution scope.
+    Context leases retain the existing frozen compiler snapshots; declaration
+    leases point outward to their immutable world. Failure publishes no rows. }
+  TConstantStorage = class(TInterfacedObject, INyxPascalConstantStorage)
+  public
+    Plan: INyxPascalStoragePlan;
+    Shapes: array of INyxPascalStorageShape;
+    Contexts: array of INyxPascalCompilerContext;
+    Definitions: array of INyxPascalBoundSymbol;
+    Origins: array of TNyxPascalIntrinsicOrigin;
+    References: array of TNyxPascalSizeReference;
+    procedure Add(const AShape: INyxPascalStorageShape;
+      const AContext: INyxPascalCompilerContext;
+      const ADefinition: INyxPascalBoundSymbol;
+      const AIntrinsic: INyxPascalIntrinsicIdentity;
+      const ACancellation: INyxCancellationScope);
+    procedure CheckIndex(AIndex: Integer);
+    function StoragePlan: INyxPascalStoragePlan;
+    function StorageNodeCount: Integer;
+    function StorageNode(AIndex: Integer): INyxPascalStorageShape;
+    function StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+    function StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+    function StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+    function StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
   end;
   { Synchronous bounded source query. Active declaration keys detect recursion;
     result dependencies own immutable worlds without pointing back to this owner. }
@@ -182,7 +236,14 @@ type
     function OrdinalValue(const AType: INyxPascalSemanticType;
       const ASource: INyxPascalBoundSymbol; AHigh: Boolean;
       const AMember: TNyxText = ''): TNyxPascalConstantValue;
-    function SizeValue(const AType: INyxPascalSemanticType): TNyxPascalConstantValue;
+    function StorageShape(const AType: INyxPascalSemanticType;
+      const ASource: INyxPascalBoundSymbol; const ASite: INyxPascalBindingSite;
+      AStorage: TConstantStorage): INyxPascalStorageShape;
+    function StorageDimension(const ASyntax: INyxPascalTypeSyntax; ANode: Integer;
+      const ASite: INyxPascalBindingSite): Integer;
+    function SizeValue(const AType: INyxPascalSemanticType;
+      const ASource: INyxPascalBoundSymbol;
+      const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
   public
     function Run(APlan: TConstantPlan; const ASite: INyxPascalBindingSite;
       const AOptions: TNyxPascalConstantOptions;
@@ -755,6 +816,139 @@ begin
   Result := Dependencies[AIndex];
 end;
 
+function TConstantResult.StoragePlan: INyxPascalStoragePlan;
+begin
+  Result := nil;
+
+  if Storage <> nil then
+  begin
+    Result := Storage.StoragePlan;
+  end;
+end;
+
+function TConstantResult.StorageNodeCount: Integer;
+begin
+  Result := 0;
+
+  if Storage <> nil then
+  begin
+    Result := Storage.StorageNodeCount;
+  end;
+end;
+
+function TConstantResult.StorageNode(AIndex: Integer): INyxPascalStorageShape;
+begin
+
+  if Storage = nil then
+  begin
+    raise ENyxPascalBinding.Create('This result has no complete storage description');
+  end;
+  Result := Storage.StorageNode(AIndex);
+end;
+
+function TConstantResult.StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageContext(AIndex);
+end;
+
+function TConstantResult.StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageDefinition(AIndex);
+end;
+
+function TConstantResult.StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageIntrinsicOrigin(AIndex);
+end;
+
+function TConstantResult.StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageIntrinsicReference(AIndex);
+end;
+
+procedure TConstantStorage.Add(const AShape: INyxPascalStorageShape;
+  const AContext: INyxPascalCompilerContext;
+  const ADefinition: INyxPascalBoundSymbol;
+  const AIntrinsic: INyxPascalIntrinsicIdentity;
+  const ACancellation: INyxCancellationScope);
+var
+  LAt: Integer;
+begin
+  NyxPascalAdmitAnalysis(ACancellation, papTypeNode);
+  LAt := Length(Shapes);
+
+  if LAt >= TNyxPascalStorageOptions.Defaults.MaximumNodes then
+  begin
+    raise ENyxPascalConstantLimit.Create('Source storage exceeds its node budget');
+  end;
+  SetLength(Shapes, LAt + 1);
+  SetLength(Contexts, LAt + 1);
+  SetLength(Definitions, LAt + 1);
+  SetLength(Origins, LAt + 1);
+  SetLength(References, LAt + 1);
+  Shapes[LAt] := AShape;
+  Contexts[LAt] := AContext;
+  Definitions[LAt] := ADefinition;
+
+  if AIntrinsic <> nil then
+  begin
+    Origins[LAt] := AIntrinsic.IntrinsicOrigin;
+    References[LAt] := AIntrinsic.IntrinsicReference;
+  end;
+end;
+
+procedure TConstantStorage.CheckIndex(AIndex: Integer);
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Shapes)) then
+  begin
+    raise ENyxPascalBinding.Create('A storage node index is outside its captured result');
+  end;
+end;
+
+function TConstantStorage.StoragePlan: INyxPascalStoragePlan;
+begin Result := Plan; end;
+function TConstantStorage.StorageNodeCount: Integer;
+begin Result := Length(Shapes); end;
+
+function TConstantStorage.StorageNode(AIndex: Integer): INyxPascalStorageShape;
+begin
+  CheckIndex(AIndex);
+  Result := Shapes[AIndex];
+end;
+
+function TConstantStorage.StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+begin
+  CheckIndex(AIndex);
+  Result := Contexts[AIndex];
+end;
+
+function TConstantStorage.StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+begin
+  CheckIndex(AIndex);
+  Result := Definitions[AIndex];
+end;
+
+function TConstantStorage.StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+begin
+
+  if StorageNode(AIndex).Kind <> pskPrimitive then
+  begin
+    raise ENyxPascalBinding.Create('Only a primitive storage node has intrinsic identity');
+  end;
+  Result := Origins[AIndex];
+end;
+
+function TConstantStorage.StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
+begin
+  StorageIntrinsicOrigin(AIndex);
+  Result := References[AIndex];
+end;
+
 procedure TConstantQuery.Tick(AWork: Integer);
 begin
   NyxPascalAdmitAnalysis(FCancellation, papConstantStep, AWork);
@@ -857,7 +1051,7 @@ procedure TConstantQuery.RequirePrimitiveSize(const AType: INyxPascalSemanticTyp
   const ASite: INyxPascalBindingSite);
 begin
 
-  if (FResult.Reason <> pbiCompilerContext) or
+  if (FResult.Reason <> pbiCompilerContext) or (FResult.Storage <> nil) or
     ((FResult.Requirements <> nil) and (FResult.Requirements.RequirementCount > 0)) then
   begin
     Exit;
@@ -1247,13 +1441,503 @@ begin
   end;
 end;
 
-function TConstantQuery.SizeValue(const AType: INyxPascalSemanticType): TNyxPascalConstantValue;
+{ Builtin classification alone grants no layout. Keep the full closed spelling,
+  including AnsiChar/Char and Real/Double distinctions, for a later compiler job. }
+function StoragePrimitive(AValue: TNyxPascalBuiltin;
+  out APrimitive: TNyxPascalStoragePrimitive): Boolean;
+begin
+  Result := True;
+  case AValue of
+    pbbByte: APrimitive := pspByte;
+    pbbShortInt: APrimitive := pspShortInt;
+    pbbWord: APrimitive := pspWord;
+    pbbSmallInt: APrimitive := pspSmallInt;
+    pbbLongWord: APrimitive := pspLongword;
+    pbbLongInt: APrimitive := pspLongint;
+    pbbQWord: APrimitive := pspQWord;
+    pbbInt64: APrimitive := pspInt64;
+    pbbInteger: APrimitive := pspInteger;
+    pbbNativeInt: APrimitive := pspNativeInt;
+    pbbNativeUInt: APrimitive := pspNativeUInt;
+    pbbPointer: APrimitive := pspPointer;
+    pbbBoolean: APrimitive := pspBoolean;
+    pbbByteBool: APrimitive := pspByteBool;
+    pbbWordBool: APrimitive := pspWordBool;
+    pbbLongBool: APrimitive := pspLongBool;
+    pbbChar: APrimitive := pspChar;
+    pbbAnsiChar: APrimitive := pspAnsiChar;
+    pbbWideChar: APrimitive := pspWideChar;
+    pbbSingle: APrimitive := pspSingle;
+    pbbDouble: APrimitive := pspDouble;
+    pbbExtended: APrimitive := pspExtended;
+    pbbReal: APrimitive := pspReal;
+    pbbCurrency: APrimitive := pspCurrency;
+    pbbComp: APrimitive := pspComp;
+    pbbAnsiString: APrimitive := pspAnsiString;
+    pbbUTF8String: APrimitive := pspUTF8String;
+    pbbUnicodeString: APrimitive := pspUnicodeString;
+    pbbWideString: APrimitive := pspWideString;
+    pbbShortString: APrimitive := pspShortString;
+  else
+    APrimitive := pspByte;
+    Result := False;
+  end;
+end;
+
+function StorageForm(const AFlags: TNyxPascalTypeFlags): TNyxPascalStorageForm;
+begin
+  Result := psfOrdinary;
+
+  if ptfPacked in AFlags then
+  begin
+    Result := psfPacked;
+  end;
+
+  if ptfBitPacked in AFlags then
+  begin
+    Result := psfBitPacked;
+  end;
+end;
+
+function TConstantQuery.StorageDimension(const ASyntax: INyxPascalTypeSyntax;
+  ANode: Integer; const ASite: INyxPascalBindingSite): Integer;
+var
+  LSyntax: INyxPascalTypeSyntax;
+  LLower, LUpper: TNyxPascalConstantValue;
+  LLength: TNyxDecimalNumber;
+  LType: INyxPascalSemanticType;
+  LSource: INyxPascalBoundSymbol;
+  LSpan, LRange: TNyxPascalSpan;
+  LToken: TNyxPascalToken;
+  LAt, LDepth: Integer;
+  LHasRange: Boolean;
+begin
+  Result := 0;
+  Tick;
+  LSpan := ASyntax.Node(ANode).Span;
+  LHasRange := False;
+  LDepth := 0;
+  LRange := NyxPascalSpan(0, 0);
+  LAt := ASyntax.Lexical.TokenAt(LSpan.Start);
+  { The declaration's opaque dimension can contain full constant expressions,
+    including parentheses. Split its actual top-level range token; do not use
+    text matching, synthesize source or start an independent value query. }
+  while LAt < ASyntax.Lexical.Count do
+  begin
+    Tick;
+    LToken := ASyntax.Lexical.Token(LAt);
+
+    if (LToken.Kind = ptkEOF) or (LToken.Span.Start >= LSpan.Finish) then
+    begin
+      Break;
+    end;
+
+    if LToken.Kind = ptkSymbol then
+    begin
+      case LToken.Symbol of
+        psoOpenParen, psoOpenBracket: Inc(LDepth);
+        psoCloseParen, psoCloseBracket: Dec(LDepth);
+        psoRange:
+          begin
+
+            if LDepth = 0 then
+            begin
+
+              if LHasRange then
+              begin
+                Refuse(pbiUnsupportedType);
+                Exit;
+              end;
+              LHasRange := True;
+              LRange := LToken.Span;
+            end;
+          end;
+      else
+        begin
+          { Other symbols belong to a bound expression, not its delimiter. }
+        end;
+      end;
+    end;
+    Inc(LAt);
+  end;
+
+  if LHasRange then
+  begin
+    LLower := TextValue(ASite, ASyntax.Lexical.Slice(
+      NyxPascalSpan(LSpan.Start, LRange.Start - LSpan.Start)));
+    LUpper := TextValue(ASite, ASyntax.Lexical.Slice(
+      NyxPascalSpan(LRange.Finish, LSpan.Finish - LRange.Finish)));
+  end
+  else
+  begin
+    { A named ordinal dimension still binds at this exact declaration. Its
+      range/enum dependencies join this query, rather than a later caller site. }
+    LSyntax := NewNyxPascalTypeSyntax(ASyntax.Lexical, LSpan,
+      TNyxPascalTypeOptions.Defaults, FCancellation);
+
+    if not LSyntax.Complete or
+      not (LSyntax.Node(LSyntax.Root).Kind in [ptxName, ptxQualified]) then
+    begin
+      Refuse(pbiUnsupportedType);
+      Exit;
+    end;
+    LType := BoundType(ASite, LSyntax.Lexical.Slice(LSyntax.Window), LSource);
+    LLower := OrdinalValue(LType, LSource, False).OrdValue;
+    LUpper := OrdinalValue(LType, LSource, True).OrdValue;
+
+    if (LLower.Kind = pvvUnknown) or (LUpper.Kind = pvvUnknown) then
+    begin
+      RequirePrimitiveSize(LType, ASite);
+    end;
+  end;
+
+  if (LLower.Kind <> pvvInteger) or (LUpper.Kind <> pvvInteger) or
+    (LLower.Number.CompareTo(LUpper.Number) > 0) then
+  begin
+    Refuse(pbiUnsupportedType);
+    Exit;
+  end;
+  LLength := LUpper.Number.Subtract(LLower.Number).Add(TNyxDecimalNumber.FromInteger(1));
+
+  if LLength.CompareTo(TNyxDecimalNumber.FromInteger(2147483647)) > 0 then
+  begin
+    Refuse(pbiUnsupportedType);
+    Exit;
+  end;
+  Result := StrToInt(String(LLength.ToText));
+end;
+
+function TConstantQuery.StorageShape(const AType: INyxPascalSemanticType;
+  const ASource: INyxPascalBoundSymbol; const ASite: INyxPascalBindingSite;
+  AStorage: TConstantStorage): INyxPascalStorageShape;
+var
+  LType: INyxPascalSemanticType;
+  LDefinition, LField: INyxPascalBoundSymbol;
+  LView: INyxPascalTranslatedSyntax;
+  LSyntax: INyxPascalTypeSyntax;
+  LSite: INyxPascalBindingSite;
+  LIdentity: INyxPascalIntrinsicIdentity;
+  LSubstituted: INyxPascalSubstitutedSymbol;
+  LContext: INyxPascalCompilerContext;
+  LFact: TNyxPascalSizeFact;
+  LPrimitive: TNyxPascalStoragePrimitive;
+  LAlignment: TNyxPascalStorageAlignment;
+  LForm: TNyxPascalStorageForm;
+  LRecord: INyxPascalStorageRecord;
+  LChild: INyxPascalStorageShape;
+  LResolved: INyxPascalResolution;
+  LDeclaration, LMember: TNyxPascalSyntaxDeclaration;
+  LScope: TNyxPascalSyntaxScope;
+  LVariants: INyxPascalVariantSyntax;
+  LKey: TNyxText;
+  LAt, LActive, LDimension: Integer;
+  LDimensions: array of Integer;
+begin
+  Tick;
+  Result := nil;
+  Inc(FDepth);
+  LActive := Length(FActive);
+  LDimensions := nil;
+  try
+
+    if FDepth > FOptions.MaximumDepth then
+    begin
+      raise ENyxPascalConstantLimit.Create('Source storage exceeds the constant query depth budget');
+    end;
+
+    if (AType = nil) or (AType.World <> ASite.World) then
+    begin
+      Refuse(pbiUnsupportedType);
+      Exit;
+    end;
+    LType := AType;
+    LDefinition := ASource;
+
+    if LType.Definition <> nil then
+    begin
+      LDefinition := LType.Definition;
+    end;
+    Depend(LDefinition);
+
+    if LType.Kind in [pstAlias, pstDistinct] then
+    begin
+      Exit(StorageShape(LType.Target, LDefinition, ASite, AStorage));
+    end;
+
+    if LType.Kind = pstBuiltin then
+    begin
+
+      if not Supports(LType, INyxPascalIntrinsicIdentity, LIdentity) or
+        not StoragePrimitive(LType.Builtin, LPrimitive) then
+      begin
+        Refuse(pbiUnsupportedType);
+        Exit;
+      end;
+      LContext := LIdentity.IntrinsicContext;
+      LFact := NyxPascalCapturedSize(LContext, LIdentity.IntrinsicReference);
+
+      if (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber = 0) or
+        (LContext.Mode = ppmUnknown) or (LFact.State <> pssKnown) or
+        (LFact.ProbeMode <> LContext.Mode) or
+        (LFact.ProbeLongStrings <> LContext.Option('H')) or
+        ((LIdentity.IntrinsicOrigin = pioSystemBootstrap) <>
+          (NyxPascalCompilerScope(LContext) = pcsoSystemBootstrap)) then
+      begin
+        Refuse(pbiCompilerContext, LIdentity.IntrinsicReference.Name);
+        RequirePrimitiveSize(LType, ASite);
+        Exit;
+      end;
+      Result := NewNyxPascalStoragePrimitive(LPrimitive, FCancellation);
+      AStorage.Add(Result, LContext, LDefinition, LIdentity, FCancellation);
+      Exit;
+    end;
+
+    if (LDefinition = nil) or (LDefinition.World <> ASite.World) then
+    begin
+      Refuse(pbiUnsupportedType);
+      Exit;
+    end;
+    LDeclaration := LDefinition.Declaration;
+
+    if LDeclaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported, psdfForward] <> [] then
+    begin
+      Refuse(pbiIncompleteSource, LDeclaration.Name);
+      Exit;
+    end;
+    LKey := 'storage:' + TNyxText(IntToStr(LDefinition.ModuleIndex)) + ':' +
+      TNyxText(IntToStr(LDefinition.DeclarationIndex));
+
+    if LType.Kind = pstArray then
+    begin
+      { Nested anonymous arrays can share a declaration anchor. Their exact
+        syntax-node ordinals remain distinct within that same lexical owner. }
+      LKey := LKey + ':array:' + TNyxText(IntToStr(LType.SyntaxNode));
+    end;
+    for LAt := 0 to High(FActive) do
+    begin
+      Tick;
+
+      if FActive[LAt] = LKey then
+      begin
+        Refuse(pbiRecursiveType, LDeclaration.Name);
+        Exit;
+      end;
+    end;
+    SetLength(FActive, LActive + 1);
+    FActive[LActive] := LKey;
+    LView := LDefinition.World.ModuleAt(LDefinition.ModuleIndex);
+    LSite := LDefinition.World.At(LDefinition.ModuleIndex, LDeclaration.Scope,
+      LDeclaration.TypeSpan.Start);
+    LContext := ContextAt(LSite);
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber = 0) or (LContext.Mode = ppmUnknown) then
+    begin
+      Refuse(pbiCompilerContext, LDeclaration.Name);
+      Exit;
+    end;
+
+    if LType.Kind = pstArray then
+    begin
+      LSyntax := LType.Syntax;
+
+      if (LSyntax = nil) or not LSyntax.Complete or
+        (LSyntax.Lexical <> LView.Syntax.Lexical) then
+      begin
+        Refuse(pbiIncompleteSource, LDeclaration.Name);
+        Exit;
+      end;
+      LDimension := LSyntax.Child(LType.SyntaxNode, ptrDimension);
+      while (LDimension >= 0) and (LSyntax.Node(LDimension).Role = ptrDimension) do
+      begin
+        Tick;
+
+        if Length(LDimensions) >= FOptions.MaximumDepth - FDepth then
+        begin
+          raise ENyxPascalConstantLimit.Create('Storage array dimensions exceed the query depth budget');
+        end;
+        LAt := StorageDimension(LSyntax, LDimension, LSite);
+
+        if LAt < 1 then
+        begin
+          Exit;
+        end;
+        SetLength(LDimensions, Length(LDimensions) + 1);
+        LDimensions[High(LDimensions)] := LAt;
+        LDimension := LSyntax.Node(LDimension).NextSibling;
+      end;
+
+      if Length(LDimensions) = 0 then
+      begin
+        Refuse(pbiUnsupportedType, LDeclaration.Name);
+        Exit;
+      end;
+      LChild := StorageShape(LType.Target, LDefinition, LSite, AStorage);
+
+      if LChild = nil then
+      begin
+        Exit;
+      end;
+      LForm := StorageForm(LSyntax.Node(LType.SyntaxNode).Flags);
+      for LAt := High(LDimensions) downto 0 do
+      begin
+        Tick;
+        LChild := NewNyxPascalStorageArray(LChild, LDimensions[LAt], LForm,
+          TNyxPascalStorageOptions.Defaults, FCancellation);
+        AStorage.Add(LChild, LContext, LDefinition, nil, FCancellation);
+      end;
+      Exit(LChild);
+    end;
+
+    if (LType.Kind <> pstDeclared) or (LDeclaration.TypeForm <> pstfRecord) or
+      (LDeclaration.NestedScope < 0) then
+    begin
+      Refuse(pbiUnsupportedType, LDeclaration.Name);
+      Exit;
+    end;
+
+    if (LDeclaration.GenericSpan.Length > 0) or
+      (Supports(LDefinition, INyxPascalSubstitutedSymbol, LSubstituted) and
+        (LSubstituted.Environment <> nil)) then
+    begin
+      Refuse(pbiGenericContext, LDeclaration.Name);
+      Exit;
+    end;
+    LScope := LView.Syntax.Scope(LDeclaration.NestedScope);
+
+    if not LScope.Complete or LScope.UnsupportedSyntax or
+      not Supports(LView.Syntax, INyxPascalVariantSyntax, LVariants) then
+    begin
+      Refuse(pbiIncompleteSource, LDeclaration.Name);
+      Exit;
+    end;
+    for LAt := 0 to LVariants.SelectorCount - 1 do
+    begin
+      Tick;
+
+      if LVariants.SelectorAt(LAt).RecordScope = LDeclaration.NestedScope then
+      begin
+        { A union cannot be flattened into sequential fields. Empty/nested arms
+          still need their own representation; no convenient branch is chosen. }
+        Refuse(pbiUnsupportedType, LDeclaration.Name);
+        Exit;
+      end;
+    end;
+    case NyxPascalCompilerPolicies(LContext).RecordAlignment of
+      praDefault: LAlignment := psaDefault;
+      praC: LAlignment := psaC;
+      pra1: LAlignment := psa1;
+      pra2: LAlignment := psa2;
+      pra4: LAlignment := psa4;
+      pra8: LAlignment := psa8;
+      pra16: LAlignment := psa16;
+      pra32: LAlignment := psa32;
+    else
+      { Missing initial/default capture is a real context prerequisite. A native
+        compiler must not receive DEFAULT merely because this value is Unknown. }
+      Refuse(pbiCompilerContext, LDeclaration.Name);
+      Exit;
+    end;
+    LSyntax := LView.TypeOfDeclaration(LDefinition.DeclarationIndex,
+      TNyxPascalTypeOptions.Defaults, FCancellation);
+
+    if not LSyntax.Complete then
+    begin
+      Refuse(pbiIncompleteSource, LDeclaration.Name);
+      Exit;
+    end;
+    LRecord := NewNyxPascalStorageRecord(StorageForm(LSyntax.Node(LSyntax.Root).Flags),
+      LAlignment, FCancellation);
+    LAt := LScope.FirstDeclaration;
+    while LAt >= 0 do
+    begin
+      Tick;
+      LMember := LView.Syntax.Declaration(LAt);
+
+      if LMember.Scope <> LDeclaration.NestedScope then
+      begin
+        Refuse(pbiIncompleteSource, LDeclaration.Name);
+        Exit;
+      end;
+
+      if (LMember.Kind in [psdkField, psdkVariable]) and
+        not (psdfClassMember in LMember.Flags) then
+      begin
+
+        if (LMember.VariantArm >= 0) or
+          (LMember.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] <> []) then
+        begin
+          Refuse(pbiIncompleteSource, LMember.Name);
+          Exit;
+        end;
+        LField := LDefinition.World.Symbol(LDefinition.ModuleIndex, LAt);
+        Depend(LField);
+        LResolved := LDefinition.World.TypeOfSymbol(LField, FCancellation);
+
+        if (LResolved.Status <> pbsBound) or (LResolved.BoundType = nil) then
+        begin
+          RefuseBinding(LResolved, LMember.Name);
+          Exit;
+        end;
+        LChild := StorageShape(LResolved.BoundType, LField,
+          LDefinition.World.At(LDefinition.ModuleIndex, LMember.Scope,
+            LMember.TypeSpan.Start), AStorage);
+
+        if LChild = nil then
+        begin
+          Exit;
+        end;
+        LRecord := LRecord.Field(LChild, TNyxPascalStorageOptions.Defaults, FCancellation);
+      end
+      else if not (LMember.Kind in [psdkType, psdkConstant, psdkRoutine, psdkProperty,
+        psdkVariable, psdkField]) then
+      begin
+        Refuse(pbiUnsupportedType, LMember.Name);
+        Exit;
+      end;
+      LAt := LMember.Next;
+    end;
+    Result := LRecord;
+    AStorage.Add(Result, LContext, LDefinition, nil, FCancellation);
+  finally
+    SetLength(FActive, LActive);
+    Dec(FDepth);
+  end;
+end;
+
+function TConstantQuery.SizeValue(const AType: INyxPascalSemanticType;
+  const ASource: INyxPascalBoundSymbol;
+  const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
 var
   LIdentity: INyxPascalIntrinsicIdentity;
   LContext: INyxPascalCompilerContext;
   LFact: TNyxPascalSizeFact;
+  LStorage: TConstantStorage;
+  LStorageLease: INyxPascalConstantStorage;
+  LShape: INyxPascalStorageShape;
 begin
   Result := TNyxPascalConstantValue.Unknown;
+
+  if (AType <> nil) and (AType.Kind <> pstBuiltin) and (FResult.Reason = pbiNone) then
+  begin
+    LStorage := TConstantStorage.Create;
+    LStorageLease := LStorage;
+    try
+      LShape := StorageShape(AType, ASource, ASite, LStorage);
+
+      if (LShape <> nil) and (FResult.Reason = pbiNone) then
+      begin
+        LStorage.Plan := PlanNyxPascalStorage(LShape,
+          TNyxPascalStorageOptions.Defaults, FCancellation);
+        FResult.Storage := LStorageLease;
+        Refuse(pbiCompilerContext, LStorage.Definitions[High(LStorage.Definitions)].Declaration.Name);
+      end;
+    except
+      on LError: ENyxPascalStorageLimit do
+        raise ENyxPascalConstantLimit.Create(LError.Message);
+    end;
+    Exit;
+  end;
 
   if (AType = nil) or (AType.Kind <> pstBuiltin) or
     not Supports(AType, INyxPascalIntrinsicIdentity, LIdentity) then
@@ -1460,7 +2144,7 @@ begin
 
             if LNode.Kind = cnSize then
             begin
-              Result := SizeValue(LType);
+              Result := SizeValue(LType, LSource, ASite);
             end
             else
             begin

@@ -162,7 +162,7 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
 
 implementation
 
-uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.values,
+uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.storage, nyx.pascal.values,
   nyx.pascal.requirements;
 
 type
@@ -170,7 +170,7 @@ type
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
     INyxPascalCompilerRequirements, INyxPascalSemanticWork,
-    INyxPascalSemanticAnalysisWork)
+    INyxPascalSemanticAnalysisWork, INyxPascalConstantStorage)
   public
     Snapshot: INyxPascalTranslation;
     Tokens: Integer;
@@ -185,6 +185,7 @@ type
     Issue: TNyxPascalBindingIssue;
     Related: TNyxText;
     Requirements: INyxPascalCompilerRequirements;
+    Storage: INyxPascalConstantStorage;
     function Source: INyxPascalTranslation;
     function WorkTokens: Integer;
     function TranslationTokens: Integer;
@@ -199,6 +200,13 @@ type
     function RelatedName: TNyxText;
     function RequirementCount: Integer;
     function RequirementAt(AIndex: Integer): INyxPascalCompilerRequirement;
+    function StoragePlan: INyxPascalStoragePlan;
+    function StorageNodeCount: Integer;
+    function StorageNode(AIndex: Integer): INyxPascalStorageShape;
+    function StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+    function StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+    function StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+    function StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
   end;
   { A synchronous site-bound semantic authority. The site owns its prefix world
     outward; no result retains this object. Named size resolution follows bound
@@ -211,6 +219,7 @@ type
     Issue: TNyxPascalBindingIssue;
     Related: TNyxText;
     Requirements: INyxPascalCompilerRequirements;
+    Storage: INyxPascalConstantStorage;
     procedure Remember(const AAnswer: INyxPascalResolution; const AName: TNyxText);
     function IsDeclared(const AName: TNyxPascalDeclarationRef): TNyxPascalKnowledge;
     function SizeOfName(const AName: TNyxPascalSizeReference): TNyxPascalSizeFact;
@@ -471,6 +480,60 @@ begin
   Result := Requirements.RequirementAt(AIndex);
 end;
 
+function TSemanticTranslation.StoragePlan: INyxPascalStoragePlan;
+begin
+  Result := nil;
+
+  if Storage <> nil then
+  begin
+    Result := Storage.StoragePlan;
+  end;
+end;
+
+function TSemanticTranslation.StorageNodeCount: Integer;
+begin
+  Result := 0;
+
+  if Storage <> nil then
+  begin
+    Result := Storage.StorageNodeCount;
+  end;
+end;
+
+function TSemanticTranslation.StorageNode(AIndex: Integer): INyxPascalStorageShape;
+begin
+
+  if Storage = nil then
+  begin
+    raise ENyxPascalBinding.Create('This conditional has no complete storage description');
+  end;
+  Result := Storage.StorageNode(AIndex);
+end;
+
+function TSemanticTranslation.StorageContext(AIndex: Integer): INyxPascalCompilerContext;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageContext(AIndex);
+end;
+
+function TSemanticTranslation.StorageDefinition(AIndex: Integer): INyxPascalBoundSymbol;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageDefinition(AIndex);
+end;
+
+function TSemanticTranslation.StorageIntrinsicOrigin(AIndex: Integer): TNyxPascalIntrinsicOrigin;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageIntrinsicOrigin(AIndex);
+end;
+
+function TSemanticTranslation.StorageIntrinsicReference(AIndex: Integer): TNyxPascalSizeReference;
+begin
+  StorageNode(AIndex);
+  Result := Storage.StorageIntrinsicReference(AIndex);
+end;
+
 procedure TScopeMeanings.Remember(const AAnswer: INyxPascalResolution; const AName: TNyxText);
 begin
 
@@ -515,6 +578,9 @@ var
   LType: INyxPascalSemanticType;
   LIdentity: INyxPascalIntrinsicIdentity;
   LContext: INyxPascalCompilerContext;
+  LValue: INyxPascalConstantResult;
+  LStorage: INyxPascalConstantStorage;
+  LOptions: TNyxPascalConstantOptions;
   LAt: Integer;
 begin
   Result := NyxPascalSizeFact(pssUnknown);
@@ -543,11 +609,43 @@ begin
     LType := LType.Target;
   end;
 
-  if (LType = nil) or (LType.Kind <> pstBuiltin) or
-    not Supports(LType, INyxPascalIntrinsicIdentity, LIdentity) then
+  if (LType <> nil) and (LType.Kind <> pstBuiltin) then
   begin
-    Issue := pbiUnsupportedType;
-    Related := AName.Name;
+
+    if Issue = pbiNone then
+    begin
+      { The legacy condition parser still owns its comparison/Boolean grammar.
+        Delegate only the bound SizeOf query; nested array constants share that
+        query's own recursion state and the same aggregate execution budget. }
+      LOptions := TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional);
+      LValue := PlanNyxPascalConstant('SizeOf(' + AName.Name + ')', LOptions, Cancellation)
+        .Evaluate(Site, LOptions, Cancellation);
+      Issue := LValue.Issue;
+      Related := LValue.RelatedName;
+      Requirements := CaptureNyxPascalRequirements(LValue);
+
+      if Supports(LValue, INyxPascalConstantStorage, LStorage) and
+        (LStorage.StoragePlan <> nil) then
+      begin
+        Storage := LStorage;
+      end;
+
+      if Related = '' then
+      begin
+        Related := AName.Name;
+      end;
+    end;
+    Exit;
+  end;
+
+  if (LType = nil) or not Supports(LType, INyxPascalIntrinsicIdentity, LIdentity) then
+  begin
+
+    if Issue = pbiNone then
+    begin
+      Issue := pbiUnsupportedType;
+      Related := AName.Name;
+    end;
     Exit;
   end;
   LContext := LIdentity.IntrinsicContext;
@@ -555,8 +653,12 @@ begin
   if ((LIdentity.IntrinsicOrigin = pioSystemBootstrap) <>
     (NyxPascalCompilerScope(LContext) = pcsoSystemBootstrap)) then
   begin
-    Issue := pbiCompilerContext;
-    Related := LIdentity.IntrinsicReference.Name;
+
+    if Issue = pbiNone then
+    begin
+      Issue := pbiCompilerContext;
+      Related := LIdentity.IntrinsicReference.Name;
+    end;
     Exit;
   end;
   Result := NyxPascalCapturedSize(LContext, LIdentity.IntrinsicReference);
@@ -638,6 +740,7 @@ begin
   Data.Issue := pbiCompilerContext;
   Data.Related := '';
   Data.Requirements := nil;
+  Data.Storage := nil;
   AdmitExpression(AExpression);
   LNeeds := PlanNyxPascalCondition(AContext, AExpression);
   Supports(LNeeds, INyxPascalConditionDeclarations, LDeclarations);
@@ -684,6 +787,7 @@ var
   LOptions: TNyxPascalConstantOptions;
   LValue: INyxPascalConstantResult;
   LRemaining: Integer;
+  LStorage: INyxPascalConstantStorage;
   LBoolean: Boolean;
 begin
   CheckCancellation;
@@ -755,6 +859,7 @@ begin
       Data.Issue := LMeanings.Issue;
       Data.Related := LMeanings.Related;
       Data.Requirements := LMeanings.Requirements;
+      Data.Storage := LMeanings.Storage;
     end
     else
     begin
@@ -774,6 +879,12 @@ begin
       Data.Issue := LValue.Issue;
       Data.Related := LValue.RelatedName;
       Data.Requirements := CaptureNyxPascalRequirements(LValue);
+
+      if Supports(LValue, INyxPascalConstantStorage, LStorage) and
+        (LStorage.StoragePlan <> nil) then
+      begin
+        Data.Storage := LStorage;
+      end;
 
       if LValue.Value.TryTruth(LBoolean) then
       begin
@@ -803,6 +914,7 @@ begin
       Data.Issue := pbiNone;
       Data.Related := '';
       Data.Requirements := nil;
+      Data.Storage := nil;
     end;
   finally
     FPrepared := False;

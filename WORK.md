@@ -33,7 +33,108 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Record layout — storage plans, integration open — 2026-10-18
+## Current integration: Declaration-bound storage, measurement open — 2026-10-18
+
+The previous goal turn is progress: 44152f1 is qualified and pushed, adding the
+immutable storage-plan foundation. This turn connects that foundation to the
+existing source constant/ordered-conditional queries. It does not replace the
+remaining compiler-layout proof with an expected literal, field-size sum or
+pristine query of a user type name. Original authoring criterion two and the full
+library/Studio/editor outcome remain active.
+
+SizeOf now captures supported data-only records and static arrays from their
+exact semantic definitions. Class-local/nested aliases, grouped/private fields,
+anonymous structured elements and named ordinal dimensions keep lexical owners
+and declaration order. Methods/properties/static data/nested type declarations
+do not become instance fields. Missing field primitives forward the existing
+typed compiler requirements; no fixed probe list is added. Unsupported variants,
+generic substitutions, dynamic/special storage, incomplete/conditional fields
+and recursive bounds refuse without publishing a partial description.
+
+Array ranges split the real top-level lexical range token, including grouped
+constant expressions. Their values run inside the same TConstantQuery active
+declaration/depth/dependency state. Named ordinal ranges bind at the actual array
+declaration. Bounds are checked before converting a positive length to the
+storage API's bounded Integer; no target size or offset is inferred.
+
+The optional INyxPascalConstantStorage capability retains a complete sterile
+plan plus child-before-parent shape/context/declaration rows. Each primitive
+retains its own bound reference, origin and mode/H/compiler-root namespace.
+Each record/array retains its declaration context and CODEALIGN history. These
+class-owned dynamic vectors point outward to existing immutable source/context;
+there is no query/cancellation/application callback, reverse link, parent-context
+chain or interface field in a record/static array. Published getters prepare no
+work. This capability is Pascal query data, not a new MCP tool or wire schema.
+
+Both legacy SizeOf conditions and full constant-expression conditions propagate
+the same pending description. Shape availability never answers the condition,
+resolves the source or installs a name-keyed size fact. Unknown record packing
+remains a compiler-context gap, independently of Default/C/fixed requests. A later
+primitive query cannot replace an earlier pending storage description's refusal.
+Native measurement still needs the exact per-node environment; one global mode
+around the plan's standalone fragment is not that proof.
+
+The existing type parser recognized bitpacked, but the declaration parser did
+not recognize its contextual prefix. The two declaration paths now retain its
+ordinary/anonymous record owner, while escaped identifiers remain names. A single
+checked token read and an ASCII-length guard avoid decoding unrelated words.
+Four additional closed scalar spellings preserve AnsiChar/Char, Real/Double and
+UTF8String/AnsiString/ShortString distinctions rather than silently substituting
+layout-equivalent-looking primitives.
+
+Focused native source checks pass 43 with a clean heap, including mixed FPC/H-
+root primitives and Delphi records, class-local aliases, static/non-storage
+members, all record forms, multidimensional/anonymous arrays, scope visibility,
+recursive and uncertain source, missing primitive requests, both conditional
+paths, cancellation and aggregate refusal. The existing storage-plan consumer
+passes 39/clean heap and its unchanged independent compiler comparison. All 86
+accepted compiler jobs have zero owned warnings/196 upstream warnings. Forty
+maintained/seven additional native consumers, the 502-file/2,338,764-token lexical
+corpus run and the unchanged original native RTL fixture have clean heaps: 49
+accepted native logs. Both Studios/backend/worker and 36 browser consumers compile
+as applicable; no browser execution/input/physical parity or adoption is claimed.
+
+The unchanged original fixture passes 56. Its five initial primitive queries,
+one explicit Word job, symbol three/eight and dynamic Longint/Int64/Pointer three/
+eight remain exact. The two-million view/four-million construction/64-round caps
+are unchanged. System retains 10,925 declarations/six syntax diagnostics/25
+answers; ObjPas retains 209/four/one. Exact Free/FreeInstance indexed completion,
+physical objpash.inc navigation and detached insertion remain ready. The VarHeader
+condition still blocks full source resolution, now with pbiCompilerContext rather
+than the blanket unsupported-type refusal. No measured layout fact is installed;
+full RTL meaning and original authoring/task/delivery completion remain open.
+
+Two maintained assertions initially expected every local record refusal to be
+UnsupportedType. Their failures are retained. The updated condition/bootstrap
+consumers require the exact missing-packing-context category and retain/strengthen
+unresolved-source, unknown-branch and no-partial-plan checks. All four product
+sources/new focused consumer are frozen separately from these two changed oracle
+inputs; final qualification is composite. The original native module/RTL fixture
+and its ceilings remain unchanged. The ignored
+`.local/record-storage-binding-paths-private.json` owns source freezes, retained
+preparations and the current same-feature qualification/return path.
+
+Final preservation checks retain 658 unrelated/662 current product sources,
+97 RTL inputs, 24 compiler inputs/three earlier inspected files plus ptype's
+array-dimension implementation, 156 retained unit packets/48 includes, all 349
+frozen release artifacts and thirteen concurrent planning files. All five
+current-start protected files remain exact. Earlier global configuration
+preservation failures are retained, not restored or reclassified as success;
+the original full preservation/delivery gate remains false.
+
+Next continue this record-layout feature through distinct immutable layout
+evidence and generic configured-compiler fulfillment. Preserve source-inherited
+packing/mode provenance, per-node primitive origin, relevant CODEALIGN requests,
+captured default ownership, exact context/capture identity and module-context
+replay. The original fixture's unchanged LWorld must see evidence through its
+updated module context or another already observed owner. Unknown packing cannot
+be relabeled Default and a synthetic probe name cannot become a user type fact.
+Do not substitute more standalone shape/parser/oracle/capture variants. No
+original criterion/task/credit/DONE, full source/type meaning, browser execution,
+Studio adoption/parity/delivery, host/config retry, protected write, cleanup/
+restart, new MCP tool/schema, raised numeric limit or sub-agent is introduced.
+
+## Previous integration: Record layout — storage plans, integration open — 2026-10-18
 
 a937401 is qualified and pushed. The previous goal turn is progress: it removes
 real repeated metadata operations and restores the unchanged 56-check native RTL

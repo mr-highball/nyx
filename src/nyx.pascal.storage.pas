@@ -45,7 +45,8 @@ type
     pspNativeInt, pspNativeUInt, pspSizeInt, pspSizeUInt, pspPointer,
     pspBoolean, pspByteBool, pspWordBool, pspLongBool, pspChar, pspWideChar,
     pspSingle, pspDouble, pspExtended, pspCurrency, pspComp, pspAnsiString,
-    pspUnicodeString, pspWideString);
+    pspUnicodeString, pspWideString, pspAnsiChar, pspReal, pspUTF8String,
+    pspShortString);
   { Authored container form; packed and bitpacked remain distinct compiler
     requests. The planner never computes either representation itself. }
   TNyxPascalStorageForm = (psfOrdinary, psfPacked, psfBitPacked);
@@ -249,7 +250,8 @@ const
     'Byte', 'ShortInt', 'Word', 'SmallInt', 'Longword', 'Longint', 'QWord', 'Int64',
     'Integer', 'Cardinal', 'NativeInt', 'NativeUInt', 'SizeInt', 'SizeUInt', 'Pointer',
     'Boolean', 'ByteBool', 'WordBool', 'LongBool', 'Char', 'WideChar', 'Single',
-    'Double', 'Extended', 'Currency', 'Comp', 'AnsiString', 'UnicodeString', 'WideString');
+    'Double', 'Extended', 'Currency', 'Comp', 'AnsiString', 'UnicodeString', 'WideString',
+    'AnsiChar', 'Real', 'UTF8String', 'ShortString');
 begin
 
   if (Ord(AValue) < Ord(Low(TNyxPascalStoragePrimitive))) or

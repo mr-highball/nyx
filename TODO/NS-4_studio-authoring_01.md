@@ -9,7 +9,27 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Record-layout work in progress (2026-10-18): a source-free typed storage tree now
+Declaration-bound storage work in progress (2026-10-18): the existing constant
+and both ordered-conditional query paths now capture complete supported storage
+from actual field/alias/nested scopes. Per-node contexts retain primitive root/
+mode/H identity separately from each record's packing/CODEALIGN intent. Array
+bounds share the same query's recursion/dependency state; unknown/unsupported
+source publishes no partial plan. A contextual bitpacked declaration-parser gap
+is repaired without consuming escaped identifiers. Focused native checks pass
+43/clean heap; the existing plan consumer passes 39/clean heap. Browsers compile
+only. Two maintained refusal assertions are updated to exact missing-packing
+context and strengthened unknown/no-partial behavior, retaining their original
+failures. Composite qualification has 86 compiler jobs/zero owned warnings and
+49 accepted native logs/clean heaps, including unchanged original RTL 56. System
+stays 10,925 declarations/six syntax diagnostics/25 answers, now reporting a typed
+compiler-context gap at VarHeader; exact indexed Free/FreeInstance remains ready.
+WORK.md owns the scoped receipts. Distinct layout evidence, generic native
+fulfillment and the actual
+source VarHeader/remaining compiler context prerequisites stay open; a captured
+shape is not a measured size, resolved source or full resolver/editor/adoption/
+parity/delivery. Continue this same feature without new fixed probes or caps.
+
+Historical record-layout foundation (2026-10-18): a source-free typed storage tree now
 emits sterile record/array/primitive declarations with explicit forms and packing
 intent. Alternate capture, immutable specialized interfaces, all thirteen observed
 cancellation boundaries and exact six-unit/all five smaller allowances qualify

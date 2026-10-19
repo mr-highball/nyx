@@ -175,7 +175,10 @@ begin
     'Qualified authored System aliases unwrap to the measured primitive');
   LResult := Analyze('unit Consumer; interface type Char=packed record A:AnsiChar; end;' +
     '{$if sizeof(Char)=1}{$define MUST_NOT_GUESS}{$endif}implementation end.', LContext, LWorld);
-  Check(LResult.Pending and (LResult.BindingIssue = pbiUnsupportedType),
+  Check(LResult.Pending and (LResult.BindingIssue = pbiCompilerContext) and
+    not LResult.Source.Resolved and
+    (LResult.Source.State(LResult.Source.StateCount - 1).Symbol(
+      NyxPascalDefine('MUST_NOT_GUESS')).IsDefined = ppkUnknown),
     'A local record shadow cannot borrow compiler or System Char measurements');
   LResult := Analyze('unit Consumer; interface {$if declared(Double)}{$endif}implementation end.',
     LContext, LWorld);
