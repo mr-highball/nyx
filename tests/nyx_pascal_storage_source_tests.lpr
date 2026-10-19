@@ -398,6 +398,63 @@ begin
     'An excess structural receipt refuses atomically without replacing the caller target');
 end;
 
+{ Pointer checking does not supply layout facts. It is nevertheless part of an
+  exact captured context: a receipt from one request cannot answer another. }
+procedure PointerPolicyIdentity;
+const
+  CSource: TNyxText = 'unit Measure; interface {$packrecords 1} ' +
+    'type TTarget=record Value:Byte; end; implementation end.';
+var
+  LBase, LContext, LMeasured: INyxPascalCompilerContext;
+  LStorage: INyxPascalConstantStorage;
+  LIdentity: INyxPascalConstantStorageIdentity;
+  LAnswer: INyxPascalConstantResult;
+  LKeys: array of TNyxPascalStorageKey;
+  LRequest, LOther: TNyxPascalPointerCheckingRequest;
+begin
+  LBase := Facts;
+  SetLength(LKeys, Ord(High(TNyxPascalPointerCheckingRequest)) + 1);
+  LStorage := Storage(Site(CSource, LBase), 'sizeof(TTarget)');
+  Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+  LKeys[0] := LIdentity.StorageKey;
+  for LRequest := Low(TNyxPascalPointerCheckingRequest) to High(TNyxPascalPointerCheckingRequest) do
+  begin
+    LContext := NyxPascalWithCompilerPolicies(LBase,
+      NyxPascalCompilerPolicies(LBase).RequestPointerChecking(LRequest));
+    LStorage := Storage(Site(CSource, LContext), 'sizeof(TTarget)');
+    Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+
+    if LRequest = ppcrUnknown then
+    begin
+      Check(LIdentity.StorageKey.SameKey(LKeys[0]),
+        'Unspecified pointer requests preserve the existing opaque structural identity');
+    end;
+    LKeys[Ord(LRequest)] := LIdentity.StorageKey;
+    LMeasured := NyxPascalWithCapturedStorage(LContext, LIdentity.StorageKey,
+      NyxPascalStorageFact(psfsKnown, 1));
+    LAnswer := Evaluate(Site(CSource, LMeasured), 'sizeof(TTarget)');
+    Check((LAnswer.Issue = pbiNone) and (LAnswer.Value.Number.ToText = '1'),
+      'An explicitly supplied structural receipt still answers its exact pointer-request context');
+  end;
+  for LRequest := Low(TNyxPascalPointerCheckingRequest) to High(TNyxPascalPointerCheckingRequest) do
+  begin
+    for LOther := Low(TNyxPascalPointerCheckingRequest) to High(TNyxPascalPointerCheckingRequest) do
+    begin
+      LContext := NyxPascalWithCompilerPolicies(LBase,
+        NyxPascalCompilerPolicies(LBase).RequestPointerChecking(LOther));
+      LMeasured := NyxPascalWithCapturedStorage(LContext, LKeys[Ord(LRequest)],
+        NyxPascalStorageFact(psfsKnown, 1));
+      LAnswer := Evaluate(Site(CSource, LMeasured), 'sizeof(TTarget)');
+      Check((LKeys[Ord(LRequest)].SameKey(LKeys[Ord(LOther)]) = (LRequest = LOther)) and
+        (((LRequest = LOther) and (LAnswer.Issue = pbiNone) and
+          (LAnswer.Value.Number.ToText = '1')) or
+         ((LRequest <> LOther) and (LAnswer.Value.Kind = pvvUnknown) and
+          (LAnswer.Issue = pbiCompilerContext))),
+        'Missing/default/off/on contexts never reuse a different request identity or answer');
+    end;
+  end;
+end;
+
 procedure StructuralBounds;
 var
   LContext: INyxPascalCompilerContext;
@@ -742,6 +799,7 @@ begin
     ModePackingProvenance;
     {$ifndef PAS2JS}WholeModePackingInput;{$endif}
     StructuralEvidence;
+    PointerPolicyIdentity;
     StructuralBounds;
     MixedStorageEvidence;
     ArraysAndForms;

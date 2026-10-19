@@ -2021,6 +2021,15 @@ var
     Number(Ord(LPolicy.DiagnosticEmission(pdcWarnings)));
     Number(Ord(LPolicy.DiagnosticEmission(pdcHints)));
     Number(Ord(LPolicy.DiagnosticEmission(pdcNotes)));
+
+    if LPolicy.PointerCheckingRequested <> ppcrUnknown then
+    begin
+      { Tagged extension cannot collide with the following numeric warning
+        count in older identities. Unspecified requests retain their old key;
+        explicit Default/Off/On each qualify their own exact context meaning. }
+      Part('pointer-check-request-v1');
+      Number(Ord(LPolicy.PointerCheckingRequested));
+    end;
     LWarnings := NyxPascalWarnings(AContext);
     Number(LWarnings.WarningCount);
     for LIndex := 0 to LWarnings.WarningCount - 1 do

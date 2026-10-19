@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Direct sealed token pages; original RTL frontier restored — 2026-10-19
+## Current integration: Typed pointer-check requests; resolved original source — 2026-10-19
+
+The previous turn is verified progress: 2452625 is qualified and pushed. This
+continuation follows the actual CHECKPOINTER OFF in isotmp.inc through existing
+compiler-policy/context/translation/constant-identity owners. The complete
+library/Studio/resolver outcome remains active; no full criterion, task, counter,
+credit, DONE, parity, adoption or delivery closes.
+
+TNyxPascalPointerCheckingRequest retains Unknown/Default/Off/On as distinct
+value-only intent. The fluent RequestPointerChecking policy participates in
+validation, detached capture, exact SamePolicies/SameFacts and local PUSH/POP.
+Unknown source effects revoke knowledge; inactive writes preserve prior intent;
+uncertain writes remain unknown. The translator recognizes the inspected FPC
+ON/OFF/DEFAULT and + / - / * spellings, preserving exact physical directive text
+and historical pre-state. Other compiler families refuse this source behavior.
+Default stays symbolic: initial settings, delayed activation, target support,
+pointer validity and actual emitted checking remain compiler-owned.
+
+The inspected FPC 3.3.1 scanner flushes pending locals at a source mode change
+without replacing cs_checkpointer. Context mode retention is qualified only for
+that captured version/family and the existing closed supported modes. Other
+versions retain conservative reset behavior. Saved settings restore pointer
+intent while leaving module GOTO/SMARTLINK requests current. The policy value
+record gains a scalar enum field, so dependent consumers are rebuilt; no existing
+enum ordinal/interface GUID changes and no interface enters a record/static array.
+
+Constant storage identities include a tagged extension for explicit pointer
+requests. Missing knowledge preserves the previous opaque identity exactly;
+the nonnumeric tag cannot alias the older following numeric warning count.
+Default/Off/On cannot reuse another request's context or answer. This extends
+existing opaque identity ownership, not a new MCP tool or schema. No compiler
+default, type layout, native eligibility or target fact is inferred.
+
+All seven owned Pascal inputs are frozen before final qualification. The
+expanded policy consumer passes 115 native checks with clean heap: immutable
+capture, all request-pair identities, invalid enums, local/module lifetime,
+inspected mode retention, malformed/foreign source refusal and conditional
+uncertainty. The whole independent FPC unit/include compiles OFF/DEFAULT/minus/
+star forms and keeps its callable body; it does not qualify ON on an unsupported
+target or observe an effective default. Expanded declaration-bound storage passes
+207 checks, including the complete four-by-four request/receipt matrix.
+
+The required unchanged original RTL consumer PASSES all 56 native checks with
+clean heap. System Source.Resolved is now TRUE with zero translation diagnostics:
+13,102 declarations/205 syntax diagnostics/31 conditional answers, no pending
+query. ObjPas remains 209/four/one with no pending query. Exact indexed
+Free/FreeInstance completion, original include-token navigation after provider
+retirement and detached insertion remain ready. The declaration/diagnostic counts
+change with retained source facts; 205 parser diagnostics still require actual
+classification and ownership review. A resolved translation does not establish
+complete grammar, source/type/module meaning or the original full criterion.
+
+Five initial queries, one explicit Word job, three-of-eight symbol preparation,
+six existing dynamic jobs inside eight, two-million view/four-million aggregate
+caps, 64 rounds, all work admission, cancellation and atomic refusal stay exact.
+All forty maintained/seven additional native consumers and the actual
+503-file/2,358,543-token corpus also pass: 49 accepted native logs including RTL,
+all with clean heaps. All 86 main compiler jobs succeed with zero owned warnings/
+196 upstream; the deliberate emission oracle warning remains separate. Thirty-six
+browser compilations include Studio/worker; native Studio/backend compile as
+applicable. Browser execution, physical editor/input, whole-resolver latency,
+complete component breadth, parity, adoption and delivery remain open.
+
+Preservation retains 665 unrelated/672 maintained-source pins, 97 RTL/24 compiler
+inputs plus retained and six pointer-specific compiler inspections, 156 original
+unit packets/48 includes, 349 frozen release artifacts, nine prior contexts,
+thirteen foreign planning files and five exact current-start protected files.
+Historical global-configuration preservation failure remains retained and false;
+no restoration occurs. All owned process/reader handles are terminal and joined;
+LAN stays offline and native Nyx tools absent. No host/config retry, protected
+mutation, cleanup/restart, approval bypass, new tool/schema/rollout or sub-agent
+occurs. Ignored `.local/pointer-policy-paths-private.json` owns frozen source,
+compiler inspections, qualification, preservation and source/remote receipts.
+
+Stop pointer-policy/fixture/compiler/capture variants. Reassess the actual 205
+System parser diagnostics through existing translated-syntax/parser/metadata
+owners, first locating exact original file/span/role and distinguishing body
+recovery from declaration ownership. Do not zero counts, skip source, relax the
+unchanged RTL consumer, add probes, raise quotas or infer missing facts. Retain
+the newly resolved original translation and exact input/context/ordered-answer
+identity. Full canonical types/module meaning/incremental budgets/editor/input/
+navigation/quality/component breadth/native-browser parity/adoption/delivery and
+the original criterion remain open; the goal stays active.
+
+## Previous integration: Direct sealed token pages; original RTL frontier restored — 2026-10-19
 
 The previous turn is verified progress: 5964747 records unchanged-executable
 attribution, with production source at 895a3de. This continuation removes the

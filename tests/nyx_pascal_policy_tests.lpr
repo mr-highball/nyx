@@ -24,7 +24,8 @@ program nyx_pascal_policy_tests;
 
 uses SysUtils, Classes, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.lexing, nyx.pascal.translation, nyx.pascal.macros,
-  nyx.pascal.syntax, nyx.pascal.syntax.translated, codegen.fixture;
+  nyx.pascal.syntax, nyx.pascal.syntax.translated, codegen.fixture
+  {$ifndef PAS2JS}, pointer.policy.fixture{$endif};
 
 var
   GChecks: Integer;
@@ -504,6 +505,171 @@ begin
 end;
 {$endif}
 
+function PointerRequestAt(const ASource: INyxPascalTranslation;
+  const AName: TNyxText): TNyxPascalPointerCheckingRequest;
+begin
+  Result := NyxPascalCompilerPolicies(ASource.State(StateAt(ASource, AName))).PointerCheckingRequested;
+end;
+
+{$push}{$R-}
+{ Deliberately outside the enum domain, as an alternate input might supply.
+  Range checking is disabled only while creating this validator control. }
+function InvalidPointerRequest: TNyxPascalPointerCheckingRequest;
+var
+  LOrdinal: Integer;
+begin
+  LOrdinal := Ord(High(TNyxPascalPointerCheckingRequest)) + 1;
+  Result := TNyxPascalPointerCheckingRequest(LOrdinal);
+end;
+{$pop}
+
+procedure PointerPolicyValues;
+var
+  LRequest, LOther: TNyxPascalPointerCheckingRequest;
+  LPolicies, LOtherPolicies: TNyxPascalCompilerPolicies;
+  LBase, LContext, LSaved, LRestored: INyxPascalCompilerContext;
+  LRejected: Boolean;
+begin
+  LBase := Facts;
+  Check(NyxPascalCompilerPolicies(LBase).PointerCheckingRequested = ppcrUnknown,
+    'Missing pointer-check capture never becomes an observed compiler default');
+  for LRequest := Low(TNyxPascalPointerCheckingRequest) to High(TNyxPascalPointerCheckingRequest) do
+  begin
+    LPolicies := TNyxPascalCompilerPolicies.Unknown.RequestPointerChecking(LRequest);
+    LContext := NyxPascalWithCompilerPolicies(LBase, LPolicies);
+    Check((NyxPascalCompilerPolicies(CaptureNyxPascalCompilerContext(LContext)).PointerCheckingRequested = LRequest)
+      and CaptureNyxPascalCompilerContext(LContext).SameFacts(LContext),
+      'Owned context capture preserves the exact typed pointer request');
+    Check(NyxPascalCompilerPolicies(LContext.UnknownState).PointerCheckingRequested = ppcrUnknown,
+      'Unknown source effects revoke pointer-check knowledge');
+    Check(NyxPascalCompilerPolicies(LContext.InMode(ppmObjFPC)).PointerCheckingRequested = LRequest,
+      'Inspected FPC source modes retain pointer intent independently of mode defaults');
+    for LOther := Low(TNyxPascalPointerCheckingRequest) to High(TNyxPascalPointerCheckingRequest) do
+    begin
+      LOtherPolicies := TNyxPascalCompilerPolicies.Unknown.RequestPointerChecking(LOther);
+      Check((LPolicies.SamePolicies(LOtherPolicies) = (LRequest = LOther)) and
+        (LContext.SameFacts(NyxPascalWithCompilerPolicies(LBase, LOtherPolicies)) = (LRequest = LOther)),
+        'Default, off, on and missing pointer capture have distinct exact identities');
+    end;
+  end;
+  LSaved := NyxPascalWithCompilerPolicies(LBase,
+    TNyxPascalCompilerPolicies.Unknown.RequestPointerChecking(ppcrDefault));
+  LContext := NyxPascalWithCompilerPolicies(LSaved,
+    TNyxPascalCompilerPolicies.Unknown.RequestPointerChecking(ppcrOn).RequestGoto(ppkTrue));
+  LRestored := RestoreNyxPascalLocalSettings(LContext, LSaved);
+  Check((NyxPascalCompilerPolicies(LRestored).PointerCheckingRequested = ppcrDefault) and
+    (NyxPascalCompilerPolicies(LRestored).GotoRequested = ppkTrue) and
+    (NyxPascalCompilerPolicies(LContext).PointerCheckingRequested = ppcrOn),
+    'Local restore recovers pointer intent without restoring module GOTO or mutating either input');
+  LContext := NyxPascalWithCompilerPolicies(NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 0), ppmDelphi),
+    TNyxPascalCompilerPolicies.Unknown.RequestPointerChecking(ppcrOff));
+  Check(NyxPascalCompilerPolicies(LContext.InMode(ppmObjFPC)).PointerCheckingRequested = ppcrUnknown,
+    'Other compiler versions retain conservative mode-reset behavior');
+  LPolicies := TNyxPascalCompilerPolicies.Unknown;
+  LRejected := False;
+  try
+    LOtherPolicies := LPolicies.RequestPointerChecking(InvalidPointerRequest);
+  except
+    on ENyxPascalContext do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LPolicies.PointerCheckingRequested = ppcrUnknown),
+    'Invalid pointer enum values refuse without changing the caller policy');
+end;
+
+procedure PointerPolicySources;
+var
+  LSource: INyxPascalTranslation;
+  LSaved: INyxPascalTranslationSettings;
+  LAt: Integer;
+begin
+  LSource := Translate('unit PointerRequests; interface ' +
+    '{$checkpointer ON} const EnabledMarker=1; {$push}{$checkpointer DEFAULT} const DefaultMarker=2; ' +
+    '{$include part.inc}{$pop} const RestoredMarker=3; ' +
+    '{$if 0}{$checkpointer off}{$endif} const InactiveMarker=4; ' +
+    '{$if UNKNOWN}{$checkpointer off}{$endif} const UncertainMarker=5; implementation end.',
+    '{$push}{$checkpointer-} const IncludedOff=6; {$checkpointer*} const IncludedDefault=7; ' +
+    '{$pop} const AfterIncluded=8;');
+  Check((PointerRequestAt(LSource, 'EnabledMarker') = ppcrOn) and
+    (PointerRequestAt(LSource, 'DefaultMarker') = ppcrDefault),
+    'Source ON and DEFAULT retain authored requests without resolving a target flag');
+  Check((PointerRequestAt(LSource, 'IncludedOff') = ppcrOff) and
+    (PointerRequestAt(LSource, 'IncludedDefault') = ppcrDefault) and
+    (PointerRequestAt(LSource, 'AfterIncluded') = ppcrDefault) and
+    (LSource.OccurrenceCount = 2), 'Nested include settings retain minus/star requests and independent POP scopes');
+  Check((PointerRequestAt(LSource, 'RestoredMarker') = ppcrOn) and
+    (PointerRequestAt(LSource, 'InactiveMarker') = ppcrOn) and
+    (PointerRequestAt(LSource, 'UncertainMarker') = ppcrUnknown) and not LSource.Resolved,
+    'Inactive writes preserve pointer intent and uncertain participation revokes knowledge');
+  Supports(LSource, INyxPascalTranslationSettings, LSaved);
+  LAt := StateAt(LSource, 'IncludedOff');
+  Check((LSaved.SettingsDepth(LAt) = 2) and
+    (NyxPascalCompilerPolicies(LSaved.SavedSettings(LAt, 1)).PointerCheckingRequested = ppcrDefault) and
+    (LSaved.SettingsOrigin(LAt, 1).Occurrence = 1),
+    'Saved pointer policy and original include PUSH origin survive publication');
+  LSource := Translate('unit PointerRequests; {$checkpointer+} interface const PlusMarker=1; ' +
+    '{$checkpointer OFF annotation} const OffMarker=2; {$checkpointer DEFAULT annotation} ' +
+    'const ResetMarker=3; implementation end.');
+  Check(LSource.Resolved and (PointerRequestAt(LSource, 'PlusMarker') = ppcrOn) and
+    (PointerRequestAt(LSource, 'OffMarker') = ppcrOff) and
+    (PointerRequestAt(LSource, 'ResetMarker') = ppcrDefault),
+    'Inspected pointer spellings preserve the exact directive comments after their value');
+  LSource := Translate('unit PointerRequests; interface {$checkpointer maybe} const BadMarker=1; implementation end.');
+  Check(not LSource.Resolved and (PointerRequestAt(LSource, 'BadMarker') = ppcrUnknown),
+    'Malformed pointer requests remain visible and revoke source facts');
+  LSource := NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('other.pas'), 'unit Other; {$checkpointer off} interface end.'),
+    NyxPascalPhysicalFile('other.pas'), NewNyxPascalCompilerContext(ppcPas2JS,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi), TNyxPascalTranslationOptions.Defaults);
+  Check(not LSource.Resolved, 'Pointer-check directive recognition does not grant another compiler family FPC behavior');
+end;
+
+{$ifndef PAS2JS}
+function ReadPointerPolicyInput(const AName: String): TNyxText;
+var
+  LFile: TFileStream;
+  LBytes: TNyxBytes;
+begin
+  LFile := TFileStream.Create(ParamStr(1) + '/tests/' + AName, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(LBytes, LFile.Size);
+
+    if Length(LBytes) > 0 then
+    begin
+      LFile.ReadBuffer(LBytes[0], Length(LBytes));
+    end;
+    Result := NyxDecodeUTF8(LBytes);
+  finally
+    LFile.Free;
+  end;
+end;
+
+procedure WholePointerPolicyInput;
+var
+  LSource: INyxPascalTranslation;
+  LView: INyxPascalTranslatedSyntax;
+begin
+  Check(PointerPolicyFixtureValue = 42, 'The independent compiled pointer-policy fixture body remains callable');
+  LSource := NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('pointer.policy.fixture.pas'), ReadPointerPolicyInput('pointer.policy.fixture.pas'))
+    .WithFile(NyxPascalPhysicalFile('pointer.policy.fixture.inc'), ReadPointerPolicyInput('pointer.policy.fixture.inc')),
+    NyxPascalPhysicalFile('pointer.policy.fixture.pas'), Facts, TNyxPascalTranslationOptions.Defaults);
+  LView := NewNyxPascalTranslatedSyntax(LSource, TNyxPascalSyntaxOptions.Defaults);
+  Check(LSource.Resolved and (LSource.OccurrenceCount = 2) and (LView.Syntax.DiagnosticCount = 0),
+    'The whole independently compiled unit/include retains ordinary declaration and body syntax');
+  Check((PointerRequestAt(LSource, 'PointerBefore') = ppcrOff) and
+    (PointerRequestAt(LSource, 'PointerDefault') = ppcrDefault) and
+    (PointerRequestAt(LSource, 'PointerIncludedOff') = ppcrOff) and
+    (PointerRequestAt(LSource, 'PointerIncludedDefault') = ppcrDefault) and
+    (PointerRequestAt(LSource, 'PointerAfterInclude') = ppcrDefault) and
+    (PointerRequestAt(LSource, 'PointerRestored') = ppcrOff),
+    'The whole compiler input retains mode-local and nested include request histories');
+end;
+{$endif}
+
 begin
   try
     ValuesAndRestore;
@@ -512,7 +678,10 @@ begin
     Budgets;
     SetAndModulePolicies;
     CodeGenerationPolicies;
+    PointerPolicyValues;
+    PointerPolicySources;
     {$ifndef PAS2JS}WholeCodeGenerationInput;{$endif}
+    {$ifndef PAS2JS}WholePointerPolicyInput;{$endif}
     WriteLn('PASS ', GChecks, ' typed compiler policy checks');
   except
     on LError: Exception do

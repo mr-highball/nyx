@@ -240,6 +240,10 @@ type
     separate from numeric/named WARN rules; errors are never a suppressible
     category here. No compiler's default or message activation time is inferred. }
   TNyxPascalDiagnosticChannel = (pdcWarnings, pdcHints, pdcNotes);
+  { Authored FPC pointer-check request only. Default names the owning compiler's
+    initial setting, not a guessed Boolean. Unknown also covers uncertain source
+    effects; no value proves target support, pointer validity or emitted checks. }
+  TNyxPascalPointerCheckingRequest = (ppcrUnknown, ppcrDefault, ppcrOff, ppcrOn);
   { Value-owned local and module policies, independent of renderer/ABI types.
     Zero initialization means unknown. Fluent copies retain exact symbolic
     values; they never infer a compiler's defaults or target capabilities.
@@ -258,6 +262,7 @@ type
     FWarnings: TNyxPascalKnowledge;
     FHints: TNyxPascalKnowledge;
     FNotes: TNyxPascalKnowledge;
+    FPointerChecking: TNyxPascalPointerCheckingRequest;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -282,6 +287,9 @@ type
       AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     { Read one validated category; a missing capture remains Unknown. }
     function DiagnosticEmission(AChannel: TNyxPascalDiagnosticChannel): TNyxPascalKnowledge;
+    { Local intent participates in capture, exact identity and saved settings.
+      Pending activation and the meaning of Default remain compiler-owned. }
+    function RequestPointerChecking(AValue: TNyxPascalPointerCheckingRequest): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -292,6 +300,7 @@ type
     property SmartLinkingRequested: TNyxPascalKnowledge read FSmartLinking;
     property GotoRequested: TNyxPascalKnowledge read FGoto;
     property AssemblerReader: TNyxPascalAssemblerReader read FAssembler;
+    property PointerCheckingRequested: TNyxPascalPointerCheckingRequest read FPointerChecking;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -1349,7 +1358,11 @@ begin
       authored request independently of the reset policies. This supplies no
       initial packing fact and grants no target layout/offset authority. Other
       compiler versions/families keep the previous conservative reset. }
-    LCopy.FPolicies := LCopy.FPolicies.AlignRecords(FPolicies.RecordAlignment);
+    LCopy.FPolicies := LCopy.FPolicies.AlignRecords(FPolicies.RecordAlignment)
+      { This scanner flushes pending locals before changing mode, and neither
+        mode handler replaces cs_checkpointer. Retain the authored request only
+        for this inspected compiler/version; this supplies no effective flag. }
+      .RequestPointerChecking(FPolicies.PointerCheckingRequested);
   end;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
@@ -2131,7 +2144,9 @@ begin
     (Ord(FHints) < Ord(Low(TNyxPascalKnowledge))) or
     (Ord(FHints) > Ord(High(TNyxPascalKnowledge))) or
     (Ord(FNotes) < Ord(Low(TNyxPascalKnowledge))) or
-    (Ord(FNotes) > Ord(High(TNyxPascalKnowledge))) then
+    (Ord(FNotes) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FPointerChecking) < Ord(Low(TNyxPascalPointerCheckingRequest))) or
+    (Ord(FPointerChecking) > Ord(High(TNyxPascalPointerCheckingRequest))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2234,6 +2249,14 @@ begin
   end;
 end;
 
+function TNyxPascalCompilerPolicies.RequestPointerChecking(
+  AValue: TNyxPascalPointerCheckingRequest): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FPointerChecking := AValue;
+  Result.Validate;
+end;
+
 function TNyxPascalCompilerPolicies.SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
 begin
   Validate;
@@ -2243,7 +2266,7 @@ begin
     (FCalling = AOther.FCalling) and (FSmartLinking = AOther.FSmartLinking) and
     (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto) and
     (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
-    (FNotes = AOther.FNotes);
+    (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking);
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;

@@ -2914,6 +2914,7 @@ var
   LWarningContext: INyxPascalCompilerContext;
   LWarnings: INyxPascalContextWarnings;
   LRegister: TNyxPascalFPURegisterPolicy;
+  LPointerChecking: TNyxPascalPointerCheckingRequest;
   LRegisterValue: Integer;
   LReader: TNyxPascalAssemblerReader;
   LCodeAlignment: TNyxPascalCodeAlignmentRequest;
@@ -3346,6 +3347,48 @@ begin
           FCompilerFrames[High(FCompilerFrames)].Context);
         SetLength(FCompilerFrames, Length(FCompilerFrames) - 1);
       end;
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'checkpointer' then
+    begin
+
+      if FContext.Family <> ppcFPC then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'This pointer-check request needs a captured FPC source context');
+        UnknownEffect;
+        Exit;
+      end;
+      { The inspected scanner accepts ON/OFF/DEFAULT and + / - / * spellings.
+        Keep DEFAULT symbolic: its initial value and target availability are not
+        facts that an authored request can provide to this source analyzer. }
+      LArgument := LayoutDirectiveValue(LValue);
+
+      if (LArgument = 'on') or (LArgument = '+') then
+      begin
+        LPointerChecking := ppcrOn;
+      end
+      else if (LArgument = 'off') or (LArgument = '-') then
+      begin
+        LPointerChecking := ppcrOff;
+      end
+      else if (LArgument = 'default') or (LArgument = '*') then
+      begin
+        LPointerChecking := ppcrDefault;
+      end
+      else
+      begin
+        raise ENyxPascalContext.Create('Pointer checking needs on, off or default');
+      end;
+
+      if FActive = ppkUnknown then
+      begin
+        LPointerChecking := ppcrUnknown;
+      end;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).RequestPointerChecking(LPointerChecking));
       SaveState;
       Exit;
     end;
