@@ -433,6 +433,14 @@ type
     function Origin: TNyxPascalSyntaxOrigin;
     function Environment: INyxPascalGenericEnvironment;
   end;
+  { A queried constructor retains its actual immutable receiver separately from
+    the declaring method and its generic frame. An inherited method can thus
+    construct a descendant while navigation still names the original source.
+    The receiver points to an earlier type value, never back to this handle. }
+  TConstructorSymbol = class(TBoundSymbol)
+  public
+    ReceiverType: INyxPascalSemanticType;
+  end;
   { In-unit provenance for the actual specialization site. A declaration's mode
     cannot substitute for the caller's mode-sensitive constraint semantics. }
   IGenericApplication = interface(IInterface)
@@ -718,6 +726,15 @@ type
     function FormalMember(const AFormal: INyxPascalFormalParameter;
       const ASite: INyxPascalBindingSite; const AName: TNyxText;
       AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
+    { Ordinary lookup remains independent of the final queried receiver. The
+      outer member boundary adds constructor receiver ownership after inheritance. }
+    function MemberCore(const AType: INyxPascalSemanticType;
+      const ASite: INyxPascalBindingSite; const AName: TNyxText;
+      AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
+    function ConstructorResult(const ASymbol: INyxPascalBoundSymbol;
+      const ASite: INyxPascalBindingSite): INyxPascalResolution;
+    function ConstructorResults(const AFound: INyxPascalResolution;
+      const ASite: INyxPascalBindingSite): INyxPascalResolution;
     function ConstraintRelated(const AActual, ARequired: INyxPascalSemanticType): TNyxPascalKnowledge;
     function InEnvironment(const ASymbol: INyxPascalBoundSymbol;
       const AEnvironment: INyxPascalGenericEnvironment): INyxPascalBoundSymbol;
@@ -2444,6 +2461,7 @@ var
   LPart: TNyxText;
   LAccess: TNyxPascalMemberAccess;
   LNamespaceFound: Boolean;
+  LConstructor: Boolean;
 begin
   Enter;
   try
@@ -2555,7 +2573,10 @@ begin
         Exit(Answer(pbsUnresolved, pbiUnsupportedType));
       end;
 
-      if (LLocal.BoundType = nil) and (LLocal.Count <> 1) then
+      LConstructor := (LLocal.Count > 0) and
+        (LLocal.SymbolAt(0).Declaration.RoutineKind = prkConstructor);
+
+      if (LLocal.BoundType = nil) and (LLocal.Count <> 1) and not LConstructor then
       begin
         Exit(Answer(pbsUnresolved, pbiOverloadContext));
       end;
@@ -2567,7 +2588,12 @@ begin
       end;
       LType := LLocal;
 
-      if LLocal.BoundType = nil then LType := TypeOfSymbol(LLocal.SymbolAt(0));
+      if LLocal.BoundType = nil then
+      begin
+
+        if LConstructor then LType := ConstructorResults(LLocal, ASite)
+        else LType := TypeOfSymbol(LLocal.SymbolAt(0));
+      end;
 
       if LType.Status <> pbsBound then
       begin
@@ -2582,7 +2608,9 @@ begin
       end;
       LLocal := Member(LType.BoundType, ASite, LPart, LAccess);
 
-      if LLocal.Status <> pbsBound then
+      if (LLocal.Status <> pbsBound) and not
+        ((LLocal.Status = pbsOverloads) and (LFirstDot > 0) and (LLocal.Count > 0) and
+         (LLocal.SymbolAt(0).Declaration.RoutineKind = prkConstructor)) then
       begin
         Exit(LLocal);
       end;
@@ -5157,6 +5185,114 @@ function TBindingQuery.Member(const AType: INyxPascalSemanticType;
   const ASite: INyxPascalBindingSite; const AName: TNyxText;
   AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
 var
+  LFound: INyxPascalResolution;
+  LSymbols: array of INyxPascalBoundSymbol;
+  LSymbol: INyxPascalBoundSymbol;
+  LCopy: TConstructorSymbol;
+  LAt: Integer;
+begin
+  LFound := MemberCore(AType, ASite, AName, AAccess, AOperator);
+  Result := LFound;
+
+  if not (LFound.Status in [pbsBound, pbsOverloads]) or (LFound.Count = 0) then Exit;
+
+  if (LFound.SymbolAt(0).Declaration.RoutineKind <> prkConstructor) or
+    (psdfClassMember in LFound.SymbolAt(0).Declaration.Flags) then Exit;
+  { Public semantic interfaces grant no sealed receiver ownership. Ordinary
+    lookup retains its prior result; constructor inference requires our exact
+    already-published type value, including its concrete generic environment. }
+
+  if not (AType is TSemanticType) or
+    (((AType as TSemanticType) as INyxPascalSemanticType) <> AType) then Exit;
+  SetLength(LSymbols, LFound.Count);
+  for LAt := 0 to LFound.Count - 1 do
+  begin
+    Tick;
+    LSymbol := LFound.SymbolAt(LAt);
+
+    if (LSymbol.Declaration.Kind <> psdkRoutine) or
+      (LSymbol.Declaration.RoutineKind <> prkConstructor) or
+      (psdfClassMember in LSymbol.Declaration.Flags) then Exit;
+    LCopy := TConstructorSymbol.Create;
+    LSymbols[LAt] := LCopy;
+    LCopy.Owner := FWorld;
+    LCopy.ModuleOrdinal := LSymbol.ModuleIndex;
+    LCopy.DeclarationOrdinal := LSymbol.DeclarationIndex;
+    LCopy.Bindings := EnvironmentOf(LSymbol);
+    LCopy.ReceiverType := AType;
+  end;
+  Result := SymbolAnswer(LSymbols);
+end;
+
+function TBindingQuery.ConstructorResult(const ASymbol: INyxPascalBoundSymbol;
+  const ASite: INyxPascalBindingSite): INyxPascalResolution;
+var
+  LContext: INyxPascalCompilerContext;
+  LResult, LType: INyxPascalSemanticType;
+begin
+  CheckSymbol(ASymbol);
+
+  if not (ASymbol is TConstructorSymbol) or
+    (((ASymbol as TConstructorSymbol) as INyxPascalBoundSymbol) <> ASymbol) then
+    Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  LContext := ContextAt(ASite);
+
+  if (LContext = nil) or (LContext.Family <> ppcFPC) or
+    (LContext.Version.FullNumber <> 30301) or
+    not (LContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]) then
+    Exit(Answer(pbsUnresolved, pbiCompilerContext));
+  LResult := (ASymbol as TConstructorSymbol).ReceiverType;
+  LType := Unwrap(LResult);
+
+  if (LType <> nil) and (LType.Kind = pstClassOf) then
+  begin
+    { Runtime metaclasses may construct a descendant. Completion promises the
+      declared instance contract, never an unobserved dynamic class or value. }
+    LResult := LType.Target;
+    LType := Unwrap(LResult);
+  end;
+
+  if (LType = nil) or (LType.Kind <> pstDeclared) or (LType.Definition = nil) or
+    not (LType.Definition.Declaration.TypeForm in [pstfClass, pstfRecord]) then
+    Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  Result := TypeAnswer(LResult);
+end;
+
+function TBindingQuery.ConstructorResults(const AFound: INyxPascalResolution;
+  const ASite: INyxPascalBindingSite): INyxPascalResolution;
+var
+  LAt: Integer;
+  LSymbol: INyxPascalBoundSymbol;
+  LFound: INyxPascalResolution;
+  LCommon: INyxPascalSemanticType;
+begin
+  LCommon := nil;
+  for LAt := 0 to AFound.Count - 1 do
+  begin
+    Tick;
+    LSymbol := AFound.SymbolAt(LAt);
+
+    if (LSymbol.Declaration.Kind <> psdkRoutine) or
+      (LSymbol.Declaration.RoutineKind <> prkConstructor) or
+      (psdfClassMember in LSymbol.Declaration.Flags) then
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    LFound := ConstructorResult(LSymbol, ASite);
+
+    if LFound.Status <> pbsBound then Exit(LFound);
+
+    if LCommon = nil then LCommon := LFound.BoundType
+    else if not SameType(LCommon, LFound.BoundType) then
+      Exit(Answer(pbsUnresolved, pbiOverloadContext));
+  end;
+
+  if LCommon = nil then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+  Result := TypeAnswer(LCommon);
+end;
+
+function TBindingQuery.MemberCore(const AType: INyxPascalSemanticType;
+  const ASite: INyxPascalBindingSite; const AName: TNyxText;
+  AAccess: TNyxPascalMemberAccess; AOperator: TNyxPascalOperatorKind): INyxPascalResolution;
+var
   LType: INyxPascalSemanticType;
   LOwner: INyxPascalBoundSymbol;
   LScope: Integer;
@@ -5733,6 +5869,10 @@ var
        (AFound.SymbolAt(0).Declaration.PropertyAccess = [pspaWrite])) then
       Exit(Answer(pbsUnresolved, pbiUnsupportedType));
 
+    if (AFound.Count > 0) and
+      (AFound.SymbolAt(0).Declaration.RoutineKind = prkConstructor) then
+      Exit(ConstructorResults(AFound, ASite));
+
     if ACall and (AFound.Count > 0) and
       (AFound.SymbolAt(0).Declaration.Kind = psdkRoutine) then
     begin
@@ -5854,11 +5994,30 @@ var
       (LContext.Mode in [ppmObjFPC, ppmDelphi, ppmDelphiUnicode]);
   end;
 
-  function ReadTypeTarget: INyxPascalResolution;
+  function ReadTypeTarget(AMemberBoundary: Boolean = False): INyxPascalResolution;
   var
-    LStart, LFinish, LAngle: Integer;
-    LParsed: INyxPascalTypeSyntax;
-    LWasTypeTarget: Boolean;
+    LStart, LFinish, LAngle, LDot: Integer;
+    LCurrent, LMember: INyxPascalResolution;
+
+    function BindCurrent: INyxPascalResolution;
+    var
+      LParsed: INyxPascalTypeSyntax;
+      LWasTypeTarget: Boolean;
+    begin
+      LParsed := NewNyxPascalTypeSyntax(LLex, NyxPascalSpan(LStart, LFinish - LStart),
+        TNyxPascalTypeOptions.Defaults, FCancel);
+
+      if not LParsed.Complete or not (LParsed.Node(LParsed.Root).Kind in [ptxName, ptxQualified, ptxGeneric]) then
+        Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+      LWasTypeTarget := FBindingTypeTarget;
+      FBindingTypeTarget := True;
+      try
+        Result := BindNode(ASite, LParsed, LParsed.Root);
+      finally
+        FBindingTypeTarget := LWasTypeTarget;
+      end;
+    end;
+
   begin
     LStart := LToken.Span.Start;
     LFinish := LStart;
@@ -5888,21 +6047,36 @@ var
         if LAngle <> 0 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
       end;
 
+      if AMemberBoundary then
+      begin
+        LCurrent := BindCurrent;
+
+        if not IsSymbol(psoDot) then Exit(LCurrent);
+
+        if (LCurrent.Status = pbsBound) and (LCurrent.BoundType <> nil) then
+        begin
+          { A constructed type may be followed by a nested type or an ordinary
+            value member. Ask the existing member binder instead of consuming a
+            constructor/function name as part of the type expression. Leave the
+            dot for normal postfix processing when this is not a nested type. }
+          LDot := LAt;
+          Next;
+
+          if not LAvailable or (LToken.Kind <> ptkWord) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LMember := Member(LCurrent.BoundType, ASite, LLex.Identifier(LAt), pmaType);
+          LAt := LDot;
+          ReadToken;
+
+          if (LMember.Status <> pbsBound) or (LMember.Count <> 1) or
+            (LMember.SymbolAt(0).Declaration.Kind <> psdkType) then Exit(LCurrent);
+        end;
+      end;
+
       if not IsSymbol(psoDot) then Break;
       Next;
     until False;
-    LParsed := NewNyxPascalTypeSyntax(LLex, NyxPascalSpan(LStart, LFinish - LStart),
-      TNyxPascalTypeOptions.Defaults, FCancel);
-
-    if not LParsed.Complete or not (LParsed.Node(LParsed.Root).Kind in [ptxName, ptxQualified, ptxGeneric]) then
-      Exit(Answer(pbsUnresolved, pbiUnsupportedType));
-    LWasTypeTarget := FBindingTypeTarget;
-    FBindingTypeTarget := True;
-    try
-      Result := BindNode(ASite, LParsed, LParsed.Root);
-    finally
-      FBindingTypeTarget := LWasTypeTarget;
-    end;
+    Result := BindCurrent;
   end;
 
   { Recursive grouping shares this query's token/depth/work scope. }
@@ -5954,7 +6128,7 @@ var
         begin
           LAt := LLex.TokenAt(LTypeStart);
           ReadToken;
-          LFound := ReadTypeTarget;
+          LFound := ReadTypeTarget(True);
           AValueAccess := pmaType;
         end;
       end

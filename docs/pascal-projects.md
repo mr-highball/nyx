@@ -3561,6 +3561,38 @@ default Studio adoption and complete input/navigation/quality/parity/delivery re
 required. Four browser consumers compile only. No default provider, new MCP tool/
 schema, active-project mutation or installed release is implied by this factory.
 
+### Constructor result contracts
+
+Constructor calls retain the queried receiver type although Pascal writes no
+function result on their declaration. For example,
+`TReceiverSpecial.Create(42).Accent` follows the descendant's members when
+`Create` is inherited from its base. Ordinary completion uses the same path for
+`TReceiverSpecial.Create(42).Ac` and Pascal's implicit no-parentheses form.
+
+The immutable constructor handle keeps the receiver separately from the method's
+declaring symbol and generic substitution frame. Inheritance therefore preserves
+the final descendant while method navigation retains its original declaration.
+Aliases, concrete generic classes, inherited generic fields, grouped expressions,
+declared metaclasses and advanced-record values retain their source contracts.
+A metaclass result promises its declared instance type; no runtime descendant is
+inferred. Only exact owned semantic types donate constructor receiver ownership.
+
+The expression reader distinguishes a generic/nested type from a following value
+member through the existing member binder. It does not treat `.Create` as a
+special string or include a method name in the preceding generic type expression.
+All visible constructor alternatives must agree on the result. Arguments remain
+balanced opaque windows: this neither selects an overload nor proves arity,
+conversion, allocation, constructor success or compiler-call eligibility.
+
+This inference is qualified for captured FPC 3.3.1 ObjFPC/Delphi/DelphiUnicode
+context. Unknown and other compiler contexts retain explicit refusal. Automatic
+class initialization/finalization, destructors and legacy object initializers
+acquire no invented constructed value. Every query retains cancellation, ordinary
+work admission, current-world ownership and atomic publication. Native checks
+include a whole compiled handwritten unit, exact detached completion/navigation,
+exhaustive smaller allowances and joined concurrent queries. The browser consumer
+compiles only; full language coverage and editor adoption remain open in WORK.md.
+
 ### Implicit routine receivers and results
 
 Owned lookup and ordinary member completion now understand source-owned `Self`

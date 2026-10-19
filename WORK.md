@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Contextual physical token reuse — 2026-10-19
+## Current integration: Constructor receiver contracts — 2026-10-19
+
+The preceding goal turn made source/qualification/remote progress in 628a591.
+Original NS-4_studio-authoring_01 criterion two still owns useful code editing,
+completion/navigation, canonical language/type meaning, incrementality and both
+target quality/adoption. Reassessment now follows a practical type-information
+gap: constructor calls have no written result type, so the current expression
+binder cannot offer members after TCustomButton.Create(...). An inherited
+constructor must retain the queried descendant, not its declaring base. Generic
+frames and class-reference receivers must survive the same path.
+
+The concrete deliverable is receiver-bound constructor result contracts through
+the existing member, expression and ordinary completion consumers. A whole
+handwritten native fixture will independently exercise class/inherited/generic/
+metaclass/record construction. Source queries must preserve original constructor
+navigation and receiver identity without executing code or guessing overload
+arguments. Class initialization, destruction, legacy object initialization and
+unknown/incomplete/foreign contexts must retain explicit refusal. Cancellation,
+work admission, atomic publication and retirement remain required.
+
+Stop after one compiler-backed fixture, focused integrated qualification and the
+necessary wider checks. Do not expand constructor/compiler/capture variants or
+call result-contract inference full overload/type checking. The original full
+criterion/task/credit/DONE/goal stays open. No host/config retry, SDK capture,
+protected mutation, cleanup/restart, new MCP tool/schema/rollout or sub-agents.
+Ignored .local/constructor-results-paths-private.json owns current evidence and
+the return path; unrelated planning work remains untouched.
+
+Focused native qualification passes 624 checks with clean heap. The whole
+handwritten compiler fixture returns 42 through seven real constructions. Source
+queries never execute those bodies. Result contracts preserve class descendants,
+aliases, metaclass instance contracts, concrete generic frames and advanced-record
+values. Parenthesized, grouped and implicit no-parentheses forms reach typed
+members through ordinary completion; navigation and detached insertion remain
+original-source exact after provider retirement. Generic type parsing now asks
+the existing member binder where a nested type ends and a value member begins,
+rather than swallowing .Create as part of the type name.
+
+The new receiver handle owns only earlier immutable type/world values. Constructor
+declarations and their substitution frames retain their identities; inherited
+lookup attaches the final queried receiver. Only sealed owned type values may
+donate that receiver. Every overload must agree on the result contract; arguments
+remain opaque and no compiler-call eligibility is inferred. Captured FPC 3.3.1
+ObjFPC/Delphi/DelphiUnicode context qualifies this inference; unknown or other
+versions retain explicit refusal. Automatic class initialization, destruction,
+legacy object initialization and malformed calls grant no invented value.
+
+The exhaustive constructor work allowance first fits at 423, with every smaller
+allowance refusing atomically; 80 cancellation boundaries refuse without a result.
+Sixty-four concurrent constructor queries join. Existing postfix checks pass
+411/clean heap unchanged. The new browser consumer compiles only. All preparations
+are retained: reserved first unit-name segment, generic template/private-storage
+bridge, authored-to-projection coordinate correction, original missing-result
+failure, generic suffix parsing failure and corrected origin accessor. A misplaced
+portable-fixture initialization in the first context harness is corrected before
+the final focused run; workers now share read-only input only.
+
+All three production/fixture inputs remain frozen through wider qualification.
+All 117 main compiler logs succeed with zero owned warnings and 294 upstream;
+the independent unchanged emission oracle retains its three deliberate visible
+markers separately. All 63 native run logs have clean heaps. Fifty-three browser
+consumers compile only, including Studio/worker; native Studio/backend compile
+as applicable. Existing cast/indexed-property/method/postfix/generic checks retain
+401/413/444/411/948. Provider reuse, ordered replay, projection and parser/filter
+history checks retain their previous exact results and work thresholds.
+
+The unchanged original RTL fixture passes 56 at its original 2M view/4M aggregate/
+64-round limits. Actual System resolves with zero translation diagnostics, 13,101
+declarations, zero syntax diagnostics and 31 semantic answers; ObjPas retains
+209/zero/one, both without a pending query. Indexed Free/FreeInstance navigation
+and detached insertion keep exact original include origins. Five initial queries,
+one Word job, symbol three/eight and six/eight ordered Longint/Int64/Pointer/
+VarHeader/CommonHeader/FreeChunk jobs stay exact. The lexical corpus passes 571
+checks over 504 source files and 2,403,319 lossless tokens.
+
+711 maintained sources/708 unrelated, 97 RTL/24 compiler inputs, 156 original unit
+packets/48 includes, 349 frozen artifacts, nine contexts, five current-start
+protected files and thirteen concurrent planning files remain exact. All readers
+are terminal/joined. Historical catalog-before allocation evidence remains in its
+earlier packet; no constructor performance measurement is inferred from it. The
+historical full preservation gate remains false, independently of current-start
+equality. LAN stays offline; native Nyx tools are absent. No full original
+criterion/task/credit/DONE, editor adoption, browser execution, parity or delivery
+is established. Stop constructor/fixture/compiler/capture variants. Reassess the
+remaining actual project/SDK source-preparation work and canonical language/type
+requirements through existing owners before the next change, preserving current
+source/context/ordered-answer identity, budgets, cancellation and atomic refusal.
+
+## Previous integration: Contextual physical token reuse — 2026-10-19
 
 The preceding checkpoint made authoritative source/qualification/remote progress
 in 2c2cbab through immutable catalog preparation. This continuation carries
