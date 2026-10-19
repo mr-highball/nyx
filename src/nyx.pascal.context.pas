@@ -428,7 +428,9 @@ type
     function WithFeature(AFeature: TNyxPascalLanguageFeature;
       AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
     { A mode directive resets feature/short-option knowledge. The caller supplies
-      concrete defaults afterward; none are inferred from the analyzer's mode. }
+      concrete defaults afterward; none are inferred from the analyzer's mode.
+      Qualified FPC 3.3.1 mode transitions retain the previous symbolic record
+      packing request, as the compiler does; Unknown never becomes Default. }
     function InMode(AValue: TNyxPascalLanguageMode): INyxPascalCompilerContext;
     { An unavailable include/unknown side effect may change every mutable fact.
       Preserve compiler identity/version metadata, revoke all inferred state. }
@@ -1234,6 +1236,17 @@ begin
     .EmitDiagnostics(pdcWarnings, FPolicies.DiagnosticEmission(pdcWarnings))
     .EmitDiagnostics(pdcHints, FPolicies.DiagnosticEmission(pdcHints))
     .EmitDiagnostics(pdcNotes, FPolicies.DiagnosticEmission(pdcNotes));
+
+  if (FFamily = ppcFPC) and (FVersion.FullNumber = 30301) and
+    (AValue in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode, ppmTP]) then
+  begin
+    { The configured scanner's SetCompileMode flushes pending switches before
+      selecting enum/set defaults, but leaves packrecords intact. Retain that
+      authored request independently of the reset policies. This supplies no
+      initial packing fact and grants no target layout/offset authority. Other
+      compiler versions/families keep the previous conservative reset. }
+    LCopy.FPolicies := LCopy.FPolicies.AlignRecords(FPolicies.RecordAlignment);
+  end;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
     LCopy.FOptions[LAt] := ppkUnknown;

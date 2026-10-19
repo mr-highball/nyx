@@ -9,6 +9,17 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
+Record-layout provenance continuation (2026-10-18): qualified FPC 3.3.1 mode
+copies now preserve the preceding symbolic record-packing request. The actual
+compiler flushes pending PACKRECORDS before selecting enum/set mode defaults;
+discarding record intent lost a declaration's storage environment. All symbolic
+requests across five supported modes, source inheritance/local restoration,
+unknown refusal and the same complete handwritten compiler/source input pass
+146 focused native checks with a clean heap. This supplies no initial/default
+packing fact, distinct measured-layout evidence or generic native fulfillment.
+Those remain the current feature, without closing original authoring criterion
+two or editor/browser/parity/adoption/delivery requirements.
+
 Declaration-bound storage work in progress (2026-10-18): the existing constant
 and both ordered-conditional query paths now capture complete supported storage
 from actual field/alias/nested scopes. Per-node contexts retain primitive root/

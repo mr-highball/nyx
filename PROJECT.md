@@ -116,7 +116,9 @@ The new [storage-plan layer](docs/pascal-projects.md#source-free-storage-plans)
 describes data-only record/array/primitive shapes and builds sterile compiler type
 fragments. Independent native compiler comparisons qualify that representation.
 Source SizeOf/ordered conditions now capture supported declared storage with
-exact field/alias scopes and per-node compiler provenance. A pending shape grants
+exact field/alias scopes and per-node compiler provenance. Qualified FPC 3.3.1
+mode changes retain authored record packing, including a pending request before
+MODE; unknown initial packing remains unknown. A pending shape grants
 no measured ABI or type identity: distinct layout evidence, native fulfillment
 and the existing VarHeader source gap remain open.
 

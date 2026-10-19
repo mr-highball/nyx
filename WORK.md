@@ -33,7 +33,76 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declaration-bound storage, measurement open — 2026-10-18
+## Current integration: Record packing provenance, measurement open — 2026-10-18
+
+The intervening user-status turn did not change product state. This continuation
+revalidated d07a1ce and the unchanged thirteen concurrent planning files before
+taking the next safe source/context action in the same record-layout feature.
+The full original library/Studio/authoring outcome remains active.
+
+Compiler-source inspection identifies a real lost declaration policy. The pinned
+FPC 3.3.1 scanner's SetCompileMode flushes pending switches, changes enum/set mode
+defaults and leaves record packing intact. InMode had discarded that request.
+Qualified copies for the five supported FPC modes now retain the previous
+symbolic record packing independently of their other reset policies. Unknown
+still means unknown; unsupported versions/families/modes retain their conservative
+behavior. No ABI, offset, size, compiler default or language-mode authority is
+inferred. Existing interfaces, enum ordinals, source facts and quotas stay intact.
+
+Focused source checks pass 146 with a clean heap: every record policy across
+five modes, immutable capture, source inheritance, local PUSH/POP, non-FPC/older
+compiler refusal and unrecoverable unknown effects. One complete handwritten
+packing.mode.fixture.pas is both compiled into the native consumer and inspected
+from its exact bounded bytes. Its compiler-owned SizeOf comparison proves pending
+PACKRECORDS survives MODE; the ordinary record keeps its actual declaration and
+psa1 request. No authored numeric expected size supplies layout evidence. The
+browser consumer compiles only. The first preparation failed on a test UTF-8
+helper spelling and is retained; the corrected final source is separately frozen.
+No production source changes after that final freeze.
+
+All 86 accepted current-source compiler jobs have zero owned warnings/196
+upstream warnings. Forty maintained/seven additional native consumers, the actual
+502-file/2,338,837-token lexical corpus and unchanged original RTL 56 pass with
+clean heaps: 49 accepted native logs. Both Studios/backend/worker and 36 browser
+consumers compile as applicable; no browser execution or physical parity is
+claimed. The RTL retains System 10,925 declarations/six syntax diagnostics/25
+answers and the same pending compiler-context prerequisite at VarHeader. ObjPas
+stays 209/four/one; exact indexed Free/FreeInstance navigation and insertion remain
+ready. All original five initial queries, explicit Word job, symbol three/eight,
+dynamic Longint/Int64/Pointer three/eight and construction/view/refinement caps
+remain unchanged. No new layout fact is installed and source resolution remains
+false. All owned process handles are terminal and joined.
+
+Preservation retains 661 unrelated/663 current maintained sources, 97 RTL inputs,
+24 compiler inputs/three earlier inspected files plus six packing-related source
+inspections, 156 exact original packets/48 includes, 349 frozen release artifacts,
+nine prior contexts and thirteen concurrent planning files. All five current-start
+protected files remain exact. Earlier global configuration preservation failures
+remain retained and false; no restoration or full preservation/delivery success
+is claimed. The ignored `.local/record-packing-provenance-paths-private.json` owns
+exact source freezes, retained preparations, qualification and return receipts.
+
+Reassessment also separates compiler initial packing from PACKRECORDS DEFAULT:
+the configured options parser writes init_settings.packrecords for CPPACKRECORD,
+while the source DEFAULT directive reads default_settings.packrecords. They are
+distinct owners. CheckSwitch has no alignment-query case, so IFOPT A is not a
+numeric-packing/default observation. Neither a missing policy, ordinary mode
+default nor a pristine spelling query can supply the missing initial environment.
+
+Stop packing/mode/fixture/compiler variants. Continue this same feature through
+provenance-backed initial environment and
+distinct immutable layout evidence, then generic configured-compiler fulfillment.
+Preserve each node's primitive root/pristine mode/H identity and record/CODEALIGN
+requests. Evidence must reach the updated module context already observed by the
+unchanged LWorld replay; a replacement unused catalog cannot advance it. A sterile
+synthetic type never becomes a user-name primitive fact. Retain all existing
+probe/view/construction/refinement caps, cancellation, exact source/context and
+atomic refusal. No original criterion/task/credit/DONE, full RTL/source/type
+meaning, browser execution, Studio/editor/adoption/parity/delivery, new MCP tool/
+schema, host/config retry, protected mutation, cleanup/restart or sub-agent is
+introduced. Historical global configuration preservation failures remain false.
+
+## Previous integration: Declaration-bound storage, measurement open — 2026-10-18
 
 The previous goal turn is progress: 44152f1 is qualified and pushed, adding the
 immutable storage-plan foundation. This turn connects that foundation to the

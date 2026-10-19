@@ -2714,6 +2714,15 @@ Packed/bitpacked intent stays distinct, including each multidimensional array.
 The declaration parser now recognizes the same contextual bitpacked prefix as the
 type parser; escaped identifiers keep their ordinary names.
 
+For captured FPC 3.3.1, supported source-mode transitions retain the preceding
+symbolic record packing request. The compiler flushes a pending PACKRECORDS
+write before changing enum/set defaults; MODE does not reset record packing.
+The immutable context copy preserves that distinction, and local PUSH/POP
+continues to restore the saved request. A complete handwritten native fixture
+qualifies the same declaration through both the compiler and source inspector.
+This does not supply uncaptured initial packing or a measured layout. Unknown
+effects/modes and unqualified compiler versions/families retain their refusal.
+
 Missing primitive evidence forwards the existing typed request. Unknown packing,
 unsupported variants/generic substitutions/special storage and uncertain source
 publish no partial plan. Neither supported capture nor its read-only getters

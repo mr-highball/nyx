@@ -26,7 +26,8 @@ uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.lexing,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
   nyx.pascal.syntax.translated, nyx.pascal.binding, nyx.pascal.constants,
   nyx.pascal.storage, nyx.pascal.values, nyx.pascal.requirements, nyx.pascal.work,
-  nyx.pascal.conditions;
+  nyx.pascal.conditions
+  {$ifndef PAS2JS}, Classes, nyx.bytes, packing.mode.fixture{$endif};
 
 type
   { Cancellation fixture counts actual reads without owning a result/world.
@@ -162,6 +163,109 @@ begin
     LStorage.StorageDefinition(3).Origin.FileIndex).Name = 'layout.pas',
     'Retiring the caller leaves exact source navigation available');
 end;
+
+procedure ModePackingProvenance;
+var
+  LMode: TNyxPascalLanguageMode;
+  LAlignment: TNyxPascalRecordAlignment;
+  LBefore, LAfter: INyxPascalCompilerContext;
+  LSite: INyxPascalBindingSite;
+  LStorage: INyxPascalConstantStorage;
+  LAnswer: INyxPascalConstantResult;
+begin
+  { A mode reset does change enum/set defaults, but FPC 3.3.1 preserves the
+    authored record request. Exercise every symbolic choice without assigning
+    any of them a numeric layout or filling an unknown initial/default fact. }
+  for LMode := ppmFPC to ppmTP do
+  begin
+    for LAlignment := Low(TNyxPascalRecordAlignment) to High(TNyxPascalRecordAlignment) do
+    begin
+      LBefore := NyxPascalWithCompilerPolicies(Facts,
+        TNyxPascalCompilerPolicies.Unknown.AlignRecords(LAlignment)
+          .StoreEnums(pes2).PackSets(psp8));
+      LAfter := LBefore.InMode(LMode);
+      Check((LAfter.Mode = LMode) and
+        (NyxPascalCompilerPolicies(LAfter).RecordAlignment = LAlignment) and
+        (NyxPascalCompilerPolicies(LAfter).EnumStorage = pesUnknown) and
+        (NyxPascalCompilerPolicies(LAfter).SetPacking = pspUnknown),
+        'A qualified mode transition retains only the independent record packing request');
+      Check(CaptureNyxPascalCompilerContext(LAfter).SameFacts(LAfter) and
+        (NyxPascalCompilerPolicies(LBefore).RecordAlignment = LAlignment),
+        'Mode-copy capture retains exact packing and leaves the original context untouched');
+    end;
+  end;
+  LBefore := NyxPascalWithCompilerPolicies(Facts,
+    TNyxPascalCompilerPolicies.Unknown.AlignRecords(pra2));
+  Check((NyxPascalCompilerPolicies(LBefore.InMode(ppmUnknown)).RecordAlignment = praUnknown) and
+    (NyxPascalCompilerPolicies(LBefore.UnknownState.InMode(ppmDelphi)).RecordAlignment = praUnknown),
+    'An unknown mode/effect cannot recover an earlier packing request');
+  LBefore := NyxPascalWithCompilerPolicies(NewNyxPascalCompilerContext(ppcPas2JS,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi),
+    TNyxPascalCompilerPolicies.Unknown.AlignRecords(pra2));
+  Check(NyxPascalCompilerPolicies(LBefore.InMode(ppmObjFPC)).RecordAlignment = praUnknown,
+    'FPC source evidence grants no matching pas2js packing semantics');
+  LBefore := NyxPascalWithCompilerPolicies(NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 2, 2), ppmDelphi),
+    TNyxPascalCompilerPolicies.Unknown.AlignRecords(pra2));
+  Check(NyxPascalCompilerPolicies(LBefore.InMode(ppmObjFPC)).RecordAlignment = praUnknown,
+    'An unqualified compiler version retains the conservative reset');
+  LSite := Site('unit ModePacking; {$packrecords 2}{$mode delphi} interface ' +
+    'type TBefore=record Value:Byte; end; {$push}{$packrecords 8} ' +
+    'type TInside=record Value:Byte; end; {$pop} ' +
+    'type TAfter=record Value:Byte; end; implementation end.', Facts);
+  LStorage := Storage(LSite, 'sizeof(TBefore)');
+  Check(LStorage.StoragePlan.Shape.Alignment = psa2,
+    'A source MODE retains packing authored before it at the record declaration');
+  LStorage := Storage(LSite, 'sizeof(TInside)');
+  Check(LStorage.StoragePlan.Shape.Alignment = psa8,
+    'An inner authored request still overrides the retained outer request');
+  LStorage := Storage(LSite, 'sizeof(TAfter)');
+  Check(LStorage.StoragePlan.Shape.Alignment = psa2,
+    'Local POP restores the exact request inherited across the source MODE');
+  LAnswer := Evaluate(Site('unit ModeUnknown; {$mode delphi} interface ' +
+    'type TTarget=record Value:Byte; end; implementation end.', Facts), 'sizeof(TTarget)');
+  Check((LAnswer.Issue = pbiCompilerContext) and
+    Supports(LAnswer, INyxPascalConstantStorage, LStorage) and (LStorage.StoragePlan = nil),
+    'A real mode directive never supplies an uncaptured initial record packing policy');
+end;
+
+{$ifndef PAS2JS}
+{ Analyze the complete exact source also compiled into this native consumer.
+  Byte input is bounded and borrowed only during this synchronous inspection. }
+procedure WholeModePackingInput;
+var
+  LStream: TFileStream;
+  LBytes: TNyxBytes;
+  LStorage: INyxPascalConstantStorage;
+begin
+
+  if ParamCount < 1 then
+  begin
+    raise Exception.Create('Native source-storage qualification needs the repository path');
+  end;
+  Check(PackingPreserved,
+    'The actual native compiler preserves pending PACKRECORDS through MODE');
+  LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
+    'tests/packing.mode.fixture.pas', fmOpenRead or fmShareDenyWrite);
+  try
+
+    if (LStream.Size < 1) or (LStream.Size > 65536) then
+    begin
+      raise Exception.Create('The whole packing fixture exceeds its byte budget');
+    end;
+    SetLength(LBytes, LStream.Size);
+    LStream.ReadBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
+  end;
+  LStorage := Storage(Site(NyxDecodeUTF8(LBytes), Facts), 'sizeof(TInheritedPacking)');
+  Check((LStorage.StoragePlan.Shape.Alignment = psa1) and
+    (LStorage.StoragePlan.Shape.Form = psfOrdinary) and
+    (LStorage.StoragePlan.Shape.Count = 2) and
+    (LStorage.StorageDefinition(2).Declaration.Name = 'TInheritedPacking'),
+    'The whole original compiler input retains its actual record and pre-MODE packing owner');
+end;
+{$endif}
 
 procedure ArraysAndForms;
 var
@@ -388,6 +492,8 @@ end;
 begin
   try
     QualifiedFields;
+    ModePackingProvenance;
+    {$ifndef PAS2JS}WholeModePackingInput;{$endif}
     ArraysAndForms;
     NonStorageMembersAndRootIdentity;
     ConditionalPropagation;
