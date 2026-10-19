@@ -144,6 +144,11 @@ begin
   Check(Supports(AReply, INyxPascalCompletionAnalysis, Result), 'The request has ordinary detached module analysis');
 end;
 
+function Revalidation(const AReply: INyxPascalCompletionResult): INyxPascalCompletionRevalidation;
+begin
+  Check(Supports(AReply, INyxPascalCompletionRevalidation, Result), 'Current-world semantic revalidation has detached counters');
+end;
+
 function Location(const AReply: INyxPascalCompletionResult): INyxOwnedPascalCompletionResult;
 begin
   Check(Supports(AReply, INyxOwnedPascalCompletionResult, Result), 'The ready row retains its physical definition source');
@@ -366,11 +371,12 @@ begin
   WriteLn('warm completion work / first fit=', LFit, ' every smaller allowance refused');
 end;
 
-procedure WorldIndependence;
+procedure WorldRevalidation;
 var
   LProvider: INyxPascalCompletionProvider;
   LSource, LChanged: INyxPascalSourceSnapshot;
   LCold, LWarm, LReply: INyxPascalCompletionResult;
+  LColdOnly: INyxPascalCompletionProvider;
 begin
   LProvider := Provider(Options, True);
   LSource := Sources;
@@ -378,13 +384,22 @@ begin
   Ready(LCold);
   LWarm := LProvider.Complete(RequestOf(LSource));
   Ready(LWarm);
-  Check((Reuse(LWarm).ConstructedModules > 0) and (Reuse(LWarm).ReusedModules = 2), 'World-dependent conditional modules are reconstructed while independent roots rebind');
-  Check(Location(LCold).DefinitionSource(0) <> Location(LWarm).DefinitionSource(0), 'A source condition never borrows a prior query''s semantic answer');
+  Check((Reuse(LWarm).ConstructedModules > 0) and (Reuse(LWarm).ReusedModules = 3), 'The initially missing import stays cold, then its completed dependency permits ordered revalidation');
+  Check((Revalidation(LWarm).RevalidatedModules = 1) and
+    (Revalidation(LWarm).RevalidatedAnswers = 1), 'A reused conditional module checks its answer in the current world');
+  Check(Location(LCold).DefinitionSource(0) = Location(LWarm).DefinitionSource(0), 'A successfully revalidated condition preserves its exact original declaration source');
   LChanged := LSource.WithBuffer(TNyxPascalSourceRef.UnitFile(NyxPascalUnit('Extra')),
     'unit Extra; interface const Changed=2; implementation end.');
   LReply := LProvider.Complete(RequestOf(LChanged));
   Check((LReply.Status = pcsReady) and (LReply.Count = 0), 'A changed imported declaration changes conditional exports in the fresh world');
+  Check(Revalidation(LReply).RevalidationDeclines > 0, 'Changed or incomplete dependency answers decline the retained module before normal analysis');
   Check(LCold.Count = 1, 'Reconstructing another world leaves the old detached result unchanged');
+  LColdOnly := Provider(Options.WithSourceReuse(TNyxPascalSourceReuseOptions.Defaults.WithSemanticReplay(False)), True);
+  Ready(LColdOnly.Complete(RequestOf(LSource)));
+  LReply := LColdOnly.Complete(RequestOf(LSource));
+  Ready(LReply);
+  Check((Reuse(LReply).ReusedModules = 2) and (Revalidation(LReply).RevalidatedModules = 0),
+    'The caller can disable semantic replay while retaining independent source reuse');
 end;
 
 {$ifndef PAS2JS}
@@ -459,7 +474,7 @@ begin
   try
     EditsAndLifetime;
     RetentionAndLoads;
-    WorldIndependence;
+    WorldRevalidation;
     WorkAndCancellation;
     {$ifndef PAS2JS}ConcurrentReaders;{$endif}
     WriteLn('PASS ', GChecks, ' source reuse completion checks');

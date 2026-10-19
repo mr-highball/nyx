@@ -98,6 +98,9 @@ type
     FDefined: Boolean;
     FPasses: Integer;
     FTokens: Integer;
+    FReplay: Boolean;
+    FReplayTokens: Integer;
+    FReplayBytes: Integer;
   public
     { Default: 64 ordered passes and four million total admitted logical work
       units. Tokens, copied/created rows and evaluator/binding steps are charged
@@ -105,9 +108,17 @@ type
     class function Defaults: TNyxPascalConditionalOptions; static;
     function UpToPasses(AValue: Integer): TNyxPascalConditionalOptions;
     function UpToTokens(AValue: Integer): TNyxPascalConditionalOptions;
+    { Optional retention never grants an answer or enlarges source/query limits.
+      Exceeding either retention bound drops the entire replay capability. }
+    function WithReplayCapture(AValue: Boolean): TNyxPascalConditionalOptions;
+    function UpToReplayTokens(AValue: Integer): TNyxPascalConditionalOptions;
+    function UpToReplayCatalogBytes(AValue: Integer): TNyxPascalConditionalOptions;
     procedure Validate;
     property MaximumPasses: Integer read FPasses;
     property MaximumTokens: Integer read FTokens;
+    property CaptureReplay: Boolean read FReplay;
+    property MaximumReplayTokens: Integer read FReplayTokens;
+    property MaximumReplayCatalogBytes: Integer read FReplayBytes;
   end;
   { Detached construction receipt. Source owns the exact final frozen files and
     ordinary translation diagnostics. Work counts actual admitted analysis
@@ -152,6 +163,19 @@ type
     ['{D79E7674-6EA8-4B9D-974C-F29389518A46}']
     function ConsultedWorld: Boolean;
   end;
+  { Detached optional retention receipt. Availability requires every accepted
+    semantic site in original order, a resolved final source and no pending
+    query. Tokens conservatively count prefix tokens plus expression characters;
+    catalog bytes count each retained prefix. These bounds are not heap estimates
+    or replay authority: only the owning rebind factory checks private provenance. }
+  INyxPascalSemanticReplay = interface(IInterface)
+    ['{C39EBFB0-6A46-40E5-A9B1-D1DF5CA42958}']
+    function ReplayAvailable: Boolean;
+    function ReplayCount: Integer;
+    function ReplayTokens: Integer;
+    function ReplayCatalogBytes: Integer;
+    function RevalidatedAnswers: Integer;
+  end;
 
 { Resolve source-scoped conditions during one ordered traversal, using detached
   frozen pre-directive tokens and exact context at each synchronous source site.
@@ -169,12 +193,35 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
   const ASyntax: TNyxPascalSyntaxOptions; const AOptions: TNyxPascalConditionalOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSemanticTranslation;
 
+{ Prove full current inputs, then reevaluate every retained semantic query in
+  original order against a fresh supplied world, sharing only frozen prefix
+  syntax and unbound plans. Changed/unknown answers or unavailable/foreign
+  records return nil; cancellation/resource refusal publishes no partial source.
+  No compiler, file, UI or authored expression is executed. }
+function RebindNyxPascalSemanticTranslation(const APrevious: INyxPascalSemanticTranslation;
+  const AFiles: INyxPascalFileCatalog; const AWorld: INyxPascalSemanticWorld;
+  const AOptions: TNyxPascalConditionalOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSemanticTranslation;
+
 implementation
 
 uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.storage, nyx.pascal.values,
   nyx.pascal.requirements, nyx.pascal.encoding;
 
 type
+  { One private chronological source answer. All retained interfaces point to
+    immutable source/context/grammar data, never a bound result or semantic world.
+    The owning construction alone creates these records after successful queries. }
+  TReplaySite = class
+  public
+    Origin: TNyxPascalConditionOrigin;
+    Context: INyxPascalCompilerContext;
+    Expression: TNyxText;
+    Projection: INyxPascalTranslatedSyntax;
+    Plan: INyxPascalConstantPlan;
+    Legacy: Boolean;
+    Expected: TNyxPascalKnowledge;
+  end;
   { Per-query adapter owns only the current immutable prefix and a borrowed
     aggregate budget. Its child enforces the constant query's remaining limit;
     retirement drops the prefix without retiring the parent operation. }
@@ -198,8 +245,12 @@ type
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
     INyxPascalCompilerRequirements, INyxPascalSemanticWork,
-    INyxPascalSemanticAnalysisWork, INyxPascalSemanticDependencies, INyxPascalConstantStorage,
+    INyxPascalSemanticAnalysisWork, INyxPascalSemanticDependencies,
+    INyxPascalSemanticReplay, INyxPascalConstantStorage,
     INyxPascalConstantStorageIdentity)
+  public
+    destructor Destroy; override;
+    procedure DropReplay;
   public
     Snapshot: INyxPascalTranslation;
     Tokens: Integer;
@@ -216,6 +267,16 @@ type
     Related: TNyxText;
     Requirements: INyxPascalCompilerRequirements;
     Storage: INyxPascalConstantStorage;
+    Sites: array of TReplaySite;
+    ReplayIntact: Boolean;
+    RetainedTokens: Integer;
+    RetainedBytes: Integer;
+    Revalidated: Integer;
+    function ReplayAvailable: Boolean;
+    function ReplayCount: Integer;
+    function ReplayTokens: Integer;
+    function ReplayCatalogBytes: Integer;
+    function RevalidatedAnswers: Integer;
     function Source: INyxPascalTranslation;
     function WorkTokens: Integer;
     function TranslationTokens: Integer;
@@ -283,6 +344,12 @@ type
     FPrefixModuleName: TNyxText;
     procedure CheckCancellation;
     procedure AdmitExpression(const AText: TNyxText);
+    function EvaluateView(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+      const AView: INyxPascalTranslatedSyntax): TNyxPascalKnowledge;
+    procedure RememberSite(const AOrigin: TNyxPascalConditionOrigin;
+      const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+      const AView: INyxPascalTranslatedSyntax; ATruth: TNyxPascalKnowledge);
   public
     Data: TSemanticTranslation;
     World: INyxPascalSemanticWorld;
@@ -406,12 +473,16 @@ begin
   Result.FDefined := True;
   Result.FPasses := 64;
   Result.FTokens := 4000000;
+  Result.FReplayTokens := 1000000;
+  Result.FReplayBytes := 64 * 1024 * 1024;
 end;
 
 procedure TNyxPascalConditionalOptions.Validate;
 begin
 
-  if not FDefined or (FPasses < 1) or (FTokens < 1) then
+  if not FDefined or (FPasses < 1) or (FTokens < 1) or
+    (FReplayTokens < 1) or (FReplayTokens > 4000000) or
+    (FReplayBytes < 1) or (FReplayBytes > 256 * 1024 * 1024) then
   begin
     raise ENyxPascalTranslationLimit.Create('Use explicit positive conditional work limits');
   end;
@@ -431,6 +502,70 @@ begin
   Result.Validate;
 end;
 
+
+function TNyxPascalConditionalOptions.WithReplayCapture(AValue: Boolean): TNyxPascalConditionalOptions;
+begin
+  Result := Self;
+  Result.FReplay := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalConditionalOptions.UpToReplayTokens(AValue: Integer): TNyxPascalConditionalOptions;
+begin
+  Result := Self;
+  Result.FReplayTokens := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalConditionalOptions.UpToReplayCatalogBytes(AValue: Integer): TNyxPascalConditionalOptions;
+begin
+  Result := Self;
+  Result.FReplayBytes := AValue;
+  Result.Validate;
+end;
+
+destructor TSemanticTranslation.Destroy;
+begin
+  DropReplay;
+  inherited Destroy;
+end;
+
+procedure TSemanticTranslation.DropReplay;
+var
+  LAt: Integer;
+begin
+  ReplayIntact := False;
+  for LAt := 0 to High(Sites) do Sites[LAt].Free;
+  Sites := nil;
+  RetainedTokens := 0;
+  RetainedBytes := 0;
+end;
+
+function TSemanticTranslation.ReplayAvailable: Boolean;
+begin
+  Result := ReplayIntact and not HasQuestion and (Snapshot <> nil) and
+    Snapshot.Resolved and (Length(Sites) = Accepted);
+end;
+
+function TSemanticTranslation.ReplayCount: Integer;
+begin
+  Result := Length(Sites);
+end;
+
+function TSemanticTranslation.ReplayTokens: Integer;
+begin
+  Result := RetainedTokens;
+end;
+
+function TSemanticTranslation.ReplayCatalogBytes: Integer;
+begin
+  Result := RetainedBytes;
+end;
+
+function TSemanticTranslation.RevalidatedAnswers: Integer;
+begin
+  Result := Revalidated;
+end;
 
 procedure TSourceSizeScope.Cancel;
 begin Retired := True; end;
@@ -962,6 +1097,82 @@ function TConditionalReader.EvaluatePrefix(const AOrigin: TNyxPascalConditionOri
   const APrefix: INyxPascalTranslation): TNyxPascalKnowledge;
 var
   LView: INyxPascalTranslatedSyntax;
+begin
+  CheckCancellation;
+  Result := ppkUnknown;
+
+  if not FPrepared or (APrefix = nil) or (APrefix.Count <> FOrigin.PrefixCount) or
+    (AOrigin.FileReference.Name <> FOrigin.FileReference.Name) or
+    (AOrigin.Occurrence <> FOrigin.Occurrence) or
+    (AOrigin.Span.Start <> FOrigin.Span.Start) or (AOrigin.Span.Length <> FOrigin.Span.Length) or
+    (AOrigin.PrefixCount <> FOrigin.PrefixCount) or
+    (AExpression <> FExpression) or not FContext.SameFacts(AContext) then
+    raise ENyxPascalTranslationLimit.Create('A frozen conditional prefix lost its exact prepared authority');
+  try
+
+    if not APrefix.Resolved then
+    begin
+      Data.Issue := pbiIncompleteSource;
+      Exit;
+    end;
+
+    if FProjection <> nil then
+      LView := AppendNyxPascalTranslatedSyntax(FProjection, APrefix, SyntaxOptions, Cancellation)
+    else
+      LView := NewNyxPascalTranslatedSyntax(APrefix, SyntaxOptions, Cancellation);
+    Result := EvaluateView(AOrigin, AContext, AExpression, LView);
+  finally
+    FPrepared := False;
+    FContext := nil;
+    FExpression := '';
+    FPlan := nil;
+  end;
+end;
+
+procedure TConditionalReader.RememberSite(const AOrigin: TNyxPascalConditionOrigin;
+  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+  const AView: INyxPascalTranslatedSyntax; ATruth: TNyxPascalKnowledge);
+var
+  LSite: TReplaySite;
+  LTokens, LBytes, LCount: Integer;
+begin
+
+  if not Options.CaptureReplay or not Data.ReplayIntact then Exit;
+  LCount := Length(Data.Sites);
+  LTokens := AView.Source.Count;
+  LBytes := AView.Source.Files.ByteCount;
+
+  if (LTokens > Options.MaximumReplayTokens - Data.RetainedTokens) or
+    (Length(AExpression) > Options.MaximumReplayTokens - Data.RetainedTokens - LTokens) or
+    (LBytes > Options.MaximumReplayCatalogBytes - Data.RetainedBytes) or
+    (LCount >= Options.MaximumPasses - 1) or
+    (LCount + 1 > Budget.Receipt.Maximum - Budget.Receipt.Total) then
+  begin
+    Data.DropReplay;
+    Exit;
+  end;
+  Inc(LTokens, Length(AExpression));
+  CheckCancellation;
+  Budget.Admit(papSourceProof, LCount + 1);
+  SetLength(Data.Sites, LCount + 1);
+  LSite := TReplaySite.Create;
+  Data.Sites[LCount] := LSite;
+  LSite.Origin := AOrigin;
+  LSite.Context := AContext;
+  LSite.Expression := AExpression;
+  LSite.Projection := AView;
+  LSite.Plan := FPlan;
+  LSite.Legacy := FLegacy;
+  LSite.Expected := ATruth;
+  Inc(Data.RetainedTokens, LTokens);
+  Inc(Data.RetainedBytes, LBytes);
+end;
+
+function TConditionalReader.EvaluateView(const AOrigin: TNyxPascalConditionOrigin;
+  const AContext: INyxPascalCompilerContext; const AExpression: TNyxText;
+  const AView: INyxPascalTranslatedSyntax): TNyxPascalKnowledge;
+var
+  LView: INyxPascalTranslatedSyntax;
   LWorld: INyxPascalSemanticWorld;
   LMeanings: TScopeMeanings;
   LSemanticOwner: INyxPascalConditionSemantics;
@@ -982,8 +1193,8 @@ begin
   Result := ppkUnknown;
   LExecution := nil;
 
-  if not FPrepared or (APrefix = nil) or
-    (APrefix.Count <> FOrigin.PrefixCount) or
+  if not FPrepared or (AView = nil) or
+    (AView.Source.Count <> FOrigin.PrefixCount) or
     (AOrigin.FileReference.Name <> FOrigin.FileReference.Name) or
     (AOrigin.Occurrence <> FOrigin.Occurrence) or
     (AOrigin.Span.Start <> FOrigin.Span.Start) or
@@ -995,20 +1206,13 @@ begin
   end;
   try
 
-    if not APrefix.Resolved then
+    if not AView.Source.Resolved then
     begin
       Data.Issue := pbiIncompleteSource;
       Exit;
     end;
 
-    if FProjection <> nil then
-    begin
-      LView := AppendNyxPascalTranslatedSyntax(FProjection, APrefix, SyntaxOptions, Cancellation);
-    end
-    else
-    begin
-      LView := NewNyxPascalTranslatedSyntax(APrefix, SyntaxOptions, Cancellation);
-    end;
+    LView := AView;
     FProjection := LView;
     LName := LView.Syntax.Scope(0).Name;
 
@@ -1107,6 +1311,7 @@ begin
       begin
         raise ENyxPascalTranslationLimit.Create('Ordered conditional refinement exceeds its work budget');
       end;
+      RememberSite(AOrigin, AContext, AExpression, LView, Result);
       Inc(Data.Accepted);
       Inc(Data.Rounds);
       Data.HasQuestion := False;
@@ -1152,6 +1357,7 @@ begin
   LData := TSemanticTranslation.Create;
   LOwner := LData;
   LData.Rounds := 1;
+  LData.ReplayIntact := AOptions.CaptureReplay;
   LReader := TConditionalReader.Create;
   LAuthority := LReader;
   LReader.Data := LData;
@@ -1188,6 +1394,96 @@ begin
     begin
       raise ENyxPascalTranslationLimit.Create('Conditional work lost its final source-token identity');
     end;
+    Result := LOwner;
+  finally
+    LBudget.Retire;
+  end;
+end;
+
+function RebindNyxPascalSemanticTranslation(const APrevious: INyxPascalSemanticTranslation;
+  const AFiles: INyxPascalFileCatalog; const AWorld: INyxPascalSemanticWorld;
+  const AOptions: TNyxPascalConditionalOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalSemanticTranslation;
+var
+  LPriorOwner, LOwner: INyxPascalSemanticTranslation;
+  LPrevious, LData: TSemanticTranslation;
+  LReader: TConditionalReader;
+  LAuthority: INyxPascalConditionalFacts;
+  LBudget: INyxPascalAnalysisBudget;
+  LSource: INyxPascalTranslation;
+  LView: INyxPascalTranslatedSyntax;
+  LSite: TReplaySite;
+  LAt: Integer;
+  LTruth: TNyxPascalKnowledge;
+begin
+  { Hold before clearing Result: native interface results can share the caller's
+    destination, including an in-place rebind of the previous receipt. }
+  LPriorOwner := APrevious;
+  Result := nil;
+  AOptions.Validate;
+  LBudget := NewNyxPascalAnalysisBudget(AOptions.MaximumTokens, ACancellation);
+  try
+    LBudget.Admit(papSourceProof);
+
+    if not (LPriorOwner is TSemanticTranslation) then Exit;
+    LPrevious := LPriorOwner as TSemanticTranslation;
+
+    if not LPrevious.ReplayAvailable then Exit;
+
+    if Length(LPrevious.Sites) >= AOptions.MaximumPasses then
+      raise ENyxPascalTranslationLimit.Create('Ordered conditional replay exceeds its unchanged pass limit');
+    LSource := RebindNyxPascalTranslation(LPrevious.Snapshot, AFiles, LBudget);
+
+    if LSource = nil then Exit;
+    LData := TSemanticTranslation.Create;
+    LOwner := LData;
+    LData.Rounds := 1;
+    LData.ReplayIntact := AOptions.CaptureReplay;
+    LAuthority := TConditionalReader.Create;
+    LReader := LAuthority as TConditionalReader;
+    LReader.Data := LData;
+    LReader.World := AWorld;
+
+    if LReader.World = nil then
+      LReader.World := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults
+        .WithImplicitScopes(pispCompilerUnits));
+    LReader.Options := AOptions;
+    LReader.Budget := LBudget;
+    LReader.Cancellation := LBudget;
+    for LAt := 0 to High(LPrevious.Sites) do
+    begin
+      LBudget.Admit(papSourceProof);
+      LSite := LPrevious.Sites[LAt];
+      { The saved projection is a hypothesis based only on already checked
+        earlier answers. Its original root/include bytes were proved above. }
+      LView := RebindNyxPascalFrozenProjection(LSite.Projection, LSource, LBudget);
+
+      if LView = nil then Exit;
+      LBudget.Admit(papSourceProof);
+
+      if not LSite.Context.SameFacts(LSource.State(
+        LSource.Token(LSite.Origin.PrefixCount).State)) then Exit;
+      LReader.FPrepared := True;
+      LReader.FOrigin := LSite.Origin;
+      LReader.FContext := LSite.Context;
+      LReader.FExpression := LSite.Expression;
+      LReader.FPlan := LSite.Plan;
+      LReader.FLegacy := LSite.Legacy;
+      LData.HasQuestion := True;
+      LData.Site := LSite.Origin;
+      LTruth := LReader.EvaluateView(LSite.Origin, LSite.Context, LSite.Expression, LView);
+
+      if (LTruth = ppkUnknown) or (LTruth <> LSite.Expected) then Exit;
+      Inc(LData.Revalidated);
+    end;
+    LBudget.Admit(papSourceProof);
+    LData.Snapshot := LSource;
+    LData.WorkReceipt := LBudget.Receipt;
+    LData.Tokens := LData.WorkReceipt.Total;
+    LData.ConstantWork := LData.WorkReceipt.Used(papConstantStep);
+    LData.PrefixWork := LData.Tokens - LData.ConstantWork;
+    { No source tokens were translated during replay. Actual proof, world and
+      evaluator work remains charged; no old cold-work total is fabricated. }
     Result := LOwner;
   finally
     LBudget.Retire;

@@ -33,7 +33,121 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Dependency-checked source reuse — 2026-10-19
+## Current integration: Ordered semantic revalidation — 2026-10-19
+
+The preceding 05789ff independent-source reuse checkpoint is qualified and pushed;
+the previous goal turn made source/qualification/remote progress. This continuation
+follows the remaining world-dependent module path. Do not retain a final semantic
+world or treat equal input files as proof that imported meanings stayed equal.
+
+The chosen path records complete ordered source queries with their exact original
+origin/context/expression, immutable pre-directive projection and unbound expression
+plan. Reuse first proves the full root/include inputs, then checks each recorded
+answer through the existing evaluator against the current request's world. A
+changed/unknown answer rejects the whole candidate before any completion rows.
+Earlier answers must match before a later retained prefix has authority. No query
+result, bound type, storage fact, world, callback or live execution scope survives
+in a reusable record. Do not infer a dependency proof from answer counts/telemetry.
+
+Owned prefix rebinding must require a private link to that exact successfully
+rebound full source. Alternate wrappers, constructing sources, unrelated lineage
+and arbitrary prefixes refuse. Current files/origins/settings must remain readable;
+syntax/type-plan storage may share only immutable proven input. Recording is
+explicit optional policy with independent retained token/catalog bounds; exceeding
+them drops the whole replay capability, never a partial answer list or source
+semantics. Every replay check/lease/evaluation consumes actual admitted work and
+all existing view/aggregate/pass/probe/query/cancellation limits stay unchanged.
+
+Integrate through the existing bounded provider directory, accounting for retained
+prefixes/plans as well as final views. Native directory locks retain their narrow
+lease/counter boundary. Qualify changed/unchanged positive and negative imports,
+multiple ordered include/macro/settings sites, current catalog visibility, unknown
+measurements, fake/stale authority, exact budgets, cancellation, retirement and
+concurrent request isolation. Then run unchanged original RTL and maintained
+consumers, exact protected/foreign/artifact checks and source/remote receipts.
+
+Ignored .local/semantic-replay-paths-private.json owns the new packet/return path.
+The full goal/criterion/task/credit/DONE remain open, including complete canonical
+source/type/module/incremental/editor/input/quality/parity/adoption/delivery. LAN
+stays offline; native Nyx tools absent. No host/config retry, capture, protected
+mutation, cleanup/restart, new MCP tool/schema, rollout or sub-agents. Preserve
+concurrent work and the historical failed global-config preservation receipt.
+
+Implementation/qualification: the condition owner now optionally records complete
+ordered sites containing original origin/context/expression, a frozen projection,
+an unbound plan and expected truth. It retains no bound result/world or live
+reader/execution scope. Retention defaults to off for direct semantic construction;
+typed token/catalog limits decline the complete capability atomically if exceeded.
+The completion provider enables it through its copied source-reuse policy; callers
+can turn semantic replay off independently of ordinary reuse. Retained prefix
+tokens/expression characters and per-prefix catalog bytes enter the existing
+directory's independent bounds, including eviction and native lock accounting.
+
+Rebinding first proves full root/include inputs. Private opaque lineage links
+then admit only the exact bounded-wrapper/frozen-storage pairs created during
+that construction. State blocks, current catalog, original origins and immutable
+syntax remain readable without parsing prefixes again. Every retained answer is
+reevaluated through the existing evaluator in the current request world, in order;
+changed/unknown answers decline the whole candidate and take normal analysis.
+Earlier successful answers alone authorize later hypothetical prefixes. New
+in-process revalidation receipts observe actual work/decisions without changing
+wire schemas or granting authority. In-place source/projection/semantic rebinds
+hold their input lease before any native result-destination alias can retire it.
+
+Focused ordered replay passes 323 checks/clean heap, with positive/negative
+imports, changed second answers, include input, saved H-/PUSH/POP state, partial
+retention refusal, pending structural measurement, fake/arbitrary prefix authority,
+second-generation/in-place lifetime, binding-step cancellation and 96 joined
+concurrent revalidations. Its representative source work is 771 cold/194 replay;
+the 194-unit first fit succeeds and every smaller allowance refuses atomically.
+Replay emits no source tokens and reconstructs no declaration syntax/metadata.
+This is actual logical work, not elapsed/UI latency. Existing input proof remains
+193 at fits 29/33. Ordinary provider integration now passes 3,388 checks including
+current-world revalidation, changed exports and caller disablement, with the prior
+3,409/755 independent-source example, exact 3,199 warm fit and 128 concurrent calls.
+
+Retained preparation failures include the missing test exception-unit import and
+the initial valid replay refusal: actual construction prefixes are bounded wrappers
+over private frozen arenas, not direct full translation objects. The repair follows
+that exact pair and continues refusing arbitrary/full/alternate wrappers. Compiler
+notes from a temporary lease spelling are corrected before freeze. The qualification
+helper's initial name adaptation collision was corrected before any batch launch;
+there are no replaced frozen sources, fixture changes or weaker RTL expectations
+within the complete final batch. All six production/fixture pins stay exact.
+
+All 107 main compiler jobs succeed with zero owned warnings/280 upstream Classes
+warnings; the unchanged emission oracle keeps its deliberate warning separate.
+All 58 native logs have clean heaps, including unchanged original RTL 56. Both
+Studios/backend/worker and 48 browser consumers compile as applicable, without
+browser execution/input/parity/adoption/delivery. The corpus retains 504 actual
+files/2,392,881 lossless tokens/571 checks. Actual System remains resolved with zero
+translation diagnostics/13,101 declarations/zero syntax diagnostics/31 answers/no
+pending; ObjPas remains 209/zero/one/no pending. Indexed Free/FreeInstance keep
+original include navigation and detached insertion after provider retirement.
+Original initial five/Word one/symbol three-of-eight/dynamic six-of-eight requests
+and exact dynamic ordering stay unchanged, as do the 2M/4M/64-round ceilings.
+This unchanged RTL consumer qualifies integration, not an RTL warm-replay speedup.
+
+Six focused/705 maintained/699 unrelated/97 RTL/24 compiler inputs, 156 exact unit
+packets/48 includes, 349 frozen artifacts, nine prior contexts, five current-start
+protected files and thirteen concurrent planning files are exact. Readers are
+joined, LAN offline and native Nyx tools absent. Historical global-config
+preservation remains false and retained; no restoration or protected mutation is
+performed. Ignored packet receipts own exact final source/qualification/remote
+identities and all failures/preparations. Full original scope/criterion/credit/
+task/DONE stays open; this is qualified unchanged-root ordered revalidation.
+
+Return path: reassess actual changed-root editing work through existing lexical,
+translation and syntax checkpoint owners, first identifying safe source boundaries
+and repeated work. Current full input proof intentionally refuses a changed used
+root/include. Do not donate later semantic answers or reuse a prefix across an
+unproved edit, guess facts, truncate source or enlarge any quota. Stop ordered-
+replay/cache/fixture/compiler/capture variants. Complete canonical source/type/
+routine/module/incremental/editor/input/quality/parity/adoption/delivery remains
+open; no default host install, configuration retry, new MCP tool/schema, rollout,
+cleanup/restart, protected mutation or sub-agents. Preserve concurrent work.
+
+## Previous integration: Dependency-checked source reuse — 2026-10-19
 
 The preceding 187e80f cast checkpoint is qualified and pushed. The previous goal
 turn made concrete source/qualification progress in the input/condition foundation.

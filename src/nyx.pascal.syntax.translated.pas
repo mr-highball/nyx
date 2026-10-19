@@ -148,6 +148,19 @@ function RebindNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSy
   const AFiles: INyxPascalFileCatalog;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
 
+{ Retain a full projection after its exact source owner established a successful
+  input rebind. Semantic answer revalidation remains the condition owner's duty;
+  this factory grants no world authority. Foreign/unrelated input returns nil. }
+function RebindNyxPascalTranslatedSource(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
+{ Rebase only a private construction-time frozen prefix along the full source's
+  proved input link. The ordered evaluator must check earlier answers first.
+  Syntax/origins stay immutable; the prefix sees the current file catalog. }
+function RebindNyxPascalFrozenProjection(const APrevious: INyxPascalTranslatedSyntax;
+  const AReboundSource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
+
 implementation
 
 uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.lexing.append,
@@ -949,6 +962,7 @@ function RebindNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSy
 var
   LSource: INyxPascalTranslation;
   LCandidate: INyxPascalTranslatedSyntax;
+  LPrevious: INyxPascalTranslatedSyntax;
 
   procedure Proof;
   begin
@@ -958,15 +972,67 @@ var
     NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
   end;
 begin
+  LPrevious := APrevious;
   Result := nil;
   Proof;
 
-  if not (APrevious is TTranslatedSyntax) or not APrevious.CompleteTranslation then Exit;
-  LSource := RebindNyxPascalTranslation(APrevious.Source, AFiles, ACancellation);
+  if not (LPrevious is TTranslatedSyntax) or not LPrevious.CompleteTranslation then Exit;
+  LSource := RebindNyxPascalTranslation(LPrevious.Source, AFiles, ACancellation);
 
   if LSource = nil then Exit;
-  LCandidate := TTranslatedSyntax.CreateRebound(APrevious as TTranslatedSyntax, LSource, ACancellation);
+  LCandidate := TTranslatedSyntax.CreateRebound(LPrevious as TTranslatedSyntax, LSource, ACancellation);
   Proof;
+  Result := LCandidate;
+end;
+
+function RebindNyxPascalTranslatedSource(const APrevious: INyxPascalTranslatedSyntax;
+  const ASource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
+var
+  LCandidate: INyxPascalTranslatedSyntax;
+  LPrevious: INyxPascalTranslatedSyntax;
+begin
+  LPrevious := APrevious;
+  Result := nil;
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Translated source rebind cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+
+  if not (LPrevious is TTranslatedSyntax) or not LPrevious.CompleteTranslation or
+    not NyxPascalTranslationReboundFrom(ASource, LPrevious.Source) then Exit;
+  LCandidate := TTranslatedSyntax.CreateRebound(LPrevious as TTranslatedSyntax, ASource, ACancellation);
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Translated source publication cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  Result := LCandidate;
+end;
+
+function RebindNyxPascalFrozenProjection(const APrevious: INyxPascalTranslatedSyntax;
+  const AReboundSource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
+var
+  LSource: INyxPascalTranslation;
+  LCandidate: INyxPascalTranslatedSyntax;
+  LPrevious: INyxPascalTranslatedSyntax;
+begin
+  LPrevious := APrevious;
+  Result := nil;
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Frozen projection rebind cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+
+  if not (LPrevious is TTranslatedSyntax) or not LPrevious.CompleteTranslation then Exit;
+  LSource := RebindNyxPascalFrozenPrefix(LPrevious.Source, AReboundSource, ACancellation);
+
+  if LSource = nil then Exit;
+  LCandidate := TTranslatedSyntax.CreateRebound(LPrevious as TTranslatedSyntax, LSource, ACancellation);
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Frozen projection publication cancelled');
+  NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
   Result := LCandidate;
 end;
 

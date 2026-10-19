@@ -41,17 +41,23 @@ type
     FModules: Integer;
     FTokens: Integer;
     FBytes: Integer;
+    FSemanticReplay: Boolean;
   public
-    { Defaults retain at most 16 modules, one million tokens and 64 MiB of
-      catalog input. The bounded directory supports at most 256 entries. }
+    { Defaults enable ordered semantic revalidation and retain at most 16 modules,
+      one million tokens and 64 MiB of catalog input, including retained prefixes.
+      The bounded directory supports at most 256 entries. }
     class function Defaults: TNyxPascalSourceReuseOptions; static;
     function UpToModules(AValue: Integer): TNyxPascalSourceReuseOptions;
     function UpToTokens(AValue: Integer): TNyxPascalSourceReuseOptions;
     function UpToCatalogBytes(AValue: Integer): TNyxPascalSourceReuseOptions;
+    { Recheck retained ordered semantic answers against each request's world.
+      False keeps world-dependent modules cold while independent reuse remains. }
+    function WithSemanticReplay(AValue: Boolean): TNyxPascalSourceReuseOptions;
     procedure Validate;
     property MaximumModules: Integer read FModules;
     property MaximumTokens: Integer read FTokens;
     property MaximumCatalogBytes: Integer read FBytes;
+    property SemanticReplay: Boolean read FSemanticReplay;
   end;
   { Independent copied analysis budgets. Per-module translation/syntax and
     semantic query limits retain their existing contracts; AggregateTokens caps
@@ -168,6 +174,15 @@ type
     ['{ED992E29-007D-47A3-AFA6-1458A5C1E213}']
     function SourceReuseState: TNyxPascalSourceReuseState;
   end;
+  { Detached current-request observations. An accepted module reevaluated all
+    its saved answers in the current world. Declines include input mismatches or
+    changed/unknown answers; these counters never grant replay authority. }
+  INyxPascalCompletionRevalidation = interface(IInterface)
+    ['{E1BC7811-2BBA-45E2-AE2B-8B05A3891F60}']
+    function RevalidatedModules: Integer;
+    function RevalidatedAnswers: Integer;
+    function RevalidationDeclines: Integer;
+  end;
 
 { Capture explicit SDK files/roots and compiler facts once. Requests overlay all
   exact project buffers, preserving accepted membership and include ownership.
@@ -197,25 +212,29 @@ uses SysUtils, nyx.pascal.drafts, nyx.pascal.files.project, nyx.pascal.syntax.tr
   nyx.pascal.work;
 
 type
-  { Internal immutable lease used by the bounded provider directory. Only a
-    completed world-independent source/view and its exact translation policy
-    survive publication; no bound type, semantic world or query owner does. }
+  { Internal immutable lease used by the bounded provider directory. A completed
+    source/view and exact translation policy survive publication. World-sensitive
+    sources additionally retain complete ordered unbound revalidation records;
+    no bound type, semantic world or live query owner survives. }
   IModuleMemoEntry = interface(IInterface)
     ['{51FF0964-C808-47B6-AF27-01447FC5B7CA}']
     function View: INyxPascalTranslatedSyntax;
     function Translation: TNyxPascalTranslationOptions;
+    function Semantic: INyxPascalSemanticTranslation;
   end;
   { Class-owned dynamic interface vectors keep entry lifetimes valid after
     eviction and outside the short native mutex; no interfaces live in records. }
   TModuleMemoEntries = array of IModuleMemoEntry;
-  { Private immutable implementation; the directory accepts only entries it
-    creates after the owned conditional construction grants independence. }
+  { Private immutable implementation. The owned condition construction must grant
+    either independence or complete ordered revalidation before publication. }
   TModuleMemoEntry = class(TInterfacedObject, IModuleMemoEntry)
   public
     Snapshot: INyxPascalTranslatedSyntax;
     Policy: TNyxPascalTranslationOptions;
+    Queries: INyxPascalSemanticTranslation;
     function View: INyxPascalTranslatedSyntax;
     function Translation: TNyxPascalTranslationOptions;
+    function Semantic: INyxPascalSemanticTranslation;
   end;
   { An internally raised typed refusal; its bounded English message contains no
     host exception/path. The call owner converts it to a no-row detached result. }
@@ -238,7 +257,8 @@ type
     source-location values and typed gap metadata are added, without a cycle. }
   TOwnedResult = class(TInterfacedObject, INyxPascalCompletionResult,
     INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis,
-    INyxPascalCompletionByteOrigins, INyxPascalCompletionReuse)
+    INyxPascalCompletionByteOrigins, INyxPascalCompletionReuse,
+    INyxPascalCompletionRevalidation)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
@@ -250,6 +270,9 @@ type
     Built: Integer;
     Reused: Integer;
     ProofWork: Integer;
+    ValidatedModules: Integer;
+    ValidatedAnswers: Integer;
+    ValidationDeclines: Integer;
     GapValue: TNyxOwnedPascalCompletionGap;
     IssueValue: TNyxPascalBindingIssue;
     RelatedValue: TNyxText;
@@ -278,6 +301,9 @@ type
     function ConstructedModules: Integer;
     function ReusedModules: Integer;
     function ReuseWork: Integer;
+    function RevalidatedModules: Integer;
+    function RevalidatedAnswers: Integer;
+    function RevalidationDeclines: Integer;
   end;
   { Frozen configuration plus a bounded immutable-source directory. Every call
     owns its own world/counters. The native mutex guards only fixed slot leases
@@ -303,8 +329,11 @@ type
     function ReuseModule(const AFile: TNyxPascalPhysicalFile;
       const AFiles: INyxPascalFileCatalog; const AContext: INyxPascalCompilerContext;
       const ATranslation: TNyxPascalTranslationOptions;
-      const ACancel: INyxCancellationScope): INyxPascalTranslatedSyntax;
+      const AWorld: INyxPascalSemanticWorld; const AConditions: TNyxPascalConditionalOptions;
+      const ACancel: INyxCancellationScope; out AValidatedModules, AValidatedAnswers,
+      ADeclines: Integer): INyxPascalTranslatedSyntax;
     procedure RememberModule(const AView: INyxPascalTranslatedSyntax;
+      const AConstruction: INyxPascalSemanticTranslation;
       const ATranslation: TNyxPascalTranslationOptions;
       const ACancel: INyxCancellationScope);
   public
@@ -339,6 +368,9 @@ type
     FBuilt: Integer;
     FReused: Integer;
     FReuseWork: Integer;
+    FValidatedModules: Integer;
+    FValidatedAnswers: Integer;
+    FValidationDeclines: Integer;
     FReceiverReady: Boolean;
     FReceiverExpressionStart: Integer;
     FReceiverPrefix: TNyxText;
@@ -372,6 +404,7 @@ begin
   Result.FModules := 16;
   Result.FTokens := 1000000;
   Result.FBytes := 64 * 1024 * 1024;
+  Result.FSemanticReplay := True;
 end;
 
 procedure TNyxPascalSourceReuseOptions.Validate;
@@ -403,6 +436,13 @@ function TNyxPascalSourceReuseOptions.UpToCatalogBytes(AValue: Integer): TNyxPas
 begin
   Result := Self;
   Result.FBytes := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalSourceReuseOptions.WithSemanticReplay(AValue: Boolean): TNyxPascalSourceReuseOptions;
+begin
+  Result := Self;
+  Result.FSemanticReplay := AValue;
   Result.Validate;
 end;
 
@@ -634,6 +674,13 @@ begin
   Result := ProofWork;
 end;
 
+function TOwnedResult.RevalidatedModules: Integer;
+begin Result := ValidatedModules; end;
+function TOwnedResult.RevalidatedAnswers: Integer;
+begin Result := ValidatedAnswers; end;
+function TOwnedResult.RevalidationDeclines: Integer;
+begin Result := ValidationDeclines; end;
+
 function TModuleMemoEntry.View: INyxPascalTranslatedSyntax;
 begin
   Result := Snapshot;
@@ -643,6 +690,9 @@ function TModuleMemoEntry.Translation: TNyxPascalTranslationOptions;
 begin
   Result := Policy;
 end;
+
+function TModuleMemoEntry.Semantic: INyxPascalSemanticTranslation;
+begin Result := Queries; end;
 
 { Admission and cancellation are checked before the fixed slot operation, never
   from within the native mutex. Bulk units describe actual slot inspections or
@@ -738,13 +788,20 @@ end;
 function TOwnedProvider.ReuseModule(const AFile: TNyxPascalPhysicalFile;
   const AFiles: INyxPascalFileCatalog; const AContext: INyxPascalCompilerContext;
   const ATranslation: TNyxPascalTranslationOptions;
-  const ACancel: INyxCancellationScope): INyxPascalTranslatedSyntax;
+  const AWorld: INyxPascalSemanticWorld; const AConditions: TNyxPascalConditionalOptions;
+  const ACancel: INyxCancellationScope; out AValidatedModules, AValidatedAnswers,
+  ADeclines: Integer): INyxPascalTranslatedSyntax;
 var
   LEntries: TModuleMemoEntries;
   LView: INyxPascalTranslatedSyntax;
   LAt: Integer;
+  LQueries, LCurrent: INyxPascalSemanticTranslation;
+  LReplay: INyxPascalSemanticReplay;
 begin
   Result := nil;
+  AValidatedModules := 0;
+  AValidatedAnswers := 0;
+  ADeclines := 0;
 
   if Length(FMemo) = 0 then Exit;
   LEntries := MemoEntries(ACancel);
@@ -760,12 +817,34 @@ begin
       not LView.Source.InitialContext.SameFacts(AContext) then Continue;
     { Examine the newest matching key only. A used-file mismatch returns to the
       cold path rather than repeatedly proving older source generations. }
-    Result := RebindNyxPascalTranslatedSyntax(LView, AFiles, ACancel);
+    LQueries := LEntries[LAt].Semantic;
+
+    if LQueries = nil then
+      Result := RebindNyxPascalTranslatedSyntax(LView, AFiles, ACancel)
+    else
+    begin
+      LCurrent := RebindNyxPascalSemanticTranslation(LQueries, AFiles, AWorld, AConditions, ACancel);
+
+      if LCurrent = nil then
+        Inc(ADeclines)
+      else
+      begin
+        Result := RebindNyxPascalTranslatedSource(LView, LCurrent.Source, ACancel);
+
+        if Result <> nil then
+        begin
+          Supports(LCurrent, INyxPascalSemanticReplay, LReplay);
+          AValidatedModules := 1;
+          AValidatedAnswers := LReplay.RevalidatedAnswers;
+        end;
+      end;
+    end;
     Exit;
   end;
 end;
 
 procedure TOwnedProvider.RememberModule(const AView: INyxPascalTranslatedSyntax;
+  const AConstruction: INyxPascalSemanticTranslation;
   const ATranslation: TNyxPascalTranslationOptions;
   const ACancel: INyxCancellationScope);
 var
@@ -773,6 +852,8 @@ var
   LLease: IModuleMemoEntry;
   LRetired: TModuleMemoEntries;
   LTokens, LBytes, LAt, LSlot: Integer;
+  LDependencies: INyxPascalSemanticDependencies;
+  LReplay: INyxPascalSemanticReplay;
 begin
 
   if Length(FMemo) = 0 then Exit;
@@ -781,11 +862,26 @@ begin
 
   if (LTokens > Options.SourceReuse.MaximumTokens) or
     (LBytes > Options.SourceReuse.MaximumCatalogBytes) then Exit;
+  if (AConstruction = nil) or (AConstruction.Source <> AView.Source) or
+    not Supports(AConstruction, INyxPascalSemanticDependencies, LDependencies) then Exit;
+
+  if LDependencies.ConsultedWorld then
+  begin
+
+    if not Supports(AConstruction, INyxPascalSemanticReplay, LReplay) or
+      not LReplay.ReplayAvailable or
+      (LReplay.ReplayTokens > Options.SourceReuse.MaximumTokens - LTokens) or
+      (LReplay.ReplayCatalogBytes > Options.SourceReuse.MaximumCatalogBytes - LBytes) then Exit;
+    Inc(LTokens, LReplay.ReplayTokens);
+    Inc(LBytes, LReplay.ReplayCatalogBytes);
+  end;
   AdmitReuse(ACancel, Length(FMemo) + 1);
   LEntry := TModuleMemoEntry.Create;
   LLease := LEntry;
   LEntry.Snapshot := AView;
   LEntry.Policy := ATranslation;
+
+  if LDependencies.ConsultedWorld then LEntry.Queries := AConstruction;
   SetLength(LRetired, Length(FMemo));
   EnterMemo;
   try
@@ -865,6 +961,8 @@ var
   LProof: INyxPascalAnalysisBudget;
   LAttemptWork: Integer;
   LRetainAllowance: Integer;
+  LValidatedModules, LValidatedAnswers, LDeclines: Integer;
+  LRetainedReplay: INyxPascalSemanticReplay;
   LAt: Integer;
   LDepth: Integer;
   LRemaining: Integer;
@@ -924,6 +1022,11 @@ begin
         raise EOwnedGap.CreateGap(pcgBudget, 'Semantic source roots exceed the aggregate token budget');
       end;
       LConditions := FProvider.Options.Conditions;
+      LConditions := LConditions.WithReplayCapture(
+        (FProvider.Options.SourceReuse.MaximumModules > 0) and
+        FProvider.Options.SourceReuse.SemanticReplay)
+        .UpToReplayTokens(FProvider.Options.SourceReuse.MaximumTokens)
+        .UpToReplayCatalogBytes(FProvider.Options.SourceReuse.MaximumCatalogBytes);
 
       if LRemaining < LConditions.MaximumTokens then
       begin
@@ -935,7 +1038,11 @@ begin
       begin
         LProof := NewNyxPascalAnalysisBudget(LConditions.MaximumTokens, FCancel);
         try
-          LView := FProvider.ReuseModule(AFile, FFiles, LFacts, LOptions, LProof);
+          LView := FProvider.ReuseModule(AFile, FFiles, LFacts, LOptions,
+            FWorld, LConditions, LProof, LValidatedModules, LValidatedAnswers, LDeclines);
+          Inc(FValidatedModules, LValidatedModules);
+          Inc(FValidatedAnswers, LValidatedAnswers);
+          Inc(FValidationDeclines, LDeclines);
         finally
           LAttemptWork := LProof.Receipt.Total;
           Inc(FTokens, LAttemptWork);
@@ -1001,13 +1108,18 @@ begin
     end;
   end;
   FWorld := WithNyxPascalSemanticModule(FWorld, LView, FCancel);
-  { Only the owning conditional traversal grants independence; diagnostics,
-    answer counts and absence of a pending query are insufficient on their own.
+  { Only the owning conditional traversal grants independence or complete
+    revalidation records; diagnostic/answer counts and absence of a pending
+    query are insufficient on their own.
     Publish after ordinary module/world coherence admission, never before it. }
 
   if (LConstruction <> nil) and not LConstruction.Pending and LSource.Resolved and
     LView.CompleteTranslation and Supports(LConstruction, INyxPascalSemanticDependencies, LDependencies) and
-    not LDependencies.ConsultedWorld and (FProvider.Options.SourceReuse.MaximumModules > 0) then
+    (not LDependencies.ConsultedWorld or
+      (FProvider.Options.SourceReuse.SemanticReplay and
+        Supports(LConstruction, INyxPascalSemanticReplay, LRetainedReplay) and
+        LRetainedReplay.ReplayAvailable)) and
+    (FProvider.Options.SourceReuse.MaximumModules > 0) then
   begin
     LRetainAllowance := LConditions.MaximumTokens - LConstruction.WorkTokens;
     LRemaining := FProvider.Options.AggregateTokens - FTokens;
@@ -1020,7 +1132,7 @@ begin
     begin
       LProof := NewNyxPascalAnalysisBudget(LRetainAllowance, FCancel);
       try
-        FProvider.RememberModule(LView, LOptions, LProof);
+        FProvider.RememberModule(LView, LConstruction, LOptions, LProof);
       finally
         Inc(FTokens, LProof.Receipt.Total);
         Inc(FReuseWork, LProof.Receipt.Total);
@@ -1220,6 +1332,9 @@ begin
   AResult.Built := FBuilt;
   AResult.Reused := FReused;
   AResult.ProofWork := FReuseWork;
+  AResult.ValidatedModules := FValidatedModules;
+  AResult.ValidatedAnswers := FValidatedAnswers;
+  AResult.ValidationDeclines := FValidationDeclines;
 
   if FWorld = nil then
   begin

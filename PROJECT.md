@@ -318,13 +318,14 @@ compile only. Full SDK capture, expression meaning, incremental work, default
 Studio adoption and complete input/navigation/quality/parity/delivery remain open.
 
 The provider now has [bounded source reuse](docs/pascal-projects.md#bounded-source-reuse-between-requests)
-for completed modules whose owning conditional traversal never consulted the input
-semantic world. Rebinding proves current visited bytes/views, compiler facts,
-policies and catalog/search identity, then shares immutable analysis with a fresh
-world per request. Caller retention limits/disablement, actual work accounting,
-cancelled no-row replies and native directory synchronization remain explicit.
-This does not qualify semantic-answer replay across changed dependencies, default
-editor installation or full incremental performance; WORK.md owns current checks.
+for completed modules. Independent modules retain their explicit condition-owner
+receipt; dependent modules require complete ordered source-query records and fresh
+answer evaluation in each request's world. Rebinding proves current visited
+bytes/views, compiler facts, policies and catalog/search identity before sharing
+immutable analysis. Changed/unknown answers reject the whole retained candidate.
+Caller retention limits/disablement, actual work accounting, cancelled no-row
+replies and native directory synchronization remain explicit. Default editor
+installation and full incremental performance remain open; WORK.md owns checks.
 
 The [SDK module/dependency layer](docs/pascal-projects.md#captured-sdk-modules-and-dependency-loading)
 now captures actual source files and loads indexed imports on demand, preserving

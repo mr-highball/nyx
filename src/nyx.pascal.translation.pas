@@ -458,6 +458,19 @@ function RebindNyxPascalTranslation(const ASource: INyxPascalTranslation;
   const AFiles: INyxPascalFileCatalog;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslation;
 
+{ Inspect only the private successful input-rebind link between two full owned
+  sources. Equal counters/text or an alternate implementation cannot grant it.
+  This proves input correspondence, not unchanged semantic conditional answers. }
+function NyxPascalTranslationReboundFrom(const ACurrent,
+  APrevious: INyxPascalTranslation): Boolean;
+{ Rebase one immutable construction-time freeze only through its exact full
+  source's successful input-rebind link. Earlier semantic answers must still be
+  revalidated in order before the caller uses this hypothetical prefix. Nil
+  refuses foreign, live, unrelated or ordinary arbitrary-cut prefix wrappers. }
+function RebindNyxPascalFrozenPrefix(const APrefix,
+  AReboundSource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalTranslation;
+
 { Immutable analysis prefix before an existing translation token. It invents no
   closing syntax or authored EOF token. State/occurrence exits stop at the site;
   full physical views remain exact for navigation. Known prefix participation
@@ -587,6 +600,8 @@ type
   public
     constructor Create(const ASource: INyxPascalTranslation; ABeforeToken: Integer;
       const AOptions: TNyxPascalTranslationOptions; const ACancellation: INyxCancellationScope);
+    constructor CreateRebound(APrevious: TTranslationPrefix;
+      const AStorage: INyxPascalTranslation; const ACancellation: INyxCancellationScope);
     function Files: INyxPascalFileCatalog;
     function InitialContext: INyxPascalCompilerContext;
     function Resolved: Boolean;
@@ -777,6 +792,8 @@ type
     FIsFrozen: Boolean;
     { Set only after all construction callbacks/writers retire successfully. }
     FPublished: Boolean;
+    { An opaque successful rebind link, never a source/producer/world lease. }
+    FReboundFrom: IInterface;
     FSharedRows: Integer;
     { Live construction keeps only its latest pure summary and retires it on
       every exit. A detached freeze owns its immutable summary independently. }
@@ -1382,6 +1399,9 @@ begin
   inherited Create;
   Lease;
   FLineage := TInterfacedObject.Create;
+  FReboundFrom := ASource.FLineage;
+  FIsFrozen := ASource.FIsFrozen;
+  FSharedRows := ASource.FSharedRows;
   FFiles := AFiles;
   FInitial := ASource.FInitial;
   FContext := ASource.FContext;
@@ -1396,6 +1416,11 @@ begin
     storage; raw physical-cache holders below are independently owned. }
   Lease; FTokenBlocks := ASource.FTokenBlocks;
   Lease; FStateRows := ASource.FStateRows;
+
+  if FIsFrozen then
+  begin
+    Lease; FStateBlocks := ASource.FStateBlocks;
+  end;
   Lease; FLexical := ASource.FLexical;
   Lease; FWindows := ASource.FWindows;
   Lease; FOccurrences := ASource.FOccurrences;
@@ -4737,6 +4762,42 @@ begin
   Check;
 end;
 
+constructor TTranslationPrefix.CreateRebound(APrevious: TTranslationPrefix;
+  const AStorage: INyxPascalTranslation; const ACancellation: INyxCancellationScope);
+
+  procedure Lease;
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Bounded frozen prefix rebind cancelled');
+    NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  end;
+begin
+  inherited Create;
+  Lease;
+  FSource := AStorage;
+  FCount := APrevious.FCount;
+  FStates := APrevious.FStates;
+  FOccurrences := APrevious.FOccurrences;
+  FExpansion := APrevious.FExpansion;
+  FResolved := APrevious.FResolved;
+  FReusedTokens := FCount;
+  Supports(FSource, INyxPascalTranslationMacros, FMacros);
+  Supports(FSource, INyxPascalTranslationSettings, FSettings);
+  Supports(FSource, INyxPascalUnresolvedConditions, FUnresolved);
+  Supports(FSource, INyxPascalRegisterDirectives, FRegisterDirectives);
+  Supports(FSource, INyxPascalWarningDirectives, FWarningDirectives);
+  Supports(FSource, INyxPascalCodeAlignmentDirectives, FCodeAlignmentDirectives);
+  Supports(FSource, INyxPascalOptimizationDirectives, FOptimizationDirectives);
+  Lease; FDiagnostics := APrevious.FDiagnostics;
+  Lease; FUnresolvedRows := APrevious.FUnresolvedRows;
+  Lease; FRegisterRows := APrevious.FRegisterRows;
+  Lease; FWarningRows := APrevious.FWarningRows;
+  Lease; FCodeAlignmentRows := APrevious.FCodeAlignmentRows;
+  Lease; FOptimizationRows := APrevious.FOptimizationRows;
+  Lease; FEmissionRows := APrevious.FEmissionRows;
+end;
+
 function TTranslationPrefix.Files: INyxPascalFileCatalog;
 begin
   Result := FSource.Files;
@@ -5069,6 +5130,7 @@ var
   LOldView, LNewView: INyxPascalSourceView;
   LOldText, LNewText: TNyxText;
   LCandidate: INyxPascalTranslation;
+  LSourceOwner: INyxPascalTranslation;
 
   procedure Proof;
   begin
@@ -5078,13 +5140,15 @@ var
     NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
   end;
 begin
+  LSourceOwner := ASource;
   Result := nil;
   Proof;
 
-  if not (ASource is TTranslation) then Exit;
-  LSource := ASource as TTranslation;
+  if not (LSourceOwner is TTranslation) then Exit;
+  LSource := LSourceOwner as TTranslation;
 
-  if not LSource.FPublished or not LSource.FResolved or (LSource.FOccurrenceCount < 1) then Exit;
+  if not LSource.FPublished or LSource.FIsFrozen or not LSource.FResolved or
+    (LSource.FOccurrenceCount < 1) then Exit;
   LFiles := CaptureNyxPascalFiles(AFiles);
   Proof;
 
@@ -5159,6 +5223,66 @@ begin
   LCandidate := TTranslation.CreateRebound(LSource, LFiles, ACancellation);
   Proof;
   Result := LCandidate;
+end;
+
+function NyxPascalTranslationReboundFrom(const ACurrent,
+  APrevious: INyxPascalTranslation): Boolean;
+var
+  LCurrent, LPrevious: TTranslation;
+begin
+  Result := False;
+
+  if not (ACurrent is TTranslation) or not (APrevious is TTranslation) then Exit;
+  LCurrent := ACurrent as TTranslation;
+  LPrevious := APrevious as TTranslation;
+  Result := LCurrent.FPublished and LPrevious.FPublished and
+    not LCurrent.FIsFrozen and not LPrevious.FIsFrozen and
+    LCurrent.FResolved and LPrevious.FResolved and
+    (LCurrent.FReboundFrom <> nil) and (LCurrent.FReboundFrom = LPrevious.FLineage);
+end;
+
+function RebindNyxPascalFrozenPrefix(const APrefix,
+  AReboundSource: INyxPascalTranslation;
+  const ACancellation: INyxCancellationScope): INyxPascalTranslation;
+var
+  LPrefix, LFull, LRebound: TTranslation;
+  LLease: INyxPascalTranslation;
+  LPrefixOwner, LFullOwner: INyxPascalTranslation;
+  LWrapper: TTranslationPrefix;
+
+  procedure Proof;
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Frozen prefix input proof cancelled');
+    NyxPascalAdmitAnalysis(ACancellation, papSourceProof);
+  end;
+begin
+  LPrefixOwner := APrefix;
+  LFullOwner := AReboundSource;
+  Result := nil;
+  Proof;
+
+  if not (LPrefixOwner is TTranslationPrefix) or not (LFullOwner is TTranslation) then Exit;
+  LWrapper := LPrefixOwner as TTranslationPrefix;
+
+  if not (LWrapper.FSource is TFrozenTranslation) then Exit;
+  LPrefix := LWrapper.FSource as TFrozenTranslation;
+  LFull := LFullOwner as TTranslation;
+
+  if not LPrefix.FIsFrozen or not LWrapper.FResolved or not LFull.FPublished or
+    LFull.FIsFrozen or not LFull.FResolved or (LFull.FReboundFrom = nil) or
+    (LPrefix.FLineage <> LFull.FReboundFrom) or
+    (LWrapper.FCount <> LPrefix.FTokenCount - 1) or
+    (LWrapper.FCount >= LFull.FTokenCount) then Exit;
+  LRebound := TFrozenTranslation.CreateRebound(LPrefix, LFull.FFiles, ACancellation);
+  LLease := LRebound;
+  { This prefix belongs to the new full candidate. No earlier source or mutable
+    writer is retained; its copied state-block directory is immutable. }
+  LRebound.FLineage := LFull.FLineage;
+  LLease := TStoredTranslationPrefix.CreateRebound(LWrapper, LLease, ACancellation);
+  Proof;
+  Result := LLease;
 end;
 
 function NewNyxPascalTranslation(const AFiles: INyxPascalFileCatalog;

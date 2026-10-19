@@ -3706,11 +3706,37 @@ current catalog. Editing a used include invalidates its consuming root. Changing
 catalog membership or search order invalidates the input proof. Physical
 navigation still owns the exact declaration source after edits/provider retirement.
 
-The owning conditional traversal must explicitly report that it never consulted
-the input semantic world. Conditions answered through local or imported
-declarations, including false or unanswered queries, keep the cold path. Zero
-accepted answers is not evidence of independence. Replaying dependency-sensitive
-semantic answers across edits remains separate work.
+An independent module needs an explicit condition-owner receipt that it never
+consulted the input semantic world. Zero accepted answers is not evidence of
+independence. A world-sensitive module instead needs a complete ordered recording
+of its accepted source queries. Before reuse, each query runs through the ordinary
+conditional evaluator against the new request's world, with its exact original
+origin, pre-directive compiler context and unbound expression plan. A false answer
+is checked just as carefully as a true one. Changed or unknown answers reject the
+whole candidate and return to normal analysis.
+
+The source owner proves the full root/include inputs before any retained prefix
+is considered. Only its original bounded-wrapper/frozen-storage pair can follow
+that private link. Earlier answers must match before later saved prefixes have
+authority. Prefix syntax and unbound plans can share storage, but resolved names,
+storage results and semantic worlds are recreated for each request. Compile-time
+constant evaluation still runs; application code, callbacks and getters do not.
+
+Ordered revalidation is enabled in the provider's reuse defaults. Set
+`TNyxPascalSourceReuseOptions.Defaults.WithSemanticReplay(False)` to keep dependent
+modules cold while retaining independent reuse. The existing retention ceilings
+include saved prefix tokens, expression characters and per-prefix catalog bytes.
+Exhausted retention drops the complete recording; a partial list cannot authorize
+replay. Unknown compiler/storage measurements retain their ordinary explicit
+fulfillment path.
+
+For direct `NewNyxPascalSemanticTranslation` callers, recording remains opt-in via
+`TNyxPascalConditionalOptions.Defaults.WithReplayCapture(True)`. Its independent
+`UpToReplayTokens` and `UpToReplayCatalogBytes` limits do not enlarge analysis
+budgets. `RebindNyxPascalSemanticTranslation` returns a complete current-world
+receipt or nil when input/answer/provenance checks decline reuse. Keep the original
+receipt until a candidate succeeds. `INyxPascalSemanticReplay` exposes detached
+availability/count/retention observations and the actual `RevalidatedAnswers`.
 
 Lookup, input proof and directory publication consume actual admitted work under
 the existing per-construction/aggregate ceilings. A hit does not charge historical
@@ -3724,7 +3750,10 @@ The optional in-process `INyxPascalCompletionReuse` result reports
 `ConstructedModules`, `ReusedModules` and `ReuseWork` for that request. The provider's
 `INyxPascalCompletionReuseStorage.SourceReuseState` returns atomic module/token/
 catalog-byte counters. Neither capability changes the existing wire schema or
-installs a default Studio engine. WORK.md owns qualification evidence and remaining
+installs a default Studio engine. `INyxPascalCompletionRevalidation` separately
+reports revalidated modules/answers and declined retained-module attempts, including
+input mismatches. These observations grant no authority on their own.
+WORK.md owns qualification evidence and remaining
 full dependency-aware incremental/editor adoption, language, input and parity scope.
 
 ## Captured SDK modules and dependency loading
