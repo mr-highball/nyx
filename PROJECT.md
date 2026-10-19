@@ -112,6 +112,13 @@ persistent insertion. COW stamps, root publication, the eight-slot cache and all
 remaining admission stay explicit. Remaining copy/parser costs and full engine/
 editor quality/adoption remain open.
 
+The new [storage-plan layer](docs/pascal-projects.md#source-free-storage-plans)
+describes data-only record/array/primitive shapes and builds sterile compiler type
+fragments. Independent native compiler comparisons qualify that representation;
+declaration-bound layout evidence, requirement fulfillment and source sizeof
+integration remain in progress. A storage shape supplies no measured ABI or type
+identity, and the existing VarHeader source gap remains open.
+
 Declaration-bound [constant operations](docs/pascal-projects.md#declaration-bound-constant-expressions)
 now retain exact 64-bit patterns through shifts and integer AND/OR/XOR. Captured
 FPC authority selects source-radix interpretation; raw token storage stays exact.

@@ -33,7 +33,102 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Coalesced metadata operations — 2026-10-18
+## Current integration: Record layout — storage plans, integration open — 2026-10-18
+
+a937401 is qualified and pushed. The previous goal turn is progress: it removes
+real repeated metadata operations and restores the unchanged 56-check native RTL
+consumer. The full resolver/library/Studio outcome remains active. Its current
+System frontier is 10,925 declarations/six syntax diagnostics/25 answers, pending
+the declaration-bound sizeof(VarHeader) condition; authored size eight is no layout
+authority. No metadata-operation/debugger/compiler/capture variant is repeated.
+
+Reassessment confirms SizeValue currently accepts captured builtin sizes only.
+Declared records have their own exact bound symbol/scope but no storage-size
+authority. PACKRECORDS policies are symbolic intent, with Unknown distinct from
+Default/C/fixed packing. Native capture currently does not measure record defaults.
+A record name must never be passed to a pristine primitive probe or satisfied by
+an unrelated same-spelling size fact. This requires a distinct typed layout path,
+not a constant for VarHeader, guessed field sum or inferred target ABI.
+
+The first layer is nyx.pascal.storage: an immutable source-free shape tree for
+closed primitive spellings, positive static-array lengths and ordered data-only
+records. Ordinary/packed/bitpacked forms and Default/C/fixed record packing stay
+distinct. Fluent record fields return specialized reference-counted interfaces;
+scalar/array shapes advertise no record capability. Alternate inputs are frozen
+with cycle, node/depth/key/source limits and atomic refusal. Class-owned dynamic
+interface vectors retain no provider, earlier parent, source or execution lease.
+Owned shape statistics confer bounded capture proof; public counters cannot.
+
+Plans eagerly generate sterile type declarations and exact structural keys.
+Generated names are internal compiler templates; no caller source string, method,
+initializer, executable block or application callback is admitted. Shape identity
+is storage-description identity only, never nominal type equivalence or measured
+size. The API computes no ABI and returns no size fact. Real copy/proof/emission
+work is admitted; getters do no deferred preparation and retain no cancellation.
+
+Two exact new source files are frozen for this layer's focused qualification.
+Native checks pass 39 with a clean heap: alternate capture/retirement, real record
+capabilities, immutable branches, invalid shapes/limits, all thirteen observed
+cancellation boundaries, an exact six-unit plan fit and all five smaller refusals.
+One independent compiler-only program compares seven handwritten controls with
+generated plain/packed/bitpacked/empty/C-layout/nested records and static arrays.
+It compiles successfully without executing that program or inferring a numeric
+size. The pas2js consumer compiles only. Both final consumers and the independent
+oracle have zero warnings. Earlier four/two case/getter-coverage warnings remain
+retained preparations; integer-boundary kind validation and exhaustive cases fix
+them without suppression. Moving native-only test imports under its platform
+guard avoids an unnecessary browser Classes dependency and its upstream warnings.
+
+The existing 661 product files are unchanged; this adds one product unit and one
+consumer. The earlier 81-job/47-native qualification and real RTL frontier remain
+the a937401 core evidence, not a new full qualification of this unintegrated layer.
+No original criterion/task/credit/DONE, record-layout completion, general resolver,
+incremental performance, browser execution, Studio adoption or delivery is claimed.
+The ignored `.local/record-layout-paths-private.json` owns exact phase evidence,
+retained preparations and the ongoing return path. No LAN/process/configuration
+change, protected write, cleanup/restart, new MCP tool/schema or sub-agent occurs.
+
+Phase receipts verify both frozen source files, all 661 prior product sources,
+97 RTL inputs, 24 compiler inputs/three separately inspected compiler files,
+156 retained unit packets/48 includes, 349 frozen release artifacts and thirteen
+concurrent planning files. All five current-start protected files stay exact.
+Earlier global configuration preservation failures remain retained and false;
+this focused checkpoint cannot close the original full preservation/delivery gate.
+
+Next continue this same record-layout feature; do not substitute more standalone
+shape/oracle variants for integration:
+
+1. Capture a storage plan from the exact declaration-bound semantic type. Bind
+   aliases and field types at their declarations; retain class/nested-type scope,
+   source/packing/form identity and conditional participation. Static-array bounds
+   must use the existing constant query's owned depth/dependency/recursion state,
+   not a fresh evaluator which can recurse through sizeof the same record forever.
+   Variant/managed/special type cases retain explicit unsupported meaning until
+   their own full shapes exist; do not omit fields or fabricate partial shapes.
+2. Add distinct immutable record-layout evidence keyed by exact frozen shape and
+   captured layout context. Keep it separate from the name-keyed primitive size
+   namespace. Capture/clone/SameFacts/settings lifetime/unknown effects must retain
+   or revoke this evidence honestly. Do not retain source/world/earlier-context
+   chains or interfaces in records/static arrays. Unknown record packing must not
+   become Default; source-inherited compiler settings need explicit provenance.
+3. Extend the existing typed requirement/fulfillment path and native compiler host
+   to request generic sterile shape measurement under an exact owning capture.
+   Preserve compiler-root/pristine identity, primitive mode/H origin, source local
+   packing and relevant CODEALIGN requests. Measure through the configured compiler
+   and validate its complete terminal receipt. Never attach the synthetic probe's
+   name as a VarHeader or other user declaration fact. No fixed SDK probe list,
+   larger job limit or new MCP/schema is needed. The original fixture passes an
+   unchanged LWorld across replays, so facts must survive via the updated module
+   context/explicit supported owner, not an unobserved replacement world alone.
+4. Let source sizeof consume only the applicable layout proof or emit a typed
+   requirement/refusal. Qualify exact ownership, mutation/cancellation, aliases,
+   scope shadowing and compiler policy changes, then run the unchanged original
+   RTL consumer under its original five initial queries, Word job, symbol three/
+   eight, generic three/eight, two-million view/four-million construction/64-round
+   limits. Restore full source/type meaning through remaining real gaps; the
+   literal expected eight and the shape compiler comparisons are not that proof.
+
+## Previous integration: Coalesced metadata operations — 2026-10-18
 
 The previous goal turn made concrete progress: 8f249fe is qualified and pushed.
 The original RTL passes its earlier projected scan but still exhausts four million

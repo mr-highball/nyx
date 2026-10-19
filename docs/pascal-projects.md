@@ -2656,6 +2656,40 @@ These are preparation counts, not time/latency measurements. WORK.md owns frozen
 maintained/unchanged real RTL evidence, preservation/source/remote receipts and
 the remaining full resolver/editor/input/parity/adoption/delivery scope.
 
+## Source-free storage plans
+
+`nyx.pascal.storage` describes data shapes independently of source names, semantic
+worlds and target measurements. Primitive spellings are closed typed choices.
+Records have ordered field children, explicit ordinary/packed/bitpacked form and
+Default/C/fixed PACKRECORDS intent. Static arrays retain one element shape and a
+positive length. A fluent field addition returns a new reference-counted record;
+scalar/array interfaces cannot pretend to be record builders.
+
+```pascal
+LOptions := TNyxPascalStorageOptions.Defaults;
+LRecord := NewNyxPascalStorageRecord(psfOrdinary, psaDefault)
+  .Field(NewNyxPascalStoragePrimitive(pspLongint), LOptions)
+  .Field(NewNyxPascalStoragePrimitive(pspLongword), LOptions);
+LPlan := PlanNyxPascalStorage(LRecord, LOptions);
+```
+
+This produces an immutable structural key and sterile type declarations, not a
+size or nominal-type assertion. Default/C packing stays compiler-owned. The
+internal generated type/field names carry no user binding authority. There is no
+source-string/executable-code input. Plan getters prepare no work and retain no
+provider/cancellation lease. Alternate shapes are frozen once with explicit cycle,
+node/depth/key/source limits. Defaults are 4,096 expanded nodes/64 levels/one MiB;
+caller-selected caps remain bounded independently of source analysis quotas.
+
+Native checks cover immutable branches, alternate-provider retirement, actual
+specialized interfaces, refusal/limits and every observed cancellation/work
+boundary. One independent compiler-only program compares seven handwritten
+record/array controls against the generated declarations. Browser tests compile
+only. These comparisons qualify data-shape emission, not target ABI capture or
+the existing source sizeof path. Layout evidence and typed source/host integration
+remain open under original authoring criterion two; WORK.md owns that continuing
+implementation and the existing VarHeader/remaining source-language prerequisites.
+
 ## Declaration-bound constant expressions
 
 `nyx.pascal.values` supplies copied exact integer, Boolean and enum-ordinal values.

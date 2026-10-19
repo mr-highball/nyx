@@ -9,7 +9,21 @@ CodeTools experiment is retained evidence, not the production resolver direction
 This requirement stays under original criterion two and its service/workflow
 prerequisites; it adds no completion credit or independent percentage.
 
-Metadata-operation prerequisite (2026-10-18): fixed scope/declaration/link groups
+Record-layout work in progress (2026-10-18): a source-free typed storage tree now
+emits sterile record/array/primitive declarations with explicit forms and packing
+intent. Alternate capture, immutable specialized interfaces, all thirteen observed
+cancellation boundaries and exact six-unit/all five smaller allowances qualify
+the foundation. Native checks pass 39/clean heap; one independent compiler-only
+program compares seven handwritten shapes. The browser consumer compiles only;
+final focused jobs have zero warnings. No existing core file is changed, and the
+source VarHeader gap is not resolved. WORK.md owns the ongoing same-feature return
+path: declaration-bound shape capture, distinct context-owned layout evidence,
+generic typed/native measurement fulfillment and source sizeof integration, with
+exact primitive/context/settings ownership. Do not reinterpret Unknown packing
+as Default, use authored size eight as authority, patch a VarHeader probe or count
+standalone shape work as full resolver/editor/parity/adoption/delivery completion.
+
+Historical metadata-operation prerequisite (2026-10-18): fixed scope/declaration/link groups
 use one checked row borrow with no intervening metadata call or capture. Later
 independent edits reacquire the current COW stamp. One private FindOrAddFirst
 replaces the name query/insertion query with one cache probe and one persistent
