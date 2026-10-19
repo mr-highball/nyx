@@ -22,12 +22,13 @@
 program nyx_pascal_fulfillment_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
+uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.lexing,
   nyx.pascal.translation, nyx.pascal.syntax, nyx.pascal.syntax.translated,
   nyx.pascal.binding, nyx.pascal.constants, nyx.pascal.values,
   nyx.pascal.requirements, nyx.pascal.compilertrace, nyx.pascal.modules,
-  nyx.pascal.fulfillment
+  nyx.pascal.fulfillment, nyx.pascal.conditions, nyx.pascal.witness,
+  nyx.pascal.encoding, nyx.pascal.work
   {$ifndef PAS2JS}, LazFileUtils, nyx.studio.pascalprofiles{$endif};
 
 type
@@ -62,6 +63,21 @@ type
     Requests: INyxPascalCompilerRequirements;
     constructor Create(const AContext: INyxPascalCompilerContext);
   end;
+  {$ifndef PAS2JS}
+  { Independent compiled packed-layout oracle. The source witness compiles the
+    whole corresponding declarations from captured include bytes; these types
+    make native comparisons independent of parser-supplied numeric sizes. }
+  TPackedPair = packed record
+    First: Byte;
+    Second: Word;
+  end;
+  { A second authored layout requires revalidation of the earlier observation
+    in the same compiler job before any new source receipt can be published. }
+  TPackedEnvelope = packed record
+    Pair: TPackedPair;
+    Last: Byte;
+  end;
+  {$endif}
 
 var
   GChecks: Integer;
@@ -158,6 +174,201 @@ begin
     LRequests.Values[LAt] := CaptureNyxPascalRequirements(LValue).RequirementAt(0);
   end;
   LRequests.Values[2] := LRequests.Values[0];
+end;
+
+function SourceFiles: INyxPascalFileCatalog;
+begin
+  Result := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('fixture/system.pp'),
+      'unit System; interface {$mode objfpc}{$include payload.inc} implementation end.')
+    .WithFile(NyxPascalPhysicalFile('fixture/payload.inc'),
+      'type TPair=packed record First:Byte; Second:Word; end;'#10 +
+      '{$if sizeof(TPair)>0}const FirstReady=1;{$endif}'#10 +
+      'type TEnvelope=packed record Pair:TPair; Last:Byte; end;'#10 +
+      '{$if sizeof(TEnvelope)>0}const SecondReady=1;{$endif}');
+end;
+
+function SourceModules(const AOwner: INyxFPCCompilerCapture): INyxPascalModuleCatalog;
+var LContext: INyxPascalCompilerContext;
+begin
+  LContext := NewNyxPascalCompilerContext(ppcFPC, AOwner.Context.Version, ppmFPC)
+    .WithOption('H', ppkFalse);
+  LContext := NyxPascalWithBootstrapContext(LContext, AOwner.Context);
+  Result := NewNyxPascalModuleCatalog.WithModule(NewNyxPascalModuleSource(
+    NyxPascalModule('System'), NyxPascalPhysicalFile('fixture/system.pp'))
+    .InContext(LContext, TNyxPascalTranslationOptions.Defaults));
+end;
+
+function SourceQuery(const AFiles: INyxPascalFileCatalog;
+  const AModules: INyxPascalModuleCatalog;
+  const AWorld: INyxPascalSemanticWorld): INyxPascalSemanticTranslation;
+begin
+  Result := NewNyxPascalSemanticTranslation(AFiles, AModules.Entry(0).Root,
+    AModules.Entry(0).Context, AWorld, AModules.Entry(0).Translation,
+    TNyxPascalSyntaxOptions.Defaults, TNyxPascalConditionalOptions.Defaults);
+end;
+
+{ Controlled external transcript input exercises parser refusal, separately from
+  the actual native compiler below. The test never labels these values native. }
+function SourceTranscript(const AWitness: INyxPascalSourceWitness;
+  AFirst, ASecond: Integer; ACount: Integer): TNyxText;
+var
+  LRoot, LPrefix, LOwner, LRowText: TNyxText;
+  LAt, LRow, LBit, LValue: Integer;
+begin
+  LRoot := NyxDecodeUTF8(NyxPascalSourceBytesAt(AWitness.Files,
+    AWitness.Files.Find(AWitness.Root)).Slice(NyxPascalByteSpan(0,
+      NyxPascalSourceBytesAt(AWitness.Files, AWitness.Files.Find(AWitness.Root)).Count)));
+  LAt := Pos('NYX_SOURCE_', LRoot);
+  LPrefix := Copy(LRoot, LAt, Length('NYX_SOURCE_') + 32 + 1);
+  Result := 'system.pp(1,1) Note: (2025) User defined: ' + LPrefix + 'READY'#10;
+  for LRow := 0 to ACount - 1 do
+  begin
+    LRowText := TNyxText(IntToStr(LRow));
+    LOwner := 'payload.inc(1,1) Note: (2025) User defined: ' + LPrefix + LRowText;
+    Result := Result + LOwner + '_BEGIN'#10;
+    LValue := AFirst;
+
+    if LRow > 0 then LValue := ASecond;
+    for LBit := 0 to 30 do
+      Result := Result + LOwner + '_BIT_' + TNyxText(IntToStr(LBit)) + '_' +
+        TNyxText(IntToStr((LValue shr LBit) and 1)) + #10;
+    Result := Result + LOwner + '_END'#10;
+  end;
+  Result := Result + 'payload.inc(1,1) Fatal: (2022) User defined: ' + LPrefix + 'STOP'#10 +
+    'Fatal: (1018) Compilation aborted'#10;
+end;
+
+procedure SourceWitnessPortable;
+var
+  LFiles, LChanged: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LWorld: INyxPascalSemanticWorld;
+  LQuery: INyxPascalSemanticTranslation;
+  LRoot: INyxPascalCompilerContext;
+  LOwner, LReply: INyxFPCCompilerCapture;
+  LRequest: INyxPascalCompilerRequirement;
+  LSource: INyxPascalSourceSizeRequirement;
+  LWitness: INyxPascalSourceWitness;
+  LPlan: INyxPascalCompilerFulfillmentPlan;
+  LApplied: INyxPascalCompilerFulfillment;
+  LChangedModules: INyxPascalModuleCatalog;
+  LChangedContext: INyxPascalCompilerContext;
+  LBudget: INyxPascalAnalysisBudget;
+  LOptions: TNyxPascalCompilerTraceOptions;
+  LCancel: INyxCancellationScope;
+  LText, LBad: TNyxText;
+  LVariant: Integer;
+  LRejected: Boolean;
+begin
+  LRoot := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmFPC, pcsoSystemBootstrap)
+    .WithSymbol(NyxPascalDefine('FPC'), ppdDefined).WithOption('H', ppkFalse);
+  LOwner := Capture(LRoot, LRoot);
+  LFiles := SourceFiles;
+  Check(NyxPascalFileCatalogIdentity(LFiles) = NyxPascalFileCatalogIdentity(CaptureNyxPascalFiles(LFiles)),
+    'Detached owned captures preserve immutable input identity');
+  LChanged := LFiles.WithFile(NyxPascalPhysicalFile('extra.pas'), 'unit Extra; interface implementation end.');
+  Check(NyxPascalFileCatalogIdentity(LFiles) <> NyxPascalFileCatalogIdentity(LChanged),
+    'A real input edit obtains a distinct identity without changing its predecessor');
+  LModules := SourceModules(LOwner);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits));
+  LQuery := SourceQuery(LFiles, LModules, LWorld);
+  Check(LQuery.Pending and (CaptureNyxPascalRequirements(LQuery).RequirementCount = 1), 'The first authored layout emits one typed source request');
+  LRequest := CaptureNyxPascalRequirements(LQuery).RequirementAt(0);
+  Check((LRequest.Kind = pcrSourceSize) and (LRequest.Reference.Name = 'tpair') and
+    (LRequest.ContextState = -1), 'Source layout does not become a pristine primitive-name request');
+  Supports(LRequest, INyxPascalSourceSizeRequirement, LSource);
+  Check(NyxPascalCapturedSize(LOwner.Context, LRequest.Reference).State = pssUnknown,
+    'No authored source name is inserted into the primitive namespace');
+  LWitness := PlanNyxPascalSourceWitness(LRequest, LOwner);
+  Check(not LWitness.Files.SameFiles(LFiles) and LFiles.SameFiles(SourceFiles),
+    'Closed witness instrumentation leaves all original captured bytes exact');
+  LOptions := TNyxPascalCompilerTraceOptions.Defaults;
+  LText := SourceTranscript(LWitness, 3, 0, 1);
+  LReply := LWitness.Read(LText, 1, LOptions);
+  Check(NyxPascalCapturedStorage(LReply.Context, LSource.StorageKey).Bytes = 3,
+    'A complete controlled source packet publishes its one structural value');
+  for LVariant := 0 to 8 do
+  begin
+    LBad := LText;
+    case LVariant of
+      0: LBad := StringReplace(LText, '_BIT_0_1', '_BIT_1_1', []);
+      1: LBad := StringReplace(LText, 'payload.inc(', 'foreign.inc(', []);
+      2: LBad := StringReplace(LText, 'Fatal: (1018) Compilation aborted', '', []);
+      3: LBad := StringReplace(LText, 'STOP', 'GUARD', []);
+      4: LBad := StringReplace(LText, 'Note: (2025)', 'Hint: (2025)', []);
+      5: LBad := StringReplace(LText, '(1,1)', '(0,1)', []);
+      6: LBad := LText + 'Error: unexpected compiler failure'#10;
+      7: LBad := StringReplace(LText, '_END', '_BEGIN', []);
+      8: LBad := StringReplace(LText, '_BIT_30_0', '_BIT_30_2', []);
+    end;
+    LRejected := False;
+    try LWitness.Read(LBad, 1, LOptions);
+    except on ENyxPascalContext do LRejected := True; end;
+    Check(LRejected, 'Malformed/foreign/incomplete source transcript refuses atomically');
+  end;
+  LRejected := False;
+  try LWitness.Read(LText, 0, LOptions);
+  except on ENyxPascalContext do LRejected := True; end;
+  Check(LRejected, 'A successful exit cannot stand in for the exact intentional terminal status');
+  LRejected := False;
+  try LWitness.Read(LText, 1, LOptions.UpToBytes(1));
+  except on ENyxPascalContext do LRejected := True; end;
+  Check(LRejected, 'Transcript byte limits refuse without truncation');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try LWitness.Read(LText, 1, LOptions, LCancel);
+  except on ENyxPascalAnalysisCancelled do LRejected := True; end;
+  Check(LRejected, 'Cancelled transcript interpretation publishes no reply');
+  LBudget := NewNyxPascalAnalysisBudget(1);
+  LRejected := False;
+  try
+    try NewNyxPascalSourceSizeRequirement(LRequest.Reference, LRequest.Source, LSource.Origin, LBudget);
+    except on ENyxPascalAnalysisWorkLimit do LRejected := True; end;
+    Check(LRejected and (LBudget.Receipt.Total = 1),
+      'Source identity construction admits work before refusing its unchanged aggregate limit');
+  finally LBudget.Retire; end;
+  LPlan := PlanNyxPascalCompilerFulfillment(LFiles, LModules, LQuery,
+    NewNyxPascalCompilerCaptures.WithCapture(LOwner), 1);
+  LApplied := LPlan.ApplyReplies(NewNyxPascalCompilerCaptures.WithCapture(LReply));
+  Check((LApplied.Jobs = 1) and (NyxPascalCapturedStorage(LOwner.Context, LSource.StorageKey).State = psfsUnknown),
+    'One-fact application updates detached modules and preserves the original capture');
+  LQuery := SourceQuery(LFiles, LApplied.Modules, LWorld);
+  Check(LQuery.Pending and (LQuery.Answers = 1) and (CaptureNyxPascalRequirements(LQuery).RequirementCount = 1),
+    'The unchanged world replay consumes the first source receipt and reaches the next layout');
+  LOwner := LApplied.Captures.CaptureAt(0);
+  LWitness := PlanNyxPascalSourceWitness(CaptureNyxPascalRequirements(LQuery).RequirementAt(0), LOwner);
+  LRejected := False;
+  try LWitness.Read(SourceTranscript(LWitness, 9, 4, 2), 1, LOptions);
+  except on ENyxPascalContext do LRejected := True; end;
+  Check(LRejected, 'The second native witness must revalidate the previous value in the same job');
+  LReply := LWitness.Read(SourceTranscript(LWitness, 3, 4, 2), 1, LOptions);
+  LPlan := PlanNyxPascalCompilerFulfillment(LFiles, LApplied.Modules, LQuery,
+    LApplied.Captures, 1);
+  LApplied := LPlan.ApplyReplies(NewNyxPascalCompilerCaptures.WithCapture(LReply));
+  LQuery := SourceQuery(LFiles, LApplied.Modules, LWorld);
+  Check(not LQuery.Pending and LQuery.Source.Resolved and (LQuery.Answers = 2),
+    'Two exact source receipts resolve the whole captured conditional input');
+  LChangedContext := NyxPascalWithBootstrapContext(LApplied.Modules.Entry(0).Context,
+    NyxPascalBootstrapContext(LApplied.Modules.Entry(0).Context).WithOption('R', ppkTrue));
+  LChangedModules := LApplied.Modules.WithModule(LApplied.Modules.Entry(0).InContext(
+    LChangedContext, TNyxPascalTranslationOptions.Defaults));
+  LQuery := SourceQuery(LFiles, LChangedModules, LWorld);
+  Check(LQuery.Pending and (LQuery.Answers = 0), 'Changed compiler-root switches cannot reuse earlier source measurements');
+  LChangedContext := LApplied.Modules.Entry(0).Context.WithOption('R', ppkTrue);
+  LChangedModules := LApplied.Modules.WithModule(LApplied.Modules.Entry(0).InContext(
+    LChangedContext, TNyxPascalTranslationOptions.Defaults));
+  LQuery := SourceQuery(LFiles, LChangedModules, LWorld);
+  Check(LQuery.Pending and (LQuery.Answers = 0), 'Changed source initial switches cannot reuse earlier source measurements');
+  LQuery := SourceQuery(LChanged, LApplied.Modules, LWorld);
+  Check(LQuery.Pending and (LQuery.Answers = 0), 'Changed input membership cannot consume an earlier source receipt');
+  LRejected := False;
+  try PlanNyxPascalCompilerFulfillment(LChanged, LModules, NewNyxPascalRequirements(LRequest),
+    NewNyxPascalCompilerCaptures.WithCapture(Capture(LRoot, LRoot)), 1);
+  except on ENyxPascalContext do LRejected := True; end;
+  Check(LRejected, 'Source request preflight rejects changed files before any native effect');
 end;
 
 procedure Portable;
@@ -322,6 +533,59 @@ begin
 end;
 
 {$ifndef PAS2JS}
+procedure NativeSource(const ACompiler, AOutput: TNyxText);
+var
+  LOwner: INyxFPCCompilerCapture;
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LCaptures: INyxPascalCompilerCaptures;
+  LWorld: INyxPascalSemanticWorld;
+  LQuery: INyxPascalSemanticTranslation;
+  LResult: INyxPascalCompilerFulfillment;
+  LSource: INyxPascalSourceSizeRequirement;
+  LAt, LExpected: Integer;
+  LRejected: Boolean;
+  LBadOwner: INyxFPCCompilerCapture;
+begin
+  LOwner := CaptureNyxFPCCompilerCapture(ACompiler, AOutput + '/source-owner',
+    NewNyxFPCSystemBootstrapProbe(NyxPascalDefine('SOURCE_OWNER')),
+    TNyxPascalCompilerTraceOptions.Defaults);
+  LFiles := SourceFiles;
+  LModules := SourceModules(LOwner);
+  LCaptures := NewNyxPascalCompilerCaptures.WithCapture(LOwner);
+  LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits));
+  for LAt := 0 to 1 do
+  begin
+    LQuery := SourceQuery(LFiles, LModules, LWorld);
+    Check(LQuery.Pending and (CaptureNyxPascalRequirements(LQuery).RequirementCount = 1), 'The real source compiler receives only the current layout request');
+    Supports(CaptureNyxPascalRequirements(LQuery).RequirementAt(0), INyxPascalSourceSizeRequirement, LSource);
+    LResult := FulfillNyxFPCCompilerRequirements(ACompiler, AOutput + '/source-' + TNyxText(IntToStr(LAt)),
+      LFiles, LModules, LQuery, LCaptures, 1, TNyxPascalCompilerTraceOptions.Defaults);
+    LExpected := SizeOf(TPackedPair);
+
+    if LAt > 0 then LExpected := SizeOf(TPackedEnvelope);
+    Check((LResult.Jobs = 1) and (NyxPascalCapturedStorage(LResult.Captures.CaptureAt(0).Context,
+      LSource.StorageKey).Bytes = LExpected), 'Actual source layout agrees with the independent compiled native oracle');
+    LModules := LResult.Modules;
+    LCaptures := LResult.Captures;
+  end;
+  LQuery := SourceQuery(LFiles, LModules, LWorld);
+  Check(LQuery.Source.Resolved and not LQuery.Pending and (LQuery.Answers = 2),
+    'Actual native measurements flow through existing modules into the unchanged source world');
+  LBadOwner := Capture(LOwner.Context.WithSymbol(NyxPascalDefine('NYX_TEST_MISSING_COMPILER_INPUT'),
+    ppdDefined), LOwner.ObservedDefaults);
+  LModules := SourceModules(LBadOwner);
+  LQuery := SourceQuery(LFiles, LModules, LWorld);
+  LRejected := False;
+  try
+    FulfillNyxFPCCompilerRequirements(ACompiler, AOutput + '/source-refused-guard',
+      LFiles, LModules, LQuery, NewNyxPascalCompilerCaptures.WithCapture(LBadOwner),
+      1, TNyxPascalCompilerTraceOptions.Defaults);
+  except on ENyxPascalContext do LRejected := True; end;
+  Check(LRejected and (NyxPascalCapturedSize(LBadOwner.Context, NyxPascalSizeReference('TPair')).State = pssUnknown),
+    'A real mismatched compiler-input guard refuses, joins its compiler and publishes no source/primitive reply');
+end;
+
 procedure Native(const ACompiler, AOutput: TNyxText);
 var
   LOwner: INyxFPCCompilerCapture;
@@ -392,12 +656,14 @@ begin
   try
     Portable;
     PristineAndLocal;
+    SourceWitnessPortable;
     {$ifndef PAS2JS}
     Check(ParamCount = 2, 'Supply configured compiler and fresh native scratch root');
     ForceDirectoriesUTF8(ParamStr(2));
     Native(ParamStr(1), ParamStr(2));
+    NativeSource(ParamStr(1), ParamStr(2));
     {$endif}
-    WriteLn('PASS ', GChecks, ' atomic primitive fulfillment checks');
+    WriteLn('PASS ', GChecks, ' atomic compiler fulfillment checks');
   except
     on LError: Exception do
     begin

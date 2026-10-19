@@ -95,6 +95,15 @@ type
     ['{D44D97AD-891A-4D2E-92C8-01478C37D93D}']
     function StorageKey: TNyxPascalStorageKey;
   end;
+  { Construction-only source witness authority, supplied by an ordered
+    conditional reader with the exact physical site. No completed value or
+    source snapshot retains this callback or its execution budget. }
+  INyxPascalSourceSizeScope = interface(IInterface)
+    ['{49C68C42-2053-49E3-AB0B-19321755EA6D}']
+    function SourceSize(const ASite: INyxPascalBindingSite;
+      const AName: TNyxPascalSizeReference; AMaximumWork: Integer; out AWork: Integer;
+      out ARequirement: INyxPascalCompilerRequirement): TNyxPascalStorageFact;
+  end;
   { Immutable parsed expression, independent of any application/editor world.
     SyntaxSupported describes this bounded grammar, not value availability.
     Evaluation resolves names at the supplied exact site; nested constants use
@@ -260,7 +269,8 @@ type
       const AKey: TNyxPascalStorageKey): TNyxPascalStorageFact;
     function SizeValue(const AType: INyxPascalSemanticType;
       const ASource: INyxPascalBoundSymbol;
-      const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
+      const ASite: INyxPascalBindingSite;
+      const AName: TNyxPascalSizeReference): TNyxPascalConstantValue;
   public
     function Run(APlan: TConstantPlan; const ASite: INyxPascalBindingSite;
       const AOptions: TNyxPascalConstantOptions;
@@ -2173,7 +2183,8 @@ end;
 
 function TConstantQuery.SizeValue(const AType: INyxPascalSemanticType;
   const ASource: INyxPascalBoundSymbol;
-  const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
+  const ASite: INyxPascalBindingSite;
+  const AName: TNyxPascalSizeReference): TNyxPascalConstantValue;
 var
   LIdentity: INyxPascalIntrinsicIdentity;
   LContext: INyxPascalCompilerContext;
@@ -2183,11 +2194,41 @@ var
   LShape: INyxPascalStorageShape;
   LStorageFact: TNyxPascalStorageFact;
   LRootContext: INyxPascalCompilerContext;
+  LSourceScope: INyxPascalSourceSizeScope;
+  LRequirement: INyxPascalCompilerRequirement;
+  LSourceWork: Integer;
 begin
   Result := TNyxPascalConstantValue.Unknown;
 
   if (AType <> nil) and (AType.Kind <> pstBuiltin) and (FResult.Reason = pbiNone) then
   begin
+    if (AType.Definition <> nil) and
+      (AType.Definition.Declaration.Flags * [psdfIncomplete, psdfConditional, psdfUnsupported] = []) and
+      Supports(FCancellation, INyxPascalSourceSizeScope, LSourceScope) then
+    begin
+      LSourceWork := 0;
+      try
+        LStorageFact := LSourceScope.SourceSize(ASite, AName,
+          FOptions.MaximumSteps - FResult.Work, LSourceWork, LRequirement);
+      finally
+        { The child scope has already admitted these steps to the aggregate.
+          Retain them in this query's independent limit without charging twice. }
+        Inc(FResult.Work, LSourceWork);
+      end;
+
+      if LStorageFact.State = psfsKnown then
+      begin
+        Depend(AType.Definition);
+        Exit(TNyxPascalConstantValue.IntegerValue(LStorageFact.Bytes));
+      end;
+
+      if LRequirement <> nil then
+      begin
+        FResult.Requirements := NewNyxPascalRequirements(LRequirement);
+        Refuse(pbiCompilerContext, AName.Name);
+        Exit;
+      end;
+    end;
     LStorage := TConstantStorage.Create;
     LStorageLease := LStorage;
     try
@@ -2431,7 +2472,7 @@ begin
 
             if LNode.Kind = cnSize then
             begin
-              Result := SizeValue(LType, LSource, ASite);
+              Result := SizeValue(LType, LSource, ASite, NyxPascalSizeReference(LNode.Name));
             end
             else
             begin

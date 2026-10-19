@@ -100,6 +100,10 @@ function NewNyxPascalFileCatalog(ACase: TNyxPascalFileCase): INyxPascalFileCatal
 { Freeze alternate catalogs once. Caller serializes mutable providers during
   capture; subsequent reads retain only owned data and exact search order. }
 function CaptureNyxPascalFiles(const AFiles: INyxPascalFileCatalog): INyxPascalFileCatalog; overload;
+{ Process-local identity of an owned immutable input set. Detached captures of
+  that exact owner retain it; fluent edits obtain a new identity. It is not a
+  content hash, disk receipt or authority supplied by alternate providers. }
+function NyxPascalFileCatalogIdentity(const AFiles: INyxPascalFileCatalog): TNyxText;
 { Legacy text-only providers explicitly mean canonical authoring UTF-8, not
   proof of bytes read from disk. Owned byte catalogs retain actual byte origin. }
 function NyxPascalSourceBytesAt(const AFiles: INyxPascalFileCatalog;
@@ -118,11 +122,21 @@ type
     Text: TNyxText;
     Bytes: Integer;
   end;
+  { Forward catalog implementation, borrowed only while its interface is held. }
+  TFileCatalog = class;
+  { Sealed identity owner. Alternate data getters never provide this receipt;
+    the concrete object and its ordinary interface identity must both match. }
+  IFileCatalogOwner = interface(IInterface)
+    ['{84F6E6F3-CCAF-45F2-A18D-9153CF573653}']
+    function CatalogOwner: TFileCatalog;
+  end;
   { Owns detached file/search vectors and an exact immutable lookup index.
     There are no callbacks or borrowed source providers after construction. }
-  TFileCatalog = class(TInterfacedObject, INyxPascalFileCatalog, INyxPascalByteFileCatalog)
+  TFileCatalog = class(TInterfacedObject, INyxPascalFileCatalog, INyxPascalByteFileCatalog,
+    IFileCatalogOwner)
   private
     FCase: TNyxPascalFileCase;
+    FIdentity: TNyxText;
     FFiles: array of TPhysicalEntry;
     FDirectories: array of TNyxText;
     FNames: TNyxTextIndex;
@@ -134,6 +148,7 @@ type
     function Clone: TFileCatalog;
   public
     constructor Create(ACase: TNyxPascalFileCase);
+    function CatalogOwner: TFileCatalog;
     destructor Destroy; override;
     function CasePolicy: TNyxPascalFileCase;
     function Count: Integer;
@@ -213,6 +228,8 @@ begin
 end;
 
 constructor TFileCatalog.Create(ACase: TNyxPascalFileCase);
+var
+  LIdentity: TGUID;
 begin
   inherited Create;
 
@@ -222,7 +239,47 @@ begin
     raise ENyxPascalContext.Create('Captured file case policy is outside its closed choices');
   end;
   FCase := ACase;
+
+  if CreateGUID(LIdentity) <> 0 then
+  begin
+    raise ENyxPascalContext.Create('A captured input set needs an independent session identity');
+  end;
+  FIdentity := TNyxText(GUIDToString(LIdentity));
   FNames := TNyxTextIndex.Create;
+end;
+
+function TFileCatalog.CatalogOwner: TFileCatalog;
+begin Result := Self; end;
+
+function OwnedCatalog(const AFiles: INyxPascalFileCatalog): TFileCatalog;
+var
+  LOwner: IFileCatalogOwner;
+begin
+  Result := nil;
+
+  if Supports(AFiles, IFileCatalogOwner, LOwner) then
+  begin
+    Result := LOwner.CatalogOwner;
+
+    if (Result = nil) or not (Result is TFileCatalog) or
+      ((Result as INyxPascalFileCatalog) <> AFiles) then
+    begin
+      raise ENyxPascalContext.Create('A source input identity has no exact immutable owner');
+    end;
+  end;
+end;
+
+function NyxPascalFileCatalogIdentity(const AFiles: INyxPascalFileCatalog): TNyxText;
+var
+  LOwner: TFileCatalog;
+begin
+  LOwner := OwnedCatalog(AFiles);
+
+  if LOwner = nil then
+  begin
+    raise ENyxPascalContext.Create('Source identity requires a frozen captured input set');
+  end;
+  Result := LOwner.FIdentity;
 end;
 
 destructor TFileCatalog.Destroy;
@@ -647,6 +704,8 @@ var
   LByteFiles: INyxPascalByteFileCatalog;
   LTarget: INyxPascalByteFileCatalog;
   LCaptured: INyxPascalFileCatalog;
+  LOwned: TFileCatalog;
+  LCopyOwner: TFileCatalog;
 begin
 
   if AFiles = nil then
@@ -689,6 +748,13 @@ begin
   end;
   { Alternate callbacks can fail at any entry. Only a complete immutable
     capture may enter the caller's potentially aliased managed result. }
+  LOwned := OwnedCatalog(AFiles);
+
+  if LOwned <> nil then
+  begin
+    LCopyOwner := OwnedCatalog(LCaptured);
+    LCopyOwner.FIdentity := LOwned.FIdentity;
+  end;
   Result := LCaptured;
 end;
 

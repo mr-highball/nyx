@@ -136,7 +136,7 @@ function PrepareNyxFPCModule(const ACompiler, AFreshDirectory: TNyxText;
 implementation
 
 uses Classes, SysUtils, Process, LazFileUtils, nyx.bytes, nyx.pascal.lexing,
-  nyx.studio.compilerprocess
+  nyx.studio.compilerprocess, nyx.pascal.witness, nyx.pascal.encoding
   {$ifdef windows}, Windows{$endif};
 
 const
@@ -450,12 +450,21 @@ end;
 { The same host-capability preflight serves single and batch operations. Building
   a typed probe performs no file/process effect and cannot retag source contexts. }
 function RequiredFactProbe(const ARequirement: INyxPascalCompilerRequirement;
-  const AOwner: INyxFPCCompilerCapture): INyxPascalCompilerProbe;
+  const AOwner: INyxFPCCompilerCapture;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerProbe;
 begin
 
   if not AOwner.Context.SameFacts(ARequirement.Context) then
   begin
     raise ENyxPascalContext.Create('A compiler requirement needs its exact owning capture');
+  end;
+
+  if ARequirement.Kind = pcrSourceSize then
+  begin
+    { Pure complete materialization qualifies the same source capability before
+      a batch creates any directory. It never becomes a pristine name query. }
+    PlanNyxPascalSourceWitness(ARequirement, AOwner, ACancellation);
+    Exit(nil);
   end;
 
   if NyxPascalCompilerScope(ARequirement.Context) = pcsoSystemBootstrap then
@@ -474,6 +483,176 @@ begin
   Result := NyxFPCProbeSizeOf(Result, ARequirement.Reference);
 end;
 
+{ Native compiler ownership for a prepared source witness. All captured files
+  stay read-leased until this exact compiler family joins; output and source
+  directories are private siblings. Transcript limits and cancellation are the
+  same as ordinary capture, and no compiled/assembled/linked program is run. }
+function CaptureSourceWitness(const ACompiler, AFreshDirectory: TNyxText;
+  const AWitness: INyxPascalSourceWitness; const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope; ATimeoutMilliseconds: Cardinal): INyxFPCCompilerCapture;
+var
+  LFiles: INyxPascalFileCatalog;
+  LDirectory, LInput, LPath, LVirtual, LPart, LStem: TNyxText;
+  LSourceHandles: array of THandle;
+  LProcess: TNyxCompilerProcess;
+  LResult: INyxFPCCompilerCapture;
+  LScope: INyxCancellationScope;
+  LBytes, LTranscript: TNyxBytes;
+  LChunk: array[0..8191] of Byte;
+  LFile, LAt, LStartPart, LCount, LBefore, LCode: Integer;
+  LStart: QWord;
+
+  procedure Deadline;
+  begin
+    CheckCancellation(LScope);
+
+    if GetTickCount64 - LStart >= ATimeoutMilliseconds then
+      raise ENyxPascalContext.Create('The owned source witness exceeded its time budget');
+  end;
+
+  procedure Drain;
+  begin
+    while LProcess.Output.NumBytesAvailable > 0 do
+    begin
+      Deadline;
+      LCount := LProcess.Output.Read(LChunk, SizeOf(LChunk));
+
+      if LCount <= 0 then Break;
+      LBefore := Length(LTranscript);
+
+      if LCount > AOptions.MaximumBytes - LBefore then
+        raise ENyxPascalContext.Create('Source witness output exceeds its byte budget');
+      SetLength(LTranscript, LBefore + LCount);
+      Move(LChunk[0], LTranscript[LBefore], LCount);
+    end;
+  end;
+
+begin
+  LScope := ACancellation;
+  AOptions.Validate;
+  CheckCancellation(LScope);
+
+  if (AWitness = nil) or (ATimeoutMilliseconds = 0) or not FileExistsUTF8(ACompiler) or
+    (Pos(#0, ACompiler) > 0) or (Pos(#0, AFreshDirectory) > 0) or
+    (AFreshDirectory = '') or DirectoryExistsUTF8(AFreshDirectory) or FileExistsUTF8(AFreshDirectory) then
+    raise ENyxPascalContext.Create('Source measurement needs a compiler, bounded time and fresh private directory');
+  LFiles := AWitness.Files;
+  { Virtual paths cannot acquire Windows device/wildcard/trailing aliases when
+    materialized. CREATE_NEW below also refuses any filesystem case collision. }
+  for LFile := 0 to LFiles.Count - 1 do
+  begin
+    CheckCancellation(LScope);
+    LVirtual := LFiles.FileAt(LFile).Name;
+    LStartPart := 1;
+    for LAt := 1 to Length(LVirtual) + 1 do
+    begin
+
+      if (LAt <= Length(LVirtual)) and (LVirtual[LAt] <> '/') then
+      begin
+
+        if LVirtual[LAt] in ['*', '?', '"', '<', '>', '|'] then
+          raise ENyxPascalContext.Create('A source witness has a nonliteral native path');
+        Continue;
+      end;
+      LPart := Copy(LVirtual, LStartPart, LAt - LStartPart);
+
+      if (LPart = '') or (LPart[Length(LPart)] in ['.', ' ']) then
+        raise ENyxPascalContext.Create('A source witness has a native path alias');
+      LStem := NyxPascalASCIIKey(LPart);
+
+      if Pos('.', LStem) > 0 then LStem := Copy(LStem, 1, Pos('.', LStem) - 1);
+
+      if (LStem = 'con') or (LStem = 'prn') or (LStem = 'aux') or (LStem = 'nul') or
+        ((Length(LStem) = 4) and ((Copy(LStem, 1, 3) = 'com') or (Copy(LStem, 1, 3) = 'lpt')) and
+        (LStem[4] in ['1'..'9'])) then
+        raise ENyxPascalContext.Create('A source witness cannot materialize a native device name');
+      LStartPart := LAt + 1;
+    end;
+  end;
+  LDirectory := IncludeTrailingPathDelimiter(ExpandFileNameUTF8(AFreshDirectory));
+  LInput := IncludeTrailingPathDelimiter(LDirectory + 'inputs');
+
+  if not CreateDirUTF8(LDirectory) or not CreateDirUTF8(LInput) or
+    not CreateDirUTF8(LDirectory + 'output') then
+    raise ENyxPascalContext.Create('The private source-witness directories could not be created');
+  SetLength(LSourceHandles, LFiles.Count);
+  for LFile := 0 to High(LSourceHandles) do LSourceHandles[LFile] := THandle(-1);
+  LProcess := nil;
+  LStart := GetTickCount64;
+  try
+    for LFile := 0 to LFiles.Count - 1 do
+    begin
+      Deadline;
+      LPath := ExpandFileNameUTF8(LInput + LFiles.FileAt(LFile).Name);
+
+      if Copy(LPath, 1, Length(LInput)) <> LInput then
+        raise ENyxPascalContext.Create('A source-witness path escaped its private input directory');
+
+      if not ForceDirectoriesUTF8(ExtractFileDir(LPath)) then
+        raise ENyxPascalContext.Create('A private source-witness parent could not be created');
+      LBytes := NyxPascalSourceBytesAt(LFiles, LFile).Slice(
+        NyxPascalByteSpan(0, NyxPascalSourceBytesAt(LFiles, LFile).Count));
+      WriteFresh(LPath, LBytes);
+      {$ifdef windows}
+      LSourceHandles[LFile] := CreateFileW(PWideChar(UTF8Decode(LPath)), GENERIC_READ,
+        FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+      {$else}
+      LSourceHandles[LFile] := FileOpen(String(RawByteString(LPath)), fmOpenRead or fmShareDenyWrite);
+      {$endif}
+
+      if LSourceHandles[LFile] = THandle(-1) then
+        raise ENyxPascalContext.Create('An exact source-witness input could not be leased');
+    end;
+    LProcess := TNyxCompilerProcess.Create(nil);
+    LProcess.Executable := String(ACompiler);
+    LProcess.CurrentDirectory := String(LInput);
+    LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
+    LProcess.Parameters.Add('-Mfpc');
+    LProcess.Parameters.Add('-Us');
+    LProcess.Parameters.Add('-s');
+    LProcess.Parameters.Add('-Cn');
+    LProcess.Parameters.Add('-v0');
+    LProcess.Parameters.Add('-vi');
+    LProcess.Parameters.Add('-vn');
+    LProcess.Parameters.Add('-vq');
+    for LAt := 0 to LFiles.DirectoryCount - 1 do
+      LProcess.Parameters.Add('-Fi' + String(LInput + LFiles.DirectoryAt(LAt)));
+    LProcess.Parameters.Add('-FU' + String(LDirectory + 'output'));
+    LProcess.Parameters.Add('-FE' + String(LDirectory + 'output'));
+    LProcess.Parameters.Add(String(LInput + AWitness.Root.Name));
+    Deadline;
+    LProcess.Execute;
+    while LProcess.FamilyRunning do
+    begin
+      Drain;
+      Deadline;
+      Sleep(5);
+    end;
+    Drain;
+    Deadline;
+    LProcess.WaitOnExit;
+    LCode := LProcess.ExitStatus;
+    WriteFresh(LDirectory + 'compiler-source.log', LTranscript);
+    LResult := AWitness.Read(NyxDecodeUTF8(LTranscript), LCode, AOptions, LScope);
+  finally
+    try
+
+      if LProcess <> nil then
+      begin
+        try LProcess.RetireAndJoin;
+        finally LProcess.Free; end;
+      end;
+    finally
+      for LFile := 0 to High(LSourceHandles) do
+      begin
+
+        if LSourceHandles[LFile] <> THandle(-1) then FileClose(LSourceHandles[LFile]);
+      end;
+    end;
+  end;
+  Result := LResult;
+end;
+
 function FulfillNyxFPCCompilerRequirement(const ACompiler, AFreshDirectory: TNyxText;
   const ARequirement: INyxPascalCompilerRequirement;
   const AOwner: INyxFPCCompilerCapture; const AOptions: TNyxPascalCompilerTraceOptions;
@@ -489,6 +668,13 @@ begin
   CheckCancellation(ACancellation);
   LRequirement := CaptureNyxPascalRequirement(ARequirement);
   LOwner := FreezeNyxFPCCompilerCapture(AOwner);
+
+  if LRequirement.Kind = pcrSourceSize then
+  begin
+    Exit(CaptureSourceWitness(ACompiler, AFreshDirectory,
+      PlanNyxPascalSourceWitness(LRequirement, LOwner, ACancellation), AOptions,
+      ACancellation, ATimeoutMilliseconds));
+  end;
 
   LProbe := RequiredFactProbe(LRequirement, LOwner);
   LFresh := CaptureNyxFPCCompilerCapture(ACompiler, AFreshDirectory, LProbe,
@@ -515,7 +701,7 @@ begin
   for LAt := 0 to LPlan.Count - 1 do
   begin
     CheckCancellation(ACancellation);
-    RequiredFactProbe(LPlan.RequirementAt(LAt), LPlan.OwnerAt(LAt));
+    RequiredFactProbe(LPlan.RequirementAt(LAt), LPlan.OwnerAt(LAt), ACancellation);
   end;
   LReplies := NewNyxPascalCompilerCaptures;
 

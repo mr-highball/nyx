@@ -265,6 +265,7 @@ var
   LAt: Integer;
   LPrevious: Integer;
   LDuplicate: Boolean;
+  LSourceKey, LPreviousKey: INyxPascalSourceSizeRequirement;
 begin
   inherited Create;
   CheckCancellation(ACancellation);
@@ -297,9 +298,20 @@ begin
     LDuplicate := False;
     for LPrevious := 0 to Count - 1 do
     begin
-      LDuplicate := LDuplicate or ((FOwners[LPrevious] = LCaptureAt) and
+      if (FOwners[LPrevious] = LCaptureAt) and
         (FModuleRows[LPrevious] = LModuleAt) and
-        (FRequirements[LPrevious].Reference.Name = LRequest.Reference.Name));
+        (FRequirements[LPrevious].Kind = LRequest.Kind) and
+        (FRequirements[LPrevious].Reference.Name = LRequest.Reference.Name) then
+      begin
+
+        if LRequest.Kind = pcrSourceSize then
+        begin
+          Supports(LRequest, INyxPascalSourceSizeRequirement, LSourceKey);
+          Supports(FRequirements[LPrevious], INyxPascalSourceSizeRequirement, LPreviousKey);
+          LDuplicate := LDuplicate or LSourceKey.StorageKey.SameKey(LPreviousKey.StorageKey);
+        end
+        else LDuplicate := True;
+      end;
     end;
 
     if LDuplicate then

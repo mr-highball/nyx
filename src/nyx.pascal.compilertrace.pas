@@ -97,6 +97,8 @@ type
     function UpToLineLength(AValue: Integer): TNyxPascalCompilerTraceOptions;
     procedure Validate;
     property MaximumBytes: Integer read FBytes;
+    property MaximumLines: Integer read FLines;
+    property MaximumLineLength: Integer read FLine;
   end;
 
 { Only FPC/ObjFPC/Delphi/DelphiUnicode/TP source modes have qualified defaults.
@@ -140,6 +142,15 @@ function FreezeNyxFPCCompilerCapture(const ASource: INyxFPCCompilerCapture): INy
   the prior context. Unrelated new observations do not widen the reply. }
 function MergeNyxFPCSizeCapture(const APrevious, AFresh: INyxFPCCompilerCapture;
   const AReference: TNyxPascalSizeReference): INyxFPCCompilerCapture;
+{ Attach one checked, previously unknown source-layout reply to an exact owner.
+  This is metadata validation; a native witness host must independently qualify
+  source, transcript, compatibility and retirement before calling this factory. }
+function WithNyxFPCStorageReply(const AOwner: INyxFPCCompilerCapture;
+  const AKey: TNyxPascalStorageKey; const AValue: TNyxPascalStorageFact): INyxFPCCompilerCapture;
+{ Verify coherence and retain exactly one new structural receipt. Additional
+  changes in AFresh remain visible to the caller's separate exact-delta check. }
+function MergeNyxFPCStorageCapture(const APrevious, AFresh: INyxFPCCompilerCapture;
+  const AKey: TNyxPascalStorageKey): INyxFPCCompilerCapture;
 
 implementation
 
@@ -1384,6 +1395,41 @@ begin
   end;
   Result := TCompilerCapture.Create(NyxPascalWithCapturedSize(LPrevious.Context,
     AReference, LFact), LCoherent.ObservedDefaults);
+end;
+
+function WithNyxFPCStorageReply(const AOwner: INyxFPCCompilerCapture;
+  const AKey: TNyxPascalStorageKey; const AValue: TNyxPascalStorageFact): INyxFPCCompilerCapture;
+var
+  LOwner: INyxFPCCompilerCapture;
+begin
+  LOwner := FreezeNyxFPCCompilerCapture(AOwner);
+  AKey.Validate;
+  AValue.Validate;
+
+  if (AValue.State <> psfsKnown) or
+    (NyxPascalCapturedStorage(LOwner.Context, AKey).State <> psfsUnknown) then
+  begin
+    raise ENyxPascalContext.Create('A storage reply must resolve one previously unknown exact key');
+  end;
+  Result := TCompilerCapture.Create(NyxPascalWithCapturedStorage(LOwner.Context,
+    AKey, AValue), LOwner.ObservedDefaults);
+end;
+
+function MergeNyxFPCStorageCapture(const APrevious, AFresh: INyxFPCCompilerCapture;
+  const AKey: TNyxPascalStorageKey): INyxFPCCompilerCapture;
+var
+  LPrevious, LFresh, LCoherent: INyxFPCCompilerCapture;
+begin
+  LPrevious := FreezeNyxFPCCompilerCapture(APrevious);
+  LFresh := FreezeNyxFPCCompilerCapture(AFresh);
+  LCoherent := LPrevious.Merge(LFresh);
+  Result := WithNyxFPCStorageReply(LPrevious, AKey,
+    NyxPascalCapturedStorage(LFresh.Context, AKey));
+
+  if not Result.ObservedDefaults.SameFacts(LCoherent.ObservedDefaults) then
+  begin
+    raise ENyxPascalContext.Create('A storage reply changed the observed compiler anchor');
+  end;
 end;
 
 end.

@@ -33,7 +33,93 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Structural size receipts, native fulfillment open — 2026-10-19
+## Current integration: Native source-size fulfillment — 2026-10-19
+
+The intervening human-status turn made no product progress. This continuation
+revalidated 2d6a7a8 and completed the first configured-native source-size path
+through the existing requirement, capture, module and unchanged-world replay
+owners. The full library/Studio/resolver outcome remains active; no original
+criterion, task, counter, credit, DONE, parity, adoption or delivery closes.
+
+A distinct pcrSourceSize request retains the exact resolved System prefix,
+physical conditional occurrence, checked reference and compiler-root owner.
+Its value-only key includes sealed process-local input identity, source site,
+compiler identity and captured initial/root inputs. UTF-8 hex framing preserves
+Unicode names without platform string-storage assumptions. Checked owned file
+captures preserve identity; actual fluent input edits detach it. Keys contain no
+source/world/context/callback/interface-record lease, and their preparation and
+lookup enter the existing constant/aggregate budgets. Successful receipt lookup
+does not leave a pending request. Nested constant declaration sites cannot borrow
+the current conditional's authority; unsupported startup policies/features,
+module roots and repeated target inclusions retain explicit prerequisites.
+
+The native host materializes captured bytes in fresh private scratch, leases
+every input through exact compiler-family retirement and compiles the real System
+source with its original directives/declarations/includes. It does not flatten
+the type into an invented record or promote Unknown packing to DEFAULT. Startup
+guards check captured defines/integers/short options. Closed per-job notes obtain
+31 ordered bits at the actual declaration site; the compiler intentionally stops
+only after the complete final packet. Earlier same-input source receipts are
+remeasured in the same job with scoped notes and must agree. Unexpected errors,
+foreign/ambiguous owners, malformed/order/status/range/limit/cancellation and
+changed earlier values refuse without publishing a partial reply. No generated
+application, assembler or linker is executed. Compiler/output configuration
+coherence remains caller-owned; this does not capture every unobserved startup
+default or establish full target ABI/environment authority.
+
+Fulfillment preflights source and primitive jobs separately, deduplicates exact
+kind/site identities, validates one structural-fact delta and atomically updates
+matching module/bootstrap contexts. Authored type names never enter pristine
+primitive facts. The same unchanged LWorld then consumes the result. Source
+instrumentation and logs are separate from the retained byte-exact original
+input packets. There is no new MCP tool, schema, server, configuration or rollout.
+
+All ten owned Pascal inputs are frozen before final qualification. The extended
+fulfillment consumer passes 56 checks, including two actual source measurements,
+independent compiled packed-layout oracles, same-job earlier-value revalidation,
+a real failed startup guard, malformed transcript/cancellation/input/switch
+refusals and unchanged-world replay. Existing source-storage/shape consumers pass
+181/39. Forty maintained/seven additional native consumers, the actual 503-file/
+2,355,444-token lexical corpus and unchanged original RTL 56 pass with clean
+heaps: 49 accepted native logs. All 86 accepted main compiler jobs have zero
+owned warnings/196 upstream warnings; the separate deliberate diagnostic oracle
+retains its expected warning outside product debt. Both Studios/backend/worker
+and 36 browser consumers compile as applicable. Browser execution, editor/input,
+physical parity, performance, adoption and delivery remain unqualified here.
+
+System advances from 10,925 declarations/six syntax diagnostics/25 answers to
+11,029/seven/27. The additional syntax exposure is retained, not presented as
+complete grammar. The native VarHeader request uses one additional job inside
+the existing dynamic eight-job allowance (Longint/Int64/Pointer/source layout:
+four total); five initial queries, the explicit Word job and three-of-eight
+symbol preparation remain exact. ObjPas stays 209/four/one. Exact indexed
+Free/FreeInstance completion, objpash.inc navigation and detached insertion remain
+ready. System still refuses MinFixedChunkSize at heap.inc scalar 29082 with
+pbiUnsupportedScope and an actual class threadvar syntax gap; Source.Resolved
+remains false. View two-million, aggregate four-million, constant and 64-round
+ceilings are unchanged. Full RTL/source/type meaning is not established.
+
+Preservation retains 654 unrelated/664 maintained sources, 97 RTL inputs, 24
+compiler inputs plus retained inspections, 156 original unit packets/48 includes,
+349 frozen release artifacts, nine previous contexts and thirteen foreign
+planning files. All five current-start protected files remain exact. Historical
+global-configuration preservation failures stay retained and false; no restoration
+or full preservation/delivery claim is made. All owned readers/process handles
+are terminal and joined. LAN remains offline, native Nyx tools absent, and no
+host/config retry, cleanup/restart, protected mutation, approval bypass or
+sub-agent is used. Ignored `.local/source-size-fulfillment-paths-private.json`
+owns exact source/qualification/preservation receipts and retained preparations,
+including the first mode-conflicting prototype and browser compatibility repairs.
+
+Stop standalone witness/key/receipt/fixture/native-probe/capture variants. Follow
+the actual class threadvar declaration and retained class scope through existing
+parser/binding owners, then reassess MinFixedChunkSize/CommonHeaderSize/FreeChunk
+against the unchanged full RTL input. Do not patch in a fixed FreeChunk probe,
+weaken assertions, infer widths/defaults or raise any quota. Complete canonical
+types/module coherence/incremental budgets/editor/input/navigation/quality/native-
+browser parity/component breadth/adoption/delivery remain required.
+
+## Previous integration: Structural size receipts, native fulfillment open — 2026-10-19
 
 The previous goal turn is progress: 11d3c85 is qualified and pushed. This turn
 revalidated its exact source/worktree before continuing the same record-layout

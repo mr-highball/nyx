@@ -349,6 +349,7 @@ var
   LReply: INyxFPCCompilerCapture;
   LOwner: INyxFPCCompilerCapture;
   LFact: TNyxPascalSizeFact;
+  LSourceSize: INyxPascalSourceSizeRequirement;
   LExpected: INyxPascalCompilerContext;
   LContext: INyxPascalCompilerContext;
   LRoot: TNyxPascalPhysicalFile;
@@ -363,7 +364,15 @@ begin
   begin
     raise ENyxPascalContext.Create('A fact reply needs its exact previous capture and default anchor');
   end;
-  LOwner := MergeNyxFPCSizeCapture(LOwner, LReply, LRequirement.Reference);
+  if LRequirement.Kind = pcrSourceSize then
+  begin
+    Supports(LRequirement, INyxPascalSourceSizeRequirement, LSourceSize);
+    LOwner := MergeNyxFPCStorageCapture(LOwner, LReply, LSourceSize.StorageKey);
+  end
+  else
+  begin
+    LOwner := MergeNyxFPCSizeCapture(LOwner, LReply, LRequirement.Reference);
+  end;
   LRoot := LRequirement.OwnerSource.Source.Files.FileAt(
     LRequirement.OwnerSource.Source.Occurrence(0).FileIndex);
 
@@ -376,12 +385,15 @@ begin
   begin
     raise ENyxPascalContext.Create('A compiler fact reply has stale or foreign module source ownership');
   end;
-  LFact := NyxPascalCapturedSize(LReply.Context, LRequirement.Reference);
-
-  if (LFact.State = pssUnknown) or (LFact.ProbeMode <> LRequirement.Context.Mode) or
-    (LFact.ProbeLongStrings <> LRequirement.Context.Option('H')) then
+  if LRequirement.Kind = pcrPrimitiveSize then
   begin
-    raise ENyxPascalContext.Create('A compiler fact reply does not resolve the requested mode and reference');
+    LFact := NyxPascalCapturedSize(LReply.Context, LRequirement.Reference);
+
+    if (LFact.State = pssUnknown) or (LFact.ProbeMode <> LRequirement.Context.Mode) or
+      (LFact.ProbeLongStrings <> LRequirement.Context.Option('H')) then
+    begin
+      raise ENyxPascalContext.Create('A compiler fact reply does not resolve the requested mode and reference');
+    end;
   end;
   LExpected := LOwner.Context;
 

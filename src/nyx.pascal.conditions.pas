@@ -163,9 +163,28 @@ function NewNyxPascalSemanticTranslation(const AFiles: INyxPascalFileCatalog;
 implementation
 
 uses SysUtils, nyx.pascal.lexing, nyx.pascal.constants, nyx.pascal.storage, nyx.pascal.values,
-  nyx.pascal.requirements;
+  nyx.pascal.requirements, nyx.pascal.encoding;
 
 type
+  { Per-query adapter owns only the current immutable prefix and a borrowed
+    aggregate budget. Its child enforces the constant query's remaining limit;
+    retirement drops the prefix without retiring the parent operation. }
+  TSourceSizeScope = class(TInterfacedObject, INyxPascalAnalysisBudget,
+    INyxPascalSourceSizeScope)
+  public
+    Budget: INyxPascalAnalysisBudget;
+    View: INyxPascalTranslatedSyntax;
+    SiteOrigin: TNyxPascalConditionOrigin;
+    Retired: Boolean;
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    procedure Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer = 1);
+    function Receipt: TNyxPascalAnalysisReceipt;
+    procedure Retire;
+    function SourceSize(const ASite: INyxPascalBindingSite;
+      const AName: TNyxPascalSizeReference; AMaximumWork: Integer; out AWork: Integer;
+      out ARequirement: INyxPascalCompilerRequirement): TNyxPascalStorageFact;
+  end;
   { Owns final data only. Publication happens after construction/checks; failure
     cleanup releases the source and all temporary authorities independently. }
   TSemanticTranslation = class(TInterfacedObject, INyxPascalSemanticTranslation,
@@ -401,6 +420,104 @@ begin
   Result.Validate;
 end;
 
+
+procedure TSourceSizeScope.Cancel;
+begin Retired := True; end;
+function TSourceSizeScope.GetCancelled: Boolean;
+begin Result := Retired or Budget.Cancelled; end;
+procedure TSourceSizeScope.Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if Retired then raise ENyxPascalAnalysisCancelled.Create('Source-size scope retired');
+  Budget.Admit(APhase, AUnits);
+end;
+function TSourceSizeScope.Receipt: TNyxPascalAnalysisReceipt;
+begin Result := Budget.Receipt; end;
+procedure TSourceSizeScope.Retire;
+begin Retired := True; View := nil; end;
+function TSourceSizeScope.SourceSize(const ASite: INyxPascalBindingSite;
+  const AName: TNyxPascalSizeReference; AMaximumWork: Integer; out AWork: Integer;
+  out ARequirement: INyxPascalCompilerRequirement): TNyxPascalStorageFact;
+var
+  LRequest: INyxPascalCompilerRequirement;
+  LSourceRequest: INyxPascalSourceSizeRequirement;
+  LValues: INyxPascalContextStorage;
+  LAt, LVisits, LFile: Integer;
+  LKey: TNyxPascalStorageKey;
+  LChild: INyxPascalAnalysisBudget;
+  LSourceView: INyxPascalSourceView;
+begin
+  AWork := 0;
+  ARequirement := nil;
+  Result := NyxPascalStorageFact(psfsUnknown);
+
+  if Retired or (View = nil) then
+  begin
+    raise ENyxPascalAnalysisCancelled.Create('Source-size scope retired');
+  end;
+
+  if (ASite = nil) or (ASite.Caret <> View.Syntax.Lexical.Scalars) or
+    (ASite.ScopeIndex <> View.Syntax.ScopeAt(ASite.Caret)) or
+    (ASite.World.ModuleAt(ASite.ModuleIndex) <> View) or
+    not NyxPascalSourceWitnessContext(View) then Exit;
+
+  if AMaximumWork < 1 then
+  begin
+    raise ENyxPascalConstantLimit.Create('Source-size lookup exceeds the remaining constant work');
+  end;
+  LChild := NewNyxPascalAnalysisBudget(AMaximumWork, Budget);
+  try
+    try
+      LFile := View.Source.Occurrence(SiteOrigin.Occurrence).FileIndex;
+      LSourceView := NyxPascalSourceViewAt(View.Source.Files, LFile);
+
+      if (LSourceView = nil) or (LSourceView.Kind <> psekUTF8) then Exit;
+      LVisits := 0;
+      for LAt := 0 to View.Source.OccurrenceCount - 1 do
+      begin
+        LChild.Admit(papConstantStep);
+
+        if View.Source.Occurrence(LAt).FileIndex = LFile then Inc(LVisits);
+      end;
+
+      if LVisits <> 1 then Exit;
+      LRequest := NewNyxPascalSourceSizeRequirement(AName, View, SiteOrigin, LChild);
+      Supports(LRequest, INyxPascalSourceSizeRequirement, LSourceRequest);
+      LKey := LSourceRequest.StorageKey;
+
+      if Supports(LRequest.Context, INyxPascalContextStorage, LValues) then
+      begin
+        for LAt := 0 to LValues.StorageCount - 1 do
+        begin
+          LChild.Admit(papConstantStep);
+
+          if Length(LValues.StorageKey(LAt).Value) = Length(LKey.Value) then
+          begin
+            LChild.Admit(papConstantStep, Length(LKey.Value));
+
+            if LValues.StorageKey(LAt).Value = LKey.Value then
+            begin
+              Result := LValues.StorageValueAt(LAt);
+              Exit;
+            end;
+          end;
+        end;
+      end;
+      ARequirement := LRequest;
+    except
+      on E: ENyxPascalAnalysisWorkLimit do
+      begin
+
+        if (E.Maximum = AMaximumWork) and (E.WorkBefore = LChild.Receipt.Total) then
+          raise ENyxPascalConstantLimit.Create(E.Message);
+        raise;
+      end;
+    end;
+  finally
+    AWork := LChild.Receipt.Total;
+    LChild.Retire;
+  end;
+end;
 
 function TSemanticTranslation.Source: INyxPascalTranslation;
 begin
@@ -828,9 +945,12 @@ var
   LRemaining: Integer;
   LStorage: INyxPascalConstantStorage;
   LBoolean: Boolean;
+  LSourceScope: TSourceSizeScope;
+  LExecution: INyxPascalAnalysisBudget;
 begin
   CheckCancellation;
   Result := ppkUnknown;
+  LExecution := nil;
 
   if not FPrepared or (APrefix = nil) or
     (APrefix.Count <> FOrigin.PrefixCount) or
@@ -888,7 +1008,12 @@ begin
     LMeanings := TScopeMeanings.Create;
     LSemanticOwner := LMeanings;
     LMeanings.Site := LWorld.At(LModule, LScope, LCaret);
-    LMeanings.Cancellation := Cancellation;
+    LSourceScope := TSourceSizeScope.Create;
+    LExecution := LSourceScope;
+    LSourceScope.Budget := Budget;
+    LSourceScope.View := LView;
+    LSourceScope.SiteOrigin := AOrigin;
+    LMeanings.Cancellation := LExecution;
 
     if FLegacy then
     begin
@@ -914,7 +1039,7 @@ begin
       begin
         LOptions := LOptions.UpToSteps(LRemaining);
       end;
-      LValue := FPlan.Evaluate(LMeanings.Site, LOptions, Cancellation);
+      LValue := FPlan.Evaluate(LMeanings.Site, LOptions, LExecution);
       Data.Issue := LValue.Issue;
       Data.Related := LValue.RelatedName;
       Data.Requirements := CaptureNyxPascalRequirements(LValue);
@@ -956,6 +1081,10 @@ begin
       Data.Storage := nil;
     end;
   finally
+    if LExecution <> nil then
+    begin
+      LExecution.Retire;
+    end;
     FPrepared := False;
     FContext := nil;
     FExpression := '';
