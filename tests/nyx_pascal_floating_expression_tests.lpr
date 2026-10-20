@@ -291,8 +291,13 @@ begin
   Check(LAnswer.Status <> pbsBound,'Unqualified symbolic floating names cannot grant arithmetic semantics');
   LSource := TNyxText(StringReplace(String(Companion(LCase)),'{$excessprecision off}','',[]));
   LAnswer := Query(LCase,LSource,Root);
+  Check((LAnswer.Status = pbsBound) and (TypeName(LAnswer.BoundType) = TNyxText('Extended')),
+    'The same authored Delphi header now has an independently qualified precision effect');
+  LSource := TNyxText(StringReplace(String(LSource),'{$mode delphi}','',[]));
+  LAnswer := Query(LCase,LSource,Root);
   Check((LAnswer.Status = pbsUnresolved) and (LAnswer.Issue = pbiCompilerContext) and
-    (LAnswer.RelatedName = TNyxText('EXCESSPRECISION')),'An uncaptured effective precision retains an explicit context gap');
+    (LAnswer.RelatedName = TNyxText('EXCESSPRECISION')),
+    'Without an authored mode or captured request, startup precision remains an explicit context gap');
   LCase := GCases[6];
   LSource := TNyxText(StringReplace(String(Companion(LCase)),'{$excessprecision off}','',[]));
   LAnswer := Query(LCase,LSource,Root);

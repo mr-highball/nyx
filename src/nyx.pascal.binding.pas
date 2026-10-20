@@ -8064,7 +8064,7 @@ var
       LBefore := LView.Origin(LOrigin).TranslationToken;
 
       if (LBefore >= LAfter) or (LSource.Token(LBefore).Activity <> ppkTrue) then Exit;
-      Result := NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)).ExcessPrecisionRequested;
+      Result := NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)).ExcessPrecisionSetting;
       for LIndex := LBefore+1 to LAfter-1 do
       begin
         Tick;
@@ -8074,9 +8074,17 @@ var
         NyxPascalDirectiveParts(LSource.Text(LIndex),LName,LValue,LOffset);
 
         if LName = 'ifopt' then
-          Result := NyxPascalCompilerPolicies(LSource.State(LRow.State)).ExcessPrecisionRequested
+          Result := NyxPascalCompilerPolicies(LSource.State(LRow.State)).ExcessPrecisionSetting
         else if (LName = 'mode') and (LRow.Activity <> ppkFalse) then
-          Result := ppkUnknown;
+        begin
+          { A qualified ignored late MODE leaves the exact state unchanged and
+            does not flush pending locals. An applied MODE has a distinct state;
+            its handler has independently proved the immediate setting effect. }
+
+          if LSource.Token(LIndex+1).State <> LRow.State then
+            Result := NyxPascalCompilerPolicies(LSource.State(
+              LSource.Token(LIndex+1).State)).ExcessPrecisionSetting;
+        end;
       end;
     end;
 

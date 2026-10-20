@@ -4,7 +4,42 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source runtime floating expressions consume qualified primitive formats
+Current-source qualification retains authored FPC 3.3.1 Delphi/DelphiUnicode header
+precision effects separately from explicit requests. InMode/selected mode alone
+seed no default. Capture/PUSH/POP/context/storage identity preserve provenance;
+later Unknown requests revoke it. Existing public policy value layout expands,
+with rebuilt consumers required and existing GUIDs/ordinals unchanged. Existing
+budgeted global-header proof distinguishes ignored late MODE: preserve its token/
+unchanged state, without retargeting, repeated-header refusal or pending-switch
+flush. Whole native header six and ignored-mode three observations agree with
+nine source windows; the latter retains two intentional compiler warnings outside
+main debt. Earlier ObjFPC/late-Delphi observation and failed test accessor/import
+preparations stay exact. Focused161/86 and previous floating483/104/64 joined/
+chain894/1694 pass with clean heaps. All 52 main compiler logs have zero owned
+warnings/105 upstream; 33 native runs have clean heaps; 17 browser consumers
+compile only; both Studios/backend/worker compile as applicable. Unchanged RTL56
+retains System13101/zero syntax/31 answers, ObjPas209/zero/one, neither pending,
+exact Free/FreeInstance navigation/insertion. Original 2M/4M/64/initial5/Word1/
+symbol3of8/dynamic6of8 stay exact. All 740 maintained/732 unrelated/eight frozen/
+five preceding source copies/three current header preparations/all older retained
+preparations/97 RTL/24 compiler pins/all previous plus three inspected owners/two
+profiles/156 unit packets/48 historical includes/349 frozen artifacts/nine contexts/
+five protected files/thirteen concurrent files stay exact. Finalizer path-spelling
+double-count and missing inherited-manifest preparations stay retained; correcting
+accounting/copying the exact manifest changes no Pascal input or compiler result.
+Readers joined; historical global-config failure keeps full preservation false.
+No Pascal edits while readers run. .local/precision-header-paths-private.json and
+WORK.md own final source/remote evidence/return path. Preserve all old quotas/probes/pins and
+protected/frozen/concurrent files. LAN offline; native Nyx tools absent. No host/
+config retry, SDK capture, protected mutation, cleanup/restart, approval bypass,
+new MCP tool/schema, rollout or sub-agents. Stop header/mode/timing/fixture/compiler
+variants. Next qualify exact real literal source/value and MINFPCONSTPREC through
+existing literal/numeric/context owners. Do not infer uncaptured startup minima or
+compiler-host parsing format from target defines. Real literal/minimum-precision/
+rounding and full language/editor/parity/adoption/delivery/original goal stay open;
+no full criterion/task/credit/DONE/default-editor installation closes.
+
+Previously qualified runtime floating expressions consume qualified primitive formats
 and preserve nominal operand identities. FPC 3.3.1 Delphi/DelphiUnicode source
 with i386 compiler-root evidence retains separate unary/binary/comparison/
 Currency/Comp/mixed-integral/division rules. Typed canonical results keep their

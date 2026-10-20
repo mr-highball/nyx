@@ -4064,6 +4064,18 @@ begin
     if LName = 'mode' then
     begin
       LMode := ModeNamed(LValue);
+      LGlobal := ppkUnknown;
+
+      if (FContext.Family = ppcFPC) and (FContext.Version.FullNumber = 30301) and
+        (FActive = ppkTrue) then
+      begin
+        LGlobal := GlobalModeHeader;
+        { This scanner ignores a late global switch before checking its mode
+          argument or repeated-MODE restriction. Preserve the original directive
+          and unchanged state; an ignored MODE neither resets nor flushes locals. }
+
+        if LGlobal = ppkFalse then Exit;
+      end;
 
       if FModeSeen then
       begin
@@ -4096,6 +4108,16 @@ begin
 
         if FContext.Family = ppcFPC then
         begin
+          { The actual authored header operation, not the context's selected
+            mode, establishes this default on the qualified scanner. InMode
+            itself deliberately retains no such initial/default authority. }
+
+          if (FContext.Version.FullNumber = 30301) and (LGlobal = ppkTrue) and
+            (LMode in [ppmDelphi, ppmDelphiUnicode]) then
+          begin
+            FContext := NyxPascalWithCompilerPolicies(FContext,
+              NyxPascalCompilerPolicies(FContext).ApplyModeExcessPrecision(ppkTrue));
+          end;
           { Only independently qualified mode facts are restored after InMode
             revokes options/features. Version-sensitive callback/helper defaults
             remain unknown until explicitly captured or switched in source. }

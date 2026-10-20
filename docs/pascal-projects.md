@@ -3778,8 +3778,30 @@ accepts `{$excessprecision on}`, `off`, `+` and `-` with the compiler's Boolean
 reader boundaries. Physical directive text and include occurrences stay in the
 ordinary source map. Inactive branches do not write the policy; uncertain
 participation and unknown effects revoke knowledge. Local PUSH/POP and bounded
-prefixes retain the exact earlier value. Mode changes conservatively revoke
-precision knowledge until another capture or explicit request supplies it.
+prefixes retain the exact earlier value and its provenance. `InMode` alone
+revokes precision knowledge: a selected language mode is not an observation of
+the compiler's initial settings.
+
+The source translator separately qualifies an authored legal-header
+`{$mode delphi}` or `{$mode delphiunicode}` on FPC 3.3.1. That operation enables
+excess precision, overriding an earlier request. `ModeExcessPrecision` records
+this effect while `ExcessPrecisionRequested` remains Unknown. The low-level
+`ApplyModeExcessPrecision` fluent copy requires the caller's own qualification;
+the translator supplies its compiler/version, conditional and module-header
+proof through the existing bounded source map. No startup default is invented.
+
+`ExcessPrecisionSetting` reads the latest of these mutually exclusive provenance
+channels. Explicit requests, including Unknown, supersede the mode effect; local
+PUSH/POP restores both. Capture, exact context equality and tagged storage keys
+distinguish an authored mode effect from an equally valued explicit request.
+Consumers must rebuild for the additional value field in the public policy record.
+
+On that qualified scanner, a MODE after the global header boundary is ignored
+with a compiler warning. Nyx preserves its physical token and unchanged state;
+it neither retargets the dialect nor applies the header-only repeated-mode rule.
+It also does not flush a queued local switch. The independent native oracle
+retains those deliberate warnings outside product warning debt. Ordinary repeated
+header modes and conditional/unknown boundaries retain their existing refusals.
 
 Capture and exact context identity include the request. Structural storage keys
 use an optional tagged extension for ON/OFF; unspecified contexts retain their
@@ -3791,8 +3813,11 @@ The independent native witness distinguishes OFF's `Single` and mixed `Double`
 results from ON's `Extended`, then verifies that POP restores OFF. Those are
 results of the pinned native compiler. The request alone does not establish
 effective activation, a target best-real type, precision/rounding, constant
-folding or legal conversions. Floating expression inference remains explicitly
-unqualified while those compiler facts are missing. Browser checks compile only.
+folding or legal conversions. Qualified i386 runtime arithmetic uses separately
+captured primitive representations, source FPU selection and node-construction
+activation timing. Real literals additionally depend on minimum-constant-precision
+and compiler-owned parsing/rounding; general literal meaning remains open.
+Browser checks compile only.
 
 ### Configured FPU snapshots
 

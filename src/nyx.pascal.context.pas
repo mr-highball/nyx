@@ -300,6 +300,7 @@ type
     FPointerChecking: TNyxPascalPointerCheckingRequest;
     FInterfaces: TNyxPascalInterfaceStyle;
     FExcessPrecision: TNyxPascalKnowledge;
+    FModeExcessPrecision: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -330,10 +331,18 @@ type
     { An independent source/capture value. In the inspected FPC this module
       setting survives MODE and local PUSH/POP; missing defaults stay unknown. }
     function UseInterfaces(AValue: TNyxPascalInterfaceStyle): TNyxPascalCompilerPolicies;
-    { Local requested excess precision, independent of target format/FPU choice
-      and pending activation. PUSH/POP restores it; mode changes revoke this
-      knowledge until a separate capture or explicit request supplies it again. }
+    { Local authored request, independent of target format/FPU choice and
+      pending activation. Even Unknown supersedes an earlier mode effect.
+      PUSH/POP restores both provenance channels; InMode alone seeds neither. }
     function RequestExcessPrecision(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { A separately qualified source MODE effect, never an inferred startup
+      default. Applying it supersedes the earlier explicit request. Callers
+      still own compiler/version/header proof and node activation timing. }
+    function ApplyModeExcessPrecision(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { Read the latest source/capture setting without conflating a MODE effect
+      with an explicit EXCESSPRECISION request. This is not a node's effective
+      flag: queued local switches retain their scanner activation contract. }
+    function ExcessPrecisionSetting: TNyxPascalKnowledge;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -347,6 +356,7 @@ type
     property PointerCheckingRequested: TNyxPascalPointerCheckingRequest read FPointerChecking;
     property InterfaceStyle: TNyxPascalInterfaceStyle read FInterfaces;
     property ExcessPrecisionRequested: TNyxPascalKnowledge read FExcessPrecision;
+    property ModeExcessPrecision: TNyxPascalKnowledge read FModeExcessPrecision;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -2246,7 +2256,10 @@ begin
     (Ord(FInterfaces) < Ord(Low(TNyxPascalInterfaceStyle))) or
     (Ord(FInterfaces) > Ord(High(TNyxPascalInterfaceStyle))) or
     (Ord(FExcessPrecision) < Ord(Low(TNyxPascalKnowledge))) or
-    (Ord(FExcessPrecision) > Ord(High(TNyxPascalKnowledge))) then
+    (Ord(FExcessPrecision) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FModeExcessPrecision) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FModeExcessPrecision) > Ord(High(TNyxPascalKnowledge))) or
+    ((FExcessPrecision <> ppkUnknown) and (FModeExcessPrecision <> ppkUnknown)) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2374,7 +2387,8 @@ begin
     (FAssembler = AOther.FAssembler) and (FGoto = AOther.FGoto) and
     (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
     (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
-    (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision);
+    (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision) and
+    (FModeExcessPrecision = AOther.FModeExcessPrecision);
 end;
 
 function TNyxPascalCompilerPolicies.RequestExcessPrecision(
@@ -2382,7 +2396,25 @@ function TNyxPascalCompilerPolicies.RequestExcessPrecision(
 begin
   Result := Self;
   Result.FExcessPrecision := AValue;
+  Result.FModeExcessPrecision := ppkUnknown;
   Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.ApplyModeExcessPrecision(
+  AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FExcessPrecision := ppkUnknown;
+  Result.FModeExcessPrecision := AValue;
+  Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.ExcessPrecisionSetting: TNyxPascalKnowledge;
+begin
+  Validate;
+  Result := FExcessPrecision;
+
+  if Result = ppkUnknown then Result := FModeExcessPrecision;
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;

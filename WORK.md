@@ -33,7 +33,97 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-activated runtime floating expressions — 2026-10-19
+## Current integration: Authored header precision effects — 2026-10-19
+
+The preceding status-only goal turn is no progress; the next safe source action
+revalidates all 737 current accepted inputs at 2b62434 before implementation.
+The full library/Studio/language objective remains open. No new tool/schema,
+startup/configuration capture, browser execution or editor installation is added.
+
+The source translator now reuses the existing budgeted global-header proof for
+FPC 3.3.1 MODE. A legal Delphi/DelphiUnicode header supplies a separately owned
+mode-derived excess-precision effect, overriding an earlier explicit request.
+Selected mode or public InMode alone never seeds that effect. Explicit later
+requests, including Unknown, supersede it; PUSH/POP, capture and exact context/
+storage identities preserve its separate provenance. The value-only public
+policy record expands; existing GUIDs/enum ordinals stay exact and consumers
+must rebuild together, with no mixed-binary compatibility claim.
+
+A qualified late MODE is preserved as an ignored original physical occurrence
+with unchanged state, before argument/repeated-header-mode handling. It does not
+flush pending locals. Runtime floating expressions read the separate setting
+through the previously qualified node-construction timeline. The existing test
+input with authored Delphi MODE and no EXCESSPRECISION now receives the stronger
+native-backed Extended result; a separate no-authored-MODE case retains Unknown
+startup refusal. The previous complete test source remains retained.
+
+The whole native header unit independently observes six expressions and saves/
+restores the mode default. A separate native program observes three expressions,
+retaining two intentional ignored-global-switch warnings outside main product
+warning debt. A preceding ObjFPC/late-Delphi oracle and its one-warning/Single
+result remain exact historical evidence. Preparation compiler failure used a
+nonexistent semantic Name accessor; the test now compares existing typed builtin
+identities. A following source query correctly refused its missing TypInfo import;
+the controlled world now explicitly includes that otherwise unused dependency,
+without inferring RTTI members. Both original failing test inputs/logs remain.
+
+Focused native preparation passes 161 checks/first fit 86, every smaller work
+allowance refusing atomically. It covers header/include/prefix chronology,
+inactive/uncertain directives, unknown effects, family/version refusal, separate
+context/storage provenance, cancellation and unchanged state quotas. All nine
+original expression windows agree with native results; semantic queries invoke
+no native body. The earlier floating suite passes 483/104 and 64 joined readers,
+with the same twenty/forty division work 894/1694 and fifty original expressions.
+The new browser consumer compiles only. These are preparation results; broader
+qualification and remote publication are pending.
+
+The frozen qualification now passes: 52 main compiler logs have zero owned
+warnings/105 upstream; 33 native runs have clean heaps; seventeen browser
+consumers compile only. Both Studios/backend/worker compile as applicable.
+All original native assertions remain accepted, including fifty arithmetic
+observations/one nested call/64 joined floating readers and the prior signature,
+generic, literal, constant, source-reuse and completion contracts. Corpus retains
+572 checks/505 actual files with 2,433,379 lossless tokens after the product edits.
+The separate emission oracle retains its one deliberate warning/three visible
+markers, while the separate ignored-mode oracle retains two warnings/three
+native results. Neither contributes to main product warning debt.
+
+Unchanged original RTL passes 56 with a clean heap: System 13,101 declarations/
+zero syntax diagnostics/31 semantic answers; ObjPas 209/zero/one; neither pending.
+Exact original-include Free/FreeInstance navigation and detached insertion remain
+ready. View 2M/aggregate 4M/64 rounds, initial five, Word one, symbol three of
+eight and the same six ordered dynamic primitive jobs within eight remain exact.
+No mode/float-specific native probe is inserted into those plans.
+
+All 740 maintained/732 unrelated sources, eight frozen inputs, five preceding
+source copies, three retained current header preparations, all inherited retained
+preparations, 97 RTL/24 compiler pins/all prior plus three inspected header owners,
+two retained profile inputs, 156 original unit packets/48 historical includes,
+349 frozen artifacts/nine contexts/five current-start protected files/thirteen
+concurrent planning files remain exact. The finalizer initially compared frozen
+Windows paths with unnormalized inventory spellings and double-counted five
+existing files. Its original script/failed accounting receipt remain retained;
+the corrected comparison admits exactly the same physical files and hashes.
+A missing inherited failure-manifest copy was restored from its unchanged prior
+packet. Neither correction reruns compilers, changes Pascal inputs nor weakens a
+source assertion. All readers joined. The earlier global-config failure remains
+retained and keeps the historical full preservation gate false.
+
+Ignored .local/precision-header-paths-private.json owns exact inputs and return
+path, including final qualification and verified source/remote receipt. LAN stays
+offline; native Nyx tools remain absent. All original limits,
+probes, SDK/compiler/retained packets, protected/frozen/concurrent files remain
+required. No Pascal source changes while compiler/console readers run. Real
+literal source/value/minimum-precision/rounding semantics, full type/language/
+incremental/editor/input/parity/adoption/delivery and the original goal stay open.
+Stop header/mode/timing/fixture/compiler variants. Next qualify real literal
+source/value contracts and MINFPCONSTPREC through existing literal/numeric/context
+owners, preserving exact decimal text and separating compiler parsing/rounding
+from target format. Do not infer an uncaptured minimum-precision startup default
+or a compiler-host real format from a target define. No original criterion,
+default-editor installation, full language/task/credit/DONE or delivery closes.
+
+## Previous integration: Source-activated runtime floating expressions — 2026-10-19
 
 The preceding goal turn makes verified implementation/qualification/remote
 progress in 94fe763. All 735 accepted Pascal inputs are revalidated before the

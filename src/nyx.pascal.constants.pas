@@ -2047,6 +2047,13 @@ var
       Part('excess-precision-request-v1');
       Number(Ord(LPolicy.ExcessPrecisionRequested));
     end;
+    if LPolicy.ModeExcessPrecision <> ppkUnknown then
+    begin
+      { Equal Boolean settings with different source provenance are distinct
+        identities. Contexts without an authored MODE effect keep the prior key. }
+      Part('mode-excess-precision-v1');
+      Number(Ord(LPolicy.ModeExcessPrecision));
+    end;
     LWarnings := NyxPascalWarnings(AContext);
     LFPU := NyxPascalConfiguredFPU(AContext);
 
