@@ -257,6 +257,46 @@ begin
     LOptions.Fragment(psfInterfaceDeclarations));
   Check((LOther.DiagnosticCount = 0) and (LOther.Named(0, 'Count') >= 0),
     'Interface include fragments retain prototypes separately from following variables');
+  LOther := NewNyxPascalSyntaxSnapshot(
+    'function Broken(const AValue: ): Integer; procedure Good;',
+    LOptions.Fragment(psfInterfaceDeclarations));
+  LAt := Entry(LOther, 0, 'Broken');
+  LNested := LOther.Declaration(LAt).NestedScope;
+  Check(HasIssue(LOther, psiExpectedName) and
+    (psdfIncomplete in LOther.Declaration(LAt).Flags) and
+    (LOther.Named(0, 'Good') >= 0),
+    'An explicit empty parameter type refuses without consuming the next declaration');
+  LAt := Entry(LOther, LNested, 'AValue');
+  Check((psdfIncomplete in LOther.Declaration(LAt).Flags) and
+    (LOther.Declaration(LAt).TypeSpan.Length = 0),
+    'The malformed parameter retains its own empty type and incomplete receipt');
+  LOther := NewNyxPascalSyntaxSnapshot(
+    'procedure Broken(const First, Second: ; Count: Integer); procedure Good;',
+    LOptions.Fragment(psfInterfaceDeclarations));
+  LNested := LOther.Declaration(Entry(LOther, 0, 'Broken')).NestedScope;
+  Check((psdfIncomplete in LOther.Declaration(Entry(LOther, LNested, 'First')).Flags) and
+    (psdfIncomplete in LOther.Declaration(Entry(LOther, LNested, 'Second')).Flags) and
+    (TypeText(LOther, Entry(LOther, LNested, 'Count')) = TNyxText('Integer')) and
+    (LOther.Named(0, 'Good') >= 0),
+    'Every name in an empty typed group refuses while later parameters and siblings survive');
+  LOther := NewNyxPascalSyntaxSnapshot(
+    'procedure CopyData(const Source; var Destination; Count: Integer);',
+    LOptions.Fragment(psfInterfaceDeclarations));
+  LNested := LOther.Declaration(Entry(LOther, 0, 'CopyData')).NestedScope;
+  Check((LOther.DiagnosticCount = 0) and
+    (LOther.Declaration(Entry(LOther, LNested, 'Source')).ParameterMode = pspmConst) and
+    (LOther.Declaration(Entry(LOther, LNested, 'Destination')).ParameterMode = pspmVar) and
+    (LOther.Declaration(Entry(LOther, LNested, 'Source')).TypeSpan.Length = 0) and
+    (TypeText(LOther, Entry(LOther, LNested, 'Count')) = TNyxText('Integer')),
+    'Legal untyped const and var parameters remain distinct from an authored empty type');
+  LOther := NewNyxPascalSyntaxSnapshot(
+    'TBag = class property Items[Index: ]: Integer read GetItem; property Count: Integer read GetCount; end;',
+    LOptions.Fragment(psfTypes));
+  LMembers := LOther.Declaration(Entry(LOther, 0, 'TBag')).NestedScope;
+  Check(HasIssue(LOther, psiExpectedName) and
+    (psdfIncomplete in LOther.Declaration(Entry(LOther, LMembers, 'Items')).Flags) and
+    (LOther.Named(LMembers, 'Count') >= 0),
+    'Indexed properties share the explicit-empty-type refusal and retain following properties');
   LOther := NewNyxPascalSyntaxSnapshot('unit MissingType; interface type TBroken = ; TGood = Integer;');
   Check((psdfIncomplete in LOther.Declaration(Entry(LOther, 0, 'TBroken')).Flags) and
     (TypeText(LOther, Entry(LOther, 0, 'TGood')) = TNyxText('Integer')) and

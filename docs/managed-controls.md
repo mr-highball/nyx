@@ -128,12 +128,29 @@ compiled kind/family/catalog recipes: those must come from the same reviewed
 checkout. `--help` requires no source inputs. This remains a development
 operation, not a runtime dependency or automatic documentation inventory.
 
+Before checking or writing, the tool captures typed declaration IR from the exact
+serialized types, facade and factory includes using Nyx's existing Pascal syntax
+owner. Explicit include grammars retain complete scopes, parameter passing/types,
+defaults, result spelling and property declarations. Lexical/syntax diagnostics,
+incomplete/unsupported scopes and mismatched kind/facade coverage refuse the
+whole generation. It verifies the 81 specialized interfaces/classes/factories
+and four facades, including their actual specialized results and fluent return
+types. The same facade map drives emission and admission; a second signature
+parser or manually maintained help inventory is not added.
+
+This is declared source structure. Imported type spelling is still unbound, and
+compiling the resulting complete application remains necessary. The IR does not
+yet emit documentation, capture the complete hand-authored core closure or
+register built-in help. Its existing source/syntax limits remain unchanged.
+
 The maintained native
-[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 62 checks
-through 14 joined generator invocations, with clean parent and child heaps.
+[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 71 checks
+through 16 joined generator invocations, with clean parent and child heaps.
 Both fresh candidates match all five maintained includes for 81 built-in kinds
 and four authoring facades. The consumer also checks copied-source drift,
 missing outputs, argument/destination refusal and exact original input bytes.
+An actual copied descriptor with an explicit empty parameter type refuses through
+the shared syntax owner in both check and candidate modes, before output exists.
 Its arguments are the compiled generator, repository root and a new runtime
 directory. Current source/compiler receipts and broader qualification are in
 [WORK.md](../WORK.md); no generated repository include changes in this batch.

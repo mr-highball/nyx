@@ -381,6 +381,123 @@ currently undocumented core closure; that gate remains open. Inspection invokes
 none of its control, callback, factory or routine bodies. The new decorated
 browser consumer has never been executed.
 
+## Own source declarations once
+
+The [declaration contribution API](../src/nyx.documentation.declarations.pas)
+separates copied source facts from the creator bindings that reference them.
+`INyxDocumentationDeclarationChunk` owns frozen declarations from one actual
+unit. A chunk is a storage boundary; it does not split a unit's factory-member
+descriptor into conflicting partial unit declarations. Several chunks may own
+different complete declarations from the same unit. A flat
+`INyxDocumentationPackage` retains these exact chunk owners, and different
+packages may share a core chunk without another declaration copy.
+
+Create the chunks and package from the same declaration-producing source:
+
+```pascal
+SetLength(Chunks, 1);
+Chunks[0] := NewNyxDocumentationDeclarationChunk(UnitReference,
+  Declarations, [ndplatformNative, ndplatformBrowser]);
+PackageOwner := NewNyxDocumentationPackage(Chunks,
+  TNyxDocumentationContributionLimits.Defaults);
+Binding := NewNyxDocumentationBinding(PackageOwner, FactoryReference,
+  [ndplatformNative, ndplatformBrowser]);
+Catalog.RegisterKind(Kind, Title, Category, False, Binding);
+```
+
+The existing schema, callback and catalog documentation arguments accept this
+binding. No separate help-registration call is added. The optional
+`INyxDocumentationContributionBinding` exposes its package owner; existing
+registration getters expose the complete declaration that owns the primary.
+A factory primary therefore still exposes the whole unit descriptor, retaining
+all its factories and signatures. `ForPrimary` keeps the same package and
+original unit. A type primary is its declared public type, with no guessed
+concrete implementation class.
+
+Canonical immutable chunks/packages/bindings use a verified private owner and
+exact canonical interface identity. Capturing those owners retains them;
+alternate producers are frozen and their claimed identities, content, counts
+and byte receipts do not replace the admitted facts. Captures reject changed
+source envelopes/bindings, contradictory primary views and cancellation before
+publication, retaining no mutable supplier. References point from snapshots and
+bindings to packages, then chunks, then inert declarations; they form no import
+ownership cycle. There is no global help inventory, module-unload contract or
+retained control, callback, factory, renderer or source document.
+
+On the contribution path, the index charges each exact captured chunk's copied
+declarations and content once, each distinct package/chunk reference once and
+every creator binding/package reference separately. Two independently captured
+equivalent chunks charge in full before declaration deduplication. Old bundles
+without this optional capability retain their existing repeated occurrence
+charges, framing and refusal rules. Conflicting declarations/availability,
+missing links, bad inheritance/cycles, exhausted budgets or stale publication
+still leave the previous index/version exact. The optional
+`INyxDocumentationContributionGeneration` retains package/chunk identities;
+the existing three-authority generation record stays unchanged. These new
+identities are local to the process, with no source-hash or cross-process claim.
+
+`TNyxDocumentationContributionLimits` is an explicit caller-owned package
+allowance. Its `Defaults` uses the existing 4096 declaration, 16 MiB and
+two-million work ceilings; zeroed/oversized limits refuse. This is no evidence
+that the intended complete generated inventory fits. Each chunk still admits
+at most 128 declarations/4 MiB and each declaration retains its existing bounds.
+Package accounting includes independently captured equal chunks and its
+reference fields. Bounded declaration/chunk copying and package/index admission
+are layered limits, not an assertion that text bytes measure object overhead or
+that a framing work step equals all internal declaration-copy work. Cancellation
+scopes and admission suppliers remain capture-local.
+
+The optional `INyxDocumentationContributionAdmission` carries the index's same
+remaining declaration/byte/work allowance through an alternate registration,
+its package and its chunks. A chunk reserves its bounded declaration count
+before any declaration getter, then reads and freezes one declaration at a
+time; each framed field is admitted before append. Package topology, duplicate
+comparisons and primary-owner/member searches also consume that shared work
+allowance. A fresh package allowance cannot reset a partly consumed index
+allowance. Query-local receipts retain exact verified canonical owners, so a
+chunk's copied count/content and each package/chunk reference are charged once;
+independently captured equivalents remain separately charged. Canonical chunk
+admission replays every privately captured field's work. An alternate binding's
+separate primary-view validation copy consumes additional actual field work and
+bytes; it is never mistaken for another retained source declaration. The old
+field-admission GUID/slots and all legacy bundle accounting stay unchanged.
+
+The new [contribution consumer](../tests/nyx_documentation_contributions_tests.lpr)
+uses an explicitly synthetic whole 81-factory unit with its 81 distinct interface
+results to exercise ownership and the 6642-occurrence failure. This is mechanics
+evidence, not a replacement for actual generated control/core metadata. It also
+retains the real extension's unresolved-core refusal without constructing its
+controls or invoking callbacks/factories/routines. It passes **70 native checks
+with a clean heap and no owned warnings**, and its browser consumer compiles.
+The alternate catalog case retains every real built-in/recipe row, placing the
+two controlled rows first through one complete ordinal permutation. Smaller
+remaining declaration/byte/work limits refuse before later source or duplicate
+primary getters; adequate limits retain complete framing and the original
+undocumented rows. No declaration getter or range guard is weakened.
+
+These focused results use
+`E:\Blekohlab\nyx\qualification\documentation-contributions-20261020-135130`,
+with `source-final-freeze-private.json` and logs:
+
+- `nyx_documentation_contributions_tests-native-focused-final-compile.log`
+- `nyx_documentation_contributions_tests-native-focused-final-run.log`
+- `nyx_documentation_contributions_tests-browser-focused-final-compile.log`
+
+The browser log retains seven existing upstream `Classes` warnings. The same
+focused qualification retains native shapes66, registry64, documentation68,
+syntax159 and indexed-property413 checks with clean heaps; all six portable
+consumers compile. A separate run of the syntax binary inspects five actual
+inputs/4060 declarations and passes8355 checks. The real generator/CLI passes71
+checks with16 joined invocations and two exact five-file candidates. These are
+focused terminal results; [WORK](../WORK.md) owns the broader qualification and
+its final audit. Browser compilation is not browser execution.
+
+Initial managed-result warning, the undersized alternate-catalog attachment
+fixture and diagnostic trace, and the browser empty-finalization preparation
+remain retained with their exact sources/logs. The repaired fixture preserves
+the entire backing snapshot. Actual emitted documentation/core closure, real
+fixture adoption and executed decorated-browser evidence remain open.
+
 ## Qualification and capability boundary
 
 The native [documentation consumer](../tests/nyx_documentation_tests.lpr) passes
@@ -473,12 +590,12 @@ Under full-unit factory-primary attachments, repeating one whole unit descriptor
 and its 81 distinct result interfaces for all 81 creators already costs
 `81 * (1 + 81) = 6642` declaration occurrences, above the unchanged 4096 ceiling
 before classes, facades or core dependencies. Imports alone cannot fix that
-ownership model. The next prerequisite is canonical immutable source chunks
-owning copied declarations, flat packages retaining those chunks and ordinary
-creator bindings referencing their package and exact primary. Exact captured
+ownership model. Canonical immutable source chunks now own copied declarations,
+flat packages retain those chunks and ordinary creator bindings reference their
+package and exact primary. Exact captured
 chunk ownership, package/chunk/binding reference costs and legacy bundle charges
-must remain separate; equivalent independent copies still charge fully. This
-architecture is not implemented here. Actual adoption still requires a complete
+remain separate; equivalent independent copies still charge fully. The mechanics
+API does not establish adoption. Actual adoption still requires a complete
 source-derived emitter/core closure, genuine registration integration and
 executed decorated-browser evidence, without omitted facts or raised ceilings.
 
@@ -496,17 +613,23 @@ The required truthful declaration prerequisites are explicit:
   direction. Imported bundles must retain each original unit owner, remain
   bounded and flow through actual registration attachments.
 - Indexed properties such as `INyxControl.Children[AIndex: Integer]` need typed
-  index parameters and declared access information. Omitting the parameter or
-  relabelling the property as a method would conceal the API.
+  index parameters, declared access and separate default-property status.
+  Omitting the parameter or relabelling the property as a method would conceal
+  the API. This descriptor extension remains the next prerequisite.
+- Open-array parameters already occur in `nyx.contract` and `nyx.data`.
+  Detached type-expression metadata must preserve their shape and original
+  named element owners; substituting an element type or invented named alias
+  would erase the declaration. This remains downstream of indexed properties.
 
 Generator adoption must derive metadata at the existing declaration emission
 points, including hand-authored dependencies and deterministic per-creator/unit
-chunks within current allowances. Generator maintenance now prepares a separate
-candidate-output/check workflow, documented in [managed controls](managed-controls.md).
-That tooling does not yet emit documentation. Adoption must produce and review
-scratch candidates before replacing source after all readers join. No generator
-has been run for this metadata integration, and no parallel manually authored
-core-help inventory is introduced.
+chunks within current allowances. The generator's existing candidate/check
+workflow and typed declaration admission are documented in
+[managed controls](managed-controls.md). The generator was run to verify actual
+contract declarations and exact candidates; it does not yet emit documentation.
+Adoption must produce and review scratch candidates before replacing source
+after all readers join. No parallel manually authored core-help inventory is
+introduced.
 
 Executed decorated-browser evidence, a complete supported-version capability
 matrix, independent API coverage and the full original Studio/library acceptance

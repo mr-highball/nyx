@@ -6,7 +6,8 @@ unit nyx.documentation.registry;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.documentation,
-  nyx.documentation.registration, nyx.schema, nyx.callbacks, nyx.catalog;
+  nyx.documentation.registration, nyx.documentation.declarations,
+  nyx.schema, nyx.callbacks, nyx.catalog;
 
 type
   { Independent captured authority generations. This vector promises no atomic
@@ -71,6 +72,16 @@ type
     function BindingAt(AIndex: Integer): TNyxDocumentationBinding;
     function UndocumentedCount: Integer;
   end;
+  { Optional local source generation retains exact immutable package/chunk
+    owners. Numeric identities are process-local, not portable source hashes;
+    the original three-authority generation record keeps its existing meaning. }
+  INyxDocumentationContributionGeneration = interface(IInterface)
+    ['{A4680A42-26F4-4F00-9BA3-73A4BD13E104}']
+    function PackageCount: Integer;
+    function PackageAt(AIndex: Integer): INyxDocumentationPackage;
+    function ChunkCount: Integer;
+    function ChunkAt(AIndex: Integer): INyxDocumentationDeclarationChunk;
+  end;
   { Caller-owned publication, serialized like its UI/startup registration owners.
     Refresh builds privately and checks expected Version again before swapping.
     Cancellation, incomplete closure or conflict leaves Current and Version
@@ -101,7 +112,11 @@ type
   { Query-local work/cancellation owner never survives into an index. Byte
     charging includes repeated registration occurrences, not only deduplicated
     declarations, so duplicate publishers cannot multiply an allowance. }
-  TDocumentationBudget = class(TInterfacedObject, INyxDocumentationAdmission)
+  TDocumentationBudget = class(TInterfacedObject, INyxDocumentationAdmission,
+    INyxDocumentationContributionAdmission)
+  private
+    FAdmittedChunks: TNyxDocumentationDeclarationChunks;
+    FAdmittedReferences: TNyxDocumentationPackages;
   public
     Limits: TNyxDocumentationIndexLimits;
     Cancellation: INyxCancellationScope;
@@ -112,6 +127,12 @@ type
     procedure ChargeBytes(AValue: Integer);
     procedure Text(const AValue: TNyxText);
     procedure AdmitField(ABytes: Integer);
+    procedure AdmitContributionWork(ACount: Integer);
+    procedure AdmitContributionDeclarations(ACount: Integer);
+    function ContributionChunkAdmitted(const AChunk: INyxDocumentationDeclarationChunk): Boolean;
+    procedure RememberContributionChunk(const AChunk: INyxDocumentationDeclarationChunk);
+    function ContributionReferencesAdmitted(const APackage: INyxDocumentationPackage): Boolean;
+    procedure RememberContributionReferences(const APackage: INyxDocumentationPackage);
   end;
   { Member result owns immutable interfaces only, independently of index life. }
   TDocumentationMembers = class(TInterfacedObject, INyxDocumentationMembers)
@@ -124,12 +145,15 @@ type
   { Parallel vectors keep interfaces in managed classes. Binding/generation
     records remain ordinary copyable values; captured registration producers,
     catalogs and schema Execute capabilities are never retained. }
-  TDocumentationIndex = class(TInterfacedObject, INyxDocumentationIndex)
+  TDocumentationIndex = class(TInterfacedObject, INyxDocumentationIndex,
+    INyxDocumentationContributionGeneration)
   public
     APIs: array of INyxDocumentationType;
     Contents: array of TNyxText;
     Platforms: array of TNyxDocumentationPlatforms;
     Rows: array of TNyxDocumentationBinding;
+    SourcePackages: TNyxDocumentationPackages;
+    SourceChunks: TNyxDocumentationDeclarationChunks;
     CapturedGeneration: TNyxDocumentationGeneration;
     CapturedVersion, Missing: Integer;
     Limits: TNyxDocumentationIndexLimits;
@@ -144,6 +168,15 @@ type
     function BindingCount: Integer;
     function BindingAt(AIndex: Integer): TNyxDocumentationBinding;
     function UndocumentedCount: Integer;
+    function PackageCount: Integer;
+    function PackageAt(AIndex: Integer): INyxDocumentationPackage;
+    function ChunkCount: Integer;
+    function ChunkAt(AIndex: Integer): INyxDocumentationDeclarationChunk;
+    procedure AddDeclaration(const AValue: INyxDocumentationType;
+      const AContent: TNyxText; APlatforms: TNyxDocumentationPlatforms;
+      ABudget: TDocumentationBudget);
+    procedure AddPackage(const AValue: INyxDocumentationPackage;
+      ABudget: TDocumentationBudget);
     procedure Add(const ARow: TNyxDocumentationBinding;
       const ARegistration: INyxDocumentationRegistration; ABudget: TDocumentationBudget);
     procedure ValidateClosure(ABudget: TDocumentationBudget);
@@ -249,6 +282,94 @@ begin
   ChargeBytes(ABytes);
 end;
 
+procedure TDocumentationBudget.AdmitContributionWork(ACount: Integer);
+begin
+
+  if (Cancellation <> nil) and Cancellation.Cancelled then
+    raise ENyxDocumentationCancelled.Create('Documentation index cancelled');
+
+  if (ACount < 0) or (ACount > RemainingWork) then
+    raise ENyxDocumentation.Create('Documentation aggregate work exhausted');
+  Dec(RemainingWork, ACount);
+end;
+
+procedure TDocumentationBudget.AdmitContributionDeclarations(ACount: Integer);
+begin
+  Spend;
+
+  if (ACount < 1) or (ACount > Limits.DeclarationLimit - Occurrences) then
+    raise ENyxDocumentation.Create('Documentation declaration occurrence allowance exhausted');
+  Inc(Occurrences, ACount);
+end;
+
+function TDocumentationBudget.ContributionChunkAdmitted(
+  const AChunk: INyxDocumentationDeclarationChunk): Boolean;
+var
+  LAt: Integer;
+begin
+  Spend;
+  { Same validates the private captured-owner receipt even for an empty list;
+    an alternate implementation's numeric identity never earns a cost skip. }
+  SameNyxDocumentationChunk(AChunk, AChunk);
+  Result := False;
+  for LAt := 0 to High(FAdmittedChunks) do
+  begin
+    Spend;
+
+    if SameNyxDocumentationChunk(FAdmittedChunks[LAt], AChunk) then
+      Exit(True);
+  end;
+end;
+
+procedure TDocumentationBudget.RememberContributionChunk(
+  const AChunk: INyxDocumentationDeclarationChunk);
+var
+  LSlot: Integer;
+begin
+
+  if ContributionChunkAdmitted(AChunk) then
+    Exit;
+  LSlot := Length(FAdmittedChunks);
+
+  if LSlot >= Limits.DeclarationLimit then
+    raise ENyxDocumentation.Create('Documentation source receipt allowance exhausted');
+  SetLength(FAdmittedChunks, LSlot + 1);
+  FAdmittedChunks[LSlot] := AChunk;
+end;
+
+function TDocumentationBudget.ContributionReferencesAdmitted(
+  const APackage: INyxDocumentationPackage): Boolean;
+var
+  LAt: Integer;
+begin
+  Spend;
+  SameNyxDocumentationPackage(APackage, APackage);
+  Result := False;
+  for LAt := 0 to High(FAdmittedReferences) do
+  begin
+    Spend;
+
+    if SameNyxDocumentationPackage(FAdmittedReferences[LAt], APackage) then
+      Exit(True);
+  end;
+end;
+
+procedure TDocumentationBudget.RememberContributionReferences(
+  const APackage: INyxDocumentationPackage);
+var
+  LSlot: Integer;
+begin
+
+  if ContributionReferencesAdmitted(APackage) then
+    Exit;
+  LSlot := Length(FAdmittedReferences);
+
+  if LSlot >= Limits.BindingLimit then
+    raise ENyxDocumentation.Create('Documentation package receipt allowance exhausted');
+  SetLength(FAdmittedReferences, LSlot + 1);
+  FAdmittedReferences[LSlot] := APackage;
+end;
+
 function TDocumentationMembers.Count: Integer;
 begin
   Result := ItemCount;
@@ -351,14 +472,137 @@ begin
   Result := Missing;
 end;
 
+function TDocumentationIndex.PackageCount: Integer;
+begin
+  Result := Length(SourcePackages);
+end;
+
+function TDocumentationIndex.PackageAt(AIndex: Integer): INyxDocumentationPackage;
+begin
+
+  if (AIndex < 0) or (AIndex >= PackageCount) then
+    raise ENyxDocumentation.Create('Captured package ordinal is out of range');
+  Result := SourcePackages[AIndex];
+end;
+
+function TDocumentationIndex.ChunkCount: Integer;
+begin
+  Result := Length(SourceChunks);
+end;
+
+function TDocumentationIndex.ChunkAt(AIndex: Integer): INyxDocumentationDeclarationChunk;
+begin
+
+  if (AIndex < 0) or (AIndex >= ChunkCount) then
+    raise ENyxDocumentation.Create('Captured source chunk ordinal is out of range');
+  Result := SourceChunks[AIndex];
+end;
+
+procedure TDocumentationIndex.AddDeclaration(const AValue: INyxDocumentationType;
+  const AContent: TNyxText; APlatforms: TNyxDocumentationPlatforms;
+  ABudget: TDocumentationBudget);
+var
+  LOther, LSlot: Integer;
+begin
+  ABudget.Spend;
+  LSlot := -1;
+  for LOther := 0 to High(APIs) do
+  begin
+    ABudget.Spend;
+
+    if APIs[LOther].Identity.Same(AValue.Identity) then
+    begin
+      LSlot := LOther;
+      Break;
+    end;
+  end;
+
+  if LSlot >= 0 then
+  begin
+
+    if (Contents[LSlot] <> AContent) or (Platforms[LSlot] <> APlatforms) then
+      raise ENyxDocumentation.Create('Conflicting documentation declaration: ' + AValue.Identity.Key);
+  end
+  else
+  begin
+    LSlot := Length(APIs);
+    SetLength(APIs, LSlot + 1);
+    SetLength(Contents, LSlot + 1);
+    SetLength(Platforms, LSlot + 1);
+    APIs[LSlot] := AValue;
+    Contents[LSlot] := AContent;
+    Platforms[LSlot] := APlatforms;
+  end;
+end;
+
+procedure TDocumentationIndex.AddPackage(const AValue: INyxDocumentationPackage;
+  ABudget: TDocumentationBudget);
+var
+  LPackage: INyxDocumentationPackage;
+  LChunk: INyxDocumentationDeclarationChunk;
+  LAt, LOther, LDeclaration, LSlot: Integer;
+  LSeen, LReferencesAdmitted: Boolean;
+begin
+  LPackage := CaptureNyxDocumentationPackage(AValue, ABudget.Cancellation, ABudget);
+  for LAt := 0 to PackageCount - 1 do
+  begin
+    ABudget.Spend;
+
+    if SameNyxDocumentationPackage(SourcePackages[LAt], LPackage) then
+      Exit;
+  end;
+  ABudget.Text(IntToStr(LPackage.Identity));
+  LReferencesAdmitted := ABudget.ContributionReferencesAdmitted(LPackage);
+  for LAt := 0 to LPackage.ChunkCount - 1 do
+  begin
+    ABudget.Spend;
+    LChunk := LPackage.ChunkAt(LAt);
+    { A package/chunk edge is a retained reference even if another package
+      already retained this copied source. Charge its fields independently. }
+
+    if not LReferencesAdmitted then
+    begin
+      ABudget.Text(LChunk.OriginUnit.Key);
+      ABudget.Text(IntToStr(LChunk.Identity));
+    end;
+    LSeen := False;
+    for LOther := 0 to ChunkCount - 1 do
+    begin
+      ABudget.Spend;
+
+      if SameNyxDocumentationChunk(SourceChunks[LOther], LChunk) then
+      begin
+        LSeen := True;
+        Break;
+      end;
+    end;
+
+    if LSeen then
+      Continue;
+
+    LChunk := CaptureNyxDocumentationDeclarationChunk(LChunk, ABudget.Cancellation, ABudget);
+    for LDeclaration := 0 to LChunk.DeclarationCount - 1 do
+      AddDeclaration(LChunk.DeclarationAt(LDeclaration), LChunk.DeclarationContentAt(LDeclaration),
+        LChunk.Platforms, ABudget);
+    LSlot := ChunkCount;
+    SetLength(SourceChunks, LSlot + 1);
+    SourceChunks[LSlot] := LChunk;
+  end;
+  LSlot := PackageCount;
+  SetLength(SourcePackages, LSlot + 1);
+  SourcePackages[LSlot] := LPackage;
+  ABudget.RememberContributionReferences(LPackage);
+end;
+
 procedure TDocumentationIndex.Add(const ARow: TNyxDocumentationBinding;
   const ARegistration: INyxDocumentationRegistration; ABudget: TDocumentationBudget);
 var
   LRegistration: INyxDocumentationRegistration;
   LRow: TNyxDocumentationBinding;
-  LAt, LOther, LSlot: Integer;
+  LAt, LSlot: Integer;
   LAPI: INyxDocumentationType;
-  LContent: TNyxText;
+  LContribution: INyxDocumentationContributionBinding;
+  LContributed: Boolean;
 begin
   ABudget.Spend;
 
@@ -378,14 +622,17 @@ begin
       raise ENyxDocumentation.Create('Duplicate registration owner row');
   end;
   LRow := ARow;
+  LContributed := (ARegistration <> nil) and
+    Supports(ARegistration, INyxDocumentationContributionBinding, LContribution);
 
-  if ARegistration <> nil then
+  if (ARegistration <> nil) and not LContributed then
   begin
     LAt := ARegistration.DeclarationCount;
 
     if (LAt < 1) or (LAt > ABudget.Limits.DeclarationLimit - ABudget.Occurrences) then
       raise ENyxDocumentation.Create('Documentation declaration occurrence allowance exhausted');
   end;
+
   LRegistration := CaptureNyxDocumentationRegistration(ARegistration, ABudget.Cancellation, ABudget);
   LRow.Documented := LRegistration <> nil;
 
@@ -394,9 +641,13 @@ begin
   else
   begin
 
-    if LRegistration.DeclarationCount > ABudget.Limits.DeclarationLimit - ABudget.Occurrences then
-      raise ENyxDocumentation.Create('Documentation declaration occurrence allowance exhausted');
-    Inc(ABudget.Occurrences, LRegistration.DeclarationCount);
+    if not LContributed then
+    begin
+
+      if LRegistration.DeclarationCount > ABudget.Limits.DeclarationLimit - ABudget.Occurrences then
+        raise ENyxDocumentation.Create('Documentation declaration occurrence allowance exhausted');
+      Inc(ABudget.Occurrences, LRegistration.DeclarationCount);
+    end;
     LRow.Primary := LRegistration.Primary;
     LRow.Origin := LRegistration.OriginUnit;
     LRow.Platforms := LRegistration.Platforms;
@@ -416,40 +667,23 @@ begin
           raise ENyxDocumentation.Create('Callback documentation primary is not a class');
       end;
     end;
-    for LAt := 0 to LRegistration.DeclarationCount - 1 do
+
+    if LContributed then
     begin
-      ABudget.Spend;
-      LAPI := LRegistration.DeclarationAt(LAt);
-      LContent := LRegistration.DeclarationContentAt(LAt);
-      LSlot := -1;
-      for LOther := 0 to High(APIs) do
-      begin
-        ABudget.Spend;
-
-        if APIs[LOther].Identity.Same(LAPI.Identity) then
-        begin
-          LSlot := LOther;
-          Break;
-        end;
-      end;
-
-      if LSlot >= 0 then
-      begin
-
-        if (Contents[LSlot] <> LContent) or (Platforms[LSlot] <> LRegistration.Platforms) then
-          raise ENyxDocumentation.Create('Conflicting documentation declaration: ' + LAPI.Identity.Key);
-      end
-      else
-      begin
-        LSlot := Length(APIs);
-        SetLength(APIs, LSlot + 1);
-        SetLength(Contents, LSlot + 1);
-        SetLength(Platforms, LSlot + 1);
-        APIs[LSlot] := LAPI;
-        Contents[LSlot] := LContent;
-        Platforms[LSlot] := LRegistration.Platforms;
-      end;
-    end;
+      Supports(LRegistration, INyxDocumentationContributionBinding, LContribution);
+      { These are binding/reference fields, not another copy of its complete
+        source declaration. A numeric identity alone never skips source costs. }
+      ABudget.Text(LRow.Origin.Key);
+      ABudget.Text(LRow.Primary.Key);
+      ABudget.Text(IntToStr(Ord(ndplatformNative in LRow.Platforms)) +
+        IntToStr(Ord(ndplatformBrowser in LRow.Platforms)));
+      ABudget.Text(IntToStr(LContribution.PackageOwner.Identity));
+      AddPackage(LContribution.PackageOwner, ABudget);
+    end
+    else
+      for LAt := 0 to LRegistration.DeclarationCount - 1 do
+        AddDeclaration(LRegistration.DeclarationAt(LAt), LRegistration.DeclarationContentAt(LAt),
+          LRegistration.Platforms, ABudget);
   end;
   for LAt := 0 to High(Rows) do
   begin

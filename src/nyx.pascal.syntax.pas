@@ -4829,6 +4829,18 @@ begin
       for LAt := 0 to High(LEntries) do
       begin
         EditEntry(LEntries[LAt]).Value.FTypeSpan := Range(LType, FPosition);
+
+        if FPosition = LType then
+          Include(EditEntry(LEntries[LAt]).Value.FFlags, psdfIncomplete);
+      end;
+
+      { Untyped const/var parameters omit the colon. Once it is authored, an
+        empty type is malformed for both routine and indexed-property groups. }
+
+      if FPosition = LType then
+      begin
+        LComplete := False;
+        Problem(psiExpectedName, 'Add a type after the parameter colon', Tok.Span);
       end;
     end;
 

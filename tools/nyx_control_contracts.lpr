@@ -30,9 +30,12 @@ uses
   SysUtils,
   StrUtils,
   nyx.text,
+  nyx.bytes,
   nyx.types,
   nyx.model,
-  nyx.catalog;
+  nyx.catalog,
+  nyx.pascal.lexing,
+  nyx.pascal.syntax;
 
 type
   { The public families carry scalar/property meaning. The finite kind map is
@@ -50,11 +53,56 @@ type
     SourceRoot, CandidateRoot: String;
     Help: Boolean;
   end;
+  { One authored facade transformation. Emission and declaration admission
+    consume this same map; method signatures still come from descriptor source. }
+  TFacadeContract = record
+    SourceFile, SourceClass, Facade, Member, GUID: String;
+    AdmissionMember, AdmissionResult: String;
+  end;
+  { Owned typed IR of the three emitted declaration includes, decoded from the
+    exact serialized bytes. It retains complete syntax/scopes/parameters/defaults
+    and properties, never live lists or an alternative signature parser. External
+    type spelling remains unbound; this proves neither compiler acceptance nor
+    a complete documentation/core closure. All construction quotas stay default. }
+  TContractDeclarations = class
+  private
+    FTypes, FFacades, FFactories: INyxPascalSyntaxSnapshot;
+    function Capture(ALines: TStringList; AFragment: TNyxPascalSyntaxFragment;
+      const APath: String): INyxPascalSyntaxSnapshot;
+    function FullType(const ASyntax: INyxPascalSyntaxSnapshot; const AName: String;
+      AForm: TNyxPascalSyntaxTypeForm): TNyxPascalSyntaxDeclaration;
+    function Routine(const ASyntax: INyxPascalSyntaxSnapshot; AScope: Integer;
+      const AName, AResult: String; AKind: TNyxPascalRoutineKind): TNyxPascalSyntaxDeclaration;
+    procedure Parameter(const ASyntax: INyxPascalSyntaxSnapshot; AScope: Integer;
+      const AName, AType: String; AMode: TNyxPascalSyntaxParameterMode; ADefault: Boolean);
+    function ParameterCount(const ASyntax: INyxPascalSyntaxSnapshot; AScope: Integer): Integer;
+  public
+    constructor Create(ATypes, AFacades, AFactories: TStringList);
+    procedure RequireContracts;
+  end;
 const
   CSourceRootOption = '--source-root';
   CCheckOption = '--check';
   COutputDirectoryOption = '--output-dir';
   CHelpOption = '--help';
+  CTypesInclude = 'src/nyx.controls.types.inc';
+  CFacadesInclude = 'src/nyx.controls.facades.inc';
+  CFactoriesInclude = 'src/nyx.controls.factories.inc';
+  CDeclarationFailure = 'Generated declarations refused: ';
+  CFacades: array[0..3] of TFacadeContract = (
+    (SourceFile: 'src/nyx.model.pas'; SourceClass: 'TNyxNodeConfig';
+      Facade: 'NyxConfiguration'; Member: 'Configure'; GUID: '{737A7921-4621-4C6F-8C01-030000000001}';
+      AdmissionMember: 'Done'; AdmissionResult: 'INyxControl'),
+    (SourceFile: 'src/nyx.model.pas'; SourceClass: 'TNyxNodeBindings';
+      Facade: 'NyxBindings'; Member: 'Binds'; GUID: '{AF627AE8-40CC-49C0-8681-E5A8F1FC1008}';
+      AdmissionMember: 'Done'; AdmissionResult: 'INyxControl'),
+    (SourceFile: 'src/nyx.contract.pas'; SourceClass: 'TNyxContract';
+      Facade: 'NyxControlContract'; Member: 'Contract'; GUID: '{737A7921-4621-4C6F-8C01-030000000003}';
+      AdmissionMember: 'Snapshot'; AdmissionResult: 'TNyxDataValue'),
+    (SourceFile: 'src/nyx.data.pas'; SourceClass: 'TNyxExtensions';
+      Facade: 'NyxControlExtensions'; Member: 'Extensions'; GUID: '{737A7921-4621-4C6F-8C01-030000000004}';
+      AdmissionMember: 'ToJSON'; AdmissionResult: 'TNyxText')
+  );
   CFamilyNames: array[TControlFamily] of String = ('CaptionControl', 'LayoutControl',
     'TextInput', 'BooleanInput', 'IntegerInput', 'ImageControl', 'ChoiceControl',
     'ReferenceControl', 'SplitControl');
@@ -193,6 +241,210 @@ begin
     LHash := ((LHash xor Ord(AName[LIndex])) * 16777619) and $FFFFFFFF;
   end;
   Result := '{737A7921-4621-4C6F-8C01-0200' + IntToHex(LHash, 8) + '}';
+end;
+
+function TContractDeclarations.Capture(ALines: TStringList;
+  AFragment: TNyxPascalSyntaxFragment; const APath: String): INyxPascalSyntaxSnapshot;
+var
+  LStream: TMemoryStream;
+  LBytes: TNyxBytes;
+  LOptions: TNyxPascalSyntaxOptions;
+  LAt: Integer;
+  LScope: TNyxPascalSyntaxScope;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+begin
+  LOptions := TNyxPascalSyntaxOptions.Defaults.Fragment(AFragment);
+  LStream := TMemoryStream.Create;
+  try
+    ALines.SaveToStream(LStream);
+
+    if LStream.Size > LOptions.LexicalOptions.MaximumSourceBytes then
+      raise Exception.Create(CDeclarationFailure + APath + ' exceeds its existing source allowance');
+    SetLength(LBytes, Integer(LStream.Size));
+
+    if Length(LBytes) > 0 then
+      Move(LStream.Memory^, LBytes[0], Length(LBytes));
+    Result := NewNyxPascalSyntaxSnapshot(NyxDecodeUTF8(LBytes), LOptions);
+  finally
+    LStream.Free;
+  end;
+
+  if Result.Lexical.DiagnosticCount <> 0 then
+    raise Exception.Create(CDeclarationFailure + APath + ' has lexical diagnostics');
+
+  if Result.DiagnosticCount <> 0 then
+    raise Exception.Create(CDeclarationFailure + APath + ': ' + String(Result.Diagnostic(0).MessageText));
+  for LAt := 0 to Result.ScopeCount - 1 do
+  begin
+    LScope := Result.Scope(LAt);
+
+    if not LScope.Complete or LScope.UnsupportedSyntax then
+      raise Exception.Create(CDeclarationFailure + APath + ' has incomplete/unsupported scope ' + String(LScope.Name));
+  end;
+  for LAt := 0 to Result.DeclarationCount - 1 do
+  begin
+    LDeclaration := Result.Declaration(LAt);
+
+    if (LDeclaration.Flags * [psdfIncomplete, psdfIncompleteHeader,
+      psdfUnsupported, psdfConditional]) <> [] then
+      raise Exception.Create(CDeclarationFailure + APath + ' has unsupported declaration ' + String(LDeclaration.Name));
+  end;
+end;
+
+constructor TContractDeclarations.Create(ATypes, AFacades, AFactories: TStringList);
+begin
+  inherited Create;
+  FTypes := Capture(ATypes, psfTypes, CTypesInclude);
+  FFacades := Capture(AFacades, psfTypes, CFacadesInclude);
+  FFactories := Capture(AFactories, psfInterfaceDeclarations, CFactoriesInclude);
+end;
+
+function TContractDeclarations.FullType(const ASyntax: INyxPascalSyntaxSnapshot;
+  const AName: String; AForm: TNyxPascalSyntaxTypeForm): TNyxPascalSyntaxDeclaration;
+var
+  LAt, LCount: Integer;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+begin
+  Result := Default(TNyxPascalSyntaxDeclaration);
+  LCount := 0;
+  LAt := ASyntax.Named(0, TNyxText(AName));
+  while LAt >= 0 do
+  begin
+    LDeclaration := ASyntax.Declaration(LAt);
+
+    if (LDeclaration.Kind = psdkType) and
+      not (psdfForward in LDeclaration.Flags) then
+    begin
+
+      if (LDeclaration.Name <> TNyxText(AName)) or
+        (LDeclaration.TypeForm <> AForm) or (LDeclaration.NestedScope < 0) then
+        raise Exception.Create(CDeclarationFailure + 'wrong full type shape for ' + AName);
+      Result := LDeclaration;
+      Inc(LCount);
+    end;
+    LAt := LDeclaration.NextNamed;
+  end;
+
+  if LCount <> 1 then
+    raise Exception.Create(CDeclarationFailure + 'requires exactly one full type ' + AName);
+end;
+
+function TContractDeclarations.Routine(const ASyntax: INyxPascalSyntaxSnapshot;
+  AScope: Integer; const AName, AResult: String;
+  AKind: TNyxPascalRoutineKind): TNyxPascalSyntaxDeclaration;
+var
+  LAt: Integer;
+begin
+  LAt := ASyntax.Named(AScope, TNyxText(AName));
+
+  if LAt < 0 then
+    raise Exception.Create(CDeclarationFailure + 'missing routine ' + AName);
+  Result := ASyntax.Declaration(LAt);
+
+  if (Result.Kind <> psdkRoutine) or (Result.RoutineKind <> AKind) or
+    (Result.NextNamed >= 0) or
+    (Trim(ASyntax.Lexical.Slice(Result.TypeSpan)) <> TNyxText(AResult)) then
+    raise Exception.Create(CDeclarationFailure + 'wrong routine/result shape for ' + AName);
+end;
+
+procedure TContractDeclarations.Parameter(const ASyntax: INyxPascalSyntaxSnapshot;
+  AScope: Integer; const AName, AType: String;
+  AMode: TNyxPascalSyntaxParameterMode; ADefault: Boolean);
+var
+  LAt: Integer;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+begin
+  LAt := ASyntax.Named(AScope, TNyxText(AName));
+
+  if LAt < 0 then
+    raise Exception.Create(CDeclarationFailure + 'missing parameter ' + AName);
+  LDeclaration := ASyntax.Declaration(LAt);
+
+  if (LDeclaration.Kind <> psdkParameter) or
+    (LDeclaration.ParameterMode <> AMode) or (LDeclaration.NextNamed >= 0) or
+    (Trim(ASyntax.Lexical.Slice(LDeclaration.TypeSpan)) <> TNyxText(AType)) or
+    ((psdfDefaultArgument in LDeclaration.Flags) <> ADefault) or
+    (ADefault and (LDeclaration.ExpressionSpan.Length = 0)) then
+    raise Exception.Create(CDeclarationFailure + 'wrong parameter/type/default for ' + AName);
+end;
+
+function TContractDeclarations.ParameterCount(const ASyntax: INyxPascalSyntaxSnapshot;
+  AScope: Integer): Integer;
+var
+  LAt: Integer;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+begin
+  Result := 0;
+  LAt := ASyntax.Scope(AScope).FirstDeclaration;
+  while LAt >= 0 do
+  begin
+    LDeclaration := ASyntax.Declaration(LAt);
+
+    if LDeclaration.Kind = psdkParameter then
+      Inc(Result);
+    LAt := LDeclaration.Next;
+  end;
+end;
+
+procedure TContractDeclarations.RequireContracts;
+var
+  LKind: TNyxKind;
+  LAt: Integer;
+  LStem, LInterface, LFamily: String;
+  LType, LClass, LRoutine: TNyxPascalSyntaxDeclaration;
+begin
+
+  if (FTypes.Scope(0).DeclarationCount <> 3 * (Ord(High(TNyxKind)) + 1)) or
+    (FFactories.Scope(0).DeclarationCount <> Ord(High(TNyxKind)) + 1) or
+    (FFacades.Scope(0).DeclarationCount <> 2 * Length(CFacades)) then
+    raise Exception.Create(CDeclarationFailure + 'unexpected top-level declaration coverage');
+  for LKind := Low(TNyxKind) to High(TNyxKind) do
+  begin
+    LStem := Stem(NyxKindName(LKind));
+    LInterface := 'INyx' + LStem;
+    LFamily := CFamilyNames[CKindFamilies[LKind]];
+    LType := FullType(FTypes, LInterface, pstfInterface);
+    LClass := FullType(FTypes, 'TNyx' + LStem, pstfClass);
+
+    if (Trim(FTypes.Lexical.Slice(LType.AncestorSpan)) <> TNyxText('(INyx' + LFamily + ')')) or
+      (Trim(FTypes.Lexical.Slice(LClass.AncestorSpan)) <> TNyxText('(TNyx' + LFamily + ', ' + LInterface + ')')) then
+      raise Exception.Create(CDeclarationFailure + 'wrong declared family for ' + LStem);
+    LRoutine := Routine(FTypes, LType.NestedScope, 'WithText', LInterface, prkFunction);
+    Parameter(FTypes, LRoutine.NestedScope, 'AText', 'TNyxText', pspmConst, False);
+
+    if ParameterCount(FTypes, LRoutine.NestedScope) <> 1 then
+      raise Exception.Create(CDeclarationFailure + 'wrong WithText parameters for ' + LStem);
+    Routine(FTypes, LClass.NestedScope, 'WithText', LInterface, prkFunction);
+    LRoutine := Routine(FTypes, LClass.NestedScope, 'Create', '', prkConstructor);
+    Parameter(FTypes, LRoutine.NestedScope, 'AID', 'TNyxText', pspmConst, True);
+    Parameter(FTypes, LRoutine.NestedScope, 'AConstruction', 'TNyxConstruction', pspmValue, True);
+
+    if ParameterCount(FTypes, LRoutine.NestedScope) <> 2 then
+      raise Exception.Create(CDeclarationFailure + 'wrong constructor parameters for ' + LStem);
+    LRoutine := Routine(FFactories, 0, 'NewNyx' + LStem, LInterface, prkFunction);
+    Parameter(FFactories, LRoutine.NestedScope, 'AID', 'TNyxText', pspmConst, True);
+    Parameter(FFactories, LRoutine.NestedScope, 'AConstruction', 'TNyxConstruction', pspmValue, True);
+
+    if ParameterCount(FFactories, LRoutine.NestedScope) <> 2 then
+      raise Exception.Create(CDeclarationFailure + 'wrong factory parameters for ' + LStem);
+  end;
+  for LAt := 0 to High(CFacades) do
+  begin
+    LType := FullType(FFacades, 'I' + CFacades[LAt].Facade, pstfInterface);
+    LClass := FullType(FFacades, 'T' + CFacades[LAt].Facade, pstfClass);
+    LRoutine := Routine(FFacades, LType.NestedScope,
+      CFacades[LAt].AdmissionMember, CFacades[LAt].AdmissionResult, prkFunction);
+
+    if ParameterCount(FFacades, LRoutine.NestedScope) <> 0 then
+      raise Exception.Create(CDeclarationFailure + 'wrong facade query parameters for ' + CFacades[LAt].Facade);
+    LRoutine := Routine(FFacades, LClass.NestedScope, 'Create', '', prkConstructor);
+    Parameter(FFacades, LRoutine.NestedScope, 'AOwner', 'INyxControl', pspmConst, False);
+
+    if ParameterCount(FFacades, LRoutine.NestedScope) <> 1 then
+      raise Exception.Create(CDeclarationFailure + 'wrong facade owner parameters for ' + CFacades[LAt].Facade);
+  end;
+  WriteLn('PASS typed declaration IR / ', Ord(High(TNyxKind)) + 1,
+    ' kinds / ', Length(CFacades), ' facades');
 end;
 
 procedure EmitControls;
@@ -1162,6 +1414,8 @@ end;
 function Run: Integer;
 var
   LMatches: Boolean;
+  LAt: Integer;
+  LDeclarations: TContractDeclarations;
 begin
   Result := 0;
   GOptions := ReadOptions;
@@ -1185,39 +1439,42 @@ begin
   GFacadeImplementation := TStringList.Create;
   try
     EmitControls;
-    EmitFacade(SourcePath('src/nyx.model.pas'), 'TNyxNodeConfig', 'NyxConfiguration', 'Configure',
-      '{737A7921-4621-4C6F-8C01-030000000001}');
-    EmitFacade(SourcePath('src/nyx.model.pas'), 'TNyxNodeBindings', 'NyxBindings', 'Binds',
-      '{AF627AE8-40CC-49C0-8681-E5A8F1FC1008}');
-    EmitFacade(SourcePath('src/nyx.contract.pas'), 'TNyxContract', 'NyxControlContract', 'Contract',
-      '{737A7921-4621-4C6F-8C01-030000000003}');
-    EmitFacade(SourcePath('src/nyx.data.pas'), 'TNyxExtensions', 'NyxControlExtensions', 'Extensions',
-      '{737A7921-4621-4C6F-8C01-030000000004}');
+    for LAt := 0 to High(CFacades) do
+      EmitFacade(SourcePath(CFacades[LAt].SourceFile), CFacades[LAt].SourceClass,
+        CFacades[LAt].Facade, CFacades[LAt].Member, CFacades[LAt].GUID);
     PrepareInclude(GTypes);
     PrepareInclude(GFactories);
     PrepareInclude(GImplementation);
     PrepareInclude(GFacadeTypes);
     PrepareInclude(GFacadeImplementation);
+    { Retain the admitted source IR until candidate/check publication returns.
+      No recovered, unsupported or partial declaration snapshot can escape. }
+    LDeclarations := TContractDeclarations.Create(GTypes, GFacadeTypes, GFactories);
+    try
+      LDeclarations.RequireContracts;
 
-    if GOptions.Mode = comCandidate then
-    begin
-      SaveCandidate;
-      WriteLn('PASS candidate contracts for ', Ord(High(TNyxKind)) + 1,
-        ' kinds and four managed authoring facades: ', GOptions.CandidateRoot);
-    end
-    else
-    begin
-      LMatches := CheckInclude(GTypes, 'src/nyx.controls.types.inc');
-      LMatches := CheckInclude(GFactories, 'src/nyx.controls.factories.inc') and LMatches;
-      LMatches := CheckInclude(GImplementation, 'src/nyx.controls.implementation.inc') and LMatches;
-      LMatches := CheckInclude(GFacadeTypes, 'src/nyx.controls.facades.inc') and LMatches;
-      LMatches := CheckInclude(GFacadeImplementation, 'src/nyx.controls.facades.implementation.inc') and LMatches;
-
-      if LMatches then
-        WriteLn('PASS maintained contracts for ', Ord(High(TNyxKind)) + 1,
-          ' kinds and four managed authoring facades')
+      if GOptions.Mode = comCandidate then
+      begin
+        SaveCandidate;
+        WriteLn('PASS candidate contracts for ', Ord(High(TNyxKind)) + 1,
+          ' kinds and four managed authoring facades: ', GOptions.CandidateRoot);
+      end
       else
-        Result := 2;
+      begin
+        LMatches := CheckInclude(GTypes, 'src/nyx.controls.types.inc');
+        LMatches := CheckInclude(GFactories, 'src/nyx.controls.factories.inc') and LMatches;
+        LMatches := CheckInclude(GImplementation, 'src/nyx.controls.implementation.inc') and LMatches;
+        LMatches := CheckInclude(GFacadeTypes, 'src/nyx.controls.facades.inc') and LMatches;
+        LMatches := CheckInclude(GFacadeImplementation, 'src/nyx.controls.facades.implementation.inc') and LMatches;
+
+        if LMatches then
+          WriteLn('PASS maintained contracts for ', Ord(High(TNyxKind)) + 1,
+            ' kinds and four managed authoring facades')
+        else
+          Result := 2;
+      end;
+    finally
+      LDeclarations.Free;
     end;
   finally
     GFacadeImplementation.Free;

@@ -13,13 +13,56 @@ live. Do not create additional helpers. Preserve concurrent work.
 While the goal is active, Lil' Scooty keeps an assigned backlog item and a queued
 next candidate. Follow TASKFLOW.MD and Athena's task-flow standard, using the task
 catalog and actual prerequisites. Agree on separate file ownership before edits.
+After each handoff, consult the current WORK.md return path and claim the next
+unmet prerequisite from the existing catalog; report its criterion, deliverable,
+proposed files and stop condition to root. If the next source scope is not yet
+agreed or builds hold a freeze, take its independent read-only review immediately.
+Keep the existing private coordination queue current; it references canonical
+tasks and does not replace the catalog or create a second completion assessment.
 Source-ready is a handoff, not the end of the work queue: during a build freeze,
 continue independent read-only review/design or owned documentation for the next
 item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current contract tool checks five maintained includes without mutation by
+Current source qualifies canonical documentation chunks/packages and referencing
+creator bindings through existing registration owners. Exact captured sources
+charge once; independent equivalents and references retain their own charges.
+Alternate binding/package/chunk copying obeys the same remaining index budget
+before row reads/field append; temporary primary validation charges actual work
+and bytes. Legacy bundles, GUID slots, quotas and three-authority generation
+remain unchanged. Native contribution70 passes with clean heap; actual core/help
+adoption and executed browser remain open. The generator now admits exact typed
+syntax before check/candidate publication, with real facade results/constructors
+and all81 kinds. CLI71 passes16 joined clean generator invocations; two five-file
+candidates remain byte exact. Its malformed descriptor exposed the existing
+explicit-colon/empty-parameter-type gap; shared Parameters now refuses that gap,
+preserving legal untyped const/var and later routine/property siblings.
+
+Common final eight-source qualification passes35 compilers,16 clean native test
+programs and16 pas2js compiles; zero owned warnings/112 upstream. Additional
+same-binary syntax execution passes8355 checks over five actual inputs/4060
+declarations, retaining explicit context diagnostics. All1731 current inputs and
+1723 unrelated prior inputs,24 compiler/97 RTL/five current-start protected/two
+profile/thirteen concurrent planning pins remain exact. Eight earlier compiler
+receipts and three earlier source freezes retain the warning/range/wrong-witness/
+empty-finalization/malformed-admission preparations; they do not replace final
+evidence. All readers joined. WORK.md and ignored
+.local/documentation-contributions-paths-private.json own final source/job/audit/
+remote receipts. Historical global-config preservation stays false. No full
+criterion/task/credit/DONE/UI/input/quality/parity/adoption/delivery closes across
+at least fifty-one unclosed batches. LAN offline/native Nyx tools absent.
+
+Next Lil' Scooty scope is typed indexed-property documentation through existing
+documentation copy/capture/framing/closure owners: ordered parameters, declared
+access and separate default-property status from actual Children syntax. Keep
+ordinary untyped/unknown facts explicit; open-array type expressions and complete
+hand-authored/core/global-routine source extraction remain downstream gates.
+Root releases that source scope after this checkpoint; no extra agents, host/
+config retry, SDK capture, protected mutation, cleanup/restart, approval bypass,
+new public MCP tool/schema or rollout. Preserve concurrent planning.
+
+Previously qualified contract tool checks five maintained includes without mutation by
 default; explicit fresh candidate output retains all81 kinds/four facades byte
 for byte. Native CLI62 checks use14 joined generator invocations/clean parent
 and child heaps; copied fixtures alone test drift/missing/refusal paths. Intrinsic

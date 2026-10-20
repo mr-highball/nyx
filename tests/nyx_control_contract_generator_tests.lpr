@@ -104,11 +104,13 @@ end;
 procedure Run;
 var
   LIndex: Integer;
-  LFirst, LSecond, LReplica, LMissing, LRefused, LFile, LOutput: String;
+  LFirst, LSecond, LReplica, LMissing, LRefused, LFile, LOutput, LInvalid: String;
   LOriginal: array[0..7] of TMemoryStream;
   LCurrent: TMemoryStream;
   LStream: TFileStream;
   LMarker: RawByteString;
+  LDescriptor: TStringList;
+  LOriginalDeclaration, LInvalidDeclaration: String;
 begin
 
   if ParamCount <> 3 then
@@ -129,6 +131,8 @@ begin
     LOutput := Invoke(GRepository, [], 0);
     Check(Pos('PASS maintained contracts', LOutput) > 0,
       'Default invocation checks the actual five maintained outputs');
+    Check(Pos('PASS typed declaration IR / 81 kinds / 4 facades', LOutput) > 0,
+      'Every actual generated interface/class/factory and facade reaches typed declaration admission');
     LFirst := Under(GRoot, 'candidate one');
     LSecond := Under(GRoot, 'candidate two');
     LOutput := Invoke(GRoot, ['--source-root', GRepository, '--output-dir', LFirst], 0);
@@ -218,6 +222,37 @@ begin
     Invoke(GRoot, ['--output-dir', LRefused], 1);
     Check(not DirectoryExists(LRefused), 'Failed descriptor preparation publishes no candidate');
 
+    { The maintenance scanner still extracts existing public descriptor methods.
+      A balanced but malformed parameter header used to pass that scanner and
+      escape as invalid Pascal. Admission now uses the existing syntax owner,
+      without compiling or executing this deliberately invalid source fixture. }
+    LInvalid := Under(GRoot, 'invalid declaration');
+    Check(CreateDir(LInvalid) and CreateDir(Under(LInvalid, 'src')),
+      'Create a separate invalid descriptor fixture');
+    for LIndex := 0 to High(CSources) do
+      CopyBytes(Under(GRepository, 'src/' + CSources[LIndex]), Under(LInvalid, 'src/' + CSources[LIndex]));
+    LDescriptor := TStringList.Create;
+    try
+      LFile := Under(LInvalid, 'src/nyx.model.pas');
+      LDescriptor.LoadFromFile(LFile);
+      LOriginalDeclaration := 'function Placeholder(const AValue: TNyxText): TNyxNodeConfig;';
+      LInvalidDeclaration := 'function Placeholder(const AValue: ): TNyxNodeConfig;';
+      Check(Pos(LOriginalDeclaration, LDescriptor.Text) > 0,
+        'The negative fixture changes an actual current descriptor method');
+      LDescriptor.Text := StringReplace(LDescriptor.Text, LOriginalDeclaration,
+        LInvalidDeclaration, []);
+      LDescriptor.SaveToFile(LFile);
+    finally
+      LDescriptor.Free;
+    end;
+    LOutput := Invoke(LInvalid, ['--check'], 1);
+    Check(Pos('Generated declarations refused: src/nyx.controls.facades.inc', LOutput) > 0,
+      'Malformed emitted signature refuses through the typed facade source owner');
+    LRefused := Under(GRoot, 'invalid declaration candidate');
+    Invoke(LInvalid, ['--output-dir', LRefused], 1);
+    Check(not DirectoryExists(LRefused),
+      'Typed source refusal precedes every candidate directory or file write');
+
     for LIndex := 0 to 7 do
     begin
 
@@ -239,7 +274,18 @@ begin
 end;
 
 begin
-  Run;
-  WriteLn('PASS ', GChecks, ' control-contract generator checks / ', GInvocations,
-    ' joined maintenance invocations');
+  try
+    Run;
+    WriteLn('PASS ', GChecks, ' control-contract generator checks / ', GInvocations,
+      ' joined maintenance invocations');
+  except
+    on E: Exception do
+    begin
+      { Retire the handled assertion after reporting its actual source trace.
+        A failed consumer must not leave an unhandled-exception heap artifact. }
+      WriteLn(StdErr, E.ClassName, ': ', E.Message);
+      DumpExceptionBackTrace(StdErr);
+      ExitCode := 1;
+    end;
+  end;
 end.

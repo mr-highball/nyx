@@ -34,7 +34,149 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current generation prerequisite: Reviewable contract output — 2026-10-20
+Helper task-flow follow-up (2026-10-20): Lil' Scooty has delivered its current
+contribution sources and cross-reviewed the root generator. Its active review
+now checks whether alternate package capture respects the index's remaining
+aggregate allowance before copying; root holds compiler admission for that
+decision. The queued independent task follows reference01/02's actual source
+adoption prerequisite: inspect emitted declarations and hand-authored core
+dependencies, then propose a bounded extraction implementation with exact file
+ownership. AGENTS.md records automatic backlog selection after handoff and useful
+read-only work during source freezes. The existing private queue points to the
+canonical tasks; no new backlog, recurring job or acceptance credit is created.
+
+## Current generation prerequisite: Typed emitted declarations — 2026-10-20
+
+The prior goal turn makes product progress: truthful documentation shapes and
+reviewable control-contract generation are qualified, committed and pushed as
+f0a1a4b. The actual81-factory ownership lower bound changes the helper's next
+implementation to canonical chunks/packages/referencing bindings. Root takes a
+separate genuine emitter prerequisite, following the original reference01/02
+criteria rather than another descriptor-only variant.
+
+Deliverable: capture typed IR of all three actual emitted declaration includes
+through the existing Pascal syntax owner, before any candidate/check publication.
+Decode the serialized bytes, retain exact scopes/methods/parameters/defaults/
+properties and refuse every lexical/syntax/incomplete/unsupported outcome. Verify
+all81 full interfaces/classes/factory result links and four facade declarations,
+including specialized fluent results and copied constructor/factory parameters.
+Keep the five emitted byte streams exactly unchanged. One authored facade map
+drives emission and admission; no additional signature parser or help inventory.
+The IR is declared structure with unbound external type spelling, not compiler
+acceptance, source-owned core metadata or full API/reference adoption.
+
+Root owns tools/nyx_control_contracts.lpr, its existing native CLI consumer and
+docs/managed-controls.md, plus central WORK/AGENTS. Lil' Scooty owns the separate
+five-path declaration-contribution implementation and component guide. Neither
+worker starts a reader/compiler until both source-ready handoffs freeze.
+
+Qualification must execute the real generator against all existing81 kinds/four
+facades, retain exact source/candidate bytes and cover a genuinely malformed
+copied descriptor header that the old extraction loop alone accepted. Both check
+and candidate modes must refuse before output. Retain every failure; if actual
+valid emitted syntax is unsupported, stop/switch to its existing syntax owner
+rather than skipping declarations, suppressing diagnostics, changing source or
+raising quotas to pass. Pair native execution with affected portable consumers
+and Studio compilation for the helper changes. Full generated/core/real-extension/
+decorated-browser/UI/parity/adoption and all original acceptance remain open;
+the at-least-fifty-batch count is not reset by this prerequisite.
+
+The first reviewed freeze is retained. Its three compiler jobs reached native
+consumer execution: the new contribution fixture failed a range check with a
+clean heap, and the generator consumer rejected root's incorrect universal
+`Done` witness. The generator child retired cleanly; its then-unhandled parent
+assertion retained three exception/trace allocations. Both reader handles joined
+before repairs. Actual Contract/Extensions declarations instead expose Snapshot
+and ToJSON; their typed witnesses and the four generated owner constructors now
+drive admission without changing emitted bytes. The CLI failure handler now
+reports its trace and retires the exception before final heap accounting.
+
+One separate native diagnostic freeze/run removes the fixture's uninitialized
+managed-result warning and reveals the exact range failure: its alternate
+catalog forwarded the complete real Count but indexed a two-row attachment
+array. That diagnostic also has a clean heap. The repair preserves every real
+catalog row, maps documentation to its actual kind ordinal and places the two
+explicit test rows first through one deterministic alternate-snapshot mapping.
+The existing work ceiling then tests the intended pre-copy boundary without
+tuning limits through repeated threshold probes or omitting built-in rows.
+Product quotas, range checks and discovery traversal remain unchanged. All
+initial/diagnostic sources, logs and terminal handles stay in the current packet;
+none are substituted for accepted final-source evidence.
+
+The repaired six-source run executes contribution70 with a clean heap and the
+real generator's first fourteen CLI cases, including exact81-kind/four-facade
+output. Its portable compile exposes pas2js's rejection of an empty finalization
+section; the native-only section keywords now follow the existing native lock
+conditional. Generator case15 then proves an actual existing syntax gap:
+`const AValue: )` yields no diagnostic even though the colon was authored.
+This changes the next action to the existing shared Parameters owner, rather
+than weakening the negative fixture or adding a signature parser. Its narrow
+repair marks all affected names incomplete, emits the existing diagnostic and
+preserves legal colon-absent untyped const/var parameters and later declarations.
+The same boundary covers indexed-property parameters. Root adds only that syntax
+unit and its maintained consumer to the owned scope (eight Pascal files), with
+native/portable syntax and existing indexed-property consumers in qualification.
+All limits and original input/oracle gates remain unchanged; real RTL integration
+is not rerun or claimed by this source-level correction.
+
+Final qualification is one common **eight-Pascal-file** freeze. **35** compiler
+jobs succeed: **16** maintained native test programs have clean heaps, **16**
+pas2js consumers/products compile, and the generator/native Studio/backend
+compile as applicable. Native focused results are contribution **70**, shapes
+**66**, registry **64**, declarations **68**, syntax **159** and indexed/default
+properties **413**. Maintained regression consumers pass navigation **34**,
+Studio definitions **146**, core **30 / 14,365**, coordinated sources **71**,
+text projection **159**, completion navigation **27**, view/history **40**,
+definition transport **31** and semantic completion **82**. Accepted compiler
+logs contain **zero Nyx-owned warnings / 112 upstream Classes warnings**.
+Browser/GUI/input/observing/parity are compilation-only or still open.
+
+The generator consumer passes **71** checks through **16 joined invocations**,
+with clean parent/child heaps. Both fresh candidates contain exactly the five
+maintained includes, byte for byte, for **81 kinds / four facades**. Actual
+malformed emitted parameter syntax refuses in both modes before output exists.
+The syntax consumer's first native invocation exercises its **159** grammar
+checks; an orchestration suffix mismatch omitted its optional corpus argument.
+After correcting that local invocation condition, the same compiled/frozen
+binary runs once with the repository argument: **8,355 checks / five actual
+inputs / 4,060 declarations**, clean heap, without an additional compiler job.
+The two generated declaration includes have zero syntax diagnostics; actual
+controls/scheduler/lexing sources retain their explicit context diagnostics.
+This is neither full core semantics nor real RTL integration.
+
+`E:\Blekohlab\nyx\qualification\documentation-contributions-20261020-135130`
+owns `source-final-freeze-private.json`, `all-source-final-private.json`,
+`accepted-common-jobs-private.json`, generator child/candidate receipts,
+`syntax-actual-corpus-terminal-private.json`, retained earlier job receipts and
+`final-audit-private.json`. All **1,731** inventoried Pascal inputs are frozen;
+**1,723** unrelated prior inputs, **24** compiler / **97** RTL / **five**
+current-start protected / **two** profile / **thirteen** concurrent planning
+pins remain exact. The **eight earlier compiler receipts** and three earlier
+source snapshots remain retained separately, including their actual failures.
+The original warning and fatal-parent exception allocations are historical
+preparations, not accepted final-source warning/heap results. All admitted
+handles are terminal; historical global-config preservation remains false and
+unrepaired. Source/remote identity is recorded in this packet after commit/push.
+
+No full reference01/02 or original criterion/task/credit/DONE closes; the
+consecutive unclosed-batch count advances **at least 50→51** for this deliverable,
+not for each compiler invocation. This reassessment follows actual source
+prerequisites: next Lil' Scooty owns property metadata that preserves ordered
+index parameters, declared read/write clauses and separate default-property
+status through the existing fluent/capture/framing/closure paths, witnessed by
+actual INyxControl.Children. Root keeps source generator/binding ownership and
+all compiler admission. The native property consumer will require an explicit
+repository argument so its source witness cannot silently skip. Full extraction
+also requires detached open-array/type-expression shapes and complete real
+core/global-routine declarations (including the eight hand-authored controls
+unit routines alongside the 81 generated factories); no empty core leaves,
+partial unit or help-only inventory substitutes for those gates. Actual creator
+adoption, executed decorated browser, editor/input/performance/quality/parity/
+independent use/delivery and the full Nyx/Studio outcome remain open. LAN stays
+offline; installed native Nyx tools are absent; no host/configuration retry,
+SDK capture, protected mutation, cleanup/restart or tool/schema rollout occurs.
+
+## Previous generation prerequisite: Reviewable contract output — 2026-10-20
 
 The preceding goal turn makes product progress: definition Back/Forward and
 registration-owned API discovery are qualified, committed and pushed as ac8a6f3.

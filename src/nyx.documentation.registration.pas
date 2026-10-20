@@ -61,10 +61,17 @@ function NewNyxDocumentationRegistration(const AOrigin, APrimary: TNyxDocumentat
 function CaptureNyxDocumentationRegistration(const AValue: INyxDocumentationRegistration;
   const ACancellation: INyxCancellationScope = nil;
   const AAdmission: INyxDocumentationAdmission = nil): INyxDocumentationRegistration;
+{ Shared bounded capture/framing for a declaration with its actual unit owner.
+  Alternate suppliers are frozen before framing; output content is published
+  only on success. Consumed admission/bytes remain consumed on refusal. }
+function CaptureNyxDocumentationDeclaration(const AValue: INyxDocumentationType;
+  const AOrigin: TNyxDocumentationRef; out AContent: TNyxText;
+  var ABytes: Integer; const ACancellation: INyxCancellationScope = nil;
+  const AAdmission: INyxDocumentationAdmission = nil): INyxDocumentationType;
 
 implementation
 
-uses nyx.bytes;
+uses nyx.bytes, nyx.documentation.declarations;
 
 type
   { All executable suppliers die at capture. Declaration/content vectors are
@@ -224,6 +231,31 @@ begin
   end;
 end;
 
+function CaptureNyxDocumentationDeclaration(const AValue: INyxDocumentationType;
+  const AOrigin: TNyxDocumentationRef; out AContent: TNyxText;
+  var ABytes: Integer; const ACancellation: INyxCancellationScope;
+  const AAdmission: INyxDocumentationAdmission): INyxDocumentationType;
+var
+  LFrozen: INyxDocumentationType;
+  LContent: TNyxText;
+begin
+  Result := nil;
+  AContent := '';
+  AOrigin.Validate;
+
+  if not AOrigin.IsUnit or (ABytes < 0) or
+    (ABytes > NyxDocumentationRegistrationMaximumBytes) then
+    raise ENyxDocumentation.Create('A declaration capture needs its unit and remaining bundle allowance');
+  LFrozen := CaptureNyxDocumentationType(AValue, ACancellation);
+
+  if not NyxDocumentationUnit(LFrozen.Identity.UnitName).Same(AOrigin) then
+    raise ENyxDocumentation.Create('A declaration capture cannot claim another unit');
+  LContent := DeclarationContent(LFrozen, ABytes, ACancellation, AAdmission);
+  CheckCancelled(ACancellation);
+  AContent := LContent;
+  Result := LFrozen;
+end;
+
 function TDocumentationRegistration.OriginUnit: TNyxDocumentationRef;
 begin
   Result := FOrigin;
@@ -354,6 +386,9 @@ begin
   CheckCancelled(ACancellation);
 
   if LInput = nil then
+    Exit;
+
+  if TryCaptureNyxDocumentationContributionBinding(LInput, Result, ACancellation, AAdmission) then
     Exit;
   LCount := LInput.DeclarationCount;
 
