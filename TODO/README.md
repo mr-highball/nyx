@@ -1891,6 +1891,7 @@ blockers rather than filename order.
 | NS-4 | [Semantic agent operation](DONE/NS-4_agent-tools_01.md) | Accepted local MCP tools, revision-aware transactions and observing Studio views | Pending assessment |
 | NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Callback criterion accepted; general source/project import and broader protected agent journeys remain open | Pending assessment |
 | NS-2 | [Resizable views and platform configuration](DONE/NS-2_split-platform_01.md) | Accepted public split panes, mobile Studio resizing and typed platform overrides | Pending assessment |
+| NS-2 | [Splitter drag snaps back](NS-2_split-platform_02.md) | Reported external drag-position regression; queued for reproduction and repair | Pending assessment |
 | NS-5 | [Compiler service slice](NS-5_compile-service_01.md) | Pascal HTTP view/application builds | Pending assessment |
 | NS-5 | [Owned constructor storage](DONE/NS-5_projection-storage_01.md) | Accepted fresh native invocation retention, capacity admission and intact browser worker packages | Pending assessment |
 | NS-5 | [Service hardening and reload](NS-5_service-reload_01.md) | Isolation, caching, cancellation and reload | Pending assessment |

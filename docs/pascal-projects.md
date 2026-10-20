@@ -4760,6 +4760,48 @@ now uses the managed context and public popup described below; controlled replie
 qualify that integration independently of language resolution. WORK.md owns exact
 evidence and the user-selected fresh Nyx-owned engine/delivery boundary.
 
+## Project-definition navigation from completion
+
+`INyxPascalCompletionDefinitions` optionally adds a project-local declaration to
+each completion row. `TNyxPascalCompletionLocation` is a copied logical source
+reference, Unicode-scalar name range and logical name; an absent value provides
+no navigation target. The ordinary result interface and its identity stay intact.
+`CaptureNyxPascalCompletionResult` freezes alternate rows and locations against
+one exact request before retaining them. Membership, source role, name spelling,
+range and the existing aggregate result budget are checked together. Escaped
+Pascal declarations retain their complete physical ampersand span.
+
+The owned resolver maps its original physical declaration back to captured project
+membership only when both the physical file identity and complete physical source
+text match. Repeated include occurrences retain their detailed provenance while
+sharing a physical project coordinate. SDK-only declarations and macro names
+without an exact original declaration spelling do not acquire a local file target.
+The separate in-process physical/byte-origin interfaces remain available.
+
+The private completion reply uses a strict version-two extension only when a row
+has a project target. All-absent results retain byte-identical version-one encoding;
+request packets and public MCP tool/schema/semantic page fields are unchanged.
+The operator path carries an independently admitted typed result into this reply
+after existing project, revision, provider and source checks. Definitions share
+the private response-size cap; no complete lexical or source packet is returned.
+
+The public completion card shows a **Definition** action beside eligible rows.
+F12 requests the selected row's declaration. `INyxPascalCompletionNavigation`
+exposes the guarded selected location without changing text/history. Studio defers
+the actual file switch until popup/input dispatch returns and rechecks the exact
+physical caret, history generation, selected row, service identity, project and
+all accepted/current buffers. A changed or composing editor refuses the old jump.
+Both adapters then use ordinary source-pane navigation/focus; unfinished buffers
+and per-file text histories are retained, with no new draft or paired Undo entry.
+CR, LF and CRLF each contribute one logical line before platform presentation;
+name columns count Unicode scalars while authored line-ending bytes remain exact.
+
+This is navigation from a resolved suggestion, not arbitrary-symbol definition
+lookup, references, rename or complete SDK source browsing. Console controller
+checks and browser compilation must remain distinct from executed Studio/input,
+browser, phone, accessibility and parity qualification. WORK.md records the exact
+current evidence and remaining modern-editor requirements.
+
 ## Ordinary Studio completion popup
 
 Both Studio adapters configure an independently owned private completion exchange

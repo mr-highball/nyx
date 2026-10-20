@@ -53,6 +53,24 @@ type
     property Kind: TNyxPascalCompletionKind read FKind;
   end;
 
+  { Optional project-local declaration name in one exact captured source buffer.
+    Coordinates are Unicode scalars; the default value is absent. This copied
+    value grants navigation data only, never file access or source mutation. }
+  TNyxPascalCompletionLocation = record
+  private
+    FAvailable: Boolean;
+    FFile: TNyxPascalSourceRef;
+    FStart: Integer;
+    FLength: Integer;
+    FName: TNyxText;
+  public
+    property Available: Boolean read FAvailable;
+    property FileReference: TNyxPascalSourceRef read FFile;
+    property Start: Integer read FStart;
+    property Length: Integer read FLength;
+    property Name: TNyxText read FName;
+  end;
+
   { Frozen query over all exact source buffers and accepted membership. At/From/
     Skip/Take return independent values; no provider, session, compiler, mutable
     editor or filesystem authority is retained. Caret counts Unicode scalars.
@@ -92,6 +110,14 @@ type
       out ANewCaret: Integer): INyxPascalSourceSnapshot;
   end;
 
+  { Optional detached definition rows sharing the ordinary result's exact query
+    and row ordinals. An absent row has no project-local target; SDK provenance
+    remains with the provider's separate in-process capability. }
+  INyxPascalCompletionDefinitions = interface(IInterface)
+    ['{8BC07D12-712A-4425-98DC-4F236C2F1B62}']
+    function DefinitionLocation(AIndex: Integer): TNyxPascalCompletionLocation;
+  end;
+
   { Replaceable target/machine adapter. Synchronous calls belong on the host's
     worker/serialized service boundary; implementations must not touch UI.
     Providers return detached data and must not execute authored applications.
@@ -122,6 +148,20 @@ function NewNyxPascalCompletionResult(const ARequest: INyxPascalCompletionReques
   serialize mutable producers during this call. Returned getters are detached. }
 function CaptureNyxPascalCompletionRequest(
   const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionRequest;
+{ Construct a bounded declaration coordinate. Binding to captured membership,
+  exact name text and its matching completion row occurs in the result factory. }
+function NyxPascalCompletionLocation(const AFile: TNyxPascalSourceRef;
+  AStart, ALength: Integer; const AName: TNyxText): TNyxPascalCompletionLocation;
+{ Freeze all alternate result getters and optional navigation rows. A supplied
+  expected query must match every source and query field before rows are read.
+  The caller serializes mutable producers during capture; none is retained. }
+function CaptureNyxPascalCompletionResult(const AResult: INyxPascalCompletionResult;
+  const AExpectedRequest: INyxPascalCompletionRequest = nil): INyxPascalCompletionResult;
+{ Add one optional location per existing row, validating complete membership,
+  scalar ranges and exact declaration spelling atomically. Zero rows are required
+  for non-ready results. Missing targets use the default absent value. }
+function NewNyxPascalCompletionDefinitions(const AResult: INyxPascalCompletionResult;
+  const ALocations: array of TNyxPascalCompletionLocation): INyxPascalCompletionResult;
 
 implementation
 
@@ -175,6 +215,27 @@ type
     function ExpectedText: TNyxText;
     function Preview(AIndex: Integer; const ACurrent: INyxPascalSourceSnapshot;
       out ANewCaret: Integer): INyxPascalSourceSnapshot;
+  end;
+
+  { Managed wrapper retains only a validated immutable base and copied scalar
+    locations. Optional metadata never keeps its provider or lexical sources. }
+  TCompletionDefinitions = class(TInterfacedObject, INyxPascalCompletionResult,
+    INyxPascalCompletionDefinitions)
+  private
+    FBase: INyxPascalCompletionResult;
+    FLocations: array of TNyxPascalCompletionLocation;
+  public
+    function Request: INyxPascalCompletionRequest;
+    function Status: TNyxPascalCompletionStatus;
+    function MessageText: TNyxText;
+    function Count: Integer;
+    function Total: Integer;
+    function Item(AIndex: Integer): TNyxPascalCompletionItem;
+    function ReplaceStart: Integer;
+    function ExpectedText: TNyxText;
+    function Preview(AIndex: Integer; const ACurrent: INyxPascalSourceSnapshot;
+      out ANewCaret: Integer): INyxPascalSourceSnapshot;
+    function DefinitionLocation(AIndex: Integer): TNyxPascalCompletionLocation;
   end;
 
 procedure CheckText(const AText: TNyxText; AMaximum: Integer);
@@ -559,6 +620,228 @@ begin
       raise ENyxPascalProject.Create('Completion response exceeds 128 KiB UTF-8');
     end;
   end;
+end;
+
+function NyxPascalCompletionLocation(const AFile: TNyxPascalSourceRef;
+  AStart, ALength: Integer; const AName: TNyxText): TNyxPascalCompletionLocation;
+var
+  LPosition: Integer;
+  LScalar: Integer;
+begin
+  AFile.Validate;
+  CheckText(AName, 256);
+
+  if (AName = '') or (AStart < 0) or (ALength < 1) or
+    (ALength > 257) or (AStart > MaxInt - ALength) then
+  begin
+    raise ENyxPascalProject.Create('A completion definition needs a bounded name range');
+  end;
+  LPosition := 1;
+  while LPosition <= System.Length(AName) do
+  begin
+    NyxNextScalar(AName, LPosition, LScalar);
+
+    if (LScalar <= 32) or (LScalar = 127) then
+    begin
+      raise ENyxPascalProject.Create('A completion definition name cannot contain separators');
+    end;
+  end;
+  Result.FAvailable := True;
+  Result.FFile := AFile;
+  Result.FStart := AStart;
+  Result.FLength := ALength;
+  Result.FName := AName;
+end;
+
+function TCompletionDefinitions.Request: INyxPascalCompletionRequest;
+begin
+  Result := FBase.Request;
+end;
+
+function TCompletionDefinitions.Status: TNyxPascalCompletionStatus;
+begin
+  Result := FBase.Status;
+end;
+
+function TCompletionDefinitions.MessageText: TNyxText;
+begin
+  Result := FBase.MessageText;
+end;
+
+function TCompletionDefinitions.Count: Integer;
+begin
+  Result := FBase.Count;
+end;
+
+function TCompletionDefinitions.Total: Integer;
+begin
+  Result := FBase.Total;
+end;
+
+function TCompletionDefinitions.Item(AIndex: Integer): TNyxPascalCompletionItem;
+begin
+  Result := FBase.Item(AIndex);
+end;
+
+function TCompletionDefinitions.ReplaceStart: Integer;
+begin
+  Result := FBase.ReplaceStart;
+end;
+
+function TCompletionDefinitions.ExpectedText: TNyxText;
+begin
+  Result := FBase.ExpectedText;
+end;
+
+function TCompletionDefinitions.Preview(AIndex: Integer;
+  const ACurrent: INyxPascalSourceSnapshot;
+  out ANewCaret: Integer): INyxPascalSourceSnapshot;
+begin
+  Result := FBase.Preview(AIndex, ACurrent, ANewCaret);
+end;
+
+function TCompletionDefinitions.DefinitionLocation(AIndex: Integer): TNyxPascalCompletionLocation;
+begin
+  FBase.Item(AIndex);
+  Result := FLocations[AIndex];
+end;
+
+{ Only an already frozen base reaches this binder. Every location is checked
+  before publication, including captured membership and its original text. }
+function BindDefinitions(const ABase: INyxPascalCompletionResult;
+  const ALocations: array of TNyxPascalCompletionLocation): INyxPascalCompletionResult;
+var
+  LBase: INyxPascalCompletionResult;
+  LHold: INyxPascalCompletionResult;
+  LResult: TCompletionDefinitions;
+  LAt: Integer;
+  LLocation: TNyxPascalCompletionLocation;
+  LItem: TNyxPascalCompletionItem;
+  LText: TNyxText;
+  LName: TNyxText;
+  LStart: Integer;
+  LFinish: Integer;
+  LBytes: Integer;
+begin
+  { Retain aliased inputs before clearing the managed function output. A failed
+    factory must expose neither a provisional base nor a partially filled row. }
+  LBase := ABase;
+  Result := nil;
+
+  if Length(ALocations) <> LBase.Count then
+  begin
+    raise ENyxPascalProject.Create('Completion definitions must match the captured page');
+  end;
+  LResult := TCompletionDefinitions.Create;
+  LHold := LResult;
+  LResult.FBase := LBase;
+  SetLength(LResult.FLocations, Length(ALocations));
+  LBytes := NyxUTF8ByteCount(LBase.MessageText) + NyxUTF8ByteCount(LBase.ExpectedText);
+  for LAt := 0 to High(ALocations) do
+  begin
+    LItem := LBase.Item(LAt);
+    Inc(LBytes, NyxUTF8ByteCount(LItem.Name) + NyxUTF8ByteCount(LItem.InsertText) +
+      NyxUTF8ByteCount(LItem.Detail));
+    LLocation := ALocations[LAt];
+
+    if LLocation.Available then
+    begin
+      LLocation := NyxPascalCompletionLocation(LLocation.FileReference,
+        LLocation.Start, LLocation.Length, LLocation.Name);
+      LText := LBase.Request.Sources.Text(LLocation.FileReference);
+      LStart := Position(LText, LLocation.Start);
+      LFinish := Position(LText, LLocation.Start + LLocation.Length);
+      LName := Copy(LText, LStart, LFinish - LStart);
+
+      if (LLocation.Name <> LItem.Name) or
+        ((LName <> LLocation.Name) and (LName <> '&' + LLocation.Name)) then
+      begin
+        raise ENyxPascalProject.Create('Completion definition does not match its captured name');
+      end;
+      LResult.FLocations[LAt] := LLocation;
+      Inc(LBytes, NyxUTF8ByteCount(LLocation.Name) +
+        NyxUTF8ByteCount(LLocation.FileReference.Name));
+    end;
+
+    if LBytes > 128 * 1024 then
+    begin
+      raise ENyxPascalProject.Create('Completion response with definitions exceeds 128 KiB UTF-8');
+    end;
+  end;
+  Result := LHold;
+end;
+
+function CaptureNyxPascalCompletionResult(const AResult: INyxPascalCompletionResult;
+  const AExpectedRequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
+var
+  LProvider: INyxPascalCompletionResult;
+  LRequest: INyxPascalCompletionRequest;
+  LExpected: INyxPascalCompletionRequest;
+  LCount: Integer;
+  LAt: Integer;
+  LRows: array of TNyxPascalCompletionItem;
+  LLocations: array of TNyxPascalCompletionLocation;
+  LDefinitions: INyxPascalCompletionDefinitions;
+  LBase: INyxPascalCompletionResult;
+begin
+  LProvider := AResult;
+  Result := nil;
+
+  if LProvider = nil then
+  begin
+    raise ENyxPascalProject.Create('Completion capture needs a provider result');
+  end;
+  LRequest := CaptureNyxPascalCompletionRequest(LProvider.Request);
+
+  if AExpectedRequest <> nil then
+  begin
+    LExpected := CaptureNyxPascalCompletionRequest(AExpectedRequest);
+
+    if not LExpected.Matches(LRequest.Sources) or
+      not LExpected.FileReference.SameFile(LRequest.FileReference) or
+      not LExpected.Owner.SameFile(LRequest.Owner) or
+      (LExpected.Caret <> LRequest.Caret) or (LExpected.Offset <> LRequest.Offset) or
+      (LExpected.Limit <> LRequest.Limit) then
+    begin
+      raise ENyxPascalProject.Create('Completion result belongs to a different captured query');
+    end;
+    LRequest := LExpected;
+  end;
+  LCount := LProvider.Count;
+
+  if (LCount < 0) or (LCount > LRequest.Limit) then
+  begin
+    raise ENyxPascalProject.Create('Completion capture exceeds its row budget');
+  end;
+  SetLength(LRows, LCount);
+  for LAt := 0 to High(LRows) do
+  begin
+    LRows[LAt] := LProvider.Item(LAt);
+  end;
+  LBase := NewNyxPascalCompletionResult(LRequest, LProvider.Status,
+    LProvider.MessageText, LProvider.ReplaceStart, LProvider.ExpectedText, LRows, LProvider.Total);
+
+  if Supports(LProvider, INyxPascalCompletionDefinitions, LDefinitions) then
+  begin
+    SetLength(LLocations, LCount);
+    for LAt := 0 to High(LLocations) do
+    begin
+      LLocations[LAt] := LDefinitions.DefinitionLocation(LAt);
+    end;
+    LBase := BindDefinitions(LBase, LLocations);
+  end;
+  Result := LBase;
+end;
+
+function NewNyxPascalCompletionDefinitions(const AResult: INyxPascalCompletionResult;
+  const ALocations: array of TNyxPascalCompletionLocation): INyxPascalCompletionResult;
+var
+  LBase: INyxPascalCompletionResult;
+begin
+  LBase := AResult;
+  Result := nil;
+  LBase := CaptureNyxPascalCompletionResult(LBase);
+  Result := BindDefinitions(LBase, ALocations);
 end;
 
 end.

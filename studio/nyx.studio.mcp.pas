@@ -115,7 +115,8 @@ type
     { Shared implementation; authority is chosen only by trusted wrappers.
       Operator reads use the launch's editor capability and ordinary workspaces. }
     function CompleteSource(const AOwner, AActor: TNyxText;
-      const AArguments: TNyxDataValue; AOperator: Boolean): TNyxDataValue;
+      const AArguments: TNyxDataValue; AOperator: Boolean;
+      out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
     function EditorCompletion(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
     { Caller holds FGuard. Validate, persist through the borrowed host callback,
@@ -1353,6 +1354,7 @@ var
   LArguments: TNyxDataValue;
   LPage: TNyxDataValue;
   LID: TNyxText;
+  LFrozen: INyxPascalCompletionResult;
 begin
 
   if AToken <> FEditorToken then
@@ -1360,18 +1362,26 @@ begin
     raise ENyxProjectConflict.Create('Editor completion capability is missing or expired');
   end;
   LArguments := NyxStudioCompletionArguments(ARequest, LID);
-  LPage := CompleteSource(AToken, 'Studio operator', LArguments, True);
-  Result := NyxStudioCompletionEnvelope(LPage, LID, NyxWorkspaceArgument(LArguments));
+  LPage := CompleteSource(AToken, 'Studio operator', LArguments, True, LFrozen);
+  Result := NyxStudioCompletionEnvelope(LPage, LID, NyxWorkspaceArgument(LArguments), LFrozen);
+
+  if NyxUTF8ByteCount(Result.ToJSON) > 48 * 1024 then
+  begin
+    raise ENyxProjectConflict.Create('Completion context exceeds 48 KiB; request fewer rows');
+  end;
 end;
 
 function TNyxStudioMCP.CompletePascal(const AOwner, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LDetached: INyxPascalCompletionResult;
 begin
-  Result := CompleteSource(AOwner, AActor, AArguments, False);
+  Result := CompleteSource(AOwner, AActor, AArguments, False, LDetached);
 end;
 
 function TNyxStudioMCP.CompleteSource(const AOwner, AActor: TNyxText;
-  const AArguments: TNyxDataValue; AOperator: Boolean): TNyxDataValue;
+  const AArguments: TNyxDataValue; AOperator: Boolean;
+  out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
 var
   LSession: TNyxAgentSession;
   LArguments: TNyxDataValue;
@@ -1382,7 +1392,9 @@ var
   LContext: TNyxAgentPascalCompletionContext;
   LPermissionGeneration: Integer;
   LFailed: Boolean;
+  LFrozen: INyxPascalCompletionResult;
 begin
+  AFrozenResult := nil;
   LSession := nil;
   FGuard.Acquire;
   try
@@ -1494,7 +1506,7 @@ begin
       end;
       if AOperator then
       begin
-        Result := LSession.FinishEditorCompletion(LArguments, LContext, LRequest, LReply);
+        Result := LSession.FinishEditorCompletion(LArguments, LContext, LRequest, LReply, LFrozen);
       end
       else
       begin
@@ -1509,6 +1521,11 @@ begin
       end;
       LSession.RecordActivity(AActor, 'nyx_pascal',
         'completion ' + Result.Field('status').AsText);
+
+      if AOperator then
+      begin
+        AFrozenResult := LFrozen;
+      end;
     except
       on E: Exception do
       begin

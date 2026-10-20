@@ -3706,6 +3706,8 @@ end;
 procedure TNyxNativeStudio.UpdateCompletionPopup(AData: PtrInt);
 var
   LDocument: TNyxDocument;
+  LLine: Integer;
+  LColumn: Integer;
 begin
   FCompletionQueued := False;
 
@@ -3714,10 +3716,24 @@ begin
     Exit;
   end;
 
-  if FPainting or ((FCodeView.Root <> nil) and not FCodeView.SectionPublicationReady) or
+  if FPainting or FQueued or ((FCodeView.Root <> nil) and not FCodeView.SectionPublicationReady) or
     ((FCompletionPopover <> nil) and not FCompletionPopover.Renderer.SectionPublicationReady) then
   begin
     CompletionChanged;
+    Exit;
+  end;
+  { The popup callback has returned. Recheck the physical source and service
+    before scheduling the ordinary pane refresh/focus for a project definition. }
+
+  if FSourceInput.TakeDefinitionNavigation(LLine, LColumn) then
+  begin
+    FState.SourceTab := nstSource;
+    FSourceLine := LLine;
+    FSourceColumn := LColumn;
+    FSourceFocusPending := True;
+    FState.CodeVisible := True;
+    FState.Panel := nspDesign;
+    RequestRefresh(False);
     Exit;
   end;
   FSourceInput.Bind;

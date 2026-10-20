@@ -33,7 +33,7 @@ type
   { Closed presentation actions. Request/page actions delegate asynchronous work;
     Accept prepares a normal buffer edit, never accepted source publication. }
   TNyxPascalCompletionAction = (pcaNone, pcaRequest, pcaSelect, pcaAccept,
-    pcaDismiss, pcaPrevious, pcaNext, pcaUndo, pcaRedo);
+    pcaDismiss, pcaPrevious, pcaNext, pcaUndo, pcaRedo, pcaDefinition);
 
   { Runtime view state, deliberately independent of a provider's transport/job.
     A ready empty page is distinct from a missing or failed provider. }
@@ -56,6 +56,14 @@ type
   INyxPascalCompletionPreparation = interface(IInterface)
     ['{4847558D-A467-44CA-B8C8-59A435EF9D02}']
     function Preview(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
+  end;
+
+  { Optional project-local navigation from the selected completion row. Reading
+    a location changes neither text nor history. The same source/caret/generation
+    guard as insertion applies; SDK-only provenance is never a project target. }
+  INyxPascalCompletionNavigation = interface(IInterface)
+    ['{A9868B38-B911-4FDC-BCBD-08767F69B544}']
+    function SelectedDefinition(const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionLocation;
   end;
 
   { One UI-thread-owned completion view beside one physical buffer/history.
@@ -104,7 +112,8 @@ uses SysUtils, nyx.data, nyx.pascal.project, nyx.interaction;
 type
   { No callback back-reference is kept. The menu's serial and history generation
     revoke detached rows/replies, while the history owns only text values. }
-  TCompletionMenu = class(TInterfacedObject, INyxPascalCompletionMenu, INyxPascalCompletionPreparation)
+  TCompletionMenu = class(TInterfacedObject, INyxPascalCompletionMenu,
+    INyxPascalCompletionPreparation, INyxPascalCompletionNavigation)
   private
     FIdentity: Integer;
     FSerial: Integer;
@@ -137,6 +146,7 @@ type
       const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionAction;
     function Accept(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
     function Preview(const ACurrentSources: INyxPascalSourceSnapshot): INyxPascalSourceSnapshot;
+    function SelectedDefinition(const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionLocation;
   end;
 
 const
@@ -230,11 +240,7 @@ function TCompletionMenu.Present(const ATicket: TNyxPascalCompletionTicket;
   const AResult: INyxPascalCompletionResult;
   const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
 var
-  LQuery: INyxPascalCompletionRequest;
-  LRows: array of TNyxPascalCompletionItem;
   LChecked: INyxPascalCompletionResult;
-  LAt: Integer;
-  LCount: Integer;
 begin
   Result := False;
 
@@ -254,29 +260,9 @@ begin
   begin
     raise ENyxPascalProject.Create('Completion view needs a provider result');
   end;
-  LQuery := CaptureNyxPascalCompletionRequest(AResult.Request);
-
-  if not FRequest.Matches(LQuery.Sources) or
-    not FRequest.FileReference.SameFile(LQuery.FileReference) or
-    not FRequest.Owner.SameFile(LQuery.Owner) or
-    (FRequest.Caret <> LQuery.Caret) or (FRequest.Offset <> LQuery.Offset) or
-    (FRequest.Limit <> LQuery.Limit) then
-  begin
-    raise ENyxPascalProject.Create('Completion view received a different query');
-  end;
-  LCount := AResult.Count;
-
-  if (LCount < 0) or (LCount > FRequest.Limit) then
-  begin
-    raise ENyxPascalProject.Create('Completion view exceeds its row budget');
-  end;
-  SetLength(LRows, LCount);
-  for LAt := 0 to High(LRows) do
-  begin
-    LRows[LAt] := AResult.Item(LAt);
-  end;
-  LChecked := NewNyxPascalCompletionResult(FRequest, AResult.Status,
-    AResult.MessageText, AResult.ReplaceStart, AResult.ExpectedText, LRows, AResult.Total);
+  { Freeze optional locations with the rows, against the exact expected request.
+    No mutable provider survives presentation or supplies a later click target. }
+  LChecked := CaptureNyxPascalCompletionResult(AResult, FRequest);
   FResult := LChecked;
   case LChecked.Status of
     pcsReady: FState := pcvReady;
@@ -340,6 +326,7 @@ var
   LButton: INyxButton;
   LAt: Integer;
   LID: TNyxText;
+  LDefinitions: INyxPascalCompletionDefinitions;
 
   procedure Action(const AButton: INyxButton; AAction: TNyxPascalCompletionAction; ARow: Integer = -1);
   begin
@@ -384,6 +371,7 @@ begin
   LRows := NewNyxScroll(AID + '-rows');
   LRows.Configure.Layout(nlColumn).Gap(6).MaximumHeight(320).Done;
   Result.Add(LRows);
+  Supports(FResult, INyxPascalCompletionDefinitions, LDefinitions);
   for LAt := 0 to FResult.Count - 1 do
   begin
     LID := AID + '-row-' + IntToStr(LAt);
@@ -403,6 +391,15 @@ begin
     LLine.Add(NewNyxBadge(LID + '-kind').WithText(CKindCaptions[FResult.Item(LAt).Kind]));
     LRow.Add(LLine);
     LRow.Add(NewNyxLabel(LID + '-detail').WithText(FResult.Item(LAt).Detail));
+
+    if (LDefinitions <> nil) and LDefinitions.DefinitionLocation(LAt).Available then
+    begin
+      LButton := NewNyxButton(LID + '-definition').WithText('Definition');
+      LButton.Configure.AccessibleName('Go to definition of ' + FResult.Item(LAt).Name)
+        .Hint('Open the declaration in this project (F12)').Done;
+      Action(LButton, pcaDefinition, LAt);
+      LRow.Add(LButton);
+    end;
     LRows.Add(LRow);
   end;
   LHeader := NewNyxRow(AID + '-pages');
@@ -481,6 +478,11 @@ begin
   begin
     Result := pcaAccept;
   end;
+
+  if AKey.Matches(nkF12Key) and SelectedDefinition(ACurrentSources).Available then
+  begin
+    Result := pcaDefinition;
+  end;
 end;
 
 function TCompletionMenu.Route(const AID: TNyxText; ARoot, ANode: TNyxNode;
@@ -491,6 +493,7 @@ var
   LParent: TNyxNode;
   LAction: Integer;
   LRow: Integer;
+  LDefinitions: INyxPascalCompletionDefinitions;
 begin
   Result := pcaNone;
 
@@ -518,21 +521,28 @@ begin
   LAction := ANode.Extensions.Value(NyxExtension(CActionKey)).AsInteger;
   LRow := ANode.Extensions.Value(NyxExtension(CRowKey)).AsInteger;
 
-  if not (LAction in [Ord(pcaAccept), Ord(pcaDismiss), Ord(pcaPrevious), Ord(pcaNext)]) then
+  if not (LAction in [Ord(pcaAccept), Ord(pcaDismiss), Ord(pcaPrevious), Ord(pcaNext), Ord(pcaDefinition)]) then
   begin
     Exit;
   end;
   Result := TNyxPascalCompletionAction(LAction);
 
-  if Result = pcaAccept then
+  if Result in [pcaAccept, pcaDefinition] then
   begin
 
-    if not NyxInteractionPolicy(ANode).CanEditValue then
+    if (Result = pcaAccept) and not NyxInteractionPolicy(ANode).CanEditValue then
     begin
       Exit(pcaNone);
     end;
 
     if (FResult = nil) or (FState <> pcvReady) or (LRow < 0) or (LRow >= FResult.Count) then
+    begin
+      Exit(pcaNone);
+    end;
+
+    if (Result = pcaDefinition) and
+      (not Supports(FResult, INyxPascalCompletionDefinitions, LDefinitions) or
+      not LDefinitions.DefinitionLocation(LRow).Available) then
     begin
       Exit(pcaNone);
     end;
@@ -542,6 +552,25 @@ begin
   if Result = pcaDismiss then
   begin
     Dismiss;
+  end;
+end;
+
+function TCompletionMenu.SelectedDefinition(
+  const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionLocation;
+var
+  LDefinitions: INyxPascalCompletionDefinitions;
+begin
+  Result := Default(TNyxPascalCompletionLocation);
+
+  if not Current(ACurrentSources) or (FState <> pcvReady) or
+    (FResult = nil) or (FSelected < 0) or (FSelected >= FResult.Count) then
+  begin
+    Exit;
+  end;
+
+  if Supports(FResult, INyxPascalCompletionDefinitions, LDefinitions) then
+  begin
+    Result := LDefinitions.DefinitionLocation(FSelected);
   end;
 end;
 

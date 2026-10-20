@@ -40,7 +40,9 @@ function DecodeNyxCompletionRequest(const AText: TNyxText; out AID: TNyxText;
   AMaximumBytes: Integer = 4 * 1024 * 1024): INyxPascalCompletionRequest;
 { A reply is rebound only to the supplied exact frozen query and matching ID.
   There is no wire field for execution provenance, session publication or editor
-  mutation. The public result factory revalidates range/row/text budgets. }
+  mutation. Version 1 bytes remain unchanged when project definitions are absent.
+  Version 2 adds strict optional project-local scalar locations, never lexical
+  snapshots or SDK files. Public capture revalidates all range/row/text budgets. }
 function EncodeNyxCompletionReply(const AResult: INyxPascalCompletionResult;
   const AID: TNyxText; AMaximumBytes: Integer = 1024 * 1024): TNyxText;
 function DecodeNyxCompletionReply(const AText, AID: TNyxText;
@@ -341,40 +343,60 @@ var
   LItem: TNyxPascalCompletionItem;
   LAt: Integer;
   LChecked: INyxPascalCompletionResult;
-  LValues: array of TNyxPascalCompletionItem;
+  LDefinitions: INyxPascalCompletionDefinitions;
+  LLocations: array of TNyxDataValue;
+  LLocation: TNyxPascalCompletionLocation;
+  LHasDefinitions: Boolean;
 begin
   ID(AID);
-
-  if AResult = nil then
-  begin
-    raise ENyxPascalProject.Create('Completion reply is missing');
-  end;
-
-  if (AResult.Count < 0) or (AResult.Count > 50) then
-  begin
-    raise ENyxPascalProject.Create('Completion reply exceeds its row budget');
-  end;
-  SetLength(LValues, AResult.Count);
-  for LAt := 0 to High(LValues) do
-  begin
-    LValues[LAt] := AResult.Item(LAt);
-  end;
-  LChecked := NewNyxPascalCompletionResult(AResult.Request, AResult.Status,
-    AResult.MessageText, AResult.ReplaceStart, AResult.ExpectedText, LValues, AResult.Total);
+  LChecked := CaptureNyxPascalCompletionResult(AResult);
   SetLength(LItems, LChecked.Count);
+  SetLength(LLocations, LChecked.Count);
+  LHasDefinitions := False;
+  Supports(LChecked, INyxPascalCompletionDefinitions, LDefinitions);
   for LAt := 0 to LChecked.Count - 1 do
   begin
     LItem := LChecked.Item(LAt);
     LItems[LAt] := NyxObject([NyxField('name', NyxData(LItem.Name)),
       NyxField('insert', NyxData(LItem.InsertText)), NyxField('detail', NyxData(LItem.Detail)),
       NyxField('kind', NyxData(CKinds[LItem.Kind]))]);
+    LLocations[LAt] := NyxNull;
+
+    if LDefinitions <> nil then
+    begin
+      LLocation := LDefinitions.DefinitionLocation(LAt);
+
+      if LLocation.Available then
+      begin
+        LHasDefinitions := True;
+        LLocations[LAt] := NyxObject([
+          NyxField('file', RefData(LLocation.FileReference)),
+          NyxField('start', NyxData(LLocation.Start)),
+          NyxField('length', NyxData(LLocation.Length)),
+          NyxField('name', NyxData(LLocation.Name))]);
+      end;
+    end;
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)), NyxField('id', NyxData(AID)),
-    NyxField('status', NyxData(CStatuses[LChecked.Status])),
-    NyxField('message', NyxData(LChecked.MessageText)),
-    NyxField('start', NyxData(LChecked.ReplaceStart)),
-    NyxField('expected', NyxData(LChecked.ExpectedText)),
-    NyxField('total', NyxData(LChecked.Total)), NyxField('items', NyxArray(LItems))]).ToJSON;
+
+  if LHasDefinitions then
+  begin
+    Result := NyxObject([NyxField('version', NyxData(2)), NyxField('id', NyxData(AID)),
+      NyxField('status', NyxData(CStatuses[LChecked.Status])),
+      NyxField('message', NyxData(LChecked.MessageText)),
+      NyxField('start', NyxData(LChecked.ReplaceStart)),
+      NyxField('expected', NyxData(LChecked.ExpectedText)),
+      NyxField('total', NyxData(LChecked.Total)), NyxField('items', NyxArray(LItems)),
+      NyxField('definitions', NyxArray(LLocations))]).ToJSON;
+  end
+  else
+  begin
+    Result := NyxObject([NyxField('version', NyxData(1)), NyxField('id', NyxData(AID)),
+      NyxField('status', NyxData(CStatuses[LChecked.Status])),
+      NyxField('message', NyxData(LChecked.MessageText)),
+      NyxField('start', NyxData(LChecked.ReplaceStart)),
+      NyxField('expected', NyxData(LChecked.ExpectedText)),
+      NyxField('total', NyxData(LChecked.Total)), NyxField('items', NyxArray(LItems))]).ToJSON;
+  end;
   Budget(Result, AMaximumBytes);
 end;
 
@@ -391,13 +413,32 @@ var
   LAt: Integer;
   LFound: Boolean;
   LName: TNyxText;
+  LVersion: Integer;
+  LDefinitions: TNyxDataValue;
+  LLocations: array of TNyxPascalCompletionLocation;
+  LBase: INyxPascalCompletionResult;
 begin
+  Result := nil;
   ID(AID);
   Budget(AText, AMaximumBytes);
   LPacket := TNyxDataValue.ParseJSON(AText);
-  Fields(LPacket, ['version', 'id', 'status', 'message', 'start', 'expected', 'total', 'items']);
+  LVersion := LPacket.Field('version').AsInteger;
 
-  if (LPacket.Field('version').AsInteger <> 1) or (LPacket.Field('id').AsText <> AID) then
+  if LVersion = 1 then
+  begin
+    Fields(LPacket, ['version', 'id', 'status', 'message', 'start', 'expected', 'total', 'items']);
+  end
+  else if LVersion = 2 then
+  begin
+    Fields(LPacket, ['version', 'id', 'status', 'message', 'start', 'expected', 'total', 'items',
+      'definitions']);
+  end
+  else
+  begin
+    raise ENyxPascalProject.Create('Unsupported completion reply protocol');
+  end;
+
+  if LPacket.Field('id').AsText <> AID then
   begin
     raise ENyxPascalProject.Create('Completion reply belongs to another protocol/request');
   end;
@@ -447,9 +488,34 @@ begin
     LValues[LAt] := NyxPascalCompletion(LRow.Field('name').AsText,
       LRow.Field('insert').AsText, LRow.Field('detail').AsText, LKind);
   end;
-  Result := NewNyxPascalCompletionResult(ARequest, LStatus, LPacket.Field('message').AsText,
+  LBase := NewNyxPascalCompletionResult(ARequest, LStatus, LPacket.Field('message').AsText,
     LPacket.Field('start').AsInteger, LPacket.Field('expected').AsText,
     LValues, LPacket.Field('total').AsInteger);
+
+  if LVersion = 2 then
+  begin
+    LDefinitions := LPacket.Field('definitions');
+
+    if (LDefinitions.Kind <> ndArray) or (LDefinitions.Count <> Length(LValues)) then
+    begin
+      raise ENyxPascalProject.Create('Completion definitions do not match their reply rows');
+    end;
+    SetLength(LLocations, Length(LValues));
+    for LAt := 0 to High(LLocations) do
+    begin
+      LRow := LDefinitions.Item(LAt);
+
+      if LRow.Kind <> ndNull then
+      begin
+        Fields(LRow, ['file', 'start', 'length', 'name']);
+        LLocations[LAt] := NyxPascalCompletionLocation(RefValue(LRow.Field('file')),
+          LRow.Field('start').AsInteger, LRow.Field('length').AsInteger,
+          LRow.Field('name').AsText);
+      end;
+    end;
+    LBase := NewNyxPascalCompletionDefinitions(LBase, LLocations);
+  end;
+  Result := LBase;
 end;
 
 end.

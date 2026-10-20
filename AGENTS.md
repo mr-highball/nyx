@@ -4,7 +4,42 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source pointer compatibility keeps SameType nominal identity separate
+The user's 2026-10-20 instruction authorizes one helper, Lil' Scooty, using
+gpt-6.1-sol/ultra. This overrides the older solo/no-subagents instructions below
+for that helper only. Coordinate separate file scopes in the shared checkout;
+root admits builds and neither worker edits Pascal while any reader/compiler is
+live. Do not create additional helpers. Preserve concurrent work.
+
+Current-source project definitions retain optional immutable logical source/name
+coordinates through owned completion, strict private v2 replies, exact Studio
+admission and public Nyx menu presentation. SDK-only provenance never fabricates
+a project target; no public MCP semantic field/schema changes. Definition/F12
+navigation queues after input dispatch and rechecks caret/history/row/service/
+project/all buffers before changing only the active source selector. Focused
+native40/46/19/56/28 and existing23/90/40/10/82/3400 pass with clean heaps.
+Final line navigation counts CR/LF/CRLF once before platform presentation, keeping
+Unicode scalar columns and authored buffers exact. Twenty-four successful builds
+have zero owned warnings/77 upstream; eleven distinct native programs have clean
+heaps. Eleven browser consumers, both Studios/backend/worker compile as applicable;
+browser/GUI interaction is not executed. All sixteen Pascal inputs remain exact
+through this final complete matrix. Earlier test-only callback renames and their
+composite25-build/12-native evidence stay retained separately, not final evidence.
+All780 current inputs/764 unrelated, retained failures/copies, prior compiler/RTL/
+profile/protected and frozen349 comparisons pass. Thirteen concurrent files stay
+exact except the separately requested one-row splitter-ticket catalog insertion,
+whose checked inverse retains all prior content. Readers joined; LAN offline;
+native Nyx tools absent. Historical global-config preservation remains false;
+current-start protected comparisons pass without repair. WORK.md and ignored
+.local/completion-navigation-paths-private.json own final source/evidence/remote.
+No complete modern editor, arbitrary-symbol navigation, references, rename,
+browser execution, parity/adoption/delivery or original criterion closes. Stop
+metadata/codec/fixture/compiler variants. Next reassess arbitrary-caret definition
+navigation through the same owned query/editor owners; preserve the full modern
+editor, source/type/project/incremental/input/quality/parity/adoption/delivery.
+No host/config retry, SDK capture, protected mutation, cleanup/restart, approval
+bypass, new MCP tool/schema or rollout. No Pascal edits during live readers.
+
+Previously qualified pointer compatibility keeps SameType nominal identity separate
 from qualified flat FPC30301 data-pointer equality/signature filtering/ranks.
 Aliases, unique parameters, copied records, nested pointers, generic substitutions
 and explicit class ancestry keep their owners; equal remaining ranks and unknown

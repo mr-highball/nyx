@@ -104,7 +104,12 @@ function NyxStudioCompletionArguments(const ARequest: TNyxDataValue;
 { Convert the already independently admitted bounded semantic page into the
   strict shared result codec. No complete source/input snapshot is returned. }
 function NyxStudioCompletionEnvelope(const APage: TNyxDataValue;
-  const AID: TNyxText; const AWorkspace: TNyxWorkspaceRef): TNyxDataValue;
+  const AID: TNyxText; const AWorkspace: TNyxWorkspaceRef): TNyxDataValue; overload;
+{ Private operator handoff carries the already admitted frozen result directly
+  into the shared reply codec. Public semantic page fields remain unchanged. }
+function NyxStudioCompletionEnvelope(const APage: TNyxDataValue;
+  const AID: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const AResult: INyxPascalCompletionResult): TNyxDataValue; overload;
 { Require exact request/project/revision correlation before the shared bounded
   result decoder admits replacement ranges against the caller's frozen sources. }
 function ReadNyxStudioCompletionEnvelope(const AEnvelope: TNyxDataValue;
@@ -229,6 +234,19 @@ begin
     NyxField('start', APage.Field('replacement').Field('offset')),
     NyxField('expected', APage.Field('replacement').Field('expected')),
     NyxField('total', APage.Field('total')), NyxField('items', NyxArray(LRows))]);
+  Result := NyxObject([NyxField('op', NyxData('completion')),
+    NyxField('requestId', NyxData(AID)), NyxField('revision', APage.Field('revision')),
+    NyxField('workspace', NyxData(AWorkspace.ID)), NyxField('page', LWire)]);
+end;
+
+function NyxStudioCompletionEnvelope(const APage: TNyxDataValue;
+  const AID: TNyxText; const AWorkspace: TNyxWorkspaceRef;
+  const AResult: INyxPascalCompletionResult): TNyxDataValue;
+var
+  LWire: TNyxDataValue;
+begin
+  CheckID(AID);
+  LWire := TNyxDataValue.ParseJSON(EncodeNyxCompletionReply(AResult, AID));
   Result := NyxObject([NyxField('op', NyxData('completion')),
     NyxField('requestId', NyxData(AID)), NyxField('revision', APage.Field('revision')),
     NyxField('workspace', NyxData(AWorkspace.ID)), NyxField('page', LWire)]);

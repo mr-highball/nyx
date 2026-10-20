@@ -94,22 +94,36 @@ function TNyxAgentSession.FinishPascalCompletion(const AArguments: TNyxDataValue
   const AContext: TNyxAgentPascalCompletionContext;
   const ARequest: INyxPascalCompletionRequest;
   const AResult: INyxPascalCompletionResult): TNyxDataValue;
+var
+  LDetached: INyxPascalCompletionResult;
 begin
-  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, False);
+  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, False, LDetached);
 end;
 
 function TNyxAgentSession.FinishEditorCompletion(const AArguments: TNyxDataValue;
   const AContext: TNyxAgentPascalCompletionContext;
   const ARequest: INyxPascalCompletionRequest;
   const AResult: INyxPascalCompletionResult): TNyxDataValue;
+var
+  LDetached: INyxPascalCompletionResult;
 begin
-  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, True);
+  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, True, LDetached);
+end;
+
+function TNyxAgentSession.FinishEditorCompletion(const AArguments: TNyxDataValue;
+  const AContext: TNyxAgentPascalCompletionContext;
+  const ARequest: INyxPascalCompletionRequest;
+  const AResult: INyxPascalCompletionResult;
+  out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
+begin
+  Result := FinishCompletion(AArguments, AContext, ARequest, AResult, True, AFrozenResult);
 end;
 
 function TNyxAgentSession.FinishCompletion(const AArguments: TNyxDataValue;
   const AContext: TNyxAgentPascalCompletionContext;
   const ARequest: INyxPascalCompletionRequest;
-  const AResult: INyxPascalCompletionResult; AOperator: Boolean): TNyxDataValue;
+  const AResult: INyxPascalCompletionResult; AOperator: Boolean;
+  out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
 const
   CStatuses: array[TNyxPascalCompletionStatus] of TNyxText =
     ('ready', 'unavailable', 'failed', 'cancelled');
@@ -118,15 +132,14 @@ const
       'parameter', 'unit', 'keyword');
 var
   LCurrent: INyxPascalCompletionRequest;
-  LReplyQuery: INyxPascalCompletionRequest;
   LChecked: INyxPascalCompletionResult;
   LContext: TNyxAgentPascalCompletionContext;
-  LItems: array of TNyxPascalCompletionItem;
+  LItem: TNyxPascalCompletionItem;
   LRows: array of TNyxDataValue;
   LAt: Integer;
-  LCount: Integer;
   LSnapshot: TNyxText;
 begin
+  AFrozenResult := nil;
   LCurrent := CaptureCompletion(AArguments, LContext, AOperator);
 
   if not FSession.MatchesCommandContext(AContext.FSession) or
@@ -142,36 +155,19 @@ begin
   begin
     raise ENyxProjectConflict.Create('The completion provider returned no page');
   end;
-  LReplyQuery := CaptureNyxPascalCompletionRequest(AResult.Request);
-
-  if not SameCompletionQuery(ARequest, LReplyQuery) then
-  begin
-    raise ENyxProjectConflict.Create('Completion reply belongs to a different query');
-  end;
-  LCount := AResult.Count;
-
-  if (LCount < 0) or (LCount > ARequest.Limit) then
-  begin
-    raise ENyxProjectConflict.Create('Completion reply exceeds its row budget');
-  end;
-  SetLength(LItems, LCount);
-  for LAt := 0 to LCount - 1 do
-  begin
-    LItems[LAt] := AResult.Item(LAt);
-  end;
-  { Independently freeze alternate provider data against the original query.
-    The shared factory rechecks enums, exact replacement text and all budgets. }
-  LChecked := NewNyxPascalCompletionResult(ARequest, AResult.Status,
-    AResult.MessageText, AResult.ReplaceStart, AResult.ExpectedText, LItems, AResult.Total);
+  { Independently freeze alternate provider rows and optional project targets
+    against the original query before serialization or private typed handoff. }
+  LChecked := CaptureNyxPascalCompletionResult(AResult, ARequest);
   SetLength(LRows, LChecked.Count);
   for LAt := 0 to LChecked.Count - 1 do
   begin
+    LItem := LChecked.Item(LAt);
     LRows[LAt] := NyxObject([
       NyxField('index', NyxData(ARequest.Offset + LAt)),
-      NyxField('name', NyxData(LItems[LAt].Name)),
-      NyxField('insert', NyxData(LItems[LAt].InsertText)),
-      NyxField('detail', NyxData(LItems[LAt].Detail)),
-      NyxField('kind', NyxData(CKinds[LItems[LAt].Kind]))]);
+      NyxField('name', NyxData(LItem.Name)),
+      NyxField('insert', NyxData(LItem.InsertText)),
+      NyxField('detail', NyxData(LItem.Detail)),
+      NyxField('kind', NyxData(CKinds[LItem.Kind]))]);
   end;
   LSnapshot := 'editing';
 
@@ -198,4 +194,9 @@ begin
     NyxField('inspectionOnly', NyxData(True)),
     NyxField('pendingDrafts', NyxData(FSession.SourceDraftsPending))]);
   BoundContext(Result);
+
+  if AOperator then
+  begin
+    AFrozenResult := LChecked;
+  end;
 end;

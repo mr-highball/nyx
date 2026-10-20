@@ -226,7 +226,8 @@ type
     function FinishCompletion(const AArguments: TNyxDataValue;
       const AContext: TNyxAgentPascalCompletionContext;
       const ARequest: INyxPascalCompletionRequest;
-      const AResult: INyxPascalCompletionResult; AOperator: Boolean): TNyxDataValue;
+      const AResult: INyxPascalCompletionResult; AOperator: Boolean;
+      out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
     { Decode the closed wire choice and require exact revision for buffer reads.
       Default accepted reads retain their existing optional-revision contract. }
     function SourceReadKind(const AArguments: TNyxDataValue): TNyxPascalSourceSnapshotKind;
@@ -286,7 +287,14 @@ type
     function FinishEditorCompletion(const AArguments: TNyxDataValue;
       const AContext: TNyxAgentPascalCompletionContext;
       const ARequest: INyxPascalCompletionRequest;
-      const AResult: INyxPascalCompletionResult): TNyxDataValue;
+      const AResult: INyxPascalCompletionResult): TNyxDataValue; overload;
+    { Private typed handoff preserves optional project navigation only after all
+      ordinary admission succeeds. No additional field enters public MCP JSON. }
+    function FinishEditorCompletion(const AArguments: TNyxDataValue;
+      const AContext: TNyxAgentPascalCompletionContext;
+      const ARequest: INyxPascalCompletionRequest;
+      const AResult: INyxPascalCompletionResult;
+      out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue; overload;
     { Trusted independent review seed; accepts an owned pair through ordinary
       Studio admission and empty history, without a sample/claim replacement. }
     constructor Create(const APair: TNyxProjectPair); overload;

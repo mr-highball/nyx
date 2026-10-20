@@ -120,8 +120,9 @@ type
     Occurrence: Integer;
   end;
   { Optional in-process definition/gap metadata. The ordinary completion result
-    and existing wire schema stay unchanged; codecs do not transport this
-    capability. Ready rows retain their exact physical lexical source after the
+    interface stays unchanged; codecs do not transport this detailed capability.
+    Portable project targets use INyxPascalCompletionDefinitions separately.
+    Ready rows retain their exact physical lexical source after the
     provider is released/replaced, so navigation need not reopen a changed file. }
   INyxOwnedPascalCompletionResult = interface(IInterface)
     ['{170458CB-C602-4E28-84F0-E90C2408EE01}']
@@ -287,7 +288,7 @@ type
     INyxOwnedPascalCompletionResult, INyxPascalCompletionAnalysis,
     INyxPascalCompletionByteOrigins, INyxPascalCompletionReuse,
     INyxPascalCompletionRevalidation, INyxPascalCompletionRevision,
-    INyxPascalCompletionLexicalWork)
+    INyxPascalCompletionLexicalWork, INyxPascalCompletionDefinitions)
   public
     Base: INyxPascalCompletionResult;
     Definitions: TDefinitionVector;
@@ -326,6 +327,7 @@ type
     function DefinitionSource(AIndex: Integer): INyxPascalLexicalSnapshot;
     function DefinitionView(AIndex: Integer): INyxPascalSourceView;
     function DefinitionByteSpan(AIndex: Integer): TNyxPascalByteSpan;
+    function DefinitionLocation(AIndex: Integer): TNyxPascalCompletionLocation;
     function ModuleCount: Integer;
     function ModuleName(AIndex: Integer): TNyxPascalModuleRef;
     function ModuleRoot(AIndex: Integer): TNyxPascalPhysicalFile;
@@ -685,6 +687,19 @@ function TOwnedResult.DefinitionByteSpan(AIndex: Integer): TNyxPascalByteSpan;
 begin
   Item(AIndex);
   Result := DefinitionViews[AIndex].OriginalSpan(Definitions[AIndex].Span);
+end;
+
+function TOwnedResult.DefinitionLocation(AIndex: Integer): TNyxPascalCompletionLocation;
+var
+  LDefinitions: INyxPascalCompletionDefinitions;
+begin
+  Item(AIndex);
+  Result := Default(TNyxPascalCompletionLocation);
+
+  if Supports(Base, INyxPascalCompletionDefinitions, LDefinitions) then
+  begin
+    Result := LDefinitions.DefinitionLocation(AIndex);
+  end;
 end;
 
 function TOwnedResult.ModuleCount: Integer;
@@ -1794,6 +1809,11 @@ var
   LNameLex: INyxPascalLexicalSnapshot;
   LExpressions: INyxPascalExpressionQueries;
   LExpressionWindow: TNyxPascalSpan;
+  LLocations: array of TNyxPascalCompletionLocation;
+  LProjectAt: Integer;
+  LProjectFile: TNyxPascalSourceRef;
+  LPhysical: TNyxPascalPhysicalFile;
+  LPhysicalName: TNyxText;
 begin
   BuildWorld;
   LFile := NyxPascalProjectPhysicalFile(FRequest.Sources, FRequest.FileReference);
@@ -1843,6 +1863,7 @@ begin
   SetLength(LResult.Definitions, Length(LRows));
   SetLength(LResult.DefinitionSources, Length(LRows));
   SetLength(LResult.DefinitionViews, Length(LRows));
+  SetLength(LLocations, Length(LRows));
   for LAt := 0 to High(LRows) do
   begin
     Check;
@@ -1866,10 +1887,34 @@ begin
     LResult.DefinitionSources[LAt] := NyxPascalOccurrenceLexical(
       LView.Source, LOrigin.Occurrence);
     LResult.DefinitionViews[LAt] := NyxPascalSourceViewAt(LView.Source.Files, LOrigin.FileIndex);
+    { Physical provenance first selects exact captured project membership. SDK
+      files and macro names without an exact original name retain only detailed
+      in-process metadata, never an invented project navigation coordinate. }
+    for LProjectAt := 0 to FRequest.Sources.Count - 1 do
+    begin
+      Check;
+      LProjectFile := FRequest.Sources.FileReference(LProjectAt);
+      LPhysical := NyxPascalProjectPhysicalFile(FRequest.Sources, LProjectFile);
+
+      if (LPhysical.Name = LResult.Definitions[LAt].FileReference.Name) and
+        (FRequest.Sources.Text(LProjectFile) = LResult.DefinitionSources[LAt].Source) then
+      begin
+        LPhysicalName := LResult.DefinitionSources[LAt].Slice(LOrigin.PhysicalSpan);
+
+        if (LPhysicalName = LRows[LAt].Name) or
+          (LPhysicalName = '&' + LRows[LAt].Name) then
+        begin
+          LLocations[LAt] := NyxPascalCompletionLocation(LProjectFile,
+            LOrigin.PhysicalSpan.Start, LOrigin.PhysicalSpan.Length, LRows[LAt].Name);
+        end;
+        Break;
+      end;
+    end;
   end;
   Check;
   LResult.Base := NewNyxPascalCompletionResult(FRequest, pcsReady, '',
     LStart, LExpected, LRows, LTotal.Total);
+  LResult.Base := NewNyxPascalCompletionDefinitions(LResult.Base, LLocations);
   CaptureAnalysis(LResult);
 end;
 

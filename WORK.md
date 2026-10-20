@@ -33,7 +33,102 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned data-pointer compatibility — 2026-10-20
+## Current integration: Project definitions in Studio completion — 2026-10-20
+
+The human authorizes Lil' Scooty (gpt-6.1-sol/ultra) as one helper, overriding the
+earlier solo restriction. Root owns menu/controller/adapters; Lil' Scooty owns
+definition data, provider/wire and the private Studio handoff. Separate file
+scopes share one build gate: neither worker edits Pascal while any admitted
+compiler/native reader is live. No additional helper is created.
+
+Optional `INyxPascalCompletionDefinitions` retains copied project source/name
+coordinates against the exact immutable request. Capture independently freezes
+provider rows and locations before presentation or transport. Whole physical
+identity/text and exact original declaration spelling map the owned resolver's
+provenance to project membership. Repeated includes retain their original
+occurrences; SDK leaf/text collisions cannot create a local target. There are
+no COM interfaces in copied records and no existing interface identity/layout
+or enumeration ordinal changes; the UI action enum appends Definition.
+
+Strict private v2 replies carry a parallel optional definition vector within the
+existing response budgets. All-absent results keep byte-identical v1 replies.
+The private operator path carries the typed result only after existing role,
+revision, provider, workspace, complete source/context and response admission.
+Public MCP semantic page bytes, tools, schemas and request packets stay exact.
+No full lexical/source snapshot is transported as declaration metadata.
+
+The Nyx-built menu shows Definition only for eligible rows; F12 uses its selected
+suggestion. Studio queues the jump until input/popup dispatch returns and checks
+current physical caret, composition, history generation, row, current service,
+project and every accepted/draft buffer again. Both adapters wait for pending
+view publication before binding the target file. Navigation changes no authored
+text, accepted source, paired history or per-file text Undo; unfinished buffers
+remain retained. This does not implement arbitrary-symbol lookup/references/
+rename or install a fully qualified modern editor.
+
+Initial validation catches provisional managed function output on malformed v2
+metadata. Factories/decoder now retain private managed candidates and publish
+only after complete validation, preserving same-variable input aliases. The
+original failure has a clean heap. Other retained preparation failures are a
+typed-constant test dependency, a JSON-whitespace assertion and root synthetic
+key events missing their ordinary Name/value initialization. The failed root
+fixtures using Halt in an exception retain their two-block/80-byte exception
+reports; corrected fixtures permit normal exception finalization. No failed
+preparation log or source freeze is replaced by later success.
+
+An earlier production freeze qualifies40/46/19/44/28, including the real
+never-listening private EditorExchange.
+That consumer confines existing local enrollment to a new unregistered scratch
+runtime, calls no Start/HTTP/compiler/SDK capture and never touches protected
+configuration. The preceding completion boundary/provider/view/client/production-
+MCP/source-reuse regressions pass23/90/40/10/82/3400 with clean heaps.
+
+Browser compilation catches one final fixture-only issue: bare Write resolves to
+the pas2js global varargs routine instead of the fixture's method. After both
+reader groups join, exactly five Read/Write callback references/declarations are
+renamed to ReadInput/WriteInput; a checked exact replacement confirms every other
+byte/text unit is unchanged. The corrected controller compiles for both targets
+and repeats44 native checks with a clean heap. All other fifteen changed/new
+Pascal inputs remain byte-identical. This is explicit composite fixture evidence,
+not a claim that every complete test-program byte came from one common freeze.
+
+Final review then identifies a real logical-line bug before commit: the queued
+caret conversion counts LF only, while browser textareas and native memo lines
+normalize lone CR too. The controller now counts CR/LF/CRLF once, preserving
+Unicode scalar columns. New CR-only/mixed cases retain the exact authored pair
+and text history. An initial test setup fails source-projection equivalence with
+a clean heap; its source/log remain retained. Final buffers use typed Nyx text
+presentation and an explicit mixed Unicode source. The final controller passes56.
+
+After every preceding reader joins, all sixteen sources freeze again and the
+complete final matrix runs unchanged. Five focused native checks pass40/46/19/56/28;
+the same six regressions pass23/90/40/10/82/3400. Final qualification has24 successful
+compiler jobs, zero owned warnings/77 upstream and eleven clean native runs over
+eleven distinct programs. Eleven browser consumers include new/maintained editor
+tests, Studio and worker; native Studio/backend compile too. The preceding25/12
+composite fixture matrix remains historical in separate receipts. Current final
+qualification is an exact common source freeze, not composite. No Studio GUI/
+browser/phone is launched. Final sixteen-source/current780 maintained receipts
+(764 unrelated), all retained
+preparation copies/failures and prior compiler/97 RTL/profile/protected pin lists
+revalidate. The independent unchanged frozen verifier confirms349 files and a
+clean heap. All readers/handles join; no Studio listener remains. Current-start
+protected comparisons pass; the historical global-config preservation failure
+remains false/unrepaired. `.local/completion-navigation-paths-private.json` owns
+the packet and final source/qualification/remote receipts. Stop metadata/codec/
+fixture/compiler variants; next reassess arbitrary-caret navigation through the
+same owned query and editor owners, retaining the full original scope.
+Browser execution, ordinary GUI/phone/input/accessibility, full language/editor/
+quality/incremental/parity/adoption/delivery and all original criterion/task/
+counter/credit/DONE requirements remain open. Prior pointer/RTL evidence below
+remains historical rather than a new current-source whole-RTL run.
+
+The intervening requested splitter report is filed for later as
+[NS-2_split-platform_02](TODO/NS-2_split-platform_02.md). Exactly one catalog row
+is inserted; a checked inverse preserves all pre-existing concurrent catalog
+work. No splitter implementation or recurring cleanup task is started.
+
+## Previous integration: Source-owned data-pointer compatibility — 2026-10-20
 
 Checkpoint 664e331 and its 771 maintained inputs revalidate before this
 integration. Only the existing binding owner changes, with four new Pascal test

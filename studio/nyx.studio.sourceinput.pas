@@ -113,6 +113,10 @@ type
     FCompletionGeneration: Integer;
     FCompletionRevision: Integer;
     FCompletionWaiting: Boolean;
+    { A row click requests navigation for the next host turn. No file switches
+      while its popup/input callback is dispatching; that turn rechecks authority. }
+    FDefinitionPending: Boolean;
+    FDefinitionRow: Integer;
     procedure CompletionChanged;
     function CompletionCurrent: Boolean;
     procedure SubmitCompletion;
@@ -154,6 +158,11 @@ type
     function BuildCompletion: TNyxDocument;
     { Exact current popup mount and typed action/ticket guard every row action. }
     function RouteCompletion(ARoot, ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+    { Consume a queued project-definition request before the host rebinds input.
+      False includes stale selection/drafts/service/project or absent metadata.
+      True switches only ActiveSourceFile and returns its one-based source caret;
+      the host queues/renders its normal source pane. No draft or Undo is added. }
+    function TakeDefinitionNavigation(out ALine, AColumn: Integer): Boolean;
     { Managed dismissal callback remains safe after this controller retires. }
     function CompletionDismissReceiver: INyxEventCallback;
     property CompletionRevision: Integer read FCompletionRevision;
@@ -568,6 +577,7 @@ begin
   FCompletionContext := nil;
   FCompletionQuery := nil;
   FCompletionWaiting := False;
+  FDefinitionPending := False;
 
   if FCompletionMenu <> nil then
   begin
@@ -714,6 +724,12 @@ begin
     pcaRequest: StartCompletion;
     pcaDismiss: DismissCompletion;
     pcaSelect: CompletionChanged;
+    pcaDefinition:
+      begin
+        FDefinitionRow := FCompletionMenu.Selected;
+        FDefinitionPending := True;
+        CompletionChanged;
+      end;
     pcaUndo:
       begin
         DismissCompletion;
@@ -780,6 +796,88 @@ begin
         { Unhandled input retains its ordinary physical platform behavior. }
       end;
   end;
+end;
+
+function TNyxStudioSourceInput.TakeDefinitionNavigation(
+  out ALine, AColumn: Integer): Boolean;
+var
+  LNavigation: INyxPascalCompletionNavigation;
+  LLocation: TNyxPascalCompletionLocation;
+  LText: TNyxText;
+  LAt: Integer;
+  LStorage: Integer;
+  LScalar: Integer;
+  LAfterCR: Boolean;
+begin
+  Result := False;
+  ALine := 0;
+  AColumn := 0;
+
+  if not FDefinitionPending then
+  begin
+    Exit;
+  end;
+  FDefinitionPending := False;
+
+  if not CompletionCurrent or (FCompletionContext = nil) or
+    not FCompletionContext.Current(FCompletionQuery) or
+    (Assigned(FCompletionContextRead) and (FCompletionContextRead() <> FCompletionContext)) or
+    (FCompletionMenu.Selected <> FDefinitionRow) or
+    not Supports(FCompletionMenu, INyxPascalCompletionNavigation, LNavigation) then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LLocation := LNavigation.SelectedDefinition(Sources);
+
+  if not LLocation.Available then
+  begin
+    Exit;
+  end;
+  LText := FSession.DraftFileText(LLocation.FileReference);
+  LStorage := 1;
+  ALine := 1;
+  AColumn := 1;
+  LAfterCR := False;
+  for LAt := 1 to LLocation.Start do
+  begin
+
+    if not NyxNextScalar(LText, LStorage, LScalar) then
+    begin
+      raise ENyxTextHistory.Create('Definition position is outside its captured source');
+    end;
+
+    { Source coordinates follow logical lines before either adapter presents
+      its own line endings. CRLF counts once; lone CR and LF each count once. }
+
+    if LScalar = 13 then
+    begin
+      Inc(ALine);
+      AColumn := 1;
+      LAfterCR := True;
+    end
+    else if LScalar = 10 then
+    begin
+
+      if not LAfterCR then
+      begin
+        Inc(ALine);
+      end;
+      AColumn := 1;
+      LAfterCR := False;
+    end
+    else
+    begin
+      Inc(AColumn);
+      LAfterCR := False;
+    end;
+  end;
+  { SourceFileText validates current membership before the UI selector changes.
+    The query already checks every accepted/draft buffer, including this target.
+    Stored per-file text histories and unfinished buffers remain independent. }
+  DismissCompletion;
+  FSession.ActiveSourceFile := LLocation.FileReference;
+  Result := True;
 end;
 
 function TNyxStudioSourceInput.BuildCompletion: TNyxDocument;

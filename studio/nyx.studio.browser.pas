@@ -5280,6 +5280,8 @@ end;
 procedure TNyxStudio.UpdateCompletionPopup;
 var
   LDocument: TNyxDocument;
+  LLine: Integer;
+  LColumn: Integer;
 begin
   FCompletionTimer := -1;
 
@@ -5288,10 +5290,24 @@ begin
     Exit;
   end;
 
-  if ((FCodeRenderer.Root <> nil) and not FCodeRenderer.SectionPublicationReady) or
+  if FSectionRefreshPending or
+    ((FCodeRenderer.Root <> nil) and not FCodeRenderer.SectionPublicationReady) or
     ((FCompletionPopover <> nil) and not FCompletionPopover.Renderer.SectionPublicationReady) then
   begin
     CompletionChanged;
+    Exit;
+  end;
+  { This callback is queued after popup/input dispatch. Navigation is admitted
+    against the still-mounted source before normal rendering rebinds the target. }
+
+  if FSourceInput.TakeDefinitionNavigation(LLine, LColumn) then
+  begin
+    FSourceTab := nstSource;
+    FSourceLine := LLine;
+    FSourceColumn := LColumn;
+    FCodeVisible := True;
+    FPanel := nspDesign;
+    Refresh(True, True);
     Exit;
   end;
   FSourceInput.Bind;
