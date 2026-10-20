@@ -33,7 +33,105 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Authored header precision effects — 2026-10-19
+## Current integration: Exact real source values and minimum precision — 2026-10-19
+
+The preceding 48cf17f goal turn makes verified implementation/qualification/
+remote progress. All 740 current accepted Pascal inputs are revalidated before
+this dependency. Full library/Studio/language scope remains open, including
+general literal typing; no selected-mode or compiler-host rounding guess is added.
+
+New nyx.pascal.reals owns a value-only exact decimal record. It retains original
+unsigned Pascal spelling, normalized coefficient, arbitrary-length signed decimal
+exponent and a separate unary sign, including negative zero. Decimal digit carry/
+borrow avoids host Float/Int64 coercion, exponent expansion and fixed-precision
+rounding. Mathematical equality differs from source spelling; Unknown gives no
+proof. Optional exponent projection checks the complete signed 32-bit boundary
+without constructing an overflowing positive magnitude. Existing work/cancellation
+owners charge parsing, normalization, comparisons and projection. Published
+values retain no execution scope, mutable source or callback.
+
+Typed MINFPCONSTPREC intent retains Unknown/Default/binary32/binary64 through
+existing policy, context, translation and exact storage owners. Only qualified
+FPC 3.3.1 source gives the identifier reader and module lifetime authority.
+Authored DEFAULT remains distinct from explicit 32; no startup default is
+inferred. Header MODE retains this request and local POP retains the current
+module value. Conditional activity, physical includes, bounded prefixes and
+unknown effects preserve existing contracts. The public policy value layout
+expands; old GUIDs/enum ordinals stay exact and consumers rebuild together.
+
+The unchanged whole native literal witness records seventeen actual generic
+deductions: minimum32/64/DEFAULT, exact/recurring/large values, signs, exponent,
+header retention, POP and directives following a literal. A following setting
+does not retag the already parsed literal. Exact source values and policy states
+are checked independently; no mathematical source value is passed off as the
+rounded compiler constant or a new literal type. General literal inference,
+compiler-host parsing/rounding, constant folding and conversions remain open.
+
+The first native preparation exposed a real plain-cancellation bug: optional
+budget admission alone does not check ordinary cancellation scopes. The new
+decimal owner now checks both at every real step. That failure's six source
+inputs and clean-heap log stay retained. Focused preparation now passes 457
+checks, real-value first fit169/policy33 with every smaller allowance refusing
+atomically and 64 joined readers. Huge exponent normalization, signed-zero/
+source distinction, all signed projection boundaries, malformed input, module
+lifetime/include/prefix/family/version/identity and unchanged state quotas pass.
+The new browser consumer compiles only. Broader qualification/publication pending.
+
+The frozen qualification now passes: 54 main compiler logs have zero owned
+warnings/112 upstream; 34 native runs have clean heaps; eighteen browser
+consumers compile only. Both Studios/backend/worker compile as applicable.
+All prior native assertions remain accepted. Corpus now covers 573 checks/
+506 actual source files/2,436,674 lossless tokens, including the new decimal unit.
+Independent unchanged emission and ignored-mode oracles retain their one/two
+deliberate warnings separately from main warning debt. Their source/results and
+the seventeen whole native literal observations stay exact.
+
+Unchanged original RTL passes 56: System retains 13,101 declarations/zero syntax
+diagnostics/31 answers; ObjPas 209/zero/one, neither pending. Exact original-
+include Free/FreeInstance navigation and detached insertion remain ready. The
+original 2M view/4M aggregate/64 rounds, initial five, Word one, symbol three of
+eight and same six ordered dynamic primitive jobs within eight stay unchanged.
+No real-literal or minimum-precision probe is inserted into those plans.
+
+All 743 maintained/737 unrelated sources, six frozen inputs, three preceding
+source copies, six retained failed-cancellation inputs and all inherited failure
+preparations, 97 RTL/24 base compiler pins/all previous and seven recorded
+literal/scanner/compiler owner inspections, two retained profile inputs,
+156 original unit packets/48 historical includes, 349 frozen artifacts/nine
+contexts/five current-start protected files/thirteen concurrent planning files
+remain exact. All owned readers joined; LAN stays offline; native Nyx tools
+remain absent. The earlier global-config failure remains retained and keeps
+the historical full preservation gate false. Final source/remote identity is
+owned by the ignored current packet's verified receipt.
+
+Staging subsequently caught a helper-added blank line at the new decimal unit's
+EOF. Its exact original source/freeze/qualification remain retained. Byte-prefix
+comparison proves only trailing newline bytes were removed; native compiler-log
+and source-import inventories identify the new test as the sole compiled consumer
+of that unit. Fresh native/browser compilations and the complete corpus read pass
+on the final bytes, with the same 457/169/33/64 and 573/506/2,436,674 results.
+All other compiled sources stay exact and their dependency-disjoint results are
+retained. Final qualification is explicitly composite, selecting the new affected
+logs while preserving the earlier full-batch logs; no assertion, warning policy,
+probe or quota changes. All affected readers joined before final verification.
+
+Ignored .local/real-literal-value-paths-private.json owns current inputs, receipts
+and return path. No Pascal input changes while compiler/console readers run.
+All original quotas/probes/SDK/compiler/retained/protected/frozen/concurrent files
+remain required. LAN offline; native Nyx tools absent. No host/config retry,
+SDK capture, protected mutation, cleanup/restart, approval bypass, new MCP tool/
+schema, rollout or sub-agents. Full type/language/incremental/editor/input/
+quality/parity/adoption/delivery and original goal remain open.
+Stop exact-value/parser/minimum-policy/fixture/compiler variants. Next reassess
+compiler-owned real parsing/rounding and literal type integration through existing
+literal/numeric/intrinsic/context owners. Preserve the whole seventeen-observation
+unit and source windows; neither host floating conversion, exact mathematical
+representability alone nor a target define establishes the compiler's rounded
+constant. No uncaptured startup minimum or compiler-host format may be inferred.
+Full literal typing/folding/conversions, language/editor/input/incremental/quality/
+parity/adoption/delivery/original criterion/task/credit/DONE remain open.
+
+## Previous integration: Authored header precision effects — 2026-10-19
 
 The preceding status-only goal turn is no progress; the next safe source action
 revalidates all 737 current accepted inputs at 2b62434 before implementation.

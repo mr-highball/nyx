@@ -3819,6 +3819,53 @@ activation timing. Real literals additionally depend on minimum-constant-precisi
 and compiler-owned parsing/rounding; general literal meaning remains open.
 Browser checks compile only.
 
+### Exact real source values and minimum precision
+
+`nyx.pascal.reals` retains an exact mathematical decimal separately from a
+compiler-rounded floating constant:
+
+```pascal
+LValue := NyxPascalRealToken('0001.2500E+0002');
+{ Spelling is unchanged; Coefficient = '125', Exponent = '0'. }
+LNegative := LValue.Negated;
+```
+
+The immutable value uses decimal strings for both the normalized coefficient and
+the signed exponent. Very large exponents remain compact, including beyond
+native integer and browser number limits. No power is expanded or host floating
+type used. Unary signs stay separate from the unsigned token, preserving negative
+zero. `SameValue` compares mathematical values while preserving distinct source
+spellings; Unknown supplies no equality proof. `TryExponent` optionally projects
+into a checked signed 32-bit integer and leaves zero on failure. Both methods and
+the parser accept the existing cancellation/work scope and retain none of it.
+
+The parser accepts one complete decimal real token in the lexical contract,
+with a fraction and/or exponent. Signs, integer-only tokens, partial exponents,
+radix prefixes, separators, whitespace, infinity and NaN refuse through the
+existing `ENyxPascalValue` family. Known syntax/value evidence is not proof that
+FPC accepts its numeric range, rounds it a particular way or chooses a type.
+
+`RequestMinimumRealPrecision` retains a typed `TNyxPascalRealPrecisionRequest`:
+`prprUnknown`, `prprDefault`, `prprBinary32` or `prprBinary64`. FPC 3.3.1 source
+`MINFPCONSTPREC` accepts DEFAULT, 32 and 64 through its identifier reader,
+including decimal leading zeroes and explanatory text after the argument. It is
+a module setting: qualified MODE and local PUSH/POP retain the current request.
+Inactive directives do nothing; uncertain participation and unknown effects
+revoke knowledge. Capture, include/prefix chronology and exact context/storage
+identity preserve authored DEFAULT separately from explicit 32, despite their
+equal behavior on that scanner. No selected mode supplies an uncaptured startup
+minimum. Existing GUIDs/ordinals remain; consumers rebuild for the added public
+policy value field.
+
+The whole independent native witness observes seventeen generic deductions,
+including minimum32/64/DEFAULT, recurring decimals, large exact integers, saved
+settings and directives following a literal. The setting at the literal's own
+parse point controls it; following directives affect later literals. These
+observations qualify policy timing and expose the remaining compiler parsing/
+rounding dependency. General real-literal type inference and constant folding
+remain open; these exact mathematical values are not substituted for rounded
+compiler values. Browser consumers compile only.
+
 ### Configured FPU snapshots
 
 `NyxPascalConfiguredFPU(LContext)` returns a typed

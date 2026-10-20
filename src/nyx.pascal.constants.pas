@@ -2054,6 +2054,13 @@ var
       Part('mode-excess-precision-v1');
       Number(Ord(LPolicy.ModeExcessPrecision));
     end;
+    if LPolicy.MinimumRealPrecisionRequested <> prprUnknown then
+    begin
+      { Authored DEFAULT remains distinct from explicit binary32 intent even
+        when a qualified scanner eventually gives them equal behavior. }
+      Part('minimum-real-precision-request-v1');
+      Number(Ord(LPolicy.MinimumRealPrecisionRequested));
+    end;
     LWarnings := NyxPascalWarnings(AContext);
     LFPU := NyxPascalConfiguredFPU(AContext);
 

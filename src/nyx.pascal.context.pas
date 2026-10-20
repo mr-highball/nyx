@@ -279,6 +279,10 @@ type
   { Captured or explicitly authored interface contract. Unknown is not a COM
     default; target support, ABI and reference-count execution stay separate. }
   TNyxPascalInterfaceStyle = (pifsUnknown, pifsCOM, pifsCORBA);
+  { Authored minimum precision for real constants, not a host float format or
+    rounding observation. DEFAULT retains its source intent; Unknown supplies
+    no startup default. Qualified FPC source gives DEFAULT its separate meaning. }
+  TNyxPascalRealPrecisionRequest = (prprUnknown, prprDefault, prprBinary32, prprBinary64);
   { Value-owned local and module policies, independent of renderer/ABI types.
     Zero initialization means unknown. Fluent copies retain exact symbolic
     values; they never infer a compiler's defaults or target capabilities.
@@ -301,6 +305,7 @@ type
     FInterfaces: TNyxPascalInterfaceStyle;
     FExcessPrecision: TNyxPascalKnowledge;
     FModeExcessPrecision: TNyxPascalKnowledge;
+    FMinimumRealPrecision: TNyxPascalRealPrecisionRequest;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -343,6 +348,10 @@ type
       with an explicit EXCESSPRECISION request. This is not a node's effective
       flag: queued local switches retain their scanner activation contract. }
     function ExcessPrecisionSetting: TNyxPascalKnowledge;
+    { Independent module setting. The qualified FPC scanner applies it before
+      parsing the next real token, retaining it across local PUSH/POP and MODE.
+      This request neither predicts a rounded value nor grants literal typing. }
+    function RequestMinimumRealPrecision(AValue: TNyxPascalRealPrecisionRequest): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -357,6 +366,7 @@ type
     property InterfaceStyle: TNyxPascalInterfaceStyle read FInterfaces;
     property ExcessPrecisionRequested: TNyxPascalKnowledge read FExcessPrecision;
     property ModeExcessPrecision: TNyxPascalKnowledge read FModeExcessPrecision;
+    property MinimumRealPrecisionRequested: TNyxPascalRealPrecisionRequest read FMinimumRealPrecision;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -1462,7 +1472,8 @@ begin
         for this inspected compiler/version; this supplies no effective flag. }
       .RequestPointerChecking(FPolicies.PointerCheckingRequested)
       { The same scanner does not replace its independent interface setting. }
-      .UseInterfaces(FPolicies.InterfaceStyle);
+      .UseInterfaces(FPolicies.InterfaceStyle)
+      .RequestMinimumRealPrecision(FPolicies.MinimumRealPrecisionRequested);
   end;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
@@ -2259,7 +2270,9 @@ begin
     (Ord(FExcessPrecision) > Ord(High(TNyxPascalKnowledge))) or
     (Ord(FModeExcessPrecision) < Ord(Low(TNyxPascalKnowledge))) or
     (Ord(FModeExcessPrecision) > Ord(High(TNyxPascalKnowledge))) or
-    ((FExcessPrecision <> ppkUnknown) and (FModeExcessPrecision <> ppkUnknown)) then
+    ((FExcessPrecision <> ppkUnknown) and (FModeExcessPrecision <> ppkUnknown)) or
+    (Ord(FMinimumRealPrecision) < Ord(Low(TNyxPascalRealPrecisionRequest))) or
+    (Ord(FMinimumRealPrecision) > Ord(High(TNyxPascalRealPrecisionRequest))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2388,7 +2401,8 @@ begin
     (FWarnings = AOther.FWarnings) and (FHints = AOther.FHints) and
     (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
     (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision) and
-    (FModeExcessPrecision = AOther.FModeExcessPrecision);
+    (FModeExcessPrecision = AOther.FModeExcessPrecision) and
+    (FMinimumRealPrecision = AOther.FMinimumRealPrecision);
 end;
 
 function TNyxPascalCompilerPolicies.RequestExcessPrecision(
@@ -2415,6 +2429,14 @@ begin
   Result := FExcessPrecision;
 
   if Result = ppkUnknown then Result := FModeExcessPrecision;
+end;
+
+function TNyxPascalCompilerPolicies.RequestMinimumRealPrecision(
+  AValue: TNyxPascalRealPrecisionRequest): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FMinimumRealPrecision := AValue;
+  Result.Validate;
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;
@@ -3231,6 +3253,7 @@ var
   LSwitch: TNyxPascalLocalSwitch;
   LPolicies: INyxPascalContextPolicies;
   LInterfaces: TNyxPascalInterfaceStyle;
+  LMinimum: TNyxPascalRealPrecisionRequest;
 begin
   LCurrent := CaptureNyxPascalCompilerContext(ACurrent);
   LSaved := CaptureNyxPascalCompilerContext(ASaved);
@@ -3247,18 +3270,21 @@ begin
   end;
   LCurrent := LCurrent.WithFeature(ppfScopedEnums, LSaved.Feature(ppfScopedEnums));
   LInterfaces := pifsUnknown;
+  LMinimum := NyxPascalCompilerPolicies(LSaved).MinimumRealPrecisionRequested;
 
   if (LCurrent.Family = ppcFPC) and (LCurrent.Version.FullNumber = 30301) then
   begin
     { FPC's local settings stack does not store interfacetype. Restoring local
       switches cannot restore an earlier module-level interface request. }
     LInterfaces := NyxPascalCompilerPolicies(LCurrent).InterfaceStyle;
+    { MINFPCONSTPREC is absent from this scanner's saved local settings. }
+    LMinimum := NyxPascalCompilerPolicies(LCurrent).MinimumRealPrecisionRequested;
   end;
   Supports(LCurrent, INyxPascalContextPolicies, LPolicies);
   LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
     .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested)
-    .UseInterfaces(LInterfaces));
+    .UseInterfaces(LInterfaces).RequestMinimumRealPrecision(LMinimum));
   LCurrent := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
   LCurrent := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));
   Result := NyxPascalOptimizations(LCurrent).WithOptimizationRules(NyxPascalOptimizations(LSaved));

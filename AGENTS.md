@@ -4,7 +4,51 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source qualification retains authored FPC 3.3.1 Delphi/DelphiUnicode header
+Current-source qualification retains exact real source values and typed MINFPCONSTPREC
+intent. New nyx.pascal.reals owns original unsigned spelling, normalized decimal
+coefficient/arbitrary-length signed exponent and separate unary sign/negative
+zero, without host floats or exponent expansion. Unknown supplies no value proof;
+signed32 exponent projection is checked. Existing work/cancellation owners charge
+real steps and published values retain no query/owner. FPC30301 source minimum
+Unknown/Default/32/64 retains separate authored identity, header MODE/module
+PUSH/POP lifetime, include/prefix and conditional/unknown-effect contracts. Policy
+value layout expands; consumers rebuild, old GUIDs/enum ordinals unchanged.
+The whole native witness retains17 actual deductions/timing; mathematical values
+are never substituted for compiler-rounded constants or a literal type. The
+first preparation's plain-cancellation failure/six sources/clean heap remain;
+the new decimal owner now checks plain scopes as well as optional budgets.
+Focused457/value169/policy33/64 joined pass with clean heap. All54 main compiler
+logs have zero owned warnings/112 upstream;34 native runs have clean heaps;18
+browser consumers compile only;both Studios/backend/worker compile as applicable.
+Unchanged RTL56 retains System13101/zero syntax/31 answers, ObjPas209/zero/one,
+neither pending, exact Free/FreeInstance navigation/insertion. Original2M/4M/64/
+initial5/Word1/symbol3of8/dynamic6of8 stay exact. All743 maintained/737 unrelated/
+six frozen/three preceding source copies/six failed-cancellation inputs/all older
+preparations/97 RTL/24 compiler pins/all prior plus seven recorded inspected
+owners/two profiles/156 unit packets/48 historical includes/349 frozen artifacts/
+nine contexts/five protected files/thirteen concurrent files stay exact. Corpus
+573/506 actual files/2436674 tokens. Readers joined; historical global-config
+failure keeps full preservation false. No Pascal edits while readers run. WORK.md
+owns the retained staging EOF-blank-line failure and final composite qualification:
+only trailing newline bytes removed, unchanged byte prefix, sole compiled importer
+verified, affected native/browser consumers rebuilt and corpus rerun with unchanged
+457/169/33/64 and573/506/2436674. All dependency-disjoint source/results stay exact;
+all old logs remain and all affected readers joined. WORK.md
+and ignored .local/real-literal-value-paths-private.json own final source/remote
+evidence/return path. Preserve
+all old quotas/probes/pins/retained/protected/frozen/concurrent files. LAN offline;
+native Nyx tools absent. No host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new MCP tool/schema, rollout or sub-agents.
+Stop exact-value/parser/minimum-policy/fixture/compiler variants. Next reassess
+compiler-owned real parsing/rounding and literal type integration through existing
+literal/numeric/intrinsic/context owners. Preserve the whole17-observation unit;
+exact mathematical representability alone is not the compiler-rounded value.
+No uncaptured startup minimum or compiler-host format from target defines.
+General literal typing/compiler-host parsing/rounding/folding/conversions and full
+language/editor/parity/adoption/delivery/original goal remain open; no original
+criterion/task/credit/DONE/default-editor installation closes.
+
+Previously qualified authored FPC 3.3.1 Delphi/DelphiUnicode header
 precision effects separately from explicit requests. InMode/selected mode alone
 seed no default. Capture/PUSH/POP/context/storage identity preserve provenance;
 later Unknown requests revoke it. Existing public policy value layout expands,

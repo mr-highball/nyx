@@ -2805,6 +2805,31 @@ begin
   raise ENyxPascalContext.Create('An FPC Boolean directive needs ON/OFF or a sign');
 end;
 
+{ The inspected readid consumes a complete ASCII identifier (including initial
+  digits). Decimal leading zeroes are legal; signs and trailing letters are not
+  an alias for 32/64. Explanatory text after the identifier remains physical text.
+  Overlong identifiers retain the compiler's refusal rather than a truncated key. }
+function ParseMinimumRealPrecision(const AValue: TNyxText): TNyxPascalRealPrecisionRequest;
+var LAt, LStart: Integer; LWord: TNyxText;
+begin
+  LAt := 1;
+  while (LAt <= Length(AValue)) and (AValue[LAt] in ['a'..'z','A'..'Z','0'..'9','_']) do
+    Inc(LAt);
+
+  if (LAt = 1) or (LAt > 256) then
+    raise ENyxPascalContext.Create('A minimum real precision needs DEFAULT, 32 or 64');
+  LWord := NyxPascalASCIIKey(Copy(AValue,1,LAt-1));
+
+  if LWord = 'default' then Exit(prprDefault);
+  LStart := 1;
+  while (LStart < Length(LWord)) and (LWord[LStart] = '0') do Inc(LStart);
+  LWord := Copy(LWord,LStart,Length(LWord)-LStart+1);
+
+  if LWord = '32' then Exit(prprBinary32);
+  if LWord = '64' then Exit(prprBinary64);
+  raise ENyxPascalContext.Create('A minimum real precision needs DEFAULT, 32 or 64');
+end;
+
 { FPC consumes one selector and action, including adjacent +/- spelling.
   Explanatory trailing text stays in the physical directive receipt. Numeric and
   named selectors are not collapsed through a guessed compiler message catalog. }
@@ -3194,6 +3219,7 @@ var
   LChannel: TNyxPascalDiagnosticChannel;
   LEmissionEnabled: Boolean;
   LInterfaces: TNyxPascalInterfaceStyle;
+  LMinimum: TNyxPascalRealPrecisionRequest;
   LFPU, LPreviousFPU: TNyxPascalFPUReference;
   function QualifiedI386FPU(const AName: TNyxText): Boolean;
   begin
@@ -3363,6 +3389,25 @@ begin
         FContext := NyxPascalWithSourceFPU(FContext,TNyxPascalSourceFPUSelection.Select(LFPU))
       else
         FContext := NyxPascalWithSourceFPU(FContext,TNyxPascalSourceFPUSelection.Unknown);
+      SaveState;
+      Exit;
+    end;
+
+    if LName = 'minfpconstprec' then
+    begin
+
+      if (FContext.Family <> ppcFPC) or (FContext.Version.FullNumber <> 30301) then
+      begin
+        Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+          'Minimum real constant precision needs its qualified FPC context');
+        UnknownEffect;
+        Exit;
+      end;
+      LMinimum := ParseMinimumRealPrecision(LValue);
+
+      if (FActive = ppkUnknown) or FBlocked then LMinimum := prprUnknown;
+      FContext := NyxPascalWithCompilerPolicies(FContext,
+        NyxPascalCompilerPolicies(FContext).RequestMinimumRealPrecision(LMinimum));
       SaveState;
       Exit;
     end;
