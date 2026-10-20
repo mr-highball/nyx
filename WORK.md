@@ -33,7 +33,113 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Exact real source values and minimum precision — 2026-10-19
+## Current integration: Binary rounding and qualified real literals — 2026-10-19
+
+The preceding c925857 turn makes verified implementation/qualification/remote
+progress. All 743 accepted Pascal inputs are revalidated before this dependency.
+No compiler-host format, startup minimum, FPU or target width is inferred.
+
+The existing real-value owner now supplies exact rational nearest-even rounding
+for explicit binary32/64/x87-extended80/binary128 formats. Private base-2^15 work
+integers keep products/carry below 2^30 on native/browser compilers. Squaring and
+limited-significand division retain all decimal digits and exact remainders;
+ties, normal/subnormal transitions, signed zero and finite-format overflow remain
+distinct. Decimal order includes the complete coefficient before extreme-order
+classification. Checked exponent arithmetic and work/cancellation refuse before
+publication. Private mutable limbs/scopes never escape into detached results.
+
+A new optional compiler-context capability stores caller-owned nearest-even
+parser algorithm/precision. Default/legacy profiles remain Unknown; no native
+importer or host/configuration enrollment is changed. Capture/Clone/MODE/local
+settings/unknown-source handling preserve immutable metadata; exact context and
+tagged storage keys distinguish it. Existing GUIDs/record layouts/enum ordinals
+stay exact; plkReal appends one ordinal and new optional context/literal GUIDs
+require rebuilt consumers, without a mixed-binary claim.
+
+Qualified FPC30301 Delphi/DelphiUnicode i386 literal inference now uses source
+numeric-token state, explicit parser policy, active supported FPU, known minimum
+precision and existing compiler-root primitive representation. It follows the
+parser-rounded value and a separate Single/Double narrowing, preserving exact
+source/value metadata through INyxPascalRealLiteral. Ordinary constant Value
+stays Unknown; generic results retain the specialization type, never argument
+value proof. Missing primitive facts keep the original typed requirement. Real
+constant folding/operators, unqualified range/underflow admission, conversions
+and default parser enrollment remain open rather than borrowing runtime rules.
+
+Real arithmetic uses the remaining existing semantic-step ceiling, including
+when no aggregate scope is supplied; the default stays 100,000. Parent budgets
+also receive every actual admission. Large-range witness queries explicitly
+select a larger test allowance, while another test proves default-cap refusal.
+No original native job, probe, view/aggregate/round or semantic limit is raised.
+
+The independent new byte witness records 23 actual compiler literal types and
+extended byte values, plus both narrowing casts. Generic emission delegates to
+a plain helper to avoid new native alignment notes. A compile-time native ABI
+guard replaces an always-constant runtime guard that emitted an unreachable-code
+warning; the exact earlier four sources/logs remain retained. All 23 values and
+46 casts agree with the mathematical model, including double-rounding, halfway,
+subnormal and large finite values. Binary128 is mathematical-vector evidence
+only. Native preparation passes 753/first fit565/64 joined; large 1e4000 rounding
+uses 223,151 admitted work. Existing exact-value controls retain their contracts.
+
+The whole original seventeen-literal unit and whole new 23-literal unit now
+agree on all forty actual source windows. The second requires the existing
+ordered semantic-condition owner for its unchanged SIZEOF ABI guard; a plain
+translation's retained failure exposes that dependency rather than justifying
+guard removal. Other retained preparations cover a missing direct lexical-unit
+test import, an incomplete test display case, and a String CASE accepted by
+pas2js but rejected by the native Delphi dialect. Closed comparisons repair the
+shared implementation without compiler-specific fallback or warning suppression.
+Focused binding preparation passes 3055/first fit2746/64 joined with clean heap;
+every smaller work allowance refuses atomically and no native witness body is
+invoked by queries. Both new browser consumers compile only.
+
+Eight current Pascal inputs are frozen before broader qualification. Ignored
+.local/binary-real-paths-private.json owns receipts and exact return path. All
+old source/SDK/compiler/protected/frozen/concurrent inputs and historical failures
+remain required. Readers must join before any Pascal input edit. LAN offline;
+native Nyx tools absent. No host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new MCP tool/schema, rollout or sub-agents.
+Broad qualification/publication pending. Full type/language/editor/input/
+incremental/quality/parity/adoption/delivery and original goal remain open.
+
+Frozen current-source qualification now passes: 58 main compiler logs have zero
+owned warnings/140 upstream; 36 native runs have clean heaps; twenty browser
+consumers compile only. Both Studios/backend/worker compile as applicable.
+Rounding753/565/64 joined and binding3055/2746/64 joined qualify alongside all
+prior exact-value, floating, integer, signature, generic, source-reuse, literal,
+completion and context assertions. Corpus covers 574 checks/507 actual source
+files/2,443,996 lossless tokens. Independent unchanged emission and ignored-mode
+oracles retain one/two intentional warnings outside main product warning debt.
+
+Unchanged original RTL passes 56 with clean heap: System 13,101 declarations/
+zero syntax diagnostics/31 answers; ObjPas 209/zero/one; neither pending. Exact
+original-include Free/FreeInstance navigation and detached insertion remain ready.
+The unchanged 2M view/4M aggregate/64 rounds, initial five, Word one, symbol three
+of eight and six identical ordered dynamic primitive jobs within eight remain.
+No real literal or parser-policy job is inserted into those plans.
+
+All 747 maintained/739 unrelated sources, eight frozen inputs, four preceding
+source copies, four first-rounding inputs, all four binding preparation inputs
+and inherited retained failures, 97 RTL/24 compiler pins/all prior and eight
+recorded parser/RTL owner inspections, two profile inputs, 156 original unit
+packets/48 historical includes, 349 frozen artifacts/nine contexts/five current-
+start protected files/thirteen concurrent planning files stay exact. Source
+whitespace was checked before freeze; final verification requires no source
+repair or composite substitution. All readers joined. The earlier global-config
+failure remains retained and keeps historical full preservation false.
+
+Ignored .local/binary-real-paths-private.json owns final qualification and exact
+verified source/remote receipt. Stop rounding/parser-policy/literal-fixture/
+compiler variants. Next reassess real constant operators/folding and conversion/
+range contracts through existing numeric/literal/binding owners, preserving
+source activation, explicit parser evidence, root identity, all limits/probes and
+the full original witnesses. Default parser enrollment remains unimplemented;
+there is no host/config retry or SDK capture authority. Full source/type/language/
+module/incremental/editor/input/quality/parity/adoption/delivery and original
+criterion/task/credit/DONE stay open; no default-editor installation is claimed.
+
+## Previous integration: Exact real source values and minimum precision — 2026-10-19
 
 The preceding 48cf17f goal turn makes verified implementation/qualification/
 remote progress. All 740 current accepted Pascal inputs are revalidated before

@@ -25,7 +25,7 @@ unit nyx.pascal.context;
 
 interface
 
-uses SysUtils, nyx.text, nyx.pascal.lexing;
+uses SysUtils, nyx.text, nyx.pascal.lexing, nyx.pascal.reals;
 
 const
   { Ordered warning requests have a separate bounded capture quota. This is not
@@ -279,6 +279,25 @@ type
   { Captured or explicitly authored interface contract. Unknown is not a COM
     default; target support, ABI and reference-count execution stay separate. }
   TNyxPascalInterfaceStyle = (pifsUnknown, pifsCOM, pifsCORBA);
+  { Qualified parsing behavior supplied by the compiler-profile owner. A target
+    define, source FPU selection or host float cannot establish this algorithm. }
+  TNyxPascalRealParserKind = (prpkUnknown, prpkNearestEven);
+  { Detached compiler-parser contract, separate from target representation and
+    source minimum precision. Constructors record caller-owned evidence only;
+    they neither inspect a host nor claim every compiler follows this policy. }
+  TNyxPascalRealParserPolicy = record
+  private
+    FKind: TNyxPascalRealParserKind;
+    FPrecision: TNyxPascalBinaryPrecision;
+  public
+    class function Unknown: TNyxPascalRealParserPolicy; static;
+    class function NearestEven(APrecision: TNyxPascalBinaryPrecision): TNyxPascalRealParserPolicy; static;
+    function Known: Boolean;
+    function SamePolicy(const AOther: TNyxPascalRealParserPolicy): Boolean;
+    procedure Validate;
+    property Kind: TNyxPascalRealParserKind read FKind;
+    property Precision: TNyxPascalBinaryPrecision read FPrecision;
+  end;
   { Authored minimum precision for real constants, not a host float format or
     rounding observation. DEFAULT retains its source intent; Unknown supplies
     no startup default. Qualified FPC source gives DEFAULT its separate meaning. }
@@ -566,6 +585,14 @@ type
     function ConfiguredFPU: TNyxPascalFPUReference;
     function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
   end;
+  { Optional immutable parser-profile evidence. Absence conveys Unknown.
+    Source changes do not alter a compiler's parser; copies retain this policy
+    independently of MODE, local settings or unknown source effects. }
+  INyxPascalContextRealParser = interface(IInterface)
+    ['{DB0CC229-2285-4188-9FA2-29345956B081}']
+    function RealParserPolicy: TNyxPascalRealParserPolicy;
+    function WithRealParserPolicy(const AValue: TNyxPascalRealParserPolicy): INyxPascalCompilerContext;
+  end;
   { Optional source-selection lifetime, independent of initial configuration.
     Values are detached; a missing capability conveys unknown source history. }
   INyxPascalContextSourceFPU = interface(IInterface)
@@ -759,6 +786,11 @@ function NyxPascalFPU(const AName: TNyxText): TNyxPascalFPUReference;
 { Legacy/absent capabilities return uncaptured. A present alternate value is
   validated and copied before publication, without retaining its producer. }
 function NyxPascalConfiguredFPU(const AContext: INyxPascalCompilerContext): TNyxPascalFPUReference;
+{ Explicit compiler-parser facts, never a target/host/source default. Alternate
+  context implementations without the optional capability remain Unknown. }
+function NyxPascalRealParser(const AContext: INyxPascalCompilerContext): TNyxPascalRealParserPolicy;
+function NyxPascalWithRealParser(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalRealParserPolicy): INyxPascalCompilerContext;
 function NyxPascalWithConfiguredFPU(const AContext: INyxPascalCompilerContext;
   const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
 { Read source history, not an authored define's spelling. Resolving Configured
@@ -867,6 +899,7 @@ begin
   Supports(LCaptured, INyxPascalContextPolicies, LPolicies);
   LCaptured := LPolicies.WithPolicies(NyxPascalCompilerPolicies(AContext));
   LCaptured := NyxPascalWithConfiguredFPU(LCaptured, NyxPascalConfiguredFPU(AContext));
+  LCaptured := NyxPascalWithRealParser(LCaptured, NyxPascalRealParser(AContext));
   LCaptured := NyxPascalWithSourceFPU(LCaptured, NyxPascalSourceFPU(AContext));
 
   if Supports(AContext, INyxPascalContextWarnings, LWarnings) then
@@ -964,7 +997,7 @@ type
   TCompilerContext = class(TInterfacedObject, INyxPascalCompilerContext, INyxPascalContextPolicies,
     INyxPascalContextSizes, INyxPascalCompilerScope, INyxPascalContextWarnings,
     INyxPascalContextCodeAlignments, INyxPascalContextOptimizations, INyxPascalContextStorage,
-    INyxPascalContextConfiguredFPU, INyxPascalContextSourceFPU)
+    INyxPascalContextConfiguredFPU, INyxPascalContextSourceFPU, INyxPascalContextRealParser)
   private
     FFamily: TNyxPascalCompilerFamily;
     FVersion: TNyxPascalCompilerVersion;
@@ -983,6 +1016,7 @@ type
     FCaptureScope: TNyxPascalCompilerScope;
     FBootstrap: INyxPascalCompilerContext;
     FConfiguredFPU: TNyxPascalFPUReference;
+    FRealParser: TNyxPascalRealParserPolicy;
     FSourceFPU: TNyxPascalSourceFPUSelection;
     function Clone: TCompilerContext;
   public
@@ -1010,6 +1044,8 @@ type
     function WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;
     function ConfiguredFPU: TNyxPascalFPUReference;
     function WithConfiguredFPU(const AValue: TNyxPascalFPUReference): INyxPascalCompilerContext;
+    function RealParserPolicy: TNyxPascalRealParserPolicy;
+    function WithRealParserPolicy(const AValue: TNyxPascalRealParserPolicy): INyxPascalCompilerContext;
     function SourceFPU: TNyxPascalSourceFPUSelection;
     function WithSourceFPU(const AValue: TNyxPascalSourceFPUSelection): INyxPascalCompilerContext;
     function WarningCount: Integer;
@@ -1259,6 +1295,7 @@ begin
     Result.FComplete := FComplete;
     Result.FPolicies := FPolicies;
     Result.FConfiguredFPU := FConfiguredFPU;
+    Result.FRealParser := FRealParser;
     Result.FSourceFPU := FSourceFPU;
     SetLength(Result.FWarnings, Length(FWarnings));
     for LAt := 0 to High(FWarnings) do
@@ -1498,6 +1535,7 @@ begin
   { Initial profile metadata is not a current source setting. Unknown source
     effects revoke mutable knowledge without changing this earlier observation. }
   LCopy.FConfiguredFPU := FConfiguredFPU;
+  LCopy.FRealParser := FRealParser;
   LCopy.FSourceFPU := TNyxPascalSourceFPUSelection.Unknown;
 end;
 
@@ -1545,6 +1583,7 @@ begin
     Exit;
   end;
   if NyxPascalConfiguredFPU(AOther).Name <> FConfiguredFPU.Name then Exit;
+  if not FRealParser.SamePolicy(NyxPascalRealParser(AOther)) then Exit;
   if not FSourceFPU.SameSelection(NyxPascalSourceFPU(AOther)) then Exit;
   LBootstrap := NyxPascalBootstrapContext(AOther);
 
@@ -3178,6 +3217,79 @@ end;
 function TCompilerContext.Policies: TNyxPascalCompilerPolicies;
 begin
   Result := FPolicies;
+end;
+
+class function TNyxPascalRealParserPolicy.Unknown: TNyxPascalRealParserPolicy;
+begin
+  Result := Default(TNyxPascalRealParserPolicy);
+end;
+
+class function TNyxPascalRealParserPolicy.NearestEven(
+  APrecision: TNyxPascalBinaryPrecision): TNyxPascalRealParserPolicy;
+begin
+  Result := Unknown; Result.FKind := prpkNearestEven; Result.FPrecision := APrecision;
+  Result.Validate;
+end;
+
+function TNyxPascalRealParserPolicy.Known: Boolean;
+begin
+  Result := FKind <> prpkUnknown;
+end;
+
+procedure TNyxPascalRealParserPolicy.Validate;
+begin
+
+  if (Ord(FKind) < Ord(Low(TNyxPascalRealParserKind))) or
+    (Ord(FKind) > Ord(High(TNyxPascalRealParserKind))) or
+    (Ord(FPrecision) < Ord(Low(TNyxPascalBinaryPrecision))) or
+    (Ord(FPrecision) > Ord(High(TNyxPascalBinaryPrecision))) or
+    ((FKind = prpkUnknown) <> (FPrecision = pbpUnknown)) then
+    raise ENyxPascalContext.Create('A real-parser policy needs a valid algorithm and explicit precision');
+end;
+
+function TNyxPascalRealParserPolicy.SamePolicy(const AOther: TNyxPascalRealParserPolicy): Boolean;
+begin
+  Validate; AOther.Validate;
+  Result := (FKind = AOther.FKind) and (FPrecision = AOther.FPrecision);
+end;
+
+function NyxPascalRealParser(const AContext: INyxPascalCompilerContext): TNyxPascalRealParserPolicy;
+var LSource: INyxPascalContextRealParser;
+begin
+  Result := TNyxPascalRealParserPolicy.Unknown;
+
+  if Supports(AContext,INyxPascalContextRealParser,LSource) then Result := LSource.RealParserPolicy;
+  Result.Validate;
+end;
+
+function NyxPascalWithRealParser(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxPascalRealParserPolicy): INyxPascalCompilerContext;
+var LSource: INyxPascalCompilerContext; LTarget: INyxPascalContextRealParser;
+begin
+  AValue.Validate;
+
+  if AContext = nil then raise ENyxPascalContext.Create('A real-parser policy needs its compiler context');
+  LSource := AContext;
+
+  if not Supports(LSource,INyxPascalContextRealParser,LTarget) then
+  begin
+    LSource := CaptureNyxPascalCompilerContext(LSource);
+    Supports(LSource,INyxPascalContextRealParser,LTarget);
+  end;
+  Result := LTarget.WithRealParserPolicy(AValue);
+end;
+
+function TCompilerContext.RealParserPolicy: TNyxPascalRealParserPolicy;
+begin
+  Result := FRealParser;
+end;
+
+function TCompilerContext.WithRealParserPolicy(
+  const AValue: TNyxPascalRealParserPolicy): INyxPascalCompilerContext;
+var LCopy: TCompilerContext;
+begin
+  AValue.Validate;
+  LCopy := Clone; Result := LCopy; LCopy.FRealParser := AValue;
 end;
 
 function TCompilerContext.WithPolicies(const AValue: TNyxPascalCompilerPolicies): INyxPascalCompilerContext;

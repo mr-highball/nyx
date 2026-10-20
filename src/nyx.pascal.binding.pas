@@ -27,7 +27,7 @@ interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.syntax.translated,
-  nyx.pascal.requirements, nyx.pascal.values;
+  nyx.pascal.requirements, nyx.pascal.values, nyx.pascal.reals;
 
 type
   { Invalid snapshot/site references are caller failures. Semantic missing or
@@ -92,7 +92,7 @@ type
   { Literal value families are distinct from their expression types. A string
     constant can have an anonymous array type yet specialize a generic as a
     managed string; neither fact is an assignment-conversion permission. }
-  TNyxPascalLiteralKind = (plkInteger, plkBoolean, plkCharacter, plkString);
+  TNyxPascalLiteralKind = (plkInteger, plkBoolean, plkCharacter, plkString, plkReal);
   { Explicit receiver intent; resolving a type name never grants instance access
     to an instance field through a class reference. }
   TNyxPascalMemberAccess = (pmaInstance, pmaType);
@@ -272,6 +272,15 @@ type
     function UnitCount: Integer;
     function CodeUnit(AIndex: Integer): Integer;
     function SpecializationType: INyxPascalSemanticType;
+  end;
+  { Optional real literal evidence keeps exact source mathematics distinct from
+    the qualified compiler-parser result. The ordinary literal Value remains
+    Unknown: integer/Boolean constant evaluators must not consume this as a
+    rounded constant, and a generic routine result inherits neither value. }
+  INyxPascalRealLiteral = interface(IInterface)
+    ['{B43025C3-05B9-4D63-877E-E0463B68BA83}']
+    function SourceValue: TNyxPascalRealValue;
+    function ParsedValue: TNyxPascalBinaryReal;
   end;
   { Optional first-class formal identity. Bound entries are source-resolved
     guaranteed member contracts, including an implied class root when qualified.
@@ -612,6 +621,16 @@ type
     function UnitCount: Integer;
     function CodeUnit(AIndex: Integer): Integer;
     function SpecializationType: INyxPascalSemanticType;
+  end;
+  { Separate capability is available only on an admitted real literal. The
+    inherited ordinary type owns source/world identity; both numeric proofs
+    are detached values without mutable work integers or execution leases. }
+  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral)
+  public
+    FSourceValue: TNyxPascalRealValue;
+    FParsedValue: TNyxPascalBinaryReal;
+    function SourceValue: TNyxPascalRealValue;
+    function ParsedValue: TNyxPascalBinaryReal;
   end;
   { Private proof for a folded expression, deliberately separate from source
     literals. A generic routine consumes only ResultType; argument values never
@@ -1285,6 +1304,16 @@ end;
 function TLiteralType.Value: TNyxPascalConstantValue;
 begin
   Result := FValue;
+end;
+
+function TRealLiteralType.SourceValue: TNyxPascalRealValue;
+begin
+  Result := FSourceValue;
+end;
+
+function TRealLiteralType.ParsedValue: TNyxPascalBinaryReal;
+begin
+  Result := FParsedValue;
 end;
 
 function TLiteralType.Wide: Boolean;
@@ -7017,6 +7046,14 @@ var
     LValue, LLower: TNyxPascalConstantValue;
     LTypeAnswer: INyxPascalResolution;
     LIdentity: INyxPascalIntrinsicIdentity;
+    LRealLiteral: TRealLiteralType;
+    LParser: TNyxPascalRealParserPolicy;
+    LMinimum: TNyxPascalRealPrecisionRequest;
+    LPrecision: TNyxPascalBinaryPrecision;
+    LFPU: TNyxPascalFPUReference;
+    LRoot: INyxPascalCompilerContext;
+    LFloat: INyxPascalFloatingIdentity;
+    LRealBudget: INyxPascalAnalysisBudget;
 
     function Primitive(const AName: TNyxText): INyxPascalResolution;
     begin
@@ -7194,11 +7231,6 @@ var
     if (LContext = nil) or (LContext.Family <> ppcFPC) or
       (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
       Exit(Answer(pbsUnresolved, pbiCompilerContext));
-    LLiteral := TLiteralType.Create;
-    LLease := LLiteral;
-    LLiteral.Owner := FWorld;
-    LLiteral.FContext := LContext;
-    LLiteral.FModule := ASite.ModuleIndex;
     LPrimitive := '';
     LNegative := IsSymbol(psoMinus);
 
@@ -7206,44 +7238,125 @@ var
 
     if not LAvailable or not LToken.Complete then Exit;
     LFinish := LToken.Span.Finish;
+    LRealLiteral := nil;
+
+    if (LToken.Kind = ptkNumber) and LToken.RealNumber then
+    begin
+      { Literal parsing precedes consumption of this numeric token. A source
+        setting between its unary sign and token belongs to the numeric token;
+        a following setting must not retag the already parsed value. }
+      LContext := ContextAt(FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,LToken.Span.Start));
+
+      if (LContext = nil) or (LContext.Family <> ppcFPC) or
+        (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi,ppmDelphiUnicode]) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext));
+      LRealLiteral := TRealLiteralType.Create; LLiteral := LRealLiteral;
+    end
+    else LLiteral := TLiteralType.Create;
+    LLease := LLiteral; LLiteral.Owner := FWorld;
+    LLiteral.FContext := LContext; LLiteral.FModule := ASite.ModuleIndex;
 
     if LToken.Kind = ptkNumber then
     begin
 
-      if LToken.RealNumber then Exit;
-      LBase := 10;
-      case LToken.NumberBase of
-        pnbDecimal: LBase := 10;
-        pnbHexadecimal: LBase := 16;
-        pnbOctal: LBase := 8;
-        pnbBinary: LBase := 2;
-      end;
-      try
-        LSpelling := LLex.Text(LAt);
-        NyxPascalAdmitAnalysis(FCancel, papSourceProof, Length(LSpelling));
-        LValue := NyxPascalIntegerToken(LSpelling, LBase);
-
-        if LNegative then LValue := LValue.Negated;
-      except
-        on ENyxPascalValue do Exit;
-      end;
-
-      if LValue.Kind <> pvvInteger then Exit;
-      for LAtBound := 0 to High(CUpper) do
+      if LRealLiteral <> nil then
       begin
-        Tick;
-        LLower := NyxPascalIntegerToken(CLower[LAtBound], 10).Negated;
+        LParser := NyxPascalRealParser(LContext);
 
-        if (LValue.Number.CompareTo(LLower.Number) >= 0) and
-          (LValue.Number.CompareTo(NyxPascalIntegerToken(CUpper[LAtBound], 10).Number) <= 0) then
-        begin
-          LPrimitive := CIntegerNames[LAtBound];
-          Break;
+        if (LParser.Kind <> prpkNearestEven) or
+          not (LParser.Precision in [pbpBinary64,pbpX87Extended80]) then
+          Exit(Answer(pbsUnresolved,pbiCompilerContext,'REALPARSER'));
+        LMinimum := NyxPascalCompilerPolicies(LContext).MinimumRealPrecisionRequested;
+
+        if LMinimum = prprUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'MINFPCONSTPREC'));
+        LFPU := NyxPascalSelectedFPU(LContext);
+
+        if not LFPU.Known or (LFPU.Name = 'none') then
+          Exit(Answer(pbsUnresolved,pbiCompilerContext,'FPUTYPE'));
+        if not ((LFPU.Name = 'x87') or (LFPU.Name = 'sse') or (LFPU.Name = 'sse2') or
+          (LFPU.Name = 'sse3') or (LFPU.Name = 'ssse3') or (LFPU.Name = 'sse41') or
+          (LFPU.Name = 'sse42') or (LFPU.Name = 'avx') or (LFPU.Name = 'fma') or
+          (LFPU.Name = 'avx2') or (LFPU.Name = 'avx512f')) then
+          Exit(Answer(pbsUnresolved,pbiCompilerContext,'FPUTYPE'));
+        LRoot := NyxPascalBootstrapContext(LContext);
+
+        if NyxPascalCompilerScope(LContext) = pcsoSystemBootstrap then LRoot := LContext;
+
+        if (LRoot = nil) or (LRoot.Family <> ppcFPC) or (LRoot.Version.FullNumber <> 30301) or
+          (LRoot.Symbol(NyxPascalDefine('CPUI386')).IsDefined <> ppkTrue) then
+          Exit(Answer(pbsUnresolved,pbiCompilerContext,'real literal target'));
+
+        if FSteps >= FLimits.MaximumSteps then
+          raise ENyxPascalBindingLimit.Create('Pascal semantic steps exceed their query budget');
+        { Arithmetic consumes the existing remaining semantic-step allowance,
+          including when a caller supplies no aggregate budget. A supplied parent
+          still receives every admission; no independent larger quota is added. }
+        LRealBudget := NewNyxPascalAnalysisBudget(FLimits.MaximumSteps-FSteps,FCancel);
+        try
+          try
+            LRealLiteral.FSourceValue := NyxPascalRealToken(LLex.Text(LAt),LRealBudget);
+
+            if LNegative then LRealLiteral.FSourceValue := LRealLiteral.FSourceValue.Negated;
+            LRealLiteral.FParsedValue := NyxPascalRoundRealToEven(LRealLiteral.FSourceValue,LParser.Precision,LRealBudget);
+
+            if (LRealLiteral.FParsedValue.Status <> rrsFinite) or
+              (LRealLiteral.FParsedValue.IsZero and not LRealLiteral.FSourceValue.IsZero) then
+              Exit; { Compiler range/underflow admission is a separate contract. }
+            LPrecision := pbpBinary32;
+
+            if LMinimum = prprBinary64 then LPrecision := pbpBinary64;
+            LPrimitive := 'extended';
+
+            if LRealLiteral.FParsedValue.SameValue(LRealLiteral.FParsedValue.RoundToEven(LPrecision,LRealBudget),LRealBudget) then
+            begin
+
+              if LPrecision = pbpBinary32 then LPrimitive := 'single' else LPrimitive := 'double';
+            end;
+          except
+            on ENyxPascalValue do Exit;
+          end;
+        finally
+          Inc(FSteps,LRealBudget.Receipt.Total); LRealBudget.Retire;
         end;
+        LLiteral.FLiteralKind := plkReal;
+        Next;
+      end
+      else
+      begin
+        LBase := 10;
+        case LToken.NumberBase of
+          pnbDecimal: LBase := 10;
+          pnbHexadecimal: LBase := 16;
+          pnbOctal: LBase := 8;
+          pnbBinary: LBase := 2;
+        end;
+        try
+          LSpelling := LLex.Text(LAt);
+          NyxPascalAdmitAnalysis(FCancel, papSourceProof, Length(LSpelling));
+          LValue := NyxPascalIntegerToken(LSpelling, LBase);
+
+          if LNegative then LValue := LValue.Negated;
+        except
+          on ENyxPascalValue do Exit;
+        end;
+
+        if LValue.Kind <> pvvInteger then Exit;
+        for LAtBound := 0 to High(CUpper) do
+        begin
+          Tick;
+          LLower := NyxPascalIntegerToken(CLower[LAtBound], 10).Negated;
+
+          if (LValue.Number.CompareTo(LLower.Number) >= 0) and
+            (LValue.Number.CompareTo(NyxPascalIntegerToken(CUpper[LAtBound], 10).Number) <= 0) then
+          begin
+            LPrimitive := CIntegerNames[LAtBound];
+            Break;
+          end;
+        end;
+        LLiteral.FLiteralKind := plkInteger;
+        LLiteral.FValue := LValue;
+        Next;
       end;
-      LLiteral.FLiteralKind := plkInteger;
-      LLiteral.FValue := LValue;
-      Next;
     end
     else if LSigned then Exit
     else if (LName = CTrueLiteral) or (LName = CFalseLiteral) then
@@ -7366,6 +7479,10 @@ var
       LTypeAnswer := Primitive(LPrimitive);
 
       if LTypeAnswer.Status <> pbsBound then Exit(LTypeAnswer);
+      if (LRealLiteral <> nil) and
+        (not Supports(LTypeAnswer.BoundType,INyxPascalFloatingIdentity,LFloat) or
+        (LFloat.FloatingFormat = pffUnknown)) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,LPrimitive));
       LLiteral.FDeduction := LTypeAnswer.BoundType;
 
       if LLiteral.TypeKind <> pstArray then
@@ -7998,6 +8115,7 @@ var
     LLiteral: INyxPascalLiteralType;
     LNumeric: INumericExpressionValue;
     LCandidate, LOperand, LArity: Integer;
+    LRealOperand: INyxPascalRealLiteral;
     LExact, LMatch, LSeen: Boolean;
 
     function OrdinaryType(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
@@ -8500,6 +8618,13 @@ var
     if (LContext = nil) or (LContext.Family <> ppcFPC) or
       (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
       Exit(Answer(pbsUnresolved, pbiCompilerContext));
+    { Real constant folding and mixed constant/operator rules require their own
+      compiler qualification. Admitting a literal's type cannot silently turn
+      those expressions into the already qualified runtime-floating rules. }
+
+    if Supports(ALeft.BoundType,INyxPascalRealLiteral,LRealOperand) or
+      (not AUnary and Supports(ARight.BoundType,INyxPascalRealLiteral,LRealOperand)) then
+      Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant operation'));
     LLeft := OrdinaryType(ALeft.BoundType);
     LRight := nil;
 

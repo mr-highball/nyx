@@ -3861,10 +3861,76 @@ The whole independent native witness observes seventeen generic deductions,
 including minimum32/64/DEFAULT, recurring decimals, large exact integers, saved
 settings and directives following a literal. The setting at the literal's own
 parse point controls it; following directives affect later literals. These
-observations qualify policy timing and expose the remaining compiler parsing/
-rounding dependency. General real-literal type inference and constant folding
-remain open; these exact mathematical values are not substituted for rounded
-compiler values. Browser consumers compile only.
+observations qualify policy timing. Qualified literal inference below consumes a
+separately supplied parser contract; these exact mathematical values are never
+substituted for rounded compiler values. Browser consumers compile only.
+
+### Binary rounding and qualified real literals
+
+`NyxPascalRoundRealToEven` converts exact decimal evidence to an explicitly
+selected binary32, binary64, x87 extended80 or binary128 mathematical format.
+The implementation uses private integer limbs, squaring for powers and exact
+rational division. It never converts through the analyzer's float type or drops
+decimal digits. Normal/subnormal boundaries, halfway ties, significand carry,
+signed zero and finite-format overflow have separate results. Very large decimal
+orders are classified before constructing powers; caller work/cancellation
+limits retain atomic refusal.
+
+```pascal
+LSource := NyxPascalRealToken('0.1');
+LParsed := NyxPascalRoundRealToEven(LSource, pbpX87Extended80);
+LSingle := LParsed.RoundToEven(pbpBinary32);
+```
+
+`TNyxPascalBinaryReal` owns normalized binary digits and an integer exponent.
+`Inexact` describes the current operation. `RoundToEven` rounds its existing
+finite value rather than reparsing the original decimal; these can differ through
+double rounding. Mathematical overflow is a failed finite-format result, not a
+manufactured infinity or a Pascal compiler admission/diagnostic prediction.
+
+An optional `INyxPascalContextRealParser` retains explicit immutable profile
+evidence. A caller with the matching compiler qualification can supply:
+
+```pascal
+LContext := NyxPascalWithRealParser(LContext,
+  TNyxPascalRealParserPolicy.NearestEven(pbpX87Extended80));
+```
+
+This records caller-owned behavior. It does not inspect a host, enroll an SDK
+or infer a compiler parser from a target define/FPU/primitive width. Legacy and
+unsupplied contexts remain Unknown. Capture, mode/local copies and exact context/
+storage identity retain the policy independently of source settings. Unknown
+source effects block source meaning while retaining immutable parser metadata.
+Existing interfaces/GUIDs and record layouts remain; new optional interfaces
+and an appended `plkReal` require rebuilt consumers rather than mixed binaries.
+
+With qualified FPC 3.3.1 Delphi/DelphiUnicode i386 root representations, a known
+nearest-even binary64/x87 parser contract, active supported FPU and authored or
+captured minimum precision, literal inference follows the parsed value and its
+narrowed Single/Double value. DEFAULT's qualified source meaning selects the
+32-bit minimum. Settings are sampled at the numeric token before consumption;
+later directives cannot retag it. Missing selected primitive facts retain the
+existing exact compiler-root requirement rather than adding fixed probes.
+
+`INyxPascalRealLiteral` exposes `SourceValue` and `ParsedValue`; ordinary literal
+`Value` remains Unknown to integer/Boolean evaluators. Its specialization type is
+the qualified primitive. Implicit generic deduction retains that type while a
+routine result acquires neither the argument's literal identity nor its value.
+Unknown parser/minimum/FPU/target evidence, unqualified families, parser overflow
+and underflow admission remain explicit gaps. Real constant operators/folding
+and general conversions are separate qualifications; admitting a literal does
+not silently apply runtime-floating rules to them.
+
+Real decoding and narrowing charge the existing remaining semantic-step budget,
+even without an aggregate caller budget. Its default remains 100,000. The large
+native-range witness uses an explicit larger test allowance; a separate default
+allowance test proves refusal. Parent analysis budgets also receive every step.
+Both whole native witnesses, forty actual literal inputs in total, retain their
+original source/guards and agree with inference. A separate byte oracle covers
+23 compiler-parsed extended values and both narrowing casts. Mathematical
+binary128 checks do not claim native/compiler binary128 parity. General parser
+enrollment, literal operations/range/conversion coverage, default editor adoption
+and browser execution/input/parity remain open.
 
 ### Configured FPU snapshots
 

@@ -1993,6 +1993,7 @@ var
     LBootstrap: INyxPascalCompilerContext;
     LFPU: TNyxPascalFPUReference;
     LSourceFPU: TNyxPascalSourceFPUSelection;
+    LRealParser: TNyxPascalRealParserPolicy;
   begin
 
     if (AContext = nil) or (ADepth > 1) then
@@ -2062,6 +2063,12 @@ var
       Number(Ord(LPolicy.MinimumRealPrecisionRequested));
     end;
     LWarnings := NyxPascalWarnings(AContext);
+    LRealParser := NyxPascalRealParser(AContext);
+
+    if LRealParser.Known then
+    begin
+      Part('real-parser-policy-v1'); Number(Ord(LRealParser.Kind)); Number(Ord(LRealParser.Precision));
+    end;
     LFPU := NyxPascalConfiguredFPU(AContext);
 
     if LFPU.Known then

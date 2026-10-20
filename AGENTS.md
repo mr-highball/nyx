@@ -4,7 +4,55 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source qualification retains exact real source values and typed MINFPCONSTPREC
+Current-source qualification retains exact rational nearest-even binary32/64/x87-extended80/
+binary128 rounding through the existing real owner. Private base2^15 work limbs,
+squaring, exact remainder/tie/carry/subnormal/range handling and decimal-order
+preflight use no host float or digit truncation; values retain no scope/workspace.
+An optional immutable caller-owned parser policy is separate from target/FPU/
+minimum precision. Default/legacy/enrolled native profiles remain Unknown; no
+host/config/capture path changes. Exact context/storage/capture/lifetime identity
+retains it. Old GUIDs/record layouts/ordinals stay exact, plkReal appends one and
+new optional context/literal GUIDs require rebuilt consumers. Qualified FPC30301
+Delphi/DelphiUnicode i386 literal typing follows the numeric-token state, parser-
+rounded value, narrowed minimum and existing root representation. Exact source
+and parsed values stay separate; ordinary constant Value stays Unknown; generic
+results inherit type only. Missing facts keep original typed requirements; no
+fixed probe added. Constant operators/folding/range/underflow/conversions/default
+parser enrollment stay open. Arithmetic charges the existing remaining semantic
+ceiling (default100000 unchanged) and any parent budget. Larger witness allowance
+is explicit; default-cap refusal is tested. Whole native23 byte values/46 casts
+agree; native math753/565/64 joined and large223151 work pass with clean heap.
+Whole unchanged17 + whole new23 literal source windows agree: binding3055/2746/
+64 joined, every smaller allowance atomic, no query invokes native bodies. The
+unchanged SIZEOF guard uses existing ordered semantic conditions. Retain all
+initial warning/ABI/helper, missing-import/display-case/condition and Delphi-
+string-CASE preparations; no source guard/expectation weakened or suppression.
+All58 main compiler logs have zero owned warnings/140 upstream;36 native runs
+have clean heaps;20 browser consumers compile only;both Studios/backend/worker
+compile as applicable. Unchanged RTL56 retains System13101/zero syntax/31 answers,
+ObjPas209/zero/one, neither pending, exact Free/FreeInstance navigation/insertion.
+Original2M/4M/64/initial5/Word1/symbol3of8/dynamic6of8 stay exact. All747 maintained/
+739 unrelated/eight frozen/four preceding copies/four first-rounding inputs/four
+binding preparations/all inherited failures/97 RTL/24 compiler pins/all prior
+plus eight recorded owner inspections/two profiles/156 unit packets/48 includes/
+349 frozen artifacts/nine contexts/five protected files/thirteen concurrent files
+stay exact. Corpus574/507 actual files/2443996 tokens. Whitespace checked before
+freeze; no final source repair/composite substitution. Readers joined; historical
+global-config failure keeps full preservation false. WORK.md and ignored
+.local/binary-real-paths-private.json own final source/remote receipts/return path.
+No Pascal edits while readers live. Preserve every old
+quota/probe/pin/protected/frozen/concurrent input and historical failure. LAN
+offline; native Nyx tools absent. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or sub-
+agents. Stop rounding/parser-policy/literal-fixture/compiler variants. Next
+reassess real constant operators/folding and conversion/range contracts through
+existing numeric/literal/binding owners, preserving activation, explicit parser
+evidence, roots and all limits/probes/witnesses. Default parser enrollment remains
+unimplemented; no host/config retry or SDK capture authority. Full language/editor/
+parity/adoption/delivery/original goal remains open; no full original criterion/
+task/credit/DONE/default-editor installation closes.
+
+Previously qualified exact real source values and typed MINFPCONSTPREC
 intent. New nyx.pascal.reals owns original unsigned spelling, normalized decimal
 coefficient/arbitrary-length signed exponent and separate unary sign/negative
 zero, without host floats or exponent expansion. Unknown supplies no value proof;
