@@ -303,6 +303,8 @@ to a class or having constructor/factory kind does not imply an authored `class`
 keyword. `Visibility` and `CallingConvention` use the existing checked syntax
 enums. Unspecified visibility and an absent convention remain unspecified; this
 contract supplies no effective accessibility, compiler default or ABI.
+The snippet uses `nyx.documentation`, `nyx.documentation.typeexpressions` and
+`nyx.pascal.syntax` for the existing visibility/convention enum names.
 
 ```pascal
 function DescribeParser(const Identity: TNyxDocumentationRef;
@@ -369,6 +371,86 @@ stubs are the sole change after the reviewed matrix; that consumer was rebuilt
 on both targets, while 39 unchanged dependency jobs retain their original source
 receipts. [WORK.md](../WORK.md) records both freezes, the retained initial warnings,
 same-binary argument guards and remaining acceptance scope.
+
+## Declared implemented interfaces
+
+This attachment is qualified by native execution and portable compilation.
+`INyxDocumentationDeclaredInterfaces.ImplementedInterfaces` returns an immutable
+`INyxDocumentationInterfaceImplementations` vector of existing typed uses.
+Nil means unknown; a non-nil vector with `Count = 0` explicitly states none.
+Passing nil to `WithNyxDocumentationImplementedInterfaces` clears to unknown.
+
+```pascal
+function DescribeInterfaces(const ClassDeclaration: INyxDocumentationType;
+  const PublicInterface: TNyxDocumentationRef;
+  const Construction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+begin
+  Result := WithNyxDocumentationImplementedInterfaces(ClassDeclaration,
+    NewNyxDocumentationInterfaceImplementations([
+      NewNyxDocumentationNamedTypeUse(PublicInterface)], Construction),
+    Construction);
+end;
+```
+
+The caller supplies those actual declared identities. Ordinary named uses must
+be nongeneric. A generic application retains its complete existing standalone
+type syntax with `ndtoImplementedInterface`, ordered explicit bindings and all
+unbound leaves. Only name/qualified/generic roots are valid; arrays, pointers,
+procedural types and a generic declaration without arguments cannot substitute
+for an interface application. No new parser, global formal-parameter identity,
+effective generic specialization or compiler conversion is inferred.
+
+The root binding is selected through captured `NamedUseNode` topology, including
+a generic root's `ptrBase`; binding zero may instead describe an enclosing
+generic name. Complete index closure resolves the root and its actual alias
+branches to an interface. Explicit argument bindings follow ordinary type
+closure, so a record, class or scalar argument is not required to be an
+interface. Missing/unbound links, wrong root kinds, alias cycles and known
+contradictions in declared availability refuse before publication. Unspecified
+platform metadata stays unspecified and proves no adapter/compiler capability.
+
+Class/callback-class owners keep this vector separate from `BaseAt`. Inherited
+member queries still follow class bases and aliases only. Declaring an interface
+does not synthesize its members on the class, claim a method-name mapping or
+describe property delegation. The latter already occurs in real browser code
+and remains a distinct source-adoption fact. Interface inheritance continues
+to use the ordinary interface base contract.
+
+Capture borrows alternate vectors synchronously under the same sealed
+construction. It bounds the vector at the existing 32-link ceiling, admits
+copied fields/work before retention, and preserves the existing 256 KiB type,
+bundle and aggregate index ceilings. Canonical expression reuse follows the
+existing private receipt owner; copied binding vectors still consume their
+actual admission. Final capability/presence/item identity, typed-use fields,
+bindings and type envelope are reobserved, with cancellation checks between
+borrowed getters and before publication. Immutable copies retain the shape;
+results retain no source, producer, admission or cancellation lease.
+
+Only present facts add `implemented-interfaces` framing. Known empty differs
+from unknown, while clearing restores the earlier absent bytes. Ordinary
+duplicate/conflict refusal preserves the previous `Current` and version.
+
+The new [relationship consumer](../tests/nyx_documentation_implementations_tests.lpr)
+requires exactly one valid native repository argument before check zero:
+
+```text
+nyx_documentation_implementations_tests.exe D:\Docs\GitHub\nyx
+```
+
+Required source witnesses inspect the real badge/include owner, both extension
+interfaces, and `INyxQueryResultPort<TNyxQueryOutcome>` with its actual interface
+and concrete record declarations. They capture selected relationship vectors;
+they neither register incomplete core classes/units nor invent generic formals.
+Portable cases separately cover composition/clear, a root outside binding zero,
+mutation/cancellation, bounds/retirement, closure/availability and atomic index
+refusal. The native consumer passes 109 checks over all three required source
+sets with a clean heap. Its same binary refuses missing and invalid repository
+arguments before check zero, also with clean heaps. The common retained-source
+matrix passes 45 compiler jobs, 21 native test programs and 21 portable compiles,
+with zero owned warnings and 147 upstream RTL warnings. Browser execution is
+not part of this evidence; [WORK.md](../WORK.md) owns the exact receipts and
+retained preparations. Complete whole-unit/core/creator adoption,
+source binding and executed decorated-browser evidence remain open.
 
 ## Named compound type declarations
 
@@ -969,10 +1051,12 @@ The required truthful declaration prerequisites are explicit:
 - Authored class/static modifiers, visibility and convention facts now have a
   managed attachment qualified by 122 native checks over seven actual members and
   portable compilation. Complete source extraction still
-  needs their original owner/context. A class's implemented interfaces also need
-  a separate relationship; they are neither class bases nor inherited class
-  members. Current descriptor mechanics and signature-only extraction establish
-  none of those full-source facts automatically.
+  needs their original owner/context. The separate implemented-interface vector
+  is qualified by 109 native checks over three actual source sets and portable
+  compilation; it preserves generic applications
+  without treating them as class bases or inherited class members. Descriptor
+  mechanics and signature-only extraction establish none of those full-source
+  facts automatically.
 
 Generator adoption must derive metadata at the existing declaration emission
 points, including hand-authored dependencies and deterministic per-creator/unit

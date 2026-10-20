@@ -106,7 +106,8 @@ type
 
 implementation
 
-uses nyx.bytes, nyx.documentation.typeexpressions, nyx.pascal.work;
+uses nyx.bytes, nyx.documentation.typeexpressions, nyx.pascal.work,
+  nyx.pascal.types;
 
 type
   { Query-local work/cancellation owner never survives into an index. Byte
@@ -857,6 +858,8 @@ var
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
   LDeclared: INyxDocumentationDeclaredTypeExpression;
+  LInterfaceDeclaration: INyxDocumentationDeclaredInterfaces;
+  LImplementations: INyxDocumentationInterfaceImplementations;
   LStates, LStack, LEdges: array of Integer;
   LReference: TNyxDocumentationRef;
   LTargets: INyxDocumentationAliasTargets;
@@ -943,6 +946,126 @@ var
     AKind := LCurrent.Kind;
     Result := True;
   end;
+  { New relationship walks charge every declaration comparison and alias hop.
+    The legacy inheritance/query path keeps its established work contract. }
+  function ImplementationIndex(const AReference: TNyxDocumentationRef): Integer;
+  var
+    LIndex: Integer;
+  begin
+
+    if not AReference.Defined or AReference.IsUnit or AReference.IsMember then
+      raise ENyxDocumentation.Create('An implemented-interface use retains an unbound or non-type reference');
+    for LIndex := 0 to High(APIs) do
+    begin
+      ABudget.Spend;
+
+      if APIs[LIndex].Identity.Same(AReference) then
+        Exit(LIndex);
+    end;
+    raise ENyxDocumentation.Create('Unresolved implemented-interface type: ' + AReference.Key);
+  end;
+  function ImplementationTarget(const AReference: TNyxDocumentationRef;
+    APlatform: TNyxPlatform; ARequired, AInterfaceRoot: Boolean): Boolean;
+  var
+    LIndex, LSteps: Integer;
+    LReference: TNyxDocumentationRef;
+    LType: INyxDocumentationType;
+  begin
+    Result := False;
+    LIndex := ImplementationIndex(AReference);
+    LSteps := 0;
+    while True do
+    begin
+      ABudget.Spend;
+      Inc(LSteps);
+
+      if LSteps > DeclarationCount then
+        raise ENyxDocumentation.Create('Cyclic implemented-interface alias');
+
+      if ARequired and (Platforms[LIndex] <> []) and not DeclaredFor(LIndex, APlatform) then
+        raise ENyxDocumentation.Create('Implemented-interface use contradicts declared target availability');
+      LType := APIs[LIndex];
+
+      if LType.Kind <> ndtAlias then
+      begin
+
+        if AInterfaceRoot and (LType.Kind <> ndtInterface) then
+          raise ENyxDocumentation.Create('An implemented-interface root does not resolve to an interface');
+
+        if LType.Kind = ndtUnit then
+          raise ENyxDocumentation.Create('An interface argument cannot resolve to a unit');
+        Exit(True);
+      end;
+      LReference := AliasFor(LType, APlatform);
+
+      if not LReference.Defined then
+      begin
+
+        if ARequired then
+          raise ENyxDocumentation.Create('Implemented-interface alias is absent for a declared target');
+        Exit;
+      end;
+      LIndex := ImplementationIndex(LReference);
+    end;
+  end;
+  procedure RequireImplementation(const AUse: INyxDocumentationTypeUse; AOwner: Integer);
+  var
+    LExpression: INyxDocumentationTypeExpression;
+    LSyntax: INyxPascalTypeSyntax;
+    LRoot, LRootSlot, LSlot, LCount: Integer;
+    LReference: TNyxDocumentationRef;
+    LPlatform: TNyxPlatform;
+    LResolved: Boolean;
+  begin
+    ABudget.Spend;
+    LRootSlot := -1;
+    LReference := AUse.Reference;
+
+    if LReference.Defined then
+      LCount := 1
+    else
+    begin
+      LExpression := AUse.Expression;
+      LSyntax := LExpression.Syntax;
+      LRoot := LSyntax.Root;
+
+      if LSyntax.Node(LRoot).Kind = ptxGeneric then
+        LRoot := LSyntax.Child(LRoot, ptrBase);
+      LCount := AUse.BindingCount;
+      for LSlot := 0 to LCount - 1 do
+      begin
+        ABudget.Spend;
+
+        if LExpression.NamedUseNode(LSlot) = LRoot then
+          LRootSlot := LSlot;
+      end;
+
+      if LRootSlot < 0 then
+        raise ENyxDocumentation.Create('Missing captured implemented-interface root');
+    end;
+    for LSlot := 0 to LCount - 1 do
+    begin
+      ABudget.Spend;
+
+      if not AUse.Reference.Defined then
+        LReference := AUse.BindingAt(LSlot);
+      LResolved := False;
+      for LPlatform := npfBrowser to npfNativeLCL do
+      begin
+        ABudget.Spend;
+
+        if (Platforms[AOwner] <> []) and not DeclaredFor(AOwner, LPlatform) then
+          Continue;
+
+        if ImplementationTarget(LReference, LPlatform, Platforms[AOwner] <> [],
+          AUse.Reference.Defined or (LSlot = LRootSlot)) then
+          LResolved := True;
+      end;
+
+      if not LResolved then
+        raise ENyxDocumentation.Create('Implemented-interface reference has no complete declared alias branch');
+    end;
+  end;
 begin
   for LAt := 0 to High(APIs) do
   begin
@@ -956,6 +1079,18 @@ begin
 
     if Supports(LAPI, INyxDocumentationDeclaredTypeExpression, LDeclared) then
       RequireUse(LDeclared.Definition);
+
+    if Supports(LAPI, INyxDocumentationDeclaredInterfaces, LInterfaceDeclaration) then
+    begin
+      LImplementations := LInterfaceDeclaration.ImplementedInterfaces;
+
+      if LImplementations <> nil then
+        for LLink := 0 to LImplementations.Count - 1 do
+        begin
+          ABudget.Spend;
+          RequireImplementation(LImplementations.ItemAt(LLink), LAt);
+        end;
+    end;
 
     if Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
     begin

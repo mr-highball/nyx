@@ -25,7 +25,42 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current source adds optional authored member class/static/visibility/convention
+Current source adds separate implemented-interface typed relationships and atomic
+selected-signature batches with construction-only prefix-window reuse. Nil/known
+empty/clear, interface-root versus argument closure, aliases and authored platform
+availability stay distinct; class Bases/member walks never acquire those edges.
+All copied windows reserve exact UTF-8 bytes before allocation; backward rescans
+and repeated copies retain their actual costs. Final sibling/source/caller-array
+agreement and value-owned leases prevent stale, partial or reentrant publication.
+Legacy scalar behavior, GUID slots, ordinals, absence framing/work and quotas stay
+exact. Native relationships109 inspects3 actual source sets; batch264 inspects all89
+controls globals under their two physical source owners. Both binaries refuse
+missing/invalid source arguments at check0/clean heaps. Final common retained
+qualification passes45 compiler jobs,21 clean native test programs and21 portable
+compiles, zero owned warnings/147 upstream. Generator103 retains21 clean joined
+children/two exact5-file candidates. All1740 Pascal inputs/1733 unrelated prior/
+24 compiler/97 RTL/five current-start protected/two profile/thirteen planning pins
+stay exact. The retained initial fixture failure is not final evidence. Readers
+joined; WORK.md and .local/documentation-interfaces-paths-private.json own terminal,
+audit/source/remote receipts. Historical global-config preservation remains false.
+No full criterion/task/credit/DONE, source adoption, browser execution/UI/input/
+quality/parity/adoption/delivery closes across at least56 unclosed batches.
+LAN offline/native Nyx tools absent.
+
+Stop relationship/window/batch/fixture/compiler variants. Next helper prerequisite
+is exact scoped generic-formal metadata/bindings through existing documentation
+copy/capture/closure owners. Formal identity requires its declared owner/index;
+same-spelled names grant no scope. Type and routine generic parameters stay
+separate, interface roots stay nominal and unspecified constraints stay unknown.
+Root separately resolves the pre-existing incompatible declared-type/translated
+syntax GUID collision through explicit capability/owner review before any source
+adapter adoption; do not silently change existing GUIDs or slots. Root releases
+separate files after source/remote handoff. Whole-unit/conditional/target/named
+binding, complete source/core/creator adoption and executed browser stay open.
+No extra agents, host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new public MCP schema or rollout. Preserve concurrent work.
+
+Previous source adds optional authored member class/static/visibility/convention
 intent, with nil unknown and immutable simple/rich/property composition. Shared
 construction bounds capture; final capability/presence/envelope checks and
 between-getter cancellation prevent stale or partial publication. Old slots,
@@ -49,7 +84,7 @@ No full criterion/task/credit/DONE, browser execution/source adoption/UI/input/
 quality/parity/adoption/delivery closes across at least55 unclosed batches.
 LAN offline/native Nyx tools absent.
 
-Stop member-intent/facade/fixture/compiler variants. Next helper prerequisite is
+That checkpoint stopped member-intent/facade/fixture/compiler variants. Its next helper prerequisite was
 a separate implemented-interface vector of existing typed uses, covering actual
 generic applications without adding interface edges to class bases/member walks.
 Root/alias closure must require interface kinds; argument bindings retain their

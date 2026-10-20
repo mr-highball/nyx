@@ -50,7 +50,167 @@ implemented-interface relationship/source-ownership prerequisite while root
 qualifies. Root retains implementation-scope release and compiler admission;
 finishing a narrow deliverable does not empty the helper's assignment.
 
-## Current reference prerequisite: Authored member intent and typed facade rewriting — 2026-10-20
+## Qualified reference prerequisite: Declared implemented interfaces and signature batches — 2026-10-20
+
+The member-intent/facade checkpoint is committed and remote-exact as
+7b7002dc81ff067aac1474508e5f8594d872204f. Its source/remote receipt verifies all
+nine owned paths clean, all1738 Pascal inputs exact, all readers joined and13
+concurrent planning files untouched. The previous turn advanced the implementation
+and its qualification; the helper-flow follow-up also persisted the backlog pull
+policy. Full acceptance remains open across at least55 batches.
+
+Owning criterion: reference01's truthful type relationships, consumed by
+reference02's source discovery. Lil' Scooty owns five paths: existing
+documentation.pas, registration.pas and
+registry.pas, new tests/nyx_documentation_implementations_tests.lpr and the
+component-documentation guide. Add a separate optional immutable vector of
+existing typed uses, including actual generic applications. Append an implemented-
+interface occurrence role without moving old ordinals; use existing syntax,
+binding and sealed construction owners. Nil stays unknown; known empty and
+explicit clear stay distinct. Ordinary named roots must be nongeneric; expression
+roots must be checked name/qualified/generic designators with the new occurrence.
+
+Preserve class Bases/AliasTarget and member traversal. The relationship root and
+each retained alias branch must resolve to an interface, while explicit argument
+bindings resolve through ordinary type closure. Select the root through captured
+NamedUseNode topology; never assume binding zero or invent formal/global names.
+Account bounded searches, alias hops and all copied observations under existing
+budgets; preserve authored availability without inferring an unspecified platform
+or compiler specialization. Reobserve capability/vector/intent presence, topology
+and source envelope with between-getter cancellation; published values retain no
+mutable producer, construction or cancellation/admission lease.
+
+Acceptance evidence for this prerequisite is actual non-generic badge/extension
+and generic query-result-port source witnesses, portable composition/copy/clear,
+stale supplier/topology/nil changes, shared limits, cancellation/retirement,
+missing/wrong-kind/alias/argument/platform closure and atomic prior-index/version
+preservation. Native actual-source cases must require a valid repository argument
+before check0. Browser evidence is compilation only under the current constraints.
+Stop on guessed bindings, inherited synthetic members, unaccounted work, stale
+shape, changed legacy absence or incomplete source publication; repair the owning
+boundary and retain refusal. Root owns every compiler admission and source freeze.
+
+Root's separate lane implements admitted prefix-work reuse through existing
+typeexpressions.pas and signatures.pas, with new
+tests/nyx_documentation_signaturebatch_tests.lpr and its own source-capture guide.
+The helper appended only the new occurrence enum value, then explicitly handed
+the pure typeexpressions.pas path back to root; it does not edit that path again.
+Construction-only text windows reserve every exact UTF-8 copy and reuse only
+checked scalar/storage positions from one immutable text value. Backward scans
+remain charged. An atomic selected-signature batch retains all earlier row/
+parameter receipts until final agreement and checks the full source value once
+at the end. Existing single-signature behavior/receipts and all quotas remain.
+Evidence must cover repeated/forward/backward supplementary/NUL windows, shared
+byte/work refusal, later sibling mutation/cancellation, retired leases and all81
+generated plus8 handwritten globals under their two physical source owners.
+This is not a partial duplicate unit registration or complete source adoption.
+Stop on unsafely reused positions, unadmitted copies, stale earlier members or
+partial publication. The helper keeps the full-source
+adoption prerequisite queued and continues its independent review during testing.
+No compiler/native reader is live at this handoff. No additional agents, host/
+configuration/SDK retry, protected mutation, cleanup/restart, approval bypass,
+new public MCP schema or rollout is authorized by this batch.
+
+Qualification and stop point: both lanes are implemented under one final retained
+seven-source freeze. The relationship vector keeps class inheritance separate,
+checks its interface root through actual topology, resolves argument types through
+ordinary closure and preserves authored availability. Inner capture observations
+and final capability/vector/envelope agreement reject oscillating or stale
+suppliers. Published metadata retains no supplier or construction/admission lease.
+
+Construction-only text windows retain immutable text and checked scalar/storage
+positions. Exact UTF-8 copies reserve shared bytes before allocation; repeated
+copies and backward scans retain their costs. Private interface leases and final
+live-owner checks survive reentrant retirement of borrowed caller slots. Signature
+batches privately copy selected ordinals before outward getters, retain every
+earlier routine/parameter/boundary receipt and reobserve all rows and the complete
+source. Final caller-array agreement follows the last outward admission. No new
+parser, inferred named binding, source origin, overload key or partial unit
+descriptor is introduced. The legacy scalar consumer remains unchanged.
+
+Ignored packet:
+`E:\Blekohlab\nyx\qualification\documentation-interfaces-20261020-164142`,
+owned by `.local/documentation-interfaces-paths-private.json`. Final accepted
+common-source evidence passes45 compiler jobs,21 native test programs with clean
+heaps and21 browser/module compiles only. Both Studios, backend and worker compile
+as applicable. Accepted logs have zero owned warnings and147 upstream pas2js RTL
+warnings. No browser execution, observing, input or native/browser parity is
+claimed. All reader handles and generator children are authoritatively joined.
+
+The relationship consumer passes109 checks over all3 actual source sets: generated
+badge, extension badge and generic query-result port. It allocates/frees1909439
+blocks/72962618 bytes exactly. The signature-batch consumer passes264 checks over
+all81 generated factories plus8 handwritten controls globals under their two
+physical source owners; it allocates/frees70718 blocks/12059270 bytes exactly.
+Both same final binaries refuse missing/invalid repository arguments before
+check0 with clean heaps (four refusals). The long-prefix32-header batch stays
+within the unchanged500000-work allowance; independent scalar calls honestly
+exhaust it. Separate retained prior values survive subsequent refusal.
+
+Member122/all7, scalar signature94/all9, declared126/all10, rich99/all9,
+property43/actual controls, contribution70, shapes66, registry64 and documentation68
+remain passing. Nine native regressions retain navigation34, Studio definitions146,
+core30 plus14365 composition/designer checks, unit71, text159, completion
+navigation27/view40, transport31 and production semantic MCP completion82. The
+MCP consumer uses its existing owned engine without starting a server. Generator103
+passes21 joined clean parent/child invocations; two fresh five-file candidates
+retain the maintained output exactly for81 kinds/four facades.
+
+The first reviewed freeze produced three compiler receipts: the relationship
+native/browser pair passed, and the batch native binary compiled cleanly but
+failed fixture check61. Its managed receiving result was not a valid retained
+prior-value witness after a failing assignment. Only the new root consumer changed
+to hold a separate `LRetainedSingle` after each successful scalar capture and
+inspect its real parameter after refusal. Product behavior and the assertion's
+data requirement were not weakened. The failed binary freed10563 blocks/5195970
+bytes exactly. Original sources/logs and the failure are retained; all45 final
+jobs use the later common retained freeze, with no source changes afterward.
+
+Two private orchestration errors remain explicit: a wrapper read the last
+expected native refusal exit1 after the argument-guard script had passed, and an
+audit-generation replacement accidentally changed the prior-input expectation
+1738 to2138. The four already-correct guard receipts were not rerun. Correcting
+only the private audit assertion produced the successful final audit. Neither
+error changed product sources, compiler results, quotas or evidence selection.
+
+`final-audit-private.json`, `accepted-common-jobs-private.json`, both source
+freezes, retained preparations, four argument refusals,21 child receipts and10
+candidate receipts preserve the evidence. All1740 final Pascal inputs,1733
+unrelated prior inputs,24 compiler/97 RTL/five current-start protected/two profile
+and13 concurrent planning pins remain exact. Historical global-config preservation
+stays false. LAN remains offline/native Nyx tools absent; no host/config/SDK retry,
+capture, cleanup, restart, production rollout or new public MCP schema occurs.
+Full original criterion/task/credit/DONE, source/core/creator adoption, browser
+execution, UI/input/quality/parity/adoption/delivery remain open across at least56
+documented unclosed batches. This qualified prerequisite does not close them.
+
+Stop relationship/window/batch/fixture/compiler variants. Reassessment selects a
+distinct prerequisite for reference01/02: exact scoped generic-formal parameters
+and bindings. Lil' Scooty's proposed five paths are documentation.pas,
+registration.pas, registry.pas, new documentation_formals consumer and the existing
+component guide. A formal requires its declaration owner, own ordinal and name;
+same spelling grants no lexical scope. Optional unknown vectors retain old
+behavior; type vectors must match GenericArity while routine-own parameters stay
+separate from containing-type arity. Only bare arity-zero type-use slots may bind
+formals; interface roots remain nominal. Preserve copy/capture/framing, old absent
+bytes/work, exact availability, cancellation/retirement and atomic index refusal.
+Actual key/value types and same-spelled class/routine formals must qualify the
+scope boundary. Authored constraints remain unknown until captured independently;
+binding-layer implicit TObject facts are not source constraints.
+
+Root's separate next lane investigates a pre-existing capability GUID collision:
+`INyxPascalDeclaredTypeSyntax` and `INyxPascalTranslatedSyntax` share one GUID with
+incompatible method layouts. Review real owners, query sites and compatibility
+before choosing explicit capability/admission changes; do not silently replace
+existing GUIDs or slots or treat QI alone as physical translated-source authority.
+This is a source-adapter prerequisite, not another signature-batch variant. Full
+whole-unit/conditional/target/named binding and actual core/creator adoption stay
+downstream, including all89 unit globals and genuine complete dependency owners.
+Root releases distinct implementation files after source/remote handoff. During
+that gate the helper continues read-only formal/adoption review and keeps a queued
+next candidate; no additional agent is created.
+
+## Qualified reference prerequisite: Authored member intent and typed facade rewriting — 2026-10-20
 
 The declared-type/source-signature checkpoint is committed and pushed as
 4a092c72902eea221a89f5f968e0e4bf288053ac. Its remote/source receipt verifies all11

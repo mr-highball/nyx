@@ -151,6 +151,8 @@ var
   LDeclared: INyxDocumentationDeclaredTypeExpression;
   LMemberDeclaration: INyxDocumentationMemberDeclaration;
   LMemberIntent: INyxDocumentationMemberIntent;
+  LInterfaceDeclaration: INyxDocumentationDeclaredInterfaces;
+  LImplementations: INyxDocumentationInterfaceImplementations;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -331,6 +333,19 @@ begin
     Add('declared-type-expression');
     Number(Ord(LDeclared.Family));
     TypeUse(LDeclared.Definition);
+  end;
+
+  if Supports(AValue, INyxDocumentationDeclaredInterfaces, LInterfaceDeclaration) then
+  begin
+    LImplementations := LInterfaceDeclaration.ImplementedInterfaces;
+
+    if LImplementations <> nil then
+    begin
+      Add('implemented-interfaces');
+      Number(LImplementations.Count);
+      for LIndex := 0 to LImplementations.Count - 1 do
+        TypeUse(LImplementations.ItemAt(LIndex));
+    end;
   end;
 end;
 

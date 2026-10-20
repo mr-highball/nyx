@@ -16,7 +16,8 @@ type
   { The enclosing declaration supplies this role. Identical array syntax in a
     parameter and a type declaration does not establish identical type intent. }
   TNyxDocumentationTypeOccurrence = (ndtoParameter, ndtoResult,
-    ndtoPropertyIndex, ndtoPropertyValue, ndtoDeclaration);
+    ndtoPropertyIndex, ndtoPropertyValue, ndtoDeclaration,
+    ndtoImplementedInterface);
   { Existing lexer/type policies plus one shared work ceiling. Bytes, tokens and
     nodes are aggregate admitted storage, including abandoned attempts, not
     fresh limits for each expression. Depth keeps maximum-nesting meaning. }
@@ -69,6 +70,17 @@ type
     function Receipt: TNyxPascalAnalysisReceipt;
     procedure Retire;
   end;
+  { Construction-only windows over one immutable Pascal text value. Two checked
+    scalar/storage positions avoid repeating earlier Unicode scans for forward
+    or repeated windows. Every copied window still reserves its exact bytes;
+    backwards requests pay for any prefix that must actually be scanned again.
+    Retire releases both source and construction. Published metadata must never
+    retain this temporary owner, which supplies no source/binding authority. }
+  INyxDocumentationTextWindows = interface(IInterface)
+    ['{DB455393-951F-4924-A995-022A343AA206}']
+    function CopyWindow(const ASpan: TNyxPascalSpan): TNyxText;
+    procedure Retire;
+  end;
 
 function NewNyxDocumentationTypeConstruction(
   const ALimits: TNyxDocumentationTypeExpressionLimits;
@@ -77,6 +89,8 @@ function NewNyxDocumentationTypeConstruction(
 { Validate the sealed construction owner before trusting a public capability.
   This performs no allocation and grants no budget reset to alternate scopes. }
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
+function NewNyxDocumentationTextWindows(const ASource: TNyxText;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTextWindows;
 { Copy one scalar window only after its exact UTF-8 byte cost is reserved.
   Prefix/window Unicode scans consume the caller's shared work allowance.
   The source is a synchronous borrowed text value, never a retained unit owner. }
@@ -159,6 +173,21 @@ type
   TOwnedConstruction = class(TConstruction, IConstructionOwner)
   public
     function Construction: TConstruction;
+  end;
+  { A source value and its two checkpoints belong to this exact operation.
+    Checkpoints commit only after a complete admitted copy. Holding a retired
+    cursor cannot revive a construction or retain its source/cancellation lease. }
+  TTextWindows = class(TInterfacedObject, INyxDocumentationTextWindows)
+  private
+    FSource: TNyxText;
+    FConstruction: INyxDocumentationTypeConstruction;
+    FStartScalar, FStartUnit, FEndScalar, FEndUnit: Integer;
+  public
+    constructor Create(const ASource: TNyxText;
+      const AConstruction: INyxDocumentationTypeConstruction);
+    destructor Destroy; override;
+    function CopyWindow(const ASpan: TNyxPascalSpan): TNyxText;
+    procedure Retire;
   end;
 
 class function TNyxDocumentationTypeExpressionLimits.Defaults: TNyxDocumentationTypeExpressionLimits;
@@ -398,6 +427,147 @@ end;
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
 begin
   ConstructionOwner(AValue);
+end;
+
+constructor TTextWindows.Create(const ASource: TNyxText;
+  const AConstruction: INyxDocumentationTypeConstruction);
+var
+  LBudget: TConstruction;
+begin
+  inherited Create;
+  LBudget := ConstructionOwner(AConstruction);
+  LBudget.Spend;
+  LBudget.Check;
+
+  { Retaining a Pascal string value does not copy its character storage. The
+    existing byte allowance governs the windows actually copied, not unrelated
+    source prefixes; every scalar visited still consumes shared work. }
+  FSource := ASource;
+  FConstruction := AConstruction;
+  FStartUnit := 1;
+  FEndUnit := 1;
+end;
+
+destructor TTextWindows.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TTextWindows.Retire;
+begin
+  FSource := '';
+  FConstruction := nil;
+  FStartScalar := 0;
+  FStartUnit := 1;
+  FEndScalar := 0;
+  FEndUnit := 1;
+end;
+
+function NewNyxDocumentationTextWindows(const ASource: TNyxText;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTextWindows;
+var
+  LCandidate: INyxDocumentationTextWindows;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LSource: TNyxText;
+begin
+  Result := nil;
+  LConstruction := AConstruction;
+  LSource := ASource;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LCandidate := TTextWindows.Create(LSource, LConstruction);
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  Result := LCandidate;
+end;
+
+function TTextWindows.CopyWindow(const ASpan: TNyxPascalSpan): TNyxText;
+var
+  LBudget: TConstruction;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LIndex, LOrdinal, LStart, LScalar, LBytes, LWidth: Integer;
+  LCandidate: TNyxText;
+  procedure CheckLive;
+  begin
+    LBudget.Check;
+
+    if FConstruction <> LConstruction then
+      raise ENyxDocumentationTypeExpressionCancelled.Create('Text windows retired during copy');
+  end;
+begin
+  Result := '';
+
+  if FConstruction = nil then
+    raise ENyxDocumentationTypeExpressionCancelled.Create('Text windows retired');
+  { An outward admission may retire this cursor and release its last stored
+    construction lease. Keep the active borrow alive until the call unwinds. }
+  LConstruction := FConstruction;
+  LBudget := ConstructionOwner(LConstruction);
+  LBudget.Spend;
+  CheckLive;
+
+  if (ASpan.Start < 0) or (ASpan.Length < 0) or
+    (ASpan.Length > High(Integer) - ASpan.Start) or
+    (ASpan.Start > Length(FSource)) or
+    (ASpan.Length > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes) then
+    raise ENyxDocumentationTypeExpression.Create('Text window exceeds its scalar or remaining copy allowance');
+  LIndex := 1;
+  LOrdinal := 0;
+
+  if FStartScalar <= ASpan.Start then
+  begin
+    LIndex := FStartUnit;
+    LOrdinal := FStartScalar;
+  end;
+
+  if (FEndScalar <= ASpan.Start) and (FEndScalar >= LOrdinal) then
+  begin
+    LIndex := FEndUnit;
+    LOrdinal := FEndScalar;
+  end;
+  while LOrdinal < ASpan.Start do
+  begin
+    LBudget.Spend;
+    CheckLive;
+
+    if not NyxNextScalar(FSource, LIndex, LScalar) then
+      raise ENyxDocumentationTypeExpression.Create('Text window starts outside well-formed Unicode source');
+    Inc(LOrdinal);
+  end;
+  LStart := LIndex;
+  LBytes := 0;
+  while LOrdinal < ASpan.Finish do
+  begin
+    LBudget.Spend;
+    CheckLive;
+
+    if not NyxNextScalar(FSource, LIndex, LScalar) then
+      raise ENyxDocumentationTypeExpression.Create('Text window ends outside well-formed Unicode source');
+
+    if LScalar < $80 then
+      LWidth := 1
+    else if LScalar < $800 then
+      LWidth := 2
+    else if LScalar < $10000 then
+      LWidth := 3
+    else
+      LWidth := 4;
+
+    if LWidth > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes - LBytes then
+      raise ENyxDocumentationTypeExpression.Create('Text window exceeds its remaining UTF-8 copy allowance');
+    Inc(LBytes, LWidth);
+    Inc(LOrdinal);
+  end;
+  { Exact byte reservation precedes allocation even on a repeated copy. Reuse
+    saves only scans already proved over this immutable value, never storage. }
+  LBudget.Reserve(LBytes, 0, 0);
+  CheckLive;
+  LCandidate := Copy(FSource, LStart, LIndex - LStart);
+  CheckLive;
+  FStartScalar := ASpan.Start;
+  FStartUnit := LStart;
+  FEndScalar := LOrdinal;
+  FEndUnit := LIndex;
+  Result := LCandidate;
 end;
 
 function CopyNyxDocumentationTypeTextWindow(const ASource: TNyxText;

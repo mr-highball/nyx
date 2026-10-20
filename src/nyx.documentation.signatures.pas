@@ -12,6 +12,9 @@ type
   { A selected declaration cannot be captured faithfully. This is a metadata
     refusal, not a compiler diagnostic or permission to execute a source unit. }
   ENyxDocumentationSignature = class(ENyxDocumentation);
+  { An ordered, atomic batch of detached signatures. Entries correspond to the
+    caller's exact snapshot-local ordinals, never stable member identities. }
+  TNyxDocumentationRoutineSignatures = array of INyxDocumentationRichSignature;
 
 { Capture only a procedure/function's declared signature. The ordinal belongs
   to this exact snapshot, not a stable overload identity. A bounded header copy
@@ -26,6 +29,15 @@ type
 function CaptureNyxDocumentationRoutineSignature(
   const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+{ Capture up to the existing per-type member ceiling from one stable source.
+  Shared text windows reuse proven prefix scans; each header is still reparsed
+  and every copied byte/parameter/type consumes the same construction. Final
+  agreement covers all selected declaration/parameter receipts and the complete
+  source value. Duplicates, stale input or any refused member publish no batch.
+  This does not discover complete units, bind names or assign member identities. }
+function CaptureNyxDocumentationRoutineSignatures(
+  const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
 
 implementation
 
@@ -58,6 +70,19 @@ type
   { At most64 parameters plus one boundary observation. Allocation follows the
     independently checked owned header count, never a supplier-provided size. }
   TParameterWitnesses = array of TParameterWitness;
+  { A batch keeps exactly the bounded fields already observed by one capture.
+    Later siblings cannot invalidate an earlier selected row unnoticed. Values
+    hold no source, parser, construction or cancellation interface. }
+  TSignatureWitness = class
+  public
+    Ordinal: Integer;
+    Routine: TNyxPascalSyntaxDeclaration;
+    Scope: TNyxPascalSyntaxScope;
+    Parameters: TParameterWitnesses;
+  end;
+  { Construction-local class owners are released even when a later row refuses.
+    This is not a publicly retained result or alternative source snapshot. }
+  TSignatureWitnesses = array of TSignatureWitness;
 
 function TParsedParameter.Name: TNyxText;
 begin
@@ -203,9 +228,12 @@ begin
   end;
 end;
 
-function CaptureNyxDocumentationRoutineSignature(
+function CaptureRoutineSignature(
   const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
-  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+  const AConstruction: INyxDocumentationTypeConstruction;
+  const AWindows: INyxDocumentationTextWindows;
+  const AExpectedLexical: INyxPascalLexicalSnapshot;
+  AWitness: TSignatureWitness): INyxDocumentationRichSignature;
 var
   LLexical: INyxPascalLexicalSnapshot;
   LParsed: INyxPascalSyntaxSnapshot;
@@ -222,19 +250,28 @@ var
   LText, LHeader, LAgain, LTypeText: TNyxText;
   LDeclarationCount, LScopeCount, LScalars, LAt, LNext, LOriginalAt,
     LRoot, LParameterCount, LObserved, LBoundary: Integer;
+  procedure AdmitSource(AUnits: Integer = 1);
+  begin
+    AConstruction.Spend(AUnits);
+    { Legacy single selection retains its original receipt/observations. A batch
+      also revokes the next supplier getter when outward admission cancels. }
+
+    if AWindows <> nil then
+      CheckNyxDocumentationTypeConstruction(AConstruction);
+  end;
 begin
   Result := nil;
   CheckNyxDocumentationTypeConstruction(AConstruction);
-  AConstruction.Spend;
+  AdmitSource;
 
   if ASource = nil then
     raise ENyxDocumentationSignature.Create('A source syntax snapshot is required');
-  AConstruction.Spend;
+  AdmitSource;
   LDeclarationCount := ASource.DeclarationCount;
 
   if (ARoutine < 0) or (LDeclarationCount < 1) or (ARoutine >= LDeclarationCount) then
     raise ENyxDocumentationSignature.Create('Selected routine ordinal is outside this snapshot');
-  AConstruction.Spend;
+  AdmitSource;
   LRoutine := ASource.Declaration(ARoutine);
   NeedDeclaration(LRoutine);
 
@@ -242,25 +279,28 @@ begin
     not (LRoutine.RoutineKind in [prkProcedure, prkFunction]) or
     (LRoutine.GenericSpan.Length <> 0) then
     raise ENyxDocumentationSignature.Create('Select a representable non-generic procedure/function header');
-  AConstruction.Spend;
+  AdmitSource;
   LScopeCount := ASource.ScopeCount;
 
   if (LRoutine.Scope < 0) or (LRoutine.Scope >= LScopeCount) or
     (LRoutine.NestedScope < 0) or (LRoutine.NestedScope >= LScopeCount) then
     raise ENyxDocumentationSignature.Create('Selected routine has no valid parameter scope');
-  AConstruction.Spend;
+  AdmitSource;
   LScope := ASource.Scope(LRoutine.NestedScope);
 
   if (LScope.Kind <> psskRoutine) or (LScope.OwnerDeclaration <> ARoutine) or
     (LScope.Parent <> LRoutine.Scope) or not LScope.Complete or LScope.UnsupportedSyntax or
     (LScope.DeclarationCount < 0) or (Length(LScope.Name) > 256) then
     raise ENyxDocumentationSignature.Create('Selected routine does not own a complete parameter scope');
-  AConstruction.Spend;
+  AdmitSource;
   LLexical := ASource.Lexical;
 
   if LLexical = nil then
     raise ENyxDocumentationSignature.Create('Selected syntax has no lexical source');
-  AConstruction.Spend;
+
+  if (AExpectedLexical <> nil) and (LLexical <> AExpectedLexical) then
+    raise ENyxDocumentationSignature.Create('Batch lexical owner changed before selected capture');
+  AdmitSource;
   LScalars := LLexical.Scalars;
   NeedSpan(LRoutine.HeaderSpan, 0, LScalars, True);
   NeedSpan(LRoutine.NameSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, True);
@@ -269,7 +309,7 @@ begin
 
   if (LRoutine.RoutineKind = prkProcedure) and (LRoutine.TypeSpan.Length <> 0) then
     raise ENyxDocumentationSignature.Create('A procedure cannot claim a function result');
-  AConstruction.Spend;
+  AdmitSource;
   LSupplierPolicy := LLexical.Options;
   LSupplierPolicy.Validate;
   LPolicy := AConstruction.Limits.Lexical;
@@ -277,10 +317,15 @@ begin
   if (LSupplierPolicy.AllowNestedComments <> LPolicy.AllowNestedComments) or
     (LSupplierPolicy.AllowUnicodeIdentifiers <> LPolicy.AllowUnicodeIdentifiers) then
     raise ENyxDocumentationSignature.Create('Selected header needs a different lexical policy');
-  AConstruction.Spend;
-  LText := LLexical.Source;
-  LHeader := CopyNyxDocumentationTypeTextWindow(LText, LRoutine.HeaderSpan, AConstruction);
-  LText := '';
+  if AWindows = nil then
+  begin
+    AdmitSource;
+    LText := LLexical.Source;
+    LHeader := CopyNyxDocumentationTypeTextWindow(LText, LRoutine.HeaderSpan, AConstruction);
+    LText := '';
+  end
+  else
+    LHeader := AWindows.CopyWindow(LRoutine.HeaderSpan);
   LSyntaxPolicy := TNyxPascalSyntaxOptions.Defaults.Fragment(psfInterfaceDeclarations).Lexical(LPolicy);
   try
     LParsed := NewNyxPascalSyntaxSnapshot(LHeader, LSyntaxPolicy, AConstruction);
@@ -294,19 +339,19 @@ begin
     raise ENyxDocumentationSignature.Create('Selected header cannot be reparsed as complete declared syntax');
   for LAt := 0 to LParsed.Lexical.Count - 1 do
   begin
-    AConstruction.Spend;
+    AdmitSource;
 
     if LParsed.Lexical.Token(LAt).Kind in [ptkDirective, ptkAssembly] then
       raise ENyxDocumentationSignature.Create('Selected header contains context-dependent source');
   end;
-  AConstruction.Spend;
+  AdmitSource;
   LModule := LParsed.Scope(0);
 
   if not LModule.Complete or LModule.UnsupportedSyntax or
     (LModule.DeclarationCount <> 1) then
     raise ENyxDocumentationSignature.Create('Selected window must contain exactly one declared routine');
   LRoot := LModule.FirstDeclaration;
-  AConstruction.Spend;
+  AdmitSource;
   LOwnedRoutine := LParsed.Declaration(LRoot);
   NeedDeclaration(LOwnedRoutine);
 
@@ -317,7 +362,7 @@ begin
     not ShiftedSpan(LOwnedRoutine.NameSpan, LRoutine.NameSpan, LRoutine.HeaderSpan.Start) or
     not ShiftedSpan(LOwnedRoutine.TypeSpan, LRoutine.TypeSpan, LRoutine.HeaderSpan.Start) then
     raise ENyxDocumentationSignature.Create('Supplied declaration disagrees with the owned header');
-  AConstruction.Spend;
+  AdmitSource;
   LOwnedScope := LParsed.Scope(LOwnedRoutine.NestedScope);
   LParameterCount := LOwnedScope.DeclarationCount;
 
@@ -326,7 +371,7 @@ begin
     (LParameterCount < 0) or (LParameterCount > NyxDocumentationMaximumParameters) or
     (LScope.DeclarationCount < LParameterCount) then
     raise ENyxDocumentationSignature.Create('Selected signature exceeds its complete parameter allowance');
-  AConstruction.Spend(LParameterCount + 1);
+  AdmitSource(LParameterCount + 1);
   SetLength(LParameters, LParameterCount);
   SetLength(LWitnesses, LParameterCount + 1);
   LNext := LOwnedScope.FirstDeclaration;
@@ -334,13 +379,13 @@ begin
   LObserved := 0;
   for LAt := 0 to LParameterCount - 1 do
   begin
-    AConstruction.Spend;
+    AdmitSource;
 
     if (LOriginalAt < 0) or (LOriginalAt >= LDeclarationCount) then
       raise ENyxDocumentationSignature.Create('Supplied parameter prefix ends before its owned header');
     LOriginal := ASource.Declaration(LOriginalAt);
     NeedDeclaration(LOriginal);
-    AConstruction.Spend;
+    AdmitSource;
     LParameter := LParsed.Declaration(LNext);
     NeedDeclaration(LParameter);
 
@@ -388,7 +433,7 @@ begin
 
   if LBoundary <> -1 then
   begin
-    AConstruction.Spend;
+    AdmitSource;
 
     if (LBoundary < 0) or (LBoundary >= LDeclarationCount) then
       raise ENyxDocumentationSignature.Create('Supplied parameter boundary is outside its snapshot');
@@ -415,34 +460,264 @@ begin
   LCandidate := NewNyxDocumentationRichSignature(LParameters, LResultUse, AConstruction);
   { Reobserve only the bounded context used above. Equality of supplier
     interfaces or claimed receipts never substitutes for these observations. }
-  AConstruction.Spend;
+  AdmitSource;
 
-  if (ASource.DeclarationCount <> LDeclarationCount) or
-    (ASource.ScopeCount <> LScopeCount) or (ASource.Lexical <> LLexical) or
-    (LLexical.Scalars <> LScalars) or not SameLexicalPolicy(LLexical.Options, LSupplierPolicy) then
-    raise ENyxDocumentationSignature.Create('Source envelope changed before signature publication');
-  AConstruction.Spend;
+  if AWindows = nil then
+  begin
 
-  if not SameDeclaration(ASource.Declaration(ARoutine), LRoutine) or
-    not SameScope(ASource.Scope(LRoutine.NestedScope), LScope) then
-    raise ENyxDocumentationSignature.Create('Selected routine changed before signature publication');
+    if (ASource.DeclarationCount <> LDeclarationCount) or
+      (ASource.ScopeCount <> LScopeCount) or (ASource.Lexical <> LLexical) or
+      (LLexical.Scalars <> LScalars) or not SameLexicalPolicy(LLexical.Options, LSupplierPolicy) then
+      raise ENyxDocumentationSignature.Create('Source envelope changed before signature publication');
+  end
+  else
+  begin
+
+    if ASource.DeclarationCount <> LDeclarationCount then
+      raise ENyxDocumentationSignature.Create('Selected batch declaration extent changed');
+    AdmitSource;
+
+    if ASource.ScopeCount <> LScopeCount then
+      raise ENyxDocumentationSignature.Create('Selected batch scope extent changed');
+    AdmitSource;
+
+    if ASource.Lexical <> LLexical then
+      raise ENyxDocumentationSignature.Create('Selected batch lexical owner changed');
+    AdmitSource;
+
+    if LLexical.Scalars <> LScalars then
+      raise ENyxDocumentationSignature.Create('Selected batch scalar extent changed');
+    AdmitSource;
+
+    if not SameLexicalPolicy(LLexical.Options, LSupplierPolicy) then
+      raise ENyxDocumentationSignature.Create('Selected batch lexical policy changed');
+  end;
+  AdmitSource;
+
+  if AWindows = nil then
+  begin
+
+    if not SameDeclaration(ASource.Declaration(ARoutine), LRoutine) or
+      not SameScope(ASource.Scope(LRoutine.NestedScope), LScope) then
+      raise ENyxDocumentationSignature.Create('Selected routine changed before signature publication');
+  end
+  else
+  begin
+
+    if not SameDeclaration(ASource.Declaration(ARoutine), LRoutine) then
+      raise ENyxDocumentationSignature.Create('Selected batch routine changed before publication');
+    AdmitSource;
+
+    if not SameScope(ASource.Scope(LRoutine.NestedScope), LScope) then
+      raise ENyxDocumentationSignature.Create('Selected batch scope changed before publication');
+  end;
   for LAt := 0 to LObserved - 1 do
   begin
-    AConstruction.Spend;
+    AdmitSource;
 
     if not SameDeclaration(ASource.Declaration(LWitnesses[LAt].Ordinal), LWitnesses[LAt].Declaration) then
       raise ENyxDocumentationSignature.Create('Selected parameter changed before signature publication');
   end;
-  AConstruction.Spend;
-  LText := LLexical.Source;
-  LAgain := CopyNyxDocumentationTypeTextWindow(LText, LRoutine.HeaderSpan, AConstruction);
-  AConstruction.Spend(Length(LHeader) + 1);
 
-  if LAgain <> LHeader then
-    raise ENyxDocumentationSignature.Create('Selected header text changed before signature publication');
-  AConstruction.Spend;
+  if AWindows = nil then
+  begin
+    AdmitSource;
+    LText := LLexical.Source;
+    LAgain := CopyNyxDocumentationTypeTextWindow(LText, LRoutine.HeaderSpan, AConstruction);
+    AdmitSource(Length(LHeader) + 1);
+
+    if LAgain <> LHeader then
+      raise ENyxDocumentationSignature.Create('Selected header text changed before signature publication');
+  end;
+
+  if AWitness <> nil then
+  begin
+    AdmitSource(LObserved + 4);
+    CheckNyxDocumentationTypeConstruction(AConstruction);
+    AWitness.Ordinal := ARoutine;
+    AWitness.Routine := LRoutine;
+    AWitness.Scope := LScope;
+    SetLength(LWitnesses, LObserved);
+    AWitness.Parameters := LWitnesses;
+  end;
+  AdmitSource;
   CheckNyxDocumentationTypeConstruction(AConstruction);
   Result := LCandidate;
+end;
+
+function CaptureNyxDocumentationRoutineSignature(
+  const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+begin
+  Result := CaptureRoutineSignature(ASource, ARoutine, AConstruction, nil, nil, nil);
+end;
+
+function CaptureNyxDocumentationRoutineSignatures(
+  const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
+var
+  LSource: INyxPascalSyntaxSnapshot;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LLexical: INyxPascalLexicalSnapshot;
+  LPolicy: TNyxPascalLexicalOptions;
+  LWindows: INyxDocumentationTextWindows;
+  LText, LFinalText: TNyxText;
+  LDeclarations, LScopes, LScalars, LAt, LBefore, LParameter: Integer;
+  { Caller arrays may be changed by an outward admission/getter callback. }
+  LSelection: array of Integer;
+  LWitnesses: TSignatureWitnesses;
+  LValues: TNyxDocumentationRoutineSignatures;
+begin
+  Result := nil;
+  { Const interface arguments are borrowed slots on some native ABIs. Retain
+    their exact values before outward callbacks can release caller variables. }
+  LSource := ASource;
+  LConstruction := AConstruction;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+
+  if (LSource = nil) or (Length(ARoutines) < 1) or
+    (Length(ARoutines) > NyxDocumentationMaximumMembers) then
+    raise ENyxDocumentationSignature.Create('A signature batch requires a bounded nonempty selection');
+  LConstruction.Spend(Length(ARoutines) + 1);
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  SetLength(LSelection, Length(ARoutines));
+  for LAt := 0 to High(ARoutines) do
+    LSelection[LAt] := ARoutines[LAt];
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LDeclarations := LSource.DeclarationCount;
+  for LAt := 0 to High(LSelection) do
+  begin
+    LConstruction.Spend;
+    CheckNyxDocumentationTypeConstruction(LConstruction);
+
+    if (LSelection[LAt] < 0) or (LSelection[LAt] >= LDeclarations) then
+      raise ENyxDocumentationSignature.Create('Batch routine ordinal is outside its exact snapshot');
+    for LBefore := 0 to LAt - 1 do
+    begin
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LSelection[LBefore] = LSelection[LAt] then
+        raise ENyxDocumentationSignature.Create('A signature batch cannot repeat a selected ordinal');
+    end;
+  end;
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LScopes := LSource.ScopeCount;
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LLexical := LSource.Lexical;
+
+  if LLexical = nil then
+    raise ENyxDocumentationSignature.Create('A signature batch requires its lexical owner');
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LPolicy := LLexical.Options;
+  LPolicy.Validate;
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LScalars := LLexical.Scalars;
+  LConstruction.Spend;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LText := LLexical.Source;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+
+  if Length(LText) >= High(Integer) then
+    raise ENyxDocumentationSignature.Create('Batch source exceeds its comparison domain');
+  LWindows := NewNyxDocumentationTextWindows(LText, LConstruction);
+  try
+    LConstruction.Spend(Length(LSelection) + 1);
+    CheckNyxDocumentationTypeConstruction(LConstruction);
+    SetLength(LValues, Length(LSelection));
+    SetLength(LWitnesses, Length(LSelection));
+    try
+      for LAt := 0 to High(LSelection) do
+      begin
+        LConstruction.Spend;
+        CheckNyxDocumentationTypeConstruction(LConstruction);
+        LWitnesses[LAt] := TSignatureWitness.Create;
+        LValues[LAt] := CaptureRoutineSignature(LSource, LSelection[LAt],
+          LConstruction, LWindows, LLexical, LWitnesses[LAt]);
+      end;
+      { A later getter may change an earlier selected row. Reobserve the exact
+        bounded receipt for every sibling before publishing the result vector. }
+      for LAt := 0 to High(LWitnesses) do
+      begin
+        LConstruction.Spend;
+        CheckNyxDocumentationTypeConstruction(LConstruction);
+
+        if not SameDeclaration(LSource.Declaration(LWitnesses[LAt].Ordinal), LWitnesses[LAt].Routine) then
+          raise ENyxDocumentationSignature.Create('Earlier batch routine changed before publication');
+        LConstruction.Spend;
+        CheckNyxDocumentationTypeConstruction(LConstruction);
+
+        if not SameScope(LSource.Scope(LWitnesses[LAt].Routine.NestedScope), LWitnesses[LAt].Scope) then
+          raise ENyxDocumentationSignature.Create('Earlier batch scope changed before publication');
+        for LParameter := 0 to High(LWitnesses[LAt].Parameters) do
+        begin
+          LConstruction.Spend;
+          CheckNyxDocumentationTypeConstruction(LConstruction);
+
+          if not SameDeclaration(LSource.Declaration(LWitnesses[LAt].Parameters[LParameter].Ordinal),
+            LWitnesses[LAt].Parameters[LParameter].Declaration) then
+            raise ENyxDocumentationSignature.Create('Earlier batch parameter changed before publication');
+        end;
+      end;
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LSource.DeclarationCount <> LDeclarations then
+        raise ENyxDocumentationSignature.Create('Batch declaration count changed');
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LSource.ScopeCount <> LScopes then
+        raise ENyxDocumentationSignature.Create('Batch scope count changed');
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LSource.Lexical <> LLexical then
+        raise ENyxDocumentationSignature.Create('Batch lexical owner changed');
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if not SameLexicalPolicy(LLexical.Options, LPolicy) then
+        raise ENyxDocumentationSignature.Create('Batch lexical policy changed');
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LLexical.Scalars <> LScalars then
+        raise ENyxDocumentationSignature.Create('Batch scalar extent changed');
+      LConstruction.Spend;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+      LFinalText := LLexical.Source;
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+      LConstruction.Spend(Length(LText) + 1);
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+
+      if LText <> LFinalText then
+        raise ENyxDocumentationSignature.Create('Complete batch source changed before publication');
+      LConstruction.Spend(Length(LSelection) + 2);
+      CheckNyxDocumentationTypeConstruction(LConstruction);
+      { No outward call follows this final input agreement. Even admission at
+        the last publication boundary cannot swap or duplicate caller ordinals. }
+      for LAt := 0 to High(LSelection) do
+      begin
+
+        if ARoutines[LAt] <> LSelection[LAt] then
+          raise ENyxDocumentationSignature.Create('Caller selection changed before batch publication');
+      end;
+      Result := LValues;
+    finally
+      for LAt := 0 to High(LWitnesses) do
+        LWitnesses[LAt].Free;
+    end;
+  finally
+    LWindows.Retire;
+  end;
 end;
 
 end.

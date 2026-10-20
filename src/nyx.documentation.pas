@@ -220,6 +220,19 @@ type
     function BindingAt(AIndex: Integer): TNyxDocumentationRef;
     function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
   end;
+  { Ordered authored interface applications retain exact syntax and explicit
+    bindings. They grant neither compiler specialization nor member mappings. }
+  INyxDocumentationInterfaceImplementations = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D119}']
+    function Count: Integer;
+    function ItemAt(AIndex: Integer): INyxDocumentationTypeUse;
+  end;
+  { Nil is unknown; a captured empty vector explicitly declares no interfaces.
+    This relationship is separate from class bases and inherited member lookup. }
+  INyxDocumentationDeclaredInterfaces = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11A}']
+    function ImplementedInterfaces: INyxDocumentationInterfaceImplementations;
+  end;
   { Managed parameter metadata carries compound syntax outside the unchanged
     copied named-parameter record. Defaults are inert, exact Pascal text. }
   INyxDocumentationParameterDeclaration = interface(IInterface)
@@ -307,6 +320,14 @@ function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
 function NewNyxDocumentationNamedTypeUse(const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
 function NewNyxDocumentationExpressionTypeUse(const AExpression: INyxDocumentationTypeExpression;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+{ Capture ordered interface uses under one construction; no supplier or scope is
+  retained. Nil attachment clears to unknown, unlike an explicit empty vector. }
+function NewNyxDocumentationInterfaceImplementations(
+  const AInterfaces: array of INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationInterfaceImplementations;
+function WithNyxDocumentationImplementedInterfaces(const AType: INyxDocumentationType;
+  const AInterfaces: INyxDocumentationInterfaceImplementations;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
 function NewNyxDocumentationParameterDeclaration(const AName: TNyxText;
   const AType: INyxDocumentationTypeUse;
   AMode: TNyxDocumentationParameterMode = ndpValue): INyxDocumentationParameterDeclaration;
@@ -473,8 +494,25 @@ var
   LIntrinsic: INyxDocumentationIntrinsic;
   LTargets: INyxDocumentationAliasTargets;
   LDeclared: INyxDocumentationDeclaredTypeExpression;
+  LDeclaration: INyxDocumentationDeclaredInterfaces;
+  LInterfaces: INyxDocumentationInterfaceImplementations;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
+
+  if Supports(AValue, INyxDocumentationDeclaredInterfaces, LDeclaration) then
+  begin
+    LInterfaces := LDeclaration.ImplementedInterfaces;
+
+    if LInterfaces <> nil then
+    begin
+      Inc(Result, Length(IntToStr(LInterfaces.Count)));
+      for LAt := 0 to LInterfaces.Count - 1 do
+      begin
+        Inc(Result, TypeUseBytes(LInterfaces.ItemAt(LAt)));
+        AdmitBytes(Result);
+      end;
+    end;
+  end;
 
   if Supports(AValue, INyxDocumentationIntrinsic, LIntrinsic) then
     Inc(Result, Length(IntToStr(Ord(LIntrinsic.Family))));
@@ -514,6 +552,27 @@ begin
 end;
 
 type
+  { Operation-local managed rows preserve the exact borrowed item topology;
+    published vectors never retain these supplier observations. }
+  TDocumentationTypeUseVector = array of INyxDocumentationTypeUse;
+  { An attachment carries its inner capture's final observations only until
+    publication, preventing an outer getter from concealing a nil/topology swap. }
+  TImplementationObservation = class
+  public
+    Capability: INyxDocumentationDeclaredInterfaces;
+    Source: INyxDocumentationInterfaceImplementations;
+    Items: TDocumentationTypeUseVector;
+    Frozen: INyxDocumentationInterfaceImplementations;
+  end;
+  { Construction-private storage publishes only captured uses. No mutable
+    source, admission or cancellation survives its factory/capture operation. }
+  TDocumentationInterfaceImplementations = class(TInterfacedObject,
+    INyxDocumentationInterfaceImplementations)
+  public
+    Items: array of INyxDocumentationTypeUse;
+    function Count: Integer;
+    function ItemAt(AIndex: Integer): INyxDocumentationTypeUse;
+  end;
   { Forward captured member class for exact private immutable-owner admission. }
   TDocumentationMember = class;
   { A private borrow is valid only with the owner's exact public interface.
@@ -665,13 +724,15 @@ type
   end;
   { Member interfaces live in a dynamic managed vector. Base/alias links remain
     data references, preventing an inherited metadata graph from owning cycles. }
-  TDocumentationType = class(TDocumentationContent, INyxDocumentationType, IDocumentationTypeOwner)
+  TDocumentationType = class(TDocumentationContent, INyxDocumentationType,
+    IDocumentationTypeOwner, INyxDocumentationDeclaredInterfaces)
   private
     FIdentity: TNyxDocumentationRef;
     FKind: TNyxDocumentationTypeKind;
     FAlias: TNyxDocumentationRef;
     FBases: array of TNyxDocumentationRef;
     FMembers: array of INyxDocumentationMember;
+    FImplemented: INyxDocumentationInterfaceImplementations;
     function AppendCapturedMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
   protected
     procedure CopyType(ATarget: TDocumentationType);
@@ -679,6 +740,7 @@ type
     procedure AssignAlias(const ATarget: TNyxDocumentationRef); virtual;
   public
     function TypeOwner: TDocumentationType;
+    function ImplementedInterfaces: INyxDocumentationInterfaceImplementations;
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationTypeKind;
     function AliasTarget: TNyxDocumentationRef;
@@ -1641,6 +1703,297 @@ begin
     (LReference.Defined and not AValue.Reference.Same(LReference)) then
     raise ENyxDocumentation.Create('Type-use envelope changed before publication');
   CheckCancellation(AScope);
+  Result := LFrozen;
+end;
+
+procedure InterfaceWork(const AScope: INyxDocumentationTypeConstruction;
+  AUnits: Integer = 1);
+begin
+  CheckCancellation(AScope);
+  AScope.Spend(AUnits);
+  CheckCancellation(AScope);
+end;
+
+function TDocumentationInterfaceImplementations.Count: Integer;
+begin
+  Result := Length(Items);
+end;
+
+function TDocumentationInterfaceImplementations.ItemAt(AIndex: Integer): INyxDocumentationTypeUse;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+    raise ENyxDocumentation.Create('Implemented-interface ordinal is out of range');
+  Result := Items[AIndex];
+end;
+
+{ Root is a checked designator, never an arbitrary first binding or a guessed
+  interface for an element/pointee. Named generics need their actual arguments. }
+function ImplementedRootSlot(const AUse: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Integer;
+var
+  LExpression: INyxDocumentationTypeExpression;
+  LSyntax: INyxPascalTypeSyntax;
+  LRoot, LAt: Integer;
+begin
+  InterfaceWork(AScope);
+
+  if AUse.Reference.Defined then
+  begin
+
+    if AUse.Reference.GenericArity <> 0 then
+      raise ENyxDocumentation.Create('A generic interface needs its explicit application syntax');
+    Exit(-1);
+  end;
+  LExpression := AUse.Expression;
+
+  if (LExpression = nil) or (LExpression.Occurrence <> ndtoImplementedInterface) then
+    raise ENyxDocumentation.Create('An implemented interface requires its declaration occurrence');
+  LSyntax := LExpression.Syntax;
+  LRoot := LSyntax.Root;
+
+  if not (LSyntax.Node(LRoot).Kind in [ptxName, ptxQualified, ptxGeneric]) then
+    raise ENyxDocumentation.Create('An implemented interface must be a named or generic designator');
+
+  if LSyntax.Node(LRoot).Kind = ptxGeneric then
+    LRoot := LSyntax.Child(LRoot, ptrBase);
+
+  if (LRoot < 0) or not (LSyntax.Node(LRoot).Kind in [ptxName, ptxQualified]) then
+    raise ENyxDocumentation.Create('A generic interface requires its checked root designator');
+  for LAt := 0 to LExpression.NamedUseCount - 1 do
+  begin
+    InterfaceWork(AScope);
+
+    if LExpression.NamedUseNode(LAt) = LRoot then
+      Exit(LAt);
+  end;
+  raise ENyxDocumentation.Create('Missing implemented-interface root occurrence');
+end;
+
+function SameImplementedUse(const ALeft, ARight: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LAt: Integer;
+  LLeft, LRight: TNyxDocumentationRef;
+begin
+  InterfaceWork(AScope);
+  Result := False;
+
+  if ALeft.Reference.Defined <> ARight.Reference.Defined then
+    Exit;
+
+  if ALeft.Reference.Defined then
+    Exit(ALeft.Reference.Same(ARight.Reference));
+  InterfaceWork(AScope, Length(ALeft.Expression.Text) + Length(ARight.Expression.Text) + 1);
+
+  if (ALeft.Expression.Text <> ARight.Expression.Text) or
+    (ALeft.BindingCount <> ARight.BindingCount) then
+    Exit;
+  for LAt := 0 to ALeft.BindingCount - 1 do
+  begin
+    InterfaceWork(AScope);
+    LLeft := ALeft.BindingAt(LAt);
+    LRight := ARight.BindingAt(LAt);
+
+    if (LLeft.Defined <> LRight.Defined) or (LLeft.Defined and not LLeft.Same(LRight)) then
+      Exit;
+  end;
+  Result := True;
+end;
+
+{ Final borrowed observation performs no reconstruction or fresh allowance.
+  It checks every used field/map, stopping before the next getter if cancelled. }
+function SameImplementedObservation(const ASource, AFrozen: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LReference, LBound, LExpected: TNyxDocumentationRef;
+  LExpression, LFinalExpression: INyxDocumentationTypeExpression;
+  LCount, LAt, LNode, LArity: Integer;
+  LText: TNyxText;
+  LRole: TNyxDocumentationTypeOccurrence;
+begin
+  Result := False;
+  InterfaceWork(AScope);
+  LReference := ASource.Reference;
+  InterfaceWork(AScope);
+  LExpression := ASource.Expression;
+  InterfaceWork(AScope);
+  LCount := ASource.BindingCount;
+  CheckCancellation(AScope);
+
+  if (LReference.Defined <> AFrozen.Reference.Defined) or
+    (LReference.Defined and not LReference.Same(AFrozen.Reference)) or
+    ((LExpression = nil) <> (AFrozen.Expression = nil)) or (LCount <> AFrozen.BindingCount) then
+    Exit;
+
+  if LExpression <> nil then
+  begin
+    InterfaceWork(AScope);
+    LText := LExpression.Text;
+    CheckCancellation(AScope);
+
+    if Length(LText) > AScope.Limits.Lexical.MaximumSourceBytes then
+      Exit;
+    InterfaceWork(AScope, Length(LText) + 1);
+
+    if LText <> AFrozen.Expression.Text then
+      Exit;
+    InterfaceWork(AScope);
+    LRole := LExpression.Occurrence;
+    InterfaceWork(AScope);
+    LAt := LExpression.NamedUseCount;
+    CheckCancellation(AScope);
+
+    if (LRole <> ndtoImplementedInterface) or (LAt <> AFrozen.Expression.NamedUseCount) then
+      Exit;
+    for LAt := 0 to LCount - 1 do
+    begin
+      InterfaceWork(AScope);
+      LNode := LExpression.NamedUseNode(LAt);
+      InterfaceWork(AScope);
+      LArity := LExpression.NamedUseArity(LAt);
+      CheckCancellation(AScope);
+
+      if (LNode <> AFrozen.Expression.NamedUseNode(LAt)) or
+        (LArity <> AFrozen.Expression.NamedUseArity(LAt)) then
+        Exit;
+    end;
+  end;
+  for LAt := 0 to LCount - 1 do
+  begin
+    InterfaceWork(AScope);
+    LBound := ASource.BindingAt(LAt);
+    CheckCancellation(AScope);
+    LExpected := AFrozen.BindingAt(LAt);
+
+    if (LBound.Defined <> LExpected.Defined) or (LBound.Defined and not LBound.Same(LExpected)) then
+      Exit;
+  end;
+  InterfaceWork(AScope);
+  LBound := ASource.Reference;
+  InterfaceWork(AScope);
+  LFinalExpression := ASource.Expression;
+  InterfaceWork(AScope);
+  LAt := ASource.BindingCount;
+  CheckCancellation(AScope);
+  Result := (LBound.Defined = LReference.Defined) and
+    (not LReference.Defined or LReference.Same(LBound)) and
+    (LFinalExpression = LExpression) and (LAt = LCount);
+
+  if Result and (LExpression <> nil) then
+  begin
+    InterfaceWork(AScope);
+    LText := LExpression.Text;
+    CheckCancellation(AScope);
+
+    if Length(LText) > AScope.Limits.Lexical.MaximumSourceBytes then
+      Exit(False);
+    InterfaceWork(AScope, Length(LText) + 1);
+
+    if LText <> AFrozen.Expression.Text then
+      Exit(False);
+    InterfaceWork(AScope);
+    LRole := LExpression.Occurrence;
+    InterfaceWork(AScope);
+    LAt := LExpression.NamedUseCount;
+    CheckCancellation(AScope);
+    Result := (LRole = ndtoImplementedInterface) and (LAt = LCount);
+  end;
+end;
+
+function CaptureInterfaceImplementations(const AValue: INyxDocumentationInterfaceImplementations;
+  const AScope: INyxDocumentationTypeConstruction;
+  out AObserved: TDocumentationTypeUseVector): INyxDocumentationInterfaceImplementations;
+var
+  LOwner: TDocumentationInterfaceImplementations;
+  LLease: INyxDocumentationInterfaceImplementations;
+  LSources: array of INyxDocumentationTypeUse;
+  LCurrent: INyxDocumentationTypeUse;
+  LCount, LAt, LOther, LBytes, LFinalCount: Integer;
+begin
+  Result := nil;
+  AObserved := nil;
+
+  if AValue = nil then
+    Exit;
+  InterfaceWork(AScope);
+  LCount := AValue.Count;
+  CheckCancellation(AScope);
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
+    raise ENyxDocumentation.Create('Implemented-interface vector allowance exhausted');
+  AScope.AdmitText(IntToStr(LCount));
+  InterfaceWork(AScope, 2 * LCount + 1);
+  LOwner := TDocumentationInterfaceImplementations.Create;
+  LLease := LOwner;
+  SetLength(LOwner.Items, LCount);
+  SetLength(LSources, LCount);
+  LBytes := Length(IntToStr(LCount));
+  for LAt := 0 to LCount - 1 do
+  begin
+    InterfaceWork(AScope);
+    LSources[LAt] := AValue.ItemAt(LAt);
+    CheckCancellation(AScope);
+    LOwner.Items[LAt] := CaptureTypeUse(LSources[LAt], AScope);
+    ImplementedRootSlot(LOwner.Items[LAt], AScope);
+    Inc(LBytes, TypeUseBytes(LOwner.Items[LAt]));
+    AdmitBytes(LBytes);
+    for LOther := 0 to LAt - 1 do
+    begin
+
+      if SameImplementedUse(LOwner.Items[LAt], LOwner.Items[LOther], AScope) then
+        raise ENyxDocumentation.Create('An implemented-interface vector repeats a declaration use');
+    end;
+  end;
+  for LAt := 0 to LCount - 1 do
+  begin
+    InterfaceWork(AScope);
+    LCurrent := AValue.ItemAt(LAt);
+    CheckCancellation(AScope);
+
+    if (LCurrent <> LSources[LAt]) or
+      not SameImplementedObservation(LCurrent, LOwner.Items[LAt], AScope) then
+      raise ENyxDocumentation.Create('Implemented-interface topology or use changed before publication');
+  end;
+  InterfaceWork(AScope);
+  LFinalCount := AValue.Count;
+  CheckCancellation(AScope);
+
+  if LFinalCount <> LCount then
+    raise ENyxDocumentation.Create('Implemented-interface count changed before publication');
+  AObserved := LSources;
+  Result := LLease;
+end;
+
+function NewNyxDocumentationInterfaceImplementations(
+  const AInterfaces: array of INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationInterfaceImplementations;
+var
+  LOwner: TDocumentationInterfaceImplementations;
+  LSource, LFrozen: INyxDocumentationInterfaceImplementations;
+  LObserved: TDocumentationTypeUseVector;
+  LAt: Integer;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+
+  if Length(AInterfaces) > NyxDocumentationMaximumLinks then
+    raise ENyxDocumentation.Create('Implemented-interface vector allowance exhausted');
+  InterfaceWork(AConstruction, Length(AInterfaces) + 1);
+  LOwner := TDocumentationInterfaceImplementations.Create;
+  LSource := LOwner;
+  SetLength(LOwner.Items, Length(AInterfaces));
+  for LAt := 0 to High(AInterfaces) do
+    LOwner.Items[LAt] := AInterfaces[LAt];
+  LFrozen := CaptureInterfaceImplementations(LSource, AConstruction, LObserved);
+  for LAt := 0 to High(AInterfaces) do
+  begin
+    InterfaceWork(AConstruction);
+
+    if AInterfaces[LAt] <> LOwner.Items[LAt] then
+      raise ENyxDocumentation.Create('Input interface use changed during capture');
+  end;
+  CheckCancellation(AConstruction);
   Result := LFrozen;
 end;
 
@@ -2752,6 +3105,7 @@ begin
   ATarget.FIdentity := FIdentity;
   ATarget.FKind := FKind;
   ATarget.FAlias := FAlias;
+  ATarget.FImplemented := FImplemented;
   SetLength(ATarget.FBases, BaseCount);
   for LAt := 0 to BaseCount - 1 do
     ATarget.FBases[LAt] := FBases[LAt];
@@ -2999,6 +3353,11 @@ begin
   Result := Self;
 end;
 
+function TDocumentationType.ImplementedInterfaces: INyxDocumentationInterfaceImplementations;
+begin
+  Result := FImplemented;
+end;
+
 function TDocumentationType.AppendCapturedMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
 var
   LNext: TDocumentationType;
@@ -3055,8 +3414,126 @@ begin
   Result := LHold;
 end;
 
+function SameImplementationVector(const ASource, AFrozen: INyxDocumentationInterfaceImplementations;
+  const AObserved: TDocumentationTypeUseVector;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LAt, LCount: Integer;
+  LItem: INyxDocumentationTypeUse;
+begin
+  Result := False;
+
+  if (ASource = nil) or (AFrozen = nil) then
+    Exit((ASource = nil) and (AFrozen = nil));
+  InterfaceWork(AScope);
+  LCount := ASource.Count;
+  CheckCancellation(AScope);
+
+  if (LCount <> AFrozen.Count) or (LCount <> Length(AObserved)) then
+    Exit;
+  for LAt := 0 to LCount - 1 do
+  begin
+    InterfaceWork(AScope);
+    LItem := ASource.ItemAt(LAt);
+    CheckCancellation(AScope);
+
+    if (LItem <> AObserved[LAt]) or
+      not SameImplementedObservation(LItem, AFrozen.ItemAt(LAt), AScope) then
+      Exit;
+  end;
+  InterfaceWork(AScope);
+  LCount := ASource.Count;
+  CheckCancellation(AScope);
+  Result := LCount = AFrozen.Count;
+end;
+
+procedure CheckImplementedOwner(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationTypeKind;
+  const AValue: INyxDocumentationInterfaceImplementations;
+  const AScope: INyxDocumentationTypeConstruction);
+var
+  LAt, LRoot: Integer;
+  LUse: INyxDocumentationTypeUse;
+  LReference: TNyxDocumentationRef;
+begin
+
+  if AValue = nil then
+    Exit;
+
+  if not (AKind in [ndtClass, ndtCallback]) then
+    raise ENyxDocumentation.Create('Only a class declaration can own implemented interfaces');
+  for LAt := 0 to AValue.Count - 1 do
+  begin
+    InterfaceWork(AScope);
+    LUse := AValue.ItemAt(LAt);
+    LRoot := ImplementedRootSlot(LUse, AScope);
+    LReference := LUse.Reference;
+
+    if LRoot >= 0 then
+      LReference := LUse.BindingAt(LRoot);
+
+    if LReference.Defined and LReference.Same(AIdentity) then
+      raise ENyxDocumentation.Create('A class cannot name itself as an implemented interface');
+  end;
+end;
+
+function SameImplementationEnvelope(const ASource, AFrozen: INyxDocumentationType;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LIdentity, LAlias, LBase: TNyxDocumentationRef;
+  LKind: TNyxDocumentationTypeKind;
+  LSummary: TNyxText;
+  LEvidence: TNyxDocumentationEvidence;
+  LAt, LBases, LMembers, LExamples, LRelated: Integer;
+begin
+  Result := False;
+  InterfaceWork(AScope);
+  LIdentity := ASource.Identity;
+  InterfaceWork(AScope);
+  LKind := ASource.Kind;
+  InterfaceWork(AScope);
+  LSummary := ASource.Summary;
+  CheckCancellation(AScope);
+
+  if Length(LSummary) > NyxDocumentationMaximumBytes then
+    Exit;
+  InterfaceWork(AScope, Length(LSummary) + 1);
+  InterfaceWork(AScope);
+  LEvidence := ASource.Evidence;
+  InterfaceWork(AScope);
+  LAlias := ASource.AliasTarget;
+  InterfaceWork(AScope);
+  LBases := ASource.BaseCount;
+  InterfaceWork(AScope);
+  LMembers := ASource.MemberCount;
+  InterfaceWork(AScope);
+  LExamples := ASource.ExampleCount;
+  InterfaceWork(AScope);
+  LRelated := ASource.RelatedCount;
+  CheckCancellation(AScope);
+
+  if not LIdentity.Same(AFrozen.Identity) or (LKind <> AFrozen.Kind) or
+    (LSummary <> AFrozen.Summary) or (LEvidence <> AFrozen.Evidence) or
+    (LAlias.Defined <> AFrozen.AliasTarget.Defined) or
+    (LAlias.Defined and not LAlias.Same(AFrozen.AliasTarget)) or
+    (LBases <> AFrozen.BaseCount) or (LMembers <> AFrozen.MemberCount) or
+    (LExamples <> AFrozen.ExampleCount) or (LRelated <> AFrozen.RelatedCount) then
+    Exit;
+  for LAt := 0 to LBases - 1 do
+  begin
+    InterfaceWork(AScope);
+    LBase := ASource.BaseAt(LAt);
+    CheckCancellation(AScope);
+
+    if not LBase.Same(AFrozen.BaseAt(LAt)) then
+      Exit;
+  end;
+  Result := True;
+end;
+
 function CaptureDocumentationType(const AValue: INyxDocumentationType;
-  const ACancellation: INyxCancellationScope): INyxDocumentationType;
+  const ACancellation: INyxCancellationScope;
+  AObservation: TImplementationObservation = nil): INyxDocumentationType;
 var
   LSource, LFrozen: INyxDocumentationType;
   LAt, LCount: Integer;
@@ -3074,6 +3551,20 @@ var
   LBuilder: TDocumentationType;
   LCanonical: INyxDocumentationType;
   LMember: INyxDocumentationMember;
+  LInterfaces, LFinalInterfaces: INyxDocumentationDeclaredInterfaces;
+  LImplementationSource, LImplementationFrozen, LImplementationFinal: INyxDocumentationInterfaceImplementations;
+  LImplementationItems: TDocumentationTypeUseVector;
+  LHasInterfaces, LFinalHasInterfaces, LLegacyInterfaces: Boolean;
+  LReadIdentity, LReadReference: TNyxDocumentationRef;
+  LReadSummary: TNyxText;
+  LReadExample: TNyxDocumentationExample;
+  LReadIntrinsic: TNyxDocumentationIntrinsicFamily;
+  procedure CheckSourceRead;
+  begin
+
+    if LHasInterfaces and not LLegacyInterfaces then
+      CheckCancellation(ACancellation);
+  end;
 begin
   LSource := AValue;
   Result := nil;
@@ -3082,9 +3573,45 @@ begin
   if LSource = nil then
     raise ENyxDocumentation.Create('A documentation type is required');
   LKind := LSource.Kind;
+  Supports(ACancellation, INyxDocumentationTypeConstruction, LScope);
+  LLegacyInterfaces := False;
+
+  if Supports(LSource, IDocumentationTypeOwner, LOwner) then
+  begin
+    LBuilder := LOwner.TypeOwner;
+
+    if LBuilder = nil then
+      raise ENyxDocumentation.Create('Missing private type owner');
+    LCanonical := LBuilder;
+
+    if LCanonical <> LSource then
+      raise ENyxDocumentation.Create('A source cannot borrow another captured type owner');
+    LLegacyInterfaces := LBuilder.FImplemented = nil;
+  end;
+  LHasInterfaces := Supports(LSource, INyxDocumentationDeclaredInterfaces, LInterfaces);
+
+  if LHasInterfaces and not LLegacyInterfaces then
+  begin
+    InterfaceWork(LScope);
+    LImplementationSource := LInterfaces.ImplementedInterfaces;
+    CheckCancellation(LScope);
+
+    if (LImplementationSource <> nil) and not (LKind in [ndtClass, ndtCallback]) then
+      raise ENyxDocumentation.Create('Only a class declaration can own implemented interfaces');
+    LImplementationFrozen := CaptureInterfaceImplementations(LImplementationSource, LScope, LImplementationItems);
+  end;
+  CheckSourceRead;
+  LReadIdentity := LSource.Identity;
+  CheckSourceRead;
+  LReadSummary := LSource.Summary;
+  CheckSourceRead;
+  CheckImplementedOwner(LReadIdentity, LKind, LImplementationFrozen, LScope);
   LHasIntrinsic := Supports(LSource, INyxDocumentationIntrinsic, LIntrinsic);
+  CheckSourceRead;
   LHasTargets := Supports(LSource, INyxDocumentationAliasTargets, LTargets);
+  CheckSourceRead;
   LHasDeclared := Supports(LSource, INyxDocumentationDeclaredTypeExpression, LDeclared);
+  CheckSourceRead;
 
   if (LHasIntrinsic <> (LKind = ndtIntrinsic)) or (LHasTargets and (LKind <> ndtAlias)) or
     (LHasDeclared <> (LKind = ndtExpression)) then
@@ -3097,19 +3624,26 @@ begin
       raise ENyxDocumentation.Create('A declared definition needs the shared capture construction');
     LScope.Spend;
     LDefinition := LDeclared.Definition;
+    CheckSourceRead;
     LScope.Spend;
     LFamily := LDeclared.Family;
-    LFrozen := NewNyxDocumentationDeclaredType(LSource.Identity, LSource.Summary, LDefinition, LScope);
+    CheckSourceRead;
+    LFrozen := NewNyxDocumentationDeclaredType(LReadIdentity, LReadSummary, LDefinition, LScope);
     Supports(LFrozen, INyxDocumentationDeclaredTypeExpression, LCapturedDeclared);
 
     if LFamily <> LCapturedDeclared.Family then
       raise ENyxDocumentation.Create('Declared family disagrees with its exact type expression');
   end
   else if LHasIntrinsic then
-    LFrozen := NewNyxDocumentationIntrinsic(LSource.Identity, LIntrinsic.Family, LSource.Summary)
+  begin
+    LReadIntrinsic := LIntrinsic.Family;
+    CheckSourceRead;
+    LFrozen := NewNyxDocumentationIntrinsic(LReadIdentity, LReadIntrinsic, LReadSummary);
+  end
   else if LHasTargets then
   begin
     LCount := LTargets.TargetCount;
+    CheckSourceRead;
 
     if (LCount < 1) or (LCount > 2) then
       raise ENyxDocumentation.Create('Captured alias exceeds its one-or-two branch allowance');
@@ -3118,12 +3652,21 @@ begin
     begin
       CheckCancellation(ACancellation);
       LBranches[LAt] := LTargets.TargetAt(LAt);
+      CheckSourceRead;
     end;
-    LFrozen := NewNyxDocumentationTargetAlias(LSource.Identity, LSource.Summary, LBranches);
+    LFrozen := NewNyxDocumentationTargetAlias(LReadIdentity, LReadSummary, LBranches);
   end
   else
-    LFrozen := NewNyxDocumentationType(LSource.Identity, LKind, LSource.Summary);
+    LFrozen := NewNyxDocumentationType(LReadIdentity, LKind, LReadSummary);
+
+  if LImplementationFrozen <> nil then
+  begin
+    Supports(LFrozen, IDocumentationTypeOwner, LOwner);
+    LBuilder := LOwner.TypeOwner;
+    LBuilder.FImplemented := LImplementationFrozen;
+  end;
   LAlias := LSource.AliasTarget;
+  CheckSourceRead;
 
   if LAlias.Defined then
   begin
@@ -3138,6 +3681,7 @@ begin
       LFrozen := LFrozen.WithAlias(LAlias);
   end;
   LCount := LSource.BaseCount;
+  CheckSourceRead;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its base allowance');
@@ -3147,9 +3691,12 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
-    LFrozen := LFrozen.WithBase(LSource.BaseAt(LAt));
+    LReadReference := LSource.BaseAt(LAt);
+    CheckSourceRead;
+    LFrozen := LFrozen.WithBase(LReadReference);
   end;
   LCount := LSource.MemberCount;
+  CheckSourceRead;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumMembers) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its member allowance');
@@ -3159,7 +3706,9 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
-    LMember := CaptureNyxDocumentationMember(LSource.MemberAt(LAt), ACancellation);
+    LMember := LSource.MemberAt(LAt);
+    CheckSourceRead;
+    LMember := CaptureNyxDocumentationMember(LMember, ACancellation);
 
     if not Supports(LFrozen, IDocumentationTypeOwner, LOwner) then
       raise ENyxDocumentation.Create('Missing private captured type owner');
@@ -3174,24 +3723,48 @@ begin
     LFrozen := LBuilder.AppendCapturedMember(LMember);
   end;
   LCount := LSource.ExampleCount;
+  CheckSourceRead;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumExamples) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its example allowance');
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
-    LFrozen := LFrozen.WithExample(LSource.ExampleAt(LAt));
+    LReadExample := LSource.ExampleAt(LAt);
+    CheckSourceRead;
+    LFrozen := LFrozen.WithExample(LReadExample);
   end;
   LCount := LSource.RelatedCount;
+  CheckSourceRead;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its related-link allowance');
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
-    LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
+    LReadReference := LSource.RelatedAt(LAt);
+    CheckSourceRead;
+    LFrozen := LFrozen.WithRelated(LReadReference);
   end;
   TypeBytes(LFrozen);
+  LFinalHasInterfaces := Supports(LSource, INyxDocumentationDeclaredInterfaces, LFinalInterfaces);
+  CheckCancellation(ACancellation);
+
+  if (LFinalHasInterfaces <> LHasInterfaces) or
+    (LHasInterfaces and (LInterfaces <> LFinalInterfaces)) then
+    raise ENyxDocumentation.Create('Implemented-interface capability changed during capture');
+
+  if LHasInterfaces and not LLegacyInterfaces then
+  begin
+    InterfaceWork(LScope);
+    LImplementationFinal := LInterfaces.ImplementedInterfaces;
+    CheckCancellation(LScope);
+
+    if (LImplementationFinal <> LImplementationSource) or
+      not SameImplementationVector(LImplementationFinal, LImplementationFrozen, LImplementationItems, LScope) or
+      not SameImplementationEnvelope(LSource, LFrozen, LScope) then
+      raise ENyxDocumentation.Create('Implemented-interface declaration changed before publication');
+  end;
 
   if LHasDeclared then
   begin
@@ -3206,6 +3779,14 @@ begin
       raise ENyxDocumentation.Create('Declared type envelope changed before publication');
   end;
   CheckCancellation(ACancellation);
+
+  if AObservation <> nil then
+  begin
+    AObservation.Capability := LInterfaces;
+    AObservation.Source := LImplementationSource;
+    AObservation.Frozen := LImplementationFrozen;
+    AObservation.Items := LImplementationItems;
+  end;
   Result := LFrozen;
 end;
 
@@ -3233,6 +3814,84 @@ begin
   end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
+end;
+
+function WithNyxDocumentationImplementedInterfaces(const AType: INyxDocumentationType;
+  const AInterfaces: INyxDocumentationInterfaceImplementations;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  LFrozen, LLease, LCanonical: INyxDocumentationType;
+  LOwner: IDocumentationTypeOwner;
+  LBuilder, LCopy: TDocumentationType;
+  LInitialCapability, LFinalCapability: INyxDocumentationDeclaredInterfaces;
+  LInitial, LFinal, LCaptured: INyxDocumentationInterfaceImplementations;
+  LObserved: TDocumentationTypeUseVector;
+  LObservation: TImplementationObservation;
+  LHasInitial, LHasFinal: Boolean;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  InterfaceWork(AConstruction);
+
+  if AType = nil then
+    raise ENyxDocumentation.Create('Implemented interfaces require their actual class declaration');
+  LObservation := TImplementationObservation.Create;
+  try
+    LHasInitial := Supports(AType, INyxDocumentationDeclaredInterfaces, LInitialCapability);
+    CheckCancellation(AConstruction);
+
+    if LHasInitial then
+    begin
+      InterfaceWork(AConstruction);
+      LInitial := LInitialCapability.ImplementedInterfaces;
+      CheckCancellation(AConstruction);
+    end;
+    LFrozen := CaptureDocumentationType(AType, AConstruction, LObservation);
+    LCaptured := CaptureInterfaceImplementations(AInterfaces, AConstruction, LObserved);
+
+    CheckImplementedOwner(LFrozen.Identity, LFrozen.Kind, LCaptured, AConstruction);
+
+    if not Supports(LFrozen, IDocumentationTypeOwner, LOwner) then
+      raise ENyxDocumentation.Create('Missing captured class declaration');
+    LBuilder := LOwner.TypeOwner;
+
+    if LBuilder = nil then
+      raise ENyxDocumentation.Create('Missing captured class owner');
+    LCanonical := LBuilder;
+
+    if LCanonical <> LFrozen then
+      raise ENyxDocumentation.Create('A class attachment cannot borrow another owner');
+    InterfaceWork(AConstruction, LFrozen.BaseCount + LFrozen.MemberCount +
+      LFrozen.ExampleCount + LFrozen.RelatedCount + 1);
+    LCopy := LBuilder.CopyValue;
+    LLease := LCopy;
+    LCopy.FImplemented := LCaptured;
+    TypeBytes(LLease);
+    InterfaceWork(AConstruction);
+    LHasFinal := Supports(AType, INyxDocumentationDeclaredInterfaces, LFinalCapability);
+    CheckCancellation(AConstruction);
+
+    if LHasFinal then
+    begin
+      InterfaceWork(AConstruction);
+      LFinal := LFinalCapability.ImplementedInterfaces;
+      CheckCancellation(AConstruction);
+    end;
+
+    if (LHasFinal <> LHasInitial) or
+      (LHasInitial and ((LFinalCapability <> LInitialCapability) or
+      (LInitialCapability <> LObservation.Capability) or (LFinal <> LInitial))) or
+      (LInitial <> LObservation.Source) or
+      not SameImplementationVector(LFinal, LObservation.Frozen, LObservation.Items, AConstruction) or
+      not SameImplementationEnvelope(AType, LFrozen, AConstruction) or
+      not SameImplementationVector(AInterfaces, LCaptured, LObserved, AConstruction) then
+      raise ENyxDocumentation.Create('Class/interface attachment changed before publication');
+  finally
+    LObservation.Free;
+  end;
+  LObserved := nil;
+  CheckCancellation(AConstruction);
+  Result := LLease;
 end;
 
 end.
