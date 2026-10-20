@@ -27,7 +27,7 @@ interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.syntax.translated,
-  nyx.pascal.requirements, nyx.pascal.values, nyx.pascal.reals;
+  nyx.pascal.requirements, nyx.pascal.values, nyx.pascal.reals, nyx.pascal.ieee;
 
 type
   { Invalid snapshot/site references are caller failures. Semantic missing or
@@ -289,6 +289,13 @@ type
   INyxPascalRealConstant = interface(IInterface)
     ['{50BCB30E-298A-4BB2-8A12-23C0CFCC9B1D}']
     function RealValue: TNyxPascalBinaryReal;
+  end;
+  { Optional admitted IEEE proof, including infinity and unordered NaN. The
+    finite-only contract above keeps its original meaning and GUID. A generic
+    result or runtime value inherits neither proof from its argument. }
+  INyxPascalIEEEConstant = interface(IInterface)
+    ['{05B9DE3B-2930-46CA-9F3A-7697270AA758}']
+    function IEEEValue: TNyxPascalIEEEValue;
   end;
   { Detached scalar proof on a folded expression, independent of a source
     literal. Real expressions keep ConstantValue Unknown and expose their
@@ -642,13 +649,15 @@ type
   { Separate capability is available only on an admitted real literal. The
     inherited ordinary type owns source/world identity; both numeric proofs
     are detached values without mutable work integers or execution leases. }
-  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral, INyxPascalRealConstant)
+  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral, INyxPascalRealConstant,
+    INyxPascalIEEEConstant)
   public
     FSourceValue: TNyxPascalRealValue;
     FParsedValue: TNyxPascalBinaryReal;
     function SourceValue: TNyxPascalRealValue;
     function ParsedValue: TNyxPascalBinaryReal;
     function RealValue: TNyxPascalBinaryReal;
+    function IEEEValue: TNyxPascalIEEEValue;
   end;
   { Internal spelling retains the existing consumer sites while the unchanged
     scalar proof contract is now available to external semantic consumers. }
@@ -662,10 +671,20 @@ type
     function ConstantValue: TNyxPascalConstantValue;
     function ResultType: INyxPascalSemanticType;
   end;
+  { The two qualified delayed floating switches share scanner chronology;
+    this selector grants no authority over other local compiler settings. }
+  TFloatingLocalSetting = (flsExcessPrecision, flsIEEEErrors);
+  { Query-owned admitted IEEE expression. The ordinary result keeps nominal
+    identity; no mutable arithmetic workspace or query budget is published. }
+  TIEEEExpressionType = class(TNumericExpressionType, INyxPascalIEEEConstant)
+  public
+    FIEEEValue: TNyxPascalIEEEValue;
+    function IEEEValue: TNyxPascalIEEEValue;
+  end;
   { Query-owned finite real expression. Its inherited integer/Boolean value
     stays Unknown; the independent optional capability carries binary evidence.
     The ordinary primitive child supplies specialization and intrinsic identity. }
-  TRealExpressionType = class(TNumericExpressionType, INyxPascalRealConstant)
+  TRealExpressionType = class(TIEEEExpressionType, INyxPascalRealConstant)
   public
     FRealValue: TNyxPascalBinaryReal;
     function RealValue: TNyxPascalBinaryReal;
@@ -929,7 +948,7 @@ type
       specialization type, including a declared alias/distinct cast target. }
     function ConstantAnswer(const AType: INyxPascalSemanticType;
       const AScalar: TNyxPascalConstantValue;
-      const AReal: TNyxPascalBinaryReal): INyxPascalResolution;
+      const AReal: TNyxPascalIEEEValue): INyxPascalResolution;
     function BasesCore(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
     function CollectMemberNames(const AType: INyxPascalSemanticType;
       const APrefix: TNyxText; var ANames: TGenericNames): INyxPascalResolution;
@@ -1353,6 +1372,16 @@ end;
 function TRealExpressionType.RealValue: TNyxPascalBinaryReal;
 begin
   Result := FRealValue;
+end;
+
+function TRealLiteralType.IEEEValue: TNyxPascalIEEEValue;
+begin
+  Result := TNyxPascalIEEEValue.Finite(FParsedValue);
+end;
+
+function TIEEEExpressionType.IEEEValue: TNyxPascalIEEEValue;
+begin
+  Result := FIEEEValue;
 end;
 
 function TLiteralType.Wide: Boolean;
@@ -4562,11 +4591,12 @@ begin
 end;
 
 function TBindingQuery.ConstantAnswer(const AType: INyxPascalSemanticType;
-  const AScalar: TNyxPascalConstantValue; const AReal: TNyxPascalBinaryReal): INyxPascalResolution;
+  const AScalar: TNyxPascalConstantValue; const AReal: TNyxPascalIEEEValue): INyxPascalResolution;
 var LNominal, LLeaf, LLease: INyxPascalSemanticType;
   LLiteral: INyxPascalLiteralType; LExpression: INyxPascalConstantExpression;
   LIdentity: INyxPascalIntrinsicIdentity; LValue: TNumericExpressionType;
   LRealValue: TRealExpressionType;
+  LIEEEValue: TIEEEExpressionType;
 begin
   LNominal := AType;
 
@@ -4576,7 +4606,7 @@ begin
 
   if LNominal = nil then Exit(Answer(pbsUnresolved,pbiUnsupportedType));
 
-  if (AReal.Status <> rrsFinite) and not (AScalar.Kind in [pvvInteger,pvvBoolean]) then
+  if (AReal.Kind = pifUnknown) and not (AScalar.Kind in [pvvInteger,pvvBoolean]) then
     Exit(TypeAnswer(LNominal));
   LLeaf := LNominal;
   while (LLeaf <> nil) and (LLeaf.Kind in [pstAlias,pstDistinct]) do
@@ -4586,10 +4616,16 @@ begin
     not Supports(LLeaf,INyxPascalIntrinsicIdentity,LIdentity) then
     Exit(Answer(pbsUnresolved,pbiCompilerContext));
 
-  if AReal.Status = rrsFinite then
+  if AReal.Kind = pifFinite then
   begin
     LRealValue := TRealExpressionType.Create; LLease := LRealValue;
-    LValue := LRealValue; LRealValue.FRealValue := AReal;
+    LValue := LRealValue; LRealValue.FRealValue := AReal.FiniteValue;
+    LRealValue.FIEEEValue := AReal;
+  end
+  else if AReal.Kind in [pifInfinity,pifNaN] then
+  begin
+    LIEEEValue := TIEEEExpressionType.Create; LLease := LIEEEValue;
+    LValue := LIEEEValue; LIEEEValue.FIEEEValue := AReal;
   end
   else
   begin
@@ -4600,6 +4636,7 @@ begin
   LValue.IntrinsicName := LIdentity.IntrinsicReference;
   LValue.IntrinsicFacts := LIdentity.IntrinsicContext;
   LValue.FResult := LNominal;
+
   if LNominal.Kind in [pstAlias,pstDistinct] then
   begin
     { Value evidence decorates the actual nominal shape. Ordinary member/type
@@ -4626,9 +4663,9 @@ var
   LAccess: TNyxPascalMemberAccess;
   LLiteral: INyxPascalLiteralType;
   LExpression: INyxPascalConstantExpression;
-  LReal: INyxPascalRealConstant;
+  LReal: INyxPascalIEEEConstant;
   LScalarValue: TNyxPascalConstantValue;
-  LRealValue: TNyxPascalBinaryReal;
+  LRealValue: TNyxPascalIEEEValue;
   LView: INyxPascalTranslatedSyntax;
   LCaret: Integer;
   LConstantContext: INyxPascalCompilerContext;
@@ -4740,15 +4777,15 @@ begin
         if LResolved.Status <> pbsBound then Exit(LResolved);
 
         if LAccess <> pmaInstance then Exit(Answer(pbsUnresolved,pbiWrongMemberKind,LDecl.Name));
-        LScalarValue := TNyxPascalConstantValue.Unknown; LRealValue := TNyxPascalBinaryReal.Unknown;
+        LScalarValue := TNyxPascalConstantValue.Unknown; LRealValue := TNyxPascalIEEEValue.Unknown;
 
         if Supports(LResolved.BoundType,INyxPascalLiteralType,LLiteral) then LScalarValue := LLiteral.Value
         else if Supports(LResolved.BoundType,INyxPascalConstantExpression,LExpression) then
           LScalarValue := LExpression.ConstantValue;
 
-        if Supports(LResolved.BoundType,INyxPascalRealConstant,LReal) then LRealValue := LReal.RealValue;
+        if Supports(LResolved.BoundType,INyxPascalIEEEConstant,LReal) then LRealValue := LReal.IEEEValue;
 
-        if (LRealValue.Status = rrsFinite) or (LScalarValue.Kind in [pvvInteger,pvvBoolean]) then
+        if (LRealValue.Kind <> pifUnknown) or (LScalarValue.Kind in [pvvInteger,pvvBoolean]) then
           Exit(ConstantAnswer(LResolved.BoundType,LScalarValue,LRealValue));
         Exit(Answer(pbsUnresolved,pbiMissingType,LDecl.Name));
       finally SetLength(FConstants,LCount); end;
@@ -6835,6 +6872,116 @@ var
     Result := LAvailable and (LToken.Kind = ptkSymbol) and (LToken.Symbol = AValue);
   end;
 
+  { FPC stores local switches when constructing a node, after parsing its
+    operands. Scanner requests leading the next token are still pending;
+    IFOPT explicitly flushes even when traversing a skipped conditional. }
+  function EffectiveFloatingSwitch(ASetting: TFloatingLocalSetting): TNyxPascalKnowledge;
+  var
+    LView: INyxPascalTranslatedSyntax;
+    LSource: INyxPascalTranslation;
+    LNext, LPrevious, LIndex, LBefore, LAfter, LOrigin, LOffset: Integer;
+    LRow: TNyxPascalTranslatedToken;
+    LName, LValue: TNyxText;
+    LToken: TNyxPascalToken;
+    function Selected(const APolicies: TNyxPascalCompilerPolicies): TNyxPascalKnowledge;
+    begin
+
+      if ASetting = flsIEEEErrors then Result := APolicies.IEEEErrorsRequested
+      else Result := APolicies.ExcessPrecisionSetting;
+    end;
+
+  begin
+    Result := ppkUnknown;
+    LView := FWorld.ModuleAt(ASite.ModuleIndex);
+    LSource := LView.Source;
+    LNext := LAt;
+    while LNext < LLex.Count do
+    begin
+      Tick;
+      LToken := LLex.Token(LNext);
+
+      if not (LToken.Kind in [ptkWhitespace,ptkComment]) then Break;
+      Inc(LNext);
+    end;
+
+    if LNext >= LLex.Count then Exit;
+    LOrigin := LView.OriginAt(LLex.Token(LNext).Span.Start);
+
+    if LOrigin < 0 then Exit;
+    LAfter := LView.Origin(LOrigin).TranslationToken;
+
+    if LSource.Token(LAfter).Activity <> ppkTrue then Exit;
+    LPrevious := LNext-1;
+    while LPrevious >= 0 do
+    begin
+      Tick;
+
+      if not (LLex.Token(LPrevious).Kind in [ptkWhitespace,ptkComment]) then Break;
+      Dec(LPrevious);
+    end;
+
+    if LPrevious < 0 then Exit;
+    LOrigin := LView.OriginAt(LLex.Token(LPrevious).Span.Start);
+
+    if LOrigin < 0 then Exit;
+    LBefore := LView.Origin(LOrigin).TranslationToken;
+
+    if (LBefore >= LAfter) or (LSource.Token(LBefore).Activity <> ppkTrue) then Exit;
+    Result := Selected(NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)));
+    for LIndex := LBefore+1 to LAfter-1 do
+    begin
+      Tick;
+      LRow := LSource.Token(LIndex);
+
+      if LRow.Expanded or (LSource.PhysicalToken(LIndex).Kind <> ptkDirective) then Continue;
+      NyxPascalDirectiveParts(LSource.Text(LIndex),LName,LValue,LOffset);
+
+      if LName = 'ifopt' then
+        Result := Selected(NyxPascalCompilerPolicies(LSource.State(LRow.State)))
+      else if (LName = 'mode') and (LRow.Activity <> ppkFalse) then
+      begin
+        { A qualified ignored late MODE leaves the exact state unchanged and
+          does not flush pending locals. An applied MODE has a distinct state;
+          its handler has independently proved the immediate setting effect. }
+
+        if LSource.Token(LIndex+1).State <> LRow.State then
+          Result := Selected(NyxPascalCompilerPolicies(LSource.State(
+            LSource.Token(LIndex+1).State)));
+      end;
+    end;
+  end;
+
+  { The inspected FPC node checks positive infinity only. This is an admission
+    rule for a newly constructed real constant, not an abstract IEEE rule or a
+    host exception mask. Unary negation reuses its admitted child separately. }
+  function SpecialValueAdmission(const AValue: TNyxPascalIEEEValue): INyxPascalResolution;
+  var LChecking: TNyxPascalKnowledge;
+  begin
+    Result := nil;
+
+    if (AValue.Kind <> pifInfinity) or AValue.Negative then Exit;
+    LChecking := EffectiveFloatingSwitch(flsIEEEErrors);
+
+    if LChecking = ppkUnknown then
+      Result := Answer(pbsUnresolved,pbiCompilerContext,'IEEEERRORS')
+    else if LChecking = ppkTrue then
+      Result := Answer(pbsUnresolved,pbiUnsupportedType,'real constant range');
+  end;
+
+  { Existing finite arithmetic reports mathematical outcomes, independently of
+    source admission. Only this explicit integration boundary projects those
+    outcomes into abstract special values; the caller still checks its node. }
+  function MathematicalOutcome(const AValue: TNyxPascalBinaryReal): TNyxPascalIEEEValue;
+  begin
+    case AValue.Status of
+      rrsFinite: Result := TNyxPascalIEEEValue.Finite(AValue);
+      rrsOverflow, rrsDivisionByZero:
+        Result := TNyxPascalIEEEValue.Infinity(AValue.Precision,AValue.Negative);
+      rrsInvalidOperation: Result := TNyxPascalIEEEValue.NotANumber(AValue.Precision);
+    else Result := TNyxPascalIEEEValue.Unknown;
+    end;
+  end;
+
   { Only result contracts are compared. Arguments stay opaque and no candidate
     is dropped by guessed conversions, arity, defaults or runtime values. }
   function ValueOf(const AFound: INyxPascalResolution; ACall: Boolean;
@@ -6844,6 +6991,8 @@ var
     LResolved: INyxPascalResolution;
     LCommon, LValue: INyxPascalSemanticType;
     LSymbol: INyxPascalBoundSymbol;
+    LIEEE: INyxPascalIEEEConstant;
+    LAdmission: INyxPascalResolution;
   begin
     AValueAccess := pmaInstance;
 
@@ -6886,6 +7035,18 @@ var
 
       if AFound.SymbolAt(0).Declaration.Kind = psdkType then AValueAccess := pmaType;
       LResolved := TypeOfSymbol(AFound.SymbolAt(0));
+
+      if (LResolved.Status = pbsBound) and
+        (AFound.SymbolAt(0).Declaration.Kind = psdkConstant) and
+        Supports(LResolved.BoundType,INyxPascalIEEEConstant,LIEEE) then
+      begin
+        { A constant reference constructs its own node at the use site. Its
+          initializer remains declaration-owned; current local checks apply to
+          this copy without reinterpreting the original represented value. }
+        LAdmission := SpecialValueAdmission(LIEEE.IEEEValue);
+
+        if LAdmission <> nil then Exit(LAdmission);
+      end;
     end;
 
     if (LResolved.Status <> pbsBound) or not ACall then Exit(LResolved);
@@ -7946,10 +8107,10 @@ var
     out AHandled: Boolean): INyxPascalResolution;
   var LLeaf, LSourceType: INyxPascalSemanticType; LFloat: INyxPascalFloatingIdentity;
     LLiteral: INyxPascalLiteralType; LScalar: INyxPascalConstantExpression;
-    LReal: INyxPascalRealConstant; LArgument: INyxPascalResolution;
+    LReal: INyxPascalIEEEConstant; LArgument, LAdmission: INyxPascalResolution;
     LContext: INyxPascalCompilerContext; LEvaluation: TNyxPascalRealEvaluationPolicy;
     LPrecision: TNyxPascalBinaryPrecision; LAccess: TNyxPascalMemberAccess;
-    LValue, LConverted: TNyxPascalBinaryReal; LInteger: TNyxPascalConstantValue;
+    LValue, LConverted: TNyxPascalIEEEValue; LInteger: TNyxPascalConstantValue;
     LBudget: INyxPascalAnalysisBudget; LFPU: TNyxPascalFPUReference;
   begin
     AHandled := False; Result := nil; LLeaf := ATarget;
@@ -7980,7 +8141,7 @@ var
     if LArgument.Status <> pbsBound then Exit(LArgument);
 
     if LAccess <> pmaInstance then Exit(Answer(pbsUnresolved,pbiWrongMemberKind,'real cast argument'));
-    LInteger := TNyxPascalConstantValue.Unknown; LValue := TNyxPascalBinaryReal.Unknown;
+    LInteger := TNyxPascalConstantValue.Unknown; LValue := TNyxPascalIEEEValue.Unknown;
     LSourceType := LArgument.BoundType;
 
     if Supports(LSourceType,INyxPascalLiteralType,LLiteral) then
@@ -7988,7 +8149,7 @@ var
     else if Supports(LSourceType,INyxPascalConstantExpression,LScalar) then
     begin LInteger := LScalar.ConstantValue; LSourceType := LScalar.ResultType; end;
 
-    if Supports(LArgument.BoundType,INyxPascalRealConstant,LReal) then LValue := LReal.RealValue;
+    if Supports(LArgument.BoundType,INyxPascalIEEEConstant,LReal) then LValue := LReal.IEEEValue;
     while (LSourceType <> nil) and (LSourceType.Kind in [pstAlias,pstDistinct]) do
     begin Tick; LSourceType := LSourceType.Target; end;
 
@@ -7997,7 +8158,7 @@ var
         pbbSmallInt,pbbWord,pbbLongInt,pbbLongWord,pbbInt64,pbbQWord,pbbInteger,pbbNativeInt,pbbNativeUInt]) then
       Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast operand'));
 
-    if (LValue.Status <> rrsFinite) and (LInteger.Kind <> pvvInteger) then Exit(TypeAnswer(ATarget));
+    if (LValue.Kind = pifUnknown) and (LInteger.Kind <> pvvInteger) then Exit(TypeAnswer(ATarget));
     LFPU := NyxPascalSelectedFPU(LContext);
 
     if not ((LFPU.Name = 'x87') or (LFPU.Name = 'sse') or (LFPU.Name = 'sse2') or
@@ -8007,7 +8168,7 @@ var
       Exit(Answer(pbsUnresolved,pbiCompilerContext,'FPUTYPE'));
     LEvaluation := NyxPascalRealEvaluation(LContext);
 
-    if (LValue.Status <> rrsFinite) and ((LEvaluation.Kind <> prekNearestEven) or
+    if (LValue.Kind = pifUnknown) and ((LEvaluation.Kind <> prekNearestEven) or
       not (LEvaluation.Precision in [pbpBinary64,pbpX87Extended80])) then
       Exit(Answer(pbsUnresolved,pbiCompilerContext,'REALEVALUATION'));
 
@@ -8017,14 +8178,21 @@ var
     try
       try
 
-        if LValue.Status <> rrsFinite then
-          LValue := NyxPascalRoundIntegerToRealEven(LInteger,LEvaluation.Precision,LBudget);
-        LConverted := LValue.RoundToEven(LPrecision,LBudget);
+        if LValue.Kind = pifUnknown then
+          LValue := TNyxPascalIEEEValue.Finite(
+            NyxPascalRoundIntegerToRealEven(LInteger,LEvaluation.Precision,LBudget));
 
-        if LConverted.Status <> rrsFinite then
+        if LValue.Kind = pifFinite then
+          LConverted := MathematicalOutcome(LValue.FiniteValue.RoundToEven(LPrecision,LBudget))
+        else LConverted := LValue.RoundToEven(LPrecision,LBudget);
+
+        if LConverted.Kind = pifUnknown then
           Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast range'));
       except on ENyxPascalValue do Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast value')); end;
     finally Inc(FSteps,LBudget.Receipt.Total); LBudget.Retire; end;
+    LAdmission := SpecialValueAdmission(LConverted);
+
+    if LAdmission <> nil then Exit(LAdmission);
     Result := ConstantAnswer(ATarget,TNyxPascalConstantValue.Unknown,LConverted);
   end;
 
@@ -8364,7 +8532,7 @@ var
     LLiteral: INyxPascalLiteralType;
     LNumeric: INumericExpressionValue;
     LCandidate, LOperand, LArity: Integer;
-    LRealLeft, LRealRight: INyxPascalRealConstant;
+    LRealLeft, LRealRight: INyxPascalIEEEConstant;
     LExact, LMatch, LSeen: Boolean;
 
     function OrdinaryType(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
@@ -8380,78 +8548,6 @@ var
       begin
         Tick;
         Result := Result.Target;
-      end;
-    end;
-
-    { FPC stores local switches when constructing a node, after parsing its
-      operands. Scanner requests leading the next token are still pending;
-      IFOPT explicitly flushes even when traversing a skipped conditional. }
-    function EffectivePrecision: TNyxPascalKnowledge;
-    var
-      LView: INyxPascalTranslatedSyntax;
-      LSource: INyxPascalTranslation;
-      LNext, LPrevious, LIndex, LBefore, LAfter, LOrigin, LOffset: Integer;
-      LRow: TNyxPascalTranslatedToken;
-      LName, LValue: TNyxText;
-      LToken: TNyxPascalToken;
-    begin
-      Result := ppkUnknown;
-      LView := FWorld.ModuleAt(ASite.ModuleIndex);
-      LSource := LView.Source;
-      LNext := LAt;
-      while LNext < LLex.Count do
-      begin
-        Tick;
-        LToken := LLex.Token(LNext);
-
-        if not (LToken.Kind in [ptkWhitespace,ptkComment]) then Break;
-        Inc(LNext);
-      end;
-
-      if LNext >= LLex.Count then Exit;
-      LOrigin := LView.OriginAt(LLex.Token(LNext).Span.Start);
-
-      if LOrigin < 0 then Exit;
-      LAfter := LView.Origin(LOrigin).TranslationToken;
-
-      if LSource.Token(LAfter).Activity <> ppkTrue then Exit;
-      LPrevious := LNext-1;
-      while LPrevious >= 0 do
-      begin
-        Tick;
-
-        if not (LLex.Token(LPrevious).Kind in [ptkWhitespace,ptkComment]) then Break;
-        Dec(LPrevious);
-      end;
-
-      if LPrevious < 0 then Exit;
-      LOrigin := LView.OriginAt(LLex.Token(LPrevious).Span.Start);
-
-      if LOrigin < 0 then Exit;
-      LBefore := LView.Origin(LOrigin).TranslationToken;
-
-      if (LBefore >= LAfter) or (LSource.Token(LBefore).Activity <> ppkTrue) then Exit;
-      Result := NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)).ExcessPrecisionSetting;
-      for LIndex := LBefore+1 to LAfter-1 do
-      begin
-        Tick;
-        LRow := LSource.Token(LIndex);
-
-        if LRow.Expanded or (LSource.PhysicalToken(LIndex).Kind <> ptkDirective) then Continue;
-        NyxPascalDirectiveParts(LSource.Text(LIndex),LName,LValue,LOffset);
-
-        if LName = 'ifopt' then
-          Result := NyxPascalCompilerPolicies(LSource.State(LRow.State)).ExcessPrecisionSetting
-        else if (LName = 'mode') and (LRow.Activity <> ppkFalse) then
-        begin
-          { A qualified ignored late MODE leaves the exact state unchanged and
-            does not flush pending locals. An applied MODE has a distinct state;
-            its handler has independently proved the immediate setting effect. }
-
-          if LSource.Token(LIndex+1).State <> LRow.State then
-            Result := NyxPascalCompilerPolicies(LSource.State(
-              LSource.Token(LIndex+1).State)).ExcessPrecisionSetting;
-        end;
       end;
     end;
 
@@ -8620,7 +8716,7 @@ var
       begin
 
         if (AKind = pokAdd) or (LLeftFormat in [pffCurrency64,pffComp64]) then Exit(TypeAnswer(LLeft));
-        LPrecision := EffectivePrecision;
+        LPrecision := EffectiveFloatingSwitch(flsExcessPrecision);
 
         if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
 
@@ -8638,7 +8734,7 @@ var
       if LRightLeaf = nil then Exit(TypeAnswer(LLeft));
 
       if (LLeftFormat = pffComp64) or (LRightFormat = pffComp64) then Exit(Canonical(pbbExtended));
-      LPrecision := EffectivePrecision;
+      LPrecision := EffectiveFloatingSwitch(flsExcessPrecision);
 
       if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
 
@@ -8667,15 +8763,18 @@ var
       Integer constants convert through host precision and the common operand
       type before arithmetic/comparison. Runtime operands retain only type proof. }
     function RealConstantResult: INyxPascalResolution;
-    var LNominal: INyxPascalResolution; LFormat: TNyxPascalBinaryPrecision;
-      LEvaluation: TNyxPascalRealEvaluationPolicy; LOperation: TNyxPascalRealOperation;
-      LValue: TNyxPascalBinaryReal; LBudget: INyxPascalAnalysisBudget;
-      LOrder: Integer; LRelation: Boolean; LComputed: TNumericExpressionType;
-      LRealComputed: TRealExpressionType; LLease: INyxPascalSemanticType;
-      LIdentity: INyxPascalIntrinsicIdentity;
+    var
+      LNominal, LOperand, LAdmission: INyxPascalResolution;
+      LFormat: TNyxPascalBinaryPrecision;
+      LEvaluation: TNyxPascalRealEvaluationPolicy;
+      LOperation: TNyxPascalRealOperation;
+      LBudget: INyxPascalAnalysisBudget;
+      LOrder: Integer;
+      LIEEEOrder: TNyxPascalIEEEOrder;
+      LRelation, LComparison, LNeedsInteger, LZeroDivisor: Boolean;
+      LChecking: TNyxPascalKnowledge;
       LIntegerLeft, LIntegerRight: TNyxPascalConstantValue;
-      LLeftValue, LRightValue: TNyxPascalBinaryReal;
-      LOperand: INyxPascalResolution; LComparison, LNeedsInteger: Boolean;
+      LLeftValue, LRightValue, LValue: TNyxPascalIEEEValue;
     begin
       Result := Answer(pbsUnresolved,pbiUnsupportedType,'real constant operation');
 
@@ -8687,8 +8786,8 @@ var
       begin
 
         if (LRealLeft = nil) or not (AKind in [pokAdd,pokSubtract]) then Exit;
-        { FPC folds a real unary constant before runtime excess-precision
-          widening. Its original represented type and value remain decisive. }
+        { FPC mutates the admitted child for unary negation. It neither widens
+          this constant nor constructs a second range-checked real node. }
         LNominal := TypeAnswer(LLeft);
       end
       else
@@ -8730,55 +8829,92 @@ var
       end;
       LEvaluation := NyxPascalRealEvaluation(LContext);
 
-      if not AUnary and (not LComparison or LNeedsInteger) and ((LEvaluation.Kind <> prekNearestEven) or
+      if not AUnary and (not LComparison or LNeedsInteger) and
+        ((LEvaluation.Kind <> prekNearestEven) or
         not (LEvaluation.Precision in [pbpBinary64,pbpX87Extended80])) then
         Exit(Answer(pbsUnresolved,pbiCompilerContext,'REALEVALUATION'));
+
+      if not AUnary and (AKind = pokDivide) then
+      begin
+        LZeroDivisor := False;
+
+        if LRealRight <> nil then LZeroDivisor := LRealRight.IEEEValue.IsZero
+        else if LIntegerRight.Kind = pvvInteger then
+          LZeroDivisor := LIntegerRight.Number.CompareTo(
+            TNyxPascalConstantValue.IntegerValue(0).Number) = 0;
+
+        if LZeroDivisor then
+        begin
+          { FPC diagnoses a zero divisor before folding, even when its
+            mathematical IEEE result would be NaN or negative infinity. }
+          LChecking := EffectiveFloatingSwitch(flsIEEEErrors);
+
+          if LChecking = ppkUnknown then
+            Exit(Answer(pbsUnresolved,pbiCompilerContext,'IEEEERRORS'));
+
+          if LChecking = ppkTrue then
+            Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real division by zero'));
+        end;
+      end;
 
       if FSteps >= FLimits.MaximumSteps then
         raise ENyxPascalBindingLimit.Create('Pascal semantic steps exceed their query budget');
       LBudget := NewNyxPascalAnalysisBudget(FLimits.MaximumSteps-FSteps,FCancel);
-      LComputed := nil; LRealComputed := nil;
       try
         try
-          LLeftValue := TNyxPascalBinaryReal.Unknown; LRightValue := LLeftValue;
+          LLeftValue := TNyxPascalIEEEValue.Unknown;
+          LRightValue := LLeftValue;
 
-          if LRealLeft <> nil then LLeftValue := LRealLeft.RealValue
-          else LLeftValue := NyxPascalRoundIntegerToRealEven(LIntegerLeft,LEvaluation.Precision,LBudget)
-            .RoundToEven(LFormat,LBudget);
+          if LRealLeft <> nil then LLeftValue := LRealLeft.IEEEValue
+          else LLeftValue := TNyxPascalIEEEValue.Finite(
+            NyxPascalRoundIntegerToRealEven(LIntegerLeft,LEvaluation.Precision,LBudget)
+            .RoundToEven(LFormat,LBudget));
 
           if not AUnary then
           begin
 
-            if LRealRight <> nil then LRightValue := LRealRight.RealValue
-            else LRightValue := NyxPascalRoundIntegerToRealEven(LIntegerRight,LEvaluation.Precision,LBudget)
-              .RoundToEven(LFormat,LBudget);
+            if LRealRight <> nil then LRightValue := LRealRight.IEEEValue
+            else LRightValue := TNyxPascalIEEEValue.Finite(
+              NyxPascalRoundIntegerToRealEven(LIntegerRight,LEvaluation.Precision,LBudget)
+              .RoundToEven(LFormat,LBudget));
           end;
 
-          if (LLeftValue.Status <> rrsFinite) or (not AUnary and (LRightValue.Status <> rrsFinite)) then
-            Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant range'));
+          if (LLeftValue.Kind = pifUnknown) or
+            (not AUnary and (LRightValue.Kind = pifUnknown)) then Exit;
 
           if LComparison then
           begin
 
-            if not LLeftValue.TryCompare(LRightValue,LOrder,LBudget) then Exit;
+            if (LLeftValue.Kind = pifFinite) and (LRightValue.Kind = pifFinite) then
+            begin
+
+              if not LLeftValue.FiniteValue.TryCompare(LRightValue.FiniteValue,LOrder,LBudget) then Exit;
+              LIEEEOrder := pieoEqual;
+
+              if LOrder < 0 then LIEEEOrder := pieoLess
+              else if LOrder > 0 then LIEEEOrder := pieoGreater;
+            end
+            else LIEEEOrder := LLeftValue.Compare(LRightValue,LBudget);
+
+            if LIEEEOrder = pieoUnknown then Exit;
             LRelation := False;
             case AKind of
-              pokEqual: LRelation := LOrder = 0;
-              pokNotEqual: LRelation := LOrder <> 0;
-              pokLess: LRelation := LOrder < 0;
-              pokLessEqual: LRelation := LOrder <= 0;
-              pokGreater: LRelation := LOrder > 0;
-              pokGreaterEqual: LRelation := LOrder >= 0;
+              pokEqual: LRelation := LIEEEOrder = pieoEqual;
+              pokNotEqual: LRelation := LIEEEOrder <> pieoEqual;
+              pokLess: LRelation := LIEEEOrder = pieoLess;
+              pokLessEqual: LRelation := LIEEEOrder in [pieoLess,pieoEqual];
+              pokGreater: LRelation := LIEEEOrder = pieoGreater;
+              pokGreaterEqual: LRelation := LIEEEOrder in [pieoGreater,pieoEqual];
             else begin end;
             end;
-            LComputed := TNumericExpressionType.Create; LLease := LComputed;
-            LComputed.FConstant := TNyxPascalConstantValue.BooleanValue(LRelation);
           end
           else
           begin
+
             if AUnary then
             begin
-              NyxPascalAdmitAnalysis(LBudget,papConstantStep); LValue := LLeftValue;
+              NyxPascalAdmitAnalysis(LBudget,papConstantStep);
+              LValue := LLeftValue;
 
               if AKind = pokSubtract then LValue := LValue.Negated;
             end
@@ -8792,29 +8928,33 @@ var
                 pokDivide: LOperation := proDivide;
               else begin end;
               end;
-              LValue := NyxPascalCalculateRealToEven(LOperation,LLeftValue,
-                LRightValue,LEvaluation.Precision,LBudget);
+
+              if (LLeftValue.Kind = pifFinite) and (LRightValue.Kind = pifFinite) then
+                LValue := MathematicalOutcome(NyxPascalCalculateRealToEven(LOperation,
+                  LLeftValue.FiniteValue,LRightValue.FiniteValue,LEvaluation.Precision,LBudget))
+              else LValue := LLeftValue.Operate(LOperation,LRightValue,LEvaluation.Precision,LBudget);
+
+              if LValue.Kind = pifFinite then
+                LValue := MathematicalOutcome(LValue.FiniteValue.RoundToEven(LFormat,LBudget))
+              else LValue := LValue.RoundToEven(LFormat,LBudget);
             end;
 
-            if LValue.Status <> rrsFinite then
-              Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant range'));
-            if not AUnary then LValue := LValue.RoundToEven(LFormat,LBudget);
-
-            if LValue.Status <> rrsFinite then
-              Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant range'));
-            LRealComputed := TRealExpressionType.Create; LLease := LRealComputed;
-            LComputed := LRealComputed; LRealComputed.FRealValue := LValue;
+            if LValue.Kind = pifUnknown then Exit;
           end;
         except on ENyxPascalValue do Exit; end;
       finally Inc(FSteps,LBudget.Receipt.Total); LBudget.Retire; end;
-      LComputed.Owner := FWorld; LComputed.TypeKind := pstBuiltin;
-      LComputed.Intrinsic := LNominal.BoundType.Builtin;
-      Supports(LNominal.BoundType,INyxPascalIntrinsicIdentity,LIdentity);
-      LComputed.IntrinsicScope := LIdentity.IntrinsicOrigin;
-      LComputed.IntrinsicName := LIdentity.IntrinsicReference;
-      LComputed.IntrinsicFacts := LIdentity.IntrinsicContext;
-      LComputed.FResult := LNominal.BoundType;
-      Result := TypeAnswer(LLease);
+
+      if LComparison then
+        Exit(ConstantAnswer(LNominal.BoundType,TNyxPascalConstantValue.BooleanValue(LRelation),
+          TNyxPascalIEEEValue.Unknown));
+
+      if not AUnary then
+      begin
+        LAdmission := SpecialValueAdmission(LValue);
+
+        if LAdmission <> nil then Exit(LAdmission);
+      end;
+      Result := ConstantAnswer(LNominal.BoundType,TNyxPascalConstantValue.Unknown,LValue);
     end;
 
     { Numeric rules receive only canonical fixed ranges. Native/Integer widths
@@ -9030,9 +9170,9 @@ var
 
     if (LLeft = nil) or (not AUnary and (LRight = nil)) then
       Exit(Answer(pbsUnresolved, pbiUnsupportedType));
-    Supports(ALeft.BoundType,INyxPascalRealConstant,LRealLeft);
+    Supports(ALeft.BoundType,INyxPascalIEEEConstant,LRealLeft);
 
-    if not AUnary then Supports(ARight.BoundType,INyxPascalRealConstant,LRealRight);
+    if not AUnary then Supports(ARight.BoundType,INyxPascalIEEEConstant,LRealRight);
 
     if (LRealLeft <> nil) or (LRealRight <> nil) or
       (not AUnary and (AKind = pokDivide) and NyxPascalRealEvaluation(LContext).Known and

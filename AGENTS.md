@@ -4,7 +4,56 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source IEEE dependency adds typed local checking intent independently
+Current-source binding adds optional INyxPascalIEEEConstant evidence for admitted
+finite/infinity/NaN expressions while keeping the old finite interface truthful
+and its GUID/methods unchanged. One new optional GUID/internal class hierarchy;
+old ordinals/record layouts retain the preceding baseline. Declared constants
+retain initializer scope/settings, copied references check their use-site node,
+alias/distinct casts keep identity, generic/runtime returns inherit no values.
+The existing bounded delayed-local owner now serves excess precision and IEEE
+through a closed private selector: pending requests, IFOPT including false
+branches, MODE and include origins remain exact. Qualified FPC30301 i386 range
+checks distinguish positive infinity, negative infinity/NaN, separate zero
+division and unary child reuse. Missing required checking facts refuse. No R/Q,
+host mask/default or profile enrollment is inferred. Existing finite work paths,
+semantic default and every preparation/probe/conditional quota stay unchanged.
+Whole native 152 expression windows at six sites agree on types/meaning/signs/
+relations and proof barriers; compiled body calls stay at 152 through queries.
+Thirteen separate inputs retain seven clean-heap successes/six expected node
+errors. NaN sign/payload/signaling remains unproved. Focused 2,099/first fit 1,024/
+all smaller allowances atomic/64 joined readers pass with clean heap. Initial
+generic-type expectation, browser imports, EOF and failed broad consumer receipts
+remain retained. The old consumer's two assertions now require unresolved,
+pbiCompilerContext and IEEEERRORS; all inputs/whole fixtures and product code stay
+exact. All old readers joined before this leaf repair. Repaired native 4,531/
+clean heap and browser compile pass; all remaining native checks pass. Its
+unchanged first five pass logs are pinned. Products and original RTL qualify the
+same exact product freeze; current five-source evidence is explicitly composite
+across the consumer-only repair. RTL 56 retains System 13,101/zero syntax/31,
+ObjPas 209/zero/one, neither pending and indexed Free/FreeInstance ready. All 70
+current compiler logs have zero owned warnings/182 upstream; 42 selected native
+runs pass with clean heaps; 26 browser consumers compile only; both Studios/
+backend/worker compile as applicable. Failed/pre-repair consumer logs remain
+separate, not overwritten or substituted into the accepted set. All 764
+maintained/759 unrelated/five frozen sources, preceding source/consumer copies,
+preparations/failures, 97 RTL/24 base compiler pins plus inspected owners, 156
+packets/48 includes/349 artifacts/nine contexts/five protected/thirteen foreign
+files stay exact. Corpus 575/508 actual files/2,454,099 tokens passes. All readers
+and handles join; no Studio listener remains. Current-start protected comparisons
+stay exact; retained historical global-config failure keeps full preservation
+false. Semantic 100,000, original 2M/4M/64/initial five/Word one/symbol three-of-eight/
+dynamic six-of-eight limits and ordered jobs remain exact. No full
+RTL/language/editor/parity/adoption/delivery or original criterion/task/credit/
+DONE closes. WORK.md and ignored .local/ieee-binding-paths-private.json own source/
+remote/evidence receipts and return path. No Pascal edits while readers live.
+Preserve all inherited source/SDK/compiler/protected/frozen/concurrent pins and
+failures. LAN offline; native Nyx tools absent. No host/config retry, SDK capture,
+protected mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout
+or sub-agents. Stop this IEEE/scanner/fixture/compiler variant after qualification;
+parser range, arbitrary intrinsics/conditions/default enrollment and wider source/
+module/incremental/editor/input/quality/parity/adoption/delivery remain open.
+
+Previously qualified IEEE dependency adds typed local checking intent independently
 of R/Q, host masks/defaults and delayed node activation. Exact context/capture/
 key/source identity and saved local/MODE lifetime retain it; unknown effects
 revoke knowledge. The policy record layout expands; maintained consumers rebuild,

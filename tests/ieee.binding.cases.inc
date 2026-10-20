@@ -1,0 +1,37 @@
+{ Repeated verbatim by independently compiled precision/FPU sites. The Boolean
+  argument describes the expected proof barrier; it does not select a type. }
+Emit('positive', True, PInf);
+Emit('negative', True, NInf);
+Emit('nan', True, QNaN);
+Emit('divide-positive', True, 1.0 / 0.0);
+Emit('divide-negative', True, -1.0 / 0.0);
+Emit('divide-invalid', True, 0.0 / 0.0);
+Emit('add-opposite', True, PInf + NInf);
+Emit('subtract-same', True, PInf - PInf);
+Emit('multiply-zero', True, PInf * 0.0);
+Emit('multiply-negative', True, PInf * (-2.0));
+Emit('multiply-negative-pair', True, NInf * (-2.0));
+Emit('divide-infinities', True, PInf / PInf);
+Emit('finite-divide-infinity', True, 1.0 / PInf);
+Emit('negative-divide-infinity', True, (-1.0) / PInf);
+Emit('negative-infinity-divide', True, NInf / 2.0);
+Emit('nan-add', True, QNaN + 1.0);
+Emit('cast-infinity', True, Single(PInf));
+Emit('cast-nan', True, Single(QNaN));
+Emit('cast-positive-overflow', True, Single(1.0e300));
+Emit('cast-negative-overflow', True, Single(-1.0e300));
+Emit('cast-positive-zero', True, Single(1.0e-300));
+Emit('cast-negative-zero', True, Single(-1.0e-300));
+Emit('distinct-cast', True, TAmount(PInf));
+Emit('nan-equal', True, QNaN = QNaN);
+Emit('nan-not-equal', True, QNaN <> QNaN);
+Emit('nan-less', True, QNaN < 1.0);
+Emit('nan-less-equal', True, QNaN <= 1.0);
+Emit('nan-greater', True, QNaN > 1.0);
+Emit('nan-greater-equal', True, QNaN >= 1.0);
+Emit('infinity-less', True, NInf < PInf);
+Emit('infinity-greater', True, PInf > 1.0);
+Emit('generic-return', False, Keep(PInf));
+Emit('generic-distinct', False, Keep(TAmount(PInf)));
+Emit('typed-storage', False, TypedInf);
+Emit('runtime-result', False, F64 + PInf);

@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: IEEE values, source intent and cast underflow — 2026-10-20
+## Current integration: Source-owned IEEE expression values — 2026-10-20
+
+The preceding 437d79a turn makes implementation, validation and remote progress.
+All 761 maintained inputs revalidate before this integration. The full Nyx and
+Studio outcome remains open; numeric work replaces no user criterion.
+
+The existing binding owner publishes optional INyxPascalIEEEConstant evidence
+for admitted finite, infinity and NaN expressions. The old finite-interface GUID
+and methods retain their finite-only meaning; special values never implement
+that capability. Existing GUIDs, enum ordinals and record layouts stay unchanged
+in this turn. One new optional GUID and internal expression classes carry
+detached evidence without a mutable arithmetic workspace, source scope or budget.
+Integer/Boolean proofs stay separate; generic/runtime results inherit no value.
+Untyped declarations retain initializer scope/settings. References check their
+new use-site node; alias/distinct casts retain authored and generic identity.
+
+Excess-precision and IEEE checking share the existing bounded scanner-local
+chronology through a closed private selector. Pending requests do not activate
+early; IFOPT flushes even through false branches; MODE and physical includes
+retain their existing ownership. The inspected FPC range check compares positive
+infinity, independently of R/Q and host masks. Negative infinity/NaN do not
+silently acquire that diagnostic. Zero division checks separately before folding;
+unary negation reuses its admitted child rather than constructing another checked
+node. Required unknown checking facts refuse rather than assuming startup flags.
+Finite arithmetic retains its old work path. Special arithmetic delegates to
+nyx.pascal.ieee and uses the existing remaining semantic budget. All original
+default limits, preparation/conditional quotas and ordered probes remain intact.
+
+An independent whole native unit/four repeated includes provides 152 expression
+windows at six checking/precision/FPU sites. Native generic deduction supplies
+types; guarded bytes qualify finite signs/zeros/infinities while NaN sign,
+payload and signaling state remain unproved. Calls stay at 152 through semantic
+queries. Thirteen separate whole compiler inputs retain seven successful
+clean-heap runs and six expected node-admission errors outside warning debt.
+The first generic assertion incorrectly expected Double under Delphi excess
+precision; a retained diagnostic establishes Extended with no inherited value.
+That assertion is corrected exactly. Initial inputs/failure heaps/logs, browser
+unused-import and EOF-whitespace preparations remain retained.
+
+Focused 2,099 checks pass with clean heap: first fit 1,024, every smaller allowance
+atomic, ordinary cancellation and 64 joined readers. Earlier IEEE 1,293 and
+declaration 3,257 checks retain clean heaps and exact first-fit values. Browser
+compilation passes with native-only imports guarded. Four Pascal inputs freeze
+after staged whitespace review. The initial broader native group stopped at an
+old real-operator assertion naming the former generic range refusal; the new
+answer still refuses and explicitly requests IEEEERRORS. Its successful compile,
+failed native run/exception heap and original source remain retained. After all
+product/RTL readers joined, only two consumer assertions changed: both now
+require unresolved plus pbiCompilerContext plus the exact IEEEERRORS name.
+No expression input, independent whole fixture, product code or quota changes.
+The repaired consumer passes 4,531 checks/clean heap and recompiles for browser.
+Products and the unchanged RTL retain the exact product-source freeze. Five
+Pascal inputs now define the final current set; qualification is explicitly
+composite across that consumer-only repair. Retained prefix hashes prove the
+first five native passes; all remaining checks now pass and readers have joined.
+No Pascal edits while compiler/native readers live. Original RTL 56 passes with clean heap,
+System 13,101/zero syntax/31 answers, ObjPas 209/zero/one, neither pending and
+exact indexed Free/FreeInstance navigation/insertion ready. All original limits
+and ordered primitive jobs remain unchanged; no full RTL meaning is claimed.
+
+The current accepted set has 70 successful compiler logs with zero owned
+warnings/182 upstream warnings, 42 selected clean-heap native runs and 26 browser
+compilations without browser execution. Both Studios/backend/worker compile as
+applicable. The pre-repair native compile/run and browser compile remain separate
+retained evidence, outside that current accepted set. No log is overwritten or
+substituted. The composite qualifies the unchanged product plus the repaired
+consumer, not a falsely asserted single final-source batch.
+
+All 764 maintained/759 unrelated/five frozen sources, original consumer pre-state,
+preceding product copy and every retained preparation/failure remain exact.
+The 97 RTL/24 base compiler pins plus inspected owners, 156 original packets,
+48 includes, 349 frozen artifacts, nine contexts/five protected files and thirteen
+foreign planning files retain their comparisons. Corpus 575 checks pass across
+508 actual source files and 2,454,099 lossless tokens. All handles/readers join;
+no Studio listener remains. Current-start protected comparisons remain exact;
+the retained historical global-config failure still keeps full preservation false.
+No protected repair occurs. Semantic default 100,000, original 2M/4M/64 limits,
+initial five/Word one/symbol three-of-eight/dynamic six-of-eight jobs remain exact.
+
+Ignored .local/ieee-binding-paths-private.json owns current packet, exact source,
+evidence/remote receipts and the return path. Preserve all inherited failures and
+source/SDK/compiler/protected/frozen/concurrent pins; thirteen foreign planning
+files remain outside owned work. LAN offline; native Nyx tools absent. No host/
+config retry, SDK capture, protected mutation, cleanup/restart, approval bypass,
+new MCP tool/schema, rollout or sub-agents. General parser range, arbitrary
+intrinsics, compiler-conditional reals/default enrollment and full language/
+module/incremental/editor/input/quality/parity/adoption/delivery remain open.
+No full original criterion/task/counter/credit/DONE closes. After qualification,
+stop this IEEE/scanner/fixture/compiler variant and reassess remaining numeric
+admission/compiler-condition prerequisites through existing owners.
+
+## Previous integration: IEEE values, source intent and cast underflow — 2026-10-20
 
 The preceding 34d8db5 turn makes implementation/qualification/remote progress.
 All 758 maintained inputs revalidate before this numeric admission dependency.

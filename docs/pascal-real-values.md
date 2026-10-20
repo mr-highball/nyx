@@ -142,8 +142,26 @@ intent independently of R/Q checks, host masks and startup defaults. The shared
 translator understands the qualified `IEEEERRORS` directive; source states,
 local PUSH/POP, mode/capture and exact storage identity retain that request.
 It is an authored setting, not a claim that a queued local switch has already
-activated on a compiler node. Nonfinite resolver admission and those activation
-boundaries remain open.
+activated on a compiler node. The qualified resolver follows that node setting
+through the same bounded scanner chronology as excess precision. Pending local
+requests do not activate early; IFOPT flushes even through a false branch. A
+copied named constant is a new node at its use site, while its initializer keeps
+its original source scope and settings. Missing required facts remain explicit.
+
+`INyxPascalIEEEConstant` optionally exposes an admitted finite/infinity/NaN value
+on a literal or expression. `INyxPascalRealConstant` retains its original GUID,
+methods and finite-only meaning; a special value never advertises that interface.
+Scalar Boolean proofs express comparisons: NaN is unordered, so equality and
+ordered relations are False and inequality is True. Runtime and generic results
+retain ordinary types without inheriting an argument's value evidence.
+
+This is qualified FPC 3.3.1 Delphi/i386 behavior with the existing measured roots
+and explicit parser/evaluator facts. FPC checks a zero divisor separately before
+folding. Its inspected real-node range check rejects positive infinity when IEEE
+checking is active; negative infinity and NaN are distinct cases. Unary negation
+reuses an admitted child without constructing a second checked real node. These
+compiler admission rules remain separate from abstract IEEE mathematics and
+host exception masks. Casts and alias/distinct targets keep their authored type.
 
 These optional facts participate in exact context, capture and storage identity.
 Source MODE, local PUSH/POP and unknown source effects do not replace initial
@@ -159,7 +177,10 @@ A third independent whole unit adds 100 declaration and cast cases, including
 the original repeated declaration/case includes and nominal type evidence.
 Thirty independent native IEEE values/relations and fourteen separate compiler
 inputs qualify the abstract layer and checking distinction. Four intentional
-compiler errors remain separate from product warning debt. General cast families,
-nonfinite/compiler-node admission, parser range, compiler-conditional real
-expressions and default profile enrollment remain open, alongside full editor
-integration and target parity.
+compiler errors remain separate from product warning debt. A further whole native
+unit supplies 152 original expression windows across checking/precision/FPU sites;
+semantic queries inspect those inputs without invoking their compiled bodies.
+Thirteen separate compiler inputs distinguish node admission and delayed settings.
+General cast families, arbitrary intrinsic admission, parser range,
+compiler-conditional real expressions and default profile enrollment remain open,
+alongside full editor integration and target parity.

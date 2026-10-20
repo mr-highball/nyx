@@ -229,16 +229,18 @@ begin
     not Supports(LAnswer.BoundType,INyxPascalRealConstant,LReal),
     'A generic call inherits the result type without inheriting its argument constant');
   LSource := Companion('1.0 / 0.0'); LAnswer := Query(LSource,'Observe(','1.0 / 0.0',Profile,Root);
-  Check((LAnswer.Status = pbsUnresolved) and (LAnswer.RelatedName = 'real constant range'),
-    'Mathematical division failure does not fabricate compiler constant admission');
+  Check((LAnswer.Status = pbsUnresolved) and (LAnswer.Issue = pbiCompilerContext) and
+    (LAnswer.RelatedName = 'IEEEERRORS'),
+    'Zero division requires the exact source-node checking fact rather than fabricated admission');
   LSource := Companion('1.0e300 * 1.0e300'); LAnswer := Query(LSource,'Observe(',
     '1.0e300 * 1.0e300',Profile,Root);
   Check((LAnswer.Status = pbsBound) and Supports(LAnswer.BoundType,INyxPascalRealConstant,LReal),
     'A large finite compiler-host result remains within its actual extended range');
   LSource := Companion('1.0e4000 * 1.0e4000'); LAnswer := Query(LSource,'Observe(',
     '1.0e4000 * 1.0e4000',Profile,Root);
-  Check((LAnswer.Status = pbsUnresolved) and (LAnswer.RelatedName = 'real constant range'),
-    'A real compiler range contract is not inferred from a mathematical overflow');
+  Check((LAnswer.Status = pbsUnresolved) and (LAnswer.Issue = pbiCompilerContext) and
+    (LAnswer.RelatedName = 'IEEEERRORS'),
+    'Positive overflow requires the exact source-node checking fact rather than inferred admission');
 end;
 
 function StorageIdentity(const APolicy: TNyxPascalRealEvaluationPolicy): TNyxText;
