@@ -33,7 +33,84 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler-host numeric conditionals — 2026-10-20
+## Current integration: Source real literal range — 2026-10-20
+
+The preceding 4b2718c turn makes implementation, validation and remote progress.
+All 767 maintained sources revalidate before this integration. The full Nyx/
+Studio outcome, complete language and editor adoption remain open.
+
+Ordinary real literals now retain qualified parser underflow to signed zero and
+admitted overflow to infinity through the existing binding/numeric/source owners.
+INyxPascalIEEERealLiteral is a new optional source-evidence interface; its exact
+source and parser result remain separate from nominal literal type. The original
+finite literal/constant GUIDs and methods retain their finite-only meaning.
+Special literals never advertise finite evidence. The internal finite subclass
+shares immutable source/IEEE ownership with a separate admitted-literal base;
+no interface is placed in a copied record or mutable world-owned value cache.
+Generic returns retain their type without inheriting argument source/value proof.
+
+The pinned FPC creates/checks the unsigned numeric node before consuming its
+token or applying a unary sign. A negative overflowing token therefore cannot
+rescue its invalid positive child under active IEEE checking. The existing
+bounded delayed-local owner supplies effective IEEE state; parser/FPU/minimum
+facts remain immediate and independent. Unknown required checking refuses.
+Nearest-even sign symmetry preserves the signed parser result's original
+Inexact proof while checking the unsigned child. Both minimum-precision choices
+retain their native equality behavior for infinity and signed zero. Tokens over
+the qualified RTL short-string boundary refuse whole, without truncation; the
+mathematical owner's wider exact-input contract remains intact. No default,
+profile enrollment, host float, extra probe or increased quota supplies facts.
+
+Eighteen independent whole compiler programs retain twelve successful clean-heap
+runs and six expected range errors, separately from product warning debt. The
+existing whole native unit/four original repeated includes now supplies 191
+expression windows, keeping all previous cases and adding actual literal types,
+signs/zeros/infinity, generic barriers and queued-switch/cast distinctions.
+Semantic queries leave its native invocation count at 191. Focused 2,649 checks
+pass with clean heap. Literal overflow/underflow first fits are 51/64; every
+smaller allowance refuses atomically. The prior expression first fit stays
+1,024, cancellation remains atomic, and two cohorts of 64 readers join.
+
+The first browser test compilation exposed a native-only import newly needed by
+portable assertions. Its complete source snapshot and error remain retained.
+All initial native readers and the unchanged RTL consumer join before the test
+import is repaired. Product and complete native witness bytes never change after
+their broad freeze. The repaired test is rebuilt/run natively and compiled for
+the browser; the corpus is rebuilt/run against the final source. Qualification
+is explicitly composite consumer evidence, not one unrepaired final-source batch.
+
+All 72 selected compiler logs pass with zero owned warnings/189 upstream; all 43
+selected native runs have clean heaps. Twenty-seven browser consumers compile
+only; both Studios/backend/worker compile as applicable. Prior unchanged native
+PASS/work/reader contracts remain exact, apart from the intentionally expanded
+IEEE test and the current corpus token count. The unchanged original RTL passes
+56 checks: System 13,101 declarations/zero syntax/31 answers, ObjPas 209/zero/one,
+neither pending. Indexed Free/FreeInstance navigation/insertion remains ready.
+The original 2M view/4M aggregate/64 rounds, initial five/Word one/symbol three-
+of-eight/dynamic six-of-eight and exact ordered primitive jobs remain unchanged.
+No full RTL/language/editor/parity/adoption/delivery criterion closes.
+
+All 767 maintained/763 unrelated/four final frozen sources, retained previous/
+initial source copies and inherited preparations/failures, 97 RTL/24 base compiler
+pins plus inspected owners, 156 original packets/48 includes/349 frozen artifacts,
+nine contexts/five protected/thirteen foreign files retain exact comparisons.
+The corpus passes 575 checks over 508 actual files/2,459,507 lossless tokens.
+All handles/readers join; no Studio listener remains. Current-start protected
+comparisons stay exact; the historical global-config failure keeps full
+preservation false. No protected repair occurs.
+
+Ignored .local/source-real-range-paths-private.json owns current source/evidence/
+remote receipts and return path. Do not edit Pascal while readers live. Preserve
+all inherited source/SDK/compiler/protected/frozen/concurrent pins and failures.
+Stop literal-range/sign/fixture/compiler variants after this qualification;
+reassess remaining compound constant-dialect and canonical-type prerequisites
+through existing owners before another bounded integration. Full source/type/
+module/incremental/editor/input/quality/parity/adoption/delivery and original
+criterion/task/counter/credit/DONE stay open. LAN offline; native Nyx tools absent.
+No host/config retry, SDK capture, protected mutation, cleanup/restart, approval
+bypass, new MCP tool/schema, rollout or sub-agents. Preserve concurrent work.
+
+## Previous integration: Compiler-host numeric conditionals — 2026-10-20
 
 The preceding 5dd3c6a turn makes implementation, validation and remote progress.
 All 764 maintained sources revalidate before this integration. The full Nyx/

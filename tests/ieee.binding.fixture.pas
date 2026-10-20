@@ -112,6 +112,8 @@ begin
   Emit('nan-divide-nonzero', True, QNaN / 2.0);
   Emit('nan-not-equal', True, QNaN <> QNaN);
   Emit('negative-less', True, NInf < 0.0);
+  Emit('literal-checked-underflow', True, 1.0e-9999);
+  Emit('literal-checked-negative-underflow', True, -1.0e-9999);
 end;
 
 {$IEEEERRORS ON}
@@ -125,6 +127,16 @@ begin
   Emit('flush-off-inactive', True, 1.0 / 0.0 {$IEEEERRORS OFF}{$ifopt H-}{$endif});
   {$IEEEERRORS OFF}
   Emit('pending-on', True, 1.0 / 0.0 {$IEEEERRORS ON});
+  {$IEEEERRORS OFF}
+  Emit('literal-following-on', True, 1.0e9999 {$IEEEERRORS ON});
+  {$IEEEERRORS ON}
+  Emit('literal-grouped-off', True, {$IEEEERRORS OFF}(1.0e9999));
+  {$IEEEERRORS ON}
+  Emit('literal-before-minus-off', True, {$IEEEERRORS OFF}-1.0e9999);
+  {$IEEEERRORS ON}
+  Emit('literal-flush-off', True, {$IEEEERRORS OFF}{$ifopt H+}{$endif}1.0e9999);
+  {$IEEEERRORS OFF}
+  Emit('literal-negative-cast-following-on', True, Double(-1.0e9999 {$IEEEERRORS ON}));
 end;
 
 {$IEEEERRORS OFF}

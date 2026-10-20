@@ -4,7 +4,48 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source conditional numbers use the existing explicit FPC dialect and
+Current-source real literals retain qualified signed underflow and admitted
+infinity through existing binding/numeric/source owners. New optional
+INyxPascalIEEERealLiteral keeps exact source and parser IEEE evidence separate
+from nominal type; old finite GUIDs/methods remain finite-only and absent on
+infinity. An immutable admitted-literal base and finite subclass own values
+outward; no interface in copied records/world-owned mutable cache. Generic
+returns inherit no source/value proof. Qualified FPC30301 creates/checks the
+unsigned real node before consuming the token/unary sign; negative overflow
+cannot rescue an invalid child. Existing delayed-local IEEE chronology remains
+separate from immediate parser/FPU/minimum facts. Unknown required facts refuse.
+Sign-symmetric rounding retains the signed parser Inexact proof; minimum32/64
+retain native equality on infinity/zero. Over-short-string tokens refuse whole;
+no truncation/default/enrollment/host float/probe/quota change. Eighteen whole
+compiler inputs retain twelve clean-heap successes/six expected range errors.
+The original whole unit/four repeated includes retains all old cases and extends
+to191 native source windows; semantic queries never invoke those bodies. Focused
+2649/first fits51/64/all smaller allowances atomic/two64-reader cohorts joined
+has clean heap; old expression first fit1024/cancellation remain exact. Initial
+browser native-only-import failure/source stays retained. All readers join
+before its test-only repair. Product/witness freeze stays exact; repaired native/
+browser test and final corpus rebuild make qualification explicitly composite.
+All72 selected compilers pass with zero owned warnings/189 upstream;43 native
+runs have clean heaps;27 browser consumers compile only;both Studios/backend/
+worker compile as applicable. Unchanged original RTL56 retains System13101/zero
+syntax/31 and ObjPas209/zero/one, neither pending; exact indexed Free/FreeInstance
+remains ready. Original2M/4M/64/initial5/Word1/symbol3of8/dynamic6of8 and ordered
+jobs stay exact. All767 maintained/763 unrelated/four frozen/retained source/
+failures/97 RTL/24 base compiler pins plus inspected owners/156 packets/48 includes/
+349 artifacts/nine contexts/five protected/thirteen foreign files stay exact.
+Corpus575/508 actual files/2459507 tokens has clean heap. Readers/handles join;
+LAN offline;native Nyx tools absent. Current-start protected exact;historical
+global-config failure keeps full preservation false. WORK.md and ignored
+.local/source-real-range-paths-private.json own current source/remote/evidence
+receipts. Stop literal/sign/range/fixture/compiler variants; reassess compound
+constant-dialect/canonical-type prerequisites through existing owners. Full
+source/type/module/incremental/editor/input/quality/parity/adoption/delivery and
+original criterion/task/counter/credit/DONE stay open. No Pascal edits while
+readers live. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. Preserve
+concurrent work.
+
+Previously qualified conditional numbers use the existing explicit FPC dialect and
 compiler-host parser/evaluator facts, independently of source target FPU/minimum/
 IEEE/R/Q settings. Qualified FPC30301 entry masks host exceptions. Typed real
 tokens, beyond64 decimal fallback and slash preserve original text; over-short-

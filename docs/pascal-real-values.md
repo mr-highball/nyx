@@ -89,12 +89,32 @@ the independently qualified compiler-host precision, then narrows to the result
 format. Each operation in a nested expression retains its intermediate value.
 Represented-value comparisons require no arithmetic-rounding policy.
 
-`INyxPascalRealLiteral` exposes the original exact source and parsed value.
+`INyxPascalRealLiteral` exposes finite original-source and parsed-value evidence.
 `INyxPascalRealConstant` exposes a represented finite value on an admitted literal
 or expression. A folded expression does not implement the source-literal
 capability. Generic calls inherit the specialization type without inheriting a
 proof about their return value. Ordinary integer/Boolean constant channels never
 receive a real value disguised as an integer.
+
+`INyxPascalIEEERealLiteral` additionally exposes exact source mathematics and
+`ParsedIEEEValue`, including a qualified parser infinity. It is available on
+finite literals too; the original finite interfaces keep their GUIDs and method
+layouts and are absent on infinity. The parser precision remains separate from
+the compiler's selected nominal literal type. A generic result inherits neither
+the argument's source proof nor its value.
+
+For the qualified FPC 3.3.1 Delphi/i386 parser, sufficiently small nonzero tokens
+can round to signed zero under either IEEE checking setting. The exact source
+still records a nonzero value, and the parsed finite value retains its original
+`Inexact` evidence. An overflowing token requires known disabled IEEE checking at
+its unsigned real-node construction. Both `1.0e9999` and `-1.0e9999` therefore
+refuse under active checking; a unary minus cannot rescue an invalid child.
+Only after that check does the sign contribute to the admitted literal value.
+The minimum-precision equality test also applies to infinity and signed zero.
+Immediate parser/FPU/minimum facts and queued IEEE requests remain distinct.
+Caller tokens beyond the qualified RTL parser's 255-unit short-string boundary
+refuse without truncation; the standalone mathematical owner retains its wider
+exact-input contract.
 
 `INyxPascalConstantExpression` now makes the existing scalar-expression contract
 public, preserving its original GUID and method layout. Its `ConstantValue`
@@ -134,8 +154,8 @@ existing contracts; general conversion/admission is still incomplete.
 
 Qualified finite real casts now retain positive/negative zero on underflow.
 The independent compiler accepts those results with IEEE errors both enabled
-and disabled. Source literal parser range and nonfinite conversion admission
-remain separate qualifications.
+and disabled. Cast admission remains distinct from unsigned source-literal
+construction and from the standalone mathematical conversion.
 
 `TNyxPascalCompilerPolicies.RequestIEEEErrors` records authored IEEE checking
 intent independently of R/Q checks, host masks and startup defaults. The shared
@@ -178,12 +198,15 @@ the original repeated declaration/case includes and nominal type evidence.
 Thirty independent native IEEE values/relations and fourteen separate compiler
 inputs qualify the abstract layer and checking distinction. Four intentional
 compiler errors remain separate from product warning debt. A further whole native
-unit supplies 152 original expression windows across checking/precision/FPU sites;
+unit supplies 191 original expression windows across checking/precision/FPU sites;
 semantic queries inspect those inputs without invoking their compiled bodies.
 Thirteen separate compiler inputs distinguish node admission and delayed settings.
-General cast families, arbitrary intrinsic admission, parser range,
-compiler-conditional real expressions and default profile enrollment remain open,
-alongside full editor integration and target parity.
+Eighteen further independent compiler inputs distinguish source-token overflow,
+signed underflow and unsigned-node checking from queued switch activation.
+General cast families, arbitrary intrinsic admission, broader parser/compiler
+families and default profile enrollment remain open, alongside full editor
+integration and target parity. The separately qualified conditional evaluator
+is described below.
 
 ## Compiler conditional expressions
 

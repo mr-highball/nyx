@@ -6,8 +6,8 @@ program nyx_pascal_ieee_binding_tests;
 uses SysUtils, Classes, nyx.text, nyx.editing, nyx.scheduler, nyx.pascal.work,
   nyx.pascal.reals, nyx.pascal.ieee, nyx.pascal.context, nyx.pascal.files,
   nyx.pascal.translation, nyx.pascal.lexing, nyx.pascal.syntax, nyx.pascal.syntax.translated,
-  nyx.pascal.binding, nyx.pascal.conditions
-  {$ifndef PAS2JS}, nyx.pascal.values, ieee.binding.fixture{$endif};
+  nyx.pascal.binding, nyx.pascal.conditions, nyx.pascal.values
+  {$ifndef PAS2JS}, ieee.binding.fixture{$endif};
 
 {$ifndef PAS2JS}
 type
@@ -18,6 +18,7 @@ type
     World: INyxPascalSemanticWorld;
     Site: INyxPascalBindingSite;
     Window: TNyxPascalSpan;
+    ExpectedKind: TNyxPascalIEEEKind;
     ErrorText: String;
     procedure Execute; override;
   end;
@@ -239,6 +240,122 @@ begin
     'Generic return typing consumes nominal identity without inheriting an argument value');
 end;
 
+procedure LiteralRangeContract;
+var LSource: TNyxText; LAnswer: INyxPascalResolution;
+  LIEEE: INyxPascalIEEEConstant; LSourceLiteral: INyxPascalIEEERealLiteral;
+  LFiniteLiteral: INyxPascalRealLiteral; LFinite: INyxPascalRealConstant;
+  LLiteral: INyxPascalLiteralType;
+
+  procedure Accepted(const AExpression, ASettings: TNyxText;
+    AKind: TNyxPascalIEEEKind; ANegative: Boolean; ABuiltin: TNyxPascalBuiltin);
+  begin
+    LSource := Companion(AExpression,'{$minfpconstprec 32}'+ASettings);
+    LAnswer := Query(LSource,'Observe(',AExpression,Profile,Root);
+    Check((LAnswer.Status = pbsBound) and (LAnswer.BoundType.Builtin = ABuiltin) and
+      Supports(LAnswer.BoundType,INyxPascalIEEEConstant,LIEEE),
+      'The qualified source literal retains compiler type and admitted value: '+String(AExpression));
+    Check((LIEEE.IEEEValue.Kind = AKind) and (LIEEE.IEEEValue.Negative = ANegative),
+      'Literal overflow/underflow preserves the actual native kind and sign');
+    Check(Supports(LAnswer.BoundType,INyxPascalRealLiteral,LFiniteLiteral) = (AKind = pifFinite),
+      'The original finite literal capability cannot advertise an infinity');
+    Check(Supports(LAnswer.BoundType,INyxPascalRealConstant,LFinite) = (AKind = pifFinite),
+      'The original finite constant capability cannot advertise an infinity');
+  end;
+
+  procedure Refused(const AExpression, ASettings: TNyxText; AIssue: TNyxPascalBindingIssue);
+  begin
+    LSource := Companion(AExpression,'{$minfpconstprec 32}'+ASettings);
+    LAnswer := Query(LSource,'Observe(',AExpression,Profile,Root);
+    Check((LAnswer.Status <> pbsBound) and (LAnswer.Issue = AIssue),
+      'Literal construction retains unsigned-node and pending-switch checks: '+String(AExpression));
+  end;
+
+begin
+  Accepted('1.0e9999','{$IEEEERRORS OFF}',pifInfinity,False,pbbSingle);
+  Check(Supports(LAnswer.BoundType,INyxPascalIEEERealLiteral,LSourceLiteral) and
+    (LSourceLiteral.SourceValue.Spelling = '1.0e9999') and
+    not LSourceLiteral.SourceValue.IsZero and
+    (LSourceLiteral.ParsedIEEEValue.Kind = pifInfinity) and
+    (LSourceLiteral.ParsedIEEEValue.Precision = pbpX87Extended80),
+    'Exact source mathematics stays distinct from the admitted parser infinity');
+  Check(Supports(LAnswer.BoundType,INyxPascalLiteralType,LLiteral) and
+    (LLiteral.LiteralKind = plkReal) and (LLiteral.Value.Kind = pvvUnknown),
+    'The ordinary literal contract supplies no invented scalar value');
+  Accepted('-1.0e9999','{$IEEEERRORS OFF}',pifInfinity,True,pbbSingle);
+  Accepted('1.0e9999','{$IEEEERRORS OFF}{$minfpconstprec 64}',pifInfinity,False,pbbDouble);
+  Accepted('1.0e-9999','{$IEEEERRORS ON}',pifFinite,False,pbbSingle);
+  Accepted('-1.0e-9999','{$IEEEERRORS ON}',pifFinite,True,pbbSingle);
+  Check(Supports(LAnswer.BoundType,INyxPascalIEEERealLiteral,LSourceLiteral) and
+    LSourceLiteral.SourceValue.Negative and not LSourceLiteral.SourceValue.IsZero and
+    LSourceLiteral.ParsedIEEEValue.IsZero and
+    LSourceLiteral.ParsedIEEEValue.FiniteValue.Inexact,
+    'A signed inexact parser zero retains its nonzero exact source separately');
+  Accepted('-1.0e-9999','{$IEEEERRORS ON}{$minfpconstprec 64}',pifFinite,True,pbbDouble);
+  Accepted('1.0e9999 {$IEEEERRORS ON}','{$IEEEERRORS OFF}',pifInfinity,False,pbbSingle);
+  Accepted('{$IEEEERRORS OFF}(1.0e9999)','{$IEEEERRORS ON}',pifInfinity,False,pbbSingle);
+  Accepted('{$IEEEERRORS OFF}-1.0e9999','{$IEEEERRORS ON}',pifInfinity,True,pbbSingle);
+  Accepted('- {$IEEEERRORS ON}1.0e9999','{$IEEEERRORS OFF}',pifInfinity,True,pbbSingle);
+  Accepted('{$IEEEERRORS OFF}{$ifopt H+}{$endif}1.0e9999','{$IEEEERRORS ON}',pifInfinity,False,pbbSingle);
+  Refused('1.0e9999','',pbiCompilerContext);
+  Refused('1.0e9999','{$IEEEERRORS ON}',pbiUnsupportedType);
+  Refused('-1.0e9999','{$IEEEERRORS ON}',pbiUnsupportedType);
+  Refused('{$IEEEERRORS OFF}1.0e9999','{$IEEEERRORS ON}',pbiUnsupportedType);
+  Refused('- {$IEEEERRORS OFF}1.0e9999','{$IEEEERRORS ON}',pbiUnsupportedType);
+  Refused('{$IEEEERRORS ON}-1.0e9999','{$IEEEERRORS OFF}',pbiUnsupportedType);
+  Refused('Double(1.0e9999 {$IEEEERRORS ON})','{$IEEEERRORS OFF}',pbiUnsupportedType);
+  Accepted('Double(-1.0e9999 {$IEEEERRORS ON})','{$IEEEERRORS OFF}',pifInfinity,True,pbbDouble);
+  Refused('1.'+TNyxText(StringOfChar('0',254))+'1','{$IEEEERRORS OFF}',pbiUnsupportedType);
+  LSource := Companion('Keep(1.0e9999)','{$minfpconstprec 32}{$IEEEERRORS OFF}');
+  LAnswer := Query(LSource,'Observe(','Keep(1.0e9999)',Profile,Root);
+  Check((LAnswer.Status = pbsBound) and (LAnswer.BoundType.Builtin = pbbSingle) and
+    not Supports(LAnswer.BoundType,INyxPascalIEEEConstant,LIEEE) and
+    not Supports(LAnswer.BoundType,INyxPascalIEEERealLiteral,LSourceLiteral),
+    'A generic result inherits neither an overflowing argument value nor its source proof');
+end;
+
+procedure LiteralRangeWorkContract;
+var LSource, LExpression: TNyxText; LWorld: INyxPascalSemanticWorld;
+  LSite: INyxPascalBindingSite; LQueries: INyxPascalExpressionQueries;
+  LWindow: TNyxPascalSpan; LAccess: TNyxPascalMemberAccess;
+  LAnswer: INyxPascalResolution; LBudget: INyxPascalAnalysisBudget;
+  LSourceLiteral: INyxPascalIEEERealLiteral; LRetained: TNyxPascalIEEEValue;
+  LAt, LPass, LFit: Integer; LExpected: TNyxPascalIEEEKind;
+begin
+  for LPass := 0 to 1 do
+  begin
+    LExpression := '1.0e9999'; LExpected := pifInfinity;
+
+    if LPass = 1 then begin LExpression := '-1.0e-9999'; LExpected := pifFinite; end;
+    LSource := Companion(LExpression,'{$minfpconstprec 32}{$IEEEERRORS OFF}');
+    LWorld := WorldFor(LSource,Profile,Root);
+    LSite := ExpressionSite(LWorld,LSource,'Observe(',LExpression,LWindow);
+    Supports(LWorld,INyxPascalExpressionQueries,LQueries); LFit := -1;
+    for LAt := 1 to 20000 do
+    begin
+      LAnswer := nil; LBudget := NewNyxPascalAnalysisBudget(LAt);
+      try
+        try
+          LAnswer := LQueries.ExpressionType(LSite,LWindow,LAccess,LBudget);
+          Check((LAnswer.Status = pbsBound) and
+            Supports(LAnswer.BoundType,INyxPascalIEEERealLiteral,LSourceLiteral),
+            'The first sufficient allowance publishes the complete source-literal proof');
+          LRetained := LSourceLiteral.ParsedIEEEValue; LFit := LAt;
+        except
+          on ENyxPascalAnalysisWorkLimit do Check((LAnswer = nil) and (LBudget.Receipt.Total <= LAt),
+            'Every smaller allowance refuses atomically within its unchanged parent budget');
+        end;
+      finally LBudget.Retire; end;
+
+      if LFit > 0 then Break;
+    end;
+    Check((LFit > 1) and (LRetained.Kind = LExpected) and
+      (LRetained.Negative = (LPass = 1)),
+      'Retired work budgets leave truthful detached literal values');
+    WriteLn('real literal range work / ',String(LExpression),' first fit=',LFit,
+      ' every smaller allowance refused');
+  end;
+end;
+
 procedure WorkContract;
 var LSource: TNyxText; LWorld: INyxPascalSemanticWorld; LSite: INyxPascalBindingSite;
   LWindow: TNyxPascalSpan; LQueries: INyxPascalExpressionQueries; LAccess: TNyxPascalMemberAccess;
@@ -327,19 +444,19 @@ begin
   LRows := TStringList.Create; LFields := TStringList.Create;
   try
     LRows.Text := String(NativeIEEEBindings);
-    Check((LRows.Count = 152) and (NativeIEEEBindingCalls = 152),
+    Check((LRows.Count = 191) and (NativeIEEEBindingCalls = 191),
       'Every original native expression executes at its authored checking/precision site');
     LFields.Delimiter := '|'; LFields.StrictDelimiter := True;
     for LRow := 0 to LRows.Count-1 do
     begin
       LFields.DelimitedText := LRows[LRow]; LText := GInclude;
-      LOccurrence := LRow div 35+1;
+      LOccurrence := LRow div 43+1;
 
-      if LRow >= 140 then begin LOccurrence := 0; LText := LSource; end;
+      if LRow >= 172 then begin LOccurrence := 0; LText := LSource; end;
       LMarker := 'Emit('''+TNyxText(LFields[1])+''',';
       LAt := Pos(LMarker,LText);
 
-      if (LRow >= 140) and (LFields[0] = 'checked') then
+      if (LRow >= 172) and (LFields[0] = 'checked') then
         LAt := Pos(LMarker,Copy(LText,Pos('procedure Checked;',LText),Length(LText)))+
           Pos('procedure Checked;',LText)-1;
       Check(LAt > 0,'The original expression retains its unique source marker');
@@ -412,7 +529,7 @@ begin
           'The original finite-only proof remains truthful at every native source site');
       end;
     end;
-    Check(NativeIEEEBindingCalls = 152,'Semantic queries never invoke the independently compiled native bodies');
+    Check(NativeIEEEBindingCalls = 191,'Semantic queries never invoke the independently compiled native bodies');
   finally LFields.Free; LRows.Free; GInclude := ''; end;
 end;
 
@@ -427,40 +544,49 @@ begin
       LAnswer := LQueries.ExpressionType(Site,Window,LAccess,LBudget);
 
       if (LAnswer.Status <> pbsBound) or not Supports(LAnswer.BoundType,INyxPascalIEEEConstant,LIEEE) or
-        (LIEEE.IEEEValue.Kind <> pifNaN) then raise Exception.Create('Concurrent IEEE expression differs');
+        (LIEEE.IEEEValue.Kind <> ExpectedKind) then raise Exception.Create('Concurrent IEEE expression differs');
     except on E: Exception do ErrorText := E.Message; end;
   finally LBudget.Retire; end;
 end;
 
 procedure ConcurrentContract;
 var LSource: TNyxText; LWorld: INyxPascalSemanticWorld; LSite: INyxPascalBindingSite;
-  LWindow: TNyxPascalSpan; LReaders: array of TBindingIEEEReader; LAt: Integer;
+  LWindow: TNyxPascalSpan; LReaders: array of TBindingIEEEReader; LAt, LPass: Integer;
+  LExpression: TNyxText; LKind: TNyxPascalIEEEKind;
 begin
-  LSource := Companion('Single(1.0 / 0.0) * 0.0','{$minfpconstprec 64}{$IEEEERRORS OFF}');
-  LWorld := WorldFor(LSource,Profile,Root);
-  LSite := ExpressionSite(LWorld,LSource,'Observe(','Single(1.0 / 0.0) * 0.0',LWindow);
-  SetLength(LReaders,64);
-  try
-    for LAt := 0 to High(LReaders) do
-    begin
-      LReaders[LAt] := TBindingIEEEReader.Create(True); LReaders[LAt].FreeOnTerminate := False;
-      LReaders[LAt].World := LWorld; LReaders[LAt].Site := LSite; LReaders[LAt].Window := LWindow; LReaders[LAt].Start;
-    end;
-    for LAt := 0 to High(LReaders) do
-    begin LReaders[LAt].WaitFor; Check(LReaders[LAt].ErrorText = '',LReaders[LAt].ErrorText); end;
-  finally
-    for LAt := 0 to High(LReaders) do
-    begin
+  for LPass := 0 to 1 do
+  begin
+    LExpression := 'Single(1.0 / 0.0) * 0.0'; LKind := pifNaN;
 
-      if LReaders[LAt] <> nil then begin LReaders[LAt].WaitFor; LReaders[LAt].Free; end;
+    if LPass = 1 then begin LExpression := '1.0e9999'; LKind := pifInfinity; end;
+    LSource := Companion(LExpression,'{$minfpconstprec 64}{$IEEEERRORS OFF}');
+    LWorld := WorldFor(LSource,Profile,Root);
+    LSite := ExpressionSite(LWorld,LSource,'Observe(',LExpression,LWindow);
+    SetLength(LReaders,64);
+    try
+      for LAt := 0 to High(LReaders) do
+      begin
+        LReaders[LAt] := TBindingIEEEReader.Create(True); LReaders[LAt].FreeOnTerminate := False;
+        LReaders[LAt].World := LWorld; LReaders[LAt].Site := LSite; LReaders[LAt].Window := LWindow;
+        LReaders[LAt].ExpectedKind := LKind; LReaders[LAt].Start;
+      end;
+      for LAt := 0 to High(LReaders) do
+      begin LReaders[LAt].WaitFor; Check(LReaders[LAt].ErrorText = '',LReaders[LAt].ErrorText); end;
+    finally
+      for LAt := 0 to High(LReaders) do
+      begin
+
+        if LReaders[LAt] <> nil then
+        begin LReaders[LAt].WaitFor; LReaders[LAt].Free; LReaders[LAt] := nil; end;
+      end;
     end;
+    WriteLn('IEEE binding readers / 64 joined');
   end;
-  WriteLn('IEEE binding readers / 64 joined');
 end;
 {$endif}
 
 begin
-  ControlledContract; WorkContract;
+  ControlledContract; LiteralRangeContract; LiteralRangeWorkContract; WorkContract;
   {$ifndef PAS2JS}NativeSourceContract; ConcurrentContract;{$endif}
   WriteLn('PASS IEEE binding ',GChecks,' checks');
 end.

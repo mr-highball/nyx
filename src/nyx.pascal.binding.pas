@@ -297,6 +297,15 @@ type
     ['{05B9DE3B-2930-46CA-9F3A-7697270AA758}']
     function IEEEValue: TNyxPascalIEEEValue;
   end;
+  { Optional source-literal evidence also admits a qualified parser infinity.
+    Exact source mathematics and the parser result remain separate; finite-only
+    literal/constant interfaces are available only when that result is finite.
+    No generic return value inherits the argument's source or numeric proof. }
+  INyxPascalIEEERealLiteral = interface(IInterface)
+    ['{6A81224C-A2A2-4475-BD24-9729406A077B}']
+    function SourceValue: TNyxPascalRealValue;
+    function ParsedIEEEValue: TNyxPascalIEEEValue;
+  end;
   { Detached scalar proof on a folded expression, independent of a source
     literal. Real expressions keep ConstantValue Unknown and expose their
     separate real capability. Generic calls consume ResultType only. This
@@ -646,18 +655,23 @@ type
     function CodeUnit(AIndex: Integer): Integer;
     function SpecializationType: INyxPascalSemanticType;
   end;
-  { Separate capability is available only on an admitted real literal. The
-    inherited ordinary type owns source/world identity; both numeric proofs
-    are detached values without mutable work integers or execution leases. }
-  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral, INyxPascalRealConstant,
-    INyxPascalIEEEConstant)
+  { Admitted real literal, including parser infinity. Its ordinary shape owns
+    source/world identity; detached numeric values retain no mutable arithmetic
+    workspace or execution lease. Finite proofs belong to the subclass alone. }
+  TIEEERealLiteralType = class(TLiteralType, INyxPascalIEEERealLiteral, INyxPascalIEEEConstant)
   public
     FSourceValue: TNyxPascalRealValue;
-    FParsedValue: TNyxPascalBinaryReal;
+    FParsedValue: TNyxPascalIEEEValue;
     function SourceValue: TNyxPascalRealValue;
+    function ParsedIEEEValue: TNyxPascalIEEEValue;
+    function IEEEValue: TNyxPascalIEEEValue;
+  end;
+  { Finite specialization preserves both original literal and constant GUIDs
+    and their finite-only result contracts, including signed inexact zero. }
+  TRealLiteralType = class(TIEEERealLiteralType, INyxPascalRealLiteral, INyxPascalRealConstant)
+  public
     function ParsedValue: TNyxPascalBinaryReal;
     function RealValue: TNyxPascalBinaryReal;
-    function IEEEValue: TNyxPascalIEEEValue;
   end;
   { Internal spelling retains the existing consumer sites while the unchanged
     scalar proof contract is now available to external semantic consumers. }
@@ -1354,19 +1368,24 @@ begin
   Result := FValue;
 end;
 
-function TRealLiteralType.SourceValue: TNyxPascalRealValue;
+function TIEEERealLiteralType.SourceValue: TNyxPascalRealValue;
 begin
   Result := FSourceValue;
 end;
 
-function TRealLiteralType.ParsedValue: TNyxPascalBinaryReal;
+function TIEEERealLiteralType.ParsedIEEEValue: TNyxPascalIEEEValue;
 begin
   Result := FParsedValue;
 end;
 
+function TRealLiteralType.ParsedValue: TNyxPascalBinaryReal;
+begin
+  Result := FParsedValue.FiniteValue;
+end;
+
 function TRealLiteralType.RealValue: TNyxPascalBinaryReal;
 begin
-  Result := FParsedValue;
+  Result := FParsedValue.FiniteValue;
 end;
 
 function TRealExpressionType.RealValue: TNyxPascalBinaryReal;
@@ -1374,9 +1393,9 @@ begin
   Result := FRealValue;
 end;
 
-function TRealLiteralType.IEEEValue: TNyxPascalIEEEValue;
+function TIEEERealLiteralType.IEEEValue: TNyxPascalIEEEValue;
 begin
-  Result := TNyxPascalIEEEValue.Finite(FParsedValue);
+  Result := FParsedValue;
 end;
 
 function TIEEEExpressionType.IEEEValue: TNyxPascalIEEEValue;
@@ -7357,7 +7376,11 @@ var
     LValue, LLower: TNyxPascalConstantValue;
     LTypeAnswer: INyxPascalResolution;
     LIdentity: INyxPascalIntrinsicIdentity;
-    LRealLiteral: TRealLiteralType;
+    LRealLiteral: TIEEERealLiteralType;
+    LSourceValue: TNyxPascalRealValue;
+    LParsedValue: TNyxPascalBinaryReal;
+    LIEEEValue: TNyxPascalIEEEValue;
+    LAdmission: INyxPascalResolution;
     LParser: TNyxPascalRealParserPolicy;
     LMinimum: TNyxPascalRealPrecisionRequest;
     LPrecision: TNyxPascalBinaryPrecision;
@@ -7561,16 +7584,17 @@ var
       if (LContext = nil) or (LContext.Family <> ppcFPC) or
         (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi,ppmDelphiUnicode]) then
         Exit(Answer(pbsUnresolved,pbiCompilerContext));
-      LRealLiteral := TRealLiteralType.Create; LLiteral := LRealLiteral;
     end
-    else LLiteral := TLiteralType.Create;
-    LLease := LLiteral; LLiteral.Owner := FWorld;
-    LLiteral.FContext := LContext; LLiteral.FModule := ASite.ModuleIndex;
+    else
+    begin
+      LLiteral := TLiteralType.Create;
+      LLease := LLiteral;
+    end;
 
     if LToken.Kind = ptkNumber then
     begin
 
-      if LRealLiteral <> nil then
+      if LToken.RealNumber then
       begin
         LParser := NyxPascalRealParser(LContext);
 
@@ -7605,20 +7629,23 @@ var
         LRealBudget := NewNyxPascalAnalysisBudget(FLimits.MaximumSteps-FSteps,FCancel);
         try
           try
-            LRealLiteral.FSourceValue := NyxPascalRealToken(LLex.Text(LAt),LRealBudget);
+            { The qualified RTL parser takes the complete original short-string
+              token. Longer inputs refuse; truncation would invent a value. }
+            if Length(LLex.Text(LAt)) > 255 then Exit;
+            LSourceValue := NyxPascalRealToken(LLex.Text(LAt),LRealBudget);
 
-            if LNegative then LRealLiteral.FSourceValue := LRealLiteral.FSourceValue.Negated;
-            LRealLiteral.FParsedValue := NyxPascalRoundRealToEven(LRealLiteral.FSourceValue,LParser.Precision,LRealBudget);
+            if LNegative then LSourceValue := LSourceValue.Negated;
+            LParsedValue := NyxPascalRoundRealToEven(LSourceValue,LParser.Precision,LRealBudget);
+            LIEEEValue := MathematicalOutcome(LParsedValue);
 
-            if (LRealLiteral.FParsedValue.Status <> rrsFinite) or
-              (LRealLiteral.FParsedValue.IsZero and not LRealLiteral.FSourceValue.IsZero) then
-              Exit; { Compiler range/underflow admission is a separate contract. }
+            if not (LIEEEValue.Kind in [pifFinite,pifInfinity]) then Exit;
             LPrecision := pbpBinary32;
 
             if LMinimum = prprBinary64 then LPrecision := pbpBinary64;
             LPrimitive := 'extended';
 
-            if LRealLiteral.FParsedValue.SameValue(LRealLiteral.FParsedValue.RoundToEven(LPrecision,LRealBudget),LRealBudget) then
+            if (LIEEEValue.Kind = pifInfinity) or
+              LParsedValue.SameValue(LParsedValue.RoundToEven(LPrecision,LRealBudget),LRealBudget) then
             begin
 
               if LPrecision = pbpBinary32 then LPrimitive := 'single' else LPrimitive := 'double';
@@ -7629,6 +7656,21 @@ var
         finally
           Inc(FSteps,LRealBudget.Receipt.Total); LRealBudget.Retire;
         end;
+        { FPC constructs/checks the unsigned real node before consuming this
+          token or applying its unary sign. Pending locals follow the same
+          scanner chronology as other real nodes; MIN/FPU remain immediate. }
+        { Nearest-even rounding is sign symmetric. Keep the signed parser
+          result's original Inexact evidence, but check its unsigned node. }
+        if LNegative then LAdmission := SpecialValueAdmission(LIEEEValue.Negated)
+        else LAdmission := SpecialValueAdmission(LIEEEValue);
+
+        if LAdmission <> nil then Exit(LAdmission);
+
+        if LIEEEValue.Kind = pifFinite then LRealLiteral := TRealLiteralType.Create
+        else LRealLiteral := TIEEERealLiteralType.Create;
+        LLiteral := LRealLiteral; LLease := LLiteral;
+        LRealLiteral.FSourceValue := LSourceValue;
+        LRealLiteral.FParsedValue := LIEEEValue;
         LLiteral.FLiteralKind := plkReal;
         Next;
       end
@@ -7781,6 +7823,8 @@ var
       end;
     end
     else Exit;
+    LLiteral.Owner := FWorld;
+    LLiteral.FContext := LContext; LLiteral.FModule := ASite.ModuleIndex;
     LLiteral.FSpan := NyxPascalSpan(LStart, LFinish - LStart);
 
     if (LPrimitive = '') and (LLiteral.TypeKind <> pstArray) then Exit;
