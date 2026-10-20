@@ -4,7 +4,48 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source string binding adds optional INyxPascalStringConstant for qualified
+Current-source pointer compatibility keeps SameType nominal identity separate
+from qualified flat FPC30301 data-pointer equality/signature filtering/ranks.
+Aliases, unique parameters, copied records, nested pointers, generic substitutions
+and explicit class ancestry keep their owners; equal remaining ranks and unknown
+conversion prerequisites refuse. Generic pointer equality follows the measured
+compiler owner-without-argument-list rule without erasing semantic arguments.
+Private pointer context/class retains active source and immutable initial/root
+target facts separately. Source CPU DEFINE/UNDEF cannot retarget the compiler or
+manufacture missing initial evidence; imported System ownership stays separate.
+No public GUID/method/enum/record layout changes or interface in copied records.
+Initial ambiguity/unused-witness warnings/missing-import/semantic failures remain
+as retained preparation logs/copies. The stronger native masked-symbol unit
+exposes a real first-implementation failure; exact pre-repair inputs/exception
+heap remain retained. Final focused1037/firstfit175/all smaller atomic/local
+refusal/cancellation/64 joined has clean heap. Two whole native modes/three
+includes each provide186 actual overload windows; four separate ambiguity inputs
+fail with no binary. Corrected five-source broad freeze passes76 compilers/zero
+owned warnings/203 upstream and45 native runs/clean heaps;29 browser consumers and
+both Studios/backend/worker compile only/as applicable. After readers join,
+exactly two IF-spacing blank lines change; a checked inverse preserves all other
+source/BOM. Current focused/corpus native and focused browser recompile pass.
+Final evidence is explicitly composite, not an unchanged final broad byte freeze:
+three extra compilers/two native runs qualify that whitespace-only source.
+Corpus575/508 actual files/2467621 tokens, unchanged RTL56/System13101/0/31 and
+ObjPas209/0/1 with no pending fact and exact Free/FreeInstance navigation/insertion
+stay qualified. Original2M/4M/64/initial5/Word1/symbol3of8/dynamic6of8/ordered jobs
+stay exact. All775 maintained/770 unrelated/five current sources/retained failures
+and copies/97 RTL/24 base compiler pins plus inspected owners/156 packets/48
+includes/349 artifacts/nine contexts/five protected/thirteen foreign files retain
+their qualified comparisons. Readers/handles join; LAN offline; native Nyx tools
+absent. Current-start protection exact; historical global-config failure keeps
+full preservation false and unrepaired. WORK.md and ignored
+.local/pointer-identity-paths-private.json own final source/evidence/remote receipts.
+Stop pointer/signature/witness/compiler variants. Reassess remaining canonical
+conversion/type/project-source dependencies through existing owners toward the
+complete modern editor. Full language/module/incremental/editor/input/navigation/
+quality/parity/adoption/delivery and original criterion/task/counter/credit/DONE
+stay open. No Pascal edits while readers live; no host/config retry, SDK capture,
+protected mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout
+or sub-agents. Preserve concurrent work and all retained failures.
+
+Previously qualified string binding adds optional INyxPascalStringConstant for qualified
 FPC30301 Delphi/DelphiUnicode concatenation/relations and declaration-owned values.
 Character/literal/typed forms stay distinct from unknown/ASCII/UTF8/UTF16 encoding;
 exact units retain NUL/lone surrogates, qualified byte promotion and complete

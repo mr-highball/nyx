@@ -59,7 +59,8 @@ type
     pbiGenericArity, pbiGenericConstraint);
   { Type definitions and constructed shapes remain distinct. Alias and distinct
     wrappers preserve declared identity; Target retains the underlying shape.
-    Numeric bounds/defaults, layout and assignment compatibility are not inferred. }
+    Qualified compatibility queries do not change this nominal identity or
+    infer numeric bounds/defaults, layout or general assignment legality. }
   TNyxPascalSemanticTypeKind = (pstDeclared, pstAlias, pstDistinct, pstPointer,
     pstArray, pstSet, pstFile, pstString, pstClassOf, pstProcedure, pstFunction,
     pstReference, pstEnumeration, pstSubrange, pstBuiltin, pstUntyped, pstFormal);
@@ -639,6 +640,24 @@ type
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
   end;
+  { Private provenance for a constructed data pointer. Its captured source
+    context qualifies representation-sensitive compatibility without changing
+    nominal type identity or exposing a machine address/layout to the editor. }
+  IDataPointerSource = interface(IInterface)
+    ['{860E8806-4B1E-41A5-92C8-C6F56187B962}']
+    function PointerContext: INyxPascalCompilerContext;
+    function PointerTargetContext: INyxPascalCompilerContext;
+  end;
+  { Both declared pointer syntax and typed address expressions retain their
+    own immutable context. Aliases/distinct wrappers still own their ordinary
+    declaration; neither the world nor context retains the resulting type. }
+  TDataPointerType = class(TSemanticType, IDataPointerSource)
+  public
+    CapturedContext: INyxPascalCompilerContext;
+    InitialTargetContext: INyxPascalCompilerContext;
+    function PointerContext: INyxPascalCompilerContext;
+    function PointerTargetContext: INyxPascalCompilerContext;
+  end;
   { Qualified primitive leaf adds only value-owned representation metadata.
     The inherited type/context/world remain the ordinary immutable identity;
     nothing retains a query, execution budget, compiler process or application. }
@@ -1019,6 +1038,14 @@ type
     function SameEnvironment(const ALeft, ARight: INyxPascalGenericEnvironment): Boolean;
     function SameType(const ALeft, ARight: INyxPascalSemanticType): Boolean;
     function SameBinding(const ALeft, ARight: INyxPascalBoundSymbol): Boolean;
+    { Compatibility is deliberately separate from exact declaration identity.
+      These helpers grant only the qualified flat FPC data-pointer rules. }
+    function DataPointer(const AType: INyxPascalSemanticType;
+      out ALeaf: INyxPascalSemanticType; out AContext: INyxPascalCompilerContext): Boolean;
+    function EqualDataPointers(const ALeft, ARight: INyxPascalSemanticType): Boolean;
+    { Initial compiler/root facts retain target authority independently of
+      authored DEFINE/UNDEF directives in a pointer's source namespace. }
+    function InitialPointerContext(AModule: Integer): INyxPascalCompilerContext;
   public
     constructor Create(const AWorld: INyxPascalSemanticWorld;
       const ACancellation: INyxCancellationScope);
@@ -1349,6 +1376,16 @@ end;
 function TSemanticType.Target: INyxPascalSemanticType;
 begin
   Result := Element;
+end;
+
+function TDataPointerType.PointerContext: INyxPascalCompilerContext;
+begin
+  Result := CapturedContext;
+end;
+
+function TDataPointerType.PointerTargetContext: INyxPascalCompilerContext;
+begin
+  Result := InitialTargetContext;
 end;
 
 function TSemanticType.Syntax: INyxPascalTypeSyntax;
@@ -2407,6 +2444,106 @@ begin
   end;
 end;
 
+function TBindingQuery.InitialPointerContext(AModule: Integer): INyxPascalCompilerContext;
+var LRoot: INyxPascalCompilerContext;
+begin
+  Result := FWorld.ModuleAt(AModule).Source.InitialContext;
+  LRoot := NyxPascalBootstrapContext(Result);
+
+  if LRoot <> nil then Result := LRoot;
+end;
+
+function TBindingQuery.DataPointer(const AType: INyxPascalSemanticType;
+  out ALeaf: INyxPascalSemanticType; out AContext: INyxPascalCompilerContext): Boolean;
+var LSource: IDataPointerSource; LActive: INyxPascalCompilerContext;
+begin
+  Enter;
+  try
+    ALeaf := AType; AContext := nil;
+    while (ALeaf <> nil) and (ALeaf.Kind in [pstAlias,pstDistinct]) do
+    begin
+      Tick;
+      ALeaf := ALeaf.Target;
+    end;
+
+    if ALeaf = nil then Exit(False);
+
+    if (ALeaf.Kind <> pstPointer) and
+      ((ALeaf.Kind <> pstBuiltin) or (ALeaf.Builtin <> pbbPointer)) then Exit(False);
+
+    if not Supports(ALeaf,IDataPointerSource,LSource) then Exit(False);
+    LActive := LSource.PointerContext; AContext := LSource.PointerTargetContext;
+    { This qualification supplies a common flat representation, not a guessed
+      byte count. Source namespace changes cannot retarget the compiler. The
+      declaration may belong to an imported FPC-mode System; the operator's
+      caller mode is qualified independently at its existing query boundary. }
+    Result := (AContext <> nil) and (AContext.Family = ppcFPC) and
+      (AContext.Version.FullNumber = 30301) and (LActive <> nil) and
+      (LActive.Family = ppcFPC) and (LActive.Version.FullNumber = 30301) and
+      (LActive.Mode <> ppmUnknown) and
+      (AContext.Symbol(NyxPascalDefine('CPUI386')).IsDefined = ppkTrue);
+  finally Leave; end;
+end;
+
+function TBindingQuery.EqualDataPointers(const ALeft, ARight: INyxPascalSemanticType): Boolean;
+var LLeft, LRight, LLeftTarget, LRightTarget: INyxPascalSemanticType;
+  LLeftContext, LRightContext: INyxPascalCompilerContext;
+  LLeftFrame, LRightFrame: INyxPascalGenericEnvironment;
+
+  function Pointee(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
+  var LLeaf: INyxPascalSemanticType;
+  begin
+    Result := AValue;
+    while (Result <> nil) and (Result.Kind = pstAlias) do
+    begin Tick; Result := Result.Target; end;
+
+    if (Result = nil) or (Result.Kind <> pstDistinct) then Exit;
+    LLeaf := Result;
+    while (LLeaf <> nil) and (LLeaf.Kind in [pstAlias,pstDistinct]) do
+    begin Tick; LLeaf := LLeaf.Target; end;
+    { Cloning a primitive/pointer preserves its representation. A copied record
+      or class gets its own declaration; matching storage shape is no equality. }
+
+    if (LLeaf <> nil) and (LLeaf.Kind in [pstBuiltin,pstPointer]) then Result := LLeaf;
+  end;
+begin
+  Enter;
+  try
+    Result := False;
+
+    if not DataPointer(ALeft,LLeft,LLeftContext) or
+      not DataPointer(ARight,LRight,LRightContext) then Exit;
+
+    if (LLeft.Kind = pstBuiltin) or (LRight.Kind = pstBuiltin) then
+      Exit((LLeft.Kind = pstBuiltin) and (LRight.Kind = pstBuiltin));
+    LLeftTarget := Pointee(LLeft.Target); LRightTarget := Pointee(LRight.Target);
+
+    if (LLeftTarget = nil) or (LRightTarget = nil) then Exit;
+    { FPC's pointer constructors propagate the pointee specialization's generic
+      owner, with no pointer generic-argument list. compare_defs_ext tests that
+      owner before ordinary pointee equality. Preserve this compiler equality
+      without erasing the actual arguments from either nominal semantic type. }
+    LLeftFrame := nil; LRightFrame := nil;
+
+    if LLeftTarget.Definition <> nil then LLeftFrame := EnvironmentOf(LLeftTarget.Definition);
+
+    if LRightTarget.Definition <> nil then LRightFrame := EnvironmentOf(LRightTarget.Definition);
+
+    if (LLeftFrame <> nil) and (LRightFrame <> nil) and
+      SameSymbol(LLeftFrame.Owner,LRightFrame.Owner) and
+      SameEnvironment(LLeftFrame.Parent,LRightFrame.Parent) then Exit(True);
+    { Distinctness on the pointee is retained by SameType, but FPC's equal_defs
+      can admit cloned primitive representations through a pointer. The local
+      normalization grants no ordinary assignment or generic type equality. }
+
+    if SameType(LLeftTarget,LRightTarget) then Exit(True);
+
+    if (LLeftTarget <> nil) and (LRightTarget <> nil) and
+      (LLeftTarget.Kind = pstPointer) and (LRightTarget.Kind = pstPointer) then
+      Exit(EqualDataPointers(LLeftTarget,LRightTarget));
+  finally Leave; end;
+end;
+
 function TBindingQuery.ContextAt(const ASite: INyxPascalBindingSite): INyxPascalCompilerContext;
 var
   LView: INyxPascalTranslatedSyntax;
@@ -3271,6 +3408,18 @@ begin
       LType := LFloat;
       LFloat.FormatValue := LFormat;
       LFloat.ByteCount := LBytes;
+    end
+    else if LValue = pbbPointer then
+    begin
+      LType := TDataPointerType.Create;
+      TDataPointerType(LType).CapturedContext := LContext;
+      TDataPointerType(LType).InitialTargetContext := InitialPointerContext(ASite.ModuleIndex);
+
+      if ASystem then
+      begin
+
+        if LSystem >= 0 then TDataPointerType(LType).InitialTargetContext := InitialPointerContext(LSystem);
+      end;
     end
     else LType := TSemanticType.Create;
     LType.Owner := FWorld;
@@ -5605,7 +5754,15 @@ begin
     begin
       Exit(Specialize(ASite, AType, ANode));
     end;
-    LType := TSemanticType.Create;
+
+    if LNode.Kind = ptxPointer then
+    begin
+      LType := TDataPointerType.Create;
+      TDataPointerType(LType).CapturedContext := ContextAt(
+        FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,LNode.Span.Start));
+      TDataPointerType(LType).InitialTargetContext := InitialPointerContext(ASite.ModuleIndex);
+    end
+    else LType := TSemanticType.Create;
     LLease := LType;
     LType.Owner := FWorld;
     LType.TypeSyntax := AType;
@@ -8302,7 +8459,7 @@ var
     LStorage, LHeap, LSeen: Boolean;
     LAccess: TNyxPascalMemberAccess;
     LType: INyxPascalSemanticType;
-    LPointer: TSemanticType;
+    LPointer: TDataPointerType;
   begin
     LSite := FWorld.At(ASite.ModuleIndex, ASite.ScopeIndex, AOffset);
     LContext := ContextAt(LSite);
@@ -8362,8 +8519,10 @@ var
         Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
       Exit(BuiltinType(LSite, 'Pointer', FLimits.ImplicitScopes = pispCompilerUnits));
     end;
-    LPointer := TSemanticType.Create;
+    LPointer := TDataPointerType.Create;
     LPointer.Owner := FWorld;
+    LPointer.CapturedContext := LContext;
+    LPointer.InitialTargetContext := InitialPointerContext(ASite.ModuleIndex);
     LPointer.TypeKind := pstPointer;
     LPointer.Element := LValue.BoundType;
     Result := TypeAnswer(LPointer);
@@ -8788,9 +8947,10 @@ var
   end;
 
   { Operator lookup preserves both operands' visible declarations and ordinary
-    privacy/generic/source gaps. The inspected FPC ranks exact signatures before
-    conversions. All exact matches must agree on the result; no conversion,
-    ordinal promotion or commutative permutation is guessed. }
+    privacy/generic/source gaps. Ordinary signatures retain exact matching; the
+    separately qualified data-pointer stage adds compiler equality, filtering
+    and conversion ranks. Other conversions, ordinal promotion and commutative
+    permutation remain separate. }
   function OperatorResult(AKind: TNyxPascalOperatorKind; AOffset: Integer;
     const ALeft, ARight: INyxPascalResolution; AUnary: Boolean): INyxPascalResolution;
   var
@@ -9618,6 +9778,210 @@ var
       Result := TypeAnswer(LLease);
     end;
 
+    { The compiler filters equivalent non-unique signatures before comparing
+      argument ranks. Exact nominal identity remains in SameType; pointer
+      equality and void conversion are separate, source-qualified stages. }
+    function PointerResult: INyxPascalResolution;
+    var LSignatures: array of INyxPascalSemanticType;
+      LIndex, LEarlier, LArgument, LConversions, LExacts: Integer;
+      LBestConversions, LBestExacts, LBestCount: Integer;
+      LFormal, LActual, LLeaf: INyxPascalSemanticType;
+      LPointerContext: INyxPascalCompilerContext;
+      LReply: INyxPascalResolution;
+      LDuplicate, LCompatible, LHasPointer, LPointerDifference, LUnknown: Boolean;
+
+      function Transparent(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
+      begin
+        Result := AValue;
+        while (Result <> nil) and (Result.Kind = pstAlias) do
+        begin Tick; Result := Result.Target; end;
+      end;
+
+      function PointerLike(const AValue: INyxPascalSemanticType): Boolean;
+      var LValue: INyxPascalSemanticType;
+      begin
+        LValue := AValue;
+        while (LValue <> nil) and (LValue.Kind in [pstAlias,pstDistinct]) do
+        begin Tick; LValue := LValue.Target; end;
+        Result := (LValue <> nil) and ((LValue.Kind = pstPointer) or
+          ((LValue.Kind = pstBuiltin) and (LValue.Builtin = pbbPointer)));
+      end;
+
+      function KnownTarget(const AValue: INyxPascalSemanticType): Boolean;
+      var LValue: INyxPascalSemanticType;
+      begin
+        LValue := Transparent(AValue);
+
+        if LValue = nil then Exit(False);
+
+        if LValue.Kind in [pstDeclared,pstBuiltin,pstPointer] then Exit(True);
+
+        if LValue.Kind <> pstDistinct then Exit(False);
+        LValue := Unwrap(LValue);
+        Result := (LValue <> nil) and ((LValue.Kind in [pstBuiltin,pstPointer]) or
+          ((LValue.Kind = pstDeclared) and (LValue.Definition <> nil) and
+            (LValue.Definition.Declaration.TypeForm = pstfRecord)));
+      end;
+
+      function EquivalentParameter(const AFirst, ASecond: INyxPascalSemanticType): Boolean;
+      var LFirst, LSecond: INyxPascalSemanticType;
+      begin
+        LFirst := Transparent(AFirst); LSecond := Transparent(ASecond);
+
+        if SameType(LFirst,LSecond) then Exit(True);
+
+        if (LFirst = nil) or (LSecond = nil) or
+          (LFirst.Kind = pstDistinct) or (LSecond.Kind = pstDistinct) then Exit(False);
+        Result := EqualDataPointers(LFirst,LSecond);
+
+        if Result then LPointerDifference := True;
+      end;
+
+      function ArgumentRank(const AParameter, AValue: INyxPascalSemanticType;
+        AMode: TNyxPascalSyntaxParameterMode): Boolean;
+      var LParameterLeaf, LValueLeaf: INyxPascalSemanticType;
+        LParameterTarget, LValueTarget: INyxPascalSemanticType;
+        LParameterContext, LValueContext: INyxPascalCompilerContext;
+        LRelation: TNyxPascalKnowledge;
+      begin
+
+        if SameType(AParameter,AValue) then begin Inc(LExacts); Exit(True); end;
+        Result := False;
+
+        if not (AMode in [pspmValue,pspmConst]) then Exit;
+
+        if not DataPointer(AParameter,LParameterLeaf,LParameterContext) or
+          not DataPointer(AValue,LValueLeaf,LValueContext) then Exit;
+
+        if EqualDataPointers(AParameter,AValue) then Exit(True);
+        LParameterTarget := Transparent(LParameterLeaf.Target);
+        LValueTarget := Transparent(LValueLeaf.Target);
+
+        if (LParameterTarget <> nil) and (LValueTarget <> nil) and
+          (LParameterTarget.Kind = pstDeclared) and (LValueTarget.Kind = pstDeclared) and
+          (LParameterTarget.Definition <> nil) and (LValueTarget.Definition <> nil) and
+          (LParameterTarget.Definition.Declaration.TypeForm = pstfClass) and
+          (LValueTarget.Definition.Declaration.TypeForm = pstfClass) then
+        begin
+          LRelation := ConstraintRelated(LValueTarget,LParameterTarget);
+
+          if LRelation = ppkUnknown then LUnknown := True;
+
+          if LRelation = ppkTrue then begin Inc(LConversions); Exit(True); end;
+        end;
+        { A failed exact comparison is not proof of incompatibility for type
+          families whose compiler equality has not been established here. Such
+          a candidate could beat a void fallback, so preserve the gap instead
+          of publishing that weaker candidate as an authoritative answer. }
+
+        if (LParameterTarget <> nil) and (LValueTarget <> nil) and
+          (not KnownTarget(LParameterTarget) or not KnownTarget(LValueTarget)) then LUnknown := True;
+        LParameterTarget := Unwrap(LParameterTarget); LValueTarget := Unwrap(LValueTarget);
+
+        if (LParameterTarget <> nil) and (LValueTarget <> nil) and
+          (LParameterTarget.Kind = pstBuiltin) and (LValueTarget.Kind = pstBuiltin) and
+          (LParameterTarget.Builtin = LValueTarget.Builtin) then LUnknown := True;
+        { Void conversions are weaker than equal pointees. Character-pointer
+          conversion penalties need their own string/conversion qualification;
+          they are deliberately not borrowed from the flat data-pointer rule. }
+
+        if ((LParameterLeaf.Kind = pstBuiltin) and (LValueLeaf.Kind = pstPointer)) or
+          ((LValueLeaf.Kind = pstBuiltin) and (LParameterLeaf.Kind = pstPointer)) then
+        begin
+          LLeaf := LParameterLeaf.Target;
+
+          if LParameterLeaf.Kind = pstBuiltin then LLeaf := LValueLeaf.Target;
+          while (LLeaf <> nil) and (LLeaf.Kind in [pstAlias,pstDistinct]) do
+          begin Tick; LLeaf := LLeaf.Target; end;
+
+          if (LLeaf <> nil) and (LLeaf.Kind = pstBuiltin) and
+            (LLeaf.Builtin in [pbbChar,pbbAnsiChar,pbbWideChar]) then Exit;
+          Inc(LConversions); Result := True;
+        end;
+      end;
+
+    begin
+      Result := nil;
+      LHasPointer := PointerLike(LLeft) or (not AUnary and PointerLike(LRight));
+
+      if not LHasPointer then Exit;
+
+      if (PointerLike(LLeft) and not DataPointer(LLeft,LLeaf,LPointerContext)) or
+        (not AUnary and PointerLike(LRight) and not DataPointer(LRight,LLeaf,LPointerContext)) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,'data pointer representation'));
+      SetLength(LSignatures,Length(LSymbols));
+      LBestConversions := MaxInt; LBestExacts := -1; LBestCount := 0; LUnknown := False;
+      for LIndex := 0 to High(LSymbols) do
+      begin
+        Tick;
+        LReply := RoutineSignature(LSymbols[LIndex]);
+
+        if LReply.Status <> pbsBound then Exit(LReply);
+
+        if LReply.BoundType.ParameterCount <> LArity then Continue;
+
+        if (LReply.BoundType.Kind <> pstFunction) or (LReply.BoundType.Target = nil) then
+          Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+        LSignatures[LIndex] := LReply.BoundType;
+        LDuplicate := False;
+        for LEarlier := 0 to LIndex-1 do
+        begin
+          Tick;
+
+          if (LSignatures[LEarlier] = nil) or
+            (LSymbols[LEarlier].ModuleIndex <> LSymbols[LIndex].ModuleIndex) or
+            (LSymbols[LEarlier].Declaration.Scope <> LSymbols[LIndex].Declaration.Scope) or
+            not SameEnvironment(EnvironmentOf(LSymbols[LEarlier]),EnvironmentOf(LSymbols[LIndex])) then Continue;
+          LCompatible := True; LPointerDifference := False;
+          for LArgument := 0 to LArity-1 do
+          begin
+            Tick;
+
+            if (LSignatures[LEarlier].ParameterMode(LArgument) <>
+                LSignatures[LIndex].ParameterMode(LArgument)) and
+              ((LSignatures[LEarlier].ParameterMode(LArgument) in [pspmVar,pspmOut,pspmConstRef]) or
+               (LSignatures[LIndex].ParameterMode(LArgument) in [pspmVar,pspmOut,pspmConstRef])) then
+              LCompatible := False;
+
+            if not EquivalentParameter(LSignatures[LEarlier].ParameterType(LArgument),
+              LSignatures[LIndex].ParameterType(LArgument)) then LCompatible := False;
+          end;
+
+          if LCompatible and LPointerDifference then begin LDuplicate := True; Break; end;
+        end;
+
+        if LDuplicate then begin LSignatures[LIndex] := nil; Continue; end;
+        LConversions := 0; LExacts := 0; LCompatible := True;
+        for LArgument := 0 to LArity-1 do
+        begin
+          Tick;
+          LFormal := LSignatures[LIndex].ParameterType(LArgument); LActual := LLeft;
+
+          if LArgument = 1 then LActual := LRight;
+
+          if not ArgumentRank(LFormal,LActual,LSignatures[LIndex].ParameterMode(LArgument)) then
+            LCompatible := False;
+        end;
+
+        if not LCompatible then Continue;
+
+        if (LConversions < LBestConversions) or
+          ((LConversions = LBestConversions) and (LExacts > LBestExacts)) then
+        begin
+          LBestConversions := LConversions; LBestExacts := LExacts;
+          LBestCount := 1; LCommon := LSignatures[LIndex].Target;
+        end
+        else if (LConversions = LBestConversions) and (LExacts = LBestExacts) then Inc(LBestCount);
+      end;
+
+      if LUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'pointer conversion prerequisites'));
+
+      if LBestCount > 1 then Exit(Answer(pbsUnresolved,pbiOverloadContext));
+
+      if LBestCount = 0 then Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+      Result := TypeAnswer(LCommon);
+    end;
+
     function Collect(const AType: INyxPascalSemanticType): INyxPascalResolution;
     var
       LIndex, LExisting: Integer;
@@ -9712,6 +10076,9 @@ var
     LArity := 2;
 
     if AUnary then LArity := 1;
+    Result := PointerResult;
+
+    if Result <> nil then Exit;
     LExact := False;
     LSeen := False;
     LCommon := nil;

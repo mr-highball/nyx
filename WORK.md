@@ -33,7 +33,92 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned string expressions — 2026-10-20
+## Current integration: Source-owned data-pointer compatibility — 2026-10-20
+
+Checkpoint 664e331 and its 771 maintained inputs revalidate before this
+integration. Only the existing binding owner changes, with four new Pascal test
+inputs. The complete Nyx/Studio and modern editor
+outcomes remain open. Compiler agreement on this type family closes no authoring,
+interaction, adoption, performance, parity or delivery criterion.
+
+Exact nominal identity stays in SameType. The separate qualified flat FPC30301
+operator path retains source-owned pointer provenance, compares compatible
+pointees/nested pointers, filters equivalent non-unique visible signatures and
+ranks exact/equal/void/explicit class-ancestry arguments. Unique parameters retain
+their own candidate; remaining equal ranks refuse without publishing a partial
+result. Unknown conversion prerequisites cannot donate a weaker void fallback.
+Copied records keep independent identities. Primitive clones can retain equal
+representation without granting ordinary assignment or generic type equality.
+
+The whole compiler witness exposes a subtle generic-pointer rule: FPC propagates
+the pointee specialization's generic owner without a pointer argument list.
+Equivalent signatures can therefore be filtered before an otherwise exact
+argument wins. Nyx follows that qualified selection while retaining the actual
+generic arguments, declaration owners and substitution parents on both types.
+The original unexpected selections are measured native results, not guessed
+nominal rules. A single private context capability/subclass extends internal
+construction; public GUIDs, methods, enum ordinals and record layouts stay exact.
+No interface occurs in a copied record or mutable world-owned result cache.
+
+An initial 786-check/four-include-occurrence batch passed all maintained consumers
+and the original RTL test. Source review then exposed an ownership problem:
+authored CPU namespace symbols were being treated as target evidence. A stronger
+whole native unit repeats every expression under a masked CPUI386 symbol, proving
+that compiler behavior is unchanged. Its new semantic assertion fails the first
+implementation and is retained with exact inputs and the exception heap. The
+repair retains active source context separately from the immutable initial/root
+compiler context. Source DEFINE/UNDEF cannot retarget the compiler or manufacture
+an absent initial observation. Imported System primitives keep their own root
+authority. No extra compiler probe, inferred address, byte count or ABI follows.
+
+The corrected whole unit has three original includes per mode, typed/untyped/
+masked, with 186 independent native overload observations across Delphi and
+DelphiUnicode. Four separate native inputs deliberately fail overload ambiguity
+and produce no binary. Portable semantic tests never link/execute witness bodies.
+Focused 1,037 checks pass: first fit175, every smaller aggregate allowance atomic,
+ordinary cancellation/local semantic refusal, nominal generic retention and
+64 joined concurrent readers, with clean heap. Initial missing-import, ambiguity,
+uninitialized-witness warning and first semantic-failure logs remain retained.
+Retained witness/input copies and the exact target-ownership failure preparation
+remain unchanged; no diagnostic is suppressed. Preparatory logs are not a claim
+that every earlier unfrozen test source was archived byte-for-byte.
+
+The corrected five-source freeze passes 76 main compiler jobs with zero owned
+warnings/203 upstream; all 45 selected native runs have clean heaps. Twenty-nine
+browser consumers and both Studios/backend/worker compile as applicable; browsers
+compile only. The unchanged original RTL56 retains System13,101/zero syntax/31
+answers and ObjPas209/zero/one, neither pending, with exact Free/FreeInstance
+completion/navigation/insertion. Original2M/4M/64/initial5/Word1/symbol3of8/
+dynamic6of8 and ordered jobs remain exact.
+
+After every reader joins, the final style review inserts exactly two blank lines
+above existing IF statements. A checked exact inverse reproduces the compiled
+source, preserving every other byte/text unit and BOM. Current-source focused
+native1,037 and corpus575/508 actual files/2,467,621 lossless tokens pass with clean
+heaps; the focused browser consumer compiles again. Final evidence is explicitly
+composite: 76 broad compiler jobs/45 native runs before this whitespace-only edit,
+plus three compilers/two native runs afterwards, zero owned warnings in both.
+The final source is not misrepresented as the earlier byte-identical freeze.
+
+All775 maintained/770 unrelated/current five-source receipts, retained copies/
+failures, 97 RTL/24 base compiler pins plus inspected owners, 156 original packets/
+48 includes/349 frozen artifacts/nine contexts/five protected/thirteen foreign
+files retain their qualified comparisons. All handles/readers join; LAN offline.
+Current-start protection remains exact. The historical global-config preservation
+failure keeps the full preservation gate false and remains unrepaired.
+
+Ignored .local/pointer-identity-paths-private.json owns the current packet, source/
+evidence/remote receipts and return path. Stop pointer/signature/witness/compiler
+variants after this qualification. Reassess the remaining canonical conversion/
+type and project-source dependencies through existing owners, retaining the full
+modern editor outcome, input/quality/parity/adoption/delivery and all original
+criterion/task/counter/credit/DONE requirements as open. No source or test family
+coverage alone installs or qualifies the complete editor.
+LAN offline; native Nyx tools absent. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or
+sub-agents. Preserve concurrent work and every retained failure.
+
+## Previous integration: Source-owned string expressions — 2026-10-20
 
 The preceding 343d1bc turn makes implementation, validation and exact-remote
 progress. All 767 maintained source inputs revalidate before this integration.

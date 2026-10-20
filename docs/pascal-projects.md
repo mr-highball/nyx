@@ -3994,6 +3994,49 @@ additional code pages/compiler families, full language/editor adoption and targe
 parity remain open. No default provider, profile enrollment or Studio deployment
 is implied by these value capabilities.
 
+### Source-owned data-pointer compatibility
+
+Expression binding keeps exact type identity separate from the qualified FPC
+rules for data pointers. A declared pointer, an alias, a distinct pointer and
+the anonymous result of a typed `@Value` expression retain their original
+semantic types. Pointee compatibility does not erase a declaration or replace
+the arguments of a concrete generic specialization.
+
+For the qualified flat FPC 3.3.1 target, ordinary operator queries can compare
+equal pointees, traverse nested pointers, admit void-pointer conversions and
+follow explicit class ancestry. Visible overloads retain their original source
+owners and substitutions. Equivalent non-unique signatures are filtered before
+argument ranking; a distinct parameter keeps its own candidate. Equal-ranked
+remaining candidates produce an overload-context refusal, including when their
+return types happen to agree. A missing conversion prerequisite cannot silently
+select a weaker void-pointer fallback.
+
+The pinned compiler has a subtle generic-pointer equality rule: its pointer
+construction retains the generic owner without a pointer argument list. This
+can make separately substituted pointers equivalent during overload filtering.
+Nyx follows that qualified selection rule while keeping both original argument
+lists intact for subsequent member/type queries. It does not apply that rule to
+ordinary generic identity, assignment or inference.
+
+Constructed pointers retain their active source context and a separate immutable
+initial compiler/root context. Only the latter supplies target facts. Authored
+`DEFINE`/`UNDEF` changes to `CPUI386` neither retarget the compiler nor manufacture
+an absent initial observation. Imported System primitives retain their actual
+compiler-root owner. No machine address, pointer byte count or ABI is inferred.
+
+The complete native unit in `tests/pointers.identity.fixture.pas` executes its
+original include under typed, untyped and masked-source-symbol settings, compiled
+separately in Delphi and DelphiUnicode modes. Actual overload bodies record the
+selected result; portable semantic tests only inspect original source and read
+the independent output. Separate compiler inputs retain deliberate ambiguities.
+Existing semantic/aggregate budgets, cancellation and immutable-reader ownership
+remain in force. WORK.md records the qualification and preserved failures.
+
+This is an expression-binding capability, with no public interface, enum or
+record-layout change. General conversion families, complete canonical types,
+incremental project dependencies, full editor integration and native/browser
+interaction parity remain open.
+
 ### Configured FPU snapshots
 
 `NyxPascalConfiguredFPU(LContext)` returns a typed
