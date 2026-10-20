@@ -4,7 +4,48 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source floating representation adds an optional specialized primitive
+Current-source runtime floating expressions consume qualified primitive formats
+and preserve nominal operand identities. FPC 3.3.1 Delphi/DelphiUnicode source
+with i386 compiler-root evidence retains separate unary/binary/comparison/
+Currency/Comp/mixed-integral/division rules. Typed canonical results keep their
+bootstrap owner and missing facts retain existing exact requirements. Local
+precision is delayed until the next scanner call and stored at node creation;
+IFOPT flushes explicitly. FPU selection is immediate, shared by later expression
+type checking; parenthesized/call-argument frames stay separate. Bounded captured
+lexical lookahead resolves no later declarations. Query-owned per-frame contexts
+avoid repeated full-chain scans and retain no execution scope or reverse world
+lease. Unknown precision/selection/target facts refuse. No public GUID/enum/
+interface/record layout or request kind changes. The original whole native unit
+executes fifty expressions/one nested call, covering distinct order, on/off,
+x87/SSE2 and infix/trailing/grouped/deferred/IFOPT/POP/macro timing. Its pre-repair
+failure/three inputs and cursor-shadow/boundary/browser-counter preparations stay
+retained without assertion weakening or suppression. Focused native 478/104 and
+64 joined readers have clean heap; all smaller allowances refuse atomically.
+Twenty/forty flat divisions cost 894/1694 admitted work. All 50 current main
+compiler logs have zero owned warnings/98 upstream; 32 native runs have clean
+heaps; 16 browser consumers compile only; both Studios/backend/worker compile as
+applicable. Unchanged RTL passes 56: System 13101/zero syntax/31 answers, ObjPas
+209/zero/one, neither pending, exact Free/FreeInstance navigation/insertion ready.
+Original 2M/4M/64-round/initial5/Word1/symbol3of8/dynamic6of8 stay exact. All 737
+maintained/734 unrelated/three frozen/three previous source copies/four current
+preparation snapshots/97 RTL/24 compiler pins/all earlier plus nine inspected
+owners/two profiles/156 unit packets/48 historical includes/349 frozen artifacts/
+nine contexts/five protected files/thirteen concurrent files stay exact. Readers
+joined; LAN offline; native Nyx tools absent. Historical global-config failure
+keeps full preservation false. WORK.md and ignored
+.local/floating-expression-paths-private.json own final receipts/return path.
+Stop runtime-floating/timing/fixture/compiler variants. Next qualify real literal
+type/value contracts and initial/header precision activation through existing
+literal/context/source owners, preserving exact decimal source and requested/
+effective distinctions. Do not infer an uncaptured startup default from selected
+mode alone. General real literals/defaults/conversions/call eligibility and full
+type/module/language/incremental/editor/input/quality/parity/adoption/delivery/
+original goal remain open. Preserve all probes/quotas, missing facts, cancellation
+and atomic refusal. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents.
+Preserve concurrent work and historical evidence.
+
+Previously qualified floating representation adds an optional specialized primitive
 capability, independent of nominal/source identity. The qualified FPC 3.3.1 i386
 compiler-root presence/size observation must agree with its actual primitive
 definition: binary32/binary64/x87-extended80/scaled-Currency/integral-Comp. Real

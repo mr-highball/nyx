@@ -33,7 +33,105 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Compiler-root floating representation — 2026-10-19
+## Current integration: Source-activated runtime floating expressions — 2026-10-19
+
+The preceding goal turn makes verified implementation/qualification/remote
+progress in 94fe763. All 735 accepted Pascal inputs are revalidated before the
+recorded runtime-arithmetic dependency. The complete library, Studio and language
+objective stays open; no default-editor installation or full criterion closes.
+
+Runtime floating expressions now consume qualified primitive representation and
+actual nominal operands. Same-format operations can retain Real/user-distinct
+left definitions; widened results retain the selected operand unless the compiler
+chooses its canonical best real. Currency/Comp, mixed integral operands, division,
+comparisons and unary plus/minus keep their separate rules. Canonical choices use
+typed builtin kinds and the original compiler-root owner. Missing result facts
+retain existing exact typed primitive requirements. No fixed query or new request
+kind is added. Unsupported bitwise/literal/conversion cases do not become floats.
+
+Activation is qualified against pinned FPC 3.3.1 Delphi/DelphiUnicode with i386
+root representations. Local switches are queued until the next scanner call and
+copied when a node is constructed; IFOPT explicitly flushes pending state.
+Source FPU selection is immediate and shared by the unparenthesized expression's
+later type checking. Parenthesized expressions/call arguments have separate
+frames. Query-owned lookahead follows captured lexical delimiters and source
+receipts, never later declarations. One cached immutable FPU context per active
+expression frame avoids repeated full-chain scans; no result/cache is retained
+inside its owning world. Unknown precision/selection/target facts refuse rather
+than importing host defaults. This does not qualify uncaptured startup/header
+precision defaults, general compiler-call eligibility or another target family.
+
+The complete independent native witness executes fifty original expressions
+plus one nested generic body. Its actual RTTI agrees across precision on/off,
+x87/SSE2, Real/distinct order, Currency/Comp, mixed values, comparisons, nested
+calls, trailing/infix directives, grouped/deferred FPU selection, IFOPT, POP and
+macro expansion. The original source is inspected intact rather than replaced
+by a simpler consumer. Before product repair it fails at the first floating
+addition with clean heap; all three exact initial inputs/logs remain retained.
+Controlled browser companions use explicit settings and compile only; they are
+not native-input/browser-runtime parity evidence.
+
+Retained preparations distinguish implementation and harness corrections. The
+first activation reader accidentally referenced a candidate-loop variable which
+shadowed the parser cursor; the candidate now has its own name. Physical-to-
+analysis mapping initially assumed a removed trailing directive had cursor
+affinity. The harness now owns the whole mapped code-token union and uses an
+explicitly captured following token for its query site, preserving all original
+expression inputs and assertions. A browser preparation also exposed Int64 test
+counters unsupported by pas2js; the existing work receipt is Integer and the test
+now uses that actual bounded type, without suppressing warnings.
+
+Focused native preparation passes 478/first fit 104 with clean heap, all smaller
+work allowances refusing atomically, typed missing facts, cancellation and 64
+joined concurrent reads. Doubling a flat division chain from twenty to forty
+operators consumes 894/1694 admitted work, guarding against quadratic lookahead.
+Source queries invoke no native body. Three source inputs are frozen for all
+existing current native regressions, both Studios/backend/worker compilation and
+the unchanged original RTL test. Ignored .local/floating-expression-paths-private.json
+owns current receipts and retained inputs. Broader qualification/publication are
+pending; this paragraph records preparation. All original quotas/probes and
+protected/frozen/SDK/concurrent inputs remain required. LAN stays offline, native
+Nyx tools stay absent, and no Pascal input changes while readers run.
+
+The frozen qualification now passes: 50 current main compiler logs have zero
+owned warnings/98 upstream. Thirty-two native runs have clean heaps; sixteen
+browser consumers compile only. Both Studios/backend/worker compile as applicable.
+Floating expression 478/104/64 joined and fifty original native observations
+qualify alongside representation 154/54, source FPU 102/47, configured FPU 50/11,
+precision 70/33 and all preceding expression/inference/signature/completion
+assertions. Corpus remains 572 checks/505 actual source files/2,432,935 lossless
+tokens. Independent compiler-only emission retains one deliberate warning and
+three restored visible markers, with no hidden marker emitted.
+
+Unchanged original RTL passes 56: System retains 13,101 declarations/zero
+translation and syntax diagnostics/31 answers; ObjPas 209/zero/one, neither
+pending. Exact Free/FreeInstance original-include navigation and detached
+insertion remain ready. Original 2M/4M/64-round, initial five queries, one Word
+job, symbol three of eight and six exact ordered dynamic primitive jobs within
+eight remain unchanged. No floating job is added to these plans.
+
+All 737 maintained/734 unrelated sources, three frozen inputs, three preceding
+source copies, four retained current preparation snapshots, 97 RTL/24 base
+compiler pins/all earlier plus nine arithmetic/scanner-owner inspection pins,
+two profile inputs, 156 unit packets/48 historical include packets, 349 frozen
+artifacts/nine contexts/five current-start protected files/thirteen concurrent
+planning files stay exact. Every reader joined. Historical preparations remain
+intact, including the older global-config failure which keeps the full
+preservation gate false. No protected file is restored or changed. No host/config
+retry, new SDK capture, cleanup/restart, new MCP tool/schema, rollout or sub-agent
+occurs. Browser execution/input and native/browser parity remain unqualified.
+
+Stop runtime-floating/timing/fixture/compiler variants. Next qualify real literal
+type/value contracts and initial/header precision activation through existing
+literal/context/source owners. Keep exact decimal source apart from host floating
+evaluation and retain the difference between requested and effective settings;
+selected mode alone is not an observed startup default. Preserve typed missing
+facts, nominal distinctions, quotas/probes, cancellation and atomic refusal.
+General real literals/defaults/conversions/call eligibility, complete canonical
+types/module/language, incremental/editor/input/quality/performance/parity/
+adoption/delivery and the original complete criterion/task/goal remain open.
+
+## Previous integration: Compiler-root floating representation — 2026-10-19
 
 The preceding goal turn makes implementation, native qualification and verified
 remote progress in a16caae. All 733 accepted Pascal inputs remain exact before

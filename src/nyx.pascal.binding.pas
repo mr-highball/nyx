@@ -6619,6 +6619,8 @@ var
   LBadBoundary: Boolean;
   LAccess: TNyxPascalMemberAccess;
   LAnswer: INyxPascalResolution;
+  LFPUChecked: Boolean;
+  LFPUContext: INyxPascalCompilerContext;
 
   procedure ReadToken;
   begin
@@ -7995,7 +7997,7 @@ var
     LFound, LSignature: INyxPascalResolution;
     LLiteral: INyxPascalLiteralType;
     LNumeric: INumericExpressionValue;
-    LAt, LOperand, LArity: Integer;
+    LCandidate, LOperand, LArity: Integer;
     LExact, LMatch, LSeen: Boolean;
 
     function OrdinaryType(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
@@ -8012,6 +8014,265 @@ var
         Tick;
         Result := Result.Target;
       end;
+    end;
+
+    { FPC stores local switches when constructing a node, after parsing its
+      operands. Scanner requests leading the next token are still pending;
+      IFOPT explicitly flushes even when traversing a skipped conditional. }
+    function EffectivePrecision: TNyxPascalKnowledge;
+    var
+      LView: INyxPascalTranslatedSyntax;
+      LSource: INyxPascalTranslation;
+      LNext, LPrevious, LIndex, LBefore, LAfter, LOrigin, LOffset: Integer;
+      LRow: TNyxPascalTranslatedToken;
+      LName, LValue: TNyxText;
+      LToken: TNyxPascalToken;
+    begin
+      Result := ppkUnknown;
+      LView := FWorld.ModuleAt(ASite.ModuleIndex);
+      LSource := LView.Source;
+      LNext := LAt;
+      while LNext < LLex.Count do
+      begin
+        Tick;
+        LToken := LLex.Token(LNext);
+
+        if not (LToken.Kind in [ptkWhitespace,ptkComment]) then Break;
+        Inc(LNext);
+      end;
+
+      if LNext >= LLex.Count then Exit;
+      LOrigin := LView.OriginAt(LLex.Token(LNext).Span.Start);
+
+      if LOrigin < 0 then Exit;
+      LAfter := LView.Origin(LOrigin).TranslationToken;
+
+      if LSource.Token(LAfter).Activity <> ppkTrue then Exit;
+      LPrevious := LNext-1;
+      while LPrevious >= 0 do
+      begin
+        Tick;
+
+        if not (LLex.Token(LPrevious).Kind in [ptkWhitespace,ptkComment]) then Break;
+        Dec(LPrevious);
+      end;
+
+      if LPrevious < 0 then Exit;
+      LOrigin := LView.OriginAt(LLex.Token(LPrevious).Span.Start);
+
+      if LOrigin < 0 then Exit;
+      LBefore := LView.Origin(LOrigin).TranslationToken;
+
+      if (LBefore >= LAfter) or (LSource.Token(LBefore).Activity <> ppkTrue) then Exit;
+      Result := NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)).ExcessPrecisionRequested;
+      for LIndex := LBefore+1 to LAfter-1 do
+      begin
+        Tick;
+        LRow := LSource.Token(LIndex);
+
+        if LRow.Expanded or (LSource.PhysicalToken(LIndex).Kind <> ptkDirective) then Continue;
+        NyxPascalDirectiveParts(LSource.Text(LIndex),LName,LValue,LOffset);
+
+        if LName = 'ifopt' then
+          Result := NyxPascalCompilerPolicies(LSource.State(LRow.State)).ExcessPrecisionRequested
+        else if (LName = 'mode') and (LRow.Activity <> ppkFalse) then
+          Result := ppkUnknown;
+      end;
+    end;
+
+    { Type checking shares immediate FPU selection across an unparenthesized
+      expression. Parentheses/call arguments have their own Expression frame.
+      Only captured lexical lookahead is inspected, never later declarations.
+      One cached boundary per frame avoids rescanning a long division chain. }
+    function EvaluationFPU: INyxPascalCompilerContext;
+    var
+      LIndex, LRound, LSquare: Integer;
+      LToken: TNyxPascalToken;
+      LBoundary: Boolean;
+    begin
+
+      if LFPUChecked then Exit(LFPUContext);
+      LFPUChecked := True;
+      LRound := 0; LSquare := 0;
+      LIndex := LLex.TokenAt(AOffset);
+      while LIndex < LLex.Count do
+      begin
+        Tick;
+        LToken := LLex.Token(LIndex);
+        LBoundary := False;
+
+        if (LRound = 0) and (LSquare = 0) then
+          LBoundary := ((LToken.Kind = ptkSymbol) and
+            (LToken.Symbol in [psoCloseParen,psoCloseBracket,psoComma,psoSemicolon])) or
+            ((LToken.Kind = ptkWord) and not LToken.Escaped and
+            (LToken.Word in [pkwEnd,pkwThen,pkwDo,pkwElse,pkwTo,pkwDownto,pkwOf,pkwUntil]));
+
+        if LBoundary then
+        begin
+          LFPUContext := ContextAt(FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,LToken.Span.Start));
+          Break;
+        end;
+
+        if LToken.Kind = ptkSymbol then
+          case LToken.Symbol of
+            psoOpenParen: Inc(LRound);
+            psoCloseParen: Dec(LRound);
+            psoOpenBracket: Inc(LSquare);
+            psoCloseBracket: Dec(LSquare);
+          else begin end;
+          end;
+        Inc(LIndex);
+      end;
+      Result := LFPUContext;
+    end;
+
+    { Qualified primitive representations grant arithmetic families, not
+      blanket conversions. The actual selected operand object preserves Real
+      and other distinct identities when FPC retains that operand definition. }
+    function FloatingResult: INyxPascalResolution;
+    var
+      LLeftLeaf, LRightLeaf, LChosen: INyxPascalSemanticType;
+      LLeftFormat, LRightFormat: TNyxPascalFloatingFormat;
+      LPrecision: TNyxPascalKnowledge;
+      LSelection: TNyxPascalFPUReference;
+      LSelectedContext: INyxPascalCompilerContext;
+      LLeftInteger, LRightInteger: Boolean;
+
+      function FloatingLeaf(const AType: INyxPascalSemanticType;
+        out AFormat: TNyxPascalFloatingFormat): INyxPascalSemanticType;
+      var LDepth: Integer; LInfo: INyxPascalFloatingIdentity;
+      begin
+        Result := AType; AFormat := pffUnknown; LDepth := 0;
+        while (Result <> nil) and (Result.Kind in [pstAlias,pstDistinct]) do
+        begin
+          Tick; Inc(LDepth);
+
+          if LDepth > FLimits.MaximumDepth then
+            raise ENyxPascalBindingLimit.Create('Floating representation exceeds its alias depth budget');
+          Result := Result.Target;
+        end;
+
+        if (Result = nil) or (Result.Kind <> pstBuiltin) or
+          not (Result.Builtin in [pbbSingle,pbbDouble,pbbExtended,pbbCurrency,pbbComp]) then Exit(nil);
+
+        if Supports(Result,INyxPascalFloatingIdentity,LInfo) then AFormat := LInfo.FloatingFormat;
+      end;
+
+      function IntegerOperand(const AType: INyxPascalSemanticType): Boolean;
+      var LInfo: INyxPascalIntrinsicIdentity; LRootContext: INyxPascalCompilerContext;
+      begin
+        Result := (AType <> nil) and (AType.Kind = pstBuiltin) and
+          (AType.Builtin in [pbbInteger,pbbByte,pbbWord,pbbSmallInt,pbbShortInt,
+            pbbLongInt,pbbLongWord,pbbInt64,pbbQWord,pbbNativeInt,pbbNativeUInt]) and
+          Supports(AType,INyxPascalIntrinsicIdentity,LInfo);
+
+        if not Result then Exit;
+        Result := LInfo.IntrinsicOrigin = pioSystemBootstrap;
+
+        if not Result then Exit;
+        Tick;
+        LRootContext := LInfo.IntrinsicContext;
+        Result := (LRootContext.Family = ppcFPC) and
+          (LRootContext.Version.FullNumber = 30301) and
+          (LRootContext.Symbol(NyxPascalDefine('CPUI386')).IsDefined = ppkTrue);
+      end;
+
+      function Canonical(AKind: TNyxPascalBuiltin): INyxPascalResolution;
+      var LName: TNyxText;
+      begin
+        case AKind of
+          pbbSingle: LName := 'single'; pbbDouble: LName := 'double';
+          pbbExtended: LName := 'extended'; pbbCurrency: LName := 'currency';
+          pbbComp: LName := 'comp'; pbbBoolean: LName := 'boolean';
+        else raise ENyxPascalBinding.Create('A floating result needs its closed primitive kind');
+        end;
+        Result := BuiltinType(FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,AOffset),LName,True);
+      end;
+
+    begin
+      Result := nil;
+
+      if not (AKind in [pokAdd,pokSubtract,pokMultiply,pokDivide,pokEqual,pokNotEqual,
+        pokLess,pokLessEqual,pokGreater,pokGreaterEqual]) then Exit;
+      LLeftLeaf := FloatingLeaf(LLeft,LLeftFormat);
+      LRightLeaf := FloatingLeaf(LRight,LRightFormat);
+
+      if (LLeftLeaf = nil) and (LRightLeaf = nil) and
+        (AUnary or (AKind <> pokDivide)) then Exit;
+      LLeftInteger := (LLeftLeaf = nil) and IntegerOperand(LLeft);
+      LRightInteger := (LRightLeaf = nil) and IntegerOperand(LRight);
+
+      if AUnary then
+      begin
+
+        if (LLeftLeaf = nil) or not (AKind in [pokAdd,pokSubtract]) then Exit;
+      end
+      else
+      begin
+
+        if not ((LLeftLeaf <> nil) or LLeftInteger) or
+          not ((LRightLeaf <> nil) or LRightInteger) then Exit;
+
+        if (LLeftLeaf = nil) and (LRightLeaf = nil) and (AKind <> pokDivide) then Exit;
+      end;
+
+      if ((LLeftLeaf <> nil) and (LLeftFormat = pffUnknown)) or
+        ((LRightLeaf <> nil) and (LRightFormat = pffUnknown)) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext));
+
+      if AKind = pokDivide then
+      begin
+        LSelectedContext := EvaluationFPU;
+        LSelection := NyxPascalSelectedFPU(LSelectedContext);
+
+        if not ((LSelection.Name = 'x87') or (LSelection.Name = 'sse') or
+          (LSelection.Name = 'sse2') or (LSelection.Name = 'sse3') or
+          (LSelection.Name = 'ssse3') or (LSelection.Name = 'sse41') or
+          (LSelection.Name = 'sse42') or (LSelection.Name = 'avx') or
+          (LSelection.Name = 'fma') or (LSelection.Name = 'avx2') or
+          (LSelection.Name = 'avx512f')) then
+          Exit(Answer(pbsUnresolved,pbiCompilerContext,'FPUTYPE'));
+
+        if (LLeftLeaf = nil) and (LRightLeaf = nil) then
+        begin
+
+          if LSelection.Name = 'x87' then Exit(Canonical(pbbExtended));
+          Exit(Canonical(pbbDouble));
+        end;
+      end;
+
+      if AUnary then
+      begin
+
+        if (AKind = pokAdd) or (LLeftFormat in [pffCurrency64,pffComp64]) then Exit(TypeAnswer(LLeft));
+        LPrecision := EffectivePrecision;
+
+        if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
+
+        if LPrecision = ppkTrue then Exit(Canonical(pbbExtended));
+        Exit(TypeAnswer(LLeft));
+      end;
+
+      if AKind in [pokEqual,pokNotEqual,pokLess,pokLessEqual,pokGreater,pokGreaterEqual] then
+        Exit(Canonical(pbbBoolean));
+
+      if (LLeftFormat = pffCurrency64) or (LRightFormat = pffCurrency64) then Exit(Canonical(pbbCurrency));
+
+      if LLeftLeaf = nil then Exit(TypeAnswer(LRight));
+
+      if LRightLeaf = nil then Exit(TypeAnswer(LLeft));
+
+      if (LLeftFormat = pffComp64) or (LRightFormat = pffComp64) then Exit(Canonical(pbbExtended));
+      LPrecision := EffectivePrecision;
+
+      if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
+
+      if LPrecision = ppkTrue then Exit(Canonical(pbbExtended));
+      LChosen := LLeft;
+
+      if ((LLeftFormat = pffBinary32) and (LRightFormat in [pffBinary64,pffX87Extended80])) or
+        ((LLeftFormat = pffBinary64) and (LRightFormat = pffX87Extended80)) then LChosen := LRight;
+      Result := TypeAnswer(LChosen);
     end;
 
     { Numeric rules receive only canonical fixed ranges. Native/Integer widths
@@ -8246,6 +8507,9 @@ var
         (AKind in [pokAnd, pokOr, pokXor]))) then LBoolean := LLeft;
 
     if LBoolean <> nil then Exit(TypeAnswer(LBoolean));
+    Result := FloatingResult;
+
+    if Result <> nil then Exit;
     Result := NumericResult;
 
     if Result <> nil then Exit;
@@ -8266,10 +8530,10 @@ var
     LExact := False;
     LSeen := False;
     LCommon := nil;
-    for LAt := 0 to High(LSymbols) do
+    for LCandidate := 0 to High(LSymbols) do
     begin
       Tick;
-      LSignature := RoutineSignature(LSymbols[LAt]);
+      LSignature := RoutineSignature(LSymbols[LCandidate]);
 
       if LSignature.Status <> pbsBound then Exit(LSignature);
 
@@ -8394,22 +8658,33 @@ var
     LRightAccess: TNyxPascalMemberAccess;
     LKind: TNyxPascalOperatorKind;
     LOffset: Integer;
+    LSavedFPUContext: INyxPascalCompilerContext;
+    LSavedFPUChecked: Boolean;
   begin
-    Result := Simple(AValueAccess);
+    LSavedFPUContext := LFPUContext;
+    LSavedFPUChecked := LFPUChecked;
+    LFPUContext := nil;
+    LFPUChecked := False;
+    try
+      Result := Simple(AValueAccess);
 
-    if Result.Status <> pbsBound then Exit;
-    LKind := CurrentOperator;
+      if Result.Status <> pbsBound then Exit;
+      LKind := CurrentOperator;
 
-    if LKind in [pokEqual, pokNotEqual, pokLess, pokLessEqual, pokGreater, pokGreaterEqual] then
-    begin
-      LOffset := LToken.Span.Start;
-      Next;
-      LRight := Simple(LRightAccess);
+      if LKind in [pokEqual, pokNotEqual, pokLess, pokLessEqual, pokGreater, pokGreaterEqual] then
+      begin
+        LOffset := LToken.Span.Start;
+        Next;
+        LRight := Simple(LRightAccess);
 
-      if (AValueAccess <> pmaInstance) or (LRightAccess <> pmaInstance) then
-        Exit(Answer(pbsUnresolved, pbiWrongMemberKind));
-      Result := OperatorResult(LKind, LOffset, Result, LRight, False);
-      AValueAccess := pmaInstance;
+        if (AValueAccess <> pmaInstance) or (LRightAccess <> pmaInstance) then
+          Exit(Answer(pbsUnresolved, pbiWrongMemberKind));
+        Result := OperatorResult(LKind, LOffset, Result, LRight, False);
+        AValueAccess := pmaInstance;
+      end;
+    finally
+      LFPUContext := LSavedFPUContext;
+      LFPUChecked := LSavedFPUChecked;
     end;
   end;
 begin
@@ -8422,6 +8697,7 @@ begin
     raise ENyxPascalBinding.Create('An expression needs an exact earlier window in its source module');
   LAt := LLex.TokenAt(AWindow.Start);
   LBadBoundary := False;
+  LFPUChecked := False;
   ReadToken;
   LAnswer := Expression(LAccess);
 
