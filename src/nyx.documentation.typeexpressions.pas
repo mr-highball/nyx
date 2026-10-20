@@ -77,6 +77,12 @@ function NewNyxDocumentationTypeConstruction(
 { Validate the sealed construction owner before trusting a public capability.
   This performs no allocation and grants no budget reset to alternate scopes. }
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
+{ Copy one scalar window only after its exact UTF-8 byte cost is reserved.
+  Prefix/window Unicode scans consume the caller's shared work allowance.
+  The source is a synchronous borrowed text value, never a retained unit owner. }
+function CopyNyxDocumentationTypeTextWindow(const ASource: TNyxText;
+  const ASpan: TNyxPascalSpan;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxText;
 function NewNyxDocumentationTypeExpression(const AText: TNyxText;
   AOccurrence: TNyxDocumentationTypeOccurrence;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeExpression;
@@ -392,6 +398,65 @@ end;
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
 begin
   ConstructionOwner(AValue);
+end;
+
+function CopyNyxDocumentationTypeTextWindow(const ASource: TNyxText;
+  const ASpan: TNyxPascalSpan;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxText;
+var
+  LBudget: TConstruction;
+  LIndex, LOrdinal, LStart, LScalar, LBytes, LWidth: Integer;
+  LCandidate: TNyxText;
+begin
+  Result := '';
+  LBudget := ConstructionOwner(AConstruction);
+  LBudget.Spend;
+
+  if (ASpan.Start < 0) or (ASpan.Length < 0) or
+    (ASpan.Length > High(Integer) - ASpan.Start) or
+    (ASpan.Start > Length(ASource)) or
+    (ASpan.Length > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes) then
+    raise ENyxDocumentationTypeExpression.Create('Text window exceeds its scalar or remaining copy allowance');
+  LIndex := 1;
+  LOrdinal := 0;
+  while LOrdinal < ASpan.Start do
+  begin
+    LBudget.Spend;
+
+    if not NyxNextScalar(ASource, LIndex, LScalar) then
+      raise ENyxDocumentationTypeExpression.Create('Text window starts outside well-formed Unicode source');
+    Inc(LOrdinal);
+  end;
+  LStart := LIndex;
+  LBytes := 0;
+  while LOrdinal < ASpan.Finish do
+  begin
+    LBudget.Spend;
+
+    if not NyxNextScalar(ASource, LIndex, LScalar) then
+      raise ENyxDocumentationTypeExpression.Create('Text window ends outside well-formed Unicode source');
+
+    if LScalar < $80 then
+      LWidth := 1
+    else if LScalar < $800 then
+      LWidth := 2
+    else if LScalar < $10000 then
+      LWidth := 3
+    else
+      LWidth := 4;
+
+    if LWidth > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes - LBytes then
+      raise ENyxDocumentationTypeExpression.Create('Text window exceeds its remaining UTF-8 copy allowance');
+    Inc(LBytes, LWidth);
+    Inc(LOrdinal);
+  end;
+  { Reserve also checks the outward remaining allowance. No source substring has
+    been allocated yet, including when a preceding window consumed the budget. }
+  LBudget.Reserve(LBytes, 0, 0);
+  LBudget.Check;
+  LCandidate := Copy(ASource, LStart, LIndex - LStart);
+  LBudget.Check;
+  Result := LCandidate;
 end;
 
 function TExpression.Text: TNyxText;

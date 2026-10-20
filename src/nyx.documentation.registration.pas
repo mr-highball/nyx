@@ -148,6 +148,7 @@ var
   LRichMember: INyxDocumentationMemberSignature;
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
+  LDeclared: INyxDocumentationDeclaredTypeExpression;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -307,6 +308,13 @@ begin
       Number(Ord(LTargets.TargetAt(LIndex).Platform));
       Add(LTargets.TargetAt(LIndex).Target.Key);
     end;
+  end;
+
+  if Supports(AValue, INyxDocumentationDeclaredTypeExpression, LDeclared) then
+  begin
+    Add('declared-type-expression');
+    Number(Ord(LDeclared.Family));
+    TypeUse(LDeclared.Definition);
   end;
 end;
 

@@ -5,7 +5,8 @@ unit nyx.documentation;
 
 interface
 
-uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.documentation.typeexpressions;
+uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.pascal.types,
+  nyx.documentation.typeexpressions;
 
 type
   { Invalid declarations fail before an immutable documentation value escapes.
@@ -37,9 +38,10 @@ type
   end;
   { Declared API shape only. A unit groups its actual global declarations and
     is never an invented containing class. Kinds prove neither implementation
-    nor reflection; an alias retains its own qualified identity. }
+    nor reflection; an alias retains its own qualified identity. Expression is
+    a named compound construction, distinct from an alias or containing class. }
   TNyxDocumentationTypeKind = (ndtClass, ndtInterface, ndtRecord, ndtEnum,
-    ndtAlias, ndtCallback, ndtUnit, ndtIntrinsic);
+    ndtAlias, ndtCallback, ndtUnit, ndtIntrinsic, ndtExpression);
   { A declared intrinsic family retains its original qualified identity. It
     supplies no inferred size, encoding, conversion rank or runtime capability;
     distinct integer/string declarations never become one nominal type. }
@@ -238,6 +240,14 @@ type
     function DeclaredAccess: TNyxDocumentationPropertyAccesses;
     function DefaultProperty: Boolean;
   end;
+  { A named compound declaration keeps its own nominal identity and exact
+    declaration-position definition. Family belongs to the existing type grammar;
+    it supplies no alias, inheritance, compiler layout or executable member. }
+  INyxDocumentationDeclaredTypeExpression = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D115}']
+    function Definition: INyxDocumentationTypeUse;
+    function Family: TNyxPascalTypeKind;
+  end;
 
 const
   NyxDocumentationMaximumMembers = 128;
@@ -287,6 +297,11 @@ function NewNyxDocumentationRichProperty(const AIdentity: TNyxDocumentationRef;
   ADefault: Boolean; const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
+{ Array/set/procedural/distinct definitions use the caller's shared construction;
+  named aliases and declaration bodies requiring source context refuse. }
+function NewNyxDocumentationDeclaredType(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const ADefinition: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
 { Intrinsic and target-alias facts have dedicated immutable owners. They are
   ordinary declaration data; these factories create no System/core inventory. }
 function NewNyxDocumentationIntrinsic(const AIdentity: TNyxDocumentationRef;
@@ -420,11 +435,15 @@ var
   LExample: TNyxDocumentationExample;
   LIntrinsic: INyxDocumentationIntrinsic;
   LTargets: INyxDocumentationAliasTargets;
+  LDeclared: INyxDocumentationDeclaredTypeExpression;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
 
   if Supports(AValue, INyxDocumentationIntrinsic, LIntrinsic) then
     Inc(Result, Length(IntToStr(Ord(LIntrinsic.Family))));
+
+  if Supports(AValue, INyxDocumentationDeclaredTypeExpression, LDeclared) then
+    Inc(Result, TypeUseBytes(LDeclared.Definition) + Length(IntToStr(Ord(LDeclared.Family))));
 
   if Supports(AValue, INyxDocumentationAliasTargets, LTargets) then
     for LAt := 0 to LTargets.TargetCount - 1 do
@@ -621,6 +640,19 @@ type
     function CopyValue: TDocumentationType; override;
   public
     function Family: TNyxDocumentationIntrinsicFamily;
+  end;
+  { A captured definition owns only immutable expression/binding data. Virtual
+    copying keeps this capability through prose/link edits without retaining the
+    source producer, construction allowance or containing source snapshot. }
+  TDocumentationDeclaredType = class(TDocumentationType, INyxDocumentationDeclaredTypeExpression)
+  private
+    FDefinition: INyxDocumentationTypeUse;
+    FFamily: TNyxPascalTypeKind;
+  protected
+    function CopyValue: TDocumentationType; override;
+  public
+    function Definition: INyxDocumentationTypeUse;
+    function Family: TNyxPascalTypeKind;
   end;
   { Detached value branches retain their original type owners. Replacing the
     alias explicitly replaces the complete branch set with one universal case;
@@ -2167,11 +2199,52 @@ begin
 
   if AKind = ndtIntrinsic then
     raise ENyxDocumentation.Create('An intrinsic declaration requires its explicit family factory');
+
+  if AKind = ndtExpression then
+    raise ENyxDocumentation.Create('A compound declaration requires its explicit definition factory');
   LValue := TDocumentationType.Create;
   LValue.FIdentity := AIdentity;
   LValue.FKind := AKind;
   LValue.FSummary := ASummary;
   Result := LValue;
+end;
+
+function NewNyxDocumentationDeclaredType(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const ADefinition: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  LOwner: TDocumentationDeclaredType;
+  LLease: INyxDocumentationType;
+  LFrozen: INyxDocumentationTypeUse;
+  LExpression: INyxDocumentationTypeExpression;
+  LFamily: TNyxPascalTypeKind;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  CheckTypeIdentity(AIdentity, ndtExpression, ASummary);
+  AConstruction.AdmitText(AIdentity.Key);
+  AConstruction.AdmitText(ASummary);
+  LFrozen := CaptureTypeUse(ADefinition, AConstruction);
+  LExpression := LFrozen.Expression;
+
+  if LFrozen.Reference.Defined or (LExpression = nil) or
+    (LExpression.Occurrence <> ndtoDeclaration) then
+    raise ENyxDocumentation.Create('A declared compound type requires its exact declaration-position expression');
+  AConstruction.Spend;
+  LFamily := LExpression.Syntax.Node(LExpression.Syntax.Root).Kind;
+
+  if not (LFamily in [ptxArray, ptxSet, ptxProcedure, ptxFunction, ptxDistinct]) then
+    raise ENyxDocumentation.Create('This declared compound family is not represented by this contract');
+  LOwner := TDocumentationDeclaredType.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := ndtExpression;
+  LOwner.FSummary := ASummary;
+  LOwner.FDefinition := LFrozen;
+  LOwner.FFamily := LFamily;
+  TypeBytes(LLease);
+  CheckCancellation(AConstruction);
+  Result := LLease;
 end;
 
 procedure CheckAliasPlatform(APlatform: TNyxPlatform);
@@ -2317,6 +2390,32 @@ begin
 end;
 
 function TDocumentationIntrinsic.Family: TNyxDocumentationIntrinsicFamily;
+begin
+  Result := FFamily;
+end;
+
+function TDocumentationDeclaredType.CopyValue: TDocumentationType;
+var
+  LCopy: TDocumentationDeclaredType;
+begin
+  LCopy := TDocumentationDeclaredType.Create;
+  try
+    CopyType(LCopy);
+    LCopy.FDefinition := FDefinition;
+    LCopy.FFamily := FFamily;
+  except
+    LCopy.Free;
+    raise;
+  end;
+  Result := LCopy;
+end;
+
+function TDocumentationDeclaredType.Definition: INyxDocumentationTypeUse;
+begin
+  Result := FDefinition;
+end;
+
+function TDocumentationDeclaredType.Family: TNyxPascalTypeKind;
 begin
   Result := FFamily;
 end;
@@ -2486,6 +2585,9 @@ begin
 
   if FKind = ndtIntrinsic then
     raise ENyxDocumentation.Create('An intrinsic declaration cannot invent members');
+
+  if FKind = ndtExpression then
+    raise ENyxDocumentation.Create('A compound declaration cannot invent members');
   LFrozen := CaptureNyxDocumentationMember(AMember);
   Result := AppendCapturedMember(LFrozen);
 end;
@@ -2506,6 +2608,9 @@ begin
 
   if FKind = ndtIntrinsic then
     raise ENyxDocumentation.Create('An intrinsic declaration cannot invent members');
+
+  if FKind = ndtExpression then
+    raise ENyxDocumentation.Create('A compound declaration cannot invent members');
 
   if not AMember.Identity.Owner.Same(FIdentity) or
     (MemberCount >= NyxDocumentationMaximumMembers) then
@@ -2557,8 +2662,12 @@ var
   LKind: TNyxDocumentationTypeKind;
   LIntrinsic: INyxDocumentationIntrinsic;
   LTargets: INyxDocumentationAliasTargets;
+  LDeclared, LCapturedDeclared, LFinalDeclared: INyxDocumentationDeclaredTypeExpression;
+  LDefinition: INyxDocumentationTypeUse;
+  LFamily: TNyxPascalTypeKind;
+  LScope: INyxDocumentationTypeConstruction;
   LBranches: TNyxDocumentationAliasTargetVector;
-  LHasIntrinsic, LHasTargets: Boolean;
+  LHasIntrinsic, LHasTargets, LHasDeclared: Boolean;
   LOwner: IDocumentationTypeOwner;
   LBuilder: TDocumentationType;
   LCanonical: INyxDocumentationType;
@@ -2573,11 +2682,28 @@ begin
   LKind := LSource.Kind;
   LHasIntrinsic := Supports(LSource, INyxDocumentationIntrinsic, LIntrinsic);
   LHasTargets := Supports(LSource, INyxDocumentationAliasTargets, LTargets);
+  LHasDeclared := Supports(LSource, INyxDocumentationDeclaredTypeExpression, LDeclared);
 
-  if (LHasIntrinsic <> (LKind = ndtIntrinsic)) or (LHasTargets and (LKind <> ndtAlias)) then
+  if (LHasIntrinsic <> (LKind = ndtIntrinsic)) or (LHasTargets and (LKind <> ndtAlias)) or
+    (LHasDeclared <> (LKind = ndtExpression)) then
     raise ENyxDocumentation.Create('Documentation shape capability contradicts its declared kind');
 
-  if LHasIntrinsic then
+  if LHasDeclared then
+  begin
+
+    if not Supports(ACancellation, INyxDocumentationTypeConstruction, LScope) then
+      raise ENyxDocumentation.Create('A declared definition needs the shared capture construction');
+    LScope.Spend;
+    LDefinition := LDeclared.Definition;
+    LScope.Spend;
+    LFamily := LDeclared.Family;
+    LFrozen := NewNyxDocumentationDeclaredType(LSource.Identity, LSource.Summary, LDefinition, LScope);
+    Supports(LFrozen, INyxDocumentationDeclaredTypeExpression, LCapturedDeclared);
+
+    if LFamily <> LCapturedDeclared.Family then
+      raise ENyxDocumentation.Create('Declared family disagrees with its exact type expression');
+  end
+  else if LHasIntrinsic then
     LFrozen := NewNyxDocumentationIntrinsic(LSource.Identity, LIntrinsic.Family, LSource.Summary)
   else if LHasTargets then
   begin
@@ -2613,6 +2739,9 @@ begin
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its base allowance');
+
+  if LHasDeclared and (LCount <> 0) then
+    raise ENyxDocumentation.Create('A compound definition cannot invent declared class ancestry');
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
@@ -2622,6 +2751,9 @@ begin
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumMembers) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its member allowance');
+
+  if LHasDeclared and (LCount <> 0) then
+    raise ENyxDocumentation.Create('A compound definition cannot invent executable members');
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
@@ -2658,6 +2790,19 @@ begin
     LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
   end;
   TypeBytes(LFrozen);
+
+  if LHasDeclared then
+  begin
+    LScope.Spend;
+
+    if not Supports(LSource, INyxDocumentationDeclaredTypeExpression, LFinalDeclared) or
+      (LFinalDeclared <> LDeclared) or (LDeclared.Definition <> LDefinition) or
+      (LDeclared.Family <> LFamily) or (LSource.Kind <> ndtExpression) or
+      not LSource.Identity.Same(LFrozen.Identity) or (LSource.Summary <> LFrozen.Summary) or
+      LSource.AliasTarget.Defined or (LSource.BaseCount <> 0) or (LSource.MemberCount <> 0) or
+      (LSource.ExampleCount <> LFrozen.ExampleCount) or (LSource.RelatedCount <> LFrozen.RelatedCount) then
+      raise ENyxDocumentation.Create('Declared type envelope changed before publication');
+  end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
 end;

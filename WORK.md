@@ -45,7 +45,116 @@ and report the criterion, deliverable, files and stop condition. The existing
 private queue references canonical tasks; it creates no new backlog, recurring
 job, busywork or acceptance credit. Deferred splitter work remains deferred.
 
-## Current reference prerequisite: Rich declared type expressions — 2026-10-20
+## Current reference prerequisite: Declared type attachment and signature extraction — 2026-10-20
+
+The rich-expression/typed-forwarding checkpoint is committed and pushed as
+4f84f07e23c6276f2c69fd769a107433c151dbbd. The remote matched, all11 owned paths
+were clean, all readers joined and13 concurrent planning files remained exact
+when its source/remote receipt was recorded. Full original acceptance remains
+open across at least53 batches. This next batch changes the deliverable to the
+remaining actual declaration attachment and source-extraction prerequisites.
+
+Owning criterion: reference01's truthful declared types/signatures, consumed by
+reference02's complete source-owned discovery. Lil' Scooty owns documentation.pas,
+registration.pas, registry.pas, the new
+tests/nyx_documentation_declarationexpressions_tests.lpr and
+docs/component-documentation.md. Append one type kind without changing old
+ordinals; an optional declared-expression capability preserves a declaration-role
+type use and its existing checked syntax family through immutable copy, capture,
+framing and index closure. Admit only actual array/set/procedural/distinct
+definitions; refuse absent, conflicting, structured/context-dependent or ordinary
+named-alias substitutes. Share existing construction/index admission and preserve
+all legacy content and atomic refusal. Mandatory native repository-root evidence
+must inspect real core definitions; portable cases compile separately. No empty
+record or synthetic member may stand in for a named type declaration.
+
+Root owns new src/nyx.documentation.signatures.pas, new
+tests/nyx_documentation_signatures_tests.lpr, its own guide and central evidence.
+The agreed root scope also includes the existing pure typeexpressions.pas owner:
+CopyNyxDocumentationTypeTextWindow charges actual Unicode prefix/window scans
+and reserves exact UTF-8 bytes before copying a selected window. It grants no
+fresh allowance or public interface/vtable change. Lil' Scooty may consume this
+function but does not edit its owner.
+The extractor captures a bounded selected header, checks alternate observations,
+reparses once through the existing declaration parser under shared admission and
+returns only a rich signature. Preserve ordered names/modes/default/type/result
+windows, refuse unrepresentable untyped parameters and keep named uses unbound.
+Snapshot ordinals are local; no factory, full-member, physical-origin, binding or
+stable overload-key authority is inferred. Actual seven Choices plus NyxObject/
+NyxArray source witnesses, supplier mutation, refusal-before-later-read counters,
+shared work/byte bounds, cancellation and retirement qualify this bounded API.
+
+Stop/switch on a required parser gap, unaccounted copied field, wrong ownership,
+stale dual metadata or source/admission retention. Repair the existing owner;
+retain uncertainty and do not broaden scopes or quotas. Both lanes must hand off
+and freeze before root admits compilers/native readers. No compiler is currently
+admitted. Complete whole-unit/core binding, creator adoption, target aliases,
+class/static/visibility/convention attachment and executed decorated-browser
+evidence stay downstream. Lil' Scooty keeps the next full-source/discovery
+prerequisite queued and uses independent review during qualification freezes.
+
+Both source lanes are qualified and cross-reviewed. Root's selected-header
+extractor preserves ordered mixed signatures through the existing parser and
+explicitly refuses absent/unrepresentable context; the helper's descriptor
+retains actual declaration-role array/set/procedural/distinct families through
+copy/capture/framing/closure. Pre-freeze review repaired three cancellation
+boundaries in root's new paths: a copied string remains private until its final
+check, final outward admission cannot publish after cancelling the construction,
+and cancellation inside the owned declaration parser normalizes to the same pure
+expression cancellation family. Focused tests target those exact boundaries;
+the final receipts below qualify those boundaries. All7 owned Pascal inputs share
+the final supplier freeze. The8 documentation consumers, existing generator and
+affected navigation/Studio/completion/products matrix pass all39 compiler jobs.
+Eighteen native test programs have clean heaps and18 portable targets compile.
+The separately compiled generator and17 joined CLI child invocations are clean;
+two five-file candidates remain byte exact for81 kinds/four facades. Warning
+accounting is zero owned/126 upstream, without claiming zero hints or notes.
+
+Native declarations126 inspects all10 actual definitions across five core units;
+source signatures94 extracts all9 actual signatures. Published values retain no
+source/supplier/construction/admission leases. Rich99/property43 and actual
+Children/open-array witnesses remain green. Both new native consumers refuse
+missing and invalid repository arguments before check0 with clean heaps, using
+their same final binaries (four distinct refusals). Every reader/compiler handle
+has joined. The final audit preserves all1737 current Pascal inputs/1730 unrelated
+prior inputs,24 compiler/97 RTL/five current-start protected/two profile pins and
+all13 concurrent planning files, plus exact source/transcript/child/candidate
+hashes. Historical global-configuration preservation remains false. Ignored
+.local/documentation-declarations-paths-private.json and
+E:\Blekohlab\nyx\qualification\documentation-declarations-20261020-194836
+own final source/terminal/audit/remote receipts and retained preparations.
+
+The earlier reviewed and admission freezes retain six compiler receipts, two
+clean-heap failed signature assertions and the initial enum warning separately.
+The first assertion incorrectly assumed constant work per capture despite
+receipt-vector growth; the final fixture uses the caller's actual remaining work
+and proves refusal before another source row. The second fixture substituted an
+equal-width result spelling through a record whose observed spans/names/kinds
+were unchanged. It now asserts a real result-span mutation, while the separate
+same-width lexical-text mutation remains tested. Production validation was not
+weakened. A closed ordinal guard replaces the exhaustive CASE's dead ELSE without
+suppression. These preparations do not replace final common-source evidence.
+
+Criteria closed: none of the full original reference01/02 criteria. All original
+task/credit/DONE, new RTL integration, browser execution, UI/input/quality/parity/
+adoption/delivery remain open across at least54 documented unclosed batches. LAN
+stays offline/native Nyx tools absent. Stop declaration/signature/fixture/compiler
+variants. Reassessment moves to authored member intent: real ParseJSON/CreateRealized
+class/static modifiers and visibility/convention need their own typed attachment;
+a rich signature alone cannot represent them. Lil' Scooty keeps that exact next
+prerequisite and full-source/discovery return path queued. Implemented interfaces
+also need separate relationship edges; they are not class bases, Related links or
+automatic inherited class member names. Whole-unit extraction must account for
+prefix scans once under unchanged budgets before large-scale adoption.
+
+Root's separate next lane follows a concrete generator defect: EmitFacade's raw
+signature-wide class-name StringReplace can alter inert defaults or identifier
+substrings. Replace only admitted type-name spans through existing syntax, retain
+actual candidate/default/identifier witnesses and leave all maintained output
+exact. The named whole-unit closure, target aliases, these remaining member/
+relationship facts, creator adoption and executed decorated browser remain required.
+
+## Previous reference prerequisite: Rich declared type expressions — 2026-10-20
 
 The previous property prerequisite is qualified and pushed as
 cdbc22130b3e3146c44fc04ded8a5e56967beef0; the remote branch matches exactly,

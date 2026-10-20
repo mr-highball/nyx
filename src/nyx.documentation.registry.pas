@@ -856,6 +856,7 @@ var
   LRichMember: INyxDocumentationMemberSignature;
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
+  LDeclared: INyxDocumentationDeclaredTypeExpression;
   LStates, LStack, LEdges: array of Integer;
   LReference: TNyxDocumentationRef;
   LTargets: INyxDocumentationAliasTargets;
@@ -952,6 +953,9 @@ begin
       not Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
       raise ENyxDocumentation.Create('Complete documentation alias requires its target: ' + LAPI.Identity.Key);
     Require(LAPI.AliasTarget);
+
+    if Supports(LAPI, INyxDocumentationDeclaredTypeExpression, LDeclared) then
+      RequireUse(LDeclared.Definition);
 
     if Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
     begin

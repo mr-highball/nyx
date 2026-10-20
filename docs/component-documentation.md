@@ -292,13 +292,89 @@ and remote receipts. The qualified simple-property and earlier descriptor
 receipts remain separate. Complete generated/core metadata adoption and executed
 decorated-browser evidence remain open.
 
-Declaration-position compound types remain a separate prerequisite. Actual
-`TNyxExecutions`, `TNyxStateKinds`, `TNyxEventHandler`, `TNyxSignalSnapshot` and
-the distinct `TNyxRegistrationID` definitions need a truthful type-level
-expression attachment; a member signature
-does not represent those named declarations. Empty records, targetless aliases
-and synthetic `Invoke` members do not satisfy that gate. Target-specific named
-aliases such as `TNyxText` retain their separate source/binding requirements.
+## Named compound type declarations
+
+The appended `ndtExpression` kind preserves the original named identity of an array,
+set, procedural or distinct declaration. Its optional
+`INyxDocumentationDeclaredTypeExpression` exposes `Definition`, an immutable
+`INyxDocumentationTypeUse`, and `Family` from the existing `TNyxPascalTypeKind`
+owner. It retains exact declaration-position syntax, ordered explicit name
+bindings, procedural qualifiers and inert bounds/defaults. It supplies no layout,
+effective calling convention, compiler acceptance or runtime capability facts.
+
+```pascal
+function DeclareValues(const Identity, ElementType: TNyxDocumentationRef;
+  const Construction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  Definition: INyxDocumentationTypeUse;
+begin
+  Definition := NewNyxDocumentationExpressionTypeUse(
+    NewNyxDocumentationTypeExpression('array of TElement', ndtoDeclaration,
+      Construction), Construction).WithBinding(0, ElementType);
+  Result := NewNyxDocumentationDeclaredType(Identity,
+    'An owned vector of elements.', Definition, Construction);
+end;
+```
+
+The caller supplies both real qualified identities; the constructor guesses no
+binding from `TElement`. This is a descriptor example, not a generated core
+inventory. The closed root families are `ptxArray`, `ptxSet`, `ptxProcedure`,
+`ptxFunction` and `ptxDistinct`. Plain named/qualified/generic aliases, missing or
+wrong-position expressions, unsupported families and bodies needing their
+original declaration context refuse. `NewNyxDocumentationType` refuses the new
+kind without its explicit definition factory. `AliasTarget` remains undefined;
+base/member/alias additions refuse rather than invent an inheritance relationship
+or synthetic `Invoke`. Target-specific named aliases such as `TNyxText` retain
+their separate source/binding requirements and targetless-alias refusal.
+
+Ordinary prose/example/related copies retain specialization. Capture shares the
+existing construction allowance, freezes alternate binding maps, checks advertised
+family against the owned syntax and rechecks the capability and legacy envelope
+before publication. Published values retain no supplier, construction, source
+unit, cancellation or admission lease. The new framed fields appear only when
+the capability is present; old absent-shape bytes and public slots/layouts remain
+unchanged. Complete index publication requires every explicit name occurrence to
+resolve, with current limits and prior-index/version preservation on refusal.
+
+The new [declared-expression consumer](../tests/nyx_documentation_declarationexpressions_tests.lpr)
+requires exactly one valid repository root before any native checks:
+
+```text
+nyx_documentation_declarationexpressions_tests.exe D:\Docs\GitHub\nyx
+```
+
+Its mandatory physical-source witness covers ten actual definitions:
+`TNyxExecutions`, `TNyxSignalSnapshot`, `TNyxRegistrationID`, `TNyxEventHandler`,
+`TNyxStateValidator`, `TNyxStateObserver`, `TNyxStateKinds`,
+`TNyxBindingTargetInfos`, `TNyxKeyModifiers` and `TNyxPointerButtons`. Exact windows
+use the existing shared construction text-copy owner; all leaf names remain
+unbound, and `of object` remains authored syntax. Portable mechanics separately
+cover immutable copies/captures, shared work/storage, alternate getter bounds,
+late mutation/cancellation, retirement and atomic closure/conflict refusal.
+The consumer passes **126 native checks with a clean heap**, including all ten
+actual definitions, and **compiles for pas2js**. Current focused receipts are in
+`E:\Blekohlab\nyx\qualification\documentation-declarations-20261020-194836`:
+`logs/nyx_documentation_declarationexpressions_tests-native-focused-supplier-compile.log`,
+`logs/nyx_documentation_declarationexpressions_tests-native-focused-supplier-run.log`
+and `logs/nyx_documentation_declarationexpressions_tests-browser-focused-supplier-compile.log`.
+The native run allocated and freed all 703325 blocks (27784423 bytes). The same
+final binary refuses missing and invalid repository arguments at check zero with
+clean heaps; its receipts are `logs/nyx_documentation_declarationexpressions_tests-argument-missing-run.log`
+and `logs/nyx_documentation_declarationexpressions_tests-argument-invalid-run.log`.
+
+The final common seven-source freeze is `source-supplier-freeze-private.json`;
+`all-source-final-private.json` and `final-audit-private.json` retain final source
+and audit identities. The full batch passes **39 compiler jobs**, **18 native test
+programs with clean heaps** and **18 pas2js compilation checks**, with zero owned
+warnings and 126 upstream warnings. The unchanged generator consumer passes 81
+checks and 17 joined generator invocations with clean parent/child heaps; both
+five-file candidates remain exact. WORK.md owns whole-batch preservation and
+remote receipts. Earlier reviewed/admission preparations, their failed assertions
+and clean heaps remain retained separately. The bounded reusable signature
+extractor is documented in [Source-owned API signatures](source-signatures.md).
+Full source binding, complete generated/core declaration adoption and executed
+browser evidence remain open; these source windows and compilation checks do
+not establish that broader acceptance.
 
 ## Intrinsic families and target-specific aliases
 
@@ -805,8 +881,18 @@ The required truthful declaration prerequisites are explicit:
 - Open-array parameters already occur in `nyx.contract` and `nyx.data`.
   Detached type-expression metadata must preserve their shape and original
   named element owners; substituting an element type or invented named alias
-  would erase the declaration. The richer optional attachment is written and
-  awaiting qualification; actual source-derived binding/adoption remains open.
+  would erase the declaration. The richer optional attachment passes 99 native
+  checks over all nine required actual windows and compiles for pas2js; actual
+  source-derived binding/adoption remains open.
+- Named array/set/procedural/distinct definitions now retain declaration-role
+  expressions through the optional type attachment, with 126 native checks over
+  all ten required actual definitions and pas2js compilation. Their detached
+  names remain unbound until the original source/binding owner supplies them.
+- Complete class/member extraction still needs authored class/static modifiers,
+  visibility and convention facts. A class's implemented interfaces also need
+  a separate relationship; they are neither class bases nor inherited class
+  members. Current descriptor mechanics and signature-only extraction establish
+  none of those full-source facts automatically.
 
 Generator adoption must derive metadata at the existing declaration emission
 points, including hand-authored dependencies and deterministic per-creator/unit

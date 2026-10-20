@@ -25,7 +25,45 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current source adds bounded detached type-expression metadata with explicit
+Current source adds optional named compound declarations (appended ndtExpression,
+D115 Definition/Family) through existing copy/capture/framing/closure owners.
+Actual array/set/procedural/distinct shapes keep declaration roles and explicit
+unbound names; fake alias/base/member facts refuse. A separate selected-header
+extractor reparses a bounded copy through existing syntax under the same shared
+admission, checks alternate observations and returns signature syntax only.
+Copied windows reserve exact UTF-8 bytes before allocation and charge prefix
+scans; final cancellation cannot publish hidden managed results. Native declared126
+inspects10 actual definitions; signature94 extracts9 actual signatures. Both final
+binaries refuse missing/invalid arguments at check0/clean heaps (four refusals).
+Final common seven-source qualification passes39 compiler jobs,18 clean native
+test programs and18 portable compiles; zero owned warnings/126 upstream. Generator81
+retains17 clean joined CLI runs/two exact five-file candidates for81 kinds/four
+facades. All1737 inputs/1730 unrelated prior,24 compiler/97 RTL/five current-start
+protected/two profile/thirteen planning pins remain exact. All readers joined.
+Reviewed/admission preparations retain six earlier compilers, two clean-heap
+fixture failures and the repaired dead enum CASE branch; final supplier receipts
+remain separate. WORK.md and ignored .local/documentation-declarations-paths-private.json
+own retained/final source, terminal/audit/remote receipts. Historical global-config
+preservation stays false. No full criterion/task/credit/DONE, new RTL integration,
+browser execution, UI/input/quality/parity/adoption/delivery closes across at least54
+unclosed batches. LAN offline/native Nyx tools absent.
+
+Stop declaration/signature/fixture/compiler variants. Next helper prerequisite is
+optional authored class/static/visibility/convention member intent through existing
+managed copy/capture/framing; absence stays unknown. Implemented interfaces need
+separate relationship edges, not class bases/Related or fabricated inherited names.
+Root's separate next lane repairs raw signature-wide class-name replacement in
+facade emission using only admitted type-name spans, preserving defaults and
+identifier substrings. Whole-unit adoption must account prefix work once within
+existing limits and retain whole-unit/conditional/target/named-binding ownership.
+Signature metadata grants no full-member/origin/factory/overload-key authority.
+Actual creator adoption/executed browser remain downstream. Root agrees separate
+file scopes before implementation and admits every build; no Pascal edits during
+readers. No extra agents, host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new public MCP tool/schema or rollout. Preserve
+concurrent planning.
+
+Previously qualified bounded detached type-expression metadata with explicit
 parameter/result/property/declaration occurrence and unbound named uses. Optional
 rich signatures/properties survive fluent copy, alternate capture, final framing
 and closure; legacy GUIDs/ordinals/records and unknown shape stay unchanged.
