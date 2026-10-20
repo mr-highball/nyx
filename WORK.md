@@ -35,6 +35,14 @@ review, including coordinate, ownership and host-dispatch limits.
 
 ## Current integration: Project definitions in Studio completion — 2026-10-20
 
+Coordination update after qualification: the human requests a standing active/
+next backlog queue for Lil' Scooty. The helper now owns assessment and proposed
+isolated implementation of [portable documentation decorators](TODO/NS-4_studio-reference_01.md),
+with [registration/discovery](TODO/NS-4_studio-reference_02.md) queued subject to its
+prerequisite. Root retains the arbitrary-caret navigation lane. TASKFLOW.MD and
+Athena govern selection, full acceptance and handoff; shared source/build freezes
+still apply. These are active scope assignments, not new completion credit.
+
 The human authorizes Lil' Scooty (gpt-6.1-sol/ultra) as one helper, overriding the
 earlier solo restriction. Root owns menu/controller/adapters; Lil' Scooty owns
 definition data, provider/wire and the private Studio handoff. Separate file

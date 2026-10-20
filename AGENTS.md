@@ -10,6 +10,15 @@ for that helper only. Coordinate separate file scopes in the shared checkout;
 root admits builds and neither worker edits Pascal while any reader/compiler is
 live. Do not create additional helpers. Preserve concurrent work.
 
+While the goal is active, Lil' Scooty keeps an assigned backlog item and a queued
+next candidate. Follow TASKFLOW.MD and Athena's task-flow standard, using the task
+catalog and actual prerequisites. Agree on separate file ownership before edits.
+Source-ready is a handoff, not the end of the work queue: during a build freeze,
+continue independent read-only review/design or owned documentation for the next
+item. Root coordinates the next implementation scope and all build admission.
+Preserve full acceptance criteria; do not create busywork, recurring cleanup or
+compiler variants to remain occupied. The reported splitter ticket stays deferred.
+
 Current-source project definitions retain optional immutable logical source/name
 coordinates through owned completion, strict private v2 replies, exact Studio
 admission and public Nyx menu presentation. SDK-only provenance never fabricates
