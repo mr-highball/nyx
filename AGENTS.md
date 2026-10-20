@@ -19,6 +19,27 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
+Current unit/global documentation retains genuine declaring-unit ownership for
+factories, overloaded routines and fields. Unit identities refuse type-required
+parameter/result/value/base/alias positions and class-only member roles; empty
+NyxDocumentationType still refuses. Existing record fields, interface GUIDs/slots
+and enum ordinals stay exact. Final common three-source qualification passes68
+native checks with clean heap and matching browser compilation: zero owned
+warnings/seven upstream. First premature interface-temporary retirement assertion
+and a path-normalization preparation refusal remain retained; the final test
+checks unchanged destruction counts after its explicit caller returns. All786
+maintained/783 unrelated sources,24 compiler/97 RTL/five current-start protected/
+two profile/thirteen planning comparisons stay exact. No new browser/GUI/frozen-
+artifact execution or full reference/editor/criterion/task/credit/DONE closure.
+WORK.md and ignored .local/documentation-units-paths-private.json own receipts.
+Readers joined; LAN offline; historical global-config preservation stays false.
+Stop descriptor/fixture/compiler variants. Next helper deliverable integrates a
+bounded immutable registered-extension reference index with actual registration
+owners; built-in generator adoption and executed browser evidence remain required.
+Root owns builds and separate editor source. No Pascal edits while readers live;
+no host/config retry, protected mutation, cleanup/restart, approval bypass, new
+public MCP tool/schema, rollout or additional agents. Preserve concurrent work.
+
 Current-source caret definitions add typed immutable request/result/provider
 contracts over the same owned semantic world. Bare/qualified names retain lexical
 shadowing/namespace authority; complex receivers retain existing expression/member

@@ -6,7 +6,7 @@
 [Current qualification](../WORK.md)
 
 Nyx has an ordinary Pascal API for immutable documentation declarations. It
-describes a class, public control interface, record, enum, alias or callback;
+describes a unit, class, public control interface, record, enum, alias or callback;
 members retain typed parameter/result references, summaries, examples and related
 links. An optional adapter binds that declaration to an exact creator kind and
 copies the existing schema and catalog facts. Reading documentation grants no
@@ -65,6 +65,52 @@ interface and class remain intact. Inspection must not construct an arbitrary
 control just to ask whether it supports this optional capability. Static
 declaration methods, such as the fixture's `Reference` and `InterfaceReference`,
 provide the construction-free entry point for future registration.
+
+## Unit-owned factories and routines
+
+Use `NyxDocumentationUnit` for a unit's actual global declarations. A unit root
+has no type name or type generic arity; `IsUnit` distinguishes it from a type or
+an absent reference. A global member has `IsMember = True`, `IsUnit = False` and
+an owner whose `IsUnit` is true. `NyxDocumentationType(AUnit, '')` still refuses:
+an empty type argument is not an alternative unit factory.
+
+The fixture declares a real `NewDocumentationBadge` global factory and two
+`DocumentationGreeting` function overloads. `DocumentationUnitReference`
+describes them beside their source. Its factory metadata follows this pattern:
+
+```pascal
+LUnit := NyxDocumentationUnit('nyx.test.documentation');
+LGlobals := NewNyxDocumentationType(LUnit, ndtUnit,
+  'Create friendly badges and format their greetings.')
+  .WithMember(NewNyxDocumentationMember(
+    NyxDocumentationMember(LUnit, 'NewDocumentationBadge'), ndmFactory,
+    'Create a badge with its stable component identifier.')
+    .WithSignature(NewNyxDocumentationSignature([
+      NyxDocumentationParameter('AID',
+        NyxDocumentationType('nyx.text', 'TNyxText'), ndpConst)],
+      NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge'))));
+```
+
+`ndmRoutine` denotes an ordinary unit procedure/function; `ndmMethod` remains a
+type-owned method. Units may own factories, routines and global fields. They
+cannot own constructors, fluent class methods, properties, events or enum values.
+The fixture's zero-argument and named greeting overloads have separate explicit
+`Default` and `Named` overload keys. For example, the named overload's key is
+`nyx.test.documentation||0|documentationgreeting|named`; its empty type component
+does not collide with an existing type/member key.
+
+A unit can be a related reference or global member owner. It cannot serve as a
+parameter type, function result type, property/field value type, base type or
+alias target. A unit descriptor cannot inherit a base or masquerade as a class;
+a class identity cannot masquerade as `ndtUnit`. Existing record fields/layouts,
+interface GUIDs/method slots and earlier enum ordinals remain unchanged.
+
+`CaptureNyxDocumentationType` freezes unit descriptors through the same bounded,
+cancellable immutable path as type descriptors. Reading `DocumentationUnitReference`
+does not invoke the factory or either greeting overload. The examples remain
+inert text. Actual factory/routine execution belongs to an explicit caller, not
+documentation lookup. This change does not register globals automatically or
+introduce a documentation inventory, reflection probe or index.
 
 ## Capture existing creator facts
 
@@ -134,9 +180,9 @@ The current fixed limits are part of the inspection contract:
 
 | Layer | Allowance |
 | --- | --- |
-| One type declaration | At most 128 members and 32 base links. |
+| One unit or type declaration | At most 128 members. Class/interface/callback declarations admit at most 32 base links; units admit none. |
 | One signature | At most 64 parameters; duplicate Pascal parameter names refuse. |
-| One type or member | At most 8 examples and 32 related links. |
+| One unit, type or member | At most 8 examples and 32 related links. |
 | Names and prose | At most 256 scalars per identity component, 2,048 per summary, 256 per example title, 16,384 per example body and 1,024 per parameter default. Type generic arity is 0 through 32. |
 | One captured declaration | 256 KiB aggregate UTF-8 content, including members, signatures, examples and links. |
 | Schema search | At most 4,096 captured kinds; creator names at most 256 scalars. |
@@ -157,26 +203,30 @@ to the future index.
 
 ## Qualification and capability boundary
 
-The current native [documentation
-consumer](../tests/nyx_documentation_tests.lpr) passes **33 checks with a clean
-heap and zero owned warnings**. It covers typed declarations, exact text,
-immutable fluent values, same-variable capture, cancellation, bounded alternate
-schema producers, detached routes, missing/empty schemas and control lifetime.
-An explicitly constructed badge exercises the specialized interface separately
-from metadata lookup. Its browser consumer **compiles successfully**; the new
-decorated-browser consumer has never been executed. Compilation is not executed
-decorated-browser evidence.
+The native [documentation consumer](../tests/nyx_documentation_tests.lpr) passes
+**68 checks with a clean heap and zero owned warnings**. It retains the preceding
+33-check type/schema foundation and adds unit ownership, real global factories
+and routine overloads, invalid type/role refusals, unchanged identity/ordinal
+contracts, immutable capture, bounded admission and cancellation. Inspection
+invokes no documented control, factory, routine or callback. Separate explicit
+callers exercise their public behavior and release all owners before checking
+destruction. The browser consumer **compiles successfully**; the decorated-browser
+consumer has never been executed. Compilation is not executed browser evidence.
 
 The final native logs identify **FPC 3.3.1-20634-gd7f522a561 [2026/08/04], i386
 Win32**. The browser compiler is **Pas2JS 3.3.1 [2026/08/04], Win32 i386**. The
-qualification packet retains `nyx_documentation_tests-qualified-compile.log`,
-`nyx_documentation_tests-qualified-run.log` and
-`nyx_documentation_tests-browser-qualified-compile.log` beside the exact final
-`source-qualified-freeze-private.json` receipt. The documentation sources remain
-unchanged in this final common batch. Native compilation has no warnings;
-browser compilation reports existing upstream Classes warnings. The
-[current work record](../WORK.md) owns the packet,
-whole-batch warning audit and retained preparation failures.
+qualification packet retains `documentation-native-reviewed-compile.log`,
+`documentation-native-reviewed-run.log` and
+`documentation-browser-reviewed-compile.log` beside the exact final
+`source-reviewed-freeze-private.json` receipt. All three Pascal inputs stay exact
+through this final two-job batch. Native compilation has no warnings; browser
+compilation reports seven existing upstream Classes warnings and zero owned
+warnings. The first native fixture checked destruction before compiler-held
+interface temporaries left their caller's lifetime. Its failed source and clean
+heap remain retained; the repaired fixture keeps the same destruction assertion
+after the explicit caller returns. The [current work record](../WORK.md) owns
+the packet and preparation receipts. The preceding 33-check foundation remains
+qualified separately at commit `2a3226de25c8af8fb2652a676ed14897b1016c91`.
 
 The earlier [runtime membership
 adapter](../src/nyx.linq.runtime.pas) and its
@@ -187,7 +237,7 @@ documentation reflection:
 
 | Capability | Native FPC | pas2js browser | Documentation use |
 | --- | --- | --- | --- |
-| Ordinary typed descriptor interfaces | Current native 33-check consumer passes. | Current consumer compiles successfully; decorated execution remains open. | Adopted ordinary Pascal contract; no special decorator syntax. |
+| Ordinary typed descriptor interfaces | Current 68-check unit/type/schema consumer passes with clean heap. | Current consumer compiles successfully; decorated execution remains open. | Ordinary Pascal contract; no special decorator syntax. |
 | Runtime class ancestry | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Existing adapter only; no class inventory is inferred. |
 | Declared nonzero-GUID interface querying | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Optional capabilities use explicit GUIDs. |
 | GUID-less runtime interface identity | Unsupported by the earlier native query adapter; it refuses. | Earlier executed evidence finds a compiler-generated identity. | Browser-generated identity stays runtime-local, not a portable registration key. |
@@ -197,9 +247,9 @@ documentation reflection:
 
 ## Open reference work
 
-Unit-level `NewNyx…` creator functions need an explicit unit/global declaration
-identity; the current type-owned factory model must not invent a containing
-class for them. Automatic registered-unit discovery, immutable index generations,
+Unit/global identities now represent creator functions without inventing a
+containing class. Adoption for the actual `NewNyx…` creator inventory remains
+open. Automatic registered-unit discovery, immutable index generations,
 complete links/inheritance/overloads and contextual Studio browsing remain open
 under reference discovery (`NS-4_studio-reference_02`), reference UI
 (`NS-4_studio-reference_03`) and completeness/compatibility

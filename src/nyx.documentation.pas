@@ -14,15 +14,16 @@ type
   { Cooperative metadata cancellation is distinct from a malformed declaration;
     no partial descriptor is returned to a cancelled inspection. }
   ENyxDocumentationCancelled = class(ENyxDocumentation);
-  { Qualified authored identity. Unit/type boundaries and generic arity remain
-    separate; a member additionally owns an explicit stable overload key. Pascal
-    name comparison is ASCII insensitive without borrowing host locale rules. }
+  { Qualified authored identity. A unit root has no type name or generic arity;
+    type roots retain both. A member keeps its exact unit/type owner and stable
+    overload key. Pascal comparison folds ASCII without host locale rules. }
   TNyxDocumentationRef = record
   private
     FUnit, FType, FMember, FOverload: TNyxText;
     FArity: Integer;
   public
     function Defined: Boolean;
+    function IsUnit: Boolean;
     function IsMember: Boolean;
     function Owner: TNyxDocumentationRef;
     function Key: TNyxText;
@@ -34,14 +35,16 @@ type
     property OverloadKey: TNyxText read FOverload;
     property GenericArity: Integer read FArity;
   end;
-  { Declared API shape only. A kind proves neither target implementation nor
-    compiler reflection, and an alias retains its own qualified identity. }
+  { Declared API shape only. A unit groups its actual global declarations and
+    is never an invented containing class. Kinds prove neither implementation
+    nor reflection; an alias retains its own qualified identity. }
   TNyxDocumentationTypeKind = (ndtClass, ndtInterface, ndtRecord, ndtEnum,
-    ndtAlias, ndtCallback);
+    ndtAlias, ndtCallback, ndtUnit);
   { Public member families distinguish fluent calls from properties and event
-    declarations without interpreting captions as behavior. }
+    declarations. Routine means a unit procedure/function, not a class method;
+    existing kinds retain their ordinals when a new family is appended. }
   TNyxDocumentationMemberKind = (ndmConstructor, ndmFactory, ndmMethod,
-    ndmFluentMethod, ndmProperty, ndmField, ndmEvent, ndmEnumValue);
+    ndmFluentMethod, ndmProperty, ndmField, ndmEvent, ndmEnumValue, ndmRoutine);
   { Parameter intent remains declared Pascal metadata. Availability of a given
     spelling on a compiler is a separate qualification requirement. }
   TNyxDocumentationParameterMode = (ndpValue, ndpConst, ndpVar, ndpOut, ndpConstRef);
@@ -105,9 +108,9 @@ type
     function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationMember;
     function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
   end;
-  { One declared class/interface/record/enum/alias/callback contract. Bases are
-    references to their original owners; inherited members are resolved by a
-    later complete index, never copied and re-owned by this descriptor. }
+  { One declared unit/class/interface/record/enum/alias/callback contract. A unit
+    owns globals without being a type. Bases retain their original owners;
+    inherited members belong to a later complete index, never a copied owner. }
   INyxDocumentationType = interface(IInterface)
     ['{52146AAD-D232-4D6E-A20A-650541D7D26D}']
     function Identity: TNyxDocumentationRef;
@@ -144,6 +147,9 @@ const
   NyxDocumentationMaximumExamples = 8;
   NyxDocumentationMaximumBytes = 256 * 1024;
 
+{ A unit identity can own global members and related links, but cannot occupy
+  a type-required parameter/result/property/base/alias position. }
+function NyxDocumentationUnit(const AUnit: TNyxText): TNyxDocumentationRef;
 function NyxDocumentationType(const AUnit, AType: TNyxText;
   AGenericArity: Integer = 0): TNyxDocumentationRef;
 function NyxDocumentationMember(const AOwner: TNyxDocumentationRef;
@@ -403,6 +409,11 @@ begin
   Result := FUnit <> '';
 end;
 
+function TNyxDocumentationRef.IsUnit: Boolean;
+begin
+  Result := Defined and (FType = '') and not IsMember;
+end;
+
 function TNyxDocumentationRef.IsMember: Boolean;
 begin
   Result := FMember <> '';
@@ -418,7 +429,11 @@ end;
 procedure TNyxDocumentationRef.Validate;
 begin
   NameBound(FUnit, True);
-  NameBound(FType, True);
+
+  if FType <> '' then
+    NameBound(FType, True)
+  else if FArity <> 0 then
+    raise ENyxDocumentation.Create('A documentation unit has no type generic arity');
 
   if (FArity < 0) or (FArity > 32) then
     raise ENyxDocumentation.Create('Documentation generic arity is outside its allowance');
@@ -447,9 +462,19 @@ begin
     Result := Key = AOther.Key;
 end;
 
+function NyxDocumentationUnit(const AUnit: TNyxText): TNyxDocumentationRef;
+begin
+  Result := Default(TNyxDocumentationRef);
+  Result.FUnit := AUnit;
+  Result.Validate;
+end;
+
 function NyxDocumentationType(const AUnit, AType: TNyxText;
   AGenericArity: Integer): TNyxDocumentationRef;
 begin
+
+  if AType = '' then
+    raise ENyxDocumentation.Create('A documentation type requires its Pascal type name');
   Result := Default(TNyxDocumentationRef);
   Result.FUnit := AUnit;
   Result.FType := AType;
@@ -463,7 +488,7 @@ begin
   AOwner.Validate;
 
   if AOwner.IsMember then
-    raise ENyxDocumentation.Create('A member identity requires its original declaring type');
+    raise ENyxDocumentation.Create('A member identity requires its original declaring unit or type');
   Result := AOwner;
   Result.FMember := AName;
   Result.FOverload := AOverload;
@@ -480,7 +505,7 @@ begin
   NameBound(AName, False);
   AType.Validate;
 
-  if AType.IsMember or (Ord(AMode) < 0) or
+  if AType.IsUnit or AType.IsMember or (Ord(AMode) < 0) or
     (Ord(AMode) > Ord(High(TNyxDocumentationParameterMode))) then
     raise ENyxDocumentation.Create('A parameter requires its declared type and passing mode');
   Result := Default(TNyxDocumentationParameter);
@@ -550,7 +575,7 @@ begin
   begin
     AResult.Validate;
 
-    if AResult.IsMember then
+    if AResult.IsUnit or AResult.IsMember then
       raise ENyxDocumentation.Create('A signature result requires a type identity');
   end;
   LValue := TDocumentationSignature.Create;
@@ -695,6 +720,15 @@ begin
   if not AIdentity.IsMember or (Ord(AKind) < 0) or
     (Ord(AKind) > Ord(High(TNyxDocumentationMemberKind))) then
     raise ENyxDocumentation.Create('A documentation member requires its identity and family');
+
+  if AIdentity.Owner.IsUnit then
+  begin
+
+    if not (AKind in [ndmFactory, ndmRoutine, ndmField]) then
+      raise ENyxDocumentation.Create('A unit owns factories, routines and global fields, not class members');
+  end
+  else if AKind = ndmRoutine then
+    raise ENyxDocumentation.Create('A global routine requires its actual declaring unit');
   LValue := TDocumentationMember.Create;
   LValue.FIdentity := AIdentity;
   LValue.FKind := AKind;
@@ -740,7 +774,7 @@ var
 begin
   LFrozen := CaptureNyxDocumentationSignature(AValue);
 
-  if not (FKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod]) then
+  if not (FKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
     raise ENyxDocumentation.Create('This documentation member has no call signature');
   LNext := CopyValue;
   LHold := LNext;
@@ -756,7 +790,8 @@ var
 begin
   AValue.Validate;
 
-  if AValue.IsMember or not (FKind in [ndmProperty, ndmField, ndmEvent, ndmEnumValue]) then
+  if AValue.IsUnit or AValue.IsMember or
+    not (FKind in [ndmProperty, ndmField, ndmEvent, ndmEnumValue]) then
     raise ENyxDocumentation.Create('This documentation member cannot declare a value type');
   LNext := CopyValue;
   LHold := LNext;
@@ -848,6 +883,9 @@ begin
   if AIdentity.IsMember or (Ord(AKind) < 0) or
     (Ord(AKind) > Ord(High(TNyxDocumentationTypeKind))) then
     raise ENyxDocumentation.Create('A documentation type requires its own qualified identity');
+
+  if AIdentity.IsUnit <> (AKind = ndtUnit) then
+    raise ENyxDocumentation.Create('A unit identity requires a unit declaration; a type requires its type name');
   LValue := TDocumentationType.Create;
   LValue.FIdentity := AIdentity;
   LValue.FKind := AKind;
@@ -920,7 +958,7 @@ var
 begin
   ATarget.Validate;
 
-  if (FKind <> ndtAlias) or ATarget.IsMember or ATarget.Same(FIdentity) then
+  if (FKind <> ndtAlias) or ATarget.IsUnit or ATarget.IsMember or ATarget.Same(FIdentity) then
     raise ENyxDocumentation.Create('An alias requires another original type identity');
   LNext := CopyValue;
   LHold := LNext;
@@ -937,7 +975,8 @@ var
 begin
   ABase.Validate;
 
-  if not (FKind in [ndtClass, ndtInterface, ndtCallback]) or ABase.IsMember or
+  if not (FKind in [ndtClass, ndtInterface, ndtCallback]) or
+    ABase.IsUnit or ABase.IsMember or
     ABase.Same(FIdentity) or (BaseCount >= NyxDocumentationMaximumLinks) then
     raise ENyxDocumentation.Create('A base requires a distinct type and bounded class/interface/callback owner');
   for LAt := 0 to BaseCount - 1 do

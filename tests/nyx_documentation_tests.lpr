@@ -108,6 +108,169 @@ begin
   Result := Event;
 end;
 
+procedure RunUnitDeclarations;
+var
+  LUnit, LOtherUnit, LType: TNyxDocumentationRef;
+  LDeclaration, LCopy, LOld, LClass, LBounded: INyxDocumentationType;
+  LField: INyxDocumentationMember;
+  LCancel: INyxCancellationScope;
+  LRejected: Boolean;
+  LAt: Integer;
+begin
+  LUnit := NyxDocumentationUnit('nyx.test.documentation');
+  LOtherUnit := NyxDocumentationUnit('nyx.test.documentation.other');
+  LType := NyxDocumentationType('Sample.Controls', 'TBadge', 1);
+  Check(LUnit.Defined and LUnit.IsUnit and not LUnit.IsMember and
+    (LUnit.TypeName = '') and (LUnit.GenericArity = 0) and
+    LUnit.Same(NyxDocumentationUnit('NYX.TEST.DOCUMENTATION')),
+    'A unit identity has its actual qualified name without a fake type or generic arity');
+  Check((LType.Key = TNyxText('sample.controls|tbadge|1||')) and
+    (NyxDocumentationMember(LType, 'Build', 'FromText').Key =
+      TNyxText('sample.controls|tbadge|1|build|fromtext')) and
+    not LUnit.Same(NyxDocumentationType('nyx.test', 'documentation')) and
+    not LUnit.Same(LOtherUnit),
+    'Existing type/member keys stay exact and cannot collide with unit identities');
+  Check((Ord(ndtClass) = 0) and (Ord(ndtCallback) = 5) and
+    (Ord(ndmConstructor) = 0) and (Ord(ndmEnumValue) = 7),
+    'Appending unit/routine kinds preserves existing public enum ordinals');
+  LDeclaration := DocumentationUnitReference;
+  Check((LDeclaration.Kind = ndtUnit) and LDeclaration.Identity.Same(LUnit) and
+    (LDeclaration.BaseCount = 0) and not LDeclaration.AliasTarget.Defined and
+    (LDeclaration.MemberCount = 3), 'Global declarations retain an actual unit owner without class ancestry');
+  Check((LDeclaration.MemberAt(0).Kind = ndmFactory) and
+    LDeclaration.MemberAt(0).Identity.Owner.Same(LUnit) and
+    LDeclaration.MemberAt(0).Signature.ResultType.Same(
+      NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge')),
+    'A global factory preserves its specialized public result and declaring unit');
+  Check((LDeclaration.MemberAt(1).Kind = ndmRoutine) and
+    (LDeclaration.MemberAt(2).Kind = ndmRoutine) and
+    (LDeclaration.MemberAt(1).Signature.ParameterCount = 0) and
+    (LDeclaration.MemberAt(2).Signature.ParameterCount = 1) and
+    not LDeclaration.MemberAt(1).Identity.Same(LDeclaration.MemberAt(2).Identity) and
+    (LDeclaration.MemberAt(1).Identity.Key =
+      TNyxText('nyx.test.documentation||0|documentationgreeting|default')),
+    'Real global overloads retain separate exact keys and zero/one-parameter signatures');
+  Check(LDeclaration.MemberAt(2).Identity.Owner.IsUnit and
+    not LDeclaration.MemberAt(2).Identity.IsUnit and
+    LDeclaration.MemberAt(2).Identity.IsMember,
+    'A unit member remains a member while its owner is the unit identity');
+  LCopy := CaptureNyxDocumentationType(LDeclaration);
+  LCopy := CaptureNyxDocumentationType(LCopy);
+  Check(LCopy.Identity.IsUnit and
+    LCopy.MemberAt(2).Identity.Same(LDeclaration.MemberAt(2).Identity) and
+    (LCopy.ExampleAt(0).Pascal = LDeclaration.ExampleAt(0).Pascal),
+    'Same-variable unit capture detaches declarations and retains inert examples');
+  LOld := NewNyxDocumentationType(LUnit, ndtUnit, 'Unit globals');
+  LCopy := LOld.WithMember(LDeclaration.MemberAt(0));
+  LClass := TDocumentationBadge.Reference.WithRelated(LUnit);
+  Check((LOld.MemberCount = 0) and (LCopy.MemberCount = 1) and
+    LClass.RelatedAt(LClass.RelatedCount - 1).Same(LUnit),
+    'Unit members compose immutably and a real class may link to its declaring unit');
+  LField := NewNyxDocumentationMember(
+    NyxDocumentationMember(LUnit, 'DocumentationGlobalRoutineCalls'), ndmField,
+    'Count explicit routine invocations in this fixture.')
+    .OfType(NyxDocumentationType('System', 'Integer'));
+  LCopy := LCopy.WithMember(LField);
+  Check((LCopy.MemberAt(1).Kind = ndmField) and
+    LCopy.MemberAt(1).Identity.Owner.IsUnit and
+    (LCopy.MemberAt(1).Signature = nil), 'A global variable is a typed unit field, not a callable class member');
+  for LAt := 0 to 16 do
+  begin
+    LRejected := False;
+    try
+      case LAt of
+        0: NewNyxDocumentationType(LUnit, ndtClass, '');
+        1: NewNyxDocumentationType(LType, ndtUnit, '');
+        2: NyxDocumentationType('Sample.Controls', '');
+        3: NyxDocumentationParameter('Value', LUnit);
+        4: NewNyxDocumentationSignature([], LUnit);
+        5: NewNyxDocumentationMember(NyxDocumentationMember(LType, 'Value'),
+             ndmProperty, '').OfType(LUnit);
+        6: NewNyxDocumentationType(NyxDocumentationType('Sample', 'Alias'),
+             ndtAlias, '').WithAlias(LUnit);
+        7: NewNyxDocumentationType(LType, ndtClass, '').WithBase(LUnit);
+        8: NewNyxDocumentationType(LUnit, ndtUnit, '').WithBase(LType);
+        9: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'Create'), ndmConstructor, '');
+        10: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'Method'), ndmMethod, '');
+        11: NewNyxDocumentationMember(NyxDocumentationMember(LType, 'Routine'), ndmRoutine, '');
+        12: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'Property'), ndmProperty, '');
+        13: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'Fluent'), ndmFluentMethod, '');
+        14: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'Event'), ndmEvent, '');
+        15: NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'EnumValue'), ndmEnumValue, '');
+        16: NyxDocumentationMember(NyxDocumentationMember(LUnit, 'Outer'), 'Inner');
+      end;
+    except
+      on ENyxDocumentation do LRejected := True;
+    end;
+    Check(LRejected, 'Invalid unit/type/member role combination refuses ' + IntToStr(LAt));
+  end;
+  LRejected := False;
+  try
+    LCopy.WithMember(NewNyxDocumentationMember(
+      NyxDocumentationMember(LOtherUnit, 'NewDocumentationBadge'), ndmFactory, ''));
+  except
+    on ENyxDocumentation do LRejected := True;
+  end;
+  Check(LRejected and (LCopy.MemberCount = 2), 'A global declaration cannot move to a different unit owner');
+  LRejected := False;
+  try
+    NyxDocumentationUnit(StringOfChar('U', 257));
+  except
+    on ENyxDocumentation do LRejected := True;
+  end;
+  Check(LRejected, 'Unit names retain the existing identity scalar allowance');
+  LRejected := False;
+  try
+    NyxDocumentationUnit('javascript:alert');
+  except
+    on ENyxDocumentation do LRejected := True;
+  end;
+  Check(LRejected, 'A unit reference cannot carry a URL scheme in place of Pascal identity');
+  LBounded := LOld;
+  for LAt := 0 to NyxDocumentationMaximumMembers - 1 do
+  begin
+    LBounded := LBounded.WithMember(NewNyxDocumentationMember(
+      NyxDocumentationMember(LUnit, 'Routine' + IntToStr(LAt)), ndmRoutine, ''));
+  end;
+  LRejected := False;
+  try
+    LBounded.WithMember(NewNyxDocumentationMember(
+      NyxDocumentationMember(LUnit, 'OneTooMany'), ndmRoutine, ''));
+  except
+    on ENyxDocumentation do LRejected := True;
+  end;
+  Check(LRejected and (LBounded.MemberCount = NyxDocumentationMaximumMembers),
+    'Unit declarations share the existing member allowance without mutating earlier readers');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try
+    LCopy := CaptureNyxDocumentationType(LDeclaration, LCancel);
+  except
+    on ENyxDocumentationCancelled do LRejected := True;
+  end;
+  Check(LRejected and (LCopy = nil), 'Cancelled unit capture publishes no partial declaration');
+  Check((DocumentationControlsConstructed = 0) and (DocumentationCallbacksConstructed = 0) and
+    (DocumentationCallbacksInvoked = 0) and (DocumentationGlobalFactoryCalls = 0) and
+    (DocumentationGlobalRoutineCalls = 0), 'Unit/type/member inspection invokes no global factory, routine or callback body');
+end;
+
+{ Interface-valued factory/fluent expressions may retain compiler temporaries
+  for this caller's whole lexical lifetime. The outer test checks retirement
+  after this procedure returns, when every named and temporary owner is gone. }
+procedure ExerciseGlobalDeclarations;
+var
+  LBadge: IDocumentationBadge;
+begin
+  LBadge := NewDocumentationBadge('global-factory');
+  LBadge := LBadge.WithGreeting(DocumentationGreeting('Ada'));
+  Check((LBadge.Greeting = TNyxText('Hello Ada')) and
+    (DocumentationGreeting = TNyxText(DocumentationGreetingDefault)) and
+    (DocumentationGlobalFactoryCalls = 1) and (DocumentationGlobalRoutineCalls = 2),
+    'Explicit global factory and overloaded routine execution agrees with the declared public contracts');
+  LBadge := nil;
+end;
+
 procedure Run;
 const
   CExact: TNyxText = '// 🚀 𐐷' + #0 + #13#10 + 'Badge.WithGreeting(''Ada'');';
@@ -131,6 +294,7 @@ var
   LRejected: Boolean;
   LAt, LRevision, LMembers, LExamples: Integer;
 begin
+  RunUnitDeclarations;
   LOwner := NyxDocumentationType('Sample.Controls', 'TBadge', 1);
   LText := NyxDocumentationType('nyx.text', 'TNyxText');
   Check(LOwner.Same(NyxDocumentationType('sample.controls', 'tbadge', 1)) and
@@ -271,6 +435,10 @@ begin
       (LFrozen.MemberAt(0).Kind = ndmConstructor) and
       (LFrozen.MemberAt(0).Signature.ParameterAt(0).Name = TNyxText('AID')),
       'Retained documentation does not retain the original control or document');
+    ExerciseGlobalDeclarations;
+    Check((DocumentationControlsConstructed = 2) and (DocumentationControlsDestroyed = 2) and
+      (DocumentationCallbacksConstructed = 0) and (DocumentationCallbacksInvoked = 0),
+      'Explicit factory ownership retires its control independently and executes no callback');
   finally
     LCatalog.Free;
   end;

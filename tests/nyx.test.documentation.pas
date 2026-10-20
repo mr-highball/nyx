@@ -48,6 +48,19 @@ var
   DocumentationControlsDestroyed: Integer;
   DocumentationCallbacksConstructed: Integer;
   DocumentationCallbacksInvoked: Integer;
+  DocumentationGlobalFactoryCalls: Integer;
+  DocumentationGlobalRoutineCalls: Integer;
+
+{ A genuine unit-level factory returns the specialized public interface. Its
+  descriptor names this unit directly, without a synthetic containing class. }
+function NewDocumentationBadge(const AID: TNyxText): IDocumentationBadge;
+{ Ordinary overloaded functions retain independent declared signatures and
+  stable overload identities. Documentation inspection invokes neither body. }
+function DocumentationGreeting: TNyxText; overload;
+function DocumentationGreeting(const AName: TNyxText): TNyxText; overload;
+{ The unit's own declaration metadata lives beside those actual globals. No
+  registry, generator, reflective enumeration or control construction runs. }
+function DocumentationUnitReference: INyxDocumentationType;
 
 { Registration publishes the same extension-owned prose/defaults to the existing
   catalog/schema/callback authorities. No second help registry or page list is
@@ -64,6 +77,50 @@ var
 function TextType: TNyxDocumentationRef;
 begin
   Result := NyxDocumentationType('nyx.text', 'TNyxText');
+end;
+
+function NewDocumentationBadge(const AID: TNyxText): IDocumentationBadge;
+begin
+  Inc(DocumentationGlobalFactoryCalls);
+  Result := TDocumentationBadge.Create(AID);
+end;
+
+function DocumentationGreeting: TNyxText;
+begin
+  Inc(DocumentationGlobalRoutineCalls);
+  Result := DocumentationGreetingDefault;
+end;
+
+function DocumentationGreeting(const AName: TNyxText): TNyxText;
+begin
+  Inc(DocumentationGlobalRoutineCalls);
+  Result := TNyxText(DocumentationGreetingDefault) + ' ' + AName;
+end;
+
+function DocumentationUnitReference: INyxDocumentationType;
+var
+  LUnit: TNyxDocumentationRef;
+begin
+  LUnit := NyxDocumentationUnit('nyx.test.documentation');
+  Result := NewNyxDocumentationType(LUnit, ndtUnit,
+    'Create friendly badges and format their greetings.')
+    .WithMember(NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'NewDocumentationBadge'),
+      ndmFactory, 'Create a badge with its stable component identifier.')
+      .WithSignature(NewNyxDocumentationSignature([
+        NyxDocumentationParameter('AID', TextType, ndpConst)],
+        NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge'))))
+    .WithMember(NewNyxDocumentationMember(
+      NyxDocumentationMember(LUnit, 'DocumentationGreeting', 'Default'),
+      ndmRoutine, 'Read the default English greeting.')
+      .WithSignature(NewNyxDocumentationSignature([], TextType)))
+    .WithMember(NewNyxDocumentationMember(
+      NyxDocumentationMember(LUnit, 'DocumentationGreeting', 'Named'),
+      ndmRoutine, 'Format an English greeting for a name.')
+      .WithSignature(NewNyxDocumentationSignature([
+        NyxDocumentationParameter('AName', TextType, ndpConst)], TextType)))
+    .WithRelated(NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge'))
+    .WithExample(NyxDocumentationExample('Create a named greeting',
+      'Badge := NewDocumentationBadge(''welcome'').WithGreeting(DocumentationGreeting(''Ada''));'));
 end;
 
 function GreetingMember(const AOwner: TNyxDocumentationRef): INyxDocumentationMember;

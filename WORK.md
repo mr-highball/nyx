@@ -34,7 +34,72 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Definition lookup from the source caret — 2026-10-20
+## Current handoff: Unit-owned API declarations — 2026-10-20
+
+Lil' Scooty keeps an active assignment and a next backlog candidate under the
+standing task-flow policy. The four-path reference01 source handoff is ready;
+root now reviews and qualifies it while the helper performs read-only lifecycle
+design for reference02. Root's source-navigation-history assessment is deferred
+until this concrete handoff is complete. No second product lane or additional
+agent is started merely to keep a worker occupied.
+
+Owner: the portable-declaration criteria in NS-4_studio-reference_01, consumed by
+the still-open reference02 discovery prerequisite. Deliverable: genuine unit
+identities for global creators/routines/fields, exact owner/overload keys and
+refusal of unit identities in type-required positions. Preserve existing fields,
+interface GUIDs/methods, enum ordinals, immutable capture, bounds and cancellation.
+Inspection must invoke no control, factory, routine, callback or example.
+
+Qualification is the maintained documentation consumer, which includes the
+schema adapter and public decorated fixture: native execution with clean heap
+and pas2js compilation, using fresh output directories and a shared source
+freeze. Only this consumer imports the changed API; unchanged Studio and editor
+consumers retain their preceding exact-source evidence rather than acquiring a
+new execution claim. Stop on a failed ownership, compatibility or budget check;
+preserve the failing source/log before repairs. Both workers pause Pascal edits
+until every admitted reader joins. Browser execution, automatic generation,
+discovery/adoption and full reference01 acceptance remain open. No task credit,
+counter or DONE status closes from this prerequisite handoff; the original
+authoring criterion remains open across at least forty-eight recorded batches.
+
+Final result: the common reviewed three-Pascal-source freeze passes68 native
+documentation checks with clean heap and the matching pas2js consumer compiles.
+Native warnings zero; browser has zero owned warnings/seven existing upstream
+Classes warnings. Unit/member/type roles, exact overload keys and old ordinals
+retain their contracts. Inspection counters remain zero; explicit caller bodies
+exercise the real factory and both overloads. The first native fixture fails its
+premature final destruction assertion with a clean heap: interface-valued fluent
+temporaries can outlive the named variable until the caller returns. Moving that
+explicit caller into a void procedure preserves the same constructed/destroyed
+assertion after every owner retires. Both final jobs include that repair; initial
+failed source/logs remain retained. A preparation-only source-freeze path-separator
+comparison refuses before publication; canonical filesystem comparison repairs
+the orchestration without changing product code or weakening ownership checks.
+
+Evidence is in ignored
+`E:\Blekohlab\nyx\qualification\documentation-units-20261020-123054`, owned by
+`.local/documentation-units-paths-private.json`. All786 maintained/783 unrelated
+Pascal inputs remain exact through the final freeze. The preceding24 compiler
+inputs,97 RTL sources,five current-start protected files,two retained profile
+inputs and thirteen concurrent planning files retain their exact hashes. Prior
+349-artifact verification remains applicable to unchanged frozen inputs, without
+a new verification/execution claim. All admitted readers join; LAN stays offline.
+Historical global-config preservation stays false and unrepaired. This is focused
+impact-based qualification, not another editor/Studio or browser execution run.
+
+Reassessment after two documentation-foundation handoffs: full reference01 still
+lacks source-generator adoption and decorated browser execution; more descriptor
+variants will not close those outcomes. The next useful helper deliverable is a
+registered-extension reference index using the actual schema/catalog/callback
+registration owners, with immutable bounded captures and atomic index refusal.
+Reference02 remains blocked for full acceptance by reference01; this integration
+preparation earns no task credit. Generated built-in adoption from the existing
+control-contract generator is the next required reference02 prerequisite, before
+reference03's consumer UI. Lil' Scooty keeps that current/next flow while root
+retains separate editor ownership and all build admission. No new public MCP tool
+or schema, host/config retry, protected mutation, cleanup/restart or rollout.
+
+## Previous integration: Definition lookup from the source caret — 2026-10-20
 
 The preceding coordination-only turn is no product progress: it confirms the
 running helper and the persisted active/next queue, without new implementation
