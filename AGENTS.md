@@ -4,7 +4,53 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source real literals retain qualified signed underflow and admitted
+Current-source string binding adds optional INyxPascalStringConstant for qualified
+FPC30301 Delphi/DelphiUnicode concatenation/relations and declaration-owned values.
+Character/literal/typed forms stay distinct from unknown/ASCII/UTF8/UTF16 encoding;
+exact units retain NUL/lone surrogates, qualified byte promotion and complete
+length-aware relations. Unknown encoding/default/families/conversions refuse;
+no host locale/replacement is guessed. Runtime/generic/typed storage inherits no
+value. One optional GUID/two enums; old GUIDs/methods/ordinals/record layouts stay
+intact and the scalar channel remains integer/Boolean-only. Named initializers
+retain original lexical scope/recursion; raw literal copies can adapt at use,
+typed constants retain their type, distinct managed/UTF8 identities follow native
+selection. New storage/copy/decode/compare work consumes existing local semantic
+and aggregate allowances before allocation/publication, with no interface in a
+copied record or mutable world cache. Pending-node H shares existing chronology;
+generic untyped-array normalization follows the complete call. Its initial
+reference-pending-H failure/source/exception heap stays retained; inspected
+pgenutil and whole native inputs qualify the correction. A stronger ShortString
+capacity assertion fails the earlier type-name-only implementation; native4/256
+observations and canonical255-character result qualify the fix. The whole unit
+compiled in both modes/four include occurrences supplies216 native windows. Separate
+native witnesses retain30 deliberate conversion warnings/clean heaps, outside
+main product warning debt, without suppression. Initial reserved-name/selector/
+generic/capacity and all older preparations stay exact. Final focused1588/first
+fit280/all smaller atomic/local refusal/cancellation/64 joined has clean heap.
+All74 main compilers pass/zero owned warnings/196 upstream;44 selected native
+runs have clean heaps;28 browser consumers compile only;both Studios/backend/
+worker compile as applicable. Exact final five-source freeze has no later repair
+or substituted consumer. Unchanged native PASS/work/reader contracts stay exact.
+Corpus575/508 actual src files/2463995 tokens passes; four new test inputs have
+separate exact compiler/source qualification. Unchanged RTL56 retains System13101/
+zero syntax/31 and ObjPas209/zero/one, neither pending, exact indexed Free/
+FreeInstance ready. Original2M/4M/64/initial5/Word1/symbol3of8/dynamic6of8/ordered
+jobs stay exact. All771 maintained/766 unrelated/five frozen/retained source and
+failures/97 RTL/24 base compiler pins plus inspected owners/156 packets/48 includes/
+349 artifacts/nine contexts/five protected/thirteen foreign files stay exact.
+Readers/handles join; LAN offline; native Nyx tools absent. Current-start protected
+exact; historical global-config failure keeps full preservation false. WORK.md
+and ignored .local/string-expressions-paths-private.json own current source/
+remote/evidence receipts. Stop string/node-timing/fixture/compiler variants;
+reassess canonical conversion/type/source dependency prerequisites through
+existing owners while retaining the full modern editor outcome. Full original
+language/module/incremental/editor/input/navigation/quality/parity/adoption/
+delivery and criterion/task/counter/credit/DONE stay open. No Pascal edits while
+readers live. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. Preserve
+concurrent work and all retained failures.
+
+Previously qualified real literals retain qualified signed underflow and admitted
 infinity through existing binding/numeric/source owners. New optional
 INyxPascalIEEERealLiteral keeps exact source and parser IEEE evidence separate
 from nominal type; old finite GUIDs/methods remain finite-only and absent on

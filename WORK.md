@@ -33,7 +33,100 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source real literal range — 2026-10-20
+## Current integration: Source-owned string expressions — 2026-10-20
+
+The preceding 343d1bc turn makes implementation, validation and exact-remote
+progress. All 767 maintained source inputs revalidate before this integration.
+The original Nyx/Studio outcome and complete resolver/editor requirements stay
+open; expression coverage replaces no authoring, interaction or parity criterion.
+
+The existing binder now handles qualified FPC30301 Delphi/DelphiUnicode string/
+character concatenation and six relations, with typed source value evidence.
+New optional INyxPascalStringConstant separates character, untyped literal and
+typed string node forms, plus unknown/ASCII/UTF8/UTF16 representation. Detached
+units preserve NUL and lone UTF16 surrogates. Character ordinals widen directly;
+string bytes decode only through qualified UTF8, with unknown/invalid conversion
+refused rather than replaced or interpreted through a host locale. Runtime,
+generic-return and typed-storage values retain type without fabricated text.
+Old interfaces/GUIDs, existing enum ordinals and public record layouts stay intact;
+one optional GUID/two new enums extend the API. The old scalar expression channel
+remains integer/Boolean-only; character units use the separate string capability.
+
+Named source constants bind complete original initializers and their lexical
+scope through the existing recursion trail. A local shadow cannot rebind an
+earlier initializer or inherit the global's value. Plain named byte literals
+can adapt at a use site; a concatenated typed constant retains its result type.
+Distinct managed-string results and UTF8 identity follow the actual selected
+operand. ShortString concatenation always returns the full canonical 255-character
+type, independently of a String[n] operand. Comparisons retain complete unit/length
+semantics. No string cast, pointer/array conversion, extra code page, target
+layout, initial default or unrelated compiler family is inferred.
+
+The existing bounded pending-node settings owner now includes H beside floating
+switches, retaining IFOPT flushes and separate immediate mode facts. Whole source
+exposes an important later stage: generic untyped-array normalization occurs
+after the complete call is consumed. An initial reference-pending-H assertion
+failed because the earlier argument type was reused. Its original source, output,
+assertion failure and exception heap remain retained. The inspected pgenutil owner
+and full native inputs qualify normalization at the complete-call boundary;
+typed string nodes do not receive that later literal rule. Existing exact
+argument/inference work and value barriers remain qualified.
+
+All new unit storage is admitted before allocation through both the remaining
+local semantic ceiling and optional aggregate parent, independently of caller
+cancellation. Decode/copy/compare work remains charged; there is no interface in
+a copied record or mutable world-owned value cache. Refusal publishes no partial
+value; results retain immutable source/type owners outward, without a decoder,
+work budget, thread or callback. Existing default limits and quotas stay unchanged.
+
+Two independent whole native witnesses, each with two original includes, qualify
+216 exact source expression windows across Delphi/DelphiUnicode and H settings.
+Native RTTI/value output supplies actual types and UTF16 units; semantic tests
+read the original complete unit/includes and never link or execute its bodies.
+The first type-name-only checks missed bounded ShortString capacity. Compiler
+source inspection prompted a stronger assertion, which fails against that first
+implementation and remains retained. Separate native SizeOf observations establish
+4 bytes for String[3] and 256 for concatenation, and the canonical result fix passes.
+Initial reserved-unit-prefix, exhaustive-selector warning and all previous source/
+generic/capacity preparations remain exact. No assertion is weakened or warning
+suppressed. The two separate witnesses intentionally expose 13/17 conversion
+warnings, including representation observations; these remain visible outside
+the product build's warning grade, with clean heaps and exact output receipts.
+
+Final focused 1,588 checks pass with clean heap: first fit280, every smaller
+allowance atomic, ordinary cancellation/local semantic refusal and 64 joined
+readers. All 74 main compiler logs pass with zero owned warnings/196 upstream;
+all 44 selected native runs have clean heaps. Twenty-eight browser consumers,
+both Studios/backend/worker compile as applicable; browsers compile only. The
+final five-Pascal-source freeze has no later repair or substituted consumer.
+The unchanged older native PASS/work/reader contracts remain exact, with only
+the owned-source corpus token count naturally changing. That corpus covers the
+508 actual src/ Pascal/include files: 575 checks/2,463,995 lossless tokens.
+The four new maintained test inputs have their own compiler/source qualifications.
+
+Unchanged original RTL56 retains System13,101 declarations/zero syntax/31 answers
+and ObjPas209/zero/one, neither pending, with exact indexed Free/FreeInstance
+navigation/insertion ready. Original2M view/4M aggregate/64 rounds, initial five/
+Word one/symbol three-of-eight/dynamic six-of-eight and ordered jobs remain exact.
+All771 maintained/766 unrelated/five frozen source inputs, current/inherited
+retained copies/failures, 97 RTL/24 base compiler pins plus inspected owners,
+156 original packets/48 includes/349 frozen artifacts/nine contexts/five protected/
+thirteen foreign files retain exact comparisons. All handles/readers join; no
+Studio listener remains. Current-start protection remains exact; historical
+global-config failure keeps the full preservation gate false. No repair occurs.
+
+Ignored .local/string-expressions-paths-private.json owns current source/evidence/
+remote receipts and return path. Stop string/node-timing/fixture/compiler variants
+after qualification. Reassess remaining canonical conversion/type and source
+dependency prerequisites through existing owners, retaining the complete modern
+editing destination in NS-4 authoring criterion two. Full language/module/
+incremental/editor/input/navigation/quality/parity/adoption/delivery and original
+criterion/task/counter/credit/DONE remain open. No Pascal edits while readers live.
+LAN offline; native Nyx tools absent. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or
+sub-agents. Preserve concurrent work and all retained failures.
+
+## Previous integration: Source real literal range — 2026-10-20
 
 The preceding 4b2718c turn makes implementation, validation and remote progress.
 All 767 maintained sources revalidate before this integration. The full Nyx/

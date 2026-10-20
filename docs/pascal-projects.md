@@ -3932,6 +3932,68 @@ binary128 checks do not claim native/compiler binary128 parity. General parser
 enrollment, literal operations/range/conversion coverage, default editor adoption
 and browser execution/input/parity remain open.
 
+### Source-owned string expressions
+
+The ordinary expression binder exposes optional `INyxPascalStringConstant`
+evidence for qualified FPC 3.3.1 Delphi/DelphiUnicode strings and characters.
+Concatenation and six ordered/equality comparisons use the original source
+operands. Named untyped constants bind their complete initializer in its own
+lexical scope; a use-site shadow cannot donate a different value. Typed constant
+storage, runtime variables and generic returns keep their types without inheriting
+an argument's text. This capability belongs to expression binding, independently
+of the separate `PlanNyxPascalConstant` conditional/scalar grammar.
+
+Three forms retain compiler distinctions: `pscfCharacter`, `pscfLiteral` and
+`pscfString`. Equal units alone do not establish equal node roles. For example,
+two narrow character operands concatenate as ShortString, while a literal array
+can select AnsiString or UnicodeString under the active settings. A plain named
+literal can adapt at its use site; a previously concatenated constant keeps its
+typed string result. Distinct managed string results retain their declaration
+when the native operator does, while a ShortString concatenation uses the full
+255-character result type rather than an operand's smaller bound.
+
+`Wide`, `UnitCount` and checked `CodeUnit` expose storage units without constructing
+a host string. Narrow units are bytes; wide units are UTF-16, including embedded
+NUL and individual surrogates. `Encoding` distinguishes known ASCII, qualified
+UTF-8, UTF-16 and unknown byte encoding. Character ordinals widen directly;
+string-byte promotion decodes only established UTF-8. Missing encoding facts and
+invalid sequences refuse rather than inventing replacements or using host ANSI
+settings. Comparisons include complete lengths and all units, without Unicode
+normalization or locale-dependent ordering.
+
+```pascal
+if Supports(LReply.BoundType, INyxPascalStringConstant, LText) then
+begin
+  { Inspect bounded units directly; no authored application code is executed. }
+  LUnits := LText.UnitCount;
+end;
+```
+
+The node-local settings owner retains queued H requests alongside the existing
+floating switches. Immediate source metadata is distinct from actual node
+construction: a trailing H request can remain pending for concatenation, while
+IFOPT flushes it. Generic normalization of an untyped literal array occurs after
+the complete call has been consumed, so it can observe a different active H
+setting. An already typed string expression does not acquire that later literal
+normalization. Unknown required settings remain explicit refusals.
+
+Unit allocation, decoding, comparisons and copies consume the existing local
+semantic ceiling and optional aggregate allowance before publication. No larger
+quota is introduced when a caller supplies cancellation alone or no execution
+scope. Budget/cancellation refusal publishes no partial value. Results retain
+no mutable decoder, query budget, thread or callback; their ordinary semantic
+children retain immutable world/declaration ownership outward.
+
+The whole independent native witness is compiled separately in both Delphi
+modes, with two original includes per unit and actual generic type/value
+observations. Its deliberate implicit-conversion diagnostics remain in separate
+compiler logs; portable semantic tests neither link nor execute its expressions.
+WORK.md records the current native, browser-compilation, budget, concurrent-reader
+and original RTL qualification. General string casts, character arrays/pointers,
+additional code pages/compiler families, full language/editor adoption and target
+parity remain open. No default provider, profile enrollment or Studio deployment
+is implied by these value capabilities.
+
 ### Configured FPU snapshots
 
 `NyxPascalConfiguredFPU(LContext)` returns a typed

@@ -306,6 +306,23 @@ type
     function SourceValue: TNyxPascalRealValue;
     function ParsedIEEEValue: TNyxPascalIEEEValue;
   end;
+  { Character ordinals, untyped literal arrays and already typed string nodes
+    have different compiler promotion rules even when their units are equal. }
+  TNyxPascalStringConstantForm = (pscfCharacter, pscfLiteral, pscfString);
+  { Representation evidence, not a host encoding guess. Unknown byte encoding
+    still permits exact byte inspection; UTF-16 units may include lone surrogates. }
+  TNyxPascalStringEncoding = (psceUnknown, psceASCII, psceUTF8, psceUTF16);
+  { Optional immutable string/character proof. Code units retain embedded NUL
+    and original width; no normalization, replacement or locale comparison is
+    implicit. Generic/runtime results inherit none of their arguments' units. }
+  INyxPascalStringConstant = interface(IInterface)
+    ['{84E82C2B-967B-480B-9CC2-142758BC7CF2}']
+    function Form: TNyxPascalStringConstantForm;
+    function Encoding: TNyxPascalStringEncoding;
+    function Wide: Boolean;
+    function UnitCount: Integer;
+    function CodeUnit(AIndex: Integer): Integer;
+  end;
   { Detached scalar proof on a folded expression, independent of a source
     literal. Real expressions keep ConstantValue Unknown and expose their
     separate real capability. Generic calls consume ResultType only. This
@@ -655,6 +672,14 @@ type
     function CodeUnit(AIndex: Integer): Integer;
     function SpecializationType: INyxPascalSemanticType;
   end;
+  { String literals alone expose code-unit evidence. Other literal families do
+    not acquire a string proof through the shared ordinary literal base. }
+  TStringLiteralType = class(TLiteralType, INyxPascalStringConstant)
+  public
+    FEncoding: TNyxPascalStringEncoding;
+    function Form: TNyxPascalStringConstantForm;
+    function Encoding: TNyxPascalStringEncoding;
+  end;
   { Admitted real literal, including parser infinity. Its ordinary shape owns
     source/world identity; detached numeric values retain no mutable arithmetic
     workspace or execution lease. Finite proofs belong to the subclass alone. }
@@ -685,9 +710,27 @@ type
     function ConstantValue: TNyxPascalConstantValue;
     function ResultType: INyxPascalSemanticType;
   end;
-  { The two qualified delayed floating switches share scanner chronology;
-    this selector grants no authority over other local compiler settings. }
-  TFloatingLocalSetting = (flsExcessPrecision, flsIEEEErrors);
+  { Detached code-unit vector shared only by value-owning objects and local
+    decoders. Elements are integers, never interfaces or borrowed source rows. }
+  TStringCodeUnits = array of Integer;
+  { Query-owned string result; its ordinary child owns nominal/compiler type
+    identity while this object owns detached units and representation facts.
+    No source-literal interface, query budget or mutable decoder is retained. }
+  TStringExpressionType = class(TNumericExpressionType, INyxPascalStringConstant)
+  public
+    FForm: TNyxPascalStringConstantForm;
+    FEncoding: TNyxPascalStringEncoding;
+    FWide: Boolean;
+    FUnits: TStringCodeUnits;
+    function Form: TNyxPascalStringConstantForm;
+    function Encoding: TNyxPascalStringEncoding;
+    function Wide: Boolean;
+    function UnitCount: Integer;
+    function CodeUnit(AIndex: Integer): Integer;
+  end;
+  { Qualified node-local switches share the scanner's pending-request lifetime.
+    Selecting one channel grants no authority over other compiler settings. }
+  TCompilerNodeSetting = (flsExcessPrecision, flsIEEEErrors, flsStringH);
   { Query-owned admitted IEEE expression. The ordinary result keeps nominal
     identity; no mutable arithmetic workspace or query budget is published. }
   TIEEEExpressionType = class(TNumericExpressionType, INyxPascalIEEEConstant)
@@ -963,6 +1006,13 @@ type
     function ConstantAnswer(const AType: INyxPascalSemanticType;
       const AScalar: TNyxPascalConstantValue;
       const AReal: TNyxPascalIEEEValue): INyxPascalResolution;
+    { Copy source-owned units into a value decoration, preserving the actual
+      ordinary result type and its declaration without claiming literal origin. }
+    function StringAnswer(const AType: INyxPascalSemanticType;
+      const AValue: INyxPascalStringConstant): INyxPascalResolution;
+    { Admit complete new unit storage through both the local semantic ceiling
+      and an optional aggregate parent before allocating any vector. }
+    procedure AdmitStringUnits(ACount: Integer);
     function BasesCore(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
     function CollectMemberNames(const AType: INyxPascalSemanticType;
       const APrefix: TNyxText; var ANames: TGenericNames): INyxPascalResolution;
@@ -1366,6 +1416,46 @@ end;
 function TLiteralType.Value: TNyxPascalConstantValue;
 begin
   Result := FValue;
+end;
+
+function TStringLiteralType.Form: TNyxPascalStringConstantForm;
+begin
+  Result := pscfLiteral;
+
+  if FLiteralKind = plkCharacter then Result := pscfCharacter;
+end;
+
+function TStringLiteralType.Encoding: TNyxPascalStringEncoding;
+begin
+  Result := FEncoding;
+end;
+
+function TStringExpressionType.Form: TNyxPascalStringConstantForm;
+begin
+  Result := FForm;
+end;
+
+function TStringExpressionType.Encoding: TNyxPascalStringEncoding;
+begin
+  Result := FEncoding;
+end;
+
+function TStringExpressionType.Wide: Boolean;
+begin
+  Result := FWide;
+end;
+
+function TStringExpressionType.UnitCount: Integer;
+begin
+  Result := Length(FUnits);
+end;
+
+function TStringExpressionType.CodeUnit(AIndex: Integer): Integer;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FUnits)) then
+    raise ERangeError.Create('String constant code-unit index is out of range');
+  Result := FUnits[AIndex];
 end;
 
 function TIEEERealLiteralType.SourceValue: TNyxPascalRealValue;
@@ -4666,6 +4756,50 @@ begin
   Result := TypeAnswer(LLease);
 end;
 
+procedure TBindingQuery.AdmitStringUnits(ACount: Integer);
+begin
+
+  if (ACount < 0) or (ACount > FLimits.MaximumSteps-FSteps) then
+    raise ENyxPascalBindingLimit.Create('String unit storage exceeds its semantic query budget');
+  NyxPascalAdmitAnalysis(FCancel,papFrozenRow,ACount);
+  Inc(FSteps,ACount);
+end;
+
+function TBindingQuery.StringAnswer(const AType: INyxPascalSemanticType;
+  const AValue: INyxPascalStringConstant): INyxPascalResolution;
+var LNominal, LLeaf, LLease: INyxPascalSemanticType;
+  LLiteral: INyxPascalLiteralType; LExpression: INyxPascalConstantExpression;
+  LIdentity: INyxPascalIntrinsicIdentity; LValue: TStringExpressionType; LAt: Integer;
+begin
+  LNominal := AType;
+
+  if Supports(LNominal,INyxPascalLiteralType,LLiteral) then LNominal := LLiteral.SpecializationType;
+
+  if Supports(LNominal,INyxPascalConstantExpression,LExpression) then LNominal := LExpression.ResultType;
+
+  if (LNominal = nil) or (AValue = nil) then Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+  LLeaf := Unwrap(LNominal);
+
+  if (LLeaf = nil) or not Supports(LLeaf,INyxPascalIntrinsicIdentity,LIdentity) then
+    Exit(Answer(pbsUnresolved,pbiCompilerContext));
+  LValue := TStringExpressionType.Create; LLease := LValue;
+  LValue.Owner := FWorld; LValue.TypeKind := pstBuiltin; LValue.Intrinsic := LLeaf.Builtin;
+  LValue.IntrinsicScope := LIdentity.IntrinsicOrigin; LValue.IntrinsicName := LIdentity.IntrinsicReference;
+  LValue.IntrinsicFacts := LIdentity.IntrinsicContext; LValue.FResult := LNominal;
+  LValue.FForm := AValue.Form; LValue.FEncoding := AValue.Encoding; LValue.FWide := AValue.Wide;
+  AdmitStringUnits(AValue.UnitCount);
+  SetLength(LValue.FUnits,AValue.UnitCount);
+  for LAt := 0 to High(LValue.FUnits) do
+  begin Tick; LValue.FUnits[LAt] := AValue.CodeUnit(LAt); end;
+
+  if LNominal.Kind in [pstAlias,pstDistinct] then
+  begin
+    LValue.TypeKind := LNominal.Kind; LValue.Intrinsic := pbbNone;
+    LValue.Declared := LNominal.Definition; LValue.Element := LNominal.Target;
+  end;
+  Result := TypeAnswer(LLease);
+end;
+
 function TBindingQuery.TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
 var
   LDecl: TNyxPascalSyntaxDeclaration;
@@ -4683,6 +4817,7 @@ var
   LLiteral: INyxPascalLiteralType;
   LExpression: INyxPascalConstantExpression;
   LReal: INyxPascalIEEEConstant;
+  LString: INyxPascalStringConstant;
   LScalarValue: TNyxPascalConstantValue;
   LRealValue: TNyxPascalIEEEValue;
   LView: INyxPascalTranslatedSyntax;
@@ -4803,6 +4938,9 @@ begin
           LScalarValue := LExpression.ConstantValue;
 
         if Supports(LResolved.BoundType,INyxPascalIEEEConstant,LReal) then LRealValue := LReal.IEEEValue;
+
+        if Supports(LResolved.BoundType,INyxPascalStringConstant,LString) then
+          Exit(StringAnswer(LResolved.BoundType,LString));
 
         if (LRealValue.Kind <> pifUnknown) or (LScalarValue.Kind in [pvvInteger,pvvBoolean]) then
           Exit(ConstantAnswer(LResolved.BoundType,LScalarValue,LRealValue));
@@ -6894,7 +7032,7 @@ var
   { FPC stores local switches when constructing a node, after parsing its
     operands. Scanner requests leading the next token are still pending;
     IFOPT explicitly flushes even when traversing a skipped conditional. }
-  function EffectiveFloatingSwitch(ASetting: TFloatingLocalSetting): TNyxPascalKnowledge;
+  function EffectiveNodeSwitch(ASetting: TCompilerNodeSetting): TNyxPascalKnowledge;
   var
     LView: INyxPascalTranslatedSyntax;
     LSource: INyxPascalTranslation;
@@ -6902,11 +7040,13 @@ var
     LRow: TNyxPascalTranslatedToken;
     LName, LValue: TNyxText;
     LToken: TNyxPascalToken;
-    function Selected(const APolicies: TNyxPascalCompilerPolicies): TNyxPascalKnowledge;
+    function Selected(const AContext: INyxPascalCompilerContext): TNyxPascalKnowledge;
     begin
-
-      if ASetting = flsIEEEErrors then Result := APolicies.IEEEErrorsRequested
-      else Result := APolicies.ExcessPrecisionSetting;
+      case ASetting of
+        flsIEEEErrors: Result := NyxPascalCompilerPolicies(AContext).IEEEErrorsRequested;
+        flsExcessPrecision: Result := NyxPascalCompilerPolicies(AContext).ExcessPrecisionSetting;
+        flsStringH: Result := AContext.Option('H');
+      end;
     end;
 
   begin
@@ -6946,7 +7086,7 @@ var
     LBefore := LView.Origin(LOrigin).TranslationToken;
 
     if (LBefore >= LAfter) or (LSource.Token(LBefore).Activity <> ppkTrue) then Exit;
-    Result := Selected(NyxPascalCompilerPolicies(LSource.State(LView.Origin(LOrigin).State)));
+    Result := Selected(LSource.State(LView.Origin(LOrigin).State));
     for LIndex := LBefore+1 to LAfter-1 do
     begin
       Tick;
@@ -6956,7 +7096,7 @@ var
       NyxPascalDirectiveParts(LSource.Text(LIndex),LName,LValue,LOffset);
 
       if LName = 'ifopt' then
-        Result := Selected(NyxPascalCompilerPolicies(LSource.State(LRow.State)))
+        Result := Selected(LSource.State(LRow.State))
       else if (LName = 'mode') and (LRow.Activity <> ppkFalse) then
       begin
         { A qualified ignored late MODE leaves the exact state unchanged and
@@ -6964,8 +7104,7 @@ var
           its handler has independently proved the immediate setting effect. }
 
         if LSource.Token(LIndex+1).State <> LRow.State then
-          Result := Selected(NyxPascalCompilerPolicies(LSource.State(
-            LSource.Token(LIndex+1).State)));
+          Result := Selected(LSource.State(LSource.Token(LIndex+1).State));
       end;
     end;
   end;
@@ -6979,7 +7118,7 @@ var
     Result := nil;
 
     if (AValue.Kind <> pifInfinity) or AValue.Negative then Exit;
-    LChecking := EffectiveFloatingSwitch(flsIEEEErrors);
+    LChecking := EffectiveNodeSwitch(flsIEEEErrors);
 
     if LChecking = ppkUnknown then
       Result := Answer(pbsUnresolved,pbiCompilerContext,'IEEEERRORS')
@@ -7001,6 +7140,30 @@ var
     end;
   end;
 
+  { Untyped byte arrays select their managed/short specialization at the current
+    compiler node. Named literal copies retain their value/encoding while the
+    active H and Unicode mode select a type independently of declaration time. }
+  function DefaultStringResult: INyxPascalResolution;
+  var LSetting: TNyxPascalKnowledge; LContext: INyxPascalCompilerContext; LName: TNyxText;
+  begin
+    LSetting := EffectiveNodeSwitch(flsStringH);
+
+    if LSetting = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'H'));
+    LName := 'shortstring';
+
+    if LSetting = ppkTrue then
+    begin
+      LContext := ContextAt(ASite);
+
+      if (LContext = nil) or (LContext.Feature(ppfUnicodeStrings) = ppkUnknown) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,'UNICODESTRINGS'));
+      LName := 'ansistring';
+
+      if LContext.Feature(ppfUnicodeStrings) = ppkTrue then LName := 'unicodestring';
+    end;
+    Result := BuiltinType(ASite,LName,FLimits.ImplicitScopes = pispCompilerUnits);
+  end;
+
   { Only result contracts are compared. Arguments stay opaque and no candidate
     is dropped by guessed conversions, arity, defaults or runtime values. }
   function ValueOf(const AFound: INyxPascalResolution; ACall: Boolean;
@@ -7011,6 +7174,7 @@ var
     LCommon, LValue: INyxPascalSemanticType;
     LSymbol: INyxPascalBoundSymbol;
     LIEEE: INyxPascalIEEEConstant;
+    LString: INyxPascalStringConstant;
     LAdmission: INyxPascalResolution;
   begin
     AValueAccess := pmaInstance;
@@ -7065,6 +7229,17 @@ var
         LAdmission := SpecialValueAdmission(LIEEE.IEEEValue);
 
         if LAdmission <> nil then Exit(LAdmission);
+      end;
+
+      if (LResolved.Status = pbsBound) and
+        (AFound.SymbolAt(0).Declaration.Kind = psdkConstant) and
+        Supports(LResolved.BoundType,INyxPascalStringConstant,LString) and
+        (LString.Form = pscfLiteral) and not LString.Wide then
+      begin
+        LAdmission := DefaultStringResult;
+
+        if LAdmission.Status <> pbsBound then Exit(LAdmission);
+        LResolved := StringAnswer(LAdmission.BoundType,LString);
       end;
     end;
 
@@ -7372,7 +7547,7 @@ var
     LStart, LFinish, LAtBound, LIndex, LScalar, LUnitCount, LBase, LCode: Integer;
     LPrevious: TNyxPascalSyntaxOrigin;
     LSpelling, LName, LPrimitive: TNyxText;
-    LNegative, LSigned, LUTF8Checked, LUTF8: Boolean;
+    LNegative, LSigned, LUTF8Checked, LUTF8, LStringASCII: Boolean;
     LValue, LLower: TNyxPascalConstantValue;
     LTypeAnswer: INyxPascalResolution;
     LIdentity: INyxPascalIntrinsicIdentity;
@@ -7452,6 +7627,8 @@ var
         SetLength(LLiteral.FUnits, LCapacity);
       end;
       LLiteral.FUnits[LUnitCount] := AValue;
+
+      if AValue >= $80 then LStringASCII := False;
       Inc(LUnitCount);
     end;
 
@@ -7587,7 +7764,8 @@ var
     end
     else
     begin
-      LLiteral := TLiteralType.Create;
+      if LToken.Kind in [ptkString,ptkCharacter] then LLiteral := TStringLiteralType.Create
+      else LLiteral := TLiteralType.Create;
       LLease := LLiteral;
     end;
 
@@ -7724,6 +7902,7 @@ var
       LUnitCount := 0;
       LUTF8Checked := False;
       LUTF8 := False;
+      LStringASCII := True;
       repeat
 
         if not LToken.Complete then Exit;
@@ -7791,6 +7970,10 @@ var
         Next;
       until not AdjacentFragments(LPrevious);
       SetLength(LLiteral.FUnits, LUnitCount);
+
+      if LLiteral.FWide then TStringLiteralType(LLiteral).FEncoding := psceUTF16
+      else if LStringASCII then TStringLiteralType(LLiteral).FEncoding := psceASCII
+      else if UTF8Source then TStringLiteralType(LLiteral).FEncoding := psceUTF8;
 
       if LUnitCount = 1 then
       begin
@@ -8016,8 +8199,46 @@ var
     LArgumentAccess: TNyxPascalMemberAccess;
     LCount: Integer;
     LSavedAt: Integer;
+    LHasLiteral: Boolean;
+    LString: INyxPascalStringConstant;
+
+    { Generic unnamed array types are normalized after the complete call has
+      been consumed. FPC's current H/Unicode switches at that stage can differ
+      from the earlier argument-node settings; typed string nodes stay fixed. }
+    function CompletedArguments: INyxPascalResolution;
+    var LAt: Integer; LDefault: INyxPascalResolution; LType: INyxPascalSemanticType;
+      LLiteral: INyxPascalLiteralType; LExpression: INyxPascalConstantExpression;
+      LProof: INyxPascalStringConstant;
+    begin
+      LDefault := nil;
+
+      if LHasLiteral then
+        for LAt := 0 to High(LArguments) do
+        begin
+          Tick;
+
+          if (LArguments[LAt].Status <> pbsBound) or
+            not Supports(LArguments[LAt].BoundType,INyxPascalStringConstant,LProof) or
+            (LProof.Form <> pscfLiteral) or LProof.Wide then Continue;
+
+          if LDefault = nil then LDefault := DefaultStringResult;
+
+          if LDefault.Status <> pbsBound then Exit(LDefault);
+          LType := LArguments[LAt].BoundType;
+
+          if Supports(LType,INyxPascalLiteralType,LLiteral) then LType := LLiteral.SpecializationType;
+
+          if Supports(LType,INyxPascalConstantExpression,LExpression) then LType := LExpression.ResultType;
+
+          if not SameType(LType,LDefault.BoundType) then
+            LArguments[LAt] := StringAnswer(LDefault.BoundType,LProof);
+        end;
+      Result := InferRoutineArguments(ASite,AFound,LArguments);
+    end;
+
   begin
     SetLength(LArguments, 0);
+    LHasLiteral := False;
     Next;
 
     if IsSymbol(psoCloseParen) then
@@ -8050,10 +8271,14 @@ var
       SetLength(LArguments, LCount + 1);
       LArguments[LCount] := LValue;
 
+      if (LValue.Status = pbsBound) and
+        Supports(LValue.BoundType,INyxPascalStringConstant,LString) and
+        (LString.Form = pscfLiteral) and not LString.Wide then LHasLiteral := True;
+
       if IsSymbol(psoCloseParen) then
       begin
         Next;
-        Exit(InferRoutineArguments(ASite, AFound, LArguments));
+        Exit(CompletedArguments);
       end;
 
       if not IsSymbol(psoComma) then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
@@ -8760,7 +8985,7 @@ var
       begin
 
         if (AKind = pokAdd) or (LLeftFormat in [pffCurrency64,pffComp64]) then Exit(TypeAnswer(LLeft));
-        LPrecision := EffectiveFloatingSwitch(flsExcessPrecision);
+        LPrecision := EffectiveNodeSwitch(flsExcessPrecision);
 
         if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
 
@@ -8778,7 +9003,7 @@ var
       if LRightLeaf = nil then Exit(TypeAnswer(LLeft));
 
       if (LLeftFormat = pffComp64) or (LRightFormat = pffComp64) then Exit(Canonical(pbbExtended));
-      LPrecision := EffectiveFloatingSwitch(flsExcessPrecision);
+      LPrecision := EffectiveNodeSwitch(flsExcessPrecision);
 
       if LPrecision = ppkUnknown then Exit(Answer(pbsUnresolved,pbiCompilerContext,'EXCESSPRECISION'));
 
@@ -8799,6 +9024,239 @@ var
 
       if Supports(AType,INyxPascalLiteralType,LSource) then Result := LSource.Value
       else if Supports(AType,INumericExpressionValue,LExpression) then Result := LExpression.ConstantValue;
+    end;
+
+    { String nodes retain character-vs-literal-vs-typed roles separately from
+      their generic specialization. Only complete constant operands are folded;
+      runtime strings supply type alone, including distinct and UTF-8 identity. }
+    function StringResult: INyxPascalResolution;
+    var
+      LProofLeft, LProofRight: INyxPascalStringConstant;
+      LLeafLeft, LLeafRight, LChosen, LLease: INyxPascalSemanticType;
+      LKindLeft, LKindRight, LKind: TNyxPascalBuiltin;
+      LDefault, LNominal: INyxPascalResolution;
+      LUnitsLeft, LUnitsRight: TStringCodeUnits;
+      LValue: TStringExpressionType; LIdentity: INyxPascalIntrinsicIdentity;
+      LKnown, LNode, LWide, LASCII, LRelation: Boolean;
+      LAt, LOrder, LCount: Integer;
+
+      function Family(const AType: INyxPascalSemanticType;
+        const AProof: INyxPascalStringConstant; out ALeaf: INyxPascalSemanticType;
+        out AKind: TNyxPascalBuiltin): Boolean;
+      begin
+        ALeaf := Unwrap(AType); AKind := pbbNone;
+        Result := (ALeaf <> nil) and (ALeaf.Kind in [pstBuiltin,pstString]) and
+          (ALeaf.Builtin in [pbbAnsiChar,pbbWideChar,pbbAnsiString,pbbUTF8String,
+            pbbUnicodeString,pbbWideString,pbbShortString]);
+
+        if not Result then Exit;
+        AKind := ALeaf.Builtin;
+
+        if (AProof <> nil) and (AProof.Form = pscfLiteral) and not AProof.Wide then AKind := pbbNone;
+      end;
+
+      function Canonical(AKind: TNyxPascalBuiltin): INyxPascalResolution;
+      var LName: TNyxText;
+      begin
+        case AKind of
+          pbbAnsiString: LName := 'ansistring'; pbbUTF8String: LName := 'utf8string';
+          pbbUnicodeString: LName := 'unicodestring'; pbbWideString: LName := 'widestring';
+          pbbShortString: LName := 'shortstring'; pbbBoolean: LName := 'boolean';
+        else Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+        end;
+        Result := BuiltinType(ASite,LName,FLimits.ImplicitScopes = pispCompilerUnits);
+      end;
+
+      { Decode only qualified UTF-8 bytes when a string needs wide storage.
+        Character ordinals widen directly. UTF-16 source units, including lone
+        surrogates, are copied exactly; no Unicode normalization is performed. }
+      function Units(const AValue: INyxPascalStringConstant; AWide: Boolean;
+        out AUnits: TStringCodeUnits): Boolean;
+      var LRead, LWrite, LCode, LTails, LTail, LMinimum, LCount: Integer;
+      begin
+        Result := False; LCount := AValue.UnitCount;
+
+        if LCount < 0 then Exit;
+        AdmitStringUnits(LCount);
+        SetLength(AUnits,LCount); LRead := 0; LWrite := 0;
+        while LRead < LCount do
+        begin
+          Tick; LCode := AValue.CodeUnit(LRead); Inc(LRead);
+
+          if (LCode < 0) or (LCode > $ffff) or (not AValue.Wide and (LCode > 255)) then Exit;
+
+          if AWide and not AValue.Wide and (AValue.Form <> pscfCharacter) and (LCode >= $80) then
+          begin
+
+            if AValue.Encoding <> psceUTF8 then Exit;
+            LTails := 0; LMinimum := 0;
+
+            if (LCode >= $c2) and (LCode <= $df) then
+            begin LTails := 1; LCode := LCode and $1f; LMinimum := $80; end
+            else if (LCode >= $e0) and (LCode <= $ef) then
+            begin LTails := 2; LCode := LCode and $f; LMinimum := $800; end
+            else if (LCode >= $f0) and (LCode <= $f4) then
+            begin LTails := 3; LCode := LCode and $7; LMinimum := $10000; end
+            else Exit;
+            while LTails > 0 do
+            begin
+              Tick;
+
+              if LRead >= LCount then Exit;
+              LTail := AValue.CodeUnit(LRead); Inc(LRead);
+
+              if (LTail < $80) or (LTail > $bf) then Exit;
+              LCode := LCode * 64 + (LTail and $3f); Dec(LTails);
+            end;
+
+            if (LCode < LMinimum) or (LCode > $10ffff) or
+              ((LCode >= $d800) and (LCode <= $dfff)) then Exit;
+          end;
+
+          if LCode > $ffff then
+          begin
+            Dec(LCode,$10000); AUnits[LWrite] := $d800 + (LCode shr 10); Inc(LWrite);
+            LCode := $dc00 + (LCode and $3ff);
+          end;
+          AUnits[LWrite] := LCode; Inc(LWrite);
+        end;
+        SetLength(AUnits,LWrite); Result := True;
+      end;
+
+    begin
+      Result := nil;
+
+      if AUnary then Exit;
+      Supports(ALeft.BoundType,INyxPascalStringConstant,LProofLeft);
+      Supports(ARight.BoundType,INyxPascalStringConstant,LProofRight);
+
+      if not Family(LLeft,LProofLeft,LLeafLeft,LKindLeft) or
+        not Family(LRight,LProofRight,LLeafRight,LKindRight) then Exit;
+      Result := Answer(pbsUnresolved,pbiUnsupportedType,'string operation');
+
+      if not (AKind in [pokAdd,pokEqual,pokNotEqual,pokLess,pokLessEqual,pokGreater,pokGreaterEqual]) then Exit;
+      LKnown := (LProofLeft <> nil) and (LProofRight <> nil);
+      LNode := ((LProofLeft <> nil) and (LProofLeft.Form <> pscfCharacter)) or
+        ((LProofRight <> nil) and (LProofRight.Form <> pscfCharacter));
+      LKind := pbbShortString;
+
+      if (LKindLeft in [pbbAnsiChar,pbbWideChar]) and (LKindRight in [pbbAnsiChar,pbbWideChar]) then
+      begin
+
+        if (LKindLeft = pbbWideChar) or (LKindRight = pbbWideChar) then LKind := pbbUnicodeString;
+      end
+      else
+      begin
+        LDefault := nil;
+
+        if LNode then
+        begin
+          LDefault := DefaultStringResult;
+
+          if LDefault.Status <> pbsBound then Exit(LDefault);
+        end;
+
+        if (LKindLeft = pbbUnicodeString) or (LKindRight = pbbUnicodeString) or
+          ((LDefault <> nil) and (LDefault.BoundType.Builtin = pbbUnicodeString)) then LKind := pbbUnicodeString
+        else if (LKindLeft in [pbbWideString,pbbWideChar]) or (LKindRight in [pbbWideString,pbbWideChar]) then LKind := pbbWideString
+        else if (LKindLeft = pbbUTF8String) or (LKindRight = pbbUTF8String) then LKind := pbbUTF8String
+        else if (LKindLeft = pbbAnsiString) or (LKindRight = pbbAnsiString) or
+          ((LDefault <> nil) and (LDefault.BoundType.Builtin = pbbAnsiString)) then LKind := pbbAnsiString;
+      end;
+      LWide := LKind in [pbbUnicodeString,pbbWideString];
+
+      if LKnown and (LProofLeft.Wide or LProofRight.Wide) then
+      begin LWide := True; LKind := pbbUnicodeString; end;
+      LChosen := nil;
+
+      { FPC always returns its full ShortString type, independently of a
+        String[n] operand's bound or nominal alias. Managed strings can retain
+        their selected operand's declaration and code-page identity. }
+      if LKind <> pbbShortString then
+      begin
+
+        if LKindLeft = LKind then LChosen := LLeft
+        else if LKindRight = LKind then LChosen := LRight;
+      end;
+      LNominal := nil;
+
+      if AKind <> pokAdd then LNominal := Canonical(pbbBoolean)
+      else if LChosen = nil then LNominal := Canonical(LKind)
+      else LNominal := TypeAnswer(LChosen);
+
+      if LNominal.Status <> pbsBound then Exit(LNominal);
+
+      if not LKnown then Exit(LNominal);
+
+      if not Units(LProofLeft,LWide,LUnitsLeft) or not Units(LProofRight,LWide,LUnitsRight) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,'string encoding'));
+
+      if AKind <> pokAdd then
+      begin
+        LOrder := 0; LCount := Length(LUnitsLeft);
+
+        if Length(LUnitsRight) < LCount then LCount := Length(LUnitsRight);
+        for LAt := 0 to LCount-1 do
+        begin
+          Tick;
+
+          if LUnitsLeft[LAt] < LUnitsRight[LAt] then LOrder := -1
+          else if LUnitsLeft[LAt] > LUnitsRight[LAt] then LOrder := 1;
+
+          if LOrder <> 0 then Break;
+        end;
+
+        if LOrder = 0 then
+        begin
+
+          if Length(LUnitsLeft) < Length(LUnitsRight) then LOrder := -1
+          else if Length(LUnitsLeft) > Length(LUnitsRight) then LOrder := 1;
+        end;
+        LRelation := False;
+        case AKind of
+          pokEqual: LRelation := LOrder = 0; pokNotEqual: LRelation := LOrder <> 0;
+          pokLess: LRelation := LOrder < 0; pokLessEqual: LRelation := LOrder <= 0;
+          pokGreater: LRelation := LOrder > 0; pokGreaterEqual: LRelation := LOrder >= 0;
+        else begin end;
+        end;
+        Exit(ConstantAnswer(LNominal.BoundType,TNyxPascalConstantValue.BooleanValue(LRelation),
+          TNyxPascalIEEEValue.Unknown));
+      end;
+
+      if Length(LUnitsLeft) > High(Integer)-Length(LUnitsRight) then
+        raise ENyxPascalBindingLimit.Create('String concatenation exceeds its bounded vector');
+      LCount := Length(LUnitsLeft)+Length(LUnitsRight);
+      AdmitStringUnits(LCount);
+      LValue := TStringExpressionType.Create; LLease := LValue;
+      LValue.Owner := FWorld; LValue.FResult := LNominal.BoundType;
+      LValue.FForm := pscfString; LValue.FWide := LWide;
+      SetLength(LValue.FUnits,LCount); LASCII := True;
+      for LAt := 0 to LCount-1 do
+      begin
+        Tick;
+
+        if LAt < Length(LUnitsLeft) then LValue.FUnits[LAt] := LUnitsLeft[LAt]
+        else LValue.FUnits[LAt] := LUnitsRight[LAt-Length(LUnitsLeft)];
+
+        if LValue.FUnits[LAt] >= $80 then LASCII := False;
+      end;
+
+      if LWide then LValue.FEncoding := psceUTF16
+      else if LASCII then LValue.FEncoding := psceASCII
+      else if (LProofLeft.Encoding in [psceASCII,psceUTF8]) and
+        (LProofRight.Encoding in [psceASCII,psceUTF8]) then LValue.FEncoding := psceUTF8;
+      LChosen := Unwrap(LNominal.BoundType);
+      LValue.TypeKind := pstBuiltin; LValue.Intrinsic := LChosen.Builtin;
+      Supports(LChosen,INyxPascalIntrinsicIdentity,LIdentity);
+      LValue.IntrinsicScope := LIdentity.IntrinsicOrigin; LValue.IntrinsicName := LIdentity.IntrinsicReference;
+      LValue.IntrinsicFacts := LIdentity.IntrinsicContext;
+
+      if LNominal.BoundType.Kind in [pstAlias,pstDistinct] then
+      begin
+        LValue.TypeKind := LNominal.BoundType.Kind; LValue.Intrinsic := pbbNone;
+        LValue.Declared := LNominal.BoundType.Definition; LValue.Element := LNominal.BoundType.Target;
+      end;
+      Result := TypeAnswer(LLease);
     end;
 
     { Constant arithmetic has its own value and host-rounding contract. It uses
@@ -8891,7 +9349,7 @@ var
         begin
           { FPC diagnoses a zero divisor before folding, even when its
             mathematical IEEE result would be NaN or negative infinity. }
-          LChecking := EffectiveFloatingSwitch(flsIEEEErrors);
+          LChecking := EffectiveNodeSwitch(flsIEEEErrors);
 
           if LChecking = ppkUnknown then
             Exit(Answer(pbsUnresolved,pbiCompilerContext,'IEEEERRORS'));
@@ -9214,6 +9672,9 @@ var
 
     if (LLeft = nil) or (not AUnary and (LRight = nil)) then
       Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    Result := StringResult;
+
+    if Result <> nil then Exit;
     Supports(ALeft.BoundType,INyxPascalIEEEConstant,LRealLeft);
 
     if not AUnary then Supports(ARight.BoundType,INyxPascalIEEEConstant,LRealRight);
