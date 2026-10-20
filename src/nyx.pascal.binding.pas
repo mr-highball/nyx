@@ -83,6 +83,12 @@ type
   { Symbolic, imported-System or compiler-root identity. Bootstrap evidence
     precedes authored aliases; equal spelling/category never establishes identity. }
   TNyxPascalIntrinsicOrigin = (pioUnqualified, pioSystem, pioSystemBootstrap);
+  { Numeric storage meaning, independent of a declared type's nominal identity.
+    Currency is scaled signed Int64 (four decimal places); Comp stores an
+    integral signed Int64 value through the compiler's floating-type family.
+    Neither is an IEEE binary floating format. No alignment/calling ABI follows. }
+  TNyxPascalFloatingFormat = (pffUnknown, pffBinary32, pffBinary64,
+    pffX87Extended80, pffCurrency64, pffComp64);
   { Literal value families are distinct from their expression types. A string
     constant can have an anonymous array type yet specialize a generic as a
     managed string; neither fact is an assignment-conversion permission. }
@@ -236,6 +242,16 @@ type
     function IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
     function IntrinsicReference: TNyxPascalSizeReference;
     function IntrinsicContext: INyxPascalCompilerContext;
+  end;
+  { Optional qualified compiler-root representation on a builtin leaf. Alias
+    and distinct wrappers retain their own identity and expose this leaf through
+    Target; sharing a format does not grant equality, conversion or call legality.
+    Absent capability means unqualified representation, not an absent type.
+    Values are copied, immutable and independent of later source FPU selection. }
+  INyxPascalFloatingIdentity = interface(IInterface)
+    ['{2BA32237-BD90-4A7E-A481-E4A38FB9046A}']
+    function FloatingFormat: TNyxPascalFloatingFormat;
+    function StorageBytes: Integer;
   end;
   { Optional source-owned literal evidence. Span is in ModuleIndex's analysis
     projection; its world retains the exact physical/include/macro origins.
@@ -563,6 +579,16 @@ type
     function ParameterName(AIndex: Integer): TNyxText;
     function ParameterMode(AIndex: Integer): TNyxPascalSyntaxParameterMode;
     function ParameterType(AIndex: Integer): INyxPascalSemanticType;
+  end;
+  { Qualified primitive leaf adds only value-owned representation metadata.
+    The inherited type/context/world remain the ordinary immutable identity;
+    nothing retains a query, execution budget, compiler process or application. }
+  TFloatingType = class(TSemanticType, INyxPascalFloatingIdentity)
+  public
+    FormatValue: TNyxPascalFloatingFormat;
+    ByteCount: Integer;
+    function FloatingFormat: TNyxPascalFloatingFormat;
+    function StorageBytes: Integer;
   end;
   { Query-local literal proof extends an ordinary shape, with separately owned
     exact values, source context and deduction type. Its primitive child has no
@@ -1150,6 +1176,16 @@ end;
 function TSemanticType.Builtin: TNyxPascalBuiltin;
 begin
   Result := Intrinsic;
+end;
+
+function TFloatingType.FloatingFormat: TNyxPascalFloatingFormat;
+begin
+  Result := FormatValue;
+end;
+
+function TFloatingType.StorageBytes: Integer;
+begin
+  Result := ByteCount;
 end;
 
 function TSemanticType.IntrinsicOrigin: TNyxPascalIntrinsicOrigin;
@@ -2933,6 +2969,9 @@ var
   LBootstrap: INyxPascalCompilerContext;
   LFact: TNyxPascalSizeFact;
   LSystem: Integer;
+  LFormat: TNyxPascalFloatingFormat;
+  LBytes: Integer;
+  LFloat: TFloatingType;
 begin
   Result := Answer(pbsMissing, pbiMissingName);
   for LValue := Succ(Low(TNyxPascalBuiltin)) to High(TNyxPascalBuiltin) do
@@ -2993,7 +3032,41 @@ begin
     begin
       Exit(Answer(pbsUnresolved, pbiCompilerContext));
     end;
-    LType := TSemanticType.Create;
+    LFormat := pffUnknown;
+    LBytes := 0;
+
+    if (LValue in [pbbSingle,pbbDouble,pbbExtended,pbbCurrency,pbbComp]) and
+      (LBootstrap <> nil) and (LContext.Family = ppcFPC) and
+      (LContext.Version.FullNumber = 30301) and
+      (NyxPascalCompilerScope(LContext) = pcsoSystemBootstrap) and
+      (LContext.Symbol(NyxPascalDefine('CPUI386')).IsDefined = ppkTrue) then
+    begin
+      { Qualified compiler initialization creates these exact definitions on
+        i386. The independent root presence/size observation must agree. Neither
+        an authored alias nor a same-sized unrelated type can enter this path.
+        Real is deliberately absent: this RTL declares it as type Double. }
+      Tick;
+      case LValue of
+        pbbSingle: begin LFormat := pffBinary32; LBytes := 4; end;
+        pbbDouble: begin LFormat := pffBinary64; LBytes := 8; end;
+        pbbExtended: begin LFormat := pffX87Extended80; LBytes := 10; end;
+        pbbCurrency: begin LFormat := pffCurrency64; LBytes := 8; end;
+        pbbComp: begin LFormat := pffComp64; LBytes := 8; end;
+      else
+        begin LFormat := pffUnknown; LBytes := 0; end;
+      end;
+    end;
+
+    if LFormat <> pffUnknown then
+    begin
+
+      if LFact.Bytes <> LBytes then Exit(Answer(pbsUnresolved,pbiCompilerContext,AName));
+      LFloat := TFloatingType.Create;
+      LType := LFloat;
+      LFloat.FormatValue := LFormat;
+      LFloat.ByteCount := LBytes;
+    end
+    else LType := TSemanticType.Create;
     LType.Owner := FWorld;
     LType.TypeKind := pstBuiltin;
     LType.Intrinsic := LValue;

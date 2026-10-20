@@ -33,7 +33,98 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Typed source FPU selection — 2026-10-19
+## Current integration: Compiler-root floating representation — 2026-10-19
+
+The preceding goal turn makes implementation, native qualification and verified
+remote progress in a16caae. All 733 accepted Pascal inputs remain exact before
+continuing its canonical-type dependency. The complete library/Studio objective
+is unchanged; no full language or editor criterion closes here.
+
+The pinned compiler initializes separate Single/Double/Extended/Currency/Comp
+definitions on i386. Its original RTL declares Real as type Double, explicitly
+preserving independent overload identity. A new optional floating identity exposes
+typed binary32/binary64/x87-extended80/scaled-Currency/integral-Comp formats and
+copied storage bytes on qualified primitive leaves. Existing intrinsic identity,
+world and captured root ownership remain unchanged. Alias/distinct wrappers keep
+their source declarations and reach representation through their ordinary Target.
+Matching formats grant neither nominal equality nor conversion/call eligibility.
+Existing GUIDs, enum ordinals, interface and record layouts remain unchanged;
+one new enum/interface and a private specialized leaf add the capability.
+
+Qualification requires the matching compiler-root presence/size observation,
+FPC 3.3.1 and its i386 target facts. Contradicting measured widths refuse with an
+explicit context issue; unknown observations retain the existing exact typed
+primitive requirement. Names, ordinary System lookup, source shadows and equal
+sizes cannot fabricate the capability. A source instruction selector cannot
+retarget an already created primitive. Other targets/compiler versions remain
+unqualified. No new fact request kind, fixed probe, compiler job budget, SDK
+capture, MCP tool/schema or host configuration is introduced.
+
+The whole native witness independently records each RTTI format/size, accepts
+transparent-alias generic arguments and distinct overloads returning routes 123,
+with nine actual generic body calls. Source queries do not execute those bodies.
+Focused native preparation passes 154 with clean heap, first fit 54, every smaller
+work allowance refusing atomically, cancellation and 64 joined concurrent reads.
+Both explicit/implicit generic applications retain the specialized metadata;
+mixed distinct arguments refuse. The browser consumer compiles only.
+
+Retained preparations distinguish harness/compilation failures from product
+meaning: an exported generic cannot capture the fixture's implementation-only
+counter; its helper is now exported. Initial compile inputs also retain a missing
+editing import and an incomplete case warning, repaired without suppression.
+The first generic expression test incorrectly calculated an analysis endpoint
+from physical length. Bounded diagnostics proved lookup/signature were already
+valid; mapping both original boundaries fixes that harness error. Its failed
+inputs/logs stay retained and no parser or accepted assertion is weakened.
+The native Extended observation uses static storage to avoid the compiler's local
+alignment note; its format, value and invocation count remain unchanged.
+
+Three inputs are frozen for the existing native regressions, both Studios/backend/
+worker compilation and unchanged original RTL test. Ignored
+.local/floating-identity-paths-private.json owns receipts and retained inputs.
+This records focused preparation; broader qualification/remote publication are
+still pending. Original quotas, probes, protected/frozen/SDK/concurrent files and
+the historical full-preservation failure remain required. LAN stays offline,
+native Nyx tools stay absent, and no source changes while compiler readers run.
+
+The frozen qualification now passes: 48 current main compiler logs have zero
+owned warnings/91 upstream. Thirty-one native runs have clean heaps; fifteen
+browser consumers compile only. Both Studios/backend/worker compile as applicable.
+Floating identity 154/54/64 joined, source FPU 102/47, configured FPU 50/11,
+precision 70/33 and every preceding expression/generic/completion assertion remain
+accepted. Corpus retains 572 checks/505 actual source files/2,430,360 lossless
+tokens. The unchanged independent compiler-only emission fixture retains one
+intentional warning separately, with no hidden marker emitted.
+
+The unchanged original RTL consumer passes 56. System retains 13,101 declarations/
+zero translation and syntax diagnostics/31 answers; ObjPas 209/zero/one. Neither
+has a pending query. Exact Free/FreeInstance include navigation and detached
+insertion remain ready. Original 2M/4M/64-round, initial five queries, one Word
+job, symbol three of eight and all six exact ordered dynamic primitive jobs
+within eight stay unchanged. No extra floating probe or metadata job is added.
+
+All 735 maintained/732 unrelated sources, three frozen inputs, five previous
+source copies, three retained current preparation snapshots, 97 RTL/24 base
+compiler pins/all earlier plus four floating-owner inspection pins, two retained
+profile inputs, 156 unit packets/48 historical includes, 349 frozen artifacts/
+nine contexts/five current-start protected files/thirteen concurrent planning
+files remain exact. Every reader joined. The historical global-config failure
+still keeps the full preservation gate false; no protected input is restored.
+The new optional capability is qualified through rebuilt consumers, without a
+published mixed-binary claim. No browser execution/input, host/config retry, SDK
+capture, cleanup/restart, new MCP tool/schema, rollout or sub-agent occurs.
+
+Stop representation/alias/fixture/compiler variants. Next qualify actual
+source-activated floating expression results through existing expression/numeric/
+context owners, using qualified primitive formats without erasing distinct types
+or inventing conversions. Precision request, source instruction selection and
+compiler activation remain separate; retain explicit gaps where facts are absent.
+Preserve all original probes/quotas, cancellation, complete input ownership and
+atomic refusal. General floating operators/literals/conversions, full canonical
+type/module/language meaning, incremental/editor/input/quality/performance/parity/
+adoption/delivery and the original complete goal remain open.
+
+## Previous integration: Typed source FPU selection — 2026-10-19
 
 The preceding user-status turn restated the checkpoint and is classified as no
 goal progress. Its source state and the fff39aa remote checkpoint are revalidated

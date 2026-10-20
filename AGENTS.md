@@ -4,7 +4,45 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source FPU history has separate configured, selected and unknown states
+Current-source floating representation adds an optional specialized primitive
+capability, independent of nominal/source identity. The qualified FPC 3.3.1 i386
+compiler-root presence/size observation must agree with its actual primitive
+definition: binary32/binary64/x87-extended80/scaled-Currency/integral-Comp. Real
+remains its original distinct Double declaration; transparent aliases and user
+distinct types retain their wrappers/owners. Shared representation grants no
+type equality, conversion or call legality. Missing observations retain existing
+typed primitive requirements; contradictory widths refuse. Ordinary System
+lookup, equal sizes, source shadows and instruction selection cannot fabricate
+root representation. Existing GUIDs/enum ordinals/interface/record layouts remain
+exact; a new enum/optional GUID/private leaf is qualified through rebuilt
+consumers, without a mixed-binary claim. Whole native RTTI/overloads retain nine
+generic body calls/routes 123; source queries invoke none. Focused native 154/54
+and 64 joined readers have clean heap; every smaller work allowance refuses
+atomically, cancellation and explicit/implicit generic identity stay exact.
+Initial generic-visibility/compile-warning/import and physical-to-analysis window
+mapping preparations remain retained, without parser/assertion weakening.
+All 48 current main compiler logs have zero owned warnings/91 upstream; 31 native
+runs have clean heaps; 15 browser consumers compile only; both Studios/backend/
+worker compile as applicable. Unchanged RTL passes 56: System 13101/zero syntax/
+31 answers, ObjPas 209/zero/one, neither pending, exact Free/FreeInstance ready.
+Original 2M/4M/64-round/initial5/Word1/symbol3of8/dynamic6of8 stay exact. All 735
+maintained/732 unrelated/three frozen/five previous source copies/three retained
+preparation snapshots/97 RTL/24 compiler pins/all previous plus four inspected
+owners/two profile inputs/156 unit packets/48 historical includes/349 frozen
+artifacts/nine contexts/five protected files/thirteen concurrent files stay exact.
+Readers joined; LAN offline; native Nyx tools absent. Historical global-config
+failure keeps full preservation false. WORK.md and ignored
+.local/floating-identity-paths-private.json own final receipts/return path. Stop
+representation/alias/fixture/compiler variants. Next qualify source-activated
+floating expression results through existing expression/numeric/context owners;
+preserve nominal distinctions, activation, missing facts, probes/quotas and
+atomic cancellation/refusal. General floating operators/literals/conversions,
+full type/module/language/incremental/editor/input/quality/parity/adoption/delivery
+and original goal remain open. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or
+sub-agents. Preserve concurrent work and historical evidence.
+
+Previously qualified source FPU history has separate configured, selected and unknown states
 through a new optional context capability. Missing legacy capabilities convey
 unknown history. Fluent copies/capture/modes retain it; unknown source effects
 revoke selection without falling back to initial metadata. FPC local PUSH/POP
