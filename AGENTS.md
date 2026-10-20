@@ -4,7 +4,47 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source unary/mixed real conversion adds explicit exact signed/unsigned64
+Current-source numeric declarations resolve their original initializer through
+the existing bounded binding query, retaining declaration scope/source settings,
+root facts and query-owned value recursion separate from type/ancestry. Scalar
+prerequisites/real values publish detached expression proofs; typed constants
+retain storage/type only even J-. Binary real casts parse one complete numeric
+argument, preserve earlier rounding and require independent host conversion for
+integers. Runtime/generic values retain no constants. Alias/distinct targets keep
+actual kind/definition/target plus specialization identity. Other cast targets
+retain prior contracts. No GUID/layout/ordinal/probe/profile enrollment changes.
+Whole independent20 cases/five sites give100 original unit/include windows
+matching types/applicable values without native body execution. Initial95 oracle,
+initializer-start/final-gap failures and unknown-directive nonexistent-window
+test remain exactly retained. Existing window/source guards stay intact: the
+declaration uses its following exact origin, and refused projection is tested
+directly. Focused3257/2659/all smaller allowances atomic/64 joined readers pass
+with clean heap. Five Pascal inputs freeze after complete staged whitespace
+review without later Pascal repair/composite substitution. All66 main compiler
+logs have zero owned warnings/168 upstream;40 native runs have clean heaps;24
+browser consumers compile only;both Studios/backend/worker compile as applicable.
+Unchanged RTL56 retains System13101/zero syntax/31 answers,ObjPas209/zero/one,
+neither pending and exact Free/FreeInstance navigation/insertion. Original2M/4M/
+64/initial5/Word1/symbol3of8/dynamic6of8 stay exact. All758 maintained/753 unrelated/
+five frozen/one preceding copy/three initial oracle/five initial binding/boundary/
+origin/unknown-projection/all inherited preparations/97 RTL/24 compiler pins/prior
+plus four owners/two profiles/156 packets/48 includes/349 artifacts/nine contexts/
+five protected files/thirteen foreign files remain exact. Corpus574/507 actual
+files/2450993 tokens. Readers/handles joined; historical global-config failure
+keeps full preservation false. WORK.md and ignored
+.local/real-declarations-paths-private.json own current receipts/return path.
+Preserve all prior source/SDK/compiler/protected/frozen/concurrent pins and old
+failures/preparations. No Pascal edits while readers live. LAN offline; native
+Nyx tools absent. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. General
+casts/range/underflow/compiler-conditional reals/default host enrollment and full
+language/editor/input/incremental/quality/parity/adoption/delivery/original goal
+remain open. Next follow existing numeric admission/conversion/condition owners;
+preserve all budgets/probes and source/root/ordered-answer identity. Stop current
+declaration/cast/fixture/compiler/profile variants. No full original criterion/
+task/counter/credit/DONE closes.
+
+Previously qualified unary/mixed real conversion adds explicit exact signed/unsigned64
 mathematical conversion through existing real/value owners; no host integer/
 float, Boolean/ordinal promotion or quota change. Qualified FPC30301 Delphi/i386
 constant unary signs retain operand type before runtime widening. Mixed integer

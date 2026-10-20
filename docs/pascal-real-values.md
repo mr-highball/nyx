@@ -104,6 +104,24 @@ Integer-only `/` can retain a real constant when explicit evaluation evidence
 is present. Without that evidence its existing type-only answer remains
 value-unknown; this is not a claim of complete constant range/admission analysis.
 
+Untyped numeric declarations retain the initializer's own lexical scope and
+source settings. Later use cannot change a constant's declaration-time minimum
+or reinterpret its value through a different local shadow. Each dependency
+evaluates at its original declaration, with a bounded, query-owned recursion
+path. Forward/self references, incomplete declarations and unknown source effects
+refuse. A reference exposes a constant-expression proof without pretending that
+the reference name is an original numeric literal. Typed constants retain their
+ordinary storage type and supply no constant value, including under `{$J-}`.
+
+Explicit binary real casts accept one complete numeric expression and retain
+each conversion stage. `Double(Single(0.1))` therefore preserves the earlier
+Single rounding. Integer arguments require independent host-conversion evidence;
+already represented real arguments do not invent another host integer stage.
+Runtime operands retain the target type without a fabricated value. A distinct
+cast target such as `TAmount = type Double` retains its ordinary declaration
+identity and its generic specialization identity. Other cast families keep their
+existing contracts; general conversion/admission is still incomplete.
+
 These optional facts participate in exact context, capture and storage identity.
 Source MODE, local PUSH/POP and unknown source effects do not replace initial
 compiler-host metadata. Resolver arithmetic consumes the existing remaining
@@ -114,6 +132,8 @@ at five authored precision/FPU sites. The resolver queries the original complete
 unit and repeated includes; it invokes no witness bodies. Browser consumers
 compile only. A second independent whole native unit adds 140 unary/mixed
 conversion cases, including actual comparison values and runtime proof barriers.
-Named real constants, explicit constant casts, broader conversion/range admission
-and default profile enrollment remain open, alongside full editor integration
-and target parity.
+A third independent whole unit adds 100 declaration and cast cases, including
+the original repeated declaration/case includes and nominal type evidence.
+General cast families, range/underflow admission, compiler-conditional real
+expressions and default profile enrollment remain open, alongside full editor
+integration and target parity.

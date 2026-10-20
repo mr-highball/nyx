@@ -33,7 +33,87 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Unary and mixed real conversion — 2026-10-20
+## Current integration: Declaration-bound real values and casts — 2026-10-20
+
+The preceding6fe4a68 turn makes implementation/qualification/remote progress.
+All754 maintained inputs revalidate before extending existing binding owners.
+No user outcome, original criterion or target-parity requirement is replaced.
+
+Untyped numeric declarations now resolve the exact initializer through the same
+bounded query at its declaration scope/source context. Its own numeric-token
+minimum and primitive/host facts remain authoritative at later uses. Query-owned
+constant recursion is separate from aliases/ancestry; every refusal/cancellation
+unwinds it. Completed integer/Boolean prerequisites and real values publish
+detached expression proofs, never a falsely relabeled source literal. Non-numeric
+constant value families remain outside this extension. Typed constants keep
+ordinary storage/type behavior, including under J-; no initializer value leaks.
+
+Binary real casts now parse one complete numeric argument under the existing
+qualified FPC30301 Delphi/DelphiUnicode contract. Real operands round their
+already represented value; integer operands require independent host conversion
+evidence before nominal narrowing. Runtime/generic values retain only target
+type. Custom aliases/distinct targets retain their actual semantic kind,
+definition/target and specialization child, rather than preserving identity only
+inside generic deduction. Other target families retain their prior contracts.
+Root identity, source activity and all existing budgets remain required; no new
+GUID, record layout, enum ordinal, native probe or profile enrollment is added.
+
+The independent whole unit initially records95 cases; its exact source/log stays
+retained. Adding a named integer prerequisite yields20 cases at five policy
+sites. All100 original declaration/case include windows now agree on types and
+applicable native values. Typed constants remain runtime barriers. Controlled
+checks retain declaration-time precision, local shadowing, forward/self refusal,
+cast arity, host-fact gaps, earlier narrowing and generic value separation.
+
+Two initial failures expose exact site ownership: initializer-start violates the
+earlier-window guard; initializer-finish can lie in synthetic whitespace. Both
+sources/logs stay retained. The existing guard remains unchanged; the declaration
+uses the following exact token origin at its own scope, matching ordinary callers.
+A later unknown-directive test incorrectly asks for a following expression window
+which the translator correctly never publishes. Its exact source/log stays
+retained; the corrected test checks refused projection and unavailable following
+name directly. No diagnostic or source guard is suppressed or removed.
+
+Focused3257/first fit2659/every smaller allowance atomic/64 joined readers pass
+with clean heap. Five final Pascal inputs pass complete staged whitespace review
+and freeze before broader qualification. Frozen qualification succeeds:66 main
+compiler logs have zero owned warnings/168 upstream;40 native runs have clean
+heaps;24 browser consumers compile only. Both Studios/backend/worker compile as
+applicable. All prior100/140/115/40 new/current source-window contracts remain
+separate and exact; integer/signature/generic/cast/source-reuse/completion/context
+assertions retain their complete original scopes. Corpus574 checks cover507
+actual source files/2,450,993 lossless tokens. No final Pascal repair or composite
+substitution follows this five-input freeze.
+
+Unchanged original RTL passes56 with clean heap: System13,101 declarations/zero
+syntax/31 answers; ObjPas209/zero/one; neither pending. Exact original-include
+Free/FreeInstance completion/navigation and detached insertion stay ready.
+Original2M view/4M aggregate/64 rounds, initial5/Word1/symbol3of8 and the same six
+ordered dynamic jobs within eight remain unchanged. No new primitive/evaluator
+probe, fixed SDK job or source/profile enrollment is added.
+
+All758 maintained/753 unrelated/five frozen/one preceding source copy/three
+first-oracle inputs/five first-binding inputs/boundary/origin/unknown-projection
+preparations/all inherited failures,97 RTL/24 compiler pins/prior plus four
+inspected owners/two profiles/156 unit packets/48 includes/349 frozen artifacts/
+nine contexts/five protected files/thirteen foreign files remain exact. Every
+reader/handle joins. The historical global-configuration failure keeps full
+preservation false; current-start protected comparisons stay exact and no old
+failure is erased. No Pascal edits while readers live. Ignored
+.local/real-declarations-paths-private.json owns the packet and return path.
+All previous source/SDK/compiler/protected/frozen/concurrent pins, old failures/
+preparations and thirteen foreign planning files remain required. LAN offline;
+native Nyx tools absent. No host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new MCP tool/schema, rollout or sub-agents.
+
+General cast families, overflow/underflow admission, compiler-conditional real
+expressions, default compiler-host enrollment and complete language/editor/input/
+incremental/quality/parity/adoption/delivery stay open. No original criterion/
+task/counter/credit/DONE closes. Next reassess remaining numeric admission and
+conversion/condition boundaries through their existing owners, retaining every
+limit/probe and exact source/root/ordered-answer identity.
+
+## Previous integration: Unary and mixed real conversion — 2026-10-20
 
 The preceding6811faf turn makes implementation/qualification/remote progress.
 This turn revalidates all751 maintained inputs before extending the same real/

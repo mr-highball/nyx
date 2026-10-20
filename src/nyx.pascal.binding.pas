@@ -800,6 +800,9 @@ type
     { Query-owned ancestry path detects cycles without retaining any mutable
       memo in a published world or erasing constructed argument identity. }
     FConstraintPath: array of INyxPascalSemanticType;
+    { Declaration-bound value recursion is separate from type/ancestry paths;
+      it is unwound on every refusal, cancellation and successful publication. }
+    FConstants: array of INyxPascalBoundSymbol;
     { A requirement names a formal contract. Until formal parameter bounds own
       their own semantic shapes, a concrete substitution cannot stand in for it. }
     FBindingConstraint: Boolean;
@@ -922,6 +925,11 @@ type
     function TypeDeclaration(const ASite: INyxPascalBindingSite;
       const AType: INyxPascalTypeSyntax; ANode: Integer): INyxPascalResolution;
     function TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
+    { Publish detached numeric evidence while retaining the exact ordinary
+      specialization type, including a declared alias/distinct cast target. }
+    function ConstantAnswer(const AType: INyxPascalSemanticType;
+      const AScalar: TNyxPascalConstantValue;
+      const AReal: TNyxPascalBinaryReal): INyxPascalResolution;
     function BasesCore(const AOwner: INyxPascalBoundSymbol; AOrdinal: Integer): INyxPascalResolution;
     function CollectMemberNames(const AType: INyxPascalSemanticType;
       const APrefix: TNyxText; var ANames: TGenericNames): INyxPascalResolution;
@@ -4553,6 +4561,55 @@ begin
   end;
 end;
 
+function TBindingQuery.ConstantAnswer(const AType: INyxPascalSemanticType;
+  const AScalar: TNyxPascalConstantValue; const AReal: TNyxPascalBinaryReal): INyxPascalResolution;
+var LNominal, LLeaf, LLease: INyxPascalSemanticType;
+  LLiteral: INyxPascalLiteralType; LExpression: INyxPascalConstantExpression;
+  LIdentity: INyxPascalIntrinsicIdentity; LValue: TNumericExpressionType;
+  LRealValue: TRealExpressionType;
+begin
+  LNominal := AType;
+
+  if Supports(LNominal,INyxPascalLiteralType,LLiteral) then LNominal := LLiteral.SpecializationType;
+
+  if Supports(LNominal,INyxPascalConstantExpression,LExpression) then LNominal := LExpression.ResultType;
+
+  if LNominal = nil then Exit(Answer(pbsUnresolved,pbiUnsupportedType));
+
+  if (AReal.Status <> rrsFinite) and not (AScalar.Kind in [pvvInteger,pvvBoolean]) then
+    Exit(TypeAnswer(LNominal));
+  LLeaf := LNominal;
+  while (LLeaf <> nil) and (LLeaf.Kind in [pstAlias,pstDistinct]) do
+  begin Tick; LLeaf := LLeaf.Target; end;
+
+  if (LLeaf = nil) or (LLeaf.Kind <> pstBuiltin) or
+    not Supports(LLeaf,INyxPascalIntrinsicIdentity,LIdentity) then
+    Exit(Answer(pbsUnresolved,pbiCompilerContext));
+
+  if AReal.Status = rrsFinite then
+  begin
+    LRealValue := TRealExpressionType.Create; LLease := LRealValue;
+    LValue := LRealValue; LRealValue.FRealValue := AReal;
+  end
+  else
+  begin
+    LValue := TNumericExpressionType.Create; LLease := LValue; LValue.FConstant := AScalar;
+  end;
+  LValue.Owner := FWorld; LValue.TypeKind := pstBuiltin; LValue.Intrinsic := LLeaf.Builtin;
+  LValue.IntrinsicScope := LIdentity.IntrinsicOrigin;
+  LValue.IntrinsicName := LIdentity.IntrinsicReference;
+  LValue.IntrinsicFacts := LIdentity.IntrinsicContext;
+  LValue.FResult := LNominal;
+  if LNominal.Kind in [pstAlias,pstDistinct] then
+  begin
+    { Value evidence decorates the actual nominal shape. Ordinary member/type
+      consumers must retain the declaration too, not only generic deduction. }
+    LValue.TypeKind := LNominal.Kind; LValue.Intrinsic := pbbNone;
+    LValue.Declared := LNominal.Definition; LValue.Element := LNominal.Target;
+  end;
+  Result := TypeAnswer(LLease);
+end;
+
 function TBindingQuery.TypeOfSymbolCore(const ASymbol: INyxPascalBoundSymbol): INyxPascalResolution;
 var
   LDecl: TNyxPascalSyntaxDeclaration;
@@ -4566,6 +4623,15 @@ var
   LFrame: INyxPascalGenericEnvironment;
   LIssue: TNyxPascalBindingIssue;
   LParameters: TGenericParameters;
+  LAccess: TNyxPascalMemberAccess;
+  LLiteral: INyxPascalLiteralType;
+  LExpression: INyxPascalConstantExpression;
+  LReal: INyxPascalRealConstant;
+  LScalarValue: TNyxPascalConstantValue;
+  LRealValue: TNyxPascalBinaryReal;
+  LView: INyxPascalTranslatedSyntax;
+  LCaret: Integer;
+  LConstantContext: INyxPascalCompilerContext;
 begin
   Enter;
   try
@@ -4633,6 +4699,59 @@ begin
           Exit(Answer(pbsUnresolved, pbiRecursiveType));
         end;
       end;
+    end;
+
+    if (LDecl.Kind = psdkConstant) and (LDecl.TypeSpan.Length = 0) and
+      (LDecl.ExpressionSpan.Length > 0) then
+    begin
+      LConstantContext := ContextAt(FWorld.At(ASymbol.ModuleIndex,LDecl.Scope,LDecl.ExpressionSpan.Start));
+
+      if (LConstantContext = nil) or (LConstantContext.Family <> ppcFPC) or
+        (LConstantContext.Version.FullNumber <> 30301) or
+        not (LConstantContext.Mode in [ppmDelphi,ppmDelphiUnicode]) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,'constant declaration'));
+      for LAt := 0 to High(FConstants) do
+      begin
+        Tick;
+
+        if SameBinding(FConstants[LAt],ASymbol) then
+          Exit(Answer(pbsUnresolved,pbiRecursiveType,LDecl.Name));
+      end;
+      LCount := Length(FConstants); SetLength(FConstants,LCount+1); FConstants[LCount] := ASymbol;
+      try
+        { A constant's initializer sees its declaration scope and earlier source
+          context. A later use cannot retag its minimum, FPU or visible names. }
+        LView := FWorld.ModuleAt(ASymbol.ModuleIndex);
+        LAt := LView.OriginAt(LDecl.ExpressionSpan.Finish-1);
+
+        if LAt < 0 then Exit(Answer(pbsUnresolved,pbiIncompleteSource,LDecl.Name));
+        Inc(LAt);
+        while (LAt < LView.OriginCount) and
+          (LView.Origin(LAt).VirtualSpan.Start < LDecl.ExpressionSpan.Finish) do
+        begin Tick; Inc(LAt); end;
+        LCaret := LView.Syntax.Lexical.Scalars;
+
+        if LAt < LView.OriginCount then LCaret := LView.Origin(LAt).VirtualSpan.Start;
+        { Token-union ends can sit in synthetic whitespace. Use the following
+          exact origin for site context, just as ordinary expression callers do. }
+        LSite := FWorld.At(ASymbol.ModuleIndex,LDecl.Scope,LCaret);
+        LResolved := ExpressionType(LSite,LDecl.ExpressionSpan,LAccess);
+
+        if LResolved.Status <> pbsBound then Exit(LResolved);
+
+        if LAccess <> pmaInstance then Exit(Answer(pbsUnresolved,pbiWrongMemberKind,LDecl.Name));
+        LScalarValue := TNyxPascalConstantValue.Unknown; LRealValue := TNyxPascalBinaryReal.Unknown;
+
+        if Supports(LResolved.BoundType,INyxPascalLiteralType,LLiteral) then LScalarValue := LLiteral.Value
+        else if Supports(LResolved.BoundType,INyxPascalConstantExpression,LExpression) then
+          LScalarValue := LExpression.ConstantValue;
+
+        if Supports(LResolved.BoundType,INyxPascalRealConstant,LReal) then LRealValue := LReal.RealValue;
+
+        if (LRealValue.Status = rrsFinite) or (LScalarValue.Kind in [pvvInteger,pvvBoolean]) then
+          Exit(ConstantAnswer(LResolved.BoundType,LScalarValue,LRealValue));
+        Exit(Answer(pbsUnresolved,pbiMissingType,LDecl.Name));
+      finally SetLength(FConstants,LCount); end;
     end;
 
     if LDecl.TypeSpan.Length = 0 then
@@ -7820,6 +7939,95 @@ var
     Result := TypeAnswer(LPointer);
   end;
 
+  { Qualified numeric casts evaluate one ordinary expression argument. Other
+    target families retain their existing opaque argument contract. Constant
+    conversion preserves the actual target identity; runtime values stay opaque. }
+  function RealCast(const ATarget: INyxPascalSemanticType; AOffset: Integer;
+    out AHandled: Boolean): INyxPascalResolution;
+  var LLeaf, LSourceType: INyxPascalSemanticType; LFloat: INyxPascalFloatingIdentity;
+    LLiteral: INyxPascalLiteralType; LScalar: INyxPascalConstantExpression;
+    LReal: INyxPascalRealConstant; LArgument: INyxPascalResolution;
+    LContext: INyxPascalCompilerContext; LEvaluation: TNyxPascalRealEvaluationPolicy;
+    LPrecision: TNyxPascalBinaryPrecision; LAccess: TNyxPascalMemberAccess;
+    LValue, LConverted: TNyxPascalBinaryReal; LInteger: TNyxPascalConstantValue;
+    LBudget: INyxPascalAnalysisBudget; LFPU: TNyxPascalFPUReference;
+  begin
+    AHandled := False; Result := nil; LLeaf := ATarget;
+    while (LLeaf <> nil) and (LLeaf.Kind in [pstAlias,pstDistinct]) do
+    begin Tick; LLeaf := LLeaf.Target; end;
+
+    if (LLeaf = nil) or (LLeaf.Kind <> pstBuiltin) or
+      not (LLeaf.Builtin in [pbbSingle,pbbDouble,pbbExtended]) then Exit;
+    LContext := ContextAt(FWorld.At(ASite.ModuleIndex,ASite.ScopeIndex,AOffset));
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi,ppmDelphiUnicode]) then Exit;
+    AHandled := True; Result := Answer(pbsUnresolved,pbiCompilerContext,'real cast target');
+
+    if not Supports(LLeaf,INyxPascalFloatingIdentity,LFloat) then Exit;
+    LPrecision := pbpUnknown;
+    case LFloat.FloatingFormat of
+      pffBinary32: LPrecision := pbpBinary32;
+      pffBinary64: LPrecision := pbpBinary64;
+      pffX87Extended80: LPrecision := pbpX87Extended80;
+    else Exit;
+    end;
+    Next; LArgument := Expression(LAccess);
+
+    if not IsSymbol(psoCloseParen) then Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast argument'));
+    Next;
+
+    if LArgument.Status <> pbsBound then Exit(LArgument);
+
+    if LAccess <> pmaInstance then Exit(Answer(pbsUnresolved,pbiWrongMemberKind,'real cast argument'));
+    LInteger := TNyxPascalConstantValue.Unknown; LValue := TNyxPascalBinaryReal.Unknown;
+    LSourceType := LArgument.BoundType;
+
+    if Supports(LSourceType,INyxPascalLiteralType,LLiteral) then
+    begin LInteger := LLiteral.Value; LSourceType := LLiteral.SpecializationType; end
+    else if Supports(LSourceType,INyxPascalConstantExpression,LScalar) then
+    begin LInteger := LScalar.ConstantValue; LSourceType := LScalar.ResultType; end;
+
+    if Supports(LArgument.BoundType,INyxPascalRealConstant,LReal) then LValue := LReal.RealValue;
+    while (LSourceType <> nil) and (LSourceType.Kind in [pstAlias,pstDistinct]) do
+    begin Tick; LSourceType := LSourceType.Target; end;
+
+    if (LSourceType = nil) or (LSourceType.Kind <> pstBuiltin) or
+      not (LSourceType.Builtin in [pbbSingle,pbbDouble,pbbExtended,pbbShortInt,pbbByte,
+        pbbSmallInt,pbbWord,pbbLongInt,pbbLongWord,pbbInt64,pbbQWord,pbbInteger,pbbNativeInt,pbbNativeUInt]) then
+      Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast operand'));
+
+    if (LValue.Status <> rrsFinite) and (LInteger.Kind <> pvvInteger) then Exit(TypeAnswer(ATarget));
+    LFPU := NyxPascalSelectedFPU(LContext);
+
+    if not ((LFPU.Name = 'x87') or (LFPU.Name = 'sse') or (LFPU.Name = 'sse2') or
+      (LFPU.Name = 'sse3') or (LFPU.Name = 'ssse3') or (LFPU.Name = 'sse41') or
+      (LFPU.Name = 'sse42') or (LFPU.Name = 'avx') or (LFPU.Name = 'fma') or
+      (LFPU.Name = 'avx2') or (LFPU.Name = 'avx512f')) then
+      Exit(Answer(pbsUnresolved,pbiCompilerContext,'FPUTYPE'));
+    LEvaluation := NyxPascalRealEvaluation(LContext);
+
+    if (LValue.Status <> rrsFinite) and ((LEvaluation.Kind <> prekNearestEven) or
+      not (LEvaluation.Precision in [pbpBinary64,pbpX87Extended80])) then
+      Exit(Answer(pbsUnresolved,pbiCompilerContext,'REALEVALUATION'));
+
+    if FSteps >= FLimits.MaximumSteps then
+      raise ENyxPascalBindingLimit.Create('Pascal semantic steps exceed their query budget');
+    LBudget := NewNyxPascalAnalysisBudget(FLimits.MaximumSteps-FSteps,FCancel);
+    try
+      try
+
+        if LValue.Status <> rrsFinite then
+          LValue := NyxPascalRoundIntegerToRealEven(LInteger,LEvaluation.Precision,LBudget);
+        LConverted := LValue.RoundToEven(LPrecision,LBudget);
+
+        if (LConverted.Status <> rrsFinite) or (LConverted.IsZero and not LValue.IsZero) then
+          Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast range'));
+      except on ENyxPascalValue do Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast value')); end;
+    finally Inc(FSteps,LBudget.Receipt.Total); LBudget.Retire; end;
+    Result := ConstantAnswer(ATarget,TNyxPascalConstantValue.Unknown,LConverted);
+  end;
+
   function Postfix(out AValueAccess: TNyxPascalMemberAccess): INyxPascalResolution;
   var
     LFound, LValue: INyxPascalResolution;
@@ -7831,6 +8039,7 @@ var
     LInnerAccess: TNyxPascalMemberAccess;
     LTypeStart: Integer;
     LTypeCallee: Boolean;
+    LCastHandled: Boolean;
     LIsLiteral: Boolean;
     LFormal: INyxPascalFormalParameter;
 
@@ -7945,8 +8154,17 @@ var
 
             if not CastContext then Exit(Answer(pbsUnresolved, pbiCompilerContext));
 
-            if Arguments <> 1 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
-            LFound := ValueOf(LFound, False, LInnerAccess);
+            LValue := ValueOf(LFound, False, LInnerAccess);
+
+            if LValue.Status <> pbsBound then Exit(LValue);
+            LFound := RealCast(LValue.BoundType,LTypeStart,LCastHandled);
+
+            if not LCastHandled then
+            begin
+
+              if Arguments <> 1 then Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+              LFound := LValue;
+            end;
             AValueAccess := pmaInstance;
             Continue;
           end;
