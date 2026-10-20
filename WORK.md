@@ -33,7 +33,91 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Declaration-bound real values and casts — 2026-10-20
+## Current integration: IEEE values, source intent and cast underflow — 2026-10-20
+
+The preceding 34d8db5 turn makes implementation/qualification/remote progress.
+All 758 maintained inputs revalidate before this numeric admission dependency.
+No complete language/editor/Studio/UI-parity or original user outcome closes.
+
+Independent native compilation of fourteen whole programs shows that IEEEERRORS
+controls compile-time floating checking independently of ordinary R/Q settings.
+Both settings admit tiny positive/negative finite cast values as signed zero;
+ON refuses the tested positive cast/extended overflow and nonzero/zero or zero/
+zero division. OFF admits infinity/NaN for those four cases. Ten successful
+native outcomes/clean heaps and four expected compiler failures remain exact
+and outside main product warning debt. This does not prove every compiler-node
+activation, negative overflow path, parser exponent or NaN bit representation.
+
+The existing compiler-policy owner now retains typed local IEEEErrorsRequested
+intent. Unknown grants no default. Exact equality/capture and optional tagged
+storage identity preserve it; local PUSH/POP restores it; the inspected FPC30301
+mode handler retains the independent flag. Unknown effects revoke knowledge.
+The shared translator accepts qualified IEEEERRORS Boolean requests with the
+existing strict operand parser and source-activity rules. The policy record
+layout expands and all maintained consumers rebuild; old GUIDs/enum ordinals
+remain. No host/importer/default profile/probe/enrollment/schema changes occur.
+Authored intent is deliberately separate from delayed node activation.
+
+New nyx.pascal.ieee owns detached abstract finite/infinity/NaN meaning. Its exact
+finite work delegates to the established rational binary owner. Special values
+obey typed four-operation/nearest-even/comparison rules; unknown and unordered
+remain separate. Infinity has a meaningful sign; NaN has no asserted sign,
+payload or signaling state and incompatible getters refuse. Existing finite
+overflow/error outcomes are never relabeled implicitly. No host float, mutable
+work integer, source world or scope escapes; ordinary cancellation and every
+smaller work allowance remain atomic. Existing finite APIs are unchanged.
+
+Qualified real-cast underflow now publishes finite signed zero, rather than
+rejecting a measured valid conversion. Parser underflow/range and nonfinite
+resolver admission remain open. A whole independent native unit gives 30 actual
+compiler special-value/relation observations without a shared Nyx algorithm.
+Focused 1,293/first fit 1,119/all smaller allowances atomic/64 joined readers pass
+with clean heap. Initial compiler preparation exposed an enum prefix collision
+with the existing FPU policy and a wrong test translation-count accessor; exact
+seven sources/logs stay retained. A dedicated pieo prefix and the existing Count
+API repair those errors without suppression. Subsequent browser-only unused
+test metadata is guarded and the unused copied helper removed before the final
+seven-source staged-whitespace freeze. Earlier preparations remain retained.
+
+Broader qualification passes against the exact seven-source final freeze, with
+no later Pascal repair or substituted evidence. All 68 main compiler logs have
+zero owned warnings and 175 upstream warnings. All 41 selected native runs pass
+with clean heaps; 25 browser consumers compile only. Both Studios, backend and
+worker compile as applicable. The unchanged original RTL passes 56 checks:
+System retains 13,101 declarations, zero syntax diagnostics and 31 answers;
+ObjPas retains 209 declarations, zero syntax diagnostics and one answer. Neither
+has a pending site; exact Free/FreeInstance navigation/insertion remains ready.
+The original two-million view/four-million aggregate/64-round limits, five initial
+queries, one Word job, three-of-eight symbol jobs and six-of-eight ordered dynamic
+jobs remain unchanged. No full RTL/language meaning or editor adoption is implied.
+
+All 761 maintained inputs, 754 unrelated sources, seven frozen sources, four
+preceding source copies, fourteen independent compiler inputs and all retained
+preparations/failures remain exact. The 97 RTL/24 base compiler pins, inspected
+compiler-owner pins, 156 original packets, 48 includes, 349 frozen artifacts,
+nine contexts/five protected files and thirteen foreign planning files retain
+their comparisons. Corpus checks pass 575 checks over 508 actual source files
+and 2,453,227 lossless tokens. All reader/process handles have joined. Current-
+start protected inputs remain exact; the retained historical global-config
+failure still keeps the full preservation gate false. No protected repair occurs.
+
+Ignored .local/real-admission-paths-private.json owns packet/evidence/source/remote
+receipts and the return path. Preserve every inherited source/SDK/compiler/
+protected/frozen/concurrent pin and old failure/preparation; the thirteen foreign
+planning files remain outside owned work. LAN stays offline; native Nyx tools
+stay absent. No host/config retry, SDK capture, protected mutation, cleanup/restart,
+approval bypass, new MCP tool/schema, rollout or sub-agents. Full original
+criterion/task/counter/credit/DONE stays open.
+
+Next follow the explicit IEEE request through existing scanner/node activation
+and numeric proof ownership before admitting special values in resolver output.
+Retain actual compiler diagnostics, source/pristine ownership, every old limit/
+probe/ordered answer and all wider language/condition/editor/input/incremental/
+quality/parity/adoption/delivery requirements. Stop standalone IEEE/policy/math/
+fixture/compiler variants; no generic active flag or source parser admission is
+inferred from these mathematical values.
+
+## Previous integration: Declaration-bound real values and casts — 2026-10-20
 
 The preceding6fe4a68 turn makes implementation/qualification/remote progress.
 All754 maintained inputs revalidate before extending existing binding owners.

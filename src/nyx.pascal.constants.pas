@@ -2064,6 +2064,11 @@ var
       Number(Ord(LPolicy.MinimumRealPrecisionRequested));
     end;
     LWarnings := NyxPascalWarnings(AContext);
+    if LPolicy.IEEEErrorsRequested <> ppkUnknown then
+    begin
+      { An optional tag keeps all prior unspecified context identities exact. }
+      Part('ieee-errors-request-v1'); Number(Ord(LPolicy.IEEEErrorsRequested));
+    end;
     LRealParser := NyxPascalRealParser(AContext);
 
     if LRealParser.Known then

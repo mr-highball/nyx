@@ -343,6 +343,7 @@ type
     FExcessPrecision: TNyxPascalKnowledge;
     FModeExcessPrecision: TNyxPascalKnowledge;
     FMinimumRealPrecision: TNyxPascalRealPrecisionRequest;
+    FIEEEErrors: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -389,6 +390,9 @@ type
       parsing the next real token, retaining it across local PUSH/POP and MODE.
       This request neither predicts a rounded value nor grants literal typing. }
     function RequestMinimumRealPrecision(AValue: TNyxPascalRealPrecisionRequest): TNyxPascalCompilerPolicies;
+    { Authored local IEEE error intent is separate from R/Q checking, host
+      exception masks and activation timing. Unknown supplies no startup flag. }
+    function RequestIEEEErrors(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -404,6 +408,7 @@ type
     property ExcessPrecisionRequested: TNyxPascalKnowledge read FExcessPrecision;
     property ModeExcessPrecision: TNyxPascalKnowledge read FModeExcessPrecision;
     property MinimumRealPrecisionRequested: TNyxPascalRealPrecisionRequest read FMinimumRealPrecision;
+    property IEEEErrorsRequested: TNyxPascalKnowledge read FIEEEErrors;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -1546,7 +1551,9 @@ begin
       .RequestPointerChecking(FPolicies.PointerCheckingRequested)
       { The same scanner does not replace its independent interface setting. }
       .UseInterfaces(FPolicies.InterfaceStyle)
-      .RequestMinimumRealPrecision(FPolicies.MinimumRealPrecisionRequested);
+      .RequestMinimumRealPrecision(FPolicies.MinimumRealPrecisionRequested)
+      { The inspected mode handler retains this separate local flag. }
+      .RequestIEEEErrors(FPolicies.IEEEErrorsRequested);
   end;
   for LAt := 0 to High(LCopy.FOptions) do
   begin
@@ -2349,7 +2356,9 @@ begin
     (Ord(FModeExcessPrecision) > Ord(High(TNyxPascalKnowledge))) or
     ((FExcessPrecision <> ppkUnknown) and (FModeExcessPrecision <> ppkUnknown)) or
     (Ord(FMinimumRealPrecision) < Ord(Low(TNyxPascalRealPrecisionRequest))) or
-    (Ord(FMinimumRealPrecision) > Ord(High(TNyxPascalRealPrecisionRequest))) then
+    (Ord(FMinimumRealPrecision) > Ord(High(TNyxPascalRealPrecisionRequest))) or
+    (Ord(FIEEEErrors) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FIEEEErrors) > Ord(High(TNyxPascalKnowledge))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2479,7 +2488,7 @@ begin
     (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
     (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision) and
     (FModeExcessPrecision = AOther.FModeExcessPrecision) and
-    (FMinimumRealPrecision = AOther.FMinimumRealPrecision);
+    (FMinimumRealPrecision = AOther.FMinimumRealPrecision) and (FIEEEErrors = AOther.FIEEEErrors);
 end;
 
 function TNyxPascalCompilerPolicies.RequestExcessPrecision(
@@ -2514,6 +2523,12 @@ begin
   Result := Self;
   Result.FMinimumRealPrecision := AValue;
   Result.Validate;
+end;
+
+function TNyxPascalCompilerPolicies.RequestIEEEErrors(
+  AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self; Result.FIEEEErrors := AValue; Result.Validate;
 end;
 
 function NyxPascalWarningNumber(AValue: Integer): TNyxPascalWarningRef;

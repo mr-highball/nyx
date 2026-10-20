@@ -4,7 +4,51 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source numeric declarations resolve their original initializer through
+Current-source IEEE dependency adds typed local checking intent independently
+of R/Q, host masks/defaults and delayed node activation. Exact context/capture/
+key/source identity and saved local/MODE lifetime retain it; unknown effects
+revoke knowledge. The policy record layout expands; maintained consumers rebuild,
+while old GUIDs/ordinals stay exact. No importer/default profile/native probe/
+enrollment changes occur. New nyx.pascal.ieee owns abstract finite/infinity/NaN
+semantics with exact delegated finite math and explicit permissive projection;
+NaN sign/payload/signaling state are unproved and incompatible getters refuse.
+No host float/workspace/source/scope escapes. Qualified finite real-cast
+underflow retains signed zero; parser range and special-value resolver admission
+stay open. Thirty whole native special-value/relation observations agree.
+Fourteen separate compiler inputs retain ten successes/clean heaps and four
+expected IEEE-ON compiler errors, independently of main product warning debt.
+Initial enum-prefix/test-count failures, seven source copies and browser metadata
+preparation stay retained; dedicated pieo names/existing Count/conditional native
+test metadata repair them without suppression. Focused 1,293 checks, first fit
+1,119, every smaller allowance atomic and 64 joined readers pass with clean heap.
+
+Seven Pascal inputs freeze after staged whitespace review, without later Pascal
+repair or substituted evidence. All 68 main compiler logs have zero owned
+warnings/175 upstream; all 41 selected native runs pass with clean heaps; 25
+browser consumers compile only; both Studios/backend/worker compile as applicable.
+Unchanged RTL 56 retains System 13,101/zero syntax/31 answers and ObjPas 209/zero/
+one, neither pending, with exact Free/FreeInstance navigation/insertion ready.
+Original 2M/4M/64/initial five/Word one/symbol three-of-eight/dynamic six-of-eight
+quotas and ordered jobs remain exact. All 761 maintained/754 unrelated/seven
+frozen/four preceding source copies/fourteen independent inputs/all inherited
+preparations and failures/97 RTL/24 compiler pins/inspected owners/156 packets/
+48 includes/349 artifacts/nine contexts/five protected/thirteen foreign files
+remain exact. Corpus 575/508 actual files/2,453,227 lossless tokens passes.
+All handles/readers joined. Current-start protected comparisons stay exact;
+the retained historical global-config failure keeps full preservation false.
+WORK.md and ignored .local/real-admission-paths-private.json own current source/
+remote/evidence receipts and return path. No Pascal edits while readers live.
+Preserve all source/SDK/compiler/protected/frozen/concurrent pins and old failures.
+LAN offline; native Nyx tools absent. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or
+sub-agents. Next reassess IEEE request activation and compiler-node/special-value
+admission through existing scanner/numeric/binding owners, preserving every old
+quota/probe/ordered answer and source/pristine identity. Stop standalone IEEE/
+policy/math/fixture/compiler variants. Full language/conditions/editor/input/
+incremental/quality/parity/adoption/delivery/original goal and criterion/task/
+counter/credit/DONE remain open.
+
+Previously qualified numeric declarations resolve their original initializer through
 the existing bounded binding query, retaining declaration scope/source settings,
 root facts and query-owned value recursion separate from type/ancestry. Scalar
 prerequisites/real values publish detached expression proofs; typed constants

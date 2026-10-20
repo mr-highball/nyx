@@ -8021,7 +8021,7 @@ var
           LValue := NyxPascalRoundIntegerToRealEven(LInteger,LEvaluation.Precision,LBudget);
         LConverted := LValue.RoundToEven(LPrecision,LBudget);
 
-        if (LConverted.Status <> rrsFinite) or (LConverted.IsZero and not LValue.IsZero) then
+        if LConverted.Status <> rrsFinite then
           Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast range'));
       except on ENyxPascalValue do Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real cast value')); end;
     finally Inc(FSteps,LBudget.Receipt.Total); LBudget.Retire; end;

@@ -52,6 +52,16 @@ budget charges the actual work, including integer storage and digit processing.
 Cancellation or budget refusal publishes no partial value or comparison. Results
 retain no work integers, budget, thread, source world or callback.
 
+`nyx.pascal.ieee` adds a separate abstract IEEE value owner. Explicit constructors
+represent finite values, signed infinities and unordered NaN meaning. It performs
+nearest-even arithmetic/rounding without host floats, delegates finite work to
+the exact binary owner and distinguishes unknown from known unordered results.
+NaN sign/payload/signaling state are outside this contract; its sign and finite
+value getters refuse rather than inventing those properties. Wrapping a failed
+finite conversion does not create an infinity: permissive IEEE projection is
+an explicit operation. This mathematical owner does not grant compiler admission
+or infer exception masks.
+
 `NyxPascalRoundIntegerToRealEven` converts the existing exact signed/unsigned-64
 integer value domain without a host integer or floating conversion. It refuses
 Boolean and nominal ordinal values; an ordinal needs its explicit integer
@@ -122,6 +132,19 @@ cast target such as `TAmount = type Double` retains its ordinary declaration
 identity and its generic specialization identity. Other cast families keep their
 existing contracts; general conversion/admission is still incomplete.
 
+Qualified finite real casts now retain positive/negative zero on underflow.
+The independent compiler accepts those results with IEEE errors both enabled
+and disabled. Source literal parser range and nonfinite conversion admission
+remain separate qualifications.
+
+`TNyxPascalCompilerPolicies.RequestIEEEErrors` records authored IEEE checking
+intent independently of R/Q checks, host masks and startup defaults. The shared
+translator understands the qualified `IEEEERRORS` directive; source states,
+local PUSH/POP, mode/capture and exact storage identity retain that request.
+It is an authored setting, not a claim that a queued local switch has already
+activated on a compiler node. Nonfinite resolver admission and those activation
+boundaries remain open.
+
 These optional facts participate in exact context, capture and storage identity.
 Source MODE, local PUSH/POP and unknown source effects do not replace initial
 compiler-host metadata. Resolver arithmetic consumes the existing remaining
@@ -134,6 +157,9 @@ compile only. A second independent whole native unit adds 140 unary/mixed
 conversion cases, including actual comparison values and runtime proof barriers.
 A third independent whole unit adds 100 declaration and cast cases, including
 the original repeated declaration/case includes and nominal type evidence.
-General cast families, range/underflow admission, compiler-conditional real
+Thirty independent native IEEE values/relations and fourteen separate compiler
+inputs qualify the abstract layer and checking distinction. Four intentional
+compiler errors remain separate from product warning debt. General cast families,
+nonfinite/compiler-node admission, parser range, compiler-conditional real
 expressions and default profile enrollment remain open, alongside full editor
 integration and target parity.

@@ -3412,13 +3412,13 @@ begin
       Exit;
     end;
 
-    if LName = 'excessprecision' then
+    if (LName = 'excessprecision') or (LName = 'ieeeerrors') then
     begin
 
       if (FContext.Family <> ppcFPC) or (FContext.Version.FullNumber <> 30301) then
       begin
         Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
-          'Excess precision requests need their qualified FPC context');
+          'Floating local switch requests need their qualified FPC context');
         UnknownEffect;
         Exit;
       end;
@@ -3426,8 +3426,12 @@ begin
       if ParseFPCBooleanSwitch(LValue) then LCondition := ppkTrue else LCondition := ppkFalse;
 
       if (FActive = ppkUnknown) or FBlocked then LCondition := ppkUnknown;
-      FContext := NyxPascalWithCompilerPolicies(FContext,
-        NyxPascalCompilerPolicies(FContext).RequestExcessPrecision(LCondition));
+      if LName = 'excessprecision' then
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).RequestExcessPrecision(LCondition))
+      else
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).RequestIEEEErrors(LCondition));
       SaveState;
       Exit;
     end;
