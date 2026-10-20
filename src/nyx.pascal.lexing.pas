@@ -304,9 +304,11 @@ type
     arrives once before scanning its successor. A translator may change the next
     block comment's nesting policy after a directive or textual include. The
     visitor never receives a mutable snapshot or controls quotas/source text;
-    exceptions abort construction. Retained only until the factory returns. }
+    exceptions abort construction. Retained only until the factory returns.
+    Its identity is distinct from a declared syntax snapshot: a visitor cannot
+    be queried as source data. Rebuild consumers for the corrected identity. }
   INyxPascalLexicalObserver = interface(IInterface)
-    ['{98349E7C-C0ED-48DE-A518-427A04570B02}']
+    ['{031EA0B8-3AD2-4E13-9CEA-5B067B7B8D67}']
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText; var AAllowNestedComments: Boolean);
   end;

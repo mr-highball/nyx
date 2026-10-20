@@ -452,6 +452,102 @@ not part of this evidence; [WORK.md](../WORK.md) owns the exact receipts and
 retained preparations. Complete whole-unit/core/creator adoption,
 source binding and executed decorated-browser evidence remain open.
 
+## Scoped generic parameters
+
+`INyxDocumentationGenericDeclaration.GenericParameters` is an optional,
+immutable declaration vector. Nil means unknown. A present empty vector
+declares no own parameters; passing nil to
+`WithNyxDocumentationGenericParameters` clears that fact. The overloads accept
+the existing type and member contracts and preserve their specialized shapes.
+The snippet below uses `nyx.documentation` and
+`nyx.documentation.typeexpressions`; the caller supplies an actual declaration
+whose checked identity has generic arity one.
+
+```pascal
+function DeclareParameter(const Declaration: INyxDocumentationType;
+  const Construction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  Names: TNyxDocumentationGenericNames;
+  Parameters: INyxDocumentationGenericParameters;
+begin
+  SetLength(Names, 1);
+  Names[0] := 'T';
+  Parameters := NewNyxDocumentationGenericParameters(
+    Declaration.Identity, Names, Construction);
+  Result := WithNyxDocumentationGenericParameters(
+    Declaration, Parameters, Construction);
+end;
+```
+
+Each `INyxDocumentationFormalParameter` retains its exact `Owner`, zero-based
+`ParameterIndex` and authored `Name`. A type's vector count must match its own
+`GenericArity`. A routine member's vector describes that routine's own
+parameters, independently of the containing type's arity. A unit cannot own a
+formal directly: a global generic routine uses its exact unit-member and
+overload identity. Same-spelled names in different declarations remain distinct.
+Names use the existing ASCII case comparison policy for lexical closure.
+
+An expression use can bind an ordered occurrence through
+`WithNyxDocumentationFormalBinding(Use, Slot, Parameter, Construction)`.
+`INyxDocumentationFormalBindings.FormalAt` exposes the captured slot. Only a
+bare name of arity zero matching the formal is accepted; qualified names,
+generic constructor positions and member designators cannot be reinterpreted
+as formals. The unchanged nominal `BindingAt` is undefined at a formal slot.
+Calling the old `WithBinding` replaces it with a nominal binding and clears the
+formal. Passing nil to the new attachment clears the slot to unbound. Clearing
+the last formal restores the original absent-map path, while prior published
+values remain readable.
+
+Complete index closure requires the exact captured declaring owner and its own
+ordinal/name. A member may use its own formals or a containing type's formals.
+The latter requires a known member-own vector: unknown does not prove absence
+of shadowing. A same-spelled member-own formal shadows the outer one, so a bare
+occurrence cannot claim that hidden outer owner. No dotted-name ancestry,
+compiler specialization or global formal identity is inferred. Implemented
+interface roots remain nominal interface/alias references; their ordinary
+argument occurrences may use properly scoped formals. These facts add no class
+base edges or inherited members.
+
+The vector is bounded at 32 own parameters, with the existing name/reference,
+256 KiB declaration and aggregate registration/index ceilings. Constructors and
+alternate-producer capture use the caller's same sealed construction for copied
+fields, work, comparisons and cancellation. Count admission precedes row reads;
+every borrowed getter is separated by cancellation checks. Final capability,
+presence, item identity, scalar and envelope agreement precedes publication.
+Managed input names and construction interfaces have local lifetime leases,
+and the caller's name vector is checked again after the last outward admission.
+Published values retain neither suppliers nor source/editor/admission leases.
+No constraint facts are supplied: an existing binding owner's implied
+`BoundType = TObject` must not become an authored constraint.
+
+Only present facts append `generic-parameters` or per-slot `formal-binding`
+content. Absent/cleared metadata preserves the earlier framing and charged work;
+known empty remains distinct. Duplicate conflicting facts, incomplete closure,
+wrong scope/name/overload and shadowed or unknown ownership refuse atomically,
+preserving the previous index `Current` and version.
+
+The [scoped-formal consumer](../tests/nyx_documentation_formals_tests.lpr)
+requires exactly one valid native repository argument before check zero:
+
+```text
+nyx_documentation_formals_tests.exe D:\Docs\GitHub\nyx
+```
+
+It must inspect all three selected actual source sets: `TNyxKeyValue` and
+`INyxKeyValue` in `nyx.linq.aggregates`, plus the distinct
+`TSignatureBox<T>.Replace` and global `Identity<T>` owners in the existing
+signature fixture. Portable cases cover specialization, nil/empty/clear,
+nominal replacement, alternate mutation and lies, final cancellation, shared
+limits and getter counters, caller-slot retirement and atomic index conflicts.
+The portable result is also rendered into `document.body.textContent` for a
+normal browser bootstrap. Native qualification passes 140 checks over all three
+actual source sets with a clean heap; the same binary refuses missing and
+invalid repository arguments before check zero, also with clean heaps. The
+portable consumer compiles. The browser URL policy rejected the selected local
+file loader before execution, so its display supplies no executed evidence.
+The selected source witnesses neither publish partial real units/classes nor establish
+complete source-derived discovery, constraints, target binding or adoption.
+
 ## Named compound type declarations
 
 The appended `ndtExpression` kind preserves the original named identity of an array,

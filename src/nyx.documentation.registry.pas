@@ -886,10 +886,156 @@ var
     else if FindDeclaration(AReference) = nil then
       raise ENyxDocumentation.Create('Unresolved documentation type or unit: ' + AReference.Key);
   end;
-  procedure RequireUse(const AUse: INyxDocumentationTypeUse);
+  { Formal identity is lexical data, never a nominal global type reference.
+    Search costs belong to the same publication budget as ordinary closure. }
+  procedure RequireFormal(const AFormal: INyxDocumentationFormalParameter;
+    const AContext: TNyxDocumentationRef);
+  var
+    LOwner: TNyxDocumentationRef;
+    LAt, LMember, LPosition, LCharacter: Integer;
+    LCapability: INyxDocumentationGenericDeclaration;
+    LParameters: INyxDocumentationGenericParameters;
+    LExpected: INyxDocumentationFormalParameter;
+    LName, LExpectedName: TNyxText;
+    LLeft, LRight: Char;
+    LInner: INyxDocumentationGenericParameters;
+    LContextCapability: INyxDocumentationGenericDeclaration;
+    LInnerName: TNyxText;
+    LSame: Boolean;
+  begin
+    ABudget.Spend;
+    LOwner := AFormal.Owner;
+
+    if not LOwner.Same(AContext) and not (AContext.IsMember and
+      not AContext.Owner.IsUnit and LOwner.Same(AContext.Owner)) then
+      raise ENyxDocumentation.Create('Formal type use belongs to another lexical declaration');
+
+    if AContext.IsMember and LOwner.Same(AContext.Owner) then
+    begin
+      LContextCapability := nil;
+      for LAt := 0 to High(APIs) do
+      begin
+        ABudget.Spend;
+
+        if not APIs[LAt].Identity.Same(AContext.Owner) then
+          Continue;
+        for LMember := 0 to APIs[LAt].MemberCount - 1 do
+        begin
+          ABudget.Spend;
+
+          if APIs[LAt].MemberAt(LMember).Identity.Same(AContext) then
+          begin
+            Supports(APIs[LAt].MemberAt(LMember), INyxDocumentationGenericDeclaration, LContextCapability);
+            Break;
+          end;
+        end;
+        Break;
+      end;
+
+      if LContextCapability = nil then
+        raise ENyxDocumentation.Create('Containing-type formal has no known member-own scope');
+      LInner := LContextCapability.GenericParameters;
+
+      if LInner = nil then
+        raise ENyxDocumentation.Create('Unknown member-own parameters cannot prove absence of shadowing');
+      LName := AFormal.Name;
+      for LMember := 0 to LInner.Count - 1 do
+      begin
+        ABudget.Spend;
+        LInnerName := LInner.ParameterAt(LMember).Name;
+        LSame := Length(LName) = Length(LInnerName);
+
+        if LSame then
+          for LCharacter := 1 to Length(LName) do
+          begin
+            ABudget.Spend;
+            LLeft := LName[LCharacter];
+            LRight := LInnerName[LCharacter];
+
+            if LLeft in ['A'..'Z'] then LLeft := Chr(Ord(LLeft) + 32);
+
+            if LRight in ['A'..'Z'] then LRight := Chr(Ord(LRight) + 32);
+
+            if LLeft <> LRight then
+            begin
+              LSame := False;
+              Break;
+            end;
+          end;
+
+        if LSame then
+          raise ENyxDocumentation.Create('A bare member occurrence cannot identify its shadowed outer formal');
+      end;
+    end;
+    LCapability := nil;
+    for LAt := 0 to High(APIs) do
+    begin
+      ABudget.Spend;
+
+      if LOwner.IsMember then
+      begin
+
+        if not APIs[LAt].Identity.Same(LOwner.Owner) then
+          Continue;
+        for LMember := 0 to APIs[LAt].MemberCount - 1 do
+        begin
+          ABudget.Spend;
+
+          if APIs[LAt].MemberAt(LMember).Identity.Same(LOwner) then
+          begin
+            Supports(APIs[LAt].MemberAt(LMember), INyxDocumentationGenericDeclaration, LCapability);
+            Break;
+          end;
+        end;
+        Break;
+      end
+      else if APIs[LAt].Identity.Same(LOwner) then
+      begin
+        Supports(APIs[LAt], INyxDocumentationGenericDeclaration, LCapability);
+        Break;
+      end;
+    end;
+
+    if LCapability = nil then
+      raise ENyxDocumentation.Create('Formal owner has no captured generic parameter declaration');
+    LParameters := LCapability.GenericParameters;
+    LPosition := AFormal.ParameterIndex;
+
+    if (LParameters = nil) or (LPosition < 0) or (LPosition >= LParameters.Count) then
+      raise ENyxDocumentation.Create('Formal owner or parameter ordinal is unresolved');
+    ABudget.Spend;
+    LExpected := LParameters.ParameterAt(LPosition);
+
+    if not LExpected.Owner.Same(LOwner) or (LExpected.ParameterIndex <> LPosition) then
+      raise ENyxDocumentation.Create('Formal declaration owner and own ordinal disagree');
+    LName := AFormal.Name;
+    LExpectedName := LExpected.Name;
+
+    if Length(LName) <> Length(LExpectedName) then
+      raise ENyxDocumentation.Create('Formal parameter name disagrees with its owner');
+    for LCharacter := 1 to Length(LName) do
+    begin
+      ABudget.Spend;
+      LLeft := LName[LCharacter];
+      LRight := LExpectedName[LCharacter];
+
+      if LLeft in ['A'..'Z'] then
+        LLeft := Chr(Ord(LLeft) + 32);
+
+      if LRight in ['A'..'Z'] then
+        LRight := Chr(Ord(LRight) + 32);
+
+      if LLeft <> LRight then
+        raise ENyxDocumentation.Create('Formal parameter name disagrees with its owner');
+    end;
+  end;
+  procedure RequireUse(const AUse: INyxDocumentationTypeUse;
+    const AContext: TNyxDocumentationRef);
   var
     LUse: Integer;
     LReference: TNyxDocumentationRef;
+    LCapability: INyxDocumentationFormalBindings;
+    LFormal: INyxDocumentationFormalParameter;
   begin
     ABudget.Spend;
 
@@ -900,10 +1046,24 @@ var
       Require(AUse.Reference)
     else
     begin
+      Supports(AUse, INyxDocumentationFormalBindings, LCapability);
       for LUse := 0 to AUse.BindingCount - 1 do
       begin
         ABudget.Spend;
         LReference := AUse.BindingAt(LUse);
+        LFormal := nil;
+
+        if LCapability <> nil then
+          LFormal := LCapability.FormalAt(LUse);
+
+        if LFormal <> nil then
+        begin
+
+          if LReference.Defined then
+            raise ENyxDocumentation.Create('A type occurrence is both nominal and formal');
+          RequireFormal(LFormal, AContext);
+          Continue;
+        end;
 
         if not LReference.Defined then
           raise ENyxDocumentation.Create('An expression retains an unbound named type occurrence');
@@ -1016,6 +1176,8 @@ var
     LReference: TNyxDocumentationRef;
     LPlatform: TNyxPlatform;
     LResolved: Boolean;
+    LFormals: INyxDocumentationFormalBindings;
+    LFormal: INyxDocumentationFormalParameter;
   begin
     ABudget.Spend;
     LRootSlot := -1;
@@ -1049,6 +1211,19 @@ var
 
       if not AUse.Reference.Defined then
         LReference := AUse.BindingAt(LSlot);
+      LFormal := nil;
+
+      if not AUse.Reference.Defined and Supports(AUse, INyxDocumentationFormalBindings, LFormals) then
+        LFormal := LFormals.FormalAt(LSlot);
+
+      if LFormal <> nil then
+      begin
+
+        if (LSlot = LRootSlot) or LReference.Defined then
+          raise ENyxDocumentation.Create('An implemented-interface root must remain a nominal interface');
+        RequireFormal(LFormal, APIs[AOwner].Identity);
+        Continue;
+      end;
       LResolved := False;
       for LPlatform := npfBrowser to npfNativeLCL do
       begin
@@ -1078,7 +1253,7 @@ begin
     Require(LAPI.AliasTarget);
 
     if Supports(LAPI, INyxDocumentationDeclaredTypeExpression, LDeclared) then
-      RequireUse(LDeclared.Definition);
+      RequireUse(LDeclared.Definition, LAPI.Identity);
 
     if Supports(LAPI, INyxDocumentationDeclaredInterfaces, LInterfaceDeclaration) then
     begin
@@ -1150,17 +1325,17 @@ begin
 
         if LRichSignature <> nil then
         begin
-          RequireUse(LRichSignature.ResultUse);
+          RequireUse(LRichSignature.ResultUse, LMethod.Identity);
           for LParameter := 0 to LRichSignature.ParameterCount - 1 do
-            RequireUse(LRichSignature.ParameterAt(LParameter).TypeUse);
+            RequireUse(LRichSignature.ParameterAt(LParameter).TypeUse, LMethod.Identity);
         end;
       end;
 
       if Supports(LMethod, INyxDocumentationRichProperty, LRichProperty) then
       begin
-        RequireUse(LRichProperty.ValueUse);
+        RequireUse(LRichProperty.ValueUse, LMethod.Identity);
         for LParameter := 0 to LRichProperty.ParameterCount - 1 do
-          RequireUse(LRichProperty.ParameterAt(LParameter).TypeUse);
+          RequireUse(LRichProperty.ParameterAt(LParameter).TypeUse, LMethod.Identity);
       end;
     end;
   end;

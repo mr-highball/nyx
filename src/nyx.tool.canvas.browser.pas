@@ -38,9 +38,11 @@ uses
 
 type
   { Target objects are borrowed until Disconnect. The public controller/form
-    owns no renderer and is shared by both adapters. }
+    owns no renderer and is shared by both adapters. Its corrected interface
+    identity is separate from JSON filtering; rebuild browser consumers together
+    so capability queries cannot admit an unrelated operation as a mounted view. }
   INyxBrowserToolCanvasView = interface(INyxToolCanvasView)
-    ['{D1411014-6120-4C84-A708-000000000022}']
+    ['{BF5DBFA7-818D-4E03-964F-0527BF7F5D73}']
     function GetRenderer: TNyxBrowserRenderer;
     property Renderer: TNyxBrowserRenderer read GetRenderer;
   end;

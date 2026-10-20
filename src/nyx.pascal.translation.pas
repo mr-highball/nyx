@@ -72,9 +72,11 @@ type
   end;
   { Optional exact planning inputs. Expressions are captured by the owning
     translator, never reconstructed against a later macro environment. Prefix
-    views expose only sites already inside their retained token interval. }
+    views expose only sites already inside their retained token interval.
+    This identity is independent from a semantic-translation result: raw source
+    questions do not supply refinement receipts. Rebuild dependent consumers. }
   INyxPascalUnresolvedConditions = interface(IInterface)
-    ['{98349E7C-C0ED-48DE-A518-427A04570C14}']
+    ['{80AB2615-589C-43A3-94AD-AB0D6EAB438F}']
     function UnresolvedCount: Integer;
     function UnresolvedAt(AIndex: Integer): TNyxPascalUnresolvedCondition;
   end;

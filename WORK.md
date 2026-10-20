@@ -50,6 +50,144 @@ implemented-interface relationship/source-ownership prerequisite while root
 qualifies. Root retains implementation-scope release and compiler admission;
 finishing a narrow deliverable does not empty the helper's assignment.
 
+The human reconfirms continuous useful backlog work. Root checked the running
+helper and the canonical flow again: the next explicit read-only assignment maps
+the existing extractor/generator/creator attachment changes for complete
+source-owned discovery, including lifecycle/operator/generic routines and a real
+source-to-index fixture. The prior five source paths stay paused while root
+finishes qualification. After that handoff the helper pulls the next independent
+unmet prerequisite and reports its acceptance outcome/ownership, without waiting
+solely because the current slice is source-ready. Root must keep the next scoped
+implementation release ready; preserve all full acceptance and stop conditions.
+
+## Current reference prerequisite: Scoped formals and safe capability identity — 2026-10-20
+
+The relationship/signature-batch checkpoint is committed/pushed as
+7916f96bd8308edfea6515f2b280bcf193770481. Its final source/remote receipt verifies
+all11 owned paths clean,1740 Pascal inputs and13 concurrent planning pins exact,
+and all readers joined. Reference01/02 remain open across at least56 batches.
+Reassessment selects the remaining exact generic scope and a concrete capability
+identity defect; no relationship/window/batch variant is repeated.
+
+Lil' Scooty's five-path scoped-formal implementation is released: documentation,
+registration, registry, the new documentation_formals consumer and the component
+guide. The previous section's complete scope/negative cases remain binding.
+During qualification it pulls the whole-source/adoption prerequisite read-only;
+the standing queue and TASKFLOW ownership process remain active.
+
+Root's read-only source inventory found600 explicit interface GUID declarations
+in Pascal units,688 including maintained includes, and four colliding pairs with
+incompatible slots. Root owns lexing.pas,
+types.pas, translation.pas, tool.canvas.browser.pas, a new portable
+tests/nyx_interface_identity_tests.lpr and docs/interface-identities.md, plus
+central evidence. Keep the widely consumed primary syntax snapshot, translated
+projection, semantic translation and JSON filter identities. Give each unrelated
+observer/declared-type/unresolved-conditions/browser-view capability its own GUID.
+This is an explicit public interface-identity correction requiring all dependent
+Pascal units and browser bundles to rebuild together; no mixed-binary or old-IID
+alias compatibility is claimed. Keeping ambiguous aliases would retain the false
+capability admission. Method layouts, type names, enum ordinals and caller APIs
+remain unchanged. Record every old/new identity in the migration guide before
+qualification; this is not a silent identity replacement.
+
+Evidence must show production owners accept their actual capability and reject
+the incompatible partner in both query directions, without calling a wrong
+vtable, and retain normal parser/translation/filter behavior and lifetimes. The
+browser-only filter/view pair receives portable compile evidence unless actual
+browser execution is separately admitted. Inventory all existing production
+interface declarations again to reject any remaining explicit IID collision.
+Rebuild affected native resolver/translation/collection consumers, documentation
+consumers and both Studio targets/backend/worker under one agreed source freeze.
+No source reader/compiler may start while either lane edits Pascal. Stop on a
+remaining collision, stale caller or changed source/quotas/guard; preserve refusal
+and retain the failure. Private projection/source-owner proofs remain necessary:
+a unique public GUID supplies a layout, never immutable physical-source authority.
+No new tool/schema/rollout, host/config/SDK retry, capture, protected mutation,
+cleanup/restart or extra agent. The original source/core/creator/executed-browser
+adoption and all full acceptance requirements remain open.
+
+Queue reassessment: the retained6642-occurrence failure belongs to the legacy
+repeated-bundle path. The already qualified contribution70 owner/index mechanics
+charge canonical source chunks once and preserve the complete unit descriptor.
+That historical count is not a current blanket adoption blocker. Next source
+adoption must use the existing contribution path; actual full-source/core closure
+and fit under the unchanged4096/16MiB/two-million limits remain unproven. Do not
+repeat packaging mechanics or relax complete source ownership to clear that gate.
+
+Selected browser validation admission: after both source-ready handoffs and the
+agreed freeze, root may execute the compiled portable contract artifacts from one
+local file page in the existing in-app browser. The browser skill is read and its
+connection is available; no tab or application is running yet. Use the compiler's
+normal runtime bootstrap and read Pascal-authored PASS/FAIL output, with no
+JavaScript replacement test logic. A denied local-file navigation ends this path;
+do not change security flags, create a host, retry configuration or bypass an
+interstitial. This can qualify only the actually executed portable contracts,
+not physical Studio input, decorated core/creator adoption or browser/native
+parity. The existing LAN service stays offline. Native source witnesses and
+browser-only test cases retain their different scopes explicitly.
+
+Final qualification uses one retained `input` freeze of nine owned Pascal files
+and all1742 current inputs. All63 compiler jobs finish successfully; all30 native
+test programs have clean heaps, and30 browser/module artifacts compile. Both
+Studios, the backend and browser worker rebuild. The actual logs contain zero
+owned warnings and210 upstream installed pas2js RTL warnings, retained visibly.
+Generator103 retains21 joined clean child invocations and two exact five-file
+candidates covering81 kinds/four facades. The broader consumer results remain
+documented in the packet rather than being promoted to full resolver/RTL success.
+
+Native scoped-formal140 inspects all three actual source sets. Production
+identity34 queries the first three incompatible capability pairs in both
+directions and retains normal lifetime/behavior. Inventory693 has zero explicit
+collisions,684 unchanged identities/four deliberate corrections/five new optional
+capabilities. The browser-only JSON-filter/view negative compiles; it has no
+mounted reverse-view evidence. The same native formal binary refuses missing and
+invalid source arguments before check0 with clean heaps. No extra compilation
+or weakened source witness is substituted for those guards.
+
+The initial reviewed formal fixture fails check96 after a successful compiler
+and clean heap: it wrongly expects clearing the caller's dynamic-array reference
+to invalidate the already-passed const managed-array value. Only that expectation
+changes; the retained value must succeed after reference retirement, and actual
+shared-element mutation still refuses at the measured final admission. The
+reviewed failure/source/terminal receipt remain retained separately. All1741
+other inputs were exact before the final common `input` freeze. A private browser
+bookkeeping property assignment also failed before navigation; its corrected
+explicit state attachment changes no product source and is recorded separately.
+
+The one selected local-file browser navigation is rejected before execution by
+the browser URL policy, which permits only HTTP/HTTPS. Root stops that path,
+closes the empty tab and retains the refusal. No host, configuration change,
+security bypass, alternate browser or substitute execution is attempted. Browser
+execution remains false for every current contract; the LAN service stays offline.
+This is a delivery/validation limitation, not a failing Pascal test.
+
+All1742 current Pascal inputs and1733 inherited unrelated inputs are exact, as
+are24 compiler inputs,97 retained RTL inputs,five current-start protected files,
+two retained profiles and13 concurrent planning paths. Every admitted native/
+compiler handle is terminal and joined; the browser tab is closed. Historical
+global-config preservation remains false; no restoration is attempted.
+The ignored `.local/documentation-formals-paths-private.json` owns the final
+audit, retained preparation, browser refusal and source/remote return path under
+`E:\Blekohlab\nyx\qualification\documentation-formals-20261020-171000`.
+
+Checkpoint: no original criterion/task/credit/DONE closes across at least57
+unclosed batches. Stop formal/identity/fixture/compiler variants. The next
+deliverable is one shared source-integration package: a complete selected public
+type/member scope and complete unit-global descriptor under their actual
+translated unit/include owner, exact source/binding closure, canonical chunks
+once and real registration/creator attachment. All89 captured callable signatures
+are not all unit globals; their two physical owners establish no include-parent
+projection. Full source/core closure and fit under unchanged4096 declarations,
+16MiB and2M work remain unproven. Constructors/destructors/operators/generic
+routines need actual preserved semantics or explicit refusal, not silent omission.
+The helper's concrete ownership map identifies the existing extractor gates,
+missing destructor/operator intent and catalog generation bootstrap dependency.
+Use existing contribution/capture/registration owners, no additional bulk-builder
+API or fake core leaves. Root releases separate source paths after the current
+source/remote checkpoint; Lil' Scooty already pulls the exact external-source
+closure/physical-origin prerequisite read-only. Full resolver/source/type/module/
+incremental/editor/input/quality/parity/adoption/delivery remain open.
+
 ## Qualified reference prerequisite: Declared implemented interfaces and signature batches — 2026-10-20
 
 The member-intent/facade checkpoint is committed and remote-exact as

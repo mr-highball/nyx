@@ -25,7 +25,52 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current source adds separate implemented-interface typed relationships and atomic
+Current source qualifies scoped generic-formal metadata and immutable type-use
+bindings: exact declared owner/ordinal/name, distinct type/routine scopes,
+nil/known-empty/clear, shadowing and nominal interface roots. Final source/input
+agreement, local managed leases and sealed shared construction retain cancellation,
+quotas and atomic refusal. Native formals140 inspects3 actual source sets with a
+clean heap; the same binary refuses missing/invalid source arguments at check0.
+Four existing incompatible interface GUID collisions are deliberately corrected
+and documented in docs/interface-identities.md. Rebuild dependent units/extensions
+and browser bundles together; do not claim mixed-binary/old-IID compatibility.
+Type names, methods, slots and ordinals stay exact. Inventory693 has zero explicit
+collisions,684 unchanged identities/four corrected/five new optional capabilities.
+Native identity34 checks production owners; three pairs have both query directions.
+The browser-only filter/view pair compiles; no mounted reverse-view proof exists.
+Final common-input qualification passes63 compiler jobs,30 clean native programs,
+30 browser/module compiles and generator103/21 joined clean children/two exact
+5-file candidates. Zero owned warnings/210 upstream. The initial reviewed fixture
+failure remains retained: clearing the caller's array reference does not invalidate
+the const managed-array value. Only that test expectation changed; shared-content
+mutation still refuses. All1742 Pascal inputs/1733 inherited unrelated/24compiler/
+97RTL/five current-start protected/two profiles/thirteen planning pins stay exact.
+Readers joined. The browser URL policy rejected the local-file loader before
+execution; no host/config/security/alternate-browser workaround is authorized.
+WORK.md and .local/documentation-formals-paths-private.json own terminal/audit/
+source/remote receipts. Historical global-config preservation remains false.
+Full source/core/creator adoption, executed browser/Studio input/quality/parity/
+delivery and every original criterion/task/credit/DONE remain open across at
+least57 unclosed batches. LAN offline; native Nyx tools absent.
+
+Stop formal/identity/fixture/compiler variants. Next deliver one shared source
+integration package through existing source/binding/contribution/registration
+owners: complete selected public type/member scopes, complete unit globals under
+their actual translated unit/include owner, canonical chunks once and real creator
+attachment. Legacy6642 repeated-bundle refusal is historical; contribution70 already
+shares canonical source chunks. Full closure and unchanged4096/16MiB/2M fit remain
+unproven. All89 callable signatures are not an inventory of all unit constants/
+variables, and their two physical owners prove no include-parent projection.
+Preserve exact nominal/formal/target/alias ownership and unresolved refusal; no
+fake core leaves, partial-unit labels, guessed stable keys or extra bulk-builder
+API. Constructors/destructors/operators/generic routines need actual declared
+coverage or explicit refusal. Helper reviews the concrete extractor/generator/
+creator ownership map and real source-to-index fixture now; root releases separate
+implementation paths after this checkpoint. No extra agent, public MCP tool/schema,
+rollout, host/config/SDK retry/capture, protected mutation, cleanup/restart or
+approval bypass. Preserve concurrent work.
+
+Previous source adds separate implemented-interface typed relationships and atomic
 selected-signature batches with construction-only prefix-window reuse. Nil/known
 empty/clear, interface-root versus argument closure, aliases and authored platform
 availability stay distinct; class Bases/member walks never acquire those edges.

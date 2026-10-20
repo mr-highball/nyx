@@ -152,9 +152,11 @@ type
   { Optional declared-source lease for structured leaves. Their bodies/members
     belong to this exact immutable declaration snapshot, never a copied parser
     or synthetic type name. DeclarationOf returns -1 on other nodes; Declarations
-    is nil for standalone type syntax. There is no reverse reference or UI borrow. }
+    is nil for standalone type syntax. There is no reverse reference or UI borrow.
+    The corrected identity separates this two-slot capability from a translated
+    projection; existing dependent units must be rebuilt together. }
   INyxPascalDeclaredTypeSyntax = interface(IInterface)
-    ['{98349E7C-C0ED-48DE-A518-427A04570D02}']
+    ['{C5E05E21-14B3-49DF-8734-7DF63996E953}']
     function Declarations: INyxPascalSyntaxSnapshot;
     function DeclarationOf(ANode: Integer): Integer;
   end;

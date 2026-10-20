@@ -161,10 +161,36 @@ var
   begin
     Add(IntToStr(AValue));
   end;
+  procedure Generics(const ADeclaration: IInterface);
+  var
+    LCapability: INyxDocumentationGenericDeclaration;
+    LParameters: INyxDocumentationGenericParameters;
+    LFormal: INyxDocumentationFormalParameter;
+    LParameter: Integer;
+  begin
+
+    if not Supports(ADeclaration, INyxDocumentationGenericDeclaration, LCapability) then
+      Exit;
+    LParameters := LCapability.GenericParameters;
+
+    if LParameters = nil then
+      Exit;
+    Add('generic-parameters');
+    Number(LParameters.Count);
+    for LParameter := 0 to LParameters.Count - 1 do
+    begin
+      LFormal := LParameters.ParameterAt(LParameter);
+      Add(LFormal.Owner.Key);
+      Number(LFormal.ParameterIndex);
+      Add(LFormal.Name);
+    end;
+  end;
   procedure TypeUse(const AUse: INyxDocumentationTypeUse);
   var
     LUse: Integer;
     LExpression: INyxDocumentationTypeExpression;
+    LCapability: INyxDocumentationFormalBindings;
+    LFormal: INyxDocumentationFormalParameter;
   begin
     Number(Ord(AUse <> nil));
 
@@ -181,6 +207,21 @@ var
       Number(AUse.BindingCount);
       for LUse := 0 to AUse.BindingCount - 1 do
         Add(ReferenceContent(AUse.BindingAt(LUse)));
+
+      if Supports(AUse, INyxDocumentationFormalBindings, LCapability) then
+        for LUse := 0 to AUse.BindingCount - 1 do
+        begin
+          LFormal := LCapability.FormalAt(LUse);
+
+          if LFormal <> nil then
+          begin
+            Add('formal-binding');
+            Number(LUse);
+            Add(LFormal.Owner.Key);
+            Number(LFormal.ParameterIndex);
+            Add(LFormal.Name);
+          end;
+        end;
     end;
   end;
   procedure RichParameter(const AParameter: INyxDocumentationParameterDeclaration);
@@ -306,6 +347,7 @@ begin
         Number(Ord(LMemberIntent.CallingConvention));
       end;
     end;
+    Generics(LMember);
   end;
   { Shape extensions follow the complete legacy content. Absence leaves the
     earlier declaration framing byte-identical; present facts cannot disappear
@@ -347,6 +389,7 @@ begin
         TypeUse(LImplementations.ItemAt(LIndex));
     end;
   end;
+  Generics(AValue);
 end;
 
 function CaptureNyxDocumentationDeclaration(const AValue: INyxDocumentationType;

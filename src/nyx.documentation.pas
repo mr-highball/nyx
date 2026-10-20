@@ -79,6 +79,36 @@ type
   end;
   { Only two concrete projections exist; copied vectors keep branches detached. }
   TNyxDocumentationAliasTargetVector = array of TNyxDocumentationAliasTarget;
+  { A managed input vector permits a local backing-store lease before outward
+    admission. Its copied names describe only scope, never implicit constraints. }
+  TNyxDocumentationGenericNames = array of TNyxText;
+  { A formal is owned by its exact declaring type or routine member and its own
+    zero-based ordinal. It retains no declaration interface, world or argument. }
+  INyxDocumentationFormalParameter = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11B}']
+    function Owner: TNyxDocumentationRef;
+    function ParameterIndex: Integer;
+    function Name: TNyxText;
+  end;
+  { Ordered scope declarations distinguish routine-own parameters from those
+    of a containing generic type. Constraint facts remain explicitly unknown. }
+  INyxDocumentationGenericParameters = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11C}']
+    function Count: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationFormalParameter;
+  end;
+  { Optional metadata composes with types and members. Nil means unknown;
+    a present empty vector declares no own parameters, and nil clears it. }
+  INyxDocumentationGenericDeclaration = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11D}']
+    function GenericParameters: INyxDocumentationGenericParameters;
+  end;
+  { Formal slots supplement the unchanged nominal BindingAt contract. A formal
+    slot has an undefined legacy reference; nil retains nominal/unknown meaning. }
+  INyxDocumentationFormalBindings = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11E}']
+    function FormalAt(AIndex: Integer): INyxDocumentationFormalParameter;
+  end;
   { Optional intrinsic shape is implemented only by admitted intrinsic owners.
     Absence is never interpreted as an unknown/default Boolean family. }
   INyxDocumentationIntrinsic = interface(IInterface)
@@ -318,6 +348,18 @@ function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
   ADeclaredAccess: TNyxDocumentationPropertyAccesses;
   ADefaultProperty: Boolean = False): INyxDocumentationMember;
 function NewNyxDocumentationNamedTypeUse(const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+function NewNyxDocumentationGenericParameters(const AOwner: TNyxDocumentationRef;
+  const ANames: TNyxDocumentationGenericNames;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationGenericParameters;
+function WithNyxDocumentationGenericParameters(const AType: INyxDocumentationType;
+  const AParameters: INyxDocumentationGenericParameters;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType; overload;
+function WithNyxDocumentationGenericParameters(const AMember: INyxDocumentationMember;
+  const AParameters: INyxDocumentationGenericParameters;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember; overload;
+function WithNyxDocumentationFormalBinding(const AUse: INyxDocumentationTypeUse;
+  AIndex: Integer; const AFormal: INyxDocumentationFormalParameter;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
 function NewNyxDocumentationExpressionTypeUse(const AExpression: INyxDocumentationTypeExpression;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
 { Capture ordered interface uses under one construction; no supplier or scope is
@@ -369,7 +411,7 @@ function CaptureNyxDocumentationType(const AValue: INyxDocumentationType;
 
 implementation
 
-uses nyx.bytes;
+uses nyx.bytes, nyx.pascal.lexing;
 
 type
   { Shared immutable prose storage has value-only vectors and no document,
@@ -437,6 +479,10 @@ end;
 function RichMemberBytes(const AValue: INyxDocumentationMember): Integer; forward;
 { Individual rich owners share the old aggregate bound before publication. }
 function TypeUseBytes(const AValue: INyxDocumentationTypeUse): Integer; forward;
+{ Optional scoped metadata is measured only when present, preserving old bytes. }
+function GenericBytes(const AValue: INyxDocumentationGenericParameters): Integer; forward;
+{ One formal contributes copied qualified owner, ordinal and authored name. }
+function FormalBytes(const AValue: INyxDocumentationFormalParameter): Integer; forward;
 { A parameter includes its exact name, full type occurrence and inert default. }
 function RichParameterBytes(const AValue: INyxDocumentationParameterDeclaration): Integer; forward;
 
@@ -448,10 +494,14 @@ var
   LParameter: TNyxDocumentationParameter;
   LDeclaration: INyxDocumentationMemberDeclaration;
   LIntent: INyxDocumentationMemberIntent;
+  LGeneric: INyxDocumentationGenericDeclaration;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) +
     RefBytes(AValue.ValueType) + SignatureBytes(AValue.Signature);
   Inc(Result, RichMemberBytes(AValue));
+
+  if Supports(AValue, INyxDocumentationGenericDeclaration, LGeneric) then
+    Inc(Result, GenericBytes(LGeneric.GenericParameters));
 
   if Supports(AValue, INyxDocumentationMemberDeclaration, LDeclaration) then
   begin
@@ -496,8 +546,12 @@ var
   LDeclared: INyxDocumentationDeclaredTypeExpression;
   LDeclaration: INyxDocumentationDeclaredInterfaces;
   LInterfaces: INyxDocumentationInterfaceImplementations;
+  LGeneric: INyxDocumentationGenericDeclaration;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
+
+  if Supports(AValue, INyxDocumentationGenericDeclaration, LGeneric) then
+    Inc(Result, GenericBytes(LGeneric.GenericParameters));
 
   if Supports(AValue, INyxDocumentationDeclaredInterfaces, LDeclaration) then
   begin
@@ -555,6 +609,33 @@ type
   { Operation-local managed rows preserve the exact borrowed item topology;
     published vectors never retain these supplier observations. }
   TDocumentationTypeUseVector = array of INyxDocumentationTypeUse;
+  { Dynamic managed slots avoid interfaces inside copied parameter records. }
+  TDocumentationFormals = array of INyxDocumentationFormalParameter;
+  { Detached formal values own only copied identity/name fields. }
+  TDocumentationFormal = class(TInterfacedObject, INyxDocumentationFormalParameter)
+  public
+    Declaring: TNyxDocumentationRef;
+    Position: Integer;
+    ParameterName: TNyxText;
+    function Owner: TNyxDocumentationRef;
+    function ParameterIndex: Integer;
+    function Name: TNyxText;
+  end;
+  { Frozen scope parameters retain no parent declaration interface or supplier. }
+  TDocumentationGenerics = class(TInterfacedObject, INyxDocumentationGenericParameters)
+  public
+    Items: TDocumentationFormals;
+    function Count: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationFormalParameter;
+  end;
+  { Capture-only observations retain supplier identities until final agreement.
+    They are destroyed before publication, never stored in descriptors. }
+  TGenericObservation = class
+  public
+    Capability: INyxDocumentationGenericDeclaration;
+    Source, Frozen: INyxDocumentationGenericParameters;
+    Items: TDocumentationFormals;
+  end;
   { An attachment carries its inner capture's final observations only until
     publication, preventing an outer getter from concealing a nil/topology swap. }
   TImplementationObservation = class
@@ -575,6 +656,14 @@ type
   end;
   { Forward captured member class for exact private immutable-owner admission. }
   TDocumentationMember = class;
+  { Forward immutable type-use owner for an exact private absence receipt. }
+  TDocumentationTypeUse = class;
+  { Private ownership must agree with the exact public interface before a nil
+    formal map may keep the old zero-work absence path. }
+  IDocumentationTypeUseOwner = interface(IInterface)
+    ['{D4423286-B9D3-4820-9E41-46EAE0D24FA1}']
+    function TypeUseOwner: TDocumentationTypeUse;
+  end;
   { A private borrow is valid only with the owner's exact public interface.
     Alternate producers cannot borrow another member's no-copy authority. }
   IDocumentationMemberOwner = interface(IInterface)
@@ -616,13 +705,15 @@ type
   { A fluent member owns its signature interface in this managed class, never
     inside a copied record. Clone publication preserves earlier readers. }
   TDocumentationMember = class(TDocumentationContent, INyxDocumentationMember,
-    INyxDocumentationMemberDeclaration, IDocumentationMemberOwner)
+    INyxDocumentationMemberDeclaration, IDocumentationMemberOwner,
+    INyxDocumentationGenericDeclaration)
   private
     FIdentity: TNyxDocumentationRef;
     FKind: TNyxDocumentationMemberKind;
     FSignature: INyxDocumentationSignature;
     FValueType: TNyxDocumentationRef;
     FIntent: INyxDocumentationMemberIntent;
+    FGenerics: INyxDocumentationGenericParameters;
   protected
     procedure CopyMember(ATarget: TDocumentationMember);
     function CopyValue: TDocumentationMember; virtual;
@@ -631,6 +722,7 @@ type
   public
     function MemberOwner: TDocumentationMember;
     function DeclarationIntent: INyxDocumentationMemberIntent;
+    function GenericParameters: INyxDocumentationGenericParameters;
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationMemberKind;
     function Signature: INyxDocumentationSignature;
@@ -658,15 +750,19 @@ type
   end;
   { Frozen compound use owns its exact expression and copied binding vector.
     Named uses retain a real reference and no expression or binding rows. }
-  TDocumentationTypeUse = class(TInterfacedObject, INyxDocumentationTypeUse)
+  TDocumentationTypeUse = class(TInterfacedObject, INyxDocumentationTypeUse,
+    INyxDocumentationFormalBindings, IDocumentationTypeUseOwner)
   public
     Named: TNyxDocumentationRef;
     Compound: INyxDocumentationTypeExpression;
     Bindings: array of TNyxDocumentationRef;
+    Formals: TDocumentationFormals;
+    function TypeUseOwner: TDocumentationTypeUse;
     function Reference: TNyxDocumentationRef;
     function Expression: INyxDocumentationTypeExpression;
     function BindingCount: Integer;
     function BindingAt(AIndex: Integer): TNyxDocumentationRef;
+    function FormalAt(AIndex: Integer): INyxDocumentationFormalParameter;
     function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
   end;
   { A managed immutable parameter is deliberately separate from the old named
@@ -725,7 +821,8 @@ type
   { Member interfaces live in a dynamic managed vector. Base/alias links remain
     data references, preventing an inherited metadata graph from owning cycles. }
   TDocumentationType = class(TDocumentationContent, INyxDocumentationType,
-    IDocumentationTypeOwner, INyxDocumentationDeclaredInterfaces)
+    IDocumentationTypeOwner, INyxDocumentationDeclaredInterfaces,
+    INyxDocumentationGenericDeclaration)
   private
     FIdentity: TNyxDocumentationRef;
     FKind: TNyxDocumentationTypeKind;
@@ -733,6 +830,7 @@ type
     FBases: array of TNyxDocumentationRef;
     FMembers: array of INyxDocumentationMember;
     FImplemented: INyxDocumentationInterfaceImplementations;
+    FGenerics: INyxDocumentationGenericParameters;
     function AppendCapturedMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
   protected
     procedure CopyType(ATarget: TDocumentationType);
@@ -741,6 +839,7 @@ type
   public
     function TypeOwner: TDocumentationType;
     function ImplementedInterfaces: INyxDocumentationInterfaceImplementations;
+    function GenericParameters: INyxDocumentationGenericParameters;
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationTypeKind;
     function AliasTarget: TNyxDocumentationRef;
@@ -1388,6 +1487,7 @@ begin
   ATarget.FSignature := FSignature;
   ATarget.FValueType := FValueType;
   ATarget.FIntent := FIntent;
+  ATarget.FGenerics := FGenerics;
 end;
 
 function TDocumentationMember.CopyValue: TDocumentationMember;
@@ -1546,9 +1646,520 @@ begin
     raise ENyxDocumentation.Create('A declared type use requires its actual named type');
 end;
 
+function TDocumentationFormal.Owner: TNyxDocumentationRef;
+begin
+  Result := Declaring;
+end;
+
+function TDocumentationFormal.ParameterIndex: Integer;
+begin
+  Result := Position;
+end;
+
+function TDocumentationFormal.Name: TNyxText;
+begin
+  Result := ParameterName;
+end;
+
+function TDocumentationGenerics.Count: Integer;
+begin
+  Result := Length(Items);
+end;
+
+function TDocumentationGenerics.ParameterAt(AIndex: Integer): INyxDocumentationFormalParameter;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Items)) then
+    raise ENyxDocumentation.Create('Generic parameter ordinal out of range');
+  Result := Items[AIndex];
+end;
+
+function TDocumentationMember.GenericParameters: INyxDocumentationGenericParameters;
+begin
+  Result := FGenerics;
+end;
+
+function TDocumentationType.GenericParameters: INyxDocumentationGenericParameters;
+begin
+  Result := FGenerics;
+end;
+
+function FormalBytes(const AValue: INyxDocumentationFormalParameter): Integer;
+begin
+  Result := 0;
+
+  if AValue <> nil then
+    Result := RefBytes(AValue.Owner) + Length(IntToStr(AValue.ParameterIndex)) + NyxUTF8ByteCount(AValue.Name);
+  AdmitBytes(Result);
+end;
+
+function GenericBytes(const AValue: INyxDocumentationGenericParameters): Integer;
+var
+  LAt: Integer;
+begin
+  Result := 0;
+
+  if AValue = nil then
+    Exit;
+  Result := Length(IntToStr(AValue.Count));
+  for LAt := 0 to AValue.Count - 1 do
+  begin
+    Inc(Result, FormalBytes(AValue.ParameterAt(LAt)));
+    AdmitBytes(Result);
+  end;
+end;
+
+{ Every new borrowed getter is separated from outward admission/cancellation. }
+procedure FormalWork(const AScope: INyxDocumentationTypeConstruction; AUnits: Integer = 1);
+begin
+  CheckCancellation(AScope);
+  try
+    AScope.Spend(AUnits);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  CheckCancellation(AScope);
+end;
+
+{ Core declaration cancellation keeps its established exception family even
+  when an outward policy retires the underlying analysis during reservation. }
+procedure FormalText(const AScope: INyxDocumentationTypeConstruction; const AText: TNyxText);
+begin
+  CheckCancellation(AScope);
+  try
+    AScope.AdmitText(AText);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  CheckCancellation(AScope);
+end;
+
+function SameFormal(const AValue, AFrozen: INyxDocumentationFormalParameter;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LOwner: TNyxDocumentationRef;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  Result := AValue = nil;
+
+  if (AValue = nil) or (AFrozen = nil) then
+    Exit((AValue = nil) and (AFrozen = nil));
+  FormalWork(AScope);
+  LOwner := AValue.Owner;
+  FormalWork(AScope);
+  LIndex := AValue.ParameterIndex;
+  FormalWork(AScope);
+  LName := AValue.Name;
+  CheckCancellation(AScope);
+  TextBound(LName, 256);
+  FormalWork(AScope, Length(LName) + RefBytes(LOwner) + RefBytes(AFrozen.Owner) + 1);
+  Result := LOwner.Same(AFrozen.Owner) and (LIndex = AFrozen.ParameterIndex) and
+    (LName = AFrozen.Name);
+end;
+
+function CaptureFormal(const AValue: INyxDocumentationFormalParameter;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationFormalParameter;
+var
+  LSource, LCandidate: INyxDocumentationFormalParameter;
+  LOwner: TDocumentationFormal;
+  LIdentity: TNyxDocumentationRef;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  Result := nil;
+  LSource := AValue;
+
+  if LSource = nil then
+    Exit;
+  FormalWork(AScope);
+  LIdentity := LSource.Owner;
+  LIdentity.Validate;
+
+  if LIdentity.IsUnit then
+    raise ENyxDocumentation.Create('A formal belongs to a type or routine member');
+  FormalWork(AScope);
+  LIndex := LSource.ParameterIndex;
+
+  if (LIndex < 0) or (LIndex >= 32) then
+    raise ENyxDocumentation.Create('Formal parameter ordinal exceeds its allowance');
+  FormalWork(AScope);
+  LName := LSource.Name;
+  CheckCancellation(AScope);
+  NameBound(LName, False);
+  FormalText(AScope, LIdentity.Key);
+  FormalText(AScope, IntToStr(LIndex));
+  FormalText(AScope, LName);
+  FormalWork(AScope);
+  LOwner := TDocumentationFormal.Create;
+  LCandidate := LOwner;
+  LOwner.Declaring := LIdentity;
+  LOwner.Position := LIndex;
+  LOwner.ParameterName := LName;
+
+  if not SameFormal(LSource, LCandidate, AScope) then
+    raise ENyxDocumentation.Create('Formal identity changed during capture');
+  CheckCancellation(AScope);
+  Result := LCandidate;
+end;
+
+function CaptureGenerics(const AValue: INyxDocumentationGenericParameters;
+  const AOwner: TNyxDocumentationRef; const AScope: INyxDocumentationTypeConstruction;
+  out AItems: TDocumentationFormals): INyxDocumentationGenericParameters;
+var
+  LSource, LCandidate: INyxDocumentationGenericParameters;
+  LBuilder: TDocumentationGenerics;
+  LItems: TDocumentationFormals;
+  LAt, LPrior, LCount, LBytes: Integer;
+begin
+  Result := nil;
+  AItems := nil;
+  LSource := AValue;
+
+  if LSource = nil then
+    Exit;
+  AOwner.Validate;
+
+  if AOwner.IsUnit then
+    raise ENyxDocumentation.Create('A generic declaration requires a type or routine owner');
+  FormalWork(AScope);
+  LCount := LSource.Count;
+
+  if (LCount < 0) or (LCount > 32) or
+    (not AOwner.IsMember and (LCount <> AOwner.GenericArity)) then
+    raise ENyxDocumentation.Create('Generic parameter count contradicts its declaring scope');
+  FormalText(AScope, IntToStr(LCount));
+  LBytes := Length(IntToStr(LCount));
+  FormalWork(AScope, LCount * 2 + 1);
+  LBuilder := TDocumentationGenerics.Create;
+  LCandidate := LBuilder;
+  SetLength(LBuilder.Items, LCount);
+  SetLength(LItems, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    FormalWork(AScope);
+    LItems[LAt] := LSource.ParameterAt(LAt);
+
+    if LItems[LAt] = nil then
+      raise ENyxDocumentation.Create('A declared generic parameter cannot be absent');
+    LBuilder.Items[LAt] := CaptureFormal(LItems[LAt], AScope);
+
+    if not LBuilder.Items[LAt].Owner.Same(AOwner) or
+      (LBuilder.Items[LAt].ParameterIndex <> LAt) then
+      raise ENyxDocumentation.Create('Generic parameter belongs to another owner or ordinal');
+    for LPrior := 0 to LAt - 1 do
+    begin
+      FormalWork(AScope, Length(LBuilder.Items[LAt].Name) + Length(LBuilder.Items[LPrior].Name) + 1);
+
+      if Fold(LBuilder.Items[LAt].Name) = Fold(LBuilder.Items[LPrior].Name) then
+        raise ENyxDocumentation.Create('Duplicate generic parameter name');
+    end;
+    Inc(LBytes, FormalBytes(LBuilder.Items[LAt]));
+    AdmitBytes(LBytes);
+  end;
+  for LAt := 0 to LCount - 1 do
+  begin
+    FormalWork(AScope);
+
+    if LSource.ParameterAt(LAt) <> LItems[LAt] then
+      raise ENyxDocumentation.Create('Generic parameter topology changed during capture');
+
+    if not SameFormal(LItems[LAt], LBuilder.Items[LAt], AScope) then
+      raise ENyxDocumentation.Create('Generic parameter changed before publication');
+  end;
+  FormalWork(AScope);
+
+  if LSource.Count <> LCount then
+    raise ENyxDocumentation.Create('Generic parameter extent changed before publication');
+  CheckCancellation(AScope);
+  AItems := LItems;
+  Result := LCandidate;
+end;
+
+function SameGenerics(const AValue, AFrozen: INyxDocumentationGenericParameters;
+  const AItems: TDocumentationFormals; const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LAt: Integer;
+begin
+  Result := False;
+
+  if (AValue = nil) or (AFrozen = nil) then
+    Exit((AValue = nil) and (AFrozen = nil));
+  FormalWork(AScope);
+
+  if AValue.Count <> AFrozen.Count then
+    Exit;
+  for LAt := 0 to High(AItems) do
+  begin
+    FormalWork(AScope);
+
+    if AValue.ParameterAt(LAt) <> AItems[LAt] then
+      Exit;
+
+    if not SameFormal(AItems[LAt], AFrozen.ParameterAt(LAt), AScope) then
+      Exit;
+  end;
+  FormalWork(AScope);
+  Result := AValue.Count = AFrozen.Count;
+  CheckCancellation(AScope);
+end;
+
+{ The exact private canonical owner alone permits the historical nil fast path. }
+function LegacyGenericDeclaration(const AValue: IInterface;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LMember: IDocumentationMemberOwner;
+  LType: IDocumentationTypeOwner;
+  LMemberOwner: TDocumentationMember;
+  LTypeOwner: TDocumentationType;
+  LMemberCanonical: INyxDocumentationMember;
+  LTypeCanonical: INyxDocumentationType;
+begin
+  Result := False;
+  CheckCancellation(AScope);
+
+  if Supports(AValue, IDocumentationMemberOwner, LMember) then
+  begin
+    CheckCancellation(AScope);
+    LMemberOwner := LMember.MemberOwner;
+    CheckCancellation(AScope);
+
+    if LMemberOwner = nil then
+      raise ENyxDocumentation.Create('Missing captured member owner');
+    LMemberCanonical := LMemberOwner;
+
+    if IInterface(LMemberCanonical) <> AValue then
+      raise ENyxDocumentation.Create('A generic declaration cannot borrow a private member owner');
+    Exit(LMemberOwner.FGenerics = nil);
+  end;
+  CheckCancellation(AScope);
+
+  if Supports(AValue, IDocumentationTypeOwner, LType) then
+  begin
+    CheckCancellation(AScope);
+    LTypeOwner := LType.TypeOwner;
+    CheckCancellation(AScope);
+
+    if LTypeOwner = nil then
+      raise ENyxDocumentation.Create('Missing captured type owner');
+    LTypeCanonical := LTypeOwner;
+
+    if IInterface(LTypeCanonical) <> AValue then
+      raise ENyxDocumentation.Create('A generic declaration cannot borrow a private type owner');
+    Result := LTypeOwner.FGenerics = nil;
+  end;
+  CheckCancellation(AScope);
+end;
+
+function ObserveGenericMetadata(const AValue: IInterface;
+  const AIdentity: TNyxDocumentationRef;
+  const AScope: INyxDocumentationTypeConstruction): TGenericObservation;
+var
+  LCapability: INyxDocumentationGenericDeclaration;
+  LObservation: TGenericObservation;
+begin
+  Result := nil;
+
+  if LegacyGenericDeclaration(AValue, AScope) or
+    not Supports(AValue, INyxDocumentationGenericDeclaration, LCapability) then
+    Exit;
+  FormalWork(AScope);
+  LObservation := TGenericObservation.Create;
+  try
+    LObservation.Capability := LCapability;
+    LObservation.Source := LCapability.GenericParameters;
+    CheckCancellation(AScope);
+    LObservation.Frozen := CaptureGenerics(LObservation.Source, AIdentity, AScope, LObservation.Items);
+    Result := LObservation;
+  except
+    LObservation.Free;
+    raise;
+  end;
+end;
+
+procedure CheckGenericObservation(const AValue: IInterface;
+  AObservation: TGenericObservation; const AScope: INyxDocumentationTypeConstruction);
+var
+  LCapability: INyxDocumentationGenericDeclaration;
+  LParameters: INyxDocumentationGenericParameters;
+begin
+
+  if AObservation = nil then
+    Exit;
+
+  if AObservation.Capability = nil then
+  begin
+
+    if LegacyGenericDeclaration(AValue, AScope) then
+      Exit;
+    CheckCancellation(AScope);
+
+    if Supports(AValue, INyxDocumentationGenericDeclaration, LCapability) then
+      raise ENyxDocumentation.Create('Generic declaration capability appeared during attachment');
+    CheckCancellation(AScope);
+    Exit;
+  end;
+  FormalWork(AScope);
+
+  if not Supports(AValue, INyxDocumentationGenericDeclaration, LCapability) or
+    (LCapability <> AObservation.Capability) then
+    raise ENyxDocumentation.Create('Generic declaration capability changed during capture');
+  FormalWork(AScope);
+  LParameters := LCapability.GenericParameters;
+  CheckCancellation(AScope);
+
+  if (LParameters <> AObservation.Source) or
+    not SameGenerics(LParameters, AObservation.Frozen, AObservation.Items, AScope) then
+    raise ENyxDocumentation.Create('Generic declaration changed before publication');
+  CheckCancellation(AScope);
+end;
+
+procedure CopyGenericObservation(ATarget, ASource: TGenericObservation);
+begin
+
+  if (ATarget = nil) or (ASource = nil) then
+    Exit;
+  ATarget.Capability := ASource.Capability;
+  ATarget.Source := ASource.Source;
+  ATarget.Frozen := ASource.Frozen;
+  ATarget.Items := ASource.Items;
+end;
+
+function NewNyxDocumentationGenericParameters(const AOwner: TNyxDocumentationRef;
+  const ANames: TNyxDocumentationGenericNames;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationGenericParameters;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LInput, LNames: TNyxDocumentationGenericNames;
+  LIdentity: TNyxDocumentationRef;
+  LBuilder: TDocumentationGenerics;
+  LFormal: TDocumentationFormal;
+  LSource, LCandidate: INyxDocumentationGenericParameters;
+  LItems: TDocumentationFormals;
+  LAt: Integer;
+  LName: TNyxText;
+begin
+  LScope := AConstruction;
+  Result := nil;
+  LInput := ANames;
+  LIdentity := AOwner;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  LIdentity.Validate;
+
+  if LIdentity.IsUnit or (Length(LInput) > 32) or
+    (not LIdentity.IsMember and (Length(LInput) <> LIdentity.GenericArity)) then
+    raise ENyxDocumentation.Create('Generic parameter count exceeds its allowance');
+  FormalWork(LScope, Length(LInput) + 1);
+  SetLength(LNames, Length(LInput));
+  for LAt := 0 to High(LNames) do
+  begin
+    LName := LInput[LAt];
+    NameBound(LName, False);
+    FormalText(LScope, LName);
+    CheckCancellation(LScope);
+    LNames[LAt] := LName;
+  end;
+  FormalWork(LScope, Length(LNames) + 1);
+  LBuilder := TDocumentationGenerics.Create;
+  LSource := LBuilder;
+  SetLength(LBuilder.Items, Length(LNames));
+  for LAt := 0 to High(LNames) do
+  begin
+    FormalText(LScope, LIdentity.Key);
+    FormalText(LScope, IntToStr(LAt));
+    FormalText(LScope, LNames[LAt]);
+    CheckCancellation(LScope);
+    LFormal := TDocumentationFormal.Create;
+    LBuilder.Items[LAt] := LFormal;
+    LFormal.Declaring := LIdentity;
+    LFormal.Position := LAt;
+    LFormal.ParameterName := LNames[LAt];
+  end;
+  LCandidate := CaptureGenerics(LSource, LIdentity, LScope, LItems);
+  FormalWork(LScope, Length(LNames) + 1);
+
+  if not AOwner.Same(LIdentity) or (Length(ANames) <> Length(LNames)) then
+    raise ENyxDocumentation.Create('Generic declaration input changed during construction');
+  for LAt := 0 to High(LNames) do
+
+    if ANames[LAt] <> LNames[LAt] then
+      raise ENyxDocumentation.Create('Generic parameter names changed during construction');
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
 function TDocumentationTypeUse.Reference: TNyxDocumentationRef;
 begin
   Result := Named;
+end;
+
+function TDocumentationTypeUse.TypeUseOwner: TDocumentationTypeUse;
+begin
+  Result := Self;
+end;
+
+function TDocumentationTypeUse.FormalAt(AIndex: Integer): INyxDocumentationFormalParameter;
+begin
+  BindingAt(AIndex);
+  Result := nil;
+
+  if Length(Formals) <> 0 then
+    Result := Formals[AIndex];
+end;
+
+function LegacyFormalMap(const AUse: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LPrivate: IDocumentationTypeUseOwner;
+  LOwner: TDocumentationTypeUse;
+  LCanonical: INyxDocumentationTypeUse;
+begin
+  Result := False;
+  CheckCancellation(AScope);
+
+  if not Supports(AUse, IDocumentationTypeUseOwner, LPrivate) then
+  begin
+    CheckCancellation(AScope);
+    Exit;
+  end;
+  CheckCancellation(AScope);
+  LOwner := LPrivate.TypeUseOwner;
+  CheckCancellation(AScope);
+
+  if LOwner = nil then
+    raise ENyxDocumentation.Create('Missing captured type-use owner');
+  LCanonical := LOwner;
+
+  if LCanonical <> AUse then
+    raise ENyxDocumentation.Create('A type use cannot borrow another private owner');
+  Result := Length(LOwner.Formals) = 0;
+end;
+
+procedure CheckFormalBinding(const AExpression: INyxDocumentationTypeExpression;
+  AIndex: Integer; const AFormal: INyxDocumentationFormalParameter;
+  const AScope: INyxDocumentationTypeConstruction);
+var
+  LNode: TNyxPascalTypeNode;
+begin
+
+  if AFormal = nil then
+    Exit;
+
+  if (AExpression = nil) or (AIndex < 0) or (AIndex >= AExpression.NamedUseCount) or
+    (AExpression.NamedUseArity(AIndex) <> 0) then
+    raise ENyxDocumentation.Create('A formal binds only a bare nongeneric named occurrence');
+  LNode := AExpression.Syntax.Node(AExpression.NamedUseNode(AIndex));
+  FormalWork(AScope, Length(LNode.Name) + Length(AFormal.Name) + 1);
+
+  if (LNode.Kind <> ptxName) or (Fold(LNode.Name) <> Fold(AFormal.Name)) then
+    raise ENyxDocumentation.Create('A formal cannot stand for a qualified/member or different type name');
 end;
 
 function TDocumentationTypeUse.Expression: INyxDocumentationTypeExpression;
@@ -1584,10 +2195,14 @@ var
   LNext: TDocumentationTypeUse;
   LLease: INyxDocumentationTypeUse;
   LAt, LBytes: Integer;
+  LAny: Boolean;
 begin
   BindingAt(AIndex);
   CheckTypeBinding(Compound, AIndex, AReference);
   LBytes := TypeUseBytes(Self) - RefBytes(Bindings[AIndex]) + RefBytes(AReference);
+
+  if Length(Formals) <> 0 then
+    Dec(LBytes, FormalBytes(Formals[AIndex]));
   AdmitBytes(LBytes);
   LNext := TDocumentationTypeUse.Create;
   LLease := LNext;
@@ -1596,6 +2211,21 @@ begin
   for LAt := 0 to High(Bindings) do
     LNext.Bindings[LAt] := Bindings[LAt];
   LNext.Bindings[AIndex] := AReference;
+
+  if Length(Formals) <> 0 then
+  begin
+    SetLength(LNext.Formals, Length(Formals));
+    for LAt := 0 to High(Formals) do
+      LNext.Formals[LAt] := Formals[LAt];
+    LNext.Formals[AIndex] := nil;
+    LAny := False;
+    for LAt := 0 to High(LNext.Formals) do
+      LAny := LAny or (LNext.Formals[LAt] <> nil);
+
+    if not LAny then
+      LNext.Formals := nil;
+  end;
+  TypeUseBytes(LLease);
   Result := LLease;
 end;
 
@@ -1637,17 +2267,32 @@ var
   LCount, LAt: Integer;
   LOwner: TDocumentationTypeUse;
   LBytes: Integer;
+  LFormalCapability, LFinalFormalCapability: INyxDocumentationFormalBindings;
+  LFormalSources: TDocumentationFormals;
+  LFormal, LFormalFrozen: INyxDocumentationFormalParameter;
+  LHasFormals, LFinalHasFormals, LLegacyFormals, LAny: Boolean;
+  LReadCount: Integer;
+  LReadExpression: INyxDocumentationTypeExpression;
+  LReadReference: TNyxDocumentationRef;
 begin
   Result := nil;
   AScope.Spend;
+  CheckCancellation(AScope);
 
   if AValue = nil then
     raise ENyxDocumentation.Create('A managed parameter needs its named type or exact expression');
   LReference := AValue.Reference;
   AScope.Spend;
+  CheckCancellation(AScope);
   LExpression := AValue.Expression;
   AScope.Spend;
+  CheckCancellation(AScope);
   LCount := AValue.BindingCount;
+  CheckCancellation(AScope);
+  LLegacyFormals := LegacyFormalMap(AValue, AScope);
+  CheckCancellation(AScope);
+  LHasFormals := Supports(AValue, INyxDocumentationFormalBindings, LFormalCapability);
+  CheckCancellation(AScope);
 
   if LReference.Defined then
   begin
@@ -1671,11 +2316,14 @@ begin
     LBytes := NyxUTF8ByteCount(LOwner.Compound.Text) + 1;
     AdmitBytes(LBytes);
     AScope.Spend(LCount + 1);
+    CheckCancellation(AScope);
     SetLength(LOwner.Bindings, LCount);
     for LAt := 0 to LCount - 1 do
     begin
       AScope.Spend;
+      CheckCancellation(AScope);
       LBound := AValue.BindingAt(LAt);
+      CheckCancellation(AScope);
 
       if LBound.Defined then
       begin
@@ -1686,24 +2334,202 @@ begin
         LOwner.Bindings[LAt] := LBound;
       end;
     end;
+
+    if LHasFormals and not LLegacyFormals then
+    begin
+      FormalWork(AScope, LCount * 2 + 1);
+      SetLength(LOwner.Formals, LCount);
+      SetLength(LFormalSources, LCount);
+      LAny := False;
+      for LAt := 0 to LCount - 1 do
+      begin
+        FormalWork(AScope);
+        LFormal := LFormalCapability.FormalAt(LAt);
+        LFormalSources[LAt] := LFormal;
+
+        if LFormal <> nil then
+        begin
+
+          if LOwner.Bindings[LAt].Defined then
+            raise ENyxDocumentation.Create('A type occurrence cannot be nominal and formal together');
+          LFormalFrozen := CaptureFormal(LFormal, AScope);
+          CheckFormalBinding(LOwner.Compound, LAt, LFormalFrozen, AScope);
+          Inc(LBytes, FormalBytes(LFormalFrozen));
+          AdmitBytes(LBytes);
+          LOwner.Formals[LAt] := LFormalFrozen;
+          LAny := True;
+        end;
+      end;
+      for LAt := 0 to LCount - 1 do
+      begin
+        FormalWork(AScope);
+
+        if LFormalCapability.FormalAt(LAt) <> LFormalSources[LAt] then
+          raise ENyxDocumentation.Create('Formal binding topology changed during capture');
+
+        if not SameFormal(LFormalSources[LAt], LOwner.Formals[LAt], AScope) then
+          raise ENyxDocumentation.Create('Formal binding changed during capture');
+      end;
+
+      if not LAny then
+        LOwner.Formals := nil;
+    end;
     for LAt := 0 to LCount - 1 do
     begin
       AScope.Spend;
+      CheckCancellation(AScope);
       LBound := AValue.BindingAt(LAt);
+      CheckCancellation(AScope);
 
       if (LBound.Defined <> LFrozen.BindingAt(LAt).Defined) or
         (LBound.Defined and not LBound.Same(LFrozen.BindingAt(LAt))) then
         raise ENyxDocumentation.Create('Expression binding changed during capture');
     end;
   end;
-  AScope.Spend;
+  LFinalHasFormals := Supports(AValue, INyxDocumentationFormalBindings, LFinalFormalCapability);
+  CheckCancellation(AScope);
 
-  if (AValue.BindingCount <> LCount) or (AValue.Expression <> LExpression) or
+  if (LFinalHasFormals <> LHasFormals) or
+    (LHasFormals and (LFormalCapability <> LFinalFormalCapability)) then
+    raise ENyxDocumentation.Create('Formal binding capability changed during capture');
+  AScope.Spend;
+  CheckCancellation(AScope);
+
+  if LHasFormals and not LLegacyFormals then
+  begin
+    LReadCount := AValue.BindingCount;
+    CheckCancellation(AScope);
+    LReadExpression := AValue.Expression;
+    CheckCancellation(AScope);
+    LReadReference := AValue.Reference;
+    CheckCancellation(AScope);
+
+    if (LReadCount <> LCount) or (LReadExpression <> LExpression) or
+      (LReadReference.Defined <> LReference.Defined) or
+      (LReference.Defined and not LReadReference.Same(LReference)) then
+      raise ENyxDocumentation.Create('Formal type-use envelope changed before publication');
+    for LAt := 0 to LCount - 1 do
+    begin
+      FormalWork(AScope);
+
+      if LFormalCapability.FormalAt(LAt) <> LFormalSources[LAt] then
+        raise ENyxDocumentation.Create('Formal binding changed at final type-use admission');
+
+      if not SameFormal(LFormalSources[LAt], LOwner.FormalAt(LAt), AScope) then
+        raise ENyxDocumentation.Create('Formal scalar changed at final type-use admission');
+    end;
+  end
+  else if (AValue.BindingCount <> LCount) or (AValue.Expression <> LExpression) or
     (AValue.Reference.Defined <> LReference.Defined) or
     (LReference.Defined and not AValue.Reference.Same(LReference)) then
     raise ENyxDocumentation.Create('Type-use envelope changed before publication');
   CheckCancellation(AScope);
   Result := LFrozen;
+end;
+
+{ Only present formal maps add comparison work to old named binding paths. }
+function SameFormalMap(const ASource, AFrozen: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LSource, LFinal, LCaptured: INyxDocumentationFormalBindings;
+  LAt: Integer;
+  LFormal, LExpected: INyxDocumentationFormalParameter;
+  LHasSource, LHasFrozen: Boolean;
+begin
+  Result := True;
+
+  if LegacyFormalMap(ASource, AScope) and LegacyFormalMap(AFrozen, AScope) then
+    Exit;
+  LHasSource := Supports(ASource, INyxDocumentationFormalBindings, LSource);
+  LHasFrozen := Supports(AFrozen, INyxDocumentationFormalBindings, LCaptured);
+  for LAt := 0 to AFrozen.BindingCount - 1 do
+  begin
+    LFormal := nil;
+    LExpected := nil;
+
+    if LHasSource then
+    begin
+      FormalWork(AScope);
+      LFormal := LSource.FormalAt(LAt);
+    end;
+
+    if LHasFrozen then
+      LExpected := LCaptured.FormalAt(LAt);
+
+    if not SameFormal(LFormal, LExpected, AScope) then
+      Exit(False);
+  end;
+  CheckCancellation(AScope);
+
+  if Supports(ASource, INyxDocumentationFormalBindings, LFinal) <> LHasSource then
+    Exit(False);
+  Result := not LHasSource or (LSource = LFinal);
+  CheckCancellation(AScope);
+end;
+
+{ Final type-use agreement is shared by interface vectors and formal attachment. }
+function SameTypeUseObservation(const ASource, AFrozen: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean; forward;
+
+function WithNyxDocumentationFormalBinding(const AUse: INyxDocumentationTypeUse;
+  AIndex: Integer; const AFormal: INyxDocumentationFormalParameter;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LSource, LFrozen, LCandidate: INyxDocumentationTypeUse;
+  LOwner, LCopy: TDocumentationTypeUse;
+  LPrivate: IDocumentationTypeUseOwner;
+  LFormal, LFormalSource: INyxDocumentationFormalParameter;
+  LAt: Integer;
+  LAny: Boolean;
+begin
+  LScope := AConstruction;
+  Result := nil;
+  LSource := AUse;
+  LFormalSource := AFormal;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  try
+    LFrozen := CaptureTypeUse(LSource, LScope);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  FormalWork(LScope);
+  LFrozen.BindingAt(AIndex);
+  LFormal := CaptureFormal(LFormalSource, LScope);
+  CheckFormalBinding(LFrozen.Expression, AIndex, LFormal, LScope);
+  Supports(LFrozen, IDocumentationTypeUseOwner, LPrivate);
+  LOwner := LPrivate.TypeUseOwner;
+  FormalWork(LScope, LFrozen.BindingCount * 2 + 1);
+  LCopy := TDocumentationTypeUse.Create;
+  LCandidate := LCopy;
+  LCopy.Compound := LOwner.Compound;
+  SetLength(LCopy.Bindings, Length(LOwner.Bindings));
+  SetLength(LCopy.Formals, Length(LOwner.Bindings));
+  for LAt := 0 to High(LCopy.Bindings) do
+  begin
+    LCopy.Bindings[LAt] := LOwner.Bindings[LAt];
+    LCopy.Formals[LAt] := LOwner.FormalAt(LAt);
+  end;
+  LCopy.Bindings[AIndex] := Default(TNyxDocumentationRef);
+  LCopy.Formals[AIndex] := LFormal;
+  LAny := False;
+  for LAt := 0 to High(LCopy.Formals) do
+    LAny := LAny or (LCopy.Formals[LAt] <> nil);
+
+  if not LAny then
+    LCopy.Formals := nil;
+  TypeUseBytes(LCandidate);
+
+  if (AFormal <> LFormalSource) or
+    ((LFormalSource <> nil) and not SameFormal(LFormalSource, LFormal, LScope)) or
+    not SameTypeUseObservation(LSource, LFrozen, LScope) then
+    raise ENyxDocumentation.Create('Formal attachment changed before publication');
+  CheckCancellation(LScope);
+  Result := LCandidate;
 end;
 
 procedure InterfaceWork(const AScope: INyxDocumentationTypeConstruction;
@@ -1798,12 +2624,12 @@ begin
     if (LLeft.Defined <> LRight.Defined) or (LLeft.Defined and not LLeft.Same(LRight)) then
       Exit;
   end;
-  Result := True;
+  Result := SameFormalMap(ALeft, ARight, AScope);
 end;
 
 { Final borrowed observation performs no reconstruction or fresh allowance.
   It checks every used field/map, stopping before the next getter if cancelled. }
-function SameImplementedObservation(const ASource, AFrozen: INyxDocumentationTypeUse;
+function SameTypeUseObservation(const ASource, AFrozen: INyxDocumentationTypeUse;
   const AScope: INyxDocumentationTypeConstruction): Boolean;
 var
   LReference, LBound, LExpected: TNyxDocumentationRef;
@@ -1844,7 +2670,7 @@ begin
     LAt := LExpression.NamedUseCount;
     CheckCancellation(AScope);
 
-    if (LRole <> ndtoImplementedInterface) or (LAt <> AFrozen.Expression.NamedUseCount) then
+    if (LRole <> AFrozen.Expression.Occurrence) or (LAt <> AFrozen.Expression.NamedUseCount) then
       Exit;
     for LAt := 0 to LCount - 1 do
     begin
@@ -1897,8 +2723,11 @@ begin
     InterfaceWork(AScope);
     LAt := LExpression.NamedUseCount;
     CheckCancellation(AScope);
-    Result := (LRole = ndtoImplementedInterface) and (LAt = LCount);
+    Result := (LRole = AFrozen.Expression.Occurrence) and (LAt = LCount);
   end;
+
+  if Result then
+    Result := SameFormalMap(ASource, AFrozen, AScope);
 end;
 
 function CaptureInterfaceImplementations(const AValue: INyxDocumentationInterfaceImplementations;
@@ -1952,7 +2781,7 @@ begin
     CheckCancellation(AScope);
 
     if (LCurrent <> LSources[LAt]) or
-      not SameImplementedObservation(LCurrent, LOwner.Items[LAt], AScope) then
+      not SameTypeUseObservation(LCurrent, LOwner.Items[LAt], AScope) then
       raise ENyxDocumentation.Create('Implemented-interface topology or use changed before publication');
   end;
   InterfaceWork(AScope);
@@ -2443,6 +3272,7 @@ end;
 function TypeUseBytes(const AValue: INyxDocumentationTypeUse): Integer;
 var
   LAt: Integer;
+  LFormals: INyxDocumentationFormalBindings;
 begin
   Result := 0;
 
@@ -2458,6 +3288,13 @@ begin
       Inc(Result, RefBytes(AValue.BindingAt(LAt)));
       AdmitBytes(Result);
     end;
+
+    if Supports(AValue, INyxDocumentationFormalBindings, LFormals) then
+      for LAt := 0 to AValue.BindingCount - 1 do
+      begin
+        Inc(Result, FormalBytes(LFormals.FormalAt(LAt)));
+        AdmitBytes(Result);
+      end;
   end;
   AdmitBytes(Result);
 end;
@@ -2503,8 +3340,69 @@ begin
   end;
 end;
 
+{ New generic metadata is observed only after legacy capture, then the legacy
+  envelope and exact new topology agree before the sole publication boundary. }
+procedure CaptureMemberGenerics(const ASource, AFrozen: INyxDocumentationMember;
+  const ASignature: INyxDocumentationSignature; const AValueType: TNyxDocumentationRef;
+  const AScope: INyxDocumentationTypeConstruction; AProof: TGenericObservation);
+var
+  LObservation: TGenericObservation;
+  LIdentity, LValue: TNyxDocumentationRef;
+  LKind: TNyxDocumentationMemberKind;
+  LSummary: TNyxText;
+  LEvidence: TNyxDocumentationEvidence;
+  LSignature: INyxDocumentationSignature;
+  LExamples, LRelated: Integer;
+  LOwner: TDocumentationMember;
+begin
+  LObservation := ObserveGenericMetadata(ASource, AFrozen.Identity, AScope);
+
+  if LObservation = nil then
+    Exit;
+  try
+
+    if (LObservation.Frozen <> nil) and (LObservation.Frozen.Count > 0) and
+      not (AFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+      raise ENyxDocumentation.Create('Only a routine member can declare own generic parameters');
+    FormalWork(AScope);
+    LIdentity := ASource.Identity;
+    FormalWork(AScope);
+    LKind := ASource.Kind;
+    FormalWork(AScope);
+    LSummary := ASource.Summary;
+    FormalWork(AScope);
+    LEvidence := ASource.Evidence;
+    FormalWork(AScope);
+    LSignature := ASource.Signature;
+    FormalWork(AScope);
+    LValue := ASource.ValueType;
+    FormalWork(AScope);
+    LExamples := ASource.ExampleCount;
+    FormalWork(AScope);
+    LRelated := ASource.RelatedCount;
+    CheckCancellation(AScope);
+    TextBound(LSummary, NyxDocumentationMaximumBytes);
+    FormalWork(AScope, Length(LSummary) + 1);
+
+    if not LIdentity.Same(AFrozen.Identity) or (LKind <> AFrozen.Kind) or
+      (LSummary <> AFrozen.Summary) or (LEvidence <> AFrozen.Evidence) or
+      (LSignature <> ASignature) or (LValue.Defined <> AValueType.Defined) or
+      (LValue.Defined and not LValue.Same(AValueType)) or
+      (LExamples <> AFrozen.ExampleCount) or (LRelated <> AFrozen.RelatedCount) then
+      raise ENyxDocumentation.Create('Generic member envelope changed during capture');
+    CheckGenericObservation(ASource, LObservation, AScope);
+    LOwner := CapturedMemberOwner(AFrozen);
+    LOwner.FGenerics := LObservation.Frozen;
+    MemberBytes(AFrozen);
+    CopyGenericObservation(AProof, LObservation);
+  finally
+    LObservation.Free;
+  end;
+end;
+
 function CaptureDocumentationMember(const AValue: INyxDocumentationMember;
-  const ACancellation: INyxCancellationScope): INyxDocumentationMember;
+  const ACancellation: INyxCancellationScope;
+  AGenericProof: TGenericObservation = nil): INyxDocumentationMember;
 var
   LSource, LFrozen: INyxDocumentationMember;
   LAt, LCount: Integer;
@@ -2801,6 +3699,7 @@ begin
         raise ENyxDocumentation.Create('Authored member scalar intent changed before publication');
     end;
   end;
+  CaptureMemberGenerics(LSource, LFrozen, LOriginalSignature, LType, LScope, AGenericProof);
   CheckCancellation(ACancellation);
   Result := LFrozen;
 end;
@@ -2819,6 +3718,8 @@ begin
     try
       LFrozen := CaptureDocumentationMember(AValue, LScope);
     except
+      on E: ENyxPascalAnalysisCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
       on E: ENyxDocumentationTypeExpressionCancelled do
         raise ENyxDocumentationCancelled.Create(E.Message);
     end;
@@ -3106,6 +4007,7 @@ begin
   ATarget.FKind := FKind;
   ATarget.FAlias := FAlias;
   ATarget.FImplemented := FImplemented;
+  ATarget.FGenerics := FGenerics;
   SetLength(ATarget.FBases, BaseCount);
   for LAt := 0 to BaseCount - 1 do
     ATarget.FBases[LAt] := FBases[LAt];
@@ -3438,7 +4340,7 @@ begin
     CheckCancellation(AScope);
 
     if (LItem <> AObserved[LAt]) or
-      not SameImplementedObservation(LItem, AFrozen.ItemAt(LAt), AScope) then
+      not SameTypeUseObservation(LItem, AFrozen.ItemAt(LAt), AScope) then
       Exit;
   end;
   InterfaceWork(AScope);
@@ -3531,9 +4433,39 @@ begin
   Result := True;
 end;
 
+{ Generic scope facts share the same captured envelope and sealed construction;
+  no generic declaration is inferred from a containing class or member spelling. }
+procedure CaptureTypeGenerics(const ASource, AFrozen: INyxDocumentationType;
+  const AScope: INyxDocumentationTypeConstruction; AProof: TGenericObservation);
+var
+  LObservation: TGenericObservation;
+  LPrivate: IDocumentationTypeOwner;
+begin
+  LObservation := ObserveGenericMetadata(ASource, AFrozen.Identity, AScope);
+
+  if LObservation = nil then
+    Exit;
+  try
+
+    if (LObservation.Frozen <> nil) and (AFrozen.Kind = ndtUnit) then
+      raise ENyxDocumentation.Create('A unit has no own generic parameter scope');
+
+    if not SameImplementationEnvelope(ASource, AFrozen, AScope) then
+      raise ENyxDocumentation.Create('Generic type envelope changed during capture');
+    CheckGenericObservation(ASource, LObservation, AScope);
+    Supports(AFrozen, IDocumentationTypeOwner, LPrivate);
+    LPrivate.TypeOwner.FGenerics := LObservation.Frozen;
+    TypeBytes(AFrozen);
+    CopyGenericObservation(AProof, LObservation);
+  finally
+    LObservation.Free;
+  end;
+end;
+
 function CaptureDocumentationType(const AValue: INyxDocumentationType;
   const ACancellation: INyxCancellationScope;
-  AObservation: TImplementationObservation = nil): INyxDocumentationType;
+  AObservation: TImplementationObservation = nil;
+  AGenericProof: TGenericObservation = nil): INyxDocumentationType;
 var
   LSource, LFrozen: INyxDocumentationType;
   LAt, LCount: Integer;
@@ -3778,6 +4710,7 @@ begin
       (LSource.ExampleCount <> LFrozen.ExampleCount) or (LSource.RelatedCount <> LFrozen.RelatedCount) then
       raise ENyxDocumentation.Create('Declared type envelope changed before publication');
   end;
+  CaptureTypeGenerics(LSource, LFrozen, LScope, AGenericProof);
   CheckCancellation(ACancellation);
 
   if AObservation <> nil then
@@ -3804,6 +4737,8 @@ begin
     try
       LFrozen := CaptureDocumentationType(AValue, LScope);
     except
+      on E: ENyxPascalAnalysisCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
       on E: ENyxDocumentationTypeExpressionCancelled do
         raise ENyxDocumentationCancelled.Create(E.Message);
     end;
@@ -3892,6 +4827,174 @@ begin
   LObserved := nil;
   CheckCancellation(AConstruction);
   Result := LLease;
+end;
+
+{ Observe the original optional slot before another supplier can change it.
+  Exact private nil owners retain their historical absence work path. }
+procedure InitialGenericMetadata(const AValue: IInterface;
+  const AScope: INyxDocumentationTypeConstruction;
+  out ACapability: INyxDocumentationGenericDeclaration;
+  out AParameters: INyxDocumentationGenericParameters);
+begin
+  ACapability := nil;
+  AParameters := nil;
+
+  if LegacyGenericDeclaration(AValue, AScope) then
+    Exit;
+  FormalWork(AScope);
+
+  if Supports(AValue, INyxDocumentationGenericDeclaration, ACapability) then
+  begin
+    FormalWork(AScope);
+    AParameters := ACapability.GenericParameters;
+    CheckCancellation(AScope);
+  end;
+end;
+
+function WithNyxDocumentationGenericParameters(const AType: INyxDocumentationType;
+  const AParameters: INyxDocumentationGenericParameters;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LSource, LFrozen, LCandidate: INyxDocumentationType;
+  LParameters, LCaptured, LInitial: INyxDocumentationGenericParameters;
+  LInitialCapability: INyxDocumentationGenericDeclaration;
+  LObserved: TDocumentationFormals;
+  LProof: TGenericObservation;
+  LPrivate: IDocumentationTypeOwner;
+  LCopy: TDocumentationType;
+begin
+  LScope := AConstruction;
+  Result := nil;
+  LSource := AType;
+  LParameters := AParameters;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  FormalWork(LScope);
+
+  if LSource = nil then
+    raise ENyxDocumentation.Create('Generic parameters require their actual type declaration');
+  LProof := TGenericObservation.Create;
+  try
+    InitialGenericMetadata(LSource, LScope, LInitialCapability, LInitial);
+    try
+      LFrozen := CaptureDocumentationType(LSource, LScope, nil, LProof);
+    except
+      on E: ENyxPascalAnalysisCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+      on E: ENyxDocumentationTypeExpressionCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+    end;
+    LCaptured := CaptureGenerics(LParameters, LFrozen.Identity, LScope, LObserved);
+    FormalWork(LScope, LFrozen.BaseCount + LFrozen.MemberCount +
+      LFrozen.ExampleCount + LFrozen.RelatedCount + 1);
+    Supports(LFrozen, IDocumentationTypeOwner, LPrivate);
+    LCopy := LPrivate.TypeOwner.CopyValue;
+    LCandidate := LCopy;
+    LCopy.FGenerics := LCaptured;
+    TypeBytes(LCandidate);
+
+    if (LInitialCapability <> LProof.Capability) or (LInitial <> LProof.Source) or
+      (AParameters <> LParameters) or not SameGenerics(LParameters, LCaptured, LObserved, LScope) or
+      not SameImplementationEnvelope(LSource, LFrozen, LScope) then
+      raise ENyxDocumentation.Create('Generic type attachment changed during capture');
+    CheckGenericObservation(LSource, LProof, LScope);
+  finally
+    LProof.Free;
+  end;
+  LObserved := nil;
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
+function WithNyxDocumentationGenericParameters(const AMember: INyxDocumentationMember;
+  const AParameters: INyxDocumentationGenericParameters;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LSource, LFrozen, LCandidate: INyxDocumentationMember;
+  LParameters, LCaptured, LInitial: INyxDocumentationGenericParameters;
+  LInitialCapability: INyxDocumentationGenericDeclaration;
+  LObserved: TDocumentationFormals;
+  LProof: TGenericObservation;
+  LCopy: TDocumentationMember;
+  LSignature, LFinalSignature: INyxDocumentationSignature;
+  LIdentity, LValue: TNyxDocumentationRef;
+  LKind: TNyxDocumentationMemberKind;
+  LSummary: TNyxText;
+  LEvidence: TNyxDocumentationEvidence;
+  LExamples, LRelated: Integer;
+begin
+  LScope := AConstruction;
+  Result := nil;
+  LSource := AMember;
+  LParameters := AParameters;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  FormalWork(LScope);
+
+  if LSource = nil then
+    raise ENyxDocumentation.Create('Generic parameters require their actual routine member');
+  LProof := TGenericObservation.Create;
+  try
+    InitialGenericMetadata(LSource, LScope, LInitialCapability, LInitial);
+    FormalWork(LScope);
+    LSignature := LSource.Signature;
+    CheckCancellation(LScope);
+    try
+      LFrozen := CaptureDocumentationMember(LSource, LScope, LProof);
+    except
+      on E: ENyxPascalAnalysisCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+      on E: ENyxDocumentationTypeExpressionCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+    end;
+    LCaptured := CaptureGenerics(LParameters, LFrozen.Identity, LScope, LObserved);
+
+    if (LCaptured <> nil) and (LCaptured.Count > 0) and
+      not (LFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+      raise ENyxDocumentation.Create('Only a routine member can own generic parameters');
+    FormalWork(LScope, LFrozen.ExampleCount + LFrozen.RelatedCount + 1);
+    LCopy := CapturedMemberOwner(LFrozen).CopyValue;
+    LCandidate := LCopy;
+    LCopy.FGenerics := LCaptured;
+    MemberBytes(LCandidate);
+    FormalWork(LScope);
+    LIdentity := LSource.Identity;
+    FormalWork(LScope);
+    LKind := LSource.Kind;
+    FormalWork(LScope);
+    LSummary := LSource.Summary;
+    FormalWork(LScope);
+    LEvidence := LSource.Evidence;
+    FormalWork(LScope);
+    LFinalSignature := LSource.Signature;
+    FormalWork(LScope);
+    LValue := LSource.ValueType;
+    FormalWork(LScope);
+    LExamples := LSource.ExampleCount;
+    FormalWork(LScope);
+    LRelated := LSource.RelatedCount;
+    CheckCancellation(LScope);
+    TextBound(LSummary, NyxDocumentationMaximumBytes);
+    FormalWork(LScope, Length(LSummary) + 1);
+
+    if (LInitialCapability <> LProof.Capability) or (LInitial <> LProof.Source) or
+      (AParameters <> LParameters) or not SameGenerics(LParameters, LCaptured, LObserved, LScope) or
+      not LIdentity.Same(LFrozen.Identity) or (LKind <> LFrozen.Kind) or
+      (LSummary <> LFrozen.Summary) or (LEvidence <> LFrozen.Evidence) or
+      (LFinalSignature <> LSignature) or
+      (LValue.Defined <> LFrozen.ValueType.Defined) or
+      (LValue.Defined and not LValue.Same(LFrozen.ValueType)) or
+      (LExamples <> LFrozen.ExampleCount) or (LRelated <> LFrozen.RelatedCount) then
+      raise ENyxDocumentation.Create('Generic member attachment changed during capture');
+    CheckGenericObservation(LSource, LProof, LScope);
+  finally
+    LProof.Free;
+  end;
+  LObserved := nil;
+  CheckCancellation(LScope);
+  Result := LCandidate;
 end;
 
 end.
