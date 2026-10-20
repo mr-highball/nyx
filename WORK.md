@@ -2,7 +2,8 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
-The full user outcome remains in MILESTONES.md. Execution is solo. Product and
+The full user outcome remains in MILESTONES.md. Root coordinates one authorized
+helper, Lil' Scooty, in a separate source scope. Product and
 substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
@@ -33,7 +34,137 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Project definitions in Studio completion — 2026-10-20
+## Current integration: Definition lookup from the source caret — 2026-10-20
+
+The preceding coordination-only turn is no product progress: it confirms the
+running helper and the persisted active/next queue, without new implementation
+evidence. This continuation takes the available product action. Original NS-4
+authoring criterion two still owns the complete modern editor; the many earlier
+unclosed prerequisite batches are not reset by changing feature or worker.
+
+Current deliverable: an immutable typed definition query/result/provider over the
+same owned semantic world, then private editor transport and both Studio input
+consumers. Resolve the exact name under the caret rather than a prefix suggestion;
+preserve declared alternatives instead of inventing overload selection. Keep
+project-local source coordinates exact and external SDK locations explicitly
+absent. No authored text or Undo changes merely to navigate.
+
+Qualification must exercise bare lexical names, shadowing, exact member lookup,
+imported/current helper buffers, includes, overload alternatives/pages, escaped
+names, non-code/inactive/uncertain source, cancellation, bounds and stale input.
+The complete end-to-end deliverable still requires private service correlation,
+queued UI handoff and native/browser execution. Contract-only checks close none
+of that criterion. Stop/switch on a demonstrated unsupported semantic owner;
+do not enlarge parser/conditional/probe budgets or guess source facts to pass.
+
+Root owns the new definition unit, completion.owned and subsequent editor/private
+transport consumers. Lil' Scooty owns the six-file documentation/schema lane.
+Root admits builds only after both workers freeze; neither edits Pascal during
+live compiler/source readers. Current work starts at f8c318c, with foreign planning
+and all retained previous evidence untouched. LAN remains offline.
+
+Implemented: the optional definition provider resolves the whole physical name
+through the existing immutable world. Bare/qualified lookup preserves lexical
+shadowing and namespace authority; supported complex receivers use the existing
+expression/member owners. The distinct `pbsOverloads` outcome is accepted only
+for declaration inspection, retaining every alternative and its exact total.
+Comment/literal/inactive/unknown and over-budget contexts publish no targets.
+Project coordinates retain the same whole-file/original-name ownership as the
+preceding completion metadata; SDK-only targets retain no invented selector.
+
+The private editor definition operation uses specialized typed provider dispatch
+after ordinary revision/workspace/source admission. Its shared wire adapter has
+empty insertion/replacement text. Ordinary Preview still returns editing-origin
+data even for a no-op; the definition popup refuses both Preview and Accept.
+The Nyx-built popup presents declared alternatives with exact ticket/mount guards.
+F12 and the visible source toolbar Definition action use the shared controller;
+a single project target queues after dispatch, and multiple targets require a
+choice. Both adapters consume the existing queued navigation and line mapping.
+All current text/caret/history/service/project/source guards apply again before
+the host changes its active source selector. Authored text/Undo is unchanged.
+
+Lil' Scooty independently implements immutable typed documentation declarations,
+public specialized badge/interface/callback examples and an optional typed schema
+inspection capability. Existing snapshot GUID/methods/transport remain exact;
+nested event routes/payloads detach. The schema/catalog adapter retains original
+metadata authority and explicit missing facts, separate from authored prose.
+Declaration and fact layers each have their documented bounded allowance and
+cancellation. It never constructs controls/callbacks or executes examples for
+inspection. This is a usable declaration foundation, with unit/global creator
+identity, source-generator adoption, automatic discovery, contextual Studio help
+and executed decorated-browser qualification still required. No reference task
+or original authoring criterion is accepted from these isolated contracts.
+
+Preparation failures remain retained with their exact source freezes: the first
+provider test exposes the distinct overload status; a later partial-name fixture
+anchor accidentally matches an earlier longer identifier. Documentation first
+needs its actual scalar-count and node-property APIs; its callback ancestry is
+also retained explicitly before final qualification. The first transport no-op
+assertion compares source origin as well as text; its correction checks every
+accepted/current byte, membership and caret while retaining Preview's real origin
+semantics. All native assertion failures have clean heaps. One initial deliberately
+raising fixture getter warning is repaired before the final matrix, without any
+product warning suppression. No failed source/log is replaced by later success.
+
+The first twenty-source common freeze qualifies28 successful compilers with zero
+owned warnings/91 upstream Classes warnings. Thirteen distinct native programs
+pass with clean heaps: new caret58, documentation33, portable metadata40, owned
+definitions46, guarded menu27, shared controller72, real never-listening private
+transport31, and maintained boundary23/provider90/view40/client10/production-MCP82/
+source-reuse3400. Thirteen browser consumers compile only, including both new
+APIs and controller/service boundaries, Studio and worker; native Studio/backend
+compile too. The production-engine fixtures use new unregistered owned scratch
+runtime directories, never Start/HTTP/SDK capture/compiler/global enrollment.
+No GUI/browser/phone/input/accessibility execution or parity is claimed.
+
+Independent cross-review by Lil' Scooty then finds a real current-owner guard
+gap: an include's explicit outline translation unit can change without changing
+the session, project, text, caret or history. The service's stored query cannot
+certify that new UI context. `CompletionCurrent` now re-reads the current borrowed
+owner callback using the same fallback as submission and requires exact SameFile
+before reply, popup or queued navigation. Three omitted IF-spacing blank lines
+are repaired in that same open source window.
+
+A first stronger controller setup correctly refuses supporting files without
+their actual compiled construction, with a clean heap. The public admission rule
+is preserved. The final controlled-port fixture changes only the current owner
+selector, before reply and before queued navigation, and checks unchanged source/
+selector/history. This proves that live-owner revocation seam; actual include-
+outline GUI interaction remains open, separately from owned-provider include
+qualification. The prior28-job evidence and its source freeze remain retained as
+`pre-owner-review-*`. A new common `qualified` freeze reruns all intended consumers
+for the real guard repair; its result is recorded only after all readers join.
+
+That repaired-source final matrix passes all28 compiler jobs and13 distinct native
+programs with clean heaps. The controller now passes78; other native counts remain
+58/33/40/46/27/31/23/90/40/10/82/3400. All thirteen browser consumers compile only,
+and both native products compile. Zero owned warnings/91 upstream remain exact.
+All twenty Pascal inputs stay byte-identical through this complete final matrix;
+the three spacing repairs are included in that common source freeze, without
+composite or pre-repair evidence substituting for current qualification. The final
+source receipt is `source-qualified-freeze-private.json`. The independent review
+finds no further actionable defect, subject to the explicit GUI/include limits.
+
+All786 maintained source inputs and766 unrelated inputs remain exact during each
+admitted common freeze. Prior compiler/97 RTL/profile/protected and thirteen concurrent
+planning comparisons pass; the independent unchanged verifier confirms349 frozen
+files with a clean heap. All readers join; zero Studio listeners remain. Current-
+start protection is exact; the historical global-config preservation gate remains
+false and unrepaired. `.local/caret-definition-paths-private.json` owns all source,
+preparation, terminal and final qualification receipts. No new public MCP tool or
+schema, host/config retry, protected mutation, cleanup or restart occurs.
+
+Full criterion two remains open across at least forty-eight documented unclosed
+batches (the forty-six-batch historical checkpoint plus the preceding navigation
+and current integration, without resetting any later prerequisite work). This
+batch moves its intended editor consumer forward but does not close full language,
+project/module/incremental/editor/references/rename/input/accessibility/quality/
+parity/adoption/delivery. Stop definition/fixture/compiler variants after final
+review. Next: retain this editor integration while Lil' Scooty addresses truthful
+unit/global creator documentation identity, then registration/discovery through
+existing declaration/registration owners. The complete original goal stays active.
+
+## Previous integration: Project definitions in Studio completion — 2026-10-20
 
 Coordination update after qualification: the human requests a standing active/
 next backlog queue for Lil' Scooty. The helper now owns assessment and proposed

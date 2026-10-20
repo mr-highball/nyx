@@ -683,6 +683,8 @@ begin
     LActions.Add(Button('action-export-source-draft', 'Save draft').Configure
       .Hint('Download the current Pascal draft')
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Save draft').Done);
+    LActions.Add(Button('action-source-definition', 'Definition').Configure
+      .Hint('Open the declaration at the source caret (F12); choose among declared overloads').Done);
     LButton := Button('action-expand-source', 'Expand');
     LActions.Add(LButton);
 

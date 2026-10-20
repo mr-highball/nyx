@@ -245,6 +245,20 @@ type
     property Revision: Integer read GetRevision;
   end;
 
+  { Optional typed inspection of one captured creator environment. Missing kinds
+    return -1; invalid ordinals refuse. Returned values detach nested event
+    vectors/payloads and never enter Execute, global registration or a control. }
+  INyxSchemaInspection = interface(IInterface)
+    ['{21E37520-0B2D-421E-A714-6E66E9131725}']
+    function KindCount: Integer;
+    function KindAt(AIndex: Integer): TNyxKindRef;
+    function FindKind(const AKind: TNyxKindRef): Integer;
+    function PropertyCount(AKind: Integer): Integer;
+    function PropertyAt(AKind, AIndex: Integer): TNyxPropertyInfo;
+    function EventCount(AKind: Integer): Integer;
+    function EventAt(AKind, AIndex: Integer): TNyxEventSchema;
+  end;
+
 { Capture current published metadata atomically; later publication cannot mutate
   the value. A scoped capture captures that exact environment instead. The wire
   reader owns detached arrays/payloads and never modifies the global registry. }
@@ -325,13 +339,23 @@ type
   end;
   TNyxPublishedSchemas = array of TNyxPublishedSchema;
 
-  TNyxSchemaSnapshot = class(TInterfacedObject, INyxSchemaSnapshot)
+  { One captured immutable creator environment. Typed getters detach returned
+    metadata; Execute only installs this snapshot as a temporary calling scope
+    and restores the previous scope before returning or propagating failure. }
+  TNyxSchemaSnapshot = class(TInterfacedObject, INyxSchemaSnapshot, INyxSchemaInspection)
   public
     Schemas: TNyxPublishedSchemas;
     CapturedRevision: Integer;
     function GetRevision: Integer;
     function ToData: TNyxDataValue;
     procedure Execute(const AAction: INyxSchemaAction);
+    function KindCount: Integer;
+    function KindAt(AIndex: Integer): TNyxKindRef;
+    function FindKind(const AKind: TNyxKindRef): Integer;
+    function PropertyCount(AKind: Integer): Integer;
+    function PropertyAt(AKind, AIndex: Integer): TNyxPropertyInfo;
+    function EventCount(AKind: Integer): Integer;
+    function EventAt(AKind, AIndex: Integer): TNyxEventSchema;
   end;
 
 var

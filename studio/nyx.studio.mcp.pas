@@ -35,7 +35,7 @@ uses
   nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
   nyx.studio.recovery, nyx.studio.resourceruns, nyx.studio.buildlaunches,
-  nyx.studio.sourcepublications, nyx.studio.editorbuild;
+  nyx.studio.sourcepublications, nyx.studio.editorbuild, nyx.studio.completion;
 
 type
   { Opaque transient native-host publication ticket. Capture precedes compilation;
@@ -116,7 +116,8 @@ type
       Operator reads use the launch's editor capability and ordinary workspaces. }
     function CompleteSource(const AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue; AOperator: Boolean;
-      out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
+      out AFrozenResult: INyxPascalCompletionResult;
+      AKind: TNyxStudioPascalQueryKind = spqCompletion): TNyxDataValue;
     function EditorCompletion(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
     { Caller holds FGuard. Validate, persist through the borrowed host callback,
@@ -282,7 +283,7 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.editing,
   nyx.studio.resourceedits, nyx.studio.sourceobservations, nyx.bytes,
   nyx.studio.sourcebuilds, nyx.studio.projectimport,
-  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project, nyx.studio.completion;
+  nyx.canvas.declarations, nyx.canvas.editing, nyx.pascal.project, nyx.pascal.definition;
 
 function NewCapability: TNyxText;
 var
@@ -859,7 +860,8 @@ begin
     raise ENyxProjectConflict.Create('Editor connection capability is missing or expired');
   end;
 
-  if ARequest.Field('op').AsText = 'completion' then
+  if (ARequest.Field('op').AsText = 'completion') or
+    (ARequest.Field('op').AsText = 'definition') then
   begin
     Exit(EditorCompletion(AToken, ARequest));
   end;
@@ -1355,6 +1357,7 @@ var
   LPage: TNyxDataValue;
   LID: TNyxText;
   LFrozen: INyxPascalCompletionResult;
+  LKind: TNyxStudioPascalQueryKind;
 begin
 
   if AToken <> FEditorToken then
@@ -1362,7 +1365,10 @@ begin
     raise ENyxProjectConflict.Create('Editor completion capability is missing or expired');
   end;
   LArguments := NyxStudioCompletionArguments(ARequest, LID);
-  LPage := CompleteSource(AToken, 'Studio operator', LArguments, True, LFrozen);
+  LKind := spqCompletion;
+
+  if ARequest.Field('op').AsText = 'definition' then LKind := spqDefinition;
+  LPage := CompleteSource(AToken, 'Studio operator', LArguments, True, LFrozen, LKind);
   Result := NyxStudioCompletionEnvelope(LPage, LID, NyxWorkspaceArgument(LArguments), LFrozen);
 
   if NyxUTF8ByteCount(Result.ToJSON) > 48 * 1024 then
@@ -1381,7 +1387,8 @@ end;
 
 function TNyxStudioMCP.CompleteSource(const AOwner, AActor: TNyxText;
   const AArguments: TNyxDataValue; AOperator: Boolean;
-  out AFrozenResult: INyxPascalCompletionResult): TNyxDataValue;
+  out AFrozenResult: INyxPascalCompletionResult;
+  AKind: TNyxStudioPascalQueryKind): TNyxDataValue;
 var
   LSession: TNyxAgentSession;
   LArguments: TNyxDataValue;
@@ -1393,6 +1400,9 @@ var
   LPermissionGeneration: Integer;
   LFailed: Boolean;
   LFrozen: INyxPascalCompletionResult;
+  LDefinitions: INyxPascalDefinitionProvider;
+  LDefinitionQuery: INyxPascalDefinitionRequest;
+  LDefinitionResult: INyxPascalDefinitionResult;
 begin
   AFrozenResult := nil;
   LSession := nil;
@@ -1451,7 +1461,27 @@ begin
           end
           else
           begin
-            LReply := LProvider.Complete(LRequest);
+
+            if AKind = spqDefinition then
+            begin
+
+              if not AOperator or not Supports(LProvider, INyxPascalDefinitionProvider, LDefinitions) then
+              begin
+                LReply := NewNyxPascalCompletionResult(LRequest, pcsUnavailable,
+                  'This Pascal provider does not offer definition lookup', 0, '', [], 0);
+              end
+              else
+              begin
+                LDefinitionQuery := NyxPascalDefinitionRequest(LRequest);
+                LDefinitionResult := CaptureNyxPascalDefinitionResult(
+                  LDefinitions.ResolveDefinition(LDefinitionQuery), LDefinitionQuery);
+                LReply := NyxPascalDefinitionPage(LDefinitionResult);
+              end;
+            end
+            else
+            begin
+              LReply := LProvider.Complete(LRequest);
+            end;
           end;
         except
           on E: Exception do

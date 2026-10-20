@@ -28,7 +28,7 @@ interface
 
 uses nyx.text, nyx.model, nyx.types, nyx.events, nyx.behavior, nyx.scheduler, nyx.editing,
   nyx.editing.commands, nyx.editing.history, nyx.text.projection, nyx.pascal.project,
-  nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion,
+  nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion, nyx.pascal.definition,
   nyx.pascal.completion.view, nyx.studio.completion, nyx.studio.session;
 
 type
@@ -113,6 +113,7 @@ type
     FCompletionGeneration: Integer;
     FCompletionRevision: Integer;
     FCompletionWaiting: Boolean;
+    FDefinitionLookup: Boolean;
     { A row click requests navigation for the next host turn. No file switches
       while its popup/input callback is dispatching; that turn rechecks authority. }
     FDefinitionPending: Boolean;
@@ -120,7 +121,8 @@ type
     procedure CompletionChanged;
     function CompletionCurrent: Boolean;
     procedure SubmitCompletion;
-    procedure StartCompletion(AOffset: Integer = 0);
+    procedure StartCompletion(AOffset: Integer = 0;
+      AKind: TNyxStudioPascalQueryKind = spqCompletion);
     procedure CompletionReply(AReply: TNyxStudioSourceCompletionReply;
       const AQuery: INyxPascalCompletionRequest; const AResult: INyxPascalCompletionResult);
     procedure CompletionAction(AAction: TNyxPascalCompletionAction);
@@ -153,6 +155,9 @@ type
       AOwner: TNyxStudioCompletionOwnerRead; AChanged: TNyxStudioCompletionChanged);
     { Close/revoke a local query without cancelling admitted server analysis. }
     procedure DismissCompletion;
+    { Inspect the identifier at the current caret. A single project target is
+      queued for normal navigation; declared alternatives use the guarded popup. }
+    procedure RequestDefinition;
     { Independent public Nyx card document, or nil when closed. Caller owns it.
       Presentation must run after input/transport return, preserving source focus. }
     function BuildCompletion: TNyxDocument;
@@ -529,6 +534,12 @@ begin
       NyxEventResponse(AExecution).Consume;
       CompletionAction(LAction);
     end;
+
+    if (LAction = pcaNone) and AEvent.Keyboard.Matches(nkF12Key) then
+    begin
+      NyxEventResponse(AExecution).Consume;
+      RequestDefinition;
+    end;
   end;
 end;
 
@@ -577,6 +588,7 @@ begin
   FCompletionContext := nil;
   FCompletionQuery := nil;
   FCompletionWaiting := False;
+  FDefinitionLookup := False;
   FDefinitionPending := False;
 
   if FCompletionMenu <> nil then
@@ -593,12 +605,20 @@ end;
 function TNyxStudioSourceInput.CompletionCurrent: Boolean;
 var
   LEditing: TNyxEditingSnapshot;
+  LOwner: TNyxPascalSourceRef;
 begin
   Result := (FCompletionQuery <> nil) and Current(LEditing);
 
   if Result then
   begin
-    Result := not LEditing.Composing and not FActive.History.Composing and
+    LOwner := FActive.FileReference;
+
+    if Assigned(FCompletionOwnerRead) then LOwner := FCompletionOwnerRead();
+    { An include's explicit translation unit can change without any buffer or
+      history change. Re-read its current owner at presentation and queued-jump
+      boundaries, rather than letting the old service query certify itself. }
+    Result := FCompletionQuery.Owner.SameFile(LOwner) and
+      not LEditing.Composing and not FActive.History.Composing and
       (FCompletionGeneration = FActive.History.Generation) and
       (FActive.History.Current.Text = LEditing.Text) and
       FActive.History.Current.Selection.SameRange(LEditing.Selection) and
@@ -607,11 +627,23 @@ begin
   end;
 end;
 
-procedure TNyxStudioSourceInput.StartCompletion(AOffset: Integer);
+procedure TNyxStudioSourceInput.RequestDefinition;
+var
+  LEditing: TNyxEditingSnapshot;
+begin
+
+  if not Current(LEditing) then Exit;
+  Observe(LEditing);
+  StartCompletion(0, spqDefinition);
+end;
+
+procedure TNyxStudioSourceInput.StartCompletion(AOffset: Integer;
+  AKind: TNyxStudioPascalQueryKind);
 var
   LEditing: TNyxEditingSnapshot;
   LOwner: TNyxPascalSourceRef;
   LTicket: TNyxPascalCompletionTicket;
+  LDefinitions: INyxPascalDefinitionMenu;
 begin
   DismissCompletion;
 
@@ -626,8 +658,20 @@ begin
   begin
     LOwner := FCompletionOwnerRead();
   end;
-  FCompletionQuery := FCompletionMenu.BeginQuery(Sources, FActive.FileReference, LOwner,
-    LTicket, AOffset);
+  FDefinitionLookup := AKind = spqDefinition;
+
+  if FDefinitionLookup then
+  begin
+
+    if not Supports(FCompletionMenu, INyxPascalDefinitionMenu, LDefinitions) then Exit;
+    FCompletionQuery := NyxPascalDefinitionQuery(LDefinitions.BeginDefinitionQuery(
+      Sources, FActive.FileReference, LOwner, LTicket, AOffset));
+  end
+  else
+  begin
+    FCompletionQuery := FCompletionMenu.BeginQuery(Sources, FActive.FileReference, LOwner,
+      LTicket, AOffset);
+  end;
   FCompletionGeneration := FActive.History.Generation;
   FCompletionReply := TNyxStudioSourceCompletionReply.Create;
   FCompletionLease := FCompletionReply;
@@ -648,6 +692,9 @@ var
   LWasWaiting: Boolean;
   LMessage: TNyxText;
   LReply: TNyxStudioSourceCompletionReply;
+  LDefinitions: INyxStudioDefinitionContext;
+  LMenu: INyxPascalDefinitionMenu;
+  LUnavailable: INyxPascalCompletionResult;
 begin
 
   if not CompletionCurrent or (FCompletionReply = nil) then
@@ -661,7 +708,21 @@ begin
 
   if FCompletionContext <> nil then
   begin
-    LReadiness := FCompletionContext.Request(FCompletionQuery, FCompletionLease);
+
+    if FDefinitionLookup then
+    begin
+      LReadiness := scrUnavailable;
+
+      if Supports(FCompletionContext, INyxStudioDefinitionContext, LDefinitions) then
+      begin
+        LReadiness := LDefinitions.RequestDefinition(
+          NyxPascalDefinitionRequest(FCompletionQuery), FCompletionLease);
+      end;
+    end
+    else
+    begin
+      LReadiness := FCompletionContext.Request(FCompletionQuery, FCompletionLease);
+    end;
   end;
   FCompletionWaiting := LReadiness = scrSynchronizing;
 
@@ -678,8 +739,27 @@ begin
     begin
       LMessage := 'Pascal completion is unavailable for this editor context';
     end;
-    FCompletionMenu.Present(LReply.Ticket,
-      NewNyxPascalCompletionResult(FCompletionQuery, pcsUnavailable, LMessage, 0, '', [], 0), Sources);
+
+    if FDefinitionLookup then
+    begin
+      LMessage := 'Connect Studio to its local service for Pascal definition lookup';
+
+      if LReadiness = scrUnavailable then
+      begin
+        LMessage := 'Pascal definition lookup is unavailable for this editor context';
+      end;
+    end;
+    LUnavailable := NewNyxPascalCompletionResult(FCompletionQuery, pcsUnavailable, LMessage, 0, '', [], 0);
+
+    if FDefinitionLookup and Supports(FCompletionMenu, INyxPascalDefinitionMenu, LMenu) then
+    begin
+      LMenu.PresentDefinition(LReply.Ticket,
+        NyxPascalDefinitionResult(NyxPascalDefinitionRequest(FCompletionQuery), LUnavailable), Sources);
+    end
+    else
+    begin
+      FCompletionMenu.Present(LReply.Ticket, LUnavailable, Sources);
+    end;
     LReply.Owner := nil;
     FCompletionReply := nil;
     FCompletionLease := nil;
@@ -688,6 +768,10 @@ end;
 
 procedure TNyxStudioSourceInput.CompletionReply(AReply: TNyxStudioSourceCompletionReply;
   const AQuery: INyxPascalCompletionRequest; const AResult: INyxPascalCompletionResult);
+var
+  LMenu: INyxPascalDefinitionMenu;
+  LResult: INyxPascalDefinitionResult;
+  LPresented: Boolean;
 begin
 
   if AReply <> FCompletionReply then
@@ -702,7 +786,24 @@ begin
     Exit;
   end;
 
-  if FCompletionMenu.Present(AReply.Ticket, AResult, Sources) then
+  if FDefinitionLookup and Supports(FCompletionMenu, INyxPascalDefinitionMenu, LMenu) then
+  begin
+    LResult := NyxPascalDefinitionResult(NyxPascalDefinitionRequest(FCompletionQuery), AResult);
+    LPresented := LMenu.PresentDefinition(AReply.Ticket, LResult, Sources);
+
+    if LPresented and (LResult.Count = 1) and (LResult.Total = 1) and
+      LResult.Target(0).Location.Available then
+    begin
+      FDefinitionRow := 0;
+      FDefinitionPending := True;
+    end;
+  end
+  else
+  begin
+    LPresented := FCompletionMenu.Present(AReply.Ticket, AResult, Sources);
+  end;
+
+  if LPresented then
   begin
     FCompletionWaiting := False;
     AReply.Owner := nil;
@@ -719,6 +820,7 @@ var
   LCandidate: INyxPascalSourceSnapshot;
   LPreparation: INyxPascalCompletionPreparation;
   LPreparedDrafts: TNyxPascalFileDrafts;
+  LKind: TNyxStudioPascalQueryKind;
 begin
   case AAction of
     pcaRequest: StartCompletion;
@@ -759,7 +861,10 @@ begin
         begin
           LOffset := 0;
         end;
-        StartCompletion(LOffset);
+        LKind := spqCompletion;
+
+        if FDefinitionLookup then LKind := spqDefinition;
+        StartCompletion(LOffset, LKind);
       end;
     pcaAccept:
       begin

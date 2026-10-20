@@ -6,19 +6,24 @@ program nyx_studio_definition_tests;
 
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.contract, nyx.model, nyx.events,
   nyx.behavior, nyx.editing, nyx.editing.history, nyx.editing.commands,
-  nyx.text.projection, nyx.pascal.drafts, nyx.pascal.completion,
+  nyx.text.projection, nyx.pascal.names, nyx.pascal.drafts,
+  nyx.pascal.completion, nyx.pascal.definition,
   nyx.studio.completion, nyx.studio.session, nyx.studio.projects,
   nyx.studio.sourceinput {$ifdef PAS2JS}, Web{$endif};
 
 type
   { Detached deterministic service lease. Delivery occurs on a separate explicit
     turn, matching the real transport's lifetime without hosting a service. }
-  TContext = class(TInterfacedObject, INyxStudioCompletionContext)
+  TContext = class(TInterfacedObject, INyxStudioCompletionContext, INyxStudioDefinitionContext)
   public
     Query: INyxPascalCompletionRequest;
     Reply: INyxStudioCompletionReply;
     Enabled: Boolean;
+    DefinitionMode: Boolean;
+    DefinitionTargets: Integer;
     function Request(const AQuery: INyxPascalCompletionRequest;
+      const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+    function RequestDefinition(const AQuery: INyxPascalDefinitionRequest;
       const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
     function Current(const AQuery: INyxPascalCompletionRequest): Boolean;
     procedure Cancel;
@@ -40,11 +45,14 @@ type
     Writes: Integer;
     ChangedWrites: Integer;
     Notices: Integer;
+    UseExplicitOwner: Boolean;
+    ExplicitOwner: TNyxPascalSourceRef;
     constructor Create;
     destructor Destroy; override;
     function ReadInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
     procedure WriteInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
     function ReadContext: INyxStudioCompletionContext;
+    function ReadOwner: TNyxPascalSourceRef;
     procedure Changed;
     procedure Key(AKey: TNyxKey; AModifiers: TNyxKeyModifiers = []);
     procedure PresentAndQueue;
@@ -71,8 +79,18 @@ end;
 function TContext.Request(const AQuery: INyxPascalCompletionRequest;
   const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
 begin
+  DefinitionMode := False;
   Query := AQuery;
   Reply := AReply;
+  Result := scrSubmitted;
+end;
+
+function TContext.RequestDefinition(const AQuery: INyxPascalDefinitionRequest;
+  const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+begin
+  Query := NyxPascalDefinitionQuery(AQuery);
+  Reply := AReply;
+  DefinitionMode := True;
   Result := scrSubmitted;
 end;
 
@@ -101,12 +119,30 @@ var
   LText: TNyxText;
   LFirst: Integer;
   LSecond: Integer;
+  LTargets: array of TNyxPascalDefinitionTarget;
 begin
   LReply := Reply;
   Reply := nil;
   LText := Query.Sources.Text(TNyxPascalSourceRef.Main);
   LFirst := NyxTextScalarCount(Copy(LText, 1, Pos('WithText', LText) - 1));
   LSecond := NyxTextScalarCount(Copy(LText, 1, Pos('WithTheme', LText) - 1));
+
+  if DefinitionMode then
+  begin
+    SetLength(LTargets, DefinitionTargets);
+    LTargets[0] := NyxPascalDefinitionTarget('WithText', 'Controlled declaration', pckMethod,
+      NyxPascalCompletionLocation(TNyxPascalSourceRef.Main, LFirst, 8, 'WithText'));
+
+    if DefinitionTargets = 2 then
+    begin
+      LTargets[1] := NyxPascalDefinitionTarget('WithTheme', 'Second declaration', pckMethod,
+        NyxPascalCompletionLocation(TNyxPascalSourceRef.Main, LSecond, 9, 'WithTheme'));
+    end;
+    LResult := NyxPascalDefinitionPage(NewNyxPascalDefinitionResult(
+      NyxPascalDefinitionRequest(Query), pdsReady, '', LTargets, Length(LTargets)));
+    LReply.Receive(Query, LResult);
+    Exit;
+  end;
   LResult := NewNyxPascalCompletionResult(Query, pcsReady, '', Query.Caret - 2,
     'Wi', [NyxPascalCompletion('WithText', 'WithText', 'Controlled declaration', pckMethod),
       NyxPascalCompletion('WithTheme', 'WithTheme', 'Second controlled declaration', pckMethod)], 2);
@@ -130,11 +166,12 @@ begin
   Writable := True;
   Context := TContext.Create;
   Context.Enabled := True;
+  Context.DefinitionTargets := 1;
   ContextLease := Context;
   OriginalContextLease := Context;
   Events := NewNyxEvents;
   Input := TNyxStudioSourceInput.Create(Events, ReadInput, WriteInput, nteLF);
-  Input.ConfigureCompletion(ReadContext, nil, Changed);
+  Input.ConfigureCompletion(ReadContext, ReadOwner, Changed);
   Input.Bind;
 end;
 
@@ -175,6 +212,13 @@ end;
 function THost.ReadContext: INyxStudioCompletionContext;
 begin
   Result := ContextLease;
+end;
+
+function THost.ReadOwner: TNyxPascalSourceRef;
+begin
+  Result := Session.ActiveSourceFile;
+
+  if UseExplicitOwner then Result := ExplicitOwner;
 end;
 
 procedure THost.Changed;
@@ -227,6 +271,9 @@ var
   LLine, LColumn, LAt: Integer;
   LText: TNyxText;
   LOther: INyxStudioCompletionContext;
+  LDocument: TNyxDocument;
+  LPage: TNyxNode;
+  LSecondOwner: TNyxPascalSourceRef;
 begin
   LHost := THost.Create;
   try
@@ -302,6 +349,99 @@ begin
     finally
       LHost.Free;
       LOther := nil;
+    end;
+  end;
+  for LAt := 0 to 3 do
+  begin
+    LHost := THost.Create;
+    try
+      LText := CSecondPrefix + 'WithTheme;' + #13#10 + 'LBadge.WithText';
+      LHost.Session.SetSourceDraft(LText);
+      LBefore := LHost.Session.ProjectSnapshot;
+      LText := NyxPresentText(LText, nteLF);
+      LHost.Physical := NyxEditingSnapshot(nepSelectionChange, neiUnknown, LText, '', False,
+        NyxTextSelection(LText, NyxTextScalarCount(LText), NyxTextScalarCount(LText)), False, False);
+      LHost.Input.Bind;
+
+      if LAt = 0 then LHost.Key(nkF12Key)
+      else LHost.Input.RequestDefinition;
+      Check(LHost.Context.DefinitionMode and (LHost.Context.Reply <> nil),
+        'F12 and visible-action entry use the specialized definition service');
+
+      if LAt = 3 then LHost.Context.DefinitionTargets := 2;
+      LHost.Context.Deliver;
+
+      if LAt = 1 then
+      begin
+        LHost.Physical := NyxEditingSnapshot(nepSelectionChange, neiUnknown, LText, '', False,
+          NyxTextSelection(LText, 0, 0), False, False);
+        Check(not LHost.Input.TakeDefinitionNavigation(LLine, LColumn),
+          'A caret change revokes an automatically queued single definition');
+      end
+      else if LAt = 2 then
+      begin
+        LHost.Context.Enabled := False;
+        Check(not LHost.Input.TakeDefinitionNavigation(LLine, LColumn),
+          'Retired service revokes an automatically queued single definition');
+      end
+      else if LAt = 3 then
+      begin
+        Check(not LHost.Input.TakeDefinitionNavigation(LLine, LColumn),
+          'Multiple declared alternatives never select the first target automatically');
+        LDocument := LHost.Input.BuildCompletion;
+        try
+          Check(LDocument <> nil, 'Alternatives use the shared Nyx-built popup');
+          LPage := LDocument.Pages[0];
+          Check(LHost.Input.RouteCompletion(LPage,
+            LPage.Find('studio-completion-row-1-choose'), ntClick),
+            'A visible declaration choice queues its selected target');
+        finally
+          LDocument.Free;
+        end;
+        Check(LHost.Input.TakeDefinitionNavigation(LLine, LColumn) and
+          (LLine = 3) and (LColumn = 11), 'Chosen alternative navigates its own declaration');
+      end
+      else
+      begin
+        Check(LHost.Input.TakeDefinitionNavigation(LLine, LColumn) and
+          (LLine = 2) and (LColumn = 11), 'A single exact target navigates on the next host turn');
+      end;
+      Check((EncodeNyxProject(LHost.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)) and
+        not LHost.Input.Commands.CanExecute(nhcUndo) and (LHost.ChangedWrites = 0),
+        'Direct definition inspection preserves all draft bytes and text Undo');
+    finally
+      LHost.Free;
+    end;
+  end;
+  for LAt := 0 to 1 do
+  begin
+    LHost := THost.Create;
+    try
+      LSecondOwner := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('SecondOwner'));
+      { Model a retired outline owner's selector without inventing supporting
+        file construction. Real auxiliary project admission requires its actual
+        compiled receipt; this controlled port proves live-owner revocation only. }
+      LHost.UseExplicitOwner := True;
+      LHost.ExplicitOwner := TNyxPascalSourceRef.Main;
+      LHost.Input.Bind;
+      LBefore := LHost.Session.ProjectSnapshot;
+      LHost.Input.RequestDefinition;
+      Check(LHost.Context.Query.FileReference.SameFile(TNyxPascalSourceRef.Main) and
+        LHost.Context.Query.Owner.SameFile(TNyxPascalSourceRef.Main),
+        'The shared input query captures the exact current owner selector');
+
+      if LAt = 0 then LHost.ExplicitOwner := LSecondOwner;
+      LHost.Context.Deliver;
+
+      if LAt = 1 then LHost.ExplicitOwner := LSecondOwner;
+      Check(not LHost.Input.TakeDefinitionNavigation(LLine, LColumn),
+        'Owner-only change revokes lookup before reply/queued jump ' + IntToStr(LAt));
+      Check(LHost.Session.ActiveSourceFile.SameFile(TNyxPascalSourceRef.Main) and
+        (EncodeNyxProject(LHost.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)) and
+        not LHost.Input.Commands.CanExecute(nhcUndo),
+        'Owner recheck changes no source selector, buffers or text history');
+    finally
+      LHost.Free;
     end;
   end;
 end;

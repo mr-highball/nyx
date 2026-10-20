@@ -1,0 +1,1066 @@
+{ Nyx portable API documentation. MIT license, see LICENSE. }
+unit nyx.documentation;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+interface
+
+uses SysUtils, nyx.text, nyx.scheduler;
+
+type
+  { Invalid declarations fail before an immutable documentation value escapes.
+    These are metadata errors, never compiler diagnostics or execution rights. }
+  ENyxDocumentation = class(EArgumentException);
+  { Cooperative metadata cancellation is distinct from a malformed declaration;
+    no partial descriptor is returned to a cancelled inspection. }
+  ENyxDocumentationCancelled = class(ENyxDocumentation);
+  { Qualified authored identity. Unit/type boundaries and generic arity remain
+    separate; a member additionally owns an explicit stable overload key. Pascal
+    name comparison is ASCII insensitive without borrowing host locale rules. }
+  TNyxDocumentationRef = record
+  private
+    FUnit, FType, FMember, FOverload: TNyxText;
+    FArity: Integer;
+  public
+    function Defined: Boolean;
+    function IsMember: Boolean;
+    function Owner: TNyxDocumentationRef;
+    function Key: TNyxText;
+    function Same(const AOther: TNyxDocumentationRef): Boolean;
+    procedure Validate;
+    property UnitName: TNyxText read FUnit;
+    property TypeName: TNyxText read FType;
+    property MemberName: TNyxText read FMember;
+    property OverloadKey: TNyxText read FOverload;
+    property GenericArity: Integer read FArity;
+  end;
+  { Declared API shape only. A kind proves neither target implementation nor
+    compiler reflection, and an alias retains its own qualified identity. }
+  TNyxDocumentationTypeKind = (ndtClass, ndtInterface, ndtRecord, ndtEnum,
+    ndtAlias, ndtCallback);
+  { Public member families distinguish fluent calls from properties and event
+    declarations without interpreting captions as behavior. }
+  TNyxDocumentationMemberKind = (ndmConstructor, ndmFactory, ndmMethod,
+    ndmFluentMethod, ndmProperty, ndmField, ndmEvent, ndmEnumValue);
+  { Parameter intent remains declared Pascal metadata. Availability of a given
+    spelling on a compiler is a separate qualification requirement. }
+  TNyxDocumentationParameterMode = (ndpValue, ndpConst, ndpVar, ndpOut, ndpConstRef);
+  { Documentation prose and schema declarations have independent authorities.
+    Neither value is an observed runtime capability or compiler RTTI receipt. }
+  TNyxDocumentationEvidence = (ndeAuthoredDeclaration, ndeSchemaDeclaration,
+    ndeCatalogDeclaration);
+  { One copied parameter/type reference. Optional defaults retain their exact
+    Pascal text without parsing, evaluating or running a callback. }
+  TNyxDocumentationParameter = record
+  private
+    FName: TNyxText;
+    FType: TNyxDocumentationRef;
+    FMode: TNyxDocumentationParameterMode;
+    FHasDefault: Boolean;
+    FDefault: TNyxText;
+  public
+    function WithDefault(const APascal: TNyxText): TNyxDocumentationParameter;
+    property Name: TNyxText read FName;
+    property TypeReference: TNyxDocumentationRef read FType;
+    property Passing: TNyxDocumentationParameterMode read FMode;
+    property HasDefault: Boolean read FHasDefault;
+    property DefaultPascal: TNyxText read FDefault;
+  end;
+  { Inert English-labelled Pascal example. Reading this copied value never
+    compiles or executes it; later verification has its own explicit owner. }
+  TNyxDocumentationExample = record
+  private
+    FTitle, FPascal: TNyxText;
+  public
+    property Title: TNyxText read FTitle;
+    property Pascal: TNyxText read FPascal;
+  end;
+  { Detached declared signature. An absent result means no declared function
+    result; constructor ownership remains in its member kind. An absent member
+    signature means unknown, rather than an invented zero-argument call. }
+  INyxDocumentationSignature = interface(IInterface)
+    ['{A42D72BB-00BB-4A1D-BE81-855B4491EAE1}']
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+    function ResultType: TNyxDocumentationRef;
+    function Evidence: TNyxDocumentationEvidence;
+  end;
+  { Immutable member decoration. Types/signatures are explicitly authored facts;
+    schema adapters separately supply existing defaults, bounds and event facts.
+    Fluent setters return new owners and never mutate an earlier descriptor. }
+  INyxDocumentationMember = interface(IInterface)
+    ['{1A569AD9-21CF-471F-8C9D-E91AF106602F}']
+    function Identity: TNyxDocumentationRef;
+    function Kind: TNyxDocumentationMemberKind;
+    function Summary: TNyxText;
+    function Evidence: TNyxDocumentationEvidence;
+    function Signature: INyxDocumentationSignature;
+    function ValueType: TNyxDocumentationRef;
+    function ExampleCount: Integer;
+    function ExampleAt(AIndex: Integer): TNyxDocumentationExample;
+    function RelatedCount: Integer;
+    function RelatedAt(AIndex: Integer): TNyxDocumentationRef;
+    function WithSignature(const AValue: INyxDocumentationSignature): INyxDocumentationMember;
+    function OfType(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+    function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationMember;
+    function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+  end;
+  { One declared class/interface/record/enum/alias/callback contract. Bases are
+    references to their original owners; inherited members are resolved by a
+    later complete index, never copied and re-owned by this descriptor. }
+  INyxDocumentationType = interface(IInterface)
+    ['{52146AAD-D232-4D6E-A20A-650541D7D26D}']
+    function Identity: TNyxDocumentationRef;
+    function Kind: TNyxDocumentationTypeKind;
+    function Summary: TNyxText;
+    function Evidence: TNyxDocumentationEvidence;
+    function AliasTarget: TNyxDocumentationRef;
+    function BaseCount: Integer;
+    function BaseAt(AIndex: Integer): TNyxDocumentationRef;
+    function MemberCount: Integer;
+    function MemberAt(AIndex: Integer): INyxDocumentationMember;
+    function ExampleCount: Integer;
+    function ExampleAt(AIndex: Integer): TNyxDocumentationExample;
+    function RelatedCount: Integer;
+    function RelatedAt(AIndex: Integer): TNyxDocumentationRef;
+    function WithAlias(const ATarget: TNyxDocumentationRef): INyxDocumentationType;
+    function WithBase(const ABase: TNyxDocumentationRef): INyxDocumentationType;
+    function WithMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
+    function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationType;
+    function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationType;
+  end;
+  { Optional metadata capability for an existing declaration/provider. Registry
+    inspection consumes registered descriptors; it must never construct a
+    control/callback merely to query this interface. }
+  INyxDocumentationSource = interface(IInterface)
+    ['{E00694CB-5DD5-49CD-B25D-A1AA51EE420A}']
+    function Documentation: INyxDocumentationType;
+  end;
+
+const
+  NyxDocumentationMaximumMembers = 128;
+  NyxDocumentationMaximumParameters = 64;
+  NyxDocumentationMaximumLinks = 32;
+  NyxDocumentationMaximumExamples = 8;
+  NyxDocumentationMaximumBytes = 256 * 1024;
+
+function NyxDocumentationType(const AUnit, AType: TNyxText;
+  AGenericArity: Integer = 0): TNyxDocumentationRef;
+function NyxDocumentationMember(const AOwner: TNyxDocumentationRef;
+  const AName: TNyxText; const AOverload: TNyxText = ''): TNyxDocumentationRef;
+function NyxDocumentationParameter(const AName: TNyxText;
+  const AType: TNyxDocumentationRef;
+  AMode: TNyxDocumentationParameterMode = ndpValue): TNyxDocumentationParameter;
+function NyxDocumentationExample(const ATitle, APascal: TNyxText): TNyxDocumentationExample;
+function NewNyxDocumentationSignature(const AParameters: array of TNyxDocumentationParameter;
+  const AResult: TNyxDocumentationRef): INyxDocumentationSignature;
+function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
+function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
+{ Freeze alternate metadata producers before retaining them. Counts and text
+  are bounded; publication is atomic, with no retained producer or callback. }
+function CaptureNyxDocumentationSignature(const AValue: INyxDocumentationSignature;
+  const ACancellation: INyxCancellationScope = nil): INyxDocumentationSignature;
+function CaptureNyxDocumentationMember(const AValue: INyxDocumentationMember;
+  const ACancellation: INyxCancellationScope = nil): INyxDocumentationMember;
+function CaptureNyxDocumentationType(const AValue: INyxDocumentationType;
+  const ACancellation: INyxCancellationScope = nil): INyxDocumentationType;
+
+implementation
+
+uses nyx.bytes;
+
+type
+  { Shared immutable prose storage has value-only vectors and no document,
+    renderer, registry, callback implementation or mutable provider reference. }
+  TDocumentationContent = class(TInterfacedObject)
+  protected
+    FSummary: TNyxText;
+    FExamples: array of TNyxDocumentationExample;
+    FRelated: array of TNyxDocumentationRef;
+    procedure CopyContent(ATarget: TDocumentationContent);
+    procedure AddExample(const AValue: TNyxDocumentationExample);
+    procedure AddRelated(const AValue: TNyxDocumentationRef);
+  public
+    function Summary: TNyxText;
+    function Evidence: TNyxDocumentationEvidence;
+    function ExampleCount: Integer;
+    function ExampleAt(AIndex: Integer): TNyxDocumentationExample;
+    function RelatedCount: Integer;
+    function RelatedAt(AIndex: Integer): TNyxDocumentationRef;
+  end;
+
+procedure CheckCancellation(const ACancellation: INyxCancellationScope);
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxDocumentationCancelled.Create('Documentation inspection cancelled');
+end;
+
+procedure AdmitBytes(AValue: Integer);
+begin
+
+  if AValue > NyxDocumentationMaximumBytes then
+    raise ENyxDocumentation.Create('Documentation exceeds its aggregate UTF-8 allowance');
+end;
+
+function RefBytes(const AValue: TNyxDocumentationRef): Integer;
+begin
+  Result := 0;
+
+  if AValue.Defined then
+    Result := NyxUTF8ByteCount(AValue.Key);
+end;
+
+function SignatureBytes(const AValue: INyxDocumentationSignature): Integer;
+var
+  LAt: Integer;
+  LParameter: TNyxDocumentationParameter;
+begin
+  Result := 0;
+
+  if AValue = nil then
+    Exit;
+  Result := RefBytes(AValue.ResultType);
+  for LAt := 0 to AValue.ParameterCount - 1 do
+  begin
+    LParameter := AValue.ParameterAt(LAt);
+    Inc(Result, NyxUTF8ByteCount(LParameter.Name) + RefBytes(LParameter.TypeReference) +
+      NyxUTF8ByteCount(LParameter.DefaultPascal));
+    AdmitBytes(Result);
+  end;
+end;
+
+function MemberBytes(const AValue: INyxDocumentationMember): Integer;
+var
+  LAt: Integer;
+  LExample: TNyxDocumentationExample;
+begin
+  Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) +
+    RefBytes(AValue.ValueType) + SignatureBytes(AValue.Signature);
+  for LAt := 0 to AValue.ExampleCount - 1 do
+  begin
+    LExample := AValue.ExampleAt(LAt);
+    Inc(Result, NyxUTF8ByteCount(LExample.Title) + NyxUTF8ByteCount(LExample.Pascal));
+    AdmitBytes(Result);
+  end;
+  for LAt := 0 to AValue.RelatedCount - 1 do
+  begin
+    Inc(Result, RefBytes(AValue.RelatedAt(LAt)));
+    AdmitBytes(Result);
+  end;
+  AdmitBytes(Result);
+end;
+
+function TypeBytes(const AValue: INyxDocumentationType): Integer;
+var
+  LAt: Integer;
+  LExample: TNyxDocumentationExample;
+begin
+  Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
+  for LAt := 0 to AValue.BaseCount - 1 do
+  begin
+    Inc(Result, RefBytes(AValue.BaseAt(LAt)));
+    AdmitBytes(Result);
+  end;
+  for LAt := 0 to AValue.MemberCount - 1 do
+  begin
+    Inc(Result, MemberBytes(AValue.MemberAt(LAt)));
+    AdmitBytes(Result);
+  end;
+  for LAt := 0 to AValue.ExampleCount - 1 do
+  begin
+    LExample := AValue.ExampleAt(LAt);
+    Inc(Result, NyxUTF8ByteCount(LExample.Title) + NyxUTF8ByteCount(LExample.Pascal));
+    AdmitBytes(Result);
+  end;
+  for LAt := 0 to AValue.RelatedCount - 1 do
+  begin
+    Inc(Result, RefBytes(AValue.RelatedAt(LAt)));
+    AdmitBytes(Result);
+  end;
+  AdmitBytes(Result);
+end;
+
+type
+  { An immutable signature owns a detached parameter vector. Its records contain
+    only names, scalar flags and qualified references, including on pas2js. }
+  TDocumentationSignature = class(TInterfacedObject, INyxDocumentationSignature)
+  public
+    Parameters: array of TNyxDocumentationParameter;
+    ReturnType: TNyxDocumentationRef;
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+    function ResultType: TNyxDocumentationRef;
+    function Evidence: TNyxDocumentationEvidence;
+  end;
+  { A fluent member owns its signature interface in this managed class, never
+    inside a copied record. Clone publication preserves earlier readers. }
+  TDocumentationMember = class(TDocumentationContent, INyxDocumentationMember)
+  private
+    FIdentity: TNyxDocumentationRef;
+    FKind: TNyxDocumentationMemberKind;
+    FSignature: INyxDocumentationSignature;
+    FValueType: TNyxDocumentationRef;
+    function CopyValue: TDocumentationMember;
+  public
+    function Identity: TNyxDocumentationRef;
+    function Kind: TNyxDocumentationMemberKind;
+    function Signature: INyxDocumentationSignature;
+    function ValueType: TNyxDocumentationRef;
+    function WithSignature(const AValue: INyxDocumentationSignature): INyxDocumentationMember;
+    function OfType(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+    function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationMember;
+    function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+  end;
+  { Member interfaces live in a dynamic managed vector. Base/alias links remain
+    data references, preventing an inherited metadata graph from owning cycles. }
+  TDocumentationType = class(TDocumentationContent, INyxDocumentationType)
+  private
+    FIdentity: TNyxDocumentationRef;
+    FKind: TNyxDocumentationTypeKind;
+    FAlias: TNyxDocumentationRef;
+    FBases: array of TNyxDocumentationRef;
+    FMembers: array of INyxDocumentationMember;
+    function CopyValue: TDocumentationType;
+  public
+    function Identity: TNyxDocumentationRef;
+    function Kind: TNyxDocumentationTypeKind;
+    function AliasTarget: TNyxDocumentationRef;
+    function BaseCount: Integer;
+    function BaseAt(AIndex: Integer): TNyxDocumentationRef;
+    function MemberCount: Integer;
+    function MemberAt(AIndex: Integer): INyxDocumentationMember;
+    function WithAlias(const ATarget: TNyxDocumentationRef): INyxDocumentationType;
+    function WithBase(const ABase: TNyxDocumentationRef): INyxDocumentationType;
+    function WithMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
+    function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationType;
+    function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationType;
+  end;
+
+procedure TextBound(const AValue: TNyxText; AMaximum: Integer);
+var
+  LAt, LScalar, LCount: Integer;
+begin
+  LAt := 1;
+  LCount := 0;
+  while LAt <= Length(AValue) do
+  begin
+
+    if not NyxNextScalar(AValue, LAt, LScalar) then
+      raise ENyxDocumentation.Create('Documentation text has malformed Unicode');
+    Inc(LCount);
+
+    if LCount > AMaximum then
+      raise ENyxDocumentation.Create('Documentation text exceeds its scalar allowance');
+  end;
+end;
+
+procedure NameBound(const AValue: TNyxText; ADotted: Boolean);
+var
+  LAt: Integer;
+  LInitial: Boolean;
+  LChar: Char;
+begin
+  TextBound(AValue, 256);
+  LInitial := True;
+  for LAt := 1 to Length(AValue) do
+  begin
+    LChar := AValue[LAt];
+
+    if ADotted and (LChar = '.') and not LInitial then
+      LInitial := True
+    else
+    begin
+
+      if not ((LChar in ['A'..'Z', 'a'..'z', '_']) or
+        (not LInitial and (LChar in ['0'..'9']))) then
+        raise ENyxDocumentation.Create('Documentation identity requires qualified Pascal names');
+      LInitial := False;
+    end;
+  end;
+
+  if LInitial then
+    raise ENyxDocumentation.Create('Documentation identity cannot be empty or end with a dot');
+end;
+
+function Fold(const AValue: TNyxText): TNyxText;
+var
+  LAt: Integer;
+begin
+  Result := AValue;
+  for LAt := 1 to Length(Result) do
+  begin
+
+    if Result[LAt] in ['A'..'Z'] then
+      Result[LAt] := Chr(Ord(Result[LAt]) + 32);
+  end;
+end;
+
+function TNyxDocumentationRef.Defined: Boolean;
+begin
+  Result := FUnit <> '';
+end;
+
+function TNyxDocumentationRef.IsMember: Boolean;
+begin
+  Result := FMember <> '';
+end;
+
+function TNyxDocumentationRef.Owner: TNyxDocumentationRef;
+begin
+  Result := Self;
+  Result.FMember := '';
+  Result.FOverload := '';
+end;
+
+procedure TNyxDocumentationRef.Validate;
+begin
+  NameBound(FUnit, True);
+  NameBound(FType, True);
+
+  if (FArity < 0) or (FArity > 32) then
+    raise ENyxDocumentation.Create('Documentation generic arity is outside its allowance');
+
+  if IsMember then
+    NameBound(FMember, False)
+  else if FOverload <> '' then
+    raise ENyxDocumentation.Create('An overload identity requires its declaring member');
+
+  if FOverload <> '' then
+    NameBound(FOverload, True);
+end;
+
+function TNyxDocumentationRef.Key: TNyxText;
+begin
+  Validate;
+  Result := Fold(FUnit) + '|' + Fold(FType) + '|' + IntToStr(FArity) +
+    '|' + Fold(FMember) + '|' + Fold(FOverload);
+end;
+
+function TNyxDocumentationRef.Same(const AOther: TNyxDocumentationRef): Boolean;
+begin
+  Result := Defined and AOther.Defined;
+
+  if Result then
+    Result := Key = AOther.Key;
+end;
+
+function NyxDocumentationType(const AUnit, AType: TNyxText;
+  AGenericArity: Integer): TNyxDocumentationRef;
+begin
+  Result := Default(TNyxDocumentationRef);
+  Result.FUnit := AUnit;
+  Result.FType := AType;
+  Result.FArity := AGenericArity;
+  Result.Validate;
+end;
+
+function NyxDocumentationMember(const AOwner: TNyxDocumentationRef;
+  const AName, AOverload: TNyxText): TNyxDocumentationRef;
+begin
+  AOwner.Validate;
+
+  if AOwner.IsMember then
+    raise ENyxDocumentation.Create('A member identity requires its original declaring type');
+  Result := AOwner;
+  Result.FMember := AName;
+  Result.FOverload := AOverload;
+  Result.Validate;
+
+  if not Result.IsMember then
+    raise ENyxDocumentation.Create('A member identity requires its Pascal name');
+end;
+
+function NyxDocumentationParameter(const AName: TNyxText;
+  const AType: TNyxDocumentationRef;
+  AMode: TNyxDocumentationParameterMode): TNyxDocumentationParameter;
+begin
+  NameBound(AName, False);
+  AType.Validate;
+
+  if AType.IsMember or (Ord(AMode) < 0) or
+    (Ord(AMode) > Ord(High(TNyxDocumentationParameterMode))) then
+    raise ENyxDocumentation.Create('A parameter requires its declared type and passing mode');
+  Result := Default(TNyxDocumentationParameter);
+  Result.FName := AName;
+  Result.FType := AType;
+  Result.FMode := AMode;
+end;
+
+function TNyxDocumentationParameter.WithDefault(const APascal: TNyxText): TNyxDocumentationParameter;
+begin
+  TextBound(APascal, 1024);
+
+  if (APascal = '') or (FMode in [ndpVar, ndpOut]) then
+    raise ENyxDocumentation.Create('This parameter cannot declare an empty or writable default');
+  Result := NyxDocumentationParameter(FName, FType, FMode);
+  Result.FHasDefault := True;
+  Result.FDefault := APascal;
+end;
+
+function NyxDocumentationExample(const ATitle, APascal: TNyxText): TNyxDocumentationExample;
+begin
+  TextBound(ATitle, 256);
+  TextBound(APascal, 16384);
+
+  if (ATitle = '') or (APascal = '') then
+    raise ENyxDocumentation.Create('A documentation example requires its title and Pascal text');
+  Result.FTitle := ATitle;
+  Result.FPascal := APascal;
+end;
+
+function TDocumentationSignature.ParameterCount: Integer;
+begin
+  Result := Length(Parameters);
+end;
+
+function TDocumentationSignature.ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+begin
+
+  if (AIndex < 0) or (AIndex >= ParameterCount) then
+    raise ENyxDocumentation.Create('Documentation parameter ordinal is out of range');
+  Result := Parameters[AIndex];
+end;
+
+function TDocumentationSignature.ResultType: TNyxDocumentationRef;
+begin
+  Result := ReturnType;
+end;
+
+function TDocumentationSignature.Evidence: TNyxDocumentationEvidence;
+begin
+  Result := ndeAuthoredDeclaration;
+end;
+
+function NewNyxDocumentationSignature(const AParameters: array of TNyxDocumentationParameter;
+  const AResult: TNyxDocumentationRef): INyxDocumentationSignature;
+var
+  LValue: TDocumentationSignature;
+  LHold: INyxDocumentationSignature;
+  LAt, LOther: Integer;
+begin
+  Result := nil;
+
+  if Length(AParameters) > NyxDocumentationMaximumParameters then
+    raise ENyxDocumentation.Create('Documentation signature exceeds its parameter allowance');
+
+  if AResult.Defined then
+  begin
+    AResult.Validate;
+
+    if AResult.IsMember then
+      raise ENyxDocumentation.Create('A signature result requires a type identity');
+  end;
+  LValue := TDocumentationSignature.Create;
+  LHold := LValue;
+  LValue.ReturnType := Default(TNyxDocumentationRef);
+
+  if AResult.Defined then
+    LValue.ReturnType := AResult;
+  SetLength(LValue.Parameters, Length(AParameters));
+  for LAt := 0 to High(AParameters) do
+  begin
+    LValue.Parameters[LAt] := NyxDocumentationParameter(AParameters[LAt].Name,
+      AParameters[LAt].TypeReference, AParameters[LAt].Passing);
+
+    if AParameters[LAt].HasDefault then
+      LValue.Parameters[LAt] := LValue.Parameters[LAt].WithDefault(AParameters[LAt].DefaultPascal);
+    for LOther := 0 to LAt - 1 do
+    begin
+
+      if Fold(AParameters[LOther].Name) = Fold(AParameters[LAt].Name) then
+        raise ENyxDocumentation.Create('A documentation signature repeats a parameter name');
+    end;
+  end;
+  SignatureBytes(LHold);
+  Result := LHold;
+end;
+
+function CaptureNyxDocumentationSignature(const AValue: INyxDocumentationSignature;
+  const ACancellation: INyxCancellationScope): INyxDocumentationSignature;
+var
+  LSource: INyxDocumentationSignature;
+  LFrozen: INyxDocumentationSignature;
+  LCount, LAt: Integer;
+  LParameters: array of TNyxDocumentationParameter;
+begin
+  LSource := AValue;
+  Result := nil;
+  CheckCancellation(ACancellation);
+
+  if LSource = nil then
+    Exit;
+  LCount := LSource.ParameterCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumParameters) then
+    raise ENyxDocumentation.Create('Captured documentation signature exceeds its parameter allowance');
+  SetLength(LParameters, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LParameters[LAt] := LSource.ParameterAt(LAt);
+  end;
+  LFrozen := NewNyxDocumentationSignature(LParameters, LSource.ResultType);
+  CheckCancellation(ACancellation);
+  Result := LFrozen;
+end;
+
+function TDocumentationContent.Summary: TNyxText;
+begin
+  Result := FSummary;
+end;
+
+function TDocumentationContent.Evidence: TNyxDocumentationEvidence;
+begin
+  Result := ndeAuthoredDeclaration;
+end;
+
+function TDocumentationContent.ExampleCount: Integer;
+begin
+  Result := Length(FExamples);
+end;
+
+function TDocumentationContent.ExampleAt(AIndex: Integer): TNyxDocumentationExample;
+begin
+
+  if (AIndex < 0) or (AIndex >= ExampleCount) then
+    raise ENyxDocumentation.Create('Documentation example ordinal is out of range');
+  Result := FExamples[AIndex];
+end;
+
+function TDocumentationContent.RelatedCount: Integer;
+begin
+  Result := Length(FRelated);
+end;
+
+function TDocumentationContent.RelatedAt(AIndex: Integer): TNyxDocumentationRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= RelatedCount) then
+    raise ENyxDocumentation.Create('Documentation related-link ordinal is out of range');
+  Result := FRelated[AIndex];
+end;
+
+procedure TDocumentationContent.CopyContent(ATarget: TDocumentationContent);
+var
+  LAt: Integer;
+begin
+  ATarget.FSummary := FSummary;
+  SetLength(ATarget.FExamples, ExampleCount);
+  for LAt := 0 to ExampleCount - 1 do
+    ATarget.FExamples[LAt] := FExamples[LAt];
+  SetLength(ATarget.FRelated, RelatedCount);
+  for LAt := 0 to RelatedCount - 1 do
+    ATarget.FRelated[LAt] := FRelated[LAt];
+end;
+
+procedure TDocumentationContent.AddExample(const AValue: TNyxDocumentationExample);
+begin
+
+  if ExampleCount >= NyxDocumentationMaximumExamples then
+    raise ENyxDocumentation.Create('Documentation example allowance is exhausted');
+  SetLength(FExamples, ExampleCount + 1);
+  FExamples[High(FExamples)] := NyxDocumentationExample(AValue.Title, AValue.Pascal);
+end;
+
+procedure TDocumentationContent.AddRelated(const AValue: TNyxDocumentationRef);
+var
+  LAt: Integer;
+begin
+  AValue.Validate;
+
+  if RelatedCount >= NyxDocumentationMaximumLinks then
+    raise ENyxDocumentation.Create('Documentation link allowance is exhausted');
+  for LAt := 0 to RelatedCount - 1 do
+  begin
+
+    if FRelated[LAt].Same(AValue) then
+      raise ENyxDocumentation.Create('Documentation repeats a related reference');
+  end;
+  SetLength(FRelated, RelatedCount + 1);
+  FRelated[High(FRelated)] := AValue;
+end;
+
+function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
+var
+  LValue: TDocumentationMember;
+begin
+  Result := nil;
+  AIdentity.Validate;
+  TextBound(ASummary, 2048);
+
+  if not AIdentity.IsMember or (Ord(AKind) < 0) or
+    (Ord(AKind) > Ord(High(TNyxDocumentationMemberKind))) then
+    raise ENyxDocumentation.Create('A documentation member requires its identity and family');
+  LValue := TDocumentationMember.Create;
+  LValue.FIdentity := AIdentity;
+  LValue.FKind := AKind;
+  LValue.FSummary := ASummary;
+  Result := LValue;
+end;
+
+function TDocumentationMember.CopyValue: TDocumentationMember;
+begin
+  Result := TDocumentationMember.Create;
+  CopyContent(Result);
+  Result.FIdentity := FIdentity;
+  Result.FKind := FKind;
+  Result.FSignature := FSignature;
+  Result.FValueType := FValueType;
+end;
+
+function TDocumentationMember.Identity: TNyxDocumentationRef;
+begin
+  Result := FIdentity;
+end;
+
+function TDocumentationMember.Kind: TNyxDocumentationMemberKind;
+begin
+  Result := FKind;
+end;
+
+function TDocumentationMember.Signature: INyxDocumentationSignature;
+begin
+  Result := FSignature;
+end;
+
+function TDocumentationMember.ValueType: TNyxDocumentationRef;
+begin
+  Result := FValueType;
+end;
+
+function TDocumentationMember.WithSignature(const AValue: INyxDocumentationSignature): INyxDocumentationMember;
+var
+  LNext: TDocumentationMember;
+  LHold: INyxDocumentationMember;
+  LFrozen: INyxDocumentationSignature;
+begin
+  LFrozen := CaptureNyxDocumentationSignature(AValue);
+
+  if not (FKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod]) then
+    raise ENyxDocumentation.Create('This documentation member has no call signature');
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.FSignature := LFrozen;
+  MemberBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationMember.OfType(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+var
+  LNext: TDocumentationMember;
+  LHold: INyxDocumentationMember;
+begin
+  AValue.Validate;
+
+  if AValue.IsMember or not (FKind in [ndmProperty, ndmField, ndmEvent, ndmEnumValue]) then
+    raise ENyxDocumentation.Create('This documentation member cannot declare a value type');
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.FValueType := AValue;
+  MemberBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationMember.WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationMember;
+var
+  LNext: TDocumentationMember;
+  LHold: INyxDocumentationMember;
+begin
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.AddExample(AValue);
+  MemberBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationMember.WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+var
+  LNext: TDocumentationMember;
+  LHold: INyxDocumentationMember;
+begin
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.AddRelated(AValue);
+  MemberBytes(LHold);
+  Result := LHold;
+end;
+
+function CaptureNyxDocumentationMember(const AValue: INyxDocumentationMember;
+  const ACancellation: INyxCancellationScope): INyxDocumentationMember;
+var
+  LSource, LFrozen: INyxDocumentationMember;
+  LAt, LCount: Integer;
+  LType: TNyxDocumentationRef;
+  LSignature: INyxDocumentationSignature;
+begin
+  LSource := AValue;
+  Result := nil;
+  CheckCancellation(ACancellation);
+
+  if LSource = nil then
+    raise ENyxDocumentation.Create('A documentation member is required');
+  LFrozen := NewNyxDocumentationMember(LSource.Identity, LSource.Kind, LSource.Summary);
+
+  LSignature := CaptureNyxDocumentationSignature(LSource.Signature, ACancellation);
+
+  if LSignature <> nil then
+    LFrozen := LFrozen.WithSignature(LSignature);
+  LType := LSource.ValueType;
+
+  if LType.Defined then
+    LFrozen := LFrozen.OfType(LType);
+  LCount := LSource.ExampleCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumExamples) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its example allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithExample(LSource.ExampleAt(LAt));
+  end;
+  LCount := LSource.RelatedCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its related-link allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
+  end;
+  MemberBytes(LFrozen);
+  CheckCancellation(ACancellation);
+  Result := LFrozen;
+end;
+
+function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
+var
+  LValue: TDocumentationType;
+begin
+  Result := nil;
+  AIdentity.Validate;
+  TextBound(ASummary, 2048);
+
+  if AIdentity.IsMember or (Ord(AKind) < 0) or
+    (Ord(AKind) > Ord(High(TNyxDocumentationTypeKind))) then
+    raise ENyxDocumentation.Create('A documentation type requires its own qualified identity');
+  LValue := TDocumentationType.Create;
+  LValue.FIdentity := AIdentity;
+  LValue.FKind := AKind;
+  LValue.FSummary := ASummary;
+  Result := LValue;
+end;
+
+function TDocumentationType.CopyValue: TDocumentationType;
+var
+  LAt: Integer;
+begin
+  Result := TDocumentationType.Create;
+  CopyContent(Result);
+  Result.FIdentity := FIdentity;
+  Result.FKind := FKind;
+  Result.FAlias := FAlias;
+  SetLength(Result.FBases, BaseCount);
+  for LAt := 0 to BaseCount - 1 do
+    Result.FBases[LAt] := FBases[LAt];
+  SetLength(Result.FMembers, MemberCount);
+  for LAt := 0 to MemberCount - 1 do
+    Result.FMembers[LAt] := FMembers[LAt];
+end;
+
+function TDocumentationType.Identity: TNyxDocumentationRef;
+begin
+  Result := FIdentity;
+end;
+
+function TDocumentationType.Kind: TNyxDocumentationTypeKind;
+begin
+  Result := FKind;
+end;
+
+function TDocumentationType.AliasTarget: TNyxDocumentationRef;
+begin
+  Result := FAlias;
+end;
+
+function TDocumentationType.BaseCount: Integer;
+begin
+  Result := Length(FBases);
+end;
+
+function TDocumentationType.BaseAt(AIndex: Integer): TNyxDocumentationRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= BaseCount) then
+    raise ENyxDocumentation.Create('Documentation base ordinal is out of range');
+  Result := FBases[AIndex];
+end;
+
+function TDocumentationType.MemberCount: Integer;
+begin
+  Result := Length(FMembers);
+end;
+
+function TDocumentationType.MemberAt(AIndex: Integer): INyxDocumentationMember;
+begin
+
+  if (AIndex < 0) or (AIndex >= MemberCount) then
+    raise ENyxDocumentation.Create('Documentation member ordinal is out of range');
+  Result := FMembers[AIndex];
+end;
+
+function TDocumentationType.WithAlias(const ATarget: TNyxDocumentationRef): INyxDocumentationType;
+var
+  LNext: TDocumentationType;
+  LHold: INyxDocumentationType;
+begin
+  ATarget.Validate;
+
+  if (FKind <> ndtAlias) or ATarget.IsMember or ATarget.Same(FIdentity) then
+    raise ENyxDocumentation.Create('An alias requires another original type identity');
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.FAlias := ATarget;
+  TypeBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationType.WithBase(const ABase: TNyxDocumentationRef): INyxDocumentationType;
+var
+  LNext: TDocumentationType;
+  LHold: INyxDocumentationType;
+  LAt: Integer;
+begin
+  ABase.Validate;
+
+  if not (FKind in [ndtClass, ndtInterface, ndtCallback]) or ABase.IsMember or
+    ABase.Same(FIdentity) or (BaseCount >= NyxDocumentationMaximumLinks) then
+    raise ENyxDocumentation.Create('A base requires a distinct type and bounded class/interface/callback owner');
+  for LAt := 0 to BaseCount - 1 do
+  begin
+
+    if FBases[LAt].Same(ABase) then
+      raise ENyxDocumentation.Create('Documentation repeats a base type');
+  end;
+  LNext := CopyValue;
+  LHold := LNext;
+  SetLength(LNext.FBases, BaseCount + 1);
+  LNext.FBases[High(LNext.FBases)] := ABase;
+  TypeBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationType.WithMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
+var
+  LFrozen: INyxDocumentationMember;
+  LNext: TDocumentationType;
+  LHold: INyxDocumentationType;
+  LAt: Integer;
+begin
+  LFrozen := CaptureNyxDocumentationMember(AMember);
+
+  if not LFrozen.Identity.Owner.Same(FIdentity) or
+    (MemberCount >= NyxDocumentationMaximumMembers) then
+    raise ENyxDocumentation.Create('A documentation member must retain its original bounded owner');
+  for LAt := 0 to MemberCount - 1 do
+  begin
+
+    if FMembers[LAt].Identity.Same(LFrozen.Identity) then
+      raise ENyxDocumentation.Create('Documentation repeats a member/overload identity');
+  end;
+  LNext := CopyValue;
+  LHold := LNext;
+  SetLength(LNext.FMembers, MemberCount + 1);
+  LNext.FMembers[High(LNext.FMembers)] := LFrozen;
+  TypeBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationType.WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationType;
+var
+  LNext: TDocumentationType;
+  LHold: INyxDocumentationType;
+begin
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.AddExample(AValue);
+  TypeBytes(LHold);
+  Result := LHold;
+end;
+
+function TDocumentationType.WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationType;
+var
+  LNext: TDocumentationType;
+  LHold: INyxDocumentationType;
+begin
+  LNext := CopyValue;
+  LHold := LNext;
+  LNext.AddRelated(AValue);
+  TypeBytes(LHold);
+  Result := LHold;
+end;
+
+function CaptureNyxDocumentationType(const AValue: INyxDocumentationType;
+  const ACancellation: INyxCancellationScope): INyxDocumentationType;
+var
+  LSource, LFrozen: INyxDocumentationType;
+  LAt, LCount: Integer;
+  LAlias: TNyxDocumentationRef;
+begin
+  LSource := AValue;
+  Result := nil;
+  CheckCancellation(ACancellation);
+
+  if LSource = nil then
+    raise ENyxDocumentation.Create('A documentation type is required');
+  LFrozen := NewNyxDocumentationType(LSource.Identity, LSource.Kind, LSource.Summary);
+  LAlias := LSource.AliasTarget;
+
+  if LAlias.Defined then
+    LFrozen := LFrozen.WithAlias(LAlias);
+  LCount := LSource.BaseCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its base allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithBase(LSource.BaseAt(LAt));
+  end;
+  LCount := LSource.MemberCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumMembers) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its member allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithMember(CaptureNyxDocumentationMember(LSource.MemberAt(LAt), ACancellation));
+  end;
+  LCount := LSource.ExampleCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumExamples) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its example allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithExample(LSource.ExampleAt(LAt));
+  end;
+  LCount := LSource.RelatedCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
+    raise ENyxDocumentation.Create('Captured documentation exceeds its related-link allowance');
+  for LAt := 0 to LCount - 1 do
+  begin
+    CheckCancellation(ACancellation);
+    LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
+  end;
+  TypeBytes(LFrozen);
+  CheckCancellation(ACancellation);
+  Result := LFrozen;
+end;
+
+end.

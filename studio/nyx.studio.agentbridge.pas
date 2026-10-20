@@ -33,7 +33,7 @@ uses
   nyx.studio.builds, nyx.resources, nyx.source, nyx.studio.sourceobservations,
   nyx.studio.sourcecompilation, nyx.studio.sourcecompilation.shared,
   nyx.studio.sourcepublications, nyx.source.preparation, nyx.studio.builddiagnostics,
-  nyx.pascal.sources, nyx.pascal.completion, nyx.studio.completion;
+  nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.definition, nyx.studio.completion;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -269,14 +269,20 @@ uses
 type
   { Managed weak bridge borrow. Exact session sources and acknowledged frame are
     rechecked for submission and presentation. Detach precedes bridge teardown. }
-  TBridgeCompletionContext = class(TInterfacedObject, INyxStudioCompletionContext)
+  TBridgeCompletionContext = class(TInterfacedObject, INyxStudioCompletionContext,
+    INyxStudioDefinitionContext)
   private
     FQuery: INyxPascalCompletionRequest;
     FRevision: Integer;
     function MatchesAcknowledged(const AQuery: INyxPascalCompletionRequest): Boolean;
+    function Submit(const AQuery: INyxPascalCompletionRequest;
+      const AReply: INyxStudioCompletionReply;
+      AKind: TNyxStudioPascalQueryKind): TNyxStudioCompletionReadiness;
   public
     Owner: TNyxStudioAgentBridge;
     function Request(const AQuery: INyxPascalCompletionRequest;
+      const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+    function RequestDefinition(const AQuery: INyxPascalDefinitionRequest;
       const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
     function Current(const AQuery: INyxPascalCompletionRequest): Boolean;
     procedure Cancel;
@@ -364,6 +370,19 @@ end;
 
 function TBridgeCompletionContext.Request(const AQuery: INyxPascalCompletionRequest;
   const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+begin
+  Result := Submit(AQuery, AReply, spqCompletion);
+end;
+
+function TBridgeCompletionContext.RequestDefinition(const AQuery: INyxPascalDefinitionRequest;
+  const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
+begin
+  Result := Submit(NyxPascalDefinitionQuery(AQuery), AReply, spqDefinition);
+end;
+
+function TBridgeCompletionContext.Submit(const AQuery: INyxPascalCompletionRequest;
+  const AReply: INyxStudioCompletionReply;
+  AKind: TNyxStudioPascalQueryKind): TNyxStudioCompletionReadiness;
 var
   LQuery: INyxPascalCompletionRequest;
 begin
@@ -392,7 +411,7 @@ begin
   FQuery := LQuery;
   FRevision := Owner.FView.Revision;
   Owner.FCompletionClient.Request(Owner.FToken, Owner.FWorkspace, Owner.FView.Revision,
-    LQuery, AReply);
+    LQuery, AReply, AKind);
   Result := scrSubmitted;
 end;
 

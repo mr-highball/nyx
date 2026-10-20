@@ -4216,6 +4216,11 @@ begin
               Download(FSession.SourceFileTitle(FSession.ActiveSourceFile), FSession.ActiveSourceText);
               Exit;
             end;
+          'action-source-definition':
+            begin
+              FSourceInput.RequestDefinition;
+              Exit;
+            end;
           'action-import':
             begin
               FFilesVisible := not FFilesVisible;

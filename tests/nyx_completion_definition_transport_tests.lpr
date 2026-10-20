@@ -3,8 +3,8 @@ program nyx_completion_definition_transport_tests;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.editing, nyx.data, nyx.pascal.drafts,
-  nyx.pascal.sources, nyx.pascal.completion, nyx.studio.agents,
+uses SysUtils, nyx.text, nyx.editing, nyx.data, nyx.scheduler, nyx.pascal.drafts,
+  nyx.pascal.sources, nyx.pascal.completion, nyx.pascal.definition, nyx.studio.agents,
   nyx.studio.completion, nyx.studio.workspaces
   {$ifdef PAS2JS}, Web
   {$else}, nyx.studio.mcp, nyx.studio.directories, nyx.studio.outputs,
@@ -14,11 +14,15 @@ uses SysUtils, nyx.text, nyx.editing, nyx.data, nyx.pascal.drafts,
 type
   { Controlled provider isolates real editor/MCP transport from language binding.
     It names the actual captured main declaration and owns no compiler or SDK. }
-  TDefinitionProvider = class(TInterfacedObject, INyxPascalCompletionProvider)
+  TDefinitionProvider = class(TInterfacedObject, INyxPascalCompletionProvider,
+    INyxPascalDefinitionProvider)
   public
     Calls: Integer;
+    DefinitionCalls: Integer;
     WithLocations: Boolean;
     function Complete(const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
+    function ResolveDefinition(const ARequest: INyxPascalDefinitionRequest;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalDefinitionResult;
   end;
 {$endif}
 
@@ -147,6 +151,22 @@ begin
 end;
 
 {$ifndef PAS2JS}
+function TDefinitionProvider.ResolveDefinition(const ARequest: INyxPascalDefinitionRequest;
+  const ACancellation: INyxCancellationScope): INyxPascalDefinitionResult;
+var
+  LText, LName: TNyxText;
+  LAt: Integer;
+begin
+  Inc(DefinitionCalls);
+  LText := ARequest.Sources.Text(TNyxPascalSourceRef.Main);
+  LName := ARequest.Sources.MainUnit.Name;
+  LAt := Pos(LName, LText);
+  Result := NewNyxPascalDefinitionResult(ARequest, pdsReady, '',
+    [NyxPascalDefinitionTarget(LName, 'Explicit definition operation', pckUnit,
+      NyxPascalCompletionLocation(TNyxPascalSourceRef.Main,
+        NyxTextScalarCount(Copy(LText, 1, LAt - 1)), NyxTextScalarCount(LName), LName))], 1);
+end;
+
 function TDefinitionProvider.Complete(
   const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
 var
@@ -190,6 +210,8 @@ var
   LClaim, LBefore, LAfter, LReply, LPacket, LPublic, LBaseline: TNyxDataValue;
   LToken, LKey, LName: TNyxText;
   LRevision, LCalls: Integer;
+  LNewCaret: Integer;
+  LPreview: INyxPascalSourceSnapshot;
   LRejected: Boolean;
 begin
 
@@ -244,6 +266,30 @@ begin
       LDefinitions.DefinitionLocation(0).FileReference.SameFile(TNyxPascalSourceRef.Main) and
       (LDefinitions.DefinitionLocation(0).Name = LName),
       'The real private handoff reaches the correlated client with the exact main source target');
+    LCalls := LProvider.Calls;
+    LReply := LEngine.EditorExchange(LToken, NyxStudioCompletionRequest(LQuery, LRevision,
+      'native-caret-definition', NyxPrimaryWorkspace, spqDefinition));
+    LReceived := ReadNyxStudioCompletionEnvelope(LReply, 'native-caret-definition',
+      NyxPrimaryWorkspace, LRevision, LQuery);
+    Check((LProvider.DefinitionCalls = 1) and (LProvider.Calls = LCalls) and
+      (LReceived.Count = 1) and Supports(LReceived, INyxPascalCompletionDefinitions, LDefinitions) and
+      LDefinitions.DefinitionLocation(0).Available,
+      'Private definition dispatch uses the specialized provider without completing a prefix');
+    LPreview := LReceived.Preview(0, LQuery.Sources, LNewCaret);
+    Check((LPreview.Count = LQuery.Sources.Count) and (LNewCaret = LQuery.Caret),
+      'Shared transport definition rows retain source membership and caret through Preview');
+    { Ordinary Preview can mark a returned value as editing-origin even for an
+      empty insertion. Compare every accepted/current byte, not that distinct
+      inspection origin; the definition menu refuses Preview/Accept altogether. }
+    for LCalls := 0 to LQuery.Sources.Count - 1 do
+    begin
+      Check(LPreview.FileReference(LCalls).SameFile(LQuery.Sources.FileReference(LCalls)) and
+        (LPreview.Text(LPreview.FileReference(LCalls)) =
+          LQuery.Sources.Text(LQuery.Sources.FileReference(LCalls))) and
+        (LPreview.AcceptedText(LPreview.FileReference(LCalls)) =
+          LQuery.Sources.AcceptedText(LQuery.Sources.FileReference(LCalls))),
+        'Shared definition page contains no accepted/current source replacement');
+    end;
     LCalls := LProvider.Calls;
     LRejected := False;
     try

@@ -26,10 +26,14 @@ unit nyx.studio.completion;
 
 interface
 
-uses nyx.text, nyx.data, nyx.pascal.completion, nyx.studio.exchange,
+uses nyx.text, nyx.data, nyx.pascal.completion, nyx.pascal.definition, nyx.studio.exchange,
   nyx.studio.workspaces;
 
 type
+  { Closed private editor operation. Both inspect acknowledged sources; only
+    completion contains replacement proposals. This is not an MCP tool change. }
+  TNyxStudioPascalQueryKind = (spqCompletion, spqDefinition);
+
   { Managed UI-thread receiver owns its dependencies. A delivery is detached
     before invocation, so it may request/cancel another query. Schedule owner/
     client destruction after callback return; the exchange may still be dispatching. }
@@ -55,6 +59,15 @@ type
     function Current(const AQuery: INyxPascalCompletionRequest): Boolean;
     procedure Cancel;
     procedure Detach;
+  end;
+
+  { Optional definition dispatch on the same revocable editor service. The
+    receiver uses the bounded shared no-op page adapter, preserving existing
+    transport tickets while the submitted query remains specialized and typed. }
+  INyxStudioDefinitionContext = interface(IInterface)
+    ['{2B1738D6-74E8-43C8-8E96-BCEB0E01E3F5}']
+    function RequestDefinition(const AQuery: INyxPascalDefinitionRequest;
+      const AReply: INyxStudioCompletionReply): TNyxStudioCompletionReadiness;
   end;
 
   { Owns one private asynchronous editor exchange. No UI/session/document is
@@ -83,7 +96,8 @@ type
       Private transport authority is retained by the exchange, never the packet. }
     procedure Request(const AToken: TNyxText; const AWorkspace: TNyxWorkspaceRef;
       ARevision: Integer; const AQuery: INyxPascalCompletionRequest;
-      const AReceiver: INyxStudioCompletionReply);
+      const AReceiver: INyxStudioCompletionReply;
+      AKind: TNyxStudioPascalQueryKind = spqCompletion);
     { Revoke local delivery and release its receiver/query. An already admitted
       server read may finish independently; this grants no server cancellation. }
     procedure Cancel;
@@ -96,7 +110,8 @@ type
   The caller supplies the ordinary project's acknowledged exact revision. }
 function NyxStudioCompletionRequest(const AQuery: INyxPascalCompletionRequest;
   ARevision: Integer; const AID: TNyxText;
-  const AWorkspace: TNyxWorkspaceRef): TNyxDataValue;
+  const AWorkspace: TNyxWorkspaceRef;
+  AKind: TNyxStudioPascalQueryKind = spqCompletion): TNyxDataValue;
 { Strict server-side boundary. Operator authority comes from the authenticated
   transport, never an input field. Returns ordinary source query arguments. }
 function NyxStudioCompletionArguments(const ARequest: TNyxDataValue;
@@ -146,21 +161,23 @@ end;
 
 function NyxStudioCompletionRequest(const AQuery: INyxPascalCompletionRequest;
   ARevision: Integer; const AID: TNyxText;
-  const AWorkspace: TNyxWorkspaceRef): TNyxDataValue;
+  const AWorkspace: TNyxWorkspaceRef; AKind: TNyxStudioPascalQueryKind): TNyxDataValue;
 const
   COrigins: array[TNyxPascalSourceSnapshotKind] of TNyxText = ('accepted', 'editing');
+  COperations: array[TNyxStudioPascalQueryKind] of TNyxText = ('completion', 'definition');
 var
   LQuery: INyxPascalCompletionRequest;
 begin
   CheckID(AID);
 
-  if ARevision < 1 then
+  if (ARevision < 1) or (Ord(AKind) < Ord(Low(TNyxStudioPascalQueryKind))) or
+    (Ord(AKind) > Ord(High(TNyxStudioPascalQueryKind))) then
   begin
     raise ENyxPascalProject.Create('Completion requires its acknowledged revision');
   end;
   LQuery := CaptureNyxPascalCompletionRequest(AQuery);
   Result := NyxWithWorkspace(NyxObject([
-    NyxField('op', NyxData('completion')), NyxField('requestId', NyxData(AID)),
+    NyxField('op', NyxData(COperations[AKind])), NyxField('requestId', NyxData(AID)),
     NyxField('expectedRevision', NyxData(ARevision)),
     NyxField('snapshot', NyxData(COrigins[LQuery.Sources.Kind])),
     NyxField('file', FileData(LQuery.FileReference)), NyxField('owner', FileData(LQuery.Owner)),
@@ -181,7 +198,8 @@ begin
   NyxAgentFields(ARequest,
     '|op|requestId|expectedRevision|snapshot|file|owner|caret|offset|limit|workspace|');
 
-  if ARequest.Field('op').AsText <> 'completion' then
+  if (ARequest.Field('op').AsText <> 'completion') and
+    (ARequest.Field('op').AsText <> 'definition') then
   begin
     raise ENyxPascalProject.Create('Expected the private editor completion operation');
   end;
@@ -306,7 +324,8 @@ end;
 
 procedure TNyxStudioCompletionClient.Request(const AToken: TNyxText;
   const AWorkspace: TNyxWorkspaceRef; ARevision: Integer;
-  const AQuery: INyxPascalCompletionRequest; const AReceiver: INyxStudioCompletionReply);
+  const AQuery: INyxPascalCompletionRequest; const AReceiver: INyxStudioCompletionReply;
+  AKind: TNyxStudioPascalQueryKind);
 var
   LQuery: INyxPascalCompletionRequest;
   LID: TNyxText;
@@ -319,7 +338,9 @@ begin
   end;
   LQuery := CaptureNyxPascalCompletionRequest(AQuery);
   LID := 'editor-completion-' + IntToStr(FSerial + 1);
-  LPacket := NyxStudioCompletionRequest(LQuery, ARevision, LID, AWorkspace);
+
+  if AKind = spqDefinition then LID := 'editor-definition-' + IntToStr(FSerial + 1);
+  LPacket := NyxStudioCompletionRequest(LQuery, ARevision, LID, AWorkspace, AKind);
   Cancel;
   Inc(FSerial);
   FQuery := LQuery;

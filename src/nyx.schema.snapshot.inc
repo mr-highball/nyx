@@ -88,6 +88,68 @@ begin
   Result := CapturedRevision;
 end;
 
+function TNyxSchemaSnapshot.KindCount: Integer;
+begin
+  Result := Length(Schemas);
+end;
+
+function TNyxSchemaSnapshot.KindAt(AIndex: Integer): TNyxKindRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= KindCount) then
+  begin
+    raise ENyxModel.Create('Captured schema kind ordinal is out of range');
+  end;
+  Result := NyxCustomKind(Schemas[AIndex].Kind);
+end;
+
+function TNyxSchemaSnapshot.FindKind(const AKind: TNyxKindRef): Integer;
+var
+  LAt: Integer;
+begin
+  Result := -1;
+  for LAt := 0 to High(Schemas) do
+  begin
+
+    if Schemas[LAt].Kind = AKind.Name then
+    begin
+      Exit(LAt);
+    end;
+  end;
+end;
+
+function TNyxSchemaSnapshot.PropertyCount(AKind: Integer): Integer;
+begin
+  KindAt(AKind);
+  Result := Length(Schemas[AKind].Properties);
+end;
+
+function TNyxSchemaSnapshot.PropertyAt(AKind, AIndex: Integer): TNyxPropertyInfo;
+begin
+
+  if (AIndex < 0) or (AIndex >= PropertyCount(AKind)) then
+  begin
+    raise ENyxModel.Create('Captured schema property ordinal is out of range');
+  end;
+  Result := Schemas[AKind].Properties[AIndex];
+end;
+
+function TNyxSchemaSnapshot.EventCount(AKind: Integer): Integer;
+begin
+  KindAt(AKind);
+  Result := Length(Schemas[AKind].Events);
+end;
+
+function TNyxSchemaSnapshot.EventAt(AKind, AIndex: Integer): TNyxEventSchema;
+begin
+
+  if (AIndex < 0) or (AIndex >= EventCount(AKind)) then
+  begin
+    raise ENyxModel.Create('Captured schema event ordinal is out of range');
+  end;
+  Result := Schemas[AKind].Events[AIndex].Copy;
+end;
+
 procedure TNyxSchemaSnapshot.Execute(const AAction: INyxSchemaAction);
 var
   LPrevious: TNyxSchemaSnapshot;

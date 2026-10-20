@@ -19,7 +19,46 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current-source project definitions retain optional immutable logical source/name
+Current-source caret definitions add typed immutable request/result/provider
+contracts over the same owned semantic world. Bare/qualified names retain lexical
+shadowing/namespace authority; complex receivers retain existing expression/member
+uncertainty and budgets. Whole identifiers resolve exactly; declared overloads
+remain alternatives with bounded pages/full totals. Private editor dispatch uses
+the specialized provider and no-op shared wire rows without public MCP tool/schema
+changes. Nyx popup inspection refuses insertion/Preview, F12/visible Definition
+queue a single project target or present alternatives; both Studio adapters recheck
+the current caret/history/service/project/all buffers before ordinary navigation.
+The separate Lil' Scooty lane adds immutable declared API documentation and typed
+captured schema inspection with copied event routes, original schema/catalog
+authority, explicit absence, bounded text and cancellation. No hidden control/
+callback/example executes for inspection. Unit/global creators, automatic source
+generation/discovery and contextual reference UI remain required. Twenty-source
+common qualification passes28 compilers/zero owned warnings/91 upstream and13
+native programs with clean heaps (58/33/40/46/27/78/31/23/90/40/10/82/3400).
+Independent review catches the explicit include-owner callback changing without
+source/caret/history changes. Currentness now rereads that live owner before
+reply/popup/queued navigation. Controlled owner-port revocation passes before
+reply and before jump; an attempted actual auxiliary fixture correctly refuses
+without compiled construction, so real include-outline GUI interaction remains
+open. Earlier72-controller/28-build evidence and all preparation failures remain
+retained separately. Final source-qualified freeze includes the owner repair and
+three IF-spacing blank lines through the complete unchanged28-build matrix.
+Thirteen browser consumers and both Studios/backend/worker compile as applicable;
+no GUI/browser execution, parity/adoption/delivery is claimed. All786 current/766
+unrelated inputs, retained failures/copies, prior compiler/97 RTL/profile/protected,
+thirteen concurrent planning files and frozen349 comparisons pass. Readers join;
+LAN offline, native Nyx tools absent. Current-start protection exact; historical
+global-config preservation remains false/unrepaired. WORK.md and ignored
+.local/caret-definition-paths-private.json own source/terminal/remote receipts.
+Full original criterion/task/credit/DONE/language/editor/input/quality/parity/
+adoption/delivery stay open across at least forty-eight documented unclosed batches.
+Stop definition/fixture/compiler variants after final review. Next helper scope is
+truthful unit/global creator documentation identity before registration/discovery;
+root retains full editor integration. No Pascal edits while readers live. No host/
+config retry, SDK capture, protected mutation, cleanup/restart, approval bypass,
+new public MCP tool/schema or rollout. Preserve concurrent work.
+
+Previously qualified project definitions retain optional immutable logical source/name
 coordinates through owned completion, strict private v2 replies, exact Studio
 admission and public Nyx menu presentation. SDK-only provenance never fabricates
 a project target; no public MCP semantic field/schema changes. Definition/F12

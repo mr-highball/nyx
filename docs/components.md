@@ -3,6 +3,10 @@
 [Architecture](architecture.md) · [Catalog](../src/nyx.catalog.pas) ·
 [Default recipes](../src/nyx.recipes.pas) · [Defaults and named parts](components-reference.md)
 
+[Portable component documentation](component-documentation.md) provides immutable
+typed API descriptors and inspection of existing schema/catalog facts. Automatic
+reference discovery and the full Studio reference browser remain ongoing work.
+
 Nyx currently defines 41 primitive/layout/authoring kinds and 36 compound recipes. A recipe
 is an ordinary owned tree built from reusable primitives. Named parts are
 editable nodes rather than inaccessible renderer internals. Native and browser

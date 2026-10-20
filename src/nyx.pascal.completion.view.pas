@@ -27,7 +27,8 @@ unit nyx.pascal.completion.view;
 interface
 
 uses nyx.text, nyx.types, nyx.controls, nyx.model, nyx.editing.history,
-  nyx.editing, nyx.text.projection, nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion;
+  nyx.editing, nyx.text.projection, nyx.pascal.sources, nyx.pascal.drafts,
+  nyx.pascal.completion, nyx.pascal.definition;
 
 type
   { Closed presentation actions. Request/page actions delegate asynchronous work;
@@ -64,6 +65,20 @@ type
   INyxPascalCompletionNavigation = interface(IInterface)
     ['{A9868B38-B911-4FDC-BCBD-08767F69B544}']
     function SelectedDefinition(const ACurrentSources: INyxPascalSourceSnapshot): TNyxPascalCompletionLocation;
+  end;
+
+  { Optional inspection mode on the same guarded Nyx popup. Definition rows
+    offer navigation only; ordinary Accept/Preview editing refuses in this mode.
+    Tickets, source/history identity and mount routing retain their authority. }
+  INyxPascalDefinitionMenu = interface(IInterface)
+    ['{2B1738D6-74E8-43C8-8E96-BCEB0E01E3F4}']
+    function BeginDefinitionQuery(const ASources: INyxPascalSourceSnapshot;
+      const AFile, AOwner: TNyxPascalSourceRef;
+      out ATicket: TNyxPascalCompletionTicket;
+      AOffset: Integer = 0; ALimit: Integer = 12): INyxPascalDefinitionRequest;
+    function PresentDefinition(const ATicket: TNyxPascalCompletionTicket;
+      const AResult: INyxPascalDefinitionResult;
+      const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
   end;
 
   { One UI-thread-owned completion view beside one physical buffer/history.
@@ -113,7 +128,8 @@ type
   { No callback back-reference is kept. The menu's serial and history generation
     revoke detached rows/replies, while the history owns only text values. }
   TCompletionMenu = class(TInterfacedObject, INyxPascalCompletionMenu,
-    INyxPascalCompletionPreparation, INyxPascalCompletionNavigation)
+    INyxPascalCompletionPreparation, INyxPascalCompletionNavigation,
+    INyxPascalDefinitionMenu)
   private
     FIdentity: Integer;
     FSerial: Integer;
@@ -124,8 +140,19 @@ type
     FResult: INyxPascalCompletionResult;
     FState: TNyxPascalCompletionViewState;
     FSelected: Integer;
+    FDefinitionMode: Boolean;
     function Current(const ASources: INyxPascalSourceSnapshot): Boolean;
+    function PresentPage(const ATicket: TNyxPascalCompletionTicket;
+      const AResult: INyxPascalCompletionResult;
+      const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
   public
+    function BeginDefinitionQuery(const ASources: INyxPascalSourceSnapshot;
+      const AFile, AOwner: TNyxPascalSourceRef;
+      out ATicket: TNyxPascalCompletionTicket;
+      AOffset: Integer = 0; ALimit: Integer = 12): INyxPascalDefinitionRequest;
+    function PresentDefinition(const ATicket: TNyxPascalCompletionTicket;
+      const AResult: INyxPascalDefinitionResult;
+      const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
     function BeginQuery(const ASources: INyxPascalSourceSnapshot;
       const AFile, AOwner: TNyxPascalSourceRef;
       out ATicket: TNyxPascalCompletionTicket;
@@ -213,9 +240,44 @@ begin
   FResult := nil;
   FState := pcvPending;
   FSelected := -1;
+  FDefinitionMode := False;
   ATicket.FOwner := FIdentity;
   ATicket.FSerial := FSerial;
   Result := LRequest;
+end;
+
+function TCompletionMenu.BeginDefinitionQuery(const ASources: INyxPascalSourceSnapshot;
+  const AFile, AOwner: TNyxPascalSourceRef;
+  out ATicket: TNyxPascalCompletionTicket; AOffset, ALimit: Integer): INyxPascalDefinitionRequest;
+var
+  LQuery: INyxPascalCompletionRequest;
+begin
+  LQuery := BeginQuery(ASources, AFile, AOwner, ATicket, AOffset, ALimit);
+  Result := NyxPascalDefinitionRequest(LQuery);
+  FDefinitionMode := True;
+end;
+
+function TCompletionMenu.PresentDefinition(const ATicket: TNyxPascalCompletionTicket;
+  const AResult: INyxPascalDefinitionResult;
+  const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
+var
+  LChecked: INyxPascalDefinitionResult;
+begin
+  Result := False;
+
+  if not FDefinitionMode or (FRequest = nil) or
+    (FState <> pcvPending) or (ATicket.FOwner <> FIdentity) or (ATicket.FSerial <> FSerial) then
+  begin
+    Exit;
+  end;
+
+  if not Current(ACurrentSources) then
+  begin
+    Dismiss;
+    Exit;
+  end;
+  LChecked := CaptureNyxPascalDefinitionResult(AResult, NyxPascalDefinitionRequest(FRequest));
+  Result := PresentPage(ATicket, NyxPascalDefinitionPage(LChecked), ACurrentSources);
 end;
 
 procedure TCompletionMenu.Dismiss;
@@ -237,6 +299,18 @@ begin
 end;
 
 function TCompletionMenu.Present(const ATicket: TNyxPascalCompletionTicket;
+  const AResult: INyxPascalCompletionResult;
+  const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
+begin
+
+  if FDefinitionMode then
+  begin
+    Exit(False);
+  end;
+  Result := PresentPage(ATicket, AResult, ACurrentSources);
+end;
+
+function TCompletionMenu.PresentPage(const ATicket: TNyxPascalCompletionTicket;
   const AResult: INyxPascalCompletionResult;
   const ACurrentSources: INyxPascalSourceSnapshot): Boolean;
 var
@@ -279,11 +353,15 @@ begin
 end;
 
 function TCompletionMenu.MessageText: TNyxText;
+var
+  LSubject: TNyxText;
 begin
   Result := '';
 
   if FState = pcvPending then
   begin
+
+    if FDefinitionMode then Exit('Finding declarations...');
     Exit('Finding suggestions...');
   end;
 
@@ -300,12 +378,15 @@ begin
 
   if FState = pcvReady then
   begin
+    LSubject := 'suggestions';
+
+    if FDefinitionMode then LSubject := 'declarations';
 
     if FResult.Count = 0 then
     begin
-      Exit('No suggestions in this context');
+      Exit('No ' + LSubject + ' in this context');
     end;
-    Result := IntToStr(FResult.Count) + ' of ' + IntToStr(FResult.Total) + ' suggestions';
+    Result := IntToStr(FResult.Count) + ' of ' + IntToStr(FResult.Total) + ' ' + LSubject;
   end;
   case FState of
     pcvUnavailable: Result := 'Completion is not configured';
@@ -327,6 +408,7 @@ var
   LAt: Integer;
   LID: TNyxText;
   LDefinitions: INyxPascalCompletionDefinitions;
+  LTitle: TNyxText;
 
   procedure Action(const AButton: INyxButton; AAction: TNyxPascalCompletionAction; ARow: Integer = -1);
   begin
@@ -348,6 +430,8 @@ begin
   Result := NewNyxCard(AID);
   Result.Configure.Visible(FState <> pcvClosed).Padding(12).Gap(8)
     .AccessibleName('Pascal completion suggestions').Done;
+
+  if FDefinitionMode then Result.Configure.AccessibleName('Pascal declarations').Done;
   Result.Node.Extensions.SetValue(NyxExtension(CTicketKey), NyxData(FSerial));
 
   if FState = pcvClosed then
@@ -356,9 +440,14 @@ begin
   end;
   LHeader := NewNyxRow(AID + '-header');
   LHeader.Configure.Gap(8).Done;
-  LHeader.Add(NewNyxLabel(AID + '-title').WithText('Code completion').Configure.Flex(1).Done);
+  LTitle := 'Code completion';
+
+  if FDefinitionMode then LTitle := 'Go to definition';
+  LHeader.Add(NewNyxLabel(AID + '-title').WithText(LTitle).Configure.Flex(1).Done);
   LButton := NewNyxButton(AID + '-dismiss').WithText('Close');
   LButton.Configure.AccessibleName('Close completion suggestions').Done;
+
+  if FDefinitionMode then LButton.Configure.AccessibleName('Close declaration choices').Done;
   Action(LButton, pcaDismiss);
   LHeader.Add(LButton);
   Result.Add(LHeader);
@@ -386,19 +475,35 @@ begin
     begin
       LButton.Configure.Variant(nvPrimary).Done;
     end;
-    Action(LButton, pcaAccept, LAt);
+
+    if FDefinitionMode then
+    begin
+      LButton.Configure.Enabled((LDefinitions <> nil) and
+        LDefinitions.DefinitionLocation(LAt).Available).Done;
+      Action(LButton, pcaDefinition, LAt);
+    end
+    else
+    begin
+      Action(LButton, pcaAccept, LAt);
+    end;
     LLine.Add(LButton);
     LLine.Add(NewNyxBadge(LID + '-kind').WithText(CKindCaptions[FResult.Item(LAt).Kind]));
     LRow.Add(LLine);
     LRow.Add(NewNyxLabel(LID + '-detail').WithText(FResult.Item(LAt).Detail));
 
-    if (LDefinitions <> nil) and LDefinitions.DefinitionLocation(LAt).Available then
+    if not FDefinitionMode and (LDefinitions <> nil) and LDefinitions.DefinitionLocation(LAt).Available then
     begin
       LButton := NewNyxButton(LID + '-definition').WithText('Definition');
       LButton.Configure.AccessibleName('Go to definition of ' + FResult.Item(LAt).Name)
         .Hint('Open the declaration in this project (F12)').Done;
       Action(LButton, pcaDefinition, LAt);
       LRow.Add(LButton);
+    end;
+
+    if FDefinitionMode and ((LDefinitions = nil) or
+      not LDefinitions.DefinitionLocation(LAt).Available) then
+    begin
+      LRow.Add(NewNyxLabel(LID + '-external').WithText('Declaration is outside this project'));
     end;
     LRows.Add(LRow);
   end;
@@ -409,6 +514,8 @@ begin
   Action(LButton, pcaPrevious);
   LHeader.Add(LButton);
   LButton := NewNyxButton(AID + '-next').WithText('More suggestions');
+
+  if FDefinitionMode then LButton.WithText('More declarations');
   LButton.Configure.Enabled(FRequest.Offset + FResult.Count < FResult.Total).Done;
   Action(LButton, pcaNext);
   LHeader.Add(LButton);
@@ -476,7 +583,16 @@ begin
 
   if AKey.Matches(nkEnterKey) or AKey.Matches(nkTabKey) then
   begin
-    Result := pcaAccept;
+
+    if FDefinitionMode then
+    begin
+
+      if SelectedDefinition(ACurrentSources).Available then Result := pcaDefinition;
+    end
+    else
+    begin
+      Result := pcaAccept;
+    end;
   end;
 
   if AKey.Matches(nkF12Key) and SelectedDefinition(ACurrentSources).Available then
@@ -526,6 +642,8 @@ begin
     Exit;
   end;
   Result := TNyxPascalCompletionAction(LAction);
+
+  if FDefinitionMode and (Result = pcaAccept) then Exit(pcaNone);
 
   if Result in [pcaAccept, pcaDefinition] then
   begin
@@ -580,6 +698,11 @@ var
   LCaret: Integer;
 begin
 
+  if FDefinitionMode then
+  begin
+    raise ENyxPascalProject.Create('Definition inspection cannot prepare a source edit');
+  end;
+
   if not Current(ACurrentSources) or (FState <> pcvReady) or
     (FResult = nil) or (FSelected < 0) then
   begin
@@ -597,6 +720,11 @@ var
   LEnd: Integer;
   LExpected: TNyxText;
 begin
+
+  if FDefinitionMode then
+  begin
+    raise ENyxPascalProject.Create('Definition inspection cannot accept a source edit');
+  end;
 
   if not Current(ACurrentSources) or (FState <> pcvReady) or
     (FResult = nil) or (FSelected < 0) then

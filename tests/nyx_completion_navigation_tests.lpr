@@ -6,7 +6,7 @@ program nyx_completion_navigation_tests;
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.controls, nyx.model,
   nyx.editing, nyx.editing.history, nyx.pascal.names, nyx.pascal.project,
   nyx.pascal.drafts, nyx.pascal.sources, nyx.pascal.completion,
-  nyx.pascal.completion.view {$ifdef PAS2JS}, Web{$endif};
+  nyx.pascal.completion.view, nyx.pascal.definition {$ifdef PAS2JS}, Web{$endif};
 
 var
   GChecks: Integer;
@@ -41,6 +41,11 @@ var
   LFrame: TNyxTextEditorFrame;
   LGeneration: Integer;
   LNameStart: Integer;
+  LDefinitionMenu: INyxPascalDefinitionMenu;
+  LDefinitionQuery: INyxPascalDefinitionRequest;
+  LDefinitionResult: INyxPascalDefinitionResult;
+  LPreparation: INyxPascalCompletionPreparation;
+  LRejected: Boolean;
 
   procedure Present;
   begin
@@ -123,6 +128,45 @@ begin
   Check((LMenu.Key(NyxKeyStroke(nkF12Key), LSources) = pcaNone) and
     not LNavigation.SelectedDefinition(LSources).Available,
     'Composition retains its physical keys and revokes navigation');
+  LHistory := NewNyxTextEditHistory(LFrame);
+  LMenu := NewNyxPascalCompletionMenu(LHistory);
+  Supports(LMenu, INyxPascalDefinitionMenu, LDefinitionMenu);
+  Check(LDefinitionMenu <> nil, 'Existing Nyx menu exposes specialized definition inspection');
+  LDefinitionQuery := LDefinitionMenu.BeginDefinitionQuery(LSources, LMain, LMain, LTicket);
+  LDefinitionResult := NewNyxPascalDefinitionResult(LDefinitionQuery, pdsReady, '', [
+    NyxPascalDefinitionTarget('WithText', 'Project method', pckMethod,
+      NyxPascalCompletionLocation(LUnit, LNameStart, 9, 'WithText')),
+    NyxPascalDefinitionTarget('External', 'SDK declaration', pckMethod,
+      Default(TNyxPascalCompletionLocation))], 2);
+  Check(LDefinitionMenu.PresentDefinition(LTicket, LDefinitionResult, LSources),
+    'Specialized definition result presents under its exact query and ticket');
+  LCard := LMenu.Build('definition', LSources);
+  Check((LCard.Node.Find('definition-title').Prop('text') = 'Go to definition') and
+    (LCard.Node.Find('definition-row-1-external') <> nil),
+    'Definition mode identifies its purpose and makes external-source limits visible');
+  Check((LMenu.Key(NyxKeyStroke(nkEnterKey), LSources) = pcaDefinition) and
+    (LMenu.Route('definition', LCard.Node, LCard.Node.Find('definition-row-0-choose'),
+      ntClick, LSources) = pcaDefinition), 'Keyboard and visible row both request navigation');
+  Check(LMenu.Route('definition', LCard.Node, LCard.Node.Find('definition-row-1-choose'),
+    ntClick, LSources) = pcaNone, 'External declaration cannot invent a local navigation action');
+  LRejected := False;
+  try
+    LMenu.Accept(LSources);
+  except
+    on Exception do LRejected := True;
+  end;
+  Check(LRejected and not LHistory.CanUndo and LHistory.Current.SameValue(LFrame),
+    'Definition mode refuses text acceptance without changing the buffer/history');
+  Supports(LMenu, INyxPascalCompletionPreparation, LPreparation);
+  LRejected := False;
+  try
+    LPreparation.Preview(LSources);
+  except
+    on Exception do LRejected := True;
+  end;
+  Check(LRejected, 'Alternate completion-preparation access cannot prepare a definition edit');
+  Check(not LMenu.Present(LTicket, NyxPascalDefinitionPage(LDefinitionResult), LSources),
+    'Ordinary prefix presentation cannot replace a definition page');
 end;
 
 begin

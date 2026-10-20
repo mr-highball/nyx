@@ -27,7 +27,7 @@ interface
 uses nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax,
   nyx.pascal.binding, nyx.pascal.modules, nyx.pascal.sources, nyx.pascal.completion,
-  nyx.pascal.encoding, nyx.pascal.conditions;
+  nyx.pascal.encoding, nyx.pascal.conditions, nyx.pascal.definition;
 
 type
   { Copied retention policy for source-independent module analysis. The limits
@@ -351,7 +351,8 @@ type
     and retention counters; source comparisons, cancellation and analysis run
     outside it. Evicted leases retire outside the lock. }
   TOwnedProvider = class(TInterfacedObject, INyxPascalCompletionProvider,
-    INyxCancellablePascalCompletionProvider, INyxPascalCompletionReuseStorage)
+    INyxCancellablePascalCompletionProvider, INyxPascalCompletionReuseStorage,
+    INyxPascalDefinitionProvider)
   private
     FMemo: TModuleMemoEntries;
     FMemoTokenCounts: array of Integer;
@@ -389,6 +390,8 @@ type
     function Complete(const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
     function CompleteWithCancellation(const ARequest: INyxPascalCompletionRequest;
       const ACancellation: INyxCancellationScope): INyxPascalCompletionResult;
+    function ResolveDefinition(const ARequest: INyxPascalDefinitionRequest;
+      const ACancellation: INyxCancellationScope = nil): INyxPascalDefinitionResult;
     function SourceReuseState: TNyxPascalSourceReuseState;
   end;
   { One synchronous analysis call. Provider is borrowed only until this call joins;
@@ -422,6 +425,7 @@ type
     FReceiverExpected: TNyxText;
     FReceiverStart: Integer;
     FReceiverDot: Integer;
+    FDefinitionMode: Boolean;
     procedure Check;
     procedure Scan;
     procedure AddModule(const AFile: TNyxPascalPhysicalFile; const AExpected: TNyxText;
@@ -436,11 +440,14 @@ type
       out AStart, ADot, AExpressionStart: Integer; out AExpected, APrefix: TNyxText);
     function Caller(const AFile: TNyxPascalPhysicalFile; ADot, AExpressionStart: Integer;
       out AExpressionWindow: TNyxPascalSpan): INyxPascalBindingSite;
+    function DefinitionBinding(const AFile: TNyxPascalPhysicalFile;
+      const ALexical: INyxPascalLexicalSnapshot;
+      out AStart: Integer; out AExpected: TNyxText): INyxPascalResolution;
     function Run: INyxPascalCompletionResult;
   public
     constructor Create(AProvider: TOwnedProvider;
       const ARequest: INyxPascalCompletionRequest; const ACancellation: INyxCancellationScope);
-    function Complete: INyxPascalCompletionResult;
+    function Complete(ADefinition: Boolean = False): INyxPascalCompletionResult;
   end;
 
 class function TNyxPascalSourceReuseOptions.Defaults: TNyxPascalSourceReuseOptions;
@@ -1727,6 +1734,104 @@ begin
   Result := FWorld.At(FOwner, LView.Syntax.ScopeAt(LOffset), LOffset);
 end;
 
+{ Resolve the whole identifier at the physical caret. Prefix matching belongs
+  only to completion; a half-typed name never borrows a longer declaration.
+  Simple qualified names use the existing lexical/namespace authority. Complex
+  postfix receivers retain ExpressionType's explicit uncertainty and budgets. }
+function TAnalysis.DefinitionBinding(const AFile: TNyxPascalPhysicalFile;
+  const ALexical: INyxPascalLexicalSnapshot;
+  out AStart: Integer; out AExpected: TNyxText): INyxPascalResolution;
+var
+  LAt, LWord, LPrevious, LDot, LExpressionStart, LPart: Integer;
+  LToken: TNyxPascalToken;
+  LName, LPrefix, LQualified, LText: TNyxText;
+  LSimple: Boolean;
+  LSite: INyxPascalBindingSite;
+  LWindow: TNyxPascalSpan;
+  LExpressions: INyxPascalExpressionQueries;
+  LReceiver: INyxPascalResolution;
+  LAccess: TNyxPascalMemberAccess;
+begin
+  Check;
+  LAt := ALexical.TokenAt(FRequest.Caret);
+  LWord := LAt;
+  LToken := ALexical.Token(LWord);
+
+  if (LToken.Kind <> ptkWord) and (LWord > 0) and
+    (ALexical.Token(LWord - 1).Kind = ptkWord) and
+    (ALexical.Token(LWord - 1).Span.Finish = FRequest.Caret) then
+  begin
+    Dec(LWord);
+    LToken := ALexical.Token(LWord);
+  end;
+
+  if (LToken.Kind <> ptkWord) or (LToken.Word <> pkwNone) then
+  begin
+    raise EOwnedGap.CreateGap(pcgExpression,
+      'Definition lookup requires an identifier at the source caret');
+  end;
+  AStart := LToken.Span.Start;
+  AExpected := ALexical.Text(LWord);
+  LName := AExpected;
+
+  if LToken.Escaped then
+  begin
+    Delete(LName, 1, 1);
+  end;
+  LPrevious := Previous(ALexical, LWord - 1);
+
+  if (LPrevious < 0) or (ALexical.Token(LPrevious).Symbol <> psoDot) then
+  begin
+    LSite := Caller(AFile, LToken.Span.Finish, AStart, LWindow);
+    Exit(FWorld.Lookup(LSite, NyxPascalBindingName(LName), FCancel));
+  end;
+  Receiver(ALexical, AStart, LDot, LExpressionStart, AExpected, LPrefix);
+  LSite := Caller(AFile, LDot, LExpressionStart, LWindow);
+  LSimple := True;
+  LQualified := '';
+  LPart := ALexical.TokenAt(LExpressionStart);
+  while LPart <= LWord do
+  begin
+    Scan;
+    LToken := ALexical.Token(LPart);
+
+    if LToken.Kind = ptkWord then
+    begin
+      LText := ALexical.Text(LPart);
+
+      if LToken.Escaped then
+      begin
+        Delete(LText, 1, 1);
+      end;
+      LQualified := LQualified + LText;
+    end
+    else if (LToken.Kind = ptkSymbol) and (LToken.Symbol = psoDot) then
+    begin
+      LQualified := LQualified + '.';
+    end
+    else if not (LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective]) then
+    begin
+      LSimple := False;
+      Break;
+    end;
+    Inc(LPart);
+  end;
+
+  if LSimple then
+  begin
+    Exit(FWorld.Lookup(LSite, NyxPascalBindingName(LQualified), FCancel));
+  end;
+  Supports(FWorld, INyxPascalExpressionQueries, LExpressions);
+  LReceiver := LExpressions.ExpressionType(LSite, LWindow, LAccess, FCancel);
+
+  if LReceiver.Status <> pbsBound then
+  begin
+    Exit(LReceiver);
+  end;
+  Result := FWorld.Member(LReceiver.BoundType, LSite,
+    NyxPascalBindingName(LName), LAccess, FCancel);
+end;
+
 { UI detail is bounded by scalar, never by a byte/UTF-16 unit boundary. }
 function ShortDetail(const AText: TNyxText): TNyxText;
 var
@@ -1814,6 +1919,7 @@ var
   LProjectFile: TNyxPascalSourceRef;
   LPhysical: TNyxPascalPhysicalFile;
   LPhysicalName: TNyxText;
+  LCount, LRowOffset, LTotalCount: Integer;
 begin
   BuildWorld;
   LFile := NyxPascalProjectPhysicalFile(FRequest.Sources, FRequest.FileReference);
@@ -1827,39 +1933,74 @@ begin
     end;
   end;
 
-  if not FReceiverReady then
-  begin
-    Receiver(LLex, FReceiverStart, FReceiverDot, FReceiverExpressionStart,
-      FReceiverExpected, FReceiverPrefix);
-    FReceiverReady := True;
-  end;
-  LStart := FReceiverStart;
-  LDot := FReceiverDot;
-  LExpected := FReceiverExpected;
-  LPrefix := FReceiverPrefix;
-  LSite := Caller(LFile, LDot, FReceiverExpressionStart, LExpressionWindow);
-  Supports(FWorld, INyxPascalExpressionQueries, LExpressions);
-  LBinding := LExpressions.ExpressionType(LSite, LExpressionWindow, LAccess, FCancel);
+  LRowOffset := 0;
 
-  if LBinding.Status <> pbsBound then
+  if FDefinitionMode then
+  begin
+    LBinding := DefinitionBinding(LFile, LLex, LStart, LExpected);
+  end
+  else
+  begin
+
+    if not FReceiverReady then
+    begin
+      Receiver(LLex, FReceiverStart, FReceiverDot, FReceiverExpressionStart,
+        FReceiverExpected, FReceiverPrefix);
+      FReceiverReady := True;
+    end;
+    LStart := FReceiverStart;
+    LDot := FReceiverDot;
+    LExpected := FReceiverExpected;
+    LPrefix := FReceiverPrefix;
+    LSite := Caller(LFile, LDot, FReceiverExpressionStart, LExpressionWindow);
+    Supports(FWorld, INyxPascalExpressionQueries, LExpressions);
+    LBinding := LExpressions.ExpressionType(LSite, LExpressionWindow, LAccess, FCancel);
+  end;
+
+  if (LBinding.Status <> pbsBound) and
+    (not FDefinitionMode or (LBinding.Status <> pbsOverloads)) then
   begin
     raise EOwnedGap.CreateGap(pcgBinding, LBinding.MessageText,
       LBinding.Issue, LBinding.RelatedName);
   end;
-  LType := LBinding.BoundType;
-  Supports(FWorld, INyxPascalMemberQueries, LQueries);
-  LPage := LQueries.Members(LType, LSite, TNyxPascalMemberQuery.Defaults
-    .Matching(LPrefix).Skip(FRequest.Offset).Take(FRequest.Limit).ForAccess(LAccess).CountAll, FCancel);
 
-  if LPage.ResultSet.Status <> pbsBound then
+  if FDefinitionMode then
   begin
-    raise EOwnedGap.CreateGap(pcgBinding, LPage.ResultSet.MessageText,
-      LPage.ResultSet.Issue, LPage.ResultSet.RelatedName);
+    LTotalCount := LBinding.Count;
+    LRowOffset := FRequest.Offset;
+    LCount := LTotalCount - LRowOffset;
+
+    if LCount < 0 then LCount := 0;
+
+    if LCount > FRequest.Limit then LCount := FRequest.Limit;
+  end
+  else
+  begin
+    LType := LBinding.BoundType;
+    Supports(FWorld, INyxPascalMemberQueries, LQueries);
+    LPage := LQueries.Members(LType, LSite, TNyxPascalMemberQuery.Defaults
+      .Matching(LPrefix).Skip(FRequest.Offset).Take(FRequest.Limit).ForAccess(LAccess).CountAll, FCancel);
+    LBinding := LPage.ResultSet;
+
+    if LBinding.Status <> pbsBound then
+    begin
+      raise EOwnedGap.CreateGap(pcgBinding, LBinding.MessageText,
+        LBinding.Issue, LBinding.RelatedName);
+    end;
+    Supports(LPage, INyxPascalMemberTotal, LTotal);
+    LTotalCount := LTotal.Total;
+    LCount := LBinding.Count;
   end;
-  Supports(LPage, INyxPascalMemberTotal, LTotal);
+
+  if (LBinding.Status <> pbsBound) and
+    (not FDefinitionMode or (LBinding.Status <> pbsOverloads)) then
+  begin
+    raise EOwnedGap.CreateGap(pcgBinding, LBinding.MessageText,
+      LBinding.Issue, LBinding.RelatedName);
+  end;
   LResult := TOwnedResult.Create;
   Result := LResult;
-  SetLength(LRows, LPage.ResultSet.Count);
+  SetLength(LRows, LCount);
   SetLength(LResult.Definitions, Length(LRows));
   SetLength(LResult.DefinitionSources, Length(LRows));
   SetLength(LResult.DefinitionViews, Length(LRows));
@@ -1867,7 +2008,7 @@ begin
   for LAt := 0 to High(LRows) do
   begin
     Check;
-    LSymbol := LPage.ResultSet.SymbolAt(LAt);
+    LSymbol := LBinding.SymbolAt(LRowOffset + LAt);
     LView := FWorld.ModuleAt(LSymbol.ModuleIndex);
     LInsert := LSymbol.Declaration.Name;
     LNameLex := NewNyxPascalLexicalSnapshot(LInsert);
@@ -1876,9 +2017,20 @@ begin
     begin
       LInsert := '&' + LInsert;
     end;
-    LRows[LAt] := NyxPascalCompletion(LSymbol.Declaration.Name, LInsert,
-      ShortDetail(LView.Syntax.Lexical.Slice(LSymbol.Declaration.HeaderSpan)),
-      CompletionKind(LSymbol.Declaration.Kind));
+
+    if FDefinitionMode and (LSymbol.Declaration.Kind = psdkLabel) then
+    begin
+      { A label has a declaration location, while the shared completion UI role
+        has no label entry. Preserve that absence rather than calling it a value. }
+      LRows[LAt] := NyxPascalCompletion(LSymbol.Declaration.Name, LInsert,
+        ShortDetail(LView.Syntax.Lexical.Slice(LSymbol.Declaration.HeaderSpan)), pckUnknown);
+    end
+    else
+    begin
+      LRows[LAt] := NyxPascalCompletion(LSymbol.Declaration.Name, LInsert,
+        ShortDetail(LView.Syntax.Lexical.Slice(LSymbol.Declaration.HeaderSpan)),
+        CompletionKind(LSymbol.Declaration.Kind));
+    end;
     LOrigin := LSymbol.Origin;
     LResult.Definitions[LAt].FileReference := LView.Source.Files.FileAt(LOrigin.FileIndex);
     LResult.Definitions[LAt].Root := LView.Source.Files.FileAt(LView.Source.Occurrence(0).FileIndex);
@@ -1913,15 +2065,16 @@ begin
   end;
   Check;
   LResult.Base := NewNyxPascalCompletionResult(FRequest, pcsReady, '',
-    LStart, LExpected, LRows, LTotal.Total);
+    LStart, LExpected, LRows, LTotalCount);
   LResult.Base := NewNyxPascalCompletionDefinitions(LResult.Base, LLocations);
   CaptureAnalysis(LResult);
 end;
 
-function TAnalysis.Complete: INyxPascalCompletionResult;
+function TAnalysis.Complete(ADefinition: Boolean): INyxPascalCompletionResult;
 var
   LReply: TOwnedResult;
 begin
+  FDefinitionMode := ADefinition;
   try
     Check;
     while True do
@@ -1997,6 +2150,25 @@ end;
 function TOwnedProvider.Complete(const ARequest: INyxPascalCompletionRequest): INyxPascalCompletionResult;
 begin
   Result := CompleteWithCancellation(ARequest, nil);
+end;
+
+function TOwnedProvider.ResolveDefinition(const ARequest: INyxPascalDefinitionRequest;
+  const ACancellation: INyxCancellationScope): INyxPascalDefinitionResult;
+var
+  LRequest: INyxPascalDefinitionRequest;
+  LAnalysis: TAnalysis;
+  LPage: INyxPascalCompletionResult;
+begin
+  LRequest := ARequest;
+  Result := nil;
+  LRequest := CaptureNyxPascalDefinitionRequest(LRequest);
+  LAnalysis := TAnalysis.Create(Self, NyxPascalDefinitionQuery(LRequest), ACancellation);
+  try
+    LPage := LAnalysis.Complete(True);
+    Result := NyxPascalDefinitionResult(LRequest, LPage);
+  finally
+    LAnalysis.Free;
+  end;
 end;
 
 function TOwnedProvider.CompleteWithCancellation(const ARequest: INyxPascalCompletionRequest;

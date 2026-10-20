@@ -4796,11 +4796,77 @@ and per-file text histories are retained, with no new draft or paired Undo entry
 CR, LF and CRLF each contribute one logical line before platform presentation;
 name columns count Unicode scalars while authored line-ending bytes remain exact.
 
-This is navigation from a resolved suggestion, not arbitrary-symbol definition
-lookup, references, rename or complete SDK source browsing. Console controller
-checks and browser compilation must remain distinct from executed Studio/input,
-browser, phone, accessibility and parity qualification. WORK.md records the exact
-current evidence and remaining modern-editor requirements.
+This action follows a resolved suggestion. Direct lookup from the source caret
+uses the specialized contract below. References, rename and complete SDK source
+browsing remain open. Console controller checks and browser compilation remain
+distinct from executed Studio/input, browser, phone, accessibility and parity
+qualification. WORK.md records exact current evidence and remaining requirements.
+
+## Definition lookup from the source caret
+
+`nyx.pascal.definition` exposes immutable `INyxPascalDefinitionRequest` and
+`INyxPascalDefinitionResult` contracts. The optional `INyxPascalDefinitionProvider`
+is implemented by both ordinary and indexed Nyx-owned completion providers.
+Definition results expose declaration targets, without insertion/replacement or
+an editing operation. A caller can replace the provider independently of a UI:
+
+```pascal
+function FindDeclarations(const AProvider: INyxPascalCompletionProvider;
+  const AQuery: INyxPascalDefinitionRequest;
+  const ACancellation: INyxCancellationScope): INyxPascalDefinitionResult;
+var
+  LDefinitions: INyxPascalDefinitionProvider;
+begin
+
+  if not Supports(AProvider, INyxPascalDefinitionProvider, LDefinitions) then
+  begin
+    Exit(NewNyxPascalDefinitionResult(AQuery, pdsUnavailable,
+      'This provider does not offer definition lookup', [], 0));
+  end;
+  Result := CaptureNyxPascalDefinitionResult(
+    LDefinitions.ResolveDefinition(AQuery, ACancellation), AQuery);
+end;
+```
+
+Build a query with `NewNyxPascalDefinitionRequest(LSources).At(LFile, LCaret)`;
+use `From(LOwner)` for an include's explicit translation unit. `Skip` and `Take`
+produce independent pages. Defaults and bounds match the established query
+boundary: twenty targets, at most fifty per page, offset at most 4096, names and
+details at most 256/2048 Unicode scalars, and 128 KiB of aggregate reply text.
+Factories bind every present location to actual captured membership, original
+name spelling and scalar boundaries. Alternate-provider capture checks the whole
+expected request before reading target rows and publishes nothing on refusal.
+
+The resolver inspects the entire identifier containing the caret, including its
+tail. A caret inside `WithText` resolves `WithText`; a distinct unfinished `With`
+does not acquire that declaration. Bare names use lexical shadowing and imported
+name authority. Qualified names retain namespace/use-clause rules. Supported
+postfix receivers use the existing source-owned expression query and exact member
+lookup. Comments, literals, inactive source, uncertain context and exceeded work
+allowances refuse rather than guessing. No user application or callback executes.
+
+Overload families remain declared alternatives, with a full total across bounded
+pages. Lookup does not claim to select a callable overload from argument values.
+An external SDK declaration can be described while its project location remains
+absent; no SDK path/text is smuggled into a project source selector. Full language
+meaning and complete SDK browsing still require their existing owners.
+
+Studio exposes **Definition** in the source toolbar. F12 from ordinary source
+input requests the current identifier; F12 while a completion row is selected
+continues to follow that row's declaration. A single project target queues its
+jump for the next host turn. Multiple declarations use the same public Nyx popup
+and require a choice. External-only choices display their limitation. Definition
+mode refuses completion Accept and proposal Preview, so it creates no text Undo
+entry. The private transport uses a closed definition operation and retains the
+existing revision, workspace, provider and complete-source checks. Public MCP
+tools, schemas and semantic completion response fields are unchanged.
+
+Before switching files, the shared controller again checks the physical caret,
+composition, history generation, selected row, current service identity and all
+accepted/draft buffers. Both adapters then use their normal queued source-pane
+publication and line/caret conversion. Native model/controller/service checks and
+browser compilation qualify these boundaries separately; executed GUI/browser/
+phone, accessibility, references, rename and full editor parity remain open.
 
 ## Ordinary Studio completion popup
 

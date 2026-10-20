@@ -4959,6 +4959,12 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-source-definition') then
+    begin
+      FSourceInput.RequestDefinition;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-export-source-draft') then
     begin
 
