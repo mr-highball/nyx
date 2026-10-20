@@ -53,6 +53,11 @@ type
   { Parameter intent remains declared Pascal metadata. Availability of a given
     spelling on a compiler is a separate qualification requirement. }
   TNyxDocumentationParameterMode = (ndpValue, ndpConst, ndpVar, ndpOut, ndpConstRef);
+  { Authored property clauses only. Inherited redeclarations may omit both;
+    these values never prove effective access or permit a getter/setter call. }
+  TNyxDocumentationPropertyAccess = (ndpaRead, ndpaWrite);
+  { A copied clause set keeps declared read/write independent of target support. }
+  TNyxDocumentationPropertyAccesses = set of TNyxDocumentationPropertyAccess;
   { Documentation prose and schema declarations have independent authorities.
     Neither value is an observed runtime capability or compiler RTTI receipt. }
   TNyxDocumentationEvidence = (ndeAuthoredDeclaration, ndeSchemaDeclaration,
@@ -103,6 +108,17 @@ type
     property Passing: TNyxDocumentationParameterMode read FMode;
     property HasDefault: Boolean read FHasDefault;
     property DefaultPascal: TNyxText read FDefault;
+  end;
+  { Optional immutable property syntax. Ordered index parameters retain their
+    declared types/modes/defaults. DefaultProperty means the separate member
+    directive, never a scalar streaming default or an effective inherited rule.
+    Absence of this capability leaves property details unknown. }
+  INyxDocumentationProperty = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D103}']
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+    function DeclaredAccess: TNyxDocumentationPropertyAccesses;
+    function DefaultProperty: Boolean;
   end;
   { Inert English-labelled Pascal example. Reading this copied value never
     compiles or executes it; later verification has its own explicit owner. }
@@ -197,6 +213,13 @@ function NewNyxDocumentationSignature(const AParameters: array of TNyxDocumentat
   const AResult: TNyxDocumentationRef): INyxDocumentationSignature;
 function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
+{ Retain property declaration syntax without treating indexing as a call.
+  The ordinary OfType setter supplies its value type; an omitted type remains
+  explicitly unknown, including on an inherited property redeclaration. }
+function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AParameters: array of TNyxDocumentationParameter;
+  ADeclaredAccess: TNyxDocumentationPropertyAccesses;
+  ADefaultProperty: Boolean = False): INyxDocumentationMember;
 function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
 { Intrinsic and target-alias facts have dedicated immutable owners. They are
@@ -286,9 +309,23 @@ function MemberBytes(const AValue: INyxDocumentationMember): Integer;
 var
   LAt: Integer;
   LExample: TNyxDocumentationExample;
+  LProperty: INyxDocumentationProperty;
+  LParameter: TNyxDocumentationParameter;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) +
     RefBytes(AValue.ValueType) + SignatureBytes(AValue.Signature);
+
+  if Supports(AValue, INyxDocumentationProperty, LProperty) then
+  begin
+    Inc(Result, 3); { Two declared clause flags and one default-member flag. }
+    for LAt := 0 to LProperty.ParameterCount - 1 do
+    begin
+      LParameter := LProperty.ParameterAt(LAt);
+      Inc(Result, NyxUTF8ByteCount(LParameter.Name) + RefBytes(LParameter.TypeReference) +
+        NyxUTF8ByteCount(LParameter.DefaultPascal));
+      AdmitBytes(Result);
+    end;
+  end;
   for LAt := 0 to AValue.ExampleCount - 1 do
   begin
     LExample := AValue.ExampleAt(LAt);
@@ -366,7 +403,9 @@ type
     FKind: TNyxDocumentationMemberKind;
     FSignature: INyxDocumentationSignature;
     FValueType: TNyxDocumentationRef;
-    function CopyValue: TDocumentationMember;
+  protected
+    procedure CopyMember(ATarget: TDocumentationMember);
+    function CopyValue: TDocumentationMember; virtual;
   public
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationMemberKind;
@@ -376,6 +415,22 @@ type
     function OfType(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
     function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationMember;
     function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationMember;
+  end;
+  { Index parameters reuse the admitted immutable parameter owner internally;
+    its absent result is never exposed as a callable property Signature.
+    Specialized virtual copying retains shape through ordinary fluent methods. }
+  TDocumentationProperty = class(TDocumentationMember, INyxDocumentationProperty)
+  private
+    FParameters: INyxDocumentationSignature;
+    FAccess: TNyxDocumentationPropertyAccesses;
+    FDefault: Boolean;
+  protected
+    function CopyValue: TDocumentationMember; override;
+  public
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+    function DeclaredAccess: TNyxDocumentationPropertyAccesses;
+    function DefaultProperty: Boolean;
   end;
   { Member interfaces live in a dynamic managed vector. Base/alias links remain
     data references, preventing an inherited metadata graph from owning cycles. }
@@ -793,12 +848,9 @@ begin
   FRelated[High(FRelated)] := AValue;
 end;
 
-function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
-  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
-var
-  LValue: TDocumentationMember;
+procedure CheckMemberIdentity(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText);
 begin
-  Result := nil;
   AIdentity.Validate;
   TextBound(ASummary, 2048);
 
@@ -814,6 +866,15 @@ begin
   end
   else if AKind = ndmRoutine then
     raise ENyxDocumentation.Create('A global routine requires its actual declaring unit');
+end;
+
+function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
+var
+  LValue: TDocumentationMember;
+begin
+  Result := nil;
+  CheckMemberIdentity(AIdentity, AKind, ASummary);
   LValue := TDocumentationMember.Create;
   LValue.FIdentity := AIdentity;
   LValue.FKind := AKind;
@@ -821,14 +882,75 @@ begin
   Result := LValue;
 end;
 
+function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AParameters: array of TNyxDocumentationParameter;
+  ADeclaredAccess: TNyxDocumentationPropertyAccesses;
+  ADefaultProperty: Boolean): INyxDocumentationMember;
+var
+  LParameters: INyxDocumentationSignature;
+  LOwner: TDocumentationProperty;
+  LLease: INyxDocumentationMember;
+begin
+  Result := nil;
+  CheckMemberIdentity(AIdentity, ndmProperty, ASummary);
+  LParameters := NewNyxDocumentationSignature(AParameters, Default(TNyxDocumentationRef));
+  LOwner := TDocumentationProperty.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := ndmProperty;
+  LOwner.FSummary := ASummary;
+  LOwner.FParameters := LParameters;
+  LOwner.FAccess := ADeclaredAccess;
+  LOwner.FDefault := ADefaultProperty;
+  MemberBytes(LLease);
+  Result := LLease;
+end;
+
+procedure TDocumentationMember.CopyMember(ATarget: TDocumentationMember);
+begin
+  CopyContent(ATarget);
+  ATarget.FIdentity := FIdentity;
+  ATarget.FKind := FKind;
+  ATarget.FSignature := FSignature;
+  ATarget.FValueType := FValueType;
+end;
+
 function TDocumentationMember.CopyValue: TDocumentationMember;
 begin
   Result := TDocumentationMember.Create;
-  CopyContent(Result);
-  Result.FIdentity := FIdentity;
-  Result.FKind := FKind;
-  Result.FSignature := FSignature;
-  Result.FValueType := FValueType;
+  CopyMember(Result);
+end;
+
+function TDocumentationProperty.CopyValue: TDocumentationMember;
+var
+  LCopy: TDocumentationProperty;
+begin
+  LCopy := TDocumentationProperty.Create;
+  CopyMember(LCopy);
+  LCopy.FParameters := FParameters;
+  LCopy.FAccess := FAccess;
+  LCopy.FDefault := FDefault;
+  Result := LCopy;
+end;
+
+function TDocumentationProperty.ParameterCount: Integer;
+begin
+  Result := FParameters.ParameterCount;
+end;
+
+function TDocumentationProperty.ParameterAt(AIndex: Integer): TNyxDocumentationParameter;
+begin
+  Result := FParameters.ParameterAt(AIndex);
+end;
+
+function TDocumentationProperty.DeclaredAccess: TNyxDocumentationPropertyAccesses;
+begin
+  Result := FAccess;
+end;
+
+function TDocumentationProperty.DefaultProperty: Boolean;
+begin
+  Result := FDefault;
 end;
 
 function TDocumentationMember.Identity: TNyxDocumentationRef;
@@ -914,8 +1036,14 @@ function CaptureNyxDocumentationMember(const AValue: INyxDocumentationMember;
 var
   LSource, LFrozen: INyxDocumentationMember;
   LAt, LCount: Integer;
-  LType: TNyxDocumentationRef;
+  LType, LCurrentType: TNyxDocumentationRef;
   LSignature: INyxDocumentationSignature;
+  LProperty: INyxDocumentationProperty;
+  LPropertyCount: Integer;
+  LParameters: array of TNyxDocumentationParameter;
+  LAccess: TNyxDocumentationPropertyAccesses;
+  LDefault: Boolean;
+  LParameter, LOriginal: TNyxDocumentationParameter;
 begin
   LSource := AValue;
   Result := nil;
@@ -923,7 +1051,29 @@ begin
 
   if LSource = nil then
     raise ENyxDocumentation.Create('A documentation member is required');
-  LFrozen := NewNyxDocumentationMember(LSource.Identity, LSource.Kind, LSource.Summary);
+
+  if Supports(LSource, INyxDocumentationProperty, LProperty) then
+  begin
+
+    if LSource.Kind <> ndmProperty then
+      raise ENyxDocumentation.Create('Property syntax requires a property member');
+    LPropertyCount := LProperty.ParameterCount;
+
+    if (LPropertyCount < 0) or (LPropertyCount > NyxDocumentationMaximumParameters) then
+      raise ENyxDocumentation.Create('Captured property exceeds its index parameter allowance');
+    LAccess := LProperty.DeclaredAccess;
+    LDefault := LProperty.DefaultProperty;
+    SetLength(LParameters, LPropertyCount);
+    for LAt := 0 to LPropertyCount - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      LParameters[LAt] := LProperty.ParameterAt(LAt);
+    end;
+    LFrozen := NewNyxDocumentationProperty(LSource.Identity, LSource.Summary,
+      LParameters, LAccess, LDefault);
+  end
+  else
+    LFrozen := NewNyxDocumentationMember(LSource.Identity, LSource.Kind, LSource.Summary);
 
   LSignature := CaptureNyxDocumentationSignature(LSource.Signature, ACancellation);
 
@@ -952,6 +1102,36 @@ begin
     LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
   end;
   MemberBytes(LFrozen);
+
+  if LProperty <> nil then
+  begin
+
+    if (LProperty.ParameterCount <> LPropertyCount) or
+      (LProperty.DeclaredAccess <> LAccess) or (LProperty.DefaultProperty <> LDefault) or
+      (LSource.Kind <> ndmProperty) or not LFrozen.Identity.Same(LSource.Identity) then
+      raise ENyxDocumentation.Create('Property declaration changed during capture');
+    for LAt := 0 to LPropertyCount - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      LParameter := LProperty.ParameterAt(LAt);
+      LOriginal := LParameters[LAt];
+
+      if (LParameter.Name <> LOriginal.Name) or
+        not LParameter.TypeReference.Same(LOriginal.TypeReference) or
+        (LParameter.Passing <> LOriginal.Passing) or
+        (LParameter.HasDefault <> LOriginal.HasDefault) or
+        (LParameter.DefaultPascal <> LOriginal.DefaultPascal) then
+        raise ENyxDocumentation.Create('Property index parameters changed during capture');
+    end;
+    LCurrentType := LSource.ValueType;
+
+    if (LProperty.ParameterCount <> LPropertyCount) or
+      (LProperty.DeclaredAccess <> LAccess) or (LProperty.DefaultProperty <> LDefault) or
+      (LSource.Kind <> ndmProperty) or not LFrozen.Identity.Same(LSource.Identity) or
+      (LSource.Signature <> nil) or (LCurrentType.Defined <> LType.Defined) or
+      (LType.Defined and not LType.Same(LCurrentType)) then
+      raise ENyxDocumentation.Create('Property declaration changed before publication');
+  end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
 end;

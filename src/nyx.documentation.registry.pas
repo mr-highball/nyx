@@ -777,6 +777,7 @@ var
   LAPI: INyxDocumentationType;
   LMethod: INyxDocumentationMember;
   LSignature: INyxDocumentationSignature;
+  LProperty: INyxDocumentationProperty;
   LStates, LStack, LEdges: array of Integer;
   LReference: TNyxDocumentationRef;
   LTargets: INyxDocumentationAliasTargets;
@@ -896,6 +897,10 @@ begin
         for LParameter := 0 to LSignature.ParameterCount - 1 do
           Require(LSignature.ParameterAt(LParameter).TypeReference);
       end;
+
+      if Supports(LMethod, INyxDocumentationProperty, LProperty) then
+        for LParameter := 0 to LProperty.ParameterCount - 1 do
+          Require(LProperty.ParameterAt(LParameter).TypeReference);
     end;
   end;
   { Iterative colour traversal checks base/alias edges without Pascal recursion

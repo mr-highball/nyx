@@ -34,18 +34,114 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-Helper task-flow follow-up (2026-10-20): Lil' Scooty has delivered its current
-contribution sources and cross-reviewed the root generator. Its active review
-now checks whether alternate package capture respects the index's remaining
-aggregate allowance before copying; root holds compiler admission for that
-decision. The queued independent task follows reference01/02's actual source
-adoption prerequisite: inspect emitted declarations and hand-authored core
-dependencies, then propose a bounded extraction implementation with exact file
-ownership. AGENTS.md records automatic backlog selection after handoff and useful
-read-only work during source freezes. The existing private queue points to the
-canonical tasks; no new backlog, recurring job or acceptance credit is created.
+Helper task-flow follow-up (2026-10-20): Lil' Scooty keeps one scoped assignment
+and a queued next prerequisite from reference01/02. Source-ready is a handoff,
+not the end of its queue. During the property qualification freeze it completed
+an independent review and designed complex type-expression metadata using the
+existing bounded Pascal type syntax. Root owns final admission, separate file
+ownership and all compilers. After each handoff, consult WORK.md, TASKFLOW.MD,
+Athena's task-flow standard and the task catalog; follow actual unmet prerequisites
+and report the criterion, deliverable, files and stop condition. The existing
+private queue references canonical tasks; it creates no new backlog, recurring
+job, busywork or acceptance credit. Deferred splitter work remains deferred.
 
-## Current generation prerequisite: Typed emitted declarations — 2026-10-20
+## Current reference prerequisite: Declared property metadata — 2026-10-20
+
+The previous goal turn is product progress: b65ed637db0d1349f63d91ad38c67cca139bfb40
+qualifies shared source ownership and typed generated-declaration admission,
+repairs the real empty-parameter-type gap, and is pushed/remote-verified. Its
+final common-source receipts remain authoritative for that checkpoint, with
+full reference01/02 and original acceptance still open across at least51 batches.
+This batch follows the actual INyxControl.Children source prerequisite rather
+than adding more package/generator variants.
+
+Owning criterion: reference01's property/member/type-link coverage, consumed by
+reference02's truthful source-derived discovery. Concrete deliverable: ordered
+index parameters, authored read/write clauses and separate default-property
+status survive fluent copy, alternate capture, deterministic framing and index
+closure through an optional typed member capability. Absence remains unknown;
+declared-empty access does not infer effective inherited/runtime access.
+Do not turn default-property status into a scalar default value. Preserve old
+GUID slots, value layouts, enum ordinals, absent-shape content and all quotas.
+
+Lil' Scooty owns documentation.pas, registration.pas, registry.pas, the new
+nyx_documentation_properties_tests.lpr and component-documentation.md. Root owns
+review, central evidence and every reader/compiler admission. The native consumer
+must require exactly one valid repository-root argument and inspect actual
+Children syntax without constructing a control or invoking GetChild. Portable
+descriptor/capture/index cases compile for pas2js; only the filesystem witness
+is excluded there. A complete synthetic closure is mechanics evidence only;
+actual unresolved core type identities remain refused. No parser/tool/SDK or
+source-binding substitute is introduced by this property contract.
+
+Qualification will freeze the four changed Pascal inputs and all current
+source, run the focused metadata consumers, generator CLI with exact candidate
+bytes and the affected navigation/Studio/completion products. Stop/switch on a
+lost property capability, malformed alternate producer, incorrect source fact,
+unaccounted field or unresolved binding; repair its existing owner and retain
+the failed evidence. Do not skip a source witness, weaken closure, raise quotas
+or manufacture System/core descriptors to pass. The packet is
+E:\Blekohlab\nyx\qualification\documentation-properties-20261020-143002;
+ignored .local/documentation-properties-paths-private.json owns process state.
+
+Root's separate read-only assessment found that nyx.pascal.types already owns
+source-free type plans, although public plan inspection exposes only Count/
+Window and opaque constants still require exact text. The next expression
+prerequisite must first compare reuse of that pure arena or bounded existing
+type views over a copied small lexical window; a second type AST is not assumed
+necessary. Open arrays and their named leaves must remain intact and unbound
+where source binding is unavailable. This is a design decision path, not an
+implemented expression descriptor or complete core/adoption claim. Full real
+unit/core/global-routine extraction, creator adoption, executed decorated browser,
+editor/input/performance/quality/parity/independent use/delivery stay open. No
+host/configuration retry, SDK capture, protected mutation, cleanup/restart,
+new public MCP tool/schema, extra agent or rollout is authorized here.
+
+The read-only reuse decision now selects existing standalone type syntax over
+a bounded copied type window. Current source-free plans require a declared
+owner/exact identities for capture and expose no public nodes/text; widening
+that replay authority would add unrelated changes. Existing small-window type
+syntax already preserves arrays/generic and qualified names/procedural forms,
+opaque bound/default text and cancellation, and refuses structured bodies that
+need the original declaration owner. An explicit occurrence role must distinguish
+parameter open arrays from a declared dynamic-array type; spelling alone cannot.
+
+For the next attachment design, preserve the old named-parameter contract fully:
+ordinary records, constructors and capture stay strict. A richer optional member
+signature capability can own managed parameter/type-use interfaces; legacy
+Member.Signature remains nil when that shape is unrepresentable there. The same
+principle applies to complex property parameters, preserving this batch's simple
+named property contract. Do not return invalid legacy records, collapse arrays
+to element references or infer qualified names from spelling. Shared pre-copy
+work/byte/cancellation admission and all named-use closure remain required. This
+is the selected design direction only; it has not been implemented or qualified.
+
+Final qualification uses the same four reviewed Pascal inputs throughout all
+33 successful compiler jobs. Fifteen native test programs pass with clean heaps;
+the property consumer passes43 checks and explicitly inspects actual Children
+source. Missing and invalid repository arguments both refuse at check count zero
+with clean heaps, using the same compiled binary. The generator consumer passes71
+checks across16 joined invocations with clean parent/child heaps; two five-file
+candidates for81 kinds/four facades remain byte exact. Fifteen pas2js targets
+compile, including Studio/worker; native Studio and backend also compile. All
+owned warning channels are clear;105 upstream warnings remain separately counted.
+No browser execution, new RTL integration, actual source-derived metadata/core
+registration or reference01/02 adoption is established by this compilation.
+
+The final audit retains all1732 current Pascal inputs and1728 unchanged unrelated
+prior inputs;24 compiler/97 RTL/five current-start protected/two profile/thirteen
+concurrent planning pins remain exact. All readers joined; there are no repaired
+source freezes or failed compiler jobs in this batch. The packet's final audit,
+accepted-common-jobs, generator child/candidate and source-argument-refusal receipts
+own the evidence. Historical global-config preservation stays false. LAN remains
+offline/native Nyx tools absent. The property contract is a qualified prerequisite;
+full original criterion/task/credit/DONE/source/type/editor/input/performance/
+quality/parity/adoption/delivery stay open across at least52 unclosed batches.
+Stop property/fixture/compiler variants. Return to the queued bounded type-window
+and rich optional-signature prerequisite, then actual full unit/core/global-routine
+source extraction and creator adoption. No new public MCP schema/tool or rollout.
+
+## Previous generation prerequisite: Typed emitted declarations — 2026-10-20
 
 The prior goal turn makes product progress: truthful documentation shapes and
 reviewable control-contract generation are qualified, committed and pushed as

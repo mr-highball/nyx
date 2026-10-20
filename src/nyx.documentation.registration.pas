@@ -143,6 +143,7 @@ var
   LExample: TNyxDocumentationExample;
   LIntrinsic: INyxDocumentationIntrinsic;
   LTargets: INyxDocumentationAliasTargets;
+  LProperty: INyxDocumentationProperty;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -201,6 +202,24 @@ begin
       for LAt := 0 to LSignature.ParameterCount - 1 do
       begin
         LParameter := LSignature.ParameterAt(LAt);
+        Add(LParameter.Name);
+        Add(LParameter.TypeReference.Key);
+        Number(Ord(LParameter.Passing));
+        Number(Ord(LParameter.HasDefault));
+        Add(LParameter.DefaultPascal);
+      end;
+    end;
+
+    if Supports(LMember, INyxDocumentationProperty, LProperty) then
+    begin
+      Add('property-shape');
+      Number(Ord(ndpaRead in LProperty.DeclaredAccess));
+      Number(Ord(ndpaWrite in LProperty.DeclaredAccess));
+      Number(Ord(LProperty.DefaultProperty));
+      Number(LProperty.ParameterCount);
+      for LAt := 0 to LProperty.ParameterCount - 1 do
+      begin
+        LParameter := LProperty.ParameterAt(LAt);
         Add(LParameter.Name);
         Add(LParameter.TypeReference.Key);
         Number(Ord(LParameter.Passing));

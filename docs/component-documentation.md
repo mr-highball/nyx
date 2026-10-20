@@ -116,6 +116,85 @@ inert text. Actual factory/routine execution belongs to an explicit caller, not
 documentation lookup. Globals enter discovery only through a bundle attached to
 their real unit/creator registration. No reflection probe enumerates them.
 
+## Declared property syntax
+
+`NewNyxDocumentationProperty` creates a property member with an optional
+`INyxDocumentationProperty` capability. It keeps ordered index parameters,
+authored read/write clauses and the separate default-property marker. The
+existing member `OfType` supplies its declared value type. A caller that already
+owns the exact references can describe an indexed property as follows:
+
+```pascal
+function IndexedItems(const Owner, IndexType,
+  ValueType: TNyxDocumentationRef): INyxDocumentationMember;
+begin
+  Result := NewNyxDocumentationProperty(
+    NyxDocumentationMember(Owner, 'Items'),
+    'Read an item at its declared index.', [
+      NyxDocumentationParameter('AIndex', IndexType)],
+    [ndpaRead], True).OfType(ValueType);
+end;
+```
+
+`ParameterCount` and `ParameterAt` expose copied parameter values through the
+same parameter contract used by signatures, including passing modes and inert
+default text. Indexing is not a callable signature: the property's existing
+`Signature` stays absent, and `WithSignature` refuses. Ordinary properties have
+zero index parameters. `DeclaredAccess = []` means neither clause was authored;
+an inherited redeclaration can omit its value type and clauses without implying
+effective runtime readability or writability. `DefaultProperty` records the
+separate `; default;` member marker, not a property's scalar default value.
+Getter/setter identities, effective inherited access and scalar property
+defaults are outside this capability.
+
+Legacy `ndmProperty` members without this capability retain unknown shape and
+byte-identical old registration framing. Present shape adds framed facts and
+all index-type references to duplicate comparison and closure validation.
+Specialized fluent copies and immutable captures retain the capability;
+alternate suppliers are copied, their bounded envelope and parameter values
+are rechecked, and cancellation is checked before publication. Inspection
+retains no supplier and executes no getter, control or callback. Units cannot
+own properties or serve as their index/value types. The existing limits remain
+64 parameters, 256 KiB per member/declaration, 4 MiB per legacy bundle/chunk,
+and caller-owned aggregate index/package limits; individual parameter/name/text
+limits do not bypass the shared byte ceiling.
+
+The new [property consumer](../tests/nyx_documentation_properties_tests.lpr)
+requires exactly one valid repository-root argument on native builds, before
+performing any checks:
+
+```text
+nyx_documentation_properties_tests.exe D:\Docs\GitHub\nyx
+```
+
+It exercises portable shape/copy/capture/framing/index refusal cases and reads
+the actual `INyxControl.Children[AIndex: Integer]: INyxControl read GetChild`
+declaration through the existing syntax owner. That witness retains raw
+`Integer` and `INyxControl` spelling; it supplies no guessed qualified System or
+core type binding and does not execute `GetChild`. The browser consumer excludes
+only filesystem inspection. The current focused native run passes **43 checks
+with a clean heap**; all 770,296 allocated blocks are freed. Separate
+missing/invalid repository arguments both refuse at check count zero with clean
+heaps. The portable consumer compiles successfully. These receipts are in
+`E:\Blekohlab\nyx\qualification\documentation-properties-20261020-143002`:
+
+- `logs/nyx_documentation_properties_tests-native-focused-reviewed-compile.log`
+- `logs/nyx_documentation_properties_tests-native-focused-reviewed-run.log`
+- `logs/nyx_documentation_properties_tests-browser-focused-reviewed-compile.log`
+- `logs/property-argument-missing-run.log`
+- `logs/property-argument-invalid-run.log`
+
+The same focused freeze retains native contribution70, shape66, registry64 and
+documentation68 checks with clean heaps; all five portable metadata consumers
+compile. The generator consumer passes71 checks across16 joined invocations,
+retaining two exact five-file candidates and clean parent/child heaps. The final
+common-source qualification passes33 compiler jobs,15 native test programs with
+clean heaps and15 pas2js compiles, including both Studios, worker and backend as
+applicable. It has zero owned warnings;105 upstream warnings remain separately
+counted. [WORK](../WORK.md) owns the aggregate and remote receipt. These checks
+establish no browser execution or actual metadata-generation/core-registration adoption.
+The preceding qualification below remains separate.
+
 ## Intrinsic families and target-specific aliases
 
 `NewNyxDocumentationIntrinsic(Identity, Family, Summary)` retains the exact
@@ -615,7 +694,9 @@ The required truthful declaration prerequisites are explicit:
 - Indexed properties such as `INyxControl.Children[AIndex: Integer]` need typed
   index parameters, declared access and separate default-property status.
   Omitting the parameter or relabelling the property as a method would conceal
-  the API. This descriptor extension remains the next prerequisite.
+  the API. The optional descriptor extension passes43 native checks, including
+  actual Children syntax, and its browser consumer compiles; actual
+  source-derived metadata adoption remains open.
 - Open-array parameters already occur in `nyx.contract` and `nyx.data`.
   Detached type-expression metadata must preserve their shape and original
   named element owners; substituting an element type or invented named alias

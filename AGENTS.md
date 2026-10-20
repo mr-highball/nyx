@@ -25,7 +25,38 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current source qualifies canonical documentation chunks/packages and referencing
+Current source adds optional declared-property metadata: ordered index parameters,
+authored read/write clauses and separate default-property status survive fluent
+copy, alternate capture, framed equality and index closure. Legacy unknown shape,
+GUID slots, record layouts, enum ordinals and quotas remain unchanged. The native
+consumer requires a valid repository root before work and passes43 checks,
+including actual INyxControl.Children syntax without getter/control execution.
+Missing/invalid arguments both refuse at check count zero with clean heaps.
+Common four-source qualification passes33 compiler jobs,15 clean native test
+programs and15 pas2js compiles; zero owned warnings/105 upstream. CLI71 passes16
+joined generator invocations/clean parent and child heaps; two five-file candidates
+for81 kinds/four facades remain byte exact. All1732 current Pascal inputs and1728
+unrelated prior inputs,24 compiler/97 RTL/five current-start protected/two profile/
+thirteen concurrent planning pins remain exact. All readers joined. WORK.md and
+ignored .local/documentation-properties-paths-private.json own terminal/audit/
+source/remote receipts. Historical global-config preservation stays false.
+No browser execution, new RTL integration, actual core/source adoption or full
+criterion/task/credit/DONE/editor/input/quality/parity/delivery closes across at
+least fifty-two unclosed batches. LAN offline/native Nyx tools absent.
+
+Stop property/fixture/compiler variants. Lil' Scooty's queued prerequisite reuses
+existing standalone Pascal type syntax over a bounded copied type window, with
+explicit occurrence role and truthful unbound named uses. Preserve strict legacy
+parameter records/constructors/capture and add optional rich signature/property
+capabilities only; old Signature remains nil when unrepresentable. Share pre-copy
+work/byte/cancellation admission, retain opaque text and refuse unresolved closure.
+Root settles exact ownership/admission before the next implementation release.
+Actual full unit/core/global-routine extraction, creator adoption and executed
+decorated browser remain downstream gates. No extra agents, host/config retry,
+SDK capture, protected mutation, cleanup/restart, approval bypass, new public MCP
+tool/schema or rollout. Preserve concurrent planning.
+
+Previously qualified canonical documentation chunks/packages and referencing
 creator bindings through existing registration owners. Exact captured sources
 charge once; independent equivalents and references retain their own charges.
 Alternate binding/package/chunk copying obeys the same remaining index budget
@@ -53,12 +84,12 @@ remote receipts. Historical global-config preservation stays false. No full
 criterion/task/credit/DONE/UI/input/quality/parity/adoption/delivery closes across
 at least fifty-one unclosed batches. LAN offline/native Nyx tools absent.
 
-Next Lil' Scooty scope is typed indexed-property documentation through existing
+That checkpoint's next Lil' Scooty scope was typed indexed-property documentation through existing
 documentation copy/capture/framing/closure owners: ordered parameters, declared
 access and separate default-property status from actual Children syntax. Keep
 ordinary untyped/unknown facts explicit; open-array type expressions and complete
 hand-authored/core/global-routine source extraction remain downstream gates.
-Root releases that source scope after this checkpoint; no extra agents, host/
+That scope is qualified above; no extra agents, host/
 config retry, SDK capture, protected mutation, cleanup/restart, approval bypass,
 new public MCP tool/schema or rollout. Preserve concurrent planning.
 
