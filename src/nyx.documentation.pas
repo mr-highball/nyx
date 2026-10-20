@@ -5,7 +5,7 @@ unit nyx.documentation;
 
 interface
 
-uses SysUtils, nyx.text, nyx.scheduler;
+uses SysUtils, nyx.text, nyx.types, nyx.scheduler;
 
 type
   { Invalid declarations fail before an immutable documentation value escapes.
@@ -39,7 +39,12 @@ type
     is never an invented containing class. Kinds prove neither implementation
     nor reflection; an alias retains its own qualified identity. }
   TNyxDocumentationTypeKind = (ndtClass, ndtInterface, ndtRecord, ndtEnum,
-    ndtAlias, ndtCallback, ndtUnit);
+    ndtAlias, ndtCallback, ndtUnit, ndtIntrinsic);
+  { A declared intrinsic family retains its original qualified identity. It
+    supplies no inferred size, encoding, conversion rank or runtime capability;
+    distinct integer/string declarations never become one nominal type. }
+  TNyxDocumentationIntrinsicFamily = (ndifBoolean, ndifInteger, ndifReal,
+    ndifCharacter, ndifString, ndifPointer);
   { Public member families distinguish fluent calls from properties and event
     declarations. Routine means a unit procedure/function, not a class method;
     existing kinds retain their ordinals when a new family is appended. }
@@ -52,6 +57,36 @@ type
     Neither value is an observed runtime capability or compiler RTTI receipt. }
   TNyxDocumentationEvidence = (ndeAuthoredDeclaration, ndeSchemaDeclaration,
     ndeCatalogDeclaration);
+  { One exact alias branch, with a type reference rather than executable code.
+    Any is an authored universal target; a lone specific branch provides no
+    information about the other projection. This record contains no interface. }
+  TNyxDocumentationAliasTarget = record
+  private
+    FPlatform: TNyxPlatform;
+    FTarget: TNyxDocumentationRef;
+  public
+    procedure Validate;
+    property Platform: TNyxPlatform read FPlatform;
+    property Target: TNyxDocumentationRef read FTarget;
+  end;
+  { Only two concrete projections exist; copied vectors keep branches detached. }
+  TNyxDocumentationAliasTargetVector = array of TNyxDocumentationAliasTarget;
+  { Optional intrinsic shape is implemented only by admitted intrinsic owners.
+    Absence is never interpreted as an unknown/default Boolean family. }
+  INyxDocumentationIntrinsic = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D101}']
+    function Family: TNyxDocumentationIntrinsicFamily;
+  end;
+  { Optional target-specific alias data preserves every declared branch.
+    TargetFor refuses absence; Any requires an actually universal/common target.
+    The old AliasTarget getter is undefined when no common target is known. }
+  INyxDocumentationAliasTargets = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D102}']
+    function TargetCount: Integer;
+    function TargetAt(AIndex: Integer): TNyxDocumentationAliasTarget;
+    function HasTarget(APlatform: TNyxPlatform): Boolean;
+    function TargetFor(APlatform: TNyxPlatform): TNyxDocumentationRef;
+  end;
   { One copied parameter/type reference. Optional defaults retain their exact
     Pascal text without parsing, evaluating or running a callback. }
   TNyxDocumentationParameter = record
@@ -164,6 +199,15 @@ function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
 function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
+{ Intrinsic and target-alias facts have dedicated immutable owners. They are
+  ordinary declaration data; these factories create no System/core inventory. }
+function NewNyxDocumentationIntrinsic(const AIdentity: TNyxDocumentationRef;
+  AFamily: TNyxDocumentationIntrinsicFamily; const ASummary: TNyxText): INyxDocumentationType;
+function NyxDocumentationAliasTarget(APlatform: TNyxPlatform;
+  const ATarget: TNyxDocumentationRef): TNyxDocumentationAliasTarget;
+function NewNyxDocumentationTargetAlias(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText;
+  const ATargets: array of TNyxDocumentationAliasTarget): INyxDocumentationType;
 { Freeze alternate metadata producers before retaining them. Counts and text
   are bounded; publication is atomic, with no retained producer or callback. }
 function CaptureNyxDocumentationSignature(const AValue: INyxDocumentationSignature;
@@ -263,8 +307,21 @@ function TypeBytes(const AValue: INyxDocumentationType): Integer;
 var
   LAt: Integer;
   LExample: TNyxDocumentationExample;
+  LIntrinsic: INyxDocumentationIntrinsic;
+  LTargets: INyxDocumentationAliasTargets;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
+
+  if Supports(AValue, INyxDocumentationIntrinsic, LIntrinsic) then
+    Inc(Result, Length(IntToStr(Ord(LIntrinsic.Family))));
+
+  if Supports(AValue, INyxDocumentationAliasTargets, LTargets) then
+    for LAt := 0 to LTargets.TargetCount - 1 do
+    begin
+      Inc(Result, RefBytes(LTargets.TargetAt(LAt).Target) +
+        Length(IntToStr(Ord(LTargets.TargetAt(LAt).Platform))));
+      AdmitBytes(Result);
+    end;
   for LAt := 0 to AValue.BaseCount - 1 do
   begin
     Inc(Result, RefBytes(AValue.BaseAt(LAt)));
@@ -329,7 +386,10 @@ type
     FAlias: TNyxDocumentationRef;
     FBases: array of TNyxDocumentationRef;
     FMembers: array of INyxDocumentationMember;
-    function CopyValue: TDocumentationType;
+  protected
+    procedure CopyType(ATarget: TDocumentationType);
+    function CopyValue: TDocumentationType; virtual;
+    procedure AssignAlias(const ATarget: TNyxDocumentationRef); virtual;
   public
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationTypeKind;
@@ -343,6 +403,31 @@ type
     function WithMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
     function WithExample(const AValue: TNyxDocumentationExample): INyxDocumentationType;
     function WithRelated(const AValue: TNyxDocumentationRef): INyxDocumentationType;
+  end;
+  { Only an intrinsic declaration exposes its family. Virtual internal copying
+    preserves the specialized capability through every ordinary fluent method. }
+  TDocumentationIntrinsic = class(TDocumentationType, INyxDocumentationIntrinsic)
+  private
+    FFamily: TNyxDocumentationIntrinsicFamily;
+  protected
+    function CopyValue: TDocumentationType; override;
+  public
+    function Family: TNyxDocumentationIntrinsicFamily;
+  end;
+  { Detached value branches retain their original type owners. Replacing the
+    alias explicitly replaces the complete branch set with one universal case;
+    ordinary prose/member copying leaves every original branch untouched. }
+  TDocumentationTargetAlias = class(TDocumentationType, INyxDocumentationAliasTargets)
+  private
+    FTargets: TNyxDocumentationAliasTargetVector;
+  protected
+    function CopyValue: TDocumentationType; override;
+    procedure AssignAlias(const ATarget: TNyxDocumentationRef); override;
+  public
+    function TargetCount: Integer;
+    function TargetAt(AIndex: Integer): TNyxDocumentationAliasTarget;
+    function HasTarget(APlatform: TNyxPlatform): Boolean;
+    function TargetFor(APlatform: TNyxPlatform): TNyxDocumentationRef;
   end;
 
 procedure TextBound(const AValue: TNyxText; AMaximum: Integer);
@@ -871,12 +956,9 @@ begin
   Result := LFrozen;
 end;
 
-function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
-  AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
-var
-  LValue: TDocumentationType;
+procedure CheckTypeIdentity(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText);
 begin
-  Result := nil;
   AIdentity.Validate;
   TextBound(ASummary, 2048);
 
@@ -886,6 +968,18 @@ begin
 
   if AIdentity.IsUnit <> (AKind = ndtUnit) then
     raise ENyxDocumentation.Create('A unit identity requires a unit declaration; a type requires its type name');
+end;
+
+function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
+var
+  LValue: TDocumentationType;
+begin
+  Result := nil;
+  CheckTypeIdentity(AIdentity, AKind, ASummary);
+
+  if AKind = ndtIntrinsic then
+    raise ENyxDocumentation.Create('An intrinsic declaration requires its explicit family factory');
   LValue := TDocumentationType.Create;
   LValue.FIdentity := AIdentity;
   LValue.FKind := AKind;
@@ -893,21 +987,225 @@ begin
   Result := LValue;
 end;
 
-function TDocumentationType.CopyValue: TDocumentationType;
+procedure CheckAliasPlatform(APlatform: TNyxPlatform);
+begin
+
+  if (Ord(APlatform) < Ord(Low(TNyxPlatform))) or (Ord(APlatform) > Ord(High(TNyxPlatform))) then
+    raise ENyxDocumentation.Create('Unknown documentation alias platform');
+end;
+
+procedure TNyxDocumentationAliasTarget.Validate;
+begin
+  CheckAliasPlatform(FPlatform);
+  FTarget.Validate;
+
+  if not FTarget.Defined or FTarget.IsUnit or FTarget.IsMember then
+    raise ENyxDocumentation.Create('An alias branch requires an actual type reference');
+end;
+
+function NyxDocumentationAliasTarget(APlatform: TNyxPlatform;
+  const ATarget: TNyxDocumentationRef): TNyxDocumentationAliasTarget;
+begin
+  Result.FPlatform := APlatform;
+  Result.FTarget := ATarget;
+  Result.Validate;
+end;
+
+function NewNyxDocumentationIntrinsic(const AIdentity: TNyxDocumentationRef;
+  AFamily: TNyxDocumentationIntrinsicFamily; const ASummary: TNyxText): INyxDocumentationType;
+var
+  LOwner: TDocumentationIntrinsic;
+  LLease: INyxDocumentationType;
+begin
+  Result := nil;
+  CheckTypeIdentity(AIdentity, ndtIntrinsic, ASummary);
+
+  if (Ord(AFamily) < Ord(Low(TNyxDocumentationIntrinsicFamily))) or
+    (Ord(AFamily) > Ord(High(TNyxDocumentationIntrinsicFamily))) then
+    raise ENyxDocumentation.Create('Unknown documentation intrinsic family');
+  LOwner := TDocumentationIntrinsic.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := ndtIntrinsic;
+  LOwner.FSummary := ASummary;
+  LOwner.FFamily := AFamily;
+  TypeBytes(LLease);
+  Result := LLease;
+end;
+
+function NewNyxDocumentationTargetAlias(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText;
+  const ATargets: array of TNyxDocumentationAliasTarget): INyxDocumentationType;
+var
+  LOwner: TDocumentationTargetAlias;
+  LLease: INyxDocumentationType;
+  LAt: Integer;
+  LSwap: TNyxDocumentationAliasTarget;
+begin
+  Result := nil;
+  CheckTypeIdentity(AIdentity, ndtAlias, ASummary);
+
+  if (Length(ATargets) < 1) or (Length(ATargets) > 2) then
+    raise ENyxDocumentation.Create('A target alias requires one or two nonoverlapping branches');
+  for LAt := 0 to High(ATargets) do
+  begin
+    ATargets[LAt].Validate;
+
+    if ATargets[LAt].Target.Same(AIdentity) then
+      raise ENyxDocumentation.Create('An alias branch cannot target itself');
+  end;
+
+  if (Length(ATargets) = 2) and
+    ((ATargets[0].Platform = ATargets[1].Platform) or
+    (ATargets[0].Platform = npfAny) or (ATargets[1].Platform = npfAny)) then
+    raise ENyxDocumentation.Create('Documentation alias branches overlap');
+  LOwner := TDocumentationTargetAlias.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := ndtAlias;
+  LOwner.FSummary := ASummary;
+  SetLength(LOwner.FTargets, Length(ATargets));
+  for LAt := 0 to High(ATargets) do
+    LOwner.FTargets[LAt] := ATargets[LAt];
+
+  if (Length(ATargets) = 2) and (Ord(LOwner.FTargets[0].Platform) > Ord(LOwner.FTargets[1].Platform)) then
+  begin
+    LSwap := LOwner.FTargets[0];
+    LOwner.FTargets[0] := LOwner.FTargets[1];
+    LOwner.FTargets[1] := LSwap;
+  end;
+
+  if (LOwner.FTargets[0].Platform = npfAny) or
+    ((Length(ATargets) = 2) and ATargets[0].Target.Same(ATargets[1].Target)) then
+    LOwner.FAlias := LOwner.FTargets[0].Target;
+  TypeBytes(LLease);
+  Result := LLease;
+end;
+
+procedure TDocumentationType.CopyType(ATarget: TDocumentationType);
 var
   LAt: Integer;
 begin
-  Result := TDocumentationType.Create;
-  CopyContent(Result);
-  Result.FIdentity := FIdentity;
-  Result.FKind := FKind;
-  Result.FAlias := FAlias;
-  SetLength(Result.FBases, BaseCount);
+  CopyContent(ATarget);
+  ATarget.FIdentity := FIdentity;
+  ATarget.FKind := FKind;
+  ATarget.FAlias := FAlias;
+  SetLength(ATarget.FBases, BaseCount);
   for LAt := 0 to BaseCount - 1 do
-    Result.FBases[LAt] := FBases[LAt];
-  SetLength(Result.FMembers, MemberCount);
+    ATarget.FBases[LAt] := FBases[LAt];
+  SetLength(ATarget.FMembers, MemberCount);
   for LAt := 0 to MemberCount - 1 do
-    Result.FMembers[LAt] := FMembers[LAt];
+    ATarget.FMembers[LAt] := FMembers[LAt];
+end;
+
+function TDocumentationType.CopyValue: TDocumentationType;
+begin
+  Result := TDocumentationType.Create;
+  try
+    CopyType(Result);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure TDocumentationType.AssignAlias(const ATarget: TNyxDocumentationRef);
+begin
+  FAlias := ATarget;
+end;
+
+function TDocumentationIntrinsic.CopyValue: TDocumentationType;
+var
+  LCopy: TDocumentationIntrinsic;
+begin
+  LCopy := TDocumentationIntrinsic.Create;
+  try
+    CopyType(LCopy);
+    LCopy.FFamily := FFamily;
+  except
+    LCopy.Free;
+    raise;
+  end;
+  Result := LCopy;
+end;
+
+function TDocumentationIntrinsic.Family: TNyxDocumentationIntrinsicFamily;
+begin
+  Result := FFamily;
+end;
+
+function TDocumentationTargetAlias.CopyValue: TDocumentationType;
+var
+  LCopy: TDocumentationTargetAlias;
+  LAt: Integer;
+begin
+  LCopy := TDocumentationTargetAlias.Create;
+  try
+    CopyType(LCopy);
+    SetLength(LCopy.FTargets, TargetCount);
+    for LAt := 0 to TargetCount - 1 do
+      LCopy.FTargets[LAt] := FTargets[LAt];
+  except
+    LCopy.Free;
+    raise;
+  end;
+  Result := LCopy;
+end;
+
+procedure TDocumentationTargetAlias.AssignAlias(const ATarget: TNyxDocumentationRef);
+begin
+  inherited AssignAlias(ATarget);
+  SetLength(FTargets, 1);
+  FTargets[0] := NyxDocumentationAliasTarget(npfAny, ATarget);
+end;
+
+function TDocumentationTargetAlias.TargetCount: Integer;
+begin
+  Result := Length(FTargets);
+end;
+
+function TDocumentationTargetAlias.TargetAt(AIndex: Integer): TNyxDocumentationAliasTarget;
+begin
+
+  if (AIndex < 0) or (AIndex >= TargetCount) then
+    raise ENyxDocumentation.Create('Documentation alias branch ordinal is out of range');
+  Result := FTargets[AIndex];
+end;
+
+function TDocumentationTargetAlias.HasTarget(APlatform: TNyxPlatform): Boolean;
+var
+  LAt: Integer;
+begin
+  CheckAliasPlatform(APlatform);
+  Result := False;
+
+  if (APlatform = npfAny) and FAlias.Defined then
+    Exit(True);
+  for LAt := 0 to TargetCount - 1 do
+  begin
+
+    if (FTargets[LAt].Platform = npfAny) or (FTargets[LAt].Platform = APlatform) then
+      Exit(True);
+  end;
+end;
+
+function TDocumentationTargetAlias.TargetFor(APlatform: TNyxPlatform): TNyxDocumentationRef;
+var
+  LAt: Integer;
+begin
+
+  if not HasTarget(APlatform) then
+    raise ENyxDocumentation.Create('No alias target is declared for the requested platform');
+
+  if APlatform = npfAny then
+    Exit(FAlias);
+  for LAt := 0 to TargetCount - 1 do
+  begin
+
+    if (FTargets[LAt].Platform = npfAny) or (FTargets[LAt].Platform = APlatform) then
+      Exit(FTargets[LAt].Target);
+  end;
+  raise ENyxDocumentation.Create('No alias target is declared for the requested platform');
 end;
 
 function TDocumentationType.Identity: TNyxDocumentationRef;
@@ -962,7 +1260,7 @@ begin
     raise ENyxDocumentation.Create('An alias requires another original type identity');
   LNext := CopyValue;
   LHold := LNext;
-  LNext.FAlias := ATarget;
+  LNext.AssignAlias(ATarget);
   TypeBytes(LHold);
   Result := LHold;
 end;
@@ -1000,6 +1298,11 @@ var
   LHold: INyxDocumentationType;
   LAt: Integer;
 begin
+  { Intrinsic families have no declared instance members in this contract;
+    helpers and compiler intrinsics require their own truthful future shapes. }
+
+  if FKind = ndtIntrinsic then
+    raise ENyxDocumentation.Create('An intrinsic declaration cannot invent members');
   LFrozen := CaptureNyxDocumentationMember(AMember);
 
   if not LFrozen.Identity.Owner.Same(FIdentity) or
@@ -1049,6 +1352,11 @@ var
   LSource, LFrozen: INyxDocumentationType;
   LAt, LCount: Integer;
   LAlias: TNyxDocumentationRef;
+  LKind: TNyxDocumentationTypeKind;
+  LIntrinsic: INyxDocumentationIntrinsic;
+  LTargets: INyxDocumentationAliasTargets;
+  LBranches: TNyxDocumentationAliasTargetVector;
+  LHasIntrinsic, LHasTargets: Boolean;
 begin
   LSource := AValue;
   Result := nil;
@@ -1056,11 +1364,45 @@ begin
 
   if LSource = nil then
     raise ENyxDocumentation.Create('A documentation type is required');
-  LFrozen := NewNyxDocumentationType(LSource.Identity, LSource.Kind, LSource.Summary);
+  LKind := LSource.Kind;
+  LHasIntrinsic := Supports(LSource, INyxDocumentationIntrinsic, LIntrinsic);
+  LHasTargets := Supports(LSource, INyxDocumentationAliasTargets, LTargets);
+
+  if (LHasIntrinsic <> (LKind = ndtIntrinsic)) or (LHasTargets and (LKind <> ndtAlias)) then
+    raise ENyxDocumentation.Create('Documentation shape capability contradicts its declared kind');
+
+  if LHasIntrinsic then
+    LFrozen := NewNyxDocumentationIntrinsic(LSource.Identity, LIntrinsic.Family, LSource.Summary)
+  else if LHasTargets then
+  begin
+    LCount := LTargets.TargetCount;
+
+    if (LCount < 1) or (LCount > 2) then
+      raise ENyxDocumentation.Create('Captured alias exceeds its one-or-two branch allowance');
+    SetLength(LBranches, LCount);
+    for LAt := 0 to LCount - 1 do
+    begin
+      CheckCancellation(ACancellation);
+      LBranches[LAt] := LTargets.TargetAt(LAt);
+    end;
+    LFrozen := NewNyxDocumentationTargetAlias(LSource.Identity, LSource.Summary, LBranches);
+  end
+  else
+    LFrozen := NewNyxDocumentationType(LSource.Identity, LKind, LSource.Summary);
   LAlias := LSource.AliasTarget;
 
   if LAlias.Defined then
-    LFrozen := LFrozen.WithAlias(LAlias);
+  begin
+
+    if LHasTargets then
+    begin
+
+      if not LAlias.Same(LFrozen.AliasTarget) then
+        raise ENyxDocumentation.Create('Common alias target contradicts its declared platform branches');
+    end
+    else
+      LFrozen := LFrozen.WithAlias(LAlias);
+  end;
   LCount := LSource.BaseCount;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then

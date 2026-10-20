@@ -40,7 +40,21 @@ type
     This maintenance tool never runs inside Studio or a consumer application. }
   TControlFamily = (cfCaption, cfContainer, cfText, cfBoolean, cfInteger,
     cfImage, cfChoice, cfReference, cfSplit);
+  { Checking is the default and never writes source. Candidate generation owns
+    a new directory, leaving all reviewed repository includes untouched. }
+  TContractOutputMode = (comCheck, comCandidate);
+  { Command-line paths belong to this one maintenance invocation. SourceRoot
+    supplies descriptor/license inputs; CandidateRoot is always a fresh leaf. }
+  TContractOptions = record
+    Mode: TContractOutputMode;
+    SourceRoot, CandidateRoot: String;
+    Help: Boolean;
+  end;
 const
+  CSourceRootOption = '--source-root';
+  CCheckOption = '--check';
+  COutputDirectoryOption = '--output-dir';
+  CHelpOption = '--help';
   CFamilyNames: array[TControlFamily] of String = ('CaptionControl', 'LayoutControl',
     'TextInput', 'BooleanInput', 'IntegerInput', 'ImageControl', 'ChoiceControl',
     'ReferenceControl', 'SplitControl');
@@ -65,6 +79,77 @@ var
   GImplementation: TStringList;
   GFacadeTypes: TStringList;
   GFacadeImplementation: TStringList;
+  GOptions: TContractOptions;
+
+function SourcePath(const ARelative: String): String;
+begin
+  Result := IncludeTrailingPathDelimiter(GOptions.SourceRoot) + ARelative;
+end;
+
+function ReadOptions: TContractOptions;
+var
+  LIndex: Integer;
+  LArgument: String;
+  LSourceGiven, LModeGiven: Boolean;
+  function PathArgument: String;
+  begin
+    Inc(LIndex);
+
+    if (LIndex > ParamCount) or (ParamStr(LIndex) = '') or
+      (Copy(ParamStr(LIndex), 1, 2) = '--') then
+      raise Exception.Create('A path is required after ' + LArgument);
+    Result := ExpandFileName(ParamStr(LIndex));
+  end;
+begin
+  Result.Mode := comCheck;
+  Result.SourceRoot := GetCurrentDir;
+  Result.CandidateRoot := '';
+  Result.Help := False;
+  LSourceGiven := False;
+  LModeGiven := False;
+  LIndex := 1;
+  while LIndex <= ParamCount do
+  begin
+    LArgument := ParamStr(LIndex);
+
+    if LArgument = CSourceRootOption then
+    begin
+
+      if LSourceGiven then
+        raise Exception.Create('--source-root may be supplied only once');
+      Result.SourceRoot := PathArgument;
+      LSourceGiven := True;
+    end
+    else if (LArgument = CCheckOption) or (LArgument = COutputDirectoryOption) then
+    begin
+
+      if LModeGiven then
+        raise Exception.Create('Choose either --check or --output-dir once');
+      LModeGiven := True;
+
+      if LArgument = COutputDirectoryOption then
+      begin
+        Result.Mode := comCandidate;
+        Result.CandidateRoot := PathArgument;
+      end;
+    end
+    else if LArgument = CHelpOption then
+      Result.Help := True
+    else
+      raise Exception.Create('Unknown argument: ' + LArgument);
+    Inc(LIndex);
+  end;
+end;
+
+procedure WriteUsage;
+begin
+  WriteLn('Nyx control-contract maintenance');
+  WriteLn('  nyx_control_contracts [--source-root <repository>] [--check]');
+  WriteLn('  nyx_control_contracts [--source-root <repository>] --output-dir <new-directory>');
+  WriteLn('No arguments checks the five maintained includes without writing.');
+  WriteLn('Candidate output retains src/ names for review; existing destinations refuse.');
+  WriteLn('Exit 0: match/generated; exit 2: source differs; exit 1: invalid input or failure.');
+end;
 
 function Stem(const AName: TNyxText): String;
 var
@@ -987,7 +1072,7 @@ begin
   end;
 end;
 
-procedure SaveInclude(ALines: TStringList; const APath: String);
+procedure PrepareInclude(ALines: TStringList);
 var
   LLicense: TStringList;
   LSource: String;
@@ -995,9 +1080,12 @@ var
 begin
   LLicense := TStringList.Create;
   try
-    LLicense.LoadFromFile('src/nyx.model.pas');
+    LLicense.LoadFromFile(SourcePath('src/nyx.model.pas'));
     LSource := LLicense.Text;
     LFinish := Pos('unit nyx.model;', LSource);
+
+    if LFinish = 0 then
+      raise Exception.Create('License source is not the Nyx model unit');
     LSource := Copy(LSource, 1, LFinish - 1);
     LSource := StringReplace(LSource, #13#10, #10, [rfReplaceAll]);
   finally
@@ -1014,10 +1102,82 @@ begin
     ALines.Delete(ALines.Count - 1);
   end;
   ALines.LineBreak := #10;
-  ALines.SaveToFile(APath);
 end;
 
+{ Compare serialized bytes, including BOM/newline policy. Text equality would
+  conceal a stale encoding or line ending in the actual maintained include. }
+function CheckInclude(ALines: TStringList; const ARelative: String): Boolean;
+var
+  LExpected, LActual: TMemoryStream;
 begin
+  Result := False;
+
+  if not FileExists(SourcePath(ARelative)) then
+  begin
+    WriteLn('DIFF missing ', ARelative);
+    Exit;
+  end;
+  LExpected := TMemoryStream.Create;
+  LActual := TMemoryStream.Create;
+  try
+    ALines.SaveToStream(LExpected);
+    LActual.LoadFromFile(SourcePath(ARelative));
+    Result := (LExpected.Size = LActual.Size);
+
+    if Result and (LExpected.Size > 0) then
+      Result := CompareMem(LExpected.Memory, LActual.Memory, LExpected.Size);
+
+    if Result then
+      WriteLn('MATCH ', ARelative)
+    else
+      WriteLn('DIFF content ', ARelative);
+  finally
+    LActual.Free;
+    LExpected.Free;
+  end;
+end;
+
+{ Creation is exclusive and happens only after all five outputs are prepared.
+  Never merge into an old candidate or replace maintained includes; a failed write leaves
+  its incomplete candidate for inspection instead of deleting caller files. }
+procedure SaveCandidate;
+var
+  LSourceDirectory: String;
+begin
+
+  if not CreateDir(GOptions.CandidateRoot) then
+    raise Exception.Create('Cannot create fresh candidate directory: ' + GOptions.CandidateRoot);
+  LSourceDirectory := IncludeTrailingPathDelimiter(GOptions.CandidateRoot) + 'src';
+
+  if not CreateDir(LSourceDirectory) then
+    raise Exception.Create('Cannot create candidate src directory');
+  LSourceDirectory := IncludeTrailingPathDelimiter(LSourceDirectory);
+  GTypes.SaveToFile(LSourceDirectory + 'nyx.controls.types.inc');
+  GFactories.SaveToFile(LSourceDirectory + 'nyx.controls.factories.inc');
+  GImplementation.SaveToFile(LSourceDirectory + 'nyx.controls.implementation.inc');
+  GFacadeTypes.SaveToFile(LSourceDirectory + 'nyx.controls.facades.inc');
+  GFacadeImplementation.SaveToFile(LSourceDirectory + 'nyx.controls.facades.implementation.inc');
+end;
+
+function Run: Integer;
+var
+  LMatches: Boolean;
+begin
+  Result := 0;
+  GOptions := ReadOptions;
+
+  if GOptions.Help then
+  begin
+    WriteUsage;
+    Exit;
+  end;
+
+  if not DirectoryExists(GOptions.SourceRoot) then
+    raise Exception.Create('Source root does not exist: ' + GOptions.SourceRoot);
+
+  if (GOptions.Mode = comCandidate) and
+    (DirectoryExists(GOptions.CandidateRoot) or FileExists(GOptions.CandidateRoot)) then
+    raise Exception.Create('Candidate directory must not already exist: ' + GOptions.CandidateRoot);
   GTypes := TStringList.Create;
   GFactories := TStringList.Create;
   GImplementation := TStringList.Create;
@@ -1025,21 +1185,40 @@ begin
   GFacadeImplementation := TStringList.Create;
   try
     EmitControls;
-    EmitFacade('src/nyx.model.pas', 'TNyxNodeConfig', 'NyxConfiguration', 'Configure',
+    EmitFacade(SourcePath('src/nyx.model.pas'), 'TNyxNodeConfig', 'NyxConfiguration', 'Configure',
       '{737A7921-4621-4C6F-8C01-030000000001}');
-    EmitFacade('src/nyx.model.pas', 'TNyxNodeBindings', 'NyxBindings', 'Binds',
+    EmitFacade(SourcePath('src/nyx.model.pas'), 'TNyxNodeBindings', 'NyxBindings', 'Binds',
       '{AF627AE8-40CC-49C0-8681-E5A8F1FC1008}');
-    EmitFacade('src/nyx.contract.pas', 'TNyxContract', 'NyxControlContract', 'Contract',
+    EmitFacade(SourcePath('src/nyx.contract.pas'), 'TNyxContract', 'NyxControlContract', 'Contract',
       '{737A7921-4621-4C6F-8C01-030000000003}');
-    EmitFacade('src/nyx.data.pas', 'TNyxExtensions', 'NyxControlExtensions', 'Extensions',
+    EmitFacade(SourcePath('src/nyx.data.pas'), 'TNyxExtensions', 'NyxControlExtensions', 'Extensions',
       '{737A7921-4621-4C6F-8C01-030000000004}');
-    SaveInclude(GTypes, 'src/nyx.controls.types.inc');
-    SaveInclude(GFactories, 'src/nyx.controls.factories.inc');
-    SaveInclude(GImplementation, 'src/nyx.controls.implementation.inc');
-    SaveInclude(GFacadeTypes, 'src/nyx.controls.facades.inc');
-    SaveInclude(GFacadeImplementation, 'src/nyx.controls.facades.implementation.inc');
-    WriteLn('PASS maintained contracts for ', Ord(High(TNyxKind)) + 1,
-      ' kinds and four managed authoring facades');
+    PrepareInclude(GTypes);
+    PrepareInclude(GFactories);
+    PrepareInclude(GImplementation);
+    PrepareInclude(GFacadeTypes);
+    PrepareInclude(GFacadeImplementation);
+
+    if GOptions.Mode = comCandidate then
+    begin
+      SaveCandidate;
+      WriteLn('PASS candidate contracts for ', Ord(High(TNyxKind)) + 1,
+        ' kinds and four managed authoring facades: ', GOptions.CandidateRoot);
+    end
+    else
+    begin
+      LMatches := CheckInclude(GTypes, 'src/nyx.controls.types.inc');
+      LMatches := CheckInclude(GFactories, 'src/nyx.controls.factories.inc') and LMatches;
+      LMatches := CheckInclude(GImplementation, 'src/nyx.controls.implementation.inc') and LMatches;
+      LMatches := CheckInclude(GFacadeTypes, 'src/nyx.controls.facades.inc') and LMatches;
+      LMatches := CheckInclude(GFacadeImplementation, 'src/nyx.controls.facades.implementation.inc') and LMatches;
+
+      if LMatches then
+        WriteLn('PASS maintained contracts for ', Ord(High(TNyxKind)) + 1,
+          ' kinds and four managed authoring facades')
+      else
+        Result := 2;
+    end;
   finally
     GFacadeImplementation.Free;
     GFacadeTypes.Free;
@@ -1047,4 +1226,20 @@ begin
     GFactories.Free;
     GTypes.Free;
   end;
+end;
+
+var
+  LExitCode: Integer;
+begin
+  try
+    LExitCode := Run;
+  except
+    on E: Exception do
+    begin
+      WriteLn(StdErr, 'ERROR ', E.Message);
+      LExitCode := 1;
+    end;
+  end;
+  { All managed emitters retire before terminating, including refusal paths. }
+  ExitCode := LExitCode;
 end.

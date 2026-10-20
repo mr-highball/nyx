@@ -134,6 +134,8 @@ var
   LSignature: INyxDocumentationSignature;
   LParameter: TNyxDocumentationParameter;
   LExample: TNyxDocumentationExample;
+  LIntrinsic: INyxDocumentationIntrinsic;
+  LTargets: INyxDocumentationAliasTargets;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -198,6 +200,26 @@ begin
         Number(Ord(LParameter.HasDefault));
         Add(LParameter.DefaultPascal);
       end;
+    end;
+  end;
+  { Shape extensions follow the complete legacy content. Absence leaves the
+    earlier declaration framing byte-identical; present facts cannot disappear
+    during duplicate comparison or aggregate accounting. }
+
+  if Supports(AValue, INyxDocumentationIntrinsic, LIntrinsic) then
+  begin
+    Add('intrinsic-family');
+    Number(Ord(LIntrinsic.Family));
+  end;
+
+  if Supports(AValue, INyxDocumentationAliasTargets, LTargets) then
+  begin
+    Add('alias-targets');
+    Number(LTargets.TargetCount);
+    for LIndex := 0 to LTargets.TargetCount - 1 do
+    begin
+      Number(Ord(LTargets.TargetAt(LIndex).Platform));
+      Add(LTargets.TargetAt(LIndex).Target.Key);
     end;
   end;
 end;

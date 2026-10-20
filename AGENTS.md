@@ -19,6 +19,37 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
+Current contract tool checks five maintained includes without mutation by
+default; explicit fresh candidate output retains all81 kinds/four facades byte
+for byte. Native CLI62 checks use14 joined generator invocations/clean parent
+and child heaps; copied fixtures alone test drift/missing/refusal paths. Intrinsic
+families and copied target-alias cases now retain specialized immutable shape
+through fluent/capture/equality/index paths. Platform-only and missing/common
+targets retain truth; per-target cycles/base kinds and atomic refusal stay
+bounded without inferred primitive/ABI facts. Common unchanged six-source
+qualification passes29 compilers/zero owned warnings/91 upstream,13 clean native
+test programs and13 pas2js compiles. Browser/GUI execution and actual core/help
+adoption remain open. Explicit src/studio/tests/tools inventory covers1729 inputs/
+1723 other frozen files; all previous791/788 unrelated and24 compiler/97 RTL/
+five current-start protected/two profile/thirteen planning pins remain exact.
+WORK.md and ignored .local/documentation-shapes-paths-private.json own common
+source/job/child/candidate/remote receipts. All readers join; LAN offline/native
+Nyx tools absent; historical global-config preservation stays false. No full
+criterion/task/credit/DONE/input/quality/parity/adoption/delivery closes across
+at least fifty unclosed batches. Stop shape/fixture/compiler variants.
+Actual81 factory results plus their complete unit imply at least6642 charged
+declarations for81 independent full factory-primary closures, exceeding4096.
+Imports alone cannot cure this lower bound. Next helper scope is source-owned
+unit/package declaration contribution ownership with referencing creator bindings
+through actual registration lifecycle. Canonical chunks own copied facts; flat
+packages share exact captured chunks, with separate reference charges and full
+charges for independently captured equivalents. Settle this before imports/indexed
+properties/generator metadata adoption. Preserve legacy repeated charging,
+duplicate/refusal rules, quotas, immutable generations and alternate objects;
+no partial unit/fake core/help inventory. Root owns separate files/build admission.
+No Pascal edits during readers, host/config retry, SDK capture, protected mutation,
+cleanup/restart, approval bypass, new public MCP tool/schema, rollout or extra agents.
+
 Current editor navigation adds immutable bounded Back/Forward through definition
 jumps in both Studios, retaining actual departure carets and exact logical-newline/
 unique-text anchors. Ambiguous/deleted/unpublished/stale targets refuse without

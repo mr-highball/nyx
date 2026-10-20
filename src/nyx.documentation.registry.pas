@@ -5,7 +5,7 @@ unit nyx.documentation.registry;
 
 interface
 
-uses SysUtils, nyx.text, nyx.scheduler, nyx.documentation,
+uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.documentation,
   nyx.documentation.registration, nyx.schema, nyx.callbacks, nyx.catalog;
 
 type
@@ -519,6 +519,24 @@ begin
   end;
 end;
 
+{ Absence is a real branch result. No target-specific alias borrows another
+  projection's case, and Any resolves only an actually common target. }
+function AliasFor(const AType: INyxDocumentationType;
+  APlatform: TNyxPlatform): TNyxDocumentationRef;
+var
+  LTargets: INyxDocumentationAliasTargets;
+begin
+  Result := AType.AliasTarget;
+
+  if Supports(AType, INyxDocumentationAliasTargets, LTargets) then
+  begin
+    Result := Default(TNyxDocumentationRef);
+
+    if LTargets.HasTarget(APlatform) then
+      Result := LTargets.TargetFor(APlatform);
+  end;
+end;
+
 procedure TDocumentationIndex.ValidateClosure(ABudget: TDocumentationBudget);
 var
   LAt, LLink, LMember, LParameter, LEdge, LDepth, LTarget, LScan: Integer;
@@ -527,6 +545,14 @@ var
   LSignature: INyxDocumentationSignature;
   LStates, LStack, LEdges: array of Integer;
   LReference: TNyxDocumentationRef;
+  LTargets: INyxDocumentationAliasTargets;
+  LPlatform: TNyxPlatform;
+  LKind: TNyxDocumentationTypeKind;
+  function DeclaredFor(AIndex: Integer; APlatform: TNyxPlatform): Boolean;
+  begin
+    Result := ((APlatform = npfBrowser) and (ndplatformBrowser in Platforms[AIndex])) or
+      ((APlatform = npfNativeLCL) and (ndplatformNative in Platforms[AIndex]));
+  end;
   procedure Require(const AReference: TNyxDocumentationRef);
   begin
     ABudget.Spend;
@@ -543,11 +569,15 @@ var
     else if FindDeclaration(AReference) = nil then
       raise ENyxDocumentation.Create('Unresolved documentation type or unit: ' + AReference.Key);
   end;
-  function EffectiveKind(const AReference: TNyxDocumentationRef): TNyxDocumentationTypeKind;
+  function EffectiveKind(const AReference: TNyxDocumentationRef;
+    APlatform: TNyxPlatform; ARequired: Boolean;
+    out AKind: TNyxDocumentationTypeKind): Boolean;
   var
     LCurrent: INyxDocumentationType;
     LSteps: Integer;
+    LNextReference: TNyxDocumentationRef;
   begin
+    Result := False;
     LCurrent := FindDeclaration(AReference);
     LSteps := 0;
     while (LCurrent <> nil) and (LCurrent.Kind = ndtAlias) do
@@ -557,12 +587,22 @@ var
 
       if LSteps > DeclarationCount then
         raise ENyxDocumentation.Create('Cyclic documentation alias');
-      LCurrent := FindDeclaration(LCurrent.AliasTarget);
+      LNextReference := AliasFor(LCurrent, APlatform);
+
+      if not LNextReference.Defined then
+      begin
+
+        if ARequired then
+          raise ENyxDocumentation.Create('A base alias target is absent for a declared platform');
+        Exit;
+      end;
+      LCurrent := FindDeclaration(LNextReference);
     end;
 
     if LCurrent = nil then
       raise ENyxDocumentation.Create('Unresolved declared base alias');
-    Result := LCurrent.Kind;
+    AKind := LCurrent.Kind;
+    Result := True;
   end;
 begin
   for LAt := 0 to High(APIs) do
@@ -570,17 +610,40 @@ begin
     ABudget.Spend;
     LAPI := APIs[LAt];
 
-    if (LAPI.Kind = ndtAlias) and not LAPI.AliasTarget.Defined then
+    if (LAPI.Kind = ndtAlias) and not LAPI.AliasTarget.Defined and
+      not Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
       raise ENyxDocumentation.Create('Complete documentation alias requires its target: ' + LAPI.Identity.Key);
     Require(LAPI.AliasTarget);
+
+    if Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
+    begin
+      for LLink := 0 to LTargets.TargetCount - 1 do
+        Require(LTargets.TargetAt(LLink).Target);
+      for LPlatform := npfBrowser to npfNativeLCL do
+      begin
+
+        if DeclaredFor(LAt, LPlatform) and not LTargets.HasTarget(LPlatform) then
+          raise ENyxDocumentation.Create('An alias target is absent for its declared platform availability');
+      end;
+    end;
     for LLink := 0 to LAPI.BaseCount - 1 do
     begin
       Require(LAPI.BaseAt(LLink));
 
-      if ((LAPI.Kind = ndtInterface) and (EffectiveKind(LAPI.BaseAt(LLink)) <> ndtInterface)) or
-        ((LAPI.Kind in [ndtClass, ndtCallback]) and
-        not (EffectiveKind(LAPI.BaseAt(LLink)) in [ndtClass, ndtCallback])) then
-        raise ENyxDocumentation.Create('Incompatible declared inheritance kinds');
+      for LPlatform := npfBrowser to npfNativeLCL do
+      begin
+
+        if (Platforms[LAt] <> []) and not DeclaredFor(LAt, LPlatform) then
+          Continue;
+
+        if EffectiveKind(LAPI.BaseAt(LLink), LPlatform, DeclaredFor(LAt, LPlatform), LKind) then
+        begin
+
+          if ((LAPI.Kind = ndtInterface) and (LKind <> ndtInterface)) or
+            ((LAPI.Kind in [ndtClass, ndtCallback]) and not (LKind in [ndtClass, ndtCallback])) then
+            raise ENyxDocumentation.Create('Incompatible declared inheritance kinds');
+        end;
+      end;
     end;
     for LLink := 0 to LAPI.RelatedCount - 1 do
       Require(LAPI.RelatedAt(LLink));
@@ -607,59 +670,64 @@ begin
   SetLength(LStates, Length(APIs));
   SetLength(LStack, Length(APIs));
   SetLength(LEdges, Length(APIs));
-  for LAt := 0 to High(APIs) do
+  for LPlatform := npfBrowser to npfNativeLCL do
   begin
-
-    if LStates[LAt] <> 0 then
-      Continue;
-    LDepth := 0;
-    LStack[0] := LAt;
-    LEdges[0] := 0;
-    LStates[LAt] := 1;
-    while LDepth >= 0 do
+    for LAt := 0 to High(LStates) do
+      LStates[LAt] := 0;
+    for LAt := 0 to High(APIs) do
     begin
-      ABudget.Spend;
-      LScan := LStack[LDepth];
-      LAPI := APIs[LScan];
-      LEdge := LEdges[LDepth];
-      Inc(LEdges[LDepth]);
-      LReference := Default(TNyxDocumentationRef);
 
-      if LEdge < LAPI.BaseCount then
-        LReference := LAPI.BaseAt(LEdge)
-      else if LEdge = LAPI.BaseCount then
-        LReference := LAPI.AliasTarget;
-
-      if not LReference.Defined then
-      begin
-        LStates[LScan] := 2;
-        Dec(LDepth);
+      if LStates[LAt] <> 0 then
         Continue;
-      end;
-      LTarget := -1;
-      for LScan := 0 to High(APIs) do
+      LDepth := 0;
+      LStack[0] := LAt;
+      LEdges[0] := 0;
+      LStates[LAt] := 1;
+      while LDepth >= 0 do
       begin
         ABudget.Spend;
+        LScan := LStack[LDepth];
+        LAPI := APIs[LScan];
+        LEdge := LEdges[LDepth];
+        Inc(LEdges[LDepth]);
+        LReference := Default(TNyxDocumentationRef);
 
-        if APIs[LScan].Identity.Same(LReference) then
+        if LEdge < LAPI.BaseCount then
+          LReference := LAPI.BaseAt(LEdge)
+        else if LEdge = LAPI.BaseCount then
+          LReference := AliasFor(LAPI, LPlatform);
+
+        if not LReference.Defined then
         begin
-          LTarget := LScan;
-          Break;
+          LStates[LScan] := 2;
+          Dec(LDepth);
+          Continue;
         end;
-      end;
+        LTarget := -1;
+        for LScan := 0 to High(APIs) do
+        begin
+          ABudget.Spend;
 
-      if LTarget < 0 then
-        raise ENyxDocumentation.Create('Unresolved inheritance/alias edge');
+          if APIs[LScan].Identity.Same(LReference) then
+          begin
+            LTarget := LScan;
+            Break;
+          end;
+        end;
 
-      if LStates[LTarget] = 1 then
-        raise ENyxDocumentation.Create('Cyclic documentation inheritance or alias');
+        if LTarget < 0 then
+          raise ENyxDocumentation.Create('Unresolved inheritance/alias edge');
 
-      if LStates[LTarget] = 0 then
-      begin
-        LStates[LTarget] := 1;
-        Inc(LDepth);
-        LStack[LDepth] := LTarget;
-        LEdges[LDepth] := 0;
+        if LStates[LTarget] = 1 then
+          raise ENyxDocumentation.Create('Cyclic documentation inheritance or alias');
+
+        if LStates[LTarget] = 0 then
+        begin
+          LStates[LTarget] := 1;
+          Inc(LDepth);
+          LStack[LDepth] := LTarget;
+          LEdges[LDepth] := 0;
+        end;
       end;
     end;
   end;
@@ -716,6 +784,12 @@ begin
 
       if AInherited then
       begin
+        { A caller may inspect TargetFor(platform), then query that exact owner.
+          The target-neutral legacy query never guesses one branch or reports
+          an empty inherited API merely because no common target is known. }
+
+        if (LType.Kind = ndtAlias) and not LType.AliasTarget.Defined then
+          raise ENyxDocumentation.Create('Select an explicit alias platform target before inherited member lookup');
         LLinks := LType.BaseCount + Ord(LType.AliasTarget.Defined);
         for LBase := 0 to LLinks - 1 do
         begin

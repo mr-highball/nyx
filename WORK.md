@@ -34,7 +34,134 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current editor integration: Return from definition jumps — 2026-10-20
+## Current generation prerequisite: Reviewable contract output — 2026-10-20
+
+The preceding goal turn makes product progress: definition Back/Forward and
+registration-owned API discovery are qualified, committed and pushed as ac8a6f3.
+This batch follows the concrete source-generator prerequisite identified by the
+reference01/02 reassessment. Root owns the existing control-contract tool, one
+native end-to-end maintenance consumer and the managed-controls guide. Lil'
+Scooty owns its separate six-path intrinsic/scalar/target-alias implementation.
+No worker starts a compiler or native reader until both handoffs freeze.
+
+Deliverable: the actual generator checks maintained output without mutation by
+default and can produce all five outputs in a fresh explicit candidate directory.
+Keep every emitted declaration/signature/GUID and source byte unchanged; select
+descriptor/license/comparison roots explicitly without pretending that changes
+the executable's compiled catalog. Unknown/conflicting/missing arguments and
+old destinations refuse. Prepare all output before filesystem publication; a
+failed write retains its partial candidate for inspection, without cleanup.
+No generated repository include is applied in this slice.
+
+Qualification must compile the real tool and execute its actual CLI through a
+maintained Pascal consumer: exact existing-output equality, deterministic fresh
+candidates from another working directory/space-containing paths, prior file/
+directory preservation, real byte drift and missing output reports, preparation
+refusal, terminal statuses and clean heaps. Mutate only copied disposable source
+fixtures in a fresh E: runtime. Inspect the reviewed candidate as evidence; stop
+on actual emitted-source drift rather than silently accepting it or replacing
+maintained output. This is the prerequisite for future declaration-owned help
+generation, not source-generator metadata adoption or full reference acceptance.
+The original authoring/reference criteria and at-least-forty-nine-batch open
+count remain intact. No task credit/DONE, new public MCP tool/schema, host/config
+retry, SDK capture, protected mutation, cleanup/restart or rollout is authorized
+by this maintenance change. Preserve thirteen concurrent planning files and all
+preceding source/failure/protected/remote receipts.
+
+Final result: the generator defaults to byte checking and produces reviewable
+fresh candidates through explicit typed invocation options. Its five serialized
+streams remain exactly equal to the maintained includes for all81 actual kinds
+and four facades. The new native CLI consumer passes62 checks across14 joined
+generator invocations with clean parent/child heaps. It verifies two identical
+fresh candidates from a different working directory with space-containing paths,
+old destination/file preservation, copied-source byte drift/missing reports,
+help/argument/preparation refusal and all original descriptor/include bytes.
+No generated repository include is applied. These are real tool invocations;
+the fixture launches no compiler, server, browser or generated application.
+
+Lil' Scooty's concurrent source adds truthful declared intrinsic families and
+platform-dependent alias targets. Old GUID slots/record layouts/enum ordinals
+remain exact; ndtIntrinsic appends. Distinct optional interfaces retain family
+and copied platform/type-reference branches through every fluent/capture path.
+One platform-only branch is valid; missing projections refuse, and a common
+target exists only when actually declared/universal or both branches agree.
+Framed equality and bounded index admission retain shape facts. Per-platform
+graphs avoid a false cycle from mutually exclusive edges, while real cycles,
+missing links, incompatible declared base kinds, contradictory producers,
+cancellation and budget exhaustion preserve the prior index. No primitive size,
+encoding, compiler conversion or real System/core declaration is fabricated.
+The new shape consumer's synthetic mechanics remain separate from the genuine
+extension's still-refused missing core closure. Target-neutral inherited queries
+explicitly refuse a target-dependent route instead of choosing a projection.
+
+The common unchanged six-Pascal-source freeze passes all29 compiler jobs with
+zero owned warnings/91 existing upstream pas2js Classes warnings. Thirteen native
+test programs have clean heaps: shapes66, registry64, documentation68, generator
+CLI62, navigation34, Studio definitions146, unit71, text projection159, completion
+navigation27, completion view40, definition transport31, MCP completion82 and
+the core consumer's30 core/14365 composition-designer checks. The additional
+generator executable has14 joined clean-heap child runs. Thirteen pas2js outputs
+compile: eleven consumers, browser Studio and source worker. Native Studio and
+backend compile only. The same reviewed source reaches every job; no source
+repair, warning suppression or second product qualification variant is needed.
+Native transport/MCP consumers use fresh existing production-engine runtimes
+without listening or starting a server. Browser/GUI/phone/IME/accessibility,
+full native input/parity/adoption/delivery and real decorated browser execution
+remain open. Compilation cannot stand in for those outcomes.
+
+Ignored packet:
+`E:\Blekohlab\nyx\qualification\documentation-shapes-20261020-132053`, owned by
+`.local/documentation-shapes-paths-private.json`. The common source,29 job/log/
+artifact identities,14 child transcripts and two exact five-file candidates
+are retained in `source-reviewed-freeze-private.json`,
+`accepted-common-jobs-private.json`, `generator-child-receipts-private.json`,
+`generator-candidates-private.json` and `final-audit-private.json`. All readers
+join the original handles; no restart follows an observation timeout.
+
+The source-hash inventory now explicitly covers all1729 Pascal files under
+src/studio/tests/tools, including development tools and negative fixtures outside
+the previous curated791. All six owned/eight retained source copies and1723
+other frozen inputs remain exact. Every prior791 input remains present, with
+the788 unrelated hashes exact. This expanded hash inventory does not claim that
+all its programs execute or compile. The prior24 compiler/97 RTL/five current-
+start protected/two profile/thirteen concurrent planning pins also remain exact.
+Previous349-artifact verification is inherited for unchanged frozen inputs,
+without another verifier execution claim. An initial inventory-display command
+misuses a PowerShell Split overload; it publishes no freeze and starts no
+compiler. Corrected path normalization supplies the explicit inventory above.
+No product/compiler failure occurs in this batch. Historical global-config
+preservation stays false/unrepaired; LAN remains offline, native Nyx tools absent.
+
+Reassessment changes the next action: a complete unit descriptor owns all81
+generated factory members and references81 distinct result interfaces. Attaching
+that full declaration closure independently to all81 creator bindings requires
+at least81*(1+81)=6642 declaration occurrences before classes/facades/core types,
+already exceeding the unchanged4096 index ceiling. This is a conditional lower
+bound from the actual byte-matched factory output and current full-unit/conflict/
+charging rules, not a measured full closure. Its source witness and assumptions
+are retained in `factory-primary-lower-bound-private.json`. Imports alone do not
+solve this ownership amplification; partial factory-stripped unit copies, changed
+legacy charging or increased limits do not qualify built-in adoption.
+
+Next helper deliverable is a concrete source-owned unit/package contribution
+contract through the actual registration lifecycle, with creator bindings
+referencing those owned declarations. Canonical immutable source chunks own the
+copied facts; flat packages retain chunk references so a shared core chunk is
+not recopied when controls and extension packages both reference it. Charge
+independently captured equivalent chunks fully, and keep legacy bundle charging
+exact. Preserve alternate implementations,
+immutable source/generation ownership, atomic refusal and legacy bundle behavior;
+avoid a parallel RegisterHelp inventory. Settle and qualify that ownership before
+source-owned imports, indexed properties and actual generator metadata adoption.
+Existing typed property syntax already owns index parameters/access/default facts;
+reuse it instead of writing another bracket parser. No full original criterion,
+task credit or DONE status closes, and the complete source/type/editor/incremental/
+input/quality/parity/adoption/delivery remains open across at least fifty recorded
+unclosed batches. Stop shape/fixture/compiler variants after this handoff. The
+helper keeps the new active prerequisite and downstream queue while root retains
+separate ownership and all compiler admission.
+
+## Previous editor integration: Return from definition jumps — 2026-10-20
 
 The previous goal turn makes product progress: unit/global API documentation is
 qualified, committed and pushed as78caee7; the active helper has moved into actual

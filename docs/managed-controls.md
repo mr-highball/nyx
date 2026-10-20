@@ -100,8 +100,43 @@ The checked-in Pascal includes are maintained by
 [nyx_control_contracts.lpr](../tools/nyx_control_contracts.lpr). It reads typed
 descriptor declarations and catalog recipes, emits all classes/interfaces,
 factories, typed part accessors and managed facades, and checks stable GUID
-uniqueness. Compile it with FPC and run it from the repository to regenerate the
-includes. It is a development operation, not a runtime dependency.
+uniqueness. Compile it with FPC from the current checkout. With no arguments,
+the executable now compares the five generated includes with the maintained
+source, byte for byte, without writing. `--check` makes that choice explicit.
+It reports each `MATCH` or `DIFF`; status 0 means a match, 2 means missing or
+different source, and 1 means invalid arguments or a generation/I/O failure.
+
+Generate a review candidate with an explicit new destination:
+
+```text
+nyx_control_contracts --source-root D:\Docs\GitHub\nyx --output-dir E:\Blekohlab\nyx\control-contract-candidate
+```
+
+The destination's parent must exist and the destination itself must be absent.
+The tool prepares every output before creating the directory, then writes the
+five includes beneath its `src` directory. Existing files/directories refuse;
+a failed write leaves its incomplete candidate available for inspection.
+It never merges with an older candidate or replaces maintained includes.
+Review the candidate diff, then apply reviewed changes only after
+all source readers have joined. Run the affected compiler/consumer checks after
+application. Retain the candidate and logs when generation or checking fails.
+
+`--source-root` selects descriptor/license inputs and the maintained comparison
+files; it defaults to the working directory. Output paths are relative to the
+invocation's working directory. This option does not rebuild the executable's
+compiled kind/family/catalog recipes: those must come from the same reviewed
+checkout. `--help` requires no source inputs. This remains a development
+operation, not a runtime dependency or automatic documentation inventory.
+
+The maintained native
+[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 62 checks
+through 14 joined generator invocations, with clean parent and child heaps.
+Both fresh candidates match all five maintained includes for 81 built-in kinds
+and four authoring facades. The consumer also checks copied-source drift,
+missing outputs, argument/destination refusal and exact original input bytes.
+Its arguments are the compiled generator, repository root and a new runtime
+directory. Current source/compiler receipts and broader qualification are in
+[WORK.md](../WORK.md); no generated repository include changes in this batch.
 
 Maintained FPC/pas2js fixtures exercise lifetime, complete catalog construction,
 alternative implementations, typing and source recovery. Generated-target checks

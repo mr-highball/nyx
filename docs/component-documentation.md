@@ -6,7 +6,8 @@
 [Current qualification](../WORK.md)
 
 Nyx has an ordinary Pascal API for immutable documentation declarations. It
-describes a unit, class, public control interface, record, enum, alias or callback;
+describes a unit, class, public control interface, record, enum, alias, intrinsic
+family or callback;
 members retain typed parameter/result references, summaries, examples and related
 links. An optional adapter binds that declaration to an exact creator kind and
 copies the existing schema and catalog facts. Reading documentation grants no
@@ -114,6 +115,74 @@ does not invoke the factory or either greeting overload. The examples remain
 inert text. Actual factory/routine execution belongs to an explicit caller, not
 documentation lookup. Globals enter discovery only through a bundle attached to
 their real unit/creator registration. No reflection probe enumerates them.
+
+## Intrinsic families and target-specific aliases
+
+`NewNyxDocumentationIntrinsic(Identity, Family, Summary)` retains the exact
+qualified type identity and an explicit Boolean, integer, real, character,
+string or pointer family. The optional `INyxDocumentationIntrinsic` capability
+exposes that family. It supplies no guessed width, encoding, conversion,
+representation or runtime reflection facts. `ndtIntrinsic` appends to the old
+type-kind ordinals; `NewNyxDocumentationType(..., ndtIntrinsic, ...)` refuses
+because it lacks a family. Intrinsic declarations may retain prose, examples and
+related references; they cannot invent bases, aliases or instance members.
+
+Use a target alias when the declaration actually differs by platform. This
+helper takes already established references rather than inventing System types:
+
+```pascal
+function PlatformAlias(const Identity, NativeType,
+  BrowserType: TNyxDocumentationRef): INyxDocumentationType;
+begin
+  Result := NewNyxDocumentationTargetAlias(Identity,
+    'Retain each declared platform target.', [
+      NyxDocumentationAliasTarget(npfNativeLCL, NativeType),
+      NyxDocumentationAliasTarget(npfBrowser, BrowserType)]);
+end;
+```
+
+The copied branch record contains a platform and exact type reference, with no
+interface or executable authority. `INyxDocumentationAliasTargets` exposes
+`TargetCount`, `TargetAt`, `HasTarget` and `TargetFor`. One specific branch is
+valid for a platform-only declaration; `TargetFor` refuses an absent projection.
+Branches sort deterministically, reject duplicates or an overlapping `npfAny`
+case, and retain at most two cases. An explicit `npfAny` branch declares a
+universal target. Two specific branches establish a common target only when
+their exact qualified references agree. Otherwise the old `AliasTarget` getter
+stays undefined and `HasTarget(npfAny)` is false. There is no fallback from one
+projection to another. Calling the existing `WithAlias` explicitly replaces a
+specialized alias's complete map with one universal target.
+
+Every fluent copy and alternate-provider capture retains these specialized
+capabilities. Capture reconstructs derived target queries from bounded copied
+rows, checks an advertised common target against those rows, and retains no
+supplier. Family and branch facts share the existing 256 KiB declaration limit
+and participate in exact framed registration equality and its 4 MiB bundle
+allowance. Per-platform graph traversal consumes the same index work ceiling;
+the 4096 declaration-occurrence, 16 MiB byte and two-million work bounds remain
+unchanged. Unextended declaration
+framing remains unchanged; existing interface GUIDs and method slots, copied
+record fields and old enum ordinals remain intact.
+
+The index requires every provided branch link to resolve. Explicit registration
+availability also requires a branch for every promised platform; unspecified
+availability does not invent one. Alias/base cycles are checked separately for
+each concrete platform, so a cyclic union of mutually exclusive branch edges
+does not become a false cycle. Inheritance kinds are checked on the owner's
+declared projections. Target-neutral `Members` refuses inherited traversal of
+an alias without a common target; select `TargetFor(platform)` and query that
+exact owner instead. This is declared graph validation, not compiler type or
+cross-platform compatibility proof.
+
+The [shape consumer](../tests/nyx_documentation_shapes_tests.lpr) passes **66
+native checks with a clean heap** and **compiles for pas2js**, with zero owned
+warnings. It uses explicitly synthetic declarations to test these mechanics.
+It does not supply placeholder descriptors for real System/core dependencies or
+replace the genuine extension's still-incomplete closure. These checks cover
+all six families, specialized fluent/capture lifetimes and bounds, target
+absence/common truth, malformed producers, atomic cancellation, framed
+conflicts, per-platform cycles, availability and inherited base kinds. No new
+decorated browser has been executed.
 
 ## Capture existing creator facts
 
@@ -325,28 +394,39 @@ destruction. The browser consumer **compiles successfully**; the decorated-brows
 consumer has never been executed. Compilation is not executed browser evidence.
 
 The native compiler is **FPC 3.3.1-20634-gd7f522a561 [2026/08/04], i386 Win32**;
-the browser compiler is **Pas2JS 3.3.1 [2026/08/04], Win32 i386**. Current
-registration evidence is in
-`E:\Blekohlab\nyx\qualification\definition-history-20261020-125511`:
+the browser compiler is **Pas2JS 3.3.1 [2026/08/04], Win32 i386**. Current focused
+shape/registration evidence is in
+`E:\Blekohlab\nyx\qualification\documentation-shapes-20261020-132053`:
 
-- `logs/nyx_documentation_registry_tests-focused-qualified-compile.log`
-- `logs/nyx_documentation_registry_tests-focused-qualified-run.log`
-- `logs/nyx_documentation_registry_tests-browser-qualified-compile.log`
-- `logs/nyx_documentation_tests-focused-qualified-{compile,run}.log`
-- `logs/nyx_documentation_tests-browser-qualified-compile.log`
+- `logs/nyx_documentation_shapes_tests-native-focused-reviewed-{compile,run}.log`
+- `logs/nyx_documentation_shapes_tests-browser-focused-reviewed-compile.log`
+- `logs/nyx_documentation_registry_tests-native-focused-reviewed-{compile,run}.log`
+- `logs/nyx_documentation_registry_tests-browser-focused-reviewed-compile.log`
+- `logs/nyx_documentation_tests-native-focused-reviewed-{compile,run}.log`
+- `logs/nyx_documentation_tests-browser-focused-reviewed-compile.log`
 
-The registry run allocates and frees all 434,077 blocks, with zero unfreed
-blocks. Both consumers have zero owned compiler warnings; browser compilation
-has seven existing upstream Classes warnings. All eight metadata Pascal inputs
-remain exact through the final source freeze. The [current work record](../WORK.md)
-owns `source-final-freeze-private.json`, preservation receipts and the larger
-consumer matrix's explicit composite qualification.
+The shape run allocates and frees all 65,252 blocks; the registry run frees all
+434,968 blocks and the unchanged declaration consumer frees all 583,651 blocks.
+Each reports zero unfreed blocks. All three consumers have zero owned compiler
+warnings; each browser compilation has seven existing upstream Classes warnings.
+`source-reviewed-freeze-private.json` retains the six changed Pascal inputs for
+this shared batch, including the four metadata sources and two separate
+generator consumers. The same unchanged six-source freeze passes the broader
+29-compiler matrix: 13 native test programs with clean heaps, 13 pas2js
+compile-only consumers and zero owned warnings. The separate generator consumer
+joins 14 actual maintenance invocations with clean child heaps and two exact
+five-file candidates. The [current work record](../WORK.md) owns
+`final-audit-private.json`, the 1729-input inventory and retained prior-pin
+comparisons. This qualification does not establish executed decorated-browser
+or GUI behavior.
 
 The initial registry browser preparation rejected direct `as` syntax between
 unrelated interface types. Its source/log remain retained. The final test uses
 `Supports` and managed optional-capability outputs, preserving all 58 original
 behavior checks and adding six explicit capability assertions. Native runtime
-querying and browser compilation are separate evidence.
+querying and browser compilation are separate evidence. The earlier registration
+packet, `E:\Blekohlab\nyx\qualification\definition-history-20261020-125511`, retains
+that failed preparation and its 64-check native/compile-only browser baseline.
 
 The prior unit/global declaration baseline is commit
 `78caee7790b6d323e7ae8d1b98dace987a2e4160`; its packet retains the first native
@@ -364,7 +444,7 @@ documentation reflection:
 
 | Capability | Native FPC | pas2js browser | Documentation use |
 | --- | --- | --- | --- |
-| Ordinary typed descriptor/registration interfaces | Current 68-check declaration and 64-check registry consumers pass with clean heaps. | Both consumers compile successfully; decorated execution remains open. | Ordinary Pascal contracts; no special decorator syntax. |
+| Ordinary typed descriptor/registration interfaces | Current declaration68, registry64 and shape66 consumers pass with clean heaps. | All three consumers compile successfully; decorated execution remains open. | Ordinary Pascal contracts; no special decorator syntax. |
 | Runtime class ancestry | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Existing adapter only; no class inventory is inferred. |
 | Declared nonzero-GUID interface querying | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Optional capabilities use explicit GUIDs. |
 | GUID-less runtime interface identity | Unsupported by the earlier native query adapter; it refuses. | Earlier executed evidence finds a compiler-generated identity. | Browser-generated identity stays runtime-local, not a portable registration key. |
@@ -388,13 +468,29 @@ generator](../tools/nyx_control_contracts.lpr) already owns generated specialize
 interfaces and facades. Emitting their documentation at those same declaration
 points is a future path to one source of truth; that adoption is not implemented
 here. The existing catalog export constructs nodes and is not runtime discovery.
+The current generator receipt contains **81 built-in kinds and four facades**.
+Under full-unit factory-primary attachments, repeating one whole unit descriptor
+and its 81 distinct result interfaces for all 81 creators already costs
+`81 * (1 + 81) = 6642` declaration occurrences, above the unchanged 4096 ceiling
+before classes, facades or core dependencies. Imports alone cannot fix that
+ownership model. The next prerequisite is canonical immutable source chunks
+owning copied declarations, flat packages retaining those chunks and ordinary
+creator bindings referencing their package and exact primary. Exact captured
+chunk ownership, package/chunk/binding reference costs and legacy bundle charges
+must remain separate; equivalent independent copies still charge fully. This
+architecture is not implemented here. Actual adoption still requires a complete
+source-derived emitter/core closure, genuine registration integration and
+executed decorated-browser evidence, without omitted facts or raised ceilings.
+
 The required truthful declaration prerequisites are explicit:
 
-- Intrinsic/scalar/string types need an actual type-family representation.
-  Boolean, Integer and string must not become invented enum/record descriptors.
-- `TNyxText` has native `UTF8String` and browser `String` alias targets. Metadata
-  must retain the actual target-dependent declaration without an empty alias or
-  a guessed common target.
+- Intrinsic/scalar/string families and target-specific alias shapes now have an
+  explicit representation. Actual System/core declarations still need their
+  source-owned metadata; Boolean, Integer and string must not become invented
+  enum/record descriptors or empty leaves merely to satisfy a missing link.
+- `TNyxText` has native `UTF8String` and browser `String` alias targets. Its actual
+  metadata adoption must retain both source-owned branches; the new shape API
+  does not itself register that declaration or manufacture a common target.
 - Core text/scheduler units already sit below the documentation contract.
   Source-owned generated companion metadata must preserve that dependency
   direction. Imported bundles must retain each original unit owner, remain
@@ -405,11 +501,12 @@ The required truthful declaration prerequisites are explicit:
 
 Generator adoption must derive metadata at the existing declaration emission
 points, including hand-authored dependencies and deterministic per-creator/unit
-chunks within current allowances. Its current output writes repository includes
-directly; authorized maintenance must first produce and review scratch candidates
-before replacing source after all readers join. No generator has been run for
-this integration, and no parallel manually authored core-help inventory is
-introduced.
+chunks within current allowances. Generator maintenance now prepares a separate
+candidate-output/check workflow, documented in [managed controls](managed-controls.md).
+That tooling does not yet emit documentation. Adoption must produce and review
+scratch candidates before replacing source after all readers join. No generator
+has been run for this metadata integration, and no parallel manually authored
+core-help inventory is introduced.
 
 Executed decorated-browser evidence, a complete supported-version capability
 matrix, independent API coverage and the full original Studio/library acceptance
