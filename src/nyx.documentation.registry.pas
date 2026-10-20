@@ -106,14 +106,14 @@ type
 
 implementation
 
-uses nyx.bytes;
+uses nyx.bytes, nyx.documentation.typeexpressions, nyx.pascal.work;
 
 type
   { Query-local work/cancellation owner never survives into an index. Byte
     charging includes repeated registration occurrences, not only deduplicated
     declarations, so duplicate publishers cannot multiply an allowance. }
   TDocumentationBudget = class(TInterfacedObject, INyxDocumentationAdmission,
-    INyxDocumentationContributionAdmission)
+    INyxDocumentationContributionAdmission, INyxDocumentationTypeAdmission)
   private
     FAdmittedChunks: TNyxDocumentationDeclarationChunks;
     FAdmittedReferences: TNyxDocumentationPackages;
@@ -129,10 +129,26 @@ type
     procedure AdmitField(ABytes: Integer);
     procedure AdmitContributionWork(ACount: Integer);
     procedure AdmitContributionDeclarations(ACount: Integer);
+    procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+    function RemainingTypeBytes: Integer;
     function ContributionChunkAdmitted(const AChunk: INyxDocumentationDeclarationChunk): Boolean;
     procedure RememberContributionChunk(const AChunk: INyxDocumentationDeclarationChunk);
     function ContributionReferencesAdmitted(const APackage: INyxDocumentationPackage): Boolean;
     procedure RememberContributionReferences(const APackage: INyxDocumentationPackage);
+  end;
+  { A call-local outward lease carries the existing index allowance through
+    unchanged package/chunk cancellation arguments. Budget holds only its
+    original cancellation, so there is no back-edge. No snapshot retains this. }
+  TDocumentationCaptureScope = class(TInterfacedObject, INyxCancellationScope,
+    INyxDocumentationTypeAdmission)
+  public
+    Parent: INyxCancellationScope;
+    Admission: INyxDocumentationTypeAdmission;
+    CancelledLocally: Boolean;
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+    function RemainingTypeBytes: Integer;
   end;
   { Member result owns immutable interfaces only, independently of index life. }
   TDocumentationMembers = class(TInterfacedObject, INyxDocumentationMembers)
@@ -280,6 +296,61 @@ end;
 procedure TDocumentationBudget.AdmitField(ABytes: Integer);
 begin
   ChargeBytes(ABytes);
+end;
+
+procedure TDocumentationBudget.AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or
+    (Ord(APhase) > Ord(High(TNyxPascalAnalysisPhase))) then
+    raise EArgumentException.Create('Unknown Pascal analysis work phase');
+  AdmitContributionWork(AUnits);
+end;
+
+function TDocumentationBudget.RemainingTypeBytes: Integer;
+begin
+  Result := RemainingBytes;
+end;
+
+procedure TDocumentationCaptureScope.Cancel;
+begin
+  CancelledLocally := True;
+end;
+
+function TDocumentationCaptureScope.GetCancelled: Boolean;
+begin
+  Result := CancelledLocally or ((Parent <> nil) and Parent.Cancelled);
+end;
+
+procedure TDocumentationCaptureScope.AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+var
+  LParentBudget: INyxPascalAnalysisBudget;
+begin
+
+  if GetCancelled then
+    raise ENyxDocumentationCancelled.Create('Documentation type capture cancelled');
+  Admission.AdmitTypeWork(APhase, AUnits);
+
+  if Supports(Parent, INyxPascalAnalysisBudget, LParentBudget) then
+    LParentBudget.Admit(APhase, AUnits);
+
+  if GetCancelled then
+    raise ENyxDocumentationCancelled.Create('Documentation type capture cancelled after admission');
+end;
+
+function TDocumentationCaptureScope.RemainingTypeBytes: Integer;
+begin
+  Result := Admission.RemainingTypeBytes;
+end;
+
+function CaptureScope(ABudget: TDocumentationBudget): INyxCancellationScope;
+var
+  LOwner: TDocumentationCaptureScope;
+begin
+  LOwner := TDocumentationCaptureScope.Create;
+  LOwner.Parent := ABudget.Cancellation;
+  LOwner.Admission := ABudget;
+  Result := LOwner;
 end;
 
 procedure TDocumentationBudget.AdmitContributionWork(ACount: Integer);
@@ -542,8 +613,10 @@ var
   LChunk: INyxDocumentationDeclarationChunk;
   LAt, LOther, LDeclaration, LSlot: Integer;
   LSeen, LReferencesAdmitted: Boolean;
+  LCapture: INyxCancellationScope;
 begin
-  LPackage := CaptureNyxDocumentationPackage(AValue, ABudget.Cancellation, ABudget);
+  LCapture := CaptureScope(ABudget);
+  LPackage := CaptureNyxDocumentationPackage(AValue, LCapture, ABudget);
   for LAt := 0 to PackageCount - 1 do
   begin
     ABudget.Spend;
@@ -580,7 +653,7 @@ begin
     if LSeen then
       Continue;
 
-    LChunk := CaptureNyxDocumentationDeclarationChunk(LChunk, ABudget.Cancellation, ABudget);
+    LChunk := CaptureNyxDocumentationDeclarationChunk(LChunk, LCapture, ABudget);
     for LDeclaration := 0 to LChunk.DeclarationCount - 1 do
       AddDeclaration(LChunk.DeclarationAt(LDeclaration), LChunk.DeclarationContentAt(LDeclaration),
         LChunk.Platforms, ABudget);
@@ -603,6 +676,7 @@ var
   LAPI: INyxDocumentationType;
   LContribution: INyxDocumentationContributionBinding;
   LContributed: Boolean;
+  LCapture: INyxCancellationScope;
 begin
   ABudget.Spend;
 
@@ -633,7 +707,8 @@ begin
       raise ENyxDocumentation.Create('Documentation declaration occurrence allowance exhausted');
   end;
 
-  LRegistration := CaptureNyxDocumentationRegistration(ARegistration, ABudget.Cancellation, ABudget);
+  LCapture := CaptureScope(ABudget);
+  LRegistration := CaptureNyxDocumentationRegistration(ARegistration, LCapture, ABudget);
   LRow.Documented := LRegistration <> nil;
 
   if LRegistration = nil then
@@ -778,6 +853,9 @@ var
   LMethod: INyxDocumentationMember;
   LSignature: INyxDocumentationSignature;
   LProperty: INyxDocumentationProperty;
+  LRichMember: INyxDocumentationMemberSignature;
+  LRichSignature: INyxDocumentationRichSignature;
+  LRichProperty: INyxDocumentationRichProperty;
   LStates, LStack, LEdges: array of Integer;
   LReference: TNyxDocumentationRef;
   LTargets: INyxDocumentationAliasTargets;
@@ -803,6 +881,31 @@ var
     end
     else if FindDeclaration(AReference) = nil then
       raise ENyxDocumentation.Create('Unresolved documentation type or unit: ' + AReference.Key);
+  end;
+  procedure RequireUse(const AUse: INyxDocumentationTypeUse);
+  var
+    LUse: Integer;
+    LReference: TNyxDocumentationRef;
+  begin
+    ABudget.Spend;
+
+    if AUse = nil then
+      Exit;
+
+    if AUse.Reference.Defined then
+      Require(AUse.Reference)
+    else
+    begin
+      for LUse := 0 to AUse.BindingCount - 1 do
+      begin
+        ABudget.Spend;
+        LReference := AUse.BindingAt(LUse);
+
+        if not LReference.Defined then
+          raise ENyxDocumentation.Create('An expression retains an unbound named type occurrence');
+        Require(LReference);
+      end;
+    end;
   end;
   function EffectiveKind(const AReference: TNyxDocumentationRef;
     APlatform: TNyxPlatform; ARequired: Boolean;
@@ -901,6 +1004,25 @@ begin
       if Supports(LMethod, INyxDocumentationProperty, LProperty) then
         for LParameter := 0 to LProperty.ParameterCount - 1 do
           Require(LProperty.ParameterAt(LParameter).TypeReference);
+
+      if Supports(LMethod, INyxDocumentationMemberSignature, LRichMember) then
+      begin
+        LRichSignature := LRichMember.DeclaredSignature;
+
+        if LRichSignature <> nil then
+        begin
+          RequireUse(LRichSignature.ResultUse);
+          for LParameter := 0 to LRichSignature.ParameterCount - 1 do
+            RequireUse(LRichSignature.ParameterAt(LParameter).TypeUse);
+        end;
+      end;
+
+      if Supports(LMethod, INyxDocumentationRichProperty, LRichProperty) then
+      begin
+        RequireUse(LRichProperty.ValueUse);
+        for LParameter := 0 to LRichProperty.ParameterCount - 1 do
+          RequireUse(LRichProperty.ParameterAt(LParameter).TypeUse);
+      end;
     end;
   end;
   { Iterative colour traversal checks base/alias edges without Pascal recursion

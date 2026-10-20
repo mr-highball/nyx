@@ -195,6 +195,111 @@ counted. [WORK](../WORK.md) owns the aggregate and remote receipt. These checks
 establish no browser execution or actual metadata-generation/core-registration adoption.
 The preceding qualification below remains separate.
 
+## Compound parameter and result types
+
+The richer contract has focused native and portable compilation evidence below.
+It reuses
+the existing [Pascal type grammar](../src/nyx.pascal.types.pas) over a copied
+small lexical window; it introduces no second type tree or signature parser.
+`INyxDocumentationTypeExpression` exposes that immutable syntax, exact inert
+text and an explicit declaration occurrence. In particular `array of TValue`
+in a parameter keeps its open-array occurrence, separately from the same text
+in a type declaration. Structured bodies needing their original declaration
+owner, incomplete grammar and untranslated directives refuse.
+
+`INyxDocumentationTypeUse` retains either a real named reference or an
+expression with ordered explicit bindings. It never substitutes an element
+reference for an array or invents a named alias. Qualified designators and
+generic bases/arguments retain their exact syntax; namespace components stay
+inside their designator. String syntax remains an explicit unresolved use
+until a truthful binding is supplied. Bounds and defaults remain opaque text,
+without evaluating their identifiers or deriving fake type links. Missing
+bindings remain inspectable and refuse complete index publication. No binder
+infers unit ownership from a short name. Generic formal/nested ownership that
+cannot be represented by the existing identities remains unresolved.
+
+Managed `INyxDocumentationParameterDeclaration` values hold these type uses;
+the old `TNyxDocumentationParameter` record and its strict named-type
+constructor/capture are unchanged. `INyxDocumentationRichSignature` can mix
+named and expression parameters/results. An optional
+`INyxDocumentationMemberSignature.DeclaredSignature` attaches it to a member.
+The old `Signature` is nil when named records cannot truthfully represent the
+declaration; a wholly named rich signature can retain a coherent old projection.
+`INyxDocumentationRichProperty` similarly keeps complex indices/value syntax,
+authored access and default status without exposing invalid simple-property
+records. `OfType` replaces the value use and preserves its indices.
+
+`WithExample` and `WithRelated` keep richer specialization. Explicit
+`WithSignature` replaces the old callable projection and clears stale rich
+data; earlier readers retain their original declaration. Captures copy alternate
+suppliers, recheck optional and legacy envelopes, and publish no partial result.
+They execute no producer fluent method, control, getter, callback or sample.
+
+`NewNyxDocumentationTypeConstruction` supplies one caller-owned byte/token/node/
+depth/work policy across the whole capture. Parser work is admitted before
+operations, and unknown analysis phases refuse before outward charging.
+Captured owner receipts share exact immutable syntax only, while
+each reference consumes work and independent equal copies consume storage
+fully. Copied syntax, binding keys, parameter names/defaults and rich member
+identity/prose consume cumulative remaining capacity, including an outer index
+allowance. The existing 256 KiB signature/member ceiling also counts repeated
+parameter occurrences when their immutable syntax owner is shared; sharing a
+source window does not erase its declaration facts. Large binding maps and
+default-heavy signatures refuse before later supplier rows. Binding capture
+allocates one private vector and visits each slot with admission. Whole-type
+capture appends its already captured members privately through the same scope;
+the public `WithMember` method still captures alternate producers. No expression
+silently resets the allowance. Retiring the construction releases its
+policy/cancellation leases; published expressions
+retain neither. Core capture retires its declaration child before exact
+registration framing charges final fields once. Existing member, declaration,
+bundle, contribution and index limits remain authoritative.
+
+The new [rich documentation consumer](../tests/nyx_documentation_typeexpressions_tests.lpr)
+requires one valid repository root before any native check:
+
+```text
+nyx_documentation_typeexpressions_tests.exe D:\Docs\GitHub\nyx
+```
+
+Its mandatory source witness reads all seven public `Choices` overloads from
+`nyx.contract` plus `NyxObject`/`NyxArray` from `nyx.data`. It copies their exact
+parameter type windows through existing syntax owners and retains all unbound
+leaves. Browser compilation excludes only filesystem inspection. The native
+consumer passes **99 checks**, inspecting all nine actual windows, with all
+553,607 allocated blocks freed. The portable consumer compiles successfully.
+These focused receipts are under
+`E:\Blekohlab\nyx\qualification\documentation-typeexpressions-20261020-145122`:
+
+- `logs/nyx_documentation_typeexpressions_tests-native-focused-phase-validation-compile.log`
+- `logs/nyx_documentation_typeexpressions_tests-native-focused-phase-validation-run.log`
+- `logs/nyx_documentation_typeexpressions_tests-browser-focused-phase-validation-compile.log`
+- `logs/expression-argument-missing-run.log`
+- `logs/expression-argument-invalid-run.log`
+
+The same final native binary refuses missing and invalid repository arguments
+at check count zero, exits with status `1` and frees all 143/170 allocated blocks
+respectively. The final common seven-Pascal-source freeze passes **35 compiler
+jobs**, 16 native test programs with clean heaps and 16 portable compilations, including both
+Studios, backend and worker as applicable. It has zero owned warnings; 112
+upstream warnings remain separately counted. The generator consumer passes 81
+checks across 17 joined actual invocations, with clean parent/child heaps and
+two exact five-file candidates. The property consumer retains 43 passing checks,
+and the prior metadata consumers remain green. `source-phase-validation-freeze-private.json` and
+`final-audit-private.json` own this final common source; the earlier reviewed 35
+receipts remain retained as preceding evidence. [WORK](../WORK.md) owns aggregate
+and remote receipts. The qualified simple-property and earlier descriptor
+receipts remain separate. Complete generated/core metadata adoption and executed
+decorated-browser evidence remain open.
+
+Declaration-position compound types remain a separate prerequisite. Actual
+`TNyxExecutions`, `TNyxStateKinds`, `TNyxEventHandler`, `TNyxSignalSnapshot` and
+the distinct `TNyxRegistrationID` definitions need a truthful type-level
+expression attachment; a member signature
+does not represent those named declarations. Empty records, targetless aliases
+and synthetic `Invoke` members do not satisfy that gate. Target-specific named
+aliases such as `TNyxText` retain their separate source/binding requirements.
+
 ## Intrinsic families and target-specific aliases
 
 `NewNyxDocumentationIntrinsic(Identity, Family, Summary)` retains the exact
@@ -700,7 +805,8 @@ The required truthful declaration prerequisites are explicit:
 - Open-array parameters already occur in `nyx.contract` and `nyx.data`.
   Detached type-expression metadata must preserve their shape and original
   named element owners; substituting an element type or invented named alias
-  would erase the declaration. This remains downstream of indexed properties.
+  would erase the declaration. The richer optional attachment is written and
+  awaiting qualification; actual source-derived binding/adoption remains open.
 
 Generator adoption must derive metadata at the existing declaration emission
 points, including hand-authored dependencies and deterministic per-creator/unit

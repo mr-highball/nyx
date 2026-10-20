@@ -105,6 +105,7 @@ procedure Run;
 var
   LIndex: Integer;
   LFirst, LSecond, LReplica, LMissing, LRefused, LFile, LOutput, LInvalid: String;
+  LForwarding, LForwardCandidate: String;
   LOriginal: array[0..7] of TMemoryStream;
   LCurrent: TMemoryStream;
   LStream: TFileStream;
@@ -252,6 +253,52 @@ begin
     Invoke(LInvalid, ['--output-dir', LRefused], 1);
     Check(not DirectoryExists(LRefused),
       'Typed source refusal precedes every candidate directory or file write');
+
+    { Punctuation in an actual descriptor's default value must never become
+      another forwarded argument. Added ordinary method headers also exercise
+      grouped const/var/out parameters, escaped names and a constant expression.
+      Only this copied source changes; the generated program is never executed. }
+    LForwarding := Under(GRoot, 'forwarding declarations');
+    Check(CreateDir(LForwarding) and CreateDir(Under(LForwarding, 'src')),
+      'Create an isolated forwarding descriptor fixture');
+    for LIndex := 0 to High(CSources) do
+      CopyBytes(Under(GRepository, 'src/' + CSources[LIndex]), Under(LForwarding, 'src/' + CSources[LIndex]));
+    LDescriptor := TStringList.Create;
+    try
+      LFile := Under(LForwarding, 'src/nyx.model.pas');
+      LDescriptor.LoadFromFile(LFile);
+      Check(Pos(LOriginalDeclaration, LDescriptor.Text) > 0,
+        'The forwarding fixture extends an actual maintained method');
+      LDescriptor.Text := StringReplace(LDescriptor.Text, LOriginalDeclaration,
+        'function Placeholder(const AValue: TNyxText = ''left;middle:right''): TNyxNodeConfig;' + LineEnding +
+        '    procedure ForwardValues(const AFirst, ASecond: TNyxText; var AThird: TNyxText; out AFourth: TNyxText);' + LineEnding +
+        '    function ForwardEscaped(const &type: TNyxText): TNyxNodeConfig;' + LineEnding +
+        '    function ForwardExpression(const AValue: Integer = Ord('';'')): TNyxNodeConfig;', []);
+      LDescriptor.SaveToFile(LFile);
+    finally
+      LDescriptor.Free;
+    end;
+    LForwardCandidate := Under(GRoot, 'forwarding candidate');
+    LOutput := Invoke(LForwarding, ['--output-dir', LForwardCandidate], 0);
+    Check(Pos('PASS typed declaration IR / 81 kinds / 4 facades', LOutput) > 0,
+      'Forwarding fixtures retain the full actual generated contract admission');
+    LDescriptor := TStringList.Create;
+    try
+      LDescriptor.LoadFromFile(Under(LForwardCandidate, 'src/nyx.controls.facades.inc'));
+      Check(Pos('function Placeholder(const AValue: TNyxText = ''left;middle:right''): INyxConfiguration;',
+        LDescriptor.Text) > 0, 'Default punctuation survives in the declared public signature');
+      LDescriptor.LoadFromFile(Under(LForwardCandidate, 'src/nyx.controls.facades.implementation.inc'));
+      Check(Pos('  ConfigurationScope.Placeholder(AValue);', LDescriptor.Text) > 0,
+        'Default string punctuation contributes no extra forwarding argument');
+      Check(Pos('  ConfigurationScope.ForwardValues(AFirst, ASecond, AThird, AFourth);', LDescriptor.Text) > 0,
+        'Grouped names and const/var/out modes forward exactly once in declaration order');
+      Check(Pos('  ConfigurationScope.ForwardEscaped(&type);', LDescriptor.Text) > 0,
+        'Forwarded escaped parameter retains its authored ampersand');
+      Check(Pos('  ConfigurationScope.ForwardExpression(AValue);', LDescriptor.Text) > 0,
+        'Nested constant-expression punctuation is never treated as parameter syntax');
+    finally
+      LDescriptor.Free;
+    end;
 
     for LIndex := 0 to 7 do
     begin

@@ -25,7 +25,45 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
-Current source adds optional declared-property metadata: ordered index parameters,
+Current source adds bounded detached type-expression metadata with explicit
+parameter/result/property/declaration occurrence and unbound named uses. Optional
+rich signatures/properties survive fluent copy, alternate capture, final framing
+and closure; legacy GUIDs/ordinals/records and unknown shape stay unchanged.
+Shared operation admission accounts copied metadata and existing parser work;
+closed phase validation precedes outward charging. Published values retain no
+construction, source unit, cancellation or editor. Native rich99 inspects all9
+actual open-array windows; missing/invalid arguments refuse at check0/clean heap.
+The generator derives ordered forwarding names through existing signature syntax,
+preserving default punctuation, grouped modes and escaped identifiers. CLI81 uses
+17 joined clean generator invocations; two five-file candidates remain exact for
+81 kinds/four facades. Final common seven-source qualification passes35 compiler
+jobs,16 clean native test programs and16 pas2js compiles; zero owned warnings/112
+upstream. Earlier reviewed35 receipts stay separate; only two closed-phase guards
+changed before the final common freeze. All1734 inputs/1727 unrelated prior inputs,
+24 compiler/97 RTL/five current-start protected/two profile/thirteen concurrent
+planning pins remain exact. Every reader joined. WORK.md and ignored
+.local/documentation-typeexpressions-paths-private.json own retained/final source,
+terminal/audit/remote receipts. Historical global-config preservation stays false.
+No full criterion/task/credit/DONE, new RTL integration, browser execution,
+UI/input/quality/parity/adoption/delivery closes across at least53 unclosed batches.
+LAN offline/native Nyx tools absent.
+
+Stop type-window/forwarding/fixture/compiler variants. Next helper prerequisite is
+truthful declaration-position array/set/procedural/distinct attachment through
+existing descriptor/capture/framing/closure owners, not a fake alias/empty record/
+Invoke member. Root's separate next lane is bounded selected-header capture and
+owned reparse into a rich signature under shared admission, with alternate
+supplier agreement and explicit refusal. A public snapshot cast proves no sealed
+owner; signature results grant no full-member/factory/origin/overload-key authority.
+Complete controls unit coverage needs81 generated factories plus8 handwritten
+globals, with conditional named aliases and class/static/visibility/convention
+facts preserved before full adoption. Root settles exact separate scopes before
+implementation and admits all builds. Real creator adoption/executed decorated
+browser remain downstream. No extra agents, host/config retry, SDK capture,
+protected mutation, cleanup/restart, approval bypass, new public MCP tool/schema
+or rollout. Preserve concurrent planning.
+
+Previously qualified optional declared-property metadata: ordered index parameters,
 authored read/write clauses and separate default-property status survive fluent
 copy, alternate capture, framed equality and index closure. Legacy unknown shape,
 GUID slots, record layouts, enum ordinals and quotas remain unchanged. The native
@@ -44,13 +82,13 @@ No browser execution, new RTL integration, actual core/source adoption or full
 criterion/task/credit/DONE/editor/input/quality/parity/delivery closes across at
 least fifty-two unclosed batches. LAN offline/native Nyx tools absent.
 
-Stop property/fixture/compiler variants. Lil' Scooty's queued prerequisite reuses
+That checkpoint stopped property/fixture/compiler variants. Its next prerequisite reused
 existing standalone Pascal type syntax over a bounded copied type window, with
 explicit occurrence role and truthful unbound named uses. Preserve strict legacy
 parameter records/constructors/capture and add optional rich signature/property
 capabilities only; old Signature remains nil when unrepresentable. Share pre-copy
 work/byte/cancellation admission, retain opaque text and refuse unresolved closure.
-Root settles exact ownership/admission before the next implementation release.
+That prerequisite is qualified above.
 Actual full unit/core/global-routine extraction, creator adoption and executed
 decorated browser remain downstream gates. No extra agents, host/config retry,
 SDK capture, protected mutation, cleanup/restart, approval bypass, new public MCP

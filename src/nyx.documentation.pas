@@ -5,7 +5,7 @@ unit nyx.documentation;
 
 interface
 
-uses SysUtils, nyx.text, nyx.types, nyx.scheduler;
+uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.documentation.typeexpressions;
 
 type
   { Invalid declarations fail before an immutable documentation value escapes.
@@ -190,6 +190,54 @@ type
     ['{E00694CB-5DD5-49CD-B25D-A1AA51EE420A}']
     function Documentation: INyxDocumentationType;
   end;
+  { A type use is a named declaration OR exact compound syntax. Expression name
+    bindings are explicit ordered values; an undefined binding remains unbound,
+    never a fabricated element alias or a compiler-resolved type. }
+  INyxDocumentationTypeUse = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D110}']
+    function Reference: TNyxDocumentationRef;
+    function Expression: INyxDocumentationTypeExpression;
+    function BindingCount: Integer;
+    function BindingAt(AIndex: Integer): TNyxDocumentationRef;
+    function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+  end;
+  { Managed parameter metadata carries compound syntax outside the unchanged
+    copied named-parameter record. Defaults are inert, exact Pascal text. }
+  INyxDocumentationParameterDeclaration = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D111}']
+    function Name: TNyxText;
+    function TypeUse: INyxDocumentationTypeUse;
+    function Passing: TNyxDocumentationParameterMode;
+    function HasDefault: Boolean;
+    function DefaultPascal: TNyxText;
+    function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+  end;
+  { Dynamic managed storage keeps interfaces out of copied parameter records. }
+  TNyxDocumentationParameterDeclarations = array of INyxDocumentationParameterDeclaration;
+  { An immutable callable declaration can mix named and complex parameter/result
+    uses. An absent result means no declared function result, as in the old API. }
+  INyxDocumentationRichSignature = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D112}']
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+    function ResultUse: INyxDocumentationTypeUse;
+  end;
+  { Optional richer callable metadata. The old Signature is absent when the
+    declaration cannot be projected truthfully into named-parameter records. }
+  INyxDocumentationMemberSignature = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D113}']
+    function DeclaredSignature: INyxDocumentationRichSignature;
+  end;
+  { Complex indices/value uses have a distinct capability. They never masquerade
+    as simple named property records. Clauses/default remain declared syntax. }
+  INyxDocumentationRichProperty = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D114}']
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+    function ValueUse: INyxDocumentationTypeUse;
+    function DeclaredAccess: TNyxDocumentationPropertyAccesses;
+    function DefaultProperty: Boolean;
+  end;
 
 const
   NyxDocumentationMaximumMembers = 128;
@@ -220,6 +268,23 @@ function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
   const ASummary: TNyxText; const AParameters: array of TNyxDocumentationParameter;
   ADeclaredAccess: TNyxDocumentationPropertyAccesses;
   ADefaultProperty: Boolean = False): INyxDocumentationMember;
+function NewNyxDocumentationNamedTypeUse(const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+function NewNyxDocumentationExpressionTypeUse(const AExpression: INyxDocumentationTypeExpression;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+function NewNyxDocumentationParameterDeclaration(const AName: TNyxText;
+  const AType: INyxDocumentationTypeUse;
+  AMode: TNyxDocumentationParameterMode = ndpValue): INyxDocumentationParameterDeclaration;
+function NewNyxDocumentationRichSignature(const AParameters: TNyxDocumentationParameterDeclarations;
+  const AResult: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+function NewNyxDocumentationRichMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText;
+  const ASignature: INyxDocumentationRichSignature;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+function NewNyxDocumentationRichProperty(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AParameters: TNyxDocumentationParameterDeclarations;
+  const AValue: INyxDocumentationTypeUse; AAccess: TNyxDocumentationPropertyAccesses;
+  ADefault: Boolean; const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
 { Intrinsic and target-alias facts have dedicated immutable owners. They are
@@ -305,6 +370,14 @@ begin
   end;
 end;
 
+{ Rich fields retain separate syntax/qualified bindings; old byte paths do not
+  call this growing traversal when neither optional capability is present. }
+function RichMemberBytes(const AValue: INyxDocumentationMember): Integer; forward;
+{ Individual rich owners share the old aggregate bound before publication. }
+function TypeUseBytes(const AValue: INyxDocumentationTypeUse): Integer; forward;
+{ A parameter includes its exact name, full type occurrence and inert default. }
+function RichParameterBytes(const AValue: INyxDocumentationParameterDeclaration): Integer; forward;
+
 function MemberBytes(const AValue: INyxDocumentationMember): Integer;
 var
   LAt: Integer;
@@ -314,6 +387,7 @@ var
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) +
     RefBytes(AValue.ValueType) + SignatureBytes(AValue.Signature);
+  Inc(Result, RichMemberBytes(AValue));
 
   if Supports(AValue, INyxDocumentationProperty, LProperty) then
   begin
@@ -384,6 +458,15 @@ begin
 end;
 
 type
+  { The private type owner permits a captured member to be appended without a
+    second reconstruction. Only this unit creates or borrows that owner. }
+  TDocumentationType = class;
+  { This private capability carries no public API slots or producer authority;
+    capture verifies its exact canonical type interface before borrowing it. }
+  IDocumentationTypeOwner = interface(IInterface)
+    ['{DA3CF3CB-5263-49B0-A338-9B92575FF8CA}']
+    function TypeOwner: TDocumentationType;
+  end;
   { An immutable signature owns a detached parameter vector. Its records contain
     only names, scalar flags and qualified references, including on pas2js. }
   TDocumentationSignature = class(TInterfacedObject, INyxDocumentationSignature)
@@ -406,6 +489,8 @@ type
   protected
     procedure CopyMember(ATarget: TDocumentationMember);
     function CopyValue: TDocumentationMember; virtual;
+    procedure AssignSignature(const AValue: INyxDocumentationSignature); virtual;
+    procedure AssignValueType(const AValue: TNyxDocumentationRef); virtual;
   public
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationMemberKind;
@@ -432,20 +517,88 @@ type
     function DeclaredAccess: TNyxDocumentationPropertyAccesses;
     function DefaultProperty: Boolean;
   end;
+  { Frozen compound use owns its exact expression and copied binding vector.
+    Named uses retain a real reference and no expression or binding rows. }
+  TDocumentationTypeUse = class(TInterfacedObject, INyxDocumentationTypeUse)
+  public
+    Named: TNyxDocumentationRef;
+    Compound: INyxDocumentationTypeExpression;
+    Bindings: array of TNyxDocumentationRef;
+    function Reference: TNyxDocumentationRef;
+    function Expression: INyxDocumentationTypeExpression;
+    function BindingCount: Integer;
+    function BindingAt(AIndex: Integer): TNyxDocumentationRef;
+    function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+  end;
+  { A managed immutable parameter is deliberately separate from the old named
+    record, whose strict constructor and capture semantics stay unchanged. }
+  TDocumentationParameterDeclaration = class(TInterfacedObject, INyxDocumentationParameterDeclaration)
+  public
+    ParameterName: TNyxText;
+    ParameterType: INyxDocumentationTypeUse;
+    Mode: TNyxDocumentationParameterMode;
+    DefaultPresent: Boolean;
+    DefaultText: TNyxText;
+    function Name: TNyxText;
+    function TypeUse: INyxDocumentationTypeUse;
+    function Passing: TNyxDocumentationParameterMode;
+    function HasDefault: Boolean;
+    function DefaultPascal: TNyxText;
+    function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+  end;
+  { Rich callable owns only captured parameter/type uses, with no supplier or
+    construction scope retained by its dynamic interface vector. }
+  TDocumentationRichSignature = class(TInterfacedObject, INyxDocumentationRichSignature)
+  public
+    Parameters: TNyxDocumentationParameterDeclarations;
+    ReturnUse: INyxDocumentationTypeUse;
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+    function ResultUse: INyxDocumentationTypeUse;
+  end;
+  { Ordinary fluent copies retain rich callable data. Explicit legacy signature
+    replacement clears it through a virtual assignment hook. }
+  TDocumentationRichMember = class(TDocumentationMember, INyxDocumentationMemberSignature)
+  public
+    RichSignature: INyxDocumentationRichSignature;
+    function DeclaredSignature: INyxDocumentationRichSignature;
+  protected
+    function CopyValue: TDocumentationMember; override;
+    procedure AssignSignature(const AValue: INyxDocumentationSignature); override;
+  end;
+  { Complex property facts stay specialized through fluent copies. OfType
+    replaces its value use only, preserving every captured index expression. }
+  TDocumentationRichProperty = class(TDocumentationMember, INyxDocumentationRichProperty)
+  public
+    Parameters: TNyxDocumentationParameterDeclarations;
+    PropertyValue: INyxDocumentationTypeUse;
+    Access: TNyxDocumentationPropertyAccesses;
+    IsDefault: Boolean;
+    function ParameterCount: Integer;
+    function ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+    function ValueUse: INyxDocumentationTypeUse;
+    function DeclaredAccess: TNyxDocumentationPropertyAccesses;
+    function DefaultProperty: Boolean;
+  protected
+    function CopyValue: TDocumentationMember; override;
+    procedure AssignValueType(const AValue: TNyxDocumentationRef); override;
+  end;
   { Member interfaces live in a dynamic managed vector. Base/alias links remain
     data references, preventing an inherited metadata graph from owning cycles. }
-  TDocumentationType = class(TDocumentationContent, INyxDocumentationType)
+  TDocumentationType = class(TDocumentationContent, INyxDocumentationType, IDocumentationTypeOwner)
   private
     FIdentity: TNyxDocumentationRef;
     FKind: TNyxDocumentationTypeKind;
     FAlias: TNyxDocumentationRef;
     FBases: array of TNyxDocumentationRef;
     FMembers: array of INyxDocumentationMember;
+    function AppendCapturedMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
   protected
     procedure CopyType(ATarget: TDocumentationType);
     function CopyValue: TDocumentationType; virtual;
     procedure AssignAlias(const ATarget: TNyxDocumentationRef); virtual;
   public
+    function TypeOwner: TDocumentationType;
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationTypeKind;
     function AliasTarget: TNyxDocumentationRef;
@@ -973,6 +1126,16 @@ begin
   Result := FValueType;
 end;
 
+procedure TDocumentationMember.AssignSignature(const AValue: INyxDocumentationSignature);
+begin
+  FSignature := AValue;
+end;
+
+procedure TDocumentationMember.AssignValueType(const AValue: TNyxDocumentationRef);
+begin
+  FValueType := AValue;
+end;
+
 function TDocumentationMember.WithSignature(const AValue: INyxDocumentationSignature): INyxDocumentationMember;
 var
   LNext: TDocumentationMember;
@@ -985,7 +1148,7 @@ begin
     raise ENyxDocumentation.Create('This documentation member has no call signature');
   LNext := CopyValue;
   LHold := LNext;
-  LNext.FSignature := LFrozen;
+  LNext.AssignSignature(LFrozen);
   MemberBytes(LHold);
   Result := LHold;
 end;
@@ -1002,7 +1165,7 @@ begin
     raise ENyxDocumentation.Create('This documentation member cannot declare a value type');
   LNext := CopyValue;
   LHold := LNext;
-  LNext.FValueType := AValue;
+  LNext.AssignValueType(AValue);
   MemberBytes(LHold);
   Result := LHold;
 end;
@@ -1031,7 +1194,703 @@ begin
   Result := LHold;
 end;
 
-function CaptureNyxDocumentationMember(const AValue: INyxDocumentationMember;
+function DocumentationConstruction(const ACancellation: INyxCancellationScope;
+  out AOwned: Boolean): INyxDocumentationTypeConstruction;
+var
+  LOuter: INyxDocumentationTypeAdmission;
+begin
+  AOwned := not Supports(ACancellation, INyxDocumentationTypeConstruction, Result);
+
+  if AOwned then
+  begin
+    Supports(ACancellation, INyxDocumentationTypeAdmission, LOuter);
+    try
+      Result := NewNyxDocumentationTypeConstruction(
+        TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(NyxDocumentationMaximumBytes), ACancellation, LOuter);
+    except
+      on E: ENyxDocumentationTypeExpressionCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+    end;
+  end
+  else
+    CheckNyxDocumentationTypeConstruction(Result);
+end;
+
+procedure RequireTypeReference(const AValue: TNyxDocumentationRef);
+begin
+  AValue.Validate;
+
+  if AValue.IsUnit or AValue.IsMember then
+    raise ENyxDocumentation.Create('A declared type use requires its actual named type');
+end;
+
+function TDocumentationTypeUse.Reference: TNyxDocumentationRef;
+begin
+  Result := Named;
+end;
+
+function TDocumentationTypeUse.Expression: INyxDocumentationTypeExpression;
+begin
+  Result := Compound;
+end;
+
+function TDocumentationTypeUse.BindingCount: Integer;
+begin
+  Result := Length(Bindings);
+end;
+
+function TDocumentationTypeUse.BindingAt(AIndex: Integer): TNyxDocumentationRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Bindings)) then
+    raise ENyxDocumentation.Create('Type-expression binding ordinal out of range');
+  Result := Bindings[AIndex];
+end;
+
+procedure CheckTypeBinding(const AExpression: INyxDocumentationTypeExpression;
+  AIndex: Integer; const AReference: TNyxDocumentationRef);
+begin
+  RequireTypeReference(AReference);
+
+  if (AExpression = nil) or (AReference.GenericArity <> AExpression.NamedUseArity(AIndex)) then
+    raise ENyxDocumentation.Create('Binding must retain the exact named-use generic arity');
+end;
+
+function TDocumentationTypeUse.WithBinding(AIndex: Integer;
+  const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+var
+  LNext: TDocumentationTypeUse;
+  LLease: INyxDocumentationTypeUse;
+  LAt, LBytes: Integer;
+begin
+  BindingAt(AIndex);
+  CheckTypeBinding(Compound, AIndex, AReference);
+  LBytes := TypeUseBytes(Self) - RefBytes(Bindings[AIndex]) + RefBytes(AReference);
+  AdmitBytes(LBytes);
+  LNext := TDocumentationTypeUse.Create;
+  LLease := LNext;
+  LNext.Compound := Compound;
+  SetLength(LNext.Bindings, Length(Bindings));
+  for LAt := 0 to High(Bindings) do
+    LNext.Bindings[LAt] := Bindings[LAt];
+  LNext.Bindings[AIndex] := AReference;
+  Result := LLease;
+end;
+
+function NewNyxDocumentationNamedTypeUse(const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
+var
+  LOwner: TDocumentationTypeUse;
+begin
+  Result := nil;
+  RequireTypeReference(AReference);
+  LOwner := TDocumentationTypeUse.Create;
+  LOwner.Named := AReference;
+  Result := LOwner;
+end;
+
+function NewNyxDocumentationExpressionTypeUse(const AExpression: INyxDocumentationTypeExpression;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+var
+  LOwner: TDocumentationTypeUse;
+  LLease: INyxDocumentationTypeUse;
+  LFrozen: INyxDocumentationTypeExpression;
+begin
+  Result := nil;
+  LFrozen := CaptureNyxDocumentationTypeExpression(AExpression, AConstruction);
+  LOwner := TDocumentationTypeUse.Create;
+  LLease := LOwner;
+  LOwner.Compound := LFrozen;
+  AConstruction.Spend(LFrozen.NamedUseCount + 1);
+  SetLength(LOwner.Bindings, LFrozen.NamedUseCount);
+  AConstruction.Spend;
+  Result := LLease;
+end;
+
+function CaptureTypeUse(const AValue: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+var
+  LReference, LBound: TNyxDocumentationRef;
+  LExpression: INyxDocumentationTypeExpression;
+  LFrozen: INyxDocumentationTypeUse;
+  LCount, LAt: Integer;
+  LOwner: TDocumentationTypeUse;
+  LBytes: Integer;
+begin
+  Result := nil;
+  AScope.Spend;
+
+  if AValue = nil then
+    raise ENyxDocumentation.Create('A managed parameter needs its named type or exact expression');
+  LReference := AValue.Reference;
+  AScope.Spend;
+  LExpression := AValue.Expression;
+  AScope.Spend;
+  LCount := AValue.BindingCount;
+
+  if LReference.Defined then
+  begin
+
+    if (LExpression <> nil) or (LCount <> 0) then
+      raise ENyxDocumentation.Create('A type use cannot claim both a named type and compound syntax');
+    AScope.AdmitText(LReference.Key);
+    LFrozen := NewNyxDocumentationNamedTypeUse(LReference);
+  end
+  else
+  begin
+
+    if (LExpression = nil) or (LCount < 0) or (LCount > AScope.Limits.Types.MaximumNodes) then
+      raise ENyxDocumentation.Create('Invalid compound type-use binding count');
+    LOwner := TDocumentationTypeUse.Create;
+    LFrozen := LOwner;
+    LOwner.Compound := CaptureNyxDocumentationTypeExpression(LExpression, AScope);
+
+    if LOwner.Compound.NamedUseCount <> LCount then
+      raise ENyxDocumentation.Create('Every named expression occurrence needs its explicit binding slot');
+    LBytes := NyxUTF8ByteCount(LOwner.Compound.Text) + 1;
+    AdmitBytes(LBytes);
+    AScope.Spend(LCount + 1);
+    SetLength(LOwner.Bindings, LCount);
+    for LAt := 0 to LCount - 1 do
+    begin
+      AScope.Spend;
+      LBound := AValue.BindingAt(LAt);
+
+      if LBound.Defined then
+      begin
+        CheckTypeBinding(LOwner.Compound, LAt, LBound);
+        Inc(LBytes, RefBytes(LBound));
+        AdmitBytes(LBytes);
+        AScope.AdmitText(LBound.Key);
+        LOwner.Bindings[LAt] := LBound;
+      end;
+    end;
+    for LAt := 0 to LCount - 1 do
+    begin
+      AScope.Spend;
+      LBound := AValue.BindingAt(LAt);
+
+      if (LBound.Defined <> LFrozen.BindingAt(LAt).Defined) or
+        (LBound.Defined and not LBound.Same(LFrozen.BindingAt(LAt))) then
+        raise ENyxDocumentation.Create('Expression binding changed during capture');
+    end;
+  end;
+  AScope.Spend;
+
+  if (AValue.BindingCount <> LCount) or (AValue.Expression <> LExpression) or
+    (AValue.Reference.Defined <> LReference.Defined) or
+    (LReference.Defined and not AValue.Reference.Same(LReference)) then
+    raise ENyxDocumentation.Create('Type-use envelope changed before publication');
+  CheckCancellation(AScope);
+  Result := LFrozen;
+end;
+
+function TDocumentationParameterDeclaration.Name: TNyxText;
+begin
+  Result := ParameterName;
+end;
+
+function TDocumentationParameterDeclaration.TypeUse: INyxDocumentationTypeUse;
+begin
+  Result := ParameterType;
+end;
+
+function TDocumentationParameterDeclaration.Passing: TNyxDocumentationParameterMode;
+begin
+  Result := Mode;
+end;
+
+function TDocumentationParameterDeclaration.HasDefault: Boolean;
+begin
+  Result := DefaultPresent;
+end;
+
+function TDocumentationParameterDeclaration.DefaultPascal: TNyxText;
+begin
+  Result := DefaultText;
+end;
+
+function TDocumentationParameterDeclaration.WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+var
+  LNext: TDocumentationParameterDeclaration;
+begin
+  Result := nil;
+  TextBound(APascal, 1024);
+
+  if (APascal = '') or (Mode in [ndpVar, ndpOut]) then
+    raise ENyxDocumentation.Create('This parameter cannot declare an empty or writable default');
+  AdmitBytes(NyxUTF8ByteCount(ParameterName) + TypeUseBytes(ParameterType) + NyxUTF8ByteCount(APascal));
+  LNext := TDocumentationParameterDeclaration.Create;
+  LNext.ParameterName := ParameterName;
+  LNext.ParameterType := ParameterType;
+  LNext.Mode := Mode;
+  LNext.DefaultPresent := True;
+  LNext.DefaultText := APascal;
+  Result := LNext;
+end;
+
+function CaptureParameter(const AValue: INyxDocumentationParameterDeclaration;
+  AOccurrence: TNyxDocumentationTypeOccurrence;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationParameterDeclaration;
+var
+  LOwner: TDocumentationParameterDeclaration;
+  LLease: INyxDocumentationParameterDeclaration;
+  LOriginalType: INyxDocumentationTypeUse;
+  LName, LDefault: TNyxText;
+begin
+  Result := nil;
+  AScope.Spend;
+
+  if AValue = nil then
+    raise ENyxDocumentation.Create('A declared parameter is required');
+  LOwner := TDocumentationParameterDeclaration.Create;
+  LLease := LOwner;
+  LName := AValue.Name;
+  NameBound(LName, False);
+  AScope.AdmitText(LName);
+  LOwner.ParameterName := LName;
+  AScope.Spend;
+  LOwner.Mode := AValue.Passing;
+
+  if (Ord(LOwner.Mode) < 0) or (Ord(LOwner.Mode) > Ord(High(TNyxDocumentationParameterMode))) then
+    raise ENyxDocumentation.Create('Unknown declared parameter passing mode');
+  AScope.Spend;
+  LOriginalType := AValue.TypeUse;
+  LOwner.ParameterType := CaptureTypeUse(LOriginalType, AScope);
+
+  if (LOwner.ParameterType.Expression <> nil) and
+    (LOwner.ParameterType.Expression.Occurrence <> AOccurrence) then
+    raise ENyxDocumentation.Create('A parameter expression must retain its actual declaration position');
+  AScope.Spend;
+  LOwner.DefaultPresent := AValue.HasDefault;
+  AScope.Spend;
+  LDefault := AValue.DefaultPascal;
+  TextBound(LDefault, 1024);
+  AScope.AdmitText(LDefault);
+  LOwner.DefaultText := LDefault;
+
+  if LOwner.DefaultPresent then
+    LLease := LLease.WithDefault(LOwner.DefaultText)
+  else if LOwner.DefaultText <> '' then
+    raise ENyxDocumentation.Create('An absent parameter default cannot retain hidden text');
+  AScope.Spend;
+
+  if (AValue.Name <> LLease.Name) or (AValue.Passing <> LLease.Passing) or
+    (AValue.TypeUse <> LOriginalType) or (AValue.HasDefault <> LLease.HasDefault) or
+    (AValue.DefaultPascal <> LLease.DefaultPascal) then
+    raise ENyxDocumentation.Create('Parameter changed before publication');
+  CheckCancellation(AScope);
+  RichParameterBytes(LLease);
+  Result := LLease;
+end;
+
+function NewNyxDocumentationParameterDeclaration(const AName: TNyxText;
+  const AType: INyxDocumentationTypeUse;
+  AMode: TNyxDocumentationParameterMode): INyxDocumentationParameterDeclaration;
+var
+  LOwner: TDocumentationParameterDeclaration;
+  LLease: INyxDocumentationParameterDeclaration;
+  LScope: INyxDocumentationTypeConstruction;
+begin
+  Result := nil;
+  NameBound(AName, False);
+
+  if (Ord(AMode) < 0) or (Ord(AMode) > Ord(High(TNyxDocumentationParameterMode))) then
+    raise ENyxDocumentation.Create('Unknown declared parameter passing mode');
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(NyxDocumentationMaximumBytes));
+  try
+    LOwner := TDocumentationParameterDeclaration.Create;
+    LLease := LOwner;
+    LScope.AdmitText(AName);
+    LOwner.ParameterName := AName;
+    LOwner.Mode := AMode;
+    LOwner.ParameterType := CaptureTypeUse(AType, LScope);
+  finally
+    LScope.Retire;
+  end;
+  RichParameterBytes(LLease);
+  Result := LLease;
+end;
+
+function TDocumentationRichSignature.ParameterCount: Integer;
+begin
+  Result := Length(Parameters);
+end;
+
+function TDocumentationRichSignature.ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Parameters)) then
+    raise ENyxDocumentation.Create('Rich signature parameter ordinal out of range');
+  Result := Parameters[AIndex];
+end;
+
+function TDocumentationRichSignature.ResultUse: INyxDocumentationTypeUse;
+begin
+  Result := ReturnUse;
+end;
+
+function NewNyxDocumentationRichSignature(const AParameters: TNyxDocumentationParameterDeclarations;
+  const AResult: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+var
+  LOwner: TDocumentationRichSignature;
+  LLease: INyxDocumentationRichSignature;
+  LAt, LOther, LBytes: Integer;
+  LParameter: INyxDocumentationParameterDeclaration;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  AConstruction.Spend;
+
+  if Length(AParameters) > NyxDocumentationMaximumParameters then
+    raise ENyxDocumentation.Create('Rich signature exceeds its parameter allowance');
+  LOwner := TDocumentationRichSignature.Create;
+  LLease := LOwner;
+  AConstruction.Spend(Length(AParameters) + 1);
+  SetLength(LOwner.Parameters, Length(AParameters));
+  LBytes := 0;
+  for LAt := 0 to High(AParameters) do
+  begin
+    LParameter := CaptureParameter(AParameters[LAt], ndtoParameter, AConstruction);
+    Inc(LBytes, RichParameterBytes(LParameter));
+    AdmitBytes(LBytes);
+    LOwner.Parameters[LAt] := LParameter;
+    for LOther := 0 to LAt - 1 do
+    begin
+      AConstruction.Spend;
+
+      if Fold(LOwner.Parameters[LOther].Name) = Fold(LOwner.Parameters[LAt].Name) then
+        raise ENyxDocumentation.Create('A rich signature repeats a parameter name');
+    end;
+  end;
+
+  if AResult <> nil then
+  begin
+    LOwner.ReturnUse := CaptureTypeUse(AResult, AConstruction);
+    Inc(LBytes, TypeUseBytes(LOwner.ReturnUse));
+    AdmitBytes(LBytes);
+
+    if (LOwner.ReturnUse.Expression <> nil) and (LOwner.ReturnUse.Expression.Occurrence <> ndtoResult) then
+      raise ENyxDocumentation.Create('A function result must retain its declared result position');
+  end;
+  CheckCancellation(AConstruction);
+  Result := LLease;
+end;
+
+function CaptureRichSignature(const AValue: INyxDocumentationRichSignature;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+var
+  LSources: TNyxDocumentationParameterDeclarations;
+  LResult: INyxDocumentationTypeUse;
+  LFrozen: INyxDocumentationRichSignature;
+  LCount, LAt: Integer;
+begin
+  Result := nil;
+  AScope.Spend;
+
+  if AValue = nil then
+    raise ENyxDocumentation.Create('A richer callable declaration needs its signature');
+  LCount := AValue.ParameterCount;
+
+  if (LCount < 0) or (LCount > NyxDocumentationMaximumParameters) then
+    raise ENyxDocumentation.Create('Captured rich parameter allowance exhausted');
+  AScope.Spend(LCount + 1);
+  SetLength(LSources, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    AScope.Spend;
+    LSources[LAt] := AValue.ParameterAt(LAt);
+  end;
+  AScope.Spend;
+  LResult := AValue.ResultUse;
+  LFrozen := NewNyxDocumentationRichSignature(LSources, LResult, AScope);
+  for LAt := 0 to LCount - 1 do
+  begin
+    AScope.Spend;
+
+    if AValue.ParameterAt(LAt) <> LSources[LAt] then
+      raise ENyxDocumentation.Create('Rich signature parameter topology changed');
+  end;
+  AScope.Spend;
+
+  if (AValue.ParameterCount <> LCount) or (AValue.ResultUse <> LResult) then
+    raise ENyxDocumentation.Create('Rich signature changed before publication');
+  CheckCancellation(AScope);
+  Result := LFrozen;
+end;
+
+function LegacySignature(const AValue: INyxDocumentationRichSignature;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationSignature;
+var
+  LParameters: array of TNyxDocumentationParameter;
+  LAt: Integer;
+  LParameter: INyxDocumentationParameterDeclaration;
+  LResult: TNyxDocumentationRef;
+begin
+  Result := nil;
+  LResult := Default(TNyxDocumentationRef);
+  AScope.Spend;
+
+  if AValue.ResultUse <> nil then
+  begin
+
+    if AValue.ResultUse.Expression <> nil then
+      Exit;
+    LResult := AValue.ResultUse.Reference;
+  end;
+  { Prove representability before allocating a named vector. Mixed signatures
+    retain only their rich shape rather than constructing a partial projection. }
+  for LAt := 0 to AValue.ParameterCount - 1 do
+  begin
+    AScope.Spend;
+
+    if AValue.ParameterAt(LAt).TypeUse.Expression <> nil then
+      Exit;
+  end;
+  AScope.Spend(AValue.ParameterCount + 1);
+  SetLength(LParameters, AValue.ParameterCount);
+  for LAt := 0 to High(LParameters) do
+  begin
+    AScope.Spend;
+    LParameter := AValue.ParameterAt(LAt);
+    AScope.AdmitText(LParameter.Name);
+    AScope.AdmitText(LParameter.TypeUse.Reference.Key);
+    AScope.AdmitText(LParameter.DefaultPascal);
+    LParameters[LAt] := NyxDocumentationParameter(LParameter.Name, LParameter.TypeUse.Reference, LParameter.Passing);
+
+    if LParameter.HasDefault then
+      LParameters[LAt] := LParameters[LAt].WithDefault(LParameter.DefaultPascal);
+  end;
+
+  if LResult.Defined then
+    AScope.AdmitText(LResult.Key);
+  Result := NewNyxDocumentationSignature(LParameters, LResult);
+end;
+
+function TDocumentationRichMember.DeclaredSignature: INyxDocumentationRichSignature;
+begin
+  Result := RichSignature;
+end;
+
+function TDocumentationRichMember.CopyValue: TDocumentationMember;
+var
+  LNext: TDocumentationRichMember;
+begin
+  LNext := TDocumentationRichMember.Create;
+  CopyMember(LNext);
+  LNext.RichSignature := RichSignature;
+  Result := LNext;
+end;
+
+procedure TDocumentationRichMember.AssignSignature(const AValue: INyxDocumentationSignature);
+begin
+  inherited AssignSignature(AValue);
+  RichSignature := nil;
+end;
+
+function NewNyxDocumentationRichMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText;
+  const ASignature: INyxDocumentationRichSignature;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LOwner: TDocumentationRichMember;
+  LLease: INyxDocumentationMember;
+  LFrozen: INyxDocumentationRichSignature;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  CheckMemberIdentity(AIdentity, AKind, ASummary);
+
+  if not (AKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+    raise ENyxDocumentation.Create('This member cannot own a richer callable signature');
+  AConstruction.AdmitText(AIdentity.Key);
+  AConstruction.AdmitText(ASummary);
+  LFrozen := CaptureRichSignature(ASignature, AConstruction);
+  LOwner := TDocumentationRichMember.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := AKind;
+  LOwner.FSummary := ASummary;
+  LOwner.RichSignature := LFrozen;
+  LOwner.FSignature := LegacySignature(LFrozen, AConstruction);
+  MemberBytes(LLease);
+  CheckCancellation(AConstruction);
+  Result := LLease;
+end;
+
+function TDocumentationRichProperty.ParameterCount: Integer;
+begin
+  Result := Length(Parameters);
+end;
+
+function TDocumentationRichProperty.ParameterAt(AIndex: Integer): INyxDocumentationParameterDeclaration;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(Parameters)) then
+    raise ENyxDocumentation.Create('Rich property parameter ordinal out of range');
+  Result := Parameters[AIndex];
+end;
+
+function TDocumentationRichProperty.ValueUse: INyxDocumentationTypeUse;
+begin
+  Result := PropertyValue;
+end;
+
+function TDocumentationRichProperty.DeclaredAccess: TNyxDocumentationPropertyAccesses;
+begin
+  Result := Access;
+end;
+
+function TDocumentationRichProperty.DefaultProperty: Boolean;
+begin
+  Result := IsDefault;
+end;
+
+function TDocumentationRichProperty.CopyValue: TDocumentationMember;
+var
+  LNext: TDocumentationRichProperty;
+  LAt: Integer;
+begin
+  LNext := TDocumentationRichProperty.Create;
+  CopyMember(LNext);
+  LNext.PropertyValue := PropertyValue;
+  LNext.Access := Access;
+  LNext.IsDefault := IsDefault;
+  SetLength(LNext.Parameters, Length(Parameters));
+  for LAt := 0 to High(Parameters) do
+    LNext.Parameters[LAt] := Parameters[LAt];
+  Result := LNext;
+end;
+
+procedure TDocumentationRichProperty.AssignValueType(const AValue: TNyxDocumentationRef);
+begin
+  inherited AssignValueType(AValue);
+  PropertyValue := NewNyxDocumentationNamedTypeUse(AValue);
+end;
+
+function NewNyxDocumentationRichProperty(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AParameters: TNyxDocumentationParameterDeclarations;
+  const AValue: INyxDocumentationTypeUse; AAccess: TNyxDocumentationPropertyAccesses;
+  ADefault: Boolean; const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LOwner: TDocumentationRichProperty;
+  LLease: INyxDocumentationMember;
+  LAt, LOther, LBytes: Integer;
+  LParameter: INyxDocumentationParameterDeclaration;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  CheckMemberIdentity(AIdentity, ndmProperty, ASummary);
+  AConstruction.Spend;
+
+  if Length(AParameters) > NyxDocumentationMaximumParameters then
+    raise ENyxDocumentation.Create('Rich property index allowance exhausted');
+  AConstruction.AdmitText(AIdentity.Key);
+  AConstruction.AdmitText(ASummary);
+  LOwner := TDocumentationRichProperty.Create;
+  LLease := LOwner;
+  LOwner.FIdentity := AIdentity;
+  LOwner.FKind := ndmProperty;
+  LOwner.FSummary := ASummary;
+  LOwner.Access := AAccess;
+  LOwner.IsDefault := ADefault;
+  AConstruction.Spend(Length(AParameters) + 1);
+  SetLength(LOwner.Parameters, Length(AParameters));
+  LBytes := RefBytes(AIdentity) + NyxUTF8ByteCount(ASummary) + 3;
+  for LAt := 0 to High(AParameters) do
+  begin
+    LParameter := CaptureParameter(AParameters[LAt], ndtoPropertyIndex, AConstruction);
+    Inc(LBytes, RichParameterBytes(LParameter));
+    AdmitBytes(LBytes);
+    LOwner.Parameters[LAt] := LParameter;
+    for LOther := 0 to LAt - 1 do
+    begin
+      AConstruction.Spend;
+
+      if Fold(LOwner.Parameters[LOther].Name) = Fold(LOwner.Parameters[LAt].Name) then
+        raise ENyxDocumentation.Create('Rich property repeats an index name');
+    end;
+  end;
+
+  if AValue <> nil then
+  begin
+    LOwner.PropertyValue := CaptureTypeUse(AValue, AConstruction);
+
+    if (LOwner.PropertyValue.Expression <> nil) and
+      (LOwner.PropertyValue.Expression.Occurrence <> ndtoPropertyValue) then
+      raise ENyxDocumentation.Create('A property value must retain its declared value position');
+    LOwner.FValueType := LOwner.PropertyValue.Reference;
+  end;
+  MemberBytes(LLease);
+  CheckCancellation(AConstruction);
+  Result := LLease;
+end;
+
+function TypeUseBytes(const AValue: INyxDocumentationTypeUse): Integer;
+var
+  LAt: Integer;
+begin
+  Result := 0;
+
+  if AValue = nil then
+    Exit;
+  Result := RefBytes(AValue.Reference);
+
+  if AValue.Expression <> nil then
+  begin
+    Inc(Result, NyxUTF8ByteCount(AValue.Expression.Text) + 1);
+    for LAt := 0 to AValue.BindingCount - 1 do
+    begin
+      Inc(Result, RefBytes(AValue.BindingAt(LAt)));
+      AdmitBytes(Result);
+    end;
+  end;
+  AdmitBytes(Result);
+end;
+
+function RichParameterBytes(const AValue: INyxDocumentationParameterDeclaration): Integer;
+begin
+  Result := NyxUTF8ByteCount(AValue.Name) + TypeUseBytes(AValue.TypeUse) + NyxUTF8ByteCount(AValue.DefaultPascal);
+  AdmitBytes(Result);
+end;
+
+function RichMemberBytes(const AValue: INyxDocumentationMember): Integer;
+var
+  LMember: INyxDocumentationMemberSignature;
+  LProperty: INyxDocumentationRichProperty;
+  LSignature: INyxDocumentationRichSignature;
+  LAt: Integer;
+begin
+  Result := 0;
+
+  if Supports(AValue, INyxDocumentationMemberSignature, LMember) then
+  begin
+    LSignature := LMember.DeclaredSignature;
+
+    if LSignature <> nil then
+    begin
+      Result := TypeUseBytes(LSignature.ResultUse);
+      for LAt := 0 to LSignature.ParameterCount - 1 do
+      begin
+        Inc(Result, RichParameterBytes(LSignature.ParameterAt(LAt)));
+        AdmitBytes(Result);
+      end;
+    end;
+  end;
+
+  if Supports(AValue, INyxDocumentationRichProperty, LProperty) then
+  begin
+    Inc(Result, TypeUseBytes(LProperty.ValueUse) + 3);
+    for LAt := 0 to LProperty.ParameterCount - 1 do
+    begin
+      Inc(Result, RichParameterBytes(LProperty.ParameterAt(LAt)));
+      AdmitBytes(Result);
+    end;
+  end;
+end;
+
+function CaptureDocumentationMember(const AValue: INyxDocumentationMember;
   const ACancellation: INyxCancellationScope): INyxDocumentationMember;
 var
   LSource, LFrozen: INyxDocumentationMember;
@@ -1044,6 +1903,14 @@ var
   LAccess: TNyxDocumentationPropertyAccesses;
   LDefault: Boolean;
   LParameter, LOriginal: TNyxDocumentationParameter;
+  LScope: INyxDocumentationTypeConstruction;
+  LRich: INyxDocumentationMemberSignature;
+  LRichSignature: INyxDocumentationRichSignature;
+  LRichProperty: INyxDocumentationRichProperty;
+  LRichParameters: TNyxDocumentationParameterDeclarations;
+  LRichValue: INyxDocumentationTypeUse;
+  LHandled: Boolean;
+  LOriginalSignature: INyxDocumentationSignature;
 begin
   LSource := AValue;
   Result := nil;
@@ -1052,7 +1919,52 @@ begin
   if LSource = nil then
     raise ENyxDocumentation.Create('A documentation member is required');
 
-  if Supports(LSource, INyxDocumentationProperty, LProperty) then
+  LHandled := False;
+  Supports(ACancellation, INyxDocumentationTypeConstruction, LScope);
+  Supports(LSource, INyxDocumentationMemberSignature, LRich);
+
+  if LRich <> nil then
+  begin
+    LScope.Spend;
+    LRichSignature := LRich.DeclaredSignature;
+  end;
+
+  if (LRichSignature <> nil) and Supports(LSource, INyxDocumentationProperty, LProperty) then
+    raise ENyxDocumentation.Create('A callable cannot also advertise simple property syntax');
+
+  if Supports(LSource, INyxDocumentationRichProperty, LRichProperty) then
+  begin
+    LScope.Spend;
+
+    if (LRichSignature <> nil) or Supports(LSource, INyxDocumentationProperty, LProperty) or
+      (LSource.Kind <> ndmProperty) then
+      raise ENyxDocumentation.Create('A property cannot publish conflicting signature/index capabilities');
+    LPropertyCount := LRichProperty.ParameterCount;
+
+    if (LPropertyCount < 0) or (LPropertyCount > NyxDocumentationMaximumParameters) then
+      raise ENyxDocumentation.Create('Captured rich property index allowance exhausted');
+    LScope.Spend(LPropertyCount + 1);
+    SetLength(LRichParameters, LPropertyCount);
+    for LAt := 0 to LPropertyCount - 1 do
+    begin
+      LScope.Spend;
+      LRichParameters[LAt] := LRichProperty.ParameterAt(LAt);
+    end;
+    LScope.Spend;
+    LRichValue := LRichProperty.ValueUse;
+    LAccess := LRichProperty.DeclaredAccess;
+    LDefault := LRichProperty.DefaultProperty;
+    LFrozen := NewNyxDocumentationRichProperty(LSource.Identity, LSource.Summary,
+      LRichParameters, LRichValue, LAccess, LDefault, LScope);
+    LHandled := True;
+  end
+  else if LRichSignature <> nil then
+  begin
+    LFrozen := NewNyxDocumentationRichMember(LSource.Identity, LSource.Kind,
+      LSource.Summary, LRichSignature, LScope);
+    LHandled := True;
+  end
+  else if Supports(LSource, INyxDocumentationProperty, LProperty) then
   begin
 
     if LSource.Kind <> ndmProperty then
@@ -1075,14 +1987,45 @@ begin
   else
     LFrozen := NewNyxDocumentationMember(LSource.Identity, LSource.Kind, LSource.Summary);
 
-  LSignature := CaptureNyxDocumentationSignature(LSource.Signature, ACancellation);
+  LOriginalSignature := LSource.Signature;
+  LSignature := CaptureNyxDocumentationSignature(LOriginalSignature, ACancellation);
 
   if LSignature <> nil then
-    LFrozen := LFrozen.WithSignature(LSignature);
+  begin
+
+    if LHandled then
+    begin
+
+      if (LFrozen.Signature = nil) or (LSignature.ParameterCount <> LFrozen.Signature.ParameterCount) or
+        (LSignature.ResultType.Defined <> LFrozen.Signature.ResultType.Defined) or
+        (LSignature.ResultType.Defined and not LSignature.ResultType.Same(LFrozen.Signature.ResultType)) then
+        raise ENyxDocumentation.Create('Legacy and rich callable signatures conflict');
+      for LAt := 0 to LSignature.ParameterCount - 1 do
+      begin
+        LScope.Spend;
+        LParameter := LSignature.ParameterAt(LAt);
+        LOriginal := LFrozen.Signature.ParameterAt(LAt);
+
+        if (LParameter.Name <> LOriginal.Name) or not LParameter.TypeReference.Same(LOriginal.TypeReference) or
+          (LParameter.Passing <> LOriginal.Passing) or (LParameter.HasDefault <> LOriginal.HasDefault) or
+          (LParameter.DefaultPascal <> LOriginal.DefaultPascal) then
+          raise ENyxDocumentation.Create('Legacy and rich parameter declarations conflict');
+      end;
+    end
+    else
+      LFrozen := LFrozen.WithSignature(LSignature);
+  end;
   LType := LSource.ValueType;
 
   if LType.Defined then
-    LFrozen := LFrozen.OfType(LType);
+  begin
+
+    if LHandled and ((not LFrozen.ValueType.Defined) or not LFrozen.ValueType.Same(LType)) then
+      raise ENyxDocumentation.Create('Legacy and rich property value types conflict');
+
+    if not LHandled then
+      LFrozen := LFrozen.OfType(LType);
+  end;
   LCount := LSource.ExampleCount;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumExamples) then
@@ -1131,6 +2074,70 @@ begin
       (LSource.Signature <> nil) or (LCurrentType.Defined <> LType.Defined) or
       (LType.Defined and not LType.Same(LCurrentType)) then
       raise ENyxDocumentation.Create('Property declaration changed before publication');
+  end;
+
+  if LRichSignature <> nil then
+  begin
+    LScope.Spend;
+
+    if (LRich.DeclaredSignature <> LRichSignature) or
+      (LSource.Kind <> LFrozen.Kind) or not LSource.Identity.Same(LFrozen.Identity) then
+      raise ENyxDocumentation.Create('Rich callable changed before publication');
+  end;
+
+  if LRichProperty <> nil then
+  begin
+    for LAt := 0 to LPropertyCount - 1 do
+    begin
+      LScope.Spend;
+
+      if LRichProperty.ParameterAt(LAt) <> LRichParameters[LAt] then
+        raise ENyxDocumentation.Create('Rich property parameter topology changed');
+    end;
+    LScope.Spend;
+
+    if (LRichProperty.ParameterCount <> LPropertyCount) or (LRichProperty.ValueUse <> LRichValue) or
+      (LRichProperty.DeclaredAccess <> LAccess) or (LRichProperty.DefaultProperty <> LDefault) or
+      (LSource.Signature <> nil) or (LSource.Kind <> ndmProperty) or
+      not LSource.Identity.Same(LFrozen.Identity) then
+      raise ENyxDocumentation.Create('Rich property changed before publication');
+  end;
+
+  if LHandled then
+  begin
+    LScope.Spend;
+    LCurrentType := LSource.ValueType;
+
+    if (LSource.Signature <> LOriginalSignature) or
+      (LCurrentType.Defined <> LType.Defined) or
+      (LType.Defined and not LType.Same(LCurrentType)) then
+      raise ENyxDocumentation.Create('Legacy rich-member envelope changed before publication');
+  end;
+  CheckCancellation(ACancellation);
+  Result := LFrozen;
+end;
+
+function CaptureNyxDocumentationMember(const AValue: INyxDocumentationMember;
+  const ACancellation: INyxCancellationScope): INyxDocumentationMember;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LOwned: Boolean;
+  LFrozen: INyxDocumentationMember;
+begin
+  Result := nil;
+  CheckCancellation(ACancellation);
+  LScope := DocumentationConstruction(ACancellation, LOwned);
+  try
+    try
+      LFrozen := CaptureDocumentationMember(AValue, LScope);
+    except
+      on E: ENyxDocumentationTypeExpressionCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+    end;
+  finally
+
+    if LOwned then
+      LScope.Retire;
   end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
@@ -1474,6 +2481,22 @@ end;
 function TDocumentationType.WithMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
 var
   LFrozen: INyxDocumentationMember;
+begin
+  { The public method continues to capture alternate producers before append. }
+
+  if FKind = ndtIntrinsic then
+    raise ENyxDocumentation.Create('An intrinsic declaration cannot invent members');
+  LFrozen := CaptureNyxDocumentationMember(AMember);
+  Result := AppendCapturedMember(LFrozen);
+end;
+
+function TDocumentationType.TypeOwner: TDocumentationType;
+begin
+  Result := Self;
+end;
+
+function TDocumentationType.AppendCapturedMember(const AMember: INyxDocumentationMember): INyxDocumentationType;
+var
   LNext: TDocumentationType;
   LHold: INyxDocumentationType;
   LAt: Integer;
@@ -1483,21 +2506,20 @@ begin
 
   if FKind = ndtIntrinsic then
     raise ENyxDocumentation.Create('An intrinsic declaration cannot invent members');
-  LFrozen := CaptureNyxDocumentationMember(AMember);
 
-  if not LFrozen.Identity.Owner.Same(FIdentity) or
+  if not AMember.Identity.Owner.Same(FIdentity) or
     (MemberCount >= NyxDocumentationMaximumMembers) then
     raise ENyxDocumentation.Create('A documentation member must retain its original bounded owner');
   for LAt := 0 to MemberCount - 1 do
   begin
 
-    if FMembers[LAt].Identity.Same(LFrozen.Identity) then
+    if FMembers[LAt].Identity.Same(AMember.Identity) then
       raise ENyxDocumentation.Create('Documentation repeats a member/overload identity');
   end;
   LNext := CopyValue;
   LHold := LNext;
   SetLength(LNext.FMembers, MemberCount + 1);
-  LNext.FMembers[High(LNext.FMembers)] := LFrozen;
+  LNext.FMembers[High(LNext.FMembers)] := AMember;
   TypeBytes(LHold);
   Result := LHold;
 end;
@@ -1526,7 +2548,7 @@ begin
   Result := LHold;
 end;
 
-function CaptureNyxDocumentationType(const AValue: INyxDocumentationType;
+function CaptureDocumentationType(const AValue: INyxDocumentationType;
   const ACancellation: INyxCancellationScope): INyxDocumentationType;
 var
   LSource, LFrozen: INyxDocumentationType;
@@ -1537,6 +2559,10 @@ var
   LTargets: INyxDocumentationAliasTargets;
   LBranches: TNyxDocumentationAliasTargetVector;
   LHasIntrinsic, LHasTargets: Boolean;
+  LOwner: IDocumentationTypeOwner;
+  LBuilder: TDocumentationType;
+  LCanonical: INyxDocumentationType;
+  LMember: INyxDocumentationMember;
 begin
   LSource := AValue;
   Result := nil;
@@ -1599,7 +2625,19 @@ begin
   for LAt := 0 to LCount - 1 do
   begin
     CheckCancellation(ACancellation);
-    LFrozen := LFrozen.WithMember(CaptureNyxDocumentationMember(LSource.MemberAt(LAt), ACancellation));
+    LMember := CaptureNyxDocumentationMember(LSource.MemberAt(LAt), ACancellation);
+
+    if not Supports(LFrozen, IDocumentationTypeOwner, LOwner) then
+      raise ENyxDocumentation.Create('Missing private captured type owner');
+    LBuilder := LOwner.TypeOwner;
+
+    if LBuilder = nil then
+      raise ENyxDocumentation.Create('Missing private captured type');
+    LCanonical := LBuilder;
+
+    if LCanonical <> LFrozen then
+      raise ENyxDocumentation.Create('A captured type cannot borrow another owner');
+    LFrozen := LBuilder.AppendCapturedMember(LMember);
   end;
   LCount := LSource.ExampleCount;
 
@@ -1620,6 +2658,32 @@ begin
     LFrozen := LFrozen.WithRelated(LSource.RelatedAt(LAt));
   end;
   TypeBytes(LFrozen);
+  CheckCancellation(ACancellation);
+  Result := LFrozen;
+end;
+
+function CaptureNyxDocumentationType(const AValue: INyxDocumentationType;
+  const ACancellation: INyxCancellationScope): INyxDocumentationType;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LOwned: Boolean;
+  LFrozen: INyxDocumentationType;
+begin
+  Result := nil;
+  CheckCancellation(ACancellation);
+  LScope := DocumentationConstruction(ACancellation, LOwned);
+  try
+    try
+      LFrozen := CaptureDocumentationType(AValue, LScope);
+    except
+      on E: ENyxDocumentationTypeExpressionCancelled do
+        raise ENyxDocumentationCancelled.Create(E.Message);
+    end;
+  finally
+
+    if LOwned then
+      LScope.Retire;
+  end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
 end;

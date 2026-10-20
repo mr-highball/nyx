@@ -45,7 +45,138 @@ and report the criterion, deliverable, files and stop condition. The existing
 private queue references canonical tasks; it creates no new backlog, recurring
 job, busywork or acceptance credit. Deferred splitter work remains deferred.
 
-## Current reference prerequisite: Declared property metadata — 2026-10-20
+## Current reference prerequisite: Rich declared type expressions — 2026-10-20
+
+The previous property prerequisite is qualified and pushed as
+cdbc22130b3e3146c44fc04ded8a5e56967beef0; the remote branch matches exactly,
+all seven owned paths were clean and all thirteen concurrent planning files
+remain exact. Full reference01/02 and original acceptance remain open across
+at least52 unclosed batches. Reassessment changes the next deliverable to the
+actual open-array signature prerequisite, rather than more property variants.
+
+Owning criterion: reference01's truthful parameter/result/property types and
+reference02's source-derived discovery. Concrete deliverable: managed optional
+rich signatures/properties own exact detached type-expression windows parsed by
+existing standalone type syntax, explicit occurrence roles and explicit qualified
+named-use bindings. Legacy named records/constructors/capture remain strict and
+unchanged; old callable Signature stays absent when it cannot represent the rich
+shape. Opaque bounds/defaults remain text; absent binding remains inspectable and
+refuses a complete index. No alias substitution, duplicate type AST or inferred
+System/core/compiler identity. Fluent replacement cannot leave stale dual metadata.
+
+Lil' Scooty's released source scope is new nyx.documentation.typeexpressions.pas,
+documentation.pas, registration.pas, registry.pas, the new
+nyx_documentation_typeexpressions_tests.lpr and component-documentation.md.
+Root owns separate source-extraction/generator planning, WORK/AGENTS and all
+reader/compiler admission. The pure expression unit has no documentation-reference
+or registration dependency. Shared operation admission must cover pre-copy bytes
+and actual parser work across all expressions, including reuse, without fresh
+per-expression allowance. Published values retain no cancellation/admission/source
+unit/editor; exact framing charges once. All existing quotas and atomic refusal
+remain in force.
+
+Evidence required: portable mixed named/open-array/procedural/qualified/generic
+syntax, explicit unresolved/refused closure, legacy compatibility and old bytes,
+rich property/fluent replacement/capture, alternate mutation, late cancellation,
+shared small-budget getter counters, retirement and prior Current/version safety.
+The native consumer requires exactly one valid repository root before any work
+and inspects all seven public Choices overloads in nyx.contract plus NyxObject/
+NyxArray in nyx.data through existing declaration/type owners. No silent source
+skip, control/getter/example execution or guessed leaf binding. Browser excludes
+only filesystem reads and will be compilation evidence unless actually executed.
+Root freezes reviewed sources before focused/affected consumers and products.
+
+Stop/switch if existing grammar requires declaration context, a leaf cannot be
+represented faithfully, shared admission is bypassed, source/cancellation is
+retained or stale metadata can publish. Preserve the refusal and repair its owner
+without broadening the six-path scope, loosening quotas or faking identities.
+After source-ready, the helper continues independent read-only full actual
+generated/hand-authored/core/global-routine extraction planning while root
+qualifies. Real creator adoption and executed decorated browser remain downstream.
+No additional agent, host/config retry, SDK capture, protected mutation, cleanup/
+restart, new public MCP tool/schema or rollout. The bounded implementation is
+qualified below; full original acceptance remains open.
+
+Root's separate generator deliverable follows reference01/02's same-source
+extraction requirement. Existing Arguments splits raw text on semicolons/colons,
+so punctuation inside a Pascal default can become a spurious forwarded argument
+even when the emitted declaration itself is valid. Replace that split with the
+existing bounded signature syntax and ordered parameter entries, preserving
+escaped NameSpan spelling. Parse once per forwarded method; no second signature
+parser, compiler inference or documentation inventory. Root owns only
+tools/nyx_control_contracts.lpr, its existing native CLI consumer and
+docs/managed-controls.md for this implementation, separate from the helper scope.
+
+Qualification must execute the actual tool with unchanged maintained source,
+retain two byte-exact five-file candidates, and extend a copied actual descriptor
+with default string/constant-expression punctuation, grouped const/var/out names
+and an escaped parameter. Inspect the real candidate forwarding calls, retain
+all earlier malformed-header/CLI/refusal checks, and keep all original descriptor/
+include files exact. No fixture program execution or full source-metadata adoption
+is claimed. Stop on lost parameter order/spelling, uncertainty, a parser gap or
+current output drift; repair its owner without weakening admission or silently
+dropping parameters. Root and helper sources must both be ready and frozen before
+any compiler/native reader is admitted. The final qualification below covers
+this implementation; successful preparation does not reset the original count.
+
+Pre-freeze review repaired cumulative outer copy admission, linear captured
+binding vectors, the existing cancellation exception contract, final legacy/rich
+agreement, aggregate metadata-byte totals and a second scope-less type-member
+reconstruction. Regression cases cover actual source windows, shared small
+byte/node/token/work allowances, original caller policy and late alternate
+mutation. The first seven-source reviewed freeze passed all35 compiler jobs,
+including native rich99/all9 actual windows and generator81/17 joined invocations.
+Its source copies, transcripts and five group receipts remain retained separately.
+
+After every reader joined, review of a new unused-phase hint identified a real
+admission gap: an unknown analysis phase could reach an accepting outer policy
+before the inner analysis owner rejected it. Both construction and index budget
+bridges now apply the existing closed-phase exception contract before outward
+charging. This is validation, with no diagnostic suppression. Only those two
+Pascal methods changed after the reviewed freeze. The final phase-validation
+freeze retains all7 owned Pascal sources and all1734 current inputs. All35 final
+compiler jobs pass;16 native test programs have clean heaps and16 portable targets
+compile. The separately compiled generator and all17 joined CLI child invocations
+also have clean heaps. Warning accounting is zero owned/112 upstream, not a claim
+of zero hints or notes. Rich99 inspects all9 actual open-array windows; property43
+retains actual Children syntax; CLI81 retains two byte-exact five-file candidates
+for81 kinds/four facades and the punctuation/grouped/escaped forwarding witness.
+The same final rich binary refuses missing and invalid repository arguments at
+check count0 with clean heaps. Every reader/compiler handle is joined.
+
+The final audit verifies all1734 current Pascal inputs and1727 unrelated prior
+inputs,24 compiler/97 RTL/five current-start protected/two retained profile pins,
+and all13 concurrent planning files. Retained source copies and final compiler,
+run, child and candidate hashes match. The earlier reviewed35 receipts remain
+separate and are not substituted for final-source results. Historical global
+configuration preservation remains false. Ignored
+.local/documentation-typeexpressions-paths-private.json and
+E:\Blekohlab\nyx\qualification\documentation-typeexpressions-20261020-145122
+own terminal/common-source/audit/remote receipts and the retained preparations.
+
+Criteria closed: none of the full original reference01/02 criteria. They remain
+open across at least53 documented unclosed batches; no task/credit/DONE, new RTL
+integration, browser execution, UI/input/quality/parity/adoption/delivery closes.
+LAN remains offline and native Nyx tools absent. Stop type-window/forwarding/
+fixture/compiler variants. Reassessment changes the next deliverable to actual
+declaration-position array/set/procedural/distinct type attachment through existing
+documentation copy/capture/framing/closure owners. An empty record, alias to a
+different type or synthetic Invoke member is not that declaration. Lil' Scooty
+keeps this concrete prerequisite and the full source/discovery return path queued.
+
+Root's separate next lane is bounded rich routine-signature extraction from an
+owned reparse of a selected header under the same shared admission. Public
+snapshot casts/counts do not establish sealed ownership; validate/copy bounded
+supplier envelopes, recheck observations and refuse unsupported/untyped shapes.
+Results describe signature syntax only, not physical authored origins, factory
+authority, class/static/visibility/convention facts or stable overload identities.
+Actual complete controls inventory is81 generated factories plus8 handwritten
+globals today. Source-owned whole-unit closure, conditional named aliases, those
+remaining member facts, real creator adoption and executed decorated browser are
+still required. No partial unit or duplicate manual core-help inventory qualifies
+them. Agree separate next scopes and source-ready before admitting another reader.
+
+## Previous reference prerequisite: Declared property metadata — 2026-10-20
 
 The previous goal turn is product progress: b65ed637db0d1349f63d91ad38c67cca139bfb40
 qualifies shared source ownership and typed generated-declaration admission,

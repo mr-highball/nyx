@@ -966,54 +966,75 @@ end;
 
 function Arguments(const ASignature: String): String;
 var
-  LStart: Integer;
-  LFinish: Integer;
-  LParameters: String;
-  LGroups: TStringList;
-  LIndex: Integer;
-  LNames: String;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LOptions: TNyxPascalSyntaxOptions;
+  LBytes: TNyxBytes;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LScope: TNyxPascalSyntaxScope;
+  LAt, LRoutine: Integer;
 begin
   Result := '';
-  LStart := Pos('(', ASignature);
-  LFinish := LastDelimiter(')', ASignature);
+  { Forward only declared parameters, in their source order. Delimiters inside
+    a default string or nested type are not parameter separators. NameSpan also
+    retains an escaped identifier's ampersand, which Name intentionally omits.
+    This is the same bounded syntax owner used for emitted declaration admission;
+    no compiler, caller method or alternative signature parser is involved. }
+  LOptions := TNyxPascalSyntaxOptions.Defaults.Fragment(psfInterfaceDeclarations);
 
-  if LStart = 0 then
+  if Length(ASignature) > LOptions.LexicalOptions.MaximumSourceBytes then
+    raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' exceeds its forwarding source allowance');
+  SetLength(LBytes, Length(ASignature));
+
+  if Length(LBytes) > 0 then
+    Move(ASignature[1], LBytes[0], Length(LBytes));
+  LSyntax := NewNyxPascalSyntaxSnapshot(NyxDecodeUTF8(LBytes), LOptions);
+
+  if (LSyntax.Lexical.DiagnosticCount <> 0) or (LSyntax.DiagnosticCount <> 0) then
+    raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an invalid forwarding signature');
+  for LAt := 0 to LSyntax.ScopeCount - 1 do
   begin
-    Exit;
+    LScope := LSyntax.Scope(LAt);
+
+    if not LScope.Complete or LScope.UnsupportedSyntax then
+      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has incomplete forwarding syntax');
   end;
-  LParameters := Copy(ASignature, LStart + 1, LFinish - LStart - 1);
-  LGroups := TStringList.Create;
-  try
-    LGroups.StrictDelimiter := True;
-    LGroups.Delimiter := ';';
-    LGroups.DelimitedText := LParameters;
-    for LIndex := 0 to LGroups.Count - 1 do
+  LRoutine := -1;
+  for LAt := 0 to LSyntax.DeclarationCount - 1 do
+  begin
+    LDeclaration := LSyntax.Declaration(LAt);
+
+    if (LDeclaration.Flags * [psdfIncomplete, psdfIncompleteHeader,
+      psdfUnsupported, psdfConditional]) <> [] then
+      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has uncertain forwarding syntax');
+
+    if (LDeclaration.Scope = 0) and (LDeclaration.Kind <> psdkRoutine) then
+      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an extra forwarding declaration');
+
+    if (LDeclaration.Kind = psdkRoutine) and (LDeclaration.Scope = 0) then
     begin
-      LNames := Trim(Copy(LGroups[LIndex], 1, Pos(':', LGroups[LIndex]) - 1));
 
-      if Pos('const ', LNames) = 1 then
-      begin
-        Delete(LNames, 1, 6);
-      end;
-
-      if Pos('out ', LNames) = 1 then
-      begin
-        Delete(LNames, 1, 4);
-      end;
-
-      if Pos('var ', LNames) = 1 then
-      begin
-        Delete(LNames, 1, 4);
-      end;
-
-      if Result <> '' then
-      begin
-        Result := Result + ', ';
-      end;
-      Result := Result + LNames;
+      if (LRoutine <> -1) or
+        not (LDeclaration.RoutineKind in [prkFunction, prkProcedure]) then
+        raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' needs one forwarding routine');
+      LRoutine := LAt;
     end;
-  finally
-    LGroups.Free;
+  end;
+
+  if LRoutine = -1 then
+    raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has no forwarding routine');
+  LScope := LSyntax.Scope(LSyntax.Declaration(LRoutine).NestedScope);
+  LAt := LScope.FirstDeclaration;
+  while LAt <> -1 do
+  begin
+    LDeclaration := LSyntax.Declaration(LAt);
+
+    if LDeclaration.Kind <> psdkParameter then
+      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an unexpected forwarding declaration');
+
+    if Result <> '' then
+      Result := Result + ', ';
+    Result := Result + String(LSyntax.Lexical.Slice(LDeclaration.NameSpan));
+    LAt := LDeclaration.Next;
   end;
 end;
 
@@ -1032,6 +1053,7 @@ var
   LFunction: Boolean;
   LFluent: Boolean;
   LCall: String;
+  LArguments: String;
 begin
   LLines := TStringList.Create;
   LMethods := TStringList.Create;
@@ -1254,9 +1276,11 @@ begin
         LCall := 'ConfigurationScope.' + LName;
       end;
 
-      if Arguments(LSignature) <> '' then
+      LArguments := Arguments(LSignature);
+
+      if LArguments <> '' then
       begin
-        LCall := LCall + '(' + Arguments(LSignature) + ')';
+        LCall := LCall + '(' + LArguments + ')';
       end;
 
       if (AMember = 'Configure') and (LName = 'ForPlatform') then

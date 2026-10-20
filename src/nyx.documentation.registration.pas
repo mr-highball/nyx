@@ -5,7 +5,8 @@ unit nyx.documentation.registration;
 
 interface
 
-uses SysUtils, nyx.text, nyx.scheduler, nyx.documentation;
+uses SysUtils, nyx.text, nyx.scheduler, nyx.documentation,
+  nyx.documentation.typeexpressions;
 
 type
   { Authored availability intent, never an observed adapter capability. An
@@ -144,6 +145,9 @@ var
   LIntrinsic: INyxDocumentationIntrinsic;
   LTargets: INyxDocumentationAliasTargets;
   LProperty: INyxDocumentationProperty;
+  LRichMember: INyxDocumentationMemberSignature;
+  LRichSignature: INyxDocumentationRichSignature;
+  LRichProperty: INyxDocumentationRichProperty;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -151,6 +155,36 @@ var
   procedure Number(AValue: Integer);
   begin
     Add(IntToStr(AValue));
+  end;
+  procedure TypeUse(const AUse: INyxDocumentationTypeUse);
+  var
+    LUse: Integer;
+    LExpression: INyxDocumentationTypeExpression;
+  begin
+    Number(Ord(AUse <> nil));
+
+    if AUse = nil then
+      Exit;
+    Add(ReferenceContent(AUse.Reference));
+    LExpression := AUse.Expression;
+    Number(Ord(LExpression <> nil));
+
+    if LExpression <> nil then
+    begin
+      Add(LExpression.Text);
+      Number(Ord(LExpression.Occurrence));
+      Number(AUse.BindingCount);
+      for LUse := 0 to AUse.BindingCount - 1 do
+        Add(ReferenceContent(AUse.BindingAt(LUse)));
+    end;
+  end;
+  procedure RichParameter(const AParameter: INyxDocumentationParameterDeclaration);
+  begin
+    Add(AParameter.Name);
+    TypeUse(AParameter.TypeUse);
+    Number(Ord(AParameter.Passing));
+    Number(Ord(AParameter.HasDefault));
+    Add(AParameter.DefaultPascal);
   end;
 begin
   Result := '';
@@ -226,6 +260,32 @@ begin
         Number(Ord(LParameter.HasDefault));
         Add(LParameter.DefaultPascal);
       end;
+    end;
+
+    if Supports(LMember, INyxDocumentationMemberSignature, LRichMember) then
+    begin
+      LRichSignature := LRichMember.DeclaredSignature;
+
+      if LRichSignature <> nil then
+      begin
+        Add('rich-signature');
+        TypeUse(LRichSignature.ResultUse);
+        Number(LRichSignature.ParameterCount);
+        for LAt := 0 to LRichSignature.ParameterCount - 1 do
+          RichParameter(LRichSignature.ParameterAt(LAt));
+      end;
+    end;
+
+    if Supports(LMember, INyxDocumentationRichProperty, LRichProperty) then
+    begin
+      Add('rich-property');
+      TypeUse(LRichProperty.ValueUse);
+      Number(Ord(ndpaRead in LRichProperty.DeclaredAccess));
+      Number(Ord(ndpaWrite in LRichProperty.DeclaredAccess));
+      Number(Ord(LRichProperty.DefaultProperty));
+      Number(LRichProperty.ParameterCount);
+      for LAt := 0 to LRichProperty.ParameterCount - 1 do
+        RichParameter(LRichProperty.ParameterAt(LAt));
     end;
   end;
   { Shape extensions follow the complete legacy content. Absence leaves the

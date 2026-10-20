@@ -138,19 +138,30 @@ and four facades, including their actual specialized results and fluent return
 types. The same facade map drives emission and admission; a second signature
 parser or manually maintained help inventory is not added.
 
+Forwarding argument extraction now uses that existing syntax owner too. Ordered
+parameter declarations supply the call arguments; punctuation inside defaults
+or nested type syntax cannot create extra arguments. Exact name spans retain
+escaped parameter spelling. Recovered, conditional or incomplete signatures
+refuse before candidate publication. The shared source qualification is recorded
+in WORK.md. Facade discovery still follows
+the maintained descriptor declaration convention; typed forwarding does not
+establish complete extraction of arbitrary hand-authored Pascal source.
+
 This is declared source structure. Imported type spelling is still unbound, and
 compiling the resulting complete application remains necessary. The IR does not
 yet emit documentation, capture the complete hand-authored core closure or
 register built-in help. Its existing source/syntax limits remain unchanged.
 
 The maintained native
-[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 71 checks
-through 16 joined generator invocations, with clean parent and child heaps.
+[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 81 checks
+through 17 joined generator invocations, with clean parent and child heaps.
 Both fresh candidates match all five maintained includes for 81 built-in kinds
 and four authoring facades. The consumer also checks copied-source drift,
 missing outputs, argument/destination refusal and exact original input bytes.
 An actual copied descriptor with an explicit empty parameter type refuses through
 the shared syntax owner in both check and candidate modes, before output exists.
+Another copied actual descriptor verifies string/constant-expression punctuation,
+grouped const/var/out parameters and escaped names in real candidate call arguments.
 Its arguments are the compiled generator, repository root and a new runtime
 directory. Current source/compiler receipts and broader qualification are in
 [WORK.md](../WORK.md); no generated repository include changes in this batch.
