@@ -656,12 +656,16 @@ begin
     if LOrderText[1] = '-' then Exit(RealRoundedZero(APrecision,AValue.Negative,True));
     Exit(RealRoundedOverflow(APrecision,AValue.Negative));
   end;
-  { Deliberately loose integer bounds avoid logarithms or host approximation.
-    Values inside them receive the complete rational conversion below. }
+  { Integer-only bounds use 10 > 2^3. A nonzero decimal with order d lies in
+    [10^d,10^(d+1)); these strict outer binary bounds prove overflow or a value
+    below half the smallest subnormal. Division avoids multiplying a possibly
+    large caller exponent. Borderline values still receive the full rational
+    conversion; neither logarithms nor host float approximations are involved. }
 
-  if LOrder > CRealMaximum[APrecision]+1 then Exit(RealRoundedOverflow(APrecision,AValue.Negative));
+  if LOrder > (CRealMaximum[APrecision]+1) div 3 then
+    Exit(RealRoundedOverflow(APrecision,AValue.Negative));
 
-  if LOrder < CRealMinimum[APrecision]-CRealPrecision[APrecision]-2 then
+  if LOrder < (CRealMinimum[APrecision]-CRealPrecision[APrecision]) div 3-1 then
     Exit(RealRoundedZero(APrecision,AValue.Negative,True));
 
   if not AValue.TryExponent(LExponent,ACancellation) or (LExponent = Low(Integer)) then

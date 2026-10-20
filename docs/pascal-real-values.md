@@ -184,3 +184,37 @@ Thirteen separate compiler inputs distinguish node admission and delayed setting
 General cast families, arbitrary intrinsic admission, parser range,
 compiler-conditional real expressions and default profile enrollment remain open,
 alongside full editor integration and target parity.
+
+## Compiler conditional expressions
+
+`TNyxPascalConstantOptions.Defaults.InDialect(pcdFPCConditional)` selects FPC's
+separate conditional numeric rules. Real tokens and `/` use the explicit
+compiler-host parser/evaluation facts. Target storage formats, `MINFPCONSTPREC`,
+source FPU selection and IEEE/R/Q requests do not establish those facts or alter
+this evaluator's arithmetic. Qualified FPC 3.3.1 compiler entry code masks host
+exceptions before evaluating these conditions. Infinity and unordered NaN are
+therefore distinct from ordinary Pascal real-node admission.
+
+A numeric result exposes the existing optional `INyxPascalIEEEConstant` interface.
+Its scalar `INyxPascalConstantResult.Value` stays Unknown; Boolean comparisons
+use the original scalar channel. A real by itself does not become a valid Boolean
+directive. Well-formed short-circuited branches require no unused numeric facts
+or declaration lookups. Unsupported grammar still refuses the complete plan.
+
+Declared constants retain the value of their original Pascal initializer, with
+its own source scope, rounding and checks. A later directive cannot reinterpret
+`Single(0.1)` as an unrounded host literal. Source binding also captures qualified
+names, nominal cast targets and transitive constant dependencies. Query-local
+memo values retain no mutable arithmetic work or application state; independent
+readers share immutable plans and worlds only.
+
+Numeric children consume the existing remaining constant-work allowance.
+Proved distant range bounds use `10 > 2^3`, including the complete coefficient's
+decimal order, to avoid constructing enormous powers for certain zero/infinity
+outcomes. Borderline values still receive full rational rounding. No host float,
+logarithm, input truncation or increased budget supplies the answer.
+
+The original whole native unit and repeated includes qualify selected/opposite
+branches, local shadowing and target-setting independence. Compiler-conditional
+macro/string/set/general intrinsic behavior, ordinary source-parser range,
+default profile enrollment and full language/editor/target adoption remain open.

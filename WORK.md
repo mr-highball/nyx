@@ -33,7 +33,95 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Source-owned IEEE expression values — 2026-10-20
+## Current integration: Compiler-host numeric conditionals — 2026-10-20
+
+The preceding 5dd3c6a turn makes implementation, validation and remote progress.
+All 764 maintained sources revalidate before this integration. The full Nyx/
+Studio outcome and all original language/editor/parity requirements remain open.
+
+The existing constant planner/query now has a separate typed numeric channel for
+the explicit FPC conditional dialect. Real tokens, decimal integers beyond the
+signed/unsigned64 parse attempts and slash follow qualified compiler-host parser/
+evaluation facts. Local MINFPCONSTPREC/FPU/IEEE/R/Q requests do not supply those
+facts or retag this separate evaluator. The inspected compiler entry masks all
+six host exceptions; conditional arithmetic follows that qualified path rather
+than ordinary real-node source checking. Existing INyxPascalIEEEConstant exposes
+real results without changing the scalar result's GUID/methods or value ordinals.
+No new public GUID, profile enrollment, native probe, tool or schema is added.
+Malformed/unsupported syntax and missing facts remain typed refusals; direct real
+values do not become Boolean directives. Caller tokens over the qualified RTL
+short-string limit refuse without truncation. Ordinary real expression strings
+remain source-bound; general strings/sets/macros/intrinsics remain open.
+
+Named numeric declarations bind their actual original initializer through the
+existing binder, retaining declared scope, rounding, nominal identity and source
+admission. An invalid ordinary alias cannot be rehabilitated by a later IF.
+Dependencies include lexical qualified names, cast targets and transitive source
+constants. Completed declaration meanings use bounded query-local parallel
+symbol/value vectors, never interfaces in copied records or world-owned mutable
+state. Every source binding and mathematical child consumes the existing
+remaining constant allowance and forwards aggregate work once. Existing scalar
+paths, default 100,000 steps, 512 tokens/16 KiB, depth64/dependencies256 and all
+native preparation/ordered conditional limits remain unchanged. Conditional
+Boolean short-circuiting omits unused semantic work only after the whole bounded
+grammar parses; it does not skip directives or grant unsupported syntax.
+
+An initial integrated underflow input hit the real 100,000-step allowance while
+building a power of five; that failure/log/source remain retained. Existing exact
+real rounding now uses the integer inequality 10 > 2^3 to prove distant overflow
+or values below half a smallest subnormal before allocating large powers.
+Decimal order includes the complete coefficient; borderline values retain full
+rational conversion. All four mathematical formats retain signed inexact zero
+and compensating long-coefficient behavior. No logarithm, host approximation,
+quota increase, discarded input or guessed parser admission is used. Earlier
+binary753/first fit565/large work223151 and scalar405 pass with clean heaps.
+
+Twenty-one independent whole compiler inputs retain seventeen successes/clean
+heaps and four expected conditional errors, independently of main warning debt.
+A complete native unit/two repeated original includes supply 57 branch truths
+under differing target precision/FPU/IEEE settings and a local source shadow.
+The actual physical selected and opposite branches agree. Ordered integration
+uses 54 answers/55 passes inside the unchanged 64 ceiling. Initial exhaustive-
+case warnings are repaired by complete closed handling, not suppression; native-
+only scalar-count import preparation and all initial inputs/failures remain.
+The strengthened focused test passes 16,132 checks with clean heap; final family/
+version refusals add two checks before the five-source staged whitespace freeze.
+Its first fit is 15,536, every smaller allowance refuses atomically, ordinary
+cancellation publishes no answer and 64 concurrent readers join.
+
+All 72 current compiler logs pass with zero owned warnings/189 upstream warnings.
+All 43 selected native runs pass with clean heaps; 27 browser consumers compile
+only. Both Studios/backend/worker compile as applicable. The exact five-source
+final freeze has no later Pascal repair or substituted consumer evidence. Final
+focused count is 16,134. The unchanged original RTL passes 56 checks with clean
+heap: System retains 13,101 declarations/zero syntax/31 answers, ObjPas 209/zero/
+one, neither pending; indexed Free/FreeInstance navigation/insertion stays ready.
+Original 2M view/4M aggregate/64 rounds, initial five/Word one/symbol three-of-eight/
+dynamic six-of-eight quotas and ordered jobs remain exact. This does not qualify
+full RTL meaning, full language or default editor adoption.
+
+All 767 maintained/762 unrelated/five frozen sources, two preceding source copies,
+all current/inherited preparations and failures, 97 RTL/24 base compiler pins plus
+inspected compiler/runtime owners, 156 packets/48 includes/349 frozen artifacts,
+nine contexts/five protected files/thirteen foreign planning files retain exact
+comparisons. Corpus 575 checks pass over 508 actual files/2,459,289 lossless tokens.
+All handles/readers join and no Studio listener remains. Current-start protected
+comparisons remain exact; the retained historical global-config failure still
+keeps full preservation false. No protected repair occurs.
+
+No Pascal edits while compiler/native readers live. Ignored
+.local/real-conditions-paths-private.json owns current source,
+packet/evidence/remote receipts and return path. Preserve all inherited source/
+SDK/compiler/protected/frozen/concurrent pins and every old failure/preparation.
+Thirteen foreign planning files remain outside owned work. LAN offline; native
+Nyx tools absent. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. Full source/
+type/module/incremental/editor/input/quality/parity/adoption/delivery and original
+criterion/task/counter/credit/DONE remain open. After qualification stop current
+conditional/math/fixture/compiler variants; reassess remaining source parsing,
+constant dialect and canonical type prerequisites through existing owners.
+
+## Previous integration: Source-owned IEEE expression values — 2026-10-20
 
 The preceding 437d79a turn makes implementation, validation and remote progress.
 All 761 maintained inputs revalidate before this integration. The full Nyx and

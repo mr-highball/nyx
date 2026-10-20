@@ -26,7 +26,7 @@ interface
 
 uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.lexing, nyx.pascal.context,
   nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.binding, nyx.pascal.values,
-  nyx.pascal.requirements, nyx.pascal.storage;
+  nyx.pascal.requirements, nyx.pascal.storage, nyx.pascal.reals, nyx.pascal.ieee;
 
 type
   { Exhaustion/cancellation refuses the complete value query; semantic unknown
@@ -57,7 +57,9 @@ type
     property MaximumDepth: Integer read FDepth;
     property Dialect: TNyxPascalConstantDialect read FDialect;
   end;
-  { Detached exact result and typed refusal. Dependencies retain their immutable
+  { Detached exact result and typed refusal. An optional INyxPascalIEEEConstant
+    supplies conditional real evidence; Value stays Unknown for that channel.
+    Dependencies retain their immutable
     source world outward only; no editor, parser, query or reverse link survives.
     Value Unknown does not establish a false condition or compiler admission. }
   INyxPascalConstantResult = interface(IInterface)
@@ -118,7 +120,9 @@ type
   end;
 
 { Parse exact integer/Boolean syntax, named constants and Low/High/SizeOf/
-  Declared/Defined names. Width-sensitive bitwise/cast/string/real/call meanings
+  Declared/Defined names. The explicit FPC conditional dialect also owns real
+  tokens and slash; ordinary numeric initializers remain source-bound.
+  Width-sensitive bitwise/cast/string/call meanings
   remain explicit unknowns. Plans own no mutable producer or host object. }
 function PlanNyxPascalConstant(const AExpression: TNyxText;
   const AOptions: TNyxPascalConstantOptions;
@@ -132,7 +136,8 @@ type
   { Closed AST operation; qualified names remain distinct from intrinsic calls.
     Array indexing, casts and ordinary function invocation are not evaluated. }
   TConstantNodeKind = (cnValue, cnName, cnPositive, cnNegative, cnNot, cnBinary,
-    cnLow, cnHigh, cnSize, cnDeclared, cnDefined, cnOrd);
+    cnLow, cnHigh, cnSize, cnDeclared, cnDefined, cnOrd, cnReal, cnRealDivide,
+    cnRealInteger);
   { Value-only node with snapshot-local child ordinals. Literal radix remains
     syntax provenance, allowing evaluation in its actual compiler context.
     No interface fields or target pointer survives in a plan's copied arena. }
@@ -140,10 +145,25 @@ type
     Kind: TConstantNodeKind;
     Literal: TNyxPascalConstantValue;
     LiteralBase: TNyxPascalNumberBase;
+    RealSpelling: TNyxText;
     Name: TNyxText;
     Left: Integer;
     Right: Integer;
     Operation: TNyxPascalValueOperation;
+  end;
+  { Evaluation-local numeric channel. SourceNeeded asks the declaration owner
+    to bind its original initializer; it is never a fabricated mathematical
+    answer. Scalar and real evidence remain separate value-only records. }
+  TConstantNumberKind = (cnkUnknown, cnkScalar, cnkReal, cnkSourceNeeded);
+  { No source world, interface, callback or mutable arithmetic arena escapes
+    through this tagged result. Only the selected channel supplies evidence. }
+  TConstantNumber = record
+    Kind: TConstantNumberKind;
+    Scalar: TNyxPascalConstantValue;
+    Real: TNyxPascalIEEEValue;
+    class function FromScalar(const AValue: TNyxPascalConstantValue): TConstantNumber; static;
+    class function FromReal(const AValue: TNyxPascalIEEEValue): TConstantNumber; static;
+    class function SourceNeeded: TConstantNumber; static;
   end;
   { Owns only a lexical snapshot and value-node arena. Parsing is construction
     local; evaluation creates an independent bounded query for each invocation. }
@@ -176,9 +196,10 @@ type
     checked dependency access cannot expose mutable vectors or a live evaluator. }
   TConstantResult = class(TInterfacedObject, INyxPascalConstantResult,
     INyxPascalCompilerRequirements, INyxPascalConstantStorage,
-    INyxPascalConstantStorageIdentity)
+    INyxPascalConstantStorageIdentity, INyxPascalIEEEConstant)
   public
     Answer: TNyxPascalConstantValue;
+    RealAnswer: TNyxPascalIEEEValue;
     Reason: TNyxPascalBindingIssue;
     Related: TNyxText;
     Work: Integer;
@@ -186,6 +207,7 @@ type
     Requirements: INyxPascalCompilerRequirements;
     Storage: INyxPascalConstantStorage;
     function Value: TNyxPascalConstantValue;
+    function IEEEValue: TNyxPascalIEEEValue;
     function Issue: TNyxPascalBindingIssue;
     function RelatedName: TNyxText;
     function WorkUnits: Integer;
@@ -241,6 +263,11 @@ type
     FResult: TConstantResult;
     FDepth: Integer;
     FActive: array of TNyxText;
+    { Completed declaration meanings are query-local. Parallel vectors avoid
+      managed interfaces in copied records and reuse fully captured dependency
+      closures without re-evaluating a cast's already visited argument graph. }
+    FNumberSymbols: array of INyxPascalBoundSymbol;
+    FNumberValues: array of TConstantNumber;
     procedure Tick(AWork: Integer = 1);
     procedure Refuse(AIssue: TNyxPascalBindingIssue; const AName: TNyxText = '');
     procedure RefuseBinding(const AAnswer: INyxPascalResolution; const AName: TNyxText);
@@ -253,6 +280,14 @@ type
     function TextValue(const ASite: INyxPascalBindingSite; const AText: TNyxText): TNyxPascalConstantValue;
     function NodeValue(APlan: TConstantPlan; ANode: Integer;
       const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
+    { FPC conditionals use compiler-host numeric rules. Ordinary initializer
+      fallback remains source-owned through the existing semantic binder. }
+    function NodeNumber(APlan: TConstantPlan; ANode: Integer;
+      const ASite: INyxPascalBindingSite): TConstantNumber;
+    function DeclarationNumber(const ASymbol: INyxPascalBoundSymbol): TConstantNumber;
+    function BoundDeclarationNumber(const ASymbol: INyxPascalBoundSymbol): TConstantNumber;
+    function RealNumber(APlan: TConstantPlan; const ANode: TConstantNode;
+      const ASite: INyxPascalBindingSite; const ALeft, ARight: TConstantNumber): TConstantNumber;
     function BoundType(const ASite: INyxPascalBindingSite; const AName: TNyxText;
       out ASource: INyxPascalBoundSymbol): INyxPascalSemanticType;
     function OrdinalValue(const AType: INyxPascalSemanticType;
@@ -283,6 +318,27 @@ begin
   Result.FSteps := 100000;
   Result.FDepth := 64;
   Result.FDialect := pcdPascal;
+end;
+
+class function TConstantNumber.FromScalar(const AValue: TNyxPascalConstantValue): TConstantNumber;
+begin
+  Result := Default(TConstantNumber);
+
+  if AValue.Kind = pvvUnknown then Exit;
+  Result.Kind := cnkScalar; Result.Scalar := AValue;
+end;
+
+class function TConstantNumber.FromReal(const AValue: TNyxPascalIEEEValue): TConstantNumber;
+begin
+  Result := Default(TConstantNumber);
+
+  if AValue.Kind = pifUnknown then Exit;
+  Result.Kind := cnkReal; Result.Real := AValue;
+end;
+
+class function TConstantNumber.SourceNeeded: TConstantNumber;
+begin
+  Result := Default(TConstantNumber); Result.Kind := cnkSourceNeeded;
 end;
 
 procedure TNyxPascalConstantOptions.Validate;
@@ -401,9 +457,19 @@ begin
         LKind := cnNot;
       end;
       FNodes[Result].Kind := LKind;
+
+      if (FOptions.Dialect = pcdFPCConditional) and (LKind = cnPositive) then
+        FSupported := False;
       Step;
       LAt := Primary;
       FNodes[Result].Left := LAt;
+    end
+    else if (Tok.Kind = ptkNumber) and Tok.Complete and Tok.RealNumber and
+      (FOptions.Dialect = pcdFPCConditional) then
+    begin
+      FNodes[Result].Kind := cnReal;
+      FNodes[Result].RealSpelling := FLexical.Text(FAt);
+      Step;
     end
     else if (Tok.Kind = ptkNumber) and Tok.Complete and not Tok.RealNumber then
     begin
@@ -452,7 +518,15 @@ begin
       except
         on ENyxPascalValue do
         begin
-          FSupported := False;
+
+          if (FOptions.Dialect = pcdFPCConditional) and (LBase = 10) then
+          begin
+            { FPC tries signed64, unsigned64, then compiler-host real parsing.
+              Preserve the original decimal token; no integer bits are clipped. }
+            FNodes[Result].Kind := cnRealInteger;
+            FNodes[Result].RealSpelling := FLexical.Text(FAt);
+          end
+          else FSupported := False;
         end;
         on ENyxDecimalNumber do
         begin
@@ -619,6 +693,15 @@ begin
           AOperation := pvoMultiply;
           Result := 40;
         end;
+      psoSlash:
+        begin
+
+          if FOptions.Dialect = pcdFPCConditional then
+          begin
+            AOperation := pvoDivide;
+            Result := 40;
+          end;
+        end;
       psoShiftLeft:
         begin
 
@@ -725,13 +808,17 @@ var
   LPrecedence: Integer;
   LParent: Integer;
   LRight: Integer;
+  LKind: TConstantNodeKind;
 begin
   Result := Primary;
   LPrecedence := Precedence(LOperation);
   while LPrecedence >= AMinimum do
   begin
+    LKind := cnBinary;
+
+    if (Tok.Kind = ptkSymbol) and (Tok.Symbol = psoSlash) then LKind := cnRealDivide;
     Step;
-    LParent := Add(cnBinary);
+    LParent := Add(LKind);
     FNodes[LParent].Operation := LOperation;
     FNodes[LParent].Left := Result;
     LRight := Expression(LPrecedence + 1);
@@ -796,6 +883,11 @@ end;
 function TConstantResult.Value: TNyxPascalConstantValue;
 begin
   Result := Answer;
+end;
+
+function TConstantResult.IEEEValue: TNyxPascalIEEEValue;
+begin
+  Result := RealAnswer;
 end;
 function TConstantResult.Issue: TNyxPascalBindingIssue;
 begin
@@ -2367,6 +2459,423 @@ begin
   Result := TNyxPascalConstantValue.IntegerValue(LFact.Bytes);
 end;
 
+{ Source fallback binds the original declaration, never an invented temporary
+  module or a retagged expression string. Its child budget consumes the remaining
+  constant allowance and forwards work once to the caller's aggregate scope. }
+function TConstantQuery.BoundDeclarationNumber(const ASymbol: INyxPascalBoundSymbol): TConstantNumber;
+var
+  LAnswer, LFound: INyxPascalResolution;
+  LIEEE: INyxPascalIEEEConstant;
+  LScalar: INyxPascalConstantExpression;
+  LBudget: INyxPascalAnalysisBudget;
+  LView: INyxPascalTranslatedSyntax;
+  LLex: INyxPascalLexicalSnapshot;
+  LSite: INyxPascalBindingSite;
+  LType: INyxPascalSemanticType;
+  LToken: TNyxPascalToken;
+  LName: TNyxText;
+  LAt, LLast, LIndex, LNext, LMember: Integer;
+  LDependency: TConstantNumber;
+begin
+  Result := Default(TConstantNumber);
+
+  if FResult.Work >= FOptions.MaximumSteps then
+    raise ENyxPascalConstantLimit.Create('Source numeric binding exceeds its constant budget');
+  LBudget := NewNyxPascalAnalysisBudget(FOptions.MaximumSteps-FResult.Work,FCancellation);
+  try
+    LAnswer := ASymbol.World.TypeOfSymbol(ASymbol,LBudget);
+  finally Inc(FResult.Work,LBudget.Receipt.Total); LBudget.Retire; end;
+
+  if LAnswer.Status <> pbsBound then
+  begin
+    RefuseBinding(LAnswer,ASymbol.Declaration.Name);
+    Exit;
+  end;
+
+  if Supports(LAnswer.BoundType,INyxPascalIEEEConstant,LIEEE) then
+    Result := TConstantNumber.FromReal(LIEEE.IEEEValue)
+  else if Supports(LAnswer.BoundType,INyxPascalConstantExpression,LScalar) then
+    Result := TConstantNumber.FromScalar(LScalar.ConstantValue);
+
+  if Result.Kind = cnkUnknown then
+  begin
+    Refuse(pbiUnsupportedType,ASymbol.Declaration.Name);
+    Exit;
+  end;
+  LType := LAnswer.BoundType;
+
+  if Supports(LType,INyxPascalConstantExpression,LScalar) then LType := LScalar.ResultType;
+  while (LType <> nil) and (LType.Kind in [pstAlias,pstDistinct]) do
+  begin
+    Tick; Depend(LType.Definition); LType := LType.Target;
+  end;
+
+  { Capture source names, including transitive constants and cast targets.
+    Qualified tokens are one lookup; literal strings/comments/directives never
+    become dependencies. Successful binding is not permission to drop a name. }
+  LView := ASymbol.World.ModuleAt(ASymbol.ModuleIndex);
+  LLex := LView.Syntax.Lexical;
+  LSite := ASymbol.World.At(ASymbol.ModuleIndex,ASymbol.Declaration.Scope,
+    ASymbol.Declaration.ExpressionSpan.Start);
+  LAt := LLex.TokenAt(ASymbol.Declaration.ExpressionSpan.Start);
+  LLast := ASymbol.Declaration.ExpressionSpan.Finish;
+  while LAt < LLex.Count do
+  begin
+    Tick; LToken := LLex.Token(LAt);
+
+    if LToken.Span.Start >= LLast then Break;
+
+    if (LToken.Kind = ptkWord) and (LToken.Word = pkwNone) then
+    begin
+      LName := LLex.Identifier(LAt); Inc(LAt);
+      while LAt < LLex.Count do
+      begin
+        LNext := LAt;
+        while (LNext < LLex.Count) and (LLex.Token(LNext).Kind in [ptkWhitespace,ptkComment]) do
+        begin Tick; Inc(LNext); end;
+
+        if (LNext >= LLex.Count) or (LLex.Token(LNext).Span.Start >= LLast) or
+          (LLex.Token(LNext).Kind <> ptkSymbol) or (LLex.Token(LNext).Symbol <> psoDot) then Break;
+        LMember := LNext+1;
+        while (LMember < LLex.Count) and (LLex.Token(LMember).Kind in [ptkWhitespace,ptkComment]) do
+        begin Tick; Inc(LMember); end;
+
+        if (LMember >= LLex.Count) or (LLex.Token(LMember).Span.Start >= LLast) or
+          (LLex.Token(LMember).Kind <> ptkWord) then Break;
+        Tick; LName := LName+'.'+LLex.Identifier(LMember); LAt := LMember+1;
+      end;
+      LFound := ASymbol.World.Lookup(LSite,NyxPascalBindingName(LName),FCancellation);
+
+      if (LFound.Status = pbsMissing) and
+        ((NyxPascalASCIIKey(LName) = 'true') or (NyxPascalASCIIKey(LName) = 'false')) then Continue;
+
+      if LFound.Status <> pbsBound then
+      begin RefuseBinding(LFound,LName); Exit(Default(TConstantNumber)); end;
+      for LIndex := 0 to LFound.Count-1 do
+      begin
+        Depend(LFound.SymbolAt(LIndex));
+
+        if LFound.SymbolAt(LIndex).Declaration.Kind = psdkConstant then
+        begin
+          LDependency := DeclarationNumber(LFound.SymbolAt(LIndex));
+
+          if LDependency.Kind = cnkUnknown then Exit(Default(TConstantNumber));
+        end;
+      end;
+    end
+    else Inc(LAt);
+  end;
+end;
+
+function TConstantQuery.DeclarationNumber(const ASymbol: INyxPascalBoundSymbol): TConstantNumber;
+var LDeclaration: TNyxPascalSyntaxDeclaration; LKey: TNyxText;
+  LAt: Integer; LView: INyxPascalTranslatedSyntax; LSite: INyxPascalBindingSite;
+  LPlan: TConstantPlan;
+begin
+  Result := Default(TConstantNumber); Depend(ASymbol);
+  for LAt := 0 to High(FNumberSymbols) do
+  begin
+    Tick;
+
+    if (FNumberSymbols[LAt].World = ASymbol.World) and
+      (FNumberSymbols[LAt].ModuleIndex = ASymbol.ModuleIndex) and
+      (FNumberSymbols[LAt].DeclarationIndex = ASymbol.DeclarationIndex) then
+      Exit(FNumberValues[LAt]);
+  end;
+  LDeclaration := ASymbol.Declaration;
+
+  if LDeclaration.Kind = psdkEnumValue then
+    Exit(TConstantNumber.FromScalar(DeclarationValue(ASymbol)));
+
+  if LDeclaration.Flags * [psdfIncomplete,psdfConditional,psdfUnsupported] <> [] then
+  begin Refuse(pbiIncompleteSource,LDeclaration.Name); Exit; end;
+
+  if (LDeclaration.Kind <> psdkConstant) or (LDeclaration.TypeSpan.Length <> 0) then
+  begin Refuse(pbiWrongMemberKind,LDeclaration.Name); Exit; end;
+
+  if LDeclaration.ExpressionSpan.Length = 0 then
+  begin Refuse(pbiIncompleteSource,LDeclaration.Name); Exit; end;
+  LKey := TNyxText(IntToStr(ASymbol.ModuleIndex))+':'+TNyxText(IntToStr(ASymbol.DeclarationIndex));
+  for LAt := 0 to High(FActive) do
+  begin
+    Tick;
+
+    if FActive[LAt] = LKey then
+    begin Refuse(pbiRecursiveType,LDeclaration.Name); Exit; end;
+  end;
+  SetLength(FActive,Length(FActive)+1); FActive[High(FActive)] := LKey;
+  try
+    LView := ASymbol.World.ModuleAt(ASymbol.ModuleIndex);
+    LSite := ASymbol.World.At(ASymbol.ModuleIndex,LDeclaration.Scope,LDeclaration.ExpressionSpan.Start);
+    Tick;
+    LPlan := TConstantPlan.Create(LView.Syntax.Lexical.Slice(LDeclaration.ExpressionSpan),
+      FOptions.InDialect(pcdPascal),FCancellation);
+    try
+      Tick(LPlan.FLexical.Count);
+
+      if LPlan.FSupported then Result := NodeNumber(LPlan,LPlan.FRoot,LSite)
+      else Result := TConstantNumber.SourceNeeded;
+
+      if Result.Kind in [cnkReal,cnkSourceNeeded] then Result := BoundDeclarationNumber(ASymbol);
+    finally LPlan.Free; end;
+  finally SetLength(FActive,Length(FActive)-1); end;
+
+  if (Result.Kind in [cnkScalar,cnkReal]) and (FResult.Reason = pbiNone) then
+  begin
+    LAt := Length(FNumberSymbols);
+
+    if LAt >= 256 then
+      raise ENyxPascalConstantLimit.Create('Numeric declarations exceed the existing dependency budget');
+    SetLength(FNumberSymbols,LAt+1); SetLength(FNumberValues,LAt+1);
+    FNumberSymbols[LAt] := ASymbol; FNumberValues[LAt] := Result;
+  end;
+end;
+
+{ Conditional reals use compiler-host precision and the compiler's masked
+  arithmetic path. Target FPU/minimum precision and source IEEE/R/Q requests
+  neither select this format nor supply the explicit parser/evaluator facts. }
+function TConstantQuery.RealNumber(APlan: TConstantPlan; const ANode: TConstantNode;
+  const ASite: INyxPascalBindingSite; const ALeft, ARight: TConstantNumber): TConstantNumber;
+var
+  LContext: INyxPascalCompilerContext;
+  LParser: TNyxPascalRealParserPolicy;
+  LEvaluation: TNyxPascalRealEvaluationPolicy;
+  LBudget: INyxPascalAnalysisBudget;
+  LLeft, LRight, LValue: TNyxPascalIEEEValue;
+  LBinary: TNyxPascalBinaryReal;
+  LSpelling: TNyxText;
+  LOperation: TNyxPascalRealOperation;
+  LOrder: TNyxPascalIEEEOrder;
+  LTruth: Boolean;
+
+  function Converted(const AValue: TConstantNumber): TNyxPascalIEEEValue;
+  var LScalar: TNyxPascalConstantValue;
+  begin
+    Result := TNyxPascalIEEEValue.Unknown;
+
+    if AValue.Kind = cnkReal then Exit(AValue.Real.RoundToEven(LEvaluation.Precision,LBudget));
+
+    if AValue.Kind <> cnkScalar then Exit;
+    LScalar := AValue.Scalar;
+
+    if LScalar.Kind = pvvBoolean then
+      LScalar := TNyxPascalConstantValue.IntegerValue(Ord(LScalar.BooleanResult));
+
+    if LScalar.Kind <> pvvInteger then Exit;
+    Result := TNyxPascalIEEEValue.Finite(
+      NyxPascalRoundIntegerToRealEven(LScalar,LEvaluation.Precision,LBudget));
+  end;
+
+begin
+  Result := Default(TConstantNumber);
+  LContext := ContextAt(ASite);
+
+  if (APlan.FOptions.Dialect <> pcdFPCConditional) or (LContext = nil) or
+    (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber <> 30301) then
+  begin Refuse(pbiCompilerContext); Exit; end;
+
+  if FResult.Work >= FOptions.MaximumSteps then
+    raise ENyxPascalConstantLimit.Create('Conditional real work exceeds its constant budget');
+  LBudget := NewNyxPascalAnalysisBudget(FOptions.MaximumSteps-FResult.Work,FCancellation);
+  try
+    try
+
+      if ANode.Kind in [cnReal,cnRealInteger] then
+      begin
+        LParser := NyxPascalRealParser(LContext);
+
+        if (LParser.Kind <> prpkNearestEven) or
+          not (LParser.Precision in [pbpBinary64,pbpX87Extended80]) then
+        begin Refuse(pbiCompilerContext,'REALPARSER'); Exit; end;
+        { The qualified RTL Val accepts one short string. Do not truncate a
+          longer caller token to reproduce a compiler scanner limitation. }
+
+        if Length(ANode.RealSpelling) > 255 then
+        begin Refuse(pbiUnsupportedType,'real parser token'); Exit; end;
+        LSpelling := ANode.RealSpelling;
+
+        if ANode.Kind = cnRealInteger then LSpelling := LSpelling+'e0';
+        LBinary := NyxPascalRoundRealToEven(NyxPascalRealToken(LSpelling,LBudget),LParser.Precision,LBudget);
+        case LBinary.Status of
+          rrsFinite: LValue := TNyxPascalIEEEValue.Finite(LBinary);
+          rrsOverflow: LValue := TNyxPascalIEEEValue.Infinity(LParser.Precision,LBinary.Negative);
+        else LValue := TNyxPascalIEEEValue.Unknown;
+        end;
+        Result := TConstantNumber.FromReal(LValue);
+        Exit;
+      end;
+      LEvaluation := NyxPascalRealEvaluation(LContext);
+
+      if (LEvaluation.Kind <> prekNearestEven) or
+        not (LEvaluation.Precision in [pbpBinary64,pbpX87Extended80]) then
+      begin Refuse(pbiCompilerContext,'REALEVALUATION'); Exit; end;
+      LLeft := Converted(ALeft); LRight := Converted(ARight);
+
+      if (LLeft.Kind = pifUnknown) or (LRight.Kind = pifUnknown) then Exit;
+
+      if (ANode.Kind = cnBinary) and (ANode.Operation in
+        [pvoEqual,pvoNotEqual,pvoLess,pvoLessEqual,pvoGreater,pvoGreaterEqual]) then
+      begin
+        LOrder := LLeft.Compare(LRight,LBudget);
+
+        if LOrder = pieoUnknown then Exit;
+        LTruth := False;
+        case ANode.Operation of
+          pvoEqual: LTruth := LOrder = pieoEqual;
+          pvoNotEqual: LTruth := LOrder <> pieoEqual;
+          pvoLess: LTruth := LOrder = pieoLess;
+          pvoLessEqual: LTruth := LOrder in [pieoLess,pieoEqual];
+          pvoGreater: LTruth := LOrder = pieoGreater;
+          pvoGreaterEqual: LTruth := LOrder in [pieoGreater,pieoEqual];
+        else begin end;
+        end;
+        Exit(TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(LTruth)));
+      end;
+      LOperation := proDivide;
+
+      if ANode.Kind <> cnRealDivide then
+        case ANode.Operation of
+          pvoAdd: LOperation := proAdd;
+          pvoSubtract: LOperation := proSubtract;
+          pvoMultiply: LOperation := proMultiply;
+        else Exit;
+        end;
+      Result := TConstantNumber.FromReal(LLeft.Operate(LOperation,LRight,LEvaluation.Precision,LBudget));
+    except on ENyxPascalValue do Refuse(pbiUnsupportedType); end;
+  finally Inc(FResult.Work,LBudget.Receipt.Total); LBudget.Retire; end;
+end;
+
+function TConstantQuery.NodeNumber(APlan: TConstantPlan; ANode: Integer;
+  const ASite: INyxPascalBindingSite): TConstantNumber;
+var LNode: TConstantNode; LLeft, LRight: TConstantNumber;
+  LFound: INyxPascalResolution; LContext: INyxPascalCompilerContext;
+  LFact: TNyxPascalDefineValue; LTruth, LOther: Boolean;
+begin
+  LNode := APlan.FNodes[ANode];
+
+  if LNode.Kind in [cnValue,cnLow,cnHigh,cnSize,cnDeclared,cnDefined,cnOrd] then
+    Exit(TConstantNumber.FromScalar(NodeValue(APlan,ANode,ASite)));
+  Tick; Inc(FDepth);
+
+  if FDepth > FOptions.MaximumDepth then
+    raise ENyxPascalConstantLimit.Create('Conditional numeric evaluation exceeds its depth budget');
+  try
+    Result := Default(TConstantNumber);
+    case LNode.Kind of
+      cnReal,cnRealInteger:
+        Result := RealNumber(APlan,LNode,ASite,Result,Result);
+      cnName:
+        begin
+          LContext := ContextAt(ASite);
+
+          if (LContext <> nil) and (Pos('.',LNode.Name) = 0) and (Length(LNode.Name) <= 128) then
+          begin
+            LFact := LContext.Symbol(NyxPascalDefine(LNode.Name));
+
+            if LFact.Kind = ppdInteger then
+              Exit(TConstantNumber.FromScalar(TNyxPascalConstantValue.IntegerValue(LFact.IntegerValue)));
+          end;
+          LFound := Resolve(ASite,LNode.Name);
+
+          if (LFound.Status = pbsBound) and (LFound.Count = 1) then
+            Result := DeclarationNumber(LFound.SymbolAt(0));
+        end;
+      cnPositive,cnNegative,cnNot:
+        begin
+          LLeft := NodeNumber(APlan,LNode.Left,ASite);
+
+          if LLeft.Kind in [cnkReal,cnkSourceNeeded] then
+          begin
+
+            if APlan.FOptions.Dialect = pcdPascal then Exit(TConstantNumber.SourceNeeded);
+
+            if (LNode.Kind = cnNegative) and (LLeft.Kind = cnkReal) then
+              Exit(TConstantNumber.FromReal(LLeft.Real.Negated));
+          end
+          else if LLeft.Kind = cnkScalar then
+            case LNode.Kind of
+              cnPositive:
+                if LLeft.Scalar.Kind = pvvInteger then Result := LLeft;
+              cnNegative: Result := TConstantNumber.FromScalar(LLeft.Scalar.Negated);
+              cnNot:
+                begin
+
+                  if (APlan.FOptions.Dialect = pcdFPCConditional) and LLeft.Scalar.TryTruth(LTruth) then
+                    Result := TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(not LTruth))
+                  else if (APlan.FOptions.Dialect = pcdFPCConditional) and (LLeft.Scalar.Kind = pvvInteger) then
+                    Result := TConstantNumber.FromScalar(LLeft.Scalar.Complemented64)
+                  else if LLeft.Scalar.Kind = pvvBoolean then
+                    Result := TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(not LLeft.Scalar.BooleanResult));
+                end;
+            else begin end;
+            end;
+        end;
+      cnBinary,cnRealDivide:
+        begin
+
+          if (LNode.Kind = cnBinary) and (LNode.Operation in [pvoShiftLeft64,pvoShiftRight64]) then
+          begin
+            LContext := ContextAt(ASite);
+
+            if (LContext = nil) or (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber = 0) then
+            begin Refuse(pbiCompilerContext); Exit; end;
+          end;
+          LLeft := NodeNumber(APlan,LNode.Left,ASite);
+
+          if (APlan.FOptions.Dialect = pcdFPCConditional) and (LNode.Kind = cnBinary) and
+            (LLeft.Kind = cnkScalar) and LLeft.Scalar.TryTruth(LTruth) then
+          begin
+
+            if ((LNode.Operation = pvoOr) and LTruth) or
+              ((LNode.Operation = pvoAnd) and not LTruth) then
+              Exit(TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(LTruth)));
+          end;
+          LRight := NodeNumber(APlan,LNode.Right,ASite);
+
+          if (LLeft.Kind in [cnkReal,cnkSourceNeeded]) or
+            (LRight.Kind in [cnkReal,cnkSourceNeeded]) or (LNode.Kind = cnRealDivide) then
+          begin
+
+            if APlan.FOptions.Dialect = pcdPascal then Exit(TConstantNumber.SourceNeeded);
+            Result := RealNumber(APlan,LNode,ASite,LLeft,LRight);
+          end
+          else if (LLeft.Kind = cnkScalar) and (LRight.Kind = cnkScalar) then
+          begin
+
+            if (LLeft.Scalar.Kind = pvvInteger) and (LRight.Scalar.Kind = pvvInteger) and
+              (LNode.Operation in [pvoAnd,pvoOr,pvoXor]) then
+            begin
+              LContext := ContextAt(ASite);
+
+              if (LContext = nil) or (LContext.Family <> ppcFPC) or (LContext.Version.FullNumber = 0) then
+              begin Refuse(pbiCompilerContext); Exit; end;
+            end;
+
+            if (APlan.FOptions.Dialect = pcdFPCConditional) and
+              (LNode.Operation in [pvoAnd,pvoOr,pvoXor]) and LLeft.Scalar.TryTruth(LTruth) then
+            begin
+
+              if LRight.Scalar.TryTruth(LOther) then
+                case LNode.Operation of
+                  pvoAnd: Result := TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(LTruth and LOther));
+                  pvoOr: Result := TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(LTruth or LOther));
+                  pvoXor: Result := TConstantNumber.FromScalar(TNyxPascalConstantValue.BooleanValue(LTruth xor LOther));
+                else begin end;
+                end;
+            end
+            else Result := TConstantNumber.FromScalar(LLeft.Scalar.Operate(LNode.Operation,LRight.Scalar));
+          end;
+        end;
+    else Refuse(pbiUnsupportedType);
+    end;
+
+    if (APlan.FOptions.Dialect = pcdFPCConditional) and (Result.Kind = cnkScalar) and
+      (Result.Scalar.Kind = pvvOrdinal) then Result.Scalar := Result.Scalar.OrdValue;
+
+    if Result.Kind = cnkUnknown then Refuse(pbiUnsupportedType,LNode.Name);
+  finally Dec(FDepth); end;
+end;
+
 function TConstantQuery.NodeValue(APlan: TConstantPlan; ANode: Integer;
   const ASite: INyxPascalBindingSite): TNyxPascalConstantValue;
 var
@@ -2565,6 +3074,7 @@ begin
             end;
           end;
         end;
+    else begin end;
     end;
 
     if (APlan.FOptions.Dialect = pcdFPCConditional) and (Result.Kind = pvvOrdinal) then
@@ -2587,6 +3097,7 @@ function TConstantQuery.Run(APlan: TConstantPlan; const ASite: INyxPascalBinding
 var
   LOwner: INyxPascalConstantResult;
   LContext: INyxPascalCompilerContext;
+  LNumber: TConstantNumber;
 begin
   AOptions.Validate;
 
@@ -2619,7 +3130,17 @@ begin
 
   if APlan.FSupported then
   begin
-    FResult.Answer := NodeValue(APlan, APlan.FRoot, ASite);
+
+    if AOptions.Dialect = pcdFPCConditional then
+    begin
+      LNumber := NodeNumber(APlan,APlan.FRoot,ASite);
+      case LNumber.Kind of
+        cnkScalar: FResult.Answer := LNumber.Scalar;
+        cnkReal: FResult.RealAnswer := LNumber.Real;
+      else Refuse(pbiUnsupportedType);
+      end;
+    end
+    else FResult.Answer := NodeValue(APlan,APlan.FRoot,ASite);
   end
   else
   begin
@@ -2629,6 +3150,7 @@ begin
   if FResult.Reason <> pbiNone then
   begin
     FResult.Answer := TNyxPascalConstantValue.Unknown;
+    FResult.RealAnswer := TNyxPascalIEEEValue.Unknown;
   end;
   FCancellation := nil;
   Result := LOwner;

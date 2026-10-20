@@ -4,7 +4,58 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source binding adds optional INyxPascalIEEEConstant evidence for admitted
+Current-source conditional numbers use the existing explicit FPC dialect and
+compiler-host parser/evaluator facts, independently of source target FPU/minimum/
+IEEE/R/Q settings. Qualified FPC30301 entry masks host exceptions. Typed real
+tokens, beyond64 decimal fallback and slash preserve original text; over-short-
+string tokens refuse without truncation. Existing INyxPascalIEEEConstant supplies
+the optional real channel; scalar result GUID/methods/value ordinals and all
+public record layouts remain unchanged. Source constants bind original complete
+initializers with lexical/nominal/rounding/admission identity and transitive
+dependencies. Completed query-local parallel symbol/value vectors reuse only
+qualified closures; no interface in copied records or world-owned mutable memo.
+All binding/math children consume the existing remaining constant allowance and
+forward aggregate work once. No default profile/probe/enrollment/tool/schema
+changes. Conditional short-circuiting retains complete syntax admission. Direct
+real conditions and unsupported families/versions refuse. Initial underflow
+really exhausted 100,000 steps; its inputs/log/exception heap remain retained.
+The existing binary owner now proves outer range bounds using 10>2^3 plus full
+decimal order, retaining exact rational work at boundaries and compensated long
+coefficients. No host float/logarithm/guess or quota increase. Earlier scalar405
+and binary753/first fit565/large223151 have clean heaps. Twenty-one whole compiler
+inputs retain seventeen clean-heap successes/four expected conditional errors.
+Whole native57 branch truths include two original repeated includes and local
+shadowing; selected/opposite activity agrees. Ordered54 answers/55 passes fits64.
+Focused16,132/first fit15,536/all smaller allowances atomic/64 joined has clean
+heap; two final family/version assertions precede the five-source staged
+whitespace freeze. Final focused count16,134 passes. All72 current compiler logs
+have zero owned warnings/189 upstream;43 selected native runs have clean heaps;
+27 browser consumers compile only;both Studios/backend/worker compile as
+applicable. Exact final five-source batch has no later Pascal repair/substituted
+evidence. Unchanged RTL56 retains System13,101/zero syntax/31 and ObjPas209/zero/
+one, neither pending, with indexed Free/FreeInstance navigation/insertion ready.
+Original2M/4M/64/initial five/Word one/symbol three-of-eight/dynamic six-of-eight
+quotas and ordered jobs remain exact. All767 maintained/762 unrelated/five frozen/
+two preceding source copies/all inherited preparations/failures/97 RTL/24 base
+compiler pins plus inspected compiler/runtime owners/156 packets/48 includes/349
+artifacts/nine contexts/five protected/thirteen foreign files stay exact. Corpus
+575/508 actual files/2,459,289 tokens passes. All readers/handles join; no Studio
+listener remains. Current-start protected comparisons stay exact; historical
+global-config failure keeps full preservation false. Initial case
+warnings/native-import/EOF/range preparations and all old failures remain exact.
+WORK.md and ignored .local/real-conditions-paths-private.json own current source/
+remote/evidence receipts and return path. No Pascal edits while readers live.
+Preserve all source/SDK/compiler/protected/frozen/concurrent pins and failures;
+thirteen foreign planning files stay outside owned work. LAN offline; native Nyx
+tools absent. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. Stop current
+conditional/math/fixture/compiler variants after qualification; source parsing,
+macro/string/set/general intrinsic/default enrollment, full source/type/module/
+incremental/editor/input/quality/parity/adoption/delivery and original criterion/
+task/counter/credit/DONE remain open. All original limits/probes/ordered answers
+and source/context ownership stay authoritative.
+
+Previously qualified binding adds optional INyxPascalIEEEConstant evidence for admitted
 finite/infinity/NaN expressions while keeping the old finite interface truthful
 and its GUID/methods unchanged. One new optional GUID/internal class hierarchy;
 old ordinals/record layouts retain the preceding baseline. Declared constants
