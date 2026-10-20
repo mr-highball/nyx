@@ -249,7 +249,8 @@ begin
   LSource := Companion('1.25 + 2.5'); LAnswer := Query(LSource,'Observe(','1.25 + 2.5',Facts,Root);
   Check(LAnswer.Status <> pbsBound,'Real constant operators do not acquire unqualified runtime rules');
   LSource := Companion('-(1.25)'); LAnswer := Query(LSource,'Observe(','-(1.25)',Facts,Root);
-  Check(LAnswer.Status <> pbsBound,'Parenthesized constant negation retains separate folding qualification');
+  Check((LAnswer.Status = pbsBound) and (TypeName(LAnswer.BoundType) = 'Single'),
+    'Qualified constant negation retains its operand type without requiring compiler-host arithmetic');
 end;
 
 function StorageIdentity(APrecision: TNyxPascalBinaryPrecision): TNyxText;

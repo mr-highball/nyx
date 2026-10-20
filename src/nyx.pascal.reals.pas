@@ -24,7 +24,7 @@ unit nyx.pascal.reals;
 
 interface
 
-uses nyx.text, nyx.scheduler;
+uses nyx.text, nyx.scheduler, nyx.pascal.values;
 
 type
   { Exact mathematical decimal evidence, separate from any compiler-rounded
@@ -138,10 +138,17 @@ function NyxPascalCalculateRealToEven(AOperation: TNyxPascalRealOperation;
   const ALeft, ARight: TNyxPascalBinaryReal;
   APrecision: TNyxPascalBinaryPrecision;
   const ACancellation: INyxCancellationScope = nil): TNyxPascalBinaryReal;
+{ Explicit mathematical conversion of the existing exact signed/unsigned-64
+  integer domain. Boolean, ordinal and Unknown inputs grant no integer proof.
+  This does not infer a compiler's implicit conversion or its intermediate
+  precision; callers model those stages separately with RoundToEven. }
+function NyxPascalRoundIntegerToRealEven(const AValue: TNyxPascalConstantValue;
+  APrecision: TNyxPascalBinaryPrecision;
+  const ACancellation: INyxCancellationScope = nil): TNyxPascalBinaryReal;
 
 implementation
 
-uses SysUtils, nyx.pascal.values, nyx.pascal.work, nyx.pascal.lexing;
+uses SysUtils, nyx.pascal.work, nyx.pascal.lexing;
 
 { Work admission dispatches optional budgets. Ordinary cancellation scopes do
   not implement that capability, so each actual decimal step checks both. }

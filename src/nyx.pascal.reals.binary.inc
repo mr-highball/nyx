@@ -680,3 +680,24 @@ begin
     Result := RoundRealRational(LNumerator,LDenominator,LExponent,APrecision,AValue.Negative,ACancellation);
   finally LNext.Free; LPower.Free; LDenominator.Free; LNumerator.Free; end;
 end;
+
+function NyxPascalRoundIntegerToRealEven(const AValue: TNyxPascalConstantValue;
+  APrecision: TNyxPascalBinaryPrecision;
+  const ACancellation: INyxCancellationScope): TNyxPascalBinaryReal;
+var LText: TNyxText; LSource: TNyxPascalRealValue; LNegative: Boolean;
+begin
+  Admit(ACancellation,papConstantStep); ValidateRealPrecision(APrecision);
+  Result := TNyxPascalBinaryReal.Unknown;
+
+  if (AValue.Kind <> pvvInteger) or (APrecision = pbpUnknown) then Exit;
+  { The value owner guarantees integral signed/unsigned-64 text. No host integer
+    or float is used to format it; at most twenty decimal digits participate. }
+  LText := AValue.Number.ToText; Admit(ACancellation,papSourceProof,Length(LText));
+  LNegative := (LText <> '') and (LText[1] = '-');
+
+  if LNegative then Delete(LText,1,1);
+  LSource := NyxPascalRealToken(LText+'.0',ACancellation);
+
+  if LNegative then LSource := LSource.Negated;
+  Result := NyxPascalRoundRealToEven(LSource,APrecision,ACancellation);
+end;

@@ -52,6 +52,12 @@ budget charges the actual work, including integer storage and digit processing.
 Cancellation or budget refusal publishes no partial value or comparison. Results
 retain no work integers, budget, thread, source world or callback.
 
+`NyxPascalRoundIntegerToRealEven` converts the existing exact signed/unsigned-64
+integer value domain without a host integer or floating conversion. It refuses
+Boolean and nominal ordinal values; an ordinal needs its explicit integer
+projection. This mathematical conversion remains independent of a compiler's
+implicit conversion stages and intermediate precision.
+
 ## Resolver integration
 
 The compiler context has two independent optional capabilities:
@@ -80,6 +86,24 @@ capability. Generic calls inherit the specialization type without inheriting a
 proof about their return value. Ordinary integer/Boolean constant channels never
 receive a real value disguised as an integer.
 
+`INyxPascalConstantExpression` now makes the existing scalar-expression contract
+public, preserving its original GUID and method layout. Its `ConstantValue`
+contains an independently proven integer or Boolean, otherwise Unknown;
+`ResultType` carries the ordinary semantic type. A real expression instead uses
+`INyxPascalRealConstant`. Neither capability is inherited by a generic return.
+
+Constant unary signs retain the operand's represented type; they do not apply
+the widening used for a runtime negative value. Mixed integer constants convert
+first through the compiler-host representation, then through the common real
+operand type, before arithmetic or comparison. This distinction matters:
+under the measured FPC contract, `16777217 = 16777216.0` is True with a Single
+minimum and False with a Double minimum. A runtime operand supplies only type
+proof even when a particular optimizer might simplify the expression.
+
+Integer-only `/` can retain a real constant when explicit evaluation evidence
+is present. Without that evidence its existing type-only answer remains
+value-unknown; this is not a claim of complete constant range/admission analysis.
+
 These optional facts participate in exact context, capture and storage identity.
 Source MODE, local PUSH/POP and unknown source effects do not replace initial
 compiler-host metadata. Resolver arithmetic consumes the existing remaining
@@ -88,6 +112,8 @@ semantic-step allowance, including when no aggregate budget is supplied.
 The native witness independently checks 85 arithmetic values and 30 comparisons
 at five authored precision/FPU sites. The resolver queries the original complete
 unit and repeated includes; it invokes no witness bodies. Browser consumers
-compile only. Unary constant operators, mixed integer/runtime expressions, named
-real constants, broader conversion/range admission and default profile enrollment
-remain open, alongside full editor integration and target parity.
+compile only. A second independent whole native unit adds 140 unary/mixed
+conversion cases, including actual comparison values and runtime proof barriers.
+Named real constants, explicit constant casts, broader conversion/range admission
+and default profile enrollment remain open, alongside full editor integration
+and target parity.

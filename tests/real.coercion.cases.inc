@@ -1,0 +1,30 @@
+{ Complete expressions retain source parentheses, literal signedness and
+  variable identity at each authored policy site. }
+Emit('unary-minus',True,-(1.25));
+Emit('unary-plus',True,+(1.25));
+Emit('unary-zero',True,-(-0.0));
+Emit('unary-fold',True,-(1.25 + 2.5));
+Emit('integer-right',True,1.25 + 2);
+Emit('integer-left',True,2 + 1.25);
+Emit('integer-subtract',True,2 - 1.25);
+Emit('integer-multiply',True,1.25 * 3);
+Emit('integer-divide',True,1.0 / 3);
+Emit('integer-numerator',True,3 / 2.0);
+Emit('integer-pair-divide',True,1 / 3);
+Emit('integer-fold',True,(1 + 2) + 1.25);
+Emit('signed-minimum',True,-9223372036854775808 + 0.0);
+Emit('unsigned-maximum',True,18446744073709551615 + 0.0);
+EmitRelation('integer-rounds-single',True,16777217 = 16777216.0);
+EmitRelation('negative-rounds-single',True,-16777217 < -16777216.0);
+EmitRelation('integer-rounds-double',True,9007199254740993 = 9007199254740992.0);
+Emit('runtime-single',False,F32 + 1.25);
+Emit('runtime-single-right',False,1.25 + F32);
+Emit('runtime-double',False,F64 + 1.25);
+Emit('runtime-extended',False,1.25 + F80);
+Emit('runtime-integer',False,I32 + 1.25);
+Emit('runtime-int64',False,1.25 + I64);
+Emit('runtime-unsigned',False,U64 / 1.25);
+Emit('runtime-zero-multiply',False,F32 * 0.0);
+Emit('runtime-unary',False,-F32);
+Emit('runtime-integer-division',False,I32 / I32);
+EmitRelation('runtime-compare',False,I32 < 1.25);

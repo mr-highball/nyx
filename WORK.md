@@ -33,7 +33,89 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Qualified real constant expressions — 2026-10-20
+## Current integration: Unary and mixed real conversion — 2026-10-20
+
+The preceding6811faf turn makes implementation/qualification/remote progress.
+This turn revalidates all751 maintained inputs before extending the same real/
+numeric/binding owners. All existing user outcomes and open criteria remain.
+
+The mathematical real owner explicitly converts the exact signed/unsigned-64
+integer value domain to a requested nearest-even format. It formats through the
+existing decimal owner, preserves every digit and charges work/cancellation;
+Boolean/ordinal/unknown values grant no integer proof. This supplies no compiler
+conversion rule by itself and uses no host integer/float for the complete value.
+
+The inspected FPC unary path folds a real constant before runtime widening.
+Qualified unary constant signs now preserve the operand type and exact sign,
+including zero, without requiring arithmetic-host evidence. The prior deliberate
+unsupported-parenthesized-negation assertion becomes a positive retained-type
+assertion; its original source remains copied exactly. Other original literal
+assertions and both original literal witnesses remain unchanged.
+
+Mixed constant arithmetic/comparison now applies compiler-host integer
+conversion, then common-real narrowing, before the existing operation. The
+native equality16777217=16777216.0 is True for a Single minimum and False for
+Double, demonstrating why exact integer comparison is insufficient. Runtime
+operands retain the existing nominal/alias/result-type rules and no invented
+constant. Generic returns inherit type only. Pure integer slash can fold under
+explicit evaluation evidence; absent that fact, its prior type-only answer
+remains value-unknown. Named constants, explicit casts and complete range/
+admission remain separate work.
+
+The previously private scalar-expression interface is published as optional
+INyxPascalConstantExpression while preserving its original GUID/method slots;
+the internal spelling is a commented alias. Its integer/Boolean proof remains
+separate from optional real values and generic specialization types. Old record
+layouts/GUIDs/ordinals retain their meaning. Default/parser/evaluator profile
+enrollment, source contexts and compiler probing are unchanged.
+
+A whole independent native unit observes28 expressions at five authored
+minimum/excess/FPU sites, including unary/folded values, signed minimum/unsigned
+maximum, actual mixed comparison values and runtime variables. All140 original
+unit/include windows match type and applicable value proofs. Queries invoke no
+witness bodies and preserve its exact ABI guard. Native focused4925 checks,
+binding first fit2363/integer-conversion first fit1821/every smaller allowance
+atomic/64 joined readers pass with clean heap. Initial4913 strengthening and
+browser unused-import preparations retain exact sources/logs. Staged whitespace
+checks include all new inputs before the final seven-source freeze.
+
+Frozen current-source qualification succeeds:64 main compiler logs have zero
+owned warnings/161 upstream;39 native runs have clean heaps;23 browser consumers
+compile only. Both Studios/backend/worker compile as applicable. All previous
+115 real-operation windows,40 literal windows, integer/generic/signature/cast/
+source-reuse/completion/context assertions remain retained. The corpus passes
+574 checks/507 actual source files/2,448,480 lossless tokens. No final Pascal
+repair or composite substitution follows the seven-input freeze; the initial
+unused import and EOF whitespace are corrected before that final broad batch.
+
+Unchanged original RTL passes56 with clean heap: System13,101 declarations/zero
+syntax/31 answers; ObjPas209/zero/one; neither pending. Original include-token
+Free/FreeInstance completion/navigation and detached insertion stay ready.
+Original2M view/4M aggregate/64 rounds, initial5/Word1/symbol3of8 and six identical
+ordered dynamic requests within eight remain exact. No new source/evaluator/
+integer primitive probe or enrollment job is added.
+
+All754 maintained/747 unrelated/seven frozen/four preceding source copies/seven
+first-coercion inputs/unused-import browser preparation/all inherited retained
+failures,97 RTL/24 compiler pins/prior plus four inspected owners/two profiles/
+156 unit packets/48 includes/349 artifacts/nine contexts/five protected files/
+thirteen foreign files stay exact. Every handle/reader joins. Historical global-
+configuration failure still keeps full preservation false; the current-start
+protected comparison stays exact. No old failure is erased. No Pascal edits
+while readers are live. Ignored .local/real-coercion-paths-private.json owns the packet,
+inherited receipts and return path. Preserve all prior source/SDK/compiler/
+protected/frozen/concurrent pins, old failure/preparation records and thirteen
+foreign planning files. LAN stays offline; native Nyx tools stay absent. No
+host/config retry, SDK capture, protected mutation, cleanup/restart, approval
+bypass, new MCP tool/schema, rollout or sub-agents.
+
+Full language/editor/input/incremental/quality/parity/adoption/delivery and the
+original library/Studio outcome remain open. No full criterion/task/counter/
+credit/DONE closes. Next follow existing declaration/constant/cast owners for
+named and explicitly converted real values, retaining all original budgets,
+identity, cancellation, source activation and exact compiler-root ownership.
+
+## Previous integration: Qualified real constant expressions — 2026-10-20
 
 The preceding user-status turn is no progress; this continuation revalidates all
 747 maintained inputs at 09eb42ee before changing the next dependency. Execution

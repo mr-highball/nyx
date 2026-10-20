@@ -4,7 +4,49 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source real constant expressions use exact represented-value arithmetic
+Current-source unary/mixed real conversion adds explicit exact signed/unsigned64
+mathematical conversion through existing real/value owners; no host integer/
+float, Boolean/ordinal promotion or quota change. Qualified FPC30301 Delphi/i386
+constant unary signs retain operand type before runtime widening. Mixed integer
+constants convert through explicit host precision and common-real representation
+before arithmetic/comparison. Runtime operands retain type only; generic results
+inherit no values. Integer-only slash folds under explicit evidence, otherwise
+retaining its previous type-only answer. Missing root/evaluation facts refuse.
+Public optional INyxPascalConstantExpression preserves the former private GUID/
+slots, separates scalar/real proofs and retains a commented internal alias.
+Original record layouts/ordinals/GUIDs, source context and profile enrollment/
+probes remain unchanged. Whole independent28 cases/five policy sites give140
+original unit/include windows matching types/applicable values without invoking
+native bodies or removing ABI guards. Focused4925/2363/integer1821/all smaller
+allowances atomic/64 joined readers pass with clean heap. Retain initial4913
+strengthening and unused-import browser preparations and four preceding source
+copies. Original parenthesized-negation refusal becomes a positive qualified
+operand-type assertion; all other literal expectations/witnesses stay exact.
+Seven Pascal inputs freeze after complete staged whitespace review; no later
+Pascal repair/composite substitution. All64 main compiler logs have zero owned
+warnings/161 upstream;39 native runs have clean heaps;23 browser consumers compile
+only;both Studios/backend/worker compile as applicable. Unchanged RTL56 retains
+System13101/zero syntax/31 answers,ObjPas209/zero/one,neither pending and exact
+Free/FreeInstance navigation/insertion. Original2M/4M/64/initial5/Word1/symbol3of8/
+dynamic6of8 remain. All754 maintained/747 unrelated/seven frozen/four preceding
+copies/seven initial inputs/browser preparation/all inherited failures/97 RTL/
+24 compiler pins/prior plus four inspected owners/two profiles/156 packets/48
+includes/349 artifacts/nine contexts/five protected files/thirteen foreign files
+stay exact. Corpus574/507 actual files/2448480 tokens. All handles/readers joined;
+historical global-config failure keeps full preservation false. WORK.md and
+ignored .local/real-coercion-paths-private.json own source/remote receipts.
+No Pascal edits while readers live. Preserve all prior
+source/SDK/compiler/protected/frozen/concurrent pins and retained failures. LAN
+offline; native Nyx tools absent. No host/config retry, SDK capture, protected
+mutation, cleanup/restart, approval bypass, new MCP tool/schema, rollout or
+sub-agents. Named constants, explicit casts, full range/admission/default profile
+enrollment remain open. Next follow existing declaration/constant/cast owners,
+preserving every budget/probe and source/root identity. Stop unary/mixed fixture/
+compiler/profile variants. Full language/editor/input/incremental/quality/parity/
+adoption/delivery/original goal remains open; no full criterion/task/counter/
+credit/DONE closes.
+
+Previously qualified real constant expressions use exact represented-value arithmetic
 and finite comparisons through the existing real owner. Four closed operations,
 explicit nearest-even formats, signed zero/cancellation/subnormals and distinct
 overflow/division/invalid outcomes retain no host float or mutable workspace.
