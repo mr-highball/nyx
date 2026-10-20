@@ -3725,7 +3725,7 @@ begin
   { The popup callback has returned. Recheck the physical source and service
     before scheduling the ordinary pane refresh/focus for a project definition. }
 
-  if FSourceInput.TakeDefinitionNavigation(LLine, LColumn) then
+  if FSourceInput.TakeSourceNavigation(LLine, LColumn) then
   begin
     FState.SourceTab := nstSource;
     FSourceLine := LLine;
@@ -4962,6 +4962,18 @@ begin
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-source-definition') then
     begin
       FSourceInput.RequestDefinition;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-source-back') then
+    begin
+      FSourceInput.NavigateBack;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-source-forward') then
+    begin
+      FSourceInput.NavigateForward;
       Exit;
     end;
 

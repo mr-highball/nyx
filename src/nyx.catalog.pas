@@ -33,7 +33,9 @@ uses
   nyx.catalog.labels,
   SysUtils,
   nyx.model,
-  nyx.schema;
+  nyx.schema,
+  nyx.scheduler,
+  nyx.documentation.registration;
 
 type
   { Palette metadata is portable. Category is a legacy authoring hint, Container
@@ -47,6 +49,23 @@ type
     Container: Boolean;
   end;
 
+  { Copied palette facts for one exact catalog generation. Captures retain no
+    catalog, recipe tree or constructor; identity is process-local, not a wire
+    key or an assertion that independently created catalogs are equivalent. }
+  INyxCatalogSnapshot = interface(IInterface)
+    ['{F2F96C17-01F7-4A4C-910B-58984492C702}']
+    function Identity: Integer;
+    function Revision: Integer;
+    function Count: Integer;
+    function ItemAt(AIndex: Integer): TNyxComponentInfo;
+  end;
+  { Optional declaration attachments use those same copied palette ordinals.
+    Nil is explicit absence for an existing undocumented registration. }
+  INyxCatalogDocumentation = interface(IInterface)
+    ['{F2F96C17-01F7-4A4C-910B-58984492C703}']
+    function DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+  end;
+
   { Registry and initial design defaults. RegisterKind rejects accidental
     duplicate registration. A registry entry describes an authorable kind;
     adapters must independently advertise/implement its target behavior. }
@@ -54,6 +73,8 @@ type
   private
     FItems: array of TNyxComponentInfo;
     FRecipes: array of TNyxNode;
+    FDocumentation: TNyxDocumentationRegistrations;
+    FIdentity, FRevision: Integer;
     function GetCount: Integer;
     function GetItem(AIndex: Integer): TNyxComponentInfo;
   public
@@ -65,6 +86,10 @@ type
       AContainer: Boolean); overload;
     procedure RegisterKind(const AKind: TNyxKindRef; const ATitle, ACategory: TNyxText;
       AContainer: Boolean); overload;
+    procedure RegisterKind(const AKind, ATitle, ACategory: TNyxText;
+      AContainer: Boolean; const ADocumentation: INyxDocumentationRegistration); overload;
+    procedure RegisterKind(const AKind: TNyxKindRef; const ATitle, ACategory: TNyxText;
+      AContainer: Boolean; const ADocumentation: INyxDocumentationRegistration); overload;
     { RegisterRecipe copies the borrowed template into the registry. Its owned
       named parts become ordinary editable descendants when NewNode instantiates
       it. Derive by customizing NewNode(baseKind, id), then registering that tree
@@ -73,6 +98,13 @@ type
       ATemplate: TNyxNode); overload;
     procedure RegisterRecipe(const AKind: TNyxKindRef; const ATitle, ACategory: TNyxText;
       ATemplate: TNyxNode); overload;
+    procedure RegisterRecipe(const AKind, ATitle, ACategory: TNyxText;
+      ATemplate: TNyxNode; const ADocumentation: INyxDocumentationRegistration); overload;
+    procedure RegisterRecipe(const AKind: TNyxKindRef; const ATitle, ACategory: TNyxText;
+      ATemplate: TNyxNode; const ADocumentation: INyxDocumentationRegistration); overload;
+    { Synchronous reads serialize with this mutable catalog's authoring calls.
+      Later Describe/registration/destruction cannot change the returned owner. }
+    function Capture(const ACancellation: INyxCancellationScope = nil): INyxCatalogSnapshot;
     function IndexOf(const AKind: TNyxText): Integer;
     { Assign one typed intent home and a small set of cross-cutting search labels
       to an existing entry. Description explains the creator's intent for help
@@ -108,12 +140,106 @@ uses
   nyx.drawing, nyx.canvas.geometry, nyx.design.tokens, nyx.data,
   nyx.recipes;
 
+type
+  { Snapshot vectors contain copied value rows plus separately managed immutable
+    attachments. Executable recipe templates remain solely in TNyxCatalog. }
+  TNyxCatalogSnapshot = class(TInterfacedObject, INyxCatalogSnapshot, INyxCatalogDocumentation)
+  public
+    Items: array of TNyxComponentInfo;
+    Documentation: TNyxDocumentationRegistrations;
+    CapturedIdentity, CapturedRevision: Integer;
+    function Identity: Integer;
+    function Revision: Integer;
+    function Count: Integer;
+    function ItemAt(AIndex: Integer): TNyxComponentInfo;
+    function DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+  end;
+
+var
+  GCatalogIdentity: Integer;
+  {$ifndef PAS2JS}
+  GCatalogIdentityLock: TRTLCriticalSection;
+  {$endif}
+
+function NextCatalogIdentity: Integer;
+begin
+  {$ifndef PAS2JS}EnterCriticalSection(GCatalogIdentityLock);{$endif}
+  try
+
+    if GCatalogIdentity = High(Integer) then
+      raise ENyxModel.Create('Catalog identity is exhausted');
+    Inc(GCatalogIdentity);
+    Result := GCatalogIdentity;
+  finally
+    {$ifndef PAS2JS}LeaveCriticalSection(GCatalogIdentityLock);{$endif}
+  end;
+end;
+
+function TNyxCatalogSnapshot.Identity: Integer;
+begin
+  Result := CapturedIdentity;
+end;
+
+function TNyxCatalogSnapshot.Revision: Integer;
+begin
+  Result := CapturedRevision;
+end;
+
+function TNyxCatalogSnapshot.Count: Integer;
+begin
+  Result := Length(Items);
+end;
+
+function TNyxCatalogSnapshot.ItemAt(AIndex: Integer): TNyxComponentInfo;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+    raise ENyxModel.Create('Catalog snapshot index out of range');
+  Result := Items[AIndex];
+end;
+
+function TNyxCatalogSnapshot.DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+begin
+  ItemAt(AIndex);
+  Result := Documentation[AIndex];
+end;
+
+function TNyxCatalog.Capture(const ACancellation: INyxCancellationScope): INyxCatalogSnapshot;
+var
+  LOwner: TNyxCatalogSnapshot;
+  LLease: INyxCatalogSnapshot;
+  LAt: Integer;
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxSchedule.Create('Catalog inspection cancelled');
+
+  if Count > 8192 then
+    raise ENyxModel.Create('Catalog inspection row allowance exceeded');
+  LOwner := TNyxCatalogSnapshot.Create;
+  LLease := LOwner;
+  LOwner.CapturedIdentity := FIdentity;
+  LOwner.CapturedRevision := FRevision;
+  SetLength(LOwner.Items, Count);
+  SetLength(LOwner.Documentation, Count);
+  for LAt := 0 to Count - 1 do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxSchedule.Create('Catalog inspection cancelled');
+    LOwner.Items[LAt] := FItems[LAt];
+    LOwner.Documentation[LAt] := FDocumentation[LAt];
+  end;
+  Result := LLease;
+end;
+
 constructor TNyxCatalog.Create;
 var
   LIndex: Integer;
   LInfo: TNyxPrimitiveInfo;
 begin
   inherited Create;
+  FIdentity := NextCatalogIdentity;
   { Palette, inspector and target admission share one primitive definition.
     Reusable instances reference a definition; they do not own ignored children. }
   for LIndex := 0 to NyxPrimitiveCount - 1 do
@@ -143,6 +269,19 @@ end;
 
 procedure TNyxCatalog.RegisterRecipe(const AKind, ATitle, ACategory: TNyxText;
   ATemplate: TNyxNode);
+begin
+  RegisterRecipe(AKind, ATitle, ACategory, ATemplate, nil);
+end;
+
+procedure TNyxCatalog.RegisterRecipe(const AKind: TNyxKindRef;
+  const ATitle, ACategory: TNyxText; ATemplate: TNyxNode;
+  const ADocumentation: INyxDocumentationRegistration);
+begin
+  RegisterRecipe(AKind.Name, ATitle, ACategory, ATemplate, ADocumentation);
+end;
+
+procedure TNyxCatalog.RegisterRecipe(const AKind, ATitle, ACategory: TNyxText;
+  ATemplate: TNyxNode; const ADocumentation: INyxDocumentationRegistration);
 var
   LCopy: TNyxNode;
   LInfo: TNyxPrimitiveInfo;
@@ -170,7 +309,7 @@ begin
         raise ENyxModel.Create('Compose leaf controls inside a layout recipe: ' + LCopy.Kind);
       end;
     end;
-    RegisterKind(AKind, ATitle, ACategory, LContainer);
+    RegisterKind(AKind, ATitle, ACategory, LContainer, ADocumentation);
     FRecipes[Count - 1] := LCopy;
   except
     LCopy.Free;
@@ -216,10 +355,28 @@ end;
 
 procedure TNyxCatalog.RegisterKind(const AKind, ATitle, ACategory: TNyxText;
   AContainer: Boolean);
+begin
+  RegisterKind(AKind, ATitle, ACategory, AContainer, nil);
+end;
+
+procedure TNyxCatalog.RegisterKind(const AKind: TNyxKindRef;
+  const ATitle, ACategory: TNyxText; AContainer: Boolean;
+  const ADocumentation: INyxDocumentationRegistration);
+begin
+  RegisterKind(AKind.Name, ATitle, ACategory, AContainer, ADocumentation);
+end;
+
+procedure TNyxCatalog.RegisterKind(const AKind, ATitle, ACategory: TNyxText;
+  AContainer: Boolean; const ADocumentation: INyxDocumentationRegistration);
 var
   LIndex: Integer;
   LKind: TNyxKind;
   LGroup: TNyxPaletteGroup;
+  LInfo: TNyxComponentInfo;
+  LItems: array of TNyxComponentInfo;
+  LRecipes: array of TNyxNode;
+  LDocuments: TNyxDocumentationRegistrations;
+  LDocumentation: INyxDocumentationRegistration;
 begin
 
   if AKind = '' then
@@ -231,28 +388,47 @@ begin
   begin
     raise ENyxModel.Create('Component kind already registered: ' + AKind);
   end;
-  LIndex := Count;
-  SetLength(FItems, LIndex + 1);
-  SetLength(FRecipes, LIndex + 1);
-  FItems[LIndex].Kind := AKind;
-  FItems[LIndex].Title := ATitle;
-  FItems[LIndex].Category := ACategory;
-  FItems[LIndex].Container := AContainer;
-  FItems[LIndex].Discovery.Group := pgOther;
-  FItems[LIndex].Discovery.Labels := [];
-  FItems[LIndex].Discovery.Aliases := '';
-  FItems[LIndex].Discovery.Description := '';
+  LDocumentation := CaptureNyxDocumentationRegistration(ADocumentation);
+
+  if IndexOf(AKind) >= 0 then
+    raise ENyxModel.Create('Component kind already registered: ' + AKind);
+
+  if FRevision = High(Integer) then
+    raise ENyxModel.Create('Catalog revision is exhausted');
+  LInfo.Kind := AKind;
+  LInfo.Title := ATitle;
+  LInfo.Category := ACategory;
+  LInfo.Container := AContainer;
+  LInfo.Discovery.Group := pgOther;
+  LInfo.Discovery.Labels := [];
+  LInfo.Discovery.Aliases := '';
+  LInfo.Discovery.Description := '';
 
   if TryNyxKind(AKind, LKind) then
   begin
-    FItems[LIndex].Discovery := NyxDefaultComponentDiscovery(LKind);
+    LInfo.Discovery := NyxDefaultComponentDiscovery(LKind);
   end
   else if TryNyxPaletteGroup(ACategory, LGroup) and (LGroup <> pgAll) then
   begin
     { Admit existing extension category captions at the legacy boundary. New
       extension code calls Describe with enums instead of behavioral strings. }
-    FItems[LIndex].Discovery.Group := LGroup;
+    LInfo.Discovery.Group := LGroup;
   end;
+  SetLength(LItems, Count + 1);
+  SetLength(LRecipes, Count + 1);
+  SetLength(LDocuments, Count + 1);
+  for LIndex := 0 to Count - 1 do
+  begin
+    LItems[LIndex] := FItems[LIndex];
+    LRecipes[LIndex] := FRecipes[LIndex];
+    LDocuments[LIndex] := FDocumentation[LIndex];
+  end;
+  LItems[High(LItems)] := LInfo;
+  LDocuments[High(LDocuments)] := LDocumentation;
+  FItems := LItems;
+  FRecipes := LRecipes;
+  FDocumentation := LDocuments;
+  Inc(FRevision);
 end;
 
 function TNyxCatalog.Describe(const AKind: TNyxKindRef; AGroup: TNyxPaletteGroup;
@@ -271,10 +447,14 @@ begin
   begin
     raise ENyxModel.Create('All groups is a filter, not a component group');
   end;
+
+  if FRevision = High(Integer) then
+    raise ENyxModel.Create('Catalog revision is exhausted');
   FItems[LIndex].Discovery.Group := AGroup;
   FItems[LIndex].Discovery.Labels := ALabels;
   FItems[LIndex].Discovery.Aliases := AAliases;
   FItems[LIndex].Discovery.Description := ADescription;
+  Inc(FRevision);
   Result := Self;
 end;
 
@@ -492,5 +672,12 @@ begin
     raise;
   end;
 end;
+
+{$ifndef PAS2JS}
+initialization
+  InitCriticalSection(GCatalogIdentityLock);
+finalization
+  DoneCriticalSection(GCatalogIdentityLock);
+{$endif}
 
 end.

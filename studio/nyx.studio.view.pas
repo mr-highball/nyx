@@ -685,6 +685,14 @@ begin
       .WhenViewport(TNyxViewportWidth.Below(640)).Text('Save draft').Done);
     LActions.Add(Button('action-source-definition', 'Definition').Configure
       .Hint('Open the declaration at the source caret (F12); choose among declared overloads').Done);
+    LActions.Add(Button('action-source-back', 'Back').Configure
+      .AccessibleName('Back to the previous source location')
+      .Hint('Return through definition jumps (Alt+Left); source Undo stays separate')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Text('←').Done);
+    LActions.Add(Button('action-source-forward', 'Forward').Configure
+      .AccessibleName('Forward to the next source location')
+      .Hint('Go forward through definition jumps (Alt+Right)')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Text('→').Done);
     LButton := Button('action-expand-source', 'Expand');
     LActions.Add(LButton);
 

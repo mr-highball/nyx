@@ -150,6 +150,20 @@ begin
   Result := Schemas[AKind].Events[AIndex].Copy;
 end;
 
+function TNyxSchemaSnapshot.DocumentationAt(AKind: Integer): INyxDocumentationRegistration;
+begin
+  KindAt(AKind);
+  Result := nil;
+
+  if AKind < Length(Documentation) then
+    Result := Documentation[AKind];
+end;
+
+function TNyxSchemaSnapshot.HasLocalDocumentation: Boolean;
+begin
+  Result := DocumentationLocal;
+end;
+
 procedure TNyxSchemaSnapshot.Execute(const AAction: INyxSchemaAction);
 var
   LPrevious: TNyxSchemaSnapshot;
@@ -175,6 +189,7 @@ function CaptureNyxSchemas: INyxSchemaSnapshot;
 var
   LOwner: TNyxSchemaSnapshot;
   LCurrent: TNyxPublishedSchemas;
+  LDocumentation: TNyxDocumentationRegistrations;
   LIndex: Integer;
   LMember: Integer;
 begin
@@ -184,6 +199,8 @@ begin
   if GSchemaEnvironment <> nil then
   begin
     LCurrent := GSchemaEnvironment.Schemas;
+    LDocumentation := GSchemaEnvironment.Documentation;
+    LOwner.DocumentationLocal := GSchemaEnvironment.DocumentationLocal;
     LOwner.CapturedRevision := GSchemaEnvironment.CapturedRevision;
   end
   else
@@ -191,15 +208,21 @@ begin
     LockSchemas;
     try
       LCurrent := GPublishedSchemas;
+      LDocumentation := GPublishedDocumentation;
+      LOwner.DocumentationLocal := True;
       LOwner.CapturedRevision := GSchemaRevision;
     finally
       UnlockSchemas;
     end;
   end;
   SetLength(LOwner.Schemas, Length(LCurrent));
+  SetLength(LOwner.Documentation, Length(LCurrent));
   for LIndex := 0 to High(LCurrent) do
   begin
     LOwner.Schemas[LIndex].Kind := LCurrent[LIndex].Kind;
+
+    if LIndex < Length(LDocumentation) then
+      LOwner.Documentation[LIndex] := LDocumentation[LIndex];
     SetLength(LOwner.Schemas[LIndex].Properties, Length(LCurrent[LIndex].Properties));
     for LMember := 0 to High(LCurrent[LIndex].Properties) do
     begin

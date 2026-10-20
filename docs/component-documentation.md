@@ -15,8 +15,11 @@ editing, compiler, file or callback authority.
 This is a foundation for the open Studio reference task
 `NS-4_studio-reference_01`. Descriptors are currently authored
 metadata beside their declarations. They are not automatic compiler reflection,
-and an edited method does not yet regenerate its descriptor or register it in a
-reference index.
+and an edited method does not yet regenerate its descriptor. Existing schema,
+callback and catalog registrations now accept their declaration bundles; an
+immutable reference index admits only a complete supplied documentation closure.
+The genuine extension currently refuses that gate because its core dependencies
+have not adopted declaration-owned metadata.
 
 ## Keep the declaration and descriptor together
 
@@ -109,8 +112,8 @@ interface GUIDs/method slots and earlier enum ordinals remain unchanged.
 cancellable immutable path as type descriptors. Reading `DocumentationUnitReference`
 does not invoke the factory or either greeting overload. The examples remain
 inert text. Actual factory/routine execution belongs to an explicit caller, not
-documentation lookup. This change does not register globals automatically or
-introduce a documentation inventory, reflection probe or index.
+documentation lookup. Globals enter discovery only through a bundle attached to
+their real unit/creator registration. No reflection probe enumerates them.
 
 ## Capture existing creator facts
 
@@ -187,6 +190,9 @@ The current fixed limits are part of the inspection contract:
 | One captured declaration | 256 KiB aggregate UTF-8 content, including members, signatures, examples and links. |
 | Schema search | At most 4,096 captured kinds; creator names at most 256 scalars. |
 | One schema binding's copied facts | At most 128 properties, 128 events and 128 routes per event; a separate 256 KiB aggregate UTF-8 allowance covers schema/catalog fact text. |
+| One registration bundle | At most 128 declarations and 4 MiB of length-framed UTF-8 declaration content. Existing per-declaration limits still apply. |
+| Callback/catalog owner capture | At most 8,192 rows each; capture accepts cancellation and retains no executable class/recipe. Existing registration capacity does not change. |
+| One index publication | Defaults: at most 4,096 declaration occurrences, 8,192 total binding rows, 16 MiB of captured framed content/registration names and 2,000,000 field-admission/comparison/traversal steps. Fluent limits may lower these ceilings. |
 
 The declaration allowance and schema/catalog allowance are separate. A binding
 owns one captured declaration **plus** its bounded creator facts; it does not
@@ -198,8 +204,113 @@ invalid counts, malformed Unicode, duplicate identities, foreign member owners
 or exhausted allowances refuse before publishing a captured result. Failed
 captures return no partial interface. Text preserves supplementary characters,
 NUL and CR/LF/CRLF exactly. Example/default text stays inert. No recursive base
-or alias resolution runs at this layer; complete link and cycle admission belongs
-to the future index.
+or alias resolution runs at the descriptor layer; complete link and cycle
+admission runs in the registration index described below.
+
+## Discover through the actual registration owners
+
+[Registration bundles](../src/nyx.documentation.registration.pas) are immutable
+ordinary Pascal values. A bundle names its unit, an exact public type or global
+factory member, and that unit's decorated declarations. `ForPrimary` returns a
+new owner for another public entry in the same bundle. It never rewrites the
+declarations' owners. A callback mapping requires a class/callback declaration;
+a creator mapping may name its real global factory. Declared native/browser
+availability is independent of schema capability grades and observed execution.
+
+The fixture passes one bundle through its existing calls, conceptually:
+
+```pascal
+RegisterNyxSchema(Kind, Properties, Events, Documentation);
+RegisterNyxCallback(NyxHandler('TDocumentationCallback'),
+  TDocumentationCallback, Documentation.ForPrimary(CallbackType));
+Catalog.RegisterKind(Kind, 'Friendly badge', 'Custom', False, Documentation);
+```
+
+No second `RegisterHelp` call, central help inventory or documentation page list
+is populated. The fixture bundle includes the real unit factory/routine
+overloads, class, specialized interface and callback descriptors. It retains all
+links to `nyx.text.TNyxText`, `nyx.controls.TNyxBadge`/`INyxBadge`,
+`nyx.events.TNyxEventCallback`, `nyx.behavior.TNyxEventInfo` and
+`nyx.scheduler.INyxExecution`. Those core owners are currently undocumented.
+The index therefore refuses this real extension closure and leaves a previously
+valid index exact. Empty substitute core descriptors, stripped signatures or a
+smaller replacement extension do not qualify that gate.
+
+Optional `INyxSchemaDocumentation`, `INyxCallbackDocumentation` and
+`INyxCatalogDocumentation` expose attachments beside the corresponding captured
+row. Old registration overloads remain valid and expose nil attachments.
+`CaptureNyxCallbacks` exports handler identities, never callback classes or
+`Resolve`. `Catalog.Capture` exports copied palette facts, never `NewNode` or a
+recipe tree. Schema attachments follow the exact current/scoped snapshot; they
+are not added to its existing transport. A decoded schema snapshot explicitly
+reports no local documentation generation and refuses index discovery. Its
+existing schema execution/typed-inspection/transport behavior remains available.
+
+Use the [caller-owned registry](../src/nyx.documentation.registry.pas) with three
+already captured authority owners:
+
+```pascal
+Schemas := CaptureNyxSchemas;
+Callbacks := CaptureNyxCallbacks;
+Palette := Catalog.Capture(Cancellation);
+Reference := Registry.Refresh(Schemas, Callbacks, Palette,
+  Registry.Version, TNyxDocumentationIndexLimits.Defaults, Cancellation);
+```
+
+`Reference.Generation` is the schema revision, callback revision and catalog
+instance identity/revision vector. It is not a transaction across the three
+authorities. Catalog identities are process-local and cannot be compared across
+native/browser processes. `Reference.Version` is the registry's separate local
+publication sequence. Consumers retain an immutable owner; refreshing from
+older captures intentionally indexes those captures, without asserting that
+they are the current global registrations. A caller must obtain new captures
+when it needs the latest generation.
+
+The registry orders qualified declarations deterministically and resolves every
+present type, unit, related/member, signature, base and alias reference. Matching
+declarations from different real registrations deduplicate only when their exact
+framed content and declared availability agree. Conflicts, missing links,
+invalid base kinds, base/alias cycles, unsupported captures, cancellation,
+exhausted allowances or a changed expected publication version refuse before
+replacing `Current`. Schema and catalog documentation for the same creator must
+name the same public primary. This agreement does not grant either registry
+authority to register the other. Legacy undocumented rows remain explicit
+`UndocumentedCount` coverage gaps; they do not become invented type metadata.
+
+`FindDeclaration` and `FindMember` use exact qualified/overload identities.
+`Members(TypeReference)` follows declared bases and aliases with bounded,
+cancellable traversal. Inherited members retain their original owners;
+independent overloads and shadowed declarations remain alternatives. This is
+documentation enumeration, not Pascal overload selection or compiler proof.
+
+Aggregate declaration counts and bytes charge every registration occurrence,
+including identical duplicates. Framed text uses UTF-8 byte lengths on both
+targets; fields are admitted before appending capture content. The index work
+counter covers its field admissions, comparisons and graph traversal, while the
+existing bounded per-declaration capture owns its internal copying/validation.
+These are layered metadata bounds, not a promise that retained object overhead
+or compiler/runtime string allocation equals the text byte allowance. All new
+inspection work accepts cancellation; no cancellation scope or metadata supplier
+is retained after capture.
+
+The discovery boundary is linked/loaded units that actually executed their
+ordinary startup/UI registration. Capturing an index never executes a class,
+callback, factory or example. Registration is append-only: existing schema and
+callback owners have no removal/unload API, and catalog ownership is local.
+There is no dynamic module-unload contract. Immutable declarations and copied
+indices remain valid after a catalog retires; callers serialize publication and
+mutable catalog/startup registration, as their existing authorities require.
+
+The [registry consumer](../tests/nyx_documentation_registry_tests.lpr) passes
+**64 native checks with a clean heap** and **compiles for pas2js**. It covers
+immutable alternate capture, actual registration attachments, exact overload and
+alias ownership, conflicts, cycles, missing links/alias targets, cancellation,
+aggregate limits, local publication reentrancy, source-generation refusal and
+catalog-independent lifetimes. Its explicitly synthetic mechanics graph tests
+the index algorithms. The complete real extension independently refuses its
+currently undocumented core closure; that gate remains open. Inspection invokes
+none of its control, callback, factory or routine bodies. The new decorated
+browser consumer has never been executed.
 
 ## Qualification and capability boundary
 
@@ -213,20 +324,36 @@ callers exercise their public behavior and release all owners before checking
 destruction. The browser consumer **compiles successfully**; the decorated-browser
 consumer has never been executed. Compilation is not executed browser evidence.
 
-The final native logs identify **FPC 3.3.1-20634-gd7f522a561 [2026/08/04], i386
-Win32**. The browser compiler is **Pas2JS 3.3.1 [2026/08/04], Win32 i386**. The
-qualification packet retains `documentation-native-reviewed-compile.log`,
-`documentation-native-reviewed-run.log` and
-`documentation-browser-reviewed-compile.log` beside the exact final
-`source-reviewed-freeze-private.json` receipt. All three Pascal inputs stay exact
-through this final two-job batch. Native compilation has no warnings; browser
-compilation reports seven existing upstream Classes warnings and zero owned
-warnings. The first native fixture checked destruction before compiler-held
-interface temporaries left their caller's lifetime. Its failed source and clean
-heap remain retained; the repaired fixture keeps the same destruction assertion
-after the explicit caller returns. The [current work record](../WORK.md) owns
-the packet and preparation receipts. The preceding 33-check foundation remains
-qualified separately at commit `2a3226de25c8af8fb2652a676ed14897b1016c91`.
+The native compiler is **FPC 3.3.1-20634-gd7f522a561 [2026/08/04], i386 Win32**;
+the browser compiler is **Pas2JS 3.3.1 [2026/08/04], Win32 i386**. Current
+registration evidence is in
+`E:\Blekohlab\nyx\qualification\definition-history-20261020-125511`:
+
+- `logs/nyx_documentation_registry_tests-focused-qualified-compile.log`
+- `logs/nyx_documentation_registry_tests-focused-qualified-run.log`
+- `logs/nyx_documentation_registry_tests-browser-qualified-compile.log`
+- `logs/nyx_documentation_tests-focused-qualified-{compile,run}.log`
+- `logs/nyx_documentation_tests-browser-qualified-compile.log`
+
+The registry run allocates and frees all 434,077 blocks, with zero unfreed
+blocks. Both consumers have zero owned compiler warnings; browser compilation
+has seven existing upstream Classes warnings. All eight metadata Pascal inputs
+remain exact through the final source freeze. The [current work record](../WORK.md)
+owns `source-final-freeze-private.json`, preservation receipts and the larger
+consumer matrix's explicit composite qualification.
+
+The initial registry browser preparation rejected direct `as` syntax between
+unrelated interface types. Its source/log remain retained. The final test uses
+`Supports` and managed optional-capability outputs, preserving all 58 original
+behavior checks and adding six explicit capability assertions. Native runtime
+querying and browser compilation are separate evidence.
+
+The prior unit/global declaration baseline is commit
+`78caee7790b6d323e7ae8d1b98dace987a2e4160`; its packet retains the first native
+lifetime assertion failure with a clean heap. The repaired fixture checks the
+same destruction contract after compiler-held interface temporaries leave the
+explicit caller's lifetime. The preceding 33-check foundation remains qualified
+separately at commit `2a3226de25c8af8fb2652a676ed14897b1016c91`.
 
 The earlier [runtime membership
 adapter](../src/nyx.linq.runtime.pas) and its
@@ -237,7 +364,7 @@ documentation reflection:
 
 | Capability | Native FPC | pas2js browser | Documentation use |
 | --- | --- | --- | --- |
-| Ordinary typed descriptor interfaces | Current 68-check unit/type/schema consumer passes with clean heap. | Current consumer compiles successfully; decorated execution remains open. | Ordinary Pascal contract; no special decorator syntax. |
+| Ordinary typed descriptor/registration interfaces | Current 68-check declaration and 64-check registry consumers pass with clean heaps. | Both consumers compile successfully; decorated execution remains open. | Ordinary Pascal contracts; no special decorator syntax. |
 | Runtime class ancestry | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Existing adapter only; no class inventory is inferred. |
 | Declared nonzero-GUID interface querying | Earlier executed runtime adapter evidence. | Earlier executed runtime adapter evidence. | Optional capabilities use explicit GUIDs. |
 | GUID-less runtime interface identity | Unsupported by the earlier native query adapter; it refuses. | Earlier executed evidence finds a compiler-generated identity. | Browser-generated identity stays runtime-local, not a portable registration key. |
@@ -249,8 +376,9 @@ documentation reflection:
 
 Unit/global identities now represent creator functions without inventing a
 containing class. Adoption for the actual `NewNyx…` creator inventory remains
-open. Automatic registered-unit discovery, immutable index generations,
-complete links/inheritance/overloads and contextual Studio browsing remain open
+open. Registration-owned discovery and immutable index generations are now
+implemented for supplied decorated closures; actual extension adoption is gated
+on missing core declarations and generator adoption. Contextual Studio browsing remains open
 under reference discovery (`NS-4_studio-reference_02`), reference UI
 (`NS-4_studio-reference_03`) and completeness/compatibility
 (`NS-4_studio-reference_04`).
@@ -260,6 +388,29 @@ generator](../tools/nyx_control_contracts.lpr) already owns generated specialize
 interfaces and facades. Emitting their documentation at those same declaration
 points is a future path to one source of truth; that adoption is not implemented
 here. The existing catalog export constructs nodes and is not runtime discovery.
+The required truthful declaration prerequisites are explicit:
+
+- Intrinsic/scalar/string types need an actual type-family representation.
+  Boolean, Integer and string must not become invented enum/record descriptors.
+- `TNyxText` has native `UTF8String` and browser `String` alias targets. Metadata
+  must retain the actual target-dependent declaration without an empty alias or
+  a guessed common target.
+- Core text/scheduler units already sit below the documentation contract.
+  Source-owned generated companion metadata must preserve that dependency
+  direction. Imported bundles must retain each original unit owner, remain
+  bounded and flow through actual registration attachments.
+- Indexed properties such as `INyxControl.Children[AIndex: Integer]` need typed
+  index parameters and declared access information. Omitting the parameter or
+  relabelling the property as a method would conceal the API.
+
+Generator adoption must derive metadata at the existing declaration emission
+points, including hand-authored dependencies and deterministic per-creator/unit
+chunks within current allowances. Its current output writes repository includes
+directly; authorized maintenance must first produce and review scratch candidates
+before replacing source after all readers join. No generator has been run for
+this integration, and no parallel manually authored core-help inventory is
+introduced.
+
 Executed decorated-browser evidence, a complete supported-version capability
 matrix, independent API coverage and the full original Studio/library acceptance
 remain required. No reference task, criterion, completion credit or DONE status

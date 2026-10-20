@@ -19,6 +19,34 @@ item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
 
+Current editor navigation adds immutable bounded Back/Forward through definition
+jumps in both Studios, retaining actual departure carets and exact logical-newline/
+unique-text anchors. Ambiguous/deleted/unpublished/stale targets refuse without
+text or Undo edits; shared queued publication rechecks live mount/project/history/
+caret/all buffers/include owner. Local traversal needs no service/provider.
+Actual schema/callback/catalog registration now captures inert declaration bundles
+and a deterministic immutable versioned reference index. Real extension closure
+still refuses missing core declarations; synthetic mechanics are separate.
+Composite qualification retains nineteen unchanged dependency consumers and six
+final warning-repair rebuilds:25 accepted compiler jobs,11 native programs with
+clean heaps,12 pas2js compiles,zero owned warnings/84 upstream. Earlier warned
+twenty-five-job freeze, native-valid/browser-invalid fixture casts and admission/
+audit preparation refusals stay retained. Final15 owned/791 maintained/776
+unrelated sources,67 source copies,24 compiler/97 RTL/five current-start protected/
+two profile/thirteen planning comparisons stay exact. Old GUID slots/record
+layouts/registration overloads remain unchanged. All readers join; LAN offline.
+WORK.md and ignored .local/definition-history-paths-private.json own composite
+source/terminal/remote receipts. No browser/GUI execution or full criterion/task/
+credit/DONE/editor/input/quality/parity/adoption/delivery closes across at least
+forty-nine documented unclosed batches; historical config preservation is false.
+Stop navigation/registry/fixture/compiler variants. Next helper scope is truthful
+intrinsic/scalar/target-alias metadata; source-owned imports, indexed properties
+and source-generator adoption stay queued/required. Preserve specialized
+shapes through immutable copies/capture; do not fabricate primitive/alias/accessor
+facts. Root owns separate source and all build admission. No Pascal edits while
+readers live, host/config retry, SDK capture, protected mutation, cleanup/restart,
+approval bypass, new public MCP tool/schema, rollout or additional agents.
+
 Current unit/global documentation retains genuine declaring-unit ownership for
 factories, overloaded routines and fields. Unit identities refuse type-required
 parameter/result/value/base/alias positions and class-only member roles; empty

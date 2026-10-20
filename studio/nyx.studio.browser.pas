@@ -4221,6 +4221,16 @@ begin
               FSourceInput.RequestDefinition;
               Exit;
             end;
+          'action-source-back':
+            begin
+              FSourceInput.NavigateBack;
+              Exit;
+            end;
+          'action-source-forward':
+            begin
+              FSourceInput.NavigateForward;
+              Exit;
+            end;
           'action-import':
             begin
               FFilesVisible := not FFilesVisible;
@@ -5305,7 +5315,7 @@ begin
   { This callback is queued after popup/input dispatch. Navigation is admitted
     against the still-mounted source before normal rendering rebinds the target. }
 
-  if FSourceInput.TakeDefinitionNavigation(LLine, LColumn) then
+  if FSourceInput.TakeSourceNavigation(LLine, LColumn) then
   begin
     FSourceTab := nstSource;
     FSourceLine := LLine;

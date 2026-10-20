@@ -29,6 +29,7 @@ interface
 uses nyx.text, nyx.model, nyx.types, nyx.events, nyx.behavior, nyx.scheduler, nyx.editing,
   nyx.editing.commands, nyx.editing.history, nyx.text.projection, nyx.pascal.project,
   nyx.pascal.sources, nyx.pascal.drafts, nyx.pascal.completion, nyx.pascal.definition,
+  nyx.pascal.navigation,
   nyx.pascal.completion.view, nyx.studio.completion, nyx.studio.session;
 
 type
@@ -118,6 +119,15 @@ type
       while its popup/input callback is dispatching; that turn rechecks authority. }
     FDefinitionPending: Boolean;
     FDefinitionRow: Integer;
+    { Local navigation owns values, not a compiler/service lease. Pending moves
+      remain unpublished until the queued host turn rechecks the live mount. }
+    FNavigationTrail: INyxPascalNavigationTrail;
+    FNavigationPending: INyxPascalNavigationTrail;
+    FNavigationQuery: INyxPascalCompletionRequest;
+    FNavigationGeneration: Integer;
+    FNavigationMessage: TNyxText;
+    function NavigationPoint: TNyxPascalNavigationPoint;
+    procedure RequestNavigation(ADirection: TNyxPascalNavigationDirection);
     procedure CompletionChanged;
     function CompletionCurrent: Boolean;
     procedure SubmitCompletion;
@@ -158,6 +168,13 @@ type
     { Inspect the identifier at the current caret. A single project target is
       queued for normal navigation; declared alternatives use the guarded popup. }
     procedure RequestDefinition;
+    { Local caret trail remains available without a compiler server. Shortcuts
+      Alt+Left/Right and visible actions share this queued, undo-free contract. }
+    procedure NavigateBack;
+    procedure NavigateForward;
+    { Consume either local traversal or the existing guarded definition jump.
+      Call before rebinding the physical source, after input dispatch returns. }
+    function TakeSourceNavigation(out ALine, AColumn: Integer): Boolean;
     { Independent public Nyx card document, or nil when closed. Caller owns it.
       Presentation must run after input/transport return, preserving source focus. }
     function BuildCompletion: TNyxDocument;
@@ -297,6 +314,7 @@ var
   LIndex: Integer;
 begin
   DismissCompletion;
+  FNavigationTrail := nil;
   FCompletionMenu := nil;
   FActive := nil;
   for LIndex := 0 to High(FBuffers) do
@@ -402,6 +420,8 @@ begin
     FCompletionMenu := NewNyxPascalCompletionMenu(FActive.History);
   end;
 
+  if FNavigationTrail = nil then FNavigationTrail := NewNyxPascalNavigationTrail;
+
   if FCompletionQuery <> nil then
   begin
 
@@ -444,6 +464,8 @@ end;
 
 procedure TNyxStudioSourceInput.Observe(const AEditing: TNyxEditingSnapshot);
 begin
+
+  if FNavigationMessage <> '' then DismissCompletion;
   FActive.History.Observe(NextFrame(AEditing), AEditing.Composing);
 
   if not AEditing.Composing then
@@ -503,18 +525,35 @@ var
   LEditing: TNyxEditingSnapshot;
   LCommand: TNyxTextHistoryCommand;
   LAction: TNyxPascalCompletionAction;
+  LNavigationKey: Boolean;
+  LDirection: TNyxPascalNavigationDirection;
 begin
+  LNavigationKey := AEvent.HasKeyboard and
+    (AEvent.Keyboard.Matches(nkLeftKey, [nmAlt], True) or
+    AEvent.Keyboard.Matches(nkRightKey, [nmAlt], True));
+  LDirection := pndBack;
+
+  if AEvent.HasKeyboard and AEvent.Keyboard.Matches(nkRightKey, [nmAlt], True) then
+    LDirection := pndForward;
 
   if not Current(LEditing) then
   begin
 
-    if AEvent.HasKeyboard and TryNyxTextHistoryKey(AEvent.Keyboard, LCommand) then
+    if LNavigationKey or
+      (AEvent.HasKeyboard and TryNyxTextHistoryKey(AEvent.Keyboard, LCommand)) then
     begin
       NyxEventResponse(AExecution).Consume;
     end;
     Exit;
   end;
   Observe(LEditing);
+
+  if LNavigationKey and not LEditing.Composing then
+  begin
+    NyxEventResponse(AExecution).Consume;
+    RequestNavigation(LDirection);
+    Exit;
+  end;
 
   if AEvent.HasKeyboard and not LEditing.Composing and
     TryNyxTextHistoryKey(AEvent.Keyboard, LCommand) then
@@ -572,6 +611,7 @@ var
   LVisible: Boolean;
 begin
   LVisible := (FCompletionQuery <> nil) or
+    (FNavigationMessage <> '') or (FNavigationPending <> nil) or
     ((FCompletionMenu <> nil) and (FCompletionMenu.State <> pcvClosed));
 
   if FCompletionReply <> nil then
@@ -590,6 +630,9 @@ begin
   FCompletionWaiting := False;
   FDefinitionLookup := False;
   FDefinitionPending := False;
+  FNavigationPending := nil;
+  FNavigationQuery := nil;
+  FNavigationMessage := '';
 
   if FCompletionMenu <> nil then
   begin
@@ -635,6 +678,136 @@ begin
   if not Current(LEditing) then Exit;
   Observe(LEditing);
   StartCompletion(0, spqDefinition);
+end;
+
+function TNyxStudioSourceInput.NavigationPoint: TNyxPascalNavigationPoint;
+var
+  LFrame: TNyxTextEditorFrame;
+begin
+  LFrame := FActive.History.Current;
+
+  if not LFrame.Selection.Defined then
+    raise ENyxPascalNavigation.Create('Source navigation requires a known physical selection');
+  { A range departs from its known start; an unknown active endpoint is never
+    inferred. Definition queries themselves already require a collapsed caret. }
+  Result := NyxPascalNavigationPoint(FActive.FileReference, LFrame.AuthoredText,
+    LFrame.Projection.ToAuthored(LFrame.Selection.Start));
+end;
+
+procedure TNyxStudioSourceInput.NavigateBack;
+begin
+  RequestNavigation(pndBack);
+end;
+
+procedure TNyxStudioSourceInput.NavigateForward;
+begin
+  RequestNavigation(pndForward);
+end;
+
+procedure TNyxStudioSourceInput.RequestNavigation(ADirection: TNyxPascalNavigationDirection);
+var
+  LEditing: TNyxEditingSnapshot;
+  LSources: INyxPascalSourceSnapshot;
+  LCandidate: INyxPascalNavigationTrail;
+  LQuery: INyxPascalCompletionRequest;
+  LFrom, LTarget: TNyxPascalNavigationPoint;
+  LOwner: TNyxPascalSourceRef;
+  LStatus: TNyxPascalNavigationStatus;
+begin
+  DismissCompletion;
+
+  if not Current(LEditing) or LEditing.Composing or FActive.History.Composing or
+    not LEditing.Selection.Defined then Exit;
+  Observe(LEditing);
+
+  if FActive.History.Current.AuthoredText <> FSession.ActiveSourceText then Exit;
+
+  if (FNavigationTrail = nil) or not FNavigationTrail.CanTravel(ADirection) then
+  begin
+
+    if ADirection = pndBack then FNavigationMessage := 'No earlier definition location.'
+    else FNavigationMessage := 'No later definition location.';
+    CompletionChanged;
+    Exit;
+  end;
+  LSources := Sources;
+  LFrom := NavigationPoint;
+  LTarget := FNavigationTrail.Destination(ADirection);
+  { SourceSnapshot.Text validates exact current membership. A removed/renamed
+    project cannot be reached through a retained selector or filesystem guess. }
+  LCandidate := FNavigationTrail.Travel(ADirection, LFrom,
+    LSources.Text(LTarget.FileReference), LStatus);
+
+  if LCandidate = nil then
+  begin
+    case LStatus of
+      pnsAmbiguous: FNavigationMessage := 'That source context now occurs more than once. The location was not guessed.';
+      pnsCancelled: FNavigationMessage := 'Source navigation was cancelled.';
+    else
+      FNavigationMessage := 'That source context has changed. Undo the edit or make a new definition jump.';
+    end;
+    CompletionChanged;
+    Exit;
+  end;
+  LOwner := FActive.FileReference;
+
+  if Assigned(FCompletionOwnerRead) then LOwner := FCompletionOwnerRead();
+  LQuery := NewNyxPascalCompletionRequest(LSources)
+    .At(FActive.FileReference, LFrom.Caret).From(LOwner);
+  FNavigationPending := LCandidate;
+  FNavigationQuery := LQuery;
+  FNavigationGeneration := FActive.History.Generation;
+  CompletionChanged;
+end;
+
+function TNyxStudioSourceInput.TakeSourceNavigation(out ALine, AColumn: Integer): Boolean;
+var
+  LPending: INyxPascalNavigationTrail;
+  LQuery: INyxPascalCompletionRequest;
+  LEditing: TNyxEditingSnapshot;
+  LFrame: TNyxTextEditorFrame;
+  LTarget: TNyxPascalNavigationPoint;
+  LOwner: TNyxPascalSourceRef;
+begin
+
+  if FNavigationPending = nil then Exit(TakeDefinitionNavigation(ALine, AColumn));
+  Result := False;
+  ALine := 0;
+  AColumn := 0;
+  LPending := FNavigationPending;
+  LQuery := FNavigationQuery;
+  FNavigationPending := nil;
+  FNavigationQuery := nil;
+  { Retire any old assistance popup on a later host turn, including a refused
+    one-shot move. This callback only queues; it cannot replace the input here. }
+  CompletionChanged;
+
+  if not Current(LEditing) or LEditing.Composing or FActive.History.Composing or
+    (LQuery = nil) or (FActive.History.Generation <> FNavigationGeneration) then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LFrame := FActive.History.Current;
+  LOwner := FActive.FileReference;
+
+  if Assigned(FCompletionOwnerRead) then LOwner := FCompletionOwnerRead();
+
+  if (LFrame.Text <> LEditing.Text) or (LFrame.AuthoredText <> FSession.ActiveSourceText) or
+    not LFrame.Selection.SameRange(LEditing.Selection) or
+    not LQuery.Owner.SameFile(LOwner) or not LQuery.Matches(Sources) then
+  begin
+    DismissCompletion;
+    Exit;
+  end;
+  LTarget := LPending.Current;
+  LTarget.Position(ALine, AColumn);
+  { All allocations, relocation and full-source guards precede this synchronous
+    selector/candidate publication. No callback or renderer is retired inline. }
+  DismissCompletion;
+  FSession.ActiveSourceFile := LTarget.FileReference;
+  FNavigationTrail := LPending;
+  Result := True;
 end;
 
 procedure TNyxStudioSourceInput.StartCompletion(AOffset: Integer;
@@ -876,6 +1049,7 @@ begin
           Exit;
         end;
         LSources := Sources;
+
         if not Supports(FCompletionMenu, INyxPascalCompletionPreparation, LPreparation) then
         begin
           raise ENyxTextHistory.Create('Completion requires detached draft preparation');
@@ -908,11 +1082,8 @@ function TNyxStudioSourceInput.TakeDefinitionNavigation(
 var
   LNavigation: INyxPascalCompletionNavigation;
   LLocation: TNyxPascalCompletionLocation;
-  LText: TNyxText;
-  LAt: Integer;
-  LStorage: Integer;
-  LScalar: Integer;
-  LAfterCR: Boolean;
+  LTarget: TNyxPascalNavigationPoint;
+  LTrail: INyxPascalNavigationTrail;
 begin
   Result := False;
   ALine := 0;
@@ -939,74 +1110,61 @@ begin
   begin
     Exit;
   end;
-  LText := FSession.DraftFileText(LLocation.FileReference);
-  LStorage := 1;
-  ALine := 1;
-  AColumn := 1;
-  LAfterCR := False;
-  for LAt := 1 to LLocation.Start do
-  begin
-
-    if not NyxNextScalar(LText, LStorage, LScalar) then
-    begin
-      raise ENyxTextHistory.Create('Definition position is outside its captured source');
-    end;
-
-    { Source coordinates follow logical lines before either adapter presents
-      its own line endings. CRLF counts once; lone CR and LF each count once. }
-
-    if LScalar = 13 then
-    begin
-      Inc(ALine);
-      AColumn := 1;
-      LAfterCR := True;
-    end
-    else if LScalar = 10 then
-    begin
-
-      if not LAfterCR then
-      begin
-        Inc(ALine);
-      end;
-      AColumn := 1;
-      LAfterCR := False;
-    end
-    else
-    begin
-      Inc(AColumn);
-      LAfterCR := False;
-    end;
-  end;
+  LTarget := NyxPascalNavigationPoint(LLocation.FileReference,
+    FSession.DraftFileText(LLocation.FileReference), LLocation.Start);
+  LTarget.Position(ALine, AColumn);
+  LTrail := FNavigationTrail.Visit(NavigationPoint, LTarget);
   { SourceFileText validates current membership before the UI selector changes.
     The query already checks every accepted/draft buffer, including this target.
     Stored per-file text histories and unfinished buffers remain independent. }
   DismissCompletion;
   FSession.ActiveSourceFile := LLocation.FileReference;
+  FNavigationTrail := LTrail;
   Result := True;
 end;
 
 function TNyxStudioSourceInput.BuildCompletion: TNyxDocument;
 var
   LCard: INyxCard;
+  LEditing: TNyxEditingSnapshot;
 begin
   Result := nil;
 
-  if not CompletionCurrent then
-  begin
-    DismissCompletion;
-    Exit;
-  end;
-  LCard := FCompletionMenu.Build('studio-completion', Sources);
+  if FNavigationPending <> nil then Exit;
 
-  if FCompletionMenu.State = pcvClosed then
+  if FNavigationMessage <> '' then
   begin
-    Exit;
-  end;
 
-  if FCompletionWaiting then
+    if not Current(LEditing) then
+    begin
+      DismissCompletion;
+      Exit;
+    end;
+    LCard := NewNyxCard('studio-completion');
+    LCard.Configure.Padding(16).Gap(8).Done;
+    LCard.Add(NewNyxLabel('studio-navigation-title').WithText('Source navigation'));
+    LCard.Add(NewNyxLabel('studio-navigation-message').WithText(FNavigationMessage));
+  end
+  else
   begin
-    LCard.Add(NewNyxLabel('studio-completion-waiting')
-      .WithText('Waiting for this Pascal draft to synchronize'));
+
+    if not CompletionCurrent then
+    begin
+      DismissCompletion;
+      Exit;
+    end;
+    LCard := FCompletionMenu.Build('studio-completion', Sources);
+
+    if FCompletionMenu.State = pcvClosed then
+    begin
+      Exit;
+    end;
+
+    if FCompletionWaiting then
+    begin
+      LCard.Add(NewNyxLabel('studio-completion-waiting')
+        .WithText('Waiting for this Pascal draft to synchronize'));
+    end;
   end;
   Result := TNyxDocument.Create;
   try

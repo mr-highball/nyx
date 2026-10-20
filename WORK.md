@@ -34,7 +34,119 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current handoff: Unit-owned API declarations — 2026-10-20
+## Current editor integration: Return from definition jumps — 2026-10-20
+
+The previous goal turn makes product progress: unit/global API documentation is
+qualified, committed and pushed as78caee7; the active helper has moved into actual
+registration-owned discovery. Root now takes a separate editor consumer lane.
+Original NS-4 authoring criterion two owns the complete modern editor; bounded
+navigation history is a prerequisite, not a replacement acceptance criterion.
+
+Deliverable: Back/Forward through definition jumps from both Studio adapters,
+using a reusable typed immutable Pascal trail. Capture genuine logical source
+selectors and Unicode scalar carets. Preserve the actual departure caret on
+traversal, drop a forward branch after a new jump, and bound retained text/entries.
+Resolve changed buffers on traversal through unchanged text or unique exact
+surrounding text, with logical newline projection. Ambiguous/removed context
+refuses explicitly; this is text anchoring, never inferred symbol identity.
+No extra source scan runs on every keystroke. No authored edit or text/document
+Undo entry is added by navigation. Reset with session/accepted-project/context
+identity and recheck physical caret/history/all source buffers before queued UI
+publication. Server availability is not a prerequisite for local Back/Forward.
+
+Qualification must cover actual trail branches, limits/atomic refusal, Unicode,
+newline projection, multiple intervening edits, ambiguous/deleted anchors,
+cancellation and missing membership; shared-controller event/queue paths must
+preserve existing source/history guards. Both affected Studio targets compile;
+actual GUI/browser execution and complete editor/input/parity/adoption/delivery
+remain open under current host constraints. Stop on an unsupported owner rather
+than guessing a coordinate or relaxing a source/project/compiler quota.
+
+Root owns the navigation unit, shared source input, both Studio adapters/view,
+their controller/trail consumers and Pascal-project guide. Lil' Scooty owns the
+separate nine-path registration/index integration. Both source-ready handoffs
+precede root-only build admission; neither edits Pascal while readers are live.
+Keep all preceding receipts/failures/protected and concurrent planning exact.
+
+Final result: both Studio adapters now expose queued Back/Forward and Alt+Left/
+Right through the shared source controller. The portable immutable trail keeps
+the real departure caret, replaces forward branches and bounds retained text.
+Logical-newline/exact-text relocation is deterministic; ambiguous or missing
+context produces a Nyx message without changing source, selector or Undo. Live
+mount/project/history/caret/all-buffer/include-owner guards are rechecked at
+publication. Local traversal needs no backend/provider. The controlled-host
+tests exercise actual retained events and queued handoff; they are not GUI,
+keyboard-device, composition-platform or phone execution evidence.
+
+The helper's companion integration attaches immutable declaration bundles to
+actual schema/callback/catalog registrations and publishes a caller-owned
+versioned reference index. Captures expose inert declarations and names, never
+callback classes, factory execution or recipe construction. Exact registration
+generations, origins, overloads, inherited members, conflicts, missing links,
+alias/base cycles, reentrancy, cancellation and aggregate bounds retain atomic
+refusal. Old registration APIs and public GUID slots/record layouts stay exact;
+transported schema captures explicitly lack local documentation authority.
+The real decorated extension still refuses its missing core declaration closure.
+Synthetic index-mechanics checks are separate and do not replace that gate.
+
+Accepted qualification is explicitly composite: nineteen consumers have unchanged
+dependency inputs; six navigation consumers are rebuilt after the one-file final
+warning repair. The earlier twenty-five-build freeze remains retained with its
+six unreachable-case warning occurrences. The exhaustive enum case becomes a
+total Boolean expression; no diagnostic suppression or compiler flag changes.
+Final accepted evidence is twenty-five compiler jobs, zero owned warnings and84
+existing upstream pas2js Classes warnings. Thirty-one actual qualified-plus-
+repair jobs are retained, not thirty-one independent accepted consumers.
+
+Eleven native programs pass with clean heaps: navigation34, Studio definitions146,
+registration index64, documentation68, unit71, text projection159, completion
+navigation27, completion view40, definition transport31 and MCP completion82;
+the core consumer separately reports30 core/14365 composition-designer checks.
+Twelve pas2js outputs compile: ten consumers, browser Studio and source worker.
+Native Studio/backend compile only. Transport/MCP consumers use their existing
+production engine in fresh runtime directories without listening or starting a
+server. No browser/LCL execution, hosted/SDK capture, compiler-context enrollment,
+observing release, native input/accessibility or parity/adoption/delivery closes.
+
+The first browser registry fixture refuses a sibling-interface `as` cast accepted
+by native FPC. Replacing only its eight fixture casts with checked Supports and
+six explicit capability assertions preserves all58 earlier checks; final64 and
+the old documentation68 pass. Production already used checked optional queries.
+The initial failing source/log and all earlier source-ready/reviewed freezes stay
+retained. A preliminary build admission refuses before any compiler because its
+source manifest was not yet published; the original freeze handle is joined,
+never restarted. The final audit's first dependency matcher misses FPC's `./src`
+spelling and refuses before publishing evidence; accepting that exact prefix
+repairs orchestration only. These preparations create no product success claim.
+
+Ignored evidence packet:
+`E:\Blekohlab\nyx\qualification\definition-history-20261020-125511`, owned by
+`.local/definition-history-paths-private.json`. `source-final-freeze-private.json`
+retains all15 owned Pascal inputs; `accepted-composite-jobs-private.json` records
+the19+6 dependency/log/output hashes, and `final-audit-private.json` records the
+counts and preservation checks. All791 maintained/776 unrelated inputs stay
+exact; only navigation changes after the earlier qualified freeze. All67 retained
+source copies,24 compiler inputs,97 original RTL sources,five current-start
+protected files,two profile inputs and thirteen concurrent planning files retain
+their hashes. Previous349-artifact verification remains applicable to unchanged
+frozen inputs, without a new verifier execution claim. Historical global-config
+preservation remains false/unrepaired. All admitted readers join; LAN stays
+offline and native Nyx tools remain absent.
+
+Reassessment: no full original authoring/reference criterion, task credit or DONE
+status closes; the complete editor/source/type/incremental/input/quality/parity/
+adoption/delivery remains open across at least forty-nine documented unclosed
+batches. Stop navigation/registration/fixture/compiler variants after this
+handoff. The next helper prerequisite is truthful intrinsic/scalar and actual
+target-alias metadata. Source-owned imports preserving each declaring unit and
+existing ceilings are queued next. Indexed properties and source-generator adoption remain
+required before a complete real core/extension reference or contextual UI claim.
+Use optional capabilities without changing old GUID slots; fluent/capture paths
+must retain specialized shapes. No fabricated primitive representation, alias
+target, public accessor or source declaration. Root retains separate ownership
+and all compiler admission; helper keeps this current/next backlog flow.
+
+## Previous handoff: Unit-owned API declarations — 2026-10-20
 
 Lil' Scooty keeps an active assignment and a next backlog candidate under the
 standing task-flow policy. The four-path reference01 source handoff is ready;

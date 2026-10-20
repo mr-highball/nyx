@@ -64,12 +64,13 @@ function DocumentationUnitReference: INyxDocumentationType;
 
 { Registration publishes the same extension-owned prose/defaults to the existing
   catalog/schema/callback authorities. No second help registry or page list is
-  populated. Reference02 will consume declaration-bound registration metadata. }
+  populated. Declaration attachments travel with those same registration calls. }
 procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog);
 
 implementation
 
-uses nyx.schema, nyx.catalog.labels, nyx.callbacks, nyx.contract, nyx.event.payload;
+uses nyx.schema, nyx.catalog.labels, nyx.callbacks, nyx.contract, nyx.event.payload,
+  nyx.documentation.registration;
 
 var
   GRegistered: Boolean;
@@ -224,7 +225,21 @@ end;
 procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog);
 var
   LProperty: TNyxPropertyInfo;
+  LDocumentation: INyxDocumentationRegistration;
+  LDeclarations: TNyxDocumentationDeclarations;
+  LUnit: TNyxDocumentationRef;
 begin
+  { This bundle owns only this actual unit's declarations. Its external core
+    links remain complete and must be resolved by the eventual core owners. }
+  LUnit := NyxDocumentationUnit('nyx.test.documentation');
+  SetLength(LDeclarations, 4);
+  LDeclarations[0] := DocumentationUnitReference;
+  LDeclarations[1] := TDocumentationBadge.Reference;
+  LDeclarations[2] := TDocumentationBadge.InterfaceReference;
+  LDeclarations[3] := TDocumentationCallback.Reference;
+  LDocumentation := NewNyxDocumentationRegistration(LUnit,
+    NyxDocumentationMember(LUnit, 'NewDocumentationBadge'), LDeclarations,
+    [ndplatformNative, ndplatformBrowser]);
 
   if not GRegistered then
   begin
@@ -238,14 +253,16 @@ begin
     RegisterNyxSchema(NyxCustomKind(DocumentationFixtureKind), [LProperty], [
       NyxNamedEventSchema(NyxEvent('GreetingChanged'), 'Greeting changed',
         'A declared text payload; producer execution remains separate.',
-        ncCustom, ncCustom, NyxScalarPayload(NyxTextDomain))]);
-    RegisterNyxCallback(NyxHandler('TDocumentationCallback'), TDocumentationCallback);
+        ncCustom, ncCustom, NyxScalarPayload(NyxTextDomain))], LDocumentation);
+    RegisterNyxCallback(NyxHandler('TDocumentationCallback'), TDocumentationCallback,
+      LDocumentation.ForPrimary(NyxDocumentationType('nyx.test.documentation', 'TDocumentationCallback')));
     GRegistered := True;
   end;
 
   if (ACatalog <> nil) and (ACatalog.IndexOf(DocumentationFixtureKind) < 0) then
   begin
-    ACatalog.RegisterKind(NyxCustomKind(DocumentationFixtureKind), 'Friendly badge', 'Custom', False);
+    ACatalog.RegisterKind(NyxCustomKind(DocumentationFixtureKind), 'Friendly badge', 'Custom',
+      False, LDocumentation);
     ACatalog.Describe(NyxCustomKind(DocumentationFixtureKind), pgText, [clText],
       'greeting, hello', DocumentationFixtureSummary);
   end;

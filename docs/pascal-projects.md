@@ -5015,6 +5015,63 @@ and private query channel now consume this controller and its typed authored/
 physical position/replacement projection as described above. No default helper,
 MCP tool/schema or observing release is installed by this source change.
 
+## Returning from definition jumps
+
+Studio's source toolbar provides Back and Forward, with Alt+Left and Alt+Right
+shortcuts. They traverse definition jumps using the actual departure caret; they
+remain local when the compiler service is unavailable. A new definition jump
+after Back replaces the forward branch. Merely choosing another source file is
+not a new definition landmark. A selected range departs from its known start,
+without guessing an active endpoint that the platform cannot report.
+
+The reusable `nyx.pascal.navigation` contract contains immutable source values:
+
+```pascal
+LTrail := NewNyxPascalNavigationTrail;
+LTrail := LTrail.Visit(LDeparture, LDeclaration);
+
+if LTrail.CanTravel(pndBack) then
+begin
+  LTarget := LTrail.Destination(pndBack);
+  LNext := LTrail.Travel(pndBack, LCurrentCaret,
+    LCurrentBuffers.Text(LTarget.FileReference), LStatus);
+
+  if LNext <> nil then
+  begin
+    { Check the current project/mount before publishing this candidate. }
+    LTrail := LNext;
+  end;
+end;
+```
+
+Each point owns its logical source selector, exact authored text and Unicode
+scalar caret. Traversal first retains unchanged text or unchanged prefix/suffix
+positions. If intervening edits surround the location, at most 32 scalars on each
+side must occur exactly once in the current buffer. CR, LF and CRLF are projected
+as logical newlines; a caret inside CRLF refuses because it has no exact logical
+host position. All other content stays exact. Ambiguous, removed or changed
+context refuses with a visible Nyx message. This is textual anchoring, not semantic
+symbol tracking or rename inference. There is no additional navigation scan on
+each keystroke. Undo back to the original text can make a retained point exact
+again; traversal never changes text or adds a text/document Undo entry.
+
+Default retention is 128 locations and 16 MiB, accounting UTF-8 text, selector and
+64 bytes per point. Copied fluent limits allow zero entries to disable retention,
+or two through 1024 locations and an explicit byte allowance. Old distant entries
+may be evicted, but a move refuses if its immediate departure/return pair cannot
+fit. Each source retains the existing four-MiB inspected-buffer ceiling. Failed,
+cancelled and over-budget candidates cannot mutate earlier trail readers.
+
+Both Studio hosts consume navigation after input dispatch and before rebinding
+the source. The shared controller rechecks session/accepted-project/context,
+physical text/selection, history generation, live include owner and every captured
+accepted/draft buffer. It refuses unpublished physical edits and composition;
+project/load replacement retires the trail even when the new text is equal.
+Private query values supply these exact input comparisons without contacting a
+provider or granting compilation rights. The existing text timeline and server
+query budgets remain separate. Source qualification and current GUI/browser
+execution limits are recorded in WORK.md.
+
 ## Shared editing history and completion presentation
 
 `nyx.editing.history` supplies an independent `INyxTextEditHistory` for one

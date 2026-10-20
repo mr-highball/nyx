@@ -40,7 +40,8 @@ uses
   nyx.event.payload,
   nyx.state,
   nyx.layout.constraints,
-  nyx.model;
+  nyx.model,
+  nyx.documentation.registration;
 
 type
   { Capability describes the current projection, not production acceptance.
@@ -223,7 +224,12 @@ function FindNyxNamedEvent(ANode: TNyxNode; const AName: TNyxEventRef;
   text. Numeric input drafts retain their editing-complete admission boundary. }
 function NyxSupportsTextInput(ANode: TNyxNode): Boolean;
 procedure RegisterNyxSchema(const AKind: TNyxKindRef;
-  const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema);
+  const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema); overload;
+{ Documentation is frozen before the existing schema registration commits.
+  It neither replaces property/event authority nor changes snapshot transport. }
+procedure RegisterNyxSchema(const AKind: TNyxKindRef;
+  const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema;
+  const ADocumentation: INyxDocumentationRegistration); overload;
 
 type
   { An action completes synchronously inside one captured metadata environment.
@@ -257,6 +263,15 @@ type
     function PropertyAt(AKind, AIndex: Integer): TNyxPropertyInfo;
     function EventCount(AKind: Integer): Integer;
     function EventAt(AKind, AIndex: Integer): TNyxEventSchema;
+  end;
+
+  { Optional local declaration attachments for the same captured schema rows.
+    Legacy and decoded transport rows return nil. Execute/ToData remain solely
+    schema operations; inspection never invokes an implementation or supplier. }
+  INyxSchemaDocumentation = interface(IInterface)
+    ['{E01D3207-6205-49F4-8468-AE09A101C202}']
+    function DocumentationAt(AKind: Integer): INyxDocumentationRegistration;
+    function HasLocalDocumentation: Boolean;
   end;
 
 { Capture current published metadata atomically; later publication cannot mutate
@@ -342,9 +357,12 @@ type
   { One captured immutable creator environment. Typed getters detach returned
     metadata; Execute only installs this snapshot as a temporary calling scope
     and restores the previous scope before returning or propagating failure. }
-  TNyxSchemaSnapshot = class(TInterfacedObject, INyxSchemaSnapshot, INyxSchemaInspection)
+  TNyxSchemaSnapshot = class(TInterfacedObject, INyxSchemaSnapshot,
+    INyxSchemaInspection, INyxSchemaDocumentation)
   public
     Schemas: TNyxPublishedSchemas;
+    Documentation: TNyxDocumentationRegistrations;
+    DocumentationLocal: Boolean;
     CapturedRevision: Integer;
     function GetRevision: Integer;
     function ToData: TNyxDataValue;
@@ -356,10 +374,13 @@ type
     function PropertyAt(AKind, AIndex: Integer): TNyxPropertyInfo;
     function EventCount(AKind: Integer): Integer;
     function EventAt(AKind, AIndex: Integer): TNyxEventSchema;
+    function DocumentationAt(AKind: Integer): INyxDocumentationRegistration;
+    function HasLocalDocumentation: Boolean;
   end;
 
 var
   GPublishedSchemas: TNyxPublishedSchemas;
+  GPublishedDocumentation: TNyxDocumentationRegistrations;
   GSchemaRevision: Integer;
   {$ifndef PAS2JS}
   GSchemaLock: TRTLCriticalSection;
@@ -378,11 +399,20 @@ threadvar
 
 procedure RegisterNyxSchema(const AKind: TNyxKindRef;
   const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema);
+begin
+  RegisterNyxSchema(AKind, AProperties, AEvents, nil);
+end;
+
+procedure RegisterNyxSchema(const AKind: TNyxKindRef;
+  const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema;
+  const ADocumentation: INyxDocumentationRegistration);
 var
   LIndex: Integer;
   LOther: Integer;
   LSchema: TNyxPublishedSchema;
   LPrevious: TNyxPublishedSchemas;
+  LDocumentation: INyxDocumentationRegistration;
+  LPreviousDocumentation: TNyxDocumentationRegistrations;
 begin
 
   if Trim(AKind.Name) = '' then
@@ -402,6 +432,7 @@ begin
   finally
     UnlockSchemas;
   end;
+  LDocumentation := CaptureNyxDocumentationRegistration(ADocumentation);
   LSchema.Kind := AKind.Name;
   SetLength(LSchema.Properties, Length(AProperties));
   for LIndex := 0 to High(AProperties) do
@@ -482,12 +513,16 @@ begin
     { Publish a detached array. Readers retain the previous immutable array;
       no existing schema/route/payload is changed by a later registration. }
     SetLength(LPrevious, Length(GPublishedSchemas) + 1);
+    SetLength(LPreviousDocumentation, Length(LPrevious));
     for LIndex := 0 to High(GPublishedSchemas) do
     begin
       LPrevious[LIndex] := GPublishedSchemas[LIndex];
+      LPreviousDocumentation[LIndex] := GPublishedDocumentation[LIndex];
     end;
     LPrevious[High(LPrevious)] := LSchema;
+    LPreviousDocumentation[High(LPreviousDocumentation)] := LDocumentation;
     GPublishedSchemas := LPrevious;
+    GPublishedDocumentation := LPreviousDocumentation;
     Inc(GSchemaRevision);
   finally
     UnlockSchemas;

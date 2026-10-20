@@ -56,6 +56,7 @@ type
     procedure Changed;
     procedure Key(AKey: TNyxKey; AModifiers: TNyxKeyModifiers = []);
     procedure PresentAndQueue;
+    procedure Place(ALine, AColumn: Integer);
   end;
 
 const
@@ -264,6 +265,118 @@ begin
   end;
 end;
 
+procedure THost.Place(ALine, AColumn: Integer);
+var
+  LText: TNyxText;
+  LCaret: Integer;
+begin
+  LText := NyxPresentText(Session.ActiveSourceText, nteLF);
+  LCaret := NyxTextScalarCount(Copy(LText, 1, NyxTextPosition(LText, ALine, AColumn) - 1));
+  Physical := NyxEditingSnapshot(nepSelectionChange, neiUnknown, LText, '', False,
+    NyxTextSelection(LText, LCaret, LCaret), False, False);
+  Input.Bind;
+end;
+
+{ Production controller and retained event ports exercise traversal after the
+  same queued definition handoff as ordinary Studio. Place models only the
+  host's returned line/caret presentation; it neither compiles nor admits files. }
+procedure RunNavigation;
+var
+  LHost: THost;
+  LBefore: TNyxProjectPair;
+  LLine, LColumn, LAt: Integer;
+  LText: TNyxText;
+  LPopup: TNyxDocument;
+begin
+  LHost := THost.Create;
+  try
+    LBefore := LHost.Session.ProjectSnapshot;
+    LHost.Input.NavigateBack;
+    Check(not LHost.Input.TakeSourceNavigation(LLine, LColumn), 'Empty local history never invents a target');
+    LPopup := LHost.Input.BuildCompletion;
+    try
+      Check((LPopup <> nil) and (LPopup.Pages[0].Find('studio-navigation-message') <> nil),
+        'An exhausted trail reports through an ordinary Nyx popup');
+    finally
+      LPopup.Free;
+    end;
+    LHost.PresentAndQueue;
+    Check(LHost.Input.TakeSourceNavigation(LLine, LColumn) and (LLine = 2) and (LColumn = 11),
+      'The unified queued path admits an ordinary definition jump');
+    LHost.Place(LLine, LColumn);
+    LHost.Context.Enabled := False;
+    LHost.Key(nkLeftKey, [nmAlt]);
+    Check((LHost.Writes = 0) and (LHost.ChangedWrites = 0), 'Back dispatch itself never replaces the physical input');
+    Check(LHost.Input.TakeSourceNavigation(LLine, LColumn) and (LLine = 4) and (LColumn = 10),
+      'Alt+Left returns to the actual origin with the compiler service unavailable');
+    LHost.Place(LLine, LColumn);
+    LHost.Key(nkRightKey, [nmAlt]);
+    Check(LHost.Input.TakeSourceNavigation(LLine, LColumn) and (LLine = 2) and (LColumn = 11),
+      'Alt+Right returns through the same local trail');
+    Check((EncodeNyxProject(LHost.Session.ProjectSnapshot) = EncodeNyxProject(LBefore)) and
+      not LHost.Input.Commands.CanExecute(nhcUndo) and not LHost.Input.Commands.CanExecute(nhcRedo) and
+      (LHost.ChangedWrites = 0), 'Definition/Back/Forward preserve every authored byte and both text stacks');
+  finally
+    LHost.Free;
+  end;
+  for LAt := 0 to 6 do
+  begin
+    LHost := THost.Create;
+    try
+      LHost.PresentAndQueue;
+      Check(LHost.Input.TakeSourceNavigation(LLine, LColumn), 'Prepare a real local trail for queue refusal');
+      LHost.Place(LLine, LColumn);
+      LHost.Input.NavigateBack;
+      case LAt of
+        0:
+          begin
+            LText := LHost.Physical.Text;
+            LHost.Physical := NyxEditingSnapshot(nepSelectionChange, neiUnknown, LText, '', False,
+              NyxTextSelection(LText, 0, 0), False, False);
+          end;
+        1: LHost.Session.SetSourceDraft(CBuffer + ' ');
+        2: LHost.Writable := False;
+        3: LHost.Session.LoadProject(LHost.Session.ProjectSnapshot);
+        4:
+          begin
+            LHost.UseExplicitOwner := True;
+            LHost.ExplicitOwner := TNyxPascalSourceRef.UnitFile(NyxPascalUnit('RetiredOwner'));
+          end;
+        5:
+          begin
+            LText := LHost.Physical.Text;
+            LHost.Physical := NyxEditingSnapshot(nepCompositionStart, neiInsertCompositionText,
+              LText, '', False, LHost.Physical.Selection, True, False);
+          end;
+        6:
+          begin
+            LText := LHost.Physical.Text + ' ';
+            LHost.Physical := NyxEditingSnapshot(nepInput, neiInsertText,
+              LText, ' ', True, LHost.Physical.Selection, False, False);
+          end;
+      end;
+      Check(not LHost.Input.TakeSourceNavigation(LLine, LColumn),
+        'Changed caret/draft/mount/project/owner/composition/unpublished input revokes queued local traversal ' + IntToStr(LAt));
+      Check(LHost.ChangedWrites = 0, 'Refused local traversal publishes no text/history change');
+    finally
+      LHost.Free;
+    end;
+  end;
+  LHost := THost.Create;
+  try
+    LHost.PresentAndQueue;
+    Check(LHost.Input.TakeSourceNavigation(LLine, LColumn), 'Prepare project-lifetime reset');
+    LHost.Place(LLine, LColumn);
+    LHost.Session.LoadProject(LHost.Session.ProjectSnapshot);
+    LHost.Place(LLine, LColumn);
+    LHost.Input.NavigateBack;
+    Check(not LHost.Input.TakeSourceNavigation(LLine, LColumn),
+      'A project/load context replacement retires the old trail even for equal source text');
+  finally
+    LHost.Free;
+  end;
+end;
+
 procedure Run;
 var
   LHost: THost;
@@ -275,6 +388,7 @@ var
   LPage: TNyxNode;
   LSecondOwner: TNyxPascalSourceRef;
 begin
+  RunNavigation;
   LHost := THost.Create;
   try
     LBefore := LHost.Session.ProjectSnapshot;

@@ -35,7 +35,8 @@ uses
   nyx.model,
   nyx.events,
   nyx.scheduler,
-  nyx.application.context;
+  nyx.application.context,
+  nyx.documentation.registration;
 
 const
   NyxCallbacksKey = 'nyx.callbacks';
@@ -158,6 +159,21 @@ type
   end;
   TNyxCallbackClass = class of TNyxEventCallback;
 
+  { Immutable startup/UI-thread registration names. No class reference, factory,
+    Resolve method or executable callback escapes through this inspection API. }
+  INyxCallbackSnapshot = interface(IInterface)
+    ['{D04054E0-56E7-498B-880D-06101121BA02}']
+    function Revision: Integer;
+    function Count: Integer;
+    function HandlerAt(AIndex: Integer): TNyxHandlerRef;
+  end;
+  { Optional declaration attachments belong to those exact captured handler
+    rows. Nil denotes a legacy registration lacking authored documentation. }
+  INyxCallbackDocumentation = interface(IInterface)
+    ['{D04054E0-56E7-498B-880D-06101121BA03}']
+    function DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+  end;
+
   { Optional injection leaves ordinary callback interfaces/classes unchanged.
     Alternative reference-counted implementations can opt into application
     dependencies without inheriting Nyx's supplied base. Binding occurs on UI,
@@ -195,7 +211,12 @@ function NyxPolicyName(APolicy: TNyxExecutionPolicy): TNyxText;
 function TryNyxPolicy(const AName: TNyxText; out APolicy: TNyxExecutionPolicy): Boolean;
 { Registry authoring is a startup/UI-thread operation. Duplicate names fail
   before replacement. Classes carry no retained instance or component cycle. }
-procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass);
+procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass); overload;
+procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass;
+  const ADocumentation: INyxDocumentationRegistration); overload;
+{ Capture only the existing registry's names and frozen attachments. Callers
+  serialize against startup/UI-thread registration, as for callback binding. }
+function CaptureNyxCallbacks(const ACancellation: INyxCancellationScope = nil): INyxCallbackSnapshot;
 { Bind once to a fresh application router before mounting. Realized page/part
   identities preserve reusable inheritance and instance overrides. All factories
   and policies are admitted before any registration is published. On failure
@@ -309,6 +330,18 @@ type
     Name: TNyxText;
     CallbackClass: TNyxCallbackClass;
   end;
+  { Managed inspection owner stores names and immutable metadata independently
+    of the implementation-class registry and of all callback lifetimes. }
+  TNyxCallbackSnapshot = class(TInterfacedObject, INyxCallbackSnapshot, INyxCallbackDocumentation)
+  public
+    Names: array of TNyxHandlerRef;
+    Documentation: TNyxDocumentationRegistrations;
+    CapturedRevision: Integer;
+    function Revision: Integer;
+    function Count: Integer;
+    function HandlerAt(AIndex: Integer): TNyxHandlerRef;
+    function DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+  end;
   { COM interfaces stay in owned classes rather than records for pas2js. }
   TNyxCallbackPlan = class
     Target: TNyxEventTarget;
@@ -321,6 +354,8 @@ type
 
 var
   GCallbackTypes: array of TNyxCallbackType;
+  GCallbackDocumentation: TNyxDocumentationRegistrations;
+  GCallbackRevision: Integer;
 
 const
   CPolicyNames: array[TNyxExecutionPolicy] of TNyxText =
@@ -1042,9 +1077,18 @@ begin
 end;
 
 procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass);
+begin
+  RegisterNyxCallback(AHandler, AClass, nil);
+end;
+
+procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass;
+  const ADocumentation: INyxDocumentationRegistration);
 var
   LHandler: TNyxHandlerRef;
   LIndex: Integer;
+  LDocumentation: INyxDocumentationRegistration;
+  LTypes: array of TNyxCallbackType;
+  LDocuments: TNyxDocumentationRegistrations;
 begin
   LHandler := NyxHandler(AHandler.Name);
 
@@ -1060,10 +1104,85 @@ begin
       raise ENyxModel.Create('Duplicate callback implementation: ' + LHandler.Name);
     end;
   end;
+  LDocumentation := CaptureNyxDocumentationRegistration(ADocumentation);
+  { An alternate metadata supplier may re-enter startup registration. The
+    second admission prevents it from bypassing the ordinary duplicate rule. }
+  for LIndex := 0 to High(GCallbackTypes) do
+  begin
+
+    if SameText(GCallbackTypes[LIndex].Name, LHandler.Name) then
+      raise ENyxModel.Create('Duplicate callback implementation: ' + LHandler.Name);
+  end;
+
+  if GCallbackRevision = High(Integer) then
+    raise ENyxModel.Create('Callback registry revision is exhausted');
   LIndex := Length(GCallbackTypes);
-  SetLength(GCallbackTypes, LIndex + 1);
-  GCallbackTypes[LIndex].Name := LHandler.Name;
-  GCallbackTypes[LIndex].CallbackClass := AClass;
+  SetLength(LTypes, LIndex + 1);
+  SetLength(LDocuments, LIndex + 1);
+  for LIndex := 0 to High(GCallbackTypes) do
+  begin
+    LTypes[LIndex] := GCallbackTypes[LIndex];
+    LDocuments[LIndex] := GCallbackDocumentation[LIndex];
+  end;
+  LIndex := High(LTypes);
+  LTypes[LIndex].Name := LHandler.Name;
+  LTypes[LIndex].CallbackClass := AClass;
+  LDocuments[LIndex] := LDocumentation;
+  GCallbackTypes := LTypes;
+  GCallbackDocumentation := LDocuments;
+  Inc(GCallbackRevision);
+end;
+
+function TNyxCallbackSnapshot.Revision: Integer;
+begin
+  Result := CapturedRevision;
+end;
+
+function TNyxCallbackSnapshot.Count: Integer;
+begin
+  Result := Length(Names);
+end;
+
+function TNyxCallbackSnapshot.HandlerAt(AIndex: Integer): TNyxHandlerRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+    raise ENyxModel.Create('Callback snapshot index out of range');
+  Result := Names[AIndex];
+end;
+
+function TNyxCallbackSnapshot.DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
+begin
+  HandlerAt(AIndex);
+  Result := Documentation[AIndex];
+end;
+
+function CaptureNyxCallbacks(const ACancellation: INyxCancellationScope): INyxCallbackSnapshot;
+var
+  LOwner: TNyxCallbackSnapshot;
+  LLease: INyxCallbackSnapshot;
+  LIndex: Integer;
+begin
+
+  if (ACancellation <> nil) and ACancellation.Cancelled then
+    raise ENyxSchedule.Create('Callback inspection cancelled');
+
+  if Length(GCallbackTypes) > 8192 then
+    raise ENyxModel.Create('Callback inspection row allowance exceeded');
+  LOwner := TNyxCallbackSnapshot.Create;
+  LLease := LOwner;
+  LOwner.CapturedRevision := GCallbackRevision;
+  SetLength(LOwner.Names, Length(GCallbackTypes));
+  SetLength(LOwner.Documentation, Length(GCallbackTypes));
+  for LIndex := 0 to High(GCallbackTypes) do
+  begin
+
+    if (ACancellation <> nil) and ACancellation.Cancelled then
+      raise ENyxSchedule.Create('Callback inspection cancelled');
+    LOwner.Names[LIndex] := NyxHandler(GCallbackTypes[LIndex].Name);
+    LOwner.Documentation[LIndex] := GCallbackDocumentation[LIndex];
+  end;
+  Result := LLease;
 end;
 
 function ResolveCallback(const AHandler: TNyxHandlerRef): INyxEventCallback;
