@@ -35,7 +35,8 @@ uses
   nyx.model,
   nyx.catalog,
   nyx.pascal.lexing,
-  nyx.pascal.syntax;
+  nyx.pascal.syntax,
+  nyx.pascal.types;
 
 type
   { The public families carry scalar/property meaning. The finite kind map is
@@ -59,6 +60,17 @@ type
     SourceFile, SourceClass, Facade, Member, GUID: String;
     AdmissionMember, AdmissionResult: String;
   end;
+  { One checked method projection drives all three facade emission sites.
+    Headers and forwarding names retain source spelling; only admitted exact
+    unqualified self type names are mapped to the managed facade. No compiler
+    binding, ABI conversion or executable descriptor is inferred here. }
+  TFacadeMethod = record
+    PublicHeader, ImplementationHeader, Arguments, Name: String;
+    IsFunction, IsFluent: Boolean;
+  end;
+  { Cached value projections avoid reparsing a method separately for interface,
+    class and implementation output. The source scanner still owns discovery. }
+  TFacadeMethods = array of TFacadeMethod;
   { Owned typed IR of the three emitted declaration includes, decoded from the
     exact serialized bytes. It retains complete syntax/scopes/parameters/defaults
     and properties, never live lists or an alternative signature parser. External
@@ -964,21 +976,114 @@ begin
   end;
 end;
 
-function Arguments(const ASignature: String): String;
+function FacadeMethod(const ASignature, ASourceClass, AFacade: String): TFacadeMethod;
 var
   LSyntax: INyxPascalSyntaxSnapshot;
   LOptions: TNyxPascalSyntaxOptions;
   LBytes: TNyxBytes;
-  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LDeclaration, LRoutineDeclaration: TNyxPascalSyntaxDeclaration;
   LScope: TNyxPascalSyntaxScope;
-  LAt, LRoutine: Integer;
+  LAt, LRoutine, LSignatureTail, LImplementationEnd: Integer;
+  LHeaderToken: TNyxPascalToken;
+  LMarks: array of Boolean;
+  LCandidate: TFacadeMethod;
+  LSelfKey: TNyxText;
+  LLastType: TNyxPascalSpan;
+  LArguments: TNyxStrings;
+  function RawUTF8(const AText: TNyxText): String;
+  var
+    LEncoded: TNyxBytes;
+  begin
+    LEncoded := NyxEncodeUTF8(AText);
+    SetLength(Result, Length(LEncoded));
+
+    if Length(LEncoded) > 0 then
+      Move(LEncoded[0], Result[1], Length(LEncoded));
+  end;
+  procedure TypeWindow(const ASpan: TNyxPascalSpan; AResult: Boolean);
+  var
+    LTypes: INyxPascalTypeSyntax;
+    LNode, LParent: TNyxPascalTypeNode;
+    LIndex, LToken: Integer;
+  begin
+
+    if ASpan.Length = 0 then
+      Exit;
+    LTypes := NewNyxPascalTypeSyntax(LSyntax.Lexical, ASpan,
+      TNyxPascalTypeOptions.Defaults);
+
+    if not LTypes.Complete or (LTypes.DiagnosticCount <> 0) then
+      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an unsupported facade type');
+    for LIndex := 0 to LTypes.Count - 1 do
+    begin
+      LNode := LTypes.Node(LIndex);
+
+      if (LNode.Kind <> ptxName) or (NyxPascalASCIIKey(LNode.Name) <> LSelfKey) then
+        Continue;
+
+      if LNode.Parent >= 0 then
+      begin
+        LParent := LTypes.Node(LNode.Parent);
+
+        if LParent.Kind = ptxQualified then
+          Continue;
+      end;
+      { The existing facade bridge replaces a direct builder result with Self.
+        A parameter or nested result needs an actual conversion bridge; changing
+        its type token alone would publish an incompatible delegated call. }
+
+      if not AResult or (LIndex <> LTypes.Root) then
+        raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' needs an explicit bridge for a compound or parameter self type');
+      LToken := LSyntax.Lexical.TokenAt(LNode.Span.Start);
+
+      if (LSyntax.Lexical.Token(LToken).Span.Start <> LNode.Span.Start) or
+        (LSyntax.Lexical.Token(LToken).Span.Length <> LNode.Span.Length) then
+        raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an inconsistent self type token');
+      LMarks[LToken] := True;
+      LCandidate.IsFluent := True;
+    end;
+  end;
+  function Header(AEnd: Integer; AQualify: Boolean): String;
+  var
+    LParts: TNyxStrings;
+    LIndex, LStart: Integer;
+    LToken: TNyxPascalToken;
+  begin
+    LParts := TNyxStrings.Create;
+    try
+      LStart := 0;
+
+      if AQualify then
+      begin
+        LParts.Add(LSyntax.Lexical.Slice(NyxPascalSpan(0, LRoutineDeclaration.NameSpan.Start)));
+        LParts.Add(TNyxText('T' + AFacade + '.'));
+        LStart := LRoutineDeclaration.NameSpan.Start;
+      end;
+      for LIndex := 0 to High(LMarks) do
+      begin
+
+        if not LMarks[LIndex] then
+          Continue;
+        LToken := LSyntax.Lexical.Token(LIndex);
+
+        if (LToken.Span.Start < LStart) or (LToken.Span.Finish > AEnd) then
+          raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an out-of-header rewrite');
+        LParts.Add(LSyntax.Lexical.Slice(NyxPascalSpan(LStart, LToken.Span.Start - LStart)));
+        LParts.Add(TNyxText('I' + AFacade));
+        LStart := LToken.Span.Finish;
+      end;
+      LParts.Add(LSyntax.Lexical.Slice(NyxPascalSpan(LStart, AEnd - LStart)));
+      Result := RawUTF8(LParts.Join(''));
+    finally
+      LParts.Free;
+    end;
+  end;
 begin
-  Result := '';
-  { Forward only declared parameters, in their source order. Delimiters inside
-    a default string or nested type are not parameter separators. NameSpan also
-    retains an escaped identifier's ampersand, which Name intentionally omits.
-    This is the same bounded syntax owner used for emitted declaration admission;
-    no compiler, caller method or alternative signature parser is involved. }
+  Result := Default(TFacadeMethod);
+  LCandidate := Default(TFacadeMethod);
+  { One owned parse supplies names, forwarding order, header boundaries and
+    actual type windows. Literal text, identifiers containing the class name and
+    qualified designators are not evidence of a direct self result. }
   LOptions := TNyxPascalSyntaxOptions.Defaults.Fragment(psfInterfaceDeclarations);
 
   if Length(ASignature) > LOptions.LexicalOptions.MaximumSourceBytes then
@@ -1022,32 +1127,90 @@ begin
 
   if LRoutine = -1 then
     raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has no forwarding routine');
-  LScope := LSyntax.Scope(LSyntax.Declaration(LRoutine).NestedScope);
-  LAt := LScope.FirstDeclaration;
-  while LAt <> -1 do
-  begin
-    LDeclaration := LSyntax.Declaration(LAt);
+  LRoutineDeclaration := LSyntax.Declaration(LRoutine);
+  LSignatureTail := LRoutineDeclaration.NameSpan.Finish;
 
-    if LDeclaration.Kind <> psdkParameter then
-      raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an unexpected forwarding declaration');
+  if (LRoutineDeclaration.GenericSpan.Length <> 0) or (LRoutineDeclaration.OwnerName <> '') then
+    raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has a context-dependent facade routine');
+  LSelfKey := NyxPascalASCIIKey(TNyxText(ASourceClass));
+  SetLength(LMarks, LSyntax.Lexical.Count);
+  LCandidate.Name := RawUTF8(LSyntax.Lexical.Slice(LRoutineDeclaration.NameSpan));
+  LCandidate.IsFunction := LRoutineDeclaration.RoutineKind = prkFunction;
+  LArguments := TNyxStrings.Create;
+  try
+    LScope := LSyntax.Scope(LRoutineDeclaration.NestedScope);
+    LAt := LScope.FirstDeclaration;
+    LLastType := NyxPascalSpan(0, 0);
+    while LAt <> -1 do
+    begin
+      LDeclaration := LSyntax.Declaration(LAt);
 
-    if Result <> '' then
-      Result := Result + ', ';
-    Result := Result + String(LSyntax.Lexical.Slice(LDeclaration.NameSpan));
-    LAt := LDeclaration.Next;
+      if LDeclaration.Kind <> psdkParameter then
+        raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has an unexpected forwarding declaration');
+      LArguments.Add(LSyntax.Lexical.Slice(LDeclaration.NameSpan));
+
+      if LDeclaration.NameSpan.Finish > LSignatureTail then
+        LSignatureTail := LDeclaration.NameSpan.Finish;
+
+      if LDeclaration.TypeSpan.Finish > LSignatureTail then
+        LSignatureTail := LDeclaration.TypeSpan.Finish;
+
+      if LDeclaration.ExpressionSpan.Finish > LSignatureTail then
+        LSignatureTail := LDeclaration.ExpressionSpan.Finish;
+
+      if (LDeclaration.TypeSpan.Start <> LLastType.Start) or
+        (LDeclaration.TypeSpan.Length <> LLastType.Length) then
+      begin
+        TypeWindow(LDeclaration.TypeSpan, False);
+        LLastType := LDeclaration.TypeSpan;
+      end;
+      LAt := LDeclaration.Next;
+    end;
+    LCandidate.Arguments := RawUTF8(LArguments.Join(', '));
+  finally
+    LArguments.Free;
   end;
+  TypeWindow(LRoutineDeclaration.TypeSpan, True);
+
+  if LRoutineDeclaration.TypeSpan.Finish > LSignatureTail then
+    LSignatureTail := LRoutineDeclaration.TypeSpan.Finish;
+  { HeaderSpan also contains overload/other routine suffixes. The owned type
+    and default spans locate the completed signature's semantic tail. Find its
+    next real lexical semicolon, never punctuation inside strings/comments or
+    earlier nested type/default expressions. Public suffixes remain untouched. }
+  LImplementationEnd := -1;
+  LAt := LSyntax.Lexical.TokenAt(LSignatureTail);
+  while LAt < LSyntax.Lexical.Count do
+  begin
+    LHeaderToken := LSyntax.Lexical.Token(LAt);
+
+    if LHeaderToken.Span.Start >= LRoutineDeclaration.HeaderSpan.Finish then
+      Break;
+
+    if (LHeaderToken.Kind = ptkSymbol) and (LHeaderToken.Symbol = psoSemicolon) then
+    begin
+      LImplementationEnd := LHeaderToken.Span.Finish;
+      Break;
+    end;
+    Inc(LAt);
+  end;
+
+  if LImplementationEnd < 0 then
+    raise Exception.Create(CDeclarationFailure + CFacadesInclude + ' has no checked signature terminator');
+  LCandidate.PublicHeader := Header(LSyntax.Lexical.Scalars, False);
+  LCandidate.ImplementationHeader := Header(LImplementationEnd, True);
+  Result := LCandidate;
 end;
 
 procedure EmitFacade(const AFile, ASourceClass, AFacade, AMember, AGUID: String);
 var
   LLines: TStringList;
   LMethods: TStringList;
+  LParsedMethods: TFacadeMethods;
   LIndex: Integer;
   LSignature: String;
   LHeader: String;
   LName: String;
-  LStart: Integer;
-  LFinish: Integer;
   LInClass: Boolean;
   LPublic: Boolean;
   LFunction: Boolean;
@@ -1103,13 +1266,16 @@ begin
     begin
       raise Exception.Create('No public facade methods: ' + ASourceClass);
     end;
+    SetLength(LParsedMethods, LMethods.Count);
+    for LIndex := 0 to LMethods.Count - 1 do
+      LParsedMethods[LIndex] := FacadeMethod(LMethods[LIndex], ASourceClass, AFacade);
     GFacadeTypes.Add('  { Managed ' + AMember + ' authoring retains its control. Returned values are');
     GFacadeTypes.Add('    independent snapshots; release this interface normally, never Free it. }');
     GFacadeTypes.Add('  I' + AFacade + ' = interface(IInterface)');
     GFacadeTypes.Add('    [''' + AGUID + ''']');
     for LIndex := 0 to LMethods.Count - 1 do
     begin
-      LSignature := StringReplace(LMethods[LIndex], ASourceClass, 'I' + AFacade, [rfReplaceAll]);
+      LSignature := LParsedMethods[LIndex].PublicHeader;
 
       if Pos('function Done:', LSignature) = 1 then
       begin
@@ -1180,7 +1346,7 @@ begin
     GFacadeTypes.Add('    constructor Create(const AOwner: INyxControl);');
     for LIndex := 0 to LMethods.Count - 1 do
     begin
-      LSignature := StringReplace(LMethods[LIndex], ASourceClass, 'I' + AFacade, [rfReplaceAll]);
+      LSignature := LParsedMethods[LIndex].PublicHeader;
 
       if Pos('function Done:', LSignature) = 1 then
       begin
@@ -1221,45 +1387,15 @@ begin
     end;
     for LIndex := 0 to LMethods.Count - 1 do
     begin
-      LSignature := LMethods[LIndex];
-      LFunction := Pos('function ', LSignature) = 1;
-
-      if LFunction then
-      begin
-        LStart := 10;
-      end
-      else
-      begin
-        LStart := 11;
-      end;
-      LFinish := Pos('(', LSignature);
-
-      if LFinish = 0 then
-      begin
-        LFinish := Pos(':', LSignature);
-      end;
-
-      if LFinish = 0 then
-      begin
-        LFinish := Pos(';', LSignature);
-      end;
-      LName := Copy(LSignature, LStart, LFinish - LStart);
-      LFluent := Pos(': ' + ASourceClass + ';', LSignature) > 0;
-      LHeader := StringReplace(LSignature, ASourceClass, 'I' + AFacade, [rfReplaceAll]);
+      LFunction := LParsedMethods[LIndex].IsFunction;
+      LName := LParsedMethods[LIndex].Name;
+      LFluent := LParsedMethods[LIndex].IsFluent;
+      LHeader := LParsedMethods[LIndex].ImplementationHeader;
 
       if LName = 'Done' then
       begin
-        LHeader := 'function Done: INyxControl;';
+        LHeader := 'function T' + AFacade + '.Done: INyxControl;';
       end;
-      Insert('T' + AFacade + '.', LHeader, LStart);
-      LFinish := LastDelimiter(')', LHeader);
-
-      if LFinish = 0 then
-      begin
-        LFinish := 1;
-      end;
-      LFinish := Pos(';', Copy(LHeader, LFinish, MaxInt)) + LFinish - 1;
-      LHeader := Copy(LHeader, 1, LFinish);
       GFacadeImplementation.Add(LHeader);
 
       if (AMember = 'Configure') and ((LName = 'ForPlatform') or
@@ -1276,7 +1412,7 @@ begin
         LCall := 'ConfigurationScope.' + LName;
       end;
 
-      LArguments := Arguments(LSignature);
+      LArguments := LParsedMethods[LIndex].Arguments;
 
       if LArguments <> '' then
       begin
@@ -1296,7 +1432,7 @@ begin
         GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
         GFacadeImplementation.Add('  LFacade.FPlatform := FPlatform;');
 
-        if Pos('AWidth:', LSignature) > 0 then
+        if LArguments = 'AWidth' then
         begin
           GFacadeImplementation.Add('  LFacade.FViewport := TNyxViewportCondition.FromWidth(AWidth);');
         end
@@ -1322,7 +1458,7 @@ begin
       begin
         GFacadeImplementation.Add('  ' + LCall + ';');
 
-        if (AMember = 'Binds') and (Pos('Expression', LSignature) > 0) then
+        if (AMember = 'Binds') and (LArguments = 'AExpression') then
         begin
           GFacadeImplementation.Add('  Result := Self;');
         end

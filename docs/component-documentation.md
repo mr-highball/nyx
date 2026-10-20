@@ -292,6 +292,84 @@ and remote receipts. The qualified simple-property and earlier descriptor
 receipts remain separate. Complete generated/core metadata adoption and executed
 decorated-browser evidence remain open.
 
+## Authored member modifiers
+
+The member-intent attachment is qualified by native execution and portable
+compilation; complete source discovery and browser execution remain separate.
+`INyxDocumentationMemberDeclaration.DeclarationIntent` returns a managed
+`INyxDocumentationMemberIntent`, or nil for unknown. Its `DeclaredClass` and
+`DeclaredStatic` flags preserve the authored modifiers independently. Belonging
+to a class or having constructor/factory kind does not imply an authored `class`
+keyword. `Visibility` and `CallingConvention` use the existing checked syntax
+enums. Unspecified visibility and an absent convention remain unspecified; this
+contract supplies no effective accessibility, compiler default or ABI.
+
+```pascal
+function DescribeParser(const Identity: TNyxDocumentationRef;
+  const Construction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+begin
+  Result := WithNyxDocumentationMemberIntent(
+    NewNyxDocumentationMember(Identity, ndmMethod,
+      'Parse an immutable data value.'),
+    NewNyxDocumentationMemberIntent(True, True, psavPublic, prcDefault,
+      Construction), Construction);
+end;
+```
+
+The caller supplies the actual qualified member identity. This attaches only
+the stated declaration facts; it does not infer a class, factory, signature or
+source origin. Passing nil to `WithNyxDocumentationMemberIntent` clears intent
+back to unknown. A global unit member cannot invent class/static modifiers, an
+enum value cannot acquire them, and a non-callable member cannot claim a routine
+calling convention. Compiler acceptance of other authored combinations remains
+separate from storing their declared syntax.
+
+The existing virtual member copy path preserves intent alongside simple
+signatures, rich signatures and both property shapes. Explicit signature/value
+replacement keeps independent modifiers; example/related copies retain all
+specializations. The private captured-owner check prevents an alternate supplier
+from borrowing another member's authority. Alternate capture admits fixed scalar
+work and logical copied bytes through the same sealed construction, reobserves
+capability/intent presence including nil changes, scalar values and the legacy
+envelope, and checks cancellation before publication. No source, producer,
+construction, cancellation or admission is retained.
+
+Only present intent adds the `member-declaration-intent` framed fields. Nil keeps
+legacy bytes and existing legacy capture-work counters unchanged. Existing
+per-member, registration and aggregate bounds still apply; intent creates no new
+reference edges or inheritance rules. Changed facts therefore participate in
+ordinary conflict refusal and prior-index/version preservation. Property/event
+schemas and observed target capabilities retain their separate authorities.
+
+The new [member-intent consumer](../tests/nyx_documentation_memberdeclarations_tests.lpr)
+requires exactly one valid repository root before native check zero:
+
+```text
+nyx_documentation_memberdeclarations_tests.exe D:\Docs\GitHub\nyx
+```
+
+Its mandatory source witness compares actual `TNyxDataValue.ParseJSON` and
+`TNyxNode.CreateRealized` with instance `ToJSON`/`Named` and all three ordinary
+node constructors, through the existing syntax owner. Forward declarations are
+followed to their full original owner. These seven observations attach only
+declared modifier/visibility/convention facts, leaving signatures unknown.
+Portable cases separately cover composition, unknown/clear framing, alternate
+mutation and late cancellation, shared allowances, retirement and atomic index
+conflicts. Native execution passes 122 checks over all seven actual members, with
+zero unfreed blocks; the portable consumer compiles. Its final binary also refuses
+missing/invalid source arguments before check zero with clean heaps. No inspection
+executes a documented class, callback, factory or example. Automatic complete
+source adoption and executed decorated-browser evidence remain open.
+
+The current composite packet is
+`E:\Blekohlab\nyx\qualification\documentation-memberintent-20261020-161704`:
+41 accepted compiler jobs, 19 clean native test programs and 19 portable compiles;
+zero owned warnings and 133 upstream warnings. Four result initializations in raise-only test
+stubs are the sole change after the reviewed matrix; that consumer was rebuilt
+on both targets, while 39 unchanged dependency jobs retain their original source
+receipts. [WORK.md](../WORK.md) records both freezes, the retained initial warnings,
+same-binary argument guards and remaining acceptance scope.
+
 ## Named compound type declarations
 
 The appended `ndtExpression` kind preserves the original named identity of an array,
@@ -888,8 +966,10 @@ The required truthful declaration prerequisites are explicit:
   expressions through the optional type attachment, with 126 native checks over
   all ten required actual definitions and pas2js compilation. Their detached
   names remain unbound until the original source/binding owner supplies them.
-- Complete class/member extraction still needs authored class/static modifiers,
-  visibility and convention facts. A class's implemented interfaces also need
+- Authored class/static modifiers, visibility and convention facts now have a
+  managed attachment qualified by 122 native checks over seven actual members and
+  portable compilation. Complete source extraction still
+  needs their original owner/context. A class's implemented interfaces also need
   a separate relationship; they are neither class bases nor inherited class
   members. Current descriptor mechanics and signature-only extraction establish
   none of those full-source facts automatically.

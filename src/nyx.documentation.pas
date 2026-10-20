@@ -6,6 +6,7 @@ unit nyx.documentation;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.pascal.types,
+  nyx.pascal.syntax,
   nyx.documentation.typeexpressions;
 
 type
@@ -141,6 +142,22 @@ type
     function ResultType: TNyxDocumentationRef;
     function Evidence: TNyxDocumentationEvidence;
   end;
+  { Authored member modifiers are separate from containing-class ownership and
+    effective compiler policy. Unspecified visibility and an absent convention
+    remain those exact requests, without an inferred public/default ABI. }
+  INyxDocumentationMemberIntent = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D116}']
+    function DeclaredClass: Boolean;
+    function DeclaredStatic: Boolean;
+    function Visibility: TNyxPascalSyntaxVisibility;
+    function CallingConvention: TNyxPascalRoutineConvention;
+  end;
+  { Optional managed intent composes with every existing member shape. A nil
+    result is unknown, not a fabricated instance/public/default declaration. }
+  INyxDocumentationMemberDeclaration = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D117}']
+    function DeclarationIntent: INyxDocumentationMemberIntent;
+  end;
   { Immutable member decoration. Types/signatures are explicitly authored facts;
     schema adapters separately supply existing defaults, bounds and event facts.
     Fluent setters return new owners and never mutate an earlier descriptor. }
@@ -271,6 +288,15 @@ function NewNyxDocumentationSignature(const AParameters: array of TNyxDocumentat
   const AResult: TNyxDocumentationRef): INyxDocumentationSignature;
 function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText): INyxDocumentationMember;
+{ Intent and attachment share the caller's construction. Nil attachment clears
+  the fact to unknown; neither function infers source or compiler authority. }
+function NewNyxDocumentationMemberIntent(ADeclaredClass, ADeclaredStatic: Boolean;
+  AVisibility: TNyxPascalSyntaxVisibility;
+  AConvention: TNyxPascalRoutineConvention;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMemberIntent;
+function WithNyxDocumentationMemberIntent(const AMember: INyxDocumentationMember;
+  const AIntent: INyxDocumentationMemberIntent;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 { Retain property declaration syntax without treating indexing as a call.
   The ordinary OfType setter supplies its value type; an omitted type remains
   explicitly unknown, including on an inherited property redeclaration. }
@@ -399,10 +425,21 @@ var
   LExample: TNyxDocumentationExample;
   LProperty: INyxDocumentationProperty;
   LParameter: TNyxDocumentationParameter;
+  LDeclaration: INyxDocumentationMemberDeclaration;
+  LIntent: INyxDocumentationMemberIntent;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) +
     RefBytes(AValue.ValueType) + SignatureBytes(AValue.Signature);
   Inc(Result, RichMemberBytes(AValue));
+
+  if Supports(AValue, INyxDocumentationMemberDeclaration, LDeclaration) then
+  begin
+    LIntent := LDeclaration.DeclarationIntent;
+
+    if LIntent <> nil then
+      Inc(Result, 2 + Length(IntToStr(Ord(LIntent.Visibility))) +
+        Length(IntToStr(Ord(LIntent.CallingConvention))));
+  end;
 
   if Supports(AValue, INyxDocumentationProperty, LProperty) then
   begin
@@ -477,6 +514,26 @@ begin
 end;
 
 type
+  { Forward captured member class for exact private immutable-owner admission. }
+  TDocumentationMember = class;
+  { A private borrow is valid only with the owner's exact public interface.
+    Alternate producers cannot borrow another member's no-copy authority. }
+  IDocumentationMemberOwner = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D118}']
+    function MemberOwner: TDocumentationMember;
+  end;
+  { Four scalar facts retain no source, cancellation, admission or executable
+    supplier. Capturing an alternate always produces this private value owner. }
+  TDocumentationMemberIntent = class(TInterfacedObject, INyxDocumentationMemberIntent)
+  public
+    ClassModifier, StaticModifier: Boolean;
+    DeclaredVisibility: TNyxPascalSyntaxVisibility;
+    Convention: TNyxPascalRoutineConvention;
+    function DeclaredClass: Boolean;
+    function DeclaredStatic: Boolean;
+    function Visibility: TNyxPascalSyntaxVisibility;
+    function CallingConvention: TNyxPascalRoutineConvention;
+  end;
   { The private type owner permits a captured member to be appended without a
     second reconstruction. Only this unit creates or borrows that owner. }
   TDocumentationType = class;
@@ -499,18 +556,22 @@ type
   end;
   { A fluent member owns its signature interface in this managed class, never
     inside a copied record. Clone publication preserves earlier readers. }
-  TDocumentationMember = class(TDocumentationContent, INyxDocumentationMember)
+  TDocumentationMember = class(TDocumentationContent, INyxDocumentationMember,
+    INyxDocumentationMemberDeclaration, IDocumentationMemberOwner)
   private
     FIdentity: TNyxDocumentationRef;
     FKind: TNyxDocumentationMemberKind;
     FSignature: INyxDocumentationSignature;
     FValueType: TNyxDocumentationRef;
+    FIntent: INyxDocumentationMemberIntent;
   protected
     procedure CopyMember(ATarget: TDocumentationMember);
     function CopyValue: TDocumentationMember; virtual;
     procedure AssignSignature(const AValue: INyxDocumentationSignature); virtual;
     procedure AssignValueType(const AValue: TNyxDocumentationRef); virtual;
   public
+    function MemberOwner: TDocumentationMember;
+    function DeclarationIntent: INyxDocumentationMemberIntent;
     function Identity: TNyxDocumentationRef;
     function Kind: TNyxDocumentationMemberKind;
     function Signature: INyxDocumentationSignature;
@@ -1067,6 +1128,172 @@ begin
   Result := LValue;
 end;
 
+function TDocumentationMemberIntent.DeclaredClass: Boolean;
+begin
+  Result := ClassModifier;
+end;
+
+function TDocumentationMemberIntent.DeclaredStatic: Boolean;
+begin
+  Result := StaticModifier;
+end;
+
+function TDocumentationMemberIntent.Visibility: TNyxPascalSyntaxVisibility;
+begin
+  Result := DeclaredVisibility;
+end;
+
+function TDocumentationMemberIntent.CallingConvention: TNyxPascalRoutineConvention;
+begin
+  Result := Convention;
+end;
+
+function NewNyxDocumentationMemberIntent(ADeclaredClass, ADeclaredStatic: Boolean;
+  AVisibility: TNyxPascalSyntaxVisibility;
+  AConvention: TNyxPascalRoutineConvention;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMemberIntent;
+var
+  LOwner: TDocumentationMemberIntent;
+  LLease: INyxDocumentationMemberIntent;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  AConstruction.Spend;
+
+  if (Ord(AVisibility) < Ord(Low(TNyxPascalSyntaxVisibility))) or
+    (Ord(AVisibility) > Ord(High(TNyxPascalSyntaxVisibility))) or
+    (Ord(AConvention) < Ord(Low(TNyxPascalRoutineConvention))) or
+    (Ord(AConvention) > Ord(High(TNyxPascalRoutineConvention))) then
+    raise ENyxDocumentation.Create('Unknown authored member visibility or calling convention');
+  { Scalar text costs are bounded before allocating the immutable owner. These
+    are logical metadata bytes; final registration framing has its own owner. }
+  AConstruction.AdmitText(IntToStr(Ord(ADeclaredClass)));
+  AConstruction.AdmitText(IntToStr(Ord(ADeclaredStatic)));
+  AConstruction.AdmitText(IntToStr(Ord(AVisibility)));
+  AConstruction.AdmitText(IntToStr(Ord(AConvention)));
+  AConstruction.Spend;
+  CheckCancellation(AConstruction);
+  LOwner := TDocumentationMemberIntent.Create;
+  LLease := LOwner;
+  LOwner.ClassModifier := ADeclaredClass;
+  LOwner.StaticModifier := ADeclaredStatic;
+  LOwner.DeclaredVisibility := AVisibility;
+  LOwner.Convention := AConvention;
+  CheckCancellation(AConstruction);
+  Result := LLease;
+end;
+
+{ Check each borrowed scalar under shared admission. An outward admission or
+  getter can cancel; no later intent getter runs after that revocation. }
+function SameMemberIntent(const AValue, AFrozen: INyxDocumentationMemberIntent;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LClass, LStatic: Boolean;
+  LVisibility: TNyxPascalSyntaxVisibility;
+  LConvention: TNyxPascalRoutineConvention;
+begin
+  Result := False;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LClass := AValue.DeclaredClass;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LStatic := AValue.DeclaredStatic;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LVisibility := AValue.Visibility;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LConvention := AValue.CallingConvention;
+  CheckCancellation(AScope);
+  Result := (LClass = AFrozen.DeclaredClass) and (LStatic = AFrozen.DeclaredStatic) and
+    (LVisibility = AFrozen.Visibility) and (LConvention = AFrozen.CallingConvention);
+end;
+
+{ Fixed scalar observation is always admitted before a borrowed getter. Final
+  agreement includes all four facts, followed by cancellation before publication. }
+function CaptureMemberIntent(const AValue: INyxDocumentationMemberIntent;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationMemberIntent;
+var
+  LClass, LStatic: Boolean;
+  LVisibility: TNyxPascalSyntaxVisibility;
+  LConvention: TNyxPascalRoutineConvention;
+  LFrozen: INyxDocumentationMemberIntent;
+begin
+  Result := nil;
+
+  if AValue = nil then
+    Exit;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LClass := AValue.DeclaredClass;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LStatic := AValue.DeclaredStatic;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LVisibility := AValue.Visibility;
+  AScope.Spend;
+  CheckCancellation(AScope);
+  LConvention := AValue.CallingConvention;
+  CheckCancellation(AScope);
+  LFrozen := NewNyxDocumentationMemberIntent(LClass, LStatic, LVisibility, LConvention, AScope);
+
+  if not SameMemberIntent(AValue, LFrozen, AScope) then
+    raise ENyxDocumentation.Create('Authored member intent changed during capture');
+  CheckCancellation(AScope);
+  Result := LFrozen;
+end;
+
+{ Only an exact captured interface permits private copying or the legacy nil
+  fast path. Mutable alternate implementations receive no ownership receipt. }
+function CapturedMemberOwner(const AValue: INyxDocumentationMember): TDocumentationMember;
+var
+  LPrivate: IDocumentationMemberOwner;
+  LCanonical: INyxDocumentationMember;
+begin
+  Result := nil;
+
+  if not Supports(AValue, IDocumentationMemberOwner, LPrivate) then
+    Exit;
+  Result := LPrivate.MemberOwner;
+
+  if Result = nil then
+    raise ENyxDocumentation.Create('Missing private captured member owner');
+  LCanonical := Result;
+
+  if LCanonical <> AValue then
+    raise ENyxDocumentation.Create('An alternate member cannot borrow another captured owner');
+end;
+
+procedure CheckMemberIntent(const AMember: INyxDocumentationMember;
+  const AIntent: INyxDocumentationMemberIntent);
+begin
+
+  if AIntent = nil then
+    Exit;
+
+  if AMember.Identity.Owner.IsUnit and (AIntent.DeclaredClass or AIntent.DeclaredStatic) then
+    raise ENyxDocumentation.Create('A unit member cannot invent an authored class or static modifier');
+
+  if not (AMember.Kind in [ndmConstructor, ndmFactory, ndmMethod,
+    ndmFluentMethod, ndmRoutine]) and (AIntent.CallingConvention <> prcDefault) then
+    raise ENyxDocumentation.Create('Only callable members own an authored calling convention');
+
+  if (AMember.Kind = ndmEnumValue) and (AIntent.DeclaredClass or AIntent.DeclaredStatic) then
+    raise ENyxDocumentation.Create('An enum value cannot declare a class or static modifier');
+end;
+
+function TDocumentationMember.MemberOwner: TDocumentationMember;
+begin
+  Result := Self;
+end;
+
+function TDocumentationMember.DeclarationIntent: INyxDocumentationMemberIntent;
+begin
+  Result := FIntent;
+end;
+
 function NewNyxDocumentationProperty(const AIdentity: TNyxDocumentationRef;
   const ASummary: TNyxText; const AParameters: array of TNyxDocumentationParameter;
   ADeclaredAccess: TNyxDocumentationPropertyAccesses;
@@ -1098,6 +1325,7 @@ begin
   ATarget.FKind := FKind;
   ATarget.FSignature := FSignature;
   ATarget.FValueType := FValueType;
+  ATarget.FIntent := FIntent;
 end;
 
 function TDocumentationMember.CopyValue: TDocumentationMember;
@@ -1943,6 +2171,16 @@ var
   LRichValue: INyxDocumentationTypeUse;
   LHandled: Boolean;
   LOriginalSignature: INyxDocumentationSignature;
+  LDeclaration, LFinalDeclaration: INyxDocumentationMemberDeclaration;
+  LIntent, LCapturedIntent, LFinalIntent: INyxDocumentationMemberIntent;
+  LHasDeclaration, LFinalHasDeclaration, LLegacyCaptured: Boolean;
+  LMemberOwner: TDocumentationMember;
+  LCurrentIdentity: TNyxDocumentationRef;
+  LCurrentKind: TNyxDocumentationMemberKind;
+  LCurrentSummary: TNyxText;
+  LCurrentSignature: INyxDocumentationSignature;
+  LCurrentExamples, LCurrentRelated: Integer;
+  LCurrentEvidence: TNyxDocumentationEvidence;
 begin
   LSource := AValue;
   Result := nil;
@@ -1953,6 +2191,18 @@ begin
 
   LHandled := False;
   Supports(ACancellation, INyxDocumentationTypeConstruction, LScope);
+  LMemberOwner := CapturedMemberOwner(LSource);
+  LLegacyCaptured := (LMemberOwner <> nil) and (LMemberOwner.FIntent = nil);
+  LHasDeclaration := Supports(LSource, INyxDocumentationMemberDeclaration, LDeclaration);
+
+  if LHasDeclaration and not LLegacyCaptured then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LIntent := LDeclaration.DeclarationIntent;
+    CheckCancellation(LScope);
+    LCapturedIntent := CaptureMemberIntent(LIntent, LScope);
+  end;
   Supports(LSource, INyxDocumentationMemberSignature, LRich);
 
   if LRich <> nil then
@@ -2058,6 +2308,13 @@ begin
     if not LHandled then
       LFrozen := LFrozen.OfType(LType);
   end;
+
+  if LCapturedIntent <> nil then
+  begin
+    CheckMemberIntent(LFrozen, LCapturedIntent);
+    LMemberOwner := CapturedMemberOwner(LFrozen);
+    LMemberOwner.FIntent := LCapturedIntent;
+  end;
   LCount := LSource.ExampleCount;
 
   if (LCount < 0) or (LCount > NyxDocumentationMaximumExamples) then
@@ -2145,6 +2402,52 @@ begin
       (LType.Defined and not LType.Same(LCurrentType)) then
       raise ENyxDocumentation.Create('Legacy rich-member envelope changed before publication');
   end;
+  LFinalHasDeclaration := Supports(LSource, INyxDocumentationMemberDeclaration, LFinalDeclaration);
+
+  if (LFinalHasDeclaration <> LHasDeclaration) or
+    (LHasDeclaration and (LFinalDeclaration <> LDeclaration)) then
+    raise ENyxDocumentation.Create('Member declaration capability changed during capture');
+
+  if LHasDeclaration and not LLegacyCaptured then
+  begin
+    LScope.Spend(10);
+    CheckCancellation(LScope);
+    LFinalIntent := LDeclaration.DeclarationIntent;
+    CheckCancellation(LScope);
+    LCurrentIdentity := LSource.Identity;
+    CheckCancellation(LScope);
+    LCurrentKind := LSource.Kind;
+    CheckCancellation(LScope);
+    LCurrentSummary := LSource.Summary;
+    CheckCancellation(LScope);
+    LCurrentSignature := LSource.Signature;
+    CheckCancellation(LScope);
+    LCurrentType := LSource.ValueType;
+    CheckCancellation(LScope);
+    LCurrentExamples := LSource.ExampleCount;
+    CheckCancellation(LScope);
+    LCurrentRelated := LSource.RelatedCount;
+    CheckCancellation(LScope);
+
+    if (LFinalIntent <> LIntent) or
+      (LCurrentKind <> LFrozen.Kind) or not LCurrentIdentity.Same(LFrozen.Identity) or
+      (LCurrentSummary <> LFrozen.Summary) or (LCurrentSignature <> LOriginalSignature) or
+      (LCurrentType.Defined <> LType.Defined) or
+      (LType.Defined and not LCurrentType.Same(LType)) or
+      (LCurrentExamples <> LFrozen.ExampleCount) or
+      (LCurrentRelated <> LFrozen.RelatedCount) then
+      raise ENyxDocumentation.Create('Member intent or legacy envelope changed before publication');
+
+    if LIntent <> nil then
+    begin
+      LCurrentEvidence := LSource.Evidence;
+      CheckCancellation(LScope);
+
+      if not SameMemberIntent(LIntent, LCapturedIntent, LScope) or
+        (LCurrentEvidence <> ndeAuthoredDeclaration) then
+        raise ENyxDocumentation.Create('Authored member scalar intent changed before publication');
+    end;
+  end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
 end;
@@ -2173,6 +2476,105 @@ begin
   end;
   CheckCancellation(ACancellation);
   Result := LFrozen;
+end;
+
+function WithNyxDocumentationMemberIntent(const AMember: INyxDocumentationMember;
+  const AIntent: INyxDocumentationMemberIntent;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LFrozen, LLease: INyxDocumentationMember;
+  LCaptured: INyxDocumentationMemberIntent;
+  LOwner, LCopy: TDocumentationMember;
+  LSignature: INyxDocumentationSignature;
+  LOriginalIntent, LCurrentIntent: INyxDocumentationMemberIntent;
+  LDeclaration, LCurrentDeclaration: INyxDocumentationMemberDeclaration;
+  LHasDeclaration, LHasCurrent: Boolean;
+  LCurrentIdentity, LCurrentType: TNyxDocumentationRef;
+  LCurrentKind: TNyxDocumentationMemberKind;
+  LCurrentSummary: TNyxText;
+  LCurrentSignature: INyxDocumentationSignature;
+  LCurrentExamples, LCurrentRelated: Integer;
+begin
+  Result := nil;
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+  AConstruction.Spend;
+
+  if AMember = nil then
+    raise ENyxDocumentation.Create('An intent attachment requires its actual member');
+  AConstruction.Spend;
+  CheckCancellation(AConstruction);
+  LSignature := AMember.Signature;
+  CheckCancellation(AConstruction);
+  LHasDeclaration := Supports(AMember, INyxDocumentationMemberDeclaration, LDeclaration);
+  CheckCancellation(AConstruction);
+
+  if LHasDeclaration then
+  begin
+    AConstruction.Spend;
+    CheckCancellation(AConstruction);
+    LOriginalIntent := LDeclaration.DeclarationIntent;
+    CheckCancellation(AConstruction);
+  end;
+  LFrozen := CaptureDocumentationMember(AMember, AConstruction);
+  LCaptured := CaptureMemberIntent(AIntent, AConstruction);
+  CheckMemberIntent(LFrozen, LCaptured);
+  LOwner := CapturedMemberOwner(LFrozen);
+
+  if LOwner = nil then
+    raise ENyxDocumentation.Create('Missing captured member for intent attachment');
+  { Virtual copying retains simple/rich/property specialization. Only captured
+    immutable vectors are copied here; no alternate fluent method is invoked. }
+  AConstruction.Spend(LFrozen.ExampleCount + LFrozen.RelatedCount + 1);
+  CheckCancellation(AConstruction);
+  LCopy := LOwner.CopyValue;
+  LLease := LCopy;
+  LCopy.FIntent := LCaptured;
+  MemberBytes(LLease);
+  AConstruction.Spend(10);
+  CheckCancellation(AConstruction);
+  LHasCurrent := Supports(AMember, INyxDocumentationMemberDeclaration, LCurrentDeclaration);
+  CheckCancellation(AConstruction);
+
+  if LHasCurrent then
+    LCurrentIntent := LCurrentDeclaration.DeclarationIntent;
+  CheckCancellation(AConstruction);
+  { Observe each borrowed envelope field once. The fixed work reservation above
+    covers this bounded vector; a cancelling getter revokes the next read. }
+  LCurrentIdentity := AMember.Identity;
+  CheckCancellation(AConstruction);
+  LCurrentKind := AMember.Kind;
+  CheckCancellation(AConstruction);
+  LCurrentSummary := AMember.Summary;
+  CheckCancellation(AConstruction);
+  LCurrentSignature := AMember.Signature;
+  CheckCancellation(AConstruction);
+  LCurrentType := AMember.ValueType;
+  CheckCancellation(AConstruction);
+  LCurrentExamples := AMember.ExampleCount;
+  CheckCancellation(AConstruction);
+  LCurrentRelated := AMember.RelatedCount;
+  CheckCancellation(AConstruction);
+
+  if (LHasCurrent <> LHasDeclaration) or
+    (LHasDeclaration and ((LCurrentDeclaration <> LDeclaration) or (LCurrentIntent <> LOriginalIntent))) or
+    not LCurrentIdentity.Same(LFrozen.Identity) or (LCurrentKind <> LFrozen.Kind) or
+    (LCurrentSummary <> LFrozen.Summary) or (LCurrentSignature <> LSignature) or
+    (LCurrentType.Defined <> LFrozen.ValueType.Defined) or
+    (LFrozen.ValueType.Defined and not LCurrentType.Same(LFrozen.ValueType)) or
+    (LCurrentExamples <> LFrozen.ExampleCount) or (LCurrentRelated <> LFrozen.RelatedCount) then
+    raise ENyxDocumentation.Create('Member envelope changed during intent attachment');
+
+  if (LOriginalIntent = nil) <> (LOwner.FIntent = nil) then
+    raise ENyxDocumentation.Create('Member intent presence changed before inner capture');
+
+  if (LOriginalIntent <> nil) and
+    not SameMemberIntent(LOriginalIntent, LOwner.FIntent, AConstruction) then
+    raise ENyxDocumentation.Create('Original member intent changed during replacement');
+
+  if (AIntent <> nil) and not SameMemberIntent(AIntent, LCaptured, AConstruction) then
+    raise ENyxDocumentation.Create('Member intent changed before attachment publication');
+  CheckCancellation(AConstruction);
+  Result := LLease;
 end;
 
 procedure CheckTypeIdentity(const AIdentity: TNyxDocumentationRef;

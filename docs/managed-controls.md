@@ -142,8 +142,15 @@ Forwarding argument extraction now uses that existing syntax owner too. Ordered
 parameter declarations supply the call arguments; punctuation inside defaults
 or nested type syntax cannot create extra arguments. Exact name spans retain
 escaped parameter spelling. Recovered, conditional or incomplete signatures
-refuse before candidate publication. The shared source qualification is recorded
-in WORK.md. Facade discovery still follows
+refuse before candidate publication. A cached checked method now also supplies
+the logical return shape, escaped method name and actual implementation-header
+terminator. Only an entire unqualified direct builder result maps to the fluent
+interface. Defaults, comments, longer identifiers, procedural parameter names and
+qualified designators retain exact text. A builder inside a parameter or compound
+result requires an explicit conversion bridge and currently refuses before disk
+publication. No container conversion, qualified binding or ABI is guessed.
+The typed rewriting passes the current generator qualification recorded in
+WORK.md. Facade discovery still follows
 the maintained descriptor declaration convention; typed forwarding does not
 establish complete extraction of arbitrary hand-authored Pascal source.
 
@@ -153,8 +160,8 @@ yet emit documentation, capture the complete hand-authored core closure or
 register built-in help. Its existing source/syntax limits remain unchanged.
 
 The maintained native
-[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 81 checks
-through 17 joined generator invocations, with clean parent and child heaps.
+[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 103 checks
+through 21 joined generator invocations, with clean parent and child heaps.
 Both fresh candidates match all five maintained includes for 81 built-in kinds
 and four authoring facades. The consumer also checks copied-source drift,
 missing outputs, argument/destination refusal and exact original input bytes.
@@ -162,6 +169,9 @@ An actual copied descriptor with an explicit empty parameter type refuses throug
 the shared syntax owner in both check and candidate modes, before output exists.
 Another copied actual descriptor verifies string/constant-expression punctuation,
 grouped const/var/out parameters and escaped names in real candidate call arguments.
+The CLI fixture extends that same copied descriptor with source-class text
+inside defaults, method/argument/type identifiers, namespace qualifiers, callback
+parameter names and comments, and separate unsupported self-conversion refusals.
 Its arguments are the compiled generator, repository root and a new runtime
 directory. Current source/compiler receipts and broader qualification are in
 [WORK.md](../WORK.md); no generated repository include changes in this batch.

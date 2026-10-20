@@ -106,6 +106,8 @@ var
   LIndex: Integer;
   LFirst, LSecond, LReplica, LMissing, LRefused, LFile, LOutput, LInvalid: String;
   LForwarding, LForwardCandidate: String;
+  LBridge: String;
+  LBridgeCase: Integer;
   LOriginal: array[0..7] of TMemoryStream;
   LCurrent: TMemoryStream;
   LStream: TFileStream;
@@ -273,7 +275,13 @@ begin
         'function Placeholder(const AValue: TNyxText = ''left;middle:right''): TNyxNodeConfig;' + LineEnding +
         '    procedure ForwardValues(const AFirst, ASecond: TNyxText; var AThird: TNyxText; out AFourth: TNyxText);' + LineEnding +
         '    function ForwardEscaped(const &type: TNyxText): TNyxNodeConfig;' + LineEnding +
-        '    function ForwardExpression(const AValue: Integer = Ord('';'')): TNyxNodeConfig;', []);
+        '    function ForwardExpression(const AValue: Integer = Ord('';'')): TNyxNodeConfig;' + LineEnding +
+        '    function TNyxNodeConfigCaption(const ATNyxNodeConfigText: TNyxText = ''TNyxNodeConfig''): TNyxText;' + LineEnding +
+        '    function KeepTypeName(const AValue: TNyxNodeConfigSuffix): TNyxNodeConfig;' + LineEnding +
+        '    function KeepNamespace(const AValue: TNyxNodeConfig.TLeaf): TNyxNodeConfig;' + LineEnding +
+        '    function ConstantDefault(const AValue: TNyxText = '': TNyxNodeConfig;''): TNyxText;' + LineEnding +
+        '    function KeepCallback(const AValue: procedure(TNyxNodeConfig: TNyxText)): TNyxNodeConfig;' + LineEnding +
+        '    function ReturnTyped: { TNyxNodeConfig remains comment text } TNyxNodeConfig;', []);
       LDescriptor.SaveToFile(LFile);
     finally
       LDescriptor.Free;
@@ -287,6 +295,16 @@ begin
       LDescriptor.LoadFromFile(Under(LForwardCandidate, 'src/nyx.controls.facades.inc'));
       Check(Pos('function Placeholder(const AValue: TNyxText = ''left;middle:right''): INyxConfiguration;',
         LDescriptor.Text) > 0, 'Default punctuation survives in the declared public signature');
+      Check(Pos('function TNyxNodeConfigCaption(const ATNyxNodeConfigText: TNyxText = ''TNyxNodeConfig''): TNyxText;',
+        LDescriptor.Text) > 0, 'Method/argument identifiers and inert default text retain the source class substring');
+      Check(Pos('function KeepTypeName(const AValue: TNyxNodeConfigSuffix): INyxConfiguration;',
+        LDescriptor.Text) > 0, 'A longer type identifier stays exact while a direct self result becomes the facade');
+      Check(Pos('function KeepNamespace(const AValue: TNyxNodeConfig.TLeaf): INyxConfiguration;',
+        LDescriptor.Text) > 0, 'Namespace components do not acquire an inferred facade identity');
+      Check(Pos('function KeepCallback(const AValue: procedure(TNyxNodeConfig: TNyxText)): INyxConfiguration;',
+        LDescriptor.Text) > 0, 'A procedural parameter name is not rewritten as a type name');
+      Check(Pos('function ReturnTyped: { TNyxNodeConfig remains comment text } INyxConfiguration;',
+        LDescriptor.Text) > 0, 'Only the admitted type token changes; surrounding comment spelling remains exact');
       LDescriptor.LoadFromFile(Under(LForwardCandidate, 'src/nyx.controls.facades.implementation.inc'));
       Check(Pos('  ConfigurationScope.Placeholder(AValue);', LDescriptor.Text) > 0,
         'Default string punctuation contributes no extra forwarding argument');
@@ -296,8 +314,48 @@ begin
         'Forwarded escaped parameter retains its authored ampersand');
       Check(Pos('  ConfigurationScope.ForwardExpression(AValue);', LDescriptor.Text) > 0,
         'Nested constant-expression punctuation is never treated as parameter syntax');
+      Check(Pos('  Result := ConfigurationScope.TNyxNodeConfigCaption(ATNyxNodeConfigText);', LDescriptor.Text) > 0,
+        'Source method and argument names survive in the actual delegated implementation');
+      Check(Pos('function TNyxConfiguration.ConstantDefault(const AValue: TNyxText = '': TNyxNodeConfig;''): TNyxText;',
+        LDescriptor.Text) > 0, 'The implementation header ends at the parsed terminator, preserving default semicolons');
+      Check(Pos('  Result := ConfigurationScope.ConstantDefault(AValue);', LDescriptor.Text) > 0,
+        'Self-like literal text does not turn a non-self result into a fluent result');
     finally
       LDescriptor.Free;
+    end;
+
+    { No array/parameter conversion exists in this facade. Both shapes must
+      refuse before disk publication, rather than merely changing a type token
+      and generating an incompatible delegated call. Each is a copied fixture;
+      no generated program or undefined imported type is compiled/executed. }
+    for LBridgeCase := 0 to 1 do
+    begin
+      LBridge := Under(GRoot, 'unbridged self ' + IntToStr(LBridgeCase));
+      Check(CreateDir(LBridge) and CreateDir(Under(LBridge, 'src')),
+        'Create a copied descriptor for the explicit typed-bridge refusal');
+      for LIndex := 0 to High(CSources) do
+        CopyBytes(Under(GRepository, 'src/' + CSources[LIndex]), Under(LBridge, 'src/' + CSources[LIndex]));
+      LDescriptor := TStringList.Create;
+      try
+        LFile := Under(LBridge, 'src/nyx.model.pas');
+        LDescriptor.LoadFromFile(LFile);
+
+        if LBridgeCase = 0 then
+          LInvalidDeclaration := 'function Unbridged(const AValue: TNyxNodeConfig): TNyxNodeConfig;'
+        else
+          LInvalidDeclaration := 'function Unbridged: TArray<TNyxNodeConfig>;';
+        LDescriptor.Text := StringReplace(LDescriptor.Text, LOriginalDeclaration,
+          LOriginalDeclaration + LineEnding + '    ' + LInvalidDeclaration, []);
+        LDescriptor.SaveToFile(LFile);
+      finally
+        LDescriptor.Free;
+      end;
+      LOutput := Invoke(LBridge, ['--check'], 1);
+      Check(Pos('needs an explicit bridge for a compound or parameter self type', LOutput) > 0,
+        'Unsupported self use refuses through the checked type shape');
+      LRefused := Under(GRoot, 'unbridged self candidate ' + IntToStr(LBridgeCase));
+      Invoke(LBridge, ['--output-dir', LRefused], 1);
+      Check(not DirectoryExists(LRefused), 'Typed bridge refusal precedes every candidate directory/file write');
     end;
 
     for LIndex := 0 to 7 do

@@ -149,6 +149,8 @@ var
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
   LDeclared: INyxDocumentationDeclaredTypeExpression;
+  LMemberDeclaration: INyxDocumentationMemberDeclaration;
+  LMemberIntent: INyxDocumentationMemberIntent;
   procedure Add(const AText: TNyxText);
   begin
     AppendContent(Result, ABytes, AText, ACancellation, AAdmission);
@@ -287,6 +289,20 @@ begin
       Number(LRichProperty.ParameterCount);
       for LAt := 0 to LRichProperty.ParameterCount - 1 do
         RichParameter(LRichProperty.ParameterAt(LAt));
+    end;
+
+    if Supports(LMember, INyxDocumentationMemberDeclaration, LMemberDeclaration) then
+    begin
+      LMemberIntent := LMemberDeclaration.DeclarationIntent;
+
+      if LMemberIntent <> nil then
+      begin
+        Add('member-declaration-intent');
+        Number(Ord(LMemberIntent.DeclaredClass));
+        Number(Ord(LMemberIntent.DeclaredStatic));
+        Number(Ord(LMemberIntent.Visibility));
+        Number(Ord(LMemberIntent.CallingConvention));
+      end;
     end;
   end;
   { Shape extensions follow the complete legacy content. Absence leaves the

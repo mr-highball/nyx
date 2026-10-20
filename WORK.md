@@ -44,8 +44,133 @@ Athena's task-flow standard and the task catalog; follow actual unmet prerequisi
 and report the criterion, deliverable, files and stop condition. The existing
 private queue references canonical tasks; it creates no new backlog, recurring
 job, busywork or acceptance credit. Deferred splitter work remains deferred.
+The helper reconfirmed this pull workflow during the member-intent batch: finish
+its four owned paths, hand off source-ready, then review the queued separate
+implemented-interface relationship/source-ownership prerequisite while root
+qualifies. Root retains implementation-scope release and compiler admission;
+finishing a narrow deliverable does not empty the helper's assignment.
 
-## Current reference prerequisite: Declared type attachment and signature extraction — 2026-10-20
+## Current reference prerequisite: Authored member intent and typed facade rewriting — 2026-10-20
+
+The declared-type/source-signature checkpoint is committed and pushed as
+4a092c72902eea221a89f5f968e0e4bf288053ac. Its remote/source receipt verifies all11
+owned paths clean, all readers joined and13 concurrent planning files exact.
+Full original acceptance remains open across at least54 batches. Reassessment
+changes this deliverable to the remaining member facts and the concrete raw-text
+emission defect; it does not repeat declaration/signature variants.
+
+Owning criterion: reference01's truthful declared members, consumed by reference02's
+same-source discovery. Lil' Scooty owns documentation.pas, registration.pas, new
+tests/nyx_documentation_memberdeclarations_tests.lpr and
+docs/component-documentation.md. Add an optional managed authored-member intent
+capability, retaining class/static modifiers separately, checked visibility and
+an absent calling convention separately from effective compiler defaults. Preserve
+simple/rich/property specialization, old GUID slots/absent bytes/quotas, fluent
+composition and bounded alternate capture. Unknown remains nil, including a final
+nil/presence agreement; no modifier or visibility is inferred from member kind or
+containing class. Real ParseJSON/CreateRealized versus ordinary instance/constructor
+source witnesses, shared admission, stale/mutating suppliers, cancellation,
+retirement and atomic duplicate/index refusal must qualify this attachment.
+
+Root owns tools/nyx_control_contracts.lpr, its existing CLI consumer,
+docs/managed-controls.md and central evidence. Replace signature-wide source-class
+StringReplace only at exact admitted type-name spans through existing syntax.
+Defaults, longer identifiers and method names containing the same substring must
+survive. Use actual copied descriptor/candidate witnesses plus both byte-exact
+maintained five-file outputs; no new parser, inferred type identity or help inventory.
+Stop on lost spelling/order, unsupported syntax, unaccounted work, stale shape,
+retained admission or output drift; repair its existing owner and preserve refusal.
+
+Both lanes must hand off and freeze before root admits any compiler/native reader.
+No reader is currently admitted. Implemented-interface relationships, complete
+whole-unit/conditional/target/named binding, prefix-work reuse, creator adoption
+and executed decorated-browser evidence remain downstream requirements. The helper
+keeps those next candidates queued and reviews them independently during freezes.
+
+Qualification and stop point: the optional member intent and typed facade
+rewriting are implemented. Present intent preserves independent authored
+class/static flags, checked visibility and calling-convention syntax. Unknown
+stays nil; explicit clear and unspecified values remain distinct. Existing
+simple/rich/property copies, GUID slots, ordinals, legacy bytes and legacy absent
+work stay exact. Shared construction bounds scalar observation/copying, final
+capability/presence/envelope agreement and cancellation. No alternate producer,
+construction or cancellation/admission lease survives publication.
+
+The generator caches one checked method projection for all emission sites.
+Only an admitted unqualified direct builder-result token becomes its managed
+facade; parameter/compound self uses require a real conversion bridge and refuse.
+Names, longer identifiers, qualified designators, comments and default literals
+keep their original text. Checked type/default spans locate the true lexical
+header terminator, preserving public overload suffixes. Existing finite viewport
+and expression-binding bridges consume the current parsed arguments. Read-only
+cross-review found and repaired the suffix-boundary and two stale header-variable
+uses before the first freeze; no failed output or weaker golden replaces them.
+Line-based descriptor discovery and fixed bridges remain explicit limitations.
+
+Ignored packet:
+`E:\Blekohlab\nyx\qualification\documentation-memberintent-20261020-161704`,
+owned by `.local/documentation-memberintent-paths-private.json`. Final accepted
+evidence comprises41 compiler jobs:39 dependency-identical reviewed jobs plus
+the repaired standalone consumer's two final jobs. All19 native test programs
+have clean heaps;19 portable outputs compile only. Both Studios, backend and
+worker compile as applicable. All accepted logs have zero owned warnings and133
+upstream pas2js RTL warnings. This is composite qualification, not a claim that
+every job used one identical whole-repository freeze.
+
+New member intent passes122 checks over all seven required actual members:
+ParseJSON/ToJSON, CreateRealized/Named and all three ordinary node constructors.
+The final binary allocates/frees355899 blocks/15134598 bytes exactly. Missing and
+invalid repository arguments both refuse before check0 with clean heaps using
+that same binary. Cases include all member shapes, immutable fluent composition,
+clear/unknown, final nil transitions and scalar/envelope mutation, between-getter
+cancellation, shared byte/work admission, retirement and atomic index conflicts.
+Signature94/all9, declared126/all10, rich99/all9, properties43/actual controls,
+contributions70, shapes66, registry64 and documentation68 remain passing. Nine
+native regressions retain navigation34, Studio definitions146, core30 plus14365
+composition/designer checks, unit71, text159, completion navigation27/view40,
+definition transport31 and production semantic MCP completion82. The MCP consumer
+uses its existing owned production-engine runtime without starting a server.
+
+Generator103 passes through21 joined maintenance invocations with clean parent
+and child heaps. Two fresh candidates retain all five maintained includes exactly
+for81 kinds/four facades. Copied actual descriptor witnesses cover punctuation,
+escaped/grouped parameters, source-class text inside inert literals/names/types,
+namespace/callback/comment spelling and refused unbridged self conversions.
+The actual maintained repository includes remain unchanged.
+
+The reviewed consumer initially emitted four native result-not-set warnings in
+raise-only alternate fluent stubs. After all original readers joined, exactly
+four `Result := nil` assignments preceded those same raises. Only that standalone
+test changed; all other1737 source inputs remain byte-identical across the two
+freezes. Its native/browser jobs were rebuilt, rather than repeating39 unchanged
+dependency jobs. The original41 compiler receipts and all four warnings remain
+retained; final accepted receipts explicitly select the repaired pair. An initial
+private warning-summary command used an incorrect path-separator regex and
+refused classification; normalized path matching correctly separates four owned
+fixture warnings from133 upstream. It changed no source or compiler result.
+
+`final-audit-private.json`, `accepted-common-jobs-private.json`, both source
+freezes,21 child receipts and10 exact candidate-file receipts retain the evidence.
+All1738 final Pascal inputs,1733 unrelated prior inputs,24 compiler/97 RTL/five
+current-start protected/two profile and13 concurrent planning pins remain exact.
+All admitted readers and child invocations are authoritatively joined. Historical
+global-config preservation stays false; no restoration, host/config/SDK retry,
+capture, cleanup, restart, production rollout or new public MCP schema occurs.
+LAN remains offline and native Nyx tools absent. No browser execution, complete
+source adoption, UI/input/quality/parity/adoption/delivery or full original
+criterion/task/credit/DONE closes across at least55 unclosed batches.
+
+Stop member-intent/facade/fixture/compiler variants. The next distinct prerequisite
+is a separate managed implemented-interface relationship using existing typed
+uses, including actual generic applications. It must preserve class bases/member
+traversal, distinguish root-interface closure from ordinary argument-type closure,
+retain authored availability/aliases and refuse unknown bindings. Root releases
+the proposed six-path helper scope only after the source/remote handoff. Whole-unit
+source/conditional/target/named binding, admitted prefix-work reuse, all89 controls
+unit globals, real creator adoption and executed reference browsing stay on the
+return path. The helper continues queued read-only work until that release.
+
+## Previous reference prerequisite: Declared type attachment and signature extraction — 2026-10-20
 
 The rich-expression/typed-forwarding checkpoint is committed and pushed as
 4f84f07e23c6276f2c69fd769a107433c151dbbd. The remote matched, all11 owned paths
