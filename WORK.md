@@ -33,7 +33,108 @@ private request/cleanup types and borrowed platform API bridges. The new diagram
 port records/interface and test PointerEvent bridge receive the same per-type
 review, including coordinate, ownership and host-dispatch limits.
 
-## Current integration: Binary rounding and qualified real literals — 2026-10-19
+## Current integration: Qualified real constant expressions — 2026-10-20
+
+The preceding user-status turn is no progress; this continuation revalidates all
+747 maintained inputs at 09eb42ee before changing the next dependency. Execution
+stays solo. The full UI library/Studio outcome and all existing open criteria
+remain the goal; a numeric checkpoint does not close editor adoption.
+
+The existing real owner now performs exact represented-value addition,
+subtraction, multiplication, division and finite comparison, with explicit
+nearest-even output precision. Private aligned work integers retain every bit;
+no host float, truncated decimal or mutable workspace escapes. Negative zero,
+exact cancellation, ties, subnormal rounding, overflow, nonzero division by zero
+and zero/zero have distinct contracts. Existing enum ordinals/record layouts and
+GUIDs retain their meaning; two status ordinals append. Comparison publishes its
+out relation only after cancellable work. All smaller arithmetic/comparison
+allowances refuse atomically; ordinary cancellation and detached-value lifetime
+retain the existing owners.
+
+Compiler-host evaluation evidence is a new optional context capability, separate
+from parsing, target representation, source minimum/FPU and EXCESSPRECISION.
+Default/legacy/enrolled contexts remain Unknown; no importer, host/configuration
+or SDK capture changes. Clone/Capture/MODE/unknown effects/local restore and
+tagged storage identity retain independent immutable facts. The new optional
+evaluation/constant GUIDs require rebuilt consumers; no mixed-binary claim.
+
+Qualified real constant expressions now use the existing source result-type
+rules, a separate compiler-host arithmetic rounding, then nominal narrowing.
+Their immutable value proof is INyxPascalRealConstant; source literals retain
+their separate source/parsed interface. Ordinary integer/Boolean values stay
+Unknown for real expressions. Comparisons retain Boolean results; generic
+specialization inherits type only. Nested operations retain intermediate
+rounding. Missing evaluator/primitive facts refuse through the original owners.
+Every arithmetic step charges the existing remaining semantic ceiling and any
+parent budget. No default ceiling, probe or original fixture is raised.
+
+The independent whole unit compiles the same 23 expressions at five authored
+minimum/excess/FPU sites. All 85 arithmetic byte values and 30 comparisons agree
+with the mathematical model. The resolver queries all 115 original include
+windows without invoking any witness body or removing the original ABI guard.
+Initial preparation passed the mathematical checks but emitted an unreachable
+branch warning and a constant-enum warning; exact sources/logs stay retained.
+The exhaustive closed case and a runtime invalid-value test remove those warnings
+without suppression. First binding assertions exposed a missing controlled
+compiler-root Boolean fact; its refusal/diagnostic sources and failed logs stay
+retained. The harness now supplies the same qualified one-byte Boolean fact used
+by existing floating-expression tests. No product primitive/probe guard weakens.
+
+Focused native qualification passes math 2108/first fit1355/comparison fit25 and
+binding4531/first fit3869, with 64 joined readers per suite and clean heaps. Nine
+Pascal inputs freeze after whitespace review; no Pascal source changes while
+compiler/native readers are live. Ignored
+.local/real-operators-paths-private.json owns the packet and exact return path.
+All previous pins, source copies, retained failures, frozen artifacts, protected
+contexts and thirteen foreign planning files remain required. LAN stays offline;
+native Nyx tools remain absent. No Pascal edits while readers live.
+
+Frozen qualification succeeds with 62 main compiler logs, zero owned warnings/
+154 upstream warnings, 38 native clean-heap runs and 22 browser compile-only
+consumers. Both Studios/backend/worker compile as applicable. Every preceding
+literal, exact-value, rounding, runtime-floating, integer, signature, generic,
+source-reuse, completion and context assertion is retained. The corpus retains
+574 checks over 507 actual source files/2,447,623 lossless tokens. Independent
+emission/ignored-mode oracles retain one/two intentional warnings outside main
+product debt. A first finalizer preparation omitted older receipt inventories;
+its failure log and the exact carried-forward manifests remain retained. No
+product source, assertion, compiler output or source guard changes to repair it.
+
+Final staging additionally finds one terminal blank line in the newly untracked
+standalone operator-binding test, which the earlier unstaged diff check did not
+cover. After every reader joins, only that blank line is removed. The original
+nine-source freeze, exact pre-repair test and all compiler/run logs are retained.
+Eight frozen inputs remain byte-identical; the affected standalone native and
+browser consumers rebuild from the final file. Qualification is explicitly
+composite: sixty unchanged compiler logs plus the two final-source consumer
+rebuilds. No original RTL, shared production source, assertion or other consumer
+changes. The staged complete inventory now supplies the full whitespace check.
+
+Unchanged original RTL passes 56 with clean heap: System13,101 declarations/zero
+syntax diagnostics/31 answers; ObjPas209/zero/one; neither pending. Exact original
+include Free/FreeInstance completion/navigation and detached insertion stay
+ready. Original2M view/4M aggregate/64 rounds, initial5/Word1/symbol3of8 and the
+same six ordered dynamic primitive jobs within eight remain exact. No evaluator
+enrollment job or fixed primitive probe is added.
+
+All751 maintained/742 unrelated/nine frozen/five preceding source copies/five
+first-operation inputs/nine first-binding inputs/diagnostic and older retained
+preparations,97 RTL/24 compiler pins/prior plus four numeric owner inspections,
+two retained profiles/156 original unit packets/48 historical includes/349 frozen
+artifacts/nine contexts/five protected files/thirteen foreign files remain exact.
+All handles/readers joined; LAN offline/native Nyx tools absent. Historical
+global-config failure still keeps the full preservation gate false; the
+current-start protected-file comparison is exact. No historical failure is erased.
+
+Unary constant operators, mixed integer/runtime/named-constant conversion,
+complete range/admission, default parser/evaluator enrollment and full language/
+editor/input/incremental/quality/parity/adoption/delivery remain open. No original
+criterion/task/counter/credit/DONE or full goal closes. Next follow those existing
+numeric/literal/conversion owners, without host/config retry, SDK capture,
+protected mutation, cleanup/restart, approval bypass, new MCP tool/schema,
+rollout or sub-agents.
+
+## Previous integration: Binary rounding and qualified real literals — 2026-10-19
 
 The preceding c925857 turn makes verified implementation/qualification/remote
 progress. All 743 accepted Pascal inputs are revalidated before this dependency.

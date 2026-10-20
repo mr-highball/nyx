@@ -20,6 +20,7 @@ type
     constructor Create(const ACancel: INyxCancellationScope);
     destructor Destroy; override;
     procedure AddSmall(AValue: Integer);
+    procedure Add(const AOther: TRealNatural);
     procedure MultiplySmall(AValue: Integer);
     procedure ShiftLeft(ABits: Integer);
     function Clone: TRealNatural;
@@ -144,6 +145,26 @@ begin
   begin
     Ensure(FCount+1); FWords[FCount] := LCarry; Inc(FCount);
   end;
+end;
+
+{ The aligned arithmetic owner calls this with independent work integers.
+  At most two base-2^15 words and one carry participate in each addition. }
+procedure TRealNatural.Add(const AOther: TRealNatural);
+var LAt, LLength, LSum, LCarry: Integer;
+begin
+  LLength := FCount;
+
+  if AOther.FCount > LLength then LLength := AOther.FCount;
+  Ensure(LLength+1); LCarry := 0;
+  for LAt := 0 to LLength-1 do
+  begin
+    LSum := WordAt(LAt)+AOther.WordAt(LAt)+LCarry;
+    FWords[LAt] := LSum and CRealLimbMask;
+    LCarry := LSum shr CRealLimbBits;
+  end;
+  FCount := LLength;
+
+  if LCarry <> 0 then begin FWords[FCount] := LCarry; Inc(FCount); end;
 end;
 
 procedure TRealNatural.ShiftLeft(ABits: Integer);
@@ -425,6 +446,14 @@ begin
   Result := Default(TNyxPascalBinaryReal);
 end;
 
+function TNyxPascalBinaryReal.Negated: TNyxPascalBinaryReal;
+begin
+  Result := Self;
+
+  if FStatus <> rrsFinite then Exit;
+  Result.FNegative := not FNegative; Result.FInexact := False;
+end;
+
 function TNyxPascalBinaryReal.IsZero: Boolean;
 begin
   Result := (FStatus = rrsFinite) and (FSignificand = '0');
@@ -462,6 +491,146 @@ begin
     LDenominator := TRealNatural.Create(ACancellation); LDenominator.AddSmall(1);
     Result := RoundRealRational(LNumerator,LDenominator,FBinaryExponent,APrecision,FNegative,ACancellation);
   finally LDenominator.Free; LNumerator.Free; end;
+end;
+
+function TNyxPascalBinaryReal.TryCompare(const AOther: TNyxPascalBinaryReal;
+  out AComparison: Integer; const ACancellation: INyxCancellationScope): Boolean;
+var LAt, LLength, LLeftPower, LRightPower, LOrder: Integer; LLeft, LRight: Char;
+begin
+  AComparison := 0; Admit(ACancellation,papConstantStep);
+  Result := (FStatus = rrsFinite) and (AOther.FStatus = rrsFinite);
+
+  if not Result then Exit;
+  LOrder := 0;
+
+  if IsZero and AOther.IsZero then Exit;
+
+  if IsZero then
+  begin
+    LOrder := -1;
+
+    if AOther.FNegative then LOrder := 1;
+  end
+  else if AOther.IsZero then
+  begin
+    LOrder := 1;
+
+    if FNegative then LOrder := -1;
+  end
+  else if FNegative <> AOther.FNegative then
+  begin
+    LOrder := 1;
+
+    if FNegative then LOrder := -1;
+  end
+  else
+  begin
+    LLeftPower := FBinaryExponent+Length(FSignificand);
+    LRightPower := AOther.FBinaryExponent+Length(AOther.FSignificand);
+
+    if LLeftPower < LRightPower then LOrder := -1
+    else if LLeftPower > LRightPower then LOrder := 1
+    else
+    begin
+      LLength := Length(FSignificand);
+
+      if Length(AOther.FSignificand) > LLength then LLength := Length(AOther.FSignificand);
+      for LAt := 1 to LLength do
+      begin
+        Admit(ACancellation,papConstantStep); LLeft := '0'; LRight := '0';
+
+        if LAt <= Length(FSignificand) then LLeft := FSignificand[LAt];
+
+        if LAt <= Length(AOther.FSignificand) then LRight := AOther.FSignificand[LAt];
+
+        if LLeft < LRight then begin LOrder := -1; Break; end;
+
+        if LLeft > LRight then begin LOrder := 1; Break; end;
+      end;
+    end;
+
+    if FNegative then LOrder := -LOrder;
+  end;
+  { The out relation is published only after all cancellable comparison work. }
+  AComparison := LOrder;
+end;
+
+function NyxPascalCalculateRealToEven(AOperation: TNyxPascalRealOperation;
+  const ALeft, ARight: TNyxPascalBinaryReal; APrecision: TNyxPascalBinaryPrecision;
+  const ACancellation: INyxCancellationScope): TNyxPascalBinaryReal;
+var LLeft, LRight, LNumerator, LDenominator: TRealNatural;
+  LExponent, LCompare: Integer; LNegative, LRightNegative: Boolean;
+begin
+  Result := TNyxPascalBinaryReal.Unknown;
+  Admit(ACancellation,papConstantStep); ValidateRealPrecision(APrecision);
+
+  if (Ord(AOperation) < Ord(Low(TNyxPascalRealOperation))) or
+    (Ord(AOperation) > Ord(High(TNyxPascalRealOperation))) then
+    raise ENyxPascalValue.Create('A real operation is outside its closed domain');
+
+  if (APrecision = pbpUnknown) or (ALeft.Status <> rrsFinite) or
+    (ARight.Status <> rrsFinite) then Exit;
+
+  if (AOperation = proDivide) and ARight.IsZero then
+  begin
+    Result.FPrecision := APrecision;
+    Result.FStatus := rrsDivisionByZero;
+    Result.FNegative := ALeft.Negative <> ARight.Negative;
+
+    if ALeft.IsZero then Result.FStatus := rrsInvalidOperation;
+    Exit;
+  end;
+  LLeft := nil; LRight := nil; LNumerator := nil; LDenominator := nil;
+  try
+    LLeft := RealNatural(ALeft.Significand,2,ACancellation);
+    LRight := RealNatural(ARight.Significand,2,ACancellation);
+    LNegative := ALeft.Negative;
+    case AOperation of
+      proAdd, proSubtract:
+        begin
+          LExponent := ALeft.BinaryExponent;
+
+          if ARight.BinaryExponent < LExponent then LExponent := ARight.BinaryExponent;
+          LLeft.ShiftLeft(RealExponentDifference(ALeft.BinaryExponent,LExponent));
+          LRight.ShiftLeft(RealExponentDifference(ARight.BinaryExponent,LExponent));
+          LRightNegative := ARight.Negative <> (AOperation = proSubtract);
+
+          if LNegative = LRightNegative then
+          begin LLeft.Add(LRight); LNumerator := LLeft; LLeft := nil; end
+          else
+          begin
+            LCompare := LLeft.CompareShifted(LRight,0);
+
+            if LCompare >= 0 then
+            begin
+              LLeft.SubtractShifted(LRight,0); LNumerator := LLeft; LLeft := nil;
+
+              if LCompare = 0 then LNegative := False;
+            end
+            else
+            begin
+              LRight.SubtractShifted(LLeft,0); LNumerator := LRight; LRight := nil;
+              LNegative := LRightNegative;
+            end;
+          end;
+          LDenominator := TRealNatural.Create(ACancellation); LDenominator.AddSmall(1);
+        end;
+      proMultiply:
+        begin
+          LExponent := RealExponentDifference(ALeft.BinaryExponent,-ARight.BinaryExponent);
+          LNegative := ALeft.Negative <> ARight.Negative;
+          LNumerator := LLeft.Multiply(LRight);
+          LDenominator := TRealNatural.Create(ACancellation); LDenominator.AddSmall(1);
+        end;
+      proDivide:
+        begin
+          LExponent := RealExponentDifference(ALeft.BinaryExponent,ARight.BinaryExponent);
+          LNegative := ALeft.Negative <> ARight.Negative;
+          LNumerator := LLeft; LLeft := nil; LDenominator := LRight; LRight := nil;
+        end;
+    end;
+    Result := RoundRealRational(LNumerator,LDenominator,LExponent,APrecision,LNegative,ACancellation);
+  finally LDenominator.Free; LNumerator.Free; LRight.Free; LLeft.Free; end;
 end;
 
 function NyxPascalRoundRealToEven(const AValue: TNyxPascalRealValue;

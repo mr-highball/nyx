@@ -37,6 +37,10 @@ Work is on `hello-nyx`, starting from the original codebase and adopting
 production breadth and complete Studio behavior are tracked in
 [MILESTONES.md](MILESTONES.md). This is an active development branch.
 
+Nyx's owned Pascal analysis separates [exact real values and compiler constant
+expressions](docs/pascal-real-values.md), with explicit numeric policies and
+bounded work. Full language coverage and editor integration remain in progress.
+
 ```pascal
 LDocument := TNyxDocument.Create;
 LDocument.AddPage(

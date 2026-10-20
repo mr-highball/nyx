@@ -4,7 +4,58 @@ Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
 
-Current-source qualification retains exact rational nearest-even binary32/64/x87-extended80/
+Current-source real constant expressions use exact represented-value arithmetic
+and finite comparisons through the existing real owner. Four closed operations,
+explicit nearest-even formats, signed zero/cancellation/subnormals and distinct
+overflow/division/invalid outcomes retain no host float or mutable workspace.
+Old ordinals/GUIDs/record layouts retain their meaning; status appends two.
+An optional immutable compiler-host evaluation policy is independent of parsing,
+target/root representation and source switches. Default/legacy/enrolled profiles
+remain Unknown; no importer/host/config/SDK capture changes. Exact context,
+Clone/Capture/MODE/unknown/local lifetime and tagged storage identity retain it.
+New optional evaluation/constant GUIDs require rebuilt consumers. Qualified
+FPC30301 Delphi/i386 binary real constants select their nominal source type,
+fold at the explicit host precision, then narrow; nested values retain each
+intermediate. RealConstant evidence is separate from source-literal mathematics;
+generic results inherit type only and ordinary scalar channels stay distinct.
+All arithmetic charges the existing remaining semantic/parent budgets. Original
+limits/probes/witnesses remain unchanged. Whole native85 arithmetic values plus
+30 comparisons at five authored source sites agree; all115 unchanged original
+unit/include windows agree without invoking native bodies. Focused math2108/
+1355/comparison25 and binding4531/3869 pass with64 joined readers per suite and
+clean heaps. Retain first warning preparation and missing Boolean fact/diagnostic
+failures; exhaustive cases/runtime invalid-value test and the existing qualified
+controlled Boolean fact repair the harness without suppression or guard removal.
+Nine Pascal inputs freeze after whitespace review. Staging later finds one EOF
+blank line in the new standalone binding test; after all readers join, only it
+is removed. The original freeze/source/logs remain retained, eight other inputs
+stay exact and native/browser standalone consumers rebuild from final source.
+Current qualification is explicitly composite:60 unchanged compiler logs plus
+two final-source consumer rebuilds. All62 main compiler logs have zero owned warnings/154
+upstream;38 native runs have clean heaps;22 browser consumers compile only;both
+Studios/backend/worker compile as applicable. Unchanged RTL56 retains System13101/
+zero syntax/31 answers,ObjPas209/zero/one,neither pending and exact Free/FreeInstance
+navigation/insertion. Original2M/4M/64/initial5/Word1/symbol3of8/dynamic6of8 remain.
+All751 maintained/742 unrelated/nine frozen/five preceding copies/five first
+operation/nine first binding/diagnostic/all inherited preparations/97 RTL/24
+compiler pins/prior plus four owner inspections/two profiles/156 packets/48
+includes/349 artifacts/nine contexts/five protected files/thirteen foreign files
+stay exact. Corpus574/507 actual files/2447623 tokens. Readers joined; historical
+global-config failure keeps full preservation false. Retain the first finalizer
+inventory omission and exact carried-forward receipts. WORK.md and ignored
+.local/real-operators-paths-private.json own current source/remote receipts.
+Preserve all old source/SDK/compiler/protected/frozen/concurrent pins
+and retained failures. No Pascal edits while readers live. LAN offline; native
+Nyx tools absent. No host/config retry, SDK capture, protected mutation, cleanup/
+restart, approval bypass, new MCP tool/schema, rollout or sub-agents. Unary,
+mixed integer/runtime/named constants and complete conversion/range/default
+enrollment remain open. Next follow existing numeric/literal/conversion owners,
+without guessing host facts. Stop current arithmetic/fixture/compiler/evaluator-
+profile refinement. Full language/editor/input/incremental/quality/
+parity/adoption/delivery/original goal remains open; no full original criterion/
+task/counter/credit/DONE/default-editor installation closes.
+
+Previously qualified exact rational nearest-even binary32/64/x87-extended80/
 binary128 rounding through the existing real owner. Private base2^15 work limbs,
 squaring, exact remainder/tie/carry/subnormal/range handling and decimal-order
 preflight use no host float or digit truncation; values retain no scope/workspace.

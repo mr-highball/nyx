@@ -63,9 +63,14 @@ type
     carries no format authority. This is not a compiler parsing policy. }
   TNyxPascalBinaryPrecision = (pbpUnknown, pbpBinary32, pbpBinary64,
     pbpX87Extended80, pbpBinary128);
-  { Overflow reports a failed finite-format range, not a constructed infinity
-    or a prediction of a Pascal compiler's diagnostics. Unknown proves nothing. }
-  TNyxPascalRealRoundingStatus = (rrsUnknown, rrsFinite, rrsOverflow);
+  { Closed mathematical outcomes, independent of compiler diagnostics. Existing
+    ordinals stay fixed. DivisionByZero is a nonzero numerator over signed zero;
+    zero over zero is InvalidOperation. Neither constructs an infinity or NaN. }
+  TNyxPascalRealRoundingStatus = (rrsUnknown, rrsFinite, rrsOverflow,
+    rrsDivisionByZero, rrsInvalidOperation);
+  { Ordinary binary arithmetic over already represented finite operands. The
+    operation does not select a compiler type or convert operands beforehand. }
+  TNyxPascalRealOperation = (proAdd, proSubtract, proMultiply, proDivide);
   { Detached nearest-even result. A nonzero finite value is sign * Significand
     * 2^BinaryExponent, with an odd, normalized binary-digit significand. Zero
     keeps its sign. Inexact describes this operation, not earlier conversions.
@@ -79,9 +84,18 @@ type
     FBinaryExponent: Integer;
   public
     class function Unknown: TNyxPascalBinaryReal; static;
+    { Exact unary negation retains signed zero. Inexact describes this new
+      operation, so it is cleared rather than inherited from an earlier parse. }
+    function Negated: TNyxPascalBinaryReal;
     function IsZero: Boolean;
     function IsSubnormal: Boolean;
     function SameValue(const AOther: TNyxPascalBinaryReal;
+      const ACancellation: INyxCancellationScope = nil): Boolean;
+    { Ordered finite comparison, including equal signed zeros. Unknown and
+      nonfinite outcomes return False with AComparison zero; they prove no
+      relation. Different precisions compare their actual represented values. }
+    function TryCompare(const AOther: TNyxPascalBinaryReal;
+      out AComparison: Integer;
       const ACancellation: INyxCancellationScope = nil): Boolean;
     { Round the already rounded finite value. This deliberately differs from
       reparsing its original decimal source; a wider format cannot recover bits
@@ -112,6 +126,16 @@ function NyxPascalRealToken(const ASpelling: TNyxText;
   refusal is atomic. Mathematical rounding is not proof of a compiler's parser,
   initial minimum precision, exception behavior or source literal type. }
 function NyxPascalRoundRealToEven(const AValue: TNyxPascalRealValue;
+  APrecision: TNyxPascalBinaryPrecision;
+  const ACancellation: INyxCancellationScope = nil): TNyxPascalBinaryReal;
+{ Perform one exact rational operation on finite represented operands and round
+  once, to the explicitly requested format. Operand formats need not match;
+  earlier lost bits are never recovered. Nearest-even exact cancellation is
+  positive zero, while equal-signed zeros and product/quotient signs follow
+  their operands. Work/cancellation refusal publishes no partial result. This
+  mathematical contract grants no compiler folding precision or range policy. }
+function NyxPascalCalculateRealToEven(AOperation: TNyxPascalRealOperation;
+  const ALeft, ARight: TNyxPascalBinaryReal;
   APrecision: TNyxPascalBinaryPrecision;
   const ACancellation: INyxCancellationScope = nil): TNyxPascalBinaryReal;
 

@@ -282,6 +282,14 @@ type
     function SourceValue: TNyxPascalRealValue;
     function ParsedValue: TNyxPascalBinaryReal;
   end;
+  { Optional finite constant proof on either a literal or a folded expression.
+    The represented value is detached and distinct from exact source text.
+    Generic specialization consumes only the ordinary result type; it must not
+    copy this proof onto a routine's return value or an unrelated variable. }
+  INyxPascalRealConstant = interface(IInterface)
+    ['{50BCB30E-298A-4BB2-8A12-23C0CFCC9B1D}']
+    function RealValue: TNyxPascalBinaryReal;
+  end;
   { Optional first-class formal identity. Bound entries are source-resolved
     guaranteed member contracts, including an implied class root when qualified.
     They are not supplied arguments. No world retains these immutable results. }
@@ -625,12 +633,13 @@ type
   { Separate capability is available only on an admitted real literal. The
     inherited ordinary type owns source/world identity; both numeric proofs
     are detached values without mutable work integers or execution leases. }
-  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral)
+  TRealLiteralType = class(TLiteralType, INyxPascalRealLiteral, INyxPascalRealConstant)
   public
     FSourceValue: TNyxPascalRealValue;
     FParsedValue: TNyxPascalBinaryReal;
     function SourceValue: TNyxPascalRealValue;
     function ParsedValue: TNyxPascalBinaryReal;
+    function RealValue: TNyxPascalBinaryReal;
   end;
   { Private proof for a folded expression, deliberately separate from source
     literals. A generic routine consumes only ResultType; argument values never
@@ -648,6 +657,14 @@ type
     FResult: INyxPascalSemanticType;
     function ConstantValue: TNyxPascalConstantValue;
     function ResultType: INyxPascalSemanticType;
+  end;
+  { Query-owned finite real expression. Its inherited integer/Boolean value
+    stays Unknown; the independent optional capability carries binary evidence.
+    The ordinary primitive child supplies specialization and intrinsic identity. }
+  TRealExpressionType = class(TNumericExpressionType, INyxPascalRealConstant)
+  public
+    FRealValue: TNyxPascalBinaryReal;
+    function RealValue: TNyxPascalBinaryReal;
   end;
   { A complete source routine header shares the ordinary semantic signature
     shape, retaining real parameter symbols instead of synthesized declarations.
@@ -1314,6 +1331,16 @@ end;
 function TRealLiteralType.ParsedValue: TNyxPascalBinaryReal;
 begin
   Result := FParsedValue;
+end;
+
+function TRealLiteralType.RealValue: TNyxPascalBinaryReal;
+begin
+  Result := FParsedValue;
+end;
+
+function TRealExpressionType.RealValue: TNyxPascalBinaryReal;
+begin
+  Result := FRealValue;
 end;
 
 function TLiteralType.Wide: Boolean;
@@ -8115,7 +8142,7 @@ var
     LLiteral: INyxPascalLiteralType;
     LNumeric: INumericExpressionValue;
     LCandidate, LOperand, LArity: Integer;
-    LRealOperand: INyxPascalRealLiteral;
+    LRealLeft, LRealRight: INyxPascalRealConstant;
     LExact, LMatch, LSeen: Boolean;
 
     function OrdinaryType(const AValue: INyxPascalSemanticType): INyxPascalSemanticType;
@@ -8401,6 +8428,101 @@ var
       Result := TypeAnswer(LChosen);
     end;
 
+    { Constant arithmetic has its own value and host-rounding contract. It uses
+      the qualified source result-type rules, then folds at the independently
+      observed compiler-host precision, then narrows to that result's storage.
+      Runtime operands and mixed integer conversion remain separate contracts. }
+    function RealConstantResult: INyxPascalResolution;
+    var LNominal: INyxPascalResolution; LFormat: TNyxPascalBinaryPrecision;
+      LEvaluation: TNyxPascalRealEvaluationPolicy; LOperation: TNyxPascalRealOperation;
+      LValue: TNyxPascalBinaryReal; LBudget: INyxPascalAnalysisBudget;
+      LOrder: Integer; LRelation: Boolean; LComputed: TNumericExpressionType;
+      LRealComputed: TRealExpressionType; LLease: INyxPascalSemanticType;
+      LIdentity: INyxPascalIntrinsicIdentity;
+    begin
+      Result := Answer(pbsUnresolved,pbiUnsupportedType,'real constant operation');
+
+      if AUnary or (LRealLeft = nil) or (LRealRight = nil) then Exit;
+
+      if not (AKind in [pokAdd,pokSubtract,pokMultiply,pokDivide,pokEqual,pokNotEqual,
+        pokLess,pokLessEqual,pokGreater,pokGreaterEqual]) then Exit;
+      LNominal := FloatingResult;
+
+      if LNominal = nil then Exit;
+
+      if LNominal.Status <> pbsBound then Exit(LNominal);
+      LFormat := pbpUnknown;
+      case LNominal.BoundType.Builtin of
+        pbbSingle: LFormat := pbpBinary32;
+        pbbDouble: LFormat := pbpBinary64;
+        pbbExtended: LFormat := pbpX87Extended80;
+        pbbBoolean: begin end;
+      else Exit;
+      end;
+      LEvaluation := NyxPascalRealEvaluation(LContext);
+
+      if (LFormat <> pbpUnknown) and ((LEvaluation.Kind <> prekNearestEven) or
+        not (LEvaluation.Precision in [pbpBinary64,pbpX87Extended80])) then
+        Exit(Answer(pbsUnresolved,pbiCompilerContext,'REALEVALUATION'));
+
+      if FSteps >= FLimits.MaximumSteps then
+        raise ENyxPascalBindingLimit.Create('Pascal semantic steps exceed their query budget');
+      LBudget := NewNyxPascalAnalysisBudget(FLimits.MaximumSteps-FSteps,FCancel);
+      LComputed := nil; LRealComputed := nil;
+      try
+        try
+
+          if LFormat = pbpUnknown then
+          begin
+
+            if not LRealLeft.RealValue.TryCompare(LRealRight.RealValue,LOrder,LBudget) then Exit;
+            LRelation := False;
+            case AKind of
+              pokEqual: LRelation := LOrder = 0;
+              pokNotEqual: LRelation := LOrder <> 0;
+              pokLess: LRelation := LOrder < 0;
+              pokLessEqual: LRelation := LOrder <= 0;
+              pokGreater: LRelation := LOrder > 0;
+              pokGreaterEqual: LRelation := LOrder >= 0;
+            else begin end;
+            end;
+            LComputed := TNumericExpressionType.Create; LLease := LComputed;
+            LComputed.FConstant := TNyxPascalConstantValue.BooleanValue(LRelation);
+          end
+          else
+          begin
+            LOperation := proAdd;
+            case AKind of
+              pokAdd: LOperation := proAdd;
+              pokSubtract: LOperation := proSubtract;
+              pokMultiply: LOperation := proMultiply;
+              pokDivide: LOperation := proDivide;
+            else begin end;
+            end;
+            LValue := NyxPascalCalculateRealToEven(LOperation,LRealLeft.RealValue,
+              LRealRight.RealValue,LEvaluation.Precision,LBudget);
+
+            if LValue.Status <> rrsFinite then
+              Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant range'));
+            LValue := LValue.RoundToEven(LFormat,LBudget);
+
+            if LValue.Status <> rrsFinite then
+              Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant range'));
+            LRealComputed := TRealExpressionType.Create; LLease := LRealComputed;
+            LComputed := LRealComputed; LRealComputed.FRealValue := LValue;
+          end;
+        except on ENyxPascalValue do Exit; end;
+      finally Inc(FSteps,LBudget.Receipt.Total); LBudget.Retire; end;
+      LComputed.Owner := FWorld; LComputed.TypeKind := pstBuiltin;
+      LComputed.Intrinsic := LNominal.BoundType.Builtin;
+      Supports(LNominal.BoundType,INyxPascalIntrinsicIdentity,LIdentity);
+      LComputed.IntrinsicScope := LIdentity.IntrinsicOrigin;
+      LComputed.IntrinsicName := LIdentity.IntrinsicReference;
+      LComputed.IntrinsicFacts := LIdentity.IntrinsicContext;
+      LComputed.FResult := LNominal.BoundType;
+      Result := TypeAnswer(LLease);
+    end;
+
     { Numeric rules receive only canonical fixed ranges. Native/Integer widths
       need their own captured intrinsic measurement; CPUINT controls arithmetic
       promotion and is not evidence about pointer size or authored RTL aliases. }
@@ -8618,13 +8740,6 @@ var
     if (LContext = nil) or (LContext.Family <> ppcFPC) or
       (LContext.Version.FullNumber <> 30301) or not (LContext.Mode in [ppmDelphi, ppmDelphiUnicode]) then
       Exit(Answer(pbsUnresolved, pbiCompilerContext));
-    { Real constant folding and mixed constant/operator rules require their own
-      compiler qualification. Admitting a literal's type cannot silently turn
-      those expressions into the already qualified runtime-floating rules. }
-
-    if Supports(ALeft.BoundType,INyxPascalRealLiteral,LRealOperand) or
-      (not AUnary and Supports(ARight.BoundType,INyxPascalRealLiteral,LRealOperand)) then
-      Exit(Answer(pbsUnresolved,pbiUnsupportedType,'real constant operation'));
     LLeft := OrdinaryType(ALeft.BoundType);
     LRight := nil;
 
@@ -8632,6 +8747,11 @@ var
 
     if (LLeft = nil) or (not AUnary and (LRight = nil)) then
       Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+    Supports(ALeft.BoundType,INyxPascalRealConstant,LRealLeft);
+
+    if not AUnary then Supports(ARight.BoundType,INyxPascalRealConstant,LRealRight);
+
+    if (LRealLeft <> nil) or (LRealRight <> nil) then Exit(RealConstantResult);
     LBoolean := nil;
 
     if (LLeft.Kind = pstBuiltin) and (LLeft.Builtin = pbbBoolean) and

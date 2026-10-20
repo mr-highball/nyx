@@ -1994,6 +1994,7 @@ var
     LFPU: TNyxPascalFPUReference;
     LSourceFPU: TNyxPascalSourceFPUSelection;
     LRealParser: TNyxPascalRealParserPolicy;
+    LRealEvaluation: TNyxPascalRealEvaluationPolicy;
   begin
 
     if (AContext = nil) or (ADepth > 1) then
@@ -2068,6 +2069,14 @@ var
     if LRealParser.Known then
     begin
       Part('real-parser-policy-v1'); Number(Ord(LRealParser.Kind)); Number(Ord(LRealParser.Precision));
+    end;
+    LRealEvaluation := NyxPascalRealEvaluation(AContext);
+
+    if LRealEvaluation.Known then
+    begin
+      { Independently qualified compiler-host folding must not collide with
+        parsing/target facts. Unknown preserves the complete earlier key. }
+      Part('real-evaluation-policy-v1'); Number(Ord(LRealEvaluation.Kind)); Number(Ord(LRealEvaluation.Precision));
     end;
     LFPU := NyxPascalConfiguredFPU(AContext);
 
