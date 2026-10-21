@@ -33,6 +33,8 @@ uses
   nyx.data,
   nyx.types,
   nyx.images,
+  nyx.button.presentation,
+  nyx.resources,
   nyx.responsive,
   nyx.presentations,
   nyx.containers,
@@ -332,6 +334,7 @@ procedure ValidateNyxControlFlowRoutes(ANode: TNyxNode; ADocument: TNyxDocument)
 implementation
 
 uses
+  Math,
   nyx.platform,
   nyx.sliders,
   nyx.binding,
@@ -1137,6 +1140,17 @@ begin
           LDescription := 'A link destination requires a link projection.';
         end;
       end;
+    atButtonPresentation:
+      begin
+        LDescription := 'Typed decorative glyph, caption, density and alignment on the same accessible button.';
+
+        if AKind <> 'button' then
+        begin
+          LBrowser := ncMissing;
+          LNative := ncMissing;
+          LDescription := 'Button presentation requires a button projection.';
+        end;
+      end;
     atSource, atAlt, atImageFit, atImageHorizontal, atImageVertical:
       begin
 
@@ -1738,6 +1752,7 @@ begin
     LTitle := NyxAttributeName(LAttribute);
     case LAttribute of
       atText: LTitle := 'Text';
+      atButtonPresentation: LTitle := 'Button presentation';
       atImageFit:
         begin
           LAttributeType := npChoice;
@@ -2370,7 +2385,7 @@ var
     Include(LTriggers, ntClick);
     Include(LBridgedTriggers, ntClick);
 
-    if LKind = 'image' then
+    if (LKind = NyxKindName(nkImage)) or (LKind = NyxKindName(nkButton)) then
     begin
       LTriggers := LTriggers + [ntImageLoading, ntImageReady, ntImageError, ntImageCleared];
       LBridgedTriggers := LBridgedTriggers + [ntImageLoading, ntImageReady, ntImageError, ntImageCleared];
@@ -2994,6 +3009,473 @@ begin
   Result := TryNyxStateInteger(AValue, AValueNumber);
 end;
 
+{ Reserved scopes retain the ordinary typed attribute identity. Parse actual
+  properties rather than Inspector defaults so descriptors cannot hide malformed
+  data behind their deferred target schema or a platform/presentation prefix. }
+function IsButtonPresentationKey(const AKey: TNyxText): Boolean;
+var
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
+begin
+  Result := AKey = NyxAttributeName(atButtonPresentation);
+
+  if not Result then
+  begin
+    Result := (TryNyxPlatformKey(AKey, LPlatform, LAttribute) or
+      TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) or
+      TryNyxPresentationKey(AKey, LPresentation, LPlatform, LAttribute)) and
+      (LAttribute = atButtonPresentation);
+  end;
+end;
+
+function ValidateButtonPresentationMetadata(ANode: TNyxNode): Boolean;
+var
+  LIndex: Integer;
+  LText: TNyxText;
+begin
+  Result := False;
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+
+    if not IsButtonPresentationKey(ANode.Props.Names[LIndex]) then
+    begin
+      Continue;
+    end;
+    LText := ANode.Prop(ANode.Props.Names[LIndex]);
+
+    if LText <> '' then
+    begin
+      TNyxButtonPresentation.FromData(TNyxDataValue.ParseJSON(LText));
+      Result := True;
+    end;
+  end;
+end;
+
+procedure ValidateButtonPresentationFaces(ANode: TNyxNode;
+  const APresentations: INyxPresentationSnapshot; ADocument: TNyxDocument;
+  ACurrentOnly: Boolean = False);
+type
+  { Admission partitions only presentation/name rules. These copied coordinate
+    spaces use the established size-admission partition and actual projection
+    methods, including independent nearest-container allocations and absence. }
+  TButtonBoundaries = array of Integer;
+  { Several rules resolving to the same ancestor share one measured space. }
+  TButtonSpace = record
+    RuntimeID: TNyxText;
+    Widths: TButtonBoundaries;
+    Heights: TButtonBoundaries;
+    Orientation: Boolean;
+    Width: Double;
+    Height: Double;
+  end;
+var
+  LSpaces: array of TButtonSpace;
+  LMeasurements: TNyxContainerMeasurements;
+  LMeasured: array of Boolean;
+  LManual: array of TNyxPresentationRef;
+  LRule: TNyxPresentationCondition;
+  LPlatform: TNyxPlatform;
+  LTarget: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LAncestor: TNyxNode;
+  LProbe: TNyxNode;
+  LRoot: TNyxNode;
+  LReference: TNyxContainerRef;
+  LIndex: Integer;
+  LSpace: Integer;
+  LOther: Integer;
+  LValue: TNyxButtonPresentation;
+  LHasPresentation: Boolean;
+  LHasGlyphOnly: Boolean;
+  LCurrentText: TNyxText;
+  LResourceImage: TNyxImageSource;
+  LBudget: Double;
+  LPlaneBudget: Double;
+
+  procedure CheckName(AProbe: TNyxNode; const AFace: TNyxButtonPresentation);
+  begin
+
+    if (AFace.ContentMode = nbcGlyphOnly) and
+      (AProbe.Prop(NyxAttributeName(atText)) = '') and
+      (AProbe.Prop(NyxAttributeName(atAccessibleName)) = '') then
+    begin
+      raise ENyxModel.Create('A glyph-only button requires a caption or accessible name: ' +
+        ANode.ID);
+    end;
+  end;
+
+  procedure AddBoundary(var AValues: TButtonBoundaries; AValue: Integer);
+  var
+    LPosition: Integer;
+    LMove: Integer;
+  begin
+    LPosition := 0;
+    while (LPosition < Length(AValues)) and (AValues[LPosition] < AValue) do
+    begin
+      Inc(LPosition);
+    end;
+
+    if (LPosition < Length(AValues)) and (AValues[LPosition] = AValue) then
+    begin
+      Exit;
+    end;
+    SetLength(AValues, Length(AValues) + 1);
+    for LMove := High(AValues) downto LPosition + 1 do
+    begin
+      AValues[LMove] := AValues[LMove - 1];
+    end;
+    AValues[LPosition] := AValue;
+  end;
+
+  function CopyAncestry(AOriginal: TNyxNode): TNyxNode;
+  var
+    LParent: TNyxNode;
+    LCopy: TNyxNode;
+  begin
+    LParent := nil;
+
+    if AOriginal.Parent <> nil then
+    begin
+      LParent := CopyAncestry(AOriginal.Parent);
+    end;
+    LCopy := TNyxNode.CreateRealized(AOriginal.Kind, AOriginal.SourceID,
+      AOriginal.ID, AOriginal.DesignID);
+    try
+      LCopy.SetProp('query-container', AOriginal.Prop('query-container'));
+      LCopy.SetProp('container-containment', AOriginal.Prop('container-containment'));
+
+      if LParent <> nil then
+      begin
+        LParent.Add(LCopy);
+      end
+      else
+      begin
+        LRoot := LCopy;
+      end;
+      Result := LCopy;
+    except
+      LCopy.Free;
+      raise;
+    end;
+  end;
+
+  procedure CheckCombination;
+  var
+    LChoice: Integer;
+    LIndex: Integer;
+    LCount: Integer;
+    LText: TNyxText;
+    LFace: TNyxButtonPresentation;
+    LSelection: TNyxPresentationSelection;
+    LSnapshot: INyxContainerSnapshot;
+    LVisibleMeasurements: TNyxContainerMeasurements;
+  begin
+    LVisibleMeasurements := nil;
+    for LIndex := 0 to High(LMeasurements) do
+    begin
+
+      if LMeasured[LIndex] then
+      begin
+        LCount := Length(LVisibleMeasurements);
+        SetLength(LVisibleMeasurements, LCount + 1);
+        LVisibleMeasurements[LCount] := LMeasurements[LIndex];
+      end;
+    end;
+    LSnapshot := NewNyxContainerSnapshot(LVisibleMeasurements);
+    for LChoice := -1 to High(LManual) do
+    begin
+      LSelection := TNyxPresentationSelection.None;
+
+      if LChoice >= 0 then
+      begin
+        LSelection := TNyxPresentationSelection.Use(LManual[LChoice]);
+      end;
+      LProbe.ApplyViewport(LSpaces[0].Width, LSpaces[0].Height, LTarget,
+        LSelection, LSnapshot);
+      LText := LProbe.Prop(NyxAttributeName(atButtonPresentation));
+
+      if LText <> '' then
+      begin
+        LFace := TNyxButtonPresentation.FromData(TNyxDataValue.ParseJSON(LText));
+        CheckName(LProbe, LFace);
+      end;
+    end;
+  end;
+
+  procedure VisitSpace(AIndex: Integer);
+  var
+    LWidthIndex: Integer;
+    LHeightIndex: Integer;
+    LWidthStart: Double;
+    LHeightStart: Double;
+    LWidthEnd: Double;
+    LHeightEnd: Double;
+    LWidth: Double;
+    LHeight: Double;
+
+    procedure VisitPoint(AWidth, AHeight: Double);
+    begin
+      LSpaces[AIndex].Width := AWidth;
+      LSpaces[AIndex].Height := AHeight;
+
+      if AIndex > 0 then
+      begin
+        LMeasurements[AIndex - 1].Width := AWidth;
+        LMeasurements[AIndex - 1].Height := AHeight;
+      end;
+      VisitSpace(AIndex + 1);
+    end;
+
+  begin
+
+    if AIndex = Length(LSpaces) then
+    begin
+      CheckCombination;
+      Exit;
+    end;
+
+    if AIndex > 0 then
+    begin
+      { A nearest publisher with no current box makes its rules inactive.
+        Independent absence must be checked alongside other active spaces. }
+      LMeasured[AIndex - 1] := False;
+      VisitSpace(AIndex + 1);
+      LMeasured[AIndex - 1] := True;
+    end;
+    for LWidthIndex := 0 to High(LSpaces[AIndex].Widths) do
+    begin
+      LWidthStart := LSpaces[AIndex].Widths[LWidthIndex];
+      LWidthEnd := 1.0E20;
+
+      if LWidthIndex < High(LSpaces[AIndex].Widths) then
+      begin
+        LWidthEnd := LSpaces[AIndex].Widths[LWidthIndex + 1];
+      end;
+      for LHeightIndex := 0 to High(LSpaces[AIndex].Heights) do
+      begin
+        LHeightStart := LSpaces[AIndex].Heights[LHeightIndex];
+        LHeightEnd := 1.0E20;
+
+        if LHeightIndex < High(LSpaces[AIndex].Heights) then
+        begin
+          LHeightEnd := LSpaces[AIndex].Heights[LHeightIndex + 1];
+        end;
+        VisitPoint(LWidthStart, LHeightStart);
+
+        if not LSpaces[AIndex].Orientation then
+        begin
+          Continue;
+        end;
+        { One feasible point per positive orientation region, plus the lower
+          corner, covers every constant-rule region in this half-open cell. }
+        LWidth := Max(0.5, LWidthStart);
+        LHeight := Max(LHeightStart, LWidth + 0.5);
+
+        if (LWidth < LWidthEnd) and (LHeight < LHeightEnd) then
+        begin
+          VisitPoint(LWidth, LHeight);
+        end;
+        LHeight := Max(0.5, LHeightStart);
+        LWidth := Max(LWidthStart, LHeight + 0.5);
+
+        if (LWidth < LWidthEnd) and (LHeight < LHeightEnd) then
+        begin
+          VisitPoint(LWidth, LHeight);
+        end;
+        LWidth := Max(0.5, Max(LWidthStart, LHeightStart));
+
+        if (LWidth < LWidthEnd) and (LWidth < LHeightEnd) then
+        begin
+          VisitPoint(LWidth, LWidth);
+        end;
+      end;
+    end;
+  end;
+
+begin
+
+  if ACurrentOnly then
+  begin
+    { Build receives an already platform/viewport-projected node. Its original
+      opposite-target base has been replaced, so only this effective face can
+      be checked here; complete document admission partitions the raw scopes. }
+    LCurrentText := ANode.Prop(NyxAttributeName(atButtonPresentation));
+
+    if LCurrentText = '' then
+    begin
+      Exit;
+    end;
+    LValue := TNyxButtonPresentation.FromData(TNyxDataValue.ParseJSON(LCurrentText));
+
+    if ANode.ProjectionKind <> NyxKindName(nkButton) then
+    begin
+      raise ENyxModel.Create('Button presentation requires a button: ' + ANode.ID);
+    end;
+    CheckName(ANode, LValue);
+
+    if LValue.GlyphKind = nbgResource then
+    begin
+      { Resolve against the realized view's owned catalog/locale without copying
+        the complete atlas catalog for every button. Missing/wrong-kind refs
+        raise; False permits an admitted hosted image whose bytes are not ready.
+        This copies semantic image data only: no transport or widget decoding. }
+      ANode.TryReadResourceImage(LValue.ResourceImage, LResourceImage);
+    end;
+    Exit;
+  end;
+  LHasPresentation := False;
+  LHasGlyphOnly := False;
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+
+    if IsButtonPresentationKey(ANode.Props.Names[LIndex]) and
+      (ANode.Prop(ANode.Props.Names[LIndex]) <> '') then
+    begin
+      LHasPresentation := True;
+      LValue := TNyxButtonPresentation.FromData(
+        TNyxDataValue.ParseJSON(ANode.Prop(ANode.Props.Names[LIndex])));
+      LHasGlyphOnly := LHasGlyphOnly or (LValue.ContentMode = nbcGlyphOnly);
+
+      if (LValue.GlyphKind = nbgResource) and (ADocument <> nil) then
+      begin
+        LValue.ResourceImage.Validate(ADocument.Resources, NyxDefaultLocale, NyxDefaultLocale);
+      end;
+    end;
+  end;
+
+  if not LHasPresentation then
+  begin
+    Exit;
+  end;
+
+  if ANode.ProjectionKind <> NyxKindName(nkButton) then
+  begin
+    raise ENyxModel.Create('Button presentation requires a button: ' + ANode.ID);
+  end;
+
+  if not LHasGlyphOnly then
+  begin
+    { Caption and glyph-caption variants add no hidden-name constraint. Shape,
+      target and every resource reference were checked above; avoid allocating
+      scope/ancestry probes for the ordinary caption-only shell buttons. }
+    Exit;
+  end;
+  SetLength(LSpaces, 1);
+  LManual := nil;
+
+  if APresentations <> nil then
+  begin
+    for LIndex := 0 to APresentations.Count - 1 do
+    begin
+
+      if APresentations.Definition(APresentations.Reference(LIndex)).Activation = npaManual then
+      begin
+        SetLength(LManual, Length(LManual) + 1);
+        LManual[High(LManual)] := APresentations.Reference(LIndex);
+      end;
+    end;
+  end;
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+
+    if not TryNyxPresentationRule(ANode.Props.Names[LIndex], APresentations,
+      LRule, LPlatform, LAttribute) or not
+      (LAttribute in [atButtonPresentation, atText, atAccessibleName]) then
+    begin
+      Continue;
+    end;
+    LSpace := 0;
+
+    if LRule.Container.Defined then
+    begin
+      LAncestor := ANode.Parent;
+      while LAncestor <> nil do
+      begin
+        LReference := LAncestor.QueryContainer;
+
+        if LReference.Defined and (LReference.Name = LRule.Container.Name) and
+          NyxContainerEligible(LAncestor.ContainerContainment, LRule.Viewport) then
+        begin
+          Break;
+        end;
+        LAncestor := LAncestor.Parent;
+      end;
+
+      if LAncestor = nil then
+      begin
+        Continue;
+      end;
+      LSpace := -1;
+      for LOther := 1 to High(LSpaces) do
+      begin
+
+        if LSpaces[LOther].RuntimeID = LAncestor.ID then
+        begin
+          LSpace := LOther;
+          Break;
+        end;
+      end;
+
+      if LSpace < 0 then
+      begin
+        LSpace := Length(LSpaces);
+        SetLength(LSpaces, LSpace + 1);
+        LSpaces[LSpace].RuntimeID := LAncestor.ID;
+      end;
+    end;
+    AddBoundary(LSpaces[LSpace].Widths, LRule.Viewport.WidthMinimum);
+    AddBoundary(LSpaces[LSpace].Widths, LRule.Viewport.WidthMaximum);
+    AddBoundary(LSpaces[LSpace].Heights, LRule.Viewport.HeightMinimum);
+    AddBoundary(LSpaces[LSpace].Heights, LRule.Viewport.HeightMaximum);
+    LSpaces[LSpace].Orientation := LSpaces[LSpace].Orientation or
+      (LRule.Viewport.OrientationValue <> nvoAny);
+  end;
+  LBudget := 2.0 * (Length(LManual) + 1);
+  for LSpace := 0 to High(LSpaces) do
+  begin
+    AddBoundary(LSpaces[LSpace].Widths, 0);
+    AddBoundary(LSpaces[LSpace].Heights, 0);
+    LPlaneBudget := 1.0 * Length(LSpaces[LSpace].Widths) * Length(LSpaces[LSpace].Heights);
+
+    if LSpaces[LSpace].Orientation then
+    begin
+      LPlaneBudget := LPlaneBudget * 4;
+    end;
+
+    if LSpace > 0 then
+    begin
+      LPlaneBudget := LPlaneBudget + 1;
+    end;
+    LBudget := LBudget * LPlaneBudget;
+
+    if LBudget > 65536 then
+    begin
+      raise ENyxModel.Create('Button presentation partition budget exceeded on ' + ANode.ID);
+    end;
+  end;
+  SetLength(LMeasurements, Length(LSpaces) - 1);
+  SetLength(LMeasured, Length(LMeasurements));
+  for LSpace := 1 to High(LSpaces) do
+  begin
+    LMeasurements[LSpace - 1].RuntimeID := LSpaces[LSpace].RuntimeID;
+  end;
+  for LTarget := npfBrowser to npfNativeLCL do
+  begin
+    LRoot := nil;
+    try
+      LProbe := CopyAncestry(ANode);
+      LProbe.Props.Assign(ANode.Props);
+      LProbe.BindPresentations(APresentations);
+      ApplyNyxPlatform(LRoot, LTarget);
+      VisitSpace(0);
+    finally
+      LRoot.Free;
+    end;
+  end;
+end;
+
 procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument);
 var
   LQueryContainer: TNyxContainerRef;
@@ -3061,6 +3543,7 @@ var
     end;
   end;
 begin
+  ValidateButtonPresentationMetadata(ANode);
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
   ValidateNyxDrawingNode(ANode);
@@ -3348,6 +3831,11 @@ begin
   begin
     ValidateNyxViewportBounds(ANode);
   end;
+
+  if ANode.IsRealized then
+  begin
+    ValidateButtonPresentationFaces(ANode, ANode.PresentationSnapshot, ADocument, True);
+  end;
 end;
 
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument);
@@ -3374,6 +3862,7 @@ var
         malformed known metadata must not hide behind the structural skip. }
       ValidateNyxDateRangeOptions(ANode);
       ValidateNyxMasterDetailIntent(ANode);
+      ValidateButtonPresentationMetadata(ANode);
     end
     else
     begin
@@ -3558,7 +4047,8 @@ var
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
       HasNyxDateRangeOptions(ANode) or HasNyxMasterDetailIntent(ANode) or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
-      (ANode.Prop(NyxAttributeName(atPageView)) <> '');
+      (ANode.Prop(NyxAttributeName(atPageView)) <> '') or
+      ValidateButtonPresentationMetadata(ANode);
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
 
@@ -3573,6 +4063,17 @@ var
   var
     LRuntime: TNyxNode;
     LBarHeadings: TNyxStrings;
+
+    procedure CheckButtonFaces(ANode: TNyxNode);
+    var
+      LChildIndex: Integer;
+    begin
+      ValidateButtonPresentationFaces(ANode, ADocument.Presentations, ADocument);
+      for LChildIndex := 0 to ANode.Count - 1 do
+      begin
+        CheckButtonFaces(ANode.Children[LChildIndex]);
+      end;
+    end;
 
     procedure CheckHosts(ANode: TNyxNode);
     var
@@ -3680,6 +4181,7 @@ var
       LBarHeadings := TNyxStrings.Create;
       CheckHosts(LRuntime);
       ApplyNyxBindings(LRuntime, ADocument.State);
+      CheckButtonFaces(LRuntime);
     finally
       LBarHeadings.Free;
       LRuntime.Free;

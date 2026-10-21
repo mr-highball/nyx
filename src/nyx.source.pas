@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.button.presentation,
   nyx.bytes,
   nyx.resources,
   nyx.resources.rows, nyx.data.rows,
@@ -887,7 +888,9 @@ type
     vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
     vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
     vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane,
-    vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent);
+    vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent,
+    vkButtonPresentation, vkGlyphCell, vkButtonContent, vkButtonDensity,
+    vkButtonAlignment, vkButtonWeight, vkGlyphTone);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -933,6 +936,8 @@ type
     ClockTime: TNyxClockTime;
     RGBColor: TNyxRGBColor;
     ImageSource: TNyxImageSource;
+    ButtonPresentation: TNyxButtonPresentation;
+    GlyphCell: TNyxGlyphCell;
     ImageValidation: TNyxImageValidationPolicy;
     ResourceDefinitionData: TNyxDataValue;
     ResourceValue: TNyxResourceValueRef;
@@ -1083,6 +1088,8 @@ type
     function DateRangeOptions: TValue;
     { Interprets only copied public field-reference options and closed intent. }
     function MasterDetailConstructor(const AName: TNyxText): TValue;
+    function ButtonPresentationConstructor(const AName: TNyxText): TValue;
+    procedure ButtonConfiguration;
     function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
@@ -1126,6 +1133,8 @@ type
     procedure Extensions(AIndex: Integer);
     procedure Callbacks;
     procedure Configure(AIndex: Integer);
+    procedure ConfigureMethods(AIndex: Integer; APlatform: TNyxPlatform;
+      const AViewport: TNyxViewportCondition; const APresentation: TNyxPresentationRef);
     procedure Content(AIndex: Integer);
     procedure ApplyCall(ANode: TNyxNode; const AMethod: TNyxText;
       const AArgs: TValues; APlatform: TNyxPlatform;
@@ -1166,7 +1175,8 @@ const
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
     'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals',
-    'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView', 'Indeterminate');
+    'ImageFit', 'ImageHorizontal', 'ImageVertical', 'PageView', 'Indeterminate',
+    'ButtonPresentation');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -1180,7 +1190,8 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate',
+    'atButtonPresentation');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -1711,6 +1722,19 @@ begin
 
   RegisterEnum(vkConstruction, Ord(ncoDefault), 'ncoDefault');
   RegisterEnum(vkImageFormat, Ord(nimPNG), 'nimPNG');
+  RegisterEnum(vkButtonContent, Ord(nbcCaption), 'nbcCaption');
+  RegisterEnum(vkButtonContent, Ord(nbcGlyphCaption), 'nbcGlyphCaption');
+  RegisterEnum(vkButtonContent, Ord(nbcGlyphOnly), 'nbcGlyphOnly');
+  RegisterEnum(vkButtonDensity, Ord(nbdNormal), 'nbdNormal');
+  RegisterEnum(vkButtonDensity, Ord(nbdCompact), 'nbdCompact');
+  RegisterEnum(vkButtonDensity, Ord(nbdTouch), 'nbdTouch');
+  RegisterEnum(vkButtonAlignment, Ord(nbaCenter), 'nbaCenter');
+  RegisterEnum(vkButtonAlignment, Ord(nbaStart), 'nbaStart');
+  RegisterEnum(vkButtonWeight, Ord(nbwInherit), 'nbwInherit');
+  RegisterEnum(vkButtonWeight, Ord(nbwRegular), 'nbwRegular');
+  RegisterEnum(vkButtonWeight, Ord(nbwSemibold), 'nbwSemibold');
+  RegisterEnum(vkGlyphTone, Ord(ngtOriginal), 'ngtOriginal');
+  RegisterEnum(vkGlyphTone, Ord(ngtForeground), 'ngtForeground');
   RegisterEnum(vkImageFormat, Ord(nimJPEG), 'nimJPEG');
   RegisterEnum(vkResourceKind, Ord(nrkImage), 'nrkImage');
   RegisterEnum(vkResourceKind, Ord(nrkJSON), 'nrkJSON');
@@ -2611,6 +2635,7 @@ end;
 {$I nyx.source.kanban.inc}
 {$I nyx.source.date.range.inc}
 {$I nyx.source.master.detail.inc}
+{$I nyx.source.button.inc}
 {$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -2953,6 +2978,11 @@ begin
             end;
           end;
           Exit;
+        end;
+
+        if (LName = 'nyxbuttonpresentation') or (LName = 'nyxglyphcell') then
+        begin
+          Exit(ButtonPresentationConstructor(LName));
         end;
 
         if LName = 'nyximagelocation' then
@@ -4844,6 +4874,7 @@ begin
     atContainerContainment: Require(vkContainerContainment);
     atSliderIntervals: Require(vkInteger);
     atImageFit: Require(vkImageFit);
+    atButtonPresentation: Require(vkButtonPresentation);
     atImageHorizontal, atImageVertical: Require(vkImageAnchor);
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
@@ -4902,6 +4933,7 @@ begin
         end;
       end;
     atImageFit: LConfigure.ImageFit(TNyxImageFit(LValue.Ordinal));
+    atButtonPresentation: LConfigure.ButtonPresentation(LValue.ButtonPresentation);
     atImageHorizontal: LConfigure.ImageHorizontal(TNyxImageAnchor(LValue.Ordinal));
     atImageVertical: LConfigure.ImageVertical(TNyxImageAnchor(LValue.Ordinal));
     atAlt: LConfigure.AlternativeText(LValue.Text);
@@ -5091,6 +5123,17 @@ begin
 end;
 
 procedure TConfigurationReader.Configure(AIndex: Integer);
+begin
+  Inc(FCursor, 3);
+  ConfigureMethods(AIndex, npfAny, TNyxViewportCondition.Any,
+    Default(TNyxPresentationRef));
+end;
+
+{ Both the stable facade and an optional facade's Done continue through the
+  same checked methods. Scope is copied explicitly; tokens and owner/type/full
+  document validation are never synthesized or bypassed. }
+procedure TConfigurationReader.ConfigureMethods(AIndex: Integer; APlatform: TNyxPlatform;
+  const AViewport: TNyxViewportCondition; const APresentation: TNyxPresentationRef);
 var
   LNode: TNyxNode;
   LMethod: TNyxText;
@@ -5099,16 +5142,14 @@ var
   LViewport: TNyxViewportCondition;
   LPresentation: TNyxPresentationRef;
 begin
-  LPlatform := npfAny;
-  LViewport := TNyxViewportCondition.Any;
-  LPresentation := Default(TNyxPresentationRef);
+  LPlatform := APlatform;
+  LViewport := AViewport;
+  LPresentation := APresentation;
 
-  if FLocals[AIndex].Configured then
-  begin
-    Fail('Keep one Configure block per control');
-  end;
+  { A new Configure supplies defaults; optional Done supplies its copied scope.
+    Repeated blocks on an admitted owner preserve ordered properties around
+    managed facets, retaining every normal owner/type/full-document check. }
   FLocals[AIndex].Configured := True;
-  Inc(FCursor, 3);
   LNode := AdmittedNode(AIndex);
   while At('.') do
   begin
@@ -6595,6 +6636,8 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.button.presentation');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.button.configuration');
     LPrefix := WithNyxImport(LPrefix, 'nyx.flow.declarations');
 
     if ADocument.Programs.Count > 0 then

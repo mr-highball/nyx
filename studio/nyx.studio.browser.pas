@@ -38,7 +38,7 @@ uses
   nyx.data,
   nyx.hostspace, nyx.hostspace.browser,
   nyx.content.editor, nyx.content.mount,
-  nyx.theme.editor, nyx.studio.theme,
+  nyx.theme.editor, nyx.studio.theme, nyx.studio.chrome,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
   nyx.programs.editor, nyx.programs.declarations, nyx.diagrams.palette,
@@ -139,6 +139,7 @@ type
     FDisplayRecoveryContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxStudioSectionViews;
+    FChromeTheme: TNyxTheme;
     FResourceBrowser: TNyxStudioResourceBrowser;
     { Coalesce input-time refreshes after borrowed views return to idle. False
       dominates retention/reset choices; disposal cancels the borrowed timer. }
@@ -616,19 +617,19 @@ begin
   Result :=
     'html,body{height:100%;margin:0;}body{background:#f3f5fa;}' +
     '[data-node=studio-shell]{height:100vh;height:100dvh;height:var(--nyx-host-height,100dvh);padding:0!important;gap:0!important;overflow:hidden;}' +
-    '[data-node=studio-header]{min-height:66px;flex-wrap:wrap!important;flex-shrink:0;padding:12px 20px!important;' +
-    'background:#fff;border-bottom:1px solid #dfe3ec;gap:14px!important;}' +
+    '[data-node=studio-header]{min-height:60px;flex-wrap:wrap!important;flex-shrink:0;padding:12px 16px!important;' +
+    'background:var(--nyx-surface);border:0;border-bottom:1px solid var(--nyx-border);border-radius:0;gap:12px!important;}' +
     '[data-node=studio-shell] [data-node=studio-logo]{font-size:24px;font-weight:800;' +
     'letter-spacing:-1px;color:#6858e8;}' +
     '[data-node=studio-subtitle]{font-size:12px;flex:1;overflow-wrap:anywhere;}' +
-    '[data-node=studio-header] .nyx-button{padding:7px 12px;font-size:12px;}' +
+    '[data-node=studio-header] .nyx-button{font-size:14px;}' +
     '[data-node=studio-workspace]{display:flex!important;flex:1;min-height:0;gap:0!important;' +
     'align-items:stretch!important;flex-wrap:nowrap!important;overflow:hidden;}' +
     '[data-node=studio-panelbar]{flex-shrink:0;padding:8px 12px!important;background:#fff;' +
     'border-bottom:1px solid #dfe3ec;gap:8px!important;flex-wrap:nowrap!important;}' +
     '[data-node=studio-panelbar] .nyx-button{flex:1;min-height:40px;padding:8px;font-size:12px;}' +
-    '[data-node=studio-project-mount]{width:230px;flex-shrink:0;min-height:0;}' +
-    '[data-node=studio-inspector-mount]{width:265px;flex-shrink:0;min-height:0;}' +
+    '[data-node=studio-project-mount]{width:248px;flex-shrink:0;min-height:0;}' +
+    '[data-node=studio-inspector-mount]{width:304px;flex-shrink:0;min-height:0;}' +
     '[data-node=studio-resources-mount]{flex:1;min-width:0;min-height:0;}' +
     '[data-node=studio-resources]{width:100%;height:100%;min-height:0;min-width:0;' +
     'box-sizing:border-box;overflow:hidden;background:#fafbfe;}' +
@@ -642,9 +643,9 @@ begin
     '[data-nyx-studio-resources=true] [data-node=studio-inspector-mount],' +
     '[data-nyx-studio-resources=true] [data-node=studio-center]{display:none!important;}' +
     '[data-node=studio-left]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
-    'background:#fff;border-right:1px solid #dfe3ec;gap:12px!important;}' +
+    'background:var(--nyx-surface);border:0;border-radius:0;border-right:1px solid var(--nyx-border);gap:12px!important;}' +
     '[data-node=studio-right]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
-    'background:#fff;border-left:1px solid #dfe3ec;gap:10px!important;}' +
+    'background:var(--nyx-surface);border:0;border-radius:0;border-left:1px solid var(--nyx-border);gap:12px!important;}' +
     '[data-node=studio-center]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
     '[data-node=studio-stage]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
     '[data-node=studio-details]{min-width:0;min-height:0;overflow:auto;padding:0!important;gap:0!important;}' +
@@ -666,7 +667,7 @@ begin
     '[data-node=studio-viewbar]{padding:12px 20px!important;background:#fafbfe;border-bottom:1px solid #dfe3ec;' +
     'flex-wrap:wrap!important;flex-shrink:0;}' +
     '[data-node=active-view-label]{overflow-wrap:anywhere;}' +
-    '[data-node=studio-viewbar] .nyx-button{font-size:12px;padding:6px 12px;}' +
+    '[data-node=studio-viewbar] .nyx-button{font-size:14px;}' +
     '[data-node=studio-canvas-wrap]{flex:1;min-height:0;overflow:auto;padding:28px!important;}' +
     '[data-node=studio-canvas]{background:#fff;border:1px solid #dfe3ec;border-radius:10px;' +
     'box-shadow:0 12px 40px #24304810;width:100%;min-height:440px;margin:0 auto;}' +
@@ -801,7 +802,8 @@ begin
   end;
   FOutputs := TNyxOutputConfiguration.Create;
   FOutputEdits := TNyxOutputEditState.Create;
-  FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
+  FChromeTheme := NewNyxStudioChromeTheme;
+  FShellRenderer := TNyxStudioSectionViews.Create(FChromeTheme, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FViewState.ResourceBrowser := NyxResourceBrowserState;
   FSourceOutline := NewNyxStudioSourceOutline;
@@ -823,12 +825,12 @@ begin
   FDesignerMove := TNyxStudioMove.Create(@DesignerDragContext, @DesignerResizeGuides,
     @DesignerResizeStatus, @DesignerResizePresentation, @DesignerMovePoint);
   FDesignerPlacement := nplInside;
-  FCodeRenderer := TNyxBrowserRenderer.Create;
+  FCodeRenderer := TNyxBrowserRenderer.Create(FChromeTheme);
   FCodeRenderer.OnEvent := HandleShell;
   FSourceInput := TNyxStudioSourceInput.Create(FCodeRenderer.Events, @ReadSourceInput, @WriteSourceInput, nteLF);
   FCompletionTimer := -1;
   FSourceInput.ConfigureCompletion(@ReadCompletionContext, @ReadCompletionOwner, @CompletionChanged);
-  FSourcePaneRenderer := TNyxBrowserRenderer.Create;
+  FSourcePaneRenderer := TNyxBrowserRenderer.Create(FChromeTheme);
   FSourcePaneRenderer.OnEvent := HandleShell;
   FSourceModal := NewNyxBrowserModalHost;
   FSourceModal.OnDismiss := SourceModalDismiss;
@@ -1017,6 +1019,7 @@ begin
   FComponentHelp := nil;
   FResourceBrowser.Free;
   FShellRenderer.Free;
+  FChromeTheme.Free;
 
   if FShellHost <> nil then
   begin
@@ -1089,6 +1092,9 @@ begin
   LState.ThemeVisible := FViewState.ThemeVisible;
   LState.ThemeEditorDraft := FViewState.ThemeEditorDraft;
   LState.ImageEditorDraft := FViewState.ImageEditorDraft;
+  LState.ButtonEditorDraft := FViewState.ButtonEditorDraft;
+  LState.SelectionToolsExpanded := FViewState.SelectionToolsExpanded;
+  LState.AssetPickerExpanded := FViewState.AssetPickerExpanded;
   LState.ResourcesVisible := FViewState.ResourcesVisible;
   LState.LogicVisible := FViewState.LogicVisible;
   LState.LogicReference := FViewState.LogicReference;
@@ -1146,6 +1152,7 @@ begin
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FViewState.ImageEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ButtonEditorDraft.Restore('inspector-button', Result.Pages[0]);
 
   if not FViewState.ResourceRowsDraft.Restore(Result.Pages[0]) and
     (Result.Pages[0].Find('studio-resource-rows') <> nil) then
@@ -1419,6 +1426,9 @@ begin
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.RootFor('inspector-content'));
   FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.RootFor('studio-theme-editor'));
   FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
+  FViewState.ButtonEditorDraft.Capture('inspector-button', FShellRenderer.RootFor('inspector-button'));
+  CaptureNyxStudioChrome(FShellRenderer.RootFor('studio-selection-tools'), FViewState.SelectionToolsExpanded);
+  CaptureNyxStudioAssets(FShellRenderer.RootFor('studio-assets-picker'), FViewState.AssetPickerExpanded);
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
   FViewState.LogicDraft.Capture('studio-logic-editor', FShellRenderer.RootFor('studio-logic-editor'));
@@ -5914,6 +5924,9 @@ begin
   LValue.ThemeVisible := FViewState.ThemeVisible;
   LValue.ThemeDraft := FViewState.ThemeEditorDraft;
   LValue.ImageDraft := FViewState.ImageEditorDraft;
+  LValue.ButtonDraft := FViewState.ButtonEditorDraft;
+  LValue.SelectionToolsExpanded := FViewState.SelectionToolsExpanded;
+  LValue.AssetPickerExpanded := FViewState.AssetPickerExpanded;
   LValue.ResourcesVisible := FViewState.ResourcesVisible;
   LValue.LogicVisible := FViewState.LogicVisible;
   LValue.LogicReference := FViewState.LogicReference;
@@ -6014,6 +6027,7 @@ begin
   FViewState.ContentEditorDraft.Clear;
   FViewState.ThemeEditorDraft.Clear;
   FViewState.ImageEditorDraft.Clear;
+  FViewState.ButtonEditorDraft.Clear;
 
   FViewState.ThemeVisible := False;
   FViewState.ResourcesVisible := False;
@@ -6079,6 +6093,9 @@ begin
     FViewState.ThemeVisible := LValue.ThemeVisible;
     FViewState.ThemeEditorDraft := LValue.ThemeDraft;
     FViewState.ImageEditorDraft := LValue.ImageDraft;
+    FViewState.ButtonEditorDraft := LValue.ButtonDraft;
+    FViewState.SelectionToolsExpanded := LValue.SelectionToolsExpanded;
+    FViewState.AssetPickerExpanded := LValue.AssetPickerExpanded;
     FViewState.ResourcesVisible := LValue.ResourcesVisible;
     FViewState.LogicVisible := LValue.LogicVisible;
     FViewState.LogicReference := LValue.LogicReference;

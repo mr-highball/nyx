@@ -52,6 +52,7 @@ uses
   nyx.content.editor,
   nyx.theme.editor,
   nyx.image.editor,
+  nyx.button.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations, nyx.flow.rows.editor, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette, nyx.diagrams.palette,
@@ -72,6 +73,7 @@ uses
   nyx.studio.collections,
   nyx.studio.inspector,
   nyx.studio.inspector.groups,
+  nyx.studio.chrome,
   nyx.studio.help,
   nyx.studio.palette,
   nyx.studio.hierarchy,
@@ -220,6 +222,9 @@ type
     { Imported pictures are independent proposals, retired when their exact
       selected image or its effective baseline changes. }
     ImageEditorDraft: TNyxImageEditorDraft;
+    ButtonEditorDraft: TNyxButtonEditorDraft;
+    SelectionToolsExpanded: Boolean;
+    AssetPickerExpanded: Boolean;
     { Common file authoring is presentation until explicit paired Apply. }
     ResourcesVisible: Boolean;
     { Dedicated nonvisual authoring uses the same public Nyx form as embedders. }
@@ -1409,7 +1414,7 @@ begin
   { Pages and definitions remain separate document roots. Palette buttons carry
     semantic add-kind metadata instead of retaining widget-specific callbacks. }
   LWorkspace.Add(LLeft);
-  LLeft.Add(TNyxNode.Create('heading', 'views-title').SetProp('text', 'PROJECT'));
+  LLeft.Add(TNyxNode.Create(nkLabel, 'views-title').Configure.Text('Project').Done);
   LLeft.Add(TNyxNode.Create('input', 'project-title').SetProp('text', 'Project title')
     .SetProp('value', ASession.Document.Title));
 
@@ -1851,7 +1856,7 @@ begin
   { Inspector fields describe model properties. A controller sends their changes
     through the session's undoable command boundary, then rebuilds this view. }
   LWorkspace.Add(LRight);
-  LRight.Add(TNyxNode.Create('heading', 'inspector-title').SetProp('text', 'INSPECTOR'));
+  LRight.Add(TNyxNode.Create(nkLabel, 'inspector-title').Configure.Text('Inspector').Done);
   LSelected := ASession.Selected;
 
   if LSelected <> nil then
@@ -1993,6 +1998,12 @@ begin
         AddNyxTimeDomainInspector(LComponentGroup.BodyColumn.Node, ASession);
 
         if (LSelectedProjection <> nil) and
+          (LSelectedProjection.ProjectionKind = NyxKindName(nkButton)) then
+        begin
+          LComponentGroup.BodyColumn.Add(NewNyxButtonEditor('inspector-button', LSelected, LSelectedProjection));
+        end;
+
+        if (LSelectedProjection <> nil) and
           (LSelectedProjection.ProjectionKind = NyxKindName(nkImage)) then
         begin
           LComponentGroup.BodyColumn.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
@@ -2022,6 +2033,14 @@ begin
         LRight.Add(LPropertiesGroup);
         for LIndex := 0 to Length(LProperties) - 1 do
         begin
+
+          if TryNyxAttribute(LProperties[LIndex].Key, LAttribute) and
+            (LAttribute = atButtonPresentation) then
+          begin
+            { The grouped typed editor owns the structured value. A raw JSON
+              text field would make ordinary behavior strings the public UI. }
+            Continue;
+          end;
 
           if (LSelectedProjection <> nil) and
             (LSelectedProjection.ProjectionKind = NyxKindName(nkImage)) and
@@ -2258,6 +2277,8 @@ begin
       LWorkspace.Remove(LRight);
     end;
   end;
+  ApplyNyxStudioChrome(Result, AState.Compact, AState.SelectionToolsExpanded,
+    AState.AssetPickerExpanded);
 end;
 
 function BuildNyxStudioView(ASession: TNyxStudioSession;

@@ -36,6 +36,7 @@ uses
   nyx.coordinators,
   nyx.application.context, nyx.flow, nyx.tool.canvas, nyx.canvas.adoption,
   nyx.images,
+  nyx.button.presentation, nyx.button.view,
   nyx.images.browser,
   nyx.image.lifecycle,
   nyx.image.events,
@@ -150,6 +151,16 @@ type
     FCustom: Boolean;
     FUpdater: TNyxBrowserUpdater;
     FViewRevision: Integer;
+    { Decorative glyph pixels share the normal image request/lifecycle. These
+      DOM children stay inside the button and never create another input route. }
+    FButtonGlyphImage: TJSHTMLImageElement;
+    FButtonGlyphFace: TJSHTMLCanvasElement;
+    FButtonPresentation: TNyxButtonPresentation;
+    { Small paint identity, never a second source/loader. Retained pixels avoid
+      resubmitting an entire embedded atlas as CSS on every ordinary Sync. }
+    FButtonGlyphRasterKey: TNyxText;
+    procedure SyncButtonFace;
+    procedure PaintButtonFace;
     FImageLifecycle: INyxImageLifecycle;
     FImageRequest: INyxBrowserImageRequest;
     procedure SyncImage;
@@ -3267,7 +3278,233 @@ end;
 
 procedure TNyxBrowserBinding.ImageSignal;
 begin
+
+  if FButtonGlyphImage <> nil then
+  begin
+    PaintButtonFace;
+  end;
   FRenderer.FlushImages;
+end;
+
+procedure TNyxBrowserBinding.PaintButtonFace;
+var
+  LReady, LCaptionVisible: Boolean;
+  LBounds: TNyxGlyphBounds;
+  LWidth, LHeight, LScale, LRatio: Double;
+  LInk, LKey: TNyxText;
+  LContext: Web.TJSCanvasRenderingContext2D;
+  LFormat: TFormatSettings;
+  function Pixels(AValue: Double): String;
+  begin
+    Result := FloatToStr(AValue, LFormat) + 'px';
+  end;
+begin
+  LFormat := FormatSettings;
+  LFormat.DecimalSeparator := '.';
+  LReady := (FImageLifecycle <> nil) and (FImageLifecycle.Current.Phase = nipReady) and
+    (FButtonPresentation.ContentMode <> nbcCaption);
+
+  if LReady then
+  begin
+    try
+      LBounds := FButtonPresentation.GlyphCell.PixelBounds(
+        FImageLifecycle.Current.Width, FImageLifecycle.Current.Height);
+    except
+      { A decoded image may be too small for the authored grid. Keep its command
+        usable without presenting an arbitrary adjacent cell or broken image. }
+      LReady := False;
+    end;
+  end;
+
+  if LReady then
+  begin
+    try
+      LScale := FButtonPresentation.GlyphBoxSize / Max(LBounds.Width, LBounds.Height);
+      LWidth := LBounds.Width * LScale;
+      LHeight := LBounds.Height * LScale;
+      { Bound decorative raster work independently of browser zoom. CSS retains
+        logical dimensions, while up to four device pixels per logical pixel
+        keeps normal high-density displays crisp without unbounded tile memory. }
+      LRatio := EnsureRange(window.devicePixelRatio, 1, 4);
+      LInk := '';
+
+      if FButtonPresentation.Tone = ngtForeground then
+      begin
+        LInk := window.getComputedStyle(FElement).getPropertyValue('color');
+
+        if LInk = '' then
+        begin
+          LInk := FRenderer.FTheme.Text;
+        end;
+      end;
+      LKey := IntToStr(FImageLifecycle.Current.Request) + '/' +
+        IntToStr(LBounds.Left) + '/' + IntToStr(LBounds.Top) + '/' +
+        IntToStr(LBounds.Width) + '/' + IntToStr(LBounds.Height) + '/' +
+        IntToStr(FButtonPresentation.GlyphBoxSize) + '/' +
+        FloatToStr(LRatio, LFormat) + '/' + IntToStr(Ord(FButtonPresentation.Tone)) + '/' + LInk;
+
+      if FButtonGlyphRasterKey <> LKey then
+      begin
+        FButtonGlyphFace.width := Max(1, Round(LWidth * LRatio));
+        FButtonGlyphFace.height := Max(1, Round(LHeight * LRatio));
+        LContext := FButtonGlyphFace.getContextAs2DContext('2d');
+
+        if LContext = nil then
+        begin
+          raise ENyxModel.Create('Decorative canvas rendering is unavailable');
+        end;
+        { Draw from the existing decoded image request. There is no readback,
+          data-URL conversion or new CORS requirement for hosted image pixels. }
+        LContext.globalCompositeOperation := 'source-over';
+        LContext.drawImage(FButtonGlyphImage, LBounds.Left, LBounds.Top,
+          LBounds.Width, LBounds.Height, 0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
+
+        if FButtonPresentation.Tone = ngtForeground then
+        begin
+          LContext.globalCompositeOperation := 'source-in';
+          LContext.fillStyleAsColor := LInk;
+          LContext.fillRect(0, 0, FButtonGlyphFace.width, FButtonGlyphFace.height);
+          LContext.globalCompositeOperation := 'source-over';
+        end;
+        FButtonGlyphRasterKey := LKey;
+      end;
+      FButtonGlyphFace.style.setProperty('width', Pixels(LWidth));
+      FButtonGlyphFace.style.setProperty('height', Pixels(LHeight));
+    except
+      { The source may remain Ready even when a host cannot paint its crop.
+        The ordinary caption still names and invokes the same command. }
+      FButtonGlyphRasterKey := '';
+      LReady := False;
+    end;
+  end;
+
+  if LReady then
+  begin
+    FButtonGlyphFace.style.setProperty('display', 'inline-block');
+  end
+  else
+  begin
+    FButtonGlyphRasterKey := '';
+    FButtonGlyphFace.style.setProperty('display', 'none');
+  end;
+  LCaptionVisible := not LReady or (FButtonPresentation.ContentMode <> nbcGlyphOnly);
+
+  if FCaption.textContent = '' then
+  begin
+    FCaption.textContent := FNode.Prop('aria-label');
+  end;
+  FCaption.style.removeProperty('display');
+
+  if not LCaptionVisible then
+  begin
+    FCaption.style.setProperty('display', 'none');
+  end;
+end;
+
+procedure TNyxBrowserBinding.SyncButtonFace;
+var
+  LSource: TNyxImageSource;
+  LMinimumHeight: Integer;
+  LDisclosureRoot, LDisclosureBody: TNyxNode;
+  LCaption: TNyxText;
+begin
+
+  if FCustom or (FNode.ProjectionKind <> 'button') then
+  begin
+    Exit;
+  end;
+
+  if (FNode.Prop(NyxAttributeName(atButtonPresentation)) = '') and
+    (FButtonGlyphImage = nil) then
+  begin
+    Exit;
+  end;
+  FButtonPresentation := NyxButtonPresentationOf(FNode);
+  LSource := NyxButtonGlyphSource(FNode, FButtonPresentation);
+
+  if not SafeURL(LSource.ToWire, True) then
+  begin
+    raise ENyxModel.Create('Unsupported button glyph URL');
+  end;
+
+  if FButtonGlyphImage = nil then
+  begin
+    FElement.textContent := '';
+    FButtonGlyphFace := TJSHTMLCanvasElement(document.createElement('canvas'));
+    FButtonGlyphFace.setAttribute('aria-hidden', 'true');
+    FButtonGlyphFace.style.setProperty('flex-shrink', '0');
+    FButtonGlyphFace.style.setProperty('pointer-events', 'none');
+    FElement.appendChild(FButtonGlyphFace);
+    FCaption := TJSHTMLElement(document.createElement('span'));
+    FElement.appendChild(FCaption);
+    FButtonGlyphImage := TJSHTMLImageElement(document.createElement('img'));
+    FButtonGlyphImage.alt := '';
+    FButtonGlyphImage.setAttribute('aria-hidden', 'true');
+    FButtonGlyphImage.style.setProperty('display', 'none');
+    FElement.appendChild(FButtonGlyphImage);
+  end;
+  LCaption := FNode.Prop('text');
+
+  if NyxDisclosureHeader(FNode, LDisclosureRoot, LDisclosureBody, LCaption) then
+  begin
+    { The ordinary header inherits its compound root caption. Decorative
+      presentation must not replace that effective name with empty local Text. }
+    FCaption.textContent := LCaption;
+  end
+  else
+  begin
+    FCaption.textContent := FNode.Prop('text');
+  end;
+
+  if NyxInteractionPolicy(FNode).Visible then
+  begin
+    FElement.style.setProperty('display', 'inline-flex');
+  end
+  else
+  begin
+    { The face owns its decoration; portable interaction still owns visibility. }
+    FElement.style.setProperty('display', 'none');
+  end;
+  FElement.style.setProperty('align-items', 'center');
+  FElement.style.setProperty('gap', IntToStr(FButtonPresentation.GlyphSpacing) + 'px');
+  FElement.style.setProperty('justify-content', 'center');
+
+  if FButtonPresentation.ContentAlignment = nbaStart then
+  begin
+    FElement.style.setProperty('justify-content', 'flex-start');
+  end;
+  LMinimumHeight := 44;
+  case FButtonPresentation.ControlDensity of
+    nbdNormal: ; { Ordinary browser button metrics. }
+    nbdCompact: LMinimumHeight := 36;
+    nbdTouch: LMinimumHeight := 44;
+  end;
+  FElement.style.setProperty('min-height', IntToStr(LMinimumHeight) + 'px');
+  FElement.style.setProperty('padding', '4px 12px');
+  FElement.style.removeProperty('font-weight');
+  case FButtonPresentation.Weight of
+    nbwInherit: ; { The existing stylesheet supplies the inherited weight. }
+    nbwRegular: FElement.style.setProperty('font-weight', '400');
+    nbwSemibold: FElement.style.setProperty('font-weight', '600');
+  end;
+
+  if (FImageLifecycle = nil) or not FImageLifecycle.Current.Defined or
+    (FImageLifecycle.Current.Source.ToWire <> LSource.ToWire) then
+  begin
+
+    if FImageRequest <> nil then
+    begin
+      FImageRequest.Retire;
+      FImageRequest := nil;
+    end;
+
+    if FImageLifecycle = nil then
+    begin
+      FImageLifecycle := NewNyxImageLifecycle;
+    end;
+    FImageRequest := StartNyxBrowserImage(FButtonGlyphImage, LSource, FImageLifecycle, ImageSignal);
+  end;
+  PaintButtonFace;
 end;
 
 procedure TNyxBrowserBinding.SyncImage;
@@ -7532,7 +7769,7 @@ begin
       end
       else if not LBinding.FCustom and (LNode.Count = 0) and
         ((LNode.ProjectionKind = 'label') or (LNode.ProjectionKind = 'heading') or
-        (LNode.ProjectionKind = 'button') or (LNode.ProjectionKind = 'link') or
+        ((LNode.ProjectionKind = 'button') and (LBinding.FButtonGlyphImage = nil)) or (LNode.ProjectionKind = 'link') or
         (LNode.ProjectionKind = 'badge') or (LNode.ProjectionKind = 'alert') or
         (LNode.ProjectionKind = 'avatar') or (LNode.ProjectionKind = 'code')) then
       begin
@@ -7544,6 +7781,8 @@ begin
           LControl.textContent := LDisclosureCaption;
         end;
       end;
+
+      LBinding.SyncButtonFace;
 
       if LControl is TJSHTMLProgressElement then
       begin
@@ -7594,6 +7833,11 @@ begin
       if LNode.Prop('aria-label') <> '' then
       begin
         LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
+      end
+      else if (LBinding.FButtonGlyphImage <> nil) and
+        (LBinding.FButtonPresentation.ContentMode = nbcGlyphOnly) then
+      begin
+        LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
       end
       else if not LBinding.FCustom and (LBinding.FInput = nil) and
         (LBinding.FCollectionMount = nil) and

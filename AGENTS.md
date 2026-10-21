@@ -1,5 +1,173 @@
 # Working in Nyx
 
+STUDIO FACELIFT ACCEPTED (2026-10-21): all six scoped criteria close only in
+TODO/DONE/NS-4_studio-chrome_01.md after independent root/helper5DBE355E review.
+Shared typed button presentation/chrome/glyphs qualify on both adapters. Native
+161/67, chrome48/52, whole Studio165/175 and its OWN fresh compiled36/36 pass
+clean; six maintained contract outputs MATCH/81 kinds/four facades. Actual browser
+desktop/compact styling/history/source/assets/36 events pass with empty consoles.
+Fourteen selected compilers: zero owned/49 upstream warnings. All readers joined,
+34owned/1795Pascal/foreign13/extra16 exact before root-only docs/task move.
+OWN3530B9EE project/AD890025 Pascal are newly produced at both widths; no C1 path
+substitution. Final browserE49B163C adds one LF only; freshly compiled previewE8E7
+and productC242 are byte-exact to browser-tested artifacts. No runtime replay or
+performance/hardware/AT/DPI/physical-phone claim follows. Retain all failures.
+Hosts stopped/ports empty/reset; successful tabs17/18 closed. Excluded bare-root404
+tab16 remains unmarked after browser URL policy rejected its close.
+Root owns docs/checkpoint/remote verification only; no further facelift readers.
+All Pascal stays exact. Next return is existing C2 whole-Kanban authoring/Save/Open/
+OWN generated compatibility; helper may prepare it read-only before a separate
+source/reader handoff. Preserve foreign13, original no-closure25/zero credit and
+deferred resolver/splitter. No LAN/config/MCP/tool/wire rollout, extra agent or
+cleanup is released by this finish. WORK/private records own exact receipts,
+limits and the separate document checkpoint. Historical headers below retain
+prior scopes; this accepted header owns the current handoff.
+
+STUDIO FACELIFT OPTIONAL-LOOKUP REFREEZE (2026-10-21): refined products/preview
+compile; native reaches24 checks/real capture then its new optional compact-tab
+fixture guard calls strict ControlFor on desktop and raises. Retain that exact
+failure and clean heap. All readers4443/56752/81413/3583 joined34/1795/13/extra4.
+Independent review accepts ONLY consumer30FFCA96 ControlFor→optional RootFor guard
+and chrome5C39424E ProjectTools gap4→0 (four48px faces now fit199px without losing
+wrap/caption fallback). Prior explicit picker-close check remains. Root refreezes
+and retries the affected four product/chrome compilers, actual1280/390 and loopback
+visual, then unchanged own-pair compatibility. No oracle/wait or unrelated source
+change. Earlier failure/evidence/scope/foreign13 limits remain exact.
+
+STUDIO FACELIFT VISUAL REPAIR REVIEWED (2026-10-21): native desktop36 passes clean;
+actual browser presentation161/configuration67 pass with empty consoles. Initial
+native/browser captures retain the real frontier: styled hidden Drag selected
+was revived, disclosure captions were lost, compact command group clipped and
+empty resource picker pushed Components below fold. Host12960 is identity-checked,
+stopped/port empty; all tabs closed/reset, all readers joined34/1795/13/extra11.
+Independent review accepts ONLY eight root Pascal deltas: browser common-visible/
+effective-header-caption, shared compact glyph/wrap and grouped project tools,
+retained collapsible assets with compatible optional22 preferences, native root
+typeface/DPI and ParentFont sizing/explicit role metrics/Consolas preservation,
+native platform-default family and added actual form/picker/font assertions.
+All original36 predicates/waits remain. Final assertion also verifies picker
+close. Root may refreeze/recompile both Studios/native chrome/browser preview,
+then actual native1280/390 and renewed loopback desktop/compact visual validation.
+Reuse unchanged focused161/67/browser and maintained-generator evidence explicitly.
+Do not claim the initial captures passed these repaired visual outcomes. Allocation
+cost is cumulative evidence, not a leak/hang or proven cause. Original compatibility
+gate, foreign13 and all earlier scope limits remain unchanged.
+
+STUDIO FACELIFT EDITOR DOMAIN REFREEZE (2026-10-21): both products and maintained
+generator compile; all six maintained contract outputs match/81 kinds/four facades,
+generator heap clean. Native chrome compiles but correctly refuses a Text value
+given to an Integer Spin before its first check; original run/log/clean heap stay.
+All actual readers68113/11474/9261/93605 joined and34/1795/13 exact audit retained.
+Root/helper accept ONLY editorB971A837 and consumer181B1DEC: numeric authoring
+drafts use exact ordinary Input roles, remaining editable through recovery/schema;
+Apply still parses Integer and validates immutable bounds. New malformed28x
+codec/restore/schema/refusal proof precedes all original checks. Refreeze and
+recompile both products/native chrome/browser preview; reuse unchanged focused
+161/67/browser and generator evidence. Then actual1280/390 and loopback visual
+review, preserving every prior limit and subsequent own-pair compatibility gate.
+
+STUDIO FACELIFT NATIVE DECLARATION REFREEZE (2026-10-21): browser Studio and both
+final focused browser programs compile; native161/67 stay clean and applicable.
+Both actual product readers15149/44059 are joined with exact34/1795/13 audit.
+Native's next retained compiler error is field declarations after methods. Root
+and helper accept ONLY12AA6AA9's unchanged comment/two baseline fields moved
+before the first method. No executable change. Refreeze and finish native Studio,
+native chrome/browser preview/maintained generator; reuse unchanged browser
+Studio/focused evidence. Earlier scoped compatibility and all limits remain.
+
+STUDIO FACELIFT PORTABILITY REFREEZE (2026-10-21): repaired native presentation161
+and configuration67 pass clean. Both first Studio compilers fail on adapter-only
+symbols; original logs/receipts remain. All actual readers69883/87692 joined and
+34/1795/13 audit is exact. Independent review accepts ONLY browser6F0F7269's
+DefaultFormatSettings→FormatSettings local initializer and native cacheBBB4F4A9's
+GraphType implementation import. Every other source/concurrent pin stays exact.
+Root may refreeze, retry both Studios and finish focused browser pair plus
+native chrome/browser preview/maintained generator. Reuse unchanged native161/67
+evidence explicitly. No source/guides edit through actual joins; earlier limits
+and the later own-pair compatibility gate remain unchanged.
+
+STUDIO FACELIFT FIXTURE REFREEZE (2026-10-21): first four readers are joined and
+34/1795/13 exact audit retained. Presentation161 is clean; both browser tests
+compile. Configuration native compiles but its noncanonical JSON fixture altered
+the embedded URL with a global colon replacement. Retain original failure/log
+and exception/Halt heap, never count it as a passing runtime. Root independently
+accepts ONLY two test deltas: legal outer JSON whitespace2C7BDEA8, and removal of
+unused invalid-return holders6E209978 (all calls/refusal predicates unchanged).
+Production stays exact. Root may refreeze and rerun the two focused native/browser
+test pairs, then finish the five unstarted product/chrome/generator compilers.
+No unrelated scope or acceptance reset follows; all earlier limits remain.
+
+STUDIO FACELIFT JOINT FREEZE ADMITTED (2026-10-21): both independent source
+reviews pass, including editor935FD468, native consumerAF38BCA0 and schema6F778B0A.
+Root may freeze34 owned/1795 Pascal/concurrent13, then admit the fixed first nine
+compilers: presentation native+browser, configuration native+browser, both Studio
+products, native chrome controls, browser chrome preview, maintained Configure
+generator. Native pure/config/generator run once; chrome runs actual1280/390
+sequentially. Temporary loopback actual browser visual review follows successful
+builds, with owned host stopped. Root owns every actual handle/join/exact audit;
+all source/guides stay paused until terminal joins. Retain every failure before
+bounded repair/review/refreeze. Subsequent compatibility is four compilers:
+unchanged whole MasterDetail Studio native/browser, then only its OWN new saved
+pair native/browser after exact pair review/pinning; actual native1280/390 each.
+No historical pair substitution. No original criterion/credit closes. Prior
+foreign13/C1/C2/deferred/no-LAN/config/MCP/extra-agent/cleanup limits remain.
+
+STUDIO FACELIFT PRE-FREEZE REVIEW (2026-10-21): both source lanes are paused.
+Root independently accepts helper's pure934D/A9D6 and final contract/source
+handoff, including schema6F778B0A current-only owned resource lookup. The helper's
+narrow source scope also includes new tests/nyx_button_configuration_tests.lpr.
+Existing helper independently reviews root's bounded follow-up repairs: queued
+style transaction baseline, exact selected form/context and direct typed roles,
+native source-vs-raster lifetime/cache case identity, immediate inherited weight,
+accessible fallback measurement and exact Undo pair. No compiler/host yet.
+Root owns a subsequent joint freeze/admission and actual joins. Preserve all
+foreign13, earlier failures, C1 evidence, C2/deferred work and facelift limits.
+
+STUDIO FACELIFT CONTRACT REPAIR HANDOFF (2026-10-21): root accepts existing
+helper's independent findings in the new, uncompiled presentation integration.
+Root pauses all contract/source paths below and releases their narrow repairs
+to the SAME Lil' Scooty: src/nyx.button.configuration.pas, src/nyx.button.view.pas,
+src/nyx.model.pas, src/nyx.types.pas, src/nyx.schema.pas, src/nyx.codegen.pas,
+src/nyx.source.pas, src/nyx.source.button.inc, src/nyx.source.builder.inc,
+src/nyx.source.reconcile.inc and tools/nyx_control_contracts.lpr. Fix typed scopes,
+default locales, exact property-order optional-facade emission/replay and existing
+lexical reconciliation/removal/retention, effective inherited/scoped admission,
+wrapper callout lease, and image-event metadata. Preserve old interface ABI,
+complete admission/strict source-design equality and all original assertions.
+No unrelated source rewrite. Helper's new pure unit/test stay source-ready/exact.
+Root owns renderer/widget/chrome/Inspector UI/asset integration and independently
+reviews the repair before the joint freeze; no compiler/host is admitted yet.
+All prior evidence/concurrent13/deferred work and other facelift limits remain.
+
+STUDIO FACELIFT SOURCE RELEASED (2026-10-21): latest explicit human steering owns
+this batch and overrides the old coordinator-only source/priority limits below.
+C1 is independently qualified52D5AEEE and checkpoint163635c is pushed/verified;
+all actual readers joined and all hosts stopped. Preserve its frozen source and
+every earlier failure/evidence. C2/resolver/splitter stay queued, no original credit.
+Root owns shared Studio chrome/theme/layout/inspector, generated local glyph assets,
+button native/browser paint/measure/Sync and existing image/resource lifecycle
+integration, model/types/schema/source/codegen and the maintained Configure generator.
+Existing Lil' Scooty owns ONLY new src/nyx.button.presentation.pas and new
+tests/nyx_button_presentation_tests.lpr: pure typed immutable presentation/image or
+resource selector, normalized atlas cell/ink tone/size/gap, caption mode/density/
+alignment/fontweight, strict canonical data and focused ownership/admission tests.
+Keep every existing INyxButton/INyxConfiguration GUID/vtable unchanged; root adds
+an optional managed facet and typed TNyxNodeConfig fluent method. No fake clickable
+image siblings, font-symbol substitute or separate non-Nyx shell. Accessible full
+command names, keyboard/focus/disabled/pressed and caption fallback survive glyph
+presentation/decode failure. Both adapters resolve resources through existing
+host/cache/cancellation owners. Actual atlas PNG is1254square, use proportional
+4x4 cells and preserve alpha; two failed light variants stay excluded. Runtime
+theme-ink presentation may use the clean atlas's alpha. Shell theme stays separate
+from the edited project's theme. Preserve action IDs/history/source/draft/events/
+properties routes and responsive access. User requested imagegen assets are allowed
+before this source release; they were never C1 compiler inputs. Thorough type/code
+comments and blank lines before if remain mandatory. Both source scopes review and
+freeze before any new compiler. Root owns subsequent targeted native/browser UI
+validation and temporary loopback-only visual preview needed for this explicit
+facelift, stopping owned hosts afterward. No LAN/config/MCP/wire rollout, extra
+agent, unrelated cleanup/restart, source probe or deferred resolver work follows.
+
 COORDINATOR05 C1 QUALIFIED / USER FACELIFT NEXT (2026-10-21): root/helper audit
 52D5AEEE accepts four compilers and actual ordinary Studio165/175 plus its OWN
 independently compiled36/36 at1280/390; all four heaps clean. Every actual reader

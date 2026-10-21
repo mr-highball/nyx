@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Studio chrome and typed button presentation](NS-4_studio-chrome_01.md) was
+accepted on2026-10-21 for all six scoped criteria. Both adapters share locally
+embedded glyphs, editor theming, typed style authoring and ordinary controls.
+Native chrome48/52, focused161/67, whole Studio165/175 and its OWN newly saved
+compiled application36/36 pass clean. Actual browser desktop/compact style,
+history, source expansion and event discovery pass; other compatibility browser
+branches compile only. Fourteen selected compilers have zero Nyx warnings.
+Original goal credit and no-closure25 remain unchanged. See
+[the qualification](../../WORK.md#studio-facelift--2026-10-21).
+
 [Common Kanban mounting](NS-3_coordinators_04.md) was accepted on2026-10-21 for
 all five scoped criteria. Both renderers share the extensible prepared lifetime
 while retaining actual typed lane/Move controls, existing movement/drag policies,

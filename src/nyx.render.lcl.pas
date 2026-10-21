@@ -41,6 +41,7 @@ uses
   nyx.colors,
   nyx.colors.lcl,
   nyx.images, nyx.images.lcl,
+  nyx.button.presentation, nyx.button.view, nyx.button.glyphs.lcl,
   nyx.image.lifecycle, nyx.image.events,
   nyx.sliders,
   nyx.sliders.lcl,
@@ -221,11 +222,16 @@ type
     { Borrowed LCL-owned drag object. Clear before callbacks or view retirement;
       it never owns this binding or its realized node. }
     FActiveDrag: TDragObject;
+    { Presentation/source/color baseline avoids decoding or resampling a toolbar
+      atlas during unrelated input, layout settling or selection refresh. }
+    FLastButtonFace: TNyxText;
+    FLastButtonGlyphSource: TNyxText;
     procedure SyncLiteralItems;
     procedure SetupCanvas(ARenderer: TNyxLCLRenderer);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RefreshPager;
     procedure SyncPicture;
+    procedure SyncButtonFace;
     procedure AttachPointer(AControl: TControl; ASlot: Integer);
     { Revoke all Nyx-installed physical slots before deferred destruction. The
       LCL control may finish its current message, but cannot enter this binding. }
@@ -345,6 +351,7 @@ type
     FContentMeasurementKey: TNyxText;
     FPublishingContent: Boolean;
     FImageDeliveryQueue: INyxImageDeliveryQueue;
+    FButtonGlyphCache: TNyxLCLButtonGlyphCache;
     { Hidden candidates cannot publish lifecycle observations. }
     FImageViewPublished: Boolean;
     { One hidden candidate consumes a frozen allocation snapshot for both
@@ -1127,6 +1134,7 @@ constructor TNyxLCLRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
   FFocusReplay := TNyxLCLFocusReplay.Create;
+  FButtonGlyphCache := TNyxLCLButtonGlyphCache.Create;
   FTheme := ATheme;
   FBorrowedTheme := ATheme;
   FOwnTheme := ATheme = nil;
@@ -1170,6 +1178,7 @@ begin
     FEvents.Close;
   end;
   Clear;
+  FButtonGlyphCache.Free;
   FBaseTheme.Free;
 
   if FOwnTheme then
@@ -1615,6 +1624,38 @@ var
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
   {$ifdef NYX_STUDIO_PROFILE}LValidationStarted: QWord;{$endif}
+  procedure InheritTypeface(AFace: TControl; AMonospaced: Boolean = False);
+  var
+    LFont: TFont;
+    LHeight: Integer;
+  begin
+
+    if AFace = nil then
+    begin
+      Exit;
+    end;
+    LFont := TNyxControlAccess(AFace).Font;
+    LHeight := LFont.Height;
+
+    if TNyxControlAccess(AFace).ParentFont then
+    begin
+      { Untouched native faces previously inherited their parent's size. Keep
+        that behavior rather than freezing the constructor's default height. }
+      LHeight := FPanel.Font.Height;
+    end;
+    { Size/color changes before parenting disable LCL ParentFont propagation.
+      Adopt the accepted host family/DPI explicitly, preserving role metrics,
+      weight and the code editors' intentionally monospaced family. }
+    LFont.PixelsPerInch := FPanel.Font.PixelsPerInch;
+
+    if not AMonospaced then
+    begin
+      LFont.Name := FPanel.Font.Name;
+    end;
+    LFont.CharSet := FPanel.Font.CharSet;
+    LFont.Quality := FPanel.Font.Quality;
+    LFont.Height := LHeight;
+  end;
 begin
   AInput := nil;
   ACaption := nil;
@@ -1703,7 +1744,7 @@ begin
     LLabel.Caption := ANode.Prop('text');
     LLabel.SetBounds(0, 0, 300, 20);
     LLabel.Font.Color := ThemeColor(FTheme.Muted);
-    LLabel.Font.Height := -12;
+    LLabel.Font.Height := -Max(12, FTheme.FontSize - 1);
     LLabel.Font.Style := [fsBold];
     { Keep the editable LCL widget inside a themed frame. This retains native
       selection, clipboard, IME and keyboard behavior while the portable palette
@@ -1919,7 +1960,9 @@ begin
 
     if LKind = 'heading' then
     begin
-      LLabel.Font.Size := 18;
+      { Theme metrics are logical pixels on both targets. Assigning points here
+        made headings scale differently from the surrounding UI on high DPI. }
+      LLabel.Font.Height := -24;
       LLabel.Font.Style := [fsBold];
     end;
 
@@ -1943,6 +1986,12 @@ begin
   begin
     Result := TNyxLogicalScrollBox.Create(FPanel);
     TScrollBox(Result).BorderStyle := bsNone;
+
+    if ANode.Prop('surface') = 'true' then
+    begin
+      TScrollBox(Result).ParentColor := False;
+      TScrollBox(Result).Color := ThemeColor(FTheme.Surface);
+    end;
   end
   else if LKind = 'code' then
   begin
@@ -1988,6 +2037,9 @@ begin
       TStringGrid(Result).GridLineColor := ThemeColor(FTheme.Border);
     end;
   end;
+  InheritTypeface(Result, (LKind = 'code') or (LKind = 'code-editor'));
+  InheritTypeface(AInput, (LKind = 'code') or (LKind = 'code-editor'));
+  InheritTypeface(ACaption);
 end;
 
 function TNyxLCLRenderer.Build(ANode: TNyxNode; AParent: TWinControl): TControl;
@@ -2720,6 +2772,7 @@ var
   LHeights: TNyxFlowSizes;
   LFrame: TRect;
   LContentWidth: Integer;
+  LButtonFace: TNyxButtonPresentation;
 begin
 
   if not NyxInteractionPolicy(ANode).Visible then
@@ -2783,6 +2836,17 @@ begin
   else if ANode.ProjectionKind = 'button' then
   begin
     Result := (FTheme.FontSize * 3 div 2) + 22;
+    LButtonFace := NyxButtonPresentationOf(ANode);
+    case LButtonFace.ControlDensity of
+      nbdNormal: ; { Retain ordinary metrics. }
+      nbdCompact: Result := Max(32, FTheme.FontSize + 16);
+      nbdTouch: Result := Max(44, FTheme.FontSize + 24);
+    end;
+
+    if LButtonFace.HasGlyph and (LButtonFace.ContentMode <> nbcCaption) then
+    begin
+      Result := Max(Result, LButtonFace.GlyphBoxSize + 8);
+    end;
   end
   else if ANode.ProjectionKind = 'separator' then
   begin
@@ -8597,6 +8661,99 @@ begin
   end;
 end;
 
+procedure TNyxLCLBinding.SyncButtonFace;
+var
+  LPresentation: TNyxButtonPresentation;
+  LSource: TNyxImageSource;
+  LIdentity: TNyxText;
+  LGlyph: TBitmap;
+  LRequest: TNyxImageRequestID;
+  LForeground: TColor;
+  LSourceWidth, LSourceHeight: Integer;
+  LSourceChanged: Boolean;
+begin
+
+  if FCustom or not (FControl is TNyxLCLButton) then
+  begin
+    Exit;
+  end;
+  LPresentation := NyxButtonPresentationOf(FNode);
+  LSource := NyxButtonGlyphSource(FNode, LPresentation);
+  LForeground := TNyxControlAccess(FControl).Font.Color;
+  LIdentity := LPresentation.ToData.ToJSON + #10 + IntToStr(LForeground);
+
+  if (LIdentity = FLastButtonFace) and (LSource.ToWire = FLastButtonGlyphSource) then
+  begin
+    Exit;
+  end;
+  LGlyph := nil;
+
+  if not LPresentation.HasGlyph and (FImageLifecycle = nil) then
+  begin
+    TNyxLCLButton(FControl).ApplyPresentation(LPresentation, nil);
+    FLastButtonFace := LIdentity;
+    FLastButtonGlyphSource := LSource.ToWire;
+    Exit;
+  end;
+
+  if FImageLifecycle = nil then
+  begin
+    FImageLifecycle := NewNyxImageLifecycle;
+  end;
+  LSourceChanged := not FImageLifecycle.Current.Defined or
+    (FImageLifecycle.Current.Source.ToWire <> LSource.ToWire);
+  { Loading belongs to source identity. A new ink, gap or caption policy must
+    neither restart the request nor manufacture an error for a valid image. }
+
+  if LSourceChanged then
+  begin
+    LRequest := FImageLifecycle.Start(LSource);
+
+    if LSource.Kind <> nisEmpty then
+    begin
+      try
+        FRenderer.FButtonGlyphCache.Dimensions(LSource, LSourceWidth, LSourceHeight);
+
+        if (LSourceWidth > 0) and (LSourceHeight > 0) then
+        begin
+          FImageLifecycle.Ready(LRequest, LSourceWidth, LSourceHeight);
+        end
+        else
+        begin
+          FImageLifecycle.Fail(LRequest, nifUnavailable, 'Button image is unavailable; caption retained');
+        end;
+      except
+        on E: Exception do
+        begin
+          FImageLifecycle.Fail(LRequest, nifDecode, 'Button image could not be decoded; caption retained');
+        end;
+      end;
+    end;
+  end;
+  try
+    try
+
+      if (LPresentation.ContentMode <> nbcCaption) and
+        (FImageLifecycle.Current.Phase = nipReady) then
+      begin
+        LGlyph := FRenderer.FButtonGlyphCache.Prepare(LSource, LPresentation, LForeground);
+      end;
+      TNyxLCLButton(FControl).ApplyPresentation(LPresentation, LGlyph);
+    except
+      on E: Exception do
+      begin
+        { A crop can be invalid for this decoded image without invalidating the
+          source's Ready observation. Keep the accessible command usable. }
+        TNyxLCLButton(FControl).ApplyPresentation(LPresentation, nil);
+      end;
+    end;
+    FLastButtonFace := LIdentity;
+    FLastButtonGlyphSource := LSource.ToWire;
+  finally
+    LGlyph.Free;
+  end;
+end;
+
 procedure TNyxLCLBinding.SyncPicture;
 var
   LSource: TNyxText;
@@ -9031,6 +9188,7 @@ begin
         if LBinding.FControl is TNyxLCLButton then
         begin
           TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
+          LBinding.SyncButtonFace;
 
           if NyxDisclosureHeader(LNode, LDisclosureRoot, LDisclosureBody, LDisclosureCaption) then
           begin

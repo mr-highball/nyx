@@ -34,7 +34,7 @@ uses
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
   nyx.content.editor, nyx.content.mount, nyx.view.recovery,
-  nyx.theme.editor, nyx.studio.theme,
+  nyx.theme.editor, nyx.studio.theme, nyx.studio.chrome,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.logic.editor,
   nyx.programs.editor, nyx.programs.declarations, nyx.diagrams.palette,
@@ -183,6 +183,7 @@ type
     FLocalSourcePreviouslyPresent: Boolean;
     FLocalSourceMessage: TNyxText;
     FTheme: TNyxTheme;
+    FChromeTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
     FSourcePaneDocument: TNyxDocument;
@@ -956,6 +957,13 @@ begin
   FSourceCommands.UseCompiler(FSourceCompiler);
   FSourceCommands.UseProjectCompiler(FProjectSourceCompiler);
   FTheme := TNyxTheme.Create;
+  FChromeTheme := NewNyxStudioChromeTheme;
+
+  if SameText(FHost.Font.Name, 'default') then
+  begin
+    { Use the platform UI family when the embedding host has not chosen one. }
+    FHost.Font.Name := Screen.MenuFont.Name;
+  end;
   FOutputs := TNyxOutputConfiguration.Create;
   FOutputEdits := TNyxOutputEditState.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
@@ -977,7 +985,7 @@ begin
   end;
   FState.CodePresentation := ncpPaneHosted;
   FState.Outputs := FOutputs;
-  FShellView := TNyxStudioSectionViews.Create(FTheme, nscEditorOwnedHierarchy);
+  FShellView := TNyxStudioSectionViews.Create(FChromeTheme, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
   FPreviewSlot := TNyxStudioPreviewSlot.Create(FCanvasView.Events.Scheduler);
@@ -989,8 +997,8 @@ begin
     DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation, DesignerResizeGuides);
   FDesignerMove := TNyxStudioMove.Create(DesignerDragContext, DesignerResizeGuides,
     DesignerResizeStatus, DesignerResizePresentation, DesignerMovePoint);
-  FCodeView := TNyxLCLRenderer.Create(FTheme);
-  FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
+  FCodeView := TNyxLCLRenderer.Create(FChromeTheme);
+  FSourcePaneView := TNyxLCLRenderer.Create(FChromeTheme);
   FSourcePaneView.OnEvent := ShellEvent;
   FSourceModal := NewNyxLCLModalHost(FHost);
   FSourceModal.OnDismiss := SourceModalDismiss;
@@ -1163,6 +1171,7 @@ begin
   FOutputEdits.Free;
   FOutputs.Free;
   FTheme.Free;
+  FChromeTheme.Free;
   inherited Destroy;
 end;
 
@@ -2210,6 +2219,7 @@ begin
   FState.ContentEditorDraft.Clear;
   FState.ThemeEditorDraft.Clear;
   FState.ImageEditorDraft.Clear;
+  FState.ButtonEditorDraft.Clear;
   FState.ResourceEditorDraft.Clear;
   FState.ResourceRowsDraft.Clear;
   FState.CanvasPaletteDraft.Clear;
@@ -2675,6 +2685,9 @@ begin
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.RootFor('inspector-content'));
     FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.RootFor('studio-theme-editor'));
     FState.ImageEditorDraft.Capture('inspector-image', FShellView.RootFor('inspector-image'));
+    FState.ButtonEditorDraft.Capture('inspector-button', FShellView.RootFor('inspector-button'));
+    CaptureNyxStudioChrome(FShellView.RootFor('studio-selection-tools'), FState.SelectionToolsExpanded);
+    CaptureNyxStudioAssets(FShellView.RootFor('studio-assets-picker'), FState.AssetPickerExpanded);
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
     FState.LogicDraft.Capture('studio-logic-editor', FShellView.RootFor('studio-logic-editor'));
@@ -2774,6 +2787,7 @@ begin
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FState.ImageEditorDraft.Restore(Result.Pages[0]);
+  FState.ButtonEditorDraft.Restore('inspector-button', Result.Pages[0]);
 
   if not FState.ResourceRowsDraft.Restore(Result.Pages[0]) and
     (Result.Pages[0].Find('studio-resource-rows') <> nil) then

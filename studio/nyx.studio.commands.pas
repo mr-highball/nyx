@@ -65,6 +65,10 @@ function RouteNyxStudioProperty(ASession: TNyxStudioSession; ANode: TNyxNode;
 implementation
 
 uses
+  nyx.data,
+  nyx.codec,
+  nyx.studio.edits,
+  nyx.studio.transactions,
   nyx.pascal.drafts,
   nyx.studio.source,
   nyx.state,
@@ -75,7 +79,9 @@ uses
   nyx.theme.editor,
   nyx.resources.editor,
   nyx.resources.rows.editor,
-  nyx.image.editor;
+  nyx.image.editor,
+  nyx.button.editor,
+  nyx.button.presentation;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
   AEvent: TNyxTrigger): Boolean;
@@ -182,6 +188,9 @@ var
   LInherit: Boolean;
   LThemeChange: TNyxThemeEditorChange;
   LImageChange: TNyxImageEditorChange;
+  LButtonOwner: TNyxText;
+  LButtonBaseline: TNyxText;
+  LButtonValue: TNyxButtonPresentation;
   LResourceChange: TNyxResourceEditorChange;
 begin
   Result := sacNone;
@@ -194,6 +203,32 @@ begin
 
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
+
+  if (AEvent = ntClick) and CaptureNyxButtonEditor(ANode, AShellRoot,
+    LButtonOwner, LButtonBaseline, LButtonValue) then
+  begin
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if (LButtonOwner <> ASession.SelectedID) or
+        (NyxButtonEditorBaseline(ASession.Selected, LProjection) <> LButtonBaseline) then
+      begin
+        raise ENyxModel.Create('Button changed; review the current style before applying');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    { Preserve the mounted design through the asynchronous source queue. An
+      earlier queued edit must not silently rebase this exact style proposal. }
+    AEdit.Action := sdaTransaction;
+    AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
+    AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+      NyxDesignStep(ReadNyxDesignPatch(NyxArray([NyxObject([
+        NyxField('op', NyxData('update')), NyxField('id', NyxData(LButtonOwner)),
+        NyxField('properties', NyxObject([NyxField(NyxAttributeName(atButtonPresentation),
+          NyxData(LButtonValue.ToData.ToJSON))]))])])))]));
+    Exit(sacEdit);
+  end;
 
   if (AEvent = ntClick) and
     (CaptureNyxResourceRowsEditor(ANode, AShellRoot, LResourceChange) or

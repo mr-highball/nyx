@@ -37,6 +37,7 @@ uses
   Forms,
   CustomDrawnControls,
   nyx.text,
+  nyx.button.presentation,
   nyx.layout.viewport,
   nyx.theme,
   nyx.accessibility.button.lcl,
@@ -69,6 +70,10 @@ type
     FPresentation: TNyxLCLButtonPresentation;
     FMenuEnabled: Boolean;
     FDisclosureCue: TNyxLCLDisclosureCue;
+    { Copied semantic face and a small independent decoded glyph. The caption
+      remains intact for accessibility even when glyph-only painting hides it. }
+    FButtonFace: TNyxButtonPresentation;
+    FGlyph: TBitmap;
     { The HWND lease borrows this control only until DestroyWnd. Managed input
       context has no owning renderer/model reference and is revoked at unmount. }
     FAccessibility: INyxLCLAccessibleButton;
@@ -77,6 +82,7 @@ type
     FAccessibilityFrame: INyxNativeGestureFrame;
     function AccessibleButtonState: TNyxLCLAccessibleButtonState;
     function DisclosureSpace: Integer;
+    function GetGlyphAvailable: Boolean;
   protected
     { Install after ordinary HWND initialization, and retire before LCL destroys
       it. Recreated windows receive independent native proxy/receiver leases. }
@@ -96,6 +102,10 @@ type
     procedure DoExit; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    { APicture is borrowed; this control copies it and never owns a renderer,
+      resource catalog or atlas cache. Nil restores the usable caption fallback. }
+    procedure ApplyPresentation(const AValue: TNyxButtonPresentation; APicture: TBitmap);
     { A managed view supplies its revocable producer scope and existing physical
       frame before parenting. No action runs before admission or after unmount;
       frame retirement follows the same deferred-control path as pointer input. }
@@ -125,6 +135,9 @@ type
     property BorderColor: TColor read FBorderColor;
     property CornerRadius: Integer read FRadius;
     property DisclosureCue: TNyxLCLDisclosureCue read FDisclosureCue;
+    { Host observation only: decode succeeded for this owned face. This grants
+      no authority to mutate its atlas, resource, button route or renderer. }
+    property GlyphAvailable: Boolean read GetGlyphAvailable;
   end;
 
   { Rounded themed surface retains TPanel's child ownership/layout behavior.
@@ -244,6 +257,33 @@ begin
   FRadius := 12;
   FMenuEnabled := True;
   FBorderVisible := True;
+  FGlyph := TBitmap.Create;
+  FButtonFace := NyxButtonPresentation;
+end;
+
+destructor TNyxLCLButton.Destroy;
+begin
+  FGlyph.Free;
+  inherited Destroy;
+end;
+
+function TNyxLCLButton.GetGlyphAvailable: Boolean;
+begin
+  Result := (FGlyph <> nil) and not FGlyph.Empty;
+end;
+
+procedure TNyxLCLButton.ApplyPresentation(const AValue: TNyxButtonPresentation; APicture: TBitmap);
+begin
+  AValue.Validate;
+  FButtonFace := AValue.Copy;
+  FGlyph.Assign(APicture);
+  case AValue.Weight of
+    nbwInherit: Font.Style := [fsBold];
+    nbwRegular: Font.Style := [];
+    nbwSemibold: Font.Style := [fsBold];
+  end;
+  InvalidatePreferredSize;
+  Invalidate;
 end;
 
 function TNyxLCLButton.AccessibleButtonState: TNyxLCLAccessibleButtonState;
@@ -420,6 +460,11 @@ begin
   Font.Height := -ATheme.FontSize;
   Font.Color := FTextColor;
   Font.Style := [fsBold];
+
+  if FButtonFace.Weight = nbwRegular then
+  begin
+    Font.Style := [];
+  end;
   ParentFont := False;
   Invalidate;
 end;
@@ -504,6 +549,8 @@ var
   LCueSpace: Integer;
   LCueLeft: Integer;
   LCueCenter: Integer;
+  LGlyphSpace, LGroupWidth, LGroupLeft: Integer;
+  LCaption: String;
 begin
 
   if (Width < 1) or (Height < 1) then
@@ -561,6 +608,49 @@ begin
   Canvas.Brush.Style := bsClear;
   LTextStyle := Canvas.TextStyle;
   LTextStyle.Alignment := taCenter;
+  LCaption := Caption;
+
+  if LCaption = '' then
+  begin
+    LCaption := AccessibleName;
+  end;
+  LGlyphSpace := 0;
+
+  if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
+  begin
+    LGlyphSpace := FButtonFace.GlyphBoxSize;
+
+    if FButtonFace.ContentMode = nbcGlyphOnly then
+    begin
+      LCaption := '';
+    end
+    else if LCaption <> '' then
+    begin
+      Inc(LGlyphSpace, FButtonFace.GlyphSpacing);
+    end;
+  end;
+  LGroupWidth := LGlyphSpace + Canvas.TextWidth(LCaption);
+  LGroupLeft := Max(12, (Width - LGroupWidth) div 2);
+
+  if FButtonFace.ContentAlignment = nbaStart then
+  begin
+    LGroupLeft := 12;
+  end;
+
+  if LGlyphSpace > 0 then
+  begin
+    Canvas.Draw(LGroupLeft + (FButtonFace.GlyphBoxSize - FGlyph.Width) div 2,
+      (Height - FGlyph.Height) div 2, FGlyph);
+    LTextStyle.Alignment := taLeftJustify;
+    LBounds.Left := LGroupLeft + LGlyphSpace;
+    LBounds.Right := Width - 12;
+  end
+  else if FButtonFace.ContentAlignment = nbaStart then
+  begin
+    LTextStyle.Alignment := taLeftJustify;
+    LBounds.Left := 12;
+    LBounds.Right := Width - 12;
+  end;
   LCueSpace := DisclosureSpace;
 
   if LCueSpace > 0 then
@@ -603,16 +693,48 @@ begin
   LTextStyle.ShowPrefix := False;
   { Left-justified TextRect uses its explicit text origin, unlike centered text.
     Keep that origin inside the padded menu bounds so no leading glyph clips. }
-  Canvas.TextRect(LBounds, LBounds.Left, 0, Caption, LTextStyle);
+  Canvas.TextRect(LBounds, LBounds.Left, 0, LCaption, LTextStyle);
 end;
 
 procedure TNyxLCLButton.CalculatePreferredSize(var APreferredWidth,
   APreferredHeight: Integer; AWithThemeSpace: Boolean);
+var
+  LCaption: String;
 begin
   Canvas.Font.Assign(Font);
-  APreferredWidth := Canvas.TextWidth(Caption) + 38;
+  { Measure the same fallback Paint displays after a decorative image fails. }
+  LCaption := Caption;
+
+  if LCaption = '' then
+  begin
+    LCaption := AccessibleName;
+  end;
+  APreferredWidth := Canvas.TextWidth(LCaption) + 38;
+
+  if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
+  begin
+
+    if FButtonFace.ContentMode = nbcGlyphOnly then
+    begin
+      APreferredWidth := 24 + FButtonFace.GlyphBoxSize;
+    end
+    else
+    begin
+      Inc(APreferredWidth, FButtonFace.GlyphBoxSize + FButtonFace.GlyphSpacing);
+    end;
+  end;
   Inc(APreferredWidth, DisclosureSpace);
   APreferredHeight := (Abs(Font.Height) * 3 div 2) + 22;
+  case FButtonFace.ControlDensity of
+    nbdNormal: ; { Preserve the ordinary button's preferred height. }
+    nbdCompact: APreferredHeight := Max(32, Abs(Font.Height) + 16);
+    nbdTouch: APreferredHeight := Max(44, Abs(Font.Height) + 24);
+  end;
+
+  if not FGlyph.Empty and (FButtonFace.ContentMode <> nbcCaption) then
+  begin
+    APreferredHeight := Max(APreferredHeight, FButtonFace.GlyphBoxSize + 8);
+  end;
 end;
 
 constructor TNyxLCLSurface.Create(AOwner: TComponent);

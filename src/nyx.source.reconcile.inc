@@ -489,6 +489,7 @@ var
     LToken: Integer;
     LOwner: Integer;
     LEnd: Integer;
+    LWrapperEnd: Integer;
   begin
     SetLength(ASites, Length(LSymbols));
     for LOwner := 0 to Length(ASites) - 1 do
@@ -500,8 +501,23 @@ var
     { One pass locates each owner's first construction/configuration/binding
       statement. The previous per-owner full token scans scaled quadratically,
       even when every authored fluent section was unchanged. }
+    LWrapperEnd := -1;
     for LToken := 0 to Length(ATokens) - 3 do
     begin
+
+      if LToken <= LWrapperEnd then
+      begin
+        Continue;
+      end;
+
+      if SameText(ATokens[LToken].Text, 'NyxButtonConfigure') and
+        (ATokens[LToken + 1].Text = '(') then
+      begin
+        { The inner owner.Configure selects the optional facade's scope. It is
+          not an ordinary Configure block or an anchor for a phantom empty one. }
+        LWrapperEnd := StatementEnd(ATokens, LToken + 2);
+        Continue;
+      end;
 
       if (ATokens[LToken].Kind <> tkWord) or
         ((ATokens[LToken + 1].Text <> ':=') and
@@ -635,6 +651,10 @@ begin
     vkResourceValue: LPayload := AValue.ResourceValue.ToData.ToJSON;
     vkResourceDefinition: LPayload := AValue.ResourceDefinitionData.ToJSON;
     vkResourceCache: LPayload := AValue.ResourceCache.ToData.ToJSON;
+    vkButtonPresentation: LPayload := AValue.ButtonPresentation.ToData.ToJSON;
+    vkGlyphCell: LPayload := AValue.GlyphCell.ToData.ToJSON;
+    vkButtonContent, vkButtonDensity, vkButtonAlignment, vkButtonWeight,
+      vkGlyphTone: LPayload := IntToStr(AValue.Ordinal);
     vkResourceKind, vkResourceServerPolicy: LPayload := IntToStr(AValue.Ordinal);
     vkBytes: LPayload := NyxEncodeBase64(AValue.Bytes);
     vkFileSaveOptions: LPayload := AValue.FileSaveOptions.ToData.ToJSON;
@@ -721,7 +741,8 @@ begin
           { Composite construction remains a sequence of atoms. Changing one
             field must not replace a whole object/domain and erase unrelated
             authored expressions or notes in its other values. }
-          LExpression := not (LValue.Kind in [vkDataField, vkDomain, vkCollectionView]) and
+          LExpression := not (LValue.Kind in [vkDataField, vkDomain, vkCollectionView,
+            vkButtonPresentation, vkGlyphCell]) and
             not ((LValue.Kind = vkData) and (LValue.Data.Kind in [ndObject, ndArray]));
 
           if LExpression then
@@ -1309,6 +1330,16 @@ begin
       begin
         LName := LTokens[LIndex + 2].Text;
       end
+      else if SameText(LTokens[LIndex].Text, 'NyxButtonConfigure') and
+        (LTokens[LIndex + 1].Text = '(') and (LTokens[LIndex + 3].Text = '.') and
+        SameText(LTokens[LIndex + 4].Text, 'Configure') then
+      begin
+        { Capture the whole managed wrapper, including its scope selector.
+          Keeping it in the owner's ordered Configure group preserves properties
+          before and after optional-facade statements during reconciliation. }
+        LName := LTokens[LIndex + 2].Text;
+        LSection := ':configure';
+      end
       else if (LTokens[LIndex + 1].Text = '.') and
         (SameText(LTokens[LIndex + 2].Text, 'Contract') or
         SameText(LTokens[LIndex + 2].Text, 'Collections') or
@@ -1877,7 +1908,8 @@ begin
           LRemoved := Removed(LSymbol);
         end
         else if (LTokens[LIndex].Kind = tkWord) and
-          SameText(LTokens[LIndex].Text, 'NyxCallbacks') then
+          (SameText(LTokens[LIndex].Text, 'NyxCallbacks') or
+          SameText(LTokens[LIndex].Text, 'NyxButtonConfigure')) then
         begin
           LRemoved := Removed(LSymbolNames.IndexOf(LowerCase(LTokens[LIndex + 2].Text)));
         end

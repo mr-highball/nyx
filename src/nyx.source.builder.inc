@@ -628,6 +628,13 @@ var
   LDocument: Boolean;
   LTabs: INyxTabs;
 begin
+
+  if At('NyxButtonConfigure') then
+  begin
+    ButtonConfiguration;
+    Exit;
+  end;
+
   { Custom canvas recipes retain their typed scene through the public descriptor
     bridge after projection configuration. No arbitrary setter names execute. }
 

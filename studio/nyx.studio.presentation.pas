@@ -27,6 +27,7 @@ interface
 
 uses
   nyx.image.editor,
+  nyx.button.editor,
   nyx.resources.editor,
   nyx.logic.editor, nyx.flow.declarations,
   nyx.programs.editor, nyx.programs.declarations, nyx.canvas.palette,
@@ -81,6 +82,9 @@ type
     ThemeDraft: TNyxThemeEditorDraft;
     { Per-workspace copied image proposal; embedded bytes remain portable. }
     ImageDraft: TNyxImageEditorDraft;
+    ButtonDraft: TNyxButtonEditorDraft;
+    SelectionToolsExpanded: Boolean;
+    AssetPickerExpanded: Boolean;
     ResourcesVisible: Boolean;
     LogicVisible: Boolean;
     LogicReference: TNyxFlowRef;
@@ -371,6 +375,17 @@ begin
     Result := NyxObject(LFields).ToJSON;
   end;
 
+  if AValue.ButtonDraft.Defined or AValue.SelectionToolsExpanded or AValue.AssetPickerExpanded then
+  begin
+    { An optional envelope leaves every historical preference packet unchanged.
+      Its inner editor packet cannot itself be another envelope on admission. }
+    Result := NyxObject([NyxField('version', NyxData(22)),
+      NyxField('editor', TNyxDataValue.ParseJSON(Result)),
+      NyxField('buttonDraft', AValue.ButtonDraft.ToData),
+      NyxField('selectionToolsExpanded', NyxData(AValue.SelectionToolsExpanded)),
+      NyxField('assetPickerExpanded', NyxData(AValue.AssetPickerExpanded))]).ToJSON;
+  end;
+
 end;
 
 function IntegerValue(const AValue: TNyxDataValue; const AKey: TNyxText;
@@ -396,6 +411,32 @@ CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|d
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
+
+  if (LValue.Kind = ndObject) and (LValue.Field('version').AsInteger = 22) then
+  begin
+    LPresentation := LValue.Field('editor');
+
+    if not (LValue.Count in [4, 5]) or (LPresentation.Kind <> ndObject) or
+      not (LPresentation.Field('version').AsInteger in [2..21]) then
+    begin
+      raise ENyxModel.Create('Button preferences require one exact historical editor packet');
+    end;
+    Result := DecodeNyxStudioPresentation(LPresentation.ToJSON);
+    Result.ButtonDraft := TNyxButtonEditorDraft.FromData(LValue.Field('buttonDraft'));
+    Result.SelectionToolsExpanded := LValue.Field('selectionToolsExpanded').AsBoolean;
+
+    if LValue.Count = 5 then
+    begin
+      Result.AssetPickerExpanded := LValue.Field('assetPickerExpanded').AsBoolean;
+    end;
+
+    if not Result.ButtonDraft.Defined and not Result.SelectionToolsExpanded and
+      not Result.AssetPickerExpanded then
+    begin
+      raise ENyxModel.Create('Chrome preference envelope requires an explicit editor choice');
+    end;
+    Exit;
+  end;
 
   if (LValue.Kind <> ndObject) or
     not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]) or

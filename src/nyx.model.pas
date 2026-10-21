@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.button.presentation,
   nyx.resources,
   nyx.resource.context,
   nyx.root.types,
@@ -525,6 +526,9 @@ type
       The text overload is the explicit legacy resource/persistence boundary. }
     function Source(const AValue: TNyxText): TNyxNodeConfig; overload;
     function Source(const AValue: TNyxImageSource): TNyxNodeConfig; overload;
+    { Copied presentation changes the existing button face, never its command,
+      event route or accessible name. Scopes follow every other typed setter. }
+    function ButtonPresentation(const AValue: TNyxButtonPresentation): TNyxNodeConfig;
     function ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;
     function ImageHorizontal(AValue: TNyxImageAnchor): TNyxNodeConfig;
     function ImageVertical(AValue: TNyxImageAnchor): TNyxNodeConfig;
@@ -2317,6 +2321,11 @@ end;
 function TNyxNodeConfig.Source(const AValue: TNyxImageSource): TNyxNodeConfig;
 begin
   Result := Put(atSource, AValue.ToWire);
+end;
+
+function TNyxNodeConfig.ButtonPresentation(const AValue: TNyxButtonPresentation): TNyxNodeConfig;
+begin
+  Result := Put(atButtonPresentation, AValue.ToData.ToJSON);
 end;
 
 function TNyxNodeConfig.ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;

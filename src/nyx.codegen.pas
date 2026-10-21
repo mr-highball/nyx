@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.button.presentation,
   nyx.resources,
   nyx.canvas.declarations,
   nyx.diagram, nyx.diagram.declarations, nyx.diagram.content,
@@ -1420,6 +1421,98 @@ begin
   end;
 end;
 
+function PascalButtonPresentation(const AText: TNyxText): TNyxText;
+const
+  CContent: array[TNyxButtonContent] of TNyxText = ('nbcCaption', 'nbcGlyphCaption', 'nbcGlyphOnly');
+  CDensity: array[TNyxButtonDensity] of TNyxText = ('nbdNormal', 'nbdCompact', 'nbdTouch');
+  CAlignment: array[TNyxButtonContentAlignment] of TNyxText = ('nbaCenter', 'nbaStart');
+  CWeight: array[TNyxButtonFontWeight] of TNyxText = ('nbwInherit', 'nbwRegular', 'nbwSemibold');
+  CTone: array[TNyxGlyphTone] of TNyxText = ('ngtOriginal', 'ngtForeground');
+var
+  LValue: TNyxButtonPresentation;
+  LCell: TNyxGlyphCell;
+  LImage: TNyxResourceImageRef;
+  LGlyph: TNyxText;
+
+  function Locale(const ALocale: TNyxLocaleRef): TNyxText;
+  begin
+
+    if not ALocale.Defined then
+    begin
+      Exit('NyxDefaultLocale');
+    end;
+    Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
+  end;
+
+begin
+  LValue := TNyxButtonPresentation.FromData(TNyxDataValue.ParseJSON(AText));
+  Result := 'NyxButtonPresentation';
+  case LValue.GlyphKind of
+    nbgNone:
+      begin
+        { Caption-only defaults have no image-source call. }
+      end;
+    nbgImage:
+      begin
+        Result := Result + '.Glyph(' + PascalImage(LValue.ImageSource.ToWire) + ')';
+      end;
+    nbgResource:
+      begin
+        LImage := LValue.ResourceImage;
+        LGlyph := 'NyxResourceImage(NyxResourceRef(' + PascalString(LImage.Reference.Name) + '))';
+
+        if LImage.Localized then
+        begin
+          LGlyph := LGlyph + '.Localize(' + Locale(LImage.Locale) + ', ' +
+            Locale(LImage.Fallback) + ')';
+        end;
+        Result := Result + '.Glyph(' + LGlyph + ')';
+      end;
+  end;
+  LCell := LValue.GlyphCell;
+
+  if (LCell.Columns <> 1) or (LCell.Rows <> 1) then
+  begin
+    Result := Result + '.Cell(NyxGlyphCell(' + IntToStr(LCell.Columns) + ', ' +
+      IntToStr(LCell.Rows) + ', ' + IntToStr(LCell.Column) + ', ' + IntToStr(LCell.Row) + '))';
+  end;
+
+  if LValue.GlyphBoxSize <> 28 then
+  begin
+    Result := Result + '.GlyphSize(' + IntToStr(LValue.GlyphBoxSize) + ')';
+  end;
+
+  if LValue.GlyphSpacing <> 6 then
+  begin
+    Result := Result + '.GlyphGap(' + IntToStr(LValue.GlyphSpacing) + ')';
+  end;
+
+  if LValue.ContentMode <> nbcCaption then
+  begin
+    Result := Result + '.Content(' + CContent[LValue.ContentMode] + ')';
+  end;
+
+  if LValue.ControlDensity <> nbdNormal then
+  begin
+    Result := Result + '.Density(' + CDensity[LValue.ControlDensity] + ')';
+  end;
+
+  if LValue.ContentAlignment <> nbaCenter then
+  begin
+    Result := Result + '.Alignment(' + CAlignment[LValue.ContentAlignment] + ')';
+  end;
+
+  if LValue.Weight <> nbwInherit then
+  begin
+    Result := Result + '.FontWeight(' + CWeight[LValue.Weight] + ')';
+  end;
+
+  if LValue.Tone <> ngtOriginal then
+  begin
+    Result := Result + '.GlyphTone(' + CTone[LValue.Tone] + ')';
+  end;
+end;
+
 function PascalResourceValue(const AValue: TNyxResourceValueRef): TNyxText;
 const
   CMethods: array[TNyxStateKind] of TNyxText =
@@ -1979,7 +2072,8 @@ const
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
     'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
-    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate');
+    'atImageFit', 'atImageHorizontal', 'atImageVertical', 'atPageView', 'atIndeterminate',
+    'atButtonPresentation');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -2031,7 +2125,8 @@ begin
   LMethod := '';
 
   if (LAttribute in [atSplitOrientation, atSplitPosition, atSplitMinimum,
-    atSplitMaximum, atSplitResizable, atQueryContainer, atContainerContainment]) and (AValue = '') then
+    atSplitMaximum, atSplitResizable, atQueryContainer, atContainerContainment,
+    atButtonPresentation]) and (AValue = '') then
   begin
     Exit('Clear(' + CAttributeSymbols[LAttribute] + ')');
   end;
@@ -3687,7 +3782,37 @@ var
     LEarlyExtensions: Boolean;
     LContext: TNyxNode;
     LProjection: TNyxNode;
+    LConfigureOpen: Boolean;
+    LTypedPresentation: Boolean;
+
+    procedure OpenConfiguration;
+    begin
+
+      if LConfigureOpen then
+      begin
+        Exit;
+      end;
+      LLines.Add('    ' + LVariable + '.Configure');
+      LConfigureOpen := True;
+      { A fresh public Configure starts with no selected scopes. Do not reuse
+        the previous block's emitter state after an optional facade statement. }
+      LScope := npfAny;
+      LViewportScope := TNyxViewportCondition.Any;
+      LPresentationScope := '';
+    end;
+
+    procedure CloseConfiguration;
+    begin
+
+      if LConfigureOpen then
+      begin
+        LLines.Add('      .Done;');
+        LConfigureOpen := False;
+      end;
+    end;
+
   begin
+    LConfigureOpen := False;
     LScope := npfAny;
     LViewportScope := TNyxViewportCondition.Any;
     LPresentationScope := '';
@@ -3743,9 +3868,9 @@ var
       EmitExtensions(ANode.Extensions, LVariable);
     end;
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar or ANode.HasCanvasScene then
+    if ANode.HasMenu or ANode.HasMenuBar or ANode.HasCanvasScene then
     begin
-      LLines.Add('    ' + LVariable + '.Configure');
+      OpenConfiguration;
     end;
 
     if ANode.HasMenu then
@@ -3819,6 +3944,47 @@ var
         LPlatform := LPresentationPlatform;
         LAttribute := LPresentationAttribute;
         LKey := NyxAttributeName(LAttribute);
+      end;
+      LTypedPresentation := False;
+
+      if (LKey = NyxAttributeName(atButtonPresentation)) and
+        (ANode.Prop(LWireKey) <> '') then
+      begin
+        { Metadata is a public exact-text boundary too. A legal noncanonical
+          JSON spelling must retain its bytes through the existing fallback. }
+        LTypedPresentation := TNyxButtonPresentation.FromData(
+          TNyxDataValue.ParseJSON(ANode.Prop(LWireKey))).ToData.ToJSON =
+          ANode.Prop(LWireKey);
+      end;
+
+      if LTypedPresentation then
+      begin
+        CloseConfiguration;
+        LKindArgument := LVariable + '.Configure';
+
+        if LPlatform <> npfAny then
+        begin
+          LKindArgument := LKindArgument + '.ForPlatform(' +
+            NyxPlatformSymbol(LPlatform) + ')';
+        end;
+
+        if LPresentation.Defined then
+        begin
+          LKindArgument := LKindArgument + '.WhenPresentation(NyxPresentation(' +
+            PascalString(LPresentation.Name) + '))';
+        end
+        else if not LViewport.IsAny then
+        begin
+          LKindArgument := LKindArgument + '.WhenViewport(' + LViewport.Pascal + ')';
+        end;
+        LLines.Add('    NyxButtonConfigure(' + LKindArgument + ').Presentation(' + #10 +
+          '      ' + PascalButtonPresentation(ANode.Prop(LWireKey)) + ');');
+        Continue;
+      end;
+      OpenConfiguration;
+
+      if LPresentation.Defined then
+      begin
 
         if LPresentation.Name <> LPresentationScope then
         begin
@@ -3843,10 +4009,7 @@ var
         LCalendarValue, LClockValue, LRGBValue));
     end;
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar or ANode.HasCanvasScene then
-    begin
-      LLines.Add('      .Done;');
-    end;
+    CloseConfiguration;
 
     if ANode.HasContent then
     begin
@@ -3989,6 +4152,8 @@ begin
     LLines.Add('  nyx.times,');
     LLines.Add('  nyx.colors,');
     LLines.Add('  nyx.images,');
+    LLines.Add('  nyx.button.presentation,');
+    LLines.Add('  nyx.button.configuration,');
     LLines.Add('  nyx.image.lifecycle,');
 
     if (ADocument.Resources.Count > 0) or (ADocument.Flows.Count > 0) or

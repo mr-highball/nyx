@@ -4,29 +4,71 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-C1 now qualifies the repaired MasterDetail through ordinary whole-Studio165/175
-and its OWN freshly saved/independently compiled36/36 at both widths. Root/helper
-52D5AEEE verifies four successful compilers, four clean heaps, all53/1782/13/51
-inputs, exact new-pair provenance and zero owned/14 upstream warnings. Generated
-inputs happen byte-equal055D/DF22 but use only new C1paths, with strict admission.
-Browser branches compile only. Queued record Details is this ordinary proof;
-independent event.Value coexistence remains current focused99's separate proof.
-No original closure;24→25 carries. C2 stays queued while the user's latest explicit
-Studio facelift takes priority. Generated clean atlas is retained as an upcoming
-asset, not relabeled as part of C1. Checkpoint this result, then release shared
-typed button presentation/chrome/adapters and accessible property/event/UI fixes.
+The user's Studio facelift is accepted in
+[its scoped task](TODO/DONE/NS-4_studio-chrome_01.md). Root now owns documentation,
+checkpoint and remote verification; every reader is joined and all Pascal stays
+exact. Next return is C2: assess the existing whole-Kanban authoring/Save/Open and
+OWN generated-application compatibility on current coordinators. Lil' Scooty may
+prepare that existing packet read-only; a separate scoped source/reader handoff
+precedes execution. No new host/config/MCP/tool/wire rollout, extra agent or cleanup.
+Foreign13 and deferred resolver/splitter work stay untouched. No original credit
+or criterion closes; core no-closure25 carries.
 
-Current bounded C1 admission: unchanged65F0DD4A consumer, four compilers/four native
-outcomes, all Pascal/guides frozen through readers. Execute ordinary full Studio
-at1280/390 and compile browser. Join both actual jobs, verify the four OWN saved
-project/Pascal files match widths and packet.Source equals emitted Pascal, review
-the saved semantics, then pin those files and independently compile/run the saved
-application at both widths with strict admission, plus matching browser compile.
-No historical pair or changed oracle/wait is allowed. Root owns handles/audits;
-helper reviews the own pair and results read-only. Previous turn is concrete
-progress: actual browser256/563 each, independent AAE3 and pushed7cff/bc9 checkpoints.
-No new host, source repair or original credit follows; C2 remains separate.
+## Studio facelift — 2026-10-21
 
+Studio now uses one shared Nyx chrome composition and independent editor theme:
+neutral surfaces, violet accents, grouped glyph commands, compact navigation,
+retained collapsible assets and a readable Properties/Events hierarchy. The typed
+button presentation contract, optional managed configuration facet, schema,
+source/codegen reconciliation and ordinary Inspector expose the same capability
+to application authors. Both adapters retain existing button routes/lifecycles,
+caption fallback and project-theme isolation. Original generated PNG bytes and
+prompt are retained in [asset provenance](studio/assets/glyphs/README.md).
+
+Independent root/helper audit
+`5DBE355E093266D7BC746DA282AA6B06EE74C55DDCBE10E29147F84C6B9E2AE1`
+in `E:\Blekohlab\nyx\qualification\studio-facelift-20261021-172643` verifies
+34 owned/1795 Pascal/13 foreign/16 extra inputs, all actual readers joined.
+Selected composite:14 accepted compilers, zero owned/49 upstream classes.pas
+warnings; nine accepted native outcomes all have zero unfreed blocks.
+
+- Focused presentation161/configuration67 pass native and actual browser. The
+  maintained generator --check matches all six outputs/81 kinds/four facades.
+- Actual native Studio chrome48 at client1280 and52 at390 pass; both products
+  compile. Actual browser1280x900/390x900 validates glyphs/names, hidden Drag,
+  bounds, typed Apply+Pascal, paired Undo/Redo, retained asset disclosure and36
+  event entries including four image lifecycle events. Console warnings/errors
+  are empty. Expanded phone source height is717.5 of900px.
+- Unchanged whole MasterDetail consumer65F0DD4A passes165/175 through actual
+  Save/Open. Its OWN four newly produced files are3530B9EE project/AD890025
+  Pascal at both widths, each packet.Source exactly9074 chars. Those exact paths
+  strict-admit and independently compile/run36/36 at1280/390. Matching whole and
+  compiled browser branches compile only. Older C1 paths are not reused.
+- Final browserE49B163C differs by one blank line from the actual-browser source;
+  newly emitted previewE8E7DF31 and productC2427AFE are byte-identical. Prior actual
+  browser execution therefore applies to that exact emitted code. Unchanged
+  focused/generator/native dependency evidence is reused, not replayed.
+
+The packet retains every failed/superseded compiler, JSON/numeric/optional-lookup
+fixture outcome, missing-worker preview and wrong entry command. No failure is
+suppressed. All owned hosts are identity-stopped/ports empty and viewport reset;
+successful preview tabs17/18 closed. Excluded bare-root404 tab16 remains unmarked
+for automatic cleanup after browser URL policy rejected its close. Native proof
+is Windows LCL and browser proof uses controlled viewports; physical phone,
+macOS, hardware DPI, assistive technology and measured performance remain outside
+this scoped claim. Allocation totals are cumulative, with all accepted heaps clean.
+
+Runtime source identities: pure934D1BD0, schema6F778B0A, editorB971A837,
+chromeD044D233, browserE49B163C, native renderer7A8067B1, widgets84B7E819.
+The accepted source freeze is separate from subsequent root-only task/document
+moves and checkpoint. No original goal credit/no-closure reset follows.
+
+## Earlier core checkpoint history
+
+C1 checkpoint163635c retains independent audit52D5AEEE, ordinary Studio165/175,
+OWN saved compiled36/36 and zero owned/14 upstream warnings on its prior source.
+Its055D/DF22 pair is historical, not the new facelift3530/AD89 input. Original core
+no-closure24→25 remains; C2 returns after this user-prioritized facelift.
 Independent AAE3 review accepts both actual browser outcomes and cleanup; checkpoint
 7cff8c3 is remote-verified. Joint assessment now identifies a concrete compatibility
 return rather than a new design task: C1, execute unchanged whole-Studio MasterDetail

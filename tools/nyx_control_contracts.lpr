@@ -1630,7 +1630,10 @@ begin
           explicit descriptor boundary, rather than leaking borrowed stores. }
 
         if (Pos('Assign(', LSignature) = 0) and (Pos('Overlay(', LSignature) = 0) and
-          (Pos('Clone:', LSignature) = 0) then
+          (Pos('Clone:', LSignature) = 0) and
+          { The new optional button configuration owns this additive method.
+            The original INyxConfiguration GUID/vtable remains byte-stable. }
+          (Pos('function ButtonPresentation(', LSignature) = 0) then
         begin
           LMethods.Add(LSignature);
         end;
