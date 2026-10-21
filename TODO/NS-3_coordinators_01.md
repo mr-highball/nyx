@@ -67,6 +67,16 @@ now also passes actual browser256/563 at1280x900/390x900 through final cleanup
 complete five-criterion assessment against that evidence and applicable prior
 compatibility/reentrancy cases; this regression alone does not close this parent.
 
+That read-only assessment now returns a concrete changed-dependency gate: C1 in
+[reuse05](NS-3_coordinators_05.md) repeats the existing whole-Studio MasterDetail
+journey on636F, then independently compiles/runs its OWN newly saved pair with
+strict admission. The former66C9 Studio/generated outcomes remain historical.
+After C1, C2 assesses the existing whole-Kanban authored/generated journey after
+97A; current139/121 runtime and mixed563 Move do not substitute for its Configure/
+Disable/Inherit/custom-payload Save/Open/generated contract. Preserve current
+native171/68 injected reentrancy/disposal boundaries separately from browser563.
+No new fixture/API/task identity, compiler or host is released by this assessment.
+
 - Criteria1–3 consume accepted registration and both migrations together with
   reuse05's current-source snapshot, refusal, replacement and lifetime evidence.
   Missing combined behavior returns to that owning task; no component-specific

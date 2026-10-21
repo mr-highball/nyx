@@ -160,6 +160,20 @@ cleanup stay unchanged. Next review all five criteria jointly against this actua
 result and applicable existing reentrant/disposal/Studio compatibility evidence;
 return a concrete remaining gap to its existing owner before accepting05.
 
+Joint review return, C1: unchanged `tests/nyx_master_detail_controls.lpr` must
+execute its full Studio authoring/Interact queued Details+Value/paired history/
+real Save/Open journey at native1280/390 against636F. Pin the OWN new saved project
+and generated Pascal from those runs; independently compile/run its existing
+`NYX_COMPILED_MASTER_DETAIL` branch against that exact pair at both widths, retaining
+strict admission. Matching ordinary/compiled browser branches compile separately.
+Finish at that actual result without changing assertions, waits or source and
+without substituting historical pairs. Old66C9's165/175+36/36 is retained historical
+evidence. This is the existing criterion5/parent criterion4 compatibility return,
+not a new component/API task or automatic acceptance. Root separately admits the
+fixed qualification after reviewing exact commands/inputs; no reader is released
+by this checklist. Native171/68 reentrancy/injected Notify-disposal evidence remains
+separate from the actual563 browser input/lifetime paths.
+
 - Execute the same useful reusable/embedded application through actual browser
   input, including independent instances, refusal, replacement, stale commands
   and disposal. Retain the same assertions and completion-aware ownership.

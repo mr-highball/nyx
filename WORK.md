@@ -4,6 +4,19 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Independent AAE3 review accepts both actual browser outcomes and cleanup; checkpoint
+7cff8c3 is remote-verified. Joint assessment now identifies a concrete compatibility
+return rather than a new design task: C1, execute unchanged whole-Studio MasterDetail
+consumer on636F at both native widths, pin its OWN saved/generated pair, independently
+compile/run that pair under strict admission and compile matching browser branches.
+Old66C9 results165/175 and36/36 cannot cover this dependency change. C2 subsequently
+assesses existing whole-Kanban authoring/generated compatibility after97A;139/121
+runtime and mixed563 Move remain useful but narrower. Source and test oracles stay
+paused; helper may prepare only C1's read-only commands/budget, with root review and
+separate qualification admission before any compiler. No new host authority/identity
+or original credit follows. Native171/68 injected reentrancy/Notify-disposal is not
+relabeled as executed by the browser563 application.
+
 Current actual result: the reusable/embedded browser regression PASSES at both
 1280x900 and390x900, with original256/aggregate563 checks and no final console
 warnings/errors. MasterDetail636F and consumer4AC repairs preserve the original

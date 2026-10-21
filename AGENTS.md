@@ -1,5 +1,21 @@
 # Working in Nyx
 
+COORDINATOR05 R3 INDEPENDENTLY REVIEWED / JOINT RETURN (2026-10-21): source/docs
+7cff8c3 is pushed/remote-verified. Helper independently accepts AAE3's actual
+256/563 both widths, all exact pins, final empty consoles and verified host cleanup.
+Four later result docs are separately accounted for; every Pascal input stays exact.
+Read-only joint review identifies the next existing-owner packet: unchanged whole
+MasterDetail Studio consumer must execute native1280/390 on636F, Save/Open its OWN
+new project/Pascal pair, independently compile/run that pair at both widths under
+strict admission, plus matching browser compiles. Old66C9's165/175 and36/36 remain
+historical, not current636F proof. Then assess the analogous existing whole-Kanban
+authoring/generated return after97A;139/121 runtime and mixed563 Move do not replace
+it. Keep current171/68 native injected reentrancy/Notify-disposal distinct from
+executed563 browser paths. No new design, fixture or API is indicated. Root owns
+docs/checkpoint and admission planning; existing helper may prepare C1's exact
+read-only command/budget proposal. No compiler/source/host is released yet. No
+original criterion/credit closes; no-closure24 carries and all prior limits remain.
+
 COORDINATOR05 R3 ACTUAL BROWSER REGRESSION QUALIFIED (2026-10-21): exactEB8F5145
 passes original256/aggregate563 at both verified1280x900/390x900. Both final console
 lists are empty and test hosts are removed by normal cleanup. RootAAE3F310 verifies
