@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+MasterDetail runtime/Studio adoption qualifies locally under criteria1/3:
+native62 policy/runtime,63 public editor, full ordinary Studio/application106/114
+and exact saved compiled app30/30 pass with clean heaps; existing actual Kanban
+regression98/98 also passes. Both widths save identical source/project bytes.
+Visible selected records, independent reuse, copied queued Edit data, custom
+parts, local masks/inheritance and source/history survive the ordinary journey.
+Browser consumers compile only. [WORK.md](../WORK.md#selected-record-masterdetail-checkpoint--2026-10-21)
+owns retained fixture failures and composite source boundaries. No original
+criterion/credit/DONE closes; no-closure10 changes the next outcome to truthful
+Edit payload discovery and useful semantic flow/canvas wiring in the linked
+prerequisite below. Native callback delivery does not establish that reuse.
+
 Coordinated DateRange is locally qualified under criteria1/3: typed public policy/
 editor70, maintained clock1613/calendar49, ordinary Studio/application82desktop/
 90compact and exact saved compiled application19/19, all with clean heaps.
@@ -210,6 +222,8 @@ source is not installed. End paging variants. See
 
 **Blockers**
 
+- [MasterDetail Edit data discovery](NS-4_master-detail-events_01.md) retains the
+  required semantic/flow/canvas reuse gap separately from native callback proof.
 - [Observable structured state](DONE/NS-1_state-collections_01.md) supplies typed
   collection/item bindings for the required production data-control families.
 

@@ -1,5 +1,33 @@
 # Working in Nyx
 
+MASTER DETAIL LOCALLY QUALIFIED (2026-10-21): typed runtime62/editor63,
+ordinary Studio/application106desktop/114compact and exact saved compiled app30/30
+pass with clean heaps. Existing actual Kanban98/98 also passes. Both widths save
+identical project/Pascal bytes; callback snapshots preserve original records
+across native UI-queued selection changes. Nine accepted compiler logs have zero
+owned/28 upstream warnings; browser consumers compile only. All readers joined/
+audited against1774 Pascal/26 owned/13 concurrent/four saved source/pair pins.
+Production Pascal stays exact from the first reviewed full workflow; only focused
+fixture OnClick/default assumptions changed afterward, with failures retained.
+
+Master List owns source/scope/query/SINGLE selection; visible snapshot membership
+owns detail presentation. Empty/hidden/removed selection restores authored
+placeholders and disables Edit without rewriting membership. Copied record data
+has logical collection/item identity; event SourceID distinguishes the runtime
+instance. Existing prepared generations, weak ports and flag-only install retain
+accepted lifetime; no second state/selection engine or static default/GUID change.
+WORK.md and ignored .local/master-detail-paths-private.json own source/remote/
+failure receipts. Stop runtime/form/fixture/compiler variants. No full original
+criterion/credit/DONE closes; core no-closure10 changes the next concrete outcome
+to TODO/NS-4_master-detail-events_01.md: truthful semantic Edit Details discovery
+and useful flow/Tool Canvas wiring. Current callbacks work but AddRoute still
+labels that route signal. Prove exact resolved source+Edit role, preserve generic
+clicks/mixed routes/explicit scalar contracts and emit authority. Scalar Value
+and structured Details can coexist at runtime; do not silently discard either
+contract. Existing Lil' Scooty has a read-only seam proposal; root reviews before
+source release. Preserve concurrent13, deferred resolver/splitter and offline/
+no-host/no-cleanup/no-new-tool/no-extra-agent boundaries.
+
 DATE RANGE LOCALLY QUALIFIED (2026-10-21): opt-in Ordered/Independent/Inherit
 policy, public Nyx form and shared paired Studio admission qualify native70,
 maintained clock1613/calendar49, ordinary Studio/application82desktop/90compact

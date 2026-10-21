@@ -765,7 +765,7 @@ uses
   nyx.controls,
   nyx.design.tokens,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model,
-  nyx.kanban, nyx.kanban.intent, nyx.date.range;
+  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -887,7 +887,7 @@ type
     vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
     vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
     vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane,
-    vkDateRangeOptions);
+    vkDateRangeOptions, vkMasterDetailOptions, vkMasterDetailIntent);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -956,6 +956,8 @@ type
     DisclosureOptions: TNyxDisclosureOptions;
     KanbanIntent: TNyxKanbanIntent;
     DateRangeOptions: TNyxDateRangeOptions;
+    MasterDetailOptions: TNyxMasterDetailOptions;
+    MasterDetailIntent: TNyxMasterDetailIntent;
     KanbanOptions: TNyxKanbanOptions;
     SelectionOptions: TNyxSelectionOptions;
     CanvasPoint: TNyxCanvasPoint;
@@ -1079,6 +1081,8 @@ type
       attachment. Existing authored children retain their independent identity. }
     function KanbanConstructor(const AName: TNyxText): TValue;
     function DateRangeOptions: TValue;
+    { Interprets only copied public field-reference options and closed intent. }
+    function MasterDetailConstructor(const AName: TNyxText): TValue;
     function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
@@ -2606,6 +2610,7 @@ end;
 {$I nyx.source.disclosure.inc}
 {$I nyx.source.kanban.inc}
 {$I nyx.source.date.range.inc}
+{$I nyx.source.master.detail.inc}
 {$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -2882,6 +2887,11 @@ begin
         if LName = 'tnyxdaterangeoptions' then
         begin
           Exit(DateRangeOptions);
+        end;
+
+        if (LName = 'tnyxmasterdetailintent') or (LName = 'nyxmasterdetailoptions') then
+        begin
+          Exit(MasterDetailConstructor(LName));
         end;
 
         if LName = 'tnyxdisclosureoptions' then
@@ -6612,7 +6622,8 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.logic.files.open') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
-        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') then
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
       end;

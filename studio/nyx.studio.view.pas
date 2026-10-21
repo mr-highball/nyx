@@ -41,7 +41,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.tabs.editor,
-  nyx.kanban.editor,
+  nyx.kanban.editor, nyx.master.detail.editor,
   nyx.selection.editor,
   nyx.event.discovery,
   nyx.reusable.editor,
@@ -197,6 +197,7 @@ type
     { A copied whole-board form survives inspector collapse; baseline changes
       retire it instead of replaying stale schema or named-part choices. }
     KanbanEditorDraft: TNyxKanbanEditorDraft;
+    MasterDetailEditorDraft: TNyxMasterDetailEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
     ReusableEditorDraft: TNyxReusableEditorDraft;
     ExpressionEditorDraft: TNyxExpressionEditorDraft;
@@ -2000,6 +2001,7 @@ begin
         AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxKanbanInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxDateRangeInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxMasterDetailInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));

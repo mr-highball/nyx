@@ -835,6 +835,52 @@ begin
     Exit;
   end;
 
+  if At('SetNyxMasterDetailIntent') or At('InheritNyxMasterDetailIntent') then
+  begin
+    LName := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('MasterDetail intent requires its admitted control');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('MasterDetail intent requires an already owned control');
+    end;
+    Inc(FCursor);
+
+    if LName = 'setnyxmasterdetailintent' then
+    begin
+      Expect(',');
+      LValue := Expression;
+
+      if LValue.Kind <> vkMasterDetailIntent then
+      begin
+        Fail('MasterDetail intent requires TNyxMasterDetailIntent');
+      end;
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+
+      if LName = 'setnyxmasterdetailintent' then
+      begin
+        SetNyxMasterDetailIntent(FControls[LLocal], LValue.MasterDetailIntent);
+      end
+      else
+      begin
+        InheritNyxMasterDetailIntent(FControls[LLocal]);
+      end;
+    end;
+    Exit;
+  end;
+
   if At('SetNyxKanbanIntent') or At('InheritNyxKanbanIntent') then
   begin
     LName := LowerCase(FTokens[FCursor].Text);

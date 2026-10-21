@@ -32,6 +32,7 @@ uses
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
   nyx.kanban.editor, nyx.date.range, nyx.date.range.editor,
+  nyx.master.detail, nyx.master.detail.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
   nyx.programs.editing, nyx.diagram.editing,
   nyx.flow.routes, nyx.flow.route.model;
@@ -47,7 +48,7 @@ type
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
     doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban,
-    doDateRange);
+    doDateRange, doMasterDetail);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -282,6 +283,9 @@ function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyx
   bindings with intent before the ordinary complete candidate/source admission. }
 function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
 function NyxDateRangePolicyPatch(const AChange: TNyxDateRangeEditorChange): INyxDesignPatch;
+{ One exact authored configuration/mask/inheritance change; no runtime selection
+  or current record enters the persisted design/source candidate. }
+function NyxMasterDetailPolicyPatch(const AChange: TNyxMasterDetailEditorChange): INyxDesignPatch;
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
   const AOptions: TNyxSelectionOptions): INyxDesignPatch;
 function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
@@ -672,6 +676,7 @@ type
     Selection: TNyxSelectionEditorChange;
     Kanban: TNyxKanbanEditorChange;
     DateRange: TNyxDateRangeEditorChange;
+    MasterDetail: TNyxMasterDetailEditorChange;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
     ProgramChange: TNyxProgramChange;
@@ -1916,6 +1921,12 @@ begin
         LOperation.Selection.Options := TNyxSelectionOptions.FromData(LWire.Field('options'));
       end;
     end
+    else if LName = 'master-detail-policy' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doMasterDetail;
+      LOperation.MasterDetail := TNyxMasterDetailEditorChange.FromData(LWire.Field('change'));
+    end
     else if LName = 'date-range-policy' then
     begin
       CheckFields(LWire, '|op|change|');
@@ -2191,6 +2202,13 @@ function NyxDateRangePolicyPatch(const AChange: TNyxDateRangeEditorChange): INyx
 begin
   Result := ReadNyxDesignPatch(NyxArray([
     NyxObject([NyxField('op', NyxData('date-range-policy')),
+      NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxMasterDetailPolicyPatch(const AChange: TNyxMasterDetailEditorChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('master-detail-policy')),
       NyxField('change', AChange.ToData)])]));
 end;
 
@@ -2807,6 +2825,20 @@ begin
         doDiagram:
           begin
             LOperation.DiagramChange.Apply(Result);
+          end;
+        doMasterDetail:
+          begin
+            ValidateNyxMasterDetailEditorChange(Result, LOperation.MasterDetail);
+            LNode := Result.FindControl(LOperation.MasterDetail.Owner);
+
+            if LOperation.MasterDetail.Inherit then
+            begin
+              InheritNyxMasterDetailIntent(RetainNyxControl(LNode));
+            end
+            else
+            begin
+              SetNyxMasterDetailIntent(RetainNyxControl(LNode), LOperation.MasterDetail.Intent);
+            end;
           end;
         doDateRange:
           begin

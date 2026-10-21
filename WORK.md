@@ -4,6 +4,80 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+## Selected-record MasterDetail checkpoint — 2026-10-21
+
+Current outcome: **live selected-record MasterDetail** under components1/3 →
+authoring2 → parity. Previous goal turn is **progress667eab1**: DateRange was
+qualified, committed/pushed and independently remote-verified. This continuation
+qualifies the next concrete component/application outcome instead of returning
+to deferred resolver work or repeating range/fixture/compiler variants.
+
+Typed copied options/intent/runtime pass62 focused native checks; the reusable
+Nyx-built editor passes63. Ordinary full Studio/application input passes106 at1280
+and114 at390 through mapped-field drafts, exact paired Undo/Redo, instance local
+Disable/Inherit, preview, named Save/Open and an independently admitted reopened
+application. Both widths save identical complete project and Pascal bytes. That
+exact saved Pascal is independently compiled; its applications pass30/30 and
+reconstruct the saved design. Existing actual Kanban controls pass98/98 after
+both renderer lifecycle/dispatch changes. All eight native logs have clean heaps.
+
+The master List alone owns source/scope/query/paging and Single selection. Exact
+visible snapshot membership projects the title/description; hidden/empty/removed
+selection restores authored placeholders and disables Edit without rewriting
+membership or picking a replacement row. Detail fields can differ from the list
+column. Runtime instances retain independent stores, custom captions and added
+content; authored rows/defaults stay exact after edits/removal in preview/app.
+Actual native UI-queued Edit captures a copied typed item/revision before later
+selection changes. The record's collection/item identity is logical; the copied
+event SourceID identifies the runtime instance. Snapshots grant no mutation
+capability. Accepted future generations, weak revocation and staged initial
+availability protect replacement/teardown; no second selection/state engine or
+static recipe/interface-GUID change follows.
+
+Nine accepted compiler logs have zero owned/28 upstream warning occurrences.
+Browser runtime/editor/ordinary/exact-generated consumers compile only. Native
+input is synthesized through real controls; browser input/observing/parity,
+hardware/assistive quality, other widgetsets/DPI and production budgets remain
+open. This is component/runtime/Studio qualification, not the complete original
+component or authoring criterion.
+
+Retained preparations: root corrected an ambiguous Inspector insertion before
+compilation. The first focused native/browser compilers found a nonexistent
+runtime Events.OnClick shortcut; the fixture now uses the existing On(target,
+ntClick) contract. Its first execution then exposed two incorrect positive
+Enabled lookups: allowing policies fall through to an absent stored property,
+while the interaction owner/renderer use the true default. Both fixture reads
+now use that same default; refusal expectations and product policy are unchanged.
+The failed run has a clean heap. All product Pascal remains byte-exact from the
+first reviewed full Studio workflow; only that focused fixture changed afterward.
+No failed outcome is erased or substituted for original product acceptance.
+
+All readers are joined/audited. Ignored `.local/master-detail-paths-private.json`
+owns the E: packet, explicit source scope, final receipt/source/remote identity and
+retained failures. Pins cover1774 Pascal inputs,26 owned files,13 concurrent
+planning files and four saved source/project inputs. Independent artifact review
+verifies exact packet.Source, specialized interfaces/typed factories/imports,
+unchanged short-name list column and scope, surviving title/Edit caption/append
+payload, absent local mask after Inherit and no leaked runtime selection/IDs.
+The maintained `tools/build.ps1 -Target master-detail` accepts a new evidence
+directory, replays the core ordinary/saved/generated path and stages browser
+artifacts without starting a listener. [Public usage](docs/master-detail.md).
+
+Stop this runtime/form/fixture/compiler batch. No full original criterion/task/
+credit/DONE closes; core no-closure advances9→10. The required next outcome is
+[Edit data discovery and useful flow/Tool Canvas wiring](TODO/NS-4_master-detail-events_01.md),
+linked from the owning component Blockers without modifying the concurrently
+owned catalog. Current callbacks receive Details, while AddRoute still advertises
+the semantic Edit route as a signal. Existing role/source proof and typed payload
+owners must make discovery truthful without relabeling generic clicks, flattening
+mixed same-name routes or granting producer authority. Explicit scalar Value and
+structured Details can coexist: do not discard either contract to make one port
+appear. Lil' Scooty has a read-only seam/API proposal; root review precedes source
+release. Keep static/Disabled/unrelated refusals, ordinary authored wiring and
+exact saved/generated applications in the next scope. Preserve concurrent13,
+deferred resolver/splitter, offline LAN and absent native Nyx tools. No host/config
+retry, cleanup/restart, new MCP/schema/tool rollout or extra agent is authorized.
+
 ## Coordinated date range checkpoint — 2026-10-21
 
 Current outcome: **coordinated DateRange authoring and saved application**, under

@@ -338,7 +338,7 @@ uses
   nyx.menu.declarations,
   nyx.menu.types,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view, nyx.kanban.intent,
-  nyx.date.range,
+  nyx.date.range, nyx.master.detail,
   nyx.flow.routes, nyx.flow.route.model;
 
 type
@@ -2980,6 +2980,7 @@ begin
   end;
 
   ValidateNyxKanbanIntent(ANode);
+  ValidateNyxMasterDetailIntent(ANode);
   { Only portable policy/target admission belongs here. Pair values may still
     be authored defaults or an interim command, before complete state projection. }
   ValidateNyxDateRangeOptions(ANode);
@@ -3257,6 +3258,7 @@ var
       { Descriptors carry local policy before their effective target is known;
         malformed known metadata must not hide behind the structural skip. }
       ValidateNyxDateRangeOptions(ANode);
+      ValidateNyxMasterDetailIntent(ANode);
     end
     else
     begin
@@ -3413,7 +3415,7 @@ var
       (ANode.Kind = NyxKindName(nkToolCanvas)) or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
-      HasNyxDateRangeOptions(ANode) or
+      HasNyxDateRangeOptions(ANode) or HasNyxMasterDetailIntent(ANode) or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '');
     for LChildIndex := 0 to ANode.Count - 1 do
@@ -3438,6 +3440,8 @@ var
       LHeadingIndex: Integer;
       LHeading: TNyxNode;
       LToolPart: TNyxNode;
+      LMasterDetail: TNyxMasterDetailIntent;
+      LMaster: TNyxNode;
     begin
       ValidateNyxControlFlowRoutes(ANode, ADocument);
 
@@ -3468,6 +3472,20 @@ var
       begin
         ValidateNyxCollectionViewSnapshot(ADocument.Collections.Snapshot(ANode.CollectionView.Key),
           ANode.CollectionView, NyxCollectionProjectionForNode(ANode));
+      end;
+
+      if HasNyxMasterDetailIntent(ANode) then
+      begin
+        LMasterDetail := GetNyxMasterDetailIntent(ANode);
+
+        if LMasterDetail.Mode = nmiConfigured then
+        begin
+          ValidateNyxMasterDetailOptions(ANode, LMasterDetail.Options);
+          LMaster := ANode.Part(NyxPart('master'));
+          ValidateNyxMasterDetailFields(
+            ADocument.Collections.Snapshot(LMaster.CollectionView.Key).Schema,
+            LMasterDetail.Options);
+        end;
       end;
       { Effective reusable ancestry can introduce or change a query publisher.
         Check those constraint combinations before paired candidate admission. }

@@ -55,7 +55,7 @@ uses
   nyx.design.tokens,
   nyx.tabs,
   nyx.disclosure,
-  nyx.kanban, nyx.kanban.intent, nyx.date.range,
+  nyx.kanban, nyx.kanban.intent, nyx.date.range, nyx.master.detail,
   nyx.selection,
   nyx.data,
   nyx.contract,
@@ -2672,6 +2672,7 @@ var
   LHasDisclosureOptions: Boolean;
   LHasKanbanIntent: Boolean;
   LHasDateRangeOptions: Boolean;
+  LHasMasterDetailIntent: Boolean;
   LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
@@ -3127,6 +3128,8 @@ var
     LDisclosureOptions: TNyxDisclosureOptions;
     LKanbanIntent: TNyxKanbanIntent;
     LDateRangeOptions: TNyxDateRangeOptions;
+    LMasterDetailIntent: TNyxMasterDetailIntent;
+    LMasterDetailOptions: TNyxMasterDetailOptions;
     LKanbanOptions: TNyxKanbanOptions;
     LKanbanLane: Integer;
     LSelectionOptions: TNyxSelectionOptions;
@@ -3307,6 +3310,27 @@ var
           end;
           LLines.Add('    SetNyxDateRangeOptions(' + AOwner +
             ', TNyxDateRangeOptions.' + LMethod + ');');
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxMasterDetailIntentKey) then
+        begin
+          LMasterDetailIntent := TNyxMasterDetailIntent.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+
+          if LMasterDetailIntent.Mode = nmiDisabled then
+          begin
+            LLines.Add('    SetNyxMasterDetailIntent(' + AOwner +
+              ', TNyxMasterDetailIntent.Disabled);');
+          end
+          else
+          begin
+            LMasterDetailOptions := LMasterDetailIntent.Options;
+            LLines.Add('    SetNyxMasterDetailIntent(' + AOwner + ',' + #10 +
+              '      TNyxMasterDetailIntent.Configured(' + #10 +
+              '        NyxMasterDetailOptions(' + #10 +
+              '          NyxTextField(' + PascalString(LMasterDetailOptions.TitleField.Name) + '),' + #10 +
+              '          NyxTextField(' + PascalString(LMasterDetailOptions.DescriptionField.Name) + '))));');
+          end;
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxKanbanIntentKey) then
@@ -3567,6 +3591,11 @@ var
     if HasNyxDateRangeOptions(ANode) then
     begin
       LHasDateRangeOptions := True;
+    end;
+
+    if HasNyxMasterDetailIntent(ANode) then
+    begin
+      LHasMasterDetailIntent := True;
     end;
 
     if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
@@ -3883,6 +3912,7 @@ begin
     LHasDisclosureOptions := False;
     LHasKanbanIntent := False;
     LHasDateRangeOptions := False;
+    LHasMasterDetailIntent := False;
     LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
@@ -3988,6 +4018,11 @@ begin
     if LHasDateRangeOptions then
     begin
       LLines.Add('  nyx.date.range,');
+    end;
+
+    if LHasMasterDetailIntent then
+    begin
+      LLines.Add('  nyx.master.detail,');
     end;
 
     if LHasSelectionOptions then
