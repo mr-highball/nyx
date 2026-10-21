@@ -2189,6 +2189,7 @@ begin
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
   FState.TabsEditorDraft.Clear;
+  FState.KanbanEditorDraft.Clear;
   FState.SelectionEditorDraft.Clear;
   FState.ReusableEditorDraft.Clear;
   FState.ExpressionEditorDraft.Clear;
@@ -2641,6 +2642,8 @@ begin
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.RootFor('inspector-menu'));
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.RootFor('inspector-menu-bar'));
     FState.TabsEditorDraft.Capture('inspector-tab-policy', FShellView.RootFor('inspector-tab-policy'));
+    FState.KanbanEditorDraft.Capture(NyxStudioKanbanEditorID,
+      FShellView.RootFor(NyxStudioKanbanEditorID));
     FState.SelectionEditorDraft.Capture('inspector-selection-policy',
       FShellView.RootFor('inspector-selection-policy'));
     FState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
@@ -2745,6 +2748,7 @@ begin
   FState.MenuEditorDraft.Restore(Result.Pages[0]);
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.TabsEditorDraft.Restore(Result.Pages[0]);
+  FState.KanbanEditorDraft.Restore(Result.Pages[0]);
   FState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FState.ReusableEditorDraft.Restore(Result.Pages[0]);
   FState.ExpressionEditorDraft.Restore(Result.Pages[0]);

@@ -4,6 +4,57 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current handoff (2026-10-21): **ordinary Kanban Studio configuration locally
+qualified**, under authoring criterion2 → components1/3 → parity. Public typed
+editor63 and board-wide candidate165 pass natively with clean heaps. The full
+ordinary Studio controller passes114 at1280/124 at390 through visible inputs,
+paired Undo/Redo, Interact, explicit Disable/Inherit, real named Save/Open and an
+application mounted from the reopened pair. Both widths save identical source
+and complete project packets. The exact saved Pascal is independently compiled;
+its ordinary application passes15/15 with clean heaps and reconstructs the exact
+accepted design. Stable-card list/Space input moves cards in independent reusable
+stores; retained bindings revoke on retirement. This is synthesized host input,
+not physical hardware, accessibility or production-performance qualification.
+
+The public Nyx Card/Select/Input/Button form borrows no controller/document after
+construction. Copied drafts survive panel changes and retire on exact authored/
+schema changes. Its typed whole-board change enters one existing candidate,
+schema/source admission and paired history operation, including all three role
+bindings. Canonical concrete/reusable/named-descriptor ownership stays separate
+from runtime IDs. Captions, custom actions, column policies and append/prepend/
+replace payload remain intact; definition/sibling/default rows stay unchanged.
+Inherit reconciles newly inherited behavior without erasing local presentation.
+
+Four browser consumers compile only. Eight accepted compiler logs have zero
+owned warnings/28 upstream occurrences; all six accepted native runs have clean
+heaps. Initial actual-consumer compilers failed for a missing nyx.responsive
+import. The repaired ordinary114/124 then exposed a real saved-source gap during
+independent artifact review: bodies gained typed Kanban calls without their
+imports. Those exact intermediate source/pair artifacts remain untouched. The
+shared workspace now promotes only the generator-requested Kanban imports through
+its existing import boundary; final authored design is text-exact to the earlier
+design. Corrected actual114/124 and exact compiled15/15 qualify that repair. A
+browser-only Undo-before-Import strengthens its future executed oracle; it adds
+no browser execution claim. No compiler replay remains.
+
+Ignored `.local/kanban-studio-paths-private.json` and its `all-joined-private.json`
+own composite freezes, terminal/log/artifact receipts and 1,762 Pascal/18 owned/
+13 concurrent/four emitted-source/pair pins. All readers are joined before these
+guides change; final source/remote checkpoint receipts remain in that packet.
+`tools/build.ps1 -Target kanban-studio -KanbanEvidenceDirectory <new directory>`
+maintains the journey and stages browser artifacts without starting a host.
+
+No original criterion/task/credit/DONE closes; core no-closure advances7→8 because
+the full authoring/component/parity outcome remains broader. Reassessment chooses
+the next useful existing components1/3 outcome: opt-in coordinated DateRange
+start/finish behavior through existing detached value/state validation, ordinary
+Studio and saved/generated applications. Lil' Scooty has a read-only proposal;
+root reviews public seams before releasing separate source ownership. Do not
+extend Kanban/import/fixture/compiler variants or invent closure credit. Resolver
+remains in its20 granular deferred tasks; splitter remains deferred. Preserve
+concurrent13, offline LAN, absent native Nyx tools and no host/config retry,
+cleanup/restart, new tool/schema/rollout or extra agent boundaries.
+
 Current handoff (2026-10-21): **automatic Kanban runtime locally qualified**.
 Both renderers now own configured movement across accepted view lifetime, without
 handwritten attachment. Preparation uses dormant ports and cached availability

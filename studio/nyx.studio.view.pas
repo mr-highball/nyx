@@ -41,6 +41,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.tabs.editor,
+  nyx.kanban.editor,
   nyx.selection.editor,
   nyx.event.discovery,
   nyx.reusable.editor,
@@ -193,6 +194,9 @@ type
     { Independent scalar draft; shares the public form capture contract. }
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     TabsEditorDraft: TNyxTabsEditorDraft;
+    { A copied whole-board form survives inspector collapse; baseline changes
+      retire it instead of replaying stale schema or named-part choices. }
+    KanbanEditorDraft: TNyxKanbanEditorDraft;
     SelectionEditorDraft: TNyxSelectionEditorDraft;
     ReusableEditorDraft: TNyxReusableEditorDraft;
     ExpressionEditorDraft: TNyxExpressionEditorDraft;
@@ -1994,6 +1998,7 @@ begin
         end;
         AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxKanbanInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));

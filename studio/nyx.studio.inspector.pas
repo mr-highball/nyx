@@ -65,6 +65,7 @@ const
   NyxStudioEventFilterID = 'events-filter';
   NyxStudioReusableEditorID = 'inspector-reusable-copy';
   NyxStudioPartsEditorID = 'inspector-instance-parts';
+  NyxStudioKanbanEditorID = 'inspector-kanban';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -158,6 +159,12 @@ procedure AddNyxTabsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; APagesExpanded: Boolean = True);
 function CaptureNyxTabsInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Public Nyx form captures one complete board configuration. Exact authored
+  owner/descriptor and mounted baseline survive through the shared paired job. }
+procedure AddNyxKanbanInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxKanbanInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Public reusable scalar-selection appearance form. Missing applicability omits
   the form; capture requires exact selection and its mounted policy baseline. }
 procedure AddNyxSelectionInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
@@ -232,6 +239,7 @@ uses
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
+  nyx.kanban.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec,
@@ -649,6 +657,57 @@ begin
       NyxStateStep(NyxStateBindingPatch([
         NyxBindControl(NyxBindingOwner(LProposal.Owner.ID), LProposal.Binding)]))]));
   end;
+end;
+
+procedure AddNyxKanbanInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) or (AProjection.Kind <> NyxKindName(nkKanbanBoard)) then
+  begin
+    Exit;
+  end;
+  AParent.Add(NewNyxKanbanEditor(NyxStudioKanbanEditorID, ASession.Document,
+    NyxControl(ASession.SelectedID)));
+end;
+
+function CaptureNyxKanbanInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxKanbanEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if ASession = nil then
+  begin
+    Exit;
+  end;
+  Result := CaptureNyxKanbanEditor(AButton, AShellRoot, ASession.Document, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if ASession.SelectedID <> LChange.Target.Owner.ID then
+  begin
+    raise ENyxModel.Create('Select this Kanban board again before configuring it');
+  end;
+
+  if ASession.ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before configuring this board');
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LChange.Target.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+    NyxDesignStep(NyxKanbanPolicyPatch(LChange))]));
+  { The queue may publish earlier work before preparing this request. Preserve
+    the exact mounted source/design authority rather than rebasing its proposal. }
+  AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
 end;
 
 function CaptureNyxSelectionInspector(ASession: TNyxStudioSession;

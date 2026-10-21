@@ -31,6 +31,7 @@ uses
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
+  nyx.kanban.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
   nyx.programs.editing, nyx.diagram.editing,
   nyx.flow.routes, nyx.flow.route.model;
@@ -45,7 +46,7 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram);
+    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -276,6 +277,9 @@ function NyxTabsPolicyPatch(const AChange: TNyxTabsEditorChange): INyxDesignPatc
 { Typed shared appearance command. Editor proposals carry exact baselines;
   compact agent operations additionally require their ordinary expected revision. }
 function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyxDesignPatch;
+{ One whole-board operation retains exact target/baseline and applies all lane
+  bindings with intent before the ordinary complete candidate/source admission. }
+function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
   const AOptions: TNyxSelectionOptions): INyxDesignPatch;
 function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
@@ -419,7 +423,7 @@ procedure ValidateNyxPositionOwner(ADocument: TNyxDocument; const AControl: TNyx
 implementation
 
 uses
-  nyx.schema, nyx.composition, nyx.binding.types;
+  nyx.schema, nyx.composition, nyx.binding.types, nyx.studio.kanban;
 
 function NyxPositionControl(const AControl: TNyxControlRef;
   const APosition: TNyxMovePosition): TNyxPositionChange;
@@ -641,6 +645,8 @@ begin
 end;
 
 type
+  { Detached closed operations retain copied typed values. Candidate dispatch
+    never invokes a caller-supplied property name or mutation callback. }
   TDesignOperation = record
     Operation: TNyxDesignOperation;
     ID: TNyxText;
@@ -662,6 +668,7 @@ type
     RootMove: TNyxRootMoveChange;
     Tabs: TNyxTabsEditorChange;
     Selection: TNyxSelectionEditorChange;
+    Kanban: TNyxKanbanEditorChange;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
     ProgramChange: TNyxProgramChange;
@@ -670,6 +677,7 @@ type
     TabPage: TNyxTabPageChange;
   end;
 
+  { Own one immutable operation vector and one final detached candidate. }
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch, INyxDesignChanges)
   private
     FOperations: array of TDesignOperation;
@@ -1905,6 +1913,12 @@ begin
         LOperation.Selection.Options := TNyxSelectionOptions.FromData(LWire.Field('options'));
       end;
     end
+    else if LName = 'kanban-policy' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doKanban;
+      LOperation.Kanban := TNyxKanbanEditorChange.FromData(LWire.Field('change'));
+    end
     else if LName = 'selection-policy' then
     begin
       CheckFields(LWire, '|op|change|');
@@ -2162,6 +2176,13 @@ function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyx
 begin
   Result := ReadNyxDesignPatch(NyxArray([
     NyxObject([NyxField('op', NyxData('selection-policy')), NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('kanban-policy')),
+      NyxField('change', AChange.ToData)])]));
 end;
 
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
@@ -2770,6 +2791,10 @@ begin
         doDiagram:
           begin
             LOperation.DiagramChange.Apply(Result);
+          end;
+        doKanban:
+          begin
+            ApplyNyxKanbanDesignChange(Result, LOperation.Kanban);
           end;
         doSelectionPolicy:
           begin

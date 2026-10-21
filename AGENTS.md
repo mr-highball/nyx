@@ -1,5 +1,32 @@
 # Working in Nyx
 
+KANBAN STUDIO LOCALLY QUALIFIED (2026-10-21): typed public editor63/candidate165,
+ordinary full Studio/application114desktop/124compact and exact saved compiled
+application15/15 pass with clean heaps. Eight accepted compilers have zero owned/
+28 upstream warning occurrences; four browser consumers compile only. All readers
+joined/audited against 1,762 Pascal/18 owned/13 concurrent/four saved-source/pair
+pins. Initial consumer missing-import failures and the intermediate exact saved
+source without Kanban imports remain retained. Reconciliation now carries only
+the generator's requested Kanban namespaces through existing import admission;
+authored design stays exact. Browser import has a stronger changed-pair oracle,
+but browser execution/input/observing/parity/performance/delivery remain open.
+
+One existing candidate/schema/source/history publication covers all three lane
+bindings and intent. Canonical authored nodes/descriptors, selected/pending/source
+guards and copied draft baselines stay exact. Configure/Disable/Inherit preserve
+custom headings, Move faces, append/prepend/replace payload and sibling ownership;
+Inherit reconciles newly inherited behavioral specs inside that same candidate.
+No projected-clone writes, runtime-ID parsing or new tool/schema/rollout follows.
+Stop Kanban/import/fixture/compiler variants. WORK.md and ignored
+.local/kanban-studio-paths-private.json own composite qualification, retained first
+failures and source/remote receipts. No full original criterion/task/credit/DONE
+closes; no-closure is eight. Next reassessed core outcome is opt-in coordinated
+DateRange behavior through existing value/state validation and ordinary Studio/
+saved/generated application owners, under components1/3 returning authoring2 and
+parity. Existing Lil' Scooty has the read-only seam proposal; root reviews before
+separate source release. Preserve concurrent13, deferred resolver/splitter, offline
+LAN and absent native Nyx tools. No host/config retry, cleanup/restart or extra agent.
+
 AUTOMATIC KANBAN RUNTIME QUALIFIED (2026-10-21): native107 contract checks,
 ordinary98/98 and exact compiled companion98/98 pass with clean heaps. Both
 renderers prepare future-scope dormant ports/availability before Build/Sync,

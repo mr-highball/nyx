@@ -294,8 +294,10 @@ Pascal preserve the distinction and customized parts. The setter writes metadata
 only and does not call Configure or duplicate children. Both renderers now prepare
 automatic attachment before building controls, then activate it with the accepted
 view. Native contract and ordinary/generated desktop/compact consumers qualify
-this runtime ownership; browser consumers compile only. Ordinary Studio
-configuration, browser execution and complete application adoption remain open.
+this runtime ownership. Ordinary native Studio configuration, paired history,
+Save/Open and the exact saved generated application also have local qualification;
+browser consumers compile only. Browser execution and full component/application
+parity, quality and delivery remain open.
 
 Generated Pascal retains normal list bindings, queries and added buttons. The
 application can opt into automatic lifetime ownership with configured intent.
@@ -315,6 +317,43 @@ on an independently admitted host; the native executable also accepts
 WORK.md owns actual current results. Compilation, synthesized native drag slots,
 physical input, accessibility, full performance and observing delivery remain
 separate evidence boundaries.
+
+### Configure Kanban in Studio
+
+Select a concrete Kanban board, a reusable board instance or an authored named
+board part. Its Properties panel offers **Kanban movement**, built entirely from
+ordinary Nyx controls. Choose an existing collection, distinct text fields for
+card titles and lane values, runtime scope and three lane values/action labels.
+Without a usable collection, the form explains the prerequisite and disables
+Apply. Existing customized headings remain yours; action labels describe the
+movement destinations without replacing those headings.
+
+**Apply board configuration** updates all three list bindings and automatic intent
+in one paired design/Pascal/history operation. A single Undo restores the whole
+previous pair. Existing Move buttons, styling, column captions/sizing, typeahead,
+paging and local payload remain intact. Missing Move buttons are ordinary Nyx
+buttons added through the lane's authored ownership. Incompatible role/column
+shapes refuse atomically instead of discarding customization.
+
+**Disable automatic movement** stores a local mask and retains the lists and
+customizations. **Use inherited configuration** removes the exact local intent;
+if a definition supplies another configured collection, all three behavioral
+bindings are reconciled together while local presentation remains. Inheriting a
+static definition leaves the ordinary bindings in place. Independent reusable
+instances keep their separate stores unless the caller selects application scope.
+
+Embedded editors can reuse `NewNyxKanbanEditor` and its copied typed
+`TNyxKanbanEditorChange`. Studio captures that change with exact authored/schema/
+source guards and admits `NyxKanbanPolicyPatch` through the existing project
+transaction. Incomplete input can be parked in `TNyxKanbanEditorDraft`; a changed
+owner/schema retires it. These forms and changes retain no borrowed controller.
+
+`tools/build.ps1 -Target kanban-studio -KanbanEvidenceDirectory <new directory>`
+maintains the typed form/candidate checks, actual native Studio journey and exact
+compiled saved companion at1280/390. It also stages `kanban-studio.html` for
+ordinary and compiled browser consumers without starting a server. Current native
+results are63/165/114/124/15/15 with clean heaps; browser artifacts compile only.
+[WORK.md](../WORK.md) retains the missing-import failure and exact repair evidence.
 
 ## Component discovery and creator descriptions
 

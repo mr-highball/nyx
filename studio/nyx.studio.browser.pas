@@ -1065,6 +1065,7 @@ begin
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.TabsEditorDraft := FViewState.TabsEditorDraft;
+  LState.KanbanEditorDraft := FViewState.KanbanEditorDraft;
   LState.SelectionEditorDraft := FViewState.SelectionEditorDraft;
   LState.ReusableEditorDraft := FViewState.ReusableEditorDraft;
   LState.ExpressionEditorDraft := FViewState.ExpressionEditorDraft;
@@ -1121,6 +1122,7 @@ begin
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.TabsEditorDraft.Restore(Result.Pages[0]);
+  FViewState.KanbanEditorDraft.Restore(Result.Pages[0]);
   FViewState.SelectionEditorDraft.Restore(Result.Pages[0]);
   FViewState.ReusableEditorDraft.Restore(Result.Pages[0]);
   FViewState.ExpressionEditorDraft.Restore(Result.Pages[0]);
@@ -1314,6 +1316,7 @@ begin
     FViewState.MenuEditorDraft.Clear;
     FViewState.MenuBarEditorDraft.Clear;
     FViewState.TabsEditorDraft.Clear;
+    FViewState.KanbanEditorDraft.Clear;
     FViewState.SelectionEditorDraft.Clear;
     FViewState.ReusableEditorDraft.Clear;
     FViewState.TabPagesDraft.Clear;
@@ -1385,6 +1388,8 @@ begin
   FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.RootFor('inspector-menu'));
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.RootFor('inspector-menu-bar'));
   FViewState.TabsEditorDraft.Capture('inspector-tab-policy', FShellRenderer.RootFor('inspector-tab-policy'));
+  FViewState.KanbanEditorDraft.Capture(NyxStudioKanbanEditorID,
+    FShellRenderer.RootFor(NyxStudioKanbanEditorID));
   FViewState.SelectionEditorDraft.Capture('inspector-selection-policy',
     FShellRenderer.RootFor('inspector-selection-policy'));
   FViewState.ReusableEditorDraft.Capture(NyxStudioReusableEditorID,
@@ -5969,6 +5974,7 @@ begin
   FViewState.MenuEditorDraft.Clear;
   FViewState.MenuBarEditorDraft.Clear;
   FViewState.TabsEditorDraft.Clear;
+  FViewState.KanbanEditorDraft.Clear;
   FViewState.SelectionEditorDraft.Clear;
   FViewState.ReusableEditorDraft.Clear;
   FViewState.ExpressionEditorDraft.Clear;

@@ -2,20 +2,23 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current Kanban adoption follows criterion2. Automatic runtime now passes native107
-contract, ordinary98/98 and exact compiled companion98/98 checks with clean heaps.
-Both renderer implementations compile; browser core/ordinary/generated consumers
-compile only. Six accepted compiler logs have zero owned/21 upstream warning
-occurrences. Failed candidate, same-ID replacement, disable/inherit, design mode,
-full retirement/remount and retained-command refusal qualify through actual native
-controls. The earlier typed intent/event prerequisites remain native73/58 clean.
-One board-wide paired Studio configuration operation is the next prerequisite:
-clone/admit all behavioral lane bindings and complete intent together, preserving
-customized parts and exact authored/source baselines. Do not replay one-shot
-Configure on customized boards or expose invalid intermediate collection edits.
-Ordinary configuration/preview/Undo/Redo/save/reopen/generated application and full
-original authoring/parity remain open. [WORK.md](../WORK.md) owns composite freezes,
-retained portability/converter failures and no-closure7; original credit stays exact.
+Current Kanban authoring follows criterion2: the public editor63/candidate165,
+ordinary full Studio/application114desktop/124compact and exact saved compiled
+application15/15 pass with clean heaps. Four browser consumers compile only;
+eight accepted compiler logs have zero owned/28 upstream warning occurrences.
+One existing paired operation admits all three behavioral bindings and complete
+intent together, preserving canonical concrete/reusable/named-descriptor owners,
+custom headings/actions, column policies and payload. Explicit Disable/Inherit,
+exact Undo/Redo, real native Save/Open, preview and independent application stores
+qualify in that bounded journey. Reconciliation now imports generator-requested
+Kanban namespaces into older accepted source frames; the earlier saved source
+without those imports remains retained. Original criteria/credit are unchanged.
+Full authoring, browser execution/input, aesthetics/accessibility, production
+budgets, parity and delivery remain open. [WORK.md](../WORK.md) owns composite
+freezes, retained failures and no-closure8. Stop Kanban/import/compiler variants;
+the next reassessed core outcome is coordinated DateRange behavior under
+components1/3 through existing value/state admission, returning here for ordinary
+Studio/saved/generated application adoption. Resolver/splitter remain deferred.
 
 Resolver direction (user decision, 2026-10-17): build a fresh, wholly Nyx-owned
 Pascal engine for completion/navigation. Keep the existing typed provider boundary,

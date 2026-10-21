@@ -6596,8 +6596,13 @@ begin
     for LImportIndex := 0 to LGeneratedImports.Count - 1 do
     begin
 
+      { Promoting an accepted static board introduces typed movement builders.
+        Carry only the namespaces requested by the new generated frame through
+        the existing import admission; keep authored imports after a reset. }
       if (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.files.open') or
-        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.logic.files.open') then
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.logic.files.open') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
       end;
