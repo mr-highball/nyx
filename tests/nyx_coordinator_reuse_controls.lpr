@@ -577,6 +577,7 @@ var
   LSlot: Integer;
   LKind: TCompound;
   LCommon: INyxCoordinatorBinding;
+  LSummary: INyxSelectionSummaryBinding;
   LDetail: INyxMasterDetailBinding;
   LBoard: INyxKanbanBinding;
   LControl: INyxControl;
@@ -589,20 +590,29 @@ begin
   begin
     LSlot := BindingIndex(AApp, LInstance);
     LCommon := GApps[AApp].View.CoordinatorBinding(Owner(AApp, LInstance, rcSummary).ID);
-    Check(Supports(LCommon, INyxSelectionSummaryBinding, GSummaries[LSlot]) and
-      GSummaries[LSlot].Connected,
+    { Query locals own temporary leases. Retain a separate global cell only
+      after the same capability/connection assertion succeeds. }
+    LSummary := nil;
+    Check(Supports(LCommon, INyxSelectionSummaryBinding, LSummary) and
+      LSummary.Connected,
       'generic application lookup preserves the exact creator specialized binding');
+    GSummaries[LSlot] := LSummary;
     LCommon := GApps[AApp].View.CoordinatorBinding(Owner(AApp, LInstance, rcDetail).ID);
+    LDetail := nil;
     Check(Supports(LCommon, INyxMasterDetailBinding, LDetail) and
       (LDetail = GApps[AApp].View.MasterDetailBinding(Owner(AApp, LInstance, rcDetail).ID)) and
       LDetail.Connected, 'common and typed detail lookup have one accepted identity');
     GDetails[LSlot] := LDetail;
     LCommon := GApps[AApp].View.CoordinatorBinding(Owner(AApp, LInstance, rcKanban).ID);
+    LBoard := nil;
     Check(Supports(LCommon, INyxKanbanBinding, LBoard) and
       (LBoard = GApps[AApp].View.KanbanBinding(Owner(AApp, LInstance, rcKanban).ID)) and
       LBoard.Connected, 'common and typed board lookup have one accepted identity');
     GBoards[LSlot] := LBoard;
     LControl := RetainNyxControl(Owner(AApp, LInstance, rcSummary));
+    LList := nil;
+    LLabel := nil;
+    LButton := nil;
     Check(Supports(LControl.Part(SelectionSummaryItems), INyxList, LList) and
       Supports(LControl.Part(SelectionSummaryCount), INyxLabel, LLabel) and
       Supports(LControl.Part(SelectionSummaryClear), INyxButton, LButton),

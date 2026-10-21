@@ -1,5 +1,71 @@
 # Working in Nyx
 
+COORDINATOR05 R3 STORAGE BROWSER FAILURE JOINED (2026-10-21): exact5AF7116F
+at1280x900/390x900 now fails before markers in collection TView.GetSpec, undefined
+Copy reached from binding ValidateRoot/RenderFrame. Keep both actual failures;
+no partial count or browser pass follows. RootB2C00B42 verifies53current+retained/
+1782Pascal/concurrent13/47extras/six runtime/13 evidence exact. Host47324 was
+verified by path/fullcommand/UTCticks639282125290419199, stopped/joined; port8766
+empty, viewport reset/tabs8/9 closed. All Pascal remains paused. Root/helper
+review the precise shared-view ownership path read-only before any next release;
+no null mask, fixture/assertion/wait change or speculative renderer redesign.
+Consumer4AC66CBF and nativeE1B05FCD remain valid in their exact scopes. Persistent
+same-regression loopback rerun permission applies to later reviewed builds, each
+host stopped; no further approval question. No05/parent/original credit closes;
+executed browser batch advances core no-closure21→22. Preserve all earlier failures
+and no extra agent/LAN/config/MCP/tool/wire rollout/unrelated cleanup.
+
+COORDINATOR05 R3 STORAGE NATIVE-LOCAL QUALIFIED (2026-10-21): consumer4AC66CBF
+passes original267/aggregate588 at actual native1280/390, both clean heaps; matching
+browser compiles only. Root auditE1B05FCD and independent helper review verify all
+53current+retained/1782Pascal/concurrent13/47extras, two new compilers0owned/seven
+upstream warnings, eight exact own exports and local-only emitted cleanup. Reuse
+D071 other10compilers/six native outcomes explicitly; no unchanged replay. Browser
+JS5AF7116F now owns GSummaries cells after unchanged successful queries, preserving
+all original fixtures/assertions/waits/input. OriginalE60/52AE failure stays retained.
+Root may freeze a separate SAME-regression browser cycle with existing Pascal host
+997B90C4 on127.0.0.1 only: actual1280x900/390x900 through final cleanup, then reset
+viewport, close own tabs, verify/stop/join own host and exact-audit all inputs/results.
+Persistent human rerun approval applies; no new question. All Pascal/guides pause
+through browser join/audit. No source/compiler/LAN/config/MCP/tool/wire/extra agent/
+unrelated cleanup or original criterion/credit closure. Core no-closure21 carries.
+
+COORDINATOR05 R3 CONSUMER STORAGE REVIEWED (2026-10-21): helper4AC66CBF is
+source-ready/paused. Root independently verifies only CaptureBindings changed:
+typed temporary Summary lease, unchanged successful Supports/Connected predicate
+and message, explicit owning global-cell assignment, pre-query typed-local resets.
+All outside-helper bytes and other1781 Pascal inputs stay exact; no product change.
+Freeze53owned/1782Pascal/concurrent13/47extras before ONLY maintained reuse two
+compilers/native588 at1280+390 plus matching browser compile. Reuse D071's other
+ten compilers/six native outcomes; retain originalE60/52AE failure and all prior
+evidence. Root owns actual handles/joins/audits. All Pascal/guides pause through
+terminal join and exact audit. Then independently review emitted ownership before
+a separate browser-cycle freeze under persistent same-regression loopback approval;
+stop each owned host afterward. No new per-cycle permission, source/API/fixture/
+assertion/wait scope, original closure, extra agent/LAN/config/MCP/tool/wire/cleanup.
+
+COORDINATOR05 R3 CONSUMER STORAGE SOURCE RELEASED (2026-10-21): previous actual
+cycle is progress, retained/independently reviewed1590037F and pushed/verified
+415aa33. All readers/host joined. Existing helper owns ONLY CaptureBindings in
+tests/nyx_coordinator_reuse_controls.lpr: typed LSummary output, reset before each
+query, same Supports-success/Connected predicate+message, then explicit owning
+GSummaries cell assignment after that successful Check. Reset existing reused
+LDetail/LBoard and LList/LLabel/LButton immediately before their query checks.
+This is a consumer portability adapter, not an oracle/production change. Preserve
+all other bytes, fixtures, Check calls/messages/logical conditions/counts, physical
+inputs and waits. OriginalE60/52AE and its failure stay immutable; canonical
+consumer gets a NEW reviewed hash. Earlier E60 byte-freeze applies to retained
+history, with ONLY this explicit helper exception now released. No product/API/
+GUID/other helper scope. Root reviews exact diff/outside-helper bytes, then fresh
+freeze admits only maintained reuse2 compilers/native588 at1280+390 and matching
+browser compile. Reuse exact D071 other10 compilers/six native outcomes; don't
+replay unchanged products/consumers. No compiler before source-ready review/freeze.
+Scoped human regression-rerun authorization applies to these identical tests with
+portable storage plumbing; actual browser still follows qualified artifact and
+its own cycle freeze/host audit. No further approval is needed within that scope.
+Preserve all53owned/1782Pascal/concurrent13/47extras, prior evidence, original
+criteria/no-closure21 and no extra agent/LAN/config/MCP/tool/wire rollout/cleanup.
+
 COORDINATOR05 R3 52AE BROWSER FAILURE JOINED (2026-10-21): exact1280x900 and
 390x900 both fail before markers at AwaitSummary.GetSelectedCount. Root/helper
 source diagnosis shows production lookup already passed Supports+Connected;

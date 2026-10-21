@@ -4,6 +4,46 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current actual browser result:5AF7116F fails at both exact viewports before markers
+in collection GetSpec/undefined Copy during ValidateRoot/RenderFrame. The repaired
+consumer's lookup/global ownership is no longer the first failure. RootB2C00B42
+retains both outcomes with53/1782/13/47+six runtime/13 evidence exact. Host47324 is
+verified/stopped/joined; port8766 empty, viewport reset and tabs8/9 closed. All
+Pascal stays paused pending independent failure review and a precise ownership
+diagnosis; no null mask or changed test oracle. Existing regression rerun approval
+persists. Original criteria stay open; actual browser batch advances21→22.
+
+Current result: the reviewed storage repair passes267/588 native checks at both
+actual widths with clean heaps and browser compilation. RootE1B05FCD/independent
+review verify53/1782/13/47 exact inputs and emitted local-only cleanup, eight own
+export pins unchanged, zero owned/seven upstream warnings. Only2new compilers were
+run; D071's other10/six native outcomes remain explicitly reused. Next is exact
+JS5AF7116F at1280x900/390x900 under the persistent same-regression loopback permission.
+Freeze this browser cycle separately, pause all source/guides, stop/join its owned
+host afterward and retain every outcome. No original criterion/credit closes.
+
+Current admission: root-reviewed consumer4AC66CBF changes only CaptureBindings
+storage plumbing. All other1781 Pascal inputs and the original logical assertions,
+messages, counts, inputs and waits stay exact. After a fresh53/1782/13/47 freeze,
+run only maintained reuse two compilers and actual native588 at1280/390. Reuse
+D071's unchanged other ten compilers/six native outcomes. Pause all Pascal/guides
+until the actual reader joins and exact audit completes; review emitted ownership
+before a separate same-regression browser-cycle freeze. Existing human loopback
+rerun permission persists, with every host stopped afterward. No original closure.
+
+Current source batch: a CaptureBindings-only portability repair in the regression
+consumer. The original E60/52AE failure is retained and checkpointed415aa33; all
+readers/host joined. Helper may query a new typed LSummary local, preserve the same
+successful Supports/Connected assertion, then retain a separate GSummaries cell;
+reset reused typed query locals before their next query. Every other byte,
+fixture/assertion/message/count/physical input/wait and all production stay exact.
+This explicitly replaces the canonical consumer's storage adapter hash while
+preserving the original frozen consumer. Root reviews/freezes before reuse-only
+two compilers/two native widths; reuse D071's unchanged other10 compilers/six native
+outcomes. The human's same-regression rerun permission persists for these unchanged-
+in-meaning tests; no per-cycle approval. No original criterion/credit closes and
+no-closure21 carries.
+
 Current result: the52AE browser run fails at both verified1280x900/390x900 before
 markers in AwaitSummary. Production lookup succeeds and its Supports+Connected
 assertion passes; CaptureBindings' generated cleanup releases the GLOBAL GSummaries

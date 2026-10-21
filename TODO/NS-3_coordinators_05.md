@@ -84,6 +84,17 @@ that scoped authorization persists. No task or browser acceptance follows.
 
 **Work packets and handoff:**
 
+R3 consumer-storage qualification/execution (2026-10-21): only CaptureBindings
+changes in4AC66CBF; unchanged logical checks/messages/input/waits remain. Independent
+E1B05FCD qualifies267/588 at both native widths with clean heaps, two compilers and
+eight exact own exports; unchanged D071 other10compilers/six native outcomes are
+explicitly reused. Exact browser5AF7116F subsequently fails at1280x900/390x900 before
+markers in collection GetSpec/undefined Copy during ValidateRoot/RenderFrame.
+AuditB2C00B42 retains both failures, exact inputs and verified stopped/joined
+host47324; viewport/tabs restored. The prior global Summary storage defect is
+repaired, but browser acceptance remains open. Review the shared-view ownership
+path before any separately released repair. Same-regression host approval persists.
+
 | Packet | Reviewable outcome | Dependency and evidence |
 | --- | --- | --- |
 | R1 — Reusable application | Two reusable instances in each of two ordinary App objects share authored definitions but isolate Summary, MasterDetail and Kanban runtime stores/claims and exact typed lookup | Accepted registration/MasterDetail/Kanban. Root owns maintained build/docs; helper receives only the separately released ordinary application consumer. Existing App.View.CoordinatorRegistry before native Mount/browser Run is sufficient; no host API change is required. |
