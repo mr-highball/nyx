@@ -4,7 +4,76 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Current result: [Reuse05/R3](TODO/NS-3_coordinators_05.md) fails actual1280x900 and
+Current result: the narrow R3 managed-ownership repair is qualified for native
+execution and browser compilation. Independent audit9E3B2222 verifies all actual
+readers joined, eight compilers, native171/68/68/588/588 and five clean heaps.
+New browser JSD8AF4094 has the correct ownership sequence; it has not executed.
+The same unchanged application at1280x900/390x900 is the next required outcome.
+The prior single host is stopped; a new bounded loopback-run question is pending.
+Root owns docs/checkpoint only, all Pascal stays paused. No complete original
+criterion/credit closes; this completed native batch advances no-closure17→18.
+
+### Managed ownership repair qualification — 2026-10-21
+
+Selection Summary now constructs inertly and its factory retains the prepared
+interface before Initialize can invoke collection callbacks or self-leased Project.
+Initialization failures unwind that managed owner through the existing cleanup.
+Summary readiness and common-mount readiness use local Supports outputs, followed
+by explicit owning-field assignments. Emitted code retains separate field leases
+and releases only the query locals. Existing command self leases remain intact;
+there is no guard masking a finalized FPort. The only Pascal changes are example
+6C503DB31EE335375FBDDB0769A9DDE1E0B4FD19C7E06CC56BA1485C58CDF736 and common
+F8E649A94F820BDC1A87E0E1A5905EB09E44C82BB98315A15F3C6472F5747371.
+
+The unchanged E60C4523 consumer preserves its267 original checks before588 at
+each native width. Portable171 and ordinary68/68 also pass, with both Studio
+products compiling. Eight actual compilers have zero owned/28 upstream classes.pas
+warning occurrences; all five actual native heaps have allocated=freed and zero
+unfreed blocks. Four real handles91834/39718/51781/5260 returned0 and joined.
+Both renderer hashes, all assertions/waits and authored defaults stay exact.
+
+Immutable9E3B22228063121119470BCE4BC550AD49DDD1DB72E7987449B503EF247B496E
+and independent review verify53 current+retained owned files,1782 Pascal,
+13 concurrent,47 extras,six retained runtime inputs,12 old browser evidence files
+and32 final receipt/log/artifact/export/failure pins. Both widths retain their own
+79EF/E610 reusable and0F3F/90FA embedded exports. These establish authored/default
+invariance only, not Save/Open or independently compiled-export behavior.
+One audit preparation stopped before any write on an absent generic artifacts
+field; normalizing the actual generic/maintained schemas and native marker wording
+changed no receipt/source and replayed no compiler/runtime.
+
+The new reuse browser JS is D8AF4094BDEC84C806A04CD110F6A8A98337CA601F7D363C2BA8F4D8EFEC69B6;
+HTML96451F59 and RTL A6C5EDC8 remain exact. Root/helper independently verified
+factory ownership before initialization and both local-to-field leases in emitted
+code. This does not execute a browser. Preserve failed audit62C40341 and its
+excluded wrong-width attempt. The next run must finish at both verified browser
+viewports and remain error-free through final cleanup, not merely set a success
+marker. Expected256/563 counts are still source-derived. Separate reentrant
+validator/notification-disposal, Save/Open/compiled exports and full target quality
+retain their original evidence requirements. Reuse05, parent and DataToolbar
+dependencies remain open. No host retry follows without the pending new approval.
+
+### Retained ownership repair source admission
+
+Both narrow ownership handoffs are now independently reviewed: root accepts common
+constructorF8E649A9; helper accepts example6C503DB3. Qualification is source-only
+until the fresh joint freeze, then the existing fixed eight-compiler/five-native
+batch below. Root owns all actual handles and joins. No browser retry or new host
+is released; previous browser failures remain the regression evidence.
+
+Admitted batch: repair the concrete R3 managed-ownership defect under the existing
+[Reuse05](TODO/NS-3_coordinators_05.md) lifetime criteria. Previous browser turn is
+progress, retained/pushed/remote-verifiede16dd10; no full original criterion closes
+and no-closure17 carries. Root owns only example Summary inert construction,
+factory-owned initialization/local readiness and docs/admission. Existing helper
+owns only common TCoordinatorMount.Create's local Supports output/FFence assignment.
+Every consumer/assertion/wait and both renderers remain exact. Source-ready review
+and a fresh joint freeze precede the fixed eight-compiler/five-native plan:
+maintained creators171/68/68, reuse588/588 and both Studio compilers. Native UI runs
+sequentially. No new browser/host attempt is admitted; first prepare the fixed
+artifact and preserve its existing failed regression unchanged.
+
+Pre-repair result: [Reuse05/R3](TODO/NS-3_coordinators_05.md) fails actual1280x900 and
 390x900 before completion in Selection Summary's reference-counted construction.
 The approved host is stopped/joined, port8766 empty, viewport reset and tabs closed.
 No source/assertion/compiler change occurred. Independent audit62C40341 retains the

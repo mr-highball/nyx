@@ -95,7 +95,10 @@ type
   { The same managed object owns preparation and the accepted custom commands.
     It retains only scoped capabilities, views and tokens, never a node/widget.
     Local revocation precedes disconnecting subscriptions. Dirty dormant views
-    refuse publication instead of projecting after hidden controls were built. }
+    refuse publication instead of projecting after hidden controls were built.
+    Construction is inert. The factory acquires a managed lease before Initialize
+    can call outward or enter a method that temporarily retains Self; this also
+    protects initialization under pas2js's initially zero interface count. }
   TSummaryBinding = class(TInterfacedObject, INyxSelectionSummaryBinding,
     INyxCoordinatorBinding, INyxPreparedCoordinator, INyxPreparedPublication,
     INyxPublicationReadiness)
@@ -125,10 +128,12 @@ type
     procedure Project(APreparing: Boolean);
     procedure Changed;
     procedure Cleanup;
-  public
-    constructor Create(const AProjection: INyxCoordinatorProjection;
+    { Called once by the factory while its prepared-owner lease is retained.
+      Failure releases that lease through the existing destructor/cleanup path. }
+    procedure Initialize(const AProjection: INyxCoordinatorProjection;
       const AViews: INyxCollectionBindings; const AView: INyxPreparedEventView;
       const AScheduler: INyxScheduler; const ARefresh: INyxCoordinatorRefresh);
+  public
     destructor Destroy; override;
     function GetConnected: Boolean;
     function GetSelectedCount: Integer;
@@ -267,15 +272,15 @@ begin
   end;
 end;
 
-constructor TSummaryBinding.Create(const AProjection: INyxCoordinatorProjection;
+procedure TSummaryBinding.Initialize(const AProjection: INyxCoordinatorProjection;
   const AViews: INyxCollectionBindings; const AView: INyxPreparedEventView;
   const AScheduler: INyxScheduler; const ARefresh: INyxCoordinatorRefresh);
 var
   LViews: INyxCollectionBindings;
   LItems: TNyxControlRef;
   LSpec: TNyxCollectionViewSpec;
+  LReadiness: INyxCollectionViewPublication;
 begin
-  inherited Create;
   FProjection := AProjection;
   LViews := AViews;
   FEventView := AView;
@@ -305,10 +310,13 @@ begin
   FView := LViews.ViewFor(LItems.ID);
   CheckAuthority(True);
 
-  if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, FReadiness) then
+  if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, LReadiness) then
   begin
     raise ENyxCoordinator.Create('Selection Summary needs a publication-aware collection view');
   end;
+  { The local query result and the retained field each own their interface lease.
+    Finalizing the Supports output must release only the local reference. }
+  FReadiness := LReadiness;
   FPort := TSummaryPort.Create;
   FPortLease := FPort;
   FPort.Owner := Self;
@@ -584,6 +592,9 @@ function TSummaryFactory.Prepare(const AProjection: INyxCoordinatorProjection;
   const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
   const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
   const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+var
+  LOwner: TSummaryBinding;
+  LLease: INyxPreparedCoordinator;
 begin
 
   if (AIntent.Kind <> ndObject) or (AIntent.Count <> 1) or
@@ -591,7 +602,13 @@ begin
   begin
     raise ENyxCoordinator.Create('Selection Summary requires version 1 intent');
   end;
-  Result := TSummaryBinding.Create(AProjection, AViews, AView, AScheduler, ARefresh);
+  LOwner := TSummaryBinding.Create;
+  { Pin the owner before any initialization callout or temporary Self lease.
+    Initialization still prepares dormant observers and initial presentation
+    before the common driver can validate or build physical controls. }
+  LLease := LOwner;
+  LOwner.Initialize(AProjection, AViews, AView, AScheduler, ARefresh);
+  Result := LLease;
 end;
 
 function NewSelectionSummaryFactory: INyxCoordinatorFactory;

@@ -1,5 +1,56 @@
 # Working in Nyx
 
+COORDINATOR05 R3 OWNERSHIP REPAIR NATIVE/COMPILE QUALIFIED (2026-10-21):
+independent root/helper audit9E3B2222 verifies53 current+retained owned/1782 Pascal/
+concurrent13/47 extras/six prior runtime inputs/12 retained browser evidence and
+32 final receipt/log/artifact/export/failure pins. All four actual handles joined
+terminal0. Eight compilers pass; native171/68/68/588/588 have five clean heaps,
+zero owned/28 upstream RTL warning occurrences. All eight own exports retain
+79EF/E610/0F3F/90FA; they are not Save/Open or compiled-export proof. ConsumerE60
+and renderers5C037EEC/9C89C990 remain exact. Example6C503DB3/commonF8E649A9 have
+correct emitted managed construction/local-to-owning-field leases in new reuse
+JSD8AF4094. This is native/compile qualification, not browser execution. Preserve
+the first62C40341 failures and no-write receipt-schema audit preparation error.
+Root owns docs/checkpoint only; all Pascal stays paused. Current freeze is now
+historical for root-only docs. No05/parent/original criterion/credit/DONE closes;
+completed native batch advances no-closure17→18. Next is the SAME rebuilt browser
+application at1280x900/390x900, including final cleanup errors. A fresh one-host
+loopback request is pending, not authorization; the previous host remains stopped.
+Preserve concurrent13, resolver14/splitter, offline LAN/no native Nyx tools and
+no extra agent, config/MCP/tool/wire rollout or unrelated cleanup/restart. Existing
+helper has read-only downstream Q1 failure/cancellation owner design only.
+
+COORDINATOR05 R3 OWNERSHIP REPAIR REVIEWED (2026-10-21): root independently
+accepts common constructorF8E649A9 and helper independently accepts example6C503DB3
+as source-ready only. Both remain paused; all readers are joined. Root may freeze
+the joint inputs and admit ONLY the existing fixed eight-compilers/five-native
+qualification below: creators4/171+68+68, reuse2/588+588, both Studio compilers2.
+Native UI is creators then reuse, sequential. All source/guides stay frozen until
+every actual handle joins and exact audit completes. Preserve consumerE60C4523,
+both renderer hashes, all assertions/waits and prior browser failure62C40341.
+Inspect emitted managed construction and distinct readiness field leases; browser
+execution is still unqualified. No new host is authorized by this source repair.
+Root owns admission/joins/audit, helper read-only review. No new agent, config,
+LAN/MCP/tool/wire rollout, unrelated restart/cleanup or original criterion closure.
+
+COORDINATOR05 R3 OWNERSHIP REPAIR SOURCE RELEASED (2026-10-21): prior browser
+turn is progress: exact1280/390 failures are retained, independently reviewed and
+checkpointed/pushed/remote-verifiede16dd10. All readers and the only host are joined.
+Root owns ONLY example Summary inert construction/private Initialize, factory
+managed lease before initialization, local readiness output and docs/admission.
+Existing helper owns ONLY TCoordinatorMount.Create's local readiness output and
+explicit FFence assignment in src/nyx.coordinators.pas. No public API/GUID, renderer,
+include, consumer/assertion/wait, default recipe or undefined-mask change follows.
+All existing self leases remain after managed ownership. Review/freeze both source
+handoffs before compilers. Planned fixed qualification: maintained coordinators4
+compilers/171+68+68 native, reuse2/588+588 native, both Studio products2;8 compilers/
+five native outcomes, sequential UI. Inspect emitted initialization/field ownership
+without claiming browser execution. Exact consumerE60C4523 and both renderers stay
+unchanged. The consumed one-host approval releases NO new host; a fixed browser
+build must be concrete before any further host request. Preserve actual62C40341
+failure, native90689991 boundary, concurrent13 and resolver14/splitter deferral.
+No extra agent, LAN/config/MCP/tool/wire rollout or unrelated cleanup/restart.
+
 COORDINATOR05 R3 FAILURE JOINED (2026-10-21): approved first browser run is
 complete, not accepted. Actual1280x900/390x900 both fail before completion markers
 with undefined Owner in Summary Revoke. Retain excluded first compact attempt at

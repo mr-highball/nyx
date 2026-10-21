@@ -45,6 +45,15 @@ viewport reset and tabs closed. Independent audit62C40341 pins unchanged source/
 assets and every result. Native evidence remains valid in its own scope; no browser
 acceptance follows. WORK's first-browser section owns exact failure receipts.
 
+R3 ownership repair (2026-10-21): source6C503DB3/F8E649A9 is independently reviewed
+and qualifies native171/68/68/588/588, five clean heaps and eight successful
+compilers. Both renderers and this task's E60C4523 application/assertions remain
+exact. New browser JSD8AF4094 emits managed factory ownership before initialization
+and separate readiness field leases. Audit9E3B2222 pins the complete joined result.
+That browser artifact has not executed; the first failure remains retained and
+a new bounded local-host question is pending. No complete original criterion or
+parent/browser gate closes from native execution and compilation.
+
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
@@ -94,16 +103,19 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 **Pull checklist — R3:**
 
 Status: the first admitted browser run failed at both required widths. Its single
-host is stopped and approval consumed. Next is a separate reviewed ownership
-repair before proposing another browser run; no host/config retry follows here.
+host is stopped and approval consumed. The reviewed ownership repair now passes
+native/compile qualification; the next outcome is the same rebuilt application
+executing at both verified browser widths. A new bounded local-host question is
+pending; this task releases no host/config retry by itself.
 
 Preserve every consumer/assertion/wait byte. The bounded proposal establishes
 managed Summary ownership before initialization/callouts/self leases, and uses
 local Supports outputs before assigning its/common-mount retained readiness fields.
 Do not hide premature finalization behind a guard for undefined FPort. Preserve
 public factories/GUIDs, dormant initial projection and partial-failure cleanup.
-Fresh applicable native/compiler evidence follows changed source, then the same
-browser application must actually finish. Source-derived256/563 expected counts
+Fresh native/compiler evidence now covers those source changes; the same rebuilt
+browser application must actually finish without errors during final cleanup.
+Source-derived256/563 expected counts
 are not passes. Reentrant validation/notification disposal and full target quality
 retain their separate evidence requirements.
 

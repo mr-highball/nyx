@@ -1189,6 +1189,8 @@ end;
 
 constructor TCoordinatorMount.Create(AScope: TCoordinatorScope;
   const AProjection: INyxCoordinatorProjection; const AChild: INyxPreparedCoordinator);
+var
+  LFence: INyxPublicationReadiness;
 begin
   inherited Create;
   FScope := AScope;
@@ -1201,10 +1203,13 @@ begin
   end;
   FScope.CheckLive;
 
-  if not Supports(FChild, INyxPublicationReadiness, FFence) then
+  if not Supports(FChild, INyxPublicationReadiness, LFence) then
   begin
     raise ENyxCoordinator.Create('A coordinator factory must supply final publication readiness');
   end;
+  { Query into a local, then retain a distinct owning field lease. Finalizing
+    the local must not release the field's reference on either compiler. }
+  FFence := LFence;
   FBinding := FChild.Binding;
   FScope.CheckLive;
 

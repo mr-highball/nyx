@@ -425,10 +425,13 @@ describe the existing structural-presentation remount path without invented
 child source or a second state/event engine. [Reuse05](../TODO/NS-3_coordinators_05.md)
 owns the actual integration and target-execution evidence.
 
-The first executed1280/390 browser consumer currently fails during Selection
-Summary's managed construction, before completion. The unchanged native results
-do not qualify that browser path; [WORK.md](../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
-retains the exact failures, host retirement and separate ownership-repair proposal.
+The first executed1280/390 browser consumer failed during Selection Summary's
+managed construction, before completion. Its factory now owns the prepared
+interface before initialization/callouts; retained readiness capabilities use
+separate local and field interface leases. Fresh native checks and browser
+compilation pass, with independently reviewed emitted ownership. The rebuilt
+browser application still needs actual execution. [WORK.md](../WORK.md#managed-ownership-repair-qualification--2026-10-21)
+records that boundary and retains the first failures and host retirement.
 
 ## Component discovery and creator descriptions
 

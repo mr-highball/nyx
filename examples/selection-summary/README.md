@@ -115,6 +115,16 @@ widgets, document or renderer.
 
 ## Maintained qualification command
 
+The factory establishes a managed prepared-interface owner before Initialize
+can call outward or acquire temporary Self leases. Construction itself stays
+inert, so initialization exceptions also unwind through that existing owner.
+This matters on pas2js, where constructor-time Self leasing cannot assume the
+native compiler's construction lifetime protection. For a capability retained
+in a field, query Supports into a local interface and then assign that local to
+the owning field. The local and field each retain their own reference; generated
+local cleanup must not consume the field's intended lease. The example source
+documents both patterns without changing its public contracts.
+
 ```powershell
 ./tools/build.ps1 -Target coordinators -CoordinatorEvidenceDirectory <new-directory>
 ```
@@ -142,10 +152,12 @@ no browser input. Separate reusable/embedded design and Pascal exports match
 across widths and preserve authored/default baselines. This command does not
 perform Save/Open or compile those exports as independent applications.
 
-The first executed browser consumer currently fails during the example's managed
+The first executed browser consumer failed during the example's managed
 construction lifetime, before completion; see [WORK.md](../../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
-for retained failures and the separate ownership-repair proposal. Native checks
-and browser compilation alone do not qualify that execution.
+for retained failures. The narrow ownership repair now passes fresh native checks
+and browser compilation, and its emitted ownership is independently reviewed.
+The rebuilt browser application still requires actual execution; native checks
+and compilation alone do not qualify that path.
 
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption
