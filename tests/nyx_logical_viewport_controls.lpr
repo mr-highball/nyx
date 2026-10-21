@@ -54,6 +54,20 @@ type
     Last: TNyxEventInfo;
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
+  {$ifndef PAS2JS}
+  { Each action uses the existing ordinary page. Managed event/subscription
+    leases outlive callbacks that remount or destroy the global renderer. }
+  TFocusReplayAction = (fraRedirect, fraNested, fraRemount, fraDispose);
+  { Only detached outcomes remain after invocation. No borrowed widget is
+    retained across a nested focus callback, frame publication or disposal. }
+  TFocusReplayProbe = class(TNyxEventCallback)
+  public
+    Action: TFocusReplayAction;
+    Calls: Integer;
+    NestedNeutral, OuterRestored, GenerationCancelled, RemountClipped: Boolean;
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
+  {$endif}
 
 var
   GChecks: Integer;
@@ -272,6 +286,186 @@ begin
 end;
 
 {$ifndef PAS2JS}
+procedure TFocusReplayProbe.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+var
+  LOuter, LInner, LView, LOther: TNyxViewportSnapshot;
+  LGeneration: INyxCancellationScope;
+begin
+  Inc(Calls);
+  { Returning to the anchor may reenter this same managed subscription. Only
+    the first invocation initiates actions; the caller checks the exact count. }
+
+  if Calls <> 1 then
+    Exit;
+  case Action of
+    fraRedirect:
+      GRenderer.FocusFor('ordinary-memo', niRuntime).SetFocus;
+    fraNested:
+      begin
+        LOuter := GRenderer.ViewportFor('ordinary-outer');
+        LInner := GRenderer.ViewportFor('ordinary-inner');
+        LView := GRenderer.ViewViewport;
+        LOther := GRenderer.ViewportFor('ordinary-unrelated');
+        GRenderer.FocusWithoutScroll('ordinary-memo', niRuntime);
+        NestedNeutral := GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+          LOuter.SamePosition(GRenderer.ViewportFor('ordinary-outer')) and
+          LInner.SamePosition(GRenderer.ViewportFor('ordinary-inner')) and
+          LView.SamePosition(GRenderer.ViewViewport) and
+          LOther.SamePosition(GRenderer.ViewportFor('ordinary-unrelated'));
+        GRenderer.ScrollView(0, 180);
+        LView := GRenderer.ViewViewport;
+        GRenderer.FocusFor('ordinary-anchor', niRuntime).SetFocus;
+        OuterRestored := (LView.Y.Position > 0) and
+          GRenderer.FocusFor('ordinary-anchor', niRuntime).Focused and
+          LView.SamePosition(GRenderer.ViewViewport) and
+          not Contained(Face('ordinary-anchor'), Face('ordinary').Parent);
+      end;
+    fraRemount:
+      begin
+        LGeneration := NyxEventGeneration(GRenderer.Events);
+        GRenderer.Render(GDocument, GDocument.Pages[2], GHost);
+        GenerationCancelled := LGeneration.Cancelled;
+        { Leave the new anchor before scrolling it away. Its subsequent Enter
+          must not inherit the old frame's same-ID suppression. }
+        GRenderer.FocusWithoutScroll('ordinary-memo', niRuntime);
+        GRenderer.ScrollView(0, 180);
+        RemountClipped := not Contained(Face('ordinary-anchor'), Face('ordinary').Parent);
+        GRenderer.FocusFor('ordinary-anchor', niRuntime).SetFocus;
+      end;
+    fraDispose:
+      FreeAndNil(GRenderer);
+  end;
+end;
+
+{ Reset only the existing ordinary page and actual scroll widgets. The host's
+  current 640/390 allocation is supplied by RunOrdinary and is never changed. }
+procedure ResetNativeFocusReplay;
+begin
+  GRenderer.Render(GDocument, GDocument.Pages[2], GHost);
+  Pump;
+  GRenderer.FocusFor('ordinary-anchor', niRuntime).SetFocus;
+  GRenderer.ScrollView(0, 0);
+  ScrollFace('ordinary-outer', 0, 0);
+  ScrollFace('ordinary-inner', 0, 0);
+  ScrollFace('ordinary-unrelated', 0, 40);
+end;
+
+{ Exercise the new native focus intent independently of Studio. Every check
+  uses fresh current faces, and disposal is followed only by value assertions. }
+procedure CheckNativeFocusReplay;
+var
+  LOuter, LInner, LView, LOther: TNyxViewportSnapshot;
+  LAction: TFocusReplayAction;
+  LProbe: TFocusReplayProbe;
+  LCallback: INyxEventCallback;
+  LSubscription: INyxEventSubscription;
+  LRefused: Boolean;
+  LSource: TNyxText;
+begin
+  LSource := TNyxCodegen.Generate(GDocument);
+  ResetNativeFocusReplay;
+  LOuter := GRenderer.ViewportFor('ordinary-outer');
+  LInner := GRenderer.ViewportFor('ordinary-inner');
+  LView := GRenderer.ViewViewport;
+  LOther := GRenderer.ViewportFor('ordinary-unrelated');
+  Check(not Contained(Face('ordinary-memo'), Face('ordinary-inner')),
+    'Native focus replay starts with its existing memo outside the nested clip');
+  GRenderer.FocusWithoutScroll('ordinary-memo', niRuntime);
+  Check(GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+    not Contained(Face('ordinary-memo'), Face('ordinary-inner')) and
+    LOuter.SamePosition(GRenderer.ViewportFor('ordinary-outer')) and
+    LInner.SamePosition(GRenderer.ViewportFor('ordinary-inner')) and
+    LView.SamePosition(GRenderer.ViewViewport) and
+    LOther.SamePosition(GRenderer.ViewportFor('ordinary-unrelated')),
+    'FocusWithoutScroll retains focus and every native viewport offset while the memo stays clipped');
+  LRefused := False;
+  try
+    GRenderer.FocusWithoutScroll('ordinary-missing', niRuntime);
+  except
+    on ENyxModel do
+      LRefused := True;
+  end;
+  Check(LRefused and GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+    LOuter.SamePosition(GRenderer.ViewportFor('ordinary-outer')) and
+    LInner.SamePosition(GRenderer.ViewportFor('ordinary-inner')) and
+    LView.SamePosition(GRenderer.ViewViewport),
+    'Missing focus replay identity refuses before focus or viewport movement');
+  GRenderer.FocusWithoutScroll('ordinary-prefix-0', niRuntime);
+  Check(GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+    LView.SamePosition(GRenderer.ViewViewport),
+    'A mounted nonfocusable replay target leaves the current native face unchanged');
+  GRenderer.FocusFor('ordinary-anchor', niRuntime).SetFocus;
+  GRenderer.FocusFor('ordinary-memo', niRuntime).SetFocus;
+  Check(GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+    Contained(Face('ordinary-memo'), Face('ordinary-inner')) and
+    Contained(Face('ordinary-memo'), Face('ordinary-outer')) and
+    Contained(Face('ordinary-memo'), Face('ordinary').Parent) and
+    LOther.SamePosition(GRenderer.ViewportFor('ordinary-unrelated')),
+    'Ordinary new native focus reveals all three clipping scopes and preserves unrelated scrolling');
+
+  for LAction := Low(TFocusReplayAction) to High(TFocusReplayAction) do
+  begin
+    ResetNativeFocusReplay;
+    { Begin from the clipped memo so entering the anchor invokes its callback.
+      Setup uses only the public focus intent whose offsets are checked above. }
+    GRenderer.FocusWithoutScroll('ordinary-memo', niRuntime);
+    LProbe := TFocusReplayProbe.Create;
+    LProbe.Action := LAction;
+    LCallback := LProbe;
+    LSubscription := GRenderer.Events.OnAfterEnter(
+      NyxControlEvents('ordinary-anchor', niRuntime)).Subscribe(LCallback);
+    try
+      GRenderer.FocusWithoutScroll('ordinary-anchor', niRuntime);
+      case LAction of
+        fraRedirect:
+          Check((LProbe.Calls = 1) and
+            GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+            Contained(Face('ordinary-memo'), Face('ordinary-inner')) and
+            Contained(Face('ordinary-memo'), Face('ordinary-outer')) and
+            Contained(Face('ordinary-memo'), Face('ordinary').Parent),
+            'A focus callback redirect to a different native target retains its ordinary Reveal');
+        fraNested:
+          begin
+            Check((LProbe.Calls = 2) and LProbe.NestedNeutral and LProbe.OuterRestored,
+              'Nested replay restores the outer exact-target suppression until its own call returns');
+            GRenderer.FocusFor('ordinary-memo', niRuntime).SetFocus;
+            Check(GRenderer.FocusFor('ordinary-memo', niRuntime).Focused and
+              Contained(Face('ordinary-memo'), Face('ordinary-inner')) and
+              Contained(Face('ordinary-memo'), Face('ordinary-outer')) and
+              Contained(Face('ordinary-memo'), Face('ordinary').Parent),
+              'Returning from all replay scopes restores ordinary focus reveal behavior');
+          end;
+        fraRemount:
+          Check((LProbe.Calls = 2) and LProbe.GenerationCancelled and LProbe.RemountClipped and
+            GRenderer.FocusFor('ordinary-anchor', niRuntime).Focused and
+            Contained(Face('ordinary-anchor'), Face('ordinary').Parent),
+            'Same-ID remount cancels the old generation before new ordinary focus reveals its anchor');
+        fraDispose:
+          Check((GRenderer = nil) and (LProbe.Calls = 1),
+            'A focus callback disposes the renderer while the replay finally owns only its detached gate');
+      end;
+    finally
+      LSubscription.Cancel;
+      LSubscription := nil;
+      LCallback := nil;
+    end;
+
+    if GRenderer = nil then
+    begin
+      GRenderer := TRenderer.Create;
+      GRenderer.Render(GDocument, GDocument.Pages[2], GHost);
+      GRenderer.FocusFor('ordinary-memo', niRuntime).SetFocus;
+      Check(Contained(Face('ordinary-memo'), Face('ordinary-inner')) and
+        Contained(Face('ordinary-memo'), Face('ordinary-outer')) and
+        Contained(Face('ordinary-memo'), Face('ordinary').Parent),
+        'An independent renderer retains ordinary focus behavior after callback disposal');
+    end;
+  end;
+  Check(TNyxCodegen.Generate(GDocument) = LSource,
+    'Native focus policy, nested callbacks and disposal preserve the exact authored source');
+end;
+
 procedure Capture(const AName: TNyxText);
 var
   LBitmap: TBitmap;
@@ -549,6 +743,7 @@ begin
         'Restored ordinary face remains usable after parking-host retirement');
     end;
     Capture('normal-nested-' + IntToStr(640 - LPass * 250));
+    CheckNativeFocusReplay;
     {$endif}
   end;
   {$ifdef PAS2JS}GHost.style.setProperty('width', '640px');

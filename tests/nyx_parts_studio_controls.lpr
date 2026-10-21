@@ -26,7 +26,7 @@ program nyx_parts_studio_controls;
 
 uses
   {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,
-  LCLType, LMessages,{$endif}
+  LCLType, LMessages, Types,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.codegen, nyx.composition, nyx.parts.editor, nyx.studio.inspector,
   nyx.studio.menu, nyx.studio.projects, nyx.studio.session,
@@ -34,6 +34,25 @@ uses
   nyx.test.editor.exchange{$else}nyx.studio.lcl{$endif};
 
 type
+  { Geometry copies use one screen/CSS-pixel coordinate space per target. No
+    native control or DOM element survives the observation that supplies it. }
+  TPartsBounds = record
+    Left, Top, Right, Bottom: Double;
+  end;
+  { A nonempty face must fit the entire effective clip, not merely intersect
+    it or report Visible. Unavailable observations never count as contained. }
+  TPartsVisibility = (ppvUnavailable, ppvContained, ppvClipped);
+  { The detached observation records actual host allocation and the Inspector's
+    current scroll as well as every clipping ancestor's intersected client box. }
+  TPartsGeometry = record
+    Face, Clip: TPartsBounds;
+    HostWidth, HostHeight, ScrollX, ScrollY: Double;
+    Ancestors: Integer;
+    Visibility: TPartsVisibility;
+  end;
+  { Initial clipping has a different owner from a newly clipped replacement.
+    Both fail the observation; neither can be promoted to a passing focus check. }
+  TPartsGeometryChange = (pgcContained, pgcInitialClipping, pgcReplacementClipping);
   {$ifdef PAS2JS}
   { Only transport is replaced by the maintained asynchronous test exchange.
     Actual Studio controls and the shared paired source queue own every edit. }
@@ -44,6 +63,9 @@ type
   {$else}
   { Expose the actual LCL control's ordinary click for this input consumer. }
   TControlAccess = class(TControl);
+  { Read the current form's protected native Tab ordering for a one-step entry
+    precondition. Navigation itself still goes through ordinary key messages. }
+  TFormAccess = class(TForm);
   { Capture widgetset exceptions for the next assertion instead of displaying a
     modal error that would obscure the failed ordinary-controller journey. }
   TFailureObserver = class
@@ -65,10 +87,21 @@ var
   GObserver: TFailureObserver;
   GWidth: Integer;
   GDraft: TNyxText;
+  GPartScrollAway: TPartsGeometry;
   {$endif}
   GStage, GChecks: Integer;
   GInitial, GHidden, GDefinition, GOther: TNyxText;
   GFinished: Boolean;
+  GPartGeometryPath: TNyxPartRef;
+  GPartGeometryAction: TNyxPartsEditorAction;
+  GPartBeforeGeometry: TPartsGeometry;
+
+const
+  CPartsVisibility: array[TPartsVisibility] of TNyxText =
+    ('unavailable', 'contained', 'clipped');
+  CPartsGeometryChange: array[TPartsGeometryChange] of TNyxText =
+    ('contained', 'initial-clipping', 'replacement-clipping');
+  CPartsActions: array[TNyxPartsEditorAction] of TNyxText = ('hide', 'restore');
 
 {$ifdef PAS2JS}
 function TPartsStudio.CreateEditorExchange: TNyxStudioEditorExchange;
@@ -246,6 +279,225 @@ begin
   raise Exception.Create('No actual part action for ' + APath);
 end;
 
+{ Intersect axes independently because browser overflow may clip only one axis.
+  Native child windows clip both axes at every actual parent client rectangle. }
+procedure IntersectPartsBounds(var AClip: TPartsBounds; const ABounds: TPartsBounds;
+  AX, AY: Boolean);
+begin
+
+  if AX then
+  begin
+
+    if ABounds.Left > AClip.Left then
+      AClip.Left := ABounds.Left;
+
+    if ABounds.Right < AClip.Right then
+      AClip.Right := ABounds.Right;
+  end;
+
+  if AY then
+  begin
+
+    if ABounds.Top > AClip.Top then
+      AClip.Top := ABounds.Top;
+
+    if ABounds.Bottom < AClip.Bottom then
+      AClip.Bottom := ABounds.Bottom;
+  end;
+end;
+
+function CapturePartGeometry(const AID: TNyxText): TPartsGeometry;
+var
+  LBounds: TPartsBounds;
+  LInspectorSeen, LHostSeen, LVisible: Boolean;
+  {$ifdef PAS2JS}
+  LFace, LAncestor, LInspector, LViewport: TJSHTMLElement;
+  LBox: TJSDOMRect;
+  LStyle: TJSCSSStyleDeclaration;
+  LOverflowX, LOverflowY: String;
+
+  function Clips(const AValue: String): Boolean;
+  begin
+    Result := (AValue = 'auto') or (AValue = 'scroll') or
+      (AValue = 'hidden') or (AValue = 'clip');
+  end;
+  {$else}
+  LFace, LAncestor: TWinControl;
+  LInspector: TControl;
+  LOrigin: TPoint;
+  LClient: TRect;
+  {$endif}
+begin
+  Result := Default(TPartsGeometry);
+  LInspectorSeen := False;
+  LHostSeen := False;
+  LFace := GStudio.ShellView.FocusFor(AID);
+  {$ifdef PAS2JS}
+  LInspector := GStudio.ShellView.ElementFor('studio-right');
+  LViewport := TJSHTMLElement(document.documentElement);
+
+  if (LFace = nil) or (LInspector = nil) or (LViewport = nil) or
+    not document.body.contains(LFace) then
+    raise Exception.Create('Parts geometry requires its mounted browser face and Inspector');
+  LBox := LFace.getBoundingClientRect;
+  Result.Face.Left := LBox.left;
+  Result.Face.Top := LBox.top;
+  Result.Face.Right := LBox.right;
+  Result.Face.Bottom := LBox.bottom;
+  Result.HostWidth := LViewport.clientWidth;
+  Result.HostHeight := LViewport.clientHeight;
+  Result.Clip.Right := Result.HostWidth;
+  Result.Clip.Bottom := Result.HostHeight;
+  LStyle := window.getComputedStyle(LFace);
+  LVisible := (LStyle.getPropertyValue('display') <> 'none') and
+    (LStyle.getPropertyValue('visibility') = 'visible');
+  LAncestor := TJSHTMLElement(LFace.parentElement);
+  while LAncestor <> nil do
+  begin
+    Inc(Result.Ancestors);
+    LStyle := window.getComputedStyle(LAncestor);
+    LVisible := LVisible and (LStyle.getPropertyValue('display') <> 'none') and
+      (LStyle.getPropertyValue('visibility') = 'visible');
+    LOverflowX := LStyle.getPropertyValue('overflow-x');
+    LOverflowY := LStyle.getPropertyValue('overflow-y');
+    LBox := LAncestor.getBoundingClientRect;
+    LBounds.Left := LBox.left + LAncestor.clientLeft;
+    LBounds.Top := LBox.top + LAncestor.clientTop;
+    LBounds.Right := LBounds.Left + LAncestor.clientWidth;
+    LBounds.Bottom := LBounds.Top + LAncestor.clientHeight;
+    IntersectPartsBounds(Result.Clip, LBounds, Clips(LOverflowX), Clips(LOverflowY));
+
+    if LAncestor = LInspector then
+    begin
+      LInspectorSeen := True;
+      Result.ScrollX := LAncestor.scrollLeft;
+      Result.ScrollY := LAncestor.scrollTop;
+    end;
+
+    if LAncestor = LViewport then
+      LHostSeen := True;
+    LAncestor := TJSHTMLElement(LAncestor.parentElement);
+  end;
+  {$else}
+  LInspector := GStudio.ShellView.ControlFor('studio-right');
+
+  if (LFace = nil) or (LFace.Parent = nil) or (LInspector = nil) then
+    raise Exception.Create('Parts geometry requires its mounted native face and Inspector');
+  { BoundsRect belongs to the parent client space; the button's own client
+    origin excludes its border and cannot measure the full activation face. }
+  LOrigin := LFace.Parent.ClientToScreen(Point(LFace.Left, LFace.Top));
+  Result.Face.Left := LOrigin.X;
+  Result.Face.Top := LOrigin.Y;
+  Result.Face.Right := LOrigin.X + LFace.Width;
+  Result.Face.Bottom := LOrigin.Y + LFace.Height;
+  Result.HostWidth := GForm.ClientWidth;
+  Result.HostHeight := GForm.ClientHeight;
+  LClient := GForm.ClientRect;
+  LOrigin := GForm.ClientToScreen(LClient.TopLeft);
+  Result.Clip.Left := LOrigin.X;
+  Result.Clip.Top := LOrigin.Y;
+  Result.Clip.Right := LOrigin.X + LClient.Right - LClient.Left;
+  Result.Clip.Bottom := LOrigin.Y + LClient.Bottom - LClient.Top;
+  LVisible := LFace.Visible;
+  LAncestor := LFace.Parent;
+  while LAncestor <> nil do
+  begin
+    Inc(Result.Ancestors);
+    LVisible := LVisible and LAncestor.Visible;
+    LClient := LAncestor.ClientRect;
+    LOrigin := LAncestor.ClientToScreen(LClient.TopLeft);
+    LBounds.Left := LOrigin.X;
+    LBounds.Top := LOrigin.Y;
+    LBounds.Right := LOrigin.X + LClient.Right - LClient.Left;
+    LBounds.Bottom := LOrigin.Y + LClient.Bottom - LClient.Top;
+    IntersectPartsBounds(Result.Clip, LBounds, True, True);
+
+    if LAncestor = LInspector then
+    begin
+      LInspectorSeen := True;
+
+      if LAncestor is TScrollingWinControl then
+      begin
+        Result.ScrollX := TScrollingWinControl(LAncestor).HorzScrollBar.Position;
+        Result.ScrollY := TScrollingWinControl(LAncestor).VertScrollBar.Position;
+      end;
+    end;
+
+    if LAncestor = GForm then
+    begin
+      LHostSeen := True;
+      Break;
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+  {$endif}
+
+  if not LInspectorSeen or not LHostSeen then
+    raise Exception.Create('Parts geometry did not reach its actual Inspector and host');
+  Result.Visibility := ppvClipped;
+
+  if LVisible and (Result.Face.Right > Result.Face.Left) and
+    (Result.Face.Bottom > Result.Face.Top) and
+    (Result.Clip.Right > Result.Clip.Left) and (Result.Clip.Bottom > Result.Clip.Top) and
+    (Result.Face.Left >= Result.Clip.Left) and (Result.Face.Top >= Result.Clip.Top) and
+    (Result.Face.Right <= Result.Clip.Right) and (Result.Face.Bottom <= Result.Clip.Bottom) then
+    Result.Visibility := ppvContained;
+end;
+
+function PartsBoundsValue(const ABounds: TPartsBounds): TNyxDataValue;
+begin
+  Result := NyxObject([NyxField('left', NyxData(ABounds.Left)),
+    NyxField('top', NyxData(ABounds.Top)), NyxField('right', NyxData(ABounds.Right)),
+    NyxField('bottom', NyxData(ABounds.Bottom))]);
+end;
+
+procedure ReportPartGeometry(const APhase, APath: TNyxText;
+  AAction: TNyxPartsEditorAction; const AGeometry: TPartsGeometry;
+  const AChange: TNyxText);
+var
+  LValue: TNyxDataValue;
+begin
+  LValue := NyxObject([NyxField('phase', NyxData(APhase)),
+    NyxField('path', NyxData(APath)), NyxField('action', NyxData(CPartsActions[AAction])),
+    NyxField('visibility', NyxData(CPartsVisibility[AGeometry.Visibility])),
+    NyxField('change', NyxData(AChange)), NyxField('face', PartsBoundsValue(AGeometry.Face)),
+    NyxField('clip', PartsBoundsValue(AGeometry.Clip)),
+    NyxField('hostWidth', NyxData(AGeometry.HostWidth)),
+    NyxField('hostHeight', NyxData(AGeometry.HostHeight)),
+    NyxField('scrollX', NyxData(AGeometry.ScrollX)), NyxField('scrollY', NyxData(AGeometry.ScrollY)),
+    NyxField('ancestors', NyxData(AGeometry.Ancestors))]);
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-parts-geometry-' + APhase, LValue.ToJSON);
+  {$else}
+  WriteLn('Parts geometry ', LValue.ToJSON);
+  Flush(Output);
+  {$endif}
+end;
+
+{ Retain only the measured face/clip and typed path across source publication.
+  A replacement is never revealed or focused as part of this observation. }
+procedure CheckReplacementGeometry(const APath: TNyxText; AAction: TNyxPartsEditorAction);
+var
+  LGeometry: TPartsGeometry;
+  LChange: TPartsGeometryChange;
+begin
+  Check((GPartGeometryPath.Name = APath) and (GPartGeometryAction <> AAction),
+    'the geometry baseline belongs to the same path and opposite Parts action');
+  LGeometry := CapturePartGeometry(ActionID(APath, AAction));
+  LChange := pgcContained;
+
+  if GPartBeforeGeometry.Visibility <> ppvContained then
+    LChange := pgcInitialClipping
+  else if LGeometry.Visibility <> ppvContained then
+    LChange := pgcReplacementClipping;
+  ReportPartGeometry('after-' + CPartsActions[GPartGeometryAction], APath, AAction,
+    LGeometry, CPartsGeometryChange[LChange]);
+  Check(LChange <> pgcInitialClipping,
+    'the initial focused action was already clipped before activation; replacement causality is unproved');
+  Check(LChange <> pgcReplacementClipping,
+    'a previously contained focused action became clipped after same-path replacement');
+end;
+
 { Resolve the current physical action only after typed path discovery. Native
   key messages enter the ordinary LCL button path; browser click is a focused
   deterministic activation, not evidence of trusted browser keyboard input. }
@@ -255,7 +507,7 @@ var
   {$ifdef PAS2JS}
   LControl: TJSHTMLElement;
   {$else}
-  LControl: TWinControl;
+  LControl, LPredecessor: TWinControl;
   {$endif}
 begin
   LID := ActionID(APath, AAction);
@@ -264,11 +516,53 @@ begin
   {$ifdef PAS2JS}
   LControl.focus;
   Check(document.activeElement = LControl, 'the current browser Parts action owns focus before activation');
-  LControl.click;
   {$else}
   Check(LControl.CanSetFocus and LControl.TabStop, 'the current native Parts action is keyboard reachable');
-  LControl.SetFocus;
+
+  if GStage = 1 then
+  begin
+    { Enter the first Hide action through the same form-level successor lookup
+      used by LCL Tab, rather than assigning focus to the target. This observes
+      native key-message traversal only; no physical keyboard is implied. }
+    LPredecessor := TFormAccess(GForm).FindNextControl(LControl, False, True, False);
+    Check((LPredecessor <> nil) and (LPredecessor <> LControl),
+      'the first Parts action has a distinct actual native Tab predecessor');
+    Check(TFormAccess(GForm).FindNextControl(LPredecessor, True, True, False) = LControl,
+      'the actual native forward Tab successor is exactly the current Parts action');
+    LPredecessor.SetFocus;
+    Check(Screen.ActiveControl = LPredecessor,
+      'the actual native Tab predecessor owns focus before entry');
+
+    if LPredecessor.Perform(CN_KEYDOWN, VK_TAB, 0) = 0 then
+    begin
+      LPredecessor.Perform(LM_KEYDOWN, VK_TAB, 0);
+    end;
+    Check(Screen.ActiveControl = LControl,
+      'ordinary native Tab key messages enter the exact current Parts action');
+    { Key release belongs to the newly focused face, as it does after an actual
+      Tab transition. No source edit or explicit scrolling precedes Space. }
+
+    if LControl.Perform(CN_KEYUP, VK_TAB, 0) = 0 then
+    begin
+      LControl.Perform(LM_KEYUP, VK_TAB, 0);
+    end;
+  end
+  else
+    LControl.SetFocus;
   Check(Screen.ActiveControl = LControl, 'the current native Parts action owns focus before activation');
+  {$endif}
+
+  if (GStage = 1) or (GStage = 4) then
+  begin
+    GPartGeometryPath := NyxPart(APath);
+    GPartGeometryAction := AAction;
+    GPartBeforeGeometry := CapturePartGeometry(LID);
+    ReportPartGeometry('before-' + CPartsActions[AAction], APath, AAction,
+      GPartBeforeGeometry, 'unobserved');
+  end;
+  {$ifdef PAS2JS}
+  LControl.click;
+  {$else}
 
   if LControl.Perform(CN_KEYDOWN, VK_SPACE, 0) = 0 then
   begin
@@ -299,6 +593,56 @@ begin
   Result := (LControl <> nil) and
     ({$ifdef PAS2JS}document.activeElement{$else}Screen.ActiveControl{$endif} = LControl);
 end;
+
+{$ifndef PAS2JS}
+{ Deliberately scroll the existing Inspector away after the two contained
+  replacement checks. Copy numbers only; the upcoming Undo owns publication. }
+procedure ScrollFocusedPartAway;
+var
+  LInspector: TControl;
+  LBefore: TPartsGeometry;
+  LID: TNyxText;
+begin
+  LID := ActionID('actions', npaHide);
+  LInspector := GStudio.ShellView.ControlFor('studio-right');
+  Check(LInspector is TScrollingWinControl,
+    'the current native Inspector has an actual scroll owner');
+  LBefore := CapturePartGeometry(LID);
+  Check(LBefore.Visibility = ppvContained,
+    'the same-path Hide action is contained before deliberate scrolling');
+  TScrollingWinControl(LInspector).HorzScrollBar.Position := 0;
+  TScrollingWinControl(LInspector).VertScrollBar.Position := 0;
+  GPartScrollAway := CapturePartGeometry(LID);
+  ReportPartGeometry('deliberate-scroll-away', 'actions', npaHide,
+    GPartScrollAway, 'deliberate-scroll');
+  Check((GPartScrollAway.ScrollX <> LBefore.ScrollX) or
+    (GPartScrollAway.ScrollY <> LBefore.ScrollY),
+    'deliberate native Inspector scrolling changes the actual viewport offset');
+  Check(GPartScrollAway.Visibility = ppvClipped,
+    'deliberate scrolling moves the focused Parts action outside its clip');
+  Check(PartActionFocused('actions', npaHide),
+    'scrolling away leaves the same actual Parts face focused');
+  Check(Pair = GInitial, 'deliberate viewport intent does not edit the accepted pair');
+end;
+
+{ The existing Undo is real queued source/history work. Its fresh replacement
+  may regain focus while the caller's explicitly chosen viewport stays put. }
+procedure CheckQueuedScrollIntent;
+var
+  LGeometry: TPartsGeometry;
+begin
+  Check(PartActionFocused('actions', npaRestore),
+    'queued Undo retains same-path focus after deliberate Inspector scrolling');
+  LGeometry := CapturePartGeometry(ActionID('actions', npaRestore));
+  ReportPartGeometry('after-undo-scroll-away', 'actions', npaRestore,
+    LGeometry, 'scroll-retention-observation');
+  Check((LGeometry.ScrollX = GPartScrollAway.ScrollX) and
+    (LGeometry.ScrollY = GPartScrollAway.ScrollY),
+    'routine queued publication preserves the deliberate Inspector viewport offset');
+  Check(LGeometry.Visibility = ppvClipped,
+    'focus replay does not pull an intentionally clipped action back into view');
+end;
+{$endif}
 
 { The Project panel is mounted alongside Parts only in the wide layout. Compact
   mode deliberately omits it; its title field is not a compact redirect target. }
@@ -404,6 +748,7 @@ begin
         CheckParts('actions', True);
         Check(PartActionFocused('actions', npaRestore),
           'Hide preserves keyboard focus on the same part''s replacement Restore action');
+        CheckReplacementGeometry('actions', npaRestore);
         GHidden := Pair;
         Check(ActionID('actions', npaRestore) <> '', 'a hidden part retains its Restore action');
         Click('action-undo');
@@ -422,13 +767,20 @@ begin
       begin
         Check(PartActionFocused('actions', npaHide),
           'Restore preserves keyboard focus on the same part''s replacement Hide action');
+        CheckReplacementGeometry('actions', npaHide);
         Check(Pair = GInitial, 'Restore original removes only the local descriptor');
         CheckParts('actions', False);
+        {$ifndef PAS2JS}
+        ScrollFocusedPartAway;
+        {$endif}
         Click('action-undo');
       end;
     6:
       begin
         Check(Pair = GHidden, 'Restore is one independently undoable operation');
+        {$ifndef PAS2JS}
+        CheckQueuedScrollIntent;
+        {$endif}
         Click('action-redo');
       end;
     7:

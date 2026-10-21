@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current-source Parts navigation reveals newly focused native controls while
+presentation replay preserves deliberate viewport choices. Actual ordinary
+Studio passes100desktop/99compact checks with clean heaps, including Tab entry,
+full replacement containment, scroll-away across Undo, source focus and pending
+drafts. The renderer's4,210 native checks also cover nested focus redirects,
+same-ID remounts and callback disposal. Matching browser consumers compile only.
+WORK.md retains the initial and replacement failures separately. Full original
+criteria, browser input, hardware/assistive quality, widgetsets/DPI and observing
+delivery remain open; return to existing component/authoring integration.
+
 Current-source native modal dismissal honors a focused child's consumed Escape
 before the remaining-key fallback. Actual nested LCL edit/form input passes 58
 checks at measured 800/390 owner widths with clean heaps; native Studio and the matching

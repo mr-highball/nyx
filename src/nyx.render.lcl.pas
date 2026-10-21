@@ -294,7 +294,24 @@ type
     runtime store during preparation. Replacements preview fallible target work
     before retirement; extension destructors must release without raising. }
   TNyxLCLRenderer = class
+  private type
+    { Immutable managed replay intent. Its exact runtime identity and revocable
+      generation own no widget/router/view. Irreversible mount cancellation
+      prevents a same-ID replacement from inheriting an earlier replay policy. }
+    IFocusReplayTarget = interface(IInterface)
+      function Preserves(const AID: TNyxText): Boolean;
+    end;
+    { Independently managed dynamic scope. A focus callback may dispose the
+      renderer, so the caller's finally restores only its local interface lease.
+      Exact-target suppression lets callbacks reveal a different chosen control. }
+    IFocusReplay = interface(IInterface)
+      function GetTarget: IFocusReplayTarget;
+      procedure SetTarget(const ATarget: IFocusReplayTarget);
+      function Preserves(const AID: TNyxText): Boolean;
+      property Target: IFocusReplayTarget read GetTarget write SetTarget;
+    end;
   private
+    FFocusReplay: IFocusReplay;
     FTheme: TNyxTheme;
     FOwnTheme: Boolean;
     { Startup palette owns independent values; per-document overrides can be
@@ -653,6 +670,13 @@ type
       must not free this control or retain it beyond the mounted view. }
     function FocusFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TWinControl;
+    { Restore one mounted keyboard face without revealing it. Missing identity
+      follows FocusFor; absent/nonfocusable faces are harmless. Focus callbacks
+      retain their ordinary behavior and may redirect focus or destroy this view.
+      Suppression applies only to this resolved runtime target/current generation,
+      including nested replay calls; no widget access follows SetFocus. }
+    procedure FocusWithoutScroll(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic);
     { Runtime text selection uses Unicode scalar offsets against physical text,
       retaining native line endings. Neither method forces focus or scrolling. }
     function TextSelectionFor(const AID: TNyxText): TNyxTextSelection;
@@ -801,6 +825,57 @@ uses
   InterfaceBase,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
   nyx.application.resources;
+
+type
+  { One immutable target lease. The existing cancellation token remains safe
+    after its mount retires, with no native pointer or renderer back reference. }
+  TNyxLCLFocusReplayTarget = class(TInterfacedObject, TNyxLCLRenderer.IFocusReplayTarget)
+  private
+    FID: TNyxText;
+    FGeneration: INyxCancellationScope;
+  public
+    constructor Create(const AID: TNyxText; const AGeneration: INyxCancellationScope);
+    function Preserves(const AID: TNyxText): Boolean;
+  end;
+  { Value-only replay policy, independently retained across native callbacks.
+    There is no renderer, control, event-router or document back reference. }
+  TNyxLCLFocusReplay = class(TInterfacedObject, TNyxLCLRenderer.IFocusReplay)
+  private
+    FTarget: TNyxLCLRenderer.IFocusReplayTarget;
+  public
+    function GetTarget: TNyxLCLRenderer.IFocusReplayTarget;
+    procedure SetTarget(const ATarget: TNyxLCLRenderer.IFocusReplayTarget);
+    function Preserves(const AID: TNyxText): Boolean;
+  end;
+
+constructor TNyxLCLFocusReplayTarget.Create(const AID: TNyxText;
+  const AGeneration: INyxCancellationScope);
+begin
+  inherited Create;
+  FID := AID;
+  FGeneration := AGeneration;
+end;
+
+function TNyxLCLFocusReplayTarget.Preserves(const AID: TNyxText): Boolean;
+begin
+  Result := (FID <> '') and (FID = AID) and
+    (FGeneration <> nil) and not FGeneration.Cancelled;
+end;
+
+function TNyxLCLFocusReplay.GetTarget: TNyxLCLRenderer.IFocusReplayTarget;
+begin
+  Result := FTarget;
+end;
+
+procedure TNyxLCLFocusReplay.SetTarget(const ATarget: TNyxLCLRenderer.IFocusReplayTarget);
+begin
+  FTarget := ATarget;
+end;
+
+function TNyxLCLFocusReplay.Preserves(const AID: TNyxText): Boolean;
+begin
+  Result := (FTarget <> nil) and FTarget.Preserves(AID);
+end;
 
 procedure TNyxLCLRenderer.NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer);
 var
@@ -981,6 +1056,7 @@ end;
 constructor TNyxLCLRenderer.Create(ATheme: TNyxTheme);
 begin
   inherited Create;
+  FFocusReplay := TNyxLCLFocusReplay.Create;
   FTheme := ATheme;
   FBorrowedTheme := ATheme;
   FOwnTheme := ATheme = nil;
@@ -5639,6 +5715,33 @@ begin
   end;
 end;
 
+procedure TNyxLCLRenderer.FocusWithoutScroll(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind);
+var
+  LFocus: TWinControl;
+  LReplay: IFocusReplay;
+  LFormer: IFocusReplayTarget;
+begin
+  FEvents.Scheduler.RequireUI;
+  LFocus := FocusFor(AID, AIdentity);
+
+  if (LFocus = nil) or not LFocus.CanFocus then
+  begin
+    Exit;
+  end;
+  { Resolve automatic/design identity before callbacks. The gate owns values
+    only; its local lease remains valid even if SetFocus disposes this renderer. }
+  LReplay := FFocusReplay;
+  LFormer := LReplay.Target;
+  LReplay.Target := TNyxLCLFocusReplayTarget.Create(
+    IdentityBinding(AID, AIdentity).FNode.ID, NyxEventGeneration(FEvents));
+  try
+    LFocus.SetFocus;
+  finally
+    LReplay.Target := LFormer;
+  end;
+end;
+
 function TNyxLCLRenderer.ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
 var
   LBinding: TNyxLCLBinding;
@@ -7455,8 +7558,12 @@ begin
   LChanged := not FHasFocus;
   FHasFocus := True;
 
-  if FRenderer.FVirtualLayout and not FRenderer.FUpdating then
+  if not FRenderer.FUpdating and
+    not FRenderer.FFocusReplay.Preserves(FNode.ID) then
   begin
+    { Native Tab assigns focus without scrolling nested ordinary containers.
+      Reveal before user callbacks, so their later focus/scroll choice wins.
+      Transactional replay and explicit viewport-preserving focus stay neutral. }
     FRenderer.Reveal(FNode.ID, niRuntime);
   end;
 

@@ -59,6 +59,22 @@ input of a composite field and returns an undefined reference for nil or foreign
 controls. Resolve that reference in the current renderer root before capturing
 the Parts anchor; neither lookup retains the widget or its owning view.
 
+New native keyboard focus reveals its control through the renderer's nested
+scroll scopes. A custom host that is replaying presentation can instead call
+`TNyxLCLRenderer.FocusWithoutScroll(ID, Identity)` after resolving the new Parts
+action. This preserves the user's current viewport, including deliberate
+scrolling away from a still-focused action. Ordinary focus callbacks still run;
+their redirect to another control can reveal that control. Replay intent is
+scoped to the exact runtime target and its revocable mount generation, so it
+cannot spill into a same-ID replacement. The method retains no native control
+after its focus call returns.
+
+Studio samples the current Inspector scroll offsets just before replacing its
+focused Parts form. It restores those offsets only after the same instance and
+named path resolve in the accepted replacement. This keeps visible actions in
+place while also respecting deliberate scrolling away; source navigation keeps
+its own focus priority.
+
 ## Creating a reusable copy
 
 Select an authored control and open Properties → Component options → Create a

@@ -4,6 +4,172 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Parts reachability is locally qualified on current native source. Ordinary Studio
+passes100 desktop/99 compact checks with clean heaps, including real LCL Tab key
+entry, fully contained Hide/Restore replacements, deliberate scroll-away across
+queued Undo, later focus choices, paired source/history and unfinished Pascal.
+Native Studio compiles with zero warnings. The unchanged renderer's4,210 native
+viewport checks retain their clean heap, including exact-target redirects,
+nested replay, same-ID remount generation and renderer disposal from callbacks.
+Both matching browser consumers compile only; their fourteen upstream RTL warning
+occurrences remain visible. No browser execution or blanket parity is inferred.
+
+`scroll-replay-all-joined-private.json` owns final native terminal/source/log/
+artifact receipts and the exact composite boundary: only native Studio differs
+from the accepted renderer/browser qualification. All1,750 Pascal/seven owned/
+thirteen concurrent pins remain exact. Initial programmatic/actual-Tab failures,
+two consumer cast warnings and the later replacement-scroll failure remain in
+the same packet. Current wide Inspector offsets80 and compact38 retain contained
+replacements; deliberately chosen0 stays0 through the subsequent queued Undo.
+The two inspected native form captures show readable English memo content within
+640/390 clips; these are not foreground/hardware/browser or full visual evidence.
+All readers are terminal. Final source/checkpoint/remote receipts follow below
+the packet's ignored `.local/parts-reach-paths-private.json` owner.
+
+This is the third concrete core deliverable since reprioritization, following
+Parts authoring and semantic focus continuity. No full original criterion/task/
+credit/DONE closes; core no-closure is three, separate from the deferred resolver.
+Stop further focus/replay/compiler/fixture variants. Reassessment returns to
+NS-3_components_01 criterion2 → NS-4_studio-authoring_01 through the existing
+Customize/palette pipeline: author one instance-local button under a named layout,
+edit its caption/callback TODO, prove exact paired Undo/Redo/save-load and sibling/
+definition isolation. The helper's bounded stage plan uses current controls and
+selection routes, with no new payload mutation API. Release only its existing
+ordinary Parts consumer after the qualified checkpoint. Stop that next journey
+at the first real authoring/source/navigation gap; no fixture variant hides it.
+Browser execution/assistive/hardware/other widgetsets/DPI/full quality/observing
+delivery remain required. Resolver/splitter stay deferred and concurrent13 exact.
+
+All five repair readers are terminal/audited: native viewport4,210 passes with
+clean heap, both browser consumers and native Studio compile; all compiler logs
+have zero owned/fourteen upstream warnings. Parts initial Tab is now contained
+at1280/390, but after Hide the Inspector offset resets80/38→0 and the replacement
+becomes clipped. Both stage2 failures retain clean heaps. All1,750/seven/thirteen
+pins stay exact; `repair-all-joined-private.json` owns this composite result.
+
+The source repair is confined to native Studio's existing presentation seam.
+At current physical Parts capture, sample the current Inspector viewport and one
+copied content-face identity. After successful same-instance/path resolution and
+source-navigation priority, restore only that scroll face with existing guarded
+RestoreInteraction before FocusWithoutScroll. Zero remains a deliberate valid
+offset. No old widget/node survives, no unconditional Reveal or new section API.
+Renderer and both consumers stay source-exact. After independent review/freeze,
+root admits only unchanged native Parts1280/390 and native Studio compilation;
+reuse viewport4,210 and the matching browser compilers. All source/guides pause
+through both terminal joins/audit. Failure receipts remain; broad acceptance and
+browser execution remain open. Next existing payload-authoring stage plan is
+ready, but starts only after this repair's concrete outcome.
+
+Reachability repair handoffs are source-ready and independently reviewed. The
+final private gate holds immutable managed target snapshots, with no interface
+in a copied record. Existing NyxEventGeneration cancellation scopes distinguish
+mounts without relying on the event revision's integer wrap. Native Studio's
+canvas and chrome replay use their exact owner; explicit source navigation stays
+unchanged. The existing viewport consumer adds native-only preservation/refusal,
+redirect/nested scope, same-ID remount and callback-disposal coverage at its
+original640/390 widths. The existing Parts journey keeps actual first Tab and
+full containment checks, then deliberately scrolls the focused action away and
+requires the next queued Undo to retain both offset and same-path focus.
+
+Root freezes seven owned files/all1,750 Pascal inputs and admits exactly five
+compiler jobs: viewport native full run/matching browser compile, ordinary Parts
+native1280/390 journey/matching browser compile, and native Studio compile. Native
+UI runs execute sequentially; no changed fixture or weaker geometry assertion.
+No unchanged backend/worker/browser product or broad native replay. All source/
+guides pause through every terminal join and exact source/concurrent audit.
+These are pending checks, not accepted reachability, browser execution, full
+quality/parity or original criterion/task/DONE/credit. Existing payload authoring
+remains queued behind this concrete repair result; resolver remains deferred.
+
+Actual first Tab entry reaches the exact Parts action, but it remains clipped at
+both1280/390 widths; stage2 fails at18/19 checks. Both heaps are clean and source
+pins1,750/four/thirteen stay exact. Browser compiles only. The native consumer's
+two sibling-class access casts warn; retain that preparation and use an exact
+TForm access subclass in the repaired consumer. `tab-entry-all-joined-private.json`
+owns this terminal result. This is a real native initial focus-reachability gap,
+not evidence that replacement moved the control. No further entry variants.
+
+The bounded production repair follows existing renderer ownership: ordinary Enter
+uses existing nearest Reveal before outward callbacks, as virtual Enter already
+does. A native FocusWithoutScroll method restores one exact mounted runtime
+target without revealing it. Its immutable target/revocable mount generation
+lives in an independently managed gate, so nested calls restore prior policy
+and finally never dereferences
+a renderer/control that focus callbacks may have destroyed. A callback redirect
+to another control still reveals that control; a new frame cannot inherit the
+old target's suppression. Existing FUpdating transactional guards remain. Native
+Studio chrome replay uses this method instead of raw SetFocus; no post-paint
+Reveal is added, so deliberate user scrolling wins. Root owns render.lcl/native
+host/guides; helper owns only the current Parts consumer for actual containment,
+scroll-intent and warning repair. Source-ready handoffs/review/freeze precede
+changed-native qualification; no browser product/model/wire/schema/section API
+changes. Existing Customize/palette payload authoring remains the return path.
+
+Parts geometry observation is terminal and audited. Both1280/390 native runs
+fail atstage2: before-Hide and after-Hide faces have identical vertical bounds,
+already beyond the Inspector's actual clip before activation. Native heaps are
+clean; both compilers succeed with zero owned/seven upstream browser warnings.
+All1,750 Pascal/four owned/thirteen concurrent inputs stay exact. The packet
+`E:\Blekohlab\nyx\qualification\parts-reach-20261021-052741` and ignored
+`.local/parts-reach-paths-private.json` retain both independent failed results,
+source/log/executable identities and `observation-all-joined-private.json`.
+This observation earns no replacement-visibility or ordinary Tab acceptance.
+
+Source-owner review finds ordinary LCL Tab selects the next control and calls
+SetFocus without nested ScrollInView; Nyx's ordinary Enter also lacks Reveal,
+while virtual Enter already uses it. The fixture had directly assigned focus.
+The materially different next decision is therefore initial keyboard entry,
+not another replacement/scroll variant. One bounded check changes only first
+native stage1 entry to actual predecessor/forward-successor preflight and normal
+CN/remaining LM Tab key messages plus release. Existing fixture, stages, geometry,
+widths and height stay exact; browser retains its deterministic activation.
+Root reviews/freezes and admits just the same two-width native journey and
+matching browser compilation. Stop at the actual result; no further entry or
+fixture variant. If real entry remains clipped, reassess the existing renderer's
+Enter/Reveal and scroll-neutral restoration ownership before product edits.
+If entry is contained, existing geometry decides replacement continuity. All
+source/guides pause through terminal join/audit. Broad original criteria stay
+open; resolver/splitter remain deferred and concurrent13 stay exact. The next
+depth task remains existing Customize/palette per-instance content authoring.
+
+Current reassessment: Parts physical reachability (2026-10-21). Previous goal
+turn is progress: focus checkpoint28ef4847 is committed/pushed/remote verified,
+with actual public63/desktop75/compact74 native checks and clean heaps. All old
+readers are terminal. Two core deliverables have moved implementation and actual
+input while full criteria remain open, so stop focus/compiler variants and
+reassess the next required quality outcome before another source repair.
+NS-2_parity-accessibility_01 criteria2/3 (through its original renderer owners)
+consume visible keyboard continuation and actual responsive/scaled evidence;
+return to NS-3_components_01/NS-4_studio-authoring_01 afterwards. Existing focus
+identity evidence does not establish that a focused button is on screen.
+
+Helper owns ONLY tests/nyx_parts_studio_controls.lpr for the smallest decisive
+current-form observation. Same fixture/stages,1280/390 host widths and existing
+900 outer height remain. Copy full button face, effective intersection of all
+actual parent client clips through Inspector/form, actual host allocation and
+Inspector scroll before Space at1/4 and after settled same-path replacement2/5.
+Native uses the parent's screen origin plus full width/height, not border-excluded
+button client dimensions. Browser uses CSS bounds and actual axis-specific
+overflow clips; compilation remains distinct from HTTP execution. No widget/DOM
+pointer crosses publication and no Reveal/resize/new rows/stages/sleeps/product
+change is allowed in this observation. Root owns AGENTS/WORK/guide/qualification.
+
+Both contained replacements at both widths means stop/no scroll change. A
+contained original followed by a clipped same-instance/path replacement is a
+specific continuity defect. An already-clipped original is a distinct initial
+reachability/caller-entry question; do not invent replacement causality or assume
+programmatic SetFocus proves ordinary Tab behavior. Both misses fail qualification.
+If a repair is justified, use existing Reveal/scroll owners after accepted scroll
+replay and preserve later user focus/scroll. The compiler helper retains both
+independent native widths and their nonzero aggregate status even when the first
+misses; no later pass replaces a failure. Root reviews/freezes and admits exactly
+native ordinary1280/390 observations plus matching browser consumer compilation;
+all Pascal/guides pause through joins/exact audit. No broader product build or
+host/config retry follows from this admission. No original full criterion/task/
+credit/DONE closes. Resolver and external splitter stay deferred; concurrent13
+remain exact. The queued depth review follows existing Customize/palette payload
+authoring and its shared operations, rather than creating another mutation API.
+
 Current batch: Parts keyboard continuity (2026-10-21). Previous goal turn is
 progress: the bounded Parts affordance and actual40/58/62/79 native checks were
 retained, checkpoint9210d747 was pushed and remote independently verified.

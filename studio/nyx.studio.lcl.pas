@@ -2807,6 +2807,8 @@ var
   LChromeEventName: TNyxText;
   LChromeCollection: TNyxStudioCollectionChromeIdentity;
   LPartsFocus: TNyxPartsEditorFocus;
+  LPartsInputs: TNyxContentFaceStates;
+  LPartsViewport: TNyxViewportSnapshot;
   LChromeReference: TNyxControlRef;
   LChromeInputs: TNyxContentFaceStates;
   LChromeNode: TNyxNode;
@@ -2957,6 +2959,7 @@ begin
     LChromeEventName := '';
     LChromeCollection := Default(TNyxStudioCollectionChromeIdentity);
     LPartsFocus := Default(TNyxPartsEditorFocus);
+    LPartsInputs := nil;
 
     if (LFocus <> nil) and (FShellView.Root <> nil) and
       InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
@@ -2982,6 +2985,19 @@ begin
                 FShellView.SectionRoot(LSection), LPartsFocus) then
               begin
                 LChromeID := LChromeReference.ID;
+
+                if LSection = nssInspector then
+                begin
+                  { Sample the user's current offsets immediately before this
+                    publication, including deliberate scrolling away. Capture
+                    only copied scroll state, never a native pointer or draft. }
+                  LPartsViewport := FShellView.SectionView(LSection).ViewportFor('studio-right');
+                  SetLength(LPartsInputs, 1);
+                  LPartsInputs[0] := CaptureNyxContentFace(
+                    FShellView.SectionRoot(LSection).Find('studio-right'));
+                  LPartsInputs[0].ScrollLeft := LPartsViewport.X.Position;
+                  LPartsInputs[0].ScrollTop := LPartsViewport.Y.Position;
+                end;
               end;
             end;
           end;
@@ -3228,7 +3244,9 @@ begin
 
       if (LFocus <> nil) and LFocus.CanFocus then
       begin
-        LFocus.SetFocus;
+        { This is presentation replay, not a new navigation request. Retain
+          deliberate scrolling even when the focused face was scrolled away. }
+        FCanvasView.FocusWithoutScroll(LCanvasFocusID, niRuntime);
 
         if LSelection.Defined then
         begin
@@ -3405,6 +3423,18 @@ begin
     begin
       LFocus := FShellView.FocusFor(LChromeID);
 
+      if LPartsFocus.Defined and (Length(LPartsInputs) <> 0) then
+      begin
+        { The anchor has resolved against the current instance/path above.
+          Replay only its Inspector viewport before restoring focus, including
+          a chosen zero offset; source navigation has already cleared its ID. }
+
+        if not FShellView.ViewFor(LChromeID).RestoreInteraction(LPartsInputs, False) then
+        begin
+          raise ENyxModel.Create('Parts viewport restoration became busy');
+        end;
+      end;
+
       if LChromeCollection.Defined and (LFocus is TCustomEdit) then
       begin
         { The rebuilt collection panel owns accepted/current pending text.
@@ -3426,7 +3456,9 @@ begin
 
       if (LFocus <> nil) and LFocus.CanFocus then
       begin
-        LFocus.SetFocus;
+        { Regeneration follows the current user viewport, even if its focused
+          Parts action has deliberately been scrolled out of view. }
+        FShellView.ViewFor(LChromeID).FocusWithoutScroll(LChromeID, niRuntime);
 
         if LSelection.Defined then
         begin

@@ -1,5 +1,95 @@
 # Working in Nyx
 
+Reachability final readers joined/audited: current native Parts100desktop/99compact
+pass clean and native Studio compiles with zero warnings. Renderer4,210 clean and
+both browser consumer compiler results are reused with exact inputs; only native
+Studio changed after that qualification. All1,750/seven/thirteen pins are exact.
+WORK.md and ignored .local/parts-reach-paths-private.json retain initial-focus,
+actual-Tab and replacement-scroll failures, warning preparation, composite passes
+and final checkpoint receipts. No reader is live. Three concrete core deliverables
+advance current code/input without full original criterion/task/credit/DONE;
+stop focus/replay/compiler/fixture variants. Next return to NS-3_components_01
+criterion2 and NS-4_studio-authoring_01: qualify EXISTING named-part Customize→
+palette append→caption/callback TODO→paired Undo/Redo/save-load/isolation flow.
+No duplicate payload mutation API. Helper's next sole source owner is the existing
+ordinary Parts consumer, released only after this exact checkpoint; root owns
+qualification/production repair. Browser execution/AT/hardware/widgetset/DPI/full
+quality/observing delivery remain open; no host/config retry, cleanup or extra
+agent. Preserve concurrent13 and deferred resolver/splitter.
+
+Repair readers joined/audited: viewport4,210 passes clean and all five compilers
+pass with zero owned/fourteen upstream warnings. Parts initial Tab is contained
+at both widths, but replacement fails because ordinary Inspector publication
+resets its offset to zero; retain both clean-heap failures. Root changes only
+native Studio/docs: capture one existing copied Inspector scroll face at exact
+current physical Parts capture and replay it through existing RestoreInteraction
+before no-scroll focus, only after same-owner/path resolution and source priority.
+Chosen zero is valid. Renderer/consumers/browser inputs remain exact. Independent
+review/freeze precede just two native jobs: unchanged Parts1280/390 journey and
+native Studio compile. Reuse renderer4210/browser evidence; no new test/fixture,
+schema/section API or unconditional Reveal. Pause source/guides through joins/audit.
+
+Reachability repair source handoffs are complete/independently reviewed. Gate
+and immutable target are private managed interfaces; existing irreversible mount
+cancellation replaces wrapping revision identity. Canvas/chrome presentation
+replay preserve viewport; actual ordinary focus reveals before user callbacks.
+Helper's existing Parts journey retains geometry/Tab/history and adds deliberate
+scroll-away across Undo; existing viewport consumer adds native nested/redirect/
+remount/disposal cases at its original640/390 allocations. Root freezes seven
+owned files/1,750 Pascal inputs and admits exactly five jobs: both consumers
+native execution/matching browser compilation, plus native Studio compilation.
+Native UI runs are sequential. Pause all Pascal/guides through complete joins/
+exact audit; retain earlier failures/warnings. Browser execution is not admitted.
+No unchanged backend/worker/browser product or broad consumer replay. Original
+criteria stay open and queued payload authoring follows the actual repair result.
+
+Actual Tab-entry readers are joined/audited: exact native predecessor/successor
+and focus checks pass, then both widths still fail initial containment atstage2,
+clean heaps. Two consumer cast warnings are retained for repair, not suppressed.
+Stop entry/fixture variants. Root now owns render.lcl/native Studio plus existing
+guides for ordinary Enter Reveal and a scroll-neutral FocusWithoutScroll replay.
+Use a detached managed gate with exact runtime target/revocable mount generation;
+other callback-directed focus remains revealable. Finally after SetFocus touches
+only that local gate, never a potentially destroyed renderer/control. Existing
+FUpdating replay guards remain. Helper owns only ordinary Parts consumer for
+containment/intentional scroll evidence and cast repair. Source-ready handoffs,
+review and root freeze precede any compiler. No unconditional Studio post-paint
+Reveal, model/worker/wire/schema/section change, host retry or extra agent.
+Return to existing Customize/palette payload authoring after this bounded repair;
+all original quality/parity criteria, resolver/splitter and concurrent13 stay open.
+
+Parts reachability observation is joined/audited: both native1280/390 runs fail
+stage2 because the first action was already clipped before Space, with unchanged
+before/after y bounds and clean heaps. Browser compiles only;1,750/four/thirteen
+pins stay exact. This disproves replacement causality, not keyboard reachability.
+One bounded caller-entry check now uses the first action's actual Tab predecessor,
+exact forward-successor guard and ordinary native key messages. Keep all stages,
+fixture/widths/height/geometry and production exact. After source review root may
+admit only the same native two-width journey plus matching browser compile.
+Stop at that actual entry outcome; no further entry/fixture variants. Pause all
+Pascal/guides through joins/audit. Existing renderer Enter/Reveal ownership is the
+return path only if actual entry remains clipped; no unconditional scrolling or
+product repair is admitted yet. Preserve later focus/scroll, historical failures,
+concurrent13 and deferred resolver/splitter; no host/config retry or new agent.
+
+CORE REACHABILITY REASSESSMENT (2026-10-21): previous goal turn is progress:
+focus checkpoint28ef4847 pushed/remote verified with actual63/75/74 native
+checks and clean heaps. All readers are terminal. After two core deliverables
+without full criterion closure, reassess physical Parts visibility under existing
+parity criteria2/3 and renderer owners before another product edit. Helper owns
+only the existing ordinary Parts consumer for copied pre-Space/replacement face
+and all ancestor clip observations at the same1280/390 allocations. Root owns
+guides/docs/qualification; production stays exact. No Reveal, extra rows/stages,
+fixture resize or source repair before actual results. Root freezes/admit native
+ordinary1280/390 observations and matching browser compile only. Each independent
+native width retains its own result; a later pass cannot erase an earlier miss.
+Initial clipping and replacement-caused clipping are distinct, both unaccepted.
+Pause all Pascal/guides through joins/exact audit; retain failure receipts.
+Keep no browser-host/config retry, new tool/schema/rollout, extra agent or cleanup.
+Preserve concurrent13/deferred splitter/resolver backlog. Read-only queued next
+depth review is existing Customize/palette per-instance payload authoring, not
+a new payload model or another copy of current machinery.
+
 CORE FOCUS CONTINUITY ACTIVE (2026-10-21): previous goal turn is progress:
 Parts Hide/Restore qualified and checkpoint9210d747 pushed/remote verified.
 All old readers are terminal. Reassess the next actual target-quality gap under
