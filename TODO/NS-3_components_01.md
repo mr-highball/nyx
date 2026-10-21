@@ -2,6 +2,18 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The user's 2026-10-21 external debugger feedback adds a
+[control usefulness review and four-packet subcatalog](NS-3_control-usefulness_01.md).
+It reviews every default control from the application user's perspective, then
+delivers [column filtering/sorting](NS-3_control-usefulness_02.md),
+[table workbench interactions](NS-3_control-usefulness_03.md) and
+[live/large-data inspection](NS-3_control-usefulness_04.md). These refine this
+task's existing usable-family, customizable-parts and advanced-data criteria;
+they add no completion credit or new implementation/reader scope. Typed queries,
+native width overrides/on-demand values and browser row windows already exist.
+The external application's implementation has not been diagnosed. The linked
+review distinguishes missing capabilities from exposure, adapter and caller gaps.
+
 The current granular core queue is in
 [WORK.md](../WORK.md#granular-core-backlog--2026-10-21). It follows the missing
 Interact host through independently usable routing/publication APIs, then

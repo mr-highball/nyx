@@ -2,17 +2,76 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Requested control-usefulness backlog — 2026-10-21
+
+Latest user steering requests a few backlog tasks after an external native
+process/service-debugger table lacked obvious column filtering. Root files four
+open NS-3 packets, linked through the existing component milestone owner:
+
+- [Control-by-control review](TODO/NS-3_control-usefulness_01.md): a complete
+  user-journey/capability/exposure matrix across primitives and compounds, with
+  prioritized concrete follow-up owners for all control families.
+- [Interactive column filtering/sorting](TODO/NS-3_control-usefulness_02.md):
+  accessible header affordances, visible active criteria, typed comparisons,
+  multi-key order and exact reset/composition with the existing query owner.
+- [Table workbench interactions](TODO/NS-3_control-usefulness_03.md): user column
+  arrangement, readable values, portable copy/range/context actions and keyboard
+  editing, with authored defaults separate from optional user preferences.
+- [Changing/large-result inspection](TODO/NS-3_control-usefulness_04.md): explicit
+  follow/pause, stable selection/focus/scroll/drafts, useful feed states and
+  measured responsiveness through existing collections and scheduler ownership.
+
+Initial source review confirms typed predicates/stable ordering already exist,
+while native adapter attachment and browser plain-text headings do not supply
+column filter/sort UI. Native inherited grid copy, width overrides/on-demand reads
+and browser row windows are existing foundations, not newly missing features.
+The external application's source is unavailable here, so no particular caller
+or library defect is diagnosed. All four tasks remain open:01 requires its complete
+reviewed matrix and actionable owners;02–04 require their specified implementations
+and actual both-target validation. Filing alone qualifies none. Original
+criteria/credit/counters remain unchanged. The new review is the linked subcatalog
+and M3 map; foreign pending main-index/milestone changes remain byte-exact.
+
+C2 continuation is retained: ordinary native reader81523 returned114 at actual
+client1280 with zero unfreed blocks; browser compiler93100 returned0. Both actual
+readers are joined. Audit8B5E17E2 verifies the exact initial5owned/1795Pascal/
+foreign13/extra4 freeze. No further reader was started while filing this request.
+Compact ordinary execution and both OWN newly emitted compiled-target programs/
+native widths remain pending. Re-freeze the reviewed documentation and pin the
+same desktop executable before its compact run; preserve all Pascal, assertions,
+waits, budgets and the original source/generated-pair provenance requirements.
+No host/config/LAN/MCP/tool/wire rollout or cleanup follows from backlog work.
+
 ## Active priority — back to core Nyx (2026-10-20)
 
-The user's Studio facelift is accepted in
-[its scoped task](TODO/DONE/NS-4_studio-chrome_01.md). Root now owns documentation,
-checkpoint and remote verification; every reader is joined and all Pascal stays
-exact. Next return is C2: assess the existing whole-Kanban authoring/Save/Open and
-OWN generated-application compatibility on current coordinators. Lil' Scooty may
-prepare that existing packet read-only; a separate scoped source/reader handoff
-precedes execution. No new host/config/MCP/tool/wire rollout, extra agent or cleanup.
-Foreign13 and deferred resolver/splitter work stay untouched. No original credit
-or criterion closes; core no-closure25 carries.
+Previous goal turn: progress. The Studio facelift is accepted/pushed/remote-verified
+at bd0ca98; its source and foreign13 remain exact. Current deliverable is C2,
+the existing whole-Kanban authoring/Save/Open/OWN generated-application journey
+under [reuse05](TODO/NS-3_coordinators_05.md) and
+[parent01](TODO/NS-3_coordinators_01.md) criterion4, serving Studio authoring2.
+Root owns docs and actual qualification; Lil' Scooty reviews read-only. No Pascal,
+fixture/assertion/wait or host/API change is released.
+
+Bounded admission: four compilers/four native outcomes on unchanged
+`tests/nyx_kanban_studio_controls.lpr` (6BBEC427). Compile ordinary FPC/pas2js;
+execute actual native client1280/390 sequentially with fresh isolated directories.
+Join those readers and independently review/pin their OWN four accepted-project/
+nyx.generated.kanban.studio files, checking width equality and packet.Source exact
+emitted-file identity. Then compile native/browser NYX_COMPILED_KANBAN_STUDIO
+using that exact new unit directory and run native at both widths with each own
+saved packet. Ordinary Finish supplies strict nprRequireMatch; the compiled branch
+checks exact reconstruction instead of calling a second strict admission path.
+Browser branches compile only. Reuse the already current product/focused evidence;
+do not run a broader target or substitute prior114/124+15/15 results.
+
+Stop at the actual C2 result, retaining failures. All source/guides pause through
+actual joins and exact audits. After independent review, assess ALL five existing
+reuse05/parent criteria jointly against current C1/C2 and bounded native/browser
+creator/reentrancy/lifetime evidence; compatibility alone adds no original credit
+or automatic closure. No new host/config/MCP/tool/wire rollout, extra agent or
+cleanup; foreign13 and deferred resolver/splitter stay untouched. Core no-closure25
+carries until actual outcome/assessment. Private `.local/kanban-return-paths-private.json`
+owns the fresh E: packet, input vectors, actual handles and receipts.
 
 ## Studio facelift — 2026-10-21
 

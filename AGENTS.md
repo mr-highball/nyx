@@ -1,5 +1,48 @@
 # Working in Nyx
 
+CONTROL USEFULNESS BACKLOG (2026-10-21): latest user request owns this documentation
+turn. Four open NS-3_control-usefulness01..04 packets cover the whole-catalog
+end-user review, table filter/sort UI, column/cell workbench and stable live/large
+result inspection. Root owns these docs, components01 links and WORK/handoff;
+existing helper reviews read-only. All1795 Pascal/foreign13 stay exact. Existing
+query/native copy/sizing/on-demand/browser-window capabilities are foundations,
+not absent features; the external debugger implementation is not diagnosed.
+Main catalog/milestone foreign edits remain untouched; review01 is the linked
+subcatalog/M3 scope map. No original criterion/credit/no-closure25 changes.
+C2 reader81523 passes114 actual native1280/heap0 and93100 browser compile passes;
+both joined, exact initial5owned/1795Pascal/foreign13/extra4 audit8B5E17E2 retained.
+No reader is live. Compact ordinary and OWN new generated native/browser plus
+native1280/390 remain pending. After backlog review, separately re-freeze docs/
+unchanged source and pin the actual desktop executable before compact reuse;
+then review both widths' OWN four files before compiled admission. Retain C2's
+fixed4compiler/4native budget, source/assertions/waits and no old pair substitution.
+No Pascal repair, new reader/host/browser execution, LAN/config/MCP/tool/wire
+rollout, extra agent or cleanup is released by task filing. WORK/private records
+own the exact continuation. Historical headers below retain prior boundaries.
+
+C2 KANBAN COMPATIBILITY ADMISSION (2026-10-21): prior goal turn is progress,
+accepted facelift bd0ca98 is pushed/remote-verified. Current worktree preserves
+all1795 Pascal and foreign13 exactly; no old reader/host is live. The next
+criterion is reuse05's joint compatibility return C2 under parent01 criterion4
+and Studio authoring2. Root owns ONLY documentation and qualification. All Pascal,
+including unchanged consumer6BBEC427, assertions/fixture/waits, stays exact.
+Independent helper review accepts a fixed FOUR-compiler/FOUR-native-outcome plan:
+ordinary whole Kanban Studio native1280/390 sequential plus browser compile;
+after those actual readers join, independently review/pin all FOUR newly saved
+project/Pascal files, then compile NYX_COMPILED_KANBAN_STUDIO native/browser using
+only that OWN emitted unit and run native1280/390 sequentially with the respective
+new packet. No historical pair substitution or broad maintained target replay.
+Ordinary Finish supplies nprRequireMatch and exact saved-pair equality; compiled
+mode separately proves exact design reconstruction, not another strict admission.
+Root freezes five docs/all1795 Pascal/foreign13/drivers before readers, owns every
+actual handle/join/exact audit, retains any failure and stops at the actual C2
+result before joint all-five assessment. No source repair, host/browser execution,
+LAN/config/MCP/tool/wire rollout, extra agent or cleanup follows. Preserve original
+no-closure25/zero original credit and deferred resolver/splitter. Existing helper
+owns only read-only plan, own-pair/outcome and final criterion review. WORK/private
+kanban-return records own exact commands, pins and return path. Historical headers
+below retain prior scopes; this header owns the present bounded admission.
+
 STUDIO FACELIFT ACCEPTED (2026-10-21): all six scoped criteria close only in
 TODO/DONE/NS-4_studio-chrome_01.md after independent root/helper5DBE355E review.
 Shared typed button presentation/chrome/glyphs qualify on both adapters. Native

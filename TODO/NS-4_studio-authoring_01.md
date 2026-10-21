@@ -1,5 +1,14 @@
 # NS-4_studio-authoring_01 — Full authoring system
 
+Current C2 admission (2026-10-21): the explicit facelift is now accepted at bd0ca98.
+Return to the unchanged whole-Kanban authoring/Save/Open and OWN generated journey
+on current production. Root admits only four compilers/four native outcomes at
+client1280/390, with independent four-file provenance review before the compiled
+phase. All Pascal/oracles/waits remain exact; browser branches compile only.
+Ordinary Finish supplies strict source/design admission; compiled mode compares
+exact design reconstruction. Stop at actual C2, then reassess joint existing
+criteria without automatic DONE/credit. WORK owns commands, failures and receipts.
+
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
 Current Kanban authoring follows criterion2: the public editor63/candidate165,
