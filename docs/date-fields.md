@@ -66,10 +66,10 @@ before disposing its controls; deferred physical retirement permits a change
 callback to unmount its own view safely. Popups size to the installed calendar
 widget and stay within the current monitor's work area.
 
-The existing date-range recipe remains two customizable named date parts,
-`start` and `finish`, separated by a label. This batch adds actual field picking,
-not automatic cross-field ordering, a richer range-selection calendar or a custom
-accessible dialog. The [WAI date-picker example](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/)
+The date-range recipe retains two customizable named date parts, `start` and
+`finish`, separated by a label. Optional coordinated ordering is described below;
+a richer range-selection calendar and custom accessible dialog remain open.
+The [WAI date-picker example](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/)
 is useful guidance for later custom presentations; this standard native tool
 window does not claim to implement that modal-dialog example.
 
@@ -97,6 +97,73 @@ Checked Win32 passes 87, managed-source regression 33, with zero native/observer
 leaks; see WORK for exact artifacts and limits. Native capability remains Basic.
 Other widgetsets, DPI matrices, IME, hardware/assistive input,
 complete accessibility and advanced date-range behavior remain open.
+
+## Coordinated date ranges
+
+`nyx.date.range` adds copied, typed ordering policy to `INyxDateRange` without
+changing the existing factory, interface identity or independent default recipe.
+Use `Ordered` when both defined endpoints must satisfy start <= finish:
+
+```pascal
+LStayDateRange := NewNyxDateRange('stay');
+SetNyxDateRangeOptions(LStayDateRange, TNyxDateRangeOptions.Ordered);
+LPage.Add(LStayDateRange);
+```
+
+Equal dates are valid. Empty or one-sided ranges stay explicit; each Date's own
+domain still decides whether empty is permitted and enforces bounds and choices.
+Ordering never fills an empty endpoint, swaps dates, clamps a value or writes the
+other field. A rejected edit leaves the accepted state and revision intact.
+The native adapter restores the rejected field while preserving an unfinished
+date draft in its peer. Runtime input leaves authored defaults unchanged.
+
+`Independent` is an explicit local mask; `InheritNyxDateRangeOptions` removes
+only that local policy and reveals the reusable definition's setting:
+
+```pascal
+SetNyxDateRangeOptions(LStayComponent, TNyxDateRangeOptions.Independent);
+InheritNyxDateRangeOptions(LStayComponent);
+```
+
+The same setters support authored whole instances and named-part descriptors.
+Ordinary admission resolves their actual target. An ordered range must retain
+its own unambiguous direct `start` and `finish` Date parts. Policies on another
+kind, malformed metadata and missing/replaced endpoints refuse. Pair validation
+uses the complete bound candidate before publication, so simultaneous changes
+and endpoints sharing a state key are assessed together. Unbound edits use the
+same prepublication comparison. Raw defaults can be superseded by valid bindings.
+
+Studio's Properties Inspector composes `NewNyxDateRangeEditor`, a reusable Nyx
+Card/Button/Label form. Its actions are **Keep dates in order**, **Keep dates
+independent** and **Use inherited ordering**. Captured changes retain their exact
+authored owner and baseline;
+the shared `NyxDateRangePolicyPatch` candidate publishes design and readable
+Pascal in one Undo step. Stale selection, pending Pascal and changed baselines
+refuse. Instance policy edits preserve customized parts and sibling instances.
+
+Generated source uses specialized interfaces and
+`SetNyxDateRangeOptions(..., TNyxDateRangeOptions.Ordered)`. Source admission
+understands the two closed factories and set/inherit calls. Promoting older
+accepted source adds the required `nyx.date.range` import through existing source
+reconciliation; arbitrary Pascal is never evaluated by the builder reader.
+
+```powershell
+./tools/build.ps1 -Target date-range -DateRangeEvidenceDirectory <new-directory>
+```
+
+This maintained target runs the policy/editor and existing time/date regression
+consumers, then the ordinary native Studio workflow at desktop and compact widths.
+It compares the complete saved project and Pascal bytes, compiles that exact saved
+unit and exercises its application independently at both widths. It also stages
+the browser consumers and exact generated companion with the matched RTL.
+
+Current local evidence is 70 policy/editor checks, 1,613 maintained time checks,
+49 maintained date checks, ordinary Studio/application 82 at 1280 and 90 at 390,
+and exact saved compiled application 19/19; all native runs have clean heaps.
+The input is synthesized through actual native controls. Browser consumers
+compile only in this packet. Browser execution, trusted hardware/assistive input,
+other widgetsets/DPI, production performance and richer range pickers remain open.
+See [the work record](../WORK.md#coordinated-date-range-checkpoint--2026-10-21).
 
 ## Studio and semantic constraint authoring
 

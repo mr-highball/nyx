@@ -2259,6 +2259,7 @@ begin
         CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxSelectionInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxKanbanInspector(FSession, LOrigin, AShellRoot, LEdit) or
+        CaptureNyxDateRangeInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxCanvasInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxLogicInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxPartsInspector(FSession, LOrigin, AShellRoot, LEdit) or
@@ -2363,6 +2364,12 @@ begin
     end;
 
     if CaptureNyxSelectionInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
+    if CaptureNyxDateRangeInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);
       Exit(True);

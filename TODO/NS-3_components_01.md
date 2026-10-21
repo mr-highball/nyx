@@ -2,6 +2,19 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Coordinated DateRange is locally qualified under criteria1/3: typed public policy/
+editor70, maintained clock1613/calendar49, ordinary Studio/application82desktop/
+90compact and exact saved compiled application19/19, all with clean heaps.
+Source/project bytes match across widths; browser consumers compile only.
+Complete projected pairs, zero-assignment precommit admission, scalar domains,
+empty/equal/one-sided values, independent legacy defaults, local masks/inheritance
+and partial peer drafts retain their contracts. [WORK.md](../WORK.md#coordinated-date-range-checkpoint--2026-10-21)
+owns composite source/retained failures and all actual-input limits. No original
+criterion/credit/DONE closes; no-closure9 changes the next deliverable to live
+selected-record MasterDetail using existing collection selection/snapshot owners,
+then ordinary Studio/save/reopen/generated adoption. Root-reviewed seam design
+precedes source release; retain static defaults and avoid another state engine.
+
 Typed Kanban movement is locally qualified under criteria one/three: native
 contract62, ordinary controls56desktop/56compact and exact compiled emitted
 companion56desktop/56compact pass with clean heaps. Stable-card keyboard/default

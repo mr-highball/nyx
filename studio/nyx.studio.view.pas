@@ -1999,6 +1999,7 @@ begin
         AddNyxMenuBarInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxSelectionInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxKanbanInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
+        AddNyxDateRangeInspector(LComponentGroup.BodyColumn.Node, ASession, LSelectedProjection);
         AddNyxCanvasInspector(LComponentGroup.BodyColumn.Node, ASession);
         LComponentGroup.BodyColumn.Add(NewNyxReusableEditor(NyxStudioReusableEditorID,
           ASession.Document, NyxControl(ASession.SelectedID)));

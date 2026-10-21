@@ -22,10 +22,12 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
+  # NEW packet for coordinated range authoring and exact saved applications.
+  [string]$DateRangeEvidenceDirectory = 'build/date-range/maintained',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -6740,6 +6742,90 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'),
       $nyxRuntime, (Join-Path $nyxRoot 'studio/web/selection-style.html') -Destination $nyxSelectionBrowser
     Write-Host 'Native selection and generated source passed; execute the staged browser fixture explicitly.'
+    exit 0
+  }
+
+  if ($Target -eq 'date-range') {
+    # Pascal owns complete candidate, actual Studio input and application proofs.
+    # A new output root preserves earlier receipts. Browser artifacts are staged
+    # for separate execution; this target starts no server or compiler service.
+    $nyxDateRangeRoot = [IO.Path]::GetFullPath($DateRangeEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxDateRangeRoot) {
+      throw 'DateRangeEvidenceDirectory must be NEW; earlier evidence is retained'
+    }
+    $nyxDateRangeNative = Join-Path $nyxDateRangeRoot 'native'
+    $nyxDateRangeCompiled = Join-Path $nyxDateRangeRoot 'compiled'
+    $nyxDateRangeBrowser = Join-Path $nyxDateRangeRoot 'browser'
+    $nyxDateRangeCompiledBrowser = Join-Path $nyxDateRangeRoot 'compiled-browser'
+    foreach ($nyxDateRangeDirectory in @($nyxDateRangeNative,
+      $nyxDateRangeCompiled, $nyxDateRangeBrowser, $nyxDateRangeCompiledBrowser)) {
+      New-Item -ItemType Directory -Path $nyxDateRangeDirectory -Force | Out-Null
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxDateRangePlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+    $nyxDateRangeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
+      "-Fu$nyxLazarus/lcl/units/$nyxDateRangePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxDateRangePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDateRangePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxDateRangePlatform")
+    foreach ($nyxDateRangeProgram in @('nyx_time_values_tests', 'nyx_date_range_tests')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxDateRangeFlags + @(
+        "-FU$nyxDateRangeNative", "-FE$nyxDateRangeNative",
+        "tests/$nyxDateRangeProgram.lpr"))
+      & (Join-Path $nyxDateRangeNative ($nyxDateRangeProgram + '.exe'))
+      if ($LASTEXITCODE -ne 0) { throw 'DateRange typed editor/candidate checks failed' }
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDateRangeFlags + @(
+      "-FU$nyxDateRangeNative", "-FE$nyxDateRangeNative",
+      'tests/nyx_date_range_controls.lpr'))
+    foreach ($nyxDateRangeWidth in @(1280, 390)) {
+      & (Join-Path $nyxDateRangeNative 'nyx_date_range_controls.exe') `
+        (Join-Path $nyxDateRangeNative "width-$nyxDateRangeWidth") $nyxDateRangeWidth
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary DateRange/application journey failed' }
+    }
+    $nyxDateRangeSource = Join-Path $nyxDateRangeNative 'width-1280'
+    $nyxDateRangePacket = Join-Path $nyxDateRangeSource 'accepted-project.nyxproject'
+    foreach ($nyxDateRangeFile in @('nyx.generated.date.range.pas', 'accepted-project.nyxproject')) {
+      if ((Get-FileHash -LiteralPath (Join-Path $nyxDateRangeSource $nyxDateRangeFile)).Hash -ne
+        (Get-FileHash -LiteralPath (Join-Path $nyxDateRangeNative "width-390/$nyxDateRangeFile")).Hash) {
+        throw 'DateRange source/pair differs between owner widths'
+      }
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDateRangeFlags + @('-dNYX_COMPILED_DATE_RANGE',
+      "-Fu$nyxDateRangeSource", "-FU$nyxDateRangeCompiled", "-FE$nyxDateRangeCompiled",
+      'tests/nyx_date_range_controls.lpr'))
+    foreach ($nyxDateRangeWidth in @(1280, 390)) {
+      & (Join-Path $nyxDateRangeCompiled 'nyx_date_range_controls.exe') `
+        (Join-Path $nyxDateRangeCompiled "width-$nyxDateRangeWidth") `
+        $nyxDateRangeWidth $nyxDateRangePacket
+      if ($LASTEXITCODE -ne 0) { throw 'Exact generated DateRange application failed' }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxDateRangeProgram in @('nyx_date_range_tests',
+      'nyx_date_range_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',
+        "-FE$nyxDateRangeBrowser", "tests/$nyxDateRangeProgram.lpr")
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio', '-dNYX_COMPILED_DATE_RANGE',
+      "-Fu$nyxDateRangeSource", "-FE$nyxDateRangeCompiledBrowser",
+      'tests/nyx_date_range_controls.lpr')
+    $nyxDateRangeHTML = [IO.File]::ReadAllText((Join-Path $nyxRoot 'studio/web/date-range.html'))
+    $nyxDateRangeExpected = [IO.File]::ReadAllText($nyxDateRangePacket).Replace('<', '\u003c')
+    [IO.File]::WriteAllText((Join-Path $nyxDateRangeBrowser 'date-range.html'),
+      $nyxDateRangeHTML, [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $nyxDateRangeCompiledBrowser 'date-range.html'),
+      $nyxDateRangeHTML.Replace('id="expected-project">null</script>',
+        'id="expected-project">' + $nyxDateRangeExpected + '</script>'),
+      [Text.UTF8Encoding]::new($false))
+    foreach ($nyxDateRangeDirectory in @($nyxDateRangeBrowser, $nyxDateRangeCompiledBrowser)) {
+      Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDateRangeDirectory 'rtl.js')
+    }
+    Write-Host 'Native DateRange and exact generated apps passed; browser artifacts compile only.'
     exit 0
   }
 

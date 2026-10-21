@@ -31,7 +31,7 @@ uses
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
   nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens,
   nyx.tabs, nyx.tabs.editor, nyx.tabs.pages.editor, nyx.selection, nyx.selection.editor,
-  nyx.kanban.editor,
+  nyx.kanban.editor, nyx.date.range, nyx.date.range.editor,
   nyx.canvas.editing, nyx.flow.editing, nyx.flow.declarations,
   nyx.programs.editing, nyx.diagram.editing,
   nyx.flow.routes, nyx.flow.route.model;
@@ -46,7 +46,8 @@ type
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
     doMenuBarSet, doMenuBarInherit, doTheme, doMoveRoot, doTabsPolicy, doTabPage,
-    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban);
+    doSelectionPolicy, doCanvas, doFlow, doFlowRoutes, doProgram, doDiagram, doKanban,
+    doDateRange);
 
   { Exact partition-safe root movement. Index names the final zero-based position
     within that page/reusable partition, after removal. The value borrows no
@@ -280,6 +281,7 @@ function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyx
 { One whole-board operation retains exact target/baseline and applies all lane
   bindings with intent before the ordinary complete candidate/source admission. }
 function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
+function NyxDateRangePolicyPatch(const AChange: TNyxDateRangeEditorChange): INyxDesignPatch;
 function NyxSetSelectionPolicy(const AOwner: TNyxControlRef;
   const AOptions: TNyxSelectionOptions): INyxDesignPatch;
 function NyxInheritSelectionPolicy(const AOwner: TNyxControlRef): INyxDesignPatch;
@@ -423,7 +425,7 @@ procedure ValidateNyxPositionOwner(ADocument: TNyxDocument; const AControl: TNyx
 implementation
 
 uses
-  nyx.schema, nyx.composition, nyx.binding.types, nyx.studio.kanban;
+  nyx.schema, nyx.composition, nyx.binding.types, nyx.studio.kanban, nyx.controls;
 
 function NyxPositionControl(const AControl: TNyxControlRef;
   const APosition: TNyxMovePosition): TNyxPositionChange;
@@ -669,6 +671,7 @@ type
     Tabs: TNyxTabsEditorChange;
     Selection: TNyxSelectionEditorChange;
     Kanban: TNyxKanbanEditorChange;
+    DateRange: TNyxDateRangeEditorChange;
     Canvas: TNyxCanvasChange;
     Flow: TNyxFlowChange;
     ProgramChange: TNyxProgramChange;
@@ -1913,6 +1916,12 @@ begin
         LOperation.Selection.Options := TNyxSelectionOptions.FromData(LWire.Field('options'));
       end;
     end
+    else if LName = 'date-range-policy' then
+    begin
+      CheckFields(LWire, '|op|change|');
+      LOperation.Operation := doDateRange;
+      LOperation.DateRange := TNyxDateRangeEditorChange.FromData(LWire.Field('change'));
+    end
     else if LName = 'kanban-policy' then
     begin
       CheckFields(LWire, '|op|change|');
@@ -2176,6 +2185,13 @@ function NyxSelectionPolicyPatch(const AChange: TNyxSelectionEditorChange): INyx
 begin
   Result := ReadNyxDesignPatch(NyxArray([
     NyxObject([NyxField('op', NyxData('selection-policy')), NyxField('change', AChange.ToData)])]));
+end;
+
+function NyxDateRangePolicyPatch(const AChange: TNyxDateRangeEditorChange): INyxDesignPatch;
+begin
+  Result := ReadNyxDesignPatch(NyxArray([
+    NyxObject([NyxField('op', NyxData('date-range-policy')),
+      NyxField('change', AChange.ToData)])]));
 end;
 
 function NyxKanbanPolicyPatch(const AChange: TNyxKanbanEditorChange): INyxDesignPatch;
@@ -2791,6 +2807,20 @@ begin
         doDiagram:
           begin
             LOperation.DiagramChange.Apply(Result);
+          end;
+        doDateRange:
+          begin
+            ValidateNyxDateRangeEditorChange(Result, LOperation.DateRange);
+            LNode := Result.FindControl(LOperation.DateRange.Owner);
+
+            if LOperation.DateRange.Inherit then
+            begin
+              InheritNyxDateRangeOptions(RetainNyxControl(LNode));
+            end
+            else
+            begin
+              SetNyxDateRangeOptions(RetainNyxControl(LNode), LOperation.DateRange.Options);
+            end;
           end;
         doKanban:
           begin

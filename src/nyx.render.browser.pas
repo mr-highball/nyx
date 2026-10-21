@@ -373,6 +373,8 @@ type
     FKanbanIDs: TNyxKanbanMountIDs;
     FUpdating: Boolean;
     FForceValues: Boolean;
+    { Scoped borrowed scalar rejection target; nil retains full forced sync. }
+    FForceValueNode: TNyxNode;
     FOnBindingError: TNyxBrowserBindingError;
     FLastBindingError: TNyxText;
     FLastBindingFailure: TNyxBindingFailure;
@@ -6239,11 +6241,19 @@ begin
 
   if (AFailure = nbfRejected) and ARestoreInput then
   begin
+    { Restore the refused date without forcing unrelated physical drafts back
+      to their accepted model values. Other forced-sync callers remain global. }
+
+    if (ANode <> nil) and (ANode.ProjectionKind = NyxKindName(nkDate)) then
+    begin
+      FForceValueNode := ANode;
+    end;
     FForceValues := True;
     try
       Sync;
     finally
       FForceValues := False;
+      FForceValueNode := nil;
     end;
   end;
 
@@ -7365,7 +7375,8 @@ begin
           Only an accepted change to its own value replaces that physical draft;
           failed commands explicitly force restoration above. }
 
-        if not FForceValues and LBinding.FHasValueBaseline and
+        if not (FForceValues and ((FForceValueNode = nil) or
+          (FForceValueNode = LNode))) and LBinding.FHasValueBaseline and
           (LBinding.FLastValue = LValue) then
         begin
           Continue;

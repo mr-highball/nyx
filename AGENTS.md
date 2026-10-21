@@ -1,5 +1,31 @@
 # Working in Nyx
 
+DATE RANGE LOCALLY QUALIFIED (2026-10-21): opt-in Ordered/Independent/Inherit
+policy, public Nyx form and shared paired Studio admission qualify native70,
+maintained clock1613/calendar49, ordinary Studio/application82desktop/90compact
+and exact saved compiled application19/19, all with clean heaps. Both widths save
+identical project/source bytes. Eight accepted compiler logs have zero owned/
+28 upstream warnings; browser consumers compile only. All readers joined/audited
+against1767 Pascal/22 owned/13 concurrent/four saved source/pair pins. Retain first
+missing-import and unreachable-enum findings. Composite qualification includes
+the final two renderer guards using typed nkDate instead of its identical wire
+spelling; exact compiled native/browser consumers qualify that final source.
+
+Metadata/target checks stay separate from pair values. Compare only complete
+bound candidates before publication, with zero-assignment unbound admission too.
+Shared keys, atomic multi-key edits, endpoint domains, empty/equal/one-sided values,
+independent legacy defaults, masks/inheritance and partial peer drafts retain
+their contracts. No swaps/clamps/today/peer writes or new runtime owner follows.
+WORK.md and ignored .local/date-range-paths-private.json own receipts and source/
+remote identity. Stop DateRange/fixture/compiler variants. No full original
+criterion/credit/DONE closes; core no-closure9 requires the next material outcome.
+Existing Lil' Scooty proposes live selected-record MasterDetail through existing
+collection selection/snapshot owners under components1/3 returning authoring2/
+parity. Read-only seam review precedes separate source release; preserve static
+defaults and avoid a second selection/state engine. Resolver/splitter stay
+deferred; concurrent13 and offline/no-host/no-cleanup/no-new-tool/no-extra-agent
+rules remain exact.
+
 KANBAN STUDIO LOCALLY QUALIFIED (2026-10-21): typed public editor63/candidate165,
 ordinary full Studio/application114desktop/124compact and exact saved compiled
 application15/15 pass with clean heaps. Eight accepted compilers have zero owned/

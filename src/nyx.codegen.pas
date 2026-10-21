@@ -55,7 +55,7 @@ uses
   nyx.design.tokens,
   nyx.tabs,
   nyx.disclosure,
-  nyx.kanban, nyx.kanban.intent,
+  nyx.kanban, nyx.kanban.intent, nyx.date.range,
   nyx.selection,
   nyx.data,
   nyx.contract,
@@ -2671,6 +2671,7 @@ var
   LHasTabsOptions: Boolean;
   LHasDisclosureOptions: Boolean;
   LHasKanbanIntent: Boolean;
+  LHasDateRangeOptions: Boolean;
   LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
@@ -3125,6 +3126,7 @@ var
     LTabOptions: TNyxTabsOptions;
     LDisclosureOptions: TNyxDisclosureOptions;
     LKanbanIntent: TNyxKanbanIntent;
+    LDateRangeOptions: TNyxDateRangeOptions;
     LKanbanOptions: TNyxKanbanOptions;
     LKanbanLane: Integer;
     LSelectionOptions: TNyxSelectionOptions;
@@ -3291,6 +3293,20 @@ var
           LLines.Add(LArgument + #10 +
             '        .Selected(' + SelectionVariantSymbol(LSelectionOptions.SelectedVariant) + ')' + #10 +
             '        .Unselected(' + SelectionVariantSymbol(LSelectionOptions.UnselectedVariant) + '));');
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxDateRangeOptionsKey) then
+        begin
+          LDateRangeOptions := TNyxDateRangeOptions.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+          LMethod := 'Independent';
+
+          if LDateRangeOptions.Order = ndroAscending then
+          begin
+            LMethod := 'Ordered';
+          end;
+          LLines.Add('    SetNyxDateRangeOptions(' + AOwner +
+            ', TNyxDateRangeOptions.' + LMethod + ');');
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxKanbanIntentKey) then
@@ -3546,6 +3562,11 @@ var
     if HasNyxKanbanIntent(ANode) then
     begin
       LHasKanbanIntent := True;
+    end;
+
+    if HasNyxDateRangeOptions(ANode) then
+    begin
+      LHasDateRangeOptions := True;
     end;
 
     if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
@@ -3861,6 +3882,7 @@ begin
     LHasTabsOptions := False;
     LHasDisclosureOptions := False;
     LHasKanbanIntent := False;
+    LHasDateRangeOptions := False;
     LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
@@ -3961,6 +3983,11 @@ begin
     if LHasKanbanIntent then
     begin
       LLines.Add('  nyx.kanban, nyx.kanban.intent,');
+    end;
+
+    if LHasDateRangeOptions then
+    begin
+      LLines.Add('  nyx.date.range,');
     end;
 
     if LHasSelectionOptions then

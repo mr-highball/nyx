@@ -177,6 +177,7 @@ implementation
 
 uses
   nyx.schema,
+  nyx.date.range,
   nyx.images,
   nyx.interaction,
   nyx.text.index,
@@ -792,6 +793,9 @@ var
     LIndex: Integer;
     LSpec: TNyxBindingSpec;
   begin
+    { Relational values are authoritative only after both full projection passes.
+      Shared endpoint keys and atomic multi-key updates must be compared together. }
+    ValidateNyxDateRangeValues(ANode);
     for LIndex := 0 to ANode.BindingCount - 1 do
     begin
       LSpec := ANode.Bindings[LIndex];
@@ -1175,6 +1179,20 @@ var
   LRevision: Integer;
   LValueOnly: Boolean;
 
+  { The scalar tree has already admitted its shape/budget. Zero-assignment
+    commands do not invoke state validators, so unbound pairs need this same pure
+    comparison before any accepted projection is copied or synchronized. }
+  procedure CheckUnboundRanges(ARangeNode: TNyxNode);
+  var
+    LChildIndex: Integer;
+  begin
+    ValidateNyxDateRangeValues(ARangeNode);
+    for LChildIndex := 0 to ARangeNode.Count - 1 do
+    begin
+      CheckUnboundRanges(ARangeNode.Children[LChildIndex]);
+    end;
+  end;
+
   procedure Collect(ACandidate, ABaseline: TNyxNode);
   var
     LIndex: Integer;
@@ -1290,6 +1308,11 @@ begin
     { Capture typed data before publication too. Invalid scalar conversion is
       a rejected command, never a failure discovered after state has committed. }
     CaptureEventValue(LNode, LDispatch, LDispatch.Info);
+
+    if Length(LAssignments) = 0 then
+    begin
+      CheckUnboundRanges(FCommandRoot);
+    end;
     LValueOnly := AEdit and Assigned(FOnValueSync) and not HasBindings and
       OnlyEditedValue(FRoot, FCommandRoot, ANode.ID);
     FState.Apply(LAssignments, LRevision);

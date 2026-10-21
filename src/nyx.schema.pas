@@ -338,6 +338,7 @@ uses
   nyx.menu.declarations,
   nyx.menu.types,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view, nyx.kanban.intent,
+  nyx.date.range,
   nyx.flow.routes, nyx.flow.route.model;
 
 type
@@ -2979,6 +2980,9 @@ begin
   end;
 
   ValidateNyxKanbanIntent(ANode);
+  { Only portable policy/target admission belongs here. Pair values may still
+    be authored defaults or an interim command, before complete state projection. }
+  ValidateNyxDateRangeOptions(ANode);
 
   if NyxIsDisclosure(ANode) then
   begin
@@ -3248,7 +3252,13 @@ var
       target-dependent values are checked on the independent realized tree,
       rather than assigning the descriptor an unrelated primitive schema. }
 
-    if ANode.Kind <> 'slot-override' then
+    if ANode.Kind = 'slot-override' then
+    begin
+      { Descriptors carry local policy before their effective target is known;
+        malformed known metadata must not hide behind the structural skip. }
+      ValidateNyxDateRangeOptions(ANode);
+    end
+    else
     begin
       ValidateNyxProperties(ANode, ADocument);
     end;
@@ -3403,6 +3413,7 @@ var
       (ANode.Kind = NyxKindName(nkToolCanvas)) or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
+      HasNyxDateRangeOptions(ANode) or
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '');
     for LChildIndex := 0 to ANode.Count - 1 do

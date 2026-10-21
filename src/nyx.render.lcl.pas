@@ -448,6 +448,8 @@ type
     FCanvasGripHosts: array[TNyxResizeAxis] of TPanel;
     FSelectionEdges: array[0..3] of TShape;
     FForceValues: Boolean;
+    { Scoped borrowed scalar rejection target; nil retains full forced sync. }
+    FForceValueNode: TNyxNode;
     FOnBindingError: TNyxLCLBindingError;
     FLastBindingError: TNyxText;
     FLastBindingFailure: TNyxBindingFailure;
@@ -7927,11 +7929,19 @@ begin
 
   if (AFailure = nbfRejected) and ARestoreInput then
   begin
+    { A rejected date changes only its own physical draft. Other unchanged
+      date fields may hold incomplete text that must survive this rejection. }
+
+    if (ANode <> nil) and (ANode.ProjectionKind = NyxKindName(nkDate)) then
+    begin
+      FForceValueNode := ANode;
+    end;
     FForceValues := True;
     try
       Sync;
     finally
       FForceValues := False;
+      FForceValueNode := nil;
     end;
   end;
 
@@ -8636,7 +8646,8 @@ begin
         begin
           Continue;
         end;
-        LWriteValue := FForceValues or not LBinding.FHasValueBaseline or
+        LWriteValue := (FForceValues and ((FForceValueNode = nil) or
+          (FForceValueNode = LNode))) or not LBinding.FHasValueBaseline or
           (LBinding.FLastValue <> LValue);
         LBinding.FHasValueBaseline := True;
         LBinding.FLastValue := LValue;

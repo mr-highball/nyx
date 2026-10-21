@@ -765,7 +765,7 @@ uses
   nyx.controls,
   nyx.design.tokens,
   nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model,
-  nyx.kanban, nyx.kanban.intent;
+  nyx.kanban, nyx.kanban.intent, nyx.date.range;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -886,7 +886,8 @@ type
     vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
     vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
     vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
-    vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane);
+    vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane,
+    vkDateRangeOptions);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -954,6 +955,7 @@ type
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
     KanbanIntent: TNyxKanbanIntent;
+    DateRangeOptions: TNyxDateRangeOptions;
     KanbanOptions: TNyxKanbanOptions;
     SelectionOptions: TNyxSelectionOptions;
     CanvasPoint: TNyxCanvasPoint;
@@ -1076,6 +1078,7 @@ type
     { Replays only typed immutable intent/options, never Configure or a runtime
       attachment. Existing authored children retain their independent identity. }
     function KanbanConstructor(const AName: TNyxText): TValue;
+    function DateRangeOptions: TValue;
     function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
@@ -2602,6 +2605,7 @@ end;
 {$I nyx.source.tabs.inc}
 {$I nyx.source.disclosure.inc}
 {$I nyx.source.kanban.inc}
+{$I nyx.source.date.range.inc}
 {$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -2873,6 +2877,11 @@ begin
           (LName = 'nyxkanbanlane') then
         begin
           Exit(KanbanConstructor(LName));
+        end;
+
+        if LName = 'tnyxdaterangeoptions' then
+        begin
+          Exit(DateRangeOptions);
         end;
 
         if LName = 'tnyxdisclosureoptions' then
@@ -6596,13 +6605,14 @@ begin
     for LImportIndex := 0 to LGeneratedImports.Count - 1 do
     begin
 
-      { Promoting an accepted static board introduces typed movement builders.
-        Carry only the namespaces requested by the new generated frame through
-        the existing import admission; keep authored imports after a reset. }
+      { New typed behavior can promote an older accepted source frame. Carry
+        only namespaces requested by the generated frame through the existing
+        import admission; keep authored imports after a reset. }
       if (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.files.open') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.logic.files.open') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban') or
-        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') then
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);
       end;

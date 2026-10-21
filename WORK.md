@@ -4,6 +4,66 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+## Coordinated date range checkpoint — 2026-10-21
+
+Current outcome: **coordinated DateRange authoring and saved application**, under
+[components](TODO/NS-3_components_01.md) criteria1/3 → authoring2 → parity.
+The preceding goal turn only verified the20 already committed backlog tasks:
+**no progress**. This continuation resumes and qualifies the existing integrated
+product outcome, rather than repeating that handoff or starting resolver work.
+
+Public copied Ordered/Independent/Inherit policy and the Nyx-built editor pass70
+native checks. Existing clock1613/calendar49 regression checks also pass. The
+ordinary full native Studio workflow passes82 at1280 and90 at390 through visible
+controls, exact paired Undo/Redo, local masks/inheritance, preview, named Save/Open
+and an application mounted from the reopened design. Both widths save identical
+complete project and Pascal bytes. The exact saved Pascal is independently
+compiled; its ordinary application passes19/19, reconstructing the saved design.
+All six native run logs have clean heaps. These are synthesized native inputs;
+browser consumers compile only, with no browser input/parity or observing claim.
+
+Pair admission compares complete projected values before state installation.
+Shared endpoint keys and atomic multi-key updates therefore see final values;
+zero-assignment unbound commands receive the same precommit check. Metadata and
+effective target checks remain separate from values, so bindings can replace raw
+defaults. Missing/ambiguous/retyped endpoints refuse; equal/empty/one-sided values
+and per-field domains retain their contracts. Rejection restores its physical
+Date only, preserving the other Date's unfinished draft. Runtime edits never
+change authored defaults, customized named parts or a sibling's independent state.
+
+Eight accepted compiler logs have zero owned/28 upstream warning occurrences.
+The first five-reader preparation remains retained: focused70 passed but warned
+on its exhaustive enum else; Studio/legacy compilation found a missing controls
+import. Only the exact import and ordinal-case correction changed before the
+full workflow. A final two-line renderer edit replaces the literal date kind by
+the existing identical `NyxKindName(nkDate)` mapping. Final exact compiled native/
+browser consumers qualify that source; earlier full Studio evidence is composite.
+No failed log is erased and no fixture acceptance is weakened.
+
+All readers are joined/audited. Ignored `.local/date-range-paths-private.json`
+owns the E: packet, explicit source scope and source/remote receipts. The audit
+pins1767 Pascal inputs,22 owned files,13 concurrent planning files and four saved
+source/project inputs. Independent artifact review verifies exact packet.Source,
+typed policy/imports, four endpoint bindings, surviving caption/append payload,
+no leaked realized IDs and unchanged saved November defaults after December input.
+The maintained `tools/build.ps1 -Target date-range` accepts a new evidence directory
+and stages browser artifacts without starting a listener. Public usage is in
+[date fields](docs/date-fields.md#coordinated-date-ranges).
+
+Stop DateRange/fixture/compiler variants. No full original criterion/task/credit/
+DONE closes; core no-closure advances8→9. Reassessment changes the next product
+outcome to live selected-record **MasterDetail**, under the same component/
+authoring/parity owners. Its current recipe has a master List plus static detail
+labels/Edit. Existing collection selection/snapshot/store ownership can supply
+stable selected-record projection and copied Edit identity. First review hidden/
+removed/foreign selection semantics and accepted renderer lifetime; do not create
+a second selection/state engine. Keep static defaults/GUIDs, independent reuse,
+ordinary Studio/save/reopen/exact generated application acceptance. Lil' Scooty
+owns that read-only seam proposal; separate source release follows root review.
+Preserve concurrent13, deferred resolver/splitter, offline LAN and absent native
+Nyx tools. No host/config retry, cleanup/restart, new MCP/schema/tool rollout or
+extra agent is authorized.
+
 Current handoff (2026-10-21): **ordinary Kanban Studio configuration locally
 qualified**, under authoring criterion2 → components1/3 → parity. Public typed
 editor63 and board-wide candidate165 pass natively with clean heaps. The full

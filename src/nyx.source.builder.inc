@@ -789,6 +789,52 @@ begin
     Exit;
   end;
 
+  if At('SetNyxDateRangeOptions') or At('InheritNyxDateRangeOptions') then
+  begin
+    LName := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Date-range policy requires its admitted control');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Date-range policy requires an already owned control');
+    end;
+    Inc(FCursor);
+
+    if LName = 'setnyxdaterangeoptions' then
+    begin
+      Expect(',');
+      LValue := Expression;
+
+      if LValue.Kind <> vkDateRangeOptions then
+      begin
+        Fail('Date-range policy requires TNyxDateRangeOptions');
+      end;
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+
+      if LName = 'setnyxdaterangeoptions' then
+      begin
+        SetNyxDateRangeOptions(FControls[LLocal], LValue.DateRangeOptions);
+      end
+      else
+      begin
+        InheritNyxDateRangeOptions(FControls[LLocal]);
+      end;
+    end;
+    Exit;
+  end;
+
   if At('SetNyxKanbanIntent') or At('InheritNyxKanbanIntent') then
   begin
     LName := LowerCase(FTokens[FCursor].Text);
