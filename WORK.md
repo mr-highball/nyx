@@ -4,6 +4,54 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current result: the52AE browser run fails at both verified1280x900/390x900 before
+markers in AwaitSummary. Production lookup succeeds and its Supports+Connected
+assertion passes; CaptureBindings' generated cleanup releases the GLOBAL GSummaries
+array and clears its cells before the next check. The next repair is a separately
+released consumer-storage portability adapter in CaptureBindings only, preserving
+every fixture/assertion/message/time limit. Production remains exact. Host28352
+is verified/stopped/joined, port8766 empty, viewport reset and tabs6/7 closed.
+Audit1590037F retains the complete failed cycle, unchanged inputs and prior history.
+Scoped human local-regression rerun approval persists and needs no per-cycle question.
+All Pascal stays paused through independent review/checkpoint; no original criterion
+closes, and this executed browser batch advances no-closure20→21.
+
+### Kanban-repaired browser execution — 2026-10-21
+
+Both exact browser viewports fail with null GetSelectedCount at the first
+AwaitSummary; no completion/R1/count marker is reached. The earlier constructor
+failures no longer block entry. Exact generated code proves CaptureBindings first
+queries and checks a connected specialized Summary, then its finally releases
+$mod.GSummaries. The managed global vector is consequently cleared before
+AwaitSummary copies its member. Production CoordinatorBinding returns its retained
+exact specialized interface; a production null mask would hide a harness defect.
+A local query lease followed by an explicit owning vector assignment is the
+appropriate consumer-only portability proposal. Existing typed query locals reused
+in that helper also need their temporary ownership checked before the next query.
+
+No source/compiler/assertion/wait/runtime input changed during this cycle.
+Immutable1590037FECEA1A424EF5ABA5A6B0BC508A84841EFF9E54E5033B45B71A0AF861
+pins53 current+retained owned,1782 Pascal,13 concurrent,47 extras,six runtime inputs
+and13 evidence files. Own host28352 was verified by exact executable/full command/
+UTC ticks639282119457264404 before stop/join. Browser viewport reset and only tabs
+6/7 closed; port8766 has no listener. Prior62C40341/744CC006 failures and native
+D071F9A6 remain in their original scopes. The same-regression repeat-host approval
+persists; each future source release/review/freeze/qualification remains separate.
+The original E60 consumer and52AE failed artifact must remain retained if a portable
+storage-helper variant is admitted. No05/parent/DataToolbar/original closure follows.
+
+### Retained repeat-regression admission
+
+Current admission: the user chose "Allow regression reruns" for temporary loopback
+Pascal hosts during the remaining repair/retest cycles of the same unchanged
+desktop/phone browser regression. Stop each host afterward; this permission
+persists within that scope. Root now owns one exact52AE browser cycle at1280x900/
+390x900 through final cleanup, a fresh source/runtime freeze and owned host stop/
+join/reset. No compiler or Pascal edit is admitted during this cycle. Helper
+reviews results read-only. Each future source repair still needs its separate
+review/freeze/qualification under task flow. Preserve all earlier failures and
+native qualification; this approval is no browser pass or task closure.
+
 Current result: the narrow Kanban ownership repair passes native execution and
 browser compilation. IndependentD071F9A6 verifies12 compilers and eight clean
 native outcomes171/68/68/588/588/139/121/121, with all actual exec outcomes joined.

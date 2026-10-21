@@ -435,9 +435,11 @@ completion on a separate prepared Kanban managed-array ownership defect.
 [WORK.md](../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
 records those failures and host retirement. The targeted Kanban ownership repair
 now uses local query outputs and distinct retained cell/field references, with
-fresh native checks and browser compilation passing. Its new browser build still
-needs actual execution; [the qualification record](../WORK.md#kanban-ownership-repair-qualification--2026-10-21)
-keeps that boundary explicit.
+fresh native checks and browser compilation passing. That new build now fails on
+the regression consumer's global Summary storage cleanup after its successful
+connected-interface assertion. [The executed result](../WORK.md#kanban-repaired-browser-execution--2026-10-21)
+distinguishes that harness ownership issue from production lookup and retains
+the exact failures; complete browser acceptance remains open.
 
 ## Component discovery and creator descriptions
 

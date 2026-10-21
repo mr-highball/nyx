@@ -1,5 +1,40 @@
 # Working in Nyx
 
+COORDINATOR05 R3 52AE BROWSER FAILURE JOINED (2026-10-21): exact1280x900 and
+390x900 both fail before markers at AwaitSummary.GetSelectedCount. Root/helper
+source diagnosis shows production lookup already passed Supports+Connected;
+CaptureBindings writes GSummaries cells as direct Supports outputs, then emitted
+finally releases that managed GLOBAL array and nulls its cells before AwaitSummary.
+This is consumer storage ownership, not a missing production binding. Do not add
+a null guard, change waits or weaken any check. OriginalE60/52AE evidence stays
+immutable. Host28352 verified by path/fullcommand/startUTCticks, stopped/joined;
+port8766 empty, viewport reset/tabs6/7 closed. Root audit1590037F verifies53 current+
+retained/1782Pascal/concurrent13/47extras/six runtime/13 evidence and prior history.
+All Pascal stays paused pending independent full review/checkpoint and separate
+explicit CaptureBindings-only portability release. Production97A3848D and all
+other helpers/fixtures/assertions/waits stay exact. Scoped human regression-rerun
+permission PERSISTS: future exact reviewed builds of this same unchanged-in-meaning
+regression may use temporary loopback hosts, each stopped afterward. No per-cycle
+approval, LAN/config/MCP/tool/wire/extra agent or unrelated cleanup follows. No05/
+parent/original criterion/credit closes; actual browser batch advances20→21.
+
+COORDINATOR05 R3 REGRESSION RERUNS AUTHORIZED (2026-10-21): human explicitly
+answered "Allow regression reruns" to temporary loopback-only Pascal hosts for
+the remaining repair/retest cycles of the SAME unchanged E60 desktop/phone
+browser regression, stopping EACH host afterward. This applicable override
+supersedes pending/no-further-host statements below within that scope; no new
+per-cycle approval is needed. Root owns each cycle's exact current-source/runtime
+freeze, verified owned host identity, actual1280x900/390x900 outcomes through final
+cleanup, screenshots, viewport reset/tab close/own host stop and joined audit.
+Stop every host/readers and audit before source changes. This first admitted
+cycle uses already-built52AE01DA/HTML96451F59/RTL A6C5EDC8 plus existing host997B90C4;
+no compiler or Pascal edit. Each future source release/review/freeze/qualification
+remains separate and explicit; broader task, consumer/assertion/wait, public API,
+LAN/config/MCP/tool/wire rollout, unrelated cleanup/restart and extra agent scope
+does not follow. Preserve consumerE60, concurrent13/resolver14/splitter, all prior
+failed/qualified evidence and original criteria. Helper reviews results read-only.
+The old unanswered-gate blocked audit resolves; any later blocker starts fresh.
+
 COORDINATOR05 R3 KANBAN OWNERSHIP NATIVE/COMPILE QUALIFIED (2026-10-21):
 independent auditD071F9A6 verifies53 current+retained owned/1782Pascal/concurrent13/
 47extras and53 final evidence pins. All eight actual exec outcomes are terminal0/

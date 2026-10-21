@@ -73,6 +73,15 @@ owning references in emitted code, but has not executed. The next outcome is tha
 same application at both verified browser widths through final cleanup; a bounded
 repeat-regression local-host question is pending. No original criterion closes.
 
+R3 next executed result (2026-10-21):52AE now fails at both exact viewports in
+AwaitSummary because CaptureBindings' emitted cleanup clears its global Summary
+storage after the successful connected-interface assertion. Production lookup
+works. Audit1590037F retains both failures, unchanged source and stopped/joined
+host28352. A separate consumer storage-only portability proposal must preserve
+the same fixture, every logical predicate/message and all waits; no null mask.
+The human approved remaining same-regression local reruns, each host stopped;
+that scoped authorization persists. No task or browser acceptance follows.
+
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
@@ -124,9 +133,11 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 Status: both previous browser builds failed before completion at both required
 widths. Their owned hosts are stopped/joined and approvals consumed. The narrow
 Kanban local-output/owning-assignment repair now passes native/compile qualification;
-its new52AE01DA browser application must actually execute. A bounded repeat-
-regression local-host question is pending. This task releases no host/config
-retry by itself.
+its new52AE01DA browser application has now failed on consumer storage ownership
+after a successful production lookup. A CaptureBindings-only portability proposal
+precedes another reviewed build/run. Human-approved same-regression loopback reruns
+are now available, with each host stopped afterward; other host/config authority
+does not follow from this task.
 
 Preserve every consumer/assertion/wait byte. The bounded proposal establishes
 managed Summary ownership before initialization/callouts/self leases, and uses
