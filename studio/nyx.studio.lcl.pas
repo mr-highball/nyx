@@ -462,7 +462,7 @@ implementation
 
 uses
   StdCtrls, nyx.editing.lcl, nyx.interaction, nyx.contract, nyx.source,
-  nyx.collections.query.editor,
+  nyx.collections.query.editor, nyx.parts.editor,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.sourcefiles,
   nyx.pascal.filechanges, nyx.studio.diagnostics, nyx.studio.rootview,
@@ -2806,6 +2806,8 @@ var
   LChromeEventTrigger: TNyxText;
   LChromeEventName: TNyxText;
   LChromeCollection: TNyxStudioCollectionChromeIdentity;
+  LPartsFocus: TNyxPartsEditorFocus;
+  LChromeReference: TNyxControlRef;
   LChromeInputs: TNyxContentFaceStates;
   LChromeNode: TNyxNode;
   LResourcePrepared: INyxPreparedPublication;
@@ -2954,6 +2956,7 @@ begin
     LChromeEventTrigger := '';
     LChromeEventName := '';
     LChromeCollection := Default(TNyxStudioCollectionChromeIdentity);
+    LPartsFocus := Default(TNyxPartsEditorFocus);
 
     if (LFocus <> nil) and (FShellView.Root <> nil) and
       InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
@@ -2963,7 +2966,30 @@ begin
 
         if FShellView.SectionRoot(LSection) <> nil then
         begin
-          LChromeID := EditingChromeIdentity(FShellView.SectionRoot(LSection));
+
+          if FSession.MatchesCommandContext(FShellCommandContext) then
+          begin
+            { Find the current physical owner once, then validate only that
+              Parts action. Scanning the form again for each row multiplies
+              work on large forms; this copied reference retains no control. }
+            LChromeReference := FShellView.SectionView(LSection).ControlReference(LFocus);
+
+            if LChromeReference.ID <> '' then
+            begin
+              LChromeNode := FShellView.SectionRoot(LSection).Find(LChromeReference.ID);
+
+              if TryCaptureNyxPartsEditorFocus(LChromeNode,
+                FShellView.SectionRoot(LSection), LPartsFocus) then
+              begin
+                LChromeID := LChromeReference.ID;
+              end;
+            end;
+          end;
+
+          if LChromeID = '' then
+          begin
+            LChromeID := EditingChromeIdentity(FShellView.SectionRoot(LSection));
+          end;
         end;
 
         if LChromeID <> '' then
@@ -3302,6 +3328,9 @@ begin
       begin
         TWinControl(FCodeView.InputFor('studio-code')).SetFocus;
         FSourceFocusPending := False;
+        { Explicit workspace navigation owns focus even without a source-line
+          request. A captured Parts or editing field must not reclaim it. }
+        LChromeID := '';
       end;
 
       if FSourceLine > 0 then
@@ -3328,6 +3357,14 @@ begin
       the same inspector/title field by identity and Unicode selection, never
       retain its destroyed widget pointer across shell replacement. Pending
       values are already present in ComposeShell's immutable presentation. }
+
+    if (LChromeID <> '') and LPartsFocus.Defined then
+    begin
+      { Row ordinals and Hide/Restore IDs may change or be reused. Only the
+        copied form/instance/path can select this replacement. Missing or
+        changed owners yield no focus target, never the old positional ID. }
+      LChromeID := LPartsFocus.Resolve(FShellView.SectionRoot(nssInspector)).ID;
+    end;
 
     if (LChromeID <> '') and (LChromeStateKey <> '') and
       ((FShell.Find(LChromeID) = nil) or

@@ -643,6 +643,10 @@ type
     { Exact runtime identity for a currently borrowed native input. Empty for
       an unrelated/non-input control. One binding pass; nothing is retained. }
     function InputIdentity(AInput: TControl): TNyxText;
+    { Copy the runtime reference for an exact projected control or its separate
+      input. Nil/foreign controls return undefined. One binding pass retains
+      nothing, dereferences no supplied widget and performs no ancestor guess. }
+    function ControlReference(AControl: TControl): TNyxControlRef;
     { Borrow the actual keyboard/focus face, including a split separator's grip.
       A component without a declared face returns nil; a missing identity raises.
       Collection attachments manage entry within their returned host. The caller
@@ -5578,6 +5582,27 @@ begin
     if FBindings[LIndex].FInput = AInput then
     begin
       Exit(FBindings[LIndex].FNode.ID);
+    end;
+  end;
+end;
+
+function TNyxLCLRenderer.ControlReference(AControl: TControl): TNyxControlRef;
+var
+  LIndex: Integer;
+begin
+  Result := Default(TNyxControlRef);
+
+  if AControl = nil then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if (FBindings[LIndex].FInput = AControl) or
+      (FBindings[LIndex].FControl = AControl) then
+    begin
+      Exit(NyxControl(FBindings[LIndex].FNode.ID));
     end;
   end;
 end;

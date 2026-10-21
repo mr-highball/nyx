@@ -49,6 +49,23 @@ type
     property Action: TNyxPartsEditorAction read FAction;
     property Baseline: TNyxText read FBaseline;
   end;
+  { Copied presentation identity for a currently focused Parts action. Resolve
+    follows the same form, instance and exact named path through row reordering
+    and Hide/Restore changes. It grants no edit or project-load authority and
+    retains no document, node, renderer, callback or physical control. }
+  TNyxPartsEditorFocus = record
+  private
+    FFormID: TNyxText;
+    FInstance: TNyxControlRef;
+    FPath: TNyxPartRef;
+    function GetDefined: Boolean;
+  public
+    function Resolve(ARoot: TNyxNode): TNyxControlRef;
+    property FormID: TNyxText read FFormID;
+    property Instance: TNyxControlRef read FInstance;
+    property Path: TNyxPartRef read FPath;
+    property Defined: Boolean read GetDefined;
+  end;
 
 { The document is borrowed synchronously. The complete saved baseline is
   deliberately conservative: definition, instance and occupied-ID changes all
@@ -79,6 +96,11 @@ function NewNyxPartsEditor(const AID: TNyxText; ADocument: TNyxDocument;
   changes neither form nor document. Controllers apply its existing typed patch. }
 function CaptureNyxPartsEditor(AButton, AShellRoot: TNyxNode;
   ADocument: TNyxDocument; out AProposal: TNyxPartsEditorProposal): Boolean;
+{ Copy only a valid live form action's presentation identity. Unrelated,
+  malformed or unavailable actions return False and clear Focus. The host must
+  capture physical focus itself and retain its ordinary project/load guards. }
+function TryCaptureNyxPartsEditorFocus(AButton, AShellRoot: TNyxNode;
+  out AFocus: TNyxPartsEditorFocus): Boolean;
 
 implementation
 
@@ -128,6 +150,167 @@ function ActionName(AAction: TNyxPartsEditorAction): TNyxText;
 begin
   CheckAction(AAction);
   Result := CActionNames[AAction];
+end;
+
+function TNyxPartsEditorFocus.GetDefined: Boolean;
+begin
+  Result := (FFormID <> '') and (FInstance.ID <> '') and
+    (FPath.Name <> '') and (FPath.Name <> CRootPath);
+end;
+
+function TryCaptureNyxPartsEditorFocus(AButton, AShellRoot: TNyxNode;
+  out AFocus: TNyxPartsEditorFocus): Boolean;
+var
+  LEditor, LRow, LBody: TNyxNode;
+  LFormID, LPath, LInstance, LOrdinal: TNyxText;
+  LAt, LChildAt, LActions: Integer;
+  LAction: TNyxPartsEditorAction;
+  LCandidate: TNyxPartsEditorFocus;
+begin
+  Result := False;
+  AFocus := Default(TNyxPartsEditorFocus);
+
+  if (AButton = nil) or (AShellRoot = nil) or
+    (AButton.ProjectionKind <> NyxKindName(nkButton)) or
+    (AButton.Prop(NyxAttributeName(atEnabled), 'true') <> 'true') or
+    (AButton.Prop(NyxAttributeName(atVisible), 'true') <> 'true') then
+    Exit;
+  LFormID := AButton.Prop(CEditor);
+
+  if LFormID = '' then
+    Exit;
+  LEditor := AShellRoot.Find(LFormID);
+
+  if (LEditor = nil) or (LEditor.ProjectionKind <> NyxKindName(nkCard)) or
+    (LEditor.Prop(CVersion) <> CFormVersion) or (LEditor.Find(AButton.ID) <> AButton) then
+    Exit;
+  LInstance := LEditor.Prop(CInstance);
+  LPath := AButton.Prop(CPath);
+
+  if (LInstance = '') or (LPath = '') or (LPath = CRootPath) or
+    (LPath[1] = '/') or (LPath[Length(LPath)] = '/') or (Pos('//', LPath) > 0) or
+    (AButton.Prop(CDescriptor) = '') then
+    Exit;
+  LOrdinal := AButton.Prop(CRow);
+
+  if not TryStrToInt(LOrdinal, LAt) or (LAt < 0) or (LAt >= CMaximumRows) then
+    Exit;
+
+  if LOrdinal <> TNyxText(IntToStr(LAt)) then
+    Exit;
+
+  if AButton.Prop(CAction) = CActionNames[npaHide] then
+    LAction := npaHide
+  else if AButton.Prop(CAction) = CActionNames[npaRestore] then
+    LAction := npaRestore
+  else
+    Exit;
+  LRow := AButton.Parent;
+
+  if (LRow = nil) or (LRow.ProjectionKind <> NyxKindName(nkColumn)) or
+    (LRow.Prop(CPath) <> LPath) or
+    (LRow.SourceID <> LFormID + '-row-' + LOrdinal) or
+    (AButton.Prop(NyxAttributeName(atPart)) <> 'action') or
+    (AButton.SourceID <> NyxPartsEditorActionID(LFormID, LAt, LAction)) then
+    Exit;
+  LBody := LRow.Parent;
+
+  if (LBody = nil) or (LBody.Parent <> LEditor) or
+    (LBody.ProjectionKind <> NyxKindName(nkColumn)) or
+    (LBody.SourceID <> LFormID + '-rows') or
+    (LBody.Prop(NyxAttributeName(atPart)) <> 'rows') or
+    (LBody.Count > CMaximumRows) or (LAt >= LBody.Count) then
+    Exit;
+
+  if LBody.Children[LAt] <> LRow then
+    Exit;
+
+  if LRow.Count > NyxMaximumNodes then
+    Exit;
+  LActions := 0;
+  for LChildAt := 0 to LRow.Count - 1 do
+  begin
+
+    if LRow.Children[LChildAt].Prop(NyxAttributeName(atPart)) = 'action' then
+      Inc(LActions);
+  end;
+
+  if LActions <> 1 then
+    Exit;
+  LCandidate := Default(TNyxPartsEditorFocus);
+  LCandidate.FFormID := LFormID;
+  LCandidate.FInstance := NyxControl(LInstance);
+  LCandidate.FPath := NyxPart(LPath);
+  AFocus := LCandidate;
+  Result := True;
+end;
+
+function TNyxPartsEditorFocus.Resolve(ARoot: TNyxNode): TNyxControlRef;
+var
+  LEditor, LBody, LRow, LButton: TNyxNode;
+  LRowAt, LChildAt, LMatches, LPaths, LVisited: Integer;
+  LCurrent: TNyxPartsEditorFocus;
+  LCandidate: TNyxControlRef;
+begin
+  Result := Default(TNyxControlRef);
+
+  if not Defined or (ARoot = nil) then
+    Exit;
+  LEditor := ARoot.Find(FFormID);
+
+  if (LEditor = nil) or (LEditor.ProjectionKind <> NyxKindName(nkCard)) or
+    (LEditor.Prop(CVersion) <> CFormVersion) or
+    (LEditor.Prop(CInstance) <> FInstance.ID) then
+    Exit;
+  LBody := LEditor.Find(FFormID + '-rows');
+
+  if (LBody = nil) or (LBody.Parent <> LEditor) or
+    (LBody.ProjectionKind <> NyxKindName(nkColumn)) or
+    (LBody.Count > CMaximumRows) then
+    Exit;
+  LMatches := 0;
+  LPaths := 0;
+  LVisited := 0;
+  LCandidate := Default(TNyxControlRef);
+  for LRowAt := 0 to LBody.Count - 1 do
+  begin
+    Inc(LVisited);
+
+    if LVisited > NyxMaximumNodes then
+      Exit;
+    LRow := LBody.Children[LRowAt];
+
+    if LRow.Prop(CPath) <> FPath.Name then
+      Continue;
+    Inc(LPaths);
+
+    if LPaths > 1 then
+      Exit;
+    for LChildAt := 0 to LRow.Count - 1 do
+    begin
+      Inc(LVisited);
+
+      if LVisited > NyxMaximumNodes then
+        Exit;
+      LButton := LRow.Children[LChildAt];
+
+      if LButton.Prop(NyxAttributeName(atPart)) <> 'action' then
+        Continue;
+      Inc(LMatches);
+
+      if (LMatches > 1) or
+        not TryCaptureNyxPartsEditorFocus(LButton, ARoot, LCurrent) then
+        Exit;
+
+      if (LCurrent.FormID <> FFormID) or (LCurrent.Instance.ID <> FInstance.ID) or
+        (LCurrent.Path.Name <> FPath.Name) then
+        Exit;
+      LCandidate := NyxControl(LButton.ID);
+    end;
+  end;
+
+  if LMatches = 1 then
+    Result := LCandidate;
 end;
 
 function RequireInstance(ADocument: TNyxDocument;

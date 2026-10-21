@@ -25,7 +25,8 @@ program nyx_parts_studio_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,{$endif}
+  {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,
+  LCLType, LMessages,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.codegen, nyx.composition, nyx.parts.editor, nyx.studio.inspector,
   nyx.studio.menu, nyx.studio.projects, nyx.studio.session,
@@ -150,7 +151,11 @@ end;
 var
   LControl: TControl;
 begin
-  LControl := GStudio.ShellView.ControlFor(AID);
+
+  if (GStudio.SourceView.Root <> nil) and (GStudio.SourceView.Root.Find(AID) <> nil) then
+    LControl := GStudio.SourceView.ControlFor(AID)
+  else
+    LControl := GStudio.ShellView.ControlFor(AID);
   Check(LControl <> nil, 'mounted native button / ' + AID);
   TControlAccess(LControl).Click;
 end;
@@ -241,6 +246,89 @@ begin
   raise Exception.Create('No actual part action for ' + APath);
 end;
 
+{ Resolve the current physical action only after typed path discovery. Native
+  key messages enter the ordinary LCL button path; browser click is a focused
+  deterministic activation, not evidence of trusted browser keyboard input. }
+procedure ActivatePartAction(const APath: TNyxText; AAction: TNyxPartsEditorAction);
+var
+  LID: TNyxText;
+  {$ifdef PAS2JS}
+  LControl: TJSHTMLElement;
+  {$else}
+  LControl: TWinControl;
+  {$endif}
+begin
+  LID := ActionID(APath, AAction);
+  LControl := GStudio.ShellView.FocusFor(LID);
+  Check(LControl <> nil, 'the current Parts action has a physical keyboard face');
+  {$ifdef PAS2JS}
+  LControl.focus;
+  Check(document.activeElement = LControl, 'the current browser Parts action owns focus before activation');
+  LControl.click;
+  {$else}
+  Check(LControl.CanSetFocus and LControl.TabStop, 'the current native Parts action is keyboard reachable');
+  LControl.SetFocus;
+  Check(Screen.ActiveControl = LControl, 'the current native Parts action owns focus before activation');
+
+  if LControl.Perform(CN_KEYDOWN, VK_SPACE, 0) = 0 then
+  begin
+    LControl.Perform(LM_KEYDOWN, VK_SPACE, 0);
+  end;
+
+  if LControl.Perform(CN_KEYUP, VK_SPACE, 0) = 0 then
+  begin
+    LControl.Perform(LM_KEYUP, VK_SPACE, 0);
+  end;
+  {$endif}
+end;
+
+{ Never retain a face across source/presentation publication. The replacement
+  is found again through its exact current typed part and action. }
+function PartActionFocused(const APath: TNyxText;
+  AAction: TNyxPartsEditorAction): Boolean;
+var
+  LID: TNyxText;
+  {$ifdef PAS2JS}
+  LControl: TJSHTMLElement;
+  {$else}
+  LControl: TWinControl;
+  {$endif}
+begin
+  LID := ActionID(APath, AAction);
+  LControl := GStudio.ShellView.FocusFor(LID);
+  Result := (LControl <> nil) and
+    ({$ifdef PAS2JS}document.activeElement{$else}Screen.ActiveControl{$endif} = LControl);
+end;
+
+{ The Project panel is mounted alongside Parts only in the wide layout. Compact
+  mode deliberately omits it; its title field is not a compact redirect target. }
+function WideHost: Boolean;
+begin
+  Result := {$ifdef PAS2JS}window.innerWidth{$else}GWidth{$endif} >= 900;
+end;
+
+procedure FocusProjectTitle;
+var
+  {$ifdef PAS2JS}
+  LInput: TJSHTMLElement;
+  {$else}
+  LInput: TWinControl;
+  {$endif}
+begin
+  LInput := {$ifndef PAS2JS}TWinControl({$endif}
+    GStudio.ShellView.InputFor('project-title'){$ifndef PAS2JS}){$endif};
+  Check(LInput <> nil, 'the wide layout has its ordinary Project title input');
+  {$ifdef PAS2JS}LInput.focus;{$else}LInput.SetFocus;{$endif}
+  Check({$ifdef PAS2JS}document.activeElement{$else}Screen.ActiveControl{$endif} = LInput,
+    'later focus moves to the ordinary Project title input before completion');
+end;
+
+function ProjectTitleFocused: Boolean;
+begin
+  Result := {$ifdef PAS2JS}document.activeElement{$else}Screen.ActiveControl{$endif} =
+    GStudio.ShellView.InputFor('project-title');
+end;
+
 procedure CheckParts(const APath: TNyxText; AHidden: Boolean);
 var
   LDocument: TNyxDocument;
@@ -310,10 +398,12 @@ begin
         end;
         {$endif}
       end;
-    1: Click(ActionID('actions', npaHide));
+    1: ActivatePartAction('actions', npaHide);
     2:
       begin
         CheckParts('actions', True);
+        Check(PartActionFocused('actions', npaRestore),
+          'Hide preserves keyboard focus on the same part''s replacement Restore action');
         GHidden := Pair;
         Check(ActionID('actions', npaRestore) <> '', 'a hidden part retains its Restore action');
         Click('action-undo');
@@ -326,10 +416,12 @@ begin
     4:
       begin
         Check(Pair = GHidden, 'one Redo restores the exact hidden pair');
-        Click(ActionID('actions', npaRestore));
+        ActivatePartAction('actions', npaRestore);
       end;
     5:
       begin
+        Check(PartActionFocused('actions', npaHide),
+          'Restore preserves keyboard focus on the same part''s replacement Hide action');
         Check(Pair = GInitial, 'Restore original removes only the local descriptor');
         CheckParts('actions', False);
         Click('action-undo');
@@ -342,10 +434,21 @@ begin
     7:
       begin
         Check(Pair = GInitial, 'Restore Redo retains the complete pair');
-        Click(ActionID('actions/send', npaHide));
+        ActivatePartAction('actions/send', npaHide);
+
+        if WideHost then
+        begin
+          Check(GStudio.SourceBusy, 'nested Hide is still preparing before the later input focus');
+          FocusProjectTitle;
+        end;
       end;
     8:
       begin
+
+        if WideHost then
+        begin
+          Check(ProjectTitleFocused, 'accepted Hide preserves the later wide-layout input focus');
+        end;
         CheckParts('actions/send', True);
         CheckParts('actions', False);
         Click(ActionID('actions/send', npaRestore));
@@ -353,6 +456,11 @@ begin
     9:
       begin
         Check(Pair = GInitial, 'nested Restore retains parent and definition');
+
+        if WideHost then
+        begin
+          Check(ProjectTitleFocused, 'Restore cannot reclaim Parts focus from the later input');
+        end;
         LAction := ActionID('actions', npaHide);
         LQueued := Default(TNyxStudioDesignEdit);
         LQueued.Action := sdaTitle;
@@ -398,12 +506,15 @@ begin
     {$ifndef PAS2JS}
     12:
       begin
+        Click('action-source-tab');
         LInput := TWinControl(GStudio.CodeView.InputFor('studio-code'));
         Check(LInput is TMemo, 'actual Pascal editor is available');
         TMemo(LInput).Text := GStudio.ProjectSnapshot.Source + #10 + '// Unfinished parts draft';
       end;
     13:
       begin
+        Check(Screen.ActiveControl = GStudio.CodeView.InputFor('studio-code'),
+          'explicit source-tab navigation wins over earlier Parts or title focus');
         Check(GStudio.ProjectSnapshot.Pending, 'Pascal memo retains an unaccepted draft');
         GDraft := Pair;
 

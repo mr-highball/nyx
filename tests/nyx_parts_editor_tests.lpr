@@ -389,12 +389,117 @@ begin
   Check(LFailed, 'A retained form needs a current owning document before capture');
 end;
 
+{ Focus follows presentation semantics, never an old ordinal or borrowed node.
+  The same real remove/inherit candidates drive both action transitions. }
+procedure FocusAnchors;
+var
+  LDocument, LHidden, LRestored: TNyxDocument;
+  LForm, LHiddenForm, LRestoredForm, LOtherForm, LMalformed: INyxCard;
+  LButton: TNyxNode;
+  LFocus, LUnicode, LChild, LRestoreFocus, LRejected: TNyxPartsEditorFocus;
+  LProposal: TNyxPartsEditorProposal;
+  LBefore, LFormerID, LOrdinal, LVersion, LAction: TNyxText;
+begin
+  LDocument := Fixture;
+  LHidden := nil;
+  LRestored := nil;
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LForm := NewNyxPartsEditor('focus-parts', LDocument, NyxControl('first'));
+    LButton := RowAction(LForm, 'actions');
+    LFormerID := LButton.ID;
+    Check(TryCaptureNyxPartsEditorFocus(LButton, LForm.Node, LFocus) and LFocus.Defined and
+      (LFocus.FormID = 'focus-parts') and (LFocus.Instance.ID = 'first') and
+      (LFocus.Path.Name = 'actions'), 'A live action copies only its exact form, instance and named path');
+    Check(LFocus.Resolve(LForm.Node).ID = LButton.ID,
+      'The copied focus identity resolves the current action before publication');
+    Check(TryCaptureNyxPartsEditorFocus(RowAction(LForm, '标题🌙<&>'), LForm.Node, LUnicode),
+      'A Unicode path has an independent copied presentation identity');
+    Check(TryCaptureNyxPartsEditorFocus(RowAction(LForm, 'actions/send'), LForm.Node, LChild),
+      'A nested part has its own exact focus identity');
+    LProposal := NyxPartsEditorProposal(LDocument, NyxControl('first'), NyxPart('actions'), npaHide);
+    LHidden := Candidate(LDocument, LProposal);
+    LHiddenForm := NewNyxPartsEditor('focus-parts', LHidden, NyxControl('first'));
+    Check(RowAction(LHiddenForm, '标题🌙<&>').ID = LFormerID,
+      'The real hidden-parent form reuses the former Hide ordinal for a different path');
+    Check((LFocus.Resolve(LHiddenForm.Node).ID = RowAction(LHiddenForm, 'actions').ID) and
+      (LFocus.Resolve(LHiddenForm.Node).ID <> LFormerID),
+      'Hide resolves the same path''s new Restore action instead of the reused ordinal');
+    Check(LUnicode.Resolve(LHiddenForm.Node).ID = RowAction(LHiddenForm, '标题🌙<&>').ID,
+      'The unaffected Unicode path follows its reordered current action');
+    Check(LChild.Resolve(LHiddenForm.Node).ID = '',
+      'A vanished descendant has no guessed parent or ordinal focus target');
+    Check(TryCaptureNyxPartsEditorFocus(RowAction(LHiddenForm, 'actions'), LHiddenForm.Node,
+      LRestoreFocus), 'A hidden path''s Restore action can supply a new focus identity');
+    LProposal := NyxPartsEditorProposal(LHidden, NyxControl('first'), NyxPart('actions'), npaRestore);
+    LRestored := Candidate(LHidden, LProposal);
+    LRestoredForm := NewNyxPartsEditor('focus-parts', LRestored, NyxControl('first'));
+    Check((LRestoreFocus.Resolve(LRestoredForm.Node).ID = RowAction(LRestoredForm, 'actions').ID) and
+      (LFocus.Resolve(LRestoredForm.Node).ID = RowAction(LRestoredForm, 'actions').ID),
+      'Restore and Undo-style reconstruction resolve the current same-path Hide action');
+    Check(TNyxCodec.Encode(LDocument) = LBefore, 'Focus capture and resolution do not mutate source data');
+
+    LOtherForm := NewNyxPartsEditor('focus-parts', LDocument, NyxControl('second'));
+    Check(LFocus.Resolve(LOtherForm.Node).ID = '',
+      'A same-ID form for a different selected instance has no inherited focus target');
+    Check(not TryCaptureNyxPartsEditorFocus(RowAction(LOtherForm, 'actions'), LForm.Node, LRejected) and
+      not LRejected.Defined, 'A same-ID action borrowed from another form refuses and clears capture');
+    LOtherForm := NewNyxPartsEditor('other-form', LDocument, NyxControl('first'));
+    Check(LFocus.Resolve(LOtherForm.Node).ID = '', 'A different form cannot satisfy the copied identity');
+    Check((LFocus.Resolve(nil).ID = '') and
+      not TryCaptureNyxPartsEditorFocus(nil, nil, LRejected) and not LRejected.Defined,
+      'Missing roots and unrelated input remain inert presentation refusals');
+    Check(not TryCaptureNyxPartsEditorFocus(LForm.Node.Find('focus-parts-help'), LForm.Node, LRejected),
+      'A neighboring label cannot become a Parts focus action');
+
+    LMalformed := NewNyxPartsEditor('focus-parts', LDocument, NyxControl('first'));
+    LVersion := LMalformed.Node.Prop('nyx.parts-editor.version');
+    LMalformed.Node.SetProp('nyx.parts-editor.version', 'unknown');
+    Check((LFocus.Resolve(LMalformed.Node).ID = '') and
+      not TryCaptureNyxPartsEditorFocus(RowAction(LMalformed, 'actions'), LMalformed.Node, LRejected),
+      'An unknown form version refuses both capture and resolution');
+    LMalformed.Node.SetProp('nyx.parts-editor.version', LVersion);
+    LButton := RowAction(LMalformed, 'actions');
+    LOrdinal := LButton.Prop('nyx.parts-editor.row');
+    LAction := LButton.Prop('nyx.parts-editor.action');
+    LButton.SetProp('nyx.parts-editor.row', '0' + LOrdinal);
+    Check((LFocus.Resolve(LMalformed.Node).ID = '') and
+      not TryCaptureNyxPartsEditorFocus(LButton, LMalformed.Node, LRejected),
+      'Noncanonical row metadata cannot redirect a focus identity');
+    LButton.SetProp('nyx.parts-editor.row', LOrdinal).SetProp('nyx.parts-editor.action', 'unknown');
+    Check(not TryCaptureNyxPartsEditorFocus(LButton, LMalformed.Node, LRejected) and not LRejected.Defined,
+      'An unknown action leaves no captured focus identity');
+    LButton.SetProp('nyx.parts-editor.action', LAction).SetProp('nyx.parts-editor.path', '/');
+    Check(not TryCaptureNyxPartsEditorFocus(LButton, LMalformed.Node, LRejected),
+      'Malformed named paths refuse without interpreting their text');
+    LButton.SetProp('nyx.parts-editor.path', 'actions');
+    LButton.Configure.Enabled(False).Done;
+    Check((LFocus.Resolve(LMalformed.Node).ID = '') and
+      not TryCaptureNyxPartsEditorFocus(LButton, LMalformed.Node, LRejected),
+      'An unavailable action is not a physical focus continuation');
+    LButton.Configure.Enabled(True).Done;
+    RowAction(LMalformed, '标题🌙<&>').Parent.SetProp('nyx.parts-editor.path', 'actions');
+    Check(LFocus.Resolve(LMalformed.Node).ID = '', 'Ambiguous current path rows yield no focus target');
+
+    LForm := nil;
+    FreeAndNil(LDocument);
+    Check(LFocus.Defined and (LFocus.Instance.ID = 'first') and (LFocus.Path.Name = 'actions') and
+      (LFocus.Resolve(LRestoredForm.Node).ID = RowAction(LRestoredForm, 'actions').ID),
+      'A copied focus identity outlives its source form and document without a back-reference');
+  finally
+    LRestored.Free;
+    LHidden.Free;
+    LDocument.Free;
+  end;
+end;
+
 begin
   try
     HideRestore;
     Refusals;
     OrderedOverrides;
     RetainedForm;
+    FocusAnchors;
     WriteLn('PASS ', GChecks, ' public Parts editor checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-parts-editor', 'passed');

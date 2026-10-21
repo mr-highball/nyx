@@ -495,7 +495,7 @@ function NyxStudioBrowserCSS: TNyxText;
 implementation
 
 uses
-  nyx.codegen, nyx.collections.query.editor,
+  nyx.codegen, nyx.collections.query.editor, nyx.parts.editor,
   nyx.codec,
   nyx.json,
   nyx.source, nyx.interaction,
@@ -1566,6 +1566,7 @@ var
   LFocusEventTrigger: TNyxText;
   LFocusEventName: TNyxText;
   LFocusCollection: TNyxStudioCollectionChromeIdentity;
+  LPartsFocus: TNyxPartsEditorFocus;
   LChromeInputs: TNyxContentFaceStates;
   LChromeNode: TNyxNode;
   LFocusNode: TNyxNode;
@@ -1661,7 +1662,33 @@ begin
   LFocusEventTrigger := '';
   LFocusEventName := '';
   LFocusCollection := Default(TNyxStudioCollectionChromeIdentity);
+  LPartsFocus := Default(TNyxPartsEditorFocus);
   LActive := TJSHTMLElement(document.activeElement);
+
+  if APreserveDraft and (LActive <> nil) and
+    FSession.MatchesCommandContext(FShellCommandContext) then
+  begin
+    LField := TJSHTMLElement(LActive.closest('[data-node]'));
+
+    if (LField <> nil) and (FShellRenderer.Root <> nil) then
+    begin
+      LFocusNode := FShellRenderer.Root.Find(LField.getAttribute('data-node'));
+
+      if (LFocusNode <> nil) and
+        TryCaptureNyxPartsEditorFocus(LFocusNode,
+          FShellRenderer.RootFor(LFocusNode.ID), LPartsFocus) and
+        (FShellRenderer.FocusFor(LFocusNode.ID) = LActive) then
+      begin
+        { The current physical choice wins over the action that originally
+          queued work. This copied anchor contains no DOM or document owner. }
+        LFocusID := LFocusNode.ID;
+      end
+      else
+      begin
+        LPartsFocus := Default(TNyxPartsEditorFocus);
+      end;
+    end;
+  end;
 
   if APreserveDraft and (LActive <> nil) and
     ((LActive is TJSHTMLInputElement) or (LActive is TJSHTMLTextAreaElement) or
@@ -1980,6 +2007,13 @@ begin
     FCanvasViewID := FSession.ActiveViewID;
   end;
 
+  if (LFocusID <> '') and LPartsFocus.Defined then
+  begin
+    { Resolve semantic ownership after successful shell admission. Another
+      selected instance, absent form or vanished path cannot inherit an ID. }
+    LFocusID := LPartsFocus.Resolve(FShellRenderer.SectionRoot(nssInspector)).ID;
+  end;
+
   if (LFocusID <> '') and (LFocusStateKey <> '') then
   begin
     LFocusNode := FShell.Find(LFocusID);
@@ -2056,7 +2090,11 @@ begin
     ((LFocusID = 'studio-code') and (FCodeRenderer.Root <> nil))) then
   begin
 
-    if LFocusID = 'studio-code' then
+    if LPartsFocus.Defined then
+    begin
+      LReplacement := FShellRenderer.FocusFor(LFocusID);
+    end
+    else if LFocusID = 'studio-code' then
     begin
       LReplacement := FCodeRenderer.InputFor('studio-code');
     end
@@ -2065,7 +2103,7 @@ begin
       LReplacement := FShellRenderer.ElementFor(LFocusID);
     end;
 
-    if not (LReplacement is TJSHTMLTextAreaElement) and
+    if not LPartsFocus.Defined and not (LReplacement is TJSHTMLTextAreaElement) and
       not (LReplacement is TJSHTMLInputElement) and
       not (LReplacement is TJSHTMLSelectElement) then
     begin
@@ -2074,7 +2112,10 @@ begin
 
     if LReplacement <> nil then
     begin
-      TJSHTMLInputElement(LReplacement).value := LFocusValue;
+      if not LPartsFocus.Defined then
+      begin
+        TJSHTMLInputElement(LReplacement).value := LFocusValue;
+      end;
       NyxFocusWithoutScroll(LReplacement);
 
       if (LFocusID = 'studio-code') and (LCodeStart >= 0) then

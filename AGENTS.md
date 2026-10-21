@@ -1,5 +1,64 @@
 # Working in Nyx
 
+CORE FOCUS CONTINUITY ACTIVE (2026-10-21): previous goal turn is progress:
+Parts Hide/Restore qualified and checkpoint9210d747 pushed/remote verified.
+All old readers are terminal. Reassess the next actual target-quality gap under
+existing component/authoring/parity owners: a focused Parts action must follow
+the same instance/named path across replacement without stealing later focus.
+Helper now owns the existing ordinary Parts control consumer for an initial
+focus/keyboard reproduction; public parts.editor/focused consumer remain paused
+until that evidence is joined. Root owns shared section.views continuity, docs
+and qualification. No runtime repair before the initial source-ready handoff/
+root freeze: one desktop native run and matching browser consumer compilation
+against current production source, stop on the real outcome. No extra fixture,
+resolver, host/config retry, new tool/schema/rollout or additional agent. Preserve
+the thirteen concurrent planning files and separately deferred splitter.
+
+Focus reproduction is joined/audited: actual native Space Hide publishes, then
+same-path Restore focus fails atstage2/check11, clean heap. Browser compiles only;
+1,750 Pascal/seven owned/thirteen concurrent inputs stay exact. Source review
+finds existing target hosts, not section publication, own general editing-focus
+capture/replay. Root scope changes to studio.lcl/browser/docs/guides; section.views
+stays exact. Helper owns parts.editor and focused/ordinary consumers for a copied
+form/instance/path focus anchor and meaningful tests. Capture current physical
+focus before paint under exact load guard, resolve fresh action after successful
+shell admission, preserve later user choices and explicit source navigation.
+No queue/wire/schema or generic section API change. Both source-ready handoffs
+and root review precede the next fixed consumer/product build admission.
+
+Focus source handoffs are reviewed: public copied anchor/focused identity tests
+and ordinary Space Hide/Restore plus wide-only later-title redirect. Root also
+preserves native explicit source-focus priority without a source-line request;
+the actual memo/Source-tab test resolves its separate SourceView owner. Root
+freezes and admits exactly six fixed jobs: public native/run/browser compile,
+ordinary native/run1280/390/browser compile, both Studios compile. No unchanged
+backend/worker/reusable replay. Pause Pascal/guides through all joins/exact audit;
+retain initial clean-heap failure. Browser execution, viewport reachability,
+runtime selection/load races, hardware/assistive/full quality/criteria stay open.
+
+Focus fixed readers are joined: native63/75/74 pass clean, all six compilers pass
+with zero owned/twenty-one upstream warnings;1,750/eight/thirteen pins exact.
+Final read-only review identifies repeated linear Parts/binding scans. Root adds
+only render.lcl ControlReference (exact FInput/FControl->copied runtime ref) and
+native Paint capture-once; original legacy input walk/browser/helper3 stay exact.
+After review/freeze admit only two native jobs: same ordinary1280/390 journey and
+native Studio compile. Reuse public/browser evidence, add no fixture/cache/schema
+or broad renderer change. Pause Pascal/guides through joins/exact audit. Full
+timing/reachability/browser/assistive/parity/delivery and original criteria stay open.
+
+Focus final native readers joined/audited: current desktop75/compact74 clean,
+native Studio compiles, zero warnings;1,750/nine/thirteen pins exact. Public63/
+browser inputs stay exact and their fixed-source results are reused. Only native
+renderer/host differ from fixed qualification. WORK.md and ignored
+.local/parts-focus-paths-private.json own actual failure, composite success and
+source/remote receipts. All readers terminal; resolver remains deferred. No full
+criterion/task/credit/DONE or broader quality/delivery closes. Two concrete core
+deliverables retain full open criteria; stop focus/compiler/fixture variants and
+reassess next current-form viewport reachability through existing parity/render
+owners before another source batch. Current focus stays scroll-neutral pending
+actual geometry evidence. No host/config retry, new tool/schema/rollout, cleanup
+or additional agent. Preserve concurrent13 and separately deferred splitter.
+
 CORE PARTS ACTIVE (2026-10-21): previous goal turn made concrete progress by
 qualifying the initializer repair, retaining preparation33's real refusal,
 authoring20 deferred tasks and pushing91e5f97. Resolver remains deferred. All

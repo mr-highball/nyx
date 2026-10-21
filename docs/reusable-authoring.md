@@ -44,6 +44,21 @@ browser consumers and source worker. Executed browser input requires the
 separately admitted HTTP environment; a compiled page alone does not qualify it.
 WORK.md records the actual current results and remaining target/quality gates.
 
+The public Parts focus anchor is presentation-only. A host can capture the
+currently focused Parts button with `TryCaptureNyxPartsEditorFocus`, then use
+`Resolve` against its newly mounted form to find the current action for that
+same instance and named path. It contains no document, widget or callback.
+Missing forms, changed instances and absent paths yield an undefined control
+reference. Hosts still own project/load guards and should observe focus just
+before replacement, so a user's later choice takes precedence over an earlier
+queued action. This anchor never authorizes an edit or changes source/history.
+
+Native custom hosts can obtain a typed runtime reference from an exact mounted
+widget with `TNyxLCLRenderer.ControlReference`. It also recognizes the separate
+input of a composite field and returns an undefined reference for nil or foreign
+controls. Resolve that reference in the current renderer root before capturing
+the Parts anchor; neither lookup retains the widget or its owning view.
+
 ## Creating a reusable copy
 
 Select an authored control and open Properties → Component options → Create a

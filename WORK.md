@@ -4,6 +4,136 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current batch: Parts keyboard continuity (2026-10-21). Previous goal turn is
+progress: the bounded Parts affordance and actual40/58/62/79 native checks were
+retained, checkpoint9210d747 was pushed and remote independently verified.
+All prior readers are terminal; the original full component/authoring/parity
+criteria remain open and the resolver backlog stays deferred. Next meaningful
+outcome is same-instance/named-path focus after Hide/Restore, preserving later
+user focus and exact command/history refusal. Generic continuity currently
+matches generated row/action IDs; those change and may be reused for another
+path after replacement. That source evidence identifies a risk, not an executed
+failure yet. Existing target-quality evidence must decide the repair.
+
+Helper owns only tests/nyx_parts_studio_controls.lpr for the initial reproduction,
+adding physical focused action activation and same-path replacement-focus checks
+to its existing journey. Public parts.editor and focused consumer stay paused.
+Root owns studio.section.views continuity and docs; no overlap. After handoff/
+review root freezes and admits one ordinary desktop native run plus the matching
+browser compiler, using unchanged production source. Stop at its actual result;
+no broad test/fixture variant or new host follows. If focus loss is confirmed,
+prefer remapping only current focused face through exact copied form instance/
+path during existing candidate admission, with original recovery state retained.
+No queued worker/wire metadata or raw action-string API is required. Preserve
+later physical focus, changed selection/load and failed/pending operations.
+Actual browser input, full keyboard/hardware/assistive/reachability and all broad
+criteria stay open; no completion credit or DONE is inferred from this batch.
+
+Focus reproduction joined/audited: actual native Space activates Hide and the
+accepted part is absent, then stage2/check11 fails because the new Restore face
+does not own focus. Heap is clean (8,126,836 blocks/239,434,311 cumulative bytes
+allocated/freed). Matching browser consumer compiles only. All1,750 Pascal,
+seven owned and thirteen concurrent inputs remain exact; failure/source receipts
+are retained in the new parts-focus packet, not replaced by a passing variant.
+
+The deeper owner review changes the repair path: retained section replacement
+does not replay candidate interaction at all, and complete-frame opt-in currently
+belongs only to Resources. Both Studio hosts already capture/replay exact chrome
+focus independently. Extend that existing mechanism with a public copied Parts
+anchor, rather than widening section publication or forcing full frame rebuilds.
+Root now owns studio.lcl/browser (section.views stays unchanged), docs and guides.
+Helper owns parts.editor and both existing focused/ordinary consumers. The
+anchor retains exact form/instance/named path, resolves fresh action identity and
+grants no document mutation or lifetime authority. Hosts capture only current
+physical focus immediately before paint under the existing load-context guard;
+later user choice wins. Missing forms/changed instances resolve undefined, and
+deliberate source navigation keeps precedence. No queue/wire/schema changes.
+Extend actual input with Hide/Restore and later project-title focus, preserving
+prior history/stale/pending checks; focused ownership tests cover reordering,
+ordinal reuse, absent/changed owners and inert malformed capture. Both handoffs
+and review precede root's next fixed consumer/product compilation admission.
+
+Both implementation lanes are source-ready and independently reviewed. The
+public focus consumer uses real remove/inherit candidates to prove reordered/
+reused action IDs, Unicode/nested paths, absent/changed owners, malformed input
+and detached anchor lifetime. Ordinary native input uses focused LCL Space for
+Hide/Restore; wide layout additionally redirects focus to its actually mounted
+Project title while work is pending. Compact omits that Project input, so no
+compact title coverage is claimed. Existing source/history/stale/draft assertions
+remain. Root also clears captured chrome focus when native explicit Source-tab/
+expand/modal navigation requests source focus without a line; otherwise that
+earlier field could reclaim the caret. The native ordinary journey exercises
+Source-tab navigation through its independent SourceView, then checks fresh memo
+focus before its existing pending-draft case. Browser activation remains a
+deterministic compiled counterpart, not trusted keyboard or executed evidence.
+
+Root freezes both lanes and admits exactly six fixed-source compiler jobs:
+public native/run + browser compile, ordinary native/run at1280/390 + browser
+compile, both Studio products compile. No unchanged backend/worker/reusable
+replay. All Pascal/guides pause through terminal joins and exact source/concurrent
+audit. Preserve the genuine initial focus failure and stop on the new actual
+results. Physical viewport reachability, runtime selection/load races, assistive/
+hardware input, other widgetsets and executed browser quality remain explicit
+existing-owner acceptance gaps; no full criterion/task/credit/DONE closes.
+
+Fixed-source readers are joined/audited: public native63 and actual desktop75/
+compact74 pass with clean heaps; both Studio products and all matching browser
+consumers compile. Six compiler logs have zero owned/twenty-one upstream browser
+warnings. All1,750 Pascal/eight owned/thirteen concurrent inputs remain exact.
+The initial stage2/check11 focus failure remains retained. Wide title redirection
+and native explicit source-tab priority now pass; compact title coverage remains
+explicitly absent because that panel is not mounted.
+
+Final source review finds avoidable repeated native work: the recursive chrome
+walk validated each Parts row's form membership before comparing physical focus,
+and both the form tree lookup and native binding lookup are linear. Root adds
+one small native ControlReference helper (exact input/control pointer to copied
+runtime ref, nil/foreign undefined; no supplied-pointer dereference, ancestry or
+design fallback). Paint identifies its current section owner once and validates
+only that current node; original non-Parts editing traversal stays unchanged.
+This removes the new repeated Parts scans without claiming timing or full form
+performance. Root adds only src/nyx.render.lcl.pas to its ownership; helper's three
+files/browser host stay exact. After independent review/root freeze, admit only
+two changed-native jobs: the same ordinary desktop/compact journey and native
+Studio compilation. Reuse public/browser checks unchanged; no alternate fixture,
+new cache, new tool/schema, backend/worker replay or broader renderer rewrite.
+Pause both source/guides until terminal join/audit. These are the final current
+native lookup checks, not a separate completion assessment or criterion closure.
+
+Final native readers are joined/audited: current desktop75/compact74 pass with
+clean heaps and native Studio compiles, zero warnings. All1,750 Pascal/nine owned/
+thirteen concurrent inputs remain exact. Only render.lcl/native host changed
+since the fixed-source qualification; public anchor/consumer/browser inputs stay
+exact, so their native63/three browser compiler results are reused. The native
+legacy editing traversal is source-exact to checkpoint9210d747. Final desktop
+allocates/frees42,353,973 blocks/1,262,248,412 cumulative bytes, compact31,616,952/
+931,546,777; no timing or full production performance claim follows.
+
+Ignored `.local/parts-focus-paths-private.json` owns the packet
+`E:\Blekohlab\nyx\qualification\parts-focus-20261021-044733`.
+`reproduction-all-joined-private.json` retains the actual first clean-heap focus
+failure; `fixed-all-joined-private.json` owns public63 and fixed full consumer/
+product checks; `native-final-all-joined-private.json` owns the final native
+source and actual75/74, with the exact two-source composite boundary. No reader
+is live. Explicit owned checkpoint/source and remote receipts follow in that
+packet; concurrent planning stays exact/unstaged and the resolver stays deferred.
+
+This core deliverable restores same-instance/named-part keyboard continuation,
+preserves later wide-title focus and explicit native Source-tab priority without
+changing saved data/history. It consumes NS-2_parity-accessibility_01 criterion
+two as the prerequisite to NS-3_components_01/NS-4_studio-authoring_01. No full
+criterion/task/credit/DONE or aggregate assessment closes. Two coherent core
+deliverables (Parts authoring, then focus continuity) have advanced current code
+and actual input since the user's priority change, with full criteria still
+open; stop further focus/fixture/compiler variants and reassess before another
+implementation batch. Next eligible quality prerequisite is observing current
+replacement bounds against Inspector clipping at both widths through existing
+renderer Reveal/scroll owners. Keep current repair scroll-neutral: no observed
+clipping miss yet justifies overriding a later user scroll. Executed browser,
+runtime selection/load races, hardware/assistive input, other widgetsets, broad
+budgets/component depth and observing delivery retain original owners. Preserve
+LAN/host/config gates, all concurrent work and the deferred external splitter.
+
 Core implementation admission (2026-10-21): previous goal turn is progress,
 not a wait: the current grammar leaf qualified, the actual source frontier was
 retained,20 granular deferred tasks were reviewed/indexed and checkpoint91e5f97
