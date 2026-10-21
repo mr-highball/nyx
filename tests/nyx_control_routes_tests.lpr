@@ -29,7 +29,9 @@ uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.flow.types, nyx.flow.declarations, nyx.state, nyx.codec, nyx.codegen, nyx.scheduler,
   nyx.source, nyx.studio.session, nyx.studio.projects, nyx.studio.edits,
   nyx.test.programs.logic, nyx.logic, nyx.logic.editor, nyx.logic.catalog,
-  nyx.flow, nyx.resources, nyx.bytes, nyx.test.named, nyx.test.logic.table
+  nyx.flow, nyx.resources, nyx.bytes, nyx.test.named, nyx.test.logic.table,
+  nyx.collections, nyx.collections.view.types, nyx.master.detail, nyx.contract,
+  nyx.schema, nyx.studio.inspector
   {$ifdef PAS2JS}, JS, Web{$else}, Classes{$endif};
 
 var
@@ -205,6 +207,135 @@ end;
 { Named creator events retain their own identity and declared payload schema.
   Structured paths use the shared typed Field/Item contract; admission grants no
   emitter, renderer, file service or creator implementation authority. }
+procedure QualifyMasterDetailChannels;
+var
+  LDocument: TNyxDocument;
+  LDetail: INyxMasterDetail;
+  LForm: INyxCard;
+  LDescriptor: TNyxLogicDescriptor;
+  LChange: TNyxControlRouteEditorChange;
+  LRoutes: INyxFlowRoutes;
+  LFailed: Boolean;
+  LBefore: TNyxText;
+begin
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.Collections.Define(NyxCollection('people'),
+      NyxCollectionSchema.Text(NyxTextField('name'), '').Text(NyxTextField('summary'), ''), []);
+    LDetail := NewNyxMasterDetail('directory');
+    LDetail.MasterList.Binds.Collection(NyxCollectionView(NyxCollection('people')).
+      Column(NyxTextField('name'), 'People')).Done;
+    LDetail.DetailEditButton.Node.Contract.On(ntClick, NyxOriginValue, NyxTextDomain);
+    SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Configured(
+      NyxMasterDetailOptions(NyxTextField('name'), NyxTextField('summary'))));
+    LDocument.AddPage(NewNyxPage('home').Add(LDetail));
+    { The inert graph requires both channels simultaneously. Discovery alone
+      cannot establish that the public authoring/admission path preserves them. }
+    LDescriptor := NyxLogicDescriptor(NyxLogicKind('dual-edit'), 'Two Edit channels',
+      'An inert exact scalar and structured record consumer.', nlgData).
+      Input(NyxFlowPort('Record'), nftJSON, 'Copied selected record').
+      Input(NyxFlowPort('Caption'), nftText, 'Explicit scalar value');
+    LDocument.Flows.Define(NyxFlowRef('Dual Edit'), NewNyxFlowGraph.WithStep(
+      NyxFlowStep('review'), NewNyxLogicDeclaration(LDescriptor, NyxObject([]))).Build);
+    LForm := NewNyxControlRouteEditor('dual-edit', LDocument, NyxControl('directory'), 42);
+    Choose(LForm, 'event', 'edit');
+    Choose(LForm, 'input', 'review / Record / JSON');
+    Choose(LForm, 'source', 'Event value');
+    LFailed := False;
+    try
+      Local(LForm, LDocument, 'map-input');
+    except
+      on E: ENyxFlow do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed, 'scalar Text cannot silently become structured JSON');
+    Choose(LForm, 'source', 'Event details');
+    Local(LForm, LDocument, 'path-clear');
+    Local(LForm, LDocument, 'map-input');
+    Choose(LForm, 'input', 'review / Caption / Text');
+    Choose(LForm, 'source', 'Event value');
+    Local(LForm, LDocument, 'map-input');
+    Check(CaptureNyxControlRouteEditor(Node(LForm, 'apply'), LForm.Node,
+      LDocument, 42, LChange), 'public form captures simultaneous Value and Details mappings');
+    LRoutes := NyxFlowRoutesFromData(LChange.RoutesData);
+    Check((LRoutes.Count = 1) and (LRoutes.Route(0).InputCount = 2) and
+      (LRoutes.Route(0).Input(0).Source = nfisEventDetails) and
+      (LRoutes.Route(0).Input(1).Source = nfisEventValue),
+      'two exact typed inputs retain independent channels on the same Edit event');
+    SetNyxFlowRoutes(LDetail.Node, LRoutes);
+    ValidateNyxDocumentProperties(LDocument);
+    Check(True, 'whole-document admission accepts both exact channel contracts together');
+    LForm := NewNyxControlRouteEditor('stale-edit', LDocument, NyxControl('directory'), 42);
+    SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Disabled);
+    LBefore := TNyxCodec.Encode(LDocument);
+    LFailed := False;
+    try
+      CaptureNyxControlRouteEditor(Node(LForm, 'apply'), LForm.Node, LDocument, 42, LChange);
+    except
+      on E: ENyxFlow do
+      begin
+        LFailed := True;
+      end;
+    end;
+    Check(LFailed and (TNyxCodec.Encode(LDocument) = LBefore),
+      'a form captured before Disabled refuses without publishing stale Details intent');
+  finally
+    LForm := nil;
+    LDetail := nil;
+    LDocument.Free;
+  end;
+end;
+
+{ The full form may wait behind another source job. Its whole accepted design
+  must still match when the existing queued transaction is prepared. }
+procedure QualifyQueuedFormBaseline;
+var
+  LDocument: TNyxDocument;
+  LSession: TNyxStudioSession;
+  LForm: INyxCard;
+  LEdit: TNyxStudioDesignEdit;
+  LRequest: TNyxStudioDesignRequest;
+  LSchemas: INyxSchemaSnapshot;
+  LPrepared: INyxPreparedDesign;
+  LBefore: TNyxText;
+begin
+  LDocument := ProgramLogicDocument;
+  LSession := nil;
+  try
+    LSession := TNyxStudioSession.Create(NyxProjectPair(TNyxCodec.Encode(LDocument),
+      TNyxCodegen.Generate(LDocument)));
+    LSession.Select('greet-button');
+    LForm := NewNyxControlRouteEditor('queued-route', LSession.Document,
+      NyxControl('greet-button'), 0);
+    Choose(LForm, 'route', 'Greet');
+    Local(LForm, LSession.Document, 'route', 0);
+    Check(CaptureNyxLogicInspector(LSession, Node(LForm, 'apply'), LForm.Node, LEdit) and
+      (LEdit.TransactionDesignBaseline = TNyxCodec.Encode(LSession.Document)),
+      'Studio route capture retains the whole accepted design for its queued source job');
+    LSchemas := CaptureNyxSchemas;
+    LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(not LPrepared.Diagnostic.Defined, 'unchanged captured route admits through the actual paired processor');
+    LPrepared := nil;
+    LSession.SetTitle('A newer accepted design');
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(LPrepared.Diagnostic.Defined and
+      (EncodeNyxProject(LSession.ProjectSnapshot) = LBefore),
+      'intervening design changes refuse a queued route without publishing or changing the current pair');
+  finally
+    LPrepared := nil;
+    LSchemas := nil;
+    LForm := nil;
+    LSession.Free;
+    LDocument.Free;
+  end;
+end;
+
+{ Preserve existing creator events and exact typed Field/Item projections. }
 procedure QualifyNamedAndRows;
 var
   LDocument: TNyxDocument;
@@ -522,6 +653,8 @@ begin
     QualifyFamilies;
     QualifyParentDraft;
     QualifyNamedAndRows;
+    QualifyMasterDetailChannels;
+    QualifyQueuedFormBaseline;
     WriteLn('PASS ', GChecks, ' authored control-route checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-control-route-contract', 'passed');

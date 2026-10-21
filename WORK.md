@@ -4,6 +4,232 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current continuation: publication03 is accepted below; next is Interact01,
+criteria1–6. Deliver the managed PreviewRuntime owner/source and connect both
+Studio hosts, then return to the unchanged actual Edit→JSONFormat→bound Memo,
+history, Save/Open and exact generated application journey. Neither accepting
+this public API nor an older matched compatibility fixture closes that outcome.
+Existing Lil' Scooty has reviewed the managed-owner/weak fixed-generation context
+seam and the downstream coordinator owners; root coordinates the next separate
+source release. All readers are joined. No new Studio host Pascal has changed.
+Original no-closure10/credit remains open. The requested eight-task queue is below;
+resolver14 and the reported splitter remain deferred.
+
+## Granular core backlog — 2026-10-21
+
+The user requests granular tasks before further implementation. The resolver's
+fourteen existing task files stay deferred. This queue advances working core
+components and their Nyx-built Studio consumer; it is navigation into canonical
+task files, not a separate task definition or a new completion score.
+
+| Order | Task | Reviewable result | Acceptance prerequisite |
+| --- | --- | --- | --- |
+| Accepted P0.1 | [Prepared root routes](TODO/DONE/NS-4_interact-flows_02.md) | Public host65/native controls26/two exact compiled companions; clean heaps | Accepted API prerequisite; original Studio outcome remains open |
+| Accepted P0.2 | [Composable view publication](TODO/DONE/NS-4_interact-flows_03.md) | Native136/136, remount/committed failure/disposal, compatibility and maintained command qualified | Accepted API prerequisite; actual Studio flow integration remains open |
+| P0.3 | [Working Studio Interact flows](TODO/NS-4_interact-flows_01.md) | PreviewRuntime mounts root flows and survives failed preparation or committed cleanup errors | P0.1 and P0.2 |
+| P0.4 | [Useful Edit data](TODO/NS-4_master-detail-events_01.md) | Authored Edit → JSONFormat → bound Memo works through history, Save/Open and the exact generated app | P0.3; reuse its unchanged journey rather than repeat a different fixture |
+| P1.1 | [Caller-owned behavior registration](TODO/NS-3_coordinators_02.md) | A creator mounts useful behavior without a component-specific renderer edit | Existing prepared lifecycle and data owners |
+| P1.2 | [Common component coordinators](TODO/NS-3_coordinators_01.md) | Kanban/MasterDetail and creator-owned reusable/embedded behavior share that path | P1.1 |
+| P2.1 | [DataToolbar query runtime](TODO/NS-3_data-toolbar_02.md) | Real search, sort and Clear control an existing List/Table query | P1.2 |
+| P2.2 | [DataToolbar Studio authoring](TODO/NS-3_data-toolbar_01.md) | Configure/Disable/Inherit, paired history, Save/Open and exact generated app | P2.1 |
+
+These are deliverable boundaries, not one task per coding step or check. Each
+file records its current gap, acceptance, refusal/lifetime cases, prerequisites
+and evidence limits. Parent scope maps retain every original requirement and
+credit once. In particular, DataToolbar adoption belongs downstream: requiring
+it to accept the coordinator prerequisite would create a dependency cycle.
+The existing milestone/catalog component and authoring entries reach these
+tasks through their parent links; their concurrently owned files stay byte-exact.
+Planning changes no original criterion/task/credit/DONE or completion percentage.
+
+Next active prerequisite: **P0.3**, actual Studio Interact mounting. P0.1/P0.2
+are accepted as independently usable host APIs, with qualification below. Contract
+review is settled: host pairs router/view and document/realized tree;
+preparation and Validate require active context, exact scheduler and exact
+prospective generation.
+Final readiness uses only retained cancellation and event reservation facts. The
+host keeps staged context stable and revokes its future token or own local fence
+before retirement/change; generic context Close does not cancel that token. No
+missing owner identity is inferred. No user product direction is missing. P0.2
+now composes admission; actual Studio adoption follows. No further wait/
+fixture variant substitutes for the missing host.
+
+Current evidence: previous integrated MasterDetail checkpoint **72d0244** remains
+committed/pushed/remote-verified. Independent Value/Details discovery, schema,
+public flow form, Tool ports and visible/searchable Inspector qualify native
+687/85/289 with clean heaps; legacy scalar/creator authority, exact source/role
+identity, mixed routes, immutable registry/context and queued full-design baseline
+remain intact. Both original55-route assertions remain. Browser consumers/Studio/
+worker compile only; the native backend compiles. This is not browser execution,
+full parity, observing, adoption or delivery.
+
+Retained failures are distinct: the first maintained semantic fixture expected35
+instead of37 recipes and had three warnings, since repaired; both first Studio
+runs used incorrect uppercase port captions; the following premature-read runs
+retain19 unfreed queued blocks/1581 bytes each and are not clean evidence. The
+final completion-aware native1280/390 runs move selection before yielding and
+wait on the actual published state plus copied callback. Both receive exactly
+one callback but the Memo stays initial until the60-second deadline; both have
+clean heaps. The existing PreviewRuntime creates stores/context but never binds
+root declarative flows. Saved/generated flow behavior remains unproven.
+
+All prior readers are terminal/joined; no live handle remains. The requested
+backlog handoff was progress: eight tasks,57 checked links, acyclic core
+dependencies,13 exact concurrent pins and1774 unchanged earlier Pascal pins.
+Routes02 source release and qualification are complete; the separately reviewed
+publication03 source scope is now released as recorded above. Preparation uses the exact
+realized root, keeps observers dormant, and installs only owned
+observer pointers/flags. Public host cases keep real scalar/Details output,
+borrowed-source release, first publication, abandonment, final-fence revocation,
+explicit creator refusal and committed-error/lifetime assertions. The review
+corrected the fixture resolver's builtin delegation and removed a test state
+write that would correctly invalidate the queued result's whole-store revision.
+No production revision guard was relaxed. First prepared-route readers joined
+exact against30 owned/1775 Pascal/13 concurrent pins. Both compilers passed;
+native execution failed its first
+dual-channel expectation with a clean heap. The actual compact JSON is correct;
+the fixture derived expected text from general ToJSON, whose native serializer
+adds spaces. Its independent compact data constant is repaired without production,
+wait-duration or assertion removal. That failed run remains retained; the final
+test source then passed the fresh native/browser and independent compatibility
+checks recorded below. Source routing remains byte-exact from the first freeze.
+At the routes02 acceptance boundary, publication03, both renderers and
+PreviewRuntime were unchanged. Renderer publication source is now in progress;
+PreviewRuntime and the ordinary completion-aware consumer stay exact. The
+root-publication draft remains unqualified.
+Ignored `.local/master-detail-events-paths-private.json` owns the E: receipts,
+explicit scopes, retained failures and current state. Final failed native evidence
+pins1774 Pascal files; the later draft is not silently added to that result.
+Thirteen concurrent planning files remain exact. Core no-closure10 stays open
+within this same integrated batch. No host/config retry, cleanup/restart, new
+MCP/wire rollout or extra agent. The [splitter bug](TODO/NS-2_split-platform_02.md)
+stays queued for later reproduction; resolver work remains deferred.
+
+## Composable view publication — 2026-10-21
+
+[Publication03](TODO/DONE/NS-4_interact-flows_03.md) is accepted and moved to DONE.
+Both public RenderContext methods accept an optional INyxViewPublicationSource
+after resource mode. Exact realized candidates share the controls' prospective
+event view, including source-only pages and source removal/design transitions.
+Hidden Build/Sync and all outward validators precede local readiness fences.
+Pure Install adopts host runtime ownership before committed cleanup can fail.
+Runtime remount retains the source; explicit replacement/design/disposal releases
+it after borrowed controls retire. Each mount/root/event notification and
+retirement gets its required attempt. Optional INyxContentLifetime reuses the
+existing weak content guard and preserves its original GUID/depth; public and
+implicit publication tails avoid Self after notification disposes the renderer.
+
+The maintained public command `tools/build.ps1 -Target view-publication
+-ViewPublicationEvidenceDirectory <fresh-directory>` passed136 actual native
+checks at1280 and136 at390 with clean heaps, then compiled the same browser
+assertions and staged an English bootstrap. It starts no listener. Refusal after
+physical factory failure, root validation and future cancellation preserves exact
+old controls/store/input/generation. Native execution also qualifies reentrancy,
+committed Notify+Retire failure with independent old queued work, source-drop,
+design one-shot, a real manual-content structural remount, normal disposal and
+renderer destruction from inside Notify while accepted managed state survives.
+Physical native autosizing failure is inspected/nonvirtual, not fault-injected.
+
+Compatibility: native content contracts55 and actual content/remount42, actual
+route application26 and Kanban98 pass with clean heaps. The exact previously
+accepted MasterDetail delivery consumer `d3679bdd…27e06e7` and its own saved
+Pascal/project pair compile against current production and pass30/30 at1280/390,
+with clean heaps. Both Studio targets and matching compatibility browser
+consumers compile. The newer completion-aware ordinary consumer stays byte-exact;
+this older pair cannot establish its still-missing Studio root-flow/save outcome.
+
+Retained failures are explicit: first browser compilation collided with the
+fixture's Document field; only its two constructor references became Web.document.
+The first content compile lacked its required generated companion; existing
+maintained contracts exported the exact pinned input for both proper consumers.
+An attempted newer MasterDetail consumer/older saved project pairing failed twice
+at missing `record-preview` with clean heaps and two compiled-only fixture
+warnings. That mismatched run and its unused browser compile are not accepted
+compatibility evidence. The integration task retains the current saved/generated
+journey and fixture-warning cleanup; no assertions, waits or production defaults
+were changed to turn those failures into a pass.
+
+Sixteen accepted compiler invocations have zero owned warnings/49 exact upstream
+RTL occurrences. Ten native execution logs have clean heaps. All readers joined
+and audited33 frozen owned/1776 Pascal/13 concurrent/eleven driver/generated/
+historical-fixture pins before this task move. `view-publication-final-joined-private.json`
+in the E: packet owned by `.local/master-detail-events-paths-private.json` lists
+the fourteen private compiler receipts plus the two public-target compilers,
+source hashes, excluded failures and native outcomes. Qualification uses the
+existing pinned checked native/pas2js driver plus the maintained command; no
+host/config retry, cleanup/restart, new MCP/wire rollout or listener occurred.
+
+Production source is exact from the first freeze: public source `7de82790…b040b1`,
+native adapter `168de394…f1859`, browser adapter `5c002e4f…19f1d4`, content owner
+`420a058d…57cff2b`. Final maintained consumer is `0c2b83c9…6a7a9a2`.
+Original prepared routes and actual MasterDetail consumer hashes stay exact.
+This accepts only an independently useful API with zero extra credit. Full
+original criterion/no-closure10, real browser execution/input/parity, adoption
+and delivery remain open. No native Nyx MCP tools are exposed; LAN stays offline.
+
+Next source decision: Interact01 reuses accepted preview stores and an explicit
+managed owner slot. A per-candidate private weak graph context exposes exactly
+the supplied future generation; existing embedded TGraphContext manufacture of
+a linked token cannot stand in for that identity. Source Prepare uses the supplied
+blueprint document/realized root, whose existing clone retains flows/programs.
+Keep the old context untouched until pure installation adopts the new runtime.
+Generic context Close calls RequireUI and belongs to cleanup after local revocation.
+Existing Lil' Scooty owns the reviewed seam plan; root must release disjoint
+PreviewRuntime/Studio host scope and freeze before the next readers.
+
+## Prepared root routing API — 2026-10-21
+
+[Routes02](TODO/DONE/NS-4_interact-flows_02.md) is accepted and moved to DONE;
+the original Studio/component/parity outcomes remain open. `PrepareNyxViewFlowRoutes`
+copies route plans from the exact already-realized candidate, reserves dormant
+observations in the supplied future event view and returns a managed binding.
+Installation adopts observer ownership only; the event plan activates its slots.
+Old manual/replacement APIs and GUIDs stay unchanged. Public use and caller
+pairing/context-lifetime obligations are in [the Logic guide](docs/logic.md#preparing-routes-before-accepting-a-view).
+
+The maintained public host consumer passes65 native checks, including real
+scalar and simultaneous Details/Value outputs, no executable resolution during
+preparation, source/tree release before validation, dormant input, abandonment,
+later-validator cancellation/router/binding revocation, unchanged context-read
+counts at final fences, lazy creator refusal, committed-error successor execution
+and late-result/disposal cancellation. The existing actual native control-route
+application passes26. Independently compiled base and handwritten continuation
+companions each reconstruct their exact saved design and seven constant families.
+All four native logs have clean heaps. Four matching browser consumers compile;
+no browser execution/input/adoption/parity is established.
+
+Eight accepted compiler logs have zero owned warnings/28 upstream RTL warnings.
+The initial warning audit mistook an upstream `src/classes.pas` path for project
+source; inspecting exact compiler paths corrected classification without changing
+any compiler or product input. Retain the first clean-heap compact-JSON fixture
+failure separately from final success. Only the independent expected compact
+data constant changed after the production freeze; no scheduling, state revision,
+timeout or original saved-source export assertion changed.
+
+Validation used the existing ignored `master-detail-events-qualify.ps1` driver
+with pinned FPC/Lazarus/pas2js paths: checked native `-B -Mdelphi -Sa -Cr -Co -Ci
+-gl -gh`, native execution and matching `-Tbrowser` compilation for
+`nyx_flow_routes_tests.lpr`, `nyx_flow_routes_controls.lpr` and both exact
+`nyx_flow_routes_compiled.lpr` inputs. Optional unit lookup in that driver avoids
+selecting an unrelated fixture macro. No listener or host/config retry ran.
+The eight terminal receipts, first failure and final join audit are in the E:
+packet owned by `.local/master-detail-events-paths-private.json`:
+`prepared-routes-final-joined-private.json` verifies30 frozen owned files,1775
+Pascal files,13 concurrent planning files and five driver/generated pins.
+Production SHA256 `36ae75bb…e7bd15b` and maintained consumer `58d46e4a…466333b`
+are retained in the accepted task and immutable source copies. No reader is live.
+
+This closes only the new public API prerequisite, with zero extra completion
+credit. No full original criterion/task, overall completion percentage or core
+no-closure10 resets. Next: publication03 joins a managed root participant to
+renderer admission and implicit remount. Keep the accepted preview context
+untouched while staging a separate private weak graph port with the exact future
+token. Pure installation must adopt managed runtime ownership before postcommit
+cleanup can fail; generic context Close calls the scheduler and belongs later.
+Studio's actual Interact binding and unchanged1280/390 Save/Open/generated-flow
+journey remain required by Interact01 and master-detail-events01. The existing
+publication-source draft has not been qualified by these route consumers.
+
 ## Selected-record MasterDetail checkpoint — 2026-10-21
 
 Current outcome: **live selected-record MasterDetail** under components1/3 →

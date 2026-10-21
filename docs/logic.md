@@ -827,6 +827,50 @@ of asynchronous callbacks. Optional event observers leave ordinary stream policy
 unchanged and cannot consume physical defaults. Dispatch snapshots all phases
 before entering any callback. Route policies are independent scheduler choices.
 
+### Preparing routes before accepting a view
+
+Explicit hosts preparing a first or replacement view use
+`PrepareNyxViewFlowRoutes` from `nyx.flow.routing`. It collects the exact
+already-realized candidate root, so the observation targets retain the same
+runtime IDs as its controls. It returns a dormant `INyxFlowRouteBinding` and a
+prepared publication. It does not bind the router's still-live generation or
+resolve executable creators during preparation.
+
+The host pairs `LView` with `LEvents` and provides an active `LNextContext` whose
+scheduler is exactly `LEvents.Scheduler` and whose generation is exactly
+`LView.Generation`. Validate rechecks those available facts; existing interfaces
+do not expose proof that two independently supplied router/view objects belong
+together. That pairing remains the host's responsibility.
+
+```pascal
+{ LRuntimeRoot is the candidate already realized for these controls.
+  LNextContext resolves this prospective view's generation, not the old one. }
+LRoutePublication := PrepareNyxViewFlowRoutes(LDocument, LRuntimeRoot,
+  LEvents, LView, LNextContext, LResolver, LNextRoutes);
+PublishNyxGroup([LRoutePublication, LView]);
+```
+
+Route preparation must precede sealing the event view. The group validates all
+participants, checks every final readiness fence, then installs all before any
+notification. Route installation only adopts prepared observer ownership; the
+event view activates its reserved slots. An abandoned route publication closes
+only its new binding. Retiring an installed publication leaves that binding
+active until its owner closes it.
+
+Final readiness uses retained future cancellation and event reservation facts,
+without calling context or scheduler getters. Keep the staged context stable
+through publication. Before retiring or changing it, the host must revoke the
+future generation or fail its own local readiness fence. Closing a generic
+application-context lease alone does not cancel that generation. A renderer host
+must also adopt the runtime borrowed by its accepted controls inside its pure
+installation boundary; a later notification error still reports committed data.
+
+This API is a host building block. Its current qualification and the separately
+open Studio Interact integration are recorded in
+[the prepared-route task](../TODO/DONE/NS-4_interact-flows_02.md) and
+[the Interact task](../TODO/NS-4_interact-flows_01.md). It does not by itself make
+Studio mount root flows or establish executed browser behavior.
+
 `nfrLatest` cancels superseded runs; `nfrEvery` admits each event up to caller-tuned
 MaximumRuns (8 default, 1..64), and `nfrIgnoreWhileRunning` explicitly skips a busy
 route. Cancelled workers cooperate; revocation prevents delivery rather than
@@ -856,6 +900,53 @@ checks. It stages browser counterparts **and their matching source worker**.
 `-LogicAuthoringMCPPort` selects an unused localhost qualification port (9029
 default); its fresh private runtime never enrolls or replaces the live project.
 WORK.md owns actual HTTP browser execution, retained failures and scoped limits.
+
+### Composing root behavior with renderer admission
+
+The optional `INyxViewPublicationSource` in `nyx.view.publication` lets a host
+join its root behavior and runtime ownership to `RenderContext`. It is the last
+optional argument, after `nrmConfigured`; existing calls keep their behavior.
+
+```pascal
+LRenderer.RenderContext(LDocument, LPage, LHost, False,
+  LNextState, LCollections, LNextContext, LResolver, nrmConfigured,
+  LPublicationSource);
+```
+
+The source's `Prepare` receives the exact already-realized candidate root and
+the same prospective event view used by the controls. It borrows the document
+and tree during that call only. Return a detached managed publication supporting
+`INyxPublicationReadiness`. Preparation may reserve observations in the supplied
+view; it must leave the accepted generation and host untouched. Hidden layout
+settlement can discard a candidate and call Prepare again for another exact root.
+
+The renderer completes hidden Build/Sync and outward validation, then checks all
+final local fences before adoption. `Install` adopts preallocated runtime/route
+ownership without callbacks, allocation, scheduling or exceptions. The host must
+own stores borrowed by accepted controls at that point. `RenderContext` returning
+successfully is too late to establish ownership: a later notification can raise
+`ENyxPublicationNotification` while the new view remains committed and usable.
+Such a failure must not free the accepted runtime or trigger a pretend rollback.
+
+Runtime views retain their managed source across implicit content remounts.
+Explicit replacement with no source drops the former source after its borrowed
+controls retire. Design-mode participants are one-shot and are not retained for
+remounts. A retained source must revoke weak host receivers on disposal and must
+not keep a widget, document or retired controller alive. `Retire` is idempotent;
+after installation it releases preparation-only resources, preserving accepted
+runtime ownership. Each required independent notification and cleanup is attempted
+even if an earlier one raises.
+
+This renderer contract is accepted in
+[publication03](../TODO/DONE/NS-4_interact-flows_03.md), with the maintained ordinary
+consumer in [view publication controls](../tests/nyx_view_publication_controls.lpr).
+`tools/build.ps1 -Target view-publication -ViewPublicationEvidenceDirectory
+<fresh-directory>` maintains native1280/390 execution and stages the matching
+browser application without starting a server. Its136 native checks pass at
+both widths with clean heaps, including notification-triggered renderer disposal;
+the existing content guard supplies a retained local liveness check without
+changing its original GUID or callback-depth contract. Actual Studio root-flow mounting,
+save/generated integration and browser input remain separate acceptance gates.
 
 ## Embedded controls and Tool Canvas
 

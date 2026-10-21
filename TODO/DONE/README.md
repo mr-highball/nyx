@@ -3,6 +3,25 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Composable renderer publication](NS-4_interact-flows_03.md) was accepted on
+2026-10-21:136 ordinary native checks at1280/390, clean heaps, and matching browser
+compilation. Managed root ownership adopts at commit; refusal preserves the old
+view, implicit remount retains its source, and committed cleanup/disposal stays
+safe. Existing content/routes/Kanban and the exact older compiled MasterDetail
+pair retain compatibility. Actual Studio root-flow/save/generated integration
+remains open and earns no extra credit. See
+[the qualification](../../WORK.md#composable-view-publication--2026-10-21).
+
+[Prepared first-view root routes](NS-4_interact-flows_02.md) was accepted on
+2026-10-21 from65 native public-host checks,26 ordinary native control-route
+checks and exact reconstruction of two compiled saved companions, all with
+clean heaps. Four matching browser consumers compile only. The API stages
+dormant observations on the exact prospective event view, preserves independent
+Value/Details and existing route APIs, and handles abandonment/committed failure.
+Studio mounting and original authoring/parity criteria remain open; no additional
+completion credit is earned. See
+[the packet](../../WORK.md#prepared-root-routing-api--2026-10-21).
+
 [Owned constructor storage](NS-5_projection-storage_01.md) was accepted on
 2026-10-10 from 80 checked Win32/i386 assertions with zero leaks: actual native
 construction/worker, retained exact evidence, capacity/policy and filesystem

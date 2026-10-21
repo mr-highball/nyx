@@ -426,6 +426,7 @@ function Snapshot(ADocument: TNyxDocument; const AOwner: TNyxControlRef): TNyxDa
 var
   LControl: TNyxNode;
   LEvents: TNyxEventSchemas;
+  LDetailsEvents: TNyxEventSchemas;
   LEventData: TRouteChoices;
   LGraphs: TRouteChoices;
   LStates: TRouteChoices;
@@ -443,6 +444,7 @@ var
   LValueNode: TNyxNode;
   LFamily: Integer;
   LDetails: Boolean;
+  LDetailsIndex: Integer;
   LIndex: Integer;
   LReference: TNyxFlowRef;
   LName: TNyxText;
@@ -492,6 +494,7 @@ begin
   LBindingChoices := Default(TRouteChoices);
   LDestinations := Default(TRouteChoices);
   LEvents := NyxEventsMetadata(LControl, ADocument);
+  LDetailsEvents := NyxEventDetailsMetadata(LControl, ADocument);
   for LIndex := 0 to High(LEvents) do
   begin
     LDomain := NyxNoDomain;
@@ -503,16 +506,25 @@ begin
       if LEvents[LIndex].Payload.Kind = nepScalar then
       begin
         LDomain := LEvents[LIndex].Payload.Domain;
-      end
-      else if LEvents[LIndex].Payload.Kind = nepData then
-      begin
-        LDetails := True;
       end;
     end
     else if LEvents[LIndex].Trigger <> ntNamed then
     begin
       ResolveNyxEventValueContract(LControl, LControl, LControl,
         LEvents[LIndex].Trigger, LValueNode, LDomain);
+    end;
+    { Scalar Value and structured Details are independent channels. Match the
+      exact event identity rather than assuming two snapshots share indices. }
+    for LDetailsIndex := 0 to High(LDetailsEvents) do
+    begin
+
+      if (LDetailsEvents[LDetailsIndex].Trigger = LEvents[LIndex].Trigger) and
+        (LDetailsEvents[LDetailsIndex].Name.Name = LEvents[LIndex].Name.Name) then
+      begin
+        LDetails := LDetailsEvents[LDetailsIndex].Payload.Defined and
+          (LDetailsEvents[LDetailsIndex].Payload.Kind = nepData);
+        Break;
+      end;
     end;
     LFamily := -1;
 

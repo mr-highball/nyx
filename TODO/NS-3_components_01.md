@@ -2,6 +2,14 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The current granular core queue is in
+[WORK.md](../WORK.md#granular-core-backlog--2026-10-21). It follows the missing
+Interact host through independently usable routing/publication APIs, then
+creator-extensible coordinators and useful DataToolbar authoring. Original
+component breadth, reuse, parity and quality acceptance remains here; these
+linked subtasks add no completion credit. Resolver and the reported splitter
+bug remain deferred.
+
 MasterDetail runtime/Studio adoption qualifies locally under criteria1/3:
 native62 policy/runtime,63 public editor, full ordinary Studio/application106/114
 and exact saved compiled app30/30 pass with clean heaps; existing actual Kanban
@@ -221,6 +229,13 @@ source is not installed. End paging variants. See
 - Advanced behavior (data virtualization, sorting/filtering, trees, tables, dialogs, pickers, drag/drop) is demonstrated beyond static recipes.
 
 **Blockers**
+
+- [Prepared coordinator extensibility](NS-3_coordinators_01.md) removes the need
+  for another central renderer lifecycle branch for each compound behavior.
+- [Live DataToolbar query coordination](NS-3_data-toolbar_01.md) is the next
+  material component outcome after current Edit/Interact integration. It consumes
+  that common path through ordinary Studio and saved/generated applications;
+  no original criterion or completion credit changes.
 
 - [MasterDetail Edit data discovery](NS-4_master-detail-events_01.md) retains the
   required semantic/flow/canvas reuse gap separately from native callback proof.

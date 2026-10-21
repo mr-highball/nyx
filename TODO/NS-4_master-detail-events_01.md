@@ -10,7 +10,7 @@ serving [component reuse](NS-3_components_01.md) and
 [Studio authoring](NS-4_studio-authoring_01.md). Completion credit stays with
 those original outcomes; this newly recorded gap earns no additional credit.
 
-Starting evidence: the current native Studio/application journey passes106/114,
+Starting evidence at `72d0244`: the native Studio/application journey passes106/114,
 including actual queued callbacks receiving a copied record through Details.
 However, `NyxEventsMetadata.AddRoute` still describes the exact semantic Edit
 route as `NyxSignalPayload`. Existing schema therefore refuses event-Details
@@ -47,6 +47,20 @@ No new MCP tool, wire schema, runtime event format or producer authority is need
   domain exists, does not meet this task's outcome.
 
 **Blockers**
+
+- [Interact root-flow publication](NS-4_interact-flows_01.md) is a newly verified
+  product prerequisite. Completion-aware native1280/390 runs both receive one
+  copied callback but never publish the flow result; both have clean heaps.
+  Studio's Interact host does not bind root declarative routes. Preserve those
+  failures and the unchanged ordinary consumer; stop wait/fixture variants.
+- Current local evidence: shared independent discovery, Events Inspector and
+  scalar/Details admission pass687 native checks; public route form85 and Tool
+  port289 pass with clean heaps. Earlier premature-read failures retain19
+  unretired blocks/1581 bytes each. The later completion-aware runs have clean
+  heaps and still fail the actual publication predicate after60 seconds: this
+  proves the missing root-flow host, not merely a scheduling delay. Preserve
+  both distinct results. Exact saved/generated application qualification remains
+  required; this task stays open.
 
 - [Observable structured state](DONE/NS-1_state-collections_01.md) supplies the
   accepted typed collection/item foundation.

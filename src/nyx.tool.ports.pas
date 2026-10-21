@@ -76,6 +76,8 @@ implementation
 uses nyx.schema, nyx.contract, nyx.event.payload, nyx.flow.routes, nyx.logic.catalog;
 
 type
+  { The immutable catalog owns copied addresses and descriptions. Discovery
+    borrows a document only while building this snapshot. }
   TPorts = class(TInterfacedObject, INyxToolControlPorts)
   public
     Values: array of TNyxToolControlPort;
@@ -152,8 +154,11 @@ function NyxToolControlPorts(const AItem: TNyxCanvasItemRef; AControl: TNyxNode;
 var
   LOwner: TPorts;
   LMetadata: TNyxEventSchemas;
+  LDetailsMetadata: TNyxEventSchemas;
   LIndex: Integer;
+  LDetailsIndex: Integer;
   LPort: TNyxToolControlPort;
+  LTitle: TNyxText;
   LValueNode: TNyxNode;
   LDomain: TNyxValueDomain;
   LSpec: TNyxBindingSpec;
@@ -166,6 +171,7 @@ begin
   LOwner := TPorts.Create;
   Result := LOwner;
   LMetadata := NyxEventsMetadata(AControl, ADocument);
+  LDetailsMetadata := NyxEventDetailsMetadata(AControl, ADocument);
   for LIndex := 0 to High(LMetadata) do
   begin
     LPort := Default(TNyxToolControlPort);
@@ -182,6 +188,7 @@ begin
     begin
       LPort.Title := LPort.EventName.Name;
     end;
+    LTitle := LPort.Title;
     LPort.Description := 'Invocation signal. ' + LMetadata[LIndex].Description;
     LOwner.Add(LPort);
     LDomain := NyxNoDomain;
@@ -192,15 +199,6 @@ begin
       if LMetadata[LIndex].Payload.Kind = nepScalar then
       begin
         LDomain := LMetadata[LIndex].Payload.Domain;
-      end
-      else if LMetadata[LIndex].Payload.Kind = nepData then
-      begin
-        LPort.Role := ntprEventDetails;
-        LPort.ValueType := nftJSON;
-        LPort.Title := LPort.Title + ' details';
-        LPort.PayloadOptional := LMetadata[LIndex].PayloadOptional;
-        LPort.Description := 'Owned structured event data; choose explicit Field/Item projections.';
-        LOwner.Add(LPort);
       end;
     end
     else if LPort.Trigger <> ntNamed then
@@ -217,6 +215,28 @@ begin
       LPort.PayloadOptional := True;
       LPort.Description := 'Accepted scalar snapshot. Missing/mistyped invocation values refuse before graph work.';
       LOwner.Add(LPort);
+    end;
+    { A semantic producer may carry both an explicit scalar and owned Details.
+      Keep both ports; a mixed producer aggregate cannot promise either shape. }
+    for LDetailsIndex := 0 to High(LDetailsMetadata) do
+    begin
+
+      if (LDetailsMetadata[LDetailsIndex].Trigger = LMetadata[LIndex].Trigger) and
+        (LDetailsMetadata[LDetailsIndex].Name.Name = LMetadata[LIndex].Name.Name) then
+      begin
+
+        if LDetailsMetadata[LDetailsIndex].Payload.Defined and
+          (LDetailsMetadata[LDetailsIndex].Payload.Kind = nepData) then
+        begin
+          LPort.Role := ntprEventDetails;
+          LPort.ValueType := nftJSON;
+          LPort.Title := LTitle + ' details';
+          LPort.PayloadOptional := LDetailsMetadata[LDetailsIndex].PayloadOptional;
+          LPort.Description := 'Owned structured event data; choose explicit Field/Item projections.';
+          LOwner.Add(LPort);
+        end;
+        Break;
+      end;
     end;
   end;
   for LIndex := 0 to AControl.BindingCount - 1 do

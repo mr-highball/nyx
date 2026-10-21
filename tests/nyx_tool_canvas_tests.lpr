@@ -29,7 +29,8 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.codec, nyx.codegen,
   nyx.source, nyx.schema, nyx.controls, nyx.tool.ports, nyx.flow.types, nyx.binding.types,
   nyx.canvas.types, nyx.canvas.declarations, nyx.view.behavior, nyx.composition,
-  nyx.studio.projects, nyx.studio.session, nyx.test.tool.canvas
+  nyx.studio.projects, nyx.studio.session, nyx.test.tool.canvas,
+  nyx.collections, nyx.collections.view.types, nyx.master.detail, nyx.contract
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 var
@@ -62,6 +63,97 @@ begin
   end;
 end;
 {$endif}
+
+{ The public Tool Canvas catalog must expose both independent event channels.
+  An immutable earlier catalog survives later policy/producer changes. }
+procedure VerifyMasterDetailPorts;
+var
+  LDocument: TNyxDocument;
+  LDetail: INyxMasterDetail;
+  LPorts: INyxToolControlPorts;
+  LRetained: INyxToolControlPorts;
+  LPort: TNyxToolControlPort;
+  LSignals: Integer;
+  LValues: Integer;
+  LDetails: Integer;
+
+  procedure CountEdit;
+  var
+    LIndex: Integer;
+  begin
+    LSignals := 0;
+    LValues := 0;
+    LDetails := 0;
+    for LIndex := 0 to LPorts.Count - 1 do
+    begin
+      LPort := LPorts.Port(LIndex);
+
+      if (LPort.Trigger <> ntNamed) or (LPort.EventName.Name <> 'edit') then
+      begin
+        Continue;
+      end;
+
+      if LPort.Role = ntprEventSignal then
+      begin
+        Inc(LSignals);
+      end
+      else if LPort.Role = ntprEventValue then
+      begin
+        Inc(LValues);
+        Check((LPort.ValueType = nftText) and LPort.PayloadOptional,
+          'explicit Edit scalar remains an optional Text output');
+      end
+      else if LPort.Role = ntprEventDetails then
+      begin
+        Inc(LDetails);
+        Check((LPort.ValueType = nftJSON) and not LPort.PayloadOptional and
+          (LPort.Title = 'edit details'), 'exact Edit role exposes required owned JSON independently');
+      end;
+    end;
+  end;
+
+begin
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.Collections.Define(NyxCollection('people'),
+      NyxCollectionSchema.Text(NyxTextField('name'), '').Text(NyxTextField('summary'), ''), []);
+    LDetail := NewNyxMasterDetail('directory');
+    LDetail.MasterList.Binds.Collection(NyxCollectionView(NyxCollection('people')).
+      Column(NyxTextField('name'), 'People')).Done;
+    LDetail.DetailEditButton.Node.Contract.On(ntClick, NyxOriginValue, NyxTextDomain);
+    LDocument.AddPage(NewNyxPage('home').Add(LDetail));
+    LPorts := NyxToolControlPorts(NyxCanvasItem('People'), LDetail.Node, LDocument);
+    CountEdit;
+    Check((LSignals = 1) and (LValues = 1) and (LDetails = 0),
+      'static Edit retains scalar and signal without inventing structured data');
+    SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Configured(
+      NyxMasterDetailOptions(NyxTextField('name'), NyxTextField('summary'))));
+    LPorts := NyxToolControlPorts(NyxCanvasItem('People'), LDetail.Node, LDocument);
+    CountEdit;
+    Check((LSignals = 1) and (LValues = 1) and (LDetails = 1),
+      'configured Edit has separate signal, scalar Value and structured Details ports');
+    LRetained := LPorts;
+    SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Disabled);
+    LPorts := NyxToolControlPorts(NyxCanvasItem('People'), LDetail.Node, LDocument);
+    CountEdit;
+    Check((LValues = 1) and (LDetails = 0), 'Disabled removes only its structured Details guarantee');
+    LPorts := LRetained;
+    CountEdit;
+    Check(LDetails = 1, 'an earlier immutable port catalog survives later policy changes');
+    SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Configured(
+      NyxMasterDetailOptions(NyxTextField('name'), NyxTextField('summary'))));
+    LDetail.Add(NewNyxButton('unrelated-edit').Configure.OnClick(NyxSemantic(nseEdit)).Done);
+    LPorts := NyxToolControlPorts(NyxCanvasItem('People'), LDetail.Node, LDocument);
+    CountEdit;
+    Check((LSignals = 1) and (LValues = 0) and (LDetails = 0),
+      'mixed same-name producers retain signal without a false uniform Value or Details port');
+  finally
+    LPorts := nil;
+    LRetained := nil;
+    LDetail := nil;
+    LDocument.Free;
+  end;
+end;
 
 procedure Verify;
 var
@@ -223,6 +315,7 @@ end;
 begin
   try
     Verify;
+    VerifyMasterDetailPorts;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-tool-contract', 'passed');
     document.body.setAttribute('data-tool-contract-checks', IntToStr(GChecks));

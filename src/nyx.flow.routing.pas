@@ -99,6 +99,29 @@ function BindNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
   const AEvents: INyxEvents; const AContext: INyxApplicationContext;
   const AResolver: INyxLogicResolver = nil): INyxFlowRouteBinding;
 
+{ Prepare the first root-route attachment for an exact already-realized view.
+  The caller pairs AView with its owning AEvents; the existing interfaces expose
+  no cross-owner identity, so scheduler equality is NOT evidence of that pairing.
+  The host also pairs ADocument with ARoot: IsRealized establishes realized
+  status, not a foreign document's ownership. Both are borrowed during this call
+  only. No second realization, ordinary callback binding or executable creator
+  resolution occurs here.
+
+  Prepare/Validate require an active context on the router's exact scheduler and
+  AContext.Generation = AView.Generation. Validate this route participant before
+  the SAME event view, then check every participant's readiness after all group
+  validators. Install activates route owners only; AView activates its slots.
+
+  The host keeps the staged context stable through installation and revokes the
+  future token (or supplies its own final local readiness fence) BEFORE replacing
+  or retiring that context. Generic context Close does not cancel a token. Final
+  route readiness calls no context/scheduler getters. Retire abandoned work on
+  UI; after installation the returned binding survives preparation retirement. }
+function PrepareNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AView: INyxPreparedEventView;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  out ABinding: INyxFlowRouteBinding): INyxPreparedPublication;
+
 implementation
 
 uses
@@ -178,7 +201,8 @@ type
   public
     constructor Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-      AObserve: Boolean = True; AIncludePages: Boolean = False);
+      AObserve: Boolean = True; AIncludePages: Boolean = False;
+      ARealized: Boolean = False);
     destructor Destroy; override;
     procedure Close;
     function GetCount: Integer;
@@ -190,6 +214,35 @@ type
     function PrepareRouteChanges(ADocument: TNyxDocument; ARoot: TNyxNode;
       const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
       out AReplacement: INyxFlowRouteBinding): INyxPreparedPublication;
+  end;
+
+  { One future-view route participant owns its dormant binding and event-plan
+    leases. The host supplies exact context lifetime authority; only the retained
+    future cancellation token and event readiness are consulted at the final
+    fence. Installation sets private observer owners/flags without callouts.
+    Retirement never closes an installed binding or retires a shared event plan. }
+  TPreparedViewRoutes = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FBinding: TRouting;
+    FBindingLease: INyxFlowRouteBinding;
+    FView: INyxPreparedEventView;
+    FViewReady: INyxPublicationReadiness;
+    FGeneration: INyxCancellationScope;
+    FValidated: Boolean;
+    FValidating: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+    procedure CheckLocal;
+    procedure AdmitContext;
+    procedure DoRetire;
+  public
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
   end;
 
 {$I nyx.flow.routing.replacement.inc}
@@ -264,7 +317,7 @@ end;
 
 constructor TRouting.Create(ADocument: TNyxDocument; ASelectedRoot: TNyxNode; const AEvents: INyxEvents;
   const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
-  AObserve: Boolean; AIncludePages: Boolean);
+  AObserve: Boolean; AIncludePages: Boolean; ARealized: Boolean);
 var
   LObservation: INyxEventObservation;
   LRoot: TNyxNode;
@@ -353,11 +406,19 @@ begin
 
   if (ASelectedRoot <> nil) and not LCovered then
   begin
-    LRoot := RealizeNyxView(ADocument, ASelectedRoot);
-    try
-      Collect(LRoot, ADocument);
-    finally
-      ReleaseNyxNode(LRoot);
+
+    if ARealized then
+    begin
+      Collect(ASelectedRoot, ADocument);
+    end
+    else
+    begin
+      LRoot := RealizeNyxView(ADocument, ASelectedRoot);
+      try
+        Collect(LRoot, ADocument);
+      finally
+        ReleaseNyxNode(LRoot);
+      end;
     end;
   end;
 
@@ -764,6 +825,229 @@ begin
     raise ENyxFlow.Create('Application routes require their exact authored focus');
   end;
   Result := TRouting.Create(ADocument, AFocusedRoot, AEvents, AContext, AResolver, True, True);
+end;
+
+destructor TPreparedViewRoutes.Destroy;
+begin
+  DoRetire;
+  inherited Destroy;
+end;
+
+procedure TPreparedViewRoutes.CheckLocal;
+begin
+
+  if FRetired or FInstalled or (FBinding = nil) or FBinding.FClosed or
+    FBinding.FTransferred or not FBinding.FStaged or
+    (FBinding.FPreparation <> Self) or (FGeneration = nil) or
+    FGeneration.Cancelled then
+  begin
+    raise ENyxFlow.Create('Prepared root route owner or future generation changed');
+  end;
+end;
+
+procedure TPreparedViewRoutes.AdmitContext;
+var
+  LContext: INyxApplicationContext;
+  LEvents: INyxEvents;
+  LScheduler: INyxScheduler;
+  LView: INyxPreparedEventView;
+  LGeneration: INyxCancellationScope;
+begin
+  LContext := FBinding.FContext;
+  LEvents := FBinding.FEvents;
+  LScheduler := FBinding.FScheduler;
+  LView := FView;
+  LGeneration := FGeneration;
+  LScheduler.RequireUI;
+  CheckLocal;
+
+  if not LContext.Active or (LEvents.Scheduler <> LScheduler) or
+    (LContext.Scheduler <> LScheduler) or
+    (LContext.Generation <> LGeneration) or
+    (LView.Generation <> LGeneration) or not LContext.Active then
+  begin
+    raise ENyxFlow.Create('Prepared root routes require the active future-view context');
+  end;
+  CheckLocal;
+end;
+
+procedure TPreparedViewRoutes.Validate;
+var
+  LKeepAlive: INyxPreparedPublication;
+begin
+  LKeepAlive := Self;
+
+  if FValidated or FValidating then
+  begin
+    raise ENyxFlow.Create('Prepared root routes validate exactly once');
+  end;
+  CheckLocal;
+  FValidating := True;
+  try
+    AdmitContext;
+    FValidated := True;
+  finally
+    FValidating := False;
+  end;
+end;
+
+procedure TPreparedViewRoutes.CheckReady;
+var
+  LKeepAlive: INyxPreparedPublication;
+  LReady: INyxPublicationReadiness;
+begin
+  LKeepAlive := Self;
+  LReady := FViewReady;
+
+  if not FValidated then
+  begin
+    raise ENyxFlow.Create('Prepared root route readiness requires validation');
+  end;
+  CheckLocal;
+  LReady.CheckReady;
+  CheckLocal;
+end;
+
+procedure TPreparedViewRoutes.Install;
+var
+  LIndex: Integer;
+begin
+
+  if not FValidated or FInstalled or FRetired then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBinding.FObservers) do
+  begin
+    FBinding.FObservers[LIndex].Owner := FBinding;
+  end;
+  FBinding.FStaged := False;
+  FInstalled := True;
+end;
+
+procedure TPreparedViewRoutes.Notify;
+begin
+  { The shared event view owns old-execution notification. Root routes have no
+    former binding to retire and do not resolve creators during publication. }
+end;
+
+procedure TPreparedViewRoutes.DoRetire;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if (FBinding <> nil) and (FBinding.FPreparation = Self) then
+  begin
+    FBinding.FPreparation := nil;
+  end;
+
+  if not FInstalled and (FBindingLease <> nil) then
+  begin
+    try
+      FBinding.Close;
+    except
+      { Candidate observers are revoked by Close before cancellation. Retirement
+        and destruction cannot revive abandoned authority or throw cleanup. }
+    end;
+  end;
+  FBinding := nil;
+  FBindingLease := nil;
+  FViewReady := nil;
+  FView := nil;
+  FGeneration := nil;
+end;
+
+procedure TPreparedViewRoutes.Retire;
+var
+  LKeepAlive: INyxPreparedPublication;
+begin
+  LKeepAlive := Self;
+  DoRetire;
+end;
+
+function PrepareNyxViewFlowRoutes(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AEvents: INyxEvents; const AView: INyxPreparedEventView;
+  const AContext: INyxApplicationContext; const AResolver: INyxLogicResolver;
+  out ABinding: INyxFlowRouteBinding): INyxPreparedPublication;
+var
+  LEvents: INyxEvents;
+  LView: INyxPreparedEventView;
+  LContext: INyxApplicationContext;
+  LResolver: INyxLogicResolver;
+  LReady: INyxPublicationReadiness;
+  LPlan: TPreparedViewRoutes;
+  LLease: INyxPreparedPublication;
+  LObserver: TRouteObserver;
+  LSubscription: INyxEventSubscription;
+  LPhase: TNyxObservationPhase;
+  LIndex: Integer;
+begin
+  LEvents := AEvents;
+  LView := AView;
+  LContext := AContext;
+  LResolver := AResolver;
+  ABinding := nil;
+
+  if (ADocument = nil) or (ARoot = nil) or not ARoot.IsRealized or
+    (LEvents = nil) or (LView = nil) or (LContext = nil) then
+  begin
+    raise ENyxFlow.Create('Prepared root routes require an exact realized view and live owners');
+  end;
+  { A host may release its root token during admission. The established model
+    reference keeps this exact tree alive only until collection has returned. }
+  ARoot.AcquireReference;
+  try
+    LPlan := TPreparedViewRoutes.Create;
+    LLease := LPlan;
+    LPlan.FView := LView;
+    LReady := nil;
+
+    if not Supports(LView, INyxPublicationReadiness, LReady) then
+    begin
+      raise ENyxFlow.Create('Prepared root routes require final event-view readiness');
+    end;
+    LPlan.FViewReady := LReady;
+    LPlan.FGeneration := LView.Generation;
+
+    if (LPlan.FGeneration = nil) or LPlan.FGeneration.Cancelled then
+    begin
+      raise ENyxFlow.Create('Prepared root routes require a live future event generation');
+    end;
+    LPlan.FBinding := TRouting.Create(ADocument, ARoot, LEvents, LContext,
+      LResolver, False, False, True);
+    LPlan.FBindingLease := LPlan.FBinding;
+    LPlan.FBinding.FPreparation := LPlan;
+    LPlan.AdmitContext;
+    SetLength(LPlan.FBinding.FObservers, Length(LPlan.FBinding.FPlans));
+    SetLength(LPlan.FBinding.FObserverLeases, Length(LPlan.FBinding.FPlans));
+    for LIndex := 0 to High(LPlan.FBinding.FPlans) do
+    begin
+      LObserver := TRouteObserver.Create;
+      LPlan.FBinding.FObserverLeases[LIndex] := LObserver;
+      LPlan.FBinding.FObservers[LIndex] := LObserver;
+      LObserver.Index := LIndex;
+      LPhase := nopBeforeCallbacks;
+
+      if LPlan.FBinding.FPlans[LIndex].Route.CallbackMode = nfcmAfterDispatch then
+      begin
+        LPhase := nopAfterDispatch;
+      end;
+      LSubscription := LView.PrepareObservation(LPlan.FBinding.FPlans[LIndex].Target,
+        LPlan.FBinding.FPlans[LIndex].Route.Trigger, LObserver, LPhase,
+        LPlan.FBinding.FPlans[LIndex].Route.EventName);
+      LPlan.FBinding.FPlans[LIndex].Subscription := LSubscription;
+      LPlan.CheckLocal;
+    end;
+    LPlan.AdmitContext;
+    ABinding := LPlan.FBindingLease;
+    Result := LLease;
+  finally
+    ARoot.ReleaseReference;
+  end;
 end;
 
 end.

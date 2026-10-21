@@ -202,6 +202,12 @@ function NyxProperties(ANode: TNyxNode; ADocument: TNyxDocument = nil): TNyxProp
   typed kind; records do not expose mutable registry storage or target widgets. }
 function NyxEventsMetadata(ANode: TNyxNode;
   ADocument: TNyxDocument = nil): TNyxEventSchemas;
+{ Independent structured channel over the same checked event/route identities.
+  Payload describes Details only: data is a proved shape, signal has no Details,
+  and undefined retains an unknown/mixed aggregate. Legacy scalar Payload stays
+  owned by NyxEventsMetadata. This query grants no custom producer authority. }
+function NyxEventDetailsMetadata(ANode: TNyxNode;
+  ADocument: TNyxDocument = nil): TNyxEventSchemas;
 { Default scrollable faces share this metadata/adapter admission boundary.
   Framed editors observe their actual input; containers observe their own face. }
 function NyxSupportsViewport(ANode: TNyxNode): Boolean;
@@ -2086,7 +2092,13 @@ begin
     nkCodeEditor, nkList, nkTable, nkTree, nkSplitView];
 end;
 
-function NyxEventsMetadata(ANode: TNyxNode; ADocument: TNyxDocument): TNyxEventSchemas;
+type
+  { One discovery traversal owns both views. Legacy preserves former scalar /
+    creator precedence; Details folds its independent physical/creator facts. }
+  TEventPayloadView = (epvLegacy, epvDetails);
+
+function DiscoverEventsMetadata(ANode: TNyxNode; ADocument: TNyxDocument;
+  AView: TEventPayloadView): TNyxEventSchemas;
 var
   LRoot: TNyxNode;
   LContext: TNyxNode;
@@ -2101,6 +2113,66 @@ var
   LAuthored: TNyxAuthoredEventInfos;
   LPublished: TNyxEventSchema;
   LPublishedSchemas: TNyxPublishedSchemas;
+  LDetailsProducers: array of Boolean;
+
+  procedure MarkDetailsProducer(AIndex: Integer);
+  begin
+
+    if AView <> epvDetails then
+    begin
+      Exit;
+    end;
+
+    if Length(LDetailsProducers) < Length(Result) then
+    begin
+      SetLength(LDetailsProducers, Length(Result));
+    end;
+    LDetailsProducers[AIndex] := True;
+  end;
+
+  function HasDetailsProducer(AIndex: Integer): Boolean;
+  begin
+    Result := (AIndex >= 0) and (AIndex < Length(LDetailsProducers)) and
+      LDetailsProducers[AIndex];
+  end;
+
+  function DetailsPayload(const APayload: TNyxEventPayloadSpec): TNyxEventPayloadSpec;
+  begin
+    Result := Default(TNyxEventPayloadSpec);
+
+    if not APayload.Defined then
+    begin
+      Exit;
+    end;
+    Result := NyxSignalPayload;
+
+    if APayload.Kind = nepData then
+    begin
+      Result := APayload.Copy;
+    end;
+  end;
+
+  function MasterDetailRecord(AOrigin, ASource: TNyxNode;
+    ATrigger: TNyxTrigger): Boolean;
+  var
+    LIntent: TNyxMasterDetailIntent;
+  begin
+    Result := False;
+
+    if (ATrigger <> ntClick) or (ASource.Kind <> NyxKindName(nkMasterDetail)) or
+      not HasNyxMasterDetailIntent(ASource) then
+    begin
+      Exit;
+    end;
+    LIntent := GetNyxMasterDetailIntent(ASource);
+
+    if LIntent.Mode <> nmiConfigured then
+    begin
+      Exit;
+    end;
+    ValidateNyxMasterDetailOptions(ASource, LIntent.Options);
+    Result := ASource.Part(NyxPart('detail/edit')) = AOrigin;
+  end;
 
   procedure AddRoute(AControl: TNyxNode; ATrigger: TNyxTrigger;
     AAttribute: TNyxAttribute);
@@ -2175,10 +2247,15 @@ var
       LRoute.ValueID := LValueNode.ID;
     end;
 
-    if LDomain.Defined then
+    if (AView = epvLegacy) and LDomain.Defined then
     begin
       LRoute.Payload := NyxScalarPayload(LDomain);
       LRoute.PayloadOptional := True;
+    end;
+
+    if (AView = epvDetails) and MasterDetailRecord(AControl, LSource, ATrigger) then
+    begin
+      LRoute.Payload := NyxDataPayload(ndObject);
     end;
 
     if (ATrigger = ntChange) and not KindIn(AControl.ProjectionKind,
@@ -2256,6 +2333,7 @@ var
     LRouteIndex := Length(Result[LMatch].Routes);
     SetLength(Result[LMatch].Routes, LRouteIndex + 1);
     Result[LMatch].Routes[LRouteIndex] := LRoute.Copy;
+    MarkDetailsProducer(LMatch);
   end;
 
   procedure CollectRoutes(AControl: TNyxNode; ACompound: Boolean);
@@ -2380,6 +2458,7 @@ var
 
 begin
   Result := nil;
+  LDetailsProducers := nil;
 
   if ANode = nil then
   begin
@@ -2588,6 +2667,16 @@ begin
 
         LPublished := LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Copy;
 
+        if AView = epvDetails then
+        begin
+          LPublished.Payload := DetailsPayload(LPublished.Payload);
+
+          if not LPublished.Payload.Defined or (LPublished.Payload.Kind <> nepData) then
+          begin
+            LPublished.PayloadOptional := False;
+          end;
+        end;
+
         if LFound < 0 then
         begin
           LFound := Length(Result);
@@ -2598,8 +2687,23 @@ begin
           { The creator's payload admits its custom producer. Existing physical
             routes keep their own independent contracts under the same name. }
           LPublished.Routes := Result[LFound].Copy.Routes;
+
+          if (AView = epvDetails) and HasDetailsProducer(LFound) then
+          begin
+            LPublished.PayloadOptional := LPublished.PayloadOptional or
+              Result[LFound].PayloadOptional;
+
+            if not Result[LFound].Payload.Defined or not LPublished.Payload.Defined or
+              (Result[LFound].Payload.ToData.ToJSON <> LPublished.Payload.ToData.ToJSON) then
+            begin
+              LPublished.Payload := Default(TNyxEventPayloadSpec);
+              LPublished.Description :=
+                'Details differ across physical routes and declared producers.';
+            end;
+          end;
         end;
         Result[LFound] := LPublished;
+        MarkDetailsProducer(LFound);
       end;
     end;
     { A declared mounted menu is an actual semantic producer on its invoker.
@@ -2677,6 +2781,17 @@ begin
       ReleaseNyxNode(LContext);
     end;
   end;
+end;
+
+function NyxEventsMetadata(ANode: TNyxNode; ADocument: TNyxDocument): TNyxEventSchemas;
+begin
+  Result := DiscoverEventsMetadata(ANode, ADocument, epvLegacy);
+end;
+
+function NyxEventDetailsMetadata(ANode: TNyxNode;
+  ADocument: TNyxDocument): TNyxEventSchemas;
+begin
+  Result := DiscoverEventsMetadata(ANode, ADocument, epvDetails);
 end;
 
 function FindNyxNamedEvent(ANode: TNyxNode; const AName: TNyxEventRef;
@@ -3293,6 +3408,9 @@ var
   LRoutes: INyxFlowRoutes;
   LRoute: TNyxFlowRoute;
   LMetadata: TNyxEventSchemas;
+  LDetails: TNyxEventSchemas;
+  LDetailsRead: Boolean;
+  LDetailsFound: Integer;
   LCallbacks: TNyxAuthoredEventInfos;
   LIndex: Integer;
   LEvent: Integer;
@@ -3319,6 +3437,8 @@ begin
     Exit;
   end;
   LMetadata := NyxEventsMetadata(ANode, ADocument);
+  LDetails := nil;
+  LDetailsRead := False;
   LCallbacks := NyxAuthoredEvents(ANode);
   for LIndex := 0 to LRoutes.Count - 1 do
   begin
@@ -3386,11 +3506,32 @@ begin
         end;
       end;
 
-      if (LInput.Source = nfisEventDetails) and
-        (not LMetadata[LFound].Payload.Defined or
-          (LMetadata[LFound].Payload.Kind <> nepData)) then
+      if LInput.Source = nfisEventDetails then
       begin
-        raise ENyxModel.Create('Logic details input requires a structured event payload');
+
+        if not LDetailsRead then
+        begin
+          LDetails := NyxEventDetailsMetadata(ANode, ADocument);
+          LDetailsRead := True;
+        end;
+        LDetailsFound := -1;
+        for LEvent := 0 to High(LDetails) do
+        begin
+
+          if (LDetails[LEvent].Trigger = LRoute.Trigger) and
+            ((LRoute.Trigger <> ntNamed) or
+              (LDetails[LEvent].Name.Name = LRoute.EventName.Name)) then
+          begin
+            LDetailsFound := LEvent;
+            Break;
+          end;
+        end;
+
+        if (LDetailsFound < 0) or not LDetails[LDetailsFound].Payload.Defined or
+          (LDetails[LDetailsFound].Payload.Kind <> nepData) then
+        begin
+          raise ENyxModel.Create('Logic details input requires a structured event payload');
+        end;
       end;
     end;
   end;

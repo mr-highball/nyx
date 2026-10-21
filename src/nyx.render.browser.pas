@@ -32,6 +32,7 @@ uses
   nyx.types,
   nyx.text,
   nyx.publication,
+  nyx.view.publication,
   nyx.application.context, nyx.flow, nyx.tool.canvas, nyx.canvas.adoption,
   nyx.images,
   nyx.images.browser,
@@ -280,7 +281,11 @@ type
     { The mounted snapshot owns recipes independently of the caller's document.
       Deferred work owns only a revocable receiver port, never this renderer. }
     FContentBlueprint: TNyxContentBlueprint;
+    { Runtime preparation source survives implicit content remounts. Its host
+      receivers must revoke before disposal; a source never owns widgets. }
+    FViewPublicationSource: INyxViewPublicationSource;
     FContentGuard: INyxContentGuard;
+    FContentLifetime: INyxContentLifetime;
     FContentWork: INyxContentWork;
     FContentExecution: INyxExecution;
     { Focus recovery may follow an accepted control command's synchronization.
@@ -314,7 +319,8 @@ type
       const AStates: TNyxContentFaceStates;
       AResourceMode: TNyxResourceRenderMode = nrmConfigured;
       AUseContext: Boolean = False; const AContext: INyxApplicationContext = nil;
-      const AResolver: INyxLogicResolver = nil);
+      const AResolver: INyxLogicResolver = nil;
+      const APublicationSource: INyxViewPublicationSource = nil);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
     procedure SetResourceContext(const AContext: INyxResourceContext);
@@ -617,12 +623,15 @@ type
     { Atomically stage an explicit nested-view runtime context with this frame.
       Existing controls keep their former context until admission succeeds.
       The host owns State/context lifetime and root callback/route attachment;
-      nested canvas fragments use the context through their existing adapters. }
+      nested canvas fragments use the context through their existing adapters.
+      An optional managed source joins root behavior/runtime ownership to this
+      accepted view boundary; notification failure leaves adoption committed. }
     procedure RenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
       const ACollections: INyxCollectionBindings; const AContext: INyxApplicationContext;
       const AResolver: INyxLogicResolver = nil;
-      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured;
+      const APublicationSource: INyxViewPublicationSource = nil);
     property Root: TNyxNode read FRoot;
     { UI-thread, view-local exclusive choice. A mounted view is required;
       unknown/automatic names refuse before mutation. Scalar-only views refresh
@@ -1055,6 +1064,7 @@ begin
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
   FEvents := NewNyxEvents;
   FContentGuard := NewNyxContentGuard(@QueueContent);
+  Supports(FContentGuard, INyxContentLifetime, FContentLifetime);
   FResizePreviewHandler := @ResizePreviewViewport;
 end;
 
@@ -1107,7 +1117,9 @@ var
   LIndex: Integer;
   LRetiringKanban: TNyxKanbanMounts;
   LRetiringMasterDetail: TNyxMasterDetailMounts;
+  LRetiringSource: INyxViewPublicationSource;
 begin
+  LRetiringSource := FViewPublicationSource;
   FUpdating := True;
   RevokeNyxKanbanMounts(FKanbanMounts);
   RevokeNyxMasterDetailMounts(FMasterDetailMounts);
@@ -1277,12 +1289,19 @@ begin
   FOwnState := False;
   FUpdating := False;
   FHost := nil;
+  { Runtime owners outlive every borrowed DOM/store link above. RenderFrame
+    retains the displaced source locally until successor adoption is complete. }
+  FViewPublicationSource := nil;
   { A subscription receiver may reenter or fail. Detach every renderer field
     first so its cleanup cannot interrupt retirement of borrowed DOM/model. }
   try
     DisconnectNyxKanbanMounts(LRetiringKanban);
   finally
-    DisconnectNyxMasterDetailMounts(LRetiringMasterDetail);
+    try
+      DisconnectNyxMasterDetailMounts(LRetiringMasterDetail);
+    finally
+      LRetiringSource := nil;
+    end;
   end;
 end;
 
@@ -2158,7 +2177,9 @@ var
   LStates: TNyxContentFaceStates;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
+  LLifetime: INyxContentLifetime;
 begin
+  LLifetime := FContentLifetime;
   FEvents.Scheduler.RequireUI;
 
   if FPublishingContent or FContentGuard.Busy then
@@ -2220,11 +2241,21 @@ begin
         FPublishingContent := True;
         try
           RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FHost,
-            FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates);
+            FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates,
+            nrmConfigured, False, nil, nil, FViewPublicationSource);
+
+          if not LLifetime.Active then
+          begin
+            Exit;
+          end;
           LKey := FContentMeasurementKey;
         finally
-          FPublishingContent := False;
-          WakeResources;
+
+          if LLifetime.Active then
+          begin
+            FPublishingContent := False;
+            WakeResources;
+          end;
         end;
       end
       else
@@ -2236,14 +2267,27 @@ begin
           try
             Sync;
           except
-            FPresentationSelection := LPreviousSelection;
-            Sync;
+
+            if LLifetime.Active then
+            begin
+              FPresentationSelection := LPreviousSelection;
+              Sync;
+            end;
             raise;
           end;
         finally
-          FPublishingContent := False;
-          WakeResources;
+
+          if LLifetime.Active then
+          begin
+            FPublishingContent := False;
+            WakeResources;
+          end;
         end;
+      end;
+
+      if not LLifetime.Active then
+      begin
+        Exit;
       end;
       FContentFrame := LFrame;
       FContentFrameKnown := True;
@@ -2256,23 +2300,34 @@ begin
       begin
         { Remember the exact failed observation to prevent an automatic retry
           storm. A new geometry or explicit manual request remains retryable. }
-        FContentFrame := LFrame;
-        FContentFrameKnown := True;
-        FContentMeasurementKey := LKey;
-        FLastContentError := TNyxText(LException.Message);
+
+        if LLifetime.Active then
+        begin
+          FContentFrame := LFrame;
+          FContentFrameKnown := True;
+          FContentMeasurementKey := LKey;
+          FLastContentError := TNyxText(LException.Message);
+        end;
         raise;
       end;
     end;
   finally
     LCandidate.Free;
   end;
-  FlushImages;
+
+  if LLifetime.Active then
+  begin
+    FlushImages;
+  end;
 end;
 
 procedure TNyxBrowserRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings; AResourceMode: TNyxResourceRenderMode);
+var
+  LLifetime: INyxContentLifetime;
 begin
+  LLifetime := FContentLifetime;
 
   if (FLiveBindings <> nil) and FLiveBindings.ResourcePublicationBusy then
   begin
@@ -2296,17 +2351,36 @@ begin
       TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser),
       nil, False, nil, AResourceMode);
   finally
-    FPublishingContent := False;
+    { Notifications may dispose this renderer after adoption. The existing
+      weak content guard is retired before any borrowed widgets are released. }
+
+    if LLifetime.Active then
+    begin
+      FPublishingContent := False;
+    end;
+  end;
+
+  if not LLifetime.Active then
+  begin
+    Exit;
   end;
   QueueContent;
-  FlushImages;
+
+  if LLifetime.Active then
+  begin
+    FlushImages;
+  end;
 end;
 
 procedure TNyxBrowserRenderer.RenderContext(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings; const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver; AResourceMode: TNyxResourceRenderMode);
+  const AResolver: INyxLogicResolver; AResourceMode: TNyxResourceRenderMode;
+  const APublicationSource: INyxViewPublicationSource);
+var
+  LLifetime: INyxContentLifetime;
 begin
+  LLifetime := FContentLifetime;
   FEvents.Scheduler.RequireUI;
 
   if AHost = nil then
@@ -2328,12 +2402,25 @@ begin
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
       TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser), nil, False, nil,
-      AResourceMode, True, AContext, AResolver);
+      AResourceMode, True, AContext, AResolver, APublicationSource);
   finally
-    FPublishingContent := False;
+
+    if LLifetime.Active then
+    begin
+      FPublishingContent := False;
+    end;
+  end;
+
+  if not LLifetime.Active then
+  begin
+    Exit;
   end;
   QueueContent;
-  FlushImages;
+
+  if LLifetime.Active then
+  begin
+    FlushImages;
+  end;
 end;
 
 procedure TNyxBrowserRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -2342,7 +2429,8 @@ procedure TNyxBrowserRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNo
   const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
   const AStates: TNyxContentFaceStates; AResourceMode: TNyxResourceRenderMode;
   AUseContext: Boolean; const AContext: INyxApplicationContext;
-  const AResolver: INyxLogicResolver);
+  const AResolver: INyxLogicResolver;
+  const APublicationSource: INyxViewPublicationSource);
 var
   LCandidate: TNyxBrowserRenderer;
   LStyle: TJSHTMLElement;
@@ -2381,6 +2469,152 @@ var
   LAcceptedKanban: TNyxKanbanMounts;
   LAcceptedMasterDetail: TNyxMasterDetailMounts;
   LCommitted: Boolean;
+  LSource: INyxViewPublicationSource;
+  LFormerSource: INyxViewPublicationSource;
+  LRootPublication: INyxPreparedPublication;
+  LRootFence: INyxPublicationReadiness;
+  LCleanupFailed: Boolean;
+  LCleanupError: TNyxText;
+
+  procedure RememberCleanupFailure(AError: Exception);
+  begin
+
+    if LCleanupFailed then
+    begin
+      Exit;
+    end;
+    LCleanupFailed := True;
+
+    if (AError is ENyxPublicationNotification) and
+      ENyxPublicationNotification(AError).HasReceiverMessage then
+    begin
+      LCleanupError := ENyxPublicationNotification(AError).ReceiverMessage;
+    end
+    else
+    begin
+      LCleanupError := AError.Message;
+    end;
+  end;
+
+  procedure RetirePreparation;
+  begin
+    { The root owns observations in this exact successor. Retire those first,
+      even for discarded hidden passes; never strand the shared event plan if
+      an extension violates its nonthrowing retirement contract. }
+    try
+
+      if LRootPublication <> nil then
+      begin
+        LRootPublication.Retire;
+      end;
+    finally
+      try
+
+        if LEventView <> nil then
+        begin
+          LEventView.Retire;
+        end;
+      finally
+        LRootFence := nil;
+        LRootPublication := nil;
+        LEventFence := nil;
+        LEventView := nil;
+      end;
+    end;
+  end;
+
+  procedure ReleaseCandidate;
+  begin
+    try
+      ReleaseNyxNode(LMeasuredRoot);
+    finally
+      try
+        LCandidate.Free;
+      finally
+        try
+          LSettlement.Free;
+        finally
+          try
+            LBlueprint.Free;
+          finally
+
+            if LOwnRuntimeState then
+            begin
+              LRuntimeState.Free;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  procedure FinishPublication;
+  var
+    LMount: Integer;
+  begin
+    { Only local leases are used after commit. Every independent cleanup and
+      notification gets an attempt. The first diagnostic describes committed
+      data, never rollback; later failures cannot skip a required retirement. }
+    for LMount := 0 to High(LAcceptedKanban) do
+    begin
+      try
+        LAcceptedKanban[LMount].Retire;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+    end;
+    for LMount := 0 to High(LAcceptedMasterDetail) do
+    begin
+      try
+        LAcceptedMasterDetail[LMount].Retire;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+    end;
+    try
+      DisconnectNyxKanbanMounts(LFormerKanban);
+    except
+      on E: Exception do RememberCleanupFailure(E);
+    end;
+    try
+      DisconnectNyxMasterDetailMounts(LFormerMasterDetail);
+    except
+      on E: Exception do RememberCleanupFailure(E);
+    end;
+
+    if LRootPublication <> nil then
+    begin
+      try
+        LRootPublication.Notify;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+      try
+        LRootPublication.Retire;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+    end;
+
+    if LEventView <> nil then
+    begin
+      try
+        LEventView.Notify;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+      try
+        LEventView.Retire;
+      except
+        on E: Exception do RememberCleanupFailure(E);
+      end;
+    end;
+
+    if LCleanupFailed then
+    begin
+      raise ENyxPublicationNotification.CreateReceiverFailure(LCleanupError);
+    end;
+  end;
 begin
   { Build the entire candidate offscreen, then preview fallible physical work in
     the actual host. Model admission alone is insufficient. Transfer ownership
@@ -2401,6 +2635,14 @@ begin
   LBlueprint := nil;
   LEventView := nil;
   LEventFence := nil;
+  { Incoming arguments may alias the retained field during implicit remount.
+    Snapshot both owners before Clear or any external preparation can run. }
+  LSource := APublicationSource;
+  LFormerSource := FViewPublicationSource;
+  LRootPublication := nil;
+  LRootFence := nil;
+  LCleanupFailed := False;
+  LCleanupError := '';
   LFormerKanban := nil;
   LFormerMasterDetail := nil;
   LAcceptedKanban := nil;
@@ -2414,6 +2656,7 @@ begin
   LFormat := FormatSettings;
   LFormat.DecimalSeparator := '.';
   LTransferState := (AState <> nil) and FOwnState and (AState = FState);
+  try
   try
 
     if LOwnRuntimeState then
@@ -2511,12 +2754,13 @@ begin
       if ((not ADesignMode) and (NyxHasKanbanMounts(LCandidate.FRoot) or
         NyxHasMasterDetailMounts(LCandidate.FRoot))) or
         (Length(FMasterDetailMounts) <> 0) or
-        (Length(FKanbanMounts) <> 0) then
+        (Length(FKanbanMounts) <> 0) or (LSource <> nil) or
+        (LFormerSource <> nil) then
       begin
 
         if not Supports(FEvents, INyxEventViewPreparation, LEventPreparation) then
         begin
-          raise ENyxModel.Create('Browser automatic boards require prepared event views');
+          raise ENyxModel.Create('Browser view publication requires prepared event views');
         end;
         LEventView := LEventPreparation.PrepareView;
 
@@ -2533,6 +2777,17 @@ begin
           PrepareNyxMasterDetailMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
             LEventView, FEvents.Scheduler, @Sync,
             LCandidate.FMasterDetailMounts, LCandidate.FMasterDetailIDs);
+        end;
+      end;
+
+      if LSource <> nil then
+      begin
+        LRootPublication := LSource.Prepare(ADocument, LCandidate.FRoot, LEventView);
+
+        if (LRootPublication = nil) or
+          not Supports(LRootPublication, INyxPublicationReadiness, LRootFence) then
+        begin
+          raise ENyxModel.Create('Browser root publication requires a participant and final readiness fence');
         end;
       end;
       { One independent store/context serves every hidden pass. Failed passes
@@ -2645,12 +2900,7 @@ begin
       LMeasurements := LAllocated;
       LFirstCandidate := False;
 
-      if LEventView <> nil then
-      begin
-        LEventView.Retire;
-        LEventView := nil;
-        LEventFence := nil;
-      end;
+      RetirePreparation;
       FreeAndNil(LCandidate);
     until False;
     { Retain one authored copy for the whole admission, not one per hidden pass. }
@@ -2748,9 +2998,19 @@ begin
       begin
         ValidateNyxKanbanMounts(LCandidate.FKanbanMounts);
         ValidateNyxMasterDetailMounts(LCandidate.FMasterDetailMounts);
+
+        if LRootPublication <> nil then
+        begin
+          LRootPublication.Validate;
+        end;
         LEventView.Validate;
         CheckNyxKanbanMounts(LCandidate.FKanbanMounts);
         CheckNyxMasterDetailMounts(LCandidate.FMasterDetailMounts);
+
+        if LRootFence <> nil then
+        begin
+          LRootFence.CheckReady;
+        end;
         LEventFence.CheckReady;
       end;
     except
@@ -2892,54 +3152,45 @@ begin
       extensions must not raise during destruction of the retired controls. }
     InstallNyxKanbanMounts(FKanbanMounts);
     InstallNyxMasterDetailMounts(FMasterDetailMounts);
+
+    if not ADesignMode then
+    begin
+      FViewPublicationSource := LSource;
+    end;
+
+    if LRootPublication <> nil then
+    begin
+      LRootPublication.Install;
+    end;
     LAcceptedKanban := FKanbanMounts;
     LAcceptedMasterDetail := FMasterDetailMounts;
     FUpdating := LUpdating;
     LCommitted := True;
   finally
+    try
 
-    if not LCommitted and (LEventView <> nil) then
-    begin
-      LEventView.Retire;
+      if not LCommitted then
+      begin
+        RetirePreparation;
+      end;
+    finally
+      ReleaseCandidate;
     end;
-    ReleaseNyxNode(LMeasuredRoot);
-    LCandidate.Free;
-    LSettlement.Free;
-    LBlueprint.Free;
-
-    if LOwnRuntimeState then
+  end;
+  except
+    on E: Exception do
     begin
-      LRuntimeState.Free;
+
+      if not LCommitted then
+      begin
+        raise;
+      end;
+      RememberCleanupFailure(E);
     end;
   end;
   { Postcommit cleanup may navigate or dispose the renderer. Only local managed
     owners are used after this point; the accepted data is never rolled back. }
-  for LIndex := 0 to High(LAcceptedKanban) do
-  begin
-    { Keep the installed binding but release preparation-only event snapshots. }
-    LAcceptedKanban[LIndex].Retire;
-  end;
-  for LIndex := 0 to High(LAcceptedMasterDetail) do
-  begin
-    LAcceptedMasterDetail[LIndex].Retire;
-  end;
-  try
-    try
-      DisconnectNyxKanbanMounts(LFormerKanban);
-    finally
-      DisconnectNyxMasterDetailMounts(LFormerMasterDetail);
-    end;
-  finally
-
-    if LEventView <> nil then
-    begin
-      try
-        LEventView.Notify;
-      finally
-        LEventView.Retire;
-      end;
-    end;
-  end;
+  FinishPublication;
 end;
 
 procedure TNyxBrowserBinding.ImageSignal;

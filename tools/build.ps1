@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
@@ -30,6 +30,8 @@ param(
   [string]$DateRangeEvidenceDirectory = 'build/date-range/maintained',
   # NEW packet for selected-record detail authoring and exact saved applications.
   [string]$MasterDetailEvidenceDirectory = 'build/master-detail/maintained',
+  # NEW output for ordinary prepared-view ownership and remount consumers.
+  [string]$ViewPublicationEvidenceDirectory = 'build/view-publication/maintained',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -6747,6 +6749,50 @@ try {
     exit 0
   }
 
+  if ($Target -eq 'view-publication') {
+    # Native controls own the assertions at two widths. The matching browser
+    # application is staged for explicit execution; this starts no listener.
+    $nyxPublicationRoot = [IO.Path]::GetFullPath($ViewPublicationEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxPublicationRoot) {
+      throw 'ViewPublicationEvidenceDirectory must be NEW; earlier evidence is retained'
+    }
+    $nyxPublicationNative = Join-Path $nyxPublicationRoot 'native'
+    $nyxPublicationBrowser = Join-Path $nyxPublicationRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxPublicationNative, $nyxPublicationBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPublicationPlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc',
+      "-FU$nyxPublicationNative", "-FE$nyxPublicationNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxPublicationPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPublicationPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPublicationPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPublicationPlatform",
+      'tests/nyx_view_publication_controls.lpr')
+    foreach ($nyxPublicationWidth in @(1280, 390)) {
+      & (Join-Path $nyxPublicationNative 'nyx_view_publication_controls.exe') $nyxPublicationWidth
+      if ($LASTEXITCODE -ne 0) { throw 'Ordinary view publication/control journey failed' }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', "-FE$nyxPublicationBrowser",
+      'tests/nyx_view_publication_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPublicationBrowser 'rtl.js')
+    $nyxPublicationHTML = @'
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyx prepared view publication</title><body>
+<script src="rtl.js"></script><script src="nyx_view_publication_controls.js"></script>
+<script>rtl.run();</script></body></html>
+'@
+    [IO.File]::WriteAllText((Join-Path $nyxPublicationBrowser 'view-publication.html'),
+      $nyxPublicationHTML, [Text.UTF8Encoding]::new($false))
+    Write-Host 'Native view publication passed at both widths; browser consumer compiles only.'
+    exit 0
+  }
+
   if ($Target -eq 'master-detail') {
     # Pascal owns complete candidate, actual Studio input and application proofs.
     # A new output root preserves earlier receipts. Browser artifacts are staged
@@ -6772,12 +6818,13 @@ try {
       "-Fu$nyxLazarus/lcl/units/$nyxMasterDetailPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxMasterDetailPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxMasterDetailPlatform")
-    foreach ($nyxMasterDetailProgram in @('nyx_master_detail_tests', 'nyx_master_detail_editor_tests')) {
+    foreach ($nyxMasterDetailProgram in @('nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
+      'nyx_semantic_events_tests', 'nyx_control_routes_tests', 'nyx_tool_canvas_tests')) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxMasterDetailFlags + @(
         "-FU$nyxMasterDetailNative", "-FE$nyxMasterDetailNative",
         "tests/$nyxMasterDetailProgram.lpr"))
       & (Join-Path $nyxMasterDetailNative ($nyxMasterDetailProgram + '.exe'))
-      if ($LASTEXITCODE -ne 0) { throw 'MasterDetail typed editor/candidate checks failed' }
+      if ($LASTEXITCODE -ne 0) { throw 'MasterDetail typed editor/event/route/port checks failed' }
     }
     Invoke-NyxCompiler $nyxLclFpc ($nyxMasterDetailFlags + @(
       "-FU$nyxMasterDetailNative", "-FE$nyxMasterDetailNative",
@@ -6807,6 +6854,7 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxMasterDetailProgram in @('nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
+      'nyx_semantic_events_tests', 'nyx_control_routes_tests', 'nyx_tool_canvas_tests',
       'nyx_master_detail_controls')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', '-Fisrc', '-Fistudio',

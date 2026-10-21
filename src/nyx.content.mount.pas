@@ -111,6 +111,16 @@ type
     function GetBusy: Boolean;
     property Busy: Boolean read GetBusy;
   end;
+  { Optional liveness lease on the same guard, preserving its original GUID and
+    callback-depth contract. Busy also means an entered callback; Active answers
+    only whether the borrowed receiver has retired. A local lease survives
+    renderer disposal, so publication tails can avoid touching a freed receiver.
+    This read is local, nonthrowing and invokes no idle callback. }
+  INyxContentLifetime = interface(IInterface)
+    ['{FA531A0A-0912-43B1-92B5-BF016B7243D5}']
+    function GetActive: Boolean;
+    property Active: Boolean read GetActive;
+  end;
   { A queued managed work port borrows a receiver until Retire. The adapter
     retires it before releasing itself. Queues retain only the port/execution,
     never the renderer, preventing cycles and calls into a retired mount. }
@@ -242,7 +252,9 @@ begin
 end;
 
 type
-  TContentGuard = class(TInterfacedObject, INyxContentGuard)
+  { One weak receiver and callback-depth owner supplies both idle guarding and
+    liveness. Retirement clears the receiver before either lease is released. }
+  TContentGuard = class(TInterfacedObject, INyxContentGuard, INyxContentLifetime)
   private
     FDepth: Integer;
     FIdle: TNyxContentUpdate;
@@ -253,6 +265,7 @@ type
     procedure Leave;
     procedure Retire;
     function GetBusy: Boolean;
+    function GetActive: Boolean;
   end;
 
   TContentWork = class(TInterfacedObject, INyxWork, INyxContentWork)
@@ -311,6 +324,11 @@ end;
 function TContentGuard.GetBusy: Boolean;
 begin
   Result := FRetired or (FDepth <> 0);
+end;
+
+function TContentGuard.GetActive: Boolean;
+begin
+  Result := not FRetired;
 end;
 
 function NewNyxContentGuard(AIdle: TNyxContentUpdate): INyxContentGuard;

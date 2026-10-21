@@ -249,7 +249,7 @@ function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
 implementation
 
 uses
-  nyx.schema, nyx.controls, nyx.content,
+  nyx.schema, nyx.controls, nyx.content, nyx.event.payload,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
@@ -421,6 +421,9 @@ begin
     AEdit.Action := sdaTransaction;
     AEdit.Selection := LControlRoute.Owner.ID;
     AEdit.View := ASession.ActiveViewID;
+    { Capture already checked the scoped form. A queued source operation must
+      also retain the whole design it was accepted against until publication. }
+    AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
     AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
       NyxDesignStep(NyxFlowRoutesPatch(LControlRoute.Owner,
         NyxFlowRoutesFromData(LControlRoute.RoutesData)))]));
@@ -1669,6 +1672,12 @@ procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   const APending: TNyxStudioPendingDesign; const AFilter: TNyxEventFilter);
 var
   LMetadata: TNyxEventSchemas;
+  LDetailsMetadata: TNyxEventSchemas;
+  LPresentation: TNyxEventSchema;
+  LDetailsIndex: Integer;
+  LDetailsEvent: Integer;
+  LDetailsRoute: Integer;
+  LDetailsText: TNyxText;
   LEvents: TNyxAuthoredEventInfos;
   LIndex: Integer;
   LInfoIndex: Integer;
@@ -1696,6 +1705,7 @@ begin
     raise ENyxModel.Create('Events inspector requires its selected projection');
   end;
   LMetadata := NyxEventsMetadata(ASession.Selected, ASession.Document);
+  LDetailsMetadata := NyxEventDetailsMetadata(ASession.Selected, ASession.Document);
   LEvents := NyxAuthoredEvents(AProjection);
   { Semantic actions are the compound's main application contract. Present
     them first while retaining original metadata indices in stable command IDs. }
@@ -1759,7 +1769,58 @@ begin
       end;
       LCard := TNyxNode.Create(nkCard, LKey);
       LCard.Configure.Padding(12).Gap(8).Surface(True).Done;
-      TagNyxEventDiscovery(LCard, LMetadata[LIndex], LInfo,
+      LDetailsEvent := -1;
+      LDetailsText := '';
+      for LDetailsIndex := 0 to High(LDetailsMetadata) do
+      begin
+
+        if (LDetailsMetadata[LDetailsIndex].Trigger = LMetadata[LIndex].Trigger) and
+          (LDetailsMetadata[LDetailsIndex].Name.Name = LMetadata[LIndex].Name.Name) then
+        begin
+          LDetailsEvent := LDetailsIndex;
+          Break;
+        end;
+      end;
+
+      if LDetailsEvent >= 0 then
+      begin
+
+        if LDetailsMetadata[LDetailsEvent].Payload.Defined then
+        begin
+
+          if LDetailsMetadata[LDetailsEvent].Payload.Kind = nepData then
+          begin
+            LDetailsText := 'Details: ' + LDetailsMetadata[LDetailsEvent].Payload.Description;
+
+            if LDetailsMetadata[LDetailsEvent].PayloadOptional then
+            begin
+              LDetailsText := LDetailsText + ' (may be absent)';
+            end;
+          end;
+        end
+        else
+        begin
+          for LDetailsRoute := 0 to High(LDetailsMetadata[LDetailsEvent].Routes) do
+          begin
+
+            if LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Payload.Defined and
+              (LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Payload.Kind = nepData) then
+            begin
+              LDetailsText := 'Details: varies by source; inspect each route.';
+              Break;
+            end;
+          end;
+        end;
+      end;
+      { Discovery tags retain an inert presentation copy. The legacy scalar
+        contract/command identities stay exact, while Details is searchable. }
+      LPresentation := LMetadata[LIndex].Copy;
+
+      if LDetailsText <> '' then
+      begin
+        LPresentation.Description := LPresentation.Description + ' ' + LDetailsText;
+      end;
+      TagNyxEventDiscovery(LCard, LPresentation, LInfo,
         ARemoval.Pending and ASession.MatchesCommandContext(ARemoval.Context) and
         (ARemoval.OwnerID = ASession.SelectedID) and (ARemoval.Trigger = LInfo.Trigger) and
         (ARemoval.Name.Name = LInfo.Name.Name));
@@ -1781,6 +1842,11 @@ begin
         end;
         LCard.Add(TNyxNode.Create(nkLabel, LKey + '-payload')
           .Configure.Text(LRouteText).Done);
+      end;
+
+      if LDetailsText <> '' then
+      begin
+        LCard.Add(NewNyxLabel(LKey + '-details').WithText(LDetailsText));
       end;
 
       if Length(LMetadata[LIndex].Routes) > 0 then
@@ -1810,6 +1876,34 @@ begin
           if LRoute.ValueID <> '' then
           begin
             LRouteText := LRouteText + ' from ' + LRoute.ValueID;
+          end;
+
+          if LDetailsText <> '' then
+          begin
+            for LDetailsRoute := 0 to High(LDetailsMetadata[LDetailsEvent].Routes) do
+            begin
+
+              if (LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Trigger = LRoute.Trigger) and
+                (LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].OriginID = LRoute.OriginID) and
+                (LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].SourceID = LRoute.SourceID) then
+              begin
+
+                if LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Payload.Defined then
+                begin
+
+                  if LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Payload.Kind = nepData then
+                  begin
+                    LRouteText := LRouteText + ' / Details: ' +
+                      LDetailsMetadata[LDetailsEvent].Routes[LDetailsRoute].Payload.Description;
+                  end
+                  else
+                  begin
+                    LRouteText := LRouteText + ' / Details: none';
+                  end;
+                end;
+                Break;
+              end;
+            end;
           end;
           LCard.Add(TNyxNode.Create(nkLabel, LKey + '-route-' + IntToStr(LRouteIndex))
             .Configure.Text(LRouteText).Done);

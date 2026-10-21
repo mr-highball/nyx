@@ -33,6 +33,8 @@ uses
   nyx.collections.view.types, nyx.collections.query, nyx.collections.selection,
   nyx.behavior, nyx.events, nyx.scheduler,
   nyx.master.detail, nyx.master.detail.editor, nyx.studio.inspector,
+  nyx.logic, nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.flow.routes,
+  nyx.flow.route.model, nyx.schema, nyx.event.payload,
   nyx.studio.projects, nyx.studio.menu,
   {$ifdef PAS2JS}nyx.studio.browser, nyx.studio.agents, nyx.studio.exchange,
   nyx.test.editor.exchange, nyx.application.browser, nyx.render.browser
@@ -94,9 +96,18 @@ type
   TStage = (dsSelectDefinition, dsDefinitionPanel, dsConfigureDefinition,
     dsDefinitionUndo, dsDefinitionRedo, dsSelectInstance, dsInstancePanel,
     dsIndependent, dsMaskUndo, dsMaskRedo, dsInherit, dsInheritedUndo,
-    dsInheritedRedo, dsPreviewPanel, dsPreviewStart, dsPreview,
+    dsInheritedRedo, dsEventsShow, dsEventsCheck, dsLogicProject, dsLogicOpen, dsLogicInputs,
+    dsLogicOutputs, dsLogicPolicy, dsLogicApply, dsLogicUndo,
+    dsLogicRedo, dsLogicClose, dsPreviewPanel, dsPreviewStart, dsPreview,
     dsProjectPanel, dsActions, dsProjectMenu, dsOpenMenu, dsSave,
     {$ifdef PAS2JS}dsUndoSaved,{$endif}dsOpen, dsReopened);
+
+const
+  CRouteForm = 'studio-logic-editor-control-routes';
+  CReviewFlow = 'Review selected record';
+  CReviewState = 'record-preview';
+  CReviewMemo = 'record-preview-memo';
+  CReviewInitial = 'Choose a person, then Edit to inspect the copied record.';
 
 var
   GStudio: TWorkshopStudio;
@@ -108,6 +119,7 @@ var
   GBefore: TNyxText;
   GDefinitionPair: TNyxText;
   GIndependentPair: TNyxText;
+  GRoutedPair: TNyxText;
   GDefinition: TNyxText;
   GOther: TNyxText;
   GSaved: TNyxText;
@@ -156,9 +168,15 @@ var
   LFirst: INyxComponent;
   LSecond: INyxComponent;
   LSchema: TNyxCollectionSchema;
+  LPreview: INyxMemo;
 begin
   Result := TNyxDocument.Create;
   try
+    { Seed a useful operation and destination, leaving the route unwired. The
+      ordinary Studio form must author the exact Edit Details connection. }
+    Result.State.SetValue(NyxTextState(CReviewState), CReviewInitial);
+    Result.Flows.Define(NyxFlowRef(CReviewFlow), NewNyxFlowGraph.WithStep(
+      NyxFlowStep('preview'), NewNyxJSONFormat(njlIndented, 2)).Build);
     LSchema := NyxCollectionSchema.Text(NyxTextField('short-name'), '').
       Text(NyxTextField('full-name'), '').Text(NyxTextField('summary'), '').
       Integer(NyxIntegerField('score'), 0);
@@ -190,6 +208,10 @@ begin
     LPage.Add(NewNyxHeading('welcome').WithText('People worth getting to know'));
     LPage.Add(LFirst);
     LPage.Add(LSecond);
+    LPreview := NewNyxMemo(CReviewMemo).WithText('Selected record JSON');
+    LPreview.Configure.ReadOnly(True).Height(240).Done;
+    LPreview.Binds.Value(NyxTextState(CReviewState)).Done;
+    LPage.Add(LPreview);
     Result.AddPage(LPage);
     Result.Validate;
   except
@@ -429,6 +451,38 @@ begin
   end;
 end;
 
+{ Read the actual form's owned dropdown labels. Captions stay user-facing;
+  their numeric choice prefixes never become programmatic event identities. }
+procedure RouteChoice(const AField, ACaption: TNyxText);
+var
+  LItems: TNyxStrings;
+  LIndex: Integer;
+  LValue: TNyxText;
+  LField: TNyxNode;
+begin
+  LField := GStudio.ShellView.RootFor(CRouteForm + '-' + AField).
+    Find(CRouteForm + '-' + AField);
+  Check(LField <> nil, 'ordinary route field is mounted: ' + AField);
+  LItems := TNyxStrings.Create;
+  try
+    LItems.Text := LField.Prop(NyxAttributeName(atItems));
+    for LIndex := 0 to LItems.Count - 1 do
+    begin
+      LValue := LItems[LIndex];
+
+      if (LValue = ACaption) or
+        (Copy(LValue, Length(LValue) - Length(ACaption) + 1, Length(ACaption)) = ACaption) then
+      begin
+        Change(CRouteForm + '-' + AField, LValue);
+        Exit;
+      end;
+    end;
+  finally
+    LItems.Free;
+  end;
+  raise Exception.Create('Missing ordinary route choice: ' + AField + ' / ' + ACaption);
+end;
+
 procedure DesignPanel;
 begin
 
@@ -441,6 +495,46 @@ end;
 procedure ClickPolicy(AAction: TNyxMasterDetailEditorAction);
 begin
   Click(NyxMasterDetailEditorActionID(NyxStudioMasterDetailEditorID, AAction));
+end;
+
+{ Derive the stable command index from the exact accepted public metadata, then
+  inspect the visible real label. No assumption about enum/card ordering leaks
+  into this ordinary user journey. }
+procedure CheckInspectorDetails;
+var
+  LDocument: TNyxDocument;
+  LMetadata: TNyxEventSchemas;
+  LIndex: Integer;
+  LID: TNyxText;
+  LText: TNyxText;
+begin
+  LDocument := TNyxCodec.Decode(GStudio.ProjectSnapshot.Design);
+  try
+    LMetadata := NyxEventsMetadata(LDocument.Find('first-directory'), LDocument);
+    LID := '';
+    for LIndex := 0 to High(LMetadata) do
+    begin
+
+      if (LMetadata[LIndex].Trigger = ntNamed) and
+        (LMetadata[LIndex].Name.Name = NyxSemantic(nseEdit).Name) then
+      begin
+        LID := 'event-' + NyxTriggerName(ntNamed) + '-' + IntToStr(LIndex) + '-details';
+        Break;
+      end;
+    end;
+    Check((LID <> '') and (GStudio.ShellView.RootFor(LID) <> nil),
+      'ordinary Events tab mounts the independent Details label for the selected instance');
+    LText := 'Details: ' + NyxDataPayload(ndObject).Description;
+    {$ifdef PAS2JS}
+    Check(GStudio.ShellView.ElementFor(LID).textContent = LText,
+      'browser Events Inspector shows the owned object channel');
+    {$else}
+    Check(TLabel(GStudio.ShellView.ControlFor(LID)).Caption = String(LText),
+      'native Events Inspector shows the owned object channel');
+    {$endif}
+  finally
+    LDocument.Free;
+  end;
 end;
 
 procedure TEditObserver.Invoke(const AEvent: TNyxEventInfo;
@@ -480,7 +574,69 @@ begin
   {$endif}
 end;
 
-procedure ExerciseRecords(AView: TView);
+{$ifdef PAS2JS}
+{ Yield one browser turn without making elapsed time an acceptance condition.
+  The caller still checks the actual publication/callback predicate. }
+function YieldUI: TJSPromise;
+begin
+  Result := TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+    begin
+      window.setTimeout(procedure
+        begin
+          AResolve(True);
+        end, 0);
+    end);
+end;
+{$endif}
+
+{ Both Sequential graph execution and native UI callbacks may publish later.
+  The awaiting caller owns the application/Studio and observer until return. }
+procedure AwaitRecord(AView: TView; AObserver: TEditObserver);
+  {$ifdef PAS2JS}async;{$endif}
+var
+  {$ifdef PAS2JS}
+  LStarted: Double;
+  {$else}
+  LStarted: QWord;
+  {$endif}
+begin
+  {$ifdef PAS2JS}LStarted := TJSDate.now;
+  {$else}LStarted := GetTickCount64;{$endif}
+  while (AView.State.GetValue(NyxTextState(CReviewState)) = CReviewInitial) or
+    (AObserver.Calls <> 1) do
+  begin
+
+    if AObserver.Calls > 1 then
+    begin
+      raise Exception.Create('One physical Edit invoked its callback more than once');
+    end;
+    {$ifdef PAS2JS}
+
+    if TJSDate.now - LStarted > 60000 then
+    {$else}
+
+    if GetTickCount64 - LStarted > 60000 then
+    {$endif}
+    begin
+      raise Exception.Create('Edit record publication did not settle / callbacks=' +
+        IntToStr(AObserver.Calls) + ' / preview=' +
+        AView.State.GetValue(NyxTextState(CReviewState)));
+    end;
+    {$ifdef PAS2JS}
+    await(TJSPromise.resolve(YieldUI));
+    {$else}
+    CheckSynchronize;
+    Application.ProcessMessages;
+
+    if (GObserver <> nil) and (GObserver.Error <> '') then
+    begin
+      raise Exception.Create('MasterDetail native callback: ' + GObserver.Error);
+    end;
+    {$endif}
+  end;
+end;
+
+procedure ExerciseRecords(AView: TView); {$ifdef PAS2JS}async;{$endif}
 var
   LRoot: TNyxNode;
   LOther: TNyxNode;
@@ -494,6 +650,8 @@ var
   LToken: INyxEventSubscription;
   LRetained: TNyxMasterDetailRecord;
   LRevision: Integer;
+  LPreview: TNyxText;
+  LPreviewData: TNyxDataValue;
   {$ifdef PAS2JS}
   LRow: TJSHTMLElement;
   {$else}
@@ -513,6 +671,8 @@ begin
   LEdit := LRoot.Part(NyxPart('detail/edit'));
   LView := AView.CollectionView(LMaster.ID);
   LRevision := LView.Store.Snapshot.Revision;
+  Check(AView.State.GetValue(NyxTextState(CReviewState)) = CReviewInitial,
+    'reopened runtime begins with the authored preview text, not an earlier record');
   AView.Reveal(LMaster.ID, niRuntime);
   {$ifdef PAS2JS}
   LRow := TJSHTMLElement(AView.ElementFor(LMaster.ID).
@@ -542,16 +702,31 @@ begin
     {$else}TButton(AView.ControlFor(LEdit.ID)).Click;
     Check(LObserver.Calls = 0, 'native UI-queued Edit has not run inside physical dispatch');
     {$endif}
+    { Move selection before any queued graph/UI work is serviced. Both the
+      ordinary callback and the formatted result must still describe row one. }
     LView.Select(Person(True));
-    {$ifndef PAS2JS}
-    CheckSynchronize;
-    Application.ProcessMessages;
+    {$ifdef PAS2JS}await(AwaitRecord(AView, LObserver));
+    {$else}AwaitRecord(AView, LObserver);{$endif}
+    LPreview := AView.State.GetValue(NyxTextState(CReviewState));
+    LPreviewData := TNyxDataValue.ParseJSON(LPreview);
+    Check(TNyxMasterDetailRecord.FromData(LPreviewData).Ref.ID = 'one',
+      'ordinary semantic Edit route sends the copied record through JSONFormat to bound text');
+    Check(Pos(#10, LPreview) > 0, 'saved graph uses readable indented JSON');
+    {$ifdef PAS2JS}
+    Check(TJSHTMLTextAreaElement(AView.InputFor(CReviewMemo)).value = LPreview,
+      'actual browser Memo displays the event-driven JSON result');
+    {$else}
+    Check(TNyxDataValue.ParseJSON(TNyxText(TMemo(AView.InputFor(CReviewMemo)).Lines.Text)).ToJSON =
+      LPreviewData.ToJSON,
+      'actual native Memo displays the event-driven JSON result');
     {$endif}
     Check((LObserver.Calls = 1) and LObserver.Captured.Defined and
       (LObserver.Captured.Ref.ID = 'one') and
       (LObserver.Captured.Item.GetValue(NyxIntegerField('score')) = 7) and
       (LBinding.Current.Ref.ID = 'two'),
       'later selection cannot retarget the copied accepted Edit record or its scalar families');
+    Check(AView.State.GetValue(NyxTextState(CReviewState)) = LPreview,
+      'changing selection never retargets the already formatted Edit record');
     LRetained := LObserver.Captured.Copy;
   finally
     LToken.Cancel;
@@ -596,7 +771,7 @@ begin
   Check((AView.CollectionView(LOther.Part(NyxPart('master')).ID).Store.Snapshot.Revision = 0) and
     (LRetained.Ref.ID = 'one'), 'independent reusable stores and detached Edit data survive');
 end;
-procedure ApplicationProof(ADocument: TNyxDocument);
+procedure ApplicationProof(ADocument: TNyxDocument); {$ifdef PAS2JS}async;{$endif}
 var
   LApplication: TApplicationHost;
   LBefore: TNyxText;
@@ -618,7 +793,8 @@ begin
     LApplication.Window.Show;
     Application.ProcessMessages;
     {$endif}
-    ExerciseRecords(LApplication.View);
+    {$ifdef PAS2JS}await(ExerciseRecords(LApplication.View));
+    {$else}ExerciseRecords(LApplication.View);{$endif}
     Check(TNyxCodec.Encode(ADocument) = LBefore,
       'ordinary application input never rewrites the saved collection defaults or intent');
   finally
@@ -626,7 +802,7 @@ begin
   end;
 end;
 
-procedure Stage;
+procedure Stage; {$ifdef PAS2JS}async;{$endif}
 {$ifndef PAS2JS}
 var
   LStore: TNyxProjectStore;
@@ -692,15 +868,74 @@ begin
         Check(Pair = GIndependentPair, 'inherit Undo restores the explicit local mask');
         Click('action-redo');
       end;
-    dsPreviewPanel:
+    dsEventsShow: Click(NyxInspectorEventsID);
+    dsEventsCheck: CheckInspectorDetails;
+    dsLogicProject:
       begin
         Check(Pair = GDefinitionPair, 'inherit Redo restores the exact saved-source candidate');
+
+        if GStudio.ShellView.RootFor('action-panel-project') <> nil then
+        begin
+          Click('action-panel-project');
+        end;
+      end;
+    dsLogicOpen: Click('action-logic-toggle');
+    dsLogicInputs:
+      begin
+        Change(CRouteForm + '-name', CReviewFlow);
+        RouteChoice('event', 'edit');
+        RouteChoice('graph', CReviewFlow);
+        RouteChoice('input', 'preview / ' + NyxLogicPort(nlpJSON).Name + ' / JSON');
+        RouteChoice('source', 'Event details');
+        Click(CRouteForm + '-path-clear');
+        Click(CRouteForm + '-map-input');
+      end;
+    dsLogicOutputs:
+      begin
+        RouteChoice('output', 'preview / ' + NyxLogicPort(nlpText).Name + ' / Text');
+        RouteChoice('destination', CReviewMemo + ' / Value');
+        Click(CRouteForm + '-map-output');
+      end;
+    dsLogicPolicy:
+      begin
+        Click(GStudio.ShellView.RootFor(CRouteForm + '-execution').
+          Find(CRouteForm + '-execution').Part(NyxPart('header')).ID);
+        RouteChoice('policy', 'Sequential');
+        Check(Pair = GDefinitionPair, 'unfinished route mappings never mutate the design/source pair');
+      end;
+    dsLogicApply: Click(CRouteForm + '-apply');
+    dsLogicUndo:
+      begin
+        GRoutedPair := Pair;
+        Check((GRoutedPair <> GDefinitionPair) and
+          (Pos('.InputEventDetails(', GStudio.ProjectSnapshot.Source) > 0) and
+          (Pos('.OutputState(', GStudio.ProjectSnapshot.Source) > 0),
+          'ordinary Apply publishes the typed Details-to-state route with its Pascal');
+        Check((SnapshotNode('directory') = GDefinition) and
+          (SnapshotNode('second-directory') = GOther),
+          'local event wiring preserves the reusable definition and sibling');
+        Click('action-undo');
+      end;
+    dsLogicRedo:
+      begin
+        Check(Pair = GDefinitionPair, 'one route Undo restores the exact unwired source/design pair');
+        Click('action-redo');
+      end;
+    dsLogicClose:
+      begin
+        Check(Pair = GRoutedPair, 'one route Redo restores the complete wired pair');
+        GDefinitionPair := GRoutedPair;
+        Click('action-logic-close');
+      end;
+    dsPreviewPanel:
+      begin
         DesignPanel;
       end;
     dsPreviewStart: Click('action-preview');
     dsPreview:
       begin
-        ExerciseRecords(GStudio.CanvasView);
+        {$ifdef PAS2JS}await(ExerciseRecords(GStudio.CanvasView));
+        {$else}ExerciseRecords(GStudio.CanvasView);{$endif}
         Check(Pair = GDefinitionPair, 'Interact does not replace authored collection defaults');
         Click('action-preview');
       end;
@@ -774,7 +1009,7 @@ begin
     GStage := Succ(GStage);
   end;
 end;
-procedure Finish;
+procedure Finish; {$ifdef PAS2JS}async;{$endif}
 var
   LPair: TNyxProjectPair;
   LDocument: TNyxDocument;
@@ -795,7 +1030,8 @@ begin
   try
     Check(EncodeNyxProject(LResolved) = GSaved,
       'independent complete source/design admission preserves the saved project exactly');
-    ApplicationProof(LDocument);
+    {$ifdef PAS2JS}await(ApplicationProof(LDocument));
+    {$else}ApplicationProof(LDocument);{$endif}
   finally
     LWorkspace.Free;
     LDocument.Free;
@@ -803,9 +1039,12 @@ begin
 end;
 
 {$ifdef PAS2JS}
-procedure Drive;
+{ One awaited controller loop prevents another stage or cleanup from overtaking
+  a suspended physical Edit proof. Source exchange keeps its existing gates. }
+procedure Drive; async;
 begin
-  try
+  while not GFinished do
+  begin
 
     if GExchange.RequestPending then
     begin
@@ -821,33 +1060,66 @@ begin
       raise Exception.Create('MasterDetail Studio timed out');
     end;
 
-    if GStudio.SourceBusy or GStudio.PresentationPending or not GStudio.SharedSourceSynchronized then
+    if not GStudio.SourceBusy and not GStudio.PresentationPending and
+      GStudio.SharedSourceSynchronized then
     begin
-      window.setTimeout(@Drive, 20);
-      Exit;
+      await(Stage);
     end;
-    Stage;
 
-    if GFinished then
+    if not GFinished then
     begin
-      Finish;
-      document.body.setAttribute('data-master-detail-studio', 'passed');
-      document.body.setAttribute('data-master-detail-checks', IntToStr(GChecks));
-    end
-    else
-    begin
-      window.setTimeout(@Drive, 20);
+      await(TJSPromise.resolve(YieldUI));
     end;
-  except
-    on E: Exception do
-    begin
-      document.body.setAttribute('data-master-detail-studio', 'failed');
-      document.body.setAttribute('data-master-detail-error', E.Message);
+  end;
+  await(Finish);
+end;
+
+{ In compiled mode this frame owns BuildNyxDocument across the entire awaited
+  application proof. No program-tail free can retire the document prematurely. }
+procedure RunBrowser; async;
+var
+  LDocument: TNyxDocument;
+  LPair: TNyxProjectPair;
+begin
+  LDocument := nil;
+  try
+    try
+      {$ifdef NYX_COMPILED_MASTER_DETAIL}
+      GSaved := document.getElementById('expected-project').textContent;
+      LPair := DecodeNyxProject(GSaved);
+      LDocument := BuildNyxDocument;
+      Check(TNyxCodec.Encode(LDocument) = LPair.Design,
+        'compiled designer output reconstructs the exact saved Studio design');
+      await(ApplicationProof(LDocument));
+      {$else}
+      LDocument := Fixture;
+      LPair := NyxProjectPair(TNyxCodec.Encode(LDocument),
+        TNyxCodegen.Generate(LDocument, 'nyx.generated.master.detail'));
+      FreeAndNil(LDocument);
+      GFiles := TProjectFiles.Create;
+      GFileLease := GFiles;
+      GStarted := TJSDate.now;
+      GCore := TNyxAgentSession.Create(LPair);
+      GStudio := TWorkshopStudio.Create;
+      GStudio.Run(False);
+      GStudio.ConnectAgents;
+      await(Drive);
+      {$endif}
+    finally
       FreeAndNil(GStudio);
       GExchange := nil;
       FreeAndNil(GCore);
       GFileLease := nil;
       GFiles := nil;
+      LDocument.Free;
+    end;
+    document.body.setAttribute('data-master-detail-studio', 'passed');
+    document.body.setAttribute('data-master-detail-checks', IntToStr(GChecks));
+  except
+    on E: Exception do
+    begin
+      document.body.setAttribute('data-master-detail-studio', 'failed');
+      document.body.setAttribute('data-master-detail-error', E.Message);
     end;
   end;
 end;
@@ -872,15 +1144,31 @@ begin
     end;
   until not GStudio.SourceBusy and not GStudio.PresentationPending;
 end;
-{$endif}
 
+{ Owners are already revoked/freed before this drain. Cancelled scheduler
+  couriers still need their ordinary UI delivery to release their work leases. }
+procedure DrainCancelledUI;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  while CheckSynchronize(0) do
+  begin
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Cancelled native UI couriers did not retire');
+    end;
+  end;
+end;
+
+procedure RunNative;
 var
   LDocument: TNyxDocument;
   LPair: TNyxProjectPair;
 begin
   LDocument := nil;
   try
-    {$ifndef PAS2JS}
 
     if ParamCount < 2 then
     begin
@@ -892,27 +1180,18 @@ begin
     Application.Initialize;
     GObserver := TFailureObserver.Create;
     Application.OnException := GObserver.Failed;
-    {$endif}
     {$ifdef NYX_COMPILED_MASTER_DETAIL}
-    {$ifdef PAS2JS}
-    GSaved := document.getElementById('expected-project').textContent;
-    {$else}
 
     if ParamCount <> 3 then
     begin
       raise Exception.Create('Compiled companion needs its exact pinned accepted project packet');
     end;
     GSaved := ReadNyxTextFile(ParamStr(3)).Text;
-    {$endif}
     LPair := DecodeNyxProject(GSaved);
     LDocument := BuildNyxDocument;
     Check(TNyxCodec.Encode(LDocument) = LPair.Design,
       'compiled designer output reconstructs the exact saved Studio design');
     ApplicationProof(LDocument);
-    {$ifdef PAS2JS}
-    document.body.setAttribute('data-master-detail-studio', 'passed');
-    document.body.setAttribute('data-master-detail-checks', IntToStr(GChecks));
-    {$endif}
     {$else}
     LDocument := Fixture;
     LPair := NyxProjectPair(TNyxCodec.Encode(LDocument),
@@ -920,14 +1199,6 @@ begin
     FreeAndNil(LDocument);
     GFiles := TProjectFiles.Create;
     GFileLease := GFiles;
-    {$ifdef PAS2JS}
-    GStarted := TJSDate.now;
-    GCore := TNyxAgentSession.Create(LPair);
-    GStudio := TWorkshopStudio.Create;
-    GStudio.Run(False);
-    GStudio.ConnectAgents;
-    Drive;
-    {$else}
     GForm := TForm.CreateNew(nil);
     GForm.ClientWidth := GWidth;
     GForm.ClientHeight := 900;
@@ -944,29 +1215,44 @@ begin
     end;
     Finish;
     {$endif}
-    {$endif}
-    {$ifndef PAS2JS}
-    WriteLn('PASS ', GChecks, ' ordinary MasterDetail Studio/application checks / width=', GWidth);
-    {$endif}
   except
     on E: Exception do
     begin
-      {$ifdef PAS2JS}
-      document.body.setAttribute('data-master-detail-studio', 'failed');
-      document.body.setAttribute('data-master-detail-error', E.Message);
-      {$else}
       WriteLn('FAIL ', E.Message, ' / checks=', GChecks);
       DumpExceptionBackTrace(Output);
       ExitCode := 1;
-      {$endif}
     end;
   end;
-  {$ifndef PAS2JS}
   FreeAndNil(GStudio);
   FreeAndNil(GForm);
+  FreeAndNil(LDocument);
+  try
+    DrainCancelledUI;
+
+    if (GObserver <> nil) and (GObserver.Error <> '') then
+    begin
+      raise Exception.Create('MasterDetail native callback: ' + GObserver.Error);
+    end;
+  except
+    on E: Exception do
+    begin
+      WriteLn('FAIL ', E.Message, ' / native teardown');
+      ExitCode := 1;
+    end;
+  end;
   Application.OnException := nil;
   FreeAndNil(GObserver);
   GFileLease := nil;
-  {$endif}
-  LDocument.Free;
+  GFiles := nil;
+
+  if ExitCode = 0 then
+  begin
+    WriteLn('PASS ', GChecks, ' ordinary MasterDetail Studio/application checks / width=', GWidth);
+  end;
+end;
+{$endif}
+
+begin
+  {$ifdef PAS2JS}RunBrowser;
+  {$else}RunNative;{$endif}
 end.

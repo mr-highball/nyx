@@ -52,10 +52,42 @@ The adapters capture before callback scheduling. A conflicting structured payloa
 refuses replacement; unrelated events retain their payload. Disconnect/replacement
 revokes the old binding and its weak input ports.
 
-Structured Edit data is currently available to callbacks through this reader.
-Automatic semantic flow/Tool Canvas port discovery remains a separate
-[required follow-up](../TODO/NS-4_master-detail-events_01.md); callback delivery
-does not establish that authoring integration.
+`NyxEventsMetadata` preserves the original scalar Value contract.
+`NyxEventDetailsMetadata` independently describes structured Details over the
+same checked event and route identities. A configured Edit role advertises an
+owned object; its explicit scalar contract, if present, remains available too.
+Static or Disabled recipes do not acquire that object guarantee. Same-name
+producers with different contracts retain their individual route facts and no
+uniform aggregate guarantee. Discovery does not grant custom `Emit` authority.
+
+The Events Inspector shows and searches Details independently. The public Logic
+route form offers **Event details**, and Tool Canvas discovery exposes a separate
+JSON output alongside invocation signals and any scalar Value output. Select the
+exact named Edit descriptor when a larger compound has mixed same-name sources.
+
+A route can format the complete captured record into existing bound text:
+
+```pascal
+LDocument.State.SetValue(NyxTextState('record-preview'), 'Choose a person to review.');
+LDocument.Flows.Define(NyxFlowRef('Review record'), NewNyxFlowGraph.WithStep(
+  NyxFlowStep('preview'), NewNyxJSONFormat(njlIndented, 2)).Build);
+SetNyxFlowRoutes(LDirectory, NewNyxFlowRoutes.WithRoute(
+  NyxNamedFlowRoute(NyxFlowRouteID('review'), NyxFlowRef('Review record'),
+    NyxSemantic(nseEdit), nfcmAfterDispatch)
+    .InputEventDetails(NyxFlowEndpoint(NyxFlowStep('preview'), NyxLogicPort(nlpJSON)),
+      NyxResourcePath)
+    .OutputState(NyxFlowEndpoint(NyxFlowStep('preview'), NyxLogicPort(nlpText)),
+      NyxTextState('record-preview'))));
+LMemo := NewNyxMemo('record-preview-memo');
+LMemo.Configure.ReadOnly(True).Done;
+LMemo.Binds.Value(NyxTextState('record-preview')).Done;
+```
+
+The graph captures the event's owned Details before submission. UI publication
+is a separate scheduled step even with sequential computation; observe the
+published state or completion instead of reading a result inside the click.
+The [integration task](../TODO/NS-4_master-detail-events_01.md) tracks ordinary
+Studio/save/generated application qualification and its platform limits.
 
 Studio composes the reusable Nyx-built `NewNyxMasterDetailEditor`. Its two mapped
 field drafts share the existing inspector draft lifecycle. **Apply detail fields**,
@@ -69,13 +101,13 @@ in that existing workflow, rather than duplicated by this form.
 ./tools/build.ps1 -Target master-detail -MasterDetailEvidenceDirectory <new-directory>
 ```
 
-The maintained target runs focused policy/runtime/editor consumers and the full
+The maintained target runs focused policy/runtime/editor/event/route/port consumers and the full
 native Studio journey at desktop and compact widths. It compares exact saved
 project/Pascal bytes and compiles the saved unit into independent applications.
 Browser consumers and the exact generated companion are staged for separate
 execution; this target starts no listener.
 
-Current local qualification is 62 runtime checks, 63 public editor checks,
+The preceding runtime checkpoint qualified 62 runtime checks, 63 public editor checks,
 ordinary native Studio/application 106 at 1280 and 114 at 390, exact saved compiled
 application 30/30 and existing actual Kanban regression 98/98, all with clean heaps.
 The native queued Edit check captures one record before selecting another and
@@ -83,5 +115,9 @@ delivers the original typed item/revision afterward. Nine accepted compiler logs
 contain zero Nyx warnings; 28 upstream pas2js RTL warnings remain separately
 identified. Browser consumers compile only in this packet. See
 [the work record](../WORK.md#selected-record-masterdetail-checkpoint--2026-10-21).
+The independent channel integration additionally passes 687 native semantic/
+Inspector checks, 85 public route checks and 289 Tool Canvas/port checks with
+clean heaps. Its ordinary saved/generated journey is still in qualification;
+these focused results do not establish asynchronous application completion.
 Browser input, hardware/assistive quality, other widgetsets/DPI, production
 performance and full component/parity acceptance remain open.
