@@ -23,15 +23,27 @@ native boundary without a production repair. Source/default exports match widths
 they are not Save/Open or compiled-application proof. Independent review retains
 one corrected private command-metadata failure, zero product failures and no
 rerun. [WORK.md](../WORK.md#reusable-ordinary-application-result--2026-10-21) owns
-the exact audit/receipts. R2 and R3 remain open; none of this task's complete
-original criteria or parent/browser gates is accepted by compilation alone.
+the exact audit/receipts. At that checkpoint R2/R3 remained open; none of this
+task's complete original criteria or parent/browser gates is accepted by
+compilation alone.
+
+R2 native-local result (2026-10-21): the same maintained command preserves those
+267 original checks and passes588 aggregate checks at each1280/390 allocation,
+both clean heaps. Saved Canvas input, fixed parent caller snapshots, late
+registration, explicit/empty/nil child overrides, refusal/replacement and
+independent lifetimes qualify the local packet. Matching browser assertions
+compile only. Original and separate embedded exports match widths; neither is
+Save/Open or compiled-export evidence. Audit90689991 and independent review retain
+the first missing-import/Scene compiler failure and exact unchanged compatibility.
+[WORK.md](../WORK.md#embedded-application-native-local-result--2026-10-21) owns the
+composite result. R3 and all complete original criteria remain open.
 
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
 | --- | --- | --- |
 | R1 — Reusable application | Two reusable instances in each of two ordinary App objects share authored definitions but isolate Summary, MasterDetail and Kanban runtime stores/claims and exact typed lookup | Accepted registration/MasterDetail/Kanban. Root owns maintained build/docs; helper receives only the separately released ordinary application consumer. Existing App.View.CoordinatorRegistry before native Mount/browser Run is sufficient; no host API change is required. |
-| R2 — Embedded application | Existing SetupCanvas/content mounts inherit a fixed caller snapshot; explicit caller override, including empty caller membership, has a documented policy; automatic built-ins compose separately | R1. Root owns renderer/canvas propagation; helper owns the same ordinary App consumer under a separate release. Every child retains its own future event generation and weak refresh. Failed/same-ID replacement and disposal preserve the accepted owner and revoke old commands. |
+| R2 — Embedded application | Existing SetupCanvas/content mounts inherit a fixed caller snapshot; explicit caller override, including empty caller membership, has a documented policy; automatic built-ins compose separately | R1. Root owns propagation in the two existing renderers only; no canvas-unit or host change is released. Helper owns the same ordinary App consumer under a separate release. Refusal preserves the accepted owner; successful replacement/disposal revokes the former commands. Stop at actual native embedded behavior plus matching browser compilation; R3 retains browser execution. |
 | R3 — Both-host acceptance | The same useful reusable/embedded application executes native and admitted-browser input/lifetime cases | R1/R2 and the external browser-session gate. Root owns session admission and evidence; helper reviews the same consumer/assertions. Native clean heaps and matching browser compiles are intermediate evidence; actual browser execution is still required by criterion5. This packet authorizes no new host/tool attempt. |
 
 Root reviews registry inheritance/override and child lifetime before either source
@@ -41,6 +53,51 @@ not a reason for a second
 registry or event engine. Finish R1 before R2 and retain actual refusal results.
 The missing admitted browser session is R3's explicit external gate. Compilation
 cannot close05, parent01 or their downstream acceptance. No task credit is added.
+
+**Pull checklist — R2:**
+
+Status on 2026-10-21: native-local qualified588/588 with clean heaps and matching
+browser compilation. Production and repaired consumer remain exact from the
+reviewed freeze. The first compile's missing direct import/six optional Scene
+accesses remain retained; only that narrow repair changed afterward. Existing
+unchanged creator/publication/Studio evidence is reused with exact dependencies.
+Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
+
+- An ordinary App mounts saved Canvas content containing creator Summary,
+  MasterDetail and Kanban behavior. Real child input changes only its own stores;
+  parent/peer data, authored definitions and defaults stay exact.
+- A later parent registry registration cannot change accepted child membership
+  or a replacement child inherited from that same accepted parent. The next
+  ordinary parent candidate captures the new membership.
+- Child explicit nonempty, explicit empty and nil registry settings take effect
+  on its next real candidate. Empty suppresses inherited caller factories only;
+  automatic built-ins remain available. A structural presentation remount from
+  the child's own retained blueprint/bindings retains its stores. Scene content
+  replacement creates a distinct child lifetime and promises no store migration.
+- A refused child replacement leaves the previous root, generation, input and
+  commands usable. Successful child-only replacement/remount revokes the old
+  generation and commands without retiring its parent or an independent peer.
+  App navigation/disposal intentionally retires its own parent and descendants;
+  the independently owned other App remains usable.
+- The original R1 journey/assertions/waits and its own exports remain intact.
+  Separate embedded exports cannot be presented as Save/Open or independent
+  generated-application evidence. Native clean heaps and browser compilation
+  complete only R2's local boundary; the complete task stays open for R3.
+
+**Pull checklist — R3:**
+
+Status: externally gated. An admitted browser host/session must exist before
+execution; this card authorizes no host/config retry or rollout.
+
+- Execute the same useful reusable/embedded application through actual browser
+  input, including independent instances, refusal, replacement, stale commands
+  and disposal. Retain the same assertions and completion-aware ownership.
+- Compare those results with the applicable native journey and document remaining
+  input/platform differences. Preserve failed cases rather than replacing them
+  with compile-only evidence or a simpler application.
+- Review all five acceptance criteria below against that combined evidence and
+  publish the supported creator/inheritance contract. Unmet reentrancy/lifetime
+  or target behavior returns to its existing owner before05 can be accepted.
 
 R1 uses twelve instance stores across three data compounds, two occurrences and
 two App objects. Resolve nested named roles from the actual realized workspace;

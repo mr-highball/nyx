@@ -379,6 +379,13 @@ type
       Built-ins compose through that same immutable membership and lifetime;
       accepted ports revoke before DOM, with cleanup deferred past adoption. }
     FCoordinatorRegistry: INyxCoordinatorRegistry;
+    { Copied caller membership inherited from the exact parent candidate. It
+      retains factories, never a parent renderer, and survives our Unmount as
+      configuration. An explicit nonnil registry, even empty, replaces this input. }
+    FInheritedCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
+    { Caller-only membership for this staging/accepted view. Descendant mounts
+      use this fixed lease, never a mutable registry or composed built-ins. }
+    FCallerCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
     FCoordinatorMounts: TNyxCoordinatorMounts;
     FCoordinatorIDs: TNyxCoordinatorMountIDs;
     { The managed target owns no renderer. Revoked before destructor callouts;
@@ -574,8 +581,10 @@ type
     function KanbanBinding(const AID: TNyxText): INyxKanbanBinding;
     function MasterDetailBinding(const AID: TNyxText): INyxMasterDetailBinding;
     function CoordinatorBinding(const AID: TNyxText): INyxCoordinatorBinding;
-    { Register trusted Pascal factories before the next Render. Changing this
-      lease never rewrites a mounted snapshot or loads code from project data. }
+    { Register trusted Pascal factories before the next candidate. Nil inherits
+      an embedded parent's fixed caller snapshot; nonnil, including empty,
+      overrides callers only. Built-ins compose independently. Changes never
+      rewrite a mounted snapshot or load code from project data. }
     property CoordinatorRegistry: INyxCoordinatorRegistry
       read FCoordinatorRegistry write FCoordinatorRegistry;
     { Move a mounted view without recreating controls or bindings. Caller owns
@@ -1154,8 +1163,11 @@ var
   LIndex: Integer;
   LRetiringCoordinators: TNyxCoordinatorMounts;
   LRetiringSource: INyxViewPublicationSource;
+  LRetiringCallerSnapshot: INyxCoordinatorRegistrySnapshot;
 begin
   LRetiringSource := FViewPublicationSource;
+  LRetiringCallerSnapshot := FCallerCoordinatorSnapshot;
+  FCallerCoordinatorSnapshot := nil;
   FUpdating := True;
   RevokeNyxCoordinatorMounts(FCoordinatorMounts);
   LRetiringCoordinators := nil;
@@ -1328,7 +1340,12 @@ begin
   try
     DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
   finally
-    LRetiringSource := nil;
+    try
+      { Keep factories leased until every old child/control link is retired. }
+      LRetiringCallerSnapshot := nil;
+    finally
+      LRetiringSource := nil;
+    end;
   end;
 end;
 
@@ -2502,6 +2519,8 @@ var
   LCoordinatorRegistry: INyxCoordinatorRegistry;
   LBuiltInCoordinators: INyxCoordinatorRegistry;
   LCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
+  LCallerCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
+  LFormerCallerCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
   LCoordinatorTarget: INyxCoordinatorRefreshTarget;
   LCommitted: Boolean;
   LSource: INyxViewPublicationSource;
@@ -2607,6 +2626,12 @@ var
     except
       on E: Exception do RememberCleanupFailure(E);
     end;
+    try
+      { Release displaced factory leases outside the pure adoption boundary. }
+      LFormerCallerCoordinatorSnapshot := nil;
+    except
+      on E: Exception do RememberCleanupFailure(E);
+    end;
     { Only local leases are used after commit. Every independent cleanup and
       notification gets an attempt. The first diagnostic describes committed
       data, never rollback; later failures cannot skip a required retirement. }
@@ -2677,6 +2702,8 @@ begin
   { Capture once before any factory callout, including hidden settling passes.
     A registration made by a creator belongs to a later Render operation. }
   LCoordinatorRegistry := FCoordinatorRegistry;
+  LCallerCoordinatorSnapshot := FInheritedCoordinatorSnapshot;
+  LFormerCallerCoordinatorSnapshot := FCallerCoordinatorSnapshot;
   LCoordinatorTarget := FCoordinatorRefreshTarget;
   LCoordinatorSnapshot := nil;
 
@@ -2696,7 +2723,10 @@ begin
 
   if LCoordinatorRegistry <> nil then
   begin
-    LCoordinatorSnapshot := LCoordinatorRegistry.Snapshot;
+    { Normalize alternate snapshots before keeping caller-only membership for
+      later embedded mounts. No mutable registry survives through this field. }
+    LCallerCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(nil,
+      LCoordinatorRegistry.Snapshot);
   end;
   { Built-ins and caller behavior share one immutable membership and prepared
     lifetime. Authored applications keep their automatic registrations. }
@@ -2706,7 +2736,7 @@ begin
   LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkKanbanBoard)),
     NyxExtension(NyxKanbanIntentKey), NewNyxKanbanCoordinatorFactory);
   LCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(
-    LBuiltInCoordinators.Snapshot, LCoordinatorSnapshot);
+    LBuiltInCoordinators.Snapshot, LCallerCoordinatorSnapshot);
   try
   try
 
@@ -2722,6 +2752,8 @@ begin
     end;
     repeat
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
+      { Build may mount saved canvases before this outer candidate commits. }
+      LCandidate.FCallerCoordinatorSnapshot := LCallerCoordinatorSnapshot;
 
       if AResourceMode = nrmConfigured then
       begin
@@ -3149,6 +3181,8 @@ begin
     FLiveBindings.OnValueSync := @SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
+    FCallerCoordinatorSnapshot := LCandidate.FCallerCoordinatorSnapshot;
+    LCandidate.FCallerCoordinatorSnapshot := nil;
     FCoordinatorMounts := LCandidate.FCoordinatorMounts;
     FCoordinatorIDs := LCandidate.FCoordinatorIDs;
     LCandidate.FCoordinatorMounts := nil;
@@ -3500,6 +3534,7 @@ begin
     { Executable registration can change independently of scalar source. Keep
       such candidates on the complete prepared path, including first adoption. }
     (FCoordinatorRegistry <> nil) or
+    (FInheritedCoordinatorSnapshot <> nil) or (FCallerCoordinatorSnapshot <> nil) or
     (FDesignMode <> ADesignMode) or
     ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady and
       (not FDesignMode or FLiveBindings.HasBindings)) or
@@ -7835,6 +7870,9 @@ end;
 
 procedure TNyxBrowserBinding.SetupCanvas(ARenderer: TNyxBrowserRenderer);
 begin
+  { Children compose their own built-ins. A later parent registration cannot
+    rewrite this accepted membership; an explicit child registry still wins. }
+  ARenderer.FInheritedCoordinatorSnapshot := FRenderer.FCallerCoordinatorSnapshot;
   ARenderer.FFactoryKinds := Copy(FRenderer.FFactoryKinds, 0, Length(FRenderer.FFactoryKinds));
   ARenderer.FDrawingNames := Copy(FRenderer.FDrawingNames, 0, Length(FRenderer.FDrawingNames));
   ARenderer.FDrawingProviders := Copy(FRenderer.FDrawingProviders, 0, Length(FRenderer.FDrawingProviders));

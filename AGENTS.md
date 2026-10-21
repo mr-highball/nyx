@@ -1,5 +1,106 @@
 # Working in Nyx
 
+COORDINATOR05 R2 NATIVE-LOCAL QUALIFIED (2026-10-21): maintained reuse passes588
+actual native checks at1280/390, preserving the original267 prefix/assertions;
+both heaps are clean. Matching browser assertions compile only. Final90689991
+audit and independent root/helper review verify53 owned/1782 Pascal/concurrent13/
+47 extras (39 before eight own exports), all actual readers joined6374 terminal0.
+Ten accepted compilers/one retained first failure have zero owned/35 upstream RTL
+warning occurrences; unchanged compatibility8 compilers/five native outcomes are
+reused, not repeated. R2's fixed inherited caller membership, real child override/
+refusal/replacement/input/built-in isolation and lifetime cases qualify locally.
+R1 exports79EF/E610 and embedded0F3F/90FA match both widths; these are authored/
+default exports, not Save/Open or compiled-export proof. Production5C037EEC/
+9C89C990 and consumerE60C4523 stay exact from the repaired freeze. Retain initial
+missing-import/Scene compiler failure and audit receipt-schema normalization.
+No05/parent/browser/original criterion/credit/DONE closes; no-closure15→16 carries.
+Root owns docs/checkpoint only, all Pascal stays paused. Next is R3 actual-browser
+input/lifetime, not another native/fixture/compiler variant. A single temporary
+loopback-host/browser override was asked; it is pending, not authorization. Preserve
+offline LAN/no native Nyx tools, concurrent13, deferred resolver14/splitter and no
+host/config retry, cleanup/restart, new MCP/tool/wire rollout or extra agent until
+an explicit applicable user override. Q1 owner design is read-only/downstream.
+
+COORDINATOR05 R2 NARROW REPAIR REVIEWED (2026-10-21): the previous goal turn is
+progress: six remaining backlog packets now have independently reviewed pull
+checklists; no original criterion/credit/counter changed. Root independently
+reviewed E60C4523 against1609FAC5: only direct root.types import, optional runtime
+Supports/local and six Scene accesses changed. Original R1 Check-through-export
+30066-character region stays exact; all1782 Pascal inputs match that repair plus
+the original frozen production. Both renderer hashes5C037EEC/9C89C990 stay exact.
+Freeze all53 owned/1782 Pascal/concurrent13/extra39 before admitting ONLY maintained
+coordinator-reuse: native compile, actual1280/390 application runs, matching browser
+compile. Reuse the exact eight accepted compatibility compilers/five clean native
+outcomes from487CAC1D; keep its first failed compiler. Root owns every actual
+handle/join/audit. Pause all Pascal/guides through terminal join and exact audit.
+Existing helper has only read-only Q1 owner design; no source/extra agent/host
+scope follows. Stop at this actual repaired R2 result, retaining failures. R3,
+complete05/parent/DataToolbar/original criteria remain open; no host/config retry,
+cleanup/restart or new MCP/tool/wire rollout. WORK/private records own receipts.
+
+BACKLOG REFINEMENT COMPLETE (2026-10-21): latest user steering owns this batch.
+All initial R2 readers are joined; helper's narrow repair E60C4523 is source-ready,
+not qualified. Root may edit only this handoff, WORK and the existing coordinator
+01/05 and DataToolbar01/02 task definitions to clarify their granular outcomes,
+dependencies, finish lines and current readiness. Existing helper reviews these
+read-only. Six remaining packet checklists and joint parent acceptance are clear;
+41 relative links pass, scoped dependencies are acyclic, all1782 current Pascal
+and concurrent13 pins are exact. No new identity, credit or source/compiler/host
+release follows.
+Both renderer hashes5C037EEC/9C89C990 and every Pascal input stay exact, including
+the repaired consumer. Preserve initial487CAC1D audit/failure, concurrent13 and
+all original browser/parent/DataToolbar gates. After backlog checks, return to
+independent narrow repair review and a separate freeze before its existing bounded
+two-compiler/two-native-width admission; do not repeat unchanged compatibility.
+
+COORDINATOR05 R2 CONSUMER REPAIR RELEASED (2026-10-21): all initial readers are
+terminal/joined and audit487CAC1D pins53owned/1782Pascal/concurrent13/extra39.
+Both Studio compilers and existing creator171/68/68 plus publication136/136 pass,
+all five native heaps clean; eight accepted compilers have zero owned/28 upstream
+warnings. First new consumer native compile fails seven diagnostics: missing
+nyx.root.types import and six Scene accesses through the base platform interface.
+Retain1609FAC5 source, original terminal/log and absence of native/browser runs.
+Root owns docs/admission only; BOTH RENDERERS and every other Pascal input remain
+exact5C037EEC/9C89C990. Existing helper may change ONLY the new consumer's direct
+nyx.root.types import and ReplaceItem's local INyxCanvasRuntimeView acquisition
+via Supports, using that optional interface for the six Scene accesses. No API,
+fixture/assertion/wait or original R1 change follows. Review/freeze precedes a
+bounded repair admission: reuse native compile/two widths and matching browser
+compile only. Reuse exact other product/creator/publication evidence; do not
+repeat unchanged consumers. Ten accepted compilers plus the retained first failed
+compiler are the possible composite, not ten attempts. No browser execution,
+R3/host/config retry, cleanup/restart, new tool/extra agent or original closure.
+
+COORDINATOR05 R2 SOURCE RELEASED (2026-10-21): prior410a33c is progress,
+committed/pushed/remote-verified. All actual readers are joined. Root owns ONLY
+both renderers' private inherited/accepted CALLER snapshots, candidate/transfer/
+Clear leases, SetupCanvas propagation and existing TryRefresh guards, plus build
+and guides. Existing Lil' Scooty owns ONLY tests/nyx_coordinator_reuse_controls.lpr
+R2 extensions; preserve the existing R1 Fixture/Cases/assertions/waits and its own
+emitted artifacts. No common ABI, app host, canvas unit, include or other consumer
+scope is released. Canonical caller membership is copied before outward Build/
+factory calls, kept on the staging and accepted owner, and passed as caller-only
+inherited configuration. Child explicit nonnil registry (including empty) wins
+over inheritance; child built-ins compose independently. Keep displaced snapshots
+leased through teardown/adoption; no final-transfer destructor callout follows.
+Inherited configuration survives Unmount; accepted caller ownership retires.
+
+Actual ordinary App saved canvases and runtime Scene content publication prove
+new/replaced embedded children still inherit the accepted parent membership after
+its mutable registry changes; next App.ShowPage captures the new membership.
+Use child Presentations.Select/Automatic with preauthored structural content to
+exercise explicit/empty/nil override from its OWN retained source/bindings, never
+an invented child context or manual coordinator attachment. Prove independent
+child generations/input/MD/Kanban, refusal/replacement/late-command/disposal and
+exact authored/peer defaults. Root reviews both source handoffs and freezes all
+inputs before admission. Planned fixed budget: maintained reuse2 compilers/two
+native widths, existing creator4/three native outcomes, publication2/two native
+widths and both Studio compilers2; native UI runs sequentially. No compiler is
+released yet. R3/browser execution/05/parent/DataToolbar/original criteria stay
+open; no original credit/reset. Preserve concurrent13, deferred resolver14/splitter,
+offline LAN/no native Nyx tools and no extra agent, host/config retry, cleanup/
+restart or MCP/tool/wire rollout. WORK/private records own exact scopes/handles.
+
 COORDINATOR05 R1 LOCALLY QUALIFIED (2026-10-21): maintained coordinator-reuse
 passes267 actual native checks at1280 and390, both clean heaps; matching browser
 assertions compile only. Two ordinary Apps each mount two reusable workspaces,

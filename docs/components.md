@@ -403,14 +403,27 @@ applications before changing or freeing their borrowed document.
 `tools/build.ps1 -Target coordinator-reuse -CoordinatorReuseEvidenceDirectory <new directory>`
 executes this ordinary native application at1280/390 and compiles the matching
 browser assertions. It preserves separate width logs and starts no listener.
-[Reuse05](../TODO/NS-3_coordinators_05.md) retains embedded inheritance and real
-browser input/lifetime acceptance. [WORK.md](../WORK.md) records actual outcomes;
+[Reuse05](../TODO/NS-3_coordinators_05.md) retains full both-host reusable/embedded
+acceptance. [WORK.md](../WORK.md) records actual outcomes;
 the command and consumer source alone do not establish that acceptance.
-The current ordinary native application result is267/267 at1280/390 with clean
-heaps; matching browser assertions compile. Both compilers have zero Nyx warnings.
-Its identical emitted design/Pascal exports qualify authored/default isolation,
-not Save/Open or generated-application execution. Production Pascal is unchanged;
-embedded caller-registry propagation and actual browser execution remain open.
+The current ordinary native application result is588/588 at1280/390 with clean
+heaps, preserving the original267 reusable checks before the embedded cases.
+Matching browser assertions compile; both compilers have zero Nyx warnings.
+Its separate identical reusable/embedded design/Pascal exports qualify authored/
+default isolation, not Save/Open or generated-application execution. R2's local
+embedded adoption qualifies natively; actual browser input/lifetimes remain open.
+
+Embedded saved Canvas items inherit the parent's captured caller registration
+membership before Build. An accepted Canvas keeps that membership for later
+Scene content replacements; a mutable parent registry change belongs to the next
+parent candidate. Children compose their own built-ins. A child's explicit
+nonnil `CoordinatorRegistry`, including an empty registry, overrides caller
+membership only; nil restores inheritance for its next candidate. Each child
+keeps its own generation, collection authority and weak refresh. The
+[example's registry rules](../examples/selection-summary/README.md#embedded-registry-rules)
+describe the existing structural-presentation remount path without invented
+child source or a second state/event engine. [Reuse05](../TODO/NS-3_coordinators_05.md)
+owns the actual integration and target-execution evidence.
 
 ## Component discovery and creator descriptions
 

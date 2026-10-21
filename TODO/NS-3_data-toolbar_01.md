@@ -26,6 +26,40 @@ browser/parity gates stay visible. Source-ready or an isolated form pass cannot
 accept the complete authoring outcome. The existing runtime02 owns query/input
 semantics; Studio uses that owner rather than duplicating search/sort logic.
 
+**Pull checklist — A1:**
+
+Status: follows accepted query runtime02 and its coordinator prerequisites.
+Deliver a useful Nyx-built configuration form integrated into ordinary Studio.
+
+- Select a scoped List/Table and typed schema fields, comparison and order;
+  configure, disable or inherit through the same public form contract for whole
+  toolbars and named reusable instances.
+- Admit intent, the required Clear role and readable typed Pascal together in
+  one paired design/source history entry. A single Undo/Redo restores the entire
+  change; no intermediate toolbar with half its required parts may publish.
+- Preserve customized parts, captions, create/refresh callbacks, definition and
+  sibling ownership. Refuse stale selection, incompatible target/roles, pending
+  source and unfinished-peer draft changes without partial design/history edits.
+- Use runtime02's real Search/Sort/Clear behavior in preview. A passing isolated
+  form or source round trip alone does not complete this Studio integration.
+
+**Pull checklist — A2:**
+
+Status: follows A1. Use the actual ordinary Studio journey at desktop and390
+allocations; retain its own saved project and generated Pascal as a paired input.
+
+- Configure and use Search, Sort and Clear; exercise Disable/Inherit, Undo/Redo
+  and actual Save/Open while customized parts and independent instances survive.
+- Compile that journey's own exact generated source against its own saved
+  project, then run the resulting application and assert visible query behavior
+  and lifetime/refusal. A historical pair or in-memory export cannot replace it.
+- Compare both widths' saved bytes, retain handwritten source, and compile the
+  matching browser consumer with the same assertions and async owners. Keep
+  actual browser/parity requirements explicit; compilation supplies no input proof.
+- Review all five original criteria below with the current runtime/Studio/app
+  evidence. Stop at the actual integrated outcome and record any remaining gate;
+  do not expand passing fixtures to stand in for an unmet requirement.
+
 **Acceptance Criteria:**
 
 - Copied typed options identify the scoped target List/Table and schema-checked

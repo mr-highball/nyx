@@ -5,17 +5,32 @@
 ## Active priority — back to core Nyx (2026-10-20)
 
 Current task: [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md),
-R2 read-only blueprint/checkpoint after R1's qualified native application result.
-The prior goal turn is progress: scoped04 and the granular backlog are
-committed/pushed/remote-verified11a7a8a. R1 now passes267/267 actual native checks,
-clean heaps and matching browser compilation. No full original criterion/credit
-closes; core no-closure advances14→15. All actual readers are terminal/joined;
-root owns documentation/checkpoint only and all Pascal stays paused until a
-separate R2 source release. Resolver14/splitter and concurrent13 remain exact.
+R3's actual-browser gate after R2's native-local result. The previous goal turn
+is progress: six granular backlog checklists were independently reviewed without
+changing original criteria/dependencies or credit. The bounded repaired consumer
+now passes588/588 actual native checks, including the original267 prefix, with
+clean heaps; matching browser assertions compile. This is further progress but
+closes no full original criterion/credit. Core no-closure advances15→16 once.
+All actual readers are terminal/joined and exact audit90689991 plus independent
+helper review pass. Root owns only docs/checkpoint; all Pascal stays paused.
+The repaired consumer E60C4523 and renderers5C037EEC/9C89C990 stay exact from freeze.
+R1 checkpoint410a33c remains the prior pushed/remote-verified source baseline.
+Reassessment changes the next action to actual admitted-browser input/lifetimes,
+not another native fixture or compiler replay. A request for one temporary
+loopback Pascal host and desktop/compact browser run is pending; elapsed time
+does not grant it. No browser/host attempt occurs until the explicit override.
+The existing helper completed read-only Q1 owner design; implementation remains
+downstream of complete05 and the coordinator parent's joint acceptance.
+Resolver14/splitter and concurrent13 remain exact.
 LAN stays offline, native Nyx tools absent; no host/config retry, cleanup/restart,
 new MCP/wire rollout or extra agent.
 
-Reassessment changes the next deliverable to R2 renderer propagation, using R1's
+### Retained R2 preparation and first-attempt failure — 2026-10-21
+
+This block records the earlier source-ready/admission state and retained first
+failure. The current qualified R2 result and R3 return path are recorded below.
+
+Reassessment changed the next deliverable to R2 renderer propagation, using R1's
 actual outcome rather than another fixture/compiler variant. Common traversal already
 covers expanded reusable nodes; the missing seam is an immutable CALLER snapshot
 retained on candidate/accepted renderer before Build and inherited by SetupCanvas.
@@ -25,6 +40,105 @@ future event generation/weak refresh. R3 still requires actual admitted-browser
 execution. Compilation cannot close05, parent01 or downstream DataToolbar.
 The ten granular packets and all original criteria remain under their existing
 owners; no extra task identity or credit is introduced.
+
+R2 source release is bounded to inherited/accepted caller fields, immutable
+capture before Build, candidate/accepted transfer and Clear leases, SetupCanvas
+propagation and existing TryRefresh guards. No common ABI, application host,
+canvas-unit/include or other consumer is released. R1 Fixture/Cases/assertions/
+waits and its own exports remain intact. An additional immutable saved-canvas
+application uses ordinary Scene content plans and App.ShowPage to distinguish
+the accepted snapshot from later caller registration. Child explicit/empty/nil
+registry choices use Presentations.Select/Automatic with preauthored structural
+content, forcing the child's own retained blueprint to remount without invented
+source or bindings. Actual independent child input/generations and migrated
+built-ins retain refusal, retirement and source/default isolation requirements.
+
+Both source handoffs and independent review precede root freeze and compiler
+admission. The fixed planned budget is ten compilers/seven native outcomes:
+maintained reuse2/two widths, existing creators4/three outcomes, publication2/two
+widths and both Studio products2. Native UI runs remain sequential. Stop at that
+actual integration result and retain failures; R3's admitted-browser gate and
+complete05/parent/DataToolbar acceptance remain open. This release starts no
+compiler/host or new tool rollout.
+
+Initial R2 readers are joined/audited before repair. Both Studios compile, and
+existing creators171/68/68 plus publication136/136 pass with clean heaps. The
+new consumer native compiler retains seven diagnostics: a missing direct
+nyx.root.types import and six Scene accesses through the platform base interface,
+where Scene belongs to optional INyxCanvasRuntimeView. No native execution or
+browser compile occurred for that consumer. Audit487CAC1DA0997FA4E142FD63D229919AC5613597E4E3B6298096571D3CA21B5E
+retains all actual terminal handles, first source1609FAC5, log/receipt and exact
+53owned/1782Pascal/concurrent13/extra39 inputs. Eight accepted initial compilers
+have zero owned/28 upstream RTL warnings; all five native outcomes are clean.
+
+The separate repair release changed only that consumer's direct import and its
+existing ReplaceItem capability lookup: acquire INyxCanvasRuntimeView through
+Supports, then use its Scene for the six accesses. Helper source-ready hash
+E60C4523FE74140DB24CC871625740164959BE40395C7D2E9B8FCCA869E43A80 was unqualified
+at source-ready.
+Preserve every original predicate/wait, fixture, R1 body and emitted artifacts.
+Renderers stay exact; no product/public API repair is indicated. The user's
+backlog pass and independent repair review then completed. After freeze, only the
+repaired consumer's native compile/two widths and matching browser compile were
+admitted. Unchanged product/creator/publication evidence was reused with exact
+dependency pins. The planned composite was ten accepted compilers plus the retained first
+failed compiler; the first attempt is never relabeled as a successful run.
+
+### Embedded application native-local result — 2026-10-21
+
+The unchanged maintained coordinator-reuse command passes588 checks per actual
+1280/390 client allocation, with clean heaps. Each log first retains the original
+PASS267 and explicit R1-completed267 marker, then321 additional embedded checks.
+Ordinary saved Canvas children use the existing Scene content/layout publication,
+App.ShowPage and their own retained structural presentation sources; no manual
+coordinator, manufactured context, new canvas/host API or second engine supplies
+the result.
+
+Late registration on the parent's mutable registry leaves accepted children and
+subsequent Scene replacements on its accepted fixed caller membership. The next
+ordinary parent candidate captures the new membership. Child future-only, empty
+and nil overrides activate through structural presentation remounts, preserving
+four compatible stores. Empty caller membership retains live MasterDetail and
+Kanban behavior, including actual selection/Move. Canvas.InputFor and ordinary
+input/hidden selection/Clear work independently of parent and peer stores.
+
+Missing-role child replacement refuses while preserving Scene/presentation
+revision, root, event generation, physical input and live commands. Accepted
+Scene replacement revokes old custom/detail/card commands but defines a distinct
+child lifetime without store-migration promise. Child structural remount preserves
+its own stores; parent navigation/disposal intentionally retires owned descendants
+while the independent other App remains usable. Definitions/defaults/source stay
+exact before and after all actions.
+
+Final immutable audit906899912C72DA8CCF60DC63BA8FF3DB506621B9CFE5AE7654AE7EC869D0C8F7
+pins53 owned source files/current+retained copies,1782 Pascal inputs,13 concurrent
+planning files and47 extras (39 initial plus eight current exports). Actual
+maintained session6374 returned0 and joined; no matching consumer remains live.
+Both native heaps are clean:19,652,636 and19,652,709 blocks all freed. Root/helper
+independent source/assertion, receipt, log, artifact and export review passes.
+
+The composite has10 accepted compilers of11 attempts, zero owned/35 repeated
+upstream pas2js classes.pas warnings, and seven clean native outcomes. Eight
+unchanged product/creator/publication compilers and five native outcomes are reused
+against exact dependencies. The first missing direct import/optional Scene access
+compiler failure remains retained, with no runtime/browser result. One audit
+preparation assumed maintained receipt exit rather than generic compileExit;
+it stopped before writing an audit. Explicit schema normalization changed no
+receipt/source or qualification and caused no compiler/runtime replay.
+
+Both widths retain the original79EFA805 design/E610B98F Pascal exports and their
+own additional0F3F7920D8F0C827393F1A800E9E4E7C45B27946B4255CE73DE5F384735883C3
+embedded design/90FA30739B3E67CB29952B05F9CB09532DB92BAA8003F01F966EF6B81DDBFCCA
+Pascal. They prove authored/default isolation only, not Save/Open or independent
+compiled generated application behavior. The repaired E60C4523 source and both
+production renderers stay exact from the reviewed repaired freeze. Ignored
+.local/master-detail-events-paths-private.json owns exact paths/receipts.
+
+R2 is native-locally qualified; reuse05 stays open. R3 actual-browser execution,
+parent integration, downstream DataToolbar and original parity/authoring/delivery
+criteria retain their complete requirements. Stop R2 source/fixture/compiler
+variants. The next concrete outcome is R3, currently gated by the explicit
+no-browser/host boundary; one bounded local-run override is pending with the user.
 
 ### Reusable ordinary application result — 2026-10-21
 
@@ -404,33 +518,57 @@ its own saved application adoption. Each packet names ownership, prerequisites,
 observable evidence and a finish line; none is a new credit-bearing task.
 After04 acceptance, K1–K3 remain accepted history. The seven packets below formed
 the implementation queue, with canonical definitions in the linked tasks. R1 is
-now native-locally qualified; the six R2–A2 packets remain, including actual
-browser execution before complete acceptance:
+now native-locally qualified and R2 has its588/588 native-local result; the five
+later R3–A2 packets remain, including actual browser execution before complete
+acceptance:
 
-| Next | Outcome | Canonical task |
-| --- | --- | --- |
-| R1 native-local qualified | Reusable controls stay independent in two ordinary applications | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
-| R2 | Embedded views inherit a fixed caller registry with explicit overrides | [Embedded behavior](TODO/NS-3_coordinators_05.md) |
-| R3 | Useful input and lifetimes run on both targets, including an admitted browser | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
-| Q1 | Typed Search, Sort and Clear update an existing collection view | [Toolbar runtime](TODO/NS-3_data-toolbar_02.md) |
-| Q2 | Independent application instances prove toolbar input and retirement | [Toolbar application](TODO/NS-3_data-toolbar_02.md) |
-| A1 | Studio configures a toolbar with one paired source/history change | [Toolbar authoring](TODO/NS-3_data-toolbar_01.md) |
-| A2 | Save/Open and that journey's exact generated app retain useful behavior | [Saved application](TODO/NS-3_data-toolbar_01.md) |
+| Next | Reviewable outcome | Readiness / acceptance prerequisite | Canonical task |
+| --- | --- | --- | --- |
+| R1 native-local qualified | Reusable controls stay independent in two ordinary applications | Native267/267 clean; browser execution still belongs to R3 | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
+| R2 native-local qualified | Embedded views inherit fixed caller membership; explicit/empty/nil overrides and replacement isolate each child | Native588/588 clean; matching browser compilation, actual execution remains R3 | [Embedded behavior](TODO/NS-3_coordinators_05.md) |
+| R3 | The same useful reusable/embedded input and lifetimes execute on both targets | R2 plus an admitted browser session; external gate, no host retry authorized | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
+| Q1 | Typed Search, Sort and Clear update live values and the collection query together | Complete coordinator parent; pre-source atomic admission and same-target ownership decisions required | [Toolbar runtime](TODO/NS-3_data-toolbar_02.md) |
+| Q2 | Independent application toolbars prove displayed results, Clear, conflicting ownership and retirement | Q1; actual native input/clean heaps plus matching browser assertions | [Toolbar application](TODO/NS-3_data-toolbar_02.md) |
+| A1 | Nyx-built Studio configures/disables/inherits a toolbar in one paired source/history change | Accepted runtime02; stale draft/selection and reusable sibling guards | [Toolbar authoring](TODO/NS-3_data-toolbar_01.md) |
+| A2 | Actual Save/Open and that journey's own independently compiled application retain useful behavior | A1; ordinary desktop/390 Studio, exact own saved pair and actual generated-app execution | [Saved application](TODO/NS-3_data-toolbar_01.md) |
 
 Every packet now names implementation and evidence owners as well as its
 prerequisite and finish line. Exact file ownership is reviewed at each separate
 source release; this backlog refinement starts no new source/compiler work.
 Root/helper task-flow review retains every original criterion and dependency.
+The current backlog pass gives each of the six remaining packets a concrete
+pull checklist under its existing task owner. R2's renderer-only scope and
+refusal-versus-retirement boundary are explicit. R3 retains actual browser input;
+it cannot be bypassed by native checks or compilation. The coordinator parent
+retains one joint acceptance finish line after02/03/04/05, not a duplicate task
+or another credit-bearing report. DataToolbar is a separate downstream consumer,
+not an unstated extra clause in that parent's creator-reuse criterion5.
+
+Backlog pass complete: root and existing helper reviewed the six open packet
+checklists and their finish lines. All41 relative links in the four canonical
+task files resolve; this scoped prerequisite graph is acyclic. All13 concurrent
+planning files and1782 Pascal inputs match their expected current hashes,
+including the unqualified repaired consumer. No compiler/runtime/source change,
+original criterion closure, credit or no-closure counter change follows from
+this planning batch. Resolver14 and the reported splitter stay deferred.
+
 Root/helper read-only review identifies the real DataToolbar prerequisite:
 atomic Search/Sort reset through existing live binding/state admission, combined
 with explicit query ownership. Caption projection/raw Value configuration cannot
 stand in for that command. Its task records the scoped capability decision and
-opt-in named Clear admission before any implementation. This is useful queued
+opt-in named Clear admission before any implementation. Q1 additionally owns a
+deterministic simultaneous same-target toolbar policy and an all-or-refused
+value/query boundary with truthful postcommit notification semantics. Q2 must
+prove no stale Clear/disposal overwrites the newer query owner. A1/A2 distinguish
+paired authoring from the actual saved/generated application. This is queued
 design, not a new API or permission to bypass the coordinator/browser gates.
 
 P0.3/P0.4 retain their browser acceptance gate after the qualified native journey;
 no admitted browser session or new tool rollout is supplied by this source batch.
-Next independently eligible work is **P1.4 / R2**, after a separate source release. P0.1/P0.2 are accepted
+The documentation-only pass returned to **P1.4 / R2**; its reviewed narrow repair
+now qualifies588/588 native-local. Next is **P1.4 / R3**, actual-browser input and
+lifetime with an explicit admitted session. No host attempt is authorized by
+backlog refinement or a compile-only result. P0.1/P0.2 are accepted
 host APIs, with qualification below. Contract review is settled: host pairs
 router/view and document/realized tree;
 preparation and Validate require active context, exact scheduler and exact

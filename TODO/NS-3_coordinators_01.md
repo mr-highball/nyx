@@ -51,10 +51,31 @@ adoption under criterion5 and shared lifetime criteria1–3. Criterion4's joint
 compatibility and all complete original criteria remain here; passing one
 internal task cannot accept the parent. Shared text-claim admission must cover
 migrated built-ins as well as creator factories, even for equal initial text.
-The DataToolbar portion of criterion5 is required by
-[DataToolbar authoring](NS-3_data-toolbar_01.md), downstream of this API/migration.
-That use is not a reverse prerequisite; components still requires both outcomes.
+Useful DataToolbar behavior is a separate downstream consumer owned by
+[DataToolbar authoring](NS-3_data-toolbar_01.md) and its query-runtime prerequisite;
+it is not part of this parent's current creator-reuse criterion5. DataToolbar
+is not a reverse prerequisite; components still requires both outcomes.
 Credit is unchanged and counted once.
+
+**Joint integration finish line:**
+
+This parent is the acceptance gate after registration02, MasterDetail03,
+Kanban04 and complete reuse05. It is not another fixture or report-only task.
+Reuse05/R2 now has its588/588 native-local outcome. The next eligible result is
+05/R3's actual browser journey, still an unmet prerequisite for this parent.
+
+- Criteria1–3 consume accepted registration and both migrations together with
+  reuse05's current-source snapshot, refusal, replacement and lifetime evidence.
+  Missing combined behavior returns to that owning task; no component-specific
+  renderer lifecycle or duplicate state/selection/event owner is introduced.
+- Criterion4 retains the real specialized interfaces, manual APIs, Details and
+  scalar Value, caller event policies and whole-component Studio/generated
+  compatibility already required by03/04. Reuse exact applicable evidence;
+  repeat only a consumer whose source/dependency changed or whose gap is concrete.
+- Criterion5 requires the useful creator application in ordinary reusable and
+  embedded owners on both hosts. Native-local and browser-compile results cannot
+  substitute for the admitted-browser journey. Only after all five criteria and
+  hard prerequisites qualify may this parent unblock DataToolbar acceptance.
 
 **Blockers**
 

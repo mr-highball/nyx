@@ -62,6 +62,36 @@ registry does not rewrite an accepted view. Without this factory registration,
 the saved controls remain static; the versioned intent cannot load executable
 code or acquire file, HTTP, compiler or other host services.
 
+## Embedded registry rules
+
+Saved Canvas item renderers inherit the parent candidate's fixed caller
+membership before they build their controls. Future Scene content replacements
+inside an accepted Canvas use that same accepted membership, even if the caller
+subsequently registers another factory on the parent's mutable registry. A new
+parent candidate, such as App.ShowPage, captures the updated registrations.
+Failed parent admission leaves its accepted membership and children intact.
+
+Each child composes its own automatic MasterDetail and Kanban factories. Those
+built-ins are not part of the inherited caller snapshot and are not duplicated.
+For the borrowed child renderer returned by RendererFor, choose future caller
+membership through its ordinary CoordinatorRegistry property:
+
+- nil inherits the parent's captured caller snapshot.
+- A nonnil registry supplies explicit caller membership instead of inheritance.
+- An explicitly empty NewNyxCoordinatorRegistry suppresses caller factories
+  while retaining the child's automatic built-ins.
+
+Assignment configures the next candidate; it does not rewrite the accepted
+child. Existing structural Presentations.Select/Automatic can remount the child
+from its own retained source and collection bindings. Do not manufacture a
+replacement document/context just to apply an override. Each child retains its
+own event generation and weak refresh capability; replacement/disposal revokes
+its commands independently. A structural remount preserves the child's compatible
+stores; Scene content replacement creates a distinct child lifetime without a
+store-migration promise. Inherited configuration survives Unmount, while
+accepted view membership retires with that view. The current qualification
+boundary and retained outcomes remain in [WORK.md](../../WORK.md).
+
 ## Creator lifetime contract
 
 Factories receive copied intent and scoped typed role discovery. Reserve text
@@ -102,12 +132,15 @@ Run the ordinary reusable-application proof separately, preserving a new packet:
 ```
 
 This command executes the application consumer at1280 and390, then compiles and
-stages the same browser assertions. Embedded registry inheritance and actual
-browser execution remain separate open gates; see [reuse05](../../TODO/NS-3_coordinators_05.md).
-The current native result is267 checks at each width, with clean heaps and zero
-Nyx-owned compiler warnings. Browser compilation passes; it is not browser input
-or embedded adoption evidence. The native emitted design/Pascal files preserve
-the authored baseline; this command does not compile those exports as applications.
+stages the same browser assertions. The current native result is588 checks at
+each width, preserving the original267 reusable checks before the embedded cases.
+Both heaps are clean, with zero Nyx-owned compiler warnings. Saved Canvas children
+exercise fixed caller membership, explicit/empty/nil overrides, real input,
+refusal/replacement and independent lifetimes. Actual browser execution remains
+open under [reuse05](../../TODO/NS-3_coordinators_05.md); compilation alone proves
+no browser input. Separate reusable/embedded design and Pascal exports match
+across widths and preserve authored/default baselines. This command does not
+perform Save/Open or compile those exports as independent applications.
 
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption
