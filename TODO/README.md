@@ -2990,3 +2990,50 @@ other counts remain 19/13/28/2. The independent current-source backend launch wa
 rejected before execution by automatic review with only "blocked by policy".
 Authentication/browser observing and original acceptance requirements remain open.
 See [the handoff](../WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).
+
+## Deferred resolver and source-reference tasks - 2026-10-21
+
+The user requested a switch back to core Nyx after preserving the remaining
+resolver work as granular backlog tasks. These tasks are **deferred**, not the
+active core workstream. They split the existing Studio authoring/reference
+outcomes without changing milestone weights, completion credit, acceptance,
+historical counters or DONE status. Core components/layout/Studio work does not
+wait for full resolver completion. [WORK.md](../WORK.md#active-priority--back-to-core-nyx-2026-10-20)
+owns the exact parked checkpoint and active return path.
+
+| Task | Concrete remaining outcome |
+| --- | --- |
+| [Resolver 01](NS-4_pascal-resolver_01.md) | Complete the real SysUtils conditional/import journey |
+| [Resolver 02](NS-4_pascal-resolver_02.md) | Integrate approved Classes inputs and real dependency closure |
+| [Resolver 03](NS-4_pascal-resolver_03.md) | Fulfill only exact source-requested compiler facts |
+| [Resolver 04](NS-4_pascal-resolver_04.md) | Finish canonical type/member and actual helper resolution |
+| [Resolver 05](NS-4_pascal-resolver_05.md) | Complete generic-call inference, constraints and overload answers |
+| [Resolver 06](NS-4_pascal-resolver_06.md) | Close expression/conversion families against real compiler witnesses |
+| [Resolver 07](NS-4_pascal-resolver_07.md) | Deliver measured dependency-aware incremental analysis |
+| [Resolver 08](NS-4_pascal-resolver_08.md) | Qualify worker scheduling, cancellation and resource lifetime |
+| [Resolver 09](NS-4_pascal-resolver_09.md) | Adopt the owned provider in ordinary native/browser completion |
+| [Resolver 10](NS-4_pascal-resolver_10.md) | Finish physical definition and return-navigation journeys |
+| [Resolver 11](NS-4_pascal-resolver_11.md) | Supply and execute exact native/browser compiler contexts |
+| [Resolver 12](NS-4_pascal-resolver_12.md) | Qualify and deliver the complete owned editing-engine outcome |
+| [Resolver 13](NS-4_pascal-resolver_13.md) | Find exact symbol references across the captured project |
+| [Resolver 14](NS-4_pascal-resolver_14.md) | Review and apply one atomic semantic rename |
+| [Reference 05](NS-4_studio-reference_05.md) | Preserve actual variant-record topology in documentation |
+| [Reference 06](NS-4_studio-reference_06.md) | Capture authored generic descriptor ownership |
+| [Reference 07](NS-4_studio-reference_07.md) | Publish the complete real source package/index |
+| [Reference 08](NS-4_studio-reference_08.md) | Emit deterministic static Pascal documentation packages |
+| [Reference 09](NS-4_studio-reference_09.md) | Adopt generated metadata through linked registration |
+| [Reference 10](NS-4_studio-reference_10.md) | Qualify a distinct bounded public-declaration maintenance contract |
+
+Each task's Blockers section owns its dependency order and external needs.
+Resolver03 supplies fact authority for Resolver01; Resolver02 follows the real
+SysUtils journey. Type/call/expression work feeds completion; incremental,
+cancellation and target context feed ordinary editor adoption. Resolver12 is the
+aggregate acceptance gate. Reference05/06 and real library closure feed07, then
+08 -> 09 returns to the **existing** Reference03 browsing and Reference04
+coverage/static-QA tasks. API help does not depend on completing every editing
+resolver task. No new probe, source capture, host/configuration retry, compiler
+batch, deployment or implementation is authorized by this planning handoff.
+
+Reference10 is a separate architectural/proof reassessment; it cannot silently
+replace the unchanged whole-source resolver/package acceptance. Resolver13/14
+retain references and reviewed rename as explicit original editing outcomes.

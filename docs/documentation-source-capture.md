@@ -149,7 +149,7 @@ requires five valid arguments before check zero:
 nyx_documentation_source_tests.exe <repository> <accepted-RTL-runtime> <verified216-inputs> <retained-profile-runtime> <retained-Windows-compiler-directory>
 ```
 
-Explicit seven-, eight-, nine- and ten-argument maintenance paths are described below;
+Explicit seven-, eight-, nine-, ten- and twelve-argument maintenance paths are described below;
 the original five arguments and complete source/package gate remain mandatory.
 
 The authoritative native compiler invocation must explicitly include
@@ -256,6 +256,7 @@ before check zero. No compiler or output path comes from an environment default.
 | 8 | Seven plus one exact retained continuation directory: replay its matching source/reply before considering a later new symbol job; mismatch refuses without fallback. |
 | 9 | Seven plus both accepted cumulative request/reply directories, in 35-name then 36-name order: prepare the validated profile before initial SysUtils construction. |
 | 10 | Nine plus the accepted primitive-reply directory: replay its actual source-owned root fact and rebuild the namespace world before first SysUtils construction; permit at most the actual fourth symbol cohort. |
+| 12 | Ten plus the accepted 57-name profile directory and explicit SysConst input directory: replay all accepted facts, prepare the actual WinDirs/SysConst namespaces, then attempt exactly one SysUtils construction without entering any collection branch. |
 
 The prepared form is:
 
@@ -387,6 +388,89 @@ name absent and cannot be skipped. The complete source/package gate remains
 open. No fifth cohort, third SysUtils construction, primitive recollection or
 Classes overlay is admitted by these receipts. Browser evidence remains
 compilation only.
+
+The twelve-argument form compiles for native and browser, but has no proven
+complete import closure or allowance fit. It preserves all five-, seven-, eight-,
+nine- and ten-argument forms. Argument 11 supplies the accepted 57-name canonical
+`nyxcompilercontext.pas` and full `compiler-profile.log`; argument 12 supplies the
+root-admitted input directory with `import1-paths.txt` and its captured
+`rtl/objpas/sysconst.pp` bytes:
+
+```text
+nyx_documentation_source_tests.exe <repository> <accepted-RTL-runtime> <verified216-inputs> <retained-profile-runtime> <retained-Windows-compiler-directory> <explicit-compiler> <fresh-output-directory> <accepted35-directory> <accepted36-directory> <accepted-primitive-directory> <accepted57-directory> <explicit-import-input-directory>
+```
+
+The original 216 sources and their prior replay checks stay unchanged. One
+canonical source-packet overlay adds only SysConst, yielding 217 inputs for the
+new namespace construction; it does not consume the Classes union. Existing
+module-header associations select retained WinDirs and captured SysConst. Each
+must produce its complete checked namespace from the pristine accepted profile
+with its separate updated bootstrap; authored unit MODE/H settings remain
+source-owned. These candidates precede the sole SysUtils construction and stay
+private until the unchanged complete-source gate. The mode bypasses every
+collection/continuation branch: four of four logical symbol jobs and seven of
+eight fact jobs are already inputs, with no fifth symbol job or primitive
+recollection. Preparation, per-module analysis and SysUtils ceilings remain
+unchanged; none of these new imports or the final package is yet accepted.
+
+The retained preparation29 diagnostics also expose a separate replacement
+boundary defect in syshelps.inc: `SUT` in the real expression
+`(ASubText<>'') and (SUT.CompareText(...)` is preceded by an eight-scalar window
+starting at the second quote of the empty string. Re-lexing that artificial
+fragment manufactures an open string and a false token-join diagnostic.
+The repair anchors the left window to the preceding complete physical
+token retained by the existing per-occurrence lexical observer. It copies no
+growing prefix and changes no grammar. Unicode scalar-to-byte mapping, actual
+surrounding-token fusion refusal, include origins and existing caps remain
+required; longer copied windows are byte-preflighted and work-admitted before
+slicing/joining. The existing translation consumer adds the actual SUT line,
+escaped-string/comment/Unicode include cases and genuine join, byte, work and
+post-admission cancellation refusals. Preparation30 qualifies this repair with
+265 native translation checks using the original repository argument and a
+clean heap. Its initial no-argument 213-check run remains retained separately;
+the same executable supplies the required actual-source evidence. The macro38,
+conditions38, witness43 and compilertrace525 consumers also pass natively with
+clean heaps. All 16 declared compiles pass, including the paired portable
+consumers, both Studios, server, worker and source consumer, with zero owned
+warnings and 56 upstream warnings. The same source binary rejects a missing
+twelve-argument import input before check zero with a clean heap and no output.
+This qualifies the leaf repair, not its use through the whole SysUtils journey.
+
+Preparation31 runs that compiled twelve-argument consumer once with the exact
+accepted profiles, saved primitive and explicit import input. Original and
+rebuilt namespaces preserve System 13,101 declarations/31 answers and ObjPas
+209/one; Windows retains 29,823 declarations. The accepted 57-name profile and
+saved four-byte LongWord reply replay successfully without new collection.
+WinDirs translation resolves completely with zero source diagnostics, consuming
+8,149 work in one pass with zero answers. Its declaration syntax still reports
+two diagnostics at physical scalars 23,810 (`=`) and 23,815 (`;`) in windirs.pp.
+The actual declaration is:
+
+```pascal
+_CoTaskMemFree: procedure(_para1:PVOID); stdcall; = nil;
+```
+
+The convention's final semicolon prevents the declaration reader from reaching
+the initializer. Recovery then treats `nil` as a new variable, so the reported
+256 declarations are not a stable complete-namespace count. The unchanged guard
+refuses at check90 before SysConst or SysUtils is constructed. All 30,829,565
+allocated blocks/18,303,013,882 cumulative bytes are freed; no native fact or
+symbol job and no new output are created. The finally-owned preparation total
+was not reported by this historical run; its printed 520,918 prefix is not a
+complete preparation-cost receipt. [WORK.md](../WORK.md) owns the exact retained
+source, logs and preservation audit.
+
+The current narrow parser repair consumes that extra separator only after an
+actually consumed inline routine suffix and only before explicit initializer
+syntax. `TypeSpan` ends at the convention, `ExpressionSpan` contains exactly the
+value, and the complete header retains the final declaration semicolon. Existing
+syntax and type consumers cover the actual spelling, function/reference forms,
+nested defaults, ordinary separators, sibling preservation and malformed
+recovery. The native syntax consumer also contains an inert callback variable
+with this spelling and never invokes it. This repair is source-ready but has not
+been compiled or executed; preparation31's refusal remains retained. Complete
+imports, the actual SysUtils boundary repair, source-package publication and
+browser execution remain open.
 
 Preparation22's full nine-argument journey fails at check88 before any native
 fact job. Both supplied canonical profiles restore successfully, consuming

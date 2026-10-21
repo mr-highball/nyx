@@ -455,6 +455,64 @@ begin
   Check(not LType.Complete, 'Conflicting procedural conventions remain explicit type diagnostics');
 end;
 
+{ A procedural variable's convention separator belongs to declaration syntax,
+  while its initializer stays outside the type grammar. These windows exercise
+  the independent type reader, including an inner default and reference target. }
+procedure InitializedProceduralVariables;
+const
+  CSource: TNyxText = 'unit InitializedCallbacks; interface var ' +
+    'Release:procedure(_para1:Pointer); stdcall; = nil; ' +
+    'Evaluate:function(AValue:LongInt=7):Boolean; cdecl; = nil; ' +
+    'Deferred:reference to function:LongInt; cdecl; = nil; ' +
+    'Tail:LongInt; implementation end.';
+  CNames: array[0..2] of TNyxText = ('Release', 'Evaluate', 'Deferred');
+  CTypes: array[0..2] of TNyxText = ('procedure(_para1:Pointer); stdcall',
+    'function(AValue:LongInt=7):Boolean; cdecl', 'reference to function:LongInt; cdecl');
+var
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LType: INyxPascalTypeSyntax;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LAt, LOrdinal, LTarget, LGroup, LDefault: Integer;
+begin
+  LSyntax := NewNyxPascalSyntaxSnapshot(CSource, TNyxPascalSyntaxOptions.Defaults);
+  Check((LSyntax.DiagnosticCount = 0) and (LSyntax.Lexical.Source = CSource),
+    'Complete initialized procedural declarations preserve their original source without recovery');
+  for LAt := 0 to High(CNames) do
+  begin
+    LOrdinal := LSyntax.Named(0, CNames[LAt]);
+    Check(LOrdinal >= 0, 'Each initialized callback retains its actual declared name');
+    LDeclaration := LSyntax.Declaration(LOrdinal);
+    Check((LSyntax.Lexical.Slice(LDeclaration.TypeSpan) = CTypes[LAt]) and
+      (LSyntax.Lexical.Slice(LDeclaration.ExpressionSpan) = 'nil'),
+      'The exact procedural type window excludes its separator and outer initializer');
+    LType := NewNyxPascalTypeSyntax(LSyntax.Lexical, LDeclaration.TypeSpan,
+      TNyxPascalTypeOptions.Defaults);
+    LTarget := LType.Root;
+
+    if LAt = 2 then
+    begin
+      Check(LType.Node(LTarget).Kind = ptxReference,
+        'A reference callback keeps its distinct outer type family');
+      LTarget := LType.Child(LTarget, ptrTarget);
+    end;
+    Check(LType.Complete and (LTarget >= 0) and
+      (((LAt = 0) and (LType.Node(LTarget).CallingConvention = pccStdcall)) or
+       ((LAt <> 0) and (LType.Node(LTarget).CallingConvention = pccCdecl))),
+      'The independent type reader receives the complete authored callback convention');
+
+    if LAt = 1 then
+    begin
+      LGroup := LType.Child(LTarget, ptrParameter);
+      LDefault := LType.Child(LGroup, ptrDefault);
+      Check((LDefault >= 0) and (LType.Lexical.Slice(LType.Node(LDefault).Span) = '7') and
+        (LType.Node(LType.Child(LTarget, ptrResult)).Name = 'Boolean'),
+        'An inner parameter default and function result remain independent of the outer nil initializer');
+    end;
+  end;
+  Check((LSyntax.Named(0, 'nil') < 0) and (LSyntax.Named(0, 'Tail') >= 0),
+    'No initializer becomes a fabricated declaration or swallows the following real variable');
+end;
+
 { Declaration and procedural-type requests share a closed source contract.
   This checks authored intent and ownership, independently of compiler admission
   and the separate global CALLING policy domain. }
@@ -809,6 +867,7 @@ begin
     EncodedStringTypes;
     GenericCloseWindows;
     ProceduralDeclarations;
+    InitializedProceduralVariables;
     WinapiRequests;
     Projection;
     {$ifndef PAS2JS}

@@ -700,6 +700,10 @@ type
     Owner: TTranslation;
     Occurrence: Integer;
     Included: Boolean;
+    { The immediately preceding physical token is already admitted by this
+      occurrence's lexer. Its start anchors a local boundary proof without
+      cutting inside a string/comment or copying the entire scanned prefix. }
+    PreviousSpan: TNyxPascalSpan;
     procedure BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);
     procedure AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText; var AAllowNestedComments: Boolean);
@@ -878,9 +882,9 @@ type
     function GlobalModeHeader: TNyxPascalKnowledge;
     procedure AddToken(AOccurrence, AToken: Integer; AExpansion: Integer = -1;
       AExpansionToken: Integer = -1);
-    procedure Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
+    procedure Word(AOccurrence, AIndex, ALeftStart: Integer; const AToken: TNyxPascalToken;
       const AText: TNyxText);
-    procedure VerifyBoundary(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+    procedure VerifyBoundary(AOccurrence, ALeftStart: Integer; const ASpan: TNyxPascalSpan;
       const AExpansion: INyxPascalMacroExpansion);
     procedure Visit(AFile, AParent: Integer; const AInclude: TNyxPascalSpan);
     procedure Directive(AOccurrence: Integer; const AToken: TNyxPascalToken;
@@ -1889,7 +1893,7 @@ begin
   end;
 end;
 
-procedure TTranslation.Word(AOccurrence, AIndex: Integer; const AToken: TNyxPascalToken;
+procedure TTranslation.Word(AOccurrence, AIndex, ALeftStart: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText);
 var
   LExpansion: INyxPascalMacroExpansion;
@@ -1925,7 +1929,7 @@ begin
     LExpansion := FMacros.Expand(AText, pmuSource, FOptions.LexicalOptions.NestedComments(FNested),
       FOptions.MaximumExpandedBytes - FBytes, FOptions.MaximumTokens - FTokenCount,
       FOptions.MaximumIncludeDepth, FCancellation);
-    VerifyBoundary(AOccurrence, AToken.Span, LExpansion);
+    VerifyBoundary(AOccurrence, ALeftStart, AToken.Span, LExpansion);
 
     if Length(FExpansions) >= FOptions.MaximumOccurrences then
     begin
@@ -1955,7 +1959,7 @@ begin
   end;
 end;
 
-procedure TTranslation.VerifyBoundary(AOccurrence: Integer; const ASpan: TNyxPascalSpan;
+procedure TTranslation.VerifyBoundary(AOccurrence, ALeftStart: Integer; const ASpan: TNyxPascalSpan;
   const AExpansion: INyxPascalMacroExpansion);
 var
   LFile: Integer;
@@ -1965,6 +1969,9 @@ var
   LLeft: TNyxText;
   LRight: TNyxText;
   LJoined: TNyxText;
+  LReplacement: TNyxText;
+  LLeftBytes, LRightBytes: TNyxPascalByteSpan;
+  LBytes, LRemaining: Integer;
   LLexical: INyxPascalLexicalSnapshot;
   LAt: Integer;
   LSpan: TNyxPascalSpan;
@@ -1980,33 +1987,46 @@ begin
       NyxEncodeUTF8(FFiles.TextAt(LFile)), pboAuthoringUTF8), NyxPascalUTF8Codec, FCancellation);
   end;
   LView := FBoundaryViews[LFile];
-  LStart := ASpan.Start - 8;
+  { The observer supplies a complete preceding token, not an arbitrary number
+    of characters. Starting at the second quote of '' would manufacture an
+    unterminated string and falsely reject the independent following macro. }
+  CheckCancellation;
+  NyxPascalAdmitAnalysis(FCancellation, papSourceProof);
+  CheckCancellation;
 
-  if LStart < 0 then
-  begin
-    LStart := 0;
-  end;
-  LFinish := ASpan.Finish + 8;
+  if (ALeftStart < 0) or (ALeftStart > ASpan.Start) or
+    (ASpan.Finish > LView.Scalars) then
+    raise ENyxPascalTranslationLimit.Create('Replacement boundary lost its exact physical token window');
+  LStart := ALeftStart;
+  LFinish := LView.Scalars;
 
-  if LFinish > LView.Scalars then
-  begin
-    LFinish := LView.Scalars;
-  end;
-  LLeft := NyxDecodeUTF8(LView.Original.Slice(LView.OriginalSpan(
-    NyxPascalSpan(LStart, ASpan.Start - LStart))));
-  LRight := NyxDecodeUTF8(LView.Original.Slice(LView.OriginalSpan(
-    NyxPascalSpan(ASpan.Finish, LFinish - ASpan.Finish))));
-  LJoined := LLeft + AExpansion.Joined + LRight;
+  if LFinish - ASpan.Finish > 8 then
+    LFinish := ASpan.Finish + 8;
+  LLeftBytes := LView.OriginalSpan(NyxPascalSpan(LStart, ASpan.Start - LStart));
+  LRightBytes := LView.OriginalSpan(NyxPascalSpan(ASpan.Finish, LFinish - ASpan.Finish));
+  LReplacement := AExpansion.Joined;
+  LBytes := NyxUTF8ByteCount(LReplacement);
+  LRemaining := FOptions.MaximumExpandedBytes - FBytes - AExpansion.WorkBytes;
 
-  if NyxUTF8ByteCount(LJoined) > FOptions.MaximumExpandedBytes - FBytes - AExpansion.WorkBytes then
-  begin
+  if (LBytes > LRemaining) or (LLeftBytes.Length > LRemaining - LBytes) then
     raise ENyxPascalMacroLimit.Create('Replacement boundary work exceeds its byte budget');
-  end;
-  Inc(FBytes, NyxUTF8ByteCount(LJoined));
+  Inc(LBytes, LLeftBytes.Length);
+
+  if LRightBytes.Length > LRemaining - LBytes then
+    raise ENyxPascalMacroLimit.Create('Replacement boundary work exceeds its byte budget');
+  Inc(LBytes, LRightBytes.Length);
+  { Admit the actual copied UTF-8 window before any slice/join. A long previous
+    string/comment may refuse the same aggregate cap; it is never truncated. }
+  NyxPascalAdmitAnalysis(FCancellation, papSourceProof, LBytes);
+  CheckCancellation;
+  Inc(FBytes, LBytes);
+  LLeft := NyxDecodeUTF8(LView.Original.Slice(LLeftBytes));
+  LRight := NyxDecodeUTF8(LView.Original.Slice(LRightBytes));
+  LJoined := LLeft + LReplacement + LRight;
   LLexical := NewNyxPascalLexicalSnapshot(LJoined,
     FOptions.LexicalOptions.NestedComments(FNested), FCancellation);
   LStart := ASpan.Start - LStart;
-  LFinish := LStart + NyxTextScalarCount(AExpansion.Joined);
+  LFinish := LStart + NyxTextScalarCount(LReplacement);
   for LAt := 0 to LLexical.Count - 2 do
   begin
     LSpan := LLexical.Token(LAt).Span;
@@ -2034,6 +2054,8 @@ end;
 
 procedure TTranslationReader.AfterToken(AIndex: Integer; const AToken: TNyxPascalToken;
   const AText: TNyxText; var AAllowNestedComments: Boolean);
+var
+  LLeftStart: Integer;
 begin
 
   if not Included or (AToken.Kind <> ptkEOF) then
@@ -2066,7 +2088,16 @@ begin
 
     if AToken.Kind = ptkWord then
     begin
-      Owner.Word(Occurrence, AIndex, AToken, AText);
+      LLeftStart := AToken.Span.Start;
+
+      if AIndex > 0 then
+      begin
+
+        if PreviousSpan.Finish <> AToken.Span.Start then
+          raise ENyxPascalTranslationLimit.Create('Replacement boundary lost its preceding physical token');
+        LLeftStart := PreviousSpan.Start;
+      end;
+      Owner.Word(Occurrence, AIndex, LLeftStart, AToken, AText);
     end
     else
     begin
@@ -2088,6 +2119,7 @@ begin
   { Includes share the caller's compiler state. In particular a nested include
     may change the policy used for this reader's very next physical token. }
   AAllowNestedComments := Owner.FNested;
+  PreviousSpan := AToken.Span;
 end;
 
 procedure TTranslationReader.BeginRead(const ACapture: INyxPascalLexicalPrefixCapture);

@@ -4719,12 +4719,14 @@ var
   LEntry: Integer;
   LStart: Integer;
   LType: Integer;
+  LSuffixStart: Integer;
   LExpression: Integer;
   LAt: Integer;
   LTypeSpan: TNyxPascalSpan;
   LExpressionSpan: TNyxPascalSpan;
   LForm: TNyxPascalSyntaxTypeForm;
   LInitialized: Boolean;
+  LRoutineSuffix: Boolean;
 begin
   LStart := Tok.Span.Start;
   LEntries := nil;
@@ -4760,6 +4762,7 @@ begin
   LExpressionSpan := LTypeSpan;
   LForm := pstfNone;
   LInitialized := False;
+  LRoutineSuffix := False;
 
   if Sym(psoColon) then
   begin
@@ -4772,7 +4775,9 @@ begin
       { Parameter defaults stay inside their groups. Only an outer initializer
         ends the type, including after a calling-convention separator. }
       Expression(psoSemicolon, False, True, AArmEnd, True);
+      LSuffixStart := FPosition;
       RoutineTypeSuffix(AArmEnd, True);
+      LRoutineSuffix := FPosition > LSuffixStart;
     end
     else
     begin
@@ -4793,6 +4798,15 @@ begin
   begin
     DeclarationHints(LEntries[0]);
   end;
+
+  { An inline procedural variable may retain the convention's terminating
+    semicolon before its explicit initializer. The recorded TypeSpan already
+    ends at the convention; consume this separator only with actual following
+    value syntax, never a sibling declaration or an ordinary named type. }
+
+  if (AKind = psdkVariable) and LRoutineSuffix and Sym(psoSemicolon) and
+    (Sym(psoEqual, 1) or Sym(psoAssign, 1)) then
+    Step;
 
   if Sym(psoEqual) or Sym(psoAssign) then
   begin

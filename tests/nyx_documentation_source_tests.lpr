@@ -78,7 +78,7 @@ var
   {$ifndef PAS2JS}
   GVerifiedInputs, GProfileRuntime, GWindowsRuntime: TNyxText;
   GRequiredCompiler, GRequiredOutput, GSymbolReplay, GPreparedReplay: TNyxText;
-  GPrimitiveReplay: TNyxText;
+  GPrimitiveReplay, GFinalProfile, GImportInputs: TNyxText;
   {$endif}
 
 function TWorldDelegate.Options: TNyxPascalBindingOptions;
@@ -639,6 +639,15 @@ type
     function UnindexedCount: Integer;
     function Unindexed(AIndex: Integer): TNyxPascalPhysicalFile;
   end;
+  { One explicitly captured import source enters the ordinary atomic packet
+    overlay. This temporary producer owns no installed file or compiler and
+    cannot discover or replace another retained source. }
+  TImportPacket = class(TInterfacedObject, INyxPascalFilePackets)
+  public
+    Value: INyxPascalFilePacket;
+    function Count: Integer;
+    function Packet(AIndex: Integer): INyxPascalFilePacket;
+  end;
   { Immutable output leases keep genuine replayed RTL inputs separate from the
     prospective local compilation-input overlay used for Nyx source. This owner
     contains no compiler process, open source handle or filesystem fallback. }
@@ -678,6 +687,17 @@ begin
   if (AIndex < 0) or (AIndex >= Length(UnindexedValues)) then
     raise Exception.Create('Retained unindexed source ordinal is outside the explicit manifest');
   Result := UnindexedValues[AIndex];
+end;
+
+function TImportPacket.Count: Integer;
+begin Result := 1; end;
+
+function TImportPacket.Packet(AIndex: Integer): INyxPascalFilePacket;
+begin
+
+  if (AIndex <> 0) or (Value = nil) then
+    raise Exception.Create('The explicit import overlay owns exactly one complete source packet');
+  Result := Value;
 end;
 
 function ReadBytes(const APath: TNyxText): TNyxBytes;
@@ -1871,6 +1891,101 @@ begin
   AUpdatedRoot := LRoot;
 end;
 
+{ Prepare only the two actual missing SysUtils implementation imports. Their
+  complete real units must prove their exported namespaces before DECLARED can
+  establish absence. Each new namespace has its existing independent 4M/64
+  analysis allowance; neither construction spends or resets a SysUtils attempt.
+  All candidates remain local until both units pass, and later SysUtils still
+  controls publication of the whole updated source world. }
+procedure PrepareImportedNamespaces(var AFiles: INyxPascalFileCatalog;
+  var AModules: INyxPascalModuleCatalog; var AWorld: INyxPascalSemanticWorld;
+  const AInitial: INyxPascalCompilerContext;
+  const APreparation: INyxPascalAnalysisBudget);
+var
+  LExtra: INyxPascalDirectoryCapture;
+  LExtraBytes: INyxPascalByteFileCatalog;
+  LProducer: TImportPacket;
+  LPackets: INyxPascalFilePackets;
+  LFiles: INyxPascalFileCatalog;
+  LModules: INyxPascalModuleCatalog;
+  LWorld: INyxPascalSemanticWorld;
+  LModule: INyxPascalModuleSource;
+  LSemantic: INyxPascalSemanticTranslation;
+  LView: INyxPascalTranslatedSyntax;
+  LName: TNyxText;
+  LAt, LModuleAt: Integer;
+begin
+
+  if (AFiles.Count <> 216) or (AInitial = nil) or
+    (NyxPascalCompilerScope(AInitial) <> pcsoPristine) or
+    (NyxPascalBootstrapContext(AInitial) = nil) or
+    (AInitial.Feature(ppfNestedComments) = ppkUnknown) then
+    raise Exception.Create('Actual imports need the original216 sources and exact prepared initial context with independent root facts');
+  LExtra := ReadManifestInputs(GImportInputs, GImportInputs + '/import1-paths.txt', 1);
+
+  if (LExtra.UnindexedCount <> 0) or (LExtra.Modules.Count <> 1) or
+    (LExtra.Modules.Find(NyxPascalModule('SysConst')) <> 0) or
+    (LExtra.Files.FileAt(0).Name <> 'rtl/objpas/sysconst.pp') or
+    (LExtra.Modules.Entry(0).Root.Name <> LExtra.Files.FileAt(0).Name) or
+    not Supports(LExtra.Files, INyxPascalByteFileCatalog, LExtraBytes) or
+    (LExtraBytes.SourceViewAt(0) = nil) or
+    (AFiles.Find(LExtra.Files.FileAt(0)) >= 0) or
+    (AModules.Find(NyxPascalModule('SysConst')) >= 0) then
+    raise Exception.Create('The explicit extra input must own one new exact decoded SysConst header/root without replacing retained inputs');
+  LProducer := TImportPacket.Create;
+  LPackets := LProducer;
+  LProducer.Value := NewNyxPascalFilePacket(LExtra.Files.FileAt(0),
+    LExtraBytes.SourceBytesAt(0), LExtraBytes.SourceViewAt(0), APreparation);
+  LFiles := OverlayNyxPascalFilePackets(AFiles, LPackets, APreparation);
+  LModules := AModules.WithModule(LExtra.Modules.Entry(0));
+  LWorld := AWorld;
+
+  if LFiles.Count <> 217 then
+    raise Exception.Create('Only the one requested import source may extend the original216 catalog');
+  for LAt := 0 to 1 do
+  begin
+    LName := 'WinDirs';
+
+    if LAt = 1 then LName := 'SysConst';
+    APreparation.Admit(papSourceProof);
+    LModuleAt := LModules.Find(NyxPascalModule(LName));
+
+    if (LModuleAt < 0) or (LWorld.FindModule(LName) >= 0) then
+      raise Exception.Create('An actual import needs one captured root and no preexisting substitute namespace: ' + LName);
+    LModule := LModules.Entry(LModuleAt);
+
+    if LFiles.Find(LModule.Root) < 0 then
+      raise Exception.Create('The captured imported root is outside the exact current source catalog: ' + LName);
+    { The pristine input is the accepted profile, never a later source state.
+      The unit's own MODE/H directives establish its local compiler settings. }
+    LModule := LModule.InContext(AInitial,
+      TNyxPascalTranslationOptions.Defaults.UpToTokens(2000000)
+        .Lexical(TNyxPascalLexicalOptions.Defaults.NestedComments(
+          AInitial.Feature(ppfNestedComments) = ppkTrue)));
+    LSemantic := NewNyxPascalSemanticTranslation(LFiles, LModule.Root,
+      LModule.Context, LWorld, LModule.Translation,
+      TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000),
+      TNyxPascalConditionalOptions.Defaults.UpToTokens(4000000));
+    LView := NewNyxPascalTranslatedSyntax(LSemantic.Source,
+      TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
+    ReportNamespaceSemantic('actual-import', LName, LSemantic, LView);
+
+    if LSemantic.Pending or not LView.CompleteTranslation or
+      not LView.Source.Resolved or (LView.Source.DiagnosticCount <> 0) or
+      (LView.Syntax.DiagnosticCount <> 0) or
+      (NyxPascalASCIIKey(LView.Syntax.Scope(0).Name) <> NyxPascalASCIIKey(LName)) then
+    begin
+      ReportSemanticFrontier(LSemantic, LView, nil, False);
+      raise Exception.Create('The actual imported namespace must be complete before SysUtils analysis: ' + LName);
+    end;
+    LModules := LModules.WithModule(LModule);
+    LWorld := LWorld.WithModule(LView);
+  end;
+  AFiles := LFiles;
+  AModules := LModules;
+  AWorld := LWorld;
+end;
+
 { Profile-first maintenance admits at most the actual fourth cumulative symbol
   job. Both semantic constructions share one work/pass ceiling; the remaining
   source/size/declaration frontier stays an ordinary final completeness failure. }
@@ -2310,9 +2425,10 @@ begin
 
     if LPreparation <> nil then
     begin
-      { Three accepted logical symbol jobs are now inputs before the initial
-        semantic construction: archived33 and both exact cumulative35/36 replies.
-        No captured context is retagged and no already accepted query is run. }
+      { Restore the archived33 and exact cumulative35/36 replies first. Optional
+        prepared-import mode also restores the accepted fourth57-name reply
+        before any SysUtils construction. No captured context is retagged and
+        no accepted query is collected again. }
       LPreparedCapture := ReadPreparedProfile(GSymbolReplay, LProbe, LCapture, 35,
         LPreparation, LPreparedProbe);
       LCapture := LPreparedCapture;
@@ -2321,8 +2437,19 @@ begin
         LPreparation, LPreparedProbe);
       LCapture := LPreparedCapture;
       LProbe := LPreparedProbe;
-      WriteLn('prepared symbol inputs / archivedJobs=1 replayedJobs=2 totalJobs=3',
-        ' maximumJobs=4 freshSymbolCaptures=0 preparationWork=', LPreparation.Receipt.Total);
+
+      if GFinalProfile <> '' then
+      begin
+        LPreparedCapture := ReadPreparedProfile(GFinalProfile, LProbe, LCapture, 57,
+          LPreparation, LPreparedProbe);
+        LCapture := LPreparedCapture;
+        LProbe := LPreparedProbe;
+        WriteLn('prepared symbol inputs / archivedJobs=1 replayedJobs=3 totalJobs=4',
+          ' maximumJobs=4 freshSymbolCaptures=0 preparationWork=', LPreparation.Receipt.Total);
+      end
+      else
+        WriteLn('prepared symbol inputs / archivedJobs=1 replayedJobs=2 totalJobs=3',
+          ' maximumJobs=4 freshSymbolCaptures=0 preparationWork=', LPreparation.Receipt.Total);
       Flush(Output);
     end;
     LSemanticWorld := AResult.World;
@@ -2336,6 +2463,13 @@ begin
     end
     else
       LContext := NyxPascalWithBootstrapContext(LCapture.Context, AResult.Bootstrap.Context);
+
+    if GFinalProfile <> '' then
+    begin
+      PrepareImportedNamespaces(LFiles, LUpdatedModules, LUpdatedWorld,
+        LContext, LPreparation);
+      LSemanticWorld := LUpdatedWorld;
+    end;
     Check(LContext.Feature(ppfNestedComments) <> ppkUnknown,
       'The retained SysUtils context must own an explicit initial comment policy');
     LModule := LModule.InContext(LContext, TNyxPascalTranslationOptions.Defaults.UpToTokens(2000000)
@@ -2349,7 +2483,23 @@ begin
     if (GPreparedReplay = '') and (GSymbolReplay <> '') and not LSemantic.Pending then
       raise Exception.Create('The explicit retained continuation reply has no pending current semantic source to match');
 
-    if GPrimitiveReplay <> '' then
+    if GFinalProfile <> '' then
+    begin
+      { All four accepted symbol jobs are already inputs. Report the one real
+        construction without invoking any collection or continuation path. }
+      LUpdatedModules := LUpdatedModules.WithModule(LModule);
+      LContinuationPlan := PreparedSourcePlan(LSemantic.Source, LPreparation);
+      LView := NewNyxPascalTranslatedSyntax(LSemantic.Source,
+        TNyxPascalSyntaxOptions.Defaults.UpToDeclarations(100000));
+      ReportNamespaceSemantic('prepared-imports', 'SysUtils', LSemantic, LView);
+      WriteLn('prepared imports totals / symbolJobs=4 maximumSymbolJobs=4',
+        ' totalDynamicJobs=7 maximumDynamicJobs=8 freshFactCaptures=0 freshSymbolCaptures=0',
+        ' preparationWork=', LPreparation.Receipt.Total, ' preparationMaximum=4000000',
+        ' semanticWork=', LSemantic.WorkTokens, ' semanticMaximum=4000000',
+        ' semanticPasses=', LSemantic.Passes, ' semanticMaximumPasses=64');
+      Flush(Output);
+    end
+    else if GPrimitiveReplay <> '' then
     begin
       LUpdatedModules := LUpdatedModules.WithModule(LModule);
       LContinuedSemantic := ContinueProfileFirstSymbols(LFiles, LUpdatedWorld,
@@ -2408,7 +2558,18 @@ begin
   finally
 
     if LPreparation <> nil then
-      LPreparation.Retire;
+    begin
+      { A failed real unit must retain the actual preparation cost too. This
+        detached read neither replans source nor grants another allowance. }
+      try
+        WriteLn('prepared final receipt / work=', LPreparation.Receipt.Total,
+          ' maximum=', LPreparation.Receipt.Maximum,
+          ' final57Input=', GFinalProfile <> '');
+        Flush(Output);
+      finally
+        LPreparation.Retire;
+      end;
+    end;
   end;
 end;
 
@@ -2671,8 +2832,8 @@ procedure RequireArguments(out ARepository, ARuntime: TNyxText);
 begin
 
   if (ParamCount <> 5) and (ParamCount <> 7) and (ParamCount <> 8) and
-    (ParamCount <> 9) and (ParamCount <> 10) then
-    raise Exception.Create('Supply repository, accepted RTL runtime, verified216 inputs, retained profile runtime and retained Windows compiler directory; optional compiler and fresh-output arguments must be supplied together, followed optionally by one retained continuation directory, both exact prepared35/36 reply directories, or those two plus the accepted primitive reply directory');
+    (ParamCount <> 9) and (ParamCount <> 10) and (ParamCount <> 12) then
+    raise Exception.Create('Supply repository, accepted RTL runtime, verified216 inputs, retained profile runtime and retained Windows compiler directory; optional compiler and fresh-output arguments must be supplied together, followed optionally by one retained continuation directory, both exact prepared35/36 reply directories, those two plus the accepted primitive reply directory, or that complete form plus the accepted57 profile and explicit import-input directory');
   ARepository := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(1)));
   ARuntime := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(2)));
   GVerifiedInputs := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(3)));
@@ -2683,6 +2844,8 @@ begin
   GSymbolReplay := '';
   GPreparedReplay := '';
   GPrimitiveReplay := '';
+  GFinalProfile := '';
+  GImportInputs := '';
 
   if ParamCount >= 7 then
   begin
@@ -2714,7 +2877,7 @@ begin
       raise Exception.Create('Prepared mode needs two distinct explicit directories with exact cumulative sources and terminal transcripts');
   end;
 
-  if ParamCount = 10 then
+  if ParamCount >= 10 then
   begin
     GPrimitiveReplay := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(10)));
 
@@ -2722,6 +2885,20 @@ begin
       not FileExistsUTF8(GPrimitiveReplay + '/system.pp') or
       not FileExistsUTF8(GPrimitiveReplay + '/compiler-profile.log') then
       raise Exception.Create('Profile-first mode needs the distinct accepted primitive source and terminal reply directory');
+  end;
+
+  if ParamCount = 12 then
+  begin
+    GFinalProfile := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(11)));
+    GImportInputs := ExcludeTrailingPathDelimiter(ExpandFileNameUTF8(ParamStr(12)));
+
+    if (GFinalProfile = GSymbolReplay) or (GFinalProfile = GPreparedReplay) or
+      (GFinalProfile = GPrimitiveReplay) or
+      not FileExistsUTF8(GFinalProfile + '/nyxcompilercontext.pas') or
+      not FileExistsUTF8(GFinalProfile + '/compiler-profile.log') or
+      not FileExistsUTF8(GImportInputs + '/import1-paths.txt') or
+      not FileExistsUTF8(GImportInputs + '/rtl/objpas/sysconst.pp') then
+      raise Exception.Create('Prepared-import mode needs the distinct accepted57 source/log pair and one explicit retained SysConst manifest/source');
   end;
 
   if not FileExistsUTF8(ARepository + '/src/nyx.controls.pas') or

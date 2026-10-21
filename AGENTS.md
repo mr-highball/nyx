@@ -1,5 +1,35 @@
 # Working in Nyx
 
+USER PRIORITY CHANGE (2026-10-20): park further resolver/source-reference
+expansion and return to core Nyx components, layout and Studio usability. Finish
+and record only the already-admitted preparation33 source reader, then preserve
+its exact result/return path. Do not start another resolver, TGUID, static-help,
+compiler-fact or source-capture batch from the older instructions below. This is
+a workstream deferral, not goal completion or a claim of resolver percentage.
+Root coordinates one meaningful existing core task after the reader joins;
+Lil' Scooty reviews that task read-only meanwhile. Preserve concurrent planning
+files and the separately deferred splitter ticket. No new host/config retries,
+cleanup, additional agents or rollout is authorized by this priority change.
+
+Preparation33 is now joined/audited: real WinDirs255/SysConst166 are complete;
+SysUtils8788/35 answers refuses check92 on ver3_2_2/Integer-size/FATAL-context
+gaps at2633694/4M work and36/64 passes. Final preparation688467/4M, clean heap,
+zero fresh native jobs/output; all1747/protected/compiler/foreign/240+one and
+accepted reply pins exact. Readers are joined, not pending. The user asks for
+granular remaining-work backlog tasks first, then core Nyx; no more resolver
+implementation, compiler variants or source/fact collection is active.
+
+The requested granular backlog is authored: NS-4_pascal-resolver_01..14 and
+NS-4_studio-reference_05..10, all deferred with full acceptance/blockers; original
+reference01..04 stay exact. TODO/README.md receives only a user-requested appended
+section, preserving every pre-existing byte; the other12 concurrent planning
+paths remain exact. Its prior whole-file foreign pin is historical, with the
+intentional root append recorded separately. No weights/credits/counters change.
+Core return: existing NS-3_components_01/NS-4_studio-authoring_01, public reusable
+instance Parts Hide/Restore editor with sibling/definition isolation, saved
+Pascal and paired history. Agree separate form/controller implementation scopes
+before edits. Resolver backlog authoring does not authorize another resolver run.
+
 Cleanup, scratch-file removal and one-off helper scripts are on-demand user
 requests, not recurring review/creation work or routine readiness updates.
 Continue the active product task after the requested handoff.
@@ -32,6 +62,69 @@ continue independent read-only review/design or owned documentation for the next
 item. Root coordinates the next implementation scope and all build admission.
 Preserve full acceptance criteria; do not create busywork, recurring cleanup or
 compiler variants to remain occupied. The reported splitter ticket stays deferred.
+
+Preparation32 is joined/audited: all16 compilers succeed; native syntax8500,
+types520, binding130, declarationexpressions178 and witness43 pass with clean
+heaps and original repository arguments. Zero owned/fifty-six upstream warnings;
+all source/protected/compiler/foreign/240+one/accepted inputs stay exact. Root
+admits ONE preparation33 genuine12arg run using the compiledp32 consumer and
+saved57/primitive inputs. No rebuild or new native fact/symbol job, continuation,
+second SysUtils construction, Classes overlay or further variant. Preserve every
+original identity, per-view2M, namespace/SysUtils4M/64, preparation4M and full gate.
+All Pascal/guides pause until terminal join/audit; retain the actual frontier and
+detached final preparation receipt. Full criterion/task/credit/DONE stays open.
+
+Preparation32 handoffs reviewed: exact procedural-variable suffix/separator
+repair, independent typed windows and detached final budget receipt. Root
+freezes both lanes/admitted16 focused consumer/product compilers only; original
+native repository arguments retained. All Pascal pauses until every reader
+joins and pins are audited. No new oracle process, native fact/symbol job,
+genuine source run or full acceptance. Preserve p31 failure and recovery evidence.
+
+Preparation31 joined: accepted57/primitive replay and217-source overlay pass, but
+WinDirs source resolves with zero source diagnostics while syntax has2 at the
+actual procedure-variable `stdcall; = nil` initializer boundary. It failscheck90
+clean heap before SysConst/SysUtils; no actual SDK SUT/package success follows.
+No new native job/output; all frozen/protected/foreign/240+one/accepted pins exact.
+Retain failure and prefix cost520918 (final preparation was not reported); do not
+freeze recovered256 declarations as an invariant. Next released lanes: helper
+existing syntax.pas/syntax consumer/guide for exact outer initializer separator;
+root existing types consumer for independent typed windows and source-consumer
+finally receipt only. Preserve real type/header/expression/sibling ownership,
+malformed refusal, all limits and full original gate. No API/enum/record/schema,
+new oracle/probe, compiler/full rerun until both source-ready handoffs and root
+review/admission. All readers joined, LAN offline; preserve concurrent work.
+
+Preparation30 joins16 successful compilers, five native consumers265/38/38/43/525
+with clean heaps and actual repository callback gate; source/Studios/backend/
+worker browser compile only, zero owned/fifty-six upstream warnings. All frozen/
+protected/foreign/240+one import and accepted source/log inputs remain exact.
+12arg missing-import guard refuses at check0 without output/job. Root admits
+ONE preparation31 genuine12arg run from compiledp30: accepted57+primitive replay,
+one approved SysConst packet, genuine checked imports before one SysUtils.
+No new native symbol/fact jobs, continuation/second construction, fifth cohort,
+Class overlay or further variant. Every original identity/2M/4M/64 bound and full
+final gate remain. Pascal stays paused; stop at the actual terminal result.
+
+Preparation30 source handoffs/review complete. Root freezes both lanes and admits
+only the declared16 focused consumer/product compiler jobs: native translation,
+macro, condition, witness, trace; paired browser/source compile; both Studios,
+backend/worker compile. All Pascal pauses until exact reader joins/audit. No
+genuine source run or native fact/symbol job yet. The new readonly SysConst
+packet is pinned separately beside original216/Class240; preserve all three roles.
+No full acceptance/credit or browser execution is inferred from compilation.
+
+Current released lanes after checkpoint52750e0: helper owns only existing
+translation.pas/translation consumer for VerifyBoundary's arbitrary-left-cut
+false string context (actual SUT empty-string expression). Preserve real joining
+refusal, original lexical/token ownership, Unicode/origins, cancellation and all
+byte/work limits; no second grammar or diagnostic suppression. Root temporarily
+owns source consumer for explicit accepted57 replay and genuine checked imported
+namespaces, plus narrow already-authorized SysConst dependency input capture.
+No compiler/native collection/full-source run until both source-ready handoffs
+and root admission/freeze. No overlap, new public API/schema/GUID, fifth symbol
+job, guessed absence, retagged source or weakened final gate. Preserve all earlier
+failures and foreign work; full original source/package/adoption remains open.
 
 Preparation29 is joined. Saved LongWord4 replay derived from actual DWord182/
 origin40 passes exact one-fact application without recollection. The actual final

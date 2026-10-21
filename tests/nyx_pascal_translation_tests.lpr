@@ -26,6 +26,7 @@ program nyx_pascal_translation_tests;
 
 uses SysUtils, Classes, nyx.text, nyx.scheduler, nyx.pascal.lexing,
   nyx.pascal.context, nyx.pascal.files, nyx.pascal.translation,
+  nyx.pascal.macros, nyx.pascal.work,
   nyx.pascal.files.project,
   nyx.pascal.sources, nyx.pascal.project, nyx.pascal.names, nyx.pascal.drafts;
 
@@ -52,6 +53,21 @@ type
     procedure Cancel;
     function GetCancelled: Boolean;
   end;
+  { Observe the exact copied boundary-window admission, whose size is derived
+    from this fixture's complete comment/replacement/suffix. The underlying
+    ordinary budget remains authoritative; cancellation returns from admission
+    so the translation must check before copying or publishing anything. }
+  TBoundaryBudget = class(TInterfacedObject, INyxPascalAnalysisBudget)
+  public
+    Inner: INyxPascalAnalysisBudget;
+    WindowBytes, WindowReads, WorkBeforeWindow: Integer;
+    CancelAtWindow, Stopped: Boolean;
+    procedure Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer = 1);
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    function Receipt: TNyxPascalAnalysisReceipt;
+    procedure Retire;
+  end;
 
 var
   GChecks: Integer;
@@ -75,6 +91,41 @@ function TPolledCancellation.GetCancelled: Boolean;
 begin
   Inc(Polls);
   Result := FCancelled or (Polls > 7);
+end;
+
+procedure TBoundaryBudget.Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if (APhase = papSourceProof) and (AUnits = WindowBytes) then
+  begin
+    Inc(WindowReads);
+    WorkBeforeWindow := Inner.Receipt.Total;
+  end;
+  Inner.Admit(APhase, AUnits);
+
+  if CancelAtWindow and (APhase = papSourceProof) and (AUnits = WindowBytes) then
+    Stopped := True;
+end;
+
+procedure TBoundaryBudget.Cancel;
+begin
+  Stopped := True;
+end;
+
+function TBoundaryBudget.GetCancelled: Boolean;
+begin
+  Result := Stopped or Inner.Cancelled;
+end;
+
+function TBoundaryBudget.Receipt: TNyxPascalAnalysisReceipt;
+begin
+  Result := Inner.Receipt;
+end;
+
+procedure TBoundaryBudget.Retire;
+begin
+  Stopped := True;
+  Inner.Retire;
 end;
 
 function NativeFacts(AVersion: Integer = 30301): INyxPascalCompilerContext;
@@ -533,6 +584,144 @@ begin
   Check(LRejected and (LPoller.Polls > 7), 'Cancellation is observed inside a long physical token');
 end;
 
+{ The actual SUT expression from retained syshelps.inc exposed an eight-scalar
+  cut inside the preceding empty string. Every replacement keeps physical
+  include origin; genuine new numeric/string/comment tokens still refuse. }
+procedure MacroBoundaries;
+const
+  CSetup = '{$macro on}{$define SUT:=sysutils}';
+  CActual = '  Result:=(ASubText<>' + #39#39 + ') and (SUT.CompareText(' +
+    'System.Copy(AText,System.Length(AText)-System.Length(ASubText)+1,' +
+    'System.Length(ASubText)),ASubText)=0);';
+var
+  LFiles: INyxPascalFileCatalog;
+  LSource, LPrior, LCandidate: INyxPascalTranslation;
+  LMacros: INyxPascalTranslationMacros;
+  LBudget: INyxPascalAnalysisBudget;
+  LPolicy: TBoundaryBudget;
+  LBody, LText, LComment: TNyxText;
+  LAt, LExpanded, LWindowBytes, LBefore, LExpansionBytes: Integer;
+  LRejected: Boolean;
+  procedure RefusesJoin(const ADefinition, ABody: TNyxText);
+  begin
+    LSource := NewNyxPascalTranslation(NewNyxPascalFileCatalog(pfcExact)
+      .WithFile(NyxPascalPhysicalFile('join.pas'), '{$macro on}' + ADefinition + ABody),
+      NyxPascalPhysicalFile('join.pas'), NativeFacts, TNyxPascalTranslationOptions.Defaults);
+    Check(not LSource.Resolved and HasIssue(LSource, ptiMacroContext),
+      'A real surrounding-token join still refuses: ' + String(ABody));
+  end;
+  procedure Policy(AMaximum: Integer; ACancel: Boolean = False);
+  begin
+    LPolicy := TBoundaryBudget.Create;
+    LBudget := LPolicy;
+    LPolicy.Inner := NewNyxPascalAnalysisBudget(AMaximum);
+    LPolicy.WindowBytes := LWindowBytes;
+    LPolicy.CancelAtWindow := ACancel;
+  end;
+begin
+  Check(Copy(CActual, Pos('SUT.CompareText', CActual) - 8, 8) = #39 + ') and (',
+    'The exact retained SUT expression exposes the old cut at the second empty-string quote');
+  LBody := CActual + #10 + 'WriteLn(''can''''t'',SUT.Name);' + #10 +
+    '{🐾 an odd '' quote}SUT.Name;' + #10 + '(* an odd '' quote *)SUT.Name;';
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('main.pas'), CSetup +
+      '{$I ''parts-🐾.inc''}{$I ''parts-🐾.inc''}SUT.Name;')
+    .WithFile(NyxPascalPhysicalFile('parts-🐾.inc'), LBody);
+  LPrior := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('main.pas'),
+    NativeFacts, TNyxPascalTranslationOptions.Defaults);
+  Check(LPrior.Resolved and (LPrior.DiagnosticCount = 0) and (LPrior.OccurrenceCount = 3),
+    'Actual SUT punctuation, escaped strings, quote-containing comments and Unicode repeated includes remain resolved');
+  Check(Supports(LPrior, INyxPascalTranslationMacros, LMacros),
+    'Resolved replacements retain their ordinary optional expansion owner');
+  Check(LPrior.Files.SameFiles(LFiles) and
+    (LMacros.Expansion(0).Trace(0).Definition.Replacement = 'sysutils') and
+    (LMacros.Expansion(0).Trace(0).Definition.Occurrence = 0),
+    'The original source stays exact and both includes use the parent-owned SUT definition');
+  LExpanded := 0;
+  for LAt := 0 to LPrior.Count - 1 do
+  begin
+
+    if not LPrior.Token(LAt).Expanded then Continue;
+    Inc(LExpanded);
+    Check((LPrior.Text(LAt) = 'SUT') and (LPrior.PhysicalToken(LAt).Span.Length = 3) and
+      (LMacros.Expansion(LPrior.Token(LAt).Expansion).Joined = 'sysutils'),
+      'Each accepted replacement retains its whole physical invocation and exact independent output');
+  end;
+  Check(LExpanded = 9,
+    'Every SUT in both physical include occurrences and after the parent directive expands once');
+  RefusesJoin('{$define NUMBER:=1}', 'NUMBER.5;');
+  RefusesJoin('{$define DOT:=.}', '.DOT;');
+  RefusesJoin('{$define STAR:=*}', '(STAR)');
+  RefusesJoin('{$define SLASH:=/}', '/SLASH body');
+  RefusesJoin('{$define TEXT:=''right''}', '''left''TEXT;');
+
+  LComment := '{' + TNyxText(StringOfChar('x', 4096)) + '}';
+  LText := CSetup + LComment + 'SUT.Name';
+  LWindowBytes := Length(LComment) + Length('sysutils') + Length('.Name');
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('budget.pas'), LText);
+  Policy(2000000);
+  try
+    LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('budget.pas'),
+      NativeFacts, TNyxPascalTranslationOptions.Defaults, LBudget);
+    Check(LSource.Resolved and (LPolicy.WindowReads = 1),
+      'A complete long preceding comment is copied through one exact admitted boundary window');
+    LBefore := LPolicy.WorkBeforeWindow;
+    Check(Supports(LSource, INyxPascalTranslationMacros, LMacros),
+      'The admitted boundary retains the real expansion work receipt');
+    LExpansionBytes := LMacros.Expansion(0).WorkBytes;
+  finally
+    LBudget.Retire;
+  end;
+  Policy(2000000);
+  LRejected := False;
+  LCandidate := nil;
+  try
+    try
+      LCandidate := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('budget.pas'),
+        NativeFacts, TNyxPascalTranslationOptions.Defaults.UpToExpandedBytes(
+          Length(LText) + LExpansionBytes + LWindowBytes - 1), LBudget);
+    except
+      on ENyxPascalMacroLimit do LRejected := True;
+    end;
+    Check(LRejected and (LCandidate = nil) and (LPolicy.WindowReads = 0) and LPrior.Resolved,
+      'One missing boundary byte refuses before window admission/copy and preserves the prior source');
+  finally
+    LBudget.Retire;
+  end;
+  Policy(LBefore + LWindowBytes - 1);
+  LRejected := False;
+  LCandidate := nil;
+  try
+    try
+      LCandidate := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('budget.pas'),
+        NativeFacts, TNyxPascalTranslationOptions.Defaults, LBudget);
+    except
+      on E: ENyxPascalAnalysisWorkLimit do
+        LRejected := (E.Phase = papSourceProof) and (E.WorkBefore = LBefore) and
+          (E.Requested = LWindowBytes);
+    end;
+    Check(LRejected and (LCandidate = nil) and (LPolicy.WindowReads = 1) and LPrior.Resolved,
+      'The exact copied-window work is refused before allocation under the remaining ordinary budget');
+  finally
+    LBudget.Retire;
+  end;
+  Policy(2000000, True);
+  LRejected := False;
+  LCandidate := nil;
+  try
+    try
+      LCandidate := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('budget.pas'),
+        NativeFacts, TNyxPascalTranslationOptions.Defaults, LBudget);
+    except
+      on ENyxPascalAnalysisCancelled do LRejected := True;
+    end;
+    Check(LRejected and (LCandidate = nil) and (LPolicy.WindowReads = 1) and LPrior.Resolved,
+      'Cancellation returned by the copied-window admission stops before source publication');
+  finally
+    LBudget.Retire;
+  end;
+end;
+
 { The inspected FPC30301 scanner consumes one IFDEF/IFNDEF identifier and leaves
   the remaining directive comment inert. Other compiler contexts keep the old
   whole-operand grammar, and no macro truth follows from the chosen spelling. }
@@ -805,6 +994,7 @@ begin
     Contexts;
     Files;
     Translation;
+    MacroBoundaries;
     ConditionalDefineOperands;
     MultipleHelperPolicies;
     {$ifndef PAS2JS}

@@ -2,6 +2,68 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Active priority — back to core Nyx (2026-10-20)
+
+The user asks to switch from the extended resolver work back to core Nyx tasks.
+Finish/join/audit only the already-running preparation33 source check, retain
+the exact checkpoint and actual unresolved frontier, then defer further resolver
+and source-reference expansion. Do not begin the previously queued TGUID,
+Classes, static-help, source capture or compiler-fact batches. There is no
+evidence-backed 80/90-percent assessment for the complete resolver outcome;
+successful focused primitives are distinct from complete RTL/editor adoption.
+The resolver/reference return path remains NS-4_studio-reference_01 then _02,
+with all original criteria and historical failures intact, but is no longer the
+active implementation priority. The overall Nyx goal remains active.
+
+The core return task is NS-3_components_01's reusable-component depth, consumed
+by NS-4_studio-authoring_01: a public Nyx Parts editor that can Hide named part
+and Restore original on one reusable instance. A Card's actions can be hidden
+without changing its definition or sibling instances, with exact saved Pascal
+and one paired Undo/Redo step. Existing remove/inherit transactions supply the
+model; the missing outcome is the ordinary authoring affordance, including
+already-hidden parts. Root coordinates the ordinary Studio/controller lane;
+Lil' Scooty next reviews the reusable public form/proposal lane read-only before
+separate implementation ownership is released. Replacement-payload authoring
+is a distinct later slice. Preserve concurrent planning work and the deferred
+external splitter ticket; this return does not resume resolver qualification.
+
+Resolver parking checkpoint: preparation33 is terminal and fully joined/audited.
+Actual WinDirs255 declarations and SysConst166 are complete with zero source/
+syntax diagnostics (8149/3407 work, one pass each). SysUtils reaches8788
+declarations/35 semantic answers at2633694/4M work and36/64 passes, then correctly
+refuses at check92: uncaptured ver3_2_2 in two include occurrences, uncertain
+sizeof(Integer) branches and the following FATAL directive policy. Five source
+diagnostics and two EOF/body-recovery syntax diagnostics remain; these are not
+new completed declarations or a complete package. The detached preparation total
+is688467/4M. No new compiler fact/symbol job or output is created; logical symbols
+remain4/4 and primitives7/8. All1,747 Pascal/protected5/compiler3/foreign13,
+240+one captured sources and acceptedp18/p19/p25/p29 source/log inputs stay exact.
+Heap is clean:33,248,380 blocks and18,610,377,356 cumulative bytes allocated/freed,
+zero unfreed. preparation33-all-joined-private.json owns the retained result.
+Do not retry this frontier or capture further facts while the workstream is
+deferred. The user's next instruction is to carve the remaining work into
+granular canonical backlog tasks before returning to core Nyx.
+
+Backlog handoff (2026-10-21): fourteen deferred NS-4_pascal-resolver_01..14 tasks
+now divide real SysUtils, Classes, exact facts, types/helpers, generic/overload
+calls, expressions/conversions, incremental analysis, cancellation/scheduling,
+ordinary completion, definition navigation, target context, final qualification,
+exact reference discovery and reviewed atomic rename. Six deferred
+NS-4_studio-reference_05..10 prerequisites cover variant topology,
+authored generics, complete source package/index, static emission and linked
+registration and a distinct bounded public-declaration maintenance reassessment.
+Existing reference01..04 retain their original scope and UI/QA
+ownership. Each new task states starting evidence, likely owners, observable
+acceptance and blockers; none changes original task/criterion/credit/DONE status
+or gates unrelated core work. TODO/README.md has one appended navigation section.
+Its entire previous byte sequence and the other12 concurrent planning paths
+are preserved; the narrow user-requested append has its own private receipt.
+Independent review corrected the separate aggregate/construction limits, made
+generic constraint descriptor work explicit, retained references/rename/public
+maintenance outcomes and removed unnecessary implementation serialization behind
+whole helper/library completion. All20 task files have required sections and
+validated local links/dependency order. No compiler is run for this handoff.
+
 The full user outcome remains in MILESTONES.md. Root coordinates one authorized
 helper, Lil' Scooty, in a separate source scope. Product and
 substantive tools are Pascal in Delphi dialect, with thorough comments and blank
@@ -55024,3 +55086,157 @@ checkpoint whitespace receipt qualifies this nonsemantic delta; compiler/heap
 receipts retain their original byte identities and are not rerun for whitespace.
 All other preparation28 Pascal bytes and all concurrent/protected inputs stay
 exact. Checkpoint remains partial work with the genuine full-source refusal open.
+
+Goal continuation classifies the previous turn as PROGRESS: independent trace525
+passes, actual accepted57 symbol input, concrete missing-import frontier and the
+owned44 checkpoint52750e0866b8a6d047dc0c9679ca07578f395faf change authoritative
+state and the next action. That checkpoint is pushed and independently remote
+verified; owned/index clean and foreign13 exact at its terminal receipt. No
+original criterion/task/credit/DONE closed; at least57 historical unclosed batches
+remain, so follow the changed existing-owner prerequisites rather than another
+full-source/probe variant.
+
+After the read-only owner review, release two separate implementation lanes.
+Lil' Scooty owns existing translation.pas and its translation consumer for the
+real syshelps.inc SUT macro-boundary failure. VerifyBoundary currently starts an
+arbitrary eight-scalar fragment at the second quote of the completed empty string
+in Result:=(ASubText<>'') and (SUT.CompareText(...), creating a false unterminated
+literal. Use actual lexical ownership/boundaries; preserve real token fusion
+refusal, source origins, Unicode, byte/work admission and cancellation. No second
+grammar, diagnostic suppression, public API or schema. Root temporarily owns
+the source consumer for explicit accepted57 input and genuine imported namespaces
+before SysUtils; narrow already-authorized SysConst source-dependency capture
+belongs to root. Keep original216 and optional240/Class input roles distinct.
+No compiler, native collection or full-source run is released until source-ready
+handoffs, exact root review and freeze. Every old failure/context/job/work/pass
+limit and the unchanged complete-source/package gate remains required.
+
+Root retains the one genuinely imported missing source SysConst from the configured
+installed RTL (12,397 bytes, strict UTF8, SHA256
+EE8006835EF52925E053A96F7101BC672155B2B42E6BCDE08F98B016B15A1FF7).
+The installed source stays read-only; no compiler/configuration/process runs.
+approved-import-inputs-private.json and approved-import-source-capture-private.json
+own that single explicit packet and its import1-paths manifest. Original216 and
+separate Class union240 remain untouched; no directory or SDK sweep is added.
+
+Root's source-consumer handoff adds explicit12arg prepared-import mode while
+preserving legacy5/7/8/9/10. Restore/verify accepted33→35→36→57 cumulative profiles
+before initial SysUtils, replay the primitive after unchanged old-six jobs, then
+construct genuine WinDirs/SysConst namespaces from exact captured roots. One
+charged atomic packet overlay extends216 to217 without replacing bytes/search
+order; each new namespace retains separate existing4M/64 and view2M, with complete
+source/zero diagnostics/header agreement before insertion. The initial context
+is pristine accepted57 plus the independent updated bootstrap; source MODE/H
+remains owned by each unit. One SysUtils construction retains4M/64 and the
+unchanged final whole-source/package assertion; new mode has no continuation,
+capture or second-construction branch. Logical symbol4/4 and facts7/8 retain old
+accepted work/identity; no new job capacity appears. This handoff is uncompiled,
+not namespace completeness, source/package fit or acceptance evidence.
+
+Both lanes are source-ready and reviewed. The private physical reader retains
+only its preceding admitted token span, independently per include. The boundary
+window starts at that complete token, retains bounded right lookahead, preflights
+actual UTF8 bytes, admits copied work before slicing and checks returned
+cancellation before allocation; existing crossing-token refusal remains. The
+translation consumer adds24 checks over actual SUT text/origins, strings/comments/
+Unicode/repeated includes, genuine joins, long predecessor, byte/work and
+cancellation refusal. No public API/schema/layout/feature-vector change. Root's
+prepared-import path was independently reviewed; SysConst's existing
+FPC_HAS_FEATURE_ANSISTRINGS observation is already in the accepted default anchor.
+No extra query is inferred. Root freezes preparation30 and admits16 scoped
+compiler jobs: five focused native consumers/paired browser, source paired
+compile, both Studios/backend/worker compile. The trace uses the actual saved57
+source as a new canonical input. These are pending checks; no genuine source run,
+native fact/symbol collection, browser execution or full acceptance is admitted.
+
+Preparation30 joins all16 successful compiler jobs: native translation265,
+macro38, condition38, witness43 and trace525 pass with clean heaps. The first
+translation invocation omitted its optional repository argument and passed213;
+that narrower log remains retained. Reusing the same executable with the original
+repository argument qualifies all265, including the real callback include.
+Paired browser/source and both Studios/backend/worker compile only. Zero owned
+warnings/fifty-six upstream browser occurrences. Source1,747/protected5/compiler3/
+foreign13 and all240+one requested import packets remain exact; acceptedp18/p19/
+p25/p29 source/log identities stay exact. preparation30-all-joined-private.json
+owns terminal receipts and the three changed Pascal inputs since checkpoint.
+The new12arg missing-import guard also refuses at check0, clean heap, with no
+output or compiler job; its separate receipt retains that negative case.
+
+Root admits ONE preparation31 genuine12arg execution from compiledp30, not a
+rebuild or new compiler-fact collection. The operation reads accepted57 and the
+single approved SysConst source, checks real imported units before one SysUtils
+construction and retains every old source-v1/root/namespace/default identity.
+Symbol4/4 and fact7/8 correspond to retained jobs, with zero new native capacity.
+Per-view2M and each existing namespace/SysUtils4M/64 plus shared preparation4M
+stay intact. No continuation, second SysUtils construction, new probe/primitive,
+Class overlay or further run variant. Stop on its actual terminal frontier and
+retain costs/failure. Full original criterion/package/adoption/browser execution/
+task/credit/DONE remains open until its intended checks actually pass.
+
+Preparation31 is joined: saved57 and the primitive reply apply exactly; original
+and rebuilt System13101/31, ObjPas209/1 and Windows29823 remain qualified at
+their existing costs. The explicit new SysConst header/packet overlays216→217,
+but the FIRST actual WinDirs namespace refuses its strict syntax gate at check90.
+Its source is resolved with zero source diagnostics/8149 work/one pass/zero
+answers; declaration recovery produces256 rows and two syntax diagnostics at
+physical23810 '=' and23815 ';'. That count includes a fabricated recovered nil
+variable and is not a future invariant. Actual authored source is
+_CoTaskMemFree: procedure(_para1:PVOID); stdcall; = nil;. The variable reader
+stops at the convention's terminal semicolon and misses the outer initializer.
+SysConst and SysUtils analysis are NOT reached; the real SDK SUT path is therefore
+still unqualified despite the passing focused macro case. Heap is clean:
+30,829,565 blocks/18,303,013,882 cumulative bytes allocated and freed; no fresh
+output or compiler job. All source/protected/compiler/foreign/240+one import and
+accepted reply pins remain exact; preparation31-all-joined-private.json owns
+actual receipts. Last reported preparation520918 is a prefix, not a final total;
+no unreported cost is guessed. Stop import/probe/full-run variants.
+
+Reassessment changes the next action to the existing procedural-variable syntax
+owner, preserving declaration roles and separate type/initializer spans. Helper
+owns only syntax.pas/its maintained consumer/guide for the semicolon immediately
+before a real outer '=' or ':=' initializer; nested parameter defaults and
+following declarations retain their old ownership. Root owns the existing types
+consumer to independently qualify those separated procedure/function/reference
+windows, plus a detached final preparation receipt in the source consumer's
+finally block. It reads existing counters on success/failure, adds no analysis,
+refund, probe or quota. No public API/enum/record/schema change or relaxed syntax
+gate. Both handoffs/review precede any compiler or genuine source run. Original
+task/criterion/package/adoption/credit/DONE and at least57 historical unclosed
+batches stay open; this turn changes maintained code and concrete evidence,
+without claiming full acceptance or an external-input block.
+
+Both initializer handoffs are source-ready and reviewed. The parser records
+whether the existing procedural suffix actually advanced, freezes the old type
+window, then consumes one variable-only semicolon only before an actual outer
+initializer. Ordinary named types, suffix-absent forms, fields and siblings keep
+their old boundaries; malformed values still diagnose. Existing native syntax
+consumer compilation includes the inert valid spelling itself (never invoked),
+alongside exact authored header/value/type and recovery checks. Root's separate
+type-reader cases preserve inner defaults/results/reference target and outer nil.
+These are uncompiled assertions until preparation32. Root freezes both lanes
+and admits the declared16 focused consumer/product compiler jobs, with original
+repository arguments for native syntax/types/binding/declaration-expression
+consumers. No new oracle process, compiler fact/symbol capture, genuine source
+run, public API/schema or full original acceptance is admitted by this batch.
+
+Preparation32 joins/audits all16 successful compiler jobs. Native syntax8500,
+types520, binding130, declarationexpressions178 and witness43 pass with clean
+heaps and original repository arguments where required. The actual inert native
+procedure-variable spelling compiles without invocation. Paired browser/source,
+both Studios/backend/worker compile only; zero owned/fifty-six upstream warning
+occurrences. All1,747 Pascal/protected5/compiler3/foreign13/240+one/accepted
+p18/p19/p25/p29 inputs remain exact. preparation32-all-joined-private.json owns
+the terminal evidence and four Pascal changes since preparation30; full source
+integration after the initializer repair has not executed.
+
+Root now admits ONE preparation33 genuine12arg native source execution, reusing
+the compiledp32 artifact with the original prepared inputs and a fresh unused
+output guard. It restores accepted57/primitive replies and checks genuine
+WinDirs/SysConst namespaces before one SysUtils construction. No rebuild, new
+native fact/symbol job, continuation, second SysUtils construction, Classes
+overlay or further variant. Every original source/context/default identity and
+per-view2M, namespace/SysUtils4M/64 and preparation4M limit stays intact. Both
+Pascal/documentation lanes pause until terminal join/audit; preserve the actual
+frontier and newly detached final preparation receipt. All prior failures and
+at least57 unclosed historical batches remain; original criterion, package,
+adoption, browser execution, task, credit and DONE stay open.

@@ -60,6 +60,11 @@ var
   GChecks: Integer;
   GCorpusFiles: Integer;
   GCorpusDeclarations: Integer;
+  {$ifndef PAS2JS}
+  { The native consumer itself compiles WinDirs' inert procedural-variable
+    spelling. It remains nil and the callback is never invoked. }
+  GCoTaskMemFree: procedure(_para1: Pointer); stdcall; = nil;
+  {$endif}
 
 procedure Check(AValue: Boolean; const AReason: String);
 begin
@@ -351,6 +356,111 @@ begin
     end;
   end;
   Check(LRejected, 'Cancellation publishes no syntax candidate');
+end;
+
+{ WinDirs' real initialized procedure variable separates its convention and
+  value with a semicolon. The type/value/header ranges keep distinct owners;
+  nested defaults, subsequent variables and malformed recovery stay intact. }
+procedure ProceduralInitializers;
+const
+  CActual = '_CoTaskMemFree: procedure(_para1:PVOID); stdcall; = nil;';
+var
+  LSyntax, LPrior: INyxPascalSyntaxSnapshot;
+  LDecl, LOther: TNyxPascalSyntaxDeclaration;
+  LMembers: Integer;
+begin
+  {$ifndef PAS2JS}
+  Check(not Assigned(GCoTaskMemFree),
+    'The native compiler admits the inert convention-separated initializer without executing a callback');
+  {$endif}
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit ActualWinDirs; interface type PVOID=Pointer; var ' +
+    CActual + ' Shell32DLLHandle: THandle = 0; Ole32DLLHandle: THandle = 0; implementation end.');
+  Check((LSyntax.DiagnosticCount = 0) and LSyntax.Scope(0).Complete,
+    'The exact WinDirs procedural-variable declaration owns its convention separator and initializer');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, '_CoTaskMemFree'));
+  Check((LDecl.Kind = psdkVariable) and (LDecl.TypeForm = pstfRoutine) and
+    not (psdfIncomplete in LDecl.Flags) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure(_para1:PVOID); stdcall')),
+    'The exact procedural type ends at stdcall, before the initializer separator');
+  Check((LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')) and
+    (LSyntax.Lexical.Slice(LDecl.HeaderSpan) = TNyxText(CActual)) and
+    (LDecl.TypeSpan.Finish < LDecl.ExpressionSpan.Start),
+    'The complete header includes every semicolon while the value span contains only nil');
+  Check((LSyntax.Named(0, 'nil') < 0) and (LSyntax.DeclarationCount = 4) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(Entry(LSyntax, 0, 'Shell32DLLHandle')).ExpressionSpan) = TNyxText('0')) and
+    (LSyntax.Lexical.Slice(LSyntax.Declaration(Entry(LSyntax, 0, 'Ole32DLLHandle')).ExpressionSpan) = TNyxText('0')),
+    'No nil variable is fabricated and both real initialized handle siblings survive');
+  LPrior := LSyntax;
+  ValidateSnapshot(LSyntax);
+
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit NestedDefaults; interface var ' +
+    'Callback: function(const N: Integer=3; const Text: String=''a;b=c''): Integer; cdecl; = nil; ' +
+    'Closure: reference to procedure(const N: Integer=5); stdcall; = nil; ' +
+    'Direct: procedure; stdcall = nil; Plain: procedure = nil; After: Integer; implementation end.');
+  Check((LSyntax.DiagnosticCount = 0) and LSyntax.Scope(0).Complete,
+    'Function/reference types retain nested defaults and either existing or separated initializer spelling');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Callback'));
+  Check((LSyntax.Lexical.Slice(LDecl.TypeSpan) =
+    TNyxText('function(const N: Integer=3; const Text: String=''a;b=c''): Integer; cdecl')) and
+    (LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')),
+    'Nested equals and semicolons remain inside parameter groups, outside the variable value');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Closure'));
+  Check((LSyntax.Lexical.Slice(LDecl.TypeSpan) =
+    TNyxText('reference to procedure(const N: Integer=5); stdcall')) and
+    (LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')),
+    'The reference-to prefix and complete convention remain owned by the type window');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Direct'));
+  Check((LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure; stdcall')) and
+    (LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')),
+    'The preexisting initializer without the final convention separator stays exact');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Plain'));
+  Check((LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure')) and
+    (LSyntax.Lexical.Slice(LDecl.ExpressionSpan) = TNyxText('nil')) and
+    (LSyntax.Named(0, 'After') >= 0) and (LSyntax.Named(0, 'N') < 0) and
+    (LSyntax.Named(0, 'nil') < 0),
+    'Plain procedural initialization and the next sibling keep their existing boundaries');
+
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Groups; interface var ' +
+    'First,Second: procedure; cdecl; After: Integer; implementation end.');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'First'));
+  LOther := LSyntax.Declaration(Entry(LSyntax, 0, 'Second'));
+  Check((LSyntax.DiagnosticCount = 0) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure; cdecl')) and
+    (LDecl.TypeSpan.Start = LOther.TypeSpan.Start) and
+    (LDecl.ExpressionSpan.Length = 0) and (LOther.ExpressionSpan.Length = 0) and
+    (LSyntax.Named(0, 'After') >= 0),
+    'An ordinary uninitialized group shares its exact procedural type without consuming its sibling');
+
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit Separators; interface var ' +
+    'Callback: procedure; stdcall; cdecl: Integer; &stdcall: Integer; ' +
+    'After: Integer; type TSlots=record Callback: procedure; stdcall; After: Integer; end; implementation end.');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Callback'));
+  LMembers := LSyntax.Declaration(Entry(LSyntax, 0, 'TSlots')).NestedScope;
+  Check((LSyntax.DiagnosticCount = 0) and (LDecl.ExpressionSpan.Length = 0) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure; stdcall')) and
+    (LSyntax.Named(0, 'cdecl') >= 0) and (LSyntax.Named(0, 'stdcall') >= 0) and
+    (LSyntax.Named(0, 'After') >= 0) and (LSyntax.Named(LMembers, 'After') >= 0),
+    'Ordinary semicolons, contextual/escaped names and record fields retain their prior declaration boundaries');
+
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit MissingValue; interface var ' +
+    'Bad: procedure; stdcall; = ; After: Integer; implementation end.');
+  LDecl := LSyntax.Declaration(Entry(LSyntax, 0, 'Bad'));
+  Check(HasIssue(LSyntax, psiExpectedName) and (psdfIncomplete in LDecl.Flags) and
+    (LDecl.ExpressionSpan.Length = 0) and
+    (LSyntax.Lexical.Slice(LDecl.TypeSpan) = TNyxText('procedure; stdcall')) and
+    (LSyntax.Named(0, 'After') >= 0),
+    'A missing procedural initializer remains incomplete while the following real variable recovers');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit OrdinaryType; interface var ' +
+    'Bad: Integer; = nil; After: Integer; implementation end.');
+  Check((LSyntax.DiagnosticCount > 0) and (LSyntax.Named(0, 'After') >= 0),
+    'An ordinary named type does not consume a new declaration separator as procedural value syntax');
+  LSyntax := NewNyxPascalSyntaxSnapshot('unit NoConvention; interface var ' +
+    'Bad: procedure; = nil; After: Integer; implementation end.');
+  Check((LSyntax.DiagnosticCount > 0) and (LSyntax.Named(0, 'After') >= 0),
+    'The extra initializer separator requires an actually consumed routine suffix');
+  Check(LPrior.Scope(0).Complete and (LPrior.DiagnosticCount = 0) and
+    (LPrior.Named(0, 'nil') < 0),
+    'Later malformed captures preserve the earlier exact WinDirs declaration snapshot');
 end;
 
 { Helper surface grammar preserves its owning type and target spelling without
@@ -812,6 +922,7 @@ begin
   {$endif}
   try
     Core;
+    ProceduralInitializers;
     Helpers;
     ModuleBodies;
     {$ifndef PAS2JS}NativeModuleBodies; Corpus;{$endif}
