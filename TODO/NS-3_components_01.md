@@ -2,7 +2,26 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Instance-local action authoring now completes the ordinary native Studio journey
+Typed Kanban movement is locally qualified under criteria one/three: native
+contract62, ordinary controls56desktop/56compact and exact compiled emitted
+companion56desktop/56compact pass with clean heaps. Stable-card keyboard/default
+actions and local drag slots share revision-aware prepared publication, including
+validator-time cancellation and postcommit failure semantics. Independent reusable
+stores remain isolated. Matching browser consumers compile only; [WORK.md](../WORK.md)
+retains the two test-initialization failures, composite source identity and all
+actual-input limits. This explicit three-lane attachment preserves the old static
+recipe; full Kanban breadth/parity and automatic Studio integration remain open.
+
+Core no-closure is five; no full original criterion/task/credit/DONE closes.
+Stop manual-attachment/fixture/compiler variants. Next follows
+[Studio authoring](NS-4_studio-authoring_01.md): explicit typed authored options,
+strict persistence/source round trips, ordinary configuration and safe automatic
+activation on the accepted mounted event generation. Preserve static absence,
+explicit disabled/inherited intent and reusable overrides. Root-reviewed design
+precedes implementation; this changes the next product outcome without weakening
+any original component, quality or parity acceptance.
+
+Previously qualified instance-local action authoring completes the native Studio journey
 at 1280/390 with 433/443 checks and clean heaps: named-part Customize, palette
 insertion, caption, callback TODO/source focus and exact paired history preserve
 the definition and sibling. The browser consumer compiles only. [WORK.md](../WORK.md)

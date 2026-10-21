@@ -202,9 +202,11 @@ runtime values; definition edits and instance state have different lifetimes.
 | Media/social | profile-card, media-card, avatar-group, comment-thread |
 
 These are defined composition recipes with tested ownership and selected
-interactions. Production behavior is still being completed: for example, the
-Kanban recipe defines lanes and action slots but does not yet implement card
-drag/drop. The confirmation recipe supports inline use and a
+interactions. Production behavior is still being completed. The Kanban recipe
+defines three lanes and action slots; the explicit [typed Kanban attachment](#typed-kanban-lane-movement)
+adds selected-card movement to its configured bound lists. Automatic Studio
+runtime attachment, arbitrary lane counts and complete card editing remain open.
+The confirmation recipe supports inline use and a
 [managed browser/LCL presentation](confirmation.md) with actual focus, cancellation,
 ordered callbacks and independent content. Data
 virtualization, overlays, picker parity, accessibility and broader interaction
@@ -213,6 +215,86 @@ coverage remain explicit [component work](../TODO/NS-3_components_01.md).
 Existing `INyxElement` units and demos remain as historical code. The new model
 preserves fluent composition and observable interaction concepts while providing
 one inspectable, serializable contract for Studio and both target adapters.
+
+## Typed Kanban lane movement
+
+`nyx.kanban` composes the existing specialized `INyxKanbanBoard`, collection views,
+events and ordinary Nyx buttons. Configure an authored board before mounting it:
+
+```pascal
+LPlan := NyxKanbanLane('plan');
+LBuild := NyxKanbanLane('build');
+LDone := NyxKanbanLane('complete');
+LOptions := NyxKanbanOptions(NyxCollection('cards'),
+  NyxTextField('title'), NyxTextField('lane'))
+  .Lane(LPlan, 'Plan')
+  .Lane(LBuild, 'Build')
+  .Lane(LDone, 'Complete')
+  .Scoped(csInstance);
+
+LBoard := NewNyxKanbanBoard('workflow');
+ConfigureNyxKanbanBoard(LBoard, LOptions);
+LDocument.AddComponent(LBoard);
+```
+
+The document supplies an ordinary collection schema/default dataset with those
+typed text fields. A card's lane is a configured open lane reference, independently
+of its caption or row position. This helper targets the existing three-lane recipe;
+it does not redefine every Kanban workflow as three stages. Instance scope gives
+each reusable occurrence its own live dataset. Existing Add actions remain
+application-owned; the attachment does not invent application card content.
+
+After mounting, retain the **actual realized board**, the same collection-view
+set used by the renderer, and that renderer's events/scheduler:
+
+```pascal
+LBinding := NewNyxKanbanBinding(LMountedBoard, LOptions, LMountedViews,
+  LRenderer.Events, LRenderer.Events.Scheduler, RefreshBoard);
+```
+
+`RefreshBoard` synchronizes the current renderer. Disconnect the managed binding
+before retiring that mounted page or renderer. It owns no renderer or document;
+its callback ports revoke their borrowed receiver. A captured move can outlive
+disconnection safely and then refuses publication. A new view generation requires
+a new attachment, even when its control names match the previous view.
+
+Select a card in a lane and activate the destination's **Move selected card here**
+button, using normal keyboard or pointer input. Local drag/drop moves the selected
+card through the same operation. Dragging another row does not silently select it.
+Foreign/external transfers grant no mutation authority. Public callers can capture
+the same command with `CaptureMove` and explicit item/source/destination/revision,
+then `Commit` or `Cancel` it.
+
+Default Click movement runs synchronously before ordinary application callbacks;
+their own execution policy remains the caller's choice. Gesture negotiation needs
+an active sequential platform response. Deferred/threaded gesture callbacks cannot
+retroactively offer or accept a drag. Configure, capture, commit, cancel and
+disconnect on the owning UI thread; marshal worker intent through the scheduler.
+
+Moves update the lane field without removing card identity. The current source
+must still visibly contain the card; an old filtered selection is insufficient.
+The exact shared store/revision and mounted lifetime are checked again after all
+validators and before installation. This uses existing atomic `PrepareAssign`
+with its Assign-style change receipts. Alternate collections must supply that
+atomic capability. Refused, stale and cancelled work preserves accepted data.
+Notification failures occur after committed installation: `Committed` stays true,
+and callers must not retry the operation as though it had rolled back.
+
+Generated Pascal retains normal list bindings, queries and added buttons. The
+application explicitly creates its runtime attachment after mounting; generation
+does not automatically install this application lifetime code. Custom recipe
+parts must preserve the required specialized lanes/lists/actions or admission
+refuses instead of borrowing another instance's view.
+
+`tools/build.ps1 -Target kanban -KanbanEvidenceDirectory <new directory>` includes
+the public contract consumer, ordinary native desktop/compact journey and exact
+emitted-companion reconstruction. It stages `kanban.html` with the Pascal browser
+consumer. `kanban.html?review` keeps the English two-board workspace interactive
+on an independently admitted host; the native executable also accepts
+`<new evidence directory> <width> --review`. The default run is a finite test.
+WORK.md owns actual current results. Compilation, synthesized native drag slots,
+physical input, accessibility, full performance and observing delivery remain
+separate evidence boundaries.
 
 ## Component discovery and creator descriptions
 

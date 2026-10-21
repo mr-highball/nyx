@@ -4,6 +4,72 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Kanban movement is locally qualified (2026-10-21), under
+[components](TODO/NS-3_components_01.md) criteria one/three. The public typed
+authoring helper configures the existing three-lane recipe; its managed mounted
+attachment moves a stable selected card through ordinary Move buttons and local
+drag/drop. Existing collection queries, Clone/Apply and atomic PrepareAssign own
+publication. There is no second collection mutation engine. Exact store/revision,
+current visible membership and live cancellation authority are checked again
+after all validators, before installation. Postcommit notification failure keeps
+Committed true and must not cause retry. Existing application event scheduling
+policies and Add actions retain their ownership.
+
+Native results: **62 public contract checks**, **56 ordinary control checks at
+1280 / 56 at 390**, and **56 / 56 through the exact compiled generated Pascal
+companion**, all with clean heaps. The real-control journey mounts two reusable
+boards with separate stores, selects actual list rows, activates a destination
+using native Space messages, and exercises standard LCL drag slots. Stale moves,
+foreign drops, disconnection and sibling isolation pass. Whole saved design
+reconstruction matches the emitted companion at both widths. These are actual
+mounted controls with synthesized host input, not physical hardware evidence.
+Viewed native client captures show readable English lanes and a vertically
+stacked narrow layout within the existing scroll host.
+
+The six accepted compiler jobs have **zero owned warnings**, with **21 repeated
+upstream warning occurrences** across three browser compilations. Matching
+browser consumers compile only. The initial focused native run stopped at49 on
+an undefined synthetic event value; the next stopped at50 on undefined synthetic
+transfer metadata. Both clean-heap failures remain retained. Only the focused
+consumer's event/transfer initialization changed, preserving assertions. Product
+and ordinary/generated control sources stayed exact. The retained initial,
+null-repair and transfer-repair freezes keep this composite boundary explicit.
+
+All readers are terminal. `final-all-joined-private.json`, below the packet owned
+by ignored `.local/kanban-paths-private.json`, retains logs, source/artifact hashes,
+generated inputs and the exact **1,753 Pascal / nine owned / thirteen concurrent**
+input audit. Root independently reviewed the public implementation; Lil' Scooty
+reviewed the real-control consumer, build target and guide. Final documentation
+and packaging require no unchanged compiler replay. The maintained
+`tools/build.ps1 -Target kanban -KanbanEvidenceDirectory <new directory>` mirrors
+the recorded qualification and retains finite native and staged browser review
+paths; its PowerShell syntax is checked, not counted as an additional execution.
+
+The existing board GUID/default recipe and generated interfaces remain intact.
+The application still explicitly owns attachment after mounting; automatic
+ordinary Studio/generated-host adoption is the next real gap. Full future Kanban
+breadth, browser execution, hardware/assistive quality, other widgetsets/DPI,
+performance and observing delivery remain open. No original criterion/task/
+credit/DONE closes; core no-closure remains **five**. The previous goal turn
+verified the already committed 20 deferred tasks and restated their handoff;
+it produced no new product state. This continuation finishes the qualified
+checkpoint and changes the next deliverable instead of another manual-attachment
+or fixture/compiler variant.
+
+Next: [ordinary Studio authoring](TODO/NS-4_studio-authoring_01.md), returning to
+components criteria1/3 and [input/parity](TODO/NS-2_parity-accessibility_01.md).
+Deliver explicit typed authored Kanban intent, strict persistence/source round
+trips, ordinary Studio configuration and automatic mounted-runtime activation.
+Absence preserves the old static recipe; disable and inherit must remain distinct
+for reusable occurrences. Candidate renderers must not attach callbacks to a
+temporary or prematurely exposed final event router. Lil' Scooty owns read-only
+design using existing optional-extension/source/pager precedents; root reviews
+the complete authoring and prepare/commit lifecycle before implementation release.
+Root owns current docs/checkpoint. No reader or new compiler is admitted now.
+Native Nyx tools were checked and remain absent; LAN stays offline. No host/
+configuration retry, alternate transport, cleanup/restart, new MCP schema/tool
+rollout or extra agent. Preserve deferred resolver/splitter work and concurrent13.
+
 The instance-local action workflow is locally qualified (2026-10-21). The
 ordinary native Studio journey passes **433 checks at 1280 / 443 at 390**, both
 with clean heaps. Existing named-layout Customize, palette Button, English

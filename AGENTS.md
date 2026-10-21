@@ -1,5 +1,35 @@
 # Working in Nyx
 
+Kanban movement is locally qualified (2026-10-21): native public contract62,
+ordinary controls56desktop/56compact and the exact compiled emitted companion
+56desktop/56compact pass with clean heaps. Real reusable instances retain separate
+stores; ordinary native selection, Space key messages and standard drag slots
+exercise stable-card moves. Synthesized host input is not hardware evidence.
+Default Click movement preserves caller scheduling policies. Prepared publication
+rechecks cancellation/lifetime after validators; notification failure stays
+committed. The existing board GUID/default recipe and generated interfaces stay
+unchanged. This is an explicit three-lane code-first attachment, not automatic
+Studio/generated-host integration or full Kanban breadth/parity acceptance.
+
+All readers joined/audited; 1,753 Pascal/nine owned/thirteen concurrent inputs stay
+exact. Two initial focused failures retain undefined synthetic event/transfer
+values; only that consumer's initialization changed afterward. Production and
+ordinary/generated control sources stay exact, with composite receipts retained.
+Six accepted compiler jobs have zero owned warnings/21 repeated upstream warning
+occurrences. Matching browser consumers compile only. WORK.md and ignored
+.local/kanban-paths-private.json own exact logs, source/artifact/remote receipts.
+
+No full original criterion/task/credit/DONE closes; core no-closure is five. Stop
+manual-attachment/fixture/compiler variants. The next changed deliverable is
+ordinary Studio-authored Kanban intent with safe automatic runtime activation,
+NS-4_studio-authoring_01 returning to NS-3_components_01 criteria1/3 and NS-2
+input/parity. Lil' Scooty owns read-only design through existing optional typed
+extensions, source round trips and renderer candidate/final-event ownership;
+root reviews that seam before releasing implementation. Preserve static absence,
+explicit disable/inherit and reusable overrides. No new tool/schema rollout,
+host/config retry, cleanup/restart or extra agent. LAN stays offline and native
+Nyx tools absent. Preserve concurrent13 and deferred resolver/splitter work.
+
 Payload authoring is locally qualified (2026-10-21): the ordinary native Studio
 journey passes 433 desktop/443 compact checks with clean heaps. Four real authored
 operations cover named-part Customize, palette Button, caption and Click Add;
