@@ -6818,7 +6818,7 @@ try {
       "-Fu$nyxLazarus/lcl/units/$nyxMasterDetailPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxMasterDetailPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxMasterDetailPlatform")
-    foreach ($nyxMasterDetailProgram in @('nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
+    foreach ($nyxMasterDetailProgram in @('nyx_studio_preview_tests', 'nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
       'nyx_semantic_events_tests', 'nyx_control_routes_tests', 'nyx_tool_canvas_tests')) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxMasterDetailFlags + @(
         "-FU$nyxMasterDetailNative", "-FE$nyxMasterDetailNative",
@@ -6853,7 +6853,7 @@ try {
     }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    foreach ($nyxMasterDetailProgram in @('nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
+    foreach ($nyxMasterDetailProgram in @('nyx_studio_preview_tests', 'nyx_master_detail_tests', 'nyx_master_detail_editor_tests',
       'nyx_semantic_events_tests', 'nyx_control_routes_tests', 'nyx_tool_canvas_tests',
       'nyx_master_detail_controls')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',

@@ -1009,6 +1009,28 @@ begin
     GStage := Succ(GStage);
   end;
 end;
+{$ifdef NYX_COMPILED_MASTER_DETAIL}
+{ The compiled companion also checks the saved bytes through ordinary project
+  admission. This exposes a refusal directly instead of inferring successful
+  Open from an unchanged pair, which may still belong to the former session. }
+procedure CheckSavedPair(const APair: TNyxProjectPair);
+var
+  LDocument: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LResolved: TNyxProjectPair;
+begin
+  LDocument := nil;
+  LWorkspace := nil;
+  try
+    AdmitNyxProject(APair, nprRequireMatch, LDocument, LWorkspace, LResolved);
+    Check(EncodeNyxProject(LResolved) = EncodeNyxProject(APair),
+      'independent admission retains the exact saved companion pair');
+  finally
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
+end;
+{$endif}
 procedure Finish; {$ifdef PAS2JS}async;{$endif}
 var
   LPair: TNyxProjectPair;
@@ -1087,6 +1109,7 @@ begin
       {$ifdef NYX_COMPILED_MASTER_DETAIL}
       GSaved := document.getElementById('expected-project').textContent;
       LPair := DecodeNyxProject(GSaved);
+      CheckSavedPair(LPair);
       LDocument := BuildNyxDocument;
       Check(TNyxCodec.Encode(LDocument) = LPair.Design,
         'compiled designer output reconstructs the exact saved Studio design');
@@ -1181,6 +1204,10 @@ begin
     GObserver := TFailureObserver.Create;
     Application.OnException := GObserver.Failed;
     {$ifdef NYX_COMPILED_MASTER_DETAIL}
+    { This branch owns no Studio or editor form; common teardown remains safe
+      even if strict saved-pair admission or compiled construction refuses. }
+    GStudio := nil;
+    GForm := nil;
 
     if ParamCount <> 3 then
     begin
@@ -1188,6 +1215,7 @@ begin
     end;
     GSaved := ReadNyxTextFile(ParamStr(3)).Text;
     LPair := DecodeNyxProject(GSaved);
+    CheckSavedPair(LPair);
     LDocument := BuildNyxDocument;
     Check(TNyxCodec.Encode(LDocument) = LPair.Design,
       'compiled designer output reconstructs the exact saved Studio design');

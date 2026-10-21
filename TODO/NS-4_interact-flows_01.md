@@ -81,3 +81,22 @@ atomic PreviewRuntime adoption; criteria5/6 remain the complete ordinary journey
 and compatibility gate here. No original criterion or credit is removed by this
 split. Browser execution requires an admitted session; compile-only results
 leave that acceptance portion open.
+
+**Local progress — 2026-10-21**
+
+Both Studio hosts now wire managed owner/weak slot/source hooks for root flows;
+native execution qualifies the journey below, while browser consumers compile only.
+The native ordinary journey passes165/175 and its own identical saved project/
+Pascal pair passes strict admission plus36/36 compiled application checks.
+Focused preview57 and existing raw-runtime Canvas55/63 pass with clean heaps;
+browser consumers compile only. Preserve the first real Open failures and checked
+NyxNamedEvent admission repair; no fallback or changed wait was used.
+
+Final review repaired two callback lifetime gaps: borrowed event-view reuse after
+a scheduler callback and former cleanup leases held only in fields a reentrant
+Retire can clear. Six final-source jobs qualify the repaired57-check consumer,
+unchanged165/175 Studio journey and both products; all native heaps are clean.
+Current exported bytes match the independently admitted/compiled pair.
+[WORK.md](../WORK.md) owns the composite identities, retained failures and next
+independent task. This task stays open; browser compilation does not close its
+execution/input/parity acceptance.

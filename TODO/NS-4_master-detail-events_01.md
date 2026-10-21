@@ -66,3 +66,15 @@ No new MCP tool, wire schema, runtime event format or producer authority is need
   accepted typed collection/item foundation.
 - External observing/browser execution needs an already admitted host/session;
   no host/configuration retry or new rollout is authorized by this task file.
+
+**Local progress — 2026-10-21**
+
+The Interact integration now completes the ordinary native Edit→JSONFormat→bound
+Memo/history/Save/Open journey at1280/390 (165/175 checks), then independently
+admits and executes its own exact saved/generated application (36/36). Both
+widths save identical bytes. Source-reader93 checks include checked NyxNamedEvent
+roundtrip/refusal and independent scalar Value plus structured Details. All pass
+with clean heaps; browser execution remains open. Interact's final review repaired
+two reentrant ownership gaps;57 focused checks and the unchanged165/175 ordinary
+journey qualify the final source with clean heaps. [WORK.md](../WORK.md) records
+exact evidence/reuse limits. This is progress, not original criterion/credit closure.

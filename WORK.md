@@ -4,16 +4,71 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Current continuation: publication03 is accepted below; next is Interact01,
-criteria1–6. Deliver the managed PreviewRuntime owner/source and connect both
-Studio hosts, then return to the unchanged actual Edit→JSONFormat→bound Memo,
-history, Save/Open and exact generated application journey. Neither accepting
-this public API nor an older matched compatibility fixture closes that outcome.
-Existing Lil' Scooty has reviewed the managed-owner/weak fixed-generation context
-seam and the downstream coordinator owners; root coordinates the next separate
-source release. All readers are joined. No new Studio host Pascal has changed.
-Original no-closure10/credit remains open. The requested eight-task queue is below;
-resolver14 and the reported splitter remain deferred.
+Current Interact01 evidence (2026-10-21): the native ordinary Studio journey
+passes165 checks at1280 and175 at390, including actual Edit→JSONFormat→visible
+bound Memo, copied original record after selection changes, paired history,
+named Save and real Open with fresh history. Its own saved055D8A project and
+DF22F4 Pascal are identical across widths and strict independent source admission;
+the exact generated application passes36/36. Focused preview57, source routes93
+and existing raw Canvas/runtime compatibility55/63 also pass with clean heaps.
+All17 compilers and eight native execution logs are joined; zero Nyx warnings
+and63 upstream pas2js RTL warning occurrences. Browser consumers compile only.
+This is local native qualification, not browser execution, observing delivery,
+full component/parity acceptance or a DONE move.
+
+Final review caught two lifetime gaps before checkpointing. Prepare now uses its
+retained event view after scheduler callbacks. Notify captures former mount/owner
+leases and the distinct-owner decision before cleanup can reenter public Retire.
+Runtime BF0770… and consumer61E652… pass57 checks, retaining the original45 and
+their waits. The new regression releases the old source only after mount.Close
+enters, then retires the preparation; an independently retained old owner proves
+explicit cancellation rather than destructor fallback. Its accepted successor
+still executes real graph output. Raw manual Create/Close/Free remains supported.
+
+All six final-source jobs passed: focused native/browser, unchanged ordinary
+Studio native1280/390/browser and both Studio product compiles. The immutable
+joined audit93A8B24D… records35 owned/1777 Pascal/13 concurrent/21 extra inputs.
+Its composite17 compilers/eight clean native runs reuse unchanged source93,
+exact own compiled36/36, raw Canvas55/63, backend and worker boundaries. Only
+previewruntime and its focused consumer differ from the predecessor's Pascal
+inventory; that older managed-runtime execution is not relabeled as current.
+Both final widths again export the exact independently admitted/compiled055D/DF22
+pair. Existing prepared-route/publication API evidence remains applicable.
+
+Retained failures: the first preview fixture omitted HasValue/ValueKind; only
+those fixture fields changed. Original784 stayed exact through both first real
+Studio journeys, which reached Save but failed Open129/139 with clean heaps.
+Direct admission of their own saved pair exposed the unsupported checked
+NyxNamedEvent constructor at142:32. The existing configuration reader now calls
+that checked factory;93 source checks and the repaired complete journey pass.
+No captured-pair fallback, dropped assertion or changed wait was used. The
+compiled-only fixture adds strict admission and nil Studio/form initialization;
+the earlier wrong-pair failure and two warnings remain historical/excluded.
+The Canvas outer wrapper concatenated manifest names; correctly parenthesized
+independent audits during and after that same successful command prove exact
+inputs. Preserve its failed wrapper guard instead of claiming that guard passed.
+
+Ignored `.local/master-detail-events-paths-private.json` owns exact source/log/
+artifact receipts, immutable predecessor and final joined audits. All readers
+are terminal; documentation alone is released for this checkpoint. The native
+batch advances Interact01 criteria1–6 and useful Edit data, while browser
+execution/input/parity and observing delivery remain open. No original criterion,
+task, credit or DONE closes; core no-closure advances from10 to11 at this handoff.
+Stop runtime/form/fixture/compiler variants. The eight-task queue below retains
+all original scope; resolver14 and splitter stay deferred.
+
+Reassessment changes the next concrete deliverable to independent P1.1,
+[caller-owned behavior registration](TODO/NS-3_coordinators_02.md), criteria1–5.
+Deliver typed immutable registration snapshots, prepared factories, guarded role
+projection/weak refresh and an ordinary Selection Summary using existing List,
+Label and Clear Button. Real multiple selection/Clear, hidden retained membership,
+two independent instances and refusal/replacement/disposal must work with clean
+native heaps; matching browser assertions compile under that task's explicit
+limit. No component-specific renderer branch, second state/query/selection engine
+or authored-default mutation qualifies. Existing helper's read-only signature and
+role-lifetime review are ready; root coordinates a separate source release after
+this checkpoint. Keep MD/Kanban migration and reusable/embedded acceptance in01,
+then DataToolbar. No host/config retry, cleanup/restart, extra agent or MCP rollout.
 
 ## Granular core backlog — 2026-10-21
 
@@ -42,19 +97,22 @@ The existing milestone/catalog component and authoring entries reach these
 tasks through their parent links; their concurrently owned files stay byte-exact.
 Planning changes no original criterion/task/credit/DONE or completion percentage.
 
-Next active prerequisite: **P0.3**, actual Studio Interact mounting. P0.1/P0.2
-are accepted as independently usable host APIs, with qualification below. Contract
-review is settled: host pairs router/view and document/realized tree;
+P0.3/P0.4 retain their browser acceptance gate after the qualified native journey;
+no admitted browser session or new tool rollout is supplied by this source batch.
+Next independently eligible implementation is **P1.1**. P0.1/P0.2 are accepted
+host APIs, with qualification below. Contract review is settled: host pairs
+router/view and document/realized tree;
 preparation and Validate require active context, exact scheduler and exact
 prospective generation.
 Final readiness uses only retained cancellation and event reservation facts. The
 host keeps staged context stable and revokes its future token or own local fence
 before retirement/change; generic context Close does not cancel that token. No
-missing owner identity is inferred. No user product direction is missing. P0.2
-now composes admission; actual Studio adoption follows. No further wait/
-fixture variant substitutes for the missing host.
+missing owner identity is inferred. No user product direction is missing.
+P0.2 composes admission and native Studio now adopts inside that boundary.
 
-Current evidence: previous integrated MasterDetail checkpoint **72d0244** remains
+### Historical baseline and retained failures before Interact01
+
+Earlier evidence: the integrated MasterDetail checkpoint **72d0244** was
 committed/pushed/remote-verified. Independent Value/Details discovery, schema,
 public flow form, Tool ports and visible/searchable Inspector qualify native
 687/85/289 with clean heaps; legacy scalar/creator authority, exact source/role
@@ -70,8 +128,8 @@ retain19 unfreed queued blocks/1581 bytes each and are not clean evidence. The
 final completion-aware native1280/390 runs move selection before yielding and
 wait on the actual published state plus copied callback. Both receive exactly
 one callback but the Memo stays initial until the60-second deadline; both have
-clean heaps. The existing PreviewRuntime creates stores/context but never binds
-root declarative flows. Saved/generated flow behavior remains unproven.
+clean heaps. At that checkpoint PreviewRuntime created stores/context but never
+bound root declarative flows. Saved/generated flow behavior was still unproven.
 
 All prior readers are terminal/joined; no live handle remains. The requested
 backlog handoff was progress: eight tasks,57 checked links, acyclic core

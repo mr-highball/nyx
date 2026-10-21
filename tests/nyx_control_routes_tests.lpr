@@ -208,17 +208,53 @@ end;
   Structured paths use the shared typed Field/Item contract; admission grants no
   emitter, renderer, file service or creator implementation authority. }
 procedure QualifyMasterDetailChannels;
+const
+  CNamedConstructor: TNyxText = 'NyxNamedEvent(''edit'')';
 var
   LDocument: TNyxDocument;
+  LParsed: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
   LDetail: INyxMasterDetail;
   LForm: INyxCard;
   LDescriptor: TNyxLogicDescriptor;
   LChange: TNyxControlRouteEditorChange;
   LRoutes: INyxFlowRoutes;
+  LPair: TNyxProjectPair;
+  LResolved: TNyxProjectPair;
   LFailed: Boolean;
   LBefore: TNyxText;
+  LSource: TNyxText;
+  LLegacy: TNyxText;
+
+  { Malformed source must reach the checked named-event constructor, not merely
+    fail later because its event is absent from discovery. Failed admission
+    publishes no independent owners and cannot change the live source document. }
+  procedure RefuseNamedSource(const AExpression, AMessage: TNyxText);
+  var
+    LInvalid: TNyxProjectPair;
+    LFailure: TNyxText;
+  begin
+    LInvalid := LPair;
+    LInvalid.Source := StringReplace(LSource, CNamedConstructor,
+      'NyxNamedEvent(' + AExpression + ')', []);
+    LFailure := '';
+    try
+      AdmitNyxProject(LInvalid, nprRequireMatch, LParsed, LWorkspace, LResolved);
+    except
+      on E: EArgumentException do
+      begin
+        LFailure := E.Message;
+      end;
+    end;
+    Check((LFailure = AMessage) and (LParsed = nil) and (LWorkspace = nil) and
+      (TNyxCodec.Encode(LDocument) = LPair.Design),
+      'Strict source rejects checked named-event input: ' + AMessage);
+  end;
+
 begin
   LDocument := TNyxDocument.Create;
+  LParsed := nil;
+  LWorkspace := nil;
   try
     LDocument.Collections.Define(NyxCollection('people'),
       NyxCollectionSchema.Text(NyxTextField('name'), '').Text(NyxTextField('summary'), ''), []);
@@ -267,6 +303,34 @@ begin
     SetNyxFlowRoutes(LDetail.Node, LRoutes);
     ValidateNyxDocumentProperties(LDocument);
     Check(True, 'whole-document admission accepts both exact channel contracts together');
+    LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument));
+    LSource := LPair.Source;
+    Check(Pos(CNamedConstructor, LSource) > 0,
+      'Generated named Edit routes use the public checked event constructor');
+    AdmitNyxProject(LPair, nprRequireMatch, LParsed, LWorkspace, LResolved);
+    Check((TNyxCodec.Encode(LParsed) = LPair.Design) and
+      (EncodeNyxProject(LResolved) = EncodeNyxProject(LPair)) and
+      (NyxControlFlowRoutes(LParsed.Find('directory')).ToData.ToJSON = LRoutes.ToData.ToJSON),
+      'Strict saved-pair admission preserves the named Edit route and both payload channels');
+    Check(LWorkspace.Render(LParsed) = LSource,
+      'No-op named-route source regeneration preserves the exact generated companion');
+    FreeAndNil(LWorkspace);
+    FreeAndNil(LParsed);
+    { Legacy NyxEvent remains a distinct supported spelling. Only the new
+      checked constructor acquires its additional open-name validation. }
+    LLegacy := StringReplace(LSource, CNamedConstructor, 'NyxEvent(''edit'')', []);
+    AdmitNyxProject(NyxProjectPair(LPair.Design, LLegacy), nprRequireMatch,
+      LParsed, LWorkspace, LResolved);
+    Check((TNyxCodec.Encode(LParsed) = LPair.Design) and (LResolved.Source = LLegacy),
+      'Legacy event construction retains exact named-route source admission');
+    FreeAndNil(LWorkspace);
+    FreeAndNil(LParsed);
+    RefuseNamedSource('''''', 'Named event requires content');
+    RefuseNamedSource('''   ''', 'Named event requires content');
+    RefuseNamedSource('''Bad'' + #10 + ''event''',
+      'Named event contains a control or line separator');
+    RefuseNamedSource('''' + StringOfChar('n', 129) + '''',
+      'Named event exceeds 128 Unicode scalars');
     LForm := NewNyxControlRouteEditor('stale-edit', LDocument, NyxControl('directory'), 42);
     SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Disabled);
     LBefore := TNyxCodec.Encode(LDocument);
@@ -282,6 +346,8 @@ begin
     Check(LFailed and (TNyxCodec.Encode(LDocument) = LBefore),
       'a form captured before Disabled refuses without publishing stale Details intent');
   finally
+    LWorkspace.Free;
+    LParsed.Free;
     LForm := nil;
     LDetail := nil;
     LDocument.Free;

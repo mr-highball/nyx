@@ -3870,6 +3870,14 @@ begin
         begin
           Result.Kind := vkEvent;
         end
+        else if LName = 'nyxnamedevent' then
+        begin
+          { Generated named routes use the public checked constructor. Preserve
+            its Unicode/content/length rules rather than treating it as the
+            legacy unchecked NyxEvent spelling. Both retain the event family. }
+          Result.Kind := vkEvent;
+          Result.Text := NyxNamedEvent(Result.Text).Name;
+        end
         else if LName = 'nyxcomponent' then
         begin
           Result.Kind := vkComponent;

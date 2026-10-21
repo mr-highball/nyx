@@ -152,7 +152,10 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
-    FPreviewRuntime: TNyxStudioPreviewRuntime;
+    { Managed Interact ownership adopts inside the renderer's pure publication
+      boundary. This slot owns no controls; its weak source port revokes first
+      during Studio disposal, and stores release after the canvas retires. }
+    FPreviewSlot: TNyxStudioPreviewSlot;
     FCanvasInputDepth: Integer;
     { Saved menu contracts use the public managed binding owner in Interact. }
     FCanvasMenus: INyxMenuBindings;
@@ -809,6 +812,7 @@ begin
   FShellHost.setAttribute('data-nyx-studio-host', 'true');
   document.body.appendChild(FShellHost);
   FCanvasRenderer := TNyxBrowserRenderer.Create;
+  FPreviewSlot := TNyxStudioPreviewSlot.Create(FCanvasRenderer.Events.Scheduler);
   FCanvasRenderer.OnEvent := HandleCanvas;
   FCanvasRenderer.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasRenderer.OnDesignerGesture := DesignerGesture;
@@ -853,6 +857,13 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+  { A retained preparation/source cannot enter a retiring Studio. Keep stores
+    owned until all DOM and nested canvas consumers have disconnected. }
+
+  if FPreviewSlot <> nil then
+  begin
+    FPreviewSlot.Revoke;
+  end;
   ClearDiagramWindows;
   { Revoke borrowed callbacks first. Server cancellation may outlive the UI
     while its owning compiler joins; no completion can call a retired Studio. }
@@ -967,12 +978,11 @@ begin
     FConfigurationRequest.abort;
   end;
   FCanvasMenus := nil;
-  if FPreviewRuntime <> nil then
-  begin
-    FPreviewRuntime.Close;
+  try
+    FreeAndNil(FCanvasRenderer);
+  finally
+    FreeAndNil(FPreviewSlot);
   end;
-  FCanvasRenderer.Free;
-  FreeAndNil(FPreviewRuntime);
 
   if FQueryPreviewModal <> nil then
   begin
@@ -1895,8 +1905,19 @@ begin
   end
   else if (LCanvas <> nil) and (FCompiledURL <> '') then
   begin
-    FCanvasRenderer.RenderCompiled(FCompiledURL, LCanvas);
-    FreeAndNil(FPreviewRuntime);
+    try
+      FCanvasRenderer.RenderCompiled(FCompiledURL, LCanvas);
+    finally
+      { RenderCompiled validates its artifact before retiring the old view.
+        Its existing event-generation revocation precedes DOM teardown. Keep
+        the slot/store lease throughout; a pre-clear refusal preserves it.
+        Root=nil records that the authored controls have actually retired. }
+
+      if FCanvasRenderer.Root = nil then
+      begin
+        FreeAndNil(FPreviewSlot);
+      end;
+    end;
   end
   else if (LCanvas <> nil) and (FSession.ActiveView <> nil) then
   begin
@@ -2802,37 +2823,40 @@ end;
 
 procedure TNyxStudio.RenderStudioCanvas(AHost: TJSHTMLElement);
 var
-  LNext: TNyxStudioPreviewRuntime;
+  LNext: INyxStudioPreviewOwner;
+  LRuntime: TNyxStudioPreviewRuntime;
   LRoot: TNyxRootRef;
 begin
-  LNext := nil;
-  try
 
-    if FPreview then
-    begin
-      LRoot := NyxPageRoot(FSession.ActiveViewID);
+  if FPreviewSlot = nil then
+  begin
+    FPreviewSlot := TNyxStudioPreviewSlot.Create(FCanvasRenderer.Events.Scheduler);
+  end;
 
-      if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
-      begin
-        LRoot := NyxReusableRoot(FSession.ActiveViewID);
-      end;
-      LNext := TNyxStudioPreviewRuntime.Create(FSession.Document, LRoot,
-        npfBrowser, FCanvasRenderer.Events.Scheduler);
-      FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-        False, LNext.State, LNext.Bindings, LNext.Context, nil, nrmAuthoredDefaults);
-    end
-    else
+  if FPreview then
+  begin
+    LRoot := NyxPageRoot(FSession.ActiveViewID);
+
+    if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
     begin
-      FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-        True, nil, nil, nil, nil, nrmAuthoredDefaults);
+      LRoot := NyxReusableRoot(FSession.ActiveViewID);
     end;
-    { The old renderer/context remain owned if hidden admission refuses. Only
-      an accepted replacement retires the former preview stores and authority. }
-    FPreviewRuntime.Free;
-    FPreviewRuntime := LNext;
-    LNext := nil;
-  finally
-    LNext.Free;
+    LNext := NewNyxStudioPreviewOwner(FSession.Document, LRoot,
+      npfBrowser, FCanvasRenderer.Events.Scheduler);
+    LRuntime := LNext.Runtime;
+    { Root behavior and managed stores adopt with the accepted DOM. A later
+      notification error leaves that owner in the slot; there is no post-return
+      raw-pointer transfer or finally-Free against newly mounted controls. }
+    FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, nil,
+      nrmAuthoredDefaults,
+      NewNyxStudioPreviewSource(FPreviewSlot, LNext, FCanvasRenderer.Events));
+  end
+  else
+  begin
+    FCanvasRenderer.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+      True, nil, nil, nil, nil, nrmAuthoredDefaults,
+      NewNyxStudioPreviewSource(FPreviewSlot, nil, FCanvasRenderer.Events));
   end;
 end;
 

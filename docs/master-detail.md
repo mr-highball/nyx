@@ -101,7 +101,7 @@ in that existing workflow, rather than duplicated by this form.
 ./tools/build.ps1 -Target master-detail -MasterDetailEvidenceDirectory <new-directory>
 ```
 
-The maintained target runs focused policy/runtime/editor/event/route/port consumers and the full
+The maintained target runs focused preview ownership, policy/runtime/editor/event/route/port consumers and the full
 native Studio journey at desktop and compact widths. It compares exact saved
 project/Pascal bytes and compiles the saved unit into independent applications.
 Browser consumers and the exact generated companion are staged for separate
@@ -117,7 +117,14 @@ identified. Browser consumers compile only in this packet. See
 [the work record](../WORK.md#selected-record-masterdetail-checkpoint--2026-10-21).
 The independent channel integration additionally passes 687 native semantic/
 Inspector checks, 85 public route checks and 289 Tool Canvas/port checks with
-clean heaps. Its ordinary saved/generated journey is still in qualification;
-these focused results do not establish asynchronous application completion.
+clean heaps. The Interact integration now also qualifies the complete native
+Studio journey165/175 and its own exact independently admitted/compiled saved
+application36/36. The final callback-lifetime repair qualifies57 focused checks
+and reruns the unchanged165/175 journey with clean heaps; source93, compiled36/36
+and raw-runtime Canvas55/63 reuse their unchanged relevant boundaries. Both final
+widths export identical project/Pascal bytes. Generated checked NyxNamedEvent
+routes now roundtrip through the existing source reader, without a captured-pair
+fallback. All17 compiler logs in that composite have zero Nyx warnings;63 repeated
+upstream RTL warnings remain. Browser counterparts compile only.
 Browser input, hardware/assistive quality, other widgetsets/DPI, production
 performance and full component/parity acceptance remain open.

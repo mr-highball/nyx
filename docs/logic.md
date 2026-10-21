@@ -948,6 +948,38 @@ the existing content guard supplies a retained local liveness check without
 changing its original GUID or callback-depth contract. Actual Studio root-flow mounting,
 save/generated integration and browser input remain separate acceptance gates.
 
+### Studio's managed Interact owner
+
+Both Studio hosts use `NewNyxStudioPreviewOwner` and
+`NewNyxStudioPreviewSource` from `nyx.studio.previewruntime`. Their
+`TNyxStudioPreviewSlot` adopts the next managed owner during the same pure
+installation as the controls. An error during later notification therefore
+leaves the accepted controls' stores owned. The source prepares root flows from
+the supplied document and realized candidate, using that exact prospective event
+view and a fixed-generation context. It supplies no external service or executable
+creator authority.
+
+An implicit remount retains the source and stores while replacing its route
+generation. Passing a source with a nil next owner explicitly retires Interact
+when a design view commits. Abandoning a candidate releases its reservations,
+leaving the accepted owner usable. Studio revokes its weak slot before canvas
+destruction and releases stores afterward. Browser compiled-preview admission
+keeps the authored owner until the renderer actually clears that view; an earlier
+artifact refusal preserves it.
+
+Revocation and installation change local flags and prepared ownership only.
+Cancellation, scheduler checks and fallible cleanup happen later, with independent
+cleanup attempts. Retain interfaces across those callbacks: a caller can clear
+its own interface slot, and a reentrant `Retire` can clear a preparation's fields.
+The older `TNyxStudioPreviewRuntime.Create`/`Close`/`Free` contract remains available
+for explicit application hosts such as the existing Canvas adoption consumer.
+
+The maintained `master-detail` target includes
+`tests/nyx_studio_preview_tests.lpr` and the ordinary Studio/save/generated
+application journey. [Current work](../WORK.md) records exact execution results,
+retained failures and the browser execution limit; compiling its browser
+assertions does not qualify browser input.
+
 ## Embedded controls and Tool Canvas
 
 `NewNyxToolCanvas('data-tool').WithScene(NyxCanvasRef('tools'))` is a specialized

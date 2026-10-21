@@ -1,5 +1,59 @@
 # Working in Nyx
 
+INTERACT01 NATIVE JOURNEY QUALIFIED (2026-10-21): repaired runtime BF0770 and
+consumer61E652 qualify57 native public checks, ordinary Studio165 at1280/175 at390
+and both product compiles. All six final readers joined/audited35 owned1777
+Pascal13 concurrent21 extra pins. Own055D project/DF22 Pascal remain byte-exact
+across both final widths and earlier independent strict admission/compiled36/36.
+Composite evidence reuses unchanged source93, raw Canvas55/63/backend/worker:
+17 compilers, eight clean native heaps, zero owned/63 upstream warning occurrences.
+Those reused executions are not relabeled as new managed-runtime executions.
+Browser compiles only; original Interact/Edit/component/parity criteria and credit
+remain open. No DONE move; core no-closure is11 after this completed native batch.
+
+Prepare uses retained FView after callbacks. Notify captures former mount/owner
+managed locals and distinct-owner fact before cleanup, surviving public Retire
+from inside old Close. Original45 checks/waits remain; actual last-source release
+and independently retained old owner prove entered cleanup plus explicit token
+cancellation, not destructor fallback. Raw manual Create/Close/Free remains compatible.
+Retain missing-payload, Open129/139, NyxNamedEvent and older wrong-pair/premature-
+read failures, plus Canvas wrapper guard error/correct independent audits. No
+captured-pair bypass, changed wait or assertion removal was used.
+
+Stop runtime/form/fixture/compiler variants. WORK/private records own immutable
+93A8B24D final evidence, exact source/export identities and checkpoint. Reassess
+to independent TODO/NS-3_coordinators_02.md: caller-owned typed registry snapshot,
+scoped role projection/weak refresh and useful Selection Summary, preserving
+existing collection/event/publication owners. Existing helper supplied reviewed
+read-only signature/lifetime design; separate source release follows checkpoint,
+not this handoff. Root owns renderer hooks/ordinary consumer/docs/qualification.
+Keep migration in coordinator01 and DataToolbar downstream. Preserve concurrent13,
+resolver/splitter deferral, offline LAN/no native Nyx tools; no extra agent,
+host/config retry, cleanup/restart or new MCP/wire rollout.
+
+INTERACT01 SOURCE RELEASED (2026-10-21): prior91bd198 was progress, committed/
+pushed/remote-verified, not a full original criterion closure. All prior readers
+are joined; the old publication03 freeze is historical after task moves. Root
+owns both Studio canvas/destructor hooks, build and guides. Existing Lil' Scooty
+owns only studio/nyx.studio.previewruntime.pas and new tests/nyx_studio_preview_tests.lpr;
+no include/other path/compiler is released. Preserve the raw runtime manual
+Create/Close/Free contract for its existing canvas-adoption caller. Add managed
+owner, Studio-owned weak slot and source with flags-only Revoke/Install; actual
+Cancel/Close/RequireUI and all cleanup occur later. Same-owner remount preserves
+stores; abandonment releases only its candidate. The root adopts ownership at
+commit via the accepted renderer seam, never post-return raw-pointer assignment.
+Design uses an explicit nil-owner retirement source. Studio revokes slot before
+canvas destruction, releases it after. Browser RenderCompiled validates before
+Clear: retain the slot across the call and release only once authored Root=nil,
+not before a possible pre-clear refusal. Existing event revocation owns teardown.
+Keep the completion-aware ordinary consumer exact784f99f2…b7a6da through its first
+real current-source journey; no changed wait or dropped assertion. Then qualify
+its OWN saved/generated pair, not historical input. Current fixture warnings
+remain assigned to that integration. No readers until both source scopes review/
+freeze; preserve concurrent13, resolver/splitter deferral, no extra agent or host/
+config retry, cleanup/restart or new MCP/wire rollout. WORK/private records own
+scope, retained failures, quotas and return path. Original no-closure10 stays open.
+
 PUBLICATION03 ACCEPTED (2026-10-21): optional managed root publication is accepted
 in TODO/DONE/NS-4_interact-flows_03.md. The maintained command passes136 actual
 native checks at1280 and390 with clean heaps; matching browser assertions compile.

@@ -212,7 +212,10 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
-    FPreviewRuntime: TNyxStudioPreviewRuntime;
+    { Managed Interact ownership adopts inside the renderer's pure publication
+      boundary. This slot owns no controls; its weak source port revokes first
+      during Studio disposal, and stores release after the canvas retires. }
+    FPreviewSlot: TNyxStudioPreviewSlot;
     FDesignerDrag: TNyxStudioDrag;
     FDesignerResize: TNyxStudioResize;
     FDesignerMove: TNyxStudioMove;
@@ -977,6 +980,7 @@ begin
   FShellView := TNyxStudioSectionViews.Create(FTheme, nscEditorOwnedHierarchy);
   FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
+  FPreviewSlot := TNyxStudioPreviewSlot.Create(FCanvasView.Events.Scheduler);
   FCanvasView.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasView.OnDesignerGesture := DesignerGesture;
   FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback,
@@ -1019,6 +1023,13 @@ destructor TNyxNativeStudio.Destroy;
 var
   LIndex: Integer;
 begin
+  { Revocation is local and cannot enter application cleanup while any Studio
+    receiver is being destroyed. Actual store cleanup follows canvas teardown. }
+
+  if FPreviewSlot <> nil then
+  begin
+    FPreviewSlot.Revoke;
+  end;
   ClearDiagramWindows;
   FRunning := False;
 
@@ -1083,12 +1094,11 @@ begin
     FHostSpace.Disconnect;
     FHostSpace := nil;
   end;
-  if FPreviewRuntime <> nil then
-  begin
-    FPreviewRuntime.Close;
+  try
+    FreeAndNil(FCanvasView);
+  finally
+    FreeAndNil(FPreviewSlot);
   end;
-  FCanvasView.Free;
-  FreeAndNil(FPreviewRuntime);
 
   if FQueryPreviewModal <> nil then
   begin
@@ -3649,37 +3659,41 @@ end;
 
 procedure TNyxNativeStudio.RenderStudioCanvas(AHost: TWinControl);
 var
-  LNext: TNyxStudioPreviewRuntime;
+  LNext: INyxStudioPreviewOwner;
+  LRuntime: TNyxStudioPreviewRuntime;
   LRoot: TNyxRootRef;
 begin
-  LNext := nil;
-  try
 
-    if FPreview then
-    begin
-      LRoot := NyxPageRoot(FSession.ActiveViewID);
+  if FPreviewSlot = nil then
+  begin
+    FPreviewSlot := TNyxStudioPreviewSlot.Create(FCanvasView.Events.Scheduler);
+  end;
 
-      if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
-      begin
-        LRoot := NyxReusableRoot(FSession.ActiveViewID);
-      end;
-      LNext := TNyxStudioPreviewRuntime.Create(FSession.Document, LRoot,
-        npfNativeLCL, FCanvasView.Events.Scheduler);
-      FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-        False, LNext.State, LNext.Bindings, LNext.Context, nil, nrmAuthoredDefaults);
-    end
-    else
+  if FPreview then
+  begin
+    LRoot := NyxPageRoot(FSession.ActiveViewID);
+
+    if FSession.Document.FindComponent(FSession.ActiveViewID) = FSession.ActiveView then
     begin
-      FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
-        True, nil, nil, nil, nil, nrmAuthoredDefaults);
+      LRoot := NyxReusableRoot(FSession.ActiveViewID);
     end;
-    { The old renderer/context remain owned if hidden admission refuses. Only
-      an accepted replacement retires the former preview stores and authority. }
-    FPreviewRuntime.Free;
-    FPreviewRuntime := LNext;
-    LNext := nil;
-  finally
-    LNext.Free;
+    LNext := NewNyxStudioPreviewOwner(FSession.Document, LRoot,
+      npfNativeLCL, FCanvasView.Events.Scheduler);
+    LRuntime := LNext.Runtime;
+    { The source stages exact candidate routes in the prospective event view.
+      Install adopts this managed owner before any notification can fail; local
+      interface release can never free stores borrowed by accepted controls. }
+    FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+      False, LRuntime.State, LRuntime.Bindings, LRuntime.Context, nil,
+      nrmAuthoredDefaults, NewNyxStudioPreviewSource(FPreviewSlot, LNext, FCanvasView.Events));
+  end
+  else
+  begin
+    { Design is an explicit successor that retires Interact at the same commit
+      boundary, preserving the former runtime if hidden preparation refuses. }
+    FCanvasView.RenderContext(FSession.Document, FSession.ActiveView, AHost,
+      True, nil, nil, nil, nil, nrmAuthoredDefaults,
+      NewNyxStudioPreviewSource(FPreviewSlot, nil, FCanvasView.Events));
   end;
 end;
 

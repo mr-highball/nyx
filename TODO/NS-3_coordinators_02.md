@@ -15,6 +15,22 @@ outcome; this split earns none. Existing Kanban/MasterDetail prepared mounts,
 publication readiness and event generations are the starting evidence. They
 are not evidence that third-party registration already works.
 
+The first useful creator example is a Selection Summary: an existing bound
+multiple-selection List, retained-selection-count Label and accessible Clear
+Button. Count includes query-hidden retained members and is labeled accordingly;
+Clear uses that same view's selection owner. Two independent instances must
+preserve rows, query and authored defaults. This example serves the criteria
+below; it creates no new component kind or selection engine.
+
+Creator factories are trusted Pascal code, not a security sandbox. Their public
+contract should distinguish model lifetime from active mount authority: built-in
+control interfaces retain nodes, not weak parents/document/widgets or permission
+to project into retired views. A scoped role projection privately retains the
+exact candidate roles; copied discovery and guarded text/availability plus weak
+refresh suffice for this example. No borrowed Node/GetNode/controller is offered
+as a supposedly revocable capability. Current read-only design is not an accepted
+implementation; root releases separate source scopes after the Interact checkpoint.
+
 **Acceptance Criteria:**
 
 - A public managed registration contract has explicit application/renderer
