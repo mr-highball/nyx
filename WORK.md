@@ -4,7 +4,80 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Current result: the approved repaired-browser run fails at both verified1280x900
+Current result: the narrow Kanban ownership repair passes native execution and
+browser compilation. IndependentD071F9A6 verifies12 compilers and eight clean
+native outcomes171/68/68/588/588/139/121/121, with all actual exec outcomes joined.
+New browser JS52AE01DA retains the corrected owning references; it has not executed.
+Root owns docs/checkpoint only and all Pascal stays paused. The next outcome is
+the same browser application at desktop/phone widths through final cleanup.
+A bounded repeat-regression loopback-host request is pending; no host is running.
+Original criteria stay open; this completed native batch advances no-closure19→20.
+
+### Kanban ownership repair qualification — 2026-10-21
+
+Source97A3848DDF552EB6DC2D45E1E404E26909FF1B3C35C0BEF6EEA90B69965540F0
+changes only TKanbanBinding.CreatePrepared and TCoordinatorKanbanPlan.Create.
+Their six Supports queries now use typed locals before explicit owning field/cell
+assignments. Reused Move/List/readiness locals clear before the next lane query;
+that releases the old temporary lease while its previous cell retains its own.
+Every refusal/readiness/order/canonical-identity check, disabled path and partial
+cleanup stays intact. No null mask or initialization redesign was introduced.
+Manual Create, MasterDetail, renderers and every consumer/assertion/wait remain
+byte-exact. Root independently verified all text outside those two constructors.
+
+Fresh maintained creators pass171 portable and68/68 ordinary checks; reusable/
+embedded applications pass588/588, preserving267 original checks at each width.
+The existing Kanban API passes139 and current ordinary Kanban passes121/121 at
+actual1280/390 client widths. Eight heaps have allocated=freed and zero unfreed
+blocks. Both Studio products and matching browser consumers compile. Twelve
+compilers emit zero owned/42 upstream classes.pas warning occurrences. Six actual
+sessions79878/55979/54729/98406/87508/95663 and two immediately terminal execs
+fd051b/eefbd2 all returned0 and joined; none was restarted on observation timeout.
+
+ImmutableD071F9A6CA4EFD027F3BA88F6F347C6036709ADE6B535870FD9D76E332F3D32F
+and independent review pin53 current+retained owned files,1782 Pascal,13 concurrent,
+47 extras and53 final receipt/log/artifact/export/prior/emitted/addendum entries.
+The eight own reusable/embedded outputs retain79EF/E610/0F3F/90FA. Two ordinary
+Kanban companions match379F920A93DEE048F7693950FD7249E0A46939809DB67A9DC79862CD6C8FE001
+across widths. These are authored/default emission and invariance, not Save/Open
+or an independently compiled-export result. Prior native9E3B2222 and actual
+browser failures62C40341/744CC006 remain immutable in their original scopes.
+
+Keep one admission-label correction: root copied older98/98 compatibility counts
+into the plan, while the unchanged current ordinary consumer actually has121
+checks per width. Pinned1C883668 addendum and actual logs establish121/121;
+the frozen admission wording remains intact. No test/oracle/source, receipt,
+compiler or runtime was changed/replayed to correct that metadata claim.
+
+New reuse browser JS52AE01DA156A86D163F9B7BA7EFB97EDDC9B12ADC0F77923C3B2C16135439174
+has both corrected constructor bodies byte-identical to independently reviewed
+creator90761A38. Three local resets, six owning assignments and local-only final
+releases replace the premature field/vector releases. Root/helper independently
+reviewed the output. HTML96451F59/RTL A6C5EDC8 stay exact. This build has not run in
+a browser; source-derived256/563 remain expectations, not passes. Reuse05/parent/
+DataToolbar and original parity/authoring gates remain open. A new bounded host
+request would permit checking this same regression through remaining repair/retest
+cycles while stopping each temporary host; it is pending, not authorization.
+
+### Retained Kanban ownership source admission
+
+Current batch: the narrow Kanban readiness-ownership repair under Reuse05/R3.
+Source97A3848D is now source-ready/paused and independently reviewed: only the
+two released constructors changed, all other Pascal bytes stay exact. Root may
+freeze the joint inputs and admit the fixed qualification below; no browser
+execution follows from that compile/native admission.
+Previous actual-browser failure744CC006 is progress, checkpointed/pushed/verified
+8905721, with every reader and host joined. Existing helper owns only six typed
+local-output/owning-assignment sites in CreatePrepared and the common adapter
+constructor. Reused lane locals are cleared before their next query. Manual
+construction, MasterDetail, renderers and every consumer/assertion/wait stay exact.
+Root reviews the source handoff and freezes all inputs before the fixed12-compiler/
+eight-native plan: creators171/68/68, reuse588/588, both Studio compilers, native
+Kanban API and ordinary98/98 plus matching browser compiles. Native UI is sequential
+creators→reuse→API→ordinary. No compiler or host is released by this source handoff.
+Original criteria remain open and no-closure19 carries.
+
+Prior result: the approved repaired-browser run fails at both verified1280x900
 and390x900 before completion, now in prepared Kanban readiness validation. Its
 constructor releases the managed readiness array after writing Supports outputs
 directly into its cells, clearing all three entries before Validate. The next

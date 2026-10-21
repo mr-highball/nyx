@@ -160,7 +160,10 @@ The rebuilt application has now executed at both browser widths, exposing a
 separate prepared Kanban managed-array ownership failure before completion.
 The Summary repair remains native/compile qualified; that failed browser result
 does not qualify the complete application. [WORK.md](../../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
-retains both exact outcomes and the stopped test host.
+retains both exact outcomes and the stopped test host. The subsequent targeted
+Kanban ownership repair passes fresh native/compile qualification and emitted-
+code review; its new browser build still requires actual execution. See the
+[qualification boundary](../../WORK.md#kanban-ownership-repair-qualification--2026-10-21).
 
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption

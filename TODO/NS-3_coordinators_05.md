@@ -63,6 +63,16 @@ approved host is stopped/joined and browser state restored. This is an actual
 failed browser result, not acceptance. A separately scoped ownership repair must
 preserve the same application and every readiness predicate.
 
+R3 Kanban ownership qualification (2026-10-21): the two-constructor repair97A3848D
+passes twelve compilers and eight clean native outcomes171/68/68/588/588/139/121/
+121. Only those six interface-output sites changed; all application/assertion/
+wait and renderer source stays exact. AuditD071F9A6 and independent review retain
+both browser failures plus the correction of an older98/98 plan label to the
+unchanged current consumer's actual121/121. New browser52AE01DA has the correct
+owning references in emitted code, but has not executed. The next outcome is that
+same application at both verified browser widths through final cleanup; a bounded
+repeat-regression local-host question is pending. No original criterion closes.
+
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
@@ -111,16 +121,18 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 
 **Pull checklist — R3:**
 
-Status: the first admitted browser run and its separately approved repaired run
-both failed before completion at both required widths. Both owned hosts are
-stopped/joined; their approvals are consumed. The repaired run now exposes Kanban's
-managed-array ownership failure. A separate local-output/owning-assignment source
-proposal precedes any compiler or future browser request. This task releases no
-host/config retry by itself.
+Status: both previous browser builds failed before completion at both required
+widths. Their owned hosts are stopped/joined and approvals consumed. The narrow
+Kanban local-output/owning-assignment repair now passes native/compile qualification;
+its new52AE01DA browser application must actually execute. A bounded repeat-
+regression local-host question is pending. This task releases no host/config
+retry by itself.
 
 Preserve every consumer/assertion/wait byte. The bounded proposal establishes
 managed Summary ownership before initialization/callouts/self leases, and uses
 local Supports outputs before assigning its/common-mount retained readiness fields.
+Keep the Kanban query locals independent from retained fields/vector cells and
+clear each reused lane local before its next query.
 Do not hide premature finalization behind a guard for undefined FPort. Preserve
 public factories/GUIDs, dormant initial projection and partial-failure cleanup.
 Fresh native/compiler evidence now covers those source changes; the same rebuilt

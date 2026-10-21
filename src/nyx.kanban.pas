@@ -1705,6 +1705,12 @@ var
   LControl: INyxControl;
   LPolicy: IKanbanEnabled;
   LObserver: INyxEventObserver;
+  { Query into temporary leases, then retain independent field/cell leases.
+    Reused lane locals are cleared before querying the next canonical role. }
+  LMove: INyxButton;
+  LItems: INyxList;
+  LReadiness: INyxCollectionViewPublication;
+  LAtomic: INyxAtomicCollection;
   LIndex: Integer;
   LPolicyIndex: Integer;
   LNext: Integer;
@@ -1775,11 +1781,14 @@ begin
     if FMoveNodes[LIndex] <> nil then
     begin
       LControl := RetainNyxControl(FMoveNodes[LIndex]);
+      LMove := nil;
 
-      if not Supports(LControl, INyxButton, FMoves[LIndex]) then
+      if not Supports(LControl, INyxButton, LMove) then
       begin
         raise ENyxKanban.Create('Prepared Kanban Move face has no button capability');
       end;
+      { The cell keeps its own lease when the query local changes or finalizes. }
+      FMoves[LIndex] := LMove;
       for LPolicyIndex := 0 to FMoveNodes[LIndex].EnabledPolicyCount - 1 do
       begin
 
@@ -1798,22 +1807,26 @@ begin
     begin
       FItemNodes[LIndex] := FBoardNode.Part(LanePath(LIndex, 'items'));
       LControl := RetainNyxControl(FItemNodes[LIndex]);
+      LItems := nil;
 
-      if not Supports(LControl, INyxList, FItems[LIndex]) then
+      if not Supports(LControl, INyxList, LItems) then
       begin
         raise ENyxKanban.Create('Prepared Kanban items role has no list capability');
       end;
+      FItems[LIndex] := LItems;
       FItemProps[LIndex] := FItemNodes[LIndex].StoredProp(
         NyxAttributeName(atReadOnly), 'false');
       FQueries[LIndex] := LaneSpec(FOptions, LIndex).QueryPolicy.ToData.ToJSON;
       FViews[LIndex] := LViews.ViewFor(FItemNodes[LIndex].ID);
       CheckPrepared;
+      LReadiness := nil;
 
       if (FViews[LIndex] = nil) or not Supports(FViews[LIndex],
-        INyxCollectionViewPublication, FReadiness[LIndex]) then
+        INyxCollectionViewPublication, LReadiness) then
       begin
         raise ENyxKanban.Create('Prepared Kanban views require publication readiness');
       end;
+      FReadiness[LIndex] := LReadiness;
       CheckPrepared;
 
       if LIndex = 0 then
@@ -1827,10 +1840,11 @@ begin
   if not FDisabled then
   begin
 
-    if (FStore = nil) or not Supports(FStore, INyxAtomicCollection, FAtomic) then
+    if (FStore = nil) or not Supports(FStore, INyxAtomicCollection, LAtomic) then
     begin
       raise ENyxKanban.Create('Prepared Kanban requires atomic collection publication');
     end;
+    FAtomic := LAtomic;
     CheckPrepared;
     for LIndex := 0 to CKanbanLaneCount - 1 do
     begin
@@ -2423,22 +2437,28 @@ end;
 
 constructor TCoordinatorKanbanPlan.Create(AOwner: TPreparedKanban;
   const APrepared: INyxPreparedKanbanBinding);
+var
+  LReadiness: INyxPublicationReadiness;
+  LBinding: INyxCoordinatorBinding;
 begin
   inherited Create;
   FOwner := AOwner;
   FPrepared := APrepared;
 
   if (FOwner = nil) or (FPrepared = nil) or
-    not Supports(FPrepared, INyxPublicationReadiness, FReadiness) then
+    not Supports(FPrepared, INyxPublicationReadiness, LReadiness) then
   begin
     raise ENyxKanban.Create('Common Kanban requires prepared publication readiness');
   end;
+  { Keep field ownership separate from each Supports output's temporary lease. }
+  FReadiness := LReadiness;
 
   if not FOwner.FOwner.FDisabled and
-    not Supports(FOwner.FBindingLease, INyxCoordinatorBinding, FBinding) then
+    not Supports(FOwner.FBindingLease, INyxCoordinatorBinding, LBinding) then
   begin
     raise ENyxKanban.Create('Common Kanban must retain its exact specialized binding');
   end;
+  FBinding := LBinding;
 end;
 
 function TCoordinatorKanbanPlan.GetBinding: INyxCoordinatorBinding;

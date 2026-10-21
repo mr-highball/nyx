@@ -1,5 +1,60 @@
 # Working in Nyx
 
+COORDINATOR05 R3 KANBAN OWNERSHIP NATIVE/COMPILE QUALIFIED (2026-10-21):
+independent auditD071F9A6 verifies53 current+retained owned/1782Pascal/concurrent13/
+47extras and53 final evidence pins. All eight actual exec outcomes are terminal0/
+joined (six assigned sessions/two immediately terminal). Twelve compilers pass;
+native171/68/68/588/588/139/121/121 have eight clean heaps and zero owned/42 exact
+upstream RTL warning occurrences. The unchanged current ordinary consumer is121/
+121: admission copied older98/98 wording; pinned1C883668 addendum corrects only
+that plan label, preserving frozen admission and all source/assertions/results.
+No replay. Eight reuse exports retain79EF/E610/0F3F/90FA; two ordinary emitted
+companions retain379F920A. These are emission/invariance, not Save/Open/compiled-
+export proof. Source97A3848D changes only the two released constructors. New reuse
+JS52AE01DA has those exact independently reviewed creator90761 method bodies,
+local resets/owning assignments/local-only final releases. ConsumerE60, MD66C9C803
+and renderers5C037EEC/9C89C990 stay exact. Browser execution is still unqualified;
+preserve both actual failures62C40341/744CC006 and native9E3B2222 history.
+Root owns docs/checkpoint only; all Pascal stays paused. Source freeze becomes
+historical for root-only docs. No05/parent/original criterion/credit/DONE closes;
+completed native batch advances no-closure19→20. Next is the SAME52AE browser
+application at1280x900/390x900 through final cleanup. A bounded repeat-regression
+loopback request is pending, not authorization; no host is running. Preserve
+concurrent13/resolver14/splitter/offline LAN/no native Nyx tools; no extra agent,
+config/MCP/tool/wire rollout or unrelated cleanup/restart. Helper reviews docs only.
+
+COORDINATOR05 R3 KANBAN OWNERSHIP REVIEWED (2026-10-21): helper source97A3848D
+is paused and independently reviewed by root. Exactly six outputs in the two
+released constructors use typed locals and owning assignments; reused locals
+clear before query. Bytes outside those constructors are exact, and no other
+Pascal/concurrent13/extra47 input changed. Root may now freeze all inputs and
+admit ONLY the fixed12-compiler/eight-native plan below using the existing pinned
+qualifiers. Native UI is creators→reuse→Kanban API→ordinary Kanban, sequential;
+both Studio and matching browser compilers may run independently. All source/
+guides pause through every actual handle join and exact audit. Root owns those
+handles; helper read-only emitted/result review only. No browser execution/host,
+new agent/tool/config/source expansion or original criterion closure follows.
+
+COORDINATOR05 R3 KANBAN OWNERSHIP SOURCE RELEASED (2026-10-21): prior actual
+browser-failure turn is progress, retained/pushed/remote-verified8905721. All
+readers/host are joined. Existing helper owns ONLY src/nyx.kanban.pas's
+TKanbanBinding.CreatePrepared and TCoordinatorKanbanPlan.Create: six Supports
+outputs become typed locals followed by distinct owning field/cell assignments.
+Clear each reused Move/List/readiness local immediately before its next query.
+Preserve every guard/order/canonical identity, disabled and partial-failure path;
+no null mask or initialization redesign. Manual Create, MD, renderers, interfaces/
+GUIDs, consumers/assertions/waits and all other Pascal stay paused/exact. Root
+owns docs/build admission/joins/audit. Helper handoff and independent root review
+precede a fresh all-input freeze; no compiler is released yet. Planned fixed
+qualification uses existing pinned qualifiers only: creators4/171+68+68 native,
+reuse2/588+588 native, both Studio compilers2, Kanban API2/one native outcome and
+ordinary Kanban2/native98+98. Total12 compilers/eight native outcomes, UI sequential
+creators→reuse→API→ordinary. Inspect emitted locals/field AddRefs and no former
+field/vector final releases. Browser compile is not execution; no host is
+authorized. Preserve744CC006/62C40341/9E3B2222, concurrent13/resolver14/splitter,
+offline LAN/no native Nyx tools, no extra agent/config/MCP/tool/wire rollout or
+unrelated cleanup/restart. Original criterion/credit/no-closure19 stays open.
+
 COORDINATOR05 R3 REPAIRED BROWSER FAILURE JOINED (2026-10-21): the approved
 single repaired-browser run is complete, not accepted. Actual1280x900/390x900
 both fail before markers with null PublicationReady in prepared Kanban Validate.
