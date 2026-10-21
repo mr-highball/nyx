@@ -31,8 +31,31 @@ LPage.Add(LSummary);
 LRegistry is INyxCoordinatorRegistry, LSummary is INyxSelectionSummary and LPage
 is an ordinary INyxPage. LRenderer is either application renderer. Mount the
 document through your existing application/collection context. The ordinary
-consumer in ../../tests/nyx_coordinator_controls.lpr provides a complete native
-and browser application with two independent stores.
+consumer in ../../tests/nyx_coordinator_controls.lpr exercises ordinary native
+controls and matching browser assertions through two independent renderer stores.
+
+For an ordinary application, assign its borrowed View.CoordinatorRegistry before mounting:
+
+```pascal
+LRegistry := NewNyxCoordinatorRegistry;
+RegisterSelectionSummary(LRegistry);
+LApp.View.CoordinatorRegistry := LRegistry;
+```
+
+LApp is TNyxLCLApplication before Mount, or TNyxBrowserApplication before Run.
+Each application supplies its own runtime collection owner. Reusable instances
+use NyxCollectionView(...).Scoped(csInstance) for independent stores, including
+when two applications borrow the same authored document. Keep that document
+unchanged and alive until both applications are destroyed. App.ShowPage navigates
+the existing runtime; a rejected page must preserve the accepted view.
+
+The separate [reusable application consumer](../../tests/nyx_coordinator_reuse_controls.lpr)
+mounts two instances in each of two actual application objects, alongside
+MasterDetail and Kanban. It resolves nested roles on the realized workspace and
+retrieves INyxSelectionSummaryBinding through Supports on CoordinatorBinding.
+Realization can project the authoring compound to an ordinary Card; retrieve
+standard named parts and the specialized runtime binding rather than assuming
+the custom authoring facade remains attached to that realized Card.
 
 Each future render captures an immutable registry snapshot. Changing the caller's
 registry does not rewrite an accepted view. Without this factory registration,
@@ -71,6 +94,20 @@ contracts and ordinary native controls at desktop and compact widths, then
 compiles matching browser assertions and stages their HTML/runtime. It starts
 no server or listener. Browser compilation does not establish execution or input.
 Current results and any retained failures belong in [WORK.md](../../WORK.md).
+
+Run the ordinary reusable-application proof separately, preserving a new packet:
+
+```powershell
+./tools/build.ps1 -Target coordinator-reuse -CoordinatorReuseEvidenceDirectory <new-directory>
+```
+
+This command executes the application consumer at1280 and390, then compiles and
+stages the same browser assertions. Embedded registry inheritance and actual
+browser execution remain separate open gates; see [reuse05](../../TODO/NS-3_coordinators_05.md).
+The current native result is267 checks at each width, with clean heaps and zero
+Nyx-owned compiler warnings. Browser compilation passes; it is not browser input
+or embedded adoption evidence. The native emitted design/Pascal files preserve
+the authored baseline; this command does not compile those exports as applications.
 
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption

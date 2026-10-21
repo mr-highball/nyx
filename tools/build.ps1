@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
@@ -34,6 +34,8 @@ param(
   [string]$ViewPublicationEvidenceDirectory = 'build/view-publication/maintained',
   # NEW caller-factory packet; native consumers execute, browser consumers stage.
   [string]$CoordinatorEvidenceDirectory = 'build/coordinators/maintained',
+  # NEW ordinary-application packet for independent reusable coordinator stores.
+  [string]$CoordinatorReuseEvidenceDirectory = 'build/coordinator-reuse/maintained',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -6748,6 +6750,67 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxSelectionSource 'nyx.generated.view.pas'),
       $nyxRuntime, (Join-Path $nyxRoot 'studio/web/selection-style.html') -Destination $nyxSelectionBrowser
     Write-Host 'Native selection and generated source passed; execute the staged browser fixture explicitly.'
+    exit 0
+  }
+
+  if ($Target -eq 'coordinator-reuse') {
+    # Ordinary application ownership is exercised by the same Pascal consumer
+    # on both targets. Browser compilation stages input; it never starts a host.
+    $nyxReuseRoot = [IO.Path]::GetFullPath($CoordinatorReuseEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxReuseRoot) {
+      throw 'CoordinatorReuseEvidenceDirectory must be NEW; preserve earlier evidence'
+    }
+    $nyxReuseNative = Join-Path $nyxReuseRoot 'native'
+    $nyxReuseBrowser = Join-Path $nyxReuseRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxReuseNative, $nyxReuseBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxReusePlatform = (& $nyxLclFpc '-iTP').Trim() + '-' + (& $nyxLclFpc '-iTO').Trim()
+    $nyxReuseFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fuexamples/selection-summary', '-Fisrc',
+      "-FU$nyxReuseNative", "-FE$nyxReuseNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxReusePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxReusePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxReusePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxReusePlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReuseFlags + @('tests/nyx_coordinator_reuse_controls.lpr'))
+    $nyxReuseSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
+    $nyxReuseExecutable = Join-Path $nyxReuseNative ('nyx_coordinator_reuse_controls' + $nyxReuseSuffix)
+    $nyxReuseRunFailure = 0
+    foreach ($nyxReuseWidth in @(1280, 390)) {
+      # Evidence directory precedes width in the consumer's public argv contract.
+      # Retain both independent widths; a later success cannot erase a failure.
+      $nyxReuseRunLog = Join-Path $nyxReuseRoot ('application-' + $nyxReuseWidth + '.log')
+      & $nyxReuseExecutable (Join-Path $nyxReuseRoot ('application-' + $nyxReuseWidth)) $nyxReuseWidth *> $nyxReuseRunLog
+      $nyxReuseRunExit = $LASTEXITCODE
+      Get-Content -LiteralPath $nyxReuseRunLog
+      if (($nyxReuseRunExit -ne 0) -and ($nyxReuseRunFailure -eq 0)) {
+        $nyxReuseRunFailure = $nyxReuseRunExit
+      }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', '-Fuexamples/selection-summary', '-Fisrc',
+      "-FE$nyxReuseBrowser", 'tests/nyx_coordinator_reuse_controls.lpr')
+    $nyxReuseHTML = @"
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyx reusable application review</title>
+<body>
+<script src="rtl.js"></script>
+<script src="nyx_coordinator_reuse_controls.js"></script>
+<script>rtl.run();</script>
+</body>
+</html>
+"@
+    [IO.File]::WriteAllText((Join-Path $nyxReuseBrowser 'nyx_coordinator_reuse_controls.html'),
+      $nyxReuseHTML, (New-Object Text.UTF8Encoding($false)))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxReuseBrowser 'rtl.js')
+    if ($nyxReuseRunFailure -ne 0) { throw 'Ordinary reusable application journey failed; both native width logs retained' }
+    Write-Host 'Native reusable applications passed; matching browser assertions staged for separate execution.'
     exit 0
   }
 

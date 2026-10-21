@@ -1,5 +1,61 @@
 # Working in Nyx
 
+COORDINATOR05 R1 LOCALLY QUALIFIED (2026-10-21): maintained coordinator-reuse
+passes267 actual native checks at1280 and390, both clean heaps; matching browser
+assertions compile only. Two ordinary Apps each mount two reusable workspaces,
+Summary+MasterDetail+Kanban on12 distinct stores. Nested typed lookup, real input,
+hidden selection/Clear, detail/card behavior, immutable authored refusal page,
+ShowPage refusal/replacement, stale commands, Unmount/remount and independent App
+disposal pass. Existing App.View registration suffices; production Pascal and old
+consumers stay exact. Own79EFA805 design/E610B98F Pascal exports match widths but
+are not Save/Open or compiled-application proof. Both compilers have zero owned/
+seven upstream RTL warnings. All actual readers are joined: maintained38815
+terminal0. Source6C97838A remains exact from reviewed freeze;53owned/1782Pascal/
+concurrent13/extra37 audit. Initial33 extras precede four post-export pins.
+
+Independent review caught one private receipt metadata error: actual frozen
+qualifier line36 executes coordinator-reuse, while its hardcoded command array
+retains the old coordinators labels. Preserve original7F56 receipt/1C7A audit;
+3CE71411 invocation addendum and79AAEB9F final composite correct only that claim.
+One metadata failure/zero product failures; no source/compiler/runtime retry.
+Root/helper independent outcome review passes. No05/parent/browser/original
+criterion/credit/DONE closes; core no-closure14→15 carries. Root owns docs and
+checkpoint only; all Pascal stays paused until separate R2 source release.
+
+Reassessment changes the next deliverable from reusable-App evidence to actual
+embedded propagation: retain an immutable CALLER snapshot on candidate/accepted
+renderer before Build; SetupCanvas inherits it when child registry=nil. Explicit
+nonnil child registry, including empty, overrides callers only; each child
+composes its own built-ins and owns its event generation/weak refresh. Never
+pass a mutable registry or already composed built-in snapshot. Existing helper's
+R2 blueprint is settled; no renderer/consumer/compiler scope is released yet.
+R3 admitted-browser and downstream DataToolbar gates remain open. Preserve
+concurrent13, deferred resolver14/splitter, offline LAN/no native Nyx tools and
+no extra agent, host/config retry, cleanup/restart or MCP/tool/wire rollout.
+WORK/private records own exact receipts and next source handoff.
+
+COORDINATOR05 R1 SOURCE RELEASED (2026-10-21): prior11a7a8a is progress,
+committed/pushed/remote-verified; its scoped04 acceptance adds no original goal
+credit. All actual readers are joined. Existing Lil' Scooty owns only the new
+tests/nyx_coordinator_reuse_controls.lpr. Root owns maintained build integration,
+guides, this handoff, WORK and task05. No production Pascal, existing consumer,
+include, host or compiler scope is released. Use the existing App.View registry
+before native Mount/browser Run: two Apps each mount two reusable workspaces,
+Summary+MasterDetail+Kanban on twelve independent stores. Actual nested roles,
+specialized runtime binding lookup, real input/hidden selection, App.ShowPage
+required-role refusal/replacement, old-command revocation and exact authored/
+default/sibling isolation are the R1 result. Preserve ordinary ShowPage semantics;
+pre-author a separate refusal page before mounting and keep the borrowed document
+unchanged throughout both App lifetimes. Do not mutate a mounted descriptor.
+do not preemptively repair renderers or add a host setter. Root reviews both
+source handoffs and freezes all inputs before admitting the new consumer's
+native1280/390 and matching browser compilation. Stop at that actual R1 result
+before releasing R2 caller-snapshot propagation. No browser execution is admitted;
+R3, parent01, DataToolbar and original parity/authoring criteria stay open.
+Preserve concurrent13, deferred resolver14/splitter, offline LAN/no native Nyx
+tools and no extra agent, host/config retry, cleanup/restart or MCP/tool/wire
+rollout. WORK/private records own exact scope, reader handles and return path.
+
 COORDINATOR04 ACCEPTED (2026-10-21): all five scoped criteria close in
 TODO/DONE/NS-3_coordinators_04.md after independent source/receipt review.
 Native139 focused,121/121 ordinary controls, unchanged full Studio114/124 and

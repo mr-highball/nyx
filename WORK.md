@@ -5,25 +5,18 @@
 ## Active priority — back to core Nyx (2026-10-20)
 
 Current task: [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md),
-R1 read-only blueprint/checkpoint handoff before a separate source release.
-[Kanban04](TODO/DONE/NS-3_coordinators_04.md) now accepts all five scoped criteria.
-Original component/authoring/parity criteria and credit stay open; core no-closure
-advances13→14 for this native batch. All readers are terminal/joined, and all
-Pascal stays paused until separately released05 ownership. Resolver14/splitter
-remain deferred; concurrent13 stay exact. LAN stays offline, native Nyx tools
-absent; no host/config retry, cleanup/restart, new MCP/wire rollout or extra agent.
+R2 read-only blueprint/checkpoint after R1's qualified native application result.
+The prior goal turn is progress: scoped04 and the granular backlog are
+committed/pushed/remote-verified11a7a8a. R1 now passes267/267 actual native checks,
+clean heaps and matching browser compilation. No full original criterion/credit
+closes; core no-closure advances14→15. All actual readers are terminal/joined;
+root owns documentation/checkpoint only and all Pascal stays paused until a
+separate R2 source release. Resolver14/splitter and concurrent13 remain exact.
+LAN stays offline, native Nyx tools absent; no host/config retry, cleanup/restart,
+new MCP/wire rollout or extra agent.
 
-Next R1 uses the existing ordinary application hosts: App.View.CoordinatorRegistry
-before native Mount/browser Run needs no new public setter or host source change.
-Two apps each mount two reusable workspace instances containing Selection Summary,
-MasterDetail and Kanban, with12 independent instance stores. Resolve actual nested
-roles and exact runtime binding interfaces; input, hidden selection, required-role
-refusal through App.ShowPage, same-ID replacement and source/default isolation
-must work. The existing direct-renderer68/68 stays separate evidence. Root owns
-future maintained build/docs; helper's proposed ordinary App consumer is the
-next separate scope, not released by this checkpoint.
-
-R2 renderer propagation follows R1's actual outcome. Common traversal already
+Reassessment changes the next deliverable to R2 renderer propagation, using R1's
+actual outcome rather than another fixture/compiler variant. Common traversal already
 covers expanded reusable nodes; the missing seam is an immutable CALLER snapshot
 retained on candidate/accepted renderer before Build and inherited by SetupCanvas.
 Nil child registry inherits; explicit nonnil registry, including empty, overrides
@@ -32,6 +25,60 @@ future event generation/weak refresh. R3 still requires actual admitted-browser
 execution. Compilation cannot close05, parent01 or downstream DataToolbar.
 The ten granular packets and all original criteria remain under their existing
 owners; no extra task identity or credit is introduced.
+
+### Reusable ordinary application result — 2026-10-21
+
+The maintained coordinator-reuse command passes267 checks at each actual1280/390
+client allocation, with clean heaps. Two ordinary App objects use their existing
+View.CoordinatorRegistry before native Mount/browser Run, each mounting two
+instances of one workspace definition. Summary, MasterDetail and Kanban have12
+pairwise-distinct home stores. The new consumer resolves nested named roles on
+real realized workspaces and retains specialized interfaces through Supports on
+common runtime lookup; it does not substitute renderer-only mounts or manually
+attach the behavior. No production Pascal or old consumer changed.
+
+Actual native selection and Space actions prove both occurrences, query-hidden
+membership/count/Clear, exact copied detail records and stable-card movement.
+Peer store rows/revisions, definitions/defaults and complete authored source stay
+intact. A malformed refusal page is authored before either App mounts, respecting
+the public borrowed-unchanged-document contract. Ordinary ShowPage refusal keeps
+the accepted root, generation, physical input and connected owners; real Clear
+still works afterward. ShowPage home replaces the same IDs, rejecting retained
+custom/detail/card commands. Unmount/remount preserves the original stores and
+fresh input. Disposing one App revokes its retained owners while input in the
+second App still works; final disposal disconnects every retained behavior.
+
+Source6C97838A3C1BE68A9CD3747B66C410841BF9BED81C7001972A4E7D0A8F79FB4C
+stays exact from the first reviewed freeze. Both widths emit identical own
+79EFA805382EDFA2B6779A16835E5AB1548CF770CDB6FA5A466B86021CAB2588 design and
+E610B98F118B55A545A82BD1F84D67CA7586AA34B3A06C436D8E48A8DCE6AE58 Pascal.
+These exports prove authored/default invariants only; no Save/Open or independent
+compiled-application result is inferred. Two compilers pass with zero owned/
+seven exact upstream pas2js classes.pas warning occurrences. Browser execution,
+hardware/assistive input, embedded inheritance, performance and full parity remain
+open. The existing direct-renderer68/68 is separate evidence, not relabeled proof.
+
+Actual maintained handle38815 returned0 and joined, with no remaining native
+child. Both native heaps are clean:8,868,699 and8,868,860 allocations all freed.
+The exact audit covers53 owned/1782 Pascal/concurrent13/initial33 extra pins,
+plus four emitted outputs admitted after export, making37 final extras. Root and
+existing helper independently reviewed source, actual outcomes and all pins.
+
+Retain one bookkeeping failure. The private qualifier correctly executes the new
+coordinator-reuse target, but its separately hardcoded receipt command array kept
+the old coordinators target/parameter labels. Original7F56E6B7 receipt and1C7A29BD
+audit remain unchanged. Invocation addendum3CE71411, backed by frozen qualifier
+294202BB line36 plus actual log/artifact pins, corrects those two metadata fields.
+Final composite79AAEB9F025C156E6E04802E44E804310AE40F4E43A1A0A7F3CAD0687AD7B597
+retains originals/addendum and one metadata failure/zero product qualification
+failures. No source/compiler/runtime replay occurred. Any future private qualifier
+copy must correct its recorded command before its next reviewed freeze.
+Ignored .local/master-detail-events-paths-private.json owns exact receipt paths.
+
+R1 is native-locally qualified;05 stays open and in TODO. R2 now owns the concrete
+missing embedded propagation outcome, then R3 requires actual admitted-browser
+input/lifetime evidence. Parent coordinator integration and both DataToolbar tasks
+retain their hard prerequisites and all original criteria; no new goal credit.
 
 ### Kanban common coordinator migration — 2026-10-21
 
@@ -355,12 +402,14 @@ acceptance. Query runtime02 owns Q1 useful typed toolbar and Q2 independent
 application qualification. Studio DataToolbar01 owns A1 paired authoring and A2
 its own saved application adoption. Each packet names ownership, prerequisites,
 observable evidence and a finish line; none is a new credit-bearing task.
-After04 acceptance, K1–K3 remain accepted history. The seven remaining packets
-are the implementation queue, with canonical definitions in the linked tasks:
+After04 acceptance, K1–K3 remain accepted history. The seven packets below formed
+the implementation queue, with canonical definitions in the linked tasks. R1 is
+now native-locally qualified; the six R2–A2 packets remain, including actual
+browser execution before complete acceptance:
 
 | Next | Outcome | Canonical task |
 | --- | --- | --- |
-| R1 | Reusable controls stay independent in two ordinary applications | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
+| R1 native-local qualified | Reusable controls stay independent in two ordinary applications | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
 | R2 | Embedded views inherit a fixed caller registry with explicit overrides | [Embedded behavior](TODO/NS-3_coordinators_05.md) |
 | R3 | Useful input and lifetimes run on both targets, including an admitted browser | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
 | Q1 | Typed Search, Sort and Clear update an existing collection view | [Toolbar runtime](TODO/NS-3_data-toolbar_02.md) |
@@ -381,7 +430,7 @@ design, not a new API or permission to bypass the coordinator/browser gates.
 
 P0.3/P0.4 retain their browser acceptance gate after the qualified native journey;
 no admitted browser session or new tool rollout is supplied by this source batch.
-Next independently eligible work is **P1.4 / R1**, after a separate source release. P0.1/P0.2 are accepted
+Next independently eligible work is **P1.4 / R2**, after a separate source release. P0.1/P0.2 are accepted
 host APIs, with qualification below. Contract review is settled: host pairs
 router/view and document/realized tree;
 preparation and Validate require active context, exact scheduler and exact

@@ -379,6 +379,39 @@ ordinary and compiled browser consumers without starting a server. Current nativ
 results are63/165/114/124/15/15 with clean heaps; browser artifacts compile only.
 [WORK.md](../WORK.md) retains the missing-import failure and exact repair evidence.
 
+## Creator behavior in ordinary applications
+
+The [Selection Summary example](../examples/selection-summary/README.md) shows
+an independently registered Pascal behavior built from standard Nyx controls.
+Register its factory through an application's borrowed `View.CoordinatorRegistry`
+before native `Mount` or browser `Run`. That caller registry supplies executable
+authority; saved intent alone cannot instantiate a factory or acquire host access.
+
+The separate [reusable application consumer](../tests/nyx_coordinator_reuse_controls.lpr)
+exercises two actual App objects, each mounting two reusable workspaces with
+Summary, MasterDetail and Kanban. Instance-scoped bindings must isolate their
+twelve runtime stores. Nested parts resolve on the realized workspace, and
+`Supports` on `CoordinatorBinding` retrieves the specialized behavior interface.
+Realization may project an authoring compound to a standard Card; an authoring
+subtype and its runtime binding have separate contracts.
+
+Both applications borrow one unchanged authored document. Build refusal pages
+before mounting and use `ShowPage` to exercise navigation refusal; preserve the
+accepted root and usable input when a required role is missing. Destroy both
+applications before changing or freeing their borrowed document.
+
+`tools/build.ps1 -Target coordinator-reuse -CoordinatorReuseEvidenceDirectory <new directory>`
+executes this ordinary native application at1280/390 and compiles the matching
+browser assertions. It preserves separate width logs and starts no listener.
+[Reuse05](../TODO/NS-3_coordinators_05.md) retains embedded inheritance and real
+browser input/lifetime acceptance. [WORK.md](../WORK.md) records actual outcomes;
+the command and consumer source alone do not establish that acceptance.
+The current ordinary native application result is267/267 at1280/390 with clean
+heaps; matching browser assertions compile. Both compilers have zero Nyx warnings.
+Its identical emitted design/Pascal exports qualify authored/default isolation,
+not Save/Open or generated-application execution. Production Pascal is unchanged;
+embedded caller-registry propagation and actual browser execution remain open.
+
 ## Component discovery and creator descriptions
 
 Studio offers **List** and **Grouped** palette modes. Each component has one

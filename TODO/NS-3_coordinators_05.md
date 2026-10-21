@@ -15,6 +15,17 @@ shared criteria1–3, serving [components](NS-3_components_01.md) criteria1/3 an
 [Studio authoring](NS-4_studio-authoring_01.md). This split adds no credit.
 DataToolbar remains downstream; it is not a reverse prerequisite for this work.
 
+R1 native-local result (2026-10-21): the maintained ordinary App consumer passes
+267 checks at1280 and390 with clean heaps, plus matching browser compilation.
+Two Apps/four reusable occurrences/twelve independent stores, actual nested-role
+input, immutable-document refusal, replacement and disposal qualify this packet's
+native boundary without a production repair. Source/default exports match widths;
+they are not Save/Open or compiled-application proof. Independent review retains
+one corrected private command-metadata failure, zero product failures and no
+rerun. [WORK.md](../WORK.md#reusable-ordinary-application-result--2026-10-21) owns
+the exact audit/receipts. R2 and R3 remain open; none of this task's complete
+original criteria or parent/browser gates is accepted by compilation alone.
+
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
@@ -36,7 +47,10 @@ two App objects. Resolve nested named roles from the actual realized workspace;
 custom authoring facades need not survive realization into ordinary Card controls,
 while Supports on the common runtime binding must retain its specialized type.
 Use real App input and App.ShowPage for refusal/replacement, preserving the old
-root/token/input and restoring the exact authored descriptor afterward. This is
+root/token/input. Pre-author the missing-required-role refusal page before either
+App mounts; both Apps borrow the same unchanged document until disposal. Never
+mutate a mounted descriptor to manufacture the failure. Successful ShowPage back
+to the home page supplies the same-ID replacement. This is
 new application-host evidence; the accepted root-renderer68/68 is not relabeled
 as reusable proof. Stop at R1's actual result before releasing R2 propagation.
 
