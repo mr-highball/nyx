@@ -33,7 +33,7 @@ uses
   nyx.composition, nyx.collections, nyx.collections.view,
   nyx.collections.bindings, nyx.collections.view.types, nyx.collections.selection,
   nyx.collections.query, nyx.coordinators, nyx.selection.summary,
-  nyx.events, nyx.behavior, nyx.scheduler, nyx.publication;
+  nyx.events, nyx.behavior, nyx.scheduler, nyx.publication, nyx.master.detail;
 
 type
   {$ifdef PAS2JS}
@@ -102,6 +102,8 @@ const
   CItemsID = 'summary-items';
   CCountID = 'summary-count';
   CClearID = 'summary-clear';
+  CDirectoryID = 'directory';
+  CDirectoryPlaceholder = 'Choose a person';
 
 var
   GDocument: TNyxDocument;
@@ -112,6 +114,7 @@ var
   GBindings: array of INyxCollectionBindings;
   GSummaries: array of INyxSelectionSummaryBinding;
   GDisposedBinding: INyxSelectionSummaryBinding;
+  GDisposedDetail: INyxMasterDetailBinding;
   GRefuseLabel: Boolean;
   GNotifyAction: TNotifyAction;
   GNotifyCalls: Integer;
@@ -268,6 +271,7 @@ begin
       begin
         Check(Supports(Inner.Binding, INyxSelectionSummaryBinding, GDisposedBinding),
           'committed custom interface is retained before notification disposes its renderer');
+        GDisposedDetail := GRenderers[0].MasterDetailBinding(CDirectoryID);
         FreeAndNil(GRenderers[0]);
       end;
   end;
@@ -435,10 +439,195 @@ begin
     GRenderers[AApp].State, GBindings[AApp]);
 end;
 
+{ Discover exact named roles on the accepted view. The consumer exercises
+  physical widgets; the common creator API still exposes only copied role refs. }
+function DetailRole(AApp: Integer; const APath: TNyxText): TNyxText;
+begin
+  Result := GRenderers[AApp].Root.Find(CDirectoryID).Part(NyxPart(APath)).ID;
+end;
+
+function DetailCaption(AApp: Integer): TNyxText;
+begin
+  {$ifdef PAS2JS}
+  Result := GRenderers[AApp].ElementFor(DetailRole(AApp, 'detail/title')).textContent;
+  {$else}
+  Result := TLabel(GRenderers[AApp].ControlFor(DetailRole(AApp, 'detail/title'))).Caption;
+  {$endif}
+end;
+
+function DetailEnabled(AApp: Integer): Boolean;
+begin
+  {$ifdef PAS2JS}
+  Result := not TJSHTMLButtonElement(GRenderers[AApp].ElementFor(
+    DetailRole(AApp, 'detail/edit'))).disabled;
+  {$else}
+  Result := GRenderers[AApp].ControlFor(DetailRole(AApp, 'detail/edit')).Enabled;
+  {$endif}
+end;
+
+procedure AwaitDetail(AApp: Integer; const ACaption: TNyxText;
+  AEnabled: Boolean); {$ifdef PAS2JS}async;{$endif}
+var
+  {$ifdef PAS2JS}LStarted: Double;{$else}LStarted: QWord;{$endif}
+begin
+  {$ifdef PAS2JS}LStarted := TJSDate.now;{$else}LStarted := GetTickCount64;{$endif}
+  while (DetailCaption(AApp) <> ACaption) or (DetailEnabled(AApp) <> AEnabled) do
+  begin
+    {$ifdef PAS2JS}
+
+    if TJSDate.now - LStarted > 10000 then
+    {$else}
+
+    if GetTickCount64 - LStarted > 10000 then
+    {$endif}
+    begin
+      raise Exception.Create('Actual MasterDetail presentation did not complete: ' + DetailCaption(AApp));
+    end;
+    {$ifdef PAS2JS}await(UITurn);{$else}Pump;{$endif}
+  end;
+  Check(True, 'actual MasterDetail title and Edit availability completed together');
+end;
+
+procedure SelectDetail(AApp: Integer);
+var
+  {$ifdef PAS2JS}LRow: TJSHTMLElement;{$else}LList: TListBox;{$endif}
+begin
+  {$ifdef PAS2JS}
+  LRow := TJSHTMLElement(GRenderers[AApp].ElementFor(DetailRole(AApp, 'master')).
+    querySelector('[data-nyx-item="ada"]'));
+  Check(LRow <> nil, 'actual MasterDetail row is present');
+  LRow.click;
+  {$else}
+  LList := TListBox(GRenderers[AApp].ControlFor(DetailRole(AApp, 'master')));
+  Check(not LList.MultiSelect and (LList.Items.Count = 2),
+    'actual MasterDetail keeps its single-selection list contract');
+  LList.SetFocus;
+  LList.ItemIndex := 0;
+  Check(Assigned(LList.OnSelectionChange), 'ordinary MasterDetail selection input is connected');
+  LList.OnSelectionChange(LList, True);
+  {$endif}
+  Pump;
+end;
+
+{ Built-in behavior coexists with caller registrations, and receives the same
+  refusal/replacement/remount boundary. No manual behavior attachment is used. }
+procedure DetailCases; {$ifdef PAS2JS}async;{$endif}
+var
+  LDetail: INyxMasterDetailBinding;
+  LCommon: INyxCoordinatorBinding;
+  LTyped: INyxMasterDetailBinding;
+  LGeneration: INyxCancellationScope;
+  LRoot: TNyxNode;
+  LRefused: Boolean;
+  LApp: Integer;
+  LDuplicate: INyxCoordinatorRegistry;
+begin
+  for LApp := 0 to 1 do
+  begin
+    LDetail := GRenderers[LApp].MasterDetailBinding(CDirectoryID);
+    LCommon := GRenderers[LApp].CoordinatorBinding(CDirectoryID);
+    Check((LDetail <> nil) and LDetail.Connected and
+      Supports(LCommon, INyxMasterDetailBinding, LTyped) and (LTyped = LDetail),
+      'automatic lookup exposes the exact specialized binding from the common vector');
+    Check((DetailCaption(LApp) = CDirectoryPlaceholder) and not DetailEnabled(LApp),
+      'automatic initial placeholders and availability precede physical input');
+  end;
+  SelectDetail(0);
+  {$ifdef PAS2JS}await(AwaitDetail(0, 'Ada Lovelace', True));
+  {$else}AwaitDetail(0, 'Ada Lovelace', True);{$endif}
+  Check((DetailCaption(1) = CDirectoryPlaceholder) and not DetailEnabled(1),
+    'automatic built-in selection is isolated between ordinary applications');
+  LDetail := GRenderers[0].MasterDetailBinding(CDirectoryID);
+  Check(LDetail.CaptureEdit.Item.GetValue(NyxTextField('name')) = 'Ada Lovelace',
+    'actual selection owns the exact current Edit record');
+  LRoot := GRenderers[0].Root;
+  LGeneration := NyxEventGeneration(GRenderers[0].Events);
+  GRefuseLabel := True;
+  LRefused := False;
+  try
+    RenderApp(0);
+  except
+    on ENyxModel do LRefused := True;
+  end;
+  GRefuseLabel := False;
+  Check(LRefused and (GRenderers[0].Root = LRoot) and not LGeneration.Cancelled and
+    LDetail.Connected and (DetailCaption(0) = 'Ada Lovelace'),
+    'failed physical preparation preserves accepted automatic text, record and generation');
+  RenderApp(0);
+  CaptureBinding(0);
+  {$ifdef PAS2JS}await(AwaitDetail(0, 'Ada Lovelace', True));
+  {$else}AwaitDetail(0, 'Ada Lovelace', True);{$endif}
+  Check(not LDetail.Connected and LGeneration.Cancelled and
+    (GRenderers[0].MasterDetailBinding(CDirectoryID) <> LDetail),
+    'replacement publishes current selection through the common lifetime and retires old commands');
+  LRefused := False;
+  try
+    LDetail.CaptureEdit;
+  except
+    on ENyxMasterDetailCancelled do LRefused := True;
+  end;
+  Check(LRefused, 'retained old automatic Edit command cannot read successor selection');
+
+  LDuplicate := NewNyxCoordinatorRegistry;
+  LDuplicate.RegisterFactory(NyxCustomKind(NyxKindName(nkMasterDetail)),
+    NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
+  GRenderers[0].CoordinatorRegistry := LDuplicate;
+  LDetail := GRenderers[0].MasterDetailBinding(CDirectoryID);
+  LRoot := GRenderers[0].Root;
+  LRefused := False;
+  try
+    RenderApp(0);
+  except
+    on ENyxCoordinator do LRefused := True;
+  end;
+  GRenderers[0].CoordinatorRegistry := GRegistry;
+  Check(LRefused and (GRenderers[0].Root = LRoot) and LDetail.Connected,
+    'built-in and caller duplicate registration refuses before replacing the accepted owner');
+
+  GRenderers[0].CollectionView(DetailRole(0, 'master')).ClearSelection;
+  {$ifdef PAS2JS}await(AwaitDetail(0, CDirectoryPlaceholder, False));
+  {$else}AwaitDetail(0, CDirectoryPlaceholder, False);{$endif}
+  LGeneration := NyxEventGeneration(GRenderers[0].Events);
+  LDetail.Disconnect;
+  LDetail.Disconnect;
+  Check(not LDetail.Connected and not LGeneration.Cancelled and
+    (GRenderers[0].MasterDetailBinding(CDirectoryID) = LDetail) and
+    (GRenderers[0].Root.Find(DetailRole(0, 'detail/edit')).EnabledPolicyCount = 0),
+    'exact typed Disconnect releases its last-false policy without replacing the view or event generation');
+  LRefused := False;
+  try
+    LDetail.CaptureEdit;
+  except
+    on ENyxMasterDetailCancelled do LRefused := True;
+  end;
+  Check(LRefused, 'explicitly disconnected typed commands refuse further record capture');
+  RenderApp(0);
+  CaptureBinding(0);
+  {$ifdef PAS2JS}await(AwaitDetail(0, CDirectoryPlaceholder, False));
+  {$else}AwaitDetail(0, CDirectoryPlaceholder, False);{$endif}
+  SelectDetail(0);
+  {$ifdef PAS2JS}await(AwaitDetail(0, 'Ada Lovelace', True));
+  {$else}AwaitDetail(0, 'Ada Lovelace', True);{$endif}
+  LDetail := GRenderers[0].MasterDetailBinding(CDirectoryID);
+  Check(LDetail.Connected, 'ordinary remount after explicit Disconnect accepts actual selection input');
+  LGeneration := NyxEventGeneration(GRenderers[0].Events);
+  GRenderers[0].Unmount;
+  Check(not LDetail.Connected and LGeneration.Cancelled,
+    'full Unmount revokes the common automatic owner and its event generation');
+  RenderApp(0);
+  CaptureBinding(0);
+  {$ifdef PAS2JS}await(AwaitDetail(0, 'Ada Lovelace', True));
+  {$else}AwaitDetail(0, 'Ada Lovelace', True);{$endif}
+  Check(GRenderers[0].MasterDetailBinding(CDirectoryID).Connected and
+    (DetailCaption(1) = CDirectoryPlaceholder),
+    'remount adopts retained collection data without sharing the other application');
+end;
+
 procedure Cases; {$ifdef PAS2JS}async;{$endif}
 var
   LPage: INyxPage;
   LSummary: INyxSelectionSummary;
+  LDetail: INyxMasterDetail;
   LRoot: TNyxNode;
   LOldRoot: TNyxNode;
   LOld: INyxSelectionSummaryBinding;
@@ -459,6 +648,14 @@ begin
     NyxCollectionItem(NyxItem(People, 'alder')).WithValue(PersonName, 'Alder'),
     NyxCollectionItem(NyxItem(People, 'birch')).WithValue(PersonName, 'Birch'),
     NyxCollectionItem(NyxItem(People, 'cedar')).WithValue(PersonName, 'Cedar')]);
+  GDocument.Collections.Define(NyxCollection('directory-people'),
+    NyxCollectionSchema.Text(NyxTextField('name'), '').Text(NyxTextField('description'), ''), [
+    NyxCollectionItem(NyxItem(NyxCollection('directory-people'), 'ada')).
+      WithValue(NyxTextField('name'), 'Ada Lovelace').
+      WithValue(NyxTextField('description'), 'A carefully written first record.'),
+    NyxCollectionItem(NyxItem(NyxCollection('directory-people'), 'grace')).
+      WithValue(NyxTextField('name'), 'Grace Hopper').
+      WithValue(NyxTextField('description'), 'An independent second record.')]);
   LPage := NewNyxPage('home');
   LPage.Configure.Padding(16).Gap(12).Done;
   LPage.Add(NewNyxHeading('title').WithText('A thoughtful little selection'));
@@ -468,8 +665,16 @@ begin
     (LSummary.CountLabel.ID = CCountID) and (LSummary.ClearButton.ID = CClearID),
     'creator compound exposes specialized ordinary parts');
   LPage.Add(LSummary);
+  LDetail := NewNyxMasterDetail(CDirectoryID);
+  LDetail.MasterList.Binds.Collection(NyxCollectionView(NyxCollection('directory-people')).
+    Column(NyxTextField('name'), 'People').Selection(nsmSingle));
+  LDetail.DetailTitleHeading.WithText(CDirectoryPlaceholder);
+  SetNyxMasterDetailIntent(LDetail, TNyxMasterDetailIntent.Configured(
+    NyxMasterDetailOptions(NyxTextField('name'), NyxTextField('description'))));
+  LPage.Add(LDetail);
   GDocument.AddPage(LPage);
   LSummary := nil;
+  LDetail := nil;
   LPage := nil;
   LAuthored := TNyxCodec.Encode(GDocument);
   GRegistry := NewNyxCoordinatorRegistry;
@@ -603,10 +808,13 @@ begin
   ClearByKeyboard(0);
   {$ifdef PAS2JS}await(AwaitCount(0, 0));{$else}AwaitCount(0, 0);{$endif}
   Check(Rows(0).Selection.Count = 0, 'new actual controls remain usable after committed failure');
+  {$ifdef PAS2JS}await(DetailCases);{$else}DetailCases;{$endif}
   GNotifyAction := nfaDispose;
   RenderApp(0);
   Check((GRenderers[0] = nil) and (GDisposedBinding <> nil) and not GDisposedBinding.Connected,
     'postcommit creator notification can dispose its renderer without retaining the host');
+  Check((GDisposedDetail <> nil) and not GDisposedDetail.Connected,
+    'notification disposal also revokes the independent common automatic MasterDetail owner');
   LRejected := False;
   try
     GDisposedBinding.Clear;
@@ -640,6 +848,7 @@ begin
     {$else}FreeAndNil(GHosts[LApp]);{$endif}
   end;
   GDisposedBinding := nil;
+  GDisposedDetail := nil;
   GRegistry := nil;
   FreeAndNil(GDocument);
 end;

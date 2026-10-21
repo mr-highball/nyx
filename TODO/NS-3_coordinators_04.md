@@ -14,6 +14,22 @@ serving [components](NS-3_components_01.md) criteria1/3. This migration adds no
 credit. It can follow registration independently of MasterDetail's migration;
 the parent retains their joint integration and full reuse acceptance.
 
+**Work packets and handoff:**
+
+| Packet | Reviewable outcome | Ownership and finish line |
+| --- | --- | --- |
+| K1 — Working common attachment | A configured board moves real cards through the common path on both renderers, retaining its exact typed lane/Move facades | Root: internal common adapter and renderers. Lil' Scooty: existing Kanban runtime and focused consumer. Review both scopes before joint freeze; an adapter alone is not delivery. |
+| K2 — Retired and refused boards | Real Move/drag/async Click, failed candidate, explicit Disconnect/reacquisition, replacement and remount preserve data and refuse stale commands | Existing collection/event owners and ordinary control consumers; retain manual GUIDs, physical facade identity and caller scheduling. |
+| K3 — Authored application compatibility | Ordinary Studio and its own saved/generated application use the migrated behavior | Reuse applicable existing journeys, native clean heaps and matching browser assertions. All five criteria below must pass before DONE. |
+
+The reviewed seam must preserve the actual canonical INyxList/INyxButton returned
+by the existing binding, including Node/Configure/read-only behavior. A library-
+internal built-in adapter may receive retained canonical controls at common
+admission; the public creator projection stays Node-free. No ID-only proxy or
+new movement/selection owner substitutes for those interfaces. This is trusted
+Pascal integration, not a security sandbox. Packet order is K1→K2→K3, with bounded
+checks declared after source review; this backlog grants no source release.
+
 **Acceptance Criteria:**
 
 - Existing Configured/Disabled/Inherit and static-absence behavior remains

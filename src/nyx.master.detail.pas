@@ -31,7 +31,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.controls, nyx.collections,
   nyx.collections.bindings, nyx.events, nyx.scheduler, nyx.behavior,
-  nyx.publication.types;
+  nyx.publication.types, nyx.coordinators;
 
 const
   NyxMasterDetailIntentKey = 'nyx.master-detail';
@@ -154,6 +154,9 @@ function PrepareNyxMasterDetailBinding(const ADetail: INyxMasterDetail;
 function PrepareNyxMasterDetailDisabled(const ADetail: INyxMasterDetail;
   const AEventView: INyxPreparedEventView;
   const AScheduler: INyxScheduler): INyxPreparedMasterDetailBinding;
+{ The same selected-record policy participates in ordinary coordinator mounting.
+  Saved intent does not load this factory; the application supplies registration. }
+function NewNyxMasterDetailCoordinatorFactory: INyxCoordinatorFactory;
 
 implementation
 
@@ -203,7 +206,8 @@ type
   end;
   { One renderer-free prepared/live controller. Nodes belong to the retained
     runtime root; dirty callbacks remain dormant until accepted installation. }
-  TDetailBinding = class(TInterfacedObject, INyxMasterDetailBinding)
+  TDetailBinding = class(TInterfacedObject, INyxMasterDetailBinding,
+    INyxCoordinatorBinding, INyxCoordinatorEventEnrichment)
   private
     FDetail: INyxMasterDetail;
     FOptions: TNyxMasterDetailOptions;
@@ -215,6 +219,19 @@ type
     FCallback: TDetailPort;
     FPort: IDetailPort;
     FPolicy: INyxRuntimeEnabledPolicy;
+    FTitleReservation: INyxRuntimeTextReservation;
+    FDescriptionReservation: INyxRuntimeTextReservation;
+    FProjection: INyxCoordinatorProjection;
+    FProjectionLifetime: INyxCoordinatorProjectionLifetime;
+    FRoleFacts: INyxCoordinatorRoleFacts;
+    FScopedRefresh: INyxCoordinatorRefresh;
+    FRootRole: TNyxControlRef;
+    FMasterRole: TNyxControlRef;
+    FTitleRole: TNyxControlRef;
+    FDescriptionRole: TNyxControlRef;
+    FEditRole: TNyxControlRef;
+    FSource: TNyxCollectionRef;
+    FScoped: Boolean;
     FRoot: TNyxNode;
     FParent: TNyxNode;
     FMaster: TNyxNode;
@@ -240,6 +257,7 @@ type
     FCleaned: Boolean;
     procedure CheckActive(APrepared: Boolean);
     procedure CheckNodes;
+    procedure CheckProjection;
     procedure AdmitView;
     function ReadCurrent(APrepared: Boolean): TNyxMasterDetailRecord;
     procedure Project(const ARecord: TNyxMasterDetailRecord);
@@ -251,11 +269,16 @@ type
       const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
       const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
       ARefresh: TNyxMasterDetailRefresh; ADisabled: Boolean);
+    constructor CreateScoped(const AProjection: INyxCoordinatorProjection;
+      const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
+      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh; ADisabled: Boolean);
     destructor Destroy; override;
     function GetConnected: Boolean;
     function GetCurrent: TNyxMasterDetailRecord;
     function CaptureEdit: TNyxMasterDetailRecord;
     function EnrichEdit(const AEvent: TNyxEventInfo): TNyxEventInfo;
+    function Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
     procedure Refresh;
     procedure Disconnect;
   end;
@@ -276,6 +299,10 @@ type
       const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
       const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
       ARefresh: TNyxMasterDetailRefresh; ADisabled: Boolean);
+    constructor CreateScoped(const AProjection: INyxCoordinatorProjection;
+      const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
+      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh; ADisabled: Boolean);
     destructor Destroy; override;
     function GetBinding: INyxMasterDetailBinding;
     procedure Revoke;
@@ -285,6 +312,37 @@ type
     procedure Install;
     procedure Notify;
     procedure Retire;
+  end;
+  { Thin common-publication adapter preserves the original manual preparation
+    interface. A disabled owner exposes only a base lifetime, not Edit commands. }
+  TCoordinatorDetailPlan = class(TInterfacedObject, INyxPreparedCoordinator,
+    INyxPreparedPublication, INyxPublicationReadiness, INyxCoordinatorBinding)
+  private
+    FOwner: TPreparedDetail;
+    FPrepared: INyxPreparedMasterDetailBinding;
+    FReadiness: INyxPublicationReadiness;
+    FBinding: INyxCoordinatorBinding;
+  public
+    constructor Create(AOwner: TPreparedDetail;
+      const APrepared: INyxPreparedMasterDetailBinding);
+    function GetBinding: INyxCoordinatorBinding;
+    function GetConnected: Boolean;
+    procedure Revoke;
+    procedure Disconnect;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+  { Explicit Pascal registration reuses the strict authored intent codec and
+    scoped role authority; no renderer-specific behavior branch is required. }
+  TDetailCoordinatorFactory = class(TInterfacedObject, INyxCoordinatorFactory)
+  public
+    function Prepare(const AProjection: INyxCoordinatorProjection;
+      const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+      const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
   end;
 
 function NyxMasterDetailOptions(const ATitleField,
@@ -955,6 +1013,19 @@ begin
     FTitleProjection := FTitle.StoredProp(NyxAttributeName(atText));
     FDescriptionProjection := FDescription.StoredProp(NyxAttributeName(atText));
     FSpec := FMaster.CollectionView.ToData.ToJSON;
+    FSource := FMaster.CollectionView.Key;
+    { Exclusive runtime ownership is independent of equal initial text. Reserve
+      both roles before the first projection or outward view admission. }
+    try
+      FTitleReservation := FTitle.ReserveRuntimeText;
+      FDescriptionReservation := FDescription.ReserveRuntimeText;
+    except
+      on E: ENyxModel do
+      begin
+        raise ENyxMasterDetail.Create('MasterDetail text role is already reserved: ' +
+          TNyxText(E.Message));
+      end;
+    end;
 
     if LViews = nil then
     begin
@@ -972,6 +1043,142 @@ begin
     CheckActive(True);
     LRecord := ReadCurrent(True);
     Project(LRecord);
+  end;
+  CheckNodes;
+end;
+
+constructor TDetailBinding.CreateScoped(const AProjection: INyxCoordinatorProjection;
+  const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh; ADisabled: Boolean);
+var
+  LViews: INyxCollectionBindings;
+  LEventView: INyxPreparedEventView;
+  LScheduler: INyxScheduler;
+  LInfo: TNyxCoordinatorRoleInfo;
+  LSpec: TNyxCollectionViewSpec;
+  LRecord: TNyxMasterDetailRecord;
+
+  function RequiredRole(const APath: TNyxText; AKind: TNyxKind): TNyxControlRef;
+  var
+    LRoleInfo: TNyxCoordinatorRoleInfo;
+  begin
+    Result := FProjection.Part(NyxPart(APath));
+    LRoleInfo := FRoleFacts.Describe(Result);
+    CheckActive(True);
+
+    if (LRoleInfo.Kind.Name <> NyxKindName(AKind)) or
+      (LRoleInfo.ProjectionKind.Name <> NyxKindName(AKind)) then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail requires its exact role: ' + APath);
+    end;
+  end;
+
+begin
+  inherited Create;
+  FScoped := True;
+  FProjection := AProjection;
+  FScopedRefresh := ARefresh;
+  LViews := AViews;
+  LEventView := AEventView;
+  FScheduler := AScheduler;
+  LScheduler := FScheduler;
+  FDisabled := ADisabled;
+
+  if not FDisabled then
+  begin
+    FOptions := AOptions.Copy;
+  end;
+
+  if (FProjection = nil) or (LEventView = nil) or (LScheduler = nil) or
+    not Supports(FProjection, INyxCoordinatorRoleFacts, FRoleFacts) or
+    not Supports(FProjection, INyxCoordinatorProjectionLifetime, FProjectionLifetime) then
+  begin
+    raise ENyxMasterDetail.Create('MasterDetail needs checked coordinator roles and retirement');
+  end;
+  FGeneration := LEventView.Generation;
+  LScheduler.RequireUI;
+  CheckActive(True);
+  FRootRole := FProjection.Root;
+  FRootID := FRootRole.ID;
+  LInfo := FRoleFacts.Describe(FRootRole);
+  CheckActive(True);
+
+  if (LInfo.Kind.Name <> NyxKindName(nkMasterDetail)) or
+    (not FDisabled and not LInfo.Compound) then
+  begin
+    raise ENyxMasterDetail.Create('MasterDetail requires its specialized compound routing');
+  end;
+  FCallback := TDetailPort.Create(Self);
+  FPort := FCallback;
+  try
+    FEditRole := FProjection.Part(NyxPart('detail/edit'));
+  except
+    on ENyxModel do
+    begin
+      FEditRole := Default(TNyxControlRef);
+    end;
+  end;
+
+  if FEditRole.ID <> '' then
+  begin
+    LInfo := FRoleFacts.Describe(FEditRole);
+    CheckActive(True);
+
+    if (LInfo.Kind.Name <> NyxKindName(nkButton)) or
+      (LInfo.ProjectionKind.Name <> NyxKindName(nkButton)) then
+    begin
+      FEditRole := Default(TNyxControlRef);
+    end;
+  end;
+  FEditID := FEditRole.ID;
+
+  if not FDisabled then
+  begin
+    FOptions.Validate;
+    FMasterRole := RequiredRole('master', nkList);
+    FTitleRole := RequiredRole('detail/title', nkHeading);
+    FDescriptionRole := RequiredRole('detail/description', nkLabel);
+    RequiredRole('detail/edit', nkButton);
+    LInfo := FRoleFacts.Describe(FTitleRole);
+    FTitleDefault := LInfo.EffectiveText;
+    LInfo := FRoleFacts.Describe(FDescriptionRole);
+    FDescriptionDefault := LInfo.EffectiveText;
+    CheckActive(True);
+
+    if not FProjection.TryCollectionSpec(FMasterRole, LSpec) then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail requires a bound master list');
+    end;
+    LSpec.Validate;
+
+    if (LSpec.SelectionMode <> nsmSingle) or (LSpec.Count < 1) then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail requires a single-selection list source');
+    end;
+    FSpec := LSpec.ToData.ToJSON;
+    FSource := LSpec.Key;
+
+    if LViews = nil then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail requires its actual collection views');
+    end;
+    FView := LViews.ViewFor(FMasterRole.ID);
+    CheckActive(True);
+
+    if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, FReadiness) then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail view requires explicit publication readiness');
+    end;
+    AdmitView;
+    FToken := FView.Subscribe(FCallback.Changed);
+    CheckActive(True);
+    LRecord := ReadCurrent(True);
+    Project(LRecord);
+  end
+  else if FEditRole.ID <> '' then
+  begin
+    FProjection.Enabled(FEditRole, False);
   end;
   CheckNodes;
 end;
@@ -1014,6 +1221,13 @@ var
 begin
   CheckActive(True);
 
+  if FScoped then
+  begin
+    { The enclosing common participant fences canonical roles after every group
+      validator. Its child final fence must make no outward projection call. }
+    Exit;
+  end;
+
   if not FRoot.IsRealized or (FRoot.ID <> FRootID) or (FRoot.Parent <> FParent) or
     (FRoot.Kind <> NyxKindName(nkMasterDetail)) or
     (IntentText(FRoot) <> FIntent) or (OptionalEdit(FRoot) <> FEdit) then
@@ -1050,12 +1264,35 @@ begin
       (Role(FRoot, 'detail/description', nkLabel) <> FDescription) or
       (FMaster.CollectionView.ToData.ToJSON <> FSpec) or
       (FTitle.StoredProp(NyxAttributeName(atText)) <> FTitleProjection) or
-      (FDescription.StoredProp(NyxAttributeName(atText)) <> FDescriptionProjection) then
+      (FDescription.StoredProp(NyxAttributeName(atText)) <> FDescriptionProjection) or
+      (FTitleReservation = nil) or not FTitleReservation.Active or
+      (FDescriptionReservation = nil) or not FDescriptionReservation.Active then
     begin
       raise ENyxMasterDetail.Create('MasterDetail behavioral roles changed');
     end;
   end;
   CheckActive(True);
+end;
+
+procedure TDetailBinding.CheckProjection;
+var
+  LInfo: TNyxCoordinatorRoleInfo;
+begin
+  CheckActive(not FConnected);
+
+  if FScoped then
+  begin
+    { Describe is an outward, revocable capability. Use it during ordinary
+      admission/input, never the child's final local readiness fence. }
+    LInfo := FRoleFacts.Describe(FRootRole);
+    CheckActive(not FConnected);
+
+    if (LInfo.Kind.Name <> NyxKindName(nkMasterDetail)) or
+      (not FDisabled and not LInfo.Compound) then
+    begin
+      raise ENyxMasterDetail.Create('MasterDetail scoped role authority changed');
+    end;
+  end;
 end;
 
 procedure TDetailBinding.AdmitView;
@@ -1066,8 +1303,13 @@ var
 begin
   LView := FView;
   CheckActive(not FConnected);
-  ValidateNyxMasterDetailOptions(FRoot, FOptions);
-  LKey := FMaster.CollectionView.Key.Name;
+  CheckProjection;
+
+  if not FScoped then
+  begin
+    ValidateNyxMasterDetailOptions(FRoot, FOptions);
+  end;
+  LKey := FSource.Name;
 
   if LView.Spec.ToData.ToJSON <> FSpec then
   begin
@@ -1133,7 +1375,7 @@ begin
     LItem := LSelection.ItemAt(0);
     CheckActive(APrepared);
 
-    if LItem.Collection.Name <> FMaster.CollectionView.Key.Name then
+    if LItem.Collection.Name <> FSource.Name then
     begin
       raise ENyxMasterDetail.Create('MasterDetail selected identity belongs to another source');
     end;
@@ -1173,8 +1415,21 @@ begin
   end;
   { Only this independent runtime projection changes. Authored nodes, rows,
     selection and scalar state are never written by a detail presentation. }
-  FTitle.SetProp(NyxAttributeName(atText), LTitle);
-  FDescription.SetProp(NyxAttributeName(atText), LDescription);
+
+  if FScoped then
+  begin
+    FProjection.Text(FTitleRole, LTitle);
+    CheckActive(not FConnected);
+    FProjection.Text(FDescriptionRole, LDescription);
+    CheckActive(not FConnected);
+    FProjection.Enabled(FEditRole, LRecord.Defined);
+    CheckActive(not FConnected);
+  end
+  else
+  begin
+    FTitle.SetProp(NyxAttributeName(atText), LTitle);
+    FDescription.SetProp(NyxAttributeName(atText), LDescription);
+  end;
   FTitleProjection := LTitle;
   FDescriptionProjection := LDescription;
   FCurrent := LRecord;
@@ -1247,8 +1502,10 @@ begin
     raise ENyxMasterDetail.Create('Disabled MasterDetail has no Edit record');
   end;
   CheckNodes;
+  CheckProjection;
   LCurrent := ReadCurrent(False);
   CheckNodes;
+  CheckProjection;
 
   if not LCurrent.Defined or not FCurrent.Defined or
     (LCurrent.FRevision <> FCurrent.FRevision) or
@@ -1282,11 +1539,17 @@ begin
   Result.HasDetails := True;
 end;
 
+function TDetailBinding.Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
+begin
+  Result := EnrichEdit(AEvent);
+end;
+
 procedure TDetailBinding.Refresh;
 var
   LKeepAlive: INyxMasterDetailBinding;
   LScheduler: INyxScheduler;
   LRefresh: TNyxMasterDetailRefresh;
+  LScopedRefresh: INyxCoordinatorRefresh;
   LRecord: TNyxMasterDetailRecord;
 begin
   LKeepAlive := Self;
@@ -1306,6 +1569,14 @@ begin
   CheckActive(False);
   Project(LRecord);
   LRefresh := FRefresh;
+  LScopedRefresh := FScopedRefresh;
+
+  if LScopedRefresh <> nil then
+  begin
+    { The guarded final-renderer port may retire this complete binding. }
+    LScopedRefresh.Request;
+    Exit;
+  end;
 
   if Assigned(LRefresh) then
   begin
@@ -1315,21 +1586,45 @@ begin
 end;
 
 procedure TDetailBinding.Revoke;
+var
+  LLifetime: INyxCoordinatorProjectionLifetime;
 begin
+  LLifetime := FProjectionLifetime;
   FRevoked := True;
   FConnected := False;
   FRefresh := nil;
+
+  if FTitleReservation <> nil then
+  begin
+    FTitleReservation.Revoke;
+  end;
+
+  if FDescriptionReservation <> nil then
+  begin
+    FDescriptionReservation.Revoke;
+  end;
 
   if FPort <> nil then
   begin
     FPort.Revoke;
   end;
+
+  if LLifetime <> nil then
+  begin
+    { Explicit binding retirement revokes its scope too. This only changes
+      owned flags; it never recurses through the enclosing mount. }
+    LLifetime.Revoke;
+  end;
 end;
 
 procedure TDetailBinding.Cleanup;
 var
+  LLifetime: INyxCoordinatorProjectionLifetime;
+  LProjection: INyxCoordinatorProjection;
   LFailure: TNyxText;
 begin
+  LLifetime := FProjectionLifetime;
+  LProjection := FProjection;
   Revoke;
 
   if FCleaned then
@@ -1366,10 +1661,66 @@ begin
       end;
     end;
   end;
+
+  if (FTitle <> nil) and (FTitleReservation <> nil) then
+  begin
+    try
+      FTitle.ReleaseRuntimeText(FTitleReservation);
+    except
+      on E: Exception do
+      begin
+
+        if LFailure = '' then
+        begin
+          LFailure := TNyxText(E.Message);
+        end;
+      end;
+    end;
+  end;
+
+  if (FDescription <> nil) and (FDescriptionReservation <> nil) then
+  begin
+    try
+      FDescription.ReleaseRuntimeText(FDescriptionReservation);
+    except
+      on E: Exception do
+      begin
+
+        if LFailure = '' then
+        begin
+          LFailure := TNyxText(E.Message);
+        end;
+      end;
+    end;
+  end;
+
+  if LLifetime <> nil then
+  begin
+    try
+      { The shared scope owns the scoped text claims and AND-enabled policy.
+        Releasing this binding must detach them now, not at view retirement. }
+      LLifetime.Disconnect;
+    except
+      on E: Exception do
+      begin
+
+        if LFailure = '' then
+        begin
+          LFailure := TNyxText(E.Message);
+        end;
+      end;
+    end;
+  end;
   FToken := nil;
   FReadiness := nil;
   FView := nil;
   FPolicy := nil;
+  FTitleReservation := nil;
+  FDescriptionReservation := nil;
+  FScopedRefresh := nil;
+  FRoleFacts := nil;
+  FProjectionLifetime := nil;
+  FProjection := nil;
   FEdit := nil;
   FMaster := nil;
   FTitle := nil;
@@ -1381,6 +1732,7 @@ begin
   FScheduler := nil;
   FCallback := nil;
   FPort := nil;
+  LProjection := nil;
 
   if LFailure <> '' then
   begin
@@ -1404,6 +1756,18 @@ begin
   inherited Create;
   FEventView := AEventView;
   FOwner := TDetailBinding.Create(ADetail, AOptions, AViews, FEventView,
+    AScheduler, ARefresh, ADisabled);
+  FBinding := FOwner;
+end;
+
+constructor TPreparedDetail.CreateScoped(const AProjection: INyxCoordinatorProjection;
+  const AOptions: TNyxMasterDetailOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh; ADisabled: Boolean);
+begin
+  inherited Create;
+  FEventView := AEventView;
+  FOwner := TDetailBinding.CreateScoped(AProjection, AOptions, AViews, FEventView,
     AScheduler, ARefresh, ADisabled);
   FBinding := FOwner;
 end;
@@ -1552,6 +1916,133 @@ function PrepareNyxMasterDetailDisabled(const ADetail: INyxMasterDetail;
 begin
   Result := TPreparedDetail.Create(ADetail, Default(TNyxMasterDetailOptions),
     nil, AEventView, AScheduler, nil, True);
+end;
+
+constructor TCoordinatorDetailPlan.Create(AOwner: TPreparedDetail;
+  const APrepared: INyxPreparedMasterDetailBinding);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FPrepared := APrepared;
+
+  if (FOwner = nil) or (FPrepared = nil) or
+    not Supports(FPrepared, INyxPublicationReadiness, FReadiness) then
+  begin
+    raise ENyxMasterDetail.Create('MasterDetail coordinator needs prepared readiness');
+  end;
+
+  if not FOwner.FOwner.FDisabled and
+    not Supports(FOwner.FBinding, INyxCoordinatorBinding, FBinding) then
+  begin
+    raise ENyxMasterDetail.Create('MasterDetail must preserve its exact typed binding');
+  end;
+end;
+
+function TCoordinatorDetailPlan.GetBinding: INyxCoordinatorBinding;
+begin
+  Result := FBinding;
+
+  if Result = nil then
+  begin
+    { A disabled preparation has a lifetime owner but no selected-record API. }
+    Result := Self;
+  end;
+end;
+
+function TCoordinatorDetailPlan.GetConnected: Boolean;
+var
+  LLease: INyxPreparedCoordinator;
+begin
+  LLease := Self;
+  Result := FOwner.FOwner.GetConnected;
+end;
+
+procedure TCoordinatorDetailPlan.Revoke;
+begin
+  FPrepared.Revoke;
+end;
+
+procedure TCoordinatorDetailPlan.Disconnect;
+var
+  LLease: INyxPreparedCoordinator;
+  LPrepared: INyxPreparedMasterDetailBinding;
+begin
+  LLease := Self;
+  LPrepared := FPrepared;
+  LPrepared.Disconnect;
+end;
+
+procedure TCoordinatorDetailPlan.Validate;
+var
+  LLease: INyxPreparedCoordinator;
+  LPrepared: INyxPreparedMasterDetailBinding;
+begin
+  LLease := Self;
+  LPrepared := FPrepared;
+  LPrepared.Validate;
+end;
+
+procedure TCoordinatorDetailPlan.CheckReady;
+var
+  LLease: INyxPreparedCoordinator;
+  LReadiness: INyxPublicationReadiness;
+begin
+  LLease := Self;
+  LReadiness := FReadiness;
+  LReadiness.CheckReady;
+end;
+
+procedure TCoordinatorDetailPlan.Install;
+begin
+  FPrepared.Install;
+end;
+
+procedure TCoordinatorDetailPlan.Notify;
+begin
+  FPrepared.Notify;
+end;
+
+procedure TCoordinatorDetailPlan.Retire;
+begin
+  FPrepared.Retire;
+end;
+
+function TDetailCoordinatorFactory.Prepare(const AProjection: INyxCoordinatorProjection;
+  const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+  const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+var
+  LProjection: INyxCoordinatorProjection;
+  LViews: INyxCollectionBindings;
+  LView: INyxPreparedEventView;
+  LScheduler: INyxScheduler;
+  LRefresh: INyxCoordinatorRefresh;
+  LIntent: TNyxMasterDetailIntent;
+  LOptions: TNyxMasterDetailOptions;
+  LOwner: TPreparedDetail;
+  LPrepared: INyxPreparedMasterDetailBinding;
+begin
+  LProjection := AProjection;
+  LViews := AViews;
+  LView := AView;
+  LScheduler := AScheduler;
+  LRefresh := ARefresh;
+  LIntent := TNyxMasterDetailIntent.FromData(AIntent);
+  LOptions := Default(TNyxMasterDetailOptions);
+
+  if LIntent.Mode = nmiConfigured then
+  begin
+    LOptions := LIntent.Options;
+  end;
+  LOwner := TPreparedDetail.CreateScoped(LProjection, LOptions, LViews,
+    LView, LScheduler, LRefresh, LIntent.Mode = nmiDisabled);
+  LPrepared := LOwner;
+  Result := TCoordinatorDetailPlan.Create(LOwner, LPrepared);
+end;
+
+function NewNyxMasterDetailCoordinatorFactory: INyxCoordinatorFactory;
+begin
+  Result := TDetailCoordinatorFactory.Create;
 end;
 
 end.

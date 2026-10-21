@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.collections.bindings,
-  nyx.collections.view.types, nyx.events, nyx.scheduler, nyx.publication.types;
+  nyx.collections.view.types, nyx.events, nyx.behavior, nyx.scheduler,
+  nyx.publication.types;
 
 type
   { Coordinator admission is a UI-only operation, like the existing prepared
@@ -65,6 +66,39 @@ type
       out ASpec: TNyxCollectionViewSpec): Boolean;
     procedure Text(const ARole: TNyxControlRef; const AValue: TNyxText);
     procedure Enabled(const ARole: TNyxControlRef; AAllowed: Boolean);
+  end;
+  { Copied role proof for specialized behavior. Semantic and primitive kinds
+    are separate: changing a primitive projection must not impersonate a typed
+    role. EffectiveText captures the current viewport/platform placeholder
+    before any coordinator writes, while AuthoredText keeps its stored meaning. }
+  TNyxCoordinatorRoleInfo = record
+    Kind: TNyxKindRef;
+    ProjectionKind: TNyxKindRef;
+    Compound: Boolean;
+    EffectiveText: TNyxText;
+  end;
+  { Optional discovery capability keeps the original projection GUID stable.
+    Its copied facts join the same final candidate checks; no descriptor escapes. }
+  INyxCoordinatorRoleFacts = interface(IInterface)
+    ['{9CD362E4-56F0-4640-B5BA-EE5802F2FAD8}']
+    function Describe(const ARole: TNyxControlRef): TNyxCoordinatorRoleInfo;
+  end;
+  { Optional owner retirement for a behavior whose public Disconnect releases
+    its presentation immediately. Revoke changes local flags only; Disconnect
+    then attempts this scope's existing cleanup. Neither cancels the enclosing
+    event generation nor calls the child/mount back. Retained copies stay inert. }
+  INyxCoordinatorProjectionLifetime = interface(IInterface)
+    ['{B463718B-3951-42AD-9246-D5D122B8DD01}']
+    procedure Revoke;
+    procedure Disconnect;
+  end;
+  { Optional synchronous capture before the router schedules callbacks. A
+    component may append its exact copied record, never consult selection after
+    queuing. It preserves independent scalar Value and unrelated event payload.
+    The common wrapper fences its accepted generation around every callout. }
+  INyxCoordinatorEventEnrichment = interface(IInterface)
+    ['{5F8715C5-A721-40E8-9CC2-1E45F424EBD3}']
+    function Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
   end;
   { A creator's managed lifetime owner. Commands must check local revocation
     and the exact accepted generation before mutating their existing data owner.
@@ -123,6 +157,10 @@ type
   TNyxCoordinatorMountIDs = array of TNyxText;
 
 function NewNyxCoordinatorRegistry: INyxCoordinatorRegistry;
+{ Both input memberships are copied before any factory can run. Duplicate
+  kind/intent pairs refuse rather than overriding a built-in or caller by order. }
+function ComposeNyxCoordinatorSnapshots(const ABuiltIns,
+  ACaller: INyxCoordinatorRegistrySnapshot): INyxCoordinatorRegistrySnapshot;
 function NyxHasCoordinatorMounts(ARoot: TNyxNode;
   const ASnapshot: INyxCoordinatorRegistrySnapshot): Boolean;
 { The host supplies paired candidate bindings/event plan and an already-realized
@@ -144,6 +182,10 @@ procedure RevokeNyxCoordinatorMounts(const AMounts: TNyxCoordinatorMounts);
 procedure DisconnectNyxCoordinatorMounts(var AMounts: TNyxCoordinatorMounts);
 function FindNyxCoordinatorMount(const AMounts: TNyxCoordinatorMounts;
   const AIDs: TNyxCoordinatorMountIDs; const AID: TNyxText): INyxCoordinatorBinding;
+{ Captures managed vector and event copies before optional enrichment callouts.
+  Renderers still check their own exact view revision before dispatch/legacy use. }
+function EnrichNyxCoordinatorEvent(const AMounts: TNyxCoordinatorMounts;
+  const AEvent: TNyxEventInfo): TNyxEventInfo;
 
 implementation
 
@@ -185,23 +227,6 @@ type
   end;
   { Forward declaration for private weak policy/subscription receivers. }
   TCoordinatorScope = class;
-  { One candidate's text claims compare exact retained-node identities without
-    retaining scopes back. Availability constraints deliberately compose by AND. }
-  ICoordinatorClaims = interface(IInterface)
-    ['{3C52EE89-E6E4-4636-98F6-513DA75F95CB}']
-    procedure ReserveText(ANode: TNyxNode; AOwner: TCoordinatorScope);
-    procedure ReleaseOwner(AOwner: TCoordinatorScope);
-  end;
-  { Shared admission table prevents nested factories silently winning the same
-    text role even when both happen to project an identical initial string. }
-  TCoordinatorClaims = class(TInterfacedObject, ICoordinatorClaims)
-  private
-    FNodes: array of TNyxNode;
-    FOwners: array of TCoordinatorScope;
-  public
-    procedure ReserveText(ANode: TNyxNode; AOwner: TCoordinatorScope);
-    procedure ReleaseOwner(AOwner: TCoordinatorScope);
-  end;
   { Callbacks acquire a short managed scope lease before reading its raw owner.
     The port itself never keeps the scope or its retained nodes alive. }
   ICoordinatorPort = interface(IInterface)
@@ -231,12 +256,16 @@ type
     Parent: TNyxNode;
     ID: TNyxText;
     Kind: TNyxText;
+    ProjectionKind: TNyxText;
+    Compound: Boolean;
+    EffectiveText: TNyxText;
     Path: TNyxText;
     TextDefault: TNyxText;
     TextCurrent: TNyxText;
     EnabledDefault: TNyxText;
     Spec: TNyxText;
     TextClaimed: Boolean;
+    TextReservation: INyxRuntimeTextReservation;
     EnabledClaimed: Boolean;
     Allowed: Boolean;
     Policy: INyxRuntimeEnabledPolicy;
@@ -258,6 +287,7 @@ type
     Final readiness uses dirty flags, the retained generation and raw model
     baselines; alternate view readiness is called only during Validate. }
   TCoordinatorScope = class(TInterfacedObject, INyxCoordinatorProjection,
+    INyxCoordinatorRoleFacts, INyxCoordinatorProjectionLifetime,
     INyxCoordinatorRefresh)
   private
     FTree: INyxControl;
@@ -269,7 +299,6 @@ type
     FGeneration: INyxCancellationScope;
     FScheduler: INyxScheduler;
     FViews: INyxCollectionBindings;
-    FClaims: ICoordinatorClaims;
     FTarget: INyxCoordinatorRefreshTarget;
     FPort: ICoordinatorPort;
     FCallback: TCoordinatorPort;
@@ -285,18 +314,20 @@ type
     procedure CheckNodes;
     procedure Seal;
     procedure Admit;
-    procedure Revoke;
     procedure Cleanup;
   public
     constructor Create(ATree, ARoot: TNyxNode; const AKey: TNyxExtensionRef;
       const AViews: INyxCollectionBindings; const AView: INyxPreparedEventView;
       const AScheduler: INyxScheduler;
-      const ATarget: INyxCoordinatorRefreshTarget; const AClaims: ICoordinatorClaims);
+      const ATarget: INyxCoordinatorRefreshTarget);
     destructor Destroy; override;
+    procedure Revoke;
+    procedure Disconnect;
     function Root: TNyxControlRef;
     function Part(const APath: TNyxPartRef): TNyxControlRef;
     function Kind(const ARole: TNyxControlRef): TNyxKindRef;
     function AuthoredText(const ARole: TNyxControlRef): TNyxText;
+    function Describe(const ARole: TNyxControlRef): TNyxCoordinatorRoleInfo;
     function TryCollectionSpec(const ARole: TNyxControlRef;
       out ASpec: TNyxCollectionViewSpec): Boolean;
     procedure Text(const ARole: TNyxControlRef; const AValue: TNyxText);
@@ -307,7 +338,8 @@ type
     scope. The exact creator binding remains public, preserving specialized
     Supports interfaces; its commands obey the same generation/revoke contract. }
   TCoordinatorMount = class(TInterfacedObject, INyxPreparedCoordinator,
-    INyxPreparedPublication, INyxPublicationReadiness)
+    INyxPreparedPublication, INyxPublicationReadiness,
+    INyxCoordinatorEventEnrichment)
   private
     FScope: TCoordinatorScope;
     FProjection: INyxCoordinatorProjection;
@@ -334,6 +366,7 @@ type
     procedure Install;
     procedure Notify;
     procedure Retire;
+    function Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
   end;
 
 function NewNyxCoordinatorRegistry: INyxCoordinatorRegistry;
@@ -499,6 +532,37 @@ begin
   Result := LCopy.Snapshot;
 end;
 
+function ComposeNyxCoordinatorSnapshots(const ABuiltIns,
+  ACaller: INyxCoordinatorRegistrySnapshot): INyxCoordinatorRegistrySnapshot;
+var
+  LBuiltIns: INyxCoordinatorRegistrySnapshot;
+  LCaller: INyxCoordinatorRegistrySnapshot;
+  LRegistry: INyxCoordinatorRegistry;
+
+  procedure Append(const AInput: INyxCoordinatorRegistrySnapshot);
+  var
+    LIndex: Integer;
+  begin
+    for LIndex := 0 to AInput.Count - 1 do
+    begin
+      LRegistry.RegisterFactory(AInput.Kind(LIndex), AInput.IntentKey(LIndex),
+        AInput.Factory(LIndex));
+    end;
+  end;
+
+begin
+  { Retain both arguments before an alternate snapshot getter can release an
+    aliased caller slot. Only local immutable copies reach the append phase. }
+  LBuiltIns := ABuiltIns;
+  LCaller := ACaller;
+  LBuiltIns := CopyRegistry(LBuiltIns);
+  LCaller := CopyRegistry(LCaller);
+  LRegistry := NewNyxCoordinatorRegistry;
+  Append(LBuiltIns);
+  Append(LCaller);
+  Result := LRegistry.Snapshot;
+end;
+
 function Match(ANode: TNyxNode;
   const ASnapshot: INyxCoordinatorRegistrySnapshot): Integer;
 var
@@ -517,46 +581,6 @@ begin
         raise ENyxCoordinator.Create('More than one coordinator intent matches ' + ANode.ID);
       end;
       Result := LIndex;
-    end;
-  end;
-end;
-
-procedure TCoordinatorClaims.ReserveText(ANode: TNyxNode; AOwner: TCoordinatorScope);
-var
-  LIndex: Integer;
-  LCount: Integer;
-begin
-  for LIndex := 0 to High(FNodes) do
-  begin
-
-    if (FNodes[LIndex] = ANode) and (FOwners[LIndex] <> nil) then
-    begin
-
-      if FOwners[LIndex] <> AOwner then
-      begin
-        raise ENyxCoordinator.Create('Two coordinators cannot project the same text role');
-      end;
-      Exit;
-    end;
-  end;
-  LCount := Length(FNodes);
-  SetLength(FNodes, LCount + 1);
-  SetLength(FOwners, LCount + 1);
-  FNodes[LCount] := ANode;
-  FOwners[LCount] := AOwner;
-end;
-
-procedure TCoordinatorClaims.ReleaseOwner(AOwner: TCoordinatorScope);
-var
-  LIndex: Integer;
-begin
-  for LIndex := 0 to High(FNodes) do
-  begin
-
-    if FOwners[LIndex] = AOwner then
-    begin
-      FNodes[LIndex] := nil;
-      FOwners[LIndex] := nil;
     end;
   end;
 end;
@@ -641,8 +665,7 @@ end;
 constructor TCoordinatorScope.Create(ATree, ARoot: TNyxNode;
   const AKey: TNyxExtensionRef;
   const AViews: INyxCollectionBindings; const AView: INyxPreparedEventView;
-  const AScheduler: INyxScheduler; const ATarget: INyxCoordinatorRefreshTarget;
-  const AClaims: ICoordinatorClaims);
+  const AScheduler: INyxScheduler; const ATarget: INyxCoordinatorRefreshTarget);
 var
   LView: INyxPreparedEventView;
   LScheduler: INyxScheduler;
@@ -654,7 +677,6 @@ begin
   FRootNode := ARoot;
   FIntentKey := AKey.Copy;
   FViews := AViews;
-  FClaims := AClaims;
   LView := AView;
   FScheduler := AScheduler;
   LScheduler := FScheduler;
@@ -730,6 +752,9 @@ begin
     LRole.Parent := ANode.Parent;
     LRole.ID := ANode.ID;
     LRole.Kind := ANode.Kind;
+    LRole.ProjectionKind := ANode.ProjectionKind;
+    LRole.Compound := ANode.Prop(NyxAttributeName(atCompound), 'false') = 'true';
+    LRole.EffectiveText := ANode.Prop(NyxAttributeName(atText));
     LRole.Path := APath;
     LRole.TextDefault := ANode.StoredProp(NyxAttributeName(atText));
     LRole.TextCurrent := LRole.TextDefault;
@@ -804,6 +829,22 @@ begin
   LRole := ARole;
   CheckLive;
   Result := FRoles[RoleIndex(LRole)].TextDefault;
+end;
+
+function TCoordinatorScope.Describe(const ARole: TNyxControlRef): TNyxCoordinatorRoleInfo;
+var
+  LLease: INyxCoordinatorProjection;
+  LRoleRef: TNyxControlRef;
+  LRole: TCoordinatorRole;
+begin
+  LLease := Self;
+  LRoleRef := ARole;
+  CheckNodes;
+  LRole := FRoles[RoleIndex(LRoleRef)];
+  Result.Kind := NyxCustomKind(LRole.Kind);
+  Result.ProjectionKind := NyxCustomKind(LRole.ProjectionKind);
+  Result.Compound := LRole.Compound;
+  Result.EffectiveText := LRole.EffectiveText;
 end;
 
 function TCoordinatorScope.TryCollectionSpec(const ARole: TNyxControlRef;
@@ -891,7 +932,14 @@ begin
     begin
       raise ENyxCoordinator.Create('A coordinator cannot replace a bound text projection');
     end;
-    FClaims.ReserveText(LRole.Node, Self);
+    try
+      LRole.TextReservation := LRole.Node.ReserveRuntimeText;
+    except
+      on E: ENyxModel do
+      begin
+        raise ENyxCoordinator.Create('Coordinator text role is already reserved: ' + TNyxText(E.Message));
+      end;
+    end;
     LRole.TextClaimed := True;
   end;
   CheckNodes;
@@ -952,6 +1000,8 @@ begin
 
     if not LRole.Node.IsRealized or (LRole.Node.ID <> LRole.ID) or
       (LRole.Node.Kind <> LRole.Kind) or (LRole.Node.Parent <> LRole.Parent) or
+      (LRole.Node.ProjectionKind <> LRole.ProjectionKind) or
+      ((LRole.Node.Prop(NyxAttributeName(atCompound), 'false') = 'true') <> LRole.Compound) or
       (FRootNode.Find(LRole.ID) <> LRole.Node) or
       (LRole.Node.CollectionView.ToData.ToJSON <> LRole.Spec) then
     begin
@@ -964,7 +1014,8 @@ begin
     end;
 
     if LRole.TextClaimed and
-      ((LRole.Node.StoredProp(NyxAttributeName(atText)) <> LRole.TextCurrent) or
+      ((LRole.TextReservation = nil) or not LRole.TextReservation.Active or
+      (LRole.Node.StoredProp(NyxAttributeName(atText)) <> LRole.TextCurrent) or
       LRole.Node.FindBinding(bpText, LBinding)) then
     begin
       raise ENyxCoordinator.Create('Coordinator text role conflicts with another projection');
@@ -1038,9 +1089,19 @@ begin
 end;
 
 procedure TCoordinatorScope.Revoke;
+var
+  LIndex: Integer;
 begin
   FRevoked := True;
   FInstalled := False;
+  for LIndex := 0 to High(FRoles) do
+  begin
+
+    if FRoles[LIndex].TextReservation <> nil then
+    begin
+      FRoles[LIndex].TextReservation.Revoke;
+    end;
+  end;
 
   if FPort <> nil then
   begin
@@ -1063,13 +1124,14 @@ begin
   FCleaned := True;
   LFailure := '';
 
-  if FClaims <> nil then
-  begin
-    FClaims.ReleaseOwner(Self);
-  end;
   for LIndex := 0 to High(FRoles) do
   begin
     LRole := FRoles[LIndex];
+
+    if LRole.TextReservation <> nil then
+    begin
+      LRole.Node.ReleaseRuntimeText(LRole.TextReservation);
+    end;
 
     if LRole.Token <> nil then
     begin
@@ -1105,7 +1167,6 @@ begin
   FTreeNode := nil;
   FTree := nil;
   FViews := nil;
-  FClaims := nil;
   FScheduler := nil;
   FGeneration := nil;
   FTarget := nil;
@@ -1116,6 +1177,14 @@ begin
   begin
     raise ENyxCoordinator.Create('Coordinator scope retired; cleanup failed: ' + LFailure);
   end;
+end;
+
+procedure TCoordinatorScope.Disconnect;
+var
+  LLease: INyxCoordinatorProjection;
+begin
+  LLease := Self;
+  Cleanup;
 end;
 
 constructor TCoordinatorMount.Create(AScope: TCoordinatorScope;
@@ -1399,6 +1468,78 @@ begin
   end;
 end;
 
+function TCoordinatorMount.Enrich(const AEvent: TNyxEventInfo): TNyxEventInfo;
+var
+  LLease: INyxPreparedCoordinator;
+  LProjection: INyxCoordinatorProjection;
+  LScope: TCoordinatorScope;
+  LGeneration: INyxCancellationScope;
+  LScheduler: INyxScheduler;
+  LBinding: INyxCoordinatorBinding;
+  LEnrichment: INyxCoordinatorEventEnrichment;
+  LInput: TNyxEventInfo;
+  LCancelled: Boolean;
+
+  function Current: Boolean;
+  begin
+    Result := (LScope <> nil) and (LGeneration <> nil) and not FCleaned and
+      FInstalled and LScope.FInstalled and not LScope.FRevoked and not LScope.FCleaned;
+
+    if Result then
+    begin
+      LCancelled := LGeneration.Cancelled;
+      Result := not LCancelled and not FCleaned and FInstalled and
+        not LScope.FRevoked and not LScope.FCleaned and LScope.FInstalled and
+        (LScope.FGeneration = LGeneration);
+    end;
+  end;
+
+begin
+  LLease := Self;
+  LInput := AEvent.Copy;
+  Result := LInput.Copy;
+  LProjection := FProjection;
+  LScope := FScope;
+  LBinding := FBinding;
+
+  if (LScope = nil) or (LBinding = nil) then
+  begin
+    Exit;
+  end;
+  LGeneration := LScope.FGeneration;
+  LScheduler := LScope.FScheduler;
+
+  if not Current or not Supports(LBinding, INyxCoordinatorEventEnrichment, LEnrichment) then
+  begin
+    Exit;
+  end;
+
+  if not Current then
+  begin
+    Exit;
+  end;
+  LScheduler.RequireUI;
+
+  if not Current then
+  begin
+    Exit;
+  end;
+
+  if not LBinding.Connected or not Current then
+  begin
+    Exit;
+  end;
+  LScope.CheckNodes;
+  Result := LEnrichment.Enrich(LInput);
+
+  if not Current then
+  begin
+    Result := LInput.Copy;
+    Exit;
+  end;
+  LScope.CheckNodes;
+end;
+
 function NyxHasCoordinatorMounts(ARoot: TNyxNode;
   const ASnapshot: INyxCoordinatorRegistrySnapshot): Boolean;
 var
@@ -1449,7 +1590,6 @@ var
   LScheduler: INyxScheduler;
   LSnapshot: INyxCoordinatorRegistrySnapshot;
   LTarget: INyxCoordinatorRefreshTarget;
-  LClaims: ICoordinatorClaims;
   LMounts: TNyxCoordinatorMounts;
   LIDs: TNyxCoordinatorMountIDs;
   LControls: array of INyxControl;
@@ -1511,7 +1651,6 @@ begin
     raise ENyxCoordinator.Create('Coordinator traversal requires an already-realized root');
   end;
   Collect(LRoot.Node);
-  LClaims := TCoordinatorClaims.Create;
   SetLength(LMounts, Length(LControls));
   SetLength(LIDs, Length(LControls));
   try
@@ -1525,7 +1664,7 @@ begin
         raise ENyxCoordinator.Create('A discovered coordinator target changed before preparation');
       end;
       LScope := TCoordinatorScope.Create(LRoot.Node, LControls[LIndex].Node,
-        LSnapshot.IntentKey(LMatches[LIndex]), LViews, LView, LScheduler, LTarget, LClaims);
+        LSnapshot.IntentKey(LMatches[LIndex]), LViews, LView, LScheduler, LTarget);
       LProjection := LScope;
       LRefresh := LScope;
       try
@@ -1720,6 +1859,25 @@ begin
   if LFailure <> '' then
   begin
     raise ENyxCoordinator.Create('Coordinator vector retired; cleanup failed: ' + LFailure);
+  end;
+end;
+
+function EnrichNyxCoordinatorEvent(const AMounts: TNyxCoordinatorMounts;
+  const AEvent: TNyxEventInfo): TNyxEventInfo;
+var
+  LMounts: TNyxCoordinatorMounts;
+  LEnrichment: INyxCoordinatorEventEnrichment;
+  LIndex: Integer;
+begin
+  LMounts := Copy(AMounts, 0, Length(AMounts));
+  Result := AEvent.Copy;
+  for LIndex := 0 to High(LMounts) do
+  begin
+
+    if Supports(LMounts[LIndex], INyxCoordinatorEventEnrichment, LEnrichment) then
+    begin
+      Result := LEnrichment.Enrich(Result);
+    end;
   end;
 end;
 

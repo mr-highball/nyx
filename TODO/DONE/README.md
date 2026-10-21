@@ -3,6 +3,15 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Common MasterDetail mounting](NS-3_coordinators_03.md) was accepted on2026-10-21
+for all six scoped criteria. Automatic behavior uses the same extensible lifetime
+on both renderers; manual/shared text ownership, exact Disconnect and queued
+record/scalar payloads remain compatible. Native99/171/68/68, full Studio165/175,
+own compiled application36/36, publication136/136 and Kanban98/98 pass clean.
+Sixteen compilers have zero Nyx warnings; browser counterparts compile only.
+Joint coordinator/reuse/browser acceptance and original goal credit remain open.
+See [the qualification](../../WORK.md#masterdetail-common-coordinator-migration--2026-10-21).
+
 [Caller-owned prepared behavior](NS-3_coordinators_02.md) was accepted on
 2026-10-21:171 native API checks and39/39 ordinary controls at client1280/390,
 all with clean heaps, plus matching browser compilation. Immutable caller
@@ -10,8 +19,9 @@ registrations mount a typed Selection Summary through generic hooks; guarded
 roles, the shared future event view and weak refresh retain instance/lifetime
 authority. Existing publication136/136, Kanban98/98 and exact compiled
 MasterDetail36/36 stay compatible; both Studios compile. This API prerequisite
-adds no original goal credit. Built-in migration, shared manual text ownership,
-full reusable/embedded adoption and browser execution remain open. See
+adds no original goal credit. MasterDetail migration/shared manual text ownership
+are qualified by03 above; Kanban migration, full reusable/embedded adoption and
+browser execution remain open. See
 [the qualification](../../WORK.md#caller-owned-behavior-registration--2026-10-21).
 
 [Composable renderer publication](NS-4_interact-flows_03.md) was accepted on

@@ -30,8 +30,12 @@ payloads and sibling instances remain independent. Runtime detail projection
 never changes authored data, scalar state or selected membership. Existing
 bindings on the two detail text properties refuse competing projection authority.
 
-Ordinary application renderers prepare the behavior before replacing an accepted
-view. The runtime owner is available through `MasterDetailBinding(RuntimeID)`;
+Ordinary application renderers register the built-in factory alongside caller
+coordinators and prepare one common behavior vector before replacing an accepted
+view. Configured applications need no extra registration. Immutable membership
+composition refuses duplicate kind/intent registrations before factory calls.
+The runtime owner is available through `MasterDetailBinding(RuntimeID)` and the
+same specialized interface from `CoordinatorBinding(RuntimeID)`;
 `Current` and `CaptureEdit` return copied `TNyxMasterDetailRecord` values, including
 stable collection/item identity, data revision and typed item fields. These descriptive
 snapshots grant no mutation authority and can outlive the original view.
@@ -51,6 +55,28 @@ end;
 The adapters capture before callback scheduling. A conflicting structured payload
 refuses replacement; unrelated events retain their payload. Disconnect/replacement
 revokes the old binding and its weak input ports.
+Explicit `INyxMasterDetailBinding.Disconnect` also releases that owner's text
+reservations and Edit availability constraint immediately. It preserves the
+enclosing event generation and other policies, permitting deliberate manual
+reattachment to the same realized control. Later retirement of the old common
+mount cannot detach the replacement's independent ownership.
+
+Automatic factories use guarded role projection and copied semantic/primitive
+kind, compound and effective placeholder facts. Runtime text reservations also
+cover manual MasterDetail attachment, so a caller behavior cannot claim the same
+title or description even when both initial strings agree. Reservations belong
+to exact realized nodes, are revoked before cleanup, and never become serialized
+metadata or inherited authority on an independent clone. Enabled constraints
+continue to compose with authored, bound and caller policies.
+The optional `INyxCoordinatorProjectionLifetime` lets a behavior whose public
+Disconnect releases presentation invoke the scope's existing retirement path.
+Its Revoke is local and flags only; Disconnect attempts the independent cleanup.
+
+`NewNyxMasterDetailCoordinatorFactory` is also available to a custom portable
+host using the common prepared driver. The existing manual preparation API and
+legacy mounts helper remain available. Optional common event enrichment captures
+the Edit record before scheduling, preserving scalar Value alongside Details;
+it grants no additional callback, routing or mutation authority.
 
 `NyxEventsMetadata` preserves the original scalar Value contract.
 `NyxEventDetailsMetadata` independently describes structured Details over the
@@ -128,3 +154,13 @@ fallback. All17 compiler logs in that composite have zero Nyx warnings;63 repeat
 upstream RTL warnings remain. Browser counterparts compile only.
 Browser input, hardware/assistive quality, other widgetsets/DPI, production
 performance and full component/parity acceptance remain open.
+
+The common-coordinator migration additionally qualifies99 focused checks,
+171 public coordinator checks, ordinary controls68/68, the unchanged full Studio
+journey165/175 and its own exact saved compiled application36/36. Publication
+136/136 and Kanban98/98 retain compatibility; all12 native outcomes have clean
+heaps. Sixteen compilers pass with zero Nyx warnings and56 repeated upstream RTL
+warnings. The matching browser programs compile only. This accepts the scoped
+[migration](../TODO/DONE/NS-3_coordinators_03.md); reusable/embedded adoption and
+the original browser/parity gates remain open. See
+[the final qualification](../WORK.md#masterdetail-common-coordinator-migration--2026-10-21).

@@ -1,5 +1,40 @@
 # Working in Nyx
 
+COORDINATOR03 ACCEPTED (2026-10-21): all six scoped criteria close in
+TODO/DONE/NS-3_coordinators_03.md after independent review. Final-source native
+99/171/68/68, full Studio165/175, own compiled36/36, publication136/136 and
+Kanban98/98 pass clean; all16 compilers pass with zero owned/56 upstream RTL
+warning occurrences. Browser compiles only. Immutable auditA18165F2 records
+all actual readers joined and exact47 owned/1780 Pascal/13 concurrent/27 extra.
+Current-source own saved055D/DF22 pairs match across widths. Common4113A6DE,
+MD66C9C803, focusedFDAA5D6D and ordinaryDBA5F4F1 identify final reviewed source.
+No Pascal changed after final freeze; later root-only docs/task moves are separate.
+
+Retain the first missing-import compilers, superseded14/6 import-source proof
+and real typed-Disconnect gap. Final optional projection lifetime releases exact
+claims/Edit mask through existing cleanup; same-board/live-generation manual
+reacquisition survives old mount retirement. Preserve original waits/assertions,
+manual APIs/GUIDs, legacy shim and unchanged full Studio consumer. The first
+final Kanban command treated sole width as evidence directory: both actual1280
+runs pass98 clean, but intended390 is EXCLUDED. Corrected only390 uses the same
+executable and passes98 clean. Original exit1 guard and accidental1280/390
+evidence folders remain retained/untracked; no cleanup or staging those folders.
+
+Original component/authoring/parity criteria and credit remain open; core
+no-closure12→13 carries. Root owns docs/checkpoint only. All Pascal remains
+paused until separate04 source release. Granular04/05/DataToolbar02/01 packets
+are canonical in their existing task files; WORK owns order/handoffs. Next04
+preserves actual canonical typed lane/Move facades through a private built-in
+adapter while public creator projection stays Node-free. A bridge alone is not
+delivery: both renderers, real movement/lifetimes and authored/generated use must
+qualify. Helper's DataToolbar input/query/Clear review is incorporated. Its sole
+next assignment is read-only04 internal canonical adapter signature/file-scope
+proposal. No04 implementation/compiler is released yet.
+Preserve concurrent13, deferred resolver14/splitter, offline LAN/no native Nyx
+tools and no extra agent, host/config retry, cleanup/restart or MCP/tool/wire
+rollout. Original browser/reuse gates remain required, including downstream
+DataToolbar acceptance; no config/session authority is inferred by planning.
+
 COORDINATOR02 ACCEPTED (2026-10-21): all five scoped criteria close in
 TODO/DONE/NS-3_coordinators_02.md; no original component/parity credit closes.
 Maintained creator command passes native171/API and ordinary39/39 at actual

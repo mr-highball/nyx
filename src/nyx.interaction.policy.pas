@@ -26,6 +26,18 @@ unit nyx.interaction.policy;
 interface
 
 type
+  { Exclusive runtime text authority, distinct from the projected string. A
+    node creates its token; the token owns no node, tree, scheduler or callback.
+    Owners revoke this local flag before fallible cleanup, then detach the exact
+    token. Equal initial text never permits a second live projection owner.
+    Descriptor/runtime clones do not inherit this exclusive authority. }
+  INyxRuntimeTextReservation = interface(IInterface)
+    ['{75768B0F-7564-4B87-9D96-0A054FDDE6D2}']
+    function GetActive: Boolean;
+    procedure Revoke;
+    property Active: Boolean read GetActive;
+  end;
+
   { Managed runtime constraint, separate from authored/live enabled values.
     Allowed can follow another portable runtime (for example collection pages).
     Reads are synchronous UI-thread operations, must not mutate or call back,

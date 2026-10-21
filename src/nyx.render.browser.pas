@@ -77,7 +77,7 @@ uses
   nyx.behavior,
   nyx.events,
   nyx.kanban, nyx.kanban.mounts,
-  nyx.master.detail, nyx.master.detail.mounts,
+  nyx.master.detail,
   nyx.data,
   nyx.viewport,
   nyx.event.emitter,
@@ -378,7 +378,6 @@ type
     { Policies and callbacks follow one accepted root/view generation. The
       parallel identity vector contains values only, never widget references. }
     FKanbanMounts: TNyxKanbanMounts;
-    FMasterDetailMounts: TNyxMasterDetailMounts;
     { Caller-owned executable registrations affect future candidates only.
       Accepted mounts retain their immutable snapshot and scoped capabilities. }
     FCoordinatorRegistry: INyxCoordinatorRegistry;
@@ -389,7 +388,6 @@ type
     FCoordinatorRefreshObject: TObject;
     FCoordinatorRefreshTarget: INyxCoordinatorRefreshTarget;
     FKanbanIDs: TNyxKanbanMountIDs;
-    FMasterDetailIDs: TNyxMasterDetailMountIDs;
     FUpdating: Boolean;
     FForceValues: Boolean;
     { Scoped borrowed scalar rejection target; nil retains full forced sync. }
@@ -1116,7 +1114,6 @@ end;
 destructor TNyxBrowserRenderer.Destroy;
 var
   LRetiringKanban: TNyxKanbanMounts;
-  LRetiringMasterDetail: TNyxMasterDetailMounts;
   LRetiringCoordinators: TNyxCoordinatorMounts;
 begin
   { Flag-only weak receiver revocation precedes event/canvas/control cleanup. }
@@ -1126,17 +1123,13 @@ begin
     TNyxBrowserCoordinatorRefresh(FCoordinatorRefreshObject).Owner := nil;
   end;
   LRetiringKanban := FKanbanMounts;
-  LRetiringMasterDetail := FMasterDetailMounts;
   LRetiringCoordinators := FCoordinatorMounts;
   RevokeNyxKanbanMounts(LRetiringKanban);
-  RevokeNyxMasterDetailMounts(LRetiringMasterDetail);
   RevokeNyxCoordinatorMounts(LRetiringCoordinators);
   FKanbanMounts := nil;
-  FMasterDetailMounts := nil;
   FCoordinatorMounts := nil;
   FCoordinatorIDs := nil;
   FKanbanIDs := nil;
-  FMasterDetailIDs := nil;
 
   if FContentGuard <> nil then
   begin
@@ -1158,11 +1151,7 @@ begin
     try
       DisconnectNyxKanbanMounts(LRetiringKanban);
     finally
-      try
-        DisconnectNyxMasterDetailMounts(LRetiringMasterDetail);
-      finally
-        DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-      end;
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
     end;
   except
     { No disposal error may skip theme retirement. Explicit Unmount and accepted
@@ -1176,17 +1165,14 @@ procedure TNyxBrowserRenderer.Clear(AKeepPresentation: Boolean;
 var
   LIndex: Integer;
   LRetiringKanban: TNyxKanbanMounts;
-  LRetiringMasterDetail: TNyxMasterDetailMounts;
   LRetiringCoordinators: TNyxCoordinatorMounts;
   LRetiringSource: INyxViewPublicationSource;
 begin
   LRetiringSource := FViewPublicationSource;
   FUpdating := True;
   RevokeNyxKanbanMounts(FKanbanMounts);
-  RevokeNyxMasterDetailMounts(FMasterDetailMounts);
   RevokeNyxCoordinatorMounts(FCoordinatorMounts);
   LRetiringKanban := nil;
-  LRetiringMasterDetail := nil;
   LRetiringCoordinators := nil;
 
   if AEventView <> nil then
@@ -1197,15 +1183,12 @@ begin
   else
   begin
     LRetiringKanban := FKanbanMounts;
-    LRetiringMasterDetail := FMasterDetailMounts;
     LRetiringCoordinators := FCoordinatorMounts;
   end;
   FKanbanMounts := nil;
-  FMasterDetailMounts := nil;
   FCoordinatorMounts := nil;
   FCoordinatorIDs := nil;
   FKanbanIDs := nil;
-  FMasterDetailIDs := nil;
   { Retire the live document before its borrowed placement is cleared. Pending
     allocation callbacks must never retain a disposed renderer or mount. }
   FreeAndNil(FCompiledMount);
@@ -1364,11 +1347,7 @@ begin
     DisconnectNyxKanbanMounts(LRetiringKanban);
   finally
     try
-      try
-        DisconnectNyxMasterDetailMounts(LRetiringMasterDetail);
-      finally
-        DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
-      end;
+      DisconnectNyxCoordinatorMounts(LRetiringCoordinators);
     finally
       LRetiringSource := nil;
     end;
@@ -2541,12 +2520,11 @@ var
   LEventView: INyxPreparedEventView;
   LEventFence: INyxPublicationReadiness;
   LFormerKanban: TNyxKanbanMounts;
-  LFormerMasterDetail: TNyxMasterDetailMounts;
   LAcceptedKanban: TNyxKanbanMounts;
-  LAcceptedMasterDetail: TNyxMasterDetailMounts;
   LFormerCoordinators: TNyxCoordinatorMounts;
   LAcceptedCoordinators: TNyxCoordinatorMounts;
   LCoordinatorRegistry: INyxCoordinatorRegistry;
+  LBuiltInCoordinators: INyxCoordinatorRegistry;
   LCoordinatorSnapshot: INyxCoordinatorRegistrySnapshot;
   LCoordinatorTarget: INyxCoordinatorRefreshTarget;
   LCommitted: Boolean;
@@ -2664,21 +2642,8 @@ var
         on E: Exception do RememberCleanupFailure(E);
       end;
     end;
-    for LMount := 0 to High(LAcceptedMasterDetail) do
-    begin
-      try
-        LAcceptedMasterDetail[LMount].Retire;
-      except
-        on E: Exception do RememberCleanupFailure(E);
-      end;
-    end;
     try
       DisconnectNyxKanbanMounts(LFormerKanban);
-    except
-      on E: Exception do RememberCleanupFailure(E);
-    end;
-    try
-      DisconnectNyxMasterDetailMounts(LFormerMasterDetail);
     except
       on E: Exception do RememberCleanupFailure(E);
     end;
@@ -2745,10 +2710,8 @@ begin
   LCleanupFailed := False;
   LCleanupError := '';
   LFormerKanban := nil;
-  LFormerMasterDetail := nil;
   LFormerCoordinators := nil;
   LAcceptedKanban := nil;
-  LAcceptedMasterDetail := nil;
   LAcceptedCoordinators := nil;
   { Capture once before any factory callout, including hidden settling passes.
     A registration made by a creator belongs to a later Render operation. }
@@ -2774,6 +2737,13 @@ begin
   begin
     LCoordinatorSnapshot := LCoordinatorRegistry.Snapshot;
   end;
+  { Built-ins and caller behavior share one immutable membership and prepared
+    lifetime. Authored applications keep their automatic registrations. }
+  LBuiltInCoordinators := NewNyxCoordinatorRegistry;
+  LBuiltInCoordinators.RegisterFactory(NyxCustomKind(NyxKindName(nkMasterDetail)),
+    NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
+  LCoordinatorSnapshot := ComposeNyxCoordinatorSnapshots(
+    LBuiltInCoordinators.Snapshot, LCoordinatorSnapshot);
   try
   try
 
@@ -2870,10 +2840,8 @@ begin
           NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
       end;
       if ((not ADesignMode) and (NyxHasKanbanMounts(LCandidate.FRoot) or
-        NyxHasMasterDetailMounts(LCandidate.FRoot) or
         NyxHasCoordinatorMounts(LCandidate.FRoot, LCoordinatorSnapshot))) or
         (Length(FCoordinatorMounts) <> 0) or
-        (Length(FMasterDetailMounts) <> 0) or
         (Length(FKanbanMounts) <> 0) or (LSource <> nil) or
         (LFormerSource <> nil) then
       begin
@@ -2894,9 +2862,6 @@ begin
           PrepareNyxKanbanMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
             LEventView, FEvents.Scheduler, @Sync,
             LCandidate.FKanbanMounts, LCandidate.FKanbanIDs);
-          PrepareNyxMasterDetailMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
-            LEventView, FEvents.Scheduler, @Sync,
-            LCandidate.FMasterDetailMounts, LCandidate.FMasterDetailIDs);
           PrepareNyxCoordinatorMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
             LEventView, FEvents.Scheduler, LCoordinatorSnapshot, LCoordinatorTarget,
             LCandidate.FCoordinatorMounts, LCandidate.FCoordinatorIDs);
@@ -3120,7 +3085,6 @@ begin
       if LEventView <> nil then
       begin
         ValidateNyxKanbanMounts(LCandidate.FKanbanMounts);
-        ValidateNyxMasterDetailMounts(LCandidate.FMasterDetailMounts);
         ValidateNyxCoordinatorMounts(LCandidate.FCoordinatorMounts);
 
         if LRootPublication <> nil then
@@ -3129,7 +3093,6 @@ begin
         end;
         LEventView.Validate;
         CheckNyxKanbanMounts(LCandidate.FKanbanMounts);
-        CheckNyxMasterDetailMounts(LCandidate.FMasterDetailMounts);
         CheckNyxCoordinatorMounts(LCandidate.FCoordinatorMounts);
 
         if LRootFence <> nil then
@@ -3204,7 +3167,6 @@ begin
       FOwnState := False;
     end;
     LFormerKanban := FKanbanMounts;
-    LFormerMasterDetail := FMasterDetailMounts;
     LFormerCoordinators := FCoordinatorMounts;
     Clear(AKeepPresentation, LEventView);
     { Transfer the independently admitted effective palette with its controls.
@@ -3232,17 +3194,13 @@ begin
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
     FKanbanMounts := LCandidate.FKanbanMounts;
-    FMasterDetailMounts := LCandidate.FMasterDetailMounts;
     FCoordinatorMounts := LCandidate.FCoordinatorMounts;
     FCoordinatorIDs := LCandidate.FCoordinatorIDs;
     FKanbanIDs := LCandidate.FKanbanIDs;
-    FMasterDetailIDs := LCandidate.FMasterDetailIDs;
     LCandidate.FKanbanMounts := nil;
-    LCandidate.FMasterDetailMounts := nil;
     LCandidate.FCoordinatorMounts := nil;
     LCandidate.FCoordinatorIDs := nil;
     LCandidate.FKanbanIDs := nil;
-    LCandidate.FMasterDetailIDs := nil;
     FLastBindingError := '';
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
@@ -3281,7 +3239,6 @@ begin
     { Prepared DOM handlers receive the committed epoch by assignment. Target
       extensions must not raise during destruction of the retired controls. }
     InstallNyxKanbanMounts(FKanbanMounts);
-    InstallNyxMasterDetailMounts(FMasterDetailMounts);
     InstallNyxCoordinatorMounts(FCoordinatorMounts);
 
     if not ADesignMode then
@@ -3294,7 +3251,6 @@ begin
       LRootPublication.Install;
     end;
     LAcceptedKanban := FKanbanMounts;
-    LAcceptedMasterDetail := FMasterDetailMounts;
     LAcceptedCoordinators := FCoordinatorMounts;
     FUpdating := LUpdating;
     LCommitted := True;
@@ -3591,7 +3547,6 @@ begin
 
   if (FRoot = nil) or (FHost = nil) or FUpdating or
     (Length(FKanbanMounts) <> 0) or
-    (Length(FMasterDetailMounts) <> 0) or
     (Length(FCoordinatorMounts) <> 0) or
     { Executable registration can change independently of scalar source. Keep
       such candidates on the complete prepared path, including first adoption. }
@@ -5673,7 +5628,7 @@ begin
       end;
     end;
     { Freeze the selected record before the router captures queued callbacks. }
-    LInfo := EnrichNyxMasterDetailEvent(FMasterDetailMounts, ADispatch.Info);
+    LInfo := EnrichNyxCoordinatorEvent(FCoordinatorMounts, ADispatch.Info);
 
     if LEvents.ViewRevision <> LRevision then
     begin
@@ -6739,8 +6694,12 @@ begin
 end;
 
 function TNyxBrowserRenderer.MasterDetailBinding(const AID: TNyxText): INyxMasterDetailBinding;
+var
+  LBinding: INyxCoordinatorBinding;
 begin
-  Result := FindNyxMasterDetailMount(FMasterDetailMounts, FMasterDetailIDs, AID);
+  LBinding := CoordinatorBinding(AID);
+  Result := nil;
+  Supports(LBinding, INyxMasterDetailBinding, Result);
 end;
 
 procedure TNyxBrowserRenderer.BindCollectionPagers;

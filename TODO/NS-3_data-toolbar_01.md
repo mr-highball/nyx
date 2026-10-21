@@ -14,6 +14,18 @@ Scope/credit remain [components](NS-3_components_01.md) criteria1/3 →
 [Studio authoring](NS-4_studio-authoring_01.md) criterion2 → parity. Preserve the
 static recipe; introduce no second collection, selection or event engine.
 
+**Work packets and handoff:**
+
+| Packet | Reviewable outcome | Dependency and finish line |
+| --- | --- | --- |
+| A1 — Paired Studio configuration | Public Nyx form and one whole-toolbar/named-reusable candidate configure, disable or inherit behavior with strict codec/source admission | Accepted query runtime02. Root owns existing Inspector/candidate/source integration; helper receives only separately released form/runtime consumer files. Intent, required Clear role and Pascal publish in one history step with draft/sibling guards. |
+| A2 — Saved application adoption | Ordinary1280/390 Studio typing, Sort/Clear, Undo/Redo and Save/Open produce a useful independently compiled application from that journey's own saved pair | A1. Execute the exact generated app, compare saved bytes and compile matching browser assertions with their async owners. All original criteria remain required. |
+
+Stop each packet at its declared actual result; retained failures and unfinished
+browser/parity gates stay visible. Source-ready or an isolated form pass cannot
+accept the complete authoring outcome. The existing runtime02 owns query/input
+semantics; Studio uses that owner rather than duplicating search/sort logic.
+
 **Acceptance Criteria:**
 
 - Copied typed options identify the scoped target List/Table and schema-checked

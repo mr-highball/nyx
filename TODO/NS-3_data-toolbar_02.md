@@ -14,6 +14,42 @@ North star: NS-3, original components criteria1/3; no extra completion credit.
 The static toolbar recipe, semantic actions and INyxCollectionView.ConfigureQuery
 already exist. Static faces alone do not qualify this task.
 
+**Work packets and handoff:**
+
+| Packet | Reviewable outcome | Dependency and finish line |
+| --- | --- | --- |
+| Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Accepted common coordinator integration. Root reviews query ownership and visible-input reset before releasing runtime/consumer scopes. Clear composes with and restores the admitted authored baseline. |
+| Q2 — Independent application | Two ordinary toolbars exercise input, empty results, hidden selection, target/query changes and retirement without changing rows/defaults | Q1. Native clean heaps, matching browser assertions and documented static compatibility qualify all five criteria below; Studio/save/generated adoption stays in01. |
+
+Resolve two concrete seams before coding Q1. The current static recipe exposes
+search/sort/create/refresh, so opt-in configuration needs an admitted named Clear
+action while preserving the default recipe/GUID. Reset visible Search and typed
+Sort through their existing scalar input/binding owner; projection Text changes
+captions, not input values. Specify ownership of intervening target/query changes
+so Clear/disposal never restore an obsolete baseline. Use ConfigureQuery and the
+existing state/selection/event owners; no replacement engine follows.
+
+The read-only owner review narrows that reset gap: live input admits through
+LiveBindings and State.Apply, while an INyxTextInput.Value setter only configures
+its node. A future scoped scalar command must reuse the existing live owner,
+exact accepted roles/generation and copied typed values without exposing a Node
+or controller. Admit Search and Sort together; two unrelated sequential writes
+cannot promise one Clear operation. Existing caller bindings/read-only/domain
+rules still apply. Specify validation/publication across scalar reset and query
+change before source release rather than assuming those owners commit together.
+
+Capture the baseline query and the last query actually owned by this attachment.
+Before each mutation, verify the exact view/store/source and last-owned query;
+an externally replaced query/target must refuse or retire this authority, never
+be overwritten by Clear. Query notification failure remains committed. The
+opt-in ordinary Clear button uses the existing Clear semantic; compatible custom
+parts/captions/callbacks survive, and an occupied incompatible role refuses the
+whole candidate. The static four existing accessors/GUID remain unchanged.
+
+Read-only design can advance while prerequisites are pending. Acceptance remains
+downstream of the complete coordinator task, including05's actual-browser gate;
+this packet list does not bypass that dependency or authorize a host rollout.
+
 **Acceptance Criteria:**
 
 - Copied typed options identify a scoped List/Table and schema-checked search/

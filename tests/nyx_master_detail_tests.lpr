@@ -29,8 +29,9 @@ uses
   nyx.master.detail, nyx.collections, nyx.collections.view,
   nyx.collections.view.types, nyx.collections.bindings, nyx.collections.selection,
   nyx.collections.query, nyx.composition, nyx.codec, nyx.events,
-  nyx.scheduler, nyx.behavior, nyx.publication
-  {$ifdef PAS2JS}, Web{$endif};
+  nyx.scheduler, nyx.behavior, nyx.publication, nyx.coordinators, nyx.responsive,
+  nyx.interaction.policy
+  {$ifdef PAS2JS}, JS, Web{$else}, Classes{$endif};
 
 type
   { Real reusable definitions, independent instance stores and ordinary views.
@@ -48,11 +49,18 @@ type
     EventPlan: INyxPreparedEventView;
     FirstPlan: INyxPreparedMasterDetailBinding;
     SecondPlan: INyxPreparedMasterDetailBinding;
+    Mounts: TNyxCoordinatorMounts;
+    IDs: TNyxCoordinatorMountIDs;
+    Registry: INyxCoordinatorRegistry;
+    RefreshTarget: INyxCoordinatorRefreshTarget;
     constructor Create;
     destructor Destroy; override;
     function View(ASecond: Boolean = False): INyxCollectionView;
     procedure Prepare(ARefresh: TNyxMasterDetailRefresh = nil);
     procedure Activate(ARefresh: TNyxMasterDetailRefresh = nil);
+    procedure PrepareAutomatic;
+    procedure AcceptAutomatic;
+    function Automatic(ASecond: Boolean = False): INyxMasterDetailBinding;
   end;
 
   { Ordinary callbacks retain event snapshots while another callback deliberately
@@ -63,6 +71,10 @@ type
     Redirect: Boolean;
     Calls: Integer;
     Last: TNyxMasterDetailRecord;
+    Scalar: TNyxDataValue;
+    HasScalar: Boolean;
+    ScalarKind: TNyxStateKind;
+    ValueID: TNyxText;
     procedure Invoke(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution); override;
   end;
@@ -77,6 +89,19 @@ type
     procedure Notify;
     procedure Retire;
   end;
+  { Closed mutations target facts already copied by the automatic factory. }
+  TRoleMutation = (rmProjectionKind, rmCompound);
+  { A later public group validator changes real candidate metadata only after
+    prior participants have completed their outward admission. }
+  TRoleValidator = class(TInterfacedObject, INyxPreparedPublication)
+  public
+    Fixture: TDetailFixture;
+    Mutation: TRoleMutation;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
 
   { Borrowed last-call receiver can release the last prepared owner while a
     view notification still has its own local controller/port leases. }
@@ -85,6 +110,47 @@ type
     Calls: Integer;
     ReleasePlan: Boolean;
     procedure Refresh;
+  end;
+  { A managed final-host-style port counts real requests without borrowing a
+    widget. The controller's guarded refresh remains the last outward call. }
+  TCoordinatorRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
+  public
+    Calls: Integer;
+    procedure Request;
+  end;
+  { Public ancestor creator reserves one real descendant text role. Its simple
+    presentation proves ownership admission, not a private claims-table mock. }
+  TTextClaim = class(TInterfacedObject, INyxPreparedCoordinator,
+    INyxPreparedPublication, INyxPublicationReadiness, INyxCoordinatorBinding)
+  private
+    FProjection: INyxCoordinatorProjection;
+    FGeneration: INyxCancellationScope;
+    FConnected: Boolean;
+    FRevoked: Boolean;
+    FValidated: Boolean;
+    FRetired: Boolean;
+  public
+    constructor Create(const AProjection: INyxCoordinatorProjection;
+      const AView: INyxPreparedEventView; const APath: TNyxPartRef);
+    function GetBinding: INyxCoordinatorBinding;
+    function GetConnected: Boolean;
+    procedure Revoke;
+    procedure Disconnect;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+  { Typed fixture registration deliberately competes with MasterDetail's title
+    using its equal initial value. No raw node is supplied to the factory. }
+  TTextClaimFactory = class(TInterfacedObject, INyxCoordinatorFactory)
+  public
+    Path: TNyxPartRef;
+    function Prepare(const AProjection: INyxCoordinatorProjection;
+      const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+      const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
   end;
 
 var
@@ -161,6 +227,7 @@ end;
 
 destructor TDetailFixture.Destroy;
 begin
+  DisconnectNyxCoordinatorMounts(Mounts);
 
   if FirstPlan <> nil then
   begin
@@ -187,6 +254,8 @@ begin
   First := nil;
   Second := nil;
   Events := nil;
+  Registry := nil;
+  RefreshTarget := nil;
   Bindings := nil;
   Runtime.Free;
   Document.Free;
@@ -227,10 +296,66 @@ begin
   PublishNyxGroup([EventPlan, FirstPlan, SecondPlan]);
 end;
 
+procedure TDetailFixture.PrepareAutomatic;
+var
+  LPreparation: INyxEventViewPreparation;
+begin
+
+  if Registry = nil then
+  begin
+    Registry := NewNyxCoordinatorRegistry;
+    Registry.RegisterFactory(NyxCustomKind(NyxKindName(nkMasterDetail)),
+      NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
+  end;
+
+  if RefreshTarget = nil then
+  begin
+    RefreshTarget := TCoordinatorRefresh.Create;
+  end;
+  Supports(Events, INyxEventViewPreparation, LPreparation);
+  EventPlan := LPreparation.PrepareView;
+  PrepareNyxCoordinatorMounts(Runtime, Bindings, EventPlan, Scheduler,
+    Registry.Snapshot, RefreshTarget, Mounts, IDs);
+end;
+
+procedure TDetailFixture.AcceptAutomatic;
+var
+  LParticipants: TNyxPreparedPublications;
+  LIndex: Integer;
+begin
+  PrepareAutomatic;
+  SetLength(LParticipants, Length(Mounts) + 1);
+  LParticipants[0] := EventPlan;
+  for LIndex := 0 to High(Mounts) do
+  begin
+    LParticipants[LIndex + 1] := Mounts[LIndex];
+  end;
+  PublishNyxGroup(LParticipants);
+end;
+
+function TDetailFixture.Automatic(ASecond: Boolean): INyxMasterDetailBinding;
+var
+  LID: TNyxText;
+  LBinding: INyxCoordinatorBinding;
+begin
+  LID := First.ID;
+
+  if ASecond then
+  begin
+    LID := Second.ID;
+  end;
+  LBinding := FindNyxCoordinatorMount(Mounts, IDs, LID);
+  Supports(LBinding, INyxMasterDetailBinding, Result);
+end;
+
 procedure TEditReceiver.Invoke(const AEvent: TNyxEventInfo;
   const AExecution: INyxExecution);
 begin
   Check(TryNyxMasterDetailEdit(AEvent, Last), 'ordinary Edit carries its typed copied record');
+  Scalar := AEvent.Value.Copy;
+  HasScalar := AEvent.HasValue;
+  ScalarKind := AEvent.ValueKind;
+  ValueID := AEvent.ValueID;
   Inc(Calls);
 
   if Redirect then
@@ -256,6 +381,33 @@ procedure TSelectionValidator.Retire;
 begin
 end;
 
+procedure TRoleValidator.Validate;
+begin
+  case Mutation of
+    rmProjectionKind:
+      begin
+        Fixture.First.DetailTitleHeading.Node.SetProp('projection-kind',
+          NyxKindName(nkLabel));
+      end;
+    rmCompound:
+      begin
+        Fixture.First.Node.SetProp(NyxAttributeName(atCompound), 'false');
+      end;
+  end;
+end;
+
+procedure TRoleValidator.Install;
+begin
+end;
+
+procedure TRoleValidator.Notify;
+begin
+end;
+
+procedure TRoleValidator.Retire;
+begin
+end;
+
 procedure TRefreshReceiver.Refresh;
 begin
   Inc(Calls);
@@ -264,6 +416,93 @@ begin
   begin
     GReleasedPlan := nil;
   end;
+end;
+
+procedure TCoordinatorRefresh.Request;
+begin
+  Inc(Calls);
+end;
+
+constructor TTextClaim.Create(const AProjection: INyxCoordinatorProjection;
+  const AView: INyxPreparedEventView; const APath: TNyxPartRef);
+var
+  LView: INyxPreparedEventView;
+  LPath: TNyxPartRef;
+  LRole: TNyxControlRef;
+  LText: TNyxText;
+begin
+  inherited Create;
+  FProjection := AProjection;
+  LView := AView;
+  LPath := APath;
+  FGeneration := LView.Generation;
+  LRole := FProjection.Part(LPath);
+  LText := FProjection.AuthoredText(LRole);
+  FProjection.Text(LRole, LText);
+end;
+
+function TTextClaim.GetBinding: INyxCoordinatorBinding;
+begin
+  Result := Self;
+end;
+
+function TTextClaim.GetConnected: Boolean;
+begin
+  Result := FConnected and not FRevoked and not FGeneration.Cancelled;
+end;
+
+procedure TTextClaim.Revoke;
+begin
+  FRevoked := True;
+  FConnected := False;
+end;
+
+procedure TTextClaim.Disconnect;
+begin
+  Revoke;
+  FProjection := nil;
+end;
+
+procedure TTextClaim.Validate;
+begin
+  FValidated := True;
+  CheckReady;
+end;
+
+procedure TTextClaim.CheckReady;
+begin
+
+  if not FValidated or FRevoked or FRetired or FGeneration.Cancelled then
+  begin
+    raise ENyxCoordinatorCancelled.Create('The ancestor title claim is no longer ready');
+  end;
+end;
+
+procedure TTextClaim.Install;
+begin
+  FConnected := True;
+end;
+
+procedure TTextClaim.Notify;
+begin
+end;
+
+procedure TTextClaim.Retire;
+begin
+  FRetired := True;
+
+  if not FConnected then
+  begin
+    Disconnect;
+  end;
+end;
+
+function TTextClaimFactory.Prepare(const AProjection: INyxCoordinatorProjection;
+  const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+  const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+begin
+  Result := TTextClaim.Create(AProjection, AView, Path);
 end;
 
 procedure IntentCases;
@@ -829,6 +1068,477 @@ begin
   end;
 end;
 
+procedure ReservationCases;
+var
+  LFixture: TDetailFixture;
+  LAuthored: INyxLabel;
+  LOriginal: TNyxNode;
+  LClone: TNyxNode;
+  LProjection: TNyxNode;
+  LFirst: INyxRuntimeTextReservation;
+  LNext: INyxRuntimeTextReservation;
+  LCloneToken: INyxRuntimeTextReservation;
+  LProjectionToken: INyxRuntimeTextReservation;
+  LRejected: Boolean;
+begin
+  LAuthored := NewNyxLabel('authored-title');
+  LRejected := False;
+  try
+    LFirst := LAuthored.Node.ReserveRuntimeText;
+  except
+    on ENyxModel do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LFirst = nil), 'authored descriptors cannot acquire runtime text authority');
+  LFixture := TDetailFixture.Create;
+  LClone := nil;
+  LProjection := nil;
+  try
+    LOriginal := LFixture.First.DetailTitleHeading.Node;
+    LFirst := LOriginal.ReserveRuntimeText;
+    LClone := LOriginal.Clone;
+    LProjection := LOriginal.CloneRuntimeProjection;
+    LCloneToken := LClone.ReserveRuntimeText;
+    LProjectionToken := LProjection.ReserveRuntimeText;
+    Check(LFirst.Active and LCloneToken.Active and LProjectionToken.Active and
+      (LFirst <> LCloneToken) and (LFirst <> LProjectionToken),
+      'both clone families preserve model text without carrying exclusive mutation ownership');
+    LFirst.Revoke;
+    LNext := LOriginal.ReserveRuntimeText;
+    LOriginal.ReleaseRuntimeText(LFirst);
+    Check(LNext.Active and LCloneToken.Active and LProjectionToken.Active,
+      'detaching an old revoked token cannot retire a newer reservation or either clone');
+    LOriginal.ReleaseRuntimeText(LNext);
+    Check(not LNext.Active and not LFirst.Active,
+      'exact reservation retirement remains idempotent and revocable');
+  finally
+    LClone.Free;
+    LProjection.Free;
+    LFixture.Free;
+  end;
+end;
+
+procedure ConfigureAncestor(AFixture: TDetailFixture; AWithDetail: Boolean);
+var
+  LFactory: TTextClaimFactory;
+  LFactoryLease: INyxCoordinatorFactory;
+begin
+  AFixture.First.Configure.PartName(NyxPart('first')).Done;
+  AFixture.Runtime.Extensions.SetValue(NyxExtension('example.detail-title'), NyxData(True));
+  AFixture.Registry := NewNyxCoordinatorRegistry;
+  LFactory := TTextClaimFactory.Create;
+  LFactoryLease := LFactory;
+  LFactory.Path := NyxPart('first/detail/title');
+  AFixture.Registry.RegisterFactory(NyxCustomKind(NyxKindName(nkPage)),
+    NyxExtension('example.detail-title'), LFactoryLease);
+
+  if AWithDetail then
+  begin
+    AFixture.Registry.RegisterFactory(NyxCustomKind(NyxKindName(nkMasterDetail)),
+      NyxExtension(NyxMasterDetailIntentKey), NewNyxMasterDetailCoordinatorFactory);
+  end;
+  AFixture.RefreshTarget := TCoordinatorRefresh.Create;
+end;
+
+procedure SharedOwnershipCases;
+var
+  LFixture: TDetailFixture;
+  LPreparation: INyxEventViewPreparation;
+  LRejected: Boolean;
+  LBaseline: TNyxText;
+begin
+  LFixture := TDetailFixture.Create;
+  try
+    LBaseline := TNyxCodec.Encode(LFixture.Document);
+    ConfigureAncestor(LFixture, False);
+    LFixture.Prepare;
+    LRejected := False;
+    try
+      PrepareNyxCoordinatorMounts(LFixture.Runtime, LFixture.Bindings,
+        LFixture.EventPlan, LFixture.Scheduler, LFixture.Registry.Snapshot,
+        LFixture.RefreshTarget, LFixture.Mounts, LFixture.IDs);
+    except
+      on ENyxCoordinator do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (Length(LFixture.Mounts) = 0) and
+      not LFixture.EventPlan.Generation.Cancelled,
+      'a generic ancestor cannot steal equal initial text from manual MasterDetail');
+    PublishNyxGroup([LFixture.EventPlan, LFixture.FirstPlan, LFixture.SecondPlan]);
+    LFixture.View.Select(Person);
+    Check(LFixture.FirstPlan.Binding.Connected and
+      (LFixture.First.DetailTitleHeading.Text = 'Ada Lovelace') and
+      (TNyxCodec.Encode(LFixture.Document) = LBaseline),
+      'generic refusal preserves the manual owner, actual selection and authored definition');
+  finally
+    LFixture.Free;
+  end;
+  LFixture := TDetailFixture.Create;
+  try
+    ConfigureAncestor(LFixture, False);
+    LFixture.PrepareAutomatic;
+    LRejected := False;
+    try
+      LFixture.FirstPlan := PrepareNyxMasterDetailBinding(LFixture.First,
+        LFixture.Options, LFixture.Bindings, LFixture.EventPlan, LFixture.Scheduler, nil);
+    except
+      on ENyxMasterDetail do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LFixture.FirstPlan = nil) and
+      (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 0),
+      'manual attachment cannot steal an equal generic claim or strand its Edit policy');
+    PublishNyxGroup([LFixture.EventPlan, LFixture.Mounts[0]]);
+    Check(LFixture.Mounts[0].Binding.Connected,
+      'manual refusal preserves the independent generic prepared owner');
+    DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+    LFixture.Activate;
+    LFixture.View.Select(Person);
+    Check(LFixture.FirstPlan.Binding.Connected and
+      (LFixture.First.DetailTitleHeading.Text = 'Ada Lovelace'),
+      'retired generic claims release exact roles for a later manual attachment');
+  finally
+    LFixture.Free;
+  end;
+  LFixture := TDetailFixture.Create;
+  try
+    ConfigureAncestor(LFixture, True);
+    LRejected := False;
+    try
+      LFixture.PrepareAutomatic;
+    except
+      on ENyxCoordinator do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (Length(LFixture.Mounts) = 0) and
+      (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 0),
+      'automatic MasterDetail and a generic ancestor share the same exclusive text admission');
+    LFixture.EventPlan.Retire;
+    LFixture.EventPlan := nil;
+    LFixture.Registry := nil;
+    LFixture.AcceptAutomatic;
+    LFixture.View.Select(Person);
+    Check((Length(LFixture.Mounts) = 2) and LFixture.Automatic.Connected and
+      (LFixture.First.DetailTitleHeading.Text = 'Ada Lovelace'),
+      'failed automatic candidates release claims and permit the same real tree to prepare again');
+  finally
+    LFixture.Free;
+  end;
+end;
+
+{$ifdef PAS2JS}
+function UITurn: TJSPromise;
+begin
+  Result := TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+    begin
+      window.setTimeout(procedure
+        begin
+          AResolve(JSValue(True));
+        end, 0);
+    end);
+end;
+{$endif}
+
+procedure AwaitEdit(const AExecution: INyxExecution); {$ifdef PAS2JS}async;{$endif}
+var
+  LExecution: INyxExecution;
+  {$ifdef PAS2JS}LStarted: Double;{$else}LStarted: QWord;{$endif}
+begin
+  LExecution := AExecution;
+  {$ifdef PAS2JS}LStarted := TJSDate.now;{$else}LStarted := GetTickCount64;{$endif}
+  while LExecution.Status in [nesPending, nesRunning] do
+  begin
+    {$ifdef PAS2JS}
+
+    if TJSDate.now - LStarted > 10000 then
+    {$else}
+
+    if GetTickCount64 - LStarted > 10000 then
+    {$endif}
+    begin
+      raise Exception.Create('Queued MasterDetail Edit did not complete');
+    end;
+    {$ifdef PAS2JS}await(UITurn);{$else}CheckSynchronize(1);{$endif}
+  end;
+  Check(LExecution.Status = nesSucceeded, 'queued Edit succeeds: ' + LExecution.Failure);
+end;
+
+procedure AutomaticCases; {$ifdef PAS2JS}async;{$endif}
+var
+  LFixture: TDetailFixture;
+  LBinding: INyxMasterDetailBinding;
+  LBase: INyxCoordinatorBinding;
+  LDispatch: TNyxDispatch;
+  LEvent: TNyxEventInfo;
+  LCopy: TNyxEventInfo;
+  LReceiver: TEditReceiver;
+  LCallback: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LExecutions: TNyxExecutions;
+  LRejected: Boolean;
+  LBaseline: TNyxText;
+begin
+  LFixture := TDetailFixture.Create;
+  try
+    LBaseline := TNyxCodec.Encode(LFixture.Document);
+    LFixture.AcceptAutomatic;
+    LBinding := LFixture.Automatic;
+    LBase := FindNyxCoordinatorMount(LFixture.Mounts, LFixture.IDs, LFixture.First.ID);
+    Check((LBinding <> nil) and LBinding.Connected and
+      Supports(LBinding, INyxCoordinatorBinding) and (LBase <> nil),
+      'common lookup preserves the existing specialized MasterDetail command interface');
+    LFixture.View.Select(Person);
+    Check((LBinding.Current.Ref.ID = 'one') and
+      not LFixture.Automatic(True).Current.Defined and
+      (LFixture.First.DetailTitleHeading.Text = 'Ada Lovelace'),
+      'common automatic mounting uses the real visible selection and independent instance source');
+    LDispatch := DispatchNyxBehavior(LFixture.First.DetailEditButton.Node, ntClick);
+    LEvent := LDispatch.Info.Copy;
+    LEvent.HasValue := True;
+    LEvent.ValueKind := nskText;
+    LEvent.Value := NyxData('independent scalar');
+    LEvent.ValueID := 'owned-scalar-source';
+    LCopy := EnrichNyxCoordinatorEvent(LFixture.Mounts, LEvent);
+    Check(LCopy.HasDetails and LCopy.HasValue and (LCopy.ValueKind = nskText) and
+      (LCopy.Value.AsText = 'independent scalar') and
+      (LCopy.ValueID = LEvent.ValueID) and not LEvent.HasDetails,
+      'common prequeue enrichment copies record Details without replacing scalar Value or input');
+    LReceiver := TEditReceiver.Create;
+    LCallback := LReceiver;
+    LToken := LFixture.Events.On(NyxControlEvents(
+      LFixture.First.DetailEditButton.ID, niRuntime), ntClick).
+      Policy(neUIQueue).Subscribe(LCallback);
+    LExecutions := LFixture.Events.Dispatch(LCopy,
+      LFixture.First.DetailEditButton.Node.DesignID, LFixture.First.Node.DesignID);
+    Check(Length(LExecutions) = 1, 'only the actual ordinary queued Edit callback is scheduled');
+    LFixture.View.Select(Person(True));
+    {$ifdef PAS2JS}await(AwaitEdit(LExecutions[0]));{$else}AwaitEdit(LExecutions[0]);{$endif}
+    Check((LReceiver.Calls = 1) and (LReceiver.Last.Ref.ID = 'one') and
+      LReceiver.HasScalar and (LReceiver.ScalarKind = nskText) and
+      (LReceiver.Scalar.AsText = 'independent scalar') and
+      (LReceiver.ValueID = 'owned-scalar-source') and (LBinding.Current.Ref.ID = 'two'),
+      'queued callback keeps original record and scalar after current selection changes');
+    LEvent.SourceID := LFixture.Second.ID;
+    LCopy := EnrichNyxCoordinatorEvent(LFixture.Mounts, LEvent);
+    Check(not LCopy.HasDetails and LCopy.HasValue and
+      (LCopy.Value.AsText = 'independent scalar'),
+      'a foreign source with another instance Edit origin gains no structured record');
+    LEvent := LDispatch.Info.Copy;
+    LEvent.HasDetails := True;
+    LEvent.Details := NyxObject([NyxField('application', NyxData('owned'))]);
+    LRejected := False;
+    try
+      LCopy := EnrichNyxCoordinatorEvent(LFixture.Mounts, LEvent);
+    except
+      on ENyxMasterDetail do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LEvent.Details.Field('application').AsText = 'owned'),
+      'common enrichment refuses to overwrite an existing owned structured payload');
+    Check(TNyxCodec.Encode(LFixture.Document) = LBaseline,
+      'automatic presentation, queued capture and refusal do not serialize runtime records');
+  finally
+
+    if LToken <> nil then
+    begin
+      LToken.Cancel;
+    end;
+    LToken := nil;
+    LExecutions := nil;
+    LCallback := nil;
+    LBase := nil;
+    LBinding := nil;
+    LFixture.Free;
+  end;
+end;
+
+procedure RoleFenceCases;
+var
+  LFixture: TDetailFixture;
+  LBinding: INyxMasterDetailBinding;
+  LValidator: TRoleValidator;
+  LParticipant: INyxPreparedPublication;
+  LPrevious: INyxCancellationScope;
+  LMutation: TRoleMutation;
+  LRejected: Boolean;
+begin
+  for LMutation := rmProjectionKind to rmCompound do
+  begin
+    LFixture := TDetailFixture.Create;
+    try
+      LPrevious := NyxEventGeneration(LFixture.Events);
+      LFixture.PrepareAutomatic;
+      LBinding := LFixture.Automatic;
+      LValidator := TRoleValidator.Create;
+      LParticipant := LValidator;
+      LValidator.Fixture := LFixture;
+      LValidator.Mutation := LMutation;
+      LRejected := False;
+      try
+        PublishNyxGroup([LFixture.Mounts[0], LFixture.Mounts[1],
+          LFixture.EventPlan, LParticipant]);
+      except
+        on ENyxCoordinator do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected and not LPrevious.Cancelled and
+        LFixture.EventPlan.Generation.Cancelled,
+        'post-Describe primitive/compound mutation refuses at the final common role fence');
+      Check(not LBinding.Connected and
+        (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 0),
+        'late role-proof refusal activates no controller and retires candidate availability');
+    finally
+      LBinding := nil;
+      LParticipant := nil;
+      LFixture.Free;
+    end;
+  end;
+end;
+
+procedure AutomaticPolicyCases;
+var
+  LFixture: TDetailFixture;
+  LBaseline: TNyxText;
+begin
+  LFixture := TDetailFixture.Create;
+  try
+    LFixture.First.DetailTitleHeading.Configure.
+      WhenViewport(TNyxViewportWidth.Below(640)).Text('Compact record details').Done;
+    LFixture.Runtime.ApplyViewport(390, 800, npfNativeLCL);
+    LFixture.AcceptAutomatic;
+    Check(LFixture.First.DetailTitleHeading.Node.StoredProp(NyxAttributeName(atText)) =
+      'Compact record details',
+      'automatic placeholder captures effective viewport text before its first projection');
+    LFixture.View.Select(Person);
+    LFixture.View.ClearSelection;
+    Check(LFixture.First.DetailTitleHeading.Node.StoredProp(NyxAttributeName(atText)) =
+      'Compact record details', 'empty selection restores the same effective placeholder');
+  finally
+    LFixture.Free;
+  end;
+  LFixture := TDetailFixture.Create;
+  try
+    LBaseline := TNyxCodec.Encode(LFixture.Document);
+    SetNyxMasterDetailIntent(LFixture.First, TNyxMasterDetailIntent.Disabled);
+    LFixture.AcceptAutomatic;
+    Check((LFixture.Automatic = nil) and (LFixture.Automatic(True) <> nil) and
+      (LFixture.First.DetailEditButton.Node.Prop(NyxAttributeName(atEnabled)) = 'false'),
+      'disabled common owner masks Edit but exposes no specialized selected-record command');
+    Check(TNyxCodec.Encode(LFixture.Document) = LBaseline,
+      'runtime disabled masking leaves the original inherited authored intent intact');
+  finally
+    LFixture.Free;
+  end;
+  LFixture := TDetailFixture.Create;
+  try
+    InheritNyxMasterDetailIntent(LFixture.First);
+    InheritNyxMasterDetailIntent(LFixture.Second);
+    LFixture.AcceptAutomatic;
+    Check((Length(LFixture.Mounts) = 0) and (LFixture.Automatic = nil) and
+      (LFixture.First.DetailTitleHeading.Text = 'Record details'),
+      'absent effective intent keeps the ordinary static recipe without loading a factory');
+  finally
+    LFixture.Free;
+  end;
+end;
+
+procedure AutomaticDisconnectCases;
+var
+  LFixture: TDetailFixture;
+  LAutomatic: INyxMasterDetailBinding;
+  LManual: INyxMasterDetailBinding;
+  LGeneration: INyxCancellationScope;
+  LRecord: TNyxMasterDetailRecord;
+  LBaseline: TNyxText;
+  LRejected: Boolean;
+begin
+  LFixture := TDetailFixture.Create;
+  try
+    LBaseline := TNyxCodec.Encode(LFixture.Document);
+    LFixture.AcceptAutomatic;
+    LGeneration := NyxEventGeneration(LFixture.Events);
+    LAutomatic := LFixture.Automatic;
+    LFixture.View.Select(Person);
+    LRecord := LAutomatic.CaptureEdit;
+    LFixture.View.ClearSelection;
+    Check(not LAutomatic.Current.Defined and
+      (LFixture.First.DetailEditButton.Node.Prop(NyxAttributeName(atEnabled)) = 'false'),
+      'empty automatic selection installs the real false Edit mask before explicit disconnect');
+
+    { Call the exact public selected-record binding, not its enclosing prepared
+      mount. The event plan and the other instance remain accepted throughout. }
+    LAutomatic.Disconnect;
+    LAutomatic.Disconnect;
+    Check(not LAutomatic.Connected and not LGeneration.Cancelled and
+      (NyxEventGeneration(LFixture.Events) = LGeneration) and
+      LFixture.Automatic(True).Connected and
+      (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 0) and
+      (LFixture.First.DetailEditButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true'),
+      'typed Disconnect immediately releases only its own scope without cancelling the live view');
+    LRejected := False;
+    try
+      LAutomatic.CaptureEdit;
+    except
+      on ENyxMasterDetailCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LRecord.Ref.ID = 'one') and
+      (LRecord.Item.GetValue(NyxTextField('full-name')) = 'Ada Lovelace'),
+      'explicitly disconnected commands refuse while their earlier copied record remains valid');
+
+    { Reuse the existing installed event plan, so successful reacquisition cannot
+      be explained by cancelling the old generation or realizing a fresh board. }
+    LFixture.FirstPlan := PrepareNyxMasterDetailBinding(LFixture.First,
+      LFixture.Options, LFixture.Bindings, LFixture.EventPlan, LFixture.Scheduler, nil);
+    LManual := LFixture.FirstPlan.Binding;
+    PublishNyxGroup([LFixture.FirstPlan]);
+    Check(LManual.Connected and not LGeneration.Cancelled and
+      (NyxEventGeneration(LFixture.Events) = LGeneration) and
+      (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 1),
+      'the same real board reacquires both text roles and Edit through the unchanged manual API');
+    LFixture.View.Select(Person(True));
+    Check((LManual.CaptureEdit.Ref.ID = 'two') and
+      (LFixture.First.DetailTitleHeading.Text = 'Grace Hopper') and
+      (LFixture.First.DetailEditButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true'),
+      'manual reacquisition observes actual selection and owns its new availability policy');
+
+    { Old common scopes may still be retained by the host. Their later exact
+      cleanup must never detach the manual owner's replacement tokens/policy. }
+    DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+    LFixture.View.ClearSelection;
+    LFixture.View.Select(Person);
+    Check(LManual.Connected and not LGeneration.Cancelled and
+      (LManual.CaptureEdit.Ref.ID = 'one') and
+      (LFixture.First.DetailTitleHeading.Text = 'Ada Lovelace') and
+      (LFixture.First.DetailEditButton.Node.EnabledPolicyCount = 1) and
+      (LFixture.First.DetailEditButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true'),
+      'later old-mount retirement leaves the replacement manual claims and selection usable');
+    Check((LFixture.View(True).Selection.Count = 0) and
+      (LFixture.View(True).Store.Snapshot.Revision = 0) and
+      (TNyxCodec.Encode(LFixture.Document) = LBaseline),
+      'disconnect and same-board reacquisition preserve sibling data and all authored defaults');
+  finally
+    LManual := nil;
+    LAutomatic := nil;
+    LFixture.Free;
+  end;
+end;
+
+procedure Run; {$ifdef PAS2JS}async;{$endif}
 begin
   try
     IntentCases;
@@ -838,6 +1548,12 @@ begin
     RefusalCases;
     DisabledAndLifetimeCases;
     AbandonAndGenerationCases;
+    ReservationCases;
+    SharedOwnershipCases;
+    {$ifdef PAS2JS}await(AutomaticCases);{$else}AutomaticCases;{$endif}
+    RoleFenceCases;
+    AutomaticPolicyCases;
+    AutomaticDisconnectCases;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-master-detail', 'passed');
     document.body.setAttribute('data-master-detail-checks', IntToStr(GChecks));
@@ -858,4 +1574,8 @@ begin
       {$endif}
     end;
   end;
+end;
+
+begin
+  Run;
 end.

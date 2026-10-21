@@ -15,6 +15,22 @@ shared criteria1–3, serving [components](NS-3_components_01.md) criteria1/3 an
 [Studio authoring](NS-4_studio-authoring_01.md). This split adds no credit.
 DataToolbar remains downstream; it is not a reverse prerequisite for this work.
 
+**Work packets and handoff:**
+
+| Packet | Reviewable outcome | Dependency and evidence |
+| --- | --- | --- |
+| R1 — Reusable application | Two real reusable creator instances with nested roles, independent stores/claims and exact specialized lookup coexist with migrated built-ins | Accepted registration/MasterDetail and qualified Kanban; root owns host propagation, helper owns the separately released ordinary creator consumer. Real input must leave definitions and siblings intact. |
+| R2 — Embedded application | Existing SetupCanvas/content mounts inherit a fixed caller snapshot; explicit caller override, including empty caller membership, has a documented policy; automatic built-ins compose separately | R1. Every child retains its own future event generation and weak refresh. Failed/same-ID replacement and disposal preserve the accepted owner and revoke old commands. |
+| R3 — Both-host acceptance | The same useful reusable/embedded application executes native and admitted-browser input/lifetime cases | R1/R2. Native clean heaps and matching browser compiles are intermediate evidence; actual browser execution is still required by criterion5. |
+
+Root reviews registry inheritance/override and child lifetime before either source
+scope is released. Common candidate traversal already covers expanded reusable
+nodes under one snapshot; embedded SetupCanvas is the concrete propagation gap,
+not a reason for a second
+registry or event engine. Finish R1 before R2 and retain actual refusal results.
+The missing admitted browser session is R3's explicit external gate. Compilation
+cannot close05, parent01 or their downstream acceptance. No task credit is added.
+
 **Acceptance Criteria:**
 
 - The creator example runs in at least two ordinary reusable instances and
@@ -44,7 +60,7 @@ DataToolbar remains downstream; it is not a reverse prerequisite for this work.
 
 - [Caller-owned registration](DONE/NS-3_coordinators_02.md) supplies the extension API
   and first independently useful root application.
-- [MasterDetail migration](NS-3_coordinators_03.md) and
+- [MasterDetail migration](DONE/NS-3_coordinators_03.md) and
   [Kanban migration](NS-3_coordinators_04.md) supply the built-in owners used by
   the mixed/reusable acceptance above. Their native evidence alone does not
   satisfy this task's browser requirement.

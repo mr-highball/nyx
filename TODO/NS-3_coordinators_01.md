@@ -44,7 +44,7 @@ event or history engine.
 
 Scope mapping: original criteria1–3 remain shared integration gates in this
 parent. [Registration02](DONE/NS-3_coordinators_02.md) owns the independent public
-extension API; [MasterDetail03](NS-3_coordinators_03.md) and
+extension API; [MasterDetail03](DONE/NS-3_coordinators_03.md) and
 [Kanban04](NS-3_coordinators_04.md) own the two useful automatic migrations under
 criteria1–4; [reuse05](NS-3_coordinators_05.md) owns creator reusable/embedded
 adoption under criterion5 and shared lifetime criteria1–3. Criterion4's joint
@@ -61,8 +61,9 @@ Credit is unchanged and counted once.
 - [Caller-owned behavior registration](DONE/NS-3_coordinators_02.md) owns the public
   registration/mount contract and an independently authored application consumer.
   Its native/compile-only evidence does not accept this parent.
-- [MasterDetail migration](NS-3_coordinators_03.md) preserves live detail/Edit
+- [MasterDetail migration](DONE/NS-3_coordinators_03.md) preserves live detail/Edit
   behavior and admits shared text ownership without a separate renderer vector.
+  Its six scoped criteria are accepted; joint integration and reuse remain here.
 - [Kanban migration](NS-3_coordinators_04.md) preserves actual board movement and
   whole-board admission through the same common lifetime.
 - [Reusable/embedded creator adoption](NS-3_coordinators_05.md) supplies independent

@@ -137,6 +137,7 @@ type
     FViewportValues: TNyxStrings;
     FEnabledPolicies: array of INyxRuntimeEnabledPolicy;
     FReadOnlyPolicies: array of INyxRuntimeReadOnlyPolicy;
+    FTextReservation: INyxRuntimeTextReservation;
     FPresentationSnapshot: INyxPresentationSnapshot;
     FResourceSnapshot: INyxResources;
     FResourceLocale: TNyxLocaleRef;
@@ -244,6 +245,13 @@ type
     { Retain one policy at a zero-based index; invalid indices raise ENyxModel.
       Inspection and policy reads share the runtime's UI-thread confinement. }
     function EnabledPolicyAt(AIndex: Integer): INyxRuntimeEnabledPolicy;
+    { UI-only exclusive presentation ownership on this exact realized node.
+      A second active owner refuses even when both strings are equal. The token
+      has no backreference; owners revoke before later exact detachment. Both
+      clone families omit reservations, so independent candidates stay usable. }
+    function ReserveRuntimeText: INyxRuntimeTextReservation;
+    { Missing/foreign tokens do nothing. Detachment never revokes a newer owner. }
+    procedure ReleaseRuntimeText(const AReservation: INyxRuntimeTextReservation);
     { Runtime-only presentation overlay. Available host width is finite logical
       pixels. Ordinary defaults/live state remain in Props; matched viewport
       scopes affect reads without changing persistence, identity or ownership.
@@ -925,6 +933,16 @@ uses
   nyx.diagram.content;
 
 type
+  { Private node-created flag cell. No alternate getter or destructor callback
+    can run during reservation admission, revocation or final publication. }
+  TNyxRuntimeTextReservation = class(TInterfacedObject, INyxRuntimeTextReservation)
+  private
+    FRevoked: Boolean;
+  public
+    function GetActive: Boolean;
+    procedure Revoke;
+  end;
+
   { Private, short-lived ownership candidate. Class fields support managed COM
     interfaces on both compilers; these objects never escape ArrangeLike. }
   TNyxArrangementEntry = class
@@ -935,6 +953,16 @@ type
     References: array of INyxNode;
     Seen: Boolean;
   end;
+
+function TNyxRuntimeTextReservation.GetActive: Boolean;
+begin
+  Result := not FRevoked;
+end;
+
+procedure TNyxRuntimeTextReservation.Revoke;
+begin
+  FRevoked := True;
+end;
 
 function NyxNodeSizeConstraints(ANode: TNyxNode;
   APlatform: TNyxPlatform): TNyxSizeConstraints;
@@ -1837,6 +1865,11 @@ destructor TNyxNode.Destroy;
 var
   LIndex: Integer;
 begin
+
+  if FTextReservation <> nil then
+  begin
+    FTextReservation.Revoke;
+  end;
   for LIndex := 0 to Count - 1 do
   begin
     FChildren[LIndex].FParent := nil;
@@ -3192,6 +3225,32 @@ begin
     raise ENyxModel.Create('Enabled policy index is out of range');
   end;
   Result := FEnabledPolicies[AIndex];
+end;
+
+function TNyxNode.ReserveRuntimeText: INyxRuntimeTextReservation;
+begin
+
+  if not IsRealized then
+  begin
+    raise ENyxModel.Create('Text reservations require a realized control');
+  end;
+
+  if (FTextReservation <> nil) and FTextReservation.Active then
+  begin
+    raise ENyxModel.Create('This text role already has a runtime projection owner');
+  end;
+  Result := TNyxRuntimeTextReservation.Create;
+  FTextReservation := Result;
+end;
+
+procedure TNyxNode.ReleaseRuntimeText(const AReservation: INyxRuntimeTextReservation);
+begin
+
+  if (AReservation <> nil) and (FTextReservation = AReservation) then
+  begin
+    FTextReservation.Revoke;
+    FTextReservation := nil;
+  end;
 end;
 
 function TNyxNode.StoredProp(const AKey: TNyxText; const ADefault: TNyxText): TNyxText;
