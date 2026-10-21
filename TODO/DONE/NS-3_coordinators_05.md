@@ -1,15 +1,12 @@
 # NS-3_coordinators_05 — Reuse creator behavior in reusable and embedded views
 
-Current C2 admission (2026-10-21): the explicit facelift is now accepted at bd0ca98.
-Return to the unchanged whole-Kanban authoring/Save/Open and OWN generated journey
-on current production. Root admits only four compilers/four native outcomes at
-client1280/390, with independent four-file provenance review before the compiled
-phase. All Pascal/oracles/waits remain exact; browser branches compile only.
-Ordinary Finish supplies strict source/design admission; compiled mode compares
-exact design reconstruction. Stop at actual C2, then reassess joint existing
-criteria without automatic DONE/credit. WORK owns commands, failures and receipts.
+Accepted2026-10-21 after independent review of all five scoped criteria, final C2
+auditFFD868BC and the creator guides. Retained AAE3 actual browser execution is
+explicitly pre-facelift; unchanged coordinator/canvas/lifetime bodies and current
+presentation/Studio compatibility support the combined evidence. Parent01 stays
+open on its hard parity prerequisite. No original goal credit is awarded.
 
-[North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md) · [Task catalog](../README.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
@@ -19,10 +16,40 @@ Selection Summary alone does not prove scoped part resolution, independent
 stores or replacement of an embedded owner. Deliver an application demonstrating
 those outcomes through the existing common coordinator path.
 
-Owner: [common coordinators](NS-3_coordinators_01.md), original criterion5 and
-shared criteria1–3, serving [components](NS-3_components_01.md) criteria1/3 and
-[Studio authoring](NS-4_studio-authoring_01.md). This split adds no credit.
+Owner: [common coordinators](../NS-3_coordinators_01.md), original criterion5 and
+shared criteria1–3, serving [components](../NS-3_components_01.md) criteria1/3 and
+[Studio authoring](../NS-4_studio-authoring_01.md). This split adds no credit.
 DataToolbar remains downstream; it is not a reverse prerequisite for this work.
+
+**Acceptance evidence — 2026-10-21:**
+
+| Original criterion | Accepted evidence and its boundary |
+| --- | --- |
+| 1 — Ordinary reusable and embedded application hosts | A34CFE36 retains588 native checks at each1280/390, clean; AAE3F310 completes actual browser256 reusable/563 aggregate at each1280x900/390x900 through cleanup. Two Apps/four reusable occurrences/twelve stores, later embedded content, real input and authored/default/peer isolation are exercised. |
+| 2 — Exact scoped roles and trusted executable authority | Unchanged commonF8E649A9, example6C503DB3, MD636F3CB2 and Kanban97A3848D plus focused171/99 and useful role/refusal journeys. Current C1/C2 source admission and own generated units preserve typed intent without loading a factory from metadata. |
+| 3 — Mixed prepared ownership and caller snapshots | The same reusable/embedded application proves specialized lookup, creator plus built-ins, fixed inherited caller membership and explicit nonempty/empty/nil future-candidate overrides. Root2FB0805E independently compares all16 complete relevant adapter method bodies with AAE3: exact after LF normalization. |
+| 4 — Refusal and independent lifetime safety | Actual native/browser navigation, failed candidate, same-ID replacement, stale commands and independent disposal; native171/99 separately covers injected reentrancy/final fences/abandonment/notification disposal. Those browser injection counterparts remain compile-only and are not counted as actual563 paths. |
+| 5 — Useful both-host result, compatibility and published contract | Creator guides now publish usage, inheritance/overrides/lifetimes, retained failures and exact limits. Current facelift5DBE355E supplies full MasterDetail165/175 and OWN3530/AD89 compiled36/36. C2FFD868BC supplies full Kanban114/124 and OWN32747EDB/3E3A2837 compiled15/15. |
+
+C2 uses four successful compiler programs and four native outcomes, all heaps
+clean, zero Nyx warnings and14 upstream RTL warning occurrences. Its fresh pair
+matches widths and each packet.Source equals its own13551-character emitted unit.
+Ordinary Finish supplies nprRequireMatch/resolved-pair equality after real Save/Open;
+the compiled branch checks exact design reconstruction and actual application
+movement/isolation/disposal. It is not another strict source parse. C2 browser
+branches compile only.
+
+AAE3 executed older adapter bytes. Seven Pascal paths later gained facelift
+presentation/source/schema/Studio changes; the common engines/consumers and all
+16 compared coordinator/canvas/publication/lifetime methods remain exact. Current
+facelift browser/input and C1/C2 qualification cover those changed boundaries.
+No current-renderer563 rerun, trusted hardware/assistive input, other widgetset/DPI,
+production performance or full observing/parity claim follows. All actual readers
+are joined; final10owned/1795Pascal/foreign13/extra10 pins match. The
+[joint record](../../WORK.md#reusableembedded-creator-acceptance--2026-10-21) owns
+the complete provenance and preserved failures. Original no-closure25→26 carries.
+
+**Retained checkpoints (historical):**
 
 R1 native-local result (2026-10-21): the maintained ordinary App consumer passes
 267 checks at1280 and390 with clean heaps, plus matching browser compilation.
@@ -31,7 +58,7 @@ input, immutable-document refusal, replacement and disposal qualify this packet'
 native boundary without a production repair. Source/default exports match widths;
 they are not Save/Open or compiled-application proof. Independent review retains
 one corrected private command-metadata failure, zero product failures and no
-rerun. [WORK.md](../WORK.md#reusable-ordinary-application-result--2026-10-21) owns
+rerun. [WORK.md](../../WORK.md#reusable-ordinary-application-result--2026-10-21) owns
 the exact audit/receipts. At that checkpoint R2/R3 remained open; none of this
 task's complete original criteria or parent/browser gates is accepted by
 compilation alone.
@@ -44,7 +71,7 @@ independent lifetimes qualify the local packet. Matching browser assertions
 compile only. Original and separate embedded exports match widths; neither is
 Save/Open or compiled-export evidence. Audit90689991 and independent review retain
 the first missing-import/Scene compiler failure and exact unchanged compatibility.
-[WORK.md](../WORK.md#embedded-application-native-local-result--2026-10-21) owns the
+[WORK.md](../../WORK.md#embedded-application-native-local-result--2026-10-21) owns the
 composite result. R3 and all complete original criteria remain open.
 
 R3 first executed result (2026-10-21): actual1280x900 and390x900 both fail before
@@ -232,20 +259,24 @@ as reusable proof. Stop at R1's actual result before releasing R2 propagation.
 
 **Blockers**
 
-C1 current-source result (2026-10-21): root/helper52D5AEEE verifies actual165/175
+All task-local prerequisites below are supplied. Current C1 compatibility uses
+facelift5DBE355E; C2 usesFFD868BC. Parent01's separate parity blocker remains open
+and is not moved or reclassified by accepting this scoped outcome.
+
+Historical C1 result (2026-10-21): root/helper52D5AEEE verifies actual165/175
 ordinary Studio and its OWN independently compiled36/36 at1280/390, all four heaps
 clean and four compilers successful. New C1Save/Open outputs match widths and use
 strict source/design admission; no historical input path is substituted despite
 byte-equal055D/DF22 exports. Browser branches compile only. The ordinary flow proves
 queued Details; independent scalar Value coexistence is current focused99's proof.
-This compatibility return is supplied. C2/parent joint acceptance stays separate;
-the user's latest explicit Studio facelift now takes priority over that later
-return, without removing its original acceptance requirement.
+That compatibility return was supplied before the explicit Studio facelift.
+The later current C1/C2 results and joint acceptance above supersede its pending
+return status, while retaining this earlier source/evidence boundary.
 
-- [Caller-owned registration](DONE/NS-3_coordinators_02.md) supplies the extension API
+- [Caller-owned registration](NS-3_coordinators_02.md) supplies the extension API
   and first independently useful root application.
-- [MasterDetail migration](DONE/NS-3_coordinators_03.md) and
-  [Kanban migration](DONE/NS-3_coordinators_04.md) supply the built-in owners used by
+- [MasterDetail migration](NS-3_coordinators_03.md) and
+  [Kanban migration](NS-3_coordinators_04.md) supply the built-in owners used by
   the mixed/reusable acceptance above. Their native evidence alone does not
   satisfy this task's browser requirement.
 - External browser execution for this regression is supplied and qualified by

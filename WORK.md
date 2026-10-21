@@ -2,6 +2,64 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Reusable/embedded creator acceptance — 2026-10-21
+
+All five unchanged criteria in
+[reuse05](TODO/DONE/NS-3_coordinators_05.md) are accepted after independent root/
+helper source, runtime, fresh-pair and public-guide review. This completes the
+scoped reusable/embedded creator outcome. The
+[common parent](TODO/NS-3_coordinators_01.md) stays open on its existing hard
+[parity prerequisite](TODO/NS-2_parity-accessibility_01.md); DataToolbar retains
+that dependency. No original component/authoring/parity criterion or goal credit
+closes. The completed compatibility batch advances original no-closure25→26.
+
+C2 final audit
+`FFD868BCDDD35B26C845DCE219B70654A0914C0CCB804AEF08D3B932437E6A7B`
+in `E:\Blekohlab\nyx\qualification\kanban-return-20261021-225630` verifies all
+actual readers joined and exact10owned/1795Pascal/foreign13/extra10 runtime inputs.
+Four compilers succeed; whole native Kanban Studio114/124 and its OWN independently
+compiled application15/15 pass at1280/390, all four heaps clean. Zero Nyx warnings;
+14 warnings are the seven upstream pas2js classes.pas diagnostics in each browser
+branch. Both browser branches compile only. No failed compiler or source/oracle/
+wait change occurred in C2.
+
+Both actual Save/Open runs produce their OWN new32747EDB project and3E3A2837
+Pascal files; all four paths are pinned and match across widths. Each packet.Source
+equals its own13551-character emitted unit; pending=false and draft/base empty. Real
+Open restores the saved pair and fresh history before export. Ordinary Finish
+strict-admits with nprRequireMatch and resolved-pair equality. Generated native/
+browser builds use that exact new unit directory and NYX_COMPILED_KANBAN_STUDIO;
+native runs receive each width's own packet as their third argument. The compiled
+branch checks exact design reconstruction and actual Move/isolation/disposal;
+it does not perform another strict source parse. No historical pair is substituted.
+
+The five-criterion composite retains A34CFE36 native99/171/68/68/588/588 and AAE3F310
+actual older-adapter browser256 reusable/563 aggregate at each1280x900/390x900,
+final cleanup and empty consoles. CommonF8E649A9, MD636F3CB2, Kanban97A3848D,
+example6C503DB3 and creator/reuse consumers remain exact. Root source review
+2FB0805E and independent helper compare16 complete adapter methods: SetupCanvas,
+CoordinatorBinding, KanbanBinding, MasterDetailBinding, RenderFrame, Clear,
+TryRefresh and RenderContext on both hosts, all exact after LF normalization.
+
+Seven older owned Pascal files later changed for the facelift; the adapters as
+complete files are not byte-identical. Current facelift5DBE355E supplies changed
+face/layout/browser-input behavior and current whole MasterDetail165/175 with its
+OWN3530/AD89 compiled36/36. C2 supplies current Kanban whole/generated compatibility.
+This impact-based composition does not claim a new563 execution on current full
+renderer bytes. Native171/99 injected reentrancy/final-fence/Notify-disposal cases
+remain distinct from actual563's normal browser refusal/lifetime cases; browser
+injection counterparts compile only. Reusable application exports establish
+default/source isolation, separately from the built-in Save/Open/generated pairs.
+
+The [creator guide](examples/selection-summary/README.md#qualified-behavior-and-boundaries)
+and [component guide](docs/components.md#creator-behavior-in-ordinary-applications)
+now publish registration, exact typed lookup, caller snapshot/child override and
+lifetime contracts with those boundaries. Earlier Summary construction, Kanban
+array, global Summary storage and collection-view browser failures remain retained
+as history. Hardware/assistive input, other widgetsets/DPI, production budgets,
+full observing/parity and the new usefulness backlog remain open. The task/document
+move occurs only after the runtime audit; no further C2 readers are needed.
+
 ## Requested control-usefulness backlog — 2026-10-21
 
 Latest user steering requests a few backlog tasks after an external native
@@ -32,46 +90,39 @@ and actual both-target validation. Filing alone qualifies none. Original
 criteria/credit/counters remain unchanged. The new review is the linked subcatalog
 and M3 map; foreign pending main-index/milestone changes remain byte-exact.
 
-C2 continuation is retained: ordinary native reader81523 returned114 at actual
+At backlog filing, ordinary native reader81523 had returned114 at actual
 client1280 with zero unfreed blocks; browser compiler93100 returned0. Both actual
 readers are joined. Audit8B5E17E2 verifies the exact initial5owned/1795Pascal/
 foreign13/extra4 freeze. No further reader was started while filing this request.
-Compact ordinary execution and both OWN newly emitted compiled-target programs/
-native widths remain pending. Re-freeze the reviewed documentation and pin the
-same desktop executable before its compact run; preserve all Pascal, assertions,
-waits, budgets and the original source/generated-pair provenance requirements.
-No host/config/LAN/MCP/tool/wire rollout or cleanup follows from backlog work.
+Compact ordinary execution and the OWN newly emitted compiled-target programs/
+native widths were still pending. The later joined C2 result above supplies those
+outcomes after a fresh documentation/executable freeze, preserving all Pascal,
+assertions, waits, budgets and own-pair provenance. No host/config/LAN/MCP/tool/
+wire rollout or cleanup followed from backlog work.
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Previous goal turn: progress. The Studio facelift is accepted/pushed/remote-verified
-at bd0ca98; its source and foreign13 remain exact. Current deliverable is C2,
-the existing whole-Kanban authoring/Save/Open/OWN generated-application journey
-under [reuse05](TODO/NS-3_coordinators_05.md) and
-[parent01](TODO/NS-3_coordinators_01.md) criterion4, serving Studio authoring2.
-Root owns docs and actual qualification; Lil' Scooty reviews read-only. No Pascal,
-fixture/assertion/wait or host/API change is released.
+Previous goal turn: progress,81b1233 filed/pushed the requested control-usefulness
+backlog and preserved C2's return. This turn finishes C2 and accepts scoped reuse05
+through the joint record above. All readers are joined; root owns only the
+documentation/checkpoint. All Pascal, fixtures/assertions/waits and foreign13
+remain exact. Original no-closure26 carries; no full goal credit is added.
 
-Bounded admission: four compilers/four native outcomes on unchanged
-`tests/nyx_kanban_studio_controls.lpr` (6BBEC427). Compile ordinary FPC/pas2js;
-execute actual native client1280/390 sequentially with fresh isolated directories.
-Join those readers and independently review/pin their OWN four accepted-project/
-nyx.generated.kanban.studio files, checking width equality and packet.Source exact
-emitted-file identity. Then compile native/browser NYX_COMPILED_KANBAN_STUDIO
-using that exact new unit directory and run native at both widths with each own
-saved packet. Ordinary Finish supplies strict nprRequireMatch; the compiled branch
-checks exact reconstruction instead of calling a second strict admission path.
-Browser branches compile only. Reuse the already current product/focused evidence;
-do not run a broader target or substitute prior114/124+15/15 results.
+Next concrete existing prerequisite is
+[parity](TODO/NS-2_parity-accessibility_01.md) criterion1's published capability
+reference. `docs/components-reference.md` omits Button presentation and four
+image lifecycle events now exposed by current schema/Studio. Existing
+`tools/nyx_catalog_reference.lpr` consumes those schema facts. Review that maintained
+publication boundary and its exact comparison/output plan before a separate
+bounded compiler/source admission. Metadata publication alone will not accept
+real target behavior, keyboard/accessibility or full parity. Stop coordinator/
+fixture/runtime variants; do not weaken parent's parity dependency to unblock
+DataToolbar. Existing Lil' Scooty owns read-only next-path review, not execution.
 
-Stop at the actual C2 result, retaining failures. All source/guides pause through
-actual joins and exact audits. After independent review, assess ALL five existing
-reuse05/parent criteria jointly against current C1/C2 and bounded native/browser
-creator/reentrancy/lifetime evidence; compatibility alone adds no original credit
-or automatic closure. No new host/config/MCP/tool/wire rollout, extra agent or
-cleanup; foreign13 and deferred resolver/splitter stay untouched. Core no-closure25
-carries until actual outcome/assessment. Private `.local/kanban-return-paths-private.json`
-owns the fresh E: packet, input vectors, actual handles and receipts.
+No new host/config/LAN/MCP/tool/wire rollout, extra agent or cleanup follows.
+Deferred resolver/splitter work and all four requested usefulness tasks remain
+open. `.local/kanban-return-paths-private.json` retains the exact C2 source/pair/
+reader receipts and separate subsequent document checkpoint.
 
 ## Studio facelift — 2026-10-21
 
@@ -454,7 +505,7 @@ batch below. Root owns all actual handles and joins. No browser retry or new hos
 is released; previous browser failures remain the regression evidence.
 
 Admitted batch: repair the concrete R3 managed-ownership defect under the existing
-[Reuse05](TODO/NS-3_coordinators_05.md) lifetime criteria. Previous browser turn is
+[Reuse05](TODO/DONE/NS-3_coordinators_05.md) lifetime criteria. Previous browser turn is
 progress, retained/pushed/remote-verifiede16dd10; no full original criterion closes
 and no-closure17 carries. Root owns only example Summary inert construction,
 factory-owned initialization/local readiness and docs/admission. Existing helper
@@ -465,7 +516,7 @@ maintained creators171/68/68, reuse588/588 and both Studio compilers. Native UI 
 sequentially. No new browser/host attempt is admitted; first prepare the fixed
 artifact and preserve its existing failed regression unchanged.
 
-Pre-repair result: [Reuse05/R3](TODO/NS-3_coordinators_05.md) fails actual1280x900 and
+Pre-repair result: [Reuse05/R3](TODO/DONE/NS-3_coordinators_05.md) fails actual1280x900 and
 390x900 before completion in Selection Summary's reference-counted construction.
 The approved host is stopped/joined, port8766 empty, viewport reset and tabs closed.
 No source/assertion/compiler change occurred. Independent audit62C40341 retains the
@@ -476,7 +527,7 @@ docs/checkpoint/read-only review only; the one-host approval is consumed. Native
 
 ### Retained R3 admission before the executed failure
 
-Current task: [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md),
+Current task: [Reusable and embedded creator behavior](TODO/DONE/NS-3_coordinators_05.md),
 R3's actual-browser execution after R2's native-local result. The user explicitly
 approved the one temporary loopback Pascal host and already-built browser checks,
 then stopping that host. This supersedes the prior pending gate for that bounded
@@ -995,8 +1046,8 @@ task files, not a separate task definition or a new completion score.
 | Accepted P1.1 | [Caller-owned behavior registration](TODO/DONE/NS-3_coordinators_02.md) | A creator mounts useful behavior without a component-specific renderer edit | Existing prepared lifecycle and data owners |
 | Accepted P1.2 | [MasterDetail common mounting](TODO/DONE/NS-3_coordinators_03.md) | Selected details/Edit and shared text ownership work through the common lifetime | P1.1 |
 | Accepted P1.3 | [Kanban common mounting](TODO/DONE/NS-3_coordinators_04.md) | Actual card movement and whole-board admission use the common lifetime | P1.1; independent of P1.2 |
-| P1.4 | [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md) | Useful behavior stays isolated across reusable/embedded owners on both hosts | P1.2 and P1.3; browser execution needs an admitted session |
-| P1.5 | [Common component integration](TODO/NS-3_coordinators_01.md) | All original migration/reuse/compatibility criteria qualify together | P1.1–P1.4; no duplicate credit |
+| Accepted P1.4 | [Reusable and embedded creator behavior](TODO/DONE/NS-3_coordinators_05.md) | Native588/588 and actual browser256/563 at both widths, plus current C1/C2 compatibility and guides | P1.2/P1.3 and task-local browser gate supplied; full parity remains separate |
+| P1.5 — parity blocked | [Common component integration](TODO/NS-3_coordinators_01.md) | All five implementation criteria have joint supporting evidence; parent acceptance remains open | P1.1–P1.4 supplied; hard NS-2 parity prerequisite still open, no duplicate credit |
 | P2.1 | [DataToolbar query runtime](TODO/NS-3_data-toolbar_02.md) | Real search, sort and Clear control an existing List/Table query | P1.5 |
 | P2.2 | [DataToolbar Studio authoring](TODO/NS-3_data-toolbar_01.md) | Configure/Disable/Inherit, paired history, Save/Open and exact generated app | P2.1 |
 
@@ -1031,21 +1082,27 @@ acceptance. Query runtime02 owns Q1 useful typed toolbar and Q2 independent
 application qualification. Studio DataToolbar01 owns A1 paired authoring and A2
 its own saved application adoption. Each packet names ownership, prerequisites,
 observable evidence and a finish line; none is a new credit-bearing task.
-After04 acceptance, K1–K3 remain accepted history. The seven packets below formed
-the implementation queue, with canonical definitions in the linked tasks. R1 is
-now native-locally qualified and R2 has its588/588 native-local result; the five
-later R3–A2 packets remain, including actual browser execution before complete
-acceptance:
+After04 acceptance, K1–K3 remain accepted history. R1–R3 are now accepted together
+in05 from the explicit native/browser/current-compatibility record above. The
+four downstream Q1/Q2/A1/A2 packets remain open behind the parent parity gate;
+they are canonical definitions, not a new credit allocation or source release:
 
 | Next | Reviewable outcome | Readiness / acceptance prerequisite | Canonical task |
 | --- | --- | --- | --- |
-| R1 native-local qualified | Reusable controls stay independent in two ordinary applications | Native267/267 clean; browser execution still belongs to R3 | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
-| R2 native-local qualified | Embedded views inherit fixed caller membership; explicit/empty/nil overrides and replacement isolate each child | Native588/588 clean; matching browser compilation, actual execution remains R3 | [Embedded behavior](TODO/NS-3_coordinators_05.md) |
-| R3 | The same useful reusable/embedded input and lifetimes execute on both targets | First actual1280/390 browser run fails; reviewed ownership repair and fresh host admission remain required | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
+| Accepted R1 | Reusable controls stay independent in two ordinary applications | Native reusable267 prefix and actual browser256 prefix; joint current-source impact/compatibility review supplied | [Reusable behavior](TODO/DONE/NS-3_coordinators_05.md) |
+| Accepted R2 | Embedded views inherit fixed caller membership; explicit/empty/nil overrides and replacement isolate each child | Native588/588 clean plus actual browser aggregate563/563 and exact unchanged common lifecycle bodies | [Embedded behavior](TODO/DONE/NS-3_coordinators_05.md) |
+| Accepted R3 | The same useful reusable/embedded input and lifetimes execute on both targets | AAE3 actual1280x900/390x900 final cleanup; current facelift/C1/C2 compatibility and truthful guides; earlier failures retained | [Both-host acceptance](TODO/DONE/NS-3_coordinators_05.md) |
 | Q1 | Typed Search, Sort and Clear update live values and the collection query together | Complete coordinator parent; pre-source atomic admission and same-target ownership decisions required | [Toolbar runtime](TODO/NS-3_data-toolbar_02.md) |
 | Q2 | Independent application toolbars prove displayed results, Clear, conflicting ownership and retirement | Q1; actual native input/clean heaps plus matching browser assertions | [Toolbar application](TODO/NS-3_data-toolbar_02.md) |
 | A1 | Nyx-built Studio configures/disables/inherits a toolbar in one paired source/history change | Accepted runtime02; stale draft/selection and reusable sibling guards | [Toolbar authoring](TODO/NS-3_data-toolbar_01.md) |
 | A2 | Actual Save/Open and that journey's own independently compiled application retain useful behavior | A1; ordinary desktop/390 Studio, exact own saved pair and actual generated-app execution | [Saved application](TODO/NS-3_data-toolbar_01.md) |
+
+### Retained backlog refinement before reuse05 acceptance
+
+The following planning snapshot predates final AAE3/C2 acceptance. Its pending
+R3/host statements and earlier counts describe that historical handoff; use the
+current tables and Active priority above for the next action. R1–R3 are supplied
+and no further coordinator/browser rerun follows from these retained notes.
 
 Every packet now names implementation and evidence owners as well as its
 prerequisite and finish line. Exact file ownership is reviewed at each separate

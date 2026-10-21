@@ -1,13 +1,14 @@
 # NS-4_studio-authoring_01 — Full authoring system
 
-Current C2 admission (2026-10-21): the explicit facelift is now accepted at bd0ca98.
-Return to the unchanged whole-Kanban authoring/Save/Open and OWN generated journey
-on current production. Root admits only four compilers/four native outcomes at
-client1280/390, with independent four-file provenance review before the compiled
-phase. All Pascal/oracles/waits remain exact; browser branches compile only.
-Ordinary Finish supplies strict source/design admission; compiled mode compares
-exact design reconstruction. Stop at actual C2, then reassess joint existing
-criteria without automatic DONE/credit. WORK owns commands, failures and receipts.
+Current C2 result (2026-10-21): independentFFD868BC accepts actual whole Kanban
+Studio114/124 Save/Open/history and its OWN newly generated application15/15 at
+native1280/390, all heaps clean. New32747EDB project/3E3A2837 Pascal pairs match
+widths and each packet.Source is its exact13551-character emitted file. Ordinary
+Finish supplies strict source/design admission; compiled mode checks exact design
+and real movement/isolation/disposal. Four compilers pass, zero owned/14 upstream
+warnings; browser branches compile only. All1795 Pascal and foreign13 stay exact.
+Scoped reuse05 is accepted separately; general authoring/parity criteria remain
+open, with no original goal credit. WORK retains exact receipts and boundaries.
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 

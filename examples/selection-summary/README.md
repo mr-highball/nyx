@@ -142,32 +142,56 @@ Run the ordinary reusable-application proof separately, preserving a new packet:
 ```
 
 This command executes the application consumer at1280 and390, then compiles and
-stages the same browser assertions. The current native result is588 checks at
-each width, preserving the original267 reusable checks before the embedded cases.
-Both heaps are clean, with zero Nyx-owned compiler warnings. Saved Canvas children
-exercise fixed caller membership, explicit/empty/nil overrides, real input,
-refusal/replacement and independent lifetimes. Actual browser execution remains
-open under [reuse05](../../TODO/NS-3_coordinators_05.md); compilation alone proves
-no browser input. Separate reusable/embedded design and Pascal exports match
-across widths and preserve authored/default baselines. This command does not
-perform Save/Open or compile those exports as independent applications.
+stages matching browser assertions. It starts no browser or listener. The retained
+native result is588 checks at each width, preserving the original267 reusable
+checks before the embedded cases, with clean heaps and no Nyx compiler warnings.
+Separate reusable/embedded design and Pascal exports match across widths and
+preserve authored/default baselines. This command does not perform Save/Open or
+compile those exports as independent applications.
 
-The first executed browser consumer failed during the example's managed
-construction lifetime, before completion; see [WORK.md](../../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
-for retained failures. The narrow ownership repair now passes fresh native checks
-and browser compilation, and its emitted ownership is independently reviewed.
-The rebuilt application has now executed at both browser widths, exposing a
-separate prepared Kanban managed-array ownership failure before completion.
-The Summary repair remains native/compile qualified; that failed browser result
-does not qualify the complete application. [WORK.md](../../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
-retains both exact outcomes and the stopped test host. The subsequent targeted
-Kanban ownership repair passes fresh native/compile qualification and emitted-
-code review. Its new browser execution now fails because the regression consumer
-clears its global Summary storage after successfully checking the connected
-specialized binding. The production lookup succeeds; a separate storage-helper
-portability repair is next. See the
-[executed boundary](../../WORK.md#kanban-repaired-browser-execution--2026-10-21).
+## Qualified behavior and boundaries
 
-This is the independently useful registration example. Built-in migration,
-shared ownership with manual MasterDetail, and full reusable/embedded adoption
-remain acceptance requirements of [common coordinators](../../TODO/NS-3_coordinators_01.md).
+The same maintained application has also completed actual browser input and
+lifetimes at1280x900 and390x900:256 reusable checks and563 aggregate checks at
+each width, final cleanup complete and no final console warnings/errors. Two Apps
+each mount two reusable workspaces, isolating twelve stores across Summary,
+MasterDetail and Kanban. Saved Canvas children exercise captured caller membership,
+later content replacement, explicit/nonempty/empty/nil overrides, refusal,
+navigation, stale commands and independent child/peer disposal.
+
+The browser execution is retained from the renderer version before Studio's
+facelift; it is not a rerun of the current renderer bytes. Both adapters' complete
+canvas setup, typed lookup, candidate publication, clear, refresh and context
+methods remain unchanged. Current facelift browser/input checks cover the changed
+button/presentation boundary. Current full MasterDetail Studio Save/Open and its
+own newly generated application pass165/175 and36/36; the equivalent Kanban
+journey passes114/124 and15/15. Those are separate compatibility journeys using
+their own saved pairs, not compiled exports from the reusable application above.
+[WORK.md](../../WORK.md#reusableembedded-creator-acceptance--2026-10-21) records
+the exact source comparison, current compatibility evidence and joint assessment.
+
+Focused native tests separately exercise injected reentrant validation, final
+fences, abandonment and notification-triggered disposal; browser counterparts of
+those injections compile only. The563 actual browser checks establish their own
+useful input/refusal/lifetime paths. DOM-handler input, Win32 native results and
+controlled viewport widths do not establish hardware/assistive input, macOS/other
+widgetsets, DPI or production performance qualification. Full target quality
+remains with [parity](../../TODO/NS-2_parity-accessibility_01.md).
+
+### Retained failures
+
+Earlier browser runs failed in Summary construction ownership, Kanban managed-array
+ownership, the consumer's global Summary storage and shared collection-view
+ownership. Each failure, narrow repair and stopped host remains in
+[the first execution](../../WORK.md#first-reusableembedded-browser-execution--2026-10-21),
+[the repaired execution](../../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21),
+[the next Kanban execution](../../WORK.md#kanban-repaired-browser-execution--2026-10-21)
+and the later checkpoints in WORK. Their failed outcomes are not acceptance;
+the final completed application above supplies the browser result.
+
+This is the independently useful registration example. Scoped
+[reusable/embedded adoption](../../TODO/DONE/NS-3_coordinators_05.md) consumes the
+accepted built-in migrations and preserves their manual APIs/shared ownership.
+[Common coordinators](../../TODO/NS-3_coordinators_01.md) remains open on its
+existing parity prerequisite; this example does not accept DataToolbar or full
+component/authoring/parity delivery.

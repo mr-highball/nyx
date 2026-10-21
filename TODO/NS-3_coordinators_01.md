@@ -1,13 +1,12 @@
 # NS-3_coordinators_01 — Extensible prepared component coordinators
 
-Current C2 admission (2026-10-21): the explicit facelift is now accepted at bd0ca98.
-Return to the unchanged whole-Kanban authoring/Save/Open and OWN generated journey
-on current production. Root admits only four compilers/four native outcomes at
-client1280/390, with independent four-file provenance review before the compiled
-phase. All Pascal/oracles/waits remain exact; browser branches compile only.
-Ordinary Finish supplies strict source/design admission; compiled mode compares
-exact design reconstruction. Stop at actual C2, then reassess joint existing
-criteria without automatic DONE/credit. WORK owns commands, failures and receipts.
+Current joint assessment (2026-10-21): scoped reuse05 is accepted after C2FFD868BC
+whole Kanban114/124 plus its OWN newly generated15/15, current facelift/C1 and
+explicit retained native/browser creator evidence. All five implementation
+criteria below have their supporting evidence; this parent remains OPEN because
+its original parity hard prerequisite is not accepted. No DataToolbar acceptance,
+original goal credit or relocation/reclassification of that blocker follows.
+WORK owns the exact source/evidence composition and unchanged criterion text.
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
@@ -55,7 +54,7 @@ Scope mapping: original criteria1–3 remain shared integration gates in this
 parent. [Registration02](DONE/NS-3_coordinators_02.md) owns the independent public
 extension API; [MasterDetail03](DONE/NS-3_coordinators_03.md) and
 [Kanban04](DONE/NS-3_coordinators_04.md) own the two useful automatic migrations under
-criteria1–4; [reuse05](NS-3_coordinators_05.md) owns creator reusable/embedded
+criteria1–4; [reuse05](DONE/NS-3_coordinators_05.md) owns creator reusable/embedded
 adoption under criterion5 and shared lifetime criteria1–3. Criterion4's joint
 compatibility and all complete original criteria remain here; passing one
 internal task cannot accept the parent. Shared text-claim admission must cover
@@ -77,7 +76,7 @@ complete five-criterion assessment against that evidence and applicable prior
 compatibility/reentrancy cases; this regression alone does not close this parent.
 
 That read-only assessment now returns a concrete changed-dependency gate: C1 in
-[reuse05](NS-3_coordinators_05.md) repeats the existing whole-Studio MasterDetail
+[reuse05](DONE/NS-3_coordinators_05.md) repeats the existing whole-Studio MasterDetail
 journey on636F, then independently compiles/runs its OWN newly saved pair with
 strict admission. The former66C9 Studio/generated outcomes remain historical.
 After C1, C2 assesses the existing whole-Kanban authored/generated journey after
@@ -90,8 +89,9 @@ C1 is now supplied on636F: root/helper52D5AEEE verifies full Studio165/175 and
 its OWN strict-admitted newly saved/independently compiled36/36, all clean at both
 widths, four successful compilers. Current-source proof replaces the previous
 changed-dependency gap; original historical evidence remains retained. Browser
-branches compile only. C2 stays required and queued while the user's explicit
-Studio facelift takes priority. No original parent criterion/credit closes here.
+branches compile only. At that checkpoint C2 remained queued behind the requested
+Studio facelift. LaterFFD868BC and current5DBE now supply those compatibility
+returns; this parent's hard parity prerequisite still prevents acceptance.
 
 - Criteria1–3 consume accepted registration and both migrations together with
   reuse05's current-source snapshot, refusal, replacement and lifetime evidence.
@@ -116,8 +116,9 @@ Studio facelift takes priority. No original parent criterion/credit closes here.
   Its six scoped criteria are accepted; joint integration and reuse remain here.
 - [Kanban migration](DONE/NS-3_coordinators_04.md) preserves actual board movement and
   whole-board admission through the same common lifetime.
-  Its five scoped criteria are accepted; complete mixed reuse remains in05/here.
-- [Reusable/embedded creator adoption](NS-3_coordinators_05.md) supplies independent
+  Its five scoped criteria are accepted; mixed reuse is now accepted in05 while
+  complete parent/parity acceptance remains here.
+- [Reusable/embedded creator adoption](DONE/NS-3_coordinators_05.md) supplies independent
   instances, mixed built-ins and actual native/browser reuse. This parent retains
   joint compatibility and complete original acceptance rather than new credit.
 - [Observable state and collections](DONE/NS-1_state-collections_01.md) supply the

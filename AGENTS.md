@@ -1,5 +1,35 @@
 # Working in Nyx
 
+REUSE05 ACCEPTED (2026-10-21): all five unchanged scoped criteria close in
+TODO/DONE/NS-3_coordinators_05.md after independent final C2/creator-guide review.
+C2FFD868BC supplies current whole Kanban114/124 and OWN32747EDB project/
+3E3A2837 Pascal compiled15/15, four successful compilers/four clean native heaps,
+zero owned/14 upstream warnings. All actual readers joined; final runtime freeze
+10owned/1795Pascal/foreign13/extra10 is exact. Subsequent docs/task move is separate.
+Ordinary Finish supplies strict source/design admission; compiled mode proves
+exact reconstruction and real movement/isolation/disposal, not a second parse.
+C2 browser compiles only; no old pair substitution or source/oracle/wait changes.
+
+Joint evidence explicitly consumes A34 native588/588 and AAE3 actual older-adapter
+browser256R1/563aggregate at1280x900/390x900 through cleanup. Common engines and
+all16 complete coordinator/canvas/publication/lifetime bodies remain exact; root
+2FB0805E and helper independently verify impact. Seven facelift paths differ:
+current5DBE browser/face/Studio and OWN3530/AD89 MD165/175+compiled36/36 cover
+that changed boundary. Never relabel AAE3 as current-renderer563 execution or
+native171 injections as executed browser injections. Guides publish these limits
+and retain four earlier browser failures as history. No original credit;25→26.
+
+Parent01 stays TODO on its genuine hard parity prerequisite; DataToolbar retains
+that dependency. No link relocation or original criterion weakening follows05.
+Root owns docs/checkpoint only; Pascal stays paused. Stop coordinator/fixture/
+compiler variants. Next existing gap is parity criterion1's published component
+reference: new Button presentation/four image events are missing from that
+maintained artifact. Existing helper may review its bounded publication path
+read-only; separate scope/freeze precedes any compiler. New control-usefulness
+01..04 remain open, deferred resolver14/splitter and foreign13 stay exact. No
+extra agent, host/config/LAN retry, cleanup/restart or MCP/tool/wire rollout.
+WORK/private records own receipts,13-document handoff and next admission.
+
 CONTROL USEFULNESS BACKLOG (2026-10-21): latest user request owns this documentation
 turn. Four open NS-3_control-usefulness01..04 packets cover the whole-catalog
 end-user review, table filter/sort UI, column/cell workbench and stable live/large

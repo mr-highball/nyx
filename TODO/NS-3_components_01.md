@@ -2,6 +2,12 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Scoped [reusable/embedded creator adoption](DONE/NS-3_coordinators_05.md) is now
+accepted from explicit native/browser/current compatibility evidence. The common
+coordinator parent retains its hard parity prerequisite, so DataToolbar and this
+task's complete breadth/quality acceptance remain open. No original credit is
+added; [WORK](../WORK.md#reusableembedded-creator-acceptance--2026-10-21) owns scope.
+
 The user's 2026-10-21 external debugger feedback adds a
 [control usefulness review and four-packet subcatalog](NS-3_control-usefulness_01.md).
 It reviews every default control from the application user's perspective, then

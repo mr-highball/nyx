@@ -3,6 +3,17 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Reusable and embedded creator behavior](NS-3_coordinators_05.md) was accepted
+on2026-10-21 for all five unchanged scoped criteria. Retained native588/588 and
+actual pre-facelift browser256 reusable/563 aggregate at both widths establish
+mixed creator/builtin input, caller overrides and independent lifetimes. Exact
+common lifecycle methods and current facelift evidence bound source reuse.
+Current full MasterDetail165/175 plus OWN compiled36/36 and Kanban114/124 plus
+OWN compiled15/15 preserve Studio/save/generated compatibility; all native heaps
+are clean. Creator guides publish exact supported boundaries and retained failures.
+The common parent remains open on parity; no original goal credit or DataToolbar
+acceptance follows. See [the joint record](../../WORK.md#reusableembedded-creator-acceptance--2026-10-21).
+
 [Studio chrome and typed button presentation](NS-4_studio-chrome_01.md) was
 accepted on2026-10-21 for all six scoped criteria. Both adapters share locally
 embedded glyphs, editor theming, typed style authoring and ordinary controls.
@@ -19,8 +30,9 @@ while retaining actual typed lane/Move controls, existing movement/drag policies
 explicit Disconnect/manual reattachment and committed cleanup/disposal. Native
 139,121/121, full Studio114/124 and own saved compiled application15/15 pass clean;
 coordinator171/68/68 and publication136/136 retain compatibility. All16 compilers
-have zero Nyx warnings; browser counterparts compile only. Joint reuse/browser/
-parity acceptance and original goal credit remain open. See
+have zero Nyx warnings; browser counterparts compile only. Joint reuse/browser
+is now supplied by05 above; complete parent/parity acceptance and original goal
+credit remain open. See
 [the qualification](../../WORK.md#kanban-common-coordinator-migration--2026-10-21).
 
 [Common MasterDetail mounting](NS-3_coordinators_03.md) was accepted on2026-10-21
@@ -29,7 +41,8 @@ on both renderers; manual/shared text ownership, exact Disconnect and queued
 record/scalar payloads remain compatible. Native99/171/68/68, full Studio165/175,
 own compiled application36/36, publication136/136 and Kanban98/98 pass clean.
 Sixteen compilers have zero Nyx warnings; browser counterparts compile only.
-Joint coordinator/reuse/browser acceptance and original goal credit remain open.
+Joint reuse/browser is supplied by05 above; complete coordinator/parity acceptance
+and original goal credit remain open.
 See [the qualification](../../WORK.md#masterdetail-common-coordinator-migration--2026-10-21).
 
 [Caller-owned prepared behavior](NS-3_coordinators_02.md) was accepted on
@@ -40,8 +53,8 @@ roles, the shared future event view and weak refresh retain instance/lifetime
 authority. Existing publication136/136, Kanban98/98 and exact compiled
 MasterDetail36/36 stay compatible; both Studios compile. This API prerequisite
 adds no original goal credit. MasterDetail migration/shared manual text ownership
-are qualified by03 above; Kanban migration, full reusable/embedded adoption and
-browser execution remain open. See
+are qualified by03 above; Kanban migration and scoped reusable/embedded browser
+adoption are now supplied by04/05. Complete parent/parity remains open. See
 [the qualification](../../WORK.md#caller-owned-behavior-registration--2026-10-21).
 
 [Composable renderer publication](NS-4_interact-flows_03.md) was accepted on

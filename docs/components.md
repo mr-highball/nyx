@@ -403,15 +403,24 @@ applications before changing or freeing their borrowed document.
 `tools/build.ps1 -Target coordinator-reuse -CoordinatorReuseEvidenceDirectory <new directory>`
 executes this ordinary native application at1280/390 and compiles the matching
 browser assertions. It preserves separate width logs and starts no listener.
-[Reuse05](../TODO/NS-3_coordinators_05.md) retains full both-host reusable/embedded
+[Reuse05](../TODO/DONE/NS-3_coordinators_05.md) retains full both-host reusable/embedded
 acceptance. [WORK.md](../WORK.md) records actual outcomes;
 the command and consumer source alone do not establish that acceptance.
-The current ordinary native application result is588/588 at1280/390 with clean
+The retained ordinary native application result is588/588 at1280/390 with clean
 heaps, preserving the original267 reusable checks before the embedded cases.
-Matching browser assertions compile; both compilers have zero Nyx warnings.
-Its separate identical reusable/embedded design/Pascal exports qualify authored/
-default isolation, not Save/Open or generated-application execution. R2's local
-embedded adoption qualifies natively; actual browser input/lifetimes remain open.
+Actual browser execution at1280x900/390x900 completes256 reusable/563 aggregate
+checks at each width, final cleanup and empty final consoles. Its separate
+identical reusable/embedded design/Pascal exports qualify authored/default
+isolation; they are not Save/Open or generated-application execution.
+
+That browser result uses the retained pre-facelift adapters. The common engines,
+consumer and both adapters' complete coordinator/canvas/publication/lifetime
+methods remain unchanged. Current facelift/input evidence covers the changed
+presentation boundary. Separate current full MasterDetail165/175 plus its OWN
+saved compiled36/36 and full Kanban114/124 plus its OWN saved compiled15/15
+supply current built-in/Studio/source compatibility. The exact source/evidence
+composition is in [the acceptance record](../WORK.md#reusableembedded-creator-acceptance--2026-10-21);
+the older browser result is not relabeled as execution of current renderer bytes.
 
 Embedded saved Canvas items inherit the parent's captured caller registration
 membership before Build. An accepted Canvas keeps that membership for later
@@ -422,24 +431,22 @@ membership only; nil restores inheritance for its next candidate. Each child
 keeps its own generation, collection authority and weak refresh. The
 [example's registry rules](../examples/selection-summary/README.md#embedded-registry-rules)
 describe the existing structural-presentation remount path without invented
-child source or a second state/event engine. [Reuse05](../TODO/NS-3_coordinators_05.md)
+child source or a second state/event engine. [Reuse05](../TODO/DONE/NS-3_coordinators_05.md)
 owns the actual integration and target-execution evidence.
 
-The first executed1280/390 browser consumer failed during Selection Summary's
-managed construction, before completion. Its factory now owns the prepared
-interface before initialization/callouts; retained readiness capabilities use
-separate local and field interface leases. Fresh native checks and browser
-compilation pass, with independently reviewed emitted ownership. The rebuilt
-browser application has now executed at both required widths and failed before
-completion on a separate prepared Kanban managed-array ownership defect.
-[WORK.md](../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
-records those failures and host retirement. The targeted Kanban ownership repair
-now uses local query outputs and distinct retained cell/field references, with
-fresh native checks and browser compilation passing. That new build now fails on
-the regression consumer's global Summary storage cleanup after its successful
-connected-interface assertion. [The executed result](../WORK.md#kanban-repaired-browser-execution--2026-10-21)
-distinguishes that harness ownership issue from production lookup and retains
-the exact failures; complete browser acceptance remains open.
+Earlier browser failures are retained history: Summary construction ownership,
+Kanban managed-array leases, consumer global Summary storage and collection-view
+ownership. Narrow repairs establish prepared ownership before initialization and
+distinct local/field leases; the final application result above supplies completed
+browser evidence. [The earlier repaired execution](../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
+and [the next Kanban execution](../WORK.md#kanban-repaired-browser-execution--2026-10-21)
+retain their exact failures and host retirement.
+
+Native focused tests separately cover injected reentrancy/notification disposal;
+those browser injection counterparts compile only. Actual563 covers its own
+useful input/refusal/independent lifetime paths. Hardware/assistive input, other
+widgetsets/DPI, production budgets and full observing/parity delivery remain open.
+The common coordinator parent retains its hard parity prerequisite.
 
 ## Component discovery and creator descriptions
 
