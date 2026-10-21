@@ -64,6 +64,7 @@ const
   NyxInspectorEventsID = 'inspector-tab-events';
   NyxStudioEventFilterID = 'events-filter';
   NyxStudioReusableEditorID = 'inspector-reusable-copy';
+  NyxStudioPartsEditorID = 'inspector-instance-parts';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
   NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
@@ -176,6 +177,11 @@ function CaptureNyxLogicInspector(ASession: TNyxStudioSession;
   occupied identities are checked before entering the ordinary paired worker. }
 function CaptureNyxReusableInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Capture a public Parts form's exact instance/descriptor intent into the same
+  source transaction used by both hosts. The form owns no session; selection,
+  paired publication, pending Pascal and mounted command context stay in Studio. }
+function CaptureNyxPartsInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Readonly Preview retains pending Pascal. Apply captures one typed state-domain
   transaction, refusing pending drafts and changed selection/default context. }
 function PreviewNyxExpressionInspector(ASession: TNyxStudioSession;
@@ -228,7 +234,8 @@ uses
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
-  nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec;
+  nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec,
+  nyx.parts.editor;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -525,6 +532,49 @@ begin
   AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
     NyxDesignStep(NyxReusablePatch([NyxDeriveComponent(LProposal.Source,
       LProposal.Definition, LProposal.Identities)]))]));
+end;
+
+function CaptureNyxPartsInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LProposal: TNyxPartsEditorProposal;
+  LChange: TNyxReusableChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := False;
+
+  if ASession = nil then
+  begin
+    Exit;
+  end;
+  Result := CaptureNyxPartsEditor(AButton, AShellRoot, ASession.Document, LProposal);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if ASession.SelectedID <> LProposal.Instance.ID then
+  begin
+    raise ENyxModel.Create('Select this reusable instance again before changing its parts');
+  end;
+  case LProposal.Action of
+    npaHide:
+      LChange := NyxOverrideComponentPart(LProposal.Instance,
+        LProposal.Descriptor, LProposal.Path, noRemove);
+    npaRestore:
+      LChange := NyxInheritComponentPart(LProposal.Instance,
+        LProposal.Descriptor, LProposal.Path);
+  end;
+  AEdit.Action := sdaTransaction;
+  AEdit.Selection := LProposal.Instance.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Transaction := CaptureNyxProjectTransaction(NyxProjectTransaction([
+    NyxDesignStep(NyxReusablePatch([LChange]))]));
+  { Source jobs deliberately capture their preparation pair after earlier queued
+    work publishes. Keep the mounted Parts document as the existing transaction
+    precondition, so a prior edit cannot silently rebase this exact proposal. }
+  AEdit.TransactionDesignBaseline := TNyxCodec.Encode(ASession.Document);
 end;
 
 function ReadExpressionProposal(ASession: TNyxStudioSession;

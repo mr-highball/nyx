@@ -1351,7 +1351,7 @@ begin
           if (FRequest.FEdit.TransactionDesignBaseline <> '') and
             (TNyxCodec.Encode(LSession.Document) <> FRequest.FEdit.TransactionDesignBaseline) then
           begin
-            raise ENyxModel.Create('The project changed since its live connections were captured');
+            raise ENyxModel.Create('The project changed since this operation was captured');
           end;
 
           if (FRequest.FEdit.CanvasSceneBaseline <> '') and

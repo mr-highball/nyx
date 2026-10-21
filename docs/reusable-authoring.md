@@ -3,6 +3,49 @@
 [Components](components.md) · [Inspector groups](inspector-groups.md) ·
 [Public Nyx form](../src/nyx.reusable.editor.pas)
 
+## Instance parts
+
+Select a reusable instance to open its Parts editor. **Hide part** removes a
+named piece from this instance's realized content. The definition and other
+instances keep their original content. Hidden rows stay in the editor with
+**Restore original**, which removes the local override and inherits the current
+definition again. Restore means inheritance, rather than recovery of an earlier
+local customization. Undo restores the exact prior design and Pascal together.
+
+Nested paths such as `actions/send` can be hidden independently. The instance
+root stays intact. A part with customized properties or its own override payload
+cannot be silently converted to a removal; the editor explains why Hide is
+unavailable. Dependent child overrides retain ordinary
+full-document validation. Reopen the editor after its instance, definition or
+captured project baseline changes.
+
+The public [Parts form](../src/nyx.parts.editor.pas) is composed entirely from
+Nyx controls and returns copied typed intent. It retains no document, renderer,
+Studio session or compiler. A custom host can inspect that intent and submit it
+through its own admission policy; Studio uses the existing shared source-command
+queue for both targets. Pending Pascal must be explicitly resolved before an
+instance part operation can publish.
+
+```pascal
+LParts := NewNyxPartsEditor('note-parts', LDocument,
+  NyxControl('first-note'));
+LPage.Add(LParts);
+```
+
+**Edit part properties** opens the existing customization choices, including the
+instance root. This disclosure keeps the structural Parts actions easy to reach.
+Saved design, generated Pascal and Undo/Redo share the same existing remove/
+inherit descriptor contract; this editor introduces no parallel layout model.
+
+`tools/build.ps1 -Target reusables` includes the Parts contract consumer and
+the ordinary native Studio journey at measured desktop/compact host widths.
+It stages `parts-editor.html` and `parts-studio.html` with matching Pascal-built
+browser consumers and source worker. Executed browser input requires the
+separately admitted HTTP environment; a compiled page alone does not qualify it.
+WORK.md records the actual current results and remaining target/quality gates.
+
+## Creating a reusable copy
+
 Select an authored control and open Properties → Component options → Create a
 reusable copy. Enter the definition name, then choose Preview names or Create
 reusable copy. The original stays in place. The copy appears among the project's

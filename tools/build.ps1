@@ -8279,15 +8279,39 @@ try {
     & (Join-Path $nyxReusableLcl 'nyx_agent_reusable_controls.exe') (Join-Path $nyxReusableExport 'design.nyx')
 
     if ($LASTEXITCODE -ne 0) { throw 'Unchanged compiled reusable controls failed' }
+    # Public instance Parts and ordinary Studio share the existing remove/inherit
+    # transaction contract. Keep their checked artifacts and project stores
+    # independent of legacy reusable exports and of the observing user's editor.
+    $nyxReusableParts = Join-Path $nyxReusableRoot 'parts-native'
+    New-Item -ItemType Directory -Force -Path $nyxReusableParts | Out-Null
+    $nyxReusablePartsFlags = @($nyxReusableControlFlags | Where-Object {
+      $_ -notin @("-FU$nyxReusableLcl", "-FE$nyxReusableLcl", "-Fu$nyxReusableExport")
+    }) + @('-uPAS2JS', "-FU$nyxReusableParts", "-FE$nyxReusableParts")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReusablePartsFlags + @('tests/nyx_parts_editor_tests.lpr'))
+    & (Join-Path $nyxReusableParts 'nyx_parts_editor_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Public Parts editor/proposal checks failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReusablePartsFlags + @('tests/nyx_parts_studio_controls.lpr'))
+    foreach ($nyxPartsWidth in @(1280, 390)) {
+      & (Join-Path $nyxReusableParts 'nyx_parts_studio_controls.exe') `
+        (Join-Path $nyxReusableRoot ('parts-project-' + $nyxPartsWidth)) $nyxPartsWidth
+
+      if ($LASTEXITCODE -ne 0) { throw "Ordinary Parts controls failed at width $nyxPartsWidth" }
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    foreach ($nyxReusableProgram in @('nyx_agent_reusable_tests', 'nyx_agent_reusable_controls')) {
+    foreach ($nyxReusableProgram in @('nyx_agent_reusable_tests', 'nyx_agent_reusable_controls',
+      'nyx_parts_editor_tests', 'nyx_parts_studio_controls')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
         '-Futests', "-Fu$nyxReusableExport", '-Jirtl.js', "-FE$nyxReusableBrowser",
         "tests/$nyxReusableProgram.lpr")
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxReusableBrowser 'rtl.js')
-    foreach ($nyxReusableHost in @('agent-reusables.html', 'agent-reusable-controls.html')) {
+    # The ordinary Parts fixture always uses this matched declarative worker.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxReusableBrowser", 'studio/nyx_source_worker.lpr')
+    foreach ($nyxReusableHost in @('agent-reusables.html', 'agent-reusable-controls.html',
+      'parts-editor.html', 'parts-studio.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxReusableHost") -Destination $nyxReusableBrowser
     }
 
@@ -8310,9 +8334,6 @@ try {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
         '-Futests', "-Fu$nyxReusableSource", '-Jirtl.js', "-FE$nyxReusableBrowser",
         'tests/nyx_reusable_studio_controls.lpr')
-      # Studio's ordinary declarative commands use this matched module worker.
-      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
-        '-Jirtl.js', "-FE$nyxReusableBrowser", 'studio/nyx_source_worker.lpr')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/reusable-studio.html') -Destination $nyxReusableBrowser
     }
     Write-Host 'Reusable consumers staged; actual browser execution requires an admitted HTTP host.'

@@ -44,6 +44,7 @@ uses
   nyx.selection.editor,
   nyx.event.discovery,
   nyx.reusable.editor,
+  nyx.parts.editor,
   nyx.tabs.pages.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
@@ -1281,6 +1282,7 @@ var
   LMetadataSource: TNyxNode;
   LPartView: TNyxNode;
   LPartCount: Integer;
+  LPartProperties: INyxDisclosure;
   LPanelbar: TNyxNode;
   LInspectorTabs: TNyxNode;
   LPlacementActions: TNyxNode;
@@ -1929,12 +1931,22 @@ begin
 
     if LSelected.ProjectionKind = 'component' then
     begin
-      LRight.Add(Caption('instance-parts-title', 'INSTANCE PARTS'));
-      LRight.Add(Button('customize-part-root', 'Customize content').SetProp('override-path', '.'));
+      { Hidden parts remain in the public editor's copied choices, independently
+        of the realized tree. Existing property/payload customization stays
+        available inside a disclosure without crowding the structural actions. }
+      LRight.Add(NewNyxPartsEditor(NyxStudioPartsEditorID, ASession.Document,
+        NyxControl(LSelected.ID)));
+      LPartProperties := NewNyxDisclosure('instance-part-properties');
+      LPartProperties.WithText('Edit part properties');
+      LPartProperties.Configure.Value(False).Surface(False).Padding(0).Done;
+      LRight.Add(LPartProperties);
+      LPartProperties.Part(NyxPart('body')).Node.Add(
+        Button('customize-part-root', 'Customize content').SetProp('override-path', '.'));
       LPartView := RealizeNyxView(ASession.Document, LSelected);
       try
         LPartCount := 0;
-        AddPartChoices(LRight, LPartView, '', LPartCount);
+        AddPartChoices(LPartProperties.Part(NyxPart('body')).Node,
+          LPartView, '', LPartCount);
       finally
         LPartView.Free;
       end;

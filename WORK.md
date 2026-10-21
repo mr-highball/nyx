@@ -4,6 +4,123 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Core implementation admission (2026-10-21): previous goal turn is progress,
+not a wait: the current grammar leaf qualified, the actual source frontier was
+retained,20 granular deferred tasks were reviewed/indexed and checkpoint91e5f97
+was pushed/independently remote verified. No reader remains live. This turn
+follows the user's core priority through reusable instance Parts Hide/Restore.
+Root owns inspector/view/sourcejobs, new ordinary control-journey consumer,
+existing reusables build wiring and reusable-authoring guide. Lil' Scooty owns
+only new parts.editor and its focused consumer; its typed API handoff is agreed.
+Both hosts already consume the shared source-command queue, so sourcejobs owns
+the common route. Existing remove/inherit descriptors and project transactions
+remain authoritative; root keeps adapter changes conditional on an actual gap.
+First coherent outcome: hide actions on one of two instances, retain a visible
+hidden row, restore original, save/load and one paired Undo/Redo. Include stale
+definition/descriptor/selection/load, root/payload/descendant refusal and pending
+Pascal preservation. Both source-ready handoffs precede root compiler admission;
+native actual input and browser compilation are reported separately. Existing
+MCP/LAN/host gates and concurrent work stay intact; resolver work stays deferred.
+
+Parts source handoff: the public form/proposal and root common inspector/view/
+sourcejobs integration are reviewed. Hidden rows retain exact Restore identities;
+typed actions map only to existing remove/inherit patches. Existing noRemove
+validation forbids local properties/bindings/payload, so the form explains and
+refuses those cases without stripping data. A disclosed legacy property editor
+retains the old customization path. The new ordinary consumer owns independent
+English two-instance data and exercises real controls/queue, exact definition/
+sibling snapshots, nested Restore, saved pair/source and one-step history, plus
+native pending-memo refusal. Build reusables wiring/HTML/guides are updated and
+PowerShell syntax passes. These are source-ready assertions, not executed proof.
+Root freezes phase1 and admits four scoped compiler jobs: focused native/run and
+browser compile, ordinary native controls at1280/390 and browser compile. Both
+agents pause all Pascal/guides until every reader joins/audit; no host/config
+retry, resolver job, browser execution or full component/parity acceptance is
+inferred. Existing products/regressions follow only after focused results justify
+their unchanged integration scope.
+
+Parts phase1 is joined/audited with exact1,750 Pascal/concurrent13 pins. Four
+compilers succeed. Native desktop ordinary controls pass47 with clean heap.
+Focused native stops at31 with clean heap because the oracle wrongly assumes
+all parent removals invalidate descendant overrides: existing authored order
+first applies the earlier child, then a new later parent removal hides it while
+retaining that child descriptor for Restore. Compact ordinary input reaches its
+full hide/history/nested Restore journey, then stops atstage9 because the fixture
+looked for native popup controls in shell sections. Its heap is clean too. One
+focused UTF8 literal warning and one unreachable exhaustive-enum else warning
+remain retained; neither is suppressed. These failures are not product acceptance.
+
+Review also finds a real queued-baseline gap: form capture verified its old
+document, but an ordinary transaction recaptured the processing pair after a
+prior queued change. Root now supplies existing TransactionDesignBaseline at
+Parts capture; its already-qualified wire/equality/pre-Materialize check rejects
+intervening changes. No new action/schema or queue restriction is required.
+Its existing guard message becomes operation-neutral in session.design.inc.
+The actual consumer now queues a title change then clicks the still-mounted
+Parts action, requiring prior publication/no removal and one Undo/no extra
+history. Native compact popup clicks follow real separate windows. The focused
+test verifies child-first exact retention/save/Restore, earlier-parent genuine
+refusal and explicit Unicode string domains. The public Parts module stays
+unchanged. Both lanes are source-ready/reviewed; root freezes phase2 and admits
+the same four changed consumer compilers/runs. Products/regressions/browser
+execution remain separate; all Pascal/guides pause through exact join/audit.
+
+Parts phase2 is terminal and audited: public native40, actual ordinary Studio
+desktop58 and compact62 checks pass with clean heaps. Both browser consumers
+compile only. All1,750 Pascal,13 owned and13 concurrent planning inputs remain
+exact; all four compiler logs have zero owned warnings/fourteen upstream browser
+warnings. Desktop allocates/frees40,144,031 blocks/1,198,410,849 cumulative bytes;
+compact31,389,509/924,333,876; no production performance budget is inferred.
+The queued title edit publishes normally while the stale Parts proposal adds
+neither removal nor history. Real Pascal memo drafts remain exact on refusal;
+compact menu input now follows its separate native popup windows. Phase1's two
+failed fixtures and warnings remain retained, not overwritten.
+
+The final read-only quality review identifies ambiguous repeated action names.
+Lil' Scooty owns one minimal existing typed AccessibleName setter in parts.editor,
+including the exact path without changing captions, IDs, metadata or semantics.
+No new test suite is warranted for this text property. After that handoff/root
+review, freeze final source and admit six integration jobs: both Studios/backend/
+source-worker compilation and the unchanged semantic reusable consumer native/run
+and browser compile. Reuse phase2's actual operation evidence; do not replay it
+unchanged. This is composite qualification: final target builds include the
+accessible-name repair, while actual operation/heap checks precede that inert
+name-only difference. Browser execution, physical clipping/scroll reachability,
+keyboard focus continuation after row replacement, assistive quality and full
+component/authoring/parity/delivery remain open under the original owners.
+No host/config retry, new tool/schema, resolver expansion or rollout is admitted.
+
+Final integration is joined/audited: both Studios, backend and source worker
+compile; unchanged semantic reusable native79 passes with a clean heap, and its
+browser consumer compiles. All six compiler logs have zero owned/twenty-one
+upstream browser warnings. Combined accepted phase2/integration qualification
+is ten compilers/zero owned/thirty-five upstream warnings, native40/58/62/79
+checks with clean heaps. The final path-qualified AccessibleName is present in
+the final product builds. A subsequent comment-only clarification says Hide on
+an already-hidden part refuses; Restore remains supported. No runtime change
+or extra replay accompanies that clarification.
+
+Evidence owner: ignored `.local/parts-editor-paths-private.json` points to
+`E:\Blekohlab\nyx\qualification\parts-editor-20261021-001943`.
+`phase2-all-joined-private.json` owns actual operations/input/history/heap and
+`integration-all-joined-private.json` owns final product/regression compilation.
+Both failed phase1 fixtures, their source snapshots, preparation failure and
+warning logs remain exact. No reader is live. Final source/evidence and remote
+identity are recorded in the packet's checkpoint receipt after explicit owned
+staging; thirteen concurrent planning files stay exact and unstaged.
+
+This core batch delivers a usable instance Parts affordance through the existing
+NS-3_components_01 criterion-two/NS-4_studio-authoring_01 owners. Neither full
+criterion/task nor credit/DONE closes; no component kind or alternate completion
+assessment is added. It contains two focused/control qualification phases, the
+first failed and the second passed; the historical unclosed resolver sequence
+remains parked separately. Stop Parts/fixture/compiler variants. Next reassess
+the current target-quality gap (keyboard focus continuation and physical reach)
+through the existing authoring/parity owners, using this accepted operation
+evidence instead of another generated example. Browser execution/observing
+delivery, full quality/budgets and broader reusable depth remain open. No user
+input is needed to preserve this checkpoint or continue eligible core review.
+
 The user asks to switch from the extended resolver work back to core Nyx tasks.
 Finish/join/audit only the already-running preparation33 source check, retain
 the exact checkpoint and actual unresolved frontier, then defer further resolver

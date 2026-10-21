@@ -1,5 +1,65 @@
 # Working in Nyx
 
+CORE PARTS ACTIVE (2026-10-21): previous goal turn made concrete progress by
+qualifying the initializer repair, retaining preparation33's real refusal,
+authoring20 deferred tasks and pushing91e5f97. Resolver remains deferred. All
+readers joined. Root owns inspector/view/sourcejobs integration, a new ordinary
+Parts control journey, reusable-authoring guide and build-target wiring. Helper
+owns only new src/nyx.parts.editor.pas and tests/nyx_parts_editor_tests.lpr. No
+overlap or compilers until both source-ready handoffs/review and root freeze.
+Use existing remove/inherit transactions and the shared ordinary source queue;
+no new model/codegen semantics, direct accepted-tree mutation or lost payload.
+Qualify hidden rows, nested parts, sibling/definition isolation, fresh baseline,
+paired source/history and actual native controls; browser compilation is distinct
+from execution. Native MCP tools are absent and LAN stays offline; no host or
+configuration retry. Preserve all concurrent planning work and deferred splitter.
+
+Parts phase1: both source-ready handoffs are reviewed. Root freezes all owned
+files and admits four focused/control compilers: Parts contract native/run and
+browser compile; ordinary Parts Studio native/run at1280/390 and browser compile.
+All Pascal/guides pause until every reader joins and exact input audit completes.
+Existing noRemove forbids local properties/content, so Hide explains/refuses those
+cases instead of discarding them. The ordinary source queue owns full paired
+admission; no model/codegen semantics or raw behavior-string API is added.
+Browser execution/products/regressions remain separate, unclaimed checks.
+
+Parts phase1 readers joined/audited. All four consumers compile; desktop ordinary
+input passes47/clean heap. Focused native fails its incorrect unconditional
+descendant-refusal expectation at31, clean; compact ordinary passes the Parts
+operations then fails a fixture popup lookup atstage9, clean. Retain both and
+the two owned warnings. Repair is focused-test ordered preservation/refusal and
+explicit UTF8 literals; root ordinary popup targeting and an existing transaction
+design baseline guard (plus generic guard wording) prevent queued rebasing.
+Public Parts module stays exact; no model or wire/schema change. Root adds only
+session.design.inc's existing guard message to its ownership. Both source-ready
+handoffs reviewed; phase2 repeats the four changed consumers under a fresh freeze.
+Pause all Pascal/guides through join/audit. No browser execution or full acceptance.
+
+Parts phase2 is joined/audited: public native40, actual desktop58/compact62 pass
+with clean heaps; browser consumers compile only. All1,750 Pascal/13 owned/13
+concurrent pins are exact; four logs have zero owned/fourteen upstream warnings.
+One final helper-owned typed AccessibleName setter adds the exact path to each
+action without semantic/ID changes. After handoff/review root freezes final
+source and admits six integration jobs: both Studios/backend/worker compile,
+unchanged semantic reusable native/run and browser compile. Reuse phase2 input/
+history/heap evidence; final product compilation covers the inert name repair.
+Keep this composite boundary explicit. Browser execution, physical/keyboard/
+assistive quality, full criteria and delivery remain open. No host/config retry,
+new tools/schema/rollout, resolver job or additional agent. Preserve concurrent work.
+
+Parts final integration is joined/audited: both Studios/backend/worker compile;
+semantic native79 passes clean and browser consumer compiles. Ten accepted
+phase2/integration logs have zero owned/thirty-five upstream warnings; native
+40/58/62/79 have clean heaps. Final builds include path-qualified accessible
+names; later source clarification is comment-only. Phase1 failures stay retained.
+WORK.md and ignored .local/parts-editor-paths-private.json own exact composite
+receipts/checkpoint/remote identity. Readers joined; no full criterion/task/
+credit/DONE, browser execution, quality or delivery closes. Stop Parts/fixture/
+compiler variants; next reassess keyboard focus/physical reach through existing
+authoring/parity owners using current evidence. Keep resolver deferred, thirteen
+concurrent planning paths exact, LAN offline and native Nyx tools absent. No
+host/config retry, new tool/schema/rollout, cleanup or additional agents.
+
 USER PRIORITY CHANGE (2026-10-20): park further resolver/source-reference
 expansion and return to core Nyx components, layout and Studio usability. Finish
 and record only the already-admitted preparation33 source reader, then preserve

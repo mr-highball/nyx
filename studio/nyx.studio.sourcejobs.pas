@@ -2260,6 +2260,7 @@ begin
         CaptureNyxSelectionInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxCanvasInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxLogicInspector(FSession, LOrigin, AShellRoot, LEdit) or
+        CaptureNyxPartsInspector(FSession, LOrigin, AShellRoot, LEdit) or
         CaptureNyxTabsInspector(FSession, LOrigin, AShellRoot, LEdit)) then
       begin
         Edit(LEdit);
@@ -2361,6 +2362,12 @@ begin
     end;
 
     if CaptureNyxSelectionInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
+    if CaptureNyxPartsInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);
       Exit(True);
