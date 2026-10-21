@@ -1105,6 +1105,17 @@ SameFacts, immutable fluent updates, mode resets and unknown effects preserve or
 revoke this metadata explicitly. Alternate capture checks a bounded symbol count
 once and publishes only after all getters/policy validation succeed.
 
+`WithMultipleHelpers` separately records `ppkUnknown`, `ppkFalse` or `ppkTrue`
+helper lookup policy. Unknown supplies no single-helper assumption. Public
+`InMode` does not infer a compiler default; qualified source MODE handling owns
+that effect. Global MODESWITCH changes survive local PUSH/POP, and an unknown
+effect revokes their knowledge. Capture, exact fact comparison, documentation
+root values and structural measurement identities distinguish known values in
+both the current and bootstrap contexts. Unknown preserves the previous value
+framing; known initial/root policies still refuse the older source-v1 witness
+format. The value record has grown, so dependent native/browser consumers must
+be rebuilt. This policy grants no helper activation or target/member resolution.
+
 The source boundary recognizes INLINE ON/OFF, PACKRECORDS numeric/C/default,
 numeric ALIGN/A aliases, PACKENUM/MINENUMSIZE/Z values, CALLING and supported long
 Boolean aliases. Long forms share the corresponding short-switch facts, including
@@ -1956,6 +1967,39 @@ requires the same defaults/compiler/mode/scope/options/features/policies, reject
 conflicting presence, exact integers or sizes, and preserves richer integer facts.
 Observed defaults are a compatibility anchor: initial command-line observations
 can differ from a source-mode guard and are never substituted for source facts.
+
+`RestoreNyxFPCCompilerProbe` recovers request intent from a saved canonical input,
+so a host can reuse an accepted reply without maintaining a second query list or
+rediscovering the requests through repeated semantic construction:
+
+```pascal
+LProbe := RestoreNyxFPCCompilerProbe(LSavedSource,
+  TNyxPascalCompilerTraceOptions.Defaults, LCancellation);
+LCapture := ReadNyxFPCCompilerCapture(LProbe, LVerifiedProbeFile,
+  LVerifiedTranscript, LTerminalExitCode,
+  TNyxPascalCompilerTraceOptions.Defaults, LCancellation);
+LCombined := LPreviousCapture.Merge(LCapture);
+```
+
+Restoration accepts only the current emitter's complete ASCII/LF source, including
+its exact scope, mode, identity, eight ordered mode guards, symbols and size
+operands. Duplicate queries, reordered guards, altered markers or expressions,
+extra source, BOMs and changed line endings refuse. It compares the shared
+emitter's fragments directly with the supplied text, without first allocating
+the generated packet implied by a shortened or malicious template. The existing
+256-symbol/64-size bounds, trace byte/line limits and optional caller-owned
+analysis budget apply; work admission and cancellation precede input inspection,
+vector construction and comparison. The published immutable request retains no
+execution policy.
+
+This operation reads no files and starts no compiler. Restored intent supplies no
+measured facts: the host still owns exact saved bytes, source/job/compiler/target
+association, terminal status and a complete transcript. `ReadNyxFPCCompilerCapture`
+and full `Merge` anchor checks remain necessary, including an independent
+bootstrap capture. Reusing a prepared context before a new namespace construction
+does not rebind a pending old view, change historical work receipts or establish
+incremental performance. New construction and logical compiler jobs retain their
+existing limits.
 
 Preparation queries each new cohort against the original base request and retains
 only merged verified facts, rather than growing a single cumulative request list.

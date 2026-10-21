@@ -2335,7 +2335,7 @@ begin
 
     if (AKind = 'ifdef') or (AKind = 'ifndef') then
     begin
-      LName := NyxPascalDefine(AValue);
+      LName := NyxPascalConditionalDefine(FContext, AValue);
       LValue := 'defined(' + LName.Name + ')';
       Result := FContext.Symbol(LName).IsDefined;
 
@@ -4159,6 +4159,14 @@ begin
 
         if FContext.Family = ppcFPC then
         begin
+          { The inspected MODE operation replaces its whole modeswitch set;
+            none of these qualified tables enables MULTIHELPERS. A selected
+            initial mode alone retains no such source-operation proof. }
+
+          if (FContext.Version.FullNumber = 30301) and (LGlobal = ppkTrue) and
+            (LMode in [ppmFPC, ppmObjFPC, ppmDelphi, ppmDelphiUnicode, ppmTP]) then
+            FContext := NyxPascalWithCompilerPolicies(FContext,
+              NyxPascalCompilerPolicies(FContext).WithMultipleHelpers(ppkFalse));
           { The actual authored header operation, not the context's selected
             mode, establishes this default on the qualified scanner. InMode
             itself deliberately retains no such initial/default authority. }
@@ -4253,6 +4261,38 @@ begin
           LCondition := ppkFalse;
         end;
         Delete(LArgument, Length(LArgument), 1);
+      end;
+
+      if (LName = 'modeswitch') and (LArgument = 'multihelpers') then
+      begin
+        { This module switch is ignored after the real header window. Unknown
+          participation revokes knowledge; local PUSH/POP never restores it. }
+
+        if (FContext.Family = ppcFPC) and (FContext.Version.FullNumber = 30301) then
+          LGlobal := GlobalModeHeader
+        else
+          LGlobal := ppkUnknown;
+
+        if LGlobal = ppkFalse then
+        begin
+          SaveState;
+          Exit;
+        end;
+
+        if LGlobal = ppkUnknown then
+        begin
+          Problem(ptiUnsupportedDirective, AOccurrence, AToken.Span,
+            'Multiple helpers need a qualified compiler module-header boundary');
+          UnknownEffect;
+          Exit;
+        end;
+
+        if FActive = ppkUnknown then
+          LCondition := ppkUnknown;
+        FContext := NyxPascalWithCompilerPolicies(FContext,
+          NyxPascalCompilerPolicies(FContext).WithMultipleHelpers(LCondition));
+        SaveState;
+        Exit;
       end;
 
       if not FeatureNamed(LArgument, LFeature) then

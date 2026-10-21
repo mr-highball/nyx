@@ -4,7 +4,9 @@ program nyx_documentation_signaturebatch_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.lexing,
-  nyx.pascal.syntax, nyx.pascal.work, nyx.documentation,
+  nyx.pascal.syntax, nyx.pascal.work, nyx.pascal.files,
+  nyx.pascal.context, nyx.pascal.translation, nyx.pascal.syntax.translated,
+  nyx.pascal.types, nyx.documentation,
   nyx.documentation.typeexpressions, nyx.documentation.signatures,
   nyx.test.documentation {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
@@ -72,6 +74,35 @@ type
     procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
     function RemainingTypeBytes: Integer;
   end;
+  { A session policy changes only caller-owned handles or shared input elements
+    at a measured admission. It supplies no syntax/source authority, and its
+    destruction proves that detached signatures retain no outward policy. }
+  TSessionAdmission = class(TInterfacedObject, INyxDocumentationTypeAdmission)
+  public
+    Used, Trigger, AvailableBytes, Action: Integer;
+    RemainingCalls, RemainingAction, WorkAtRemaining: Integer;
+    destructor Destroy; override;
+    procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+    function RemainingTypeBytes: Integer;
+  end;
+  { The same immutable facts behind a different ordinary interface cannot earn
+    the private owner's session path. Getter counters prove early refusal. }
+  TSessionViewDelegate = class(TInterfacedObject, INyxPascalTranslatedSyntax)
+  public
+    Value: INyxPascalTranslatedSyntax;
+    GetterReads: Integer;
+    function Source: INyxPascalTranslation;
+    function Syntax: INyxPascalSyntaxSnapshot;
+    function CompleteTranslation: Boolean;
+    function BlockedAt: Integer;
+    function OriginCount: Integer;
+    function Origin(AIndex: Integer): TNyxPascalSyntaxOrigin;
+    function OriginAt(AVirtualOffset: Integer): Integer;
+    function VirtualAt(AOccurrence, APhysicalOffset: Integer): Integer;
+    function Part(AIndex: Integer; const ASpan: TNyxPascalSpan): TNyxPascalSyntaxOrigin;
+    function TypeOfDeclaration(AIndex: Integer; const AOptions: TNyxPascalTypeOptions;
+      const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+  end;
 
 const
   CHeaders: TNyxText = 'function One(A: Integer): Boolean;' + #10 +
@@ -79,6 +110,10 @@ const
 
 var
   GChecks, GDisposed, GPolicies: Integer;
+  GSourceScope: INyxDocumentationTypeConstruction;
+  GSignatureSource: INyxDocumentationSignatureSource;
+  GSignatureOrdinals: TNyxDocumentationRoutineOrdinals;
+  GPolicyDestroyed: Integer;
   {$ifndef PAS2JS}
   GActual: Integer;
   {$endif}
@@ -89,6 +124,79 @@ begin
 
   if not AValue then
     raise Exception.Create(AReason);
+end;
+
+function TSessionViewDelegate.Source: INyxPascalTranslation;
+begin Inc(GetterReads); Result := Value.Source; end;
+function TSessionViewDelegate.Syntax: INyxPascalSyntaxSnapshot;
+begin Inc(GetterReads); Result := Value.Syntax; end;
+function TSessionViewDelegate.CompleteTranslation: Boolean;
+begin Inc(GetterReads); Result := Value.CompleteTranslation; end;
+function TSessionViewDelegate.BlockedAt: Integer;
+begin Inc(GetterReads); Result := Value.BlockedAt; end;
+function TSessionViewDelegate.OriginCount: Integer;
+begin Inc(GetterReads); Result := Value.OriginCount; end;
+function TSessionViewDelegate.Origin(AIndex: Integer): TNyxPascalSyntaxOrigin;
+begin Inc(GetterReads); Result := Value.Origin(AIndex); end;
+function TSessionViewDelegate.OriginAt(AVirtualOffset: Integer): Integer;
+begin Inc(GetterReads); Result := Value.OriginAt(AVirtualOffset); end;
+function TSessionViewDelegate.VirtualAt(AOccurrence, APhysicalOffset: Integer): Integer;
+begin Inc(GetterReads); Result := Value.VirtualAt(AOccurrence, APhysicalOffset); end;
+function TSessionViewDelegate.Part(AIndex: Integer; const ASpan: TNyxPascalSpan): TNyxPascalSyntaxOrigin;
+begin Inc(GetterReads); Result := Value.Part(AIndex, ASpan); end;
+function TSessionViewDelegate.TypeOfDeclaration(AIndex: Integer; const AOptions: TNyxPascalTypeOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalTypeSyntax;
+begin Inc(GetterReads); Result := Value.TypeOfDeclaration(AIndex, AOptions, ACancellation); end;
+
+destructor TSessionAdmission.Destroy;
+begin
+  Inc(GPolicyDestroyed);
+  inherited Destroy;
+end;
+
+procedure TSessionAdmission.AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or
+    (Ord(APhase) > Ord(High(TNyxPascalAnalysisPhase))) or (AUnits < 1) then
+    raise Exception.Create('A session policy received an invalid work phase');
+  Inc(Used, AUnits);
+
+  if (Trigger > 0) and (Used >= Trigger) then
+  begin
+    Trigger := 0;
+    case Action of
+      3: GSourceScope := nil;
+      4: GSignatureOrdinals[0] := -1;
+      5: GSignatureSource.Retire;
+      6: GSignatureOrdinals := nil;
+      7: GSourceScope.Retire;
+      8: GSignatureSource := nil;
+      else begin end;
+    end;
+  end;
+end;
+
+function TSessionAdmission.RemainingTypeBytes: Integer;
+var
+  LAction: Integer;
+begin
+  Inc(RemainingCalls);
+  LAction := RemainingAction;
+  RemainingAction := 0;
+  case LAction of
+    1: GSourceScope.Retire;
+    2: GSourceScope.AdmitText('1234');
+    else begin end;
+  end;
+
+  if LAction <> 0 then
+    WorkAtRemaining := Used;
+
+  if AvailableBytes > 0 then
+    Result := AvailableBytes
+  else
+    Result := 4 * 1024 * 1024;
 end;
 
 function Syntax(const AText: TNyxText): INyxPascalSyntaxSnapshot;
@@ -270,6 +378,268 @@ end;
 function TOuter.RemainingTypeBytes: Integer;
 begin
   Result := Bytes;
+end;
+
+procedure PortableSignatureSource;
+var
+  LFiles: INyxPascalFileCatalog;
+  LContext: INyxPascalCompilerContext;
+  LView: INyxPascalTranslatedSyntax;
+  LAlternate: TSessionViewDelegate;
+  LAlternateView: INyxPascalTranslatedSyntax;
+  LSession: INyxDocumentationSignatureSource;
+  LScope: INyxDocumentationTypeConstruction;
+  LSelection: TNyxDocumentationRoutineOrdinals;
+  LValues, LPrevious: TNyxDocumentationRoutineSignatures;
+  LText: TNyxText;
+  LFailure: Boolean;
+  LPolicy: TSessionAdmission;
+  LAdmission: INyxDocumentationTypeAdmission;
+  LAt, LWork, LLimit, LAction, LDestroyed: Integer;
+begin
+  LText := 'unit SignatureSource; interface type ';
+  for LAt := 0 to 399 do
+    LText := LText + 'TPadding' + TNyxText(IntToStr(LAt)) + ' = record end; ';
+  LText := LText + 'procedure First(const A: TNumber = 0); ' +
+    'function Second(var B: TNumber): TNumber; implementation end.';
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(
+    NyxPascalPhysicalFile('SignatureSource.pas'), LText);
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+    NyxPascalPhysicalFile('SignatureSource.pas'), LContext,
+    TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+  Check(LView.CompleteTranslation and (LView.Syntax.DiagnosticCount = 0),
+    'The session prefix witness is complete owned translated declaration syntax');
+  LLimit := LView.Syntax.Lexical.Scalars * 3;
+  SetLength(LSelection, 1);
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Work(LLimit));
+  try
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    LSelection[0] := LView.Syntax.Named(0, 'First');
+    LValues := LSession.CaptureDeclared(LSelection);
+    LPrevious := LValues;
+    LSelection[0] := LView.Syntax.Named(0, 'Second');
+    LValues := LSession.CaptureDeclared(LSelection);
+    Check((Length(LValues) = 1) and (LValues[0].ParameterCount = 1) and
+      (LValues[0].ParameterAt(0).Name = 'B') and
+      (LValues[0].ParameterAt(0).Passing = ndpVar) and
+      (LValues[0].ResultUse.Expression.Text = 'TNumber') and
+      (LPrevious[0].ParameterAt(0).Name = 'A') and
+      LPrevious[0].ParameterAt(0).HasDefault and
+      (LPrevious[0].ParameterAt(0).DefaultPascal = '0'),
+      'One checked session preserves original parameter/default/result shape across separate selections');
+    Check(LScope.Receipt.Total < LLimit,
+      'A shared source cursor fits three source extents without repeated complete-unit validation');
+    LSession.Retire;
+    LFailure := False;
+    try
+      LSession.CaptureDeclared(LSelection);
+    except
+      on ENyxDocumentationTypeExpressionCancelled do LFailure := True;
+    end;
+    Check(LFailure and (LPrevious[0].ParameterAt(0).Name = 'A'),
+      'Retirement refuses new captures and leaves detached prior signatures readable');
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LSession := nil;
+    LScope.Retire;
+  end;
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Work(LLimit));
+  LFailure := False;
+  try
+    try
+      LSelection[0] := LView.Syntax.Named(0, 'First');
+      CaptureNyxDocumentationDeclaredRoutineSignatures(LView.Syntax, LSelection, LScope);
+      LSelection[0] := LView.Syntax.Named(0, 'Second');
+      CaptureNyxDocumentationDeclaredRoutineSignatures(LView.Syntax, LSelection, LScope);
+    except
+      on ENyxDocumentationTypeExpression do LFailure := True;
+      on ENyxPascalAnalysisWorkLimit do LFailure := True;
+    end;
+  finally
+    LScope.Retire;
+  end;
+  Check(LFailure, 'The unchanged independent snapshot batches still charge repeated full-source agreement');
+  LAlternate := TSessionViewDelegate.Create;
+  LAlternateView := LAlternate;
+  LAlternate.Value := LView;
+  LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  LFailure := False;
+  try
+    try
+      NewNyxDocumentationSignatureSource(LAlternateView, LScope);
+    except
+      on ENyxDocumentationSignature do LFailure := True;
+    end;
+  finally
+    LScope.Retire;
+  end;
+  Check(LFailure and (LAlternate.GetterReads = 0),
+    'A delegating view cannot borrow the owned session fast path or reach source getters');
+  LSelection[0] := LView.Syntax.Named(0, 'First');
+  LPolicy := TSessionAdmission.Create;
+  LAdmission := LPolicy;
+  LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  try
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    LValues := LSession.CaptureDeclared(LSelection);
+    LWork := LPolicy.Used;
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LSession := nil;
+    LScope.Retire;
+  end;
+  for LAction := 4 to 8 do
+  begin
+    GSignatureOrdinals := Copy(LSelection);
+    LPolicy := TSessionAdmission.Create;
+    LAdmission := LPolicy;
+    LPolicy.Trigger := LWork;
+    LPolicy.Action := LAction;
+    GSourceScope := NewNyxDocumentationTypeConstruction(
+      TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+    LScope := GSourceScope;
+    GSignatureSource := NewNyxDocumentationSignatureSource(LView, LScope);
+    LSession := GSignatureSource;
+
+    if LAction = 8 then
+      LSession := nil;
+    LFailure := False;
+    LValues := nil;
+    try
+      try
+        LValues := GSignatureSource.CaptureDeclared(GSignatureOrdinals);
+      except
+        on ENyxDocumentationSignature do LFailure := True;
+        on ENyxDocumentationTypeExpressionCancelled do LFailure := True;
+      end;
+      Check((LPolicy.Trigger = 0) and
+        (((LAction in [4, 5, 7]) and LFailure and (LValues = nil)) or
+          ((LAction in [6, 8]) and not LFailure and (Length(LValues) = 1))),
+        'Last-admission mutation/retirement refuses; released caller handles retain in-flight value ownership, action=' + IntToStr(LAction));
+    finally
+      GSignatureSource := nil;
+
+      if LSession <> nil then
+        LSession.Retire;
+      LSession := nil;
+      GSignatureOrdinals := nil;
+      GSourceScope := nil;
+      LScope.Retire;
+      LScope := nil;
+    end;
+  end;
+  LDestroyed := GPolicyDestroyed;
+  LAdmission := nil;
+  Check((GPolicyDestroyed = LDestroyed + 1) and
+    (LPrevious[0].ParameterAt(0).DefaultPascal = '0'),
+    'Session retirement releases outward policy while published signatures keep only detached fields');
+  LPolicy := TSessionAdmission.Create;
+  LAdmission := LPolicy;
+  LPolicy.Trigger := 1;
+  LPolicy.Action := 3;
+  GSourceScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  LSession := NewNyxDocumentationSignatureSource(LView, GSourceScope);
+  try
+    LValues := LSession.CaptureDeclared(LSelection);
+    Check((GSourceScope = nil) and (Length(LValues) = 1),
+      'The session factory leases construction before admission can release its last caller slot');
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LSession := nil;
+  end;
+  LPolicy := TSessionAdmission.Create;
+  LAdmission := LPolicy;
+  LPolicy.AvailableBytes := 1;
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  try
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    LFailure := False;
+    LValues := nil;
+    try
+      LValues := LSession.CaptureDeclared(LSelection);
+    except
+      on ENyxDocumentationTypeExpression do LFailure := True;
+    end;
+    Check(LFailure and (LValues = nil),
+      'Owned syntax still requires remaining byte admission for each selected type window');
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LSession := nil;
+    LScope.Retire;
+  end;
+  for LAction := 1 to 2 do
+  begin
+    LPolicy := TSessionAdmission.Create;
+    LAdmission := LPolicy;
+    LPolicy.RemainingAction := LAction;
+    GSourceScope := NewNyxDocumentationTypeConstruction(
+      TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(8), nil, LAdmission);
+    LScope := GSourceScope;
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    LFailure := False;
+    LValues := nil;
+    try
+      try
+        LValues := LSession.CaptureDeclared(LSelection);
+      except
+        on ENyxDocumentationTypeExpressionCancelled do LFailure := LAction = 1;
+        on ENyxDocumentationTypeExpression do LFailure := LAction = 2;
+      end;
+      Check(LFailure and (LValues = nil) and (LPolicy.RemainingAction = 0) and
+        (LPolicy.RemainingCalls >= LAction) and (LPolicy.WorkAtRemaining > 0) and
+        (LPolicy.Used = LPolicy.WorkAtRemaining),
+        'Remaining-byte retirement or reentrant local reservation refuses before later type work, action=' + IntToStr(LAction));
+    finally
+      LSession.Retire;
+      LSession := nil;
+      GSourceScope := nil;
+      LScope.Retire;
+    end;
+  end;
+  SetLength(LSelection, 2);
+  LSelection[1] := LSelection[0];
+  LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  try
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    LFailure := False;
+    try
+      LSession.CaptureDeclared(LSelection);
+    except
+      on ENyxDocumentationSignature do LFailure := True;
+    end;
+    Check(LFailure, 'Duplicate owned-source selections refuse without publishing a partial vector');
+    LSelection[1] := LView.Syntax.Named(0, 'TPadding0');
+    LFailure := False;
+    LValues := nil;
+    try
+      LValues := LSession.CaptureDeclared(LSelection);
+    except
+      on ENyxDocumentationSignature do LFailure := True;
+    end;
+    Check(LFailure and (LValues = nil) and
+      (LPrevious[0].ParameterAt(0).DefaultPascal = '0'),
+      'A later non-routine refuses the whole session selection while detached prior success remains readable');
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LSession := nil;
+    LScope.Retire;
+  end;
 end;
 
 procedure WindowCases;
@@ -586,29 +956,39 @@ begin
 
   if not DirectoryExists(Result) or not FileExists(Result + 'PROJECT.md') or
     not FileExists(Result + 'src' + PathDelim + 'nyx.controls.pas') or
+    not FileExists(Result + 'src' + PathDelim + 'nyx.controls.types.inc') or
+    not FileExists(Result + 'src' + PathDelim + 'nyx.controls.facades.inc') or
+    not FileExists(Result + 'src' + PathDelim + 'nyx.controls.implementation.inc') or
+    not FileExists(Result + 'src' + PathDelim + 'nyx.controls.facades.implementation.inc') or
     not FileExists(Result + 'src' + PathDelim + 'nyx.controls.factories.inc') then
-    raise EArgumentException.Create('Repository root requires actual controls/factory source');
+    raise EArgumentException.Create('Repository root requires actual controls and all five literal includes');
 end;
 
-function SourceSyntax(const APath: String; AFragment: TNyxPascalSyntaxFragment): INyxPascalSyntaxSnapshot;
+function SourceText(const APath: String): TNyxText;
 var
   LStream: TMemoryStream;
   LBytes: TNyxBytes;
-  LOptions: TNyxPascalSyntaxOptions;
+  LOptions: TNyxPascalLexicalOptions;
 begin
-  LOptions := TNyxPascalSyntaxOptions.Defaults.Fragment(AFragment);
+  LOptions := TNyxPascalLexicalOptions.Defaults;
   LStream := TMemoryStream.Create;
   try
     LStream.LoadFromFile(APath);
 
-    if LStream.Size > LOptions.LexicalOptions.MaximumSourceBytes then
+    if LStream.Size > LOptions.MaximumSourceBytes then
       raise Exception.Create('Actual source exceeds existing lexical allowance');
     SetLength(LBytes, Integer(LStream.Size));
 
     if Length(LBytes) > 0 then
       Move(LStream.Memory^, LBytes[0], Length(LBytes));
-    Result := NewNyxPascalSyntaxSnapshot(NyxDecodeUTF8(LBytes), LOptions);
+    Result := NyxDecodeUTF8(LBytes);
   finally LStream.Free; end;
+end;
+
+function SourceSyntax(const APath: String; AFragment: TNyxPascalSyntaxFragment): INyxPascalSyntaxSnapshot;
+begin
+  Result := NewNyxPascalSyntaxSnapshot(SourceText(APath),
+    TNyxPascalSyntaxOptions.Defaults.Fragment(AFragment));
 end;
 
 procedure ActualBatch(const ASource: INyxPascalSyntaxSnapshot; AExpected: Integer);
@@ -653,6 +1033,139 @@ begin
   finally LScope.Retire; end;
 end;
 
+procedure ActualSignatureSource(const ARepository: TNyxText);
+var
+  LFiles: INyxPascalFileCatalog;
+  LContext: INyxPascalCompilerContext;
+  LView: INyxPascalTranslatedSyntax;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LSession: INyxDocumentationSignatureSource;
+  LScope: INyxDocumentationTypeConstruction;
+  LSelection: TNyxDocumentationRoutineOrdinals;
+  LValues: TNyxDocumentationRoutineSignatures;
+  LOwner, LRoutine: TNyxPascalSyntaxDeclaration;
+  LModule: TNyxPascalSyntaxScope;
+  LAt, LCount, LGroup, LGroups, LRoutines, LGlobals, LPublicTypes,
+    LRead, LWork: Integer;
+  procedure AddFile(const AName: TNyxText);
+  begin
+    LFiles := LFiles.WithFile(NyxPascalPhysicalFile(AName),
+      SourceText(ExcludeTrailingPathDelimiter(String(ARepository)) + PathDelim +
+        'src' + PathDelim + String(AName)));
+  end;
+  procedure SelectScope(AScope: Integer);
+  var
+    LBefore: Integer;
+  begin
+    LModule := LSyntax.Scope(AScope);
+    Check(LModule.Complete and not LModule.UnsupportedSyntax,
+      'Every selected actual controls signature scope must be complete');
+    LSelection := nil;
+    LAt := LModule.FirstDeclaration;
+    LRead := 0;
+    while LAt <> -1 do
+    begin
+      Inc(LRead);
+      Check(LRead <= LModule.DeclarationCount,
+        'Actual public scope links remain within their complete declared count');
+      LRoutine := LSyntax.Declaration(LAt);
+
+      if (LRoutine.Kind = psdkRoutine) and
+        (LRoutine.Visibility in [psavUnspecified, psavInterface, psavPublic,
+          psavPublished, psavAutomated]) then
+      begin
+        LCount := Length(LSelection);
+        Check(LCount < NyxDocumentationMaximumMembers,
+          'No actual public signature is omitted to fit the member ceiling');
+        SetLength(LSelection, LCount + 1);
+        LSelection[LCount] := LAt;
+      end;
+      LAt := LRoutine.Next;
+    end;
+
+    if Length(LSelection) = 0 then
+      Exit;
+    LValues := LSession.CaptureDeclared(LSelection);
+    Check(Length(LValues) = Length(LSelection),
+      'Each complete actual public callable group publishes atomically');
+    for LBefore := 0 to High(LSelection) do
+    begin
+      LRoutine := LSyntax.Declaration(LSelection[LBefore]);
+
+      if LRoutine.TypeSpan.Length <> 0 then
+        Check((LValues[LBefore].ResultUse <> nil) and
+          (LValues[LBefore].ResultUse.Expression.Text = LSyntax.Lexical.Slice(LRoutine.TypeSpan)),
+          'The actual result retains its exact unbound projected type window')
+      else
+        Check(LValues[LBefore].ResultUse = nil,
+          'A result-free actual callable acquires no invented type');
+    end;
+    Inc(LGroups);
+    Inc(LRoutines, Length(LSelection));
+
+    if AScope = 0 then
+      LGlobals := Length(LSelection)
+    else
+      Inc(LPublicTypes);
+  end;
+begin
+  { These are the real unit's five literal include owners, not fabricated unit
+    fragments or a reduced declaration list. Import/type binding is deliberately
+    outside this signature-only witness and remains required for the package. }
+  LFiles := NewNyxPascalFileCatalog(pfcExact);
+  AddFile('nyx.controls.pas');
+  AddFile('nyx.controls.types.inc');
+  AddFile('nyx.controls.facades.inc');
+  AddFile('nyx.controls.factories.inc');
+  AddFile('nyx.controls.implementation.inc');
+  AddFile('nyx.controls.facades.implementation.inc');
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).WithSymbol(NyxPascalDefine('PAS2JS'), ppdUndefined);
+  LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+    NyxPascalPhysicalFile('nyx.controls.pas'), LContext,
+    TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+  Check(LView.Source.Resolved and LView.CompleteTranslation and
+    (LView.Source.DiagnosticCount = 0) and (LView.Syntax.DiagnosticCount = 0),
+    'Actual controls and all five original includes produce one complete translated signature source');
+  LSyntax := LView.Syntax;
+  LGroups := 0;
+  LRoutines := 0;
+  LGlobals := 0;
+  LPublicTypes := 0;
+  LValues := nil;
+  LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  try
+    LSession := NewNyxDocumentationSignatureSource(LView, LScope);
+    SelectScope(0);
+    for LGroup := 0 to LSyntax.DeclarationCount - 1 do
+    begin
+      LOwner := LSyntax.Declaration(LGroup);
+
+      if (LOwner.Kind = psdkType) and (LOwner.Scope = 0) and
+        (LOwner.NestedScope >= 0) and
+        (LOwner.Visibility in [psavUnspecified, psavInterface, psavPublic,
+          psavPublished, psavAutomated]) then
+        SelectScope(LOwner.NestedScope);
+    end;
+    LWork := LScope.Receipt.Total;
+    Check((LGlobals = 89) and (LPublicTypes >= 81) and (LRoutines > LGlobals) and
+      (LWork <= TNyxDocumentationTypeExpressionLimits.Defaults.MaximumWork),
+      'All89 globals and every actual public type callable group share one unchanged default allowance');
+    LSession.Retire;
+    LSession := nil;
+  finally
+
+    if LSession <> nil then
+      LSession.Retire;
+    LScope.Retire;
+  end;
+  Check((Length(LValues) > 0) and (LValues[0].ParameterCount >= 0),
+    'Actual detached signatures remain readable after source-session and construction retirement');
+  WriteLn('actual controls signature source / globals=', LGlobals,
+    ' public type groups=', LPublicTypes, ' routines=', LRoutines,
+    ' groups=', LGroups, ' shared work=', LWork);
+end;
+
 procedure ActualSources(const ARepository: String);
 begin
   ActualBatch(SourceSyntax(ARepository + 'src' + PathDelim + 'nyx.controls.factories.inc', psfInterfaceDeclarations), 81);
@@ -672,8 +1185,10 @@ begin
     BatchCases;
     AlternateCases;
     SelectionCases;
+    PortableSignatureSource;
     {$ifndef PAS2JS}
     ActualSources(LRepository);
+    ActualSignatureSource(TNyxText(LRepository));
     {$endif}
     Check((DocumentationControlsConstructed = 0) and (DocumentationCallbacksConstructed = 0) and
       (DocumentationCallbacksInvoked = 0) and (DocumentationGlobalFactoryCalls = 0) and

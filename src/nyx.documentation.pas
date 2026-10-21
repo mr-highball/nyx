@@ -6,7 +6,7 @@ unit nyx.documentation;
 interface
 
 uses SysUtils, nyx.text, nyx.types, nyx.scheduler, nyx.pascal.types,
-  nyx.pascal.syntax,
+  nyx.pascal.syntax, nyx.pascal.context,
   nyx.documentation.typeexpressions;
 
 type
@@ -27,6 +27,13 @@ type
     function Defined: Boolean;
     function IsUnit: Boolean;
     function IsMember: Boolean;
+    { Operators keep their authored Pascal designator outside ordinary member
+      names. These getters refuse an ordinary reference; emitters never decode
+      the private selector stored in the unchanged overload field. }
+    function IsOperator: Boolean;
+    function OperatorKind: TNyxPascalOperatorKind;
+    function OperatorToken: TNyxText;
+    function OperatorOverloadKey: TNyxText;
     function Owner: TNyxDocumentationRef;
     function Key: TNyxText;
     function Same(const AOther: TNyxDocumentationRef): Boolean;
@@ -52,7 +59,8 @@ type
     declarations. Routine means a unit procedure/function, not a class method;
     existing kinds retain their ordinals when a new family is appended. }
   TNyxDocumentationMemberKind = (ndmConstructor, ndmFactory, ndmMethod,
-    ndmFluentMethod, ndmProperty, ndmField, ndmEvent, ndmEnumValue, ndmRoutine);
+    ndmFluentMethod, ndmProperty, ndmField, ndmEvent, ndmEnumValue, ndmRoutine,
+    ndmDestructor, ndmOperator, ndmConstant, ndmVariable, ndmResourceString);
   { Parameter intent remains declared Pascal metadata. Availability of a given
     spelling on a compiler is a separate qualification requirement. }
   TNyxDocumentationParameterMode = (ndpValue, ndpConst, ndpVar, ndpOut, ndpConstRef);
@@ -250,6 +258,27 @@ type
     function BindingAt(AIndex: Integer): TNyxDocumentationRef;
     function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
   end;
+  { A compiler-root leaf has no invented unit declaration. The exact immutable
+    context preserves supplied provenance and unknown facts; family alone grants
+    no target, ABI, encoding or evidence that a compiler was executed. }
+  INyxDocumentationCompilerRoot = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D122}']
+    function Name: TNyxPascalSizeReference;
+    function Family: TNyxDocumentationIntrinsicFamily;
+    function Facts: INyxPascalCompilerContext;
+  end;
+  { Root slots supplement the unchanged nominal/formal channels. Nil means no
+    root proof; a present root leaves BindingAt undefined and FormalAt nil. }
+  INyxDocumentationCompilerRootBindings = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D123}']
+    function RootAt(AIndex: Integer): INyxDocumentationCompilerRoot;
+  end;
+  { A direct alias can terminate at an explicit compiler root without inventing
+    System metadata. Nil means the ordinary AliasTarget contract applies. }
+  INyxDocumentationAliasDefinition = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D125}']
+    function Definition: INyxDocumentationTypeUse;
+  end;
   { Ordered authored interface applications retain exact syntax and explicit
     bindings. They grant neither compiler specialization nor member mappings. }
   INyxDocumentationInterfaceImplementations = interface(IInterface)
@@ -274,6 +303,12 @@ type
     function DefaultPascal: TNyxText;
     function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
   end;
+  { Explicitly untyped const/var/out parameters have no type use. Absence of
+    this capability still means unknown/malformed metadata, never untyped. }
+  INyxDocumentationUntypedParameter = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D11F}']
+    function DeclaredUntyped: Boolean;
+  end;
   { Dynamic managed storage keeps interfaces out of copied parameter records. }
   TNyxDocumentationParameterDeclarations = array of INyxDocumentationParameterDeclaration;
   { An immutable callable declaration can mix named and complex parameter/result
@@ -289,6 +324,20 @@ type
   INyxDocumentationMemberSignature = interface(IInterface)
     ['{014254DA-C69D-48CD-B14E-6718EB13D113}']
     function DeclaredSignature: INyxDocumentationRichSignature;
+  end;
+  { A storage declaration's exact type can be compound syntax. Its occurrence
+    remains a field, variable or constant, never a property/callable result. }
+  INyxDocumentationMemberValue = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D120}']
+    function DeclaredValueType: INyxDocumentationTypeUse;
+  end;
+  { Written type absence on a constant differs from an unknown type. Exact
+    initializer text is inert authored syntax, never an evaluated value. }
+  INyxDocumentationStorageDeclaration = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D121}']
+    function HasDeclaredType: Boolean;
+    function HasInitializer: Boolean;
+    function InitializerPascal: TNyxText;
   end;
   { Complex indices/value uses have a distinct capability. They never masquerade
     as simple named property records. Clauses/default remain declared syntax. }
@@ -323,6 +372,11 @@ function NyxDocumentationType(const AUnit, AType: TNyxText;
   AGenericArity: Integer = 0): TNyxDocumentationRef;
 function NyxDocumentationMember(const AOwner: TNyxDocumentationRef;
   const AName: TNyxText; const AOverload: TNyxText = ''): TNyxDocumentationRef;
+{ Exact operator designators never become synthetic callable names. The old
+  ordinary member factory still accepts Pascal identifiers only. }
+function NyxDocumentationOperator(const AOwner: TNyxDocumentationRef;
+  AKind: TNyxPascalOperatorKind; const AToken: TNyxText;
+  const AOverload: TNyxText = ''): TNyxDocumentationRef;
 function NyxDocumentationParameter(const AName: TNyxText;
   const AType: TNyxDocumentationRef;
   AMode: TNyxDocumentationParameterMode = ndpValue): TNyxDocumentationParameter;
@@ -360,6 +414,21 @@ function WithNyxDocumentationGenericParameters(const AMember: INyxDocumentationM
 function WithNyxDocumentationFormalBinding(const AUse: INyxDocumentationTypeUse;
   AIndex: Integer; const AFormal: INyxDocumentationFormalParameter;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+{ Context visitation refuses alternate context owners before their getters. A
+  public root describes supplied metadata; only the checked source adapter can
+  establish that this is the root of a particular semantic query. }
+function NewNyxDocumentationCompilerRoot(const AName: TNyxPascalSizeReference;
+  AFamily: TNyxDocumentationIntrinsicFamily; const AFacts: INyxPascalCompilerContext;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationCompilerRoot;
+function WithNyxDocumentationCompilerRootBinding(const AUse: INyxDocumentationTypeUse;
+  AIndex: Integer; const ARoot: INyxDocumentationCompilerRoot;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+{ Exact inert equality data is available only from a privately captured root.
+  No supplier is invoked; final registration framing remains separately charged. }
+function NyxDocumentationCompilerRootContent(const ARoot: INyxDocumentationCompilerRoot): TNyxText;
+function NewNyxDocumentationAliasDefinition(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const ADefinition: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
 function NewNyxDocumentationExpressionTypeUse(const AExpression: INyxDocumentationTypeExpression;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
 { Capture ordered interface uses under one construction; no supplier or scope is
@@ -373,6 +442,11 @@ function WithNyxDocumentationImplementedInterfaces(const AType: INyxDocumentatio
 function NewNyxDocumentationParameterDeclaration(const AName: TNyxText;
   const AType: INyxDocumentationTypeUse;
   AMode: TNyxDocumentationParameterMode = ndpValue): INyxDocumentationParameterDeclaration;
+{ The explicit untyped form has no default and uses the supplied construction.
+  It never weakens the old named/typed parameter constructor. }
+function NewNyxDocumentationUntypedParameterDeclaration(const AName: TNyxText;
+  AMode: TNyxDocumentationParameterMode;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationParameterDeclaration;
 function NewNyxDocumentationRichSignature(const AParameters: TNyxDocumentationParameterDeclarations;
   const AResult: INyxDocumentationTypeUse;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
@@ -380,13 +454,27 @@ function NewNyxDocumentationRichMember(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText;
   const ASignature: INyxDocumentationRichSignature;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+{ Compound fields retain ndtoField syntax under this supplied construction.
+  The old OfType operation remains a deliberate named-type replacement. }
+function NewNyxDocumentationValueMember(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AType: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+{ Global variables/constants/resource strings retain their actual family.
+  Nil AType means known unwritten type only for a constant/resource string.
+  Ordinary fields and strict named OfType do not infer this new declaration. }
+function NewNyxDocumentationStorageMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText;
+  const AType: INyxDocumentationTypeUse; AHasInitializer: Boolean;
+  const AInitializer: TNyxText;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 function NewNyxDocumentationRichProperty(const AIdentity: TNyxDocumentationRef;
   const ASummary: TNyxText; const AParameters: TNyxDocumentationParameterDeclarations;
   const AValue: INyxDocumentationTypeUse; AAccess: TNyxDocumentationPropertyAccesses;
   ADefault: Boolean; const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 function NewNyxDocumentationType(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText): INyxDocumentationType;
-{ Array/set/procedural/distinct definitions use the caller's shared construction;
+{ Compound definitions share the construction, preserving encoded-string
+  operands as opaque syntax rather than guessed encoding or evaluated values;
   named aliases and declaration bodies requiring source context refuse. }
 function NewNyxDocumentationDeclaredType(const AIdentity: TNyxDocumentationRef;
   const ASummary: TNyxText; const ADefinition: INyxDocumentationTypeUse;
@@ -547,6 +635,7 @@ var
   LDeclaration: INyxDocumentationDeclaredInterfaces;
   LInterfaces: INyxDocumentationInterfaceImplementations;
   LGeneric: INyxDocumentationGenericDeclaration;
+  LAliasDefinition: INyxDocumentationAliasDefinition;
 begin
   Result := RefBytes(AValue.Identity) + NyxUTF8ByteCount(AValue.Summary) + RefBytes(AValue.AliasTarget);
 
@@ -573,6 +662,9 @@ begin
 
   if Supports(AValue, INyxDocumentationDeclaredTypeExpression, LDeclared) then
     Inc(Result, TypeUseBytes(LDeclared.Definition) + Length(IntToStr(Ord(LDeclared.Family))));
+
+  if Supports(AValue, INyxDocumentationAliasDefinition, LAliasDefinition) then
+    Inc(Result, TypeUseBytes(LAliasDefinition.Definition));
 
   if Supports(AValue, INyxDocumentationAliasTargets, LTargets) then
     for LAt := 0 to LTargets.TargetCount - 1 do
@@ -658,6 +750,45 @@ type
   TDocumentationMember = class;
   { Forward immutable type-use owner for an exact private absence receipt. }
   TDocumentationTypeUse = class;
+  { Private root receipts are validated against the concrete canonical interface;
+    exposing another owner's pointer cannot earn immutable reuse. }
+  TDocumentationCompilerRoot = class;
+  { Only exact captured roots provide an inert context stream for equality. }
+  IDocumentationCompilerRootOwner = interface(IInterface)
+    ['{014254DA-C69D-48CD-B14E-6718EB13D124}']
+    function RootOwner: TDocumentationCompilerRoot;
+  end;
+  { Dynamic managed slots preserve copied-record and browser ownership rules. }
+  TDocumentationRoots = array of INyxDocumentationCompilerRoot;
+  { Detached root values retain neither construction nor executable receiver. }
+  TDocumentationCompilerRoot = class(TInterfacedObject,
+    INyxDocumentationCompilerRoot, IDocumentationCompilerRootOwner)
+  public
+    RootName: TNyxPascalSizeReference;
+    RootFamily: TNyxDocumentationIntrinsicFamily;
+    Context: INyxPascalCompilerContext;
+    Content: TNyxText;
+    ContentBytes: Integer;
+    function RootOwner: TDocumentationCompilerRoot;
+    function Name: TNyxPascalSizeReference;
+    function Family: TNyxDocumentationIntrinsicFamily;
+    function Facts: INyxPascalCompilerContext;
+  end;
+  { Operation-local framing reserves both temporary pieces and final joined
+    storage before formatting. Every SameFacts field is retained, in order. }
+  TDocumentationContextValues = class(TInterfacedObject, INyxPascalCompilerContextValues)
+  public
+    Scope: INyxDocumentationTypeConstruction;
+    Pieces: TNyxStrings;
+    Bytes: Integer;
+    PieceCapacity: Integer;
+    constructor Create(const AScope: INyxDocumentationTypeConstruction);
+    destructor Destroy; override;
+    procedure IntegerValue(AValue: Integer);
+    procedure TextValue(const AValue: TNyxText);
+    procedure AddPiece(const AValue: TNyxText);
+    function Finish: TNyxText;
+  end;
   { Private ownership must agree with the exact public interface before a nil
     formal map may keep the old zero-work absence path. }
   IDocumentationTypeUseOwner = interface(IInterface)
@@ -751,18 +882,21 @@ type
   { Frozen compound use owns its exact expression and copied binding vector.
     Named uses retain a real reference and no expression or binding rows. }
   TDocumentationTypeUse = class(TInterfacedObject, INyxDocumentationTypeUse,
-    INyxDocumentationFormalBindings, IDocumentationTypeUseOwner)
+    INyxDocumentationFormalBindings, INyxDocumentationCompilerRootBindings,
+    IDocumentationTypeUseOwner)
   public
     Named: TNyxDocumentationRef;
     Compound: INyxDocumentationTypeExpression;
     Bindings: array of TNyxDocumentationRef;
     Formals: TDocumentationFormals;
+    Roots: TDocumentationRoots;
     function TypeUseOwner: TDocumentationTypeUse;
     function Reference: TNyxDocumentationRef;
     function Expression: INyxDocumentationTypeExpression;
     function BindingCount: Integer;
     function BindingAt(AIndex: Integer): TNyxDocumentationRef;
     function FormalAt(AIndex: Integer): INyxDocumentationFormalParameter;
+    function RootAt(AIndex: Integer): INyxDocumentationCompilerRoot;
     function WithBinding(AIndex: Integer; const AReference: TNyxDocumentationRef): INyxDocumentationTypeUse;
   end;
   { A managed immutable parameter is deliberately separate from the old named
@@ -779,7 +913,15 @@ type
     function Passing: TNyxDocumentationParameterMode;
     function HasDefault: Boolean;
     function DefaultPascal: TNyxText;
-    function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+    function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration; virtual;
+  end;
+  { The specialized immutable owner cannot acquire a type or default through
+    a fluent copy; nil TypeUse is truthful only beside this explicit marker. }
+  TDocumentationUntypedParameter = class(TDocumentationParameterDeclaration,
+    INyxDocumentationUntypedParameter)
+  public
+    function DeclaredUntyped: Boolean;
+    function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration; override;
   end;
   { Rich callable owns only captured parameter/type uses, with no supplier or
     construction scope retained by its dynamic interface vector. }
@@ -800,6 +942,30 @@ type
   protected
     function CopyValue: TDocumentationMember; override;
     procedure AssignSignature(const AValue: INyxDocumentationSignature); override;
+  end;
+  { Fluent inert content copies preserve the field's captured type use. An
+    explicit OfType replaces compound syntax, without retaining its old edges. }
+  TDocumentationValueMember = class(TDocumentationMember, INyxDocumentationMemberValue)
+  public
+    DeclaredValue: INyxDocumentationTypeUse;
+    function DeclaredValueType: INyxDocumentationTypeUse;
+  protected
+    function CopyValue: TDocumentationMember; override;
+    procedure AssignValueType(const AValue: TNyxDocumentationRef); override;
+  end;
+  { A complete storage envelope survives fluent inert-content copies. Type
+    replacement preserves the initializer while enforcing its declared family. }
+  TDocumentationStorageMember = class(TDocumentationValueMember,
+    INyxDocumentationStorageDeclaration)
+  public
+    WrittenType, InitializerPresent: Boolean;
+    InitializerText: TNyxText;
+    function HasDeclaredType: Boolean;
+    function HasInitializer: Boolean;
+    function InitializerPascal: TNyxText;
+  protected
+    function CopyValue: TDocumentationMember; override;
+    procedure AssignValueType(const AValue: TNyxDocumentationRef); override;
   end;
   { Complex property facts stay specialized through fluent copies. OfType
     replaces its value use only, preserving every captured index expression. }
@@ -891,6 +1057,17 @@ type
     function HasTarget(APlatform: TNyxPlatform): Boolean;
     function TargetFor(APlatform: TNyxPlatform): TNyxDocumentationRef;
   end;
+  { Optional direct alias syntax survives ordinary fluent copies. An explicit
+    WithAlias replaces it with the old nominal contract, leaving no stale root. }
+  TDocumentationRootAlias = class(TDocumentationType, INyxDocumentationAliasDefinition)
+  private
+    FDefinition: INyxDocumentationTypeUse;
+  protected
+    function CopyValue: TDocumentationType; override;
+    procedure AssignAlias(const ATarget: TNyxDocumentationRef); override;
+  public
+    function Definition: INyxDocumentationTypeUse;
+  end;
 
 procedure TextBound(const AValue: TNyxText; AMaximum: Integer);
 var
@@ -966,6 +1143,127 @@ begin
   Result := FMember <> '';
 end;
 
+{ This selector is disjoint from all legacy ordinary member identities because
+  its member designator contains the actual Pascal operator keyword and space.
+  The overload field remains an ordinary bounded dotted identifier encoding. }
+function DecodeDocumentationOperator(const AKey: TNyxText;
+  out AKind: TNyxPascalOperatorKind; out ASelector: Integer): Boolean;
+const
+  CPrefix = 'NyxOperator.K';
+var
+  LAt, LValue, LFirst: Integer;
+begin
+  Result := False;
+  AKind := pokNone;
+  ASelector := 0;
+
+  if Pos(CPrefix, AKey) <> 1 then
+    Exit;
+  LFirst := Length(CPrefix) + 1;
+  LAt := LFirst;
+  LValue := 0;
+  while (LAt <= Length(AKey)) and (AKey[LAt] in ['0'..'9']) do
+  begin
+    LValue := LValue * 10 + Ord(AKey[LAt]) - Ord('0');
+
+    if LValue > Ord(High(TNyxPascalOperatorKind)) then
+      Exit;
+    Inc(LAt);
+  end;
+
+  if (LAt = LFirst) or (LValue <= Ord(pokUnknown)) then
+    Exit;
+
+  if LAt <= Length(AKey) then
+  begin
+
+    if (AKey[LAt] <> '.') or (LAt = Length(AKey)) then
+      Exit;
+    ASelector := LAt + 1;
+  end;
+  AKind := TNyxPascalOperatorKind(LValue);
+  Result := True;
+end;
+
+{ Closed authored spellings are checked against the syntax owner's existing
+  operator families. This is no operand parser, overload selection or ABI proof. }
+function DocumentationOperatorToken(AKind: TNyxPascalOperatorKind;
+  const AToken: TNyxText): Boolean;
+const
+  CNames: array[TNyxPascalOperatorKind] of TNyxText =
+    ('', '', 'add', 'subtract', 'multiply', 'divide', 'intdivide', 'modulus', '',
+      'equal', 'notequal', 'lessthan', 'lessthanorequal', 'greaterthan',
+      'greaterthanorequal', 'implicit', 'explicit', 'not', 'and', 'or', 'xor',
+      'shl', 'shr', 'in', '', 'inc', 'dec', 'enumerator', 'initialize',
+      'finalize', 'addref', 'copy');
+begin
+  Result := False;
+
+  if (Ord(AKind) <= Ord(pokUnknown)) or
+    (Ord(AKind) > Ord(High(TNyxPascalOperatorKind))) or (Length(AToken) > 32) then
+    Exit;
+
+  if (CNames[AKind] <> '') and (Fold(AToken) = CNames[AKind]) then
+    Exit(True);
+  case AKind of
+    pokAdd: Result := AToken = '+';
+    pokSubtract: Result := AToken = '-';
+    pokMultiply: Result := AToken = '*';
+    pokDivide: Result := AToken = '/';
+    pokPower: Result := AToken = '**';
+    pokEqual: Result := AToken = '=';
+    pokNotEqual: Result := AToken = '<>';
+    pokLess: Result := AToken = '<';
+    pokLessEqual: Result := AToken = '<=';
+    pokGreater: Result := AToken = '>';
+    pokGreaterEqual: Result := AToken = '>=';
+    pokImplicit: Result := AToken = ':=';
+    pokSymmetricDifference: Result := AToken = '><';
+  else
+    Result := False;
+  end;
+end;
+
+function TNyxDocumentationRef.IsOperator: Boolean;
+begin
+  Result := Pos('operator ', FMember) = 1;
+end;
+
+function TNyxDocumentationRef.OperatorKind: TNyxPascalOperatorKind;
+var
+  LSelector: Integer;
+begin
+  Result := pokNone;
+  Validate;
+
+  if not IsOperator or not DecodeDocumentationOperator(FOverload, Result, LSelector) then
+    raise ENyxDocumentation.Create('An ordinary reference has no authored operator family');
+end;
+
+function TNyxDocumentationRef.OperatorToken: TNyxText;
+begin
+  Validate;
+
+  if not IsOperator then
+    raise ENyxDocumentation.Create('An ordinary reference has no authored operator token');
+  Result := Copy(FMember, Length('operator ') + 1, Length(FMember));
+end;
+
+function TNyxDocumentationRef.OperatorOverloadKey: TNyxText;
+var
+  LKind: TNyxPascalOperatorKind;
+  LSelector: Integer;
+begin
+  Validate;
+
+  if not IsOperator or not DecodeDocumentationOperator(FOverload, LKind, LSelector) then
+    raise ENyxDocumentation.Create('An ordinary reference has no operator overload selector');
+  Result := '';
+
+  if LSelector > 0 then
+    Result := Copy(FOverload, LSelector, Length(FOverload));
+end;
+
 function TNyxDocumentationRef.Owner: TNyxDocumentationRef;
 begin
   Result := Self;
@@ -974,6 +1272,9 @@ begin
 end;
 
 procedure TNyxDocumentationRef.Validate;
+var
+  LKind: TNyxPascalOperatorKind;
+  LSelector: Integer;
 begin
   NameBound(FUnit, True);
 
@@ -986,7 +1287,19 @@ begin
     raise ENyxDocumentation.Create('Documentation generic arity is outside its allowance');
 
   if IsMember then
-    NameBound(FMember, False)
+  begin
+
+    if IsOperator then
+    begin
+      NameBound(FOverload, True);
+
+      if not DecodeDocumentationOperator(FOverload, LKind, LSelector) or
+        not DocumentationOperatorToken(LKind, Copy(FMember, Length('operator ') + 1, Length(FMember))) then
+        raise ENyxDocumentation.Create('An operator identity requires its exact checked family and authored token');
+    end
+    else
+      NameBound(FMember, False);
+  end
   else if FOverload <> '' then
     raise ENyxDocumentation.Create('An overload identity requires its declaring member');
 
@@ -1033,6 +1346,7 @@ function NyxDocumentationMember(const AOwner: TNyxDocumentationRef;
   const AName, AOverload: TNyxText): TNyxDocumentationRef;
 begin
   AOwner.Validate;
+  NameBound(AName, False);
 
   if AOwner.IsMember then
     raise ENyxDocumentation.Create('A member identity requires its original declaring unit or type');
@@ -1043,6 +1357,25 @@ begin
 
   if not Result.IsMember then
     raise ENyxDocumentation.Create('A member identity requires its Pascal name');
+end;
+
+function NyxDocumentationOperator(const AOwner: TNyxDocumentationRef;
+  AKind: TNyxPascalOperatorKind; const AToken, AOverload: TNyxText): TNyxDocumentationRef;
+begin
+  AOwner.Validate;
+
+  if AOwner.IsMember or not DocumentationOperatorToken(AKind, AToken) then
+    raise ENyxDocumentation.Create('An operator requires its original declaring owner and checked authored family');
+  Result := AOwner;
+  Result.FMember := 'operator ' + AToken;
+  Result.FOverload := 'NyxOperator.K' + IntToStr(Ord(AKind));
+
+  if AOverload <> '' then
+  begin
+    NameBound(AOverload, True);
+    Result.FOverload := Result.FOverload + '.' + AOverload;
+  end;
+  Result.Validate;
 end;
 
 function NyxDocumentationParameter(const AName: TNyxText;
@@ -1268,11 +1601,15 @@ begin
   if AIdentity.Owner.IsUnit then
   begin
 
-    if not (AKind in [ndmFactory, ndmRoutine, ndmField]) then
+    if not (AKind in [ndmFactory, ndmRoutine, ndmField, ndmOperator,
+      ndmConstant, ndmVariable, ndmResourceString]) then
       raise ENyxDocumentation.Create('A unit owns factories, routines and global fields, not class members');
   end
-  else if AKind = ndmRoutine then
-    raise ENyxDocumentation.Create('A global routine requires its actual declaring unit');
+  else if AKind in [ndmRoutine, ndmVariable, ndmResourceString] then
+    raise ENyxDocumentation.Create('A global declaration requires its actual declaring unit');
+
+  if AIdentity.IsOperator <> (AKind = ndmOperator) then
+    raise ENyxDocumentation.Create('An authored operator designator requires the operator member family');
 end;
 
 function NewNyxDocumentationMember(const AIdentity: TNyxDocumentationRef;
@@ -1438,7 +1775,7 @@ begin
     raise ENyxDocumentation.Create('A unit member cannot invent an authored class or static modifier');
 
   if not (AMember.Kind in [ndmConstructor, ndmFactory, ndmMethod,
-    ndmFluentMethod, ndmRoutine]) and (AIntent.CallingConvention <> prcDefault) then
+    ndmFluentMethod, ndmRoutine, ndmDestructor, ndmOperator]) and (AIntent.CallingConvention <> prcDefault) then
     raise ENyxDocumentation.Create('Only callable members own an authored calling convention');
 
   if (AMember.Kind = ndmEnumValue) and (AIntent.DeclaredClass or AIntent.DeclaredStatic) then
@@ -1566,8 +1903,12 @@ var
 begin
   LFrozen := CaptureNyxDocumentationSignature(AValue);
 
-  if not (FKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+  if not (FKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine,
+    ndmDestructor, ndmOperator]) then
     raise ENyxDocumentation.Create('This documentation member has no call signature');
+
+  if (FKind = ndmDestructor) and (LFrozen <> nil) and LFrozen.ResultType.Defined then
+    raise ENyxDocumentation.Create('A destructor has no declared function result');
   LNext := CopyValue;
   LHold := LNext;
   LNext.AssignSignature(LFrozen);
@@ -1583,7 +1924,8 @@ begin
   AValue.Validate;
 
   if AValue.IsUnit or AValue.IsMember or
-    not (FKind in [ndmProperty, ndmField, ndmEvent, ndmEnumValue]) then
+    not (FKind in [ndmProperty, ndmField, ndmEvent, ndmEnumValue,
+      ndmConstant, ndmVariable, ndmResourceString]) then
     raise ENyxDocumentation.Create('This documentation member cannot declare a value type');
   LNext := CopyValue;
   LHold := LNext;
@@ -1738,6 +2080,294 @@ begin
       raise ENyxDocumentationCancelled.Create(E.Message);
   end;
   CheckCancellation(AScope);
+end;
+
+{ Count before IntToStr, including Low(Integer), without negation overflow. }
+function DecimalBytes(AValue: Integer): Integer;
+begin
+  Result := 1 + Ord(AValue < 0);
+
+  if AValue > 0 then
+    AValue := -AValue;
+  while AValue <= -10 do
+  begin
+    Inc(Result);
+    AValue := AValue div 10;
+  end;
+end;
+
+{ The pure reserve owner uses its own cancellation family; core metadata keeps
+  the established ENyxDocumentationCancelled boundary without changing it. }
+procedure RootReserve(ABytes: Integer; const AScope: INyxDocumentationTypeConstruction);
+begin
+  CheckCancellation(AScope);
+  try
+    ReserveNyxDocumentationTypeBytes(ABytes, AScope);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  CheckCancellation(AScope);
+end;
+
+constructor TDocumentationContextValues.Create(const AScope: INyxDocumentationTypeConstruction);
+begin
+  inherited Create;
+  Scope := AScope;
+  Pieces := TNyxStrings.Create;
+end;
+
+destructor TDocumentationContextValues.Destroy;
+begin
+  Pieces.Free;
+  inherited Destroy;
+end;
+
+procedure TDocumentationContextValues.AddPiece(const AValue: TNyxText);
+var
+  LCapacity: Integer;
+begin
+
+  if Pieces.Count = PieceCapacity then
+  begin
+    { Match the existing text owner's actual geometric allocation. Field bytes
+      are reserved separately before formatting, and this work precedes Add. }
+    LCapacity := Pieces.Count * 2 + 16;
+    FormalWork(Scope, LCapacity);
+    Pieces.Add(AValue);
+    PieceCapacity := LCapacity;
+  end
+  else
+    Pieces.Add(AValue);
+end;
+
+procedure TDocumentationContextValues.IntegerValue(AValue: Integer);
+var
+  LBytes: Integer;
+begin
+  LBytes := DecimalBytes(AValue) + 2; { typed i + decimal + semicolon }
+  FormalWork(Scope, LBytes + 1);
+
+  if LBytes > NyxDocumentationMaximumBytes - Bytes then
+    raise ENyxDocumentation.Create('Compiler context exceeds declaration bytes');
+  RootReserve(LBytes * 2, Scope);
+  CheckCancellation(Scope);
+  AddPiece('i' + IntToStr(AValue) + ';');
+  Inc(Bytes, LBytes);
+end;
+
+procedure TDocumentationContextValues.TextValue(const AValue: TNyxText);
+var
+  LText: TNyxText;
+  LBytes, LPayload: Integer;
+begin
+  LText := AValue;
+  FormalWork(Scope, Length(LText) + 1);
+  LPayload := NyxUTF8ByteCount(LText);
+  LBytes := 2 + DecimalBytes(LPayload) + LPayload; { typed t + length + colon }
+
+  if LBytes > NyxDocumentationMaximumBytes - Bytes then
+    raise ENyxDocumentation.Create('Compiler context exceeds declaration bytes');
+  RootReserve(LBytes * 2, Scope);
+  CheckCancellation(Scope);
+  AddPiece('t' + IntToStr(LPayload) + ':' + LText);
+  Inc(Bytes, LBytes);
+end;
+
+function TDocumentationContextValues.Finish: TNyxText;
+var
+  LCandidate: TNyxText;
+begin
+  FormalWork(Scope, Bytes + Pieces.Count + 1);
+  LCandidate := Pieces.Join;
+  CheckCancellation(Scope);
+  Result := LCandidate;
+end;
+
+function TDocumentationCompilerRoot.RootOwner: TDocumentationCompilerRoot;
+begin
+  Result := Self;
+end;
+
+function TDocumentationCompilerRoot.Name: TNyxPascalSizeReference;
+begin
+  Result := RootName;
+end;
+
+function TDocumentationCompilerRoot.Family: TNyxDocumentationIntrinsicFamily;
+begin
+  Result := RootFamily;
+end;
+
+function TDocumentationCompilerRoot.Facts: INyxPascalCompilerContext;
+begin
+  Result := Context;
+end;
+
+function NyxDocumentationCompilerRootContent(const ARoot: INyxDocumentationCompilerRoot): TNyxText;
+var
+  LRoot: INyxDocumentationCompilerRoot;
+  LPrivate: IDocumentationCompilerRootOwner;
+  LOwner: TDocumentationCompilerRoot;
+  LCanonical: INyxDocumentationCompilerRoot;
+begin
+  LRoot := ARoot;
+
+  if (LRoot = nil) or not Supports(LRoot, IDocumentationCompilerRootOwner, LPrivate) then
+    raise ENyxDocumentation.Create('Compiler-root content requires a captured immutable owner');
+  LOwner := LPrivate.RootOwner;
+
+  if (LOwner = nil) or (LOwner.ClassType <> TDocumentationCompilerRoot) then
+    raise ENyxDocumentation.Create('Missing captured compiler-root owner');
+  LCanonical := LOwner;
+
+  if LCanonical <> LRoot then
+    raise ENyxDocumentation.Create('A compiler root cannot borrow another captured owner');
+  Result := LOwner.Content;
+end;
+
+function NewNyxDocumentationCompilerRoot(const AName: TNyxPascalSizeReference;
+  AFamily: TNyxDocumentationIntrinsicFamily; const AFacts: INyxPascalCompilerContext;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationCompilerRoot;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LContext: INyxPascalCompilerContext;
+  LName: TNyxPascalSizeReference;
+  LSink: TDocumentationContextValues;
+  LSinkLease: INyxPascalCompilerContextValues;
+  LOwner: TDocumentationCompilerRoot;
+  LCandidate: INyxDocumentationCompilerRoot;
+begin
+  Result := nil;
+  LScope := AConstruction;
+  LContext := AFacts;
+  LName := AName;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+
+  if (LContext = nil) or (LName.Name = '') or (Pos('.', LName.Name) <> 0) or
+    (Ord(AFamily) < Ord(Low(TNyxDocumentationIntrinsicFamily))) or
+    (Ord(AFamily) > Ord(High(TNyxDocumentationIntrinsicFamily))) then
+    raise ENyxDocumentation.Create('Compiler-root metadata requires explicit name, family and context');
+  FormalText(LScope, LName.Name);
+  LSink := TDocumentationContextValues.Create(LScope);
+  LSinkLease := LSink;
+  try
+    VisitNyxPascalCompilerContextValues(LContext, LSinkLease, LScope);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  CheckCancellation(LScope);
+
+  if NyxPascalCompilerScope(LContext) <> pcsoSystemBootstrap then
+    raise ENyxDocumentation.Create('A compiler root requires exact bootstrap-scope context');
+  LOwner := TDocumentationCompilerRoot.Create;
+  LCandidate := LOwner;
+  LOwner.RootName := LName;
+  LOwner.RootFamily := AFamily;
+  LOwner.Context := LContext;
+  LOwner.Content := LSink.Finish;
+  LOwner.ContentBytes := LSink.Bytes;
+  AdmitBytes(LSink.Bytes + NyxUTF8ByteCount(LName.Name) + DecimalBytes(Ord(AFamily)));
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
+function SameRoot(const ASource, AFrozen: INyxDocumentationCompilerRoot;
+  const AScope: INyxDocumentationTypeConstruction; ACharge: Boolean = True): Boolean;
+var
+  LName: TNyxPascalSizeReference;
+  LFamily: TNyxDocumentationIntrinsicFamily;
+  LFacts: INyxPascalCompilerContext;
+begin
+  Result := (ASource = nil) and (AFrozen = nil);
+
+  if (ASource = nil) or (AFrozen = nil) then
+    Exit;
+
+  if ACharge then
+    FormalWork(AScope, 4);
+  CheckCancellation(AScope);
+  LName := ASource.Name;
+
+  CheckCancellation(AScope);
+  LFamily := ASource.Family;
+
+  CheckCancellation(AScope);
+  LFacts := ASource.Facts;
+  CheckCancellation(AScope);
+  Result := (LName.Name = AFrozen.Name.Name) and (LFamily = AFrozen.Family) and
+    (LFacts = AFrozen.Facts);
+end;
+
+function CaptureRoot(const ASource: INyxDocumentationCompilerRoot;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationCompilerRoot;
+var
+  LSource, LCandidate, LCanonical: INyxDocumentationCompilerRoot;
+  LPrivate: IDocumentationCompilerRootOwner;
+  LOwner: TDocumentationCompilerRoot;
+  LName: TNyxPascalSizeReference;
+  LFamily: TNyxDocumentationIntrinsicFamily;
+  LFacts: INyxPascalCompilerContext;
+begin
+  Result := nil;
+  LSource := ASource;
+  CheckCancellation(AScope);
+
+  if LSource = nil then
+    Exit;
+  FormalWork(AScope);
+
+  if Supports(LSource, IDocumentationCompilerRootOwner, LPrivate) then
+  begin
+    CheckCancellation(AScope);
+    LOwner := LPrivate.RootOwner;
+    CheckCancellation(AScope);
+
+    if (LOwner = nil) or (LOwner.ClassType <> TDocumentationCompilerRoot) then
+      raise ENyxDocumentation.Create('Missing private compiler-root owner');
+    LCanonical := LOwner;
+
+    if LCanonical <> LSource then
+      raise ENyxDocumentation.Create('A root supplier cannot borrow private immutable authority');
+    Result := LSource;
+    Exit;
+  end;
+  FormalWork(AScope);
+  LName := LSource.Name;
+  FormalWork(AScope);
+  LFamily := LSource.Family;
+  FormalWork(AScope);
+  LFacts := LSource.Facts;
+  CheckCancellation(AScope);
+  LCandidate := NewNyxDocumentationCompilerRoot(LName, LFamily, LFacts, AScope);
+
+  if not SameRoot(LSource, LCandidate, AScope) then
+    raise ENyxDocumentation.Create('Compiler-root fields changed during capture');
+  CheckCancellation(AScope);
+  Result := LCandidate;
+end;
+
+{ The captured stream already has an admitted exact UTF-8 byte count. Measuring
+  a shared root does not repeatedly rescan the entire immutable context. }
+function RootBytes(const ARoot: INyxDocumentationCompilerRoot): Integer;
+var
+  LPrivate: IDocumentationCompilerRootOwner;
+  LOwner: TDocumentationCompilerRoot;
+begin
+  Result := 0;
+
+  if ARoot = nil then
+    Exit;
+  NyxDocumentationCompilerRootContent(ARoot);
+  Supports(ARoot, IDocumentationCompilerRootOwner, LPrivate);
+  LOwner := LPrivate.RootOwner;
+  Result := LOwner.ContentBytes + NyxUTF8ByteCount(LOwner.RootName.Name) + DecimalBytes(Ord(LOwner.RootFamily));
 end;
 
 function SameFormal(const AValue, AFrozen: INyxDocumentationFormalParameter;
@@ -2114,6 +2744,54 @@ begin
     Result := Formals[AIndex];
 end;
 
+function TDocumentationTypeUse.RootAt(AIndex: Integer): INyxDocumentationCompilerRoot;
+begin
+  BindingAt(AIndex);
+  Result := nil;
+
+  if Length(Roots) <> 0 then
+    Result := Roots[AIndex];
+end;
+
+function LegacyRootMap(const AUse: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LPrivate: IDocumentationTypeUseOwner;
+  LOwner: TDocumentationTypeUse;
+  LCanonical: INyxDocumentationTypeUse;
+begin
+  Result := False;
+  CheckCancellation(AScope);
+
+  if not Supports(AUse, IDocumentationTypeUseOwner, LPrivate) then
+  begin
+    CheckCancellation(AScope);
+    Exit;
+  end;
+  LOwner := LPrivate.TypeUseOwner;
+  CheckCancellation(AScope);
+
+  if LOwner = nil then
+    raise ENyxDocumentation.Create('Missing private type-use owner');
+  LCanonical := LOwner;
+
+  if LCanonical <> AUse then
+    raise ENyxDocumentation.Create('A root map cannot borrow another type-use owner');
+  Result := Length(LOwner.Roots) = 0;
+end;
+
+procedure CheckRootBinding(const AExpression: INyxDocumentationTypeExpression;
+  AIndex: Integer; const ARoot: INyxDocumentationCompilerRoot);
+begin
+
+  if ARoot = nil then
+    Exit;
+
+  if (AExpression = nil) or (AIndex < 0) or
+    (AIndex >= AExpression.NamedUseCount) or (AExpression.NamedUseArity(AIndex) <> 0) then
+    raise ENyxDocumentation.Create('A compiler root binds only a nongeneric named occurrence');
+end;
+
 function LegacyFormalMap(const AUse: INyxDocumentationTypeUse;
   const AScope: INyxDocumentationTypeConstruction): Boolean;
 var
@@ -2203,6 +2881,11 @@ begin
 
   if Length(Formals) <> 0 then
     Dec(LBytes, FormalBytes(Formals[AIndex]));
+
+  if Length(Roots) <> 0 then
+
+    if Roots[AIndex] <> nil then
+      Dec(LBytes, RootBytes(Roots[AIndex]));
   AdmitBytes(LBytes);
   LNext := TDocumentationTypeUse.Create;
   LLease := LNext;
@@ -2224,6 +2907,22 @@ begin
 
     if not LAny then
       LNext.Formals := nil;
+  end;
+
+  if Length(Roots) <> 0 then
+  begin
+    SetLength(LNext.Roots, Length(Roots));
+    LAny := False;
+    for LAt := 0 to High(Roots) do
+    begin
+
+      if LAt <> AIndex then
+        LNext.Roots[LAt] := Roots[LAt];
+      LAny := LAny or (LNext.Roots[LAt] <> nil);
+    end;
+
+    if not LAny then
+      LNext.Roots := nil;
   end;
   TypeUseBytes(LLease);
   Result := LLease;
@@ -2274,6 +2973,10 @@ var
   LReadCount: Integer;
   LReadExpression: INyxDocumentationTypeExpression;
   LReadReference: TNyxDocumentationRef;
+  LRootCapability, LFinalRootCapability: INyxDocumentationCompilerRootBindings;
+  LRootSources: TDocumentationRoots;
+  LRoot: INyxDocumentationCompilerRoot;
+  LHasRoots, LLegacyRoots: Boolean;
 begin
   Result := nil;
   AScope.Spend;
@@ -2292,6 +2995,9 @@ begin
   LLegacyFormals := LegacyFormalMap(AValue, AScope);
   CheckCancellation(AScope);
   LHasFormals := Supports(AValue, INyxDocumentationFormalBindings, LFormalCapability);
+  CheckCancellation(AScope);
+  LLegacyRoots := LegacyRootMap(AValue, AScope);
+  LHasRoots := Supports(AValue, INyxDocumentationCompilerRootBindings, LRootCapability);
   CheckCancellation(AScope);
 
   if LReference.Defined then
@@ -2374,6 +3080,35 @@ begin
       if not LAny then
         LOwner.Formals := nil;
     end;
+
+    if LHasRoots and not LLegacyRoots then
+    begin
+      FormalWork(AScope, LCount * 2 + 1);
+      SetLength(LOwner.Roots, LCount);
+      SetLength(LRootSources, LCount);
+      LAny := False;
+      for LAt := 0 to LCount - 1 do
+      begin
+        FormalWork(AScope);
+        LRoot := LRootCapability.RootAt(LAt);
+        CheckCancellation(AScope);
+        LRootSources[LAt] := LRoot;
+
+        if LRoot = nil then
+          Continue;
+
+        if LOwner.Bindings[LAt].Defined or (LOwner.FormalAt(LAt) <> nil) then
+          raise ENyxDocumentation.Create('A compiler root cannot also be nominal or formal');
+        LOwner.Roots[LAt] := CaptureRoot(LRoot, AScope);
+        CheckRootBinding(LOwner.Compound, LAt, LOwner.Roots[LAt]);
+        Inc(LBytes, RootBytes(LOwner.Roots[LAt]));
+        AdmitBytes(LBytes);
+        LAny := True;
+      end;
+
+      if not LAny then
+        LOwner.Roots := nil;
+    end;
     for LAt := 0 to LCount - 1 do
     begin
       AScope.Spend;
@@ -2424,6 +3159,44 @@ begin
     (LReference.Defined and not AValue.Reference.Same(LReference)) then
     raise ENyxDocumentation.Create('Type-use envelope changed before publication');
   CheckCancellation(AScope);
+
+  if Supports(AValue, INyxDocumentationCompilerRootBindings, LFinalRootCapability) <> LHasRoots then
+    raise ENyxDocumentation.Create('Compiler-root capability changed during capture');
+  CheckCancellation(AScope);
+
+  if LHasRoots and (LFinalRootCapability <> LRootCapability) then
+    raise ENyxDocumentation.Create('Compiler-root capability owner changed during capture');
+
+  if LHasRoots and not LLegacyRoots then
+  begin
+    FormalWork(AScope, LCount * 8 + 4);
+    for LAt := 0 to LCount - 1 do
+    begin
+      LRoot := LRootCapability.RootAt(LAt);
+      CheckCancellation(AScope);
+
+      if (LRoot <> LRootSources[LAt]) or not SameRoot(LRoot, LOwner.RootAt(LAt), AScope, False) then
+        raise ENyxDocumentation.Create('Compiler-root slot changed before publication');
+      LBound := AValue.BindingAt(LAt);
+      CheckCancellation(AScope);
+
+      if (LBound.Defined <> LOwner.Bindings[LAt].Defined) or
+        (LBound.Defined and not LBound.Same(LOwner.Bindings[LAt])) then
+        raise ENyxDocumentation.Create('Nominal binding changed at final root observation');
+    end;
+    LReadCount := AValue.BindingCount;
+    CheckCancellation(AScope);
+    LReadExpression := AValue.Expression;
+    CheckCancellation(AScope);
+    LReadReference := AValue.Reference;
+    CheckCancellation(AScope);
+
+    if (LReadCount <> LCount) or (LReadExpression <> LExpression) or
+      (LReadReference.Defined <> LReference.Defined) or
+      (LReference.Defined and not LReadReference.Same(LReference)) then
+      raise ENyxDocumentation.Create('Compiler-root type-use envelope changed before publication');
+  end;
+  CheckCancellation(AScope);
   Result := LFrozen;
 end;
 
@@ -2464,6 +3237,87 @@ begin
   if Supports(ASource, INyxDocumentationFormalBindings, LFinal) <> LHasSource then
     Exit(False);
   Result := not LHasSource or (LSource = LFinal);
+  CheckCancellation(AScope);
+end;
+
+{ New roots add no traversal work to privately captured absent legacy maps. }
+function SameRootMap(const ASource, AFrozen: INyxDocumentationTypeUse;
+  const AScope: INyxDocumentationTypeConstruction): Boolean;
+var
+  LSource, LFinal, LCaptured: INyxDocumentationCompilerRootBindings;
+  LRoot, LExpected: INyxDocumentationCompilerRoot;
+  LReference, LExpectedReference: TNyxDocumentationRef;
+  LExpression: INyxDocumentationTypeExpression;
+  LText: TNyxText;
+  LCompareUnits: Integer;
+  LAt: Integer;
+  LHasSource, LHasFrozen: Boolean;
+begin
+  Result := True;
+
+  if LegacyRootMap(ASource, AScope) and LegacyRootMap(AFrozen, AScope) then
+    Exit;
+  LHasSource := Supports(ASource, INyxDocumentationCompilerRootBindings, LSource);
+  CheckCancellation(AScope);
+  LHasFrozen := Supports(AFrozen, INyxDocumentationCompilerRootBindings, LCaptured);
+
+  if not LHasSource and LegacyRootMap(AFrozen, AScope) then
+    Exit;
+  LCompareUnits := 0;
+
+  if AFrozen.Expression <> nil then
+    LCompareUnits := Length(AFrozen.Expression.Text);
+  FormalWork(AScope, AFrozen.BindingCount * 8 + LCompareUnits + 5);
+  for LAt := 0 to AFrozen.BindingCount - 1 do
+  begin
+    LRoot := nil;
+    LExpected := nil;
+
+    if LHasSource then
+    begin
+      LRoot := LSource.RootAt(LAt);
+      CheckCancellation(AScope);
+    end;
+
+    if LHasFrozen then
+      LExpected := LCaptured.RootAt(LAt);
+
+    if not SameRoot(LRoot, LExpected, AScope, False) then
+      Exit(False);
+    LReference := ASource.BindingAt(LAt);
+    CheckCancellation(AScope);
+    LExpectedReference := AFrozen.BindingAt(LAt);
+
+    if (LReference.Defined <> LExpectedReference.Defined) or
+      (LReference.Defined and not LReference.Same(LExpectedReference)) then
+      Exit(False);
+  end;
+
+  if Supports(ASource, INyxDocumentationCompilerRootBindings, LFinal) <> LHasSource then
+    Exit(False);
+  CheckCancellation(AScope);
+  Result := not LHasSource or (LSource = LFinal);
+  LReference := ASource.Reference;
+  CheckCancellation(AScope);
+  LExpectedReference := AFrozen.Reference;
+  LExpression := ASource.Expression;
+  CheckCancellation(AScope);
+  Result := Result and (LReference.Defined = LExpectedReference.Defined) and
+    (not LReference.Defined or LReference.Same(LExpectedReference)) and
+    ((LExpression = nil) = (AFrozen.Expression = nil)) and
+    (ASource.BindingCount = AFrozen.BindingCount);
+  CheckCancellation(AScope);
+
+  if Result and (LExpression <> nil) then
+  begin
+    LText := LExpression.Text;
+    CheckCancellation(AScope);
+    Result := (Length(LText) = LCompareUnits) and (LText = AFrozen.Expression.Text);
+    CheckCancellation(AScope);
+
+    if Result then
+      Result := LExpression.Occurrence = AFrozen.Expression.Occurrence;
+  end;
   CheckCancellation(AScope);
 end;
 
@@ -2514,6 +3368,24 @@ begin
     LCopy.Bindings[LAt] := LOwner.Bindings[LAt];
     LCopy.Formals[LAt] := LOwner.FormalAt(LAt);
   end;
+
+  if Length(LOwner.Roots) <> 0 then
+  begin
+    FormalWork(LScope, Length(LOwner.Roots) + 1);
+    SetLength(LCopy.Roots, Length(LOwner.Roots));
+    LAny := False;
+    for LAt := 0 to High(LOwner.Roots) do
+    begin
+
+      if (LAt <> AIndex) or (LFormal = nil) then
+        LCopy.Roots[LAt] := LOwner.Roots[LAt];
+      LAny := LAny or (LCopy.Roots[LAt] <> nil);
+    end;
+
+    if not LAny then
+      LCopy.Roots := nil;
+  end;
+
   LCopy.Bindings[AIndex] := Default(TNyxDocumentationRef);
   LCopy.Formals[AIndex] := LFormal;
   LAny := False;
@@ -2532,11 +3404,84 @@ begin
   Result := LCandidate;
 end;
 
+function WithNyxDocumentationCompilerRootBinding(const AUse: INyxDocumentationTypeUse;
+  AIndex: Integer; const ARoot: INyxDocumentationCompilerRoot;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeUse;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LSource, LFrozen, LCandidate: INyxDocumentationTypeUse;
+  LRootSource, LRoot: INyxDocumentationCompilerRoot;
+  LOwner, LCopy: TDocumentationTypeUse;
+  LPrivate: IDocumentationTypeUseOwner;
+  LAt: Integer;
+  LAny: Boolean;
+begin
+  Result := nil;
+  LScope := AConstruction;
+  LSource := AUse;
+  LRootSource := ARoot;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  LFrozen := CaptureTypeUse(LSource, LScope);
+  FormalWork(LScope);
+  LFrozen.BindingAt(AIndex);
+  LRoot := CaptureRoot(LRootSource, LScope);
+  CheckRootBinding(LFrozen.Expression, AIndex, LRoot);
+  Supports(LFrozen, IDocumentationTypeUseOwner, LPrivate);
+  LOwner := LPrivate.TypeUseOwner;
+  FormalWork(LScope, LFrozen.BindingCount * 3 + 1);
+  LCopy := TDocumentationTypeUse.Create;
+  LCandidate := LCopy;
+  LCopy.Compound := LOwner.Compound;
+  SetLength(LCopy.Bindings, Length(LOwner.Bindings));
+  SetLength(LCopy.Formals, Length(LOwner.Bindings));
+  SetLength(LCopy.Roots, Length(LOwner.Bindings));
+  for LAt := 0 to High(LCopy.Bindings) do
+  begin
+    LCopy.Bindings[LAt] := LOwner.Bindings[LAt];
+    LCopy.Formals[LAt] := LOwner.FormalAt(LAt);
+    LCopy.Roots[LAt] := LOwner.RootAt(LAt);
+  end;
+  LCopy.Roots[AIndex] := LRoot;
+
+  if LRoot <> nil then
+  begin
+    LCopy.Bindings[AIndex] := Default(TNyxDocumentationRef);
+    LCopy.Formals[AIndex] := nil;
+  end;
+  LAny := False;
+  for LAt := 0 to High(LCopy.Formals) do
+    LAny := LAny or (LCopy.Formals[LAt] <> nil);
+
+  if not LAny then
+    LCopy.Formals := nil;
+  LAny := False;
+  for LAt := 0 to High(LCopy.Roots) do
+    LAny := LAny or (LCopy.Roots[LAt] <> nil);
+
+  if not LAny then
+    LCopy.Roots := nil;
+  TypeUseBytes(LCandidate);
+
+  if (ARoot <> LRootSource) or not SameRoot(LRootSource, LRoot, LScope) or
+    not SameTypeUseObservation(LSource, LFrozen, LScope) then
+    raise ENyxDocumentation.Create('Compiler-root attachment changed before publication');
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
 procedure InterfaceWork(const AScope: INyxDocumentationTypeConstruction;
   AUnits: Integer = 1);
 begin
   CheckCancellation(AScope);
-  AScope.Spend(AUnits);
+  try
+    AScope.Spend(AUnits);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
   CheckCancellation(AScope);
 end;
 
@@ -2728,6 +3673,9 @@ begin
 
   if Result then
     Result := SameFormalMap(ASource, AFrozen, AScope);
+
+  if Result then
+    Result := SameRootMap(ASource, AFrozen, AScope);
 end;
 
 function CaptureInterfaceImplementations(const AValue: INyxDocumentationInterfaceImplementations;
@@ -2870,6 +3818,117 @@ begin
   Result := LNext;
 end;
 
+function TDocumentationUntypedParameter.DeclaredUntyped: Boolean;
+begin
+  Result := True;
+end;
+
+function TDocumentationUntypedParameter.WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+begin
+  Result := nil;
+  raise ENyxDocumentation.Create('An explicitly untyped parameter cannot declare a default (' +
+    IntToStr(Length(APascal)) + ' storage units offered)');
+end;
+
+function CaptureUntypedParameter(const AValue: INyxDocumentationParameterDeclaration;
+  const ACapability: INyxDocumentationUntypedParameter;
+  AOccurrence: TNyxDocumentationTypeOccurrence;
+  const AScope: INyxDocumentationTypeConstruction): INyxDocumentationParameterDeclaration;
+var
+  LSource: INyxDocumentationParameterDeclaration;
+  LCapability, LAgain: INyxDocumentationUntypedParameter;
+  LScope: INyxDocumentationTypeConstruction;
+  LOwner: TDocumentationUntypedParameter;
+  LCandidate: INyxDocumentationParameterDeclaration;
+  LName: TNyxText;
+  LMode: TNyxDocumentationParameterMode;
+  procedure Admit;
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+  end;
+begin
+  Result := nil;
+  LSource := AValue;
+  LCapability := ACapability;
+  LScope := AScope;
+  Admit;
+
+  if (AOccurrence <> ndtoParameter) or not LCapability.DeclaredUntyped then
+    raise ENyxDocumentation.Create('Only an explicit callable parameter can be untyped');
+  Admit;
+  LName := LSource.Name;
+  NameBound(LName, False);
+  LScope.AdmitText(LName);
+  CheckCancellation(LScope);
+  Admit;
+  LMode := LSource.Passing;
+
+  if (Ord(LMode) < Ord(Low(TNyxDocumentationParameterMode))) or
+    (Ord(LMode) > Ord(High(TNyxDocumentationParameterMode))) or
+    not (LMode in [ndpConst, ndpVar, ndpOut]) then
+    raise ENyxDocumentation.Create('This parameter mode requires an authored type');
+  Admit;
+
+  if LSource.TypeUse <> nil then
+    raise ENyxDocumentation.Create('An untyped parameter cannot retain a contradictory type');
+  Admit;
+
+  if LSource.HasDefault then
+    raise ENyxDocumentation.Create('An untyped parameter cannot declare a default');
+  Admit;
+
+  if LSource.DefaultPascal <> '' then
+    raise ENyxDocumentation.Create('An untyped parameter cannot retain hidden default text');
+  LScope.AdmitText('untyped-parameter');
+  CheckCancellation(LScope);
+  LOwner := TDocumentationUntypedParameter.Create;
+  LCandidate := LOwner;
+  LOwner.ParameterName := LName;
+  LOwner.Mode := LMode;
+  Admit;
+
+  if not Supports(LSource, INyxDocumentationUntypedParameter, LAgain) or
+    (LAgain <> LCapability) then
+    raise ENyxDocumentation.Create('Untyped parameter capability changed during capture');
+  Admit;
+
+  if not LAgain.DeclaredUntyped then
+    raise ENyxDocumentation.Create('Untyped parameter intent changed during capture');
+  Admit;
+
+  if LSource.Name <> LName then
+    raise ENyxDocumentation.Create('Untyped parameter name changed during capture');
+  Admit;
+
+  if LSource.Passing <> LMode then
+    raise ENyxDocumentation.Create('Untyped parameter mode changed during capture');
+  Admit;
+
+  if LSource.TypeUse <> nil then
+    raise ENyxDocumentation.Create('Untyped parameter acquired a type during capture');
+  Admit;
+
+  if LSource.HasDefault then
+    raise ENyxDocumentation.Create('Untyped parameter acquired a default during capture');
+  Admit;
+
+  if LSource.DefaultPascal <> '' then
+    raise ENyxDocumentation.Create('Untyped parameter acquired hidden text during capture');
+  Admit;
+
+  if not Supports(LSource, INyxDocumentationUntypedParameter, LAgain) or
+    (LAgain <> LCapability) then
+    raise ENyxDocumentation.Create('Untyped parameter capability changed before publication');
+  Admit;
+
+  if not LAgain.DeclaredUntyped then
+    raise ENyxDocumentation.Create('Untyped parameter intent changed before publication');
+  RichParameterBytes(LCandidate);
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
 function CaptureParameter(const AValue: INyxDocumentationParameterDeclaration;
   AOccurrence: TNyxDocumentationTypeOccurrence;
   const AScope: INyxDocumentationTypeConstruction): INyxDocumentationParameterDeclaration;
@@ -2877,6 +3936,7 @@ var
   LOwner: TDocumentationParameterDeclaration;
   LLease: INyxDocumentationParameterDeclaration;
   LOriginalType: INyxDocumentationTypeUse;
+  LUntyped, LFinalUntyped: INyxDocumentationUntypedParameter;
   LName, LDefault: TNyxText;
 begin
   Result := nil;
@@ -2884,6 +3944,9 @@ begin
 
   if AValue = nil then
     raise ENyxDocumentation.Create('A declared parameter is required');
+
+  if Supports(AValue, INyxDocumentationUntypedParameter, LUntyped) then
+    Exit(CaptureUntypedParameter(AValue, LUntyped, AOccurrence, AScope));
   LOwner := TDocumentationParameterDeclaration.Create;
   LLease := LOwner;
   LName := AValue.Name;
@@ -2921,8 +3984,35 @@ begin
     (AValue.DefaultPascal <> LLease.DefaultPascal) then
     raise ENyxDocumentation.Create('Parameter changed before publication');
   CheckCancellation(AScope);
+
+  if Supports(AValue, INyxDocumentationUntypedParameter, LFinalUntyped) then
+    raise ENyxDocumentation.Create('Typed parameter acquired contradictory untyped intent');
   RichParameterBytes(LLease);
   Result := LLease;
+end;
+
+function NewNyxDocumentationUntypedParameterDeclaration(const AName: TNyxText;
+  AMode: TNyxDocumentationParameterMode;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationParameterDeclaration;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LOwner: TDocumentationUntypedParameter;
+  LSource: INyxDocumentationParameterDeclaration;
+  LCapability: INyxDocumentationUntypedParameter;
+  LName: TNyxText;
+begin
+  Result := nil;
+  LName := AName;
+  LScope := AConstruction;
+  CheckNyxDocumentationTypeConstruction(LScope);
+  LScope.Spend;
+  CheckCancellation(LScope);
+  LOwner := TDocumentationUntypedParameter.Create;
+  LSource := LOwner;
+  LCapability := LOwner;
+  LOwner.ParameterName := LName;
+  LOwner.Mode := AMode;
+  Result := CaptureUntypedParameter(LSource, LCapability, ndtoParameter, LScope);
 end;
 
 function NewNyxDocumentationParameterDeclaration(const AName: TNyxText;
@@ -3087,7 +4177,9 @@ begin
   begin
     AScope.Spend;
 
-    if AValue.ParameterAt(LAt).TypeUse.Expression <> nil then
+    LParameter := AValue.ParameterAt(LAt);
+
+    if (LParameter.TypeUse = nil) or (LParameter.TypeUse.Expression <> nil) then
       Exit;
   end;
   AScope.Spend(AValue.ParameterCount + 1);
@@ -3144,11 +4236,15 @@ begin
   CheckNyxDocumentationTypeConstruction(AConstruction);
   CheckMemberIdentity(AIdentity, AKind, ASummary);
 
-  if not (AKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+  if not (AKind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine,
+    ndmDestructor, ndmOperator]) then
     raise ENyxDocumentation.Create('This member cannot own a richer callable signature');
   AConstruction.AdmitText(AIdentity.Key);
   AConstruction.AdmitText(ASummary);
   LFrozen := CaptureRichSignature(ASignature, AConstruction);
+
+  if (AKind = ndmDestructor) and (LFrozen.ResultUse <> nil) then
+    raise ENyxDocumentation.Create('A destructor has no declared function result');
   LOwner := TDocumentationRichMember.Create;
   LLease := LOwner;
   LOwner.FIdentity := AIdentity;
@@ -3159,6 +4255,186 @@ begin
   MemberBytes(LLease);
   CheckCancellation(AConstruction);
   Result := LLease;
+end;
+
+function TDocumentationValueMember.DeclaredValueType: INyxDocumentationTypeUse;
+begin
+  Result := DeclaredValue;
+end;
+
+function TDocumentationValueMember.CopyValue: TDocumentationMember;
+var
+  LNext: TDocumentationValueMember;
+begin
+  LNext := TDocumentationValueMember.Create;
+  CopyMember(LNext);
+  LNext.DeclaredValue := DeclaredValue;
+  Result := LNext;
+end;
+
+procedure TDocumentationValueMember.AssignValueType(const AValue: TNyxDocumentationRef);
+begin
+  inherited AssignValueType(AValue);
+  DeclaredValue := nil;
+
+  if AValue.Defined then
+    DeclaredValue := NewNyxDocumentationNamedTypeUse(AValue);
+end;
+
+function NewNyxDocumentationValueMember(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const AType: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LFrozen: INyxDocumentationTypeUse;
+  LOwner: TDocumentationValueMember;
+  LCandidate: INyxDocumentationMember;
+  LType: INyxDocumentationTypeUse;
+  LIdentity: TNyxDocumentationRef;
+  LSummary: TNyxText;
+begin
+  Result := nil;
+  LIdentity := AIdentity;
+  LSummary := ASummary;
+  LType := AType;
+  LScope := AConstruction;
+  CheckNyxDocumentationTypeConstruction(LScope);
+  CheckMemberIdentity(LIdentity, ndmField, LSummary);
+  LScope.AdmitText(LIdentity.Key);
+  CheckCancellation(LScope);
+  LScope.AdmitText(LSummary);
+  CheckCancellation(LScope);
+  LScope.AdmitText('declared-field-type');
+  CheckCancellation(LScope);
+  LFrozen := CaptureTypeUse(LType, LScope);
+
+  if (LFrozen.Expression <> nil) and (LFrozen.Expression.Occurrence <> ndtoField) then
+    raise ENyxDocumentation.Create('A field type must retain its declared field position');
+  LOwner := TDocumentationValueMember.Create;
+  LCandidate := LOwner;
+  LOwner.FIdentity := LIdentity;
+  LOwner.FKind := ndmField;
+  LOwner.FSummary := LSummary;
+  LOwner.FValueType := LFrozen.Reference;
+  LOwner.DeclaredValue := LFrozen;
+  MemberBytes(LCandidate);
+  CheckCancellation(LScope);
+  Result := LCandidate;
+end;
+
+function TDocumentationStorageMember.HasDeclaredType: Boolean;
+begin
+  Result := WrittenType;
+end;
+
+function TDocumentationStorageMember.HasInitializer: Boolean;
+begin
+  Result := InitializerPresent;
+end;
+
+function TDocumentationStorageMember.InitializerPascal: TNyxText;
+begin
+  Result := InitializerText;
+end;
+
+function TDocumentationStorageMember.CopyValue: TDocumentationMember;
+var
+  LNext: TDocumentationStorageMember;
+begin
+  LNext := TDocumentationStorageMember.Create;
+  CopyMember(LNext);
+  LNext.DeclaredValue := DeclaredValue;
+  LNext.WrittenType := WrittenType;
+  LNext.InitializerPresent := InitializerPresent;
+  LNext.InitializerText := InitializerText;
+  Result := LNext;
+end;
+
+procedure TDocumentationStorageMember.AssignValueType(const AValue: TNyxDocumentationRef);
+begin
+
+  if (FKind = ndmVariable) and not AValue.Defined then
+    raise ENyxDocumentation.Create('A variable requires its written declared type');
+
+  if (FKind = ndmResourceString) and AValue.Defined then
+    raise ENyxDocumentation.Create('A resource string has no authored type annotation');
+  inherited AssignValueType(AValue);
+  WrittenType := AValue.Defined;
+end;
+
+function NewNyxDocumentationStorageMember(const AIdentity: TNyxDocumentationRef;
+  AKind: TNyxDocumentationMemberKind; const ASummary: TNyxText;
+  const AType: INyxDocumentationTypeUse; AHasInitializer: Boolean;
+  const AInitializer: TNyxText;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LFrozen: INyxDocumentationTypeUse;
+  LOwner: TDocumentationStorageMember;
+  LCandidate: INyxDocumentationMember;
+  LRole: TNyxDocumentationTypeOccurrence;
+  LIdentity: TNyxDocumentationRef;
+  LSummary, LInitializer: TNyxText;
+  LType: INyxDocumentationTypeUse;
+begin
+  Result := nil;
+  LIdentity := AIdentity;
+  LSummary := ASummary;
+  LInitializer := AInitializer;
+  LType := AType;
+  LScope := AConstruction;
+  CheckNyxDocumentationTypeConstruction(LScope);
+  CheckMemberIdentity(LIdentity, AKind, LSummary);
+
+  if not (AKind in [ndmConstant, ndmVariable, ndmResourceString]) then
+    raise ENyxDocumentation.Create('Storage syntax requires a declared variable, constant or resource string');
+
+  if ((AKind = ndmVariable) and (LType = nil)) or
+    ((AKind = ndmResourceString) and (LType <> nil)) then
+    raise ENyxDocumentation.Create('Storage family and authored type presence disagree');
+
+  if ((AKind in [ndmConstant, ndmResourceString]) and not AHasInitializer) or
+    (AHasInitializer <> (LInitializer <> '')) then
+    raise ENyxDocumentation.Create('Storage initializer presence and exact text disagree');
+  TextBound(LInitializer, NyxDocumentationMaximumBytes);
+  LScope.AdmitText(LIdentity.Key);
+  CheckCancellation(LScope);
+  LScope.AdmitText(LSummary);
+  CheckCancellation(LScope);
+  LScope.AdmitText('storage-declaration');
+  CheckCancellation(LScope);
+  LScope.AdmitText(LInitializer);
+  CheckCancellation(LScope);
+  LFrozen := nil;
+
+  if LType <> nil then
+  begin
+    LScope.AdmitText('declared-storage-type');
+    CheckCancellation(LScope);
+    LFrozen := CaptureTypeUse(LType, LScope);
+    LRole := ndtoConstant;
+
+    if AKind = ndmVariable then
+      LRole := ndtoVariable;
+
+    if (LFrozen.Expression <> nil) and (LFrozen.Expression.Occurrence <> LRole) then
+      raise ENyxDocumentation.Create('A storage type must retain its actual declaration position');
+  end;
+  LOwner := TDocumentationStorageMember.Create;
+  LCandidate := LOwner;
+  LOwner.FIdentity := LIdentity;
+  LOwner.FKind := AKind;
+  LOwner.FSummary := LSummary;
+  LOwner.DeclaredValue := LFrozen;
+  LOwner.WrittenType := LFrozen <> nil;
+
+  if LFrozen <> nil then
+    LOwner.FValueType := LFrozen.Reference;
+  LOwner.InitializerPresent := AHasInitializer;
+  LOwner.InitializerText := LInitializer;
+  MemberBytes(LCandidate);
+  CheckCancellation(LScope);
+  Result := LCandidate;
 end;
 
 function TDocumentationRichProperty.ParameterCount: Integer;
@@ -3273,6 +4549,8 @@ function TypeUseBytes(const AValue: INyxDocumentationTypeUse): Integer;
 var
   LAt: Integer;
   LFormals: INyxDocumentationFormalBindings;
+  LRoots: INyxDocumentationCompilerRootBindings;
+  LRoot: INyxDocumentationCompilerRoot;
 begin
   Result := 0;
 
@@ -3295,13 +4573,29 @@ begin
         Inc(Result, FormalBytes(LFormals.FormalAt(LAt)));
         AdmitBytes(Result);
       end;
+
+    if not LegacyRootMap(AValue, nil) and
+      Supports(AValue, INyxDocumentationCompilerRootBindings, LRoots) then
+      for LAt := 0 to AValue.BindingCount - 1 do
+      begin
+        LRoot := LRoots.RootAt(LAt);
+
+        if LRoot <> nil then
+          Inc(Result, RootBytes(LRoot));
+        AdmitBytes(Result);
+      end;
   end;
   AdmitBytes(Result);
 end;
 
 function RichParameterBytes(const AValue: INyxDocumentationParameterDeclaration): Integer;
+var
+  LUntyped: INyxDocumentationUntypedParameter;
 begin
   Result := NyxUTF8ByteCount(AValue.Name) + TypeUseBytes(AValue.TypeUse) + NyxUTF8ByteCount(AValue.DefaultPascal);
+
+  if Supports(AValue, INyxDocumentationUntypedParameter, LUntyped) then
+    Inc(Result, Length('untyped-parameter'));
   AdmitBytes(Result);
 end;
 
@@ -3310,6 +4604,8 @@ var
   LMember: INyxDocumentationMemberSignature;
   LProperty: INyxDocumentationRichProperty;
   LSignature: INyxDocumentationRichSignature;
+  LValue: INyxDocumentationMemberValue;
+  LStorage: INyxDocumentationStorageDeclaration;
   LAt: Integer;
 begin
   Result := 0;
@@ -3338,6 +4634,21 @@ begin
       AdmitBytes(Result);
     end;
   end;
+
+  if Supports(AValue, INyxDocumentationMemberValue, LValue) and
+    (LValue.DeclaredValueType <> nil) then
+  begin
+
+    if AValue.Kind = ndmField then
+      Inc(Result, Length('declared-field-type'))
+    else
+      Inc(Result, Length('declared-storage-type'));
+    Inc(Result, TypeUseBytes(LValue.DeclaredValueType));
+  end;
+
+  if Supports(AValue, INyxDocumentationStorageDeclaration, LStorage) then
+    Inc(Result, Length('storage-declaration') + 2 + NyxUTF8ByteCount(LStorage.InitializerPascal));
+  AdmitBytes(Result);
 end;
 
 { New generic metadata is observed only after legacy capture, then the legacy
@@ -3362,7 +4673,7 @@ begin
   try
 
     if (LObservation.Frozen <> nil) and (LObservation.Frozen.Count > 0) and
-      not (AFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+      not (AFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine, ndmOperator]) then
       raise ENyxDocumentation.Create('Only a routine member can declare own generic parameters');
     FormalWork(AScope);
     LIdentity := ASource.Identity;
@@ -3420,6 +4731,14 @@ var
   LRichProperty: INyxDocumentationRichProperty;
   LRichParameters: TNyxDocumentationParameterDeclarations;
   LRichValue: INyxDocumentationTypeUse;
+  LFieldValue, LFinalFieldValue: INyxDocumentationMemberValue;
+  LDeclaredField, LFinalDeclaredField: INyxDocumentationTypeUse;
+  LHasFieldValue, LFinalHasFieldValue: Boolean;
+  LStorage, LFinalStorage: INyxDocumentationStorageDeclaration;
+  LHasStorage, LFinalHasStorage, LStorageType, LStorageInitializer: Boolean;
+  LFinalStorageType, LFinalStorageInitializer: Boolean;
+  LStorageText, LFinalStorageText: TNyxText;
+  LCapturedValue: INyxDocumentationMemberValue;
   LHandled: Boolean;
   LOriginalSignature: INyxDocumentationSignature;
   LDeclaration, LFinalDeclaration: INyxDocumentationMemberDeclaration;
@@ -3461,11 +4780,77 @@ begin
     LScope.Spend;
     LRichSignature := LRich.DeclaredSignature;
   end;
+  LHasFieldValue := Supports(LSource, INyxDocumentationMemberValue, LFieldValue);
+
+  if LHasFieldValue then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LDeclaredField := LFieldValue.DeclaredValueType;
+    CheckCancellation(LScope);
+  end;
+  LHasStorage := Supports(LSource, INyxDocumentationStorageDeclaration, LStorage);
+
+  if LHasStorage then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LStorageType := LStorage.HasDeclaredType;
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LStorageInitializer := LStorage.HasInitializer;
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LStorageText := LStorage.InitializerPascal;
+    CheckCancellation(LScope);
+
+    if LStorageType <> (LDeclaredField <> nil) then
+      raise ENyxDocumentation.Create('Storage type presence contradicts its declared type use');
+  end;
 
   if (LRichSignature <> nil) and Supports(LSource, INyxDocumentationProperty, LProperty) then
     raise ENyxDocumentation.Create('A callable cannot also advertise simple property syntax');
 
-  if Supports(LSource, INyxDocumentationRichProperty, LRichProperty) then
+  if LHasStorage then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+
+    if (LRichSignature <> nil) or Supports(LSource, INyxDocumentationProperty, LProperty) or
+      Supports(LSource, INyxDocumentationRichProperty, LRichProperty) then
+      raise ENyxDocumentation.Create('Storage cannot advertise callable or property syntax');
+    LCurrentKind := LSource.Kind;
+    CheckCancellation(LScope);
+    LCurrentIdentity := LSource.Identity;
+    CheckCancellation(LScope);
+    LCurrentSummary := LSource.Summary;
+    CheckCancellation(LScope);
+    LFrozen := NewNyxDocumentationStorageMember(LCurrentIdentity, LCurrentKind,
+      LCurrentSummary, LDeclaredField, LStorageInitializer, LStorageText, LScope);
+    LHandled := True;
+  end
+  else if LDeclaredField <> nil then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+
+    if (LRichSignature <> nil) or Supports(LSource, INyxDocumentationProperty, LProperty) or
+      Supports(LSource, INyxDocumentationRichProperty, LRichProperty) then
+      raise ENyxDocumentation.Create('A field cannot advertise callable or property syntax');
+    LCurrentKind := LSource.Kind;
+    CheckCancellation(LScope);
+
+    if LCurrentKind <> ndmField then
+      raise ENyxDocumentation.Create('Declared field syntax requires a field member');
+    LCurrentIdentity := LSource.Identity;
+    CheckCancellation(LScope);
+    LCurrentSummary := LSource.Summary;
+    CheckCancellation(LScope);
+    LFrozen := NewNyxDocumentationValueMember(LCurrentIdentity, LCurrentSummary,
+      LDeclaredField, LScope);
+    LHandled := True;
+  end
+  else if Supports(LSource, INyxDocumentationRichProperty, LRichProperty) then
   begin
     LScope.Spend;
 
@@ -3653,6 +5038,85 @@ begin
       (LType.Defined and not LType.Same(LCurrentType)) then
       raise ENyxDocumentation.Create('Legacy rich-member envelope changed before publication');
   end;
+  LFinalHasFieldValue := Supports(LSource, INyxDocumentationMemberValue, LFinalFieldValue);
+
+  if (LFinalHasFieldValue <> LHasFieldValue) or
+    (LHasFieldValue and (LFinalFieldValue <> LFieldValue)) then
+    raise ENyxDocumentation.Create('Declared field capability changed during capture');
+
+  if LHasFieldValue then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LFinalDeclaredField := LFinalFieldValue.DeclaredValueType;
+    CheckCancellation(LScope);
+
+    if LFinalDeclaredField <> LDeclaredField then
+      raise ENyxDocumentation.Create('Declared storage type topology changed before publication');
+
+    if LDeclaredField <> nil then
+    begin
+
+      if not Supports(LFrozen, INyxDocumentationMemberValue, LCapturedValue) or
+        not SameTypeUseObservation(LDeclaredField, LCapturedValue.DeclaredValueType, LScope) then
+        raise ENyxDocumentation.Create('Declared storage type changed before publication');
+    end;
+  end;
+  LFinalHasStorage := Supports(LSource, INyxDocumentationStorageDeclaration, LFinalStorage);
+
+  if (LFinalHasStorage <> LHasStorage) or
+    (LHasStorage and (LFinalStorage <> LStorage)) then
+    raise ENyxDocumentation.Create('Storage declaration capability changed during capture');
+
+  if LHasStorage then
+  begin
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LFinalStorageType := LFinalStorage.HasDeclaredType;
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LFinalStorageInitializer := LFinalStorage.HasInitializer;
+    LScope.Spend;
+    CheckCancellation(LScope);
+    LFinalStorageText := LFinalStorage.InitializerPascal;
+    CheckCancellation(LScope);
+
+    if Length(LFinalStorageText) > NyxDocumentationMaximumBytes then
+      raise ENyxDocumentation.Create('Storage initializer changed beyond its declared allowance');
+    LScope.Spend(Length(LFinalStorageText) + 1);
+    CheckCancellation(LScope);
+
+    if (LFinalStorageType <> LStorageType) or
+      (LFinalStorageInitializer <> LStorageInitializer) or (LFinalStorageText <> LStorageText) then
+      raise ENyxDocumentation.Create('Storage declaration changed before publication');
+  end;
+
+  if LHasFieldValue or LHasStorage then
+  begin
+    LScope.Spend(10);
+    CheckCancellation(LScope);
+    LCurrentIdentity := LSource.Identity;
+    CheckCancellation(LScope);
+    LCurrentKind := LSource.Kind;
+    CheckCancellation(LScope);
+    LCurrentSummary := LSource.Summary;
+    CheckCancellation(LScope);
+    LCurrentSignature := LSource.Signature;
+    CheckCancellation(LScope);
+    LCurrentType := LSource.ValueType;
+    CheckCancellation(LScope);
+    LCurrentExamples := LSource.ExampleCount;
+    CheckCancellation(LScope);
+    LCurrentRelated := LSource.RelatedCount;
+    CheckCancellation(LScope);
+
+    if not LCurrentIdentity.Same(LFrozen.Identity) or (LCurrentKind <> LFrozen.Kind) or
+      (LCurrentSummary <> LFrozen.Summary) or (LCurrentSignature <> LOriginalSignature) or
+      (LCurrentType.Defined <> LType.Defined) or
+      (LType.Defined and not LCurrentType.Same(LType)) or
+      (LCurrentExamples <> LFrozen.ExampleCount) or (LCurrentRelated <> LFrozen.RelatedCount) then
+      raise ENyxDocumentation.Create('Declared field or envelope changed before publication');
+  end;
   LFinalHasDeclaration := Supports(LSource, INyxDocumentationMemberDeclaration, LFinalDeclaration);
 
   if (LFinalHasDeclaration <> LHasDeclaration) or
@@ -3732,7 +5196,9 @@ begin
   Result := LFrozen;
 end;
 
-function WithNyxDocumentationMemberIntent(const AMember: INyxDocumentationMember;
+{ Keep the established work/getter sequence inside one public cancellation
+  boundary. Its inputs are leased by the wrapper before outward admission. }
+function AttachMemberIntent(const AMember: INyxDocumentationMember;
   const AIntent: INyxDocumentationMemberIntent;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
 var
@@ -3831,6 +5297,29 @@ begin
   Result := LLease;
 end;
 
+function WithNyxDocumentationMemberIntent(const AMember: INyxDocumentationMember;
+  const AIntent: INyxDocumentationMemberIntent;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationMember;
+var
+  LMember, LCandidate: INyxDocumentationMember;
+  LIntent: INyxDocumentationMemberIntent;
+  LScope: INyxDocumentationTypeConstruction;
+begin
+  Result := nil;
+  try
+    LMember := AMember;
+    LIntent := AIntent;
+    LScope := AConstruction;
+    LCandidate := AttachMemberIntent(LMember, LIntent, LScope);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  Result := LCandidate;
+end;
+
 procedure CheckTypeIdentity(const AIdentity: TNyxDocumentationRef;
   AKind: TNyxDocumentationTypeKind; const ASummary: TNyxText);
 begin
@@ -3889,7 +5378,8 @@ begin
   AConstruction.Spend;
   LFamily := LExpression.Syntax.Node(LExpression.Syntax.Root).Kind;
 
-  if not (LFamily in [ptxArray, ptxSet, ptxProcedure, ptxFunction, ptxDistinct]) then
+  if not (LFamily in [ptxArray, ptxSet, ptxProcedure, ptxFunction, ptxDistinct,
+    ptxPointer, ptxClassOf, ptxEncodedString]) then
     raise ENyxDocumentation.Create('This declared compound family is not represented by this contract');
   LOwner := TDocumentationDeclaredType.Create;
   LLease := LOwner;
@@ -3901,6 +5391,55 @@ begin
   TypeBytes(LLease);
   CheckCancellation(AConstruction);
   Result := LLease;
+end;
+
+function NewNyxDocumentationAliasDefinition(const AIdentity: TNyxDocumentationRef;
+  const ASummary: TNyxText; const ADefinition: INyxDocumentationTypeUse;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LSource, LFrozen: INyxDocumentationTypeUse;
+  LOwner: TDocumentationRootAlias;
+  LCandidate: INyxDocumentationType;
+  LExpression: INyxDocumentationTypeExpression;
+  LRoots: INyxDocumentationCompilerRootBindings;
+  LIdentity: TNyxDocumentationRef;
+  LSummary: TNyxText;
+begin
+  Result := nil;
+  LScope := AConstruction;
+  LSource := ADefinition;
+  LIdentity := AIdentity;
+  LSummary := ASummary;
+  CheckCancellation(LScope);
+  CheckNyxDocumentationTypeConstruction(LScope);
+  CheckTypeIdentity(LIdentity, ndtAlias, LSummary);
+  FormalText(LScope, LIdentity.Key);
+  FormalText(LScope, LSummary);
+  LFrozen := CaptureTypeUse(LSource, LScope);
+  LExpression := LFrozen.Expression;
+
+  if LFrozen.Reference.Defined or (LExpression = nil) or
+    (LExpression.Occurrence <> ndtoDeclaration) or (LFrozen.BindingCount <> 1) or
+    not (LExpression.Syntax.Node(LExpression.Syntax.Root).Kind in [ptxName, ptxQualified]) then
+    raise ENyxDocumentation.Create('A direct alias definition needs one exact declaration-position named use');
+  Supports(LFrozen, INyxDocumentationCompilerRootBindings, LRoots);
+
+  if not LFrozen.BindingAt(0).Defined and ((LRoots = nil) or (LRoots.RootAt(0) = nil)) then
+    raise ENyxDocumentation.Create('A direct alias cannot replace an unbound type with invented root metadata');
+  LOwner := TDocumentationRootAlias.Create;
+  LCandidate := LOwner;
+  LOwner.FIdentity := LIdentity;
+  LOwner.FKind := ndtAlias;
+  LOwner.FSummary := LSummary;
+  LOwner.FDefinition := LFrozen;
+  LOwner.FAlias := LFrozen.BindingAt(0);
+  TypeBytes(LCandidate);
+
+  if not SameTypeUseObservation(LSource, LFrozen, LScope) then
+    raise ENyxDocumentation.Create('Alias definition changed before publication');
+  CheckCancellation(LScope);
+  Result := LCandidate;
 end;
 
 procedure CheckAliasPlatform(APlatform: TNyxPlatform);
@@ -4076,6 +5615,32 @@ end;
 function TDocumentationDeclaredType.Family: TNyxPascalTypeKind;
 begin
   Result := FFamily;
+end;
+
+function TDocumentationRootAlias.CopyValue: TDocumentationType;
+var
+  LCopy: TDocumentationRootAlias;
+begin
+  LCopy := TDocumentationRootAlias.Create;
+  try
+    CopyType(LCopy);
+    LCopy.FDefinition := FDefinition;
+  except
+    LCopy.Free;
+    raise;
+  end;
+  Result := LCopy;
+end;
+
+procedure TDocumentationRootAlias.AssignAlias(const ATarget: TNyxDocumentationRef);
+begin
+  inherited AssignAlias(ATarget);
+  FDefinition := nil;
+end;
+
+function TDocumentationRootAlias.Definition: INyxDocumentationTypeUse;
+begin
+  Result := FDefinition;
 end;
 
 function TDocumentationTargetAlias.CopyValue: TDocumentationType;
@@ -4491,10 +6056,13 @@ var
   LReadSummary: TNyxText;
   LReadExample: TNyxDocumentationExample;
   LReadIntrinsic: TNyxDocumentationIntrinsicFamily;
+  LAliasDefinition, LFinalAliasDefinition: INyxDocumentationAliasDefinition;
+  LAliasSource, LAliasFrozen, LAliasFinal: INyxDocumentationTypeUse;
+  LHasAliasDefinition, LFinalHasAliasDefinition: Boolean;
   procedure CheckSourceRead;
   begin
 
-    if LHasInterfaces and not LLegacyInterfaces then
+    if (LHasInterfaces and not LLegacyInterfaces) or (LAliasSource <> nil) then
       CheckCancellation(ACancellation);
   end;
 begin
@@ -4544,12 +6112,30 @@ begin
   CheckSourceRead;
   LHasDeclared := Supports(LSource, INyxDocumentationDeclaredTypeExpression, LDeclared);
   CheckSourceRead;
+  LHasAliasDefinition := Supports(LSource, INyxDocumentationAliasDefinition, LAliasDefinition);
+  CheckSourceRead;
+
+  if LHasAliasDefinition then
+  begin
+    InterfaceWork(LScope);
+    LAliasSource := LAliasDefinition.Definition;
+    CheckCancellation(ACancellation);
+
+    if (LAliasSource <> nil) and ((LKind <> ndtAlias) or LHasTargets) then
+      raise ENyxDocumentation.Create('An alias definition contradicts its kind or platform branches');
+  end;
 
   if (LHasIntrinsic <> (LKind = ndtIntrinsic)) or (LHasTargets and (LKind <> ndtAlias)) or
     (LHasDeclared <> (LKind = ndtExpression)) then
     raise ENyxDocumentation.Create('Documentation shape capability contradicts its declared kind');
 
-  if LHasDeclared then
+  if LAliasSource <> nil then
+  begin
+    LFrozen := NewNyxDocumentationAliasDefinition(LReadIdentity, LReadSummary, LAliasSource, LScope);
+    Supports(LFrozen, INyxDocumentationAliasDefinition, LFinalAliasDefinition);
+    LAliasFrozen := LFinalAliasDefinition.Definition;
+  end
+  else if LHasDeclared then
   begin
 
     if not Supports(ACancellation, INyxDocumentationTypeConstruction, LScope) then
@@ -4603,7 +6189,7 @@ begin
   if LAlias.Defined then
   begin
 
-    if LHasTargets then
+    if LHasTargets or (LAliasSource <> nil) then
     begin
 
       if not LAlias.Same(LFrozen.AliasTarget) then
@@ -4618,7 +6204,7 @@ begin
   if (LCount < 0) or (LCount > NyxDocumentationMaximumLinks) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its base allowance');
 
-  if LHasDeclared and (LCount <> 0) then
+  if (LHasDeclared or (LAliasSource <> nil)) and (LCount <> 0) then
     raise ENyxDocumentation.Create('A compound definition cannot invent declared class ancestry');
   for LAt := 0 to LCount - 1 do
   begin
@@ -4633,7 +6219,7 @@ begin
   if (LCount < 0) or (LCount > NyxDocumentationMaximumMembers) then
     raise ENyxDocumentation.Create('Captured documentation exceeds its member allowance');
 
-  if LHasDeclared and (LCount <> 0) then
+  if (LHasDeclared or (LAliasSource <> nil)) and (LCount <> 0) then
     raise ENyxDocumentation.Create('A compound definition cannot invent executable members');
   for LAt := 0 to LCount - 1 do
   begin
@@ -4712,6 +6298,28 @@ begin
   end;
   CaptureTypeGenerics(LSource, LFrozen, LScope, AGenericProof);
   CheckCancellation(ACancellation);
+  LFinalHasAliasDefinition := Supports(LSource, INyxDocumentationAliasDefinition, LFinalAliasDefinition);
+  CheckCancellation(ACancellation);
+
+  if (LFinalHasAliasDefinition <> LHasAliasDefinition) or
+    (LHasAliasDefinition and (LFinalAliasDefinition <> LAliasDefinition)) then
+    raise ENyxDocumentation.Create('Alias definition capability changed before publication');
+
+  if LHasAliasDefinition then
+  begin
+    InterfaceWork(LScope);
+    LAliasFinal := LFinalAliasDefinition.Definition;
+    CheckCancellation(LScope);
+
+    if LAliasFinal <> LAliasSource then
+      raise ENyxDocumentation.Create('Alias definition topology changed before publication');
+
+    if (LAliasSource <> nil) and
+      (not SameTypeUseObservation(LAliasSource, LAliasFrozen, LScope) or
+      not SameImplementationEnvelope(LSource, LFrozen, LScope)) then
+      raise ENyxDocumentation.Create('Alias definition fields or envelope changed before publication');
+  end;
+  CheckCancellation(ACancellation);
 
   if AObservation <> nil then
   begin
@@ -4751,7 +6359,9 @@ begin
   Result := LFrozen;
 end;
 
-function WithNyxDocumentationImplementedInterfaces(const AType: INyxDocumentationType;
+{ The public wrapper translates cancellation from the sealed entry check and
+  every inner capture, leaving this existing ordered observation unchanged. }
+function AttachImplementedInterfaces(const AType: INyxDocumentationType;
   const AInterfaces: INyxDocumentationInterfaceImplementations;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
 var
@@ -4827,6 +6437,29 @@ begin
   LObserved := nil;
   CheckCancellation(AConstruction);
   Result := LLease;
+end;
+
+function WithNyxDocumentationImplementedInterfaces(const AType: INyxDocumentationType;
+  const AInterfaces: INyxDocumentationInterfaceImplementations;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationType;
+var
+  LType, LCandidate: INyxDocumentationType;
+  LInterfaces: INyxDocumentationInterfaceImplementations;
+  LScope: INyxDocumentationTypeConstruction;
+begin
+  Result := nil;
+  try
+    LType := AType;
+    LInterfaces := AInterfaces;
+    LScope := AConstruction;
+    LCandidate := AttachImplementedInterfaces(LType, LInterfaces, LScope);
+  except
+    on E: ENyxPascalAnalysisCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+    on E: ENyxDocumentationTypeExpressionCancelled do
+      raise ENyxDocumentationCancelled.Create(E.Message);
+  end;
+  Result := LCandidate;
 end;
 
 { Observe the original optional slot before another supplier can change it.
@@ -4952,7 +6585,7 @@ begin
     LCaptured := CaptureGenerics(LParameters, LFrozen.Identity, LScope, LObserved);
 
     if (LCaptured <> nil) and (LCaptured.Count > 0) and
-      not (LFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine]) then
+      not (LFrozen.Kind in [ndmConstructor, ndmFactory, ndmMethod, ndmFluentMethod, ndmRoutine, ndmOperator]) then
       raise ENyxDocumentation.Create('Only a routine member can own generic parameters');
     FormalWork(LScope, LFrozen.ExampleCount + LFrozen.RelatedCount + 1);
     LCopy := CapturedMemberOwner(LFrozen).CopyValue;

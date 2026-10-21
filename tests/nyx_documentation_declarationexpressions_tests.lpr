@@ -4,7 +4,9 @@ program nyx_documentation_declarationexpressions_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.scheduler, nyx.pascal.lexing,
-  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.work,
+  nyx.pascal.syntax, nyx.pascal.types, nyx.pascal.work, nyx.pascal.context,
+  nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax.translated,
+  nyx.pascal.binding, nyx.documentation.source, nyx.documentation.declarations,
   nyx.documentation.typeexpressions, nyx.documentation,
   nyx.documentation.registration, nyx.documentation.registry,
   nyx.catalog, nyx.schema, nyx.callbacks, nyx.test.documentation
@@ -77,9 +79,48 @@ type
     procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
     function RemainingTypeBytes: Integer;
   end;
+  { Alternate roots expose final-read mutation/cancellation without supplying
+    compiler execution authority. Their context is an explicitly authored value. }
+  TAlternateRoot = class(TInterfacedObject, INyxDocumentationCompilerRoot)
+  public
+    Value: INyxDocumentationCompilerRoot;
+    NameReads, MutateAt: Integer;
+    Scope: INyxCancellationScope;
+    function Name: TNyxPascalSizeReference;
+    function Family: TNyxDocumentationIntrinsicFamily;
+    function Facts: INyxPascalCompilerContext;
+  end;
+  { Optional root topology remains separate from the forwarded legacy envelope. }
+  TAlternateRootUse = class(TAlternateUse, INyxDocumentationCompilerRootBindings)
+  public
+    Root: INyxDocumentationCompilerRoot;
+    RootReads, ClearAt, PublishAt: Integer;
+    function RootAt(AIndex: Integer): INyxDocumentationCompilerRoot;
+  end;
+  { The alias capability can disappear semantically by returning nil late. }
+  TAlternateRootAlias = class(TAlternateType, INyxDocumentationAliasDefinition)
+  public
+    Use: INyxDocumentationTypeUse;
+    Reads, ClearAt: Integer;
+    function Definition: INyxDocumentationTypeUse;
+  end;
+  { Reentrant admission replaces caller slots after entry. Local leases must
+    retain the already admitted record/text/context and construction values. }
+  TRootInputAdmission = class(TInterfacedObject, INyxDocumentationTypeAdmission)
+  public
+    AliasInput, RootInput, Fired: Boolean;
+    destructor Destroy; override;
+    procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+    function RemainingTypeBytes: Integer;
+  end;
 
 var
   GChecks, GDisposed, GLeasesDisposed: Integer;
+  GRootInputDisposed: Integer;
+  GAliasIdentity: TNyxDocumentationRef;
+  GAliasSummary: TNyxText;
+  GRootInputFacts: INyxPascalCompilerContext;
+  GRootInputScope: INyxDocumentationTypeConstruction;
   {$ifndef PAS2JS}
   GActualDefinitions: Integer;
   {$endif}
@@ -95,6 +136,85 @@ end;
 function Ref(const AName: TNyxText): TNyxDocumentationRef;
 begin
   Result := NyxDocumentationType('mechanics.declarations', AName);
+end;
+
+function TAlternateRoot.Name: TNyxPascalSizeReference;
+begin
+  Inc(NameReads);
+  Result := Value.Name;
+
+  if (MutateAt > 0) and (NameReads >= MutateAt) then
+    Result := NyxPascalSizeReference('Byte');
+end;
+
+function TAlternateRoot.Family: TNyxDocumentationIntrinsicFamily;
+begin
+  Result := Value.Family;
+end;
+
+function TAlternateRoot.Facts: INyxPascalCompilerContext;
+begin
+  Result := Value.Facts;
+
+  if Scope <> nil then
+    Scope.Cancel;
+end;
+
+function TAlternateRootUse.RootAt(AIndex: Integer): INyxDocumentationCompilerRoot;
+begin
+  Value.BindingAt(AIndex);
+  Inc(RootReads);
+  Result := Root;
+
+  if (PublishAt > 0) and (RootReads < PublishAt) then
+    Result := nil;
+
+  if (ClearAt > 0) and (RootReads >= ClearAt) then
+    Result := nil;
+end;
+
+function TAlternateRootAlias.Definition: INyxDocumentationTypeUse;
+begin
+  Inc(Reads);
+  Result := Use;
+
+  if (ClearAt > 0) and (Reads >= ClearAt) then
+    Result := nil;
+end;
+
+destructor TRootInputAdmission.Destroy;
+begin
+  Inc(GRootInputDisposed);
+  inherited Destroy;
+end;
+
+procedure TRootInputAdmission.AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or
+    (Ord(APhase) > Ord(High(TNyxPascalAnalysisPhase))) or (AUnits < 1) then
+    raise Exception.Create('Invalid root input admission');
+
+  if Fired then
+    Exit;
+  Fired := True;
+
+  if AliasInput then
+  begin
+    GAliasIdentity := Ref('TReplacedCallerSlot');
+    GAliasSummary := 'Replaced after admission.';
+  end;
+
+  if RootInput then
+  begin
+    GRootInputFacts := nil;
+    GRootInputScope := nil;
+  end;
+end;
+
+function TRootInputAdmission.RemainingTypeBytes: Integer;
+begin
+  Result := NyxDocumentationMaximumBytes;
 end;
 
 function Construction: INyxDocumentationTypeConstruction;
@@ -335,9 +455,11 @@ end;
 
 procedure ShapeCases;
 const
-  CText: array[0..4] of TNyxText = ('array of TItem', 'set of TItem',
-    'procedure(const A:TItem) of object', 'function(A:TItem):TItem; cdecl', 'type TItem');
-  CFamily: array[0..4] of TNyxPascalTypeKind = (ptxArray, ptxSet, ptxProcedure, ptxFunction, ptxDistinct);
+  CText: array[0..7] of TNyxText = ('array of TItem', 'set of TItem',
+    'procedure(const A:TItem) of object', 'function(A:TItem):TItem; cdecl', 'type TItem',
+    '^TItem', 'class of TItem', 'AnsiString(CP_UTF8)');
+  CFamily: array[0..7] of TNyxPascalTypeKind = (ptxArray, ptxSet, ptxProcedure,
+    ptxFunction, ptxDistinct, ptxPointer, ptxClassOf, ptxEncodedString);
 var
   LScope: INyxDocumentationTypeConstruction;
   LValue, LCopy, LFrozen: INyxDocumentationType;
@@ -389,7 +511,7 @@ end;
 
 procedure RefusalCases;
 const
-  CWrong: array[0..5] of TNyxText = ('TItem', 'Some.TItem', 'TList<TItem>', '^TItem',
+  CWrong: array[0..5] of TNyxText = ('TItem', 'Some.TItem', 'TList<TItem>', 'file of TItem',
     'record Value:TItem; end', 'array of');
 var
   LScope: INyxDocumentationTypeConstruction;
@@ -704,6 +826,460 @@ begin
   end;
 end;
 
+{ These complete controlled Pascal units exercise source binding and registration,
+  using explicitly authored facts. They are not archived SDK input or evidence
+  that the real native package's missing inputs/facts have been obtained. }
+procedure CompilerRootSourceCases;
+const
+  CSource: TNyxText = 'unit RootSlots; interface uses System; type TFlag = Boolean; ' +
+    'TKeyword = type String(1252); TArray = array of String(1252); TShort = ShortString; ' +
+    'function Echo(const A:TFlag):Boolean; implementation ' +
+    'function Echo(const A:TFlag):Boolean; begin Result:=A; end; end.';
+var
+  LRoot, LContext: INyxPascalCompilerContext;
+  LFiles: INyxPascalFileCatalog;
+  LWorld: INyxPascalSemanticWorld;
+  LScopes: TNyxDocumentationSourceScopes;
+  LCreators: TNyxDocumentationSourceCreators;
+  LScope: INyxDocumentationTypeConstruction;
+  LPackage, LPrevious: INyxDocumentationPackage;
+  LAlias, LUnit: INyxDocumentationType;
+  LDefinition: INyxDocumentationAliasDefinition;
+  LRootMap, LResultMap: INyxDocumentationCompilerRootBindings;
+  LSignature: INyxDocumentationMemberSignature;
+  LShape: INyxDocumentationDeclaredTypeExpression;
+  LBinding: INyxDocumentationRegistration;
+  LRegistry: TNyxDocumentationRegistry;
+  LCatalog: TNyxCatalog;
+  LIndex: INyxDocumentationIndex;
+  LFailed: Boolean;
+  LAt: Integer;
+  procedure Add(const AName, AText: TNyxText; AMode: TNyxPascalLanguageMode);
+  var
+    LView: INyxPascalTranslatedSyntax;
+  begin
+    LContext := NyxPascalWithBootstrapContext(NewNyxPascalCompilerContext(ppcFPC,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), AMode).WithOption('H', ppkFalse), LRoot);
+    LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile(AName + '.pas'), AText);
+    LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(LFiles,
+      NyxPascalPhysicalFile(AName + '.pas'), LContext, TNyxPascalTranslationOptions.Defaults),
+      TNyxPascalSyntaxOptions.Defaults);
+    LWorld := LWorld.WithModule(LView);
+  end;
+  procedure MakeWorld(AKnown, AAnsiKnown: Boolean);
+  begin
+    LRoot := NewNyxPascalCompilerContext(ppcFPC,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), ppmFPC, pcsoSystemBootstrap).WithOption('H', ppkFalse);
+
+    if AKnown then
+    begin
+      LRoot := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('Boolean'),
+        NyxPascalSizeFact(pssKnown, ppmFPC, ppkFalse, 1));
+      LRoot := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('ShortString'),
+        NyxPascalSizeFact(pssKnown, ppmFPC, ppkFalse, 256));
+    end;
+
+    if AAnsiKnown then
+      LRoot := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('AnsiString'),
+        NyxPascalSizeFact(pssKnown, ppmFPC, ppkFalse, 4));
+    LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits));
+    Add('System', 'unit System; interface implementation end.', ppmFPC);
+    Add('ObjPas', 'unit ObjPas; interface implementation end.', ppmObjFPC);
+    Add('RootSlots', CSource, ppmDelphi);
+  end;
+begin
+  LCreators := nil;
+  MakeWorld(True, True);
+  SetLength(LScopes, 5);
+  LScopes[0].ModuleIndex := 2;
+  LScopes[0].DeclarationIndex := -1;
+  LScopes[1].ModuleIndex := 2;
+  LScopes[1].DeclarationIndex := LWorld.ModuleAt(2).Syntax.Named(0, 'TFlag');
+  LScopes[2].ModuleIndex := 2;
+  LScopes[2].DeclarationIndex := LWorld.ModuleAt(2).Syntax.Named(0, 'TKeyword');
+  LScopes[3].ModuleIndex := 2;
+  LScopes[3].DeclarationIndex := LWorld.ModuleAt(2).Syntax.Named(0, 'TArray');
+  LScopes[4].ModuleIndex := 2;
+  LScopes[4].DeclarationIndex := LWorld.ModuleAt(2).Syntax.Named(0, 'TShort');
+  LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  try
+    LPackage := CaptureNyxDocumentationSourcePackage(LWorld, LScopes, LCreators, [], LScope);
+  finally
+    LScope.Retire;
+  end;
+  LAlias := LPackage.FindDeclaration(NyxDocumentationType('RootSlots', 'TFlag'));
+  LUnit := LPackage.FindDeclaration(NyxDocumentationUnit('RootSlots'));
+  Check((LPackage.DeclarationCount = 5) and (LUnit.MemberCount = 1) and
+    Supports(LAlias, INyxDocumentationAliasDefinition, LDefinition) and
+    Supports(LDefinition.Definition, INyxDocumentationCompilerRootBindings, LRootMap) and
+    (LRootMap.RootAt(0) <> nil), 'Owned controlled source captures complete globals and a genuine root-terminal alias');
+  Check(Supports(LUnit.MemberAt(0), INyxDocumentationMemberSignature, LSignature) and
+    Supports(LSignature.DeclaredSignature.ResultUse, INyxDocumentationCompilerRootBindings, LResultMap) and
+    (LRootMap.RootAt(0) = LResultMap.RootAt(0)), 'Repeated source root uses share one exact context/name owner within the operation');
+  Check((LRootMap.RootAt(0).Facts.SameFacts(LRoot)) and (LUnit.MemberAt(0).Signature = nil),
+    'Root provenance remains exact while the old named-only signature stays explicitly absent');
+  Check(Supports(LPackage.FindDeclaration(NyxDocumentationType('RootSlots', 'TKeyword')),
+    INyxDocumentationDeclaredTypeExpression, LShape) and (LShape.Family = ptxDistinct) and
+    Supports(LShape.Definition, INyxDocumentationCompilerRootBindings, LResultMap) and
+    (LResultMap.RootAt(0).Name.Name = 'ansistring'),
+    'Distinct String(codepage) retains its actual encoded parent and ANSI base under H-');
+  Check(Supports(LPackage.FindDeclaration(NyxDocumentationType('RootSlots', 'TArray')),
+    INyxDocumentationDeclaredTypeExpression, LShape) and (LShape.Family = ptxArray) and
+    Supports(LShape.Definition, INyxDocumentationCompilerRootBindings, LResultMap) and
+    (LResultMap.RootAt(0).Name.Name = 'ansistring'),
+    'Array String(codepage) uses the local encoded-string parent rather than whole-expression kind');
+  Check(Supports(LPackage.FindDeclaration(NyxDocumentationType('RootSlots', 'TShort')),
+    INyxDocumentationAliasDefinition, LDefinition) and
+    Supports(LDefinition.Definition, INyxDocumentationCompilerRootBindings, LResultMap) and
+    (LResultMap.RootAt(0).Name.Name = 'shortstring'),
+    'Explicit ShortString remains a separate root from the encoded ANSI base under the same H- context');
+  LBinding := NewNyxDocumentationBinding(LPackage, LAlias.Identity);
+  LCatalog := TNyxCatalog.Create;
+  LRegistry := TNyxDocumentationRegistry.Create;
+  try
+    LCatalog.RegisterKind('controlled-source-root', 'Controlled root', 'Mechanics', False, LBinding);
+    LIndex := LRegistry.Refresh(CaptureNyxSchemas, CaptureNyxCallbacks, LCatalog.Capture, 0);
+    Check((LIndex.DeclarationCount = 5) and (LIndex.FindDeclaration(LAlias.Identity) <> nil),
+      'Real registration/index consumes the controlled source package without a fabricated System declaration');
+  finally
+    LRegistry.Free;
+    LCatalog.Free;
+  end;
+  LPrevious := LPackage;
+  for LAt := 0 to 2 do
+  begin
+    MakeWorld(LAt = 2, False);
+
+    if LAt = 1 then
+      LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults.WithImplicitScopes(pispCompilerUnits))
+        .WithModule(LWorld.ModuleAt(2));
+    LScopes[0].ModuleIndex := LWorld.Count - 1;
+    LScopes[1].ModuleIndex := LScopes[0].ModuleIndex;
+    LScopes[2].ModuleIndex := LScopes[0].ModuleIndex;
+    LScopes[3].ModuleIndex := LScopes[0].ModuleIndex;
+    LScopes[4].ModuleIndex := LScopes[0].ModuleIndex;
+    LPackage := nil;
+    LFailed := False;
+    LScope := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+    try
+      try
+        LPackage := CaptureNyxDocumentationSourcePackage(LWorld, LScopes, LCreators, [], LScope);
+      except
+        on ENyxDocumentationSource do LFailed := True;
+      end;
+    finally
+      LScope.Retire;
+    end;
+    Check(LFailed and (LPackage = nil) and (LPrevious.DeclarationCount = 5),
+      'Unknown Boolean/ANSI root or absent imported source refuses complete capture, retaining prior package ' + IntToStr(LAt));
+  end;
+end;
+
+{ Native hidden interface-result temporaries retire at this lexical boundary;
+  the caller verifies actual policy destruction only after this procedure. }
+procedure CaptureReleasedRootInputs(const AFacts: INyxPascalCompilerContext;
+  const AName: TNyxPascalSizeReference; AFamily: TNyxDocumentationIntrinsicFamily;
+  out ARoot: INyxDocumentationCompilerRoot);
+var
+  LPolicy: TRootInputAdmission;
+  LAdmission: INyxDocumentationTypeAdmission;
+begin
+  LPolicy := TRootInputAdmission.Create;
+  LAdmission := LPolicy;
+  LPolicy.RootInput := True;
+  GRootInputFacts := AFacts;
+  GRootInputScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  ARoot := NewNyxDocumentationCompilerRoot(AName, AFamily,
+    GRootInputFacts, GRootInputScope);
+  Check((GRootInputFacts = nil) and (GRootInputScope = nil) and (ARoot.Facts = AFacts),
+    'Last caller context/construction slots can retire during admission without invalidating local root leases');
+end;
+
+procedure CompilerRootCases;
+var
+  LScope, LSmall: INyxDocumentationTypeConstruction;
+  LContext, LChangedContext: INyxPascalCompilerContext;
+  LRoot, LOther, LRootSupplier: INyxDocumentationCompilerRoot;
+  LUse, LClear, LNominal, LChangedUse, LAlternateUse: INyxDocumentationTypeUse;
+  LPlainArrayUse, LClearArrayUse: INyxDocumentationTypeUse;
+  LRoots: INyxDocumentationCompilerRootBindings;
+  LFormalMap: INyxDocumentationFormalBindings;
+  LGenerics: INyxDocumentationGenericParameters;
+  LNames: TNyxDocumentationGenericNames;
+  LAlias, LCopy, LCaptured, LReplacement: INyxDocumentationType;
+  LPlainArray, LClearArray: INyxDocumentationType;
+  LAliasDefinition: INyxDocumentationAliasDefinition;
+  LAlternate: TAlternateRoot;
+  LAlternateMap: TAlternateRootUse;
+  LAlternateAlias: TAlternateRootAlias;
+  LDeclarations: TNyxDocumentationDeclarations;
+  LInterfaces: array of INyxDocumentationTypeUse;
+  LRegistration, LOldRegistration: INyxDocumentationRegistration;
+  LRegistry: TNyxDocumentationRegistry;
+  LCatalog, LBad: TNyxCatalog;
+  LIndex, LPrevious: INyxDocumentationIndex;
+  LFailure: Boolean;
+  LBytes, LVersion, LLegacyWork: Integer;
+  LInputPolicy: TRootInputAdmission;
+  LInputAdmission: INyxDocumentationTypeAdmission;
+  LDisposedBefore: Integer;
+  LKnownHelperContent: TNyxText;
+begin
+  { Controlled values prove metadata mechanics only. They are not measured
+    compiler facts and never replace the native source-package prerequisites. }
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi, pcsoSystemBootstrap);
+  LScope := Construction;
+  LRoot := NewNyxDocumentationCompilerRoot(NyxPascalSizeReference('Boolean'), ndifBoolean, LContext, LScope);
+  Check((LRoot.Name.Name = NyxPascalSizeReference('Boolean').Name) and
+    (LRoot.Family = ndifBoolean) and (LRoot.Facts = LContext) and
+    (NyxDocumentationCompilerRootContent(LRoot) <> ''), 'Root metadata keeps exact supplied context and explicit family');
+  LChangedContext := NyxPascalWithCompilerPolicies(LContext,
+    NyxPascalCompilerPolicies(LContext).WithMultipleHelpers(ppkFalse));
+  LOther := NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LChangedContext, LScope);
+  LKnownHelperContent := NyxDocumentationCompilerRootContent(LOther);
+  Check(LKnownHelperContent <> NyxDocumentationCompilerRootContent(LRoot),
+    'Declared known-off multiple-helper provenance participates in detached root context framing');
+  LChangedContext := NyxPascalWithCompilerPolicies(LContext,
+    NyxPascalCompilerPolicies(LContext).WithMultipleHelpers(ppkTrue));
+  LOther := NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LChangedContext, LScope);
+  Check((NyxDocumentationCompilerRootContent(LOther) <> LKnownHelperContent) and
+    (NyxDocumentationCompilerRootContent(LOther) <> NyxDocumentationCompilerRootContent(LRoot)),
+    'Known-on, known-off and absent helper policy retain three distinct documentation-root contents');
+  LBytes := NyxUTF8ByteCount(LRoot.Name.Name) + 2 * NyxUTF8ByteCount(NyxDocumentationCompilerRootContent(LRoot));
+  LSmall := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(LBytes));
+  LOther := NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LContext, LSmall);
+  Check(NyxDocumentationCompilerRootContent(LOther) = NyxDocumentationCompilerRootContent(LRoot),
+    'Exact capacity admits every temporary and final context-stream byte before formatting');
+  LFailure := False;
+  try
+    NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LContext, LSmall);
+  except
+    on ENyxDocumentationTypeExpression do LFailure := True;
+  end;
+  Check(LFailure and (LOther.Facts = LContext), 'Second independent context capture cannot reset the shared byte allowance');
+  LSmall.Retire;
+  LSmall := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(LBytes - 1));
+  LFailure := False;
+  try
+    NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LContext, LSmall);
+  except
+    on ENyxDocumentationTypeExpression do LFailure := True;
+  end;
+  Check(LFailure, 'One byte below exact context capacity refuses before final formatting/join');
+  LSmall.Retire;
+  LUse := WithNyxDocumentationCompilerRootBinding(TypeUse('Boolean', LScope, False), 0, LRoot, LScope);
+  Check(Supports(LUse, INyxDocumentationCompilerRootBindings, LRoots) and (LRoots.RootAt(0) = LRoot) and
+    not LUse.Reference.Defined and not LUse.BindingAt(0).Defined,
+    'Explicit root does not manufacture an old nominal declaration');
+  LClear := WithNyxDocumentationCompilerRootBinding(LUse, 0, nil, LScope);
+  Check(Supports(LClear, INyxDocumentationCompilerRootBindings, LRoots) and (LRoots.RootAt(0) = nil),
+    'Root clear restores the unbound slot while old immutable use stays readable');
+  LPlainArrayUse := TypeUse('array of Boolean', LScope, False);
+  LClearArrayUse := WithNyxDocumentationCompilerRootBinding(LPlainArrayUse, 0, LRoot, LScope);
+  LClearArrayUse := WithNyxDocumentationCompilerRootBinding(LClearArrayUse, 0, nil, LScope);
+  LPlainArray := NewNyxDocumentationDeclaredType(Ref('TClearArray'), '', LPlainArrayUse, LScope);
+  LClearArray := NewNyxDocumentationDeclaredType(Ref('TClearArray'), '', LClearArrayUse, LScope);
+  LSmall := Construction;
+  LCaptured := CaptureNyxDocumentationType(LPlainArray, LSmall);
+  LLegacyWork := LSmall.Receipt.Total;
+  LSmall.Retire;
+  LSmall := Construction;
+  LCaptured := CaptureNyxDocumentationType(LClearArray, LSmall);
+  Check(LSmall.Receipt.Total = LLegacyWork, 'Cleared all-nil root vector restores the exact absent capture work receipt');
+  LSmall.Retire;
+  SetLength(LDeclarations, 1);
+  LDeclarations[0] := LPlainArray;
+  LRegistration := NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'), Ref('TClearArray'), LDeclarations);
+  LDeclarations[0] := LClearArray;
+  LOldRegistration := NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'), Ref('TClearArray'), LDeclarations);
+  Check(LRegistration.DeclarationContentAt(0) = LOldRegistration.DeclarationContentAt(0),
+    'Cleared root metadata restores byte-identical old optional-absence framing');
+  LNominal := LUse.WithBinding(0, Ref('TItem'));
+  Check(Supports(LNominal, INyxDocumentationCompilerRootBindings, LRoots) and (LRoots.RootAt(0) = nil) and
+    LNominal.BindingAt(0).Same(Ref('TItem')), 'Nominal replacement clears a root without losing exact syntax');
+  SetLength(LNames, 1);
+  LNames[0] := 'T';
+  LGenerics := NewNyxDocumentationGenericParameters(NyxDocumentationType('mechanics.declarations', 'TBox', 1), LNames, LScope);
+  LChangedUse := WithNyxDocumentationFormalBinding(TypeUse('T', LScope, False), 0, LGenerics.ParameterAt(0), LScope);
+  LChangedUse := WithNyxDocumentationCompilerRootBinding(LChangedUse, 0, LRoot, LScope);
+  Check(Supports(LChangedUse, INyxDocumentationFormalBindings, LFormalMap) and (LFormalMap.FormalAt(0) = nil),
+    'A root replacement clears a scoped formal without inferring a spelling identity');
+  LChangedUse := WithNyxDocumentationFormalBinding(LChangedUse, 0, LGenerics.ParameterAt(0), LScope);
+  Check(Supports(LChangedUse, INyxDocumentationCompilerRootBindings, LRoots) and (LRoots.RootAt(0) = nil),
+    'Formal replacement clears root provenance');
+  LFailure := False;
+  try
+    WithNyxDocumentationCompilerRootBinding(TypeUse('TBox<T>', LScope, False), 0, LRoot, LScope);
+  except
+    on ENyxDocumentation do LFailure := True;
+  end;
+  Check(LFailure, 'Generic designator cannot be relabeled as a compiler-root leaf');
+  LAlias := NewNyxDocumentationAliasDefinition(Ref('TRootAlias'), 'Explicit supplied root.', LUse, LScope);
+  Check((LAlias.Kind = ndtAlias) and not LAlias.AliasTarget.Defined and
+    Supports(LAlias, INyxDocumentationAliasDefinition, LAliasDefinition) and
+    (LAliasDefinition.Definition.Expression.Text = 'Boolean'), 'Root alias preserves declared alias kind and exact source expression');
+  LCopy := LAlias.WithExample(NyxDocumentationExample('Read metadata', 'Root.Facts;')).WithRelated(Ref('TItem'));
+  Check(Supports(LCopy, INyxDocumentationAliasDefinition, LAliasDefinition) and
+    (LAliasDefinition.Definition <> nil), 'Fluent prose copying retains specialized root alias');
+  LCaptured := CaptureNyxDocumentationType(LAlias, LScope);
+  Check(Supports(LCaptured, INyxDocumentationAliasDefinition, LAliasDefinition) and
+    (LAliasDefinition.Definition <> nil), 'Type capture preserves the optional exact alias definition');
+  LReplacement := LAlias.WithAlias(Ref('TItem'));
+  Check(Supports(LReplacement, INyxDocumentationAliasDefinition, LAliasDefinition) and
+    (LAliasDefinition.Definition = nil) and LReplacement.AliasTarget.Same(Ref('TItem')),
+    'Explicit alias replacement clears stale root metadata');
+  LAlternate := TAlternateRoot.Create;
+  LRootSupplier := LAlternate;
+  LAlternate.Value := LRoot;
+  LAlternate.MutateAt := 2;
+  LFailure := False;
+  try
+    WithNyxDocumentationCompilerRootBinding(LClear, 0, LRootSupplier, LScope);
+  except
+    on ENyxDocumentation do LFailure := True;
+  end;
+  Check(LFailure and (LAlternate.NameReads >= 2), 'Late alternate root-name mutation refuses immutable publication');
+  LAlternateMap := TAlternateRootUse.Create(LUse);
+  LAlternateUse := LAlternateMap;
+  LAlternateMap.Root := LRoot;
+  LAlternateMap.ClearAt := 2;
+  LFailure := False;
+  try
+    NewNyxDocumentationAliasDefinition(Ref('TLate'), '', LAlternateUse, LScope);
+  except
+    on ENyxDocumentation do LFailure := True;
+  end;
+  Check(LFailure and (LAlternateMap.RootReads >= 2), 'Final root value-to-nil topology change refuses capture');
+  LAlternateMap := TAlternateRootUse.Create(LClear);
+  LAlternateUse := LAlternateMap;
+  LAlternateMap.Root := LRoot;
+  LAlternateMap.PublishAt := 2;
+  LFailure := False;
+  try
+    NewNyxDocumentationAliasDefinition(Ref('TLateAppearance'), '', LAlternateUse, LScope);
+  except
+    on ENyxDocumentation do LFailure := True;
+  end;
+  Check(LFailure and (LAlternateMap.RootReads >= 2), 'Final nil-to-root topology change cannot acquire late authority');
+  LAlternateAlias := TAlternateRootAlias.Create(LAlias);
+  LCopy := LAlternateAlias;
+  LAlternateAlias.Use := LUse;
+  LAlternateAlias.ClearAt := 2;
+  LFailure := False;
+  try
+    CaptureNyxDocumentationType(LCopy, LScope);
+  except
+    on ENyxDocumentation do LFailure := True;
+  end;
+  Check(LFailure, 'Late alias definition disappearance refuses capture');
+  LChangedContext := LContext.WithSymbol(NyxPascalDefine('CONFIGURED_DIFFERENCE'), ppdInteger, 7);
+  LOther := NewNyxDocumentationCompilerRoot(LRoot.Name, LRoot.Family, LChangedContext, LScope);
+  Check(NyxDocumentationCompilerRootContent(LOther) <> NyxDocumentationCompilerRootContent(LRoot),
+    'Same family/version/name with a different exact context remains different equality data');
+  SetLength(LDeclarations, 1);
+  LDeclarations[0] := LAlias;
+  LRegistration := NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'), LAlias.Identity, LDeclarations, [], LScope);
+  Check(Pos('compiler-root-binding-v1', LRegistration.DeclarationContentAt(0)) > 0,
+    'Root context and alias shape participate in bounded registration equality');
+  LDeclarations[0] := NewNyxDocumentationDeclaredType(Ref('TUnbound'), '', TypeUse('array of Boolean', LScope, False), LScope);
+  LOldRegistration := NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'), Ref('TUnbound'), LDeclarations, [], LScope);
+  LRegistry := TNyxDocumentationRegistry.Create;
+  LCatalog := TNyxCatalog.Create;
+  LBad := TNyxCatalog.Create;
+  try
+    LCatalog.RegisterKind('explicit-root', 'Root', 'Mechanics', False, LRegistration);
+    LIndex := LRegistry.Refresh(CaptureNyxSchemas, CaptureNyxCallbacks, LCatalog.Capture, 0);
+    Check((LIndex.DeclarationCount = 1) and (LIndex.Members(LAlias.Identity).Count = 0),
+      'Real immutable index accepts a terminal root alias without a fabricated System leaf');
+    LPrevious := LIndex;
+    LVersion := LRegistry.Version;
+    LBad.RegisterKind('unbound-root', 'Unbound', 'Mechanics', False, LOldRegistration);
+    LFailure := False;
+    try
+      LRegistry.Refresh(CaptureNyxSchemas, CaptureNyxCallbacks, LBad.Capture, LVersion);
+    except
+      on ENyxDocumentation do LFailure := True;
+    end;
+    Check(LFailure and (LRegistry.Current = LPrevious) and (LRegistry.Version = LVersion),
+      'Adding a root channel never weakens missing ordinary named closure or atomic prior-index refusal');
+    LBad.Free;
+    LBad := TNyxCatalog.Create;
+    SetLength(LDeclarations, 2);
+    LDeclarations[0] := LAlias;
+    LDeclarations[1] := NewNyxDocumentationType(Ref('TWrongBase'), ndtClass, '').WithBase(LAlias.Identity);
+    LBad.RegisterKind('root-base', 'Bad base', 'Mechanics', False,
+      NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'),
+        Ref('TWrongBase'), LDeclarations));
+    LFailure := False;
+    try
+      LRegistry.Refresh(CaptureNyxSchemas, CaptureNyxCallbacks, LBad.Capture, LVersion);
+    except
+      on ENyxDocumentation do LFailure := True;
+    end;
+    Check(LFailure and (LRegistry.Current = LPrevious) and (LRegistry.Version = LVersion),
+      'Terminal compiler-root alias cannot become a class/interface base');
+    LBad.Free;
+    LBad := TNyxCatalog.Create;
+    SetLength(LInterfaces, 1);
+    LInterfaces[0] := WithNyxDocumentationCompilerRootBinding(
+      TypeUse('Boolean', LScope, False, ndtoImplementedInterface), 0, LRoot, LScope);
+    SetLength(LDeclarations, 1);
+    LDeclarations[0] := WithNyxDocumentationImplementedInterfaces(
+      NewNyxDocumentationType(Ref('TWrongInterface'), ndtClass, ''),
+      NewNyxDocumentationInterfaceImplementations(LInterfaces, LScope), LScope);
+    LBad.RegisterKind('root-interface', 'Bad interface', 'Mechanics', False,
+      NewNyxDocumentationRegistration(NyxDocumentationUnit('mechanics.declarations'),
+        Ref('TWrongInterface'), LDeclarations));
+    LFailure := False;
+    try
+      LRegistry.Refresh(CaptureNyxSchemas, CaptureNyxCallbacks, LBad.Capture, LVersion);
+    except
+      on ENyxDocumentation do LFailure := True;
+    end;
+    Check(LFailure and (LRegistry.Current = LPrevious) and (LRegistry.Version = LVersion),
+      'Compiler-root occurrence cannot be the nominal implemented-interface root');
+  finally
+    LBad.Free;
+    LCatalog.Free;
+    LRegistry.Free;
+  end;
+  LSmall := Construction;
+  LAlternate := TAlternateRoot.Create;
+  LRootSupplier := LAlternate;
+  LAlternate.Value := LRoot;
+  LAlternate.Scope := LSmall;
+  LFailure := False;
+  try
+    WithNyxDocumentationCompilerRootBinding(LClear, 0, LRootSupplier, LSmall);
+  except
+    on ENyxDocumentationCancelled do LFailure := True;
+  end;
+  Check(LFailure and (LRoot.Facts = LContext), 'Alternate root getter cancellation publishes no value and retains prior detached facts');
+  LSmall.Retire;
+  LScope.Retire;
+  Check(LRoot.Facts = LContext, 'Published root retains no retired construction dependency');
+  LDisposedBefore := GRootInputDisposed;
+  CaptureReleasedRootInputs(LContext, LRoot.Name, LRoot.Family, LOther);
+  Check(GRootInputDisposed = LDisposedBefore + 1, 'Published root retains no admission object after caller-slot release');
+  LInputPolicy := TRootInputAdmission.Create;
+  LInputAdmission := LInputPolicy;
+  LInputPolicy.AliasInput := True;
+  LSmall := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LInputAdmission);
+  GAliasIdentity := Ref('TCapturedInput');
+  GAliasSummary := 'Originally admitted.';
+  LCopy := NewNyxDocumentationAliasDefinition(GAliasIdentity, GAliasSummary, LUse, LSmall);
+  Check(LCopy.Identity.Same(Ref('TCapturedInput')) and (LCopy.Summary = 'Originally admitted.') and
+    GAliasIdentity.Same(Ref('TReplacedCallerSlot')), 'Alias input record/text slots are leased before the first outward callback');
+  LSmall.Retire;
+  LSmall := nil;
+  LInputAdmission := nil;
+  GAliasIdentity := Default(TNyxDocumentationRef);
+  GAliasSummary := '';
+end;
+
 procedure IndexCases;
 var
   LRegistry: TNyxDocumentationRegistry;
@@ -886,6 +1462,8 @@ begin
     RefusalCases;
     CaptureCases;
     SharedStorageCases;
+    CompilerRootCases;
+    CompilerRootSourceCases;
     IndexCases;
     {$ifndef PAS2JS}
     ActualSources(LRepository);

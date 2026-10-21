@@ -146,9 +146,12 @@ var
   LTargets: INyxDocumentationAliasTargets;
   LProperty: INyxDocumentationProperty;
   LRichMember: INyxDocumentationMemberSignature;
+  LMemberValue: INyxDocumentationMemberValue;
+  LStorage: INyxDocumentationStorageDeclaration;
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
   LDeclared: INyxDocumentationDeclaredTypeExpression;
+  LAliasDefinition: INyxDocumentationAliasDefinition;
   LMemberDeclaration: INyxDocumentationMemberDeclaration;
   LMemberIntent: INyxDocumentationMemberIntent;
   LInterfaceDeclaration: INyxDocumentationDeclaredInterfaces;
@@ -191,6 +194,8 @@ var
     LExpression: INyxDocumentationTypeExpression;
     LCapability: INyxDocumentationFormalBindings;
     LFormal: INyxDocumentationFormalParameter;
+    LRoots: INyxDocumentationCompilerRootBindings;
+    LRoot: INyxDocumentationCompilerRoot;
   begin
     Number(Ord(AUse <> nil));
 
@@ -222,15 +227,38 @@ var
             Add(LFormal.Name);
           end;
         end;
+
+      if Supports(AUse, INyxDocumentationCompilerRootBindings, LRoots) then
+        for LUse := 0 to AUse.BindingCount - 1 do
+        begin
+          LRoot := LRoots.RootAt(LUse);
+
+          if LRoot <> nil then
+          begin
+            Add('compiler-root-binding-v1');
+            Number(LUse);
+            Add(LRoot.Name.Name);
+            Number(Ord(LRoot.Family));
+            Add(NyxDocumentationCompilerRootContent(LRoot));
+          end;
+        end;
     end;
   end;
   procedure RichParameter(const AParameter: INyxDocumentationParameterDeclaration);
+  var
+    LUntyped: INyxDocumentationUntypedParameter;
   begin
     Add(AParameter.Name);
     TypeUse(AParameter.TypeUse);
     Number(Ord(AParameter.Passing));
     Number(Ord(AParameter.HasDefault));
     Add(AParameter.DefaultPascal);
+
+    if Supports(AParameter, INyxDocumentationUntypedParameter, LUntyped) then
+    begin
+      Add('untyped-parameter');
+      Number(Ord(LUntyped.DeclaredUntyped));
+    end;
   end;
 begin
   Result := '';
@@ -334,6 +362,25 @@ begin
         RichParameter(LRichProperty.ParameterAt(LAt));
     end;
 
+    if Supports(LMember, INyxDocumentationMemberValue, LMemberValue) and
+      (LMemberValue.DeclaredValueType <> nil) then
+    begin
+
+      if LMember.Kind = ndmField then
+        Add('declared-field-type')
+      else
+        Add('declared-storage-type');
+      TypeUse(LMemberValue.DeclaredValueType);
+    end;
+
+    if Supports(LMember, INyxDocumentationStorageDeclaration, LStorage) then
+    begin
+      Add('storage-declaration');
+      Number(Ord(LStorage.HasDeclaredType));
+      Number(Ord(LStorage.HasInitializer));
+      Add(LStorage.InitializerPascal);
+    end;
+
     if Supports(LMember, INyxDocumentationMemberDeclaration, LMemberDeclaration) then
     begin
       LMemberIntent := LMemberDeclaration.DeclarationIntent;
@@ -376,6 +423,14 @@ begin
     Number(Ord(LDeclared.Family));
     TypeUse(LDeclared.Definition);
   end;
+
+  if Supports(AValue, INyxDocumentationAliasDefinition, LAliasDefinition) then
+
+    if LAliasDefinition.Definition <> nil then
+    begin
+      Add('direct-alias-definition-v1');
+      TypeUse(LAliasDefinition.Definition);
+    end;
 
   if Supports(AValue, INyxDocumentationDeclaredInterfaces, LInterfaceDeclaration) then
   begin

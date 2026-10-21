@@ -455,6 +455,76 @@ begin
   end;
 end;
 
+{ Helper lookup policy grants no storage measurement. Exact measurement reuse
+  must still distinguish absent, single-helper and multiple-helper contexts,
+  including independently owned bootstrap policy. All sizes here are controlled
+  fixture replies rather than a native compiler or layout claim. }
+procedure HelperPolicyIdentity;
+const
+  CSource: TNyxText = 'unit Measure; interface {$packrecords 1} ' +
+    'type TTarget=record Value:Byte; end; implementation end.';
+var
+  LBase, LContext, LMeasured, LRoot: INyxPascalCompilerContext;
+  LStorage: INyxPascalConstantStorage;
+  LIdentity: INyxPascalConstantStorageIdentity;
+  LAnswer: INyxPascalConstantResult;
+  LKeys: array[TNyxPascalKnowledge] of TNyxPascalStorageKey;
+  LPolicy, LOther: TNyxPascalKnowledge;
+  LBootstrap: Boolean;
+
+  function ContextFor(AValue: TNyxPascalKnowledge): INyxPascalCompilerContext;
+  begin
+
+    if LBootstrap then
+      Result := NyxPascalWithBootstrapContext(LBase,
+        NyxPascalWithCompilerPolicies(LRoot,
+          TNyxPascalCompilerPolicies.Unknown.WithMultipleHelpers(AValue)))
+    else
+      Result := NyxPascalWithCompilerPolicies(LBase,
+        NyxPascalCompilerPolicies(LBase).WithMultipleHelpers(AValue));
+  end;
+
+begin
+  LBase := Facts;
+  LRoot := NewNyxPascalCompilerContext(ppcFPC,
+    LBase.Version, ppmDelphi, pcsoSystemBootstrap).WithOption('H', ppkTrue);
+  LRoot := NyxPascalWithCapturedSize(LRoot, NyxPascalSizeReference('Byte'),
+    NyxPascalSizeFact(pssKnown, ppmDelphi, ppkTrue, 1));
+  for LBootstrap := False to True do
+  begin
+    for LPolicy := Low(TNyxPascalKnowledge) to High(TNyxPascalKnowledge) do
+    begin
+      LContext := ContextFor(LPolicy);
+      LStorage := Storage(Site(CSource, LContext), 'sizeof(TTarget)');
+      Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+      LKeys[LPolicy] := LIdentity.StorageKey;
+
+      if (LPolicy = ppkUnknown) and not LBootstrap then
+      begin
+        LStorage := Storage(Site(CSource, LBase), 'sizeof(TTarget)');
+        Supports(LStorage, INyxPascalConstantStorageIdentity, LIdentity);
+        Check(LIdentity.StorageKey.SameKey(LKeys[LPolicy]),
+          'An explicit absent helper policy preserves the existing structural request key');
+      end;
+    end;
+    for LPolicy := Low(TNyxPascalKnowledge) to High(TNyxPascalKnowledge) do
+    begin
+      for LOther := Low(TNyxPascalKnowledge) to High(TNyxPascalKnowledge) do
+      begin
+        LMeasured := NyxPascalWithCapturedStorage(ContextFor(LOther), LKeys[LPolicy],
+          NyxPascalStorageFact(psfsKnown, 1));
+        LAnswer := Evaluate(Site(CSource, LMeasured), 'sizeof(TTarget)');
+        Check((LKeys[LPolicy].SameKey(LKeys[LOther]) = (LPolicy = LOther)) and
+          (((LPolicy = LOther) and (LAnswer.Issue = pbiNone) and
+            (LAnswer.Value.Number.ToText = '1')) or
+           ((LPolicy <> LOther) and (LAnswer.Value.Kind = pvvUnknown) and
+            (LAnswer.Issue = pbiCompilerContext))),
+          'A measured storage value answers only the identical outer or bootstrap helper policy');
+      end;
+    end;
+  end;
+end;
+
 procedure StructuralBounds;
 var
   LContext: INyxPascalCompilerContext;
@@ -800,6 +870,7 @@ begin
     {$ifndef PAS2JS}WholeModePackingInput;{$endif}
     StructuralEvidence;
     PointerPolicyIdentity;
+    HelperPolicyIdentity;
     StructuralBounds;
     MixedStorageEvidence;
     ArraysAndForms;

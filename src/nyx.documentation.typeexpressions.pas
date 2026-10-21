@@ -17,7 +17,7 @@ type
     parameter and a type declaration does not establish identical type intent. }
   TNyxDocumentationTypeOccurrence = (ndtoParameter, ndtoResult,
     ndtoPropertyIndex, ndtoPropertyValue, ndtoDeclaration,
-    ndtoImplementedInterface);
+    ndtoImplementedInterface, ndtoField, ndtoVariable, ndtoConstant);
   { Existing lexer/type policies plus one shared work ceiling. Bytes, tokens and
     nodes are aggregate admitted storage, including abandoned attempts, not
     fresh limits for each expression. Depth keeps maximum-nesting meaning. }
@@ -89,6 +89,13 @@ function NewNyxDocumentationTypeConstruction(
 { Validate the sealed construction owner before trusting a public capability.
   This performs no allocation and grants no budget reset to alternate scopes. }
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
+{ Reserve a known UTF-8 byte count before allocating formatted metadata, using
+  the same sealed construction and outward aggregate allowance as type windows.
+  This admits one operation and bytes only: the caller separately admits any
+  scalar inspection/formatting work and supplies the exact eventual byte count.
+  It cannot reset limits or grant authority to an alternate construction. }
+procedure ReserveNyxDocumentationTypeBytes(ABytes: Integer;
+  const AConstruction: INyxDocumentationTypeConstruction);
 function NewNyxDocumentationTextWindows(const ASource: TNyxText;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTextWindows;
 { Copy one scalar window only after its exact UTF-8 byte cost is reserved.
@@ -108,6 +115,9 @@ implementation
 uses nyx.bytes;
 
 type
+  { Identity-only creation arena. Expressions may retain this empty token after
+    their construction retires; it holds no scope, source, policy or callback. }
+  TExpressionArena = class(TInterfacedObject);
   { Private borrowed owner, used only under the public expression's lease. }
   TExpression = class;
   { A public alternate cannot earn reuse by advertising counts or another
@@ -125,6 +135,10 @@ type
     NamedNodes, Arities: array of Integer;
     Policy: TNyxDocumentationTypeExpressionLimits;
     TextBytes: Integer;
+    { Written once before first publication. Reuse still requires the exact
+      ordinary interface at this slot in the active construction's vector. }
+    CreationArena: IInterface;
+    CreationSlot: Integer;
     function Owner: TExpression;
     function Text: TNyxText;
     function Occurrence: TNyxDocumentationTypeOccurrence;
@@ -146,10 +160,13 @@ type
     FCancelled, FRetired: Boolean;
     FOwners: array of INyxDocumentationTypeExpression;
     FOwnerCount: Integer;
+    FArena: IInterface;
     procedure Check;
     procedure Reserve(ABytes, ATokens, ANodes: Integer);
-    procedure Remember(const AValue: INyxDocumentationTypeExpression);
-    function Seen(const AValue: INyxDocumentationTypeExpression): Boolean;
+    procedure Remember(const AValue: INyxDocumentationTypeExpression;
+      ACreated: TExpression = nil);
+    function Seen(const AValue: INyxDocumentationTypeExpression;
+      AOwner: TExpression): Boolean;
   public
     constructor Create(const ALimits: TNyxDocumentationTypeExpressionLimits;
       const ACancellation: INyxCancellationScope;
@@ -248,6 +265,7 @@ begin
   inherited Create;
   ALimits.Validate;
   FPolicy := ALimits;
+  FArena := TExpressionArena.Create;
   FAnalysis := NewNyxPascalAnalysisBudget(ALimits.MaximumWork, ACancellation);
   FOuter := AAdmission;
   Check;
@@ -266,22 +284,55 @@ begin
 end;
 
 function TConstruction.GetCancelled: Boolean;
+var
+  LSelf: INyxDocumentationTypeConstruction;
+  LAnalysis: INyxPascalAnalysisBudget;
 begin
-  Result := FCancelled or FRetired or ((FAnalysis <> nil) and FAnalysis.Cancelled);
+  LSelf := Self;
+  LAnalysis := FAnalysis;
+  Result := FCancelled or FRetired;
+
+  if not Result and (LAnalysis <> nil) then
+    Result := LAnalysis.Cancelled;
+  { A parent's cancellation getter is outward code too. Retirement during that
+    call must remain visible even when the parent itself returns False. }
+  Result := Result or FCancelled or FRetired;
 end;
 
 procedure TConstruction.Reserve(ABytes, ATokens, ANodes: Integer);
+var
+  LSelf: INyxDocumentationTypeConstruction;
+  LOuter: INyxDocumentationTypeAdmission;
+  LRemaining: Integer;
+  procedure CheckStorage;
+  begin
+
+    if (ABytes < 0) or (ATokens < 0) or (ANodes < 0) or
+      (ABytes > FPolicy.Lexical.MaximumSourceBytes - FBytes) or
+      (ATokens > FPolicy.Lexical.MaximumTokens - FTokens) or
+      (ANodes > FPolicy.Types.MaximumNodes - FNodes) then
+      raise ENyxDocumentationTypeExpression.Create('Shared type-expression storage allowance exhausted');
+  end;
 begin
+  LSelf := Self;
+  LOuter := FOuter;
   Check;
+  CheckStorage;
 
-  if (ABytes < 0) or (ATokens < 0) or (ANodes < 0) or
-    (ABytes > FPolicy.Lexical.MaximumSourceBytes - FBytes) or
-    (ATokens > FPolicy.Lexical.MaximumTokens - FTokens) or
-    (ANodes > FPolicy.Types.MaximumNodes - FNodes) then
-    raise ENyxDocumentationTypeExpression.Create('Shared type-expression storage allowance exhausted');
+  if LOuter <> nil then
+  begin
+    LRemaining := LOuter.RemainingTypeBytes;
+    Check;
+    { The outward getter may have used this same construction recursively.
+      Recheck local counters before committing the original reservation. }
+    CheckStorage;
 
-  if (FOuter <> nil) and (ABytes > FOuter.RemainingTypeBytes - FBytes) then
-    raise ENyxDocumentationTypeExpression.Create('Remaining aggregate type-expression copy allowance exhausted');
+    if LRemaining < FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Remaining aggregate type-expression copy allowance exhausted');
+
+    if ABytes > LRemaining - FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Remaining aggregate type-expression copy allowance exhausted');
+  end;
   Inc(FBytes, ABytes);
   Inc(FTokens, ATokens);
   Inc(FNodes, ANodes);
@@ -291,13 +342,21 @@ end;
 procedure TConstruction.Admit(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
 var
   LReceipt: TNyxPascalAnalysisReceipt;
+  LSelf: INyxDocumentationTypeConstruction;
+  LAnalysis: INyxPascalAnalysisBudget;
+  LOuter: INyxDocumentationTypeAdmission;
 begin
+  { Admission is outward code. Keep the receiver and its borrowed owners alive
+    if that code releases the caller's last reference or retires this scope. }
+  LSelf := Self;
+  LAnalysis := FAnalysis;
+  LOuter := FOuter;
   Check;
 
   if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or
     (Ord(APhase) > Ord(High(TNyxPascalAnalysisPhase))) then
     raise EArgumentException.Create('Unknown Pascal analysis work phase');
-  LReceipt := FAnalysis.Receipt;
+  LReceipt := LAnalysis.Receipt;
 
   if (AUnits < 1) or (AUnits > LReceipt.Maximum - LReceipt.Total) then
     raise ENyxDocumentationTypeExpression.Create('Shared type-expression work allowance exhausted');
@@ -307,9 +366,13 @@ begin
   else if APhase = papTypeNode then
     Reserve(0, 0, AUnits);
 
-  if FOuter <> nil then
-    FOuter.AdmitTypeWork(APhase, AUnits);
-  FAnalysis.Admit(APhase, AUnits);
+  if LOuter <> nil then
+  begin
+    LOuter.AdmitTypeWork(APhase, AUnits);
+    Check;
+  end;
+  LAnalysis.Admit(APhase, AUnits);
+  Check;
 end;
 
 procedure TConstruction.Spend(AUnits: Integer);
@@ -318,14 +381,33 @@ begin
 end;
 
 procedure TConstruction.AdmitText(const AValue: TNyxText);
+var
+  LSelf: INyxDocumentationTypeConstruction;
+  LOuter: INyxDocumentationTypeAdmission;
+  LText: TNyxText;
+  LRemaining: Integer;
 begin
+  LSelf := Self;
+  LOuter := FOuter;
+  LText := AValue;
   Check;
 
-  if (Length(AValue) > FPolicy.Lexical.MaximumSourceBytes - FBytes) or
-    ((FOuter <> nil) and (Length(AValue) > FOuter.RemainingTypeBytes - FBytes)) then
+  if Length(LText) > FPolicy.Lexical.MaximumSourceBytes - FBytes then
     raise ENyxDocumentationTypeExpression.Create('Copied metadata exceeds remaining construction bytes');
-  Spend(Length(AValue) + 1);
-  Reserve(NyxUTF8ByteCount(AValue), 0, 0);
+
+  if LOuter <> nil then
+  begin
+    LRemaining := LOuter.RemainingTypeBytes;
+    Check;
+
+    if LRemaining < FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Copied metadata exceeds remaining construction bytes');
+
+    if Length(LText) > LRemaining - FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Copied metadata exceeds remaining construction bytes');
+  end;
+  Spend(Length(LText) + 1);
+  Reserve(NyxUTF8ByteCount(LText), 0, 0);
 end;
 
 function TConstruction.Limits: TNyxDocumentationTypeExpressionLimits;
@@ -340,50 +422,104 @@ begin
 end;
 
 procedure TConstruction.Retire;
+var
+  LSelf: INyxDocumentationTypeConstruction;
 begin
+  { Releasing a policy may execute its destructor and drop the caller's last
+    scope reference. Keep this receiver alive through its complete retirement. }
+  LSelf := Self;
   FRetired := True;
   FOwners := nil;
   FOwnerCount := 0;
+  FArena := nil;
   FOuter := nil;
   FAnalysis.Retire;
 end;
 
-function TConstruction.Seen(const AValue: INyxDocumentationTypeExpression): Boolean;
+function TConstruction.Seen(const AValue: INyxDocumentationTypeExpression;
+  AOwner: TExpression): Boolean;
 var
   LAt: Integer;
 begin
   Result := False;
   Spend;
-  for LAt := 0 to FOwnerCount - 1 do
+
+  if AOwner.CreationArena = FArena then
+  begin
+    Spend(3);
+    LAt := AOwner.CreationSlot;
+
+    if (LAt < 0) or (LAt >= FOwnerCount) then
+      raise ENyxDocumentationTypeExpression.Create('A creation receipt is outside its retained owner vector');
+
+    if FOwners[LAt] <> AValue then
+      raise ENyxDocumentationTypeExpression.Create('A creation receipt disagrees with its exact retained expression');
+    Exit(True);
+  end;
+  { Foreign constructions retain full charged lookup. Equal text and an old
+    creation arena never supply a receipt in a different construction. }
+  LAt := 0;
+  while LAt < FOwnerCount do
   begin
     Spend;
 
     if FOwners[LAt] = AValue then
       Exit(True);
+    Inc(LAt);
   end;
 end;
 
-procedure TConstruction.Remember(const AValue: INyxDocumentationTypeExpression);
+procedure TConstruction.Remember(const AValue: INyxDocumentationTypeExpression;
+  ACreated: TExpression);
 var
   LSlot, LCapacity: Integer;
+  LValue: INyxDocumentationTypeExpression;
 begin
+  LValue := AValue;
   Spend;
-  LSlot := FOwnerCount;
 
-  if LSlot >= FPolicy.Types.MaximumNodes then
-    raise ENyxDocumentationTypeExpression.Create('Expression receipt allowance exhausted');
-
-  if LSlot = Length(FOwners) then
+  if ACreated <> nil then
   begin
+    Spend(3);
+
+    if ((ACreated as INyxDocumentationTypeExpression) <> LValue) or
+      (ACreated.CreationArena <> nil) then
+      raise ENyxDocumentationTypeExpression.Create('Only a new exact expression may receive a creation receipt');
+  end;
+  while True do
+  begin
+    LSlot := FOwnerCount;
+
+    if LSlot >= FPolicy.Types.MaximumNodes then
+      raise ENyxDocumentationTypeExpression.Create('Expression receipt allowance exhausted');
+
+    if LSlot < Length(FOwners) then
+      Break;
     LCapacity := LSlot + 16 + LSlot div 2;
 
     if LCapacity > FPolicy.Types.MaximumNodes then
       LCapacity := FPolicy.Types.MaximumNodes;
     Spend(LSlot + LCapacity + 1);
+    { Growth admission may append or grow recursively. Observe the current
+      count after that callback, before allocating or stamping the new owner. }
+    LSlot := FOwnerCount;
+
+    if LSlot < Length(FOwners) then
+      Break;
+
+    if LSlot >= LCapacity then
+      Continue;
     SetLength(FOwners, LCapacity);
+    Break;
   end;
-  FOwners[LSlot] := AValue;
+  FOwners[LSlot] := LValue;
   Inc(FOwnerCount);
+
+  if ACreated <> nil then
+  begin
+    ACreated.CreationArena := FArena;
+    ACreated.CreationSlot := LSlot;
+  end;
 end;
 
 function TOwnedConstruction.Construction: TConstruction;
@@ -427,6 +563,20 @@ end;
 procedure CheckNyxDocumentationTypeConstruction(const AValue: INyxDocumentationTypeConstruction);
 begin
   ConstructionOwner(AValue);
+end;
+
+procedure ReserveNyxDocumentationTypeBytes(ABytes: Integer;
+  const AConstruction: INyxDocumentationTypeConstruction);
+var
+  LConstruction: INyxDocumentationTypeConstruction;
+  LBudget: TConstruction;
+begin
+  { Outward byte admission may release the caller's slot or retire this scope.
+    Keep the sealed owner alive and reuse its existing refusal boundaries. }
+  LConstruction := AConstruction;
+  LBudget := ConstructionOwner(LConstruction);
+  LBudget.Spend;
+  LBudget.Reserve(ABytes, 0, 0);
 end;
 
 constructor TTextWindows.Create(const ASource: TNyxText;
@@ -668,30 +818,44 @@ function NewNyxDocumentationTypeExpression(const AText: TNyxText;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeExpression;
 var
   LBudget: TConstruction;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LOuter: INyxDocumentationTypeAdmission;
+  LText: TNyxText;
   LOwner: TExpression;
   LLease: INyxDocumentationTypeExpression;
   LLexical: INyxPascalLexicalSnapshot;
   LNode, LParent: TNyxPascalTypeNode;
-  LAt, LSlot, LChild, LArity, LTextBytes: Integer;
+  LAt, LSlot, LChild, LArity, LTextBytes, LRemaining: Integer;
 begin
-  Result := nil;
-  LBudget := ConstructionOwner(AConstruction);
+  LConstruction := AConstruction;
+  LText := AText;
+  LBudget := ConstructionOwner(LConstruction);
   LBudget.Spend;
 
   if (Ord(AOccurrence) < 0) or (Ord(AOccurrence) > Ord(High(TNyxDocumentationTypeOccurrence))) then
     raise ENyxDocumentationTypeExpression.Create('Unknown declared type occurrence role');
 
-  if Length(AText) > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes then
+  if Length(LText) > LBudget.FPolicy.Lexical.MaximumSourceBytes - LBudget.FBytes then
     raise ENyxDocumentationTypeExpression.Create('Type-expression copy exceeds remaining source bytes');
 
-  if (LBudget.FOuter <> nil) and
-    (Length(AText) > LBudget.FOuter.RemainingTypeBytes - LBudget.FBytes) then
-    raise ENyxDocumentationTypeExpression.Create('Type-expression copy exceeds remaining aggregate bytes');
-  LBudget.Spend(Length(AText) + 1);
-  LTextBytes := NyxUTF8ByteCount(AText);
+  LOuter := LBudget.FOuter;
+
+  if LOuter <> nil then
+  begin
+    LRemaining := LOuter.RemainingTypeBytes;
+    LBudget.Check;
+
+    if LRemaining < LBudget.FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Type-expression copy exceeds remaining aggregate bytes');
+
+    if Length(LText) > LRemaining - LBudget.FBytes then
+      raise ENyxDocumentationTypeExpression.Create('Type-expression copy exceeds remaining aggregate bytes');
+  end;
+  LBudget.Spend(Length(LText) + 1);
+  LTextBytes := NyxUTF8ByteCount(LText);
   LBudget.Reserve(LTextBytes, 0, 0);
   try
-    LLexical := NewNyxPascalLexicalSnapshot(AText, LBudget.FPolicy.Lexical, AConstruction);
+    LLexical := NewNyxPascalLexicalSnapshot(LText, LBudget.FPolicy.Lexical, LConstruction);
   except
     on E: ENyxPascalAnalysisCancelled do
       raise ENyxDocumentationTypeExpressionCancelled.Create(E.Message);
@@ -706,7 +870,7 @@ begin
   LOwner.TextBytes := LTextBytes;
   try
     LOwner.Value := NewNyxPascalTypeSyntax(LLexical, NyxPascalSpan(0, LLexical.Scalars),
-      LBudget.FPolicy.Types, AConstruction);
+      LBudget.FPolicy.Types, LConstruction);
   except
     on E: ENyxPascalAnalysisCancelled do
       raise ENyxDocumentationTypeExpressionCancelled.Create(E.Message);
@@ -762,7 +926,7 @@ begin
   LBudget.Spend(LSlot * 2 + 1);
   SetLength(LOwner.NamedNodes, LSlot);
   SetLength(LOwner.Arities, LSlot);
-  LBudget.Remember(LLease);
+  LBudget.Remember(LLease, LOwner);
   LBudget.Check;
   Result := LLease;
 end;
@@ -771,21 +935,23 @@ function CaptureNyxDocumentationTypeExpression(const AValue: INyxDocumentationTy
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationTypeExpression;
 var
   LBudget: TConstruction;
+  LConstruction: INyxDocumentationTypeConstruction;
   LPrivate: IExpressionOwner;
   LOwner: TExpression;
-  LCanonical, LFrozen: INyxDocumentationTypeExpression;
+  LInput, LCanonical, LFrozen: INyxDocumentationTypeExpression;
   LText: TNyxText;
   LRole: TNyxDocumentationTypeOccurrence;
   LCount, LAt: Integer;
 begin
-  Result := nil;
-  LBudget := ConstructionOwner(AConstruction);
+  LInput := AValue;
+  LConstruction := AConstruction;
+  LBudget := ConstructionOwner(LConstruction);
   LBudget.Spend;
 
-  if AValue = nil then
+  if LInput = nil then
     raise ENyxDocumentationTypeExpression.Create('A declared type expression is required');
 
-  if Supports(AValue, IExpressionOwner, LPrivate) then
+  if Supports(LInput, IExpressionOwner, LPrivate) then
   begin
     LOwner := LPrivate.Owner;
 
@@ -793,14 +959,14 @@ begin
     begin
       LCanonical := LOwner;
 
-      if (LCanonical = AValue) and
+      if (LCanonical = LInput) and
         (LOwner.Policy.Types.MaximumDepth = LBudget.FPolicy.Types.MaximumDepth) and
         (LOwner.Policy.Lexical.AllowUnicodeIdentifiers = LBudget.FPolicy.Lexical.AllowUnicodeIdentifiers) and
         (LOwner.Policy.Lexical.MaximumCommentDepth = LBudget.FPolicy.Lexical.MaximumCommentDepth) and
         (LOwner.Policy.Lexical.AllowNestedComments = LBudget.FPolicy.Lexical.AllowNestedComments) then
       begin
 
-        if not LBudget.Seen(LCanonical) then
+        if not LBudget.Seen(LCanonical, LOwner) then
         begin
           LBudget.Reserve(LOwner.TextBytes, LOwner.Value.Lexical.Count, LOwner.Value.Count);
           LBudget.Remember(LCanonical);
@@ -811,15 +977,15 @@ begin
       end;
     end;
   end;
-  LCount := AValue.NamedUseCount;
+  LCount := LInput.NamedUseCount;
 
   if (LCount < 0) or (LCount > LBudget.FPolicy.Types.MaximumNodes - LBudget.FNodes) then
     raise ENyxDocumentationTypeExpression.Create('Alternate type-expression name allowance exhausted');
   LBudget.Spend;
-  LText := AValue.Text;
+  LText := LInput.Text;
   LBudget.Spend;
-  LRole := AValue.Occurrence;
-  LFrozen := NewNyxDocumentationTypeExpression(LText, LRole, AConstruction);
+  LRole := LInput.Occurrence;
+  LFrozen := NewNyxDocumentationTypeExpression(LText, LRole, LConstruction);
 
   if LFrozen.NamedUseCount <> LCount then
     raise ENyxDocumentationTypeExpression.Create('Alternate expression named-use count disagrees with its text');
@@ -827,13 +993,13 @@ begin
   begin
     LBudget.Spend;
 
-    if (AValue.NamedUseNode(LAt) <> LFrozen.NamedUseNode(LAt)) or
-      (AValue.NamedUseArity(LAt) <> LFrozen.NamedUseArity(LAt)) then
+    if (LInput.NamedUseNode(LAt) <> LFrozen.NamedUseNode(LAt)) or
+      (LInput.NamedUseArity(LAt) <> LFrozen.NamedUseArity(LAt)) then
       raise ENyxDocumentationTypeExpression.Create('Alternate expression name occurrence disagrees with its text');
   end;
   LBudget.Spend;
 
-  if (AValue.NamedUseCount <> LCount) or (AValue.Text <> LText) or (AValue.Occurrence <> LRole) then
+  if (LInput.NamedUseCount <> LCount) or (LInput.Text <> LText) or (LInput.Occurrence <> LRole) then
     raise ENyxDocumentationTypeExpression.Create('Alternate expression changed before publication');
   LBudget.Check;
   Result := LFrozen;

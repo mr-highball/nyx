@@ -35,7 +35,9 @@ uses
   nyx.model,
   nyx.schema,
   nyx.scheduler,
-  nyx.documentation.registration;
+  nyx.documentation,
+  nyx.documentation.registration,
+  nyx.documentation.declarations;
 
 type
   { Palette metadata is portable. Category is a legacy authoring hint, Container
@@ -66,6 +68,18 @@ type
     function DocumentationAt(AIndex: Integer): INyxDocumentationRegistration;
   end;
 
+  { A generated companion supplies one immutable package and the exact declared
+    creator primary for each built-in kind. It is borrowed only during catalog
+    construction; published bindings retain the package, never this producer.
+    This explicit input keeps the maintenance generator independent of metadata
+    that it is about to generate. Primary mapping is authored declaration data,
+    not permission to construct or invoke a control/factory. }
+  INyxCatalogDocumentationSource = interface(IInterface)
+    ['{A38289DE-06D3-4BC9-A179-587BA7D903AE}']
+    function PackageOwner: INyxDocumentationPackage;
+    function PrimaryForKind(AKind: TNyxKind): TNyxDocumentationRef;
+  end;
+
   { Registry and initial design defaults. RegisterKind rejects accidental
     duplicate registration. A registry entry describes an authorable kind;
     adapters must independently advertise/implement its target behavior. }
@@ -75,10 +89,15 @@ type
     FRecipes: array of TNyxNode;
     FDocumentation: TNyxDocumentationRegistrations;
     FIdentity, FRevision: Integer;
+    procedure Initialize(const ADocumentation: INyxCatalogDocumentationSource);
     function GetCount: Integer;
     function GetItem(AIndex: Integer): TNyxComponentInfo;
   public
-    constructor Create;
+    constructor Create; overload;
+    { The supplied companion must cover every built-in primitive and recipe.
+      Unknown, changing or unresolved primaries refuse the whole new catalog.
+      The ordinary no-argument constructor retains its explicit absence path. }
+    constructor Create(const ADocumentation: INyxCatalogDocumentationSource); overload;
     destructor Destroy; override;
     { Text overloads admit wire/legacy metadata. New extension authoring uses a
       distinct kind reference; captions/categories are ordinary user data. }
@@ -234,11 +253,31 @@ begin
 end;
 
 constructor TNyxCatalog.Create;
+begin
+  inherited Create;
+  Initialize(nil);
+end;
+
+constructor TNyxCatalog.Create(const ADocumentation: INyxCatalogDocumentationSource);
+begin
+  inherited Create;
+  Initialize(ADocumentation);
+end;
+
+procedure TNyxCatalog.Initialize(const ADocumentation: INyxCatalogDocumentationSource);
 var
   LIndex: Integer;
   LInfo: TNyxPrimitiveInfo;
+  LSource: INyxCatalogDocumentationSource;
+  LPackage: INyxDocumentationPackage;
+  LDocuments: TNyxDocumentationRegistrations;
+  LPrimaries: array of TNyxDocumentationRef;
+  LKinds: array of TNyxKind;
+  LCurrent: TNyxDocumentationRef;
 begin
-  inherited Create;
+  { Retain the caller's supplied value before invoking an alternate producer;
+    clearing its separate variable during a callback cannot retire our borrow. }
+  LSource := ADocumentation;
   FIdentity := NextCatalogIdentity;
   { Palette, inspector and target admission share one primitive definition.
     Reusable instances reference a definition; they do not own ignored children. }
@@ -248,6 +287,46 @@ begin
     RegisterKind(LInfo.Kind, LInfo.Title, LInfo.Category, LInfo.Container);
   end;
   RegisterNyxRecipes(Self);
+
+  if LSource = nil then
+    Exit;
+  LPackage := CaptureNyxDocumentationPackage(LSource.PackageOwner);
+
+  if LPackage = nil then
+    raise ENyxDocumentation.Create('Catalog documentation requires its declaration package');
+  SetLength(LDocuments, Count);
+  SetLength(LPrimaries, Count);
+  SetLength(LKinds, Count);
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if not TryNyxKind(FItems[LIndex].Kind, LKinds[LIndex]) then
+      raise ENyxDocumentation.Create('Catalog documentation encountered an unknown built-in kind');
+    LPrimaries[LIndex] := LSource.PrimaryForKind(LKinds[LIndex]);
+
+    if not LPrimaries[LIndex].Defined then
+      raise ENyxDocumentation.Create('Catalog documentation omits a built-in creator');
+    { All bindings share this exact captured package. Their ordinary factory
+      performs complete primary admission without invoking any creator. Empty
+      binding platforms retain absence; only the package's authored chunks can
+      supply target facts, never the compiler used to create this catalog. }
+    LDocuments[LIndex] := NewNyxDocumentationBinding(LPackage, LPrimaries[LIndex]);
+  end;
+  { Producer calls may be reentrant. Reobserve every mapping and the canonical
+    package after all captured bindings exist, before exposing the vector. The
+    catalog itself has not escaped its constructor and retains no producer. }
+  for LIndex := 0 to Count - 1 do
+  begin
+    LCurrent := LSource.PrimaryForKind(LKinds[LIndex]);
+
+    if not LCurrent.Same(LPrimaries[LIndex]) then
+      raise ENyxDocumentation.Create('Catalog creator documentation changed during construction');
+  end;
+
+  if not SameNyxDocumentationPackage(LPackage,
+    CaptureNyxDocumentationPackage(LSource.PackageOwner)) then
+    raise ENyxDocumentation.Create('Catalog documentation package changed during construction');
+  FDocumentation := LDocuments;
 end;
 
 destructor TNyxCatalog.Destroy;

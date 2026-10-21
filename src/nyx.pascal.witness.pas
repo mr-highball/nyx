@@ -52,11 +52,23 @@ type
 function PlanNyxPascalSourceWitness(const ARequirement: INyxPascalCompilerRequirement;
   const AOwner: INyxFPCCompilerCapture;
   const ACancellation: INyxCancellationScope = nil): INyxPascalSourceWitness;
+{ Revalidate a previously materialized compiler input, without executing a new
+  compiler or accepting a supplied measurement. RetainedFiles must already be
+  an owned captured byte catalog with its exact original path/search order.
+  Its one canonical root packet identity is used to rebuild the closed witness
+  for the CURRENT typed requirement, compiler owner and ordered earlier answers.
+  Every file byte must agree before the existing Read becomes available. The
+  retained transcript still needs its independent host/process provenance;
+  restoration supplies neither a compiler receipt nor authority to reuse an old
+  process-local source key. Callers rebuild requirements in their current world. }
+function RestoreNyxPascalSourceWitness(const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner: INyxFPCCompilerCapture; const ARetainedFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalSourceWitness;
 
 implementation
 
 uses SysUtils, nyx.bytes, nyx.pascal.context, nyx.pascal.encoding,
-  nyx.pascal.lexing, nyx.pascal.translation;
+  nyx.pascal.lexing, nyx.pascal.translation, nyx.pascal.work;
 
 const
   CKeyPrefix: TNyxText = 'nyx.storage.1|source-v1|';
@@ -84,7 +96,8 @@ type
     function BaseName(AFile: Integer): TNyxText;
   public
     constructor Create(const ARequirement: INyxPascalCompilerRequirement;
-      const AOwner: INyxFPCCompilerCapture; const ACancellation: INyxCancellationScope);
+      const AOwner: INyxFPCCompilerCapture; const ACancellation: INyxCancellationScope;
+      const ARestoredPrefix: TNyxText = '');
     function Files: INyxPascalFileCatalog;
     function Root: TNyxPascalPhysicalFile;
     function Read(const ATranscript: TNyxText; AExitCode: Integer;
@@ -167,7 +180,8 @@ begin
 end;
 
 constructor TSourceWitness.Create(const ARequirement: INyxPascalCompilerRequirement;
-  const AOwner: INyxFPCCompilerCapture; const ACancellation: INyxCancellationScope);
+  const AOwner: INyxFPCCompilerCapture; const ACancellation: INyxCancellationScope;
+  const ARestoredPrefix: TNyxText);
 var
   LRequest: INyxPascalCompilerRequirement;
   LSource: INyxPascalSourceSizeRequirement;
@@ -331,16 +345,22 @@ begin
       FPoints[LOther] := LPoint;
     end;
 
-    if CreateGUID(LGuid) <> 0 then
-      raise ENyxPascalContext.Create('A source witness needs an independent packet identity');
-    FPrefix := 'NYX_SOURCE_';
-    LName := TNyxText(GUIDToString(LGuid));
-    for LAt := 1 to Length(LName) do
+    FPrefix := ARestoredPrefix;
+
+    if FPrefix = '' then
     begin
 
-      if LName[LAt] in ['0'..'9', 'A'..'F', 'a'..'f'] then FPrefix := FPrefix + LName[LAt];
+      if CreateGUID(LGuid) <> 0 then
+        raise ENyxPascalContext.Create('A source witness needs an independent packet identity');
+      FPrefix := 'NYX_SOURCE_';
+      LName := TNyxText(GUIDToString(LGuid));
+      for LAt := 1 to Length(LName) do
+      begin
+
+        if LName[LAt] in ['0'..'9', 'A'..'F', 'a'..'f'] then FPrefix := FPrefix + LName[LAt];
+      end;
+      FPrefix := FPrefix + '_';
     end;
-    FPrefix := FPrefix + '_';
     LGuards := '{$codepage utf8}'#10;
     for LContextAt := 0 to 1 do
     begin
@@ -616,6 +636,161 @@ function PlanNyxPascalSourceWitness(const ARequirement: INyxPascalCompilerRequir
   const ACancellation: INyxCancellationScope): INyxPascalSourceWitness;
 begin
   Result := TSourceWitness.Create(ARequirement, AOwner, ACancellation);
+end;
+
+function RestoreNyxPascalSourceWitness(const ARequirement: INyxPascalCompilerRequirement;
+  const AOwner: INyxFPCCompilerCapture; const ARetainedFiles: INyxPascalFileCatalog;
+  const ACancellation: INyxCancellationScope): INyxPascalSourceWitness;
+const
+  CLead: TNyxText = '{$push}{$notes on}{$note NYX_SOURCE_';
+  CTail: TNyxText = 'READY}{$pop}';
+  CPrefix: TNyxText = 'NYX_SOURCE_';
+var
+  LScope: INyxCancellationScope;
+  LRequest: INyxPascalCompilerRequirement;
+  LOwner: INyxFPCCompilerCapture;
+  LRetained, LExpected: INyxPascalFileCatalog;
+  LRoot: TNyxPascalPhysicalFile;
+  LBytes, LLeft, LRight: INyxPascalSourceBytes;
+  LWitness: INyxPascalSourceWitness;
+  LPrefix: TNyxText;
+  LAt, LOther, LStart, LFound, LFile: Integer;
+
+  function ReadByte(const ABytes: INyxPascalSourceBytes; AIndex: Integer): Byte;
+  begin
+    Check(LScope);
+    NyxPascalAdmitAnalysis(LScope, papSourceProof);
+    Check(LScope);
+    Result := ABytes.ByteAt(AIndex);
+  end;
+
+  function Matches(AStart: Integer; const AText: TNyxText): Boolean;
+  var
+    LIndex: Integer;
+  begin
+    Result := False;
+
+    if (AStart < 0) or (Length(AText) > LBytes.Count - AStart) then
+      Exit;
+    for LIndex := 1 to Length(AText) do
+    begin
+
+      if ReadByte(LBytes, AStart + LIndex - 1) <> Ord(AText[LIndex]) then
+        Exit;
+    end;
+    Result := True;
+  end;
+
+  procedure Refuse;
+  begin
+    raise ENyxPascalContext.Create('Retained source witness does not match its current exact input');
+  end;
+
+begin
+  Result := nil;
+  { Lease all caller values before the first cancellation/admission callback.
+    A caller may retire its separate slots without revoking these passed values. }
+  LScope := ACancellation;
+  LRetained := ARetainedFiles;
+  LRequest := ARequirement;
+  LOwner := AOwner;
+  Check(LScope);
+
+  if (LRetained = nil) or (LRequest = nil) or (LOwner = nil) then
+    Refuse;
+  { Mutable alternate suppliers must be captured by their caller first. This
+    synchronous restoration cannot certify a producer's changing file universe. }
+  if NyxPascalFileCatalogIdentity(LRetained) = '' then
+    Refuse;
+  LRequest := CaptureNyxPascalRequirement(LRequest);
+  LOwner := FreezeNyxFPCCompilerCapture(LOwner);
+  Check(LScope);
+
+  if (LRequest.Kind <> pcrSourceSize) or (LRequest.Source = nil) or
+    (LRequest.Source.Source.OccurrenceCount = 0) then
+    Refuse;
+  LRoot := LRequest.Source.Source.Files.FileAt(
+    LRequest.Source.Source.Occurrence(0).FileIndex);
+  LFile := LRetained.Find(LRoot);
+
+  if LFile < 0 then
+    Refuse;
+  LBytes := NyxPascalSourceBytesAt(LRetained, LFile);
+  LFound := 0;
+  LPrefix := '';
+  for LAt := 0 to LBytes.Count - 1 do
+  begin
+
+    if not Matches(LAt, CLead) then
+      Continue;
+    Inc(LFound);
+
+    if LFound <> 1 then
+      Refuse;
+    LStart := LAt + Length(CLead);
+
+    if (LStart > LBytes.Count - 33) or
+      not Matches(LStart + 33, CTail) then
+      Refuse;
+    LPrefix := CPrefix;
+    for LOther := 0 to 31 do
+    begin
+      LFile := ReadByte(LBytes, LStart + LOther);
+
+      if not (LFile in [Ord('0')..Ord('9'), Ord('A')..Ord('F')]) then
+        Refuse;
+      LPrefix := LPrefix + TNyxText(Chr(LFile));
+    end;
+
+    if ReadByte(LBytes, LStart + 32) <> Ord('_') then
+      Refuse;
+    LPrefix := LPrefix + '_';
+  end;
+
+  if LFound <> 1 then
+    Refuse;
+  Check(LScope);
+  { The retained marker carries no facts: the existing owner rebuilds all
+    guards, current/prior measurement sites and closed note packets afresh. }
+  LWitness := TSourceWitness.Create(LRequest, LOwner, LScope, LPrefix);
+  LExpected := LWitness.Files;
+
+  if (LRetained.CasePolicy <> LExpected.CasePolicy) or
+    (LRetained.Count <> LExpected.Count) or
+    (LRetained.DirectoryCount <> LExpected.DirectoryCount) then
+    Refuse;
+  for LAt := 0 to LExpected.DirectoryCount - 1 do
+  begin
+    Check(LScope);
+    NyxPascalAdmitAnalysis(LScope, papSourceProof);
+
+    if LRetained.DirectoryAt(LAt) <> LExpected.DirectoryAt(LAt) then
+      Refuse;
+  end;
+  for LAt := 0 to LExpected.Count - 1 do
+  begin
+    Check(LScope);
+    NyxPascalAdmitAnalysis(LScope, papSourceProof);
+
+    if LRetained.FileAt(LAt).Name <> LExpected.FileAt(LAt).Name then
+      Refuse;
+    LLeft := NyxPascalSourceBytesAt(LExpected, LAt);
+    LRight := NyxPascalSourceBytesAt(LRetained, LAt);
+
+    if (LLeft.Count <> LRight.Count) or (LLeft.Origin <> LRight.Origin) then
+      Refuse;
+    for LOther := 0 to LLeft.Count - 1 do
+    begin
+
+      if ReadByte(LLeft, LOther) <> ReadByte(LRight, LOther) then
+        Refuse;
+    end;
+  end;
+  Check(LScope);
+  { Publish only the reconstructed owner. Retained input decoding cannot donate
+    source authority; compiler input is exact bytes, while its source views come
+    from the current original requirement and the ordinary witness constructor. }
+  Result := LWitness;
 end;
 
 end.

@@ -136,6 +136,10 @@ type
 function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
   const AOptions: TNyxPascalSyntaxOptions;
   const ACancellation: INyxCancellationScope = nil): INyxPascalTranslatedSyntax;
+{ Exact canonical built-in projection ownership, not a producer's capability
+  claim. Completeness, physical-source provenance and compiler facts remain
+  independent checks; a delegating alternate view returns False. }
+function NyxPascalOwnedTranslatedSyntax(const AView: INyxPascalTranslatedSyntax): Boolean;
 
 { Continue an owned, unblocked projection along the same captured translation
   lineage with exactly matching options. Existing physical origins stay exact;
@@ -1005,6 +1009,21 @@ function NewNyxPascalTranslatedSyntax(const ASource: INyxPascalTranslation;
   const ACancellation: INyxCancellationScope): INyxPascalTranslatedSyntax;
 begin
   Result := TTranslatedSyntax.Create(ASource, AOptions, ACancellation);
+end;
+
+function NyxPascalOwnedTranslatedSyntax(const AView: INyxPascalTranslatedSyntax): Boolean;
+var
+  LView: INyxPascalTranslatedSyntax;
+  LOwner: TTranslatedSyntax;
+begin
+  LView := AView;
+  Result := False;
+
+  if not (LView is TTranslatedSyntax) then
+    Exit;
+  LOwner := LView as TTranslatedSyntax;
+  Result := (LOwner.ClassType = TTranslatedSyntax) and
+    ((LOwner as INyxPascalTranslatedSyntax) = LView);
 end;
 
 function RebindNyxPascalTranslatedSyntax(const APrevious: INyxPascalTranslatedSyntax;

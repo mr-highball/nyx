@@ -3,12 +3,18 @@ program nyx_control_contract_generator_tests;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses Classes, SysUtils, Process;
+uses Classes, SysUtils, Process, nyx.text, nyx.bytes, nyx.types,
+  nyx.pascal.context, nyx.pascal.lexing, nyx.pascal.files,
+  nyx.pascal.translation, nyx.pascal.syntax,
+  nyx.pascal.syntax.translated, nyx.pascal.binding,
+  nyx.documentation, nyx.documentation.source,
+  nyx.documentation.typeexpressions, nyx.controls.documentation;
 
 const
-  CIncludes: array[0..4] of String = ('nyx.controls.types.inc',
+  CIncludes: array[0..5] of String = ('nyx.controls.types.inc',
     'nyx.controls.factories.inc', 'nyx.controls.implementation.inc',
-    'nyx.controls.facades.inc', 'nyx.controls.facades.implementation.inc');
+    'nyx.controls.facades.inc', 'nyx.controls.facades.implementation.inc',
+    'nyx.controls.documentation.pas');
   CSources: array[0..2] of String = ('nyx.model.pas', 'nyx.contract.pas', 'nyx.data.pas');
 var
   GChecks, GInvocations: Integer;
@@ -63,6 +69,145 @@ begin
   end;
 end;
 
+function SourceText(const APath: String): TNyxText;
+var
+  LStream: TMemoryStream;
+  LBytes: TNyxBytes;
+begin
+  LStream := FileBytes(APath);
+  try
+
+    if LStream.Size > TNyxPascalLexicalOptions.Defaults.MaximumSourceBytes then
+      raise Exception.Create('Actual source exceeds the existing lexical allowance');
+    SetLength(LBytes, Integer(LStream.Size));
+
+    if Length(LBytes) > 0 then
+      Move(LStream.Memory^, LBytes[0], Length(LBytes));
+    Result := NyxDecodeUTF8(LBytes);
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure CreatorSourceSelections;
+const
+  CMarker: TNyxText = 'function NewNyxBadge(';
+  CChanged: TNyxText = 'function NewNyxBadgeStale(';
+var
+  LFiles, LChangedFiles: INyxPascalFileCatalog;
+  LContext: INyxPascalCompilerContext;
+  LView: INyxPascalTranslatedSyntax;
+  LWorld: INyxPascalSemanticWorld;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LValues, LCandidate: TNyxDocumentationSourceCreators;
+  LSelected: array of Boolean;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LFactoryText, LChangedText: TNyxText;
+  LAt, LPosition, LWork: Integer;
+  LRefused: Boolean;
+
+  procedure AddFile(const AName: TNyxText);
+  begin
+    LFiles := LFiles.WithFile(NyxPascalPhysicalFile(AName),
+      SourceText(Under(GRepository, 'src/' + String(AName))));
+  end;
+
+  procedure SelectWorld(const AFiles: INyxPascalFileCatalog);
+  begin
+    LView := NewNyxPascalTranslatedSyntax(NewNyxPascalTranslation(AFiles,
+      NyxPascalPhysicalFile('nyx.controls.pas'), LContext,
+      TNyxPascalTranslationOptions.Defaults), TNyxPascalSyntaxOptions.Defaults);
+    Check(LView.CompleteTranslation and LView.Source.Resolved and
+      (LView.Source.DiagnosticCount = 0) and (LView.Syntax.DiagnosticCount = 0),
+      'Creator selection inspects the complete actual unit and all five literal includes');
+    { The selector inspects declared factory shapes only. This exact owned world
+      intentionally makes no claim about resolving imports or nominal bindings;
+      those remain prerequisites of the full source-package integration. }
+    LWorld := NewNyxPascalSemanticWorld(TNyxPascalBindingOptions.Defaults).WithModule(LView);
+  end;
+
+begin
+  LFiles := NewNyxPascalFileCatalog(pfcExact);
+  AddFile('nyx.controls.pas');
+  AddFile('nyx.controls.types.inc');
+  AddFile('nyx.controls.facades.inc');
+  AddFile('nyx.controls.factories.inc');
+  AddFile('nyx.controls.implementation.inc');
+  AddFile('nyx.controls.facades.implementation.inc');
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi).
+    WithSymbol(NyxPascalDefine('PAS2JS'), ppdUndefined);
+  SelectWorld(LFiles);
+  LConstruction := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  try
+    LValues := NyxControlsDocumentationCreators(LWorld, 0, LConstruction);
+    LWork := LConstruction.Receipt.Total;
+    Check(Length(LValues) = Ord(High(TNyxKind)) + 1,
+      'The generated companion selects every built-in creator from actual source');
+    SetLength(LSelected, LView.Syntax.DeclarationCount);
+    for LAt := 0 to High(LValues) do
+    begin
+      Check((LValues[LAt].ModuleIndex = 0) and
+        (LValues[LAt].DeclarationIndex >= 0) and
+        (LValues[LAt].DeclarationIndex < LView.Syntax.DeclarationCount),
+        'Each annotation belongs to a real declaration in this exact world');
+      LDeclaration := LView.Syntax.Declaration(LValues[LAt].DeclarationIndex);
+      Check((LDeclaration.Kind = psdkRoutine) and
+        (LDeclaration.RoutineKind = prkFunction) and
+        (LDeclaration.Visibility = psavInterface) and (LDeclaration.Scope = 0),
+        'Each generated creator selects an actual public global function');
+      Check(not LSelected[LValues[LAt].DeclarationIndex],
+        'Two built-in kinds never acquire the same source creator annotation');
+      LSelected[LValues[LAt].DeclarationIndex] := True;
+    end;
+    LDeclaration := LView.Syntax.Declaration(LValues[Ord(nkBadge)].DeclarationIndex);
+    Check((LDeclaration.Name = 'NewNyxBadge') and
+      (LView.Syntax.Lexical.Slice(LDeclaration.TypeSpan) = 'INyxBadge'),
+      'Badge creator annotation retains its actual specialized interface result');
+    Check(LWork <= TNyxDocumentationTypeExpressionLimits.Defaults.MaximumWork,
+      'All creator shape checks share the unchanged construction allowance');
+  finally
+    LConstruction.Retire;
+  end;
+  LCandidate := nil;
+  LRefused := False;
+  try
+    LCandidate := NyxControlsDocumentationCreators(LWorld, 0, LConstruction);
+  except
+    on ENyxDocumentationTypeExpressionCancelled do LRefused := True;
+  end;
+  Check(LRefused and (Length(LCandidate) = 0) and
+    (Length(LValues) = Ord(High(TNyxKind)) + 1),
+    'Retired construction refuses another selector operation without replacing prior annotations');
+
+  { Change one real factory declaration in an immutable copied file catalog.
+    All other original unit/include bytes remain present; no repository file is
+    written and no reduced substitute source can satisfy this stale-input case. }
+  LFactoryText := SourceText(Under(GRepository, 'src/nyx.controls.factories.inc'));
+  LPosition := Pos(CMarker, LFactoryText);
+  Check(LPosition > 0, 'Stale-source fixture finds the actual badge factory declaration');
+  LChangedText := Copy(LFactoryText, 1, LPosition - 1) + CChanged +
+    Copy(LFactoryText, LPosition + Length(CMarker), Length(LFactoryText));
+  LChangedFiles := LFiles.WithFile(NyxPascalPhysicalFile('nyx.controls.factories.inc'), LChangedText);
+  SelectWorld(LChangedFiles);
+  LConstruction := NewNyxDocumentationTypeConstruction(TNyxDocumentationTypeExpressionLimits.Defaults);
+  LRefused := False;
+  try
+    try
+      LCandidate := NyxControlsDocumentationCreators(LWorld, 0, LConstruction);
+    except
+      on ENyxDocumentation do LRefused := True;
+    end;
+    Check(LRefused and (Length(LCandidate) = 0) and
+      (Length(LValues) = Ord(High(TNyxKind)) + 1),
+      'A stale real factory name refuses atomically while prior annotations remain readable');
+  finally
+    LConstruction.Retire;
+  end;
+  WriteLn('actual generated creator selections / kinds=', Length(LValues),
+    ' shared work=', LWork, ' / unbound declaration shapes only');
+end;
+
 procedure CopyBytes(const AFrom, ATo: String);
 var
   LBytes: TMemoryStream;
@@ -108,7 +253,7 @@ var
   LForwarding, LForwardCandidate: String;
   LBridge: String;
   LBridgeCase: Integer;
-  LOriginal: array[0..7] of TMemoryStream;
+  LOriginal: array[0..8] of TMemoryStream;
   LCurrent: TMemoryStream;
   LStream: TFileStream;
   LMarker: RawByteString;
@@ -129,11 +274,11 @@ begin
     for LIndex := 0 to High(CIncludes) do
       LOriginal[LIndex] := FileBytes(Under(GRepository, 'src/' + CIncludes[LIndex]));
     for LIndex := 0 to High(CSources) do
-      LOriginal[LIndex + 5] := FileBytes(Under(GRepository, 'src/' + CSources[LIndex]));
+      LOriginal[LIndex + Length(CIncludes)] := FileBytes(Under(GRepository, 'src/' + CSources[LIndex]));
 
     LOutput := Invoke(GRepository, [], 0);
     Check(Pos('PASS maintained contracts', LOutput) > 0,
-      'Default invocation checks the actual five maintained outputs');
+      'Default invocation checks the five maintained includes and creator-documentation companion');
     Check(Pos('PASS typed declaration IR / 81 kinds / 4 facades', LOutput) > 0,
       'Every actual generated interface/class/factory and facade reaches typed declaration admission');
     LFirst := Under(GRoot, 'candidate one');
@@ -217,7 +362,7 @@ begin
     end;
     LOutput := Invoke(LMissing, [], 2);
     Check((Pos('DIFF missing src/' + CIncludes[0], LOutput) > 0) and
-      (Pos('DIFF missing src/' + CIncludes[4], LOutput) > 0),
+      (Pos('DIFF missing src/' + CIncludes[5], LOutput) > 0),
       'Missing output checking inspects the entire maintained output set');
     Check(not FileExists(Under(LMissing, 'src/' + CIncludes[0])),
       'Default checking does not fill missing source files');
@@ -358,13 +503,14 @@ begin
       Check(not DirectoryExists(LRefused), 'Typed bridge refusal precedes every candidate directory/file write');
     end;
 
-    for LIndex := 0 to 7 do
+    CreatorSourceSelections;
+    for LIndex := 0 to High(LOriginal) do
     begin
 
-      if LIndex < 5 then
+      if LIndex < Length(CIncludes) then
         LFile := Under(GRepository, 'src/' + CIncludes[LIndex])
       else
-        LFile := Under(GRepository, 'src/' + CSources[LIndex - 5]);
+        LFile := Under(GRepository, 'src/' + CSources[LIndex - Length(CIncludes)]);
       LCurrent := FileBytes(LFile);
       try
         Check(SameBytes(LOriginal[LIndex], LCurrent), 'All original descriptor/include bytes remain exact');

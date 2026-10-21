@@ -493,6 +493,80 @@ begin
   finally LScope.Retire; end;
 end;
 
+{ The public attachment must keep its documentation cancellation contract even
+  when the shared construction refuses inside an outward admission. Replay the
+  successful call's actual admission sites, including its inner type capture;
+  do not guess a work count or weaken the construction's immediate guard. }
+procedure AttachmentCancellationCases;
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LAdmission: TAdmission;
+  LAdmissionLease: INyxDocumentationTypeAdmission;
+  LSource: TTypeSource;
+  LLease, LResult, LFirst: INyxDocumentationType;
+  LLastAdmission, LAt: Integer;
+  LRefused: Boolean;
+begin
+  LSource := TTypeSource.Create;
+  LLease := LSource;
+  LSource.Value := NewNyxDocumentationType(R('C'), ndtClass, 'Class.');
+  LScope := Scope;
+  try
+    LSource.Interfaces := NamedVector('IContract', LScope);
+  finally
+    LScope.Retire;
+  end;
+  LAdmission := TAdmission.Create;
+  LAdmissionLease := LAdmission;
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmissionLease);
+  try
+    LFirst := WithNyxDocumentationImplementedInterfaces(LLease, nil, LScope);
+    LLastAdmission := LAdmission.Calls;
+    Check((LFirst <> nil) and (LLastAdmission > 1),
+      'The attachment baseline admits its real complete capture before publication');
+  finally
+    LScope.Retire;
+  end;
+
+  for LAt := 0 to LLastAdmission do
+  begin
+    LAdmission := TAdmission.Create;
+    LAdmission.CancelAt := LAt;
+    LAdmissionLease := LAdmission;
+    LScope := NewNyxDocumentationTypeConstruction(
+      TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmissionLease);
+    LAdmission.Target := LScope;
+    LSource.Cancellation := LScope;
+    LSource.Reads := 0;
+    LSource.AfterCancel := 0;
+    try
+
+      if LAt = 0 then
+        LScope.Cancel;
+      LResult := nil;
+      LRefused := False;
+      try
+        LResult := WithNyxDocumentationImplementedInterfaces(LLease, nil, LScope);
+      except
+        on ENyxDocumentationCancelled do
+          LRefused := True;
+      end;
+      Check(LRefused and (LResult = nil) and (LAdmission.Calls = LAt) and
+        (LSource.AfterCancel = 0),
+        'Every attachment admission cancels publicly and stops supplier reads at ' + IntToStr(LAt));
+    finally
+      { These caller-owned links deliberately form a temporary cancellation
+        cycle. End it explicitly; a published value must retain neither link. }
+      LSource.Cancellation := nil;
+      LAdmission.Target := nil;
+      LScope.Retire;
+    end;
+  end;
+  Check((InterfacesOf(LFirst) = nil) and (LFirst.Identity.Same(R('C'))),
+    'Cancelled replacements preserve the preceding immutable declaration');
+end;
+
 function RetiredValue: INyxDocumentationType;
 var
   LScope: INyxDocumentationTypeConstruction;
@@ -947,6 +1021,7 @@ begin
     ShapeCases;
     ReuseCases;
     AlternateCases;
+    AttachmentCancellationCases;
     BoundsCases;
     IndexCases;
     PlatformCases;

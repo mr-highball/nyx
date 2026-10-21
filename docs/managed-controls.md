@@ -101,8 +101,9 @@ The checked-in Pascal includes are maintained by
 descriptor declarations and catalog recipes, emits all classes/interfaces,
 factories, typed part accessors and managed facades, and checks stable GUID
 uniqueness. Compile it with FPC from the current checkout. With no arguments,
-the executable now compares the five generated includes with the maintained
-source, byte for byte, without writing. `--check` makes that choice explicit.
+the executable compares the five generated includes and the creator documentation
+companion with the maintained source, byte for byte, without writing. `--check`
+makes that choice explicit.
 It reports each `MATCH` or `DIFF`; status 0 means a match, 2 means missing or
 different source, and 1 means invalid arguments or a generation/I/O failure.
 
@@ -114,7 +115,8 @@ nyx_control_contracts --source-root D:\Docs\GitHub\nyx --output-dir E:\Blekohlab
 
 The destination's parent must exist and the destination itself must be absent.
 The tool prepares every output before creating the directory, then writes the
-five includes beneath its `src` directory. Existing files/directories refuse;
+five includes and `nyx.controls.documentation.pas` beneath its `src` directory.
+Existing files/directories refuse;
 a failed write leaves its incomplete candidate available for inspection.
 It never merges with an older candidate or replaces maintained includes.
 Review the candidate diff, then apply reviewed changes only after
@@ -127,6 +129,34 @@ invocation's working directory. This option does not rebuild the executable's
 compiled kind/family/catalog recipes: those must come from the same reviewed
 checkout. `--help` requires no source inputs. This remains a development
 operation, not a runtime dependency or automatic documentation inventory.
+
+The generated companion accepts an explicitly supplied complete declaration
+package. `NewNyxControlsDocumentationSource(Package)` matches each built-in
+creator against its checked source name, specialized result, ordered parameters
+and authored defaults, retaining that declaration's original overload identity.
+Rich type expressions must resolve to the exact nominal types; a similar-looking
+compound expression or alias substitution does not match. Missing, ambiguous or
+stale signatures refuse before a catalog is published.
+
+For source-package construction, the same companion emits
+`NyxControlsDocumentationCreators(World, ModuleIndex, Construction)`. This matches
+all built-in creators against the complete current `nyx.controls` public source
+scope and returns exact declaration selections for the source adapter. A creator
+role comes from these generated expectations, rather than a convention that every
+routine beginning with `New` must be a factory. Selections are local to that
+immutable world; the adapter derives stable documentation identities from the
+authored declarations. Type/default windows consume the caller's shared
+construction, with no separate parser or fresh allowance per creator. Actual
+nominal bindings and referenced-type closure remain the source adapter's work.
+
+Pass the resulting source to `TNyxCatalog.Create(Source)` to attach all built-in
+creator references. Those bindings retain one captured immutable package and do
+not keep the producer. Construction rechecks package and primary identities after
+the producer returns. The existing no-argument constructor still expresses absent
+documentation. Neither path runs a documented factory, creates a control or reads
+source files for help. A caller must supply genuine complete source declarations;
+the generated companion does not serialize the full source package or fill gaps
+in core types, imports, compiler facts or platform availability.
 
 Before checking or writing, the tool captures typed declaration IR from the exact
 serialized types, facade and factory includes using Nyx's existing Pascal syntax
@@ -154,15 +184,27 @@ WORK.md. Facade discovery still follows
 the maintained descriptor declaration convention; typed forwarding does not
 establish complete extraction of arbitrary hand-authored Pascal source.
 
-This is declared source structure. Imported type spelling is still unbound, and
-compiling the resulting complete application remains necessary. The IR does not
-yet emit documentation, capture the complete hand-authored core closure or
-register built-in help. Its existing source/syntax limits remain unchanged.
+This is declared source structure. Imported type spelling in the maintenance IR
+is still unbound, and compiling the resulting complete application remains
+necessary. The companion emits creator expectations from that same IR; it does
+not capture the complete hand-authored core closure or automatically register
+built-in help. Complete source-package adoption remains under qualification.
+Existing source/syntax limits remain unchanged.
 
 The maintained native
-[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) passes 103 checks
-through 21 joined generator invocations, with clean parent and child heaps.
-Both fresh candidates match all five maintained includes for 81 built-in kinds
+[CLI consumer](../tests/nyx_control_contract_generator_tests.lpr) now passes
+358 checks through 21 joined generator invocations, with clean parent and child
+heaps. It checks all six outputs, including exact repeated companion bytes.
+The generated companion also executes its creator selector against the complete
+actual controls unit and all five original includes. All 81 distinct creator
+annotations fit the unchanged construction allowance using 134,147 work units;
+the badge selection retains its specialized `INyxBadge` result. A renamed badge
+factory in an immutable copied file catalog refuses without publishing a partial
+selection, and retiring the construction leaves prior annotations intact.
+These are unbound declaration-shape checks. The real complete source package,
+nominal bindings and catalog attachment still require their separate integration
+proof; creator selections alone do not establish that adoption.
+The fresh candidates match all five maintained includes for 81 built-in kinds
 and four authoring facades. The consumer also checks copied-source drift,
 missing outputs, argument/destination refusal and exact original input bytes.
 An actual copied descriptor with an explicit empty parameter type refuses through
@@ -174,7 +216,8 @@ inside defaults, method/argument/type identifiers, namespace qualifiers, callbac
 parameter names and comments, and separate unsupported self-conversion refusals.
 Its arguments are the compiled generator, repository root and a new runtime
 directory. Current source/compiler receipts and broader qualification are in
-[WORK.md](../WORK.md); no generated repository include changes in this batch.
+[WORK.md](../WORK.md); the new companion's first reviewed candidate leaves the
+five existing generated includes byte-exact.
 
 Maintained FPC/pas2js fixtures exercise lifetime, complete catalog construction,
 alternative implementations, typing and source recovery. Generated-target checks

@@ -19,6 +19,26 @@ type
     procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
     function RemainingTypeBytes: Integer;
   end;
+  { One-name inputs have no large type-proof copy before receipt growth. This
+    policy reenters at that admitted growth, or releases the caller's last
+    input/scope handles. It owns no expression or construction back-reference. }
+  TReceiptAdmission = class(TInterfacedObject, INyxDocumentationTypeAdmission)
+  public
+    GrowArmed, DropArmed: Boolean;
+    GrowthCalls: Integer;
+    destructor Destroy; override;
+    procedure AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+    function RemainingTypeBytes: Integer;
+  end;
+  { A parent may retire the child while returning False itself. The child must
+    reobserve its own retired state before publishing or admitting more work. }
+  TReceiptCancellation = class(TInterfacedObject, INyxCancellationScope)
+  public
+    RetireOnRead, CancelledValue: Boolean;
+    RetireReads: Integer;
+    procedure Cancel;
+    function GetCancelled: Boolean;
+  end;
   { Mutable expression supplier exposes borrowed-read counters. Capture must
     parse its copied text and never retain its source syntax or executable self. }
   TAlternateExpression = class(TInterfacedObject, INyxDocumentationTypeExpression)
@@ -89,6 +109,10 @@ type
 
 var
   GChecks, GDestroyed: Integer;
+  GReceiptDisposed: Integer;
+  GReceiptConstruction: INyxDocumentationTypeConstruction;
+  GReceiptInput, GReceiptNested: INyxDocumentationTypeExpression;
+  GReceiptText: TNyxText;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -117,6 +141,61 @@ end;
 function TOuterAdmission.RemainingTypeBytes: Integer;
 begin
   Result := Bytes;
+end;
+
+destructor TReceiptAdmission.Destroy;
+begin
+  Inc(GReceiptDisposed);
+  inherited Destroy;
+end;
+
+procedure TReceiptAdmission.AdmitTypeWork(APhase: TNyxPascalAnalysisPhase; AUnits: Integer);
+begin
+
+  if (Ord(APhase) < Ord(Low(TNyxPascalAnalysisPhase))) or
+    (Ord(APhase) > Ord(High(TNyxPascalAnalysisPhase))) or (AUnits < 1) then
+    raise Exception.Create('Receipt policy received an invalid admission');
+
+  if DropArmed then
+  begin
+    DropArmed := False;
+    GReceiptConstruction := nil;
+    GReceiptInput := nil;
+    GReceiptText := '';
+  end;
+
+  if GrowArmed and (APhase = papTypeProof) and (AUnits > 4) then
+  begin
+    { For the one-character/one-node input all ordinary explicit proof charges
+      are at most3. This observes real receipt growth without a guessed ordinal
+      or a new private instrumentation capability. Clear before reentering. }
+    GrowArmed := False;
+    Inc(GrowthCalls);
+    GReceiptNested := NewNyxDocumentationTypeExpression('B', ndtoParameter,
+      GReceiptConstruction);
+  end;
+end;
+
+function TReceiptAdmission.RemainingTypeBytes: Integer;
+begin
+  Result := NyxDocumentationMaximumBytes;
+end;
+
+procedure TReceiptCancellation.Cancel;
+begin
+  CancelledValue := True;
+end;
+
+function TReceiptCancellation.GetCancelled: Boolean;
+begin
+
+  if RetireOnRead then
+  begin
+    RetireOnRead := False;
+    Inc(RetireReads);
+    GReceiptConstruction.Retire;
+  end;
+  Result := CancelledValue;
 end;
 
 function TAlternateExpression.Text: TNyxText;
@@ -426,6 +505,185 @@ begin
       LRefused := True;
   end;
   Check(LRefused, 'A retired construction cannot silently open a fresh allowance');
+end;
+
+procedure CaptureReleasedInputs(ACaptureExisting: Boolean;
+  out AFrozen: INyxDocumentationTypeExpression);
+var
+  LPolicy: TReceiptAdmission;
+  LAdmission: INyxDocumentationTypeAdmission;
+begin
+  AFrozen := nil;
+  LPolicy := TReceiptAdmission.Create;
+  LAdmission := LPolicy;
+  GReceiptConstruction := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  GReceiptText := 'array of T';
+  try
+
+    if ACaptureExisting then
+      GReceiptInput := NewNyxDocumentationTypeExpression(GReceiptText,
+        ndtoParameter, GReceiptConstruction);
+    LPolicy.DropArmed := True;
+
+    if ACaptureExisting then
+      AFrozen := CaptureNyxDocumentationTypeExpression(GReceiptInput, GReceiptConstruction)
+    else
+      AFrozen := NewNyxDocumentationTypeExpression(GReceiptText,
+        ndtoParameter, GReceiptConstruction);
+    Check(not LPolicy.DropArmed and (GReceiptConstruction = nil) and
+      (GReceiptInput = nil) and (GReceiptText = ''),
+      'Outward admission really releases the last caller construction and input handles');
+  finally
+
+    if GReceiptConstruction <> nil then
+      GReceiptConstruction.Retire;
+    GReceiptConstruction := nil;
+    GReceiptInput := nil;
+    GReceiptText := '';
+  end;
+end;
+
+procedure ReceiptArenaCases;
+const
+  CMany = 192;
+  CForeign: TNyxText = 'array of T';
+var
+  LScope: INyxDocumentationTypeConstruction;
+  LValues: array of INyxDocumentationTypeExpression;
+  LFirst, LSecond, LCopy, LOuter, LDetached: INyxDocumentationTypeExpression;
+  LPolicy: TReceiptAdmission;
+  LAdmission: INyxDocumentationTypeAdmission;
+  LParent: TReceiptCancellation;
+  LParentLease: INyxCancellationScope;
+  LAt, LBefore, LDisposed, LBytes: Integer;
+  LFailure: Boolean;
+begin
+  LScope := Construction;
+  SetLength(LValues, CMany);
+  try
+    for LAt := 0 to CMany - 1 do
+      LValues[LAt] := NewNyxDocumentationTypeExpression(
+        'TReceipt' + TNyxText(IntToStr(LAt)), ndtoParameter, LScope);
+    LBefore := LScope.Receipt.Total;
+    for LAt := CMany - 1 downto 0 do
+    begin
+      LCopy := CaptureNyxDocumentationTypeExpression(LValues[LAt], LScope);
+      Check(LCopy = LValues[LAt], 'Same-construction receipt reuse preserves exact immutable expression identity');
+    end;
+    { This generous linear envelope distinguishes direct receipt lookup from
+      scanning the complete prefix for each expression, without an exact work
+      count, first-fit search, larger quota or reduced public source witness. }
+    Check(LScope.Receipt.Total - LBefore <= CMany * 16,
+      'Reuse after many retained receipts consumes bounded linear lookup work');
+  finally
+    LScope.Retire;
+  end;
+  Check(LValues[0].Text = 'TReceipt0',
+    'Retired creation arenas leave immutable values readable without retaining construction');
+  LValues := nil;
+  LScope := Construction;
+  try
+    LFirst := NewNyxDocumentationTypeExpression(CForeign, ndtoParameter, LScope);
+    LSecond := NewNyxDocumentationTypeExpression(CForeign, ndtoParameter, LScope);
+    Check(LFirst <> LSecond, 'Independent equal expressions have distinct captured owners');
+  finally
+    LScope.Retire;
+  end;
+  LBytes := NyxUTF8ByteCount(CForeign);
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(LBytes));
+  try
+    LCopy := NewNyxDocumentationTypeExpression('A', ndtoParameter, LScope);
+    LCopy := nil;
+    LFailure := False;
+    try
+      LCopy := CaptureNyxDocumentationTypeExpression(LFirst, LScope);
+    except
+      on ENyxDocumentationTypeExpression do LFailure := True;
+    end;
+    Check(LFailure and (LCopy = nil),
+      'A retired foreign arena and colliding old slot cannot bypass remaining storage admission');
+  finally
+    LScope.Retire;
+  end;
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(LBytes * 2));
+  try
+    LCopy := NewNyxDocumentationTypeExpression('A', ndtoParameter, LScope);
+    LCopy := CaptureNyxDocumentationTypeExpression(LFirst, LScope);
+    Check((LCopy = LFirst) and
+      (CaptureNyxDocumentationTypeExpression(LFirst, LScope) = LFirst),
+      'A foreign owner pays its first storage capture and keeps its normal repeated receipt');
+    LCopy := nil;
+    LFailure := False;
+    try
+      LCopy := CaptureNyxDocumentationTypeExpression(LSecond, LScope);
+    except
+      on ENyxDocumentationTypeExpression do LFailure := True;
+    end;
+    Check(LFailure and (LCopy = nil),
+      'An independently captured equal expression pays storage fully rather than borrowing the first owner');
+  finally
+    LScope.Retire;
+  end;
+  LScope := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults.Bytes(LBytes * 2));
+  try
+    Check((CaptureNyxDocumentationTypeExpression(LFirst, LScope) = LFirst) and
+      (CaptureNyxDocumentationTypeExpression(LSecond, LScope) = LSecond),
+      'Adequate exact capacity admits both distinct foreign owners without stale-slot rejection');
+  finally
+    LScope.Retire;
+  end;
+  LPolicy := TReceiptAdmission.Create;
+  LAdmission := LPolicy;
+  GReceiptConstruction := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, nil, LAdmission);
+  GReceiptNested := nil;
+  LPolicy.GrowArmed := True;
+  try
+    LOuter := NewNyxDocumentationTypeExpression('A', ndtoParameter, GReceiptConstruction);
+    Check((LPolicy.GrowthCalls = 1) and not LPolicy.GrowArmed and
+      (GReceiptNested <> nil) and (GReceiptNested.Text = 'B'),
+      'The outward receipt-growth admission recursively creates a real sibling expression');
+    Check((CaptureNyxDocumentationTypeExpression(GReceiptNested, GReceiptConstruction) = GReceiptNested) and
+      (CaptureNyxDocumentationTypeExpression(LOuter, GReceiptConstruction) = LOuter),
+      'Recursive growth keeps both exact committed receipt slots without overwrite');
+  finally
+    GReceiptConstruction.Retire;
+    GReceiptConstruction := nil;
+    GReceiptNested := nil;
+    LAdmission := nil;
+  end;
+  for LAt := 0 to 1 do
+  begin
+    LDisposed := GReceiptDisposed;
+    CaptureReleasedInputs(LAt <> 0, LDetached);
+    Check((GReceiptDisposed = LDisposed + 1) and (LDetached <> nil) and
+      (LDetached.Text = CForeign) and (LDetached.Occurrence = ndtoParameter),
+      'New/capture input leases survive caller release and retain no outward policy, mode=' + TNyxText(IntToStr(LAt)));
+  end;
+  LParent := TReceiptCancellation.Create;
+  LParentLease := LParent;
+  GReceiptConstruction := NewNyxDocumentationTypeConstruction(
+    TNyxDocumentationTypeExpressionLimits.Defaults, LParentLease);
+  LParent.RetireOnRead := True;
+  LFailure := False;
+  LCopy := nil;
+  try
+    try
+      LCopy := NewNyxDocumentationTypeExpression('A', ndtoParameter, GReceiptConstruction);
+    except
+      on ENyxDocumentationTypeExpressionCancelled do LFailure := True;
+    end;
+    Check(LFailure and (LCopy = nil) and (LParent.RetireReads = 1) and
+      not LParent.CancelledValue and (LDetached.Text = CForeign),
+      'Retirement during a parent cancellation getter remains visible even when the parent returns False');
+  finally
+    GReceiptConstruction.Retire;
+    GReceiptConstruction := nil;
+  end;
 end;
 
 procedure SharedBudgetCases;
@@ -1175,6 +1433,7 @@ begin
     LRepository := RepositoryArgument;
     {$endif}
     SyntaxCases;
+    ReceiptArenaCases;
     SharedBudgetCases;
     BindingCases;
     MetadataBudgetCases;

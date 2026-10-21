@@ -654,7 +654,7 @@ begin
       if (LName = 'ifdef') or (LName = 'ifndef') then
       begin
         try
-          LCandidate := NyxPascalDefine(LValue);
+          LCandidate := NyxPascalConditionalDefine(FSource.State(LRow.State), LValue);
         except
           on ENyxPascalContext do
           begin

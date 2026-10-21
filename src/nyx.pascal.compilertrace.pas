@@ -112,6 +112,15 @@ function NewNyxFPCCompilerProbe(const AIdentity: TNyxPascalDefineRef;
 function NewNyxFPCSystemBootstrapProbe(const AIdentity: TNyxPascalDefineRef): INyxPascalCompilerProbe;
 { Legacy probes are pristine; invalid namespace values refuse. }
 function NyxFPCProbeScope(const AProbe: INyxPascalCompilerProbe): TNyxPascalCompilerScope;
+{ Restore request intent from this owner's exact canonical Pascal input. This
+  admits no compiler facts, filesystem/process provenance or configuration. The
+  complete source must match the shared emitter, byte for byte; another spelling
+  or an older/foreign template refuses rather than being normalized. Input uses
+  the ordinary trace byte/line ceilings and optional caller-owned work budget.
+  A host still verifies its saved input and complete ReadCapture/Merge receipts. }
+function RestoreNyxFPCCompilerProbe(const ASource: TNyxText;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope = nil): INyxPascalCompilerProbe;
 
 { Interpret a terminal compiler transcript for the exact probe file. Ordinary
   probes require successful compilation. Bootstrap probes require exit 1 and the
@@ -169,6 +178,28 @@ type
     function ObservedDefaults: INyxPascalCompilerContext;
     function Merge(const ANext: INyxFPCCompilerCapture): INyxFPCCompilerCapture;
   end;
+  { The same canonical fragments either build ordinary Source or compare a
+    restored request directly with supplied input. Comparison allocates no
+    regenerated aggregate/string vector: every fragment is admitted before its
+    bytes are examined, and a shortened template fails at the first mismatch.
+    Each invocation owns its cursor and leases; recursive calls share no state. }
+  TProbeSourceWriter = class
+  private
+    FParts: TNyxStrings;
+    FInput: TNyxText;
+    FCancellation: INyxCancellationScope;
+    FPosition: Integer;
+    procedure Check;
+  public
+    constructor CreateOutput;
+    constructor CreateComparison(const AInput: TNyxText;
+      const ACancellation: INyxCancellationScope);
+    destructor Destroy; override;
+    procedure Admit(AUnits: Integer);
+    procedure Write(const APieces: array of TNyxText);
+    procedure Number(AValue: Integer);
+    function Finish: TNyxText;
+  end;
   { Owns a detached query vector. Source is rebuilt from checked closed mode
     spellings and ASCII names; caller text cannot inject compiler directives. }
   TCompilerProbe = class(TInterfacedObject, INyxPascalCompilerProbe, INyxPascalSizeProbe,
@@ -184,6 +215,8 @@ type
     function Count: Integer;
     function Symbol(AIndex: Integer): TNyxPascalDefineRef;
     function WithSymbol(const AName: TNyxPascalDefineRef): INyxPascalCompilerProbe;
+    { Closed source grammar shared by output and strict request restoration. }
+    procedure Emit(AWriter: TProbeSourceWriter);
     function Source: TNyxText;
     function SizeCount: Integer;
     function SizeName(AIndex: Integer): TNyxPascalSizeReference;
@@ -381,81 +414,209 @@ begin
   LCopy.Names[Count] := LName;
 end;
 
+constructor TProbeSourceWriter.CreateOutput;
+begin
+  inherited Create;
+  FParts := TNyxStrings.Create;
+end;
+
+constructor TProbeSourceWriter.CreateComparison(const AInput: TNyxText;
+  const ACancellation: INyxCancellationScope);
+begin
+  inherited Create;
+  FInput := AInput;
+  FCancellation := ACancellation;
+  FPosition := 1;
+end;
+
+destructor TProbeSourceWriter.Destroy;
+begin
+  FParts.Free;
+  inherited Destroy;
+end;
+
+procedure TProbeSourceWriter.Check;
+begin
+
+  if (FCancellation <> nil) and FCancellation.Cancelled then
+    raise ENyxPascalAnalysisCancelled.Create('Compiler request restoration cancelled');
+end;
+
+procedure TProbeSourceWriter.Admit(AUnits: Integer);
+begin
+  Check;
+  NyxPascalAdmitAnalysis(FCancellation, papSourceProof, AUnits);
+  Check;
+end;
+
+procedure TProbeSourceWriter.Write(const APieces: array of TNyxText);
+var
+  LPiece, LAt, LCount: Integer;
+begin
+  { Fragment slots are a bounded transient call vector, not retained output.
+    Strings are separate constants/checked references; none is concatenated
+    into an unadmitted large generated line before entering this method. }
+  Admit(Length(APieces));
+  for LPiece := 0 to High(APieces) do
+  begin
+
+    if FParts <> nil then
+      FParts.Add(APieces[LPiece])
+    else
+    begin
+      Check;
+      LCount := Length(APieces[LPiece]);
+
+      if LCount > Length(FInput) - FPosition + 1 then
+        raise ENyxPascalContext.Create('Saved compiler request is not the complete canonical source');
+      Admit(LCount);
+      for LAt := 1 to LCount do
+      begin
+
+        if FInput[FPosition] <> APieces[LPiece][LAt] then
+          raise ENyxPascalContext.Create('Saved compiler request differs from its canonical source');
+        Inc(FPosition);
+      end;
+    end;
+  end;
+end;
+
+procedure TProbeSourceWriter.Number(AValue: Integer);
+begin
+  { Source supplies only bounded vector ordinals, bit indices and positive
+    31-bit divisors. Admit the scalar formatting operation before its allocation. }
+  Admit(1);
+  Write([TNyxText(IntToStr(AValue))]);
+end;
+
+function TProbeSourceWriter.Finish: TNyxText;
+begin
+  Check;
+
+  if FParts <> nil then
+    Result := FParts.Join
+  else
+  begin
+
+    if FPosition - 1 <> Length(FInput) then
+      raise ENyxPascalContext.Create('Saved compiler request has noncanonical trailing source');
+    Result := '';
+  end;
+end;
+
+procedure TCompilerProbe.Emit(AWriter: TProbeSourceWriter);
+var
+  LAt, LBit: Integer;
+  LName: TNyxText;
+
+  { Prefix and row markers are emitted as separate bounded pieces, so even a
+    refused shortened input cannot first allocate the implied generated packet. }
+  procedure Prefix;
+  begin
+    AWriter.Write(['NYX_CONTEXT_', ProbeID.Name, '_']);
+  end;
+
+  procedure Row;
+  begin
+    Prefix;
+    AWriter.Write(['S_']);
+    AWriter.Number(LAt);
+    AWriter.Write(['_']);
+  end;
+
+begin
+
+  if EvidenceScope = pcsoSystemBootstrap then
+  begin
+    AWriter.Write(['unit System;'#10'{$mode fpc}{$codepage utf8}'#10'interface'#10,
+      '{ TYPE forces compiler setup before the next directive is scanned. }'#10,
+      'type'#10'{$note ']);
+  end
+  else
+  begin
+    AWriter.Write(['program NyxCompilerContext;'#10'{$mode ', ModeName(SourceMode),
+      '}{$codepage utf8}'#10,
+      '{ This declaration forces implicit System setup before fact queries. }'#10,
+      'type TNyxContextMarker = Byte;'#10'{$note ']);
+  end;
+  Prefix;
+  AWriter.Write(['BEGIN}'#10]);
+  for LAt := 0 to Count - 1 do
+  begin
+    AWriter.Write(['{$ifdef ', Names[LAt].Name, '}'#10'{$note ']);
+    Prefix;
+    AWriter.Write(['D_']);
+    AWriter.Number(LAt);
+    AWriter.Write(['}'#10'{$else}'#10'{$note ']);
+    Prefix;
+    AWriter.Write(['U_']);
+    AWriter.Number(LAt);
+    AWriter.Write(['}'#10'{$endif}'#10]);
+  end;
+  for LAt := 0 to SizeCount - 1 do
+  begin
+    LName := SizeNames[LAt].Name;
+    { Qualified operands retain the original direct compile/refusal contract;
+      only unqualified symbols admit FPC's declared() absence measurement. }
+
+    AWriter.Admit(Length(LName));
+
+    if Pos('.', LName) > 0 then
+      AWriter.Write(['{$if true}'#10])
+    else
+      AWriter.Write(['{$if declared(', LName, ')}'#10]);
+    AWriter.Write(['{$if (sizeof(', LName, ') >= 0) and (sizeof(', LName,
+      ') <= 2147483647)}'#10'{$note ']);
+    Row;
+    AWriter.Write(['K}'#10]);
+    for LBit := 0 to 30 do
+    begin
+      AWriter.Write(['{$if ((sizeof(', LName, ') div ']);
+      AWriter.Number(1 shl LBit);
+      AWriter.Write([') mod 2) = 0}'#10'{$note ']);
+      Row;
+      AWriter.Write(['B_']);
+      AWriter.Number(LBit);
+      AWriter.Write(['_0}'#10'{$else}'#10'{$note ']);
+      Row;
+      AWriter.Write(['B_']);
+      AWriter.Number(LBit);
+      AWriter.Write(['_1}'#10'{$endif}'#10]);
+    end;
+    AWriter.Write(['{$else}'#10'{$note ']);
+    Row;
+    AWriter.Write(['O}'#10'{$endif}'#10'{$else}'#10'{$note ']);
+    Row;
+    AWriter.Write(['U}'#10'{$endif}'#10]);
+  end;
+  AWriter.Write(['{$ifopt H+}'#10'{$note ']);
+  Prefix;
+  AWriter.Write(['H_TRUE}'#10'{$else}'#10'{$note ']);
+  Prefix;
+  AWriter.Write(['H_FALSE}'#10'{$endif}'#10'{$note ']);
+  Prefix;
+  AWriter.Write(['END}'#10]);
+
+  if EvidenceScope = pcsoSystemBootstrap then
+  begin
+    AWriter.Write(['{$fatal ']);
+    Prefix;
+    AWriter.Write(['BOOTSTRAP_STOP}'#10]);
+  end
+  else
+    AWriter.Write(['begin'#10'end.'#10]);
+end;
+
 function TCompilerProbe.Source: TNyxText;
 var
-  LAt: Integer;
-  LPrefix: TNyxText;
-  LParts: TNyxStrings;
-  LBit: Integer;
-  LRow: TNyxText;
-  LName: TNyxText;
+  LWriter: TProbeSourceWriter;
 begin
-  LPrefix := 'NYX_CONTEXT_' + ProbeID.Name + '_';
-  LParts := TNyxStrings.Create;
+  LWriter := TProbeSourceWriter.CreateOutput;
   try
-
-    if EvidenceScope = pcsoSystemBootstrap then
-    begin
-      LParts.Add('unit System;'#10'{$mode fpc}{$codepage utf8}'#10'interface'#10 +
-        '{ TYPE forces compiler setup before the next directive is scanned. }'#10 +
-        'type'#10'{$note ' + LPrefix + 'BEGIN}'#10);
-    end
-    else
-    begin
-      LParts.Add('program NyxCompilerContext;'#10'{$mode ' + ModeName(SourceMode) +
-        '}{$codepage utf8}'#10 +
-        '{ This declaration forces implicit System setup before fact queries. }'#10 +
-        'type TNyxContextMarker = Byte;'#10'{$note ' + LPrefix + 'BEGIN}'#10);
-    end;
-    for LAt := 0 to Count - 1 do
-    begin
-      LParts.Add('{$ifdef ' + Names[LAt].Name + '}'#10'{$note ' + LPrefix +
-        'D_' + TNyxText(IntToStr(LAt)) + '}'#10'{$else}'#10'{$note ' + LPrefix +
-        'U_' + TNyxText(IntToStr(LAt)) + '}'#10'{$endif}'#10);
-    end;
-    for LAt := 0 to SizeCount - 1 do
-    begin
-      LName := SizeNames[LAt].Name;
-      LRow := LPrefix + 'S_' + TNyxText(IntToStr(LAt)) + '_';
-      { FPC's declared() accepts an unqualified symbol. A qualified operand
-        instead compiles directly: an unavailable export refuses the entire
-        owned probe rather than manufacturing a measured absence. }
-
-      if Pos('.', LName) > 0 then
-      begin
-        LParts.Add('{$if true}'#10);
-      end
-      else
-      begin
-        LParts.Add('{$if declared(' + LName + ')}'#10);
-      end;
-      LParts.Add(
-        '{$if (sizeof(' + LName + ') >= 0) and (sizeof(' + LName + ') <= 2147483647)}'#10 +
-        '{$note ' + LRow + 'K}'#10);
-      for LBit := 0 to 30 do
-      begin
-        LParts.Add('{$if ((sizeof(' + LName + ') div ' + TNyxText(IntToStr(1 shl LBit)) +
-          ') mod 2) = 0}'#10 + '{$note ' + LRow + 'B_' + TNyxText(IntToStr(LBit)) + '_0}'#10 +
-          '{$else}'#10'{$note ' + LRow + 'B_' + TNyxText(IntToStr(LBit)) + '_1}'#10'{$endif}'#10);
-      end;
-      LParts.Add('{$else}'#10'{$note ' + LRow + 'O}'#10'{$endif}'#10 +
-        '{$else}'#10'{$note ' + LRow + 'U}'#10'{$endif}'#10);
-    end;
-    LParts.Add('{$ifopt H+}'#10'{$note ' + LPrefix + 'H_TRUE}'#10 +
-      '{$else}'#10'{$note ' + LPrefix + 'H_FALSE}'#10'{$endif}'#10 +
-      '{$note ' + LPrefix + 'END}'#10);
-
-    if EvidenceScope = pcsoSystemBootstrap then
-    begin
-      LParts.Add('{$fatal ' + LPrefix + 'BOOTSTRAP_STOP}'#10);
-    end
-    else
-    begin
-      LParts.Add('begin'#10'end.'#10);
-    end;
-    Result := LParts.Join;
+    Emit(LWriter);
+    Result := LWriter.Finish;
   finally
-    LParts.Free;
+    LWriter.Free;
   end;
 end;
 
@@ -626,6 +787,282 @@ begin
   begin
     raise ENyxPascalContext.Create('Compiler trace budgets must be explicitly positive');
   end;
+end;
+
+function RestoreNyxFPCCompilerProbe(const ASource: TNyxText;
+  const AOptions: TNyxPascalCompilerTraceOptions;
+  const ACancellation: INyxCancellationScope): INyxPascalCompilerProbe;
+const
+  CIdentityPrefix = '{$note NYX_CONTEXT_';
+  CIdentitySuffix = '_BEGIN}';
+  CSymbolPrefix = '{$ifdef ';
+  CSizePrefix = '{$if (sizeof(';
+var
+  LText, LLine, LName: TNyxText;
+  LOptions: TNyxPascalCompilerTraceOptions;
+  LCancellation: INyxCancellationScope;
+  LIdentity, LSymbol: TNyxPascalDefineRef;
+  LSize: TNyxPascalSizeReference;
+  LNames: array of TNyxPascalDefineRef;
+  LSizes: array of TNyxPascalSizeReference;
+  LNameCount, LSizeCount: Integer;
+  LPosition, LAt, LOther, LLines, LLineLength, LClose, LSkip: Integer;
+  LMode: TNyxPascalLanguageMode;
+  LScope: TNyxPascalCompilerScope;
+  LProbe: INyxPascalCompilerProbe;
+  LOwner: TCompilerProbe;
+  LWriter: TProbeSourceWriter;
+
+  { All caller-owned arguments are leased/copied before the first observation.
+    A cancellation/budget callback may release them or recursively restore an
+    independent request; it cannot change this operation's cursor or options. }
+  procedure Check;
+  begin
+
+    if (LCancellation <> nil) and LCancellation.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Compiler request restoration cancelled');
+  end;
+
+  procedure Admit(AUnits: Integer);
+  begin
+    Check;
+    NyxPascalAdmitAnalysis(LCancellation, papSourceProof, AUnits);
+    Check;
+  end;
+
+  { The complete input has already passed ASCII/LF/line limits. Admit the later
+    scan and slice independently; only one bounded line is materialized. }
+  function NextLine: TNyxText;
+  var
+    LAfter: Integer;
+  begin
+
+    if LPosition > Length(LText) then
+      raise ENyxPascalContext.Create('Saved compiler request has an incomplete header');
+    LAfter := LPosition;
+    repeat
+      Admit(1);
+
+      if LText[LAfter] = #10 then
+        Break;
+      Inc(LAfter);
+    until False;
+    Admit(LAfter - LPosition);
+    Result := Copy(LText, LPosition, LAfter - LPosition);
+    LPosition := LAfter + 1;
+  end;
+
+  { Extract only bounded request references. The later shared emitter verifies
+    all surrounding guards, ordinals, markers and template text, including lines
+    which have no request operand. This is not a general Pascal source parser. }
+  function Operand(const ALine: TNyxText; AStart, ACount: Integer): TNyxText;
+  begin
+
+    if (ACount < 1) or (AStart < 1) or (ACount > Length(ALine) - AStart + 1) then
+      raise ENyxPascalContext.Create('Saved compiler request has an absent operand');
+    Admit(ACount);
+    Result := Copy(ALine, AStart, ACount);
+  end;
+
+  { Equality can inspect a long shared prefix. Charge the actual compared bytes
+    rather than hiding that work behind one vector-slot admission per name. }
+  function SameName(const ALeft, ARight: TNyxText): Boolean;
+  var
+    LIndex: Integer;
+  begin
+    Admit(1);
+    Result := False;
+
+    if Length(ALeft) <> Length(ARight) then
+      Exit;
+    for LIndex := 1 to Length(ALeft) do
+    begin
+      Admit(1);
+
+      if ALeft[LIndex] <> ARight[LIndex] then
+        Exit;
+    end;
+    Result := True;
+  end;
+
+begin
+  LText := ASource;
+  LOptions := AOptions;
+  LCancellation := ACancellation;
+  LOptions.Validate;
+  Check;
+
+  if (Length(LText) < 1) or (Length(LText) > LOptions.MaximumBytes) or
+    (Length(LText) = High(Integer)) then
+    raise ENyxPascalContext.Create('Saved compiler request exceeds its byte/cursor budget');
+  LLines := 0;
+  LLineLength := 0;
+  for LAt := 1 to Length(LText) do
+  begin
+    Admit(1);
+
+    if LText[LAt] = #10 then
+    begin
+
+      if LLines >= LOptions.MaximumLines then
+        raise ENyxPascalContext.Create('Saved compiler request exceeds its line budget');
+      Inc(LLines);
+      LLineLength := 0;
+    end
+    else
+    begin
+
+      if not (Ord(LText[LAt]) in [32..126]) then
+        raise ENyxPascalContext.Create('Canonical compiler requests require exact ASCII and LF input');
+
+      if LLineLength >= LOptions.MaximumLineLength then
+        raise ENyxPascalContext.Create('Saved compiler request exceeds its line-length budget');
+      Inc(LLineLength);
+    end;
+  end;
+
+  if LText[Length(LText)] <> #10 then
+    raise ENyxPascalContext.Create('Canonical compiler requests end with LF');
+  LPosition := 1;
+  LLine := NextLine;
+
+  if LLine = 'program NyxCompilerContext;' then
+  begin
+    LScope := pcsoPristine;
+    LSkip := 2;
+  end
+  else if LLine = 'unit System;' then
+  begin
+    LScope := pcsoSystemBootstrap;
+    LSkip := 3;
+  end
+  else
+    raise ENyxPascalContext.Create('Saved compiler request has a foreign source scope');
+  LLine := NextLine;
+
+  if LLine = '{$mode fpc}{$codepage utf8}' then
+    LMode := ppmFPC
+  else if LLine = '{$mode objfpc}{$codepage utf8}' then
+    LMode := ppmObjFPC
+  else if LLine = '{$mode delphi}{$codepage utf8}' then
+    LMode := ppmDelphi
+  else if LLine = '{$mode delphiunicode}{$codepage utf8}' then
+    LMode := ppmDelphiUnicode
+  else if LLine = '{$mode tp}{$codepage utf8}' then
+    LMode := ppmTP
+  else
+    raise ENyxPascalContext.Create('Saved compiler request has an unqualified source mode');
+
+  if (LScope = pcsoSystemBootstrap) and (LMode <> ppmFPC) then
+    raise ENyxPascalContext.Create('Bootstrap compiler requests retain FPC source mode');
+  for LAt := 1 to LSkip do
+    LLine := NextLine;
+  LLine := NextLine;
+  Admit(Length(LLine));
+
+  if (Pos(CIdentityPrefix, LLine) <> 1) or
+    (Copy(LLine, Length(LLine) - Length(CIdentitySuffix) + 1,
+      Length(CIdentitySuffix)) <> CIdentitySuffix) then
+    raise ENyxPascalContext.Create('Saved compiler request has no exact opening identity');
+  LName := Operand(LLine, Length(CIdentityPrefix) + 1,
+    Length(LLine) - Length(CIdentityPrefix) - Length(CIdentitySuffix));
+  Admit(Length(LName));
+  LIdentity := NyxPascalDefine(LName);
+
+  { Allocate the existing maximum vectors once, privately. This avoids cloning
+    a growing immutable request for each parsed row or concealing quadratic work.
+    Only admitted typed slots survive in the final exact-sized owned request. }
+  Admit(256);
+  SetLength(LNames, 256);
+  Admit(64);
+  SetLength(LSizes, 64);
+  LNameCount := 0;
+  LSizeCount := 0;
+  while LPosition <= Length(LText) do
+  begin
+    LLine := NextLine;
+    Admit(Length(LLine));
+
+    if Pos(CSymbolPrefix, LLine) = 1 then
+    begin
+
+      if LNameCount >= Length(LNames) then
+        raise ENyxPascalContext.Create('Saved compiler request exceeds 256 symbol queries');
+      LName := Operand(LLine, Length(CSymbolPrefix) + 1,
+        Length(LLine) - Length(CSymbolPrefix) - 1);
+      Admit(Length(LName));
+      LSymbol := NyxPascalDefine(LName);
+      for LOther := 0 to LNameCount - 1 do
+      begin
+
+        if SameName(LNames[LOther].Name, LSymbol.Name) then
+          raise ENyxPascalContext.Create('Saved compiler request repeats a symbol query');
+      end;
+      Admit(1);
+      LNames[LNameCount] := LSymbol;
+      Inc(LNameCount);
+    end
+    else if Pos(CSizePrefix, LLine) = 1 then
+    begin
+
+      if LSizeCount >= Length(LSizes) then
+        raise ENyxPascalContext.Create('Saved compiler request exceeds 64 size queries');
+      Admit(Length(LLine));
+      LClose := Pos(')', LLine);
+      LName := Operand(LLine, Length(CSizePrefix) + 1,
+        LClose - Length(CSizePrefix) - 1);
+      Admit(Length(LName));
+      LSize := NyxPascalSizeReference(LName);
+      Admit(Length(LName));
+
+      if (LScope = pcsoSystemBootstrap) and (Pos('.', LName) > 0) then
+        raise ENyxPascalContext.Create('Bootstrap compiler requests need unqualified size names');
+      for LOther := 0 to LSizeCount - 1 do
+      begin
+
+        if SameName(LSizes[LOther].Name, LSize.Name) then
+          raise ENyxPascalContext.Create('Saved compiler request repeats a size query');
+      end;
+      Admit(1);
+      LSizes[LSizeCount] := LSize;
+      Inc(LSizeCount);
+    end;
+  end;
+  Admit(8);
+  LProbe := NewCompilerProbe(LIdentity, LMode, LScope);
+  LOwner := LProbe as TCompilerProbe;
+
+  if LNameCount < LProbe.Count then
+    raise ENyxPascalContext.Create('Saved compiler request omits required mode guards');
+  for LAt := 0 to LProbe.Count - 1 do
+  begin
+
+    if not SameName(LProbe.Symbol(LAt).Name, LNames[LAt].Name) then
+      raise ENyxPascalContext.Create('Saved compiler request changes ordered mode guards');
+  end;
+  Admit(LNameCount);
+  SetLength(LOwner.Names, LNameCount);
+  for LAt := 0 to LNameCount - 1 do
+  begin
+    Admit(1);
+    LOwner.Names[LAt] := LNames[LAt];
+  end;
+  Admit(LSizeCount);
+  SetLength(LOwner.SizeNames, LSizeCount);
+  for LAt := 0 to LSizeCount - 1 do
+  begin
+    Admit(1);
+    LOwner.SizeNames[LAt] := LSizes[LAt];
+  end;
+  LWriter := TProbeSourceWriter.CreateComparison(LText, LCancellation);
+  try
+    LOwner.Emit(LWriter);
+    LWriter.Finish;
+  finally
+    LWriter.Free;
+  end;
+  Check;
+  Result := LProbe;
 end;
 
 procedure TTraceReader.Check;

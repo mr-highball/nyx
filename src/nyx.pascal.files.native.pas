@@ -95,6 +95,14 @@ function CaptureNyxPascalSourceDirectory(const ADirectory: TNyxText;
   const AOptions: TNyxPascalDirectoryOptions;
   const AContext: INyxPascalCompilerContext = nil;
   const ACancellation: INyxCancellationScope = nil): INyxPascalDirectoryCapture;
+{ Recover only the same bounded syntactic namespace/header used by native
+  directory capture, from an explicitly supplied captured text value. No host
+  path is opened or discovered. Empty means no recognized complete unit header;
+  the result is an index association, never proof of conditional participation
+  or a complete parsed module. Real translated loading still checks its owner. }
+function NyxPascalCapturedModuleHeader(const AText: TNyxText;
+  const AOptions: TNyxPascalDirectoryOptions;
+  const ACancellation: INyxCancellationScope = nil): TNyxText;
 
 implementation
 
@@ -702,6 +710,28 @@ begin
     raise ENyxPascalContext.Create('Unindexed source is outside the capture');
   end;
   Result := FUnindexed[AIndex];
+end;
+
+function NyxPascalCapturedModuleHeader(const AText: TNyxText;
+  const AOptions: TNyxPascalDirectoryOptions;
+  const ACancellation: INyxCancellationScope): TNyxText;
+var
+  LReader: TDirectoryCapture;
+  LText: TNyxText;
+  LScope: INyxCancellationScope;
+begin
+  { Keep passed text/scope values alive if a cancellation callback retires the
+    caller's separate variables. Header owns no directory or file handle. }
+  LText := AText;
+  LScope := ACancellation;
+  AOptions.Validate;
+  LReader := TDirectoryCapture.Create;
+  try
+    LReader.FOptions := AOptions;
+    Result := LReader.Header(LText, LScope);
+  finally
+    LReader.Free;
+  end;
 end;
 
 function CaptureNyxPascalSourceDirectory(const ADirectory: TNyxText;

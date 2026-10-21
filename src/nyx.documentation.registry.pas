@@ -855,9 +855,11 @@ var
   LSignature: INyxDocumentationSignature;
   LProperty: INyxDocumentationProperty;
   LRichMember: INyxDocumentationMemberSignature;
+  LMemberValue: INyxDocumentationMemberValue;
   LRichSignature: INyxDocumentationRichSignature;
   LRichProperty: INyxDocumentationRichProperty;
   LDeclared: INyxDocumentationDeclaredTypeExpression;
+  LAliasDefinition: INyxDocumentationAliasDefinition;
   LInterfaceDeclaration: INyxDocumentationDeclaredInterfaces;
   LImplementations: INyxDocumentationInterfaceImplementations;
   LStates, LStack, LEdges: array of Integer;
@@ -1036,6 +1038,8 @@ var
     LReference: TNyxDocumentationRef;
     LCapability: INyxDocumentationFormalBindings;
     LFormal: INyxDocumentationFormalParameter;
+    LRoots: INyxDocumentationCompilerRootBindings;
+    LRoot: INyxDocumentationCompilerRoot;
   begin
     ABudget.Spend;
 
@@ -1047,6 +1051,7 @@ var
     else
     begin
       Supports(AUse, INyxDocumentationFormalBindings, LCapability);
+      Supports(AUse, INyxDocumentationCompilerRootBindings, LRoots);
       for LUse := 0 to AUse.BindingCount - 1 do
       begin
         ABudget.Spend;
@@ -1055,6 +1060,20 @@ var
 
         if LCapability <> nil then
           LFormal := LCapability.FormalAt(LUse);
+        LRoot := nil;
+
+        if LRoots <> nil then
+          LRoot := LRoots.RootAt(LUse);
+
+        if LRoot <> nil then
+        begin
+
+          if LReference.Defined or (LFormal <> nil) then
+            raise ENyxDocumentation.Create('A compiler-root occurrence has contradictory binding channels');
+          ABudget.Spend;
+          NyxDocumentationCompilerRootContent(LRoot);
+          Continue;
+        end;
 
         if LFormal <> nil then
         begin
@@ -1071,6 +1090,29 @@ var
       end;
     end;
   end;
+  { Explicit untyped parameters have no closure edge. A nil ordinary use is
+    still refused here, rather than borrowing the absent-result convention. }
+  procedure RequireParameter(const AParameter: INyxDocumentationParameterDeclaration;
+    const AContext: TNyxDocumentationRef);
+  var
+    LUntyped: INyxDocumentationUntypedParameter;
+  begin
+
+    if Supports(AParameter, INyxDocumentationUntypedParameter, LUntyped) then
+    begin
+      ABudget.Spend;
+
+      if not LUntyped.DeclaredUntyped or (AParameter.TypeUse <> nil) or
+        not (AParameter.Passing in [ndpConst, ndpVar, ndpOut]) or
+        AParameter.HasDefault or (AParameter.DefaultPascal <> '') then
+        raise ENyxDocumentation.Create('Contradictory untyped parameter declaration');
+      Exit;
+    end;
+
+    if AParameter.TypeUse = nil then
+      raise ENyxDocumentation.Create('A typed parameter retains no declared type');
+    RequireUse(AParameter.TypeUse, AContext);
+  end;
   function EffectiveKind(const AReference: TNyxDocumentationRef;
     APlatform: TNyxPlatform; ARequired: Boolean;
     out AKind: TNyxDocumentationTypeKind): Boolean;
@@ -1078,6 +1120,7 @@ var
     LCurrent: INyxDocumentationType;
     LSteps: Integer;
     LNextReference: TNyxDocumentationRef;
+    LDefinition: INyxDocumentationAliasDefinition;
   begin
     Result := False;
     LCurrent := FindDeclaration(AReference);
@@ -1089,6 +1132,14 @@ var
 
       if LSteps > DeclarationCount then
         raise ENyxDocumentation.Create('Cyclic documentation alias');
+
+      if Supports(LCurrent, INyxDocumentationAliasDefinition, LDefinition) then
+
+        if (LDefinition.Definition <> nil) and not LCurrent.AliasTarget.Defined then
+        begin
+          AKind := ndtIntrinsic;
+          Exit(True);
+        end;
       LNextReference := AliasFor(LCurrent, APlatform);
 
       if not LNextReference.Defined then
@@ -1130,6 +1181,7 @@ var
     LIndex, LSteps: Integer;
     LReference: TNyxDocumentationRef;
     LType: INyxDocumentationType;
+    LDefinition: INyxDocumentationAliasDefinition;
   begin
     Result := False;
     LIndex := ImplementationIndex(AReference);
@@ -1156,6 +1208,16 @@ var
           raise ENyxDocumentation.Create('An interface argument cannot resolve to a unit');
         Exit(True);
       end;
+
+      if Supports(LType, INyxDocumentationAliasDefinition, LDefinition) then
+
+        if (LDefinition.Definition <> nil) and not LType.AliasTarget.Defined then
+        begin
+
+          if AInterfaceRoot then
+            raise ENyxDocumentation.Create('A compiler-root alias cannot implement an interface');
+          Exit(True);
+        end;
       LReference := AliasFor(LType, APlatform);
 
       if not LReference.Defined then
@@ -1178,6 +1240,8 @@ var
     LResolved: Boolean;
     LFormals: INyxDocumentationFormalBindings;
     LFormal: INyxDocumentationFormalParameter;
+    LRoots: INyxDocumentationCompilerRootBindings;
+    LCompilerRoot: INyxDocumentationCompilerRoot;
   begin
     ABudget.Spend;
     LRootSlot := -1;
@@ -1215,6 +1279,19 @@ var
 
       if not AUse.Reference.Defined and Supports(AUse, INyxDocumentationFormalBindings, LFormals) then
         LFormal := LFormals.FormalAt(LSlot);
+      LCompilerRoot := nil;
+
+      if not AUse.Reference.Defined and Supports(AUse, INyxDocumentationCompilerRootBindings, LRoots) then
+        LCompilerRoot := LRoots.RootAt(LSlot);
+
+      if LCompilerRoot <> nil then
+      begin
+
+        if (LSlot = LRootSlot) or LReference.Defined or (LFormal <> nil) then
+          raise ENyxDocumentation.Create('An implemented-interface root must remain nominal');
+        NyxDocumentationCompilerRootContent(LCompilerRoot);
+        Continue;
+      end;
 
       if LFormal <> nil then
       begin
@@ -1248,12 +1325,19 @@ begin
     LAPI := APIs[LAt];
 
     if (LAPI.Kind = ndtAlias) and not LAPI.AliasTarget.Defined and
-      not Supports(LAPI, INyxDocumentationAliasTargets, LTargets) then
+      not Supports(LAPI, INyxDocumentationAliasTargets, LTargets) and
+      (not Supports(LAPI, INyxDocumentationAliasDefinition, LAliasDefinition) or
+      (LAliasDefinition.Definition = nil)) then
       raise ENyxDocumentation.Create('Complete documentation alias requires its target: ' + LAPI.Identity.Key);
     Require(LAPI.AliasTarget);
 
     if Supports(LAPI, INyxDocumentationDeclaredTypeExpression, LDeclared) then
       RequireUse(LDeclared.Definition, LAPI.Identity);
+
+    if Supports(LAPI, INyxDocumentationAliasDefinition, LAliasDefinition) then
+
+      if LAliasDefinition.Definition <> nil then
+        RequireUse(LAliasDefinition.Definition, LAPI.Identity);
 
     if Supports(LAPI, INyxDocumentationDeclaredInterfaces, LInterfaceDeclaration) then
     begin
@@ -1327,7 +1411,7 @@ begin
         begin
           RequireUse(LRichSignature.ResultUse, LMethod.Identity);
           for LParameter := 0 to LRichSignature.ParameterCount - 1 do
-            RequireUse(LRichSignature.ParameterAt(LParameter).TypeUse, LMethod.Identity);
+            RequireParameter(LRichSignature.ParameterAt(LParameter), LMethod.Identity);
         end;
       end;
 
@@ -1335,8 +1419,11 @@ begin
       begin
         RequireUse(LRichProperty.ValueUse, LMethod.Identity);
         for LParameter := 0 to LRichProperty.ParameterCount - 1 do
-          RequireUse(LRichProperty.ParameterAt(LParameter).TypeUse, LMethod.Identity);
+          RequireParameter(LRichProperty.ParameterAt(LParameter), LMethod.Identity);
       end;
+
+      if Supports(LMethod, INyxDocumentationMemberValue, LMemberValue) then
+        RequireUse(LMemberValue.DeclaredValueType, LMethod.Identity);
     end;
   end;
   { Iterative colour traversal checks base/alias edges without Pascal recursion
@@ -1421,6 +1508,7 @@ var
   LAt, LNext, LBase, LSeen, LSlot, LLinks, LCapacity: Integer;
   LFound: Boolean;
   LReference: TNyxDocumentationRef;
+  LAliasDefinition: INyxDocumentationAliasDefinition;
 begin
   LBudget := TDocumentationBudget.Create(Limits, ACancellation);
   LBudgetLease := LBudget;
@@ -1463,7 +1551,9 @@ begin
           The target-neutral legacy query never guesses one branch or reports
           an empty inherited API merely because no common target is known. }
 
-        if (LType.Kind = ndtAlias) and not LType.AliasTarget.Defined then
+        if (LType.Kind = ndtAlias) and not LType.AliasTarget.Defined and
+          (not Supports(LType, INyxDocumentationAliasDefinition, LAliasDefinition) or
+          (LAliasDefinition.Definition = nil)) then
           raise ENyxDocumentation.Create('Select an explicit alias platform target before inherited member lookup');
         LLinks := LType.BaseCount + Ord(LType.AliasTarget.Defined);
         for LBase := 0 to LLinks - 1 do

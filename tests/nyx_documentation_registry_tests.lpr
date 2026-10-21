@@ -6,6 +6,7 @@ program nyx_documentation_registry_tests;
 uses SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.scheduler, nyx.schema,
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.documentation,
   nyx.documentation.registration, nyx.documentation.registry,
+  nyx.documentation.declarations,
   nyx.test.documentation {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -302,6 +303,40 @@ begin
   Check(LRefused and (ARegistry.Current = LPrevious) and (ARegistry.Version = LVersion), AReason);
 end;
 
+{ Incomplete explicit packages are refusal inputs, never a stand-in for the
+  genuine source closure. Preparation must leave all real registries intact. }
+procedure ExpectFixtureSourceRefusal(ACatalog: TNyxCatalog;
+  const APackage: INyxDocumentationPackage; ALegacyInstalled: Boolean);
+var
+  LSchemas: INyxSchemaSnapshot;
+  LCallbacks: INyxCallbackSnapshot;
+  LCatalog: INyxCatalogSnapshot;
+  LRefused: Boolean;
+  LMessage: String;
+begin
+  LSchemas := CaptureNyxSchemas;
+  LCallbacks := CaptureNyxCallbacks;
+  LCatalog := ACatalog.Capture;
+  LRefused := False;
+  try
+    RegisterDocumentationFixture(ACatalog, APackage);
+  except
+    on E: ENyxDocumentation do
+    begin
+      LRefused := True;
+      LMessage := E.Message;
+    end;
+  end;
+  Check(LRefused and (CaptureNyxSchemas.Revision = LSchemas.Revision) and
+    (CaptureNyxCallbacks.Revision = LCallbacks.Revision) and
+    (ACatalog.Capture.Revision = LCatalog.Revision),
+    'An unavailable source fixture package refuses before any real registry or catalog publication');
+
+  if ALegacyInstalled then
+    Check(Pos('legacy metadata', LMessage) > 0,
+      'A source registration cannot silently replace the already installed legacy owner');
+end;
+
 procedure Run;
 var
   LCatalog, LOtherCatalog: TNyxCatalog;
@@ -333,6 +368,8 @@ var
   LRefused: Boolean;
   LWire: TNyxText;
   LDeclarations: TNyxDocumentationDeclarations;
+  LRefusalChunks: TNyxDocumentationDeclarationChunks;
+  LRefusalPackage: INyxDocumentationPackage;
 begin
   LDefaults := TNyxDocumentationIndexLimits.Defaults;
   LCatalog := TNyxCatalog.Create;
@@ -341,6 +378,16 @@ begin
     LSchemas := CaptureNyxSchemas;
     LCallbacks := CaptureNyxCallbacks;
     LOldCatalog := LCatalog.Capture;
+    ExpectFixtureSourceRefusal(LCatalog, nil, False);
+    { This intentionally incomplete package supplies only its unit owner. It
+      cannot be used to claim a complete fixture, core or source-derived API. }
+    SetLength(LRefusalChunks, 1);
+    LRefusalChunks[0] := NewNyxDocumentationDeclarationChunk(
+      NyxDocumentationUnit('nyx.test.documentation'), [NewNyxDocumentationType(
+        NyxDocumentationUnit('nyx.test.documentation'), ndtUnit, 'Refusal input.')]);
+    LRefusalPackage := NewNyxDocumentationPackage(LRefusalChunks,
+      TNyxDocumentationContributionLimits.Defaults);
+    ExpectFixtureSourceRefusal(LCatalog, LRefusalPackage, False);
     LInitial := LRegistry.Refresh(LSchemas, LCallbacks, LOldCatalog, 0);
     Check((LInitial.Version = 1) and (LInitial.DeclarationCount = 0),
       'Legacy registrations produce explicit coverage gaps, never invented declarations');
@@ -598,6 +645,7 @@ begin
     LNewSchemas := CaptureNyxSchemas;
     LNewCallbacks := CaptureNyxCallbacks;
     LAlternateCapture := LCatalog.Capture;
+    ExpectFixtureSourceRefusal(LCatalog, LRefusalPackage, True);
     Check(Supports(LNewSchemas, INyxSchemaInspection, LSchemaInspection),
       'An actual creator snapshot exposes typed schema inspection');
     Check(Supports(LNewSchemas, INyxSchemaDocumentation, LSchemaDocs),

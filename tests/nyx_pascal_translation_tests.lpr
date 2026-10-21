@@ -418,7 +418,7 @@ begin
     (LUnknown.Token(WordAt(LUnknown, 'OrdinarySource')).Activity = ppkTrue),
     'Unconfigured output/compiler context retains source inspection with explicit unknown branches');
   LFiles := LFiles.WithFile(NyxPascalPhysicalFile('main.pas'),
-    '{$ifdef invalid/name}Maybe{$else}Other{$endif}AfterBroken');
+    '{$ifdef /invalid}Maybe{$else}Other{$endif}AfterBroken');
   LUnknown := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('main.pas'), NativeFacts, LOptions);
   Check(HasIssue(LUnknown, ptiUnknownCondition) and
     not HasIssue(LUnknown, ptiUnbalancedConditional) and
@@ -533,6 +533,198 @@ begin
   Check(LRejected and (LPoller.Polls > 7), 'Cancellation is observed inside a long physical token');
 end;
 
+{ The inspected FPC30301 scanner consumes one IFDEF/IFNDEF identifier and leaves
+  the remaining directive comment inert. Other compiler contexts keep the old
+  whole-operand grammar, and no macro truth follows from the chosen spelling. }
+procedure ConditionalDefineOperands;
+const
+  CDirective: TNyxText = '{$ifdef sizeof(NativeInt)>=8}';
+var
+  LContext: INyxPascalCompilerContext;
+  LFiles: INyxPascalFileCatalog;
+  LSource: INyxPascalTranslation;
+  LInputs: INyxPascalUnresolvedConditions;
+  LRef: TNyxPascalDefineRef;
+  LName, LValue, LInvalid: TNyxText;
+  LOffset, LCase: Integer;
+  LFailed: Boolean;
+begin
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi)
+    .WithSymbol(NyxPascalDefine('FLAG'), ppdDefined)
+    .WithSymbol(NyxPascalDefine('OFF'), ppdUndefined)
+    .WithSymbol(NyxPascalDefine('INVALID'), ppdUndefined)
+    .WithSymbol(NyxPascalDefine('SIZEOF'), ppdUndefined);
+  LRef := NyxPascalConditionalDefine(LContext, #9 + ' FLAG(note)>=1');
+  Check(LRef.Name = TNyxText('flag'),
+    'Qualified conditional selection accepts leading ASCII whitespace and one identifier');
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('operand.pas'),
+    '{$ifdef FLAG(note)}Chosen{$else}WrongFlag{$endif}' +
+    '{$ifndef OFF/trailing}Absent{$else}WrongAbsent{$endif}' +
+    '{$ifdef invalid/name}WrongInvalid{$else}Annotation{$endif}' +
+    CDirective + 'WrongSize{$else}NotSize{$endif}Tail');
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('operand.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  Check(LSource.Resolved and
+    (LSource.Token(WordAt(LSource, 'Chosen')).Activity = ppkTrue) and
+    (LSource.Token(WordAt(LSource, 'Absent')).Activity = ppkTrue) and
+    (LSource.Token(WordAt(LSource, 'Annotation')).Activity = ppkTrue) and
+    (LSource.Token(WordAt(LSource, 'NotSize')).Activity = ppkTrue) and
+    (LSource.Token(WordAt(LSource, 'WrongSize')).Activity = ppkFalse),
+    'IFDEF/IFNDEF retain measured symbol truth while ignoring punctuation and annotation tails');
+  NyxPascalDirectiveParts(CDirective, LName, LValue, LOffset);
+  Check((LName = TNyxText('ifdef')) and (LValue = TNyxText('sizeof(NativeInt)>=8')) and
+    (LOffset = Pos('sizeof', CDirective) - 1),
+    'Operand selection leaves the complete authored directive value and scalar offset intact');
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+  LFiles := LFiles.WithFile(NyxPascalPhysicalFile('operand.pas'),
+    CDirective + 'Maybe{$else}Other{$endif}Tail');
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('operand.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  Check(Supports(LSource, INyxPascalUnresolvedConditions, LInputs) and
+    (LInputs.UnresolvedCount = 1) and LInputs.UnresolvedAt(0).Plannable and
+    (LInputs.UnresolvedAt(0).Expression = TNyxText('defined(sizeof)')) and
+    (LInputs.UnresolvedAt(0).Origin.Span.Start = 0) and
+    (LInputs.UnresolvedAt(0).Origin.Span.Length = Length(CDirective)) and
+    (LSource.Token(WordAt(LSource, 'Maybe')).Activity = ppkUnknown) and
+    (LSource.Token(WordAt(LSource, 'Tail')).Activity = ppkTrue),
+    'The real sizeof-looking IFDEF retains an unknown macro requirement and its exact authored span');
+  for LCase := 0 to 3 do
+  begin
+    case LCase of
+      0: LContext := NativeFacts(30300);
+      1: LContext := NewNyxPascalCompilerContext(ppcPas2JS,
+        TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+      2: LContext := NewNyxPascalCompilerContext(ppcUnknown,
+        TNyxPascalCompilerVersion.Create(0, 0, 0), ppmUnknown);
+      3: LContext := nil;
+    end;
+    LFailed := False;
+    try
+      NyxPascalConditionalDefine(LContext, 'FLAG(note)');
+    except
+      on ENyxPascalContext do LFailed := True;
+    end;
+    Check(LFailed, 'Unqualified compiler contexts retain strict whole-operand validation');
+  end;
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+  for LCase := 0 to 5 do
+  begin
+    case LCase of
+      0: LInvalid := '';
+      1: LInvalid := '/FLAG';
+      2: LInvalid := '(FLAG)';
+      3: LInvalid := '9FLAG';
+      4: LInvalid := TNyxText(StringOfChar('A', 129)) + '(tail)';
+      5: LInvalid := 'éFLAG';
+    end;
+    LFailed := False;
+    try
+      NyxPascalConditionalDefine(LContext, LInvalid);
+    except
+      on ENyxPascalContext do LFailed := True;
+    end;
+    Check(LFailed, 'Conditional selection refuses a missing, invalid or overlong identifier without truncation');
+  end;
+  LRef := NyxPascalConditionalDefine(LContext, TNyxText(StringOfChar('A', 128)) + '(tail)');
+  Check(Length(LRef.Name) = 128, 'The old exact identifier bound remains usable with an inert tail');
+end;
+
+{ Only the qualified authored module operation establishes MULTIHELPERS state.
+  The selected initial mode is not a default, and this module-wide switch is
+  deliberately outside the local PUSH/POP settings stack. }
+procedure MultipleHelperPolicies;
+const
+  CModes: array[0..4] of TNyxText = ('fpc', 'objfpc', 'delphi', 'delphiunicode', 'tp');
+var
+  LView: INyxPascalTranslation;
+  LContext: INyxPascalCompilerContext;
+  LFiles: INyxPascalFileCatalog;
+  LCancel: INyxCancellationScope;
+  LAt: Integer;
+  LRejected: Boolean;
+
+  procedure Translate(const AText: TNyxText; const AContext: INyxPascalCompilerContext);
+  begin
+    LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(
+      NyxPascalPhysicalFile('helpers.pas'), AText);
+    LView := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('helpers.pas'),
+      AContext, TNyxPascalTranslationOptions.Defaults);
+  end;
+
+  function AtWord(const AWord: TNyxText): TNyxPascalKnowledge;
+  begin
+    Result := NyxPascalCompilerPolicies(LView.State(
+      LView.Token(WordAt(LView, AWord)).State)).MultipleHelpers;
+  end;
+
+begin
+  Translate('unit Helpers; interface Initial implementation end.', NativeFacts);
+  Check(AtWord('Initial') = ppkUnknown,
+    'A selected initial Delphi mode alone grants no multiple-helper default');
+  for LAt := Low(CModes) to High(CModes) do
+  begin
+    Translate('{$mode ' + CModes[LAt] + '} unit Helpers; interface Reset implementation end.',
+      NativeFacts);
+    Check(LView.Resolved and (AtWord('Reset') = ppkFalse),
+      'Each inspected FPC30301 authored MODE table resets multiple helpers off');
+  end;
+  Translate('unit Helpers; interface {$modeswitch multihelpers+} Enabled ' +
+    '{$modeswitch multihelpers-} LateIgnored implementation end.', NativeFacts);
+  Check((AtWord('Enabled') = ppkTrue) and (AtWord('LateIgnored') = ppkTrue),
+    'The real unit header switch applies, while a late module switch is ignored');
+  Translate('{$modeswitch multihelpers} {$mode objfpc} unit Helpers; interface Reset ' +
+    '{$mode delphi} LateMode implementation end.', NativeFacts);
+  Check((AtWord('Reset') = ppkFalse) and (AtWord('LateMode') = ppkFalse),
+    'Effective MODE replaces a prior module switch and late MODE cannot replace it');
+  Translate('unit Helpers; interface {$modeswitch multihelpers-} Disabled implementation end.',
+    NativeFacts);
+  Check(AtWord('Disabled') = ppkFalse, 'The explicit minus form proves module-wide off');
+  Translate('{$mode objfpc} {$push} {$modeswitch multihelpers+} {$pop} ' +
+    'unit Helpers; interface AfterPop implementation end.', NativeFacts);
+  Check(AtWord('AfterPop') = ppkTrue,
+    'POP restores local settings without undoing the current module-wide helper switch');
+  Translate('{$mode objfpc} {$ifdef NEVER} {$modeswitch multihelpers+} {$endif} ' +
+    'unit Helpers; interface Inactive implementation end.', NativeFacts);
+  Check(AtWord('Inactive') = ppkFalse,
+    'An inactive module switch cannot revoke the qualified MODE reset');
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+  Translate('{$mode objfpc} {$ifdef MAYBE} {$modeswitch multihelpers+} {$endif} ' +
+    'unit Helpers; interface Uncertain implementation end.', LContext);
+  Check(AtWord('Uncertain') = ppkUnknown,
+    'An uncertain active switch revokes the known module policy rather than guessing a branch');
+  Translate('{$mode objfpc} {$unknown_effect} unit Helpers; interface Revoked implementation end.',
+    NativeFacts);
+  Check(AtWord('Revoked') = ppkUnknown,
+    'Unknown textual effects revoke multiple-helper knowledge with the other source policies');
+  Translate('{$mode objfpc} unit Helpers; interface OtherVersion implementation end.',
+    NativeFacts(30202));
+  Check(AtWord('OtherVersion') = ppkUnknown,
+    'A different FPC version inherits no inspected mode-table default');
+  Translate('{$modeswitch multihelpers+} unit Helpers; interface OtherFamily implementation end.',
+    NewNyxPascalCompilerContext(ppcUnknown,
+      TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi));
+  Check((AtWord('OtherFamily') = ppkUnknown) and HasIssue(LView, ptiUnsupportedDirective),
+    'An unqualified compiler family refuses the module switch without a default');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try
+    NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('helpers.pas'), NativeFacts,
+      TNyxPascalTranslationOptions.Defaults, LCancel);
+  except on ENyxPascalAnalysisCancelled do LRejected := True; end;
+  Check(LRejected, 'Cancellation still refuses policy translation before publication');
+  LRejected := False;
+  try
+    NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('helpers.pas'), NativeFacts,
+      TNyxPascalTranslationOptions.Defaults.UpToTokens(1));
+  except on ENyxPascalTokenLimit do LRejected := True; end;
+  Check(LRejected, 'The existing token ceiling still refuses complete switch translation');
+end;
+
 {$ifndef PAS2JS}
 function ReadText(const APath: String): TNyxText;
 var
@@ -613,6 +805,8 @@ begin
     Contexts;
     Files;
     Translation;
+    ConditionalDefineOperands;
+    MultipleHelperPolicies;
     {$ifndef PAS2JS}
     ActualCallbackGate;
     {$endif}

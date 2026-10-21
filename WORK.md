@@ -60,7 +60,563 @@ unmet prerequisite and reports its acceptance outcome/ownership, without waiting
 solely because the current slice is source-ready. Root must keep the next scoped
 implementation release ready; preserve all full acceptance and stop conditions.
 
-## Current reference prerequisite: Scoped formals and safe capability identity — 2026-10-20
+Latest helper check (2026-10-20): Lil' Scooty is running on the written source
+adapter and actual controls/fixture registration/index consumer, reviewing
+admission/lifetimes and adding focused atomic-refusal coverage before handoff.
+The next available review is actual complete source closure and quota fit while
+root validates; it does not require another human assignment. TASKFLOW.MD now
+makes queue replenishment root's handoff responsibility. The private queue's stale
+fixture ownership was corrected: root owns nyx.test.documentation.pas, helper
+owns the source adapter/consumer. Existing missing Classes includes and requested
+compiler-root facts remain explicit blockers with the separate authorization
+question pending. This workflow update changes no acceptance or batch count.
+
+## Current reference integration: Source-owned API discovery — 2026-10-20
+
+The scoped-formal/capability checkpoint is committed/pushed and independently
+source/remote verified as4e15890a3a7976ee01294e51447652f72b9c5b40. All13 owned paths
+were clean, all1742 Pascal inputs and13 foreign planning paths exact, all readers
+joined and the selected browser tab closed before releasing the next scope.
+The source/remote receipt remains in that qualification packet. At least57
+unclosed batches require a changed next action, not another mechanics variant.
+
+Owning acceptance remains reference01's faithful source-owned API description
+and reference02's real registration/discovery. Deliver one shared integration:
+complete selected public class/interface/callback scopes and complete public unit
+globals from their actual translated unit/include owner, genuine referenced-type
+closure and one canonical package reused at the existing schema/callback/factory
+owners. A real source-derived fixture must publish an immutable index without
+constructing controls/callbacks or invoking examples; changed/unknown/missing
+members, origins, bindings or quotas preserve prior Current/version. Actual
+whole-source closure and allowance fit are still unmeasured. Native and portable
+consumer source are required; current browser execution remains externally gated.
+No full reference/editor/parity/creator adoption is inferred from this next lane.
+
+Lil' Scooty owns the library/source-adapter lane: documentation.pas,
+documentation.registration.pas, documentation.registry.pas only as needed for
+this integration; documentation.signatures.pas; new documentation.source.pas;
+new documentation_source consumer; necessary existing documentation/signature
+consumers; component-documentation and source-capture guides. The fixture unit
+nyx.test.documentation.pas has transferred to root. Root owns that fixture, the
+control-contract tool, catalog, generator consumer and managed-controls guide,
+plus WORK/AGENTS/private admission. No overlapping edits.
+Root consumes the helper's typed adapter boundary after its API handoff. Lifecycle,
+operator and routine-generic support belongs to that real integration, preserving
+old APIs/GUID slots/layouts/ordinals; never silently omit or relabel unsupported
+members. Stable keys cannot depend on row ordinals or circular formal-owner keys.
+
+Qualification/maintenance may supply exact source packets and a typed package
+to the existing registration owner. Preserve the ordinary fixture call surface
+and filesystem/backend-free browsing; static companion emission remains root's
+integration work. One package owned by the real registration lifetime prevents
+independent recapture by subsequent catalogs. Each existing registry retains its
+own duplicate/revision authority; no cross-registry transaction or dynamic unload
+claim is introduced. Low-level declarations must not import generated companions.
+
+Stop/switch on unavailable compiler/context/source facts, unsupported complete
+scope or a quota failure; retain the refusal rather than dropping declarations,
+inventing core leaves, expanding limits or retrying probes. Both lanes pause
+source-ready before root admits any compiler/native reader. No extra agent,
+host/config/SDK retry, capture, protected mutation, cleanup/restart, new public MCP
+schema or rollout. Preserve13 concurrent planning paths and the deferred splitter.
+After handoff the helper pulls the next useful prerequisite under the standing
+workflow. The ignored .local/lil-scooty-work-queue-private.json records the active
+and next canonical task references, not another backlog or acceptance assessment.
+
+Current integration preparation (same source-adoption batch): explicit manifests
+stage 216 previously preserved source inputs: the original 156, 48 SysUtils
+includes and 12 already-pinned Windows includes. Original module associations
+and the separate 28-file Windows request order remain distinct. The genuine
+retained Delphi/RTL/Windows compiler requests must match before their archived
+replies can be used; no new compiler fact job or SDK discovery is admitted.
+The packet is `E:\Blekohlab\nyx\qualification\documentation-source-20261020-220435`.
+
+Root's explicit fixture registration overload now accepts the caller's canonical
+package, validates the actual factory shape and declaration roles, and retains
+that exact owner for later ordinary registration calls. Prepared schema and
+callback bindings precede real registry publication; existing registries retain
+their independent authority. The maintained registry consumer adds negative
+nil/missing-owner and legacy-replacement checks, requiring unchanged real schema,
+callback and catalog revisions. These inputs prove no positive source/core
+closure. Preparation6 runs the maintained native registry68, contribution70 and
+documentation68 checks with clean heaps; the registry also compiles for browser.
+Preparation5's missing SysUtils import and source-local warning are retained
+failures, repaired only after its readers joined. Preparation6 exposed one later
+test-local initialization warning. Preparation7 changes only that initialization
+and compiles the full source-consumer body for native/browser with zero owned
+warnings/seven upstream browser warnings. Its source inventory proves that exact
+one-file delta; preparation6/7 are composite targeted evidence, not a full common
+product matrix or executed source-package/browser acceptance. All handles joined.
+
+The preceding user-triggered goal turn made workflow progress: the live helper
+confirmed its active integration and next independent closure review, task flow
+made root responsible for queue replenishment, and stale fixture ownership was
+removed. It was not a verified compiler wait or an accepted product criterion.
+
+The helper's queued closure review changes the next implementation action. Every
+complete scope used its own signature batch, which rescanned the whole lexical
+source for final agreement. At least82 controls scopes over at least99,348 source
+characters require8,146,536 work units for those checks alone, exceeding the
+unchanged2,000,000 allowance before parsing/copy/binding. Preserve that lower-bound
+failure; no full closure fit was ever established. The same integration now uses
+one exact-owned translated signature session per module. Helper owns signatures,
+source and their maintained consumers/guides; the old alternate-snapshot APIs
+stay unchanged. The existing mandatory-root signaturebatch consumer will exercise
+all89 actual globals and all public callable type groups over the five original
+includes, without a skip mode or a known-blocked full RTL replay. Preparation10
+now measures this complete signature-only scope successfully, as recorded below;
+whole package closure and its separate aggregate fit remain unproven.
+
+Preparation8/9 retain the next actual decision boundary. The exact context-value
+consumer now passes167 native checks with a clean heap and compiles for browser;
+the initial same-source-FPU fixture expectation was wrong and remains retained.
+This proves immutable context value identity, not compiler-root facts or ABI.
+The per-module signature session and its portable refusal/lifetime cases compile
+for both targets. The native consumer reaches the complete actual controls unit
+and fails at check3384 under the unchanged2,000,000 work cap, with a clean heap.
+The retained stack identifies repeated linear expression-receipt searches in
+TConstruction.Seen; no full-unit or source-package success is claimed.
+
+All preparation9 readers are terminal/joined. Root replaces same-construction
+receipt searches with an immutable, pre-publication creation-arena token and
+checked canonical owner slot. Foreign constructions keep charged full lookup;
+equal text, stale arenas and alternate interfaces earn no local receipt. The
+token retains no construction/source/policy. Reentrant growth observes the
+current count after outward admission, and operation-local leases preserve
+caller release/retirement safety. Lil' Scooty owns focused regression additions
+in the existing type-expression consumer while root owns its implementation.
+The unchanged complete actual-unit signature witness remains decisive: no scopes,
+quotas or source inputs are reduced.
+
+Preparation10 freezes 26 owned Pascal paths over the unchanged 1,747-file inventory.
+All eight jobs are successful and terminal/joined. The complete actual controls
+unit and its five literal includes yield 89 globals, 190 public type callable
+groups and 1,312 routines across 191 groups using 597,176 of the unchanged 2,000,000
+work allowance. The maintained signature-batch consumer passes 6,084 native checks;
+the expression consumer passes 305 with all nine actual windows, including the
+new receipt/reentrant-growth/caller-release/parent-retirement cases. Existing
+signature 94 and scoped-formal 140 consumers also pass. All four native programs
+have clean heaps. Three browser consumers and the full source consumer's native
+body compile; source-package execution and browser execution are not included.
+The eight compiler logs have zero owned warnings and 21 installed upstream warnings.
+The provisional warning classifier accidentally matched the installed RTL's
+`src` segment; its initial receipt is retained and exact rooted classification
+corrects the derived count. All 1,747 source hashes and 13 foreign planning hashes
+stay exact throughout qualification; preparation9's real quota failure remains.
+
+The previous goal turn changed source lifetime/retirement guards and authoritative
+handoff ownership, and the current continuation supplies the decisive full-unit
+signature evidence. This remains the same source-adoption integration after at
+least57 unclosed batches; no original criterion/task/credit/DONE closes. The
+passed prerequisite changes the next action: Lil' Scooty is released on optional
+compiler-root TypeUse slots, rich alias definition and their real source/binding/
+registration consumers. Root adds the existing construction's pure pre-copy byte
+reservation free helper and qualifies generated creator selections against the
+same complete actual unit. Those new edits are uncompiled WIP. Full core closure,
+actual package/index registration and compiler-fact/source gates remain required.
+
+Preparation11 retains all eight terminal/joined jobs against its exact 1,747-file
+source freeze. All compiles pass. The extended native generator consumer passes
+358 checks through 21 joined maintenance children, with clean parent/child heaps.
+Its generated selector executes against complete actual controls plus all five
+includes, returning all 81 distinct creator annotations using 134,147 work units.
+The copied stale badge factory and retired-construction refusals preserve prior
+annotations. This qualifies unbound declaration shapes only, not actual core
+binding, a full package or catalog attachment. Signature 6,084 / work 597,176 and
+formal 140 checks remain green with clean heaps on this source; the full source
+consumer compiles native/browser without execution.
+
+The changed root/alias consumer fails disposal assertion 88 with a clean heap.
+Its test constructs a construction interface inside the same procedure as the
+immediate destructor-count assertion; static ownership review finds no scope or
+admission field on the published root. The proposed fixture repair places that
+caller-slot release sequence in a nested helper so managed call temporaries end
+before the outer disposal assertion. This is not yet replacement evidence.
+Two product review findings also enter the narrow repair: context-piece vector
+growth must admit its actual capacity before Add, and encoded String(codepage)
+must recognize its named leaf's encoded parent under distinct/array wrappers.
+Keep exact limits, context/source ownership and all actual source requirements.
+Lil' Scooty owns these three repairs and controlled consumers; root owns the next
+common freeze and all readers. No broad extra fastpath is added: a cleared new
+root-alias subtype retains bounded optional-capability observation work, while
+ordinary legacy alias inputs keep their existing path and framing.
+
+Preparation12 joins all twelve readers against the exact 1,747-file freeze.
+The repaired root/alias consumer passes 176 checks, including all ten actual
+definitions and controlled source-to-package/index cases, with a clean heap;
+its browser consumer compiles. Both Studios, backend and browser worker compile.
+Maintained native registry68/contribution70/implementation109/property43/docs68
+checks also pass with clean heaps. These remain targeted/composite evidence;
+the unchanged full SDK-derived source package has not executed successfully.
+
+The unchanged member-declaration consumer exposes a real cancellation-domain
+regression at check62: an early construction admission now correctly refuses,
+but WithNyxDocumentationMemberIntent lets the internal type-expression exception
+escape instead of the public documentation cancellation exception. Its failure
+has a clean heap and remains retained. Preserve the immediate cancellation guard,
+all work charges and existing assertions. Lil' Scooty owns the narrow public
+attachment-boundary normalization; root adds directly analogous implemented-
+interface attachment regression coverage. Both source lanes pause before the
+next shared freeze. The thirteen concurrent planning files remain byte-exact.
+No new source capture or compiler-fact collection is authorized: the human has
+asked for a plain-English explanation of that pending permission request.
+
+Subsequent explicit approval changes that external gate: after the plain-English
+explanation of missing library reads and installed-compiler questions, the human
+said, "oh, yes this is fine then. you may probe read only source files". Root may
+capture the missing Classes/library dependencies and fulfill only actual typed
+source-requested facts within existing quotas. Preserve the original 216 retained
+inputs and original replay identities; retain additions separately with exact
+source/context/request receipts. No fixed new primitive list, general SDK sweep,
+configuration change or host restart follows from this narrow approval. The
+unchanged full journey must run again before naming its next runtime blocker.
+
+Preparation13 qualifies the public cancellation repair against the unchanged
+member consumer: 122 checks/all seven actual members pass with a clean heap and
+the browser consumer compiles. The new interface-attachment test successfully
+replays all measured outward-admission cancellation points, then its final
+assertion incorrectly dereferences the deliberately nil cleared interface vector.
+Retain that clean-heap fixture failure at check119. Preparation14 changes only
+that assertion to compare nil; the other26 owned Pascal files remain exact.
+The interface consumer then passes178/all three actual source relationships,
+root/alias176/all ten actual definitions and formals140/all three actual source
+sets pass with clean heaps. Three maintained portable consumers compile only.
+No immediate construction guard, source getter sequence or work charge changes.
+
+The unchanged five-argument full source journey now executes on preparation14.
+It passes the original System/ObjPas/Windows replay assertions and advances past
+the former lexical-policy check66, then fails the existing SysUtils completeness
+assertion at check87: 2,871 declarations, Pending=True, RelatedName empty. All
+23,629,259 allocations/15,567,379,912 cumulative bytes are freed. This is a new
+retained real integration failure, not proof that Classes or package extraction
+was reached. All seven readers are terminal/joined and all1,747 source hashes
+remain exact. The next action uses existing semantic issue/origin, typed compiler
+requirements and retained unresolved-condition diagnostics to identify the exact
+cause; no missing-name list or probe can be inferred from the empty RelatedName.
+Lil' Scooty owns that unchanged-scope consumer diagnostic handoff; the concrete
+TGUID record-variant prerequisite stays queued until this earlier gate resolves.
+
+Under the explicit read-only approval, root captures24 literal Classes dependency
+files (575,002 bytes) separately from the exact original216 inputs. The installed
+Classes root still matches its retained hash. Twenty-two additions decode under
+strict UTF8; German/Spanish constsg.inc/constss.inc retain opaque bytes with no
+guessed codec or participation. Existing win/tthread.inc already belongs to the
+original retained inputs. The exact new-input manifest and source hashes are in
+the current qualification packet; none has yet been consumed by the full journey
+and no new compiler-fact job has run. SDK bytes and compiler settings stay exact.
+
+Preparation15 changes only native diagnostic output in the existing source
+consumer; both readers are terminal/joined and all1,747 input hashes stay exact.
+The repeated whole journey retains check87 with a clean heap and now identifies
+pbiIncompleteSource, 988,330 work, seven passes/six answers, first blocked token
+24,983. Its semantic Char-size question cannot bind the earlier unresolved
+`defined(cpu64)` at syshelph.inc scalar1,003; both initial/current cpu64 facts are
+unknown. A later actual `not defined(ver3_2)` at scalar62,753 likewise needs an
+initial/current symbol fact. There are zero typed primitive/source-size requests.
+The later fatal Unsupported Integer type size remains an actual unresolved branch,
+not a directive to suppress. No Char/Integer query is authorized by these raw
+size spellings alone. Existing required-only compiler planning/module preparation
+is the next owner; no fixed initial probe list, guessed absence or new schema.
+
+Lil' Scooty is released only on the existing consumer's explicit native compiler/
+fresh-output option for that required-symbol continuation. The original five-
+argument archived-only path, complete source scope and final assertion remain.
+Use existing preparation budgets, exact base profile/input equality, observed
+default-anchor compatibility and independent bootstrap ownership. Root admits the
+next actual native collection only after source handoff/freeze; no fact job has
+yet been launched. Classes overlay consumption, variants and static packet
+emission remain subsequent prerequisites in the same source-adoption integration.
+
+Preparation16's seven-argument native opt-in compiles, as does the portable source
+consumer. Both readers are joined and all1,747 source hashes stay exact. The raw
+module preparation plans33 names, spends67,111 archived plus67,111 prospective
+work, launches zero fresh compiler jobs, and retains the same check87 failure
+with a clean heap. This is a concrete continuation-owner error: raw preparation
+cannot see the cpu64/ver3_2 requirements exposed only after the semantic source's
+six accepted answers. Keep that failed run; enabling speculative include prefetch
+or inserting those names by hand would bypass the actual owner.
+
+The next consumer-only repair starts with the real semantic result, plans its
+exact immutable Source, and uses the existing native capture/verified merge only
+for eligible newly requested initial symbols. Preserve the archived default anchor,
+all prior facts and the independent bootstrap. The whole continuation shares the
+existing four-job ceiling (including the archived job), four-million raw/planning
+work, four-million semantic work and64 logical passes; per-view two-million stays.
+Charge prior attempts before another construction. A typed size/source request,
+no eligible symbol or any source/identity/budget refusal remains explicit. The
+five-argument archived-only path and complete final assertion stay in place.
+No fresh symbol or primitive fact has been collected yet. Five protected files
+and configured compiler/two configuration files remain exact to the pre-run pins;
+the historical global-configuration preservation claim remains false.
+
+Preparation17 is retained as reviewed but unrun. Before compiler admission the
+helper found that the archived33-symbol probe also owns four ordered size queries;
+requiring an empty size vector would incorrectly reject that original input.
+The narrow repair preserves the exact existing typed size names and order while
+prohibiting additions. Preparation18 freezes that consumer-only repair with all
+other26 owned Pascal files exact. Its browser consumer compiles; the native
+seven-argument whole journey is running under the shared limits. No result or
+new fact is credited before that reader joins and its exact receipts are checked.
+
+Preparation18 is now joined and audited: both compilers succeed, all1,747 source
+inputs, all240 installed/retained dependency pins, five protected files, compiler
+and its two configurations, and thirteen concurrent planning files remain exact.
+One fresh compiler job preserves the original33 symbols/four size queries and
+adds only source-requested cpu64/ver3_2. Both are explicitly undefined on this
+compiler; cumulative merge verifies the whole default anchor, all earlier facts
+and the independently attached bootstrap. Total symbol jobs2/4, planning201,333
+of4M, and semantic2,191,957 work/23 of64 passes remain within the original caps.
+Do not recollect those accepted replies merely to repeat this continuation.
+
+The unchanged final check87 still fails with a clean heap: SysUtils advances to
+3,303 declarations/fifteen answers, then reports zero typed compiler requirements,
+eight unresolved conditions and six variable-declaration syntax diagnostics.
+The first unsupported source condition is literally
+`{$ifdef sizeof(NativeInt)>=8}` in retained syshelph.inc at scalar94,082; later
+conditions use ordinary IF NativeInt/NativeUInt sizes. This is a directive-operand
+grammar/ownership prerequisite, not authority for new size measurements. Preserve
+the exact authored directive and later fatal refusal. Reassess configured-FPC
+operand/trailing-text handling through existing lexical/directive/condition
+owners before another full run; distinguish the six syntax diagnostics using
+existing origin ownership. Classes overlay and missing public RtlConsts/Types/
+TypInfo roots stay queued behind this actual gate. No source package extraction,
+browser execution or original acceptance criterion is established by this run.
+
+The configured scanner's read-only source establishes the missing grammar:
+isdef/isnotdef read one identifier, and handledirectives consumes the remaining
+comment text. It establishes no value for that identifier. Root implements the
+shared bounded selector only for the inspected FPC3.3.1 context, retaining the
+old complete-operand contract elsewhere and all raw directive receipts. The
+helper owns translation, context-aware lookahead, the two existing focused
+consumers and the same source consumer's explicit retained-reply path and exact
+syntax-origin diagnostics. Unknown-context include proposals stay strict.
+
+The next qualification is bounded to those existing consumers and the unchanged
+whole source journey. An optional explicit retained directory must replay p18's
+exact emitted input/reply as logical job2 before any later new source-requested
+job; mismatch refuses without fallback. All current construction work and passes
+remain cumulative under the same caps. Historical attempts are retained, not
+presented as current semantic reuse. Stop at the actual next source/refusal gate;
+do not add a compiler grammar oracle, new primitive list, relaxed assertion or
+replacement miniature source. Classes/public imports and complete package/static
+emission remain subsequent prerequisites of the original open criterion.
+
+Preparation19's focused qualification is joined against the31-owned/1,747-input
+freeze. Native contextvalue176, translation172 and compilerplan37 pass with clean
+heaps, preserving prior assertions and adding the qualified-operand, uncertainty,
+raw-origin, limit/cancellation and caller-input lifetime coverage. All three
+portable consumers compile; this does not establish browser execution. The
+source consumer also compiles for browser. Its full native eight-argument run
+is live with the exact pinned p18 retained reply, fresh confined output and
+unchanged quotas; all Pascal remains frozen until that reader joins. No full
+source-package result, current whole-product qualification or acceptance credit
+follows from the focused passes alone.
+
+Preparation19's full source reader is now joined. All eight compiler receipts,
+1,747 product inputs,240 installed/retained dependency pins, five protected files,
+compiler/two configurations and thirteen concurrent planning files remain exact.
+The exact p18 reply replays successfully; one new36-name cumulative native request
+answers only the actually requested sizeof macro, explicitly undefined. All four
+original size queries, whole default anchor, prior facts and independent bootstrap
+remain exact. No accepted p18 fact was recollected. The unchanged final source
+assertion fails at check88 (one legitimate replay equality check precedes it),
+with all24,625,588 allocations/15,734,121,608 cumulative bytes freed.
+
+The actual frontier is now nineteen SysUtils answers and one typed compiler-root
+LongWord requirement, owned/observed by rtl/win32/system.pp in bootstrap FPC30301
+mode1, source offset182/origin40. No LongWord measurement has been collected. The
+six syntax errors map exactly to `for`/`TGUID`/`Class` at syshelph.inc1,242/1,246/
+1,257 under the genuine `TGuidHelper = record helper for TGUID` header. Those
+are separate measured prerequisites; neither a guessed primitive width nor a
+flattened ordinary record supplies their meaning. Native focused coverage remains
+qualified and all four browser consumers compile only. Full package extraction
+has not been reached; original criterion/task/credit/DONE stays open.
+
+Stop further fact/continuation/fixture/compiler variants before another full run.
+Logical symbol jobs3/4, planning268,444/4M and semantic3,415,320/4M with43/64 passes
+leave584,680 work and21 rounds. The existing Revise factory donates physical
+lexical rows but still reconstructs every context, prefix and ordered answer;
+Rebind deliberately requires a complete resolved source with no pending question.
+Neither API grants pending-answer reuse or resets the aggregate limits. Root
+reassesses this repeated construction through existing conditions/translation/
+syntax owners; the helper identifies the smallest record-helper header repair
+and meaningful existing-consumer checks. No new probe is authorized by a raw name
+or a reader diagnostic. The actual typed LongWord request remains available for
+the later bounded fulfillment path under the user's existing narrow approval.
+
+Root releases only the independent header prerequisite in the existing syntax/
+binding units and their two maintained consumers. Distinct appended record/class/
+type-helper forms preserve old ordinals and declaration layouts; complete checked
+headers retain their full source span, a helper parent remains separate from the
+target, and unsupported helper meaning refuses explicitly instead of entering an
+alias cycle. No new optional GUID/target-span API or helper lookup/adoption is
+claimed. Root transfers binding-file ownership for this scope and all33 owned
+Pascal paths remain disjoint. The helper is implementing this source-only handoff;
+root admits focused qualification after its next pause. No further native fact
+collection or full-source run follows until the separate context/world preparation
+and aggregate-work path has been agreed. The retained whole source journey and
+original acceptance criteria remain unchanged.
+
+Root prepares a separate240-file future input union with all216 originals plus
+the24 approved additions, byte-exact to both retained copies and current installed
+sources. Its original156/Windows28/all216 manifests are unchanged. The active
+reader used the216 tree, so this is prepared input evidence, not a240-file native
+source/package measurement. Existing packet overlay APIs can preserve the47
+module roots, all opaque views and old search order before appending Classes'
+include directory. Actual SysUtils outcome owns the next implementation release.
+
+The helper's queued source review confirms genuine closure extends through the
+fixture's public documentation/catalog/package contracts as well as controls.
+TNyxNode has 99 textual public declaration headers and INyxConfiguration 95;
+these are only static counts, not proof of complete bound fit under 128 members.
+Classes' classesh.inc/classes.inc and actual primitive observations remain the
+external gate. The existing five-argument full consumer is unchanged; controlled
+source/root fixtures cannot replace its real SDK/registration/index acceptance.
+
+In parallel, root owns the exact context-value prerequisite for later compiler-
+root type binding. The new context-owned visitor and focused contextvalue
+consumer pass the targeted preparation9 native167 checks and browser compile.
+They stream every SameFacts field from
+exact immutable owners through typed integer/text calls, admit existing analysis
+work and retain operation-local leases. A receiver owns byte reservation/framing
+and must keep output private until successful return. No fluent recapture,
+alternate-context trust, resolver/world retention or new external fact is added.
+Old Capture/SameFacts APIs remain unchanged. Optional primitive-root and direct
+alias type-use integration follows the demonstrated repeated-source prerequisite;
+it is not implemented or accepted by this value visitor alone. Missing genuine
+Classes includes and requested facts still await the pending explicit override.
+This is the same source-adoption batch after at least57 unclosed batches; no
+original criterion, task, credit, DONE or delivery closes.
+
+Root adds pure restoration of exact instrumented source-witness inputs for a
+current typed requirement, plus reuse of the existing bounded captured-module
+header scanner. Restoration reconstructs every original/current/prior packet and
+compares every retained file, path/search order and byte; it never transplants
+an old process-local key or supplies a measurement. Its controlled portable
+fixture passed 37 native checks with a clean heap. This is synthetic transcript
+parser/ownership evidence, not a new native ABI or real RTL acceptance result.
+
+Three initial preparation readers are terminal and joined. Native generation
+also produced all six outputs for 81 kinds/four facades with a clean heap. The
+five existing includes match exactly; only the reviewed new ordinary Pascal
+creator companion was applied. Its explicit package mapping and the catalog
+constructor attachment remain unqualified by real source-package adoption.
+The retained browser preparation rejects unrelated-interface `as` casts in the
+new test; root repaired them to capability checks after all readers joined.
+The generator exposed one new owned exhaustive-case warning after adding
+destructor/operator member kinds; the helper owns its correction. Neither
+repair has replacement qualification yet. Browser execution remains unavailable.
+
+Both implementation lanes are released again. Lil' Scooty continues the actual
+source-package/registration/index integration, including explicit untyped
+parameters, pointer/class-of declarations and compound field type uses required
+by the genuine public core closure. No synthetic leaf or incomplete scope can
+stand in for those declarations. The standing pull process is now also explicit
+in TASKFLOW.MD; source-ready triggers the next useful independent review rather
+than an empty assignment. Full criterion/task/credit/DONE and the unclosed-batch
+count stay unchanged pending this complete integration's outcome.
+
+Goal continuation classification: the previous turn made progress by recording
+the standing pull/handoff policy, applying only the reviewed sixth generated
+companion and preserving the initial preparation results/refusals. There is no
+live reader being treated as a wait. The current source-adoption batch continues;
+an individual preparation compile does not increment or close its acceptance.
+
+Root's next companion revision emits a typed creator-selection builder from the
+same checked factory IR. It inspects only the exact immutable world's complete
+controls module and its public declarations/parameter scopes, using existing
+bounded text windows and the caller's shared construction. Returned selections
+are transient ordinals for the source adapter, never stable overload keys or
+permission to execute creators. This bridges explicit generated creator intent
+to the helper's source capture; real nominal binding/package/index adoption
+remains unproven. Regeneration and replacement qualification are pending the next
+joint source pause. The generated checked-in companion still records the earlier
+reviewed revision until that candidate is regenerated and reviewed.
+
+Preparation2 is terminal/joined across five jobs: native restoration37 with a
+clean heap, both portable consumers compile with pas2js, and native generator
+admission/emission81/four with a clean heap. All five compiler logs have zero
+owned warnings (14 installed pas2js RTL warnings). The real source consumer
+compiles, replays the original System13101/31 and ObjPas209/one guarded sequence
+and restores Windows29823, then FAILS at check66 with a clean heap: the SysUtils
+consumer forces nested comments against its captured Delphi policy. This is a
+retained consumer-policy refusal, not a successful source-package result. The
+helper repaired lexical options to the exact known captured fact after every
+reader joined; replacement execution remains pending.
+
+The second generated candidate preserves all five old includes, but its source
+annotation helper has not been applied or compiled: review found an incorrect
+Lexical.Text getter (the API is Source). Root repaired that emitter and tightened
+post-admission cancellation checks. A fresh reviewed candidate is still required.
+No generator run alone proves the emitted companion compiles or is adopted.
+
+Actual core closure exposes `UTF8String = type AnsiString(CP_UTF8)`. Root now owns
+the existing type/parser and binding paths plus their maintained consumers for
+that prerequisite. Appended encoded-string syntax keeps the authored base and
+opaque code-page operand; appended semantic shape retains a separately qualified
+ANSI Target and does not acquire ordinary-string folding/encoding/ABI authority.
+Unknown compiler-root presence still returns the existing typed requirement.
+Neither parser support nor the controlled missing/known tests supplies absent
+primitive facts. The ordinary native type declarations test the compiler's
+code-page behavior without publishing a capture. These edits are unqualified.
+The actual retained root packets inspected so far do not establish Boolean,
+AnsiString or ShortString; no fresh probes, guessed sizes or fake leaves are
+admitted. Full actual source closure remains open. This is still the one shared
+integration batch, not a new mechanics/fixture acceptance sequence.
+
+Preparations3/4 are also terminal/joined. Encoded-string syntax/physical-origin
+checks pass507 natively with a clean heap (including the ordinary compiled string
+declarations); the browser consumer compiles. Binding passes87 natively with a
+clean heap, including explicit unknown/known controlled root distinction and real
+included badge navigation; its browser consumer compiles. The first binding
+compile failure is retained: importing type syntax exposed a pre-existing enum
+name overlap in that fixture. Only its two compiler-policy constants were
+qualified after all readers joined. The parser grammar is grounded in the
+[FPC string reference](https://docs.freepascal.org/docs-html/current/ref/refsu9.html)
+and the actual retained System declaration; neither is a fabricated ABI reply.
+
+The fixed third creator candidate was reviewed/applied only after readers
+joined, preserving the five old includes exactly. Its native ordinary unit
+compiles. The maintained six-output CLI consumer passes107 through21 joined
+generator children, all parent/child heaps clean. Generation uses the exact
+preparation3 tool; its source is unchanged across preparation4. These are
+composite changed-boundary checks, not a final whole-source/product matrix or
+execution proof of the generated source selector. No accepted preparation log
+adds an owned compiler warning. The source consumer compiles on both targets
+with the actual global storage envelopes, but its repaired full native namespace
+run and real source-package/index registration are still pending. The typed
+source-input unit currently supplies selections only; no capture body is
+advertised as implemented. After all four preparation4 readers joined, the
+helper's actual source-adapter body scope was released again, with next read-only
+prerequisites retained. No full criterion/task/credit/DONE closes.
+
+Next goal turn classifies the previous turn as progress: encoded source syntax
+and binding, the applied creator companion and changed-boundary native/portable
+evidence altered the actual source/adoption prerequisites. The active helper was
+confirmed running and continues the same source-capture body scope; no new binder
+generic API is admitted without a demonstrated selected dependency.
+
+Read-only retained-input review now identifies a concrete external input need.
+`rtl/win32/classes.pp` is already one of the genuine original47 module roots and
+retains SHA75F13328D3C0E1706805EBEF35445EC4EB675370B817B1D59020A11FB754DC80.
+Its literal `classesh.inc` and `classes.inc` inputs are absent by exact basename
+from all216 retained sources and from the previous97 pinned RTL inventory.
+The namespace has not been restored; root presence alone proves no complete
+Classes meaning. `nyx.model` directly imports Classes, so an empty replacement or
+ignored import cannot establish the real selected control closure. The packet's
+required-native-input-proposal-private.json retains this source-backed decision.
+
+The user was asked asynchronously for an explicit override of the current
+no-new-SDK-capture/no-new-probe restriction: bounded collection of actual missing
+source dependencies and compiler facts actually requested by the adapter,
+preserving original RTL inputs/probe sequence, every existing quota and no host/
+configuration change. No dependent discovery/capture/fact job is authorized
+while that answer is pending. The helper can continue the source body and its
+precise refusal path independently. Full package/actual namespace/primitive/
+registration/index and original acceptance stay open; this input question is
+neither criterion closure nor a claim that the whole goal is blocked.
+
+## Qualified reference prerequisite: Scoped formals and safe capability identity — 2026-10-20
 
 The relationship/signature-batch checkpoint is committed/pushed as
 7916f96bd8308edfea6515f2b280bcf193770481. Its final source/remote receipt verifies
@@ -54123,3 +54679,348 @@ Implementation checkpoint `9d2717b02df36017e0dc85316a847f223cede741` is pushed t
 All owned code/test changes are checked; the original goal remains active. The
 current LAN container release stays unchanged while the next grouped release is
 prepared, retaining all current projects and the remaining structural gate.
+
+Preparation20 joins all six exact readers: native syntax282 and binding85 pass
+with clean heaps; their browser consumers and source consumer browser/native
+compile only. No full-source runtime or new compiler fact is admitted. All1,747
+Pascal sources, protected5/compiler3/foreign13 and installed/retained240 pins stay
+exact. The initial hash-audit preparation misread the flat240 manifest as an
+object; that preparation is retained separately and the corrected audit hashes
+every installed/retained path. There are zero owned compiler warnings and21
+upstream occurrences (seven per browser compile). Header parsing distinguishes
+all three appended helper families, keeps malformed parents/unsupported target
+suffixes incomplete and preserves member/sibling ownership. Binding explicitly
+refuses helper semantics; activation, full source adoption and original criterion
+remain open.
+
+The next bounded prerequisite belongs to existing compilertrace ownership: restore
+only request intent from the exact canonical compiler input already retained for
+accepted p18/p19 replies, before a new checked namespace construction. Root owns
+src/nyx.pascal.compilertrace.pas; Lil' Scooty separately owns its existing consumer.
+A shared private emitter will stream the canonical template against supplied text,
+requiring every byte and final length, without allocating an unbounded regenerated
+aggregate from shortened hostile input. Input/lines/queries and actual comparison/
+vector work retain explicit limits and cancellation. Restoring intent grants no
+compiler/source/process facts; complete ReadCapture+Merge anchors and exact source
+ownership remain required. No new fact/full-source run is released by this scope.
+The old LongWord requirement still needs its original156 System owner and a fully
+qualified new root/world, rather than retagging old contexts or weakening Rebind.
+All prior failed preparations and costs remain retained; no quota is reset or
+original criterion/task/credit/DONE/new tool/schema/rollout is closed.
+
+Preparation21 joins all five readers. Existing compilertrace consumer516 and
+planner37 pass natively with clean heaps; two browser consumers and source native
+consumer compile only. The native trace run restores both explicit retainedp18
+35-name/p19 36-name requests and re-encodes them to byte-identical pre-emitter
+inputs. All1,747 source/protected5/compiler3/foreign13/installed-retained240 pins
+stay exact. Fourteen upstream browser warning occurrences, zero owned warnings.
+No source runtime, new native fact, host/configuration change or full criterion
+closure follows. The strict restorer shares the emitter, rejects noncanonical
+source and duplicates, preserves8 ordered guards/256 names/64 sizes and ordinary
+trace limits, and admits actual source comparison/vector work. Caller-release,
+recursive execution, exact/one-less/shared work and first/middle/final outward
+cancellation all qualify; published requests retain no execution policy or facts.
+
+Root releases only the existing source consumer for the next source handoff:
+explicit9-argument prepared input consumes BOTH accepted profiles before first
+SysUtils construction, while legacy5/7/8 remain intact. Complete ReadCapture and
+archived33→35→36 Merge anchors, prefixes/four sizes/order are required; these are
+three logical symbol jobs within the unchanged four, not new initial probes.
+Actual restoration/planning work shares existing4M preparation; the two SysUtils
+attempts share existing4M work/64 passes. A genuine typed LongWord prerequisite
+may plan one bounded fulfillment against its exact original156 System owner,
+counting six old dynamic jobs plus one within eight. Before its caller can use
+that refined root, construct a NEW checked System/ObjPas/Windows world under each
+module's existing4M/64 ceiling, reporting every work/pass/answer term. This is
+explicit new checked namespace construction, not in-flight Rebind, retagged old
+views or a global64 allowance silently reset. The original namespace counts and
+whole actual-source package/registration/index gate stay mandatory. Root admits
+no full-source/fact run until this ownership/cap flow is reviewed. Priorp19 failure,
+3,415,320 work/43 passes and all historical source receipts remain retained.
+
+Preparation22 completes both readers: native/browser source consumers compile;
+the full nine-argument native run fails unchanged completeness admission at check88,
+clean heap (24,013,227 blocks/15,635,220,013 cumulative bytes all freed). No fact
+job or symbol recapture occurs; p22-source-live-runtime does not exist. All1,747
+sources/protected5/compiler3/foreign13/installed-retained240 and both accepted
+profile source/log hashes stay exact; seven upstream warnings, zero owned.
+Retained preparation22-all-joined-private.json and logs own exact terminal evidence.
+
+Prepared input restores35 then36 names with all four sizes/anchors/prefixes exact:
+133956+134601 restoration/read work plus67111 original planning =335668/4M.
+Original checked System now reports3913992/4M work,32/64 passes,31 answers and13101
+declarations; ObjPas112955/4M,2/64,one/209; Windows28 retains29823 declarations and
+its original plain-translation/lexical receipt. These namespace costs are real,
+not free proof. New SysUtils5086 declarations/1444575 work/10 passes/nine answers
+stops earlier than the historicalp19LongWord site: pbiIncompleteSource(integer)
+at syshelph.inc80570 inside an unfinished TIntegerHelper prefix. Seven source
+and two EOF syntax diagnostics remain, zero typed compiler requirements. The
+consumer correctly refuses before fact collection or new world/package publication.
+No updated-root fit, full source success or original criterion/task/credit closes.
+
+Existing binder Single routes the open member scope to OpenScopeInherited; its
+closed ordinary type-form guard refuses newly truthful helper forms. Simply adding
+helpers would be unsound because target/parent/other active helper members can
+shadow the outer name. Inspected FPC symtable/scanner/mode tables confirm a bounded
+future proof: checked no-parent helper + fully bound primitive target at its outer
+header + explicit MULTIHELPERS off, retaining exact EOF/header/own-name proofs.
+Structured/unknown/parent/helper targets and on/unknown setting must refuse; full
+helper TypeOfSymbol/member activation stays independently unsupported.
+
+Next existing-owner design is a typed MultipleHelpers knowledge field in compiler
+policies, not another feature-vector element. Initial profiles/plain public InMode
+stayUnknown; qualified source-authored MODE supplies off, global MODESWITCH writes
+it, inactive directives do nothing, uncertainty/unknown effects revoke it, and
+local PUSH/POP retains it because compiler modeswitches are global. All Capture/
+SameFacts/value/identity/documentation-root/storage framing owners must include
+known values while preserving EVERY old Unknown/absent byte and source-v1 witness
+key. A public policy record layout extension requires rebuilding consumers; no
+unchanged-ABI claim. Root owns context/value/identity/source-key framing, helper
+maps translation/global lifetime plus private narrow helper-prefix binding and
+existing consumers. This is read-only design now: no source release, new oracle/
+probe/recapture, full rerun or public tool/schema/rollout. PriorLongWord remains
+historical until a new genuine source result requests it.
+
+Downstream review confirms public import recursion already stops at the interface
+boundary, while extraction conservatively requires a complete full-unit owner.
+Registered chunk/package browsing itself uses no source/world/files; static full
+companion emission remains the adoption gap. The maintenance selector is currently
+co-located in nyx.controls.documentation and brings resolver units into that
+surface; eventual generated static metadata must separate it without a second
+inventory. A future exported-boundary proof can narrow source maintenance only
+under its own full provenance contract, not by weakening this existing journey.
+Original reference01/02 and all library/editor/input/parity/delivery scope stay open.
+
+Goal continuation classifies the prior turn as PROGRESS: p20/p21 qualify real
+source repairs/request reuse, and p22 yields a different concrete helper-prefix
+frontier with exact terminal/heap/cost receipts. All handles remain joined.
+After existing-owner design review root releases a typed MultipleHelpers knowledge
+field in TNyxPascalCompilerPolicies (Unknown absence); no feature-enum addition,
+new GUID or MCP schema. This changes a public value record layout and therefore
+requires rebuilt consumers. Root owns context policy/capture/SameFacts/known-only
+Visit and constants.StorageEvidenceKey context framing, plus existing contextvalue,
+storage_source and witness_restore consumers. Existing source-v1 strict Unknown
+initial/root-policy guard remains intact, so its legacy keys stay exact and known
+initial policy continues to refuse. Helper separately owns existing translation/
+binding and their two consumers: qualified source MODE/MODESWITCH global lifetime
+and checked no-parent primitive-target lexical prefix proof, with full helper
+binding/activation and structured/unknown/parent targets still unsupported.
+All old incomplete-source/shadowing/EOF/diagnostic/cancellation limits remain.
+No new compiler, oracle, probe, recapture or full-source run is admitted until
+source handoff review; do not repeat failed variants or alter historical receipts.
+
+Root source-ready for the released MultipleHelpers policy boundary: fixed legacy
+Unknown context stream (78 fields/78 work), known-only tag (80/99), capture/clone/
+unknown/mode/global POP/bootstrap ownership, exact storage-receipt cross-policy
+refusal and strict source-v1 initial/root Unknown admission. Source-v1 constructor
+and feature vector are unchanged. These are uncompiled assertions, not pass claims.
+Existing generic documentation-root Visit consumes the same values; constants'
+manual context framing adds its own known-only tag. Helper translation/binding
+source handoff is still pending. No compiler, oracle, new fact or full-source run
+is admitted. Prior failures and the original source/adoption criterion remain.
+
+Preparation23 joins all three reader groups/ten compiler jobs. Native context250,
+storage233, witness43 and translation241 pass with clean heaps; binding compiles
+but fails the forward-alias recursion expectation, also clean heap. Five browser
+consumers compile only. All1,747/protected5/compiler3/foreign13/installed-retained240
+pins stay exact; zero owned warnings/35 upstream occurrences. No source/fact run
+or broader qualification is admitted after that failure. Exact evidence remains
+preparation23-all-joined-private.json and its individual terminal/log receipts.
+
+Existing TypeOfSymbol(TA) binds at TA's declaration site; later TB is excluded by
+Exact's caret boundary. The TA=TB;TB=TA fixture therefore produces a bare missing
+target, correctly normalized by the prefix proof to incomplete-source. Root
+releases only the helper-owned binding consumer to assert this actual refusal and
+add an independent visible TA=TA recursive-alias case. No production rule changes,
+extra oracle or weakened proof follow. All prior source/package/adoption criteria
+and genuine preparation22 failure remain open; next qualification is composite.
+
+Preparation24 joins all four reader groups/34 successful compiler jobs. Binding130,
+trace516 (both exact retained canonical requests), planner37, syntax8478, type507,
+conditions38, policy115, macro38, open-scope30 and documentation178/305/68/178/6084
+pass with clean heaps. Composite with four preparation23 native passes yields18
+native consumers; only the binding consumer changed across those freezes.
+Paired browser consumers, both Studios/backend/worker and source consumer compile
+only. All1,747/protected5/compiler3/foreign13/installed-retained240 pins stay exact;
+p24 has zero owned warnings/119 upstream occurrences. No full source/fact job is
+admitted by those checks. preparation24-all-joined-private.json owns exact evidence.
+
+Helper review found the unchanged source consumer's unconditional diagnostic guard
+would reject any genuine pending condition before its requested fact could exist.
+Root temporarily owns a test-consumer-only repair: all source/syntax diagnostics
+remain reported; exact current Pending+pbiCompilerContext+one typed LongWord/
+bootstrap/original156 requirement and generic ownership preflight remain required.
+The generic fulfillment quotas and final zero-diagnostic/complete namespace/source/
+package checks are unchanged. This is not suppression of an independent defect
+or a full-source success claim. Reader admission waits on source handoff review;
+all Pascal is paused. Classes/public closure/static metadata and original criterion
+remain the same return path, with every historical failure retained.
+
+Preparation25 joins both source readers. Native/browser consumers compile with
+zero owned warnings/seven upstream browser occurrences. The genuine nine-argument
+run passes the repaired typed admission and captures exactly one requested
+LongWord bootstrap fact (4bytes). Generic ownership/one-fact validation applies
+it to the exact original156 System owner; full default anchors/prior facts stay
+verified. The accepted raw source/log pair lives at
+E:\Blekohlab\nyx\qualification\documentation-source-20261020-220435\p25-source-live-runtime\fact-1;
+preparation25-native-primitive-reply-private.json owns its hashes/31 exact bits,
+original declaration sourceOffset182/origin40 and no-recollection return rule.
+All p18/p19 source/log inputs remain byte-identical; no symbol capture occurs.
+
+Original and updated System each retain13101 declarations/zero syntax/31answers,
+3913992 work/32 passes. ObjPas stays209/zero/one,112959→113006 work/two passes;
+Windows28 retains29823 declarations. Initial SysUtils5462/1606687 work/20 passes/
+19answers advances under the newly qualified root to5654/1815646/28/27, with zero
+syntax diagnostics. Its full original completeness check89 still fails, clean
+heap:33104474 blocks/18594517567 cumulative allocated bytes all freed.111 source
+diagnostics/110 unresolved conditions remain. Earlier new defined(cpullvm)/linux
+sites occur immediately after sysutilh.inc returns from syshelph.inc; the semantic
+pending site is later fina.inc9698 not declared(MaxDirs). The36-name prepared
+profile never contained those new names; context refinement did not lose them.
+No current typed primitive request remains, and no package/Classes stage is reached.
+
+Actual totals are3422333/4M SysUtils work and48/64 passes, leaving577667/16;
+preparation526542/4M, symbol3/4, dynamic facts7/8. Another full construction needs
+at least the already accepted28 rounds, so no third reconstruction, fourth native
+symbol cohort or budget reset is admitted in this operation. Both existing view
+and aggregate limits remain exact. Stop probe/full-run/input/compiler variants.
+All1,747/protected5/compiler3/foreign13/installed-retained240 and p18/p19 source/log
+pins stay exact; preparation25-all-joined-private.json owns terminal evidence.
+
+Next bounded prerequisite, still under reference01 and returning to reference02:
+review a profile-first input journey that reuses accepted p25 canonical primitive
+source/log through existing request/capture/merge owners AFTER the old six fact
+replays, preserving their source-v1 identity, then constructs a NEW checked root/
+namespace world before first SysUtils. Keep all previous failures/work receipts
+and logical fact7/8 correspondence; do not transplant catalog IDs or retag views.
+A fourth actual symbol cohort must be derived from the genuine final plan and
+qualify within unchanged256-name/4-job/4M/64 bounds; its future fit is unproven.
+No fixed SDK list, invented absence, skipped directives, fact recollection or new
+public tool/schema is allowed. Lil' Scooty owns read-only owner/identity/accounting
+review only until the next separate source scope is agreed. All Pascal remains
+paused. Full original criterion/task/credit/DONE/source/package/adoption/editor/
+input/parity/delivery stays open; this turn made progress, not full acceptance.
+
+The previous goal turn is PROGRESS: qualified production policy/helper-prefix
+behavior, composite18 native consumers, exact real LongWord replay/capture and a
+new source frontier changed the next action. It is not an external-input block.
+After existing-owner design review root releases a source-consumer-only profile-
+first path (explicit tenth retained primitive source/log directory, legacy5/7/8/9
+intact). Lil' Scooty owns tests/nyx_documentation_source_tests.lpr and its guide;
+root temporarily owns tests/nyx_pascal_compilertrace_tests.lpr for the explicit
+accepted bootstrap pair regression. No production/public API/schema/GUID change.
+Old six fact/source-witness replay runs unchanged before the new input is applied.
+Restore canonical intent, derive a genuine matching simple-alias type requirement
+in the exact checked old System owner, and use existing Read/Merge/Apply proof.
+New checked namespace worlds precede first SysUtils construction. Preserve logical
+fact7/8 and symbol3/4; a source-derived fourth cohort alone may consume remaining
+symbol capacity, with complete old36 prefix/four sizes/defaults/bootstrap retained.
+All SysUtils constructions share one unchanged4M/64 remainder; all preparation
+shares4M and every namespace keeps its qualified separate ceiling. Keep all p25
+cost/failure evidence. Stop on another fact/cohort, no eligible names, budget or
+final whole-source refusal. No compiler/probe/native collection/full run is
+released until both source-ready handoffs and root admission review.
+
+Preparation26 joins all readers: four compiler jobs successful; protocol521 passes
+with clean heap and exact retained p18/p19/p25 inputs. Source consumer compiles
+natively/browser; new10-argument missing-input guard refuses at check0 with clean
+heap and no output directory. Only two consumers changed; all production and1,747/
+protected5/compiler3/foreign13/installed-retained240 pins remain exact. Fourteen
+upstream browser warning occurrences, zero owned. Existing18-consumer/product
+production qualification stays composite; no library source changed in this scope.
+Root admits exactly one genuine10arg source execution from the already compiled
+p26 consumer, fresh p27 output: accepted p25 primitive is replayed, never recollected;
+at most current-source-derived fourth cumulative symbol job may run. Every old
+logical fact/source identity, default anchor, original-six replay, namespace and
+4M/64/2M quota/final completeness assertion remains. Stop on its actual result;
+no fifth cohort, third SysUtils reconstruction or new primitive job is admitted.
+
+Preparation27 joins the one genuine10arg run from the unchanged p26 executable.
+It fails check88 before namespace rebuilding or first SysUtils: generic one-fact
+application rejects a saved partial reply that omits the old owner's other facts.
+The heap is clean (23,387,105 allocated/freed blocks;15,959,424,652 cumulative
+bytes), no fresh runtime directory exists and no compiler job was collected.
+All1,747/protected5/compiler3/foreign13/installed-retained240 and acceptedp18/p19/
+p25 source/log inputs remain exact. preparation27-all-joined-private.json owns
+the actual failure; the saved LongWord fact itself is neither invalidated nor
+recollected. No updated-world, profile-first SysUtils fit or package claim follows.
+
+Existing-owner reassessment finds a consumer error: old ReplayRequirement and
+native fulfillment normalize a fresh query through MergeNyxFPCSizeCapture before
+ApplyReplies, while the new input path passed raw ReadProbe directly. A raw
+one-query transcript contains only its requested facts; complete generic replies
+must preserve the exact old owner plus the one new fact. Keep that strict
+module/fulfillment equality unchanged. Release only the helper's source consumer
+to use that existing merge, and root's existing trace consumer to independently
+qualify partial-versus-complete packets with old presence/absence/default anchors
+and immutable owners. No production/public API/schema/GUID changes. The four
+portable assertions and minimal consumer repair require paired focused compile/
+native qualification before another actual source run can be considered. All
+historical costs/failures and the full original acceptance gate stay retained;
+do not use another run to erase the p27 refusal or reset a live allowance.
+
+Preparation28 joins four successful compiler jobs. The existing native trace
+consumer passes525 checks with clean heap, including the four independent
+partial-versus-complete one-fact checks and exact acceptedp18/p19/p25 input
+parsing. Source consumer compiles native/browser. Only those two consumers
+changed from p26; production is identical. All1,747/protected5/compiler3/foreign13/
+installed-retained240 and accepted source/log pins stay exact. Zero owned warnings,
+fourteen upstream browser occurrences; no browser execution or new native job.
+preparation28-all-joined-private.json owns the exact composite evidence.
+
+The concrete consumer omission is now corrected and independently qualified.
+Root admits one p29 genuine10arg execution from the compiled p28 consumer, using
+the same accepted inputs and a fresh output directory. It reuses, never recollects,
+the accepted primitive and preserves original-six replay and exact cumulative
+fact7/8 identity. Only a genuinely requested fourth symbol cohort can collect;
+old36 prefix/four size queries/defaults/bootstrap and shared4M/64/2M ceilings
+remain unchanged. Stop on its actual terminal result: no fifth cohort, third
+SysUtils construction or new primitive job. This is validation after a proven
+consumer repair, not a retry of unchanged code or erasure of p27 failure/costs.
+Full source/package/Classes/adoption/criterion/task/credit/DONE remain open.
+
+Preparation29 joins the one genuine10arg execution from compiledp28. The saved
+LongWord4 reply now passes the unchanged generic one-fact proof, derived from
+the real System DWord alias at sourceOffset182/origin40. Original-six replay,
+all previous facts and the full default anchor remain exact; no primitive is
+recollected. Fresh checked System13101/zero syntax/31answers and ObjPas209/zero/
+one retain3913992/32 and113006/2 work/passes; Windows28 retains29823 declarations.
+Initial SysUtils is5654/1815646/28/27. The actual fourth cumulative symbol job
+contains57 names, preserving the old36 prefix/four size queries/defaults and
+independent bootstrap. Its21 new names resolve to exact captured observations;
+retain the source/log and never recollect this accepted reply.
+
+After that last cohort SysUtils reaches6145 declarations/zero syntax/27answers,
+9 source diagnostics and8 unresolved conditions. Whole-source check90 still
+fails, clean heap:33,449,874 allocated/freed blocks and18,594,683,708 cumulative
+bytes, zero unfreed. Actual shared cost3849398/4M and56/64 leaves150602/8;
+preparation617721/4M, symbols4/4 and facts7/8. No fifth cohort, third construction,
+new primitive, budget reset or further full-source variant is admitted.
+preparation29-all-joined-private.json and preparation29-native-symbol-reply-private.json
+own terminal, exact ordered replies, immutable pins and accepted-source receipts.
+All1,747/protected5/compiler3/foreign13/installed-retained240 and p18/p19/p25 pins
+remain exact. No package/Classes/source acceptance, browser execution, task/
+credit/DONE or delivery follows from these narrower successes.
+
+Existing-owner review identifies the next actual prerequisite, changing the
+next action from symbol/conditional variants to module construction. Binding
+issue2 is pbiMissingModule, related WinDirs, at fina.inc9698 not declared(MaxDirs).
+SysUtils's real implementation imports SysConst and WinDirs; reverse import
+lookup cannot establish absence while WinDirs is missing from the semantic world.
+That refusal correctly preserves possible imported shadowing. The WinDirs root
+already belongs to the retained216 and declares its source-owned ObjFPC/H mode;
+its interface has no explicit imports, and its implementation imports Windows.
+Next review a genuinely checked WinDirs namespace and then any actual SysConst
+dependency before first SysUtils, using exact contexts and retained57-name input,
+without retagging views, ignoring imports, manufacturing absence or granting new
+probe capacity. Its complete-source/allowance fit is unproven. This is read-only
+design pending the owned checkpoint; all Pascal remains paused. Later Classes/
+public closure/TGUID/static companion work returns to the same original tasks.
+
+Owned checkpoint staging found one extra terminal blank line in the new root
+witness-restore consumer. After all readers joined, remove only its final LF;
+the exact earlier file equals the final file plus that one LF. The private
+checkpoint whitespace receipt qualifies this nonsemantic delta; compiler/heap
+receipts retain their original byte identities and are not rerun for whitespace.
+All other preparation28 Pascal bytes and all concurrent/protected inputs stay
+exact. Checkpoint remains partial work with the genuine full-source refusal open.

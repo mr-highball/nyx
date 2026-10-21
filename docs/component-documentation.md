@@ -1168,3 +1168,64 @@ Executed decorated-browser evidence, a complete supported-version capability
 matrix, independent API coverage and the full original Studio/library acceptance
 remain required. No reference task, criterion, completion credit or DONE status
 closes from this contract or its assertion count.
+
+The current source-adoption integration is described in
+[source capture](documentation-source-capture.md#source-package-integration-under-qualification).
+It now contains a real checked-world-to-canonical-package body and a consumer
+which attempts the complete controls/fixture registration/index path. It is
+unqualified source work, not a new discovery acceptance claim. Its portable
+mechanics cases cannot stand in for the mandatory native original-source
+closure, unchanged allowance fit, real registration lifetimes or executed
+browser evidence. Missing captured includes, nominal/compiler-root descriptor
+ownership and unsupported complete-scope facts explicitly refuse the candidate;
+the last valid index remains authoritative. No empty core descriptor or omitted
+member is introduced to make the example publish.
+
+The source adapter's current quota prerequisite is a construction-only
+[owned module signature session](documentation-source-capture.md#owned-module-signature-sessions-under-qualification).
+It shares the existing admitted text cursor across complete selected scopes
+without repeating alternate-snapshot full-unit validation. Actual copied windows
+and rich metadata retain their original shared limits; the old snapshot APIs
+are unchanged. Its actual complete-controls signature witness belongs to the
+existing repository-argument signature-batch consumer. Preparation10 passes
+6,084 native checks with clean heap, all89 globals and every190 public type group
+(1,312 routines/191 selections/597,176 shared work), plus portable compilation.
+It establishes no nominal/core closure or source-package publication by itself.
+
+The optional compiler-root path is currently under qualification. A
+`INyxDocumentationCompilerRoot` retains a bare compiler name, declared intrinsic
+family and exact immutable bootstrap context; `RootAt` supplements the unchanged
+nominal/formal binding channels. A nonnil root is exclusive with those channels,
+and nil clear restores ordinary absence. Nongeneric root slots preserve the
+original expression, including qualified or encoded-string base occurrences.
+The ordinary help reader needs no semantic world to inspect those captured
+values. Only the checked source adapter establishes their connection to an
+actual semantic query; constructing metadata does not measure a compiler.
+
+`NewNyxDocumentationAliasDefinition` retains direct alias syntax and a root
+terminal without inventing a `System` declaration or mislabeling the alias as a
+record/expression. Old `AliasTarget` stays absent when it cannot represent the
+definition. Explicit `WithAlias` replacement clears the optional definition.
+Root-terminal aliases have no inherited members, cannot be class/interface
+bases and cannot be implemented-interface roots. Ordinary nominal and generic
+argument closure still require their real owners. The absent optional path adds
+no registration fields; present context equality includes every ordered
+`SameFacts` field and all unknown/configured states.
+
+Capture reserves each context field's temporary/final UTF-8 capacity before
+formatting, keeps the existing 256KiB declaration and shared construction caps,
+and charges final registration framing separately. Exact canonical root reuse
+shares copied facts; independent equivalent captures retain their full cost.
+Alternate producers, final nil/topology/envelope changes and cancellation refuse
+before publication. The existing declaration-expression consumer contains the
+controlled source-to-package/index and lifetime/budget/refusal cases. Its
+preparation12 leaf passes176 native checks/all10 actual definitions with a clean
+heap and compiles for pas2js. The complete group fails the unchanged member-intent
+consumer at check62: its public attachment leaks the lower type-expression
+cancellation exception. That clean-heap failure is retained; the narrow public
+cancellation repair awaits qualification. The
+retained preparation11 failure was an early fixture lifetime assertion; the
+repaired check runs after the explicit caller's lexical temporaries retire.
+This does not qualify the genuine full source package or browser execution.
+See the [source boundary](documentation-source-capture.md#compiler-root-metadata-under-qualification)
+for exact provenance, limits and the still-open genuine source/fact gates.

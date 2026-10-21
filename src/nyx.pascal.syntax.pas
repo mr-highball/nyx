@@ -68,10 +68,12 @@ type
     pokSymmetricDifference, pokInc, pokDec, pokEnumerator, pokInitialize,
     pokFinalize, pokAddRef, pokCopy);
   { Surface type construction. Named expressions may still be generic/qualified;
-    neither this form nor an ancestor expression claims semantic resolution. }
+    helper forms preserve authored intent separately from ordinary storage and
+    class ancestry. No form claims helper eligibility or semantic resolution. }
   TNyxPascalSyntaxTypeForm = (pstfNone, pstfNamed, pstfClass, pstfInterface,
     pstfRecord, pstfObject, pstfEnumeration, pstfArray, pstfSet, pstfPointer,
-    pstfRoutine, pstfClassReference);
+    pstfRoutine, pstfClassReference, pstfRecordHelper, pstfClassHelper,
+    pstfTypeHelper);
   { Authored access at this declaration. Strict and unit visibility remain
     distinct; effective inherited accessibility belongs to later binding. }
   TNyxPascalSyntaxVisibility = (psavUnspecified, psavInterface, psavImplementation,
@@ -1157,6 +1159,9 @@ type
     procedure VariantFields(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility);
     { Reuse declared-body grammar and ownership for named and inline types. }
     procedure StructuredBody(AScope, AOwner: Integer);
+    { A helper target is an authored bare/qualified type designator. Unsupported
+      compound targets remain explicit; no target becomes class ancestry. }
+    function HelperDesignator: Boolean;
     procedure TypeExpression(AScope: Integer; AVisibility: TNyxPascalSyntaxVisibility;
       AStop: TNyxPascalSymbol; AArmEnd: Boolean = False);
     function Form: TNyxPascalSyntaxTypeForm;
@@ -3877,6 +3882,10 @@ begin
         if Word(pkwOf, 1) then
         begin
           Result := pstfClassReference;
+        end
+        else if Word(pkwHelper, 1) then
+        begin
+          Result := pstfClassHelper;
         end;
       end;
     pkwInterface, pkwDispinterface:
@@ -3886,6 +3895,19 @@ begin
     pkwRecord:
       begin
         Result := pstfRecord;
+
+        if Word(pkwHelper, 1) then
+        begin
+          Result := pstfRecordHelper;
+        end;
+      end;
+    pkwType:
+      begin
+
+        if Word(pkwHelper, 1) then
+        begin
+          Result := pstfTypeHelper;
+        end;
       end;
     pkwObject:
       begin
@@ -4052,24 +4074,100 @@ begin
   end;
 end;
 
+function TSyntaxSnapshot.HelperDesignator: Boolean;
+var
+  LToken: TNyxPascalToken;
+begin
+  Result := False;
+  repeat
+    LToken := Tok;
+
+    if (LToken.Kind <> ptkWord) or
+      not (LToken.Escaped or (LToken.Word in [pkwNone, pkwString])) then
+    begin
+      Exit;
+    end;
+    Step;
+    Result := True;
+
+    if not Sym(psoDot) then
+    begin
+      Exit;
+    end;
+    Step;
+    Result := False;
+  until False;
+end;
+
 procedure TSyntaxSnapshot.StructuredBody(AScope, AOwner: Integer);
 var
   LMemberScope: Integer;
   LAncestor: Integer;
   LParentArm: Integer;
+  LHelper: Boolean;
+
+  { Invalid headers keep their authored ranges and recoverable body, but never
+    acquire a complete declaration merely because its member END was found. }
+  procedure RejectHelperHeader(AIssue: TNyxPascalSyntaxIssue; const AMessage: TNyxText);
+  begin
+    Include(EditEntry(AOwner).Value.FFlags, psdfIncomplete);
+    Problem(AIssue, AMessage, Tok.Span);
+  end;
+
+  { This consumes only an already refused compound suffix. Hard declaration
+    boundaries stop recovery even if the authored delimiter never closes. }
+  procedure SkipHelperSuffix(AOpen, AClose: TNyxPascalSymbol);
+  var
+    LDepth: Integer;
+  begin
+    LDepth := 1;
+    Step;
+    while not EOF and (LDepth > 0) and not Sym(psoSemicolon) and
+      not (Tok.Word in [pkwEnd, pkwImplementation, pkwBegin, pkwClass, pkwProperty,
+        pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor,
+        pkwPrivate, pkwProtected, pkwPublic, pkwPublished, pkwStrict]) do
+    begin
+
+      if Sym(AOpen) then
+      begin
+        Inc(LDepth);
+
+        if LDepth > FOptions.MaximumDepth then
+          raise ENyxPascalSyntaxLimit.Create('Helper target recovery exceeds its nesting budget');
+      end
+      else if Sym(AClose) then
+      begin
+        Dec(LDepth);
+      end
+      else if (AOpen = psoLess) and Sym(psoShiftRight) then
+      begin
+        Dec(LDepth, 2);
+      end;
+      Step;
+    end;
+  end;
+
 begin
   Enter;
   LParentArm := FActiveArm;
   FActiveArm := -1;
   try
+    LHelper := Entry(AOwner).Value.TypeForm in
+      [pstfRecordHelper, pstfClassHelper, pstfTypeHelper];
     Step;
 
-    if Word(pkwSealed) or Word(pkwAbstract) then
+    if LHelper then
+    begin
+      { Form checked the contextual, unescaped HELPER token. Both introducer
+        words belong to this declaration, before its independent target. }
+      Step;
+    end
+    else if Word(pkwSealed) or Word(pkwAbstract) then
     begin
       Step;
     end;
 
-    if Sym(psoSemicolon) then
+    if not LHelper and Sym(psoSemicolon) then
     begin
       Include(EditEntry(AOwner).Value.FFlags, psdfForward);
       Exit;
@@ -4078,8 +4176,70 @@ begin
     if Sym(psoOpenParen) then
     begin
       LAncestor := FPosition;
-      Groups(psoOpenParen, psoCloseParen);
+
+      if LHelper then
+      begin
+        Step;
+
+        if not HelperDesignator then
+          RejectHelperHeader(psiExpectedName, 'A helper parent needs one type designator');
+
+        if not Sym(psoCloseParen) then
+        begin
+          RejectHelperHeader(psiExpectedSeparator, 'Finish the single helper parent with )');
+          while not EOF and not Sym(psoCloseParen) and not Sym(psoSemicolon) and
+            not (Tok.Word in [pkwFor, pkwEnd, pkwImplementation, pkwBegin, pkwClass,
+              pkwProperty, pkwPrivate, pkwProtected, pkwPublic, pkwPublished, pkwStrict,
+              pkwProcedure, pkwFunction, pkwConstructor, pkwDestructor]) do
+          begin
+            Step;
+          end;
+        end;
+
+        if Sym(psoCloseParen) then
+          Step;
+      end
+      else
+        Groups(psoOpenParen, psoCloseParen);
       EditEntry(AOwner).Value.FAncestorSpan := Range(LAncestor, FPosition);
+    end;
+
+    if LHelper then
+    begin
+
+      if Word(pkwFor) then
+      begin
+        Step;
+      end
+      else
+      begin
+        RejectHelperHeader(psiExpectedSeparator, 'A helper header needs for before its target');
+      end;
+
+      if not HelperDesignator then
+      begin
+        RejectHelperHeader(psiExpectedName, 'A helper needs its complete target type designator');
+      end;
+      while Sym(psoLess) or Sym(psoOpenBracket) or Sym(psoOpenParen) do
+      begin
+        RejectHelperHeader(psiUnsupportedSyntax, 'Compound helper targets need additional checked type syntax');
+        Include(EditEntry(AOwner).Value.FFlags, psdfUnsupported);
+
+        if Sym(psoLess) then
+          SkipHelperSuffix(psoLess, psoGreater)
+        else if Sym(psoOpenBracket) then
+          SkipHelperSuffix(psoOpenBracket, psoCloseBracket)
+        else
+          SkipHelperSuffix(psoOpenParen, psoCloseParen);
+      end;
+
+      if Sym(psoSemicolon) then
+      begin
+        { A helper cannot acquire ordinary forward-type meaning. Leave this
+          separator to ParseType so the next sibling is not parsed as a field. }
+        RejectHelperHeader(psiUnclosedScope, 'A helper needs its member scope and end');
+        Exit;
+      end;
     end;
     LMemberScope := AddScope(psskMembers, AScope, AOwner, Tok.Span.Start,
       Entry(AOwner).Value.Name);
@@ -4144,7 +4304,8 @@ begin
 
     if Word(pkwRecord) or (Word(pkwObject) and not Word(pkwOf, -1)) or
       Word(pkwInterface) or Word(pkwDispinterface) or
-      (Word(pkwClass) and not Word(pkwOf, 1)) then
+      (Word(pkwClass) and not Word(pkwOf, 1)) or
+      (Word(pkwType) and Word(pkwHelper, 1)) then
     begin
       LOwner := AddDeclaration(AScope, psdkType, AVisibility, FPosition, pokNone, True);
       EditEntry(LOwner).Value.FForm := Form;
@@ -4221,7 +4382,8 @@ begin
     LForm := Form;
     EditEntry(LEntry).Value.FForm := LForm;
 
-    if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
+    if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject,
+      pstfRecordHelper, pstfClassHelper, pstfTypeHelper] then
     begin
       StructuredBody(AScope, LEntry);
     end
@@ -4280,7 +4442,8 @@ begin
     end;
     EditEntry(LEntry).Value.FTypeSpan := Range(LTypeStart, FPosition);
 
-    if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject] then
+    if LForm in [pstfClass, pstfInterface, pstfRecord, pstfObject,
+      pstfRecordHelper, pstfClassHelper, pstfTypeHelper] then
     begin
       FMetadata.AddFirst(mkStructure, TNyxText(IntToStr(Entry(LEntry).Value.TypeSpan.Start)), LEntry);
     end;

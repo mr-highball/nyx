@@ -25,7 +25,8 @@ unit nyx.pascal.context;
 
 interface
 
-uses SysUtils, nyx.text, nyx.pascal.lexing, nyx.pascal.reals;
+uses SysUtils, nyx.text, nyx.scheduler, nyx.pascal.work,
+  nyx.pascal.lexing, nyx.pascal.reals;
 
 const
   { Ordered warning requests have a separate bounded capture quota. This is not
@@ -344,6 +345,7 @@ type
     FModeExcessPrecision: TNyxPascalKnowledge;
     FMinimumRealPrecision: TNyxPascalRealPrecisionRequest;
     FIEEEErrors: TNyxPascalKnowledge;
+    FMultipleHelpers: TNyxPascalKnowledge;
   public
     class function Unknown: TNyxPascalCompilerPolicies; static;
     function WithInlining(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
@@ -393,6 +395,11 @@ type
     { Authored local IEEE error intent is separate from R/Q checking, host
       exception masks and activation timing. Unknown supplies no startup flag. }
     function RequestIEEEErrors(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+    { Independent module lookup policy. Unknown does not mean one helper; a
+      qualified authored MODE may reset it, and global MODESWITCH changes survive
+      local PUSH/POP. Recording a value grants no helper activation or compiler
+      provenance. Public InMode alone supplies no default. }
+    function WithMultipleHelpers(AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
     function SamePolicies(const AOther: TNyxPascalCompilerPolicies): Boolean;
     procedure Validate;
     property Inlining: TNyxPascalKnowledge read FInlining;
@@ -409,6 +416,7 @@ type
     property ModeExcessPrecision: TNyxPascalKnowledge read FModeExcessPrecision;
     property MinimumRealPrecisionRequested: TNyxPascalRealPrecisionRequest read FMinimumRealPrecision;
     property IEEEErrorsRequested: TNyxPascalKnowledge read FIEEEErrors;
+    property MultipleHelpers: TNyxPascalKnowledge read FMultipleHelpers;
   end;
   { Simple named sizeof operand, distinct from compiler defines and arbitrary
     Pascal expressions. ASCII dotted identifiers are normalized without admitting
@@ -724,6 +732,28 @@ type
     { Clone with one matching root packet; nil detaches, reverse/nested leases refuse. }
     function WithBootstrapContext(const AContext: INyxPascalCompilerContext): INyxPascalCompilerContext;
   end;
+  { A construction-only receiver for exact immutable context values. Integers
+    and text are distinct fields in a versioned, ordered stream; text is borrowed
+    only for the call. A receiver must reserve its own byte allowance before
+    copying/framing a field and publish its result only after visitation returns.
+    No receiver is retained by a compiler context. }
+  INyxPascalCompilerContextValues = interface(IInterface)
+    ['{1A51B0A9-13F0-43BE-A944-646AB81CE73C}']
+    procedure IntegerValue(AValue: Integer);
+    procedure TextValue(const AValue: TNyxText);
+  end;
+
+{ Enumerate every value used by SameFacts without invoking alternate context
+  getters or making fluent copies. Only exact Nyx immutable context owners are
+  admitted, including a separately owned bootstrap packet when present. The
+  first integer is format version 1; subsequent counts delimit ordered vectors.
+  Existing analysis admission charges each scalar and borrowed text traversal.
+  Cancellation/admission/receiver failure may leave a private receiver partial;
+  no atomic publication or host/compiler/source authority is conferred. }
+procedure VisitNyxPascalCompilerContextValues(
+  const AContext: INyxPascalCompilerContext;
+  const AReceiver: INyxPascalCompilerContextValues;
+  const ACancellation: INyxCancellationScope = nil);
 
 { Legacy contexts report pristine; invalid namespace values refuse. }
 function NyxPascalCompilerScope(const AContext: INyxPascalCompilerContext): TNyxPascalCompilerScope;
@@ -808,6 +838,13 @@ function RestoreNyxPascalLocalSettings(const ACurrent, ASaved: INyxPascalCompile
 
 { Reject empty/over-128/non-ASCII names and identifiers starting with a digit. }
 function NyxPascalDefine(const AName: TNyxText): TNyxPascalDefineRef;
+{ Select the symbol operand of IFDEF/IFNDEF without evaluating it. The inspected
+  FPC 3.3.1 scanner reads one identifier after ASCII whitespace; remaining text
+  belongs to the original directive comment, which the caller must retain.
+  Other compiler contexts keep the strict whole-operand contract. The existing
+  bounded ASCII symbol domain still applies, including refusal of long names. }
+function NyxPascalConditionalDefine(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxText): TNyxPascalDefineRef;
 { Pure metadata constructor with unknown options/features and an open define set.
   No implicit FPC/PAS2JS/platform/version define is read from this build process. }
 { An explicit bounded selector, normalized like other compiler references.
@@ -1194,6 +1231,43 @@ begin
   Result.FName := NyxPascalASCIIKey(AName);
 end;
 
+function NyxPascalConditionalDefine(const AContext: INyxPascalCompilerContext;
+  const AValue: TNyxText): TNyxPascalDefineRef;
+var
+  LContext: INyxPascalCompilerContext;
+  LValue: TNyxText;
+  LFirst, LAfter: Integer;
+begin
+  { Retain both inputs before observing an alternate context: a virtual getter
+    can replace the caller's string slot as well as retire its context slot.
+    This operation selects syntax only; symbol facts and source scope remain
+    owned by the translation/condition caller, with no host facts consulted. }
+  LValue := AValue;
+  LContext := AContext;
+
+  if (LContext = nil) or (LContext.Family <> ppcFPC) or
+    (LContext.Version.FullNumber <> 30301) then
+  begin
+    Result := NyxPascalDefine(LValue);
+    Exit;
+  end;
+  LFirst := 1;
+  while (LFirst <= Length(LValue)) and (LValue[LFirst] in [#9..#13, ' ']) do
+    Inc(LFirst);
+  LAfter := LFirst;
+  while (LAfter <= Length(LValue)) and
+    (LValue[LAfter] in ['A'..'Z', 'a'..'z', '_', '0'..'9']) do
+  begin
+
+    if LAfter - LFirst >= 128 then
+      raise ENyxPascalContext.Create('A conditional compiler symbol exceeds 128 ASCII identifier characters');
+    Inc(LAfter);
+  end;
+  { The checked constructor rejects an empty/invalid first operand. Stopping
+    at the first delimiter never turns an overlong identifier into a prefix. }
+  Result := NyxPascalDefine(Copy(LValue, LFirst, LAfter - LFirst));
+end;
+
 class function TNyxPascalCompilerVersion.Create(AMajor, AMinor, APatch: Integer): TNyxPascalCompilerVersion;
 begin
 
@@ -1307,6 +1381,188 @@ begin
     raise ENyxPascalContext.Create('A short compiler option needs one ASCII letter');
   end;
   Result := Ord(AName) - Ord('A');
+end;
+
+procedure VisitNyxPascalCompilerContextValues(
+  const AContext: INyxPascalCompilerContext;
+  const AReceiver: INyxPascalCompilerContextValues;
+  const ACancellation: INyxCancellationScope);
+var
+  LContext: INyxPascalCompilerContext;
+  LReceiver: INyxPascalCompilerContextValues;
+  LExecution: INyxCancellationScope;
+  LOwner, LBootstrap: TCompilerContext;
+  procedure Check;
+  begin
+
+    if (LExecution <> nil) and LExecution.Cancelled then
+      raise ENyxPascalAnalysisCancelled.Create('Compiler context value visitation cancelled');
+  end;
+  procedure Number(AValue: Integer);
+  begin
+    Check;
+    NyxPascalAdmitAnalysis(LExecution, papMetadataValue);
+    Check;
+    LReceiver.IntegerValue(AValue);
+    Check;
+  end;
+  procedure Text(const AValue: TNyxText);
+  begin
+    Check;
+    { Context names/keys are already immutable canonical ASCII values. Reserve
+      their inspection before handing the borrowed storage to the receiver. }
+
+    if Length(AValue) = MaxInt then
+      raise ENyxPascalContext.Create('Context text exceeds portable work accounting');
+    NyxPascalAdmitAnalysis(LExecution, papSourceProof, Length(AValue) + 1);
+    Check;
+    LReceiver.TextValue(AValue);
+    Check;
+  end;
+  function Owned(const AValue: INyxPascalCompilerContext): TCompilerContext;
+  begin
+
+    if not (AValue is TCompilerContext) then
+      raise ENyxPascalContext.Create('Context values require the exact immutable Nyx owner');
+    Result := AValue as TCompilerContext;
+
+    if (Result.ClassType <> TCompilerContext) or
+      ((Result as INyxPascalCompilerContext) <> AValue) then
+      raise ENyxPascalContext.Create('Context values require the exact immutable Nyx interface');
+  end;
+  procedure Values(AValue: TCompilerContext; AChild: TCompilerContext);
+  var
+    LAt, LAssignment: Integer;
+    LFeature: TNyxPascalLanguageFeature;
+  begin
+    Number(Ord(AValue.FFamily));
+    Number(AValue.FVersion.FullNumber);
+    Number(Ord(AValue.FMode));
+    Number(Ord(AValue.FComplete));
+    Number(Ord(AValue.FCaptureScope));
+    Text(AValue.FConfiguredFPU.Name);
+    Number(Ord(AValue.FRealParser.FKind));
+    Number(Ord(AValue.FRealParser.FPrecision));
+    Number(Ord(AValue.FRealEvaluation.FKind));
+    Number(Ord(AValue.FRealEvaluation.FPrecision));
+    Number(Ord(AValue.FSourceFPU.FKind));
+    Text(AValue.FSourceFPU.FReference.Name);
+    Number(Ord(AChild <> nil));
+
+    if AChild <> nil then
+      Values(AChild, nil);
+    { Keep this enumeration beside SameFacts. Every independent policy channel,
+      including authored emission and source MODE effects, remains distinct. }
+    Number(Ord(AValue.FPolicies.FInlining));
+    Number(Ord(AValue.FPolicies.FRecords));
+    Number(Ord(AValue.FPolicies.FEnums));
+    Number(Ord(AValue.FPolicies.FSets));
+    Number(Ord(AValue.FPolicies.FCalling));
+    Number(Ord(AValue.FPolicies.FSmartLinking));
+    Number(Ord(AValue.FPolicies.FGoto));
+    Number(Ord(AValue.FPolicies.FAssembler));
+    Number(Ord(AValue.FPolicies.FWarnings));
+    Number(Ord(AValue.FPolicies.FHints));
+    Number(Ord(AValue.FPolicies.FNotes));
+    Number(Ord(AValue.FPolicies.FPointerChecking));
+    Number(Ord(AValue.FPolicies.FInterfaces));
+    Number(Ord(AValue.FPolicies.FExcessPrecision));
+    Number(Ord(AValue.FPolicies.FModeExcessPrecision));
+    Number(Ord(AValue.FPolicies.FMinimumRealPrecision));
+    Number(Ord(AValue.FPolicies.FIEEEErrors));
+
+    if AValue.FPolicies.FMultipleHelpers <> ppkUnknown then
+    begin
+      { Keep the complete legacy Unknown stream and its work cost unchanged.
+        Known source policy is tagged so it cannot impersonate the next count. }
+      Text('multiple-helpers-v1');
+      Number(Ord(AValue.FPolicies.FMultipleHelpers));
+    end;
+    Number(Length(AValue.FWarnings));
+    for LAt := 0 to High(AValue.FWarnings) do
+    begin
+      Number(Ord(AValue.FWarnings[LAt].FReference.FKind));
+      Number(AValue.FWarnings[LAt].FReference.FNumber);
+      Text(AValue.FWarnings[LAt].FReference.FName);
+      Number(Ord(AValue.FWarnings[LAt].FAction));
+      Number(Ord(AValue.FWarnings[LAt].FActivity));
+    end;
+    Number(Length(AValue.FCodeAlignments));
+    for LAt := 0 to High(AValue.FCodeAlignments) do
+    begin
+      Number(Ord(AValue.FCodeAlignments[LAt].FActivity));
+      Number(Length(AValue.FCodeAlignments[LAt].FRequest.FAssignments));
+      for LAssignment := 0 to High(AValue.FCodeAlignments[LAt].FRequest.FAssignments) do
+      begin
+        Number(Ord(AValue.FCodeAlignments[LAt].FRequest.FAssignments[LAssignment].FSubject));
+        Number(AValue.FCodeAlignments[LAt].FRequest.FAssignments[LAssignment].FValue);
+      end;
+    end;
+    Number(Length(AValue.FOptimizations));
+    for LAt := 0 to High(AValue.FOptimizations) do
+    begin
+      Number(Ord(AValue.FOptimizations[LAt].FActivity));
+      Number(Ord(AValue.FOptimizations[LAt].FRequest.FKind));
+      Number(Ord(AValue.FOptimizations[LAt].FRequest.FMode));
+      Number(Ord(AValue.FOptimizations[LAt].FRequest.FFeature));
+      Number(Ord(AValue.FOptimizations[LAt].FRequest.FEnabled));
+    end;
+    Number(Length(AValue.FSizes));
+    for LAt := 0 to High(AValue.FSizes) do
+    begin
+      Text(AValue.FSizes[LAt].Name.Name);
+      Number(Ord(AValue.FSizes[LAt].Value.FState));
+      Number(Ord(AValue.FSizes[LAt].Value.FMode));
+      Number(Ord(AValue.FSizes[LAt].Value.FLongStrings));
+      Number(AValue.FSizes[LAt].Value.FBytes);
+    end;
+    Number(Length(AValue.FStorage));
+    for LAt := 0 to High(AValue.FStorage) do
+    begin
+      Text(AValue.FStorage[LAt].Key.Value);
+      Number(Ord(AValue.FStorage[LAt].Value.FState));
+      Number(AValue.FStorage[LAt].Value.FBytes);
+    end;
+    Number(Length(AValue.FSymbols));
+    for LAt := 0 to High(AValue.FSymbols) do
+    begin
+      Text(AValue.FSymbols[LAt].Name.Name);
+      Number(Ord(AValue.FSymbols[LAt].Value.Kind));
+
+      if AValue.FSymbols[LAt].Value.Kind = ppdInteger then
+        Number(AValue.FSymbols[LAt].Value.IntegerValue);
+    end;
+    Number(Length(AValue.FOptions));
+    for LAt := 0 to High(AValue.FOptions) do
+      Number(Ord(AValue.FOptions[LAt]));
+    Number(Ord(High(TNyxPascalLanguageFeature)) - Ord(Low(TNyxPascalLanguageFeature)) + 1);
+    for LFeature := Low(TNyxPascalLanguageFeature) to High(TNyxPascalLanguageFeature) do
+      Number(Ord(AValue.FFeatures[LFeature]));
+  end;
+begin
+  { These leases precede cancellation, analysis admission and receiver calls.
+    Reassigning a caller variable cannot retire the active immutable values. }
+  LContext := AContext;
+  LReceiver := AReceiver;
+  LExecution := ACancellation;
+  Check;
+
+  if LReceiver = nil then
+    raise ENyxPascalContext.Create('Context value visitation needs its explicit receiver');
+  LOwner := Owned(LContext);
+  LBootstrap := nil;
+
+  if LOwner.FBootstrap <> nil then
+  begin
+    LBootstrap := Owned(LOwner.FBootstrap);
+
+    if (LBootstrap.FCaptureScope <> pcsoSystemBootstrap) or
+      (LBootstrap.FBootstrap <> nil) then
+      raise ENyxPascalContext.Create('Context value visitation refuses nested bootstrap ownership');
+  end;
+  Number(1);
+  Values(LOwner, LBootstrap);
+  Check;
 end;
 
 constructor TCompilerContext.Create;
@@ -2358,7 +2614,9 @@ begin
     (Ord(FMinimumRealPrecision) < Ord(Low(TNyxPascalRealPrecisionRequest))) or
     (Ord(FMinimumRealPrecision) > Ord(High(TNyxPascalRealPrecisionRequest))) or
     (Ord(FIEEEErrors) < Ord(Low(TNyxPascalKnowledge))) or
-    (Ord(FIEEEErrors) > Ord(High(TNyxPascalKnowledge))) then
+    (Ord(FIEEEErrors) > Ord(High(TNyxPascalKnowledge))) or
+    (Ord(FMultipleHelpers) < Ord(Low(TNyxPascalKnowledge))) or
+    (Ord(FMultipleHelpers) > Ord(High(TNyxPascalKnowledge))) then
   begin
     raise ENyxPascalContext.Create('Compiler policy is outside its closed value domain');
   end;
@@ -2488,7 +2746,16 @@ begin
     (FNotes = AOther.FNotes) and (FPointerChecking = AOther.FPointerChecking) and
     (FInterfaces = AOther.FInterfaces) and (FExcessPrecision = AOther.FExcessPrecision) and
     (FModeExcessPrecision = AOther.FModeExcessPrecision) and
-    (FMinimumRealPrecision = AOther.FMinimumRealPrecision) and (FIEEEErrors = AOther.FIEEEErrors);
+    (FMinimumRealPrecision = AOther.FMinimumRealPrecision) and (FIEEEErrors = AOther.FIEEEErrors) and
+    (FMultipleHelpers = AOther.FMultipleHelpers);
+end;
+
+function TNyxPascalCompilerPolicies.WithMultipleHelpers(
+  AValue: TNyxPascalKnowledge): TNyxPascalCompilerPolicies;
+begin
+  Result := Self;
+  Result.FMultipleHelpers := AValue;
+  Result.Validate;
 end;
 
 function TNyxPascalCompilerPolicies.RequestExcessPrecision(
@@ -3522,6 +3789,9 @@ begin
   LCurrent := LPolicies.WithPolicies(NyxPascalCompilerPolicies(LSaved)
     .RequestSmartLinking(NyxPascalCompilerPolicies(LCurrent).SmartLinkingRequested)
     .RequestGoto(NyxPascalCompilerPolicies(LCurrent).GotoRequested)
+    { Module modeswitches are outside the local settings stack. Restore neither
+      an earlier known value nor earlier uncertainty over the current policy. }
+    .WithMultipleHelpers(NyxPascalCompilerPolicies(LCurrent).MultipleHelpers)
     .UseInterfaces(LInterfaces).RequestMinimumRealPrecision(LMinimum));
   LCurrent := NyxPascalWarnings(LCurrent).WithWarningRules(NyxPascalWarnings(LSaved));
   LCurrent := NyxPascalCodeAlignments(LCurrent).WithCodeAlignmentRules(NyxPascalCodeAlignments(LSaved));

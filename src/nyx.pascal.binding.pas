@@ -60,10 +60,13 @@ type
   { Type definitions and constructed shapes remain distinct. Alias and distinct
     wrappers preserve declared identity; Target retains the underlying shape.
     Qualified compatibility queries do not change this nominal identity or
-    infer numeric bounds/defaults, layout or general assignment legality. }
+    infer numeric bounds/defaults, layout or general assignment legality. Encoded
+    strings preserve their opaque source operand and qualified ANSI Target;
+    existing plain-string folding/conversion rules do not acquire this family. }
   TNyxPascalSemanticTypeKind = (pstDeclared, pstAlias, pstDistinct, pstPointer,
     pstArray, pstSet, pstFile, pstString, pstClassOf, pstProcedure, pstFunction,
-    pstReference, pstEnumeration, pstSubrange, pstBuiltin, pstUntyped, pstFormal);
+    pstReference, pstEnumeration, pstSubrange, pstBuiltin, pstUntyped, pstFormal,
+    pstEncodedString);
   { Authored formal requirements grant only their declared type contract. They
     do not identify an actual argument, layout or constructor invocation. }
   TNyxPascalGenericRequirement = (pgrClass, pgrRecord, pgrConstructor);
@@ -490,6 +493,10 @@ function NyxPascalBindingName(const AName: TNyxText): TNyxPascalBindingName;
 { Empty persistent source world. Nothing parses, opens, executes or enrolls a
   project until the caller explicitly supplies an already constructed source view. }
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
+{ Exact built-in immutable world ownership, checked inside its implementation.
+  A delegating alternate cannot acquire this receipt through public getters or
+  capabilities. True grants no source-byte, disk, compiler or target provenance. }
+function NyxPascalOwnedSemanticWorld(const AWorld: INyxPascalSemanticWorld): Boolean;
 { Conservative correspondence of one visible name at two sites in the same
   immutable world. Both lookups and named type/alias definitions must retain
   exact declaration identity. Shadowing, uncertain scopes, anonymous/builtin
@@ -4983,6 +4990,15 @@ begin
       Exit(Answer(pbsUnresolved, pbiIncompleteSource));
     end;
 
+    if (LDecl.Kind = psdkType) and (LDecl.TypeForm in
+      [pstfRecordHelper, pstfClassHelper, pstfTypeHelper]) then
+    begin
+      { Parsed helper declarations retain their own source/member scopes. They
+        supply neither ordinary record/class storage nor helper lookup rules;
+        do not re-enter their structured body through alias type parsing. }
+      Exit(Answer(pbsUnresolved, pbiUnsupportedType, LDecl.Name));
+    end;
+
     if LDecl.Kind = psdkLabel then
     begin
       { Labels inhabit the lexical namespace (including DECLARED and shadowing),
@@ -5826,6 +5842,43 @@ begin
         begin
           LType.TypeKind := pstSubrange;
         end;
+      ptxEncodedString:
+        begin
+          { This is an authored structural request, analogous to an unevaluated
+            array bound. Keep the exact code-page operand on Syntax and the
+            separately resolved ANSI base on Target. In particular, neither
+            CP_UTF8 spelling nor an arbitrary numeric operand proves an effective
+            encoding, conversion rule, constant value or storage layout. }
+          LChild := AType.Child(ANode, ptrBase);
+
+          if (LChild < 0) or (AType.Child(ANode, ptrCodePage) < 0) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+
+          if AType.Node(LChild).Kind = ptxString then
+          begin
+            { The explicit String(codepage) grammar selects an ANSI base even
+              under H-. Compiler-unit mode still requires the real System owner
+              and its captured primitive presence, rather than a caller alias. }
+            if (FLimits.ImplicitScopes = pispCompilerUnits) and
+              (FWorld.FindModule('System') < 0) then
+              Exit(Answer(pbsUnresolved, pbiMissingModule, 'System'));
+            LResolved := BuiltinType(ASite, 'AnsiString',
+              FLimits.ImplicitScopes = pispCompilerUnits);
+          end
+          else
+            LResolved := BindNode(ASite, AType, LChild);
+
+          if LResolved.Status <> pbsBound then
+            Exit(LResolved);
+
+          if (LResolved.BoundType = nil) or
+            (LResolved.BoundType.Kind <> pstBuiltin) or
+            (LResolved.BoundType.Builtin <> pbbAnsiString) then
+            Exit(Answer(pbsUnresolved, pbiUnsupportedType));
+          LType.TypeKind := pstEncodedString;
+          LType.Element := LResolved.BoundType;
+          LChild := -1;
+        end;
       ptxString:
         begin
           LType.TypeKind := pstString;
@@ -6279,6 +6332,95 @@ var
   LScope: TNyxPascalSyntaxScope;
   LAt: Integer;
   LLast: TNyxPascalToken;
+
+  { This is only a lexical absence proof for an unfinished helper. It grants
+    neither helper eligibility nor activation: the ordinary helper type/member
+    APIs still refuse. With MULTIHELPERS off, a parentless primitive target has
+    no nested member table that could hide the next enclosing lexical name. }
+  function PrimitiveHelperPrefix: INyxPascalResolution;
+  var
+    LContext: INyxPascalCompilerContext;
+    LLexical: INyxPascalLexicalSnapshot;
+    LTargetSyntax: INyxPascalTypeSyntax;
+    LTarget: INyxPascalResolution;
+    LTerminal: INyxPascalSemanticType;
+    LToken: TNyxPascalToken;
+    LHeaderEnd, LTokenAt, LTargetStart: Integer;
+    LIntroducer: TNyxPascalWord;
+
+    { Every inspected token belongs to the checked header, before the first
+      body token. Trivia cannot advance this proof into a member declaration. }
+    function HeaderToken: Boolean;
+    begin
+      Result := False;
+      while LTokenAt < LLexical.Count do
+      begin
+        Tick;
+        LToken := LLexical.Token(LTokenAt);
+
+        if LToken.Span.Start >= LHeaderEnd then Exit;
+
+        if not (LToken.Kind in [ptkWhitespace, ptkComment, ptkDirective]) then
+          Exit(True);
+        Inc(LTokenAt);
+      end;
+    end;
+
+    function Consume(AWord: TNyxPascalWord): Boolean;
+    begin
+      Result := HeaderToken and (LToken.Kind = ptkWord) and not LToken.Escaped and
+        (LToken.Word = AWord);
+
+      if Result then Inc(LTokenAt);
+    end;
+
+  begin
+    Result := Answer(pbsUnresolved, pbiIncompleteSource);
+    LToken := Default(TNyxPascalToken);
+
+    if LDeclaration.AncestorSpan.Length <> 0 then Exit;
+    LContext := ContextAt(ASite);
+
+    if (LContext = nil) or (LContext.Family <> ppcFPC) or
+      (LContext.Version.FullNumber <> 30301) or
+      (NyxPascalCompilerPolicies(LContext).MultipleHelpers <> ppkFalse) then Exit;
+    LLexical := LSyntax.Lexical;
+    LHeaderEnd := LScope.Span.Start;
+
+    if (LDeclaration.TypeSpan.Length = 0) or
+      (LDeclaration.TypeSpan.Start >= LHeaderEnd) then Exit;
+    LTokenAt := LLexical.TokenAt(LDeclaration.TypeSpan.Start);
+    LIntroducer := pkwType;
+
+    if LDeclaration.TypeForm = pstfRecordHelper then LIntroducer := pkwRecord
+    else if LDeclaration.TypeForm = pstfClassHelper then LIntroducer := pkwClass;
+
+    if not Consume(LIntroducer) or not Consume(pkwHelper) or not Consume(pkwFor) or
+      not HeaderToken then Exit;
+    LTargetStart := LToken.Span.Start;
+    LTargetSyntax := NewNyxPascalTypeSyntax(LLexical,
+      NyxPascalSpan(LTargetStart, LHeaderEnd - LTargetStart),
+      TNyxPascalTypeOptions.Defaults, FCancel);
+
+    if not LTargetSyntax.Complete or
+      not (LTargetSyntax.Node(LTargetSyntax.Root).Kind in [ptxName, ptxQualified]) then Exit;
+    { The target was authored outside the helper's member scope. Resolving it
+      there avoids recursion and cannot borrow a same-spelled helper member. }
+    LTarget := BindNode(FWorld.At(AOwner.ModuleIndex, LDeclaration.Scope,
+      LTargetStart), LTargetSyntax, LTargetSyntax.Root);
+
+    if LTarget.Status <> pbsBound then
+    begin
+
+      if LTarget.Status <> pbsMissing then Result := LTarget;
+      Exit;
+    end;
+    LTerminal := Unwrap(LTarget.BoundType);
+
+    if (LTerminal <> nil) and (LTerminal.Kind = pstBuiltin) and
+      (LTerminal.Builtin <> pbbNone) then
+      Result := Answer(pbsMissing, pbiMissingName);
+  end;
 begin
   Tick;
   LView := FWorld.ModuleAt(AOwner.ModuleIndex);
@@ -6287,7 +6429,8 @@ begin
 
   if (AOwner.ModuleIndex <> ASite.ModuleIndex) or not LView.CompleteTranslation or
     (LDeclaration.Kind <> psdkType) or
-    not (LDeclaration.TypeForm in [pstfClass, pstfInterface, pstfObject, pstfRecord]) or
+    not (LDeclaration.TypeForm in [pstfClass, pstfInterface, pstfObject, pstfRecord,
+      pstfRecordHelper, pstfClassHelper, pstfTypeHelper]) or
     (LDeclaration.NestedScope < 0) or
     (LDeclaration.Flags * [psdfConditional, psdfUnsupported, psdfForward] <> []) then
   begin
@@ -6314,6 +6457,9 @@ begin
       Exit(Answer(pbsUnresolved, pbiIncompleteSource));
     end;
   end;
+
+  if LDeclaration.TypeForm in [pstfRecordHelper, pstfClassHelper, pstfTypeHelper] then
+    Exit(PrimitiveHelperPrefix);
 
   if LDeclaration.AncestorSpan.Length > 0 then
   begin
@@ -10364,6 +10510,21 @@ end;
 function NewNyxPascalSemanticWorld(const AOptions: TNyxPascalBindingOptions): INyxPascalSemanticWorld;
 begin
   Result := TSemanticWorld.Create(AOptions);
+end;
+
+function NyxPascalOwnedSemanticWorld(const AWorld: INyxPascalSemanticWorld): Boolean;
+var
+  LWorld: INyxPascalSemanticWorld;
+  LOwner: TSemanticWorld;
+begin
+  LWorld := AWorld;
+  Result := False;
+
+  if not (LWorld is TSemanticWorld) then
+    Exit;
+  LOwner := LWorld as TSemanticWorld;
+  Result := (LOwner.ClassType = TSemanticWorld) and
+    ((LOwner as INyxPascalSemanticWorld) = LWorld);
 end;
 
 function WithNyxPascalSemanticModule(const AWorld: INyxPascalSemanticWorld;

@@ -302,10 +302,97 @@ begin
     'Truncated lookahead never exceeds the compiler probe name quota');
 end;
 
+{ Required rows use the exact translated compiler context; speculative raw
+  includes have no such owner and cannot inherit the analyzer's own compiler.
+  A sizeof-looking IFDEF is therefore a macro query only when qualified. }
+procedure ConditionalOperandPlanning;
+var
+  LFiles: INyxPascalFileCatalog;
+  LContext: INyxPascalCompilerContext;
+  LSource: INyxPascalTranslation;
+  LPlan, LSaved: INyxPascalCompilerPlan;
+  LProbe, LBase: INyxPascalCompilerProbe;
+  LSizes: INyxPascalSizeProbe;
+  LCandidates: INyxPascalCompilerCandidates;
+  LIncludes: INyxPascalCompilerIncludeCandidates;
+  LCancel: INyxCancellationScope;
+  LFailed: Boolean;
+begin
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 3, 1), ppmDelphi);
+  LFiles := NewNyxPascalFileCatalog(pfcExact).WithFile(NyxPascalPhysicalFile('operand.pas'),
+    'unit Operand; interface {$ifdef sizeof(NativeInt)>=8}const Maybe=1;{$endif} implementation end.');
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('operand.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource, TNyxPascalCompilerPlanOptions.Defaults);
+  Check((LPlan.Count = 1) and LPlan.Needs(0).SyntaxSupported and
+    (LPlan.Needs(0).SymbolCount = 1) and
+    (LPlan.Needs(0).Symbol(0).Name = TNyxText('sizeof')) and
+    (LPlan.Needs(0).SizeCount = 0),
+    'The authored IFDEF needs only its actual first macro operand, never a guessed NativeInt size');
+  LBase := NewNyxFPCCompilerProbe(NyxPascalDefine('OPERAND'), ppmDelphi);
+  LProbe := LPlan.CompilerProbe(LBase);
+  Check(Supports(LProbe, INyxPascalSizeProbe, LSizes) and
+    (LProbe.Count = LBase.Count + 1) and
+    (LProbe.Symbol(LBase.Count).Name = TNyxText('sizeof')) and (LSizes.SizeCount = 0),
+    'A qualified trailing annotation adds one symbol request and no size operand');
+  LFiles := LFiles.WithFile(NyxPascalPhysicalFile('operand.pas'),
+    'unit Operand; interface {$if defined(NEEDED)}{$endif}' +
+    '{$NYX_CAPTURE_BOUNDARY ON}{$ifdef FUTURE(note)}const Maybe=1;{$endif} implementation end.');
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('operand.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Check(Supports(LPlan, INyxPascalCompilerCandidates, LCandidates) and
+    (LPlan.Count = 1) and (LCandidates.CandidateCount = 1) and
+    (LCandidates.CandidateAt(0).Name = TNyxText('future')),
+    'Context-aware lookahead shares the qualified first-operand rule beyond the retained required prefix');
+  LSaved := LPlan;
+  LFailed := False;
+  try
+    PlanNyxPascalCompilerRequirements(LSource,
+      TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True).UpToTokens(LSource.Count));
+  except
+    on ENyxPascalTranslationLimit do LFailed := True;
+  end;
+  Check(LFailed and (LSaved.Count = 1),
+    'Trailing-operand lookahead still charges existing work before publication and preserves the prior plan');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LFailed := False;
+  try
+    PlanNyxPascalCompilerRequirements(LSource,
+      TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True), LCancel);
+  except
+    on ENyxPascalAnalysisCancelled do LFailed := True;
+  end;
+  Check(LFailed and (LSaved.Count = 1),
+    'Cancelled qualified-operand planning retains the same atomic refusal contract');
+  LFiles := NewNyxPascalFileCatalog(pfcExact)
+    .WithFile(NyxPascalPhysicalFile('raw.pas'), 'unit Raw; interface {$i raw.inc} implementation end.')
+    .WithFile(NyxPascalPhysicalFile('raw.inc'), '{$ifdef FUTURE(note)}{$endif}');
+  LIncludes := PlanNyxPascalCompilerIncludeCandidates(LFiles,
+    NyxPascalPhysicalFile('raw.pas'), TNyxPascalLexicalOptions.Defaults,
+    TNyxPascalCompilerPlanOptions.Defaults);
+  Check((LIncludes.FilesVisited = 2) and (LIncludes.Count = 0),
+    'Captured raw include candidates without compiler context retain strict whole-operand syntax');
+  LContext := NewNyxPascalCompilerContext(ppcFPC,
+    TNyxPascalCompilerVersion.Create(3, 2, 2), ppmDelphi);
+  LSource := NewNyxPascalTranslation(LFiles, NyxPascalPhysicalFile('raw.pas'),
+    LContext, TNyxPascalTranslationOptions.Defaults);
+  LPlan := PlanNyxPascalCompilerRequirements(LSource,
+    TNyxPascalCompilerPlanOptions.Defaults.LookAheadConditions(True));
+  Check(Supports(LPlan, INyxPascalCompilerCandidates, LCandidates) and
+    (LPlan.Count = 1) and not LPlan.Needs(0).SyntaxSupported and
+    (LCandidates.CandidateCount = 0) and (LPlan.CompilerProbe(LBase).Source = LBase.Source),
+    'An unqualified compiler version cannot reinterpret a trailing operand as a pristine candidate');
+end;
+
 begin
   try
     OrderedRequirements;
     ConditionalLookahead;
+    ConditionalOperandPlanning;
     WriteLn('PASS ', GChecks, ' compiler requirement planning checks');
   except
     on LError: Exception do

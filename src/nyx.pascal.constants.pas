@@ -2161,6 +2161,14 @@ var
       { An optional tag keeps all prior unspecified context identities exact. }
       Part('ieee-errors-request-v1'); Number(Ord(LPolicy.IEEEErrorsRequested));
     end;
+
+    if LPolicy.MultipleHelpers <> ppkUnknown then
+    begin
+      { Helper lookup can change a name's meaning without changing its spelling.
+        Unknown keeps every prior key byte exact; known states never cross-reuse
+        an answer belonging to another helper-search policy. }
+      Part('multiple-helpers-v1'); Number(Ord(LPolicy.MultipleHelpers));
+    end;
     LRealParser := NyxPascalRealParser(AContext);
 
     if LRealParser.Known then

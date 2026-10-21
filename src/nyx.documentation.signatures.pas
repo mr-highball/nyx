@@ -5,7 +5,7 @@ unit nyx.documentation.signatures;
 
 interface
 
-uses SysUtils, nyx.text, nyx.pascal.syntax, nyx.documentation,
+uses SysUtils, nyx.text, nyx.pascal.syntax, nyx.pascal.syntax.translated, nyx.documentation,
   nyx.documentation.typeexpressions;
 
 type
@@ -15,6 +15,27 @@ type
   { An ordered, atomic batch of detached signatures. Entries correspond to the
     caller's exact snapshot-local ordinals, never stable member identities. }
   TNyxDocumentationRoutineSignatures = array of INyxDocumentationRichSignature;
+  { A managed selection keeps its backing storage alive across outward admission.
+    Ordinals belong only to the session's exact immutable translated snapshot. }
+  TNyxDocumentationRoutineOrdinals = array of Integer;
+  { A construction-only lease over one complete canonical translated owner.
+    Repeated selections share one scalar cursor rather than rechecking complete
+    unit text. Each selected window, type and detached field remains admitted.
+    Retire releases all source/construction leases; returned signatures do not
+    retain this session. It establishes no disk, compiler or nominal authority. }
+  INyxDocumentationSignatureSource = interface(IInterface)
+    ['{E81F93CB-59BD-4B38-9F5D-26C348D92921}']
+    function CaptureDeclared(const ARoutines: TNyxDocumentationRoutineOrdinals): TNyxDocumentationRoutineSignatures;
+    procedure Retire;
+  end;
+
+{ Only the exact built-in immutable translated owner is accepted, with complete
+  resolved translation and diagnostic-free complete module syntax. Alternate
+  snapshots keep using the independent checked APIs below. The caller owns the
+  shared construction and must retire this session before publishing a package. }
+function NewNyxDocumentationSignatureSource(
+  const ASource: INyxPascalTranslatedSyntax;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationSignatureSource;
 
 { Capture only a procedure/function's declared signature. The ordinal belongs
   to this exact snapshot, not a stable overload identity. A bounded header copy
@@ -38,10 +59,23 @@ function CaptureNyxDocumentationRoutineSignature(
 function CaptureNyxDocumentationRoutineSignatures(
   const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
   const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
+{ The source-adoption path also preserves constructors, destructors, operators
+  and routine-owned generic headers. It returns only their declared parameter
+  and result shape: generic owners, operator identity and member intent remain
+  the source adapter's separate checked facts. The older entry points above
+  retain their strict non-generic procedure/function contract. }
+function CaptureNyxDocumentationDeclaredRoutineSignature(
+  const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+{ The same atomic bounded batch admission and final supplier agreement apply
+  to every selected lifecycle/operator/generic signature. No routine is invoked. }
+function CaptureNyxDocumentationDeclaredRoutineSignatures(
+  const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
 
 implementation
 
-uses nyx.pascal.lexing, nyx.bytes;
+uses nyx.pascal.lexing, nyx.pascal.translation, nyx.bytes;
 
 type
   { Construction-only parameter supplier. The ordinary rich-signature capture
@@ -59,6 +93,12 @@ type
     function HasDefault: Boolean;
     function DefaultPascal: TNyxText;
     function WithDefault(const APascal: TNyxText): INyxDocumentationParameterDeclaration;
+  end;
+  { Only an owned header with no authored type and an admitted passing mode
+    creates this marker. Nil type alone never stands for a successful capture. }
+  TParsedUntypedParameter = class(TParsedParameter, INyxDocumentationUntypedParameter)
+  public
+    function DeclaredUntyped: Boolean;
   end;
   { Value observations of the bounded parameter prefix, including one optional
     following local declaration. Ordinals have authority only during this call;
@@ -83,6 +123,31 @@ type
   { Construction-local class owners are released even when a later row refuses.
     This is not a publicly retained result or alternative source snapshot. }
   TSignatureWitnesses = array of TSignatureWitness;
+  { Immutable syntax needs no alternate-supplier receipts or header reparse.
+    This temporary owner retains one cursor across complete sibling scopes;
+    local leases protect in-flight calls from reentrant caller retirement. }
+  TSignatureSource = class(TInterfacedObject, INyxDocumentationSignatureSource)
+  private
+    FSource: INyxPascalTranslatedSyntax;
+    FSyntax: INyxPascalSyntaxSnapshot;
+    FWindows: INyxDocumentationTextWindows;
+    FConstruction: INyxDocumentationTypeConstruction;
+    FDeclarations, FScopes, FScalars: Integer;
+    FRetired, FBusy: Boolean;
+    procedure CheckLive(const AConstruction: INyxDocumentationTypeConstruction);
+    procedure Spend(const AConstruction: INyxDocumentationTypeConstruction; AUnits: Integer = 1);
+    function CaptureOne(ARoutine: Integer;
+      const ASyntax: INyxPascalSyntaxSnapshot;
+      const AWindows: INyxDocumentationTextWindows;
+      const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+  public
+    constructor Create(const ASource: INyxPascalTranslatedSyntax;
+      const AConstruction: INyxDocumentationTypeConstruction);
+    destructor Destroy; override;
+    procedure Initialize;
+    function CaptureDeclared(const ARoutines: TNyxDocumentationRoutineOrdinals): TNyxDocumentationRoutineSignatures;
+    procedure Retire;
+  end;
 
 function TParsedParameter.Name: TNyxText;
 begin
@@ -115,7 +180,7 @@ var
 begin
   Result := nil;
 
-  if (APascal = '') or (Length(APascal) > 1024) or
+  if (ParameterType = nil) or (APascal = '') or (Length(APascal) > 1024) or
     (Mode in [ndpVar, ndpOut]) then
     raise ENyxDocumentationSignature.Create('A parsed parameter requires a bounded non-writable default');
 
@@ -130,6 +195,11 @@ begin
   LNext.DefaultPresent := True;
   LNext.DefaultText := APascal;
   Result := LNext;
+end;
+
+function TParsedUntypedParameter.DeclaredUntyped: Boolean;
+begin
+  Result := True;
 end;
 
 function SameSpan(const ALeft, ARight: TNyxPascalSpan): Boolean;
@@ -182,6 +252,7 @@ begin
   { All declaration-facing fields relevant to this selected header are checked
     again. Unused body/linkage/visibility metadata grants no result authority. }
   Result := (ALeft.Kind = ARight.Kind) and (ALeft.RoutineKind = ARight.RoutineKind) and
+    (ALeft.OperatorKind = ARight.OperatorKind) and
     (ALeft.Name = ARight.Name) and (ALeft.OwnerName = ARight.OwnerName) and
     (ALeft.Flags = ARight.Flags) and (ALeft.Scope = ARight.Scope) and
     (ALeft.NestedScope = ARight.NestedScope) and (ALeft.Next = ARight.Next) and
@@ -228,12 +299,364 @@ begin
   end;
 end;
 
+constructor TSignatureSource.Create(const ASource: INyxPascalTranslatedSyntax;
+  const AConstruction: INyxDocumentationTypeConstruction);
+begin
+  inherited Create;
+  FSource := ASource;
+  FConstruction := AConstruction;
+end;
+
+destructor TSignatureSource.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TSignatureSource.CheckLive(const AConstruction: INyxDocumentationTypeConstruction);
+begin
+
+  if FRetired or (AConstruction = nil) or (FConstruction <> AConstruction) then
+    raise ENyxDocumentationTypeExpressionCancelled.Create('Signature source retired');
+  CheckNyxDocumentationTypeConstruction(AConstruction);
+
+  if FRetired or (FConstruction <> AConstruction) then
+    raise ENyxDocumentationTypeExpressionCancelled.Create('Signature source retired during admission');
+end;
+
+procedure TSignatureSource.Spend(const AConstruction: INyxDocumentationTypeConstruction;
+  AUnits: Integer);
+begin
+  CheckLive(AConstruction);
+  AConstruction.Spend(AUnits);
+  CheckLive(AConstruction);
+end;
+
+procedure TSignatureSource.Initialize;
+var
+  LConstruction: INyxDocumentationTypeConstruction;
+  LSource: INyxPascalTranslatedSyntax;
+  LTranslation: INyxPascalTranslation;
+  LLexical: INyxPascalLexicalSnapshot;
+  LRoot: TNyxPascalSyntaxScope;
+  LPolicy, LExpected: TNyxPascalLexicalOptions;
+begin
+  LConstruction := FConstruction;
+  LSource := FSource;
+
+  if not NyxPascalOwnedTranslatedSyntax(LSource) then
+    raise ENyxDocumentationSignature.Create('A signature source requires the exact owned translated snapshot');
+  Spend(LConstruction);
+
+  if not LSource.CompleteTranslation then
+    raise ENyxDocumentationSignature.Create('A signature source requires complete resolved translation');
+  Spend(LConstruction);
+
+  if LSource.BlockedAt <> -1 then
+    raise ENyxDocumentationSignature.Create('A signature source contains an uncertain translated prefix');
+  Spend(LConstruction);
+  LTranslation := LSource.Source;
+  Spend(LConstruction);
+
+  if (LTranslation = nil) or not LTranslation.Resolved then
+    raise ENyxDocumentationSignature.Create('A signature source requires resolved translation');
+  Spend(LConstruction);
+
+  if LTranslation.DiagnosticCount <> 0 then
+    raise ENyxDocumentationSignature.Create('A signature source contains translation diagnostics');
+  Spend(LConstruction);
+  FSyntax := LSource.Syntax;
+  Spend(LConstruction);
+
+  if FSyntax.DiagnosticCount <> 0 then
+    raise ENyxDocumentationSignature.Create('A signature source contains declaration diagnostics');
+  Spend(LConstruction);
+  FDeclarations := FSyntax.DeclarationCount;
+  Spend(LConstruction);
+  FScopes := FSyntax.ScopeCount;
+
+  if (FDeclarations < 0) or (FScopes < 1) then
+    raise ENyxDocumentationSignature.Create('A signature source has no complete module scope');
+  Spend(LConstruction);
+  LRoot := FSyntax.Scope(0);
+
+  if (LRoot.Kind <> psskModule) or not LRoot.Complete or LRoot.UnsupportedSyntax then
+    raise ENyxDocumentationSignature.Create('A signature source module is incomplete or unsupported');
+  Spend(LConstruction);
+  LLexical := FSyntax.Lexical;
+  Spend(LConstruction);
+
+  if LLexical.DiagnosticCount <> 0 then
+    raise ENyxDocumentationSignature.Create('A signature source contains lexical diagnostics');
+  Spend(LConstruction);
+  FScalars := LLexical.Scalars;
+  Spend(LConstruction);
+  LPolicy := LLexical.Options;
+  LExpected := LConstruction.Limits.Lexical;
+
+  if (LPolicy.AllowNestedComments <> LExpected.AllowNestedComments) or
+    (LPolicy.AllowUnicodeIdentifiers <> LExpected.AllowUnicodeIdentifiers) then
+    raise ENyxDocumentationSignature.Create('A signature source needs the caller lexical policy');
+  Spend(LConstruction);
+  FWindows := NewNyxDocumentationTextWindows(LLexical.Source, LConstruction);
+  CheckLive(LConstruction);
+end;
+
+procedure TSignatureSource.Retire;
+begin
+
+  if FRetired then
+    Exit;
+  FRetired := True;
+
+  if FWindows <> nil then
+    FWindows.Retire;
+  FWindows := nil;
+  FSyntax := nil;
+  FSource := nil;
+  FConstruction := nil;
+end;
+
+function TSignatureSource.CaptureOne(ARoutine: Integer;
+  const ASyntax: INyxPascalSyntaxSnapshot;
+  const AWindows: INyxDocumentationTextWindows;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+var
+  LRoutine, LParameter: TNyxPascalSyntaxDeclaration;
+  LScope: TNyxPascalSyntaxScope;
+  LRows: array of TNyxPascalSyntaxDeclaration;
+  LParameters: TNyxDocumentationParameterDeclarations;
+  LBuilder: TParsedParameter;
+  LExpression: INyxDocumentationTypeExpression;
+  LResult: INyxDocumentationTypeUse;
+  LCandidate: INyxDocumentationRichSignature;
+  LText: TNyxText;
+  LAt, LCount, LNext: Integer;
+begin
+  Result := nil;
+  Spend(AConstruction);
+
+  if (ARoutine < 0) or (ARoutine >= FDeclarations) then
+    raise ENyxDocumentationSignature.Create('Selected routine is outside this signature source');
+  LRoutine := ASyntax.Declaration(ARoutine);
+  NeedDeclaration(LRoutine);
+
+  if (LRoutine.Kind <> psdkRoutine) or
+    not (LRoutine.RoutineKind in [prkProcedure, prkFunction, prkConstructor,
+      prkDestructor, prkOperator]) then
+    raise ENyxDocumentationSignature.Create('Select a representable declared routine');
+  NeedSpan(LRoutine.HeaderSpan, 0, FScalars, True);
+  NeedSpan(LRoutine.NameSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, True);
+  NeedSpan(LRoutine.GenericSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, False);
+  NeedSpan(LRoutine.TypeSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length,
+    LRoutine.RoutineKind = prkFunction);
+
+  if (LRoutine.RoutineKind in [prkProcedure, prkConstructor, prkDestructor]) and
+    (LRoutine.TypeSpan.Length <> 0) then
+    raise ENyxDocumentationSignature.Create('This declared routine cannot have a result');
+
+  if (LRoutine.Scope < 0) or (LRoutine.Scope >= FScopes) or
+    (LRoutine.NestedScope < 0) or (LRoutine.NestedScope >= FScopes) then
+    raise ENyxDocumentationSignature.Create('A declared routine needs its complete parameter scope');
+  Spend(AConstruction);
+  LScope := ASyntax.Scope(LRoutine.NestedScope);
+
+  if (LScope.Kind <> psskRoutine) or not LScope.Complete or LScope.UnsupportedSyntax or
+    (LScope.OwnerDeclaration <> ARoutine) or (LScope.Parent <> LRoutine.Scope) or
+    (LScope.DeclarationCount < 0) then
+    raise ENyxDocumentationSignature.Create('A declared routine parameter scope is incomplete');
+  { Only the bounded checked parameter prefix is visited. Ordinary body locals
+    never enter the detached signature or require a scan through a routine body. }
+  Spend(AConstruction, NyxDocumentationMaximumParameters + 1);
+  SetLength(LRows, NyxDocumentationMaximumParameters);
+  LCount := 0;
+  LNext := LScope.FirstDeclaration;
+  while LNext <> -1 do
+  begin
+    Spend(AConstruction);
+
+    if (LNext < 0) or (LNext >= FDeclarations) then
+      raise ENyxDocumentationSignature.Create('A declared parameter lies outside its owned source');
+    LParameter := ASyntax.Declaration(LNext);
+    NeedDeclaration(LParameter);
+
+    if LParameter.Scope <> LRoutine.NestedScope then
+      raise ENyxDocumentationSignature.Create('A declared parameter belongs to another routine');
+
+    if LParameter.Kind <> psdkParameter then
+    begin
+
+      if (LRoutine.RoutineKind = prkOperator) and (LParameter.Kind = psdkVariable) and
+        SameSpan(LParameter.TypeSpan, LRoutine.TypeSpan) and
+        (LRoutine.TypeSpan.Length > 0) then
+        NeedSpan(LParameter.NameSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, True)
+      else if LParameter.NameSpan.Start < LRoutine.HeaderSpan.Finish then
+        raise ENyxDocumentationSignature.Create('A declared header contains an unsupported parameter row');
+      Break;
+    end;
+
+    if (LCount >= NyxDocumentationMaximumParameters) or (LCount >= LScope.DeclarationCount) then
+      raise ENyxDocumentationSignature.Create('A declared signature exceeds its parameter allowance');
+    NeedSpan(LParameter.NameSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, True);
+    NeedSpan(LParameter.TypeSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, False);
+    NeedSpan(LParameter.ExpressionSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length,
+      psdfDefaultArgument in LParameter.Flags);
+
+    if not (psdfDefaultArgument in LParameter.Flags) and (LParameter.ExpressionSpan.Length <> 0) then
+      raise ENyxDocumentationSignature.Create('An absent parameter default retains unexpected text');
+    LRows[LCount] := LParameter;
+    Inc(LCount);
+    LNext := LParameter.Next;
+  end;
+
+  if (LNext = -1) and (LScope.DeclarationCount <> LCount) then
+    raise ENyxDocumentationSignature.Create('A complete parameter scope has inconsistent declaration counts');
+  Spend(AConstruction, LCount + 1);
+  SetLength(LParameters, LCount);
+  for LAt := 0 to LCount - 1 do
+  begin
+    Spend(AConstruction);
+    LParameter := LRows[LAt];
+
+    if LParameter.TypeSpan.Length = 0 then
+    begin
+
+      if not (LParameter.ParameterMode in [pspmConst, pspmVar, pspmOut]) or
+        (psdfDefaultArgument in LParameter.Flags) then
+        raise ENyxDocumentationSignature.Create('This declared parameter requires an explicit type');
+      LBuilder := TParsedUntypedParameter.Create;
+    end
+    else
+      LBuilder := TParsedParameter.Create;
+    LParameters[LAt] := LBuilder;
+    LBuilder.ParameterName := LParameter.Name;
+    LBuilder.Mode := PassingMode(LParameter.ParameterMode);
+    LBuilder.DefaultPresent := psdfDefaultArgument in LParameter.Flags;
+
+    if LParameter.TypeSpan.Length <> 0 then
+    begin
+      LText := AWindows.CopyWindow(LParameter.TypeSpan);
+      CheckLive(AConstruction);
+      LExpression := NewNyxDocumentationTypeExpression(LText, ndtoParameter, AConstruction);
+      CheckLive(AConstruction);
+      LBuilder.ParameterType := NewNyxDocumentationExpressionTypeUse(LExpression, AConstruction);
+      CheckLive(AConstruction);
+    end;
+
+    if LBuilder.DefaultPresent then
+    begin
+      LBuilder.DefaultText := AWindows.CopyWindow(LParameter.ExpressionSpan);
+      CheckLive(AConstruction);
+    end;
+  end;
+  LResult := nil;
+
+  if LRoutine.TypeSpan.Length <> 0 then
+  begin
+    LText := AWindows.CopyWindow(LRoutine.TypeSpan);
+    CheckLive(AConstruction);
+    LExpression := NewNyxDocumentationTypeExpression(LText, ndtoResult, AConstruction);
+    CheckLive(AConstruction);
+    LResult := NewNyxDocumentationExpressionTypeUse(LExpression, AConstruction);
+    CheckLive(AConstruction);
+  end;
+  LCandidate := NewNyxDocumentationRichSignature(LParameters, LResult, AConstruction);
+  Spend(AConstruction);
+  Result := LCandidate;
+end;
+
+function TSignatureSource.CaptureDeclared(
+  const ARoutines: TNyxDocumentationRoutineOrdinals): TNyxDocumentationRoutineSignatures;
+var
+  LInput, LSelection: TNyxDocumentationRoutineOrdinals;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LSyntax: INyxPascalSyntaxSnapshot;
+  LWindows: INyxDocumentationTextWindows;
+  LLease: INyxDocumentationSignatureSource;
+  LCandidate: TNyxDocumentationRoutineSignatures;
+  LAt, LBefore: Integer;
+begin
+  Result := nil;
+  { Dynamic-array and interface value leases precede the first outward call.
+    Releasing caller variables cannot invalidate in-flight borrowed storage. }
+  LInput := ARoutines;
+  LLease := Self;
+  LConstruction := FConstruction;
+  LSyntax := FSyntax;
+  LWindows := FWindows;
+  CheckLive(LConstruction);
+
+  if FBusy then
+    raise ENyxDocumentationSignature.Create('A signature source cannot capture reentrantly');
+  FBusy := True;
+  try
+
+    if (Length(LInput) < 1) or (Length(LInput) > NyxDocumentationMaximumMembers) then
+      raise ENyxDocumentationSignature.Create('A signature selection exceeds its existing member allowance');
+    Spend(LConstruction, Length(LInput) * 2 + 1);
+    LSelection := Copy(LInput);
+    SetLength(LCandidate, Length(LSelection));
+    for LAt := 0 to High(LSelection) do
+    begin
+      Spend(LConstruction);
+
+      if (LSelection[LAt] < 0) or (LSelection[LAt] >= FDeclarations) then
+        raise ENyxDocumentationSignature.Create('Selected routine is outside this signature source');
+      for LBefore := 0 to LAt - 1 do
+      begin
+        Spend(LConstruction);
+
+        if LSelection[LBefore] = LSelection[LAt] then
+          raise ENyxDocumentationSignature.Create('Duplicate declared routine selection');
+      end;
+    end;
+    for LAt := 0 to High(LSelection) do
+      LCandidate[LAt] := CaptureOne(LSelection[LAt], LSyntax, LWindows, LConstruction);
+    Spend(LConstruction, Length(LSelection) + 1);
+    { No callback follows agreement. Shared-element mutation at the last
+      outward admission refuses, while a caller dropping its handle is safe. }
+    for LAt := 0 to High(LSelection) do
+    begin
+
+      if LInput[LAt] <> LSelection[LAt] then
+        raise ENyxDocumentationSignature.Create('Caller selection changed before signature publication');
+    end;
+    Result := LCandidate;
+  finally
+    FBusy := False;
+    LLease := nil;
+  end;
+end;
+
+function NewNyxDocumentationSignatureSource(
+  const ASource: INyxPascalTranslatedSyntax;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationSignatureSource;
+var
+  LSource: INyxPascalTranslatedSyntax;
+  LConstruction: INyxDocumentationTypeConstruction;
+  LCandidate: INyxDocumentationSignatureSource;
+  LOwner: TSignatureSource;
+begin
+  Result := nil;
+  LSource := ASource;
+  LConstruction := AConstruction;
+
+  if not NyxPascalOwnedTranslatedSyntax(LSource) then
+    raise ENyxDocumentationSignature.Create('A signature source requires the exact owned translated snapshot');
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  LOwner := TSignatureSource.Create(LSource, LConstruction);
+  LCandidate := LOwner;
+  LOwner.Initialize;
+  CheckNyxDocumentationTypeConstruction(LConstruction);
+  Result := LCandidate;
+end;
+
 function CaptureRoutineSignature(
   const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
   const AConstruction: INyxDocumentationTypeConstruction;
   const AWindows: INyxDocumentationTextWindows;
   const AExpectedLexical: INyxPascalLexicalSnapshot;
-  AWitness: TSignatureWitness): INyxDocumentationRichSignature;
+  AWitness: TSignatureWitness; ADeclared: Boolean): INyxDocumentationRichSignature;
 var
   LLexical: INyxPascalLexicalSnapshot;
   LParsed: INyxPascalSyntaxSnapshot;
@@ -249,14 +672,14 @@ var
   LCandidate: INyxDocumentationRichSignature;
   LText, LHeader, LAgain, LTypeText: TNyxText;
   LDeclarationCount, LScopeCount, LScalars, LAt, LNext, LOriginalAt,
-    LRoot, LParameterCount, LObserved, LBoundary: Integer;
+    LRoot, LParameterCount, LObserved, LBoundary, LOwnedBoundary: Integer;
   procedure AdmitSource(AUnits: Integer = 1);
   begin
     AConstruction.Spend(AUnits);
     { Legacy single selection retains its original receipt/observations. A batch
       also revokes the next supplier getter when outward admission cancels. }
 
-    if AWindows <> nil then
+    if ADeclared or (AWindows <> nil) then
       CheckNyxDocumentationTypeConstruction(AConstruction);
   end;
 begin
@@ -276,8 +699,10 @@ begin
   NeedDeclaration(LRoutine);
 
   if (LRoutine.Kind <> psdkRoutine) or
-    not (LRoutine.RoutineKind in [prkProcedure, prkFunction]) or
-    (LRoutine.GenericSpan.Length <> 0) then
+    (not ADeclared and (not (LRoutine.RoutineKind in [prkProcedure, prkFunction]) or
+      (LRoutine.GenericSpan.Length <> 0))) or
+    (ADeclared and not (LRoutine.RoutineKind in [prkProcedure, prkFunction,
+      prkConstructor, prkDestructor, prkOperator])) then
     raise ENyxDocumentationSignature.Create('Select a representable non-generic procedure/function header');
   AdmitSource;
   LScopeCount := ASource.ScopeCount;
@@ -307,8 +732,12 @@ begin
   NeedSpan(LRoutine.TypeSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length,
     LRoutine.RoutineKind = prkFunction);
 
-  if (LRoutine.RoutineKind = prkProcedure) and (LRoutine.TypeSpan.Length <> 0) then
-    raise ENyxDocumentationSignature.Create('A procedure cannot claim a function result');
+  if (LRoutine.RoutineKind in [prkProcedure, prkConstructor, prkDestructor]) and
+    (LRoutine.TypeSpan.Length <> 0) then
+    raise ENyxDocumentationSignature.Create('This routine cannot claim a function result');
+
+  if ADeclared then
+    NeedSpan(LRoutine.GenericSpan, LRoutine.HeaderSpan.Start, LRoutine.HeaderSpan.Length, False);
   AdmitSource;
   LSupplierPolicy := LLexical.Options;
   LSupplierPolicy.Validate;
@@ -358,13 +787,47 @@ begin
   if (LOwnedRoutine.Kind <> psdkRoutine) or (LOwnedRoutine.Scope <> 0) or
     (LOwnedRoutine.RoutineKind <> LRoutine.RoutineKind) or
     (LOwnedRoutine.Name <> LRoutine.Name) or (LOwnedRoutine.OwnerName <> LRoutine.OwnerName) or
-    (LOwnedRoutine.GenericSpan.Length <> 0) or
+    (not ADeclared and (LOwnedRoutine.GenericSpan.Length <> 0)) or
+    (ADeclared and ((LOwnedRoutine.OperatorKind <> LRoutine.OperatorKind) or
+      not ShiftedSpan(LOwnedRoutine.GenericSpan, LRoutine.GenericSpan, LRoutine.HeaderSpan.Start))) or
     not ShiftedSpan(LOwnedRoutine.NameSpan, LRoutine.NameSpan, LRoutine.HeaderSpan.Start) or
     not ShiftedSpan(LOwnedRoutine.TypeSpan, LRoutine.TypeSpan, LRoutine.HeaderSpan.Start) then
     raise ENyxDocumentationSignature.Create('Supplied declaration disagrees with the owned header');
   AdmitSource;
   LOwnedScope := LParsed.Scope(LOwnedRoutine.NestedScope);
   LParameterCount := LOwnedScope.DeclarationCount;
+  LOwnedBoundary := -1;
+
+  if ADeclared and (LOwnedRoutine.RoutineKind = prkOperator) then
+  begin
+    { FPC operators may name their result between the parameter list and colon.
+      That variable belongs to the header, never the public parameter vector. }
+    LParameterCount := 0;
+    LNext := LOwnedScope.FirstDeclaration;
+    while LNext <> -1 do
+    begin
+      AdmitSource;
+
+      if (LNext < 0) or (LNext >= LParsed.DeclarationCount) or
+        (LParameterCount > NyxDocumentationMaximumParameters) then
+        raise ENyxDocumentationSignature.Create('Operator header exceeds its bounded parameter prefix');
+      LParameter := LParsed.Declaration(LNext);
+      NeedDeclaration(LParameter);
+
+      if LParameter.Kind <> psdkParameter then
+      begin
+
+        if (LParameter.Kind <> psdkVariable) or (LParameter.Next <> -1) or
+          (LOwnedRoutine.TypeSpan.Length = 0) or
+          not SameSpan(LParameter.TypeSpan, LOwnedRoutine.TypeSpan) then
+          raise ENyxDocumentationSignature.Create('Operator header has an unsupported result declaration');
+        LOwnedBoundary := LNext;
+        Break;
+      end;
+      Inc(LParameterCount);
+      LNext := LParameter.Next;
+    end;
+  end;
 
   if not LOwnedScope.Complete or LOwnedScope.UnsupportedSyntax or
     (LOwnedScope.Kind <> psskRoutine) or (LOwnedScope.OwnerDeclaration <> LRoot) or
@@ -398,7 +861,8 @@ begin
       not ShiftedSpan(LParameter.TypeSpan, LOriginal.TypeSpan, LRoutine.HeaderSpan.Start) or
       not ShiftedSpan(LParameter.ExpressionSpan, LOriginal.ExpressionSpan, LRoutine.HeaderSpan.Start) then
       raise ENyxDocumentationSignature.Create('Supplied parameter order or declaration disagrees with its owned header');
-    NeedSpan(LParameter.TypeSpan, 0, LParsed.Lexical.Scalars, True);
+    NeedSpan(LParameter.TypeSpan, 0, LParsed.Lexical.Scalars,
+      not ADeclared or (LParameter.TypeSpan.Length <> 0));
     NeedSpan(LParameter.ExpressionSpan, 0, LParsed.Lexical.Scalars,
       psdfDefaultArgument in LParameter.Flags);
 
@@ -408,14 +872,26 @@ begin
     LWitnesses[LObserved].Ordinal := LOriginalAt;
     LWitnesses[LObserved].Declaration := LOriginal;
     Inc(LObserved);
-    LBuilder := TParsedParameter.Create;
+    if LParameter.TypeSpan.Length = 0 then
+    begin
+
+      if not ADeclared or not (LParameter.ParameterMode in [pspmConst, pspmVar, pspmOut]) or
+        (psdfDefaultArgument in LParameter.Flags) then
+        raise ENyxDocumentationSignature.Create('This declared parameter requires an explicit type');
+      LBuilder := TParsedUntypedParameter.Create;
+    end
+    else
+      LBuilder := TParsedParameter.Create;
     LParameters[LAt] := LBuilder;
     LBuilder.ParameterName := LParameter.Name;
     LBuilder.Mode := PassingMode(LParameter.ParameterMode);
     LBuilder.DefaultPresent := psdfDefaultArgument in LParameter.Flags;
-    LTypeText := CopyNyxDocumentationTypeTextWindow(LHeader, LParameter.TypeSpan, AConstruction);
-    LExpression := NewNyxDocumentationTypeExpression(LTypeText, ndtoParameter, AConstruction);
-    LBuilder.ParameterType := NewNyxDocumentationExpressionTypeUse(LExpression, AConstruction);
+    if LParameter.TypeSpan.Length <> 0 then
+    begin
+      LTypeText := CopyNyxDocumentationTypeTextWindow(LHeader, LParameter.TypeSpan, AConstruction);
+      LExpression := NewNyxDocumentationTypeExpression(LTypeText, ndtoParameter, AConstruction);
+      LBuilder.ParameterType := NewNyxDocumentationExpressionTypeUse(LExpression, AConstruction);
+    end;
 
     if LBuilder.DefaultPresent then
       LBuilder.DefaultText := CopyNyxDocumentationTypeTextWindow(LHeader,
@@ -424,7 +900,7 @@ begin
     LOriginalAt := LOriginal.Next;
   end;
 
-  if LNext <> -1 then
+  if LNext <> LOwnedBoundary then
     raise ENyxDocumentationSignature.Create('Owned parameter list retains an unexpected declaration');
   { Implementation scopes may have ordinary locals after the parameter prefix.
     They are not copied as signature facts. One boundary read catches extra
@@ -439,9 +915,24 @@ begin
       raise ENyxDocumentationSignature.Create('Supplied parameter boundary is outside its snapshot');
     LOriginal := ASource.Declaration(LBoundary);
 
-    if (LOriginal.Kind = psdkParameter) or (LOriginal.Scope <> LRoutine.NestedScope) or
-      (LOriginal.NameSpan.Start < LRoutine.HeaderSpan.Finish) then
-      raise ENyxDocumentationSignature.Create('Supplied signature has an inconsistent parameter boundary');
+    if LOwnedBoundary <> -1 then
+    begin
+      AdmitSource;
+      LParameter := LParsed.Declaration(LOwnedBoundary);
+
+      if (LOriginal.Kind <> psdkVariable) or (LOriginal.Scope <> LRoutine.NestedScope) or
+        (LOriginal.Name <> LParameter.Name) or
+        not ShiftedSpan(LParameter.NameSpan, LOriginal.NameSpan, LRoutine.HeaderSpan.Start) or
+        not ShiftedSpan(LParameter.TypeSpan, LOriginal.TypeSpan, LRoutine.HeaderSpan.Start) then
+        raise ENyxDocumentationSignature.Create('Operator result declaration disagrees with its owned header');
+    end
+    else
+    begin
+
+      if (LOriginal.Kind = psdkParameter) or (LOriginal.Scope <> LRoutine.NestedScope) or
+        (LOriginal.NameSpan.Start < LRoutine.HeaderSpan.Finish) then
+        raise ENyxDocumentationSignature.Create('Supplied signature has an inconsistent parameter boundary');
+    end;
     LWitnesses[LObserved].Ordinal := LBoundary;
     LWitnesses[LObserved].Declaration := LOriginal;
     Inc(LObserved);
@@ -450,7 +941,9 @@ begin
     raise ENyxDocumentationSignature.Create('Supplied routine scope count disagrees with its parameter boundary');
   LResultUse := nil;
 
-  if LOwnedRoutine.RoutineKind = prkFunction then
+  if (LOwnedRoutine.RoutineKind = prkFunction) or
+    (ADeclared and (LOwnedRoutine.RoutineKind = prkOperator) and
+      (LOwnedRoutine.TypeSpan.Length <> 0)) then
   begin
     NeedSpan(LOwnedRoutine.TypeSpan, 0, LParsed.Lexical.Scalars, True);
     LTypeText := CopyNyxDocumentationTypeTextWindow(LHeader, LOwnedRoutine.TypeSpan, AConstruction);
@@ -462,7 +955,7 @@ begin
     interfaces or claimed receipts never substitutes for these observations. }
   AdmitSource;
 
-  if AWindows = nil then
+  if (AWindows = nil) and not ADeclared then
   begin
 
     if (ASource.DeclarationCount <> LDeclarationCount) or
@@ -494,7 +987,7 @@ begin
   end;
   AdmitSource;
 
-  if AWindows = nil then
+  if (AWindows = nil) and not ADeclared then
   begin
 
     if not SameDeclaration(ASource.Declaration(ARoutine), LRoutine) or
@@ -549,12 +1042,13 @@ function CaptureNyxDocumentationRoutineSignature(
   const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
   const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
 begin
-  Result := CaptureRoutineSignature(ASource, ARoutine, AConstruction, nil, nil, nil);
+  Result := CaptureRoutineSignature(ASource, ARoutine, AConstruction, nil, nil, nil, False);
 end;
 
-function CaptureNyxDocumentationRoutineSignatures(
+function CaptureRoutineSignatures(
   const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
-  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
+  const AConstruction: INyxDocumentationTypeConstruction;
+  ADeclared: Boolean): TNyxDocumentationRoutineSignatures;
 var
   LSource: INyxPascalSyntaxSnapshot;
   LConstruction: INyxDocumentationTypeConstruction;
@@ -640,7 +1134,7 @@ begin
         CheckNyxDocumentationTypeConstruction(LConstruction);
         LWitnesses[LAt] := TSignatureWitness.Create;
         LValues[LAt] := CaptureRoutineSignature(LSource, LSelection[LAt],
-          LConstruction, LWindows, LLexical, LWitnesses[LAt]);
+          LConstruction, LWindows, LLexical, LWitnesses[LAt], ADeclared);
       end;
       { A later getter may change an earlier selected row. Reobserve the exact
         bounded receipt for every sibling before publishing the result vector. }
@@ -718,6 +1212,32 @@ begin
   finally
     LWindows.Retire;
   end;
+end;
+
+function CaptureNyxDocumentationRoutineSignatures(
+  const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
+begin
+  Result := CaptureRoutineSignatures(ASource, ARoutines, AConstruction, False);
+end;
+
+function CaptureNyxDocumentationDeclaredRoutineSignature(
+  const ASource: INyxPascalSyntaxSnapshot; ARoutine: Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): INyxDocumentationRichSignature;
+var
+  LSource: INyxPascalSyntaxSnapshot;
+  LScope: INyxDocumentationTypeConstruction;
+begin
+  LSource := ASource;
+  LScope := AConstruction;
+  Result := CaptureRoutineSignature(LSource, ARoutine, LScope, nil, nil, nil, True);
+end;
+
+function CaptureNyxDocumentationDeclaredRoutineSignatures(
+  const ASource: INyxPascalSyntaxSnapshot; const ARoutines: array of Integer;
+  const AConstruction: INyxDocumentationTypeConstruction): TNyxDocumentationRoutineSignatures;
+begin
+  Result := CaptureRoutineSignatures(ASource, ARoutines, AConstruction, True);
 end;
 
 end.

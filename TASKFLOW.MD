@@ -33,3 +33,29 @@ and TODO-to-DONE moves.
 - Newly discovered required work receives the next unused task identity and is
   linked before returning to the current task.
 
+## Parallel work and handoffs
+
+While the goal is active, Lil' Scooty keeps one scoped assignment and identifies
+the next unmet prerequisite from the canonical task catalog. A source-ready
+handoff does not empty that queue. Report the owning criterion, deliverable,
+changed files, remaining checks and next candidate to root; continue independent
+read-only review of that prerequisite while implementation ownership or
+qualification is pending.
+
+Root coordinates separate file ownership and admits all compiler/readers. Both
+agents pause Pascal edits while any admitted reader is live, and resume only
+after root has joined every reader and released the next scope. During a freeze,
+use useful read-only investigation or separately owned documentation work. Pull
+from existing tasks and their prerequisites; do not manufacture busywork,
+recurring cleanup or new acceptance credit to keep an agent occupied. A concrete
+external blocker is reported with its unblock condition and return task.
+
+At each handoff, keep the helper queue current with the active deliverable, its
+owned files, the next eligible prerequisite and the action available during
+review. Root replenishes that queue before releasing the current assignment;
+another user request is not needed. Lil' Scooty may pull independent read-only
+work immediately and reports the next concrete scope for ownership coordination
+before editing. If no useful authorized work is eligible, report the exact
+blocker instead of silently waiting or inventing work. A task's source-ready
+state remains separate from acceptance and DONE.
+

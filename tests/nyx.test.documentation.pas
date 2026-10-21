@@ -6,7 +6,7 @@ unit nyx.test.documentation;
 interface
 
 uses nyx.text, nyx.types, nyx.model, nyx.controls, nyx.events, nyx.behavior,
-  nyx.scheduler, nyx.catalog, nyx.documentation;
+  nyx.scheduler, nyx.catalog, nyx.documentation, nyx.documentation.declarations;
 
 type
   { A specialized extension retains the ordinary badge contract. Documentation
@@ -65,15 +65,27 @@ function DocumentationUnitReference: INyxDocumentationType;
 { Registration publishes the same extension-owned prose/defaults to the existing
   catalog/schema/callback authorities. No second help registry or page list is
   populated. Declaration attachments travel with those same registration calls. }
-procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog);
+procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog); overload;
+{ The source-adoption path receives one already complete declaration package.
+  Its exact captured owner lives with the real schema/callback registrations and
+  is reused by later catalogs. Different owners and prior legacy registration
+  refuse; this operation never silently replaces global registry entries.
+  Individual registries retain their own publication authority. }
+procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog;
+  const APackage: INyxDocumentationPackage); overload;
 
 implementation
 
-uses nyx.schema, nyx.catalog.labels, nyx.callbacks, nyx.contract, nyx.event.payload,
-  nyx.documentation.registration;
+uses SysUtils, nyx.schema, nyx.catalog.labels, nyx.callbacks, nyx.contract, nyx.event.payload,
+  nyx.documentation.registration, nyx.documentation.typeexpressions,
+  nyx.pascal.types;
 
 var
   GRegistered: Boolean;
+  { Only explicit source registration installs these immutable leases. Legacy
+    bundles keep their original independent capture/accounting behavior. }
+  GSourcePackage: INyxDocumentationPackage;
+  GSourceDocumentation: INyxDocumentationRegistration;
 
 function TextType: TNyxDocumentationRef;
 begin
@@ -103,6 +115,9 @@ var
   LUnit: TNyxDocumentationRef;
 begin
   LUnit := NyxDocumentationUnit('nyx.test.documentation');
+
+  if GSourcePackage <> nil then
+    Exit(GSourcePackage.FindDeclaration(LUnit));
   Result := NewNyxDocumentationType(LUnit, ndtUnit,
     'Create friendly badges and format their greetings.')
     .WithMember(NewNyxDocumentationMember(NyxDocumentationMember(LUnit, 'NewDocumentationBadge'),
@@ -138,6 +153,9 @@ var
   LID: TNyxDocumentationRef;
 begin
   LID := NyxDocumentationType('nyx.test.documentation', 'TDocumentationBadge');
+
+  if GSourcePackage <> nil then
+    Exit(GSourcePackage.FindDeclaration(LID));
   Result := NewNyxDocumentationType(LID, ndtClass, DocumentationFixtureSummary)
     .WithBase(NyxDocumentationType('nyx.controls', 'TNyxBadge'))
     .WithMember(NewNyxDocumentationMember(NyxDocumentationMember(LID, 'Create'),
@@ -158,6 +176,9 @@ var
   LID: TNyxDocumentationRef;
 begin
   LID := NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge');
+
+  if GSourcePackage <> nil then
+    Exit(GSourcePackage.FindDeclaration(LID));
   Result := NewNyxDocumentationType(LID, ndtInterface, DocumentationFixtureSummary)
     .WithBase(NyxDocumentationType('nyx.controls', 'INyxBadge'))
     .WithMember(GreetingMember(LID));
@@ -212,6 +233,9 @@ var
   LID: TNyxDocumentationRef;
 begin
   LID := NyxDocumentationType('nyx.test.documentation', 'TDocumentationCallback');
+
+  if GSourcePackage <> nil then
+    Exit(GSourcePackage.FindDeclaration(LID));
   Result := NewNyxDocumentationType(LID, ndtCallback, 'Observe a friendly greeting event.')
     .WithBase(NyxDocumentationType('nyx.events', 'TNyxEventCallback'))
     .WithMember(NewNyxDocumentationMember(NyxDocumentationMember(LID, 'Invoke'),
@@ -222,13 +246,57 @@ begin
         Default(TNyxDocumentationRef))));
 end;
 
-procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog);
+{ Share the real registry calls without adding a cross-registry transaction.
+  All supplied metadata has been prepared before this publication boundary. }
+procedure PublishDocumentationFixture(const ADocumentation,
+  ACallbackDocumentation: INyxDocumentationRegistration);
 var
   LProperty: TNyxPropertyInfo;
-  LDocumentation: INyxDocumentationRegistration;
+begin
+
+  if GRegistered then
+    Exit;
+  LProperty := Default(TNyxPropertyInfo);
+  LProperty.Key := 'greeting';
+  LProperty.Title := 'Greeting';
+  LProperty.ValueType := npText;
+  LProperty.DefaultValue := DocumentationGreetingDefault;
+  LProperty.Support := NyxPropertySupport(npmCustom, ncCustom, ncCustom,
+    'Stored greeting supplied by this extension.');
+  RegisterNyxSchema(NyxCustomKind(DocumentationFixtureKind), [LProperty], [
+    NyxNamedEventSchema(NyxEvent('GreetingChanged'), 'Greeting changed',
+      'A declared text payload; producer execution remains separate.',
+      ncCustom, ncCustom, NyxScalarPayload(NyxTextDomain))], ADocumentation);
+  RegisterNyxCallback(NyxHandler('TDocumentationCallback'), TDocumentationCallback,
+    ACallbackDocumentation);
+  GRegistered := True;
+end;
+
+procedure AddDocumentationFixture(ACatalog: TNyxCatalog;
+  const ADocumentation: INyxDocumentationRegistration);
+begin
+
+  if (ACatalog <> nil) and (ACatalog.IndexOf(DocumentationFixtureKind) < 0) then
+  begin
+    ACatalog.RegisterKind(NyxCustomKind(DocumentationFixtureKind), 'Friendly badge', 'Custom',
+      False, ADocumentation);
+    ACatalog.Describe(NyxCustomKind(DocumentationFixtureKind), pgText, [clText],
+      'greeting, hello', DocumentationFixtureSummary);
+  end;
+end;
+
+procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog);
+var
+  LDocumentation, LCallbackDocumentation: INyxDocumentationRegistration;
   LDeclarations: TNyxDocumentationDeclarations;
   LUnit: TNyxDocumentationRef;
 begin
+
+  if GSourcePackage <> nil then
+  begin
+    RegisterDocumentationFixture(ACatalog, GSourcePackage);
+    Exit;
+  end;
   { This bundle owns only this actual unit's declarations. Its external core
     links remain complete and must be resolved by the eventual core owners. }
   LUnit := NyxDocumentationUnit('nyx.test.documentation');
@@ -241,31 +309,168 @@ begin
     NyxDocumentationMember(LUnit, 'NewDocumentationBadge'), LDeclarations,
     [ndplatformNative, ndplatformBrowser]);
 
-  if not GRegistered then
+  LCallbackDocumentation := LDocumentation.ForPrimary(
+    NyxDocumentationType('nyx.test.documentation', 'TDocumentationCallback'));
+  PublishDocumentationFixture(LDocumentation, LCallbackDocumentation);
+  AddDocumentationFixture(ACatalog, LDocumentation);
+end;
+
+{ An exact bare declared use keeps its nominal source binding. A similarly
+  spelled alias, unresolved expression or procedural type is not this API. }
+function FixtureNamedUse(const AUse: INyxDocumentationTypeUse;
+  const AExpected: TNyxDocumentationRef): Boolean;
+var
+  LExpression: INyxDocumentationTypeExpression;
+begin
+  Result := False;
+
+  if AUse = nil then
+    Exit;
+  LExpression := AUse.Expression;
+
+  if LExpression = nil then
+    Exit(AUse.Reference.Same(AExpected));
+
+  if not LExpression.Syntax.Complete or (LExpression.Syntax.Root < 0) or
+    (LExpression.Syntax.Node(LExpression.Syntax.Root).Kind <> ptxName) or
+    (LExpression.NamedUseCount <> 1) or
+    (LExpression.NamedUseNode(0) <> LExpression.Syntax.Root) or
+    (LExpression.NamedUseArity(0) <> 0) or (AUse.BindingCount <> 1) then
+    Exit;
+  Result := AUse.BindingAt(0).Same(AExpected);
+end;
+
+function FixtureFactory(const AUnit: INyxDocumentationType): TNyxDocumentationRef;
+var
+  LAt, LMatches: Integer;
+  LMember: INyxDocumentationMember;
+  LCapability: INyxDocumentationMemberSignature;
+  LRich: INyxDocumentationRichSignature;
+  LParameter: INyxDocumentationParameterDeclaration;
+  LLegacy: INyxDocumentationSignature;
+  LOldParameter: TNyxDocumentationParameter;
+  LShape: Boolean;
+  LResultType: TNyxDocumentationRef;
+begin
+  Result := Default(TNyxDocumentationRef);
+  LMatches := 0;
+  LResultType := NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge');
+  for LAt := 0 to AUnit.MemberCount - 1 do
   begin
-    LProperty := Default(TNyxPropertyInfo);
-    LProperty.Key := 'greeting';
-    LProperty.Title := 'Greeting';
-    LProperty.ValueType := npText;
-    LProperty.DefaultValue := DocumentationGreetingDefault;
-    LProperty.Support := NyxPropertySupport(npmCustom, ncCustom, ncCustom,
-      'Stored greeting supplied by this extension.');
-    RegisterNyxSchema(NyxCustomKind(DocumentationFixtureKind), [LProperty], [
-      NyxNamedEventSchema(NyxEvent('GreetingChanged'), 'Greeting changed',
-        'A declared text payload; producer execution remains separate.',
-        ncCustom, ncCustom, NyxScalarPayload(NyxTextDomain))], LDocumentation);
-    RegisterNyxCallback(NyxHandler('TDocumentationCallback'), TDocumentationCallback,
-      LDocumentation.ForPrimary(NyxDocumentationType('nyx.test.documentation', 'TDocumentationCallback')));
-    GRegistered := True;
+    LMember := AUnit.MemberAt(LAt);
+
+    if (LMember.Kind <> ndmFactory) or
+      (LMember.Identity.MemberName <> 'NewDocumentationBadge') then
+      Continue;
+    LRich := nil;
+
+    if Supports(LMember, INyxDocumentationMemberSignature, LCapability) then
+      LRich := LCapability.DeclaredSignature;
+    LShape := False;
+
+    if LRich <> nil then
+    begin
+
+      if (LRich.ParameterCount = 1) and FixtureNamedUse(LRich.ResultUse, LResultType) then
+      begin
+        LParameter := LRich.ParameterAt(0);
+        LShape := (LParameter.Name = 'AID') and (LParameter.Passing = ndpConst) and
+          not LParameter.HasDefault and FixtureNamedUse(LParameter.TypeUse, TextType);
+      end;
+    end
+    else
+    begin
+      LLegacy := LMember.Signature;
+
+      if (LLegacy <> nil) and (LLegacy.ParameterCount = 1) and
+        LLegacy.ResultType.Same(LResultType) then
+      begin
+        LOldParameter := LLegacy.ParameterAt(0);
+        LShape := (LOldParameter.Name = 'AID') and (LOldParameter.Passing = ndpConst) and
+          not LOldParameter.HasDefault and LOldParameter.TypeReference.Same(TextType);
+      end;
+    end;
+
+    if not LShape then
+      Continue;
+    Inc(LMatches);
+    Result := LMember.Identity;
   end;
 
-  if (ACatalog <> nil) and (ACatalog.IndexOf(DocumentationFixtureKind) < 0) then
+  if LMatches <> 1 then
+    raise ENyxDocumentation.Create('The fixture requires its unique actual declared factory signature');
+end;
+
+procedure RegisterDocumentationFixture(ACatalog: TNyxCatalog;
+  const APackage: INyxDocumentationPackage);
+var
+  LPackage: INyxDocumentationPackage;
+  LUnit, LClass, LInterface, LCallback: INyxDocumentationType;
+  LDocumentation, LCallbackDocumentation: INyxDocumentationRegistration;
+  LSnapshot: INyxCatalogSnapshot;
+  LDocuments: INyxCatalogDocumentation;
+  LExisting: INyxDocumentationRegistration;
+  LBinding: INyxDocumentationContributionBinding;
+  LIndex: Integer;
+begin
+  { Capture may call an alternate producer. Recheck global ownership only after
+    it returns, before any real registry or catalog publication. }
+  LPackage := CaptureNyxDocumentationPackage(APackage);
+
+  if LPackage = nil then
+    raise ENyxDocumentation.Create('Source fixture registration requires its explicit declaration package');
+
+  if GRegistered and (GSourcePackage = nil) then
+    raise ENyxDocumentation.Create('The fixture is already registered with legacy metadata');
+
+  if (GSourcePackage <> nil) and not SameNyxDocumentationPackage(GSourcePackage, LPackage) then
+    raise ENyxDocumentation.Create('The fixture is already registered with a different source package');
+  LUnit := LPackage.FindDeclaration(NyxDocumentationUnit('nyx.test.documentation'));
+  LClass := LPackage.FindDeclaration(NyxDocumentationType('nyx.test.documentation', 'TDocumentationBadge'));
+  LInterface := LPackage.FindDeclaration(NyxDocumentationType('nyx.test.documentation', 'IDocumentationBadge'));
+  LCallback := LPackage.FindDeclaration(NyxDocumentationType('nyx.test.documentation', 'TDocumentationCallback'));
+
+  if (LUnit = nil) or (LClass = nil) or (LInterface = nil) or (LCallback = nil) then
+    raise ENyxDocumentation.Create('The source package omits a declared fixture registration owner');
+
+  if (LUnit.Kind <> ndtUnit) or (LClass.Kind <> ndtClass) or
+    (LInterface.Kind <> ndtInterface) or not (LCallback.Kind in [ndtClass, ndtCallback]) then
+    raise ENyxDocumentation.Create('Source fixture declaration roles disagree with their real registration');
+
+  if GSourceDocumentation = nil then
+    LDocumentation := NewNyxDocumentationBinding(LPackage, FixtureFactory(LUnit))
+  else
+    LDocumentation := GSourceDocumentation;
+  { Prepare the actual callback binding before any global effect. ForPrimary
+    retains the exact package, with this class's source-provided identity. }
+  LCallbackDocumentation := LDocumentation.ForPrimary(LCallback.Identity);
+
+  if ACatalog <> nil then
   begin
-    ACatalog.RegisterKind(NyxCustomKind(DocumentationFixtureKind), 'Friendly badge', 'Custom',
-      False, LDocumentation);
-    ACatalog.Describe(NyxCustomKind(DocumentationFixtureKind), pgText, [clText],
-      'greeting, hello', DocumentationFixtureSummary);
+    LIndex := ACatalog.IndexOf(DocumentationFixtureKind);
+
+    if LIndex >= 0 then
+    begin
+      LSnapshot := ACatalog.Capture;
+
+      if not Supports(LSnapshot, INyxCatalogDocumentation, LDocuments) then
+        raise ENyxDocumentation.Create('The existing catalog fixture has no declaration attachment');
+      LExisting := LDocuments.DocumentationAt(LIndex);
+
+      if (LExisting = nil) or not LExisting.Primary.Same(LDocumentation.Primary) or
+        not Supports(LExisting, INyxDocumentationContributionBinding, LBinding) then
+        raise ENyxDocumentation.Create('The catalog fixture has a different declaration attachment');
+
+      if not SameNyxDocumentationPackage(LPackage, LBinding.PackageOwner) then
+        raise ENyxDocumentation.Create('The catalog fixture belongs to a different source package');
+    end;
   end;
+  PublishDocumentationFixture(LDocumentation, LCallbackDocumentation);
+  { The same immutable owner now follows the actual global registration lifetime.
+    No parsed world, source document, producer, control or callback is retained. }
+  GSourcePackage := LPackage;
+  GSourceDocumentation := LDocumentation;
+  AddDocumentationFixture(ACatalog, LDocumentation);
 end;
 
 end.

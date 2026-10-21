@@ -33,17 +33,21 @@ type
     instead produces a detached recoverable syntax tree and diagnostics. }
   ENyxPascalTypeLimit = class(ENyxPascalLexicalLimit);
   { Declared type construction, never resolved compiler identity. Bounds/defaults
-    retain exact syntax for later constant binding rather than numeric conversion. }
+    retain exact syntax for later constant binding rather than numeric conversion.
+    Encoded strings retain both their authored base and opaque code-page operand;
+    they grant no effective encoding, conversion or target-layout fact. }
   TNyxPascalTypeKind = (ptxMissing, ptxName, ptxQualified, ptxGeneric, ptxPointer,
     ptxArray, ptxSet, ptxFile, ptxString, ptxClassOf, ptxProcedure, ptxFunction,
     ptxReference, ptxDistinct, ptxParameterGroup, ptxParameterName, ptxUntyped,
     ptxBound, ptxSubrange, ptxEnumeration, ptxEnumMember, ptxUnsupported,
-    ptxStructured);
+    ptxStructured, ptxEncodedString);
   { Typed child intent. Ordinals and links are local to one immutable arena;
-    they confer neither declaration visibility nor an editing capability. }
+    they confer neither declaration visibility nor an editing capability.
+    A code-page child is a value expression, never a generic type argument. }
   TNyxPascalTypeRole = (ptrRoot, ptrBase, ptrMember, ptrArgument, ptrPointee,
     ptrElement, ptrDimension, ptrLength, ptrTarget, ptrParameter, ptrParameterName,
-    ptrParameterType, ptrResult, ptrDefault, ptrLowerBound, ptrUpperBound, ptrEnumMember);
+    ptrParameterType, ptrResult, ptrDefault, ptrLowerBound, ptrUpperBound, ptrEnumMember,
+    ptrCodePage);
   { Source-compatible name for the shared declaration/type request contract.
     Existing qualified enum spellings and ordinals remain available below;
     Winapi retains intent without resolving a target-specific ABI alias. }
@@ -301,6 +305,9 @@ type
     procedure Expect(AValue: TNyxPascalSymbol; const AMessage: TNyxText);
     function ParseType: Integer;
     function ParseName: Integer;
+    { Keep an authored string base and one opaque code-page operand distinct.
+      Existing bound grouping/quota rules apply; no numeric encoding is guessed. }
+    function EncodedString(ABase: Integer): Integer;
     function ParseRoutine: Integer;
     function ParseStructure(AStart: Integer): Integer;
     procedure Parameters(AParent: Integer);
@@ -743,6 +750,16 @@ begin
   end;
 end;
 
+function TTypeSyntax.EncodedString(ABase: Integer): Integer;
+begin
+  Result := Add(ptxEncodedString, FNodes[ABase].Span.Start);
+  Link(Result, ABase, ptrBase);
+  Step;
+  Link(Result, Bound(psoCloseParen, True, False), ptrCodePage);
+  Expect(psoCloseParen, 'Finish the single string code-page expression with )');
+  Finish(Result);
+end;
+
 function TTypeSyntax.Bound(AStop: TNyxPascalSymbol; AComma, ARange: Boolean): Integer;
 var
   LStack: array of TNyxPascalSymbol;
@@ -1072,7 +1089,7 @@ var
   LBase: Integer;
   LMember: Integer;
   LPacking: TNyxPascalTypeFlags;
-  LSpecialize: Boolean;
+  LSpecialize, LAnsiString: Boolean;
 begin
   CheckCancellation;
 
@@ -1221,6 +1238,11 @@ begin
         Step;
         Link(Result, Bound(psoCloseBracket, False, False), ptrLength);
         Expect(psoCloseBracket, 'Finish the short-string length with ]');
+      end
+      else if Sym(psoOpenParen) then
+      begin
+        Finish(Result);
+        Result := EncodedString(Result);
       end;
     end
     else if Sym(psoOpenParen) then
@@ -1258,12 +1280,16 @@ begin
     else if Word(pkwSpecialize) or NameToken then
     begin
       LSpecialize := Word(pkwSpecialize);
+      LAnsiString := Key = 'ansistring';
 
       if LSpecialize then
       begin
         Step;
       end;
       Result := ParseName;
+
+      if LAnsiString and (FNodes[Result].Kind = ptxName) and Sym(psoOpenParen) then
+        Result := EncodedString(Result);
 
       if LSpecialize then
       begin

@@ -36,6 +36,12 @@ type
   TCompilerGrid = array[0..2, 1..4] of Integer;
   { Compiler-owned pointer oracle; no object/application lifetime is involved. }
   PCompilerGrid = ^TCompilerGrid;
+  { The real compiler accepts the same source-level code-page declarations.
+    This ordinary test does not publish compiler-root presence/size facts. }
+  TCompilerUTF8Text = type AnsiString(CP_UTF8);
+  { Explicit keyword syntax selects its authored code page independently of
+    the analyzer's separate default-String policy and intrinsic capture. }
+  TCompilerWesternText = type String(1252);
   { Compiler-qualified procedural type with explicit parameter modes. }
   TCompilerCallback = function(const AText: TNyxText; var ACount: Integer): Boolean of object;
   { The compiler oracle keeps the same adjacent generic closer/alias delimiter
@@ -120,6 +126,66 @@ begin
       LParent := AType.Node(LParent).Parent;
     end;
   end;
+end;
+
+procedure EncodedStringTypes;
+const
+  CInvalid: array[0..6] of TNyxText = ('AnsiString()', 'AnsiString(CP_UTF8',
+    'AnsiString(1252, 1251)', 'AnsiString((CP_UTF8])', 'TBox(1252)',
+    'UnicodeString(1252)', 'String[10](1252)');
+var
+  LType: INyxPascalTypeSyntax;
+  LBase, LCodePage, LAt: Integer;
+  LRejected: Boolean;
+  LLexical: INyxPascalLexicalSnapshot;
+  {$ifndef PAS2JS}
+  LUTF8: TCompilerUTF8Text;
+  LWestern: TCompilerWesternText;
+  {$endif}
+begin
+  LType := Parse('type AnsiString(CP_UTF8)');
+  Validate(LType);
+  Check(LType.Complete and (LType.Node(LType.Root).Kind = ptxDistinct),
+    'The actual RTL distinct-string declaration retains its outer nominal constructor');
+  LBase := LType.Child(LType.Root, ptrTarget);
+  Check((LType.Node(LBase).Kind = ptxEncodedString) and
+    (LType.Node(LType.Child(LBase, ptrBase)).Name = 'AnsiString'),
+    'The authored ANSI base is a separate source node inside the encoded-string shape');
+  LCodePage := LType.Child(LBase, ptrCodePage);
+  Check((LType.Node(LCodePage).Kind = ptxBound) and
+    (LType.Lexical.Slice(LType.Node(LCodePage).Span) = 'CP_UTF8'),
+    'A code-page operand is exact unevaluated value syntax, never a type argument');
+  LType := Parse('array of AnsiString((CP_UTF8 + 0))');
+  Validate(LType);
+  LBase := LType.Child(LType.Root, ptrElement);
+  Check(LType.Complete and
+    (LType.Lexical.Slice(LType.Node(LType.Child(LBase, ptrCodePage)).Span) = '(CP_UTF8 + 0)'),
+    'Nested operand grouping survives inside a real enclosing array type');
+  LType := Parse('String(1252)');
+  Validate(LType);
+  Check(LType.Complete and (LType.Node(LType.Root).Kind = ptxEncodedString) and
+    (LType.Node(LType.Child(LType.Root, ptrBase)).Kind = ptxString),
+    'Keyword and named string bases retain their different authored nodes');
+  for LAt := 0 to High(CInvalid) do
+  begin
+    LType := Parse(CInvalid[LAt]);
+    Check(not LType.Complete, 'Missing/multiple operands and unrelated type calls retain refusal');
+  end;
+  LLexical := NewNyxPascalLexicalSnapshot('AnsiString(CP_UTF8)');
+  LRejected := False;
+  try
+    LType := NewNyxPascalTypeSyntax(LLexical, NyxPascalSpan(0, LLexical.Scalars),
+      TNyxPascalTypeOptions.Defaults.UpToNodes(2));
+  except
+    on ENyxPascalTypeLimit do LRejected := True;
+  end;
+  Check(LRejected, 'Base, request and operand share the existing node quota without truncation');
+  {$ifndef PAS2JS}
+  LUTF8 := 'English example';
+  LWestern := 'English example';
+  Check((StringCodePage(LUTF8) = CP_UTF8) and (StringCodePage(LWestern) = 1252),
+    'The separately compiled ordinary declarations retain their requested code pages');
+  {$endif}
 end;
 
 function Facts: INyxPascalCompilerContext;
@@ -740,6 +806,7 @@ end;
 begin
   try
     Types;
+    EncodedStringTypes;
     GenericCloseWindows;
     ProceduralDeclarations;
     WinapiRequests;

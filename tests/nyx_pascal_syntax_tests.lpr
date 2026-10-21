@@ -23,7 +23,7 @@ program nyx_pascal_syntax_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses SysUtils, Classes, nyx.text, nyx.editing, nyx.scheduler,
-  nyx.pascal.lexing, nyx.pascal.syntax, nyx.bytes, nyx.pascal.context,
+  nyx.pascal.lexing, nyx.pascal.lexing.append, nyx.pascal.syntax, nyx.bytes, nyx.pascal.context,
   nyx.pascal.files, nyx.pascal.translation, nyx.pascal.syntax.translated
   {$ifndef PAS2JS}, Process, module.body.fixture{$endif};
 
@@ -353,6 +353,200 @@ begin
   Check(LRejected, 'Cancellation publishes no syntax candidate');
 end;
 
+{ Helper surface grammar preserves its owning type and target spelling without
+  granting compiler eligibility, helper activation or ordinary record storage.
+  These retained RTL header spellings are parser inputs, never executed code. }
+procedure Helpers;
+const
+  CRecordHelper: TNyxText = 'TGuidHelper = record helper for TGUID ' +
+    'Class Function Create(const Data; DataEndian: TEndian = CPUEndian): TGUID; overload; static; inline; ' +
+    'Class Function Create(const B: TBytes; DataEndian: TEndian = CPUEndian): TGUID; overload; static; inline; ' +
+    'Class Function Create(const B: TBytes; AStartIndex: Cardinal; DataEndian: TEndian = CPUEndian): TGUID; overload; static; ' +
+    'Class Function Create(const S: string): TGUID; overload; static; ' +
+    'Class Function Create(A: Integer; B: SmallInt; C: SmallInt; const D: TBytes): TGUID; overload; static; ' +
+    'Class Function Create(A: Integer; B: SmallInt; C: SmallInt; D, E, F, G, H, I, J, K: Byte): TGUID; overload; static; ' +
+    'Class Function Create(A: Cardinal; B: Word; C: Word; D, E, F, G, H, I, J, K: Byte): TGUID; overload; static; ' +
+    'Class Function NewGuid: TGUID; static; ' +
+    'Function ToByteArray(DataEndian: TEndian = CPUEndian): TBytes; ' +
+    'Function ToString(SkipBrackets: Boolean = False): string; end;';
+  CHeaders: array[0..30] of TNyxText = (
+    'TAnsiStringHelper = Type Helper for AnsiString',
+    'TCurrencyHelper = type helper for Currency',
+    'TWideStringHelper = Type Helper for WideString',
+    'TUnicodeStringHelper = Type Helper for UnicodeString',
+    'TShortStringHelper = Type Helper for ShortString',
+    'TStringHelper = Type helper(TUnicodeStringHelper) for UnicodeString',
+    'TStringHelper = Type helper(TAnsiStringHelper) for ansistring',
+    'TSingleHelper = Type Helper for Single',
+    'TDoubleHelper = Type Helper for Double',
+    'TRealHelper = Type Helper(TDoubleHelper) for Real',
+    'TExtendedHelper = Type Helper for Extended',
+    'TByteHelper = Type Helper for Byte',
+    'TShortIntHelper = Type Helper for ShortInt',
+    'TWordHelper = Type Helper for Word',
+    'TSmallIntHelper = Type Helper for SmallInt',
+    'TCardinalHelper = Type Helper for Cardinal { for LongWord Type too }',
+    'TIntegerHelper = Type Helper for Integer',
+    'TLongIntHelper = Type Helper for LongInt',
+    'TQWordHelper = Type Helper for QWord',
+    'TInt64Helper = Type Helper for Int64',
+    'TNativeIntHelper = Type Helper for NativeInt',
+    'TNativeUIntHelper = Type Helper for NativeUInt',
+    'TBooleanHelper = Type Helper for Boolean',
+    'TBoolean8Helper = Type Helper for Boolean8',
+    'TBoolean16Helper = Type Helper for Boolean16',
+    'TBoolean32Helper = Type Helper for Boolean32',
+    'TBoolean64Helper = Type Helper for Boolean64',
+    'TByteBoolHelper = Type Helper for ByteBool',
+    'TWordBoolHelper = Type Helper for WordBool',
+    'TLongBoolHelper = Type Helper for LongBool',
+    'TQWordBoolHelper = Type Helper for QWordBool');
+  CRefusedHeaders: array[0..8] of TNyxText = (
+    'TBroken = record helper() for TGUID',
+    'TBroken = class helper(TParent, TOther) for TObject',
+    'TBroken = type helper(TParent for Integer',
+    'TBroken = type helper for TBox<TItem>',
+    'TBroken = type helper for string[5]',
+    'TBroken = record helper for Target(1252)',
+    'TBroken = type helper for TBox<TItem',
+    'TBroken = type helper for string[5',
+    'TBroken = class helper(TParent<TItem>) for TObject');
+var
+  LSyntax, LOther, LAppended: INyxPascalSyntaxSnapshot;
+  LLexical, LNext: INyxPascalLexicalSnapshot;
+  LIdentity: IInterface;
+  LOptions: TNyxPascalSyntaxOptions;
+  LCancel: INyxCancellationScope;
+  LType, LMembers, LAt, LCount: Integer;
+  LDeclaration: TNyxPascalSyntaxDeclaration;
+  LRejected: Boolean;
+begin
+  Check((Ord(pstfClassReference) = 11) and (Ord(pstfRecordHelper) = 12) and
+    (Ord(pstfClassHelper) = 13) and (Ord(pstfTypeHelper) = 14),
+    'Helper forms append without changing any preceding surface-form ordinal');
+  LOptions := TNyxPascalSyntaxOptions.Defaults.Fragment(psfTypes);
+  LSyntax := NewNyxPascalSyntaxSnapshot(CRecordHelper + ' TAfter = Integer;', LOptions);
+  LType := Entry(LSyntax, 0, 'TGuidHelper');
+  LMembers := LSyntax.Declaration(LType).NestedScope;
+  Check((LSyntax.DiagnosticCount = 0) and (LType >= 0) and
+    (LSyntax.Declaration(LType).TypeForm = pstfRecordHelper) and
+    (LSyntax.Declaration(LType).AncestorSpan.Length = 0) and
+    (LSyntax.Scope(LMembers).DeclarationCount = 10) and LSyntax.Scope(LMembers).Complete,
+    'The exact TGuidHelper header and all ten authored routines belong to one helper scope');
+  Check((Pos('record helper for TGUID', String(TypeText(LSyntax, LType))) = 1) and
+    (LSyntax.Named(LMembers, 'helper') < 0) and (LSyntax.Named(LMembers, 'TGUID') < 0) and
+    (LSyntax.Named(0, 'Create') < 0) and (TypeText(LSyntax, Entry(LSyntax, 0, 'TAfter')) = 'Integer'),
+    'The complete type span keeps target text without target fields or leaked unit-level methods');
+  LAt := Entry(LSyntax, LMembers, 'Create');
+  LCount := 0;
+  while LAt >= 0 do
+  begin
+    LDeclaration := LSyntax.Declaration(LAt);
+    Check((LDeclaration.Kind = psdkRoutine) and
+      (LDeclaration.Flags * [psdfClassMember, psdfStatic] = [psdfClassMember, psdfStatic]) and
+      (TypeText(LSyntax, LAt) = 'TGUID'),
+      'Each Create overload retains authored class/static/result syntax within its helper');
+    LAt := LDeclaration.NextNamed;
+    Inc(LCount);
+  end;
+  Check((LCount = 7) and
+    not (psdfClassMember in LSyntax.Declaration(Entry(LSyntax, LMembers, 'ToString')).Flags),
+    'All seven actual Create overloads remain separate from instance ToString');
+  for LAt := Low(CHeaders) to High(CHeaders) do
+  begin
+    LOther := NewNyxPascalSyntaxSnapshot(CHeaders[LAt] + #10 +
+      'end; TFollowing = Integer;', LOptions);
+    LDeclaration := LOther.Declaration(LOther.Scope(0).FirstDeclaration);
+    Check((LOther.DiagnosticCount = 0) and (LDeclaration.TypeForm = pstfTypeHelper) and
+      LOther.Scope(LDeclaration.NestedScope).Complete and
+      (LOther.Scope(LDeclaration.NestedScope).DeclarationCount = 0),
+      'Retained SysUtils type-helper header has one closed, unbound member scope: ' + IntToStr(LAt));
+    Check((Pos('(', String(CHeaders[LAt])) > 0) = (LDeclaration.AncestorSpan.Length > 0),
+      'Only authored helper-parent parentheses occupy AncestorSpan: ' + IntToStr(LAt));
+    Check(TypeText(LOther, Entry(LOther, 0, 'TFollowing')) = 'Integer',
+      'Every helper header preserves its following type sibling: ' + IntToStr(LAt));
+  end;
+  LOther := NewNyxPascalSyntaxSnapshot('TChild = class helper(TParent) for Namespace.Target ' +
+    'public function Value: Integer; end; TFollowing = Integer;', LOptions);
+  LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TChild'));
+  Check((LOther.DiagnosticCount = 0) and (LDeclaration.TypeForm = pstfClassHelper) and
+    (LOther.Lexical.Slice(LDeclaration.AncestorSpan) = '(TParent)') and
+    (TypeText(LOther, Entry(LOther, LDeclaration.NestedScope, 'Value')) = 'Integer'),
+    'Class-helper parent and qualified target retain different authored roles');
+  LOther := NewNyxPascalSyntaxSnapshot('&helper = Integer; TPlain = record &helper: Integer; end; ' +
+    'TEscaped = record helper for Namespace.&helper end; TString = type helper for string end;', LOptions);
+  LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TPlain'));
+  Check((LOther.DiagnosticCount = 0) and (LDeclaration.TypeForm = pstfRecord) and
+    (TypeText(LOther, Entry(LOther, 0, 'helper')) = 'Integer') and
+    (LOther.Named(LDeclaration.NestedScope, 'helper') >= 0) and
+    (LOther.Declaration(Entry(LOther, 0, 'TEscaped')).TypeForm = pstfRecordHelper) and
+    (LOther.Declaration(Entry(LOther, 0, 'TString')).TypeForm = pstfTypeHelper),
+    'Escaped helper names and qualified escaped/String targets preserve their lexical roles');
+  LOther := NewNyxPascalSyntaxSnapshot('TBroken = record helper TGUID procedure Keep; end; ' +
+    'TGood = Integer;', LOptions);
+  LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TBroken'));
+  Check(HasIssue(LOther, psiExpectedSeparator) and (psdfIncomplete in LDeclaration.Flags) and
+    (LOther.Named(LDeclaration.NestedScope, 'Keep') >= 0) and
+    (TypeText(LOther, Entry(LOther, 0, 'TGood')) = 'Integer'),
+    'A missing FOR stays incomplete while its recoverable methods and sibling survive');
+  LOther := NewNyxPascalSyntaxSnapshot('TBroken = record helper for; TGood = Integer;', LOptions);
+  LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TBroken'));
+  Check(HasIssue(LOther, psiExpectedName) and (psdfIncomplete in LDeclaration.Flags) and
+    not (psdfForward in LDeclaration.Flags) and (LDeclaration.NestedScope < 0) and
+    (TypeText(LOther, Entry(LOther, 0, 'TGood')) = 'Integer'),
+    'An absent target refuses before a separator without inventing a forward helper or losing siblings');
+  LOther := NewNyxPascalSyntaxSnapshot('TBroken = record helper for Namespace. end; ' +
+    'TGood = Integer;', LOptions);
+  Check(HasIssue(LOther, psiExpectedName) and
+    (psdfIncomplete in LOther.Declaration(Entry(LOther, 0, 'TBroken')).Flags) and
+    (LOther.Named(0, 'TGood') >= 0), 'A dangling qualification is not a complete helper target');
+  for LAt := Low(CRefusedHeaders) to High(CRefusedHeaders) do
+  begin
+    LOther := NewNyxPascalSyntaxSnapshot(CRefusedHeaders[LAt] +
+      ' procedure Keep; end; TGood = Integer;', LOptions);
+    LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TBroken'));
+    Check((LOther.DiagnosticCount > 0) and (psdfIncomplete in LDeclaration.Flags) and
+      (LOther.Scope(LDeclaration.NestedScope).DeclarationCount = 1) and
+      (LOther.Named(LDeclaration.NestedScope, 'Keep') >= 0) and
+      (TypeText(LOther, Entry(LOther, 0, 'TGood')) = 'Integer'),
+      'Invalid parent or unsupported target tails refuse as headers, retaining only real members and siblings: ' +
+      IntToStr(LAt));
+  end;
+  LOther := NewNyxPascalSyntaxSnapshot('unit OpenHelper; interface type TBroken = record helper for TGUID ' +
+    'procedure Keep; implementation procedure Good; begin end; end.');
+  LDeclaration := LOther.Declaration(Entry(LOther, 0, 'TBroken'));
+  Check(HasIssue(LOther, psiUnclosedScope) and (psdfIncomplete in LDeclaration.Flags) and
+    not LOther.Scope(LDeclaration.NestedScope).Complete and (LOther.Named(0, 'Good') >= 0),
+    'A missing helper END preserves its open scope and the following implementation declaration');
+  LLexical := NewNyxPascalAppendLexical(CRecordHelper +
+    ' TStable = Integer; TNext = record hel', LOptions.LexicalOptions);
+  LOther := NewNyxPascalSyntaxFromLexical(LLexical, LOptions);
+  LIdentity := NyxPascalDeclarationIdentity(LOther, Entry(LOther, 0, 'TGuidHelper'));
+  LNext := AppendNyxPascalLexical(LLexical, 'per for TGUID procedure Added; end;');
+  LAppended := AppendNyxPascalSyntax(LOther, LNext, LOptions);
+  Check((LAppended.DiagnosticCount = 0) and
+    (LAppended.Declaration(Entry(LAppended, 0, 'TNext')).TypeForm = pstfRecordHelper) and
+    (LIdentity = NyxPascalDeclarationIdentity(LAppended, Entry(LAppended, 0, 'TGuidHelper'))) and
+    (LOther.Lexical.Source <> LAppended.Lexical.Source),
+    'Appending across HELPER repairs the provisional tail while retaining the earlier exact declaration owner');
+  LRejected := False;
+  try NewNyxPascalSyntaxSnapshot(CRecordHelper, LOptions.UpToDeclarations(2));
+  except on ENyxPascalSyntaxLimit do LRejected := True; end;
+  Check(LRejected and (LSyntax.Declaration(LType).TypeForm = pstfRecordHelper),
+    'Helper members consume the existing declaration allowance atomically');
+  LRejected := False;
+  try NewNyxPascalSyntaxSnapshot('TH = record helper for TGUID end;', LOptions.UpToDepth(2));
+  except on ENyxPascalSyntaxLimit do LRejected := True; end;
+  Check(LRejected, 'A helper scope consumes the unchanged parser-depth allowance');
+  LCancel := NewNyxCancellationScope;
+  LCancel.Cancel;
+  LRejected := False;
+  try NewNyxPascalSyntaxSnapshot(CRecordHelper, LOptions, LCancel);
+  except on ENyxPascalAnalysisCancelled do LRejected := True; end;
+  Check(LRejected and (TypeText(LSyntax, Entry(LSyntax, 0, 'TAfter')) = 'Integer'),
+    'Cancelled helper parsing preserves the previously published source and following type');
+end;
+
 { Query typed executable regions through the existing immutable scope surface.
   No body token is promoted to a declaration, and closed spans grant no runtime
   or full statement/expression meaning. }
@@ -618,6 +812,7 @@ begin
   {$endif}
   try
     Core;
+    Helpers;
     ModuleBodies;
     {$ifndef PAS2JS}NativeModuleBodies; Corpus;{$endif}
     WriteLn('PASS ', GChecks, ' owned syntax/scope checks; ', GCorpusFiles,
