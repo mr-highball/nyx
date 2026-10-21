@@ -263,14 +263,6 @@ end;
 procedure ValidateNyxKanbanIntent(ANode: TNyxNode);
 var
   LIntent: TNyxKanbanIntent;
-  LOptions: TNyxKanbanOptions;
-  LItems: TNyxNode;
-  LMove: TNyxNode;
-  LSpec: TNyxCollectionViewSpec;
-  LQuery: TNyxCollectionQuery;
-  LColumn: TNyxCollectionColumn;
-  LPath: TNyxText;
-  LIndex: Integer;
 begin
 
   if not HasNyxKanbanIntent(ANode) then
@@ -293,37 +285,7 @@ begin
   begin
     Exit;
   end;
-  LOptions := LIntent.Options;
-  for LIndex := 0 to LOptions.Count - 1 do
-  begin
-    LPath := 'lane-' + IntToStr(LIndex);
-    LItems := ANode.Part(NyxPart(LPath + '/items'));
-    LMove := ANode.Part(NyxPart(LPath + '/move'));
-
-    if (LItems.ProjectionKind <> 'list') or (LMove.ProjectionKind <> 'button') or
-      not LItems.HasCollectionView then
-    begin
-      raise ENyxKanban.Create('Automatic Kanban requires bound lists and Move buttons');
-    end;
-    LSpec := LItems.CollectionView;
-    LQuery := NyxCollectionQuery.Where(NyxWhere(LOptions.LaneField).EqualTo(
-      LOptions.LaneAt(LIndex).Name, nqtExact));
-
-    if not LSpec.Defined or (LSpec.Key.Name <> LOptions.Collection.Name) or
-      (LSpec.Scope <> LOptions.Scope) or (LSpec.SelectionMode <> nsmSingle) or
-      (LSpec.ParentField <> '') or (LSpec.Count <> 1) or
-      (LSpec.QueryPolicy.ToData.ToJSON <> LQuery.ToData.ToJSON) then
-    begin
-      raise ENyxKanban.Create('Automatic Kanban list binding disagrees with its typed intent');
-    end;
-    LColumn := LSpec.ColumnAt(0);
-
-    if (LColumn.FieldName <> LOptions.TitleField.Name) or
-      (LColumn.Kind <> nskText) or (LColumn.Mode <> cmReadOnly) then
-    begin
-      raise ENyxKanban.Create('Automatic Kanban requires its typed card-title field');
-    end;
-  end;
+  ValidateNyxKanbanBoardOptions(ANode, LIntent.Options);
 end;
 
 end.

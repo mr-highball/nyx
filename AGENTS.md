@@ -1,5 +1,29 @@
 # Working in Nyx
 
+AUTOMATIC KANBAN RUNTIME QUALIFIED (2026-10-21): native107 contract checks,
+ordinary98/98 and exact compiled companion98/98 pass with clean heaps. Both
+renderers prepare future-scope dormant ports/availability before Build/Sync,
+admit before retirement and activate after accepted ownership. Failed candidate,
+same-ID replacement, disabled/inherit, design mode, full Unmount/remount and
+retained-command refusal qualify through actual native controls. Browser core,
+ordinary and exact generated consumers compile only. Six accepted compiler logs
+have zero owned/21 upstream warning occurrences. Initial missing nskText/static
+COM-array failures and the later pas2js nested out-cell converter failure remain
+retained. Only the exact import/vector and local traversal repairs changed;
+tests stayed exact. All readers joined/audited against 1,757 Pascal/13 owned/
+13 concurrent and two emitted source pins. No source/compiler replay remains.
+Next deliver ONE board-wide existing Studio paired design-patch/configuration
+operation, preserving customized parts and exact canonical node/descriptor and
+source baselines. Three sequential collection edits are invalid intermediates;
+Configure is one-shot and cannot rewrite customized existing boards. Ordinary
+Studio configuration/preview/Undo/Redo/save/reopen/generated application and full
+original criteria remain required; no credit/DONE closes and no-closure7 carries.
+WORK.md and ignored .local/kanban-adoption-paths-private.json own composite
+qualification, retained failures and return path. Preserve concurrent13, deferred
+resolver/splitter, offline LAN and absent native Nyx tools. No host/config retry,
+cleanup/restart, new MCP/schema/tool rollout or extra agent. Existing Lil' Scooty
+has the next Studio scope mapped; root coordinates separate ownership.
+
 KANBAN ADOPTION UNDERWAY (2026-10-21): its intent/event prerequisites now qualify
 native73/58 with clean heaps; matching browser compilers pass with zero owned/
 fourteen upstream warning occurrences. All four readers joined/audited against

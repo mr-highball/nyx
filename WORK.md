@@ -4,7 +4,106 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Current integration: automatic Kanban adoption (2026-10-21). Previous goal turn
+Current handoff (2026-10-21): **automatic Kanban runtime locally qualified**.
+Both renderers now own configured movement across accepted view lifetime, without
+handwritten attachment. Preparation uses dormant ports and cached availability
+on the accepted router's prospective scope before Build/Sync; final validation
+precedes old retirement, and installed ports activate only after all accepted
+root/view fields transfer. Old subscription/execution cleanup is postcommit and
+uses local leases. Ordinary Clear detaches owners before cleanup; destruction
+retains fallback cleanup without skipping theme retirement. Static absence and
+the explicit manual API retain their contracts; disabled masks preserve authored
+Enabled/captions/children. Installed plans release preparation-only event leases.
+
+Native **107 contract checks**, **98 ordinary checks at1280 / 98 at390**, and
+**98 / 98 through the exact compiled emitted companion** pass with clean heaps.
+Actual list selection, native Space activation and ordinary drag slots cover
+independent reusable stores and retained source activation. A throwing target
+factory preserves the old root, generation, connected binding and store. Same-ID
+replacement revokes old commands; disabled/inherit, design mode, Unmount/remount
+and renderer disposal retain their intended behavior. JSON/source reconstruction
+matches the authored document and the emitted Pascal is identical at both widths.
+The inspected narrow native client capture shows readable English content and
+stacked lanes. This is synthesized host input, not physical hardware evidence.
+
+Browser core, ordinary and exact generated consumers **compile only**. The six
+accepted compiler logs have **zero owned warnings /21 upstream warning
+occurrences**; five accepted native runs have clean heaps. Core native/browser
+reuse their portability freeze: the only later production change is the shared
+traversal unit outside that consumer's graph. Both actual/generated consumers
+use the final traversal freeze. `runtime-all-joined-private.json` below the
+ignored `.local/kanban-adoption-paths-private.json` packet retains all terminal,
+log/artifact and **1,757 Pascal /13 owned /13 concurrent /two generated** pins.
+Every reader is terminal; there is no unchanged compiler replay to perform.
+
+The initial four compilers failed before native execution: missing `nyx.state`
+for `nskText`, and pas2js refusing a static interface array. Only that import,
+dynamic readiness-vector declaration and unconditional three-slot allocation
+changed. Native107/98/98 then passed, while actual browser compilation exposed a
+pas2js converter failure when nested traversal captured out-argument cells.
+Root moved accumulation into locals, publishing outputs after success; public
+signatures, behavioral checks and tests stayed exact. The failed logs/freezes
+remain retained, with independent review of both exact repair deltas. A later
+path-only `Split-Path` print failed after its successful receipt/state writes;
+the corrected readback verified those writes before admitting the next jobs.
+No failed invocation is counted as accepted behavior.
+
+This is the seventh core batch without a full original criterion closure. The
+integrated runtime is progress; no task/credit/DONE or overall percentage changes.
+Stop runtime/fixture/compiler variants. Next deliver **one board-wide existing
+Studio design-patch candidate** with typed configuration and one paired source/
+history publication. Its operation must author all three behavioral list roles
+and full intent together, retain customized headings/Move faces/payload, and
+create only missing initial Move faces. Repeated one-shot Configure would reject
+existing actions and rewrite captions; three separate collection edits would
+validate invalid intermediate lane states. Exact canonical node/named descriptor
+authority and TransactionDesignBaseline remain shared. The helper has mapped
+existing tabs/selection editor and inspector/sourcejobs patterns; root releases
+separate files after checkpoint. Full ordinary configuration, preview movement,
+paired Undo/Redo/save/reopen and generated application host journeys remain
+required under original Studio authoring criterion2 → components1/3 → parity.
+Browser execution/input/accessibility/performance/observing delivery remain open;
+no host/config retry, new schema/tool/rollout, cleanup/restart or extra agent.
+
+Historical source-ready review, before this qualification: Root reviewed prepared subscriptions, cached
+availability, final admission and installed lifetime; helper independently
+reviewed mount traversal, both renderers and actual-control consumer. Review
+repairs detach old owners before teardown, defer fallible cleanup until fields
+retire, release preparation-only event leases after adoption and lease the UI
+scheduler across validation. Disabled preservation checks authored StoredProp
+while the real widget checks the effective mask. Ordinary/generated controls
+now request the renderer's automatic binding, with no handwritten attachment;
+failed candidate, same-ID replacement, design mode, disable/inherit, Unmount and
+remount remain required native checks. No reader is live and no runtime result
+is claimed. Source freeze and terminal receipts will distinguish this integration
+from the already accepted intent/event prerequisites below. Full ordinary Studio
+paired authoring/save/reopen/application delivery and original criteria remain
+open, with no-closure6 unchanged.
+
+Historical runtime source plan: previous turn was progress:
+74e1195 is pushed/remote-verified, with native intent73/event58 clean and matching
+browser compilers. All readers are terminal. Root accepted the exact next seam:
+helper owns prepared Kanban/disabled-mask binding in existing main/intent/tests;
+root owns shared stateless mount traversal, both renderer lifecycle owners and
+the ordinary/generated control journey. The original Studio authoring criterion2
+→ components1/3 → input/parity remains the destination; no-closure6 carries.
+
+Allocate candidate policies and dormant final-router registrations before first
+Build/Sync. Use cached availability, exact future scope and accepted Self.Sync
+as the borrowed callback. After target factories/physical observations, check
+existing view-publication readiness and managed dirty/raw-model authority, then
+the event-plan fence. Before old controls retire, revoke old ports and install
+the preallocated scope; activate new ports only after accepted root/view fields
+transfer. Old cancellation/disconnection is postcommit, with no callback/UI/
+allocation in installation. Full Clear, content remount and refresh use one owner.
+Each discarded settlement candidate abandons its own event reservation before
+the next begins. Existing manual/static boards keep their path; design mode
+keeps movement dormant. Source handoffs/review precede reader freeze/admission.
+Full ordinary Studio one-board paired configuration/save/reopen/generated-app
+acceptance remains required. No host/config retry, alternate transport, cleanup/
+restart, new MCP rollout or extra agent; preserve concurrent13 and deferred work.
+
+Historical prerequisite integration: automatic Kanban adoption (2026-10-21). Previous goal turn
 is progress:8529a2e shipped the qualified movement API and independently verified
 the remote. Its next integrated design now has two locally qualified prerequisites,
 under [Studio authoring](TODO/NS-4_studio-authoring_01.md) criterion2 returning to

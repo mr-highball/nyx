@@ -2,15 +2,20 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
-Current Kanban adoption follows criterion2. Typed intent/source and prepared
-event-generation prerequisites pass native73/58 with clean heaps; matching browser
-compilers pass only. Automatic renderer attachment and ordinary configuration are
-still open. Next adopts a prepared binding in both renderers and one board-wide
-existing paired design-patch candidate, avoiding invalid intermediate lane edits.
-Preserve static absence, disabled versus inherit and customized sibling/definition
-isolation. Focused evidence cannot replace preview/save/reopen/generated application
-journeys or full original authoring/parity acceptance. [WORK.md](../WORK.md) owns
-retained compiler/import receipts and no-closure6; original criteria/credit stay exact.
+Current Kanban adoption follows criterion2. Automatic runtime now passes native107
+contract, ordinary98/98 and exact compiled companion98/98 checks with clean heaps.
+Both renderer implementations compile; browser core/ordinary/generated consumers
+compile only. Six accepted compiler logs have zero owned/21 upstream warning
+occurrences. Failed candidate, same-ID replacement, disable/inherit, design mode,
+full retirement/remount and retained-command refusal qualify through actual native
+controls. The earlier typed intent/event prerequisites remain native73/58 clean.
+One board-wide paired Studio configuration operation is the next prerequisite:
+clone/admit all behavioral lane bindings and complete intent together, preserving
+customized parts and exact authored/source baselines. Do not replay one-shot
+Configure on customized boards or expose invalid intermediate collection edits.
+Ordinary configuration/preview/Undo/Redo/save/reopen/generated application and full
+original authoring/parity remain open. [WORK.md](../WORK.md) owns composite freezes,
+retained portability/converter failures and no-closure7; original credit stays exact.
 
 Resolver direction (user decision, 2026-10-17): build a fresh, wholly Nyx-owned
 Pascal engine for completion/navigation. Keep the existing typed provider boundary,

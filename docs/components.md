@@ -291,15 +291,20 @@ InheritNyxKanbanIntent(LInstance);
 Configured intent replaces the complete typed options. Disabled is a local mask;
 inherit removes that mask and reveals the definition's value. JSON and crafted
 Pascal preserve the distinction and customized parts. The setter writes metadata
-only and does not call Configure or duplicate children. Automatic renderer and
-Studio adoption are still being integrated; use the explicit mounted attachment
-above for current running applications.
+only and does not call Configure or duplicate children. Both renderers now prepare
+automatic attachment before building controls, then activate it with the accepted
+view. Native contract and ordinary/generated desktop/compact consumers qualify
+this runtime ownership; browser consumers compile only. Ordinary Studio
+configuration, browser execution and complete application adoption remain open.
 
 Generated Pascal retains normal list bindings, queries and added buttons. The
-application explicitly creates its runtime attachment after mounting; generation
-does not automatically install this application lifetime code. Custom recipe
+application can opt into automatic lifetime ownership with configured intent.
+Without that intent, the explicit mounted attachment remains available and static
+boards retain their behavior. Design mode keeps movement dormant. Custom recipe
 parts must preserve the required specialized lanes/lists/actions or admission
-refuses instead of borrowing another instance's view.
+refuses instead of borrowing another instance's view. Renderers expose the accepted
+`KanbanBinding` by exact realized ID for programmatic commands; disabled or unmounted
+boards return nil. A failed replacement keeps the previous view active.
 
 `tools/build.ps1 -Target kanban -KanbanEvidenceDirectory <new directory>` includes
 the public contract consumer, ordinary native desktop/compact journey and exact

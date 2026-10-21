@@ -89,6 +89,7 @@ uses
   nyx.design.tokens,
   nyx.behavior,
   nyx.events,
+  nyx.kanban, nyx.kanban.mounts,
   nyx.data,
   nyx.viewport,
   nyx.viewport.lcl,
@@ -422,6 +423,10 @@ type
     FOwnState: Boolean;
     FLiveBindings: TNyxLiveBindings;
     FCollectionBindings: INyxCollectionBindings;
+    { Managed automatic boards belong to this exact accepted realized view.
+      Their ports revoke before widgets; cleanup can be deferred past adoption. }
+    FKanbanMounts: TNyxKanbanMounts;
+    FKanbanIDs: TNyxKanbanMountIDs;
     FUpdating: Boolean;
     FDesignMode: Boolean;
     { Immutable fresh document context, not a retained document or a source
@@ -467,7 +472,8 @@ type
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
       AFailure: TNyxBindingFailure = nbfRejected; ARestoreInput: Boolean = True);
-    procedure Clear(AKeepPresentation: Boolean = False);
+    procedure Clear(AKeepPresentation: Boolean = False;
+      const AEventView: INyxPreparedEventView = nil);
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateControl(ANode: TNyxNode; out AInput: TControl;
       out ACaption: TLabel): TControl;
@@ -733,6 +739,8 @@ type
     function CollectionMount(const AID: TNyxText): INyxCollectionMount;
     { Retained portable pager attachment; it disconnects before this view retires. }
     function CollectionPager(const AID: TNyxText): INyxCollectionPager;
+    { Exact runtime identity; a static/disabled/unmounted board returns nil. }
+    function KanbanBinding(const AID: TNyxText): INyxKanbanBinding;
     procedure Sync;
     property OnEvent: TNyxLCLEvent read FOnEvent write FOnEvent;
     { Configure before mounting. Opted-in designer drops use a synchronous
@@ -1073,7 +1081,13 @@ begin
 end;
 
 destructor TNyxLCLRenderer.Destroy;
+var
+  LRetiringKanban: TNyxKanbanMounts;
 begin
+  LRetiringKanban := FKanbanMounts;
+  RevokeNyxKanbanMounts(LRetiringKanban);
+  FKanbanMounts := nil;
+  FKanbanIDs := nil;
 
   if FContentGuard <> nil then
   begin
@@ -1091,14 +1105,38 @@ begin
   begin
     FTheme.Free;
   end;
+  try
+    DisconnectNyxKanbanMounts(LRetiringKanban);
+  except
+    { Disposal has already retired every renderer field. Explicit Unmount and
+      postcommit retirement still report cleanup failures to their caller. }
+  end;
   inherited Destroy;
 end;
 
-procedure TNyxLCLRenderer.Clear(AKeepPresentation: Boolean);
+procedure TNyxLCLRenderer.Clear(AKeepPresentation: Boolean;
+  const AEventView: INyxPreparedEventView);
 var
   LIndex: Integer;
   LDeferControls: Boolean;
+  LRetiringKanban: TNyxKanbanMounts;
 begin
+  FUpdating := True;
+  RevokeNyxKanbanMounts(FKanbanMounts);
+  LRetiringKanban := nil;
+
+  if AEventView <> nil then
+  begin
+    { The caller retains old owners until every accepted field is published.
+      Generation installation is preallocated and invokes no cancellation code. }
+    AEventView.Install;
+  end
+  else
+  begin
+    LRetiringKanban := FKanbanMounts;
+  end;
+  FKanbanMounts := nil;
+  FKanbanIDs := nil;
   FImageViewPublished := False;
   if not AKeepPresentation and (FPresentationView <> nil) then
   begin
@@ -1190,7 +1228,7 @@ begin
     FEmitterScope := nil;
   end;
 
-  if FEvents <> nil then
+  if (FEvents <> nil) and (AEventView = nil) then
   begin
     FEvents.CancelPending;
   end;
@@ -1312,6 +1350,9 @@ begin
   FState := nil;
   FOwnState := False;
   FUpdating := False;
+  { All borrowed renderer state is retired before subscription cleanup can
+    enter an alternate receiver or report a failure. Keep only local leases. }
+  DisconnectNyxKanbanMounts(LRetiringKanban);
 end;
 
 procedure TNyxLCLRenderer.RegisterDrawingProvider(const AName: TNyxDrawingProviderRef;
@@ -4398,6 +4439,12 @@ var
   LMeasurementKey: TNyxText;
   LFormerHorizontal: Integer;
   LFormerVertical: Integer;
+  LEventPreparation: INyxEventViewPreparation;
+  LEventView: INyxPreparedEventView;
+  LEventFence: INyxPublicationReadiness;
+  LFormerKanban: TNyxKanbanMounts;
+  LAcceptedKanban: TNyxKanbanMounts;
+  LCommitted: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -4435,6 +4482,11 @@ begin
   LMeasuredRoot := nil;
   LSettlement := nil;
   LBlueprint := nil;
+  LEventView := nil;
+  LEventFence := nil;
+  LFormerKanban := nil;
+  LAcceptedKanban := nil;
+  LCommitted := False;
   LRuntimeState := AState;
   LOwnRuntimeState := AState = nil;
   LCollections := ACollections;
@@ -4546,6 +4598,28 @@ begin
         LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
           NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
       end;
+      if ((not ADesignMode) and NyxHasKanbanMounts(LCandidate.FRoot)) or
+        (Length(FKanbanMounts) <> 0) then
+      begin
+
+        if not Supports(FEvents, INyxEventViewPreparation, LEventPreparation) then
+        begin
+          raise ENyxModel.Create('Native automatic boards require prepared event views');
+        end;
+        LEventView := LEventPreparation.PrepareView;
+
+        if not Supports(LEventView, INyxPublicationReadiness, LEventFence) then
+        begin
+          raise ENyxModel.Create('Native event view has no final readiness fence');
+        end;
+
+        if not ADesignMode then
+        begin
+          PrepareNyxKanbanMounts(LCandidate.FRoot, LCandidate.FCollectionBindings,
+            LEventView, FEvents.Scheduler, Sync,
+            LCandidate.FKanbanMounts, LCandidate.FKanbanIDs);
+        end;
+      end;
       { Hidden passes share one runtime store/context. Candidate teardown removes
         staged validators and controls without freeing borrowed accepted data. }
       LCandidate.FState := LRuntimeState;
@@ -4620,6 +4694,13 @@ begin
       LCollections := LCandidate.FCollectionBindings;
       LMeasurements := LAllocated;
       LFirstCandidate := False;
+
+      if LEventView <> nil then
+      begin
+        LEventView.Retire;
+        LEventView := nil;
+        LEventFence := nil;
+      end;
       FreeAndNil(LCandidate);
     until False;
     { One owned authored blueprint survives successful admission. Ordinary
@@ -4751,6 +4832,14 @@ begin
       end;
       LCandidate.FEmitterScope.Activate(EmitNamed);
       LMeasurementKey := NyxContentMeasurements(LCandidate.FRoot, LMeasurements);
+
+      if LEventView <> nil then
+      begin
+        ValidateNyxKanbanMounts(LCandidate.FKanbanMounts);
+        LEventView.Validate;
+        CheckNyxKanbanMounts(LCandidate.FKanbanMounts);
+        LEventFence.CheckReady;
+      end;
     except
       { Retain exact old controls, input ranges and pending router revision.
         The candidate owns every newly installed hook and releases it on failure. }
@@ -4792,7 +4881,8 @@ begin
     begin
       FOwnState := False;
     end;
-    Clear(AKeepPresentation);
+    LFormerKanban := FKanbanMounts;
+    Clear(AKeepPresentation, LEventView);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('retire');{$endif}
     { Publish effective tokens with the successfully staged native controls. }
 
@@ -4817,6 +4907,10 @@ begin
     FLiveBindings.OnValueSync := SyncEditedValue;
     FCollectionBindings := LCandidate.FCollectionBindings;
     LCandidate.FCollectionBindings := nil;
+    FKanbanMounts := LCandidate.FKanbanMounts;
+    FKanbanIDs := LCandidate.FKanbanIDs;
+    LCandidate.FKanbanMounts := nil;
+    LCandidate.FKanbanIDs := nil;
     FLastBindingError := '';
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
@@ -4874,12 +4968,20 @@ begin
     LViewportPublication.PublishRevision(FEvents.ViewRevision);
     LEditingPublication.PublishRevision(FEvents.ViewRevision);
     LCapturePublication.PublishRevision(FEvents.ViewRevision);
+    InstallNyxKanbanMounts(FKanbanMounts);
+    LAcceptedKanban := FKanbanMounts;
     FImageViewPublished := True;
     FUpdating := LUpdating;
+    LCommitted := True;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
   finally
     try
+
+      if not LCommitted and (LEventView <> nil) then
+      begin
+        LEventView.Retire;
+      end;
       ReleaseNyxNode(LMeasuredRoot);
       LCandidate.Free;
       LSettlement.Free;
@@ -4898,6 +5000,27 @@ begin
     end;
   end;
   {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
+  { Cancellation may enter application code or dispose this renderer. Nothing
+    following this boundary borrows Self or its newly accepted widgets. }
+  for LIndex := 0 to High(LAcceptedKanban) do
+  begin
+    { Installed plans retain behavior, while releasing preparation-only event
+      leases that would otherwise keep old execution snapshots alive. }
+    LAcceptedKanban[LIndex].Retire;
+  end;
+  try
+    DisconnectNyxKanbanMounts(LFormerKanban);
+  finally
+
+    if LEventView <> nil then
+    begin
+      try
+        LEventView.Notify;
+      finally
+        LEventView.Retire;
+      end;
+    end;
+  end;
 end;
 
 procedure TNyxLCLRenderer.FlushImages;
@@ -5136,7 +5259,11 @@ begin
   FEvents.Scheduler.RequireUI;
   Result := False;
 
+  { Live collection edits call Sync directly. An authored replacement of a
+    board must admit its exact new nodes/views and accepted event generation. }
+
   if (FRoot = nil) or (FPanel = nil) or FUpdating or
+    (Length(FKanbanMounts) <> 0) or
     (FDesignMode <> ADesignMode) or
     ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady and
       (not FDesignMode or FLiveBindings.HasBindings)) or
@@ -7832,6 +7959,11 @@ begin
       Exit(FBindings[LIndex].FCollectionPager);
     end;
   end;
+end;
+
+function TNyxLCLRenderer.KanbanBinding(const AID: TNyxText): INyxKanbanBinding;
+begin
+  Result := FindNyxKanbanMount(FKanbanMounts, FKanbanIDs, AID);
 end;
 
 procedure TNyxLCLRenderer.BindCollectionPagers;

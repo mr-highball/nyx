@@ -31,7 +31,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.controls, nyx.collections, nyx.collections.view.types,
-  nyx.collections.bindings, nyx.events, nyx.scheduler;
+  nyx.collections.bindings, nyx.events, nyx.scheduler, nyx.model,
+  nyx.publication.types;
 
 type
   { Kanban admission/refusal preserves the existing collection exception family. }
@@ -115,6 +116,20 @@ type
     property Connected: Boolean read GetConnected;
   end;
 
+  { One staged automatic attachment, retained by the renderer for its view
+    lifetime. Binding is nil for a disabled availability mask. Revoke only
+    closes weak input authority; Disconnect later attempts all cleanup. Retire
+    abandons an uninstalled preparation, but retains installed behavior until
+    Disconnect/destruction. Coordinate Install after the event plan installs and
+    the accepted renderer adopts its nodes. Install never calls the host. }
+  INyxPreparedKanbanBinding = interface(INyxPreparedPublication)
+    ['{6F84A65A-5B49-4825-BC28-0BD052209CF7}']
+    function GetBinding: INyxKanbanBinding;
+    procedure Revoke;
+    procedure Disconnect;
+    property Binding: INyxKanbanBinding read GetBinding;
+  end;
+
 function NyxKanbanLane(const AName: TNyxText): TNyxKanbanLaneRef;
 function NyxKanbanOptions(const ACollection: TNyxCollectionRef;
   const ATitleField, ALaneField: TNyxTextFieldRef): TNyxKanbanOptions;
@@ -136,10 +151,30 @@ function NewNyxKanbanBinding(const ABoard: INyxKanbanBoard;
   const AScheduler: INyxScheduler;
   ARefresh: TNyxKanbanRefresh): INyxKanbanBinding;
 
+{ Shared behavioral declaration admission. It preserves independently authored
+  captions, styling and payloads, while requiring the exact three list roles. }
+procedure ValidateNyxKanbanBoardOptions(ANode: TNyxNode;
+  const AOptions: TNyxKanbanOptions);
+
+{ Prepare before Build/Sync against the accepted router's prospective event
+  plan. ARefresh borrows the final accepted receiver, never a temporary renderer.
+  Views must expose their existing publication-readiness capability. Validate
+  performs outward admission; its final readiness fence calls no view getters. }
+function PrepareNyxKanbanBinding(const ABoard: INyxKanbanBoard;
+  const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  ARefresh: TNyxKanbanRefresh): INyxPreparedKanbanBinding;
+
+{ Disabled intent masks only recognized existing Move buttons. It requires no
+  collection and never reconstructs or removes customized parts. }
+function PrepareNyxKanbanDisabled(const ABoard: INyxKanbanBoard;
+  const AEventView: INyxPreparedEventView;
+  const AScheduler: INyxScheduler): INyxPreparedKanbanBinding;
+
 implementation
 
 uses
-  nyx.types, nyx.model, nyx.behavior, nyx.collections.view,
+  nyx.types, nyx.state, nyx.behavior, nyx.collections.view,
   nyx.collections.query, nyx.collections.selection, nyx.interaction.policy,
   nyx.gestures, nyx.publication;
 
@@ -251,6 +286,23 @@ type
     FPort: IKanbanPort;
     FCallback: TKanbanPort;
     FConnected: Boolean;
+    FPrepared: Boolean;
+    FDisabled: Boolean;
+    FRevoked: Boolean;
+    FDirty: Boolean;
+    FCleaned: Boolean;
+    FBoardNode: TNyxNode;
+    FBoardParent: TNyxNode;
+    FBoardProps: TNyxText;
+    FBoardExtensions: TNyxText;
+    FItemNodes: array[0..2] of TNyxNode;
+    FMoveNodes: array[0..2] of TNyxNode;
+    FItemProps: array[0..2] of TNyxText;
+    FMoveProps: array[0..2] of TNyxText;
+    FReadOnly: array[0..2] of Boolean;
+    FAllowed: array[0..2] of Boolean;
+    FQueries: array[0..2] of TNyxText;
+    FReadiness: array of INyxCollectionViewPublication;
     FActive: Integer;
     FDragItem: TNyxItemRef;
     FDragLane: Integer;
@@ -274,12 +326,22 @@ type
       const AID: TNyxText);
     procedure ClearDrag;
     procedure Retire;
+    procedure CheckPrepared;
+    procedure CheckPreparedNodes;
+    procedure AdmitPreparedContract;
+    procedure CacheAvailability;
+    procedure RevokePrepared;
+    procedure DisconnectPrepared;
   public
     constructor Create(const ABoard: INyxKanbanBoard;
       const AOptions: TNyxKanbanOptions;
       const AViews: INyxCollectionBindings; const AEvents: INyxEvents;
       const AScheduler: INyxScheduler; ARefresh: TNyxKanbanRefresh);
     destructor Destroy; override;
+    constructor CreatePrepared(const ABoard: INyxKanbanBoard;
+      const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
     procedure Activate(const AEvents: INyxEvents);
     procedure Disconnect;
     procedure Refresh;
@@ -289,6 +351,36 @@ type
     function CaptureMove(const AItem: TNyxItemRef;
       const AFromLane, AToLane: TNyxKanbanLaneRef;
       AExpectedRevision: Integer): INyxKanbanMove;
+  end;
+
+  { Preparation owns the future event lease until retirement and the installed
+    attachment until explicit disconnection. It contains no renderer reference;
+    the borrowed final Refresh method is protected by the binding's weak port. }
+  TPreparedKanban = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPreparedKanbanBinding, INyxPublicationReadiness)
+  private
+    FEventView: INyxPreparedEventView;
+    FBindingLease: INyxKanbanBinding;
+    FOwner: TKanbanBinding;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+    procedure DoDisconnect;
+    procedure DoRetire;
+  public
+    constructor Create(const ABoard: INyxKanbanBoard;
+      const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+      const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+    destructor Destroy; override;
+    function GetBinding: INyxKanbanBinding;
+    procedure Revoke;
+    procedure Disconnect;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
   end;
 
 function TNyxKanbanLaneRef.GetName: TNyxText;
@@ -487,6 +579,59 @@ begin
     'Card').Scoped(AOptions.Scope).Selection(nsmSingle).Query(LQuery);
 end;
 
+procedure CheckLaneSpec(const ASpec: TNyxCollectionViewSpec;
+  const AOptions: TNyxKanbanOptions; const AQuery: TNyxText);
+var
+  LColumn: TNyxCollectionColumn;
+begin
+
+  if not ASpec.Defined or (ASpec.Key.Name <> AOptions.Collection.Name) or
+    (ASpec.Scope <> AOptions.Scope) or (ASpec.SelectionMode <> nsmSingle) or
+    (ASpec.ParentField <> '') or (ASpec.Count <> 1) or
+    (ASpec.QueryPolicy.ToData.ToJSON <> AQuery) then
+  begin
+    raise ENyxKanban.Create('Automatic Kanban list binding disagrees with its typed intent');
+  end;
+  LColumn := ASpec.ColumnAt(0);
+
+  if (LColumn.FieldName <> AOptions.TitleField.Name) or
+    (LColumn.Kind <> nskText) or (LColumn.Mode <> cmReadOnly) then
+  begin
+    raise ENyxKanban.Create('Automatic Kanban requires its typed card-title field');
+  end;
+end;
+
+procedure ValidateNyxKanbanBoardOptions(ANode: TNyxNode;
+  const AOptions: TNyxKanbanOptions);
+var
+  LOptions: TNyxKanbanOptions;
+  LItems: TNyxNode;
+  LMove: TNyxNode;
+  LIndex: Integer;
+begin
+  LOptions := AOptions.Copy;
+  LOptions.Validate;
+
+  if (ANode = nil) or (ANode.Kind <> NyxKindName(nkKanbanBoard)) then
+  begin
+    raise ENyxKanban.Create('Automatic Kanban intent requires its specialized board');
+  end;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+    LItems := ANode.Part(LanePath(LIndex, 'items'));
+    LMove := ANode.Part(LanePath(LIndex, CMovePart));
+
+    if (LItems.ProjectionKind <> NyxKindName(nkList)) or
+      (LMove.ProjectionKind <> NyxKindName(nkButton)) or
+      not LItems.HasCollectionView then
+    begin
+      raise ENyxKanban.Create('Automatic Kanban requires bound lists and Move buttons');
+    end;
+    CheckLaneSpec(LItems.CollectionView, LOptions,
+      LaneSpec(LOptions, LIndex).QueryPolicy.ToData.ToJSON);
+  end;
+end;
+
 procedure ConfigureNyxKanbanBoard(const ABoard: INyxKanbanBoard;
   const AOptions: TNyxKanbanOptions);
 var
@@ -591,10 +736,19 @@ var
   LOwner: INyxKanbanBinding;
   LView: INyxCollectionView;
   LChanges: INyxCollectionChanges;
+  LBinding: TKanbanBinding;
 begin
   LOwner := Acquire;
+  LBinding := Owner;
   LView := AView;
   LChanges := AChanges;
+
+  if (LOwner <> nil) and (LBinding <> nil) and LBinding.FPrepared and
+    not LBinding.FConnected then
+  begin
+    LBinding.FDirty := True;
+    Exit;
+  end;
 
   if (LOwner <> nil) and LOwner.Connected then
   begin
@@ -640,8 +794,25 @@ end;
 function TKanbanEnabled.GetAllowed: Boolean;
 var
   LOwner: INyxKanbanBinding;
+  LBinding: TKanbanBinding;
+  LCancelled: Boolean;
 begin
   LOwner := FPort.Acquire;
+  LBinding := FPort.Owner;
+
+  if (LOwner <> nil) and (LBinding <> nil) and LBinding.FPrepared then
+  begin
+    Result := False;
+
+    if LBinding.FRevoked or (LBinding.FGeneration = nil) then
+    begin
+      Exit;
+    end;
+    LCancelled := LBinding.FGeneration.Cancelled;
+    Result := not LCancelled and not LBinding.FRevoked and
+      LBinding.FAllowed[FDestination];
+    Exit;
+  end;
   Result := (LOwner <> nil) and LOwner.Connected;
 
   if Result then
@@ -655,6 +826,13 @@ var
   LOwner: INyxKanbanBinding;
 begin
   LOwner := FPort.Acquire;
+
+  if (LOwner <> nil) and FPort.Owner.FPrepared then
+  begin
+    { Dormant automatic attachment reserves its faces against another owner. }
+    Result := not FPort.Owner.FRevoked;
+    Exit;
+  end;
   Result := (LOwner <> nil) and LOwner.Connected;
 end;
 
@@ -843,6 +1021,13 @@ var
   LExpected: TNyxCollectionViewSpec;
   LNode: TNyxNode;
 begin
+
+  if FPrepared then
+  begin
+    RequireLive;
+    AdmitPreparedContract;
+    Exit;
+  end;
   RequireLive;
   for LIndex := 0 to CKanbanLaneCount - 1 do
   begin
@@ -930,7 +1115,19 @@ end;
 
 destructor TKanbanBinding.Destroy;
 begin
-  Retire;
+
+  if FPrepared then
+  begin
+    try
+      DisconnectPrepared;
+    except
+      { Destruction follows irrevocable weak-port revocation. }
+    end;
+  end
+  else
+  begin
+    Retire;
+  end;
   inherited Destroy;
 end;
 
@@ -946,6 +1143,12 @@ procedure TKanbanBinding.Retire;
 var
   LIndex: Integer;
 begin
+
+  if FPrepared then
+  begin
+    DisconnectPrepared;
+    Exit;
+  end;
   FConnected := False;
   FRefresh := nil;
 
@@ -1225,6 +1428,11 @@ begin
   begin
     FActive := -1;
   end;
+
+  if FPrepared then
+  begin
+    CacheAvailability;
+  end;
   { No selection mutation from a view notification; hidden members stay owned
     by the view but cannot become move input after leaving their source lane. }
   Refresh;
@@ -1246,6 +1454,20 @@ begin
   RequireLive;
   for LIndex := 0 to CKanbanLaneCount - 1 do
   begin
+
+    if FPrepared and (AEvent.Trigger in [ntClick, ntAfterEnter]) and
+      (AEvent.OriginID = FItemNodes[LIndex].ID) then
+    begin
+      FActive := -1;
+
+      if SelectedItem(LIndex, LItem) then
+      begin
+        FActive := LIndex;
+      end;
+      CacheAvailability;
+      Refresh;
+      Exit;
+    end;
 
     if (AEvent.Trigger = ntDragEnd) and AEvent.HasDrag and
       (AEvent.Drag.Phase = ndpEnd) and
@@ -1360,6 +1582,724 @@ begin
     LResponse.AcceptDrop(ndoMove);
     Exit;
   end;
+end;
+
+function OptionalMoveNode(ABoard: TNyxNode; AIndex: Integer): TNyxNode;
+var
+  LLane: TNyxNode;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  Result := nil;
+  LLane := nil;
+  LName := 'lane-' + IntToStr(AIndex);
+  for LIndex := 0 to ABoard.Count - 1 do
+  begin
+
+    if ABoard.Children[LIndex].StoredProp(NyxAttributeName(atPart)) = LName then
+    begin
+
+      if LLane <> nil then
+      begin
+        raise ENyxKanban.Create('Automatic Kanban lane part is ambiguous');
+      end;
+      LLane := ABoard.Children[LIndex];
+    end;
+  end;
+
+  if LLane = nil then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to LLane.Count - 1 do
+  begin
+
+    if LLane.Children[LIndex].StoredProp(NyxAttributeName(atPart)) = CMovePart then
+    begin
+
+      if Result <> nil then
+      begin
+        raise ENyxKanban.Create('Automatic Kanban Move part is ambiguous');
+      end;
+      Result := LLane.Children[LIndex];
+    end;
+  end;
+
+  if (Result <> nil) and (Result.ProjectionKind <> NyxKindName(nkButton)) then
+  begin
+    Result := nil;
+  end;
+end;
+
+constructor TKanbanBinding.CreatePrepared(const ABoard: INyxKanbanBoard;
+  const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+var
+  LViews: INyxCollectionBindings;
+  LEventView: INyxPreparedEventView;
+  LControl: INyxControl;
+  LPolicy: IKanbanEnabled;
+  LObserver: INyxEventObserver;
+  LIndex: Integer;
+  LPolicyIndex: Integer;
+  LNext: Integer;
+
+  procedure RememberEvent(const AToken: INyxEventSubscription);
+  begin
+    LNext := Length(FSubscriptions);
+    SetLength(FSubscriptions, LNext + 1);
+    FSubscriptions[LNext] := AToken;
+    CheckPrepared;
+  end;
+
+begin
+  inherited Create;
+  FPrepared := True;
+  FDisabled := ADisabled;
+  FBoard := ABoard;
+  FOptions := AOptions.Copy;
+  LViews := AViews;
+  LEventView := AEventView;
+  FScheduler := AScheduler;
+  FRefresh := ARefresh;
+  FActive := -1;
+  FDragLane := -1;
+
+  if (FBoard = nil) or (LEventView = nil) or (FScheduler = nil) then
+  begin
+    raise ENyxKanban.Create('Prepared Kanban requires board, event plan and UI scheduler');
+  end;
+  FBoardNode := FBoard.Node;
+  FGeneration := LEventView.Generation;
+  FScheduler.RequireUI;
+  CheckPrepared;
+
+  if (FBoardNode = nil) or not FBoardNode.IsRealized or
+    (FBoardNode.Kind <> NyxKindName(nkKanbanBoard)) then
+  begin
+    raise ENyxKanban.Create('Prepared Kanban requires its realized specialized board');
+  end;
+  FBoardProps := FBoardNode.StoredProp('projection-kind');
+  FBoardParent := FBoardNode.Parent;
+  FBoardExtensions := FBoardNode.Extensions.ToJSON;
+  SetLength(FMoves, CKanbanLaneCount);
+  SetLength(FPolicies, CKanbanLaneCount);
+  SetLength(FReadiness, CKanbanLaneCount);
+  FCallback := TKanbanPort.Create(Self);
+  FPort := FCallback;
+
+  if not FDisabled then
+  begin
+    FOptions.Validate;
+
+    if LViews = nil then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban requires its mounted collection bindings');
+    end;
+    ValidateNyxKanbanBoardOptions(FBoardNode, FOptions);
+    SetLength(FItems, CKanbanLaneCount);
+    SetLength(FViews, CKanbanLaneCount);
+    SetLength(FViewTokens, CKanbanLaneCount);
+  end;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+    FMoveNodes[LIndex] := OptionalMoveNode(FBoardNode, LIndex);
+
+    if FMoveNodes[LIndex] <> nil then
+    begin
+      LControl := RetainNyxControl(FMoveNodes[LIndex]);
+
+      if not Supports(LControl, INyxButton, FMoves[LIndex]) then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban Move face has no button capability');
+      end;
+      for LPolicyIndex := 0 to FMoveNodes[LIndex].EnabledPolicyCount - 1 do
+      begin
+
+        if Supports(FMoveNodes[LIndex].EnabledPolicyAt(LPolicyIndex),
+          IKanbanEnabled, LPolicy) and LPolicy.GetConnected then
+        begin
+          raise ENyxKanban.Create('Kanban board already reserves its Move faces');
+        end;
+        CheckPrepared;
+      end;
+      FMoveProps[LIndex] := FMoveNodes[LIndex].StoredProp(
+        NyxAttributeName(atEnabled), 'true');
+    end;
+
+    if not FDisabled then
+    begin
+      FItemNodes[LIndex] := FBoardNode.Part(LanePath(LIndex, 'items'));
+      LControl := RetainNyxControl(FItemNodes[LIndex]);
+
+      if not Supports(LControl, INyxList, FItems[LIndex]) then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban items role has no list capability');
+      end;
+      FItemProps[LIndex] := FItemNodes[LIndex].StoredProp(
+        NyxAttributeName(atReadOnly), 'false');
+      FQueries[LIndex] := LaneSpec(FOptions, LIndex).QueryPolicy.ToData.ToJSON;
+      FViews[LIndex] := LViews.ViewFor(FItemNodes[LIndex].ID);
+      CheckPrepared;
+
+      if (FViews[LIndex] = nil) or not Supports(FViews[LIndex],
+        INyxCollectionViewPublication, FReadiness[LIndex]) then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban views require publication readiness');
+      end;
+      CheckPrepared;
+
+      if LIndex = 0 then
+      begin
+        FStore := FViews[LIndex].Store;
+        CheckPrepared;
+      end;
+    end;
+  end;
+
+  if not FDisabled then
+  begin
+
+    if (FStore = nil) or not Supports(FStore, INyxAtomicCollection, FAtomic) then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban requires atomic collection publication');
+    end;
+    CheckPrepared;
+    for LIndex := 0 to CKanbanLaneCount - 1 do
+    begin
+      FViewTokens[LIndex] := FViews[LIndex].Subscribe(FCallback.Changed);
+      CheckPrepared;
+    end;
+    AdmitPreparedContract;
+    CacheAvailability;
+  end;
+  LObserver := TKanbanObservation.Create(FPort);
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+
+    if FMoveNodes[LIndex] <> nil then
+    begin
+      FPolicies[LIndex] := TKanbanEnabled.Create(FPort, LIndex);
+      FMoveNodes[LIndex].AttachEnabledPolicy(FPolicies[LIndex]);
+    end;
+
+    if not FDisabled then
+    begin
+      RememberEvent(LEventView.PrepareObservation(
+        NyxControlEvents(FMoveNodes[LIndex].ID, niRuntime), ntClick,
+        LObserver, nopBeforeCallbacks, NyxEvent('')));
+      RememberEvent(LEventView.PrepareObservation(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntDragEnd,
+        LObserver, nopBeforeCallbacks, NyxEvent('')));
+      RememberEvent(LEventView.PrepareObservation(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntClick,
+        LObserver, nopBeforeCallbacks, NyxEvent('')));
+      RememberEvent(LEventView.PrepareObservation(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntAfterEnter,
+        LObserver, nopBeforeCallbacks, NyxEvent('')));
+      RememberEvent(LEventView.PrepareCallback(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntDragStart,
+        FCallback, NyxEvent('')));
+      RememberEvent(LEventView.PrepareCallback(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntDragOver,
+        FCallback, NyxEvent('')));
+      RememberEvent(LEventView.PrepareCallback(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntDragEnter,
+        FCallback, NyxEvent('')));
+      RememberEvent(LEventView.PrepareCallback(
+        NyxControlEvents(FItemNodes[LIndex].ID, niRuntime), ntDrop,
+        FCallback, NyxEvent('')));
+    end;
+  end;
+  CheckPreparedNodes;
+end;
+
+procedure TKanbanBinding.CheckPrepared;
+var
+  LGeneration: INyxCancellationScope;
+  LCancelled: Boolean;
+begin
+  LGeneration := FGeneration;
+
+  if not FPrepared or FRevoked or FCleaned or FDirty or
+    (LGeneration = nil) then
+  begin
+    raise ENyxKanbanCancelled.Create('Prepared Kanban changed or retired before adoption');
+  end;
+  LCancelled := LGeneration.Cancelled;
+
+  if LCancelled or FRevoked or FCleaned or FDirty or
+    (FGeneration <> LGeneration) then
+  begin
+    raise ENyxKanbanCancelled.Create('Prepared Kanban changed or retired before adoption');
+  end;
+end;
+
+procedure TKanbanBinding.CheckPreparedNodes;
+var
+  LIndex: Integer;
+  LPolicyIndex: Integer;
+  LFound: Boolean;
+begin
+  CheckPrepared;
+
+  if not FBoardNode.IsRealized or
+    (FBoardNode.Parent <> FBoardParent) or
+    (FBoardNode.Kind <> NyxKindName(nkKanbanBoard)) or
+    (FBoardNode.StoredProp('projection-kind') <> FBoardProps) or
+    (FBoardNode.Extensions.ToJSON <> FBoardExtensions) then
+  begin
+    raise ENyxKanban.Create('Prepared Kanban board identity or intent changed');
+  end;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+
+    if OptionalMoveNode(FBoardNode, LIndex) <> FMoveNodes[LIndex] then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban Move face was replaced');
+    end;
+
+    if FMoveNodes[LIndex] <> nil then
+    begin
+
+      if FMoveNodes[LIndex].StoredProp(NyxAttributeName(atEnabled), 'true') <>
+        FMoveProps[LIndex] then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban Move availability changed');
+      end;
+      LFound := False;
+      for LPolicyIndex := 0 to FMoveNodes[LIndex].EnabledPolicyCount - 1 do
+      begin
+        LFound := LFound or
+          (FMoveNodes[LIndex].EnabledPolicyAt(LPolicyIndex) = FPolicies[LIndex]);
+      end;
+
+      if not LFound then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban availability policy was detached');
+      end;
+    end;
+
+    if not FDisabled then
+    begin
+
+      if (FBoardNode.Part(LanePath(LIndex, 'items')) <> FItemNodes[LIndex]) or
+        not FItemNodes[LIndex].HasCollectionView or
+        (FItemNodes[LIndex].ProjectionKind <> NyxKindName(nkList)) or
+        (FItemNodes[LIndex].StoredProp(NyxAttributeName(atReadOnly), 'false') <>
+          FItemProps[LIndex]) then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban list role changed');
+      end;
+      CheckLaneSpec(FItemNodes[LIndex].CollectionView, FOptions, FQueries[LIndex]);
+    end;
+  end;
+  CheckPrepared;
+end;
+
+procedure TKanbanBinding.AdmitPreparedContract;
+var
+  LIndex: Integer;
+  LSnapshot: INyxCollectionSnapshot;
+begin
+  CheckPrepared;
+  ValidateNyxKanbanBoardOptions(FBoardNode, FOptions);
+  LSnapshot := FStore.Snapshot;
+  CheckPrepared;
+  LSnapshot.Schema.Definition(FOptions.TitleField);
+  CheckPrepared;
+  LSnapshot.Schema.Definition(FOptions.LaneField);
+  CheckPrepared;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+
+    if FViews[LIndex].Store <> FStore then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban lanes do not share one exact store');
+    end;
+    CheckPrepared;
+
+    if FViews[LIndex].Projection <> cpList then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban requires list projections');
+    end;
+    CheckPrepared;
+    CheckLaneSpec(FViews[LIndex].Spec, FOptions, FQueries[LIndex]);
+    CheckPrepared;
+
+    if FViews[LIndex].QueryPolicy.ToData.ToJSON <> FQueries[LIndex] then
+    begin
+      raise ENyxKanban.Create('Prepared Kanban runtime query changed');
+    end;
+    CheckPrepared;
+  end;
+end;
+
+procedure TKanbanBinding.CacheAvailability;
+var
+  LIndex: Integer;
+  LSource: Integer;
+  LSelection: INyxCollectionSelection;
+  LItem: TNyxItemRef;
+  LVisible: Boolean;
+begin
+  CheckPrepared;
+  LSource := FActive;
+
+  if LSource < 0 then
+  begin
+    for LIndex := 0 to CKanbanLaneCount - 1 do
+    begin
+      LSelection := FViews[LIndex].Selection;
+      CheckPrepared;
+
+      if LSelection.Count = 1 then
+      begin
+        LItem := LSelection.ItemAt(0);
+        LVisible := FViews[LIndex].Snapshot.Has(LItem);
+        CheckPrepared;
+
+        if LVisible then
+        begin
+
+          if LSource >= 0 then
+          begin
+            LSource := -1;
+            Break;
+          end;
+          LSource := LIndex;
+        end;
+      end;
+    end;
+  end;
+  FActive := LSource;
+  LVisible := False;
+
+  if LSource >= 0 then
+  begin
+    LSelection := FViews[LSource].Selection;
+    CheckPrepared;
+
+    if LSelection.Count = 1 then
+    begin
+      LVisible := FViews[LSource].Snapshot.Has(LSelection.ItemAt(0));
+      CheckPrepared;
+    end;
+  end;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+    FReadOnly[LIndex] := FItemNodes[LIndex].Prop(
+      NyxAttributeName(atReadOnly), 'false') = 'true';
+    CheckPrepared;
+  end;
+  for LIndex := 0 to CKanbanLaneCount - 1 do
+  begin
+    FAllowed[LIndex] := LVisible and (LIndex <> LSource) and
+      not FReadOnly[LIndex];
+
+    if LSource >= 0 then
+    begin
+      FAllowed[LIndex] := FAllowed[LIndex] and not FReadOnly[LSource];
+    end;
+  end;
+end;
+
+procedure TKanbanBinding.RevokePrepared;
+begin
+  FRevoked := True;
+  FConnected := False;
+  FRefresh := nil;
+
+  if FPort <> nil then
+  begin
+    FPort.Revoke;
+  end;
+end;
+
+procedure TKanbanBinding.DisconnectPrepared;
+var
+  LIndex: Integer;
+  LFailure: TNyxText;
+  LFailed: Boolean;
+
+  procedure Failed(const AMessage: string);
+  begin
+
+    if not LFailed then
+    begin
+      LFailure := TNyxText(AMessage);
+    end;
+    LFailed := True;
+  end;
+
+begin
+  RevokePrepared;
+
+  if FCleaned then
+  begin
+    Exit;
+  end;
+  FCleaned := True;
+  LFailure := '';
+  LFailed := False;
+  for LIndex := 0 to High(FSubscriptions) do
+  begin
+    try
+      FSubscriptions[LIndex].Cancel;
+    except
+      on E: Exception do
+      begin
+        Failed(E.Message);
+      end;
+    end;
+  end;
+  for LIndex := 0 to High(FViewTokens) do
+  begin
+
+    if FViewTokens[LIndex] <> nil then
+    begin
+      try
+        FViewTokens[LIndex].Disconnect;
+      except
+        on E: Exception do
+        begin
+          Failed(E.Message);
+        end;
+      end;
+    end;
+  end;
+  for LIndex := 0 to High(FPolicies) do
+  begin
+
+    if (FPolicies[LIndex] <> nil) and (FMoveNodes[LIndex] <> nil) then
+    begin
+      try
+        FMoveNodes[LIndex].DetachEnabledPolicy(FPolicies[LIndex]);
+      except
+        on E: Exception do
+        begin
+          Failed(E.Message);
+        end;
+      end;
+    end;
+    FReadiness[LIndex] := nil;
+    FItemNodes[LIndex] := nil;
+    FMoveNodes[LIndex] := nil;
+  end;
+  FSubscriptions := nil;
+  FViewTokens := nil;
+  FPolicies := nil;
+  ClearDrag;
+  FItems := nil;
+  FMoves := nil;
+  FViews := nil;
+  FAtomic := nil;
+  FStore := nil;
+  FBoard := nil;
+  FBoardNode := nil;
+  FGeneration := nil;
+  FScheduler := nil;
+  FCallback := nil;
+  FPort := nil;
+
+  if LFailed then
+  begin
+    raise ENyxKanban.Create('Kanban disconnected; cleanup receiver failed: ' + LFailure);
+  end;
+end;
+
+constructor TPreparedKanban.Create(const ABoard: INyxKanbanBoard;
+  const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+begin
+  inherited Create;
+  FEventView := AEventView;
+  FOwner := TKanbanBinding.CreatePrepared(ABoard, AOptions, AViews,
+    FEventView, AScheduler, ARefresh, ADisabled);
+  FBindingLease := FOwner;
+end;
+
+destructor TPreparedKanban.Destroy;
+begin
+  try
+    DoDisconnect;
+  except
+    { All tokens/policies were attempted after revocation; destructors do not
+      turn a cleanup diagnostic into rollback or a dangling weak receiver. }
+  end;
+  inherited Destroy;
+end;
+
+function TPreparedKanban.GetBinding: INyxKanbanBinding;
+begin
+  Result := nil;
+
+  if (FOwner <> nil) and not FOwner.FDisabled then
+  begin
+    Result := FBindingLease;
+  end;
+end;
+
+procedure TPreparedKanban.Revoke;
+begin
+
+  if FOwner <> nil then
+  begin
+    FOwner.RevokePrepared;
+  end;
+end;
+
+procedure TPreparedKanban.DoDisconnect;
+begin
+
+  if FOwner <> nil then
+  begin
+    FOwner.DisconnectPrepared;
+  end;
+end;
+
+procedure TPreparedKanban.Disconnect;
+var
+  LKeepAlive: INyxPreparedKanbanBinding;
+begin
+  LKeepAlive := Self;
+  DoDisconnect;
+end;
+
+procedure TPreparedKanban.Validate;
+var
+  LKeepAlive: INyxPreparedKanbanBinding;
+  LScheduler: INyxScheduler;
+  LIndex: Integer;
+begin
+  LKeepAlive := Self;
+
+  if FValidated or FInstalled or FRetired then
+  begin
+    raise ENyxKanban.Create('Prepared Kanban admission is single use');
+  end;
+  FOwner.CheckPrepared;
+  LScheduler := FOwner.FScheduler;
+  LScheduler.RequireUI;
+  FOwner.CheckPrepared;
+
+  if not FOwner.FDisabled then
+  begin
+    FOwner.AdmitPreparedContract;
+    for LIndex := 0 to CKanbanLaneCount - 1 do
+    begin
+
+      if not FOwner.FReadiness[LIndex].PublicationReady then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban collection view is busy');
+      end;
+      FOwner.CheckPrepared;
+
+      if (FOwner.FItemNodes[LIndex].Prop(NyxAttributeName(atReadOnly), 'false') =
+        'true') <> FOwner.FReadOnly[LIndex] then
+      begin
+        raise ENyxKanban.Create('Prepared Kanban read-only availability changed');
+      end;
+      FOwner.CheckPrepared;
+    end;
+  end;
+  FValidated := True;
+  CheckReady;
+end;
+
+procedure TPreparedKanban.CheckReady;
+var
+  LKeepAlive: INyxPreparedKanbanBinding;
+begin
+  LKeepAlive := Self;
+
+  if not FValidated or FInstalled or FRetired then
+  begin
+    raise ENyxKanban.Create('Prepared Kanban readiness requires admitted nodes');
+  end;
+  FOwner.CheckPreparedNodes;
+end;
+
+procedure TPreparedKanban.Install;
+begin
+
+  if not FValidated or FInstalled or FRetired or FOwner.FRevoked then
+  begin
+    Exit;
+  end;
+  FOwner.FConnected := True;
+  FInstalled := True;
+end;
+
+procedure TPreparedKanban.Notify;
+begin
+  { Candidate Sync already rendered availability. Activation makes no borrowed
+    host call; ordinary live view notifications request subsequent refreshes. }
+end;
+
+procedure TPreparedKanban.DoRetire;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if not FInstalled then
+  begin
+    try
+      DoDisconnect;
+    except
+      { Cleanup has already revoked every weak receiver and attempted all rows. }
+    end;
+  end;
+  FEventView := nil;
+end;
+
+procedure TPreparedKanban.Retire;
+var
+  LKeepAlive: INyxPreparedKanbanBinding;
+begin
+  LKeepAlive := Self;
+  DoRetire;
+end;
+
+function PrepareNyxKanbanBinding(const ABoard: INyxKanbanBoard;
+  const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
+  const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  ARefresh: TNyxKanbanRefresh): INyxPreparedKanbanBinding;
+var
+  LBoard: INyxKanbanBoard;
+  LOptions: TNyxKanbanOptions;
+  LViews: INyxCollectionBindings;
+  LEventView: INyxPreparedEventView;
+  LScheduler: INyxScheduler;
+begin
+  LBoard := ABoard;
+  LOptions := AOptions.Copy;
+  LViews := AViews;
+  LEventView := AEventView;
+  LScheduler := AScheduler;
+  Result := TPreparedKanban.Create(LBoard, LOptions, LViews, LEventView,
+    LScheduler, ARefresh, False);
+end;
+
+function PrepareNyxKanbanDisabled(const ABoard: INyxKanbanBoard;
+  const AEventView: INyxPreparedEventView;
+  const AScheduler: INyxScheduler): INyxPreparedKanbanBinding;
+var
+  LBoard: INyxKanbanBoard;
+  LEventView: INyxPreparedEventView;
+  LScheduler: INyxScheduler;
+begin
+  LBoard := ABoard;
+  LEventView := AEventView;
+  LScheduler := AScheduler;
+  Result := TPreparedKanban.Create(LBoard, Default(TNyxKanbanOptions), nil,
+    LEventView, LScheduler, nil, True);
 end;
 
 function NewNyxKanbanBinding(const ABoard: INyxKanbanBoard;

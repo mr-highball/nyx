@@ -30,17 +30,12 @@ uses
     Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl,{$endif}
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
   nyx.composition, nyx.responsive, nyx.collections, nyx.collections.view,
-  nyx.collections.bindings, nyx.collections.view.types, nyx.kanban
+  nyx.collections.bindings, nyx.collections.view.types, nyx.kanban,
+  nyx.kanban.intent, nyx.events, nyx.scheduler
   {$ifdef NYX_COMPILED_KANBAN}, nyx.generated.kanban{$endif};
 
+{$ifndef PAS2JS}
 type
-  { Presentation borrows the current renderer only while both attachments live.
-    It is released after Disconnect and before the renderer or form retires. }
-  TKanbanPresentation = class
-  public
-    procedure Refresh;
-  end;
-  {$ifndef PAS2JS}
   { Expose ordinary LCL drag slots without replacing the connected Nyx handlers.
     These synthesized host callbacks do not qualify physical pointer hardware. }
   TControlAccess = class(TControl);
@@ -51,14 +46,14 @@ type
     MessageText: TNyxText;
     procedure Failed(ASender: TObject; AException: Exception);
   end;
-  {$endif}
+{$endif}
 
 var
   GDocument: TNyxDocument;
   GViews: INyxCollectionBindings;
   GOptions: TNyxKanbanOptions;
   GBindings: array of INyxKanbanBinding;
-  GPresentation: TKanbanPresentation;
+  GRefuseCandidate: Boolean;
   GAuthored: TNyxText;
   GChecks: Integer;
   GReview: Boolean;
@@ -132,10 +127,36 @@ begin
   {$endif}
 end;
 
-procedure TKanbanPresentation.Refresh;
+{ A creator-supplied ordinary label proves refusal after dormant board hooks
+  were prepared. The same factory renders real English content on success. }
+{$ifdef PAS2JS}
+function ReviewLabel(ANode: TNyxNode): TJSHTMLElement;
 begin
-  GRenderer.Sync;
+
+  if GRefuseCandidate then
+  begin
+    raise ENyxModel.Create('Deliberate candidate label failure');
+  end;
+  Result := TJSHTMLElement(document.createElement('span'));
+  Result.textContent := ANode.Prop(NyxAttributeName(atText));
 end;
+{$else}
+function ReviewLabel(ANode: TNyxNode; AOwner: TComponent): TControl;
+var
+  LLabel: TLabel;
+begin
+
+  if GRefuseCandidate then
+  begin
+    raise ENyxModel.Create('Deliberate candidate label failure');
+  end;
+  LLabel := TLabel.Create(AOwner);
+  LLabel.AutoSize := False;
+  LLabel.WordWrap := True;
+  LLabel.Caption := String(ANode.Prop(NyxAttributeName(atText)));
+  Result := LLabel;
+end;
+{$endif}
 
 {$ifndef PAS2JS}
 procedure TFailureObserver.Failed(ASender: TObject; AException: Exception);
@@ -162,6 +183,7 @@ begin
         .WithValue(CardLane, Complete.Name)]);
     LBoard := NewNyxKanbanBoard('workflow');
     ConfigureNyxKanbanBoard(LBoard, GOptions);
+    SetNyxKanbanIntent(LBoard, TNyxKanbanIntent.Configured(GOptions));
     LBoard.Configure.WhenViewport(TNyxViewportWidth.Below(700)).Layout(nlColumn).Done;
     LBoard.Lane0ItemsList.Configure.Height(112).Done;
     LBoard.Lane1ItemsList.Configure.Height(112).Done;
@@ -343,6 +365,21 @@ var
   LRevision: Integer;
   LMove: INyxKanbanMove;
   LRejected: Boolean;
+  LFormer: INyxKanbanBinding;
+  LGeneration: INyxCancellationScope;
+  LFormerRoot: TNyxNode;
+  LInstance: INyxControl;
+  LMaskedMove: TNyxNode;
+
+  procedure ReadAutomaticBindings;
+  begin
+    GBindings[0] := GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow'));
+    GBindings[1] := GRenderer.KanbanBinding(NyxQualifiedID('second-board', 'workflow'));
+    Check((GBindings[0] <> nil) and GBindings[0].Connected and
+      (GBindings[1] <> nil) and GBindings[1].Connected,
+      'accepted view supplies both managed automatic bindings');
+  end;
+
 begin
   LStore := LaneView(0, Plan).Store;
   LSibling := LaneView(1, Plan).Store;
@@ -399,7 +436,33 @@ begin
     'captured stale move refuses without overwriting accepted work');
   Check(TNyxCodec.Encode(GDocument) = GAuthored, 'runtime changes preserve authored defaults and source');
   LMove := GBindings[0].CaptureMove(FirstCard, Plan, Complete, LStore.Snapshot.Revision);
-  GBindings[0].Disconnect;
+  LFormer := GBindings[0];
+  LGeneration := NyxEventGeneration(GRenderer.Events);
+  LFormerRoot := GRenderer.Root;
+  GRefuseCandidate := True;
+  LRejected := False;
+  try
+    try
+      GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+  finally
+    GRefuseCandidate := False;
+  end;
+  Check(LRejected and (GRenderer.Root = LFormerRoot) and LFormer.Connected and
+    not LGeneration.Cancelled and (NyxEventGeneration(GRenderer.Events) = LGeneration) and
+    (LStore.Snapshot.Revision = LRevision),
+    'failed real factory preserves current boards, generation and accepted data');
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  ReadAutomaticBindings;
+  Check(not LFormer.Connected and LGeneration.Cancelled and
+    (GBindings[0] <> LFormer) and (LaneView(0, Plan).Store = LStore),
+    'successful same-ID replacement owns a fresh binding and preserves the runtime dataset');
   LRejected := False;
   try
     LMove.Commit;
@@ -410,17 +473,84 @@ begin
     end;
   end;
   Check(LRejected and not LMove.Committed and (LStore.Snapshot.Revision = LRevision),
-    'retained command safely refuses after explicit page attachment retirement');
-  Check(GBindings[1].Connected, 'retiring one board preserves the other attachment');
+    'retained command cannot cross a same-ID automatic view replacement');
+  SelectFirstCard(0, Plan);
+  MoveByKeyboard(0, Complete);
+  Check(LaneView(0, Complete).Snapshot.Has(FirstCard),
+    'fresh automatic callbacks move a card after successful replacement');
+  LInstance := RetainNyxControl(GDocument.Find('first-board'));
+  SetNyxKanbanIntent(LInstance, TNyxKanbanIntent.Disabled);
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  Check(GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow')) = nil,
+    'one disabled reusable occurrence exposes no movement controller');
+  LMaskedMove := GRenderer.Root.Find(NyxQualifiedID('first-board', 'workflow'))
+    .Part(NyxPart('lane-1/move'));
+  {$ifdef PAS2JS}
+  Check(TJSHTMLButtonElement(GRenderer.ElementFor(LMaskedMove.ID)).disabled,
+    'disabled intent masks the actual inherited Move face');
+  {$else}
+  Check(not GRenderer.ControlFor(LMaskedMove.ID).Enabled,
+    'disabled intent masks the actual inherited Move face');
+  {$endif}
+  Check(LMaskedMove.StoredProp(NyxAttributeName(atEnabled), 'true') = 'true',
+    'runtime mask preserves the authored Enabled setting');
+  GBindings[1] := GRenderer.KanbanBinding(NyxQualifiedID('second-board', 'workflow'));
+  Check((GBindings[1] <> nil) and GBindings[1].Connected,
+    'disabled instance leaves the rendered sibling functional');
+  SelectFirstCard(1, Plan);
+  MoveByKeyboard(1, Build);
+  Check(LaneView(1, Build).Snapshot.Has(FirstCard) and
+    (LStore.Snapshot.Item(FirstCard).GetValue(CardLane) = Complete.Name),
+    'the independent sibling moves while the masked board retains its data');
   {$ifndef PAS2JS}
   Capture('independent');
   {$endif}
+  InheritNyxKanbanIntent(LInstance);
+  LInstance := nil;
+  Check(TNyxCodec.Encode(GDocument) = GAuthored,
+    'inherit restores the complete original authored document');
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  ReadAutomaticBindings;
+  LFormer := GBindings[0];
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, True, nil, GViews);
+  Check(not LFormer.Connected and
+    (GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow')) = nil),
+    'design mode retires live movement and keeps authored parts editable');
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  ReadAutomaticBindings;
+  SelectFirstCard(0, Complete);
+  LRevision := LStore.Snapshot.Revision;
+  LMove := GBindings[0].CaptureMove(FirstCard, Complete, Plan, LRevision);
+  GRenderer.Unmount;
+  Check(not GBindings[0].Connected and not GBindings[1].Connected,
+    'ordinary Unmount revokes every automatic board before controls retire');
+  LRejected := False;
+  try
+    LMove.Commit;
+  except
+    on ENyxCollection do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and not LMove.Committed and (LStore.Snapshot.Revision = LRevision),
+    'retained automatic command refuses safely after full view retirement');
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  ReadAutomaticBindings;
+  SelectFirstCard(0, Complete);
+  MoveByKeyboard(0, Plan);
+  Check((LStore.Snapshot.Revision = LRevision + 1) and
+    LaneView(0, Plan).Snapshot.Has(FirstCard),
+    'the same renderer becomes interactive again after Unmount and remount');
 end;
 
 procedure Initialize;
 var
   LRoot: TNyxNode;
-  LBoard: INyxKanbanBoard;
   LExpected: TNyxDocument;
   LCode: TNyxText;
   LIndex: Integer;
@@ -445,7 +575,8 @@ begin
   GAuthored := TNyxCodec.Encode(GDocument);
   LCode := TNyxCodegen.Generate(GDocument, 'nyx.generated.kanban');
   Check((Pos('INyxKanbanBoard', LCode) > 0) and (Pos('INyxButton', LCode) > 0) and
-    (Pos('NyxCollectionView', LCode) > 0), 'crafted source retains specialized parts and typed queries');
+    (Pos('NyxCollectionView', LCode) > 0) and (Pos('SetNyxKanbanIntent', LCode) > 0),
+    'crafted source retains specialized parts, typed queries and automatic intent');
   {$ifndef PAS2JS}
 
   if GEvidence <> '' then
@@ -470,6 +601,11 @@ begin
   finally
     LRoot.Free;
   end;
+  {$ifdef PAS2JS}
+  GRenderer.RegisterFactory('label', @ReviewLabel);
+  {$else}
+  GRenderer.RegisterFactory('label', ReviewLabel);
+  {$endif}
   GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
   Pump;
   SetLength(GBindings, 2);
@@ -484,10 +620,9 @@ begin
     begin
       LRoot := GRenderer.Root.Find(NyxQualifiedID('second-board', 'workflow'));
     end;
-    LBoard := RetainNyxControl(LRoot) as INyxKanbanBoard;
-    GBindings[LIndex] := NewNyxKanbanBinding(LBoard, GOptions, GViews,
-      GRenderer.Events, GRenderer.Events.Scheduler, GPresentation.Refresh);
-    Check(GBindings[LIndex].Connected, 'explicit code-first binding attaches to the actual mounted board');
+    GBindings[LIndex] := GRenderer.KanbanBinding(LRoot.ID);
+    Check((GBindings[LIndex] <> nil) and GBindings[LIndex].Connected,
+      'renderer automatically attaches the actual mounted board without handwritten binding code');
   end;
 end;
 
@@ -495,20 +630,24 @@ procedure Release;
 var
   LIndex: Integer;
 begin
+  { The renderer owns automatic attachment retirement. Retained public binding
+    references must already be revoked when its actual controls are gone. }
+  GRenderer.Free;
+  GRenderer := nil;
   for LIndex := 0 to High(GBindings) do
   begin
 
     if GBindings[LIndex] <> nil then
     begin
-      GBindings[LIndex].Disconnect;
+
+      if GBindings[LIndex].Connected then
+      begin
+        raise ENyxKanban.Create('Renderer disposal retained a live automatic binding');
+      end;
       GBindings[LIndex] := nil;
     end;
   end;
-  GRenderer.Free;
-  GRenderer := nil;
   GViews := nil;
-  GPresentation.Free;
-  GPresentation := nil;
   GDocument.Free;
   GDocument := nil;
   {$ifndef PAS2JS}
@@ -539,7 +678,6 @@ begin
   GRenderer := TNyxBrowserRenderer.Create;
   GReview := window.location.search = '?review';
   {$endif}
-  GPresentation := TKanbanPresentation.Create;
   try
     try
       Initialize;

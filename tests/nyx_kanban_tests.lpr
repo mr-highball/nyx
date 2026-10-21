@@ -29,7 +29,7 @@ uses
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.query, nyx.collections.bindings, nyx.collections.selection,
   nyx.composition, nyx.events, nyx.scheduler, nyx.behavior, nyx.gestures,
-  nyx.codec, nyx.source
+  nyx.codec, nyx.source, nyx.publication
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -127,9 +127,30 @@ type
       const AExecution: INyxExecution); override;
   end;
 
+  { Borrowed final presentation receiver counts refreshes and can release the
+    last renderer-style plan lease during a real committed view notification. }
+  TPreparedRefreshProbe = class
+  public
+    Calls: Integer;
+    ReleasePlan: Boolean;
+    procedure Refresh;
+  end;
+
+  { A later ordinary participant proves the pure final fence notices an actual
+    selection publication after the binding's outward admission has returned. }
+  TPreparedSelection = class(TInterfacedObject, INyxPreparedPublication)
+  public
+    View: INyxCollectionView;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
 var
   GChecks: Integer;
   GReleasedMove: INyxKanbanMove;
+  GPreparedPlan: INyxPreparedKanbanBinding;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -1182,6 +1203,446 @@ begin
   end;
 end;
 
+procedure TPreparedRefreshProbe.Refresh;
+begin
+  Inc(Calls);
+
+  if ReleasePlan then
+  begin
+    GPreparedPlan := nil;
+  end;
+end;
+
+procedure TPreparedSelection.Validate;
+begin
+  View.Select(Card);
+end;
+
+procedure TPreparedSelection.Install;
+begin
+end;
+
+procedure TPreparedSelection.Notify;
+begin
+end;
+
+procedure TPreparedSelection.Retire;
+begin
+end;
+
+procedure DetachManual(AFixture: TBoardFixture);
+begin
+  AFixture.First.Disconnect;
+  AFixture.Second.Disconnect;
+  AFixture.First := nil;
+  AFixture.Second := nil;
+end;
+
+procedure PreparedActivationCase;
+var
+  LSchedulerOwner: TTurnScheduler;
+  LScheduler: INyxScheduler;
+  LFixture: TBoardFixture;
+  LPreparation: INyxEventViewPreparation;
+  LEventPlan: INyxPreparedEventView;
+  LPlan: INyxPreparedKanbanBinding;
+  LPrevious: INyxCancellationScope;
+  LFuture: INyxCancellationScope;
+  LView: INyxCollectionView;
+  LSibling: INyxCollection;
+  LStore: INyxCollection;
+  LButton: INyxButton;
+  LHeading: INyxHeading;
+  LSpec: TNyxCollectionViewSpec;
+  LStream: INyxEventStream;
+  LToken: INyxEventSubscription;
+  LClick: TQueuedClick;
+  LClickLease: INyxEventCallback;
+  LEvent: TNyxEventInfo;
+  LExecutions: TNyxExecutions;
+  LProbe: TPreparedRefreshProbe;
+  LMove: INyxKanbanMove;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LSchedulerOwner := TTurnScheduler.Create;
+  LScheduler := LSchedulerOwner;
+  LFixture := TBoardFixture.Create(LScheduler);
+  LProbe := TPreparedRefreshProbe.Create;
+  try
+    DetachManual(LFixture);
+    LBefore := TNyxCodec.Encode(LFixture.Document);
+    LButton := LFixture.FirstBoard.Part(NyxPart('lane-1/move')) as INyxButton;
+    LHeading := LFixture.FirstBoard.Part(NyxPart('lane-1/title')) as INyxHeading;
+    LButton.Text := 'Bring the selected card';
+    LHeading.Text := 'Work together';
+    LSpec := NyxCollectionView(LFixture.Options.Collection).
+      Column(LFixture.Options.TitleField, 'Our cards').Scoped(csInstance).
+      Selection(nsmSingle).Query(NyxCollectionQuery.Where(
+        NyxWhere(LFixture.Options.LaneField).EqualTo(ReadyLane.Name, nqtExact)));
+    LFixture.FirstBoard.Lane0ItemsList.Node.SetCollectionView(LSpec);
+    LFixture.Bindings := LFixture.Bindings.Recompose(LFixture.Runtime);
+    LView := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+    LStore := LView.Store;
+    LSibling := LFixture.Bindings.ViewFor(LFixture.SecondBoard.Lane0ItemsList.ID).Store;
+    LView.Select(Card);
+    LStream := LFixture.Events.On(NyxControlEvents(LButton.ID, niRuntime), ntClick).
+      Policy(neUIQueue);
+    LClick := TQueuedClick.Create;
+    LClickLease := LClick;
+    LClick.Fixture := LFixture;
+    LToken := LStream.Subscribe(LClickLease);
+    Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+    LPrevious := NyxEventGeneration(LFixture.Events);
+    LEventPlan := LPreparation.PrepareView;
+    LFuture := LEventPlan.Generation;
+    LPlan := PrepareNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+      LFixture.Bindings, LEventPlan, LScheduler, LProbe.Refresh);
+    LFixture.First := LPlan.Binding;
+    Check((LFixture.First <> nil) and not LFixture.First.Connected and
+      not LPrevious.Cancelled and not LFuture.Cancelled,
+      'a prepared binding exposes no live movement before its prospective view installs');
+    Check((LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true') and
+      (LProbe.Calls = 0),
+      'cached selected-card availability is ready for first Sync without a host refresh');
+    LEvent := EventFor(ntClick, LButton, LFixture.FirstBoard);
+    LExecutions := LFixture.Events.Dispatch(LEvent, LButton.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((LStore.Snapshot.Item(Card).GetValue(LFixture.Options.LaneField) =
+      ReadyLane.Name) and (Length(LExecutions) = 1) and (LClick.Calls = 0),
+      'dormant default slots cannot move data while independent application work stays queued');
+    Check(LStream.ExecutionPolicy = neUIQueue,
+      'prepared input preserves the ordinary caller-owned Click policy');
+    PublishNyxGroup([LEventPlan, LPlan]);
+    Check(LFixture.First.Connected and LPrevious.Cancelled and
+      (NyxEventGeneration(LFixture.Events) = LFuture) and (LProbe.Calls = 0),
+      'coordinated installation adopts the exact future generation without calling the host');
+    Check((LButton.Text = 'Bring the selected card') and
+      (LHeading.Text = 'Work together') and
+      (LView.Spec.ColumnAt(0).Title = 'Our cards'),
+      'automatic behavioral admission preserves button, heading and column cosmetics');
+    LExecutions := LFixture.Events.Dispatch(LEvent, LButton.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((LStore.Snapshot.Item(Card).GetValue(LFixture.Options.LaneField) =
+      ActiveLane.Name) and (LProbe.Calls > 0) and (LClick.Calls = 0),
+      'installed synchronous Move publishes through the real store before queued callbacks');
+    LSchedulerOwner.Drain;
+    Check((LClick.Calls = 1) and LClick.SawMoved and
+      (LStream.ExecutionPolicy = neUIQueue),
+      'only the accepted-generation application callback executes after the synchronous move');
+    LMove := LFixture.First.CaptureMove(Card, ActiveLane, DoneLane,
+      LStore.Snapshot.Revision);
+    LPlan.Revoke;
+    Check(not LFixture.First.Connected and
+      (LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'false'),
+      'flag-only revocation closes input and availability before old controls retire');
+    LRejected := False;
+    try
+      LMove.Commit;
+    except
+      on ENyxKanbanCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LStore.Snapshot.Item(Card).
+      GetValue(LFixture.Options.LaneField) = ActiveLane.Name),
+      'a retained captured move cannot outlive its revoked automatic attachment');
+    LPlan.Disconnect;
+    LPlan.Disconnect;
+    Check((LButton.Node.EnabledPolicyCount = 0) and
+      (LButton.Node.StoredProp(NyxAttributeName(atEnabled), 'true') = 'true') and
+      (LButton.Text = 'Bring the selected card'),
+      'cleanup detaches only runtime availability and preserves authored presentation');
+    Check((TNyxCodec.Encode(LFixture.Document) = LBefore) and
+      (LSibling.Snapshot.Revision = 0) and
+      (LSibling.Snapshot.Item(Card).GetValue(LFixture.Options.LaneField) = ReadyLane.Name),
+      'automatic movement leaves the definition, saved document and sibling store exact');
+  finally
+
+    if LPlan <> nil then
+    begin
+      LPlan.Disconnect;
+    end;
+
+    if LToken <> nil then
+    begin
+      LToken.Cancel;
+    end;
+    LPlan := nil;
+    LEventPlan := nil;
+    LPreparation := nil;
+    LProbe.Free;
+    LFixture.Free;
+    LScheduler := nil;
+  end;
+end;
+
+procedure PreparedRefusalCases;
+var
+  LFixture: TBoardFixture;
+  LPreparation: INyxEventViewPreparation;
+  LEventPlan: INyxPreparedEventView;
+  LPlan: INyxPreparedKanbanBinding;
+  LView: INyxCollectionView;
+  LStore: INyxCollection;
+  LAtomic: INyxAtomicCollection;
+  LReservation: INyxPreparedPublication;
+  LPrevious: INyxCancellationScope;
+  LMutation: TPreparedSelection;
+  LMutationLease: INyxPreparedPublication;
+  LIndex: Integer;
+  LRejected: Boolean;
+  LBefore: TNyxText;
+begin
+  for LIndex := 0 to 6 do
+  begin
+    LFixture := TBoardFixture.Create;
+    try
+      DetachManual(LFixture);
+      LBefore := TNyxCodec.Encode(LFixture.Document);
+      LView := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+      LStore := LView.Store;
+      LPrevious := NyxEventGeneration(LFixture.Events);
+      Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+      LEventPlan := LPreparation.PrepareView;
+      LPlan := PrepareNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+        LFixture.Bindings, LEventPlan, LFixture.Scheduler, nil);
+      case LIndex of
+        0:
+          begin
+            LView.Select(Card);
+          end;
+        1:
+          begin
+            LView.ConfigureQuery(NyxCollectionQuery);
+          end;
+        2:
+          begin
+            Supports(LStore, INyxAtomicCollection, LAtomic);
+            LReservation := LAtomic.PrepareAssign(LStore.Snapshot,
+              LStore.Snapshot.Revision);
+          end;
+        3:
+          begin
+            LFixture.FirstBoard.Lane0ItemsList.Node.RemoveCollectionView;
+          end;
+        4:
+          begin
+            LPlan.Revoke;
+          end;
+        5:
+          begin
+            LEventPlan.Generation.Cancel;
+          end;
+        6:
+          begin
+            LMutation := TPreparedSelection.Create;
+            LMutationLease := LMutation;
+            LMutation.View := LView;
+          end;
+      end;
+      LRejected := False;
+      try
+
+        if LMutationLease <> nil then
+        begin
+          PublishNyxGroup([LEventPlan, LPlan, LMutationLease]);
+        end
+        else
+        begin
+          PublishNyxGroup([LEventPlan, LPlan]);
+        end;
+      except
+        on ENyxKanban do
+        begin
+          LRejected := True;
+        end;
+        on ENyxSchedule do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected and not LPrevious.Cancelled and not LPlan.Binding.Connected,
+        'prepared refusal preserves mounted generation for case ' + IntToStr(LIndex));
+      Check((LStore.Snapshot.Revision = 0) and
+        (TNyxCodec.Encode(LFixture.Document) = LBefore),
+        'dirty/busy/retired preparation cannot publish data or source for case ' +
+        IntToStr(LIndex));
+    finally
+
+      if LReservation <> nil then
+      begin
+        LReservation.Retire;
+      end;
+      LReservation := nil;
+      LAtomic := nil;
+      LMutationLease := nil;
+      LMutation := nil;
+      LPlan := nil;
+      LEventPlan := nil;
+      LPreparation := nil;
+      LView := nil;
+      LStore := nil;
+      LFixture.Free;
+    end;
+  end;
+end;
+
+procedure PreparedDisabledCase;
+var
+  LFixture: TBoardFixture;
+  LPreparation: INyxEventViewPreparation;
+  LEventPlan: INyxPreparedEventView;
+  LPlan: INyxPreparedKanbanBinding;
+  LButton: INyxButton;
+  LStore: INyxCollection;
+  LEvent: TNyxEventInfo;
+  LExecutions: TNyxExecutions;
+begin
+  LFixture := TBoardFixture.Create;
+  try
+    DetachManual(LFixture);
+    LButton := LFixture.FirstBoard.Part(NyxPart('lane-1/move')) as INyxButton;
+    LButton.Text := 'A customized move face';
+    LStore := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID).Store;
+    Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+    LEventPlan := LPreparation.PrepareView;
+    LPlan := PrepareNyxKanbanDisabled(LFixture.FirstBoard, LEventPlan, LFixture.Scheduler);
+    Check((LPlan.Binding = nil) and
+      (LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'false') and
+      (LButton.Node.StoredProp(NyxAttributeName(atEnabled), 'true') = 'true'),
+      'disabled intent is a runtime mask without a fabricated data controller');
+    PublishNyxGroup([LEventPlan, LPlan]);
+    LEvent := EventFor(ntClick, LButton, LFixture.FirstBoard);
+    LExecutions := LFixture.Events.Dispatch(LEvent, LButton.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((Length(LExecutions) = 0) and (LStore.Snapshot.Revision = 0) and
+      (LFixture.FirstBoard.Lane0ItemsList.Node.Prop(
+        NyxAttributeName(atReadOnly), 'false') = 'false'),
+      'disabled masks register no movement or unrelated list editing restriction');
+    LPlan.Revoke;
+    LPlan.Disconnect;
+    Check((LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true') and
+      (LButton.Text = 'A customized move face'),
+      'retiring a disabled mask restores the preserved customized face');
+  finally
+
+    if LPlan <> nil then
+    begin
+      LPlan.Disconnect;
+    end;
+    LPlan := nil;
+    LEventPlan := nil;
+    LPreparation := nil;
+    LFixture.Free;
+  end;
+end;
+
+procedure PreparedLifetimeCase;
+var
+  LFixture: TBoardFixture;
+  LPreparation: INyxEventViewPreparation;
+  LEventPlan: INyxPreparedEventView;
+  LProbe: TPreparedRefreshProbe;
+  LView: INyxCollectionView;
+  LStore: INyxCollection;
+  LBinding: INyxKanbanBinding;
+  LMove: INyxKanbanMove;
+
+  procedure Stage;
+  begin
+    GPreparedPlan := PrepareNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+      LFixture.Bindings, LEventPlan, LFixture.Scheduler, LProbe.Refresh);
+  end;
+
+begin
+  LFixture := TBoardFixture.Create;
+  LProbe := TPreparedRefreshProbe.Create;
+  try
+    DetachManual(LFixture);
+    LView := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+    LStore := LView.Store;
+    Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+    LEventPlan := LPreparation.PrepareView;
+    Stage;
+    LBinding := GPreparedPlan.Binding;
+    PublishNyxGroup([LEventPlan, GPreparedPlan]);
+    LProbe.ReleasePlan := True;
+    LMove := LBinding.CaptureMove(Card, ReadyLane, ActiveLane, LStore.Snapshot.Revision);
+    LMove.Commit;
+    Check(LMove.Committed and (GPreparedPlan = nil) and not LBinding.Connected and
+      (LProbe.Calls = 1),
+      'a committed notification may release the last attachment-plan lease safely');
+    Check(LStore.Snapshot.Item(Card).GetValue(LFixture.Options.LaneField) = ActiveLane.Name,
+      'callback disposal preserves the already installed card movement');
+  finally
+    GPreparedPlan := nil;
+    LBinding := nil;
+    LEventPlan := nil;
+    LPreparation := nil;
+    LProbe.Free;
+    LFixture.Free;
+  end;
+end;
+
+procedure PreparedSourceActivationCase;
+var
+  LFixture: TBoardFixture;
+  LPreparation: INyxEventViewPreparation;
+  LEventPlan: INyxPreparedEventView;
+  LPlan: INyxPreparedKanbanBinding;
+  LReady: INyxCollectionView;
+  LActive: INyxCollectionView;
+  LButton: INyxButton;
+  LEvent: TNyxEventInfo;
+begin
+  LFixture := TBoardFixture.Create;
+  try
+    DetachManual(LFixture);
+    LReady := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+    LActive := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane1ItemsList.ID);
+    LReady.Select(Card);
+    LActive.Select(NyxItem(LFixture.Options.Collection, 'card-three'));
+    Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+    LEventPlan := LPreparation.PrepareView;
+    LPlan := PrepareNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+      LFixture.Bindings, LEventPlan, LFixture.Scheduler, nil);
+    LButton := LFixture.FirstBoard.Part(NyxPart('lane-2/move')) as INyxButton;
+    Check(LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'false',
+      'several retained lane selections never invent one initial active source');
+    PublishNyxGroup([LEventPlan, LPlan]);
+    LEvent := EventFor(ntClick, LFixture.FirstBoard.Lane0ItemsList, LFixture.FirstBoard);
+    LFixture.Events.Dispatch(LEvent, LFixture.FirstBoard.Lane0ItemsList.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true') and
+      (LReady.Selection.Count = 1) and (LActive.Selection.Count = 1) and
+      (LReady.Store.Snapshot.Revision = 0),
+      'clicking an already-selected row establishes source intent without selection mutation');
+    LEvent := EventFor(ntAfterEnter, LFixture.FirstBoard.Lane1ItemsList, LFixture.FirstBoard);
+    LFixture.Events.Dispatch(LEvent, LFixture.FirstBoard.Lane1ItemsList.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    LEvent := EventFor(ntClick, LButton, LFixture.FirstBoard);
+    LFixture.Events.Dispatch(LEvent, LButton.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((LReady.Store.Snapshot.Item(Card).GetValue(LFixture.Options.LaneField) =
+      ReadyLane.Name) and (LReady.Store.Snapshot.Item(
+      NyxItem(LFixture.Options.Collection, 'card-three')).GetValue(
+      LFixture.Options.LaneField) = DoneLane.Name),
+      'real focus entry chooses the exact retained source lane for subsequent Move');
+  finally
+
+    if LPlan <> nil then
+    begin
+      LPlan.Disconnect;
+    end;
+    LPlan := nil;
+    LEventPlan := nil;
+    LPreparation := nil;
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     OptionCases;
@@ -1195,6 +1656,11 @@ begin
     LifetimeCases;
     InputCases;
     PolicyCases;
+    PreparedActivationCase;
+    PreparedRefusalCases;
+    PreparedDisabledCase;
+    PreparedLifetimeCase;
+    PreparedSourceActivationCase;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-kanban', 'passed');
     document.body.setAttribute('data-kanban-checks', IntToStr(GChecks));
