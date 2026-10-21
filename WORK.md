@@ -4,7 +4,61 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Current result: the narrow R3 managed-ownership repair is qualified for native
+Current result: the approved repaired-browser run fails at both verified1280x900
+and390x900 before completion, now in prepared Kanban readiness validation. Its
+constructor releases the managed readiness array after writing Supports outputs
+directly into its cells, clearing all three entries before Validate. The next
+action is a bounded local-to-owning-field lease repair proposal in that executed
+constructor/adapter, preserving every readiness predicate and the same application.
+Root owns docs/checkpoint/read-only proposal only; all Pascal stays paused until
+a separate source release. The single host is stopped/joined and its approval
+consumed. No further browser run is authorized. No complete original criterion
+closes; this actual browser batch advances no-closure18→19.
+
+### Repaired reusable/embedded browser execution — 2026-10-21
+
+Exact repaired JSD8AF4094/HTML96451F59/RTL A6C5EDC8 ran once at each verified
+1280x900 and390x900 through the approved temporary loopback Pascal host. Both
+required viewports were observed before navigation and again with their results;
+there was no wrong-width attempt. Both fail before every status/count/R1 marker
+with TypeError "Cannot read properties of null (reading 'PublicationReady')".
+Final error observations retain the same stack through Kanban Validate, its thin
+coordinator adapter and common validation. The screenshot is blank because the
+candidate is torn down before completion. Expected256/563 remain source-derived,
+not browser passes. No test/assertion/wait, compiler, Pascal or runtime asset changed.
+
+The exact generated constructor fills FReadiness through direct Supports outputs,
+then its finally calls rtl._Release(this.FReadiness). The bundled managed-array
+implementation decrements count1 to0 and clears every cell. That precisely explains
+the null entry at Kanban Validate without a callback, cancellation or finalized
+Summary object. The same executed constructor also has direct-output finalizers
+for FMoves/FItems/FAtomic; its adapter has them for FReadiness/FBinding. A separate
+bounded repair should query locals and explicitly assign each retained field/cell,
+keeping validation order, exact specialized identities and all readiness checks.
+This stack does not establish a need to split Kanban initialization. Adjacent
+MasterDetail field-output sites need explicit separate scope if pursued.
+
+Owned host44704 was checked against its executable, full command and exact UTC
+ticks639282105618252760 before stop/join. Port8766 is empty; viewport reset and
+only test tabs4/5 were closed. Immutable744CC006CFE69C4FC1BB2FF0C8B9DC7E2D456F4E69C46C4F1BAEC6B50DC8B8D4
+and independent review verify53 current+retained owned,1782 Pascal,13 concurrent,
+47 extras,six runtime inputs and13 evidence files. Native9E3B2222 and its exact
+receipt/log/artifact/export pins, original62C40341 and its12 evidence files remain
+unchanged. The current failed run has no compiler/source edit or retry. Ignored
+.local/master-detail-events-paths-private.json owns exact receipts and next scope.
+Reuse05/parent/DataToolbar and original parity/authoring gates remain open.
+
+### Retained repaired-browser admission
+
+The user explicitly approved "Run the repaired browser checks".
+Root owns one temporary loopback Pascal host for the exact already-built repaired
+application at1280x900/390x900, its actual outcomes through final cleanup and
+stopping the owned host. A fresh source/runtime freeze precedes that reader;
+all source/guides remain paused through join/audit. No compiler or Pascal change
+is released. Helper independently reviews the results. Preserve the first browser
+failures and current native/compile qualification; this admission proves no pass.
+
+Prior result: the narrow R3 managed-ownership repair is qualified for native
 execution and browser compilation. Independent audit9E3B2222 verifies all actual
 readers joined, eight compilers, native171/68/68/588/588 and five clean heaps.
 New browser JSD8AF4094 has the correct ownership sequence; it has not executed.

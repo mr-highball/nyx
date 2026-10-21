@@ -50,9 +50,18 @@ and qualifies native171/68/68/588/588, five clean heaps and eight successful
 compilers. Both renderers and this task's E60C4523 application/assertions remain
 exact. New browser JSD8AF4094 emits managed factory ownership before initialization
 and separate readiness field leases. Audit9E3B2222 pins the complete joined result.
-That browser artifact has not executed; the first failure remains retained and
-a new bounded local-host question is pending. No complete original criterion or
+At that checkpoint the browser artifact had not executed, the first failure was
+retained and a new bounded local-host question was pending. No original criterion or
 parent/browser gate closes from native execution and compilation.
+
+R3 repaired execution (2026-10-21): that exact D8AF4094 application now fails at
+both verified1280x900/390x900 before markers, in prepared Kanban Validate with a
+null readiness-array entry. The constructor's direct Supports array output emits
+a final managed-array release that clears its cells. Independent744CC006 preserves
+both failures, unchanged source/assets and native/first-browser evidence. The one
+approved host is stopped/joined and browser state restored. This is an actual
+failed browser result, not acceptance. A separately scoped ownership repair must
+preserve the same application and every readiness predicate.
 
 **Work packets and handoff:**
 
@@ -102,11 +111,12 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 
 **Pull checklist — R3:**
 
-Status: the first admitted browser run failed at both required widths. Its single
-host is stopped and approval consumed. The reviewed ownership repair now passes
-native/compile qualification; the next outcome is the same rebuilt application
-executing at both verified browser widths. A new bounded local-host question is
-pending; this task releases no host/config retry by itself.
+Status: the first admitted browser run and its separately approved repaired run
+both failed before completion at both required widths. Both owned hosts are
+stopped/joined; their approvals are consumed. The repaired run now exposes Kanban's
+managed-array ownership failure. A separate local-output/owning-assignment source
+proposal precedes any compiler or future browser request. This task releases no
+host/config retry by itself.
 
 Preserve every consumer/assertion/wait byte. The bounded proposal establishes
 managed Summary ownership before initialization/callouts/self leases, and uses

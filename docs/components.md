@@ -430,8 +430,11 @@ managed construction, before completion. Its factory now owns the prepared
 interface before initialization/callouts; retained readiness capabilities use
 separate local and field interface leases. Fresh native checks and browser
 compilation pass, with independently reviewed emitted ownership. The rebuilt
-browser application still needs actual execution. [WORK.md](../WORK.md#managed-ownership-repair-qualification--2026-10-21)
-records that boundary and retains the first failures and host retirement.
+browser application has now executed at both required widths and failed before
+completion on a separate prepared Kanban managed-array ownership defect.
+[WORK.md](../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
+records those failures and host retirement. Native/compile qualification does
+not establish successful browser execution.
 
 ## Component discovery and creator descriptions
 

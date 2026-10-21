@@ -1,5 +1,41 @@
 # Working in Nyx
 
+COORDINATOR05 R3 REPAIRED BROWSER FAILURE JOINED (2026-10-21): the approved
+single repaired-browser run is complete, not accepted. Actual1280x900/390x900
+both fail before markers with null PublicationReady in prepared Kanban Validate.
+Independent audit744CC006 verifies53 current+retained owned/1782Pascal/concurrent13/
+47extras/six runtime inputs/13 evidence, unchanged native9E3B2222 and first failure
+62C40341. Own host44704 was verified by path/full command/startUTC ticks, stopped/
+joined; port8766 empty, viewport reset and tabs4/5 closed. No compiler/source edit
+or changed assertion/wait. The one-host approval is consumed; no further host.
+Exact JS shows CreatePrepared's direct Supports array outputs followed by finally
+_Release(FReadiness): managed-array count1 becomes0 and clears all three entries
+before Validate. Same executed ctor/adapter direct-out FMoves/FItems/FAtomic and
+FReadiness/FBinding need distinct local-to-owning-field leases. Do not mask null
+or skip readiness; no inert-Initialize split is indicated by this Kanban stack.
+Root owns docs/checkpoint/read-only proposal only; all Pascal stays paused. A
+separate explicit source release/review/freeze must precede compilers. Kanban
+8C7A7819/MD66C9C803 and both renderers remain exact. Adjacent MasterDetail sites
+are not this actual stack and require explicit separate scope, never silent
+inclusion. No05/parent/original criterion/credit/DONE closes; actual browser batch
+advances no-closure18→19. Preserve concurrent13/resolver14/splitter/offline LAN/no
+native Nyx tools, no extra agent/config/MCP/tool/wire rollout or unrelated cleanup.
+
+COORDINATOR05 R3 REPAIRED BROWSER ADMITTED (2026-10-21): human explicitly
+answered "Run the repaired browser checks" to the new one-host question. This
+overrides the pending gate ONLY for one temporary loopback Pascal host, exact
+already-built reuse JSD8AF4094/HTML96451F59/RTL A6C5EDC8 at1280x900/390x900, then
+stopping that verified owned host. Reuse host997B90C4; no compiler/Pascal edit,
+LAN/config/MCP/tool/wire rollout, unrelated restart/cleanup or extra agent follows.
+Root owns fresh source/runtime freeze, process identity, both actual outcomes,
+final-cleanup errors, screenshots, viewport reset/tab close/host stop and all
+joins/audit. Helper reviews read-only. All source/guides pause through actual
+join/exact audit. Preserve53owned/1782Pascal/concurrent13/47extras, consumerE60,
+both renderer hashes, native9E3B2222 and first browser failure62C40341. Expected
+256/563 are source-derived until observed. Stop at the actual bounded browser
+outcome; no05/parent/original acceptance is presumed. Prior blocked audit resolves
+with this explicit answer; any later blocker starts a fresh audit.
+
 COORDINATOR05 R3 OWNERSHIP REPAIR NATIVE/COMPILE QUALIFIED (2026-10-21):
 independent root/helper audit9E3B2222 verifies53 current+retained owned/1782 Pascal/
 concurrent13/47 extras/six prior runtime inputs/12 retained browser evidence and

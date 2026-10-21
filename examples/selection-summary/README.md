@@ -156,8 +156,11 @@ The first executed browser consumer failed during the example's managed
 construction lifetime, before completion; see [WORK.md](../../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
 for retained failures. The narrow ownership repair now passes fresh native checks
 and browser compilation, and its emitted ownership is independently reviewed.
-The rebuilt browser application still requires actual execution; native checks
-and compilation alone do not qualify that path.
+The rebuilt application has now executed at both browser widths, exposing a
+separate prepared Kanban managed-array ownership failure before completion.
+The Summary repair remains native/compile qualified; that failed browser result
+does not qualify the complete application. [WORK.md](../../WORK.md#repaired-reusableembedded-browser-execution--2026-10-21)
+retains both exact outcomes and the stopped test host.
 
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption
