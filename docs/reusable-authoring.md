@@ -37,6 +37,19 @@ instance root. This disclosure keeps the structural Parts actions easy to reach.
 Saved design, generated Pascal and Undo/Redo share the same existing remove/
 inherit descriptor contract; this editor introduces no parallel layout model.
 
+To add an action to one instance, select it, open **Edit part properties**, and
+choose its named layout part, such as `actions`. Add a Button from Components.
+Studio appends that control to the selected part while retaining the definition's
+existing actions. At compact widths, switch to Project to reach Components and
+back to Inspector to edit the added control. Its properties and Events belong
+to the newly authored control, independently of other instances.
+
+Adding a Click callback opens its Pascal TODO stub. Caption edits and callback
+creation each publish design and source together, with ordinary Undo/Redo.
+Resolve unfinished Pascal before admitting further design edits. Hide remains
+unavailable for a part with local properties or added content; structural removal
+does not silently discard that customization.
+
 `tools/build.ps1 -Target reusables` includes the Parts contract consumer and
 the ordinary native Studio journey at measured desktop/compact host widths.
 It stages `parts-editor.html` and `parts-studio.html` with matching Pascal-built

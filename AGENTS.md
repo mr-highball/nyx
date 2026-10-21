@@ -1,5 +1,30 @@
 # Working in Nyx
 
+Payload authoring is locally qualified (2026-10-21): the ordinary native Studio
+journey passes 433 desktop/443 compact checks with clean heaps. Four real authored
+operations cover named-part Customize, palette Button, caption and Click Add;
+automatic TODO/source navigation, exact paired Undo/Redo/source reconstruction
+and definition/sibling isolation pass. The browser consumer compiles only, with
+zero owned/seven upstream warnings. Two test-only Web bridge failures stay
+retained. Only PAS2JS computed-style getters/ancestor type changed afterward;
+the native branch is exact, with original source/artifact receipts retained.
+Production remains effd2ac. All readers joined/audited; 1,750 Pascal/four owned/
+thirteen concurrent inputs are exact. WORK.md and ignored
+.local/parts-payload-paths-private.json own composite evidence/final checkpoint.
+
+No original criterion/task/credit/DONE closes; core no-closure is four. Saved-pair
+replay is not compiler-backed application/file-dialog evidence. Browser input,
+hardware/assistive quality, widgetsets/DPI and observing delivery stay open. Stop
+Parts/leaf/compiler variants. The changed next outcome is functional Kanban lane
+movement under NS-3_components_01 criteria 1/3, returning to NS-2 input/parity.
+Lil' Scooty has read-only public-seam design ownership: reuse existing stable
+collection items, typed fields, query views and expected-revision updates, with
+an accessible Move action and independent lifetimes. No implementation or new
+schema/renderer API is admitted before root reviews that seam. Root owns current
+docs/checkpoint; no reader is live. Preserve concurrent13, resolver/splitter
+deferral and all full criteria. No host/config retry, cleanup/restart or extra
+agent; native Nyx tools remain absent and LAN offline.
+
 Reachability final readers joined/audited: current native Parts100desktop/99compact
 pass clean and native Studio compiles with zero warnings. Renderer4,210 clean and
 both browser consumer compiler results are reused with exact inputs; only native

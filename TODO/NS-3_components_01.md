@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Instance-local action authoring now completes the ordinary native Studio journey
+at 1280/390 with 433/443 checks and clean heaps: named-part Customize, palette
+insertion, caption, callback TODO/source focus and exact paired history preserve
+the definition and sibling. The browser consumer compiles only. [WORK.md](../WORK.md)
+owns retained bridge failures and the exact composite source boundary. Full
+criterion two and parity remain open; core no-closure is four. Stop further
+Parts/leaf variants. The next reassessed product outcome is useful Kanban lane
+movement under criteria one/three through existing collection/query contracts;
+public-seam review precedes implementation. No original criteria or credit change.
+
 Current-source [named reusable copies](../docs/reusable-authoring.md) supply a
 public managed Nyx form and independently copied typed identity plan. Nested parts,
 source ownership and ordinary paired authoring remain shared. This adds no catalog

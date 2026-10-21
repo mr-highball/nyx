@@ -4,6 +4,58 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+The instance-local action workflow is locally qualified (2026-10-21). The
+ordinary native Studio journey passes **433 checks at 1280 / 443 at 390**, both
+with clean heaps. Existing named-layout Customize, palette Button, English
+caption and Click Add perform four real authored operations. Current mounted
+controls, automatic callback TODO/source focus and exact event ownership pass.
+Four Undo/four Redo/four return steps compare complete saved design/source pairs;
+every state reconstructs accepted Pascal and preserves the definition/sibling.
+Ordinary presentation cleanup and hierarchy selection allow all prior geometry,
+stale-selection and unfinished-source cases to finish. Production is unchanged.
+
+The matching browser consumer compiles only, with **zero owned/seven upstream
+warnings**; native compilation has zero warnings. Initial browser compilation
+failed on the test's computed-style accessor; the next exposed its parent-element
+type. Both failures are retained. The only subsequent source changes use the
+installed Web getters and TJSElement within PAS2JS BrowserFaceVisible. Root
+reviewed those exact replacements; the native preprocessor branch is unchanged.
+Native source/artifact receipts retain their original identity rather than
+claiming the later whole-file hash was executed.
+
+Qualification used `.local/parts-payload-qualify.ps1` with
+`-Name initial-native -Source tests/nyx_parts_studio_controls.lpr -StudioJourney`,
+plus browser-only compiler jobs at each retained bridge frontier. The final
+`-Name parent-browser -Source tests/nyx_parts_studio_controls.lpr -Browser` passes.
+All readers are terminal; `final-all-joined-private.json` below ignored
+`.local/parts-payload-paths-private.json` owns logs, artifacts, source identities,
+the composite boundary and exact 1,750 Pascal/four owned/thirteen concurrent pins.
+Final documentation changes require no unchanged compiler replay. Saved-pair
+codec/source reconstruction is distinct from compiler-backed generated application
+execution and file-dialog persistence. Browser interaction, hardware/assistive
+quality, other widgetsets/DPI and observing delivery remain open.
+
+This is the fourth core batch without a full original acceptance criterion
+closure. No criterion/task/credit/DONE or percentage changes. Stop Parts/leaf/
+compiler variants after this useful existing-feature qualification. Reassessment
+changes the next outcome to functional Kanban lane movement under
+[components](TODO/NS-3_components_01.md) criteria 1/3, returning to existing
+[input/parity](TODO/NS-2_parity-accessibility_01.md). The present board is a static
+recipe. A useful next slice will move a stable card between existing query-bound
+lane views through typed expected-revision collection updates, with a visible
+keyboard-operable Move action and independent board lifetimes. Stale/foreign/
+cancelled operations must preserve data; drag input must share that operation.
+
+Lil' Scooty owns read-only public-seam design before implementation release:
+identify the exact existing collection/query/list contracts and minimal files,
+preserve the specialized board factory, and avoid a second mutation engine or
+assumed renderer/schema change. Root owns this checkpoint. No further source or
+compiler job is admitted yet. Browser execution remains an external acceptance
+gate; no HTTP/configuration retry, alternate transport, cleanup or extra agent.
+Resolver/reference work stays in the **20 deferred granular tasks** linked from
+the [catalog](TODO/README.md#deferred-resolver-and-source-reference-tasks---2026-10-21);
+the external splitter and thirteen concurrent planning files remain preserved.
+
 Parts reachability is locally qualified on current native source. Ordinary Studio
 passes100 desktop/99 compact checks with clean heaps, including real LCL Tab key
 entry, fully contained Hide/Restore replacements, deliberate scroll-away across

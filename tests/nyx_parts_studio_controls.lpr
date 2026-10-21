@@ -28,7 +28,9 @@ uses
   {$ifdef PAS2JS}JS, Web,{$else}Interfaces, Classes, Forms, Controls, StdCtrls,
   LCLType, LMessages, Types,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
-  nyx.codegen, nyx.composition, nyx.parts.editor, nyx.studio.inspector,
+  nyx.codegen, nyx.composition, nyx.parts.editor, nyx.callbacks, nyx.source,
+  nyx.disclosure, nyx.collections, nyx.collections.view, nyx.studio.hierarchy,
+  nyx.studio.inspector,
   nyx.studio.menu, nyx.studio.projects, nyx.studio.session,
   {$ifdef PAS2JS}nyx.studio.browser, nyx.studio.agents, nyx.studio.exchange,
   nyx.test.editor.exchange{$else}nyx.studio.lcl{$endif};
@@ -53,6 +55,12 @@ type
   { Initial clipping has a different owner from a newly clipped replacement.
     Both fail the observation; neither can be promoted to a passing focus check. }
   TPartsGeometryChange = (pgcContained, pgcInitialClipping, pgcReplacementClipping);
+  { One ordinary action is submitted per settled turn. Copied paired snapshots
+    bridge those turns; no selected node, widget or mounted collection survives. }
+  TPayloadPhase = (ppOpenProperties, ppCustomize, ppCustomized, ppPalette,
+    ppAdded, ppCaption, ppCaptioned, ppCaptionFace, ppEvents, ppAddCallback,
+    ppCallbackAdded, ppUndo, ppRedo, ppReturn, ppCloseMenu, ppCloseSource,
+    ppRestoreInspector, ppSelectOriginal, ppSelectedOriginal, ppDone);
   {$ifdef PAS2JS}
   { Only transport is replaced by the maintained asynchronous test exchange.
     Actual Studio controls and the shared paired source queue own every edit. }
@@ -95,6 +103,14 @@ var
   GPartGeometryPath: TNyxPartRef;
   GPartGeometryAction: TNyxPartsEditorAction;
   GPartBeforeGeometry: TPartsGeometry;
+  GPayloadPhase: TPayloadPhase;
+  GPayloadPairs: array[0..4] of TNyxText;
+  GPayloadDescriptorID: TNyxText;
+  GPayloadID: TNyxText;
+  GPayloadDefaultCaption: TNyxText;
+  GPayloadHandler: TNyxHandlerRef;
+  GPayloadCallback: TNyxCallbackRef;
+  GPayloadHistoryAt: Integer;
 
 const
   CPartsVisibility: array[TPartsVisibility] of TNyxText =
@@ -102,6 +118,7 @@ const
   CPartsGeometryChange: array[TPartsGeometryChange] of TNyxText =
     ('contained', 'initial-clipping', 'replacement-clipping');
   CPartsActions: array[TNyxPartsEditorAction] of TNyxText = ('hide', 'restore');
+  CPayloadCaption: TNyxText = 'Review this note';
 
 {$ifdef PAS2JS}
 function TPartsStudio.CreateEditorExchange: TNyxStudioEditorExchange;
@@ -715,6 +732,698 @@ begin
   end;
 end;
 
+{ Resolve only the currently mounted shell. Compact panels intentionally omit
+  the other owners; finding a parked/previous field cannot authorize input. }
+function ShellNode(const AID: TNyxText): TNyxNode;
+var
+  LRoot: TNyxNode;
+begin
+  Result := nil;
+  LRoot := GStudio.ShellView.RootFor(AID);
+
+  if LRoot <> nil then
+  begin
+    Result := LRoot.Find(AID);
+  end;
+end;
+
+{$ifdef PAS2JS}
+{ A retained DOM face in the hidden parking owner is not an available control.
+  Check the complete current parent chain without changing layout or scrolling. }
+function BrowserFaceVisible(AFace: TJSHTMLElement): Boolean;
+var
+  LAncestor: TJSElement;
+  LStyle: TJSCSSStyleDeclaration;
+  LBounds: TJSDOMRect;
+begin
+  Result := False;
+
+  if (AFace = nil) or not document.documentElement.contains(AFace) then
+  begin
+    Exit;
+  end;
+  LBounds := AFace.getBoundingClientRect;
+
+  if (LBounds.width <= 0) or (LBounds.height <= 0) then
+  begin
+    Exit;
+  end;
+  LAncestor := AFace;
+  while LAncestor <> nil do
+  begin
+    LStyle := window.getComputedStyle(LAncestor);
+
+    if (LStyle.getPropertyValue('display') = 'none') or
+      (LStyle.getPropertyValue('visibility') = 'hidden') or
+      (LStyle.getPropertyValue('visibility') = 'collapse') then
+    begin
+      Exit;
+    end;
+    LAncestor := LAncestor.parentElement;
+  end;
+  Result := True;
+end;
+{$endif}
+
+procedure CheckShellFace(const AID: TNyxText);
+var
+  {$ifdef PAS2JS}
+  LFace: TJSHTMLElement;
+  {$else}
+  LFace: TControl;
+  {$endif}
+begin
+  Check(ShellNode(AID) <> nil, 'authoring control belongs to the mounted shell / ' + AID);
+  {$ifdef PAS2JS}
+  LFace := GStudio.ShellView.ElementFor(AID);
+  Check(BrowserFaceVisible(LFace), 'authoring browser control is visible / ' + AID);
+  {$else}
+  LFace := GStudio.ShellView.ControlFor(AID);
+  Check((LFace <> nil) and LFace.IsVisible,
+    'authoring native control is visible through its current parents / ' + AID);
+  {$endif}
+end;
+
+{ The public tree supplies the selected authored identity on both targets. Never
+  infer it from a generated descriptor number or call Session.Select for cleanup. }
+function HierarchySelection: TNyxText;
+var
+  LView: INyxCollectionView;
+begin
+  Check(ShellNode(NyxStudioHierarchyID) <> nil, 'the current Inspector owns its hierarchy');
+  LView := GStudio.ShellView.CollectionView(NyxStudioHierarchyID);
+  Check((LView.Selection.Count = 1) and LView.Selection.Focus.Defined,
+    'the current hierarchy reports one selected authored identity');
+  Result := LView.Selection.Focus.ID;
+end;
+
+{ Customize buttons carry exact part paths as command data. Their ordinal IDs
+  remain presentation details and are deliberately rediscovered after paint. }
+function CustomizeActionsID: TNyxText;
+var
+  LMatches: Integer;
+
+  procedure Visit(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+  begin
+
+    if (ANode.ProjectionKind = NyxKindName(nkButton)) and
+      (ANode.Prop('override-path') = 'actions') then
+    begin
+      Inc(LMatches);
+      Result := ANode.ID;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Visit(ANode.Children[LIndex]);
+    end;
+  end;
+
+begin
+  Result := '';
+  LMatches := 0;
+  Check(ShellNode('instance-part-properties') <> nil,
+    'the ordinary instance customization disclosure is mounted');
+  Visit(ShellNode('instance-part-properties'));
+  Check(LMatches = 1, 'one actual Customize command owns the exact actions path');
+end;
+
+function PayloadClick(ANode: TNyxNode): TNyxAuthoredEventInfo;
+var
+  LEvents: TNyxAuthoredEventInfos;
+  LIndex: Integer;
+begin
+  Result := Default(TNyxAuthoredEventInfo);
+  LEvents := NyxAuthoredEvents(ANode);
+  for LIndex := 0 to High(LEvents) do
+  begin
+
+    if LEvents[LIndex].Trigger = ntClick then
+    begin
+      Exit(LEvents[LIndex]);
+    end;
+  end;
+end;
+
+{ Every accepted authoring/history result reconstructs the full paired source
+  through the existing declarative owner. Callback implementations remain inert
+  Pascal text; exact paired history, not bare code generation, retains the TODO. }
+procedure CheckPayloadState(AState: Integer);
+var
+  LSaved: TNyxProjectPair;
+  LDocument: TNyxDocument;
+  LReplayed: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LInstance: TNyxNode;
+  LRule: TNyxNode;
+  LPayload: TNyxNode;
+  LRuntime: TNyxNode;
+  LActions: TNyxNode;
+  LClick: TNyxAuthoredEventInfo;
+begin
+  LSaved := DecodeNyxProject(Pair);
+  Check(not LSaved.Pending, 'payload authoring publishes an accepted pair without a draft');
+  Check(EncodeNyxProject(LSaved) = Pair, 'payload design/source pair round trips exactly');
+  LDocument := TNyxCodec.Decode(LSaved.Design);
+  LReplayed := nil;
+  LWorkspace := nil;
+  try
+    Check(TNyxCodec.NodeSnapshot(LDocument.Find('note')).ToJSON = GDefinition,
+      'payload publication preserves the exact reusable definition');
+    Check(TNyxCodec.NodeSnapshot(LDocument.Find('second-note')).ToJSON = GOther,
+      'payload publication preserves the exact sibling instance');
+    LReplayed := TNyxSourceWorkspace.PrepareDraft(LSaved.Source, LWorkspace);
+    Check(TNyxCodec.Encode(LReplayed) = LSaved.Design,
+      'the entire accepted Pascal reconstructs the exact payload design');
+    Check(LWorkspace.Capture.Source = LSaved.Source,
+      'source reconstruction preserves every accepted Pascal byte');
+    LInstance := LDocument.Find('first-note');
+
+    if AState = 0 then
+    begin
+      Check(LInstance.Count = 0, 'original instance has no local customization descriptor');
+    end
+    else
+    begin
+      Check(LInstance.Count = 1, 'only the selected instance owns one local descriptor');
+      LRule := LInstance.Children[0];
+      Check((LRule.ID = GPayloadDescriptorID) and
+        (LRule.Kind = NyxKindName(nkSlotOverride)) and
+        (LRule.Prop(NyxAttributeName(atPath)) = 'actions'),
+        'the copied descriptor identity belongs to the exact named actions path');
+
+      if AState = 1 then
+      begin
+        Check((LRule.Prop(NyxAttributeName(atOverrideMode)) = NyxOverrideName(noProperties)) and
+          (LRule.Count = 0), 'Customize creates an empty properties descriptor');
+      end
+      else
+      begin
+        Check((LRule.Prop(NyxAttributeName(atOverrideMode)) = NyxOverrideName(noAppend)) and
+          (LRule.Count = 1), 'palette insertion promotes properties to one appended payload');
+        LPayload := LRule.Children[0];
+        Check((LPayload.ID = GPayloadID) and
+          (LPayload.Kind = NyxKindName(nkButton)),
+          'the added button retains its own copied authored identity');
+
+        if AState = 2 then
+        begin
+          Check(LPayload.Prop(NyxAttributeName(atText)) = GPayloadDefaultCaption,
+            'Undo preserves the palette button''s original caption');
+        end
+        else
+        begin
+          Check(LPayload.Prop(NyxAttributeName(atText)) = CPayloadCaption,
+            'the English caption belongs only to the authored payload');
+        end;
+        LClick := PayloadClick(LPayload);
+
+        if AState = 4 then
+        begin
+          Check((Length(LClick.Callbacks) = 1) and
+            (LClick.Callbacks[0].Handler.Name = GPayloadHandler.Name) and
+            (LClick.Callbacks[0].ID.Name = GPayloadCallback.Name),
+            'the payload owns exactly the admitted Click registration');
+          Check(Pos('TODO: implement ' + GPayloadHandler.Name + '.',
+            ReadNyxHandlerSource(LSaved.Source, GPayloadHandler).Code) > 0,
+            'the exact payload handler owns the retained TODO implementation');
+        end
+        else
+        begin
+          Check(Length(LClick.Callbacks) = 0,
+            'earlier payload states contain no later Click registration');
+        end;
+      end;
+    end;
+    LRuntime := RealizeNyxView(LDocument, LInstance);
+    try
+      LActions := LRuntime.Part(NyxPart('actions'));
+      Check(LRuntime.Part(NyxPart('actions/send')).Prop(NyxAttributeName(atText)) =
+        'Send note', 'the inherited named action remains unchanged');
+
+      if AState < 2 then
+      begin
+        Check(LActions.Count = 1, 'the earlier action row contains only its inherited button');
+      end
+      else
+      begin
+        Check((LActions.Count = 2) and (LActions.Children[1].DesignID = GPayloadID),
+          'the selected realization appends the actual authored button after inherited content');
+        Check(LActions.Children[1].Prop(NyxAttributeName(atText)) =
+          LInstance.Children[0].Children[0].Prop(NyxAttributeName(atText)),
+          'the realized payload caption follows its authored value');
+      end;
+    finally
+      LRuntime.Free;
+    end;
+    LRuntime := RealizeNyxView(LDocument, LDocument.Find('second-note'));
+    try
+      Check(LRuntime.Part(NyxPart('actions')).Count = 1,
+        'the sibling realization receives no added action or callback');
+    finally
+      LRuntime.Free;
+    end;
+  finally
+    LWorkspace.Free;
+    LReplayed.Free;
+    LDocument.Free;
+  end;
+end;
+
+procedure CheckPayloadCanvas(const ACaption: TNyxText);
+var
+  {$ifdef PAS2JS}
+  LFace: TJSHTMLElement;
+  {$else}
+  LFace: TControl;
+  {$endif}
+begin
+  CheckShellFace('studio-canvas');
+  {$ifdef PAS2JS}
+  LFace := GStudio.CanvasView.ElementFor(GPayloadID, niDesign);
+  Check(BrowserFaceVisible(LFace) and (TNyxText(LFace.textContent) = ACaption),
+    'the actual Design canvas shows the payload''s current English caption');
+  {$else}
+  LFace := GStudio.CanvasView.ControlFor(GPayloadID, niDesign);
+  Check((LFace <> nil) and LFace.IsVisible and
+    (TNyxText(TControlAccess(LFace).Caption) = ACaption),
+    'the actual Design canvas shows the payload''s current English caption');
+  {$endif}
+
+  if not WideHost then
+  begin
+    Check((ShellNode('studio-left') = nil) and (ShellNode('studio-right') = nil),
+      'compact Design mounts the canvas without parked Project or Inspector fields');
+  end;
+end;
+
+procedure WritePayloadCaption;
+var
+  {$ifdef PAS2JS}
+  LInput: TJSHTMLElement;
+  {$else}
+  LInput: TControl;
+  {$endif}
+begin
+  CheckShellFace('inspector-text');
+  LInput := GStudio.ShellView.InputFor('inspector-text');
+  {$ifdef PAS2JS}
+  Check(LInput <> nil, 'caption editing uses the mounted Inspector input');
+  LInput.focus;
+  TJSHTMLInputElement(LInput).value := CPayloadCaption;
+  LInput.dispatchEvent(TJSEvent.new('input'));
+  {$else}
+  Check(LInput is TCustomEdit, 'caption editing uses the mounted native Inspector input');
+  TWinControl(LInput).SetFocus;
+  TCustomEdit(LInput).Text := CPayloadCaption;
+  {$endif}
+end;
+
+function PayloadCodeShowing: Boolean;
+var
+  {$ifdef PAS2JS}
+  LCode: TJSHTMLElement;
+  {$else}
+  LCode: TControl;
+  {$endif}
+begin
+  {$ifdef PAS2JS}
+  LCode := TJSHTMLElement(document.querySelector('textarea[data-node="studio-code"]'));
+  Result := BrowserFaceVisible(LCode);
+  {$else}
+  Result := False;
+
+  if (GStudio.CodeView.Root = nil) or (GStudio.CodeView.Root.Find('studio-code') = nil) then
+  begin
+    Exit;
+  end;
+  LCode := GStudio.CodeView.InputFor('studio-code');
+  Result := (LCode is TWinControl) and LCode.IsVisible and TWinControl(LCode).Showing;
+  {$endif}
+end;
+
+{ Callback completion must itself navigate the independent source owner. A
+  manual Code/Design action here would hide a failed ordinary Add contract. }
+procedure CheckPayloadSourceFocus;
+var
+  LSaved: TNyxProjectPair;
+  LIntent: TNyxStudioEventIntent;
+  LOwner: TNyxText;
+  LView: TNyxText;
+  LHandler: TNyxHandlerRef;
+  LLine: Integer;
+  {$ifdef PAS2JS}
+  LCode: TJSHTMLTextAreaElement;
+  LIndex: Integer;
+  LCaretLine: Integer;
+  LText: TNyxText;
+  {$else}
+  LCode: TControl;
+  {$endif}
+begin
+  LSaved := GStudio.ProjectSnapshot;
+  Check(GStudio.SourceCommands.CompletedEvent(LIntent, LOwner, LView, LHandler) and
+    (LIntent.Action = seaAdd) and (LOwner = GPayloadID) and (LView = 'home') and
+    (LHandler.Name = GPayloadHandler.Name),
+    'ordinary callback completion retains the exact authored payload and view owner');
+  Check(PayloadCodeShowing, 'callback Add automatically mounts visible Pascal source');
+  LLine := NyxHandlerSourceLine(LSaved.Source, GPayloadHandler);
+  {$ifdef PAS2JS}
+  LCode := TJSHTMLTextAreaElement(
+    document.querySelector('textarea[data-node="studio-code"]'));
+  Check((document.activeElement = LCode) and (TNyxText(LCode.value) = LSaved.Source),
+    'automatic source navigation focuses the current independent browser editor');
+  LText := LCode.value;
+  LCaretLine := 1;
+  for LIndex := 1 to Integer(LCode.selectionStart) do
+  begin
+
+    if LText[LIndex] = #10 then
+    begin
+      Inc(LCaretLine);
+    end;
+  end;
+  Check(LCaretLine = LLine, 'browser source caret names the exact payload implementation line');
+  {$else}
+  LCode := GStudio.CodeView.InputFor('studio-code');
+  Check((LCode is TMemo) and (Screen.ActiveControl = LCode) and
+    (StringReplace(TNyxText(TMemo(LCode).Text), #13#10, #10,
+      [rfReplaceAll]) = LSaved.Source),
+    'automatic source navigation focuses the current independent native editor');
+  Check((TMemo(LCode).CaretPos.Y + 1 = LLine) and
+    (GStudio.Session.CallbackLine(GPayloadHandler) = LLine) and
+    (GStudio.Session.SelectedID = GPayloadID),
+    'native caret and unchanged payload selection name the exact implementation line');
+  {$endif}
+
+  if not WideHost then
+  begin
+    Check((ShellNode('studio-canvas') <> nil) and (ShellNode('studio-right') = nil),
+      'compact callback completion automatically selects Design/source ownership');
+  end;
+end;
+
+{ Continue the original Parts fixture through four ordinary authored mutations.
+  The existing driver settles each turn; history cleanup also uses actual UI
+  actions, then the current public hierarchy restores the original selection. }
+function PayloadAuthoring: Boolean;
+var
+  LDisclosure: TNyxNode;
+  LCommand: TNyxText;
+  LDocument: TNyxDocument;
+  LRule: TNyxNode;
+  LPayload: TNyxNode;
+  LClick: TNyxAuthoredEventInfo;
+  LHierarchy: INyxCollectionView;
+  LItem: TNyxItemRef;
+begin
+  Result := False;
+  {$ifndef PAS2JS}
+  WriteLn('Parts payload phase ', Ord(GPayloadPhase));
+  Flush(Output);
+  {$endif}
+  case GPayloadPhase of
+    ppOpenProperties:
+      begin
+        GPayloadPairs[0] := GInitial;
+        Check(HierarchySelection = 'first-note',
+          'payload authoring starts on the selected instance');
+        LDisclosure := ShellNode('instance-part-properties');
+        Check(LDisclosure <> nil, 'the existing part-properties disclosure is available');
+
+        if not NyxDisclosureExpanded(LDisclosure) then
+        begin
+          Click(LDisclosure.Part(NyxPart('header')).ID);
+        end;
+        GPayloadPhase := ppCustomize;
+      end;
+    ppCustomize:
+      begin
+        Check(NyxDisclosureExpanded(ShellNode('instance-part-properties')),
+          'the ordinary disclosure opens its actual customization controls');
+        Check(Pair = GPayloadPairs[0], 'opening customization changes no accepted pair');
+        LCommand := CustomizeActionsID;
+        CheckShellFace(LCommand);
+        Click(LCommand);
+        GPayloadPhase := ppCustomized;
+      end;
+    ppCustomized:
+      begin
+        GPayloadDescriptorID := HierarchySelection;
+        GPayloadPairs[1] := Pair;
+        Check(GPayloadPairs[1] <> GPayloadPairs[0], 'Customize is one admitted paired edit');
+        CheckPayloadState(1);
+
+        if not WideHost then
+        begin
+          Click('action-panel-project');
+        end;
+        GPayloadPhase := ppPalette;
+      end;
+    ppPalette:
+      begin
+        Check(Pair = GPayloadPairs[1], 'Project navigation preserves the customized pair');
+        CheckShellFace('palette-button');
+
+        if not WideHost then
+        begin
+          Check((ShellNode('studio-left') <> nil) and (ShellNode('studio-right') = nil),
+            'compact palette input belongs to the actually mounted Project panel');
+        end;
+        {$ifndef PAS2JS}
+        Check(GStudio.Session.SelectedID = GPayloadDescriptorID,
+          'Project navigation retains the selected part descriptor');
+        {$endif}
+        Click('palette-button');
+        GPayloadPhase := ppAdded;
+      end;
+    ppAdded:
+      begin
+        LDocument := TNyxCodec.Decode(GStudio.ProjectSnapshot.Design);
+        try
+          LRule := LDocument.Find(GPayloadDescriptorID);
+          Check((LRule <> nil) and (LRule.Count = 1),
+            'the actual palette result belongs to the selected descriptor');
+          LPayload := LRule.Children[0];
+          GPayloadID := LPayload.ID;
+          GPayloadDefaultCaption := LPayload.Prop(NyxAttributeName(atText));
+        finally
+          LDocument.Free;
+        end;
+        GPayloadPairs[2] := Pair;
+        Check(GPayloadPairs[2] <> GPayloadPairs[1],
+          'palette insertion is one admitted paired edit');
+        Check(GPayloadDefaultCaption <> CPayloadCaption,
+          'the chosen English caption will change the actual palette default');
+        CheckPayloadState(2);
+        CheckPayloadCanvas(GPayloadDefaultCaption);
+
+        if not WideHost then
+        begin
+          Click('action-panel-inspector');
+        end;
+        GPayloadPhase := ppCaption;
+      end;
+    ppCaption:
+      begin
+        Check(HierarchySelection = GPayloadID,
+          'palette completion selects the new authored payload in the current Inspector');
+        WritePayloadCaption;
+        Check(GStudio.SourceBusy and (Pair = GPayloadPairs[2]),
+          'ordinary caption input prepares without replacing the accepted pair');
+        GPayloadPhase := ppCaptioned;
+      end;
+    ppCaptioned:
+      begin
+        GPayloadPairs[3] := Pair;
+        Check(GPayloadPairs[3] <> GPayloadPairs[2], 'caption editing is one admitted paired edit');
+        CheckPayloadState(3);
+
+        if not WideHost then
+        begin
+          Click('action-panel-design');
+        end;
+        GPayloadPhase := ppCaptionFace;
+      end;
+    ppCaptionFace:
+      begin
+        Check(Pair = GPayloadPairs[3], 'Design navigation preserves the caption pair');
+        CheckPayloadCanvas(CPayloadCaption);
+
+        if not WideHost then
+        begin
+          Click('action-panel-inspector');
+        end;
+        GPayloadPhase := ppEvents;
+      end;
+    ppEvents:
+      begin
+        Check(HierarchySelection = GPayloadID,
+          'returning to Inspector retains the selected authored payload');
+        CheckShellFace(NyxInspectorEventsID);
+        Click(NyxInspectorEventsID);
+        GPayloadPhase := ppAddCallback;
+      end;
+    ppAddCallback:
+      begin
+        CheckShellFace('event-click-add');
+        Check(ShellNode('event-click-add').Prop(NyxStudioEventOwnerKey) = GPayloadID,
+          'the ordinary Click Add command belongs to the new payload, not an inherited button');
+        Check(Pair = GPayloadPairs[3], 'Events navigation retains the accepted caption pair');
+        Click('event-click-add');
+        Check(GStudio.SourceBusy and (Pair = GPayloadPairs[3]),
+          'Click Add retains the accepted pair while its TODO source is preparing');
+        GPayloadPhase := ppCallbackAdded;
+      end;
+    ppCallbackAdded:
+      begin
+        LDocument := TNyxCodec.Decode(GStudio.ProjectSnapshot.Design);
+        try
+          LClick := PayloadClick(LDocument.Find(GPayloadID));
+          Check(Length(LClick.Callbacks) = 1, 'ordinary Add publishes one payload Click callback');
+          GPayloadHandler := LClick.Callbacks[0].Handler;
+          GPayloadCallback := LClick.Callbacks[0].ID;
+        finally
+          LDocument.Free;
+        end;
+        GPayloadPairs[4] := Pair;
+        Check(GPayloadPairs[4] <> GPayloadPairs[3],
+          'callback creation is one admitted paired edit');
+        CheckPayloadState(4);
+        CheckPayloadSourceFocus;
+        GPayloadHistoryAt := 3;
+        Click('action-undo');
+        GPayloadPhase := ppUndo;
+      end;
+    ppUndo:
+      begin
+        Check(Pair = GPayloadPairs[GPayloadHistoryAt],
+          'each Undo restores the exact previous source/design pair');
+        CheckPayloadState(GPayloadHistoryAt);
+
+        if GPayloadHistoryAt > 0 then
+        begin
+          Dec(GPayloadHistoryAt);
+          Click('action-undo');
+        end
+        else
+        begin
+          GPayloadHistoryAt := 1;
+          Click('action-redo');
+          GPayloadPhase := ppRedo;
+        end;
+      end;
+    ppRedo:
+      begin
+        Check(Pair = GPayloadPairs[GPayloadHistoryAt],
+          'each Redo restores the exact admitted source/design pair');
+        CheckPayloadState(GPayloadHistoryAt);
+
+        if GPayloadHistoryAt < 4 then
+        begin
+          Inc(GPayloadHistoryAt);
+          Click('action-redo');
+        end
+        else
+        begin
+          GPayloadHistoryAt := 3;
+          Click('action-undo');
+          GPayloadPhase := ppReturn;
+        end;
+      end;
+    ppReturn:
+      begin
+        Check(Pair = GPayloadPairs[GPayloadHistoryAt],
+          'history cleanup returns through the same exact paired states');
+        CheckPayloadState(GPayloadHistoryAt);
+
+        if GPayloadHistoryAt > 0 then
+        begin
+          Dec(GPayloadHistoryAt);
+          Click('action-undo');
+        end
+        else
+        begin
+          Check(PayloadCodeShowing, 'callback source remains visible before explicit cleanup');
+
+          if WideHost then
+          begin
+            Click('action-code');
+          end
+          else
+          begin
+            Click(NyxStudioActionMenuID);
+          end;
+          GPayloadPhase := ppCloseMenu;
+        end;
+      end;
+    ppCloseMenu:
+      begin
+
+        if not WideHost then
+        begin
+          {$ifdef PAS2JS}
+          Click('studio-menu-view');
+          {$else}
+          ClickMenu('Component actions', 'View');
+          {$endif}
+        end;
+        GPayloadPhase := ppCloseSource;
+      end;
+    ppCloseSource:
+      begin
+
+        if not WideHost then
+        begin
+          {$ifdef PAS2JS}
+          Click('studio-menu-code');
+          {$else}
+          ClickMenu('View', 'Pascal source');
+          {$endif}
+        end;
+        GPayloadPhase := ppRestoreInspector;
+      end;
+    ppRestoreInspector:
+      begin
+        Check(not PayloadCodeShowing,
+          'ordinary Pascal action restores the original closed source pane');
+        Check(Pair = GInitial, 'presentation cleanup leaves the original complete pair exact');
+
+        if not WideHost then
+        begin
+          Click('action-panel-inspector');
+        end;
+        GPayloadPhase := ppSelectOriginal;
+      end;
+    ppSelectOriginal:
+      begin
+        CheckShellFace(NyxStudioHierarchyID);
+        LHierarchy := GStudio.ShellView.CollectionView(NyxStudioHierarchyID);
+        LItem := NyxItem(LHierarchy.Spec.Key, 'first-note');
+        Check(LHierarchy.Snapshot.IndexOf(LItem) >= 0,
+          'the current hierarchy contains the original instance after authored Undo');
+        LHierarchy.Select(LItem);
+        GPayloadPhase := ppSelectedOriginal;
+      end;
+    ppSelectedOriginal:
+      begin
+        Check(HierarchySelection = 'first-note',
+          'the actual hierarchy selection route restores the original instance');
+        Check(Pair = GInitial, 'hierarchy navigation adds no source/design history');
+        CheckPayloadState(0);
+        Check(ActionID('actions', npaHide) <> '',
+          'all original Parts actions remain available for the stale/draft journey');
+        GPayloadPhase := ppDone;
+        Result := True;
+      end;
+    ppDone:
+      begin
+        Result := True;
+      end;
+  end;
+end;
+
 procedure Stage;
 var
   LQueued: TNyxStudioDesignEdit;
@@ -807,11 +1516,20 @@ begin
       end;
     9:
       begin
-        Check(Pair = GInitial, 'nested Restore retains parent and definition');
 
-        if WideHost then
+        if GPayloadPhase = ppOpenProperties then
         begin
-          Check(ProjectTitleFocused, 'Restore cannot reclaim Parts focus from the later input');
+          Check(Pair = GInitial, 'nested Restore retains parent and definition');
+
+          if WideHost then
+          begin
+            Check(ProjectTitleFocused, 'Restore cannot reclaim Parts focus from the later input');
+          end;
+        end;
+
+        if not PayloadAuthoring then
+        begin
+          Exit;
         end;
         LAction := ActionID('actions', npaHide);
         LQueued := Default(TNyxStudioDesignEdit);
