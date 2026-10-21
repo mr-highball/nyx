@@ -4,8 +4,27 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current result: [Reuse05/R3](TODO/NS-3_coordinators_05.md) fails actual1280x900 and
+390x900 before completion in Selection Summary's reference-counted construction.
+The approved host is stopped/joined, port8766 empty, viewport reset and tabs closed.
+No source/assertion/compiler change occurred. Independent audit62C40341 retains the
+exact failures and unchanged inputs. This is progress: the next action is a specific
+managed-ownership repair proposal, not another unchanged browser attempt. Root owns
+docs/checkpoint/read-only review only; the one-host approval is consumed. Native
+588/588 remains qualified; no full original criterion/credit closes, no-closure17.
+
+### Retained R3 admission before the executed failure
+
 Current task: [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md),
-R3's actual-browser gate after R2's native-local result. The previous goal turn
+R3's actual-browser execution after R2's native-local result. The user explicitly
+approved the one temporary loopback Pascal host and already-built browser checks,
+then stopping that host. This supersedes the prior pending gate for that bounded
+run only. Reuse the verified prepared host and exact existing HTML/JS/RTL; no
+compiler or Pascal edit is admitted. Root freezes inputs, runs1280x900 and390x900,
+records actual terminal DOM/result evidence, resets viewport and stops only its
+verified owned host. Helper owns independent read-only acceptance review.
+The preceding unanswered-gate turns were no progress; explicit approval resolves
+that blocker and any later blocked audit starts fresh. The earlier backlog turn
 is progress: six granular backlog checklists were independently reviewed without
 changing original criteria/dependencies or credit. The bounded repaired consumer
 now passes588/588 actual native checks, including the original267 prefix, with
@@ -17,13 +36,48 @@ The repaired consumer E60C4523 and renderers5C037EEC/9C89C990 stay exact from fr
 R1 checkpoint410a33c remains the prior pushed/remote-verified source baseline.
 Reassessment changes the next action to actual admitted-browser input/lifetimes,
 not another native fixture or compiler replay. A request for one temporary
-loopback Pascal host and desktop/compact browser run is pending; elapsed time
-does not grant it. No browser/host attempt occurs until the explicit override.
+loopback Pascal host and desktop/compact browser run was pending; its explicit
+approval is now received. No broader host/config/source authority follows.
 The existing helper completed read-only Q1 owner design; implementation remains
 downstream of complete05 and the coordinator parent's joint acceptance.
 Resolver14/splitter and concurrent13 remain exact.
 LAN stays offline, native Nyx tools absent; no host/config retry, cleanup/restart,
 new MCP/wire rollout or extra agent.
+
+### First reusable/embedded browser execution — 2026-10-21
+
+The existing HTML96451F59/JS235D4222/RTL A6C5EDC8 ran through one verified prepared
+Pascal host997B90C4, with no compiler or source edit. Entry HTML bytes matched over
+HTTP. Actual1280x900 and390x900 both raise TypeError "Cannot set properties of
+undefined (setting 'Owner')" in Summary Revoke during candidate teardown. No
+completion/check-count/R1 marker is reached. Expected256/563 are source-derived
+only, not executed passes. Screenshots retain the blank application after failure.
+
+The first intended compact attempt actually ran1280x720: viewport applied before
+fresh tab creation did not carry into that tab. Keep its result/screenshot/error
+excluded from390 evidence. A blank tab was then verified390x900 before navigation
+to the same unchanged consumer, reproducing the same failure. No wait/assertion
+or fixture changed. Both required widths have their own exact observations.
+
+Host42024 was verified by executable, command and exact UTC creation ticks, then
+stopped/joined; port8766 has no listener. Viewport reset and all test tabs closed.
+The first stop guard refused a parsed-DateTime/string comparison without action;
+exact UTC ticks resolved that representation issue before stopping only that host.
+Immutable62C403413799B9F1D491CC29009A4755D90E632FF5E044C639D4F7E2783C37CB and independent
+review verify53 current/retained owned files,1782 Pascal,13 concurrent,47 prior
+extras,six runtime inputs and12 evidence files. All original native evidence and
+failures remain exact. No browser/task05/parent/original acceptance follows.
+
+Read-only source review finds constructor Project(True)'s managed Self lease
+destroying Summary before its factory acquires ownership under the actual pas2js
+TInterfacedObject. Finalization writes FPort=undefined; a guard would hide the
+finalized receiver. Proposed separate repair: inert construction, factory-owned
+managed lease before Initialize/callouts, retaining existing command self leases.
+Exact generated Supports out-field finalizers also release Summary FReadiness and
+common mount FFence without their intended field lease; use local outputs followed
+by explicit owning-field assignments. Only the example/common unit are proposed,
+with the same untouched consumer as the regression oracle. No source/compiler
+release or additional host start follows from this completed bounded run.
 
 ### Retained R2 preparation and first-attempt failure — 2026-10-21
 
@@ -526,7 +580,7 @@ acceptance:
 | --- | --- | --- | --- |
 | R1 native-local qualified | Reusable controls stay independent in two ordinary applications | Native267/267 clean; browser execution still belongs to R3 | [Reusable behavior](TODO/NS-3_coordinators_05.md) |
 | R2 native-local qualified | Embedded views inherit fixed caller membership; explicit/empty/nil overrides and replacement isolate each child | Native588/588 clean; matching browser compilation, actual execution remains R3 | [Embedded behavior](TODO/NS-3_coordinators_05.md) |
-| R3 | The same useful reusable/embedded input and lifetimes execute on both targets | R2 plus an admitted browser session; external gate, no host retry authorized | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
+| R3 | The same useful reusable/embedded input and lifetimes execute on both targets | First actual1280/390 browser run fails; reviewed ownership repair and fresh host admission remain required | [Both-host acceptance](TODO/NS-3_coordinators_05.md) |
 | Q1 | Typed Search, Sort and Clear update live values and the collection query together | Complete coordinator parent; pre-source atomic admission and same-target ownership decisions required | [Toolbar runtime](TODO/NS-3_data-toolbar_02.md) |
 | Q2 | Independent application toolbars prove displayed results, Clear, conflicting ownership and retirement | Q1; actual native input/clean heaps plus matching browser assertions | [Toolbar application](TODO/NS-3_data-toolbar_02.md) |
 | A1 | Nyx-built Studio configures/disables/inherits a toolbar in one paired source/history change | Accepted runtime02; stale draft/selection and reusable sibling guards | [Toolbar authoring](TODO/NS-3_data-toolbar_01.md) |

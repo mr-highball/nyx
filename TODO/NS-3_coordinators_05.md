@@ -38,6 +38,13 @@ the first missing-import/Scene compiler failure and exact unchanged compatibilit
 [WORK.md](../WORK.md#embedded-application-native-local-result--2026-10-21) owns the
 composite result. R3 and all complete original criteria remain open.
 
+R3 first executed result (2026-10-21): actual1280x900 and390x900 both fail before
+completion with undefined Owner in Summary Revoke. Keep the first intended compact
+attempt at actual1280x720 excluded. The one approved host is stopped/joined;
+viewport reset and tabs closed. Independent audit62C40341 pins unchanged source/
+assets and every result. Native evidence remains valid in its own scope; no browser
+acceptance follows. WORK's first-browser section owns exact failure receipts.
+
 **Work packets and handoff:**
 
 | Packet | Reviewable outcome | Dependency and evidence |
@@ -86,8 +93,19 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 
 **Pull checklist — R3:**
 
-Status: externally gated. An admitted browser host/session must exist before
-execution; this card authorizes no host/config retry or rollout.
+Status: the first admitted browser run failed at both required widths. Its single
+host is stopped and approval consumed. Next is a separate reviewed ownership
+repair before proposing another browser run; no host/config retry follows here.
+
+Preserve every consumer/assertion/wait byte. The bounded proposal establishes
+managed Summary ownership before initialization/callouts/self leases, and uses
+local Supports outputs before assigning its/common-mount retained readiness fields.
+Do not hide premature finalization behind a guard for undefined FPort. Preserve
+public factories/GUIDs, dormant initial projection and partial-failure cleanup.
+Fresh applicable native/compiler evidence follows changed source, then the same
+browser application must actually finish. Source-derived256/563 expected counts
+are not passes. Reentrant validation/notification disposal and full target quality
+retain their separate evidence requirements.
 
 - Execute the same useful reusable/embedded application through actual browser
   input, including independent instances, refusal, replacement, stale commands

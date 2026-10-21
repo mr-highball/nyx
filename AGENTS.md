@@ -1,5 +1,40 @@
 # Working in Nyx
 
+COORDINATOR05 R3 FAILURE JOINED (2026-10-21): approved first browser run is
+complete, not accepted. Actual1280x900/390x900 both fail before completion markers
+with undefined Owner in Summary Revoke. Retain excluded first compact attempt at
+actual1280x720; verified390 navigation followed on the same unchanged host/assets.
+One host42024 stopped/joined after exact path/command/startUTC-tick verification;
+port8766 empty, viewport reset, test tabs closed. First DateTime/string stop guard
+refused without action; preserve its note. Independent root/helper audit62C40341
+verifies53 current+retained owned/1782 Pascal/concurrent13/47 prior extras/six runtime
+inputs/12 evidence files. Zero new compilers/source edits; native588/588 unchanged.
+Summary's constructor calls self-leased Project before factory ownership, freeing
+the pas2js object; $final writes the undefined FPort. Do not mask that lifetime bug.
+Exact Supports out-field finalizers also leave Summary FReadiness/common FFence
+without their intended field lease. Next separate proposal is inert construction,
+managed factory ownership before Initialize, and local Supports outputs assigned
+to those retained fields. Only example Summary and common coordinator unit are
+proposed; no source/compiler scope released yet. Root owns docs/checkpoint/read-only
+review. One-host approval is consumed; no retry, LAN/config/MCP rollout or extra
+agent. Task05/parent/original criteria remain open; no credit/DONE, no-closure17.
+Preserve all failures, concurrent13 and deferred resolver14/splitter.
+
+COORDINATOR05 R3 BROWSER ADMITTED (2026-10-21): user explicitly answered
+"Run the local browser checks" to the pending one-host question. This overrides
+the prior browser/host prohibition ONLY for one temporary loopback Pascal host,
+the already-built exact reusable/embedded consumer at1280x900 and390x900, and
+stopping that owned host afterward. Root owns input freeze, actual host identity,
+browser results/viewport reset/host stop and all joins/audit; helper reviews only.
+Reuse verified existing preview-host997B90C4 and HTML96451F59/JS235D4222/RTL A6C5EDC8;
+no compiler, Pascal edit, application rebuild, LAN/config/MCP rollout or extra
+agent follows. ConsumerE60C4523 and both renderers5C037EEC/9C89C990 stay exact.
+Freeze source/guides before the actual reader and retain every result, including
+failure. Stop at the bounded browser outcome, reset viewport and stop only the
+verified owned host. Original task/parent/full-goal criteria are not presumed
+accepted. Concurrent13, deferred resolver14/splitter and all native evidence stay
+exact. WORK/private records own admission, source/asset/process/result receipts.
+
 COORDINATOR05 R2 NATIVE-LOCAL QUALIFIED (2026-10-21): maintained reuse passes588
 actual native checks at1280/390, preserving the original267 prefix/assertions;
 both heaps are clean. Matching browser assertions compile only. Final90689991

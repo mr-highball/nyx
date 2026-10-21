@@ -425,6 +425,11 @@ describe the existing structural-presentation remount path without invented
 child source or a second state/event engine. [Reuse05](../TODO/NS-3_coordinators_05.md)
 owns the actual integration and target-execution evidence.
 
+The first executed1280/390 browser consumer currently fails during Selection
+Summary's managed construction, before completion. The unchanged native results
+do not qualify that browser path; [WORK.md](../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
+retains the exact failures, host retirement and separate ownership-repair proposal.
+
 ## Component discovery and creator descriptions
 
 Studio offers **List** and **Grouped** palette modes. Each component has one

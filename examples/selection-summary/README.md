@@ -142,6 +142,11 @@ no browser input. Separate reusable/embedded design and Pascal exports match
 across widths and preserve authored/default baselines. This command does not
 perform Save/Open or compile those exports as independent applications.
 
+The first executed browser consumer currently fails during the example's managed
+construction lifetime, before completion; see [WORK.md](../../WORK.md#first-reusableembedded-browser-execution--2026-10-21)
+for retained failures and the separate ownership-repair proposal. Native checks
+and browser compilation alone do not qualify that execution.
+
 This is the independently useful registration example. Built-in migration,
 shared ownership with manual MasterDetail, and full reusable/embedded adoption
 remain acceptance requirements of [common coordinators](../../TODO/NS-3_coordinators_01.md).
