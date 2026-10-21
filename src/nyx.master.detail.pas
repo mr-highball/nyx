@@ -946,6 +946,7 @@ var
   LEventView: INyxPreparedEventView;
   LScheduler: INyxScheduler;
   LExisting: IDetailEnabled;
+  LReadiness: INyxCollectionViewPublication;
   LIndex: Integer;
   LRecord: TNyxMasterDetailRecord;
 begin
@@ -1034,10 +1035,12 @@ begin
     FView := LViews.ViewFor(FMaster.ID);
     CheckActive(True);
 
-    if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, FReadiness) then
+    if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, LReadiness) then
     begin
       raise ENyxMasterDetail.Create('MasterDetail view requires explicit publication readiness');
     end;
+    { The field retains its own lease after the query local is finalized. }
+    FReadiness := LReadiness;
     AdmitView;
     FToken := FView.Subscribe(FCallback.Changed);
     CheckActive(True);
@@ -1055,6 +1058,9 @@ var
   LViews: INyxCollectionBindings;
   LEventView: INyxPreparedEventView;
   LScheduler: INyxScheduler;
+  LRoleFacts: INyxCoordinatorRoleFacts;
+  LLifetime: INyxCoordinatorProjectionLifetime;
+  LReadiness: INyxCollectionViewPublication;
   LInfo: TNyxCoordinatorRoleInfo;
   LSpec: TNyxCollectionViewSpec;
   LRecord: TNyxMasterDetailRecord;
@@ -1091,11 +1097,15 @@ begin
   end;
 
   if (FProjection = nil) or (LEventView = nil) or (LScheduler = nil) or
-    not Supports(FProjection, INyxCoordinatorRoleFacts, FRoleFacts) or
-    not Supports(FProjection, INyxCoordinatorProjectionLifetime, FProjectionLifetime) then
+    not Supports(FProjection, INyxCoordinatorRoleFacts, LRoleFacts) or
+    not Supports(FProjection, INyxCoordinatorProjectionLifetime, LLifetime) then
   begin
     raise ENyxMasterDetail.Create('MasterDetail needs checked coordinator roles and retirement');
   end;
+  { Query locals and retained fields each need an independent owning lease.
+    Publish neither scoped capability until the complete original guard admits. }
+  FRoleFacts := LRoleFacts;
+  FProjectionLifetime := LLifetime;
   FGeneration := LEventView.Generation;
   LScheduler.RequireUI;
   CheckActive(True);
@@ -1166,10 +1176,11 @@ begin
     FView := LViews.ViewFor(FMasterRole.ID);
     CheckActive(True);
 
-    if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, FReadiness) then
+    if (FView = nil) or not Supports(FView, INyxCollectionViewPublication, LReadiness) then
     begin
       raise ENyxMasterDetail.Create('MasterDetail view requires explicit publication readiness');
     end;
+    FReadiness := LReadiness;
     AdmitView;
     FToken := FView.Subscribe(FCallback.Changed);
     CheckActive(True);
@@ -1920,22 +1931,28 @@ end;
 
 constructor TCoordinatorDetailPlan.Create(AOwner: TPreparedDetail;
   const APrepared: INyxPreparedMasterDetailBinding);
+var
+  LReadiness: INyxPublicationReadiness;
+  LBinding: INyxCoordinatorBinding;
 begin
   inherited Create;
   FOwner := AOwner;
   FPrepared := APrepared;
 
   if (FOwner = nil) or (FPrepared = nil) or
-    not Supports(FPrepared, INyxPublicationReadiness, FReadiness) then
+    not Supports(FPrepared, INyxPublicationReadiness, LReadiness) then
   begin
     raise ENyxMasterDetail.Create('MasterDetail coordinator needs prepared readiness');
   end;
+  { Keep the retained fields separate from each temporary query output. }
+  FReadiness := LReadiness;
 
   if not FOwner.FOwner.FDisabled and
-    not Supports(FOwner.FBinding, INyxCoordinatorBinding, FBinding) then
+    not Supports(FOwner.FBinding, INyxCoordinatorBinding, LBinding) then
   begin
     raise ENyxMasterDetail.Create('MasterDetail must preserve its exact typed binding');
   end;
+  FBinding := LBinding;
 end;
 
 function TCoordinatorDetailPlan.GetBinding: INyxCoordinatorBinding;

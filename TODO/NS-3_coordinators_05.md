@@ -141,27 +141,24 @@ Stop R2 source/fixture/compiler variants; R3 is the next actual outcome.
 
 **Pull checklist — R3:**
 
-Status: both previous browser builds failed before completion at both required
-widths. Their owned hosts are stopped/joined and approvals consumed. The narrow
-Kanban local-output/owning-assignment repair now passes native/compile qualification;
-its new52AE01DA browser application has now failed on consumer storage ownership
-after a successful production lookup. A CaptureBindings-only portability proposal
-precedes another reviewed build/run. Human-approved same-regression loopback reruns
-are now available, with each host stopped afterward; other host/config authority
-does not follow from this task.
+Status: actual browser regression now passes256/563 at each verified1280x900/
+390x900 through final cleanup, with no final console warnings/errors. Exact
+EB8F5145 combines consumer4AC's CaptureBindings-only storage repair and MasterDetail
+636F's six local-to-owning-field constructor fixes. All original logical assertions,
+messages, fixture/input/waits remain intact. RootAAE3F310 retains exact inputs and
+verified stopped/joined host47336, reset viewport and closed tabs. NativeA34CFE36
+qualifies ten compilers/six clean99/171/68/68/588/588 outcomes. All four earlier
+browser failures, original source variants and audit-schema normalization remain
+retained. Scoped human same-regression rerun permission persists; none is needed
+now. Other host/config authority does not follow from this task.
 
-Preserve every consumer/assertion/wait byte. The bounded proposal establishes
-managed Summary ownership before initialization/callouts/self leases, and uses
-local Supports outputs before assigning its/common-mount retained readiness fields.
-Keep the Kanban query locals independent from retained fields/vector cells and
-clear each reused lane local before its next query.
-Do not hide premature finalization behind a guard for undefined FPort. Preserve
-public factories/GUIDs, dormant initial projection and partial-failure cleanup.
-Fresh native/compiler evidence now covers those source changes; the same rebuilt
-browser application must actually finish without errors during final cleanup.
-Source-derived256/563 expected counts
-are not passes. Reentrant validation/notification disposal and full target quality
-retain their separate evidence requirements.
+These are observed browser counts, replacing the earlier compile-only expectation
+for this exact application. Input goes through actual DOM handlers; trusted hardware,
+assistive technology, full parity and Save/Open/independently compiled exports
+remain separate claims. Public factories/GUIDs, dormant projection and partial-failure
+cleanup stay unchanged. Next review all five criteria jointly against this actual
+result and applicable existing reentrant/disposal/Studio compatibility evidence;
+return a concrete remaining gap to its existing owner before accepting05.
 
 - Execute the same useful reusable/embedded application through actual browser
   input, including independent instances, refusal, replacement, stale commands
@@ -218,6 +215,7 @@ as reusable proof. Stop at R1's actual result before releasing R2 propagation.
   [Kanban migration](DONE/NS-3_coordinators_04.md) supply the built-in owners used by
   the mixed/reusable acceptance above. Their native evidence alone does not
   satisfy this task's browser requirement.
-- External: browser execution/observing needs an admitted host/session. Until
-  supplied, preserve this gate as open; no host/config retry, server restart,
-  new MCP/tool/wire rollout or extra agent is authorized by this task.
+- External browser execution for this regression is supplied and qualified by
+  AAE3F310 under explicit same-regression permission. Each temporary host is stopped.
+  Broader target quality remains separate; no unrelated host/config retry, server
+  restart, new MCP/tool/wire rollout or extra agent is authorized by this task.

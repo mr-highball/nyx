@@ -1,5 +1,67 @@
 # Working in Nyx
 
+COORDINATOR05 R3 ACTUAL BROWSER REGRESSION QUALIFIED (2026-10-21): exactEB8F5145
+passes original256/aggregate563 at both verified1280x900/390x900. Both final console
+lists are empty and test hosts are removed by normal cleanup. RootAAE3F310 verifies
+53current+retained/1782Pascal/concurrent13/47extras/six runtime/13 evidence exact,
+with no source/compiler change during browser execution. Own47336 path/fullcommand/
+UTCticks639282131378974385 verified before stop/join; port8766 empty, viewport reset
+and tabs10/11 closed. NativeA34CFE36 retains ten successful compilers/six clean
+99/171/68/68/588/588 outcomes, zero owned/35 upstream warnings and exact own exports.
+Keep all four prior browser failures, original consumers and root audit-schema
+normalization. Actual DOM-handler input/lifetime regression is qualified locally;
+trusted hardware/AT/SaveOpen/compiled-export/full parity are not inferred. Root
+owns docs/checkpoint and subsequent joint05/parent acceptance assessment only;
+all Pascal stays paused. No original task/criterion/credit closes in this batch;
+actual browser advances23→24. Persistent human same-regression rerun permission
+remains scoped, but no further run is needed now. Preserve no extra agent/LAN/
+config/MCP/tool/wire rollout/unrelated cleanup and existing deferred work.
+
+COORDINATOR05 R3 MASTERDETAIL NATIVE-LOCAL QUALIFIED (2026-10-21): source636F3CB2
+passes ten compilers and six actual native99/171/68/68/588/588 outcomes, all heaps
+clean. RootA34CFE36 pins53current+retained/1782Pascal/concurrent13/47extras, zero
+owned/35upstream warning occurrences and eight unchanged own exports. All six
+actual exec outcomes joined. Retain first root audit missing-member schema error;
+normalization changes only audit handling, with no source/compiler/runtime retry.
+Root/helper emitted review confirms six independent field leases/local-only exits.
+Root may freeze a separate SAME-regression browser cycle of EB8F5145 at exact
+1280x900/390x900 using existing host997B90C4 bound127.0.0.1 only, then final console/
+screenshots/reset/own-tab-close/verified own-host stop/join/exact audit. Persistent
+human regression-rerun approval applies; no further question. All Pascal/guides
+pause through browser join/audit. No source/compiler/newtool/LAN/config/MCP/wire/
+extra agent/unrelated cleanup/original closure. Completed native batch advances22→23.
+
+COORDINATOR05 R3 MASTERDETAIL SOURCE REVIEWED (2026-10-21): root independently
+reviews636F3CB2, only six typed-local/owning-field replacements across the three
+released constructors. All outside-constructor bytes and other1781 Pascal inputs
+stay exact; no consumer/fixture/assertion/wait/API/GUID changes. Freeze all53owned/
+1782Pascal/concurrent13/47extras before the fixed ten compilers/six native outcomes
+already planned below. Root owns each actual handle and exact terminal join/audit;
+native UI jobs stay sequential. All source/guides pause until every reader joins.
+No browser host yet; exact newly compiled same regression follows separate emitted
+review/cycle freeze under persistent human permission. All prior failures retained.
+
+COORDINATOR05 R3 MASTERDETAIL OWNERSHIP SOURCE RELEASED (2026-10-21): prior
+consumer checkpoint0274229 is pushed/remote-verified; all actual readers joined.
+Root/helper independently verifyB2C00B42 failure and exact finalized shared-view
+chain. Existing helper owns ONLY src/nyx.master.detail.pas, ONLY constructors
+TDetailBinding.Create/CreateScoped and TCoordinatorDetailPlan.Create. Replace
+six direct Supports field outputs with typed locals and explicit owning field
+assignments AFTER the existing successful guards. Create uses readiness;
+CreateScoped uses RoleFacts/ProjectionLifetime/readiness; adapter uses prepared
+readiness/binding. Preserve compound guard short circuit, disabled paths, all
+existing identities/readiness/order/cleanup/manual APIs/GUIDs. All outside those
+constructors and all consumers/collections/renderers remain exact. No null guard
+or initialization redesign. No compiler yet: root independent exact source review
+and fresh53/1782/13/47 freeze precede ten compilers: both Studios2, creator command4,
+reuse command2, existing focused MasterDetail native/browser2. Native UI outcomes
+run sequentially; preserve99focused/171creator/68+68ordinary/588+588reuse expectations
+and all original waits/assertions. No replay of unrelated unchanged Kanban consumers.
+After actual joins/audit/emitted review, separate same-regression browser cycle
+uses persistent human loopback permission and stops its host. Root owns docs and
+admission; no other source, extra agent/LAN/config/MCP/tool/wire/cleanup/original
+criterion closure follows. Core no-closure22 carries; failures stay retained.
+
 COORDINATOR05 R3 STORAGE BROWSER FAILURE JOINED (2026-10-21): exact5AF7116F
 at1280x900/390x900 now fails before markers in collection TView.GetSpec, undefined
 Copy reached from binding ValidateRoot/RenderFrame. Keep both actual failures;

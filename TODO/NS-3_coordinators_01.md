@@ -61,8 +61,11 @@ Credit is unchanged and counted once.
 
 This parent is the acceptance gate after registration02, MasterDetail03,
 Kanban04 and complete reuse05. It is not another fixture or report-only task.
-Reuse05/R2 now has its588/588 native-local outcome. The next eligible result is
-05/R3's actual browser journey, still an unmet prerequisite for this parent.
+Reuse05/R2 retains its588/588 native-local outcome. Its same useful application
+now also passes actual browser256/563 at1280x900/390x900 through final cleanup
+(AAE3F310), after the narrowly reviewed ownership repairs. The next step is05's
+complete five-criterion assessment against that evidence and applicable prior
+compatibility/reentrancy cases; this regression alone does not close this parent.
 
 - Criteria1–3 consume accepted registration and both migrations together with
   reuse05's current-source snapshot, refusal, replacement and lifetime evidence.

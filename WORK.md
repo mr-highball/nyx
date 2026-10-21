@@ -4,6 +4,46 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current actual result: the reusable/embedded browser regression PASSES at both
+1280x900 and390x900, with original256/aggregate563 checks and no final console
+warnings/errors. MasterDetail636F and consumer4AC repairs preserve the original
+test logic, inputs and waits. RootAAE3F310 pins53/1782/13/47+six runtime/13 evidence;
+own host47336 is verified/stopped/joined, port8766 empty, viewport reset and tabs
+10/11 closed. NativeA34CFE36 retains ten passing compilers/six clean outcomes.
+All earlier failures and the audit-schema normalization remain intact. This is
+actual DOM-handler/lifetime proof for this application, with hardware/AT/full parity
+and SaveOpen/compiled exports outside its claim. Root now owns docs/checkpoint and
+joint05/parent acceptance review; all Pascal pauses, no further reader is needed.
+No original criterion/credit closes in this batch; actual browser advances23→24.
+
+Current result: MasterDetail ownership repair636F passes ten compilers and six
+native outcomes99/171/68/68/588/588, all clean heaps. AuditA34CFE36 pins53/1782/13/47
+exact source and eight unchanged own exports; warnings are zero owned/35 upstream.
+Keep the initial audit missing-member handling error separately; only the audit
+was normalized, with no source/compiler/runtime retry. Root/helper confirm emitted
+owning field assignments and local-only constructor exits. Next exact browser
+EB8F5145 uses a fresh cycle freeze under persistent same-regression loopback
+permission. Stop/join each host afterward, retain every result and restore browser
+state. All source pauses through that audit. No original closure;22→23 carries.
+
+Current source review:636F3CB2 contains only the six MasterDetail constructor
+ownership fixes; root confirms all outside-region bytes and other1781 Pascal
+inputs exact. After53/1782/13/47 freeze admit only the planned ten compilers/six
+native outcomes; all source/guides pause through actual reader joins/audit. The
+consumer remains4AC66CBF with every original fixture/assertion/input/wait. Browser
+execution follows emitted review and its own frozen loopback cycle.
+
+Next source batch: six direct interface-query outputs in the three existing
+MasterDetail constructors only. Independent diagnosis shows a collection view's
+spec becomes undefined only on finalization; unowned readiness fields are released
+again during cleanup while the application still retains cached page bindings.
+Helper may replace these outputs with typed local queries and owning assignments
+after the same guards, preserving all other source, disabled/manual behavior and
+test oracles. Root reviews/freezes before ten targeted compilers (Studios2,
+creators4,reuse2,focused MasterDetail2), six sequential native outcomes and matching
+browser compilation. No compiler/source beyond that scope is admitted now. Same
+regression rerun permission remains valid after qualification; stop each own host.
+
 Current actual browser result:5AF7116F fails at both exact viewports before markers
 in collection GetSpec/undefined Copy during ValidateRoot/RenderFrame. The repaired
 consumer's lookup/global ownership is no longer the first failure. RootB2C00B42
