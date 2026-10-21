@@ -92,6 +92,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -193,6 +194,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -294,6 +296,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -395,6 +398,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -496,6 +500,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -597,6 +602,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -698,6 +704,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -799,6 +806,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -900,6 +908,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1003,6 +1012,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1105,6 +1115,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1207,6 +1218,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1309,6 +1321,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1410,6 +1423,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Available | Available | Typed decorative glyph, caption, density and alignment on the same accessible button. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1445,6 +1459,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 
 ## link — Link
 
@@ -1522,6 +1540,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1635,6 +1654,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1757,6 +1777,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1881,6 +1902,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1995,6 +2017,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2109,6 +2132,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2223,6 +2247,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2337,6 +2362,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2451,6 +2477,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2565,6 +2592,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2687,6 +2715,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2801,6 +2830,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2915,6 +2945,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3030,6 +3061,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3145,6 +3177,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3259,6 +3292,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3365,6 +3399,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3467,6 +3502,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3569,6 +3605,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3671,6 +3708,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3772,6 +3810,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3873,6 +3912,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3975,6 +4015,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4090,6 +4131,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4214,6 +4256,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4316,6 +4359,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4417,6 +4461,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4530,6 +4575,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4631,6 +4677,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4733,6 +4780,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4768,6 +4816,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnActivate | Available | Available | Runs when Continue is activated. |
 
 Semantic action `activate`:
@@ -4860,6 +4912,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4895,6 +4948,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnPrimary | Available | Available | Runs when Create is activated. |
 | OnMenu | Available | Available | Runs when More... is activated. |
 
@@ -4994,6 +5051,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5038,6 +5096,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnSearch | Available | Available | Runs when Search is activated. |
 | OnClear | Available | Available | Runs when Clear is activated. |
 
@@ -5142,6 +5204,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5276,6 +5339,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5320,6 +5384,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnSubmit | Available | Available | Runs when Sign in is activated. |
 
 Semantic action `submit`:
@@ -5421,6 +5489,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5457,6 +5526,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnSave | Available | Available | Runs when Save preferences is activated. |
 
 Semantic action `save`:
@@ -5558,6 +5631,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5693,6 +5767,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5729,6 +5804,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnDecrement | Available | Available | Runs when - is activated. |
 | OnIncrement | Available | Available | Runs when + is activated. |
 
@@ -5833,6 +5912,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5868,6 +5948,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnSelect | Available | Available | Runs when Day is activated. |
 
 Semantic action `select`:
@@ -5963,6 +6047,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5998,6 +6083,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnRate | Available | Available | Runs when 1 is activated. |
 
 Semantic action `rate`:
@@ -6097,6 +6186,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6141,6 +6231,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnCreate | Available | Available | Runs when New record is activated. |
 | OnRefresh | Available | Available | Runs when Refresh is activated. |
 
@@ -6247,6 +6341,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6291,6 +6386,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnApply | Available | Available | Runs when Apply filters is activated. |
 | OnReset | Available | Available | Runs when Reset is activated. |
 
@@ -6397,6 +6496,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6433,6 +6533,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnPrevious | Available | Available | Runs when Previous is activated. |
 | OnNext | Available | Available | Runs when Next is activated. |
 
@@ -6538,6 +6642,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6573,6 +6678,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnHome | Available | Available | Runs when Home is activated. |
 | OnSection | Available | Available | Runs when Projects is activated. |
 
@@ -6674,6 +6783,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6709,6 +6819,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnOverview | Available | Available | Runs when Overview is activated. |
 | OnProjects | Available | Available | Runs when Projects is activated. |
 | OnSettings | Available | Available | Runs when Settings is activated. |
@@ -6817,6 +6931,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6854,6 +6969,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnEdit | Available | Available | Runs when Edit record is activated. |
 
 Semantic action `edit`:
@@ -6949,6 +7068,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6986,6 +7106,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnViewAll | Available | Available | Runs when View all is activated. |
 
 Semantic action `view-all`:
@@ -7080,6 +7204,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7117,6 +7242,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnExport | Available | Available | Runs when Export is activated. |
 
 Semantic action `export`:
@@ -7211,6 +7340,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7248,6 +7378,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnAdd | Available | Available | Runs when Add card is activated. |
 
 Semantic action `add`:
@@ -7352,6 +7486,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7474,6 +7609,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7584,6 +7720,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7709,6 +7846,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7744,6 +7882,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnCreate | Available | Available | Runs when Create an item is activated. |
 
 Semantic action `create`:
@@ -7838,6 +7980,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7873,6 +8016,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnCancel | Available | Available | Runs when Cancel is activated. |
 | OnConfirm | Available | Available | Runs when Confirm is activated. |
 
@@ -7975,6 +8122,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8010,6 +8158,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnDismiss | Available | Available | Runs when Dismiss is activated. |
 
 Semantic action `dismiss`:
@@ -8105,6 +8257,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8140,6 +8293,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnUndo | Available | Available | Runs when Undo is activated. |
 | OnDismiss | Available | Available | Runs when Close is activated. |
 
@@ -8240,6 +8397,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8284,6 +8442,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnBack | Available | Available | Runs when Back is activated. |
 | OnNext | Available | Available | Runs when Continue is activated. |
 
@@ -8392,6 +8554,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8427,6 +8590,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnStep | Available | Available | Runs when Step 1 is activated. |
 
 Semantic action `step`:
@@ -8524,6 +8691,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8559,6 +8727,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnMessage | Available | Available | Runs when Message is activated. |
 | OnFollow | Available | Available | Runs when Follow is activated. |
 
@@ -8662,6 +8834,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8804,6 +8977,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8916,6 +9090,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8962,6 +9137,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnReply | Available | Available | Runs when Post reply is activated. |
 
 Semantic action `reply`:
@@ -9068,6 +9247,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9210,6 +9390,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9254,6 +9435,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnNew | Available | Available | Runs when New is activated. |
 | OnOpen | Available | Available | Runs when Open is activated. |
 | OnSave | Available | Available | Runs when Save is activated. |
@@ -9367,6 +9552,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9404,6 +9590,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 | OnAdd | Available | Available | Runs when + Add is activated. |
 
 Semantic action `add`:
@@ -9498,6 +9688,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -9533,6 +9724,10 @@ Root projection — Browser: Available. LCL: Available.
 | OnDragExit | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDrop | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
 | OnDragEnd | Basic support | Basic support | Owned transfer formats; payloads readable only at start/drop. Opt in with DragSource/DropTarget; sequential start offers data, enter/over/drop negotiate allowed operation. Native LCL internal mouse drags; browser host drag support. No automatic model mutation. |
+| OnImageLoading | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageReady | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageError | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
+| OnImageCleared | Available | Available | Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume. |
 
 Self value contract: { "type" : "boolean" }.
 
@@ -9618,6 +9813,7 @@ Root projection — Browser: Available. LCL: Available.
 | image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | page-view | Reference |  |  | Shared contract | Unavailable | Unavailable | Exact local collection-view identity followed by this reusable pager. |
 | indeterminate | Boolean |  |  | Presentation | Unavailable | Unavailable | Indeterminate presentation belongs to a Progress control. |
+| button-presentation | Text |  |  | Presentation | Unavailable | Unavailable | Button presentation requires a button projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |

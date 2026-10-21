@@ -2,6 +2,51 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Current catalog reference publication — 2026-10-21
+
+The unchanged Pascal reference generator now supplies exact reviewed bytes to
+[components-reference.md](docs/components-reference.md). One checked FPC compile
+and one generation succeed with zero warnings and zero unfreed blocks. The
+metadata-only run starts no renderer, browser, compiler-fact probe or host. All
+1795 Pascal inputs and foreign13 remain exact; the compiler uses maintained
+native flags, separate E: FU/FE and heap diagnostics.
+
+Packet: `E:\Blekohlab\nyx\qualification\catalog-publication-20261021-232750`.
+Joined auditC5B2027D pins the actual76752 terminal0/root join, six initial owned
+docs/all1795 Pascal/foreign13/extra4. Output
+`191E0AACB1923F0ADD5970FBFD60C0C61F97A8F676DEDD4109E92973F217A351`
+strict-decodes UTF-8, uses LF and is promoted byte-for-byte after independent
+root/helper review. Subsequent seven-document edits are a separate checkpoint;
+the seventh corrects the component guide's stale population count only.
+
+Actual generation reports80 kinds, with80 unique headings and the exact prior
+ordered kind set. Public CPrimitives supplies43 entries, all present;37 recipes
+complete that catalog. The81st typed kind/facade is the SlotOverride descriptor,
+which is not another palette control. No80/81 guess or omitted control is hidden.
+Root DCE465CE and independent helper reconstruct every old section by removing
+only its actual new rows: all prior preamble/properties/events/defaults/parts/
+routes/support grades/order remain byte-exact. Exactly196 rows are added:
+80 button-presentation rows and116 lifecycle rows on Button plus28 button-bearing
+compounds. Result:5200 unique per-kind property keys and2576 event keys; no duplicates.
+
+Button's presentation row is Available on both targets; the other79 kinds retain
+Unavailable/projection help. Image quartet names are unique per affected kind;
+existing Image/media lifecycle rows stay exact. Compound additions come from
+actual eligible descendants through the existing schema collector and source/
+origin dispatch. Caption-only buttons do not automatically begin an image load.
+Ready observes decoding, not pixel approval; replacement/clearing/disposal
+suppress stale delivery and lifecycle notifications cannot be consumed.
+
+Architecture/capabilities now link the real published matrix and explain its
+typed button facade versus persisted Text representation. Existing facelift
+5DBE161/67, native chrome48/52 and actual browser styling/history/36-event discovery
+remain separate implementation evidence; this generator does not replay them or
+qualify all property combinations/custom intent/factory contexts. Parity01's
+three original criteria and both renderer prerequisites remain open, as do the
+coordinator parent, DataToolbar and all four usefulness tasks. No goal credit;
+completed publication batch advances no-closure26→27. Stop metadata/compiler
+variants at this exact artifact; reassess the next useful control/parity outcome.
+
 ## Reusable/embedded creator acceptance — 2026-10-21
 
 All five unchanged criteria in
@@ -102,27 +147,26 @@ wire rollout or cleanup followed from backlog work.
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Previous goal turn: progress,81b1233 filed/pushed the requested control-usefulness
-backlog and preserved C2's return. This turn finishes C2 and accepts scoped reuse05
-through the joint record above. All readers are joined; root owns only the
-documentation/checkpoint. All Pascal, fixtures/assertions/waits and foreign13
-remain exact. Original no-closure26 carries; no full goal credit is added.
+Previous goal turn: progress,81877d6 qualified C2/accepted scoped reuse05 and was
+pushed/remote-verified. This turn publishes the current default catalog reference
+from one unchanged Pascal tool generation, as recorded above. All readers are
+joined; root owns documentation/checkpoint only. Pascal, assertions/waits and
+foreign13 stay exact. No original criterion closes; no-closure27 carries.
 
-Next concrete existing prerequisite is
-[parity](TODO/NS-2_parity-accessibility_01.md) criterion1's published capability
-reference. `docs/components-reference.md` omits Button presentation and four
-image lifecycle events now exposed by current schema/Studio. Existing
-`tools/nyx_catalog_reference.lpr` consumes those schema facts. Review that maintained
-publication boundary and its exact comparison/output plan before a separate
-bounded compiler/source admission. Metadata publication alone will not accept
-real target behavior, keyboard/accessibility or full parity. Stop coordinator/
-fixture/runtime variants; do not weaken parent's parity dependency to unblock
-DataToolbar. Existing Lil' Scooty owns read-only next-path review, not execution.
+The published metadata is now current. Next reassessment follows the existing
+[usefulness review](TODO/NS-3_control-usefulness_01.md): map ordinary user actions
+across all80 registered controls against actual public/adaptor/Studio exposure,
+starting from the reviewed table and input-family findings. Give each concrete
+gap its existing owner and useful finish line before source release. Root/helper
+can continue that read-only review; no new compiler, runtime fixture or API is
+released by this publication. Keep full parity1/2/3 and both renderer prerequisites
+explicit, and preserve parent/DataToolbar hard dependencies. Do not repeat the
+accepted coordinator or metadata qualification to manufacture closure.
 
 No new host/config/LAN/MCP/tool/wire rollout, extra agent or cleanup follows.
 Deferred resolver/splitter work and all four requested usefulness tasks remain
 open. `.local/kanban-return-paths-private.json` retains the exact C2 source/pair/
-reader receipts and separate subsequent document checkpoint.
+reader receipts; the new private catalog-publication state owns this admission.
 
 ## Studio facelift — 2026-10-21
 

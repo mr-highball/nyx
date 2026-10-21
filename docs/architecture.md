@@ -116,8 +116,11 @@ typed primitive defaults, projection capabilities and property admission.
 Recipe `Kind` and persisted base `ProjectionKind` are distinct, so successive
 primitive derivation preserves target semantics without a runtime registry.
 Exact factories override base factories. Bound factories supply updaters that
-retain their target/child identity. Consumer-defined property/event schemas
-and a complete property-level capability matrix remain planned. Metadata drives validation,
+retain their target/child identity. Consumer-defined property/event schemas use
+`RegisterNyxSchema`; the generated [default catalog matrix](components-reference.md)
+publishes per-property/event meanings, defaults and target grades from that same
+public metadata. Custom claims still require an adapter and supporting evidence;
+the matrix does not establish full target/quality qualification. Metadata drives validation,
 Studio property panels, code generation, and renderer admission. It must allow a
 consumer to register a custom component and renderer without editing a central
 case statement.

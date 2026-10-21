@@ -10,6 +10,32 @@ An editable portable field does not imply that every standard projection enacts
 it. A leaf can retain layout metadata, for example, while a layout host supplies
 the actual arrangement.
 
+## Published default catalog
+
+The [generated reference](components-reference.md) covers the 80 registered default
+kinds: 43 primitive/layout/authoring entries and 37 compound recipes. The separate
+`SlotOverride` authoring descriptor accounts for the 81st typed kind/facade; it is
+not another palette control. Application-defined registrations and configured
+intent/factory contracts retain their dedicated documentation.
+
+Button presentation and the four image lifecycle events are included. Compounds
+expose lifecycle events from their actual eligible default descendants; a plain
+container does not acquire them automatically. Ready means target decoding,
+with replacement/clearing/disposal suppressing stale delivery; it is not pixel
+integrity approval and these notifications cannot be consumed.
+
+The property table's `Text` type describes the stored representation of the
+structured button descriptor. Application code uses the checked immutable
+`TNyxButtonPresentation` and managed `NyxButtonConfigure` facade; see their
+[typed value](../src/nyx.button.presentation.pas) and
+[configuration contract](../src/nyx.button.configuration.pas).
+
+The reference is promoted byte-for-byte from the unchanged Pascal generator.
+[Publication evidence](../WORK.md#current-catalog-reference-publication--2026-10-21)
+records the full diff and the separate implementation journeys. Metadata
+publication does not qualify every property combination or complete parity,
+accessibility, performance or the control-usefulness review.
+
 ## Typed property support
 
 `TNyxPropertyInfo.Support` is an immutable value snapshot. Its meaning is a

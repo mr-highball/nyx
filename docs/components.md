@@ -7,8 +7,10 @@
 typed API descriptors and inspection of existing schema/catalog facts. Automatic
 reference discovery and the full Studio reference browser remain ongoing work.
 
-Nyx currently defines 41 primitive/layout/authoring kinds and 36 compound recipes. A recipe
-is an ordinary owned tree built from reusable primitives. Named parts are
+Nyx's default catalog contains 43 primitive/layout/authoring kinds and 37 compound
+recipes. Its 80 entries are listed in the generated reference; the separate
+`SlotOverride` authoring descriptor is not another catalog control. A recipe is
+an ordinary owned tree built from reusable primitives. Named parts are
 editable nodes rather than inaccessible renderer internals. Native and browser
 adapters consume the same expanded tree.
 

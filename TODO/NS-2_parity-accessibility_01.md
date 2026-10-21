@@ -2,6 +2,22 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current catalog publication (2026-10-21): the unchanged Pascal generator emits
+80 unique default kinds, matching the prior set: 43 primitives and 37 recipes.
+Exact191E0AAC bytes are promoted to components-reference.md after independent
+full-diff review. All prior rows/defaults/parts/routes remain exact;196 additions
+are 80 Button-presentation property rows and 116 lifecycle-event rows on Button
+plus 28 eligible compounds. Only Button's presentation grade is Available; that
+row on the other 79 kinds retains Unavailable/projection help. Four event names appear once
+per affected kind, with decode-only Ready/stale-delivery/nonconsumable limits.
+One checked native metadata compiler/generation succeeds with zero warnings and
+clean heap; no production source or renderer/browser/host execution changes.
+Existing facelift161/67, chrome48/52 and actual browser styling/history/discovery
+of 36 Button events back their respective boundaries separately. This refreshes criterion1's
+published artifact; full criterion1/2/3 and both renderer prerequisites remain
+open. [WORK](../WORK.md#current-catalog-reference-publication--2026-10-21) owns
+source, output and qualification boundaries; no goal credit follows publication.
+
 Current-source Parts navigation reveals newly focused native controls while
 presentation replay preserves deliberate viewport choices. Actual ordinary
 Studio passes100desktop/99compact checks with clean heaps, including Tab entry,
