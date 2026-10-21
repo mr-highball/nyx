@@ -764,7 +764,8 @@ uses
   nyx.root.types,
   nyx.controls,
   nyx.design.tokens,
-  nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model;
+  nyx.tabs, nyx.disclosure, nyx.selection, nyx.flow.routes, nyx.flow.route.model,
+  nyx.kanban, nyx.kanban.intent;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -885,7 +886,7 @@ type
     vkDiagramAttachment, vkDiagramRouting, vkDiagramArrow, vkDiagramRemoval,
     vkDiagramContent, vkCanvasBoundary, vkCanvasAxis, vkCanvasGuideSnapping,
     vkCanvasGuideRef, vkCanvasGuide, vkCanvasRulers, vkCanvasPrecisionOptions, vkCanvasPrecision,
-    vkDiagramPortRef, vkDiagramPort);
+    vkDiagramPortRef, vkDiagramPort, vkKanbanIntent, vkKanbanOptions, vkKanbanLane);
   { Parser-owned candidate value. Managed configuration/data stays independent
     of the admitted document; only the tagged family is interpreted. Host file
     handles and runtime permissions never enter these literal source values. }
@@ -952,6 +953,8 @@ type
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
+    KanbanIntent: TNyxKanbanIntent;
+    KanbanOptions: TNyxKanbanOptions;
     SelectionOptions: TNyxSelectionOptions;
     CanvasPoint: TNyxCanvasPoint;
     CanvasBounds: TNyxCanvasBounds;
@@ -1070,6 +1073,9 @@ type
       calls and string substitutes for references/enums are refused. }
     function TabsOptions: TValue;
     function DisclosureOptions: TValue;
+    { Replays only typed immutable intent/options, never Configure or a runtime
+      attachment. Existing authored children retain their independent identity. }
+    function KanbanConstructor(const AName: TNyxText): TValue;
     function SelectionOptions: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
@@ -2595,6 +2601,7 @@ end;
 {$I nyx.source.themes.inc}
 {$I nyx.source.tabs.inc}
 {$I nyx.source.disclosure.inc}
+{$I nyx.source.kanban.inc}
 {$I nyx.source.selection.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -2860,6 +2867,12 @@ begin
         if (LName = 'nyxthemetokens') or (LName = 'nyxthemepreset') then
         begin
           Exit(ThemeTokens(LName));
+        end;
+
+        if (LName = 'tnyxkanbanintent') or (LName = 'nyxkanbanoptions') or
+          (LName = 'nyxkanbanlane') then
+        begin
+          Exit(KanbanConstructor(LName));
         end;
 
         if LName = 'tnyxdisclosureoptions' then

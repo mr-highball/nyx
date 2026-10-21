@@ -789,6 +789,52 @@ begin
     Exit;
   end;
 
+  if At('SetNyxKanbanIntent') or At('InheritNyxKanbanIntent') then
+  begin
+    LName := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    Expect('(');
+
+    if FCursor >= Length(FTokens) then
+    begin
+      Fail('Kanban intent requires its admitted control');
+    end;
+    LLocal := LocalIndex(FTokens[FCursor].Text);
+
+    if (LLocal < 0) or not FLocals[LLocal].Admitted then
+    begin
+      Fail('Kanban intent requires an already owned control');
+    end;
+    Inc(FCursor);
+
+    if LName = 'setnyxkanbanintent' then
+    begin
+      Expect(',');
+      LValue := Expression;
+
+      if LValue.Kind <> vkKanbanIntent then
+      begin
+        Fail('Kanban intent requires TNyxKanbanIntent');
+      end;
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+
+      if LName = 'setnyxkanbanintent' then
+      begin
+        SetNyxKanbanIntent(FControls[LLocal], LValue.KanbanIntent);
+      end
+      else
+      begin
+        InheritNyxKanbanIntent(FControls[LLocal]);
+      end;
+    end;
+    Exit;
+  end;
+
   if At('SetNyxDisclosureOptions') then
   begin
     Inc(FCursor);

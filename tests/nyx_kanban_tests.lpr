@@ -25,6 +25,7 @@ program nyx_kanban_tests;
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.kanban,
+  nyx.kanban.intent,
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.query, nyx.collections.bindings, nyx.collections.selection,
   nyx.composition, nyx.events, nyx.scheduler, nyx.behavior, nyx.gestures,
@@ -534,6 +535,124 @@ begin
   end;
   Check(LRejected and (LBoard.Lane0Column.Count = 4),
     'reconfiguration cannot duplicate or overwrite authored Move controls');
+end;
+
+procedure IntentCases;
+var
+  LFixture: TBoardFixture;
+  LDefinition: INyxControl;
+  LFirst: INyxControl;
+  LTitle: INyxHeading;
+  LMoveButton: INyxButton;
+  LIntent: TNyxKanbanIntent;
+  LWorkspace: TNyxSourceWorkspace;
+  LCandidate: TNyxDocument;
+  LRuntime: TNyxNode;
+  LBefore: TNyxText;
+  LSource: TNyxText;
+  LBadSource: TNyxText;
+  LOptionsStart: Integer;
+  LRejected: Boolean;
+begin
+  LFixture := TBoardFixture.Create;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  LCandidate := nil;
+  LRuntime := nil;
+  try
+    LDefinition := RetainNyxControl(LFixture.Document.Find('work-board'));
+    LFirst := RetainNyxControl(LFixture.Document.Find('first-board'));
+    Check(not HasNyxKanbanIntent(LDefinition.Node) and
+      (GetNyxKanbanIntent(LDefinition.Node).Mode = nkiUndefined),
+      'legacy manual boards have no implicit automatic movement intent');
+    LIntent := TNyxKanbanIntent.Configured(LFixture.Options);
+    SetNyxKanbanIntent(LDefinition, LIntent);
+    Check(TNyxKanbanIntent.FromData(LIntent.ToData).ToData.ToJSON =
+      LIntent.ToData.ToJSON, 'complete typed intent survives its strict data boundary');
+    SetNyxKanbanIntent(LFirst, TNyxKanbanIntent.Disabled);
+    LRuntime := RealizeNyxView(LFixture.Document, LFixture.Document.Find('home'));
+    Check((GetNyxKanbanIntent(LRuntime.Find(
+      NyxQualifiedID('first-board', 'work-board'))).Mode = nkiDisabled) and
+      (GetNyxKanbanIntent(LRuntime.Find(
+      NyxQualifiedID('second-board', 'work-board'))).Mode = nkiConfigured),
+      'one reusable disabled mask replaces inherited intent without changing its sibling');
+    ReleaseNyxNode(LRuntime);
+    LRuntime := nil;
+    LTitle := LDefinition.Part(NyxPart('lane-1/title')) as INyxHeading;
+    LMoveButton := LDefinition.Part(NyxPart('lane-1/move')) as INyxButton;
+    LTitle.Text := 'Building together';
+    LMoveButton.Text := 'Bring selected card here';
+    ValidateNyxKanbanIntent(LDefinition.Node);
+    LBefore := TNyxCodec.Encode(LFixture.Document);
+    LCandidate := TNyxCodec.Decode(LBefore);
+    Check(TNyxCodec.Encode(LCandidate) = LBefore,
+      'saved JSON retains configured intent, disabled mask and customized part values');
+    LCandidate.Free;
+    LCandidate := nil;
+    LSource := LWorkspace.Render(LFixture.Document);
+    Check((Pos('SetNyxKanbanIntent(', LSource) > 0) and
+      (Pos('TNyxKanbanIntent.Configured(', LSource) > 0) and
+      (Pos('TNyxKanbanIntent.Disabled', LSource) > 0) and
+      (Pos('ConfigureNyxKanbanBoard(', LSource) = 0),
+      'crafted source preserves typed intent without constructing recipe children twice');
+    LCandidate := LWorkspace.Candidate(LFixture.Document, LSource);
+    Check(TNyxCodec.Encode(LCandidate) = LBefore,
+      'configured definition, disabled instance and customized parts reconstruct exactly');
+    LCandidate.Free;
+    LCandidate := nil;
+    LOptionsStart := Pos('NyxKanbanOptions(', LSource);
+    Check(LOptionsStart > 0, 'configured source includes the public typed options builder');
+    LBadSource := Copy(LSource, 1, LOptionsStart - 1) +
+      StringReplace(Copy(LSource, LOptionsStart, MaxInt), 'NyxTextField(''title'')',
+      'NyxIntegerField(''score'')', []);
+    LRejected := False;
+    try
+      LCandidate := LWorkspace.Candidate(LFixture.Document, LBadSource);
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (TNyxCodec.Encode(LFixture.Document) = LBefore),
+      'source cannot substitute another field family for the typed title reference');
+    LRejected := False;
+    try
+      SetNyxKanbanIntent(LDefinition, Default(TNyxKanbanIntent));
+    except
+      on ENyxKanban do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (TNyxCodec.Encode(LFixture.Document) = LBefore),
+      'undefined intent refuses atomically instead of silently enabling or inheriting');
+    LRejected := False;
+    try
+      TNyxKanbanIntent.FromData(NyxObject([NyxField('version', NyxData(1)),
+        NyxField('mode', NyxData('disabled')), NyxField('lanes', NyxArray([]))]));
+    except
+      on ENyxKanban do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'disabled intent rejects hidden configuration members');
+    InheritNyxKanbanIntent(LFirst);
+    LRuntime := RealizeNyxView(LFixture.Document, LFixture.Document.Find('home'));
+    Check(not HasNyxKanbanIntent(LFirst.Node) and
+      (GetNyxKanbanIntent(LRuntime.Find(
+      NyxQualifiedID('first-board', 'work-board'))).Mode = nkiConfigured),
+      'inherit removes only the local mask and reveals the exact definition intent');
+  finally
+    ReleaseNyxNode(LRuntime);
+    LCandidate.Free;
+    LMoveButton := nil;
+    LTitle := nil;
+    LFirst := nil;
+    LDefinition := nil;
+    LWorkspace.Free;
+    LFixture.Free;
+  end;
 end;
 
 procedure ModelCases;
@@ -1066,6 +1185,7 @@ end;
 begin
   try
     OptionCases;
+    IntentCases;
     ModelCases;
     RefusalCases;
     ValidatorCase(ikCancelMove);

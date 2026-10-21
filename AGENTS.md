@@ -1,5 +1,30 @@
 # Working in Nyx
 
+KANBAN ADOPTION UNDERWAY (2026-10-21): its intent/event prerequisites now qualify
+native73/58 with clean heaps; matching browser compilers pass with zero owned/
+fourteen upstream warning occurrences. All four readers joined/audited against
+1,756 Pascal/fourteen owned/thirteen concurrent inputs. Initial four compiler
+failures retain the missing root nyx.types import; only that exact import changed
+after review. Source/JSON preserve typed configured/disabled/inherited intent and
+customized parts without duplicating Configure. Existing manual APIs stay exact.
+Prepared final-router slots remain invisible until successor scope installation;
+old execution cancellation attempts every ticket, reports committed failure and
+has nonthrowing retirement/destructor fallback. No automatic binding is attached
+yet: full Studio/generated application behavior is still the required outcome.
+
+No full original criterion/task/credit/DONE closes; core no-closure is six. Stop
+intent/event-fixture/compiler variants. Next perform the already planned actual
+prepared Kanban binding and both-renderer integration, then one board-wide paired
+Studio transaction and generated application journey. Lil' Scooty owns read-only
+runtime seam design; root reviews before source release. Preserve prospective
+generation authority, dormant ports/initial availability before physical Sync,
+accepted borrowed refresh ownership and cosmetic versus behavioral part roles.
+Final install cannot allocate, validate, call host/UI or arbitrary callbacks.
+Ignored .local/kanban-adoption-paths-private.json and WORK.md own phase/source/
+artifact/checkpoint receipts. Preserve concurrent13, resolver/splitter deferral,
+offline LAN and absent native Nyx tools. No host/config retry, cleanup/restart,
+new MCP/tool rollout or extra agent. No reader remains live.
+
 Kanban movement is locally qualified (2026-10-21): native public contract62,
 ordinary controls56desktop/56compact and the exact compiled emitted companion
 56desktop/56compact pass with clean heaps. Real reusable instances retain separate

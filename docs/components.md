@@ -280,6 +280,21 @@ atomic capability. Refused, stale and cancelled work preserves accepted data.
 Notification failures occur after committed installation: `Committed` stays true,
 and callers must not retry the operation as though it had rolled back.
 
+`nyx.kanban.intent` adds optional portable automatic-movement metadata:
+
+```pascal
+SetNyxKanbanIntent(LBoard, TNyxKanbanIntent.Configured(LOptions));
+SetNyxKanbanIntent(LInstance, TNyxKanbanIntent.Disabled);
+InheritNyxKanbanIntent(LInstance);
+```
+
+Configured intent replaces the complete typed options. Disabled is a local mask;
+inherit removes that mask and reveals the definition's value. JSON and crafted
+Pascal preserve the distinction and customized parts. The setter writes metadata
+only and does not call Configure or duplicate children. Automatic renderer and
+Studio adoption are still being integrated; use the explicit mounted attachment
+above for current running applications.
+
 Generated Pascal retains normal list bindings, queries and added buttons. The
 application explicitly creates its runtime attachment after mounting; generation
 does not automatically install this application lifetime code. Custom recipe

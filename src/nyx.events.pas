@@ -293,6 +293,34 @@ type
     function PrepareObservationRemoval(const ASubscription: INyxEventSubscription): INyxPreparedPublication;
   end;
 
+  { One UI-only successor view reservation. New slots remain invisible until
+    installation, and registration closes at Validate. Generation is the exact
+    prospective token, not the router's still-live mounted generation. Abandoning
+    the plan revokes only its token/slots. Installed slots survive retirement.
+    Install revokes the old generation without callbacks or allocation; Notify
+    subsequently attempts cancellation of every captured old execution. A Notify
+    failure reports committed adoption and must never cause a retry. }
+  INyxPreparedEventView = interface(INyxPreparedPublication)
+    ['{A9C4016E-E4AB-47B8-9B3B-AC637C23A49C}']
+    function GetGeneration: INyxCancellationScope;
+    function PrepareCallback(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const ACallback: INyxEventCallback;
+      const AName: TNyxEventRef): INyxEventSubscription;
+    function PrepareObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
+      const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
+      const AName: TNyxEventRef): INyxEventSubscription;
+    property Generation: INyxCancellationScope read GetGeneration;
+  end;
+
+  { Optional mounted-view admission preserves every existing router interface.
+    At most one plan reserves a router until retirement. The readiness fence
+    rejects changed generations, cancelled slots and later dispatched work;
+    ordinary registrations and stream policies remain independently owned. }
+  INyxEventViewPreparation = interface(IInterface)
+    ['{E65F33B1-085B-439B-9287-9FB65B85206A}']
+    function PrepareView: INyxPreparedEventView;
+  end;
+
 { UI-only capture. Missing/closed/unsupported routers refuse instead of returning
   an unbound token that could silently survive navigation. Alternative routers
   may implement INyxEventGeneration without adopting Nyx's implementation class. }
@@ -409,7 +437,7 @@ type
     FCallback: INyxEventCallback;
     FExecutions: TNyxExecutions;
     FLastExecution: INyxExecution;
-    { Prepared observations reserve their position while remaining invisible.
+    { Prepared registrations reserve their position while remaining invisible.
       Disabled is the non-calling installation fence; Cancel retires work later. }
     FStaged: Boolean;
     FDisabled: Boolean;
@@ -471,7 +499,7 @@ type
   end;
 
   TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration,
-    INyxEventObservation, INyxEventObservationEditing)
+    INyxEventObservation, INyxEventObservationEditing, INyxEventViewPreparation)
   private
     FClosed: Boolean;
     FViewRevision: Integer;
@@ -480,6 +508,8 @@ type
     FScheduler: INyxScheduler;
     FGroups: array of TNyxEventGroup;
     FExecutions: TNyxExecutions;
+    { Weak reservation. Its plan retains this router; no reverse lease cycles. }
+    FPreparedView: TObject;
     procedure Admit;
     procedure PruneExecutions;
     function AddObservation(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger;
@@ -503,6 +533,7 @@ type
       const AObserver: INyxEventObserver; APhase: TNyxObservationPhase;
       const AName: TNyxEventRef; out ASubscription: INyxEventSubscription): INyxPreparedPublication;
     function PrepareObservationRemoval(const ASubscription: INyxEventSubscription): INyxPreparedPublication;
+    function PrepareView: INyxPreparedEventView;
     function On(const ATarget: TNyxEventTarget; ATrigger: TNyxTrigger): INyxEventStream;
     function OnNamed(const ATarget: TNyxEventTarget;
       const AName: TNyxEventRef): INyxEventStream;
@@ -1928,7 +1959,14 @@ begin
 
         if not LGroup.Observing then
         begin
-          Inc(LCallbackCount, Length(LGroup.Registrations));
+          for LEntryIndex := 0 to High(LGroup.Registrations) do
+          begin
+
+            if LGroup.Registrations[LEntryIndex].Active then
+            begin
+              Inc(LCallbackCount);
+            end;
+          end;
         end;
       end;
     end;
@@ -1954,7 +1992,7 @@ begin
 
           if not LGroup.Registrations[LEntryIndex].Active then
           begin
-            { Inactive reserved observation slots survive pruning but do not
+            { Inactive reserved registration slots survive pruning but do not
               enter this dispatch. Publication during a callback starts next time. }
             Continue;
           end;
@@ -2093,6 +2131,8 @@ begin
   Result := NyxControlEvents(AID, AIdentity);
   Result.FRole := nerSource;
 end;
+
+{$I nyx.events.view.inc}
 
 function NewNyxEvents(const AScheduler: INyxScheduler): INyxEvents;
 begin

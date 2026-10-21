@@ -4,6 +4,67 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current integration: automatic Kanban adoption (2026-10-21). Previous goal turn
+is progress:8529a2e shipped the qualified movement API and independently verified
+the remote. Its next integrated design now has two locally qualified prerequisites,
+under [Studio authoring](TODO/NS-4_studio-authoring_01.md) criterion2 returning to
+components1/3 and input/parity. **Automatic attachment and ordinary Studio
+configuration are not implemented yet.** The original full adoption outcome stays
+required; the following source and event evidence does not accept that journey.
+
+Native **73 Kanban contract checks** include exact JSON/source reconstruction of
+configured definition, disabled reusable instance and customized heading/Move
+captions. Inherit reveals the definition; undefined Set, hidden disabled payload
+and isolated wrong title-field family refuse without editing accepted content.
+Known optional data uses existing extension overlays, with no generic model slot
+or MCP schema change. Crafted Pascal emits a typed setter and immutable options,
+never another Configure call or duplicate recipe children. Manual APIs remain exact.
+
+Native **58 observation/publication checks** qualify the optional prepared event
+view on the existing router. One reservation owns a preallocated prospective
+scope and dormant callbacks/observations. Validate seals membership; the final
+fence checks original scope/revision, staged tokens and exact old execution vector.
+Flag-only installation revokes old authority before retiring controls. Cancellation
+is postcommit, attempts every old ticket even after an error, and has a nonthrowing
+Retire/destructor fallback. Ordinary policies, dispatch snapshots and previous
+interfaces/GUIDs retain their contracts. Root independently found and reviewed the
+fallback repair; helper independently reviewed authored/source changes. Both
+native consumers have clean heaps. Browser consumers compile only, with **zero
+owned warnings / fourteen upstream warning occurrences** across their two logs.
+
+The initial four compiler jobs stopped at the new intent unit's missing
+`nyx.types` import, before any native execution. All failures and original freezes
+remain retained. Root repaired only that import; exact retained-source comparison
+qualifies the delta. The first receipt audit incorrectly expected the native
+compiler's exit1 from pas2js, whose actual nonzero exit6 is preserved. A premature
+freeze attempt refused stale handle metadata and started no reader. Both real
+native handles had already joined; the corrected receipt audit cleared metadata
+before the import-repair freeze. No rejected gate or failure is counted as success.
+
+`prerequisite-all-joined-private.json`, below the ignored
+`.local/kanban-adoption-paths-private.json` packet owner, retains all four accepted
+terminal/log/artifact receipts and **1,756 Pascal / fourteen owned / thirteen
+concurrent** exact pins. No reader remains live. There is no unchanged compiler
+replay to do. This is the sixth core batch without a full original criterion
+closure: no task/credit/DONE or overall percentage changes. Stop intent/event
+fixture variants and move to actual prepared binding/renderers, not another proof
+of the same prerequisites. Browser input, hardware/accessibility, performance and
+observing delivery remain separate open requirements.
+
+Next source release follows root review of Lil' Scooty's read-only prepared
+Kanban runtime seam: consume the exact future event generation, attach dormant
+ports and availability before Build/Sync, preserve cosmetic parts, rebase refresh
+to the accepted receiver, and activate without host calls/allocation after old
+retirement. Then both renderers/application hosts and **one board-wide existing
+design-patch candidate** must adopt it. Three sequential collection-bind edits
+would expose invalid intermediate lane/intent combinations; the existing paired
+transaction engine must admit all three roles and intent together. Exact canonical
+node/named-part descriptor authority and source/design baselines remain shared.
+Full acceptance requires ordinary configuration, preview movement, paired Undo/
+Redo/save/reopen, independent reusable stores and compiled generated applications.
+Preserve concurrent13, deferred resolver/splitter and existing browser execution
+gate; no host/config retry, alternate transport, cleanup/restart or extra agent.
+
 Kanban movement is locally qualified (2026-10-21), under
 [components](TODO/NS-3_components_01.md) criteria one/three. The public typed
 authoring helper configures the existing three-lane recipe; its managed mounted

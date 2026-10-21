@@ -55,6 +55,7 @@ uses
   nyx.design.tokens,
   nyx.tabs,
   nyx.disclosure,
+  nyx.kanban, nyx.kanban.intent,
   nyx.selection,
   nyx.data,
   nyx.contract,
@@ -2669,6 +2670,7 @@ var
   LHasSavedTypeAhead: Boolean;
   LHasTabsOptions: Boolean;
   LHasDisclosureOptions: Boolean;
+  LHasKanbanIntent: Boolean;
   LHasSelectionOptions: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
@@ -3122,6 +3124,9 @@ var
     LArgument: TNyxText;
     LTabOptions: TNyxTabsOptions;
     LDisclosureOptions: TNyxDisclosureOptions;
+    LKanbanIntent: TNyxKanbanIntent;
+    LKanbanOptions: TNyxKanbanOptions;
+    LKanbanLane: Integer;
     LSelectionOptions: TNyxSelectionOptions;
 
     function DrawingPaint(const AData: TNyxDataValue): TNyxText;
@@ -3286,6 +3291,39 @@ var
           LLines.Add(LArgument + #10 +
             '        .Selected(' + SelectionVariantSymbol(LSelectionOptions.SelectedVariant) + ')' + #10 +
             '        .Unselected(' + SelectionVariantSymbol(LSelectionOptions.UnselectedVariant) + '));');
+        end
+        else if (AExtensions.Scope = nesNode) and
+          (LObject.Names[LFieldIndex] = NyxKanbanIntentKey) then
+        begin
+          LKanbanIntent := TNyxKanbanIntent.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+
+          if LKanbanIntent.Mode = nkiDisabled then
+          begin
+            LLines.Add('    SetNyxKanbanIntent(' + AOwner + ', TNyxKanbanIntent.Disabled);');
+          end
+          else
+          begin
+            LKanbanOptions := LKanbanIntent.Options;
+            LArgument := '    SetNyxKanbanIntent(' + AOwner + ',' + #10 +
+              '      TNyxKanbanIntent.Configured(' + #10 +
+              '        NyxKanbanOptions(NyxCollection(' +
+              PascalString(LKanbanOptions.Collection.Name) + '),' + #10 +
+              '          NyxTextField(' + PascalString(LKanbanOptions.TitleField.Name) + '),' + #10 +
+              '          NyxTextField(' + PascalString(LKanbanOptions.LaneField.Name) + '))';
+            for LKanbanLane := 0 to LKanbanOptions.Count - 1 do
+            begin
+              LArgument := LArgument + #10 + '          .Lane(NyxKanbanLane(' +
+                PascalString(LKanbanOptions.LaneAt(LKanbanLane).Name) + '), ' +
+                PascalString(LKanbanOptions.CaptionAt(LKanbanLane)) + ')';
+            end;
+
+            if LKanbanOptions.Scope = csApplication then
+            begin
+              LArgument := LArgument + #10 + '          .Scoped(csApplication)';
+            end;
+            LLines.Add(LArgument + '));');
+          end;
         end
         else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxDisclosureKey) then
@@ -3503,6 +3541,11 @@ var
     if NyxIsDisclosure(ANode) then
     begin
       LHasDisclosureOptions := True;
+    end;
+
+    if HasNyxKanbanIntent(ANode) then
+    begin
+      LHasKanbanIntent := True;
     end;
 
     if ANode.Extensions.Has(NyxExtension(NyxSelectionOptionsKey)) then
@@ -3817,6 +3860,7 @@ begin
     LHasSavedTypeAhead := False;
     LHasTabsOptions := False;
     LHasDisclosureOptions := False;
+    LHasKanbanIntent := False;
     LHasSelectionOptions := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
@@ -3912,6 +3956,11 @@ begin
     if LHasDisclosureOptions then
     begin
       LLines.Add('  nyx.disclosure,');
+    end;
+
+    if LHasKanbanIntent then
+    begin
+      LLines.Add('  nyx.kanban, nyx.kanban.intent,');
     end;
 
     if LHasSelectionOptions then

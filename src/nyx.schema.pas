@@ -337,7 +337,7 @@ uses
   nyx.composition,
   nyx.menu.declarations,
   nyx.menu.types,
-  nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view,
+  nyx.tabs, nyx.disclosure, nyx.selection, nyx.drawing.view, nyx.kanban.intent,
   nyx.flow.routes, nyx.flow.route.model;
 
 type
@@ -2977,6 +2977,8 @@ begin
       end;
     end;
   end;
+
+  ValidateNyxKanbanIntent(ANode);
 
   if NyxIsDisclosure(ANode) then
   begin

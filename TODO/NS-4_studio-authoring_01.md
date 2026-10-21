@@ -2,6 +2,16 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current Kanban adoption follows criterion2. Typed intent/source and prepared
+event-generation prerequisites pass native73/58 with clean heaps; matching browser
+compilers pass only. Automatic renderer attachment and ordinary configuration are
+still open. Next adopts a prepared binding in both renderers and one board-wide
+existing paired design-patch candidate, avoiding invalid intermediate lane edits.
+Preserve static absence, disabled versus inherit and customized sibling/definition
+isolation. Focused evidence cannot replace preview/save/reopen/generated application
+journeys or full original authoring/parity acceptance. [WORK.md](../WORK.md) owns
+retained compiler/import receipts and no-closure6; original criteria/credit stay exact.
+
 Resolver direction (user decision, 2026-10-17): build a fresh, wholly Nyx-owned
 Pascal engine for completion/navigation. Keep the existing typed provider boundary,
 exact multi-file snapshots and semantic/editor consumers; the optional GPLv2+
