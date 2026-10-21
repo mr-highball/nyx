@@ -1,7 +1,7 @@
 # NS-3_control-usefulness_04 — Inspect changing and large results without losing context
 
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Usefulness review](NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
+[Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
 **Description:**
 
@@ -76,7 +76,7 @@ reviewed source/validation scope; L1 alone does not qualify scale or accept04.
 
 **Blockers**
 
-- [Control usefulness review](NS-3_control-usefulness_01.md) supplies the ranked
+- [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the ranked
   operational-data gaps and concrete acceptance workload.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply authoritative
   data, revision and selection publication. Existing scheduler/query/windowing

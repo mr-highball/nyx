@@ -1,7 +1,7 @@
 # NS-3_control-usefulness_03 — Make tables comfortable data workbenches
 
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Usefulness review](NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
+[Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
 **Description:**
 
@@ -74,7 +74,7 @@ source scope and actual result; completing W1 does not accept W2 or this task.
 
 **Blockers**
 
-- [Control usefulness review](NS-3_control-usefulness_01.md) supplies the reviewed
+- [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed
   gaps and target-specific interaction contract.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply stable typed
   data/selection/edit publication. Existing query/navigation/sizing owners remain

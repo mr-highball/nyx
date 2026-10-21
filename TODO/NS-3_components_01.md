@@ -9,7 +9,7 @@ task's complete breadth/quality acceptance remain open. No original credit is
 added; [WORK](../WORK.md#reusableembedded-creator-acceptance--2026-10-21) owns scope.
 
 The user's 2026-10-21 external debugger feedback adds a
-[control usefulness review and four-packet subcatalog](NS-3_control-usefulness_01.md).
+[control usefulness review and four-packet subcatalog](DONE/NS-3_control-usefulness_01.md).
 It reviews every default control from the application user's perspective, then
 delivers [column filtering/sorting](NS-3_control-usefulness_02.md),
 [table workbench interactions](NS-3_control-usefulness_03.md) and
@@ -19,6 +19,31 @@ they add no completion credit or new implementation/reader scope. Typed queries,
 native width overrides/on-demand values and browser row windows already exist.
 The external application's implementation has not been diagnosed. The linked
 review distinguishes missing capabilities from exposure, adapter and caller gaps.
+The source-bound [user-action matrix](../docs/control-usefulness.md) covers the
+default catalog and maps concrete gaps to these existing owners; source inspection
+does not qualify new runtime behavior or accept this task's three full criteria.
+
+The review also refines this task's existing usable-family outcomes below. These
+are implementation stories under the original criteria, not new task identities
+or completed features. Each requires managed typed configuration, meaningful
+events, both target workflows and ordinary Studio/persistence/source/history/
+semantic adoption; the matrix records source evidence and target limitations.
+
+| Family | Useful implementation finish line within the original scope |
+| --- | --- |
+| Forms | Field-specific domain/validation feedback, correction and first-invalid focus preserve accepted data and peer drafts; reuse existing scalar admission/bindings rather than create a validation engine |
+| Choices | A typed option identity can remain stable while its display label/localization changes; selection, disabled/empty choices and dataset replacement retain the intended value on both targets |
+| Editable text/code | Generic CodeEditor exposes useful find/replace, indentation/line navigation and deliberate read-only/undo behavior; inherited widget editing and Studio's separate Pascal resolver are documented separately |
+| Media | Avatar can opt into a resource/embedded portrait with initials/name fallback, load/error/clear policy and independent reusable state; its current standard face remains initials-only |
+| Feedback | Optional managed notices define explicit dismiss/undo ownership, timeout/focus/announcement policy and safe retirement; inline recipes/manual lifetime remain available |
+| Data-driven compositions | Repeated participant/comment/dashboard content has stable identities, accurate counts and empty/loading/error recovery through existing collections/content/resource owners, without implicit backend services |
+
+Heading hierarchy, native separator/status faces, readable long captions and
+live announcements feed the original parity/accessibility owner. Existing
+canvas/diagram/Tool Canvas/Logic tasks retain their full requirements; this
+review does not replace them or reopen accepted foundations. Per-column query,
+workbench and live-result stories remain in the three usefulness implementation
+packets linked above, rather than being implemented twice here.
 
 The current granular core queue is in
 [WORK.md](../WORK.md#granular-core-backlog--2026-10-21). It follows the missing

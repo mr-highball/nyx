@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Whole-catalog control usefulness review](NS-3_control-usefulness_01.md) was
+accepted on2026-10-21 for all six unchanged review criteria. The source-bound
+[matrix](../../docs/control-usefulness.md) covers80 unique default kinds, with
+35root/45helper primary rows and independent cross-review. Typed APIs, ordinary
+affordances, events/authoring, target/evidence limits, service-workbench stories
+and14 explicit proposal directions identify actionable existing owners. No
+compiler/host/runtime was invoked and no product feature/credit is accepted.
+The three table/live-data packets and all original component/parity/authoring
+requirements remain open. See [the record](../../WORK.md#control-usefulness-review--2026-10-21).
+
 [Reusable and embedded creator behavior](NS-3_coordinators_05.md) was accepted
 on2026-10-21 for all five unchanged scoped criteria. Retained native588/588 and
 actual pre-facelift browser256 reusable/563 aggregate at both widths establish

@@ -1,5 +1,44 @@
 # Working in Nyx
 
+CONTROL USEFULNESS01 ACCEPTED (2026-10-21): previous544ca92 is progress. All six
+unchanged review criteria close in TODO/DONE/NS-3_control-usefulness_01.md after
+root/helper primary and independent cross-review. Source-bound80-kind matrix:
+35root+45helper,80unique/no missing/extra/duplicates, actual APIs/locators and
+14 typed/default/event proposal directions. Source inspection is NOT a new
+runtime verdict. Existing receipts/failures keep their exact boundaries; zero
+compilers/probes/hosts/new input executions. One review correction preserves
+absent Canvas as an empty workspace, not refusal. No product criterion/credit;
+no-closure27→28 carries. All1795 Pascal/foreign13/reference191E remain exact.
+
+Root owns matrix/task move, components01 story refinements, three incoming task
+links, accepted subcatalog, WORK and this handoff/checkpoint. Main catalog and
+milestone foreign edits stay exact. Existing helper now reads usefulness02's
+column filter/sort design: immutable per-column policy, advanced query-editor
+reuse, authored/user query and Clear/ABA authority, same-target owners and real
+two-view refusal. No implementation/reader is released; separate reviewed scope
+and freeze must precede any source/compiler. Preserve coordinator-parent/parity/
+DataToolbar hard blockers; reviewed design is not their implementation release.
+No extra agent/LAN/host/config retry/restart/cleanup or MCP/tool/wire rollout;
+resolver14/splitter remain deferred. WORK/private usefulness records own the
+exact review/checkpoint and next existing implementation/design outcome.
+
+CONTROL USEFULNESS REVIEW (2026-10-21): previous544ca92 is progress, committed/
+pushed/remote-verified. Published default metadata191E remains exact; all actual
+readers are joined. Next is existing usefulness01's source-bound80-kind user-action
+matrix, ranked concrete gaps and existing owners, not another metadata/compiler
+variant. Root owns docs/control-usefulness.md, task01/components01, WORK and this
+handoff. Existing Lil' Scooty supplies read-only45-kind findings; root reviews35
+disjoint kinds and owns every tracked edit. Same1795 Pascal/foreign13 stay exact.
+No compiler/probe/host/source/API release follows. Review distinguishes ordinary
+affordance, opt-in runtime contract, missing exposure and caller responsibility;
+source reading is not newly executed behavior. Existing receipts retain their
+actual source/target boundaries. No product criterion/credit closes by the audit.
+Stop when the complete actionable matrix is independently reviewed; preserve all
+original task criteria and follow existing implementation owners afterward.
+Private control-usefulness state records baseline, scopes and return; resolver14/
+splitter stay deferred, LAN offline, no extra agent/config/restart/cleanup/MCP/
+tool/wire rollout. Canonical index/milestone foreign edits remain untouched.
+
 CATALOG REFERENCE PUBLISHED (2026-10-21): previous81877d6 is progress. Unchanged
 22ADFA24 generator compiles/runs once, actual76752 terminal0/root joined, no
 warnings and heap0. C5B2027D pins initial6owned/1795Pascal/foreign13/extra4 exactly.

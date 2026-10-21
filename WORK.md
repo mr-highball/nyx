@@ -2,6 +2,45 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Control usefulness review — 2026-10-21
+
+Previous goal turn is progress:544ca92 publishes the current catalog reference,
+committed/pushed/remote-verified. This batch accepts all six unchanged criteria of
+[usefulness01](TODO/DONE/NS-3_control-usefulness_01.md) as a review deliverable.
+[The user-facing audit](docs/control-usefulness.md) has35 root/45 helper rows:
+80 unique registered kinds, no omissions/extras/duplicates. Root checks current
+specialized API/source locators and106 artifact file links. All80 rows distinguish
+supported/opt-in/exposure/target-gap/absent/N/A for the named action, with shared
+event, authoring, empty/error/readonly/disabled/input/recovery profiles. Service
+workbench stories, public source-only examples and ranked existing owners make
+the findings actionable. Fourteen proposed contract directions specify typed
+ownership, default/override policy and semantic event/payload/cancellation meaning;
+none is misrepresented as a released ABI. Independent cross-review passes all six
+original criteria after repairing one Canvas statement: no scene deliberately
+creates an empty workspace; only invalid authored references refuse.
+
+Baseline544ca92/metadata191E retains1795 exact Pascal inputs and13 foreign files.
+`.local/control-usefulness-paths-private.json` records their pins, owned preimages,
+the E: packet and separate later document checkpoint. No source changed, and no
+compiler, runtime fixture, probe, browser or host ran. Reused receipt/failure
+boundaries remain explicit; old native Copy/queries/paging/tabs/menus/pickers and
+MD/Kanban are acknowledged foundations, not reimplemented missing features.
+
+The task moves to DONE with incoming links and its linked accepted subcatalog;
+the main index/milestone foreign edits remain byte-exact and retain their existing
+components01 ownership path. All six original review criteria and components01's
+three full product criteria are exact. Planning adds no product credit and does
+not accept usefulness02–04, parent/parity/DataToolbar or observing delivery.
+Original no-closure27→28 does not reset merely because a scoped review closes.
+
+Next existing outcome is usefulness02's column filter/sort design, not another
+catalog/metadata/coordinator variant. Existing Lil' Scooty has read-only ownership
+of current interface/adapter seams, typed policy and useful command proposals.
+Settle authored/user query contribution, last-owned/ABA and Clear semantics with
+Q1's same-target authority before source release. DataToolbar's actual hard
+parent/parity dependencies stay intact. Root reviews the design/source scope and
+owns any later reader admission; no implementation/compiler/host is released here.
+
 ## Current catalog reference publication — 2026-10-21
 
 The unchanged Pascal reference generator now supplies exact reviewed bytes to
@@ -111,7 +150,7 @@ Latest user steering requests a few backlog tasks after an external native
 process/service-debugger table lacked obvious column filtering. Root files four
 open NS-3 packets, linked through the existing component milestone owner:
 
-- [Control-by-control review](TODO/NS-3_control-usefulness_01.md): a complete
+- [Control-by-control review](TODO/DONE/NS-3_control-usefulness_01.md): a complete
   user-journey/capability/exposure matrix across primitives and compounds, with
   prioritized concrete follow-up owners for all control families.
 - [Interactive column filtering/sorting](TODO/NS-3_control-usefulness_02.md):
@@ -147,26 +186,25 @@ wire rollout or cleanup followed from backlog work.
 
 ## Active priority — back to core Nyx (2026-10-20)
 
-Previous goal turn: progress,81877d6 qualified C2/accepted scoped reuse05 and was
-pushed/remote-verified. This turn publishes the current default catalog reference
-from one unchanged Pascal tool generation, as recorded above. All readers are
-joined; root owns documentation/checkpoint only. Pascal, assertions/waits and
-foreign13 stay exact. No original criterion closes; no-closure27 carries.
+Previous goal turn: progress,544ca92 published current default metadata and was
+pushed/remote-verified. The complete80-kind usefulness review is now accepted
+above; this is a planning outcome, with no product criterion/credit. All readers
+remain joined; Pascal/assertions/waits and foreign13 stay exact. No-closure28
+carries for the original core outcome.
 
-The published metadata is now current. Next reassessment follows the existing
-[usefulness review](TODO/NS-3_control-usefulness_01.md): map ordinary user actions
-across all80 registered controls against actual public/adaptor/Studio exposure,
-starting from the reviewed table and input-family findings. Give each concrete
-gap its existing owner and useful finish line before source release. Root/helper
-can continue that read-only review; no new compiler, runtime fixture or API is
-released by this publication. Keep full parity1/2/3 and both renderer prerequisites
-explicit, and preserve parent/DataToolbar hard dependencies. Do not repeat the
-accepted coordinator or metadata qualification to manufacture closure.
+Next is the existing [column filter/sort packet](TODO/NS-3_control-usefulness_02.md):
+turn the reviewed gap into a typed useful design/source scope using the current
+query model/editor and field/schema identities. Root/helper may review that design
+read-only; no compiler/runtime/API is released here. Resolve same-target/query/
+Clear ownership with the existing Q1 analysis before implementation, without
+making all DataToolbar acceptance a reciprocal dependency. Full parity1/2/3 and
+both renderer prerequisites remain explicit; parent/DataToolbar hard blockers
+are preserved. Do not repeat accepted coordinator/catalog/review qualification.
 
 No new host/config/LAN/MCP/tool/wire rollout, extra agent or cleanup follows.
-Deferred resolver/splitter work and all four requested usefulness tasks remain
-open. `.local/kanban-return-paths-private.json` retains the exact C2 source/pair/
-reader receipts; the new private catalog-publication state owns this admission.
+Deferred resolver/splitter work and the three usefulness implementation tasks
+remain open. Private C2/catalog records retain their exact source/pair/runtime
+receipts; the new private usefulness state owns this read-only review/checkpoint.
 
 ## Studio facelift — 2026-10-21
 

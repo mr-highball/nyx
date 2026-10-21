@@ -1,7 +1,7 @@
 # NS-3_control-usefulness_02 — Let table users filter and sort columns
 
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Usefulness review](NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
+[Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
 
 **Description:**
 
@@ -73,7 +73,7 @@ introducing another store, query evaluator or component-specific lifecycle.
 
 **Blockers**
 
-- [Control usefulness review](NS-3_control-usefulness_01.md) supplies the reviewed
+- [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed
   interaction gaps, default policy and concrete target/source boundary.
 - [Observable collections](DONE/NS-1_state-collections_01.md) supply the accepted
   store, typed schema and selection/query publication foundation.

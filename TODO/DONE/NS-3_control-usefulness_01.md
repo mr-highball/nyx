@@ -1,9 +1,24 @@
 # NS-3_control-usefulness_01 — Review every control as an application user
 
-[North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Component outcome](NS-3_components_01.md) · [Task flow](../TASKFLOW.MD)
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Component outcome](../NS-3_components_01.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
+
+Accepted on2026-10-21 as a review/planning deliverable only. The source-bound
+[80-kind user-action matrix](../../docs/control-usefulness.md) covers the exact
+544ca92 Pascal baseline and191E catalog:35 root rows plus45 helper rows,80 unique,
+zero missing/extra/duplicates. Both primary review and independent cross-review
+pass all six unchanged criteria. Root checks current API/source locators and
+106 local artifact links; source1795/foreign13 remain exact. Fourteen proposed
+contract directions explicitly state typed ownership, default/override and
+semantic event meaning without claiming those APIs are implemented. Service
+workbench stories and ranked existing owners provide the follow-up pull queue.
+Zero compilers, new executions, probes or hosts are part of this review; historical
+receipts/failures retain their original boundaries. No component/parity/authoring
+criterion or product completion credit follows. All three implementation packets
+and parent prerequisites remain open. [WORK](../../WORK.md#control-usefulness-review--2026-10-21)
+records qualification, exact source scope and the next column-query design.
 
 The user's 2026-10-21 external process/service-debugger experience exposed a
 practical question: can a person using a Nyx application filter a native table's
@@ -19,18 +34,18 @@ must explicitly enable, and what remains inaccessible or unimplemented on each
 target. Include reusable custom parts and the public extension path.
 
 North star: NS-3. Milestone: M3, advanced behavior and useful component depth under
-[components01](NS-3_components_01.md), especially its three original criteria.
+[components01](../NS-3_components_01.md), especially its three original criteria.
 Completion credit: pending evidence-backed assessment within that existing scope;
 filing or accepting a review earns no implementation or additional goal credit.
 Original component, renderer, accessibility and Studio criteria remain intact.
 
-Starting evidence: [catalog](../src/nyx.catalog.pas),
-[typed kinds](../src/nyx.types.pas),
-[specialized controls](../src/nyx.controls.types.inc),
-[configuration facades](../src/nyx.controls.facades.inc),
-[component guide](../docs/components.md),
-[collection behavior](../docs/collection-views.md) and
-[typed queries](../docs/collection-queries.md). Filtering, stable ordering,
+Starting evidence: [catalog](../../src/nyx.catalog.pas),
+[typed kinds](../../src/nyx.types.pas),
+[specialized controls](../../src/nyx.controls.types.inc),
+[configuration facades](../../src/nyx.controls.facades.inc),
+[component guide](../../docs/components.md),
+[collection behavior](../../docs/collection-views.md) and
+[typed queries](../../docs/collection-queries.md). Filtering, stable ordering,
 selection, paging, native on-demand values and browser row windows already have
 implementations; they must not be reported as wholly absent because an end-user
 command surface is missing. Source inspection is evidence of exposure, not a new
@@ -45,9 +60,9 @@ Initial source review (2026-10-21), pending the complete audit above:
 | Cells | Navigation, current-cell editing, row selection; inherited native grid copy behavior | A defined both-target copy/range/context-action contract |
 | Large data | Native on-demand cell reads; measured browser row windows | Stable live inspection controls and measured whole-view responsiveness |
 
-These findings come from the [query declarations](../src/nyx.collections.query.pas),
-[native event attachment](../src/nyx.collections.lcl.pas),
-[browser heading construction](../src/nyx.collections.browser.pas) and the
+These findings come from the [query declarations](../../src/nyx.collections.query.pas),
+[native event attachment](../../src/nyx.collections.lcl.pas),
+[browser heading construction](../../src/nyx.collections.browser.pas) and the
 existing collection guide. Inherited native copy behavior is not a claim that
 Nyx already defines portable range/clipboard semantics. The external debugger
 has not been reproduced, and none of these source reads is a new runtime verdict.
@@ -62,9 +77,9 @@ ownership; unrelated pending edits to those two files are preserved.
 | Packet | Delivered result | Order |
 | --- | --- | --- |
 | This review | Complete per-kind usefulness matrix, ranked gaps and concrete follow-up owners | First |
-| [Column filtering and sorting](NS-3_control-usefulness_02.md) | Discoverable end-user table queries using the existing query model | After the review |
-| [Table workbench interactions](NS-3_control-usefulness_03.md) | Usable column management, cell actions and keyboard workflows | After the review; coordinate with query UI |
-| [Live operational data](NS-3_control-usefulness_04.md) | Stable inspection of changing/large results with visible update controls | After the review; reuse the other packets where applicable |
+| [Column filtering and sorting](../NS-3_control-usefulness_02.md) | Discoverable end-user table queries using the existing query model | After the review |
+| [Table workbench interactions](../NS-3_control-usefulness_03.md) | Usable column management, cell actions and keyboard workflows | After the review; coordinate with query UI |
+| [Live operational data](../NS-3_control-usefulness_04.md) | Stable inspection of changing/large results with visible update controls | After the review; reuse the other packets where applicable |
 
 **Acceptance Criteria:**
 
