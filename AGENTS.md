@@ -1,5 +1,104 @@
 # Working in Nyx
 
+COORDINATOR02 ACCEPTED (2026-10-21): all five scoped criteria close in
+TODO/DONE/NS-3_coordinators_02.md; no original component/parity credit closes.
+Maintained creator command passes native171/API and ordinary39/39 at actual
+client1280/390, clean; both matching browser programs compile. Existing native
+publication136/136, Kanban98/98 and own exact055D/DF22 compiled MasterDetail36/36
+pass clean; both Studios compile. Composite12 compilers/nine native runs have
+zero owned/42 upstream RTL warnings. Unit0FEFD5CA, focusedE7DE8E24, creatorD66F00D6
+and ordinaryC27F5281 remain exact. All actual readers joined/audited43 owned/
+1780 Pascal/concurrent13/extra23; immutable final audit5747B03A owns the receipt.
+Only the two new consumers changed after first source freeze; unchanged product/
+compatibility-browser results are reused explicitly. Retain first empty-name/
+zero-ticket fixture failure, missing custom updater/one warning, unsupported
+interface-as and outer null-nativeRuns audit error; none was hidden/suppressed.
+
+Root owns documentation/checkpoint only; Pascal stays frozen until separate03
+source release. Next TODO/NS-3_coordinators_03.md migrates automatic MasterDetail
+through the common path while preserving manual APIs/GUIDs, shared text ownership
+(equal-initial/manual vs creator), copied primitive/compound/effective-text facts
+and optional prequeue enrichment with independent Value/Details. Existing helper
+supplied read-only03/04/05 seams; no new source scope is released by this handoff.
+Reusable realization already shares the parent snapshot; embedded SetupCanvas
+needs separate immutable membership propagation and its own weak target in05.
+Built-in migration/reuse/browser execution/input/parity stay open in parent01;
+DataToolbar remains downstream. Core no-closure advances11→12 for the completed
+native batch; accepting this independent API does not reset original criteria.
+WORK/private records own exact source, failures, queue and remote checkpoint.
+Preserve concurrent13/resolver14/splitter deferral, offline LAN/no native Nyx tools,
+no extra agent, host/config retry, cleanup/restart or new MCP/tool/wire rollout.
+
+COORDINATOR02 SOURCE RELEASE (2026-10-21): prior b160e31 is progress, committed/
+pushed/remote-verified; all readers joined and1777 Pascal/concurrent13 pins exact.
+Next independent task is TODO/NS-3_coordinators_02.md criteria1–5. Existing helper
+owns ONLY new src/nyx.coordinators.pas and tests/nyx_coordinators_tests.lpr. Root
+owns both generic renderer hooks/weak refresh, ordinary Selection Summary creator
+example/consumer, maintained build/docs and reader admission. No compiler until
+both source-ready scopes are independently reviewed and jointly frozen.
+
+Both final source reviews are complete: helper unit0FEFD5CA and consumer0A9BCE84
+are paused; root's kind/interface-vector/GetConnected/input-alias repairs and
+ordinary alias case are independently reviewed. Root may freeze all owned and
+Pascal/concurrent/extra inputs, then admit the fixed twelve-compiler/nine-native
+plan in WORK. Keep all Pascal/guides paused until every actual handle is terminal
+and exact audits join. Initial failures remain retained; no assertion dropped or
+wait changed.
+
+First coordinator readers joined/audited43/1780/concurrent13/extra23. Both Studio
+compilers pass; focused native fails check26 clean because fixture Click had an
+empty Name and router correctly ignored it. Helper ONLY consumer is released for
+valid physical NyxTriggerName and separate ordinary-registration/observer-ticket
+checks; preserve failed Clear/isolation/spec/policy assertions and all waits.
+No product source repair is indicated. Fresh review/freeze precedes next readers;
+reuse unchanged product compilers rather than replaying them for a test-only fix.
+Corrected consumer0B145ECB is source-ready/paused and independently reviewed:
+proper Click name, zero ordinary registrations, dormant0/installed1 successful
+observer ticket, all original Clear/isolation/spec/policy predicates retained.
+Only this Pascal file changed from the first reviewed freeze. Root may freeze
+coordinator-input and resume the fixed remaining qualification; both unchanged
+Studio compiler results remain applicable.
+
+Second readers joined/audited43/1780/13/23: focused171 clean; ordinary first
+selection times out at8 clean because fault-injection custom label lacks its
+required updater. Three browser compatibility compilers pass. Root ONLY ordinary
+consumer now C27F5281 adds typed updaters, explicit nfaNone warning repair and
+diagnostic values at unchanged deadline; requested client1280/390 are explicit
+and asserted (outer height unchanged). Helper independently reviewed all deltas.
+All original behavior assertions/waits remain. Root may freeze coordinator-controls
+and finish fixed remaining qualification; no product edit or new fixture variant.
+Reuse exact unchanged Studio/API/compatibility source evidence, retaining both
+failures/warning. Pause source/guides through all actual joins/exact audit.
+
+Current native171/API and ordinary39/39 pass clean; first focused browser compile
+rejects interface-as cast. Reader is terminal/joined and43/1780/13/23 exact. Only
+helper consumer changes to reviewed E7DE8E24: Supports queries the same base GUID,
+then original exact identity/independent/connected predicates; no scenario/count/
+wait changes. All product and ordinary-control Pascal stays exact. Root may freeze
+coordinator-portable and finish fixed remaining readers; preserve the compiler
+failure and reuse unchanged compiler/native evidence within exact boundaries.
+
+Use caller-owned typed kind+extension registration and immutable candidate
+snapshots before factory callbacks. Factories get copied intent/role metadata,
+scoped guarded text/AND-availability projection, existing candidate bindings,
+the SAME future event view/scheduler and weak final-owner refresh. Private
+canonical role facades retain model memory, not parent/document/widget or active
+authority. Revoke projection/refresh flags before teardown; actual disconnect/
+cleanup is deferred and all-attempt. Install adopts preallocated ownership only.
+Initial projection precedes Build; observers stay dormant. Generic mounts join
+existing validation/final fences/accepted event installation, including source-
+only views, replacement, remount and committed cleanup failure. No executable
+factory comes from saved metadata. Trusted Pascal code is not a security sandbox.
+Preserve manual APIs/GUIDs; coordinator03/04/05 split MD/Kanban migration and
+reusable/embedded adoption under coordinator01's unchanged original criteria.
+WORK owns their dependency order; this backlog split releases no new source scope.
+No component-specific renderer branch or second selection/state/query engine.
+Selection Summary uses existing multiple-selection List, retained-count Label
+and accessible Clear Button; prove actual two-instance input and lifetime cases.
+WORK/private state own exact scopes/quotas/return. Original no-closure11 carries;
+preserve concurrent13, resolver/splitter deferral, offline LAN/no native Nyx tools,
+no extra agent, host/config retry, cleanup/restart or MCP/tool/wire rollout.
+
 INTERACT01 NATIVE JOURNEY QUALIFIED (2026-10-21): repaired runtime BF0770 and
 consumer61E652 qualify57 native public checks, ordinary Studio165 at1280/175 at390
 and both product compiles. All six final readers joined/audited35 owned1777

@@ -4,6 +4,95 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+Current batch: accept/checkpoint [caller-owned behavior registration](TODO/DONE/NS-3_coordinators_02.md).
+Previous goal turn is progress: three granular migration/reuse tasks and their
+57 task links/dependency order were verified. This turn delivers the working
+creator API and ordinary Selection Summary, qualifying all five scoped criteria.
+Original component/authoring/parity criteria and credit stay open; core no-closure
+advances11→12 for this completed native batch. The API prerequisite adds no credit
+and does not reset the original outcome.
+
+Next: [MasterDetail common mounting](TODO/NS-3_coordinators_03.md), criteria1–6.
+Existing Lil' Scooty supplied read-only03/04/05 seams. Root owns checkpoint/docs;
+all Pascal remains frozen until the separate next source release. No new agent,
+host/config retry, cleanup/restart or MCP/tool/wire rollout. Keep concurrent13,
+deferred resolver14/splitter and offline LAN/no native Nyx tools exact.
+
+### Caller-owned behavior registration — 2026-10-21
+
+Accepted [coordinator02](TODO/DONE/NS-3_coordinators_02.md) provides caller-owned
+typed kind/extension registration and immutable snapshots before factory calls.
+Public factories receive copied role/intent data, canonical guarded text and
+AND-availability projection, the same future event view and weak final-owner
+refresh. Installed authority is distinct from retained model memory. Revoke is
+local before deferred independent cleanup; Install adopts prepared ownership.
+Generic lookup preserves exact specialized creator binding interfaces. Saved
+metadata never loads factories or grants host authority. Trusted Pascal is not
+a security sandbox.
+
+The documented [Selection Summary](examples/selection-summary/README.md) is an
+ordinary typed Card/List/Label/Button compound with its own specialized interface
+and binding. Multiple-selection count includes query-hidden retained membership;
+keyboard Clear changes that same view's selection without changing data, query
+or authored defaults. Two ordinary applications with independent stores qualify
+initial text/availability, actual input, registry snapshots, aliased caller input,
+physical refusal, replacement, late commands and committed failure/disposal.
+No component-specific renderer branch or second state/query/selection engine
+was added. Shared manual MasterDetail text ownership remains explicit03 work.
+
+The maintained command is tools/build.ps1 -Target coordinators with a fresh
+-CoordinatorEvidenceDirectory. Its final actual run passes171 public native
+checks and39 ordinary controls at each client allocation1280/390, all clean.
+Both matching browser programs compile without omitted assertions. Existing
+publication136/136, Kanban98/98 and the unchanged current MasterDetail consumer
+against its own exact saved055D/DF22 pair36/36 pass with clean heaps. Both Studios
+compile. Browser execution/input/observing and full reusable/embedded adoption
+remain open; compilation does not accept those outcomes.
+
+Final immutable joined audit5747B03AE02BFF2068EBC7C6BFBCDE10110A51AA6041C259215B17AEAFA7CB5B
+records43 owned/1780 Pascal/13 concurrent/23 extra inputs. All actual sessions
+are terminal. Twelve accepted compiler jobs have zero owned/42 repeated upstream
+pas2js RTL warnings; all nine native execution results have clean heaps. Production
+stays exact from the first reviewed freeze. Only the two new test programs
+changed: unit0FEFD5CA, focusedE7DE8E24, creatorD66F00D6 and ordinaryC27F5281 identify
+the final sources. Both first-freeze Studio compilers and three input-freeze
+compatibility browser compilers are reused with exact production/program inputs,
+rather than relabeled as reruns. Earlier full Interact Save/Open and worker/backend
+evidence retains its explicitly unchanged boundary. The independent helper
+acceptance review confirms all five scoped criteria and exact receipt hashes.
+
+Retained first failures: focused Click supplied an empty name, so the router
+correctly skipped it; the fixture also confused ordinary registrations with
+observer execution tickets. The corrected fixture checks zero ordinary callbacks,
+dormant0/installed1 successful observer ticket and all original Clear/isolation/
+spec/policy assertions. Ordinary first selection then timed out at8 because its
+fault-injection custom Label factory omitted the required updater. Both heaps
+were clean. The consumer now registers native/browser updaters, covers nfaNone
+(one old warning retained) and reports values at the unchanged10-second deadline.
+It sets/asserts the requested client widths instead of outer widths; height and
+width inputs remain unchanged. The subsequent browser compile rejects the
+test's interface-as cast; Supports now queries that same base GUID, retaining
+exact identity/independence predicates and assertion count. No product change,
+wait adjustment, dropped assertion or alternate fixture manufactured acceptance.
+The initial outer audit treated absent nativeRuns as one null entry; its failed
+guard is retained, and null-safe parsing audits the same immutable results.
+Ignored .local/master-detail-events-paths-private.json owns all exact receipts.
+
+The accepted API closes only02. [Common coordinators](TODO/NS-3_coordinators_01.md)
+keeps joint migration/reuse/compatibility. Next03 needs shared runtime text
+reservations covering manual and automatic MasterDetail, copied primitive/
+compound/effective-text facts and optional prequeue enrichment preserving Value
+and copied Details independently. Existing manual APIs/GUIDs and configured/
+disabled/inherited/static behavior must remain. Kanban04 preserves synchronous
+Move/list/DragEnd observation and distinct gesture negotiation; its real typed
+part facades cannot be silently narrowed. Reuse05 needs embedded snapshot
+propagation through existing SetupCanvas, with each child retaining its own
+event generation/weak refresh; reusable expansion already traverses the parent's
+captured snapshot. No03/04/05 implementation is released by this checkpoint.
+DataToolbar remains downstream. Source acceptance adds no original goal credit.
+
+### Qualified Interact checkpoint
+
 Current Interact01 evidence (2026-10-21): the native ordinary Studio journey
 passes165 checks at1280 and175 at390, including actual Edit→JSONFormat→visible
 bound Memo, copied original record after selection changes, paired history,
@@ -54,11 +143,11 @@ are terminal; documentation alone is released for this checkpoint. The native
 batch advances Interact01 criteria1–6 and useful Edit data, while browser
 execution/input/parity and observing delivery remain open. No original criterion,
 task, credit or DONE closes; core no-closure advances from10 to11 at this handoff.
-Stop runtime/form/fixture/compiler variants. The eight-task queue below retains
+Stop runtime/form/fixture/compiler variants. The core queue below retains
 all original scope; resolver14 and splitter stay deferred.
 
 Reassessment changes the next concrete deliverable to independent P1.1,
-[caller-owned behavior registration](TODO/NS-3_coordinators_02.md), criteria1–5.
+[caller-owned behavior registration](TODO/DONE/NS-3_coordinators_02.md), criteria1–5.
 Deliver typed immutable registration snapshots, prepared factories, guarded role
 projection/weak refresh and an ordinary Selection Summary using existing List,
 Label and Clear Button. Real multiple selection/Clear, hidden retained membership,
@@ -83,9 +172,12 @@ task files, not a separate task definition or a new completion score.
 | Accepted P0.2 | [Composable view publication](TODO/DONE/NS-4_interact-flows_03.md) | Native136/136, remount/committed failure/disposal, compatibility and maintained command qualified | Accepted API prerequisite; actual Studio flow integration remains open |
 | P0.3 | [Working Studio Interact flows](TODO/NS-4_interact-flows_01.md) | PreviewRuntime mounts root flows and survives failed preparation or committed cleanup errors | P0.1 and P0.2 |
 | P0.4 | [Useful Edit data](TODO/NS-4_master-detail-events_01.md) | Authored Edit → JSONFormat → bound Memo works through history, Save/Open and the exact generated app | P0.3; reuse its unchanged journey rather than repeat a different fixture |
-| P1.1 | [Caller-owned behavior registration](TODO/NS-3_coordinators_02.md) | A creator mounts useful behavior without a component-specific renderer edit | Existing prepared lifecycle and data owners |
-| P1.2 | [Common component coordinators](TODO/NS-3_coordinators_01.md) | Kanban/MasterDetail and creator-owned reusable/embedded behavior share that path | P1.1 |
-| P2.1 | [DataToolbar query runtime](TODO/NS-3_data-toolbar_02.md) | Real search, sort and Clear control an existing List/Table query | P1.2 |
+| Accepted P1.1 | [Caller-owned behavior registration](TODO/DONE/NS-3_coordinators_02.md) | A creator mounts useful behavior without a component-specific renderer edit | Existing prepared lifecycle and data owners |
+| P1.2 | [MasterDetail common mounting](TODO/NS-3_coordinators_03.md) | Selected details/Edit and shared text ownership work through the common lifetime | P1.1 |
+| P1.3 | [Kanban common mounting](TODO/NS-3_coordinators_04.md) | Actual card movement and whole-board admission use the common lifetime | P1.1; independent of P1.2 |
+| P1.4 | [Reusable and embedded creator behavior](TODO/NS-3_coordinators_05.md) | Useful behavior stays isolated across reusable/embedded owners on both hosts | P1.2 and P1.3; browser execution needs an admitted session |
+| P1.5 | [Common component integration](TODO/NS-3_coordinators_01.md) | All original migration/reuse/compatibility criteria qualify together | P1.1–P1.4; no duplicate credit |
+| P2.1 | [DataToolbar query runtime](TODO/NS-3_data-toolbar_02.md) | Real search, sort and Clear control an existing List/Table query | P1.5 |
 | P2.2 | [DataToolbar Studio authoring](TODO/NS-3_data-toolbar_01.md) | Configure/Disable/Inherit, paired history, Save/Open and exact generated app | P2.1 |
 
 These are deliverable boundaries, not one task per coding step or check. Each
@@ -97,9 +189,23 @@ The existing milestone/catalog component and authoring entries reach these
 tasks through their parent links; their concurrently owned files stay byte-exact.
 Planning changes no original criterion/task/credit/DONE or completion percentage.
 
+Granularity pass (2026-10-21): the three new coordinator tasks split useful
+MasterDetail migration, Kanban migration and reusable/embedded adoption. Their
+parent maps every original criterion and remains the joint integration gate.
+The existing catalog/milestone links reach them through that same parent;
+the thirteen concurrently owned planning files remain exact. Each task records
+its input/lifetime failure cases, dependencies and actual evidence required.
+No coding-step/report-only tickets or new completion credit were added.
+Resolver14 and the reported splitter remain deferred. The current02 source
+drafts stay unqualified; no compiler was run for this planning change.
+Link checks pass for all seven coordinator/DataToolbar task files (57 relative
+links), and their prerequisite graph is acyclic. All thirteen concurrent files
+and both paused helper sources match their recorded hashes. After this planning pass, the next task was02:
+independent source review before joint freeze and bounded qualification, then03.
+
 P0.3/P0.4 retain their browser acceptance gate after the qualified native journey;
 no admitted browser session or new tool rollout is supplied by this source batch.
-Next independently eligible implementation is **P1.1**. P0.1/P0.2 are accepted
+Next independently eligible implementation is **P1.2**. P0.1/P0.2 are accepted
 host APIs, with qualification below. Contract review is settled: host pairs
 router/view and document/realized tree;
 preparation and Validate require active context, exact scheduler and exact

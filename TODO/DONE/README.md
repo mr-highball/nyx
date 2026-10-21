@@ -3,6 +3,17 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Caller-owned prepared behavior](NS-3_coordinators_02.md) was accepted on
+2026-10-21:171 native API checks and39/39 ordinary controls at client1280/390,
+all with clean heaps, plus matching browser compilation. Immutable caller
+registrations mount a typed Selection Summary through generic hooks; guarded
+roles, the shared future event view and weak refresh retain instance/lifetime
+authority. Existing publication136/136, Kanban98/98 and exact compiled
+MasterDetail36/36 stay compatible; both Studios compile. This API prerequisite
+adds no original goal credit. Built-in migration, shared manual text ownership,
+full reusable/embedded adoption and browser execution remain open. See
+[the qualification](../../WORK.md#caller-owned-behavior-registration--2026-10-21).
+
 [Composable renderer publication](NS-4_interact-flows_03.md) was accepted on
 2026-10-21:136 ordinary native checks at1280/390, clean heaps, and matching browser
 compilation. Managed root ownership adopts at commit; refusal preserves the old

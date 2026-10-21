@@ -42,18 +42,32 @@ event or history engine.
   edits. Cancellation, stale input, reentrant validation and disposal preserve
   instance isolation. Native/browser evidence and compile-only limits stay explicit.
 
-Scope mapping: original criteria1-3 are shared integration gates; criterion4
-and the generic creator/reuse portion of criterion5 remain here. The DataToolbar
-portion of criterion5 is required by
+Scope mapping: original criteria1–3 remain shared integration gates in this
+parent. [Registration02](DONE/NS-3_coordinators_02.md) owns the independent public
+extension API; [MasterDetail03](NS-3_coordinators_03.md) and
+[Kanban04](NS-3_coordinators_04.md) own the two useful automatic migrations under
+criteria1–4; [reuse05](NS-3_coordinators_05.md) owns creator reusable/embedded
+adoption under criterion5 and shared lifetime criteria1–3. Criterion4's joint
+compatibility and all complete original criteria remain here; passing one
+internal task cannot accept the parent. Shared text-claim admission must cover
+migrated built-ins as well as creator factories, even for equal initial text.
+The DataToolbar portion of criterion5 is required by
 [DataToolbar authoring](NS-3_data-toolbar_01.md), downstream of this API/migration.
 That use is not a reverse prerequisite; components still requires both outcomes.
 Credit is unchanged and counted once.
 
 **Blockers**
 
-- [Caller-owned behavior registration](NS-3_coordinators_02.md) owns the public
+- [Caller-owned behavior registration](DONE/NS-3_coordinators_02.md) owns the public
   registration/mount contract and an independently authored application consumer.
-  This parent keeps compatibility migration and reusable/embedded instances.
+  Its native/compile-only evidence does not accept this parent.
+- [MasterDetail migration](NS-3_coordinators_03.md) preserves live detail/Edit
+  behavior and admits shared text ownership without a separate renderer vector.
+- [Kanban migration](NS-3_coordinators_04.md) preserves actual board movement and
+  whole-board admission through the same common lifetime.
+- [Reusable/embedded creator adoption](NS-3_coordinators_05.md) supplies independent
+  instances, mixed built-ins and actual native/browser reuse. This parent retains
+  joint compatibility and complete original acceptance rather than new credit.
 - [Observable state and collections](DONE/NS-1_state-collections_01.md) supply the
   accepted data authority; existing prepared event/publication owners and locally
   qualified Kanban/MasterDetail policies supply the lifecycle starting point.
