@@ -77,6 +77,13 @@ Disable/Inherit/custom-payload Save/Open/generated contract. Preserve current
 native171/68 injected reentrancy/disposal boundaries separately from browser563.
 No new fixture/API/task identity, compiler or host is released by this assessment.
 
+C1 is now supplied on636F: root/helper52D5AEEE verifies full Studio165/175 and
+its OWN strict-admitted newly saved/independently compiled36/36, all clean at both
+widths, four successful compilers. Current-source proof replaces the previous
+changed-dependency gap; original historical evidence remains retained. Browser
+branches compile only. C2 stays required and queued while the user's explicit
+Studio facelift takes priority. No original parent criterion/credit closes here.
+
 - Criteria1–3 consume accepted registration and both migrations together with
   reuse05's current-source snapshot, refusal, replacement and lifetime evidence.
   Missing combined behavior returns to that owning task; no component-specific

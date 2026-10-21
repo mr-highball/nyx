@@ -161,7 +161,7 @@ result and applicable existing reentrant/disposal/Studio compatibility evidence;
 return a concrete remaining gap to its existing owner before accepting05.
 
 Joint review return, C1: unchanged `tests/nyx_master_detail_controls.lpr` must
-execute its full Studio authoring/Interact queued Details+Value/paired history/
+execute its full Studio authoring/Interact queued record Details/paired history/
 real Save/Open journey at native1280/390 against636F. Pin the OWN new saved project
 and generated Pascal from those runs; independently compile/run its existing
 `NYX_COMPILED_MASTER_DETAIL` branch against that exact pair at both widths, retaining
@@ -222,6 +222,16 @@ as reusable proof. Stop at R1's actual result before releasing R2 propagation.
   exact supported boundaries with the ordinary application example.
 
 **Blockers**
+
+C1 current-source result (2026-10-21): root/helper52D5AEEE verifies actual165/175
+ordinary Studio and its OWN independently compiled36/36 at1280/390, all four heaps
+clean and four compilers successful. New C1Save/Open outputs match widths and use
+strict source/design admission; no historical input path is substituted despite
+byte-equal055D/DF22 exports. Browser branches compile only. The ordinary flow proves
+queued Details; independent scalar Value coexistence is current focused99's proof.
+This compatibility return is supplied. C2/parent joint acceptance stays separate;
+the user's latest explicit Studio facelift now takes priority over that later
+return, without removing its original acceptance requirement.
 
 - [Caller-owned registration](DONE/NS-3_coordinators_02.md) supplies the extension API
   and first independently useful root application.

@@ -4,6 +4,29 @@
 
 ## Active priority — back to core Nyx (2026-10-20)
 
+C1 now qualifies the repaired MasterDetail through ordinary whole-Studio165/175
+and its OWN freshly saved/independently compiled36/36 at both widths. Root/helper
+52D5AEEE verifies four successful compilers, four clean heaps, all53/1782/13/51
+inputs, exact new-pair provenance and zero owned/14 upstream warnings. Generated
+inputs happen byte-equal055D/DF22 but use only new C1paths, with strict admission.
+Browser branches compile only. Queued record Details is this ordinary proof;
+independent event.Value coexistence remains current focused99's separate proof.
+No original closure;24→25 carries. C2 stays queued while the user's latest explicit
+Studio facelift takes priority. Generated clean atlas is retained as an upcoming
+asset, not relabeled as part of C1. Checkpoint this result, then release shared
+typed button presentation/chrome/adapters and accessible property/event/UI fixes.
+
+Current bounded C1 admission: unchanged65F0DD4A consumer, four compilers/four native
+outcomes, all Pascal/guides frozen through readers. Execute ordinary full Studio
+at1280/390 and compile browser. Join both actual jobs, verify the four OWN saved
+project/Pascal files match widths and packet.Source equals emitted Pascal, review
+the saved semantics, then pin those files and independently compile/run the saved
+application at both widths with strict admission, plus matching browser compile.
+No historical pair or changed oracle/wait is allowed. Root owns handles/audits;
+helper reviews the own pair and results read-only. Previous turn is concrete
+progress: actual browser256/563 each, independent AAE3 and pushed7cff/bc9 checkpoints.
+No new host, source repair or original credit follows; C2 remains separate.
+
 Independent AAE3 review accepts both actual browser outcomes and cleanup; checkpoint
 7cff8c3 is remote-verified. Joint assessment now identifies a concrete compatibility
 return rather than a new design task: C1, execute unchanged whole-Studio MasterDetail

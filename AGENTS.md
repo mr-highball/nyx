@@ -1,5 +1,40 @@
 # Working in Nyx
 
+COORDINATOR05 C1 QUALIFIED / USER FACELIFT NEXT (2026-10-21): root/helper audit
+52D5AEEE accepts four compilers and actual ordinary Studio165/175 plus its OWN
+independently compiled36/36 at1280/390; all four heaps clean. Every actual reader
+joined94733/35172/13397/12807. Exact53current+retained/1782Pascal/concurrent13 and
+47→51extras retain four new saved inputs; actual055D/DF22 bytes equal historical
+exports but ONLY newly written C1paths were supplied to strict generated admission.
+No old-path substitution, source change or browser execution; zero owned/14upstream
+warnings. Ordinary proof covers queued record Details; current focused99 separately
+proves independent scalar Value coexistence. C1's changed636F whole-Studio/compiled
+return is supplied; C2 and original05/parent/parity/credit remain open.24→25 carries.
+Latest explicit user request now prioritizes a functional, beautiful shared Studio
+facelift with imagegen custom glyphs and encountered property/event fixes. Preserve
+this actual C1 checkpoint before releasing facelift source. All old source scopes
+are paused; next separate source release will name root/helper files and qualify
+shared typed contracts/native+browser rendering. No LAN/config/MCP/wire/extra-agent
+or cleanup work is implied. Original deferred work and failures stay retained.
+
+COORDINATOR05 C1 QUALIFICATION ADMITTED (2026-10-21): previous goal turn is actual
+progress, source7cff8c3/docsbc9bee4 pushed/remote-verified and AAE3 browser256/563
+both widths independently accepted. All readers/host joined. Root independently
+reviews helper C1 plan against unchanged consumer65F0DD4A and existing pinned
+qualifier2181BE7B. Fresh53owned/1782Pascal/concurrent13/47extra freeze admits ONLY
+four compilers/four native outcomes: ordinary Studio native1280/390 plus browser
+compile; then its OWN saved project/Pascal pair must match both widths, be semantically
+reviewed and source-equal before adding those four new file pins and admitting
+compiled native1280/390 plus matching compiled browser. Never use historical055D/
+DF22 inputs. Strict nprRequireMatch, generated design equality, every original
+assertion/wait and exact three compiled arguments remain unchanged. Native UI
+runs sequentially. Root owns actual handles/joins/audits; all Pascal/guides pause
+through terminal joins/exact audit. Existing helper independently reviews the own
+pair/results read-only; no source/compiler/host action from helper. Stop at real
+frontier, retaining failures. No browser execution, unrelated consumer replay,
+extra agent/LAN/config/MCP/tool/wire/cleanup or original criterion/credit closure.
+Core no-closure24 carries; C2 remains subsequent separate review/admission.
+
 COORDINATOR05 R3 INDEPENDENTLY REVIEWED / JOINT RETURN (2026-10-21): source/docs
 7cff8c3 is pushed/remote-verified. Helper independently accepts AAE3's actual
 256/563 both widths, all exact pins, final empty consoles and verified host cleanup.
