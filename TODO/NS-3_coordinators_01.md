@@ -5,10 +5,10 @@
 **Description:**
 
 Make opt-in compound behavior creator-extensible through the existing prepared
-publication and event-view owners. Current Kanban/MasterDetail behavior requires
-separate lifecycle vectors and dispatch wiring in both renderers. A common
-mounting/factory path must preserve those policies and allow creator-owned
-behavior in an ordinary application without editing renderer internals.
+publication and event-view owners. Kanban and MasterDetail now use the accepted
+common mounting/factory path in both renderers. The remaining integration must
+preserve those policies and prove creator-owned behavior across reusable and
+embedded application views without component-specific renderer edits.
 
 Owner and credit remain [components](NS-3_components_01.md) criteria1/3, returning
 to [Studio authoring](NS-4_studio-authoring_01.md) and native/browser parity. This
@@ -45,7 +45,7 @@ event or history engine.
 Scope mapping: original criteria1–3 remain shared integration gates in this
 parent. [Registration02](DONE/NS-3_coordinators_02.md) owns the independent public
 extension API; [MasterDetail03](DONE/NS-3_coordinators_03.md) and
-[Kanban04](NS-3_coordinators_04.md) own the two useful automatic migrations under
+[Kanban04](DONE/NS-3_coordinators_04.md) own the two useful automatic migrations under
 criteria1–4; [reuse05](NS-3_coordinators_05.md) owns creator reusable/embedded
 adoption under criterion5 and shared lifetime criteria1–3. Criterion4's joint
 compatibility and all complete original criteria remain here; passing one
@@ -64,8 +64,9 @@ Credit is unchanged and counted once.
 - [MasterDetail migration](DONE/NS-3_coordinators_03.md) preserves live detail/Edit
   behavior and admits shared text ownership without a separate renderer vector.
   Its six scoped criteria are accepted; joint integration and reuse remain here.
-- [Kanban migration](NS-3_coordinators_04.md) preserves actual board movement and
+- [Kanban migration](DONE/NS-3_coordinators_04.md) preserves actual board movement and
   whole-board admission through the same common lifetime.
+  Its five scoped criteria are accepted; complete mixed reuse remains in05/here.
 - [Reusable/embedded creator adoption](NS-3_coordinators_05.md) supplies independent
   instances, mixed built-ins and actual native/browser reuse. This parent retains
   joint compatibility and complete original acceptance rather than new credit.

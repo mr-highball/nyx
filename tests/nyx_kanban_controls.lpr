@@ -31,7 +31,8 @@ uses
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
   nyx.composition, nyx.responsive, nyx.collections, nyx.collections.view,
   nyx.collections.bindings, nyx.collections.view.types, nyx.kanban,
-  nyx.kanban.intent, nyx.events, nyx.scheduler
+  nyx.kanban.intent, nyx.events, nyx.scheduler, nyx.coordinators, nyx.data,
+  nyx.publication.types
   {$ifdef NYX_COMPILED_KANBAN}, nyx.generated.kanban{$endif};
 
 {$ifndef PAS2JS}
@@ -48,6 +49,45 @@ type
   end;
 {$endif}
 
+const
+  CNotificationIntent: TNyxText = 'test-kanban-notification';
+
+type
+  { A separately registered creator participates beside the real automatic
+    boards. Its postcommit notification either fails or disposes the renderer;
+    this tests accepted Kanban ownership, rather than an already-retired binding. }
+  TNotificationMode = (nnmFailure, nnmDispose);
+  { Minimal creator-owned prepared lifetime. Install only records adoption;
+    Notify exercises its copied failure/disposal mode after built-ins commit. }
+  TNotificationPlan = class(TInterfacedObject, INyxPreparedCoordinator,
+    INyxPreparedPublication, INyxPublicationReadiness, INyxCoordinatorBinding)
+  private
+    FMode: TNotificationMode;
+    FInstalled: Boolean;
+    FRevoked: Boolean;
+  public
+    constructor Create(AMode: TNotificationMode);
+    function GetBinding: INyxCoordinatorBinding;
+    function GetConnected: Boolean;
+    procedure Revoke;
+    procedure Disconnect;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+  { Public creator path remains Node-free even while built-in Kanban uses the
+    private canonical admission channel. One explicit caller owns this registry. }
+  TNotificationFactory = class(TInterfacedObject, INyxCoordinatorFactory)
+  public
+    Mode: TNotificationMode;
+    function Prepare(const AProjection: INyxCoordinatorProjection;
+      const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+      const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+  end;
+
 var
   GDocument: TNyxDocument;
   GViews: INyxCollectionBindings;
@@ -57,6 +97,7 @@ var
   GAuthored: TNyxText;
   GChecks: Integer;
   GReview: Boolean;
+  GPublished: INyxKanbanBinding;
   {$ifdef PAS2JS}
   GRenderer: TNyxBrowserRenderer;
   GHost: TJSHTMLElement;
@@ -67,6 +108,79 @@ var
   GWidth: Integer;
   GEvidence: String;
   {$endif}
+
+constructor TNotificationPlan.Create(AMode: TNotificationMode);
+begin
+  inherited Create;
+  FMode := AMode;
+end;
+
+function TNotificationPlan.GetBinding: INyxCoordinatorBinding;
+begin
+  Result := Self;
+end;
+
+function TNotificationPlan.GetConnected: Boolean;
+begin
+  Result := FInstalled and not FRevoked;
+end;
+
+procedure TNotificationPlan.Revoke;
+begin
+  FRevoked := True;
+end;
+
+procedure TNotificationPlan.Disconnect;
+begin
+  Revoke;
+end;
+
+procedure TNotificationPlan.Validate;
+begin
+  CheckReady;
+end;
+
+procedure TNotificationPlan.CheckReady;
+begin
+
+  if FRevoked then
+  begin
+    raise ENyxCoordinatorCancelled.Create('Test notification participant is retired');
+  end;
+end;
+
+procedure TNotificationPlan.Install;
+begin
+  FInstalled := True;
+end;
+
+procedure TNotificationPlan.Notify;
+var
+  {$ifdef PAS2JS}LRenderer: TNyxBrowserRenderer;{$else}LRenderer: TNyxLCLRenderer;{$endif}
+begin
+  GPublished := GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow'));
+
+  if FMode = nnmDispose then
+  begin
+    LRenderer := GRenderer;
+    GRenderer := nil;
+    LRenderer.Free;
+  end;
+  raise ENyxCoordinator.Create('Deliberate committed notification failure');
+end;
+
+procedure TNotificationPlan.Retire;
+begin
+  { Installed lifetime belongs to the common mount, not preparation retirement. }
+end;
+
+function TNotificationFactory.Prepare(const AProjection: INyxCoordinatorProjection;
+  const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+  const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+begin
+  Result := TNotificationPlan.Create(Mode);
+end;
 
 function Cards: TNyxCollectionRef;
 begin
@@ -548,6 +662,150 @@ begin
     'the same renderer becomes interactive again after Unmount and remount');
 end;
 
+{ Continue the original complete journey with common-binding identity and
+  deliberate retirement. No old stage, assertion, allocation or wait is changed.
+  Retained facades own the old nodes; their existence is not command authority. }
+procedure CheckCommonOwnership;
+var
+  LCommon: INyxCoordinatorBinding;
+  LTyped: INyxKanbanBinding;
+  LFormer: INyxKanbanBinding;
+  LManual: INyxKanbanBinding;
+  LItems: INyxList;
+  LMoveFace: INyxButton;
+  LControl: INyxControl;
+  LBoard: INyxKanbanBoard;
+  LGeneration: INyxCancellationScope;
+  LStore: INyxCollection;
+  LRevision: Integer;
+  LRejected: Boolean;
+  LIndex: Integer;
+  LFactory: TNotificationFactory;
+  LFactoryLease: INyxCoordinatorFactory;
+  LRegistry: INyxCoordinatorRegistry;
+  LInstanceID: TNyxText;
+begin
+  for LIndex := 0 to 1 do
+  begin
+
+    if LIndex = 0 then
+    begin
+      LInstanceID := 'first-board';
+    end
+    else
+    begin
+      LInstanceID := 'second-board';
+    end;
+    LCommon := GRenderer.CoordinatorBinding(NyxQualifiedID(LInstanceID, 'workflow'));
+    LTyped := nil;
+    Check(Supports(LCommon, INyxKanbanBinding, LTyped) and
+      (LTyped = GBindings[LIndex]), 'generic lookup preserves exact specialized board binding');
+  end;
+  LStore := LaneView(0, Plan).Store;
+  LFormer := GBindings[0];
+  LItems := LFormer.Items(Plan);
+  LMoveFace := LFormer.MoveButton(Build);
+  Check((LItems.Node = GRenderer.Root.Find(LItems.ID)) and
+    (LMoveFace.Node = GRenderer.Root.Find(LMoveFace.ID)),
+    'public specialized facades retain actual canonical list and Move nodes');
+  LItems.Configure.ReadOnly(True).Done;
+  Check(GRenderer.Root.Find(LItems.ID).Prop(NyxAttributeName(atReadOnly), 'false') = 'true',
+    'specialized Configure changes the actual mounted list');
+  LRevision := LStore.Snapshot.Revision;
+  LRejected := False;
+  try
+    LFormer.CaptureMove(FirstCard, Plan, Build, LRevision);
+  except
+    on ENyxCollection do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LStore.Snapshot.Revision = LRevision),
+    'canonical read-only policy refuses movement without changing rows');
+  GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  Pump;
+  GBindings[0] := GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow'));
+  GBindings[1] := GRenderer.KanbanBinding(NyxQualifiedID('second-board', 'workflow'));
+  Check(not LFormer.Connected and (LItems.ID = GBindings[0].Items(Plan).ID) and
+    (LItems.Node <> GBindings[0].Items(Plan).Node) and
+    (LMoveFace.Node <> GBindings[0].MoveButton(Build).Node),
+    'same-ID successor keeps fresh canonical facades distinct from retained old nodes');
+  LItems.Configure.ReadOnly(False).Done;
+  LItems.Configure.ReadOnly(True).Done;
+  Check((LItems.Node.Prop(NyxAttributeName(atReadOnly), 'false') = 'true') and
+    (GBindings[0].Items(Plan).Node.Prop(NyxAttributeName(atReadOnly), 'false') = 'false'),
+    'mutating a retained former facade cannot change the new control');
+
+  LFormer := GBindings[0];
+  LGeneration := NyxEventGeneration(GRenderer.Events);
+  LFormer.Disconnect;
+  LFormer.Disconnect;
+  LCommon := GRenderer.CoordinatorBinding(NyxQualifiedID('first-board', 'workflow'));
+  Check(not LFormer.Connected and not LCommon.Connected and
+    not LGeneration.Cancelled and GBindings[1].Connected,
+    'exact typed Disconnect is idempotent and preserves sibling and enclosing generation');
+  LControl := RetainNyxControl(GRenderer.Root.Find(NyxQualifiedID('first-board', 'workflow')));
+  Check(Supports(LControl, INyxKanbanBoard, LBoard),
+    'same accepted runtime board retains its specialized control interface');
+  LManual := NewNyxKanbanBinding(LBoard, GOptions, GViews, GRenderer.Events,
+    GRenderer.Events.Scheduler, nil);
+  GBindings[0] := LManual;
+  Check(LManual.Connected and (LManual.Items(Plan).Node =
+    GRenderer.Root.Find(LManual.Items(Plan).ID)),
+    'manual attachment reacquires exact canonical parts on the same live event generation');
+  SelectFirstCard(0, Plan);
+  GRenderer.Sync;
+  MoveByKeyboard(0, Build);
+  Check((LStore.Snapshot.Revision = LRevision + 1) and
+    LaneView(0, Build).Snapshot.Has(FirstCard),
+    'real input works after deliberate common-to-manual handoff');
+  LManual.Disconnect;
+  LManual := nil;
+
+  { A normal creator notification runs after accepted built-in ownership. Both
+    failure and disposal must preserve the distinction from precommit refusal. }
+  LRegistry := NewNyxCoordinatorRegistry;
+  LFactory := TNotificationFactory.Create;
+  LFactoryLease := LFactory;
+  LFactory.Mode := nnmFailure;
+  LRegistry.RegisterFactory(NyxCustomKind(NyxKindName(nkLabel)),
+    NyxExtension(CNotificationIntent), LFactoryLease);
+  GDocument.Find('review-help').Extensions.SetValue(
+    NyxExtension(CNotificationIntent), NyxData(True));
+  GRenderer.CoordinatorRegistry := LRegistry;
+  LGeneration := NyxEventGeneration(GRenderer.Events);
+  LRejected := False;
+  try
+    GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  except
+    on E: Exception do
+    begin
+      LRejected := Pos('Deliberate committed notification failure', E.Message) > 0;
+    end;
+  end;
+  Check(LRejected and LGeneration.Cancelled and (GPublished <> nil) and GPublished.Connected,
+    'notification failure reports committed acceptance of the new real Kanban binding');
+  GBindings[0] := GRenderer.KanbanBinding(NyxQualifiedID('first-board', 'workflow'));
+  GBindings[1] := GRenderer.KanbanBinding(NyxQualifiedID('second-board', 'workflow'));
+  Check(GPublished = GBindings[0], 'postcommit failure retains the exact published binding');
+  LFactory.Mode := nnmDispose;
+  LRejected := False;
+  try
+    GRenderer.Render(GDocument, GDocument.Find('board-review'), GHost, False, nil, GViews);
+  except
+    on E: Exception do
+    begin
+      LRejected := Pos('Deliberate committed notification failure', E.Message) > 0;
+    end;
+  end;
+  Check(LRejected and (GRenderer = nil) and (GPublished <> nil) and not GPublished.Connected,
+    'notification-triggered disposal disconnects the newly accepted board safely');
+  GDocument.Find('review-help').Extensions.Remove(NyxExtension(CNotificationIntent));
+  Check(TNyxCodec.Encode(GDocument) = GAuthored,
+    'common lifecycle proof restores the complete original authored document');
+end;
+
 procedure Initialize;
 var
   LRoot: TNyxNode;
@@ -648,6 +906,7 @@ begin
     end;
   end;
   GViews := nil;
+  GPublished := nil;
   GDocument.Free;
   GDocument := nil;
   {$ifndef PAS2JS}
@@ -688,6 +947,7 @@ begin
       if not GReview then
       begin
         Run;
+        CheckCommonOwnership;
       end;
       {$ifdef PAS2JS}
 

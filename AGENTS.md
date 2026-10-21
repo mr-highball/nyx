@@ -1,5 +1,45 @@
 # Working in Nyx
 
+COORDINATOR04 ACCEPTED (2026-10-21): all five scoped criteria close in
+TODO/DONE/NS-3_coordinators_04.md after independent source/receipt review.
+Native139 focused,121/121 ordinary controls, unchanged full Studio114/124 and
+its OWN saved compiled application15/15 pass clean. Coordinator171/68/68 and
+publication136/136 retain compatibility; both Studio products compile. All16
+compilers have zero owned/56 upstream RTL warning occurrences. Browser compiles
+only. Immutable final audit7062003F verifies all actual readers joined and
+exact52 owned/1781 Pascal/13 concurrent/32 extra inputs. Source stayed exact from
+the first reviewed freeze; no qualification failure or retry. Own02FD8996 project/
+83E8C814 Pascal pair matches across both actual Studio widths; no old pair used.
+
+Both renderers now have only the common coordinator vector. One trusted internal
+canonical adapter retains real specialized lane/Move facades and the old binding
+GUID; public factory/projection GUIDs remain unchanged. Existing movement/drag/
+async Click policies and all old107/98 assertions/waits remain. Exact typed
+Disconnect revokes own/scope flags before all-attempt cleanup, permits same-board
+manual reattachment without cancelling the router, and cannot detach newer
+manual ownership. Final weak refresh is last. Actual NEW accepted bindings prove
+committed notification failure/disposal. Legacy shim/intent/editor/full Studio
+consumer stay byte-exact. Root-only later docs/task moves do not change Pascal.
+
+Original component/authoring/parity criteria/credit remain open; no-closure13→14
+carries. Root owns docs/checkpoint only; all Pascal stays paused until separate05
+source release. Next05 R1 is a new ordinary APP proof: two instances in each of
+two App objects, Summary+MD+Kanban on12 independent stores, exact nested roles,
+real input, App.ShowPage refusal/replacement and source/default isolation. Existing
+App.View.CoordinatorRegistry before Mount/Run supplies registration on both hosts;
+no new host setter/API or renderer production repair is released for R1.
+Existing helper has read-only blueprint/next-scope ownership; no compiler/source
+is released yet. R2 follows R1 actual result: immutable CALLER snapshot before
+Build→SetupCanvas child inheritance, explicit nonnil override/empty callers only,
+own child event/weak refresh. Do not pass the composed builtin snapshot or mutable
+registry. R3's actual-browser external gate and parent/DataToolbar dependencies
+remain open. Preserve concurrent13, deferred resolver14/splitter, offline LAN/no
+native Nyx tools and no extra agent, host/config retry, cleanup/restart or new
+MCP/tool/wire rollout. Retained1280/390 evidence folders remain untracked.
+
+Historical checkpoints below retain their evidence and prior source-release
+limits. The current header owns the present task and ownership boundary.
+
 COORDINATOR03 ACCEPTED (2026-10-21): all six scoped criteria close in
 TODO/DONE/NS-3_coordinators_03.md after independent review. Final-source native
 99/171/68/68, full Studio165/175, own compiled36/36, publication136/136 and

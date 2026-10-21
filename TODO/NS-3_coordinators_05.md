@@ -19,9 +19,9 @@ DataToolbar remains downstream; it is not a reverse prerequisite for this work.
 
 | Packet | Reviewable outcome | Dependency and evidence |
 | --- | --- | --- |
-| R1 — Reusable application | Two real reusable creator instances with nested roles, independent stores/claims and exact specialized lookup coexist with migrated built-ins | Accepted registration/MasterDetail and qualified Kanban; root owns host propagation, helper owns the separately released ordinary creator consumer. Real input must leave definitions and siblings intact. |
-| R2 — Embedded application | Existing SetupCanvas/content mounts inherit a fixed caller snapshot; explicit caller override, including empty caller membership, has a documented policy; automatic built-ins compose separately | R1. Every child retains its own future event generation and weak refresh. Failed/same-ID replacement and disposal preserve the accepted owner and revoke old commands. |
-| R3 — Both-host acceptance | The same useful reusable/embedded application executes native and admitted-browser input/lifetime cases | R1/R2. Native clean heaps and matching browser compiles are intermediate evidence; actual browser execution is still required by criterion5. |
+| R1 — Reusable application | Two reusable instances in each of two ordinary App objects share authored definitions but isolate Summary, MasterDetail and Kanban runtime stores/claims and exact typed lookup | Accepted registration/MasterDetail/Kanban. Root owns maintained build/docs; helper receives only the separately released ordinary application consumer. Existing App.View.CoordinatorRegistry before native Mount/browser Run is sufficient; no host API change is required. |
+| R2 — Embedded application | Existing SetupCanvas/content mounts inherit a fixed caller snapshot; explicit caller override, including empty caller membership, has a documented policy; automatic built-ins compose separately | R1. Root owns renderer/canvas propagation; helper owns the same ordinary App consumer under a separate release. Every child retains its own future event generation and weak refresh. Failed/same-ID replacement and disposal preserve the accepted owner and revoke old commands. |
+| R3 — Both-host acceptance | The same useful reusable/embedded application executes native and admitted-browser input/lifetime cases | R1/R2 and the external browser-session gate. Root owns session admission and evidence; helper reviews the same consumer/assertions. Native clean heaps and matching browser compiles are intermediate evidence; actual browser execution is still required by criterion5. This packet authorizes no new host/tool attempt. |
 
 Root reviews registry inheritance/override and child lifetime before either source
 scope is released. Common candidate traversal already covers expanded reusable
@@ -30,6 +30,15 @@ not a reason for a second
 registry or event engine. Finish R1 before R2 and retain actual refusal results.
 The missing admitted browser session is R3's explicit external gate. Compilation
 cannot close05, parent01 or their downstream acceptance. No task credit is added.
+
+R1 uses twelve instance stores across three data compounds, two occurrences and
+two App objects. Resolve nested named roles from the actual realized workspace;
+custom authoring facades need not survive realization into ordinary Card controls,
+while Supports on the common runtime binding must retain its specialized type.
+Use real App input and App.ShowPage for refusal/replacement, preserving the old
+root/token/input and restoring the exact authored descriptor afterward. This is
+new application-host evidence; the accepted root-renderer68/68 is not relabeled
+as reusable proof. Stop at R1's actual result before releasing R2 propagation.
 
 **Acceptance Criteria:**
 
@@ -61,7 +70,7 @@ cannot close05, parent01 or their downstream acceptance. No task credit is added
 - [Caller-owned registration](DONE/NS-3_coordinators_02.md) supplies the extension API
   and first independently useful root application.
 - [MasterDetail migration](DONE/NS-3_coordinators_03.md) and
-  [Kanban migration](NS-3_coordinators_04.md) supply the built-in owners used by
+  [Kanban migration](DONE/NS-3_coordinators_04.md) supply the built-in owners used by
   the mixed/reusable acceptance above. Their native evidence alone does not
   satisfy this task's browser requirement.
 - External: browser execution/observing needs an admitted host/session. Until

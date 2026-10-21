@@ -308,6 +308,30 @@ refuses instead of borrowing another instance's view. Renderers expose the accep
 `KanbanBinding` by exact realized ID for programmatic commands; disabled or unmounted
 boards return nil. A failed replacement keeps the previous view active.
 
+Automatic boards now share the prepared coordinator path with MasterDetail and
+caller-owned behavior. Built-in registration composes with the caller's immutable
+candidate snapshot; configured applications need no additional registration.
+`CoordinatorBinding` preserves the exact specialized `INyxKanbanBinding` returned
+by `KanbanBinding`. Its lane lists and Move buttons are the actual retained
+controls, preserving specialized configuration and read-only admission.
+The library's internal canonical adapter feeds the existing movement engine;
+the public creator projection retains its copied, guarded contract.
+
+Explicit binding `Disconnect` revokes that attachment and releases its own
+availability constraints without cancelling the enclosing event generation.
+This permits a deliberate manual reattachment to the same realized board;
+the caller owns that manual lifetime. A retained former control facade still
+owns its old node, but cannot change a same-ID successor or grant a retired
+command new authority. Automatic refresh uses the common generation-guarded weak
+host port. The scoped [common migration](../TODO/DONE/NS-3_coordinators_04.md)
+qualifies139 native contract checks,121/121 ordinary controls,114/124 unchanged
+Studio checks and15/15 applications compiled from that journey's own saved pair,
+all with clean heaps. All16 compilers pass with zero Nyx warnings; matching browser
+programs compile only. Creator/MasterDetail and publication compatibility remain
+qualified; full reusable/embedded browser and original parity criteria stay open.
+[The work record](../WORK.md#kanban-common-coordinator-migration--2026-10-21)
+records exact source/pair identities and evidence boundaries.
+
 `tools/build.ps1 -Target kanban -KanbanEvidenceDirectory <new directory>` includes
 the public contract consumer, ordinary native desktop/compact journey and exact
 emitted-companion reconstruction. It stages `kanban.html` with the Pascal browser

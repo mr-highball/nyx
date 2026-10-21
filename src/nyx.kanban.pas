@@ -32,7 +32,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.controls, nyx.collections, nyx.collections.view.types,
   nyx.collections.bindings, nyx.events, nyx.scheduler, nyx.model,
-  nyx.publication.types;
+  nyx.publication.types, nyx.coordinators;
 
 type
   { Kanban admission/refusal preserves the existing collection exception family. }
@@ -171,12 +171,16 @@ function PrepareNyxKanbanDisabled(const ABoard: INyxKanbanBoard;
   const AEventView: INyxPreparedEventView;
   const AScheduler: INyxScheduler): INyxPreparedKanbanBinding;
 
+{ The common driver supplies the canonical realized board to this built-in
+  adapter. Manual attachment and the existing specialized binding stay intact. }
+function NewNyxKanbanCoordinatorFactory: INyxCoordinatorFactory;
+
 implementation
 
 uses
-  nyx.types, nyx.state, nyx.behavior, nyx.collections.view,
+  nyx.types, nyx.data, nyx.state, nyx.behavior, nyx.collections.view,
   nyx.collections.query, nyx.collections.selection, nyx.interaction.policy,
-  nyx.gestures, nyx.publication;
+  nyx.gestures, nyx.publication, nyx.kanban.intent, nyx.coordinators.internal;
 
 const
   CKanbanLaneCount = 3;
@@ -268,7 +272,8 @@ type
   { One ordinary board attachment. Arrays have three admitted entries and are
     never exposed. The only raw pointer is its private, revocable callback port;
     no renderer, document, widget or platform transfer is retained. }
-  TKanbanBinding = class(TInterfacedObject, INyxKanbanBinding)
+  TKanbanBinding = class(TInterfacedObject, INyxKanbanBinding,
+    INyxCoordinatorBinding)
   private
     FBoard: INyxKanbanBoard;
     FOptions: TNyxKanbanOptions;
@@ -283,6 +288,8 @@ type
     FGeneration: INyxCancellationScope;
     FScheduler: INyxScheduler;
     FRefresh: TNyxKanbanRefresh;
+    FScopedRefresh: INyxCoordinatorRefresh;
+    FProjectionLifetime: INyxCoordinatorProjectionLifetime;
     FPort: IKanbanPort;
     FCallback: TKanbanPort;
     FConnected: Boolean;
@@ -341,7 +348,9 @@ type
     constructor CreatePrepared(const ABoard: INyxKanbanBoard;
       const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
       const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
-      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean;
+      const AScopedRefresh: INyxCoordinatorRefresh = nil;
+      const AProjectionLifetime: INyxCoordinatorProjectionLifetime = nil);
     procedure Activate(const AEvents: INyxEvents);
     procedure Disconnect;
     procedure Refresh;
@@ -371,7 +380,9 @@ type
     constructor Create(const ABoard: INyxKanbanBoard;
       const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
       const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
-      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+      ARefresh: TNyxKanbanRefresh; ADisabled: Boolean;
+      const AScopedRefresh: INyxCoordinatorRefresh = nil;
+      const AProjectionLifetime: INyxCoordinatorProjectionLifetime = nil);
     destructor Destroy; override;
     function GetBinding: INyxKanbanBinding;
     procedure Revoke;
@@ -381,6 +392,47 @@ type
     procedure Install;
     procedure Notify;
     procedure Retire;
+  end;
+
+  { The common lifetime delegates to the existing prepared engine. Configured
+    lookup returns its exact specialized binding; a disabled mask has only this
+    base lifetime, preserving the old nil specialized lookup contract. }
+  TCoordinatorKanbanPlan = class(TInterfacedObject, INyxPreparedCoordinator,
+    INyxPreparedPublication, INyxPublicationReadiness, INyxCoordinatorBinding)
+  private
+    FOwner: TPreparedKanban;
+    FPrepared: INyxPreparedKanbanBinding;
+    FReadiness: INyxPublicationReadiness;
+    FBinding: INyxCoordinatorBinding;
+  public
+    constructor Create(AOwner: TPreparedKanban;
+      const APrepared: INyxPreparedKanbanBinding);
+    function GetBinding: INyxCoordinatorBinding;
+    function GetConnected: Boolean;
+    procedure Revoke;
+    procedure Disconnect;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+  { Stateless library adapter receives the exact canonical control only through
+    the internal driver seam. Ordinary creator projections gain no node access;
+    every candidate reuses the same movement, gesture and publication engine. }
+  TKanbanCoordinatorFactory = class(TInterfacedObject, INyxCoordinatorFactory,
+    INyxCanonicalCoordinatorFactory)
+  public
+    function Prepare(const AProjection: INyxCoordinatorProjection;
+      const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+      const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+    function PrepareCanonical(const ACanonical: INyxControl;
+      const AProjection: INyxCoordinatorProjection;
+      const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+      const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+      const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
   end;
 
 function TNyxKanbanLaneRef.GetName: TNyxText;
@@ -1211,10 +1263,20 @@ procedure TKanbanBinding.Refresh;
 var
   LKeepAlive: INyxKanbanBinding;
   LRefresh: TNyxKanbanRefresh;
+  LScopedRefresh: INyxCoordinatorRefresh;
 begin
   LKeepAlive := Self;
   RequireLive;
   LRefresh := FRefresh;
+  LScopedRefresh := FScopedRefresh;
+
+  if LScopedRefresh <> nil then
+  begin
+    { The guarded port belongs to the accepted scope, not a borrowed renderer.
+      It may dispose the complete view; no attachment access follows. }
+    LScopedRefresh.Request;
+    Exit;
+  end;
 
   if Assigned(LRefresh) then
   begin
@@ -1634,7 +1696,9 @@ end;
 constructor TKanbanBinding.CreatePrepared(const ABoard: INyxKanbanBoard;
   const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
   const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
-  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean;
+  const AScopedRefresh: INyxCoordinatorRefresh;
+  const AProjectionLifetime: INyxCoordinatorProjectionLifetime);
 var
   LViews: INyxCollectionBindings;
   LEventView: INyxPreparedEventView;
@@ -1663,6 +1727,8 @@ begin
   LEventView := AEventView;
   FScheduler := AScheduler;
   FRefresh := ARefresh;
+  FScopedRefresh := AScopedRefresh;
+  FProjectionLifetime := AProjectionLifetime;
   FActive := -1;
   FDragLane := -1;
 
@@ -2006,7 +2072,10 @@ begin
 end;
 
 procedure TKanbanBinding.RevokePrepared;
+var
+  LLifetime: INyxCoordinatorProjectionLifetime;
 begin
+  LLifetime := FProjectionLifetime;
   FRevoked := True;
   FConnected := False;
   FRefresh := nil;
@@ -2015,10 +2084,16 @@ begin
   begin
     FPort.Revoke;
   end;
+
+  if LLifetime <> nil then
+  begin
+    LLifetime.Revoke;
+  end;
 end;
 
 procedure TKanbanBinding.DisconnectPrepared;
 var
+  LLifetime: INyxCoordinatorProjectionLifetime;
   LIndex: Integer;
   LFailure: TNyxText;
   LFailed: Boolean;
@@ -2034,6 +2109,7 @@ var
   end;
 
 begin
+  LLifetime := FProjectionLifetime;
   RevokePrepared;
 
   if FCleaned then
@@ -2087,6 +2163,20 @@ begin
     FItemNodes[LIndex] := nil;
     FMoveNodes[LIndex] := nil;
   end;
+
+  if LLifetime <> nil then
+  begin
+    try
+      { Explicit typed Disconnect retires the same common scope immediately.
+        Its cleanup never calls the child or the enclosing mount back. }
+      LLifetime.Disconnect;
+    except
+      on E: Exception do
+      begin
+        Failed(E.Message);
+      end;
+    end;
+  end;
   FSubscriptions := nil;
   FViewTokens := nil;
   FPolicies := nil;
@@ -2102,6 +2192,8 @@ begin
   FScheduler := nil;
   FCallback := nil;
   FPort := nil;
+  FScopedRefresh := nil;
+  FProjectionLifetime := nil;
 
   if LFailed then
   begin
@@ -2112,12 +2204,14 @@ end;
 constructor TPreparedKanban.Create(const ABoard: INyxKanbanBoard;
   const AOptions: TNyxKanbanOptions; const AViews: INyxCollectionBindings;
   const AEventView: INyxPreparedEventView; const AScheduler: INyxScheduler;
-  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean);
+  ARefresh: TNyxKanbanRefresh; ADisabled: Boolean;
+  const AScopedRefresh: INyxCoordinatorRefresh;
+  const AProjectionLifetime: INyxCoordinatorProjectionLifetime);
 begin
   inherited Create;
   FEventView := AEventView;
   FOwner := TKanbanBinding.CreatePrepared(ABoard, AOptions, AViews,
-    FEventView, AScheduler, ARefresh, ADisabled);
+    FEventView, AScheduler, ARefresh, ADisabled, AScopedRefresh, AProjectionLifetime);
   FBindingLease := FOwner;
 end;
 
@@ -2325,6 +2419,169 @@ begin
   LBinding := LOwner;
   LOwner.Activate(LEvents);
   Result := LBinding;
+end;
+
+constructor TCoordinatorKanbanPlan.Create(AOwner: TPreparedKanban;
+  const APrepared: INyxPreparedKanbanBinding);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FPrepared := APrepared;
+
+  if (FOwner = nil) or (FPrepared = nil) or
+    not Supports(FPrepared, INyxPublicationReadiness, FReadiness) then
+  begin
+    raise ENyxKanban.Create('Common Kanban requires prepared publication readiness');
+  end;
+
+  if not FOwner.FOwner.FDisabled and
+    not Supports(FOwner.FBindingLease, INyxCoordinatorBinding, FBinding) then
+  begin
+    raise ENyxKanban.Create('Common Kanban must retain its exact specialized binding');
+  end;
+end;
+
+function TCoordinatorKanbanPlan.GetBinding: INyxCoordinatorBinding;
+begin
+  Result := FBinding;
+
+  if Result = nil then
+  begin
+    Result := Self;
+  end;
+end;
+
+function TCoordinatorKanbanPlan.GetConnected: Boolean;
+var
+  LLease: INyxPreparedCoordinator;
+begin
+  LLease := Self;
+  Result := FOwner.FOwner.GetConnected;
+end;
+
+procedure TCoordinatorKanbanPlan.Revoke;
+begin
+  FPrepared.Revoke;
+end;
+
+procedure TCoordinatorKanbanPlan.Disconnect;
+var
+  LLease: INyxPreparedCoordinator;
+  LPrepared: INyxPreparedKanbanBinding;
+begin
+  LLease := Self;
+  LPrepared := FPrepared;
+  LPrepared.Disconnect;
+end;
+
+procedure TCoordinatorKanbanPlan.Validate;
+var
+  LLease: INyxPreparedCoordinator;
+  LPrepared: INyxPreparedKanbanBinding;
+begin
+  LLease := Self;
+  LPrepared := FPrepared;
+  LPrepared.Validate;
+end;
+
+procedure TCoordinatorKanbanPlan.CheckReady;
+var
+  LLease: INyxPreparedCoordinator;
+  LReadiness: INyxPublicationReadiness;
+begin
+  LLease := Self;
+  LReadiness := FReadiness;
+  LReadiness.CheckReady;
+end;
+
+procedure TCoordinatorKanbanPlan.Install;
+begin
+  FPrepared.Install;
+end;
+
+procedure TCoordinatorKanbanPlan.Notify;
+begin
+  FPrepared.Notify;
+end;
+
+procedure TCoordinatorKanbanPlan.Retire;
+begin
+  FPrepared.Retire;
+end;
+
+function TKanbanCoordinatorFactory.Prepare(const AProjection: INyxCoordinatorProjection;
+  const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+  const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+begin
+  Result := nil;
+  raise ENyxKanban.Create('Kanban preparation requires the canonical common driver');
+end;
+
+function TKanbanCoordinatorFactory.PrepareCanonical(const ACanonical: INyxControl;
+  const AProjection: INyxCoordinatorProjection;
+  const AIntent: TNyxDataValue; const AViews: INyxCollectionBindings;
+  const AView: INyxPreparedEventView; const AScheduler: INyxScheduler;
+  const ARefresh: INyxCoordinatorRefresh): INyxPreparedCoordinator;
+var
+  LCanonical: INyxControl;
+  LControl: INyxControl;
+  LBoard: INyxKanbanBoard;
+  LProjection: INyxCoordinatorProjection;
+  LLifetime: INyxCoordinatorProjectionLifetime;
+  LViews: INyxCollectionBindings;
+  LView: INyxPreparedEventView;
+  LScheduler: INyxScheduler;
+  LRefresh: INyxCoordinatorRefresh;
+  LRoot: TNyxControlRef;
+  LIntent: TNyxKanbanIntent;
+  LOptions: TNyxKanbanOptions;
+  LOwner: TPreparedKanban;
+  LPrepared: INyxPreparedKanbanBinding;
+begin
+  LCanonical := ACanonical;
+  LProjection := AProjection;
+  LViews := AViews;
+  LView := AView;
+  LScheduler := AScheduler;
+  LRefresh := ARefresh;
+  LIntent := TNyxKanbanIntent.FromData(AIntent);
+
+  if (LCanonical = nil) or (LProjection = nil) or
+    not Supports(LProjection, INyxCoordinatorProjectionLifetime, LLifetime) then
+  begin
+    raise ENyxKanban.Create('Common Kanban requires canonical control and scoped retirement');
+  end;
+  LRoot := LProjection.Root;
+
+  if (LCanonical.ID <> LRoot.ID) or not LCanonical.Node.IsRealized or
+    (LCanonical.Kind <> NyxKindName(nkKanbanBoard)) then
+  begin
+    raise ENyxKanban.Create('Common Kanban canonical control differs from its scoped target');
+  end;
+  { The driver deliberately retains a generic canonical facade. Recover the
+    actual specialized implementation from that same descriptor, never clone it. }
+  LControl := RetainNyxControl(LCanonical.Node);
+
+  if not Supports(LControl, INyxKanbanBoard, LBoard) then
+  begin
+    raise ENyxKanban.Create('Common Kanban requires its real specialized board');
+  end;
+  LOptions := Default(TNyxKanbanOptions);
+
+  if LIntent.Mode = nkiConfigured then
+  begin
+    LOptions := LIntent.Options;
+  end;
+  LOwner := TPreparedKanban.Create(LBoard, LOptions, LViews, LView,
+    LScheduler, nil, LIntent.Mode = nkiDisabled, LRefresh, LLifetime);
+  LPrepared := LOwner;
+  Result := TCoordinatorKanbanPlan.Create(LOwner, LPrepared);
+end;
+
+function NewNyxKanbanCoordinatorFactory: INyxCoordinatorFactory;
+begin
+  Result := TKanbanCoordinatorFactory.Create;
 end;
 
 end.

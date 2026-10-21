@@ -191,7 +191,7 @@ implementation
 
 uses
   nyx.controls, nyx.binding.types, nyx.collections.view, nyx.collections,
-  nyx.interaction.policy, nyx.publication;
+  nyx.interaction.policy, nyx.publication, nyx.coordinators.internal;
 
 type
   { Parallel arrays own values and interfaces without pas2js record limitations. }
@@ -1601,6 +1601,9 @@ var
   LRefresh: INyxCoordinatorRefresh;
   LChild: INyxPreparedCoordinator;
   LFactory: INyxCoordinatorFactory;
+  LCanonical: INyxControl;
+  LCanonicalFactory: INyxCanonicalCoordinatorFactory;
+  LHasCanonicalFactory: Boolean;
   LIndex: Integer;
 
   procedure Collect(ANode: TNyxNode);
@@ -1674,8 +1677,26 @@ begin
           raise ENyxCoordinator.Create('Coordinator intent changed before factory preparation');
         end;
         LFactory := LSnapshot.Factory(LMatches[LIndex]);
-        LChild := LFactory.Prepare(LProjection, LIntents[LIndex].Copy,
-          LViews, LView, LScheduler, LRefresh);
+        LCanonical := LControls[LIndex];
+        LCanonicalFactory := nil;
+        { QueryInterface is an outward factory call. Keep all candidate leases
+          local, then recheck the exact canonical roles before granting the
+          internal built-in channel. Ordinary creator factories keep their
+          existing Node-free projection and unchanged Prepare contract. }
+        LHasCanonicalFactory := Supports(LFactory,
+          INyxCanonicalCoordinatorFactory, LCanonicalFactory);
+        LScope.CheckNodes;
+
+        if LHasCanonicalFactory then
+        begin
+          LChild := LCanonicalFactory.PrepareCanonical(LCanonical, LProjection,
+            LIntents[LIndex].Copy, LViews, LView, LScheduler, LRefresh);
+        end
+        else
+        begin
+          LChild := LFactory.Prepare(LProjection, LIntents[LIndex].Copy,
+            LViews, LView, LScheduler, LRefresh);
+        end;
         LScope.CheckLive;
         LMounts[LIndex] := TCoordinatorMount.Create(LScope, LProjection, LChild);
         LIDs[LIndex] := LScope.Root.ID;
@@ -1703,6 +1724,8 @@ begin
         raise;
       end;
       LChild := nil;
+      LCanonicalFactory := nil;
+      LCanonical := nil;
       LProjection := nil;
       LRefresh := nil;
       LScope := nil;

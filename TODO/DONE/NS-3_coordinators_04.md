@@ -1,16 +1,16 @@
 # NS-3_coordinators_04 — Mount Kanban through the common coordinator path
 
-[North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
+[North stars](../../MILESTONES.md) · [Task catalog](../README.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
 
 Keep a configured Kanban's real card movement working while moving automatic
-mounting and retirement onto the public prepared coordinator path. Current
+mounting and retirement onto the public prepared coordinator path. The starting
 Kanban runtime, ordinary controls and Studio/save/generated journeys qualify
-the existing implementation; each renderer still owns a separate Kanban vector.
+the existing implementation; at the start each renderer kept a separate Kanban vector.
 
-Owner: [common coordinators](NS-3_coordinators_01.md), original criteria1–4,
-serving [components](NS-3_components_01.md) criteria1/3. This migration adds no
+Owner: [common coordinators](../NS-3_coordinators_01.md), original criteria1–4,
+serving [components](../NS-3_components_01.md) criteria1/3. This migration adds no
 credit. It can follow registration independently of MasterDetail's migration;
 the parent retains their joint integration and full reuse acceptance.
 
@@ -29,6 +29,27 @@ admission; the public creator projection stays Node-free. No ID-only proxy or
 new movement/selection owner substitutes for those interfaces. This is trusted
 Pascal integration, not a security sandbox. Packet order is K1→K2→K3, with bounded
 checks declared after source review; this backlog grants no source release.
+
+Accepted 2026-10-21 for all five scoped criteria after independent source and
+receipt review. Both renderers use the common prepared vector and existing
+movement/gesture engine. The internal canonical adapter preserves exact real
+lane/Move facades and old binding GUIDs; public creator projection/factory GUIDs
+remain unchanged. Typed Disconnect releases its own policies/scope while keeping
+the router generation alive for deliberate manual reattachment. Notification
+failure/disposal remains committed and revokes the newly accepted binding.
+
+Native139 focused,121/121 ordinary controls,114/124 unchanged full Studio and
+15/15 own saved compiled applications pass with clean heaps. Coordinator171 and
+68/68 plus publication136/136 remain compatible; both Studio products compile.
+All16 compilers pass with zero Nyx warnings and56 upstream RTL occurrences.
+Matching browser assertions compile only. Both actual Studio widths save the
+same02FD8996 project and83E8C814 Pascal pair; the compiled apps use that pair.
+Final immutable audit7062003F pins52 owned/1781 Pascal/13 concurrent/32 extra
+inputs. Pascal remained unchanged since the first reviewed freeze; the four own
+saved files were pinned after their actual export. There were no qualification
+failures. [WORK.md](../../WORK.md#kanban-common-coordinator-migration--2026-10-21)
+owns the exact receipts. Parent/reuse/browser/parity criteria and original credit
+remain open; this acceptance adds none.
 
 **Acceptance Criteria:**
 
@@ -59,7 +80,7 @@ checks declared after source review; this backlog grants no source release.
 
 **Blockers**
 
-- [Caller-owned registration](DONE/NS-3_coordinators_02.md) supplies the common prepared
+- [Caller-owned registration](NS-3_coordinators_02.md) supplies the common prepared
   path and immutable factory snapshots.
 - Existing collection/event/publication owners and Kanban policies remain the
   authority. No second movement, selection, state or history engine is introduced.

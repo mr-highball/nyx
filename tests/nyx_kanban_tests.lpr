@@ -29,7 +29,7 @@ uses
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.query, nyx.collections.bindings, nyx.collections.selection,
   nyx.composition, nyx.events, nyx.scheduler, nyx.behavior, nyx.gestures,
-  nyx.codec, nyx.source, nyx.publication
+  nyx.codec, nyx.source, nyx.publication, nyx.coordinators
   {$ifdef PAS2JS}, Web{$endif};
 
 type
@@ -46,10 +46,26 @@ type
     SecondBoard: INyxKanbanBoard;
     First: INyxKanbanBinding;
     Second: INyxKanbanBinding;
+    EventPlan: INyxPreparedEventView;
+    Mounts: TNyxCoordinatorMounts;
+    IDs: TNyxCoordinatorMountIDs;
+    Registry: INyxCoordinatorRegistry;
+    RefreshTarget: INyxCoordinatorRefreshTarget;
     constructor Create(const AScheduler: INyxScheduler = nil);
     destructor Destroy; override;
     function View(ASecond: Boolean; const ALane: TNyxKanbanLaneRef): INyxCollectionView;
     function Store: INyxCollection;
+    procedure UseCommon;
+    procedure PrepareCommon;
+    procedure AcceptCommon;
+  end;
+
+  { Managed final-host-style receiver counts guarded refresh without retaining
+    a renderer, document, fixture or coordinator binding back into its scope. }
+  TCommonRefresh = class(TInterfacedObject, INyxCoordinatorRefreshTarget)
+  public
+    Calls: Integer;
+    procedure Request;
   end;
 
   { Validators can revoke the current intent while all published state is still
@@ -237,6 +253,7 @@ end;
 
 destructor TBoardFixture.Destroy;
 begin
+  DisconnectNyxCoordinatorMounts(Mounts);
 
   if First <> nil then
   begin
@@ -252,6 +269,9 @@ begin
   begin
     Events.Close;
   end;
+  EventPlan := nil;
+  Registry := nil;
+  RefreshTarget := nil;
   First := nil;
   Second := nil;
   FirstBoard := nil;
@@ -289,6 +309,71 @@ end;
 function TBoardFixture.Store: INyxCollection;
 begin
   Result := View(False, ReadyLane).Store;
+end;
+
+procedure TBoardFixture.PrepareCommon;
+var
+  LPreparation: INyxEventViewPreparation;
+  LBinding: INyxCoordinatorBinding;
+begin
+
+  if Registry = nil then
+  begin
+    Registry := NewNyxCoordinatorRegistry;
+    Registry.RegisterFactory(NyxCustomKind(NyxKindName(nkKanbanBoard)),
+      NyxExtension(NyxKanbanIntentKey), NewNyxKanbanCoordinatorFactory);
+  end;
+
+  if RefreshTarget = nil then
+  begin
+    RefreshTarget := TCommonRefresh.Create;
+  end;
+  Supports(Events, INyxEventViewPreparation, LPreparation);
+  EventPlan := LPreparation.PrepareView;
+  PrepareNyxCoordinatorMounts(Runtime, Bindings, EventPlan, Scheduler,
+    Registry.Snapshot, RefreshTarget, Mounts, IDs);
+  LBinding := FindNyxCoordinatorMount(Mounts, IDs, FirstBoard.ID);
+  Supports(LBinding, INyxKanbanBinding, First);
+  LBinding := FindNyxCoordinatorMount(Mounts, IDs, SecondBoard.ID);
+  Supports(LBinding, INyxKanbanBinding, Second);
+end;
+
+procedure TBoardFixture.UseCommon;
+begin
+
+  if First <> nil then
+  begin
+    First.Disconnect;
+  end;
+
+  if Second <> nil then
+  begin
+    Second.Disconnect;
+  end;
+  First := nil;
+  Second := nil;
+  SetNyxKanbanIntent(FirstBoard, TNyxKanbanIntent.Configured(Options));
+  SetNyxKanbanIntent(SecondBoard, TNyxKanbanIntent.Configured(Options));
+end;
+
+procedure TBoardFixture.AcceptCommon;
+var
+  LParticipants: TNyxPreparedPublications;
+  LIndex: Integer;
+begin
+  PrepareCommon;
+  SetLength(LParticipants, Length(Mounts) + 1);
+  LParticipants[0] := EventPlan;
+  for LIndex := 0 to High(Mounts) do
+  begin
+    LParticipants[LIndex + 1] := Mounts[LIndex];
+  end;
+  PublishNyxGroup(LParticipants);
+end;
+
+procedure TCommonRefresh.Request;
+begin
+  Inc(Calls);
 end;
 
 constructor TQueuedExecution.Create(const AParent: INyxExecution);
@@ -1109,7 +1194,7 @@ begin
   end;
 end;
 
-procedure PolicyCases;
+procedure PolicyCases(ACommon: Boolean = False);
 var
   LSchedulerOwner: TTurnScheduler;
   LScheduler: INyxScheduler;
@@ -1134,14 +1219,30 @@ begin
   LProbeOwner := LProbe;
   try
     LButton := LFixture.First.MoveButton(ActiveLane);
-    LFixture.First.Disconnect;
-    LFixture.First := nil;
+
+    if ACommon then
+    begin
+      LFixture.UseCommon;
+    end
+    else
+    begin
+      LFixture.First.Disconnect;
+      LFixture.First := nil;
+    end;
     LStream := LFixture.Events.On(NyxControlEvents(LButton.ID, niRuntime), ntClick).
       Policy(neUIQueue);
     LProbe.Fixture := LFixture;
     LToken := LStream.Subscribe(LProbeOwner);
-    LFixture.First := NewNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
-      LFixture.Bindings, LFixture.Events, LScheduler, nil);
+
+    if ACommon then
+    begin
+      LFixture.AcceptCommon;
+    end
+    else
+    begin
+      LFixture.First := NewNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+        LFixture.Bindings, LFixture.Events, LScheduler, nil);
+    end;
     Check(LStream.ExecutionPolicy = neUIQueue,
       'binding admission preserves the application Click execution policy');
     LFixture.View(False, ReadyLane).Select(Card);
@@ -1643,6 +1744,359 @@ begin
   end;
 end;
 
+{ Common staging uses the same real boards/views as every manual assertion.
+  Retained facades are the actual canonical nodes, not ID-based stand-ins. }
+procedure CommonCanonicalCase;
+var
+  LFixture: TBoardFixture;
+  LRefresh: TCommonRefresh;
+  LPrevious: INyxCancellationScope;
+  LBase: INyxCoordinatorBinding;
+  LTyped: INyxKanbanBinding;
+  LItems: INyxList;
+  LButton: INyxButton;
+  LView: INyxCollectionView;
+  LStore: INyxCollection;
+  LMove: INyxKanbanMove;
+  LEvent: TNyxEventInfo;
+  LExecutions: TNyxExecutions;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LFixture := TBoardFixture.Create;
+  try
+    LFixture.UseCommon;
+    LBefore := TNyxCodec.Encode(LFixture.Document);
+    LView := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+    LStore := LView.Store;
+    LView.Select(Card);
+    LRefresh := TCommonRefresh.Create;
+    LFixture.RefreshTarget := LRefresh;
+    LPrevious := NyxEventGeneration(LFixture.Events);
+    LFixture.PrepareCommon;
+    Check(Supports(LFixture.FirstBoard.Part(NyxPart('lane-1/move')),
+      INyxButton, LButton), 'common Move face preserves the public button interface');
+    Check(not LFixture.First.Connected and not LPrevious.Cancelled and
+      (LButton.Node.Prop(NyxAttributeName(atEnabled), 'true') = 'true') and
+      (LRefresh.Calls = 0),
+      'common staging caches availability without activating commands or refreshing the host');
+    LEvent := EventFor(ntClick, LButton, LFixture.FirstBoard);
+    LExecutions := LFixture.Events.Dispatch(LEvent, LButton.Node.DesignID,
+      LFixture.FirstBoard.Node.DesignID);
+    Check((Length(LExecutions) = 0) and (LStore.Snapshot.Revision = 0),
+      'common future observations remain invisible to the still-current router');
+    PublishNyxGroup([LFixture.EventPlan, LFixture.Mounts[0], LFixture.Mounts[1]]);
+    LBase := FindNyxCoordinatorMount(LFixture.Mounts, LFixture.IDs, LFixture.FirstBoard.ID);
+    Check(LPrevious.Cancelled and LFixture.First.Connected and
+      Supports(LBase, INyxKanbanBinding, LTyped) and (LTyped = LFixture.First) and
+      (LRefresh.Calls = 0),
+      'common installation preserves exact specialized identity and makes no host call');
+    LItems := LTyped.Items(ReadyLane);
+    LButton := LTyped.MoveButton(ActiveLane);
+    Check((LItems.Node = LFixture.FirstBoard.Lane0ItemsList.Node) and
+      (LButton.Node = LFixture.FirstBoard.Node.Part(NyxPart('lane-1/move'))) and
+      (LTyped.Items(ReadyLane) = LItems) and (LTyped.MoveButton(ActiveLane) = LButton),
+      'canonical lane and Move getters retain their real typed facades and descriptor identity');
+    LItems.Configure.ReadOnly(True).Done;
+    LRejected := False;
+    try
+      LMove := LTyped.CaptureMove(Card, ReadyLane, ActiveLane, LStore.Snapshot.Revision);
+    except
+      on ENyxKanban do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LMove = nil) and (LStore.Snapshot.Revision = 0),
+      'configuring ReadOnly through the real returned facade still refuses card mutation');
+    LItems.Configure.ReadOnly(False).Done;
+    LMove := LTyped.CaptureMove(Card, ReadyLane, ActiveLane, LStore.Snapshot.Revision);
+    LMove.Commit;
+    Check(LMove.Committed and (LRefresh.Calls > 0) and
+      LFixture.View(False, ActiveLane).Snapshot.Has(Card) and
+      (LFixture.View(True, ReadyLane).Store.Snapshot.Revision = 0) and
+      (TNyxCodec.Encode(LFixture.Document) = LBefore),
+      'common movement shares the existing store engine and guarded refresh ' +
+      'without source leakage');
+  finally
+    LTyped := nil;
+    LBase := nil;
+    LMove := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ The final common fence must preserve the accepted router after dirty input,
+  cancellation or a later validator publishes selection into the real view. }
+procedure CommonRefusalCases;
+var
+  LFixture: TBoardFixture;
+  LPrevious: INyxCancellationScope;
+  LBinding: INyxKanbanBinding;
+  LMutation: TPreparedSelection;
+  LParticipant: INyxPreparedPublication;
+  LView: INyxCollectionView;
+  LIndex: Integer;
+  LRejected: Boolean;
+begin
+  for LIndex := 0 to 2 do
+  begin
+    LFixture := TBoardFixture.Create;
+    try
+      LFixture.UseCommon;
+      LView := LFixture.Bindings.ViewFor(LFixture.FirstBoard.Lane0ItemsList.ID);
+      LPrevious := NyxEventGeneration(LFixture.Events);
+      LFixture.PrepareCommon;
+      LBinding := LFixture.First;
+      case LIndex of
+        0:
+          begin
+            LView.Select(Card);
+          end;
+        1:
+          begin
+            LFixture.EventPlan.Generation.Cancel;
+          end;
+        2:
+          begin
+            LMutation := TPreparedSelection.Create;
+            LParticipant := LMutation;
+            LMutation.View := LView;
+          end;
+      end;
+      LRejected := False;
+      try
+
+        if LParticipant <> nil then
+        begin
+          PublishNyxGroup([LFixture.Mounts[0], LFixture.Mounts[1],
+            LFixture.EventPlan, LParticipant]);
+        end
+        else
+        begin
+          PublishNyxGroup([LFixture.Mounts[0], LFixture.Mounts[1], LFixture.EventPlan]);
+        end;
+      except
+        on ENyxKanban do
+        begin
+          LRejected := True;
+        end;
+        on ENyxCoordinator do
+        begin
+          LRejected := True;
+        end;
+        on ENyxSchedule do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected and not LPrevious.Cancelled and not LBinding.Connected,
+        'common dirty/cancelled/later-mutated preparation never installs its controller');
+      Check((LView.Store.Snapshot.Revision = 0) and
+        (LFixture.FirstBoard.Node.Part(NyxPart('lane-1/move')).EnabledPolicyCount = 0),
+        'refused common preparation releases candidate availability without changing cards');
+    finally
+      LParticipant := nil;
+      LBinding := nil;
+      LView := nil;
+      LFixture.Free;
+    end;
+  end;
+end;
+
+{ Public typed Disconnect permits manual attachment on the very same nodes and
+  live event generation; later retirement cannot detach that replacement. }
+procedure CommonDisconnectCase;
+var
+  LFixture: TBoardFixture;
+  LOld: INyxKanbanBinding;
+  LMove: INyxKanbanMove;
+  LGeneration: INyxCancellationScope;
+  LButton: INyxButton;
+  LStore: INyxCollection;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LFixture := TBoardFixture.Create;
+  try
+    LFixture.UseCommon;
+    LBefore := TNyxCodec.Encode(LFixture.Document);
+    LFixture.AcceptCommon;
+    LGeneration := NyxEventGeneration(LFixture.Events);
+    LOld := LFixture.First;
+    LButton := LOld.MoveButton(ActiveLane);
+    LStore := LFixture.Store;
+    LMove := LOld.CaptureMove(Card, ReadyLane, ActiveLane, LStore.Snapshot.Revision);
+    LOld.Disconnect;
+    LOld.Disconnect;
+    Check(not LOld.Connected and not LGeneration.Cancelled and
+      (LButton.Node.EnabledPolicyCount = 0) and LFixture.Second.Connected,
+      'typed common Disconnect detaches its policies immediately ' +
+      'without retiring sibling or router');
+    LRejected := False;
+    try
+      LMove.Commit;
+    except
+      on ENyxKanbanCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and not LMove.Committed and (LStore.Snapshot.Revision = 0),
+      'a captured command remains revoked after its typed owner explicitly disconnects');
+    LFixture.First := NewNyxKanbanBinding(LFixture.FirstBoard, LFixture.Options,
+      LFixture.Bindings, LFixture.Events, LFixture.Scheduler, nil);
+    Check(LFixture.First.Connected and not LGeneration.Cancelled and
+      (LFixture.First.MoveButton(ActiveLane).Node = LButton.Node),
+      'unchanged manual API reacquires the same real board and event generation');
+    DisconnectNyxCoordinatorMounts(LFixture.Mounts);
+    LMove := LFixture.First.CaptureMove(Card, ReadyLane, ActiveLane, LStore.Snapshot.Revision);
+    LMove.Commit;
+    Check(LMove.Committed and LFixture.First.Connected and not LGeneration.Cancelled and
+      (LButton.Node.EnabledPolicyCount = 1) and
+      LFixture.View(False, ActiveLane).Snapshot.Has(Card),
+      'later old common cleanup cannot detach the new manual policy or stable-card authority');
+    Check(TNyxCodec.Encode(LFixture.Document) = LBefore,
+      'same-board reacquisition never writes authored definition or collection defaults');
+  finally
+    LMove := nil;
+    LOld := nil;
+    LFixture.Free;
+  end;
+end;
+
+{ A successor has the same logical IDs but independent canonical nodes. Retained
+  old typed facades survive as model memory, never as authority over that successor. }
+procedure CommonReplacementCase;
+var
+  LFixture: TBoardFixture;
+  LRoot: TNyxNode;
+  LOldRoot: TNyxNode;
+  LBindings: INyxCollectionBindings;
+  LOldMounts: TNyxCoordinatorMounts;
+  LMounts: TNyxCoordinatorMounts;
+  LIDs: TNyxCoordinatorMountIDs;
+  LPreparation: INyxEventViewPreparation;
+  LView: INyxPreparedEventView;
+  LPrevious: INyxCancellationScope;
+  LControl: INyxControl;
+  LBoard: INyxKanbanBoard;
+  LOld: INyxKanbanBinding;
+  LBase: INyxCoordinatorBinding;
+  LItems: INyxList;
+  LRejected: Boolean;
+begin
+  LRoot := nil;
+  LOldRoot := nil;
+  LFixture := TBoardFixture.Create;
+  try
+    LFixture.UseCommon;
+    LFixture.AcceptCommon;
+    LOld := LFixture.First;
+    LItems := LOld.Items(ReadyLane);
+    LPrevious := NyxEventGeneration(LFixture.Events);
+    LRoot := RealizeNyxView(LFixture.Document, LFixture.Document.Pages[0]);
+    LBindings := LFixture.Bindings.Recompose(LRoot);
+    LControl := RetainNyxControl(LRoot.Find(LFixture.FirstBoard.ID));
+    Check(Supports(LControl, INyxKanbanBoard, LBoard),
+      'replacement first board preserves its public specialized interface');
+    SetNyxKanbanIntent(LBoard, TNyxKanbanIntent.Configured(LFixture.Options));
+    LControl := RetainNyxControl(LRoot.Find(LFixture.SecondBoard.ID));
+    SetNyxKanbanIntent(LControl, TNyxKanbanIntent.Configured(LFixture.Options));
+    Supports(LFixture.Events, INyxEventViewPreparation, LPreparation);
+    LView := LPreparation.PrepareView;
+    PrepareNyxCoordinatorMounts(LRoot, LBindings, LView, LFixture.Scheduler,
+      LFixture.Registry.Snapshot, LFixture.RefreshTarget, LMounts, LIDs);
+    PublishNyxGroup([LView, LMounts[0], LMounts[1]]);
+    LOldMounts := LFixture.Mounts;
+    LFixture.Mounts := LMounts;
+    LMounts := nil;
+    LFixture.IDs := LIDs;
+    LFixture.EventPlan := LView;
+    LOldRoot := LFixture.Runtime;
+    LFixture.Runtime := LRoot;
+    LRoot := nil;
+    LFixture.Bindings := LBindings;
+    LFixture.FirstBoard := LBoard;
+    Check(Supports(LControl, INyxKanbanBoard, LFixture.SecondBoard),
+      'replacement second board preserves its public specialized interface');
+    LBase := FindNyxCoordinatorMount(LFixture.Mounts, LFixture.IDs, LBoard.ID);
+    Supports(LBase, INyxKanbanBinding, LFixture.First);
+    LBase := FindNyxCoordinatorMount(LFixture.Mounts, LFixture.IDs, LControl.ID);
+    Supports(LBase, INyxKanbanBinding, LFixture.Second);
+    DisconnectNyxCoordinatorMounts(LOldMounts);
+    LOldRoot.Free;
+    LOldRoot := nil;
+    Check(LPrevious.Cancelled and not LOld.Connected and LFixture.First.Connected and
+      (LItems.ID = LFixture.First.Items(ReadyLane).ID) and
+      (LItems.Node <> LFixture.First.Items(ReadyLane).Node),
+      'same-ID replacement preserves canonical facade distinction and retires old commands');
+    LRejected := False;
+    try
+      LOld.Items(ReadyLane);
+    except
+      on ENyxKanbanCancelled do
+      begin
+        LRejected := True;
+      end;
+    end;
+    LItems.Configure.ReadOnly(True).Done;
+    Check(LRejected and
+      (LFixture.First.Items(ReadyLane).Node.Prop(
+        NyxAttributeName(atReadOnly), 'false') = 'false') and
+      (LItems.Node.Prop(NyxAttributeName(atReadOnly), 'false') = 'true'),
+      'retained old facade configuration cannot mutate the accepted successor');
+  finally
+    DisconnectNyxCoordinatorMounts(LMounts);
+    DisconnectNyxCoordinatorMounts(LOldMounts);
+    LView := nil;
+    LBase := nil;
+    LOld := nil;
+    LOldRoot.Free;
+    LRoot.Free;
+    LFixture.Free;
+  end;
+end;
+
+procedure CommonDisabledCase;
+var
+  LFixture: TBoardFixture;
+  LBase: INyxCoordinatorBinding;
+  LTyped: INyxKanbanBinding;
+begin
+  LFixture := TBoardFixture.Create;
+  try
+    LFixture.UseCommon;
+    SetNyxKanbanIntent(LFixture.FirstBoard, TNyxKanbanIntent.Disabled);
+    LFixture.AcceptCommon;
+    LBase := FindNyxCoordinatorMount(LFixture.Mounts, LFixture.IDs, LFixture.FirstBoard.ID);
+    Check((LFixture.First = nil) and LBase.Connected and
+      not Supports(LBase, INyxKanbanBinding, LTyped) and LFixture.Second.Connected and
+      (LFixture.FirstBoard.Node.Part(NyxPart('lane-1/move')).Prop(
+        NyxAttributeName(atEnabled), 'true') = 'false'),
+      'common disabled masking exposes only a base owner and preserves other configured boards');
+    LBase.Disconnect;
+    Check(not LBase.Connected and
+      (LFixture.FirstBoard.Node.Part(NyxPart('lane-1/move')).EnabledPolicyCount = 0),
+      'disabled base Disconnect releases its exact availability policy too');
+  finally
+    LBase := nil;
+    LFixture.Free;
+  end;
+  LFixture := TBoardFixture.Create;
+  try
+    LFixture.UseCommon;
+    InheritNyxKanbanIntent(LFixture.FirstBoard);
+    InheritNyxKanbanIntent(LFixture.SecondBoard);
+    LFixture.AcceptCommon;
+    Check((Length(LFixture.Mounts) = 0) and (LFixture.First = nil) and
+      (LFixture.Second = nil),
+      'absent effective intent retains the original static board behavior');
+  finally
+    LFixture.Free;
+  end;
+end;
+
 begin
   try
     OptionCases;
@@ -1661,6 +2115,12 @@ begin
     PreparedDisabledCase;
     PreparedLifetimeCase;
     PreparedSourceActivationCase;
+    CommonCanonicalCase;
+    CommonRefusalCases;
+    CommonDisconnectCase;
+    CommonReplacementCase;
+    CommonDisabledCase;
+    PolicyCases(True);
     {$ifdef PAS2JS}
     document.body.setAttribute('data-kanban', 'passed');
     document.body.setAttribute('data-kanban-checks', IntToStr(GChecks));

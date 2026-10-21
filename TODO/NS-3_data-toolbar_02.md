@@ -18,8 +18,8 @@ already exist. Static faces alone do not qualify this task.
 
 | Packet | Reviewable outcome | Dependency and finish line |
 | --- | --- | --- |
-| Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Accepted common coordinator integration. Root reviews query ownership and visible-input reset before releasing runtime/consumer scopes. Clear composes with and restores the admitted authored baseline. |
-| Q2 — Independent application | Two ordinary toolbars exercise input, empty results, hidden selection, target/query changes and retirement without changing rows/defaults | Q1. Native clean heaps, matching browser assertions and documented static compatibility qualify all five criteria below; Studio/save/generated adoption stays in01. |
+| Q1 — Useful public toolbar | Typed target/field options and real Search, Sort and Clear operate on an existing List/Table query | Accepted common coordinator integration. Root owns scalar-input/query admission and publication across the existing owners; helper receives separately released toolbar runtime/focused-consumer scope. Root reviews query ownership and visible-input reset before source release. Clear composes with and restores the admitted authored baseline. |
+| Q2 — Independent application | Two ordinary toolbars exercise input, empty results, hidden selection, target/query changes and retirement without changing rows/defaults | Q1. Helper owns the separately released ordinary App consumer; root owns maintained build and reader admission. Native clean heaps, matching browser assertions and documented static compatibility qualify all five criteria below; Studio/save/generated adoption stays in01. |
 
 Resolve two concrete seams before coding Q1. The current static recipe exposes
 search/sort/create/refresh, so opt-in configuration needs an admitted named Clear

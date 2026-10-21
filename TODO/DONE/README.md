@@ -3,6 +3,16 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Common Kanban mounting](NS-3_coordinators_04.md) was accepted on2026-10-21 for
+all five scoped criteria. Both renderers share the extensible prepared lifetime
+while retaining actual typed lane/Move controls, existing movement/drag policies,
+explicit Disconnect/manual reattachment and committed cleanup/disposal. Native
+139,121/121, full Studio114/124 and own saved compiled application15/15 pass clean;
+coordinator171/68/68 and publication136/136 retain compatibility. All16 compilers
+have zero Nyx warnings; browser counterparts compile only. Joint reuse/browser/
+parity acceptance and original goal credit remain open. See
+[the qualification](../../WORK.md#kanban-common-coordinator-migration--2026-10-21).
+
 [Common MasterDetail mounting](NS-3_coordinators_03.md) was accepted on2026-10-21
 for all six scoped criteria. Automatic behavior uses the same extensible lifetime
 on both renderers; manual/shared text ownership, exact Disconnect and queued
