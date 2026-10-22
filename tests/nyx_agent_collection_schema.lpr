@@ -26,6 +26,9 @@ program nyx_agent_collection_schema;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
+  { BEGIN QUERY_POLICY_SCHEMA_IMPORTS }
+  nyx.studio.collectionintent, nyx.studio.stateedits,
+  { END QUERY_POLICY_SCHEMA_IMPORTS }
   { BEGIN QUERY_CONTROL_DISCOVERY_IMPORTS }
   nyx.collections, nyx.collections.view.types, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.query, nyx.collections.query.policy,
@@ -278,7 +281,7 @@ end;
 { BEGIN EXPANDED_ACTION_NAMES }
 { The two scalar-edit actions each have four mutually exclusive family branches.
   Check their identities independently rather than treating enum length as the
-  number of schema branches. Named operations keep eight separate closed shapes. }
+  number of schema branches. Named operations keep ten separate closed shapes. }
 function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
 const
   CActions: array[0..30] of TNyxText = (
@@ -288,19 +291,20 @@ const
     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
     'table-query', 'column-query', 'default-table-query', 'default-column-query');
-  CNamed: array[0..7] of TNyxText = (
+  CNamed: array[0..9] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
-    'bind', 'query', 'typeahead');
-  CRequired: array[0..7] of TNyxText = (
+    'bind', 'query', 'typeahead', 'table-query', 'column-query');
+  CRequired: array[0..9] of TNyxText = (
     '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
     '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
-    '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|');
+    '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|',
+    '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|');
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
   LCounts: array[0..30] of Integer;
   LFamilies: array[0..30, 0..3] of Boolean;
-  LNamed: array[0..7] of Boolean;
+  LNamed: array[0..9] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
   LName, LKind, LExpected: TNyxText;
@@ -477,6 +481,143 @@ begin
 end;
 
 { END EXPANDED_ACTION_NAMES }
+{ BEGIN QUERY_POLICY_SCHEMA_CASES }
+{ New named commands retain ordinary intent and descriptor versions. Discovery
+  advertises only typed policy/null and current identities, not a UI baseline. }
+procedure PolicyEditDiscovery(const ATool: TNyxDataValue);
+var
+  LChanges, LTable, LColumn, LWire, LBad, LProperties: TNyxDataValue;
+  LPatch: INyxCollectionPatch;
+  LKey: TNyxCollectionRef;
+  LField: TNyxStudioCollectionFieldRef;
+  LTablePolicy: TNyxTableQueryPolicy;
+  LColumnPolicy: TNyxColumnQueryPolicy;
+  LRejected: Boolean;
+
+  function Replacing(const AData: TNyxDataValue; const AName: TNyxText;
+    const AValue: TNyxDataValue): TNyxDataValue;
+  var
+    LFields: array of TNyxDataField;
+    LAt: Integer;
+  begin
+    SetLength(LFields, AData.Count);
+    for LAt := 0 to AData.Count - 1 do
+    begin
+
+      if AData.Key(LAt) = AName then
+      begin
+        LFields[LAt] := NyxField(AName, AValue);
+      end
+      else
+      begin
+        LFields[LAt] := NyxField(AData.Key(LAt), AData.Field(AData.Key(LAt)));
+      end;
+    end;
+    Result := NyxObject(LFields);
+  end;
+
+  procedure Refuses(const AData: TNyxDataValue; const AReason: TNyxText);
+  var
+    LRejected: Boolean;
+  begin
+    LRejected := False;
+    try
+      ReadNyxCollectionPatch(AData);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, AReason);
+  end;
+
+begin
+  LChanges := ATool.Field('inputSchema').Field('oneOf');
+  LChanges := LChanges.Item(LChanges.Count - 1).Field('properties').Field('changes')
+    .Field('items').Field('oneOf');
+  LTable := LChanges.Item(8);
+  LColumn := LChanges.Item(9);
+  Check((LTable.Field('properties').Field('op').Field('const').AsText = 'table-query') and
+    (LColumn.Field('properties').Field('op').Field('const').AsText = 'column-query') and
+    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 7) and
+    (LChanges.Item(7).Field('properties').Field('op').Field('const').AsText = 'typeahead'),
+    'two policy commands append after existing named operations without changing binding versions');
+  Check((LTable.Field('required').Count = 5) and (LColumn.Field('required').Count = 7) and
+    (LTable.Field('properties').Field('projection').Field('const').AsText = 'table') and
+    (LColumn.Field('properties').Field('projection').Field('const').AsText = 'table') and
+    not NyxAgentHas(LTable.Field('properties'), 'baseline') and
+    not NyxAgentHas(LColumn.Field('properties'), 'baseline'),
+    'table-only named commands require no caller form baseline');
+  LProperties := LTable.Field('properties').Field('policy');
+  Check((LProperties.Field('oneOf').Count = 2) and
+    (LProperties.Field('oneOf').Item(0).Field('type').AsText = 'null') and
+    (LProperties.Field('oneOf').Item(1).Field('required').Count = 5) and
+    not LProperties.Field('oneOf').Item(1).Field('additionalProperties').AsBoolean,
+    'named table policy discovery preserves strict object versus null reset');
+  LProperties := LColumn.Field('properties').Field('policy').Field('oneOf');
+  Check((LProperties.Item(0).Field('type').AsText = 'null') and
+    (LProperties.Item(1).Field('required').Count = 5) and
+    (LProperties.Item(1).Field('properties').Field('operators').Field('anyOf').Item(0)
+      .Field('type').AsText = 'null') and
+    (LColumn.Field('properties').Field('kind').Field('enum').Count = 4),
+    'named column policy discovery keeps typed families and nullable default operators');
+
+  LKey := NyxCollection('policy-discovery-rows');
+  LField := TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('priority'));
+  LTablePolicy := NyxTableQuery.Sorting(False);
+  LColumnPolicy := NyxColumnQuery.Filtering(False).Operators([nqcEqual, nqcAtLeast]);
+  LPatch := NyxCollectionPatch([
+    NyxSetCollectionTableQuery(NyxBindingOwner('policy-table'), LKey, cpTable, LTablePolicy),
+    NyxUseDefaultCollectionTableQuery(NyxBindingOwner('policy-table'), LKey, cpTable),
+    NyxSetCollectionColumnQuery(NyxBindingOwner('policy-table'), LKey, cpTable, LField, LColumnPolicy),
+    NyxUseDefaultCollectionColumnQuery(NyxBindingOwner('policy-table'), LKey, cpTable, LField)]);
+  LTablePolicy := LTablePolicy.Sorting(True);
+  LColumnPolicy := LColumnPolicy.Operators([]);
+  LWire := LPatch.ToData;
+  Check((LWire.Item(0).Field('policy').Kind = ndObject) and
+    not LWire.Item(0).Field('policy').Field('sorting').AsBoolean and
+    (LWire.Item(1).Field('policy').Kind = ndNull) and
+    (LWire.Item(2).Field('policy').Field('operators').Count = 2) and
+    (LWire.Item(3).Field('policy').Kind = ndNull) and
+    (ReadNyxCollectionPatch(LWire).ToData.ToJSON = LWire.ToJSON),
+    'all four factories own scalar copies and round trip independently of later caller edits');
+  Refuses(NyxArray([Replacing(LWire.Item(0), 'projection', NyxData('list'))]),
+    'table policy wire cannot target a non-table projection');
+  Refuses(NyxArray([Replacing(LWire.Item(2), 'kind', NyxData('boolean'))]),
+    'column policy wire rejects an operator from the wrong scalar family');
+  Refuses(NyxArray([Replacing(LWire.Item(2), 'policy', NyxData(False))]),
+    'a Boolean is neither a column policy record nor a null reset');
+  LBad := NyxObject([NyxField('op', NyxData('column-query')),
+    NyxField('owner', NyxData('policy-table')), NyxField('key', NyxData(LKey.Name)),
+    NyxField('projection', NyxData('table')), NyxField('kind', NyxData('integer')),
+    NyxField('policy', NyxNull)]);
+  Refuses(NyxArray([LBad]), 'a column reset still requires its exact field');
+  LRejected := False;
+  try
+    NyxSetCollectionTableQuery(NyxBindingOwner('policy-table'), LKey, cpTable,
+      Default(TNyxTableQueryPolicy));
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'an undefined typed table setter does not silently mean reset');
+  LRejected := False;
+  try
+    NyxSetCollectionColumnQuery(NyxBindingOwner('policy-table'), LKey, cpTable,
+      LField, Default(TNyxColumnQueryPolicy));
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'an undefined typed column setter does not silently mean reset');
+end;
+
+{ END QUERY_POLICY_SCHEMA_CASES }
 begin
   try
     { This is the actual MCP discovery builder. No server constructor, listener,
@@ -535,9 +676,9 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 45, 'named commands and all thirty-one typed ordinary actions');
+    Check(LChanges.Count = 47, 'named commands and all thirty-one typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
-    Check(ExactChangeBranches(LChanges), 'eight named shapes and every typed action/family occur exactly once');
+    Check(ExactChangeBranches(LChanges), 'ten named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
@@ -581,6 +722,9 @@ begin
     { BEGIN QUERY_CONTROL_DISCOVERY_CALL }
     CurrentPolicyDiscovery(LTool);
     { END QUERY_CONTROL_DISCOVERY_CALL }
+    { BEGIN QUERY_POLICY_SCHEMA_CALL }
+    PolicyEditDiscovery(LTool);
+    { END QUERY_POLICY_SCHEMA_CALL }
     WriteLn('PASS ', LChecks, ' actual collection MCP discovery checks');
   except
     on LException: Exception do

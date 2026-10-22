@@ -1,5 +1,112 @@
 # Working in Nyx
 
+QUERY POLICY EDITS NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
+Existing nyx_collections now has two closed baseline-free table/column policy
+set/default operations, backed by four typed public factories. Each ordered
+candidate captures current effective owner/key/schema/spec and uses the normal
+intent admission, including explicit equal-byte pending refusal. Null reset,
+declared default objects, local/inherited ownership, all four scalar families,
+preceding grouped changes, late refusal and one paired Undo retain their meaning.
+
+Full shared9D6D native208 (original176 plus32), real discovery3979 native128 and
+unchanged inheritance14 pass with complete clean heaps. Matching browser tests
+and both Studio mains compile. Seven accepted compilers have zero owned/21
+upstream RTL warnings. Retain first47688 compile failure at new expected-domain
+oracle and its narrow Definition repair; it has no native result or success credit.
+Root joins80525/62db6f,37220/05b19f and67138/5a1943 are terminal; all11 actual
+compiler/native processes are absent. Composite556EE9FB verifies1852 frozen pins,
+27 retained copies/eight receipts/47 artifact references at6E784F26. No Pascal,
+guide or tool changed after final freeze. This is semantic/native evidence,
+not browser input, installed MCP/wire, observing deployment or performance proof.
+
+Core45->46; no original/P4B/P4C/credit/DONE closes. Root owns ONLY outcome docs
+AGENTS/WORK/task02 and checkpoint; all Pascal/guide/tools remain paused. Existing
+helper owns independent outcome review then read-only P4C preparation. Next is
+the SAME ordinary query Studio consumer: preserve stages0-10, append useful local
+policy/history, real named Save/Open and its OWN exact reopened pair/emitted unit,
+then compiled two-instance application at both widths. Browser needs full Studio
+exchange rather than its current manual Inspector harness and later actual input
+under an applicable host override. Native Open's unsaved-pair refusal differs
+from browser export/Undo/import; preserve both. No new fixture/engine/API is
+justified. Retain equal-byte pending-summary visibility with existing agent-workflow
+owner. No host/config/MCP rollout, probe/profile, cleanup/restart or extra agent.
+
+QUERY POLICY EDITS ORACLE REPAIR REVIEWED (2026-10-22): helper9D6D5D73 adds only
+Definition to the integer-domain builder on the oracle's expected side; reversing
+that occurrence restores retained71C56 byte-exact. Actual schema Domain.ToData,
+all other predicates/scenarios/waits and every product/guide/tool stay exact.
+Both agents independently checked the public Definition/ToData declarations.
+Root may fresh-freeze the same nine paths and admit the same seven-compiler/
+three-native plan. Preserve initial47688 failure/586A30AC audit separately.
+Pause all source/docs/tools through actual joins/audit; no broader release.
+
+QUERY POLICY EDITS FIRST COMPILER JOINED (2026-10-22): full native journey compile
+fails only the new test's integer-domain ToData oracle at line813. No native or
+other compiler ran. Root80525/62db6f and actual47688 are terminal/joined/absent;
+audit586A30AC verifies1852 pins/nine retained copies/three compiler artifacts
+againstA04EBF07. Keep this first failure and original source71C56/receipt exact.
+Release ONLY helper's shared test to compare the unchanged integer domain through
+its actual public facts. No assertion/scenario/wait may be dropped. Root owns
+outcome/admission docs; every other Pascal/guide/tool remains paused. Independent
+repair review/fresh freeze precedes the same seven compilers/three native runs;
+no product repair, host or expanded scope follows from a test compile error.
+
+QUERY POLICY EDITS REVIEWED/FREEZE ADMITTED (2026-10-22): root/helper independently
+review both source handoffs, guide and two private drivers. Review9AEBDF06 proves
+marked helper additions restore exactE398/9129 bytes; current71C56/3979 retain all
+old assertions/waits. Root85AF6B41/schema2355/descriptionA5F1/guide82AB pass. Driver
+9EF891BC/989FBC1B differs only in state paths; actual RunOwned AST stays3975 chars,
+both PowerShell parsers report zero errors. Outside nine owned paths,1838 pinned
+Pascal/foreign/extra occurrences match. No reader has yet launched.
+
+Root may freeze nine owned/1807 Pascal/13 foreign/23 extra inputs, then admit ONLY
+the fixed seven compilers/three native executions: full semantic journey native/
+browser, actual discovery native, unchanged inheritance native/browser and both
+Studio mains. Each native uses ordinary300seconds and complete direct heap output.
+Source/docs/tools pause until all actual handles are terminal/root-joined and
+exact audits pass. Existing helper has read-only downstream P4C design only.
+Equal-bytes pending summary visibility is a retained later discovery-owner finding;
+authoritative file flags and existing intent guard own current refusal behavior.
+No host, browser execution, profile/probe, cleanup/restart, extra agent, original
+criterion/credit/DONE or completeP4B/P4C closure follows from this admission.
+
+QUERY POLICY EDITS SOURCE RELEASE (2026-10-22): previous goal turn is progress,
+eafa767 pushed/remote-verified. PriorC565/1850pins and all terminal joins revalidate.
+New private query-policy-edits packet retains nine preimages/1807 Pascal/13
+foreign/21 prior extra inputs; core45 and all original criteria remain open.
+
+Root owns ONLY AGENTS/WORK/task02/studio-agents guide, collectionedits.pas, its
+schema include and nyx_collections description in studio.mcp. Existing helper
+owns ONLY existing shared agent collection tests and actual discovery program.
+Append ccTableQuery/ccColumnQuery without moving old ordinals. Four typed public
+set/default factories own scalar policies/typed field refs; setters require
+defined valid policies, explicit reset is separate. Two closed named operations
+table-query/column-query require owner/key/projection:table/policy (plus exact
+field/kind for column); null selects default, a default policy object stays saved.
+Append these two branches after the old eight named shapes, preserving old spec
+indexes,31 intent identities and seven binding versions; expanded count45->47.
+
+For EACH ordered candidate step resolve the current owner/effective spec/schema,
+require exact key/column/family and derive NyxQueryEditorBaseline immediately.
+Replay existing ApplyCollectionIntent sca*Query/default, including SourceDraftPending
+even when draft bytes equal accepted text. Retain/release the owned projection;
+no node/store escapes. Preceding group edits must affect the next baseline.
+Keep cpTable-only edits distinct from inspectable non-table saved metadata, local
+reset vs inheritance, one paired Undo and late-failure/no-op behavior. Do not
+send a form baseline to agents or add a parser/query/store/codec owner.
+
+Helper adds marked independent agent-only read->set/default tests/call; no owned
+PreviewPair-derived baseline is allowed as a mutation input. Preserve old E398
+assertions/waits and current schema9129 checks; only intended47/two named-shape
+expectations may change. Prove grouped ordering, all-or-refused history/source,
+reusable isolation, strict unused fields, malformed/null/default, stale revision,
+changed family/projection and equal-bytes pending refusal. New private scoped
+drivers add two pins; independent source/tool review and joint freeze precede
+seven planned compilers/three native runs on existing programs. Source/docs/tools
+pause during readers; root owns every actual admission/join/audit. Browser
+compiles only. No host/config/MCP rollout, probe/profile, cleanup/restart, extra
+agent or original/P4B/P4C/credit/DONE closure is released by this source scope.
+
 QUERY POLICY READS NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
 Existing nyx_collections bindings/column now accept optional strict queryControls;
 omitted/false keeps exact legacy JSON. Requested contexts/columns expose declared

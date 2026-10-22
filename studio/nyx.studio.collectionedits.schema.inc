@@ -248,6 +248,20 @@ begin
     '"policy":{"oneOf":[{"type":"null"},' + LTypeAhead + ']}',
     '"op","owner","key","projection","policy"');
 
+  { Named policy edits derive the form baseline inside each ordered candidate.
+    Null resets only the declaration; defined default objects remain authored.
+    These are table authoring commands, not restrictions on saved List metadata. }
+  Branch('"op":{"const":"table-query"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LTableQuery + ']}',
+    '"op","owner","key","projection","policy"');
+  Branch('"op":{"const":"column-query"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"field":{"type":"string","minLength":1},' +
+    '"kind":{"enum":["text","boolean","integer","number"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LColumnQuery + ']}',
+    '"op","owner","key","projection","field","kind","policy"');
+
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +

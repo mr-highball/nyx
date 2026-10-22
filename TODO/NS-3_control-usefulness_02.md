@@ -5,6 +5,39 @@
 
 **Description:**
 
+Agent-only policy edits are now native-locally qualified: four typed set/default
+factories back two strict baseline-free named operations. Each ordered candidate
+derives its own current baseline and reuses ordinary intent admission. Full
+semantic journey208, real discovery128 and unchanged inheritance14 pass with
+complete clean heaps; matching browser tests and both Studio mains compile.
+Seven accepted compilers have zero owned/21 upstream RTL warnings. Retain the
+first new test-domain compiler failure and its sole Definition repair. All actual
+readers are root-joined; composite556EE9FB verifies1852 inputs/27 source copies/
+eight receipts/47 artifact references. [WORK](../WORK.md#current-boundary-agent-only-query-policy-edits-qualify-locally)
+owns exact evidence, failure and target limits. Core45->46; no original/P4B/P4C/
+browser/credit/DONE closes. Source/guide/tools remain paused after qualification.
+
+The next meaningful deliverable is P4C's SAME ordinary Studio two-instance
+policy/history journey, real named Save/Open and its OWN exact reopened emitted
+Pascal/application at both widths, followed by actual browser input under an
+applicable host override. Preserve existing stages/assertions/waits. Native Open
+refuses unsaved changed pairs; browser export/Undo/import uses full Studio's
+managed exchange. The current manual browser Inspector harness and old P3 export
+pair cannot establish this result. No new fixture program/engine/API or source/
+compiler/host release follows from this local semantic result.
+
+Retained source-release history:
+
+Current separate P4B source packet implements baseline-derived named table/column
+policy set/default operations through existing typed intent admission. Agents
+must complete a bounded read->write workflow without supplying a full form
+baseline. Preserve exact revision/key/typed field, ordered candidate changes,
+equal-bytes pending refusal, local reset/inheritance and one paired Undo. Only
+two named shapes are added after the existing eight (45->47 expanded branches);
+no new tool or binding version. [WORK](../WORK.md#current-source-scope-agent-only-table-and-column-policy-edits)
+owns exact files, independent review/freeze and planned validation. No criterion
+closes before its actual authoring/refusal/lifetime results return.
+
 The bounded policy-read packet is now native-locally qualified: full semantic
 journey176, actual discovery115 and unchanged inheritance14 pass with complete
 clean heaps; matching browser assertions and both Studio mains compile. Seven

@@ -39,7 +39,8 @@ const
 
 type
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
-    ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead);
+    ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead,
+    ccTableQuery, ccColumnQuery);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -64,6 +65,12 @@ type
       reset at replay, never collection inheritance or a live search engine. }
     FTypeAheadDeclared: Boolean;
     FTypeAhead: TNyxTypeAheadOptions;
+    { Command policies own only scalar flags and an operator set. An explicit
+      default object stays declared; only the separate reset factories clear
+      presence. No baseline, projected node or runtime query owner is retained. }
+    FQueryControlsDeclared: Boolean;
+    FTableQuery: TNyxTableQueryPolicy;
+    FColumnQuery: TNyxColumnQueryPolicy;
   public
     property Kind: TNyxCollectionChangeKind read FKind;
   end;
@@ -135,6 +142,31 @@ function NyxSetCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
 function NyxUseDefaultCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
   TNyxCollectionChange;
+{ Replace only a table's authored filter/sort command policy. Each ordered
+  candidate derives the current schema/binding baseline internally and reuses
+  ordinary intent admission; agents need only the exact revision/owner/key.
+  A defined default object remains an explicit saved choice. Non-table
+  projections refuse, independently of their inspectable saved metadata. }
+function NyxSetCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTableQueryPolicy): TNyxCollectionChange;
+{ Remove the table's declaration while retaining its independent local binding,
+  columns, query, paging and sizing. This does not restore reusable inheritance. }
+function NyxUseDefaultCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+{ Replace one exact typed column's command policy. Its field must still occur
+  in both the current schema and bound columns with the same scalar family.
+  Policies are immutable scalar/set values; caller edits cannot retarget them. }
+function NyxSetCollectionColumnQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AField: TNyxStudioCollectionFieldRef;
+  const APolicy: TNyxColumnQueryPolicy): TNyxCollectionChange;
+{ Reset only this column's declaration to library defaults. Undefined fields
+  refuse; the remaining table/column policies and local ownership survive. }
+function NyxUseDefaultCollectionColumnQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AField: TNyxStudioCollectionFieldRef): TNyxCollectionChange;
 function NyxCollectionPatch(const AChanges: array of TNyxCollectionChange):
   INyxCollectionPatch;
 
@@ -382,6 +414,57 @@ begin
   Result.FTypeAhead := APolicy;
 end;
 
+function NyxUseDefaultCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+begin
+
+  if AProjection <> cpTable then
+  begin
+    raise ENyxCollection.Create('Table query controls require the table projection');
+  end;
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccTableQuery;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+  Result.FProjection := AProjection;
+end;
+
+function NyxSetCollectionTableQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTableQueryPolicy): TNyxCollectionChange;
+begin
+  APolicy.Validate;
+  Result := NyxUseDefaultCollectionTableQuery(AOwner, AKey, AProjection);
+  Result.FQueryControlsDeclared := True;
+  Result.FTableQuery := APolicy;
+end;
+
+function NyxUseDefaultCollectionColumnQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AField: TNyxStudioCollectionFieldRef): TNyxCollectionChange;
+begin
+
+  if not AField.Defined then
+  begin
+    raise ENyxCollection.Create('Column query controls require an exact typed field');
+  end;
+  Result := NyxUseDefaultCollectionTableQuery(AOwner, AKey, AProjection);
+  Result.FKind := ccColumnQuery;
+  Result.FField := AField;
+end;
+
+function NyxSetCollectionColumnQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AField: TNyxStudioCollectionFieldRef;
+  const APolicy: TNyxColumnQueryPolicy): TNyxCollectionChange;
+begin
+  APolicy.Validate(AField.Kind);
+  Result := NyxUseDefaultCollectionColumnQuery(AOwner, AKey, AProjection, AField);
+  Result.FQueryControlsDeclared := True;
+  Result.FColumnQuery := APolicy;
+end;
+
 constructor TNyxCollectionPatch.Create(const AChanges: array of TNyxCollectionChange);
 var
   LIndex: Integer;
@@ -520,7 +603,7 @@ begin
               LProjected.Free;
             end;
           end;
-        ccQuery:
+        ccQuery, ccTableQuery, ccColumnQuery:
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LProjected := LSession.SelectedProjection;
@@ -533,13 +616,46 @@ begin
                 raise ENyxCollection.Create('Query edit requires the exact bound collection');
               end;
               LIntent := Default(TNyxStudioCollectionIntent);
-              LIntent.Action := scaQuery;
               LIntent.Key := LChange.FKey;
               LIntent.Projection := LChange.FProjection;
-              LIntent.Query := LChange.FQuery.Copy;
+              case LChange.FKind of
+                ccQuery:
+                  begin
+                    LIntent.Action := scaQuery;
+                    LIntent.Query := LChange.FQuery.Copy;
+                  end;
+                ccTableQuery:
+                  begin
+                    LIntent.Action := scaDefaultTableQuery;
+
+                    if LChange.FQueryControlsDeclared then
+                    begin
+                      LIntent.Action := scaTableQuery;
+                      LIntent.TableQuery := LChange.FTableQuery;
+                    end;
+                  end;
+                ccColumnQuery:
+                  begin
+                    LIntent.Action := scaDefaultColumnQuery;
+                    LIntent.Field := LChange.FField;
+
+                    if LChange.FQueryControlsDeclared then
+                    begin
+                      LIntent.Action := scaColumnQuery;
+                      LIntent.ColumnQuery := LChange.FColumnQuery;
+                    end;
+                  end;
+              else
+                begin
+                  raise ENyxCollection.Create('Unexpected baseline-qualified query change');
+                end;
+              end;
               { The candidate owns the current binding/schema at this ordered
                 step. Ordinary Studio admission validates the same complete
-                replacement, without sending private form metadata to agents. }
+                replacement, without sending private form metadata to agents.
+                Recompute after every prior edit, including another policy.
+                ApplyCollectionIntent also preserves the pending-draft guard
+                when accepted and draft bytes happen to be equal. }
               LIntent.QueryBaseline := NyxQueryEditorBaseline(
                 LSession.Document.Collections.Snapshot(LChange.FKey).Schema,
                 LProjected.CollectionView);
@@ -1353,6 +1469,48 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('query', LChange.FQuery.ToData)]);
         end;
+      ccTableQuery, ccColumnQuery:
+        begin
+          LOp := 'table-query';
+          LPolicy := NyxNull;
+
+          if LChange.FKind = ccColumnQuery then
+          begin
+            LOp := 'column-query';
+          end;
+
+          if LChange.FQueryControlsDeclared then
+          begin
+
+            if LChange.FKind = ccTableQuery then
+            begin
+              LPolicy := LChange.FTableQuery.ToData;
+            end
+            else
+            begin
+              LPolicy := LChange.FColumnQuery.ToData;
+            end;
+          end;
+
+          if LChange.FKind = ccTableQuery then
+          begin
+            LValues[LIndex] := NyxObject([NyxField('op', NyxData(LOp)),
+              NyxField('owner', NyxData(LChange.FOwner.ID)),
+              NyxField('key', NyxData(LChange.FKey.Name)),
+              NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+              NyxField('policy', LPolicy)]);
+          end
+          else
+          begin
+            LValues[LIndex] := NyxObject([NyxField('op', NyxData(LOp)),
+              NyxField('owner', NyxData(LChange.FOwner.ID)),
+              NyxField('key', NyxData(LChange.FKey.Name)),
+              NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+              NyxField('field', NyxData(LChange.FField.Name)),
+              NyxField('kind', NyxData(NyxStateKindName(LChange.FField.Kind))),
+              NyxField('policy', LPolicy)]);
+          end;
+        end;
     end;
   end;
   Result := NyxArray(LValues);
@@ -1432,6 +1590,52 @@ begin
         NyxCollection(LData.Field('key').AsText),
         ReadProjection(LData.Field('projection')),
         TNyxCollectionQuery.FromData(LData.Field('query')));
+      Continue;
+    end;
+
+    if LOp = 'table-query' then
+    begin
+      Fields(LData, '|op|owner|key|projection|policy|', 5);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionTableQuery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionTableQuery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          TNyxTableQueryPolicy.FromData(LData.Field('policy')));
+      end;
+      Continue;
+    end;
+
+    if LOp = 'column-query' then
+    begin
+      Fields(LData, '|op|owner|key|projection|field|kind|policy|', 7);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionColumnQuery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          ReadField(LData.Field('field').AsText, ReadKind(LData.Field('kind'))));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionColumnQuery(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          ReadField(LData.Field('field').AsText, ReadKind(LData.Field('kind'))),
+          TNyxColumnQueryPolicy.FromData(LData.Field('policy')));
+      end;
       Continue;
     end;
     LKey := NyxCollection(LData.Field('key').AsText);

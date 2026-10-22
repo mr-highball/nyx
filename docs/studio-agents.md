@@ -2320,13 +2320,50 @@ arrays when filtering is disabled. No live predicates, selection or mounted
 session state is included. Existing column/title windows and the complete48KiB
 response limit remain; compare returned revisions between related reads.
 
-The four ordinary query-policy intents below currently require the host form's
-complete exact schema/binding `baseline`. These bounded policy reads do not
-return or reconstruct that baseline. Host-side callers can use the existing
-typed baseline API; an agent-only set/reset convenience which derives it from
-the exact-revision candidate remains an open P4B follow-up. The ordinary named
-`query` operation already derives its own baseline, but changes predicates/sorts,
-rather than table/column capability policy. Do not substitute one for the other.
+Use named `table-query` and `column-query` changes to set/reset the inspected
+command policies. Both require exact `owner`, `key`, `projection: "table"` and
+`policy`; `column-query` also requires the exact `field` and scalar `kind`.
+A complete typed policy object saves a declaration, even when equal to defaults.
+Explicit `policy: null` removes only that declaration and uses library defaults.
+It keeps an independent local binding; `inherit` separately restores inheritance.
+Omitted policy, unknown members (including `baseline`), wrong field family or a
+non-table target refuse. Saved List/Tree metadata remains readable through the
+capability queries but does not enable these table-only authoring commands.
+
+For example, after reading the table revision and its requested column:
+
+```json
+{
+  "mode": "apply",
+  "expectedRevision": 12,
+  "operationId": "restore-service-name-filter-defaults",
+  "changes": [{
+    "op": "column-query",
+    "owner": "services-table",
+    "key": "services",
+    "projection": "table",
+    "field": "name",
+    "kind": "text",
+    "policy": null
+  }]
+}
+```
+
+Each ordered candidate derives its current schema/binding baseline internally,
+then uses the same typed intent admission as Studio. Earlier bind, field,
+sizing/paging or policy edits in a group affect the next operation. Late failure
+discards the entire group; changed success produces one paired Undo step.
+Pending Pascal edits still refuse, even if draft and accepted text happen to
+match. Agents do not need a whole form or document to operate these policies.
+The older ordinary query-policy `intent` shapes remain available for host form
+callers with their exact `baseline`. Named `query` changes predicates/sorts;
+the two named policy operations configure which user commands are admitted.
+
+Pascal callers use `NyxSetCollectionTableQuery` or
+`NyxSetCollectionColumnQuery` with the existing immutable policy records and
+typed field reference. Undefined setter policies refuse. The corresponding
+`NyxUseDefaultCollectionTableQuery`/`NyxUseDefaultCollectionColumnQuery` factories
+make reset explicit; no baseline is part of their public contract.
 
 Group related policies through `nyx_collections` or a `collections` group inside
 `nyx_transaction`. For example, at the revision read from `nyx_session`:

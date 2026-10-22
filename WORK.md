@@ -4,6 +4,146 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: agent-only query policy edits qualify locally
+
+This goal turn is PROGRESS. Four typed public set/default factories and two
+closed named collection changes let an agent inspect and edit query-control
+policies without obtaining a whole form baseline. Each ordered candidate derives
+its current baseline internally, then uses ordinary ApplyCollectionIntent.
+No new query/store/codec/history owner, tool identity or binding version appears.
+Discovery keeps24 tools/13 request branches/seven binding versions and now47
+expanded change branches: ten named shapes plus37 scalar-expanded intent shapes.
+The original31 intent identities and old eight named positions remain exact.
+
+| Actual result | Evidence boundary |
+| --- | --- |
+| Full semantic journey9D6D | Native208: previous176 plus32 new checks; bounded read-to-set/default, explicit/default/null intent, all four scalar families, reusable isolation, ordered sizing/paging/schema/query preservation, grouped late refusal, exact paired history, stale/current-family/projection/column refusal and all four equal-byte pending guards. |
+| Real discovery3979 | Native128: previous115 plus13 new checks; actual catalog shapes, typed factory copies, exact null/object reset and decoder/refusal behavior. No server is constructed. |
+| Unchanged inheritance | Native14: exact mask/restorable/key/history behavior remains compatible. |
+| Products and browser tests | Both Studio mains and matching journey/inheritance browser assertions compile. No browser input, installed MCP/wire or observing deployment is established. |
+
+All three native runs have complete equal allocation/free totals, zero unfreed
+blocks and true heap/free footers. Seven accepted compilers have zero owned/21
+upstream pas2js RTL warnings. Keep the first failed native compiler separately:
+its new test called ToData on an integer-domain builder; adding only Definition
+on the expected side uses the actual public value domain. No native execution
+occurred for that failure. Reversal restores retained71C56 exactly; removing new
+marked cases then restores previousE398. The schema restoration retains9129.
+No assertion, scenario or wait was removed. Native functional success is not a
+production performance measurement.
+
+Root joins80525/62db6f (retained failure),37220/05b19f and67138/5a1943 are terminal.
+All11 actual compiler/native processes are absent. Composite556EE9FB verifies1852
+input occurrences (nine owned/1807 Pascal/13 foreign/23 extra),27 retained source
+copies, eight compiler receipts and47 referenced artifacts at final6E784F26.
+Root85AF6B41/schema2355A14C/descriptionA5F15D4D/guide82ABACB9 and tests9D6D/3979
+stay exact. Later root outcome edits are limited to these three documents.
+Independent helper evidence/outcome review precedes checkpoint. Core45->46;
+no original/P4B/P4C/browser/credit/DONE closes.
+
+Reassessment changes the next deliverable to P4C's ordinary saved application,
+not another semantic metadata variant. Keep the same query Studio consumer and
+its stages0-10/Ready60/global2400. Append actual local policy configuration,
+paired history and definition/sibling/default isolation; then use real named
+native Save/Open and independent ProjectStore.ReadProject. Native Open refuses
+unsaved changed pairs; browser export/Undo/import instead proves restoring a
+changed pair. Browser must use full Studio plus the existing managed file/editor
+exchange, not its current manually rendered Inspector. Project-file-name lies
+outside the query-editor root, and compact panel navigation must be explicit.
+Emit each width's OWN reopened accepted-project.nyxproject and exact
+nyx.fixture.table.query.studio.pas; cross-check all four files before strict
+pair admission and compilation. The SAME consumer's compiled application branch
+must exercise two independent reusable tables, actual query commands/callbacks,
+paging/hidden selection/drafts/lifetimes. Old P3 exports cannot substitute.
+Actual browser input remains a separate applicable-host gate. Existing build and
+MasterDetail Save/Open/exchange seams suffice; no new fixture program or engine
+is justified. No P4C source/compiler/host is released by this outcome.
+
+Root owns only AGENTS/WORK/task02 outcome/checkpoint; all Pascal/guide/tools are
+paused. Helper performs independent review and read-only P4C preparation. The
+equal-byte pending-summary inconsistency stays with the existing
+[semantic agent-workflow owner](TODO/NS-4_agent-workflows_01.md), separately from
+the authoritative source-file flags and guard used here. LAN remains offline;
+no host/config/MCP rollout, probe/profile, cleanup/restart or extra agent follows.
+
+### Current source scope: agent-only table and column policy edits
+
+This section and the following older checkpoints retain superseded source and
+admission history. The [qualified boundary above](#current-boundary-agent-only-query-policy-edits-qualify-locally)
+owns current readiness, paused source, actual results and the return to P4C.
+
+The narrow test repair9D6D5D73 is independently reviewed: adding only Definition
+on the expected integer-domain builder side uses its real public API. Reversing
+that occurrence recovers retained71C56 exactly; actual schema Domain.ToData and
+all predicates/scenarios/waits remain. Production/guide/tools and schema3979 are
+unchanged. Fresh freeze admits the same seven-compiler/three-native plan, while
+retaining the initial failed compiler and its audit separately.
+
+First full native compile is retained as a failure: new shared test line813
+assumes an integer-domain ToData method which the public type does not expose.
+No native execution or other compiler was attempted. Root80525 joined62db6f;
+actual compiler47688 is absent. Audit586A30AC verifies1852 current pins, nine
+retained source copies and three compiler artifacts atA04EBF07. Release only
+helper's shared test for the equivalent public-domain preservation oracle;
+keep all assertions/scenarios/waits and all production/other tests exact.
+Independent repair review and fresh freeze precede the unchanged fixed plan.
+
+Both source handoffs and private drivers now pass independent review9AEBDF06.
+Removing only marked helper additions and the intended discovery-shape changes
+recovers exact priorE398/9129 bytes; all old assertions/waits remain. Current
+helper71C56/3979 and root85AF/schema2355/descriptionA5F1/guide82AB are source-ready.
+The two drivers are literal state-path-only copies with exact3975-character
+RunOwned AST and zero parser errors. All1838 outside-owned pinned occurrences
+match. A fresh joint freeze may admit the fixed seven compilers/three native
+runs below; no reader launched before review. All source/docs/tools then pause
+through actual root joins and exact audit. Helper's next scope is read-only P4C.
+
+Read-only review also found that session/runtime pending summaries compare text
+bytes, while source-file flags retain explicit pending state even with equal
+bytes. Keep this visibility inconsistency with the existing source-authoring
+discovery owner for later clarification. It is outside this source packet;
+current policy operations must use the authoritative normal intent guard.
+
+Prior goal turn is PROGRESS: eafa767 is pushed/remote-verified; finalC565 and all
+1850 input pins remain exact, with all actual readers joined. The next P4B user
+outcome is a bounded read->set/default workflow without obtaining a full form
+baseline. New private query-policy-edits retains nine preimages/1807 Pascal/13
+foreign/21 prior extra inputs. Two narrowly copied freeze/qualification drivers
+will add two pins, requiring independent review before execution. Core45 and all
+original criteria remain open; this source release is not acceptance.
+
+Root owns AGENTS/WORK/task02/guide, existing collectionedits unit/schema include
+and only the collection tool description. Lil' Scooty owns the same shared agent
+collection tests and actual discovery program. Append two private change kinds,
+four typed set/default factories and two named closed wire shapes. Old enum
+ordinals,31 intent identities, seven binding versions and eight named branch
+positions remain stable; two new branches follow the old eight, making47 total
+expanded changes. Strict nullable policy selects default only via explicit null;
+defined default objects retain authored presence. Column operations accept a
+typed field reference and recheck its current schema plus retained column family.
+
+Each isolated ordered candidate resolves its present owner/effective spec/schema
+and derives its own baseline immediately, then uses existing ApplyCollectionIntent.
+Preceding bind/field/sizing/paging changes must be reflected; a later refusal
+discards the whole group. Keep the SourceDraftPending guard, including equal
+source/draft bytes, and existing authority/revision/no-draft/one-Undo publication.
+Default resets retain local ownership; inheritance is separate. Successful exact
+no-ops need not invent history. Saved List/Tree metadata remains readable while
+these ordinary authoring operations keep the existing table-only restriction.
+
+Helper tests may use an owned seed/setup and pair snapshots as oracles; required
+mutation inputs must come from bounded tool reads plus requested typed choices,
+never a PreviewPair-derived baseline. Mark new standalone cases/imports/call so
+the old sharedE398 is mechanically recoverable. Preserve schema9129 assertions,
+updating only intended47/two-named-shape expectations and adding strict discovery
+and real decoder/refusal coverage. Independent root/helper source/tool reviews
+and a fresh joint freeze precede the existing seven-compiler/three-native plan:
+full journey native/browser, real discovery native, unchanged inheritance native/
+browser and both Studio mains. No focused-only substitute, new fixture program, export,
+host or browser runtime. All source/docs/tools pause until every actual handle
+is terminal/joined and exact audits pass. Return remains complete P4B agreement,
+then P4C's OWN ordinary Studio Save/Open/generated two-view application proof.
+
 ### Current boundary: bounded policy inspection qualifies locally
 
 This turn is PROGRESS. Existing bindings/column modes now expose opt-in strict
