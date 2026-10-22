@@ -1,5 +1,68 @@
 # Working in Nyx
 
+QUERY AUTHORING P4A NATIVE-LOCAL QUALIFIED (2026-10-22): capture27453 is terminal/
+root joinedba1c45 exit0. Immutable0941A8F3 and independent root/helper review
+verify13owned/1807Pascal/foreign13/extra9 exact, including all retained source.
+Actual1280/390 complete266/267 checks, all11 stages/original waits/predicates,
+normal exits/no timeout and complete OWN final heaps with zero unfreed blocks.
+These are two NEW executions of pinned150C41CD, not repaired historical partial
+footers. Current7631 reverses two PAS2JS-only names to EE1C exactly; native input
+is unchanged. Reuse six accepted compilers/zero owned21 upstream warnings and
+focused180 clean at their exact boundaries. No compiler or browser execution
+occurred in capture. Retain initial focused/browser failures, warnings and old
+partial reports; null/empty trace environment values remain recorded distinctly.
+This qualifies ONLY native-local policy input/history/teardown. Browser input,
+P4B events/semantic/source agreement, P4C OWN Save/Open/compiled companion,
+performance and original criteria remain open. Core36 advances37 without credit/
+DONE. Root owns outcome docs/checkpoint only; ALL Pascal/tools stay paused until
+a separate P4B source release after checkpoint. Next P4B uses shared typed allowed
+policies, exact Before/Changed discovery, typed source factories and atomic
+Policy-before-Add with exact pending locks/receipt/TODO handling on both routes.
+Preserve existing runtime Before sequential guard; no second query/event engine.
+Maintained-runner final-heap integration stays with existing delivery/CI owner;
+private capture proof is not that public tooling fix. Preserve foreign13/offline
+LAN/no native Nyx tools, pending browser approval and no host/config/MCP/worker
+rollout, cleanup/restart or extra agent. WORK/private records own exact return.
+
+QUERY AUTHORING BROWSER REPAIRED / HEAP-CAPTURE TOOL RELEASE (2026-10-21): single
+browser compiler is terminal/root joined2f46f7 exit0. Immutable8CF7F4B7 verifies
+13owned/1807Pascal/foreign13/extra8 exact. Two browser-only name changes recover
+EE1C exactly; current7631 passes with zero owned/seven upstream warnings. Reuse
+five earlier accepted compilers for composite6/21 upstream; no native replay or
+browser execution occurred. Original failures and both partial heaps remain.
+Root now owns ONLY one capture-only mode in existing private qualifier plus
+related private pins/handoff/WORK/outcome docs; maintained build and ALL Pascal
+stay exact. Existing helper reviews before fresh freeze. Pin existing150C41CD
+executable as extra9; admit ZERO compilers/TWO sequential native executions at
+1280/390, original2args/1800s/60s/2400/assertions. Capture HEAPTRC log= to distinct
+fresh absolute ASCII/no-space <=255byte files OUTSIDE fresh fixture directories.
+Require no preexisting HEAPTRC options; scope/restore environment immediately
+around each owned launch, preserving all unrelated settings. Retain raw streams,
+exact process/environment/heap receipts and complete final reports; stop first
+failure, root joins/audits before edits. Expected actual266/267, no early dump,
+disabled tracing, compiler, native fixture variant or old-footer repair. All
+Pascal/guides/tools pause through readers. This capture scope is not browser-host
+authority or performance acceptance. Core36/P4A/B/C/original criteria stay open.
+Preserve foreign13, offline LAN/no native Nyx tools, no host/config/MCP/worker
+rollout, cleanup/restart or extra agent. WORK/private records own exact scope.
+
+QUERY AUTHORING BROWSER CALLBACK SOURCE RELEASE (2026-10-21): previous9db123b
+is progress, committed/pushed/remote-verified. All actual readers are joined;
+1807Pascal/foreign13/extra8 and native executable150C41CD are exact. Root owns
+ONLY browser-only fixture Closed declaration and pagehide reference: rename both
+to QueryStudioPageClosed, preserving body/signature/event/cleanup and all native
+preprocessed tokens. Root also owns this handoff/WORK/outcome docs. Existing
+helper independently reviews these two substitutions read-only before a fresh
+freeze. Admit ONE matching browser compiler with the existing maintained flags
+and matched RTL, fresh output and exact receipt; no native compile/run or product
+source repair. Reuse five accepted compilers and actual266/267 functional results
+at their explicit source boundaries. Retain first browser failure and incomplete
+full heaps. Stop at first failure or compile result; root joins/audits all actual
+handles before edits. All Pascal/guides pause through that reader. Heap-capture
+tool changes/runs remain a separate future scope. P4A/B/C and all original gates
+stay open, core36 carries. No host/browser execution/LAN/config/MCP/worker rollout,
+cleanup/restart or extra agent follows. WORK/private records own exact evidence.
+
 QUERY AUTHORING P4A FUNCTIONAL RESULT / BROWSER FAILURE (2026-10-21): full25443
 is terminal/root joined7ee916 exit1. Immutable95B25BDD verifies13owned/1807Pascal/
 foreign13/extra8 exact and every actual reader joined. Repaired focused180 has

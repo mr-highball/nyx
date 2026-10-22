@@ -1112,7 +1112,7 @@ begin
 end;
 
 {$ifdef PAS2JS}
-function Closed(AEvent: TJSEvent): Boolean;
+function QueryStudioPageClosed(AEvent: TJSEvent): Boolean;
 begin
   FreeAndNil(GReview);
   Result := True;
@@ -1147,7 +1147,7 @@ begin
     Trace('admission-cases:after');
     GReview := TReview.Create;
     {$ifdef PAS2JS}
-    window.addEventListener('pagehide', @Closed);
+    window.addEventListener('pagehide', @QueryStudioPageClosed);
     Drive;
     {$else}
     while GReview <> nil do

@@ -4,6 +4,123 @@
 
 ## Table query policy authoring — 2026-10-21
 
+### Current native-local qualification — 2026-10-22
+
+The final capture reader27453 is terminal/root joinedba1c45, exit0. Immutable
+audit0941A8F33853691F600E986FA0B815A8C7AAB93585E6BC79CC8D357AA72F9952 and
+independent root/helper review verify13owned/1807Pascal/foreign13/extra9 exact,
+including every retained source input. No owned child remains live. Both actual
+client widths complete all11 stages and original assertions/deadlines:
+
+| Actual client width | Checks | Final allocated = freed blocks | Final allocated = freed bytes | Result |
+| --- | --- | --- | --- | --- |
+|1280|266|434,534,749|51,562,793,072|Normal exit0; no timeout; complete heap, zero unfreed|
+|390|267|347,252,451|35,204,021,011|Normal exit0; no timeout; complete heap, zero unfreed|
+
+This is the ordinary native Studio query-policy/history journey: table and all
+four scalar column families, valid/invalid drafts through hide/reopen, deliberate
+defaults versus inheritance, unrelated title/scope preservation, reusable pair
+isolation and20 paired Undo/Redo actions. No assertion, fixture, operation wait
+or poll ceiling changed. Captured final heap/free footers follow application
+teardown. Both raw stderr files are empty because HeapTrc owns separate logs.
+
+These are NEW executions of the exact150C41CD native executable. Earlier partial
+256byte reports and all failures remain immutable. Current7631ABF0 differs from
+the compiled EE1CEAA1 fixture only by two PAS2JS-only callback identifiers;
+reversing them recovers EE1C byte for byte. Native preprocessed input is unchanged.
+Capture performs zero compilers. Explicit reuse supplies six accepted compilers
+with zero owned/21 upstream warning occurrences and focused180 with a complete
+clean heap. The original focused warning/failure and failed browser compiler stay
+separate. The repaired matching browser consumer compiles only; it executes no
+browser Studio or input. Trace environment null/empty values remain distinct in
+receipts; both mean no options, without a byte-identical restoration claim.
+
+This independently reviewed result qualifies native-local policy input/history/
+teardown only. Original task02 criteria and credit, full P4A/browser behavior,
+P4B/C, parent/parity and performance remain open; no task moves to DONE. This
+completed native packet advances core no-closure36 to37 once. Checked native
+refreshes still take tens of seconds, so no release-performance claim follows.
+
+The final-report buffering gap also remains a public tooling limitation: the
+maintained query-authoring runner still redirects stderr to disk. Its installed
+RTL can emit only a256byte partial final report there. Current qualification uses
+the reviewed/pinned private capture-only mode. Integrating fresh per-width owned
+HeapTrc files and complete-report validation into the maintained runner belongs
+to the existing [delivery/CI owner](TODO/NS-6_delivery_01.md). This note maps the
+existing CI evidence requirement; it does not claim that public tooling fix or
+add credit, another runtime variant or a rollout.
+
+Root owns outcome docs/checkpoint only; all Pascal/tools remain paused until
+the next separate source release. Return to P4B's shared allowed-policy metadata,
+exact native Before/Changed discovery, bounded semantic reads and typed source
+factory/import agreement. Runtime already requires sequential Before callbacks;
+preserve that defense while moving invalid-policy refusal into authoring.
+An absent stream with a chosen non-sequential allowed policy needs one ordered
+Policy-before-Add candidate, exact pending-event locks, strict existing
+AddedHandler receipt admission and TODO navigation on both async/sync routes.
+Generic multi-add semantics, request17/reply2 and old interface GUIDs stay intact.
+Then P4C must prove its OWN real Save/Open and strictly admitted compiled pair.
+Browser-host approval remains pending. No host/browser execution/LAN/config/MCP/
+worker rollout, cleanup/restart or extra agent follows from this qualification.
+
+### Matching browser repaired; separate final-heap capture scope
+
+The single matching browser compiler is terminal/root joined2f46f7, exit0.
+Immutable audit8CF7F4B768E3218A3773A9DF64F244A93850EDA28FA4E99C793DC544B4D35A67
+verifies13owned/1807Pascal/foreign13/extra8 exact. Repaired7631ABF0 has only two
+browser-only callback identifiers changed; reversal recovers EE1C byte for byte.
+Native preprocessed tokens, executable and earlier266/267 functional results
+remain unchanged. The new compiler has zero owned/seven upstream warnings;
+explicit reuse of the earlier five gives six accepted/21 upstream occurrences.
+Keep the original failed browser compile separate. No browser execution or full
+native teardown qualification is asserted; core36 and all original gates carry.
+
+Root separately releases a capture-only mode in the existing private qualifier,
+related private pins and outcome docs. ALL Pascal and maintained build stay
+exact. Existing helper independently reviews this tool source before a new
+freeze. Add the existing150C41CD executable as the ninth extra pin and admit
+zero compilers, two sequential native executions at1280/390. Each uses the same
+original two arguments, fresh evidence directory and original1800s/60s/2400
+bounds. Require actual266/267 and complete final heap reports, not an early dump.
+
+The only intended capture difference is `HEAPTRC=log=<fresh absolute path>` in
+each child's launch environment. Refuse preexisting tracing options instead of
+silently changing their meaning. Restore the qualifier's inherited setting
+immediately after launch, even on launch failure. Use distinct ASCII/no-space
+paths at most255bytes outside the fixture directories, which remain nonexistent
+until the application creates them. Keep raw stdout/stderr, exact executable/
+arguments/environment/process receipts and owned direct-file heap reports.
+Missing/fallback/incomplete reports or nonzero exit stop the packet and remain
+unqualified. No native compiler or compatibility replay is part of this scope.
+
+Root owns every actual handle/join/audit. All Pascal/guides/tools pause through
+readers; stop at the first failure or both final results before edits. Prior
+partial footers remain immutable, and fresh outcomes are labeled new executions.
+This is final teardown evidence, not a release-performance claim. P4A/B/C and
+all original criteria remain open; no host/browser/LAN/config/MCP/worker rollout,
+cleanup/restart or extra agent follows.
+
+### Browser-only callback repair: separate source release
+
+Previous9db123b is progress, committed/pushed/remote-verified. Actual readers are
+joined; all1807Pascal/foreign13/extra8 and the150C41CD native executable remain
+exact. Root releases only the browser fixture's `Closed` declaration and
+`pagehide` callback reference, renaming both to `QueryStudioPageClosed`. Its
+signature/body/cleanup/event and the entire native preprocessed branch remain
+unchanged. Existing helper independently reviews the two substitutions, then
+root freezes all inputs before one matching browser compiler. Use the existing
+maintained flags and matched RTL with a fresh output/receipt. No compiler probe,
+native recompile or input replay follows from this browser-only identifier fix.
+
+Stop at its first failure or compilation result; preserve the original failed
+EE1CEAA1/log and partial heaps. Root joins/audits before any further edit. Reuse
+the five accepted compilers and266/267 native functional results explicitly;
+neither their source boundary nor missing heap evidence changes retroactively.
+Heap-capture tool changes and same-executable native reruns need their separate
+reviewed release after this result. P4A/B/C and original criteria/credit/DONE stay
+open; core36 carries. No host, actual browser input, LAN/config/MCP/worker rollout,
+cleanup/restart or extra agent follows.
+
 ### Current result: native input passes; browser and heap evidence remain open
 
 Root joined the final full wrapper25443 at7ee916, exit1 after its browser

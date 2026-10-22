@@ -628,16 +628,19 @@ It exits itself before its1800s outer cap. Retain all attempts and the truncated
 heap footer without a complete clean-heap or overall passing claim. Queue126
 compatibility remains at its original source boundary.
 
-The narrow pending-presentation repair subsequently passes180 focused checks
-with a complete clean heap. The unchanged full actual Studio journey passes266
-desktop1280 and267 compact390 checks with all11 stages, original assertions and
-deadlines intact. Both full heap reports truncate at256bytes, so this does not
-yet qualify native teardown. Matching browser compilation then fails on the
-fixture callback name `Closed` colliding with an imported browser enum. Retain
-both failures and partial reports. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
-records the exact source boundary and separate browser-name/capture-only next
-steps. Complete P4A, actual browser input, P4B and P4C remain open; these checked
-functional results do not establish release performance.
+The narrow pending-presentation repair passes180 focused checks with a complete
+clean heap. The actual native Studio journey is now locally qualified at1280/
+390:266/267 checks, all11 stages, original assertions and deadlines, normal exits
+and complete own zero-unfreed final heap reports. Those fresh executions reuse
+the pinned executable; they do not repair its older truncated256byte reports.
+The browser-only callback-name collision is also repaired, and the matching
+consumer compiles with zero owned warnings. No browser input is executed.
+[WORK](../WORK.md#table-query-policy-authoring--2026-10-21) retains all failures,
+source equivalence, compiler reuse and the final capture evidence. Public runner
+final-heap integration remains a delivery/CI item; current proof uses the reviewed
+private capture mode. Full P4A/browser behavior, P4B event/semantic/source agreement
+and P4C OWN Save/Open/compiled proof remain required. These checked functional
+results do not establish release performance.
 
 `-QueryAuthoringProfile` adds only the existing Pascal phase/layout clocks and
 counters to the native checked build. Combine it with `-QueryAuthoringDiagnostic`

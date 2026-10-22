@@ -173,6 +173,20 @@ single-browser-compiler scope and subsequent unchanged-executable heap capture.
 No new source/tool/runtime is released by this result; no browser execution is
 asserted. P4B/C and all seven criteria stay required.
 
+Native-local P4A authoring is now independently qualified in WORK's2026-10-22
+result. Audit0941A8F3 verifies13owned/1807Pascal/foreign13/extra9 exact and every
+actual reader joined. Two NEW same-executable runs complete266/267 actual1280/
+390 checks with complete own zero-unfreed final heap reports; original11 stages,
+assertions,60s/2400/1800s bounds stay exact. Browser-only callback rename7631
+recovers oldEE1C exactly, preserving native input. Matching browser compilation
+passes; explicit compiler reuse gives six accepted/zero owned21 upstream warning
+occurrences. Original failures and partial reports remain retained, not repaired.
+Core36 advances37 without original criterion/credit/DONE. This is native-local
+input/history/teardown, not actual browser or release-performance acceptance.
+P4B/C and every original criterion stay open; no new source/tool/host is released.
+The return is shared event/policy/source agreement, then OWN Save/Open/compiled
+proof. Public runner final-heap integration retains its existing delivery owner.
+
 | Packet | User-visible result and evidence | Preserve / remains required |
 | --- | --- | --- |
 | P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |

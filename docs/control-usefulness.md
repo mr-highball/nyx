@@ -35,18 +35,18 @@ The user's process/service-debugger report is covered by these existing owners:
 
 | User outcome | Backlog owner and current boundary |
 | --- | --- |
-| Find records with column filters, numeric sorting, visible criteria and reset | [Column queries02](../TODO/NS-3_control-usefulness_02.md): P3 passes782 actual native checks at each1280/390 with clean heaps. Matching browser assertions compile only. Full Studio policy/event/history/Save/Open/generated and actual browser interaction remain open. |
+| Find records with column filters, numeric sorting, visible criteria and reset | [Column queries02](../TODO/NS-3_control-usefulness_02.md): separate native-local results cover P3 workbench782/782 and P4A Studio policy/history266/267, with clean heaps at their own source boundaries. Browser assertions compile only. Events/semantic/source agreement, OWN Save/Open/generated and actual browser interaction remain open. |
 | Arrange columns, inspect long values and copy/export useful selections | [Table workbench03](../TODO/NS-3_control-usefulness_03.md): W1 owns resize/choose/reorder/hide/pin/reset; W2 owns full-value/cell actions, copy/export and preference lifetime. Both remain open. |
 | Keep context while services/logs change and recognize paused/failed/empty states | [Live inspection04](../TODO/NS-3_control-usefulness_04.md): L1 owns follow/pause, context and recovery; L2 owns measured mounted responsiveness. Both remain open. |
 | Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/NS-3_control-usefulness_05.md): retains declared policies without adding a lane filter UI. Open. |
 
-Task02 retains its first full P4A native60s Ready failure. After the narrow
-pending-presentation repair, the unchanged actual Studio journey passes266
-desktop/267 compact checks. Both full heap reports are incomplete, and matching
-browser compilation fails on a fixture callback-name collision. [The current
-work record](../WORK.md#table-query-policy-authoring--2026-10-21) separates those
-outcomes from P3's native result. Complete authoring/browser/product acceptance
-and release-performance validation remain open.
+Task02 retains its first full P4A native60s Ready failure and old partial heaps.
+After the narrow pending-presentation repair, two fresh same-executable runs now
+qualify266 desktop/267 compact authoring/history checks with complete zero-unfreed
+heaps. The browser-only callback collision is repaired and matching compilation
+passes. [The current work record](../WORK.md#table-query-policy-authoring--2026-10-21)
+keeps the source/reuse boundaries explicit. Complete authoring/browser/product
+acceptance and release-performance validation remain open.
 
 The remaining control families keep the concrete owners and finish lines in
 [Priorities](#priorities-public-examples-and-finish-lines), including forms,
