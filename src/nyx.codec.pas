@@ -96,6 +96,12 @@ type
   TNyxCodec = class
   public
     class function Encode(ADocument: TNyxDocument): TNyxText; static;
+    { Pure projection-comparison data from a fully exported and admitted design.
+      The complete design still passes export validation and both raw/formatted
+      UTF-8 read budgets before framing and unused typed definitions are omitted.
+      Retained opaque values, order and exact numbers keep their export meaning.
+      No document, source, rendered projection or parsed tree survives the call. }
+    class function ProjectionContext(ADocument: TNyxDocument): TNyxText; static;
     class function Decode(const ASource: TNyxText): TNyxDocument; static;
     { Independent current-format node/subtree snapshot, including known typed
       metadata and extensions. Borrows no node after return. This is exact
@@ -109,6 +115,12 @@ uses
   nyx.json,
   nyx.resources.rows,
   nyx.collections.codec;
+
+type
+  { One attempt-local writer owns complete export admission for both results.
+    Context extraction starts only after that admission; it is not a reduced
+    document export or a replacement for any node/version validation. }
+  TNyxEncodingPurpose = (nepDocument, nepProjectionContext);
 
 procedure WriteExtensions(AExtensions: TNyxExtensions; AObject: TJSONObject);
 var
@@ -395,7 +407,105 @@ begin
   end;
 end;
 
-class function TNyxCodec.Encode(ADocument: TNyxDocument): TNyxText;
+procedure RequireProjectionContextReadBudget(const ACanonical: TNyxText);
+var
+  LReadBudget: Boolean;
+  {$ifdef PAS2JS}
+  LIndex: Integer;
+  LScalar: Integer;
+  LBytes: Integer;
+  {$endif}
+begin
+  { Match TNyxDataValue.ParseJSON followed by Count, including its separate
+    formatted UTF-8 read budget. Formatting can expand a fully admitted design;
+    omitted pages/components must not let that former refusal disappear. Native
+    TNyxText units are already UTF-8 bytes. Keep the browser ASCII/scalar path and
+    diagnostics identical to nyx.data's snapshot read boundary. }
+  LReadBudget := Length(ACanonical) <= NyxMaximumJSONBytes;
+  {$ifdef PAS2JS}
+  LIndex := 1;
+  LBytes := 0;
+  while LReadBudget and (LIndex <= Length(ACanonical)) do
+  begin
+
+    if Ord(ACanonical[LIndex]) <= $7f then
+    begin
+      Inc(LIndex);
+      Inc(LBytes);
+    end
+    else
+    begin
+
+      if not NyxNextScalar(ACanonical, LIndex, LScalar) then
+      begin
+        raise ENyxJSON.Create('Snapshot formatter emitted malformed Unicode');
+      end;
+
+      if LScalar <= $7ff then
+      begin
+        Inc(LBytes, 2);
+      end
+      else if LScalar <= $ffff then
+      begin
+        Inc(LBytes, 3);
+      end
+      else
+      begin
+        Inc(LBytes, 4);
+      end;
+    end;
+    LReadBudget := LBytes <= NyxMaximumJSONBytes;
+  end;
+  {$endif}
+
+  if not LReadBudget then
+  begin
+    raise ENyxJSON.Create('JSON exceeds 4 MiB formatted UTF-8 read budget');
+  end;
+end;
+
+function ProjectionContextFromAdmitted(ADocument: TNyxDocument;
+  AAdmitted: TJSONData): TNyxText;
+var
+  LObject: TJSONObject;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+  LKey: TNyxText;
+begin
+  { This DOM belongs to the complete export's DecodeNyxJSON, not a new reduced
+    admission. Reuse its exact canonical formatter before touching members; only
+    retained values need a closed TNyxDataValue and its immediate-member index. }
+  RequireProjectionContextReadBudget(AAdmitted.AsJSON);
+  LObject := TJSONObject(AAdmitted);
+  SetLength(LFields, LObject.Count);
+  LCount := 0;
+  for LIndex := 0 to LObject.Count - 1 do
+  begin
+    LKey := LObject.Names[LIndex];
+
+    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
+      (LKey = 'version') or
+      ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
+      ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
+      not ADocument.Extensions.Has(NyxExtension('collections'))) then
+    begin
+      Continue;
+    end;
+    { Preserve the former context predicate and insertion order exactly. Empty
+      typed presentations emitted by another version branch and older opaque
+      presentations/collections are retained under the same rules as before.
+      Parse admitted formatter text rather than converting numbers or strings. }
+    LFields[LCount] := NyxField(LKey,
+      TNyxDataValue.ParseJSON(LObject.Items[LIndex].AsJSON));
+    Inc(LCount);
+  end;
+  SetLength(LFields, LCount);
+  Result := NyxObject(LFields).ToJSON;
+end;
+
+function EncodeDocument(ADocument: TNyxDocument;
+  APurpose: TNyxEncodingPurpose): TNyxText;
 var
   LRoot: TJSONObject;
   LPages: TJSONArray;
@@ -637,10 +747,28 @@ begin
       Individually admitted payloads may exceed bytes/depth when combined with
       pages or other fields. This runs before Studio history/publication too. }
     LAdmitted := DecodeNyxJSON(Result);
-    LAdmitted.Free;
+    try
+
+      if APurpose = nepProjectionContext then
+      begin
+        Result := ProjectionContextFromAdmitted(ADocument, LAdmitted);
+      end;
+    finally
+      LAdmitted.Free;
+    end;
   finally
     LRoot.Free;
   end;
+end;
+
+class function TNyxCodec.Encode(ADocument: TNyxDocument): TNyxText;
+begin
+  Result := EncodeDocument(ADocument, nepDocument);
+end;
+
+class function TNyxCodec.ProjectionContext(ADocument: TNyxDocument): TNyxText;
+begin
+  Result := EncodeDocument(ADocument, nepProjectionContext);
 end;
 
 function RequireField(AObject: TJSONObject; const AName: TNyxText;

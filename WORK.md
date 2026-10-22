@@ -4,6 +4,110 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: context compatibility passes; selection remains slow
+
+Codec5F018928/wrapper7A2C057C/consumerFDEF31BA pass174 actual native projection
+checks (original144+30), complete clean791096blocks/120439764bytes and zero
+warnings. Matching browser compilation passes; seven upstream RTL warnings stay
+retained, zero owned warnings. Root joins78764/59ffb2 and9c6262 own that result.
+The original writer and context oracle remain mechanically byte-exact at their
+reviewed boundaries; all original projection cases/windows/waits are preserved.
+
+The fixed unchanged unprofiled controls journey then fails the SAME
+Select/second-search/check67 Ready30: one41281ms Pump/two completed paints,
+SourceBusy=False/PresentationPending=False/stateApplied/selectedsecond-search/
+client1100/no observer error. Its first three interaction phases pass, but the
+complete reusable/restricted-policy/lifetime journey does not. Compiler succeeds
+without warnings; native exits1 (not outer timeout), with a complete clean heap:
+150789178blocks/27562181747bytes equal and zero unfreed. Root joined41400/15cef6;
+compiler41260/runtime47876 are absent. No matched release speedup is claimed;
+the redundant parse removal is insufficient to meet the actual deadline.
+
+Audit48CFFCDB verifies all29owned/1807Pascal/foreign13/extra19 inputs exact since
+freeze93301951, three receipt pins and twenty-two compiler/runtime artifact pins.
+There are three successful compilers, one passing native and one failed native.
+Remaining SIXTEEN compilers are unattempted under the first-failure stop rule.
+Prior compatibility/recovery evidence stays at its own exact source boundary;
+it is not relabeled as current-codec execution. Core no-closure37→38, with no
+original criterion/task/credit/DONE closure and all P4B/P4C/browser gates open.
+
+Root owns documentation/checkpoint only; source/tools stay paused. An initially
+considered proposal (SUPERSEDED by applicability review below) was a conservative
+negative source-membership path in the
+Studio section owner, before an already-required fresh section publication. A
+closed proof must inspect BOTH entire plain primitive source trees and their
+exact global IDs; count/order alone cannot predict realization. Same-membership
+rearrangements stay on existing retained paths; component/recipe/override/content
+or other structural contexts fall back to ordinary processing. Keep readiness,
+draft capture/rollback, Chrome fallback and complete new Prepare admission.
+Actual Inspector eligibility/savings were unproven. No new source/reader/
+profiling/fixture/host/tool rollout is authorized by the read-only proposal.
+
+Independent review passes audit48CFFCDB and all twenty-two artifact/three receipt
+pins. It also resolves the proposed shortcut's applicability against the real
+callgraph: both selected Search instances are reusable component references.
+BuildNyxStudioView adds PartsEditor and a Disclosure recipe before the Events
+branch, so their complete Inspector role is not an all-primitive tree. Do not
+implement that inapplicable predicate or broaden it by assuming ProjectionKind
+alone proves an arbitrary recipe's identity. The next read-only prerequisite is
+the actual compound/recipe expansion and source-to-runtime identity ownership,
+before a separately reviewed broader proof or implementation. This changes the
+next action; it does not admit another timing/source/fixture variant or close an
+original criterion. Root owns only documentation/checkpoint at this boundary.
+
+### Retained context source release and admission
+
+The previous goal turn is progress: qualified lawful section recovery40 and
+current paint attribution are checkpointed at bff012b, pushed/remote-verified.
+All actual readers are joined. Original controls Ready30/P4B and core37 remain
+open. Reassessment rejects speculative transfer of a rejected refresh candidate:
+its live selection/resource/binding/measurement context differs from fresh Render.
+No renderer-preparation capsule or new section/publication ABI is implemented.
+
+The next concrete source deliverable stays with the existing performance owner:
+reuse Encode's already fully admitted DOM when constructing the exact immutable
+projection context. The current path performs another complete Decode/AsJSON/index
+through TNyxDataValue.ParseJSON before discarding title/pages/components/version.
+This source-proven duplicate can be removed without persistent caching or sharing
+runtime projections. Every full export still constructs all nodes and selects its
+wire version, serializes, then checks complete byte/depth/member/Unicode/duplicate/
+finite-number admission. The whole canonical formatted UTF-8 read budget remains
+required before filtering, with the old message. Retained field ordering, exact
+numbers/strings and typed-versus-opaque presentation/collection behavior stay exact.
+
+The existing helper owns only codec.pas's private typed writer purpose and pure
+ProjectionContext bridge. Root owns the existing projection.refresh wrapper,
+additive frozen-old-oracle cases in the existing projection-refresh consumer,
+the performance task and existing private qualification orchestration. Retain
+all preimages; other1804 Pascal/foreign13 and both renderers stay exact. All
+original test cases/predicates/waits/windows remain; the actual controls545FB593
+is unchanged. No compiler until both scopes/tools are independently reviewed and
+frozen. Source duplication justifies this edit; timings do not prove its savings.
+
+Qualification is fixed: projection native/browser first, then ONE unchanged
+unprofiled controls-native gate at Ready30/outer600. Stop first failure and retain
+it; do not adjust a wait or add another source/profiling variant. If that gate
+passes, complete seven paired consumer scopes (view sections, Studio sections,
+callbacks, queue, source diagnostics, semantic, editing) and both Studio mains:
+nineteen compilers/nine native outcomes in total. The seven paired scopes are
+the retained compatibility plan, not extra credit. All native arguments/default
+windows and direct final clean-heap capture remain exact. Matching browser checks
+compile only; no host/config/MCP/worker rollout or new profile is authorized.
+
+Both source lanes and private tools pass independent root/helper review:
+codec5F018928, wrapper7A2C057C and consumerFDEF31BA; freezeB0E85DA3 and
+qualifier97944AB2. Root mechanically recovers the original8058-character writer,
+old context oracle and every original projection-consumer byte without newline
+normalization. Thirty new checks remain additive. Helper caught a pre-freeze
+depth fixture error (container depths, not scalar depths, own the limit);268
+arrays now place the exported last container at271. No compiler/runtime failure
+was produced by that review correction. Whole formatted-budget logic and field
+predicate match the original owners; extra imports only name actual declarations.
+All other1804 Pascal/foreign13/extra19 match. Root may jointly freeze29/1807/13/19
+and admit the fixed sequence. All source/docs/tools pause until actual reader
+joins/exact audit; first failure ends this qualification. Performance remains
+unproven until the unchanged full controls journey returns.
+
 ### Current result and lawful section recovery correction
 
 The lawful correction is now qualified and independently reviewed: consumer

@@ -108,13 +108,15 @@ function RefreshNyxBoundProjectionArrangement(AExisting, ACandidate: TNyxNode;
   except title/pages/components remain significant, including defaults, tokens,
   collection registries and creator extension data. Requested-root realization
   separately checks structure and every node. Unrelated authored roots may
-  change only when the requested realized view retains identical semantics. }
+  change only when the requested realized view retains identical semantics.
+  The codec reuses its fully admitted temporary JSON tree for this projection;
+  no excluded source tree is decoded/indexed a second time or retained here. }
 function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;
 
 implementation
 
 uses
-  nyx.codec, nyx.data, nyx.presentations, nyx.text.index;
+  nyx.codec, nyx.presentations, nyx.text.index;
 
 type
   { Only the explicit coordinator boundary admits unchanged bindings. }
@@ -656,36 +658,8 @@ begin
 end;
 
 function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;
-var
-  LData: TNyxDataValue;
-  LFields: array of TNyxDataField;
-  LIndex: Integer;
-  LCount: Integer;
-  LKey: TNyxText;
 begin
-  LData := TNyxDataValue.ParseJSON(TNyxCodec.Encode(ADocument));
-  SetLength(LFields, LData.Count);
-  LCount := 0;
-  for LIndex := 0 to LData.Count - 1 do
-  begin
-    LKey := LData.Key(LIndex);
-
-    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
-      (LKey = 'version') or
-      ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
-      ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
-      not ADocument.Extensions.Has(NyxExtension('collections'))) then
-    begin
-      Continue;
-    end;
-    { Wire version is framing, not runtime meaning. Named definitions are
-      checked per referenced property by retained projection admission; unused
-      definitions cannot disturb live controls. Older opaque data stays exact. }
-    LFields[LCount] := NyxField(LKey, LData.Field(LKey));
-    Inc(LCount);
-  end;
-  SetLength(LFields, LCount);
-  Result := NyxObject(LFields).ToJSON;
+  Result := TNyxCodec.ProjectionContext(ADocument);
 end;
 
 end.

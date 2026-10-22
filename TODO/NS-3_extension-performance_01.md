@@ -2,6 +2,24 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The 2026-10-22 source-context cleanup passes174 actual native projection checks
+and matching browser compilation, preserving exact bytes and complete export/
+formatted-read refusals. It reuses the codec's already fully admitted DOM instead
+of decoding/indexing the full design again before dropping pages/components.
+The unchanged native Inspector journey STILL fails Ready30 at the same selection:
+41.281s, two paints, first three phases only. Both native heaps are complete/clean;
+three compilers have zero owned warnings. This is compatibility evidence, not a
+latency fix or original performance acceptance. Sixteen later compilers never
+ran. See the [current boundary](../WORK.md#current-boundary-context-compatibility-passes-selection-remains-slow).
+Read-only reassessment examines whether the existing Studio section owner can
+prove an exact plain-primitive membership change before attempting retained reuse;
+counts/order alone are insufficient, all fresh admission/rollback remains required
+and the actual Inspector includes a Disclosure recipe, so the primitive-only
+proposal is inapplicable. Read-only review must follow real compound/recipe
+expansion and identity ownership before any broader source proof. No implementation
+scope, new timing variant, performance credit or task acceptance follows from
+that design.
+
 Current-source [indexed immutable routing](../docs/diagrams.md) gives each graph
 independent exact-name maps and shares routes within one projection. Ordered
 arrays, collision/case/namespace semantics, retirement, canonical admission and

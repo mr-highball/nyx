@@ -1,5 +1,94 @@
 # Working in Nyx
 
+CONTEXT COMPATIBILITY QUALIFIED / NATIVE LATENCY OPEN (2026-10-22): all three
+actual readers are root-joined. Codec5F018928/wrapper7A2C057C/consumerFDEF31BA
+pass174 native projection checks (old144+30), complete clean791096blocks/
+120439764bytes; matching browser compiles only. Three compilers have zero owned/
+seven upstream RTL warnings. Original controls545FB593 still fails SAME
+Select/second-search/check67 Ready30: one41281ms Pump/two completed paints,
+both busyFalse/stateApplied/client1100/no observer error. Its failed heap is
+complete/clean150789178blocks/27562181747bytes. This source cleanup is not a
+latency fix; no release speedup or full P4B acceptance follows.
+
+Root joined78764/59ffb2, browser9c6262 and41400/15cef6. Audit48CFFCDB verifies
+29owned/1807Pascal/foreign13/extra19, all three receipt/twenty-two artifact pins,
+and exact inputs since freeze93301951. Remaining SIXTEEN compilers did not run.
+Keep every previous source/receipt/failure and supported recovery40 evidence at
+its own source boundary. Core no-closure37→38; original criteria/credit stay open.
+Root owns docs/checkpoint only; all Pascal/tools remain paused. Existing helper
+independently reviews outcomes and read-only existing-owner next design.
+
+Initially considered (SUPERSEDED by applicability review below): a narrow negative
+source-membership check before a doomed retained attempt in the Studio section
+owner. It would require proof that BOTH complete accepted/new
+role sources are plain primitive trees and exact GLOBAL ID membership differs;
+counts/order/primitive lookup alone do not prove realization. Recipes, references,
+overrides, responsive content/custom structural contexts remain ordinary paths.
+Same membership must retain ordinary arrangement. Preserve all readiness/draft
+capture/recovery, current Chrome fallback and FULL fresh Prepare admission/group
+rollback. Actual Inspector eligibility and sufficient savings were unproven;
+no implementation/extra reader/profile/fixture follows from this design. No
+host/config/MCP/worker rollout, cleanup/restart or extra agent. WORK/private
+state retain the complete original/P4B/P4C/browser/performance return path.
+
+Independent boundary review passes audit48CFFCDB and all22 artifact/three receipt
+pins; only the three outcome documents changed after join. Applicability review
+REJECTS the proposed primitive-only shortcut as the next remedy: the actual
+first-search/second-search design selects reusable components, and the Inspector
+adds a Disclosure recipe before choosing the Events tab. The complete role is
+therefore not plain primitive source. Do not implement an inapplicable fast path
+or infer arbitrary recipe safety from ProjectionKind. Next read-only prerequisite
+is the real compound/recipe expansion and identity ownership in composition and
+the section owner; a broader static-source proof would need separate review.
+No source/compiler/profile/fixture or other rollout follows from this handoff.
+
+PROJECTION CONTEXT SOURCE RELEASE (2026-10-22): previous goal turn is progress;
+bff012b is committed/pushed/remote-verified. All actual readers are joined.
+Reassessment changes the next action from a speculative renderer-preparation
+capsule to the existing exact source-context owner. NyxProjectionContext currently
+performs a SECOND full decode/canonicalization/index of the complete exported
+design before discarding its pages/components. Encode already owns the first
+fully admitted DOM and immediately frees it. Reuse that DOM within this attempt;
+do not skip the full document construction/serialization/Decode admission.
+
+Existing helper owns ONLY src/nyx.codec.pas: private typed encoding purpose and
+shared original writer; normal Encode retains exact output/traversal/refusal.
+Sole pure bridge TNyxCodec.ProjectionContext returns exact old context bytes.
+Context mode follows COMPLETE export admission, checks the same whole canonical
+formatted UTF-8 read budget/message as data.pas, then uses the old root-field
+predicate/order and parses ONLY retained field values before NyxField/NyxObject.
+No persistent cache, mutable global mode, old-store projection or renderer handoff.
+Root owns ONLY NyxProjectionContext forwarding/comments in projection.refresh,
+additive compatibility/refusal cases in the existing projection-refresh consumer,
+existing performance task/docs/private qualification tools. Preserve every old
+case/assertion/window/wait and original controls545FB593. Retain all source/tool
+preimages. Other1804 Pascal, foreign13 and both renderer hashes stay exact.
+
+Tests compare the frozen old context algorithm and normal codec output, including
+ordering/Unicode/NUL/exact numbers/typed and opaque contexts, unused named
+presentations, empty typed collections, full discarded-tree/title byte/member/
+depth/Unicode refusal and source independence. This removes redundant work;
+current clocks do not establish savings or a sufficient Ready30 fix. No reader
+until both scopes/tool changes are independently reviewed and jointly frozen.
+Fixed qualification: projection native/browser, unchanged unprofiled controls
+native; stop first failure. Only after that gate passes continue the remaining
+seven paired consumer scopes and both Studio compilers (nineteen compilers/nine
+native outcomes total). All native windows/arguments/Ready30/outer limits/heaps
+stay exact. No extra profile/fixture/browser execution/host/config/MCP/worker
+rollout, cleanup/restart or extra agent. Core37/original/P4B/P4C remain open;
+WORK/private state own exact source, reader admission and current return path.
+
+Source/tool review passes: codec5F018928/wrapper7A2C057C/consumerFDEF31BA and
+private freezeB0E85DA3/qualifier97944AB2. Original8058-character codec writer,
+frozen old context oracle and original consumer recover byte-exact; thirty new
+checks are additive. Independent review caught a pre-freeze fixture depth error:
+268 arrays, not267, reach exported container271; no compiler/runtime failed.
+Whole formatted read-budget loop/predicate match their old owners. Both tools
+parse; only29 ownership count and existing projection-target map/path/suffix
+are added, default-off profile guard exact. Other1804 Pascal/foreign13/extra19
+match. Root may freeze29/1807/13/19, then run the fixed plan; source/docs/tools
+pause through every actual join/audit. No observed efficacy is claimed yet.
+
 PUBLIC SECTION RECOVERY CORRECTION QUALIFIED (2026-10-22): audit960287AD and
 independent root/helper review verify sourceAEB3709A, native40 (original31+nine
 lawful checks), complete clean348063blocks/13388400bytes and zero owned warnings.

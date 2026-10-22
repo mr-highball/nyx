@@ -27,7 +27,8 @@ uses
   {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls,
     LCLIntf, LCLType, Math,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
-  nyx.state, nyx.behavior, nyx.projection.refresh
+  nyx.state, nyx.behavior, nyx.projection.refresh, nyx.codec, nyx.json,
+  nyx.presentations, nyx.resources, nyx.collections
   {$ifdef NYX_ARRANGEMENT_MCP}, nyx.generated.view{$endif}
   {$ifdef NYX_IDENTITY_COMPILED}, nyx.identity.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser
@@ -304,6 +305,213 @@ begin
   end;
 end;
 {$endif}
+
+{ Frozen pre-optimization context algorithm. Keep this independent full-value
+  path as the compatibility oracle: production now projects the codec's first
+  admitted DOM, while this still decodes/canonicalizes/indexes the full export. }
+function LegacyProjectionContext(ADocument: TNyxDocument): TNyxText;
+var
+  LData: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+  LKey: TNyxText;
+begin
+  LData := TNyxDataValue.ParseJSON(TNyxCodec.Encode(ADocument));
+  SetLength(LFields, LData.Count);
+  LCount := 0;
+  for LIndex := 0 to LData.Count - 1 do
+  begin
+    LKey := LData.Key(LIndex);
+
+    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
+      (LKey = 'version') or
+      ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
+      ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
+      not ADocument.Extensions.Has(NyxExtension('collections'))) then
+    begin
+      Continue;
+    end;
+    { Wire version is framing, not runtime meaning. Named definitions are
+      checked per referenced property by retained projection admission; unused
+      definitions cannot disturb live controls. Older opaque data stays exact. }
+    LFields[LCount] := NyxField(LKey, LData.Field(LKey));
+    Inc(LCount);
+  end;
+  SetLength(LFields, LCount);
+  Result := NyxObject(LFields).ToJSON;
+end;
+
+procedure CheckContext(ADocument: TNyxDocument; const AReason: TNyxText);
+var
+  LBefore: TNyxText;
+  LExpected: TNyxText;
+begin
+  LBefore := TNyxCodec.Encode(ADocument);
+  LExpected := LegacyProjectionContext(ADocument);
+  Check((NyxProjectionContext(ADocument) = LExpected) and
+    (TNyxCodec.ProjectionContext(ADocument) = LExpected), AReason);
+  Check(TNyxCodec.Encode(ADocument) = LBefore,
+    'context construction leaves the complete authored export byte-exact');
+end;
+
+{ A reduced context must refuse invalid data even when the offending source is
+  one of the fields it discards. Match both exception family and diagnostic to
+  the original full-export algorithm; a small successful result is a failure. }
+procedure RejectContext(ADocument: TNyxDocument; const AReason: TNyxText);
+var
+  LExpected: TNyxText;
+  LActual: TNyxText;
+begin
+  LExpected := '';
+  LActual := '';
+  try
+    LegacyProjectionContext(ADocument);
+  except
+    on LException: Exception do
+    begin
+      LExpected := TNyxText(LException.ClassName) + ': ' + TNyxText(LException.Message);
+    end;
+  end;
+  try
+    NyxProjectionContext(ADocument);
+  except
+    on LException: Exception do
+    begin
+      LActual := TNyxText(LException.ClassName) + ': ' + TNyxText(LException.Message);
+    end;
+  end;
+  Check((LExpected <> '') and (LActual = LExpected), AReason);
+end;
+
+procedure ProjectionContextCompatibility;
+var
+  LDocument: TNyxDocument;
+  LContext: TNyxText;
+  LValue: TNyxDataValue;
+  LIndex: Integer;
+  LHasPresentation: Boolean;
+  LMalformed: TNyxText;
+begin
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('context-page'));
+    CheckContext(LDocument, 'empty context matches the frozen full-value oracle');
+    LContext := NyxProjectionContext(LDocument);
+    LDocument.Title := TNyxText('English title / 🌙') + #0 + ' / slash';
+    LDocument.Pages[0].Add(NewNyxLabel('context-label').WithText('Independent caption'));
+    LDocument.AddComponent(NewNyxColumn('unused-context-component'));
+    CheckContext(LDocument, 'title, pages and unused components keep the exact old context');
+    Check(NyxProjectionContext(LDocument) = LContext,
+      'excluded authored trees and Unicode/NUL title do not change context meaning');
+
+    LDocument.Extensions.SetValue(NyxExtension(TNyxText('future / 🌙') + #0),
+      TNyxDataValue.ParseJSON('{"precise":9007199254740993,"decimal":1.2300e+4,' +
+        '"negativeZero":-0,"escaped":"\u0000\/\uD83C\uDF19","Empty":[],"empty":{}}'));
+    CheckContext(LDocument, 'opaque key/order/exact decimal/Unicode/NUL values remain byte-exact');
+    LDocument.State.SetValue(NyxTextState('context-caption'), TNyxText('A retained default'));
+    CheckContext(LDocument, 'typed state defaults retain the old context representation');
+    LDocument.Collections.Define(NyxCollection('context-records'),
+      NyxCollectionSchema.Text(NyxTextField('name'), ''), []);
+    CheckContext(LDocument, 'typed collection defaults retain their context and ordering');
+
+    LDocument.Resources.Define(NyxResourceRef('context-copy'),
+      NyxTextResource('An embedded English resource'));
+    CheckContext(LDocument, 'resources and emitted empty typed presentations preserve context');
+    LValue := TNyxDataValue.ParseJSON(NyxProjectionContext(LDocument));
+    Check(LValue.Field(NyxPresentationsWireField).Kind = ndObject,
+      'an emitted empty presentation field remains significant when no typed definition exists');
+    LDocument.Presentations.Define(NyxPresentation('unused-context-presentation'),
+      TNyxPresentationCondition.Manual);
+    CheckContext(LDocument, 'unused typed named presentations preserve the exact exclusion rule');
+    LValue := TNyxDataValue.ParseJSON(NyxProjectionContext(LDocument));
+    LHasPresentation := False;
+    for LIndex := 0 to LValue.Count - 1 do
+    begin
+      LHasPresentation := LHasPresentation or (LValue.Key(LIndex) = NyxPresentationsWireField);
+    end;
+    Check(not LHasPresentation, 'actual typed presentation definitions remain excluded from context');
+  finally
+    LDocument.Free;
+  end;
+
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('empty-registry-context-page'));
+    LDocument.Presentations.Define(NyxPresentation('empty-registry-presentation'),
+      TNyxPresentationCondition.Manual);
+    CheckContext(LDocument, 'a higher wire version retains the exact empty-collection exclusion');
+    Check(TNyxDataValue.ParseJSON(NyxProjectionContext(LDocument)).Count = 0,
+      'unused named definitions and emitted empty typed collections leave no context fields');
+  finally
+    LDocument.Free;
+  end;
+
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('opaque-context-page'));
+    LDocument.Extensions.SetValue(NyxExtension('collections'),
+      TNyxDataValue.ParseJSON('{"legacy":"keep this exact opaque collection value"}'));
+    LDocument.Extensions.SetValue(NyxExtension(NyxPresentationsWireField),
+      TNyxDataValue.ParseJSON('["keep this opaque presentation value"]'));
+    CheckContext(LDocument, 'older opaque collections and presentations remain significant');
+    LValue := TNyxDataValue.ParseJSON(NyxProjectionContext(LDocument));
+    Check((LValue.Field('collections').Kind = ndObject) and
+      (LValue.Field(NyxPresentationsWireField).Kind = ndArray),
+      'opaque legacy fields cannot be mistaken for empty typed registries');
+    LDocument.Presentations.Define(NyxPresentation('conflicting-context-presentation'),
+      TNyxPresentationCondition.Manual);
+    RejectContext(LDocument, 'typed promotion still refuses retained opaque metadata conflicts');
+  finally
+    LDocument.Free;
+  end;
+
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('budget-context-page'));
+    LDocument.Title := StringOfChar('x', NyxMaximumJSONBytes);
+    RejectContext(LDocument, 'discarded title still obeys the complete export byte budget');
+    LDocument.Title := 'Context budget review';
+    LDocument.Pages[0].Add(NewNyxLabel('large-context-label')
+      .WithText(StringOfChar('x', NyxMaximumJSONBytes)));
+    RejectContext(LDocument, 'discarded page text still obeys the complete export byte budget');
+    LDocument.Find('large-context-label').Configure.Text('A small caption again').Done;
+    for LIndex := 0 to NyxMaximumJSONMembers do
+    begin
+      LDocument.Find('large-context-label').Props.Add('future-' + IntToStr(LIndex) + '=value');
+    end;
+    RejectContext(LDocument, 'discarded page properties still obey the full object member budget');
+  finally
+    LDocument.Free;
+  end;
+
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('depth-context-page'));
+    LDocument.Pages[0].Extensions.SetValue(NyxExtension('future.depth'),
+      TNyxDataValue.ParseJSON(StringOfChar('[', NyxMaximumJSONDepth - 2) + '0' +
+        StringOfChar(']', NyxMaximumJSONDepth - 2)));
+    RejectContext(LDocument, 'discarded node envelope still obeys aggregate JSON depth');
+  finally
+    LDocument.Free;
+  end;
+
+  LDocument := TNyxDocument.Create;
+  try
+    LDocument.AddPage(NewNyxPage('unicode-context-page'));
+    {$ifdef PAS2JS}
+    LMalformed := Chr($D800);
+    {$else}
+    SetLength(LMalformed, 1);
+    LMalformed[1] := #$FF;
+    {$endif}
+    LDocument.Title := LMalformed;
+    RejectContext(LDocument, 'discarded title cannot bypass malformed Unicode admission');
+  finally
+    LDocument.Free;
+  end;
+  RejectContext(nil, 'context construction preserves the original nil-document refusal');
+end;
 
 procedure Run;
 var
@@ -642,6 +850,7 @@ begin
     CompiledIdentity;
     {$endif}
 
+    ProjectionContextCompatibility;
     WriteLn('PASS ', GChecks, ' actual retained projection checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-projection-refresh', 'passed');
