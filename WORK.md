@@ -4,6 +4,92 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: five event phases pass; queued source admission fails
+
+Previous goal turn is PROGRESS. The two additive real Inspector gestures preserve
+every original predicate/gesture/Ready30/Pump and the deliberately unpainted
+reload/stale-Add interval. All FIVE original named phases now pass, including
+restricted creator policy, atomic Add/locks, fresh TODO focus and paired Undo/Redo
+at both1100 and390. The later reload/lifetime tail fails: queued
+UpdateCompletionPopup calls SourceInput.Bind, which correctly rejects authored
+and presented text differing beyond line endings. Run954 maps to the finally
+tail; the trace alone does not identify which Pump serviced the callback.
+
+The native compiler passes with zero warnings. The native program exits1 itself,
+NOT timeout, with a complete clean heap:205622542 blocks/38216753528 cumulative
+bytes allocated=freed,0unfreed. Its648.595s launch-to-exit includes teardown,
+under the explicitly selected900 functional allocation. Ready30 remains exact;
+this is not a responsiveness or latency qualification. Actual root session7608
+joinedaa6e83; compiler13428/native24092 are absent. Receipt2751803B and immutable
+gate audit8B5AA0C3 independently verify freeze4ABEDFF3, all1873 current pins,
+34 retained owned copies and nine artifacts. No Pascal changed after that freeze.
+
+First failure stops the plan: remaining12 compatibility/product compilers remain
+UNATTEMPTED. Six unchanged semantic752/queue248/section67 results stay explicitly
+reused at their own source boundary. Core42->43; no original/P4B/P4C/browser/
+performance criterion, credit or DONE closes. Browser remains compile-only.
+
+Read-only diagnosis identifies a host input-admission gap shared by both adapters:
+the physical code view is retained/parked when no source host is composed, yet
+ReadSourceInput checks requested visibility without certifying the actually
+presented source/load/file. A later Bind can pair old physical content with the
+new current session; its strict projection is the correct consistency oracle.
+Do not suppress that error, change resolver behavior or replace the full journey.
+Root owns outcome docs/checkpoint only. All Pascal/tools stay paused pending a
+separate narrow presented-frame source release, independent review and fresh
+freeze. Existing helper reviews contract/test seams read-only. Preserve the exact
+consumerBEC86A8E, qualifierD285D251 and all remaining source/foreign/tool pins.
+No host/config/MCP/worker rollout, profile, cleanup/restart or extra agent follows.
+Return remains complete P4B event/source/semantic agreement then OWN P4C proof.
+
+### Retained source release: repair compact event journey navigation
+
+The previous turn is PROGRESS:5fc98f2 is pushed/remote-verified and the missing
+Inspector diagnostic changes the next action. Revalidation passes1873 current
+pins against56B5205C/final4A476C3D; prior compiler/native readers are absent.
+Core42 and every original/P4B/P4C/browser/performance gate remain open.
+
+Existing Lil' Scooty owns only two additive real Inspector-panel clicks in the
+existing native controls consumer. At the compact atomic-loop boundary, invoke
+the existing panel Click(False) before Select(reply-memo); after the width loop,
+invoke it before Select(first-search). The existing following Select/Ready owns
+the deferred paint. This mounts the appropriate Inspector before accessing its
+policy and before capturing old controls for the reload/stale-command journey.
+Never refresh between direct reload and its stale Add click. Preserve all
+original predicates, gestures, Ready30, explicit Pumps and diagnostic output.
+Marked gesture removal must recover6FBAAF12 byte-exact, and removing its two
+diagnostic blocks must still recover original545FB593. No product Pascal changes.
+
+Root owns docs/private admission and a closed optional controls-only allocation
+in the existing qualifier. ControlsTimeoutSeconds accepts600/900, defaults600,
+and refuses any explicitly supplied value for every other name before state or
+mutation. Only controls-native's old600 assignment uses it; compiler300/other
+native300 and all maps/flags/profile/arguments/join/heap/PASS behavior stay exact.
+Reverse only parameter/guard/assignment to recover originalC61BFCAC. Retain its
+preimage, independently review and update only its existing extra-input pin.
+
+The explicit900 functional allocation is predeclared for the complete existing
+journey: failed-run launch-to-exit579 plus five remaining Ready allocations150,
+two explicit Pump allowances60, source admission/cleanup30 and margin81. Source
+operations and these allowances are reviewed independently; they are neither
+measured duration bounds nor performance acceptance. Startup/teardown is included
+in579; there is no timestamp at the previous lookup failure. Ready30 and every
+original wait remain exact. There is no automatic retry or larger cap on failure.
+
+Both source/tool handoffs independently review, then freeze34owned/1807Pascal/
+foreign13/extra19. Initial ONE controls-native compiler/run explicitly uses900,
+no profile, original whole-program PASS/full final native heap gates. Stop first
+failure and join/audit the actual handle. Only complete success admits these
+remaining12 under the SAME frozen source: projection native/browser, view-section
+native/browser, callbacks native/browser, source native/browser, editing native/
+browser, and both Studio product compilers. Native UI runs remain sequential.
+Reuse exact unchanged semantic752, queue248 and section67 native/browser results
+as six compilers; their previous controls failures remain retained, not rewritten.
+All source/docs/tools pause through actual root joins and exact audits. Browser
+compiles only; no original/full P4B/P4C/performance closure is predeclared.
+No host/config/MCP/worker rollout, profile, cleanup/restart or extra agent. Return
+to complete event/source/semantic agreement, then OWN P4C Save/Open/compiled proof.
+
 ### Current boundary: compact test needs to return to Inspector
 
 This turn is PROGRESS. The bounded diagnostic changes the next action from a

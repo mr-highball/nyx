@@ -1,5 +1,67 @@
 # Working in Nyx
 
+COMPACT EVENT JOURNEY: SOURCE FRAME FAILURE (2026-10-22): prior goal turn is
+progress. One compiler passes with zero warnings. All FIVE original phases now
+pass, including restricted creator policies/atomic Add/locks/TODO/history at
+both1100/390. Later queued completion Bind refuses mismatched authored/presented
+text in the reload/lifetime tail. Native exits1 itself, not timeout; complete
+clean heap205622542blocks/38216753528bytes allocated=freed,0unfreed. Full native
+launch-to-exit648.595s includes teardown under the explicit900 functional budget;
+Ready30 is unchanged and no performance result follows. Root7608 joinedaa6e83;
+actual compiler13428/native24092 are absent. Independent audit8B5AA0C3 verifies
+34owned/1807Pascal/foreign13/extra19,34 retained copies and nine artifacts exact.
+Core42->43; remaining12 compilers stay UNATTEMPTED. No original/P4B/P4C/browser/
+performance criterion, credit or DONE closes.
+
+The strict projection is correct: both host readers can pair retained/parked
+physical source with a newer current session. Bind reconciles identity and then
+rejects different content; its ordinary command Current guard does not certify
+this new frame. Run954 is a finally-tail line, not proof of which Pump serviced
+it. Root owns outcome docs/checkpoint only; ALL Pascal/private tools are paused.
+Existing helper reviews a narrow actual-presented-frame admission design and
+existing regression seams read-only. No repair/compiler is released yet. Keep
+original assertions/gestures/Ready30, stale reload interval and both navigation
+additions exact. No resolver/oracle weakening, new fixture/wait, host/config/MCP/
+worker rollout, profile, cleanup/restart or extra agent. WORK/private records own
+the retained failure and separate source-review/freeze return to P4B then P4C.
+
+COMPACT EVENT JOURNEY REPAIR RELEASE (2026-10-22): prior5fc98f2 is progress,
+committed/pushed/remote-verified. All actual readers are joined/absent;1873 pins
+revalidate against56B5205C/final4A476C3D. Core42 and all original gates stay open.
+Root/helper independently reviewed the two real navigation prerequisites and
+the complete remaining workload. No product/schema/renderer repair follows.
+
+Existing helper owns ONLY two marked additive Inspector Click(False) gestures
+in tests/nyx_event_queue_controls.lpr: compact loop before existing Select of
+reply-memo, then post-loop before existing Select of first-search. Use the real
+compact panel action; its deferred refresh shares the existing Select/Ready.
+Preserve the unpainted direct reload->stale Add interval, every original Check,
+gesture, Ready30, explicit Pump and the existing bounded diagnostic. Removing
+only the two gesture blocks restores6FBAAF12; removing diagnostic blocks too
+restores original545FB593. No other Pascal path is released.
+
+Root owns ONLY docs/private admission and existing qualifier's optional
+ControlsTimeoutSeconds parameter, closed600/900 default600. Reject ANY explicit
+use on non-controls-native before state/tool reads or output/environment writes;
+only the existing controls-native timeout assignment uses it. Compiler300,
+other native300, maps/flags/profile/arguments/join/fullheap/PASS gates remain
+byte-exact. Mechanical reversal restoresC61BFCAC. The future controls invocation
+explicitly uses900 as total functional workload allocation: failed launch-to-exit
+579 + five remaining Ready allocations150 + explicit Pumps60 + admission/cleanup30
++ margin81. These are declared allowances, NOT measured bounds or latency proof;
+Ready30 remains unchanged. No automatic retry, cap increase or new fixture.
+
+Independent source/tool review and fresh34owned/1807Pascal/foreign13/extra19
+freeze precede ONE controls-native compiler/run. First failure stops. Only a full
+functional pass/complete clean heap, actual root join and exact gate audit admit
+the remaining12 original compatibility/product compilers, sequential native UI
+runs, under the SAME source freeze. Reuse the six unchanged semantic752/queue248/
+section67 native+browser compilers explicitly; do not repeat them. Every actual
+reader is root-owned/joined/audited. Sources/docs/tools pause through those joins.
+Browser COMPILES ONLY; original/P4B/P4C/performance acceptance stays open until
+its own evidence. No host/config/MCP/worker rollout, profile, cleanup/restart or
+extra agent. WORK/private records own the fixed plan and return path.
+
 MISSING POLICY OBSERVATION QUALIFIED (2026-10-22): this turn is progress. The
 single original native journey plus additive diagnostic is terminal/root-joined
 at66216/f5efdb; compiler47768/native18112 are absent. Audit5D09F275 independently

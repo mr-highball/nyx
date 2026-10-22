@@ -2,6 +2,27 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The compact navigation correction now passes all FIVE original event phases,
+including policy/atomic Add/locks/TODO/history at both widths. The full journey
+then fails in queued source Bind after reload: retained physical text differs
+from current authored source. One compiler has zero warnings; native exits1
+without timeout and frees all205622542 allocations/38216753528 cumulative bytes.
+Root joins/audits all readers and inputs; remaining12 compilers are unattempted.
+Full launch-to-exit648.595s includes teardown under the reviewed900 functional
+allocation, with Ready30 unchanged. This is progress, not performance or original
+acceptance. The strict projection stays intact; next is a separately reviewed
+host presented-frame admission repair, not resolver or fixture weakening. See
+[the current boundary](../WORK.md#current-boundary-five-event-phases-pass-queued-source-admission-fails).
+
+The separate compact-journey repair adds two real Inspector-panel gestures to
+the existing test and shares its original Select/Ready waits. It preserves every
+original predicate, Ready30 and the reload/stale-control oracle. One explicitly
+selected controls-only900s functional allocation follows source/tool review and
+exact freeze; default600/other readers remain unchanged. The declared allowance
+is not a duration bound or responsiveness claim. Only full success/clean heap
+and actual joined audit admit the remaining12 compatibility/product compilers.
+See [the current admission](../WORK.md#current-source-release-repair-compact-event-journey-navigation).
+
 The bounded observation now locates an absent ENTIRE Inspector role at compact
 loop1/390/check88. The preceding wide atomic callback policy/add/TODO/history
 prefix completed. Source review confirms callback completion selects Design and

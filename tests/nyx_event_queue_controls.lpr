@@ -833,6 +833,15 @@ begin
       Check(((LWidthIndex = 0) and (GForm.ClientWidth = 1100)) or
         ((LWidthIndex = 1) and (GForm.ClientWidth = 390)),
         'Atomic callback phase runs at its requested actual client width');
+      { BEGIN COMPACT_POLICY_PANEL_NAVIGATION }
+      { TODO navigation selected Design. Open the real compact Inspector before
+        the existing selection/Ready coalesces this deferred panel change. }
+
+      if LWidthIndex = 1 then
+      begin
+        Click('action-panel-inspector', False);
+      end;
+      { END COMPACT_POLICY_PANEL_NAVIGATION }
       Select('reply-memo');
       LKey := EventKey(ntNamed, LName);
       { BEGIN MISSING_POLICY_OBSERVATION_CALL }
@@ -911,6 +920,11 @@ begin
         Check(PairText = LBefore, 'Wide group retires as one Undo before the compact journey');
       end;
     end;
+    { BEGIN STALE_CALLBACK_PANEL_NAVIGATION }
+    { Compact TODO focus selected Design again. Mount the first-search controls
+      through the existing Select/Ready before the deliberately unpainted reload. }
+    Click('action-panel-inspector', False);
+    { END STALE_CALLBACK_PANEL_NAVIGATION }
     Select('first-search');
     LKey := EventKey(ntNamed, NyxSemantic(nseSearch));
     QualifiedPhase('restricted creator policy, atomic Add, exact locks and TODO focus');
