@@ -1,5 +1,115 @@
 # Working in Nyx
 
+QUERY POLICY READS NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
+Existing nyx_collections bindings/column now accept optional strict queryControls;
+omitted/false keeps exact legacy JSON. Requested contexts/columns expose declared
+and resolved typed policy, with separate standard table support. Saved List
+metadata remains inspectable; null/default/empty operators, local/effective/
+restorable ownership and48KiB refusal retain their contracts. FullE398 native
+journey176, actual discovery9129 native115 and unchanged inheritance14 pass with
+complete clean heaps. Matching browser assertions and both Studio mains compile.
+
+All actual readers are root-joined/absent:98804/4440a9,97619/cba47b,90472/436834,
+57260/693b0c. Composite0EF52F05 verifies1850 pins/nine retained copies/nine receipts/
+70 artifact references at freeze2ECEFC37. Seven accepted compilers (five fresh,
+two exact dependency-unchanged journey results) have zero owned/21 upstream RTL
+warning occurrences. Two earlier clean compilers/failed schema oracles and their
+complete clean heaps remain separately retained. They exposed stale21-tool and
+miscounted39-action-branch expectations; current24 exact tools/45 branches are
+independently checked. No product assertion was dropped. Literal test restoration
+recovers prior unit/schema source; RunOwned newline-only precision finding stays
+retained. Browser execution, performance and original criteria are still open.
+
+Core44->45. Root owns ONLY outcome docs/checkpoint; ALL Pascal/guide/tools remain
+paused. Next P4B deliverable is small typed semantic table/column set/default
+operations deriving baseline inside each ordered exact-revision candidate and
+reusing normal ApplyCollectionIntent (including pending-draft, even equal bytes).
+Keep explicit default vs null reset, cpTable authoring versus inspectable non-
+table metadata, current key/field/family, one paired Undo and late-failure isolation.
+Two later named branches would bring45 to47 while31 existing intent identities
+and seven binding versions remain. Existing helper has read-only reviewed design;
+no new source scope yet. P4C's OWN Studio Save/Open/generated application and
+actual browser remain downstream. No original/P4B/P4C/credit/DONE closes; no
+server/config/host/MCP rollout, profile/probe, cleanup/restart or extra agent.
+
+QUERY POLICY READS EXPANDED-ACTION REPAIR (2026-10-22): second native discovery
+compiler is clean; runtime now reaches the39-change assertion and fails. The
+source count omitted scalar expansion: eight named branches plus31 ordinary
+actions, with default/cell each emitting four scalar variants, totals45. This
+is a retained review/test-oracle error, not a product API change. Root90472 is
+joined436834, actual46648/45204 absent; both heaps remain complete/clean. Audit
+expanded-action verifies1850 pins/nine copies/ten artifacts againstEF9855EB.
+The four inheritance/Studio compilers remain unattempted. Keep both failures.
+
+Existing helper may edit ONLY the discovery program: correct39->45 and verify
+exact31 action membership with one branch each except four distinct scalar
+families for default/cell, plus eight named branch shapes. Do not drop or loosen
+old assertions. Root owns outcome/admission docs only; every other Pascal and
+tool stays exact. Independent repair review/fresh freeze precede the same five
+planned compilers; reuse native176 and matching browser compilation. No host,
+new tool, profile/probe/cleanup/restart or extra agent. P4B agent-only set/reset,
+P4C and original/browser/performance gates remain open; no credit/DONE follows.
+
+QUERY POLICY READS DISCOVERY REPAIR RELEASE (2026-10-22): full unchanged E398
+journey passes176 native checks with a complete clean heap; matching browser
+compiles. Actual native discovery compiles clean, then fails its first old21-tool
+count assertion: current pure catalog has24 constructors. Root98804/4440a9 and
+97619/cba47b are terminal/joined, all five actual process IDs absent. Failure
+auditA3BAA5B1 verifies1850 frozen pins/nine retained copies/25 artifact references;
+both native heaps are complete/clean. Remaining inheritance/Studio four compilers
+are unattempted. Keep the first schema executable/log/receipt; no product failure
+or runtime/browser/task closure is inferred. Core44 remains until this batch ends.
+
+Existing helper may change ONLY tests/nyx_agent_collection_schema.lpr: update the
+stale catalog count21 to actual24 and assert independently expected exact tool
+membership/uniqueness, retaining all original/new collection assertions. No
+shared test, response/schema include, MCP description or other Pascal changes.
+Root owns only outcome/admission docs and exact joins/audits. Independent repair
+review and fresh nine-path freeze precede schema-native plus the four still
+unattempted compilers. Reuse exact E398 full native/browser evidence; do not
+replay it for this discovery-only test repair. Pause all other Pascal/tools.
+No new tool, server/config/host rollout, profile/probe, cleanup/restart or agent.
+P4B baseline-derived policy operations and all original/P4C/browser gates stay open.
+
+QUERY POLICY READS SOURCE RELEASE (2026-10-22): previous user-side backlog
+confirmation revalidated the existing80-kind review/owners and254 links; it
+changed no core source. Prior final9A2F/D401 and all1873 pins remain exact,
+all actual readers are joined. New private query-policy-reads packet retains
+nine preimages,1807 Pascal,13 foreign and19 extra inputs; core44 stays open.
+
+Root owns ONLY this handoff, WORK, task02, docs/studio-agents.md, the existing
+agents.collections response include, collectionedits.schema include and the
+nyx_collections DESCRIPTION in studio.mcp. Existing helper owns ONLY the existing
+test.agent.collections unit and agent_collection_schema program. Add optional
+strict Boolean queryControls only on bindings/column; omitted/false keeps exact
+old response shapes. Requested defined contexts/columns expose declared plus
+existing typed policy ToData. Report standard table projection support separately
+from saved metadata, including valid non-table declarations. Preserve absent/
+cleared/local/effective/restorable meaning, column/title bounds, null/default
+versus empty operators, four existing set/default intents and48KiB refusal.
+No new tool/mode, evaluator, codec, runtime store or revision-read API follows.
+
+Helper preserves every original journey assertion/wait/enum iteration. Mark
+additive policy tests and narrow valid-payload cases for current sizing/paging/
+query actions; never skip newer enum values. Existing schema test's stale10/32/4
+counts become current13 branches/39 changes/7 versions with independent new
+version/closed-selector assertions. These are source findings, not executed
+failures. Mechanical removal of marked unit additions must restore1DD4FA1E.
+Both scopes require independent review and a fresh joint freeze before ANY
+compiler. Two new private freeze/qualifier pins bring extras to21; independent
+tool review precedes execution. Plan: full journey native/browser, discovery
+native, unchanged inheritance native/browser and both Studio compilers: seven
+compilers/three native runs, no focused-only define, exports or UI host.
+Root owns exact process admission/joins/audits; source/docs/tools pause
+during readers. Preserve prior failures and all original/P4B/P4C/browser gates.
+No renderer/host/controller change, new fixture/program, server/config/MCP/worker
+rollout, probe/profile, cleanup/restart or extra agent. LAN remains offline.
+Next P4B gap is independently confirmed: ordinary policy intents require a full
+schema/binding baseline not reconstructible from these bounded reads. Tests use
+their owned PreviewPair and cannot prove agent-only edits. A separate later
+scope must derive baseline inside exact-revision set/default candidates, as the
+named query operation already does; no full form dump. No P4B closure follows.
+
 SOURCE FRAME REPAIR NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
 Unchanged BEC86A8E passes107 actual native callback checks, all five phases plus
 same-ID reload/stale Add and queued editor retirement. Its policy loop asserts

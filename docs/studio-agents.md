@@ -2204,8 +2204,8 @@ never supplies an omitted collection, row or view owner.
 | `rows` | `key`; optionally 1..16 exact `fields` | Up to 20 scoped row IDs; selected cells only, with typed values or 80-scalar text previews |
 | `value` | `key`, `field`; optionally `item` **or** domain `choice` index | Exact Boolean/Integer/Double, or a text window of at most 4096 Unicode scalars |
 | `domain` | `key`, `field` | Range metadata and up to 50 indexed choice previews |
-| `bindings` | Exact authored `owner` | Supported projection, local/cleared/effective/inherited/restorable meaning, paged columns and bounded saved/default typeahead |
-| `column` | `owner`, `field`, explicit `source: local/effective/restorable` | Exact column family/mode and a title text window |
+| `bindings` | Exact authored `owner`; optional Boolean `queryControls` | Supported projection, local/cleared/effective/inherited/restorable meaning, paged columns, bounded typeahead and opt-in query-control policies |
+| `column` | `owner`, `field`, explicit `source: local/effective/restorable`; optional Boolean `queryControls` | Exact column family/mode and a title text window, with opt-in column query-control policy |
 | `query` | `owner`, explicit `source: local/effective/restorable` | Default eight/max twenty predicate nodes, value previews and at most eight sort keys |
 | `query-value` | `owner`, `source`, exact predicate child `path` | One exact typed value or a text window of at most 4096 Unicode scalars |
 | `preview` | `owner`, `source`, `expectedRevision`, typed `query` or null, `section` | Counts only (`summary`), eight/max twenty row IDs with optional exact field previews (`rows`), or a default 2048/max 4096-scalar Pascal window (`pascal`) |
@@ -2294,6 +2294,40 @@ it. `typeAheadSupported` distinguishes list/tree capability; table policies are
 null. Only bounded scalar options are returned: runtime text prefixes, timestamps,
 focus and runtime overrides belong to the mounted application and are absent.
 
+For capability inspection, set `queryControls: true` on `bindings` or `column`.
+The selector is a strict Boolean, defaults to false, and is refused on other
+modes. Omitted/false keeps the prior response shape. For example:
+
+```json
+{"mode":"bindings","owner":"services-table","offset":0,"limit":2,"queryControls":true}
+```
+
+Each requested defined binding context gains `queryControls: {declared, policy}`
+for its table policy; only its requested column page gains the corresponding
+column policies. An exact `column` request returns that field's policy alongside
+its existing title window. `declared: false` reports resolved library defaults;
+an explicitly equivalent declaration stays true. Existing local, effective,
+inherited and restorable ownership still applies. Absent contexts stay null;
+a cleared binding stays cleared rather than acquiring a default binding.
+
+Top-level `queryControlsSupported` describes the standard table projection's
+capability, independently of stored intent. Valid saved policies on List/Tree
+remain inspectable with support false. Support true does not prove a mounted
+runtime is enabled or a particular operator is admitted for a field: inspect
+its family and table/column policies. Typed policy serialization preserves
+`operators: null` for family defaults, explicit subsets and explicit empty
+arrays when filtering is disabled. No live predicates, selection or mounted
+session state is included. Existing column/title windows and the complete48KiB
+response limit remain; compare returned revisions between related reads.
+
+The four ordinary query-policy intents below currently require the host form's
+complete exact schema/binding `baseline`. These bounded policy reads do not
+return or reconstruct that baseline. Host-side callers can use the existing
+typed baseline API; an agent-only set/reset convenience which derives it from
+the exact-revision candidate remains an open P4B follow-up. The ordinary named
+`query` operation already derives its own baseline, but changes predicates/sorts,
+rather than table/column capability policy. Do not substitute one for the other.
+
 Group related policies through `nyx_collections` or a `collections` group inside
 `nyx_transaction`. For example, at the revision read from `nyx_session`:
 
@@ -2332,6 +2366,8 @@ Additional fields depend on that action and are discoverable through tools/list:
 | `parent` | Text field name `parent`, or null to clear the tree mapping |
 | `remove-column`, `add-column` | Exact `field`, `kind` |
 | `query` | Complete typed `query` and exact schema/binding `baseline` from the public query form |
+| `table-query`, `default-table-query` | Exact query-editor `baseline`; a complete typed `tableQuery` for set, no policy for default reset |
+| `column-query`, `default-column-query` | Exact query-editor `baseline`, `field`, `kind`; a complete typed `columnQuery` for set, no policy for default reset |
 
 Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
 adds the field's default presentation; change its title/mode in subsequent

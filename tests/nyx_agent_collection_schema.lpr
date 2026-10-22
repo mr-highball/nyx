@@ -26,6 +26,11 @@ program nyx_agent_collection_schema;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
+  { BEGIN QUERY_CONTROL_DISCOVERY_IMPORTS }
+  nyx.collections, nyx.collections.view.types, nyx.collections.columns,
+  nyx.collections.paging, nyx.collections.query, nyx.collections.query.policy,
+  nyx.studio.collectionedits,
+  { END QUERY_CONTROL_DISCOVERY_IMPORTS }
   SysUtils, nyx.text, nyx.data, nyx.studio.mcp, nyx.studio.agents;
 
 var
@@ -52,12 +57,435 @@ begin
   Inc(LChecks);
 end;
 
+{ BEGIN QUERY_CONTROL_DISCOVERY_CASES }
+{ Compare the real discovery builder with the existing portable contract, then
+  admit/refuse independently constructed descriptors through the public codec.
+  This checks current shapes without implementing another schema validator. }
+procedure CurrentPolicyDiscovery(const ATool: TNyxDataValue);
+var
+  LActual, LPortable, LBranch, LProperties, LSpecs, LSpecSchema: TNyxDataValue;
+  LColumnSchema, LData, LColumn, LPolicy, LBad, LBind: TNyxDataValue;
+  LBase, LSpec, LDecoded: TNyxCollectionViewSpec;
+  LIndex, LCount, LVersion: Integer;
+  LMode: TNyxText;
+
+  function Required(const ASchema: TNyxDataValue; const AName: TNyxText): Boolean;
+  var
+    LAt: Integer;
+  begin
+    Result := False;
+    for LAt := 0 to ASchema.Field('required').Count - 1 do
+    begin
+
+      if ASchema.Field('required').Item(LAt).AsText = AName then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
+
+  function Replacing(const AObject: TNyxDataValue; const AName: TNyxText;
+    const AValue: TNyxDataValue): TNyxDataValue;
+  var
+    LFields: array of TNyxDataField;
+    LAt: Integer;
+  begin
+    SetLength(LFields, AObject.Count);
+    for LAt := 0 to AObject.Count - 1 do
+    begin
+
+      if AObject.Key(LAt) = AName then
+      begin
+        LFields[LAt] := NyxField(AName, AValue);
+      end
+      else
+      begin
+        LFields[LAt] := NyxField(AObject.Key(LAt), AObject.Field(AObject.Key(LAt)));
+      end;
+    end;
+    Result := NyxObject(LFields);
+  end;
+
+  procedure RefusesView(const AData: TNyxDataValue; const AReason: TNyxText);
+  var
+    LRejected: Boolean;
+    LParsed: TNyxCollectionViewSpec;
+  begin
+    LRejected := False;
+    try
+      LParsed := TNyxCollectionViewSpec.FromData(AData);
+      LParsed.Validate;
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, AReason);
+  end;
+
+begin
+  LActual := ATool.Field('inputSchema').Field('oneOf');
+  LPortable := NyxCollectionAgentSchema.Field('oneOf');
+  LCount := 0;
+  for LIndex := 0 to LActual.Count - 1 do
+  begin
+    LBranch := LActual.Item(LIndex);
+    LProperties := LBranch.Field('properties');
+    LMode := LProperties.Field('mode').Field('const').AsText;
+
+    if NyxAgentHas(LProperties, 'queryControls') then
+    begin
+      Inc(LCount);
+      Check(((LMode = 'bindings') or (LMode = 'column')) and
+        (LProperties.Field('queryControls').Field('type').AsText = 'boolean') and
+        not LProperties.Field('queryControls').Field('default').AsBoolean and
+        not Required(LBranch, 'queryControls') and
+        (LProperties.Field('queryControls').ToJSON = LPortable.Item(LIndex)
+          .Field('properties').Field('queryControls').ToJSON),
+        'actual discovery keeps an optional strict Boolean selector on ' + LMode);
+    end
+    else
+    begin
+      Check((LMode <> 'bindings') and (LMode <> 'column') and
+        not NyxAgentHas(LPortable.Item(LIndex).Field('properties'), 'queryControls'),
+        'other closed modes do not advertise the policy selector ' + IntToStr(LIndex));
+    end;
+  end;
+  Check(LCount = 2, 'only bindings and exact column reads expose queryControls');
+  LSpecs := LActual.Item(LActual.Count - 1).Field('properties').Field('changes')
+    .Field('items').Field('oneOf').Item(5).Field('properties').Field('spec').Field('oneOf');
+  LSpecSchema := LSpecs.Item(4);
+  LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 5) and
+    (LSpecSchema.Field('required').Count = 8) and
+    (LColumnSchema.Field('properties').Field('sizing').Field('required').Count = 5) and
+    Required(LSpecSchema.Field('properties').Field('columns').Field('contains'), 'sizing'),
+    'version five requires a real sizing declaration and its strict scalar policy');
+  LSpecSchema := LSpecs.Item(5);
+  LProperties := LSpecSchema.Field('properties').Field('paging');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 6) and
+    (LSpecSchema.Field('required').Count = 9) and Required(LSpecSchema, 'paging') and
+    (LProperties.Field('required').Count = 3) and
+    (LProperties.Field('properties').Field('pageSize').Field('minimum').AsInteger = 1) and
+    (LProperties.Field('properties').Field('initialPage').Field('minimum').AsInteger = 1),
+    'version six carries independent positive paging choices');
+  LSpecSchema := LSpecs.Item(6);
+  LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 7) and
+    (LSpecSchema.Field('required').Count = 10) and
+    (LColumnSchema.Field('required').Count = 6) and
+    Required(LColumnSchema, 'sizing') and Required(LColumnSchema, 'queryControls') and
+    (LColumnSchema.Field('properties').Field('sizing').Field('anyOf').Item(0)
+      .Field('type').AsText = 'null') and
+    (LColumnSchema.Field('properties').Field('queryControls').Field('anyOf').Item(0)
+      .Field('type').AsText = 'null') and
+    (LSpecSchema.Field('properties').Field('paging').Field('anyOf').Item(0)
+      .Field('type').AsText = 'null'), 'version seven preserves the six-field nullable column envelope');
+  Check((LSpecSchema.Field('anyOf').Item(0).Field('properties').Field('queryControls')
+      .Field('type').AsText = 'object') and
+    (LSpecSchema.Field('anyOf').Item(1).Field('properties').Field('columns').Field('contains')
+      .Field('properties').Field('queryControls').Field('type').AsText = 'object'),
+    'version seven needs an actual table or column declaration rather than null presence');
+
+  LBase := NyxCollectionView(NyxCollection('discovery-rows'))
+    .Column(NyxTextField('caption'), 'Caption');
+  for LVersion := 5 to 7 do
+  begin
+    case LVersion of
+      5: LSpec := LBase.ColumnSizing(NyxColumnSizing.Fixed(160));
+      6: LSpec := LBase.Paged(NyxCollectionPaging.PageSize(12));
+      7: LSpec := LBase.ColumnQuery(NyxColumnQuery.Filtering(False).Operators([]));
+    else
+      begin
+        raise Exception.Create('Unexpected current discovery version');
+      end;
+    end;
+    LData := LSpec.ToData;
+    LDecoded := TNyxCollectionViewSpec.FromData(LData);
+    LBind := NyxObject([NyxField('op', NyxData('bind')),
+      NyxField('owner', NyxData('discovery-table')), NyxField('projection', NyxData('table')),
+      NyxField('spec', LData)]);
+    Check((LData.Field('version').AsInteger = LVersion) and
+      (LDecoded.ToData.ToJSON = LData.ToJSON) and
+      (ReadNyxCollectionPatch(NyxArray([LBind])).ToData.Item(0).Field('spec').ToJSON = LData.ToJSON),
+      'current typed version admits through the real strict bind decoder ' + IntToStr(LVersion));
+  end;
+  LPolicy := LData.Field('columns').Item(0).Field('queryControls');
+  Check((LData.Field('queryControls').Kind = ndNull) and
+    (LPolicy.Field('operators').Count = 0) and not LPolicy.Field('filtering').AsBoolean,
+    'a column-only disabled empty declaration remains version seven without a table default');
+  LColumn := Replacing(LData.Field('columns').Item(0), 'queryControls', NyxNull);
+  RefusesView(Replacing(LData, 'columns', NyxArray([LColumn])),
+    'an all-null version-seven declaration cannot masquerade as an explicit policy');
+  RefusesView(Replacing(LData, 'queryControls', NyxData('default')),
+    'table policy strings cannot replace the typed nullable record');
+  LBad := Replacing(LPolicy, 'filtering', NyxData(True));
+  LColumn := Replacing(LData.Field('columns').Item(0), 'queryControls', LBad);
+  RefusesView(Replacing(LData, 'columns', NyxArray([LColumn])),
+    'an enabled empty operator set refuses through actual policy admission');
+  LBad := Replacing(LPolicy, 'operators', NyxArray([NyxData('equal'), NyxData('equal')]));
+  LColumn := Replacing(LData.Field('columns').Item(0), 'queryControls', LBad);
+  RefusesView(Replacing(LData, 'columns', NyxArray([LColumn])),
+    'duplicate operators refuse even while filtering is disabled');
+  LData := LBase.Paged(NyxCollectionPaging.PageSize(12)).ToData;
+  RefusesView(Replacing(LData, 'paging', Replacing(LData.Field('paging'), 'pageSize', NyxData(0))),
+    'version-six paging does not admit zero size');
+end;
+
+{ END QUERY_CONTROL_DISCOVERY_CASES }
+{ BEGIN CURRENT_CATALOG_NAMES }
+{ Independent expected identities catch missing, substituted or duplicate tools.
+  Their order is deliberately irrelevant to collection request discovery. }
+function ExactCatalogNames(const ATools: TNyxDataValue): Boolean;
+const
+  CExpected: array[0..23] of TNyxText = (
+    'nyx_session', 'nyx_outline', 'nyx_node', 'nyx_logic', 'nyx_components',
+    'nyx_menus', 'nyx_tokens', 'nyx_presentations', 'nyx_state', 'nyx_collections',
+    'nyx_resources', 'nyx_diagnostics', 'nyx_source', 'nyx_transaction',
+    'nyx_select', 'nyx_history', 'nyx_preview', 'nyx_callbacks', 'nyx_build',
+    'nyx_pascal', 'nyx_roots', 'nyx_reviews', 'nyx_workspaces', 'nyx_project');
+var
+  LExpected, LActual, LMatches: Integer;
+begin
+  Result := False;
+
+  if ATools.Count <> Length(CExpected) then
+  begin
+    Exit;
+  end;
+  for LExpected := Low(CExpected) to High(CExpected) do
+  begin
+    LMatches := 0;
+    for LActual := 0 to ATools.Count - 1 do
+    begin
+
+      if ATools.Item(LActual).Field('name').AsText = CExpected[LExpected] then
+      begin
+        Inc(LMatches);
+      end;
+    end;
+
+    if LMatches <> 1 then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+{ END CURRENT_CATALOG_NAMES }
+{ BEGIN EXPANDED_ACTION_NAMES }
+{ The two scalar-edit actions each have four mutually exclusive family branches.
+  Check their identities independently rather than treating enum length as the
+  number of schema branches. Named operations keep eight separate closed shapes. }
+function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
+const
+  CActions: array[0..30] of TNyxText = (
+    'create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
+    'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
+    'add-column', 'clear', 'inherit', 'selection', 'query',
+    'column-content', 'column-fixed', 'column-flex', 'column-minimum',
+    'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
+    'table-query', 'column-query', 'default-table-query', 'default-column-query');
+  CNamed: array[0..7] of TNyxText = (
+    'define', 'field', 'remove-field', 'append/update-row', 'move-row',
+    'bind', 'query', 'typeahead');
+  CRequired: array[0..7] of TNyxText = (
+    '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
+    '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
+    '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|');
+  CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
+  CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
+var
+  LCounts: array[0..30] of Integer;
+  LFamilies: array[0..30, 0..3] of Boolean;
+  LNamed: array[0..7] of Boolean;
+  LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
+  LIndex, LAt, LFamily, LAction, LShape: Integer;
+  LName, LKind, LExpected: TNyxText;
+
+  function ExactRequired(const ABranch: TNyxDataValue;
+    const AExpected: TNyxText): Boolean;
+  var
+    LRequired: TNyxDataValue;
+    LAt: Integer;
+    LKey, LSeen: TNyxText;
+  begin
+    Result := False;
+    LRequired := ABranch.Field('required');
+    LSeen := '|';
+    for LAt := 0 to LRequired.Count - 1 do
+    begin
+      LKey := LRequired.Item(LAt).AsText;
+
+      if (Pos('|' + LKey + '|', AExpected) = 0) or
+        (Pos('|' + LKey + '|', LSeen) > 0) or
+        not NyxAgentHas(ABranch.Field('properties'), LKey) then
+      begin
+        Exit;
+      end;
+      LSeen := LSeen + LKey + '|';
+    end;
+    Result := (Length(LSeen) = Length(AExpected)) and
+      (LRequired.Count = ABranch.Field('properties').Count);
+  end;
+
+begin
+  Result := False;
+  for LAt := Low(LCounts) to High(LCounts) do
+  begin
+    LCounts[LAt] := 0;
+    for LFamily := Low(CFamilies) to High(CFamilies) do
+    begin
+      LFamilies[LAt, LFamily] := False;
+    end;
+  end;
+  for LAt := Low(LNamed) to High(LNamed) do
+  begin
+    LNamed[LAt] := False;
+  end;
+  for LIndex := 0 to AChanges.Count - 1 do
+  begin
+    LBranch := AChanges.Item(LIndex);
+    LProperties := LBranch.Field('properties');
+    LOperation := LProperties.Field('op');
+    LName := '';
+
+    if NyxAgentHas(LOperation, 'const') then
+    begin
+      LName := LOperation.Field('const').AsText;
+    end
+    else if NyxAgentHas(LOperation, 'enum') then
+    begin
+      LChoices := LOperation.Field('enum');
+
+      if (LChoices.Count <> 2) or not
+        (((LChoices.Item(0).AsText = 'append') and (LChoices.Item(1).AsText = 'update-row')) or
+         ((LChoices.Item(1).AsText = 'append') and (LChoices.Item(0).AsText = 'update-row'))) then
+      begin
+        Exit;
+      end;
+      LName := 'append/update-row';
+    end;
+
+    if LName = 'intent' then
+    begin
+      LName := LProperties.Field('action').Field('const').AsText;
+      LAction := -1;
+      for LAt := Low(CActions) to High(CActions) do
+      begin
+
+        if LName = CActions[LAt] then
+        begin
+          LAction := LAt;
+        end;
+      end;
+
+      if LAction < 0 then
+      begin
+        Exit;
+      end;
+      Inc(LCounts[LAction]);
+
+      if (LName = 'default') or (LName = 'cell') then
+      begin
+        LExpected := '|op|action|key|field|kind|value|';
+
+        if LName = 'cell' then
+        begin
+          LExpected := '|op|action|key|item|field|kind|value|';
+        end;
+
+        if not ExactRequired(LBranch, LExpected) then
+        begin
+          Exit;
+        end;
+        LKind := LProperties.Field('kind').Field('const').AsText;
+        LFamily := -1;
+        for LAt := Low(CFamilies) to High(CFamilies) do
+        begin
+
+          if LKind = CFamilies[LAt] then
+          begin
+            LFamily := LAt;
+          end;
+        end;
+
+        if LFamily < 0 then
+        begin
+          Exit;
+        end;
+
+        if LFamilies[LAction, LFamily] or
+          (LProperties.Field('value').Field('type').AsText <> CScalars[LFamily]) then
+        begin
+          Exit;
+        end;
+        LFamilies[LAction, LFamily] := True;
+      end;
+    end
+    else
+    begin
+      LShape := -1;
+      for LAt := Low(CNamed) to High(CNamed) do
+      begin
+
+        if LName = CNamed[LAt] then
+        begin
+          LShape := LAt;
+        end;
+      end;
+
+      if LShape < 0 then
+      begin
+        Exit;
+      end;
+
+      if LNamed[LShape] or not ExactRequired(LBranch, CRequired[LShape]) then
+      begin
+        Exit;
+      end;
+      LNamed[LShape] := True;
+    end;
+  end;
+  for LAt := Low(CActions) to High(CActions) do
+  begin
+
+    if (CActions[LAt] = 'default') or (CActions[LAt] = 'cell') then
+    begin
+
+      if LCounts[LAt] <> Length(CFamilies) then
+      begin
+        Exit;
+      end;
+    end
+    else if LCounts[LAt] <> 1 then
+    begin
+      Exit;
+    end;
+  end;
+  for LAt := Low(LNamed) to High(LNamed) do
+  begin
+
+    if not LNamed[LAt] then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+{ END EXPANDED_ACTION_NAMES }
 begin
   try
     { This is the actual MCP discovery builder. No server constructor, listener,
       personal configuration or authenticated active project is touched. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 21, 'complete source catalog count');
+    Check(LTools.Count = 24, 'complete source catalog count');
+    { BEGIN CURRENT_CATALOG_CHECK }
+    Check(ExactCatalogNames(LTools), 'complete exact tool names are unique');
+    { END CURRENT_CATALOG_CHECK }
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -73,7 +501,7 @@ begin
     Check(not LTool.Field('annotations').Field('readOnlyHint').AsBoolean,
       'mixed query/edit tool advertises conservative mutation hint');
     LSchema := LTool.Field('inputSchema').Field('oneOf');
-    Check(LSchema.Count = 10, 'all ten closed context/apply modes are discoverable');
+    Check(LSchema.Count = 13, 'all thirteen closed context/apply branches are discoverable');
     for LMode := 0 to LSchema.Count - 1 do
     begin
       LVariant := LSchema.Item(LMode);
@@ -107,7 +535,10 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 32, 'named commands and all eighteen typed ordinary actions');
+    Check(LChanges.Count = 45, 'named commands and all thirty-one typed ordinary actions');
+    { BEGIN EXPANDED_ACTION_CHECK }
+    Check(ExactChangeBranches(LChanges), 'eight named shapes and every typed action/family occur exactly once');
+    { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
       (LDefinition.Item(0).Field('properties').Field('default').Field('type').AsText = 'string') and
@@ -117,7 +548,7 @@ begin
       .Field('properties').Field('choices').Field('maxItems').AsInteger = 128,
       'bounded typed domain choices');
     LDefinition := LChanges.Item(5).Field('properties').Field('spec').Field('oneOf');
-    Check((LDefinition.Count = 4) and
+    Check((LDefinition.Count = 7) and
       (LDefinition.Item(0).Field('properties').Field('version').Field('const').AsInteger = 1) and
       (LDefinition.Item(1).Field('required').Count = 6) and
       (LDefinition.Item(1).Field('properties').Field('selection').Field('const').AsText = 'multiple'),
@@ -147,6 +578,9 @@ begin
         not NyxAgentHas(LChange.Field('properties'), 'review'),
         'nested operation keeps strict ownership ' + IntToStr(LIndex));
     end;
+    { BEGIN QUERY_CONTROL_DISCOVERY_CALL }
+    CurrentPolicyDiscovery(LTool);
+    { END QUERY_CONTROL_DISCOVERY_CALL }
     WriteLn('PASS ', LChecks, ' actual collection MCP discovery checks');
   except
     on LException: Exception do

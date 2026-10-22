@@ -4,6 +4,163 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: bounded policy inspection qualifies locally
+
+This turn is PROGRESS. Existing bindings/column modes now expose opt-in strict
+Boolean queryControls without changing omitted/false JSON. Requested defined
+contexts and only requested column pages/exact fields carry declared plus typed
+resolved policy. Standard table support is separate from valid saved List/Tree
+metadata. Existing ownership, null/default/empty/subset operator intent, Unicode
+title windows, revision rules and complete48KiB response refusal are preserved.
+Tool description, portable schema and guide agree; no tool identity was added.
+
+| Current result | Actual boundary |
+| --- | --- |
+| Full semantic collection journeyE398 | Native176: all original143 current-action checks plus33 isolated policy-read checks. False/omitted equality, defaults/explicit intent, inheritance/masks, typed edits/history/refusal and a smaller page after48KiB refusal pass. |
+| Actual MCP discovery9129 | Native115 checks the pure real catalog:24 unique exact tools,13 closed request branches,45 change branches covering31 actions with scalar variants, seven binding versions and strict optional selectors. No server is constructed. |
+| Unchanged inheritance consumer | Native14 exact mask/restorable/key/history checks pass. New policy reads do not replace this default-shape compatibility. |
+| Target builds | Matching journey/inheritance browser assertions and both Studio mains compile; browser input and observing deployment are unproven here. |
+
+All three successful native executions have complete equal allocation/free and
+zero-unfreed final heap reports. Seven accepted compilers have zero owned/21
+upstream pas2js classes.pas warning occurrences. The composite explicitly reuses
+only initial journey native/browser results: subsequent Pascal deltas are the
+standalone discovery program, outside their dependencies. Five accepted compilers
+are fresh after that repair. Keep two earlier successful compilers whose schema
+executables failed stale21-tool/miscounted39-branch oracles; both failure heaps
+are complete/clean. They are diagnostic evidence, not successful runtime credit.
+Every original assertion remains; marked restoration proofs recover old1DD4/DD44
+sources. Root/helper missed the six scalar expansion branches in the first review;
+exact action/family identity checks now accompany the45 expectation. Retain that
+failure and the earlier newline-only RunOwned precision finding explicitly.
+
+Root joins98804/4440a9,97619/cba47b,90472/436834 and57260/693b0c are terminal;
+all14 actual process IDs are absent. Composite0EF52F05 verifies current1850 pins,
+nine retained source copies, nine compiler receipts and70 artifact references
+against2ECEFC37. No Pascal/guide/tool changed after that freeze. Source hashes:
+response12737A81, schema5C310EEC, descriptionC6359DA9, sharedE3989188 and actual
+discovery9129D340. Functional success is not production responsiveness evidence.
+Core44->45; no original/P4B/P4C/browser/credit/DONE closure follows.
+
+Root owns only outcome docs/checkpoint. All Pascal/guide/tools remain paused.
+The next separately reviewed P4B source packet is baseline-derived semantic
+set/default: four typed public factories over two nullable named wire operations,
+table-only authoring through current intent admission, fresh owner/schema/spec
+capture inside EACH ordered candidate, exact key/typed field, same pending-draft
+guard even for equal source bytes and all-or-refused publication. Default reset
+retains local binding ownership; inheritance remains separate. No-op resets need
+not invent history. Two named branches would make47 while31 intent identities
+and seven binding versions remain. The existing helper's read-only blueprint
+identifies current collectionedits/schema/description plus the same test seams;
+no source is released by this outcome. After real agent-only read-to-write proof,
+return to P4C's OWN ordinary Studio Save/Open/generated application journey and
+actual browser gate. LAN stays offline; no host/config/MCP/worker rollout,
+profile/probe, cleanup/restart or extra agent is introduced.
+
+### Current boundary: discovery action expansion was miscounted
+
+The first narrow catalog repair proves all24 exact tool names and proceeds to
+the39-change assertion, which fails. Root/helper's source count missed the two
+scalar-expanded actions: eight named branches plus31 ordinary actions plus six
+additional default/cell variants totals45. Retain the wrong39 review claim and
+both failed schema executables/logs/receipts. This is an oracle error; product
+response/schema and sharedE398 remain unchanged. Root90472 joined436834; actual
+46648/45204 are absent. The compiler has zero warnings and the failure heap is
+complete/clean. Expanded-action failure audit verifies1850 pins/nine retained
+copies/ten artifacts at unchangedEF9855EB. Four inheritance/Studio compilers are
+still unattempted; no fresh journey rerun is needed for a discovery-only repair.
+
+Release only helper's discovery test for45 plus independent exact action and
+scalar-family membership. Preserve every previous assertion and current24-tool
+identity proof. Root reviews, freezes and resumes the same five-compiler/two-
+native remainder, retaining first failures. All other Pascal/tools stay exact.
+Core44 and complete P4B/P4C/original/browser gates remain open. This packet's
+next product operation is still baseline-derived semantic set/default; repeated
+count fixes do not earn component or end-to-end authoring credit.
+
+### Current boundary: full policy reads pass; discovery catalog oracle is stale
+
+Initial freeze7E893268 stays exact: nine owned/1807 Pascal/13 foreign/21 extra,
+1850 pin occurrences and nine retained source copies. Full native journeyE398
+passes176 (original143 plus33 new policy-read checks), complete equal45659530
+blocks/20024891512 cumulative bytes, zero unfreed and final heap footer. Browser
+compiles. Actual MCP discovery compiles, then fails its first old21-tool catalog
+assertion; the pure source catalog contains24 named constructors. Its failure
+heap is also complete/clean. All three compilers have zero owned warnings;
+browser retains its upstream warnings. No server or browser runtime was started.
+Root98804 joined4440a9 and remaining97619 joinedcba47b; actual5380/38092/15080/
+4876/47028 are absent. AuditA3BAA5B1 verifies all1850 pins/nine retained copies and
+25 artifact references. Four inheritance/Studio compilers remain unattempted.
+
+This is a retained test-oracle failure. Release only helper's existing discovery
+program for21->24 and independent expected exact membership/uniqueness checks,
+preserving all previous collection assertions. Product12737A81/5C310EEC/C6359DA9,
+sharedE398 and every other Pascal input stay exact. Root reviews the repair,
+freshly freezes the same nine-path packet and admits native discovery plus the
+four remaining compilers. Explicitly reuse full journey native/browser results;
+do not rerun unaffected input. Keep the first failed source/executable/log and
+receipt, and stop at the next real result. Core44/original/P4B/P4C gates remain
+open. The subsequent P4B baseline-derived set/default operations still require
+a separate source release and genuine agent-only read-to-write proof.
+
+### Current source scope: bounded query-policy inspection
+
+The user-side backlog request is satisfied by the existing80-kind review and
+tasks02/03/04 plus the original component-family owners. Independent review and
+254 relative links pass; no duplicate task or new runtime claim follows. Prior
+final9A2F and all1873 frozen pin occurrences are revalidated. All readers remain
+joined. This next separate source packet addresses the actual missing P4B read.
+
+Root owns only AGENTS/WORK/task02/studio-agents guide, the existing collection
+response/schema includes and nyx_collections tool description. Lil' Scooty owns
+only tests/nyx.test.agent.collections.pas and tests/nyx_agent_collection_schema.lpr.
+The private query-policy-reads packet retains nine preimages,1807 Pascal inputs,
+13 foreign pins and19 original extra inputs. Two new private freeze/qualifier
+pins bring extras to21; independent source/tool review and a joint freeze precede
+any compiler. All other Pascal/tools remain paused. The bounded plan is seven
+compilers/three native executions: full journey native/browser, actual discovery
+native, unchanged inheritance native/browser and both Studio mains. Native runs
+take no arguments, use complete direct heap capture and stop at first failure;
+browser compiles only. No focused-only define, authored exports or UI host.
+Independent tool review caught a newline-only precision error in root's initial
+"exact RunOwned" comparison: Python text reads normalized line endings. The
+unexecuted candidate is retained; copying the original function's literal bytes
+now makes actual PowerShell AST extents equal at3975 characters. The bounded
+driver's process/heap behavior is unchanged. Both tests' marked-block restoration
+proofs independently recover their exact old1DD4/DD44 source bytes.
+
+Only bindings/column gain optional strict Boolean queryControls, default false.
+Omitted/false must preserve byte-equivalent old JSON. Requested defined binding
+contexts and requested column pages/exact field gain declared plus the existing
+typed policy ToData; a separate queryControlsSupported flag describes standard
+table projection support, independently of valid saved policies on List/Tree.
+No runtime contribution state is read. Existing absent/cleared/inherited/local/
+effective/restorable ownership, title windows, null/default/empty operator intent,
+revision behavior and48KiB bound stay unchanged. Tool description/schema/help
+must agree with this optional response and current seven binding versions.
+
+Full existing agent journey and actual native MCP schema discovery must qualify.
+Source review found latent valid-payload omissions in the general action loop
+and stale discovery counts. Helper may add marked real sizing/paging/query-policy
+case inputs without skipping actions or changing original assertions/deadlines,
+plus standalone marked policy-read checks using independent sessions. Removing
+those marked unit additions must restore1DD4FA1E exactly. Schema coverage keeps
+old v1–v4 predicates and adds meaningful v5–v7/strict-selector admission checks;
+current source counts are13/39/7, not executed outcomes. Root reviews the source,
+then admits a bounded dependency-based plan, retains first failures and joins
+every actual handle. Browser compiles only; no host or configuration is started.
+Read-only inspection also confirms a remaining P4B operation gap: the four
+ordinary policy intents require NyxQueryEditorBaseline, which contains the full
+binding plus schema defaults/domains. Bounded context lacks complete sizing/
+paging/domain data, and must not grow into a form/document dump. New tests obtain
+their baseline from their owned PreviewPair; they prove existing typed intent
+admission/read agreement, not an ordinary agent-only editing workflow. After
+this read packet, provide exact-revision semantic set/default operations which
+derive the current baseline inside the ordered candidate, reusing normal intent
+admission just like the named query operation. This requires its own reviewed
+source scope. Core44, complete P4B/P4C and original credit remain open; P4C's own
+ordinary Save/Open/generated application proof follows complete P4B agreement.
+
 ### Current boundary: source frame repair qualifies locally; policy reads remain
 
 This turn is PROGRESS. Private host-only source admission now rejects parked or

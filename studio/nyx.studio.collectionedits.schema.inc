@@ -409,12 +409,14 @@ begin
     '"required":["mode","key","field"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"bindings"},"owner":{"type":"string","minLength":1},' +
     '"offset":{"type":"integer","minimum":0,"maximum":64},' +
-    '"limit":{"type":"integer","minimum":1,"maximum":50}},' +
+    '"limit":{"type":"integer","minimum":1,"maximum":50},' +
+    '"queryControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +
     '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
-    '"count":{"type":"integer","minimum":1,"maximum":4096}},' +
+    '"count":{"type":"integer","minimum":1,"maximum":4096},' +
+    '"queryControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"source":{"enum":["local","effective","restorable"]},' +

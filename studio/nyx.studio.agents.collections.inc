@@ -188,7 +188,8 @@ begin
 end;
 
 function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
-  AOffset, ALimit: Integer; ATypeAheadSupported: Boolean): TNyxDataValue;
+  AOffset, ALimit: Integer; ATypeAheadSupported,
+  AQueryControls: Boolean): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
@@ -222,6 +223,13 @@ begin
       NyxField('kind', NyxData(NyxStateKindName(LColumn.Kind))),
       NyxField('editable', NyxData(LColumn.Mode = cmEditable)),
       NyxField('title', CollectionScalarPreview(TNyxStateValue.FromText(LColumn.Title)))]);
+
+    if AQueryControls then
+    begin
+      LColumns[LIndex] := WithResults(LColumns[LIndex], NyxObject([
+        NyxField('declared', NyxData(LColumn.HasQueryPolicy)),
+        NyxField('policy', LColumn.QueryPolicy.ToData)]), 'queryControls');
+    end;
   end;
   { A bounded scalar policy belongs to each requested binding context. Declared
     distinguishes saved intent from the library default; the parent response
@@ -241,6 +249,17 @@ begin
     NyxField('nextOffset', NyxData(Min(AOffset + Length(LColumns), ASpec.Count))),
     NyxField('total', NyxData(ASpec.Count)), NyxField('columns', NyxArray(LColumns)),
     NyxField('typeAhead', LTypeAhead)]);
+  { Capability reads are opt-in and share the existing column page/byte budget.
+    Serialize the admitted policy itself: disabled filtering must not erase an
+    explicit operator set. Saved declarations remain useful on non-table views;
+    the outer response reports standard projection support independently. }
+
+  if AQueryControls then
+  begin
+    Result := WithResults(Result, NyxObject([
+      NyxField('declared', NyxData(ASpec.HasTableQueryPolicy)),
+      NyxField('policy', ASpec.TableQueryPolicy.ToData)]), 'queryControls');
+  end;
 end;
 
 {$include nyx.studio.agents.collectionqueries.inc}
@@ -286,6 +305,7 @@ var
   LColumn: TNyxCollectionColumn;
   LProjectionName: TNyxText;
   LColumnSource: TNyxAgentCollectionSource;
+  LQueryControls: Boolean;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentCollectionMode) to High(TNyxAgentCollectionMode) do
@@ -360,10 +380,11 @@ begin
 
   if LMode in [acmBindings, acmColumn, acmQuery, acmQueryValue, acmPreview] then
   begin
+    LQueryControls := False;
 
     if LMode = acmBindings then
     begin
-      NyxAgentFields(AArguments, '|mode|owner|offset|limit|');
+      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|');
       LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollectionFields);
       LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
     end
@@ -372,7 +393,7 @@ begin
       case LMode of
         acmColumn:
           begin
-            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|');
+            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|queryControls|');
           end;
         acmQuery:
           begin
@@ -412,6 +433,13 @@ begin
       LOffset := 0;
       LLimit := 1;
     end;
+    { AsBoolean requires the native scalar family. No truthy string/number is
+      accepted, and the closed mode shapes above refuse this selector elsewhere. }
+
+    if NyxAgentHas(AArguments, 'queryControls') then
+    begin
+      LQueryControls := AArguments.Field('queryControls').AsBoolean;
+    end;
     LName := AArguments.Field('owner').AsText;
     LNode := FSession.Document.Find(LName);
 
@@ -434,7 +462,7 @@ begin
       if LNode.HasCollectionView then
       begin
         LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
-          (LProjectionName = 'list') or (LProjectionName = 'tree'));
+          (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls);
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -443,7 +471,7 @@ begin
           if LSpec.Defined then
           begin
             LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
-              (LProjectionName = 'list') or (LProjectionName = 'tree'));
+              (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls);
           end;
         end;
       end;
@@ -455,7 +483,7 @@ begin
         if LProjection.HasCollectionView then
         begin
           LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
-            (LProjectionName = 'list') or (LProjectionName = 'tree'));
+            (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls);
         end;
       end;
 
@@ -471,6 +499,12 @@ begin
             (LEffective.Kind <> ndNull))), NyxField('local', LLocal),
           NyxField('effective', LEffective)]);
         Result := WithResults(Result, LRestorable, 'restorable');
+
+        if LQueryControls then
+        begin
+          Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+            'queryControlsSupported');
+        end;
         Exit;
       end;
       LSpec := Default(TNyxCollectionViewSpec);
@@ -533,6 +567,15 @@ begin
               NyxField('editable', NyxData(LColumn.Mode = cmEditable)),
               NyxField('title', CollectionScalarWindow(
                 TNyxStateValue.FromText(LColumn.Title), AArguments))]);
+
+            if LQueryControls then
+            begin
+              Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+                'queryControlsSupported');
+              Result := WithResults(Result, NyxObject([
+                NyxField('declared', NyxData(LColumn.HasQueryPolicy)),
+                NyxField('policy', LColumn.QueryPolicy.ToData)]), 'queryControls');
+            end;
             Exit;
           end;
         end;

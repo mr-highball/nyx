@@ -45,6 +45,9 @@ uses
   SysUtils, nyx.model, nyx.types, nyx.controls, nyx.codec, nyx.codegen, nyx.data,
   nyx.contract, nyx.state, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.query.editor,
+  { BEGIN QUERY_CONTROL_READ_IMPORT }
+  nyx.collections.query.policy,
+  { END QUERY_CONTROL_READ_IMPORT }
   nyx.studio.collectionintent, nyx.studio.collectionedits,
   nyx.studio.stateedits, nyx.studio.agents, nyx.studio.workspaces, nyx.studio.reviews;
 
@@ -90,6 +93,369 @@ begin
   end;
 end;
 
+{ BEGIN QUERY_CONTROL_READ_CASES }
+{ An independent accepted project exercises the actual bounded agent route.
+  Its candidates/history never change the original journey's seed or export.
+  Policies describe saved/default intent; projection support is a separate fact. }
+function RunQueryControlReadCases: Integer;
+var
+  LAgent: TNyxAgentSession;
+  LKey, LWideKey: TNyxCollectionRef;
+  LSchema, LWideSchema: TNyxCollectionSchema;
+  LBase, LDeclared, LLane, LWide: TNyxCollectionViewSpec;
+  LReply, LAbsent, LFalse, LPage, LState, LWire, LStale: TNyxDataValue;
+  LIntent: TNyxStudioCollectionIntent;
+  LBefore, LAfter, LDefinition, LPeer, LTitle, LFieldName: TNyxText;
+  LRevision, LReadRevision, LIndex: Integer;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise ENyxCollection.Create('Query control reads: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+  function PairText: TNyxText;
+  begin
+    Result := EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home'));
+  end;
+
+  function ReadContext(const AMode: TNyxText;
+    const AFields: array of TNyxDataField): TNyxDataValue;
+  var
+    LMembers: array of TNyxDataField;
+    LAt: Integer;
+  begin
+    SetLength(LMembers, Length(AFields) + 1);
+    LMembers[0] := NyxField('mode', NyxData(AMode));
+    for LAt := 0 to High(AFields) do
+    begin
+      LMembers[LAt + 1] := AFields[LAt];
+    end;
+    Result := LAgent.Call('nyx_collections', 'Policy reader', NyxObject(LMembers));
+  end;
+
+  function Binding(const AOwner: TNyxText): TNyxDataValue;
+  begin
+    Result := ReadContext('bindings', [NyxField('owner', NyxData(AOwner)),
+      NyxField('queryControls', NyxData(True)), NyxField('limit', NyxData(1))]);
+  end;
+
+  function Request(const AID: TNyxText; const AChanges: TNyxDataValue): TNyxDataValue;
+  begin
+    Result := NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData(AID)), NyxField('changes', AChanges)]);
+  end;
+
+  procedure Apply(const AID: TNyxText; const AChanges: array of TNyxCollectionChange);
+  begin
+    LAgent.Call('nyx_collections', 'Policy reader',
+      Request(AID, NyxCollectionPatch(AChanges).ToData), 'policy-read-owner');
+    LRevision := LAgent.Revision;
+  end;
+
+  procedure History(const ADirection, AID: TNyxText);
+  begin
+    LAgent.Call('nyx_history', 'Policy reader', NyxObject([
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData(AID)), NyxField('direction', NyxData(ADirection))]));
+    LRevision := LAgent.Revision;
+  end;
+
+  function Replacing(const AData: TNyxDataValue; const AName: TNyxText;
+    const AValue: TNyxDataValue): TNyxDataValue;
+  var
+    LFields: array of TNyxDataField;
+    LAt: Integer;
+  begin
+    SetLength(LFields, AData.Count);
+    for LAt := 0 to AData.Count - 1 do
+    begin
+
+      if AData.Key(LAt) = AName then
+      begin
+        LFields[LAt] := NyxField(AName, AValue);
+      end
+      else
+      begin
+        LFields[LAt] := NyxField(AData.Key(LAt), AData.Field(AData.Key(LAt)));
+      end;
+    end;
+    Result := NyxObject(LFields);
+  end;
+
+  procedure Refuses(const AArguments: TNyxDataValue; const AReason: TNyxText;
+    const AMessage: TNyxText = '');
+  var
+    LPair: TNyxText;
+    LSession, LAfterSession: TNyxDataValue;
+    LRejected: Boolean;
+  begin
+    LPair := PairText;
+    LSession := LAgent.Call('nyx_session', 'Policy reader', NyxObject([]));
+    LRejected := False;
+    try
+      LAgent.Call('nyx_collections', 'Policy reader', AArguments, 'policy-read-owner');
+    except
+      on E: Exception do
+      begin
+        LRejected := (AMessage = '') or (Pos(AMessage, TNyxText(E.Message)) > 0);
+      end;
+    end;
+    LAfterSession := LAgent.Call('nyx_session', 'Policy reader', NyxObject([]));
+    Check(LRejected and (LAgent.Revision = LRevision) and (PairText = LPair) and
+      (LSession.Field('canUndo').AsBoolean = LAfterSession.Field('canUndo').AsBoolean) and
+      (LSession.Field('canRedo').AsBoolean = LAfterSession.Field('canRedo').AsBoolean) and
+      (LSession.Field('selection').AsText = LAfterSession.Field('selection').AsText), AReason);
+  end;
+
+  function PolicyIntent(AAction: TNyxStudioCollectionAction): TNyxStudioCollectionIntent;
+  var
+    LDocument: TNyxDocument;
+  begin
+    Result := Default(TNyxStudioCollectionIntent);
+    Result.Action := AAction;
+    Result.Key := LKey;
+    Result.Projection := cpTable;
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LRevision, 'home').Design);
+    try
+      Result.QueryBaseline := NyxQueryEditorBaseline(
+        LDocument.Collections.Snapshot(LKey).Schema,
+        LDocument.Find('tasks-table').CollectionView);
+    finally
+      LDocument.Free;
+    end;
+
+    if AAction in [scaColumnQuery, scaDefaultColumnQuery] then
+    begin
+      Result.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
+    end;
+  end;
+
+begin
+  Result := 0;
+  LAgent := TNyxAgentSession.Create(CreateNyxAgentCollectionSeed);
+  try
+    LRevision := LAgent.Revision;
+    LKey := NyxCollection('policy-rows');
+    LTitle := TNyxText(StringOfChar('x', 5000)) + TNyxText('🌙');
+    LSchema := NyxCollectionSchema.Text(NyxTextField('caption'), '')
+      .Integer(NyxIntegerField('priority'), 0).Boolean(NyxBooleanField('done'), False)
+      .Number(NyxNumberField('ratio'), 0);
+    LBase := NyxCollectionView(LKey).Column(NyxTextField('caption'), LTitle)
+      .Column(NyxIntegerField('priority'), 'Priority')
+      .Column(NyxBooleanField('done'), 'Done').Column(NyxNumberField('ratio'), 'Ratio');
+    Apply('policy-read-seed', [NyxDefineCollection(LKey, LSchema, []),
+      NyxBindCollection(NyxBindingOwner('tasks-table'), cpTable, LBase),
+      NyxBindCollection(NyxBindingOwner('tasks-list'), cpList,
+        NyxCollectionView(LKey).Column(NyxTextField('caption'), 'Peer'))]);
+    LBefore := PairText;
+    LReadRevision := LRevision;
+    LState := LAgent.Call('nyx_session', 'Policy reader', NyxObject([]));
+    LAbsent := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table'))]);
+    LFalse := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('queryControls', NyxData(False))]);
+    Check((LAbsent.ToJSON = LFalse.ToJSON) and
+      not NyxAgentHas(LAbsent, 'queryControlsSupported') and
+      not NyxAgentHas(LAbsent.Field('local'), 'queryControls') and
+      not NyxAgentHas(LAbsent.Field('local').Field('columns').Item(0), 'queryControls'),
+      'omitted and false selectors retain the exact legacy binding shape');
+    LAbsent := ReadContext('column', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('field', NyxData('caption')), NyxField('source', NyxData('local')),
+      NyxField('offset', NyxData(5000)), NyxField('count', NyxData(1))]);
+    LFalse := ReadContext('column', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('field', NyxData('caption')), NyxField('source', NyxData('local')),
+      NyxField('offset', NyxData(5000)), NyxField('count', NyxData(1)),
+      NyxField('queryControls', NyxData(False))]);
+    Check((LAbsent.ToJSON = LFalse.ToJSON) and not NyxAgentHas(LAbsent, 'queryControls'),
+      'omitted and false selectors retain the exact legacy column window');
+    LReply := Binding('tasks-table');
+    Check(LReply.Field('queryControlsSupported').AsBoolean and
+      not LReply.Field('local').Field('queryControls').Field('declared').AsBoolean and
+      (LReply.Field('local').Field('queryControls').Field('policy').ToJSON =
+        NyxTableQuery.ToData.ToJSON), 'an absent table choice exposes a resolved default without declaring it');
+    LPage := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('offset', NyxData(1)), NyxField('limit', NyxData(1)),
+      NyxField('queryControls', NyxData(True))]).Field('effective');
+    Check((LPage.Field('columns').Count = 1) and (LPage.Field('total').AsInteger = 4) and
+      (LPage.Field('nextOffset').AsInteger = 2) and
+      (LPage.Field('columns').Item(0).Field('field').AsText = 'priority') and
+      not LPage.Field('columns').Item(0).Field('queryControls').Field('declared').AsBoolean,
+      'only the requested column page carries its default capability metadata');
+    LReply := ReadContext('column', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('field', NyxData('caption')), NyxField('source', NyxData('effective')),
+      NyxField('offset', NyxData(5000)), NyxField('count', NyxData(1)),
+      NyxField('queryControls', NyxData(True))]);
+    Check((LReply.Field('title').Field('text').AsText = TNyxText('🌙')) and
+      (LReply.Field('queryControls').Field('policy').ToJSON = NyxColumnQuery.ToData.ToJSON),
+      'capability metadata preserves the independent supplementary title window');
+    Check((PairText = LBefore) and (LRevision = LReadRevision) and
+      (LAgent.Revision = LReadRevision) and
+      (LAgent.Call('nyx_session', 'Policy reader', NyxObject([])).Field('selection').AsText =
+        LState.Field('selection').AsText), 'reads do not publish policy defaults or navigate');
+
+    LDeclared := NyxCollectionView(LKey).Column(NyxTextField('caption'), LTitle)
+      .ColumnQuery(NyxColumnQuery.Operators([nqcEqual, nqcContains]).TextComparison(nqtAsciiInsensitive))
+      .Column(NyxIntegerField('priority'), 'Priority')
+      .ColumnQuery(NyxColumnQuery.Filtering(False).Operators([nqcEqual]))
+      .Column(NyxBooleanField('done'), 'Done')
+      .ColumnQuery(NyxColumnQuery.Filtering(False).Operators([]))
+      .Column(NyxNumberField('ratio'), 'Ratio').ColumnQuery(NyxColumnQuery)
+      .TableQuery(NyxTableQuery);
+    Apply('policy-read-declarations', [NyxBindCollection(NyxBindingOwner('tasks-table'), cpTable, LDeclared)]);
+    LReply := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(4)), NyxField('queryControls', NyxData(True))]);
+    LPage := LReply.Field('local');
+    Check(LPage.Field('queryControls').Field('declared').AsBoolean and
+      (LPage.Field('queryControls').Field('policy').ToJSON = NyxTableQuery.ToData.ToJSON),
+      'an explicitly saved default remains distinct from no table declaration');
+    for LIndex := 0 to 3 do
+    begin
+      Check(LPage.Field('columns').Item(LIndex).Field('queryControls').Field('declared').AsBoolean and
+        (LPage.Field('columns').Item(LIndex).Field('queryControls').Field('policy').ToJSON =
+          LDeclared.ColumnAt(LIndex).QueryPolicy.ToData.ToJSON),
+        'the requested field retains its exact typed saved policy ' + TNyxText(IntToStr(LIndex)));
+    end;
+    Check((LPage.Field('columns').Item(1).Field('queryControls').Field('policy').Field('operators').Count = 1) and
+      not LPage.Field('columns').Item(1).Field('queryControls').Field('policy').Field('filtering').AsBoolean and
+      (LPage.Field('columns').Item(2).Field('queryControls').Field('policy').Field('operators').Count = 0) and
+      (LPage.Field('columns').Item(3).Field('queryControls').Field('policy').Field('operators').Kind = ndNull),
+      'disabled subsets, explicit empty operators and default null operators remain distinct');
+
+    LLane := NyxCollectionView(LKey).Scoped(csInstance).Column(NyxTextField('caption'), 'Lane')
+      .ColumnQuery(NyxColumnQuery.Sorting(False).Operators([nqcEqual]))
+      .TableQuery(NyxTableQuery.Filtering(False));
+    Apply('policy-read-lane', [NyxBindCollection(NyxBindingOwner('definition-list'), cpList, LLane)]);
+    LDefinition := Binding('definition-list').Field('local').ToJSON;
+    LPeer := Binding('tasks-list').Field('local').ToJSON;
+    LReply := Binding('first-items');
+    Check(not LReply.Field('queryControlsSupported').AsBoolean and
+      LReply.Field('inherited').AsBoolean and (LReply.Field('local').Kind = ndNull) and
+      LReply.Field('effective').Field('queryControls').Field('declared').AsBoolean and
+      (LReply.Field('effective').Field('queryControls').Field('policy').ToJSON =
+        LLane.TableQueryPolicy.ToData.ToJSON), 'a List reports unsupported presentation without hiding inherited saved intent');
+    Apply('policy-read-local-lane', [NyxBindCollection(NyxBindingOwner('first-items'), cpList,
+      LLane.TableQuery(NyxTableQuery.Sorting(False)))]);
+    LReply := Binding('first-items');
+    Check(not LReply.Field('inherited').AsBoolean and
+      (LReply.Field('local').Field('queryControls').Field('policy').ToJSON =
+        NyxTableQuery.Sorting(False).ToData.ToJSON) and
+      (Binding('definition-list').Field('local').ToJSON = LDefinition) and
+      (Binding('tasks-list').Field('local').ToJSON = LPeer),
+      'local reusable policy overrides preserve definition and independent peer metadata');
+    LIntent := Default(TNyxStudioCollectionIntent);
+    LIntent.Action := scaClear;
+    LIntent.Key := LKey;
+    LIntent.Projection := cpList;
+    Apply('policy-read-mask', [NyxCollectionIntentChange(NyxBindingOwner('first-items'), LIntent)]);
+    LReply := Binding('first-items');
+    Check(LReply.Field('local').Field('cleared').AsBoolean and
+      LReply.Field('effective').Field('cleared').AsBoolean and
+      (LReply.Field('restorable').Field('queryControls').Field('policy').ToJSON =
+        LLane.TableQueryPolicy.ToData.ToJSON), 'a clear mask exposes only its actual restorable inherited policy');
+    LReply := ReadContext('column', [NyxField('owner', NyxData('first-items')),
+      NyxField('field', NyxData('caption')), NyxField('source', NyxData('restorable')),
+      NyxField('queryControls', NyxData(True))]);
+    Check(not LReply.Field('queryControlsSupported').AsBoolean and
+      LReply.Field('queryControls').Field('declared').AsBoolean and
+      (LReply.Field('queryControls').Field('policy').ToJSON = LLane.ColumnAt(0).QueryPolicy.ToData.ToJSON),
+      'an exact restorable List column exposes its stored policy without granting a header');
+    LReply := Binding('home');
+    Check(not LReply.Field('queryControlsSupported').AsBoolean and
+      (LReply.Field('local').Kind = ndNull) and (LReply.Field('effective').Kind = ndNull),
+      'an unrelated owner never acquires a policy or collection by inspection');
+
+    LBefore := PairText;
+    LIntent := PolicyIntent(scaTableQuery);
+    LIntent.TableQuery := NyxTableQuery.Filtering(False);
+    LStale := Request('policy-read-stale', NyxCollectionPatch([
+      NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]).ToData);
+    Apply('policy-read-set-table', [NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]);
+    LAfter := PairText;
+    Check(not Binding('tasks-table').Field('effective').Field('queryControls').Field('policy')
+      .Field('filtering').AsBoolean, 'the ordinary table policy intent is visible through the same read');
+    History('undo', 'policy-read-undo');
+    Check(PairText = LBefore, 'one Undo restores exact design and handwritten source');
+    History('redo', 'policy-read-redo');
+    Check(PairText = LAfter, 'one Redo restores the exact policy publication');
+    Refuses(LStale, 'stale revision refuses the complete policy change');
+    LIntent := PolicyIntent(scaDefaultTableQuery);
+    Apply('policy-read-default-table', [NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]);
+    Check(not Binding('tasks-table').Field('local').Field('queryControls').Field('declared').AsBoolean,
+      'default-table removes only the saved table choice');
+    LIntent := PolicyIntent(scaColumnQuery);
+    LIntent.ColumnQuery := NyxColumnQuery.Sorting(False).Operators([nqcEqual]);
+    Apply('policy-read-set-column', [NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]);
+    LReply := Binding('tasks-table');
+    Check(not LReply.Field('local').Field('columns').Item(0).Field('queryControls').Field('policy')
+      .Field('sorting').AsBoolean, 'the ordinary exact-field policy intent admits without a replacement binding');
+    LIntent := PolicyIntent(scaDefaultColumnQuery);
+    Apply('policy-read-default-column', [NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]);
+    LReply := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(4)), NyxField('queryControls', NyxData(True))]);
+    Check(not LReply.Field('local').Field('columns').Item(0).Field('queryControls').Field('declared').AsBoolean and
+      LReply.Field('local').Field('columns').Item(1).Field('queryControls').Field('declared').AsBoolean and
+      (Binding('definition-list').Field('local').ToJSON = LDefinition) and
+      (Pos('CollectionWorkshopNote', LAgent.PreviewPair(LRevision, 'home').Source) > 0),
+      'default-column preserves peer declarations, reusable definition and authored helper');
+    LIntent := PolicyIntent(scaColumnQuery);
+    LIntent.ColumnQuery := NyxColumnQuery;
+    LWire := NyxCollectionPatch([NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]).ToData.Item(0);
+    Refuses(Request('policy-read-family', NyxArray([Replacing(LWire, 'kind', NyxData('integer'))])),
+      'a changed field family cannot steal the column policy');
+    Refuses(Request('policy-read-shape', NyxArray([Replacing(LWire, 'columnQuery', NyxData('default'))])),
+      'a raw string cannot replace the closed column policy');
+    LIntent.QueryBaseline := LIntent.QueryBaseline + ' stale';
+    Refuses(Request('policy-read-baseline', NyxCollectionPatch([
+      NyxCollectionIntentChange(NyxBindingOwner('tasks-table'), LIntent)]).ToData),
+      'a stale full-spec baseline refuses without a partial candidate');
+    Refuses(NyxObject([NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('tasks-table')),
+      NyxField('queryControls', NyxData('true'))]), 'selector strings are not Boolean values');
+    Refuses(NyxObject([NyxField('mode', NyxData('column')), NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('local')), NyxField('field', NyxData('caption')),
+      NyxField('queryControls', NyxData(1))]), 'selector numbers are not Boolean values');
+    Refuses(NyxObject([NyxField('mode', NyxData('list')), NyxField('queryControls', NyxData(False))]),
+      'even false selectors refuse on an unrelated closed mode');
+
+    LWideKey := NyxCollection('wide-policy-rows');
+    LWideSchema := NyxCollectionSchema;
+    LWide := NyxCollectionView(LWideKey);
+    LTitle := '';
+    for LIndex := 1 to 90 do
+    begin
+      LTitle := LTitle + TNyxText('🌙');
+    end;
+    for LIndex := 0 to 63 do
+    begin
+      LFieldName := 'field-' + TNyxText(IntToStr(LIndex));
+      LWideSchema := LWideSchema.Text(NyxTextField(LFieldName), '');
+      LWide := LWide.Column(NyxTextField(LFieldName), LTitle)
+        .ColumnQuery(NyxColumnQuery.Operators([nqcEqual, nqcContains]));
+    end;
+    Apply('policy-read-wide', [NyxDefineCollection(LWideKey, LWideSchema, []),
+      NyxBindCollection(NyxBindingOwner('tasks-table'), cpTable, LWide)]);
+    LFalse := ReadContext('bindings', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(50)), NyxField('queryControls', NyxData(False))]);
+    Check((LFalse.Field('local').Field('columns').Count = 50) and
+      (LFalse.Field('effective').Field('columns').Count = 50),
+      'the legacy page fits before optional policy metadata crosses its byte budget');
+    Refuses(NyxObject([NyxField('mode', NyxData('bindings')), NyxField('owner', NyxData('tasks-table')),
+      NyxField('limit', NyxData(50)), NyxField('queryControls', NyxData(True))]),
+      'requested policy metadata still obeys the complete UTF-8 response budget', 'Context exceeds 48 KiB');
+    LReply := Binding('tasks-table');
+    Check((LReply.Field('local').Field('columns').Count = 1) and
+      (LReply.Field('local').Field('total').AsInteger = 64),
+      'a smaller requested policy page recovers without changing the accepted project');
+  finally
+    LAgent.Free;
+  end;
+end;
+
+{ END QUERY_CONTROL_READ_CASES }
 function RunNyxAgentCollectionJourney(out APair: TNyxProjectPair;
   AQueriesOnly: Boolean): Integer;
 var
@@ -287,6 +653,55 @@ var
               LActionDocument.Free;
             end;
           end;
+        { BEGIN CURRENT_INTENT_PAYLOADS }
+        scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
+        scaColumnMaximum, scaColumnDefault:
+          begin
+            LIntent.Field := TNyxStudioCollectionFieldRef.Integer(NyxIntegerField('priority'));
+            case LAction of
+              scaColumnFixed: LIntent.Value := '180';
+              scaColumnFlex: LIntent.Value := '2';
+              scaColumnMinimum: LIntent.Value := '80';
+              scaColumnMaximum: LIntent.Value := '480';
+            else
+              begin
+                { Content/default sizing have no numeric payload. }
+              end;
+            end;
+          end;
+        scaPageSize: LIntent.Value := '2';
+        scaInitialPage: LIntent.Value := '1';
+        scaDefaultPaging:
+          begin
+            { Removing an absent paging choice is still a valid typed intent. }
+          end;
+        scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery:
+          begin
+            LActionDocument := TNyxCodec.Decode(LCurrent.Design);
+            try
+              LIntent.QueryBaseline := NyxQueryEditorBaseline(
+                LActionDocument.Collections.Snapshot(LKey).Schema,
+                LActionDocument.Find('tasks-table').CollectionView);
+            finally
+              LActionDocument.Free;
+            end;
+
+            if LAction = scaTableQuery then
+            begin
+              LIntent.TableQuery := NyxTableQuery.Filtering(False);
+            end;
+
+            if LAction in [scaColumnQuery, scaDefaultColumnQuery] then
+            begin
+              LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));
+            end;
+
+            if LAction = scaColumnQuery then
+            begin
+              LIntent.ColumnQuery := NyxColumnQuery.Operators([nqcEqual]);
+            end;
+          end;
+        { END CURRENT_INTENT_PAYLOADS }
         scaBind, scaClear, scaInherit:
           begin
             { These actions use the already supplied exact key/owner/projection. }
@@ -524,6 +939,9 @@ var
 
 begin
   Result := 0;
+  { BEGIN QUERY_CONTROL_READ_CALL }
+  Inc(Result, RunQueryControlReadCases);
+  { END QUERY_CONTROL_READ_CALL }
   LSeed := CreateNyxAgentCollectionSeed;
   LAgent := TNyxAgentSession.Create(LSeed);
   try

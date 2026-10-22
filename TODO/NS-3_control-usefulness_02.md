@@ -5,6 +5,49 @@
 
 **Description:**
 
+The bounded policy-read packet is now native-locally qualified: full semantic
+journey176, actual discovery115 and unchanged inheritance14 pass with complete
+clean heaps; matching browser assertions and both Studio mains compile. Seven
+accepted compilers have zero owned/21 upstream warnings. Two earlier stale-count
+discovery failures remain retained, with exact24-tool/45-expanded-branch identity
+coverage in the final test. All actual readers are joined and current1850 pins/
+nine source copies/nine receipts/70 artifact references verify. [WORK](../WORK.md#current-boundary-bounded-policy-inspection-qualifies-locally)
+owns scope/reuse and failures. Core44->45; every original criterion stays open.
+
+Next P4B requires agent-only typed set/default operations which derive the full
+baseline inside each ordered exact-revision candidate. Existing host-side intent
+tests use their owned PreviewPair and cannot replace that workflow. Keep normal
+pending-draft/family/projection/history/refusal semantics and separate reset from
+inheritance. A later two-operation extension would make47 closed change branches;
+no source scope or tool/server rollout is released by this result. P4C's OWN
+Studio Save/Open/emitted application and actual browser journey remain required.
+Earlier paragraphs below retain the failed admissions rather than superseding
+these current outcome and return-path boundaries.
+
+The second retained discovery failure identifies an incorrect39-branch oracle:
+31 ordinary actions include default/cell with four scalar variants each, so
+eight named shapes plus37 expanded intent branches total45. Only the discovery
+test is released to correct this and assert exact action/family membership.
+Product/shared inputs stay exact; four remaining compatibility/product compilers
+are unattempted. [WORK](../WORK.md#current-boundary-discovery-action-expansion-was-miscounted)
+retains both failures and all actual joins; no original criterion closes.
+
+Current read packet retains its first discovery-test failure: full semantic
+journey176 native/clean plus browser compilation pass, while the old expected
+21-tool count fails against24 current tool constructors. Only that discovery
+oracle and explicit membership coverage are released for repair; current product
+and shared journey source stay exact. Fresh review/freeze precedes the remaining
+five compilers, reusing both unaffected journey results. [WORK](../WORK.md#current-boundary-full-policy-reads-pass-discovery-catalog-oracle-is-stale)
+owns the receipts and actual joins; no complete P4B/P4C/browser gate closes.
+
+Current P4B source packet: add opt-in bounded query-control capability reads to
+the existing collection bindings/column modes, preserving old default responses.
+Declared versus resolved policy and projection support must remain distinct,
+including valid saved non-table metadata. Existing full semantic journey and
+native discovery require narrow current-API test maintenance; no action/assertion
+is skipped. Source review/freeze precedes readers. [WORK](../WORK.md#current-source-scope-bounded-query-policy-inspection)
+owns the exact release; complete P4B/P4C and all original criteria remain open.
+
 Give users of a Nyx table visible, understandable column filtering and sorting
 without requiring every application to construct its own grid query editor.
 The external debugger report motivates this outcome; the external application's
@@ -236,6 +279,16 @@ support, existing reusable provenance/revision rules and48KiB bound. Inspect val
 saved policies even on non-table projections; support=false must not erase intent.
 No new tool/server rollout or original closure follows. P4C still requires its
 OWN ordinary Studio Save/Open/emitted application and actual browser journey.
+
+The new read packet must not by itself close P4B. Source review confirms that
+the four ordinary policy intents require the full form schema/binding baseline;
+bounded reads omit complete sizing/paging/default/domain data. Host-side test
+PreviewPair access is not an agent-only authoring proof. Follow these reads with
+small exact-revision table/column set/default operations deriving that baseline
+inside each ordered candidate and using the same typed admission/history. Reuse
+the named query operation's ownership pattern; do not send a full form/document
+baseline or introduce another query owner. Separate source review and actual
+semantic read-to-write/refusal/isolation tests are required before P4B closes.
 
 **Retained earlier P4B boundary:** one typed allowed-policy set
 feeds native query discovery, effective empty-stream admission, Inspector and
