@@ -42,7 +42,8 @@ uses
   SysUtils, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec, nyx.codegen,
   nyx.callbacks, nyx.scheduler, nyx.schema, nyx.source.preparation,
   nyx.studio.session, nyx.studio.inspector, nyx.event.discovery,
-  nyx.event.payload, nyx.source, nyx.studio.callbackedits;
+  nyx.event.payload, nyx.source, nyx.studio.callbackedits,
+  nyx.studio.sourcejobs;
 
 function CreateNyxEventQueueSeed: TNyxProjectPair;
 var
@@ -631,6 +632,315 @@ begin
   Result := LChecks;
 end;
 
+{ BEGIN pending-event presentation cases. These observations use the ordinary
+  preparing notification before StartQueued, then explicitly cancel all queued
+  intent. No worker, private queue setter, pump or new deadline is needed. Active
+  workers/discarded draining jobs remain source-reviewed and belong to the
+  unchanged physical Studio journey; these cases do not claim to execute them. }
+type
+  TQueuePreparationMode = (qpmPhysical, qpmNamed, qpmPolicy, qpmPair,
+    qpmBatch, qpmMixedBatch, qpmInvalidEvent, qpmAppendEvent,
+    qpmAppendStructure, qpmAppendPascal, qpmSelection, qpmView, qpmReload,
+    qpmSchema, qpmDetach);
+
+  { The controller borrows this receiver only during each test. Execute is an
+    existing synchronous schema-scope action; neither it nor Changed retains a
+    worker/session beyond the caller's explicit lifetime. Cancellation happens
+    after observation, never inside the predicate under test. }
+  TQueuePreparationCheck = class(TInterfacedObject, INyxSchemaAction)
+  private
+    FChecks: Integer;
+    FDepth: Integer;
+    procedure Check(ACondition: Boolean; const AReason: TNyxText);
+    function Observe: Boolean;
+  public
+    Session: TNyxStudioSession;
+    Commands: TNyxSourceCommands;
+    Mode: TQueuePreparationMode;
+    FirstEdit: TNyxStudioDesignEdit;
+    PreparingCalls: Integer;
+    Initial: Boolean;
+    Observed: Boolean;
+    procedure Changed(AState: TNyxSourceCommandState; const AMessage: TNyxText);
+    procedure Execute;
+    property Checks: Integer read FChecks;
+  end;
+
+procedure TQueuePreparationCheck.Check(ACondition: Boolean; const AReason: TNyxText);
+begin
+
+  if not ACondition then
+  begin
+    raise Exception.Create(AReason + ' / preparing case ' + IntToStr(Ord(Mode)));
+  end;
+  Inc(FChecks);
+end;
+
+function TQueuePreparationCheck.Observe: Boolean;
+var
+  LPair, LHistory, LOwner, LView: TNyxText;
+  LState: TNyxSourceCommandState;
+  LBusy, LAgain: Boolean;
+  LRevision: Integer;
+begin
+  LPair := EncodeNyxProject(Session.ProjectSnapshot);
+  { RecoveryStamp is compared only for getter side effects in this synchronous
+    test; its history counters are not used as a publication/revision proof. }
+  LHistory := Session.RecoveryStamp;
+  LOwner := Session.SelectedID;
+  LView := Session.ActiveViewID;
+  LState := Commands.State;
+  LBusy := Commands.Busy;
+  LRevision := NyxSchemaRevision;
+  Result := Commands.EventPreparationOnly;
+  LAgain := Commands.EventPreparationOnly;
+  Check((Result = LAgain) and
+    (EncodeNyxProject(Session.ProjectSnapshot) = LPair) and
+    (Session.RecoveryStamp = LHistory) and (Session.SelectedID = LOwner) and
+    (Session.ActiveViewID = LView) and (Commands.State = LState) and
+    (Commands.Busy = LBusy) and (NyxSchemaRevision = LRevision),
+    'Preparing classification is repeatable and changes no pair/draft/history/queue presentation');
+end;
+
+procedure TQueuePreparationCheck.Changed(AState: TNyxSourceCommandState;
+  const AMessage: TNyxText);
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+
+  if AState <> nssPreparing then
+  begin
+    Exit;
+  end;
+  Inc(FDepth);
+  Inc(PreparingCalls);
+  try
+
+    if FDepth = 1 then
+    begin
+      Initial := Observe;
+      case Mode of
+        qpmAppendEvent, qpmAppendStructure:
+          begin
+            LEdit := FirstEdit;
+
+            if Mode = qpmAppendEvent then
+            begin
+              LEdit.Event.Trigger := ntAfterKeyPress;
+            end
+            else
+            begin
+              { This real structural action is absent from PendingDesign, so
+                checking only that lossy overlay would miss the mixed tail. }
+              LEdit := Default(TNyxStudioDesignEdit);
+              LEdit.Action := sdaDuplicate;
+              LEdit.Selection := FirstEdit.Selection;
+              LEdit.View := FirstEdit.View;
+            end;
+            Commands.Edit(LEdit);
+          end;
+        qpmAppendPascal:
+          begin
+            Session.SetSourceDraft(Session.Source + #10 + '{ Retain this independent Pascal draft. }');
+            Commands.Apply;
+          end;
+        qpmSelection:
+          Session.Select('send-button');
+        qpmView:
+          begin
+            Session.Activate('other');
+            Session.Select('reply-memo');
+          end;
+        qpmReload:
+          begin
+            Session.LoadProject(Session.ProjectSnapshot);
+            Session.Select(FirstEdit.Selection);
+          end;
+        qpmDetach:
+          Commands.Detach;
+      else
+        begin
+          { Other cases observe their original copied event intent unchanged. }
+        end;
+      end;
+
+      if not (Mode in [qpmAppendEvent, qpmAppendStructure, qpmAppendPascal]) then
+      begin
+        Observed := Observe;
+      end;
+    end
+    else
+    begin
+      { The outer job is still queued. Observe the WHOLE two-job queue before
+        cancelling it, so a valid callback head cannot conceal a mixed tail. }
+      Observed := Observe;
+    end;
+  finally
+    try
+
+      if Mode <> qpmDetach then
+      begin
+        Commands.Cancel;
+      end;
+    finally
+      Dec(FDepth);
+    end;
+  end;
+end;
+
+procedure TQueuePreparationCheck.Execute;
+begin
+  Commands.Edit(FirstEdit);
+end;
+
+function RunPendingEventQueueCases: Integer;
+var
+  LMode: TQueuePreparationMode;
+  LCheck: TQueuePreparationCheck;
+  LLease: INyxSchemaAction;
+  LSession: TNyxStudioSession;
+  LCommands: TNyxSourceCommands;
+  LSchemas: INyxSchemaSnapshot;
+  LBefore: TNyxText;
+  LExpectedInitial, LExpectedObserved: Boolean;
+  LCalls, LChecks, LRevision: Integer;
+  LEvent: TNyxCallbackEvent;
+begin
+  LChecks := 0;
+  for LMode := Low(TQueuePreparationMode) to High(TQueuePreparationMode) do
+  begin
+    LSession := TNyxStudioSession.Create(CreateNyxEventQueueSeed);
+    LCheck := TQueuePreparationCheck.Create;
+    LLease := LCheck;
+    LCommands := nil;
+    try
+      LSession.Select('reply-memo');
+
+      if LMode = qpmNamed then
+      begin
+        LSession.Select('first-search');
+      end;
+      LCheck.Session := LSession;
+      LCheck.Mode := LMode;
+      LCommands := TNyxSourceCommands.Create(LSession, LCheck.Changed);
+      LCheck.Commands := LCommands;
+      LCheck.Check(not LCommands.EventPreparationOnly,
+        'An idle controller has no event-only preparation');
+      LBefore := LSession.Save + #0 + LSession.Source;
+      LCheck.FirstEdit := Default(TNyxStudioDesignEdit);
+      LCheck.FirstEdit.Action := sdaEvent;
+      LCheck.FirstEdit.Selection := LSession.SelectedID;
+      LCheck.FirstEdit.View := LSession.ActiveViewID;
+      LCheck.FirstEdit.Event.Action := seaAdd;
+      LCheck.FirstEdit.Event.Trigger := ntBeforeKeyPress;
+
+      if LMode = qpmNamed then
+      begin
+        LCheck.FirstEdit.Event.Trigger := ntNamed;
+        LCheck.FirstEdit.Event.Name := NyxSemantic(nseSearch);
+      end;
+
+      if LMode = qpmPolicy then
+      begin
+        LCheck.FirstEdit.Event.Action := seaPolicy;
+        LCheck.FirstEdit.Event.Policy := neUIQueue;
+      end;
+
+      if LMode in [qpmPair, qpmBatch, qpmMixedBatch] then
+      begin
+        LCheck.FirstEdit.Action := sdaCallbacks;
+        LEvent := NyxCallbackEvent(ntBeforeKeyPress);
+
+        if LMode = qpmPair then
+        begin
+          LCheck.FirstEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+            NyxSetCallbackPolicy(LSession.SelectedID, LEvent, neUIQueue),
+            NyxAddCallback(LSession.SelectedID, LEvent)]));
+        end
+        else if LMode = qpmBatch then
+        begin
+          LCheck.FirstEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+            NyxAddCallback(LSession.SelectedID, LEvent),
+            NyxAddCallback(LSession.SelectedID, NyxCallbackEvent(ntAfterKeyPress))]));
+        end
+        else
+        begin
+          LCheck.FirstEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+            NyxAddCallback(LSession.SelectedID, LEvent),
+            NyxAddCallback('send-button', NyxCallbackEvent(ntClick))]));
+        end;
+      end;
+
+      if LMode = qpmInvalidEvent then
+      begin
+        { Ordinary copied intent is not admitted until dispatch. Its malformed
+          named transport must not qualify during the earlier notification. }
+        LCheck.FirstEdit.Event.Trigger := ntNamed;
+      end;
+      LExpectedInitial := not (LMode in [qpmMixedBatch, qpmInvalidEvent, qpmSchema]);
+      LExpectedObserved := LExpectedInitial and not (LMode in [qpmAppendStructure,
+        qpmAppendPascal, qpmSelection, qpmView, qpmReload, qpmDetach]);
+      LCalls := 1;
+
+      if LMode in [qpmAppendEvent, qpmAppendStructure, qpmAppendPascal] then
+      begin
+        LCalls := 2;
+      end;
+
+      if LMode = qpmSchema then
+      begin
+        LRevision := NyxSchemaRevision;
+
+        if LRevision = 0 then
+        begin
+          Inc(LRevision);
+        end
+        else
+        begin
+          Dec(LRevision);
+        end;
+        { Scoped immutable metadata can carry a non-current captured revision
+          without changing the global registry. The job's owned lease must not
+          qualify merely because the visible owner and view still match. }
+        LSchemas := ReadNyxSchemaSnapshot(ReplaceField(CaptureNyxSchemas.ToData,
+          'revision', NyxData(LRevision)));
+        LSchemas.Execute(LLease);
+        LSchemas := nil;
+      end
+      else
+      begin
+        LCheck.Execute;
+      end;
+      LCheck.Check((LCheck.PreparingCalls = LCalls) and
+        (LCheck.Initial = LExpectedInitial),
+        'Public preparing notification classifies the exact pre-dispatch queue');
+      LCheck.Check(LCheck.Observed = LExpectedObserved,
+        'Mixed jobs and changed owner/view/load/schema cannot use event-only presentation');
+      LCheck.Check(not LCommands.EventPreparationOnly and not LCommands.Busy,
+        'Explicit cancellation/detachment retires pending presentation eligibility');
+      LCheck.Check((LSession.Save + #0 + LSession.Source = LBefore) and
+        not LSession.CanUndo,
+        'Pre-dispatch observation and cleanup publish no accepted pair or history');
+
+      if LMode = qpmAppendPascal then
+      begin
+        LCheck.Check(Pos('{ Retain this independent Pascal draft. }', LSession.DraftSource) > 0,
+          'Rejecting mixed preparation preserves its independently supplied Pascal draft');
+      end;
+      Inc(LChecks, LCheck.Checks);
+    finally
+      LCommands.Free;
+      LCheck.Commands := nil;
+      LSchemas := nil;
+      LLease := nil;
+      LCheck := nil;
+      LSession.Free;
+    end;
+  end;
+  Result := LChecks;
+end;
+{ END pending-event presentation cases. }
+
 function RunNyxEventQueueJourney(out APair: TNyxProjectPair): Integer;
 var
   LSession: TNyxStudioSession;
@@ -1008,6 +1318,9 @@ begin
     LSession.Free;
   end;
   Inc(LChecks, RunPolicyEventQueueCases);
+  { BEGIN pending-event presentation call. }
+  Inc(LChecks, RunPendingEventQueueCases);
+  { END pending-event presentation call. }
   Result := LChecks;
 end;
 

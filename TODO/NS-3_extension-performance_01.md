@@ -2,6 +2,31 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The pending event path now passes native semantic752, public queue248 and
+unchanged section67 with complete clean heaps; matching browser assertions
+compile only. The unchanged full native editor qualifies FOUR original phases
+through named reusable navigation, then fails on missing model policy control
+event-named-43-policy. It exits1 itself with a complete clean heap, not a timeout.
+All seven compilers pass with zero owned/21 upstream RTL warning occurrences;
+all readers are terminal/root-joined/exact-audited. First failure stops the other
+12 compilers, including full browser host compilation. Original Ready30/P4B/P4C/
+browser/performance acceptance stays open; neither more completed phases nor
+headless helper checks establish host shortcut hit rates or causal savings.
+Next is read-only current/mounted event-identity ownership diagnosis before any
+separate source/diagnostic release. No new profile, fixture, wait or compiler
+variant is released. See [the current result](../WORK.md#current-boundary-pending-presentation-checks-pass-creator-policy-control-is-missing).
+
+The retained source admission targeted pending event presentation. Classify every
+owned queued/active command, then use the canonical Inspector composition to
+preflight existing event controls and apply only pending locks/policy values.
+Exact mounted guards and a final synchronous readiness fence precede writes;
+mixed/unknown/incompatible state keeps ordinary refresh. Both preparing refresh
+callers cooperate, while committed publication and source navigation stay full.
+This source-backed seam is not a timing result. The original editor Ready30
+journey, unchanged section regression and shared queue/semantic consumers were
+required to qualify it. The current result above owns their actual outcomes.
+See [the retained release](../WORK.md#retained-source-release-pending-event-presentation).
+
 Current native queue ownership qualifies78 focused checks and the repaired
 67-check real Studio-section regression, both with complete clean heaps; matching
 browser assertions compile only. The unchanged editor controls still fail their

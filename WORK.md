@@ -4,6 +4,125 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: pending presentation checks pass; creator policy control is missing
+
+This goal turn is PROGRESS. The complete pending-only event path now passes its
+shared semantic and public queue checks, and the unchanged full native journey
+passes FOUR original phases before its first new failure. It does not qualify
+the overall editor journey, P4B/P4C, browser input or release performance. Core
+no-closure40->41 records the completed native batch without criterion/credit/DONE.
+
+| Actual reader | Result and limit |
+| --- | --- |
+| Semantic native/browser | Native752 = original729+23 new raw/realized preflight cases, complete clean heap; matching browser assertions compile only. |
+| Queue native/browser | Native248 = original142+106 public preparing observations; all15 new pre-StartQueued modes execute without skips, complete clean heap. Matching browser assertions compile only. Active/discard/reply/name-draft ownership remains source-reviewed where not exercised by those public cases. |
+| Unchanged sectionAF5A native/browser | Native67 passes with complete clean heap; matching browser assertions compile only. Section compatibility alone does not prove the full host shortcut executes. |
+| Unchanged controls545FB593 native | Compiler passes. Add/navigation/pending/history; warning/confirmation/exact removal; independent Pascal draft/refusal; named reusable ownership/navigation/English captures all qualify. The restricted creator-policy phase then cannot find model ID event-named-43-policy. The retained failure output does not identify its loop width. Native exits1 itself, not a timeout, with a complete clean heap. |
+
+All seven compilers pass with zero owned/21 upstream RTL warning occurrences.
+All four native executions finish with complete zero-unfreed heaps, including
+the failed journey's190681657 blocks/34688694357 cumulative bytes allocated=freed.
+Seven original receipts and48 artifacts are retained. Immutable audit7478DB68
+pins freezeCED17A95 and verifies34owned/1807Pascal/foreign13/extra19, every actual
+root join and absent actual compiler/native PIDs. Root/helper independent review
+passes. Source remains exact from the reviewed freeze; no failed input is replaced.
+
+First failure stops the fixed plan: remaining12 compatibility/product compilers
+are unattempted, including the full browser host. Standalone scheduler78/browser
+evidence is explicitly reused unchanged, not a new execution. Actual browser
+input, later atomic callback/compact/lifetime phases and OWN P4C Save/Open/compiled
+proof remain open. Passing more original phases does not establish host shortcut
+hit rates, causal latency improvement or release-performance acceptance.
+
+Read-only diagnosis establishes that ViewFor/SectionFor searches the model trees,
+so this failure is not merely a physically hidden/disabled native control.
+EventKey and canonical AddNyxEventsInspector use the same current metadata index
+formula; CaptureEvents/panel navigation preserves the Events tab. Current-source
+versus mounted event ownership remains a hypothesis, not a product diagnosis.
+The next useful observation would compare the expected key and bounded actual
+policy-command identities for the same owner/trigger/name at this failure.
+That observation needs a separate reviewed source scope; no new fixture, wait,
+compiler, profiler or repair is released by this outcome.
+
+Root owns outcome docs/checkpoint only; all Pascal/private tools stay paused.
+Existing Lil' Scooty reviews these outcomes and continues the ownership diagnosis
+read-only. Preserve offline LAN/no native Nyx tools; no host/config/MCP/worker
+rollout, cleanup/restart or extra agent. The user's latest control-usefulness
+request is already covered by the80-kind review and existing02-05 owners: root
+checks273 local links and helper independently checks187, all resolving. No new
+task identity or duplicate review/implementation credit is needed.
+
+### Retained source release: pending event presentation
+
+The admission below is retained pre-run history. The current outcome above
+supersedes its expected/not-executed and permission-to-freeze statements.
+
+The prior goal turn is PROGRESS:7bd8bf8 holds the native queue repair and actual
+lifetime evidence. This turn revalidates all32 owned/1807 Pascal/13 foreign/19
+extra inputs and actual reader retirement. Independent source trace33E868E0
+changes the next action: preparing SourceCommandChanged already synchronizes
+source activity but requests full paint; RouteEvents requests it again; committed
+completion requests another full paint and owns TODO navigation. Browser has
+the corresponding two callers. These are source ownership facts, not measured
+exclusive costs or a savings claim. PendingDesign alone loses other edit kinds;
+CommandContext is load-only and RecoveryStamp's history counts saturate.
+
+Release one complete pending-only event presentation path. Lil' Scooty owns only
+sourcejobs.pas's EventPreparationOnly query and additive existing queue-unit
+cases. Root owns shared Inspector canonical expected-tree preflight/scalars,
+both host glue paths and additive existing semantic-events tests. Existing freeze
+tool changes only32→34 ownership count for the two host paths; no qualifier flags,
+maps, waits, profile gates, worker/wire, library ABI/GUID or new unit changes.
+All source/doc/tool/state preimages are retained in pending-event-before.
+
+The UI-only classifier inspects ALL active/queued owned jobs, including the
+queue-only preparing notification before StartQueued. It rejects discarded,
+detached, mixed/stale/Pascal/project/structural, wrong selected owner/view/schema,
+retained name drafts and adoption/save replies. It accepts ordinary event or
+strictly decoded all-same-owner callback groups, never filtered subsets.
+The Inspector builds its small detached reference through existing canonical
+AddNyxEventsInspector with current pending/removal/filter values. Validate all
+materialized event identities, choice/alert/registration/warning structure and
+command ownership before any scalar write. An unretained synchronous nonmutating
+predicate rechecks queue eligibility, then exact mounted frame/root/load/owner/
+view/schema and local queued/reentry/replacement/recovery flags at the final fence.
+Role/session/receiver remain borrowed for the call under existing composition
+lifetime requirements; this creates no accepted-pair revision or new state owner.
+
+Apply only policy Value and approved add/policy/remove/confirm Enabled fields.
+Preserve navigation/cancel/filter fields and visibility, independent drafts,
+focus/scroll, source activity and per-event locks. Sync only own Inspector/Chrome
+footer and the existing activity path. Both Preparing notification and mutation
+route use this path; full committed/navigation/removal-warning paints stay.
+Any unknown/mixed/incompatible/refused/failed shortcut uses ordinary full refresh.
+
+Original controls545FB593 and sectionAF5A67 stay byte-exact, all existing test
+predicates/waits retained. Both source handoffs and tools must review before
+fresh34owned/1807Pascal/foreign13/extra19 freeze. Initial fixed7 compilers/four
+native executions: semantic native/browser, queue native/browser, unchanged
+section native/browser, unchanged controls Ready30/outer600. First failure stops.
+Only a passing initial gate admits the other12 original compatibility/product
+compilers (19 total/nine native runs); standalone scheduler78/browser remains
+explicitly reused unchanged, not rerun. Browser compiles only. Original criteria,
+P4B/P4C/performance/core40 remain open; no profile/host/config/MCP/worker rollout,
+cleanup/restart or extra agent follows this source release.
+
+Both source handoffs independently review. Helper sourcejobsB272680D and queue
+76950571 restore exact E0C88E5B/23E15914 preimages, with106 additive public
+pre-StartQueued observations expected (not executed). Active/discard/reply/name-
+draft transitions remain source-reviewed, not manufactured private fixtures.
+Root Inspector7901540E and semanticA8962E84 add23 raw/realized checks while
+restoring every original semantic byte/check/wait. Review catches and repairs
+the new alert fixture's raw/runtime ownership before any compiler; the same
+extra-membership refusal predicate remains. History stamp equality is a test
+side-effect observation after two real edits, never revision authority.
+Both hosts now fence Inspector AND footer identity, perform borrowed lookups
+inside retirement-safe try/finally and recheck after Inspector.Sync before using
+the footer. Six blank-before-if style fixes change no logic. Count-only freeze
+34 tool parses and reverses byte-exact to32; qualifier remainsC61BFCAC unchanged.
+Root may freeze34/1807/13/19 and admit the fixed initial7, then all source/docs/
+tools pause through every actual join/audit. No new runtime/efficacy claim follows.
+
 ### Current boundary: queue lifetime qualified; original editor timing remains open
 
 This turn changes maintained queue ownership and its native consumer, qualifies

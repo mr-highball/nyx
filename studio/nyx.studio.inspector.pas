@@ -45,6 +45,10 @@ uses
 type
   TNyxInspectorTab = (nitProperties, nitEvents);
   TNyxInspectorEffect = (nieNone, nieSource, nieRequestRemoval, nieCancelRemoval, nieRemoved);
+  { Borrowed synchronous final fence for a pending-only presentation. The
+    receiver must outlive the call; it must not pump, dispatch, synchronize or
+    mutate a view. Nothing retains this method after the call returns. }
+  TNyxPendingEventPresentationReady = function: Boolean of object;
   { Confirmation is presentation state, not a saved design. Exact owner and
     registration identities prevent a stale warning from removing another item. }
   TNyxCallbackRemoval = record
@@ -113,6 +117,14 @@ procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
 { Filter this owned inspector and update its accessible summary. No rebuild,
   callback mutation, source edit or history step is performed. }
 procedure FilterNyxEventsInspector(ARoot: TNyxNode; const AFilter: TNyxEventFilter);
+{ Compare the canonical event-only composition with the mounted forest before
+  applying existing policy/availability fields. No source, registration, draft,
+  visibility or history is changed. False means ordinary refresh is required.
+  The root/session/guard receiver remain borrowed for this synchronous call. }
+function TryRefreshNyxPendingEvents(ARoot: TNyxNode; ASession: TNyxStudioSession;
+  const ARemoval: TNyxCallbackRemoval; const APending: TNyxStudioPendingDesign;
+  const AFilter: TNyxEventFilter;
+  AReady: TNyxPendingEventPresentationReady): Boolean;
 { Closed input IDs distinguish local discovery from application callbacks. Clear
   resets only discovery values; other actions read the complete current form. }
 function RouteNyxEventsFilter(ANode: TNyxNode; ATrigger: TNyxTrigger;
@@ -250,7 +262,7 @@ function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
 implementation
 
 uses
-  nyx.schema, nyx.controls, nyx.content, nyx.event.payload,
+  nyx.schema, nyx.controls, nyx.content, nyx.event.payload, nyx.text.index,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations, nyx.tabs.editor, nyx.tabs.pages.editor,
@@ -2002,6 +2014,199 @@ begin
     'UI queue defers to the UI thread.').Done);
   FilterNyxEventsInspector(AParent, AFilter);
 
+end;
+
+function TryRefreshNyxPendingEvents(ARoot: TNyxNode; ASession: TNyxStudioSession;
+  const ARemoval: TNyxCallbackRemoval; const APending: TNyxStudioPendingDesign;
+  const AFilter: TNyxEventFilter;
+  AReady: TNyxPendingEventPresentationReady): Boolean;
+const
+  { Reserved Inspector identities, never user-supplied behavior names. }
+  CEventPrefix = 'event-';
+  CIdentityKeys: array[0..5] of TNyxText = (NyxStudioEventCommandKey,
+    NyxStudioEventOwnerKey, NyxStudioEventTriggerKey, NyxStudioEventNameKey,
+    NyxStudioEventHandlerKey, NyxStudioEventIDKey);
+type
+  { Temporary borrowed positions only. Neither vector escapes this call or
+    owns/retires any mounted node. The detached reference owns its own tree. }
+  TNodes = array of TNyxNode;
+var
+  LExpected, LProjection, LNode, LTarget: TNyxNode;
+  LExpectedIndex, LLiveIndex: TNyxTextIndex;
+  LExpectedNodes, LLiveNodes: TNodes;
+  LExpectedCount, LLiveCount, LIndex, LPosition: Integer;
+  LCommand, LKey: TNyxText;
+
+  function IndexTree(ANode, AParent: TNyxNode; ADepth: Integer;
+    AIndex: TNyxTextIndex; var ANodes: TNodes; var ACount: Integer): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := False;
+
+    if (ANode = nil) or (ANode.Parent <> AParent) or
+      (ADepth > NyxMaximumTreeDepth) or (ACount >= NyxMaximumNodes) or
+      (AIndex.IndexOf(ANode.ID) >= 0) then
+    begin
+      Exit;
+    end;
+
+    if ACount = Length(ANodes) then
+    begin
+      SetLength(ANodes, (ACount + 1) * 2);
+    end;
+    ANodes[ACount] := ANode;
+    AIndex.AddFirst(ANode.ID, ACount);
+    Inc(ACount);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if not IndexTree(ANode.Children[LChild], ANode, ADepth + 1,
+        AIndex, ANodes, ACount) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+  function LiveID(ANode: TNyxNode): TNyxText;
+  begin
+    Result := ANode.ID;
+
+    if ARoot.IsRealized then
+    begin
+      Result := NyxQualifiedID('', ANode.ID);
+    end;
+  end;
+
+  function Matches(ANode, AParent: TNyxNode): Boolean;
+  var
+    LActual: TNyxNode;
+    LAt, LChild, LIdentity: Integer;
+  begin
+    Result := False;
+    LAt := LLiveIndex.IndexOf(LiveID(ANode));
+
+    if LAt < 0 then
+    begin
+      Exit;
+    end;
+    LActual := LLiveNodes[LAt];
+
+    if (LActual.Parent <> AParent) or (LActual.SourceID <> ANode.SourceID) or
+      (LActual.Kind <> ANode.Kind) or
+      (LActual.ProjectionKind <> ANode.ProjectionKind) or
+      (LActual.Prop(NyxAttributeName(atItems)) <> ANode.Prop(NyxAttributeName(atItems))) or
+      (LActual.Prop(NyxAttributeName(atText)) <> ANode.Prop(NyxAttributeName(atText))) or
+      (LActual.Count <> ANode.Count) then
+    begin
+      Exit;
+    end;
+    for LIdentity := Low(CIdentityKeys) to High(CIdentityKeys) do
+    begin
+
+      if LActual.Prop(CIdentityKeys[LIdentity]) <> ANode.Prop(CIdentityKeys[LIdentity]) then
+      begin
+        Exit;
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if (LActual.Children[LChild].ID <> LiveID(ANode.Children[LChild])) or
+        not Matches(ANode.Children[LChild], LActual) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+begin
+  Result := False;
+
+  if (ARoot = nil) or (ASession = nil) or not Assigned(AReady) then
+  begin
+    Exit;
+  end;
+  LExpected := nil;
+  LProjection := nil;
+  LExpectedIndex := nil;
+  LLiveIndex := nil;
+  try
+    { Reuse the single composition owner for default policy, creator choices,
+      registrations, invalid-policy alerts and exact removal-warning shape. }
+    LExpected := TNyxNode.Create(nkColumn, 'pending-event-reference');
+    LProjection := ASession.SelectedProjection;
+    AddNyxEventsInspector(LExpected, ASession, LProjection, ARemoval, APending, AFilter);
+    LExpectedIndex := TNyxTextIndex.Create;
+    LLiveIndex := TNyxTextIndex.Create;
+    LExpectedCount := 0;
+    LLiveCount := 0;
+
+    if not IndexTree(LExpected, nil, 0, LExpectedIndex, LExpectedNodes, LExpectedCount) or
+      not IndexTree(ARoot, ARoot.Parent, 0, LLiveIndex, LLiveNodes, LLiveCount) then
+    begin
+      Exit;
+    end;
+    for LIndex := 0 to LExpected.Count - 1 do
+    begin
+
+      if not Matches(LExpected.Children[LIndex], ARoot) then
+      begin
+        Exit;
+      end;
+    end;
+    for LIndex := 0 to LLiveCount - 1 do
+    begin
+      LNode := LLiveNodes[LIndex];
+      { Every internal event card has commands. Also check the reserved prefix
+        so an unexpected empty/stale card cannot evade the membership test. }
+
+      if (LNode.Prop(NyxStudioEventCommandKey) <> '') or
+        (Copy(LNode.SourceID, 1, Length(CEventPrefix)) = CEventPrefix) then
+      begin
+
+        if LExpectedIndex.IndexOf(LNode.SourceID) < 0 then
+        begin
+          Exit;
+        end;
+      end;
+    end;
+    { Metadata composition is complete. The caller checks job eligibility first
+      and its exact current frame last; no outward work follows before writes. }
+
+    if not AReady() then
+    begin
+      Exit;
+    end;
+    for LIndex := 1 to LExpectedCount - 1 do
+    begin
+      LNode := LExpectedNodes[LIndex];
+      LCommand := LNode.Prop(NyxStudioEventCommandKey);
+
+      if (LCommand = CCommands[icAdd]) or (LCommand = CCommands[icPolicy]) or
+        (LCommand = CCommands[icRequest]) or (LCommand = CCommands[icConfirm]) then
+      begin
+        LKey := LiveID(LNode);
+        LPosition := LLiveIndex.IndexOf(LKey);
+        LTarget := LLiveNodes[LPosition];
+        LTarget.Configure.Enabled(LNode.Prop(NyxAttributeName(atEnabled), 'true') = 'true').Done;
+
+        if LCommand = CCommands[icPolicy] then
+        begin
+          LTarget.Configure.Value(LNode.Prop(NyxAttributeName(atValue))).Done;
+        end;
+      end;
+    end;
+    Result := True;
+  finally
+    LLiveIndex.Free;
+    LExpectedIndex.Free;
+    LProjection.Free;
+    LExpected.Free;
+  end;
 end;
 
 procedure FilterNyxEventsInspector(ARoot: TNyxNode; const AFilter: TNyxEventFilter);

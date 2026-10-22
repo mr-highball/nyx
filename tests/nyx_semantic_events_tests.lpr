@@ -39,6 +39,14 @@ uses
   {$else}Classes, Interfaces, Forms, Controls, StdCtrls, nyx.render.lcl;{$endif}
 
 type
+  { The presentation fence is observed independently of either target adapter.
+    Refusal must happen after complete preflight but before any scalar write. }
+  TPendingPresentationGuard = class
+  public
+    Allow: Boolean;
+    Calls: Integer;
+    function Ready: Boolean;
+  end;
   {$ifdef PAS2JS}TRenderer = TNyxBrowserRenderer;
   {$else}TRenderer = TNyxLCLRenderer;
   TButtonAccess = class(TButton);
@@ -1931,6 +1939,210 @@ begin
 end;
 {$endif}
 
+function TPendingPresentationGuard.Ready: Boolean;
+begin
+  Inc(Calls);
+  Result := Allow;
+end;
+
+{ Use the public Inspector composition on both raw and canonically realized
+  forests. This is additive to the existing discovery/control journey and never
+  replaces its physical UI checks, schema cases, source assertions or waits. }
+procedure PendingPresentationChecks;
+const
+  COwner = 'pending-input/~';
+  CUnexpectedAlert = 'event-click-unexpected-alert';
+var
+  LSession: TNyxStudioSession;
+  LDocument, LInspector: TNyxDocument;
+  LRoot, LSourceRoot, LProjection, LPolicy, LRemove, LAlert: TNyxNode;
+  LGuard: TPendingPresentationGuard;
+  LRemoval: TNyxCallbackRemoval;
+  LPending: TNyxStudioPendingDesign;
+  LFilter: TNyxEventFilter;
+  LHandler: TNyxHandlerRef;
+  LEvents: TNyxAuthoredEventInfos;
+  LPhase, LLine, LIndex, LEvent: Integer;
+  LBefore, LSource, LHistory, LScalarBefore, LItems: TNyxText;
+
+  function Node(const AID: TNyxText): TNyxNode;
+  begin
+
+    if LRoot.IsRealized then
+    begin
+      Result := LRoot.Find(NyxQualifiedID('', AID));
+    end
+    else
+    begin
+      Result := LRoot.Find(AID);
+    end;
+  end;
+
+  function Scalars(ANode: TNyxNode): TNyxText;
+  var
+    LChild: Integer;
+  begin
+    Result := NyxObject([NyxField('id', NyxData(ANode.ID)),
+      NyxField('enabled', NyxData(ANode.Prop(NyxAttributeName(atEnabled)))),
+      NyxField('value', NyxData(ANode.Prop(NyxAttributeName(atValue)))),
+      NyxField('visible', NyxData(ANode.Prop(NyxAttributeName(atVisible)))),
+      NyxField('items', NyxData(ANode.Prop(NyxAttributeName(atItems))))]).ToJSON;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Result := Result + #10 + Scalars(ANode.Children[LChild]);
+    end;
+  end;
+
+  function Present: Boolean;
+  begin
+    Result := TryRefreshNyxPendingEvents(LRoot, LSession, LRemoval,
+      LPending, LFilter, {$ifdef PAS2JS}@{$endif}LGuard.Ready);
+  end;
+
+begin
+  LDocument := TNyxDocument.Create;
+  LSession := TNyxStudioSession.Create;
+  LGuard := TPendingPresentationGuard.Create;
+  LInspector := nil;
+  LRoot := nil;
+  LProjection := nil;
+  try
+    LDocument.AddPage(TNyxNode.Create(nkColumn, 'pending-page'));
+    LDocument.Pages[0].Add(NewNyxMemo(COwner));
+    LSession.Load(TNyxCodec.Encode(LDocument));
+    LSession.Select(COwner);
+    LHandler := LSession.AddCallback(ntClick, LLine);
+    LSession.SetCallbackPolicy(ntClick, neUIQueue);
+    LBefore := LSession.Save;
+    LSource := LSession.Source;
+    LHistory := LSession.RecoveryStamp;
+    LProjection := LSession.SelectedProjection;
+    LEvents := NyxAuthoredEvents(LProjection);
+    LEvent := -1;
+    for LIndex := 0 to High(LEvents) do
+    begin
+
+      if LEvents[LIndex].Trigger = ntClick then
+      begin
+        LEvent := LIndex;
+      end;
+    end;
+    Check(LEvent >= 0, 'pending presentation has a real accepted callback stream');
+    LRemoval := Default(TNyxCallbackRemoval);
+    LRemoval.Pending := True;
+    LRemoval.Context := LSession.CommandContext;
+    LRemoval.OwnerID := COwner;
+    LRemoval.Trigger := ntClick;
+    LRemoval.ID := LEvents[LEvent].Callbacks[0].ID;
+    LRemoval.Handler := LHandler;
+    LFilter := NyxEventFilter.Query('no-matching-pending-event');
+    for LPhase := 0 to 1 do
+    begin
+      LInspector := TNyxDocument.Create;
+      LSourceRoot := TNyxNode.Create(nkColumn, 'pending-inspector');
+      LInspector.AddPage(LSourceRoot);
+      AddNyxEventsInspector(LSourceRoot, LSession, LProjection,
+        LRemoval, Default(TNyxStudioPendingDesign), LFilter);
+
+      if LPhase = 0 then
+      begin
+        LRoot := LSourceRoot;
+      end
+      else
+      begin
+        LRoot := RealizeNyxView(LInspector, LSourceRoot);
+      end;
+      try
+        LPending := Default(TNyxStudioPendingDesign);
+        SetLength(LPending.Events, 1);
+        LPending.Events[0].Owner := COwner;
+        LPending.Events[0].Intent.Action := seaPolicy;
+        LPending.Events[0].Intent.Trigger := ntClick;
+        LPending.Events[0].Intent.Policy := neSequential;
+        SetLength(LPending.EventLocks, 1);
+        LPending.EventLocks[0].Owner := COwner;
+        LPending.EventLocks[0].Trigger := ntClick;
+        LGuard.Allow := False;
+        LGuard.Calls := 0;
+        LScalarBefore := Scalars(LRoot);
+        Check(not Present and (LGuard.Calls = 1) and
+          (Scalars(LRoot) = LScalarBefore),
+          'final pending fence refusal writes no raw or realized scalar');
+        LGuard.Allow := True;
+        Check(Present, 'canonical pending event forest accepts raw and realized ownership');
+        LPolicy := Node('event-click-policy');
+        LRemove := Node('event-click-callback-0-remove');
+        Check((LPolicy.Prop(NyxAttributeName(atValue)) = NyxPolicyName(neSequential)) and
+          (LPolicy.Prop(NyxAttributeName(atEnabled)) = 'false') and
+          (Node('event-click-add').Prop(NyxAttributeName(atEnabled)) = 'false') and
+          (LRemove.Prop(NyxAttributeName(atEnabled)) = 'false') and
+          (Node('event-removal-confirm').Prop(NyxAttributeName(atEnabled)) = 'false'),
+          'pending grouped policy and exact removal controls share canonical locks');
+        Check((Node('event-click-callback-0-source').Prop(NyxAttributeName(atEnabled), 'true') = 'true') and
+          (Node('event-removal-warning').Part(NyxPart('actions/cancel')).Prop(
+            NyxAttributeName(atEnabled), 'true') = 'true'),
+          'pending presentation keeps source navigation and warning cancellation available');
+        Check((Node('event-' + NyxTriggerName(ntAfterEnter)).Prop(NyxAttributeName(atVisible)) = 'false') and
+          (Node(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery)).Prop(
+            NyxAttributeName(atValue)) = LFilter.SearchText),
+          'pending presentation preserves hidden cards and the independent filter value');
+        Check(Node('event-' + NyxTriggerName(ntAfterEnter) + '-add').Prop(
+          NyxAttributeName(atEnabled), 'true') = 'true',
+          'pending locks leave an unrelated event available');
+        LItems := LPolicy.Prop(NyxAttributeName(atItems));
+        LPolicy.Configure.Items('incompatible choice').Done;
+        LScalarBefore := Scalars(LRoot);
+        LGuard.Calls := 0;
+        Check(not Present and (LGuard.Calls = 0) and (Scalars(LRoot) = LScalarBefore),
+          'late incompatible choices refuse before the fence without partial writes');
+        LPolicy.Configure.Items(LItems).Done;
+        LRemove.SetProp(NyxStudioEventOwnerKey, 'another-owner');
+        LScalarBefore := Scalars(LRoot);
+        Check(not Present and (Scalars(LRoot) = LScalarBefore),
+          'foreign registration ownership cannot receive a pending overlay');
+        LRemove.SetProp(NyxStudioEventOwnerKey, COwner);
+
+        if LPhase = 0 then
+        begin
+          LAlert := TNyxNode.Create(nkAlert, CUnexpectedAlert);
+        end
+        else
+        begin
+          LAlert := TNyxNode.CreateRealized(NyxKindName(nkAlert), CUnexpectedAlert,
+            NyxQualifiedID('', CUnexpectedAlert), CUnexpectedAlert);
+        end;
+        Node('event-click').Add(LAlert);
+        LScalarBefore := Scalars(LRoot);
+        Check(not Present and (Scalars(LRoot) = LScalarBefore),
+          'incompatible alert membership requires ordinary full refresh without scalar writes');
+        LAlert := Node('event-click').Extract(Node('event-click').Count - 1);
+        LAlert.Free;
+        LPending := Default(TNyxStudioPendingDesign);
+        Check(Present and (LPolicy.Prop(NyxAttributeName(atValue)) = NyxPolicyName(neUIQueue)) and
+          (LRemove.Prop(NyxAttributeName(atEnabled), 'true') = 'true'),
+          'canonical no-pending presentation restores accepted policy and availability');
+        Check((LSession.Save = LBefore) and (LSession.Source = LSource) and
+          (LSession.RecoveryStamp = LHistory),
+          'pending presentation adds no source edit, callback mutation or history');
+      finally
+
+        if LPhase = 1 then
+        begin
+          LRoot.Free;
+        end;
+        LRoot := nil;
+        FreeAndNil(LInspector);
+      end;
+    end;
+  finally
+    LProjection.Free;
+    LInspector.Free;
+    LGuard.Free;
+    LSession.Free;
+    LDocument.Free;
+  end;
+end;
+
 procedure Finish;
 begin
   try
@@ -1969,6 +2181,7 @@ begin
     DetailDeclaredChecks;
     DetailSchemaAdmissionChecks;
     DetailInspectorChecks;
+    PendingPresentationChecks;
     AuthoringChecks;
     ControlChecks;
     ReusableControlChecks;

@@ -1,5 +1,87 @@
 # Working in Nyx
 
+PENDING EVENT PRESENTATION FIRST BOUNDARY (2026-10-22): this turn is progress.
+All seven compiler readers/four native executions are terminal/root-joined;
+independent audit7478DB68 verifies34owned/1807Pascal/foreign13/extra19 and all
+seven receipts/48 artifacts. Seven compilers pass with zero owned/21 upstream
+RTL warning occurrences. Semantic752 (729+23), queue248 (142+106) and unchanged
+section67 pass with complete clean heaps; matching browser assertions COMPILE
+ONLY. All15 new public pre-StartQueued modes execute without skips. Native full
+controls545FB593 compiles, qualifies FOUR original phases through named reusable
+navigation/English captures, then exits1 at missing model event-named-43-policy.
+It is not a timeout; its complete heap also frees all190681657 blocks/34688694357
+bytes. All FOUR native heaps are clean. Stop first failure: remaining12 original
+compatibility/product compilers are UNATTEMPTED. No overall Ready30 journey,
+P4B/P4C/browser/performance/original criterion, credit or DONE closes; core40->41.
+
+Both sources/hosts remain exact from freezeCED17A95. Headless raw/realized
+preflight and public queue cases do not prove host shortcut hit rates or timing
+savings; full browser host compilation remains among the unattempted readers.
+Original controls/assertions/waits remain exact. Missing policy means missing
+model identity, not merely physical visibility. Current EventKey and canonical
+Inspector use the same metadata index formula; no product cause is established.
+Root owns outcome docs/checkpoint only; ALL Pascal/tools stay paused. Existing
+helper independently reviews outcomes, then read-only mounted event-identity/
+schema ownership diagnosis before any separate source/diagnostic release.
+Preserve every failure, offline LAN/no native Nyx tools and no profile/host/config/
+MCP/worker rollout, cleanup/restart or extra agent. The latest backlog request is
+already covered by the reviewed80-kind matrix and existing usefulness02-05;
+independent coverage/link review needs no duplicate task or product credit.
+
+PENDING EVENT PRESENTATION SOURCE RELEASE (2026-10-22): prior7bd8bf8 is
+progress, committed/pushed/remote-verified. All actual readers joined;32owned/
+1807Pascal/foreign13/extra19 revalidate. Source trace33E868E0 and independent
+root/helper review identify TWO semantic full-paint requests around preparation
+and committed publication, plus the route's duplicate refresh request. They do
+not prove exclusive cost or savings. PendingDesign omits other edit families;
+load-only CommandContext and saturating RecoveryStamp are not pair revisions.
+
+Release one complete pending-only event presentation path. Existing helper owns
+ONLY sourcejobs.pas EventPreparationOnly classification and additive public cases
+in tests/nyx.test.event.queue.pas. Root owns ONLY shared inspector expected-tree/
+scalar preflight, native/browser host glue and additive semantic-events tests,
+plus docs and existing freeze count32→34 for the two host paths. No new unit,
+GUID/public library ABI, renderer/canvas/section owner/worker/wire scope follows.
+Original controls545FB593, portable sectionAF5A, scheduler9EFB/A1B4 and all
+original assertions/waits remain exact. Preimages stay in pending-event-before.
+
+Classify ALL owned active/queued jobs, including before StartQueued. Require
+preparing/live/current selected owner+view/load/schema, no discarded/detached/
+mixed jobs or held name drafts/adoption/save replies. Accept only ordinary event
+or strict decoded all-same-owner callback groups. Expected Inspector composition
+uses CURRENT removal review/filter/pending values and canonical existing Add.
+Preflight the entire event forest/choices/alerts/registrations/commands before
+any write. A borrowed nonmutating synchronous readiness predicate rechecks job
+eligibility first, then exact mounted frame/root/load/owner/view/schema and host
+queued/reentry/replacement/recovery flags at the final fence. The borrowed role,
+session and receiver must outlive this synchronous call, as in existing composition.
+No retained callback, revision authority, pointer-as-revision or new state engine.
+
+Only policy Value and approved add/policy/remove/confirm Enabled fields change;
+navigation/cancel/filter visibility/drafts/focus remain. Synchronize own Inspector,
+Chrome footer and existing source activity; unknown/mixed/incompatible/failure
+uses full ordinary refresh. Coordinate BOTH notification and RouteEvents refresh
+callers. All committed/navigation/removal-warning publication remains ordinary.
+Both source handoffs/tools independently review before fresh34/1807/13/19 freeze.
+Fixed initial7 compilers/four native runs: semantic paired, queue paired, unchanged
+section paired, unchanged controls Ready30/outer600. Stop first failure; only a
+passing initial gate admits remaining12 original compatibility/product compilers.
+Reuse unchanged standalone scheduler78/browser evidence explicitly. Browser
+COMPILES ONLY; no new profile/host/config/MCP/worker rollout, cleanup/restart or
+extra agent. Original/P4B/P4C/performance criteria/core40 remain open.
+
+Both source handoffs now independently review: sourcejobsB272680D and queue76950571
+restore original E0C88E5B/23E15914 exactly;106 additive public pre-dispatch checks
+are expected, not executed. Inspector7901540E and semanticA8962E84 retain all
+original729 semantic predicates/waits, adding23 raw/realized preflight cases.
+Review repairs the NEW realized-alert fixture using CreateRealized, preserves
+the same refusal/assertions, and checks the existing history stamp only for
+getter side effects. Native/browser host guards include BOTH Inspector/footer
+identity and recheck after Inspector.Sync, before footer writes. Six style-only
+blank-before-if corrections precede freeze. No compiler has run. Root may fresh
+freeze34/1807/13/19 and admit the fixed initial7; all source/docs/tools then pause
+through actual root joins/exact audits. Source-ready is not latency acceptance.
+
 NATIVE UI COURIER QUALIFIED / EDITOR TIMING OPEN (2026-10-22): this turn is
 progress: managed native queue ownership,23 additive lifetime assertions and
 portable section-consumer receivers. Scheduler78 executes all23 without SKIP;

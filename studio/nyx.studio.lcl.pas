@@ -257,6 +257,12 @@ type
     { Shell controls remain mounted until deferred painting after a project load.
       Their old identities must not submit intent into the newly accepted load. }
     FShellCommandContext: TNyxStudioCommandContext;
+    { Copied identity of the last admitted event frame. The temporary root and
+      footer are borrowed only during the synchronous pending presentation. }
+    FEventFrameOwner, FEventFrameView: TNyxText;
+    FEventFrameSchema: Integer;
+    FPendingEventRoot, FPendingEventFooter: TNyxNode;
+    FPendingEventPresentation: Boolean;
     { A surviving retry belongs to the failed current load, even if an earlier
       shell is still mounted. It cannot redirect recovery into another project. }
     FDisplayRecoveryContext: TNyxStudioCommandContext;
@@ -319,6 +325,8 @@ type
     procedure RenderStudioCanvas(AHost: TWinControl);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
+    function PendingEventFrameReady: Boolean;
+    function TryPendingEventPresentation: Boolean;
     { Reset project-local presentation only after admitted opening; input and
       file binding stay available through failed or stale compiler completion. }
     procedure ProjectOpened;
@@ -465,7 +473,7 @@ type
 implementation
 
 uses
-  StdCtrls, nyx.editing.lcl, nyx.interaction, nyx.contract, nyx.source,
+  StdCtrls, nyx.editing.lcl, nyx.interaction, nyx.contract, nyx.source, nyx.schema,
   nyx.collections.query.editor, nyx.parts.editor,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.sourcefiles,
@@ -3502,6 +3510,9 @@ begin
     FCanvasRestores := nil;
     RestoreProjectControls;
     FShellCommandContext := FSession.CommandContext;
+    FEventFrameOwner := FSession.SelectedID;
+    FEventFrameView := FSession.ActiveViewID;
+    FEventFrameSchema := NyxSchemaRevision;
     { The hierarchy belongs to the independent Inspector scope. Retire the
       borrowed receiver before binding the current mounted view. }
 
@@ -3551,6 +3562,75 @@ begin
     FPainting := False;
   end;
   CompletionChanged;
+end;
+
+function TNyxNativeStudio.PendingEventFrameReady: Boolean;
+begin
+  Result := False;
+
+  if (FSourceCommands = nil) or not FSourceCommands.EventPreparationOnly then
+  begin
+    Exit;
+  end;
+  { Classifier/schema reads precede the final local frame fence. In particular,
+    a load identity alone cannot certify this selection or Inspector mount. }
+  Result := FPendingEventPresentation and FRunning and not FPainting and
+    not FChangingProject and not FQueued and not FReplaceCanvas and
+    not FState.DisplayRecovery.BlocksInput and
+    FSession.MatchesCommandContext(FShellCommandContext) and
+    (FSession.SelectedID = FEventFrameOwner) and
+    (FSession.ActiveViewID = FEventFrameView) and
+    (NyxSchemaRevision = FEventFrameSchema) and (FPendingEventRoot <> nil) and
+    (FShellView.SectionRoot(nssInspector) = FPendingEventRoot) and
+    (FPendingEventFooter <> nil) and
+    (FShellView.Root.Find('studio-status') = FPendingEventFooter);
+end;
+
+function TNyxNativeStudio.TryPendingEventPresentation: Boolean;
+begin
+  Result := False;
+
+  if FPendingEventPresentation then
+  begin
+    Exit;
+  end;
+  FPendingEventPresentation := True;
+  try
+    try
+      FPendingEventRoot := FShellView.SectionRoot(nssInspector);
+      FPendingEventFooter := FShellView.Root.Find('studio-status');
+
+      if not PendingEventFrameReady then
+      begin
+        Exit;
+      end;
+
+      if not TryRefreshNyxPendingEvents(FPendingEventRoot, FSession,
+          FState.CallbackRemoval, FSourceCommands.PendingDesign,
+          FState.EventFilter, PendingEventFrameReady) then
+      begin
+        Exit;
+      end;
+      { Existing models and controls remain mounted. Source activity was already
+        synchronized by the notification; only event fields and status follow. }
+      FShellView.SectionView(nssInspector).Sync;
+
+      if not PendingEventFrameReady then
+      begin
+        Exit;
+      end;
+      FPendingEventFooter.Configure.Text(FState.Status).Done;
+      FShellView.ViewFor(FPendingEventFooter.ID).Sync;
+      Result := True;
+    except
+      { A presentation failure never publishes a pair or skips ordinary recovery. }
+      Result := False;
+    end;
+  finally
+    FPendingEventRoot := nil;
+    FPendingEventFooter := nil;
+    FPendingEventPresentation := False;
+  end;
 end;
 
 procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
@@ -3666,6 +3746,11 @@ begin
   if LRestoreCanvas then
   begin
     RememberCanvasRestore(LRestore);
+  end;
+
+  if (AState = nssPreparing) and TryPendingEventPresentation then
+  begin
+    Exit;
   end;
   RequestRefresh(((AState = nssApplied) and not FSourceCommands.PublishedCanvasAdoption) or
     LRestoreCanvas);
@@ -5127,7 +5212,11 @@ begin
             { Mutation completion owns any later source-navigation effect. }
           end;
       end;
-      RequestRefresh;
+
+      if (LEffect <> nieNone) or not TryPendingEventPresentation then
+      begin
+        RequestRefresh;
+      end;
       Exit;
     end;
   except

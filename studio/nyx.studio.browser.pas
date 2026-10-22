@@ -136,6 +136,13 @@ type
     FCanvasCommandContext: TNyxStudioCommandContext;
     { A shell control is qualified by the load it actually presents. }
     FShellCommandContext: TNyxStudioCommandContext;
+    { Last admitted selection/schema plus a call-scoped borrowed root/footer.
+      A pending overlay grants no source publication or replacement authority. }
+    FEventFrameOwner, FEventFrameView: TNyxText;
+    FEventFrameSchema: Integer;
+    FPendingEventRoot, FPendingEventFooter: TNyxNode;
+    FPendingEventPresentation: Boolean;
+    FRefreshDepth: Integer;
     FDisplayRecoveryContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxStudioSectionViews;
@@ -338,6 +345,8 @@ type
     procedure RenderStudioCanvas(AHost: TJSHTMLElement);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
+    function PendingEventFrameReady: Boolean;
+    function TryPendingEventPresentation: Boolean;
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     function PointerBegin(AEvent: TJSEvent): Boolean;
     function PointerEnd(AEvent: TJSEvent): Boolean;
@@ -500,7 +509,7 @@ implementation
 
 uses
   nyx.codegen, nyx.collections.query.editor, nyx.parts.editor,
-  nyx.codec,
+  nyx.codec, nyx.schema,
   nyx.json,
   nyx.source, nyx.interaction,
   nyx.editing.browser, nyx.studio.exchange.browser, nyx.files.browser;
@@ -1472,15 +1481,20 @@ end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
 begin
+  Inc(FRefreshDepth);
   try
-    RefreshDisplay(ARetainCanvas, APreserveDraft);
-    CompletionChanged;
-  except
-    on LException: Exception do
-    begin
-      DisplayFailed(LException.Message);
-      raise;
+    try
+      RefreshDisplay(ARetainCanvas, APreserveDraft);
+      CompletionChanged;
+    except
+      on LException: Exception do
+      begin
+        DisplayFailed(LException.Message);
+        raise;
+      end;
     end;
+  finally
+    Dec(FRefreshDepth);
   end;
 end;
 
@@ -2191,6 +2205,9 @@ begin
   end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   FShellCommandContext := FSession.CommandContext;
+  FEventFrameOwner := FSession.SelectedID;
+  FEventFrameView := FSession.ActiveViewID;
+  FEventFrameSchema := NyxSchemaRevision;
   { An independent Inspector publishes its own event revision. }
 
   if FHierarchySubscription <> nil then
@@ -2576,6 +2593,70 @@ begin
   AgentRefresh(LChanged);
 end;
 
+function TNyxStudio.PendingEventFrameReady: Boolean;
+begin
+  Result := False;
+
+  if (FSourceCommands = nil) or not FSourceCommands.EventPreparationOnly then
+  begin
+    Exit;
+  end;
+  Result := FPendingEventPresentation and (FRefreshDepth = 0) and
+    not FSectionRefreshPending and not FReplaceCanvas and
+    not FViewState.DisplayRecovery.BlocksInput and
+    FSession.MatchesCommandContext(FShellCommandContext) and
+    (FSession.SelectedID = FEventFrameOwner) and
+    (FSession.ActiveViewID = FEventFrameView) and
+    (NyxSchemaRevision = FEventFrameSchema) and (FPendingEventRoot <> nil) and
+    (FShellRenderer.SectionRoot(nssInspector) = FPendingEventRoot) and
+    (FPendingEventFooter <> nil) and
+    (FShellRenderer.Root.Find('studio-status') = FPendingEventFooter);
+end;
+
+function TNyxStudio.TryPendingEventPresentation: Boolean;
+begin
+  Result := False;
+
+  if FPendingEventPresentation then
+  begin
+    Exit;
+  end;
+  FPendingEventPresentation := True;
+  try
+    try
+      FPendingEventRoot := FShellRenderer.SectionRoot(nssInspector);
+      FPendingEventFooter := FShellRenderer.Root.Find('studio-status');
+
+      if not PendingEventFrameReady then
+      begin
+        Exit;
+      end;
+
+      if not TryRefreshNyxPendingEvents(FPendingEventRoot, FSession,
+          FCallbackRemoval, FSourceCommands.PendingDesign,
+          FViewState.EventFilter, @PendingEventFrameReady) then
+      begin
+        Exit;
+      end;
+      FShellRenderer.SectionView(nssInspector).Sync;
+
+      if not PendingEventFrameReady then
+      begin
+        Exit;
+      end;
+      FPendingEventFooter.Configure.Text(FStatus).Done;
+      FShellRenderer.ViewFor(FPendingEventFooter.ID).Sync;
+      Result := True;
+    except
+      Result := False;
+    end;
+  finally
+    FPendingEventRoot := nil;
+    FPendingEventFooter := nil;
+    FPendingEventPresentation := False;
+  end;
+end;
+
 procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
 var
@@ -2699,6 +2780,11 @@ begin
   { Preparing/status refreshes preserve the mounted canvas and source control.
     Completed proposals reconcile accepted values, including exact field resets
     after rejection. Reuse remains subject to the public projection guards. }
+
+  if (AState = nssPreparing) and TryPendingEventPresentation then
+  begin
+    Exit;
+  end;
   try
     Refresh(True, True);
   except
@@ -3790,7 +3876,11 @@ begin
             { The admitted receipt, rather than an early click, owns navigation. }
           end;
       end;
-      Refresh(True, True);
+
+      if (LInspectorEffect <> nieNone) or not TryPendingEventPresentation then
+      begin
+        Refresh(True, True);
+      end;
       Exit;
     end;
   except

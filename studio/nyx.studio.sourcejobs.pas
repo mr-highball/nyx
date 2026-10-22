@@ -271,6 +271,15 @@ type
     { Copy pending field/title values for observing chrome. No queued intent,
       accepted document or mutable processor owner is exposed or modified. }
     function PendingDesign: TNyxStudioPendingDesign;
+    { UI-only presentation classification, never publication authority or a
+      document revision. Inspect every owned active/queued job, including the
+      preparing notification before StartQueued moves the first queue slot.
+      Only current selected-owner/view event intent under the current creator
+      revision qualifies. Mixed, stale, discarded, detached or other draft/reply
+      ownership requires ordinary presentation. No job/draft is pruned here.
+      Hosts must also guard their exact mounted frame and recheck this predicate
+      after outward metadata preparation, before their first scalar write. }
+    function EventPreparationOnly: Boolean;
     { Successful ordinary transaction notification only. Returns the last saved
       definition still present in this exact project context; failed/cancelled/
       stale proposals never retarget a local program form. No source is parsed. }
@@ -1319,6 +1328,144 @@ begin
     end;
   end;
   SetLength(FNameDrafts, LCount);
+end;
+
+function TNyxSourceCommands.EventPreparationOnly: Boolean;
+var
+  LIndex: Integer;
+  LOwner, LView: TNyxText;
+  LRevision: Integer;
+
+  function EventIntentOnly(const AIntent: TNyxStudioEventIntent): Boolean;
+  begin
+    Result := False;
+
+    if (Ord(AIntent.Action) < Ord(Low(TNyxStudioEventAction))) or
+      (Ord(AIntent.Action) > Ord(High(TNyxStudioEventAction))) or
+      (Ord(AIntent.Trigger) < Ord(Low(TNyxTrigger))) or
+      (Ord(AIntent.Trigger) > Ord(High(TNyxTrigger))) or
+      (Ord(AIntent.Policy) < Ord(Low(TNyxExecutionPolicy))) or
+      (Ord(AIntent.Policy) > Ord(High(TNyxExecutionPolicy))) then
+    begin
+      Exit;
+    end;
+
+    if ((AIntent.Trigger = ntNamed) <> (AIntent.Name.Name <> '')) or
+      (not NyxIsRuntimeTrigger(AIntent.Trigger) and (AIntent.Trigger <> ntNamed)) or
+      ((AIntent.Action <> seaPolicy) and (AIntent.Policy <> neSequential)) then
+    begin
+      Exit;
+    end;
+
+    if AIntent.Action = seaRemove then
+    begin
+      Result := (AIntent.ID.Name <> '') and (AIntent.Handler.Name <> '');
+    end
+    else
+    begin
+      Result := (AIntent.ID.Name = '') and (AIntent.Handler.Name = '');
+    end;
+  end;
+
+  function EventJobOnly(const AJob: TNyxEditorSourceJob): Boolean;
+  var
+    LChanges: TNyxCallbackChanges;
+    LChange: Integer;
+    LSchemas: INyxSchemaSnapshot;
+  begin
+    Result := False;
+
+    if (AJob.Kind <> eskDesign) or
+      not FSession.MatchesCommandContext(AJob.Context) or
+      (AJob.Edit.Selection <> LOwner) or (AJob.Edit.View <> LView) or
+      (AJob.Schemas = nil) then
+    begin
+      Exit;
+    end;
+    LSchemas := AJob.Schemas.Value;
+
+    if (LSchemas = nil) or (LSchemas.Revision <> LRevision) or
+      (AJob.Schemas.Adoption <> nil) or (AJob.Schemas.DiagramSave <> nil) then
+    begin
+      Exit;
+    end;
+    case AJob.Edit.Action of
+      sdaEvent:
+        Result := EventIntentOnly(AJob.Edit.Event);
+      sdaCallbacks:
+        begin
+
+          if not AJob.Edit.Callbacks.Defined then
+          begin
+            Exit;
+          end;
+          { Use the same bounded strict decoder as queue admission/overlay.
+            Do not silently project one owner's rows out of a mixed batch. }
+          LChanges := ReadNyxCallbackChanges(AJob.Edit.Callbacks);
+          for LChange := 0 to High(LChanges) do
+          begin
+
+            if LChanges[LChange].Owner <> LOwner then
+            begin
+              Exit;
+            end;
+          end;
+          Result := Length(LChanges) > 0;
+        end;
+    else
+      { PendingDesign deliberately omits some other design actions; absence
+        from that overlay is not evidence that their publication is cosmetic. }
+      Exit;
+    end;
+  end;
+
+begin
+  FScheduler.RequireUI;
+  Result := False;
+
+  if FDetached or FDiscardActive or (FState <> nssPreparing) or
+    (Length(FNameDrafts) <> 0) then
+  begin
+    Exit;
+  end;
+  LOwner := FSession.SelectedID;
+  LView := FSession.ActiveViewID;
+  LRevision := NyxSchemaRevision;
+
+  if (LOwner = '') or (LView = '') then
+  begin
+    Exit;
+  end;
+  { An active holder remains owned even when another public presentation view
+    would omit it. A non-running owned holder is a transition, not a shortcut. }
+
+  if FActive.Schemas <> nil then
+  begin
+
+    if not FRunning or not EventJobOnly(FActive) then
+    begin
+      Exit;
+    end;
+  end
+  else if FRunning then
+  begin
+    Exit;
+  end;
+
+  if not FRunning and (Length(FQueue) = 0) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FQueue) do
+  begin
+
+    if not EventJobOnly(FQueue[LIndex]) then
+    begin
+      Exit;
+    end;
+  end;
+  Result := (FSession.SelectedID = LOwner) and
+    (FSession.ActiveViewID = LView) and (NyxSchemaRevision = LRevision);
 end;
 
 function TNyxSourceCommands.PendingDesign: TNyxStudioPendingDesign;
