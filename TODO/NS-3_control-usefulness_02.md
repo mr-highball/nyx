@@ -5,6 +5,21 @@
 
 **Description:**
 
+The own-browser pair gate is locally qualified: repaired phone700 at actual390x900,
+with complete12719-unit packet exact2BB6/source093B across phone, desktop and real
+independent compiled inputs. All six fields/drafts/helper inventories match.
+Desktop696 and compiled369/369 are explicitly reused by unchanged path/identity,
+with their original producer labels. Independent reviewB884C725/compositeDB05C06B
+verify1924 pins/eight retained copies and every actual reader joined. The earlier
+phone304 failure and launch/capture corrections remain retained. The two repair
+browser builds have0 owned/14 known RTL warnings; no native work was repeated.
+[WORK](../WORK.md#own-browser-pair-qualified-next-control-journey) owns checkpoint
+and the next separate P3 single-browser-compiler/two-width actual runtime gate.
+No P3 reader or pending-fact repair source is admitted now. Active-cell browser
+checks keep their original44BAC companion. Reassessment680D8374 keeps all seven
+original criteria/core47/P4C aggregate/full goal open without credit or DONE.
+The earlier readiness paragraphs below are retained history.
+
 Ordinary desktop now passes696 at actual1280x900 with complete browser-owned2BB6/
 093B pair, exact compiled inputs and empty drafts/helper inventories; independent
 reviewA0E26B5B passes. Compact390x900 fails at stage15/check304 while immediately

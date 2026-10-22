@@ -1,5 +1,31 @@
 # Working in Nyx
 
+OWN BROWSER PAIR LOCALLY QUALIFIED (2026-10-22): phone passes700 at actual390x900,
+including repaired callback navigation and its own saved-project application.
+Complete12719-unit packet is exact2BB6 across phone/desktop/native; all six fields,
+empty drafts/helpers and source093B match actual independent compiled inputs.
+Retain actual desktop696 by unchanged executed path and compiled369/369 by exact
+JS9AAB, with original producer labels and no new runs. Native755/759+426/426 remains
+explicitly reused by exact native projections. Source232E adds only the guarded
+PAS2JS wait; two matching browser compilers pass0 owned/14 known RTL warnings.
+Independent reviewB884C725 and compositeDB05C06B verify1924 pins/eight copies.
+All actual readers joined:48992 stopped,19091 listener0, tabs32/33 absent, inventory
+empty and viewport reset. Retain earlier phone304 failure, wrong-root navigation
+and blocked error-page/capture corrections; no failure or receipt was replaced.
+
+Root owns three handoff docs and four-path checkpoint only; all Pascal stays
+paused. After the pushed/verified checkpoint, next is separate P3 qualification:
+ONLY one fresh current browser compile of unchanged C9F376A9 consumer, original
+flags/fresh FE and existing matched RTL/wrapper. Existing helper reviews capture
+read-only. Fresh freeze/joint review precede compiler admission; its join/review
+precedes actual1280x900/390x900 temporary-loopback runs under existing human
+regression authorization. Do not repeat unchanged native work or ask permission
+again. No P3 reader is admitted yet. Active-cell browser gate follows with the
+original44BAC companion; pending-fact/build guard consistency repair is downstream.
+Contract decisionA87AFDFF needs no user choice and releases no source now.
+Reassessment680D8374 keeps all seven original criteria/core47/P4C aggregate/full
+goal open without credit/DONE. Prior releases below are retained history.
+
 COMPACT CALLBACK NAVIGATION REPAIR RELEASE (2026-10-22): actual ordinary desktop
 passes696 at1280x900. Its complete browser-owned packet has exact2BB6 project and
 093B source, empty drafts/helper inventories, matching actual compiled inputs.

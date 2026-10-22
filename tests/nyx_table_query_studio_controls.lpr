@@ -1512,7 +1512,13 @@ begin
         FBeforeHandler := LInfo.Callbacks[0].Handler.Name;
         FBeforeRegistration := LInfo.Callbacks[0].ID.Name;
         {$ifdef PAS2JS}await(History);{$else}History;{$endif}
-        Inspector;
+        Inspector;{$ifdef PAS2JS}
+        { Browser Inspector navigation publishes after the current dispatch. }
+
+        if FStudio.PresentationPending then
+        begin
+          await(AwaitStudio);
+        end;{$endif}
         Click(NyxInspectorEventsID);
       end;
     16:

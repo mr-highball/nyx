@@ -4,6 +4,36 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Own browser pair qualified; next control journey
+
+The repaired phone run passes700 at actual390x900. Its complete12719-unit saved
+packet is byte-exact2BB6 across phone, desktop and native; all six decoded fields,
+empty drafts/helpers and source093B match actual independently compiled inputs.
+Keep desktop696 as unchanged-path evidence and compiled browser369/369 by exact
+JS9AAB, retaining native-producer labels and counting no new executions. Native
+755/759+426/426 remains explicitly reused by exact projections. The sole guarded
+PAS2JS insertion232E has two passing browser builds with0 owned/14 known RTL
+warning occurrences. Independent reviewB884C725/compositeDB05C06B verify1924 pins
+and eight retained copies. Every actual reader is joined;48992 stopped,19091 has
+no listener, tabs32/33 are absent, inventory is empty and viewport restored.
+Earlier phone304 failure and all launch/capture corrections remain retained.
+
+Reassessment680D8374 preserves the original seven criteria. The own-browser pair
+gate advances; separate P3 filter/header/ownership browser paths, active-cell
+editing and pending-fact consistency still prevent original acceptance. No credit,
+DONE move or core47 reset follows. Root checkpoints only these three handoff docs
+and the reviewed consumer. All Pascal remains paused.
+
+After that pushed/verified checkpoint, root/helper review and a fresh freeze may
+admit ONLY one current P3 browser compiler of unchanged C9F376A9, original flags
+except fresh FE, and unchanged matched wrapper/RTL. No native replay. Join/review
+that compiler before the already-authorized actual1280x900/390x900 temporary
+loopback journeys; stop/join each host. No P3 reader is admitted now. Existing
+helper owns read-only capture/outcome review. Next after P3 is the original44BAC
+active-cell browser gate. DecisionA87AFDFF separately settles pending main-draft
+build refusal using the existing API contract; it releases no repair source.
+Earlier sections below retain history and do not expand this scope.
+
 ### Compact callback navigation repair
 
 Ordinary desktop now passes696 at actual1280x900, with complete browser-owned
