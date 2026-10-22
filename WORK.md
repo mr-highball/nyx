@@ -4,6 +4,32 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Current table workbench browser paths qualified
+
+The unchanged P3 consumerC9F376A9 passes712 actual browser checks at1280x900 and
+712 at390x900. Both run current JS6F0E with original B7B6 wrapper and matched RTLA6;
+terminal success is published after the original Cleanup. Error attributes and
+console errors are absent. One fresh browser compiler passes0 owned/7 known RTL
+warnings. Root audit8D6C541F and independent reviewDAA893A5 verify1945 pins/eight
+retained copies. Actual tabs34/35 close, viewport resets and inventories are empty.
+Exact hosts44004/47756 stop/join, ports19092/19093 have no listeners. Blank terminal
+screenshots document cleanup, not visual quality. Native782/782 remains explicitly
+reused by unchanged native path; its count is not applied to browser checks.
+
+Root checkpoints only these three handoff docs. All Pascal remains paused. After
+push/remote verification, independent review/fresh freeze may admit ONLY one
+current active-cell browser compiler: unchanged60765453 consumer, its ORIGINAL
+44BAC16F generated companion, unchanged A1F2CE14 wrapper/matched RTL, original flags
+with fresh FE. Do not regenerate/substitute the saved-query093B companion or repeat
+native work. Join/review the compiler before actual1280x900/390x900 runs under the
+existing human same-regression/rerun authorization, each temporary loopback host
+stopped/joined. Root owns actual handles; helper reviews read-only. No new reader
+or repair source is admitted now. Active-cell editor/draft/caret/sort/filter-out
+proof and pending-main-draft facts/build guard consistency remain open. The settled
+A87AFDFF contract needs no user choice; its source release is separate/downstream.
+All seven original criteria/core47/P4C aggregate/full goal remain open; no credit
+or DONE movement follows this narrower browser result. Prior sections retain history.
+
 ### Own browser pair qualified; next control journey
 
 The repaired phone run passes700 at actual390x900. Its complete12719-unit saved

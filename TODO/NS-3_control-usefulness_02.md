@@ -5,6 +5,20 @@
 
 **Description:**
 
+Current P3 browser paths are locally qualified: unchangedC9F376A9 passes712 at
+actual1280x900 and712 at390x900, using currentJS6F0E/originalB7B6/RTLA6. Success
+follows original Cleanup with no error attrs/console errors. One current browser
+compiler has0 owned/7 known RTL warnings. Root8D6C541F/independentDAA893A5 verify
+1945pins/eight copies; every actual tab/host is closed/joined and listeners0.
+Native782/782 is explicitly reused, not replayed or relabeled as browser counts.
+[WORK](../WORK.md#current-table-workbench-browser-paths-qualified) owns three-doc
+checkpoint and the separate original44BAC active-cell browser gate. All Pascal
+is paused; independent review/fresh freeze must precede its one fresh compiler,
+then joined review precedes already-authorized actual desktop/phone runs.
+No reader or pending-fact/build consistency repair source is admitted here.
+All seven original criteria/core47/P4C aggregate/full goal stay open without
+credit/DONE; earlier paragraphs below retain historical readiness only.
+
 The own-browser pair gate is locally qualified: repaired phone700 at actual390x900,
 with complete12719-unit packet exact2BB6/source093B across phone, desktop and real
 independent compiled inputs. All six fields/drafts/helper inventories match.

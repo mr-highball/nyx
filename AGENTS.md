@@ -1,5 +1,28 @@
 # Working in Nyx
 
+P3 CURRENT BROWSER LOCALLY QUALIFIED (2026-10-22): unchanged C9F376A9 passes712
+actual browser checks at1280x900 and390x900 with JS6F0E/wrapperB7B6/RTLA6. Terminal
+workbench success follows original Cleanup; no error attrs or console errors.
+One fresh current compiler passes0 owned/7 known RTL warnings. Root8D6C541F and
+independent DAA893A5 verify1945 pins/eight copies. Tabs34/35 closed, viewport reset,
+inventories empty; exact hosts44004/47756 stopped/joined, ports19092/19093 listener0.
+Blank terminal screenshots show cleanup, not visual-quality proof. Native782/782
+is retained unchanged-path evidence, not replayed or relabeled as browser counts.
+
+Root owns ONLY three handoff docs/checkpoint now; all Pascal remains paused.
+After pushed/verified checkpoint, next is original active-cell browser gate:
+unchanged60765453 consumer, original44BAC16F generated companion and A1F2CE14
+wrapper. Independent review/fresh freeze precede ONLY one current browser compiler,
+original flags/fresh FE. Join/review before actual1280x900/390x900 temporary-loopback
+runs under existing human regression/rerun authorization; do not ask again or
+repeat native. Root owns every actual reader/join; existing helper reviews read-only.
+No reader or repair source is admitted by this header. Pending-main-draft facts/
+build guard consistency remains downstream under decisionA87AFDFF. All seven
+original criteria/core47/P4C aggregate/full goal stay open without credit/DONE.
+Preserve deferred resolver/splitter, concurrent13, offline LAN/no native Nyx tools,
+no extra agent/config/install/user-service/MCP/wire rollout or cleanup/restart.
+Historical paragraphs below retain evidence and their former release boundaries.
+
 OWN BROWSER PAIR LOCALLY QUALIFIED (2026-10-22): phone passes700 at actual390x900,
 including repaired callback navigation and its own saved-project application.
 Complete12719-unit packet is exact2BB6 across phone/desktop/native; all six fields,
