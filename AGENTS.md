@@ -1,5 +1,37 @@
 # Working in Nyx
 
+COMPACT CALLBACK NAVIGATION REPAIR RELEASE (2026-10-22): actual ordinary desktop
+passes696 at1280x900. Its complete browser-owned packet has exact2BB6 project and
+093B source, empty drafts/helper inventories, matching actual compiled inputs.
+Independent reviewA0E26B5B passes. Compiled browser369/369 remains explicitly reused
+with its original native-producer provenance; no new compiled execution is claimed.
+Actual compact390x900 fails at stage15/check304: inspector-tab-events absent.
+Retain failureABC59BAC and join7AB1470A; no final count/own packet was produced.
+Both actual hosts/tabs are closed/joined, inventory empty, all1912 pins exact in
+composite1C27AA5A. A later PID47028 belongs to unrelated conhost with different
+start identity; retain the metadata correction and never touch that process.
+
+Root/helper independently confirm a harness synchronization error: stage15 already
+clicks Inspector after callback TODO navigation selects Design. Browser shell
+publication is deferred and exposes PresentationPending synchronously; immediate
+Events lookup sees the former compact root. Native Click already calls Ready.
+After this three-doc checkpoint is pushed/verified, ONLY existing Lil' Scooty may
+insert a guarded PAS2JS AwaitStudio after that Inspector and before the unchanged
+Events click. Use the existing public fence and existing wait/deadline; preserve
+all gestures/assertions/steps. No product repair or broader test variant follows.
+Root owns docs, independent review/freeze, qualification and every actual reader.
+All other Pascal/buildD9/worker50300/host7EA/adapter23EA stay exact.
+
+No compiler is released yet. Review exact native projections, desktop false-path
+and compiled-path reuse, then freeze before only two matching browser compilers
+with fresh FE and own093B Fu. Prefer exact compiled JS9AAB proof. Reuse native
+755/759+426/426, actual desktop696 and compiled browser369/369 honestly; rerun only
+the authorized compact journey on a fresh temporary loopback origin, stop/join it.
+Actual390x900 terminal/full lossless own packet/cross-width exact pair remains
+required. P3, active-cell browser and pending-fact consistency gaps stay open;
+this repair releases none of those source scopes. Core47/all seven original
+criteria/P4C/full goal stay open; no credit or DONE closes. Earlier text is history.
+
 NEUTRAL BROWSER INSPECTION BUILT / RUNTIME READY (2026-10-22): reviewed07BA3FE2
 changes only the PAS2JS InspectAccepted read/comment to public neutral observe
 Summary. Exact reversal restores13D; native ordinary/compiled active text stays

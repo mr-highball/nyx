@@ -5,6 +5,26 @@
 
 **Description:**
 
+Ordinary desktop now passes696 at actual1280x900 with complete browser-owned2BB6/
+093B pair, exact compiled inputs and empty drafts/helper inventories; independent
+reviewA0E26B5B passes. Compact390x900 fails at stage15/check304 while immediately
+looking up Events after the existing Inspector click. Retain failureABC59BAC and
+join7AB1470A; no final count/own packet is claimed. All actual readers are joined,
+inventory empty, composite1C27AA5A verifies1912 pins and retains the PID-reuse audit
+correction without touching unrelated conhost. [WORK](../WORK.md#compact-callback-navigation-repair)
+owns the narrow release after its verified checkpoint: existing helper adds ONLY
+guarded PAS2JS AwaitStudio using the public PresentationPending fence, after the
+existing stage15 Inspector call. All gestures/assertions/bounds remain unchanged.
+Independent source/reuse review and fresh freeze precede two matching browser
+compilers, then only the already-authorized compact rerun on a temporary loopback
+origin. Native755/759+426/426, desktop696 and compiled browser369/369 are explicitly
+reused by unchanged path/identity, with original producer labels retained. Actual
+compact terminal/full own packet/exact cross-width pair remains required. All
+seven original criteria/core47/P4C/P3 stay open; active-cell browser and pending-
+fact consistency gaps have no new source scope. No credit or DONE closes.
+
+Earlier readiness paragraphs below are retained history, superseded above.
+
 Neutral inspection repair07BA3FE2 is built: auditB8A51692 verifies1900pins/8copies,
 root/actual compiler joins and0 owned/14 upstream warnings. Native active source
 is exact; reuse755/759+426/426. Generated review4DA6F821 proves one ordinary JS

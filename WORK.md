@@ -4,6 +4,38 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Compact callback navigation repair
+
+Ordinary desktop now passes696 at actual1280x900, with complete browser-owned
+project2BB6/source093B matching the actual compiled inputs and empty drafts/helper
+inventories. Independent reviewA0E26B5B passes. Existing compiled browser369/369
+retains its native-producer labels; linking the equal browser-owned pair is not a
+new execution. Compact390x900 terminates at stage15/check304 because Events is
+looked up before the preceding Inspector click's deferred shell publication.
+Retain failureABC59BAC/join7AB1470A, with no final count or own packet. All actual
+readers are closed/joined and inventory empty; composite1C27AA5A verifies1912 pins.
+It also retains the PID-reuse audit correction: unrelated later conhost47028 has a
+different start identity and was not touched.
+
+Root and helper independently traced the existing Inspector call, callback TODO
+navigation to Design, synchronous PresentationPending flag and queued publication.
+After this three-doc checkpoint is pushed and verified, release ONLY existing
+Lil' Scooty's consumer stage15 guarded PAS2JS AwaitStudio after Inspector and before
+the unchanged Events click. Native Click already waits; retain all original
+assertions/gestures/steps/Ready60/GPolls2400 and other waits. Root owns these three
+docs, source review/freeze/admission and all actual handles. No product or other
+Pascal/buildD9/worker50300/host7EA/adapter23EA change is released.
+
+No compiler yet. Independent native-projection/desktop false-path/compiled-path
+review precedes a fresh freeze and only two matching browser compilers, fresh FE,
+exact own093B Fu. Prefer byte-identical compiled JS9AAB before reusing its369/369.
+Reuse native755/759+426/426 and desktop696 explicitly by unchanged path; execute
+only the same authorized compact regression at a fresh temporary loopback origin.
+Require actual390x900 terminal, complete lossless own packet, exact cross-width
+pair and cleanup/join. Original seven criteria/core47/P4C/P3 remain open, as do
+active-cell browser and pending-fact consistency gaps; no source scope or credit
+for those follows. Prior release/outcome paragraphs below retain history.
+
 ### Neutral browser inspection source release
 
 The reviewed repair07BA3FE2 is now built. FreezeC2EC5CF9/auditB8A51692 verify all
