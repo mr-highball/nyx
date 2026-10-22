@@ -570,7 +570,142 @@ try {
     if ($Target -eq 'query-authoring' -and $QueryAuthoringProfile) {
       $nyxWorkbenchFlags += @('-dNYX_STUDIO_PROFILE', '-dNYX_LCL_LAYOUT_PROFILE')
     }
-    Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
+    if ($Target -eq 'query-authoring') {
+      $nyxWorkbenchFlags += @('-uPAS2JS')
+      # Reuse the reviewed owned-process capture. Every direct compiler/native
+      # launch has its own raw streams and identity; no server is involved.
+      $output = $nyxWorkbenchRoot
+      $nyxAuthoringUnitNames = @(Get-ChildItem -LiteralPath @('src', 'studio', 'tests', 'tools') `
+        -Recurse -File | Where-Object { $_.Extension -in @('.pas', '.pp', '.inc', '.lpr', '.dpr') } | `
+        ForEach-Object { $_.Name }) + @('nyx.fixture.table.query.studio.pas')
+function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
+  [int]$TimeoutSeconds, [bool]$TraceHeap) {
+  foreach ($argument in $Arguments) {
+    if ($argument -match '[\s"]') { throw 'Reviewed arguments contain no spaces or quotes' }
+  }
+  $stdout = Join-Path $output ($Tag + '-stdout.log')
+  $stderr = Join-Path $output ($Tag + '-stderr.log')
+  $heap = Join-Path $output ($Tag + '-heap.log')
+  foreach ($path in @($stdout,$stderr,$heap)) {
+    if (Test-Path -LiteralPath $path) { throw 'Owned process logs must be fresh' }
+  }
+  $inheritedTrace = [Environment]::GetEnvironmentVariable('HEAPTRC','Process')
+  if ($TraceHeap -and -not [string]::IsNullOrEmpty($inheritedTrace)) {
+    throw 'Native qualification requires no inherited HeapTrc options'
+  }
+  if ($TraceHeap -and (-not [IO.Path]::IsPathFullyQualified($heap) -or
+      $heap -match '[^\x21-\x7E]' -or [Text.Encoding]::ASCII.GetByteCount($heap) -gt 255)) {
+    throw 'Heap path must be absolute ASCII without spaces, at most255bytes'
+  }
+  $start = @{FilePath=$Executable;RedirectStandardOutput=$stdout;
+    RedirectStandardError=$stderr;PassThru=$true;WindowStyle='Hidden';
+    WorkingDirectory=(Get-Location).Path}
+  if ($Arguments.Count -gt 0) { $start.ArgumentList=$Arguments }
+  $started = [DateTime]::UtcNow.ToString('o')
+  try {
+    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC','log='+$heap,'Process') }
+    $process = Start-Process @start
+  } finally {
+    if ($TraceHeap) { [Environment]::SetEnvironmentVariable('HEAPTRC',$inheritedTrace,'Process') }
+  }
+  # Persist actual launch identity before waiting, including if a later capture
+  # step fails. Root joins this exact reader; a receipt alone is not liveness.
+  $launchPath = Join-Path $output ($Tag + '-launch-private.json')
+  [ordered]@{pid=$process.Id;executable=$Executable;arguments=$Arguments;
+    startedUTC=$started;stdout=$stdout;stderr=$stderr;heap=$heap;
+    traceHeap=$TraceHeap;timeoutSeconds=$TimeoutSeconds} |
+    ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $launchPath -Encoding utf8
+  $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+  $timedOut = $false
+  while (-not $process.WaitForExit(1000)) {
+    if ([DateTime]::UtcNow -ge $deadline) {
+      $timedOut = $true
+      $process.Kill($true)
+      $process.WaitForExit()
+      break
+    }
+  }
+  $process.WaitForExit()
+  $result = [ordered]@{pid=$process.Id;executable=$Executable;
+    executableSHA256=(Get-FileHash -LiteralPath $Executable -Algorithm SHA256).Hash;
+    arguments=$Arguments;exit=$process.ExitCode;timedOut=$timedOut;
+    timeoutSeconds=$TimeoutSeconds;startedUTC=$started;finishedUTC=[DateTime]::UtcNow.ToString('o');
+    stdout=$stdout;stdoutSHA256=(Get-FileHash -LiteralPath $stdout -Algorithm SHA256).Hash;
+    stderr=$stderr;stderrSHA256=(Get-FileHash -LiteralPath $stderr -Algorithm SHA256).Hash;
+    launch=$launchPath;launchSHA256=(Get-FileHash -LiteralPath $launchPath -Algorithm SHA256).Hash}
+  $process.Dispose()
+  if ($TraceHeap) {
+    $heapText = if (Test-Path -LiteralPath $heap) { [IO.File]::ReadAllText($heap) } else { '' }
+    $allocated = [regex]::Match($heapText,'(?m)^(\d+) memory blocks allocated : (\d+)\s*$')
+    $freed = [regex]::Match($heapText,'(?m)^(\d+) memory blocks freed : (\d+)\s*$')
+    $result.heap=$heap
+    $result.heapSHA256=if(Test-Path -LiteralPath $heap){(Get-FileHash -LiteralPath $heap).Hash}else{$null}
+    $result.inheritedHEAPTRC=$inheritedTrace
+    $result.restoredHEAPTRC=[Environment]::GetEnvironmentVariable('HEAPTRC','Process')
+    $result.heapComplete=$allocated.Success -and $freed.Success -and
+      $allocated.Groups[1].Value -eq $freed.Groups[1].Value -and
+      $allocated.Groups[2].Value -eq $freed.Groups[2].Value -and
+      $heapText -match '(?m)^0 unfreed memory blocks : 0\s*$' -and
+      $heapText -match '(?m)^True heap size : \d+ \(\d+ used in System startup\)\s*$' -and
+      $heapText -match '(?m)^True free heap : \d+\s*$'
+  }
+  return $result
+}
+      function Invoke-NyxQueryAuthoringCompiler([string]$Executable,
+        [string[]]$Arguments, [string]$Tag) {
+        $result = RunOwned $Executable $Arguments $Tag 300 $false
+        # Fail owned warnings before any longer UI run. The freshly emitted
+        # unit is owned too, although it lives outside the checkout's sources.
+        $result.warnings = @((Get-Content -LiteralPath $result.stdout) +
+          (Get-Content -LiteralPath $result.stderr) | Where-Object { $_ -match 'Warning:' })
+        $result.ownedOrUnclassifiedWarnings = @($result.warnings | Where-Object {
+          if ($_ -match '^(.+?)\(\d+,\d+\)\s+Warning:') {
+            [IO.Path]::GetFileName($Matches[1]) -in $nyxAuthoringUnitNames
+          } else { $true }
+        })
+        $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+          (Join-Path $nyxWorkbenchRoot ($Tag + '-process-private.json')) -Encoding UTF8
+        Get-Content -LiteralPath $result.stdout | ForEach-Object { Write-Host $_ }
+        Get-Content -LiteralPath $result.stderr | ForEach-Object { Write-Host $_ }
+        if ($result.exit -ne 0 -or $result.timedOut -or $result.ownedOrUnclassifiedWarnings.Count -ne 0) {
+          throw ('Owned query-authoring compiler failed: ' + $Tag)
+        }
+      }
+      function Invoke-NyxQueryAuthoringApplication([string]$Executable,
+        [string]$Evidence, [int]$Width, [string]$Tag, [string]$ExpectedPacket = '') {
+        if (Test-Path -LiteralPath $Evidence) { throw 'Application evidence must be NEW' }
+        $arguments = @($Evidence, [string]$Width)
+        if ($ExpectedPacket) { $arguments += $ExpectedPacket }
+        $result = RunOwned $Executable $arguments $Tag $QueryAuthoringTimeoutSeconds $true
+        $text = [IO.File]::ReadAllText($result.stdout)
+        $suffix = if ($ExpectedPacket) { 'compiled Studio query-policy application checks' } `
+          else { 'actual Studio query-policy checks' }
+        $result.functionalPass = $text -match ('(?m)^PASS \d+ ' + [regex]::Escape($suffix) + '\s*$')
+        $result.actualClientWidth = $text -match ('(?m)^CLIENT_WIDTH=' + $Width + '\s*$')
+        $result | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath `
+          (Join-Path $nyxWorkbenchRoot ($Tag + '-process-private.json')) -Encoding UTF8
+        Get-Content -LiteralPath $result.stdout | ForEach-Object { Write-Host $_ }
+        Get-Content -LiteralPath $result.stderr | ForEach-Object { Write-Host $_ }
+        if ($result.exit -ne 0 -or $result.timedOut -or -not $result.functionalPass -or
+            -not $result.actualClientWidth -or -not $result.heapComplete) {
+          throw ('Actual query-authoring application failed or lacks complete clean heap: ' + $Tag)
+        }
+      }
+      Invoke-NyxQueryAuthoringCompiler $nyxLclFpc `
+        ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr")) 'ordinary-native-compiler'
+    } else {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
+    }
+    if ($Target -eq 'query-authoring' -and -not $QueryAuthoringDiagnostic) {
+      # Catch portable consumer errors before the longer native authoring runs.
+      # The compiled consumer still waits for its OWN two-width reopened exports.
+      $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxWorkbenchRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      $nyxWorkbenchBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio')
+      Invoke-NyxQueryAuthoringCompiler $nyxPas2js ($nyxWorkbenchBrowserFlags + @(
+        "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")) 'ordinary-browser-compiler'
+    }
     $nyxWorkbenchSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
     $nyxWorkbenchWidths = @(1280, 390)
     if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
@@ -580,66 +715,67 @@ try {
       $nyxWorkbenchEvidence = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth)
       $nyxWorkbenchRunLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '.log')
       if ($Target -eq 'query-authoring') {
-        # Own this precise process handle; a timeout never targets a server or
-        # another run. Keep both raw streams and the interrupted receipt. The
-        # test's original internal waits and assertions remain unchanged.
-        $nyxAuthoringOutputLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stdout.log')
-        $nyxAuthoringErrorLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stderr.log')
-        # Start-Process may not retain StartInfo.FileName after exit. Keep the
-        # exact absolute launch input independently for this NEW run's receipt.
-        $nyxAuthoringExecutable = Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)
-        $nyxAuthoringStartParameters = @{
-          FilePath = $nyxAuthoringExecutable
-          ArgumentList = '"{0}" {1}' -f $nyxWorkbenchEvidence, $nyxWorkbenchWidth
-          RedirectStandardOutput = $nyxAuthoringOutputLog
-          RedirectStandardError = $nyxAuthoringErrorLog
-          PassThru = $true
-        }
-        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
-          $nyxAuthoringStartParameters.WindowStyle = 'Hidden'
-        }
-        $nyxAuthoringProcess = Start-Process @nyxAuthoringStartParameters
-        $nyxAuthoringDeadline = [DateTime]::UtcNow.AddSeconds($QueryAuthoringTimeoutSeconds)
-        $nyxAuthoringTimedOut = $false
-        while (-not $nyxAuthoringProcess.WaitForExit(1000)) {
-          if ([DateTime]::UtcNow -ge $nyxAuthoringDeadline) {
-            $nyxAuthoringTimedOut = $true
-            $nyxAuthoringProcess.Kill()
-            $nyxAuthoringProcess.WaitForExit()
-            break
-          }
-        }
-        $nyxAuthoringProcess.WaitForExit()
-        $nyxWorkbenchRunExit = $nyxAuthoringProcess.ExitCode
-        [ordered]@{pid=$nyxAuthoringProcess.Id;executable=$nyxAuthoringExecutable;
-          width=$nyxWorkbenchWidth;exit=$nyxWorkbenchRunExit;timedOut=$nyxAuthoringTimedOut;
-          timeoutSeconds=$QueryAuthoringTimeoutSeconds;stdout=$nyxAuthoringOutputLog;
-          stderr=$nyxAuthoringErrorLog} | ConvertTo-Json | Set-Content -LiteralPath `
-          (Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-process-private.json')) -Encoding UTF8
-        $nyxAuthoringProcess.Dispose()
-        Get-Content -LiteralPath $nyxAuthoringOutputLog | Set-Content -LiteralPath $nyxWorkbenchRunLog -Encoding UTF8
-        Get-Content -LiteralPath $nyxAuthoringErrorLog | Add-Content -LiteralPath $nyxWorkbenchRunLog -Encoding UTF8
-        if ($nyxAuthoringTimedOut) {
-          Get-Content -LiteralPath $nyxWorkbenchRunLog
-          throw "Owned native policy test did not complete within $QueryAuthoringTimeoutSeconds seconds at $nyxWorkbenchWidth; interrupted evidence retained"
-        }
+        Invoke-NyxQueryAuthoringApplication `
+          (Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)) `
+          $nyxWorkbenchEvidence $nyxWorkbenchWidth ('native-' + $nyxWorkbenchWidth)
       } else {
         & (Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)) `
           $nyxWorkbenchEvidence $nyxWorkbenchWidth *> $nyxWorkbenchRunLog
         $nyxWorkbenchRunExit = $LASTEXITCODE
       }
-      Get-Content -LiteralPath $nyxWorkbenchRunLog
-      if ($nyxWorkbenchRunExit -ne 0) { throw "Actual table query controls failed at $nyxWorkbenchWidth" }
+      if ($Target -ne 'query-authoring') {
+        Get-Content -LiteralPath $nyxWorkbenchRunLog
+        if ($nyxWorkbenchRunExit -ne 0) { throw "Actual table query controls failed at $nyxWorkbenchWidth" }
+      }
     }
     if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
       Write-Host 'Native1280 diagnostic only;390 and matching browser compilation remain required.'
       exit 0
     }
-    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
-    $nyxWorkbenchRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio',
-      "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")
+    if ($Target -eq 'query-authoring') {
+      # Compile only this journey's reopened source, once both independently
+      # authored widths emitted identical project and Pascal bytes.
+      $nyxAuthoringSource = Join-Path $nyxWorkbenchRoot 'native-1280'
+      $nyxAuthoringPacket = Join-Path $nyxAuthoringSource 'accepted-project.nyxproject'
+      $nyxAuthoringExports = @()
+      foreach ($nyxAuthoringFile in @('accepted-project.nyxproject', 'nyx.fixture.table.query.studio.pas')) {
+        $first = Join-Path $nyxAuthoringSource $nyxAuthoringFile
+        $second = Join-Path $nyxWorkbenchRoot ('native-390/' + $nyxAuthoringFile)
+        if ((Get-FileHash -LiteralPath $first).Hash -ne (Get-FileHash -LiteralPath $second).Hash) {
+          throw ('Own query-authoring exports differ across widths: ' + $nyxAuthoringFile)
+        }
+        foreach ($export in @($first, $second)) {
+          $nyxAuthoringExports += @{path=$export;sha256=(Get-FileHash -LiteralPath $export).Hash}
+        }
+      }
+      $nyxAuthoringExports | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath `
+        (Join-Path $nyxWorkbenchRoot 'own-exports-private.json') -Encoding UTF8
+      $nyxAuthoringCompiled = Join-Path $nyxWorkbenchRoot 'compiled'
+      $nyxAuthoringCompiledBrowser = Join-Path $nyxWorkbenchRoot 'compiled-browser'
+      New-Item -ItemType Directory -Path $nyxAuthoringCompiled, $nyxAuthoringCompiledBrowser | Out-Null
+      $nyxAuthoringCompiledFlags = @($nyxWorkbenchFlags | Where-Object {
+        -not $_.StartsWith('-FU') -and -not $_.StartsWith('-FE') })
+      Invoke-NyxQueryAuthoringCompiler $nyxLclFpc ($nyxAuthoringCompiledFlags + @(
+        '-dNYX_COMPILED_TABLE_QUERY_STUDIO', "-Fu$nyxAuthoringSource",
+        "-FU$nyxAuthoringCompiled", "-FE$nyxAuthoringCompiled",
+        "tests/$nyxWorkbenchProgram.lpr")) 'compiled-native-compiler'
+      Invoke-NyxQueryAuthoringCompiler $nyxPas2js ($nyxWorkbenchBrowserFlags + @(
+        '-dNYX_COMPILED_TABLE_QUERY_STUDIO', "-Fu$nyxAuthoringSource",
+        "-FE$nyxAuthoringCompiledBrowser", "tests/$nyxWorkbenchProgram.lpr")) 'compiled-browser-compiler'
+      foreach ($nyxWorkbenchWidth in @(1280, 390)) {
+        Invoke-NyxQueryAuthoringApplication `
+          (Join-Path $nyxAuthoringCompiled ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)) `
+          (Join-Path $nyxWorkbenchRoot ('compiled-' + $nyxWorkbenchWidth)) `
+          $nyxWorkbenchWidth ('compiled-' + $nyxWorkbenchWidth) $nyxAuthoringPacket
+      }
+    }
+    if ($Target -ne 'query-authoring') {
+      $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxWorkbenchRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio',
+        "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")
+    }
     Copy-Item -LiteralPath $nyxWorkbenchRuntime -Destination (Join-Path $nyxWorkbenchBrowser 'rtl.js')
     $nyxWorkbenchHTML = @"
 <!doctype html>
@@ -651,9 +787,30 @@ try {
 <script>rtl.run();</script></body>
 </html>
 "@
+    if ($Target -eq 'query-authoring') {
+      $nyxWorkbenchHTML = $nyxWorkbenchHTML.Replace('<body>',
+        '<body><script type="application/json" id="expected-project">null</script>')
+    }
     [IO.File]::WriteAllText((Join-Path $nyxWorkbenchBrowser 'index.html'),
       $nyxWorkbenchHTML, (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host 'Actual native table inputs checked at both widths; matching browser assertions compiled only.'
+    if ($Target -eq 'query-authoring') {
+      # The only browser packet is the source just reopened and pinned above.
+      # JSON '<' escaping prevents an authored caption ending this script tag.
+      $nyxAuthoringExpected = [IO.File]::ReadAllText($nyxAuthoringPacket).Replace('<', '\u003c')
+      [IO.File]::WriteAllText((Join-Path $nyxAuthoringCompiledBrowser 'index.html'),
+        $nyxWorkbenchHTML.Replace('id="expected-project">null</script>',
+          'id="expected-project">' + $nyxAuthoringExpected + '</script>'),
+        [Text.UTF8Encoding]::new($false))
+      Copy-Item -LiteralPath $nyxWorkbenchRuntime -Destination (Join-Path $nyxAuthoringCompiledBrowser 'rtl.js')
+      foreach ($export in $nyxAuthoringExports) {
+        if ((Get-FileHash -LiteralPath $export.path).Hash -ne $export.sha256) {
+          throw 'Own query-authoring source changed during application qualification'
+        }
+      }
+      Write-Host 'Ordinary saved query Studio and its OWN compiled applications passed natively at both widths; both browser consumers compile only.'
+    } else {
+      Write-Host 'Actual native table inputs checked at both widths; matching browser assertions compiled only.'
+    }
     exit 0
   }
   if ($Target -in @('query-publication', 'query-session')) {

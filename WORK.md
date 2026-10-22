@@ -2,6 +2,230 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Own saved query workbench — 2026-10-22
+
+### Current result: own compiled application passes native checks
+
+This goal turn is PROGRESS. The SAME consumer901D3F06's existing compiled branch
+uses this journey's OWN retained330 Save/Open pair2BB6B854 and emitted unit093B64B3.
+Actual compiled applications at client1280 and390 each pass426 checks with complete
+clean heaps. Both strict native/browser compilers pass, with zero owned/seven
+upstream RTL warning occurrences. The browser application compiles but did not run.
+This bounded matrix result leaves fullStudioQualified/crossWidthExportsQualified/
+browserExecuted false and preserves the producer exports' partial qualified=false.
+
+The matrix independently admits the exact saved pair and compares its own emitted
+BuildNyxDocument result to the saved design. Real emitted callback classes and
+initialization bind before independent runtime observers; no ordinary TODO adapter
+is present in this branch. Actual header/form/key paths exercise four scalar
+filter families, Shift multi-sort versus the peer's single sort, inherited opt-out,
+hidden selection, typed paging, invalid/cancelled/corrected drafts, empty recovery,
+chip/Clear/physical Reset, copied Details and successful/vetoed callback execution.
+Queued old Apply cannot reach a same-ID replacement; both stores survive and
+retained workbench/popup commands refuse after disposal. Source/default/sibling
+snapshots stay exact. Synthetic browser and native installed callback input limits
+remain documented; this establishes no hardware/assistive/performance claim.
+
+Root82853/c19b8d joins terminalf95771/exit0; actual4016/32256/47964/17476 are absent.
+AuditD7433905 verifies1853 frozen occurrences (six owned/1807 Pascal/13 foreign/
+27 extras), six retained copies and18 artifact references at freezeA5FDEF73.
+Both raw native heaps balance exactly:6601818/6601817 blocks and245941545/
+245941510 cumulative bytes, zero unfreed, true-heap/free footer and empty stderr.
+Root and helper independently review the actual receipts, logs and own-input
+provenance. Consumer901D/buildC234/guideA79C/driver3B746 remain unchanged from
+freeze; later root outcome edits are limited to AGENTS/WORK/task02.
+
+Retain all earlier attempts separately:35741/c88ba6 missing-import compiler10048
+fails without UI;6840/f89a5c compiler46364 exits0 but its owned warning refuses
+admission without UI;54515/d0ba95 has two clean ordinary compilers then desktop
+stages0-25 reach330 authoring/history/Save/Read/Open checks before application
+Select refuses an off-page row, with a complete clean heap. All those actual
+handles are joined. These partial checks do not become an overall Studio pass.
+Three marked additive setup/lifecycle regions repair the visible-page and retired-
+popup preconditions; their1010-byte removal restores54AF4520 exactly, preserving
+all prior predicates/calls/waits. There was no product selection/popup repair.
+
+Core46->47; no original/P4B/P4C/credit/DONE criterion closes. Reassessment has
+resolved the common application matrix before another long Studio replay. The
+next bounded action is a separate reviewed admission of the EXISTING unchanged
+maintained query-authoring target901D/C234 at both actual widths. It must complete
+the whole ordinary authoring->named Save/independent Read/Open->ApplicationProof,
+produce four fresh own exports with exact cross-width equality, and qualify its
+exact compiled native/browser companions. The retained-pair426/426 matrix is
+advance evidence, not a substitute for those obligations. Preserve original
+Ready60/global2400 and explicitly qualified1800s total; no more fixture/profile/
+product variants. Actual browser input remains a later applicable-host gate.
+Root owns outcome/checkpoint only; all Pascal/guides/tools pause, helper owns
+read-only next-admission review. No host/config/MCP rollout, probe, cleanup/
+restart or extra agent is released by this outcome.
+
+### Retained source-review and repair history
+
+The following admission and repair boundaries are historical and superseded by
+the current joined result above. Their failures and source scopes remain retained.
+
+The bounded application-matrix source/tool handoffs were independently reviewed.
+Consumer901D3F06 has three marked additive setup/lifecycle regions; root reversal
+removes1010 bytes and restores54AF4520 exactly. Every old assertion/call/wait and
+fixture stays. ReviewF5A1B9FD accepts first-page selection setup and fresh popup
+reacquisition while preserving the later physical Reset's sort-clearing proof.
+Private driver3B74679D passes both reviews with unchanged3975-character RunOwned.
+Its fixed two-compiler/two-native plan uses the existing compiled branch and ONLY
+the own retained330 pair2BB6B854/093B64B3, all three new inputs frozen as extras.
+The planned freeze was six owned/1807 Pascal/13 concurrent/27 extras. No reader had
+launched at this source-only review. Native runs were sequential1280/390 at300s;
+both native/browser compilers precede them, and any first failure stops the plan.
+Receipts explicitly keep fullStudioQualified/crossWidthExportsQualified/
+browserExecuted false. All source/docs/tools pause through actual joins/audit.
+Full current ordinary two-width/own export/compiled/browser obligations remain;
+no source/host/fixture/rollout or original criterion closure follows from review.
+
+### Retained first application failure and repair release
+
+Desktop native stages0-25 reach330 exact authoring/history/callback/Save/independent
+Read/Open checks, including fresh history and exact definition/sibling/defaults.
+The common application then refuses `Select(Linus)` after the earlier name sort
+moved Linus off the current page. Both agents independently traced the only such
+call to `TView.Select`'s visible-Snapshot precondition; instance/key is correct.
+This is a test setup error, not evidence of a product selection defect. The full
+native run fails; do not relabel its partial330 checks as complete acceptance.
+
+Root54515/d0ba95 is terminal1; actual18056/7952/43456/46896 are absent. AuditC6D217D0
+verifies1850 pins/six retained copies/17 artifact references and its own partial
+2BB6B854 project/093B64B3 Pascal exports. Raw heap539338523 blocks/70496769584
+cumulative allocated bytes balances exactly with zero unfreed and full footer;
+this is not peak memory or release-performance evidence. Ordinary native/browser
+compilers pass with zero owned/seven upstream RTL warnings. Compact ordinary and
+both compiled compilers/runs remain unattempted. Earlier compiler1AE59 and owned-
+warning8B571 refusals remain separately retained with their actual exits.
+
+Release only the same consumer's initial first-workbench ResetAll and explicit
+Visible(Linus,Grace) before its unchanged Select. Later real header input and
+HasUserSort assertion must restore the physical Reset's original sort-clearing
+intent. Existing accepted chip/Clear/sort publications retire their popup; fresh
+KeyboardOpen after chip removal before ClearOwner and after sort before Reset
+must reacquire the current presenter. Preserve all original calls/predicates/
+waits/fixture; these are existing lifecycle preconditions, not a product repair.
+Reassessment changes the next action: use the EXISTING compiled branch and this
+OWN retained330 pair for a bounded application-matrix check before another long
+Studio replay. Root owns one reviewed private qualifier and admission docs; add
+its driver and both exact input exports as three extra pins (24->27). After both
+source/tool reviews and fresh freeze, admit only two compilers/two sequential
+native widths, stopping at first failure and actual-joining every handle.
+This diagnoses the common matrix; full ordinary1280/390, current cross-width own
+four-file equality and their exact compiled/browser qualification remain required.
+The maintained full target, all production/other consumers/guides stay exact.
+No source/host/config/MCP rollout or new fixture/program follows. Core46 carries
+to this bounded handoff; original criteria/credit/DONE remain open.
+
+Startup repair54AF4520 is independently reviewed. Only21 bytes explicitly assign
+GClosing:=False before existing program try; exact reversal restores3739A05A.
+All assertions/input/waits/imports and other source/guide/tool bytes stay exact.
+No compiler has yet read this repair. Root may fresh-freeze the same six paths
+for the unchanged four+four plan, retaining both failure/refusal audits; all
+source/docs/tools pause through actual joins/exact audit and core46 stays open.
+
+Import-repaired native compiler46364 exits0, but its owned GClosing read/never-
+assigned warning refuses admission before browser compilation or UI. Root6840/
+f89a5c is terminal1; actual46356/46364 are absent. Audit8B5715C8 verifies1850 pins/
+six retained copies/eight refs. Release only explicit GClosing:=False at program
+startup in the same consumer, making its existing initial state clear. No
+suppression, assertion/wait change or other source repair is released. Independent
+reversal/review and fresh freeze precede the same four+four plan; keep both first
+attempts and their actual exits. No native application/export has run yet.
+
+The narrow import repair3739A05A is independently reviewed: only32 bytes add
+shared nyx.studio.menu/native-only nyx.files.lcl; reversing those exact imports
+restores retained8BEDFC59. Existing public declarations own all failed names and
+the compiled read helper. Predicates/input/waits and all product/guide/tool bytes
+remain exact. Retain initial10048 failure/audit1AE59C24. Root may fresh-freeze the
+same six paths before the unchanged four-compiler/four-native plan; all source/
+docs/tools pause through actual joins/audit. This review is not a compiler result.
+
+First ordinary native compiler10048 fails three direct-name lookups: the action
+menu ID and two file writes. No native/browser application or export ran. Root
+35741/c88ba6 is terminal1 and actual24580/10048 are absent. Audit1AE59C24 verifies
+1850 frozen input occurrences, six retained source copies and eight referenced
+artifacts; keep source8BEDFC59 and the complete failed output. Release only the
+same consumer's direct nyx.studio.menu and native-only nyx.files.lcl imports.
+The latter also supplies the compiled branch's ReadNyxTextFile. All predicates,
+waits and other bytes remain exact. Independent narrow review and fresh freeze
+precede the unchanged four-compiler/four-native plan; no product repair follows.
+Every other source/guide/tool remains paused; core46/original gates stay open.
+
+Both source handoffs and build/guide/private drivers are independently reviewed.
+Consumer8BEDFC59 preserves exact Fixture/FixturePair, descriptor/admission and
+Ready regions. Original native stages0-10 compare exactly after conditional
+projection/line-ending normalization and removal of their former final completion
+marker; their predicates, input and60s/2400 bounds remain. RootF65630B1 retains
+the source review; helper474C41F6 independently accepts buildC2349B14, guideA79C46DA
+and drivers03C2B9D1/7D8223E0. Final cross-review confirms actual Events Add IDs,
+default filter visibility and compound/runtime query dispatch use the same
+qualified instance identity. All1843 outside-owned input occurrences stay exact.
+
+No compiler/host has launched at this review boundary. Root may now fresh-freeze
+six owned/1807 Pascal/13 concurrent/24 extra occurrences, then admit the fixed
+four-compiler/four-sequential-native plan below. Ordinary native/browser compile
+precedes long native UI; exact own four exports precede both compiled builds.
+Keep direct launch/raw-stream/width/owned-warning/full-final-heap receipts and
+actual root joins. All source/docs/tools pause through terminal joins/exact audit;
+first failures remain retained. Helper's only concurrent task is read-only
+preparation of the same pages' later applicable browser gate. Core46 and every
+original criterion remain open; reviewed source is not execution or acceptance.
+
+Previous goal turn is PROGRESS:42cc72d is pushed and remote-verified; prior final
+78D63 and all1852 pins revalidate with every actual reader joined. New private
+query-saved-workbench retains six preimages/1807 Pascal/13 foreign/22 prior extras
+outside current ownership. Two reviewed scoped drivers will add two pins. Core46
+and all original criteria remain open; the semantic read-to-write result changes
+the next action to P4C's actual ordinary saved/generated application.
+
+Root owns AGENTS/WORK/task02, docs/collection-queries and only the existing
+query-authoring integration in tools/build.ps1. Existing helper owns ONLY the
+same tests/nyx_table_query_studio_controls.lpr. No production Pascal or other
+consumer is released. Preserve original descriptor/admission cases and stages
+0-10 assertions, Ready60/global2400. After Inherit, append meaningful local
+first-instance policy configuration, exact paired history and definition/sibling/
+defaults isolation. Use native named project actions and independent on-disk
+ProjectStore.ReadProject, real Open and deliberate fresh history. Native Open's
+unsaved-pair refusal remains. Browser uses full TNyxStudio plus existing managed
+editor/file exchange, real export/Undo/import and copied delivery leases; its
+current manual Inspector shell cannot stand for ordinary Studio.
+Before Save, ordinary Events Add authors query Before/Changed callback streams,
+with exact paired history and saved/generated template/registration identities.
+These authored stub/stream checks stay separate from runtime observer/payload
+delivery proof. Original Fixture stays unchanged; explicitly owned first-runtime-
+store extra rows supply paging cases while the peer/defaults remain exact.
+Public paging commands do not claim a physical Pager in this pager-free fixture.
+The uncompiled descriptor application may register a no-op binding for ONLY its
+two exact newly authored TODO handlers, matching their admitted empty templates.
+This is ordinary descriptor-binding setup, not execution of emitted Pascal.
+The own-compiled branch must register no substitute: its emitted unit supplies
+the actual callback classes/initialization, checked before runtime observers.
+
+Each actual width emits the reopened accepted-project.nyxproject and exact unit
+nyx.fixture.table.query.studio.pas. Compare all four files before strict complete
+pair admission/compilation. The same consumer's conditional compiled application
+branch imports that OWN emitted unit, compares BuildNyxDocument to saved design,
+then mounts both reusable table instances with their independent csInstance stores.
+Actual header/form/query input, callbacks, paging/hidden selection/drafts and
+replacement/lifetime refusal must preserve authored/default/source isolation.
+Use existing public workbench/mount/presenter APIs and actual installed event
+paths; no new fixture program, engine, API or old P3 export substitutes.
+
+Root integrates own exports/expected packet and ordinary/compiled browser pages
+into the existing query-authoring target, preserving query-workbench and explicit
+diagnostic incompleteness. Both handoffs and private driver reviews precede a
+joint freeze. Fixed intended plan: four compilers (ordinary native, owncompiled
+native, ordinary browser, owncompiled browser), four sequential actual nativeUI
+runs at1280/390 and complete direct heap reports. Keep original internal bounds;
+use existing explicitly qualified1800s native total budget. Unchanged production
+Studio compilers are reused unless a real dependency change justifies more.
+All source/docs/tools pause during readers; root owns every actual handle/join/
+exact audit and retains failures. Actual browser input remains a later applicable
+host gate. No server/config/MCP rollout, profile/probe, cleanup/restart, extra
+agent or original criterion/credit/DONE closure follows from this source release.
+
 ## Event policy inspection repair — 2026-10-22
 
 ### Current boundary: agent-only query policy edits qualify locally

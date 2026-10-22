@@ -1,5 +1,181 @@
 # Working in Nyx
 
+QUERY SAVED APPLICATION MATRIX NATIVE-LOCAL (2026-10-22): this turn is PROGRESS.
+The SAME consumer901D3F06/OWN retained330 pair2BB6B854+093B64B3 passes426 actual
+compiled-application checks at1280 and390, both complete clean heaps. Real own
+emitted classes/initialization, all four scalar forms, callback execution/veto/
+copied Details, hidden selection/paging/drafts/recovery, same-ID replacement and
+late-command/disposal refusal pass. Matching browser compiles only. Matrix two
+compilers have0 owned/seven upstream RTL warnings; no full Studio/cross-width/
+browser input acceptance follows. Partial producer exports remain qualified=false.
+
+Root82853/f95771 is terminal0; actual4016/32256/47964/17476 are absent. AuditD7433905
+verifies1853 frozen occurrences/six copies/18 artifact refs atA5FDEF73; independent
+root/helper outcome review passes. Source/guide/build/private driver remain exact.
+Keep earlier10048 missing imports,46364 owned-warning refusal and46896 clean-heap
+330 Studio authoring/Save/Read/Open then off-page test-selection failure. All
+earlier actual roots/handles are joined; no failure became success credit.
+Only three additive setup/lifecycle regions repair selection/presenter preconditions;
+removing1010 bytes restores exact54AF. No product repair or dropped predicate/wait.
+
+Core46->47; no original/P4B/P4C/credit/DONE closes. Root owns ONLY outcome
+AGENTS/WORK/task02 and checkpoint. All Pascal/guides/tools stay paused. Next
+separate admission is the EXISTING unchanged full maintained query-authoring
+target901D/C234: actual ordinary1280/390, fresh own four-export equality, its exact
+compiled companions and later applicable-host browser gate. PreserveReady60/
+global2400/explicit1800 total; no fixture/profile/product variant. Existing helper
+owns read-only outcome/next-admission review. No host/config/MCP rollout, cleanup/
+restart, probe or extra agent. WORK/private records own receipts and return path.
+
+QUERY SAVED APPLICATION MATRIX REVIEWED (2026-10-22): consumer901D3F06 adds only
+three marked setup/lifecycle regions; root reversal removes1010 bytes and
+restores exact54AF4520. Existing sort/selection/filter/Reset predicates, fixture
+and waits remain. Source reviewF5A1B9FD and independent private driver3B74679D
+reviews pass; RunOwned stays exact3975 AST characters. Pin OWN failed-journey
+330 exports2BB6B854/093B64B3 and driver as extras, total27. No reader has launched.
+Root may fresh-freeze six owned/1807 Pascal/13 concurrent/27 extras and admit ONLY
+the EXISTING compiled branch's two compilers/two sequential native1280/390 runs,
+300s each, stopping first failure. This is retained-own-pair application-matrix
+validation, not full Studio/cross-width export/browser qualification. All source/
+docs/tools pause through actual joins/exact audit; no host/new fixture/product
+repair/tool rollout follows. Preserve every earlier failure and all original gates.
+
+QUERY SAVED WORKBENCH APPLICATION REPAIR RELEASE (2026-10-22): native desktop
+stages0-25 reach330 exact authoring/history/Save/Read/Open checks, then application
+Select refuses off-page Linus after the preceding sort. Both agents confirm the
+existing visible-Snapshot precondition; instance scope/key is correct. No product
+defect is established. Root54515/d0ba95 is terminal1; actual18056/7952/43456/46896
+are absent. AuditC6D217D0 verifies1850 pins/six copies/17 artifact refs and partial
+own2BB6B854 project/093B64B3 Pascal. Full539338523-block heap is clean. Two clean
+compilers have0 owned/seven upstream warnings; other widths/compiled builds did
+not run. Preserve initial compiler1AE59 and warning8B571 attempts separately.
+
+Release ONLY helper's SAME consumer setup: first ResetAll+Visible(Linus,Grace)
+before unchanged Select; before the later physical Reset, real header input+
+HasUserSort assertion must restore its sort-clearing meaning. Add explanatory
+comments and fresh KeyboardOpen after accepted chip removal before ClearOwner,
+and after that header sort before Reset: each accepted publication retires its
+popup, so the next popup action must reacquire a current presentation. Keep every
+old predicate/wait/fixture exact. Root owns admission docs
+and ONE scoped private application qualifier using the EXISTING compiled branch
+and OWN retained330 pair. Pin both input exports plus that driver (24->27 extras).
+Independent source/tool review and fresh same-six-path freeze precede only two
+compilers/two sequential native widths, stopping at first failure. This is a
+bounded application-matrix diagnostic, not a fresh/full Studio acceptance.
+The maintained full four+four target stays exact and its ordinary1280/390,
+cross-width four exports/compiled/browser obligations remain open. All other
+source/guide/tools pause; no host/config/MCP rollout, probe/profile, cleanup/
+restart or extra agent. Root owns actual joins/audit; core46 carries to handoff.
+
+QUERY SAVED WORKBENCH STARTUP REPAIR REVIEWED (2026-10-22): consumer54AF4520
+adds ONLY21 bytes for explicit GClosing:=False before program try. Both agents
+reviewed it; root's exact reversal restores3739A05A. All imports/assertions/
+gestures/waits and product/guide/tools stay exact; no suppression. Retain first
+compiler failure1AE59C24 and warning refusal8B5715C8. Root may fresh-freeze the
+same six paths for the unchanged four-compiler/four-sequential-native plan.
+Pause all source/docs/tools through actual joins/exact audit; core46 and original
+browser/authoring gates remain open. No compiler has run against this repair yet.
+
+QUERY SAVED WORKBENCH WARNING REFUSAL JOINED (2026-10-22): import-repaired native
+compiler46364 exits0 but admission correctly refuses its owned GClosing read/
+never-assigned warning. Root6840/f89a5c is terminal1; actual46356/46364 are absent.
+Audit8B5715C8 verifies1850 pins/six retained copies/eight refs. No UI/browser/
+export ran; do not label the warning-rejected compiler accepted. Release ONLY
+the same consumer's explicit GClosing:=False at program startup, preserving all
+other bytes/predicates/waits. Existing globals already defaultFalse; this makes
+that state explicit without suppression. Root owns outcome/admission docs;
+all other source/guide/tools pause. Review/reversal/fresh freeze precedes the
+same four+four plan. Retain both earlier attempts; core46/original gates open.
+
+QUERY SAVED WORKBENCH IMPORT REPAIR REVIEWED (2026-10-22): consumer3739A05A
+adds ONLY32 direct-import bytes for shared nyx.studio.menu and native-only
+nyx.files.lcl. Independent root reversal restores exact8BEDFC59; all predicates,
+input/waits and product/guide/tools remain exact. Existing declarations and both
+source reviews pass. Retain first10048 compiler failure/audit1AE59C24 separately.
+Root may fresh-freeze the same six paths and admit the same four-compiler/four-
+sequential-native plan; no reader yet follows from this source-only review.
+Pause all source/docs/tools through actual joins/exact audit. Browser execution,
+host/config/MCP rollout and every original criterion remain open; core46 carries.
+
+QUERY SAVED WORKBENCH FIRST COMPILER JOINED (2026-10-22): ordinary native10048
+fails three unresolved identifiers: action-menu ID and two file writes. Root
+35741/c88ba6 joins terminal1; actual24580/10048 are absent. Audit1AE59C24 verifies
+all1850 frozen occurrences/six retained source copies/eight artifact references.
+No native/browser application or export ran. Keep source8BEDFC59 and failed logs.
+Release ONLY helper consumer's direct nyx.studio.menu import and native-only
+nyx.files.lcl import, whose existing declarations own those names and compiled
+ReadNyxTextFile. Preserve all other bytes/predicates/waits; no product repair.
+Root owns admission/outcome docs; every other source/guide/tool stays paused.
+Independent repair review/fresh freeze precedes the same four-compiler/four-native
+plan. No unchanged result needs replay because this first compiler is the only
+attempt. Core46 and all original/browser gates remain open.
+
+QUERY SAVED WORKBENCH P4C REVIEWED (2026-10-22): both source handoffs and scoped
+build/guide/drivers are independently reviewed. Consumer8BEDFC59 preserves exact
+Fixture/FixturePair/descriptor/admission/Ready regions and native stages0-10;
+only former completion moves to appended stages. Original60s/2400 bounds stay.
+Root reviewF65630B1 and helper tool review474C41F6 retain this source-only result.
+Final event Add/filter/qualified-instance dispatch cross-check also passes.
+BuildC2349B14/guideA79C46DA/drivers03C2B9D1+7D8223E0 remain reviewed and unexecuted;
+all1843 outside-owned input occurrences match. No reader has launched yet.
+
+Root may freeze six owned/1807 Pascal/13 concurrent/24 extra pins, then admit
+ONLY the fixed four-compiler/four-native plan: ordinary native+browser compile,
+ordinary1280/390, exact own four-export match, owncompiled native+browser compile,
+owncompiled1280/390. Native UI runs sequentially; known i386-win32/win32 and
+explicit1800s total use existing options, without facts probes/profile/diagnostic.
+Every actual handle must join and exact audits pass before any source release.
+All Pascal/docs/tools pause during readers. Retain the first failure if any;
+no host/browser execution/config/MCP rollout, cleanup/restart or extra agent.
+Core46 and all original/P4B/P4C/credit/DONE gates remain open. Existing helper
+owns only read-only browser-gate preparation during qualification.
+
+QUERY SAVED WORKBENCH P4C SOURCE RELEASE (2026-10-22): previous goal turn is
+PROGRESS;42cc72d is pushed/remote-verified. Prior78D63/1852 pins revalidate; all
+actual readers stay joined. New private query-saved-workbench retains six
+preimages/1807 Pascal/13 foreign/22 prior outside-owned extras. Core46 and every
+original criterion remain open. This is a separate source release, not readers.
+
+Existing Lil' Scooty owns ONLY tests/nyx_table_query_studio_controls.lpr. Root
+owns ONLY AGENTS/WORK/task02, docs/collection-queries and tools/build.ps1's existing
+query-authoring branch/integration. No production Pascal or other consumer changes.
+Keep original descriptor/admission cases, stages0-10 assertions and60s/2400 bounds.
+Append meaningful local first-instance policy/history/isolation after Inherit;
+real native named Save/Open must independently read the stored exact pair and
+begin fresh history. Native Open keeps unsaved-pair refusal. Full browser Studio
+uses existing managed editor/file exchange and export/Undo/import; retain copied
+file lease/clear-before-callback. No Session.Load shortcut counts as actual Open.
+Append ordinary query Before/Changed Events Add before Save and retain exact
+paired history/source template/registration identity through own exports. Keep
+these saved stub/stream checks separate from runtime observer/payload proof.
+Ordinary uncompiled descriptor setup may bind ONLY its two exact admitted empty
+TODO handlers via public registration. Label this adapter honestly; compiled
+branch must use its OWN emitted classes/initialization, with no substitute.
+
+Each width emits its OWN reopened accepted-project.nyxproject plus exactly named
+nyx.fixture.table.query.studio.pas. Check all four files equal before compiling.
+Same consumer's conditional compiled branch strictly admits the exact packet,
+calls its OWN BuildNyxDocument and proves actual two-instance application input,
+query callbacks/paging/hidden selection/drafts/replacement/lifetimes plus exact
+definition/sibling/authored defaults. Preserve csInstance ownership; never create
+another fixture/program/engine or substitute old P3 exports. Reuse existing public
+header/form/mount APIs and actual physical native/browser event construction.
+Original fixture stays exact; explicitly owned first-runtime-store row additions
+may supply paging cases while second-store rows and authored defaults stay exact.
+Public paging commands are not physical Pager input in this pager-free fixture.
+
+Root's maintained build stages ordinary/compiled native and browser in fresh
+directories, pins own exports and passes exact expected packet to compiled native
+and browser. Keep query-workbench behavior unchanged and diagnostic1280-only
+explicitly incomplete. Two new private scoped drivers require independent review.
+Both handoffs/source/tools review and fresh freeze precede FOUR compiler/four
+sequential nativeUI runs (ordinary1280/390, owncompiled1280/390). Reuse unchanged
+product compilers; no runtime source changed. OriginalReady60/global2400 remain,
+native total bound uses existing explicitly qualified1800s option. Actual browser
+execution needs a later applicable host override; no host/config/MCP rollout,
+probe/profile, cleanup/restart or extra agent is released. Root owns every actual
+reader handle/join/exact audit; pause all source/docs/tools during readers.
+
 QUERY POLICY EDITS NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
 Existing nyx_collections now has two closed baseline-free table/column policy
 set/default operations, backed by four typed public factories. Each ordered

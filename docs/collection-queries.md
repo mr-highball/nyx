@@ -665,6 +665,56 @@ reviewed total execution budget can use the existing explicit timeout option;
 that does not change the300s default or original operation deadlines/assertions.
 Current results and any future admission remain in WORK.
 
+## Save and test the authored query workbench
+
+The extended `query-authoring` regression uses the same Studio consumer for
+policy authoring, ordinary project Save/Open and the saved application's input.
+It retains the original Inspector checks and appends local reusable policies and
+query-event registrations. Native Save uses a named project and its ordinary
+project store; Open starts deliberate fresh history. Browser Studio uses its
+managed file exchange to export, Undo and import the exact project bytes.
+The file boundary is controlled by the consumer; it does not claim an operating
+system file-dialog gesture.
+
+Each actual native width writes `accepted-project.nyxproject` and
+`nyx.fixture.table.query.studio.pas` from the reopened project. The build refuses
+different project or Pascal bytes between widths. It then compiles that exact
+emitted unit into the same consumer's application branch and passes the expected
+project explicitly. Strict source/design admission and `BuildNyxDocument` equality
+precede the two-instance application checks. Old fixture exports cannot qualify
+this new journey.
+
+```powershell
+& './tools/build.ps1' -Target query-authoring `
+  -QueryAuthoringPlatform i386-win32 `
+  -QueryAuthoringEvidenceDirectory 'E:\Blekohlab\nyx\review\new-query-workbench' `
+  -QueryAuthoringTimeoutSeconds 1800
+```
+
+Choose a new directory with an absolute ASCII path without spaces: the native
+heap tracer has a 255-byte path limit. Each compiler and application has separate
+raw stdout/stderr, launch identity and terminal receipt. Each native application
+must report its actual requested client width, a successful check count and a
+complete zero-unfreed heap footer. The explicit total timeout above preserves
+the original per-operation deadlines and the 300-second default.
+
+The complete target stages `native`, `compiled`, `browser` and `compiled-browser`
+outputs. Browser pages include the matched RTL; the compiled page embeds only
+this reopened expected project. Building these pages starts no host and proves
+compilation only. Actual browser input and current native results are recorded
+in [WORK](../WORK.md#own-saved-query-workbench--2026-10-22). Diagnostic mode remains
+native1280-only and does not compile or qualify the complete saved application.
+
+Saved callback templates/registrations and runtime observer delivery are separate
+checks. The ordinary uncompiled descriptor application binds only its two exact
+empty TODO handlers through a declared no-op test adapter. This is descriptor
+binding setup. The compiled application registers no substitute and uses the
+actual callback classes in its own emitted Pascal. The pager-free fixture uses
+public typed paging commands for paging assertions; header and query-form checks
+drive real target input paths. Additional rows belong only to the first runtime
+instance's store, leaving its peer and the
+authored row defaults unchanged.
+
 ## Bounded semantic query authoring
 
 The existing `nyx_collections` tool now supplies `query` predicate pages and

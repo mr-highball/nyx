@@ -5,6 +5,79 @@
 
 **Description:**
 
+Current SAME-consumer901D compiled application passes426/426 actual native checks
+at1280/390 with complete clean heaps, using this journey's OWN retained330 pair
+2BB6B854/093B64B3 and real emitted callbacks/initialization. Matching browser
+compiles only; two matrix compilers have0 owned/seven upstream RTL warnings.
+Root82853/f95771 is terminal and all actual readers are joined. AuditD7433905
+verifies1853 frozen inputs/six copies/18 artifacts; independent outcome review
+passes. [WORK](../WORK.md#current-result-own-compiled-application-passes-native-checks)
+retains exact scope, three earlier failures and the purely additive setup repair.
+Core46->47; full ordinary Studio two-width/fresh cross-width own exports/exact
+companions/browser gates and all original criteria remain open. Next is the
+unchanged full maintained target under separate admission, with no new variant.
+
+**Retained admission and repair history (superseded by the current result above):**
+
+The existing compiled-branch diagnostic was source/tool reviewed:901D3F06's three
+marked setup additions reverse exactly to54AF4520; all prior predicates/waits
+remain. Private driver3B74679D pins the OWN330 pair, admits two compilers/two
+sequential native widths only after fresh six-path freeze, and explicitly grants
+no fullStudio/cross-width/browser acceptance. [WORK](../WORK.md#own-saved-query-workbench--2026-10-22)
+owned the27-extra-input freeze and actual join/audit; no reader had launched at
+that source-only review boundary.
+
+P4C's desktop Studio stages0-25 reach330 exact policy/history/callback/Save/Read/
+Open checks, then the common application's off-page selection setup fails. The
+full run is failed with a complete clean heap; ordinary compact/compiled runs
+are unattempted. Root-joined auditC6D217D0 retains1850 pins and partial own pair
+2BB6B854/093B64B3. Both agents confirm existing visible-page Select semantics;
+only the test setup is released for repair, preserving the later real Reset's
+sort-clearing proof. Reopen the retired popup before subsequent Clear/Reset
+actions through existing keyboard input; every original call/check/wait stays.
+Next use the SAME existing compiled branch and OWN retained
+pair for a fixed two-compiler/two-native diagnostic before a long replay. This
+does not replace full ordinary two-width/cross-width/compiled/browser gates.
+[WORK](../WORK.md#retained-first-application-failure-and-repair-release)
+owns scope/review/freeze/actual joins; no original criterion or credit closes.
+
+Startup repair54AF4520 adds only21 bytes for explicit initialFalse, independently
+reviewed and exactly reversible to3739A05A. No assertion/wait/suppression change;
+fresh same-six-path freeze precedes the unchanged plan. Both earlier outcomes
+remain retained; no compiler has read this repair yet.
+
+The import-repaired compiler exits0 but its owned unassigned GClosing warning
+correctly blocks admission. No UI/browser/export ran; root-joined audit8B5715C8
+verifies1850 pins/six copies/eight refs. Only an explicit initialFalse assignment
+is released, then independent review/fresh freeze. Both earlier attempts remain.
+
+The direct-import repair3739A05A is independently reviewed. Reversing its only32
+added bytes restores exact8BEDFC59, preserving all predicates/input/waits and
+product/guide/tools. A fresh same-six-path freeze precedes the unchanged bounded
+plan; retain the first10048 failure/audit1AE59C24 without runtime success credit.
+
+The first P4C native compile fails three unresolved direct names; no application
+or export ran. Root-joined audit1AE59C24 retains1850 pins/six source copies/eight
+artifact references. Only the same consumer's menu/native file-unit imports are
+released for repair, followed by independent review/fresh freeze. All assertions,
+waits and product source remain exact; this grants no runtime/criterion credit.
+
+P4C's same-consumer source8BEDFC59 and build/guide/private drivers are now
+independently reviewed; original fixture/admission/native0-10/waits stay exact.
+Final Events Add/default filter/qualified-instance dispatch cross-check passes.
+No reader has launched. [WORK](../WORK.md#own-saved-query-workbench--2026-10-22)
+owns the fresh six-path freeze and fixed four-compiler/four-native admission;
+source readiness grants no execution, browser or original criterion closure.
+
+P4C now has a separate source release in [WORK](../WORK.md#own-saved-query-workbench--2026-10-22):
+extend the SAME ordinary Studio consumer after original stages0-10, use real
+named Save/Open/full browser exchange, emit that reopened project's OWN exact
+pair/unit at both widths and compile/use its independent two-table application.
+All production Pascal stays exact; source/tool review and fresh freeze precede
+the fixed four-compiler/four-native plan. Internal waits/assertions remain;
+actual browser input stays a separate applicable-host gate. This is source
+readiness work, not acceptance or a new runtime/tool rollout; core46 carries.
+
 Agent-only policy edits are now native-locally qualified: four typed set/default
 factories back two strict baseline-free named operations. Each ordered candidate
 derives its own current baseline and reuses ordinary intent admission. Full
