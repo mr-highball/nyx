@@ -1,5 +1,99 @@
 # Working in Nyx
 
+PUBLIC SECTION RECOVERY CORRECTION QUALIFIED (2026-10-22): audit960287AD and
+independent root/helper review verify sourceAEB3709A, native40 (original31+nine
+lawful checks), complete clean348063blocks/13388400bytes and zero owned warnings.
+Matching browser compiles only, seven upstream RTL warnings retained. Root joined
+native15770/f29bae and browser ef5949; actual compiler/runtime43956/30860/42108
+are terminal. Exact25owned/1807Pascal/foreign13/extra19, two receipt/thirteen
+artifact pins match. Production65A72E00 and every other Pascal input stayed exact.
+This proves public Prepare/Publish physical-refusal rollback, accepted-control
+identity/draft/mount/events/layout recovery and continued publication. Rejected
+candidate reuse/private-flag runtime proof is not claimed. Retain/withdraw3021's
+seven unsupported direct borrowed-MoveHost checks; no contract was weakened.
+Unchanged Studio53/semantic729/editing120/three headless evidence stays reused.
+
+One admitted profile is consumed: SAME controls Ready30 still fails43.765s;
+shell38.016s/two Inspector replacements is attribution, not a latency repair.
+Root owns docs/checkpoint only; all Pascal/tools stay paused. Existing helper
+has read-only performance-owner design/review. No safe current API transfers a
+rejected TryRefresh candidate to Prepare: current selections/measurements/resource/
+live-binding context differ from fresh section admission. Attempt-local immutable
+SOURCE preparation requires a separately reviewed ownership/context design before
+source release; no old-store projection, persistent cache or validation bypass.
+Resource-scoped Sync remains a secondary read-only seam. No further compiler/
+profile/fixture/host/config/MCP/worker rollout, cleanup/restart or extra agent.
+Core37/P4B/P4C/browser/performance and original criteria/credit remain open.
+
+NATIVE ATTRIBUTION JOINED / SECTION FIXTURE CORRECTION (2026-10-22): root joined
+17877/709a7f; audit32655340 verifies25owned/1807Pascal/foreign13/extra19 and nine
+artifact pins. Profiled controls still fails SAME second-search/check67 Ready30,
+one43765ms Pump/two completed paints, clean heap/zero warnings. Two complete
+cycles total43609ms; shell38016ms includes Inspector-only replacement twice.
+Nested phase clocks are not additive; unmarked shell cost remains unattributed.
+This is diagnosis, not efficacy or original/P4B/core37 acceptance. No further
+profile/compiler/production optimization follows from the one admitted run.
+
+Independent source review found an ownership defect in3021C415's SEVEN new
+checks: borrowed section Renderer explicitly forbids direct MoveHost. Withdraw
+that supported-usage proof, retaining its receipt; unchanged Studio53/semantic729/
+editing120 and three headless results remain within their exact scopes. Existing
+helper owns ONLY replacing those native additions in the SAME view-section
+consumer with Prepare/Publish rollback through the public section owner. Native
+HeaderHost may use a normally unarmed TPanel subclass at the SAME bounds; arm
+only AFTER Prepare, inherited candidate insertion then one throw. Retain exact
+accepted renderer/root/input/draft/mount/revision/events after rollback, resize
+the actual host narrower/back, then fresh publication succeeds. Retain every
+original case/predicate/wait and GFailUpdate oracle; refresh the later native
+close baseline after the added successful publication. No direct borrowed
+Render/Unmount/MoveHost, candidate retention, private flag access or new fixture.
+Accepted-host resizing proves accepted rollback/layout recovery; the rejected
+candidate's private finally remains source-reviewed, not a reuse assertion.
+
+Root owns docs/private state and independent review. All other1806 Pascal,
+production65A72E00, nativeStudioCFB269EA and both private tools stay exact. No
+reader until reviewed handoff/fresh freeze; then a separately bounded native
+consumer and matching browser compile can qualify this test-only correction,
+reusing unchanged product evidence explicitly. Keep all failures/original gates,
+offline LAN/no native Nyx tools; no host/config/MCP/worker rollout, cleanup/
+restart or extra agent. Resource-browser whole-shell Sync is read-only triage,
+not a released optimization or explanation of all nineteen-second shell cost.
+
+Lawful consumerAEB3709A is source-ready/paused. Root exact diff review recovers
+original82F31016 byte-exact by removing the three native additions and reverting
+the sole host constructor; all original31 checks and browser branch stay. Nine
+new checks expect native40. Root source-review receipt records all other1806
+Pascal/foreign13/extras19 and both private tools exact. Independent helper review
+precedes fresh25/1807/13/19 freeze. Then admit ONLY normal view-sections-native
+compile/actual original default window and matching view-sections-browser compile;
+no profile defines/product replay/extra width/browser execution. Stop first failure,
+retain artifacts and join every actual handle before docs/source change. Reuse
+unchanged Studio53/semantic729/editing120/three headless evidence explicitly;
+controls latency remains failed, remaining unrelated compilers unattempted.
+
+NATIVE PAINT ATTRIBUTION PRIVATE-TOOL RELEASE (2026-10-22): previous goal turn
+is progress; f9bb480 is committed/pushed/remote-verified. All five actual readers
+are joined and retained. Root owns ONLY a default-off private qualifier switch
+restricted to exact controls-native, adding ONLY existing NYX_STUDIO_PROFILE/
+NYX_LCL_LAYOUT_PROFILE compiler defines, plus AGENTS/WORK/private state. Retain
+FF6D1E80 tool preimage. All1807 Pascal including65A72E00/3021C415/545FB593 stay
+exact; freeze toolCB06E4D5 and all other inputs remain exact. Existing helper
+independently reviews tool diff/plan read-only. Fresh25/1807/13/19 freeze precedes
+ONE compiler/native attribution observation with unchanged evidence argument,
+checked flags/direct final heap capture/Ready30/outer600. Root owns every actual
+launch/join/audit; source/guides/tools pause while live. Analyze last two complete
+paints before SAME failure, keeping partial/teardown separate and respecting
+nested counter scopes. No new instrumentation/probe/fixture/model/browser replay,
+wait change, product repair, host/config/MCP/worker rollout, cleanup/restart or
+extra agent. Nine later compilers and core37/original/P4B/P4C gates remain open.
+
+Exact private qualifier47DAD0BE passes independent root/helper review and static
+parse. Default-off behavior remains exact; target guard precedes output/state/
+environment mutation. Extra pin is refreshed. Root may freshly freeze25/1807/
+13/19 then admit the ONE observation. If profiling changes the failure boundary,
+retain/report that actual context rather than attributing it to the earlier
+selection or retrying. All Pascal and freezeCB06E4D5 stay exact.
+
 NATIVE MOVEHOST BOUNDARY VERIFIED / LATENCY OPEN (2026-10-22): renderer65A72E00
 and consumer3021C415 pass actual native38 physical recovery, unchanged Studio
 sections53, fresh semantic729 and editing120; all four heaps complete/clean.

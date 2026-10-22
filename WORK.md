@@ -4,6 +4,113 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current result and lawful section recovery correction
+
+The lawful correction is now qualified and independently reviewed: consumer
+AEB3709A passes40 actual native checks (original31+nine new public-publication
+checks), zero owned warnings and a complete clean heap348063blocks/13388400bytes.
+Matching browser compilation passes with seven retained upstream RTL warnings;
+browser execution did not run. Root joined15770/f29bae and ef5949, and actual
+compiler/runtime43956/30860/42108 are terminal. Audit960287AD verifies25owned/
+1807Pascal/foreign13/extra19, both receipt pins and thirteen artifact pins. The
+renderer and every other Pascal input stayed exact. This qualifies supported
+public rollback/accepted-host recovery, not rejected candidate reuse, private
+flag runtime observation, latency efficacy, full P4B or original acceptance.
+
+Root now owns documentation/checkpoint only. Every source/tool stays paused.
+The next existing-owner deliverable is native Inspector responsiveness under
+the unchanged controls Ready30. Read-only design found no safe current-API
+shortcut: rejected TryRefresh destroys its candidate, and its current selection,
+container/resource/live-binding context differs from fresh section Render.
+Do not transfer an old-store projection or failed renderer into a replacement.
+Review an attempt-local immutable SOURCE-preparation ownership/context contract
+before any implementation; no persistent cache or skipped admission follows.
+Current clocks locate shell/Inspector replacement but do not establish exclusive
+preparation cost or a sufficient fix. Resource-only scoped Sync stays secondary.
+No further profile/compiler/fixture variant or host/tool rollout is admitted.
+
+The one current-source profiling observation is joined (17877/709a7f).
+Audit32655340 and receiptF57F7BD4 verify exact25 owned/1807 Pascal/foreign13/
+extra19 and nine artifact pins. The same second-search/check67 Ready30 fails
+after one43765ms Pump with two completed paints; compiler warnings are zero
+and the full native heap is clean. Completed cycles2916–3022 and3032–3155 total
+21781/21828ms. Shell rendering accounts for38016ms of43609ms measured paint
+time (about87% of the43765ms Ready observation), with only Inspector replaced
+in each. Canvas4516ms, compose827ms and finish250ms are separate parent phases;
+nested build/Sync/layout clocks must not be added again. Unmarked shell time
+remains unattributed; no exact renderer identity or release-build speedup follows.
+
+Root's independent review also found a fixture error: the seven new checks in
+3021C415 call MoveHost directly on the borrowed section renderer, despite the
+public section interface explicitly reserving its lifecycle to publication.
+Those seven checks do not qualify supported public usage. Their original receipt
+is retained and that claim is withdrawn. The original section cases remain;
+unchanged Studio53, semantic729, editing120 and three headless native outcomes
+remain valid within their exact dependency scopes.
+
+### Superseded correction admission (retained history)
+
+The existing helper now owns only a lawful replacement of the native additions
+in the same view-section consumer. Use the original native HeaderHost as a
+normally unarmed TPanel subclass at unchanged dimensions. Prepare via the public
+section, then arm a one-shot inherited candidate-insertion exception and call
+PublishNyxViewSections. Assert rollback retains exact accepted renderer/root/
+input/draft/mount/revision/events. Resize the actual host narrower/back through
+native geometry; a fresh successful public publication proves continued use.
+Do not retain or directly move the candidate/borrowed renderer. Accepted layout
+recovery does not prove reuse of the rejected candidate or runtime observation
+of its private finally flag. Every original case/assertion/wait and the existing
+GFailUpdate fault stays; an added native assignment refreshes the original close
+revision baseline after the extra successful publication.
+
+All other Pascal and both private tools stay exact. Root reviews the handoff
+before a fresh freeze and bounded native consumer/matching browser compilation;
+no reader or further profiling is released yet. ResourceBrowser.Mount's
+unconditional whole-shell Sync is a source-corroborated secondary review seam,
+not an admitted fix or an explanation of the entire shell cost. Core37,
+P4B/P4C/performance/browser and all original outcomes remain open.
+
+Source-ready consumerAEB3709A now passes root's independent exact diff review.
+Removing its three native additions and reverting the sole native constructor
+recovers original82F31016 byte-for-byte, without line-ending normalization.
+Every original31 check and browser path remains; nine lawful additions expect
+native40. All other1806 Pascal/foreign13/extras19 and both private tools match.
+After independent helper review/fresh25/1807/13/19 freeze, admit only the normal
+view-section native compile/run at its original default window and matching
+browser compilation. No profile defines, extra width, browser execution or
+unchanged product replay. Stop first failure and retain it. Source/docs/tools
+pause until both actual readers are joined and audited. Exact prior Studio53/
+semantic729/editing120/three headless evidence is reused, not rerun or relabeled;
+the controls Ready30 failure remains open.
+
+### Retained profiling admission and earlier evidence
+
+Previous goal turn is progress: f9bb480 is committed/pushed/remote-verified;
+native physical recovery38, Studio recovery53, semantic729 and editing120 pass
+with clean heaps, while the retained original controls latency gate stays open.
+All actual readers are joined. Root now releases ONLY a private default-off
+qualifier switch restricted to exact controls-native, adding only the existing
+two Studio/layout profile defines. Retain FF6D1E80 tool before edits. All1807
+Pascal inputs, freeze toolCB06E4D5 and other inputs stay exact; the existing helper
+reviews the tool delta/one-run plan read-only.
+
+Fresh25/1807/13/19 freeze precedes ONE compiler/native observation with the same
+consumer/evidence argument/checked flags/direct final heap report/Ready30/outer600.
+Root owns every launch/join/audit; all source/guides/tools pause while live.
+Attribute the last two complete paints before the same failed selection through
+existing phase labels; separate incomplete/teardown output and respect nested
+timing scopes. No new instrumentation/fixture/probe, other model/browser replay,
+wait change or production repair follows from enabling these counters. Nine
+later compilers, core37 and all original/P4B/P4C/performance gates remain open.
+
+Private qualifier47DAD0BE passes exact independent root/helper review and static
+PowerShell parse. Its target guard precedes state read, output creation and
+environment mutation; inactive behavior and every original flag/argument/timeout
+remain exact. Qualifier extra pin is refreshed; all Pascal/foreign/freeze tool
+pins remain exact. Root may now freshly freeze25/1807/13/19 and admit the single
+observation. If profiling shifts the failure earlier, retain that real boundary;
+do not label it as the previous selection or add an automatic retry.
+
 Current boundary: actual native view sections38 (31 retained+seven new), unchanged
 Studio sections53, fresh semantic729 and editing120 all pass with zero warnings
 and complete clean heaps on renderer65A72E00. Root/helper independently reviewed

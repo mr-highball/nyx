@@ -47,15 +47,15 @@ type
   {$endif}
 
   {$ifndef PAS2JS}
-  { One ordinary native target refuses AFTER LCL has inserted the exact borrowed
-    scroll host. This exercises a throwing physical MoveHost frame, rather than
-    a component factory or the later section Sync fault. The owner window keeps
-    this temporary host alive until its borrowed renderer has moved back. }
+  { The ordinary accepted host stays unarmed through every original case. An
+    added public section publication arms it only AFTER preparation, then refuses
+    the first candidate insertion after LCL has established its physical parent.
+    No candidate renderer or control is retained by this host. }
   TPhysicalMoveHost = class(TPanel)
   public
-    ExpectedControl: TControl;
     Armed: Boolean;
     Entered: Boolean;
+    WasEmpty: Boolean;
     Inserted: Boolean;
     Attempts: Integer;
     procedure InsertControl(AControl: TControl; AIndex: Integer); override;
@@ -257,14 +257,16 @@ end;
 procedure TPhysicalMoveHost.InsertControl(AControl: TControl; AIndex: Integer);
 begin
 
-  if Armed and (AControl = ExpectedControl) then
+  if Armed then
   begin
     Armed := False;
     Entered := True;
     Inc(Attempts);
-    { TControl.SetParent removes the old parent before calling this virtual
-      method. Inherited insertion establishes the NEW parent and completes its
-      own auto-sizing finally before this deliberate exception leaves MoveHost. }
+    WasEmpty := ControlCount = 0;
+    { Publication has parked the accepted renderer before inserting its candidate.
+      TControl.SetParent removes the former parent first; inherited insertion
+      establishes THIS parent and completes its own auto-sizing finally before
+      the deliberate exception asks the section owner to roll back. }
     inherited InsertControl(AControl, AIndex);
     Inserted := (AControl.Parent = Self) and (ControlCount = 1);
     raise ENyxModel.Create('Intentional physical MoveHost insertion refusal');
@@ -272,11 +274,12 @@ begin
   inherited InsertControl(AControl, AIndex);
 end;
 
-procedure NativeMoveFailureRecovery(ASection: ISection; AHost: TPanel;
-  AObserver: TScenario);
+procedure NativePublicationMoveRecovery(ASection: ISection;
+  AHost: TPhysicalMoveHost; ADocument: TNyxDocument; AObserver: TScenario);
 var
   LRenderer: TRenderer;
-  LTarget: TPhysicalMoveHost;
+  LChange: INyxViewSectionChange;
+  LParent: TWinControl;
   LScrollHost: TWinControl;
   LRootFace: TControl;
   LRoot: TNyxNode;
@@ -285,9 +288,12 @@ var
   LMount: INyxCollectionMount;
   LText: TNyxText;
   LOriginalWidth: Integer;
+  LHostWidth: Integer;
+  LParentChildren: Integer;
   LRevision: Integer;
   LClicks: Integer;
   LRefused: Boolean;
+  LBefore: TNyxText;
 begin
   LRenderer := ASection.Renderer;
   LRoot := ASection.Root;
@@ -300,21 +306,24 @@ begin
   Draft(LInput);
   LText := TextOf(LInput);
   LOriginalWidth := LRootFace.Width;
+  LHostWidth := AHost.Width;
+  LParent := AHost.Parent;
+  LParentChildren := LParent.ControlCount;
   LClicks := AObserver.Clicks;
-  LTarget := TPhysicalMoveHost.Create(AHost.Owner);
+  LBefore := TNyxCodec.Encode(ADocument);
   try
-    LTarget.BevelOuter := bvNone;
-    LTarget.SetBounds(AHost.Left, AHost.Top, AHost.Width - 100, AHost.Height);
-    LTarget.Parent := AHost.Parent;
-    LTarget.BringToFront;
-    Check((LScrollHost.Parent = AHost) and
-      (LOriginalWidth > LTarget.ClientWidth) and (LTarget.ControlCount = 0),
-      'native physical-move recovery starts from a wider accepted host');
-    LTarget.ExpectedControl := LScrollHost;
-    LTarget.Armed := True;
+    Check(not AHost.Armed and (LScrollHost.Parent = AHost) and
+      (AHost.ControlCount = 1) and (LOriginalWidth > AHost.ClientWidth - 100),
+      'native publication recovery starts with one accepted tree in the unchanged host');
+    LChange := ASection.Prepare(ADocument, ADocument.Pages[0]);
+    Check((LChange.State = vcsPrepared) and (ASection.Renderer = LRenderer) and
+      (ASection.Root = LRoot) and (Input(ASection, 'header-input') = LInput) and
+      (TextOf(LInput) = LText) and not AHost.Armed,
+      'native preparation retains accepted identities and draft before arming the host');
+    AHost.Armed := True;
     LRefused := False;
     try
-      LRenderer.MoveHost(LTarget);
+      PublishNyxViewSections([LChange]);
     except
       on LException: ENyxModel do
       begin
@@ -326,53 +335,55 @@ begin
         LRefused := True;
       end;
     end;
-    Check(LRefused and LTarget.Entered and LTarget.Inserted and
-      (LTarget.Attempts = 1) and not LTarget.Armed and
-      (LScrollHost.Parent = LTarget),
-      'native physical move actually inserts its borrowed scroll host before refusing');
+    Check(LRefused and AHost.Entered and AHost.WasEmpty and AHost.Inserted and
+      (AHost.Attempts = 1) and not AHost.Armed and
+      (LChange.State = vcsCanceled),
+      'public native publication actually inserts its candidate before one host refusal');
+    LChange := nil;
     Check((ASection.Renderer = LRenderer) and (ASection.Root = LRoot) and
       (LRenderer.Root = LRoot) and (ASection.Revision = LRevision) and
+      (LScrollHost.Parent = AHost) and (AHost.ControlCount = 1) and
+      (LParent.ControlCount = LParentChildren) and
       (Input(ASection, 'header-input') = LInput) and
       (Face(ASection, 'header-action') = LAction) and
       (TextOf(LInput) = LText) and LMount.Connected and
       (LRenderer.CollectionMount('header-table') = LMount),
-      'throwing native physical move retains exact renderer, roots, input, draft and collection');
-    { Recover the SAME renderer first, then move it successfully to the narrower
-      target. No Sync or replacement can repair geometry before this assertion:
-      MoveHost's explicit final Resize must remain usable after the exception. }
-    LRenderer.MoveHost(AHost);
-    Check((LScrollHost.Parent = AHost) and (LTarget.ControlCount = 0) and
-      (LRootFace.Width = LOriginalWidth),
-      'native physical-move refusal recovers the original accepted geometry');
-    LRenderer.MoveHost(LTarget);
-    Check((LScrollHost.Parent = LTarget) and (LTarget.Attempts = 1) and
-      (LRootFace.Width > 0) and (LRootFace.Width <= LTarget.ClientWidth) and
+      'public rollback restores exact accepted renderer, roots, input, draft, collection and hosts');
+    { Resize the accepted host through ordinary native allocation. This proves
+      accepted layout/rollback recovery, NOT reuse of the rejected candidate:
+      cancellation retires that candidate, whose private finally is reviewed in
+      source. Borrowed Renderer access below is lookup only, never lifetime work. }
+    AHost.Width := LHostWidth - 100;
+    Check((LScrollHost.Parent = AHost) and (AHost.ControlCount = 1) and
+      (LRootFace.Width > 0) and (LRootFace.Width <= AHost.ClientWidth) and
       (LRootFace.Width < LOriginalWidth),
-      'same native renderer lays out at a different host width after the throwing move');
-    LRenderer.MoveHost(AHost);
-    Check((LScrollHost.Parent = AHost) and (LTarget.ControlCount = 0) and
+      'accepted native renderer responds to a narrower host after public rollback');
+    AHost.Width := LHostWidth;
+    Check((LScrollHost.Parent = AHost) and (AHost.ControlCount = 1) and
       (LRootFace.Width = LOriginalWidth) and (ASection.Root = LRoot) and
       (Input(ASection, 'header-input') = LInput) and
       (TextOf(LInput) = LText) and LMount.Connected,
-      'native recovery returns exact input, draft and geometry before temporary host cleanup');
+      'accepted native layout returns exact input, draft and geometry at its original host width');
     Click(LAction);
     Check((AObserver.Clicks = LClicks + 1) and
       (Face(ASection, 'header-action') = LAction) and
       (ASection.Revision = LRevision),
-      'same native event route executes once after failed and recovered physical moves');
+      'accepted native event route executes once after public publication rollback');
+    LChange := ASection.Prepare(ADocument, ADocument.Pages[0]);
+    Check(PublishNyxViewSections([LChange]) and (LChange.State = vcsPublished) and
+      (ASection.Revision = LRevision + 1) and (ASection.Root <> LRoot) and
+      (ASection.Renderer <> LRenderer) and
+      (Input(ASection, 'header-input') <> LInput) and not LMount.Connected and
+      (AHost.Attempts = 1) and not AHost.Armed and (AHost.ControlCount = 1),
+      'fresh public native publication succeeds and retires the former accepted scope');
+    LChange := nil;
+    Check((LParent.ControlCount = LParentChildren) and
+      (TNyxCodec.Encode(ADocument) = LBefore),
+      'native section recovery releases both proposal parking hosts without editing its source');
   finally
-    try
-      LRenderer.MoveHost(AHost);
-    finally
-      { Never let a temporary parent destroy a still-borrowed renderer tree on
-        an unexpected recovery failure. Run releases sections before its owner
-        window, which then safely retires any still-owned temporary host. }
-
-      if LTarget.ControlCount = 0 then
-      begin
-        LTarget.Free;
-      end;
-    end;
+    AHost.Armed := False;
+    AHost.Width := LHostWidth;
+    LChange := nil;
   end;
 end;
 {$endif}
@@ -464,7 +475,7 @@ begin
   LWindow.Caption := 'Nyx view sections';
   LWindow.ClientWidth := 900;
   LWindow.ClientHeight := 380;
-  LHeaderHost := TPanel.Create(LWindow);
+  LHeaderHost := TPhysicalMoveHost.Create(LWindow);
   LHeaderHost.Parent := LWindow;
   LHeaderHost.SetBounds(12, 12, 430, 350);
   LHeaderHost.BevelOuter := bvNone;
@@ -652,7 +663,9 @@ begin
       'canceling a staged candidate retains the accepted view');
     Check(PublishNyxViewSections([]), 'empty publication group is an explicit no-op');
     {$ifndef PAS2JS}
-    NativeMoveFailureRecovery(LHeader, LHeaderHost, LObserver);
+    NativePublicationMoveRecovery(LHeader, TPhysicalMoveHost(LHeaderHost),
+      LNextHeader, LObserver);
+    LRevision := LHeader.Revision;
     {$endif}
     {$ifdef PAS2JS}await(Capture);{$else}
     Application.ProcessMessages;
