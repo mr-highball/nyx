@@ -2,6 +2,29 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The new section-owner change passes67 actual native functional checks (old53+14)
+with zero compiler warnings, but final heap qualification FAILS: three pending
+work/execution/courier allocations retain104bytes. All actual readers are joined
+and source/artifact pins match; first failure leaves browser and timing readers
+unattempted. No latency or clean-heap result follows. The next read-only repair
+design examines native queued-courier ownership through cancellation/shutdown;
+the tests' immediate owner retirement and unchanged waits remain legitimate.
+See [the current boundary](../WORK.md#current-boundary-native67-passes-functionally-queue-lifetime-fails).
+
+The separately reviewed source scope adds a negative membership decision in the
+existing Studio section owner. Materialized catalog recipes copy one concrete node per
+source node; dynamic component/content/slot paths are excluded throughout the
+candidate tree. Compare canonical NyxQualifiedID('', ID) membership with the
+CURRENT realized role, including escaping, uniqueness and bounded ownership.
+Different membership goes directly to the ordinary fully admitted replacement;
+equal/unknown retains the original refresh/arrangement path. All readiness,
+draft recovery, Chrome fallback, fresh validation and group rollback remain.
+The actual Events Inspector's materialized PartsEditor/Disclosure is eligible;
+callback rows differ between the two Search selections. Source proof is not
+timing efficacy. Additive existing Studio-section cases and the unchanged
+Ready30 controls journey must qualify the change before a latency claim.
+See [the bounded source release](../WORK.md#retained-source-release-static-membership-before-replacement).
+
 The 2026-10-22 source-context cleanup passes174 actual native projection checks
 and matching browser compilation, preserving exact bytes and complete export/
 formatted-read refusals. It reuses the codec's already fully admitted DOM instead
@@ -11,14 +34,14 @@ The unchanged native Inspector journey STILL fails Ready30 at the same selection
 three compilers have zero owned warnings. This is compatibility evidence, not a
 latency fix or original performance acceptance. Sixteen later compilers never
 ran. See the [current boundary](../WORK.md#current-boundary-context-compatibility-passes-selection-remains-slow).
-Read-only reassessment examines whether the existing Studio section owner can
+The earlier read-only reassessment examined whether the Studio section owner could
 prove an exact plain-primitive membership change before attempting retained reuse;
 counts/order alone are insufficient, all fresh admission/rollback remains required
 and the actual Inspector includes a Disclosure recipe, so the primitive-only
-proposal is inapplicable. Read-only review must follow real compound/recipe
-expansion and identity ownership before any broader source proof. No implementation
-scope, new timing variant, performance credit or task acceptance follows from
-that design.
+proposal was inapplicable. Subsequent review followed real compound/recipe
+expansion and identity ownership before the separate source release above.
+That earlier primitive-only design granted no implementation scope, timing
+variant, performance credit or task acceptance.
 
 Current-source [indexed immutable routing](../docs/diagrams.md) gives each graph
 independent exact-name maps and shares routes within one projection. Ordered

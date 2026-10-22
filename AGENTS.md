@@ -1,5 +1,80 @@
 # Working in Nyx
 
+STATIC MEMBERSHIP FUNCTIONAL / QUEUED LIFETIME OPEN (2026-10-22): current turn
+is progress: closed materialized-source identity proof, reviewed private owner
+optimization and additive actual native67 (old53+14). Compiler succeeds with
+zero warnings. Native exits0 without timeout and every functional check passes,
+but final heap FAILS:46254411 blocks/12719305734 bytes allocated versus46254408/
+12719305630 freed, THREE blocks104bytes retained (TContentWork28, execution56,
+courier20). Qualification is NOT accepted. Root97532/b4609a exit1 joins actual
+compiler39252/runtime45048, both absent. Audit4EA8B416 verifies exact31owned/
+1807Pascal/foreign13/extra19 and nine artifact pins plus receipt. First failure
+stops the batch; browser and unchanged controls plus other fourteen compilers
+remain UNATTEMPTED. Current measured latency remains the old41.281s failure;
+this native67 result makes no efficacy/browser/clean-heap claim.
+
+OwnerE195C0A3/consumerF887526A stay exact from freeze. No original criterion,
+task/credit/DONE closes; core no-closure38→39. Root owns docs/checkpoint only,
+all Pascal/tools PAUSED. Existing helper independently reviews receipt/pins and
+read-only native queue ownership. Both source reviews locate the pending UI
+courier's sole raw platform-queue lease: Cancel/Shutdown revoke execution flags
+but do not remove/free an undelivered courier; Deliver alone frees it. Renderer
+Clear retires its callback and cancels the execution correctly. Review exact RTL
+queue-removal/worker/reentry ownership before a separately released scheduler
+repair. Installed RTL appends before calling WakeMainThread outside the lock;
+that call may deliver/shut down or raise after insertion. A raw pending list plus
+local courier.Free is therefore insufficient. Review a private managed native
+queue-entry lease pinned across enqueue/delivery, with exact removal and weak
+owner revocation, before releasing source. No public interface change follows.
+Do not add a teardown pump, change any check/wait, or suppress the leak.
+No repair source/compiler is released by this boundary. Preserve failed receipt,
+all earlier gates, original controls545FB593 and full P4B/P4C/performance scope;
+no profile/host/config/MCP/worker rollout, cleanup/restart or extra agent.
+
+STATIC MEMBERSHIP SOURCE RELEASE (2026-10-22): previous bounded backlog response
+was a status restatement, not new goal progress; revalidation finds all readers
+joined and the existing source-context inputs exact. Read-only root/helper review
+changes the next action: catalog recipes ALREADY own their materialized children;
+generic composition copies them once. Dynamic component/content/slot paths remain
+excluded. A candidate-only closed static tree maps IDs through the actual
+NyxQualifiedID('', ID), including slash/tilde escaping. Compare its complete unique
+GLOBAL membership with the CURRENT realized role, not old source/count/order.
+Different membership proves retained/arrangement impossible; equal/unknown stays
+ordinary TryRefresh. Both metadata/resource binding and behavior/platform/scalar
+projection preserve that static membership. The actual Inspector's PartsEditor/
+Disclosure plus callback rows meet this source shape; selecting the callback-free
+second Search removes the first Search's callback controls. Timing efficacy is
+still unproven; original Ready30 and core38 remain open.
+
+Root owns ONLY studio/nyx.studio.section.views.pas's private bounded negative
+predicate and non-Chrome call site, docs and existing freeze ownership count.
+Existing helper owns ONLY additive cases in tests/nyx_studio_section_controls.lpr;
+all original53 predicates/physical failure cases/waits/window remain. Preserve
+source/tool preimages. Keep every readiness check, all clones/CaptureInteraction,
+ordinary retained/arrangement and restore paths, Chrome fallback and FULL fresh
+Prepare/group publication/rollback. No accepted/rejected candidate transfer,
+document cache, new public ABI, renderer/factory or input/deadline change follows.
+
+No compiler until both source scopes and the count-only freeze change pass
+independent review and a fresh31owned/1807Pascal/foreign13/extra19 freeze. Fixed
+admission: Studio-section native/browser then ONE unchanged unprofiled controls
+native gate. Stop first failure. If it passes, finish the fourteen remaining
+compatibility/Studio compilers from the original plan. Reuse exact unchanged
+projection174 native/browser evidence explicitly; no redundant projection replay.
+Browser remains compile-only. All sources/docs/tools pause through actual joins
+and exact audit. No profile/host/config/MCP/worker rollout, cleanup/restart or
+extra agent. Original/P4B/P4C/parity/production-performance acceptance stays open.
+
+Both source scopes pass independent review: ownerE195C0A3, consumerF887526A
+(old53+14 shared checks, expected67), count-only freeze1B849687 and exact
+qualifier97944AB2. Original owner/consumer recover byte-exact after removing only
+the new predicate/decision wrapper and additive helper/import/call. Equal-count
+different IDs, escaped IDs, retained rearrangement/drafts/events, dynamic/content
+fallback and full invalid-source refusal are covered without new deadlines.
+Root may freeze31/1807/13/19 and admit the fixed first3 readers; all sources/docs/
+tools pause until every actual handle is root-joined and exact-audited. No timing
+or runtime verdict is inferred from source review.
+
 CONTEXT COMPATIBILITY QUALIFIED / NATIVE LATENCY OPEN (2026-10-22): all three
 actual readers are root-joined. Codec5F018928/wrapper7A2C057C/consumerFDEF31BA
 pass174 native projection checks (old144+30), complete clean791096blocks/

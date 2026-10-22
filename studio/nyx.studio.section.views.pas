@@ -154,6 +154,9 @@ type
 
 implementation
 
+uses
+  nyx.text.index;
+
 type
   {$ifdef PAS2JS}
   ISection = INyxBrowserViewSection;
@@ -602,6 +605,104 @@ begin
   end;
 end;
 
+{ Negative evidence only, never source admission or compatibility. Catalog
+  recipes already own their materialized children. With no component/content/
+  override path anywhere in this source, composition's generic Expand copies
+  each concrete node once, with an empty prefix and canonical escaped runtime
+  ID. Presentation/resource snapshots and scalar binding/platform projection
+  preserve that membership. The current realized root supplies the other set;
+  its former source may itself have used dynamic composition.
+
+  Both retained refresh and arrangement require identical GLOBAL runtime IDs.
+  Different sets therefore need independent Prepare anyway; avoid preparing and
+  discarding a doomed retained candidate first. Equal sets or an unknown shape
+  still take the complete ordinary path, including reparenting/reordering whose
+  per-parent child counts change. Full fresh Prepare remains the admission owner.
+  Indices retain copied keys only and expire with this invocation. }
+function StaticMembershipChanged(AExisting, ASource: TNyxNode): Boolean;
+var
+  LExistingIDs: TNyxTextIndex;
+  LSourceIDs: TNyxTextIndex;
+  LExistingCount: Integer;
+  LSourceCount: Integer;
+  LDifferent: Boolean;
+
+  function Collect(ANode, AParent: TNyxNode; ARealized: Boolean;
+    ADepth: Integer; AIDs: TNyxTextIndex; var ACount: Integer): Boolean;
+  var
+    LKey: TNyxText;
+    LChild: Integer;
+  begin
+    Result := False;
+
+    if (ANode = nil) or (ANode.Parent <> AParent) or
+      (ANode.IsRealized <> ARealized) or (ADepth > NyxMaximumTreeDepth) or
+      (ACount >= NyxMaximumNodes) then
+    begin
+      Exit;
+    end;
+
+    if not ARealized and
+      ((ANode.Kind = NyxKindName(nkComponent)) or
+        (ANode.ProjectionKind = NyxKindName(nkComponent)) or
+        (ANode.Kind = NyxKindName(nkSlotOverride)) or
+        (ANode.ProjectionKind = NyxKindName(nkSlotOverride)) or ANode.HasContent) then
+    begin
+      Exit;
+    end;
+    LKey := ANode.ID;
+
+    if not ARealized then
+    begin
+      { Empty prefix still escapes slash/tilde. Raw design IDs are not runtime
+        IDs, even when this source contains no reusable component reference. }
+      LKey := NyxQualifiedID('', LKey);
+    end;
+
+    if AIDs.IndexOf(LKey) >= 0 then
+    begin
+      Exit;
+    end;
+    AIDs.AddFirst(LKey, ACount);
+    Inc(ACount);
+
+    if not ARealized and (LExistingIDs.IndexOf(LKey) < 0) then
+    begin
+      LDifferent := True;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if not Collect(ANode.Children[LChild], ANode, ARealized,
+        ADepth + 1, AIDs, ACount) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+begin
+  Result := False;
+  LExistingIDs := TNyxTextIndex.Create;
+  LSourceIDs := nil;
+  try
+    LSourceIDs := TNyxTextIndex.Create;
+    LExistingCount := 0;
+    LSourceCount := 0;
+    LDifferent := False;
+
+    if Collect(AExisting, nil, True, 0, LExistingIDs, LExistingCount) and
+      Collect(ASource, nil, False, 0, LSourceIDs, LSourceCount) then
+    begin
+      Result := LDifferent or (LExistingCount <> LSourceCount);
+    end;
+  finally
+    LSourceIDs.Free;
+    LExistingIDs.Free;
+  end;
+end;
+
 function TNyxStudioSectionViews.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
   ADesignMode: Boolean): Boolean;
 var
@@ -723,17 +824,22 @@ begin
           Continue;
         end;
 
-        { Even a target Sync exception can have touched the physical draft.
-          Ordinary TryRefresh recovers its model; the outer owner must also
-          restore continuity for this attempted retained role. }
-        LRetained[LSection] := True;
+        { Chrome retains its original full-frame fallback. For another role,
+          a complete static membership mismatch can only reach replacement.
+          Readiness, model/draft capture above and fresh Prepare below remain
+          required; this decision grants no admission or continuity rights. }
+        if (LSection = nssChrome) or not StaticMembershipChanged(LView.Root,
+          LDocuments[LSection].Pages[0]) then
+        begin
+          { Even a target Sync exception can have touched the physical draft.
+            Ordinary TryRefresh recovers its model; the outer owner must also
+            restore continuity for this attempted retained role. }
+          LRetained[LSection] := True;
 
-        if LView.TryRefresh(LDocuments[LSection], LDocuments[LSection].Pages[0], False) then
-        begin
-          Continue;
-        end
-        else
-        begin
+          if LView.TryRefresh(LDocuments[LSection], LDocuments[LSection].Pages[0], False) then
+          begin
+            Continue;
+          end;
           LRetained[LSection] := False; { False promises no admitted changes. }
         end;
         {$ifdef NYX_STUDIO_PROFILE}

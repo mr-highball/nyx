@@ -4,6 +4,133 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: native67 passes functionally; queue lifetime fails
+
+The reviewed static-membership ownerE195C0A3 and consumerF887526A compile without
+warnings and pass ALL67 actual native checks: original53 plus14 shared additions.
+Native exits0 without timeout after149s. The original rollback/host-failure checks,
+escaped identities, materialized Disclosure same-set rearrangement/drafts/events,
+same-count different-ID admission/refusal and dynamic/inactive-content fallback
+all return. This is useful functional evidence, not accepted qualification:
+the complete final heap reports46254411blocks/12719305734bytes allocated versus
+46254408/12719305630 freed, THREE unfreed blocks104bytes. Traces identify
+TContentWork28, TNyxExecution56 and TNyxCourier20. The latter two originate at
+the same-set TryRefresh; the work was first allocated through content resize.
+
+Root joins unified97532/b4609a exit1. Compiler39252 and runtime45048 are terminal
+and absent. Immutable audit4EA8B416 verifies all31owned/1807Pascal/foreign13/
+extra19 inputs stayed exact from freeze, plus nine artifact pins and the failed
+receipt. First failure ends admission: browser/controls and the other fourteen
+compilers remain unattempted. Native67 is not a clean-heap or browser result;
+the unchanged controls Ready30 has not rerun and its last result remains41.281s.
+No speedup is claimed. All earlier source/receipt/failure boundaries remain.
+Core no-closure38→39; original/P4B/P4C/browser/performance criteria stay open.
+
+Independent root/helper source triage finds a real next ownership question,
+rather than a reason to change the tests: Scheduler.SubmitAttached hands a raw
+courier solely to ForceQueue(nil, Deliver). Deliver frees it; Cancel only flips
+execution flags, while Shutdown cancels/clears executions without removing/freeing
+queued UI couriers. Renderer Clear properly retires content work and cancels its
+execution. An undelivered cancelled courier can therefore retain exactly these
+three objects through process exit. This is a source-supported mechanism, not
+yet an executed diagnosis of every queue/RTL variant. Read exact installed queue
+removal, worker and reentry lifetimes before proposing a bounded ownership repair.
+Independent source review confirms RemoveQueuedEvents matches BOTH method code
+and object data, disposing only the queue record. Append then calls WakeMainThread
+outside the queue lock: delivery/Shutdown or an exception can occur after insertion
+before enqueue returns. A raw pending list and unconditional local courier.Free
+would still risk double release. The next reviewed design must use a private
+managed native queue-entry lease across submission/delivery, independent pending
+membership, weak scheduler ownership and idempotent exact-method retirement.
+Cancel stays flags-only; detach before Run permits reentrant Shutdown without
+freeing running work. Preserve worker ownership/nonblocking shutdown and browser
+timers. These are source-design requirements, not a released implementation.
+Keep the legitimate immediate facade teardown in the new cases; no teardown pump,
+wait/timeout change, assertion removal or heap suppression is allowed.
+
+Root owns docs/checkpoint only. All Pascal/tools remain paused; existing helper
+reviews the receipt and read-only next native queue contract. No repair source
+or further reader is released yet. Preserve owner/consumer and both renderers,
+original controls545FB593 and all other inputs until that independent design and
+a separate source release. No profile/browser execution/host/config/MCP/worker
+rollout, cleanup/restart or extra agent. Return through a clean qualified67 and
+matching browser compile to the unchanged actual controls/P4B gate, then full
+original compatibility and OWN P4C saved/generated application outcomes.
+
+### Retained source release: static membership before replacement
+
+The previous bounded backlog response restated already filed work; it made no
+new goal progress. This continuation revalidates all1807 Pascal/foreign13/extra19
+against the last admitted freeze and confirms no live reader. The new read-only
+decision changes the next action rather than repeating the failed context cleanup
+or inapplicable primitive-only design. Core38 carries; no criterion closes.
+
+Root/helper source review distinguishes materialized recipes from dynamic
+component expansion. Catalog.NewNode clones and qualifies a recipe's children
+before the shell exists. Composition's generic branch then emits exactly one
+realized node per concrete source node, using NyxQualifiedID('', sourceID), NOT
+the raw ID; slash/tilde escaping still applies at the top level. Presentation/
+resource snapshots, behavior, scalar bindings and platform properties do not
+add/remove those nodes. Exclude component Kind/ProjectionKind, slot overrides,
+content rules, malformed ownership and non-design candidates throughout the
+complete bounded source closure. Compare the canonical unique global ID set
+with the exact CURRENT realized role. The former source need not itself be
+static. Any membership difference makes both retained refresh and arrangement
+impossible; equal membership says nothing about compatibility and must continue
+the original path, including count-changing reparenting and sibling reorder.
+
+This covers the actual Events Inspector: PartsEditor is an already composed
+Card/Column/Label/Button tree, Disclosure already owns its concrete parts, and
+event cards are concrete controls. The original journey first authors a Search
+callback, then selects its callback-free sibling; the callback row/action IDs
+disappear. The source proof is relevant to that failure, but no current timing
+establishes exclusive cost, savings or a sufficient Ready30 repair.
+
+Root owns only a private predicate/call site in studio/nyx.studio.section.views
+plus documentation and the existing freeze count. The helper owns only additive
+cases in the existing Studio-section consumer. Preserve all original53 checks,
+physical insertion/Project-before-Inspector failures and waits/windows. New cases
+must cover a concrete Disclosure's changed membership, canonical escaped IDs,
+same-global-set reparent/reorder with retained physical draft/control/events,
+dynamic component/content fallback and full fresh invalid-source refusal.
+All readiness/clones/CaptureInteraction stay before the decision. Skip only a
+proven-impossible NON-Chrome retained attempt, then use the unchanged full Prepare
+and grouped publication/rollback. Never transfer a failed candidate, accept a
+document from the predicate, infer compatibility or weaken fresh validation.
+
+Preimages of both source files, three docs, both tools and private state are
+retained in the existing packet's static-membership-before directory. Both
+renderer implementations, original controls545FB593, codec5F018928/wrapper7A2C057C/
+projection consumerFDEF31BA and all other Pascal remain outside this release.
+Independent source/tool review precedes a fresh31/1807/13/19 freeze. Fixed readers:
+Studio-sections native/browser, then one unchanged unprofiled controls-native
+at Ready30/outer600. First failure stops. If it passes, finish the fourteen other
+original compatibility/Studio compilers. Reuse unchanged projection174 native/
+browser evidence at its exact dependency boundary, not as a new execution.
+No profile/browser execution/host/config/MCP/worker/cleanup/restart/extra agent.
+Original/P4B/P4C/browser/production-performance acceptance remains required.
+
+Independent root/helper source review passes ownerE195C0A3 and consumerF887526A.
+The original owner recovers byte-exact by removing its private predicate/import
+and restoring only the retained-decision wrapper. The entire original consumer
+recovers byte-exact by removing one helper/import/call; fourteen shared checks
+make67 expected (old53 preserved). Same-count different IDs, slash/tilde mapping,
+materialized Disclosure reparent/reorder and physical draft/control/event scope,
+invalid-source refusal and dynamic/inactive-content fallback are explicit. Added
+dynamic Render boundaries use the existing Idle method without changing its wait.
+Pre-freeze source review fixed the helper's interface-to-Node assignment and
+corrected its provisional fifteen-check count to fourteen; no compiler failed.
+Root's first reconstruction script used the superseded import spelling; corrected
+actual-import restoration passes without a source change. Both are retained in
+the source-review history. Freeze1B849687 differs only29→31; qualifier97944AB2
+stays exact. The old-freeze audit correctly rejected that expressly released
+tool change until its new pin was recorded; original freeze/preimage is retained.
+All other1805 Pascal/foreign13 and eighteen unreleased extras remain exact.
+The three docs contain229 resolving local artifact links. Root may now freeze
+31/1807/13/19 and admit Studio-section native/browser then unchanged controls
+native, first failure stopping. Source/docs/tools remain paused through every
+actual terminal join and audit. This is source readiness, not runtime efficacy.
+
 ### Current boundary: context compatibility passes; selection remains slow
 
 Codec5F018928/wrapper7A2C057C/consumerFDEF31BA pass174 actual native projection

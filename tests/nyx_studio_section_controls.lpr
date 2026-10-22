@@ -29,7 +29,8 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.contract,
   nyx.theme, nyx.behavior, nyx.events, nyx.scheduler, nyx.content.mount,
   nyx.studio.session,
-  nyx.studio.view, nyx.studio.sections, nyx.studio.section.views
+  nyx.studio.view, nyx.studio.sections, nyx.studio.section.views,
+  nyx.content, nyx.presentations
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser{$endif};
 
 type
@@ -285,6 +286,223 @@ begin
       raise ENyxModel.Create('Studio section input boundary did not settle');
     end;
   until not AViews.Dispatching;
+end;
+
+{ These additional cases use the ordinary owner without the original badge
+  configurator: a registered custom factory intentionally prevents retained
+  refresh and therefore cannot establish the static-membership decision. All
+  render/refresh lifetimes go through the facade; borrowed faces and roots are
+  used only for lookup, input and identity observations. }
+procedure StaticMembershipCases(ASession: TNyxStudioSession; ATheme: TNyxTheme;
+  AHost: {$ifdef PAS2JS}TJSHTMLElement{$else}TWinControl{$endif});
+  {$ifdef PAS2JS}async;{$endif}
+const
+  CInput = 'static-input/~';
+  CAction = 'static-action/~';
+  CAdded = 'static-added/~';
+  CDynamicInput = 'dynamic-input/~';
+var
+  LViews: TNyxStudioSectionViews;
+  LBase, LNext, LInvalid, LDynamic: TNyxDocument;
+  LScenario: TScenario;
+  LLease: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LDisclosure: INyxDisclosure;
+  LInputSpec: INyxInput;
+  LDefinition: INyxColumn;
+  LReference: INyxComponent;
+  LProject, LBody, LFrom, LTo, LRoot: TNyxNode;
+  LInput, LAction: TNyxStudioSectionControl;
+  LInputID, LActionID, LDynamicID: TNyxText;
+  LRefused: Boolean;
+begin
+  LViews := TNyxStudioSectionViews.Create(ATheme, nscEditorOwnedHierarchy);
+  LScenario := TScenario.Create;
+  LLease := LScenario;
+  LScenario.Views := LViews;
+  LBase := nil;
+  LNext := nil;
+  LInvalid := nil;
+  LDynamic := nil;
+  try
+    LBase := Shell(ASession);
+    LProject := LBase.Pages[0].Find('studio-left');
+    while LProject.Count > 0 do
+    begin
+      LProject.Extract(LProject.Count - 1).Free;
+    end;
+    LDisclosure := NewNyxDisclosure('static-disclosure/~');
+    LDisclosure.Configure.Text('Retained details').Value(True).Done;
+    LBody := LDisclosure.Node.Part(NyxPart('body'));
+    LBody.Add(NewNyxColumn('static-from'));
+    LBody.Add(NewNyxColumn('static-to'));
+    LFrom := LBody.Find('static-from');
+    LInputSpec := NewNyxInput(CInput);
+    LInputSpec.Configure.Text('Draft').InputType(niNumber).Value(10.0).Done;
+    LInputSpec.Contract.Value(NyxNumberDomain.Range(0, 100));
+    LFrom.Add(LInputSpec);
+    LInputSpec := nil;
+    LFrom.Add(NewNyxButton(CAction).WithText('Observe retained callback'));
+    LProject.Add(LDisclosure);
+    LDisclosure := nil;
+    LViews.Render(LBase, LBase.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LRoot := LViews.SectionRoot(nssProject);
+    LInputID := NyxQualifiedID('', CInput);
+    LActionID := NyxQualifiedID('', CAction);
+    LInput := LViews.InputFor(LInputID, niRuntime);
+    LAction := LViews.ControlFor(LActionID, niRuntime);
+    Check((LInputID <> CInput) and (LActionID <> CAction) and
+      (LBase.Find(CInput) <> nil) and (LRoot.Find(CInput) = nil) and
+      (LRoot.Find(LInputID).SourceID = CInput),
+      'static source slash/tilde identities use canonical escaped runtime keys');
+    Check((LRoot.Find(NyxQualifiedID('', 'static-disclosure/~')).Kind =
+      NyxKindName(nkDisclosure)) and (LInput <> nil) and (LAction <> nil),
+      'materialized Disclosure owns its ordinary physical descendants');
+    LToken := LViews.SectionEvents(nssProject).On(
+      NyxControlEvents(LActionID, niRuntime), ntClick).Subscribe(LLease);
+    Draft(LInput, '12.5');
+    Check((InputText(LInput) = '12.5') and
+      (LRoot.Find(LInputID).Prop('value') = '10'),
+      'static section starts with an unfinished physical numeric draft');
+
+    { A global set, rather than source traversal order or parent-local sets,
+      decides only a negative result. Reparent and reorder the same IDs. }
+    LNext := LBase.Clone;
+    LFrom := LNext.Find('static-from');
+    LTo := LNext.Find('static-to');
+    LTo.Add(LFrom.Extract(0));
+    LTo.Insert(0, LFrom.Extract(0));
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'same global static membership permits ordinary reparent/reorder refresh');
+    Check((LViews.SectionRoot(nssProject) = LRoot) and
+      (LViews.InputFor(LInputID, niRuntime) = LInput) and
+      (LViews.ControlFor(LActionID, niRuntime) = LAction) and
+      (LRoot.Find(LInputID).Parent.ID = 'static-to') and
+      (LRoot.Find('static-to').Children[0].ID = LActionID),
+      'same-set escaped identities retain exact roots/faces with the new arrangement');
+    Check((InputText(LInput) = '12.5') and LToken.Active,
+      'same-set arrangement retains the unfinished draft and callback scope');
+    Click(LAction);
+    Check(LScenario.Clicks = 1,
+      'retained physical action executes its original callback once');
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    Check(LViews.TryRefresh(LBase, LBase.Pages[0]) and
+      (LViews.SectionRoot(nssProject) = LRoot) and
+      (LViews.InputFor(LInputID, niRuntime) = LInput) and LToken.Active,
+      'inverse same-set arrangement remains a retained refresh');
+
+    { Replace one exact ID without changing any node count. A proven set
+      difference still uses complete fresh admission. Failure may not retire
+      accepted controls, draft or event authority. }
+    LInvalid := LBase.Clone;
+    LInvalid.Find(CAction).Named(CAdded);
+    LInvalid.Find(CInput).SetProp('height', 'not-a-length');
+    LRefused := False;
+    try
+      LViews.TryRefresh(LInvalid, LInvalid.Pages[0]);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LViews.SectionRoot(nssProject) = LRoot) and
+      (LViews.InputFor(LInputID, niRuntime) = LInput) and
+      (InputText(LInput) = '12.5') and LToken.Active and
+      (LViews.Root.Find(NyxQualifiedID('', CAdded)) = nil),
+      'invalid changed-membership source refuses without touching accepted draft/faces/events');
+    LNext.Free;
+    LNext := LBase.Clone;
+    LNext.Find(CAction).Named(CAdded);
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'valid changed static membership reaches ordinary fresh section publication');
+    Check((LViews.SectionRoot(nssProject) <> LRoot) and
+      (LViews.Root.Find(NyxQualifiedID('', CAdded)) <> nil) and not LToken.Active,
+      'same-count changed static IDs replace the role and retire its former event scope');
+    LToken := nil;
+
+    { Dynamic candidates must finish closure classification before a negative
+      result: their raw component IDs do not describe realized membership. }
+    LDynamic := LBase.Clone;
+    LProject := LDynamic.Find('studio-left');
+    while LProject.Count > 0 do
+    begin
+      LProject.Extract(LProject.Count - 1).Free;
+    end;
+    LDefinition := NewNyxColumn('dynamic-template');
+    LInputSpec := NewNyxInput(CDynamicInput);
+    LInputSpec.Configure.Text('Dynamic draft').InputType(niNumber).Value(10.0).Done;
+    LInputSpec.Contract.Value(NyxNumberDomain.Range(0, 100));
+    LDefinition.Add(LInputSpec);
+    LInputSpec := nil;
+    LDefinition.Add(NewNyxLabel('dynamic-note').WithText('Before'));
+    LDynamic.AddComponent(LDefinition);
+    LDefinition := nil;
+    LReference := NewNyxComponent('dynamic-reference');
+    LReference.Configure.Component(NyxComponent('dynamic-template')).Done;
+    LProject.Add(LReference);
+    LReference := nil;
+    LViews.Render(LDynamic, LDynamic.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LRoot := LViews.SectionRoot(nssProject);
+    LDynamicID := NyxQualifiedID(NyxQualifiedID('', 'dynamic-reference'), CDynamicInput);
+    LInput := LViews.InputFor(LDynamicID, niRuntime);
+    Draft(LInput, '13.5');
+    LNext.Free;
+    LNext := LDynamic.Clone;
+    LNext.Find('dynamic-note').SetProp('text', 'After');
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]) and
+      (LViews.SectionRoot(nssProject) = LRoot) and
+      (LViews.InputFor(LDynamicID, niRuntime) = LInput) and
+      (InputText(LInput) = '13.5') and
+      (LRoot.Find(NyxQualifiedID('dynamic-reference', 'dynamic-note')).Prop('text') = 'After'),
+      'component source falls back to ordinary retained realized-identity admission');
+
+    LDynamic.Presentations.Define(NyxPresentation('inactive-alternative'),
+      TNyxPresentationCondition.Manual);
+    LDefinition := NewNyxColumn('dynamic-alternative');
+    LDefinition.Add(NewNyxInput('inactive-input').Configure.Value('Inactive').Done);
+    LDynamic.AddComponent(LDefinition);
+    LDefinition := nil;
+    LDynamic.Find('dynamic-reference').Content.Use(NyxComponent('dynamic-template'))
+      .WhenPresentation(NyxPresentation('inactive-alternative'))
+      .Use(NyxComponent('dynamic-alternative')).Done;
+    LViews.Render(LDynamic, LDynamic.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LRoot := LViews.SectionRoot(nssProject);
+    LInput := LViews.InputFor(LDynamicID, niRuntime);
+    Draft(LInput, '14.5');
+    LNext.Free;
+    LNext := LDynamic.Clone;
+    LNext.Find('dynamic-alternative').Add(NewNyxLabel('inactive-new').WithText('Later'));
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]) and
+      (LViews.SectionRoot(nssProject) = LRoot) and
+      (LViews.InputFor(LDynamicID, niRuntime) = LInput) and
+      (InputText(LInput) = '14.5'),
+      'inactive content changes keep ordinary fallback and the active physical draft');
+    Check((LViews.Root.Find(NyxQualifiedID('dynamic-reference', 'inactive-input')) = nil) and
+      (LViews.Root.Find(NyxQualifiedID('dynamic-reference', 'inactive-new')) = nil),
+      'ordinary content fallback does not mount an inactive manual branch');
+  finally
+
+    if LToken <> nil then
+    begin
+      LToken.Cancel;
+    end;
+    LToken := nil;
+    LScenario.Views := nil;
+    LViews.Free;
+    LLease := nil;
+    LReference := nil;
+    LDefinition := nil;
+    LInputSpec := nil;
+    LDisclosure := nil;
+    LNext.Free;
+    LInvalid.Free;
+    LDynamic.Free;
+    LBase.Free;
+  end;
 end;
 
 procedure Run; {$ifdef PAS2JS}async;{$endif}
@@ -694,6 +912,8 @@ begin
     LViews.Free;
     LViews := nil;
     Check(not LToken.Active, 'facade retirement revokes the retained event token');
+    {$ifdef PAS2JS}await(StaticMembershipCases(LSession, LTheme, LHost));
+    {$else}StaticMembershipCases(LSession, LTheme, LHost);{$endif}
     WriteLn('PASS ', GChecks, ' actual Studio section recovery checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-section-checks', IntToStr(GChecks));
