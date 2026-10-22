@@ -1,5 +1,184 @@
 # Working in Nyx
 
+QUERY WORKBENCH HEADER BUILDS REVIEWED / RUNTIME ACCESS UNAVAILABLE (2026-10-22):
+reviewed23EA567C changes only QueryClick/QueryKey role-first parsing. Freeze350C2325
+has8owned/1807Pascal/13concurrent/27extras. Root99527 joins8c4331;38328/47220 pass,
+0owned/14known upstream warnings. Audit31C17F16/admissionAD4E0F8A and independent
+helper verify1895 pins. Only FE differs; own093B Fu, worker50300/host7EA stay exact.
+Native755/759+426/426 is explicitly reused, not rerun. Retain06c001 metadata-only
+missing-property error and Add-Member correction; no receipt/compiler replacement.
+
+Repaired runtime remains UNATTEMPTED. Prior browser-control tool is absent from
+current inventory. Documented Computer Use fallback lists apps but Brave launch
+returns GetCursorPos Access denied0x80070005; next inventory shows not running/no
+window. No new host started/config/install/service change. Private availability
+receipt retains external gate separately from product failures/UNKNOWN/wrong-
+viewport cases. Human same-regression desktop/phone rerun authorization persists;
+resume compiled1280 first when supported browser access returns, blank tab then
+assert exact1280x900/390x900 before navigation. No unchanged compiler replay.
+Root owns docs/checkpoint only; Pascal paused. Core47/original/P4C/browser-own/P3
+stay open; no DONE/credit. All actual compilers and earlier hosts remain joined.
+
+Earlier repair/admission narratives below are retained history, superseded by
+the current built/runtime-unavailable boundary above; they release no new readers.
+
+QUERY WORKBENCH HEADER NULL REPAIR (2026-10-22): independent compiled browser23
+fails actual filter-header activation with StrToIntDef(null) at QueryClick; the
+filter role has only data-nyx-query-column, but code first parses absent sort.
+QueryKey repeats that bug. Its actual1280x720 is excluded from planned900-height
+qualification. Retain failureFDB61DA1, not a browser pass. Ordinary22 had no
+readable terminal/actual viewport and is UNKNOWN/unqualified060038B6; observer
+timeouts/resets are not product outcomes. Both22/23 are closed, inventory empty,
+viewport reset and own47956/7620 hosts identity-stopped/joined; all1887 pins exact.
+
+Root owns ONLY src/nyx.collections.browser.pas QueryClick/QueryKey attribute choice
+before integer parsing; preserve filter priority, all guards/fallbacks/dispatch.
+Source23EA567C is paused for independent review. This adds eighth owned path;
+all other Pascal/consumer13D/worker50300/host7EA stay exact. Native901D conditional
+proof and worker dependency exclusion permit explicit reuse, not new execution.
+Fresh eight-owned/1807-Pascal/13-concurrent/27-extra freeze precedes ONLY two browser
+recompiles; reuse exact matched worker/host/HTML/RTL. Start with the existing
+compiled1280 case to resolve this concrete failure, then remaining same cases.
+Create blank tab FIRST, set its viewport SECOND, verify actual1280x900/390x900
+BEFORE test navigation and retain terminal actual viewport too. No source/fixture/
+assertion/wait/API/config/MCP/LAN/extra-agent scope. Human rerun authorization
+persists; all hosts still stop/join. Root owns docs/actual readers/audits; helper
+read-only. Core47/original/P4C/browser-own provenance and P3 gates stay open.
+
+QUERY WORKBENCH SOURCE WORKER STAGING REPAIR (2026-10-22): third browser run
+reaches114 checks/stage1, then first Apply reports the real editor Worker error.
+The ordinary staged directory has only HTML/testJS/RTL; required sibling
+nyx_source_worker.js is absent. Existing WorkerError->WorkerTimeout emits the
+retained message; no query/exchange product repair is indicated. Root joins own
+host11936, closes tab21/resets viewport; HTTP200/404/405/403 actually passed and
+CCAB1DC1 verifies1879 exact inputs/assets through join. Later cases remain open.
+
+Release ONLY existing tools/build.ps1 query-authoring worker staging and private
+query-saved-workbench-qualify.ps1's fifth direct-compiler accounting. Worker is
+the existing studio/nyx_source_worker.lpr, unchanged; -Tmodule/-Jirtl.js and known
+include flags match other maintained builds. All Pascal/consumer13D/host379F stay
+exact. Reuse exact current two browser outputs+7EA host; no repeated unaffected
+compiler/native run. Fresh seven-path freeze repins the narrowly changed private
+qualifier extra, then admits ONLY one worker browser compiler and exact staging
+copies into fresh browser directories. Root joins/audits before same authorized
+four-case reruns on fresh origins. No wait/assertion/fixture/API/config/LAN/MCP
+change or new tool rollout. Retain every failure and native dependency evidence;
+core47/original gates remain open. Helper owns read-only review; no source launch.
+
+QUERY WORKBENCH INTEGRATION SOURCE REVIEWED (2026-10-22): same consumer13D14723
+borrows/pumps both distinct Studio-owned transports, clears pointers after owner
+retirement, and publishes copied progress/terminal accepted JSON to DOM readers.
+No assertion/fixture/wait changes. Root selects native PAS2JS=false in ordinary/
+compiled modes: all1994/1988 nonempty trimmed active lines exactly match retained
+901D (E6F798E7/92CB8DAF); reuse its755/759+426/426, not new native execution.
+Host379F66AE moves ONLY original405 guard after unchanged resource404 validation;
+reversal restores1D507D31 byte-exact. ExactHost/loopback/flatASCII/GETHEAD/no-body
+and noAPI scope remain. Both sources reviewed/paused. After fresh seven-owned/
+1807-Pascal/13-concurrent/27-extra freeze admit ONLY one strict known-FPC host
+compile and original two browser compiles (fresh-FE only, own093B-Fu). Reuse exact
+3975RunOwned/private3B746 capture and original HTML/RTL; owned warnings refuse.
+Root joins every actual reader and audits before any host. Verify actual static
+GET200/missing-routePOST404/existing-artifactPOST405/wrongHost403 before navigation.
+No nativeUI/probe/newfixture/productAPI/LAN/config/MCP scope. Existing human
+authorization covers same four browser cases/reruns; each own host stops/joins.
+Retain both browser failures/all prior evidence; core47/original gates stay open.
+
+QUERY WORKBENCH BROWSER INTEGRATION REPAIR (2026-10-22): second ordinary desktop
+run reaches63 checks/constructor:end then original2400-poll bound fails before
+authoring. Console is empty; original body/assets/delay and failed outcome stay
+retained. Own host48548 is identity-stopped/joined, tab20 closed, viewport reset;
+all1871 input/asset occurrences exact through audit946FCBF6. No live reader remains.
+
+Concrete current dependencies changed: Studio creates separate editing/completion
+exchanges but this consumer services only its last borrowed pointer. ConnectAgents
+also checks recovery readiness; static997B returns405 for absent /api/recovery/
+connect before its path rejection, preventing existing404 older-host handling.
+Release helper ONLY same-consumer browser borrowed exchange-vector/pump/retirement
+and copied DOM progress/terminal own-project evidence; preserve every assertion,
+fixture/wait and native branch. Root owns ONLY existing tools/nyx_preview_host.lpr
+request-order correction: resolve missing/invalid resource404 before unchanged
+GET/HEAD-only405 guard. No API, request-body execution, protocol/config/MCP/LAN
+change or production recovery bypass. One temporary-host rebuild plus the same
+two browser builds follow independent review and fresh seven-owned/1807-Pascal/
+13-concurrent/27-extra freeze. User's authorized same-regression repair/reruns
+cover this necessary preview fixture correction; each own host still stops/joins.
+Root owns three docs/private receipts/all readers; helper launches nothing.
+Native901D evidence stays explicitly dependency-reused only with exact projection
+proof. Original browser failureA38A/946F and all earlier outcomes/core47 remain.
+
+QUERY WORKBENCH BROWSER COUNT REPAIR REVIEWED (2026-10-22): consumerDFF63AF0
+adds only351 bytes: browser explicit Count() array index with explanation and
+the exact original native statement in ELSE. Root/helper independently select
+that native branch and restore whole901D source byte-for-byte. Reuse exact full
+native755/759+426/426 as dependency evidence; do not call it repaired execution.
+Original strict payload refusal/assertions/fixture/waits remain. Freeze same six
+paths/1807 Pascal/13 concurrent/27 extras before ONLY two browser compilers.
+Reuse unchanged3975-character RunOwned from private3B746 driver, original ordinary/
+compiled browser flags with fresh-FE only, compiled-Fu NEWfull-studio/native-1280,
+and exact original HTML/RTL. Raw actual launches/root terminal joins and pre/post
+pins precede authorized same-regression hosts. All source/docs/tools pause during
+readers. Retain first browser failureA38A/host11656 and every earlier failure;
+no product repair, native replay, host rebuild/config/MCP/LAN/extra-agent scope.
+
+QUERY WORKBENCH FIRST BROWSER FAILURE JOINED (2026-10-22): desktop1280x900 reaches
+50 checks then the original AdmissionCases array index is emitted as method
+reference LData.Count instead of Count(), causing an unhandled JS TypeError.
+No Studio mounts or later cases ran. Preserve original assets/console/body and
+failed qualified=false outcome. Own host11656 is identity-stopped/joined, listener
+absent; own tab19 closed and viewport reset. All1853 inputs+12 assets stay exact
+at first-browser freeze5E798C59 through that join. Native755/759+426/426 remains
+qualified for exact901D source; no browser success follows.
+
+Release ONLY existing helper's same-consumer Count array-index portability fix,
+retaining every fixture/assertion/wait and native behavior. Root owns ONLY three
+admission/outcome docs/private receipts; mark prior native admission as history.
+Independent review and a fresh source/artifact freeze precede browser compilation
+and authorized SAME regression reruns. No product/host rebuild or other source
+scope. User's existing loopback-host/rerun authorization remains applicable.
+No live reader remains; preserve prior failures/core47/original acceptance gates.
+
+QUERY WORKBENCH BROWSER ADMISSION (2026-10-22): unchanged full maintained target
+passes actual native Studio755/759 and own compiled426/426 at1280/390, all four
+complete clean heaps. Four compilers have0 owned/14 upstream RTL warnings.
+Fresh producer2BB6/093B matches across widths; actual compiled inputs use that
+NEW producer, not the retained partial. Root69995/4ab8b9 is terminal0; nine actual
+processes are absent. Audit755DA29C verifies1853 pins/six copies/40 artifact refs
+at freeze8F4A6F40; root/helper independent review passes. Source901D/buildC234/
+guideA79C and all other source/tools remain paused; prior failures stay retained.
+
+Direct human reply call_ab9bd3bd473845748fa95641c5cc1ef1 says "Run browser tests
+and needed reruns". This overrides the host gate ONLY for this table-workbench
+regression: ordinary and compiled browser at actual1280x900/390x900, each using
+a fresh owned temporary loopback-only Pascal host/origin, stopped and joined
+afterward. Reuse verified997B90C4 host; no rebuild/LAN/Studio service/config/MCP
+change. Root owns manifests/actual host identities/outcomes/guarded stop/tab and
+viewport cleanup. Helper stays read-only. Record terminal/count/console/actual
+viewport and exact browser-own exported pair before compiled-browser credit.
+Freeze inputs before launch; preserve any failed case before same-regression
+repair/rerun. Only root's three admission/outcome docs/private receipts may change;
+no Pascal repair follows without a concrete failure and narrow reviewed release.
+Core47 and original criteria stay open pending actual outcomes and acceptance.
+
+QUERY SAVED FULL STUDIO ADMISSION (2026-10-22): previous goal turn is PROGRESS;
+e7d2c2a is pushed/remote-verified. Final9F83313C/0357566F and all1853 current pins
+revalidate; prior12 actual processes remain absent and every actual root is joined.
+Both agents independently revalidate unchanged consumer901D/buildC234/guideA79C,
+qualifier7D8223/freezer03C2 and prior source/tool reviews. No Pascal/guide/tool edit
+is released. Root owns ONLY AGENTS/WORK/task02 admission/outcome docs and actual
+reader/freeze/audit ownership. Existing helper owns read-only admission/outcome.
+
+After fresh same-six-path freeze (1807 Pascal/13 concurrent/27 extra), admit ONLY
+the EXISTING full maintained query-authoring target: ordinary native+browser
+compile, sequential ordinary1280/390 full authoring/Save/Read/Open/ApplicationProof,
+four FRESH own exports exact across widths, their exact compiled native+browser
+builds, sequential compiled1280/390. OriginalReady60/global2400/native1800 and
+outer9000 stay. Owned warnings refuse before UI; first failure ends admission.
+Retained-pair426/426 is advance evidence, not substitute for this full journey.
+Pause all source/docs/tools through every actual terminal join/exact audit.
+No host/browser execution/config/MCP rollout, profile/probe, cleanup/restart or
+extra agent; no new fixture/product variant. Core47 and all original gates stay
+open until actual outcomes. WORK/private records own this separate admission.
+
 QUERY SAVED APPLICATION MATRIX NATIVE-LOCAL (2026-10-22): this turn is PROGRESS.
 The SAME consumer901D3F06/OWN retained330 pair2BB6B854+093B64B3 passes426 actual
 compiled-application checks at1280 and390, both complete clean heaps. Real own

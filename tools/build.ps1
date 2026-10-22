@@ -705,6 +705,12 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
         '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio')
       Invoke-NyxQueryAuthoringCompiler $nyxPas2js ($nyxWorkbenchBrowserFlags + @(
         "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")) 'ordinary-browser-compiler'
+      # Ordinary Studio sends paired design/source edits to its real Pascal
+      # worker. Stage that worker beside this consumer and its matching rtl.js;
+      # a compiled test page alone cannot exercise the editor's Apply path.
+      Invoke-NyxQueryAuthoringCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule',
+        '-Jirtl.js', '-Fusrc', '-Fustudio', '-Fisrc',
+        "-FE$nyxWorkbenchBrowser", 'studio/nyx_source_worker.lpr') 'ordinary-source-worker-compiler'
     }
     $nyxWorkbenchSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
     $nyxWorkbenchWidths = @(1280, 390)

@@ -154,7 +154,10 @@ var
   GFileLease: INyxTextFileExchange;
   {$ifdef PAS2JS}
   GCore: TNyxAgentSession;
-  GExchange: TNyxTestEditorExchange;
+  { Studio's main bridge and completion client each own a distinct transport.
+    This vector only borrows them for the qualification clock; clear it after
+    Studio frees those owners, before releasing their shared backend session. }
+  GExchanges: array of TNyxTestEditorExchange;
   {$endif}
 
 { Diagnostic presentation only. Native output is flushed at each completed
@@ -165,6 +168,7 @@ begin
   {$ifdef PAS2JS}
   document.body.setAttribute('data-query-authoring-stage', APhase +
     ';stage=' + IntToStr(AStage) + ';checks=' + IntToStr(GChecks));
+  document.body.setAttribute('data-query-authoring-polls', IntToStr(GPolls));
   {$else}
   WriteLn('TRACE ticks=', GetTickCount64, ' stage=', AStage,
     ' checks=', GChecks, ' ', APhase);
@@ -220,9 +224,18 @@ end;
 
 {$ifdef PAS2JS}
 function TWorkshopStudio.CreateEditorExchange: TNyxStudioEditorExchange;
+var
+  LExchange: TNyxTestEditorExchange;
 begin
-  GExchange := TNyxTestEditorExchange.Create(GCore);
-  Result := GExchange;
+  LExchange := TNyxTestEditorExchange.Create(GCore);
+  try
+    SetLength(GExchanges, Length(GExchanges) + 1);
+    GExchanges[High(GExchanges)] := LExchange;
+    Result := LExchange;
+  except
+    LExchange.Free;
+    raise;
+  end;
 end;
 
 function UITurn: TJSPromise;
@@ -237,16 +250,41 @@ begin
 end;
 
 procedure ServiceExchange;
+var
+  LIndex: Integer;
+  LExchange: TNyxTestEditorExchange;
+  LState: TNyxText;
 begin
+  LIndex := 0;
+  while LIndex < Length(GExchanges) do
+  begin
+    LExchange := GExchanges[LIndex];
 
-  if GExchange.RequestPending then
-  begin
-    GExchange.Deliver;
-  end
-  else if GExchange.TickPending then
-  begin
-    GExchange.FireTick;
+    if LExchange.RequestPending then
+    begin
+      LExchange.Deliver;
+    end
+    else if LExchange.TickPending then
+    begin
+      LExchange.FireTick;
+    end;
+    { A reply can replace or retire its owning Studio. Reacquire the vector at
+      the next iteration and never touch the just-serviced receiver afterward. }
+    Inc(LIndex);
   end;
+  { Copied protocol-clock progress only: these public pending/counter reads do
+    not dispatch another reply, mutate a source or claim synchronization. }
+  LState := '';
+  for LIndex := 0 to High(GExchanges) do
+  begin
+    LExchange := GExchanges[LIndex];
+    LState := LState + IntToStr(LIndex) + ':request=' +
+      BoolToStr(LExchange.RequestPending, True) + ',tick=' +
+      BoolToStr(LExchange.TickPending, True) + ',posts=' +
+      IntToStr(LExchange.Posts) + ',commits=' + IntToStr(LExchange.Commits) + ';';
+  end;
+  document.body.setAttribute('data-query-authoring-exchanges', IntToStr(Length(GExchanges)));
+  document.body.setAttribute('data-query-authoring-exchange-state', LState);
 end;
 
 procedure ClickProjectMenu(const AID: TNyxText);
@@ -769,7 +807,14 @@ begin
     begin
       LFields[LIndex] := NyxField(LData.Key(LIndex), LData.Field(LData.Key(LIndex)));
     end;
+    {$ifdef PAS2JS}
+    { Count is a zero-argument typed-data method. Its explicit invocation keeps
+      the browser array index a number instead of a method reference; the same
+      unexpected member still exercises the unchanged strict refusal below. }
+    LFields[LData.Count()] := NyxField('unexpected', NyxData(True));
+    {$else}
     LFields[LData.Count] := NyxField('unexpected', NyxData(True));
+    {$endif}
     LRefused := False;
     try
       LRead := TNyxStudioCollectionIntent.FromData(NyxObject(LFields));
@@ -876,8 +921,11 @@ end;
 destructor TReview.Destroy;
 begin
   {$ifdef PAS2JS}
-  FStudio.Free;
-  GExchange := nil;
+  try
+    FStudio.Free;
+  finally
+    GExchanges := nil;
+  end;
   FreeAndNil(GCore);
   FSession.Free;
   {$else}
@@ -2431,6 +2479,10 @@ begin
 end;
 
 procedure Passed;
+{$ifdef PAS2JS}
+var
+  LArtifact: TJSHTMLElement;
+{$endif}
 begin
   {$ifdef NYX_COMPILED_TABLE_QUERY_STUDIO}
   WriteLn('PASS ', GChecks, ' compiled Studio query-policy application checks');
@@ -2438,6 +2490,15 @@ begin
   WriteLn('PASS ', GChecks, ' actual Studio query-policy checks');
   {$endif}
   {$ifdef PAS2JS}
+  { Publish only the completed proof's copied accepted packet. DOM readers can
+    retain its exact text without accessing program globals or executing it.
+    The non-executable JSON node is not a saved-source constructor or endpoint. }
+  LArtifact := TJSHTMLElement(document.createElement('script'));
+  LArtifact.setAttribute('type', 'application/json');
+  LArtifact.setAttribute('id', 'query-authoring-project');
+  LArtifact.textContent := GSaved;
+  document.body.appendChild(LArtifact);
+  document.body.setAttribute('data-query-authoring-project-length', IntToStr(Length(GSaved)));
   document.body.setAttribute('data-query-authoring', 'passed');
   document.body.setAttribute('data-query-authoring-checks', IntToStr(GChecks));
   {$endif}

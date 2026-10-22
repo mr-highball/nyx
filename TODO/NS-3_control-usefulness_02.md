@@ -5,6 +5,92 @@
 
 **Description:**
 
+Reviewed23EA567C builds both browser bundles with0 owned/14 known upstream warnings;
+1895 pins match freeze350C2325/audit31C17F16. Runtime is UNATTEMPTED: prior browser
+tool disappeared and documented fallback launch returns Windows Access denied,
+with no running Brave/window afterward. No new host started. [WORK](../WORK.md#header-repair-built-browser-access-currently-unavailable)
+retains this external gate and continuing human rerun authorization. Resume the
+same compiled-first desktop/phone cases when supported access returns, verify exact
+viewport before navigation and reuse unchanged builds. Original/core47 stays open.
+
+Earlier repair/admission paragraphs below retain history; the current built/
+runtime-unavailable outcome above supersedes their former future-tense releases.
+
+Actual compiled browser filter-header input exposes a null DOM attribute parsed
+before its role is chosen; QueryKey shares the defect. Case23 is also excluded
+for actual1280x720 versus planned900 height. Ordinary22 remains UNKNOWN after
+unreadable observations. Both tabs/hosts are retired; FDB61DA1/060038B6 retain
+1887 exact inputs and no pass credit. [WORK](../WORK.md#actual-browser-header-failure-and-viewport-correction)
+releases only browser adapter23EA567C role-first parsing, then independent review,
+eight-path freeze/two browser recompiles and compiled-first same regressions.
+Verify actual viewport after blank-tab creation, before navigation. All existing
+native/worker/host evidence is explicitly reused; core47/original gates remain.
+
+The current browser reaches114 checks/stage1 then first Apply fails because the
+maintained ordinary output omitted its real nyx_source_worker.js. Root retains
+the exact Worker failure, joins host11936/closes tab21/resets viewport, and audits
+1879 pins in CCAB1DC1; static HTTP contract checks passed. Only existing build/
+private qualifier staging/accounting is released; all Pascal stays exact.
+[WORK](../WORK.md#missing-source-worker-deployment-prerequisite) admits one worker
+compiler after fresh freeze, reusing exact two browser builds/host, then authorized
+same cases. No wait/assertion/API change or browser acceptance; core47 carries.
+
+Integration sources13D14723/host379F66AE are independently reviewed. Both
+ordinary/compiled native active source projections remain exact901D; reuse
+755/759+426/426 explicitly. The test now services both Studio-owned exchanges
+and exposes copied terminal JSON; the static host resolves absent resources404
+before its unchanged read-only method guard. [WORK](../WORK.md#integration-sources-reviewed-for-the-existing-browser-regression)
+admits only three compilers after fresh seven-path freeze, then actual joins/
+HTTP behavior checks and authorized same-regression cases. All original browser
+criteria/core47 remain open; no recovery bypass/API/config/LAN/MCP rollout.
+
+The repaired browser constructs Studio at63 checks, then hits the original2400
+completion bound. Current Studio creates two independent exchanges but the test
+pumps one; its static host also returns405 for an absent recovery route, blocking
+the existing404 compatibility path. Root joins host48548/closes tab20/resets
+viewport and audit946FCBF6 retains1871 exact inputs/assets and failure. Only
+[WORK](../WORK.md#browser-integration-repair-after-the-unchanged-completion-bound)'s
+same-consumer exchange/evidence repair and static-host resource/method ordering
+are released, then independent review/freeze/three builds and authorized reruns.
+No recovery bypass/API/config change; native proof remains explicitly reused.
+
+ConsumerDFF63AF0's351-byte browser Count() portability repair is independently
+reviewed. Selecting its native ELSE restores the entire901D source byte-exact,
+so full native755/759+426/426 is explicitly reused. Every assertion/wait stays.
+[WORK](../WORK.md#browser-count-repair-reviewed-for-two-browser-builds) admits only
+two fresh browser builds after freeze, then root joins/audits before authorized
+same-regression hosts. First browser failure stays retained; core47 carries.
+
+The first authorized browser1280x900 reaches50 original admission checks then
+fails before Studio mount: pas2js emits the Count method as an array index rather
+than invoking it. Original failure/assets/console remain retained. Own host11656
+is stopped/joined, own tab closed and viewport reset; all1853+12 pins stayed exact.
+[WORK](../WORK.md#first-browser-failure-retained-narrow-portability-repair) releases
+only the same consumer's narrow Count-index portability fix, then independent
+review/fresh browser build and already-authorized same-regression reruns. Native
+evidence remains exact901D; no browser or original criterion closes/core47 stays.
+
+The unchanged full target now passes755/759 actual native Studio checks and
+426/426 own compiled checks at1280/390, all four heaps clean. Four compilers
+have0 owned/14 upstream RTL warnings. Fresh2BB6/093B exports match across widths
+and are the actual compiled inputs. Root-joined audit755DA29C verifies1853 pins/
+six copies/40 artifacts. Direct human answer "Run browser tests and needed
+reruns" now authorizes this SAME ordinary/compiled browser regression at desktop/
+phone widths on temporary loopback-only Pascal hosts, each stopped afterward.
+[WORK](../WORK.md#full-native-outcome-and-authorized-browser-admission) owns exact
+scope, frozen artifacts, browser-own pair provenance and actual cleanup. No
+source/config/LAN/MCP change is released; original acceptance/core47 stay open.
+
+The retained separately reviewed native admission was the unchanged full Studio
+target901D/C234, following pushed e7d2c2a. Both agents revalidate all1853 pins and
+prior reviews; no Pascal/guide/tool change is released. Fresh freeze precedes
+four compilers/four sequential native outcomes: full ordinary1280/390 authoring/
+Save/Read/Open/ApplicationProof, four fresh own exports with exact equality, and
+their exact compiled companions. Preserve60s/2400/1800 bounds and first-failure
+stop. [WORK](../WORK.md#retained-full-studio-admission-after-the-compiled-application-checkpoint)
+owns actual joins/audit; retained-pair426/426 does not replace these obligations.
+Browser execution and all original criteria remain open; core47 carries.
+
 Current SAME-consumer901D compiled application passes426/426 actual native checks
 at1280/390 with complete clean heaps, using this journey's OWN retained330 pair
 2BB6B854/093B64B3 and real emitted callbacks/initialization. Matching browser

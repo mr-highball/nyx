@@ -103,12 +103,6 @@ begin
     Exit;
   end;
 
-  if (ARequest.Method <> 'GET') and (ARequest.Method <> 'HEAD') then
-  begin
-    AResponse.Code := 405;
-    AResponse.SetCustomHeader('Allow', 'GET, HEAD');
-    Exit;
-  end;
   LName := Copy(ARequest.PathInfo, 2, MaxInt);
 
   if (LName = '') or (Pos('..', LName) > 0) then
@@ -162,6 +156,17 @@ begin
   if not FileExists(FDirectory + LName) then
   begin
     AResponse.Code := 404;
+    Exit;
+  end;
+  { This static host has no API routes. Resolve an absent resource as 404 before
+    checking an existing artifact's allowed methods, so embedded clients can
+    distinguish an unsupported service from a refused preview-resource write.
+    Flat artifacts remain read-only; no request body is read or executed. }
+
+  if (ARequest.Method <> 'GET') and (ARequest.Method <> 'HEAD') then
+  begin
+    AResponse.Code := 405;
+    AResponse.SetCustomHeader('Allow', 'GET, HEAD');
     Exit;
   end;
   AResponse.ContentStream := TFileStream.Create(FDirectory + LName,

@@ -4,6 +4,239 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Header repair built; browser access currently unavailable
+
+Both reviewed23EA567C browser bundles contain role-first parsing and compile:
+actual38328/47220, zero owned/fourteen known upstream warnings. Root99527 joined;
+freeze350C2325, audit31C17F16 and admissionAD4E0F8A independently verify1895 pins.
+Only FE differs from original flags; own093B Fu, worker50300/host7EA are exact.
+Native755/759+426/426 is explicitly reused. Retain06c001 missing-property metadata
+assignment and Add-Member-only correction; no compiler/receipt was repeated.
+
+No repaired browser runtime has run. The previous browser-control namespace is
+absent from current tools. Supported Computer Use fallback lists apps but opening
+Brave returns GetCursorPos Access denied0x80070005; next inventory shows no running
+browser/window. No new host was started. The private availability receipt retains
+this external gate separately from earlier failed/UNKNOWN/wrong-viewport cases.
+No config/install/service change follows. Human rerun authorization persists:
+resume the same compiled1280-first desktop/phone regression when supported browser
+access returns, blank tab then set/assert1280x900/390x900 before navigation and at
+terminal. Reuse unchanged builds; close own tabs and stop/join each temporary host.
+Root checkpoints docs; Pascal stays paused. Core47/original/P4C/browser-own/P3 gates
+remain open, without criterion/credit/DONE closure.
+
+The earlier repair/admission notes below are retained history. The current
+built/runtime-unavailable section above owns readiness and reader scope.
+
+### Actual browser header failure and viewport correction
+
+The independently compiled browser23 fails its real filter-header release:
+QueryClick first passes the absent sort attribute (JavaScript null) into Pascal
+StrToIntDef, before choosing its present filter-column attribute. The same order
+exists in QueryKey. The retained console stack and failure are concrete product
+evidence. Its actual viewport is1280x720 because a new tab used its default height;
+it is excluded from the planned900-height qualification. Retain FDB61DA1 failure.
+
+Ordinary22 never produced a readable terminal or actual viewport; inspection
+timeouts and four observer resets are retained as UNKNOWN/unqualified060038B6,
+not a product pass/failure. The already-planned compiled same-width case ran on
+an independent origin while ordinary observation was unavailable; no shared
+project/source changed. Both22/23 are now closed, browser inventory empty and
+viewport reset. Root identity-stops/joins both47956/7620 hosts and verifies all
+1887 inputs/assets. No native/application/browser criterion credit follows.
+
+Release only root's browser adapter QueryClick/QueryKey attribute choice before
+integer conversion. Preserve filter priority, malformed-index refusal, guards,
+ownership and dispatch. Source23EA567C is paused for independent review. It is
+the eighth owned path; all other Pascal/consumer13D/host7EA/worker50300 stay exact.
+Native imports exclude this browser unit, and the worker bundle/dependency log
+excludes it; explicitly reuse those prior outcomes rather than rerun them.
+After fresh eight-owned/1807-Pascal/13-concurrent/27-extra freeze, compile only
+the two browser consumers with original flags/fresh-FE/own093B-Fu, staging the
+exact prior HTML/RTL/worker. Start with the existing compiled1280 regression,
+then remaining authorized cases. Create a blank tab first, apply its viewport
+second, verify actual1280x900/390x900 before navigation and again at terminal.
+No assertions/fixture/waits or other API/config/LAN/MCP changes. Root joins/audits
+every reader and each temporary host. Core47/original/P4C/browser-own provenance
+and broader existing P3 browser gates remain open; helper stays read-only.
+
+### Missing source-worker deployment prerequisite
+
+The integration-repaired ordinary browser reaches114 checks/stage1, then first
+Apply reports the editor processor failure. The actual page directory contains
+only index.html, test JavaScript and rtl.js. SourceCommands creates the existing
+sibling nyx_source_worker.js for design/source edits; its absent script reaches
+the real WorkerError/WorkerTimeout path. Preserve this failed case and all earlier
+failures. No query/exchange/runtime product repair is established. Actual static
+HTTP200/404/405/403 checks pass. Root identity-stops/joins host11936, closes tab21,
+resets viewport and audits all1879 inputs/assets in CCAB1DC1. Later cases did not run.
+
+Release only the existing maintained query-authoring worker staging in build.ps1
+and the existing private qualifier's fifth direct-compiler accounting. Preserve
+all Pascal/consumer13D/host379F, original assertions/waits and fixture. Compile the
+unchanged existing studio/nyx_source_worker.lpr with known -Tmodule/-Jirtl.js flags,
+matching other maintained outputs. Reuse exact existing two browser builds and
+7EA host; stage their exact files plus the new real worker in fresh directories.
+No unchanged native/browser/host compiler is repeated. Independent review and
+fresh seven-owned/1807-Pascal/13-concurrent/27-extra freeze repin only the narrow
+private-qualifier delta, then admit one worker compiler. Root joins/audits before
+the already-authorized four browser cases/reruns on fresh origins. No new fixture,
+API/engine/wire/config/LAN/MCP change or extra agent. Source readiness/staging is
+not runtime success; every original acceptance/core47 remains open.
+
+### Integration sources reviewed for the existing browser regression
+
+Consumer13D14723 borrows and services both independent Studio-owned exchanges,
+clears borrowed pointers after Studio retirement, and publishes copied clock
+progress/terminal accepted-project JSON for read-only DOM evidence. All fixture,
+assertions and waits remain. Root independently selects native PAS2JS=false in
+ordinary/compiled modes: all1994/1988 nonempty trimmed active lines match retained
+901D exactly (E6F798E7/92CB8DAF). Reuse that exact755/759+426/426 dependency proof;
+no native execution is repeated or relabeled. Browser evidence remains unqualified.
+
+Host379F66AE moves only the original405 guard after unchanged404 resource checks;
+removing its comment and reversing that move restores1D507D31 byte-exact. Exact
+loopback Host, flat ASCII paths, GET/HEAD-only serving and no-body/no-API behavior
+stay. After independent review/fresh seven-owned/1807-Pascal/13-concurrent/27-extra
+freeze, admit one strict known-FPC host build and the original two browser builds.
+Use exact3975-character RunOwned from3B746, fresh output directories, original
+browser flags with only-FE replacement and exact own093B-Fu, copied original
+HTML/RTL. Owned warnings refuse; root joins/audits actual readers before hosts.
+Then verify actual GETindex200, missing-routePOST404, existing-artifactPOST405
+and wrongHost403 before running the four already-authorized browser cases.
+All sources/docs/tools pause during readers. No native UI/probe, new fixture,
+production Studio API, LAN/config/MCP change or extra agent. Prior failures stay
+retained, source readiness earns no browser/criterion credit, and core47 carries.
+
+### Browser integration repair after the unchanged completion bound
+
+The Count-repaired ordinary browser reaches63 checks and constructs Studio, then
+the original2400-poll bound fails before authoring. Retain the empty console,
+actual1280x900 body/stage, navigation observation delay and failed case in
+browser-count-repaired/ordinary-1280. No reload or altered wait rescued it.
+Root identity-stops/joins host48548, confirms listener/process absence, closes
+tab20 and resets viewport. Audit946FCBF6 verifies all1871 frozen inputs/assets.
+
+Two concrete integration gaps explain this boundary. The current Studio constructor
+creates independent editing and completion exchanges, while this consumer overwrites
+one borrowed pointer and pumps only completion. Its explicit ConnectAgents also
+checks same-origin recovery readiness: the static preview host returns405 before
+rejecting the absent nested API, so the existing404 older-host compatibility path
+cannot connect. No table/runtime product defect has been established.
+
+Helper owns ONLY the same consumer's browser borrowed exchange vector, pumping/
+retirement and DOM-only copied progress/terminal own-project evidence. Preserve
+all assertions/fixture/waits and exact native projection. Read-only browser tooling
+cannot access page Pascal globals; the harness must publish its own copied artifact
+for provenance. Root owns ONLY the existing preview host request-order correction:
+resolve missing/invalid resources404 before unchanged GET/HEAD-only405 guard. This
+adds no API, network exposure, body execution, recovery bypass or config change.
+The authorized same-regression repair/reruns require one rebuilt temporary Pascal
+host, plus the same two browser builds. Independent source/tool review and fresh
+seven-owned/1807-Pascal/13-concurrent/27-extra freeze precede those readers. Root
+joins/audits all actual processes before hosts; each host still stops afterward.
+No other source/API/compiler scope, LAN/Studio service/MCP change or extra agent.
+Reuse native901D evidence only after exact branch proof; core47/original criteria
+and both retained browser failures remain open.
+
+### Browser Count repair reviewed for two browser builds
+
+Same-consumer DFF63AF0 adds only351 bytes for an explicit browser Count() call,
+an explanatory comment, and the original native statement in ELSE. Root and
+helper independently restore the entire901D source byte-for-byte by selecting
+that native branch. All predicates/payload/fixture/waits remain exact. Reuse
+the full native755/759+426/426 with this explicit dependency boundary; those
+executions are not repeated or relabeled as repaired-browser executions.
+
+After fresh same-six-path/1807-Pascal/13-concurrent/27-extra freeze, admit only
+two browser compilers. Extract the existing unchanged3975-character RunOwned
+from reviewed private driver3B746; use each original full-studio browser argument
+array with only fresh-FE, preserving compiled-Fu to NEWfull-studio/native-1280.
+Copy exact original HTML/RTL; stop at first failure, retain raw process receipts,
+root-join both actual compilers and audit every input before any new host. No
+private/product tool rollout, native replay, compiler probes or host rebuild.
+All source/docs/tools pause through joins. Existing human authorization then
+covers the same desktop/phone regression hosts and needed reruns. Preserve first
+browserA38A failure and all older outcomes; core47/original criteria stay open.
+
+### First browser failure retained; narrow portability repair
+
+The authorized ordinary desktop browser at actual1280x900 reaches50 checks, then
+fails in the original AdmissionCases before Studio construction. pas2js emits
+the Pascal array index LData.Count as a JavaScript method reference, while the
+adjacent arithmetic/loop forms call Count(). The generated record assignment
+therefore targets an undefined array member and throws. This is a concrete
+browser test-consumer portability failure; no product defect is established.
+Preserve the original body/stage/console/assets and qualified=false case in
+browser-first/ordinary-1280. Later browser cases were not attempted.
+
+Root verifies exact host11656 executable/command/creation identity, stops and
+joins it, confirms no listener/process, closes own tab19 and resets viewport.
+All1853 source inputs plus12 assets remain exact through that join. Existing
+native755/759 and compiled426/426 remain evidence for exact901D, not a repaired
+browser source. No live reader remains. Only helper's SAME consumer Count-index
+portability repair is released, preserving every assertion/fixture/wait. Review
+the native compatibility boundary independently before the fresh browser build.
+Root owns three docs/private admission receipts; no product/host/tool repair.
+The user's SAME regression rerun authorization already applies; no repeat
+permission request is needed. Core47 and all original criteria remain open.
+
+### Full native outcome and authorized browser admission
+
+The unchanged full maintained target passes755/759 actual Studio checks and
+426/426 own compiled-application checks at client1280/390. All four complete
+heaps are clean. Four compilers pass with0 owned/14 upstream RTL warning
+occurrences. Fresh ordinary producer exports2BB6B854/093B64B3 match across widths;
+their exact NEW directory supplies both compiled builds and actual applications.
+Identical bytes do not relabel the earlier partial producer as qualified.
+Root69995/4ab8b9 is terminal0 and all nine actual processes are absent. Audit
+755DA29C verifies1853 pins/six retained copies/40 artifact references at freeze
+8F4A6F40; independent root/helper outcome and browser-artifact review passes.
+
+The direct human answer to call_ab9bd3bd473845748fa95641c5cc1ef1 authorizes
+"Run browser tests and needed reruns". Next run ONLY these prepared ordinary
+and compiled table-workbench browser cases at actual1280x900/390x900, using
+separate fresh origins and the existing verified997B90C4 loopback-only Pascal
+host. Each host is identity-guarded, stopped and joined afterward; close own
+tabs and reset viewport. No LAN/Studio service/config/MCP change or host rebuild.
+Root pins the six browser assets, four fresh exports and host/prepared receipts
+before launching; record actual terminal/count/stage, viewport and console.
+Read the ordinary browser's own retained GSAVED pair and compare exact design/
+source with the fresh native pair before granting own compiled-browser credit.
+Preserve any failure before authorized same-regression reruns. No Pascal change
+is currently released. All source/guides/tools stay exact; only root's three
+admission/outcome docs and private receipts change before browser freeze.
+Core47 and every original criterion remain open until actual acceptance review.
+
+### Retained full Studio admission after the compiled application checkpoint
+
+Previous goal turn is PROGRESS: e7d2c2a is pushed and remote-verified. Final
+9F83313C/0357566F and all1853 input occurrences revalidate; prior12 actual
+processes are absent and all actual root readers are joined. Both agents check
+unchanged source901D/buildC234/guideA79C and full qualifier7D8223/freezer03C2;
+root admission review78578201 and independent helper review retain this decision.
+No Pascal/guide/tool change is released. Only root's three admission/outcome
+documents change before a fresh same-six-path freeze; helper stays read-only.
+
+The admitted action was the EXISTING full maintained target, not another fixture
+or profile variant: ordinary native/browser compiles, sequential full ordinary
+1280/390 journeys, four fresh own exports with exact cross-width equality, their
+exact compiled native/browser builds and sequential compiled1280/390 runs.
+Those ordinary journeys must complete authoring/history, callback creation,
+named Save/independent Read/Open and the common ApplicationProof in one process.
+Retained-pair426/426 stays advance evidence; its partial producer does not satisfy
+fresh ordinary/cross-width acceptance. Preserve originalReady60/global2400 and
+explicit1800s total per native, outer9000s and first-failure stop. Owned compiler
+warnings refuse before UI; every native requires exact width/PASS/complete heap.
+
+Root owns the fresh six-owned/1807-Pascal/13-concurrent/27-extra freeze, actual
+reader handle/terminal joins and exact audits. All source/docs/tools pause while
+any reader is live. This bounded admission can qualify native integration and
+matching browser compilation only; actual browser input needs its later
+applicable host gate. Core47 and every original criterion remain open. No host,
+new source/tool/fixture, MCP/config rollout, probe/profile, cleanup/restart or
+extra agent is released. Keep all earlier failures and partial results unchanged.
+
 ### Current result: own compiled application passes native checks
 
 This goal turn is PROGRESS. The SAME consumer901D3F06's existing compiled branch

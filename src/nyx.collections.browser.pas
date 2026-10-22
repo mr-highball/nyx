@@ -2084,11 +2084,16 @@ begin
     Exit;
   end;
   LFilter := LButton.hasAttribute('data-nyx-query-column');
-  LColumn := StrToIntDef(LButton.getAttribute('data-nyx-query-sort'), -1);
+  { A filter affordance has no sort attribute. DOM absence is JavaScript null,
+    not a Pascal string; choose the present role before parsing its index. }
 
   if LFilter then
   begin
     LColumn := StrToIntDef(LButton.getAttribute('data-nyx-query-column'), -1);
+  end
+  else
+  begin
+    LColumn := StrToIntDef(LButton.getAttribute('data-nyx-query-sort'), -1);
   end;
   AEvent.preventDefault;
   QueryColumn(LColumn, LFilter, TJSMouseEvent(AEvent).shiftKey);
@@ -2125,11 +2130,15 @@ begin
   if LHeader <> nil then
   begin
     LFilter := LHeader.hasAttribute('data-nyx-query-column');
-    LColumn := StrToIntDef(LHeader.getAttribute('data-nyx-query-sort'), -1);
+    { Keyboard activation uses the same exclusive DOM roles as pointer input. }
 
     if LFilter then
     begin
       LColumn := StrToIntDef(LHeader.getAttribute('data-nyx-query-column'), -1);
+    end
+    else
+    begin
+      LColumn := StrToIntDef(LHeader.getAttribute('data-nyx-query-sort'), -1);
     end;
   end;
 
