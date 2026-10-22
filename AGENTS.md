@@ -1,5 +1,88 @@
 # Working in Nyx
 
+QUERY AUTHORING P4A DIAGNOSTIC JOINED (2026-10-21): all3 actual readers are
+terminal/root joined; immutable audit22088A97 and independent helper review
+verify12owned/1807Pascal/foreign13/extra8 exact. Three compilers pass with zero
+owned/seven upstream RTL warnings. Repaired queue126 passes with clean heap;
+four unchanged initial product/sizing compilers and sizing40clean are reused.
+Actual1280 reaches144 checks/stage2, then the exact owned300s guard interrupts
+Ready after integer-form expansion. No assertion failure was reported, but no
+overall pass/heap/teardown proof follows. Preserve initial interruption/stale
+queue failure and diagnostic timeout. Receipt executable=null is a retained
+metadata defect; root separately observed live PID38648/path/creation instant.
+Trace proves finite repeated work: initial Run16s, tab refresh18-22s, Apply47s,
+Undo/Redo23-24s. Source complexity findings are hypotheses, not a bottleneck proof.
+Stop this budget. Root owns docs/checkpoint only; all Pascal stays paused until
+a separate existing-profile observation release. Next proposed fixed packet is
+ONE native compile with existing NYX_STUDIO_PROFILE/NYX_LCL_LAYOUT_PROFILE plus
+ONE unchanged1280 consumer run under the SAME300s guard, preserving all original
+predicates/waits. In that future tool scope, write the NEW profiling-run receipt's
+executable from the exact known launch path; retain the original null receipt
+and audit untouched. No production repair is released.
+390/newconsumerbrowser/P4B/C/original criteria remain open; core31 advances32,
+no DONE/credit. Preserve foreign13 and no host/browser/LAN/MCP/config/worker,
+cleanup/restart or extra agent. WORK/private state owns receipts and return path.
+
+QUERY AUTHORING P4A DIAGNOSTIC REVIEWED (2026-10-21): root independently removes
+only Trace helper/call lines from EE1CEAA1 and recovers first695F7BB9 source;
+all predicates, inputs, fixtures and60s/2400 bounds stay exact. Forms46568516
+is unchanged. Helper independently accepts queue4DCB7718, build186400A9,
+qualifierE20D64D0 and guide8B9C09CB. Root may freeze12owned/1807Pascal/foreign13/
+extra8 then admit ONLY one native1280 diagnostic and repaired queue native/browser
+(three compilers/two native outcomes). No390/newconsumerbrowser follows. Pause
+all Pascal/guides through actual joins and exact audit. Stop at this result;
+the last entered synchronous phase determines a separate repair scope. Reuse
+the four unaffected initial product/sizing compilers and sizing40clean outcome.
+The backlog-only reply added no product progress; do not restart prior readers.
+Initial stopped native has no pass/heap claim; retain initial queue failure.
+All original criteria/credit/core31 stay open. No host/browser/LAN/MCP/config/
+worker launch, cleanup/restart or extra agent. Existing helper read-only P4B map
+does not release its source. WORK/private state owns actual admission and joins.
+
+QUERY AUTHORING P4A NARROW DIAGNOSTIC RELEASE (2026-10-21): all7 first readers
+are terminal/root joined; immutable auditD4F47903 verifies11owned/1807Pascal/
+foreign13/extra8 exact. Seven compilers pass, native sizing40clean, queue fails
+its old version5 assertion against unchanged version9 production, clean heap.
+New actual1280 Studio reaches its width receipt, then remains CPU-bound; root
+stopped only that exact owned PID/path/creation instant. Retain interrupted run
+without passing/heap claims;390/new-consumer browser were not attempted.
+All production including forms46568516 stays exact. Existing helper owns ONLY
+flushed phase/stage/input markers in the new consumer, preserving ALL predicates,
+60s Ready/2400 poll bounds, expressions and fixture. Root additionally owns ONLY
+tests/nyx.test.collection.queue.pas current9/current-roundtrip and legacy5 decoding
+checks, plus build's per-native owned300s execution bound/private qualifier/docs.
+Exact12 paths/preimages are in private authoring state. Independent review/freeze
+precedes three compilers/two native outcomes: ONE actual1280 diagnostic native
+consumer and repaired queue native/browser. Reuse four unchanged product/sizing
+compilers; no broad repeat or wait relaxation. Stop at diagnostic result and
+locate the expensive call before any new repair. Full390/browser/Studio/events/
+saved-generated/original gates remain open, core31 carries; no original credit.
+No host/browser/LAN/MCP/config/worker launch, cleanup/restart or extra agent.
+
+QUERY AUTHORING P4A SOURCE RELEASED (2026-10-21): previousc553930 is progress,
+committed/pushed/remote-verified. All P3 readers are joined;1806Pascal/foreign13/
+extra6 match before this separate release. Reviewed four-action/default/inherit
+seam is settled. Root owns collectionintent, session.collections, collectionedits
+and its schema include, build/query guide/task02/WORK/handoff. Existing helper
+owns ONLY studio/nyx.studio.collections.pas and NEW
+tests/nyx_table_query_studio_controls.lpr. Exact11 paths/preimages are in
+.local/query-authoring-paths-private.json. No other source is released.
+Use one existing paired sdaCollection intent with exact full-spec/schema baseline;
+preserve old ordinals/11-and13-member encodings, raw policy absence and surviving
+field/family identities. Whole-form Apply and explicit library defaults retain
+local-owner isolation; whole-binding Inherit is separate. Place ordinary form
+sections in the existing inspector-collection-query subtree so current draft
+capture/restore remains authoritative. No new queue/host/session owner follows.
+Both scopes require independent review/freeze before readers. Fixed qualification
+plan: new consumer native1280/390+browser compile, unchanged column-sizing and
+collection-queue native/browser consumers, both Studio mains (8 compilers/4 native
+outcomes). Stop at actual P4A result; P4B event-policy/discovery and P4C own saved/
+generated execution remain required, as do every original criterion and credit.
+Core no-closure31 carries. P3 browser approval remains pending; no host/browser,
+LAN/MCP/config/worker launch, cleanup/restart or extra agent is released. Separate
+Kanban05/resolver14/splitter and foreign13 stay exact. WORK/private state owns
+source scopes, retained failures, all actual reader handles and return path.
+
 QUERY AUTHORING P4 READINESS (2026-10-21): previous6f56f41 is progress,
 committed/pushed/remote-verified. All P3 readers remain joined;1806Pascal/
 foreign13/extra6 stay exact. Root/helper independent read-only review identifies

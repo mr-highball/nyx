@@ -30,7 +30,8 @@ interface
 uses
   nyx.text, nyx.types, nyx.data, nyx.state, nyx.collections,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging;
+  nyx.studio.authoring, nyx.collections.columns, nyx.collections.paging,
+  nyx.collections.query.policy;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -40,7 +41,8 @@ type
     scaAddRow, scaRemoveRow, scaCell, scaBind, scaScope, scaTitle, scaMode,
     scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
-    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging);
+    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -92,9 +94,15 @@ type
     Scope: TNyxCollectionScope;
     SelectionMode: TNyxSelectionMode;
     Projection: TNyxCollectionProjection;
-    { A complete typed replacement, qualified by the form's exact schema/binding
-      baseline. Only scaQuery uses these fields; an empty policy clears defaults. }
+    { Authored predicates and command capabilities are separate choices. Only
+      scaQuery uses Query; its undefined value clears the authored query. The
+      two policy setters require a defined matching policy; the default actions
+      carry no policy and clear only that raw declaration, never inheritance.
+      Every query/policy action carries the full effective-spec/schema baseline
+      so an old form cannot replace a newer binding's independent choices. }
     Query: TNyxCollectionQuery;
+    TableQuery: TNyxTableQueryPolicy;
+    ColumnQuery: TNyxColumnQueryPolicy;
     QueryBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
@@ -268,13 +276,15 @@ begin
   Result := AAction in [scaBind, scaScope, scaTitle, scaMode, scaParent,
     scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery,
     scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum,
-    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging];
+    scaColumnMaximum, scaColumnDefault, scaPageSize, scaInitialPage, scaDefaultPaging,
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
 begin
   Result := AAction in [scaCreate, scaRemove, scaAddField, scaAddRow, scaRemoveRow,
-    scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaQuery];
+    scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaQuery,
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -283,8 +293,13 @@ var
 begin
   LKey := Key.Name;
 
-  if ((Action = scaQuery) and (QueryBaseline = '')) or
-    ((Action <> scaQuery) and (Query.Defined or (QueryBaseline <> ''))) then
+  if ((Action in [scaQuery, scaTableQuery, scaColumnQuery,
+      scaDefaultTableQuery, scaDefaultColumnQuery]) and (QueryBaseline = '')) or
+    (not (Action in [scaQuery, scaTableQuery, scaColumnQuery,
+      scaDefaultTableQuery, scaDefaultColumnQuery]) and (QueryBaseline <> '')) or
+    ((Action <> scaQuery) and Query.Defined) or
+    ((Action = scaTableQuery) <> TableQuery.Defined) or
+    ((Action = scaColumnQuery) <> ColumnQuery.Defined) then
   begin
     raise ENyxCollection.Create('Query intent requires its own exact baseline and policy');
   end;
@@ -323,14 +338,16 @@ begin
 
   if (Action in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn,
     scaAddColumn, scaColumnContent, scaColumnFixed, scaColumnFlex,
-    scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) and not Field.Defined then
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+    scaColumnQuery, scaDefaultColumnQuery]) and not Field.Defined then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact typed field');
   end;
 
   if Field.Defined and not (Action in [scaDefault, scaCell, scaTitle, scaMode,
     scaParent, scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
-    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) then
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+    scaColumnQuery, scaDefaultColumnQuery]) then
   begin
     raise ENyxCollection.Create('This collection intent does not use a field');
   end;
@@ -341,10 +358,21 @@ begin
   end;
 
   if (Action in [scaColumnContent, scaColumnFixed, scaColumnFlex,
-    scaColumnMinimum, scaColumnMaximum, scaColumnDefault]) and
+    scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+    scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery]) and
     (Projection <> cpTable) then
   begin
-    raise ENyxCollection.Create('Column sizing requires the table projection');
+    raise ENyxCollection.Create('Column sizing/query controls require the table projection');
+  end;
+
+  if Action = scaTableQuery then
+  begin
+    TableQuery.Validate;
+  end;
+
+  if Action = scaColumnQuery then
+  begin
+    ColumnQuery.Validate(Field.Kind);
   end;
 
   if (Action in [scaPageSize, scaInitialPage, scaDefaultPaging]) and (Projection = cpTree) then
@@ -382,7 +410,9 @@ begin
     (Mode = AOther.Mode) and (Scope = AOther.Scope) and
     (SelectionMode = AOther.SelectionMode) and (Projection = AOther.Projection) and
     (QueryBaseline = AOther.QueryBaseline) and
-    (Query.ToData.ToJSON = AOther.Query.ToData.ToJSON);
+    (Query.ToData.ToJSON = AOther.Query.ToData.ToJSON) and
+    (TableQuery.ToData.ToJSON = AOther.TableQuery.ToData.ToJSON) and
+    (ColumnQuery.ToData.ToJSON = AOther.ColumnQuery.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -413,15 +443,33 @@ begin
     NyxField('selection', NyxData(Ord(SelectionMode))),
     NyxField('projection', NyxData(Ord(Projection)))]);
 
-  if Action = scaQuery then
+  if Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery] then
   begin
-    SetLength(LFields, 13);
+    { Former actions retain their exact eleven-member encoding, and scaQuery
+      retains its former thirteen-member encoding and names. Default-policy
+      actions add only a baseline; setters add their own closed policy object. }
+    SetLength(LFields, 12);
     for LIndex := 0 to 10 do
     begin
       LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
     end;
-    LFields[11] := NyxField('query', Query.ToData);
-    LFields[12] := NyxField('baseline', NyxData(QueryBaseline));
+    LFields[11] := NyxField('baseline', NyxData(QueryBaseline));
+
+    if Action in [scaQuery, scaTableQuery, scaColumnQuery] then
+    begin
+      SetLength(LFields, 13);
+      LFields[12] := LFields[11];
+      case Action of
+        scaQuery: LFields[11] := NyxField('query', Query.ToData);
+        scaTableQuery: LFields[11] := NyxField('tableQuery', TableQuery.ToData);
+        scaColumnQuery: LFields[11] := NyxField('columnQuery', ColumnQuery.ToData);
+      else
+        begin
+          raise ENyxCollection.Create('This intent has no query policy payload');
+        end;
+      end;
+    end;
     Result := NyxObject(LFields);
   end;
 end;
@@ -497,15 +545,32 @@ begin
     raise ENyxCollection.Create('Collection binding changed; use its current inspector');
   end;
 
-  if AIntent.Action = scaQuery then
+  if AIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery] then
   begin
 
     if AIntent.QueryBaseline <> NyxQueryEditorBaseline(ASchema, ASpec) then
     begin
       raise ENyxCollection.Create('Query binding/schema changed; use its current inspector');
     end;
-    AIntent.Query.Validate(ASchema);
-    Exit(ASpec.Query(AIntent.Query));
+
+    if AIntent.Action = scaQuery then
+    begin
+      AIntent.Query.Validate(ASchema);
+      Exit(ASpec.Query(AIntent.Query));
+    end;
+
+    if AIntent.Action = scaTableQuery then
+    begin
+      Exit(ASpec.TableQuery(AIntent.TableQuery));
+    end;
+
+    if AIntent.Action = scaDefaultTableQuery then
+    begin
+      Exit(ASpec.UseDefaultTableQuery);
+    end;
+    { Column policies need the existing family-qualified column loop below.
+      Never append a column merely to apply a captured policy to its name. }
   end;
 
   if AIntent.Action = scaClear then
@@ -577,6 +642,13 @@ begin
   if ASpec.PagingPolicy.Defined then
   begin
     Result := Result.Paged(ASpec.PagingPolicy);
+  end;
+
+  if ASpec.HasTableQueryPolicy then
+  begin
+    { Copy raw presence, not the resolved default: absence must remain absent
+      through unrelated edits and continue to encode as the older view version. }
+    Result := Result.TableQuery(ASpec.TableQueryPolicy);
   end;
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then
@@ -690,6 +762,20 @@ begin
     end;
     Result := AddTypedColumn(Result, LReference, LTitle, LMode);
 
+    if AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+      (AIntent.Action = scaColumnQuery) then
+    begin
+      Result := Result.ColumnQuery(AIntent.ColumnQuery);
+    end
+    else if LColumn.HasQueryPolicy and not
+      (AIntent.Field.Defined and (LColumn.FieldName = AIntent.Field.Name) and
+        (AIntent.Action = scaDefaultColumnQuery)) then
+    begin
+      { The selected policy's reset affects only that raw declaration. Every
+        surviving peer retains its independently declared operators and mode. }
+      Result := Result.ColumnQuery(LColumn.QueryPolicy);
+    end;
+
     if LSizing.Defined then
     begin
       { An unrelated title/edit-mode/scope action must retain the exact authored
@@ -700,7 +786,7 @@ begin
 
   if (AIntent.Action in [scaTitle, scaMode, scaRemoveColumn, scaColumnContent,
     scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum,
-    scaColumnDefault]) and not LColumnFound then
+    scaColumnDefault, scaColumnQuery, scaDefaultColumnQuery]) and not LColumnFound then
   begin
     raise ENyxCollection.Create('Collection column no longer exists');
   end;
@@ -755,14 +841,19 @@ var
 begin
   Result := Default(TNyxStudioCollectionIntent);
 
-  if (AData.Kind <> ndObject) or not (AData.Count in [11, 13]) then
+  if (AData.Kind <> ndObject) or not (AData.Count in [11, 12, 13]) then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact descriptor');
   end;
   Result.Action := TNyxStudioCollectionAction(Choice('action',
     Ord(Low(TNyxStudioCollectionAction)), Ord(High(TNyxStudioCollectionAction))));
 
-  if (Result.Action = scaQuery) <> (AData.Count = 13) then
+  if ((Result.Action in [scaQuery, scaTableQuery, scaColumnQuery]) and
+      (AData.Count <> 13)) or
+    ((Result.Action in [scaDefaultTableQuery, scaDefaultColumnQuery]) and
+      (AData.Count <> 12)) or
+    (not (Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+      scaDefaultTableQuery, scaDefaultColumnQuery]) and (AData.Count <> 11)) then
   begin
     raise ENyxCollection.Create('Query intent requires its exact extended descriptor');
   end;
@@ -770,6 +861,21 @@ begin
   if Result.Action = scaQuery then
   begin
     Result.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+  end;
+
+  if Result.Action = scaTableQuery then
+  begin
+    Result.TableQuery := TNyxTableQueryPolicy.FromData(AData.Field('tableQuery'));
+  end;
+
+  if Result.Action = scaColumnQuery then
+  begin
+    Result.ColumnQuery := TNyxColumnQueryPolicy.FromData(AData.Field('columnQuery'));
+  end;
+
+  if Result.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery] then
+  begin
     Result.QueryBaseline := AData.Field('baseline').AsText;
   end;
   Result.Key := NyxCollection(AData.Field('key').AsText);

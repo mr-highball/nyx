@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
   nyx.collections.registry,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
-  nyx.typeahead,
+  nyx.typeahead, nyx.collections.query.policy,
   nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.stateedits, nyx.studio.projects;
 
@@ -166,7 +166,8 @@ const
      'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
      'add-column', 'clear', 'inherit', 'selection', 'query',
      'column-content', 'column-fixed', 'column-flex', 'column-minimum',
-     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging');
+     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
+     'table-query', 'column-query', 'default-table-query', 'default-column-query');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -932,7 +933,22 @@ begin
   if LIntent.Action = scaQuery then
   begin
     Add('query', LIntent.Query.ToData);
+  end;
+
+  if LIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery] then
+  begin
     Add('baseline', NyxData(LIntent.QueryBaseline));
+  end;
+
+  if LIntent.Action = scaTableQuery then
+  begin
+    Add('tableQuery', LIntent.TableQuery.ToData);
+  end;
+
+  if LIntent.Action = scaColumnQuery then
+  begin
+    Add('columnQuery', LIntent.ColumnQuery.ToData);
   end;
 
   if NyxStudioCollectionViewAction(LIntent.Action) then
@@ -948,7 +964,8 @@ begin
 
   if LIntent.Action in [scaDefault, scaCell, scaTitle, scaMode,
     scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
-    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+    scaColumnQuery, scaDefaultColumnQuery] then
   begin
     Add('field', NyxData(LIntent.Field.Name));
     Add('kind', NyxData(NyxStateKindName(LIntent.Field.Kind)));
@@ -1056,10 +1073,31 @@ begin
 
   if LIntent.Action = scaQuery then
   begin
-    LAllowed := LAllowed + 'query|baseline|';
-    Inc(LRequired, 2);
+    LAllowed := LAllowed + 'query|';
+    Inc(LRequired);
     LIntent.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+  end;
+
+  if LIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery] then
+  begin
+    LAllowed := LAllowed + 'baseline|';
+    Inc(LRequired);
     LIntent.QueryBaseline := AData.Field('baseline').AsText;
+  end;
+
+  if LIntent.Action = scaTableQuery then
+  begin
+    LAllowed := LAllowed + 'tableQuery|';
+    Inc(LRequired);
+    LIntent.TableQuery := TNyxTableQueryPolicy.FromData(AData.Field('tableQuery'));
+  end;
+
+  if LIntent.Action = scaColumnQuery then
+  begin
+    LAllowed := LAllowed + 'columnQuery|';
+    Inc(LRequired);
+    LIntent.ColumnQuery := TNyxColumnQueryPolicy.FromData(AData.Field('columnQuery'));
   end;
 
   if NyxStudioCollectionViewAction(LIntent.Action) then
@@ -1078,7 +1116,8 @@ begin
 
   if LIntent.Action in [scaDefault, scaCell, scaTitle, scaMode,
     scaRemoveColumn, scaAddColumn, scaColumnContent, scaColumnFixed,
-    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+    scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+    scaColumnQuery, scaDefaultColumnQuery] then
   begin
     LAllowed := LAllowed + 'field|kind|';
     Inc(LRequired, 2);

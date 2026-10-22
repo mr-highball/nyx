@@ -106,6 +106,7 @@ var
   LIntent: TNyxStudioCollectionIntent;
   LEdit: TNyxStudioDesignEdit;
   LRequest: TNyxStudioDesignRequest;
+  LReadRequest: TNyxStudioDesignRequest;
   LPrepared: INyxPreparedDesign;
   LSeed: TNyxProjectPair;
   LPairBefore: TNyxText;
@@ -234,6 +235,29 @@ var
       end;
     end;
     Result := NyxObject(LFields);
+  end;
+
+  function VersionFiveTicket(const ACurrent: TNyxDataValue): TNyxDataValue;
+  const
+    { The historical collection envelope had these eleven named edit fields.
+      New placement/resize/presentation/position slots belong to later versions;
+      changing only the outer version would not test real legacy admission. }
+    CEditFields: array[0..10] of TNyxText = ('action', 'selection', 'view',
+      'name', 'value', 'direction', 'platform', 'stateInput', 'binding',
+      'event', 'collection');
+  var
+    LFields: array of TNyxDataField;
+    LEdit: TNyxDataValue;
+    LIndex: Integer;
+  begin
+    LEdit := ACurrent.Field('edit');
+    SetLength(LFields, Length(CEditFields));
+    for LIndex := 0 to High(CEditFields) do
+    begin
+      LFields[LIndex] := NyxField(CEditFields[LIndex], LEdit.Field(CEditFields[LIndex]));
+    end;
+    Result := ReplaceField(ACurrent, 'version', NyxData(5));
+    Result := ReplaceField(Result, 'edit', NyxObject(LFields));
   end;
 
   procedure RefuseDescriptor(const AData: TNyxDataValue);
@@ -479,7 +503,19 @@ begin
     LEdit.Collection := Proposal(scaCreate, 'ticket');
     LRequest := LSession.PrepareDesignRequest(LEdit, LScope.Revision);
     LWire := LRequest.ToData;
-    Check(LWire.Field('version').AsInteger = 5, 'Private collection ticket uses version five');
+    { Existing production emits the deployed v9 envelope, independently of the
+      inner collection action. Retain legacy v5 compatibility as its own real
+      eleven-field admission, not an obsolete expectation for new output. }
+    Check((LWire.Field('version').AsInteger = 9) and
+      (LWire.Field('edit').Count = 15), 'Current private collection ticket uses its deployed version nine');
+    LReadRequest := ReadNyxStudioDesignRequest(TNyxDataValue.ParseJSON(LWire.ToJSON));
+    Check(LReadRequest.SameRequest(LRequest),
+      'Current collection ticket retains its exact request identity through worker decoding');
+    LReadRequest := ReadNyxStudioDesignRequest(VersionFiveTicket(LWire));
+    Check(LReadRequest.SameRequest(LRequest),
+      'Historical eleven-field version-five ticket still admits the same collection request');
+    Check(LReadRequest.ToData.ToJSON = LWire.ToJSON,
+      'Legacy collection admission normalizes to the unchanged current envelope');
     LIntent := Proposal(scaCell, 'tasks');
     LIntent.Item := NyxItem(LIntent.Key, 'alpha');
     LIntent.Field := TNyxStudioCollectionFieldRef.Text(NyxTextField('caption'));

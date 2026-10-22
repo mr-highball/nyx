@@ -564,6 +564,61 @@ server. `QueryWorkbenchPlatform` can supply an already known LCL unit target
 such as `i386-win32`. This command does not qualify full Studio/history/own
 saved-generated application flows or the separate actual-browser input gate.
 
+## Studio query-control choices
+
+A bound table's collection Inspector separates the authored query from the
+commands its users may operate. Table choices control filtering, sorting and
+single/multiple sort keys. Each column can narrow filtering, sorting, operators
+and text comparison according to its scalar family. Applying one complete form
+uses one ordinary collection intent and the paired document/Pascal history.
+Changing an option alone remains a draft. Unrelated title, sizing, selection or
+column edits preserve every surviving raw query-control declaration.
+
+“Use Nyx defaults” removes that one explicit table/column policy. An absent
+choice stays absent in saved/source output; resolved defaults are not silently
+written back. On a reusable instance this creates the same local whole-binding
+override as other collection edits. “Inherit binding” instead removes the local
+binding override and resumes its current definition, including its policies.
+Clearing one policy does not merge that property from an ancestor.
+
+The ordinary queue carries typed `scaTableQuery`, `scaColumnQuery`,
+`scaDefaultTableQuery` and `scaDefaultColumnQuery` proposals. Setters contain the
+matching immutable `TNyxTableQueryPolicy` or `TNyxColumnQueryPolicy`; default actions
+contain no policy. All four require the captured full effective-spec/schema
+baseline. A changed owner, field family, binding or pending Pascal draft refuses
+before the accepted pair changes. Runtime filters remain independent user-session
+contributions rather than authored defaults.
+
+The existing collection patch transports those same intents, using closed
+`table-query`, `column-query`, `default-table-query` and `default-column-query`
+action names at the external JSON boundary. The strict decoder and advertised
+schema share the baseline, table projection, field-family and payload rules.
+Complete binding transport admits strict version7 query-control descriptors;
+the older versions keep their former shapes when no policy was declared.
+
+`tools/build.ps1 -Target query-authoring -QueryAuthoringPlatform i386-win32
+-QueryAuthoringEvidenceDirectory <new-directory>` is the maintained ordinary
+policy-form regression. It executes native1280/390 and compiles matching browser
+assertions without launching a host. Source release is not qualification: current
+results and the still-required event/discovery, own Save/Open/generated application
+and actual-browser gates are recorded in [WORK](../WORK.md#table-query-policy-authoring--2026-10-21).
+
+The policy regression owns each native process and bounds execution to 300 seconds
+by default (`-QueryAuthoringTimeoutSeconds`). A timeout retains the raw stdout,
+stderr and process receipt; an interrupted run proves neither passing input nor
+clean teardown. `-QueryAuthoringDiagnostic` runs the same native1280 fixture and
+assertions with phase markers, leaving 390 and browser compilation unattempted.
+It is a diagnostic gate; it does not replace full target/width qualification.
+
+The current diagnostic reached144 checks at native1280 before that limit,
+without an assertion failure or overall pass. Repeated checked-build refreshes
+took18-24 seconds and Apply about47 seconds; existing phase/layout profiling is
+the next investigation. Queue compatibility passes126 native checks with a
+clean heap. Native390, matching new-consumer browser compilation and the complete
+ordinary authored journey remain unqualified. Keep interrupted logs and do not
+infer clean teardown from a forced stop. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
+records the exact source/evidence boundary.
+
 ## Bounded semantic query authoring
 
 The existing `nyx_collections` tool now supplies `query` predicate pages and

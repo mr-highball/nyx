@@ -2,6 +2,140 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Table query policy authoring — 2026-10-21
+
+The diagnostic is now terminal and independently reviewed. Immutable audit
+`22088A978075935607D46C7B70724DBB9CD5AAD202282A2A0B2BE0020054B011`
+verifies all12 owned/1807 Pascal/foreign13/extra8 pins after all three actual
+jobs were root joined. Native queue126 passes with a clean heap and matching
+browser compilation; all three fresh compilers have zero owned/seven upstream
+RTL warnings. Reuse the four unaffected initial product/sizing compilers and
+clean sizing40, with only the trace consumer and queue fixture changed from
+the first Pascal freeze. Ten actual compiler attempts all succeeded; the seven
+compiler current-source composite is not full P4A or a new browser execution.
+
+Native1280 reaches144 checks/stage2 before the exact owned300s process guard
+interrupts Ready after opening the integer form. The native wrapper94360 is
+joined exit1; queue88143 joins exit0 and browser returns0 directly. Initial Run
+finishes in16.328s; bindings open21.125s, tab replacement17.937/22.250s, table/
+column Apply46.984/47.703s, and completed Undo/Redo23-24s. The earlier stopped
+run was therefore not evidence of a deadlock. This trace proves expensive finite
+work, without identifying an exact internal bottleneck. The interrupted run has
+no overall passing, heap or teardown claim; preserve both interruptions and
+the initial stale-queue failure. The process receipt's executable=null is a
+retained metadata defect, separate from root's repeated actual live PID38648/
+path/creation-time observations and the precise Process object's stop ownership.
+
+Stop the current budget. Existing layout traversal/linear binding lookup are
+source hypotheses only. Next is one separately reviewed observation using the
+existing NYX_STUDIO_PROFILE/NYX_LCL_LAYOUT_PROFILE hooks on the SAME unchanged
+consumer at1280, one compiler/one300s run. It must distinguish composition,
+realization, native build, Sync/layout and source phases before any production
+repair. Repair only the launch-path receipt in that tool scope, keeping the
+original null field and audit. No390/browser/compatibility replay or product
+repair is released now. P4B's independent schema/discovery/Inspector/agent/source
+impact map is ready for later; all original acceptance and P4C remain open.
+This completed diagnostic batch advances core no-closure31 to32, without a DONE
+move, credit or relaxed predicate/wait. Root owns documentation/checkpoint only;
+all Pascal/guides pause after that checkpoint until separate source release.
+
+### Historical P4A admission notes (superseded)
+
+The following preparation and first-admission notes retain their original scopes
+and failures. The joined diagnostic result above owns current status; these older
+future admissions and pre-compiler statements release no additional run or edit.
+
+The previous backlog-only reply verified the already-filed user request, but
+added no new product progress. This continuation returns to the bounded P4A
+diagnostic. Root independently verified that removing only the Trace helper and
+call lines from EE1CEAA1 recovers first695F7BB9 exactly after newline normalization;
+all predicates, inputs, fixtures and60s/2400 waits remain. Forms46568516 stays
+exact. Helper independently accepts root queue4DCB7718/build186400A9/private
+qualifierE20D64D0/guide8B9C09CB. Both source scopes are ready/paused; root may
+freeze12owned/1807Pascal/foreign13/extra8 and admit only three compilers/two native
+outcomes: one actual1280 diagnostic and repaired queue native/browser. Reuse the
+four unaffected initial product/sizing compilers plus clean sizing40. Stop at
+the actual phase result before any new repair. No390/newconsumerbrowser/host,
+new source scope, original closure or credit follows; core31 carries.
+
+Initial admission is joined and retained in immutable auditD4F47903: all seven
+actual jobs are terminal and11owned/1807Pascal/foreign13/extra8 stay exact. Seven
+compilers pass; sizing40native passes clean and matching browser compiles. Both
+Studio mains compile. Queue browser compiles, but native stops at the old private
+version5 oracle; unchanged production has emitted version9 since the prior
+baseline and still reads historical5. The failed queue heap is clean.
+
+The new actual1280 Studio run passes its descriptor/admission prefix and prints
+the exact client width, then remains CPU-bound without phase markers. Root
+verified its exact PID6044/path/creation instant, retained the observation and
+stopped only that qualification process; parent57878 is joined exit1. Do not
+claim passing native input, cleanup or a clean heap for an interrupted run.
+Native390 and matching new consumer browser were not attempted. The first
+creation-time guard refused a DateTime/text representation mismatch before any
+effect; the successful stop compared the same instant as UTC ticks.
+
+Separate narrow source release now preserves all production/forms46568516.
+Helper may add only flushed constructor/Ready/stage/input markers to the same
+consumer, retaining every fixture, predicate, expression and wait. Root owns a
+minimal stale queue oracle repair: current version9 and current request roundtrip,
+plus real legacy version5 shape/admission/identity proof. Root also adds a300s
+per-native owned-process bound in build/private diagnostic orchestration; an
+interrupted run stays incomplete. Review/freeze all12 owned paths before three
+compilers/two native outcomes: one diagnostic native1280 plus repaired queue
+native/browser. Reuse the four unaffected product/sizing compilers using exact
+Pascal dependency boundaries. No consumer390/browser execution or new source
+variant follows until that diagnostic locates its expensive call. Core31 and
+all original criteria/credit remain open; this is an evidence-directed repair,
+not a smaller acceptance or a reason to rerun unrelated consumers.
+
+Previous turn made progress: c553930 refined and pushed the reviewed backlog;
+the original seven usefulness02 criteria and core no-closure31 remain unchanged.
+All P3 actual jobs are joined. Root rechecked1806 Pascal/foreign13/extra6 before
+this separate reviewed P4A source release. The deliverable is a real Inspector
+form for table/column query-control policy, preserving choices during unrelated
+edits and applying each complete form as one existing paired history intent.
+This advances original criterion6; full event/help/source/semantic agreement and
+the own saved/generated/browser journey remain P4B/C, not replaced by this packet.
+
+Exact11 owned paths and retained preimages are in ignored
+`.local/query-authoring-paths-private.json`. Root owns typed intent validation/
+codec/replay and raw-policy preservation, pending-source refusal, collection
+patch/schema parity, maintained build and documentation. Lil' Scooty owns only
+the existing ordinary collection Inspector and a new independent actual-control
+consumer. Four appended typed setter/default actions use mandatory exact schema/
+full effective-spec baseline; former actions/encodings remain unchanged. A local
+whole-spec override follows existing selected-owner admission. Library defaults
+clear one raw declaration; only whole-binding Inherit resumes its ancestor.
+
+The helper's independent capture review found that both hosts already retain the
+existing `inspector-collection-query` subtree through menu-draft capture/restore.
+Put policy forms inside that Card and route their exact live Apply/default buttons
+through existing CaptureNyxStudioQuery. Preserve incomplete draft text, selection,
+pending structural locks and paired source queue; add no host/router state.
+No other source is released, including Kanban05 or P4B event/schema capability.
+
+Both source handoffs are independently reviewed and paused. Root accepted the
+helper's retained Disclosure forms46568516 and actual Studio consumer695F7BB9,
+including real bindings hide/reopen of an invalid draft before correction.
+Pre-reader review repaired two concrete gaps: disabled filtering must preserve
+raw checked operator membership, and advertised v7 columns must require six
+fields with independent nullable sizing/policy slots and non-null promotion.
+The helper accepted root intent814C4864/session889C0EE7/edits81CA8D52 and repaired
+schema66E68A5A; build80E145A6 retains the old command behavior. No compiler or host
+has run. Root may freeze the exact11 owned/1807 Pascal/foreign13/extra8 inputs and
+admit only the fixed plan below; all source/guides remain paused through joins.
+
+Stop source before any reader, independently review both handoffs, freeze all
+owned/Pascal/foreign/extra inputs, then admit eight compilers: new consumer native
+and browser, unchanged column-sizing and collection-queue native/browser, and
+both Studio mains. Four native outcomes are new consumer actual1280/390 plus
+existing sizing/queue once each, all with clean heaps. Runtime-library P3 evidence
+is reused only with its unchanged inputs. Root owns every actual handle/join;
+both agents pause source/guides through readers and exact final audit. Retain
+failures, refuse unreviewed repair scope and do not substitute compilation for
+actual input. Actual browser tests remain behind the already pending user override;
+no host/LAN/MCP/config/worker launch, cleanup/restart or new agent follows.
+
 ## Authored table query readiness — 2026-10-21
 
 Previous goal turn is progress: P3 checkpoint6f56f41 is committed, pushed and

@@ -226,9 +226,10 @@ var
 begin
   AIntent.Validate;
 
-  if (AIntent.Action = scaQuery) and SourceDraftPending then
+  if (AIntent.Action in [scaQuery, scaTableQuery, scaColumnQuery,
+    scaDefaultTableQuery, scaDefaultColumnQuery]) and SourceDraftPending then
   begin
-    { A complete authored query replacement also regenerates managed Pascal.
+    { An authored query or command-policy replacement regenerates managed Pascal.
       Refuse before any mutation while a handwritten draft is pending, matching
       the existing menu/form candidate contract and external paired admission. }
     raise ENyxCollection.Create('Resolve the pending Pascal draft before applying a query');

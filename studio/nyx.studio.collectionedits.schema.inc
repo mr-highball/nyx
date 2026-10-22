@@ -44,6 +44,9 @@ var
   LSpecFour: TNyxText;
   LSpecFive: TNyxText;
   LSpecSix: TNyxText;
+  LSpecSeven: TNyxText;
+  LTableQuery: TNyxText;
+  LColumnQuery: TNyxText;
   LPaging: TNyxText;
   LSizing: TNyxText;
   LTypeAhead: TNyxText;
@@ -195,8 +198,43 @@ begin
     '"paging":' + LPaging + ',"parent":{"type":"string"}', []);
   LSpecSix := StringReplace(LSpecSix, '"selection","query","typeAhead"]',
     '"selection","query","typeAhead","paging"]', []);
+  { Query-control descriptors share the public version-one scalar records.
+    Family-specific operator admission remains with those typed records and
+    the schema-qualified intent; this wire schema does not evaluate queries. }
+  LTableQuery := '{"type":"object","properties":{"version":{"const":1},' +
+    '"enabled":{"type":"boolean"},"filtering":{"type":"boolean"},' +
+    '"sorting":{"type":"boolean"},"sortMode":{"enum":["single","multiple"]}},' +
+    '"required":["version","enabled","filtering","sorting","sortMode"],"additionalProperties":false}';
+  LColumnQuery := '{"type":"object","properties":{"version":{"const":1},' +
+    '"filtering":{"type":"boolean"},"sorting":{"type":"boolean"},' +
+    '"operators":{"anyOf":[{"type":"null"},{"type":"array","maxItems":9,' +
+    '"uniqueItems":true,"items":{"enum":["equal","notEqual","less","atMost",' +
+    '"greater","atLeast","contains","startsWith","endsWith"]}}]},' +
+    '"textComparison":{"enum":["exact","asciiInsensitive"]}},' +
+    '"required":["version","filtering","sorting","operators","textComparison"],' +
+    '"additionalProperties":false,"if":{"properties":{"filtering":{"const":true}}},' +
+    '"then":{"properties":{"operators":{"anyOf":[{"type":"null"},{"type":"array","minItems":1}]}}}}';
+  LSpecSeven := StringReplace(LSpecSix, '"const":6', '"const":7', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"sizing":' + LSizing,
+    '"sizing":{"anyOf":[{"type":"null"},' + LSizing + ']}', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"paging":' + LPaging,
+    '"paging":{"anyOf":[{"type":"null"},' + LPaging + ']}', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"editable":{"type":"boolean"}',
+    '"editable":{"type":"boolean"},"queryControls":{"anyOf":[{"type":"null"},' + LColumnQuery + ']}', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"required":["field","kind","title","editable"]',
+    '"required":["field","kind","title","editable","sizing","queryControls"]', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"parent":{"type":"string"}',
+    '"queryControls":{"anyOf":[{"type":"null"},' + LTableQuery + ']},"parent":{"type":"string"}', []);
+  LSpecSeven := StringReplace(LSpecSeven, '"selection","query","typeAhead","paging"]',
+    '"selection","query","typeAhead","paging","queryControls"]', []);
+  { Version seven requires at least one raw declaration. A null table choice
+    with no column declaration stays an older version; defaults are not saved. }
+  Delete(LSpecSeven, Length(LSpecSeven), 1);
+  LSpecSeven := LSpecSeven + ',"anyOf":[{"properties":{"queryControls":{"type":"object"}}},' +
+    '{"properties":{"columns":{"contains":{"properties":{"queryControls":{"type":"object"}},' +
+    '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
-    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ']}';
+    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -218,9 +256,27 @@ begin
 
     if LAction = scaQuery then
     begin
-      LProperties := LProperties + ',"baseline":{"type":"string","minLength":1},' +
-        '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}';
-      LRequired := LRequired + ',"baseline","query"';
+      LProperties := LProperties + ',"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}';
+      LRequired := LRequired + ',"query"';
+    end;
+
+    if LAction in [scaQuery, scaTableQuery, scaColumnQuery,
+      scaDefaultTableQuery, scaDefaultColumnQuery] then
+    begin
+      LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
+      LRequired := LRequired + ',"baseline"';
+    end;
+
+    if LAction = scaTableQuery then
+    begin
+      LProperties := LProperties + ',"tableQuery":' + LTableQuery;
+      LRequired := LRequired + ',"tableQuery"';
+    end;
+
+    if LAction = scaColumnQuery then
+    begin
+      LProperties := LProperties + ',"columnQuery":' + LColumnQuery;
+      LRequired := LRequired + ',"columnQuery"';
     end;
 
     if NyxStudioCollectionViewAction(LAction) then
@@ -229,7 +285,8 @@ begin
         '"projection":{"enum":["list","table","tree"]}';
 
       if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
-        scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+        scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+        scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -252,7 +309,8 @@ begin
     end;
 
     if LAction in [scaDefault, scaCell, scaTitle, scaMode, scaRemoveColumn, scaAddColumn,
-      scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault] then
+      scaColumnContent, scaColumnFixed, scaColumnFlex, scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
+      scaColumnQuery, scaDefaultColumnQuery] then
     begin
       LProperties := LProperties + ',"field":{"type":"string","minLength":1},' +
         '"kind":{"enum":["text","boolean","integer","number"]}';

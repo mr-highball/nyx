@@ -88,6 +88,23 @@ the seven original criteria below closes from this native-local P3 result.
 P4's remaining work is ordered below. These are finish lines within the original
 criteria6–7, not new completion credit or permission to change source/run readers.
 
+P4A now has a separately reviewed source release in
+[WORK](../WORK.md#table-query-policy-authoring--2026-10-21). It implements ordinary
+policy forms, typed paired intent/admission and preservation only. Native actual
+Inspector/history checks and matching browser/product compilation must qualify
+that result before any local claim. P4B/C and all original acceptance stay open;
+this source release supplies no browser-host authority or new product credit.
+
+P4A's first native journey is still unqualified. The reviewed diagnostic compiles
+and reaches144 actual1280 checks, including table/text-column Apply and paired
+Undo/Redo, before the fixed300s guard interrupts during later form work. It is
+not an overall pass or clean-teardown result. Queue126/native clean and browser
+compilation retain compatibility. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
+owns the exact joined audit, retained failures and repeated18-24s refresh/47s Apply
+observations. Next use existing phase/layout profiling before a production repair;
+do not extend waits, remove checks or treat a smaller run as full P4A. All seven
+criteria remain unchanged and open; core no-closure32 carries.
+
 | Packet | User-visible result and evidence | Preserve / remains required |
 | --- | --- | --- |
 | P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |

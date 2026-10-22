@@ -31,10 +31,16 @@ uses
   nyx.types,
   nyx.behavior,
   nyx.model,
+  nyx.collections.query,
   nyx.studio.session,
   nyx.studio.collectionintent;
 
 type
+  { Stable logical roles for the ordinary query-policy form. Column -1 names
+    the table; nonnegative columns are transport positions whose copied field
+    and scalar family are independently rechecked during capture. }
+  TNyxStudioQueryPolicyField = (sqpfEnabled, sqpfFiltering, sqpfSorting,
+    sqpfSortMode, sqpfTextComparison, sqpfFamilyOperators);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -81,6 +87,16 @@ procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
 procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
   ASession: TNyxStudioSession; AProjection: TNyxNode;
   const APending: TNyxStudioPendingDesign); overload;
+{ Copied control identities for physical hosts and public authoring consumers.
+  They do not authorize a command or identify a column independently of its
+  admitted form's owner/schema/full-binding baseline. }
+function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
+function NyxStudioQueryPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioQueryPolicyField): TNyxText;
+function NyxStudioQueryPolicyOperatorID(AColumn: Integer;
+  AComparison: TNyxQueryComparison): TNyxText;
+function NyxStudioQueryPolicyApplyID(AColumn: Integer): TNyxText;
+function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -144,8 +160,10 @@ uses
   nyx.collections.paging,
   nyx.collections.selection,
   nyx.collections.query.editor,
+  nyx.collections.query.policy,
   nyx.collections.query.preview,
   nyx.collections.bindings,
+  nyx.menu.editor,
   nyx.studio.authoring;
 
 type
@@ -163,7 +181,208 @@ const
     'cell', 'bind', 'scope', 'title', 'mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
     'column-content', 'column-fixed', 'column-flex', 'column-minimum',
-    'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging');
+    'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
+    'table-query', 'column-query', 'default-table-query', 'default-column-query');
+  CQueryEditor = 'inspector-collection-query';
+  CPolicyColumn = 'studio-query-policy-column';
+  CPolicyAction = 'studio-query-policy-action';
+  CPolicyBaseline = 'studio-query-policy-baseline';
+  CPolicyApply = 'apply';
+  CPolicyDefault = 'default';
+  CSingleSort = 'Single key';
+  CMultipleSort = 'Multiple keys';
+  CExactText = 'Exact text';
+  CAsciiText = 'ASCII insensitive';
+  CPolicyFields: array[TNyxStudioQueryPolicyField] of TNyxText =
+    ('enabled', 'filtering', 'sorting', 'sort-mode', 'text-comparison', 'family-operators');
+  CComparisonCaptions: array[TNyxQueryComparison] of TNyxText =
+    ('Equals', 'Does not equal', 'Less than', 'At most', 'Greater than',
+     'At least', 'Contains', 'Starts with', 'Ends with');
+
+function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
+begin
+
+  if AColumn < -1 then
+  begin
+    raise ENyxCollection.Create('A query-policy form requires a table or column');
+  end;
+  Result := CQueryEditor + '-controls-table';
+
+  if AColumn >= 0 then
+  begin
+    Result := CQueryEditor + '-controls-column-' + TNyxText(IntToStr(AColumn));
+  end;
+end;
+
+function NyxStudioQueryPolicyFieldID(AColumn: Integer;
+  AField: TNyxStudioQueryPolicyField): TNyxText;
+begin
+
+  if (Ord(AField) < Ord(Low(TNyxStudioQueryPolicyField))) or
+    (Ord(AField) > Ord(High(TNyxStudioQueryPolicyField))) then
+  begin
+    raise ENyxCollection.Create('Unknown query-policy form field');
+  end;
+  Result := NyxStudioQueryPolicyFormID(AColumn) + '-' + CPolicyFields[AField];
+end;
+
+function NyxStudioQueryPolicyOperatorID(AColumn: Integer;
+  AComparison: TNyxQueryComparison): TNyxText;
+begin
+
+  if (AColumn < 0) or (Ord(AComparison) < Ord(Low(TNyxQueryComparison))) or
+    (Ord(AComparison) > Ord(High(TNyxQueryComparison))) then
+  begin
+    raise ENyxCollection.Create('An operator control requires its exact column and comparison');
+  end;
+  Result := NyxStudioQueryPolicyFormID(AColumn) + '-operator-' +
+    TNyxText(IntToStr(Ord(AComparison)));
+end;
+
+function NyxStudioQueryPolicyApplyID(AColumn: Integer): TNyxText;
+begin
+  Result := NyxStudioQueryPolicyFormID(AColumn) + '-apply';
+end;
+
+function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
+begin
+  Result := NyxStudioQueryPolicyFormID(AColumn) + '-default';
+end;
+
+{ Policy controls are children of the existing query editor. Both Studio hosts
+  already capture that complete subtree through their copied draft owner. These
+  controls have no immediate collection command: only Apply/default captures one
+  complete typed policy, never a sequence of interim invalid declarations. }
+procedure AddQueryPolicyForms(AEditor: TNyxNode; const AOwner: TNyxText;
+  const ASpec: TNyxCollectionViewSpec; ALocked: Boolean);
+var
+  LForm: TNyxNode;
+  LColumn: TNyxCollectionColumn;
+  LTable: TNyxTableQueryPolicy;
+  LPolicy: TNyxColumnQueryPolicy;
+  LIndex, LOperatorIndex: Integer;
+  LChosen: Boolean;
+  LComparison: TNyxQueryComparison;
+  LFamily: TNyxQueryComparisons;
+
+  procedure Toggle(AColumn: Integer; AField: TNyxStudioQueryPolicyField;
+    const ACaption: TNyxText; AValue: Boolean);
+  begin
+    LForm.Add(TNyxNode.Create(nkCheckbox, NyxStudioQueryPolicyFieldID(AColumn, AField))
+      .Configure.Text(ACaption).Value(AValue).Enabled(not ALocked).Done);
+  end;
+
+  procedure Choice(AColumn: Integer; AField: TNyxStudioQueryPolicyField;
+    const ACaption, AChoices, AValue: TNyxText);
+  begin
+    LForm.Add(TNyxNode.Create(nkSelect, NyxStudioQueryPolicyFieldID(AColumn, AField))
+      .Configure.Text(ACaption).Items(AChoices).Value(AValue).Enabled(not ALocked).Done);
+  end;
+
+  procedure BeginForm(AColumn: Integer; const ATitle: TNyxText; ADeclared: Boolean);
+  var
+    LStatus: TNyxText;
+    LDisclosure: INyxDisclosure;
+  begin
+    LForm := TNyxNode.Create(nkCard, NyxStudioQueryPolicyFormID(AColumn));
+    LForm.Configure.Padding(8).Gap(6).Surface(True).Done;
+    LForm.SetProp(CPolicyColumn, TNyxText(IntToStr(AColumn)))
+      .SetProp(COwner, AOwner).SetProp(CKey, ASpec.Key.Name)
+      .SetProp(CPolicyBaseline, AEditor.Prop(NyxMenuFormBaselineKey));
+    LForm.Add(TNyxNode.Create(nkHeading, LForm.ID + '-title').Configure.Text(ATitle).Done);
+    LStatus := 'Using Nyx defaults. Apply declares these choices explicitly.';
+
+    if ADeclared then
+    begin
+      LStatus := 'Explicit choices. Use Nyx defaults clears only this policy.';
+    end;
+    LForm.Add(TNyxNode.Create(nkLabel, LForm.ID + '-status').Configure.Text(LStatus).Done);
+
+    if AColumn < 0 then
+    begin
+      AEditor.Add(LForm);
+    end
+    else
+    begin
+      { The existing Disclosure owns only local presentation. Its retained body
+        remains in the query editor's ordinary draft capture subtree. }
+      LDisclosure := NewNyxDisclosure(LForm.ID + '-section').WithText(ATitle);
+      LDisclosure.Configure.Value(False).Surface(False).Done;
+      LDisclosure.BodyColumn.Node.Add(LForm);
+      AEditor.Add(LDisclosure);
+    end;
+  end;
+
+  procedure EndForm(AColumn: Integer);
+  begin
+    LForm.Add(TNyxNode.Create(nkButton, NyxStudioQueryPolicyApplyID(AColumn))
+      .Configure.Text('Apply query controls').Enabled(not ALocked)
+      .Extension(CPolicyAction, CPolicyApply).Done);
+    LForm.Add(TNyxNode.Create(nkButton, NyxStudioQueryPolicyDefaultID(AColumn))
+      .Configure.Text('Use Nyx defaults').Enabled(not ALocked)
+      .Extension(CPolicyAction, CPolicyDefault).Done);
+  end;
+
+begin
+  LTable := ASpec.TableQueryPolicy;
+  BeginForm(-1, 'Table query controls', ASpec.HasTableQueryPolicy);
+  Toggle(-1, sqpfEnabled, 'Enable user query controls', LTable.IsEnabled);
+  Toggle(-1, sqpfFiltering, 'Allow user filtering', LTable.FilterEnabled);
+  Toggle(-1, sqpfSorting, 'Allow user sorting', LTable.SortEnabled);
+
+  if LTable.Mode = nqsmSingle then
+  begin
+    Choice(-1, sqpfSortMode, 'User sort keys', CSingleSort + #10 + CMultipleSort, CSingleSort);
+  end
+  else
+  begin
+    Choice(-1, sqpfSortMode, 'User sort keys', CSingleSort + #10 + CMultipleSort, CMultipleSort);
+  end;
+  EndForm(-1);
+  for LIndex := 0 to ASpec.Count - 1 do
+  begin
+    LColumn := ASpec.ColumnAt(LIndex);
+    LPolicy := LColumn.QueryPolicy;
+    BeginForm(LIndex, LColumn.Title + ' query controls', LColumn.HasQueryPolicy);
+    LForm.SetProp(CField, LColumn.FieldName).SetProp(CKind, NyxStateKindName(LColumn.Kind));
+    Toggle(LIndex, sqpfFiltering, 'Allow filtering this column', LPolicy.FilterEnabled);
+    Toggle(LIndex, sqpfSorting, 'Allow sorting this column', LPolicy.SortEnabled);
+    Toggle(LIndex, sqpfFamilyOperators, 'Use the field family default operators', not LPolicy.HasOperators);
+
+    if LColumn.Kind = nskText then
+    begin
+
+      if LPolicy.TextMode = nqtAsciiInsensitive then
+      begin
+        Choice(LIndex, sqpfTextComparison, 'User text comparison',
+          CExactText + #10 + CAsciiText, CAsciiText);
+      end
+      else
+      begin
+        Choice(LIndex, sqpfTextComparison, 'User text comparison',
+          CExactText + #10 + CAsciiText, CExactText);
+      end;
+    end;
+    LFamily := NyxQueryFamilyComparisons(LColumn.Kind);
+    for LComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
+    begin
+
+      if LComparison in LFamily then
+      begin
+        LChosen := not LPolicy.HasOperators;
+        for LOperatorIndex := 0 to LPolicy.ComparisonCount - 1 do
+        begin
+          LChosen := LChosen or (LPolicy.ComparisonAt(LOperatorIndex) = LComparison);
+        end;
+        LForm.Add(TNyxNode.Create(nkCheckbox,
+          NyxStudioQueryPolicyOperatorID(LIndex, LComparison)).Configure
+          .Text(CComparisonCaptions[LComparison]).Value(LChosen)
+          .Enabled(not ALocked).Done);
+      end;
+    end;
+    EndForm(LIndex);
+  end;
+end;
 
 class function TNyxStudioCollectionChromeIdentity.FromNode(ANode: TNyxNode):
   TNyxStudioCollectionChromeIdentity;
@@ -543,6 +762,11 @@ begin
       NyxControl(ASession.SelectedID), LSchema, LSpec);
     LQueryEditor.Configure.Enabled(not LLocked).Done;
     AddNyxQueryEditorPreview(LQueryEditor);
+
+    if AProjection.ProjectionKind = NyxKindName(nkTable) then
+    begin
+      AddQueryPolicyForms(LQueryEditor.Node, ASession.SelectedID, LSpec, LLocked);
+    end;
     LPanel.Add(LQueryEditor);
     for LFieldIndex := 0 to LSchema.Count - 1 do
     begin
@@ -767,6 +991,294 @@ begin
   Result := (LSource <> nil) and (LSource.Find(AEvent.OriginID) <> nil);
 end;
 
+{ Read only the exact current mounted form. Closed choices and direct role
+  shapes are verified before constructing either immutable policy; the form's
+  copied baseline is rechecked again by the isolated collection candidate. }
+function CaptureQueryPolicy(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LForm, LEditor, LProjection, LRole: TNyxNode;
+  LColumnIndex, LIndex, LExpectedCount, LCount: Integer;
+  LAction, LBaseline, LOwner, LText: TNyxText;
+  LSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LColumn: TNyxCollectionColumn;
+  LReference: TNyxStudioCollectionFieldRef;
+  LFamily: TNyxQueryComparisons;
+  LComparison: TNyxQueryComparison;
+  LOperators: array of TNyxQueryComparison;
+  LTablePolicy: TNyxTableQueryPolicy;
+  LColumnPolicy: TNyxColumnQueryPolicy;
+
+  function Role(const AID: TNyxText; AKind: TNyxKind): TNyxNode;
+  begin
+    Result := LForm.Find(AID);
+
+    if (Result = nil) or (Result.Parent <> LForm) or
+      (Result.Kind <> NyxKindName(AKind)) or
+      (Result.ProjectionKind <> NyxKindName(AKind)) then
+    begin
+      raise ENyxCollection.Create('Use the current query-policy form and its direct typed controls');
+    end;
+  end;
+
+  function Flag(AField: TNyxStudioQueryPolicyField): Boolean;
+  var
+    LValue: TNyxText;
+  begin
+    LValue := Role(NyxStudioQueryPolicyFieldID(LColumnIndex, AField), nkCheckbox)
+      .Prop(NyxAttributeName(atValue));
+
+    if (LValue <> 'true') and (LValue <> 'false') then
+    begin
+      raise ENyxCollection.Create('Query-policy Boolean choices require true or false');
+    end;
+    Result := LValue = 'true';
+  end;
+
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := (AButton <> nil) and (AButton.Prop(CPolicyAction) <> '');
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (AShellRoot = nil) or
+    (AShellRoot.Find(AButton.ID) <> AButton) or (AButton.Parent = nil) then
+  begin
+    raise ENyxCollection.Create('Use the current mounted query-policy action');
+  end;
+  LForm := AButton.Parent;
+  LEditor := AShellRoot.Find(CQueryEditor);
+
+  if (LEditor = nil) or (LEditor.Find(LForm.ID) <> LForm) or
+    (LForm.Kind <> NyxKindName(nkCard)) or
+    (LForm.ProjectionKind <> NyxKindName(nkCard)) or
+    (LEditor.Kind <> NyxKindName(nkCard)) or
+    (LEditor.ProjectionKind <> NyxKindName(nkCard)) or
+    not TryStrToInt(LForm.Prop(CPolicyColumn), LColumnIndex) or
+    (LColumnIndex < -1) then
+  begin
+    raise ENyxCollection.Create('Query-policy action has no current table or column form');
+  end;
+
+  if (LForm.ID <> NyxStudioQueryPolicyFormID(LColumnIndex)) or
+    (LForm.Prop(CPolicyColumn) <> TNyxText(IntToStr(LColumnIndex))) then
+  begin
+    raise ENyxCollection.Create('Query-policy form identity changed');
+  end;
+  LAction := AButton.Prop(CPolicyAction);
+
+  if ((LAction <> CPolicyApply) and (LAction <> CPolicyDefault)) or
+    ((LAction = CPolicyApply) and (AButton.ID <> NyxStudioQueryPolicyApplyID(LColumnIndex))) or
+    ((LAction = CPolicyDefault) and (AButton.ID <> NyxStudioQueryPolicyDefaultID(LColumnIndex))) then
+  begin
+    raise ENyxCollection.Create('Unknown query-policy action');
+  end;
+  Role(NyxStudioQueryPolicyApplyID(LColumnIndex), nkButton);
+  Role(NyxStudioQueryPolicyDefaultID(LColumnIndex), nkButton);
+  LOwner := LForm.Prop(COwner);
+  LBaseline := LForm.Prop(CPolicyBaseline);
+
+  if (LOwner = '') or (ASession.SelectedID <> LOwner) or
+    (LEditor.Prop(NyxMenuFormOwnerKey) <> LOwner) or (LBaseline = '') or
+    (LEditor.Prop(NyxMenuFormBaselineKey) <> LBaseline) or
+    APending.CollectionViewLocked(LOwner) or ASession.SourceDraftPending then
+  begin
+    raise ENyxCollection.Create('Select this table again after pending edits or Pascal drafts');
+  end;
+  LProjection := ASession.SelectedProjection;
+  try
+
+    if (LProjection = nil) or (LProjection.ProjectionKind <> NyxKindName(nkTable)) or
+      not LProjection.HasCollectionView or not LProjection.CollectionView.Defined then
+    begin
+      raise ENyxCollection.Create('Query controls require the selected bound table');
+    end;
+    LSpec := LProjection.CollectionView;
+    LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+
+    if (LForm.Prop(CKey) <> LSpec.Key.Name) or APending.CollectionLocked(LSpec.Key) or
+      (NyxQueryEditorBaseline(LSchema, LSpec) <> LBaseline) then
+    begin
+      raise ENyxCollection.Create('Table binding or schema changed; reopen its current policy form');
+    end;
+    Role(NyxStudioQueryPolicyFieldID(LColumnIndex, sqpfFiltering), nkCheckbox);
+    Role(NyxStudioQueryPolicyFieldID(LColumnIndex, sqpfSorting), nkCheckbox);
+    LExpectedCount := 8;
+
+    if LColumnIndex = -1 then
+    begin
+      Role(NyxStudioQueryPolicyFieldID(-1, sqpfEnabled), nkCheckbox);
+      Role(NyxStudioQueryPolicyFieldID(-1, sqpfSortMode), nkSelect);
+
+      if (LForm.Prop(CField) <> '') or (LForm.Prop(CKind) <> '') then
+      begin
+        raise ENyxCollection.Create('Table query controls cannot impersonate a column');
+      end;
+    end
+    else
+    begin
+
+      if LColumnIndex >= LSpec.Count then
+      begin
+        raise ENyxCollection.Create('The policy column is no longer present');
+      end;
+      LColumn := LSpec.ColumnAt(LColumnIndex);
+
+      if (LForm.Prop(CField) <> LColumn.FieldName) or
+        (LForm.Prop(CKind) <> NyxStateKindName(LColumn.Kind)) then
+      begin
+        raise ENyxCollection.Create('The policy column changed its identity or scalar family');
+      end;
+      LReference := Default(TNyxStudioCollectionFieldRef);
+      for LIndex := 0 to LSchema.Count - 1 do
+      begin
+
+        if (LSchema.FieldAt(LIndex).Name = LColumn.FieldName) and
+          (LSchema.FieldAt(LIndex).Kind = LColumn.Kind) then
+        begin
+          LReference := TNyxStudioCollectionFieldRef.FromMetadata(LSchema.FieldAt(LIndex));
+          Break;
+        end;
+      end;
+
+      if not LReference.Defined then
+      begin
+        raise ENyxCollection.Create('The policy field disappeared or changed its family');
+      end;
+      Role(NyxStudioQueryPolicyFieldID(LColumnIndex, sqpfFamilyOperators), nkCheckbox);
+      LExpectedCount := 7;
+
+      if LColumn.Kind = nskText then
+      begin
+        Role(NyxStudioQueryPolicyFieldID(LColumnIndex, sqpfTextComparison), nkSelect);
+        Inc(LExpectedCount);
+      end;
+      LFamily := NyxQueryFamilyComparisons(LColumn.Kind);
+      for LComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
+      begin
+
+        if LComparison in LFamily then
+        begin
+          Role(NyxStudioQueryPolicyOperatorID(LColumnIndex, LComparison), nkCheckbox);
+          Inc(LExpectedCount);
+        end;
+      end;
+    end;
+
+    if LForm.Count <> LExpectedCount then
+    begin
+      raise ENyxCollection.Create('The policy form structure changed; use its current controls');
+    end;
+    AEdit.Action := sdaCollection;
+    AEdit.Selection := LOwner;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Collection.Key := LSpec.Key;
+    AEdit.Collection.Projection := cpTable;
+    AEdit.Collection.QueryBaseline := LBaseline;
+
+    if LColumnIndex = -1 then
+    begin
+
+      if LAction = CPolicyDefault then
+      begin
+        AEdit.Collection.Action := scaDefaultTableQuery;
+      end
+      else
+      begin
+        LTablePolicy := NyxTableQuery.Enabled(Flag(sqpfEnabled))
+          .Filtering(Flag(sqpfFiltering)).Sorting(Flag(sqpfSorting));
+        LText := Role(NyxStudioQueryPolicyFieldID(-1, sqpfSortMode), nkSelect)
+          .Prop(NyxAttributeName(atValue));
+
+        if LText = CSingleSort then
+        begin
+          LTablePolicy := LTablePolicy.SortMode(nqsmSingle);
+        end
+        else if LText = CMultipleSort then
+        begin
+          LTablePolicy := LTablePolicy.SortMode(nqsmMultiple);
+        end
+        else
+        begin
+          raise ENyxCollection.Create('Choose single or multiple user sort keys');
+        end;
+        AEdit.Collection.Action := scaTableQuery;
+        AEdit.Collection.TableQuery := LTablePolicy;
+      end;
+    end
+    else
+    begin
+      AEdit.Collection.Field := LReference;
+
+      if LAction = CPolicyDefault then
+      begin
+        AEdit.Collection.Action := scaDefaultColumnQuery;
+      end
+      else
+      begin
+        LColumnPolicy := NyxColumnQuery.Filtering(Flag(sqpfFiltering)).Sorting(Flag(sqpfSorting));
+
+        if LColumn.Kind = nskText then
+        begin
+          LText := Role(NyxStudioQueryPolicyFieldID(LColumnIndex, sqpfTextComparison), nkSelect)
+            .Prop(NyxAttributeName(atValue));
+
+          if LText = CExactText then
+          begin
+            LColumnPolicy := LColumnPolicy.TextComparison(nqtExact);
+          end
+          else if LText = CAsciiText then
+          begin
+            LColumnPolicy := LColumnPolicy.TextComparison(nqtAsciiInsensitive);
+          end
+          else
+          begin
+            raise ENyxCollection.Create('Choose exact or ASCII-insensitive text comparison');
+          end;
+        end;
+
+        if not Flag(sqpfFamilyOperators) then
+        begin
+          LOperators := nil;
+          for LComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
+          begin
+
+            if LComparison in LFamily then
+            begin
+              LRole := Role(NyxStudioQueryPolicyOperatorID(LColumnIndex, LComparison), nkCheckbox);
+              LText := LRole.Prop(NyxAttributeName(atValue));
+
+              if (LText <> 'true') and (LText <> 'false') then
+              begin
+                raise ENyxCollection.Create('Operator choices require true or false');
+              end;
+
+              if LText = 'true' then
+              begin
+                LCount := Length(LOperators);
+                SetLength(LOperators, LCount + 1);
+                LOperators[LCount] := LComparison;
+              end;
+            end;
+          end;
+          LColumnPolicy := LColumnPolicy.Operators(LOperators);
+        end;
+        LColumnPolicy.Validate(LColumn.Kind);
+        AEdit.Collection.Action := scaColumnQuery;
+        AEdit.Collection.ColumnQuery := LColumnPolicy;
+      end;
+    end;
+    AEdit.Collection.Validate;
+  finally
+    LProjection.Free;
+  end;
+end;
+
 function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
@@ -777,6 +1289,11 @@ var
   LSchema: TNyxCollectionSchema;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
+
+  if CaptureQueryPolicy(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
   Result := CaptureNyxQueryEditor(AButton, AShellRoot, LChange);
 
   if not Result then
@@ -873,6 +1390,11 @@ begin
   if not LFound then
   begin
     raise ENyxCollection.Create('Unknown collection command');
+  end;
+
+  if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery] then
+  begin
+    raise ENyxCollection.Create('Use the current complete query-policy form');
   end;
 
   if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection,

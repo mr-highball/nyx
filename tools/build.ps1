@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('query-authoring', 'query-workbench', 'query-session', 'query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
@@ -45,6 +45,15 @@ param(
   # Supply a previously known compiler unit target to avoid repeating probes.
   # Empty asks the selected LCL compiler for its destination as other targets do.
   [string]$QueryWorkbenchPlatform,
+  # Ordinary Studio policy forms use a separate NEW evidence packet. No host is
+  # launched; native inputs execute and matching browser assertions are staged.
+  [string]$QueryAuthoringEvidenceDirectory = 'build/query-authoring/maintained',
+  [string]$QueryAuthoringPlatform,
+  # Diagnostic mode keeps the identical assertions/fixture but executes only
+  # native1280. Full qualification still needs390 and matching browser staging.
+  [switch]$QueryAuthoringDiagnostic,
+  [ValidateRange(1, 3600)]
+  [int]$QueryAuthoringTimeoutSeconds = 300,
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -524,8 +533,16 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
 Push-Location $nyxRoot
 try {
   $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
-  if ($Target -eq 'query-workbench') {
-    $nyxWorkbenchRoot = [IO.Path]::GetFullPath($QueryWorkbenchEvidenceDirectory)
+  if ($Target -in @('query-workbench', 'query-authoring')) {
+    $nyxWorkbenchProgram = 'nyx_table_query_controls'
+    $nyxWorkbenchDirectory = $QueryWorkbenchEvidenceDirectory
+    $nyxWorkbenchPlatform = $QueryWorkbenchPlatform
+    if ($Target -eq 'query-authoring') {
+      $nyxWorkbenchProgram = 'nyx_table_query_studio_controls'
+      $nyxWorkbenchDirectory = $QueryAuthoringEvidenceDirectory
+      $nyxWorkbenchPlatform = $QueryAuthoringPlatform
+    }
+    $nyxWorkbenchRoot = [IO.Path]::GetFullPath($nyxWorkbenchDirectory)
     if (Test-Path -LiteralPath $nyxWorkbenchRoot) {
       throw 'Query workbench evidence directory must be NEW; retain earlier results'
     }
@@ -534,7 +551,6 @@ try {
     New-Item -ItemType Directory -Path $nyxWorkbenchNative, $nyxWorkbenchBrowser | Out-Null
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxWorkbenchLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
-    $nyxWorkbenchPlatform = $QueryWorkbenchPlatform
     if (-not $nyxWorkbenchPlatform) {
       $nyxWorkbenchPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     }
@@ -548,22 +564,73 @@ try {
       "-Fu$nyxWorkbenchLazarus/components/lazutils/lib/$nyxWorkbenchPlatform",
       "-Fu$nyxWorkbenchLazarus/packager/units/$nyxWorkbenchPlatform",
       "-FU$nyxWorkbenchNative", "-FE$nyxWorkbenchNative")
-    Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @('tests/nyx_table_query_controls.lpr'))
+    Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
     $nyxWorkbenchSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
-    foreach ($nyxWorkbenchWidth in @(1280, 390)) {
+    $nyxWorkbenchWidths = @(1280, 390)
+    if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
+      $nyxWorkbenchWidths = @(1280)
+    }
+    foreach ($nyxWorkbenchWidth in $nyxWorkbenchWidths) {
       $nyxWorkbenchEvidence = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth)
       $nyxWorkbenchRunLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '.log')
-      & (Join-Path $nyxWorkbenchNative ('nyx_table_query_controls' + $nyxWorkbenchSuffix)) `
-        $nyxWorkbenchEvidence $nyxWorkbenchWidth *> $nyxWorkbenchRunLog
-      $nyxWorkbenchRunExit = $LASTEXITCODE
+      if ($Target -eq 'query-authoring') {
+        # Own this precise process handle; a timeout never targets a server or
+        # another run. Keep both raw streams and the interrupted receipt. The
+        # test's original internal waits and assertions remain unchanged.
+        $nyxAuthoringOutputLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stdout.log')
+        $nyxAuthoringErrorLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stderr.log')
+        $nyxAuthoringStartParameters = @{
+          FilePath = Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)
+          ArgumentList = '"{0}" {1}' -f $nyxWorkbenchEvidence, $nyxWorkbenchWidth
+          RedirectStandardOutput = $nyxAuthoringOutputLog
+          RedirectStandardError = $nyxAuthoringErrorLog
+          PassThru = $true
+        }
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+          $nyxAuthoringStartParameters.WindowStyle = 'Hidden'
+        }
+        $nyxAuthoringProcess = Start-Process @nyxAuthoringStartParameters
+        $nyxAuthoringDeadline = [DateTime]::UtcNow.AddSeconds($QueryAuthoringTimeoutSeconds)
+        $nyxAuthoringTimedOut = $false
+        while (-not $nyxAuthoringProcess.WaitForExit(1000)) {
+          if ([DateTime]::UtcNow -ge $nyxAuthoringDeadline) {
+            $nyxAuthoringTimedOut = $true
+            $nyxAuthoringProcess.Kill()
+            $nyxAuthoringProcess.WaitForExit()
+            break
+          }
+        }
+        $nyxAuthoringProcess.WaitForExit()
+        $nyxWorkbenchRunExit = $nyxAuthoringProcess.ExitCode
+        [ordered]@{pid=$nyxAuthoringProcess.Id;executable=$nyxAuthoringProcess.StartInfo.FileName;
+          width=$nyxWorkbenchWidth;exit=$nyxWorkbenchRunExit;timedOut=$nyxAuthoringTimedOut;
+          timeoutSeconds=$QueryAuthoringTimeoutSeconds;stdout=$nyxAuthoringOutputLog;
+          stderr=$nyxAuthoringErrorLog} | ConvertTo-Json | Set-Content -LiteralPath `
+          (Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-process-private.json')) -Encoding UTF8
+        $nyxAuthoringProcess.Dispose()
+        Get-Content -LiteralPath $nyxAuthoringOutputLog | Set-Content -LiteralPath $nyxWorkbenchRunLog -Encoding UTF8
+        Get-Content -LiteralPath $nyxAuthoringErrorLog | Add-Content -LiteralPath $nyxWorkbenchRunLog -Encoding UTF8
+        if ($nyxAuthoringTimedOut) {
+          Get-Content -LiteralPath $nyxWorkbenchRunLog
+          throw "Owned native policy test did not complete within $QueryAuthoringTimeoutSeconds seconds at $nyxWorkbenchWidth; interrupted evidence retained"
+        }
+      } else {
+        & (Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)) `
+          $nyxWorkbenchEvidence $nyxWorkbenchWidth *> $nyxWorkbenchRunLog
+        $nyxWorkbenchRunExit = $LASTEXITCODE
+      }
       Get-Content -LiteralPath $nyxWorkbenchRunLog
       if ($nyxWorkbenchRunExit -ne 0) { throw "Actual table query controls failed at $nyxWorkbenchWidth" }
+    }
+    if ($Target -eq 'query-authoring' -and $QueryAuthoringDiagnostic) {
+      Write-Host 'Native1280 diagnostic only;390 and matching browser compilation remain required.'
+      exit 0
     }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxWorkbenchRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Futests', '-Fustudio', '-Fisrc', '-Fitests', '-Fistudio',
-      "-FE$nyxWorkbenchBrowser", 'tests/nyx_table_query_controls.lpr')
+      "-FE$nyxWorkbenchBrowser", "tests/$nyxWorkbenchProgram.lpr")
     Copy-Item -LiteralPath $nyxWorkbenchRuntime -Destination (Join-Path $nyxWorkbenchBrowser 'rtl.js')
     $nyxWorkbenchHTML = @"
 <!doctype html>
@@ -571,7 +638,7 @@ try {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nyx table query workbench</title>
-<body><script src="rtl.js"></script><script src="nyx_table_query_controls.js"></script>
+<body><script src="rtl.js"></script><script src="$nyxWorkbenchProgram.js"></script>
 <script>rtl.run();</script></body>
 </html>
 "@
