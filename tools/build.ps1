@@ -52,6 +52,9 @@ param(
   # Diagnostic mode keeps the identical assertions/fixture but executes only
   # native1280. Full qualification still needs390 and matching browser staging.
   [switch]$QueryAuthoringDiagnostic,
+  # Existing Pascal clocks/counters only; neither assertions nor compiler safety
+  # flags change. Combine with Diagnostic for one bounded native1280 observation.
+  [switch]$QueryAuthoringProfile,
   [ValidateRange(1, 3600)]
   [int]$QueryAuthoringTimeoutSeconds = 300,
   # A NEW packet for retained disclosure controls and generated reconstruction.
@@ -564,6 +567,9 @@ try {
       "-Fu$nyxWorkbenchLazarus/components/lazutils/lib/$nyxWorkbenchPlatform",
       "-Fu$nyxWorkbenchLazarus/packager/units/$nyxWorkbenchPlatform",
       "-FU$nyxWorkbenchNative", "-FE$nyxWorkbenchNative")
+    if ($Target -eq 'query-authoring' -and $QueryAuthoringProfile) {
+      $nyxWorkbenchFlags += @('-dNYX_STUDIO_PROFILE', '-dNYX_LCL_LAYOUT_PROFILE')
+    }
     Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchFlags + @("tests/$nyxWorkbenchProgram.lpr"))
     $nyxWorkbenchSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
     $nyxWorkbenchWidths = @(1280, 390)
@@ -579,8 +585,11 @@ try {
         # test's original internal waits and assertions remain unchanged.
         $nyxAuthoringOutputLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stdout.log')
         $nyxAuthoringErrorLog = Join-Path $nyxWorkbenchRoot ("native-" + $nyxWorkbenchWidth + '-stderr.log')
+        # Start-Process may not retain StartInfo.FileName after exit. Keep the
+        # exact absolute launch input independently for this NEW run's receipt.
+        $nyxAuthoringExecutable = Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)
         $nyxAuthoringStartParameters = @{
-          FilePath = Join-Path $nyxWorkbenchNative ($nyxWorkbenchProgram + $nyxWorkbenchSuffix)
+          FilePath = $nyxAuthoringExecutable
           ArgumentList = '"{0}" {1}' -f $nyxWorkbenchEvidence, $nyxWorkbenchWidth
           RedirectStandardOutput = $nyxAuthoringOutputLog
           RedirectStandardError = $nyxAuthoringErrorLog
@@ -602,7 +611,7 @@ try {
         }
         $nyxAuthoringProcess.WaitForExit()
         $nyxWorkbenchRunExit = $nyxAuthoringProcess.ExitCode
-        [ordered]@{pid=$nyxAuthoringProcess.Id;executable=$nyxAuthoringProcess.StartInfo.FileName;
+        [ordered]@{pid=$nyxAuthoringProcess.Id;executable=$nyxAuthoringExecutable;
           width=$nyxWorkbenchWidth;exit=$nyxWorkbenchRunExit;timedOut=$nyxAuthoringTimedOut;
           timeoutSeconds=$QueryAuthoringTimeoutSeconds;stdout=$nyxAuthoringOutputLog;
           stderr=$nyxAuthoringErrorLog} | ConvertTo-Json | Set-Content -LiteralPath `

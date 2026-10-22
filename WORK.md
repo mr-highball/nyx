@@ -4,6 +4,77 @@
 
 ## Table query policy authoring — 2026-10-21
 
+The existing-profile packet is terminal/root joined, with source unchanged from
+its reviewed freeze. Sole wrapper73461 returns1 after its precise child13748
+hits the same300s bound at144 checks/stage2. One native compiler has zero warnings.
+Immutable auditA86741A3 pins12owned/1807Pascal/foreign13/extra8; NEW process receipt
+contains the exact launch executable, while the oldnull receipt/22088 audit remain
+untouched. No overall pass, heap, teardown,390 or matching new browser claim follows.
+
+Preserve one metadata failure and its correction: the first phase-facts parser
+accepted only `paint-capture,0`, omitting a completed capture16ms at raw line963.
+Original facts/audit stay immutable. Addendum35901296 pins corrected890DD6AB:
+13 completed paints plus one incomplete, without a compiler/runtime replay.
+Largest-parent attribution is unchanged. Initial and bindings shell render cost
+14.687/17.453s; largest later completed shell interval is21.672s. Composition
+235-437ms and new Inspector construction188ms are small. Its build interval
+2.438s includes HandleNeeded2.250s; layout656ms, first Sync1.485s, retirement
+interval1.546s and repeated later layout calls are nested contributors. Static
+`section-replace,2` identifies Inspector, not2ms. No exclusive bottleneck or
+release-performance claim follows from these overlapping checked-build labels.
+
+After two bounded diagnostics, stop additional profiling variants. The source
+shows that coarse host locking would not suppress explicit Nyx layout, and a
+group unlock after pure publication could introduce an unsafe fallible cleanup.
+A narrow MoveHost notification guard is still a hypothesis, not a demonstrated
+repair sufficient for the complete journey. Do not turn either into a speculative
+new publication API while the original functional workflow remains unfinished.
+
+The next proposed deliverable returns to the complete unchanged11-stage native
+1280/390 authoring journey and matching browser compilation. Its many Apply/
+Undo/Redo cycles exceed what a300s diagnostic can cover at observed checked-build
+costs. Independently review a workload-derived whole-executable budget using the
+existing explicit timeout option, retaining its default300s and EVERY original
+60s/2400 bound/assertion/fixture. A larger total test allocation is not a relaxed
+per-operation deadline or performance acceptance. Keep performance under the
+existing measured-performance owner. No new reader is released yet. Root owns
+documentation/checkpoint only; all Pascal remains paused. This completed packet
+advances core no-closure32 to33, no original criterion, DONE or credit closes.
+
+Independent workload review now supports a fixed1800s outer budget PER WIDTH
+for that next full packet. The unchanged fixture has10 mutations and10 History
+calls (20 Undo/Redo actions), plus setup/navigation/disclosure/draft recovery:
+about52 paint-equivalents is a planning estimate, not an event-count promise.
+Observed mutation47.8/48.5s and history23.7-24.7s timings project about980s for
+the30 primary actions, with roughly100-200s of other work. Compact duration is
+unproven.1800s is a bounded functional allocation, not guaranteed acceptance;
+Ready still rejects an operation exceeding60s after ProcessMessages returns.
+Next separate tool-only release explicitly passes the existing timeout option,
+then reviews/freezes before one ordinary native compile/two native widths and
+matching browser compile. Reuse unaffected product/sizing/queue evidence; no
+additional profiling or speculative production optimization is needed first.
+
+### Historical existing-profile preparation (superseded)
+
+Current packet is an existing-hook profile observation. Previous01c89bf is
+progress, committed/pushed/remote-verified; all prior actual readers remain
+joined. Root revalidated1807Pascal/foreign13/extra8 before releasing only build's
+opt-in profile flag, the NEW run's exact launch-path receipt, private qualifier
+and related documentation. All Pascal including forms46568516/consumerEE1CEAA1
+stays byte-exact. Existing helper reviews tool scope and profile attribution;
+no product change is released. Retain old null executable receipt and all audits.
+
+Independent source review and a fresh freeze precede ONE native compiler plus
+ONE unchanged actual1280 run, with existing NYX_STUDIO_PROFILE and
+NYX_LCL_LAYOUT_PROFILE defines and the SAME300s owned-process guard. No assertion,
+fixture,60s/2400 wait or compiler safety flag changes. No390/browser/compatibility
+replay follows. The decision is which completed internal phase owns the measured
+refresh cost; nested timings/counters are not additive and checked-build timing
+is not release-performance proof. Stop at that actual result before any separate
+production repair. Core32/original acceptance/P4B/C remain open; no credit/DONE.
+
+### Retained diagnostic result (previous packet)
+
 The diagnostic is now terminal and independently reviewed. Immutable audit
 `22088A978075935607D46C7B70724DBB9CD5AAD202282A2A0B2BE0020054B011`
 verifies all12 owned/1807 Pascal/foreign13/extra8 pins after all three actual

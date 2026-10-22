@@ -101,9 +101,26 @@ Undo/Redo, before the fixed300s guard interrupts during later form work. It is
 not an overall pass or clean-teardown result. Queue126/native clean and browser
 compilation retain compatibility. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
 owns the exact joined audit, retained failures and repeated18-24s refresh/47s Apply
-observations. Next use existing phase/layout profiling before a production repair;
-do not extend waits, remove checks or treat a smaller run as full P4A. All seven
-criteria remain unchanged and open; core no-closure32 carries.
+observations. The following existing-profile observation retains the same source;
+do not relax internal waits, remove checks or treat a smaller run as full P4A.
+All seven criteria remain unchanged and open.
+
+The next bounded observation uses the existing native phase/layout profile hooks
+on the unchanged consumer at1280 with the same300s guard. Only opt-in build/tool
+plumbing and future process-receipt identity changed. That observation is now
+terminal:144/stage2 interrupted again, one compiler with zero warnings. Corrected
+metadata retains13 complete paints and one incomplete; repeated shell rendering
+dominates. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21) retains the
+first parser error/addendum, nested timing limits and exact source boundaries.
+Stop further profile variants. Next review a whole-executable budget covering
+the complete unchanged11-stage journey using the existing explicit timeout option,
+while its default300s,60s Ready deadline,2400 global Drive-poll bound and all
+predicates stay unchanged. This is functional qualification, not release-performance acceptance.
+Independent workload review supports a fixed1800s PER WIDTH outer allocation:
+the unchanged fixture contains10 mutations and20 Undo/Redo actions plus other
+input. Compact duration is still unproven; an internal60s failure must still fail.
+No run or speculative production repair is released by this note. Full P4A remains
+the original authored journey; core no-closure33 carries without credit/DONE.
 
 | Packet | User-visible result and evidence | Preserve / remains required |
 | --- | --- | --- |
@@ -111,11 +128,11 @@ criteria remain unchanged and open; core no-closure32 carries.
 | P4B — Discover and operate semantically | Shared event/help discovery exposes exact Before/Changed query names and copied Details, bounded binding reads expose requested declared/effective policies, existing revision-aware changes accept strict v7 and the same typed intents | Before is sequential/cancellable, Changed follows normal policy; Inspector and semantic policy choices must agree with admission. No new server or runtime rollout is implied |
 | P4C — Prove the authored workbench | Actual Studio two-instance configuration, paired Undo/Redo, real Save/Open and that journey's OWN strictly admitted emitted Pascal, independently compiled/executed at both widths; actual browser input under an applicable host override | Preserve definition/sibling/source/default isolation, callbacks, query/paging/hidden selection/draft/lifetime behavior. P3 authored8441/A861 exports cannot substitute for this new saved/generated pair |
 
-Read-only readiness review found a concrete P4A prerequisite:
-`ApplyNyxStudioCollectionViewIntent` reconstructs views for title/mode/scope/
-selection/parent/column/sizing edits but does not copy declared query policies.
-Preserve table policy only when `HasTableQueryPolicy`, and each surviving column
-policy only when `HasQueryPolicy`, matching field identity and family. Copying
+The historical pre-P4A readiness review found a concrete prerequisite:
+`ApplyNyxStudioCollectionViewIntent` reconstructed views for title/mode/scope/
+selection/parent/column/sizing edits without copying declared query policies.
+P4A now preserves table policy only when `HasTableQueryPolicy`, and each surviving
+column policy only when `HasQueryPolicy`, matching field identity and family. Copying
 resolved defaults unconditionally would corrupt absence/version compatibility.
 Adding/removing a column must preserve every survivor; a new column starts with
 absent policy. Keep deliberate fresh-bind and last-column-clear behavior.

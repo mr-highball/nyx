@@ -612,12 +612,25 @@ It is a diagnostic gate; it does not replace full target/width qualification.
 
 The current diagnostic reached144 checks at native1280 before that limit,
 without an assertion failure or overall pass. Repeated checked-build refreshes
-took18-24 seconds and Apply about47 seconds; existing phase/layout profiling is
-the next investigation. Queue compatibility passes126 native checks with a
+took18-24 seconds and Apply about47 seconds. Existing phase/layout profiling
+locates shell rendering as the dominant completed parent interval, up to21.7s;
+nested control construction, handle initialization and layout are not additive.
+Queue compatibility passes126 native checks with a
 clean heap. Native390, matching new-consumer browser compilation and the complete
 ordinary authored journey remain unqualified. Keep interrupted logs and do not
 infer clean teardown from a forced stop. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
 records the exact source/evidence boundary.
+
+`-QueryAuthoringProfile` adds only the existing Pascal phase/layout clocks and
+counters to the native checked build. Combine it with `-QueryAuthoringDiagnostic`
+to observe that same1280 journey under the same execution bound. Composition,
+realization, build, Sync/layout and source timings can overlap; use completed
+enclosing phases and their nested detail rather than summing all printed totals.
+This diagnostic does not establish release-build performance or full acceptance.
+The complete functional journey has many Apply/Undo/Redo cycles. Its separately
+reviewed total execution budget can use the existing explicit timeout option;
+that does not change the300s default or original operation deadlines/assertions.
+Current results and any future admission remain in WORK.
 
 ## Bounded semantic query authoring
 

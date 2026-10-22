@@ -1,5 +1,47 @@
 # Working in Nyx
 
+QUERY AUTHORING P4A PROFILE JOINED (2026-10-21): sole actual reader73461 is
+terminal/root joined. Immutable A86741A3 pins12owned/1807Pascal/foreign13/extra8
+exact; one native compiler passes with zero warnings. Actual unchanged1280
+reaches144/stage2 before the same300s guard interrupts Ready. No assertion or
+internal wait failure was reported; no overall pass/heap/teardown proof follows.
+NEW receipt pins13748/exact executable; oldnull receipt/22088 audit stay exact.
+Retain one metadata error: original phase parser counted only capture0, missing
+one capture16ms. Addendum35901296/corrected890DD6AB preserve originals and record
+13 completed paints plus one incomplete; no rerun/source change. Larger shell
+intervals take14.687-21.672s; composition235-437ms and control creation188ms are small.
+Native HandleNeeded2250ms, repeated layouts and prepared section work contribute;
+overlapping labels are not additive or proof of one exclusive bottleneck.
+Reassess after these two diagnostic budgets: stop further profiling variants.
+Independent workload review supports the next complete unchanged native1280/390
+functional journey with a fixed1800s PER WIDTH outer execution budget, retaining
+the default300s setting and original60s/2400 waits/assertions. Current cap is
+not an original per-operation acceptance deadline. Performance remains open;
+no speculative coarse host lock or new publication API is released. Root owns
+docs/checkpoint only; all Pascal stays paused until separate source release.
+Next tool-only release must explicitly pass the existing timeout option and
+freeze before2compilers/native1280+390; reuse unchanged compatibility evidence.
+Core32 advances33; P4A/B/C/all original gates remain open, no DONE/credit. No
+host/browser/LAN/MCP/config/worker, cleanup/restart or extra agent. WORK/private
+state owns exact evidence, remaining budget review and return path.
+
+QUERY AUTHORING P4A EXISTING-PROFILE TOOL RELEASE (2026-10-21): prior01c89bf
+is progress, committed/pushed/remote-verified. All actual diagnostic readers
+remain joined;1807Pascal/foreign13/extra8 match before this release. Root owns
+ONLY build's opt-in QueryAuthoringProfile flag (the two existing Pascal hooks),
+NEW process-receipt executable launch input, private qualifier and guide/WORK/
+task02/handoff. All Pascal including forms46568516/consumerEE1CEAA1 stays exact.
+Existing helper owns read-only output-attribution and independent tool review.
+No compiler until source review/freeze; then fixed ONE native compiler and ONE
+unchanged1280 run with SAME300s guard, original60s/2400 waits and all assertions.
+No390/newconsumerbrowser or compatibility replay. Preserve original null receipt,
+both interrupted runs and all audits. Attribute completed composition/realize/
+build/Sync/layout/source phases without adding overlapping totals or treating
+checked-build timing as release performance. Stop at actual profile result;
+no production repair is released. Core32 and original/P4B/C gates remain open,
+no DONE/credit. No host/browser/LAN/MCP/config/worker, cleanup/restart or extra
+agent follows. WORK/private state owns exact scope and every actual handle/join.
+
 QUERY AUTHORING P4A DIAGNOSTIC JOINED (2026-10-21): all3 actual readers are
 terminal/root joined; immutable audit22088A97 and independent helper review
 verify12owned/1807Pascal/foreign13/extra8 exact. Three compilers pass with zero
