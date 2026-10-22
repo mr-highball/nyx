@@ -23,6 +23,15 @@ The source-bound [user-action matrix](../docs/control-usefulness.md) covers the
 default catalog and maps concrete gaps to these existing owners; source inspection
 does not qualify new runtime behavior or accept this task's three full criteria.
 
+The 2026-10-22 follow-up refines the same backlog with concrete application-user
+checks: task02 distinguishes bound tables/defaults from literal `Items` and
+requires discoverable native filter commands; task03 specifies editable pins at
+both logical edges, compact column recovery and exact copy/export semantics;
+task04 covers List/Tree search versus typeahead, ancestor context, hidden
+selection and independent paused/live views. These are refinements of existing
+criteria, not duplicate tickets. Forms, choices, editable text, media, feedback,
+navigation and canvas remain covered by the full matrix and owners below.
+
 The review also refines this task's existing usable-family outcomes below. These
 are implementation stories under the original criteria, not new task identities
 or completed features. Each requires managed typed configuration, meaningful

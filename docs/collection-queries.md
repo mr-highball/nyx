@@ -557,6 +557,18 @@ is not a semantic query veto. Changed carries actual accepted old/new snapshots
 after grouped publication and supports ordinary scheduler policies. The host
 passes exact runtime and design identities independently for reusable instances.
 
+P4B candidate source now exposes these exact event identities through ordinary
+discovery and Inspector, with sequential-only Before policy and independent
+object Details. Generated callbacks use the existing enum-valued factory and
+required imports, including empty streams. Shared schema restrictions also
+govern zero-callback admission and bounded semantic reads. An absent event with
+an allowed non-sequential initial choice is created as one Policy-before-Add
+candidate, retaining one Undo and exact TODO navigation. This integration is
+source in qualification, not an additional runtime workbench, browser-input
+result or rollout. [Event policy capabilities](events.md#event-policy-capabilities-source-in-qualification)
+and [WORK](../WORK.md#query-event-authoring-p4b-separate-source-release--2026-10-22)
+retain its evidence boundary.
+
 `tools/build.ps1 -Target query-workbench` takes a new
 `QueryWorkbenchEvidenceDirectory`, runs the ordinary native consumer at actual
 client1280/390, and compiles matching browser assertions without launching a

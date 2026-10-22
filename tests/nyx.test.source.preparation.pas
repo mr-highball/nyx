@@ -37,7 +37,7 @@ implementation
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.codec, nyx.codegen, nyx.source, nyx.source.preparation,
-  nyx.event.payload, nyx.controls,
+  nyx.event.payload, nyx.controls, nyx.scheduler,
   nyx.test.source.structural;
 
 type
@@ -180,8 +180,103 @@ var
       'invalid creator transport cannot publish or change the global registry');
   end;
 
+  { Exercise transport as a public detached reader. The fixture is deliberately
+    independent of the process registry, so refusal cannot be hidden by an
+    unrelated creator registration or a private serializer shortcut. }
+  procedure PolicySnapshotChecks;
+  var
+    LLegacy: TNyxDataValue;
+    LRestricted: TNyxDataValue;
+    LAll: TNyxDataValue;
+    LPacket: TNyxDataValue;
+    LMask: Integer;
+    LRead: INyxSchemaSnapshot;
+    LInspection: INyxSchemaInspection;
+
+    function EventData(const AName: TNyxText; APolicyField: Boolean;
+      const AMask: TNyxDataValue): TNyxDataValue;
+    var
+      LFields: array of TNyxDataField;
+    begin
+      SetLength(LFields, 11);
+      LFields[0] := NyxField('trigger', NyxData(Ord(ntNamed)));
+      LFields[1] := NyxField('name', NyxData(AName));
+      LFields[2] := NyxField('payload', NyxSignalPayload.ToData);
+      LFields[3] := NyxField('title', NyxData('Policy fixture'));
+      LFields[4] := NyxField('description', NyxData('A detached creator event.'));
+      LFields[5] := NyxField('browser', NyxData(Ord(ncCustom)));
+      LFields[6] := NyxField('native', NyxData(Ord(ncCustom)));
+      LFields[7] := NyxField('optional', NyxData(False));
+      LFields[8] := NyxField('producer', NyxData(True));
+      LFields[9] := NyxField('contexts', NyxData(0));
+      LFields[10] := NyxField('routes', NyxArray([]));
+
+      if APolicyField then
+      begin
+        SetLength(LFields, 12);
+        LFields[11] := NyxField('policies', AMask);
+      end;
+      Result := NyxObject(LFields);
+    end;
+
+    function Packet(AVersion: Integer;
+      const AEvents: array of TNyxDataValue): TNyxDataValue;
+    begin
+      Result := NyxObject([
+        NyxField('version', NyxData(AVersion)),
+        NyxField('revision', NyxData(LRevision)),
+        NyxField('schemas', NyxArray([NyxObject([
+          NyxField('kind', NyxData('policy-fixture')),
+          NyxField('properties', NyxArray([])),
+          NyxField('events', NyxArray(AEvents))])]))]);
+    end;
+
+  begin
+    LRevision := NyxSchemaRevision;
+    LLegacy := EventData('changed', False, NyxNull);
+    LPacket := Packet(1, [LLegacy]);
+    LRead := ReadNyxSchemaSnapshot(LPacket);
+    Check(Supports(LRead, INyxSchemaInspection, LInspection),
+      'version-one snapshots expose optional copied event inspection');
+    Check((LRead.ToData.ToJSON = LPacket.ToJSON) and
+      (LInspection.EventAt(0, 0).AllowedPolicies =
+        [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)]),
+      'unrestricted version-one event fields and ordering stay byte-canonical');
+    LRestricted := EventData('changed', True, NyxData(1));
+    LAll := EventData('other-event', True, NyxData(15));
+    LPacket := Packet(2, [LRestricted, LAll]);
+    LRead := ReadNyxSchemaSnapshot(LPacket);
+    LInspection := nil;
+    Check(Supports(LRead, INyxSchemaInspection, LInspection),
+      'version-two snapshots expose the same optional inspection interface');
+    Check((LRead.ToData.ToJSON = LPacket.ToJSON) and
+      (LInspection.EventAt(0, 0).AllowedPolicies = [neSequential]) and
+      (LInspection.EventAt(0, 1).AllowedPolicies =
+        [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)]),
+      'restricted version two uses uniform closed rows and preserves independent policy sets');
+    LRead := ReadNyxSchemaSnapshot(Packet(2, [EventData('changed', True, NyxData(15))]));
+    Check(LRead.ToData.ToJSON = Packet(1, [LLegacy]).ToJSON,
+      'redundant all-policy version two normalizes to canonical version one');
+    RejectWire(Packet(1, [LRestricted]));
+    RejectWire(Packet(2, [LRestricted, LLegacy]));
+    for LMask := -1 to 0 do
+    begin
+      RejectWire(Packet(2, [EventData('changed', True, NyxData(LMask))]));
+    end;
+    RejectWire(Packet(2, [EventData('changed', True, NyxData(16))]));
+    RejectWire(Packet(2, [EventData('changed', True, NyxNull)]));
+    RejectWire(Packet(2, [EventData('changed', True, NyxData('1'))]));
+    RejectWire(Packet(2, [EventData('changed', True, NyxData(True))]));
+    RejectWire(Packet(2, [EventData('changed', True, NyxData(1.5))]));
+    RejectWire(ReplaceField(LPacket, 'version', NyxData(4294967297.0)));
+    RejectWire(ReplaceField(LPacket, 'version', NyxNull));
+    Check(LPacket.ToJSON = Packet(2, [LRestricted, LAll]).ToJSON,
+      'strict admission and normalization do not mutate caller-owned transport');
+  end;
+
 begin
   Result := 0;
+  PolicySnapshotChecks;
   LBefore := CaptureNyxSchemas;
   LDocument := TNyxDocument.Create;
   LCandidate := nil;

@@ -240,6 +240,16 @@ function TNyxStudioPendingDesign.EventLocked(const AOwner: TNyxText;
 var
   LIndex: Integer;
 begin
+  for LIndex := 0 to High(EventLocks) do
+  begin
+
+    if (EventLocks[LIndex].Owner = AOwner) and
+      (EventLocks[LIndex].Trigger = ATrigger) and
+      (EventLocks[LIndex].Name.Name = AName.Name) then
+    begin
+      Exit(True);
+    end;
+  end;
   for LIndex := 0 to High(Events) do
   begin
 
@@ -1190,6 +1200,9 @@ var
   LHandlerPatch: INyxHandlerPatch;
   LHandlerPlan: INyxHandlerPlan;
   LHandlerRows: TNyxHandlerEditResults;
+  LPolicyAddOwner: TNyxText;
+  LPolicyAddEvent: TNyxCallbackEvent;
+  LPolicyAddPolicy: TNyxExecutionPolicy;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -1476,6 +1489,15 @@ begin
             LReservedSource, LCallbackResults);
           LSession.AdoptProject(LPair);
           FCallbackResults := EncodeNyxCallbackResults(LCallbackResults);
+
+          if TryNyxCallbackPolicyAddShape(FRequest.FEdit.Callbacks,
+            LPolicyAddOwner, LPolicyAddEvent, LPolicyAddPolicy) then
+          begin
+            { The strict decoder supplies shape only. Candidate execution above
+              has checked the owner, exact stream and permitted policy before
+              returning this sole addition. Generic multi-add stays plural. }
+            FAddedHandler := LCallbackResults[1].Registration.Handler;
+          end;
         end;
       sdaCollection:
         begin
@@ -1771,6 +1793,14 @@ var
   LPair: TNyxDataValue;
   LPrepared: INyxPreparedSource;
   LEvent: TNyxStudioEventIntent;
+  LAddition: Boolean;
+  LAdditionOwner: TNyxText;
+  LPairEvent: TNyxCallbackEvent;
+  LPairPolicy: TNyxExecutionPolicy;
+  LPairAddition: Boolean;
+  LEvents: TNyxAuthoredEventInfos;
+  LIndex: Integer;
+  LPolicyMatches: Boolean;
 begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
@@ -1797,8 +1827,28 @@ begin
     LOwner.FAddedHandler := NyxHandler(AData.Field('addedHandler').AsText);
   end;
 
-  if ((ARequest.FEdit.Action <> sdaEvent) or
-    (ARequest.FEdit.Event.Action <> seaAdd) or LPrepared.Diagnostic.Defined) and
+  LAddition := (ARequest.FEdit.Action = sdaEvent) and
+    (ARequest.FEdit.Event.Action = seaAdd);
+  LAdditionOwner := ARequest.FEdit.Selection;
+  LEvent := ARequest.FEdit.Event;
+  LPairAddition := False;
+
+  if ARequest.FEdit.Action = sdaCallbacks then
+  begin
+    LPairAddition := TryNyxCallbackPolicyAddShape(ARequest.FEdit.Callbacks,
+      LAdditionOwner, LPairEvent, LPairPolicy);
+
+    if LPairAddition then
+    begin
+      LAddition := True;
+      LEvent := Default(TNyxStudioEventIntent);
+      LEvent.Action := seaAdd;
+      LEvent.Trigger := LPairEvent.Trigger;
+      LEvent.Name := LPairEvent.Name;
+    end;
+  end;
+
+  if (not LAddition or LPrepared.Diagnostic.Defined) and
     (LOwner.FAddedHandler.Name <> '') then
   begin
     raise ENyxModel.Create('Only an admitted callback addition returns a handler');
@@ -1808,9 +1858,8 @@ begin
   begin
     LPrepared.Take(LOwner.FDocument, LOwner.FWorkspace);
 
-    if (ARequest.FEdit.Action = sdaEvent) and (ARequest.FEdit.Event.Action = seaAdd) then
+    if LAddition then
     begin
-      LEvent := ARequest.FEdit.Event;
       LEvent.Handler := LOwner.FAddedHandler;
       LEvent.ID := Default(TNyxCallbackRef);
 
@@ -1827,9 +1876,31 @@ begin
         raise ENyxModel.Create('Callback addition receipt cannot reuse an existing helper');
       end;
 
-      if not HasEventRegistration(LOwner.FDocument.Find(ARequest.FEdit.Selection), LEvent) then
+      if not HasEventRegistration(LOwner.FDocument.Find(LAdditionOwner), LEvent) then
       begin
         raise ENyxModel.Create('Callback addition receipt differs from its admitted registration');
+      end;
+
+      if LPairAddition then
+      begin
+        LPolicyMatches := False;
+        LEvents := NyxAuthoredEvents(LOwner.FDocument.Find(LAdditionOwner));
+        for LIndex := 0 to High(LEvents) do
+        begin
+
+          if (LEvents[LIndex].Trigger = LEvent.Trigger) and
+            (LEvents[LIndex].Name.Name = LEvent.Name.Name) then
+          begin
+            LPolicyMatches := LEvents[LIndex].Policy = LPairPolicy;
+            Break;
+          end;
+        end;
+
+        if not LPolicyMatches or
+          (NyxHandlerSourceLine(LOwner.FSource, LEvent.Handler) < 1) then
+        begin
+          raise ENyxModel.Create('Callback policy/add receipt differs from its requested policy or helper');
+        end;
       end;
     end;
 

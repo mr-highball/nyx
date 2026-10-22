@@ -1657,6 +1657,7 @@ begin
         NyxField('payloadOptional', NyxData(LEvents[LIndex].PayloadOptional)),
         NyxField('declaredProducer', NyxData(LEvents[LIndex].DeclaredProducer)),
         NyxField('contexts', NyxEventContextsData(LEvents[LIndex].Contexts)),
+        NyxField('allowedPolicies', NyxEventPoliciesData(LEvents[LIndex].AllowedPolicies)),
         NyxField('totalRoutes', NyxData(Length(LEvents[LIndex].Routes))),
         NyxField('routes', NyxArray(LRouteItems)),
         NyxField('browser', NyxData(NyxCapabilityText(LEvents[LIndex].Browser))),

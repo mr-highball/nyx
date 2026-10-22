@@ -762,6 +762,7 @@ uses
   nyx.typeahead,
   nyx.collections.columns,
   nyx.collections.query.policy,
+  nyx.collections.query.controls,
   nyx.collections.paging,
   nyx.root.types,
   nyx.controls,
@@ -845,7 +846,7 @@ type
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode,
     vkCollectionQuery, vkCollectionPredicate, vkCollectionSort, vkQueryField,
     vkSortDirection, vkQueryTextComparison, vkQueryComparison, vkQuerySortMode, vkPlatform,
-    vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
+    vkSplitOrientation, vkSemanticEvent, vkQueryWorkbenchEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
     vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
@@ -1925,6 +1926,8 @@ begin
 
     RegisterEnum(vkSemanticEvent, Ord(LSemantic), NyxSemanticSymbol(LSemantic));
   end;
+  RegisterEnum(vkQueryWorkbenchEvent, Ord(nqweBeforeChange), 'nqweBeforeChange');
+  RegisterEnum(vkQueryWorkbenchEvent, Ord(nqweChanged), 'nqweChanged');
   for LTrigger := Low(TNyxTrigger) to High(TNyxTrigger) do
   begin
 
@@ -3816,6 +3819,19 @@ begin
           end;
           Result.Kind := vkEvent;
           Result.Text := NyxSemantic(TNyxSemanticEvent(LArgs[0].Ordinal)).Name;
+          Exit;
+        end;
+
+        if LName = 'nyxqueryworkbenchevent' then
+        begin
+
+          if LArgs[0].Kind <> vkQueryWorkbenchEvent then
+          begin
+            Fail('NyxQueryWorkbenchEvent requires a TNyxQueryWorkbenchEvent enum');
+          end;
+          Result.Kind := vkEvent;
+          Result.Text := NyxQueryWorkbenchEvent(
+            TNyxQueryWorkbenchEvent(LArgs[0].Ordinal)).Name;
           Exit;
         end;
 
@@ -6697,6 +6713,7 @@ begin
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.kanban.intent') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.date.range') or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.collections.query.controls') or
         (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.master.detail') then
       begin
         LPrefix := WithNyxImport(LPrefix, LGeneratedImports.UnitAt(LImportIndex).Name);

@@ -28,7 +28,9 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.catalog,
   nyx.codec, nyx.codegen, nyx.source, nyx.composition, nyx.contract, nyx.schema,
   nyx.behavior, nyx.events, nyx.callbacks, nyx.scheduler, nyx.event.payload, nyx.state,
+  nyx.binding,
   nyx.master.detail, nyx.collections, nyx.collections.view.types,
+  nyx.collections.query.controls,
   nyx.flow, nyx.flow.types, nyx.flow.declarations, nyx.flow.routes,
   nyx.flow.route.model, nyx.logic, nyx.resources, nyx.event.discovery,
   nyx.studio.session, nyx.studio.inspector, nyx.studio.projects, nyx.studio.agents,
@@ -60,6 +62,25 @@ type
     LegacyKind: TNyxEventPayloadKind;
     UniformDetails: Boolean;
     OptionalDetails: Boolean;
+    procedure Execute;
+  end;
+  { Scoped creator metadata exercises collisions without publishing a global
+    table schema or granting the native producer a custom Emit capability. }
+  TQuerySchemaCheck = class(TInterfacedObject, INyxSchemaAction)
+  public
+    Document: TNyxDocument;
+    LegacyPayload: TNyxEventPayloadSpec;
+    OptionalPayload: Boolean;
+    Conflict: Boolean;
+    procedure Execute;
+  end;
+  { Validate effective empty streams independently of table bindings/routes.
+    The same action also checks a custom component-reference projection. }
+  TQueryAdmissionCheck = class(TInterfacedObject, INyxSchemaAction)
+  public
+    Document: TNyxDocument;
+    RefusalExpected: Boolean;
+    CheckProxy: Boolean;
     procedure Execute;
   end;
 
@@ -145,6 +166,487 @@ begin
       NyxField('routes', NyxArray(LRoutes))]);
   end;
   Result := NyxArray(LEvents).ToJSON;
+end;
+
+function QueryCreatorSnapshot(const APayload: TNyxEventPayloadSpec;
+  AOptional: Boolean; AAllowed: TNyxExecutionPolicies;
+  const AKind: TNyxText = 'query-metadata-probe'): INyxSchemaSnapshot;
+var
+  LPolicy: TNyxExecutionPolicy;
+  LMask: Integer;
+begin
+  LMask := 0;
+  for LPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+  begin
+
+    if LPolicy in AAllowed then
+    begin
+      LMask := LMask or (1 shl Ord(LPolicy));
+    end;
+  end;
+  Result := ReadNyxSchemaSnapshot(NyxObject([
+    NyxField('version', NyxData(2)), NyxField('revision', NyxData(41)),
+    NyxField('schemas', NyxArray([NyxObject([
+      NyxField('kind', NyxData(AKind)),
+      NyxField('properties', NyxArray([])), NyxField('events', NyxArray([NyxObject([
+        NyxField('trigger', NyxData(Ord(ntNamed))),
+        NyxField('name', NyxData(NyxQueryWorkbenchEvent(nqweBeforeChange).Name)),
+        NyxField('payload', APayload.ToData),
+        NyxField('title', NyxData('Creator query proposal')),
+        NyxField('description', NyxData('An explicit creator producer.')),
+        NyxField('browser', NyxData(Ord(ncCustom))),
+        NyxField('native', NyxData(Ord(ncCustom))),
+        NyxField('optional', NyxData(AOptional)),
+        NyxField('producer', NyxData(True)), NyxField('contexts', NyxData(0)),
+        NyxField('routes', NyxArray([])), NyxField('policies', NyxData(LMask))])]))])]))]));
+end;
+
+procedure TQuerySchemaCheck.Execute;
+var
+  LEvents: TNyxEventSchemas;
+  LDetails: TNyxEventSchemas;
+  LEvent: Integer;
+  LDeclared: TNyxEventSchema;
+  LRejected: Boolean;
+begin
+
+  if Conflict then
+  begin
+    LRejected := False;
+    try
+      NyxEventsMetadata(Document.Find('services'), Document);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'disjoint native/creator policy restrictions refuse discovery');
+    LRejected := False;
+    try
+      ValidateNyxDocumentProperties(Document);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'a bound table refuses disjoint policies even without authored callbacks');
+    Exit;
+  end;
+  LEvents := NyxEventsMetadata(Document.Find('services'), Document);
+  LDetails := NyxEventDetailsMetadata(Document.Find('services'), Document);
+  LEvent := EventIndex(LEvents, NyxQueryWorkbenchEvent(nqweBeforeChange));
+  Check((LEvents[LEvent].Payload.ToData.ToJSON = LegacyPayload.ToData.ToJSON) and
+    (LEvents[LEvent].PayloadOptional = OptionalPayload) and
+    LEvents[LEvent].DeclaredProducer and
+    (LEvents[LEvent].AllowedPolicies = [neSequential]) and
+    (LEvents[LEvent].Title = 'Creator query proposal'),
+    'query discovery preserves explicit creator payload/optionality/title and intersects policy');
+  Check(FindNyxNamedEvent(Document.Find('services'),
+    NyxQueryWorkbenchEvent(nqweBeforeChange), LDeclared) and LDeclared.DeclaredProducer and
+    (LDeclared.Payload.ToData.ToJSON = LegacyPayload.ToData.ToJSON),
+    'native metadata merging does not rewrite creator custom-Emit admission');
+  LEvent := EventIndex(LDetails, NyxQueryWorkbenchEvent(nqweBeforeChange));
+
+  if (LegacyPayload.Kind = nepData) and
+    (LegacyPayload.ToData.Field('dataKind').AsText = 'object') then
+  begin
+    Check(LDetails[LEvent].Payload.Defined and
+      (LDetails[LEvent].Payload.Kind = nepData) and
+      (LDetails[LEvent].PayloadOptional = OptionalPayload),
+      'agreeing native/creator object Details retain explicit optionality');
+  end
+  else
+  begin
+    Check(not LDetails[LEvent].Payload.Defined,
+      'differing creator/native Details never fabricate a uniform object');
+  end;
+end;
+
+procedure TQueryAdmissionCheck.Execute;
+var
+  LRejected: Boolean;
+  LFaceRejected: Boolean;
+  LRuntime, LProxy: TNyxNode;
+  LBefore, LBeforeEvents: TNyxText;
+  LMetadata: TNyxEventSchemas;
+  LEvent: Integer;
+
+  function EventBytes(ANode: TNyxNode): TNyxText;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.ID + ':';
+
+    if ANode.Extensions.Has(NyxExtension(NyxCallbacksKey)) then
+    begin
+      Result := Result + ANode.Extensions.Value(NyxExtension(NyxCallbacksKey)).ToJSON;
+    end;
+    Result := Result + #10;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Result := Result + EventBytes(ANode.Children[LChild]);
+    end;
+  end;
+
+  procedure CheckFace(ANode: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    try
+      ValidateNyxProperties(ANode);
+    except
+      on ENyxModel do
+      begin
+        LFaceRejected := True;
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      CheckFace(ANode.Children[LChild]);
+    end;
+  end;
+begin
+  LRejected := False;
+  try
+    ValidateNyxDocumentProperties(Document);
+  except
+    on ENyxModel do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected = RefusalExpected,
+    'effective restricted empty stream admission is independent of collection/route guards');
+  { The SAME detached projection is useful for diagnosis, but cannot become a
+    physical face with a forbidden event policy. Nothing repairs saved events. }
+  LBefore := TNyxCodec.Encode(Document);
+  LRuntime := RealizeNyxView(Document, Document.Pages[0]);
+  try
+
+    if CheckProxy then
+    begin
+      LProxy := LRuntime.Find(NyxQualifiedID('plain-instance', 'plain-template'));
+      Check((LProxy <> nil) and (LProxy.Kind = 'projection-proxy') and
+        (LProxy.ProjectionKind = NyxKindName(nkLabel)),
+        'a custom reference retains its own semantic kind and the definition physical face');
+      LMetadata := NyxEventsMetadata(LProxy, Document);
+      LEvent := EventIndex(LMetadata, NyxQueryWorkbenchEvent(nqweBeforeChange));
+      Check((LEvent >= 0) and (LMetadata[LEvent].AllowedPolicies = [neUIQueue]),
+        'the custom reference has its own explicitly scoped creator-policy restriction');
+    end;
+    LBeforeEvents := EventBytes(LRuntime);
+    ApplyNyxBindings(LRuntime, Document.State);
+    Check((EventBytes(LRuntime) = LBeforeEvents) and
+      (LRuntime.Find('plain-policy').Prop(NyxAttributeName(atText)) =
+        Document.Find('plain-policy').Prop(NyxAttributeName(atText))) and
+      (TNyxCodec.Encode(Document) = LBefore),
+      'read-only property projection preserves values, authored policies and the original document');
+    LFaceRejected := False;
+    CheckFace(LRuntime);
+    Check(LFaceRejected = RefusalExpected,
+      'the same projection retains strict single-face event-policy admission');
+  finally
+    LRuntime.Free;
+  end;
+end;
+
+procedure QueryEventChecks;
+var
+  LDocument: TNyxDocument;
+  LTable: INyxControl;
+  LPage: INyxColumn;
+  LMetadata: TNyxEventSchemas;
+  LDetails: TNyxEventSchemas;
+  LDeclared: TNyxEventSchema;
+  LBefore: TNyxText;
+  LRegistry: TNyxText;
+  LEvent: Integer;
+  LIndex: Integer;
+  LRejected: Boolean;
+  LAction: TQuerySchemaCheck;
+  LLease: INyxSchemaAction;
+  LSnapshot: INyxSchemaSnapshot;
+  LSource: TNyxText;
+  LWorkspace: TNyxSourceWorkspace;
+  LCandidate: TNyxDocument;
+  LOpenSource: TNyxText;
+  LPayload: TNyxEventPayloadSpec;
+  LAgent: TNyxAgentSession;
+  LReply: TNyxDataValue;
+
+  procedure StandaloneSourceChecks;
+  var
+    LDoc: TNyxDocument;
+    LFrame: TNyxSourceWorkspace;
+    LNode: TNyxNode;
+    LRead: TNyxDocument;
+    LBaseline: TNyxText;
+    LRendered: TNyxText;
+
+    function HasQueryImport(const ASource: TNyxText): Boolean;
+    var
+      LImports: TNyxImportClause;
+      LImport: Integer;
+    begin
+      Result := False;
+      { Reconciliation can append the required unit immediately before the
+        semicolon. Parse its identity rather than requiring a trailing comma. }
+      LImports := ReadNyxImports(ASource, nisInterface);
+      for LImport := 0 to LImports.Count - 1 do
+      begin
+
+        if SameText(LImports.UnitAt(LImport).Name, 'nyx.collections.query.controls') then
+        begin
+          Exit(True);
+        end;
+      end;
+    end;
+  begin
+    LDoc := TNyxDocument.Create;
+    LFrame := TNyxSourceWorkspace.Create;
+    try
+      LDoc.AddPage(TNyxNode.Create(nkColumn, 'standalone'));
+      LNode := TNyxNode.Create(nkLabel, 'notice');
+      LDoc.Pages[0].Add(LNode);
+      LBaseline := TNyxCodegen.Generate(LDoc);
+      Check(not HasQueryImport(LBaseline),
+        'unrelated companions do not gain an unused query-event import');
+      LBaseline := StringReplace(LBaseline, 'implementation' + #10,
+        'implementation' + #10 + '{ Keep this authored frame. }' + #10, []);
+      LFrame.Accept(LDoc, LBaseline);
+      LNode.Configure.OnClick(NyxQueryWorkbenchEvent(nqweBeforeChange)).Done;
+      LRendered := TNyxCodegen.Generate(LDoc);
+      Check(HasQueryImport(LRendered) and
+        (Pos('.OnClick(NyxQueryWorkbenchEvent(nqweBeforeChange))', LRendered) > 0),
+        'Emit-only standalone controls request the typed query-event unit');
+      NyxCallbacks(LNode).OnNamed(NyxQueryWorkbenchEvent(nqweChanged)).Policy(neUIQueue);
+      LRendered := LFrame.Render(LDoc);
+      Check(HasQueryImport(LRendered) and
+        (Pos('.OnNamed(NyxQueryWorkbenchEvent(nqweChanged))', LRendered) > 0) and
+        (Pos('{ Keep this authored frame. }', LRendered) > 0),
+        'a retained older frame gains the query factory import without losing authored content');
+      LRead := LFrame.Candidate(LDoc, LRendered);
+      try
+        Check(TNyxCodec.Encode(LRead) = TNyxCodec.Encode(LDoc),
+          'standalone Emit and zero-callback stream reconstruct exact meaning');
+      finally
+        LRead.Free;
+      end;
+    finally
+      LFrame.Free;
+      LDoc.Free;
+    end;
+  end;
+
+  procedure EmptyStreamAdmissionChecks;
+  var
+    LDoc: TNyxDocument;
+    LAction: TQueryAdmissionCheck;
+    LLease: INyxSchemaAction;
+    LSnapshot, LProxySnapshot: INyxSchemaSnapshot;
+    LDefinition: INyxControl;
+    LInstance: INyxControl;
+    LPlain: TNyxNode;
+  begin
+    LDoc := TNyxDocument.Create;
+    LAction := TQueryAdmissionCheck.Create;
+    LLease := LAction;
+    LSnapshot := QueryCreatorSnapshot(NyxSignalPayload, False, [neUIQueue]);
+    try
+      LDoc.AddPage(TNyxNode.Create(nkColumn, 'plain-policy-home'));
+      LPlain := TNyxNode.Create(NyxCustomKind('query-metadata-probe'), 'plain-policy');
+      LPlain.Configure.CustomProjection(NyxCustomKind(NyxKindName(nkLabel)))
+        .Text('Accepted policy preview').Done;
+      LDoc.Pages[0].Add(LPlain);
+      NyxCallbacks(LPlain).OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange)).Policy(neSequential);
+      LAction.Document := LDoc;
+      LAction.RefusalExpected := True;
+      LSnapshot.Execute(LLease);
+      NyxCallbacks(LPlain).OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange)).Policy(neUIQueue);
+      NyxCallbacks(LPlain).OnClick.Policy(neThreaded);
+      LAction.RefusalExpected := False;
+      LSnapshot.Execute(LLease);
+      LDefinition := NewNyxControl(NyxCustomKind('query-metadata-probe'), 'plain-template');
+      LDefinition.Configure.CustomProjection(NyxCustomKind(NyxKindName(nkLabel))).Done;
+      LDoc.AddComponent(LDefinition);
+      LInstance := NewNyxControl(NyxCustomKind('projection-proxy'), 'plain-instance');
+      LInstance.Configure.CustomProjection(NyxCustomKind(NyxKindName(nkComponent)))
+        .Component(NyxComponent('plain-template')).Done;
+      NyxCallbacks(LInstance.Node).OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange)).Policy(neSequential);
+      LDoc.Pages[0].Add(LInstance);
+      LAction.RefusalExpected := True;
+      LAction.CheckProxy := True;
+      { A custom reference dispatches through its own creator kind. Restrict
+        that kind explicitly rather than inventing transitive schema authority
+        from the definition's different semantic identity. }
+      LProxySnapshot := QueryCreatorSnapshot(NyxSignalPayload, False,
+        [neUIQueue], 'projection-proxy');
+      LProxySnapshot.Execute(LLease);
+    finally
+      LAction.Document := nil;
+      LLease := nil;
+      LSnapshot := nil;
+      LProxySnapshot := nil;
+      LDefinition := nil;
+      LInstance := nil;
+      LDoc.Free;
+    end;
+  end;
+begin
+  StandaloneSourceChecks;
+  EmptyStreamAdmissionChecks;
+  LDocument := TNyxDocument.Create;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  LAction := TQuerySchemaCheck.Create;
+  LLease := LAction;
+  try
+    LRegistry := CaptureNyxSchemas.ToData.ToJSON;
+    LDocument.Collections.Define(NyxCollection('services'),
+      NyxCollectionSchema.Text(NyxTextField('name'), ''), []);
+    LPage := NewNyxColumn('query-home');
+    LDocument.AddPage(LPage);
+    LTable := NewNyxControl(NyxCustomKind('query-metadata-probe'), 'services');
+    LTable.Configure.CustomProjection(NyxCustomKind(NyxKindName(nkTable))).Done;
+    LTable.Binds.Collection(NyxCollectionView(NyxCollection('services'))
+      .Column(NyxTextField('name'), 'Service')).Done;
+    LPage.Add(LTable);
+    LBefore := TNyxCodec.Encode(LDocument);
+    LMetadata := NyxEventsMetadata(LTable.Node, LDocument);
+    LDetails := NyxEventDetailsMetadata(LTable.Node, LDocument);
+    LEvent := EventIndex(LMetadata, NyxQueryWorkbenchEvent(nqweBeforeChange));
+    Check((LEvent >= 0) and (LMetadata[LEvent].Payload.Kind = nepSignal) and
+      not LMetadata[LEvent].DeclaredProducer and
+      (LMetadata[LEvent].AllowedPolicies = [neSequential]),
+      'bound projected tables discover the native sequential Before signal');
+    LEvent := EventIndex(LDetails, NyxQueryWorkbenchEvent(nqweBeforeChange));
+    Check((LDetails[LEvent].Payload.ToData.ToJSON = NyxDataPayload(ndObject).ToData.ToJSON) and
+      not LDetails[LEvent].PayloadOptional,
+      'native query Before has required independent object Details');
+    LEvent := EventIndex(LMetadata, NyxQueryWorkbenchEvent(nqweChanged));
+    Check((LEvent >= 0) and (LMetadata[LEvent].AllowedPolicies =
+      [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)]),
+      'committed query Changed retains ordinary scheduler policy choices');
+    Check(not FindNyxNamedEvent(LTable.Node, NyxQueryWorkbenchEvent(nqweBeforeChange), LDeclared),
+      'discovery-only native query names grant no custom Emit capability');
+    Check((TNyxCodec.Encode(LDocument) = LBefore) and
+      (CaptureNyxSchemas.ToData.ToJSON = LRegistry),
+      'query discovery leaves the document and creator registry unchanged');
+    LTable.Configure.OnClick(NyxQueryWorkbenchEvent(nqweBeforeChange)).Done;
+    LMetadata := NyxEventsMetadata(LTable.Node, LDocument);
+    LDetails := NyxEventDetailsMetadata(LTable.Node, LDocument);
+    LEvent := EventIndex(LMetadata, NyxQueryWorkbenchEvent(nqweBeforeChange));
+    Check((Length(LMetadata[LEvent].Routes) = 1) and
+      (LMetadata[LEvent].Payload.Kind = nepSignal) and
+      (LMetadata[LEvent].AllowedPolicies = [neSequential]),
+      'same-name physical alias retains its route and native policy restriction');
+    LEvent := EventIndex(LDetails, NyxQueryWorkbenchEvent(nqweBeforeChange));
+    Check(not LDetails[LEvent].Payload.Defined,
+      'a physical signal and native object Details remain honestly mixed');
+    LTable.Configure.Clear(atEmit).Done;
+    LAction.Document := LDocument;
+    for LIndex := 0 to 4 do
+    begin
+      case LIndex of
+        0: LPayload := NyxScalarPayload(NyxIntegerDomain.Range(0, 10));
+        1: LPayload := NyxSignalPayload;
+      else
+        LPayload := NyxDataPayload(ndObject);
+      end;
+      LAction.LegacyPayload := LPayload;
+      LAction.OptionalPayload := LIndex = 3;
+      LAction.Conflict := LIndex = 4;
+
+      if LAction.Conflict then
+      begin
+        LSnapshot := QueryCreatorSnapshot(LPayload, False, [neUIQueue]);
+      end
+      else
+      begin
+        LSnapshot := QueryCreatorSnapshot(LPayload, LAction.OptionalPayload,
+          [neSequential, neUIQueue]);
+      end;
+      LSnapshot.Execute(LLease);
+    end;
+    NyxCallbacks(LTable.Node).OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange)).Policy(neUIQueue);
+    LRejected := False;
+    try
+      ValidateNyxDocumentProperties(LDocument);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'native Before policy refuses an empty non-sequential authored stream');
+    NyxCallbacks(LTable.Node).OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange)).Policy(neSequential);
+    NyxCallbacks(LTable.Node).OnNamed(NyxQueryWorkbenchEvent(nqweChanged)).Policy(neUIQueue);
+    ValidateNyxDocumentProperties(LDocument);
+    LBefore := TNyxCodec.Encode(LDocument);
+    LSource := TNyxCodegen.Generate(LDocument);
+    Check((Pos('nyx.collections.query.controls,', LSource) > 0) and
+      (Pos('.OnNamed(NyxQueryWorkbenchEvent(nqweBeforeChange))', LSource) > 0) and
+      (Pos('.OnNamed(NyxQueryWorkbenchEvent(nqweChanged))', LSource) > 0),
+      'empty query streams generate typed event factories and their import');
+    LAgent := TNyxAgentSession.Create;
+    try
+      LReply := LAgent.Exchange(NyxObject([
+        NyxField('op', NyxData('claim')),
+        NyxField('project', NyxData(EncodeNyxProject(NyxProjectPair(LBefore, LSource)))),
+        NyxField('selection', NyxData('services')), NyxField('view', NyxData('query-home'))]));
+      LMetadata := NyxEventsMetadata(LTable.Node, LDocument);
+      LEvent := EventIndex(LMetadata, NyxQueryWorkbenchEvent(nqweBeforeChange));
+      LReply := LAgent.Call('nyx_node', 'query event policy journey', NyxObject([
+        NyxField('id', NyxData('services')), NyxField('events', NyxData(True)),
+        NyxField('eventOffset', NyxData(LEvent)), NyxField('eventLimit', NyxData(1)),
+        NyxField('routeLimit', NyxData(1))]));
+      Check((LReply.Field('events').Count = 1) and
+        (LReply.Field('events').Item(0).Field('allowedPolicies').ToJSON =
+          NyxArray([NyxData(NyxPolicyName(neSequential))]).ToJSON) and
+        not LReply.Field('events').Item(0).Field('declaredProducer').AsBoolean,
+        'bounded semantic reads expose the exact event restriction without custom-Emit authority');
+    finally
+      LAgent.Free;
+    end;
+    LCandidate := LWorkspace.Candidate(LDocument, LSource);
+    try
+      Check(TNyxCodec.Encode(LCandidate) = LBefore,
+        'closed source reading reconstructs exact typed query streams and policies');
+    finally
+      LCandidate.Free;
+    end;
+    LOpenSource := StringReplace(LSource, 'NyxQueryWorkbenchEvent(nqweChanged)',
+      'NyxEvent(''query-changed'')', [rfReplaceAll]);
+    LCandidate := LWorkspace.Candidate(LDocument, LOpenSource);
+    try
+      Check(TNyxCodec.Encode(LCandidate) = LBefore,
+        'authored open-name query references remain compatible');
+    finally
+      LCandidate.Free;
+    end;
+    LRejected := False;
+    try
+      LCandidate := LWorkspace.Candidate(LDocument, StringReplace(LSource,
+        'NyxQueryWorkbenchEvent(nqweChanged)', 'NyxQueryWorkbenchEvent(nseSearch)', []));
+      LCandidate.Free;
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (TNyxCodec.Encode(LDocument) = LBefore),
+      'wrong query-event enum family refuses without changing the authored document');
+  finally
+    LAction.Document := nil;
+    LLease := nil;
+    LSnapshot := nil;
+    LTable := nil;
+    LPage := nil;
+    LWorkspace.Free;
+    LDocument.Free;
+  end;
 end;
 
 function DetailsDocument: TNyxDocument;
@@ -1461,6 +1963,7 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     InventoryChecks;
     ContextChecks;
+    QueryEventChecks;
     DetailChannelChecks;
     DetailMixedChecks;
     DetailDeclaredChecks;

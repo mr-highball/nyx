@@ -30,6 +30,7 @@ uses
   nyx.scheduler, nyx.schema, nyx.studio.projects, nyx.studio.session,
   nyx.studio.inspector, nyx.studio.sourcejobs, nyx.studio.lcl, nyx.render.lcl,
   nyx.event.discovery,
+  nyx.event.payload, nyx.studio.callbackedits,
   nyx.test.event.queue;
 
 type
@@ -305,12 +306,15 @@ begin
 end;
 
 procedure Run;
+const
+  CHandwrittenDraftNote = '{ Handwritten application draft }';
 var
   LSeed: TNyxProjectPair;
   LBefore: TNyxText;
   LAfter: TNyxText;
   LDraft: TNyxText;
   LDraftBase: TNyxText;
+  LInputDraft, LNativeDraft, LNativeSuffix: TNyxText;
   LKey: TNyxText;
   LInfo: TNyxAuthoredEventInfo;
   LHandler: TNyxHandlerRef;
@@ -319,14 +323,71 @@ var
   LPolicy: TNyxExecutionPolicy;
   LFailed: Boolean;
   LReview: TNyxCallbackRemoval;
+  LSchema: TNyxEventSchema;
+  LName: TNyxEventRef;
+  LWidthIndex: Integer;
 
   procedure QualifiedPhase(const AName: TNyxText);
   begin
     WriteLn('Qualified actual callback phase: ', AName);
     Flush(Output);
   end;
+
+  function Difference(const AExpected, AActual: TNyxText): TNyxText;
+  var
+    LAt: Integer;
+  begin
+    LAt := 1;
+    while (LAt <= Length(AExpected)) and (LAt <= Length(AActual)) and
+      (AExpected[LAt] = AActual[LAt]) do
+    begin
+      Inc(LAt);
+    end;
+    Result := IntToStr(Length(AExpected)) + '/' + IntToStr(Length(AActual)) +
+      '@' + IntToStr(LAt);
+
+    if LAt <= Length(AExpected) then
+    begin
+      Result := Result + ':expected=' + IntToStr(Ord(AExpected[LAt]));
+    end;
+
+    if LAt <= Length(AActual) then
+    begin
+      Result := Result + ':actual=' + IntToStr(Ord(AActual[LAt]));
+    end;
+  end;
+
+  function DraftEvidence: TNyxText;
+  var
+    LActualDraft, LActualBase: TNyxText;
+    LActualPolicy: TNyxExecutionPolicy;
+  begin
+    { Diagnostic reads only: keep the original condition, gestures and deadline.
+      Lengths/first differing code units expose normalization or lost capture
+      without dumping either the accepted source or the handwritten draft. }
+    LActualDraft := GStudio.Session.DraftSource;
+    LActualBase := GStudio.Session.SourceDraftBase;
+    LActualPolicy := EventInfo(ntBeforeKeyPress, Default(TNyxEventRef)).Policy;
+    Result := ' / draft=' + BoolToStr(LActualDraft = LDraft, True) +
+      ' / base=' + BoolToStr(LActualBase = LDraftBase, True) +
+      ' / pair=' + BoolToStr(PairText = LBefore, True) +
+      ' / policy=' + NyxPolicyName(LActualPolicy) +
+      ' / pending=' + BoolToStr(GStudio.ProjectSnapshot.Pending, True) +
+      ' / state=' + IntToStr(Ord(GStudio.SourceCommands.State)) +
+      ' / draft-diff=' + Difference(LDraft, LActualDraft) +
+      ' / base-diff=' + Difference(LDraftBase, LActualBase) +
+      ' / status=' + Copy(GStudio.Status, 1, 160);
+  end;
 begin
   Application.Initialize;
+  { A creator may require a non-sequential initial policy. This real native
+    Inspector path exercises Policy-before-Add without changing the existing
+    unrestricted keyboard scenarios or their assertions/deadlines. }
+  LName := NyxEvent('deferred-review');
+  LSchema := NyxNamedEventSchema(LName, 'OnDeferredReview',
+    'An explicitly queued creator callback.', ncCustom, ncCustom, NyxSignalPayload);
+  LSchema.AllowedPolicies := [neUIQueue];
+  RegisterNyxSchema(NyxCustomKind(NyxKindName(nkMemo)), [], [LSchema]);
   ForceDirectories(ParamStr(1));
   GObserver := TFailureObserver.Create;
   Application.OnException := GObserver.Failed;
@@ -466,9 +527,20 @@ begin
     Click('action-redo');
     QualifiedPhase('warning, confirmation, native disabled snapshot and exact removal');
 
-    LDraft := GStudio.Session.Source + #10 + '{ Handwritten application draft }';
     LDraftBase := GStudio.Session.Source;
-    Text('studio-code', LDraft);
+    LInputDraft := LDraftBase + #10 + CHandwrittenDraftNote;
+    { Keep the original LF physical assignment. The native memo presents its
+      new insertion with the host line ending; ntePreserve retains those newly
+      authored units while preserving every preexisting source byte. Compute
+      that exact expectation independently, never from the session's draft. }
+    LDraft := LDraftBase + TNyxText(LineEnding) + CHandwrittenDraftNote;
+    Text('studio-code', LInputDraft);
+    LNativeDraft := TNyxText(TCustomEdit(GStudio.CodeView.InputFor('studio-code')).Text);
+    LNativeSuffix := TNyxText(LineEnding) + CHandwrittenDraftNote;
+    Check((Length(LNativeDraft) >= Length(LNativeSuffix)) and
+      (Copy(LNativeDraft, Length(LNativeDraft) - Length(LNativeSuffix) + 1,
+        MaxInt) = LNativeSuffix),
+      'Actual native memo exposes the expected inserted line-ending suffix');
     LBefore := PairText;
     Text(NyxEventFilterPartID(NyxStudioEventFilterID, nefpQuery), 'key press');
     Check(PairText = LBefore, 'Discovery remains available without rewriting pending Pascal');
@@ -484,7 +556,7 @@ begin
       (GStudio.Session.SourceDraftBase = LDraftBase) and
       (PairText = LBefore) and
       (EventInfo(ntBeforeKeyPress, Default(TNyxEventRef)).Policy = neThreaded),
-      'Pending Pascal refuses policy publication and retains exact pair/draft/base');
+      'Pending Pascal refuses policy publication and retains exact pair/draft/base' + DraftEvidence);
     Click('action-reset-source');
     QualifiedPhase('independent Pascal draft and refusal');
 
@@ -508,6 +580,96 @@ begin
       'The captured first instance owns the addition after later navigation');
     CaptureEvents(LKey);
     QualifiedPhase('named reusable ownership, independent navigation and English captures');
+
+    for LWidthIndex := 0 to 1 do
+    begin
+
+      if LWidthIndex = 0 then
+      begin
+        GForm.ClientWidth := 1100;
+      end
+      else
+      begin
+        GForm.ClientWidth := 390;
+      end;
+      GStudio.RequestRefresh;
+      Ready;
+      Check(((LWidthIndex = 0) and (GForm.ClientWidth = 1100)) or
+        ((LWidthIndex = 1) and (GForm.ClientWidth = 390)),
+        'Atomic callback phase runs at its requested actual client width');
+      Select('reply-memo');
+      LKey := EventKey(ntNamed, LName);
+      Check((TComboBox(GStudio.ShellView.InputFor(LKey + '-policy')).Items.Count = 1) and
+        (TComboBox(GStudio.ShellView.InputFor(LKey + '-policy')).Text = NyxPolicyName(neUIQueue)),
+        'Actual creator event exposes only its allowed initial policy');
+      LBefore := PairText;
+      Click(LKey + '-add', False);
+      LPending := GStudio.SourceCommands.PendingDesign;
+      Check(LPending.EventLocked('reply-memo', ntNamed, LName) and
+        not LPending.EventLocked('reply-memo', ntKeyDown, Default(TNyxEventRef)) and
+        not LPending.EventLocked('send-button', ntNamed, LName) and
+        LPending.EventPolicy('reply-memo', ntNamed, LName, LPolicy) and (LPolicy = neUIQueue),
+        'Grouped Add locks only its exact event and presents its ordered policy');
+      LEdit := Default(TNyxStudioDesignEdit);
+      LEdit.Action := sdaEvent;
+      LEdit.Selection := 'reply-memo';
+      LEdit.View := 'home';
+      LEdit.Event.Action := seaAdd;
+      LEdit.Event.Trigger := ntNamed;
+      LEdit.Event.Name := LName;
+      LFailed := False;
+      try
+        GStudio.SourceCommands.Edit(LEdit);
+      except
+        on ENyxModel do
+        begin
+          LFailed := True;
+        end;
+      end;
+      Check(LFailed and (PairText = LBefore),
+        'A pre-paint Add cannot duplicate a pending grouped registration');
+      LEdit.Action := sdaCallbacks;
+      LEdit.Event := Default(TNyxStudioEventIntent);
+      LEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+        NyxSetCallbackPolicy('reply-memo', NyxCallbackEvent(LName), neUIQueue),
+        NyxAddCallback('reply-memo', NyxCallbackEvent(LName))]));
+      LFailed := False;
+      try
+        GStudio.SourceCommands.Edit(LEdit);
+      except
+        on ENyxModel do
+        begin
+          LFailed := True;
+        end;
+      end;
+      Check(LFailed, 'A second batch checks exact pending-event locks before enqueue');
+      Ready;
+      LInfo := EventInfo(ntNamed, LName);
+      Check((LInfo.Policy = neUIQueue) and (Length(LInfo.Callbacks) = 1),
+        'One actual Add admits its non-sequential policy and sole callback together');
+      LHandler := LInfo.Callbacks[0].Handler;
+      Check(CodeShowing and
+        (TMemo(GStudio.CodeView.InputFor('studio-code')).CaretPos.Y + 1 =
+          GStudio.Session.CallbackLine(LHandler)) and
+        (Screen.ActiveControl = GStudio.CodeView.InputFor('studio-code')),
+        'Grouped completion opens the actual Pascal editor at its fresh TODO line');
+      Check(not GStudio.SourceCommands.PendingDesign.EventLocked('reply-memo', ntNamed, LName),
+        'Publication retires the exact grouped event lock');
+      LAfter := PairText;
+      Click('action-undo');
+      Check(PairText = LBefore, 'One actual Undo removes the entire policy/addition pair');
+      Click('action-redo');
+      Check(PairText = LAfter, 'One actual Redo restores the entire policy/addition pair');
+
+      if LWidthIndex = 0 then
+      begin
+        Click('action-undo');
+        Check(PairText = LBefore, 'Wide group retires as one Undo before the compact journey');
+      end;
+    end;
+    Select('first-search');
+    LKey := EventKey(ntNamed, NyxSemantic(nseSearch));
+    QualifiedPhase('restricted creator policy, atomic Add, exact locks and TODO focus');
 
     { Exact same IDs after reload still retire old mounted event controls. }
     GStudio.Session.LoadProject(LSeed);

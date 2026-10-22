@@ -2,7 +2,264 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Event policy inspection repair — 2026-10-22
+
+The newline-oracle controls run is terminal/root joined1663/ad30cd. Compiler
+13344 passes with zero warnings; native15580 passes its first THREE actual
+phases, including the original exact draft/base/pair/threaded-policy refusal.
+It then fails a later Select's unchanged Ready30 before the fourth phase.
+The status text and finally-tail RUN line do not identify that selection or
+whether source work, presentation or one long Pump exhausted the bound.
+This is not an overall controls pass or a diagnosed production retirement bug.
+
+Exact input audit03A6B8D0 verifies23owned/1807Pascal/13foreign/19extra, nine
+compiler/native artifact pins and both actual child processes absent after the
+root join. The native failed result has a complete clean heap:156345212 blocks/
+27586421593 bytes allocated and freed, zero unfreed. The audit's first console
+display used Select-Object on an ordered dictionary and showed null properties;
+the saved JSON is correct and a separate direct read verifies its real fields.
+No evidence file was rewritten. All previous failures remain retained.
+
+The five accepted native scopes71/142/359/729/120 retain their unchanged source
+boundaries. Seven later browser/product compilers remain unattempted. Next is
+read-only root/helper triage of the existing readiness predicate and queued
+presentation ownership, then a separately reviewed narrow observation if the
+existing evidence is insufficient. Keep predicates, gestures and bounds; no
+guessed product repair, new fixture or further reader is released here.
+Core37 and every original/P4C/browser requirement remain open.
+
+Independent root/helper outcome review passes: the saved audit and all nine
+artifact pins are populated and exact. Source review confirms Ready checks its
+elapsed deadline after Pump, before its idle predicate. A long completed paint
+therefore can fail while both busy flags are already false; the current message
+does not prove a stuck queue. PresentationPending aggregates queued paint,
+painting and queued completion; source-command busy is a separate owner.
+
+The smallest next observation stays in the SAME consumer: label exact Ready
+context (especially Select/Click), report copied source/presentation flags,
+command state/selection, elapsed time, existing public PaintCount delta and
+last/longest Pump duration. Keep the deadline's position, idle predicate,
+Sleep1, every gesture/case and Ready30/outer600. No product edit, extra fixture,
+new profiling hook or wait increase is indicated. This is a blueprint, pending
+a separate narrow source release/review/freeze after this checkpoint.
+
+The bounded original-assertion diagnostic is now terminal/root joined
+16565/b93947, with exact23/1807/13/19 audit and a complete clean heap. It shows
+base/pair/policy preservation and pending-draft refusal all succeed. Only the
+newly inserted newline differs: the fixture expected LF while the actual native
+memo exposes CRLF. The authored text-preservation policy deliberately retains
+those newly inserted physical units and preserves every old source byte.
+
+The existing consumer's independently reviewed59CD4174 correction leaves the
+physical source+LF+comment assignment unchanged. It independently precomputes
+the exact authored expectation as base+native LineEnding+comment and adds an
+actual Memo suffix check. The original four-term predicate, diagnostic helpers,
+gestures, Ready30 and outer600 remain intact. No production repair or comparison
+normalization follows. Fresh joint freeze precedes ONE native controls compiler/
+run; only a passing actual result releases the remaining seven fixed compilers.
+Reuse the five unchanged accepted scopes. All original/P4C/browser criteria and
+core37 remain open; this is not a universal widgetset line-ending claim.
+
+Current actual-control boundary: native callbacks71, queue142, source359,
+semantic729 and editing120 pass, each with zero warnings and a complete clean
+heap. Native controls compile with zero warnings and qualify their first two
+physical phases, then fail ORIGINAL line499's draft/base/pair/policy conjunction.
+Root joined23372/a9a000; the exact input audit passes and the failed native run
+also has a complete zero-unfreed heap (116305189 blocks/20961417173 bytes equal).
+The later draft/reuse/two-width atomic phase and every browser/Studio compiler
+remain unattempted. This is not overall native Studio or P4B qualification.
+
+The next narrow observation changes ONLY the same assertion's diagnostic
+message: individual Boolean comparisons, actual policy/pending/state/status,
+lengths and first differing code units, without dumping source. No predicate,
+gesture, case, wait or deadline changes. All product and other consumers stay
+exact; five accepted scopes are reusable. After independent review/freeze, admit
+one controls compiler/native run with the same Ready30/outer600 bounds. Choose
+the product repair from that actual evidence; do not guess which term failed.
+Core37 and all original/P4C/browser requirements remain open.
+
+Current follow-up: inspection-repair source passes native callbacks71, queue142
+and source359, all with zero warnings and complete zero-unfreed heaps. Semantic
+compiles with zero warnings, then fails the new retained-frame import assertion;
+its failed native outcome has a complete clean heap. Root joined63963/56774a
+and the exact23/1807/13/19 audit passes. The remaining readers never started.
+Independent source review proves the import is validly appended before the
+existing semicolon; the new test incorrectly requires a trailing comma. Only
+its three new import-presence/absence oracles now use parsed interface-unit
+membership. Typed event and handwritten-comment predicates remain intact.
+No production or source-continuation repair is indicated. After independent
+review/freeze, reuse71/142/359 at their unchanged boundaries and run fresh
+semantic plus the remaining fixed readers. No original acceptance changes.
+
+The next semantic run passes the parsed-import checks, then reveals a second
+fixture issue: a custom component reference deliberately retains its own creator
+kind, so a schema registered only for the referenced definition does not restrict
+that proxy. Its zero-warning compiler and failed clean-heap native outcome are
+retained; root joined90658/84a5b4 and the exact input audit passes. The consumer
+now scopes the proxy's OWN restricted schema and adds exact realized semantic
+kind, physical projection and allowed-policy assertions. The existing refusal
+predicate is preserved. No transitive creator inheritance or production change
+is introduced. The same three accepted dependencies remain reusable; review and
+fresh freeze still precede the ten remaining fixed readers.
+
+P4B's fixed qualification has stopped at three retained failures, with every
+actual reader joined and the exact23-owned/1807-Pascal/13-foreign/19-extra audits
+passing before repairs. First, the schema used a nonexistent saved-binding
+projection member; the canonical node projection and its direct enum import
+repair that mismatch. Next, synchronous Inspector routing needed the direct
+project-pair type import. Predecessor callback tests pass71 with zero warnings
+and a complete clean heap; that evidence remains limited to its exact source.
+
+The next queue build passes without warnings, but the native test exposes a
+product issue: a newly restricted creator policy prevents SelectedProjection
+from showing an older accepted control's invalid-policy diagnostic. Its failed
+native execution exits normally with equal allocation/free and zero unfreed
+blocks. No later compiler or native consumer ran. The original fixture and
+diagnostic/disabled-Add/refusal predicates remain unchanged.
+
+The narrow repair stays within the same23 paths. Schema uses a private typed
+purpose: detached property-tree projection retains scalar/domain/resource/
+presentation checks, while public single-control admission and complete
+document admission retain event-policy validation. Both renderers call that
+strict single-control gate before choosing/calling a custom factory. No public
+signature, ambient flag, authored event removal or exception swallowing is
+introduced. Existing semantic cases now check the SAME projected policy/text
+and untouched document, followed by strict face/document refusal. This is an
+API/source-ordering proof, not a new actual renderer-execution claim.
+
+Independent review and a fresh joint freeze precede the unchanged13-compiler/
+six-native plan. Because schema changed, predecessor callbacks71 is retained
+rather than relabeled as a current-source result. All source/guides/tools pause
+through readers; first failure stops admission. Core37, P4C's own Save/Open/
+compiled application, actual browser input and every original criterion remain
+open. Private query-events receipts own exact handles, artifacts and failures.
+
+## Control usefulness backlog refinement — 2026-10-22
+
+The latest request is a bounded documentation side packet. The accepted
+[80-kind review](docs/control-usefulness.md) and existing usefulness02–05 tasks
+already cover the reported debugger workflow, so no duplicate task identities
+are added. The external application's implementation remains uninspected.
+
+- [Column queries02](TODO/NS-3_control-usefulness_02.md) now requires a clear
+  bound-table/literal-Items/default-opt-out diagnosis and discoverable native
+  filtering, with a stopped-service/CPU-range/multi-key-sort/reset scenario.
+- [Workbench03](TODO/NS-3_control-usefulness_03.md) now makes W1's editable pins
+  at both logical edges and compact recovery explicit. W2 distinguishes full
+  value inspection, raw/display/draft output, selected/hidden/page/full-result
+  data and typed clipboard/save refusal or cancellation.
+- [Live inspection04](TODO/NS-3_control-usefulness_04.md) now links List/Tree
+  context to existing owners: DataToolbar retains List/Table search, while
+  Tree find/reveal stays with components01/hierarchy and04. It distinguishes
+  typeahead from filtering and requires ancestor/match context, hidden-selection
+  recovery and independent paused/live views during source churn.
+
+Parent components01 and the review's linked subcatalog retain catalog-wide
+ownership for forms, choices, editing, media, navigation and the other families.
+The main task catalog/milestone files have unrelated edits and are preserved;
+their existing component entry reaches these refinements through that parent.
+The seven documentation paths are this handoff, AGENTS, parent components01,
+usefulness02/03/04 and docs/control-usefulness. Root reviews source facts; the
+existing helper independently reviews task boundaries, links and useful finish
+lines. This packet changes no Pascal, task status, original criterion, credit or
+core37 count and admits no compiler, browser, host or other runtime activity.
+
+Independent root/helper review passes. All426 local artifact links resolve;
+the original Acceptance Criteria/Blockers in all four touched task files remain
+exact after newline normalization. All18 preservation pins (five in-progress
+Pascal files and the unrelated13-file set) remain unchanged. Scoped whitespace
+checks pass. This is backlog refinement, not implementation qualification.
+
+Return to the separately released P4B event-authoring implementation below.
+Its source is not jointly reviewed/frozen or qualified. Helper's two ready files
+remain exact0968A38F/27FC8E38 while root integration continues; no source-ready
+claim for the root scope follows from refining these backlog tasks.
+
 ## Table query policy authoring — 2026-10-21
+
+### Query event authoring P4B: separate source release — 2026-10-22
+
+Both source scopes are now ready and independently reviewed. Root source adds
+the shared event-policy contract/discovery/admission, strict v1/v2 transport,
+typed query-event generation/reading/imports, bounded semantic choices and
+Inspector/group/pending/receipt/TODO integration. Root's four existing consumers
+add the matching policy/codec/source/native-control regressions. The helper's
+strict shared decoder/exact pair and callback-intent consumer remain0968/27FC;
+its transferred event.queue consumer is23E15914. Original seeds, scenarios,
+assertions and deadlines remain; source readiness is not qualification.
+
+Pre-compiler independent review caught record fields declared after methods,
+two tests calling optional inspection APIs through their base interfaces, and
+an empty-policy test which also had an invalid payload. These are corrected;
+no compiler was used to discover them. The native appended atomic-Add phase
+asserts actual1100/390 clients and uses an otherwise valid batch-lock probe.
+
+The fixed impact plan is13 compilers and six sequential native executions:
+callback intents, event queue, source diagnostics, semantic events and editing
+each compile natively and for browser; native event controls execute the full
+existing journey plus the new two-width phase; both Studio products compile.
+No unrelated generated-fixture variant or broad family replay is part of this
+plan. Native consumers retain their internal waits; the owned outer process
+limit is300s, or600s for the complete native control journey. Compiler limit is
+300s. Stop the packet at its first compiler, owned-warning or runtime failure.
+
+Root's new private freeze/qualification scripts derive the maintained flags and
+use known i386-win32/win32 paths without compiler probes. Each actual launch has
+a fresh PID/argument/log receipt before waiting. All six native processes use
+fresh final HeapTrc files outside fixture evidence, with scoped environment
+restoration; complete equal allocation/free, zero unfreed and the actual PASS
+are required. This reuses the reviewed final-report capture principle without
+claiming the maintained public-runner repair. No listener/browser/worker starts.
+The two private scripts and fixed plan now pass independent helper review at
+freezeE79D5821/qualifier42A36240. Root may jointly freeze before admitting the
+fixed readers. Expected inputs are23 owned/1807 Pascal/13 foreign/19 extras, including
+the exact prior9 extras, four backlog docs, maintained build and toolchain files.
+All source/guides/tools pause through live readers; root joins every actual
+handle before edits. No compiler has run at this source handoff.
+Core37 and all P4C/browser/performance/original criteria remain open.
+
+Within the same23 released paths, source ownership now transfers the existing
+tests/nyx.test.event.queue.pas from root to Lil' Scooty for additive exact-pair
+receipt/admission/pending and synchronous-route regressions. Every old seed,
+assertion and deadline stays intact. The helper retains its original two files;
+root retains all production and other existing consumers. No compiler, fixture,
+new path, wire or host is released. Private ownership records track this transfer;
+both source scopes still require independent review and a joint freeze.
+
+Previous496242f is progress, committed/pushed/remote-verified. All actual readers
+are joined and1807Pascal/foreign13/extra9 remain exact. P4B now releases the
+shared typed allowed-policy capability, exact query Before/Changed discovery,
+effective empty-stream admission, strict snapshot compatibility, crafted typed
+source factories/imports, bounded semantic reads and ordinary event authoring.
+Its useful result is agreement between Inspector choices, semantic operations,
+source admission and runtime behavior, not a metadata declaration alone.
+
+Root owns the scheduler policy-set alias; schema/snapshot; codegen/source;
+Inspector/agent/session/design/sourcejobs integration; existing semantic events,
+editing, source-preparation and event-queue consumers; and related docs. Existing
+helper owns only the callbackedits pure typed decoder/exact pair inspection and
+existing callback-intent additive tests. The ignored query-events state records
+23 exact owned paths/preimages. No new Pascal fixture, renderer, workbench runtime,
+GUID or request17/reply2 field is released. Keep every old assertion and wait.
+
+Default old creator records safely to all policies through a managed marker;
+explicit empty restrictions refuse, and same-event restrictions intersect.
+Before query offers sequential only; Changed retains normal choices. Native
+discovery grants no custom Emit authority and preserves explicit creator rights.
+The existing runtime Before guard remains intact. Unrestricted schema snapshots
+retain canonical version1; restricted snapshots use strict uniform version2 rows.
+An absent stream choosing a permitted non-sequential policy needs an ordered
+Policy-before-Add pair in ONE candidate. Preserve generic multi-add results,
+strict fresh-handler receipt validation, exact pending-event locks and TODO
+navigation in BOTH async and sync routes. Existing invalid policies stay visible
+with an honest diagnostic rather than being silently repaired by presentation.
+
+No compiler is released yet. Review both source scopes independently, settle
+the fixed impact-based plan using existing consumers, then freeze jointly before
+readers. Stop first failure and root-join/audit before repair. P4C's OWN real
+Save/Open/strict compiled pair, actual browser input and performance remain open;
+source readiness does not close original criteria, credit or core37. No host,
+LAN/config/MCP/worker/wire rollout, cleanup/restart or extra agent follows.
 
 ### Current native-local qualification — 2026-10-22
 

@@ -29,6 +29,30 @@ the external application.
 DataToolbar and FilterBar integration must reuse this query policy rather than
 introducing another store, query evaluator or component-specific lifecycle.
 
+**Application-author diagnosis and user discoverability:**
+
+The 2026-10-22 follow-up keeps this as the column-query owner. A missing Filter
+button in an external application is not enough to identify a renderer defect.
+The public example/help and final ordinary application journey must distinguish:
+
+- A schema-bound `Table` from a literal `Items` table, the layout `Grid`, and a
+  table part inside a reusable compound. Literal rows do not acquire a query
+  owner merely because they look tabular.
+- Effective library defaults from explicit table/column opt-outs, unsupported
+  field/operator families and a stale application build. Explain the effective
+  choice in Studio/help without requiring a widget downcast or raw property key.
+- A query-capable bound table with no application-built toolbar: its standard
+  header controls and keyboard alternative must let a user find the filter,
+  see active rules/counts and recover from no matches. Verify this on native,
+  rather than relying only on a programmatic `ConfigureQuery` assertion.
+
+The concrete acceptance story is: find stopped services by Status, narrow a
+numeric CPU range, apply stable multi-key sorting, remove one rule, then reset
+the intended contribution without deleting another surface's rules. Preserve
+selection and distinguish a filtered-empty result from a failed data source.
+The existing seven criteria and P4 saved-application/browser gates own this
+story; the checklist creates no new task, query engine or completion credit.
+
 Ordered implementation packets preserve all seven criteria below:
 
 | Packet | Useful result | Still required afterward |
@@ -192,6 +216,24 @@ proof. Public runner final-heap integration retains its existing delivery owner.
 | P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |
 | P4B — Discover and operate semantically | Shared event/help discovery exposes exact Before/Changed query names and copied Details, bounded binding reads expose requested declared/effective policies, existing revision-aware changes accept strict v7 and the same typed intents | Before is sequential/cancellable, Changed follows normal policy; Inspector and semantic policy choices must agree with admission. No new server or runtime rollout is implied |
 | P4C — Prove the authored workbench | Actual Studio two-instance configuration, paired Undo/Redo, real Save/Open and that journey's OWN strictly admitted emitted Pascal, independently compiled/executed at both widths; actual browser input under an applicable host override | Preserve definition/sibling/source/default isolation, callbacks, query/paging/hidden selection/draft/lifetime behavior. P3 authored8441/A861 exports cannot substitute for this new saved/generated pair |
+
+P4B integration is now source in qualification: one typed allowed-policy set
+feeds native query discovery, effective empty-stream admission, Inspector and
+bounded agent reads. Source generation/reading retain typed query-event
+factories/imports. Exact policy/addition groups use existing candidates, receipt
+validation, pending event locks and both TODO navigation routes. The existing
+consumers are being extended additively; original assertions/waits, request17/
+reply2 and generic multi-add behavior remain intact. Independent source review
+and exact freezes precede the fixed impact-based reader plan. Five native suites
+now pass71/142/359/729/120 with zero warnings and complete clean heaps at their
+exact source boundaries. Actual native controls pass their first three phases,
+including exact pending-Pascal preservation/refusal, then fail a later unchanged
+readiness deadline. This is not overall controls or P4B qualification. All actual
+readers are joined/audited; the seven later browser/product compilers have not
+run. Retain failures and diagnose the pending owner before any repair or further
+reader. No browser/worker/MCP rollout or original criterion closes.
+[WORK](../WORK.md#event-policy-inspection-repair--2026-10-22) owns the current
+source/qualification boundary and return to P4C.
 
 The historical pre-P4A readiness review found a concrete prerequisite:
 `ApplyNyxStudioCollectionViewIntent` reconstructed views for title/mode/scope/

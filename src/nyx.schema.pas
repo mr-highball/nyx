@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.scheduler,
   nyx.data,
   nyx.types,
   nyx.images,
@@ -149,10 +150,18 @@ type
       empty, without interpreting uninitialized set bits as capabilities. }
     FContextMarker: TNyxText;
     FContexts: TNyxEventContexts;
+    { Managed marker preserves old partially filled local creator records.
+      Untouched metadata is unrestricted; an explicitly empty set stays empty
+      until admission rejects it, rather than becoming an accidental default. }
+    FPolicyMarker: TNyxText;
+    FAllowedPolicies: TNyxExecutionPolicies;
     function GetContexts: TNyxEventContexts;
     procedure SetContexts(AValue: TNyxEventContexts);
+    function GetAllowedPolicies: TNyxExecutionPolicies;
+    procedure SetAllowedPolicies(AValue: TNyxExecutionPolicies);
   public
     property Contexts: TNyxEventContexts read GetContexts write SetContexts;
+    property AllowedPolicies: TNyxExecutionPolicies read GetAllowedPolicies write SetAllowedPolicies;
     { Arrays and payload descriptors are detached before publication/return. }
     function Copy: TNyxEventSchema;
   end;
@@ -161,6 +170,8 @@ type
 { Closed snapshot-family names at the query/serialization boundary. At most
   seven entries are returned; a caller receives a new immutable array value. }
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
+{ Bounded semantic representation: at most the four closed scheduler choices. }
+function NyxEventPoliciesData(APolicies: TNyxExecutionPolicies): TNyxDataValue;
 
 const
   NyxPrimitiveCount = 43;
@@ -322,6 +333,9 @@ function TryNyxInteger(const AValue: TNyxText; out AValueNumber: Integer): Boole
   shares the inspector's exact descriptor rules without constructing editor
   help/capability descriptions. Every call reads the current borrowed model. }
 procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument = nil);
+{ Projected values remain inspectable when a creator changes its event policy.
+  This tree check retains property admission; event-policy admission belongs to
+  the strict single-control gate and complete document admission below. }
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument = nil);
 { Validate all portable properties, including inherited reusable overrides.
   The document is borrowed. Structural references/ownership are admitted first. }
@@ -340,8 +354,10 @@ uses
   nyx.binding,
   nyx.callbacks,
   nyx.collections.view,
+  nyx.collections.view.types,
   nyx.collections.bindings,
   nyx.collections.pager,
+  nyx.collections.query.controls,
   nyx.design.tokens,
   nyx.composition,
   nyx.menu.declarations,
@@ -356,6 +372,11 @@ type
     target capability descriptions cannot affect those checks. This choice is
     private so public metadata always remains a complete owned snapshot. }
   TNyxPropertyDetail = (npdAdmission, npdAuthoring);
+
+  { Detached property projection must not hide an accepted control merely
+    because its event capability changed. Physical faces and new documents
+    still require strict event admission before they can be accepted. }
+  TNyxPropertyPurpose = (nppProjection, nppControl);
 
   TNyxPublishedSchema = record
     Kind: TNyxText;
@@ -466,6 +487,11 @@ begin
   SetLength(LSchema.Events, Length(AEvents));
   for LIndex := 0 to High(AEvents) do
   begin
+
+    if AEvents[LIndex].AllowedPolicies = [] then
+    begin
+      raise ENyxModel.Create('A published event requires an allowed execution policy');
+    end;
 
     if not NyxIsRuntimeTrigger(AEvents[LIndex].Trigger) and
       (AEvents[LIndex].Trigger <> ntNamed) then
@@ -591,6 +617,22 @@ begin
   FContextMarker := 'nyx.event-contexts.v1';
 end;
 
+function TNyxEventSchema.GetAllowedPolicies: TNyxExecutionPolicies;
+begin
+  Result := [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)];
+
+  if FPolicyMarker = 'nyx.event-policies.v1' then
+  begin
+    Result := FAllowedPolicies;
+  end;
+end;
+
+procedure TNyxEventSchema.SetAllowedPolicies(AValue: TNyxExecutionPolicies);
+begin
+  FAllowedPolicies := AValue;
+  FPolicyMarker := 'nyx.event-policies.v1';
+end;
+
 function TNyxEventSchema.Copy: TNyxEventSchema;
 var
   LIndex: Integer;
@@ -605,6 +647,7 @@ begin
   Result.PayloadOptional := PayloadOptional;
   Result.DeclaredProducer := DeclaredProducer;
   Result.Contexts := Contexts;
+  Result.AllowedPolicies := AllowedPolicies;
 
   if Payload.Defined then
   begin
@@ -2048,6 +2091,27 @@ begin
   Result := BuildNyxProperties(ANode, ADocument, npdAuthoring);
 end;
 
+function NyxEventPoliciesData(APolicies: TNyxExecutionPolicies): TNyxDataValue;
+var
+  LPolicy: TNyxExecutionPolicy;
+  LItems: array of TNyxDataValue;
+  LCount: Integer;
+begin
+  SetLength(LItems, Ord(High(TNyxExecutionPolicy)) + 1);
+  LCount := 0;
+  for LPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+  begin
+
+    if LPolicy in APolicies then
+    begin
+      LItems[LCount] := NyxData(NyxPolicyName(LPolicy));
+      Inc(LCount);
+    end;
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxArray(LItems);
+end;
+
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
 const
   CNames: array[TNyxEventContextKind] of TNyxText = ('keyboard', 'text-edit',
@@ -2369,6 +2433,83 @@ var
         end;
       end;
     end;
+  end;
+
+  { Mounted table queries publish a legacy signal and independent structured
+    Details. Discovery adds this producer without registering custom Emit
+    authority. A creator already declaring the name retains its own authority
+    and payload; exact stream restrictions still intersect with the native one. }
+  procedure AddQueryProducer(AKind: TNyxQueryWorkbenchEvent);
+  var
+    LName: TNyxEventRef;
+    LNativePayload: TNyxEventPayloadSpec;
+    LAllowed: TNyxExecutionPolicies;
+    LMatch, LScan: Integer;
+    LDescription, LTitle: TNyxText;
+  begin
+    LName := NyxQueryWorkbenchEvent(AKind);
+    LAllowed := [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)];
+    LTitle := 'OnQueryChanged';
+    LDescription := 'After an admitted table query change. Details owns the query change and before/after observations; Value is absent.';
+
+    if AKind = nqweBeforeChange then
+    begin
+      LAllowed := [neSequential];
+      LTitle := 'OnBeforeQueryChange';
+      LDescription := 'Before table query publication; sequential callbacks may cancel. Details owns the proposal; Value is absent.';
+    end;
+    LNativePayload := NyxSignalPayload;
+
+    if AView = epvDetails then
+    begin
+      LNativePayload := NyxDataPayload(ndObject);
+    end;
+    LMatch := -1;
+    for LScan := 0 to High(Result) do
+    begin
+
+      if (Result[LScan].Trigger = ntNamed) and (Result[LScan].Name.Name = LName.Name) then
+      begin
+        LMatch := LScan;
+        Break;
+      end;
+    end;
+
+    if LMatch < 0 then
+    begin
+      LMatch := Length(Result);
+      SetLength(Result, LMatch + 1);
+      Result[LMatch] := NyxNamedEventSchema(LName, LTitle, LDescription,
+        ncAvailable, ncAvailable, LNativePayload);
+      Result[LMatch].DeclaredProducer := False;
+      Result[LMatch].AllowedPolicies := LAllowed;
+    end
+    else
+    begin
+      LAllowed := LAllowed * Result[LMatch].AllowedPolicies;
+
+      if LAllowed = [] then
+      begin
+        raise ENyxModel.Create('Conflicting execution policies for event: ' + LName.Name);
+      end;
+      Result[LMatch].AllowedPolicies := LAllowed;
+      Result[LMatch].Description := Result[LMatch].Description + ' ' + LDescription;
+      { Legacy creator payloads describe custom Emit admission, independently
+        of native routes. Details instead describes every actual producer. }
+
+      if (AView = epvDetails) or not Result[LMatch].DeclaredProducer then
+      begin
+
+        if not Result[LMatch].Payload.Defined or
+          (Result[LMatch].Payload.ToData.ToJSON <> LNativePayload.ToData.ToJSON) then
+        begin
+          Result[LMatch].Payload := Default(TNyxEventPayloadSpec);
+          Result[LMatch].Description := Result[LMatch].Description +
+            ' Payloads differ across native, physical or declared producers.';
+        end;
+      end;
+    end;
+    MarkDetailsProducer(LMatch);
   end;
 
   procedure Collect(AControl: TNyxNode; ACompound: Boolean);
@@ -2702,6 +2843,12 @@ begin
           { The creator's payload admits its custom producer. Existing physical
             routes keep their own independent contracts under the same name. }
           LPublished.Routes := Result[LFound].Copy.Routes;
+          LPublished.AllowedPolicies := LPublished.AllowedPolicies * Result[LFound].AllowedPolicies;
+
+          if LPublished.AllowedPolicies = [] then
+          begin
+            raise ENyxModel.Create('Conflicting execution policies for event: ' + LPublished.Name.Name);
+          end;
 
           if (AView = epvDetails) and HasDetailsProducer(LFound) then
           begin
@@ -2720,6 +2867,14 @@ begin
         Result[LFound] := LPublished;
         MarkDetailsProducer(LFound);
       end;
+    end;
+
+    if LRoot.HasCollectionView and
+      (LRoot.ProjectionKind = NyxKindName(nkTable)) and
+      (NyxCollectionProjectionForNode(LRoot) = cpTable) then
+    begin
+      AddQueryProducer(nqweBeforeChange);
+      AddQueryProducer(nqweChanged);
     end;
     { A declared mounted menu is an actual semantic producer on its invoker.
       It supplies an immutable Details snapshot, decoded by NyxMenuInvocation;
@@ -3476,7 +3631,41 @@ begin
   end;
 end;
 
-procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument);
+{ This guard admits every authored stream, even an empty stream without routes.
+  It is deliberately independent of scheduler capabilities and route planning.
+  Call only on the effective tree so reusable overrides cannot bypass policy. }
+procedure ValidateEffectiveEventPolicies(ANode: TNyxNode; ADocument: TNyxDocument);
+var
+  LAuthored: TNyxAuthoredEventInfos;
+  LMetadata: TNyxEventSchemas;
+  LIndex, LEvent: Integer;
+begin
+  LAuthored := NyxAuthoredEvents(ANode);
+
+  if (Length(LAuthored) = 0) and not (ANode.HasCollectionView and
+    (ANode.ProjectionKind = NyxKindName(nkTable)) and
+    (NyxCollectionProjectionForNode(ANode) = cpTable)) then
+  begin
+    Exit;
+  end;
+  LMetadata := NyxEventsMetadata(ANode, ADocument);
+  for LIndex := 0 to High(LAuthored) do
+  begin
+    for LEvent := 0 to High(LMetadata) do
+    begin
+
+      if (LAuthored[LIndex].Trigger = LMetadata[LEvent].Trigger) and
+        (LAuthored[LIndex].Name.Name = LMetadata[LEvent].Name.Name) and
+        not (LAuthored[LIndex].Policy in LMetadata[LEvent].AllowedPolicies) then
+      begin
+        raise ENyxModel.Create('Execution policy is not allowed for event on control: ' + ANode.ID);
+      end;
+    end;
+  end;
+end;
+
+procedure ValidateNyxPropertiesForPurpose(ANode: TNyxNode;
+  ADocument: TNyxDocument; APurpose: TNyxPropertyPurpose);
 var
   LQueryContainer: TNyxContainerRef;
   LContainment: TNyxContainerContainment;
@@ -3834,8 +4023,18 @@ begin
 
   if ANode.IsRealized then
   begin
+
+    if APurpose = nppControl then
+    begin
+      ValidateEffectiveEventPolicies(ANode, ADocument);
+    end;
     ValidateButtonPresentationFaces(ANode, ANode.PresentationSnapshot, ADocument, True);
   end;
+end;
+
+procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument);
+begin
+  ValidateNyxPropertiesForPurpose(ANode, ADocument, nppControl);
 end;
 
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument);
@@ -3866,7 +4065,7 @@ var
     end
     else
     begin
-      ValidateNyxProperties(ANode, ADocument);
+      ValidateNyxPropertiesForPurpose(ANode, ADocument, nppProjection);
     end;
 
     if ANode.Prop(NyxAttributeName(atPageView)) <> '' then
@@ -4040,8 +4239,12 @@ var
   function RequiresRealization(ANode: TNyxNode): Boolean;
   var
     LChildIndex: Integer;
+    LSchemaIndex, LEventIndex, LAuthoredIndex: Integer;
+    LRegistered: TNyxPublishedSchemas;
+    LAuthored: TNyxAuthoredEventInfos;
   begin
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
+      (ANode.ProjectionKind = 'component') or
       (ANode.Kind = NyxKindName(nkToolCanvas)) or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar or
@@ -4049,6 +4252,46 @@ var
       ANode.Extensions.Has(NyxExtension(NyxFlowRoutesKey)) or
       (ANode.Prop(NyxAttributeName(atPageView)) <> '') or
       ValidateButtonPresentationMetadata(ANode);
+    { A plain creator with an empty authored stream otherwise needs no
+      realization. Match its exact restricted stream without calling discovery
+      (which itself realizes), and leave unrelated legacy roots unchanged. }
+
+    if not Result then
+    begin
+      LAuthored := NyxAuthoredEvents(ANode);
+
+      if Length(LAuthored) > 0 then
+      begin
+        LRegistered := CurrentSchemas;
+        for LSchemaIndex := 0 to High(LRegistered) do
+        begin
+
+          if (LRegistered[LSchemaIndex].Kind <> ANode.Kind) and
+            (LRegistered[LSchemaIndex].Kind <> ANode.ProjectionKind) then
+          begin
+            Continue;
+          end;
+          for LEventIndex := 0 to High(LRegistered[LSchemaIndex].Events) do
+          begin
+
+            if LRegistered[LSchemaIndex].Events[LEventIndex].AllowedPolicies =
+              [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)] then
+            begin
+              Continue;
+            end;
+            for LAuthoredIndex := 0 to High(LAuthored) do
+            begin
+
+              if (LAuthored[LAuthoredIndex].Trigger = LRegistered[LSchemaIndex].Events[LEventIndex].Trigger) and
+                (LAuthored[LAuthoredIndex].Name.Name = LRegistered[LSchemaIndex].Events[LEventIndex].Name.Name) then
+              begin
+                Result := True;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
 
@@ -4085,6 +4328,7 @@ var
       LMasterDetail: TNyxMasterDetailIntent;
       LMaster: TNyxNode;
     begin
+      ValidateEffectiveEventPolicies(ANode, ADocument);
       ValidateNyxControlFlowRoutes(ANode, ADocument);
 
       if (ANode.Kind = NyxKindName(nkToolCanvas)) and

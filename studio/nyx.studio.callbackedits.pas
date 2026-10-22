@@ -62,6 +62,9 @@ type
     property Policy: TNyxExecutionPolicy read FPolicy;
     property Position: Integer read FPosition;
   end;
+  { Independent inspection values. Replacing a returned array member cannot
+    change a captured batch or another reader; no patch/session is retained. }
+  TNyxCallbackChanges = array of TNyxCallbackChange;
   TNyxCallbackEditResult = record
     Kind: TNyxCallbackChangeKind;
     Owner: TNyxText;
@@ -110,6 +113,17 @@ function NyxCallbackPatch(const AChanges: array of TNyxCallbackChange): INyxCall
 { Capture built-in or substitutable snapshot-capable patches without retaining
   their interface in a queued record. Unknown implementations refuse. }
 function CaptureNyxCallbackBatch(const APatch: INyxCallbackPatch): TNyxCallbackBatchSnapshot;
+{ Inspect the existing normalized snapshot through the same strict decoder as
+  ReadNyxCallbackPatch. Undefined or malformed input refuses without a session,
+  candidate or source effect; the returned ordered values are independently owned. }
+function ReadNyxCallbackChanges(
+  const ABatch: TNyxCallbackBatchSnapshot): TNyxCallbackChanges;
+{ Recognize only [Policy, Add] for one exact owner/trigger/name. Other valid
+  batches return False with cleared outputs. Shape is not policy permission or
+  proof of an absent stream; the current candidate still owns those checks. }
+function TryNyxCallbackPolicyAddShape(const ABatch: TNyxCallbackBatchSnapshot;
+  out AOwner: TNyxText; out AEvent: TNyxCallbackEvent;
+  out APolicy: TNyxExecutionPolicy): Boolean;
 { Strict wire admission and bounded-result encoding are explicit persistence/
   transport boundaries. Unknown fields, wrong scalar types and ambiguous event
   identities reject before a temporary session or active project is edited. }
@@ -553,9 +567,12 @@ begin
   end;
 end;
 
-function ReadNyxCallbackPatch(const AChanges: TNyxDataValue): INyxCallbackPatch;
+{ Decode once for both executable patch construction and inert inspection.
+  Keeping every closed-field/reference/enum check here prevents presentation or
+  receipt inspection from accepting a weaker interpretation of the same batch. }
+function DecodeNyxCallbackChanges(const AChanges: TNyxDataValue): TNyxCallbackChanges;
 var
-  LChanges: array of TNyxCallbackChange;
+  LChanges: TNyxCallbackChanges;
   LIndex: Integer;
   LValue: TNyxDataValue;
   LEventData: TNyxDataValue;
@@ -632,7 +649,48 @@ begin
       raise ENyxModel.Create('Unknown callback operation');
     end;
   end;
-  Result := NyxCallbackPatch(LChanges);
+  Result := LChanges;
+end;
+
+function ReadNyxCallbackPatch(const AChanges: TNyxDataValue): INyxCallbackPatch;
+begin
+  Result := NyxCallbackPatch(DecodeNyxCallbackChanges(AChanges));
+end;
+
+function ReadNyxCallbackChanges(
+  const ABatch: TNyxCallbackBatchSnapshot): TNyxCallbackChanges;
+begin
+  Result := DecodeNyxCallbackChanges(ABatch.ToData);
+end;
+
+function TryNyxCallbackPolicyAddShape(const ABatch: TNyxCallbackBatchSnapshot;
+  out AOwner: TNyxText; out AEvent: TNyxCallbackEvent;
+  out APolicy: TNyxExecutionPolicy): Boolean;
+var
+  LChanges: TNyxCallbackChanges;
+begin
+  AOwner := '';
+  AEvent := Default(TNyxCallbackEvent);
+  APolicy := neSequential;
+  Result := False;
+  LChanges := ReadNyxCallbackChanges(ABatch);
+
+  if Length(LChanges) <> 2 then
+  begin
+    Exit;
+  end;
+
+  if (LChanges[0].Kind <> nccPolicy) or (LChanges[1].Kind <> nccAdd) or
+    (LChanges[0].Owner <> LChanges[1].Owner) or
+    (LChanges[0].Event.Trigger <> LChanges[1].Event.Trigger) or
+    (LChanges[0].Event.Name.Name <> LChanges[1].Event.Name.Name) then
+  begin
+    Exit;
+  end;
+  AOwner := LChanges[0].Owner;
+  AEvent := LChanges[0].Event;
+  APolicy := LChanges[0].Policy;
+  Result := True;
 end;
 
 function EncodeNyxCallbackResults(const AResults: TNyxCallbackEditResults): TNyxDataValue;

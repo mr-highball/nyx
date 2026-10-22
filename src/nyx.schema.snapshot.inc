@@ -281,10 +281,31 @@ begin
   end;
 end;
 
-function SchemaEventData(const AEvent: TNyxEventSchema): TNyxDataValue;
+function SchemaPolicyMask(APolicies: TNyxExecutionPolicies): Integer;
+var
+  LPolicy: TNyxExecutionPolicy;
+begin
+  Result := 0;
+  for LPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+  begin
+
+    if LPolicy in APolicies then
+    begin
+      Result := Result or (1 shl Ord(LPolicy));
+    end;
+  end;
+
+  if Result = 0 then
+  begin
+    raise ENyxModel.Create('Schema transport requires a nonempty execution-policy set');
+  end;
+end;
+
+function SchemaEventData(const AEvent: TNyxEventSchema; AVersion: Integer): TNyxDataValue;
 var
   LPayload: TNyxDataValue;
   LRoutes: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
   LIndex: Integer;
 begin
   LPayload := NyxNull;
@@ -298,16 +319,25 @@ begin
   begin
     LRoutes[LIndex] := AEvent.Routes[LIndex].ToData;
   end;
-  Result := NyxObject([
-    NyxField('trigger', NyxData(Ord(AEvent.Trigger))),
-    NyxField('name', NyxData(AEvent.Name.Name)), NyxField('payload', LPayload),
-    NyxField('title', NyxData(AEvent.Title)), NyxField('description', NyxData(AEvent.Description)),
-    NyxField('browser', NyxData(Ord(AEvent.Browser))),
-    NyxField('native', NyxData(Ord(AEvent.Native))),
-    NyxField('optional', NyxData(AEvent.PayloadOptional)),
-    NyxField('producer', NyxData(AEvent.DeclaredProducer)),
-    NyxField('contexts', NyxData(SchemaContextMask(AEvent.Contexts))),
-    NyxField('routes', NyxArray(LRoutes))]);
+  SetLength(LFields, 11);
+
+  if AVersion = 2 then
+  begin
+    SetLength(LFields, 12);
+    LFields[11] := NyxField('policies', NyxData(SchemaPolicyMask(AEvent.AllowedPolicies)));
+  end;
+  LFields[0] := NyxField('trigger', NyxData(Ord(AEvent.Trigger)));
+  LFields[1] := NyxField('name', NyxData(AEvent.Name.Name));
+  LFields[2] := NyxField('payload', LPayload);
+  LFields[3] := NyxField('title', NyxData(AEvent.Title));
+  LFields[4] := NyxField('description', NyxData(AEvent.Description));
+  LFields[5] := NyxField('browser', NyxData(Ord(AEvent.Browser)));
+  LFields[6] := NyxField('native', NyxData(Ord(AEvent.Native)));
+  LFields[7] := NyxField('optional', NyxData(AEvent.PayloadOptional));
+  LFields[8] := NyxField('producer', NyxData(AEvent.DeclaredProducer));
+  LFields[9] := NyxField('contexts', NyxData(SchemaContextMask(AEvent.Contexts)));
+  LFields[10] := NyxField('routes', NyxArray(LRoutes));
+  Result := NyxObject(LFields);
 end;
 
 function TNyxSchemaSnapshot.ToData: TNyxDataValue;
@@ -318,7 +348,23 @@ var
   LProperty: TNyxPropertyInfo;
   LIndex: Integer;
   LMember: Integer;
+  LVersion: Integer;
 begin
+  { Legacy ALL-policy snapshots keep their exact version1 shape and order.
+    One restriction promotes the WHOLE snapshot, with uniform strict rows. }
+  LVersion := 1;
+  for LIndex := 0 to High(Schemas) do
+  begin
+    for LMember := 0 to High(Schemas[LIndex].Events) do
+    begin
+
+      if Schemas[LIndex].Events[LMember].AllowedPolicies <>
+        [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)] then
+      begin
+        LVersion := 2;
+      end;
+    end;
+  end;
   SetLength(LRows, Length(Schemas));
   for LIndex := 0 to High(Schemas) do
   begin
@@ -344,25 +390,57 @@ begin
     SetLength(LEvents, Length(Schemas[LIndex].Events));
     for LMember := 0 to High(LEvents) do
     begin
-      LEvents[LMember] := SchemaEventData(Schemas[LIndex].Events[LMember]);
+      LEvents[LMember] := SchemaEventData(Schemas[LIndex].Events[LMember], LVersion);
     end;
     LRows[LIndex] := NyxObject([NyxField('kind', NyxData(Schemas[LIndex].Kind)),
       NyxField('properties', NyxArray(LProperties)), NyxField('events', NyxArray(LEvents))]);
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
+  Result := NyxObject([NyxField('version', NyxData(LVersion)),
     NyxField('revision', NyxData(CapturedRevision)), NyxField('schemas', NyxArray(LRows))]);
 end;
 
-function ReadSchemaEvent(const AData: TNyxDataValue): TNyxEventSchema;
+function ReadSchemaEvent(const AData: TNyxDataValue; AVersion: Integer): TNyxEventSchema;
 var
   LMask: Integer;
   LContexts: TNyxEventContexts;
   LKind: TNyxEventContextKind;
   LRoutes: TNyxDataValue;
+  LPolicy: TNyxExecutionPolicy;
+  LPolicies: TNyxExecutionPolicies;
 begin
-  SchemaFields(AData, '|trigger|name|payload|title|description|browser|native|' +
-    'optional|producer|contexts|routes|', 11);
+
+  if AVersion = 1 then
+  begin
+    SchemaFields(AData, '|trigger|name|payload|title|description|browser|native|' +
+      'optional|producer|contexts|routes|', 11);
+  end
+  else
+  begin
+    SchemaFields(AData, '|trigger|name|payload|title|description|browser|native|' +
+      'optional|producer|contexts|routes|policies|', 12);
+  end;
   Result := Default(TNyxEventSchema);
+
+  if AVersion = 2 then
+  begin
+    LMask := SchemaOrdinal(AData.Field('policies'),
+      (1 shl (Ord(High(TNyxExecutionPolicy)) + 1)) - 1);
+
+    if LMask = 0 then
+    begin
+      raise ENyxModel.Create('Schema transport requires a nonempty execution-policy set');
+    end;
+    LPolicies := [];
+    for LPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+    begin
+
+      if (LMask and (1 shl Ord(LPolicy))) <> 0 then
+      begin
+        Include(LPolicies, LPolicy);
+      end;
+    end;
+    Result.AllowedPolicies := LPolicies;
+  end;
   Result.Trigger := TNyxTrigger(SchemaOrdinal(AData.Field('trigger'), Ord(High(TNyxTrigger))));
   Result.Name := NyxEvent(AData.Field('name').AsText);
   Result.Title := AData.Field('title').AsText;
@@ -435,10 +513,12 @@ var
   LIndex: Integer;
   LMember: Integer;
   LOther: Integer;
+  LVersion: Integer;
 begin
   SchemaFields(AData, '|version|revision|schemas|', 3);
+  LVersion := SchemaOrdinal(AData.Field('version'), 2);
 
-  if AData.Field('version').AsInteger <> 1 then
+  if (LVersion <> 1) and (LVersion <> 2) then
   begin
     raise ENyxModel.Create('Unsupported schema snapshot version');
   end;
@@ -520,7 +600,7 @@ begin
     SetLength(LOwner.Schemas[LIndex].Events, LEvents.Count);
     for LMember := 0 to LEvents.Count - 1 do
     begin
-      LOwner.Schemas[LIndex].Events[LMember] := ReadSchemaEvent(LEvents.Item(LMember));
+      LOwner.Schemas[LIndex].Events[LMember] := ReadSchemaEvent(LEvents.Item(LMember), LVersion);
       for LOther := 0 to LMember - 1 do
       begin
 

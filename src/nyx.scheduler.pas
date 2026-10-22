@@ -52,6 +52,9 @@ type
     always defers to the UI thread. Threaded explicitly requires a real worker;
     a browser never pretends that a timeout is a thread. }
   TNyxExecutionPolicy = (neSequential, neAsynchronous, neUIQueue, neThreaded);
+  { A declaration may restrict execution without claiming target scheduler
+    support. The event owner and scheduler admit these two concerns separately. }
+  TNyxExecutionPolicies = set of TNyxExecutionPolicy;
   TNyxSchedulerCapability = (nscDeferredUI, nscWorkerThreads);
   TNyxSchedulerCapabilities = set of TNyxSchedulerCapability;
   TNyxExecutionStatus = (nesPending, nesRunning, nesSucceeded, nesFailed, nesCancelled);

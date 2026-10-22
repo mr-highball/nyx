@@ -373,6 +373,51 @@ mount/build. Runtime subscription cancellation remains a separate live operation
 
 ## Studio properties and events
 
+### Event policy capabilities (source in qualification)
+
+The 2026-10-22 P4B source uses `TNyxEventSchema.AllowedPolicies`, a
+`TNyxExecutionPolicies` enum set shared by discovery, effective document
+admission and Studio. Older creator records default to all four policies;
+explicit restrictions survive copied snapshots. An empty declaration or a
+disjoint restriction for the same effective event refuses. This describes
+event permission; actual scheduler/target support remains a separate check.
+Even a policy-only stream with zero callbacks must satisfy the event's rule.
+
+Bound tables discover `NyxQueryWorkbenchEvent(nqweBeforeChange)` and
+`NyxQueryWorkbenchEvent(nqweChanged)`. Before allows sequential execution only;
+Changed retains normal policy choices. Native Value is absent (a signal), while
+the independently decoded Details channel carries the query-change object.
+Discovery grants no custom Emit permission. An explicit creator producer keeps
+its authority/payload; matching restrictions intersect and differing producer
+payloads remain honestly non-uniform in Details discovery.
+
+The candidate Inspector offers only allowed policies. An older authored invalid
+policy remains visible as a diagnostic until deliberately corrected. For an
+absent stream whose initial choice is non-sequential, Add prepares Policy then
+Add in one candidate and one paired undo step. Existing empty streams retain
+their accepted policy. Grouped commands lock only their touched event identities
+while waiting; ordinary policy edits retain their existing queue behavior.
+Both routers retain fresh-handler/TODO navigation checks. Generic multi-add
+groups keep their ordered plural results rather than gaining an ambiguous
+single navigation target.
+
+Detached property-tree projection preserves the accepted event policy so the
+Inspector can explain a stale choice without changing it. It still validates
+property values. A projection passing that check is not event-policy admission:
+complete document admission and the strict single-control gate used before
+native/browser factory creation continue to reject forbidden policies. A schema
+change alone does not promise dynamic retirement of already mounted callbacks.
+
+Generated Pascal uses the enum-valued query factory and its required unit,
+including standalone Emit references and empty callback streams. Open custom
+event references remain compatible. Unrestricted creator snapshot transport
+keeps canonical version1; restricted transport uses strict uniform version2
+event rows. This is source work awaiting joint qualification, with no worker,
+server or observing rollout. [WORK](../WORK.md#query-event-authoring-p4b-separate-source-release--2026-10-22)
+records the admitted validation boundary.
+
+### Ordinary authoring
+
 [Event discovery](event-discovery.md) adds typed family/search/registration
 filters while retaining cards, policy fields and pending removal reviews.
 

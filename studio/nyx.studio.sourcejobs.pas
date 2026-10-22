@@ -325,7 +325,8 @@ uses
   SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
   nyx.studio.sourceprojection, nyx.studio.projectionediting,
   nyx.studio.commands, nyx.codec, nyx.canvas.editing, nyx.canvas.route.types,
-  nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing, nyx.diagram.editing
+  nyx.studio.transactions, nyx.flow.editing, nyx.programs.editing, nyx.diagram.editing,
+  nyx.studio.callbackedits
   {$ifndef PAS2JS}, Classes{$endif};
 
 type
@@ -1040,6 +1041,8 @@ var
   LJob: TNyxEditorSourceJob;
   LLast: Integer;
   LPending: TNyxStudioPendingDesign;
+  LChanges: TNyxCallbackChanges;
+  LChange: Integer;
   {$if defined(NYX_STUDIO_PROFILE) and not defined(PAS2JS)}
   { Opt-in UI-thread phase samples contain no source, identity or credentials.
     Ordinary native/browser builds perform no profiling clock/output work. }
@@ -1083,7 +1086,21 @@ begin
   if (AEdit.Action = sdaEvent) and LPending.EventLocked(AEdit.Selection,
     AEdit.Event.Trigger, AEdit.Event.Name) then
   begin
-    raise ENyxModel.Create('Wait for this callback removal before editing its event');
+    raise ENyxModel.Create('Wait for the pending callback change before editing its event');
+  end;
+
+  if AEdit.Action = sdaCallbacks then
+  begin
+    LChanges := ReadNyxCallbackChanges(AEdit.Callbacks);
+    for LChange := 0 to High(LChanges) do
+    begin
+
+      if LPending.EventLocked(LChanges[LChange].Owner,
+        LChanges[LChange].Event.Trigger, LChanges[LChange].Event.Name) then
+      begin
+        raise ENyxModel.Create('Wait for the pending callback change before editing its event');
+      end;
+    end;
   end;
 
   if (AEdit.Action = sdaSetBinding) and not AEdit.Binding.Cleared and
@@ -1312,6 +1329,8 @@ var
   procedure Include(const AEdit: TNyxStudioDesignEdit);
   var
     LCount: Integer;
+    LChanges: TNyxCallbackChanges;
+    LChange: Integer;
   begin
 
     if AEdit.Action = sdaTitle then
@@ -1375,6 +1394,32 @@ var
       SetLength(Result.Events, LCount + 1);
       Result.Events[LCount].Owner := AEdit.Selection;
       Result.Events[LCount].Intent := AEdit.Event;
+    end
+    else if AEdit.Action = sdaCallbacks then
+    begin
+      LChanges := ReadNyxCallbackChanges(AEdit.Callbacks);
+      for LChange := 0 to High(LChanges) do
+      begin
+        LCount := Length(Result.EventLocks);
+        SetLength(Result.EventLocks, LCount + 1);
+        Result.EventLocks[LCount].Owner := LChanges[LChange].Owner;
+        Result.EventLocks[LCount].Trigger := LChanges[LChange].Event.Trigger;
+        Result.EventLocks[LCount].Name := LChanges[LChange].Event.Name;
+
+        if LChanges[LChange].Kind = nccPolicy then
+        begin
+          { Append in active/queue order, alongside ordinary policy commands.
+            The latest exact policy wins without fabricating a removal intent. }
+          LCount := Length(Result.Events);
+          SetLength(Result.Events, LCount + 1);
+          Result.Events[LCount].Owner := LChanges[LChange].Owner;
+          Result.Events[LCount].Intent := Default(TNyxStudioEventIntent);
+          Result.Events[LCount].Intent.Action := seaPolicy;
+          Result.Events[LCount].Intent.Trigger := LChanges[LChange].Event.Trigger;
+          Result.Events[LCount].Intent.Name := LChanges[LChange].Event.Name;
+          Result.Events[LCount].Intent.Policy := LChanges[LChange].Policy;
+        end;
+      end;
     end
     else if AEdit.Action = sdaCollection then
     begin
@@ -1916,7 +1961,8 @@ begin
       FCompletedFileChange := FActive.Source.FileChange;
     end;
 
-    if (LState = nssApplied) and LDesign and (LAction = sdaEvent) then
+    if (LState = nssApplied) and LDesign and
+      (LAction in [sdaEvent, sdaCallbacks]) then
     begin
       FCompletedHandler := ADesign.AddedHandler;
     end;
@@ -2195,18 +2241,40 @@ end;
 
 function TNyxSourceCommands.CompletedEvent(out AIntent: TNyxStudioEventIntent;
   out AOwner, AView: TNyxText; out AAddedHandler: TNyxHandlerRef): Boolean;
+var
+  LEvent: TNyxCallbackEvent;
+  LPolicy: TNyxExecutionPolicy;
 begin
   AIntent := Default(TNyxStudioEventIntent);
   AOwner := '';
   AView := '';
   AAddedHandler := Default(TNyxHandlerRef);
-  Result := FPublishedDesign and (FPublishedAction = sdaEvent) and
+  Result := FPublishedDesign and (FPublishedAction in [sdaEvent, sdaCallbacks]) and
     FSession.MatchesCommandContext(FCompletedContext);
 
   if Result then
   begin
-    AIntent := FCompletedEdit.Event;
-    AOwner := FCompletedEdit.Selection;
+
+    if FPublishedAction = sdaCallbacks then
+    begin
+      Result := TryNyxCallbackPolicyAddShape(FCompletedEdit.Callbacks,
+        AOwner, LEvent, LPolicy);
+
+      if not Result then
+      begin
+        Exit;
+      end;
+      { Only this exact group's sole addition participates in ordinary TODO
+        navigation. Plural generic callback batches retain their own results. }
+      AIntent.Action := seaAdd;
+      AIntent.Trigger := LEvent.Trigger;
+      AIntent.Name := LEvent.Name;
+    end
+    else
+    begin
+      AIntent := FCompletedEdit.Event;
+      AOwner := FCompletedEdit.Selection;
+    end;
     AView := FCompletedEdit.View;
     AAddedHandler := FCompletedHandler;
   end;
@@ -2227,7 +2295,7 @@ begin
   Result := CaptureNyxStudioEvents(FSession, ANode, ATrigger, AReview,
     PendingDesign, LEdit, AEffect, ALine, ARemoval);
 
-  if Result and (LEdit.Action = sdaEvent) then
+  if Result and (LEdit.Action in [sdaEvent, sdaCallbacks]) then
   begin
     Edit(LEdit);
   end;

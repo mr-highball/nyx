@@ -43,6 +43,248 @@ begin
   Inc(GChecks);
 end;
 
+{ Inert inspection uses the real queued snapshot boundary. These cases neither
+  create a session nor infer permission/stream existence from a recognized shape. }
+procedure InspectionCases;
+var
+  LPair, LNamedPair, LBounded: TNyxCallbackBatchSnapshot;
+  LChanges, LAgain, LMaximum: TNyxCallbackChanges;
+  LWireItems: array of TNyxDataValue;
+  LOwner: TNyxText;
+  LEvent: TNyxCallbackEvent;
+  LPolicy: TNyxExecutionPolicy;
+  LIndex: Integer;
+  LRejected: Boolean;
+
+  procedure NotPair(const AChanges: array of TNyxCallbackChange;
+    const AReason: TNyxText);
+  begin
+    LOwner := 'previous-owner';
+    LEvent := NyxCallbackEvent(NyxEvent('previous-event'));
+    LPolicy := neThreaded;
+    Check(not TryNyxCallbackPolicyAddShape(
+      CaptureNyxCallbackBatch(NyxCallbackPatch(AChanges)), LOwner, LEvent, LPolicy),
+      AReason);
+    Check((LOwner = '') and (LEvent.Trigger = ntClick) and
+      (LEvent.Name.Name = '') and (LPolicy = neSequential),
+      AReason + ' clears every output');
+  end;
+
+  procedure RefuseWire(const AWire: TNyxDataValue; const AReason: TNyxText);
+  var
+    LRefused: Boolean;
+  begin
+    LRefused := False;
+    try
+      ReadNyxCallbackChanges(ReadNyxCallbackBatchSnapshot(AWire));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, AReason);
+  end;
+
+begin
+  LPair := CaptureNyxCallbackBatch(NyxCallbackPatch([
+    NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+    NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown))]));
+  Check(TryNyxCallbackPolicyAddShape(LPair, LOwner, LEvent, LPolicy) and
+    (LOwner = 'project-name') and (LEvent.Trigger = ntKeyDown) and
+    (LEvent.Name.Name = '') and (LPolicy = neUIQueue),
+    'physical-event Policy then Add retains exact typed identity and policy');
+  LNamedPair := CaptureNyxCallbackBatch(NyxCallbackPatch([
+    NyxSetCallbackPolicy('project-name', NyxCallbackEvent(NyxEvent('query-before')), neSequential),
+    NyxAddCallback('project-name', NyxCallbackEvent(NyxEvent('query-before')))]));
+  Check(TryNyxCallbackPolicyAddShape(LNamedPair, LOwner, LEvent, LPolicy) and
+    (LEvent.Trigger = ntNamed) and (LEvent.Name.Name = 'query-before') and
+    (LPolicy = neSequential), 'named-event shape retains its exact open name');
+  LChanges := ReadNyxCallbackChanges(LPair);
+  Check((Length(LChanges) = 2) and (LChanges[0].Kind = nccPolicy) and
+    (LChanges[1].Kind = nccAdd), 'inspection retains ordered operation meanings');
+  LAgain := ReadNyxCallbackChanges(LPair);
+  LChanges[0] := NyxAddCallback('other-owner', NyxCallbackEvent(ntClick));
+  Check((LAgain[0].Kind = nccPolicy) and (LAgain[0].Owner = 'project-name'),
+    'replacing an inspected member cannot change a peer read');
+  LChanges := ReadNyxCallbackChanges(LPair);
+  Check(LChanges[0].Policy = neUIQueue,
+    'replacing an inspected member cannot change the queued snapshot');
+  LChanges := ReadNyxCallbackChanges(CaptureNyxCallbackBatch(NyxCallbackPatch([
+    NyxMoveCallback('project-name', NyxCallbackEvent(ntKeyDown), NyxCallbackID('registration'), 2),
+    NyxRemoveCallback('project-name', NyxCallbackEvent(ntKeyDown), NyxCallbackID('registration'))])));
+  Check((LChanges[0].Kind = nccMove) and (LChanges[0].Position = 2) and
+    (LChanges[0].Registration.Name = 'registration') and
+    (LChanges[1].Kind = nccRemove) and (LChanges[1].Registration.Name = 'registration'),
+    'inspection preserves typed registration and position meanings for generic changes');
+
+  NotPair([NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown)),
+    NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue)],
+    'reversed Add then Policy remains a generic batch');
+  NotPair([NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+    NyxAddCallback('Project-name', NyxCallbackEvent(ntKeyDown))],
+    'case-distinct owners are not one exact policy-addition target');
+  NotPair([NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+    NyxAddCallback('project-name', NyxCallbackEvent(ntChange))],
+    'different physical triggers are not one policy-addition target');
+  NotPair([NyxSetCallbackPolicy('project-name', NyxCallbackEvent(NyxEvent('query-before')), neUIQueue),
+    NyxAddCallback('project-name', NyxCallbackEvent(NyxEvent('Query-before')))],
+    'case-distinct named events are not one policy-addition target');
+  NotPair([NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown))],
+    'an ordinary single Add does not acquire a policy-pair meaning');
+  NotPair([NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+    NyxMoveCallback('project-name', NyxCallbackEvent(ntKeyDown), NyxCallbackID('registration'), 0)],
+    'a policy followed by a registration move is not a callback addition');
+  NotPair([NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+    NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown)),
+    NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown))],
+    'generic multiple additions do not choose one scalar navigation handler');
+
+  SetLength(LMaximum, NyxMaximumCallbackChanges);
+  for LIndex := 0 to High(LMaximum) do
+  begin
+    LMaximum[LIndex] := NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown));
+  end;
+  LBounded := CaptureNyxCallbackBatch(NyxCallbackPatch(LMaximum));
+  Check(Length(ReadNyxCallbackChanges(LBounded)) = NyxMaximumCallbackChanges,
+    'inspection preserves the existing complete 32-member batch budget');
+  SetLength(LWireItems, NyxMaximumCallbackChanges + 1);
+  for LIndex := 0 to High(LWireItems) do
+  begin
+    LWireItems[LIndex] := LPair.ToData.Item(1);
+  end;
+  RefuseWire(NyxArray(LWireItems), 'inspection cannot admit an over-budget wire batch');
+  RefuseWire(NyxArray([]), 'inspection cannot admit an empty wire batch');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('add')), NyxField('id', NyxData('')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down'))]))])]),
+    'inspection retains exact owner-reference admission');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('add')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down'))])),
+    NyxField('registration', NyxData('not-an-add-field'))])]),
+    'inspection retains action-specific closed fields');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('policy')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down'))])),
+    NyxField('policy', NyxData(True))])]),
+    'inspection rejects a Boolean in the closed policy family');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('policy')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down'))])),
+    NyxField('policy', NyxData('later'))])]),
+    'inspection rejects unknown execution-policy names');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('add')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down')),
+      NyxField('name', NyxData('query-before'))]))])]),
+    'inspection rejects an ambiguous trigger and name');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('add')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('not-a-trigger'))]))])]),
+    'inspection rejects an unknown event trigger');
+  RefuseWire(NyxArray([NyxObject([
+    NyxField('op', NyxData('move')), NyxField('id', NyxData('project-name')),
+    NyxField('event', NyxObject([NyxField('trigger', NyxData('key-down'))])),
+    NyxField('registration', NyxData('registration')), NyxField('index', NyxData('zero'))])]),
+    'inspection retains the Integer position family');
+  LRejected := False;
+  try
+    ReadNyxCallbackChanges(Default(TNyxCallbackBatchSnapshot));
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'an undefined snapshot cannot enter typed inspection');
+  LOwner := 'previous-owner';
+  LEvent := NyxCallbackEvent(NyxEvent('previous-event'));
+  LPolicy := neThreaded;
+  LRejected := False;
+  try
+    TryNyxCallbackPolicyAddShape(Default(TNyxCallbackBatchSnapshot),
+      LOwner, LEvent, LPolicy);
+  except
+    on Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (LOwner = '') and (LEvent.Name.Name = '') and
+    (LPolicy = neSequential), 'undefined shape inspection refuses with cleared outputs');
+end;
+
+{ A real independent planner/worker/history case proves that inspection does not
+  replace normal admission. This deliberately uses an absent unrestricted stream
+  with an explicit nondefault policy, then retains one exact Add/TODO result. }
+procedure PolicyAddCase;
+var
+  LSession: TNyxStudioSession;
+  LBefore, LAfter: TNyxProjectPair;
+  LEdit: TNyxStudioDesignEdit;
+  LRequest: TNyxStudioDesignRequest;
+  LSchemas: INyxSchemaSnapshot;
+  LPrepared, LReceived: INyxPreparedDesign;
+  LGroup: INyxPreparedCallbackGroup;
+  LRows: TNyxDataValue;
+  LInfos: TNyxAuthoredEventInfos;
+begin
+  LSession := TNyxStudioSession.Create;
+  try
+    LSession.Select('project-name');
+    LBefore := LSession.ProjectSnapshot;
+    Check(Length(NyxAuthoredEvents(LSession.Document.Find('project-name'))) = 0,
+      'the policy-addition journey starts with no authored stream');
+    LEdit := Default(TNyxStudioDesignEdit);
+    LEdit.Action := sdaCallbacks;
+    LEdit.Selection := LSession.SelectedID;
+    LEdit.View := LSession.ActiveViewID;
+    LEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+      NyxSetCallbackPolicy('project-name', NyxCallbackEvent(ntKeyDown), neUIQueue),
+      NyxAddCallback('project-name', NyxCallbackEvent(ntKeyDown))]));
+    LSchemas := CaptureNyxSchemas;
+    LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+    Check((LRequest.IntentData.Field('version').AsInteger = 17) and
+      ReadNyxStudioDesignRequest(LRequest.ToData).SameRequest(LRequest),
+      'the exact policy-addition pair uses the existing complete request shape');
+    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(not LPrepared.Diagnostic.Defined and
+      Supports(LPrepared, INyxPreparedCallbackGroup, LGroup),
+      'Policy then Add prepares as one ordinary grouped candidate');
+    LRows := LGroup.CallbackResults;
+    Check((LRows.Count = 2) and (LRows.Item(0).Field('op').AsText = 'policy') and
+      (LRows.Item(1).Field('op').AsText = 'add') and
+      (LRows.Item(1).Field('policy').AsText = NyxPolicyName(neUIQueue)),
+      'the Add result observes the earlier explicit policy in the same candidate');
+    Check((LPrepared.AddedHandler.Name <> '') and
+      (LPrepared.AddedHandler.Name = LRows.Item(1).Field('handler').AsText),
+      'only the exact pair returns its sole added handler for navigation');
+    LReceived := ReceiveNyxPreparedDesign(LPrepared.ToData, LRequest, LSchemas);
+    Check((LReceived.AddedHandler.Name = LPrepared.AddedHandler.Name) and
+      (Pos('TODO', ReadNyxHandlerSource(LReceived.Source, LReceived.AddedHandler).Code) > 0),
+      'the strict worker receipt retains the exact fresh handler and editable TODO');
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'policy-addition preparation and receipt leave the accepted pair unchanged');
+    Check(LSession.CompleteDesignRequest(LRequest, LReceived) = nscApplied,
+      'one completion admits policy and callback together');
+    LAfter := LSession.ProjectSnapshot;
+    LInfos := NyxAuthoredEvents(LSession.Document.Find('project-name'));
+    Check((Length(LInfos) = 1) and (LInfos[0].Policy = neUIQueue) and
+      (Length(LInfos[0].Callbacks) = 1) and
+      (LInfos[0].Callbacks[0].Handler.Name = LReceived.AddedHandler.Name),
+      'the admitted stream has its requested policy and sole exact registration');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'one Undo removes the complete policy-addition pair');
+    LSession.Redo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAfter),
+      'one Redo restores the complete policy-addition pair');
+  finally
+    LSession.Free;
+  end;
+end;
+
 { Shared record/worker boundary qualification runs unchanged in checked native
   and the actual browser. It uses independent literal sessions; executed
   handwritten publication belongs to the production semantic/compiler consumer. }
@@ -206,6 +448,8 @@ end;
 
 begin
   try
+    InspectionCases;
+    PolicyAddCase;
     Execute;
     WriteLn('PASS ', GChecks, ' callback intent checks');
     {$ifdef PAS2JS}

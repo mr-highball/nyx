@@ -184,6 +184,7 @@ var
   LBad: Boolean;
   LLegacySchema: TNyxEventSchema;
   LSchemaCopy: TNyxEventSchema;
+  LSchemaRevision: Integer;
 begin
   Check(not Default(TNyxTextSelection).Defined and
     not Default(TNyxEditingSnapshot).Defined, 'undefined is distinct from an empty caret');
@@ -275,6 +276,28 @@ begin
   LSchemaCopy := LLegacySchema.Copy;
   LLegacySchema.Contexts := [];
   Check(LSchemaCopy.Contexts = [nctxEditing], 'creator context declaration copies independently');
+  Check(LLegacySchema.AllowedPolicies =
+    [Low(TNyxExecutionPolicy)..High(TNyxExecutionPolicy)],
+    'old creator records default to every execution policy without reading uninitialized bits');
+  LLegacySchema.AllowedPolicies := [neUIQueue, neAsynchronous];
+  LSchemaCopy := LLegacySchema.Copy;
+  LLegacySchema.AllowedPolicies := [];
+  Check((LSchemaCopy.AllowedPolicies = [neUIQueue, neAsynchronous]) and
+    (LLegacySchema.AllowedPolicies = []),
+    'policy restrictions copy independently and explicit empty does not become a default');
+  LLegacySchema.Payload := NyxSignalPayload;
+  LSchemaRevision := NyxSchemaRevision;
+  LBad := False;
+  try
+    RegisterNyxSchema(NyxCustomKind('empty-policy-probe'), [], [LLegacySchema]);
+  except
+    on ENyxModel do
+    begin
+      LBad := True;
+    end;
+  end;
+  Check(LBad and (NyxSchemaRevision = LSchemaRevision),
+    'empty execution-policy declaration refuses before creator publication');
   LSelection := NyxTextSelection(LText, 1, 2, ntdBackward);
   LSnapshot := NyxEditingSnapshot(nepBeforeEdit, neiInsertFromPaste, LText,
     '👩‍💻', True, LSelection, False, True, 'insertFromPaste');

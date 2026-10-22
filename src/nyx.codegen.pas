@@ -210,7 +210,8 @@ uses
   nyx.scheduler,
   nyx.composition,
   nyx.codec,
-  nyx.schema;
+  nyx.schema,
+  nyx.collections.query.controls;
 
 const
   CStateFactories: array[TNyxStateKind] of TNyxText = (
@@ -265,6 +266,72 @@ begin
 end;
 
 function PascalString(const AValue: TNyxText): TNyxText; forward;
+
+{ Exact library events retain their typed factories even on a standalone
+  control with no collection binding. Empty authored streams still emit a
+  Policy statement, so callback count is not an import-use test. }
+function NeedsQueryEventUnits(ADocument: TNyxDocument): Boolean;
+var
+  LIndex: Integer;
+
+  function IsQueryEvent(const AName: TNyxText): Boolean;
+  begin
+    Result := (AName = NyxQueryWorkbenchEvent(nqweBeforeChange).Name) or
+      (AName = NyxQueryWorkbenchEvent(nqweChanged).Name);
+  end;
+
+  function ContainsEvent(ANode: TNyxNode): Boolean;
+  var
+    LEvents: TNyxAuthoredEventInfos;
+    LEvent: Integer;
+    LChild: Integer;
+  begin
+
+    if IsQueryEvent(ANode.Prop(NyxAttributeName(atEmit))) or
+      IsQueryEvent(ANode.Prop(NyxAttributeName(atEmitChange))) then
+    begin
+      Exit(True);
+    end;
+    LEvents := NyxAuthoredEvents(ANode);
+    for LEvent := 0 to High(LEvents) do
+    begin
+
+      if (LEvents[LEvent].Trigger = ntNamed) and
+        IsQueryEvent(LEvents[LEvent].Name.Name) then
+      begin
+        Exit(True);
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if ContainsEvent(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+
+    if ContainsEvent(ADocument.Pages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+
+    if ContainsEvent(ADocument.Components[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
 
 function NeedsFileOpenUnits(ADocument: TNyxDocument): Boolean;
 var
@@ -2052,6 +2119,16 @@ begin
   if TryNyxSemantic(AName, LSemantic) then
   begin
     Exit('NyxSemantic(' + NyxSemanticSymbol(LSemantic) + ')');
+  end;
+
+  if AName = NyxQueryWorkbenchEvent(nqweBeforeChange).Name then
+  begin
+    Exit('NyxQueryWorkbenchEvent(nqweBeforeChange)');
+  end;
+
+  if AName = NyxQueryWorkbenchEvent(nqweChanged).Name then
+  begin
+    Exit('NyxQueryWorkbenchEvent(nqweChanged)');
   end;
   Result := 'NyxEvent(' + PascalString(AName) + ')';
 end;
@@ -4288,6 +4365,11 @@ begin
     if ADocument.HasComputedBindings then
     begin
       LLines.Add('  nyx.expressions,');
+    end;
+
+    if NeedsQueryEventUnits(ADocument) then
+    begin
+      LLines.Add('  nyx.collections.query.controls,');
     end;
 
     if ADocument.HasCollectionViews then

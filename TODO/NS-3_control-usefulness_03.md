@@ -34,6 +34,43 @@ source scope and actual result; completing W1 does not accept W2 or this task.
 | W1 | Real column resize with keyboard alternative, choose/reorder/show/hide/pin and default reset; stable per-instance arrangement | Cell actions and full task acceptance |
 | W2 | Full-value inspection, format/select/copy/export/context actions and integrated preference/lifecycle behavior on W1 | Any unmet original criterion and broader parity/budgets |
 
+**Pull checklist — W1, service/process inspection:**
+
+- Keep an editable Service name column pinned at logical start and a Status
+  column pinned at logical end while the middle columns scroll. Both remain
+  ordinary data columns with correct focus, selection, editing and callbacks;
+  a leading non-editable native `FixedCols` region alone is not the result.
+  Command/action cells remain W2 work rather than a prerequisite for W1.
+- At desktop and compact widths, resize/reorder/hide columns, reveal a hidden
+  column and restore defaults through discoverable controls and keyboard
+  alternatives. Specify how oversized pins leave a usable middle region or
+  degrade visibly; all-hidden columns must retain a reachable recovery action.
+- Change filters/order while a cell is focused, then rebind or replace the
+  reusable instance. Follow stable row/field identities, preserve each peer's
+  independent arrangement, and fire each accepted command once across panes.
+  Current native width retention is starting evidence, not drag-resize proof.
+
+**Pull checklist — W2, exact inspection and output:**
+
+- Reveal a full executable path or error message without shrinking the UI.
+  Inspecting or selecting it must not commit an unfinished cell draft. Define
+  whether each copy command takes accepted raw data, formatted display text or
+  an explicitly selected draft; do not silently substitute one for another.
+- Copy one cell and selected record IDs, then export a deliberately chosen
+  filtered result. Make selected versus visible rows, hidden selected rows,
+  hidden columns and current page versus all matches explicit. Capture stable
+  identities/revisions so a later update cannot redirect the command to a
+  different process. Specify headers, escaping, line endings and delimiters.
+- Report unsupported clipboard access, cancelled file save and export limits
+  through typed command results. Reuse the existing file-save outcomes; the
+  portable clipboard capability still needs an explicit result/unavailable
+  contract. Keep inspection and selection intact on refusal; never report a
+  requested download as a confirmed disk write. Reuse managed menus.
+
+These 2026-10-22 refinements make the original criteria observable; they do not
+release implementation, introduce a second history/query owner or
+claim that inherited native widget copy satisfies the portable contract.
+
 **Acceptance Criteria:**
 
 - Provide typed authoring policies and real user controls for resizing, bounded

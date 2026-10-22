@@ -35,6 +35,43 @@ reviewed source/validation scope; L1 alone does not qualify scale or accept04.
 | L1 | Stable live inspection, visible follow/pause/resume and feed states, independent views and lifecycle refusal | Measured scale/paint/input/memory and full task acceptance |
 | L2 | Predeclared budgets measured on that same useful mounted journey at both targets/widths, with offscreen correctness and teardown | Any unmet original criterion and broader production performance/parity |
 
+**Cross-family inspection checklist — Lists, Tables and Trees:**
+
+The 2026-10-22 refinement keeps live/context behavior here, table column commands
+in [02](NS-3_control-usefulness_02.md), presentation/copy in
+[03](NS-3_control-usefulness_03.md), and coordinated List/Table search in the
+existing [DataToolbar runtime](NS-3_data-toolbar_02.md). Tree find/reveal uses
+the existing hierarchy/query owners under [components01](NS-3_components_01.md)
+and this task; it does not expand DataToolbar's target families. This creates
+no new search engine or reciprocal prerequisite on those tasks.
+
+- Typeahead moves focus among displayed labels; it is not a membership filter.
+  A public example and Studio/help must say which capability is active. Do not
+  imply that the Table workbench also installs search controls on a List/Tree.
+- Demonstrate finding a deeply nested process in a filtered Tree. Required
+  ancestors provide navigable context; distinguish actual matches from retained
+  context ancestors and disclosed rows, with clearly named counts and search
+  scope. Inclusion of an ancestor does not itself expand it: reveal an admitted
+  match's path deliberately. Clearing this surface's search retains surviving
+  selected identities and deliberate disclosure changes; it must not restore an
+  old expansion snapshot over later user input. Define focus/scroll recovery
+  and explain intervening deletions. Reuse existing hierarchy/query and stable-
+  selection owners; state unsupported combinations explicitly.
+- Make hidden selection understandable: show a selected-but-not-visible count
+  or equivalent discoverable explanation and an explicit reveal/clear action
+  where supported. A reveal which requires relaxing a filter needs a deliberate
+  choice; it must not silently alter the accepted query or select another row.
+  Withdrawing one owner's search may still leave authored/peer filters hiding
+  a selection; explain that state rather than promising an impossible reveal.
+- Pause one of two views while services are inserted, updated or removed. Keep
+  the paused view's inspection readable with a stale/pending indication; the
+  peer remains live. Resume deliberately, honor bounded retention/overflow and
+  explain a lost anchor or deleted edited row without overwriting its draft.
+
+L1 and the existing family-specific owners deliver these interactions; L2
+measures that same mounted workload. Existing lazy cell reads, row windows or
+query snapshots alone do not establish the user-facing result or performance.
+
 **Acceptance Criteria:**
 
 - Expose typed opt-in update/follow policies with clear defaults and caller

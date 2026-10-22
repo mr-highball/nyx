@@ -1,5 +1,168 @@
 # Working in Nyx
 
+P4B NATIVE RETIREMENT TRIAGE (2026-10-22): controls newline oracle59CD4174
+compiles with zero warnings. Actual first THREE phases pass, including the
+original exact draft/base/pair/threaded-policy refusal. A later Select's Ready30
+fails before phase4; its combined source/presentation wait and finally-tail RUN
+line do not identify the particular command or pending owner. Do not guess a
+product repair or increase waits. Root joined1663/ad30cd; compiler13344/native
+15580 are terminal, exact23/1807/13/19 and nine artifact pins audit03A6B8D0 pass.
+Failed native has a complete clean heap156345212 blocks/27586421593 bytes equal.
+Retain all failures. Five native suites71/142/359/729/120 remain reusable at
+their exact boundaries; seven later browser/product compilers never ran.
+Root owns docs/checkpoint and read-only triage; existing helper independently
+reviewed result/readiness ownership. Ready checks its deadline AFTER Pump and
+BEFORE idle flags: one long completed paint can fail without a stuck queue.
+Next useful observation is SAME-consumer Ready context, source/presentation
+flags, command state/selection, paint delta and last/max Pump duration; preserve
+predicate position, all gestures, Sleep1, Ready30 and outer600. No product fix
+is supported yet. All Pascal/tools remain paused until a
+separate narrow observation/source release and fresh review/freeze. No original
+criterion/P4B/P4C/browser/credit closes; core37 remains. No host/config/MCP/worker
+rollout, cleanup/restart, new fixture or extra agent follows.
+
+P4B NATIVE NEWLINE ORACLE REVIEWED (2026-10-22): the bounded diagnostic is
+terminal/root joined16565/b93947; exact23/1807/13/19 audit passes, zero warnings
+and complete clean heap. It proves base/pair/threaded policy/pending refusal
+are correct; only the newly inserted line ending differs (LF versus native
+CRLF). Preserve that failed result. This is a fixture expectation mismatch,
+not a production draft-publication defect. Existing controls59CD4174 retains
+the identical physical LF input and original four-term equality, gestures and
+Ready30/outer600. Its independently precomputed authored expectation uses the
+native LineEnding; one additive Memo suffix check observes that boundary.
+Root/helper exact source review passes; no normalization-on-compare or product
+change. Root may freshly freeze the SAME23/1807/13/19, then admit ONE native
+controls compiler/run. Reuse the five unchanged accepted native scopes. Later
+seven fixed browser/product compilers wait for this actual outcome. All source,
+guides and tools pause through actual joins/exact audits. No host/browser run,
+config/MCP/worker rollout, cleanup/restart or extra agent; core37/P4C/original
+criteria stay open.
+
+P4B ACTUAL DRAFT REFUSAL DIAGNOSTIC (2026-10-22): current five native suites
+71/142/359/729/120 pass with zero warnings and complete clean heaps. Native
+controls compile with zero warnings and pass their first two actual phases,
+then fail the ORIGINAL four-term pending-Pascal assertion499. Root joined
+23372/a9a000; exact23/1807/13/19 audit passes and failed native heap is complete/
+zero-unfreed. No later draft/reuse/new atomic-width or browser/Studio gate ran.
+Do not infer which of draft/base/pair/policy changed from that combined failure.
+Root releases ONLY the existing controls consumer's bounded diagnostic message
+plus docs/private state. Keep the predicate, gestures, Ready30 and outer600 exact;
+no product repair, substitute fixture or extra scenario is indicated yet.
+Review and fresh freeze precede ONE controls compiler/native observation only.
+Reuse five unchanged accepted scopes; later seven compilers remain paused until
+this outcome is understood. Core37/P4C/original/browser gates stay open. No host,
+config/MCP/worker rollout, cleanup/restart, public tool or extra agent follows.
+
+P4B TEST AUTHORITY REVIEW (2026-10-22): inspection repair qualifies native
+callbacks71/queue142/source359 with complete clean heaps and zero warnings.
+Semantic compiles without warnings but fails a new retained-frame import test;
+its failed native result also has a complete clean heap. All actual readers
+are root joined63963/56774a and exact23/1807/13/19 audit passes. No later reader
+ran. Independent source review confirms WithNyxImport correctly appends the
+final namespace before a semicolon; the new test wrongly required a comma.
+Parsed unit membership repairs that oracle. Next semantic compile passes with
+zero warnings, but its clean-heap native run reveals a fixture authority error:
+the custom projection-proxy keeps its own creator identity, not the referenced
+definition's registered event schema. Root joined90658/84a5b4; exact audit passes.
+Root changes ONLY the existing consumer to scope the proxy's own restricted
+schema and assert its exact realized kind/physical face/policy. Do not invent
+transitive registration or change production to match a mistaken fixture.
+Typed event and handwritten-frame predicates, original refusal predicates and
+all old tests/waits stay. No later reader ran. Review/freeze precedes
+the ten remaining fixed readers, starting with fresh semantic; reuse71/142/359 at
+their unchanged dependency boundaries, retaining all failures. Original13
+accepted-compiler/six-native plan is not expanded into unrelated variants.
+Core37/P4C/browser/original gates remain open; no host/config/tool rollout.
+
+P4B INSPECTION REPAIR REVIEW (2026-10-22): fixed qualification stopped at each
+first failure; all actual readers are terminal/root joined. Retain original
+schema projection compiler failure, then Inspector missing-import compiler
+failure. Predecessor callbacks71 passes with a complete zero-unfreed heap and
+zero warnings. The next queue compiler passes, but its native run refuses the
+accepted legacy policy during SelectedProjection before the diagnostic can be
+shown; its failed outcome has a complete clean heap. Exact failure audits retain
+23owned/1807Pascal/13foreign/19extra and all later readers remain unattempted.
+Root repairs ONLY schema's private property-purpose split and existing semantic
+consumer. Property-tree projection keeps all value/property checks; strict
+public single-control admission (before both target factories) and document
+CheckHosts retain event-policy refusal. No catch, authored mutation, ambient
+bypass or source/API/path expansion follows. The same-node regression must
+prove readable unchanged policy/text and strict face/document refusal. Existing
+legacy Inspector predicates/waits and all helper files remain exact. Review and
+fresh freeze precede the SAME13 compiler/six serial native plan; schema changes
+require fresh callbacks, not reuse of predecessor71 as current qualification.
+Stop first failure and join/audit before edits. Core37/P4C/browser/original
+criteria stay open; no host/config/MCP/worker rollout, cleanup or extra agent.
+
+P4B SOURCE REVIEWED / QUALIFICATION PREPARATION (2026-10-22): previous goal turn
+is progress (reviewed control-usefulness task refinements). Both P4B source scopes
+are ready and independently reviewed, not qualified. Retain fields-before-methods,
+optional-interface test repairs and the otherwise-valid empty-policy probe.
+Existing helper files stay0968/27FC/23E15914. Root owns only private freeze/
+qualification orchestration plus existing23-path docs and final reader admission;
+no public build or product scope expands. Fixed impact plan is13 compilers:
+callback-intent, event-queue, source-diagnostic, semantic and editing each native/
+browser, actual native event controls, both Studios. Six native runs are serial;
+the control journey asserts1100/390 inside one unchanged existing program, keeping
+old assertions/deadlines. Others keep their original entrypoints. Matching browser
+programs compile only. Use maintained flags with knowni386-win32/win32, no probes.
+Native children get fresh owned final HeapTrc files outside fixture evidence;
+require full equal allocation/free, zero unfreed and actual PASS. Stop first
+compiler/owned-warning/runtime failure, root joins exact launches before edits.
+Private tools and plan pass independent review; root may now jointly freeze
+before admitting the fixed readers. Expected freeze23owned/1807Pascal/13foreign/
+19extras, preserving prior9 and four backlog docs. All Pascal/guides/tools pause
+while admitted readers are live. No browser/host/MCP/worker rollout, cleanup,
+restart, new fixture or extra agent; core37/P4C/original criteria remain open.
+
+P4B EXISTING TEST OWNERSHIP TRANSFER (2026-10-22): all readers remain joined;
+no compiler is admitted. Within the SAME23 released paths, root transfers ONLY
+tests/nyx.test.event.queue.pas to existing Lil' Scooty for additive exact-pair
+receipt/admission/pending and synchronous-route checks. Existing decoder and
+callback-intent files remain helper-owned at0968/27FC, unchanged until a concrete
+review finding. Root retains all production, semantic/editing/source-preparation/
+actual-native consumers and docs. Preserve every old assertion/wait/seed and
+generic batch result. No new fixture/path/API/wire/host scope or extra agent.
+Source review and a joint freeze still precede the fixed compiler plan.
+
+CONTROL USEFULNESS BACKLOG REFINEMENT (2026-10-22): latest user request is a
+docs-only side packet. Reuse accepted80-kind review and existing02/03/04 owners;
+do not duplicate tickets. Root refines bound/literal/default filter diagnosis,
+editable both-edge pins, exact copy/export, List/Tree search versus typeahead,
+ancestor/hidden-selection recovery and paused/live peers in those tasks, parent
+components01, docs/control-usefulness, WORK and this handoff. Independent root/
+helper review passes;426 links and18 preservation pins pass. No implementation
+credit, criterion/DONE/counter
+or browser verdict changes. Current P4B Pascal remains in progress/uncompiled;
+helper's two source-ready files stay exact0968A38F/27FC8E38. Return to the P4B
+release below after this bounded task refinement. No new source/compiler/host,
+MCP/config/worker rollout, cleanup/restart or extra agent follows.
+
+QUERY EVENT AUTHORING P4B SOURCE RELEASE (2026-10-22): previous496242f is progress,
+committed/pushed/remote-verified. All actual readers are joined;1807Pascal/
+foreign13/extra9 remain exact. Root owns ONLY scheduler policy-set alias, schema/
+snapshot policy capability and effective admission/native query discovery,
+codegen/source typed query-event factory/imports, Inspector/agent policy exposure,
+session/design/sourcejobs atomic Policy-before-Add pending/receipt/TODO paths,
+existing semantic/editing/source-preparation/event-queue consumers and related
+guides/handoff/WORK/task02. Existing helper owns ONLY callbackedits' shared strict
+typed batch decoder/exact pair inspection and existing callback_intent additive
+regressions. Exact23 paths/preimages live in private query-events state; no other
+Pascal, renderer/workbench runtime, new fixture, GUID or request17/reply2 field
+change is released. Before remains sequential at runtime; discovery does not
+grant custom Emit. Default old creator records to ALL policies via managed marker;
+intersect same-event restrictions and refuse empty conflicts. Preserve canonical
+unrestricted snapshotv1; restrictedv2 uses uniform strict event fields. Keep old
+assertions/waits and generic multi-add semantics. Both async and sync UI paths
+must publish one candidate and retain TODO focus; exact batch-touched event locks
+must precede enqueue. No compiler is released yet: independently review both
+source scopes, choose the fixed impact-based existing-consumer plan and jointly
+freeze before readers. No new public server/tool or worker/wire rollout follows
+from source codec work. P4C/browser/performance/original criteria/core37 stay open.
+Preserve foreign13/offline LAN/no native Nyx tools, pending browser approval and
+no host/config retry, cleanup/restart or extra agent. WORK/private state owns
+ownership, qualification and return to OWN Save/Open/compiled proof.
+
 QUERY AUTHORING P4A NATIVE-LOCAL QUALIFIED (2026-10-22): capture27453 is terminal/
 root joinedba1c45 exit0. Immutable0941A8F3 and independent root/helper review
 verify13owned/1807Pascal/foreign13/extra9 exact, including all retained source.

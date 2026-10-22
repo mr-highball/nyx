@@ -119,7 +119,8 @@ function RouteNyxEventsFilter(ANode: TNyxNode; ATrigger: TNyxTrigger;
   ARoot: TNyxNode; out AFilter: TNyxEventFilter): Boolean;
 { Capture immutable typed mutation or a presentation-only warning/navigation.
   This function never generates source or publishes a pair on the UI thread.
-  The out edit is sdaEvent only for add, policy or an exact confirmed removal. }
+  An absent stream with a non-sequential initial policy uses one sdaCallbacks
+  Policy-before-Add group; ordinary add/policy/confirmed removal use sdaEvent. }
 function CaptureNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
   ATrigger: TNyxTrigger; const ARemovalReview: TNyxCallbackRemoval;
   const APending: TNyxStudioPendingDesign; out AEdit: TNyxStudioDesignEdit;
@@ -257,7 +258,7 @@ uses
   nyx.studio.transactions, nyx.selection.editor, nyx.studio.authoring, nyx.canvas.editor,
   nyx.logic.editor, nyx.flow.rows.editor, nyx.flow.routes, nyx.flow.controls.editor,
   nyx.programs.editor, nyx.canvas.palette, nyx.canvas.editing, nyx.codec,
-  nyx.parts.editor;
+  nyx.parts.editor, nyx.source, nyx.studio.projects;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
@@ -1698,6 +1699,8 @@ var
   LOrderCount: Integer;
   LLocked: Boolean;
   LPendingPolicy: TNyxExecutionPolicy;
+  LHasStream: Boolean;
+  LPolicyAllowed: Boolean;
 begin
 
   if (AParent = nil) or (ASession = nil) or (AProjection = nil) then
@@ -1740,13 +1743,18 @@ begin
   end;
   LChoices := TNyxStrings.Create;
   try
-    for LExecutionPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
-    begin
-      LChoices.Add(NyxPolicyName(LExecutionPolicy));
-    end;
     for LDisplayIndex := 0 to High(LOrder) do
     begin
       LIndex := LOrder[LDisplayIndex];
+      LChoices.Clear;
+      for LExecutionPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+      begin
+
+        if LExecutionPolicy in LMetadata[LIndex].AllowedPolicies then
+        begin
+          LChoices.Add(NyxPolicyName(LExecutionPolicy));
+        end;
+      end;
       LKey := 'event-' + NyxTriggerName(LMetadata[LIndex].Trigger);
 
       if LMetadata[LIndex].Trigger = ntNamed then
@@ -1757,6 +1765,7 @@ begin
       LInfo.Name := LMetadata[LIndex].Name;
       LInfo.Policy := neSequential;
       LInfo.Callbacks := nil;
+      LHasStream := False;
       for LInfoIndex := 0 to High(LEvents) do
       begin
 
@@ -1764,7 +1773,23 @@ begin
           (LEvents[LInfoIndex].Name.Name = LInfo.Name.Name) then
         begin
           LInfo := LEvents[LInfoIndex];
+          LHasStream := True;
           Break;
+        end;
+      end;
+
+      if not LHasStream and not (LInfo.Policy in LMetadata[LIndex].AllowedPolicies) then
+      begin
+        { Presentation chooses an allowed initial policy. Add must publish that
+          policy with its first callback, never a transient sequential stream. }
+        for LExecutionPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+        begin
+
+          if LExecutionPolicy in LMetadata[LIndex].AllowedPolicies then
+          begin
+            LInfo.Policy := LExecutionPolicy;
+            Break;
+          end;
         end;
       end;
       LCard := TNyxNode.Create(nkCard, LKey);
@@ -1917,8 +1942,22 @@ begin
       begin
         LInfo.Policy := LPendingPolicy;
       end;
-      LPolicy.Configure.Items(LChoices.Text).Value(NyxPolicyName(LInfo.Policy))
-        .Enabled(not LLocked).Done;
+      LPolicyAllowed := LInfo.Policy in LMetadata[LIndex].AllowedPolicies;
+      LPolicy.Configure.Items(LChoices.Text).Enabled(not LLocked).Done;
+
+      if LPolicyAllowed then
+      begin
+        LPolicy.Configure.Value(NyxPolicyName(LInfo.Policy)).Done;
+      end
+      else
+      begin
+        { A creator restriction can make an older authored policy invalid. Do
+          not display the first allowed option as if it were already accepted. }
+        LPolicy.Configure.Value('').Done;
+        LCard.Add(TNyxNode.Create(nkAlert, LKey + '-invalid-policy')
+          .Configure.Text('Current policy ' + NyxPolicyName(LInfo.Policy) +
+            ' is unavailable for this event. Choose an allowed policy.').Done);
+      end;
       LCard.Add(LPolicy);
       for LCallbackIndex := 0 to High(LInfo.Callbacks) do
       begin
@@ -1953,7 +1992,7 @@ begin
       end;
       LCard.Add(EventCommand(nkButton, LKey + '-add', '+ Add callback',
         icAdd, ASession.SelectedID, LInfo.Trigger, LInfo.Name)
-        .Configure.Enabled(not LLocked).Done);
+        .Configure.Enabled(not LLocked and LPolicyAllowed).Done);
     end;
   finally
     LChoices.Free;
@@ -2055,6 +2094,11 @@ var
   LIndex: Integer;
   LCallbackIndex: Integer;
   LFound: Boolean;
+  LMetadata: TNyxEventSchemas;
+  LAllowed: TNyxExecutionPolicies;
+  LHasStream: Boolean;
+  LEventChoice: TNyxCallbackEvent;
+  LPendingPolicy: TNyxExecutionPolicy;
 begin
   Result := False;
   AEffect := nieNone;
@@ -2113,14 +2157,95 @@ begin
   if (LCommand in [icAdd, icPolicy, icConfirm]) and
     APending.EventLocked(AEdit.Selection, LEvent, LName) then
   begin
-    raise ENyxModel.Create('Wait for this callback removal before editing its event');
+    raise ENyxModel.Create('Wait for the pending callback change before editing its event');
+  end;
+
+  if LCommand in [icAdd, icPolicy] then
+  begin
+    LMetadata := NyxEventsMetadata(ASession.Selected, ASession.Document);
+    LFound := False;
+    LAllowed := [];
+    for LIndex := 0 to High(LMetadata) do
+    begin
+
+      if (LMetadata[LIndex].Trigger = LEvent) and
+        (LMetadata[LIndex].Name.Name = LName.Name) then
+      begin
+        LFound := True;
+        LAllowed := LMetadata[LIndex].AllowedPolicies;
+        Break;
+      end;
+    end;
+
+    if not LFound or (LAllowed = []) then
+    begin
+      raise ENyxModel.Create('The selected component no longer publishes this callback');
+    end;
   end;
   case LCommand of
     icAdd:
       begin
-
         AEdit.Action := sdaEvent;
         AEdit.Event.Action := seaAdd;
+        LHasStream := False;
+        LPolicy := neSequential;
+        LProjection := ASession.SelectedProjection;
+        try
+          LInfos := NyxAuthoredEvents(LProjection);
+          for LIndex := 0 to High(LInfos) do
+          begin
+
+            if (LInfos[LIndex].Trigger = LEvent) and
+              (LInfos[LIndex].Name.Name = LName.Name) then
+            begin
+              LHasStream := True;
+              LPolicy := LInfos[LIndex].Policy;
+              Break;
+            end;
+          end;
+        finally
+          LProjection.Free;
+        end;
+
+        if not LHasStream and not (LPolicy in LAllowed) then
+        begin
+          for LPolicy := Low(TNyxExecutionPolicy) to High(TNyxExecutionPolicy) do
+          begin
+
+            if LPolicy in LAllowed then
+            begin
+              Break;
+            end;
+          end;
+        end;
+
+        if APending.EventPolicy(AEdit.Selection, LEvent, LName, LPendingPolicy) then
+        begin
+          LPolicy := LPendingPolicy;
+        end;
+
+        if not (LPolicy in LAllowed) then
+        begin
+          raise ENyxModel.Create('Choose an allowed execution policy before adding a callback');
+        end;
+
+        if not LHasStream and (LPolicy <> neSequential) then
+        begin
+
+          if LEvent = ntNamed then
+          begin
+            LEventChoice := NyxCallbackEvent(LName);
+          end
+          else
+          begin
+            LEventChoice := NyxCallbackEvent(LEvent);
+          end;
+          AEdit.Action := sdaCallbacks;
+          AEdit.Event := Default(TNyxStudioEventIntent);
+          AEdit.Callbacks := CaptureNyxCallbackBatch(NyxCallbackPatch([
+            NyxSetCallbackPolicy(AEdit.Selection, LEventChoice, LPolicy),
+            NyxAddCallback(AEdit.Selection, LEventChoice)]));
+        end;
       end;
     icPolicy:
       begin
@@ -2128,6 +2253,11 @@ begin
         if not TryNyxPolicy(ANode.Prop('value'), LPolicy) then
         begin
           raise ENyxModel.Create('Choose a supported execution policy');
+        end;
+
+        if not (LPolicy in LAllowed) then
+        begin
+          raise ENyxModel.Create('This event does not allow the selected execution policy');
         end;
 
         AEdit.Action := sdaEvent;
@@ -2236,6 +2366,12 @@ function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
 var
   LEdit: TNyxStudioDesignEdit;
   LHandler: TNyxHandlerRef;
+  LOwner: TNyxText;
+  LEvent: TNyxCallbackEvent;
+  LPolicy: TNyxExecutionPolicy;
+  LRows: TNyxCallbackEditResults;
+  LPair: TNyxProjectPair;
+  LPatch: INyxCallbackPatch;
 begin
   Result := CaptureNyxStudioEvents(ASession, ANode, ATrigger, APending,
     Default(TNyxStudioPendingDesign), LEdit, AEffect, ALine, ARemoval);
@@ -2257,6 +2393,23 @@ begin
           AEffect := nieNone;
         end;
     end;
+  end;
+
+  if Result and (LEdit.Action = sdaCallbacks) then
+  begin
+
+    if not TryNyxCallbackPolicyAddShape(LEdit.Callbacks, LOwner, LEvent, LPolicy) then
+    begin
+      raise ENyxModel.Create('This event command requires an exact policy/addition group');
+    end;
+    LPatch := ReadNyxCallbackPatch(LEdit.Callbacks.ToData);
+    LPair := LPatch.Candidate(ASession, LRows);
+    LHandler := LRows[1].Registration.Handler;
+    { Resolve the TODO before publication. A refusal cannot leave a changed pair
+      behind merely because navigation was unavailable after the swap. }
+    ALine := NyxHandlerSourceLine(LPair.Source, LHandler);
+    ASession.AdoptProject(LPair);
+    AEffect := nieSource;
   end;
 end;
 

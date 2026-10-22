@@ -38,7 +38,18 @@ The user's process/service-debugger report is covered by these existing owners:
 | Find records with column filters, numeric sorting, visible criteria and reset | [Column queries02](../TODO/NS-3_control-usefulness_02.md): separate native-local results cover P3 workbench782/782 and P4A Studio policy/history266/267, with clean heaps at their own source boundaries. Browser assertions compile only. Events/semantic/source agreement, OWN Save/Open/generated and actual browser interaction remain open. |
 | Arrange columns, inspect long values and copy/export useful selections | [Table workbench03](../TODO/NS-3_control-usefulness_03.md): W1 owns resize/choose/reorder/hide/pin/reset; W2 owns full-value/cell actions, copy/export and preference lifetime. Both remain open. |
 | Keep context while services/logs change and recognize paused/failed/empty states | [Live inspection04](../TODO/NS-3_control-usefulness_04.md): L1 owns follow/pause, context and recovery; L2 owns measured mounted responsiveness. Both remain open. |
+| Find a nested process in a List/Tree and understand matches, ancestor context and hidden selection | [Live inspection04](../TODO/NS-3_control-usefulness_04.md) owns context; existing [DataToolbar search](../TODO/NS-3_data-toolbar_02.md) targets List/Table, while Tree find/reveal stays with components01/hierarchy and04. Typeahead and membership filtering are distinct; Table-only workbench behavior is not inferred. |
 | Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/NS-3_control-usefulness_05.md): retains declared policies without adding a lane filter UI. Open. |
+
+The 2026-10-22 backlog refinement adds explicit user journeys to the existing
+tasks, preserving this historical80-kind baseline. Task02 now includes an
+application-author diagnosis checklist (binding shape, effective opt-outs,
+supported field family and build) and a discoverable native filter story.
+Task03 requires editable start/end pins, compact recovery and deliberate
+raw/display/draft and selected/page/full-result copy/export choices. Task04
+adds the cross-family search/context and independent paused/live-view checks.
+The external debugger's code remains unavailable; these checks do not attribute
+its missing controls to Nyx or its author. No new runtime verdict follows.
 
 Task02 retains its first full P4A native60s Ready failure and old partial heaps.
 After the narrow pending-presentation repair, two fresh same-executable runs now

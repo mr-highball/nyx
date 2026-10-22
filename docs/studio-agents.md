@@ -572,6 +572,17 @@ explicit creator producer; inferred button/change aliases do not authorize
 custom emission. `registrationOffset` / `registrationLimit` independently page
 ordered callbacks across the same event window, with explicit partial status.
 
+P4B candidate source also returns each event's bounded `allowedPolicies` list
+(at most four closed policy names) from the same typed schema used by Inspector
+and effective candidate admission. A bound table's Before-query event permits
+`sequential`; Changed retains ordinary choices. A policy-only stream is checked
+even with no registrations or routes. Event permission does not imply target
+scheduler availability. Grouped policy/addition still uses the existing callback
+operation and paired history; no new tool, request field or server is introduced.
+This source extension awaits joint qualification and is not an installed MCP/
+worker rollout. See [event policies](events.md#event-policy-capabilities-source-in-qualification)
+and [current work](../WORK.md#query-event-authoring-p4b-separate-source-release--2026-10-22).
+
 For example, read `nyx_session`, then query
 
 ```json

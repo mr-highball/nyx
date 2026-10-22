@@ -316,6 +316,13 @@ type
     Owner: TNyxText;
     Intent: TNyxStudioEventIntent;
   end;
+  { A grouped edit locks only events it actually touches. These copied keys
+    carry no batch implementation, callback collection or source authority. }
+  TNyxStudioPendingEventLock = record
+    Owner: TNyxText;
+    Trigger: TNyxTrigger;
+    Name: TNyxEventRef;
+  end;
   { Value-only pending collection proposal. Owner is empty for document data
     and exact authored identity for collection-view operations. }
   TNyxStudioPendingCollection = record
@@ -335,6 +342,7 @@ type
     NewDefaultPending: Boolean;
     Bindings: array of TNyxStudioPendingBinding;
     Events: array of TNyxStudioPendingEvent;
+    EventLocks: array of TNyxStudioPendingEventLock;
     Collections: array of TNyxStudioPendingCollection;
     { Structural data locks guard pre-paint clicks and pending form duplication;
       view locks belong to the exact authored control, never a positional ID. }
@@ -350,8 +358,8 @@ type
     { Latest waiting policy wins without changing the accepted event contract. }
     function EventPolicy(const AOwner: TNyxText; ATrigger: TNyxTrigger;
       const AName: TNyxEventRef; out APolicy: TNyxExecutionPolicy): Boolean;
-    { Confirmed removal locks its exact event until admission retires. This also
-      guards pre-paint clicks, independently of physical disabled controls. }
+    { Confirmed removal and grouped changes lock their exact events until
+      admission retires, including clicks before disabled controls repaint. }
     function EventLocked(const AOwner: TNyxText; ATrigger: TNyxTrigger;
       const AName: TNyxEventRef): Boolean;
     { Copy the latest exact authored owner/target. False returns a cleared
