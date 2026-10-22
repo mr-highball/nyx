@@ -1,5 +1,103 @@
 # Working in Nyx
 
+NATIVE MOVEHOST BOUNDARY VERIFIED / LATENCY OPEN (2026-10-22): renderer65A72E00
+and consumer3021C415 pass actual native38 physical recovery, unchanged Studio
+sections53, fresh semantic729 and editing120; all four heaps complete/clean.
+Original controls545FB593 compiles with zero warnings but still fails SAME
+Select/second-search/check67 Ready30: ONE41922ms Pump/TWO completed paints,
+both busy flagsFalse/stateApplied/width1100/no observer error. Failed heap is
+complete153014368blocks/27475637031bytes equal/zero unfreed. This correct guard
+is insufficient for the latency gate; no fix/speedup/P4B acceptance is claimed.
+Root joined93316/fca994 and all earlier four actual readers. AuditA9B0109E
+verifies25owned/1807Pascal/foreign13/extra19 and72 artifact pins, including exact
+three renderer-free reused scopes. Remaining NINE compilers never ran; retain
+all failures. Root owns docs/checkpoint and read-only attribution design only;
+existing helper reviews final evidence and one SAME-consumer existing-hook
+NYX_STUDIO_PROFILE/NYX_LCL_LAYOUT_PROFILE observation. All Pascal/tools remain
+paused until a separate narrow private-tool release/review/freeze. No new
+fixture/probe/instrumentation, wait change, guessed production repair, browser/
+host/config/MCP/worker rollout, cleanup/restart or extra agent. Core37 and all
+original/P4B/P4C/browser/performance criteria remain open.
+
+Final independent review verifies auditA9B0109E, five receipt pins and all72
+artifacts. Next blueprint is ONE controls-native compiler/run with only the
+two existing profile defines, default-off private option restricted to that
+target; unchanged evidence argument/flags/Ready30/outer600/direct heap capture.
+Correlate the last two complete paint cycles before the SAME failure. Existing
+validation is nested in creation, and child timings are not additive to parent
+elapsed time. This is attribution only; no profile tool edit/reader is released
+until after checkpoint and separate review/freeze.
+
+NATIVE MOVEHOST NARROW SOURCE RELEASE (2026-10-22): actual Ready diagnostic
+and auditB3A485D4 pass independent root/helper evidence review as retained
+latency failure. Source establishes a separate redundant-layout boundary:
+MoveHost sets FUpdating, but FPanel.OnResize calls Resize which guards only
+FLayouting/FProjecting; an explicit final Resize already follows reparenting.
+Root owns ONLY src/nyx.render.lcl.pas MoveHost's saved/restored FLayouting around
+panel/edge/grip Parent assignments, restoring BEFORE unchanged explicit Resize;
+plus existing docs/private qualification orchestration. Existing helper owns
+ONLY additive native throw/recovery in tests/nyx_view_section_controls.lpr.
+Retain every old check/size/wait and both existing section Preview/Sync faults;
+prove failed physical move then SAME renderer geometry/identity/draft/events
+recovery through public APIs. No new fixture/public API/GUID or other product
+path. Current control545FB593 and every other Pascal file stay exact.
+No compiler until both handoffs and revised private25-owned freeze/reader tools
+are independently reviewed. Keep all1807 Pascal/foreign13/extras pinned; root
+owns every launch/join/audit. Reuse only callbacks71/queue142/source359 whose
+compiler inputs omit the native renderer; semantic729/editing120 need fresh
+qualification after this shared unit changes. Actual original controls Ready30/
+outer600 must assess efficacy; no speedup or P4B acceptance is claimed. Original
+and core37 gates stay open; no browser/host/config/MCP/worker rollout, cleanup/
+restart or extra agent. The existing performance owner retains full budgets.
+
+Both source handoffs now pass independent review: renderer65A72E00 and native-
+only consumer3021C415. Root independently strips the three additive blocks and
+recovers original82F31016 byte-exact; installed LCL confirms the entered fault
+occurs after real insertion and unwinds native sizing finally. Every old case
+and both section Preview/Sync faults stay. Private freezeCB06E4D5/qualifier
+FF6D1E80 pass independent review and static parse. Root may freshly freeze25/
+1807/13/19, then admit14 fixed compilers/five SERIAL native runs: both section
+programs, semantic/editing, original controls, matching section/browser suites
+and both Studio mains. Section natives retain their original default windows;
+controls retain1100/390 and Ready30/outer600. Reuse three renderer-free suites
+only. Stop first failure; source/guides/tools pause through actual joins/audit.
+No actual browser execution or original/core credit follows from compilation.
+
+P4B READY COST IDENTIFIED (2026-10-22): diagnostic545FB593 compiles with zero
+warnings; actual first THREE phases pass. Select/second-search/check67 then
+exceeds Ready30 in ONE44250ms Pump with TWO completed paints. SourceBusy=False,
+PresentationPending=False, state2/selectedsecond-search/width1100/no observer
+error prove completed UI work exceeded the deadline, not retained busy flags.
+Root joined3371/5780f5; compiler47304/native45696 terminal and exact23/1807/13/19
+plus nine artifact pins auditB3A485D4 pass. Failed native heap is complete:
+156345251 blocks/27561170466 bytes equal, zero unfreed. Retain every failure.
+Root owns docs and read-only performance triage; existing helper independently
+reviews evidence/paint/section seams. No production repair, new reader, profile,
+fixture or wait change follows yet. Both renderer7083D12D/StudioCFB269EA stay
+exact; historical P4A resize timings are corroboration, not current attribution.
+Five native suites retain exact dependency boundaries; later seven compilers
+never ran. Core37 and original/P4B/P4C/browser/credit remain open. No host/config/
+MCP/worker rollout, cleanup/restart or extra agent.
+
+P4B READY OBSERVATION SOURCE RELEASE (2026-10-22): prior e9d3eeb is progress,
+committed/pushed/remote-verified. All actual readers remain joined; five native
+accepted scopes retain exact dependencies. Root owns ONLY existing controls
+consumer diagnostics plus AGENTS/WORK/private state. Add exact Ready context,
+copied source/presentation/state/selection facts, elapsed/iteration count,
+existing public PaintCount delta and last/max Pump duration. Preserve AFTER-Pump
+deadline expression/position, idle predicate, Sleep1/final Pump, every old check,
+gesture and case, Ready30/outer600. No product edit or new fixture/profile hook.
+Existing helper independently reviews source read-only. Fresh joint freeze of
+SAME23/1807/13/19 precedes ONE controls compiler/native observation; later seven
+compilers stay paused. Source/guides/tools pause through actual joins/exact
+audits. No host/browser/MCP/worker rollout, config retry, cleanup/restart or
+extra agent. Core37/P4B/P4C/original criteria/credit stay open.
+
+Exact diagnostic545FB593 now passes independent root/helper review: all eleven
+Ready calls retain their order and have labels; passive failure snapshots and
+QWord metrics preserve original inputs/checks/waits. Both private tools remain
+E79D5821/42A36240 exact. Root may freshly freeze then admit the one observation.
+
 P4B NATIVE RETIREMENT TRIAGE (2026-10-22): controls newline oracle59CD4174
 compiles with zero warnings. Actual first THREE phases pass, including the
 original exact draft/base/pair/threaded-policy refusal. A later Select's Ready30

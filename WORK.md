@@ -4,6 +4,153 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+Current boundary: actual native view sections38 (31 retained+seven new), unchanged
+Studio sections53, fresh semantic729 and editing120 all pass with zero warnings
+and complete clean heaps on renderer65A72E00. Root/helper independently reviewed
+those completed receipts/source boundaries. The original controls545FB593 then
+compiles without warnings but fails the SAME Select/second-search/check67
+Ready30: one41922ms Pump, two completed paints, both busy flags false, state
+Applied, selectedsecond-search, client1100 and no observer error. The full failed
+heap is clean:153014368 blocks/27475637031 bytes equal, zero unfreed.
+
+Root joined93316/fca994 and all four prior actual handles. AuditA9B0109E verifies
+25owned/1807Pascal/13foreign/19extra and72 compiler/native artifact pins, including
+three unchanged renderer-free reused suites. The five compilers pass; four
+native programs pass and controls does not. Remaining NINE compilers are
+unattempted. Existing source, failures, waits and full heap reports are retained.
+The guard's physical recovery behavior is verified natively; it is insufficient
+to resolve the latency failure. Single checked-build samples44.250s/41.922s are
+not a matched release-performance comparison or proof of a production speedup.
+
+Next is independent final-boundary review, checkpoint, then a separately
+reviewed ONE current-source attribution observation using the existing native
+Studio/layout profile hooks in the SAME controls program. Keep source65A72E00/
+3021C415/545FB593 and every input/check/gesture/Ready30/outer600/heap flag exact.
+Only a narrow private compiler-define option is proposed, with retained old
+tool and fresh25/1807/13/19 freeze; no new profiler hook or fixture. Correlate
+the actual failing UI cycle's existing phase/layout logs before any further
+renderer change. Root owns every future actual launch/join/audit. The existing
+[performance owner](TODO/NS-3_extension-performance_01.md) retains full native/
+browser budgets. Core37, original component/parity/authoring and P4B/P4C stay open.
+
+Final independent root/helper review passes auditA9B0109E, all five receipt pins
+and72 artifacts, with exact source/input boundaries. The proposed one-run
+attribution option is default off and rejects every target except controls-
+native. It adds ONLY the existing NYX_STUDIO_PROFILE/NYX_LCL_LAYOUT_PROFILE
+defines to one compiler; native arguments, checked flags, direct heap capture,
+Ready30/outer600 and frozen consumer stay exact. Partition the last two COMPLETE
+Studio paint cycles before the exact failing context, keeping partial/teardown
+output separate. Existing section-replace ordinal2 identifies Inspector; nested
+build/view/Sync/layout counters supply attribution, not exact widget IDs or
+exclusive CPU. Validation is already inside creation, and child timings must
+not be added to parent totals. This read-only blueprint releases no new tool or
+reader before the separate post-checkpoint private-tool review/freeze.
+
+### Native physical-move layout guard: separate source release
+
+Independent root/helper outcome review verifies auditB3A485D4, receipt2A2B68B4
+and all nine artifact pins. The44.25s observation is completed UI work; it does
+not identify exclusive cost. Read-only source review nevertheless establishes
+a narrow duplicate-layout boundary independently: native MoveHost reparents
+its panel/edges/grips with FUpdating=True, but its OnResize handler guards
+FLayouting/FProjecting, then an explicit Resize runs after all Parent changes.
+
+Root releases ONLY that method's saved/set/restored FLayouting around physical
+reparenting, restoring the old value BEFORE the unchanged explicit Resize.
+Existing focus/selection/scroll restoration, outer FUpdating guard, section
+Preview/Sync faults, rollback and publication fences stay. The existing helper
+owns ONLY an additive native throwing-host/recovery case in the existing view-
+section consumer. It must restore/move the SAME renderer, prove geometry changes
+at another host size and preserve exact root/input/draft/event identity. All old
+checks, fixed dimensions and waits remain; the unchanged Studio-section consumer
+retains its independent Project-before-Inspector Preview/Sync failure proof.
+
+This adds renderer and existing view-section consumer to the SAME ownership
+packet (25 paths, still1807 Pascal); no new fixture/API/GUID, browser renderer,
+native Studio or other Pascal path is released. Current controls545FB593 stays
+exact. Both source handoffs and revised private freeze/reader orchestration
+need independent review before any compiler. Root owns all actual launches,
+joins and audits. Compiler logs prove callbacks/queue/source omit this renderer,
+so their71/142/359 results remain reusable; semantic/editing import it and must
+be qualified again. Existing section tests and the original Ready30/outer600
+control journey must assess the repair without changing waits or claiming a
+speedup from historical timings. Native/browser full budgets, core37, P4B/P4C
+and original acceptance remain open; no host/runtime rollout follows.
+
+Both exact source handoffs pass independent review: renderer65A72E00 and existing
+view-section consumer3021C415. Root independently removes its three native-only
+additions and recovers original82F31016 byte-exact, retaining every old assertion,
+case, default size and wait. The seven new checks enter AFTER real LCL insertion,
+recover the SAME renderer, observe narrower root geometry before any explicit
+Sync, return exact identities/draft/mount/geometry and dispatch the same event
+once. Installed LCL source confirms Parent assignment and sizing finally at
+that fault boundary. The browser branch is unchanged after preprocessing.
+
+Private freezeCB06E4D5/qualifierFF6D1E80 pass independent source review and static
+PowerShell parse. Their only deltas admit25 paths and existing section source/
+LCL-path/PASS-suffix mappings. Existing process identity, flags, freshness, final
+heap reports and timeouts remain exact. Reviewed impact plan is14 fresh compilers
+with five serial native executions: view-section, Studio-section, semantic,
+editing, original controls; matching browser consumers and both Studio mains
+compile. Section natives use original default program windows, not invented
+width arguments; controls retain their original1100/390 journey and Ready30/
+outer600. Reuse only three renderer-free native suites71/142/359. This yields a
+possible17-compiler composite, not17 fresh attempts or an actual browser result.
+Fresh25/1807/13/19 freeze precedes admission. Stop first failure, join actual
+handles and audit exact inputs before edits; all source/guides/tools pause.
+
+The unchanged-gesture readiness observation is terminal/root joined3371/5780f5.
+Compiler47304 passes with zero warnings. Native45696 passes the first THREE
+actual phases, then Select/second-search at check67 reports44250ms in one Pump,
+two completed paints, SourceBusy=False, PresentationPending=False, state2,
+selectedsecond-search, client1100 and no observer error. Both owners had retired;
+completed UI work exceeded the original30s deadline. This diagnoses a latency
+failure, not a stuck queue. The exact wait/predicate remains a failed outcome.
+
+AuditB3A485D4 verifies23owned/1807Pascal/13foreign/19extra, nine compiler/native
+artifact pins and actual child processes absent after the root join. The failed
+native heap is complete:156345251 blocks/27561170466 bytes allocated/freed, zero
+unfreed. Retain all earlier failures and the five native accepted scopes at
+their unchanged dependency boundaries. All seven later compilers remain
+unattempted; P4B and original/P4C/browser/quality criteria stay open, core37.
+
+Next is independent outcome review and read-only native performance triage.
+Root finds early exits for streamless non-table event validation and viewport
+validation without relevant bound rules, rather than evidence of a new general
+metadata hot loop. Renderer7083D12D and nativeStudioCFB269EA are byte-exact from
+the older P4A profile. That different consumer's21.672s shell paint has repeated
+unowned resize/layout work, corroborating the existing native hosting/layout
+follow-up; it does not attribute this run's44.25s to a specific method or prove
+a speedup. Existing MoveHost sets FUpdating while reparenting, but Resize is
+guarded by FLayouting/FProjecting and an explicit Resize already follows. Review
+that narrow physical-move guard and existing section failure/lifetime tests
+before any separately released production repair. No new profile/reader,
+product edit, fixture or wait change is admitted by this result.
+
+Previous goal turn is progress: checkpoint e9d3eeb is committed/pushed/remote-
+verified; the backlog refinements and actual third-phase authored-draft proof
+are retained. All actual readers are joined. The next source release is ONLY
+diagnostics in the existing controls consumer, plus this handoff/AGENTS/private
+state. Label each Ready context; report copied source/presentation/state/
+selection, elapsed time/iteration count, existing public PaintCount delta and
+last/max Pump duration. This separates a long completed Pump from flags still
+pending at the same deadline, without declaring either cause in advance.
+
+Keep the AFTER-Pump deadline expression and position, idle predicate, Sleep1,
+final Pump, original gestures/cases/assertions and Ready30/outer600 exact. The
+existing helper reviews read-only; a fresh SAME23/1807/13/19 freeze precedes ONE
+native controls compiler/run. Five unchanged native suites retain their source
+boundaries; later seven compilers wait. No product, new fixture, profile hook,
+host/browser/runtime rollout or extra agent is released. All source/guides/tools
+pause while actual readers are live. Core37 and original/P4B/P4C gates stay open.
+
+Exact controls545FB593 passes independent root/helper source review. All eleven
+Ready call sites remain, with operation/ID or unique direct-wait labels. Passive
+failure facts are copied once; QWord duration/count metrics and widened paint
+subtraction add no Pump, sleep, projection or source realization. Both private
+tools remain exact E79D5821/42A36240. Fresh joint freeze and the single bounded
+observation follow; this review supplies no runtime result.
+
 The newline-oracle controls run is terminal/root joined1663/ad30cd. Compiler
 13344 passes with zero warnings; native15580 passes its first THREE actual
 phases, including the original exact draft/base/pair/threaded-policy refusal.

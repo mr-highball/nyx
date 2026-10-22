@@ -228,7 +228,16 @@ and exact freezes precede the fixed impact-based reader plan. Five native suites
 now pass71/142/359/729/120 with zero warnings and complete clean heaps at their
 exact source boundaries. Actual native controls pass their first three phases,
 including exact pending-Pascal preservation/refusal, then fail a later unchanged
-readiness deadline. This is not overall controls or P4B qualification. All actual
+readiness deadline. Its same-gesture diagnostic locates Select/second-search:
+one44.25s UI Pump completes two paints and leaves both readiness flags false.
+This is a native latency failure, not a demonstrated stuck queue. The narrow
+native physical-move guard now passes38 recovery/53 unchanged Studio-section
+checks, with fresh semantic729/editing120 and clean heaps. The SAME controls
+journey still exceeds its unchanged deadline at41.922s/two paints with idle
+flags. Guard recovery is verified natively; overall latency remains open under
+the existing performance owner. Current-source phase attribution precedes any
+further renderer repair; no deadline or fixture is substituted.
+This is not overall controls or P4B qualification. All actual
 readers are joined/audited; the seven later browser/product compilers have not
 run. Retain failures and diagnose the pending owner before any repair or further
 reader. No browser/worker/MCP rollout or original criterion closes.

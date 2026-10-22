@@ -70,17 +70,55 @@ begin
   Application.ProcessMessages;
 end;
 
-procedure Ready;
+{ Observe the existing wait without moving its deadline or servicing extra work.
+  Pump duration includes all synchronized/UI work, not exclusive paint time.
+  Failure facts are copied once; realizing a projection here would add work. }
+procedure Ready(const AContext: TNyxText);
 var
   LStart: QWord;
+  LPumpStart, LLastPump, LMaxPump, LIterations, LElapsed: QWord;
+  LStartPaint, LEndPaint, LClientWidth: Integer;
+  LSourceBusy, LPresentationPending: Boolean;
+  LState: TNyxSourceCommandState;
+  LSelection, LStatus, LObserverError: TNyxText;
 begin
+  LStartPaint := GStudio.PaintCount;
+  LMaxPump := 0;
+  LIterations := 0;
   LStart := GetTickCount64;
   repeat
+    LPumpStart := GetTickCount64;
     Pump;
+    LLastPump := GetTickCount64 - LPumpStart;
+    Inc(LIterations);
+
+    if LLastPump > LMaxPump then
+    begin
+      LMaxPump := LLastPump;
+    end;
 
     if GetTickCount64 - LStart > 30000 then
     begin
-      raise ENyxModel.Create('Event command did not retire / ' + GStudio.Status);
+      LElapsed := GetTickCount64 - LStart;
+      LSourceBusy := GStudio.SourceBusy;
+      LPresentationPending := GStudio.PresentationPending;
+      LState := GStudio.SourceCommands.State;
+      LSelection := GStudio.Session.SelectedID;
+      LEndPaint := GStudio.PaintCount;
+      LClientWidth := GForm.ClientWidth;
+      LStatus := GStudio.Status;
+      LObserverError := GObserver.Error;
+      raise ENyxModel.Create('Event command did not retire / ' + LStatus +
+        ' / context=' + AContext + ' / checks=' + IntToStr(GChecks) +
+        ' / elapsed-ms=' + IntToStr(LElapsed) +
+        ' / pumps=' + IntToStr(LIterations) +
+        ' / last-pump-ms=' + IntToStr(LLastPump) +
+        ' / max-pump-ms=' + IntToStr(LMaxPump) +
+        ' / paints=' + IntToStr(Int64(LEndPaint) - Int64(LStartPaint)) +
+        ' / source-busy=' + BoolToStr(LSourceBusy, True) +
+        ' / presentation-pending=' + BoolToStr(LPresentationPending, True) +
+        ' / state=' + IntToStr(Ord(LState)) + ' / selected=' + LSelection +
+        ' / width=' + IntToStr(LClientWidth) + ' / observer=' + LObserverError);
     end;
     Sleep(1);
   until not GStudio.SourceBusy and not GStudio.PresentationPending;
@@ -104,7 +142,7 @@ begin
 
   if AWait then
   begin
-    Ready;
+    Ready('Click/' + AID);
   end;
 end;
 
@@ -154,7 +192,7 @@ procedure Select(const AID: TNyxText);
 begin
   GStudio.Session.Select(AID);
   GStudio.RequestRefresh;
-  Ready;
+  Ready('Select/' + AID);
 end;
 
 procedure Capture(const AName: TNyxText);
@@ -299,7 +337,7 @@ begin
   Capture('events-desktop');
   GForm.ClientWidth := 390;
   GStudio.RequestRefresh;
-  Ready;
+  Ready('Capture events compact viewport');
   Click('action-panel-inspector');
   RevealInspectorControl(AKey);
   Capture('events-390');
@@ -420,7 +458,7 @@ begin
     Click(LKey + '-add', False);
     Check(GStudio.SourceCommands.Busy and (PairText = LBefore),
       'Actual Add captures intent and retains the accepted pair during preparation');
-    Ready;
+    Ready('Initial callback addition');
     LInfo := EventInfo(ntBeforeKeyPress, Default(TNyxEventRef));
     Check(Length(LInfo.Callbacks) = 1, 'Actual Add creates one ordered registration');
     LHandler := LInfo.Callbacks[0].Handler;
@@ -451,7 +489,7 @@ begin
     Check((TComboBox(GStudio.ShellView.InputFor(LKey + '-policy')).Text = NyxPolicyName(neThreaded))
       and (Screen.ActiveControl = GStudio.ShellView.InputFor(LKey + '-policy')),
       'Earlier painting retains latest policy input and exact event field focus');
-    Ready;
+    Ready('Rapid callback policy queue');
     LInfo := EventInfo(ntBeforeKeyPress, Default(TNyxEventRef));
     Check((LInfo.Policy = neThreaded) and (Length(LInfo.Callbacks) = 1),
       'Rapid policy queue retains its registration and latest choice');
@@ -517,7 +555,7 @@ begin
     end;
     Check(LFailed, 'Pre-paint typed guard refuses mutation of an event being removed');
     CheckPendingConfirmation(LReview, GStudio.SourceCommands.PendingDesign);
-    Ready;
+    Ready('Callback removal publication');
     Check((Length(EventInfo(ntBeforeKeyPress, Default(TNyxEventRef)).Callbacks) = 1) and
       (GStudio.ShellView.Root.Find('event-removal-warning') = nil) and
       (GStudio.Session.CallbackLine(LHandler) > 0),
@@ -546,12 +584,12 @@ begin
     Check(PairText = LBefore, 'Discovery remains available without rewriting pending Pascal');
     Click(NyxEventFilterPartID(NyxStudioEventFilterID, nefpClear));
     Click(EventKey(ntAfterKeyPress, Default(TNyxEventRef)) + '-add', False);
-    Ready;
+    Ready('Pending Pascal addition refusal');
     Check((PairText = LBefore) and
       (Length(EventInfo(ntAfterKeyPress, Default(TNyxEventRef)).Callbacks) = 0),
       'Actual Add refuses independent pending Pascal without replacing it');
     Choice(LKey + '-policy', NyxPolicyName(neSequential));
-    Ready;
+    Ready('Pending Pascal policy refusal');
     Check((GStudio.Session.DraftSource = LDraft) and
       (GStudio.Session.SourceDraftBase = LDraftBase) and
       (PairText = LBefore) and
@@ -572,7 +610,7 @@ begin
       'Source is deliberately hidden before navigation during preparation');
     Click(LKey + '-add', False);
     Select('second-search');
-    Ready;
+    Ready('Reusable navigation during preparation');
     Check((GStudio.Session.SelectedID = 'second-search') and not CodeShowing,
       'Older admitted handler cannot steal later selection or reopen hidden Pascal');
     Select('first-search');
@@ -593,7 +631,7 @@ begin
         GForm.ClientWidth := 390;
       end;
       GStudio.RequestRefresh;
-      Ready;
+      Ready('Atomic callback viewport');
       Check(((LWidthIndex = 0) and (GForm.ClientWidth = 1100)) or
         ((LWidthIndex = 1) and (GForm.ClientWidth = 390)),
         'Atomic callback phase runs at its requested actual client width');
@@ -643,7 +681,7 @@ begin
         end;
       end;
       Check(LFailed, 'A second batch checks exact pending-event locks before enqueue');
-      Ready;
+      Ready('Atomic callback publication');
       LInfo := EventInfo(ntNamed, LName);
       Check((LInfo.Policy = neUIQueue) and (Length(LInfo.Callbacks) = 1),
         'One actual Add admits its non-sequential policy and sole callback together');

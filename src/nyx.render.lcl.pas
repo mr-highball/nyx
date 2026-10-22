@@ -3884,6 +3884,7 @@ var
   LHorizontal: Integer;
   LVertical: Integer;
   LUpdating: Boolean;
+  LLayouting: Boolean;
   LIndex: Integer;
 begin
   FEvents.Scheduler.RequireUI;
@@ -3936,27 +3937,36 @@ begin
   LUpdating := FUpdating;
   FUpdating := True;
   try
-    { Reparent the scroll host, never recreate its children or event routers.
-      Guard native focus notifications caused by reparenting from authoring. }
-    FPanel.Parent := AHost;
-    { Inert proposal windows are siblings of the scroll host. Move even hidden
-      strips before the caller disposes the previous host; their borrowed parent
-      must never free windows still owned/referenced by this renderer. }
-    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
-    begin
-
-      if FResizeEdges[LIndex] <> nil then
+    { Reparenting can synchronously invoke OnResize before all native siblings
+      have reached their final host. FUpdating guards authored input, while
+      FLayouting guards geometry. Retain its prior value even when a host refuses
+      insertion; the explicit Resize below still owns the completed move. }
+    LLayouting := FLayouting;
+    FLayouting := True;
+    try
+      { Reparent the scroll host, never recreate children or event routers. }
+      FPanel.Parent := AHost;
+      { Inert proposal windows are siblings of the scroll host. Move even hidden
+        strips before the caller disposes the previous host; their borrowed
+        parent must never free windows still owned by this renderer. }
+      for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
       begin
-        FResizeEdges[LIndex].Parent := AHost;
-      end;
-    end;
-    for LIndex := Ord(Low(TNyxResizeAxis)) to Ord(High(TNyxResizeAxis)) do
-    begin
 
-      if FCanvasGripHosts[TNyxResizeAxis(LIndex)] <> nil then
-      begin
-        FCanvasGripHosts[TNyxResizeAxis(LIndex)].Parent := AHost;
+        if FResizeEdges[LIndex] <> nil then
+        begin
+          FResizeEdges[LIndex].Parent := AHost;
+        end;
       end;
+      for LIndex := Ord(Low(TNyxResizeAxis)) to Ord(High(TNyxResizeAxis)) do
+      begin
+
+        if FCanvasGripHosts[TNyxResizeAxis(LIndex)] <> nil then
+        begin
+          FCanvasGripHosts[TNyxResizeAxis(LIndex)].Parent := AHost;
+        end;
+      end;
+    finally
+      FLayouting := LLayouting;
     end;
     Resize(FPanel);
 
