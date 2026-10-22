@@ -1,5 +1,29 @@
 # Working in Nyx
 
+ACTIVE-CELL BROWSER LOCALLY QUALIFIED (2026-10-22): unchanged60765453/original44BAC
+passes75 actual checks at1280x900 and390x900 using JSAA05/wrapperA1F2/RTLA6.
+Same browser editor/draft/caret survives two sorts; filtering its row out retires
+that editor without committing the draft, preserves hidden selection and exact
+authored defaults. Root24A78FA1/independent5BE7EEC6 verify1991 pins/eight copies.
+One current browser compiler passes0 owned/7 known RTL warnings; no native replay.
+Tabs36/37 closed/reset, inventories empty; exact15384/44412 hosts joined and
+19094/19095 listener0. These are existing synthetic input assertions; page retirement
+adds no explicit renderer-disposal assertion or hardware/AT proof. Initial capture
+draft442E was never executed; sole reference correction1E9A is retained/reviewed.
+
+Root owns ONLY three handoff docs/checkpoint now; all Pascal stays paused.
+After push/verification, next is separately reviewed pending-main-draft consistency
+under existingA87AFDFF contract. Read-only scope review includes TEN expressions:
+six main status facts plus EditorBuildPair in agents; legacy getter AND two direct
+resource-publication guards68/166 in its resourceruntimes include. The latter do
+not call through the getter. Use existing SourceDraftPending, preserving pending-
+capable EditorSourcePair, helper/aggregate draft policy and detached import no-op
+normalization. Existing helper designs additive tests read-only; no repair source
+or compiler/runtime is released here. All seven original criteria/core47/P4C
+aggregate/full goal remain open without credit/DONE. Preserve concurrent13,
+deferred resolver/splitter, offline LAN/no native Nyx tools, no extra agent/config/
+install/user-service/MCP/wire rollout or cleanup/restart. Earlier text is history.
+
 P3 CURRENT BROWSER LOCALLY QUALIFIED (2026-10-22): unchanged C9F376A9 passes712
 actual browser checks at1280x900 and390x900 with JS6F0E/wrapperB7B6/RTLA6. Terminal
 workbench success follows original Cleanup; no error attrs or console errors.

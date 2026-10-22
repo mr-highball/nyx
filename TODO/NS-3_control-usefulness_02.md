@@ -5,6 +5,20 @@
 
 **Description:**
 
+Original active-cell browser paths now pass75 at actual1280x900 and75 at390x900
+with unchanged60765453/original44BAC and currentJSAA05/A1F2/RTLA6. Existing F2,
+same-editor draft/caret through sorting, filter-out discard, hidden selection
+and exact defaults pass; no extra hardware/AT or renderer-disposal proof is claimed.
+Root24A78FA1/independent5BE7EEC6 verify1991pins/eight copies and every actual reader
+joined. The current compiler has0 owned/7 known RTL warnings; native is not replayed.
+[WORK](../WORK.md#active-cell-draft-and-caret-browser-paths-qualified) owns this
+three-doc checkpoint. Pending-main-draft consistency is the next separate source
+review: existing SourceDraftPending must govern six status facts, the build guard,
+legacy getter and BOTH direct resource-publication guards. Preserve pending-capable
+source capture/helper policy/import normalization. No repair source or reader is
+released here. All seven original criteria/core47/P4C aggregate/full goal remain
+open without credit/DONE; previous readiness paragraphs retain history.
+
 Current P3 browser paths are locally qualified: unchangedC9F376A9 passes712 at
 actual1280x900 and712 at390x900, using currentJS6F0E/originalB7B6/RTLA6. Success
 follows original Cleanup with no error attrs/console errors. One current browser

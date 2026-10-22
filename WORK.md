@@ -4,6 +4,34 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Active cell draft and caret browser paths qualified
+
+The original60765453 consumer and44BAC16F companion pass75 actual browser checks
+at1280x900 and75 at390x900. CurrentJSAA05 uses unchanged A1F2 wrapper/matched RTLA6.
+Existing synthetic F2 entry, same editor/draft/caret through two sorts, filter-out
+retirement/discard, hidden selection and exact authored defaults pass. This adds
+no hardware/AT proof or explicit renderer-disposal assertion. One fresh browser
+compiler passes0 owned/7 known RTL warnings; native work is not replayed.
+Root24A78FA1/independent5BE7EEC6 verify1991 pins/eight copies. Actual tabs36/37
+close/reset, inventories are empty, exact hosts15384/44412 stop/join and ports
+19094/19095 have no listeners. The first capture draft442E was never executed;
+its sole state-property correction1E9A is independently reviewed and retained.
+
+Root checkpoints only these three docs; all Pascal remains paused. Next is a
+separate reviewed source release for existingA87AFDFF pending-main-draft contract.
+Read-only review now covers TEN expressions: six main status facts and EditorBuildPair
+in agents, plus the legacy public getter and TWO direct resource-publication
+guards68/166 in resourceruntimes. Those guards do not inherit a getter repair.
+Use existing SourceDraftPending; preserve pending-capable EditorSourcePair, helper/
+aggregate draft policy and detached import no-op normalization. Add equal-bytes
+PendingTrue/refusal/current-pair invariance/resolution cases through existing
+ordinary test owners, including valid resource enrollment. Ordinary commits retire
+publication authority; this is not isolated pending-predicate proof. Existing
+helper supplies the bounded test/ownership design read-only; no source/compiler/
+runtime is released by this checkpoint. The integrated original seven criteria,
+core47/P4C aggregate/full goal stay open without credit or DONE movement. Prior
+P3 and own-browser pair results remain applicable with their original provenance.
+
 ### Current table workbench browser paths qualified
 
 The unchanged P3 consumerC9F376A9 passes712 actual browser checks at1280x900 and
