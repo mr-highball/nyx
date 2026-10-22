@@ -40,11 +40,13 @@ The user's process/service-debugger report is covered by these existing owners:
 | Keep context while services/logs change and recognize paused/failed/empty states | [Live inspection04](../TODO/NS-3_control-usefulness_04.md): L1 owns follow/pause, context and recovery; L2 owns measured mounted responsiveness. Both remain open. |
 | Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/NS-3_control-usefulness_05.md): retains declared policies without adding a lane filter UI. Open. |
 
-Task02's first full P4A native authoring attempt fails its unchanged60s Ready
-deadline during text-column Apply;390 and that consumer's browser compilation
-were not attempted. [The current work record](../WORK.md#table-query-policy-authoring--2026-10-21)
-retains this failure separately from P3's native result. No complete authoring,
-browser or product acceptance follows from the earlier782-check runs.
+Task02 retains its first full P4A native60s Ready failure. After the narrow
+pending-presentation repair, the unchanged actual Studio journey passes266
+desktop/267 compact checks. Both full heap reports are incomplete, and matching
+browser compilation fails on a fixture callback-name collision. [The current
+work record](../WORK.md#table-query-policy-authoring--2026-10-21) separates those
+outcomes from P3's native result. Complete authoring/browser/product acceptance
+and release-performance validation remain open.
 
 The remaining control families keep the concrete owners and finish lines in
 [Priorities](#priorities-public-examples-and-finish-lines), including forms,

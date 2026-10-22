@@ -589,6 +589,15 @@ baseline. A changed owner, field family, binding or pending Pascal draft refuses
 before the accepted pair changes. Runtime filters remain independent user-session
 contributions rather than authored defaults.
 
+While a policy proposal is pending, the Inspector keeps its accepted binding
+baseline and disables the affected owner's controls. Its existing draft snapshot
+retains current choices, including unfinished input. Pending presentation does
+not claim that a policy is already admitted. Refusal or cancellation can restore
+the same unlocked form; successful admission changes the baseline normally.
+Capture still refuses another policy edit against a pending owner. This source
+repair requires the unchanged ordinary authoring journey to qualify; descriptor
+draft checks alone do not establish physical input or cancellation behavior.
+
 The existing collection patch transports those same intents, using closed
 `table-query`, `column-query`, `default-table-query` and `default-column-query`
 action names at the external JSON boundary. The strict decoder and advertised
@@ -610,16 +619,25 @@ clean teardown. `-QueryAuthoringDiagnostic` runs the same native1280 fixture and
 assertions with phase markers, leaving 390 and browser compilation unattempted.
 It is a diagnostic gate; it does not replace full target/width qualification.
 
-The current diagnostic reached144 checks at native1280 before that limit,
-without an assertion failure or overall pass. Repeated checked-build refreshes
-took18-24 seconds and Apply about47 seconds. Existing phase/layout profiling
-locates shell rendering as the dominant completed parent interval, up to21.7s;
-nested control construction, handle initialization and layout are not additive.
-Queue compatibility passes126 native checks with a
-clean heap. Native390, matching new-consumer browser compilation and the complete
-ordinary authored journey remain unqualified. Keep interrupted logs and do not
-infer clean teardown from a forced stop. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
-records the exact source/evidence boundary.
+Earlier diagnostics reached144 checks at native1280 before their total limit,
+without an overall pass. Existing phase/layout profiling shows separate pending
+and committed Inspector replacements around text-column Apply, with shell
+intervals20.922/21.610s; nested timing labels are not additive. The first full
+functional attempt then fails its original Ready60s deadline at stage1/check133.
+It exits itself before its1800s outer cap. Retain all attempts and the truncated
+heap footer without a complete clean-heap or overall passing claim. Queue126
+compatibility remains at its original source boundary.
+
+The narrow pending-presentation repair subsequently passes180 focused checks
+with a complete clean heap. The unchanged full actual Studio journey passes266
+desktop1280 and267 compact390 checks with all11 stages, original assertions and
+deadlines intact. Both full heap reports truncate at256bytes, so this does not
+yet qualify native teardown. Matching browser compilation then fails on the
+fixture callback name `Closed` colliding with an imported browser enum. Retain
+both failures and partial reports. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
+records the exact source boundary and separate browser-name/capture-only next
+steps. Complete P4A, actual browser input, P4B and P4C remain open; these checked
+functional results do not establish release performance.
 
 `-QueryAuthoringProfile` adds only the existing Pascal phase/layout clocks and
 counters to the native checked build. Combine it with `-QueryAuthoringDiagnostic`

@@ -4,6 +4,131 @@
 
 ## Table query policy authoring — 2026-10-21
 
+### Current result: native input passes; browser and heap evidence remain open
+
+Root joined the final full wrapper25443 at7ee916, exit1 after its browser
+compiler failed. Immutable audit
+`95B25BDD54262DC214372FAEB46EAF4410FA651B3F7C883E424BF4BDA4BFC2C2`
+verifies13owned/1807Pascal/foreign13/extra8 exact and every actual reader joined.
+The repaired pending consumer passes180 with a complete clean heap. Both Studio
+mains and pending native/browser compilation succeed; the full native compiler
+also succeeds. Those five accepted compilers have zero owned warnings and14
+upstream RTL warning occurrences. The earlier focused fixture failure and its
+one owned warning remain retained separately.
+
+The unchanged full consumerEE1CEAA1 completes all11 stages at actual client1280
+and390, passing266 and267 checks respectively. Both owned processes exit0 without
+timeout. Table/text/integer/number/Boolean policy editing, invalid draft refusal
+and recovery, defaults versus inheritance, pair isolation and all20 Undo/Redo
+actions pass with the original Ready60s, global2400 and1800s PER WIDTH bounds.
+The compact branch has its own check count; do not relabel it as266. The native
+executable is150C41CD9DD9293B72CB34E1316BE0930F663277F8C23F22651F9FC39C54751C.
+
+Both full native stderr files are exactly256bytes, ending partway through the
+freed-byte line. Equal allocation/free block counts do not supply a complete
+heap report. These are functional input results, not complete native-local P4A
+qualification. Desktop first table/text Apply Ready intervals improve from the
+retained55.5s/failing60s result to29.829s/30.453s in this checked run. Other
+refreshes still take tens of seconds; this is not release-performance acceptance.
+
+The matching full browser compiler then fails at line1150: `@Closed` resolves
+the imported browser `closed: TJSShadowRootMode` rather than the fixture callback.
+Its compilerexit7, wrapperexit1 and seven upstream warning occurrences remain
+retained. No browser execution or successful matching compilation is asserted.
+The source freeze and all predicates stayed exact through this first failure.
+
+Stop this packet and reassess: native behavior advanced, but browser portability
+and complete final heap evidence still prevent qualification. Core no-closure35
+advances36 once; no original criterion, P4A/B/C acceptance, credit or DONE closes.
+Root owns outcome docs/checkpoint only; Pascal and tools stay paused. The next
+separate source scope is only the browser fixture's callback name/reference,
+followed by independent review/freeze and one matching browser compiler. Reuse
+unaffected accepted results explicitly; do not replay native input for that name.
+
+After that, a separately reviewed tool-only capture scope can reuse the exact
+pinned executable for two fresh native executions. Installed RTL source shows
+that disk stderr is buffered256bytes and HeapTrc reports during finalization,
+after the earlier standard-stream flush. Its `HEAPTRC=log=<path>` option instead
+owns/closes the file after the final report. Use child-only settings and distinct
+fresh absolute ASCII/no-space paths of at most255bytes, outside each initially
+nonexistent fixture directory. Preserve all arguments, assertions and bounds;
+require complete direct-file heap reports. No early dump, compiler/Pascal change,
+disabled tracing or historical-footer reconstruction follows. This is a reviewed
+next direction, not current tool/runtime admission.
+
+The latest backlog request has complete coverage in the source-bound80-kind
+[usefulness matrix](docs/control-usefulness.md) and existing02-05 tasks. Helper
+cross-review confirms concrete filter/sort, column/cell, live inspection and
+Kanban preservation owners, with160 local links resolving. No new identity or
+duplicate implementation credit is needed. Other control families retain their
+ranked existing owners. The external debugger's own code remains uninspected.
+P4B's typed event/policy/source agreement follows this result, then P4C's OWN
+Save/Open/strict compiled companion. Browser-host approval remains pending; no
+host/LAN/MCP/config/worker rollout, cleanup/restart or additional agent follows.
+
+### Accepted presentation while policy edits are pending
+
+The first focused reader51230 is terminal/root joined exit1. Immutable audit
+`62379BAB7BE75D8C6F1E952539D6EF4BCF7277661A55A9CCB47A712F4F08DE5F`
+verifies13owned/1807Pascal/foreign13/extra8 exact. Native compilation succeeds
+with one new owned nonexhaustive-case warning in the appended fixture. The first
+valid case completes; the following invalid explicit-empty operator draft
+correctly raises `EArgumentException`, while the fixture catches only
+`ENyxCollection`. Its complete heap footer reports zero unfreed blocks. Retain
+both failure and warning; the other five planned compilers/full UI are unattempted.
+
+Root releases only a fixture repair: catch that specific empty-operator argument
+diagnostic and add an explicit rejecting case fallback. Preserve every assertion,
+seed, deadline, productionDA08 and fullEE1CEAA1. Independent helper review/fresh
+freeze precedes the same pending-first fixed packet. No production retry, new
+profiler or changed workload is implied. Core34 advances35 for this completed
+native batch; all original criteria/P4A/B/C remain open without credit/DONE.
+
+Previous9efee61 is progress, committed/pushed/remote-verified. All actual readers
+are joined and1807Pascal/foreign13/extra8 remain exact. Root independently reads
+retained profile lines1147–1400: the same text-column Apply replaces Inspector
+during pending paint at1163, admits/notifies at1263–1268, then replaces it again
+at1277. Shell intervals are20.922/21.610s in that profiled run. Exact profile/full
+Pascal membership agrees. This is actual duplicate replacement evidence, while
+the unprofiled full first run supplies the distinct Ready60s failure. It does
+not promise a particular timing gain or prove every pending face can refresh.
+
+The producer notifies preparation before starting work and retires its active
+job before completion notification. Both request presentation. The pending
+collection panel currently applies prospective policy to the editor baseline;
+those nonrefreshable metadata changes force replacement before admission.
+Release the narrow repair: the four pending table/column setter/default actions
+retain the accepted spec. Existing owner locks, disabled controls, exact capture
+refusal, draft restoration, source/history admission and completion remain intact.
+The eventual committed baseline still changes normally. No renderer refresh
+exception, coarse host lock or new publication/scheduler contract is needed.
+
+Existing helper owns only `studio/nyx.studio.collections.pas`'s pending predicate
+and explanatory comment. Root owns additive checks in existing
+`tests/nyx_collection_pending_tests.lpr`, private qualifier's pending native/browser
+modes and the guide/task02/WORK/handoff. The existing queue seed and all original
+pending assertions stay intact. Descriptor/draft checks cover all four actions,
+accepted baseline and declarations, locks/capture refusal, raw valid/invalid
+draft retention and unlocked recovery; they are not physical-input or actual
+Cancel evidence. The full actual authoring consumerEE1CEAA1 stays byte-exact.
+
+Independent source/tool reviews and a fresh13owned freeze precede a fixed six
+compilers/three native outcomes: pending native execution and browser compilation,
+both Studio mains, then the unchanged maintained full native1280/390 and matching
+browser compilation. Join other readers before full UI runs so compilers do not
+compete with its deadline. Keep1800s PER WIDTH, default300s, Ready60s, global2400,
+every fixture/assertion and all11 stages. Stop at first failure or full result;
+root joins/audits before repair. No additional profiling or compatibility replay.
+All original criteria/P4B/C/core34 stay open; source release earns no credit.
+No host/browser execution/LAN/MCP/config/worker, cleanup/restart or extra agent.
+
+P4B's read-only review additionally identifies disjoint same-event restrictions:
+a built-in sequential-only Before event intersected with creator UIQueue-only
+metadata must diagnose the empty intersection. It must never become legacy ALL
+or choose a fallback. Scheduler admission alone checks target support, not event
+policy authority, even for empty callback streams. Preserve this case in existing
+semantic-event regression/admission work when P4B receives its separate scope.
+
 ### First complete-packet attempt: retained failure
 
 The complete functional packet stopped at its first failure. Root joined sole

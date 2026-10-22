@@ -142,6 +142,37 @@ is a read-only repair candidate, not yet a sufficient timing diagnosis. No sourc
 or rerun is released. Preserve consumerEE1CEAA1, all fixtures, waits and predicates;
 P4A/B/C and every original criterion stay open. Core33 advances34 without credit.
 
+The next separately released repair keeps accepted query-policy presentation
+during all four pending policy actions, preserving exact locks/capture/baseline
+admission and draft ownership. Retained profile evidence shows pending and
+committed Inspector replacements around the same text-column Apply. Existing
+pending-descriptor checks are extended additively; full consumerEE1CEAA1 remains
+exact. Source/tool review and freeze precede pending native/browser, both Studio
+compilers and the unchanged full1280/390 journey plus browser compile. No Ready/
+poll/fixture relaxation or new profiler is admitted. This is a repair candidate;
+full P4A and all original criteria remain unqualified until actual results.
+
+The first focused pending native reader is retained as a fixture failure: an
+invalid empty operator draft raises the documented `EArgumentException`, while
+the new test catches only `ENyxCollection`. The first valid case completes and
+the heap is clean. One new fixture case warning is also retained. Root's narrow
+catch/fallback repair needs fresh review/freeze before the same fixed packet;
+productionDA08/fullEE1C and every predicate/wait remain exact. No full UI/browser
+result or task acceptance follows. WORK records joined audit62379BAB and core35.
+
+The repaired packet is now terminal/root joined, audited95B25BDD with13owned/
+1807Pascal/foreign13/extra8 exact. Pending180 has a complete clean heap; unchanged
+full actual1280/390 pass266/267 with all11 stages and original waits/assertions.
+Both full stderr heap footers truncate at256bytes, so native-local P4A remains
+unqualified. Five accepted compilers have zero owned/14 upstream warning
+occurrences. Matching full browser compilation fails1150 at `@Closed`, which
+resolves the imported browser enum instead of the fixture callback; keep that
+failure and its separate seven upstream warnings. Core35 advances36 without
+original closure/credit/DONE. WORK owns the next separate callback-name repair/
+single-browser-compiler scope and subsequent unchanged-executable heap capture.
+No new source/tool/runtime is released by this result; no browser execution is
+asserted. P4B/C and all seven criteria stay required.
+
 | Packet | User-visible result and evidence | Preserve / remains required |
 | --- | --- | --- |
 | P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |
@@ -187,6 +218,10 @@ reads and effective realized candidate admission must use that one capability.
 Do not hide validation inside route-only processing, skip empty streams or grant
 built-in custom Emit authority. Changed and unrestricted legacy events retain
 their existing choices; raw descriptor shape admission remains separate.
+A disjoint creator/built-in policy intersection is an effective-owner error:
+diagnose it rather than treating the empty set as legacy unrestricted metadata
+or selecting a fallback. Scheduler support is a distinct check and cannot supply
+event-policy admission for a declared stream with zero callbacks/routes.
 
 A separate previous-spec rebuild in the Kanban editor has the same preservation
 gap and is tracked in [usefulness05](NS-3_control-usefulness_05.md). It adds no

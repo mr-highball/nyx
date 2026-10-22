@@ -626,12 +626,22 @@ begin
     LSpec := Default(TNyxCollectionViewSpec);
   end;
   LLocked := APending.CollectionViewLocked(ASession.SelectedID);
+  { Query-policy proposals retain the accepted editor specification until the
+    paired candidate is admitted. Overlaying their prospective policy here
+    changes the exact form baseline, discards copied drafts and forces a
+    physical replacement before publication. The existing owner lock above
+    still disables the pending form, and capture independently refuses it.
+    Admission installs the new policy normally; refusal or cancellation can
+    restore the same accepted form and its unfinished values. Other pending
+    collection actions retain their established presentation behavior. }
   for LPendingIndex := 0 to High(APending.Collections) do
   begin
 
     if (APending.Collections[LPendingIndex].Owner = ASession.SelectedID) and
       NyxStudioCollectionViewAction(APending.Collections[LPendingIndex].Intent.Action) and
-      (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) then
+      (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) and
+      not (APending.Collections[LPendingIndex].Intent.Action in
+        [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(

@@ -1,5 +1,67 @@
 # Working in Nyx
 
+QUERY AUTHORING P4A FUNCTIONAL RESULT / BROWSER FAILURE (2026-10-21): full25443
+is terminal/root joined7ee916 exit1. Immutable95B25BDD verifies13owned/1807Pascal/
+foreign13/extra8 exact and every actual reader joined. Repaired focused180 has
+a complete clean heap. Actual full1280/390 pass266/267, normal exit0/no timeout,
+all original11 stages/deadlines/assertions unchanged. Both full heap reports are
+truncated256bytes; no complete clean-heap or P4A qualification follows. Five
+accepted compilers have zero owned/14 upstream warning occurrences. Matching
+new-consumer browser compile fails1150: @Closed resolves Web.closed enum instead
+of the fixture callback; its seven upstream warnings and compilerexit7 remain
+separate. Retain initial focused failure/owned warning and all older failures.
+Root owns outcome docs/checkpoint only; all Pascal/tools stay paused. Next is
+separate consumer-only browser callback-name repair, independent review/freeze
+and ONE browser compiler, reusing exact unaffected results. Then separately
+review capture-only native executions of the pinned150C41CD executable using
+child-only HEAPTRC log= fresh files outside fixture directories; original args,
+1800s/60s/2400 bounds and checks remain. No recompile/native fixture variant or
+early heap dump replaces final teardown evidence. Repeated editor latency stays
+open, despite improved checked-run observations. Core35 advances36; no original
+criterion/credit/DONE closes. Latest user's backlog request is covered by the
+80-kind review and usefulness02-05; no duplicate tasks. Preserve foreign13,
+offline LAN/no native Nyx tools, pending browser approval and no host/config/
+worker/MCP rollout, cleanup/restart or extra agent. WORK/private state owns exact
+receipts, failure/capture plans and return to P4B then P4C.
+
+QUERY AUTHORING ACCEPTED-PRESENTATION FIXTURE REPAIR (2026-10-21): sole actual
+reader51230 is terminal/root joined exit1. Immutable62379BAB verifies13owned/
+1807Pascal/foreign13/extra8 exact. Native compiles with one NEW owned nonexhaustive
+case warning. First valid case completes; next invalid operator draft correctly
+raises EArgumentException, but the appended fixture catches only ENyxCollection.
+Native failure has a complete clean heap. Keep failure/warning; all other planned
+readers are unattempted. Root owns ONLY existing pending fixture's additional
+specific EArgumentException catch for that empty-operator diagnostic and explicit
+case fallback to remove its warning, plus outcome docs. ProductionDA08, fullEE1C,
+queue4DC, tools/build1EEE and all other Pascal remain exact. No predicate, wait,
+seed or original assertion changes. Helper independently reviews before fresh
+freeze and resuming the SAME fixed packet; no profiler/new variant/host follows.
+Core34 advances35 for this completed native batch; no original criteria/DONE/
+credit closes. WORK/private state owns retained receipt, exact scopes and joins.
+
+QUERY AUTHORING P4A ACCEPTED-PRESENTATION SOURCE RELEASE (2026-10-21): previous
+9efee61 is progress, committed/pushed/remote-verified. All actual readers remain
+joined;1807Pascal/foreign13/extra8 are exact. Root independently reads retained
+profile1147-1400: text-column Apply has pending Inspector replacement1163, then
+prepare/admit/notify1263-68, committed replacement1277. The exact same Pascal
+inputs produced the full first Ready60s failure; profiling is not current timing.
+This materially supports a narrow repair, not a sufficient performance claim.
+Existing helper owns ONLY collections.pas pending overlay: omit the four policy
+actions, retain accepted spec and ALL existing locks/capture/admission guards.
+Root owns ONLY additive existing collection_pending_tests, private qualifier's
+two pending modes, guide/WORK/task02/handoff. ConsumerEE1CEAA1, queue fixture,
+producer/renderers/ABI/build/waits stay exact. No new fixture or profiler follows.
+Review both source scopes and tool pins, then freeze before fixed SIX compilers/
+THREE native outcomes: pending native/browser, both Studio mains, maintained
+unchanged full native1280 then390 and matching browser compile. Run full UI only
+after other readers join; same1800s outer allocation and original60s/2400 bounds.
+Stop at first failure; root joins/audits every actual handle before repair.
+Descriptor/draft checks prove no physical input or actual cancellation by
+themselves; unchanged full journey remains required. Preserve all old failures/
+partial heap and core34. No original criteria/credit/DONE or host/browser execution/
+LAN/MCP/config/worker, cleanup/restart, extra agent or broader source release.
+WORK/private state owns exact scopes, fixed admission and return to P4B/C.
+
 QUERY AUTHORING P4A FULL FIRST FAILURE JOINED (2026-10-21): sole actual wrapper
 76295 and child15812 are terminal/root joined, exit1 without forced stop or outer
 timeout. Immutable audit24732435 pins12owned/1807Pascal/foreign13/extra8 exact;
