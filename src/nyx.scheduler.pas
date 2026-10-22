@@ -232,8 +232,9 @@ type
     procedure Complete(const AFailure: TNyxText);
   end;
 
-  { A courier owns every input. Its queued method is the sole raw self-reference;
-    it releases itself only after the queue has invoked that method. }
+  { A courier owns every input. Immediate/worker delivery releases it after Run;
+    a native deferred UI entry instead owns it until delivery or retirement.
+    Browser timers retain the existing self-releasing delivery boundary. }
   TNyxCourier = class
   private
     FWork: INyxWork;
@@ -246,6 +247,54 @@ type
   end;
 
   {$IFNDEF PAS2JS}
+  TNyxNativeUIQueue = class;
+
+  { Private managed platform target, never a public capability/GUID. Submission
+    and the pending registry retain independent entry leases across Wake hooks;
+    the raw RTL method pointer is removed before retirement releases user work. }
+  INyxNativeUIEntry = interface(IInterface)
+    procedure Enqueue(ADelay: Integer);
+    procedure Detach;
+    procedure Unqueue;
+    procedure Retire;
+  end;
+  { An independent queue lifetime, with no reference back to its scheduler.
+    Execution pruning/cancellation cannot orphan these pending ownership leases. }
+  INyxNativeUIQueue = interface(IInterface)
+    function Adopt(ACourier: TNyxCourier): INyxNativeUIEntry;
+    procedure Close;
+  end;
+  { Each slot owns a managed entry; traversal order never selects another
+    scheduler's work. The complete vector transfers to Close before callouts. }
+  TNyxNativeUIEntries = array of INyxNativeUIEntry;
+  { UI-thread-only registry. Entries borrow this owner only while registered;
+    Close revokes every weak link and queued method before releasing any work. }
+  TNyxNativeUIQueue = class(TInterfacedObject, INyxNativeUIQueue)
+  private
+    FClosed: Boolean;
+    FEntries: TNyxNativeUIEntries;
+    procedure Forget(const AEntry: INyxNativeUIEntry);
+  public
+    destructor Destroy; override;
+    function Adopt(ACourier: TNyxCourier): INyxNativeUIEntry;
+    procedure Close;
+  end;
+  { Owns one courier, not the scheduler. A submission lease outlives ForceQueue
+    even when WakeMainThread delivers, closes the owner or raises after insertion.
+    Deliver detaches before user work; Retire clears ownership before destruction. }
+  TNyxNativeUIEntry = class(TInterfacedObject, INyxNativeUIEntry)
+  private
+    FOwner: TNyxNativeUIQueue;
+    FCourier: TNyxCourier;
+  public
+    destructor Destroy; override;
+    procedure Enqueue(ADelay: Integer);
+    procedure Detach;
+    procedure Unqueue;
+    procedure Retire;
+    procedure Deliver;
+  end;
+
   { Workers retain only this independent queue, never their scheduler or UI.
     It owns pending couriers; Take transfers one to a worker. No thread object is
     retained by the queue, so retiring the scheduler cannot create a cycle. }
@@ -315,6 +364,7 @@ type
     {$IFNDEF PAS2JS}
     FOptions: TNyxSchedulerOptions;
     FPool: INyxWorkerQueue;
+    FUIQueue: INyxNativeUIQueue;
     {$ENDIF}
     FExecutions: array of INyxExecution;
     procedure Prune;
@@ -610,6 +660,215 @@ begin
 end;
 
 {$I nyx.scheduler.pool.inc}
+
+destructor TNyxNativeUIEntry.Destroy;
+var
+  LCourier: TNyxCourier;
+begin
+  { Normal delivery/retirement already detached and cleared the courier. This
+    final safeguard neither resurrects Self nor leaves a raw RTL method target. }
+  FOwner := nil;
+  Unqueue;
+  LCourier := FCourier;
+  FCourier := nil;
+  LCourier.Free;
+  inherited Destroy;
+end;
+
+procedure TNyxNativeUIEntry.Detach;
+var
+  LKeep: INyxNativeUIEntry;
+  LOwner: TNyxNativeUIQueue;
+begin
+  LKeep := Self;
+  LOwner := FOwner;
+  FOwner := nil;
+
+  if LOwner <> nil then
+  begin
+    LOwner.Forget(LKeep);
+  end;
+end;
+
+procedure TNyxNativeUIEntry.Unqueue;
+begin
+  { This RTL operation compares both code and object data, removes only this
+    exact target's records, and performs no user callback or courier destruction. }
+  TThread.RemoveQueuedEvents(nil, Self.Deliver);
+end;
+
+procedure TNyxNativeUIEntry.Retire;
+var
+  LKeep: INyxNativeUIEntry;
+  LCourier: TNyxCourier;
+begin
+  LKeep := Self;
+  LKeep.Detach;
+  LKeep.Unqueue;
+  LCourier := FCourier;
+  FCourier := nil;
+
+  if LCourier <> nil then
+  begin
+    LCourier.FExecution.Cancel;
+    LCourier.Free;
+  end;
+end;
+
+procedure TNyxNativeUIEntry.Deliver;
+var
+  LKeep: INyxNativeUIEntry;
+  LCourier: TNyxCourier;
+begin
+  LKeep := Self;
+  LKeep.Detach;
+  LCourier := FCourier;
+  FCourier := nil;
+
+  if LCourier <> nil then
+  begin
+    { Running work is no longer pending. Reentrant Shutdown can retire siblings
+      without freeing this courier; its existing Deliver owns Run + final Free. }
+    LCourier.Deliver;
+  end;
+end;
+
+procedure TNyxNativeUIEntry.Enqueue(ADelay: Integer);
+var
+  LWorker: TNyxWorker;
+begin
+  { SubmitAttached pins this entry AND its independent owner before entering
+    here. A bootstrap WaitFor can service callbacks just like a Wake hook can. }
+
+  if (FCourier = nil) or (FOwner = nil) then
+  begin
+    Exit;
+  end;
+  { FPC 3.2.0 ForceQueue executes inline until the RTL has entered
+    multithreaded mode. Complete one empty bootstrap thread before the
+    first deferred submission. No user work runs in this bootstrap and
+    no global RTL flag is manually changed. Queue from the UI thread:
+    old RTL thread destruction removes even unowned queue entries that
+    were submitted from the destroyed thread. }
+
+  if not IsMultiThread then
+  begin
+    LWorker := TNyxWorker.Create(nil);
+    LWorker.FreeOnTerminate := False;
+    try
+      LWorker.Start;
+      LWorker.WaitFor;
+    finally
+      LWorker.Free;
+    end;
+  end;
+
+  if (FCourier = nil) or (FOwner = nil) then
+  begin
+    Exit;
+  end;
+  {$if FPC_FULLVERSION >= 30301}
+  TThread.ForceQueue(nil, Self.Deliver, ADelay);
+  {$else}
+  TThread.ForceQueue(nil, Self.Deliver);
+  {$endif}
+  { No raw courier or scheduler access follows WakeMainThread. It may already
+    have delivered/retired this entry, or may raise after adding its RTL record. }
+end;
+
+destructor TNyxNativeUIQueue.Destroy;
+begin
+  Close;
+  inherited Destroy;
+end;
+
+function TNyxNativeUIQueue.Adopt(ACourier: TNyxCourier): INyxNativeUIEntry;
+var
+  LEntry: TNyxNativeUIEntry;
+  LLease: INyxNativeUIEntry;
+  LCount: Integer;
+begin
+
+  if FClosed then
+  begin
+    raise ENyxSchedule.Create('Native UI queue is closed');
+  end;
+  LEntry := TNyxNativeUIEntry.Create;
+  LLease := LEntry;
+  LCount := Length(FEntries);
+  SetLength(FEntries, LCount + 1);
+  FEntries[LCount] := LLease;
+  LEntry.FOwner := Self;
+  { All allocation/registration precedes this no-callout ownership transfer.
+    An earlier refusal leaves the caller's raw courier independently owned. }
+  LEntry.FCourier := ACourier;
+  Result := LLease;
+end;
+
+procedure TNyxNativeUIQueue.Forget(const AEntry: INyxNativeUIEntry);
+var
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  for LIndex := 0 to High(FEntries) do
+  begin
+
+    if FEntries[LIndex] = AEntry then
+    begin
+      for LMove := LIndex to High(FEntries) - 1 do
+      begin
+        FEntries[LMove] := FEntries[LMove + 1];
+      end;
+      { The caller pins this entry; all other leases remain in the vector.
+        Removing membership cannot release user work or enter its destructor. }
+      SetLength(FEntries, Length(FEntries) - 1);
+      Exit;
+    end;
+  end;
+end;
+
+procedure TNyxNativeUIQueue.Close;
+var
+  LEntries: TNyxNativeUIEntries;
+  LIndex: Integer;
+  LFailure: TNyxText;
+begin
+
+  if FClosed then
+  begin
+    Exit;
+  end;
+  FClosed := True;
+  LEntries := FEntries;
+  FEntries := nil;
+  for LIndex := 0 to High(LEntries) do
+  begin
+    LEntries[LIndex].Detach;
+  end;
+  for LIndex := 0 to High(LEntries) do
+  begin
+    LEntries[LIndex].Unqueue;
+  end;
+  { All weak links and RTL records are gone before the first destructor can
+    pump, shut down again or release the scheduler. Only local leases follow. }
+  LFailure := '';
+  for LIndex := 0 to High(LEntries) do
+  begin
+    try
+      LEntries[LIndex].Retire;
+    except
+      on LException: Exception do
+      begin
+        LFailure := LFailure + ' / ' + UTF8Encode(UnicodeString(LException.Message));
+      end;
+    end;
+  end;
+
+  if LFailure <> '' then
+  begin
+    raise ENyxSchedule.Create('Native UI retirement failed' + String(LFailure));
+  end;
+end;
 {$ENDIF}
 
 constructor TNyxScheduler.Create(const AOptions: TNyxSchedulerOptions);
@@ -711,7 +970,8 @@ var
   LCourier: TNyxCourier;
   LImmediate: TNyxCourier;
   {$IFNDEF PAS2JS}
-  LWorker: TNyxWorker;
+  LUIQueue: INyxNativeUIQueue;
+  LUIEntry: INyxNativeUIEntry;
   {$ENDIF}
 begin
   Admit(APolicy);
@@ -742,29 +1002,16 @@ begin
 
       if APolicy = neUIQueue then
       begin
-        { FPC 3.2.0 ForceQueue executes inline until the RTL has entered
-          multithreaded mode. Complete one empty bootstrap thread before the
-          first deferred submission. No user work runs in this bootstrap and
-          no global RTL flag is manually changed. Queue from the UI thread:
-          old RTL thread destruction removes even unowned queue entries that
-          were submitted from the destroyed thread. }
-
-        if not IsMultiThread then
+        if FUIQueue = nil then
         begin
-          LWorker := TNyxWorker.Create(nil);
-          LWorker.FreeOnTerminate := False;
-          try
-            LWorker.Start;
-            LWorker.WaitFor;
-          finally
-            LWorker.Free;
-          end;
+          FUIQueue := TNyxNativeUIQueue.Create;
         end;
-        {$if FPC_FULLVERSION >= 30301}
-        TThread.ForceQueue(nil, LCourier.Deliver, ADelay);
-        {$else}
-        TThread.ForceQueue(nil, LCourier.Deliver);
-        {$endif}
+        LUIQueue := FUIQueue;
+        LUIEntry := LUIQueue.Adopt(LCourier);
+        LCourier := nil;
+        { Ownership is managed before bootstrap/enqueue can call outward. Wake
+          can deliver, retire or raise without invalidating either local lease. }
+        LUIEntry.Enqueue(ADelay);
       end
       else
       begin
@@ -785,10 +1032,18 @@ begin
       end;
       {$ENDIF}
     end;
-    { Deferred ownership is now held by the platform queue/worker; synchronous
+    { Deferred ownership is now held by the platform entry/worker; synchronous
       delivery has already released the courier. }
     LCourier := nil;
   except
+    {$IFNDEF PAS2JS}
+
+    if LUIEntry <> nil then
+    begin
+      Result.Cancel;
+      LUIEntry.Retire;
+    end;
+    {$ENDIF}
     LCourier.Free;
     Result.Cancel;
     raise;
@@ -798,6 +1053,11 @@ end;
 procedure TNyxScheduler.Shutdown;
 var
   LIndex: Integer;
+  {$IFNDEF PAS2JS}
+  LUIQueue: INyxNativeUIQueue;
+  LPool: INyxWorkerQueue;
+  LExecutions: array of INyxExecution;
+  {$ENDIF}
 begin
 
   if FClosed then
@@ -805,16 +1065,43 @@ begin
     Exit;
   end;
   FClosed := True;
+  {$IFNDEF PAS2JS}
+  LUIQueue := FUIQueue;
+  FUIQueue := nil;
+  LPool := FPool;
+  { Completed executions can still retain a caller-supplied parent context.
+    Detach the WHOLE vector, retaining those leases through queue retirement;
+    clearing the field must not invoke that parent's destructor mid-shutdown. }
+  LExecutions := FExecutions;
+  FExecutions := nil;
+  for LIndex := 0 to High(LExecutions) do
+  begin
+    LExecutions[LIndex].Cancel;
+  end;
+  {$ELSE}
   for LIndex := 0 to Length(FExecutions) - 1 do
   begin
     FExecutions[LIndex].Cancel;
   end;
   SetLength(FExecutions, 0);
+  {$ENDIF}
   {$IFNDEF PAS2JS}
 
-  if FPool <> nil then
-  begin
-    FPool.Close;
+  { Finalize scheduler-owned fields before user work can release the last
+    scheduler reference. Independent local owners suffice afterward, including
+    Destroy -> Shutdown; retaining Self there would resurrect a dying object. }
+  try
+
+    if LUIQueue <> nil then
+    begin
+      LUIQueue.Close;
+    end;
+  finally
+
+    if LPool <> nil then
+    begin
+      LPool.Close;
+    end;
   end;
   {$ENDIF}
 end;

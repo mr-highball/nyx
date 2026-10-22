@@ -1,5 +1,113 @@
 # Working in Nyx
 
+NATIVE UI COURIER QUALIFIED / EDITOR TIMING OPEN (2026-10-22): this turn is
+progress: managed native queue ownership,23 additive lifetime assertions and
+portable section-consumer receivers. Scheduler78 executes all23 without SKIP;
+current portable sectionAF5A6EB1 passes67 with byte-identical functional stdout
+and complete clean heap. Initial unchanged sectionF887 also passes67 clean.
+Scheduler and repaired section browser assertions COMPILE ONLY. Retain first
+browser exit6/receipt84F8842C; receiver-only repair reverses byte-exact toF887.
+
+The unchanged controls545FB593 compiler passes, but actual native fails its
+ORIGINAL Ready30 at Initial callback addition/check10:30063ms, one Pump/two
+paints, source-busyFalse/presentation-pendingFalse/state2, selectedreply-memo,
+width1100, observerempty. Exit1/not outer timeout; COMPLETE clean heap28769934
+blocks/5796583734bytes allocated=freed,0unfreed/fullfooter. No claim of timing
+efficacy/regression causality follows a different failure stage. Remaining16
+compilers are UNATTEMPTED. No original/P4B/P4C/browser/performance criterion,
+credit or DONE closes; core no-closure39→40.
+
+Final20E6299D audit verifies32owned/1807Pascal/foreign13/extra19 and every
+artifact across seven actual compilers/four native runs, ALL terminal/root-joined.
+Six compiler successes/one retained first failure; three native successes/one
+retained Ready failure; all FOUR heaps clean. Zero owned/21 upstream RTL warning
+occurrences, including the failed browser compiler. Queue9EFBBED7/testsA1B425D2,
+ownerE195C0A3/portable consumerAF5A and both renderers stay exact from reviewed
+freezes. Root owns docs/checkpoint only; ALL Pascal/tools PAUSED. Existing helper
+independently reviews outcomes, then read-only performance01/P4B ownership trace
+of this exact initial-callback source/publication and repeated section work.
+No new profile/fixture/wait/source/compiler variant is released. Separate reviewed
+source scope/freeze must precede another performance admission. Preserve all
+earlier failures, original controls/criteria and offline LAN/no native Nyx tools;
+no host/config/MCP/worker rollout, cleanup/restart or extra agent.
+
+NATIVE UI COURIER FIRST BOUNDARY / CONSUMER PORTABILITY (2026-10-22): all four
+actual compiler readers and two native runs are terminal/root-joined. Audit
+FFEEF127 verifies32owned/1807Pascal/foreign13/extra19 and every artifact pin.
+Scheduler78 (all23 additions executed, no SKIP) and unchanged Studio-section67
+pass with complete clean heaps and zero native compiler warnings. Section67's
+stdout is byte-identical to the retained leaked predecessor; its immediate
+teardown now releases every allocation. Browser scheduler compiles only.
+The FIRST section browser compiler fails at332: Extract(...).Free requires a
+variable receiver in pas2js; the same spelling also occurs at431. Retain its
+exit6/receipt84F8842C and seven upstream RTL warnings. No browser program ran.
+Stop the fixed batch: controls timing and the other17 compilers are unattempted.
+No latency/original/P4B/P4C/browser criterion or credit closes; core39 carries.
+
+Root owns docs/admission only. After independent failed-receipt/source review,
+existing helper may change ONLY the two new StaticMembershipCases removal-loop
+receivers in tests/nyx_studio_section_controls.lpr: declare one local TNyxNode,
+assign Extract to it and Free that variable immediately in each original loop.
+All67 assertions, ownership/order, immediate teardown, waits and original53
+bytes stay exact; no helper/new API/conditional workaround or fixture variant.
+Scheduler9EFBBED7/testsA1B425D2, section ownerE195C0A3, controls545FB593 and all
+other Pascal/tools remain frozen. Root reviews/fresh-freezes before admitting
+repaired section native/browser, then unchanged controls native Ready30/outer600;
+first failure stops. Reuse the exact unchanged scheduler native78/browser result,
+not a new execution claim. Only that initial gate releases the other16 original
+compilers; no profile/host/config/MCP/worker rollout, cleanup/restart or extra agent.
+
+NATIVE UI COURIER SOURCE RELEASE (2026-10-22): priorab7a14b is progress,
+committed/pushed/remote-verified. All readers joined and1807Pascal/foreign13/
+extra19 revalidated. Core39 and failed native67 heap3blocks104 remain open.
+Root/helper independently reviewed exact queue ownership: use private managed
+native pending-owner/entry leases in existing scheduler, never a raw pending list.
+Root owns ONLY src/nyx.scheduler.pas, docs and existing private qualification
+map/count. Existing helper owns ONLY additive native cases in
+tests/nyx.test.scheduler.pas. Preserve all original test/journey bytes, waits,
+public interfaces/GUIDs, browser timers, worker queue/include and nonblocking
+worker shutdown. Both renderers, section ownerE195C0A3, section consumerF887526A,
+original controls545FB593 and all other Pascal stay exact.
+
+Pending owner retains entries; each entry owns its courier and borrows only that
+independent owner, never scheduler. Submission pins owner+entry and transfers
+raw courier ownership BEFORE bootstrap WaitFor/ForceQueue. After bootstrap,
+recheck entry liveness. Deliver pins self and detaches before user Run; Retire
+is idempotent, unqueues exact method before releasing its cleared courier field.
+Shutdown finalizes scheduler fields/copies independent owner+pool leases first;
+revoke ALL weak membership and remove ALL exact queued methods before any work
+destructor. Cleanup attempts every pending item and pool close. No Self tail or
+Self resurrection from Destroy follows user-destructor callouts. Cancel remains
+flags-only, pending ownership independent of execution Prune. Enqueue failure
+handles Wake delivery/Shutdown/raise-after-insertion without double release.
+
+Existing scheduler tests add immediate shutdown/last-release without pumping,
+retained cancelled ticket/later-pump safety/pruning, running/reentrant shutdown,
+destructor reentry, scoped restored Wake hooks and peer-scheduler isolation.
+Do not manipulate IsMultiThread or claim executed bootstrap variants without
+actual evidence. No compiler until both source scopes/tools independently review
+and fresh32owned/1807Pascal/foreign13/extra19 freeze. Initial fixed5 compilers/
+3native outcomes: scheduler native/browser, unchanged section native/browser,
+unchanged unprofiled controls native Ready30/outer600. Stop first failure. Only
+after that gate passes finish the remaining16 original compilers (21 total,
+10 native executions); shared scheduler changed, so old binaries are not fresh
+compatibility evidence. Browser compiles only. Pause sources/docs/tools through
+all actual root joins/audits. No profile/host/config/MCP/worker rollout, cleanup/
+restart or extra agent; original/P4B/P4C/browser/performance criteria stay open.
+
+Final source/tool review passes scheduler9EFBBED7, helperA1B425D2, freezeF5BC5C36
+and qualifierC61BFCAC. Original public/GUID region and courier Run/Deliver remain
+exact; worker include and browser timer/shared exception order stay unchanged.
+Helper restores original unit1FD3EDFF byte-exact;23 native additions retain the
+first20 byte-exact. Three parent-order assertions use a future60000ms sibling
+without waiting; unsupported runtime delay emits SKIP, not a false proof.
+Independent review caught completed executions retaining an external parent:
+native Shutdown now DETACHES FExecutions into local leases through queue/pool
+cleanup, preventing parent destruction before pending targets retire. Retain
+first2FDC source/review and20-check helper, no compiler failure produced.
+Root may freeze32/1807/13/19 and admit the fixed initial5; source/docs/tools pause
+through every actual join/audit. No runtime/leak/latency result is inferred yet.
+
 STATIC MEMBERSHIP FUNCTIONAL / QUEUED LIFETIME OPEN (2026-10-22): current turn
 is progress: closed materialized-source identity proof, reviewed private owner
 optimization and additive actual native67 (old53+14). Compiler succeeds with

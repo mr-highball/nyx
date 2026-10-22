@@ -312,6 +312,7 @@ var
   LDefinition: INyxColumn;
   LReference: INyxComponent;
   LProject, LBody, LFrom, LTo, LRoot: TNyxNode;
+  LRemoved: TNyxNode;
   LInput, LAction: TNyxStudioSectionControl;
   LInputID, LActionID, LDynamicID: TNyxText;
   LRefused: Boolean;
@@ -329,7 +330,8 @@ begin
     LProject := LBase.Pages[0].Find('studio-left');
     while LProject.Count > 0 do
     begin
-      LProject.Extract(LProject.Count - 1).Free;
+      LRemoved := LProject.Extract(LProject.Count - 1);
+      LRemoved.Free;
     end;
     LDisclosure := NewNyxDisclosure('static-disclosure/~');
     LDisclosure.Configure.Text('Retained details').Value(True).Done;
@@ -428,7 +430,8 @@ begin
     LProject := LDynamic.Find('studio-left');
     while LProject.Count > 0 do
     begin
-      LProject.Extract(LProject.Count - 1).Free;
+      LRemoved := LProject.Extract(LProject.Count - 1);
+      LRemoved.Free;
     end;
     LDefinition := NewNyxColumn('dynamic-template');
     LInputSpec := NewNyxInput(CDynamicInput);

@@ -4,6 +4,160 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: queue lifetime qualified; original editor timing remains open
+
+This turn changes maintained queue ownership and its native consumer, qualifies
+the real leaked Studio-section reproduction, and repairs its two portable
+receiver expressions. It is concrete progress, without original criterion,
+P4B/P4C/performance credit or a DONE move. Core no-closure39→40 records this
+completed native batch; no historical failure or original deadline is removed.
+
+| Actual reader | Result and boundary |
+| --- | --- |
+| Scheduler native/browser | Native78 executes all23 additions, including parent-release ordering, without SKIP; complete clean heap. Browser compiles only. |
+| Initial unchanged sectionF887 | Native67 clean with functional stdout byte-identical to the retained leaked predecessor. First browser compiler fails at332; retain exit6, receipt84F8842C and the equivalent second expression at431. |
+| Portable sectionAF5A | One local TNyxNode and two immediate Extract/Free splits reverse exactly toF887. All67 assertions/waits/immediate teardown stay exact. Fresh native67 is clean; browser compiles only. |
+| Unchanged editor controls545FB593 | Compiler passes with zero warnings. Native fails ORIGINAL Ready30 at Initial callback addition/check10:30063ms, one Pump/two paints, busyFalse/pendingFalse/state2, selectedreply-memo/width1100, observerempty. Exit1, not outer600 timeout. |
+
+The failed controls run still has a complete clean heap:28769934 allocations/
+5796583734 cumulative bytes allocated=freed,0unfreed and full footer. The current
+portable section has46254416 allocations/12717980527 bytes allocated=freed.
+The queued leak is therefore qualified at its intended native boundary; timing
+efficacy or regression causality cannot be inferred from a different failed
+stage. The later second-Search, compact atomic, full history/lifetime and OWN P4C
+Save/Open/generated journey remain unqualified on this composite. No browser
+program ran. Stop the fixed plan: the remaining16 compilers were not attempted.
+
+Final immutable audit20E6299D verifies all32owned/1807Pascal/foreign13/extra19,
+seven actual compiler readers/four native runs, all artifact hashes and actual
+root joins. There are six successful compilers plus the retained browser failure,
+three successful native runs plus the retained Ready failure; all FOUR heaps
+are complete/clean. Zero owned and21 upstream RTL warning occurrences include
+the failed browser compile. The first-boundary auditFFEEF127 and initial2FDC/
+20-check helper/source reviews remain retained; no failed artifact is overwritten.
+
+Root now owns docs/checkpoint only. All Pascal and private qualification tools
+stay paused at scheduler9EFBBED7/testsA1B425D2, section ownerE195C0A3/consumerAF5A,
+original controls545FB593 and the exact renderer pins. Existing Lil' Scooty reviews
+final outcomes, then traces the exact initial callback's existing source and
+presentation ownership read-only to identify repeated work and a useful existing
+seam. Reassess before a separate scoped source release/freeze, not another test,
+wait, profile or compiler variant. Preserve offline LAN/no native Nyx tools; no
+host/config/MCP/worker rollout, cleanup/restart or extra agent follows.
+
+### Current boundary: native courier lifetime passes; browser consumer portability
+
+All four actual compilers and both native runs are terminal and root-joined.
+The immutable native-courier-first-boundary audit FFEEF127 verifies the exact
+32 owned/1807 Pascal/13 foreign/19 extra inputs and every reader artifact.
+Scheduler78 executes all23 new lifetime assertions, including the parent-order
+case, without SKIP:1098 allocations/78741bytes are all freed. The unchanged
+Studio-section consumerF887526A passes67 with stdout byte-identical to its failed
+predecessor, now freeing all46254416 allocations/12719306131 cumulative bytes.
+Both native compilers have zero warnings; immediate teardown and every assertion
+remain unchanged. This qualifies the actual queued-lifetime reproduction, not
+the slow-selection or original full performance outcome.
+
+Scheduler-browser compiles only. The first section-browser compile exits6:
+pas2js requires a variable receiver for Extract(...).Free at332. Its seven
+upstream RTL warnings, receipt84F8842C and full failure are retained. The same
+new removal-loop spelling occurs at431. No browser execution or controls timing
+run follows this failure;17 of the planned21 compilers remain unattempted.
+Core39 carries; original/P4B/P4C/browser and production performance stay open.
+
+After independent failed-receipt/source review, release ONLY the existing helper's
+two removal loops in StaticMembershipCases: one local TNyxNode receives Extract,
+then Free immediately at the same point. Preserve all67 checks, source ownership,
+waits, immediate teardown and original53 bytes; no new helper/API/conditional or
+fixture variant. Scheduler9EFBBED7/testsA1B425D2, ownerE195C0A3, controls545FB593
+and every other Pascal/tool stay exact. Root owns docs, review and fresh freeze.
+Then admit repaired section native/browser and unchanged controls Ready30/
+outer600, stopping at the first failure. Reuse unchanged scheduler78/browser
+evidence explicitly. Only a passing initial gate admits the other16 original
+compilers; no profiling, host/config/MCP/worker rollout, cleanup/restart or agent.
+
+### Current source release: managed native UI couriers
+
+Priorab7a14b is a source-progress checkpoint, pushed/remote-verified, with all
+actual readers joined. The failed native67 heap3blocks104bytes is retained.
+This turn revalidates1807Pascal/foreign13/extra19 and changes the next action to
+the independently reviewed ownership repair below. Core39 carries; no original
+criterion or credit closes. Existing performance01 owns this prerequisite before
+the unchanged P4B/latency journey, not a new diagnostic task or wait adjustment.
+
+Root owns only scheduler.pas production source, docs and existing qualification
+tool maps/count. Helper owns only additive native cases in the existing scheduler
+unit consumer. No include/new unit/public interface/GUID/renderer/Studio source
+scope is released. Keep section ownerE195C0A3, consumerF887526A and original
+controls545FB593 exact, including every current deadline and physical input.
+
+The native pending owner retains managed entries, which own existing couriers
+and borrow that independent owner. No scheduler cycle/backreference is introduced.
+Submission pins owner and entry across bootstrap/ForceQueue. Register/adopt and
+clear the raw local courier before bootstrap WaitFor, which may service callbacks;
+recheck entry liveness afterward. Deliver pins itself and detaches before Run,
+so running work can shut down its scheduler without retiring its own frame.
+Retire removes the exact queued method and clears the owned courier field before
+user destruction. Wake can already have delivered/shut down or raised after
+insertion; failure retirement must be idempotent. Pending registry ownership
+remains separate from execution pruning and thread-safe flags-only Cancel.
+
+Shutdown captures owner/pool locals and finalizes scheduler state before any
+user-work destructor. Revoke all weak owners, then remove every exact queued
+method, then release pending couriers; attempt all independent retirements/pool
+close. Use independent managed locals after callouts, with no scheduler Self
+tail and no artificial Self lease from Destroy. Preserve the worker pool's
+nonblocking ownership, browser timer branch and existing UI-only contract.
+
+Add native destructor-count and real queue cases in the existing scheduler
+consumer: shutdown and last release before any pump, retained cancelled ticket,
+later pump/no double-free, cancellation pruning, shutdown from running work,
+work-destructor reentry, restored scoped Wake hooks for post-insertion raise,
+shutdown during enqueue and delivery-before-raise, and peer-scheduler isolation.
+No old assertion, wait or journey changes; bootstrap paths without deterministic
+public-hook execution remain source-reviewed, not falsely claimed as tested.
+
+Preimages of both released sources, three docs, both tools and state are retained
+in native-courier-before. Independent source/tool review precedes a fresh
+32/1807/13/19 freeze. Fixed initial admission: scheduler native/browser, unchanged
+Studio-section native/browser, then unchanged unprofiled controls-native at
+Ready30/outer600; stop first failure. If all pass, finish the original other16
+compilers, including projection/headless compatibility whose common dependency
+changed (21 compilers/10 native executions total). Every native run needs its
+complete clean heap and actual root join; browser assertions compile only.
+No profile/browser execution/host/config/MCP/worker rollout, cleanup/restart or
+extra agent. Full P4B, OWN P4C saved/generated, parity and production performance
+remain required after this bounded repair, not substituted by scheduler checks.
+
+Independent final source review passes scheduler9EFBBED7 and helperA1B425D2.
+The scheduler's whole public interface/GUID region and existing courier Run/
+Deliver recover exact; worker include and browser timer/shared exception order
+stay unchanged. Review caught an additional real release boundary in initial
+2FDC: a completed private execution can retain an external public parent whose
+destructor calls outward. Native Shutdown now detaches the complete execution
+vector into local leases and keeps it through queue/pool retirement. No scheduler
+field is finalized while that parent's destructor can observe live pending targets.
+First2FDC source/review is retained; no compiler ran on that source.
+
+The helper's original unit1FD3EDFF recovers byte-exact by removing only one guarded
+block/call, with no import/program/wait change. Twenty native additions cover the
+queue cases; three more exercise the parent release order. The earlier20-check
+source233C is retained and its twenty assertions stay byte-exact in A1B4.
+The parent wraps a canonical successful execution, queues a future60000ms sibling
+and immediate parented child, then drops the wrapper and BOTH child ticket leases
+before Shutdown with no later Prune/submission. Its destructor observes the sibling
+already retired before reentrant Shutdown/CheckSynchronize. No delay is waited out;
+unsupported CanYieldUI explicitly reports SKIP and cannot earn that order proof.
+Bootstrap variants without deterministic execution remain source-reviewed only.
+
+FreezeF5BC5C36 is mechanically the original count31→32 only; qualifierC61BFCAC
+adds only scheduler native/browser names, the existing program map and PASS suffix.
+All original flags/arguments/timeouts/heap gates/profile guards remain. Both tools
+parse and the original1805 unreleased Pascal/foreign13/seventeen non-tool extras
+stay exact. Root may freeze32/1807/13/19 and admit the fixed initial5, first failure
+stopping. Every source/doc/tool then stays paused through actual terminal joins
+and exact audit; no source-ready status is runtime/leak/latency acceptance.
+
 ### Current boundary: native67 passes functionally; queue lifetime fails
 
 The reviewed static-membership ownerE195C0A3 and consumerF887526A compile without

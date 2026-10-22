@@ -2,6 +2,38 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+Current native queue ownership qualifies78 focused checks and the repaired
+67-check real Studio-section regression, both with complete clean heaps; matching
+browser assertions compile only. The unchanged editor controls still fail their
+ORIGINAL Ready30: initial callback/check10 takes30063ms in one Pump/two paints.
+That failed journey also frees all allocations; native compiler warnings are zero.
+The different failed stage proves neither timing efficacy nor regression cause.
+All readers are joined/exact-audited; the remaining16 compilers are unattempted.
+Keep original performance/P4B/P4C/browser criteria open. Next is a read-only trace
+of repeated work in this exact source/publication path before a separate repair
+scope; no new profile, wait or fixture variant is released. See the
+[current boundary](../WORK.md#current-boundary-queue-lifetime-qualified-original-editor-timing-remains-open).
+
+The managed native queue repair now passes78 focused checks and the unchanged
+67-check actual Studio-section regression, both with complete clean heaps and
+zero compiler warnings. The retained three-allocation leak no longer reproduces;
+all assertions and immediate teardown remain exact. Scheduler browser compilation
+passes, but the first section-browser compiler rejects two new removal-loop
+Extract(...).Free receivers. The batch stops before controls timing. A separately
+reviewed local-variable-only consumer correction precedes fresh section native/
+browser qualification and the unchanged Ready30 journey. These results add no
+latency, browser execution or original performance acceptance. See the
+[current boundary](../WORK.md#current-boundary-native-courier-lifetime-passes-browser-consumer-portability).
+
+The next separately reviewed repair releases only the existing scheduler's
+native UI queue ownership and additive existing scheduler tests. Managed pending
+owner/entry leases survive bootstrap/Wake reentry and enqueue failure; shutdown
+revokes/unqueues all pending methods before work destruction. Running delivery
+detaches first, Cancel remains flags-only, and worker/browser/public contracts
+stay intact. Fresh focused/ordinary qualification and the unchanged Ready30
+journey are required; source design is not leak closure or latency evidence.
+See [the source release](../WORK.md#current-source-release-managed-native-ui-couriers).
+
 The new section-owner change passes67 actual native functional checks (old53+14)
 with zero compiler warnings, but final heap qualification FAILS: three pending
 work/execution/courier allocations retain104bytes. All actual readers are joined

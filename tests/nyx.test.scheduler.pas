@@ -386,6 +386,507 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+type
+  PNativeQueueScheduler = ^INyxScheduler;
+
+  { Managed facts outlive any refused/undelivered work even if a check fails.
+    The scheduler slot and sibling are borrowed only during this helper; its
+    finally block revokes those pointers before the helper's stack unwinds. }
+  TNativeQueueFacts = class(TInterfacedObject)
+  public
+    Calls, Destroyed, Reentries: Integer;
+    ParentDestroyed: Integer;
+    SawRunningCancellation, SawRunningLifetime: Boolean;
+    ParentSawRetirement, ParentCallouts: Boolean;
+    ShutdownOnRun, DropSchedulerOnDestroy, PumpOnDestroy: Boolean;
+    Scheduler: INyxScheduler;
+    SchedulerSlot: PNativeQueueScheduler;
+    Sibling: TNativeQueueFacts;
+    Ticket: INyxExecution;
+    procedure Reset;
+  end;
+
+  TNativeQueueWork = class(TInterfacedObject, INyxWork)
+  private
+    FFacts: TNativeQueueFacts;
+    FFactsLease: IInterface;
+  public
+    constructor Create(AFacts: TNativeQueueFacts);
+    destructor Destroy; override;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+
+  { An application-supplied parent forwards a real canonical execution. Its
+    destructor is an ordinary outward lifetime boundary, independently of the
+    private child execution that retains it after that child has completed. }
+  TNativeQueueParent = class(TInterfacedObject, INyxExecution)
+  private
+    FInner: INyxExecution;
+    FFacts: TNativeQueueFacts;
+    FFactsLease: IInterface;
+  public
+    constructor Create(const AInner: INyxExecution; AFacts: TNativeQueueFacts);
+    destructor Destroy; override;
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    function GetStatus: TNyxExecutionStatus;
+    function GetFailure: TNyxText;
+  end;
+
+  TNativeQueueWakeMode = (nqwRaise, nqwShutdown, nqwDeliverRaise);
+  { This is a scoped simulation of the RTL's ordinary WakeMainThread callout,
+    not a scheduler probe or replacement queue. Only the UI-thread one-shot
+    branch touches test state; other notifications retain the former receiver. }
+  TNativeQueueWake = class
+  public
+    Previous: TNotifyEvent;
+    Scheduler: INyxScheduler;
+    Mode: TNativeQueueWakeMode;
+    Armed: Boolean;
+    Calls: Integer;
+    procedure Notify(ASender: TObject);
+  end;
+
+const
+  CNativeQueueWakeRefusal = 'Intentional native queue wake refusal';
+
+procedure TNativeQueueFacts.Reset;
+begin
+  Scheduler := nil;
+  Ticket := nil;
+  Calls := 0;
+  Destroyed := 0;
+  Reentries := 0;
+  ParentDestroyed := 0;
+  SawRunningCancellation := False;
+  SawRunningLifetime := False;
+  ParentSawRetirement := False;
+  ParentCallouts := False;
+  ShutdownOnRun := False;
+  DropSchedulerOnDestroy := False;
+  PumpOnDestroy := False;
+  SchedulerSlot := nil;
+  Sibling := nil;
+end;
+
+constructor TNativeQueueWork.Create(AFacts: TNativeQueueFacts);
+begin
+  inherited Create;
+  FFacts := AFacts;
+  FFactsLease := AFacts;
+end;
+
+destructor TNativeQueueWork.Destroy;
+var
+  LScheduler: INyxScheduler;
+begin
+  Inc(FFacts.Destroyed);
+
+  if FFacts.DropSchedulerOnDestroy and (FFacts.SchedulerSlot <> nil) then
+  begin
+    { Drop the caller's last public slot during the outer Shutdown cleanup.
+      This local lease permits reentry, then releases before outer Shutdown
+      resumes; its implementation may no longer read a destroyed scheduler. }
+    LScheduler := FFacts.SchedulerSlot^;
+    FFacts.SchedulerSlot^ := nil;
+
+    if LScheduler <> nil then
+    begin
+      Inc(FFacts.Reentries);
+      LScheduler.Shutdown;
+    end;
+  end;
+
+  if FFacts.PumpOnDestroy then
+  begin
+    { An adversarial destructor may service the platform queue. Every pending
+      sibling target must already be removed, not merely execution-cancelled. }
+    CheckSynchronize(0);
+  end;
+  inherited Destroy;
+end;
+
+procedure TNativeQueueWork.Execute(const AExecution: INyxExecution);
+begin
+  Inc(FFacts.Calls);
+  FFacts.Ticket := AExecution;
+
+  if FFacts.ShutdownOnRun then
+  begin
+    FFacts.Scheduler.Shutdown;
+    FFacts.SawRunningCancellation := AExecution.Cancelled;
+    FFacts.SawRunningLifetime := (FFacts.Destroyed = 0) and
+      (FFacts.Sibling <> nil) and (FFacts.Sibling.Destroyed = 1);
+  end;
+end;
+
+constructor TNativeQueueParent.Create(const AInner: INyxExecution;
+  AFacts: TNativeQueueFacts);
+begin
+  inherited Create;
+  FInner := AInner;
+  FFacts := AFacts;
+  FFactsLease := AFacts;
+end;
+
+destructor TNativeQueueParent.Destroy;
+begin
+  Inc(FFacts.ParentDestroyed);
+  FFacts.ParentSawRetirement := (FFacts.Sibling <> nil) and
+    (FFacts.Sibling.Calls = 0) and (FFacts.Sibling.Destroyed = 1);
+
+  if FFacts.ParentCallouts then
+  begin
+
+    if FFacts.Scheduler <> nil then
+    begin
+      FFacts.Scheduler.Shutdown;
+    end;
+    CheckSynchronize(0);
+  end;
+  inherited Destroy;
+end;
+
+procedure TNativeQueueParent.Cancel;
+begin
+  FInner.Cancel;
+end;
+
+function TNativeQueueParent.GetCancelled: Boolean;
+begin
+  Result := FInner.Cancelled;
+end;
+
+function TNativeQueueParent.GetStatus: TNyxExecutionStatus;
+begin
+  Result := FInner.Status;
+end;
+
+function TNativeQueueParent.GetFailure: TNyxText;
+begin
+  Result := FInner.Failure;
+end;
+
+procedure TNativeQueueWake.Notify(ASender: TObject);
+begin
+
+  if GetCurrentThreadID = MainThreadID then
+  begin
+
+    if Armed then
+    begin
+      Armed := False;
+      Inc(Calls);
+      case Mode of
+        nqwRaise:
+          raise ENyxSchedule.Create(CNativeQueueWakeRefusal);
+        nqwShutdown:
+          Scheduler.Shutdown;
+        nqwDeliverRaise:
+          begin
+            CheckSynchronize(0);
+            raise ENyxSchedule.Create(CNativeQueueWakeRefusal);
+          end;
+      end;
+    end;
+  end;
+
+  if Assigned(Previous) then
+  begin
+    Previous(ASender);
+  end;
+end;
+
+{ Immediate destruction is checked BEFORE a pump. Later CheckSynchronize calls
+  test non-revival/double-release, never supply missing cleanup to a passing
+  assertion. No original journey wait or RTL bootstrap flag is changed. }
+function RunNativeQueueRetirementTests: Integer;
+var
+  LScheduler, LPeer: INyxScheduler;
+  LWork, LOtherWork: INyxWork;
+  LTicket, LOtherTicket: INyxExecution;
+  LParent, LInner: INyxExecution;
+  LTurns: INyxSchedulerTurns;
+  LDelays: INyxSchedulerDelays;
+  LFirst, LSecond: TNativeQueueFacts;
+  LFirstLease, LSecondLease: IInterface;
+  LHook: TNativeQueueWake;
+  LPrevious: TNotifyEvent;
+  LRejected: Boolean;
+
+  procedure NextCase;
+  begin
+    LWork := nil;
+    LOtherWork := nil;
+    LParent := nil;
+    LInner := nil;
+    LTurns := nil;
+    LDelays := nil;
+
+    if LScheduler <> nil then
+    begin
+      LScheduler.Shutdown;
+    end;
+    LScheduler := nil;
+
+    if LPeer <> nil then
+    begin
+      LPeer.Shutdown;
+    end;
+    LPeer := nil;
+    LTicket := nil;
+    LOtherTicket := nil;
+    LFirst.Reset;
+    LSecond.Reset;
+    LScheduler := NewNyxScheduler;
+  end;
+
+  procedure SubmitWithWake(AMode: TNativeQueueWakeMode);
+  begin
+    LHook.Mode := AMode;
+    LHook.Calls := 0;
+    LHook.Scheduler := LScheduler;
+    LHook.Armed := True;
+    LRejected := False;
+    WakeMainThread := LHook.Notify;
+    try
+      try
+        LTicket := LScheduler.Submit(LWork, neUIQueue);
+      except
+        on LException: ENyxSchedule do
+        begin
+
+          if LException.Message <> CNativeQueueWakeRefusal then
+          begin
+            raise;
+          end;
+          LRejected := True;
+        end;
+      end;
+    finally
+      WakeMainThread := LPrevious;
+      LHook.Armed := False;
+      LHook.Scheduler := nil;
+    end;
+    LWork := nil;
+  end;
+
+begin
+  Result := 0;
+  LFirst := TNativeQueueFacts.Create;
+  LFirstLease := LFirst;
+  LSecond := TNativeQueueFacts.Create;
+  LSecondLease := LSecond;
+  LHook := TNativeQueueWake.Create;
+  LPrevious := WakeMainThread;
+  LHook.Previous := LPrevious;
+  try
+    NextCase;
+    LWork := TNativeQueueWork.Create(LFirst);
+    LTicket := LScheduler.Submit(LWork, neUIQueue);
+    LWork := nil;
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 0),
+      'pending native UI work is owned without entering inline', Result);
+    LScheduler.Shutdown;
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 1) and
+      (LTicket.Status = nesCancelled),
+      'shutdown retires pending native work before any pump and preserves its cancelled ticket', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 1),
+      'later native queue service cannot revive shutdown work or release it twice', Result);
+
+    NextCase;
+    LWork := TNativeQueueWork.Create(LFirst);
+    LTicket := LScheduler.Submit(LWork, neUIQueue);
+    LWork := nil;
+    LScheduler := nil;
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 1) and LTicket.Cancelled,
+      'last scheduler release retires queued work without pumping', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 1),
+      'retained execution does not retain scheduler work after owner destruction', Result);
+
+    NextCase;
+    LWork := TNativeQueueWork.Create(LFirst);
+    LTicket := LScheduler.Submit(LWork, neUIQueue);
+    LWork := nil;
+    LTicket.Cancel;
+    Check((LFirst.Destroyed = 0) and (LTicket.Status = nesCancelled),
+      'pending execution cancellation remains flags-only', Result);
+    LOtherWork := TNativeQueueWork.Create(LSecond);
+    LOtherTicket := LScheduler.Submit(LOtherWork, neUIQueue);
+    LOtherWork := nil;
+    LScheduler.Shutdown;
+    Check((LFirst.Destroyed = 1) and (LSecond.Destroyed = 1) and
+      (LFirst.Calls = 0) and (LSecond.Calls = 0) and LOtherTicket.Cancelled,
+      'execution pruning cannot orphan an earlier cancelled native courier', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Destroyed = 1) and (LSecond.Destroyed = 1),
+      'pruned and pending native couriers both remain retired after queue service', Result);
+
+    NextCase;
+    LFirst.Scheduler := LScheduler;
+    LFirst.Sibling := LSecond;
+    LFirst.ShutdownOnRun := True;
+    LWork := TNativeQueueWork.Create(LFirst);
+    LTicket := LScheduler.Submit(LWork, neUIQueue);
+    LWork := nil;
+    LOtherWork := TNativeQueueWork.Create(LSecond);
+    LOtherTicket := LScheduler.Submit(LOtherWork, neUIQueue);
+    LOtherWork := nil;
+    CheckSynchronize(0);
+    Check((LFirst.Calls = 1) and LFirst.SawRunningCancellation and
+      LFirst.SawRunningLifetime and (LFirst.Destroyed = 1),
+      'running native work survives reentrant shutdown until its own return', Result);
+    Check((LSecond.Calls = 0) and (LSecond.Destroyed = 1) and
+      LOtherTicket.Cancelled and (LTicket.Status = nesCancelled),
+      'reentrant shutdown retires the pending sibling and completes current cancellation', Result);
+
+    NextCase;
+    LFirst.DropSchedulerOnDestroy := True;
+    LFirst.PumpOnDestroy := True;
+    LFirst.SchedulerSlot := @LScheduler;
+    LWork := TNativeQueueWork.Create(LFirst);
+    LTicket := LScheduler.Submit(LWork, neUIQueue);
+    LWork := nil;
+    LOtherWork := TNativeQueueWork.Create(LSecond);
+    LOtherTicket := LScheduler.Submit(LOtherWork, neUIQueue);
+    LOtherWork := nil;
+    LScheduler.Shutdown;
+    Check((LScheduler = nil) and (LFirst.Reentries = 1) and
+      (LFirst.Destroyed = 1) and (LFirst.Calls = 0) and LTicket.Cancelled,
+      'work destruction can reenter shutdown and release the caller scheduler slot', Result);
+    Check((LSecond.Calls = 0) and (LSecond.Destroyed = 1) and LOtherTicket.Cancelled,
+      'all pending native targets are removed before a work destructor pumps', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Destroyed = 1) and (LFirst.Calls = 0),
+      'destructor-driven scheduler retirement leaves no queued target', Result);
+
+    NextCase;
+    LPeer := NewNyxScheduler;
+    LOtherWork := TNativeQueueWork.Create(LSecond);
+    LOtherTicket := LPeer.Submit(LOtherWork, neUIQueue);
+    LOtherWork := nil;
+    LWork := TNativeQueueWork.Create(LFirst);
+    SubmitWithWake(nqwRaise);
+    Check(LRejected and (LHook.Calls = 1) and (LFirst.Destroyed = 1) and
+      (LFirst.Calls = 0),
+      'wake refusal after insertion retires only the refused native entry without a pump', Result);
+    Check((LOtherTicket.Status = nesPending) and (LSecond.Destroyed = 0) and
+      (LSecond.Calls = 0),
+      'exact-method enqueue cleanup preserves another scheduler pending entry', Result);
+    CheckSynchronize(0);
+    Check((LSecond.Calls = 1) and (LSecond.Destroyed = 1) and
+      (LOtherTicket.Status = nesSucceeded) and (LFirst.Destroyed = 1),
+      'peer scheduler still delivers once after another enqueue refusal', Result);
+
+    NextCase;
+    LWork := TNativeQueueWork.Create(LFirst);
+    SubmitWithWake(nqwShutdown);
+    Check(not LRejected and (LHook.Calls = 1) and (LFirst.Calls = 0) and
+      (LFirst.Destroyed = 1) and (LTicket.Status = nesCancelled),
+      'shutdown inside enqueue wake returns an inert retained execution', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Calls = 0) and (LFirst.Destroyed = 1),
+      'enqueue shutdown cannot post or revive a retired native entry', Result);
+
+    NextCase;
+    LWork := TNativeQueueWork.Create(LFirst);
+    SubmitWithWake(nqwDeliverRaise);
+    Check(LRejected and (LHook.Calls = 1) and (LFirst.Calls = 1) and
+      (LFirst.Destroyed = 1) and (LFirst.Ticket.Status = nesSucceeded),
+      'wake delivery followed by refusal does not double-release completed native work', Result);
+    CheckSynchronize(0);
+    Check((LFirst.Calls = 1) and (LFirst.Destroyed = 1),
+      'delivery-before-enqueue-refusal has no second callback or destruction', Result);
+
+    NextCase;
+    LTurns := NyxSchedulerTurns(LScheduler);
+
+    if LTurns.CanYieldUI then
+    begin
+      { The sibling remains future-dated while the immediate child completes.
+        No delay is waited out and no bootstrap/global flag is manipulated. }
+      LWork := TNativeQueueWork.Create(LFirst);
+      LInner := LScheduler.Submit(LWork, neSequential);
+      LWork := nil;
+      LFirst.Reset;
+      LFirst.Scheduler := LScheduler;
+      LFirst.Sibling := LSecond;
+      LFirst.ParentCallouts := True;
+      LParent := TNativeQueueParent.Create(LInner, LFirst);
+      LInner := nil;
+      LDelays := NyxSchedulerDelays(LScheduler);
+      LOtherWork := TNativeQueueWork.Create(LSecond);
+      LOtherTicket := LDelays.PostAfter(LOtherWork, 60000);
+      LOtherWork := nil;
+      LWork := TNativeQueueWork.Create(LFirst);
+      LTicket := LScheduler.PostUI(LWork, LParent);
+      LWork := nil;
+      LParent := nil;
+      CheckSynchronize(0);
+      Check((LFirst.Calls = 1) and (LTicket.Status = nesSucceeded) and
+        (LOtherTicket.Status = nesPending) and (LSecond.Destroyed = 0) and
+        (LFirst.ParentDestroyed = 0),
+        'completed parented child and future sibling retain distinct native ownership', Result);
+      { Only the scheduler's completed-execution vector now retains the child
+        and its external parent. Do not submit again and prune that vector. }
+      LTicket := nil;
+      LFirst.Ticket := nil;
+      LScheduler.Shutdown;
+      Check((LFirst.ParentDestroyed = 1) and LFirst.ParentSawRetirement and
+        (LSecond.Calls = 0) and (LSecond.Destroyed = 1),
+        'external parent destructor runs after all pending native work has retired', Result);
+      Check(LOtherTicket.Cancelled and (LFirst.Calls = 1) and
+        (LFirst.Destroyed = 1) and (LSecond.Destroyed = 1),
+        'parent destructor reentry and queue service preserve completed and cancelled outcomes', Result);
+    end
+    else
+    begin
+      WriteLn('SKIP native delayed parent retirement: RTL has no cooperative UI delay');
+    end;
+  finally
+    WakeMainThread := LPrevious;
+    LHook.Armed := False;
+    LHook.Scheduler := nil;
+    LHook.Free;
+    { Revoke borrowed stack/test pointers even on a failed implementation.
+      Managed fact leases keep any leaked work safe for the failure report. }
+    LFirst.DropSchedulerOnDestroy := False;
+    LFirst.PumpOnDestroy := False;
+    LFirst.ShutdownOnRun := False;
+    LFirst.ParentCallouts := False;
+    LFirst.SchedulerSlot := nil;
+    LFirst.Sibling := nil;
+    LFirst.Scheduler := nil;
+    LSecond.SchedulerSlot := nil;
+    LWork := nil;
+    LOtherWork := nil;
+    LParent := nil;
+    LInner := nil;
+    LTurns := nil;
+    LDelays := nil;
+
+    if LScheduler <> nil then
+    begin
+      LScheduler.Shutdown;
+    end;
+
+    if LPeer <> nil then
+    begin
+      LPeer.Shutdown;
+    end;
+    LScheduler := nil;
+    LPeer := nil;
+    LTicket := nil;
+    LOtherTicket := nil;
+    LFirstLease := nil;
+    LSecondLease := nil;
+  end;
+end;
+{$endif}
+
 function RunNyxSchedulerTests: Integer;
 var
   LRouter: INyxEvents;
@@ -493,6 +994,7 @@ begin
     LFirst.AddTo := nil;
     LThird.Router := nil;
   end;
+  {$ifndef PAS2JS}Inc(Result, RunNativeQueueRetirementTests);{$endif}
 end;
 
 {$ifndef PAS2JS}
