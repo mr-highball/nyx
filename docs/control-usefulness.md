@@ -27,6 +27,32 @@ independent cross-review pass the six unchanged review-task criteria.
 The [work record](../WORK.md#control-usefulness-review--2026-10-21) records review
 and exact source boundaries. This review adds no product implementation credit.
 
+## Follow-up backlog and current progress
+
+The matrix below remains the historical review of checkpoint544ca92. Its gap
+labels are starting evidence, rather than a claim that subsequent work is absent.
+The user's process/service-debugger report is covered by these existing owners:
+
+| User outcome | Backlog owner and current boundary |
+| --- | --- |
+| Find records with column filters, numeric sorting, visible criteria and reset | [Column queries02](../TODO/NS-3_control-usefulness_02.md): P3 passes782 actual native checks at each1280/390 with clean heaps. Matching browser assertions compile only. Full Studio policy/event/history/Save/Open/generated and actual browser interaction remain open. |
+| Arrange columns, inspect long values and copy/export useful selections | [Table workbench03](../TODO/NS-3_control-usefulness_03.md): W1 owns resize/choose/reorder/hide/pin/reset; W2 owns full-value/cell actions, copy/export and preference lifetime. Both remain open. |
+| Keep context while services/logs change and recognize paused/failed/empty states | [Live inspection04](../TODO/NS-3_control-usefulness_04.md): L1 owns follow/pause, context and recovery; L2 owns measured mounted responsiveness. Both remain open. |
+| Preserve explicit query choices during unrelated lane reconfiguration | [Kanban preservation05](../TODO/NS-3_control-usefulness_05.md): retains declared policies without adding a lane filter UI. Open. |
+
+Task02's first full P4A native authoring attempt fails its unchanged60s Ready
+deadline during text-column Apply;390 and that consumer's browser compilation
+were not attempted. [The current work record](../WORK.md#table-query-policy-authoring--2026-10-21)
+retains this failure separately from P3's native result. No complete authoring,
+browser or product acceptance follows from the earlier782-check runs.
+
+The remaining control families keep the concrete owners and finish lines in
+[Priorities](#priorities-public-examples-and-finish-lines), including forms,
+choices, editing, media, navigation, feedback, splitters and canvas controls.
+This preserves one review across all80 kinds without duplicating table tasks.
+The external debugger's implementation has not been inspected; a caller-specific
+diagnosis remains separate from the public library review.
+
 ## Reading the matrix
 
 Each row identifies a user goal, its existing public contract, ordinary native

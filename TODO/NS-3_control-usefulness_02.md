@@ -122,6 +122,26 @@ input. Compact duration is still unproven; an internal60s failure must still fai
 No run or speculative production repair is released by this note. Full P4A remains
 the original authored journey; core no-closure33 carries without credit/DONE.
 
+The complete P4A functional packet now has a separate tool-only release in
+[WORK](../WORK.md#table-query-policy-authoring--2026-10-21): existing explicit
+1800s PER WIDTH, all Pascal and original operation/poll/assertion bounds exact.
+Independent review/freeze precedes native1280/390 plus matching browser compile;
+no new reader or qualification is asserted by the release alone. First failure
+stops that packet before any repair. P4B/C and all seven criteria remain required.
+
+That first complete-packet attempt is now terminal and independently reviewed.
+One native compiler has zero warnings; actual1280 reaches stage1/check133, then
+fails the ORIGINAL Ready60s deadline during text-column Apply after the paired
+update. It exits1 itself before the1800s outer cap.390 and matching new-consumer
+browser compilation remain unattempted. Equal allocation/free totals have only
+a truncated heap footer, not a complete clean-heap receipt. Immutable audit
+24732435 and [WORK](../WORK.md#table-query-policy-authoring--2026-10-21) retain all
+inputs/failures. Pending optimistic policy reconstruction invalidates the exact
+editor baseline before commit; keeping accepted presentation plus existing locks
+is a read-only repair candidate, not yet a sufficient timing diagnosis. No source
+or rerun is released. Preserve consumerEE1CEAA1, all fixtures, waits and predicates;
+P4A/B/C and every original criterion stay open. Core33 advances34 without credit.
+
 | Packet | User-visible result and evidence | Preserve / remains required |
 | --- | --- | --- |
 | P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |

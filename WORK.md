@@ -4,6 +4,70 @@
 
 ## Table query policy authoring — 2026-10-21
 
+### First complete-packet attempt: retained failure
+
+The complete functional packet stopped at its first failure. Root joined sole
+wrapper76295 exit1 and its exact child15812; no process was forcibly stopped and
+the1800s outer limit was not reached. Immutable audit
+`2473243506448BF2E3516F76B35BFF3384153675E9F3931C5618E55D680731D3`
+and independent root/helper review verify12owned/1807Pascal/foreign13/extra8 exact.
+One native compiler succeeds with zero warnings. Actual1280 reaches stage1/
+check133 and fails its unchanged Ready60s deadline during text-column Apply,
+after the admitted Design/Pascal pair update. First table Apply's Ready interval
+had taken55.5s (the whole Click/Apply was about57.2s).
+Compact390 and matching new-consumer browser compilation were not attempted.
+The retained stderr shows equal allocated/freed totals, but its footer ends at
+`0 unfreed`; this is not a complete clean-heap receipt or an overall passing run.
+
+The larger total allocation exposed a real per-operation deadline failure. Keep
+that failure and all prior interrupted attempts; do not lengthen Ready, remove
+assertions, add another profiling variant or substitute a smaller fixture.
+Unaffected product/sizing/queue evidence remains reusable only at its original
+source boundaries. P4A/B/C and all seven original task02 criteria remain open;
+this completed native batch advances core no-closure33 to34, without credit/DONE.
+
+Read-only source review identifies one narrow presentation issue: pending policy
+intents optimistically rebuild the query editor's spec and exact baseline before
+admission. A candidate repair would keep the accepted spec for those four pending
+actions while retaining existing owner locks, disabled controls, exact capture
+refusal and draft restoration. Nonrefreshable baseline changes force replacement;
+however, pending and eventual committed specs can be equal. Source alone does not
+prove two replacements per Apply or that this repair solves the observed timeout.
+Next establish that producer/paint relationship from existing evidence before a
+separately reviewed source release. ConsumerEE1CEAA1 and every predicate/deadline
+remain unchanged. No source, compiler, host or configuration scope is released.
+
+The latest backlog-only request is already covered by the accepted80-kind
+[review](docs/control-usefulness.md) and existing usefulness02–05 owners. A new
+progress cross-reference distinguishes the historical matrix from P3's native
+result and this retained P4A failure; no duplicate task or new acceptance follows.
+Root owns documentation/checkpoint only. The return path is this P4A functional
+journey, then P4B semantic/event agreement and P4C own Save/Open/generated proof.
+
+### Historical full-packet admission (superseded by the result above)
+
+Current packet is the complete unchanged P4A functional journey. Prior17fa9d3
+is progress, committed/pushed/remote-verified; all actual readers remain joined.
+Root revalidated1807Pascal/foreign13/extra8 before a separate TOOL-ONLY release:
+private qualifier's authoring-full explicitly passes the existing1800s PER WIDTH
+outer timeout. The maintained build, all Pascal/fixtures/assertions/11 stages,
+300s default,60s Ready deadline and2400 GLOBAL Drive polls remain byte-exact.
+This changes the whole-run allocation, not admission or the operation deadlines.
+
+Independent tool review and a fresh freeze precede fixed TWO compilers/TWO native
+outcomes: native compile, actual1280 then390 on that same executable, matching
+browser compile. Native runs are sequential. Reuse the unaffected product/sizing/
+queue compilers and clean40/126 native results; do not replay compatibility.
+Stop at first assertion/internal deadline/1800s outer failure or the complete
+result. Preserve refusals, heap reports and failures; root owns every actual
+handle/join and exact audit before any repair. Both agents pause all Pascal/guides
+through readers. No source/production optimization, host/browser execution/LAN/
+MCP/config/worker, cleanup/restart or extra agent follows. P4B event/discovery and
+P4C own Save/Open/generated/browser journeys remain required. Core33/original
+criteria/credit stay open; native functional proof is not release performance.
+
+### Retained existing-profile result (previous packet)
+
 The existing-profile packet is terminal/root joined, with source unchanged from
 its reviewed freeze. Sole wrapper73461 returns1 after its precise child13748
 hits the same300s bound at144 checks/stage2. One native compiler has zero warnings.

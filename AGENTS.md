@@ -1,5 +1,44 @@
 # Working in Nyx
 
+QUERY AUTHORING P4A FULL FIRST FAILURE JOINED (2026-10-21): sole actual wrapper
+76295 and child15812 are terminal/root joined, exit1 without forced stop or outer
+timeout. Immutable audit24732435 pins12owned/1807Pascal/foreign13/extra8 exact;
+root/helper independently verify. One native compiler passes with zero warnings.
+Actual1280 reaches stage1/check133, then its ORIGINAL Ready60s deadline fails
+during text-column Apply after the pair update.390 and matching new browser
+compile are unattempted. Equal allocated/freed totals have a truncated heap
+footer; preserve it without a complete clean-heap or overall passing claim.
+Stop this packet. No further compiler/profile/fixture/wait variant or source
+repair is released. Existing helper/root read-only review finds optimistic
+pending policy reconstruction changes the exact editor baseline before commit.
+Keeping accepted policy plus existing locks is a plausible narrow presentation
+repair, not proof of two replacements per Apply or a sufficient timing fix.
+Establish the actual producer/paint sequence before separately releasing source;
+preserve consumerEE1CEAA1 and every original predicate/deadline. Root owns docs
+and checkpoint only; all Pascal stays paused. Latest user backlog request is
+already owned by the80-kind review and usefulness02-05; add a current-progress
+cross-reference, no duplicate tasks/credit. Core33 advances34 for the completed
+native batch; no original criterion/DONE closes. Preserve offline LAN/no native
+Nyx tools and no host/browser/MCP/config/worker, cleanup/restart or extra agent.
+WORK/private state owns retained failures and the return to P4A, then P4B/C.
+
+QUERY AUTHORING P4A FULL TOOL RELEASE (2026-10-21): prior17fa9d3 is progress,
+committed/pushed/remote-verified. All actual readers remain joined;1807Pascal/
+foreign13/extra8 match before this separate release. Root owns ONLY private
+qualifier's authoring-full admission and related handoff/WORK/task02 docs. It
+explicitly passes existing timeout1800s PER WIDTH, without Diagnostic/Profile;
+ordinary maintained build and ALL Pascal stay exact. Default300s, Ready60s,
+GLOBAL Drive2400 and every original assertion/fixture/11stage remain unchanged.
+Helper independently reviews the tool handoff; review/freeze precedes fixed
+TWO compilers and TWO native outcomes (one native executable1280 then390, matching
+browser compile). Reuse unaffected product/sizing/queue evidence. Stop at first
+failure or the full result; preserve all attempts and root-join every actual
+handle before repair. No retry, production optimization, new source, host/browser
+execution/LAN/MCP/config/worker, cleanup/restart or extra agent. All Pascal/guides
+pause through terminal join/exact audit. Core33/P4B/C/all original criteria stay
+open; this is functional qualification, not release-performance acceptance.
+WORK/private state owns exact source, actual handles and the return path.
+
 QUERY AUTHORING P4A PROFILE JOINED (2026-10-21): sole actual reader73461 is
 terminal/root joined. Immutable A86741A3 pins12owned/1807Pascal/foreign13/extra8
 exact; one native compiler passes with zero warnings. Actual unchanged1280
