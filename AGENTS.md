@@ -1,5 +1,67 @@
 # Working in Nyx
 
+TABLE FILTERING/SORTING ACCEPTED (2026-10-22): original seven criteria in
+TODO/DONE/NS-3_control-usefulness_02.md are jointly accepted after actual browser
+and own saved/compiled application evidence. Root5AB58201/independent79298403
+retain exact original criteria, accepted blockers and bounded producer reuse.
+P3 native782/782/browser712/712, active-cell browser75/75, own native755/759+
+compiled426/426, browser-own696/700 and exact2BB6/093B compiled369/369 qualify.
+Latest pending-state native99/83/141 and actual browser99/99+83/83 pass; eight
+compilers have0 owned/28 known RTL warning occurrences, all three heaps clean.
+CA015B90 verifies2111 pins/13 copies/52 artifacts; tabs38-41 closed/reset,
+inventories empty, exact hosts2528/16616/14712/49236 joined, ports19096-19099
+listener0. Resource additions stay native-only; Publish's pending predicate is
+source-reviewed. Older Studio bundles retain their original producer identities,
+not current0467/65FD bytecode. Synthetic input/blank terminal screenshots add no
+hardware/AT/visual-quality claim. All original assertions/waits/failures remain.
+
+Root owns docs-only acceptance/move/link repairs and the checkpoint. All Pascal
+stays paused. Broader components01/parity/performance/full goal and pending
+completion-credit assessment remain open. Existing helper's next assignment is
+read-only task03 W1 design: useful column resize/keyboard alternative, choose/
+reorder/show-hide/reset and editable logical-start/end pins with independent peer
+state. A separate reviewed source split/freeze must precede implementation/readers;
+no new source/compiler/host is released here. Preserve concurrent foreign planning
+edits, deferred resolver/splitter and offline LAN/no native Nyx tools. No extra
+agent/config/install/user-service/MCP/wire rollout or cleanup/restart follows.
+Historical paragraphs below retain their former release boundaries.
+
+Parent core no-closure47 carries without an increment or reset: accepting this
+scoped task's seven criteria does not accept components01's three full criteria.
+
+PENDING MAIN-DRAFT CONSISTENCY SOURCE RELEASE (2026-10-22): previous turn is
+progress: P3 browser712/712 and original active-cell75/75 qualify at actual1280/
+390, all actual readers joined;3080e8d is pushed/remote-verified. Five inputs in
+reviewedD767BD68 remain exact; prior four hosts are absent and ports19092-19095
+have no listeners. No original criterion/credit/DONE closes; core47 carries.
+
+Root may change ONLY ten predicates and their explanatory comments in agents
+(six main pending facts + EditorBuildPair) and its resourceruntimes include
+(getter + two direct Observe/Publish guards). Use existing SourceDraftPending.
+Existing Lil' Scooty may add ONLY tests in handler_edit_tests, agent_build_tests
+and nyx.test.resource.runtime. Keep every original assertion/wait and actual
+source-index references. Prove equal-byte PendingTrue facts/getter, valid build
+refusals, pending-capable source capture, exact pair/revision/navigation/history
+and deliberate resolution. Use real matching resource snapshots for enrollment.
+Ordinary commits retire publication authority; its pending subpredicate remains
+source-reviewed, not independently injected by enroll/commit/Publish. No reentrant
+snapshot fixture, test-only setter or public API follows. Preserve helper/aggregate
+draft policy and detached import normalization. Every other Pascal input is paused.
+
+Independent review of BOTH source scopes and fresh freeze precede the fixed
+eight-compiler/three-native plan: handler N/B, agent-build N/B, agent-resource N/B
+(native runs resource.runtime), both Studios compile only. Original flags, fresh
+outputs,300s per process/complete native heaps/first-failure stop; no broad target
+or probe. Resource native gets exactly two fresh output args. Join/review before
+four focused browser runs at actual1280x900/390x900 under existing same-regression
+authorization, temporary loopback hosts each stopped/joined. No reader is admitted
+yet. Root owns every actual handle and docs/build capture; helper's next work is
+read-only original-seven-criteria/reuse review. Existing broader P3/active-cell/
+own-pair evidence retains its provenance; reuse needs exact changed-path review.
+Return to integrated original acceptance after this remaining consistency gap.
+Preserve concurrent13/deferred resolver/splitter/offline LAN/no native Nyx tools;
+no extra agent/config/install/user-service/MCP/wire rollout or cleanup/restart.
+
 ACTIVE-CELL BROWSER LOCALLY QUALIFIED (2026-10-22): unchanged60765453/original44BAC
 passes75 actual checks at1280x900 and390x900 using JSAA05/wrapperA1F2/RTLA6.
 Same browser editor/draft/caret survives two sorts; filtering its row out retires

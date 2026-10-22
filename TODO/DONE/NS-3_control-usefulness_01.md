@@ -77,7 +77,7 @@ ownership; unrelated pending edits to those two files are preserved.
 | Packet | Delivered result | Order |
 | --- | --- | --- |
 | This review | Complete per-kind usefulness matrix, ranked gaps and concrete follow-up owners | First |
-| [Column filtering and sorting](../NS-3_control-usefulness_02.md) | Discoverable end-user table queries using the existing query model | After the review |
+| [Column filtering and sorting](NS-3_control-usefulness_02.md) | Discoverable end-user table queries using the existing query model | After the review |
 | [Table workbench interactions](../NS-3_control-usefulness_03.md) | Usable column management, cell actions and keyboard workflows | After the review; coordinate with query UI |
 | [Live operational data](../NS-3_control-usefulness_04.md) | Stable inspection of changing/large results with visible update controls | After the review; reuse the other packets where applicable |
 

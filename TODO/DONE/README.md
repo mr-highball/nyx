@@ -3,6 +3,17 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Table filtering and sorting](NS-3_control-usefulness_02.md) was accepted
+on2026-10-22 for all seven unchanged criteria. Actual P3 native782/782 and
+browser712/712, active-cell browser75/75, own Studio native755/759+compiled426/426
+and browser-own696/700 with exact2BB6/093B compiled369/369 qualify useful controls
+and authoring. Final pending-state native99/83/141 and browser99/99+83/83 pass,
+with zero owned warnings and clean native heaps. All readers are joined and
+independently reviewed. Retain original producer labels, synthetic-input/target
+limits and native-only resource additions. No broader component/parity or
+completion credit is assigned. See
+[the acceptance](../../WORK.md#table-filtering-and-sorting-accepted).
+
 [Whole-catalog control usefulness review](NS-3_control-usefulness_01.md) was
 accepted on2026-10-21 for all six unchanged review criteria. The source-bound
 [matrix](../../docs/control-usefulness.md) covers80 unique default kinds, with

@@ -914,7 +914,7 @@ begin
     NyxField('view', NyxData(FSession.ActiveViewID)),
     NyxField('pages', NyxData(FSession.Document.Count)),
     NyxField('components', NyxData(FSession.Document.ComponentCount)),
-    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source)),
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending)),
     NyxField('canUndo', NyxData(FSession.CanUndo)),
     NyxField('canRedo', NyxData(FSession.CanRedo)),
     NyxField('activitySequence', NyxData(FActivitySerial))]);
@@ -2833,7 +2833,7 @@ begin
     NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
     NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))),
     NyxField('text', NyxData(LText)),
-    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
 function TNyxAgentSession.Views(const AArguments: TNyxDataValue;
@@ -3472,7 +3472,7 @@ begin
     NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LClause.Count)),
     NyxField('nextOffset', NyxData(Min(LOffset + Length(LItems), LClause.Count))),
     NyxField('units', NyxArray(LItems)),
-    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
 function TNyxAgentSession.Routines(const AArguments: TNyxDataValue;
@@ -3544,7 +3544,7 @@ begin
       NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
       NyxField('nextOffset', NyxData(Min(LOffset + LLimit, LTotal))),
       NyxField('text', NyxData(LText)),
-      NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+      NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
     Exit;
   end;
   NyxAgentFields(AArguments, '|mode|expectedRevision|offset|limit|');
@@ -3566,7 +3566,7 @@ begin
     NyxField('total', NyxData(LCatalog.Count)),
     NyxField('nextOffset', NyxData(Min(LOffset + Length(LItems), LCatalog.Count))),
     NyxField('routines', NyxArray(LItems)),
-    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
 function TNyxAgentSession.Declarations(const AArguments: TNyxDataValue;
@@ -3648,7 +3648,7 @@ begin
     NyxField('line', NyxData(LSite.SourceLine(LPart))),
     NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
     NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))), NyxField('text', NyxData(LText)),
-    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
 {$I nyx.studio.agents.state.inc}
@@ -4982,7 +4982,10 @@ begin
     raise ENyxModel.Create('Build revision conflict');
   end;
 
-  if FSession.DraftSource <> FSession.Source then
+  { Build admission follows the same deliberate main-draft state as editor
+    facts, even when the draft already matches the accepted main unit. }
+
+  if FSession.SourceDraftPending then
   begin
     raise ENyxModel.Create('Resolve the pending draft before building');
   end;

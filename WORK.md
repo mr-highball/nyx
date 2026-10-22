@@ -4,6 +4,111 @@
 
 ## Own saved query workbench — 2026-10-22
 
+### Table filtering and sorting accepted
+
+On2026-10-22 root and Lil' Scooty accept all seven unchanged criteria in
+[table filtering/sorting](TODO/DONE/NS-3_control-usefulness_02.md). Both original
+blockers are accepted. This completes the intended user-facing filtering task:
+typed per-column configuration, ordinary native/browser header controls, useful
+query forms, combined predicates and sort keys, safe editing and independent
+reusable state, plus Studio/source/history and the journey's own compiled code.
+
+| Original criterion | Accepted integrated evidence |
+| --- | --- |
+| Typed capability/default contract | Schema-checked Text/Integer/Number/Boolean families, immutable operator/comparison/sort policies, absent/default/opt-out distinctions and strict saved/source round trips. Empty text is a value; nullable or missing fields are not promised. |
+| Useful filter interaction | P3 native782/782 and browser712/712 at desktop/compact widths exercise header/form, keyboard/focus, current draft, chips, counts, clear and empty-result recovery. Own authoring/application tests exercise table and column opt-out. |
+| Sorting | Original header ascending/descending/default cycle, visible precedence/reset, multiple typed keys, stable equal-value order and query-before-paging checks pass. |
+| Query authority/refusal | The existing Q1 rule is settled: baseline plus independent owner predicates and one shared user-sort vector. P3 covers peer Clear, raw takeover, stale/reentrant/cancelled/final-fence refusal. Full DataToolbar02 is not an added prerequisite. |
+| Identity, editing and events | Original active-cell browser75/75 preserves the same editor/draft/caret through sorting and discards a filtered-out draft safely. P3 typed before/changed, cancellation, disconnect and own two-instance stores preserve source/selection/lifetime rules. |
+| Studio and semantic authoring | Native policy208/schema128/inheritance14, event107/source input38/38 and actual own Studio histories/source readers retain accepted evidence. Latest native99/83/141 and browser99/99+83/83 qualify explicit main-draft consistency, including equal-byte PendingTrue frames. |
+| Own application proof | Native Studio755/759 and OWN compiled426/426; browser-own696/700 with complete2BB6/source093B pair; real independently compiled browser369/369. Exact browser-produced packet equals actual compiled inputs; original producer labels remain. |
+
+The last production repair changes only ten predicates and two purpose comments
+in agents0467D525/resourceruntimes65FD327B. Three additive test blocks retain every
+original assertion and wait. Eight compilers pass with zero owned warnings and28
+known upstream RTL warnings; three native heaps are complete and clean. Actual
+focused browser checks pass99/99 and83/83 at1280x900/390x900 without error attributes
+or console errors. All four tabs38-41 close/reset with empty inventories; exact
+hosts2528/16616/14712/49236 join and ports19096-19099 have no listeners.
+RootCA015B90/independent79298403 verify2111 frozen pins,13 retained copies and52
+browser artifacts. Native/compiler auditCEAD4623 and reviewFE57BC41 retain all
+actual twelve reader identities. Integrated decision5AB58201 owns the seven-way
+matrix; prior8D6C541F/24A78FA1/DB05C06B/755DA29C/556EE9FB retain their provenance.
+Commands are the maintained query-workbench/query-authoring journeys plus the
+reviewed direct handler/build/resource compiler cases and exact emitted browser
+pages, under existing temporary-loopback regression authorization. No broad
+target, new listener service or compiler probe was used for this final repair.
+
+Reuse is explicit: with Pending=False the getter already returns Source; with a
+divergent pending draft both old/new predicates are true. Only Pending=True with
+equal main text changes. Earlier Studio journeys exercised resolved/divergent
+frames; their receipts retain their old agents build identities. They are not
+claimed as executions of0467/65FD. Current focused cases cover that new boundary.
+Resource additions execute natively only; direct Publish's pending predicate is
+source-reviewed because an ordinary commit retires old enrollment authority.
+New history assertions cover complete pair/revision/navigation and recovery
+stamp/counts/availability, alongside the retained original Undo/Redo journeys.
+
+Qualification covers Win32 LCL and this Chromium browser at desktop/phone widths.
+Synthetic input is not physical keyboard/touch/IME/assistive-technology certification.
+Blank terminal captures show owner cleanup, not aesthetic quality. Wider widgetset
+parity, production performance, complete components01 and the full Nyx goal remain
+open; scope-expanded percentage/credit assessment stays pending without duplicate
+credit. All failures, refusals and earlier excluded observations remain retained.
+
+Root now owns acceptance documentation, task movement/link repair and the scoped
+checkpoint; Pascal remains paused. Next is existing
+[table workbench task03 W1](TODO/NS-3_control-usefulness_03.md): actual column
+arrangement for a service/process inspector, with resize/keyboard alternatives,
+choose/reorder/show-hide/reset and editable logical-start Service/logical-end
+Status pins at both widths, usable overflow and independent peer state. Existing
+helper designs that source split read-only. Separate reviewed ownership/freeze
+precedes implementation/readers. No new identity, host/config/MCP rollout or
+cleanup follows; foreign milestone/catalog scope edits remain unstaged.
+
+Parent core no-closure47 carries without increment/reset. This acceptance closes
+task02's seven criteria; components01's three full criteria remain open. There
+was no historical task02-only counter to reset or percentage to invent.
+
+### Pending main draft consistency source release
+
+The preceding goal turn is progress: actual P3 browser712/712 and original
+active-cell75/75 pass at desktop/phone sizes, all readers joined,3080e8d pushed
+and remote-verified. Core47/all seven original criteria remain open; no credit
+or DONE has been assigned. Read-onlyD767BD68 and resource scopeD6120BFD settle
+the next deliverable: original criterion6 needs the same explicit pending state
+in Studio facts, public build admission and the existing resource observation
+boundary, including a deliberate PendingTrue frame whose text equals accepted text.
+
+Root owns ONLY the ten existing predicates plus purpose comments in
+studio/nyx.studio.agents.pas and its resourceruntimes include: six facts, main build
+guard, public getter and both direct resource guards. Existing Lil' Scooty owns
+additive cases in the existing handler-edit, agent-build and resource.runtime
+tests only. Use SourceDraftPending throughout this scope; preserve aggregate/
+helper-file policy, pending-capable EditorSourcePair, detached import normalization
+and every original assertion/wait. Test actual resolved references, otherwise-valid
+requests and complete pair/revision/selection/view/history invariance. Resource
+enrollment uses a real matching snapshot and proves post-resolution success.
+Ordinary commit revokes old publication authority, so that refusal is not isolated
+pending-subpredicate evidence; review the direct publication predicate as source.
+
+Both source handoffs need independent review and a fresh joint freeze before any
+reader. Fixed qualification is eight direct compilers and three native runs:
+handler N/B, agent-build N/B, agent-resource N/B (native includes resource.runtime),
+plus native/browser Studio compile-only. Use original flags/fresh outputs,300s per
+process, complete native heaps and first-failure stop. Resource native has exactly
+two fresh output args; no listener or user/service configuration change is involved.
+Its ordinary private test-runtime files remain part of that journey; no broad
+build target or probe is involved.
+After actual joins and independent outcome review, four focused browser runs use
+the original wrappers at actual1280x900/390x900 on temporary loopback hosts, each
+stopped/joined under existing human regression authorization. No reader is admitted
+now. Root owns admission/handles; helper reviews original criteria/reuse read-only
+after source handoff. Reuse broad unchanged P3/active-cell/own-pair evidence only
+with reviewed changed-path boundaries and original producer labels. Stop at the
+first genuine failure for bounded review; otherwise return to integrated original
+seven-criteria acceptance, preserving core47 until actual criterion closure.
+
 ### Active cell draft and caret browser paths qualified
 
 The original60765453 consumer and44BAC16F companion pass75 actual browser checks
@@ -2118,7 +2223,7 @@ The latest request is a bounded documentation side packet. The accepted
 already cover the reported debugger workflow, so no duplicate task identities
 are added. The external application's implementation remains uninspected.
 
-- [Column queries02](TODO/NS-3_control-usefulness_02.md) now requires a clear
+- [Column queries02](TODO/DONE/NS-3_control-usefulness_02.md) now requires a clear
   bound-table/literal-Items/default-opt-out diagnosis and discoverable native
   filtering, with a stopped-service/CPU-range/multi-key-sort/reset scenario.
 - [Workbench03](TODO/NS-3_control-usefulness_03.md) now makes W1's editable pins
@@ -2835,7 +2940,7 @@ all eight actual jobs are joined. Exact1800 Pascal/foreign13 preimages were
 checked before this separate P3 source release. The useful deliverable is now
 ordinary table users opening a filter from a header or keyboard, editing actual
 Nyx form controls, applying/resetting a typed rule and seeing sort/filter state.
-This advances [usefulness02](TODO/NS-3_control-usefulness_02.md) criteria1–5;
+This advances [usefulness02](TODO/DONE/NS-3_control-usefulness_02.md) criteria1–5;
 all seven original criteria remain unchanged and open. Core no-closure30 carries.
 
 Root owns typed column/table query policies and saved/source parity, the existing
@@ -2965,7 +3070,7 @@ Previous goal turn is progress: c2e0fd8 delivers qualified prepared query
 publication and is pushed/remote-verified. All actual readers are joined and
 baseline1797 Pascal/foreign13 remain exact. Reassessment after no-closure29
 changes the useful deliverable from another P1 variant to the canonical shared
-query session required by [column filtering02](TODO/NS-3_control-usefulness_02.md)
+query session required by [column filtering02](TODO/DONE/NS-3_control-usefulness_02.md)
 criterion4. Full table/header/authoring criteria remain the destination.
 
 Root owns the existing view and bindings, a private session implementation
@@ -3071,7 +3176,7 @@ independent receipt review; no P3 source/compiler/host is released by this resul
 
 Previous goal turn is progress:17d7f52 accepts the complete source-bound control
 review and is pushed/remote-verified. The next useful dependency under
-[column query02](TODO/NS-3_control-usefulness_02.md) criterion4 is a public optional
+[column query02](TODO/DONE/NS-3_control-usefulness_02.md) criterion4 is a public optional
 prepared-query facet on the existing collection view. Immediate ConfigureQuery
 cannot atomically publish a query and visible Search/Sort resets alongside an
 existing prepared state owner. This batch implements that shared model seam;
@@ -3296,7 +3401,7 @@ open NS-3 packets, linked through the existing component milestone owner:
 - [Control-by-control review](TODO/DONE/NS-3_control-usefulness_01.md): a complete
   user-journey/capability/exposure matrix across primitives and compounds, with
   prioritized concrete follow-up owners for all control families.
-- [Interactive column filtering/sorting](TODO/NS-3_control-usefulness_02.md):
+- [Interactive column filtering/sorting](TODO/DONE/NS-3_control-usefulness_02.md):
   accessible header affordances, visible active criteria, typed comparisons,
   multi-key order and exact reset/composition with the existing query owner.
 - [Table workbench interactions](TODO/NS-3_control-usefulness_03.md): user column
@@ -3335,7 +3440,7 @@ above; this is a planning outcome, with no product criterion/credit. All readers
 remain joined; Pascal/assertions/waits and foreign13 stay exact. No-closure28
 carries for the original core outcome.
 
-Next is the existing [column filter/sort packet](TODO/NS-3_control-usefulness_02.md):
+Next is the existing [column filter/sort packet](TODO/DONE/NS-3_control-usefulness_02.md):
 turn the reviewed gap into a typed useful design/source scope using the current
 query model/editor and field/schema identities. Root/helper may review that design
 read-only; no compiler/runtime/API is released here. Resolve same-target/query/

@@ -373,9 +373,11 @@ mount/build. Runtime subscription cancellation remains a separate live operation
 
 ## Studio properties and events
 
-### Event policy capabilities (source in qualification)
+<a id="event-policy-capabilities-source-in-qualification"></a>
 
-The 2026-10-22 P4B source uses `TNyxEventSchema.AllowedPolicies`, a
+### Event policy capabilities
+
+The 2026-10-22 query integration uses `TNyxEventSchema.AllowedPolicies`, a
 `TNyxExecutionPolicies` enum set shared by discovery, effective document
 admission and Studio. Older creator records default to all four policies;
 explicit restrictions survive copied snapshots. An empty declaration or a
@@ -391,7 +393,7 @@ Discovery grants no custom Emit permission. An explicit creator producer keeps
 its authority/payload; matching restrictions intersect and differing producer
 payloads remain honestly non-uniform in Details discovery.
 
-The candidate Inspector offers only allowed policies. An older authored invalid
+The Inspector offers only allowed policies. An older authored invalid
 policy remains visible as a diagnostic until deliberately corrected. For an
 absent stream whose initial choice is non-sequential, Add prepares Policy then
 Add in one candidate and one paired undo step. Existing empty streams retain
@@ -412,9 +414,12 @@ Generated Pascal uses the enum-valued query factory and its required unit,
 including standalone Emit references and empty callback streams. Open custom
 event references remain compatible. Unrestricted creator snapshot transport
 keeps canonical version1; restricted transport uses strict uniform version2
-event rows. This is source work awaiting joint qualification, with no worker,
-server or observing rollout. [WORK](../WORK.md#query-event-authoring-p4b-separate-source-release--2026-10-22)
-records the admitted validation boundary.
+event rows. The query integration is accepted through actual native/browser
+Inspector, callback/source/history and own compiled application journeys, with
+the bounded semantic policy/schema/refusal checks retained separately.
+[WORK](../WORK.md#table-filtering-and-sorting-accepted) records original producer
+reuse, actual target counts and synthetic-input limits. This does not qualify
+dynamic schema retirement, every widgetset or an observing service rollout.
 
 ### Ordinary authoring
 

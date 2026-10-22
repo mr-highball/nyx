@@ -38,7 +38,7 @@ reviewed source/validation scope; L1 alone does not qualify scale or accept04.
 **Cross-family inspection checklist — Lists, Tables and Trees:**
 
 The 2026-10-22 refinement keeps live/context behavior here, table column commands
-in [02](NS-3_control-usefulness_02.md), presentation/copy in
+in [02](DONE/NS-3_control-usefulness_02.md), presentation/copy in
 [03](NS-3_control-usefulness_03.md), and coordinated List/Table search in the
 existing [DataToolbar runtime](NS-3_data-toolbar_02.md). Tree find/reveal uses
 the existing hierarchy/query owners under [components01](NS-3_components_01.md)

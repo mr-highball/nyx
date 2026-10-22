@@ -35,6 +35,9 @@ function RunNyxResourceRuntimeProtocol: Integer;
 implementation
 
 uses SysUtils, nyx.text, nyx.data, nyx.model, nyx.controls, nyx.codec,
+  { BEGIN pending-main-draft resource imports }
+  nyx.types,
+  { END pending-main-draft resource imports }
   nyx.codegen, nyx.resources, nyx.application.resources, nyx.scheduler,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.resourceruns,
   nyx.studio.workspaces, nyx.studio.preview;
@@ -63,6 +66,117 @@ begin
     Result := Other;
   end;
 end;
+
+{ BEGIN pending-main-draft resource helper }
+{ Reuse a real immutable snapshot from the existing resource owner. An ordinary
+  editor commit revokes old observation authority, so these cases isolate valid
+  enrollment refusal and resolved publication, not Publish's pending subpredicate. }
+function EqualMainDraftResources(const AAccepted: TNyxProjectPair;
+  const ASnapshot: INyxResourceRuntimeSnapshot): Integer;
+var
+  LCore: TNyxAgentSession;
+  LDocument: TNyxDocument;
+  LPending: TNyxProjectPair;
+  LObservation: TNyxStudioResourceObservation;
+  LRevision: Integer;
+  LBefore: TNyxText;
+  LStamp: TNyxText;
+  LReports: TNyxText;
+  LState: TNyxDataValue;
+  LAfter: TNyxDataValue;
+  LRefused: Boolean;
+
+  procedure Check(AValue: Boolean; const AReason: TNyxText);
+  begin
+
+    if not AValue then
+    begin
+      raise Exception.Create('Pending main resource state: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+  function State: TNyxDataValue;
+  begin
+    Result := LCore.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(0))])).Field('session');
+  end;
+
+  function Reports: TNyxDataValue;
+  begin
+    Result := LCore.Call('nyx_resources', 'Pending resource state', NyxObject([
+      NyxField('mode', NyxData('runtimes')),
+      NyxField('expectedRevision', NyxData(LCore.Revision))])).Field('items');
+  end;
+begin
+  Result := 0;
+  LDocument := TNyxCodec.Decode(AAccepted.Design);
+  try
+    Check((ASnapshot <> nil) and (ASnapshot.Count > 0) and not ASnapshot.Stopped and
+      ASnapshot.MatchesDeclarations(LDocument.Resources),
+      'snapshot is otherwise valid, live and matches the exact accepted declarations');
+  finally
+    LDocument.Free;
+  end;
+  LPending := AAccepted;
+  LPending.Pending := True;
+  LPending.Draft := LPending.Source;
+  LPending.DraftBase := LPending.Source;
+  LCore := TNyxAgentSession.Create(LPending);
+  try
+    LRevision := LCore.Revision;
+    LBefore := EncodeNyxProject(LCore.EditorSourcePair(LRevision));
+    LState := State;
+    LStamp := LCore.RecoveryStamp;
+    LReports := Reports.ToJSON;
+    Check(LCore.PendingDraft and (LBefore = EncodeNyxProject(LPending)),
+      'owned resource core retains explicit PendingTrue even with identical source bytes');
+    LRefused := False;
+    try
+      LCore.ObserveResourceRuntime(LRevision, NyxStudioRuntime('equal-main-draft'),
+        srsResources, npfNativeLCL, '', ASnapshot);
+    except
+      on E: ENyxResource do
+      begin
+        LRefused := Pos('no draft', E.Message) > 0;
+      end;
+    end;
+    Check(LRefused, 'valid enrollment refuses specifically while the main draft is pending');
+    LAfter := State;
+    Check((LCore.Revision = LRevision) and (LCore.RecoveryStamp = LStamp) and
+      (EncodeNyxProject(LCore.EditorSourcePair(LRevision)) = LBefore) and
+      (Reports.ToJSON = LReports) and
+      (LAfter.Field('selection').AsText = LState.Field('selection').AsText) and
+      (LAfter.Field('view').AsText = LState.Field('view').AsText) and
+      (LAfter.Field('canUndo').AsBoolean = LState.Field('canUndo').AsBoolean) and
+      (LAfter.Field('canRedo').AsBoolean = LState.Field('canRedo').AsBoolean),
+      'refused enrollment preserves exact pair, revision, navigation/history and reports');
+    LCore.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(AAccepted))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    LRevision := LCore.Revision;
+    Check(not LCore.PendingDraft and
+      (EncodeNyxProject(LCore.EditorSourcePair(LRevision)) = EncodeNyxProject(AAccepted)),
+      'deliberate resolution retains the original accepted resource/source pair');
+    LObservation := LCore.ObserveResourceRuntime(LRevision,
+      NyxStudioRuntime('equal-main-draft'), srsResources, npfNativeLCL, '', ASnapshot);
+    Check((Reports.Count = 1) and Reports.Item(0).Field('active').AsBoolean and
+      (Reports.Item(0).Field('sequence').AsInteger = 1),
+      'the same valid snapshot enrolls after deliberate resolution');
+    LCore.PublishResourceRuntime(LObservation, ASnapshot);
+    Check((Reports.Item(0).Field('sequence').AsInteger = 2) and
+      (LCore.Revision = LRevision) and
+      (EncodeNyxProject(LCore.EditorSourcePair(LRevision)) = EncodeNyxProject(AAccepted)),
+      'resolved publication advances only runtime evidence, not accepted authoring state');
+    LCore.RetireResourceRuntime(LObservation);
+    Check(not Reports.Item(0).Field('active').AsBoolean,
+      'fresh resolved authority retires normally after successful publication');
+  finally
+    LCore.Free;
+  end;
+end;
+{ END pending-main-draft resource helper }
 
 function RunNyxResourceRuntimeProtocol: Integer;
 var
@@ -220,6 +334,9 @@ begin
     LBroker.Exchange(LGrant.Field('token').AsText, LProbe.Core, Request(1, 'publish'));
     Check(not Reports.Item(Reports.Count - 1).Field('active').AsBoolean,
       'a stopped final snapshot revokes publication without a fake live host');
+    { BEGIN pending-main-draft resource call }
+    Inc(Result, EqualMainDraftResources(LPair, LSnapshot));
+    { END pending-main-draft resource call }
   finally
     LBroker.Free;
     LProbe.Core.Free;

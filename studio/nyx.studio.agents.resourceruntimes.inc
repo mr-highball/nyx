@@ -23,9 +23,11 @@
 { Included by nyx.studio.agents. Only a trusted host can publish copied runtime
   evidence. Public semantic tools inspect it without borrowing live receivers. }
 
+{ Pending is explicit editor state. Recovery and paired history can retain a
+  deliberate main draft whose text matches the accepted unit. }
 function TNyxAgentSession.GetPendingDraft: Boolean;
 begin
-  Result := FSession.DraftSource <> FSession.Source;
+  Result := FSession.SourceDraftPending;
 end;
 
 function NyxStudioRuntime(const AName: TNyxText): TNyxStudioRuntimeRef;
@@ -65,7 +67,7 @@ begin
   RequireRevision(NyxObject([NyxField('expectedRevision', NyxData(AExpected))]));
   NyxStudioRuntime(AReference.Name);
 
-  if (FSession.DraftSource <> FSession.Source) or (ASnapshot = nil) or
+  if (FSession.SourceDraftPending) or (ASnapshot = nil) or
     (ASnapshot.Count < 0) or (ASnapshot.Count > NyxMaximumResources) or
     not ASnapshot.MatchesDeclarations(FSession.Document.Resources) then
   begin
@@ -163,7 +165,7 @@ begin
     begin
 
       if not FResourceRuns[LIndex].Active or
-        (FSession.DraftSource <> FSession.Source) or (ASnapshot = nil) or
+        (FSession.SourceDraftPending) or (ASnapshot = nil) or
         not ASnapshot.MatchesDeclarations(FSession.Document.Resources) then
       begin
         raise ENyxResource.Create('Runtime publication is retired, mismatched or blocked by a draft');

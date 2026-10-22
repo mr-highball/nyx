@@ -2,6 +2,13 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+[Column filtering/sorting02](DONE/NS-3_control-usefulness_02.md) is accepted on
+2026-10-22 from actual native/browser user interaction and Studio/save/own compiled
+source. [WORK](../WORK.md#table-filtering-and-sorting-accepted) records exact
+qualification and limits. This closes02's seven criteria only: this parent's
+three full breadth/quality criteria and core no-closure47 remain open, with no
+duplicate percentage/credit. Next useful core packet is table workbench03 W1.
+
 Scoped [reusable/embedded creator adoption](DONE/NS-3_coordinators_05.md) is now
 accepted from explicit native/browser/current compatibility evidence. The common
 coordinator parent retains its hard parity prerequisite, so DataToolbar and this
@@ -11,7 +18,7 @@ added; [WORK](../WORK.md#reusableembedded-creator-acceptance--2026-10-21) owns s
 The user's 2026-10-21 external debugger feedback adds a
 [control usefulness review and four-packet subcatalog](DONE/NS-3_control-usefulness_01.md).
 It reviews every default control from the application user's perspective, then
-delivers [column filtering/sorting](NS-3_control-usefulness_02.md),
+delivers [column filtering/sorting](DONE/NS-3_control-usefulness_02.md),
 [table workbench interactions](NS-3_control-usefulness_03.md) and
 [live/large-data inspection](NS-3_control-usefulness_04.md). These refine this
 task's existing usable-family, customizable-parts and advanced-data criteria;

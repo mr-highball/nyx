@@ -132,6 +132,165 @@ begin
   end;
 end;
 
+{ BEGIN pending-main-draft facts helper }
+{ Own a copy of the existing callback seed. The extra ordinary unit helper gives
+  declaration/routine readers a real indexed target without treating generated
+  infrastructure or a callback class member as an editable unit declaration. }
+procedure EqualMainDraftFacts(const ASeed: TNyxProjectPair;
+  const AHandler: TNyxHandlerRef);
+var
+  LAgent: TNyxAgentSession;
+  LSeed: TNyxProjectPair;
+  LFrame: TNyxProjectPair;
+  LCatalog: TNyxRoutineCatalog;
+  LRoutine: TNyxRoutineSource;
+  LDeclaration: TNyxRoutineDeclarationSource;
+  LHandler: TNyxHandlerSource;
+  LIndex: Integer;
+  LFound: Boolean;
+  LRevision: Integer;
+  LBefore: TNyxText;
+  LStamp: TNyxText;
+  LState: TNyxDataValue;
+
+  function State: TNyxDataValue;
+  begin
+    Result := LAgent.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(0))])).Field('session');
+  end;
+
+  procedure Facts(APending: Boolean);
+  var
+    LValue: TNyxDataValue;
+  begin
+    Check(LAgent.PendingDraft = APending, 'public getter retains explicit main draft state');
+    Check(LAgent.Call('nyx_session', 'Pending facts', NyxObject([]))
+      .Field('pendingDraft').AsBoolean = APending, 'session summary agrees with the main draft flag');
+    LValue := LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('inspect')), NyxField('handler', NyxData(AHandler.Name)),
+      NyxField('count', NyxData(8))]));
+    Check((LValue.Field('pendingDraft').AsBoolean = APending) and
+      (LValue.Field('text').AsText = Copy(LHandler.Code, 1, 8)),
+      'handler pending fact accompanies exact bounded accepted text');
+    Check(LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('imports')), NyxField('section', NyxData('interface')),
+      NyxField('limit', NyxData(1))])).Field('pendingDraft').AsBoolean = APending,
+      'accepted import inspection retains the explicit pending main flag');
+    LValue := LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('routines')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('limit', NyxData(1))]));
+    Check((LValue.Field('pendingDraft').AsBoolean = APending) and
+      (LValue.Field('total').AsInteger = LCatalog.Count),
+      'legacy main-unit routine catalog agrees with its actual source index');
+    LValue := LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('routine')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('routine', NyxData(LRoutine.Routine.Name)), NyxField('count', NyxData(8))]));
+    Check((LValue.Field('pendingDraft').AsBoolean = APending) and
+      (LValue.Field('text').AsText = Copy(LRoutine.Code, 1, 8)),
+      'routine body pending fact accompanies the indexed accepted implementation');
+    LValue := LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('declaration')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('routine', NyxData(LRoutine.Routine.Name)), NyxField('count', NyxData(8))]));
+    Check((LValue.Field('pendingDraft').AsBoolean = APending) and
+      (LValue.Field('text').AsText = Copy(LDeclaration.Text(dspInterface), 1, 8)),
+      'declaration pending fact accompanies the real accepted counterpart');
+    Check(LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('views')), NyxField('count', NyxData(8))]))
+      .Field('pendingDraft').AsBoolean = APending, 'managed views retain their authoritative main flag');
+    LValue := LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('files')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('limit', NyxData(1))]));
+    Check((LValue.Field('pendingDrafts').AsBoolean = APending) and
+      (LValue.Field('files').Item(0).Field('pendingDraft').AsBoolean = APending),
+      'main-only fixture agrees with existing file and aggregate pending facts');
+    Check(LAgent.Call('nyx_pascal', 'Pending facts', NyxObject([
+      NyxField('mode', NyxData('unit')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('snapshot', NyxData('accepted')), NyxField('count', NyxData(8))]))
+      .Field('pendingDraft').AsBoolean = APending, 'accepted unit inspection retains its main flag');
+  end;
+
+  procedure Unchanged;
+  var
+    LAfter: TNyxDataValue;
+  begin
+    LAfter := State;
+    Check((EncodeNyxProject(LAgent.EditorSourcePair(LRevision)) = LBefore) and
+      (LAgent.Revision = LRevision) and (LAgent.RecoveryStamp = LStamp) and
+      (LAfter.Field('selection').AsText = LState.Field('selection').AsText) and
+      (LAfter.Field('view').AsText = LState.Field('view').AsText) and
+      (LAfter.Field('canUndo').AsBoolean = LState.Field('canUndo').AsBoolean) and
+      (LAfter.Field('canRedo').AsBoolean = LState.Field('canRedo').AsBoolean),
+      'pending facts preserve complete pair, revision, navigation and history; activity may log');
+  end;
+begin
+  LSeed := ASeed;
+  LSeed.Source := AddNyxRoutineDeclaration(LSeed.Source,
+    NyxRoutineDeclaration(nrFunction, NyxRoutine('PendingMainFact'), rvInterface,
+      'function PendingMainFact: Integer;', #10 + 'begin' + #10 +
+      '  Result := 7;' + #10 + 'end;'));
+  Check(LSeed.Files.IsEmpty and not LSeed.Pending,
+    'owned callback seed exercises main-only legacy inspection branches');
+  LCatalog := ReadNyxRoutines(LSeed.Source);
+  LRoutine := Default(TNyxRoutineSource);
+  LFound := False;
+  for LIndex := 0 to LCatalog.Count - 1 do
+  begin
+
+    if SameText(LCatalog.Item(LIndex).Routine.Name, 'PendingMainFact') then
+    begin
+      LRoutine := LCatalog.Item(LIndex);
+      LFound := True;
+    end;
+  end;
+  Check(LFound, 'pending fact queries use a routine reference returned by the real source index');
+  LDeclaration := ReadNyxRoutineDeclaration(LSeed.Source, LRoutine.Routine);
+  LHandler := ReadNyxHandlerSource(LSeed.Source, AHandler);
+  LAgent := TNyxAgentSession.Create(LSeed);
+  try
+    LRevision := LAgent.Revision;
+    LAgent.Call('nyx_transaction', 'Pending facts', NyxObject([
+      NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData('facts-history')),
+      NyxField('operations', NyxArray([NyxObject([NyxField('op', NyxData('title')),
+        NyxField('value', NyxData('Pending fact history'))])]))]));
+    LAgent.Call('nyx_history', 'Pending facts', NyxObject([
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('operationId', NyxData('facts-history-undo')), NyxField('direction', NyxData('undo'))]));
+    LRevision := LAgent.Revision;
+    Check(EncodeNyxProject(LAgent.EditorSourcePair(LRevision)) = EncodeNyxProject(LSeed),
+      'ordinary history restores the exact accepted seed before pending setup');
+    LFrame := LSeed;
+    LFrame.Pending := True;
+    LFrame.Draft := LFrame.Source;
+    LFrame.DraftBase := LFrame.Source;
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(LFrame))),
+      NyxField('selection', NyxData('project-name')), NyxField('view', NyxData('home'))]));
+    LRevision := LAgent.Revision;
+    LBefore := EncodeNyxProject(LAgent.EditorSourcePair(LRevision));
+    LState := State;
+    LStamp := LAgent.RecoveryStamp;
+    Check((LBefore = EncodeNyxProject(LFrame)) and LState.Field('canRedo').AsBoolean,
+      'equal-byte PendingTrue frame retains real Redo through ordinary synchronization');
+    Facts(True);
+    Unchanged;
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(LSeed))),
+      NyxField('selection', NyxData('project-name')), NyxField('view', NyxData('home'))]));
+    LRevision := LAgent.Revision;
+    LBefore := EncodeNyxProject(LAgent.EditorSourcePair(LRevision));
+    LState := State;
+    LStamp := LAgent.RecoveryStamp;
+    Check(LBefore = EncodeNyxProject(LSeed), 'deliberate resolution changes no accepted source or design');
+    Facts(False);
+    Unchanged;
+  finally
+    LAgent.Free;
+  end;
+end;
+{ END pending-main-draft facts helper }
+
 var
   LFirst: TNyxHandlerSource;
   LSecond: TNyxHandlerSource;
@@ -303,6 +462,9 @@ begin
       'Inspection reports the protected draft while reading accepted code');
     Refuse(Args('pending-draft', NyxArray([Change(GFirst, LBody, LBody)])), 'Pending drafts refuse publication');
     Check(Pair.Draft = LDraft.Draft, 'Rejected edit retains every draft byte');
+    { BEGIN pending-main-draft facts call }
+    EqualMainDraftFacts(LOriginal, GFirst);
+    { END pending-main-draft facts call }
     FreeAndNil(GAgent);
     FreeAndNil(GStudio);
     WriteLn('PASS ', GCount, ' portable handler source/transaction checks');

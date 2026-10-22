@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Scoped [table filtering and sorting](TODO/DONE/NS-3_control-usefulness_02.md)
+is accepted on2026-10-22 for its seven unchanged criteria: typed policies,
+ordinary native/browser interaction, query ownership, safe editing/events and
+Studio/history/own compiled application. Actual P3 browser712/712, active-cell75/75,
+own browser696/700 and compiled369/369 complement retained clean native journeys.
+The final pending-state repair passes native99/83/141 and browser99/99+83/83,
+with all readers joined. [WORK](WORK.md#table-filtering-and-sorting-accepted)
+records exact evidence and reuse/target limits. This accepts that packet only;
+components01's full breadth/quality and NS-2 parity/performance remain open.
+NS-3 completion and expanded-scope weights stay Pending assessment; no percentage
+or duplicate credit is assigned. Next core packet is
+[table workbench03 W1](TODO/NS-3_control-usefulness_03.md), column arrangement.
+
 The 2026-10-13 canvas/diagram request expands the intended destination with
 [a general infinite workspace](TODO/NS-3_canvas-workspace_01.md),
 [typed Pascal behavior programs](TODO/NS-1_canvas-behaviors_01.md) and

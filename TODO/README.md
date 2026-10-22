@@ -3,6 +3,18 @@
 [Milestones](../MILESTONES.md) · [Task flow](../TASKFLOW.MD) ·
 [Current work](../WORK.md) · [Accepted tasks](DONE/README.md)
 
+[Table filtering and sorting](DONE/NS-3_control-usefulness_02.md) is accepted
+on2026-10-22 against all seven unchanged criteria and its accepted blockers.
+Typed policies and ordinary native/browser controls include safe query ownership,
+editing/events, Studio/source/history and the same journey's own compiled code.
+[WORK](../WORK.md#table-filtering-and-sorting-accepted) retains actual target
+counts, original producer reuse and qualification limits. Full component/parity/
+performance goals and completion-credit assessment remain open.
+Next core work is [table workbench03 W1](NS-3_control-usefulness_03.md):
+usable resize, keyboard alternatives, reorder/show-hide/reset and editable pins
+at both logical edges. Source design is read-only until a separate ownership split;
+this is not a host/config or rollout release.
+
 The user-selected fresh [Nyx-owned Pascal engine](../docs/pascal-projects.md#nyx-owned-pascal-analysis)
 now has lossless lexical and recoverable declaration/scope primitives. Original
 authoring criterion two retains captured include/conditional/compiler context,

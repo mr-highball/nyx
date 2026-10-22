@@ -64,7 +64,7 @@ This is model authority, not a grant to a mounted application's callbacks.
 UI commands must still validate their current owner/event generation. Canonical
 toolbar/header contributions, visible column controls, rich events and ordinary
 Studio/save/generated authoring remain under
-[column filter/sort02](../TODO/NS-3_control-usefulness_02.md). No new query parser,
+[column filter/sort02](../TODO/DONE/NS-3_control-usefulness_02.md). No new query parser,
 store, scheduler or semantic server is introduced by this facet.
 
 The maintained `tools/build.ps1 -Target query-publication` command checks the
@@ -557,17 +557,31 @@ is not a semantic query veto. Changed carries actual accepted old/new snapshots
 after grouped publication and supports ordinary scheduler policies. The host
 passes exact runtime and design identities independently for reusable instances.
 
-P4B candidate source now exposes these exact event identities through ordinary
-discovery and Inspector, with sequential-only Before policy and independent
-object Details. Generated callbacks use the existing enum-valued factory and
-required imports, including empty streams. Shared schema restrictions also
-govern zero-callback admission and bounded semantic reads. An absent event with
-an allowed non-sequential initial choice is created as one Policy-before-Add
-candidate, retaining one Undo and exact TODO navigation. This integration is
-source in qualification, not an additional runtime workbench, browser-input
-result or rollout. [Event policy capabilities](events.md#event-policy-capabilities-source-in-qualification)
-and [WORK](../WORK.md#query-event-authoring-p4b-separate-source-release--2026-10-22)
-retain its evidence boundary.
+Studio exposes these event identities through ordinary discovery and Inspector,
+with sequential-only Before policy and independent object Details. Generated
+callbacks use the enum-valued factory and required imports, including empty
+streams. Shared schema restrictions govern zero-callback admission and bounded
+semantic reads. Adding an absent event with an allowed non-sequential initial
+choice prepares Policy-before-Add with one Undo and exact TODO navigation.
+[Event policy capabilities](events.md#event-policy-capabilities) documents that
+contract.
+
+The filtering/sorting integration is accepted for Win32 LCL and the browser
+journeys at1280x900/390x900. Actual workbench checks pass native782/782 and
+browser712/712; active-cell browser75/75 preserves draft/caret identity through
+sorts. Own Studio/history/source paths pass native755/759 and browser696/700;
+that journey's exact2BB6/093B saved/generated pair passes independently compiled
+native426/426 and browser369/369. Older results keep their original producer
+labels. The final main-draft consistency cases pass native99/83/141 and browser
+99/99+83/83. Semantic policy reads/changes and strict discovery remain bounded
+revision-aware operations in the existing agent contract, without a new tool server.
+See [the integrated acceptance](../WORK.md#table-filtering-and-sorting-accepted).
+
+Empty text remains a typed value; nullable/missing-field operations are not
+implied. The actual synthetic keyboard/pointer paths do not certify physical
+devices, IME or assistive technology, and broader widgetsets/performance remain
+open. Authored defaults and runtime query contributions retain distinct ownership;
+this qualification adds no browser preference persistence or deployed-service claim.
 
 `tools/build.ps1 -Target query-workbench` takes a new
 `QueryWorkbenchEvidenceDirectory`, runs the ordinary native consumer at actual

@@ -1,9 +1,52 @@
 # NS-3_control-usefulness_02 — Let table users filter and sort columns
 
-[North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Usefulness review](DONE/NS-3_control-usefulness_01.md) · [Task flow](../TASKFLOW.MD)
+[North star NS-3](../../MILESTONES.md#assessment) · [Task catalog](../README.md) ·
+[Usefulness review](NS-3_control-usefulness_01.md) · [Task flow](../../TASKFLOW.MD)
 
 **Description:**
+
+Accepted on2026-10-22 after root/Lil' Scooty review of all seven unchanged
+criteria and both accepted blockers. Typed filters/sorts now have ordinary
+native/browser header/form/keyboard interaction, peer-safe query ownership,
+editing/lifetime protection, Studio properties/events/source/history and an
+independently built own application. This is the completed filtering/sorting
+packet; the broader component catalog, workbench task03 and full parity remain open.
+
+P3 passes native782/782 and actual browser712/712; original active-cell browser
+passes75/75. Own Studio passes native755/759 and OWN compiled426/426, browser-own
+696/700 with complete2BB6/source093B pair and real compiled browser369/369.
+Latest equal-byte pending-state cases pass native99/83/141 and browser99/99+
+83/83; eight compilers have0 owned/28 known RTL warning occurrences and three
+complete clean native heaps. RootCA015B90/independent79298403 verify2111 pins/
+13 copies/52 artifacts and all actual tabs/hosts joined. Integrated5AB58201 and
+the [acceptance record](../../WORK.md#table-filtering-and-sorting-accepted) map
+each original criterion to retained commands, source identities and outcomes.
+
+Older Studio bundles retain their original producer identities under the reviewed
+resolved/divergent path equivalence; they are not0467/65FD bytecode. Resources'
+new cases execute natively only; Publish's pending predicate is source-reviewed.
+History additions prove complete frame/revision/navigation plus stamp/counts/
+availability alongside original Undo/Redo. Synthetic input and blank terminal
+screenshots do not establish hardware/IME/AT or visual quality. Qualification is
+Win32 LCL/this Chromium host at1280x900/390x900, with broader performance/widgetset
+parity still open. Completion credit stays pending assessment within components01.
+
+The retained description below is historical; this dated acceptance supersedes
+its former readiness/gate statements without changing any criterion.
+
+The remaining pending-main-draft consistency gap is now source-released under
+[WORK](../../WORK.md#pending-main-draft-consistency-source-release), following pushed
+3080e8d and actual joined P3/active-cell browser results. Root owns ten existing
+facts/build/resource predicates in two production files; existing helper adds
+equal-byte PendingTrue cases in three existing test files. Use authoritative main
+SourceDraftPending, preserve helper/aggregate policy and pending-capable capture,
+and retain every original assertion/wait. Ordinary commit revokes resource
+publication authority; that path does not isolate its pending subpredicate.
+Independent source review/freeze must precede eight direct compilers/three native
+runs, then actual joins/review precede focused desktop/phone browser checks.
+No reader is admitted yet. This delivers original criterion6 consistency and
+returns to integrated original acceptance; all seven criteria/core47/P4C/full goal
+remain open now without credit/DONE. Earlier paragraphs retain history.
 
 Original active-cell browser paths now pass75 at actual1280x900 and75 at390x900
 with unchanged60765453/original44BAC and currentJSAA05/A1F2/RTLA6. Existing F2,
@@ -11,7 +54,7 @@ same-editor draft/caret through sorting, filter-out discard, hidden selection
 and exact defaults pass; no extra hardware/AT or renderer-disposal proof is claimed.
 Root24A78FA1/independent5BE7EEC6 verify1991pins/eight copies and every actual reader
 joined. The current compiler has0 owned/7 known RTL warnings; native is not replayed.
-[WORK](../WORK.md#active-cell-draft-and-caret-browser-paths-qualified) owns this
+[WORK](../../WORK.md#active-cell-draft-and-caret-browser-paths-qualified) owns this
 three-doc checkpoint. Pending-main-draft consistency is the next separate source
 review: existing SourceDraftPending must govern six status facts, the build guard,
 legacy getter and BOTH direct resource-publication guards. Preserve pending-capable
@@ -25,7 +68,7 @@ follows original Cleanup with no error attrs/console errors. One current browser
 compiler has0 owned/7 known RTL warnings. Root8D6C541F/independentDAA893A5 verify
 1945pins/eight copies; every actual tab/host is closed/joined and listeners0.
 Native782/782 is explicitly reused, not replayed or relabeled as browser counts.
-[WORK](../WORK.md#current-table-workbench-browser-paths-qualified) owns three-doc
+[WORK](../../WORK.md#current-table-workbench-browser-paths-qualified) owns three-doc
 checkpoint and the separate original44BAC active-cell browser gate. All Pascal
 is paused; independent review/fresh freeze must precede its one fresh compiler,
 then joined review precedes already-authorized actual desktop/phone runs.
@@ -41,7 +84,7 @@ with their original producer labels. Independent reviewB884C725/compositeDB05C06
 verify1924 pins/eight retained copies and every actual reader joined. The earlier
 phone304 failure and launch/capture corrections remain retained. The two repair
 browser builds have0 owned/14 known RTL warnings; no native work was repeated.
-[WORK](../WORK.md#own-browser-pair-qualified-next-control-journey) owns checkpoint
+[WORK](../../WORK.md#own-browser-pair-qualified-next-control-journey) owns checkpoint
 and the next separate P3 single-browser-compiler/two-width actual runtime gate.
 No P3 reader or pending-fact repair source is admitted now. Active-cell browser
 checks keep their original44BAC companion. Reassessment680D8374 keeps all seven
@@ -54,7 +97,7 @@ reviewA0E26B5B passes. Compact390x900 fails at stage15/check304 while immediatel
 looking up Events after the existing Inspector click. Retain failureABC59BAC and
 join7AB1470A; no final count/own packet is claimed. All actual readers are joined,
 inventory empty, composite1C27AA5A verifies1912 pins and retains the PID-reuse audit
-correction without touching unrelated conhost. [WORK](../WORK.md#compact-callback-navigation-repair)
+correction without touching unrelated conhost. [WORK](../../WORK.md#compact-callback-navigation-repair)
 owns the narrow release after its verified checkpoint: existing helper adds ONLY
 guarded PAS2JS AwaitStudio using the public PresentationPending fence, after the
 existing stage15 Inspector call. All gestures/assertions/bounds remain unchanged.
@@ -74,7 +117,7 @@ is exact; reuse755/759+426/426. Generated review4DA6F821 proves one ordinary JS
 statement change and byte-exact compiled9AAB/RTL/expected pair, so existing actual
 369/369 is reused with native-producer provenance retained. The BOM metadata
 check correction is retained separately, without compiler/input replay.
-[WORK](../WORK.md#neutral-browser-inspection-source-release) owns checkpoint and
+[WORK](../../WORK.md#neutral-browser-inspection-source-release) owns checkpoint and
 fresh metadata admission before the SAME authorized ordinary browser two-width
 journey. Full terminal/viewport/lossless own-pair evidence remains required; a
 different pair needs its OWN strict admission/build. Core47/original/P4C/browser-
@@ -86,7 +129,7 @@ the built result above owns current readiness and runtime scope.
 The CSS-observed ordinary browser run is explicitly retired UNQUALIFIED for a
 reviewed internal observation repair: only186 checks/stepafter3 were readable,
 without a terminal/own packet. Host41688 joined; direct browser inventory is now
-empty and retirement028501B0 checks all1899 pins. [WORK](../WORK.md#neutral-browser-inspection-source-release)
+empty and retirement028501B0 checks all1899 pins. [WORK](../../WORK.md#neutral-browser-inspection-source-release)
 releases only the consumer's PAS2JS InspectAccepted read/comment to use existing
 neutral Exchange observe Summary. Keep the actual Studio snapshot owner and all
 original operations/assertions/waits. Public-query logging stays intentional and
@@ -99,7 +142,7 @@ Compiled browser runtime now passes369/369 at actual1280x900/390x900, using the
 exact native-produced2BB6/093B pair. Browser-own Studio production remains open:
 ordinary1280 is UNKNOWN after an unresponsive tab; ordinary390 is unattempted.
 All own hosts joined, and resumed browser2 inventory is empty; retirement0F810282
-verifies former26 absent and1895 pins exact. [WORK](../WORK.md#browser-partial-result-and-observation-only-release)
+verifies former26 absent and1895 pins exact. [WORK](../../WORK.md#browser-partial-result-and-observation-only-release)
 releases only existing build-wrapper CSS to expose copied progress/terminal packet,
 then independent review/freeze/newHTML with exact-old bytecode for the same authorized
 ordinary reruns. No Pascal/JS/worker/host/assertion/wait/fixture change or compiler/
@@ -109,7 +152,7 @@ acceptance. Core47/original/P4C/browser-own/P3 criteria stay open without credit
 Direct @Browser access works: documentation/listTabs and blank-tab creation succeed;
 tab24 actually1280x900 before navigation. Root's earlier nested-tool inventory did
 not cover direct CUA, so the browser-outage/blocked conclusion is excluded metadata
-inference. Windows fallback denial remains separate. [WORK](../WORK.md#direct-browser-access-verified-prior-blocker-inference-corrected)
+inference. Windows fallback denial remains separate. [WORK](../../WORK.md#direct-browser-access-verified-prior-blocker-inference-corrected)
 resumes the same authorized compiled-first regression after corrected3doc freeze,
 reusing every build/worker/host unchanged. No new permission/config/compiler scope.
 Actual status/viewport/own artifacts and host cleanup still gate acceptance;
@@ -118,7 +161,7 @@ core47/original criteria remain open. Older unavailable notes retain history onl
 Reviewed23EA567C builds both browser bundles with0 owned/14 known upstream warnings;
 1895 pins match freeze350C2325/audit31C17F16. Runtime is UNATTEMPTED: prior browser
 tool disappeared and documented fallback launch returns Windows Access denied,
-with no running Brave/window afterward. No new host started. [WORK](../WORK.md#header-repair-built-browser-access-currently-unavailable)
+with no running Brave/window afterward. No new host started. [WORK](../../WORK.md#header-repair-built-browser-access-currently-unavailable)
 retains this external gate and continuing human rerun authorization. Resume the
 same compiled-first desktop/phone cases when supported access returns, verify exact
 viewport before navigation and reuse unchanged builds. Original/core47 stays open.
@@ -130,7 +173,7 @@ Actual compiled browser filter-header input exposes a null DOM attribute parsed
 before its role is chosen; QueryKey shares the defect. Case23 is also excluded
 for actual1280x720 versus planned900 height. Ordinary22 remains UNKNOWN after
 unreadable observations. Both tabs/hosts are retired; FDB61DA1/060038B6 retain
-1887 exact inputs and no pass credit. [WORK](../WORK.md#actual-browser-header-failure-and-viewport-correction)
+1887 exact inputs and no pass credit. [WORK](../../WORK.md#actual-browser-header-failure-and-viewport-correction)
 releases only browser adapter23EA567C role-first parsing, then independent review,
 eight-path freeze/two browser recompiles and compiled-first same regressions.
 Verify actual viewport after blank-tab creation, before navigation. All existing
@@ -141,7 +184,7 @@ maintained ordinary output omitted its real nyx_source_worker.js. Root retains
 the exact Worker failure, joins host11936/closes tab21/resets viewport, and audits
 1879 pins in CCAB1DC1; static HTTP contract checks passed. Only existing build/
 private qualifier staging/accounting is released; all Pascal stays exact.
-[WORK](../WORK.md#missing-source-worker-deployment-prerequisite) admits one worker
+[WORK](../../WORK.md#missing-source-worker-deployment-prerequisite) admits one worker
 compiler after fresh freeze, reusing exact two browser builds/host, then authorized
 same cases. No wait/assertion/API change or browser acceptance; core47 carries.
 
@@ -149,7 +192,7 @@ Integration sources13D14723/host379F66AE are independently reviewed. Both
 ordinary/compiled native active source projections remain exact901D; reuse
 755/759+426/426 explicitly. The test now services both Studio-owned exchanges
 and exposes copied terminal JSON; the static host resolves absent resources404
-before its unchanged read-only method guard. [WORK](../WORK.md#integration-sources-reviewed-for-the-existing-browser-regression)
+before its unchanged read-only method guard. [WORK](../../WORK.md#integration-sources-reviewed-for-the-existing-browser-regression)
 admits only three compilers after fresh seven-path freeze, then actual joins/
 HTTP behavior checks and authorized same-regression cases. All original browser
 criteria/core47 remain open; no recovery bypass/API/config/LAN/MCP rollout.
@@ -159,7 +202,7 @@ completion bound. Current Studio creates two independent exchanges but the test
 pumps one; its static host also returns405 for an absent recovery route, blocking
 the existing404 compatibility path. Root joins host48548/closes tab20/resets
 viewport and audit946FCBF6 retains1871 exact inputs/assets and failure. Only
-[WORK](../WORK.md#browser-integration-repair-after-the-unchanged-completion-bound)'s
+[WORK](../../WORK.md#browser-integration-repair-after-the-unchanged-completion-bound)'s
 same-consumer exchange/evidence repair and static-host resource/method ordering
 are released, then independent review/freeze/three builds and authorized reruns.
 No recovery bypass/API/config change; native proof remains explicitly reused.
@@ -167,7 +210,7 @@ No recovery bypass/API/config change; native proof remains explicitly reused.
 ConsumerDFF63AF0's351-byte browser Count() portability repair is independently
 reviewed. Selecting its native ELSE restores the entire901D source byte-exact,
 so full native755/759+426/426 is explicitly reused. Every assertion/wait stays.
-[WORK](../WORK.md#browser-count-repair-reviewed-for-two-browser-builds) admits only
+[WORK](../../WORK.md#browser-count-repair-reviewed-for-two-browser-builds) admits only
 two fresh browser builds after freeze, then root joins/audits before authorized
 same-regression hosts. First browser failure stays retained; core47 carries.
 
@@ -175,7 +218,7 @@ The first authorized browser1280x900 reaches50 original admission checks then
 fails before Studio mount: pas2js emits the Count method as an array index rather
 than invoking it. Original failure/assets/console remain retained. Own host11656
 is stopped/joined, own tab closed and viewport reset; all1853+12 pins stayed exact.
-[WORK](../WORK.md#first-browser-failure-retained-narrow-portability-repair) releases
+[WORK](../../WORK.md#first-browser-failure-retained-narrow-portability-repair) releases
 only the same consumer's narrow Count-index portability fix, then independent
 review/fresh browser build and already-authorized same-regression reruns. Native
 evidence remains exact901D; no browser or original criterion closes/core47 stays.
@@ -187,7 +230,7 @@ and are the actual compiled inputs. Root-joined audit755DA29C verifies1853 pins/
 six copies/40 artifacts. Direct human answer "Run browser tests and needed
 reruns" now authorizes this SAME ordinary/compiled browser regression at desktop/
 phone widths on temporary loopback-only Pascal hosts, each stopped afterward.
-[WORK](../WORK.md#full-native-outcome-and-authorized-browser-admission) owns exact
+[WORK](../../WORK.md#full-native-outcome-and-authorized-browser-admission) owns exact
 scope, frozen artifacts, browser-own pair provenance and actual cleanup. No
 source/config/LAN/MCP change is released; original acceptance/core47 stay open.
 
@@ -197,7 +240,7 @@ prior reviews; no Pascal/guide/tool change is released. Fresh freeze precedes
 four compilers/four sequential native outcomes: full ordinary1280/390 authoring/
 Save/Read/Open/ApplicationProof, four fresh own exports with exact equality, and
 their exact compiled companions. Preserve60s/2400/1800 bounds and first-failure
-stop. [WORK](../WORK.md#retained-full-studio-admission-after-the-compiled-application-checkpoint)
+stop. [WORK](../../WORK.md#retained-full-studio-admission-after-the-compiled-application-checkpoint)
 owns actual joins/audit; retained-pair426/426 does not replace these obligations.
 Browser execution and all original criteria remain open; core47 carries.
 
@@ -207,7 +250,7 @@ at1280/390 with complete clean heaps, using this journey's OWN retained330 pair
 compiles only; two matrix compilers have0 owned/seven upstream RTL warnings.
 Root82853/f95771 is terminal and all actual readers are joined. AuditD7433905
 verifies1853 frozen inputs/six copies/18 artifacts; independent outcome review
-passes. [WORK](../WORK.md#current-result-own-compiled-application-passes-native-checks)
+passes. [WORK](../../WORK.md#current-result-own-compiled-application-passes-native-checks)
 retains exact scope, three earlier failures and the purely additive setup repair.
 Core46->47; full ordinary Studio two-width/fresh cross-width own exports/exact
 companions/browser gates and all original criteria remain open. Next is the
@@ -219,7 +262,7 @@ The existing compiled-branch diagnostic was source/tool reviewed:901D3F06's thre
 marked setup additions reverse exactly to54AF4520; all prior predicates/waits
 remain. Private driver3B74679D pins the OWN330 pair, admits two compilers/two
 sequential native widths only after fresh six-path freeze, and explicitly grants
-no fullStudio/cross-width/browser acceptance. [WORK](../WORK.md#own-saved-query-workbench--2026-10-22)
+no fullStudio/cross-width/browser acceptance. [WORK](../../WORK.md#own-saved-query-workbench--2026-10-22)
 owned the27-extra-input freeze and actual join/audit; no reader had launched at
 that source-only review boundary.
 
@@ -234,7 +277,7 @@ actions through existing keyboard input; every original call/check/wait stays.
 Next use the SAME existing compiled branch and OWN retained
 pair for a fixed two-compiler/two-native diagnostic before a long replay. This
 does not replace full ordinary two-width/cross-width/compiled/browser gates.
-[WORK](../WORK.md#retained-first-application-failure-and-repair-release)
+[WORK](../../WORK.md#retained-first-application-failure-and-repair-release)
 owns scope/review/freeze/actual joins; no original criterion or credit closes.
 
 Startup repair54AF4520 adds only21 bytes for explicit initialFalse, independently
@@ -261,11 +304,11 @@ waits and product source remain exact; this grants no runtime/criterion credit.
 P4C's same-consumer source8BEDFC59 and build/guide/private drivers are now
 independently reviewed; original fixture/admission/native0-10/waits stay exact.
 Final Events Add/default filter/qualified-instance dispatch cross-check passes.
-No reader has launched. [WORK](../WORK.md#own-saved-query-workbench--2026-10-22)
+No reader has launched. [WORK](../../WORK.md#own-saved-query-workbench--2026-10-22)
 owns the fresh six-path freeze and fixed four-compiler/four-native admission;
 source readiness grants no execution, browser or original criterion closure.
 
-P4C now has a separate source release in [WORK](../WORK.md#own-saved-query-workbench--2026-10-22):
+P4C now has a separate source release in [WORK](../../WORK.md#own-saved-query-workbench--2026-10-22):
 extend the SAME ordinary Studio consumer after original stages0-10, use real
 named Save/Open/full browser exchange, emit that reopened project's OWN exact
 pair/unit at both widths and compile/use its independent two-table application.
@@ -282,7 +325,7 @@ complete clean heaps; matching browser tests and both Studio mains compile.
 Seven accepted compilers have zero owned/21 upstream RTL warnings. Retain the
 first new test-domain compiler failure and its sole Definition repair. All actual
 readers are root-joined; composite556EE9FB verifies1852 inputs/27 source copies/
-eight receipts/47 artifact references. [WORK](../WORK.md#current-boundary-agent-only-query-policy-edits-qualify-locally)
+eight receipts/47 artifact references. [WORK](../../WORK.md#current-boundary-agent-only-query-policy-edits-qualify-locally)
 owns exact evidence, failure and target limits. Core45->46; no original/P4B/P4C/
 browser/credit/DONE closes. Source/guide/tools remain paused after qualification.
 
@@ -303,7 +346,7 @@ must complete a bounded read->write workflow without supplying a full form
 baseline. Preserve exact revision/key/typed field, ordered candidate changes,
 equal-bytes pending refusal, local reset/inheritance and one paired Undo. Only
 two named shapes are added after the existing eight (45->47 expanded branches);
-no new tool or binding version. [WORK](../WORK.md#current-source-scope-agent-only-table-and-column-policy-edits)
+no new tool or binding version. [WORK](../../WORK.md#current-source-scope-agent-only-table-and-column-policy-edits)
 owns exact files, independent review/freeze and planned validation. No criterion
 closes before its actual authoring/refusal/lifetime results return.
 
@@ -313,7 +356,7 @@ clean heaps; matching browser assertions and both Studio mains compile. Seven
 accepted compilers have zero owned/21 upstream warnings. Two earlier stale-count
 discovery failures remain retained, with exact24-tool/45-expanded-branch identity
 coverage in the final test. All actual readers are joined and current1850 pins/
-nine source copies/nine receipts/70 artifact references verify. [WORK](../WORK.md#current-boundary-bounded-policy-inspection-qualifies-locally)
+nine source copies/nine receipts/70 artifact references verify. [WORK](../../WORK.md#current-boundary-bounded-policy-inspection-qualifies-locally)
 owns scope/reuse and failures. Core44->45; every original criterion stays open.
 
 Next P4B requires agent-only typed set/default operations which derive the full
@@ -331,7 +374,7 @@ The second retained discovery failure identifies an incorrect39-branch oracle:
 eight named shapes plus37 expanded intent branches total45. Only the discovery
 test is released to correct this and assert exact action/family membership.
 Product/shared inputs stay exact; four remaining compatibility/product compilers
-are unattempted. [WORK](../WORK.md#current-boundary-discovery-action-expansion-was-miscounted)
+are unattempted. [WORK](../../WORK.md#current-boundary-discovery-action-expansion-was-miscounted)
 retains both failures and all actual joins; no original criterion closes.
 
 Current read packet retains its first discovery-test failure: full semantic
@@ -339,7 +382,7 @@ journey176 native/clean plus browser compilation pass, while the old expected
 21-tool count fails against24 current tool constructors. Only that discovery
 oracle and explicit membership coverage are released for repair; current product
 and shared journey source stay exact. Fresh review/freeze precedes the remaining
-five compilers, reusing both unaffected journey results. [WORK](../WORK.md#current-boundary-full-policy-reads-pass-discovery-catalog-oracle-is-stale)
+five compilers, reusing both unaffected journey results. [WORK](../../WORK.md#current-boundary-full-policy-reads-pass-discovery-catalog-oracle-is-stale)
 owns the receipts and actual joins; no complete P4B/P4C/browser gate closes.
 
 Current P4B source packet: add opt-in bounded query-control capability reads to
@@ -347,7 +390,7 @@ the existing collection bindings/column modes, preserving old default responses.
 Declared versus resolved policy and projection support must remain distinct,
 including valid saved non-table metadata. Existing full semantic journey and
 native discovery require narrow current-API test maintenance; no action/assertion
-is skipped. Source review/freeze precedes readers. [WORK](../WORK.md#current-source-scope-bounded-query-policy-inspection)
+is skipped. Source review/freeze precedes readers. [WORK](../../WORK.md#current-source-scope-bounded-query-policy-inspection)
 owns the exact release; complete P4B/P4C and all original criteria remain open.
 
 Give users of a Nyx table visible, understandable column filtering and sorting
@@ -359,10 +402,10 @@ North star: NS-3. Milestone: M3/components01 advanced data-control behavior.
 Completion credit: pending assessment within original component scope; no
 duplicate credit for existing query, state, DataToolbar or parity work.
 
-Starting evidence: [typed queries](../docs/collection-queries.md),
-[collection views](../docs/collection-views.md),
-[query owner](../src/nyx.collections.query.pas) and
-[live DataToolbar](NS-3_data-toolbar_02.md). Existing filtering/stable ordering
+Starting evidence: [typed queries](../../docs/collection-queries.md),
+[collection views](../../docs/collection-views.md),
+[query owner](../../src/nyx.collections.query.pas) and
+[live DataToolbar](../NS-3_data-toolbar_02.md). Existing filtering/stable ordering
 are foundations. The missing result to review and deliver is the table user's
 discoverable column interaction and its portable, authored configuration.
 The existing public `NewNyxQueryEditor` is available for advanced predicate/sort
@@ -408,7 +451,7 @@ Ordered implementation packets preserve all seven criteria below:
 | P4 — Authored workbench | Typed policy/event/help/source/persistence/semantic agreement and own saved/generated two-view workbench at both targets/widths | Any unmet original criterion, full parity/quality and delivery |
 
 P1 has a separately reviewed local qualification recorded in
-[WORK](../WORK.md#prepared-collection-query-publication--2026-10-21): root owns
+[WORK](../../WORK.md#prepared-collection-query-publication--2026-10-21): root owns
 the existing view/prepared integration/build; helper owns only the independent
 new contract and public focused consumer. Native89 public checks, unchanged
 query56 and its own compiled-query57 pass with clean heaps. Matching browser
@@ -427,8 +470,8 @@ recapturing their effective query. Explicit authored restoration is a prepared
 rebase, not automatic behavior when acquiring/releasing an owner lease.
 
 P2 now has a separately bounded native-local API qualification in
-[WORK](../WORK.md#shared-collection-query-sessions--2026-10-21), with the matching
-[Q1 ownership rule](NS-3_data-toolbar_02.md) specified before implementation.
+[WORK](../../WORK.md#shared-collection-query-sessions--2026-10-21), with the matching
+[Q1 ownership rule](../NS-3_data-toolbar_02.md) specified before implementation.
 One optional session on the existing view owns baseline/independent predicates/
 shared sort. Typed fluent batches, revocable leases, copied observations and
 checked metadata transfer use the existing prepared-query participant. Root owns
@@ -441,7 +484,7 @@ header/renderer/Studio/Q1 implementation or browser execution is released by P2.
 All original criteria remain open; the next outcome is P3's actual useful table
 commands and shared form, not another model/compiler variant.
 
-P3 has a separate source release in [WORK](../WORK.md#table-query-workbench--2026-10-21):
+P3 has a separate source release in [WORK](../../WORK.md#table-query-workbench--2026-10-21):
 root owns saved typed policy/source parity and target mount/presenter integration;
 the existing helper owns the shared form/controller and ordinary live-input
 consumer. Existing sessions, query parsing, events, popovers and live input
@@ -458,7 +501,7 @@ P4's remaining work is ordered below. These are finish lines within the original
 criteria6–7, not new completion credit or permission to change source/run readers.
 
 P4A now has a separately reviewed source release in
-[WORK](../WORK.md#table-query-policy-authoring--2026-10-21). It implements ordinary
+[WORK](../../WORK.md#table-query-policy-authoring--2026-10-21). It implements ordinary
 policy forms, typed paired intent/admission and preservation only. Native actual
 Inspector/history checks and matching browser/product compilation must qualify
 that result before any local claim. P4B/C and all original acceptance stay open;
@@ -468,7 +511,7 @@ P4A's first native journey is still unqualified. The reviewed diagnostic compile
 and reaches144 actual1280 checks, including table/text-column Apply and paired
 Undo/Redo, before the fixed300s guard interrupts during later form work. It is
 not an overall pass or clean-teardown result. Queue126/native clean and browser
-compilation retain compatibility. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21)
+compilation retain compatibility. [WORK](../../WORK.md#table-query-policy-authoring--2026-10-21)
 owns the exact joined audit, retained failures and repeated18-24s refresh/47s Apply
 observations. The following existing-profile observation retains the same source;
 do not relax internal waits, remove checks or treat a smaller run as full P4A.
@@ -479,7 +522,7 @@ on the unchanged consumer at1280 with the same300s guard. Only opt-in build/tool
 plumbing and future process-receipt identity changed. That observation is now
 terminal:144/stage2 interrupted again, one compiler with zero warnings. Corrected
 metadata retains13 complete paints and one incomplete; repeated shell rendering
-dominates. [WORK](../WORK.md#table-query-policy-authoring--2026-10-21) retains the
+dominates. [WORK](../../WORK.md#table-query-policy-authoring--2026-10-21) retains the
 first parser error/addendum, nested timing limits and exact source boundaries.
 Stop further profile variants. Next review a whole-executable budget covering
 the complete unchanged11-stage journey using the existing explicit timeout option,
@@ -492,7 +535,7 @@ No run or speculative production repair is released by this note. Full P4A remai
 the original authored journey; core no-closure33 carries without credit/DONE.
 
 The complete P4A functional packet now has a separate tool-only release in
-[WORK](../WORK.md#table-query-policy-authoring--2026-10-21): existing explicit
+[WORK](../../WORK.md#table-query-policy-authoring--2026-10-21): existing explicit
 1800s PER WIDTH, all Pascal and original operation/poll/assertion bounds exact.
 Independent review/freeze precedes native1280/390 plus matching browser compile;
 no new reader or qualification is asserted by the release alone. First failure
@@ -504,7 +547,7 @@ fails the ORIGINAL Ready60s deadline during text-column Apply after the paired
 update. It exits1 itself before the1800s outer cap.390 and matching new-consumer
 browser compilation remain unattempted. Equal allocation/free totals have only
 a truncated heap footer, not a complete clean-heap receipt. Immutable audit
-24732435 and [WORK](../WORK.md#table-query-policy-authoring--2026-10-21) retain all
+24732435 and [WORK](../../WORK.md#table-query-policy-authoring--2026-10-21) retain all
 inputs/failures. Pending optimistic policy reconstruction invalidates the exact
 editor baseline before commit; keeping accepted presentation plus existing locks
 is a read-only repair candidate, not yet a sufficient timing diagnosis. No source
@@ -569,7 +612,7 @@ typing/IME/modal/history in unchanged source-input38/38. Current compatibility
 and both products compile; the20-compiler/11-clean-native composite explicitly
 reuses only dependency-unchanged semantic752/queue248 results. Browser compiles
 only; functional completion is not performance acceptance. See the
-[current evidence](../WORK.md#current-boundary-source-frame-repair-qualifies-locally-policy-reads-remain).
+[current evidence](../../WORK.md#current-boundary-source-frame-repair-qualifies-locally-policy-reads-remain).
 
 P4B remains open: existing bounded bindings/column reads still omit the declared/
 effective table/column query-control policies promised above. Predicate/sort
@@ -616,7 +659,7 @@ This is not overall controls or P4B qualification. All actual
 readers are joined/audited; the seven later browser/product compilers have not
 run. Retain failures and diagnose the pending owner before any repair or further
 reader. No browser/worker/MCP rollout or original criterion closes.
-[WORK](../WORK.md#event-policy-inspection-repair--2026-10-22) owns the current
+[WORK](../../WORK.md#event-policy-inspection-repair--2026-10-22) owns the current
 source/qualification boundary and return to P4C.
 
 The historical pre-P4A readiness review found a concrete prerequisite:
@@ -664,7 +707,7 @@ or selecting a fallback. Scheduler support is a distinct check and cannot supply
 event-policy admission for a declared stream with zero callbacks/routes.
 
 A separate previous-spec rebuild in the Kanban editor has the same preservation
-gap and is tracked in [usefulness05](NS-3_control-usefulness_05.md). It adds no
+gap and is tracked in [usefulness05](../NS-3_control-usefulness_05.md). It adds no
 hard dependency or implicit P4 source ownership; no new Kanban filter UI follows.
 The P3 browser artifacts and existing loopback host are prepared/verified. A
 specific user override for actual browser tests and same-regression reruns is
@@ -715,7 +758,7 @@ pending; that request is not authorization and no host/browser has been started.
 
 **Blockers**
 
-- [Control usefulness review](DONE/NS-3_control-usefulness_01.md) supplies the reviewed
+- [Control usefulness review](NS-3_control-usefulness_01.md) supplies the reviewed
   interaction gaps, default policy and concrete target/source boundary.
-- [Observable collections](DONE/NS-1_state-collections_01.md) supply the accepted
+- [Observable collections](NS-1_state-collections_01.md) supply the accepted
   store, typed schema and selection/query publication foundation.

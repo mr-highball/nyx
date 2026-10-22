@@ -217,6 +217,101 @@ begin
   end;
 end;
 
+{ BEGIN pending-main-draft build helper }
+{ Build admission must use editor state even when its saved buffer equals the
+  accepted source. Source compilation intentionally captures that pending frame. }
+procedure EqualMainDraftBuilds(const AAccepted: TNyxProjectPair);
+var
+  LAgent: TNyxAgentSession;
+  LPending: TNyxProjectPair;
+  LCapture: TNyxProjectPair;
+  LBefore: TNyxText;
+  LStamp: TNyxText;
+  LRevision: Integer;
+  LState: TNyxDataValue;
+  LRefused: Boolean;
+
+  function State: TNyxDataValue;
+  begin
+    Result := LAgent.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(0))])).Field('session');
+  end;
+
+  procedure Unchanged;
+  var
+    LAfter: TNyxDataValue;
+  begin
+    LAfter := State;
+    Check((LAgent.Revision = LRevision) and (LAgent.RecoveryStamp = LStamp) and
+      (EncodeNyxProject(LAgent.EditorSourcePair(LRevision)) = LBefore) and
+      (LAfter.Field('selection').AsText = LState.Field('selection').AsText) and
+      (LAfter.Field('view').AsText = LState.Field('view').AsText) and
+      (LAfter.Field('canUndo').AsBoolean = LState.Field('canUndo').AsBoolean) and
+      (LAfter.Field('canRedo').AsBoolean = LState.Field('canRedo').AsBoolean),
+      'equal-byte build refusal/source capture preserves complete frame and navigation/history');
+  end;
+begin
+  LAgent := TNyxAgentSession.Create(AAccepted);
+  try
+    Check(LAgent.CurrentPair(AAccepted), 'accepted build seed is initially current');
+    LPending := AAccepted;
+    LPending.Pending := True;
+    LPending.Draft := LPending.Source;
+    LPending.DraftBase := LPending.Source;
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LAgent.Revision)),
+      NyxField('project', NyxData(EncodeNyxProject(LPending))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    LRevision := LAgent.Revision;
+    LBefore := EncodeNyxProject(LAgent.EditorSourcePair(LRevision));
+    LState := State;
+    LStamp := LAgent.RecoveryStamp;
+    Check(LAgent.PendingDraft and (LBefore = EncodeNyxProject(LPending)) and
+      not LAgent.CurrentPair(AAccepted), 'explicit equal-byte pending frame makes the accepted build noncurrent');
+    LRefused := False;
+    try
+      LAgent.BuildPair(LRevision, bsApplication, '');
+    except
+      on E: Exception do
+      begin
+        LRefused := Pos('pending draft', E.Message) > 0;
+      end;
+    end;
+    Check(LRefused, 'otherwise-valid agent build refuses the explicit equal-byte draft');
+    Unchanged;
+    LRefused := False;
+    try
+      LAgent.EditorBuildPair(LRevision, bsApplication, '');
+    except
+      on E: Exception do
+      begin
+        LRefused := Pos('pending draft', E.Message) > 0;
+      end;
+    end;
+    Check(LRefused, 'otherwise-valid operator build also refuses the equal-byte draft');
+    Unchanged;
+    LCapture := LAgent.EditorSourcePair(LRevision);
+    Check(LCapture.Pending and (EncodeNyxProject(LCapture) = LBefore),
+      'private source compilation captures the exact complete pending frame');
+    Unchanged;
+    LAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('project', NyxData(EncodeNyxProject(AAccepted))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    LRevision := LAgent.Revision;
+    Check(not LAgent.PendingDraft and LAgent.CurrentPair(AAccepted),
+      'deliberate draft resolution restores exact accepted-pair currentness');
+    Check((EncodeNyxProject(LAgent.BuildPair(LRevision, bsApplication, '')) = EncodeNyxProject(AAccepted)) and
+      (EncodeNyxProject(LAgent.EditorBuildPair(LRevision, bsApplication, '')) = EncodeNyxProject(AAccepted)),
+      'both build authorities capture the same accepted pair after resolution');
+    Check(LCapture.Pending and (LCapture.Draft = AAccepted.Source) and
+      (LCapture.DraftBase = AAccepted.Source), 'retained source capture remains an independent pending value');
+  finally
+    LAgent.Free;
+  end;
+end;
+{ END pending-main-draft build helper }
+
 var
   LPair: TNyxProjectPair;
   LValue: TNyxDataValue;
@@ -394,6 +489,9 @@ begin
       end;
     end;
     Check(LRefused, 'A declared compiler artifact cannot exceed the download budget');
+    { BEGIN pending-main-draft build call }
+    EqualMainDraftBuilds(GPair);
+    { END pending-main-draft build call }
     LRequest := nil;
     LReport := nil;
     GSession.Free;

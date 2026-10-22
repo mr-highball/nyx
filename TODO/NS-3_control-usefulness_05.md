@@ -1,7 +1,7 @@
 # NS-3_control-usefulness_05 — Preserve query choices when reconfiguring Kanban lanes
 
 [North star NS-3](../MILESTONES.md#assessment) · [Task catalog](README.md) ·
-[Task flow](../TASKFLOW.MD) · [Table query authoring](NS-3_control-usefulness_02.md)
+[Task flow](../TASKFLOW.MD) · [Table query authoring](DONE/NS-3_control-usefulness_02.md)
 
 **Description:**
 

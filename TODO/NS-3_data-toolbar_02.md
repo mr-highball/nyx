@@ -53,7 +53,7 @@ downstream of the complete coordinator task, including05's actual-browser gate;
 this packet list does not bypass that dependency or authorize a host rollout.
 
 The shared ownership rule is now specified with
-[column filtering02](NS-3_control-usefulness_02.md): one view-owned baseline and
+[column filtering02](DONE/NS-3_control-usefulness_02.md): one view-owned baseline and
 independent owner/channel predicates, plus one visible shared user-sort vector.
 CurrentQuery is the baseline on first admission; later surfaces join it. Clear
 withdraws this toolbar's search and resets sorting only while it owns that vector.

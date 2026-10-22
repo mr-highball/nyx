@@ -21,7 +21,7 @@ portable column management and the remaining workbench affordances require
 explicit review and qualification.
 Inherited native grid copy behavior already exists; the gap is a documented,
 portable Nyx copy/range contract with the same stable identities on both targets.
-Coordinate the header surface with [filter/sort work](NS-3_control-usefulness_02.md);
+Coordinate the header surface with [filter/sort work](DONE/NS-3_control-usefulness_02.md);
 that packet owns query semantics, while this packet owns presentation/cell actions.
 Existing programmatic queries suffice for this packet's coexistence checks;
 accepting the new filter UI is not a hidden prerequisite for column management.
