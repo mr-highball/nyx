@@ -186,6 +186,15 @@ type
     FSourceInput: TNyxStudioSourceInput;
     { Keep presentation writes outside physical edit/history observation. }
     FSourceInputWriting: Boolean;
+    { Copied load/file/authored text identify the frame actually written into
+      the retained editor. Root/host are borrowed identity checks only. A parked
+      view or failed write cannot certify text for a different current source. }
+    FSourceInputAvailable: Boolean;
+    FSourceInputContext: TNyxStudioCommandContext;
+    FSourceInputFile: TNyxPascalSourceRef;
+    FSourceInputText: TNyxText;
+    FSourceInputRoot: TNyxNode;
+    FSourceInputHost: TJSHTMLElement;
     { Separate public Nyx popover, replaced only on a later browser turn. It
       borrows the retained source input as anchor and preserves its focus/caret. }
     FCompletionPopover: INyxBrowserPopover;
@@ -422,6 +431,10 @@ type
     procedure ProjectOpened;
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     function ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+    function MatchesSourceInputFrame: Boolean;
+    procedure PublishSourceInputFrame(const AContext: TNyxStudioCommandContext;
+      const AFile: TNyxPascalSourceRef; const AText: TNyxText;
+      ARoot: TNyxNode; AHost: TJSHTMLElement);
     procedure WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
     function ReadCompletionContext: INyxStudioCompletionContext;
     function ReadCompletionOwner: TNyxPascalSourceRef;
@@ -868,6 +881,7 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+  FSourceInputAvailable := False;
   { A retained preparation/source cannot enter a retiring Studio. Keep stores
     owned until all DOM and nested canvas consumers have disconnected. }
 
@@ -1624,6 +1638,9 @@ var
   LCodeHost: TJSHTMLElement;
   LSourceHost: TJSHTMLElement;
   LSourceDocument: TNyxDocument;
+  LSourceContext: TNyxStudioCommandContext;
+  LSourceFile: TNyxPascalSourceRef;
+  LSourceText: TNyxText;
   LCanvasFocusID: TNyxText;
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
@@ -1841,6 +1858,9 @@ begin
   LResourceCompatible := FResourceBrowser.Compatible(FSession);
   LResourcePrepared := FResourceBrowser.Prepare(FSession);
   LShellCandidate := CreateShell;
+  { Shell admission can detach the old source host. Revoke before its first
+    outward DOM change, including refusal paths which need later recovery. }
+  FSourceInputAvailable := False;
   try
 
     if not LResourceCompatible or
@@ -2013,21 +2033,26 @@ begin
       FSourceModal.Hide;
     end;
     LCodeHost := FSourcePaneRenderer.ElementFor('studio-code-host');
+    LSourceContext := FSession.CommandContext;
+    LSourceFile := FSession.ActiveSourceFile;
+    LSourceText := FSession.ActiveSourceText;
 
     if FCodeRenderer.Root = nil then
     begin
       FreeAndNil(FCodeDocument);
-      FCodeDocument := NewNyxStudioCodeDocument(FSession.ActiveSourceText);
+      FCodeDocument := NewNyxStudioCodeDocument(LSourceText);
       FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
     end
     else
     begin
       { Move the existing public view, including its listeners and text range.
         Sync changes value only when source admission/history changed the draft. }
-      FCodeRenderer.Root.Configure.Value(FSession.ActiveSourceText).Done;
+      FCodeRenderer.Root.Configure.Value(LSourceText).Done;
       FCodeRenderer.Sync;
       FCodeRenderer.MoveHost(LCodeHost);
     end;
+    PublishSourceInputFrame(LSourceContext, LSourceFile, LSourceText,
+      FCodeRenderer.Root, LCodeHost);
     FSourceInput.Bind;
     FCodeRenderer.BindTextHistory('studio-code', FSourceInput.Commands);
   end
@@ -3247,6 +3272,10 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LSourceContext: TNyxStudioCommandContext;
+  LSourceFile: TNyxPascalSourceRef;
+  LSourceRoot: TNyxNode;
+  LSourceHost: TJSHTMLElement;
   LSourceFilesEffect: TNyxStudioSourceFilesEffect;
   LOutlineEffect: TNyxStudioSourceOutlineEffect;
   LOutlineLocation: TNyxPascalRoutineLocation;
@@ -3931,7 +3960,16 @@ begin
     { The editor is a normal Nyx control. Retain its live DOM, cursor and scroll
       while typing; applying is one explicit atomic command, not a remount per
       keystroke. Pending drafts remain visible across shell/viewport changes. }
-    FSourceInput.Change(ANode, AEvent.Trigger);
+    LSourceContext := FSourceInputContext;
+    LSourceFile := FSourceInputFile;
+    LSourceRoot := FSourceInputRoot;
+    LSourceHost := FSourceInputHost;
+
+    if FSourceInput.Change(ANode, AEvent.Trigger) then
+    begin
+      PublishSourceInputFrame(LSourceContext, LSourceFile, FSession.ActiveSourceText,
+        LSourceRoot, LSourceHost);
+    end;
     LCompilerPanel := FShellRenderer.Root.Find(NyxStudioCompilerDiagnosticsID);
 
     if LCompilerPanel <> nil then
@@ -5427,12 +5465,41 @@ begin
   end;
 end;
 
+function TNyxStudio.MatchesSourceInputFrame: Boolean;
+begin
+  Result := (FSession <> nil) and (FCodeRenderer <> nil) and
+    (FSourceInputRoot <> nil) and (FCodeRenderer.Root = FSourceInputRoot) and
+    (FShell <> nil) and (FShell.Find('studio-source-mount') <> nil) and
+    (FSourcePaneRenderer <> nil) and (FSourcePaneRenderer.Root <> nil) and
+    (FSourcePaneRenderer.Root.Find('studio-code-host') <> nil) and
+    (FSourcePaneRenderer.ElementFor('studio-code-host') = FSourceInputHost) and
+    FSession.MatchesCommandContext(FSourceInputContext) and
+    FSession.ActiveSourceFile.SameFile(FSourceInputFile) and
+    (FSession.ActiveSourceText = FSourceInputText);
+end;
+
+procedure TNyxStudio.PublishSourceInputFrame(const AContext: TNyxStudioCommandContext;
+  const AFile: TNyxPascalSourceRef; const AText: TNyxText;
+  ARoot: TNyxNode; AHost: TJSHTMLElement);
+begin
+  { A physical write may call outward. Its pre-write source identity must still
+    match after the full text/selection succeeds, including unsaved drafts. }
+  FSourceInputAvailable := False;
+  FSourceInputContext := AContext;
+  FSourceInputFile := AFile;
+  FSourceInputText := AText;
+  FSourceInputRoot := ARoot;
+  FSourceInputHost := AHost;
+  FSourceInputAvailable := MatchesSourceInputFrame;
+end;
+
 function TNyxStudio.ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
 begin
   ASession := FSession;
   Result := Default(TNyxEditingSnapshot);
 
-  if FCodeVisible and not FCanvasExpanded and (FSourceTab = nstSource) and
+  if FSourceInputAvailable and MatchesSourceInputFrame and
+    FCodeVisible and not FCanvasExpanded and (FSourceTab = nstSource) and
     (FCodeRenderer <> nil) and (FCodeRenderer.Root <> nil) and
     not FSourceInputWriting and NyxInteractionPolicy(FCodeRenderer.Root).CanEditValue then
   begin
@@ -5540,7 +5607,17 @@ begin
 end;
 
 procedure TNyxStudio.WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
+var
+  LContext: TNyxStudioCommandContext;
+  LFile: TNyxPascalSourceRef;
+  LRoot: TNyxNode;
+  LHost: TJSHTMLElement;
 begin
+  LContext := FSourceInputContext;
+  LFile := FSourceInputFile;
+  LRoot := FSourceInputRoot;
+  LHost := FSourceInputHost;
+  FSourceInputAvailable := False;
   FSourceInputWriting := True;
   try
     FCodeRenderer.Root.Configure.Value(AFrame.Text).Done;
@@ -5550,6 +5627,7 @@ begin
     begin
       FCodeRenderer.SetTextSelection('studio-code', AFrame.Selection);
     end;
+    PublishSourceInputFrame(LContext, LFile, AFrame.AuthoredText, LRoot, LHost);
   finally
     FSourceInputWriting := False;
   end;

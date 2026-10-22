@@ -1,5 +1,71 @@
 # Working in Nyx
 
+SOURCE FRAME REPAIR NATIVE-LOCAL QUALIFIED (2026-10-22): this turn is progress.
+Unchanged BEC86A8E passes107 actual native callback checks, all five phases plus
+same-ID reload/stale Add and queued editor retirement. Its policy loop asserts
+actual client1100/390. Both hosts' private presented-frame guards are reviewed;
+native FBEDF305/browser9A0D2E5B stay exact from freezeD401B0C1. Existing unchanged
+64AD source-input consumer passes38/38 with the SAME executable at1100/390 host
+allocations (not asserted client widths), preserving typing/IME/history/modal
+behavior. These three Studio executions have complete clean heaps.
+
+Current-source compatibility passes native174/40/71/359/120/67 and both Studio
+product compilers; all matching browser entries compile only. Composite9741027D
+checks20 accepted compilers (16fresh +4 dependency-unchanged semantic/queue reuse),
+11 clean native executions (9fresh +2reused),0owned/63upstream RTL warnings.
+Native section67 is facade compatibility; only its browser variant imports the
+changed Studio adapter. The retained release's dependency label was too broad;
+do not count that extra native rerun as native host proof or new credit.
+All actual readers are root-joined/absent:67551/1fc523,15015/f599c0,61702/70b438.
+GateF816D4D1, compatibility9BDDCCDD and warm5BA18635 each verify1873 current pins,
+34retained copies and their actual artifacts. First failures/formatting draft
+remain retained. Native full650.434s includes teardown under explicit900; Ready30
+and warm Pump15000 stay exact. No latency/browser/original criterion is accepted.
+Core43->44; P4B/P4C, original credit and DONE remain open.
+
+Root owns outcome docs/checkpoint only; ALL Pascal/tools are paused. Next is
+the concrete P4B capability-read gap: existing nyx_collections bindings/column
+responses omit table/column query-control policy metadata. Existing helper has
+read-only schema/response/test design: optional strict queryControls flag on
+those existing modes, declared/resolved typed policies only for requested pages/
+column, projection support separate from valid saved declarations (including
+List lanes), unchanged false/omitted shapes and48KiB bound. No source/reader is
+released yet; independent scope/freeze follows checkpoint. No new tool identity,
+server/config/MCP/worker rollout, profile, cleanup/restart or extra agent. Return
+remains complete P4B agreement, then P4C's OWN Studio Save/Open/generated proof.
+
+SOURCE FRAME ADMISSION REPAIR RELEASE (2026-10-22): d23cea6 is progress,
+committed/pushed/remote-verified. All actual readers are joined; final V2 audit
+DF6DDAAF pins the three reviewed outcome docs and retains initial formatting
+draft/preimages. Core43 and every original/P4B/P4C/browser/performance gate stay
+open. Root/helper independently settle the narrow host-frame design below.
+
+Root owns ONLY private source-frame admission in studio/nyx.studio.lcl.pas and
+studio/nyx.studio.browser.pas, plus outcome/admission docs. Retain copied load
+CommandContext, active file and exact authored text actually presented, current
+code root/host and an availability flag. Invalidate before parking/hiding or
+outward Render/Sync; capture before writing that same text, then publish only
+after successful context/file/text/root/host recheck, before existing Bind.
+Read returns undefined for unavailable/stale frames. Advance the exact retained
+frame after successful ordinary Change and full WriteSourceInput using authored
+AFrame.AuthoredText, preserving physical newline projection/selection and IME.
+Native UpdateTitleAndSource follows the same discipline. In-paint fresh Bind
+must remain valid. No shared controller/projection/resolver/renderer/API repair.
+
+Existing helper independently reviews both source handoffs read-only; no test
+edit is released. Original consumerBEC86A8E, Ready30, gestures, reload interval,
+private qualifierD285D251 and all other Pascal stay exact. Root freshly freezes
+34owned/1807Pascal/foreign13/extra19 only after independent review, then admits
+ONE controls-native compiler/run with the same explicit900 allocation. Stop at
+first failure/root join/exact audit. Full success admits the prior remaining12,
+plus current-source Studio-section native/browser compatibility and the existing
+unchanged native source-input consumer at both widths (one compiler). No new
+fixture, wait or timeout follows. Reuse only dependency-unchanged semantic752/
+queue248 native+browser; old full-Studio section67 must be requalified because
+these hosts changed. All source/docs/tools pause through actual joins/audits.
+Browser compiles only. No host/config/MCP/worker rollout, profile, cleanup/restart
+or extra agent; return remains complete P4B then OWN P4C saved/generated proof.
+
 COMPACT EVENT JOURNEY: SOURCE FRAME FAILURE (2026-10-22): prior goal turn is
 progress. One compiler passes with zero warnings. All FIVE original phases now
 pass, including restricted creator policies/atomic Add/locks/TODO/history at

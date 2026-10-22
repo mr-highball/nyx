@@ -4,6 +4,89 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: source frame repair qualifies locally; policy reads remain
+
+This turn is PROGRESS. Private host-only source admission now rejects parked or
+stale load/file/authored frames while preserving fresh in-paint Bind. Exact
+captured facts publish only after successful physical text/selection/host writes;
+typing, history and completion advance authored identity separately from physical
+line endings. Shared controller/projection/resolver/renderer contracts stay exact.
+NativeFBEDF305/browser9A0D2E5B remain unchanged from reviewed freezeD401B0C1.
+
+| Evidence | Actual result and boundary |
+| --- | --- |
+| Unchanged full event consumerBEC86A8E | PASS107, all five phases and same-ID reload/stale mounted Add/editor disposal. Policy loop asserts client1100/390. Complete clean heap210309835 blocks/39033758365 cumulative bytes. |
+| Unchanged ordinary source-input64AD | SAME executable PASS38/38 at1100/390 host allocations; client widths are not asserted. Typing, readonly, handle recreation, modal movement, Undo/Redo, composition and external draft refusal pass. Both complete clean heaps; original Pump15000 unchanged. |
+| Current-source compatibility | Native projection174, staged sections40, callback intent71, source359, editing120 and Studio-section facade67 pass with complete clean heaps. Both Studio products and matching browser assertions compile. |
+| Explicit unchanged reuse | Semantic752 and queue248 native plus their browser compilers exclude both changed host units and the unrelated full-controls program from their dependencies. Their original receipts remain the evidence. Section67 has a fresh native facade baseline; its browser variant imports the changed Studio adapter. |
+
+All actual current readers are root-joined/absent:67551/1fc523,15015/f599c0 and
+61702/70b438. Independent source/outcome reviews pass. GateF816D4D1, compatibility
+9BDDCCDD and warm5BA18635 rehash all1873 pin occurrences/34 retained copies and
+9/86/14 artifact references respectively. Composite9741027D retains20 accepted
+compiler receipts:16new+4reused;11 clean native executions:9new+2reused. All have
+zero owned warnings;63 upstream pas2js RTL warning occurrences are retained.
+Browser evidence is compile-only. Full native650.434s is launch-to-exit including
+teardown under the same explicit900 allocation; Ready30 is unchanged. Functional
+success is not a measured responsiveness improvement or performance acceptance.
+Earlier failure receipts, additive test navigation and formatting-draft history
+remain intact. Core43->44, with no original/P4B/P4C/browser/credit/DONE closure.
+
+Outcome review corrects one admission-label mistake: root treated both section67
+variants as host-dependent. Its native program exercises the public composition/
+section facade, while its browser variant imports Studio. Retain the additional
+native baseline, but do not label it native host repair proof or repeat it on
+that mistaken dependency basis. Native host proof is107 plus ordinary38/38.
+
+The next actual P4B gap is bounded collection-binding capability reads. Existing
+bindings/column responses expose columns and typeahead but omit declared/effective
+table/column query-control policies. Existing query modes describe predicates and
+sorts, not these capability choices. Semantic event discovery does not prove that
+missing read. The existing task02 owns this follow-up; no new task/tool is needed.
+Root/helper settle read-only design: optional strict Boolean queryControls on
+bindings/column only; omitted/false preserves prior response. Existing typed
+ToData exposes declared/resolved policy for only requested binding contexts and
+column page/exact field. Projection support remains separate from valid stored
+policies, including non-table List lanes. Preserve local/effective/restorable
+provenance, null/default versus empty operator sets, revision rules, existing
+four typed set/default intents and48KiB refusal. Reuse the existing collection
+response/schema/tool description and additive existing agent collection tests.
+All Pascal/tools remain paused; root owns these outcome docs/checkpoint only.
+Separate source review/freeze follows checkpoint. No server/config/MCP/worker
+rollout, profile, cleanup/restart or extra agent; P4C's own ordinary Save/Open and
+strictly admitted emitted application remain downstream with actual browser input.
+
+### Retained source release: admit only the presented source frame
+
+Checkpointd23cea6 is pushed/remote-verified. Final V2 auditDF6DDAAF includes exact
+outcome-doc hashes; the malformed first formatting draft and audit95B067C3 remain
+retained, with no product/reader effect. All readers are joined and core43 stays
+open. Root/helper settle private host-only frame guards as the narrow repair.
+
+Root owns both host adapters only: copied load context/file/exact authored text,
+code root/host and availability identify the actually presented frame. Invalidate
+before outward writes or parking; capture source facts before the write and
+publish only after successful exact recheck, before legitimate in-paint Bind.
+Read must return undefined for parked, retired or stale frames. Successful typing
+and complete history/completion/presentation writes advance the same frame,
+using AFrame.AuthoredText independently of native/browser physical line endings.
+UpdateTitleAndSource follows this rule too. Exceptions leave admission revoked.
+No controller, projection oracle, resolver, renderer, public API or test changes.
+Existing helper owns independent source review read-only. The full original
+consumerBEC86A8E and all original deadlines/gestures remain exact.
+
+After independent review, freeze the same34owned/1807Pascal/13foreign/19extra.
+Initial one controls-native compiler/run uses existing qualifierD285D251 and
+explicit900. First failure stops before any further reader. Only full PASS,
+complete clean heap and actual joined exact audit admit the previous remaining12
+and current-source Studio-section native/browser plus the unchanged ordinary
+native source-input consumer (one compiler,1100/390 executions). Its original
+Pump15000 remains unchanged. This source change invalidates old full-Studio
+section67 reuse; semantic752/queue248 dependency-unchanged results remain reused
+explicitly. All Pascal/docs/tools pause during readers. No original/performance/
+browser criterion or credit closes in advance. No server/config/MCP/worker
+rollout, profile, cleanup/restart or extra agent. Return remains P4B then P4C.
+
 ### Current boundary: five event phases pass; queued source admission fails
 
 Previous goal turn is PROGRESS. The two additive real Inspector gestures preserve

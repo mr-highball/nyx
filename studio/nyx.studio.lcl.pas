@@ -226,6 +226,16 @@ type
     FSourceInput: TNyxStudioSourceInput;
     { Programmatic frame restoration must not be observed as physical typing. }
     FSourceInputWriting: Boolean;
+    { A retained memo is not necessarily the current source presentation. These
+      copied source facts and borrowed identities certify only the successfully
+      written frame; parking or a failed write revokes admission first. Neither
+      identity owns a control, and old identities are only compared, not read. }
+    FSourceInputAvailable: Boolean;
+    FSourceInputContext: TNyxStudioCommandContext;
+    FSourceInputFile: TNyxPascalSourceRef;
+    FSourceInputText: TNyxText;
+    FSourceInputRoot: TNyxNode;
+    FSourceInputHost: TWinControl;
     { Independent public Nyx popover. Rebuild only after callback return; the
       source memo and its text timeline remain mounted and keep keyboard focus. }
     FCompletionPopover: INyxLCLPopover;
@@ -316,6 +326,10 @@ type
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     function ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
+    function MatchesSourceInputFrame: Boolean;
+    procedure PublishSourceInputFrame(const AContext: TNyxStudioCommandContext;
+      const AFile: TNyxPascalSourceRef; const AText: TNyxText;
+      ARoot: TNyxNode; AHost: TWinControl);
     procedure WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
     function ReadCompletionContext: INyxStudioCompletionContext;
     function ReadCompletionOwner: TNyxPascalSourceRef;
@@ -1039,6 +1053,7 @@ destructor TNyxNativeStudio.Destroy;
 var
   LIndex: Integer;
 begin
+  FSourceInputAvailable := False;
   { Revocation is local and cannot enter application cleanup while any Studio
     receiver is being destroyed. Actual store cleanup follows canvas teardown. }
 
@@ -2825,6 +2840,9 @@ var
   LCodeHost: TWinControl;
   LSourceHost: TWinControl;
   LSourceDocument: TNyxDocument;
+  LSourceContext: TNyxStudioCommandContext;
+  LSourceFile: TNyxPascalSourceRef;
+  LSourceText: TNyxText;
   LOldCanvasHost: TWinControl;
   LOldSourceHost: TWinControl;
   LCanvasInputs: TNyxContentFaceStates;
@@ -3085,6 +3103,9 @@ begin
     LResourceCompatible := FResourceBrowser.Compatible(FSession);
     LResourcePrepared := FResourceBrowser.Prepare(FSession);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-compose');{$endif}
+    { Shell replacement can park the independently retained source pane before
+      its own reconciliation. Revoke readers before that first outward change. }
+    FSourceInputAvailable := False;
     try
 
       if not LResourceCompatible or
@@ -3357,21 +3378,26 @@ begin
 
     if LCodeHost <> nil then
     begin
+      LSourceContext := FSession.CommandContext;
+      LSourceFile := FSession.ActiveSourceFile;
+      LSourceText := FSession.ActiveSourceText;
 
       if FCodeView.Root = nil then
       begin
         FreeAndNil(FCodeDocument);
-        FCodeDocument := NewNyxStudioCodeDocument(FSession.ActiveSourceText);
+        FCodeDocument := NewNyxStudioCodeDocument(LSourceText);
         FCodeDocument.Pages[0].Configure.HeightSizing(nsFill).Done;
         FCodeView.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
       end
       else
       begin
-        FCodeView.Root.Configure.Value(FSession.ActiveSourceText)
+        FCodeView.Root.Configure.Value(LSourceText)
           .Clear(atHeight).HeightSizing(nsFill).Done;
         FCodeView.Sync;
         FCodeView.MoveHost(LCodeHost);
       end;
+      PublishSourceInputFrame(LSourceContext, LSourceFile, LSourceText,
+        FCodeView.Root, LCodeHost);
 
       if FSourceInput <> nil then
       begin
@@ -3822,17 +3848,29 @@ begin
 end;
 
 procedure TNyxNativeStudio.SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+var
+  LContext: TNyxStudioCommandContext;
+  LFile: TNyxPascalSourceRef;
+  LRoot: TNyxNode;
+  LHost: TWinControl;
 begin
 
   if FPainting or FChangingProject then
   begin
     Exit;
   end;
+  LContext := FSourceInputContext;
+  LFile := FSourceInputFile;
+  LRoot := FSourceInputRoot;
+  LHost := FSourceInputHost;
   try
 
     if ((FSourceInput <> nil) and FSourceInput.Change(ANode, AEvent.Trigger)) or
       ((FSourceInput = nil) and RouteNyxStudioSource(FSession, ANode, AEvent.Trigger)) then
     begin
+      { Change admitted this exact physical edit before advancing the draft.
+        Recheck its retained owner before any bridge/queued completion follows. }
+      PublishSourceInputFrame(LContext, LFile, FSession.ActiveSourceText, LRoot, LHost);
       FState.Status := 'Pascal draft / apply when ready';
       { The session owns text immediately. The bridge's project-owned timer
         captures once for a typing burst; transport never borrows this memo. }
@@ -3851,12 +3889,41 @@ begin
   end;
 end;
 
+function TNyxNativeStudio.MatchesSourceInputFrame: Boolean;
+begin
+  Result := (FSession <> nil) and (FCodeView <> nil) and
+    (FSourceInputRoot <> nil) and (FCodeView.Root = FSourceInputRoot) and
+    (FShell <> nil) and (FShell.Find('studio-source-mount') <> nil) and
+    (FSourcePaneView <> nil) and (FSourcePaneView.Root <> nil) and
+    (FSourcePaneView.Root.Find('studio-code-host') <> nil) and
+    (FSourcePaneView.ControlFor('studio-code-host') = FSourceInputHost) and
+    FSession.MatchesCommandContext(FSourceInputContext) and
+    FSession.ActiveSourceFile.SameFile(FSourceInputFile) and
+    (FSession.ActiveSourceText = FSourceInputText);
+end;
+
+procedure TNyxNativeStudio.PublishSourceInputFrame(const AContext: TNyxStudioCommandContext;
+  const AFile: TNyxPascalSourceRef; const AText: TNyxText;
+  ARoot: TNyxNode; AHost: TWinControl);
+begin
+  { Call only after the complete physical write succeeds. Validate the facts
+    captured before that write, rather than blessing a newly current session. }
+  FSourceInputAvailable := False;
+  FSourceInputContext := AContext;
+  FSourceInputFile := AFile;
+  FSourceInputText := AText;
+  FSourceInputRoot := ARoot;
+  FSourceInputHost := AHost;
+  FSourceInputAvailable := MatchesSourceInputFrame;
+end;
+
 function TNyxNativeStudio.ReadSourceInput(out ASession: TNyxStudioSession): TNyxEditingSnapshot;
 begin
   ASession := FSession;
   Result := Default(TNyxEditingSnapshot);
 
-  if FState.CodeVisible and not FState.CanvasExpanded and (FState.SourceTab = nstSource) and
+  if FSourceInputAvailable and MatchesSourceInputFrame and
+    FState.CodeVisible and not FState.CanvasExpanded and (FState.SourceTab = nstSource) and
     (FCodeView <> nil) and (FCodeView.Root <> nil) and
     not FSourceInputWriting and NyxInteractionPolicy(FCodeView.Root).CanEditValue then
   begin
@@ -3968,12 +4035,21 @@ end;
 procedure TNyxNativeStudio.WriteSourceInput(const AFrame: TNyxTextEditorFrame; AChanged: Boolean);
 var
   LPainting: Boolean;
+  LContext: TNyxStudioCommandContext;
+  LFile: TNyxPascalSourceRef;
+  LRoot: TNyxNode;
+  LHost: TWinControl;
 begin
+  LContext := FSourceInputContext;
+  LFile := FSourceInputFile;
+  LRoot := FSourceInputRoot;
+  LHost := FSourceInputHost;
+  FSourceInputAvailable := False;
   LPainting := FPainting;
   FPainting := True;
   FSourceInputWriting := True;
   try
-    FCodeView.Root.Configure.Value(FSession.ActiveSourceText).Done;
+    FCodeView.Root.Configure.Value(AFrame.AuthoredText).Done;
     FCodeView.Sync;
     RestoreNyxLCLInputText(TWinControl(FCodeView.InputFor('studio-code')), AFrame.Text);
 
@@ -3981,6 +4057,7 @@ begin
     begin
       FCodeView.SetTextSelection('studio-code', AFrame.Selection);
     end;
+    PublishSourceInputFrame(LContext, LFile, AFrame.AuthoredText, LRoot, LHost);
   finally
     FSourceInputWriting := False;
     FPainting := LPainting;
@@ -3999,14 +4076,27 @@ begin
 end;
 
 procedure TNyxNativeStudio.UpdateTitleAndSource;
+var
+  LContext: TNyxStudioCommandContext;
+  LFile: TNyxPascalSourceRef;
+  LText: TNyxText;
+  LRoot: TNyxNode;
+  LHost: TWinControl;
 begin
   FPainting := True;
   try
 
     if FCodeView.Root <> nil then
     begin
-      FCodeView.Root.Configure.Value(FSession.ActiveSourceText).Done;
+      LContext := FSession.CommandContext;
+      LFile := FSession.ActiveSourceFile;
+      LText := FSession.ActiveSourceText;
+      LRoot := FCodeView.Root;
+      LHost := FSourceInputHost;
+      FSourceInputAvailable := False;
+      FCodeView.Root.Configure.Value(LText).Done;
       FCodeView.Sync;
+      PublishSourceInputFrame(LContext, LFile, LText, LRoot, LHost);
 
       if FSourceInput <> nil then
       begin

@@ -217,7 +217,27 @@ proof. Public runner final-heap integration retains its existing delivery owner.
 | P4B — Discover and operate semantically | Shared event/help discovery exposes exact Before/Changed query names and copied Details, bounded binding reads expose requested declared/effective policies, existing revision-aware changes accept strict v7 and the same typed intents | Before is sequential/cancellable, Changed follows normal policy; Inspector and semantic policy choices must agree with admission. No new server or runtime rollout is implied |
 | P4C — Prove the authored workbench | Actual Studio two-instance configuration, paired Undo/Redo, real Save/Open and that journey's OWN strictly admitted emitted Pascal, independently compiled/executed at both widths; actual browser input under an applicable host override | Preserve definition/sibling/source/default isolation, callbacks, query/paging/hidden selection/draft/lifetime behavior. P3 authored8441/A861 exports cannot substitute for this new saved/generated pair |
 
-P4B integration is now source in qualification: one typed allowed-policy set
+**Current P4B boundary — 2026-10-22:** the unchanged full native event journey
+now passes107 checks through both actual client widths, same-ID reload/stale Add
+and queued editor disposal. Private source-frame admission preserves ordinary
+typing/IME/modal/history in unchanged source-input38/38. Current compatibility
+and both products compile; the20-compiler/11-clean-native composite explicitly
+reuses only dependency-unchanged semantic752/queue248 results. Browser compiles
+only; functional completion is not performance acceptance. See the
+[current evidence](../WORK.md#current-boundary-source-frame-repair-qualifies-locally-policy-reads-remain).
+
+P4B remains open: existing bounded bindings/column reads still omit the declared/
+effective table/column query-control policies promised above. Predicate/sort
+query reads and event-policy discovery do not supply that capability context.
+Next is a separately reviewed addition to those existing modes/schema/tests:
+optional strict Boolean queryControls, unchanged omitted/false response, typed
+declared/resolved policy for requested contexts/columns only, separate projection
+support, existing reusable provenance/revision rules and48KiB bound. Inspect valid
+saved policies even on non-table projections; support=false must not erase intent.
+No new tool/server rollout or original closure follows. P4C still requires its
+OWN ordinary Studio Save/Open/emitted application and actual browser journey.
+
+**Retained earlier P4B boundary:** one typed allowed-policy set
 feeds native query discovery, effective empty-stream admission, Inspector and
 bounded agent reads. Source generation/reading retain typed query-event
 factories/imports. Exact policy/addition groups use existing candidates, receipt

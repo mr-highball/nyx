@@ -2,6 +2,20 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The presented-source guard now qualifies locally: unchanged full native Studio
+PASS107 includes reload/stale-command/disposal; unchanged source-input PASS38/38
+preserves typing/IME/history/modal behavior at both host allocations. Current
+compatibility174/40/71/359/120/67 and both product builds pass; composite20 compilers
+explicitly includes four dependency-unchanged semantic/queue results. Eleven
+native executions have complete clean heaps; zero owned/63 upstream RTL warnings
+are retained. All actual readers joined/exact-audited; browser compiles only.
+Full native650.434s includes teardown under explicit900 and original Ready30;
+warm Pump15000 remains exact. This is functional progress, not latency/scale or
+original acceptance. P4B bounded policy reads and P4C stay open. See
+[the current result](../WORK.md#current-boundary-source-frame-repair-qualifies-locally-policy-reads-remain).
+
+Retained earlier boundary:
+
 The compact navigation correction now passes all FIVE original event phases,
 including policy/atomic Add/locks/TODO/history at both widths. The full journey
 then fails in queued source Bind after reload: retained physical text differs
