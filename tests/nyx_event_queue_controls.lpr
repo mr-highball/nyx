@@ -264,6 +264,204 @@ begin
   raise ENyxModel.Create('Named event metadata is absent');
 end;
 
+{ BEGIN MISSING_POLICY_OBSERVATION }
+procedure ObserveMissingPolicy(const AKey, AName: TNyxText; ALoop: Integer);
+const
+  CMaxNodes = 4096;
+  CMaxDepth = 64;
+  CMaxEntries = 8; { Eight semantic matches plus eight named policy candidates. }
+  CMaxSectionText = 3072;
+  CMaxOutput = 8192;
+  CMaxScalars = 32;
+var
+  LRoot: TNyxNode;
+  LOwner, LView, LRootID, LMatches, LCandidates, LText, LFooter: TNyxText;
+  LLoop, LWidth, LChecks, LVisited, LMatchCount, LCandidateCount: Integer;
+  LMatchEntries, LCandidateEntries: Integer;
+  LFilter, LCard, LPolicy, LIncomplete, LTruncated: Boolean;
+
+  function Safe(const AValue: TNyxText): TNyxText;
+  var
+    LIndex, LScalar, LCount: Integer;
+  begin
+    Result := '"';
+    LIndex := 1;
+    LCount := 0;
+    while (LIndex <= Length(AValue)) and (LCount < CMaxScalars) do
+    begin
+
+      if not NyxNextScalar(AValue, LIndex, LScalar) then
+      begin
+        Exit(Result + '<invalid-text>"');
+      end;
+      Inc(LCount);
+
+      if (LScalar >= 32) and (LScalar <= 126) and
+        (LScalar <> 34) and (LScalar <> 92) then
+      begin
+        Result := Result + NyxScalarText(LScalar);
+      end
+      else
+      begin
+        Result := Result + '\u{' + IntToHex(LScalar, 6) + '}';
+      end;
+    end;
+
+    if LIndex <= Length(AValue) then
+    begin
+      Result := Result + '<scalar-truncated>';
+    end;
+    Result := Result + '"';
+  end;
+
+  procedure AppendEntry(var AText: TNyxText; var AEntries: Integer;
+    const AEntry: TNyxText);
+  begin
+
+    if (AEntries >= CMaxEntries) or
+      (Length(AText) + Length(AEntry) > CMaxSectionText) then
+    begin
+      LTruncated := True;
+      Exit;
+    end;
+    AText := AText + AEntry;
+    Inc(AEntries);
+  end;
+
+  procedure Visit(ANode: TNyxNode; ADepth: Integer);
+  var
+    LIndex: Integer;
+    LCommand, LEventOwner, LTrigger, LName, LEntry: TNyxText;
+    LMatch, LCandidate: Boolean;
+  begin
+
+    if (LVisited >= CMaxNodes) or (ADepth > CMaxDepth) then
+    begin
+      LIncomplete := True;
+      Exit;
+    end;
+    Inc(LVisited);
+    LFilter := LFilter or (ANode.ID = NyxStudioEventFilterID);
+    LCard := LCard or (ANode.ID = AKey);
+    LPolicy := LPolicy or (ANode.ID = AKey + '-policy');
+    LCommand := ANode.Prop(NyxStudioEventCommandKey);
+    LEventOwner := ANode.Prop(NyxStudioEventOwnerKey);
+    LTrigger := ANode.Prop(NyxStudioEventTriggerKey);
+    LName := ANode.Prop(NyxStudioEventNameKey);
+    LMatch := (LCommand <> '') and (LEventOwner = LOwner) and
+      (LTrigger = NyxTriggerName(ntNamed)) and (LName = AName);
+    { Select kind plus exported event identity keys identifies policy candidates
+      without importing the Inspector's private command enum or ordinal. }
+    LCandidate := (ANode.Kind = NyxKindName(nkSelect)) and (LCommand <> '') and
+      (LTrigger = NyxTriggerName(ntNamed));
+
+    if LMatch or LCandidate then
+    begin
+      LEntry := ' [id=' + Safe(ANode.ID) + ';source=' + Safe(ANode.SourceID) +
+        ';command=' + Safe(LCommand) + ';owner=' + Safe(LEventOwner) +
+        ';trigger=' + Safe(LTrigger) + ';name=' + Safe(LName) + ']';
+
+      if LMatch then
+      begin
+        Inc(LMatchCount);
+        AppendEntry(LMatches, LMatchEntries, LEntry);
+      end;
+
+      if LCandidate then
+      begin
+        Inc(LCandidateCount);
+        AppendEntry(LCandidates, LCandidateEntries, LEntry);
+      end;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+
+      if (LVisited >= CMaxNodes) or (ADepth >= CMaxDepth) then
+      begin
+        LIncomplete := True;
+        Break;
+      end;
+      Visit(ANode.Children[LIndex], ADepth + 1);
+    end;
+  end;
+
+  function Presence(ASeen: Boolean): TNyxText;
+  begin
+    Result := 'present';
+
+    if not ASeen then
+    begin
+      Result := 'absent';
+
+      if LIncomplete then
+      begin
+        Result := 'not-seen-incomplete';
+      end;
+    end;
+  end;
+begin
+  { Failure-only, synchronous copied evidence. No node survives the scan; it
+    never realizes metadata, reads widgets, services work or repairs the model.
+    Both sections have independent entry/text caps, and all text is scalar-safe
+    ASCII-escaped. Counts mean observed nodes; incomplete is never full absence. }
+  try
+    LOwner := GStudio.Session.SelectedID;
+    LView := GStudio.Session.ActiveViewID;
+    LLoop := ALoop;
+    LWidth := GForm.ClientWidth;
+    LChecks := GChecks;
+    LRoot := nil;
+    LRootID := '';
+    LMatches := '';
+    LCandidates := '';
+    LVisited := 0;
+    LMatchCount := 0;
+    LCandidateCount := 0;
+    LMatchEntries := 0;
+    LCandidateEntries := 0;
+    LFilter := False;
+    LCard := False;
+    LPolicy := False;
+    LIncomplete := False;
+    LTruncated := False;
+
+    if GStudio.ShellView.Root <> nil then
+    begin
+      LRoot := GStudio.ShellView.RootFor('studio-right');
+    end;
+
+    if LRoot <> nil then
+    begin
+      LRootID := LRoot.ID;
+      Visit(LRoot, 0);
+    end;
+    LText := 'MISSING_POLICY owner=' + Safe(LOwner) + ' / view=' + Safe(LView) +
+      ' / loop=' + IntToStr(LLoop) + ' / width=' + IntToStr(LWidth) +
+      ' / checks=' + IntToStr(LChecks) + ' / expected-card=' + Safe(AKey) +
+      ' / event-name=' + Safe(AName) +
+      ' / inspector=' + BoolToStr(LRoot <> nil, True) + ' / root=' + Safe(LRootID) +
+      ' / filter=' + Presence(LFilter) + ' / card=' + Presence(LCard) +
+      ' / policy=' + Presence(LPolicy) + ' / semantic-matches=' + IntToStr(LMatchCount) +
+      LMatches + ' / named-policy-candidates=' + IntToStr(LCandidateCount) + LCandidates;
+    LRoot := nil;
+
+    if Length(LText) > CMaxOutput - 256 then
+    begin
+      LText := Copy(LText, 1, CMaxOutput - 256);
+      LTruncated := True;
+    end;
+    LFooter := ' / visited=' + IntToStr(LVisited) +
+      ' / incomplete=' + BoolToStr(LIncomplete, True) +
+      ' / output-truncated=' + BoolToStr(LTruncated, True);
+    WriteLn(LText + LFooter);
+    Flush(Output);
+  except
+    { The unchanged original lookup/assertion remains the failure authority when
+      copying or writing this supplementary diagnostic itself refuses. }
+  end;
+end;
+{ END MISSING_POLICY_OBSERVATION }
+
 function CodeShowing: Boolean;
 var
   LCode: TControl;
@@ -637,6 +835,14 @@ begin
         'Atomic callback phase runs at its requested actual client width');
       Select('reply-memo');
       LKey := EventKey(ntNamed, LName);
+      { BEGIN MISSING_POLICY_OBSERVATION_CALL }
+
+      if (GStudio.ShellView.Root = nil) or
+        (GStudio.ShellView.Root.Find(LKey + '-policy') = nil) then
+      begin
+        ObserveMissingPolicy(LKey, LName.Name, LWidthIndex);
+      end;
+      { END MISSING_POLICY_OBSERVATION_CALL }
       Check((TComboBox(GStudio.ShellView.InputFor(LKey + '-policy')).Items.Count = 1) and
         (TComboBox(GStudio.ShellView.InputFor(LKey + '-policy')).Text = NyxPolicyName(neUIQueue)),
         'Actual creator event exposes only its allowed initial policy');

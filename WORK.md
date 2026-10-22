@@ -4,6 +4,93 @@
 
 ## Event policy inspection repair — 2026-10-22
 
+### Current boundary: compact test needs to return to Inspector
+
+This turn is PROGRESS. The bounded diagnostic changes the next action from a
+speculative creator/schema repair to a missing ordinary navigation prerequisite
+in the native consumer. No production Pascal changed in this turn. Core41->42
+records the completed native batch; no full original criterion, P4B/P4C, browser,
+performance, credit or DONE closes.
+
+One compiler passes with zero warnings. The original journey plus206 additive
+diagnostic lines passes its four original named phases, then exits1 itself at
+the same missing policy lookup. It is NOT a timeout. Complete final heap totals
+are190681492 blocks/34687165831 cumulative bytes allocated=freed,0unfreed/full
+footer. Root joins actual session66216 atf5efdb; compiler47768 and native18112
+are absent. Immutable audit5D09F275 verifies freeze56B5205C, all1873 current pin
+occurrences,34 retained owned copies and nine receipt artifacts. Root/helper
+independent outcome review passes; all source remains exact from that freeze.
+
+The complete, untruncated failure-only record is: selectedreply-memo, viewhome,
+loop1, actual width390, check88, expected event-named-43/deferred-review, but
+Inspector root absent and0visited. This is not a partial card or a different
+event index inside a mounted Inspector. Reaching the second iteration proves
+the preceding wide policy restriction, atomic Add/locks, fresh TODO focus and
+paired Undo/Redo predicates completed; it does not qualify the compact group
+or the full phase. The retained earlier receipt's loop width stays unknown.
+
+Root/helper source review finds the corresponding intended UI flow. Exact-owner
+seaAdd completion sets CodeVisible and PanelDesign in native SourceCommandChanged.
+Wide layouts keep Inspector mounted. Compact composition deliberately removes
+inactive Inspector roots; changing Session.Select alone does not switch panels.
+The fixture changes to390 and selects the Memo without the ordinary Inspector
+panel gesture. The source transition explains the missing test precondition;
+the diagnostic does not directly observe the private Panel enum. Registered-only
+filters are cleared earlier, and clone/extraction/realization/retained refresh
+preserve hidden card children in this actual primitive path. No creator/schema/
+renderer repair is warranted by this evidence.
+
+Next is read-only review of the two places that need real compact Inspector
+navigation: before the compact atomic lookup and before the later stale-mounted
+control/reload journey after another TODO focus. Additive existing Click(False)
+may share the original following Select/Ready; retain every original assertion,
+gesture and Ready30 deadline. No source repair is released yet. Whole-program
+allocation also needs review: the failed run's launch-to-exit took578.563s,
+including startup/finally/heap teardown, against outer600. Arithmetic difference
+21.437s is not a measured remainder at the lookup; no failure-point timestamp
+was retained. Compact Add/history and final reload/retirement remain unqualified;
+no arbitrary timeout relief or responsiveness claim follows.
+
+Root owns outcome docs/checkpoint only; all Pascal/private tools stay paused.
+Consumer6FBAAF12 strips exactly to original545FB593; every other source/tool and
+foreign pin stays exact. Existing helper reviews those navigation/workload seams
+read-only. Remaining12 compatibility/product compilers are unattempted; earlier
+focused/browser evidence is reused explicitly, not rerun. No profile/host/config/
+MCP/worker rollout, cleanup/restart or extra agent. Return remains complete P4B
+event/source/semantic agreement, then P4C's OWN saved/generated workbench proof.
+
+### Retained source release: observe missing creator policy ownership
+
+The admission below is retained pre-run history; the current result above owns
+the completed reader, diagnostic and remaining source boundary.
+
+Previous turn is PROGRESS:b0afde9 is pushed/remote-verified. Current-source
+revalidation checks1873 pins against freezeCED17A95 and its final three-doc
+audit378B597D; all seven actual compiler/native reader identities remain absent.
+Core41 and all original/full-journey/P4B/P4C/browser/performance gates remain open.
+
+Root/helper source review does not establish the missing policy's cause. Release
+only an additive observation in the existing controls consumer to the existing
+helper. Immediately after EventKey(ntNamed,LName), before the original unchanged
+policy Check/InputFor, emit evidence only if the expected model node is absent.
+Copy selected owner/view, loop/actual width/check count and expected Inspector/
+filter/card/policy presence. Bounded synchronous model traversal reports exact
+owner/trigger/name matches regardless index plus named policy candidates, with
+IDs/SourceIDs and explicit scan/output/scalar truncation. Do not reuse a private
+command ordinal, walk physical widgets, recompute schema metadata, publish edits,
+refresh/Sync/Pump, retry or change any original predicate, gesture or wait.
+No source/body/draft/pointer dump or new fixture/API/profiler is in scope.
+
+Retain original545FB593 and prove byte-exact recovery by removing only the
+marked helper/call. Root independently reviews, fresh-freezes34owned/1807Pascal/
+foreign13/extra19 and admits ONE controls-native compiler/run with the unchanged
+Ready30/outer600 and complete native heap gate. No other Pascal or tool changes;
+root owns docs/admission, helper owns only this consumer. All source/docs/tools
+pause through the actual root join and exact outcome audit. Stop on that result
+before any repair or further reader; remaining12 stay unattempted and previous
+focused/browser evidence is reused explicitly. No host/config/MCP/worker rollout,
+profile, cleanup/restart or extra agent follows.
+
 ### Current boundary: pending presentation checks pass; creator policy control is missing
 
 This goal turn is PROGRESS. The complete pending-only event path now passes its

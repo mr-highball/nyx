@@ -1,5 +1,63 @@
 # Working in Nyx
 
+MISSING POLICY OBSERVATION QUALIFIED (2026-10-22): this turn is progress. The
+single original native journey plus additive diagnostic is terminal/root-joined
+at66216/f5efdb; compiler47768/native18112 are absent. Audit5D09F275 independently
+verifies34owned/1807Pascal/foreign13/extra19,34 retained owned copies and all nine
+artifacts. Compiler passes with ZERO warnings. Native exits1 itself, NOT timeout;
+complete clean heap190681492 blocks/34687165831 bytes allocated=freed,0unfreed.
+Four original phases pass. Diagnostic proves ownerreply-memo/viewhome/loop1/
+width390/check88 and the ENTIRE Inspector role absent,0visited, no truncation.
+Wide atomic policy/add/locks/TODO/history prefix completed before that loop;
+compact atomic/reload/retirement/full journey remain unqualified. Failed native
+launch-to-exit takes578.563s including teardown against unchanged outer600;
+no failure-point timestamp or full remaining-workload qualification follows.
+Core41->42, with no original/P4B/P4C/browser/performance criterion, credit or DONE.
+
+Independent source review explains a fixture navigation prerequisite: exact
+callback Add opens Pascal and selects Design; compact composition intentionally
+omits inactive Inspector roots. The fixture changes width/selection but never
+returns to Inspector before the lookup. Ordinary event filtering preserves model
+descendants and is not that panel policy. No schema/renderer repair is justified.
+Root owns outcome docs/checkpoint only; ALL Pascal/tools remain paused at
+consumer6FBAAF12/freeze56B5205C. Original545FB593 still restores byte-exact by
+stripping the two diagnostic blocks; every original assertion/gesture/wait stays.
+Existing helper reviews the second stale-control/reload navigation boundary and
+the remaining whole-program workload read-only. Separate source/admission review
+must precede any additive real-panel gestures or outer-allocation change; Ready30
+and all original predicates remain required. Remaining12 compilers stay
+unattempted. No profile/host/config/MCP/worker rollout, cleanup/restart or extra
+agent; WORK/private receipts own the exact result and return to P4B then P4C.
+
+MISSING CREATOR POLICY OBSERVATION RELEASE (2026-10-22): priorb0afde9 is progress,
+committed/pushed/remote-verified. All seven actual readers are joined/absent;
+final audit378B597D revalidates1873 pins with only three outcome docs differing
+from freezeCED17A95. Core41 and all original/P4B/P4C/performance gates stay open.
+Root/helper independently reviewed the same missing-policy failure. No source
+cause is established; do not invent a renderer/schema repair or another fixture.
+
+Existing Lil' Scooty owns ONLY one additive bounded diagnostic in the existing
+tests/nyx_event_queue_controls.lpr. After EventKey(ntNamed,LName), before the
+unchanged failing policy Check/InputFor, observe ONLY if the expected policy
+model node is absent. Copy current selected owner/view, loop/client width/check
+count, expected Inspector/filter/card/policy presence and bounded mounted event
+command IDs/SourceIDs/owner/trigger/name. Match exact semantic owner/trigger/name
+independently of display index; summarize named policy candidates without a new
+private command ordinal. Bound traversal/output/scalars and report truncation/
+incomplete scans rather than false absence. Borrow model nodes synchronously;
+no native widget traversal, metadata recomputation, source/draft/body dump,
+Sync/refresh/Pump/retry/new wait or changed predicate/gesture follows. Strip only
+the marked helper/call to recover original545FB593 byte-exact. No other Pascal
+path is released. Root owns docs/private admission only; tools stay unchanged.
+
+Root independently reviews source, freezes all34owned/1807Pascal/foreign13/
+extra19 with only this consumer and three docs changed, then admits ONE existing
+controls-native compiler/run at Ready30/outer600 with the exact full-heap gate.
+Stop at its actual result and root join/exact audit before any further source
+or reader release. Remaining12 compatibility/product compilers stay unattempted;
+unchanged focused/native/browser results remain explicitly reused, not rerun.
+No host/config/MCP/worker rollout, profile, cleanup/restart or extra agent.
+
 PENDING EVENT PRESENTATION FIRST BOUNDARY (2026-10-22): this turn is progress.
 All seven compiler readers/four native executions are terminal/root-joined;
 independent audit7478DB68 verifies34owned/1807Pascal/foreign13/extra19 and all

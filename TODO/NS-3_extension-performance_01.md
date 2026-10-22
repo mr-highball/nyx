@@ -2,6 +2,26 @@
 
 [North stars](../MILESTONES.md) · [Task catalog](README.md) · [Task flow](../TASKFLOW.MD)
 
+The bounded observation now locates an absent ENTIRE Inspector role at compact
+loop1/390/check88. The preceding wide atomic callback policy/add/TODO/history
+prefix completed. Source review confirms callback completion selects Design and
+compact composition omits inactive Inspector; selection alone does not return
+to that panel. Repair the test's real navigation precondition after separate
+review, rather than inventing a creator/schema/renderer change. One compiler
+has zero warnings; the native failure is not a timeout and its full heap is
+clean. Failed-run launch-to-exit578.563s includes teardown against outer600;
+there is no failure-point timestamp. Remaining compact/lifetime workload stays
+unqualified; review whole-program allocation without weakening Ready30 or
+claiming responsiveness. All readers joined/exact-audited; remaining12 compilers
+stay unattempted. See [the current result](../WORK.md#current-boundary-compact-test-needs-to-return-to-inspector).
+
+The retained bounded observation adds failure-only mounted event identities to the
+same original editor journey. It preserves every action, predicate and Ready30/
+outer600 bound; no profiler, speculative repair or narrower fixture substitutes
+for that journey. One existing native compiler/run follows independent review
+and exact freeze; stop at its result before further source/reader release.
+See [the observation scope](../WORK.md#retained-source-release-observe-missing-creator-policy-ownership).
+
 The pending event path now passes native semantic752, public queue248 and
 unchanged section67 with complete clean heaps; matching browser assertions
 compile only. The unchanged full native editor qualifies FOUR original phases
