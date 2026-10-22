@@ -984,7 +984,12 @@ var
   LState: TNyxDataValue;
   LInspection: TNyxStudioSession;
 begin
-  LState := GCore.Call('nyx_session', 'Query inspection', NyxObject([]));
+  { Public semantic reads intentionally record operator activity. This copied
+    test inspection uses the existing neutral editor observation instead;
+    FStudio.ProjectSnapshot below still owns the accepted paired state. }
+  LState := GCore.Exchange(NyxObject([
+    NyxField('op', NyxData('observe')),
+    NyxField('after', NyxData(GCore.Revision))])).Field('session');
   LInspection := TNyxStudioSession.Create(FStudio.ProjectSnapshot);
   try
     LInspection.Activate(LState.Field('view').AsText);

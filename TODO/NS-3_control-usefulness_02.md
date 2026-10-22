@@ -5,6 +5,53 @@
 
 **Description:**
 
+Neutral inspection repair07BA3FE2 is built: auditB8A51692 verifies1900pins/8copies,
+root/actual compiler joins and0 owned/14 upstream warnings. Native active source
+is exact; reuse755/759+426/426. Generated review4DA6F821 proves one ordinary JS
+statement change and byte-exact compiled9AAB/RTL/expected pair, so existing actual
+369/369 is reused with native-producer provenance retained. The BOM metadata
+check correction is retained separately, without compiler/input replay.
+[WORK](../WORK.md#neutral-browser-inspection-source-release) owns checkpoint and
+fresh metadata admission before the SAME authorized ordinary browser two-width
+journey. Full terminal/viewport/lossless own-pair evidence remains required; a
+different pair needs its OWN strict admission/build. Core47/original/P4C/browser-
+own/P3 gates stay open without credit or DONE movement.
+
+The following source-release and earlier outcome paragraphs retain history;
+the built result above owns current readiness and runtime scope.
+
+The CSS-observed ordinary browser run is explicitly retired UNQUALIFIED for a
+reviewed internal observation repair: only186 checks/stepafter3 were readable,
+without a terminal/own packet. Host41688 joined; direct browser inventory is now
+empty and retirement028501B0 checks all1899 pins. [WORK](../WORK.md#neutral-browser-inspection-source-release)
+releases only the consumer's PAS2JS InspectAccepted read/comment to use existing
+neutral Exchange observe Summary. Keep the actual Studio snapshot owner and all
+original operations/assertions/waits. Public-query logging stays intentional and
+unchanged; no timing cause or speedup is claimed. Review/native projection/fresh
+freeze precede two matching browser builds; reuse native/worker/host explicitly.
+Same authorized browser journeys and complete own-pair evidence remain required;
+core47/original/P4C/browser-own/P3 gates stay open.
+
+Compiled browser runtime now passes369/369 at actual1280x900/390x900, using the
+exact native-produced2BB6/093B pair. Browser-own Studio production remains open:
+ordinary1280 is UNKNOWN after an unresponsive tab; ordinary390 is unattempted.
+All own hosts joined, and resumed browser2 inventory is empty; retirement0F810282
+verifies former26 absent and1895 pins exact. [WORK](../WORK.md#browser-partial-result-and-observation-only-release)
+releases only existing build-wrapper CSS to expose copied progress/terminal packet,
+then independent review/freeze/newHTML with exact-old bytecode for the same authorized
+ordinary reruns. No Pascal/JS/worker/host/assertion/wait/fixture change or compiler/
+native replay. Actual terminal/viewport/lossless own-pair evidence still gates
+acceptance. Core47/original/P4C/browser-own/P3 criteria stay open without credit.
+
+Direct @Browser access works: documentation/listTabs and blank-tab creation succeed;
+tab24 actually1280x900 before navigation. Root's earlier nested-tool inventory did
+not cover direct CUA, so the browser-outage/blocked conclusion is excluded metadata
+inference. Windows fallback denial remains separate. [WORK](../WORK.md#direct-browser-access-verified-prior-blocker-inference-corrected)
+resumes the same authorized compiled-first regression after corrected3doc freeze,
+reusing every build/worker/host unchanged. No new permission/config/compiler scope.
+Actual status/viewport/own artifacts and host cleanup still gate acceptance;
+core47/original criteria remain open. Older unavailable notes retain history only.
+
 Reviewed23EA567C builds both browser bundles with0 owned/14 known upstream warnings;
 1895 pins match freeze350C2325/audit31C17F16. Runtime is UNATTEMPTED: prior browser
 tool disappeared and documented fallback launch returns Windows Access denied,

@@ -1,5 +1,74 @@
 # Working in Nyx
 
+NEUTRAL BROWSER INSPECTION BUILT / RUNTIME READY (2026-10-22): reviewed07BA3FE2
+changes only the PAS2JS InspectAccepted read/comment to public neutral observe
+Summary. Exact reversal restores13D; native ordinary/compiled active text stays
+B1899F07/9C113ED7. Keep accepted FStudio.ProjectSnapshot, all original operations,
+assertions, waits and leases. Public Call logging remains intentional/unchanged;
+no current timing cause or speedup is claimed. All other Pascal/buildD9/worker50300/
+host7EA/adapter23EA stay exact. Retain BBF88C29 unqualified186/stepafter3 and actual
+retirement028501B0; no timeout-derived product failure or browser-own proof.
+
+FreezeC2EC5CF9 and auditB8A51692 verify1900pins/8copies, root3941 joined4ed74a and
+actual14944/48296 absent. Both browser compilers pass0owned/14upstream occurrences,
+only FE differs; own093B Fu remains exact. Independent helper outcome review PASS.
+Generated review4DA6F821 proves sole ordinary JS statement change76EF9044 and exact
+compiled JS9AAB/RTL/expected pair. Reuse native755/759+426/426 and actual compiled
+browser369/369 explicitly; no unchanged runtime replay. Those receipts remain
+native-producer-labeled. Both wrappers add only existing noninteractive CSS.
+Retain first BOM-stripping metadata check and exact-BOM correctionA96FC0F2; no
+compiler or product input was changed/repeated for that check.
+
+Root owns docs/checkpoint, then separate fresh metadata freeze/runtime admission
+for the SAME authorized ordinary desktop/phone regression on temporary loopback
+hosts, each stopped/joined. Existing helper stays read-only. No compiler/native
+replay, worker/host rebuild, source variant or permission request follows. Require actual
+terminal viewport and complete lossless browser-own packet; exact decoded pair/
+draft/helper inventories must match real compiled inputs before linking evidence.
+If different, retain/admit/compile its OWN source; never substitute an older pair.
+Core47/original/P4C/browser-own/P3 gates remain open; no credit or DONE movement.
+
+DIRECT BROWSER PARTIAL RESULT / OBSERVATION-ONLY RELEASE (2026-10-22): actual
+compiled application passes369 at1280x900 and369 at390x900, with exact native-
+produced2BB6/093B pair; this is not browser-own Studio production. Ordinary1280
+is UNKNOWN after an unresponsive tab, with no terminal/viewport/provenance proof;
+ordinary390 is unattempted. Retain all original failures and partial67FCC6DD.
+All three own hosts are stopped/joined. Resumed direct browser2 inventory is
+actually empty; retirement0F810282 verifies previous26 absent, all1895 pins exact,
+and44292/48340/46892 absent with ports19085-19087 listener0. Previous turn is progress.
+
+Release ONLY root's tools/build.ps1 existing nyxWorkbenchHTML CSS presentation and
+these three handoff docs. Show existing copied progress attrs in a fixed bounded,
+noninteractive pseudo-element; exact CSS media viewport labels default UNVERIFIED.
+Display only the existing passed non-executable packet for lossless observation.
+All Pascal/JS/worker/host, scripts/assertions/waits/fixtures stay exact. Removing
+the single style must restore build8549 byte-exact. Helper independently reviews;
+fresh eight-owned/1807Pascal/13concurrent/27extra freeze plus exact-old-bytecode/
+newHTML staging precedes the same authorized ordinary desktop/phone reruns. Zero
+compiler/native replay. Root owns every actual handle/join/audit; pause all source
+through joins. CSS/AX visibility and complete decoded own-pair equality require
+actual evidence; clipping/last-trace polls do not imply liveness or success.
+Core47/original/P4C/browser-own/P3 stay open; no criterion/credit/DONE closes.
+
+DIRECT BROWSER ACCESS VERIFIED / PRIOR BLOCK INFERENCE CORRECTED (2026-10-22):
+user points to @Browser; direct cua_repl documentation/listTabs/blank-tab creation
+and actual1280x900 read all succeed (browser2/tab24). Root had checked only nested
+ALL_TOOLS and wrongly inferred that the direct browser namespace was absent.
+Preserve prior283BC0DC/66ACED0B receipts as excluded metadata inference, not actual
+browser outage. Windows GetCursorPos denial is real but only the fallback result.
+No config/install/service change is needed. Human same-regression authorization
+persists; no reapproval. Root acknowledges error and resumes compiled1280 first.
+
+All Pascal23EA/consumer13D, worker50300/host7EA and40 assets remain exact. Root owns
+ONLY corrected docs/admission and actual browser readers; helper read-only review.
+Fresh8owned/1807Pascal/13concurrent/27extra freeze precedes reused-build runtime.
+No compiler/native replay, fixture/assertion/wait change or broader scope follows.
+Blank tab FIRST then viewport set/actual1280x900 or390x900 BEFORE navigation and
+at terminal. Retain actual status/console/own-pair evidence; close each own tab,
+reset viewport and identity-stop/join each temporary loopback Pascal host. Pause
+all Pascal/guides through joins. Core47/original/P4C/browser-own/P3 remain open.
+The following unavailable/admission narratives retain history, superseded here.
+
 QUERY WORKBENCH HEADER BUILDS REVIEWED / RUNTIME ACCESS UNAVAILABLE (2026-10-22):
 reviewed23EA567C changes only QueryClick/QueryKey role-first parsing. Freeze350C2325
 has8owned/1807Pascal/13concurrent/27extras. Root99527 joins8c4331;38328/47220 pass,

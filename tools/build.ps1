@@ -789,6 +789,55 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nyx table query workbench</title>
+<style id="nyx-authoring-observer">
+/* Read-only presentation of existing copied test facts. This bounded overlay
+   takes no input or layout space; a clipped value is never a terminal proof.
+   The viewport label is a CSS media match, not a stored capability setting. */
+body[data-query-authoring-stage]::after,
+body[data-query-authoring]::after {
+  --nyx-authoring-observer-viewport: "UNVERIFIED";
+  content: "Copied test progress (may be clipped) / CSS viewport: "
+    var(--nyx-authoring-observer-viewport)
+    "\A Last trace: " attr(data-query-authoring-stage)
+    "\A Polls at last trace: " attr(data-query-authoring-polls)
+    " / Exchanges: " attr(data-query-authoring-exchanges)
+    "\A Exchange snapshot: " attr(data-query-authoring-exchange-state)
+    "\A Result: " attr(data-query-authoring) " / Checks: " attr(data-query-authoring-checks)
+    " / Packet UTF-16 units: " attr(data-query-authoring-project-length);
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: min(30vh, 12rem);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid #c5d0e8;
+  border-radius: 6px;
+  background: #111c30;
+  color: #edf3ff;
+  font: 12px/1.35 monospace;
+  white-space: pre-wrap;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+@media (width: 1280px) and (height: 900px) {
+  body[data-query-authoring-stage]::after,
+  body[data-query-authoring]::after { --nyx-authoring-observer-viewport: "1280x900"; }
+}
+@media (width: 390px) and (height: 900px) {
+  body[data-query-authoring-stage]::after,
+  body[data-query-authoring]::after { --nyx-authoring-observer-viewport: "390x900"; }
+}
+/* Passed publishes this non-executable copied packet after application teardown.
+   Only this terminal artifact becomes visible; expected inputs remain hidden. */
+body[data-query-authoring="passed"] script#query-authoring-project {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+</style>
 <body><script src="rtl.js"></script><script src="$nyxWorkbenchProgram.js"></script>
 <script>rtl.run();</script></body>
 </html>
