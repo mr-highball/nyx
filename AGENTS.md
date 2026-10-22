@@ -1,5 +1,22 @@
 # Working in Nyx
 
+QUERY AUTHORING P4 READINESS (2026-10-21): previous6f56f41 is progress,
+committed/pushed/remote-verified. All P3 readers remain joined;1806Pascal/
+foreign13/extra6 stay exact. Root/helper independent read-only review identifies
+Studio intent rebuild policy loss, a separate Kanban-lane loss tracked05 and
+missing policy/event/semantic/crafted-source authoring seams. Task02 now owns
+granular P4A/B/C finish lines; original seven acceptance bullets/credit unchanged,
+core no-closure31 carries. Root owns only readiness docs/checkpoint; all Pascal
+remains paused pending a separate reviewed source release. Existing helper has
+read-only typed intent/event-policy seam review and next ownership proposal.
+Exact P3 browser JS/RTL/HTML and existing host997B90C4 are prepared/verified;
+8766 was free at preparation. User override for desktop/phone actual browser
+tests plus required same-regression reruns is requested asynchronously and is
+PENDING, not authorization. No host/browser/LAN/MCP/config/worker launch, cleanup/
+restart or extra agent follows. Preserve native-local qualification, foreign13,
+resolver14/splitter and all original browser/Studio/history/SaveOpen/generated
+gates. WORK/private readiness records own this handoff and return path.
+
 QUERY WORKBENCH P3 NATIVE-LOCAL QUALIFIED (2026-10-21): ordinary table inputs
 pass782 actual checks at1280 and390, same executable/distinct client receipts,
 both clean heaps. Matching browser assertions and both Studio mains compile.

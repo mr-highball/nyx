@@ -85,6 +85,62 @@ structural-focus assertion. Actual browser input, full Studio/events/semantic
 authoring, history/Save/Open and compiled own companion stay required; none of
 the seven original criteria below closes from this native-local P3 result.
 
+P4's remaining work is ordered below. These are finish lines within the original
+criteria6–7, not new completion credit or permission to change source/run readers.
+
+| Packet | User-visible result and evidence | Preserve / remains required |
+| --- | --- | --- |
+| P4A — Author query controls | Ordinary Inspector configures typed table/column filtering, sorting, allowed comparisons and text comparison; explicit Use Nyx defaults is distinct from Restore inherited binding. One paired candidate/history step per admitted form intent, including local reusable overrides and stale/pending-draft refusal | Every unrelated column/scope/selection/sizing edit preserves existing declared policies; absent choices remain absent; runtime filter contributions are not design defaults |
+| P4B — Discover and operate semantically | Shared event/help discovery exposes exact Before/Changed query names and copied Details, bounded binding reads expose requested declared/effective policies, existing revision-aware changes accept strict v7 and the same typed intents | Before is sequential/cancellable, Changed follows normal policy; Inspector and semantic policy choices must agree with admission. No new server or runtime rollout is implied |
+| P4C — Prove the authored workbench | Actual Studio two-instance configuration, paired Undo/Redo, real Save/Open and that journey's OWN strictly admitted emitted Pascal, independently compiled/executed at both widths; actual browser input under an applicable host override | Preserve definition/sibling/source/default isolation, callbacks, query/paging/hidden selection/draft/lifetime behavior. P3 authored8441/A861 exports cannot substitute for this new saved/generated pair |
+
+Read-only readiness review found a concrete P4A prerequisite:
+`ApplyNyxStudioCollectionViewIntent` reconstructs views for title/mode/scope/
+selection/parent/column/sizing edits but does not copy declared query policies.
+Preserve table policy only when `HasTableQueryPolicy`, and each surviving column
+policy only when `HasQueryPolicy`, matching field identity and family. Copying
+resolved defaults unconditionally would corrupt absence/version compatibility.
+Adding/removing a column must preserve every survivor; a new column starts with
+absent policy. Keep deliberate fresh-bind and last-column-clear behavior.
+Copy-based query/paging edits already preserve these choices.
+
+The proposed ordinary intent seam appends typed setter/default actions to the
+existing collection intent and reuses its exact schema/full effective-spec
+baseline and `sdaCollection` queue. Policy payloads belong only to their actions;
+default actions clear only the selected raw choice. Preserve former intent wire
+shapes/ordinals and reject pending Pascal before candidate mutation. Studio,
+semantic changes and preview must use this one admission path. Generated built-in
+query callback references should use the existing enum-valued factory, with
+matching uses/source-reader support, rather than a behavioral string literal.
+
+The reviewed typed seam appends table/column setter and default actions, with
+separate immutable table/column policy payloads. Setters require a defined
+policy; default actions require no policy payload. Column actions retain the
+schema-qualified field, all four are table-only structural proposals, and the
+exact full-spec baseline is required even for restoring a default. Whole-form
+Apply emits one intent; option changes remain draft. Existing intent ordinals
+and former eleven/thirteen-member encodings remain unchanged. Library defaults
+and whole-binding Inherit are deliberately different; no per-policy ancestor
+merge is implied by clearing one policy in a local whole-spec override.
+
+Event policy discovery also needs a shared typed restriction: Before-query must
+offer/admit sequential execution only, including a declared empty callback
+stream. An additive metadata capability should default old creator records to
+all four policies, using the existing managed-marker compatibility pattern.
+Preserve/intersect matching restrictions; do not widen a built-in restriction
+when merging creator metadata. Inspector choices/capture, bounded agent event
+reads and effective realized candidate admission must use that one capability.
+Do not hide validation inside route-only processing, skip empty streams or grant
+built-in custom Emit authority. Changed and unrestricted legacy events retain
+their existing choices; raw descriptor shape admission remains separate.
+
+A separate previous-spec rebuild in the Kanban editor has the same preservation
+gap and is tracked in [usefulness05](NS-3_control-usefulness_05.md). It adds no
+hard dependency or implicit P4 source ownership; no new Kanban filter UI follows.
+The P3 browser artifacts and existing loopback host are prepared/verified. A
+specific user override for actual browser tests and same-regression reruns is
+pending; that request is not authorization and no host/browser has been started.
+
 **Acceptance Criteria:**
 
 - Expose immutable typed fluent per-column capabilities through specialized

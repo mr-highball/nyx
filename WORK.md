@@ -2,6 +2,58 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Authored table query readiness — 2026-10-21
+
+Previous goal turn is progress: P3 checkpoint6f56f41 is committed, pushed and
+remote-verified. Current worktree/private receipts confirm all18 actual jobs
+joined,1806 Pascal/foreign13/extra6 exact and no source work beyond that checkpoint.
+Core no-closure31 carries; no original criterion or credit changes. The next
+deliverable is task02 criteria6–7's useful Studio authoring and actual browser
+input, not another table-model/compiler variant.
+
+Read-only review now pins a real authoring defect: collectionintent's generic
+view rebuild loses explicit table and column query policies on unrelated edits.
+Preserve only raw declarations, not resolved defaults; retain exact field/family
+identity, all survivors and inherited effective policy in a selected local owner.
+Fresh bind/new columns/last-column clear keep their current intentional behavior.
+A second lane-specific builder is separately tracked in
+[usefulness05](TODO/NS-3_control-usefulness_05.md), with no new filter UI or silent
+source expansion. Task02 now has granular P4A/B/C finish lines, preserving all
+seven original acceptance bullets exactly.
+
+Existing collection intent/selected-owner paired candidates, query editor,
+callback metadata and semantic readers remain the owners. Root/helper propose
+appended typed table/column setter/default intents with an exact schema/full-spec
+baseline and the same source-draft refusal. The helper will own the ordinary
+Inspector/form capture and a new Studio/own-generated consumer after a separate
+source release; root will own intent/admission/schema/bounded semantic discovery,
+crafted event references, source recognition and build. No source is released by
+this readiness record. Before-query execution policy admission/discovery must
+agree with runtime; current Inspector lists all policies and needs a shared typed
+restriction seam reviewed before adding incompatible authoring choices.
+
+Root/helper agreed the concrete four-action intent seam: table/column policy
+setters and explicit defaults, separate typed records, mandatory full-spec/schema
+baseline, cpTable/family-qualified identity, structural locks and one Apply intent.
+Preserve former action ordinals/eleven/thirteen-member encodings and reject
+unused payloads. Defaults in a local whole-spec override mean library defaults;
+only whole-binding Inherit resumes ancestor policy. Shared event metadata will
+need optional typed ExecutionPolicies with a managed compatibility marker: old
+creator records allow all4, Before allows sequential only. Effective candidate
+validation must cover empty streams and route-free roots; Inspector/semantic
+reads share that capability. Crafted callback refs need the existing enum factory
+and conditional import/source recognition even without an explicit v7 policy.
+
+The exact already-built P3 browser JS/RTL/HTML and existing Pascal preview host
+997B90C4 are verified;8766 was free at preparation. No host or browser was started.
+The current AGENTS restriction requires an applicable user override, requested
+asynchronously for desktop/phone tests and necessary reruns of this same regression,
+stopping each loopback host afterward. That answer is pending, not authorization.
+No LAN service, firewall, native MCP tools/config, worker, cleanup/restart or new
+agent is touched. While pending, root/helper perform independent read-only P4
+design and documentation. All Pascal stays paused. Return to the exact prepared
+browser gate when authorized, then release the reviewed useful authoring scope.
+
 ## Table query workbench — 2026-10-21
 
 **Native-local result:** the ordinary two-table workbench passes782 actual checks
