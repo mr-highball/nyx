@@ -38,6 +38,7 @@ uses
   nyx.contract,
   nyx.collections,
   nyx.collections.query,
+  nyx.collections.query.publication,
   nyx.collections.paging,
   nyx.collections.query.view,
   nyx.collections.registry,
@@ -245,6 +246,10 @@ procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnaps
 { False for nil/unknown views or active view/store notification. This is a
   synchronous readiness observation, never a reservation or admission cache. }
 function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
+{ Obtain the optional query capability without changing the original view ABI.
+  Unsupported alternate views refuse explicitly; no sequential fallback can
+  promise a coordinated query/state publication. }
+function NyxCollectionQueryPublication(const AView: INyxCollectionView): INyxCollectionQueryPublication;
 
 implementation
 
@@ -252,7 +257,10 @@ uses
   Math;
 
 type
+  { Private forward declarations join source projection and query preparation
+    without exposing either implementation type in the portable public API. }
   TView = class;
+  TQueryPreparation = class;
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
   public
     Owner: TView;
@@ -265,11 +273,18 @@ type
   TParentIndexes = TNyxQueryIndexes;
 
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
-    INyxCollectionViewPublication, INyxCollectionPages)
+    INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
     FPrepared: TView; { detached, privately owned projection; never subscribed }
+    { Query plans have a separate reservation from source-row preparations.
+      The plan retains this view; this weak slot cannot form an ownership cycle. }
+    FQueryPreparation: TQueryPreparation;
+    { Identity has no owner backlink. Intent advances only for an accepted
+      effective policy change; equal assignments cannot invalidate a capture. }
+    FQueryIdentity: IInterface;
+    FQueryIntent: Integer;
     FSource: INyxCollectionSnapshot;
     FSnapshot: INyxCollectionSnapshot;
     FUnpaged: INyxCollectionSnapshot;
@@ -330,6 +345,9 @@ type
     function PublicationReady: Boolean;
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
+    function CaptureQuery: INyxCollectionQueryCapture;
+    function PrepareQuery(const ACapture: INyxCollectionQueryCapture;
+      const AQuery: TNyxCollectionQuery): INyxPreparedPublication;
     function GetPaging: TNyxCollectionPaging;
     function GetPageWindow: TNyxCollectionPageWindow;
     function ConfigurePaging(const APolicy: TNyxCollectionPaging): INyxCollectionPages;
@@ -363,6 +381,67 @@ type
     function ExpandAll: INyxTreeHierarchy;
     function CollapseAll: INyxTreeHierarchy;
     function VisibleItems: TNyxItemRefs;
+  end;
+
+  { Private proof is independent of policy equality, source revision and caller
+    names. Its inert identity token has no backreference to a view or dataset.
+    Foreign public captures cannot acquire authority by returning the same query. }
+  IQueryCaptureProof = interface(IInterface)
+    ['{97FBA0A4-2294-45D2-A660-8FD3F068E369}']
+    function QueryIdentity: IInterface;
+    function QueryIntent: Integer;
+  end;
+
+  { An immutable, cheaply retained query-intent observation. Row updates may
+    occur after capture; only preparation retains its then-current dataset. }
+  TQueryCapture = class(TInterfacedObject, INyxCollectionQueryCapture, IQueryCaptureProof)
+  private
+    FIdentity: IInterface;
+    FIntent: Integer;
+    FQuery: TNyxCollectionQuery;
+  public
+    constructor Create(const AIdentity: IInterface; AIntent: Integer;
+      const AQuery: TNyxCollectionQuery);
+    function GetQuery: TNyxCollectionQuery;
+    function QueryIdentity: IInterface;
+    function QueryIntent: Integer;
+  end;
+
+  { One reserved, single-use query participant for the existing publication
+    coordinator. The detached TView is only a projection calculator: it never
+    subscribes to a store or owns a renderer. Former model references remain
+    leased until retirement, including after a pure adoption into the live view. }
+  TQueryPreparation = class(TInterfacedObject, INyxPreparedPublication,
+    INyxPublicationReadiness)
+  private
+    FOwner: TView;
+    FLease: INyxCollectionView;
+    FSource: INyxCollectionSnapshot;
+    FBeforeSnapshot: INyxCollectionSnapshot;
+    FBeforeUnpaged: INyxCollectionSnapshot;
+    FBeforeSelection: INyxCollectionSelection;
+    FBeforeQuery: TNyxCollectionQuery;
+    FQuery: TNyxCollectionQuery;
+    FIntent: Integer;
+    FCandidate: TView;
+    FChanged: Boolean;
+    FValidationStarted: Boolean;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FNotified: Boolean;
+    FRetired: Boolean;
+    procedure RequireCurrent;
+  public
+    { The factory acquires a managed interface before Initialize may call an
+      alternate interface implementation. No constructor self-retention trap. }
+    procedure Initialize(AOwner: TView; const ACapture: INyxCollectionQueryCapture;
+      const AQuery: TNyxCollectionQuery);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure CheckReady;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
   end;
 
   TContextPreparation = class;
@@ -407,6 +486,259 @@ type
     procedure Notify;
     procedure Retire;
   end;
+
+constructor TQueryCapture.Create(const AIdentity: IInterface; AIntent: Integer;
+  const AQuery: TNyxCollectionQuery);
+begin
+  inherited Create;
+  FIdentity := AIdentity;
+  FIntent := AIntent;
+  FQuery := AQuery.Copy;
+end;
+
+function TQueryCapture.GetQuery: TNyxCollectionQuery;
+begin
+  Result := FQuery.Copy;
+end;
+
+function TQueryCapture.QueryIdentity: IInterface;
+begin
+  Result := FIdentity;
+end;
+
+function TQueryCapture.QueryIntent: Integer;
+begin
+  Result := FIntent;
+end;
+
+function NyxCollectionQueryPublication(const AView: INyxCollectionView): INyxCollectionQueryPublication;
+var
+  LPublication: INyxCollectionQueryPublication;
+begin
+  LPublication := nil;
+
+  if (AView = nil) or not Supports(AView, INyxCollectionQueryPublication, LPublication) then
+  begin
+    raise ENyxCollection.Create('Collection view does not support prepared queries');
+  end;
+  { A local owning QI result is required by both compilers. Never hand a field
+    directly to Supports and leave pas2js with an already released field value. }
+  Result := LPublication;
+end;
+
+procedure TQueryPreparation.Initialize(AOwner: TView;
+  const ACapture: INyxCollectionQueryCapture; const AQuery: TNyxCollectionQuery);
+var
+  LProof: IQueryCaptureProof;
+  LCaptureLease: INyxCollectionQueryCapture;
+begin
+  FLease := AOwner as INyxCollectionView;
+  FOwner := AOwner;
+  LCaptureLease := ACapture;
+  { Preserve the entry value before even the atomic source's Busy getter can
+    call application code. Predicates are already closed descriptors at Where. }
+  FQuery := TNyxCollectionQuery.FromData(AQuery.ToData);
+  FOwner.Writable;
+
+  { Writable may call an alternate source. Recheck only canonical fields after
+    it returns: a nested preparation must never lose its live reservation. }
+
+  if FOwner.FNotifying or (FOwner.FQueryPreparation <> nil) or
+    (FOwner.FAtomic = nil) or (FOwner.FPrepared <> nil) then
+  begin
+    raise ENyxCollection.Create('Prepared query requires an available atomic collection source');
+  end;
+  FSource := FOwner.FSource;
+  FBeforeSnapshot := FOwner.FSnapshot;
+  FBeforeUnpaged := FOwner.FUnpaged;
+  FBeforeSelection := FOwner.FSelection;
+  FBeforeQuery := FOwner.FQuery.Copy;
+  FIntent := FOwner.FQueryIntent;
+  FOwner.FQueryPreparation := Self;
+  FChanged := FQuery.ToData.ToJSON <> FBeforeQuery.ToData.ToJSON;
+  LProof := nil;
+
+  if (LCaptureLease = nil) or not Supports(LCaptureLease, IQueryCaptureProof, LProof) then
+  begin
+    raise ENyxCollection.Create('Prepared query requires its exact view capture');
+  end;
+
+  if (LProof.QueryIdentity <> FOwner.FQueryIdentity) or
+    (LProof.QueryIntent <> FIntent) then
+  begin
+    raise ENyxCollection.Create('Collection query capture belongs to another or changed view intent');
+  end;
+  { The private proof never calls or trusts the foreign public GetQuery method. }
+
+  if FChanged and (FIntent = High(Integer)) then
+  begin
+    raise ENyxCollection.Create('Collection query intent is exhausted');
+  end;
+  LProof := nil;
+  LCaptureLease := nil;
+  RequireCurrent;
+end;
+
+destructor TQueryPreparation.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TQueryPreparation.RequireCurrent;
+begin
+
+  if FRetired or (FOwner = nil) then
+  begin
+    raise ENyxCollection.Create('Prepared query has retired');
+  end;
+
+  if (FOwner.FQueryPreparation <> Self) or FOwner.FNotifying or
+    (FOwner.FPrepared <> nil) or (FOwner.FQueryIntent <> FIntent) or
+    (FOwner.FSource <> FSource) or (FOwner.FSnapshot <> FBeforeSnapshot) or
+    (FOwner.FUnpaged <> FBeforeUnpaged) or (FOwner.FSelection <> FBeforeSelection) then
+  begin
+    raise ENyxCollection.Create('Prepared query view/source/intent has changed');
+  end;
+end;
+
+procedure TQueryPreparation.Validate;
+var
+  LReadyLease: INyxPublicationReadiness;
+  LParents: TParentIndexes;
+  LWindow: TNyxCollectionPageWindow;
+begin
+  { Keep the plan and hence the view/source alive through outward immutable
+    snapshot reads. The same owned lease performs the final readiness check. }
+  LReadyLease := Self;
+  RequireCurrent;
+
+  if FValidated then
+  begin
+    Exit;
+  end;
+
+  if FValidationStarted then
+  begin
+    raise ENyxCollection.Create('A refused query preparation cannot be validated again');
+  end;
+  FValidationStarted := True;
+
+  if FChanged then
+  begin
+    FCandidate := TView.CreateValidator(FOwner.FSpec, FOwner.FProjection);
+    FCandidate.FSource := FSource;
+    FCandidate.FQuery := FQuery;
+    FCandidate.FSnapshot := FBeforeSnapshot;
+    FCandidate.FUnpaged := FBeforeUnpaged;
+    FCandidate.FPaging := FOwner.FPaging;
+    FCandidate.FPage := FOwner.FPage;
+    FCandidate.FSelection := FBeforeSelection;
+    FCandidate.FExpanded := Copy(FOwner.FExpanded, 0, Length(FOwner.FExpanded));
+    FCandidate.ValidateDataset(FSource, LParents);
+    FCandidate.FSnapshot := NyxQuerySnapshot(FSource, FQuery, LParents, FCandidate.FParents);
+    FCandidate.FUnpaged := FCandidate.FSnapshot;
+
+    if FCandidate.FPaging.Defined then
+    begin
+      LWindow := NyxCollectionPageWindow(FCandidate.FUnpaged.Count,
+        FCandidate.FPaging.ItemsPerPage, FCandidate.FPage);
+      FCandidate.FSnapshot := NyxPageSnapshot(FCandidate.FUnpaged, LWindow);
+      FCandidate.FPage := LWindow.Page;
+    end;
+    FCandidate.FSelection := FCandidate.ReconcileSelection(FSource,
+      FCandidate.FSnapshot, FBeforeSnapshot);
+    FCandidate.BuildHierarchy;
+    FCandidate.ReconcileTreeFocus;
+  end;
+  RequireCurrent;
+  FValidated := True;
+  LReadyLease.CheckReady;
+end;
+
+procedure TQueryPreparation.CheckReady;
+begin
+  { Pure canonical fields only. In particular do not call a store/scheduler/
+    capture getter after the complete group's outward validators have run. }
+  RequireCurrent;
+
+  if not FValidated or FInstalled then
+  begin
+    raise ENyxCollection.Create('Prepared query readiness requires a validated candidate');
+  end;
+end;
+
+procedure TQueryPreparation.Install;
+begin
+  { All allocation, source reads and final fences precede this adoption. Former
+    interfaces remain leased on the plan, so assignment cannot finalize them. }
+
+  if FValidated and not FInstalled and not FRetired and (FOwner <> nil) then
+  begin
+
+    if FChanged then
+    begin
+      FOwner.FQuery := FQuery;
+      FOwner.FSnapshot := FCandidate.FSnapshot;
+      FOwner.FUnpaged := FCandidate.FUnpaged;
+      FOwner.FPage := FCandidate.FPage;
+      FOwner.FParents := FCandidate.FParents;
+      FOwner.FSelection := FCandidate.FSelection;
+      FOwner.FExpanded := FCandidate.FExpanded;
+      FOwner.FFirstChild := FCandidate.FFirstChild;
+      FOwner.FNextSibling := FCandidate.FNextSibling;
+      FOwner.FQueryIntent := FIntent + 1;
+    end;
+    FInstalled := True;
+  end;
+end;
+
+procedure TQueryPreparation.Notify;
+begin
+
+  if not FInstalled or FRetired or FNotified then
+  begin
+    Exit;
+  end;
+  FNotified := True;
+
+  if FChanged then
+  begin
+    { Notify leases the view itself and attempts every independent observer.
+      No plan/owner access follows a callback that may release caller handles. }
+    FOwner.Notify(nil);
+  end;
+end;
+
+procedure TQueryPreparation.Retire;
+var
+  LCandidate: TView;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if (FOwner <> nil) and (FOwner.FQueryPreparation = Self) then
+  begin
+    FOwner.FQueryPreparation := nil;
+  end;
+  FOwner := nil;
+  LCandidate := FCandidate;
+  FCandidate := nil;
+  LCandidate.Free;
+  FSource := nil;
+  FBeforeSnapshot := nil;
+  FBeforeUnpaged := nil;
+  FBeforeSelection := nil;
+  FBeforeQuery := Default(TNyxCollectionQuery);
+  FQuery := Default(TNyxCollectionQuery);
+  { Last release may dispose the independent model. It cannot roll back an
+    installed query and no borrowed owner is accessed afterward. }
+  FLease := nil;
+end;
 
 function PrepareNyxCollectionContextResources(const AContext: INyxCollectionContext;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
@@ -771,6 +1103,8 @@ var
   LAtomic: INyxAtomicCollection;
 begin
   inherited Create;
+  { Captures retain only this inert token, never the live view or its source. }
+  FQueryIdentity := TInterfacedObject.Create;
   ASpec.Validate;
 
   if (AStore = nil) or not ASpec.Defined then
@@ -916,7 +1250,8 @@ end;
 procedure TView.Writable;
 begin
 
-  if FNotifying or ((FAtomic <> nil) and FAtomic.Busy) then
+  if FNotifying or (FQueryPreparation <> nil) or
+    ((FAtomic <> nil) and FAtomic.Busy) then
   begin
     raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
   end;
@@ -1071,6 +1406,11 @@ begin
   { Query predicates may be alternative implementations. Retain this receiver
     through admission even when application code retires its rendered host. }
   LKeepAlive := Self as INyxCollectionView;
+
+  if FQueryPreparation <> nil then
+  begin
+    raise ENyxCollection.Create('Source row publication conflicts with a prepared query');
+  end;
   RetireCandidate;
   LCandidate := TView.CreateValidator(FSpec, FProjection);
   try
@@ -1333,7 +1673,8 @@ end;
 
 function TView.PublicationReady: Boolean;
 begin
-  Result := not FNotifying and (FPrepared = nil) and (FAtomic <> nil) and not FAtomic.Busy;
+  Result := not FNotifying and (FPrepared = nil) and (FQueryPreparation = nil) and
+    (FAtomic <> nil) and not FAtomic.Busy;
 end;
 
 function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
@@ -1349,6 +1690,23 @@ begin
   Result := FQuery.Copy;
 end;
 
+function TView.CaptureQuery: INyxCollectionQueryCapture;
+begin
+  Result := TQueryCapture.Create(FQueryIdentity, FQueryIntent, FQuery);
+end;
+
+function TView.PrepareQuery(const ACapture: INyxCollectionQueryCapture;
+  const AQuery: TNyxCollectionQuery): INyxPreparedPublication;
+var
+  LPreparation: TQueryPreparation;
+begin
+  { Initialize may inspect an alternate capture/QI implementation. Establish
+    interface ownership first, including on pas2js and every refusal path. }
+  LPreparation := TQueryPreparation.Create;
+  Result := LPreparation;
+  LPreparation.Initialize(Self, ACapture, AQuery);
+end;
+
 function TView.ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
 var
   LPolicy: TNyxCollectionQuery;
@@ -1358,6 +1716,8 @@ var
   LSelection: INyxCollectionSelection;
   LUnpaged: INyxCollectionSnapshot;
   LWindow: TNyxCollectionPageWindow;
+  LPrepared: INyxPreparedPublication;
+  LReadiness: INyxPublicationReadiness;
 begin
   Writable;
   Result := Self as INyxCollectionView;
@@ -1367,6 +1727,35 @@ begin
   begin
     Exit;
   end;
+
+  if FQueryIntent = High(Integer) then
+  begin
+    raise ENyxCollection.Create('Collection query intent is exhausted');
+  end;
+
+  if FAtomic <> nil then
+  begin
+    LPrepared := PrepareQuery(CaptureQuery, LPolicy);
+    try
+      LPrepared.Validate;
+      LReadiness := nil;
+
+      if not Supports(LPrepared, INyxPublicationReadiness, LReadiness) then
+      begin
+        raise ENyxCollection.Create('Prepared query readiness is unavailable');
+      end;
+      LReadiness.CheckReady;
+      LPrepared.Install;
+      { Preserve ConfigureQuery's existing ENyxCollectionNotification behavior.
+        Multi-model callers choose PublishNyxGroup and its committed exception. }
+      LPrepared.Notify;
+    finally
+      LPrepared.Retire;
+    end;
+    Exit;
+  end;
+  { Legacy non-atomic stores retain their ordinary immediate query API. They
+    deliberately cannot promise the optional coordinated reservation contract. }
   ValidateDataset(FSource, LParents);
   LResult := NyxQuerySnapshot(FSource, LPolicy, LParents, LResultParents);
   LUnpaged := LResult;
@@ -1388,6 +1777,7 @@ begin
   end;
   FParents := LResultParents;
   FSelection := LSelection;
+  Inc(FQueryIntent);
   BuildHierarchy;
   ReconcileTreeFocus;
   Notify(nil);

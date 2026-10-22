@@ -2,6 +2,84 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Prepared collection query publication — 2026-10-21
+
+Previous goal turn is progress:17d7f52 accepts the complete source-bound control
+review and is pushed/remote-verified. The next useful dependency under
+[column query02](TODO/NS-3_control-usefulness_02.md) criterion4 is a public optional
+prepared-query facet on the existing collection view. Immediate ConfigureQuery
+cannot atomically publish a query and visible Search/Sort resets alongside an
+existing prepared state owner. This batch implements that shared model seam;
+canonical contribution sessions, actual headers, Studio and full task acceptance
+remain required afterward. No alternate query/store/event engine is introduced.
+
+Root owns `src/nyx.collections.view.pas`, typed Supports helper, maintained build,
+query guide/task02 and this handoff. Existing Lil' Scooty owns only the new
+independent contract `src/nyx.collections.query.publication.pas` and new focused
+public consumer `tests/nyx_collection_query_publication_tests.lpr`. Reviewed design
+uses an opaque exact-view/private-intent capture, no retained source/store/view;
+row changes before Prepare are valid. The preparation leases the current source,
+old/new projections and owner, with a separate reservation and pure final fence.
+All result/page/selection/hierarchy work precedes adoption; notifications occur
+only after all group participants install. Abandonment retires without rollback;
+committed observer failure remains committed. Atomic source is required for this
+optional API; ordinary legacy non-atomic/equal ConfigureQuery remains compatible.
+
+Baseline1795 Pascal/foreign13 are exact before release. Private
+`.local/query-publication-paths-private.json` pins scope/preimages/E: packet and
+planned7-compiler/3-native model budget. No compiler until both source handoffs
+pass independent review and root freezes them. No new browser execution, host,
+renderer/Studio source, session/control UI, MCP/tool/wire, extra agent or cleanup
+is released. Query capture is model authority, not an application event-generation
+grant; later UI owners must retain their ordinary lifetime guards. Parent/parity/
+DataToolbar hard dependencies remain unchanged.
+
+The fixed qualification uses the maintained new consumer command (native check
+plus matching browser compile), unchanged typed-query native/browser consumers,
+that native consumer's own freshly emitted compiled query fixture, and both Studio
+product mains. Browser Studio is compiled directly; its unchanged source worker
+is excluded rather than silently adding an eighth compiler. Independent review
+caught and fixed a source-Busy callout boundary before compilation: copy the entry
+proposal before the getter and recheck canonical reservation flags afterward.
+The public consumer proves both caller-input mutation and retained nested-query
+reservation. Both source scopes and the private fixed-budget driver passed
+independent root/helper review before the first compiler.
+
+The actual result is native89 prepared-query checks, unchanged typed-query56 and
+its own newly emitted compiled-query57, all with zero unfreed blocks. The focused
+and old query browser consumers compile, as do both Studio product mains. All
+seven compilers pass: zero owned/21 upstream RTL warning occurrences. Notes and
+hints remain distinct. These are renderer-free model executions and compiled
+product mains, not header/input/parity or full Studio runtime proof. The emitted
+query fixture DAD3354B is this native query consumer's output, not Studio Save/Open
+or a saved generated application.
+
+All six actual readers are terminal0/root joined (maintained11763, query-native
+17159, query-browser immediate chunk4ab7e0, owncompiled65860, Studio-native88531,
+Studio-browser29908). Immutable joined audit
+`1A5F4431B4B65C3F3077E3EFBC6580E3DD31F91D7988F8245BDBE85C8F86E31F`
+in `E:\Blekohlab\nyx\qualification\query-publication-20261021-235530` verifies
+all8 owned/1797 Pascal/foreign13/extra3 inputs and the generated fixture exact.
+Production44085132, independent contract90FD48FD and consumer96626E26 stayed
+byte-exact from the reviewed freeze through every reader. The original public
+view declaration/GUID is exact. No product/compiler failure or retry occurred;
+one pre-reader audit pattern assumed an absent explicit interface ancestor and
+was corrected without changing source. Root owns only later documentation and
+checkpoint; Pascal remains paused.
+
+P1 is useful qualified API progress under criterion4, not closure of any of
+usefulness02's seven full product criteria. No DONE move or product credit;
+original no-closure28→29 carries. Stop P1 variants. Reassessment returns to P2's
+single canonical contribution state on the existing view, then actual table
+commands and ordinary authored workbench. Before P2 source release, settle exact
+lease/ABA/reset semantics and checked same-store/spec runtime transfer. Current
+accepted query is the default explicit baseline; additional surfaces join the
+existing session rather than applying effective filters twice. Authored rebase
+requires an explicit fresh prepared command. Existing Lil' Scooty owns read-only
+design/independent receipt review; no next implementation/compiler is released.
+All native/browser/Studio/history/source/persistence/generated/semantic/event and
+Q1/parent/parity/DataToolbar gates retain their original scope and hard blockers.
+
 ## Control usefulness review — 2026-10-21
 
 Previous goal turn is progress:544ca92 publishes the current catalog reference,

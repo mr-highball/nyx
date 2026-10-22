@@ -28,6 +28,34 @@ the external application.
 DataToolbar and FilterBar integration must reuse this query policy rather than
 introducing another store, query evaluator or component-specific lifecycle.
 
+Ordered implementation packets preserve all seven criteria below:
+
+| Packet | Useful result | Still required afterward |
+| --- | --- | --- |
+| P1 — Prepared query publication | Optional opaque intent capture and query preparation on the existing view; real state/two-view group is all-or-refused and observers see all committed models | Canonical contributions, visible controls, authoring and full02 |
+| P2 — Shared query contributions | One view-owned explicitly admitted baseline (CurrentQuery by default; authored via explicit rebase), independent user predicates/shared sort, exact leases and explicit owner/global Clear with ABA/lifetime guards | Header/form controls and complete target/source adoption |
+| P3 — Useful table commands | Real native/browser header/keyboard filtering/sort, active chips/counts/empty recovery and coherent peer surface drafts | Ordinary Studio/history/save/generated integration and full qualification |
+| P4 — Authored workbench | Typed policy/event/help/source/persistence/semantic agreement and own saved/generated two-view workbench at both targets/widths | Any unmet original criterion, full parity/quality and delivery |
+
+P1 has a separately reviewed local qualification recorded in
+[WORK](../WORK.md#prepared-collection-query-publication--2026-10-21): root owns
+the existing view/prepared integration/build; helper owns only the independent
+new contract and public focused consumer. Native89 public checks, unchanged
+query56 and its own compiled-query57 pass with clean heaps. Matching browser
+consumers and both Studio mains compile only; seven compilers have zero owned
+warnings. All readers are joined/audited with reviewed source unchanged. No
+header/session/renderer/Studio/Q1 source scope follows. Equal ConfigureQuery
+remains a true no-op; changed A→B→A intent invalidates old captures. Source updates
+before Prepare are valid; a preparation reserves the current atomic source/view
+and refuses a simultaneous same-source row-edit transaction. This is a documented
+API boundary, not a claim that the full table interaction exists.
+All seven acceptance criteria remain open; P1 adds no duplicate product credit.
+Next is the single view-owned P2 contribution/session result, not another P1
+fixture/compiler variant. Default baseline admission preserves the accepted
+CurrentQuery; a second surface joins existing canonical contributions instead of
+recapturing their effective query. Explicit authored restoration is a prepared
+rebase, not automatic behavior when acquiring/releasing an owner lease.
+
 **Acceptance Criteria:**
 
 - Expose immutable typed fluent per-column capabilities through specialized

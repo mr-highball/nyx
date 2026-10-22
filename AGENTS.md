@@ -1,5 +1,50 @@
 # Working in Nyx
 
+QUERY PUBLICATION P1 NATIVE-LOCAL QUALIFIED (2026-10-21): prepared-query public
+consumer passes89 native checks; unchanged typed-query56 and its OWN emitted
+compiled fixture57 pass. All three heaps are clean. Matching focused/query
+browser consumers and both Studio mains compile; no browser/Studio execution or
+source-worker rebuild is claimed. Seven compilers: zero owned/21 upstream RTL
+warning occurrences. All six actual reader jobs are terminal/root joined;
+immutable audit1A5F4431 pins8owned/1797Pascal/foreign13/extra3 plus ownDAD3354B.
+Production44085132/contract90FD48FD/consumer96626E26 stayed exact from reviewed
+freeze. Before compilation independent review fixed Busy-callout proposal copy/
+reservation recheck and added real alternate-source cases; no product failure.
+Root owns docs/checkpoint only; all Pascal remains paused. Full usefulness02's
+seven criteria, parent/parity/DataToolbar and product credit remain open;
+no-closure28→29 carries. Do not run another P1 variant. Next P2 is ONE existing
+view-owned contribution/session state: independent predicates, shared sort,
+exact revocable leases/current intent, atomic display/query publication and
+explicit owner/global reset. Default baseline admission preserves CurrentQuery;
+joining a live session must not recapture its effective query as a new baseline.
+Authored restoration is an explicit prepared rebase, never a lease side effect.
+Existing helper owns read-only next design/independent review; no next source or
+compiler scope is released. Then deliver actual native/browser headers/controls
+and ordinary authored workbench. Preserve hard dependencies, foreign13, deferred
+resolver/splitter, offline LAN/no native Nyx tools and no new host/config/MCP/
+tool/wire/cleanup/restart or extra agent. WORK/private records own exact evidence.
+
+QUERY PUBLICATION SOURCE RELEASED (2026-10-21): previous17d7f52 is progress,
+pushed/remote-verified. Existing usefulness02 criterion4 now delivers an optional
+prepared-query API on the EXISTING view, before canonical contributions/headers.
+Root owns only view.pas, maintained build, query guide/task02, WORK and handoff;
+existing helper owns ONLY new query.publication.pas contract and its new public
+focused consumer. Preserve original INyxCollectionView GUID, legacy equal-query
+true no-op and non-atomic ordinary ConfigureQuery compatibility. Opaque capture
+owns inert exact-view identity/private query intent, not source/store/view.
+Prepare uses current source and requires atomic source support, reserves the
+view separately from store FPrepared, stages complete query/result/paging/
+selection/hierarchy and leases displaced data through pure Install/retirement.
+Mixed same-source row/query preparation refuses; different-view query groups and
+existing prepared state compose. Actual policy changes advance intent; ABA and
+foreign captures refuse. Root/helper review BOTH scopes before freeze/readers.
+Planned fixed budget7 compilers/3 native model outcomes; none released yet.
+All foreign13/unowned source stay exact. No renderer/Studio/header/session/Q1
+implementation, host/browser execution/new tools or extra agent follows. Full02,
+parent/parity/DataToolbar criteria remain open; source-ready is not acceptance.
+Private query-publication state owns scope/reader budget and return to shared
+contributions then real table affordances. Resolver/splitter stay deferred.
+
 CONTROL USEFULNESS01 ACCEPTED (2026-10-21): previous544ca92 is progress. All six
 unchanged review criteria close in TODO/DONE/NS-3_control-usefulness_01.md after
 root/helper primary and independent cross-review. Source-bound80-kind matrix:

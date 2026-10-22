@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('query-publication', 'coordinator-reuse', 'coordinators', 'view-publication', 'master-detail', 'date-range', 'kanban-studio', 'kanban', 'expression-costs', 'expression-reuse', 'expression-locals', 'expression-execution', 'computed-authoring', 'canvas-geometry', 'canvas-scene', 'canvas-workspace', 'canvas-document', 'canvas-authoring', 'canvas-reuse', 'canvas-continuation', 'canvas-drawing', 'logic-flow', 'logic-document', 'logic-authoring', 'flow-routes', 'tool-canvas', 'logic-collections', 'logic-hosts', 'logic-http-authoring', 'logic-table', 'logic-row-routes', 'computed-bindings', 'studio-progress', 'progress-activity', 'button-palette', 'selection-inspector', 'selection-style', 'disclosure', 'tabs', 'query-studio-browser', 'semantic-query-preview', 'query-preview', 'linq-projection', 'linq-pipeline', 'linq-parallel', 'linq-execution', 'linq', 'agent-callback-http', 'core', 'generated', 'collections', 'collection-views', 'collection-performance', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-import', 'project-files', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resource-foundation', 'resources', 'resource-stream', 'resource-policy', 'resource-persistence', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-projection', 'source-observer', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'compiled-runtime', 'pascal-projects', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-runtime', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
 [string]$Target = 'core',
   # NEW packet for typed Kanban moves, mounted controls and emitted companions.
   [string]$KanbanEvidenceDirectory = 'build/kanban/maintained',
@@ -36,6 +36,8 @@ param(
   [string]$CoordinatorEvidenceDirectory = 'build/coordinators/maintained',
   # NEW ordinary-application packet for independent reusable coordinator stores.
   [string]$CoordinatorReuseEvidenceDirectory = 'build/coordinator-reuse/maintained',
+  # NEW model-only packet; native assertions run and matching browser stages.
+  [string]$QueryPublicationEvidenceDirectory = 'build/query-publication/maintained',
   # A NEW packet for retained disclosure controls and generated reconstruction.
   [string]$DisclosureEvidenceDirectory = 'build/disclosure/maintained',
   # Exact semantic selection seed; policy enrichment and assertions are Pascal.
@@ -515,6 +517,46 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
 Push-Location $nyxRoot
 try {
   $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+  if ($Target -eq 'query-publication') {
+    # The consumer uses public state/view/query interfaces. No UI host, compiler
+    # fact probes, generated fixture substitution or project mutation is needed.
+    $nyxQueryPublicationRoot = [IO.Path]::GetFullPath($QueryPublicationEvidenceDirectory)
+    if (Test-Path -LiteralPath $nyxQueryPublicationRoot) {
+      throw 'QueryPublicationEvidenceDirectory must be NEW; preserve prior evidence'
+    }
+    $nyxQueryPublicationNative = Join-Path $nyxQueryPublicationRoot 'native'
+    $nyxQueryPublicationBrowser = Join-Path $nyxQueryPublicationRoot 'browser'
+    New-Item -ItemType Directory -Path $nyxQueryPublicationNative, $nyxQueryPublicationBrowser | Out-Null
+    $nyxQueryPublicationFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxQueryPublicationNative", "-FE$nyxQueryPublicationNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryPublicationFlags + @('tests/nyx_collection_query_publication_tests.lpr'))
+    $nyxQueryPublicationSuffix = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { '.exe' } else { '' }
+    & (Join-Path $nyxQueryPublicationNative ('nyx_collection_query_publication_tests' + $nyxQueryPublicationSuffix))
+    if ($LASTEXITCODE -ne 0) { throw 'Prepared collection query checks failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-FE$nyxQueryPublicationBrowser", 'tests/nyx_collection_query_publication_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryPublicationBrowser 'rtl.js')
+    $nyxQueryPublicationHTML = @"
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nyx prepared query review</title>
+<body>
+<script src="rtl.js"></script>
+<script src="nyx_collection_query_publication_tests.js"></script>
+<script>rtl.run();</script>
+</body>
+</html>
+"@
+    [IO.File]::WriteAllText((Join-Path $nyxQueryPublicationBrowser 'index.html'),
+      $nyxQueryPublicationHTML, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host 'Prepared queries checked natively; matching browser assertions compiled only.'
+    exit 0
+  }
+
   $nyxVersion = (& $nyxFpc '-iV').Trim()
   $nyxCPU = (& $nyxFpc '-iTP').Trim()
   $nyxOS = (& $nyxFpc '-iTO').Trim()

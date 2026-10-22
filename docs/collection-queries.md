@@ -7,6 +7,73 @@
 owned executable callbacks. Their snapshot entry point complements this
 serializable bound-control policy.
 
+## Prepared runtime query changes
+
+The optional `INyxCollectionQueryPublication` facet preserves the original
+`INyxCollectionView` interface/GUID. Obtain it through
+`NyxCollectionQueryPublication(View)` in `nyx.collections.view`; the contract lives
+in `nyx.collections.query.publication`, independently of renderers and controls.
+Unsupported alternate views refuse rather than silently perform sequential
+query/state writes. The public native consumer passes89 checks with a clean heap;
+matching browser assertions compile only. Current qualification is recorded in
+[WORK](../WORK.md#prepared-collection-query-publication--2026-10-21).
+
+```pascal
+LQueryOwner := NyxCollectionQueryPublication(LServicesView);
+LCapture := LQueryOwner.CaptureQuery;
+LPolicy := LCapture.Query
+  .Where(NyxWhere(NyxTextField('status')).EqualTo('stopped'))
+  .OrderBy(NyxNumberField('cpu'), nsdDescending);
+LPreparedQuery := LQueryOwner.PrepareQuery(LCapture, LPolicy);
+
+// APreparedState is an existing prepared scalar/state publication, for example
+// resetting the visible Search and Sort values through their real state owner.
+PublishNyxGroup([APreparedState, LPreparedQuery]);
+```
+
+Declare `LQueryOwner: INyxCollectionQueryPublication`,
+`LCapture: INyxCollectionQueryCapture`, `LPolicy: TNyxCollectionQuery` and
+`LPreparedQuery: INyxPreparedPublication`. Existing collection/query/state and
+publication units supply the other values. The application owns its schema,
+fields and prepared state; descriptor Text/Value setters are not live commands.
+
+A capture owns copied query intent and an inert exact-view identity, not source
+rows, a store or the view itself. A capture from another view refuses even when
+its query is identical. Actual A→B→A query changes invalidate the original
+capture; an equal ordinary ConfigureQuery remains a complete no-op and keeps it
+valid. Row changes before Prepare are allowed. Preparation uses the current
+source, retains that source and reserves its exact view through retirement.
+
+The prepared API requires a prepared/atomic source. Query, selection, paging,
+new subscriptions and source-row preparation cannot bypass its reservation;
+disconnecting an existing observer remains safe. A simultaneous same-source
+row-edit/query group explicitly refuses. Different views over the same unchanged
+store may prepare queries together. Ordinary non-atomic ConfigureQuery retains
+its existing immediate behavior, without claiming this coordinated capability.
+
+Validation computes the full filtered/sorted/unpaged/page/selection/hierarchy
+candidate. The final readiness fence reads private reservation/source/intent
+facts only; installation adopts preallocated values and retains displaced leases.
+Every participant installs before notifications. Later refusal leaves all models
+unchanged, abandonment releases its reservation, and postcommit observer failure
+remains committed while other independent observers are attempted. Repeated
+Retire cannot undo an installed result. Equal prepared policies retain existing
+snapshot identities and do not notify the query view.
+
+This is model authority, not a grant to a mounted application's callbacks.
+UI commands must still validate their current owner/event generation. Canonical
+toolbar/header contributions, visible column controls, rich events and ordinary
+Studio/save/generated authoring remain under
+[column filter/sort02](../TODO/NS-3_control-usefulness_02.md). No new query parser,
+store, scheduler or semantic server is introduced by this facet.
+
+The maintained `tools/build.ps1 -Target query-publication` command checks the
+native contract and stages the matching browser program. Supply a NEW
+`-QueryPublicationEvidenceDirectory` on your scratch drive to retain its outputs.
+It does not launch a host or execute the browser program.
+
+## Query editor preview
+
 Studio's query editor has **Preview project defaults**. It captures the current
 form without applying it, displays complete matching counts and a bounded row
 sample, and shows the same typed Pascal expression used by companion generation.
