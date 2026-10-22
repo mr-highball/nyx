@@ -2,6 +2,166 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Table query workbench — 2026-10-21
+
+**Native-local result:** the ordinary two-table workbench passes782 actual checks
+at each distinct client1280/390 with clean heaps. The same executable exercises
+real header/release/key/form input, typed policies, sort/reset, invalid-draft and
+empty recovery, hidden selection/peer filters, cancellation, queue supersession,
+raw takeover, replacement and disposal. A new exact structural-focus assertion
+adds coverage without dropping prior predicates or changing waits. Both OWN
+authored844131B1 project/A86173D6 Pascal exports match; this is codec/source proof,
+not Studio Save/Open or an independently compiled emitted application.
+
+Matching browser assertions and both final Studio mains compile. The final10
+compiler composite is four fresh compilers plus six exact unaffected compatibility
+compilers; session93/prepared-query89/typed-query56 retain their clean native
+outcomes. Zero owned/35 upstream RTL warning occurrences. All18 actual jobs are
+terminal/root joined. Immutable auditC2CBEF9C verifies25owned/1806Pascal/foreign13/
+extra6 at terminal and retains actual21 compiler attempts/ten native outcomes,
+including both compiler failures and five failed UI runs; all ten heaps are clean.
+Final Pascal stayed exact through all readers. Earlier failures and repair scopes
+remain below. Root/helper independently verified the final receipts, exact reuse,
+source pins and outcome documents; the owned checkpoint follows those reviews.
+
+All seven original filtering criteria remain open, with no duplicate component
+credit or DONE move. Core no-closure30→31 records this completed native batch.
+Root owns documentation/checkpoint only, all Pascal remains paused. Existing
+helper reviews receipts and the next P4/R3 readiness read-only. Actual browser
+input is the next external gate, followed by Studio policy/events/semantic help,
+paired history and its OWN Save/Open/compiled generated application. No host,
+worker/LAN/MCP/config rollout, cleanup/restart or new agent is released. The
+source-release and retained repair history follows.
+
+Previous turn is progress: shared sessions19e141e are pushed and remote-verified;
+all eight actual jobs are joined. Exact1800 Pascal/foreign13 preimages were
+checked before this separate P3 source release. The useful deliverable is now
+ordinary table users opening a filter from a header or keyboard, editing actual
+Nyx form controls, applying/resetting a typed rule and seeing sort/filter state.
+This advances [usefulness02](TODO/NS-3_control-usefulness_02.md) criteria1–5;
+all seven original criteria remain unchanged and open. Core no-closure30 carries.
+
+Root owns typed column/table query policies and saved/source parity, the existing
+mount and both target handlers, weak target popover adapters, renderer wiring,
+maintained build/query guide and this handoff. Lil' Scooty owns only new portable
+query-control declarations/controller, additive options on the existing query
+editor and a new ordinary two-table public consumer. Exact25 paths, retained
+preimages, all Pascal inputs and foreign pins are recorded in ignored
+`.local/query-workbench-paths-private.json`. No compiler/host is admitted.
+The fresh consumer is `tests/nyx_table_query_controls.lpr`; an initial proposed
+name collided with the existing `nyx_collection_query_controls` fixture. That
+collision was caught before edits/readers, and the old fixture remains exact.
+
+One existing session owns the data query. Popover presenters capture actual
+mounted input through their own renderer; authored Content is not a live value
+source. Factories are weak target/theme borrowers revoked before teardown.
+Every surface owns a monotonic serial independent of query no-op detection, so
+an older deferred Apply refuses after even a same-value Clear. Its flags-only
+readiness check joins the same prepared publication group. Before-change uses
+the existing named sequential event stream and execution cancellation; physical
+Consume is not a semantic veto. Draft errors retain actual user input. Counts
+distinguish matching rows before paging from all source rows. Header controls
+must preserve native cell editing/resizing and the existing canonical key veto.
+
+Both source scopes require independent review and one exact freeze before the
+bounded plan: ordinary consumer native1280/390 plus matching browser compilation,
+unchanged P2/P1/query native+browser compatibility, both Studio mains (10 accepted
+compilers/five native outcomes planned). Preserve any first failure. Stop at
+actual qualified native interaction and matching browser source, retaining the
+separate actual-browser and full Studio/history/save/generated/event-discovery
+gates. No source worker, LAN/MCP/config rollout, host, restart/cleanup or new
+agent follows. Q1/parent/parity blockers and all foreign files remain exact.
+
+Pre-reader source review corrected real interaction seams: accepted parent event
+router with separately copied runtime/design identities; header sort cycles start
+from user override ownership rather than a descending authored baseline; sort
+forms never absorb baseline-only keys; field markers inspect typed predicates
+rather than infer meaning from contribution channel names. Native activation uses
+the widget's HeaderClick on release, after its focus/resize decision. Popover
+initial focus resolves the actual editor/field part path. Closed/dismissed forms
+refuse queued work both on UI entry and at the final validator, while a fresh
+input may reopen its retained draft. Refusal/candidate failure keeps the accepted
+form. Full removable chips explain bounded typed rules. These are source repairs
+before any compiler, not newly executed or accepted product results.
+
+Final independent pre-reader review also corrected the protected declaration
+order in the mount without behavior changes. Explicit draft reload now stages
+current own rules before retiring the discarded form, and predicate captions
+truncate at Unicode scalar boundaries. The consumer retains stale-refusal and
+then exercises real Reload/Apply input. Root accepted helper's four source
+files; helper reviewed root's policy/codec/emission/target/lifetime seams. The
+maintained command deliberately stops at its first failure: unattempted widths
+or browser compilation remain unqualified. Pin the current private drivers as
+well as inherited inputs before the joint freeze; all Pascal/guides pause while
+actual readers run.
+
+The first workbench native compiler is terminal1/root joined (session37058,
+join de9514). Audit57C603D0 retains the exact25/1806/foreign13/extra5 inputs and
+compiler log. No native run or browser compile occurred. The consumer used two
+nonexistent property symbols; the existing NyxAttributeName(atValue) contract is
+the same live-value lookup. Full-log addendum also retains nine implicit Unicode
+conversion warnings: seven in workbench captions and two in its Unicode fixture.
+Only the helper workbench's explicit caption conversions and consumer's accessor/
+scalar fixture are released for repair. NyxAttributeName is already directly
+imported through nyx.types, so no additional unit is needed. Preserve all assertions and
+waits, then independently review and freeze before a fresh output directory.
+
+The repaired consumer native compiler passes with zero warnings, but its actual
+1280 run refuses at literal-table ViewFor: absence correctly raises ENyxCollection
+rather than returning nil. Its heap is clean;390 and matching workbench browser
+were not attempted. The independent Studio browser compiler stops at the new
+editor's Inc(enum), unsupported by pas2js. Both readers are terminal/root joined;
+auditEFAF3E3D retains25/1806/foreign13/extra6 exact and seven upstream RTL warnings,
+zero owned warnings. Only helper editor's guarded enum-successor expression and
+consumer's expected literal-absence refusal are released for repair. Preserve
+all original assertions/scenarios/waits and retain the failed1280 outcome.
+
+Portable repair compiles both Studios and current compatibility consumers;
+canonical-session93/prepared-query89/typed-query56 pass with clean heaps.
+The ordinary workbench compiles but1280 fails its unchanged first physical
+header-sort assertion, also with a clean heap. All ten actual reader jobs are
+terminal/root joined. AuditB5CBDCB2 pins25/1806/foreign13/extra6 exactly, with
+nine successful compilers at that freeze, zero owned/28 upstream warnings.
+Matching workbench browser and390 remain unattempted. Source inspection finds
+no fixed-row option defect: LCL admits the existing complete release path.
+Only consumer diagnostic text/public observations on the same failed assertion
+are released next; no product patch, direct callback bypass, changed wait or
+weakened predicate follows. Reuse exact unchanged compatibility/Studio results
+after this test-only diagnostic repair instead of replaying them.
+
+Diagnostic1280 (session59935, join b9bdf5) retains the same failed predicate and
+clean heap. AuditCD458899 pins25/1806/foreign13/extra6 exact. Its public facts
+prove correct cell/focus/editor admission and no callbacks; mount ErrorText is
+"Construct a typed data value before use". Root traced this to EventInfo's
+default Value: the existing TNyxEventInfo.Copy always copies that typed value,
+even when HasValue=False. Canonical event constructors explicitly use NyxNull.
+Only helper workbench EventInfo's null initialization/comment is released next;
+keep HasValue=False and the existing Details payload. This is a product defect,
+not a native gesture/options issue. Review/freeze before fresh workbench and both
+Studio compilers; reuse the unchanged six compatibility compilers/93/89/56.
+
+Event-value repair passes the original real header sort cycles and callback
+payload checks; later native1280 refuses the unchanged focus assertion when
+reopening a retained same-column draft. Its heap remains clean. Both Studios
+compile with zero owned/seven upstream warnings. All three new readers joined;
+audit461BE77E retains exact25/1806/foreign13/extra6. Root traced the retained
+OpenColumn branch: its Show options omit the initial OpenForm's typed field
+focus. Only helper's identical Focus(editor/field) addition is released next;
+preserve the draft, all assertions and waits. Rebuild workbench first, then both
+final Studios once that actual journey passes; six compatibility compilers and
+three clean model outcomes stay eligible for exact reuse.
+
+Retained-focus1280 reaches LifetimeCases after all preceding suites, then fails
+the same focus oracle on an already-open form. Its heap is clean; audit4170A71E
+pins25/1806/foreign13/extra6 exactly and all15 actual jobs are joined. Root owns
+only the two target Show(open) adapters, which now honor explicit focus through
+the existing renderer APIs without rebuilding live controls. Helper owns only
+final guarded post-adoption focus after old-host retirement and an extra exact
+structural-focus assertion. Existing popover Close semantics/API stay intact.
+Independent review corrected live Part.ID use to niRuntime; authored design IDs
+are a separate namespace. Joint review/freeze precedes another workbench run;
+unchanged compatibility remains reused and final Studio compilers stay deferred.
+
 ## Shared collection query sessions — 2026-10-21
 
 Previous goal turn is progress: c2e0fd8 delivers qualified prepared query

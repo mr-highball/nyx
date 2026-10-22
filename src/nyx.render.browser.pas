@@ -379,6 +379,9 @@ type
     FCanvasGripViews: array[TNyxResizeAxis] of TNyxBrowserRenderer;
     FCanvasGripHosts: array[TNyxResizeAxis] of TJSHTMLElement;
     FEvents: INyxEvents;
+    { Hidden candidates borrow the accepted parent's event router for table
+      commands. It survives adoption; the candidate's own router does not. }
+    FCollectionQueryEvents: INyxEvents;
     FEmbeddedContext: INyxApplicationContext;
     FEmbeddedResolver: INyxLogicResolver;
     FCanvasAdoptionHost: INyxCanvasRouteAdoptionHost;
@@ -727,6 +730,7 @@ implementation
 
 uses
   nyx.canvas.browser, nyx.canvas.scene, nyx.tool.canvas.browser,
+  nyx.collections.query.browser,
   nyx.application.resources;
 
 type
@@ -1121,6 +1125,7 @@ begin
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
   FEvents := NewNyxEvents;
+  FCollectionQueryEvents := FEvents;
   FCoordinatorRefreshObject := TNyxBrowserCoordinatorRefresh.Create(Self);
   FCoordinatorRefreshTarget := TNyxBrowserCoordinatorRefresh(FCoordinatorRefreshObject);
   FContentGuard := NewNyxContentGuard(@QueueContent);
@@ -2910,6 +2915,7 @@ begin
       LCandidate.FHost.appendChild(LCandidate.Build(LCandidate.FRoot));
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
       begin
+        LCandidate.FCollectionQueryEvents := FEvents;
         LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
           LCandidate.FCollectionBindings.View(LIndex));
       end;
@@ -4219,6 +4225,7 @@ var
   LElement: TJSHTMLElement;
   LIndex: Integer;
   LKind: TNyxText;
+  LQueryMount: INyxCollectionQueryMount;
 begin
 
   if AView = nil then
@@ -4255,6 +4262,14 @@ begin
       Result := MountNyxBrowserCollection(LElement, AView);
       FBindings[LIndex].FCollectionMount := Result;
       Result.ObserveSelection(FBindings[LIndex].CollectionSelectionChanged);
+
+      if not FDesignMode and (AView.Projection = cpTable) and
+        Supports(Result, INyxCollectionQueryMount, LQueryMount) then
+      begin
+        LQueryMount.ConfigureQueries(NewNyxBrowserQueryFormFactory(
+          LElement, FTheme), FCollectionQueryEvents,
+          NyxControlEvents(FBindings[LIndex].FNode.ID, niRuntime), FBindings[LIndex].FNode.DesignID);
+      end;
       Exit;
     end;
   end;

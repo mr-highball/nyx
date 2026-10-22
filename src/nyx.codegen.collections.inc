@@ -163,12 +163,18 @@ const
   CFields: array[TNyxStateKind] of TNyxText =
     ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
   CMatches: array[TNyxTypeAheadMatch] of TNyxText = ('ntmFolded', 'ntmExact');
+  CComparisons: array[TNyxQueryComparison] of TNyxText =
+    ('nqcEqual', 'nqcNotEqual', 'nqcLess', 'nqcAtMost', 'nqcGreater', 'nqcAtLeast',
+     'nqcContains', 'nqcStartsWith', 'nqcEndsWith');
 var
   LView: TNyxCollectionViewSpec;
   LColumn: TNyxCollectionColumn;
   LIndex: Integer;
+  LOperator: Integer;
   LLine: TNyxText;
   LQuery: TNyxCollectionQuery;
+  LColumnPolicy: TNyxColumnQueryPolicy;
+  LTablePolicy: TNyxTableQueryPolicy;
 begin
 
   if not ANode.HasCollectionView then
@@ -225,6 +231,70 @@ begin
       end;
       ALines.Add(LLine + ')');
     end;
+
+    if LColumn.HasQueryPolicy then
+    begin
+      LColumnPolicy := LColumn.QueryPolicy;
+      LLine := AIndent + '    .ColumnQuery(NyxColumnQuery';
+
+      if not LColumnPolicy.FilterEnabled then
+      begin
+        LLine := LLine + '.Filtering(False)';
+      end;
+
+      if not LColumnPolicy.SortEnabled then
+      begin
+        LLine := LLine + '.Sorting(False)';
+      end;
+
+      if LColumnPolicy.TextMode = nqtAsciiInsensitive then
+      begin
+        LLine := LLine + '.TextComparison(nqtAsciiInsensitive)';
+      end;
+
+      if LColumnPolicy.HasOperators then
+      begin
+        LLine := LLine + '.Operators([';
+        for LOperator := 0 to LColumnPolicy.ComparisonCount - 1 do
+        begin
+
+          if LOperator > 0 then
+          begin
+            LLine := LLine + ', ';
+          end;
+          LLine := LLine + CComparisons[LColumnPolicy.ComparisonAt(LOperator)];
+        end;
+        LLine := LLine + '])';
+      end;
+      ALines.Add(LLine + ')');
+    end;
+  end;
+
+  if LView.HasTableQueryPolicy then
+  begin
+    LTablePolicy := LView.TableQueryPolicy;
+    LLine := AIndent + '    .TableQuery(NyxTableQuery';
+
+    if not LTablePolicy.IsEnabled then
+    begin
+      LLine := LLine + '.Enabled(False)';
+    end;
+
+    if not LTablePolicy.FilterEnabled then
+    begin
+      LLine := LLine + '.Filtering(False)';
+    end;
+
+    if not LTablePolicy.SortEnabled then
+    begin
+      LLine := LLine + '.Sorting(False)';
+    end;
+
+    if LTablePolicy.Mode = nqsmSingle then
+    begin
+      LLine := LLine + '.SortMode(nqsmSingle)';
+    end;
+    ALines.Add(LLine + ')');
   end;
 
   if LView.ParentField <> '' then

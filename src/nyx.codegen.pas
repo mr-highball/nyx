@@ -79,6 +79,7 @@ uses
   nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.query,
+  nyx.collections.query.policy,
   nyx.collections.selection,
   nyx.binding.types,
   SysUtils,
@@ -4300,6 +4301,11 @@ begin
       if ADocument.HasColumnSizing then
       begin
         LLines.Add('  nyx.collections.columns,');
+      end;
+
+      if ADocument.HasCollectionQueryControls then
+      begin
+        LLines.Add('  nyx.collections.query.policy,');
       end;
       LLines.Add('  nyx.collections.selection,');
       LLines.Add('  nyx.collections.query,');

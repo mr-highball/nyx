@@ -42,6 +42,7 @@ implementation
 
 uses
   Classes,
+  Types,
   SysUtils,
   Math,
   Forms,
@@ -60,6 +61,8 @@ uses
   nyx.collections.columns,
   nyx.layout.flow,
   nyx.collections.view.types,
+  nyx.collections.query,
+  nyx.collections.query.controls,
   nyx.typeahead,
   nyx.collections.selection,
   nyx.collections.tree.rows;
@@ -96,6 +99,11 @@ type
     FRejectTextKey: Boolean;
     FConsumedTextKey: Boolean;
     FPreviousMouse: TMouseEvent;
+    FPreviousHeaderClick: THdrEvent;
+    FQueryPressActive: Boolean;
+    FQueryPressColumn: Integer;
+    FQueryPressFilter: Boolean;
+    FQueryPressAppend: Boolean;
     FPreviousPrepare: TOnPrepareCanvasEvent;
     FPreviousTreeSelection: TNotifyEvent;
     FPreviousMultiSelect: Boolean;
@@ -109,6 +117,10 @@ type
     FColumnOverrides: TNyxFlowSizes;
     FPreviousGridResize: TNotifyEvent;
     FColumnApplying: Boolean;
+    FPreviousHeaderHeight: Integer;
+    FQueryHeaderAdjusted: Boolean;
+    FPreviousGridHint: String;
+    FPreviousGridShowHint: Boolean;
     function TreeRows: INyxTreeRows;
     procedure SizeGridColumns;
     procedure GridResized(Sender: TObject);
@@ -126,6 +138,7 @@ type
     procedure UTF8KeyPress(Sender: TObject; var AKey: TUTF8Char);
     procedure GridMouseDown(Sender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
+    procedure GridHeaderClicked(Sender: TObject; AIsColumn: Boolean; AIndex: Integer);
     procedure PrepareGrid(Sender: TObject; AColumn, ARow: Integer; AState: TGridDrawState);
     function VisibleOrder: TNyxItemRefs;
     procedure TreeEdited(Sender: TObject; ANode: TTreeNode; var AText: String);
@@ -134,6 +147,7 @@ type
     { Pure UI-thread read, clipped during native geometry/teardown transitions.
       It borrows the view only while this mount owns the grid reader. }
     function GridText(AColumn, ARow: Integer): TNyxText;
+    procedure QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
     function EditText(const AItem: TNyxItemRef; AColumn: Integer;
       const AValue: TNyxText): TNyxText;
   protected
@@ -211,6 +225,8 @@ begin
           raise ENyxCollection.Create('Table binding requires a native string grid');
         end;
         FGrid := TStringGrid(AControl);
+        FPreviousGridHint := FGrid.Hint;
+        FPreviousGridShowHint := FGrid.ShowHint;
         FPreviousCell := FGrid.OnSelectCell;
         FPreviousValidate := FGrid.OnValidateEntry;
         FPreviousOptions := FGrid.Options;
@@ -218,11 +234,13 @@ begin
         FGrid.OnValidateEntry := GridEdited;
         FPreviousKey := FGrid.OnKeyDown;
         FPreviousMouse := FGrid.OnMouseDown;
+        FPreviousHeaderClick := FGrid.OnHeaderClick;
         FPreviousPrepare := FGrid.OnPrepareCanvas;
         FPreviousGridResize := FGrid.OnResize;
         FGrid.OnResize := GridResized;
         FGrid.OnKeyDown := KeyDown;
         FGrid.OnMouseDown := GridMouseDown;
+        FGrid.OnHeaderClick := GridHeaderClicked;
         FGrid.OnPrepareCanvas := PrepareGrid;
 
         if FGrid is TNyxCollectionStringGrid then
@@ -729,13 +747,106 @@ begin
 
   if ARow = 0 then
   begin
-    Exit(FView.Spec.ColumnAt(AColumn).Title);
+    Result := QueryHeader(AColumn);
+
+    if (FQueries <> nil) and
+      ((FView.Spec.TableQueryPolicy.FilterEnabled and FView.Spec.ColumnAt(AColumn).QueryPolicy.FilterEnabled) or
+       (FView.Spec.TableQueryPolicy.SortEnabled and FView.Spec.ColumnAt(AColumn).QueryPolicy.SortEnabled)) then
+    begin
+      Result := Result + TNyxText('  ▾');
+    end;
+    Exit;
   end;
   LData := FView.Snapshot;
 
   if (ARow > 0) and (ARow <= LData.Count) then
   begin
     Result := DisplayText(FView.CellText(LData.ItemAt(ARow - 1).Ref, AColumn));
+  end;
+end;
+
+procedure TNativeMount.QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
+var
+  LQueries: INyxCollectionQueryWorkbench;
+  LSort: TNyxCollectionSort;
+  LObservation: TNyxQueryWorkbenchObservation;
+  LField: TNyxText;
+  LIndex: Integer;
+  LAscending: Boolean;
+  LReset: Boolean;
+begin
+
+  if not GetConnected or not FEnabled or (FQueries = nil) or
+    (AColumn < 0) or (AColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  LQueries := FQueries;
+  try
+
+    if not ((FView.Spec.TableQueryPolicy.FilterEnabled and FView.Spec.ColumnAt(AColumn).QueryPolicy.FilterEnabled) or
+      (FView.Spec.TableQueryPolicy.SortEnabled and FView.Spec.ColumnAt(AColumn).QueryPolicy.SortEnabled)) then
+    begin
+      Exit;
+    end;
+
+    if AFilter or not FView.Spec.TableQueryPolicy.SortEnabled or
+      not FView.Spec.ColumnAt(AColumn).QueryPolicy.SortEnabled then
+    begin
+
+      if FView.Spec.TableQueryPolicy.FilterEnabled and
+        FView.Spec.ColumnAt(AColumn).QueryPolicy.FilterEnabled then
+      begin
+        LQueries.OpenColumn(AColumn);
+      end
+      else
+      begin
+        LQueries.OpenSort;
+      end;
+      Exit;
+    end;
+    LAscending := True;
+    LReset := False;
+    LField := FView.Spec.ColumnAt(AColumn).FieldName;
+    LObservation := LQueries.Observation;
+
+    if not GetConnected or not FEnabled or (FQueries <> LQueries) then
+    begin
+      Exit;
+    end;
+    { An authored descending baseline is not a user cycle already at its last
+      step. The first header activation deliberately starts an ascending key. }
+    for LIndex := 0 to LObservation.Query.SortCount - 1 do
+    begin
+      LSort := LObservation.Query.SortAt(LIndex);
+
+      if LObservation.HasUserSort and (LSort.FieldName = LField) then
+      begin
+        LAscending := False;
+        LReset := LSort.Direction = nsdDescending;
+        Break;
+      end;
+    end;
+
+    if LReset then
+    begin
+      LQueries.ResetSort;
+    end
+    else if LAscending then
+    begin
+      LQueries.SortColumn(AColumn, nsdAscending, AAppend);
+    end
+    else
+    begin
+      LQueries.SortColumn(AColumn, nsdDescending, AAppend);
+    end;
+  except
+    on LException: Exception do
+    begin
+      { The same diagnostic phase distinguishes a refused command from a
+        committed observer failure. Never undo committed rows in an adapter. }
+      Failed(LException);
+    end;
   end;
 end;
 
@@ -982,6 +1093,23 @@ begin
   begin
     FGrid.BeginUpdate;
     try
+      { Enlarge the existing fixed header, retaining every existing row index.
+        Counts/markers wrap within it; detailed removable chips live in the
+        shared Nyx form. This is not an overlaid toolbar hiding data rows. }
+
+      if (FQueries <> nil) and not FQueryHeaderAdjusted then
+      begin
+        FPreviousHeaderHeight := FGrid.RowHeights[0];
+        FQueryHeaderAdjusted := True;
+        FGrid.RowHeights[0] := Max(FPreviousHeaderHeight, FGrid.DefaultRowHeight * 3);
+      end;
+
+      if FQueries <> nil then
+      begin
+        FGrid.Hint := FQuerySummary + TNyxText('. Header arrow or Alt+Down: filter. ') +
+          TNyxText('Header title: sort; Shift: add a sort key.');
+        FGrid.ShowHint := True;
+      end;
       { Preserve drafts when their accepted scalar is unchanged. Native grid
         cells are positional, so moved/new rows must receive their new content;
         unchanged rows survive unrelated field publications and normalization. }
@@ -1007,7 +1135,7 @@ begin
         end;
         for LColumn := 0 to FView.Spec.Count - 1 do
         begin
-          FGrid.Cells[LColumn, 0] := FView.Spec.ColumnAt(LColumn).Title;
+          FGrid.Cells[LColumn, 0] := GridText(LColumn, 0);
 
           if LData.Count = 0 then
           begin
@@ -1098,6 +1226,17 @@ begin
           SizeGridColumns;
         end;
       end;
+      { Query metadata may change without row membership changing. Refresh
+        headers independently of data-cell normalization/draft ownership. }
+      for LColumn := 0 to FView.Spec.Count - 1 do
+      begin
+
+        if not FGridReaderAttached then
+        begin
+          FGrid.Cells[LColumn, 0] := GridText(LColumn, 0);
+        end;
+      end;
+      FGrid.Invalidate;
 
       if (LSelected >= 0) and (FGrid.Row <> LSelected + 1) then
       begin
@@ -1275,9 +1414,19 @@ begin
     FGrid.OnValidateEntry := FPreviousValidate;
     FGrid.OnKeyDown := FPreviousKey;
     FGrid.OnMouseDown := FPreviousMouse;
+    FGrid.OnHeaderClick := FPreviousHeaderClick;
+    FQueryPressActive := False;
     FGrid.OnPrepareCanvas := FPreviousPrepare;
     FGrid.OnResize := FPreviousGridResize;
     FGrid.Options := FPreviousOptions;
+    FGrid.Hint := FPreviousGridHint;
+    FGrid.ShowHint := FPreviousGridShowHint;
+
+    if FQueryHeaderAdjusted then
+    begin
+      FGrid.RowHeights[0] := FPreviousHeaderHeight;
+      FQueryHeaderAdjusted := False;
+    end;
     FGrid := nil;
   end;
 

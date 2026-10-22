@@ -1,5 +1,65 @@
 # Working in Nyx
 
+QUERY WORKBENCH P3 NATIVE-LOCAL QUALIFIED (2026-10-21): ordinary table inputs
+pass782 actual checks at1280 and390, same executable/distinct client receipts,
+both clean heaps. Matching browser assertions and both Studio mains compile.
+Final10 compiler composite (fresh4/reused6) has zero owned/35 upstream RTL
+warnings; unchanged session93/publication89/query56 retain compatibility.
+All18 actual jobs are terminal/root joined; immutable auditC2CBEF9C verifies
+25owned/1806Pascal/foreign13/extra6 at terminal. Actual21 compiler attempts and
+ten native outcomes retain the two compiler failures/five failed UI runs; every
+native heap is clean. Source stays exact from the final reviewed freeze.
+Own844131B1 project/A86173D6 Pascal exports match widths; they prove authored
+codec/source output, not Studio Save/Open or a compiled emitted application.
+Typed v7 query policy preserves absent v1-6 output. Existing canonical sessions,
+events/popovers/live controls own commands. Retain the real uninitialized event
+Value/focus defects and repairs, first missing-symbol/enum failures and nine
+superseded Unicode warnings. Extra structural-focus oracle is additive; no old
+predicate/wait was dropped or bypassed. Root/helper independently reviewed source,
+final receipts, exact reuse and outcome documentation; all reviews pass.
+All original usefulness02 seven criteria/Q1/parent/parity/Studio/history/save/
+generated/browser-execution gates stay open; no DONE/credit. Core no-closure30
+advances31 for this completed native batch. Root owns docs/checkpoint only; all
+Pascal is paused. Existing helper owns read-only final outcome review and P4/R3
+readiness. Next useful gate is actual browser input, then Studio policy/event/
+semantic authoring and its OWN saved/generated journey. No host/browser launch,
+worker/LAN/MCP/config rollout, cleanup/restart or extra agent follows without
+an explicit applicable user override. Preserve foreign13/resolver14/splitter.
+WORK/private workbench state own exact retained receipts and the return path.
+
+QUERY WORKBENCH P3 SOURCE RELEASED (2026-10-21): prior19e141e is progress,
+pushed/remote-verified; all P2 readers are joined and1800 Pascal/foreign13 match.
+Next useful outcome is actual table header/key/live-form input on ordinary native
+controls plus matching browser implementation, not another model-only variant.
+Root owns typed saved query policy/view codec/model discovery/codegen/source,
+existing collection mount/native/browser handlers, two new target presenter
+adapters, renderer wiring, build/query guide/task02/WORK/handoff. Existing helper
+owns ONLY new query.controls/workbench units, additive query.editor options and
+new ordinary two-table consumer. Exact25 paths/preimages are in private
+.local/query-workbench-paths-private.json. No other source is released.
+The new consumer is tests/nyx_table_query_controls.lpr; the already tracked
+nyx_collection_query_controls stays exact. This name collision was corrected
+before any consumer edit or reader, not permission to replace the old test.
+Reuse P2 ONE canonical session and existing QueryEditor/parser, event router,
+popover hosts and mounted live bindings. Default bound scalar tables admit
+family-appropriate filters and multiple sort keys; typed table/column policies
+allow opt-out/operator/comparison restrictions. Literal Items stay unbound.
+Factories borrow exact targets/theme and are revoked before target retirement;
+presenters capture their actual mounted renderer Root, never authored Content.
+Controller callbacks own weak flags only. Per-surface monotonic serial advances
+on every superseding intent, including equal/refused Clear, and joins session
+publication through a pure readiness participant. Preserve active invalid drafts.
+Named before-query callbacks use existing neSequential execution cancellation,
+never spoof physical Consume; after notifications use ordinary policies.
+Counts say matching source rows / source rows, not authored-eligible totals.
+Both source scopes need independent review/freeze before any compiler. Planned
+bounded qualification is ordinary consumer native1280/390+browser, current P2/
+P1/query native+browser compatibility and both Studio mains; no reader is admitted
+yet. All seven02/Q1/parent/parity/Studio/history/save/generated/browser-input
+gates remain open; no-closure30 carries. No host/browser execution/worker/LAN/
+MCP/config/restart/cleanup or extra agent follows. Preserve foreign13/resolver14/
+splitter deferral. WORK/private workbench state own admission and return.
+
 QUERY SESSION P2 NATIVE-LOCAL QUALIFIED (2026-10-21): canonical-session public
 consumer passes93 native checks, unchanged prepared-query89 and typed-query56
 retain compatibility; all three final heaps are clean. All four browser programs

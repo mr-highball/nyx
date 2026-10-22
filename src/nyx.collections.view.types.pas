@@ -33,6 +33,7 @@ uses
   nyx.data,
   nyx.collections,
   nyx.collections.query,
+  nyx.collections.query.policy,
   nyx.collections.selection,
   nyx.typeahead,
   nyx.collections.columns,
@@ -60,6 +61,9 @@ type
     FTitle: TNyxText;
     FMode: TNyxCollectionCellMode;
     FSizing: TNyxColumnSizing;
+    FQueryPolicy: TNyxColumnQueryPolicy;
+    function GetQueryPolicy: TNyxColumnQueryPolicy;
+    function GetHasQueryPolicy: Boolean;
   public
     function Copy: TNyxCollectionColumn;
     { Read the declared scalar family from an admitted item. Missing fields and
@@ -72,6 +76,10 @@ type
     { Undefined preserves the library's default content allocation and legacy
       wire version. A defined value owns only logical dimensions and bounds. }
     property Sizing: TNyxColumnSizing read FSizing;
+    { Resolved library default and authored presence are distinct. Query controls
+      affect user commands; they never rewrite the accepted baseline query. }
+    property QueryPolicy: TNyxColumnQueryPolicy read GetQueryPolicy;
+    property HasQueryPolicy: Boolean read GetHasQueryPolicy;
   end;
 
   { Renderer-independent authored binding. Fluent calls return detached copies,
@@ -91,6 +99,7 @@ type
     FHasTypeAhead: Boolean;
     FTypeAhead: TNyxTypeAheadOptions;
     FPaging: TNyxCollectionPaging;
+    FTableQuery: TNyxTableQueryPolicy;
     FColumns: array of TNyxCollectionColumn;
     function AddColumn(const AName: TNyxText; AKind: TNyxStateKind;
       const ATitle: TNyxText; AMode: TNyxCollectionCellMode): TNyxCollectionViewSpec;
@@ -99,6 +108,9 @@ type
     function GetQuery: TNyxCollectionQuery;
     function GetTypeAhead: TNyxTypeAheadOptions;
     function GetHasColumnSizing: Boolean;
+    function GetHasQueryControls: Boolean;
+    function GetHasTableQueryPolicy: Boolean;
+    function GetTableQueryPolicy: TNyxTableQueryPolicy;
   public
     function Column(const AField: TNyxTextFieldRef; const ATitle: TNyxText;
       AMode: TNyxCollectionCellMode = cmReadOnly): TNyxCollectionViewSpec; overload;
@@ -128,6 +140,14 @@ type
     { Clear only the immediately preceding column's explicit choice. Missing
       columns refuse; other sizing/query/selection policies remain independent. }
     function UseDefaultColumnSizing: TNyxCollectionViewSpec;
+    { Configure the preceding column's user filter/sort affordances. Typed
+      operators are validated against that column before returning a copy. }
+    function ColumnQuery(const APolicy: TNyxColumnQueryPolicy): TNyxCollectionViewSpec;
+    function UseDefaultColumnQuery: TNyxCollectionViewSpec;
+    { Tables resolve absent choices to enabled scalar filtering/sorting. These
+      saved choices are independent of runtime owner contributions and drafts. }
+    function TableQuery(const APolicy: TNyxTableQueryPolicy): TNyxCollectionViewSpec;
+    function UseDefaultTableQuery: TNyxCollectionViewSpec;
     { Save independent page defaults; runtime page changes never rewrite this
       authored value. Tables/lists consume it after their query. Trees refuse
       during projection admission until hierarchy-aware paging is supported. }
@@ -156,6 +176,9 @@ type
     { True when any column carries an explicit policy, selecting descriptor v5. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
     property PagingPolicy: TNyxCollectionPaging read FPaging;
+    property HasQueryControls: Boolean read GetHasQueryControls;
+    property HasTableQueryPolicy: Boolean read GetHasTableQueryPolicy;
+    property TableQueryPolicy: TNyxTableQueryPolicy read GetTableQueryPolicy;
   end;
 
 function NyxCollectionView(const AKey: TNyxCollectionRef): TNyxCollectionViewSpec;
@@ -170,6 +193,100 @@ begin
   Result.FTitle := FTitle;
   Result.FMode := FMode;
   Result.FSizing := FSizing;
+  Result.FQueryPolicy := FQueryPolicy;
+end;
+
+function TNyxCollectionColumn.GetQueryPolicy: TNyxColumnQueryPolicy;
+begin
+  Result := NyxColumnQuery;
+
+  if FQueryPolicy.Defined then
+  begin
+    Result := FQueryPolicy;
+  end;
+end;
+
+function TNyxCollectionColumn.GetHasQueryPolicy: Boolean;
+begin
+  Result := FQueryPolicy.Defined;
+end;
+
+function TNyxCollectionViewSpec.GetTableQueryPolicy: TNyxTableQueryPolicy;
+begin
+  Result := NyxTableQuery;
+
+  if FTableQuery.Defined then
+  begin
+    Result := FTableQuery;
+  end;
+end;
+
+function TNyxCollectionViewSpec.GetHasTableQueryPolicy: Boolean;
+begin
+  Result := FTableQuery.Defined;
+end;
+
+function TNyxCollectionViewSpec.GetHasQueryControls: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := FTableQuery.Defined;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if FColumns[LIndex].HasQueryPolicy then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxCollectionViewSpec.ColumnQuery(
+  const APolicy: TNyxColumnQueryPolicy): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a column before configuring its query controls');
+  end;
+  APolicy.Validate(FColumns[Count - 1].Kind);
+  Result := Copy;
+  Result.FColumns[Count - 1].FQueryPolicy := APolicy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultColumnQuery: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined or (Count = 0) then
+  begin
+    raise ENyxCollection.Create('Declare a column before restoring its query controls');
+  end;
+  Result := Copy;
+  Result.FColumns[Count - 1].FQueryPolicy := Default(TNyxColumnQueryPolicy);
+end;
+
+function TNyxCollectionViewSpec.TableQuery(
+  const APolicy: TNyxTableQueryPolicy): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before configuring query controls');
+  end;
+  APolicy.Validate;
+  Result := Copy;
+  Result.FTableQuery := APolicy;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultTableQuery: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before restoring query controls');
+  end;
+  Result := Copy;
+  Result.FTableQuery := Default(TNyxTableQueryPolicy);
 end;
 
 function TNyxCollectionViewSpec.GetHasColumnSizing: Boolean;
@@ -303,6 +420,7 @@ begin
   Result.FHasTypeAhead := FHasTypeAhead;
   Result.FTypeAhead := FTypeAhead;
   Result.FPaging := FPaging;
+  Result.FTableQuery := FTableQuery;
   SetLength(Result.FColumns, Count);
   for LIndex := 0 to Count - 1 do
   begin
@@ -472,13 +590,19 @@ begin
   if not FDefined then
   begin
 
-    if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead or FPaging.Defined then
+    if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead or
+      FPaging.Defined or FTableQuery.Defined then
     begin
       raise ENyxCollection.Create('Absent collection view contains a descriptor');
     end;
     Exit;
   end;
   LReference := NyxCollection(FKey.Name);
+
+  if FTableQuery.Defined then
+  begin
+    FTableQuery.Validate;
+  end;
 
   if FPaging.Defined then
   begin
@@ -526,6 +650,11 @@ begin
       (Ord(FColumns[LIndex].Mode) > Ord(High(TNyxCollectionCellMode))) then
     begin
       raise ENyxCollection.Create('Unknown collection view column choice');
+    end;
+
+    if FColumns[LIndex].HasQueryPolicy then
+    begin
+      FColumns[LIndex].QueryPolicy.Validate(FColumns[LIndex].Kind);
     end;
     for LOther := 0 to LIndex - 1 do
     begin
@@ -575,6 +704,20 @@ begin
         NyxField('title', NyxData(FColumns[LIndex].Title)),
         NyxField('editable', NyxData(FColumns[LIndex].Mode = cmEditable)),
         NyxField('sizing', FColumns[LIndex].Sizing.ToData)]);
+    end;
+
+    if HasQueryControls then
+    begin
+      { Version seven has a closed complete column shape. Null independently
+        preserves each absent sizing/query choice; versions one through six
+        retain their exact former descriptors when no query choice is saved. }
+      LColumns[LIndex] := NyxObject([
+        NyxField('field', NyxData(FColumns[LIndex].FieldName)),
+        NyxField('kind', NyxData(NyxStateKindName(FColumns[LIndex].Kind))),
+        NyxField('title', NyxData(FColumns[LIndex].Title)),
+        NyxField('editable', NyxData(FColumns[LIndex].Mode = cmEditable)),
+        NyxField('sizing', FColumns[LIndex].Sizing.ToData),
+        NyxField('queryControls', FColumns[LIndex].FQueryPolicy.ToData)]);
     end;
   end;
   Result := NyxObject([NyxField('version', NyxData(1)),
@@ -664,6 +807,28 @@ begin
       NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
       NyxField('typeAhead', LTypeAhead), NyxField('paging', FPaging.ToData)]);
   end;
+
+  if HasQueryControls then
+  begin
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    LTypeAhead := NyxNull;
+
+    if FHasTypeAhead then
+    begin
+      LTypeAhead := FTypeAhead.ToData;
+    end;
+    Result := NyxObject([NyxField('version', NyxData(7)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
+      NyxField('typeAhead', LTypeAhead), NyxField('paging', FPaging.ToData),
+      NyxField('queryControls', FTableQuery.ToData)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -693,27 +858,28 @@ begin
       ((AData.Count = 6) and (AData.Field('version').AsInteger = 2)) or
       ((AData.Count = 7) and (AData.Field('version').AsInteger = 3)) or
       ((AData.Count = 8) and (AData.Field('version').AsInteger in [4, 5])) or
-      ((AData.Count = 9) and (AData.Field('version').AsInteger = 6))) then
+      ((AData.Count = 9) and (AData.Field('version').AsInteger = 6)) or
+      ((AData.Count = 10) and (AData.Field('version').AsInteger = 7))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
   Result := NyxCollectionView(NyxCollection(AData.Field('key').AsText));
   LVersion := AData.Field('version').AsInteger;
 
-  if LVersion in [5, 6] then
+  if LVersion in [5, 6, 7] then
   begin
     for LFieldIndex := 0 to AData.Count - 1 do
     begin
 
       if Pos('|' + AData.Key(LFieldIndex) + '|',
-        '|version|key|scope|parent|columns|selection|query|typeAhead|paging|') = 0 then
+        '|version|key|scope|parent|columns|selection|query|typeAhead|paging|queryControls|') = 0 then
       begin
         raise ENyxCollection.Create('Unknown sized collection view field');
       end;
     end;
   end;
 
-  if LVersion in [3, 4, 5, 6] then
+  if LVersion in [3, 4, 5, 6, 7] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
@@ -737,7 +903,7 @@ begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
 
-  if (LVersion in [5, 6]) and (AData.Field('typeAhead').Kind <> ndNull) then
+  if (LVersion in [5, 6, 7]) and (AData.Field('typeAhead').Kind <> ndNull) then
   begin
     Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
@@ -778,7 +944,9 @@ begin
     LColumn := LColumns.Item(LIndex);
 
     if (LColumn.Kind <> ndObject) or
-      not ((LColumn.Count = 4) or ((LVersion in [5, 6]) and (LColumn.Count = 5))) then
+      not (((LVersion < 7) and (LColumn.Count = 4)) or
+        ((LVersion in [5, 6]) and (LColumn.Count = 5)) or
+        ((LVersion = 7) and (LColumn.Count = 6))) then
     begin
       raise ENyxCollection.Create('Invalid collection view column descriptor');
     end;
@@ -826,6 +994,29 @@ begin
       LPolicy := TNyxColumnSizing.FromData(LColumn.Field('sizing'));
       Result := Result.ColumnSizing(LPolicy);
     end;
+
+    if LVersion = 7 then
+    begin
+      for LFieldIndex := 0 to LColumn.Count - 1 do
+      begin
+
+        if Pos('|' + LColumn.Key(LFieldIndex) + '|',
+          '|field|kind|title|editable|sizing|queryControls|') = 0 then
+        begin
+          raise ENyxCollection.Create('Unknown queryable collection column field');
+        end;
+      end;
+
+      if LColumn.Field('sizing').Kind <> ndNull then
+      begin
+        Result := Result.ColumnSizing(TNyxColumnSizing.FromData(LColumn.Field('sizing')));
+      end;
+
+      if LColumn.Field('queryControls').Kind <> ndNull then
+      begin
+        Result := Result.ColumnQuery(TNyxColumnQueryPolicy.FromData(LColumn.Field('queryControls')));
+      end;
+    end;
   end;
 
   if (LVersion = 5) and not Result.HasColumnSizing then
@@ -833,9 +1024,23 @@ begin
     raise ENyxCollection.Create('Version-five collection views require an explicit column sizing');
   end;
 
-  if LVersion = 6 then
+  if (LVersion = 6) or ((LVersion = 7) and (AData.Field('paging').Kind <> ndNull)) then
   begin
     Result := Result.Paged(TNyxCollectionPaging.FromData(AData.Field('paging')));
+  end;
+
+  if LVersion = 7 then
+  begin
+
+    if AData.Field('queryControls').Kind <> ndNull then
+    begin
+      Result := Result.TableQuery(TNyxTableQueryPolicy.FromData(AData.Field('queryControls')));
+    end;
+
+    if not Result.HasQueryControls then
+    begin
+      raise ENyxCollection.Create('Version-seven views require an explicit query control choice');
+    end;
   end;
   Result.Validate;
 end;

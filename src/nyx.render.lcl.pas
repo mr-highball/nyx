@@ -431,6 +431,10 @@ type
     FDesignerInput: TNyxDesignerInput;
     FOnDesignerGesture: TNyxDesignerGesture;
     FEvents: INyxEvents;
+    { Candidate tables use the accepted parent's router. Their own temporary
+      renderer router closes after adoption; mounted input captures the new
+      accepted generation only when a real user command starts. }
+    FCollectionQueryEvents: INyxEvents;
     FEmbeddedContext: INyxApplicationContext;
     FEmbeddedResolver: INyxLogicResolver;
     FCanvasAdoptionHost: INyxCanvasRouteAdoptionHost;
@@ -873,6 +877,7 @@ implementation
 uses
   InterfaceBase,
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
+  nyx.collections.query.lcl,
   nyx.application.resources;
 
 type
@@ -1146,6 +1151,7 @@ begin
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
   FEvents := NewNyxEvents;
+  FCollectionQueryEvents := FEvents;
   FCoordinatorRefreshObject := TNyxLCLCoordinatorRefresh.Create(Self);
   FCoordinatorRefreshTarget := TNyxLCLCoordinatorRefresh(FCoordinatorRefreshObject);
   FContentGuard := NewNyxContentGuard(QueueContent);
@@ -5097,6 +5103,7 @@ begin
       {$endif}
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
       begin
+        LCandidate.FCollectionQueryEvents := FEvents;
         LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
           LCandidate.FCollectionBindings.View(LIndex));
       end;
@@ -6153,6 +6160,7 @@ function TNyxLCLRenderer.BindCollection(const AID: TNyxText;
 var
   LBinding: TNyxLCLBinding;
   LKind: TNyxText;
+  LQueryMount: INyxCollectionQueryMount;
 begin
 
   if AView = nil then
@@ -6183,6 +6191,14 @@ begin
   Result := MountNyxLCLCollection(LBinding.FControl, AView);
   LBinding.FCollectionMount := Result;
   Result.ObserveSelection(LBinding.CollectionSelectionChanged);
+
+  if not FDesignMode and (AView.Projection = cpTable) and
+    Supports(Result, INyxCollectionQueryMount, LQueryMount) then
+  begin
+    LQueryMount.ConfigureQueries(NewNyxLCLQueryFormFactory(
+      TWinControl(LBinding.FControl), FTheme), FCollectionQueryEvents,
+      NyxControlEvents(LBinding.FNode.ID, niRuntime), LBinding.FNode.DesignID);
+  end;
 end;
 
 function TNyxLCLRenderer.IdentityBinding(const AID: TNyxText;

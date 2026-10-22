@@ -27,7 +27,7 @@ unit nyx.collections.query.editor;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.controls, nyx.collections,
+  nyx.text, nyx.data, nyx.types, nyx.model, nyx.controls, nyx.collections,
   nyx.collections.query, nyx.collections.view.types, nyx.menu.editor;
 
 type
@@ -39,6 +39,26 @@ type
     nqeClearFilter, nqeClearSort);
   TNyxQueryEditorField = (nqfField, nqfComparison, nqfValue,
     nqfTextMatch, nqfDirection);
+  { Authoring preserves the original complete query editor. Runtime forms edit
+    one column predicate or the permitted shared sort, without publishing while
+    their structural draft is being edited. }
+  TNyxQueryEditorMode = (nqemAuthoring, nqemRuntimeColumn, nqemRuntimeSort);
+  { Immutable form purpose. Initial query is supplied separately from the exact
+    admitted view specification, so a form never forges its binding baseline. }
+  TNyxQueryEditorOptions = record
+  private
+    FMode: TNyxQueryEditorMode;
+    FColumn: Integer;
+    function GetColumnIndex: Integer;
+  public
+    function Copy: TNyxQueryEditorOptions;
+    function ColumnFilter(AColumn: Integer): TNyxQueryEditorOptions;
+    function SortKeys: TNyxQueryEditorOptions;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxQueryEditorOptions; static;
+    property Mode: TNyxQueryEditorMode read FMode;
+    property ColumnIndex: Integer read GetColumnIndex;
+  end;
   TNyxQueryEditorChange = record
     Owner: TNyxControlRef;
     Baseline: TNyxText;
@@ -61,7 +81,14 @@ function NyxQueryEditorBaseline(const ASchema: TNyxCollectionSchema;
   Text matching is explicitly scalar/exact or ASCII-insensitive, never locale
   coercion. Save and structural actions capture the whole form as one policy. }
 function NewNyxQueryEditor(const AID: TNyxText; const AOwner: TNyxControlRef;
-  const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec): INyxCard;
+  const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec): INyxCard; overload;
+{ Runtime overload shares the existing field/predicate reader. Saved binding
+  policy governs permitted fields/operators; incomplete values stay form text. }
+function NewNyxQueryEditor(const AID: TNyxText; const AOwner: TNyxControlRef;
+  const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
+  const AInitialQuery: TNyxCollectionQuery;
+  const AOptions: TNyxQueryEditorOptions): INyxCard; overload;
+function NyxQueryEditorOptions: TNyxQueryEditorOptions;
 { Stable typed identities for host navigation and physical-input consumers.
   Predicate children append their ordinal to their parent's ID. }
 function NyxQueryEditorFieldID(const APrefix: TNyxText;
@@ -97,7 +124,7 @@ function CaptureNyxQueryEditor(AButton, AShellRoot: TNyxNode;
 implementation
 
 uses
-  SysUtils, nyx.data, nyx.state, nyx.contract, nyx.responsive;
+  SysUtils, nyx.state, nyx.contract, nyx.responsive, nyx.collections.query.policy;
 
 const
   CEditor = 'nyx.query-editor';
@@ -105,6 +132,7 @@ const
   CTarget = 'nyx.query-editor.target';
   CPolicy = 'nyx.query-editor.policy';
   CFields = 'nyx.query-editor.fields';
+  COptions = 'nyx.query-editor.options';
   CFieldNames: array[TNyxQueryEditorField] of TNyxText =
     ('field', 'comparison', 'value', 'text-match', 'direction');
   CActions: array[TNyxQueryEditorAction] of TNyxText =
@@ -122,6 +150,172 @@ const
     ('exact', 'asciiInsensitive');
   CDirections: array[TNyxSortDirection] of TNyxText = ('Ascending', 'Descending');
   CDirectionWire: array[TNyxSortDirection] of TNyxText = ('ascending', 'descending');
+
+function NyxQueryEditorOptions: TNyxQueryEditorOptions;
+begin
+  Result := Default(TNyxQueryEditorOptions);
+end;
+
+function TNyxQueryEditorOptions.Copy: TNyxQueryEditorOptions;
+begin
+  Result := Self;
+end;
+
+function TNyxQueryEditorOptions.GetColumnIndex: Integer;
+begin
+  Result := -1;
+
+  if FMode = nqemRuntimeColumn then
+  begin
+    Result := FColumn;
+  end;
+end;
+
+function TNyxQueryEditorOptions.ColumnFilter(AColumn: Integer): TNyxQueryEditorOptions;
+begin
+
+  if AColumn < 0 then
+  begin
+    raise ENyxCollection.Create('Column filter requires a nonnegative column');
+  end;
+  Result := Self;
+  Result.FMode := nqemRuntimeColumn;
+  Result.FColumn := AColumn;
+end;
+
+function TNyxQueryEditorOptions.SortKeys: TNyxQueryEditorOptions;
+begin
+  Result := Self;
+  Result.FMode := nqemRuntimeSort;
+  Result.FColumn := -1;
+end;
+
+function TNyxQueryEditorOptions.ToData: TNyxDataValue;
+begin
+  Result := NyxObject([NyxField('mode', NyxData(Ord(FMode))),
+    NyxField('column', NyxData(ColumnIndex))]);
+end;
+
+class function TNyxQueryEditorOptions.FromData(
+  const AData: TNyxDataValue): TNyxQueryEditorOptions;
+var
+  LMode, LColumn, LIndex: Integer;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 2) then
+  begin
+    raise ENyxCollection.Create('Invalid query editor options');
+  end;
+  for LIndex := 0 to AData.Count - 1 do
+  begin
+
+    if (AData.Key(LIndex) <> 'mode') and (AData.Key(LIndex) <> 'column') then
+    begin
+      raise ENyxCollection.Create('Unknown query editor option');
+    end;
+  end;
+  LMode := AData.Field('mode').AsInteger;
+  LColumn := AData.Field('column').AsInteger;
+
+  if (LMode < Ord(Low(TNyxQueryEditorMode))) or
+    (LMode > Ord(High(TNyxQueryEditorMode))) or
+    ((LMode = Ord(nqemRuntimeColumn)) and (LColumn < 0)) or
+    ((LMode <> Ord(nqemRuntimeColumn)) and (LColumn <> -1)) then
+  begin
+    raise ENyxCollection.Create('Invalid query editor mode/column');
+  end;
+  Result := NyxQueryEditorOptions;
+  Result.FMode := TNyxQueryEditorMode(LMode);
+  Result.FColumn := LColumn;
+end;
+
+{ This is policy admission of the existing closed query tree, not evaluation. }
+procedure CheckRuntimeQuery(const AQuery: TNyxCollectionQuery;
+  const ASpec: TNyxCollectionViewSpec; const AOptions: TNyxQueryEditorOptions);
+var
+  LFilter: INyxCollectionPredicate;
+  LIndex, LColumn: Integer;
+  LSort: TNyxCollectionSort;
+
+  procedure Predicate(const AValue: INyxCollectionPredicate);
+  var
+    LChild: Integer;
+    LSpec: TNyxCollectionColumn;
+  begin
+
+    if AValue.Kind = nqpField then
+    begin
+      LSpec := ASpec.ColumnAt(AOptions.ColumnIndex);
+
+      if (AValue.FieldName <> LSpec.FieldName) or (AValue.FieldKind <> LSpec.Kind) or
+        not LSpec.QueryPolicy.Allows(LSpec.Kind, AValue.Comparison) or
+        ((LSpec.Kind = nskText) and (AValue.TextComparison <> LSpec.QueryPolicy.TextMode)) then
+      begin
+        raise ENyxCollection.Create('Filter is outside this column query policy');
+      end;
+    end;
+    for LChild := 0 to AValue.ChildCount - 1 do
+    begin
+      Predicate(AValue.Child(LChild));
+    end;
+  end;
+
+begin
+
+  if AOptions.Mode = nqemAuthoring then
+  begin
+    Exit;
+  end;
+
+  if not ASpec.TableQueryPolicy.IsEnabled then
+  begin
+    raise ENyxCollection.Create('Table query controls are disabled');
+  end;
+  LFilter := AQuery.Filter;
+
+  if AOptions.Mode = nqemRuntimeColumn then
+  begin
+
+    if (AOptions.ColumnIndex < 0) or (AOptions.ColumnIndex >= ASpec.Count) or
+      not ASpec.TableQueryPolicy.FilterEnabled or
+      not ASpec.ColumnAt(AOptions.ColumnIndex).QueryPolicy.FilterEnabled or
+      (AQuery.SortCount <> 0) then
+    begin
+      raise ENyxCollection.Create('Column filter is not available');
+    end;
+
+    if LFilter <> nil then
+    begin
+      Predicate(LFilter);
+    end;
+  end
+  else
+  begin
+
+    if not ASpec.TableQueryPolicy.SortEnabled or (LFilter <> nil) or
+      ((ASpec.TableQueryPolicy.Mode = nqsmSingle) and (AQuery.SortCount > 1)) then
+    begin
+      raise ENyxCollection.Create('Sort is outside the table query policy');
+    end;
+    for LIndex := 0 to AQuery.SortCount - 1 do
+    begin
+      LSort := AQuery.SortAt(LIndex);
+      LColumn := 0;
+      while (LColumn < ASpec.Count) and
+        (ASpec.ColumnAt(LColumn).FieldName <> LSort.FieldName) do
+      begin
+        Inc(LColumn);
+      end;
+
+      if (LColumn = ASpec.Count) or not ASpec.ColumnAt(LColumn).QueryPolicy.SortEnabled or
+        (ASpec.ColumnAt(LColumn).Kind <> LSort.Kind) or
+        ((LSort.Kind = nskText) and (LSort.TextComparison <> ASpec.ColumnAt(LColumn).QueryPolicy.TextMode)) then
+      begin
+        raise ENyxCollection.Create('Sort field is not admitted by this table');
+      end;
+    end;
+  end;
+end;
 
 function NyxQueryEditorPreviewID(const AID: TNyxText): TNyxText;
 begin
@@ -263,6 +457,15 @@ end;
 
 function NewNyxQueryEditor(const AID: TNyxText; const AOwner: TNyxControlRef;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec): INyxCard;
+begin
+  Result := NewNyxQueryEditor(AID, AOwner, ASchema, ASpec,
+    ASpec.QueryPolicy, NyxQueryEditorOptions);
+end;
+
+function NewNyxQueryEditor(const AID: TNyxText; const AOwner: TNyxControlRef;
+  const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
+  const AInitialQuery: TNyxCollectionQuery;
+  const AOptions: TNyxQueryEditorOptions): INyxCard;
 var
   LBaseline: TNyxText;
   LFields: TNyxDataValue;
@@ -272,6 +475,10 @@ var
   LCard: INyxCard;
   LPolicy: TNyxCollectionQuery;
   LFilter: INyxCollectionPredicate;
+  LAllFields: TNyxDataValue;
+  LPermitted: array of TNyxDataValue;
+  LColumn, LMaximumSorts: Integer;
+  LHeading, LHelp: TNyxText;
 
   procedure Button(const AParent: INyxControl; const APrefix: TNyxText;
     AAction: TNyxQueryEditorAction; const ACaption: TNyxText;
@@ -315,12 +522,14 @@ var
       for LComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
       begin
 
-        if ((AValue.FieldKind = nskText) and
+        if (((AValue.FieldKind = nskText) and
           (LComparison in [nqcEqual, nqcNotEqual, nqcContains, nqcStartsWith, nqcEndsWith])) or
           ((AValue.FieldKind = nskBoolean) and
           (LComparison in [nqcEqual, nqcNotEqual])) or
           ((AValue.FieldKind in [nskInteger, nskNumber]) and
-          (LComparison in [nqcEqual, nqcNotEqual, nqcLess, nqcAtMost, nqcGreater, nqcAtLeast])) then
+          (LComparison in [nqcEqual, nqcNotEqual, nqcLess, nqcAtMost, nqcGreater, nqcAtLeast]))) and
+          ((AOptions.Mode = nqemAuthoring) or
+            ASpec.ColumnAt(AOptions.ColumnIndex).QueryPolicy.Allows(AValue.FieldKind, LComparison)) then
         begin
 
           if LChoices <> '' then
@@ -366,8 +575,13 @@ var
 
       if AValue.FieldKind = nskText then
       begin
-        Choice(LRow, APrefix, nqfTextMatch, 'Text matching',
-          CMatches[nqtExact] + #10 + CMatches[nqtAsciiInsensitive],
+        LChoices := CMatches[nqtExact] + #10 + CMatches[nqtAsciiInsensitive];
+
+        if AOptions.Mode <> nqemAuthoring then
+        begin
+          LChoices := CMatches[ASpec.ColumnAt(AOptions.ColumnIndex).QueryPolicy.TextMode];
+        end;
+        Choice(LRow, APrefix, nqfTextMatch, 'Text matching', LChoices,
           CMatches[AValue.TextComparison]);
       end;
     end
@@ -425,7 +639,38 @@ var
 begin
   LBaseline := NyxQueryEditorBaseline(ASchema, ASpec);
   LFields := SchemaFields(ASchema);
-  LPolicy := ASpec.QueryPolicy;
+  LPolicy := AInitialQuery.Copy;
+  LPolicy.Validate(ASchema);
+  CheckRuntimeQuery(LPolicy, ASpec, AOptions);
+
+  if AOptions.Mode <> nqemAuthoring then
+  begin
+    LBaseline := NyxObject([NyxField('binding', ASpec.ToData),
+      NyxField('fields', SchemaFields(ASchema)),
+      NyxField('runtime', AOptions.ToData)]).ToJSON;
+    LAllFields := LFields;
+    LPermitted := nil;
+    for LIndex := 0 to LAllFields.Count - 1 do
+    begin
+      for LColumn := 0 to ASpec.Count - 1 do
+      begin
+
+        if (ASpec.ColumnAt(LColumn).FieldName = LAllFields.Item(LIndex).Field('name').AsText) and
+          (((AOptions.Mode = nqemRuntimeColumn) and (LColumn = AOptions.ColumnIndex)) or
+           ((AOptions.Mode = nqemRuntimeSort) and ASpec.ColumnAt(LColumn).QueryPolicy.SortEnabled)) then
+        begin
+          SetLength(LPermitted, Length(LPermitted) + 1);
+          LPermitted[High(LPermitted)] := LAllFields.Item(LIndex);
+        end;
+      end;
+    end;
+    LFields := NyxArray(LPermitted);
+
+    if LFields.Count = 0 then
+    begin
+      raise ENyxCollection.Create('No query fields are available in this form');
+    end;
+  end;
   LOptions := '';
   for LIndex := 0 to LFields.Count - 1 do
   begin
@@ -444,24 +689,44 @@ begin
     .SetProp(NyxMenuFormBaselineKey, LBaseline)
     .SetProp(NyxMenuFormReferenceKey, '')
     .SetProp(CPolicy, LPolicy.ToData.ToJSON).SetProp(CFields, LFields.ToJSON);
+  LHeading := 'Filter and sort';
+  LHelp := 'Choose a field to add a condition or sort key. Edit values, then Apply. ' +
+    'Each action saves the complete query as one Undo step; source rows remain intact.';
+
+  if AOptions.Mode <> nqemAuthoring then
+  begin
+    Result.Node.SetProp(COptions, AOptions.ToData.ToJSON);
+    LHelp := 'Edit this draft, then Apply. Invalid input remains available to correct. ' +
+      'Source rows stay intact. Filters compose; sorting is shared.';
+    LHeading := 'Sort table';
+
+    if AOptions.Mode = nqemRuntimeColumn then
+    begin
+      LHeading := 'Filter ' + ASpec.ColumnAt(AOptions.ColumnIndex).Title;
+    end;
+  end;
   Result.Add(NewNyxHeading(AID + TNyxText('-title')).Configure
-    .PartName(NyxPart('title')).Text('Filter and sort').Done);
+    .PartName(NyxPart('title')).Text(LHeading).Done);
   Result.Add(NewNyxLabel(AID + TNyxText('-help')).Configure
-    .PartName(NyxPart('help')).Text(
-    'Choose a field to add a condition or sort key. Edit values, then Apply. ' +
-    'Each action saves the complete query as one Undo step; source rows remain intact.').Done);
+    .PartName(NyxPart('help')).Text(LHelp).Done);
   Choice(Result, AID, nqfField, 'Field to add', LOptions,
     NyxMenuEditorChoiceCaption(0, LFields.Item(0).Field('name').AsText));
   LFilter := LPolicy.Filter;
 
-  if LFilter <> nil then
+  if (LFilter <> nil) and (AOptions.Mode <> nqemRuntimeSort) then
   begin
     Predicate(Result, LFilter, NyxQueryEditorPredicateID(AID), 'filter');
   end
-  else
+  else if AOptions.Mode <> nqemRuntimeSort then
   begin
+    LHelp := 'All source rows are visible';
+
+    if AOptions.Mode <> nqemAuthoring then
+    begin
+      LHelp := 'This surface has no column filter; authored and other filters still apply.';
+    end;
     Result.Add(NewNyxLabel(AID + TNyxText('-no-filter')).Configure
-      .PartName(NyxPart('no-filter')).Text('All source rows are visible').Done);
+      .PartName(NyxPart('no-filter')).Text(LHelp).Done);
     Button(Result, NyxQueryEditorPredicateID(AID), nqeAnd, 'Add condition');
   end;
   for LIndex := 0 to LPolicy.SortCount - 1 do
@@ -474,17 +739,41 @@ begin
       LOptions, FieldCaption(LSort.FieldName));
     Choice(LCard, LCard.ID, nqfDirection, 'Direction',
       CDirections[nsdAscending] + #10 + CDirections[nsdDescending], CDirections[LSort.Direction]);
+    LHelp := CMatches[nqtExact] + #10 + CMatches[nqtAsciiInsensitive];
+
+    if AOptions.Mode = nqemRuntimeSort then
+    begin
+      LHelp := CMatches[LSort.TextComparison];
+    end;
     Choice(LCard, LCard.ID, nqfTextMatch, 'Text matching (text fields)',
-      CMatches[nqtExact] + #10 + CMatches[nqtAsciiInsensitive], CMatches[LSort.TextComparison]);
+      LHelp, CMatches[LSort.TextComparison]);
     Button(LCard, LCard.ID, nqeSortEarlier, 'Move earlier', LIndex > 0);
     Button(LCard, LCard.ID, nqeSortLater, 'Move later', LIndex < LPolicy.SortCount - 1);
     Button(LCard, LCard.ID, nqeRemoveSort, 'Remove sort key');
     Result.Add(LCard);
   end;
-  Button(Result, AID, nqeAddSort, 'Add chosen sort key', LPolicy.SortCount < NyxMaximumQuerySorts);
+  LMaximumSorts := NyxMaximumQuerySorts;
+
+  if (AOptions.Mode = nqemRuntimeSort) and (ASpec.TableQueryPolicy.Mode = nqsmSingle) then
+  begin
+    LMaximumSorts := 1;
+  end;
+
+  if AOptions.Mode <> nqemRuntimeColumn then
+  begin
+    Button(Result, AID, nqeAddSort, 'Add chosen sort key', LPolicy.SortCount < LMaximumSorts);
+  end;
   Button(Result, AID, nqeSave, 'Apply query');
-  Button(Result, AID, nqeClearFilter, 'Clear filter', LFilter <> nil);
-  Button(Result, AID, nqeClearSort, 'Clear sorting', LPolicy.SortCount > 0);
+
+  if AOptions.Mode <> nqemRuntimeSort then
+  begin
+    Button(Result, AID, nqeClearFilter, 'Clear filter', LFilter <> nil);
+  end;
+
+  if AOptions.Mode <> nqemRuntimeColumn then
+  begin
+    Button(Result, AID, nqeClearSort, 'Clear sorting', LPolicy.SortCount > 0);
+  end;
 end;
 
 function CaptureNyxQueryEditor(AButton, AShellRoot: TNyxNode;
@@ -505,6 +794,29 @@ var
   LOther: Integer;
   LIndex: Integer;
   LTargetFound: Boolean;
+  LOptions: TNyxQueryEditorOptions;
+  LBinding: TNyxCollectionViewSpec;
+
+  function SortTextMode(const AName: TNyxText): TNyxQueryTextComparison;
+  var
+    LColumn: Integer;
+  begin
+    Result := nqtExact;
+
+    if LOptions.Mode <> nqemRuntimeSort then
+    begin
+      Exit;
+    end;
+    for LColumn := 0 to LBinding.Count - 1 do
+    begin
+
+      if LBinding.ColumnAt(LColumn).FieldName = AName then
+      begin
+        Exit(LBinding.ColumnAt(LColumn).QueryPolicy.TextMode);
+      end;
+    end;
+    raise ENyxCollection.Create('Sort field is not a table column');
+  end;
 
   function Value(const APrefix: TNyxText; AField: TNyxQueryEditorField): TNyxText;
   var
@@ -555,12 +867,32 @@ var
   function NewPredicate: INyxCollectionPredicate;
   var
     LField: TNyxDataValue;
+    LComparison: TNyxQueryComparison;
+    LMatch: TNyxQueryTextComparison;
   begin
     LField := Field(LEditorID);
+    LComparison := nqcEqual;
+    LMatch := nqtExact;
+
+    if LOptions.Mode = nqemRuntimeColumn then
+    begin
+      LMatch := LBinding.ColumnAt(LOptions.ColumnIndex).QueryPolicy.TextMode;
+      LComparison := Low(TNyxQueryComparison);
+      while not LBinding.ColumnAt(LOptions.ColumnIndex).QueryPolicy.Allows(
+        LBinding.ColumnAt(LOptions.ColumnIndex).Kind, LComparison) do
+      begin
+
+        if LComparison = High(TNyxQueryComparison) then
+        begin
+          raise ENyxCollection.Create('No filter comparison is admitted');
+        end;
+        LComparison := TNyxQueryComparison(Ord(LComparison) + 1);
+      end;
+    end;
     Result := NyxPredicateFromData(NyxObject([
       NyxField('op', NyxData('field')), NyxField('field', LField.Field('name')),
-      NyxField('kind', LField.Field('kind')), NyxField('comparison', NyxData('equal')),
-      NyxField('textComparison', NyxData('exact')), NyxField('value', LField.Field('default'))]));
+      NyxField('kind', LField.Field('kind')), NyxField('comparison', NyxData(CComparisonWire[LComparison])),
+      NyxField('textComparison', NyxData(CMatchWire[LMatch])), NyxField('value', LField.Field('default'))]));
   end;
 
   function Predicate(const AOriginal: INyxCollectionPredicate;
@@ -710,6 +1042,11 @@ var
     LField := Field(APrefix);
     LDirection := Choice(Value(APrefix, nqfDirection), CDirections);
     LMatch := Choice(Value(APrefix, nqfTextMatch), CMatches);
+
+    if LOptions.Mode = nqemRuntimeSort then
+    begin
+      LMatch := Ord(SortTextMode(LField.Field('name').AsText));
+    end;
     Result := NyxObject([
       NyxField('field', LField.Field('name')), NyxField('kind', LField.Field('kind')),
       NyxField('direction', NyxData(CDirectionWire[TNyxSortDirection(LDirection)])),
@@ -719,6 +1056,7 @@ var
 begin
   Result := False;
   AChange := Default(TNyxQueryEditorChange);
+  LOptions := NyxQueryEditorOptions;
 
   if (AButton = nil) or (AShellRoot = nil) or (AButton.Prop(CEditor) = '') then
   begin
@@ -742,6 +1080,13 @@ begin
   if AChange.Baseline = '' then
   begin
     raise ENyxCollection.Create('Query editor requires its exact baseline');
+  end;
+
+  if LEditor.Prop(COptions) <> '' then
+  begin
+    LOptions := TNyxQueryEditorOptions.FromData(TNyxDataValue.ParseJSON(LEditor.Prop(COptions)));
+    LBinding := TNyxCollectionViewSpec.FromData(
+      TNyxDataValue.ParseJSON(AChange.Baseline).Field('binding'));
   end;
   LOriginal := TNyxCollectionQuery.FromData(TNyxDataValue.ParseJSON(LEditor.Prop(CPolicy)));
   LFields := TNyxDataValue.ParseJSON(LEditor.Prop(CFields));
@@ -801,7 +1146,8 @@ begin
     SetLength(LSorts, Length(LSorts) + 1);
     LSorts[High(LSorts)] := NyxObject([
       NyxField('field', LTemporary.Field('name')), NyxField('kind', LTemporary.Field('kind')),
-      NyxField('direction', NyxData('ascending')), NyxField('textComparison', NyxData('exact'))]);
+      NyxField('direction', NyxData('ascending')), NyxField('textComparison',
+        NyxData(CMatchWire[SortTextMode(LTemporary.Field('name').AsText)]))]);
   end;
 
   if LAction in [nqeSortEarlier, nqeSortLater, nqeRemoveSort] then
@@ -852,6 +1198,7 @@ begin
       NyxField('version', NyxData(1)), NyxField('filter', LTemporary),
       NyxField('order', NyxArray(LSorts))]));
   end;
+  CheckRuntimeQuery(AChange.Query, LBinding, LOptions);
   Result := True;
 end;
 

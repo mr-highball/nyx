@@ -478,6 +478,92 @@ Paging, virtualization, broader
 large-data budgets, production styling and hardware/IME/assistive-technology
 qualification keep their original task owners.
 
+## Table user controls: native qualification
+
+The P3 workbench implementation adds ordinary header/filter form commands over
+the existing view-owned query session. The ordinary native workbench passes782
+checks at each actual1280/390 client with clean heaps. Matching browser assertions
+and both Studio mains compile; browser input and full Studio authoring remain
+separate gates. [WORK](../WORK.md#table-query-workbench--2026-10-21) records the
+bounded compiler/input evidence and retained failures. The original seven
+filtering task criteria remain open.
+
+Bound scalar tables resolve absent policies to enabled family-appropriate
+filtering and sorting. Literal `Items` has no collection/query owner. Authors can
+narrow the public contract without widget downcasts:
+
+```pascal
+LPeople := NyxCollectionView(NyxCollection('people'))
+  .Column(NyxTextField('name'), 'Name')
+    .ColumnQuery(NyxColumnQuery.TextComparison(nqtAsciiInsensitive)
+      .Operators([nqcEqual, nqcContains, nqcStartsWith]))
+  .Column(NyxIntegerField('age'), 'Age')
+    .ColumnQuery(NyxColumnQuery.Operators([nqcEqual, nqcAtLeast, nqcAtMost]))
+  .Column(NyxBooleanField('active'), 'Active')
+    .ColumnQuery(NyxColumnQuery.Sorting(False))
+  .TableQuery(NyxTableQuery.SortMode(nqsmMultiple));
+```
+
+`Filtering(False)`/`Sorting(False)` opt out per column or table;
+`NyxTableQuery.Enabled(False)` opts out of all table query commands. These choices
+do not clear an existing authored query. `UseDefaultColumnQuery` restores only
+the preceding column's absent choice; `UseDefaultTableQuery` restores the table
+default. Explicit choices use strict nested view descriptor version7. With no
+explicit query choices, former version1–6 descriptors remain byte-compatible.
+Generated Pascal and the closed source reader use these same fluent builders.
+
+Text admits equal/not-equal/contains/starts-with/ends-with. Boolean admits
+equal/not-equal. Integer/Number add less/at-most/greater/at-least. Unsupported
+operator families, duplicates and unknown enum/wire values refuse before a new
+policy is returned. Text comparison defaults to exact Unicode scalar behavior;
+the explicit ASCII-insensitive choice changes only A–Z folding. Empty text is
+a value. The current collection schema requires a correctly typed value for
+every declared field, so nullable/missing-field operators are not implied.
+
+The native header's arrow and `Alt+Down` open the shared Nyx form; its title
+cycles ascending/descending/default, with Shift admitting another key when
+multiple sorting is enabled. Browser headers expose separate keyboard-focusable
+sort and filter buttons. Header markers show filters, sort precedence and the
+matching/source counts; the form contains full removable contribution chips,
+explicit resets and empty-result recovery. This bounded presentation does not
+claim an always-open chip toolbar. Native column-resize boundaries and an active
+cell editor keep their existing gestures/key ownership.
+
+Matching rows are counted **before paging**; source rows count the source store.
+The latter is not a count of rows eligible under an authored baseline. Clear
+Owner withdraws only that surface's filters and its still-owned sort. Clear All
+Filters, Reset Sort and Reset All are explicit shared-session commands. A raw
+query takeover invalidates older work; a fresh input can join the new session.
+Every superseding input advances a private serial even when its Clear is a model
+no-op, so delayed Apply cannot replay over newer user intent. Invalid drafts
+stay in actual mounted form controls until corrected/replaced deliberately.
+Closing/dismissing the form refuses its pending commands; a fresh table input can
+reopen the retained draft. An explicit Discard draft and reload action replaces
+it from current accepted rules when its original capture is stale. A successful
+Apply/reset retires that exact form and
+the next Open observes current accepted chips/rules. A refusal or veto preserves
+the existing draft. Native header activation occurs on mouse release after the
+widget's ordinary resize/focus decision. Explicit form focus is honored on first
+open, reopening an existing draft and structural replacement after former-host
+retirement, without rebuilding a retained draft merely to focus it.
+
+`NyxQueryWorkbenchEvent(nqweBeforeChange)` and `nqweChanged` use the existing
+ordered named event streams. The typed `NyxQueryWorkbenchChange` decoder returns
+copied Details. Before carries the accepted observation and requested edits;
+its `HasAfter=False` explicitly avoids inventing a second composition engine.
+Sequential before callbacks may cancel their execution; failed, asynchronous
+or incomplete before callbacks refuse publication. Physical input `Consume`
+is not a semantic query veto. Changed carries actual accepted old/new snapshots
+after grouped publication and supports ordinary scheduler policies. The host
+passes exact runtime and design identities independently for reusable instances.
+
+`tools/build.ps1 -Target query-workbench` takes a new
+`QueryWorkbenchEvidenceDirectory`, runs the ordinary native consumer at actual
+client1280/390, and compiles matching browser assertions without launching a
+server. `QueryWorkbenchPlatform` can supply an already known LCL unit target
+such as `i386-win32`. This command does not qualify full Studio/history/own
+saved-generated application flows or the separate actual-browser input gate.
+
 ## Bounded semantic query authoring
 
 The existing `nyx_collections` tool now supplies `query` predicate pages and

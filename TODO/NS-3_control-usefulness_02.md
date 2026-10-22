@@ -22,8 +22,9 @@ are foundations. The missing result to review and deliver is the table user's
 discoverable column interaction and its portable, authored configuration.
 The existing public `NewNyxQueryEditor` is available for advanced predicate/sort
 editing; reuse it instead of introducing another parser/editor for the same model.
-The current native adapter installs no header query handlers; browser headings
-are plain `th` text. These are source observations, not an execution verdict for
+At the initial review the native adapter installed no header query handlers;
+browser headings were plain `th` text. These are baseline source observations,
+not an execution verdict for
 the external application.
 DataToolbar and FilterBar integration must reuse this query policy rather than
 introducing another store, query evaluator or component-specific lifecycle.
@@ -70,6 +71,19 @@ including retained first identifier failure and superseded enum warnings. No
 header/renderer/Studio/Q1 implementation or browser execution is released by P2.
 All original criteria remain open; the next outcome is P3's actual useful table
 commands and shared form, not another model/compiler variant.
+
+P3 has a separate source release in [WORK](../WORK.md#table-query-workbench--2026-10-21):
+root owns saved typed policy/source parity and target mount/presenter integration;
+the existing helper owns the shared form/controller and ordinary live-input
+consumer. Existing sessions, query parsing, events, popovers and live input
+bindings remain the owners. Independently reviewed/frozen source now passes782
+actual native checks at each1280/390 with clean heaps. Matching browser assertions
+and both Studio mains compile; final10 compiler composite has zero owned warnings.
+Own matching document/Pascal exports prove codec/source only. All readers are
+joined and audited, including retained compiler/input failures and an additive
+structural-focus assertion. Actual browser input, full Studio/events/semantic
+authoring, history/Save/Open and compiled own companion stay required; none of
+the seven original criteria below closes from this native-local P3 result.
 
 **Acceptance Criteria:**
 

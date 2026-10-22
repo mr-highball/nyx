@@ -786,6 +786,7 @@ type
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
     function GetHasColumnSizing: Boolean;
+    function GetHasCollectionQueryControls: Boolean;
     function GetHasCollectionPaging: Boolean;
     function GetHasContentRules: Boolean;
     function GetHasDiagramContent: Boolean;
@@ -895,6 +896,7 @@ type
     { Exact owned binding metadata, including reusable definitions. Used for
       stable conditional imports; no renderer/materialized tree is retained. }
     property HasColumnSizing: Boolean read GetHasColumnSizing;
+    property HasCollectionQueryControls: Boolean read GetHasCollectionQueryControls;
     { Authoring/generation dependency scan; owns no view, store or target type. }
     property HasCollectionPaging: Boolean read GetHasCollectionPaging;
     property HasContentRules: Boolean read GetHasContentRules;
@@ -4445,6 +4447,46 @@ begin
   begin
 
     if HasSizing(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxDocument.GetHasCollectionQueryControls: Boolean;
+var
+  LIndex: Integer;
+
+  function HasQueryControls(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasCollectionView and ANode.CollectionView.HasQueryControls;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := HasQueryControls(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasQueryControls(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasQueryControls(FComponents[LIndex]) then
     begin
       Exit(True);
     end;

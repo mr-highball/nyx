@@ -761,6 +761,7 @@ uses
   nyx.popover.types,
   nyx.typeahead,
   nyx.collections.columns,
+  nyx.collections.query.policy,
   nyx.collections.paging,
   nyx.root.types,
   nyx.controls,
@@ -843,7 +844,7 @@ type
     vkCollectionSchema, vkCollectionItem, vkNoDomain, vkScalarValue,
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode,
     vkCollectionQuery, vkCollectionPredicate, vkCollectionSort, vkQueryField,
-    vkSortDirection, vkQueryTextComparison, vkPlatform,
+    vkSortDirection, vkQueryTextComparison, vkQueryComparison, vkQuerySortMode, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
@@ -852,6 +853,7 @@ type
     vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions, vkColumnSizing, vkCollectionPaging,
+    vkColumnQueryPolicy, vkTableQueryPolicy,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
@@ -956,6 +958,8 @@ type
     PopoverOptions: TNyxPopoverOptions;
     TypeAheadOptions: TNyxTypeAheadOptions;
     ColumnSizing: TNyxColumnSizing;
+    ColumnQueryPolicy: TNyxColumnQueryPolicy;
+    TableQueryPolicy: TNyxTableQueryPolicy;
     CollectionPaging: TNyxCollectionPaging;
     TabsOptions: TNyxTabsOptions;
     DisclosureOptions: TNyxDisclosureOptions;
@@ -1673,6 +1677,7 @@ var
   LTrigger: TNyxTrigger;
   LSemantic: TNyxSemanticEvent;
   LTimePrecision: TNyxTimePrecision;
+  LQueryComparison: TNyxQueryComparison;
   LFlowType: TNyxFlowType;
   LLogicGroup: TNyxLogicGroup;
   LLogicPort: TNyxLogicPort;
@@ -1715,6 +1720,23 @@ begin
   RegisterEnum(vkSortDirection, Ord(nsdDescending), 'nsdDescending');
   RegisterEnum(vkQueryTextComparison, Ord(nqtExact), 'nqtExact');
   RegisterEnum(vkQueryTextComparison, Ord(nqtAsciiInsensitive), 'nqtAsciiInsensitive');
+  RegisterEnum(vkQuerySortMode, Ord(nqsmSingle), 'nqsmSingle');
+  RegisterEnum(vkQuerySortMode, Ord(nqsmMultiple), 'nqsmMultiple');
+  for LQueryComparison := Low(TNyxQueryComparison) to High(TNyxQueryComparison) do
+  begin
+    { Enum names are Pascal symbols, not user-authored behavior strings. }
+    case LQueryComparison of
+      nqcEqual: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcEqual');
+      nqcNotEqual: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcNotEqual');
+      nqcLess: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcLess');
+      nqcAtMost: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcAtMost');
+      nqcGreater: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcGreater');
+      nqcAtLeast: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcAtLeast');
+      nqcContains: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcContains');
+      nqcStartsWith: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcStartsWith');
+      nqcEndsWith: RegisterEnum(vkQueryComparison, Ord(LQueryComparison), 'nqcEndsWith');
+    end;
+  end;
   RegisterEnum(vkExpressionTextComparison, Ord(netExact), 'netExact');
   RegisterEnum(vkExpressionTextComparison, Ord(netAsciiInsensitive), 'netAsciiInsensitive');
   RegisterEnum(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly');
@@ -3687,7 +3709,8 @@ begin
         if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or
           (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') or
-          (LName = 'nyxcolumnsizing') or (LName = 'nyxcollectionpaging') then
+          (LName = 'nyxcolumnsizing') or (LName = 'nyxcollectionpaging') or
+          (LName = 'nyxcolumnquery') or (LName = 'nyxtablequery') then
         begin
           Exit(MenuConstructor(LName));
         end;
@@ -6755,6 +6778,11 @@ begin
       if ADocument.HasColumnSizing then
       begin
         LPrefix := WithNyxImport(LPrefix, 'nyx.collections.columns');
+      end;
+
+      if ADocument.HasCollectionQueryControls then
+      begin
+        LPrefix := WithNyxImport(LPrefix, 'nyx.collections.query.policy');
       end;
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.selection');
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.query');

@@ -34,6 +34,8 @@ uses
   nyx.collections.selection,
   nyx.collections.refresh,
   nyx.typeahead,
+  nyx.events,
+  nyx.collections.query.controls,
   nyx.binding.types;
 
 type
@@ -79,16 +81,30 @@ type
     property RefreshCount: Integer read GetRefreshCount;
   end;
 
+  { Optional table affordances leave the original mount GUID/vtable intact.
+    Hosts supply their exact accepted event router and a weak target presenter.
+    Literal Items controls have no bound mount and never acquire this surface. }
+  INyxCollectionQueryMount = interface(IInterface)
+    ['{96760DF7-7CB0-46B7-9259-32C886E6CC03}']
+    procedure ConfigureQueries(const APresenters: INyxQueryFormPresenterFactory;
+      const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
+      const ADesignID: TNyxText = '');
+    function GetQueryWorkbench: INyxCollectionQueryWorkbench;
+    property QueryWorkbench: INyxCollectionQueryWorkbench read GetQueryWorkbench;
+  end;
+
   { Adapter base only. Derived classes borrow target controls, implement in-place
     synchronization and detach their target callbacks. No target types enter the
     portable interfaces. Activate runs after concrete handles are initialized
     and the caller retains an interface owner; target factories do this before
     activating. Active commands retain their own call frames through callbacks.
     UI-thread confinement is inherited from the view/store contract. }
-  TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount)
+  TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount, INyxCollectionQueryMount)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
+    FDisconnecting: Boolean;
+    FQueryFactory: INyxQueryFormPresenterFactory;
     FError: TNyxText;
     FFailure: TNyxBindingFailure;
     FRefreshCount: Integer;
@@ -107,6 +123,11 @@ type
     FUpdating: Boolean;
     FEnabled: Boolean;
     FReadOnly: Boolean;
+    FQueries: INyxCollectionQueryWorkbench;
+    { Cached during synchronization, never query a source/controller from the
+      native paint reader. Header zero retains its existing data-row ABI. }
+    FQueryHeaders: array of TNyxText;
+    FQuerySummary: TNyxText;
     { Valid only during RenderDataset. Dataset notifications carry their log;
       explicit policy/selection refreshes still synchronize target state. }
     FRefreshPlan: TNyxCollectionRefreshPlan;
@@ -117,6 +138,8 @@ type
     FNormalizeValues: Boolean;
     FNormalizeItem: TNyxItemRef;
     FNormalizeColumn: Integer;
+    procedure UpdateQueryHeaders;
+    function QueryHeader(AColumn: Integer): TNyxText;
     { Target wire decoders report rejection through the same diagnostic phase
       contract as commands, before restoring their accepted widget display. }
     procedure Failed(AException: Exception);
@@ -136,6 +159,10 @@ type
     procedure Refresh;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
     procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
+    procedure ConfigureQueries(const APresenters: INyxQueryFormPresenterFactory;
+      const AEvents: INyxEvents; const ATarget: TNyxEventTarget;
+      const ADesignID: TNyxText = '');
+    function GetQueryWorkbench: INyxCollectionQueryWorkbench;
     procedure ObserveSelection(AObserver: TNyxCollectionSelectionObserver);
     function Select(const AItem: TNyxItemRef): Boolean; overload;
     function Select(const AItem: TNyxItemRef; AAction: TNyxSelectionAction): Boolean; overload;
@@ -154,6 +181,100 @@ type
   end;
 
 implementation
+
+uses
+  nyx.collections.view.types, nyx.collections.query,
+  nyx.collections.query.session,
+  nyx.collections.query.workbench;
+
+function TNyxCollectionMountBase.GetQueryWorkbench: INyxCollectionQueryWorkbench;
+begin
+  Result := FQueries;
+end;
+
+procedure TNyxCollectionMountBase.ConfigureQueries(
+  const APresenters: INyxQueryFormPresenterFactory; const AEvents: INyxEvents;
+  const ATarget: TNyxEventTarget; const ADesignID: TNyxText);
+var
+  LKeepAlive: INyxCollectionMount;
+  LQueries: INyxCollectionQueryWorkbench;
+  LSession: INyxCollectionQuerySession;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if not FConnected or (FView = nil) or (FView.Projection <> cpTable) or
+    (APresenters = nil) or (AEvents = nil) or (FQueries <> nil) then
+  begin
+    raise ENyxCollection.Create('Query controls require one connected table and exact target presenter');
+  end;
+
+  if not FView.Spec.TableQueryPolicy.IsEnabled then
+  begin
+    APresenters.Revoke;
+    Exit;
+  end;
+
+  if not Supports(FView, INyxCollectionQuerySession, LSession) then
+  begin
+    APresenters.Revoke;
+
+    if FView.Spec.HasQueryControls then
+    begin
+      raise ENyxCollection.Create('This view implementation does not expose query sessions for saved table controls');
+    end;
+    { Preserve ordinary custom view implementations of the original interface.
+      An absent optional capability never invents a second mutable query owner. }
+    Exit;
+  end;
+  LQueries := NewNyxCollectionQueryWorkbench(FView, AEvents, ATarget, APresenters, ADesignID);
+
+  if not FConnected then
+  begin
+    LQueries.Disconnect;
+    raise ENyxCollection.Create('Table retired while creating query controls');
+  end;
+  FQueryFactory := APresenters;
+  FQueries := LQueries;
+  FQueries.SetEnabled(FEnabled);
+  Refresh;
+end;
+
+procedure TNyxCollectionMountBase.UpdateQueryHeaders;
+var
+  LObservation: TNyxQueryWorkbenchObservation;
+  LColumn: Integer;
+begin
+  FQueryHeaders := nil;
+  FQuerySummary := '';
+
+  if (FQueries = nil) or not FQueries.Connected then
+  begin
+    Exit;
+  end;
+  LObservation := FQueries.Observation;
+
+  if not FConnected or (FView = nil) then
+  begin
+    Exit;
+  end;
+  FQuerySummary := IntToStr(LObservation.MatchedRows) + TNyxText(' matching / ') +
+    IntToStr(LObservation.SourceRows) + TNyxText(' source rows');
+  SetLength(FQueryHeaders, FView.Spec.Count);
+  for LColumn := 0 to High(FQueryHeaders) do
+  begin
+    FQueryHeaders[LColumn] := NyxQueryWorkbenchHeader(LObservation, FView.Spec, LColumn);
+  end;
+end;
+
+function TNyxCollectionMountBase.QueryHeader(AColumn: Integer): TNyxText;
+begin
+
+  if (AColumn >= 0) and (AColumn < Length(FQueryHeaders)) then
+  begin
+    Exit(FQueryHeaders[AColumn]);
+  end;
+  Result := FView.Spec.ColumnAt(AColumn).Title;
+end;
 
 constructor TNyxCollectionMountBase.Create(const AView: INyxCollectionView);
 begin
@@ -206,27 +327,68 @@ begin
 end;
 
 procedure TNyxCollectionMountBase.Disconnect;
+var
+  LQueries: INyxCollectionQueryWorkbench;
 begin
-  ResetTypeAhead;
-  FSearchOrder := nil;
-  FSelectionObserver := nil;
-  FSelection := nil;
-  FTypeAheadSnapshot := nil;
-  FLastSnapshot := nil;
-  FChanges := nil;
-  FRefreshPlan := Default(TNyxCollectionRefreshPlan);
 
-  if FToken <> nil then
+  if FDisconnecting then
   begin
-    FToken.Disconnect;
-    FToken := nil;
+    Exit;
+  end;
+  FDisconnecting := True;
+  FConnected := False;
+  LQueries := FQueries;
+  FQueries := nil;
+
+  if LQueries <> nil then
+  begin
+    LQueries.Revoke;
   end;
 
-  if FView <> nil then
+  if FQueryFactory <> nil then
   begin
-    FConnected := False;
-    DetachTarget;
-    FView := nil;
+    FQueryFactory.Revoke;
+    FQueryFactory := nil;
+  end;
+  try
+    try
+
+      if LQueries <> nil then
+      begin
+        LQueries.Disconnect;
+      end;
+    finally
+      ResetTypeAhead;
+      FSearchOrder := nil;
+      FSelectionObserver := nil;
+      FSelection := nil;
+      FTypeAheadSnapshot := nil;
+      FLastSnapshot := nil;
+      FChanges := nil;
+      FRefreshPlan := Default(TNyxCollectionRefreshPlan);
+      FQueryHeaders := nil;
+      FQuerySummary := '';
+      try
+
+        if FToken <> nil then
+        begin
+          FToken.Disconnect;
+        end;
+      finally
+        FToken := nil;
+        try
+
+          if FView <> nil then
+          begin
+            DetachTarget;
+          end;
+        finally
+          FView := nil;
+        end;
+      end;
+    end;
+  finally
+    FDisconnecting := False;
   end;
 end;
 
@@ -285,6 +447,12 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   FUpdating := True;
   try
+    UpdateQueryHeaders;
+
+    if not FConnected then
+    begin
+      Exit;
+    end;
     LSnapshot := FView.Snapshot;
     FRefreshPlan := NyxCollectionRefreshPlan(FLastSnapshot, LSnapshot, FView.Spec, FChanges);
     RenderDataset;
@@ -320,6 +488,11 @@ begin
   end;
   FEnabled := AEnabled;
   FReadOnly := AReadOnly;
+
+  if FQueries <> nil then
+  begin
+    FQueries.SetEnabled(AEnabled);
+  end;
   ResetTypeAhead;
   Refresh;
 end;

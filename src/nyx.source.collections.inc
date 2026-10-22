@@ -107,6 +107,8 @@ begin
 
       if (SameText(LMethod, 'UseDefaultTypeAhead') or
         SameText(LMethod, 'UseDefaultColumnSizing') or
+        SameText(LMethod, 'UseDefaultColumnQuery') or
+        SameText(LMethod, 'UseDefaultTableQuery') or
         SameText(LMethod, 'UseDefaultPaging')) and not At('(') then
       begin
         LArgs := nil;
@@ -157,6 +159,47 @@ begin
           Fail('ColumnSizing requires a typed NyxColumnSizing policy');
         end;
         Result.CollectionView := Result.CollectionView.ColumnSizing(LArgs[0].ColumnSizing);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'ColumnQuery') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkColumnQueryPolicy) then
+        begin
+          Fail('ColumnQuery requires a typed NyxColumnQuery policy');
+        end;
+        Result.CollectionView := Result.CollectionView.ColumnQuery(LArgs[0].ColumnQueryPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'TableQuery') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkTableQueryPolicy) then
+        begin
+          Fail('TableQuery requires a typed NyxTableQuery policy');
+        end;
+        Result.CollectionView := Result.CollectionView.TableQuery(LArgs[0].TableQueryPolicy);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultColumnQuery') or SameText(LMethod, 'UseDefaultTableQuery') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Restoring query controls takes no arguments');
+        end;
+
+        if SameText(LMethod, 'UseDefaultColumnQuery') then
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultColumnQuery;
+        end
+        else
+        begin
+          Result.CollectionView := Result.CollectionView.UseDefaultTableQuery;
+        end;
         Continue;
       end;
 

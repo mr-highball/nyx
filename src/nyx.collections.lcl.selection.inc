@@ -29,26 +29,93 @@ procedure TNativeMount.GridMouseDown(Sender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
 var
   LKeepAlive: INyxCollectionMount;
+  LColumn, LRow: Integer;
+  LBounds: TRect;
 begin
   LKeepAlive := Self as INyxCollectionMount;
   FGridShift := AShift;
+  FQueryPressActive := False;
 
   if Assigned(FPreviousMouse) then
   begin
     FPreviousMouse(Sender, AButton, AShift, AX, AY);
   end;
+
+  if not GetConnected or not FEnabled or FUpdating or (FGrid = nil) or
+    (FQueries = nil) or (AButton <> mbLeft) or FGrid.EditorMode then
+  begin
+    Exit;
+  end;
+  FGrid.MouseToCell(AX, AY, LColumn, LRow);
+
+  if (LRow <> 0) or (LColumn < 0) or (LColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  LBounds := FGrid.CellRect(LColumn, 0);
+  { Leave native column resizing to the widget's existing boundary gesture. }
+
+  if (AX - LBounds.Left <= 5) or (LBounds.Right - AX <= 5) then
+  begin
+    Exit;
+  end;
+  { MouseDown runs before LCL focuses the grid. Only record intent here;
+    HeaderClick runs on release after the widget admits a genuine header click,
+    so opening the form does not immediately lose focus to the grid default. }
+  FQueryPressColumn := LColumn;
+  FQueryPressFilter := (LBounds.Right - AX <= 28) or (ssAlt in AShift);
+  FQueryPressAppend := ssShift in AShift;
+  FQueryPressActive := True;
+end;
+
+procedure TNativeMount.GridHeaderClicked(Sender: TObject; AIsColumn: Boolean; AIndex: Integer);
+var
+  LKeepAlive: INyxCollectionMount;
+  LFilter, LAppend: Boolean;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+  LFilter := FQueryPressActive and (FQueryPressColumn = AIndex) and FQueryPressFilter;
+  LAppend := FQueryPressActive and (FQueryPressColumn = AIndex) and FQueryPressAppend;
+  FQueryPressActive := False;
+
+  if Assigned(FPreviousHeaderClick) then
+  begin
+    FPreviousHeaderClick(Sender, AIsColumn, AIndex);
+  end;
+
+  if not GetConnected or not FEnabled or FUpdating or not AIsColumn or
+    (FGrid = nil) or (FQueries = nil) or FGrid.EditorMode then
+  begin
+    Exit;
+  end;
+  QueryColumn(AIndex, LFilter, LAppend);
 end;
 
 procedure TNativeMount.PrepareGrid(Sender: TObject; AColumn, ARow: Integer;
   AState: TGridDrawState);
 var
   LKeepAlive: INyxCollectionMount;
+  LStyle: TTextStyle;
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
   if Assigned(FPreviousPrepare) then
   begin
     FPreviousPrepare(Sender, AColumn, ARow, AState);
+  end;
+
+  if not GetConnected or (FGrid = nil) then
+  begin
+    Exit;
+  end;
+
+  if (ARow = 0) and (FQueries <> nil) then
+  begin
+    LStyle := FGrid.Canvas.TextStyle;
+    LStyle.SingleLine := False;
+    LStyle.WordBreak := True;
+    FGrid.Canvas.TextStyle := LStyle;
+    Exit;
   end;
 
   if not GetConnected or (FView.Spec.SelectionMode <> nsmMultiple) or
@@ -131,6 +198,15 @@ begin
   if not GetConnected then
   begin
     AKey := 0;
+    Exit;
+  end;
+
+  if not FUpdating and FEnabled and (AKey <> 0) and (FGrid <> nil) and
+    not FGrid.EditorMode and (FQueries <> nil) and (ssAlt in AShift) and
+    (AKey = VK_DOWN) then
+  begin
+    AKey := 0;
+    QueryColumn(FGrid.Col, True, False);
     Exit;
   end;
 

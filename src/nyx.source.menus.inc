@@ -34,6 +34,7 @@ var
   LDismissals: TNyxPopoverDismissals;
   LDefinition: INyxMenuDefinition;
   LBarDefinition: INyxMenuBarDefinition;
+  LComparisons: array of TNyxQueryComparison;
 
   procedure Require(ACount: Integer; AKind: TValueKind);
   begin
@@ -59,7 +60,8 @@ begin
   LMethod := AName;
 
   if SameText(AName, 'NyxTypeAhead') or SameText(AName, 'NyxColumnSizing') or
-    SameText(AName, 'NyxCollectionPaging') then
+    SameText(AName, 'NyxCollectionPaging') or SameText(AName, 'NyxColumnQuery') or
+    SameText(AName, 'NyxTableQuery') then
   begin
     LArgs := nil;
 
@@ -85,6 +87,18 @@ begin
     begin
       Result.Kind := vkCollectionPaging;
       Result.CollectionPaging := NyxCollectionPaging;
+    end;
+
+    if SameText(AName, 'NyxColumnQuery') then
+    begin
+      Result.Kind := vkColumnQueryPolicy;
+      Result.ColumnQueryPolicy := NyxColumnQuery;
+    end;
+
+    if SameText(AName, 'NyxTableQuery') then
+    begin
+      Result.Kind := vkTableQueryPolicy;
+      Result.TableQueryPolicy := NyxTableQuery;
     end;
   end
   else
@@ -141,6 +155,25 @@ begin
     LMethod := LowerCase(FTokens[FCursor].Text);
     Inc(FCursor);
 
+    if (Result.Kind = vkColumnQueryPolicy) and (LMethod = 'operators') then
+    begin
+      Expect('(');
+      LArgs := ArrayArguments(Ord(High(TNyxQueryComparison)) + 1);
+      Expect(')');
+      SetLength(LComparisons, Length(LArgs));
+      for LIndex := 0 to High(LArgs) do
+      begin
+
+        if LArgs[LIndex].Kind <> vkQueryComparison then
+        begin
+          Fail('Operators requires typed TNyxQueryComparison enum members');
+        end;
+        LComparisons[LIndex] := TNyxQueryComparison(LArgs[LIndex].Ordinal);
+      end;
+      Result.ColumnQueryPolicy := Result.ColumnQueryPolicy.Operators(LComparisons);
+      Continue;
+    end;
+
     if (Result.Kind = vkPopoverOptions) and (LMethod = 'dismisson') then
     begin
       Expect('(');
@@ -170,6 +203,64 @@ begin
       LArgs := Arguments(5);
     end;
     case Result.Kind of
+      vkColumnQueryPolicy:
+        begin
+
+          if LMethod = 'textcomparison' then
+          begin
+            Require(1, vkQueryTextComparison);
+            Result.ColumnQueryPolicy := Result.ColumnQueryPolicy.TextComparison(
+              TNyxQueryTextComparison(LArgs[0].Ordinal));
+          end
+          else
+          begin
+            Require(1, vkBoolean);
+
+            if LMethod = 'filtering' then
+            begin
+              Result.ColumnQueryPolicy := Result.ColumnQueryPolicy.Filtering(LArgs[0].Ordinal <> 0);
+            end
+            else if LMethod = 'sorting' then
+            begin
+              Result.ColumnQueryPolicy := Result.ColumnQueryPolicy.Sorting(LArgs[0].Ordinal <> 0);
+            end
+            else
+            begin
+              Fail('Unknown column query control method');
+            end;
+          end;
+        end;
+      vkTableQueryPolicy:
+        begin
+
+          if LMethod = 'sortmode' then
+          begin
+            Require(1, vkQuerySortMode);
+            Result.TableQueryPolicy := Result.TableQueryPolicy.SortMode(
+              TNyxQuerySortMode(LArgs[0].Ordinal));
+          end
+          else
+          begin
+            Require(1, vkBoolean);
+
+            if LMethod = 'enabled' then
+            begin
+              Result.TableQueryPolicy := Result.TableQueryPolicy.Enabled(LArgs[0].Ordinal <> 0);
+            end
+            else if LMethod = 'filtering' then
+            begin
+              Result.TableQueryPolicy := Result.TableQueryPolicy.Filtering(LArgs[0].Ordinal <> 0);
+            end
+            else if LMethod = 'sorting' then
+            begin
+              Result.TableQueryPolicy := Result.TableQueryPolicy.Sorting(LArgs[0].Ordinal <> 0);
+            end
+            else
+            begin
+              Fail('Unknown table query control method');
+            end;
+          end;
+        end;
       vkCollectionPaging:
         begin
 

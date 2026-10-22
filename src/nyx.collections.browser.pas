@@ -56,6 +56,8 @@ uses
   nyx.typeahead,
   nyx.collections.grid,
   nyx.collections.columns,
+  nyx.collections.query,
+  nyx.collections.query.controls,
   nyx.layout.flow,
   nyx.collections.window,
   nyx.collections.selection,
@@ -128,6 +130,16 @@ type
     FTreeRows: INyxTreeRows;
     FTreeGeometryRows: INyxTreeRows;
     FFocusedColumn: Integer;
+    { Stable header controls survive row refresh and own no per-row closures.
+      The delegated handlers run after the renderer's canonical host events. }
+    FHeaderCells: array of TJSHTMLElement;
+    FHeaderLabels: array of TJSHTMLElement;
+    FHeaderSorts: array of TJSHTMLElement;
+    FHeaderFilters: array of TJSHTMLElement;
+    procedure RefreshQueryHeaders;
+    procedure QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
+    function QueryClick(AEvent: TEventListenerEvent): Boolean;
+    function QueryKey(AEvent: TJSKeyboardEvent): Boolean;
     { Edit ownership is runtime-only and uses a stable item/column tuple.
       Hidden editors retain draft/caret identity without becoming extra Tab or
       accessibility entries. No document, source or row object is retained. }
@@ -244,13 +256,38 @@ begin
     LRow.setAttribute('role', 'row');
     LRow.setAttribute('aria-rowindex', '1');
     LHeader.appendChild(LRow);
+    SetLength(FHeaderCells, AView.Spec.Count);
+    SetLength(FHeaderLabels, AView.Spec.Count);
+    SetLength(FHeaderSorts, AView.Spec.Count);
+    SetLength(FHeaderFilters, AView.Spec.Count);
     for LIndex := 0 to AView.Spec.Count - 1 do
     begin
       LCell := NewElement('th');
       LCell.setAttribute('role', 'columnheader');
       LCell.setAttribute('aria-colindex', IntToStr(LIndex + 1));
-      LCell.textContent := AView.Spec.ColumnAt(LIndex).Title;
       LCell.setAttribute('scope', 'col');
+      FHeaderCells[LIndex] := LCell;
+      FHeaderLabels[LIndex] := NewElement('span');
+      FHeaderLabels[LIndex].textContent := AView.Spec.ColumnAt(LIndex).Title;
+      LCell.appendChild(FHeaderLabels[LIndex]);
+      FHeaderSorts[LIndex] := NewElement('button');
+      FHeaderSorts[LIndex].className := 'nyx-button';
+      FHeaderSorts[LIndex].setAttribute('type', 'button');
+      FHeaderSorts[LIndex].style.setProperty('padding', '4px 6px');
+      FHeaderSorts[LIndex].style.setProperty('white-space', 'normal');
+      FHeaderSorts[LIndex].setAttribute('data-nyx-query-sort', IntToStr(LIndex));
+      FHeaderSorts[LIndex].style.setProperty('display', 'none');
+      LCell.appendChild(FHeaderSorts[LIndex]);
+      FHeaderFilters[LIndex] := NewElement('button');
+      FHeaderFilters[LIndex].className := 'nyx-button';
+      FHeaderFilters[LIndex].textContent := 'Filter';
+      FHeaderFilters[LIndex].setAttribute('type', 'button');
+      FHeaderFilters[LIndex].style.setProperty('padding', '4px 6px');
+      FHeaderFilters[LIndex].setAttribute('data-nyx-query-column', IntToStr(LIndex));
+      FHeaderFilters[LIndex].setAttribute('aria-label', 'Filter ' + AView.Spec.ColumnAt(LIndex).Title);
+      FHeaderFilters[LIndex].setAttribute('aria-haspopup', 'dialog');
+      FHeaderFilters[LIndex].style.setProperty('display', 'none');
+      LCell.appendChild(FHeaderFilters[LIndex]);
       LRow.appendChild(LCell);
     end;
     FHost.appendChild(LHeader);
@@ -277,6 +314,8 @@ begin
   { Nyx's canonical keyboard listener was installed by the renderer first.
     Delegating row selection at this host lets its callbacks consume the key
     before the collection applies the default action. }
+  FHost.addEventListener('keydown', @QueryKey);
+  FHost.addEventListener('click', @QueryClick);
   FHost.addEventListener('keydown', @Key);
 
   if AView.Projection in [cpList, cpTable, cpTree] then
@@ -1863,6 +1902,7 @@ end;
 procedure TBrowserMount.RenderDataset;
 begin
   FHost.setAttribute('aria-disabled', LowerCase(BoolToStr(not FEnabled, True)));
+  RefreshQueryHeaders;
   case FView.Projection of
     cpTable:
       begin
@@ -1882,6 +1922,226 @@ begin
   end;
 end;
 
+procedure TBrowserMount.RefreshQueryHeaders;
+var
+  LColumn, LIndex: Integer;
+  LSortEnabled, LFilterEnabled: Boolean;
+  LSort: TNyxCollectionSort;
+begin
+  for LColumn := 0 to High(FHeaderCells) do
+  begin
+    FHeaderLabels[LColumn].textContent := QueryHeader(LColumn);
+    FHeaderSorts[LColumn].textContent := QueryHeader(LColumn);
+    FHeaderSorts[LColumn].setAttribute('aria-label', 'Sort ' + QueryHeader(LColumn) +
+      '. Activate for ascending, descending, then default order. Shift adds a key.');
+    LSortEnabled := (FQueries <> nil) and FView.Spec.TableQueryPolicy.SortEnabled and
+      FView.Spec.ColumnAt(LColumn).QueryPolicy.SortEnabled;
+    LFilterEnabled := (FQueries <> nil) and FView.Spec.TableQueryPolicy.FilterEnabled and
+      FView.Spec.ColumnAt(LColumn).QueryPolicy.FilterEnabled;
+    FHeaderLabels[LColumn].style.setProperty('display', '');
+    FHeaderSorts[LColumn].style.setProperty('display', 'none');
+    FHeaderFilters[LColumn].style.setProperty('display', 'none');
+
+    if LSortEnabled then
+    begin
+      FHeaderLabels[LColumn].style.setProperty('display', 'none');
+      FHeaderSorts[LColumn].style.setProperty('display', '');
+    end;
+
+    if LFilterEnabled then
+    begin
+      FHeaderFilters[LColumn].style.setProperty('display', '');
+    end;
+
+    if FEnabled then
+    begin
+      FHeaderSorts[LColumn].removeAttribute('disabled');
+      FHeaderFilters[LColumn].removeAttribute('disabled');
+    end
+    else
+    begin
+      FHeaderSorts[LColumn].setAttribute('disabled', '');
+      FHeaderFilters[LColumn].setAttribute('disabled', '');
+    end;
+    FHeaderCells[LColumn].setAttribute('aria-sort', 'none');
+    for LIndex := 0 to FView.QueryPolicy.SortCount - 1 do
+    begin
+      LSort := FView.QueryPolicy.SortAt(LIndex);
+
+      if LSort.FieldName = FView.Spec.ColumnAt(LColumn).FieldName then
+      begin
+
+        if LIndex > 0 then
+        begin
+          FHeaderCells[LColumn].setAttribute('aria-sort', 'other');
+        end
+        else if LSort.Direction = nsdAscending then
+        begin
+          FHeaderCells[LColumn].setAttribute('aria-sort', 'ascending');
+        end
+        else
+        begin
+          FHeaderCells[LColumn].setAttribute('aria-sort', 'descending');
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TBrowserMount.QueryColumn(AColumn: Integer; AFilter, AAppend: Boolean);
+var
+  LQueries: INyxCollectionQueryWorkbench;
+  LIndex: Integer;
+  LSort: TNyxCollectionSort;
+  LObservation: TNyxQueryWorkbenchObservation;
+  LField: TNyxText;
+  LAscending, LReset: Boolean;
+begin
+
+  if not GetConnected or not FEnabled or FUpdating or (FQueries = nil) or
+    (AColumn < 0) or (AColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+  LQueries := FQueries;
+  try
+
+    if AFilter then
+    begin
+
+      if FView.Spec.TableQueryPolicy.FilterEnabled and
+        FView.Spec.ColumnAt(AColumn).QueryPolicy.FilterEnabled then
+      begin
+        LQueries.OpenColumn(AColumn);
+      end
+      else
+      begin
+        LQueries.OpenSort;
+      end;
+      Exit;
+    end;
+    LAscending := True;
+    LReset := False;
+    LField := FView.Spec.ColumnAt(AColumn).FieldName;
+    LObservation := LQueries.Observation;
+
+    if not GetConnected or not FEnabled or (FQueries <> LQueries) then
+    begin
+      Exit;
+    end;
+    for LIndex := 0 to LObservation.Query.SortCount - 1 do
+    begin
+      LSort := LObservation.Query.SortAt(LIndex);
+
+      if LObservation.HasUserSort and (LSort.FieldName = LField) then
+      begin
+        LAscending := False;
+        LReset := LSort.Direction = nsdDescending;
+        Break;
+      end;
+    end;
+
+    if LReset then
+    begin
+      LQueries.ResetSort;
+    end
+    else if LAscending then
+    begin
+      LQueries.SortColumn(AColumn, nsdAscending, AAppend);
+    end
+    else
+    begin
+      LQueries.SortColumn(AColumn, nsdDescending, AAppend);
+    end;
+  except
+    on LException: Exception do
+    begin
+      Failed(LException);
+    end;
+  end;
+end;
+
+function TBrowserMount.QueryClick(AEvent: TEventListenerEvent): Boolean;
+var
+  LKeep: INyxCollectionMount;
+  LButton: TJSHTMLElement;
+  LColumn: Integer;
+  LFilter: Boolean;
+begin
+  Result := True;
+  LKeep := Self as INyxCollectionMount;
+
+  if not GetConnected or not FEnabled or AEvent.defaultPrevented or
+    not (AEvent.target is TJSHTMLElement) then
+  begin
+    Exit;
+  end;
+  LButton := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest(
+    '[data-nyx-query-column],[data-nyx-query-sort]'));
+
+  if (LButton = nil) or not FHost.contains(LButton) then
+  begin
+    Exit;
+  end;
+  LFilter := LButton.hasAttribute('data-nyx-query-column');
+  LColumn := StrToIntDef(LButton.getAttribute('data-nyx-query-sort'), -1);
+
+  if LFilter then
+  begin
+    LColumn := StrToIntDef(LButton.getAttribute('data-nyx-query-column'), -1);
+  end;
+  AEvent.preventDefault;
+  QueryColumn(LColumn, LFilter, TJSMouseEvent(AEvent).shiftKey);
+end;
+
+function TBrowserMount.QueryKey(AEvent: TJSKeyboardEvent): Boolean;
+var
+  LKeep: INyxCollectionMount;
+  LElement, LHeader: TJSHTMLElement;
+  LColumn: Integer;
+  LFilter: Boolean;
+begin
+  Result := True;
+  LKeep := Self as INyxCollectionMount;
+
+  if not GetConnected or not FEnabled or (FQueries = nil) or
+    AEvent.defaultPrevented or AEvent.isComposing or
+    not (AEvent.target is TJSHTMLElement) then
+  begin
+    Exit;
+  end;
+  LElement := TJSHTMLElement(AEvent.target);
+
+  if (LowerCase(LElement.tagName) = 'input') or
+    (LowerCase(LElement.tagName) = 'textarea') or
+    (LowerCase(LElement.tagName) = 'select') then
+  begin
+    Exit;
+  end;
+  LColumn := FFocusedColumn;
+  LHeader := TJSHTMLElement(LElement.closest('[data-nyx-query-column],[data-nyx-query-sort]'));
+  LFilter := False;
+
+  if LHeader <> nil then
+  begin
+    LFilter := LHeader.hasAttribute('data-nyx-query-column');
+    LColumn := StrToIntDef(LHeader.getAttribute('data-nyx-query-sort'), -1);
+
+    if LFilter then
+    begin
+      LColumn := StrToIntDef(LHeader.getAttribute('data-nyx-query-column'), -1);
+    end;
+  end;
+
+  if (AEvent.altKey and (AEvent.key = 'ArrowDown')) or
+    ((LHeader <> nil) and not AEvent.ctrlKey and not AEvent.metaKey and
+      ((AEvent.key = 'Enter') or (AEvent.key = ' '))) then
+  begin
+    AEvent.preventDefault;
+    QueryColumn(LColumn, LFilter or AEvent.altKey, AEvent.shiftKey);
+  end;
+end;
+
 procedure TBrowserMount.DetachTarget;
 var
   LIndex: Integer;
@@ -1890,6 +2150,8 @@ begin
   if FHost <> nil then
   begin
     FHost.removeEventListener('keydown', @Key);
+    FHost.removeEventListener('keydown', @QueryKey);
+    FHost.removeEventListener('click', @QueryClick);
     FHost.removeEventListener('focusin', @WindowChanged);
     FHost.removeEventListener('focusin', @EditorFocusChanged);
     FHost.removeEventListener('focusout', @EditorFocusChanged);
@@ -1926,6 +2188,10 @@ begin
   end;
   FSpacers := nil;
   FRendered := nil;
+  FHeaderCells := nil;
+  FHeaderLabels := nil;
+  FHeaderSorts := nil;
+  FHeaderFilters := nil;
   FBody := nil;
   FHost := nil;
 end;
