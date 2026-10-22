@@ -2,6 +2,114 @@
 
 [Project](PROJECT.md) · [Milestones](MILESTONES.md) · [Tasks](TODO/README.md)
 
+## Shared collection query sessions — 2026-10-21
+
+Previous goal turn is progress: c2e0fd8 delivers qualified prepared query
+publication and is pushed/remote-verified. All actual readers are joined and
+baseline1797 Pascal/foreign13 remain exact. Reassessment after no-closure29
+changes the useful deliverable from another P1 variant to the canonical shared
+query session required by [column filtering02](TODO/NS-3_control-usefulness_02.md)
+criterion4. Full table/header/authoring criteria remain the destination.
+
+Root owns the existing view and bindings, a private session implementation
+include, maintained build/query guide, task02, the existing Q1 design wording,
+this handoff and reader admission. Existing Lil' Scooty owns ONLY new
+`src/nyx.collections.query.session.pas` and
+`tests/nyx_collection_query_session_tests.lpr`. Both scopes passed independent
+review and a joint freeze before compilers. Private
+`.local/query-session-paths-private.json` retains preimages/baseline and the E:
+packet; all unowned Pascal and13 concurrent files remain exact.
+
+One view-owned canonical state retains the admitted baseline, independent scoped
+owner/channel filters and a single shared user sort vector. CurrentQuery is the
+initial baseline and a second surface joins the existing state. All edits use
+the existing prepared-query participant, including scalar reset groups. A
+metadata-only sort ownership change publishes intent; exact same-owner values
+and equal raw ConfigureQuery remain no-op. SortBy(empty) explicitly unsorts;
+ResetSort restores baseline order. ClearOwner removes only its filters and its
+still-owned sort. Global reset/filter chip removal and full-spec authored rebase
+are explicit captured commands. Revoke/destruction flags cannot hide a rollback.
+Old ABA/cross-view/revoked commands refuse; source rows and hidden selection stay
+under their existing owners. No new query evaluator/store/event lifecycle follows.
+
+Snapshots retain copied metadata/inert proof only, never source/store/view.
+Recompose retains the existing exact store/projection/spec match and copies a
+captured session into new target authority with orphan metadata IDs. A former
+owner cannot command the replacement view; the former view is independently
+valid until its ordinary host lifetime retires. Import promises the exact copied
+snapshot, not the latest source intent at a later commit. This is model authority,
+not permission for an expired mounted UI callback.
+
+The fixed planned budget is8 compilers/3 native model runs: new maintained
+session native/browser, unchanged P1 maintained native/browser, unchanged typed
+query native/browser, and both Studio mains. Worker rebuild/browser execution/
+hosts are excluded. The focused public consumer must prove real combined
+filters/sort/reset/chip/state-group results and checked Recompose/new authority,
+plus refusal/lifetime/ABA/import/rebase cases. All final readers are now joined.
+Stop at the actual useful P2 result, preserving failures; then release actual native/
+browser header/form work separately. All seven original usefulness02 criteria,
+Q1/parent/parity hard blockers, ordinary Studio/history/save/generated/events and
+semantic adoption remain open; no product credit or DONE follows this source release.
+
+First actual session reader (immediate chunk6a9ea2) is terminal1/root joined:
+the native compiler rejects the new `Label` metadata/member as a Pascal reserved
+word. No native execution or browser compiler ran. Immutable failure audit
+B334B7A3 retains the exact initial11 owned/1800 Pascal/foreign13/extra3 freeze,
+source copies, log and terminal receipt. The narrow source repair renames ONLY
+this new field/property to `Caption`/`GetCaption` in contract/consumer and matching
+private implementation. All behavior/predicates/scenarios remain. The next
+reviewed freeze uses a fresh `session-caption` output and preserves the initial
+`session` failure; fixed accepted8 compilers/3 native runs are unchanged, with
+the one failed compiler counted separately. No reader is admitted during repair.
+
+Caption reader86475 is terminal0/root joined: native93 canonical-session checks
+pass with heap0 and browser compilation succeeds. Both compilers report the
+defensive else on an already exhaustive typed edit enum as unreachable. Quality
+audit65F31934 retains all11/1800/13/3 source inputs and those functional results;
+they are superseded for final warning-free qualification. No remaining reader
+started. The only production repair removes that two-line unreachable else/raise,
+with no scenario/assertion/wait change. A separately reviewed freeze uses new
+`session-exhaustive` output. The unchanged final plan is eight accepted compilers
+and three native model outcomes; actual composite attempts also retain the first
+failed compiler and these two superseded warning compilers/native93 run.
+
+Final reviewed source qualifies native93 canonical-session checks, unchanged
+prepared-query89 and typed-query56, all with clean heaps. The final8 compilers
+pass with zero owned/28 upstream RTL warning occurrences: maintained session2,
+maintained P1 publication2, unchanged query native/browser2 and Studio mains2.
+Browser consumers/products compile only; no source worker rebuild, actual browser
+input, full Studio run or new saved/generated application proof is claimed.
+The public consumer exercises real result data and actual binding Recompose,
+with grouped scalar state, no-op/metadata-only intent, independent owner clears,
+orphan chips, raw/rebase/ABA, live revocation and last actor release, coherent
+committed failure and old/new view lifetime isolation. Final stages retain inert
+actor lifetime ports only, so last caller lease release can still revoke readiness.
+
+All8 actual jobs are terminal/root joined: first session immediate6a9ea2 failed1,
+caption86475 superseded0, final exhaustive3306, publication16604, query-native72010,
+query-browser immediate4a6f6b, Studio-native78106 and Studio-browser35412 final0.
+Actual composite is11 compiler invocations/four native executions; final accepted
+proof uses8 compilers/three clean runs, not the superseded warning source.
+Immutable joined audit
+`B9DAF201093AC5DDCE5C7389916B6D1988A329F05A6F82753E3CFF38BC5675D5`
+in `E:\Blekohlab\nyx\qualification\query-session-20261021-201229` verifies
+all11 owned/1800 Pascal/foreign13/extra3 exact at terminal. Final view9D43AF2E,
+includeDB7BC2B1, bindingsAA854530, contractA192D594 and consumerB178F4FA stay
+exact from final freeze. Original view ABI, all seven usefulness02 and five Q1
+criteria remain exact. FirstB334B7A3 and quality65F31934 audits remain immutable.
+Root owns only later documentation/checkpoint; all Pascal stays paused.
+
+No full original criterion/DONE/product credit closes; no-closure29→30 carries.
+Stop further model/compiler variants and return to P3's actual user-facing
+headers/keyboard/forms/chips/counts/recovery. Existing mounts own input and reuse
+the QueryEditor; settle weak target presenter/typed saved column policy/file
+ownership before separate source release. A per-surface owned command serial
+advances even for same-value Clear and supplies a pure readiness fence in the
+same prepared group, preventing queued old Apply while preserving P2 no-op.
+Root/helper retain all native/browser/Studio/history/own saved-generated/event/
+semantic/parity and Q1 hard gates. Existing helper owns read-only P3 design and
+independent receipt review; no P3 source/compiler/host is released by this result.
+
 ## Prepared collection query publication — 2026-10-21
 
 Previous goal turn is progress:17d7f52 accepts the complete source-bound control

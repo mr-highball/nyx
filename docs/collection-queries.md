@@ -72,6 +72,88 @@ native contract and stages the matching browser program. Supply a NEW
 `-QueryPublicationEvidenceDirectory` on your scratch drive to retain its outputs.
 It does not launch a host or execute the browser program.
 
+## Shared filter and sort owners
+
+`nyx.collections.query.session` defines an optional shared session on the same
+live collection view. Obtain it with `NyxCollectionQuerySession(View)` from
+`nyx.collections.view`. Its current qualification evidence
+is recorded in [WORK](../WORK.md#shared-collection-query-sessions--2026-10-21).
+The public native consumer passes93 checks with a clean heap, and matching
+browser assertions compile only. It adds no table header controls or Studio
+authoring for them yet.
+
+```pascal
+LServiceQueries := NyxCollectionQuerySession(LServicesView);
+LHeaderOwner := LServiceQueries.AcquireOwner(
+  NyxQueryOrigin('column-header'), 'Status column');
+LToolbarOwner := LServiceQueries.AcquireOwner(
+  NyxQueryOrigin('data-toolbar'), 'Service search');
+
+LColumnChanges := NyxQuerySessionEdits
+  .Filter(NyxQueryChannel('status'),
+    NyxWhere(NyxTextField('status')).EqualTo('stopped'))
+  .SortBy(NyxCollectionQuery.OrderBy(NyxNumberField('cpu'), nsdDescending));
+LColumnPublication := LServiceQueries.PrepareSession(
+  LServiceQueries.Capture, LHeaderOwner, LColumnChanges);
+PublishNyxGroup([LColumnPublication]);
+```
+
+Declare `LServiceQueries: INyxCollectionQuerySession`, owners as
+`INyxCollectionQueryOwner`, changes as `TNyxQuerySessionEdits`, and the prepared
+publication as `INyxPreparedPublication`. Origins/channels are typed open
+identities for metadata; they do not select behavior through magic strings.
+The actual comparison and order use the existing typed query constructs.
+
+The initial baseline is the current accepted query. Acquiring a second owner
+joins the existing session; it never turns already composed user filters into
+another baseline. Independent owner/channel predicates AND with that baseline.
+One shared user sort vector replaces baseline sorting. An empty `SortBy` selects
+unsorted source order explicitly; `ResetSort` instead restores baseline sorting.
+Sort-only owners retain their label/origin in `SortOwner`, so peer surfaces can
+show the current shared choice or Custom instead of a stale private caption.
+
+`ClearFilter(Channel)` removes only that actor's slot. `ClearOwner` removes its
+slots and resets sorting only while that actor still owns the shared vector.
+`ClearAllFilters`, `ResetSort` and `ResetAll` are distinct explicit choices.
+Enumerate bounded `Count`/`ContributionAt` metadata for filter chips;
+`RemoveFilter(OwnerID, Channel)` explicitly removes an active or orphan chip.
+An ID is presentation data, never command authority. Same-origin reacquisition
+gets a fresh token and cannot implicitly adopt earlier contributions.
+
+Each command requires the exact current session snapshot and a live scoped
+owner. Changed A→B→A metadata, cross-view snapshots, raw policy takeover and
+revoked owners refuse before mutation. A same-sort ownership transfer advances
+intent even when displayed rows stay equal. Exact same-owner/value edits remain
+no-op. `Revoke` and final owner release affect lifetime flags only; accepted
+filters remain visible until explicitly withdrawn. `Connected` in a snapshot
+describes capture time. A pending preparation retains only the inert lifetime
+port, so explicit Revoke or final actor release also revokes its readiness fence.
+Callers keep their owner lease alive through an intended publication.
+
+Actual raw `ConfigureQuery`/prepared-query replacement starts a fresh baseline
+and generation. Equal raw assignments remain no-op. `PrepareRebase` explicitly
+restores the exact complete authored specification's baseline while retaining
+user contributions and current user sorting. Merely opening or closing a panel
+cannot restore authored defaults. Baseline, contributions and sort descriptors
+are all schema-checked, including baseline sorting currently hidden by an override.
+Combined trees retain the existing predicate/node/depth/byte and sort limits.
+
+The existing prepared query participant reserves the view and publishes query,
+canonical metadata and any prepared scalar Search/Sort reset together. Final
+readiness reads only retained private flags/references; every model installs
+before notification. Refusal changes none, and observer failure remains committed.
+Atomic source support is required for these prepared commands. Ordinary legacy
+non-atomic query behavior retains its existing immediate API.
+
+Checked binding recomposition requires the same store, projection and complete
+specification. It copies the captured baseline/contributions/sort into fresh
+target authority, with disconnected remapped metadata IDs. The source view stays
+independent; old owners cannot command the new view. Snapshots retain no source,
+store, view, document or executable owner lease. `PrepareImport` is explicit
+copied-metadata takeover, not latest-source-at-commit synchronization. Unsupported
+session/atomic alternatives retain the existing query-copy fallback. Nothing here
+grants an expired mounted UI callback a new event generation.
+
 ## Query editor preview
 
 Studio's query editor has **Preview project defaults**. It captures the current

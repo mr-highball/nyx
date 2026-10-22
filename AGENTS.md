@@ -1,5 +1,77 @@
 # Working in Nyx
 
+QUERY SESSION P2 NATIVE-LOCAL QUALIFIED (2026-10-21): canonical-session public
+consumer passes93 native checks, unchanged prepared-query89 and typed-query56
+retain compatibility; all three final heaps are clean. All four browser programs
+compile only; both Studio product mains compile, no worker/
+browser/Studio runtime is claimed. Final8 accepted compilers have zero owned/
+28 upstream RTL warning occurrences. Actual11 compiler attempts retain first
+reserved-Label failure and two superseded exhaustive-enum warning compilers;
+their earlier93 clean native run is separate, not final-source proof. All8 reader
+jobs are terminal/root joined. Immutable auditB9DAF201 verifies11owned/1800Pascal/
+foreign13/extra3 exact at terminal. Production view9D43AF2E/includeDB7BC2B1/
+bindingsAA854530, contractA192D594/consumerB178F4FA/build6FECB88C stay exact from
+the final reviewed freeze. Preserve firstB334B7A3 and caption-quality65F31934.
+Root owns docs/checkpoint only; all Pascal remains paused. Full usefulness02's
+seven criteria/Q1/parent/parity and product credit stay open; no-closure29→30.
+Stop P2 model/compiler variants. Next useful P3 is actual native/browser header/
+keyboard filter/sort/chips/count/recovery and shared Nyx QueryEditor form via
+existing mounts. Keep ONE existing coordinator/event/query owner. Per-surface
+monotonic command port advances even for equal Clear and joins a pure readiness
+participant, so queued older Apply refuses without changing P2 true-no-op rules.
+Settle weak target-presenter/file ownership and typed saved column policy before
+separate source release. Existing helper owns read-only P3 seam/next review only.
+No header/renderer/Studio/Q1 source, compiler/host/browser execution/worker/LAN/
+MCP/config/restart/cleanup or extra agent follows yet. Foreign13/deferred resolver/
+splitter and all original source/history/save/generated/event/parity gates remain.
+WORK/private query-session state own exact receipts/failures/scope/return.
+
+QUERY SESSION P2 SOURCE RELEASED (2026-10-21): previousc2e0fd8 is progress,
+pushed/remote-verified; all P1 readers joined. Existing usefulness02 criterion4
+now owns ONE canonical contribution state on TView, not a second query engine.
+Root owns view/bindings/private session include/build/query guide, task02/Q1
+design clarification, WORK and this handoff. Existing Lil' Scooty owns ONLY new
+query.session.pas contract and new public session consumer. Capture copies
+metadata without source/store/view. Exact revocable owner leases share one
+baseline (CurrentQuery by default), independent AND filters and one user-sort
+vector. Fresh whole-session intent/lease fences guard grouped edits/reset/rebase.
+Equal same-owner values remain no-op; metadata-only ownership changes advance
+intent. SortBy(empty) explicitly unsorts; ResetSort uses baseline. ClearOwner
+withdraws own filters and resets sort only if still owned. Global resets and
+chip removal are explicit. Flags-only revoke/destruction never rolls back data.
+Raw actual query takeover revokes the former generation; equal raw query does
+nothing. Explicit authored rebase checks complete matching spec. Checked
+same-store/spec/projection Recompose copies exact captured metadata into fresh
+target authority/orphan IDs; never revoke or retain the source view. Import
+promises captured metadata, not latest-at-commit continuity.
+Use existing TQueryPreparation for query/metadata/state all-or-refused adoption,
+pure final field fences, displaced leases and all-attempt committed notification.
+Both scopes require independent review/freeze BEFORE any reader. Planned fixed
+budget8 compilers/3 native model outcomes; no reader released yet. No renderer,
+header/Studio/Q1 implementation, browser execution, host/worker rebuild/newtool/
+MCP/config/cleanup/restart or extra agent follows. Full02/parent/parity/Q1 hard
+gates remain open; preserve foreign13/all unowned Pascal. No-closure29 carries;
+next after useful P2 is actual native/browser table commands, not another P1
+variant. WORK/private query-session state own exact scope/admission/return.
+
+First P2 reader is terminal1/root joined; failure auditB334B7A3 pins all original
+11owned/1800Pascal/foreign13/extra3 exactly. Native compiler refuses new reserved
+identifier Label before any native run or browser compile. Narrow repair changes
+ONLY that new metadata/member to Caption/GetCaption in contract, consumer and
+root view/private include. No assertion/scenario/wait/behavior change. Retain
+initial session output/freeze/log; reviewed repaired freeze precedes fresh
+session-caption output and the same remaining fixed eight accepted compilers/
+three native outcomes. This is eight accepted compilers plus one retained first
+failure, not eight attempts. No other source/host/UI scope follows.
+
+Caption reader86475 is terminal0/root joined: native93 clean and browser compile
+pass, but an exhaustive enum's defensive else emits one owned warning in each
+compiler. Quality audit65F31934 retains exact11/1800/13/3 and functional93; no
+remaining reader started. Narrow root repair removes ONLY that unreachable
+else/raise pair. Fresh reviewed session-exhaustive output preserves both earlier
+jobs. Accepted8/3 budget stays; composite actual attempts may be8 accepted plus
+first failed1 and superseded warning2. No oracle, scenario or wait changes.
+
 QUERY PUBLICATION P1 NATIVE-LOCAL QUALIFIED (2026-10-21): prepared-query public
 consumer passes89 native checks; unchanged typed-query56 and its OWN emitted
 compiled fixture57 pass. All three heaps are clean. Matching focused/query

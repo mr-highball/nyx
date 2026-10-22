@@ -253,6 +253,7 @@ var
   LPreviousPages: INyxCollectionPages;
   LNextPages: INyxCollectionPages;
   LItems: array of TNyxItemRef;
+  LQueryTransfer: INyxPreparedPublication;
 begin
   LCandidate := TBindings.Create(ARoot, FContext);
   Result := LCandidate;
@@ -290,7 +291,16 @@ begin
       LNextPages := NyxCollectionPages(LCandidate.FViews[LIndex]);
       { Recomposition creates an independent view, preserving its current live
         query/page before reconciling visible focus and hidden selection. }
-      LCandidate.FViews[LIndex].ConfigureQuery(FViews[LMatch].GetQuery);
+      LQueryTransfer := PrepareNyxCollectionQueryTransfer(FViews[LMatch], LCandidate.FViews[LIndex]);
+
+      if LQueryTransfer <> nil then
+      begin
+        PublishNyxGroup([LQueryTransfer]);
+      end
+      else
+      begin
+        LCandidate.FViews[LIndex].ConfigureQuery(FViews[LMatch].GetQuery);
+      end;
       LNextPages.ConfigurePaging(LPreviousPages.Paging);
       LNextPages.GoToPage(LPreviousPages.Window.Page);
     end;

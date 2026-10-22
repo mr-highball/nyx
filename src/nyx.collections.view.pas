@@ -39,6 +39,7 @@ uses
   nyx.collections,
   nyx.collections.query,
   nyx.collections.query.publication,
+  nyx.collections.query.session,
   nyx.collections.paging,
   nyx.collections.query.view,
   nyx.collections.registry,
@@ -250,6 +251,14 @@ function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boo
   Unsupported alternate views refuse explicitly; no sequential fallback can
   promise a coordinated query/state publication. }
 function NyxCollectionQueryPublication(const AView: INyxCollectionView): INyxCollectionQueryPublication;
+{ Shared runtime contribution metadata and scoped commands on the same view.
+  Unsupported alternatives refuse explicitly; no parallel query engine exists. }
+function NyxCollectionQuerySession(const AView: INyxCollectionView): INyxCollectionQuerySession;
+{ Copy only a compatible captured session during detached view recomposition.
+  Nil means an alternative lacks the optional session facet/atomic source; the
+  caller keeps its existing query-copy fallback. No authority is transferred. }
+function PrepareNyxCollectionQueryTransfer(const AFormer,
+  ANext: INyxCollectionView): INyxPreparedPublication;
 
 implementation
 
@@ -261,6 +270,10 @@ type
     without exposing either implementation type in the portable public API. }
   TView = class;
   TQueryPreparation = class;
+  TQuerySessionState = class;
+  TQueryScope = class;
+  TQueryOwnerLife = class;
+  TQueryOwnerLease = class;
   TViewSubscription = class(TInterfacedObject, INyxCollectionViewSubscription)
   public
     Owner: TView;
@@ -273,7 +286,8 @@ type
   TParentIndexes = TNyxQueryIndexes;
 
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
-    INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication)
+    INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
+    INyxCollectionQuerySession)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
@@ -281,10 +295,17 @@ type
     { Query plans have a separate reservation from source-row preparations.
       The plan retains this view; this weak slot cannot form an ownership cycle. }
     FQueryPreparation: TQueryPreparation;
-    { Identity has no owner backlink. Intent advances only for an accepted
-      effective policy change; equal assignments cannot invalidate a capture. }
+    { Identity has no owner backlink. Intent includes accepted session metadata
+      changes; equal raw assignments remain complete no-ops. }
     FQueryIdentity: IInterface;
     FQueryIntent: Integer;
+    { The raw immutable state is borrowed from the adjacent owning lease. It
+      contains only query values and inert lifetime flags, never a source/view. }
+    FQuerySession: TQuerySessionState;
+    FQuerySessionLease: IInterface;
+    FNextQueryOwner: Integer;
+    FQueryOwnerLives: array of IInterface;
+    FQueryOwnerFlags: array of TQueryOwnerLife;
     FSource: INyxCollectionSnapshot;
     FSnapshot: INyxCollectionSnapshot;
     FUnpaged: INyxCollectionSnapshot;
@@ -348,6 +369,17 @@ type
     function CaptureQuery: INyxCollectionQueryCapture;
     function PrepareQuery(const ACapture: INyxCollectionQueryCapture;
       const AQuery: TNyxCollectionQuery): INyxPreparedPublication;
+    function Capture: INyxCollectionQuerySessionSnapshot;
+    function AcquireOwner(const AOrigin: TNyxQueryOriginRef;
+      const ALabel: TNyxText): INyxCollectionQueryOwner;
+    function PrepareSession(const ACapture: INyxCollectionQuerySessionSnapshot;
+      const AOwner: INyxCollectionQueryOwner;
+      const AEdits: TNyxQuerySessionEdits): INyxPreparedPublication;
+    function PrepareRebase(const ACapture: INyxCollectionQuerySessionSnapshot;
+      const AOwner: INyxCollectionQueryOwner;
+      const AAuthoredSpec: TNyxCollectionViewSpec): INyxPreparedPublication;
+    function PrepareImport(const ATargetCapture,
+      ASourceSnapshot: INyxCollectionQuerySessionSnapshot): INyxPreparedPublication;
     function GetPaging: TNyxCollectionPaging;
     function GetPageWindow: TNyxCollectionPageWindow;
     function ConfigurePaging(const APolicy: TNyxCollectionPaging): INyxCollectionPages;
@@ -423,6 +455,16 @@ type
     FBeforeQuery: TNyxCollectionQuery;
     FQuery: TNyxCollectionQuery;
     FIntent: Integer;
+    FBeforeSession: TQuerySessionState;
+    FBeforeSessionLease: IInterface;
+    FSession: TQuerySessionState;
+    FSessionLease: IInterface;
+    FSessionChanged: Boolean;
+    FNextOwner: Integer;
+    FHasCommandOwner: Boolean;
+    FCommandInfo: TNyxQueryOwnerInfo;
+    FCommandLife: TQueryOwnerLife;
+    FCommandLifeLease: IInterface;
     FCandidate: TView;
     FChanged: Boolean;
     FValidationStarted: Boolean;
@@ -431,6 +473,9 @@ type
     FNotified: Boolean;
     FRetired: Boolean;
     procedure RequireCurrent;
+    procedure RequireSessionCapture(const ACapture: INyxCollectionQuerySessionSnapshot);
+    procedure RequireSessionOwner(const AOwner: INyxCollectionQueryOwner);
+    procedure SetSession(AState: TQuerySessionState; const ALease: IInterface);
   public
     { The factory acquires a managed interface before Initialize may call an
       alternate interface implementation. No constructor self-retention trap. }
@@ -442,6 +487,99 @@ type
     procedure Install;
     procedure Notify;
     procedure Retire;
+  end;
+
+  { A generation flag and owner flag are inert ports. A lease/snapshot may keep
+    them alive after a view disappears, without keeping that view or store alive. }
+  TQueryScope = class(TInterfacedObject)
+  public
+    Active: Boolean;
+  end;
+  TQueryOwnerLife = class(TInterfacedObject)
+  public
+    Active: Boolean;
+    Scope: TQueryScope;
+    ScopeLease: IInterface;
+  end;
+
+  { Immutable canonical values, with parallel inert owner-life leases. Only
+    captured Connected presentation is dynamic; values never expose these ports.
+    Composition uses the existing typed query tree and its existing budgets. }
+  TQuerySessionState = class(TInterfacedObject)
+  public
+    Scope: TQueryScope;
+    ScopeLease: IInterface;
+    Baseline: TNyxCollectionQuery;
+    Effective: TNyxCollectionQuery;
+    HasUserSort: Boolean;
+    UserSort: TNyxCollectionQuery;
+    SortOwner: TNyxQueryOwnerInfo;
+    SortLife: TQueryOwnerLife;
+    SortLifeLease: IInterface;
+    Contributions: array of TNyxQueryContribution;
+    OwnerFlags: array of TQueryOwnerLife;
+    OwnerLives: array of IInterface;
+    procedure Initialize(const ABaseline: TNyxCollectionQuery);
+    procedure Assign(AOther: TQuerySessionState);
+    procedure RemoveAt(AIndex: Integer);
+    procedure Compose;
+    procedure Validate(const ASchema: TNyxCollectionSchema);
+    function SameValues(AOther: TQuerySessionState): Boolean;
+    procedure Apply(const AOwner: TNyxQueryOwnerInfo; ALife: TQueryOwnerLife;
+      const ALifeLease: IInterface; const AEdits: TNyxQuerySessionEdits);
+    function Import(const ASource: INyxCollectionQuerySessionSnapshot): Integer;
+  end;
+
+  { Private proof types are not numeric IDs or public snapshot getters. Final
+    fences retain their exact canonical objects and read fields only. }
+  IQueryOwnerProof = interface(IInterface)
+    ['{A05EBCA5-4828-47FC-8895-6855B964094B}']
+    function OwnerLease: TQueryOwnerLease;
+  end;
+  IQuerySessionProof = interface(IInterface)
+    ['{AA1CD2E4-C8D3-4C1A-9BC4-DA8201A7E2AB}']
+    function Identity: IInterface;
+    function Intent: Integer;
+    function Session: TQuerySessionState;
+  end;
+  TQueryOwnerLease = class(TInterfacedObject, INyxCollectionQueryOwner, IQueryOwnerProof)
+  public
+    Info: TNyxQueryOwnerInfo;
+    Life: TQueryOwnerLife;
+    LifeLease: IInterface;
+    destructor Destroy; override;
+    function GetID: TNyxQueryOwnerID;
+    function GetOrigin: TNyxQueryOriginRef;
+    function GetCaption: TNyxText;
+    function GetConnected: Boolean;
+    procedure Revoke;
+    function OwnerLease: TQueryOwnerLease;
+  end;
+
+  { Public observations freeze presentation booleans at capture time. The
+    private retained state/identity is inert and grants no command lease. }
+  TQuerySessionSnapshot = class(TInterfacedObject,
+    INyxCollectionQuerySessionSnapshot, IQuerySessionProof)
+  private
+    FState: TQuerySessionState;
+    FStateLease: IInterface;
+    FIdentity: IInterface;
+    FIntent: Integer;
+    FContributions: array of TNyxQueryContribution;
+    FSortOwner: TNyxQueryOwnerInfo;
+  public
+    constructor Create(AState: TQuerySessionState; const AStateLease,
+      AIdentity: IInterface; AIntent: Integer);
+    function GetBaseline: TNyxCollectionQuery;
+    function GetEffective: TNyxCollectionQuery;
+    function GetHasUserSort: Boolean;
+    function GetUserSort: TNyxCollectionQuery;
+    function GetSortOwner: TNyxQueryOwnerInfo;
+    function GetCount: Integer;
+    function ContributionAt(AIndex: Integer): TNyxQueryContribution;
+    function Identity: IInterface;
+    function Intent: Integer;
+    function Session: TQuerySessionState;
   end;
 
   TContextPreparation = class;
@@ -531,6 +669,8 @@ procedure TQueryPreparation.Initialize(AOwner: TView;
 var
   LProof: IQueryCaptureProof;
   LCaptureLease: INyxCollectionQueryCapture;
+  LSession: TQuerySessionState;
+  LSessionLease: IInterface;
 begin
   FLease := AOwner as INyxCollectionView;
   FOwner := AOwner;
@@ -553,6 +693,9 @@ begin
   FBeforeUnpaged := FOwner.FUnpaged;
   FBeforeSelection := FOwner.FSelection;
   FBeforeQuery := FOwner.FQuery.Copy;
+  FBeforeSession := FOwner.FQuerySession;
+  FBeforeSessionLease := FOwner.FQuerySessionLease;
+  FNextOwner := FOwner.FNextQueryOwner;
   FIntent := FOwner.FQueryIntent;
   FOwner.FQueryPreparation := Self;
   FChanged := FQuery.ToData.ToJSON <> FBeforeQuery.ToData.ToJSON;
@@ -573,6 +716,19 @@ begin
   if FChanged and (FIntent = High(Integer)) then
   begin
     raise ENyxCollection.Create('Collection query intent is exhausted');
+  end;
+
+  if FChanged then
+  begin
+    { Raw effective-policy replacement starts a fresh baseline/generation.
+      The former state and generation remain leased through group retirement. }
+    LSession := TQuerySessionState.Create;
+    LSessionLease := LSession;
+    LSession.Initialize(FQuery);
+    FSession := LSession;
+    FSessionLease := LSessionLease;
+    FSessionChanged := True;
+    FNextOwner := 0;
   end;
   LProof := nil;
   LCaptureLease := nil;
@@ -595,10 +751,18 @@ begin
 
   if (FOwner.FQueryPreparation <> Self) or FOwner.FNotifying or
     (FOwner.FPrepared <> nil) or (FOwner.FQueryIntent <> FIntent) or
+    (FOwner.FQuerySession <> FBeforeSession) or not FBeforeSession.Scope.Active or
     (FOwner.FSource <> FSource) or (FOwner.FSnapshot <> FBeforeSnapshot) or
     (FOwner.FUnpaged <> FBeforeUnpaged) or (FOwner.FSelection <> FBeforeSelection) then
   begin
     raise ENyxCollection.Create('Prepared query view/source/intent has changed');
+  end;
+
+  if FHasCommandOwner and ((FCommandLife = nil) or not FCommandLife.Active or
+    (FCommandLife.Scope <> FBeforeSession.Scope) or
+    not FCommandLife.Scope.Active) then
+  begin
+    raise ENyxCollection.Create('Query command owner has revoked or belongs to another session');
   end;
 end;
 
@@ -623,6 +787,12 @@ begin
     raise ENyxCollection.Create('A refused query preparation cannot be validated again');
   end;
   FValidationStarted := True;
+
+  if FSession <> nil then
+  begin
+    FSession.Validate(FSource.Schema);
+    RequireCurrent;
+  end;
 
   if FChanged then
   begin
@@ -687,6 +857,22 @@ begin
       FOwner.FExpanded := FCandidate.FExpanded;
       FOwner.FFirstChild := FCandidate.FFirstChild;
       FOwner.FNextSibling := FCandidate.FNextSibling;
+    end;
+
+    if FSessionChanged then
+    begin
+
+      if FSession.Scope <> FBeforeSession.Scope then
+      begin
+        FBeforeSession.Scope.Active := False;
+      end;
+      FOwner.FQuerySession := FSession;
+      FOwner.FQuerySessionLease := FSessionLease;
+      FOwner.FNextQueryOwner := FNextOwner;
+    end;
+
+    if FChanged or FSessionChanged then
+    begin
       FOwner.FQueryIntent := FIntent + 1;
     end;
     FInstalled := True;
@@ -702,7 +888,7 @@ begin
   end;
   FNotified := True;
 
-  if FChanged then
+  if FChanged or FSessionChanged then
   begin
     { Notify leases the view itself and attempts every independent observer.
       No plan/owner access follows a callback that may release caller handles. }
@@ -735,10 +921,18 @@ begin
   FBeforeSelection := nil;
   FBeforeQuery := Default(TNyxCollectionQuery);
   FQuery := Default(TNyxCollectionQuery);
+  FCommandLife := nil;
+  FCommandLifeLease := nil;
+  FSession := nil;
+  FSessionLease := nil;
+  FBeforeSession := nil;
+  FBeforeSessionLease := nil;
   { Last release may dispose the independent model. It cannot roll back an
     installed query and no borrowed owner is accessed afterward. }
   FLease := nil;
 end;
+
+{$include nyx.collections.query.session.implementation.inc}
 
 function PrepareNyxCollectionContextResources(const AContext: INyxCollectionContext;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
@@ -1132,6 +1326,9 @@ begin
   FProjection := AProjection;
   FSource := FStore.Snapshot;
   FQuery := ASpec.QueryPolicy;
+  FQuerySession := TQuerySessionState.Create;
+  FQuerySessionLease := FQuerySession;
+  FQuerySession.Initialize(FQuery);
   ValidateDataset(FSource, LParents);
   FSnapshot := NyxQuerySnapshot(FSource, FQuery, LParents, FParents);
   FUnpaged := FSnapshot;
@@ -1177,6 +1374,13 @@ destructor TView.Destroy;
 var
   LIndex: Integer;
 begin
+  { Lifetime ports retire before source disconnection or any model finalizer.
+    Retained snapshots/leases can observe retirement without retaining Self. }
+
+  if (FQuerySession <> nil) and (FQuerySession.Scope <> nil) then
+  begin
+    FQuerySession.Scope.Active := False;
+  end;
   RetireCandidate;
 
   if FStoreToken <> nil then
@@ -1718,6 +1922,8 @@ var
   LWindow: TNyxCollectionPageWindow;
   LPrepared: INyxPreparedPublication;
   LReadiness: INyxPublicationReadiness;
+  LSession: TQuerySessionState;
+  LSessionLease: IInterface;
 begin
   Writable;
   Result := Self as INyxCollectionView;
@@ -1756,6 +1962,9 @@ begin
   end;
   { Legacy non-atomic stores retain their ordinary immediate query API. They
     deliberately cannot promise the optional coordinated reservation contract. }
+  LSession := TQuerySessionState.Create;
+  LSessionLease := LSession;
+  LSession.Initialize(LPolicy);
   ValidateDataset(FSource, LParents);
   LResult := NyxQuerySnapshot(FSource, LPolicy, LParents, LResultParents);
   LUnpaged := LResult;
@@ -1780,6 +1989,10 @@ begin
   Inc(FQueryIntent);
   BuildHierarchy;
   ReconcileTreeFocus;
+  FQuerySession.Scope.Active := False;
+  FQuerySession := LSession;
+  FQuerySessionLease := LSessionLease;
+  FNextQueryOwner := 0;
   Notify(nil);
 end;
 

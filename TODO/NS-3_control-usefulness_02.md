@@ -56,6 +56,21 @@ CurrentQuery; a second surface joins existing canonical contributions instead of
 recapturing their effective query. Explicit authored restoration is a prepared
 rebase, not automatic behavior when acquiring/releasing an owner lease.
 
+P2 now has a separately bounded native-local API qualification in
+[WORK](../WORK.md#shared-collection-query-sessions--2026-10-21), with the matching
+[Q1 ownership rule](NS-3_data-toolbar_02.md) specified before implementation.
+One optional session on the existing view owns baseline/independent predicates/
+shared sort. Typed fluent batches, revocable leases, copied observations and
+checked metadata transfer use the existing prepared-query participant. Root owns
+view/bindings/build/docs; the existing helper owns the new contract/public consumer.
+Native93 new public checks plus unchanged prepared-query89/query56 pass with
+clean heaps. Final8 compilers have zero owned warnings; browser assertions and
+both Studio mains compile only. All actual readers are joined and exact audited,
+including retained first identifier failure and superseded enum warnings. No
+header/renderer/Studio/Q1 implementation or browser execution is released by P2.
+All original criteria remain open; the next outcome is P3's actual useful table
+commands and shared form, not another model/compiler variant.
+
 **Acceptance Criteria:**
 
 - Expose immutable typed fluent per-column capabilities through specialized

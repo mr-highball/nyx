@@ -38,10 +38,12 @@ cannot promise one Clear operation. Existing caller bindings/read-only/domain
 rules still apply. Specify validation/publication across scalar reset and query
 change before source release rather than assuming those owners commit together.
 
-Capture the baseline query and the last query actually owned by this attachment.
-Before each mutation, verify the exact view/store/source and last-owned query;
-an externally replaced query/target must refuse or retire this authority, never
-be overwritten by Clear. Query notification failure remains committed. The
+Capture the admitted baseline and the canonical session observation for each
+command. Before mutation, verify the exact view/store/source, mounted generation,
+session intent and own live lease. Peer changes require a fresh capture and
+preservation of their current contributions. Actual raw query/target replacement
+must refuse or retire former authority, never be overwritten by Clear; equal raw
+assignments remain no-op. Query notification failure remains committed. The
 opt-in ordinary Clear button uses the existing Clear semantic; compatible custom
 parts/captions/callbacks survive, and an occupied incompatible role refuses the
 whole candidate. The static four existing accessors/GUID remain unchanged.
@@ -49,6 +51,20 @@ whole candidate. The static four existing accessors/GUID remain unchanged.
 Read-only design can advance while prerequisites are pending. Acceptance remains
 downstream of the complete coordinator task, including05's actual-browser gate;
 this packet list does not bypass that dependency or authorize a host rollout.
+
+The shared ownership rule is now specified with
+[column filtering02](NS-3_control-usefulness_02.md): one view-owned baseline and
+independent owner/channel predicates, plus one visible shared user-sort vector.
+CurrentQuery is the baseline on first admission; later surfaces join it. Clear
+withdraws this toolbar's search and resets sorting only while it owns that vector.
+In isolation this restores the exact admitted baseline; with peers it preserves
+their current contributions. Separate explicit global resets remove all user
+filters/reset order. Same-origin reacquisition gets a fresh exact owner token,
+never another attachment's authority. Actual raw query replacement revokes the
+former session generation; equal replacement remains a no-op. The existing
+prepared state/query owner admits visible Search/Sort reset together. This settles
+the design seam only: Q1 implementation remains blocked by its unchanged parent,
+and all five original acceptance criteria below remain required.
 
 **Pull checklist — Q1:**
 
