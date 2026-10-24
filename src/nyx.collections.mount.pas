@@ -623,7 +623,7 @@ type
     cannot outlive this synchronous envelope; the accepted range owns none of
     these live mount/view references. Flags-only checks follow every callout. }
   TCellRangeKeyCommand = class(TInterfacedObject, INyxCollectionCellRangeKeyCommand,
-    INyxCollectionCellRangePointerEntry)
+    INyxCollectionCellRangePointerEntry, INyxCollectionCellRangePointerReceipt)
   private
     FOwner: TNyxCollectionMountBase;
     FLease: INyxCollectionMount;
@@ -649,6 +649,7 @@ type
     FResolved: Boolean;
     FPrepared: Boolean;
     FCompleted: Boolean;
+    FInstalled: Boolean;
     FRetired: Boolean;
     procedure CaptureOwner(AOwner: TNyxCollectionMountBase; AKeepStroke: Boolean = False);
     function PreparedCurrent: Boolean;
@@ -663,6 +664,7 @@ type
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
+    function GetInstalled: Boolean;
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
   end;
@@ -1313,6 +1315,11 @@ begin
     (FOwner.FView = FView) and (FOwner.FInputLifetime = FInput) and FInput.Current;
 end;
 
+function TCellRangeKeyCommand.GetInstalled: Boolean;
+begin
+  Result := FInstalled and not FRetired;
+end;
+
 function TCellRangeKeyCommand.GetCurrent: Boolean;
 begin
   Result := GetDispatchCurrent and FOwner.FCellRangeEnabled and FOwner.FEnabled and
@@ -1572,6 +1579,7 @@ begin
     begin
       Exit;
     end;
+    FInstalled := True;
   end
   else
   begin

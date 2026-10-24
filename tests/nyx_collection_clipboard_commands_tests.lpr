@@ -1955,6 +1955,7 @@ var
   LAdmission: INyxCollectionInputAdmission;
   LEntry: INyxCollectionCellRangePointerEntry;
   LOlder: INyxCollectionCellRangePointerEntry;
+  LReceipt: INyxCollectionCellRangePointerReceipt;
   LPrevious: INyxCollectionCellRangeIntent;
   LBefore: INyxCollectionSnapshot;
   LFocuses: Integer;
@@ -1984,24 +1985,31 @@ begin
     LEntry := LInput.BeginCellRangePointer(ncrpReplace);
     LEntry.ResolveCells(LOrigin, LTarget);
     LEntry.Prepare;
+    Check(Supports(LEntry, INyxCollectionCellRangePointerReceipt, LReceipt) and
+      not LReceipt.Installed, 'Prepared endpoint has no installed receipt');
     LFocuses := LObject.Focuses;
     Check(LEntry.Current and (LRanges.CellRange = nil),
       'mounted pointer prepares complete RAW range before canonical publication');
     Check(LEntry.Complete(False) and LEntry.Complete(True) and
       (LRanges.CellRange = nil) and (LObject.Focuses = LFocuses),
       'consumed-first mounted pointer completion cannot retry or move focus');
+    Check(not LReceipt.Installed, 'Claiming consumed input does not arm a later drag');
     LEntry.Retire;
     LEntry := LInput.BeginCellRangePointer(ncrpReplace);
     LEntry.ResolveCells(LOrigin, LTarget);
     LEntry.Prepare;
     LObject.FocusPointer := LEntry;
     LEntry.Complete(True);
+    Check(Supports(LEntry, INyxCollectionCellRangePointerReceipt, LReceipt) and
+      LReceipt.Installed and LEntry.Current,
+      'Installed receipt distinguishes the original successful pointer default');
     LPrevious := LRanges.CellRange;
     Check((LPrevious <> nil) and LPrevious.Current and
       LPrevious.Capture.Anchor.Same(LOrigin) and LPrevious.Capture.Focus.Same(LTarget) and
       (LObject.Focuses = LFocuses + 1),
       'focus reentry cannot complete the original pointer twice or replace exact endpoints');
     LEntry.Retire;
+    Check(not LReceipt.Installed, 'Retirement withdraws synchronous installed receipt');
     Check(LPrevious.Current and (LRanges.CellRange = LPrevious),
       'retiring installed mounted pointer preserves its detached accepted range');
     LOlder := LInput.BeginCellRangePointer(ncrpExtend);

@@ -70,7 +70,8 @@ type
 
   { Each callback mode changes only the original real key's semantic phase.
     Newer copy is a separate typed command; no physical event is replayed. }
-  TKeyMode = (kmObserve, kmConsume, kmMutate, kmDisableABA, kmNested, kmRetire);
+  TKeyMode = (kmObserve, kmConsume, kmMutate, kmDisableABA, kmNested, kmRetire,
+    kmCapture);
 
   { Test owner outlives every subscription and injected host receiver. }
   TCopyReview = class;
@@ -242,6 +243,7 @@ type
     FRangeReplacements: Integer;
     FRangeKeySending: Boolean;
     FRangePointerSending: Boolean;
+    FRangeStrokeSending: Boolean;
     FRangePointers: Integer;
     FRangePointerUps: Integer;
     FPointerCallbackRecorded: Boolean;
@@ -328,6 +330,11 @@ const
 
 var
   GChecks: Integer;
+  {$ifdef PAS2JS}
+  GRangeCapturedID: NativeInt = -1;
+  GRangeCaptureRefused: Boolean;
+  GRangeCaptures: Integer;
+  {$endif}
   {$ifndef PAS2JS}
   GFallbackCopies: Integer;
   GErrors: TNativeErrors;
@@ -352,6 +359,34 @@ begin
 end;
 
 {$ifdef PAS2JS}
+{ Explicit injected platform authority for synthetic pointers. The real DOM hit
+  test, canonical callbacks, mounted capture lifecycle and release remain live.
+  These seams make no trusted hardware or browser-device capture claim. }
+procedure CaptureRangePointer(AID: NativeInt);
+begin
+
+  if GRangeCaptureRefused then
+  begin
+    raise Exception.Create('Injected platform capture refusal');
+  end;
+  GRangeCapturedID := AID;
+  Inc(GRangeCaptures);
+end;
+
+function HasRangePointer(AID: NativeInt): Boolean;
+begin
+  Result := GRangeCapturedID = AID;
+end;
+
+procedure ReleaseRangePointer(AID: NativeInt);
+begin
+
+  if GRangeCapturedID = AID then
+  begin
+    GRangeCapturedID := -1;
+  end;
+end;
+
 { Await actual rendering opportunities for the existing mounted row/window
   publisher; these are not replacement input or publication callbacks. }
 function Frame: TJSPromise;
@@ -1087,6 +1122,18 @@ var
   LEpoch: Integer;
 begin
 
+  if FRangeStrokeSending and (AEvent.Trigger = ntPointerMove) then
+  begin
+
+    if FMode = kmConsume then
+    begin
+      Check(Supports(AExecution, INyxEventResponse, LResponse) and
+        LResponse.CanConsume, 'Original managed move admits canonical consumption');
+      LResponse.Consume;
+    end;
+    Exit;
+  end;
+
   if FRangePointerSending and (AEvent.Trigger = ntPointerUp) then
   begin
     Inc(FRangePointerUps);
@@ -1105,6 +1152,10 @@ begin
       LGesture.CanRequest(ngcCapturePointer),
       'one actual managed pointer execution admits both input and gesture decisions');
     case FMode of
+      kmCapture:
+        begin
+          LGesture.CapturePointer;
+        end;
       kmConsume:
         begin
           LResponse.Consume;
@@ -1243,7 +1294,10 @@ begin
     'real canonical key phase retains the table identity and Ctrl+C snapshot');
   Inc(FKeys);
   case FMode of
-    kmObserve: ;
+    kmObserve, kmCapture:
+      begin
+        { Capture mode changes only the original pointer callback above. }
+      end;
     kmConsume:
       begin
         Check(Supports(AExecution, INyxEventResponse, LResponse) and LResponse.CanConsume,
@@ -2479,6 +2533,197 @@ var
     {$endif}
   end;
 
+  {$ifdef PAS2JS}
+  { Synthetic pointers traverse the actual renderer, captured host route and
+    resident-cell hit test. Only capture acquisition is injected; the suite
+    deliberately distinguishes these checks from trusted physical interaction. }
+  procedure StrokeJourney;
+  var
+    LSetCapture: JSValue;
+    LHasCapture: JSValue;
+    LReleaseCapture: JSValue;
+    LOptions: TJSObject;
+    LAccepted: INyxCollectionCellRangeIntent;
+    LMoveToken: INyxEventSubscription;
+    LCaptures: Integer;
+    LRound: Integer;
+
+    procedure Send(const AKind: String; ACell: TJSHTMLElement; AID: Integer = 73);
+    var
+      LBounds: TJSDOMRect;
+      LTarget: TJSHTMLElement;
+    begin
+      LOptions := TJSObject.new;
+      LOptions['bubbles'] := True;
+      LOptions['cancelable'] := True;
+      LOptions['button'] := 0;
+      LOptions['buttons'] := 1;
+
+      if AKind = 'pointerup' then
+      begin
+        LOptions['buttons'] := 0;
+      end;
+      LOptions['pointerId'] := AID;
+      LOptions['pointerType'] := 'mouse';
+      LOptions['isPrimary'] := True;
+      LOptions['shiftKey'] := True;
+      LOptions['clientX'] := -100;
+      LOptions['clientY'] := -100;
+
+      if ACell <> nil then
+      begin
+        LBounds := ACell.getBoundingClientRect;
+        LOptions['clientX'] := LBounds.left + LBounds.width / 2;
+        LOptions['clientY'] := LBounds.top + LBounds.height / 2;
+      end;
+      LTarget := FTable;
+
+      if AKind = 'pointerdown' then
+      begin
+        LTarget := ACell;
+      end;
+      LTarget.dispatchEvent(TRangePointerEvent.new(AKind, LOptions));
+    end;
+
+  begin
+    LSetCapture := TJSObject(FTable)['setPointerCapture'];
+    LHasCapture := TJSObject(FTable)['hasPointerCapture'];
+    LReleaseCapture := TJSObject(FTable)['releasePointerCapture'];
+    TJSObject(FTable)['setPointerCapture'] := @CaptureRangePointer;
+    TJSObject(FTable)['hasPointerCapture'] := @HasRangePointer;
+    TJSObject(FTable)['releasePointerCapture'] := @ReleaseRangePointer;
+    LMoveToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
+      ntPointerMove).Subscribe(FCallback);
+    try
+      LRanges.ConfigureCellRange(True);
+      FRangePointerSending := True;
+      FRangeStrokeSending := True;
+      for LRound := 0 to 7 do
+      begin
+        FMode := kmObserve;
+        GRangeCaptureRefused := LRound = 3;
+        GRangeCapturedID := -1;
+        LRanges.ClearCellRange;
+        FocusOrigin;
+        LOriginCell.scrollIntoView;
+        LCaptures := GRangeCaptures;
+
+        if LRound = 4 then
+        begin
+          FMode := kmCapture;
+        end;
+        Send('pointerdown', LTargetCell);
+        LAccepted := LRanges.CellRange;
+        Check((LAccepted <> nil) and LAccepted.Current and
+          LAccepted.Capture.Focus.Same(LTarget),
+          'Shift-down retains its immediate exact accepted endpoint');
+
+        if LRound = 3 then
+        begin
+          Check((GRangeCapturedID = -1) and (GRangeCaptures = LCaptures),
+            'Refused capture preserves Shift-click without a false live drag');
+          Continue;
+        end;
+        Check((GRangeCapturedID = 73) and (GRangeCaptures = LCaptures + 1),
+          'Current original down acquires one injected platform capture');
+        Send('pointermove', LOriginCell, 74);
+        Check((LRanges.CellRange = LAccepted) and (GRangeCapturedID = 73),
+          'Wrong pointer cannot move or cancel another pending stroke');
+
+        if LRound = 5 then
+        begin
+          Send('pointermove', nil);
+          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current,
+            'Outside-grid hit cancels without constructing an undefined identity');
+          Continue;
+        end;
+
+        if LRound = 6 then
+        begin
+          Send('lostpointercapture', LOriginCell, 74);
+          Send('lostpointercapture', LOriginCell);
+          Check(GRangeCapturedID = 73,
+            'Wrong-pointer and delayed loss cannot revoke a still-captured current pair');
+          ReleaseRangePointer(73);
+          Send('lostpointercapture', LOriginCell);
+          Check((LRanges.CellRange = LAccepted) and LAccepted.Current and
+            (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
+            'Actual matching loss withdraws the preview and restores accepted paint');
+          Continue;
+        end;
+
+        if LRound = 7 then
+        begin
+          FMount.Refresh;
+          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current,
+            'Refresh releases original gesture capture without changing accepted cells');
+          Continue;
+        end;
+
+        if LRound = 1 then
+        begin
+          FMode := kmConsume;
+        end;
+        Send('pointermove', LOriginCell);
+        Check(LRanges.CellRange = LAccepted,
+          'Captured movement paints only preview, preserving accepted cells');
+
+        if LRound = 4 then
+        begin
+          Check((GRangeCapturedID = 73) and
+            (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
+            'Explicit application capture outranks the optional range drag');
+          ReleaseRangePointer(73);
+          Continue;
+        end;
+
+        if LRound = 1 then
+        begin
+          Check((GRangeCapturedID = -1) and LAccepted.Current and
+            (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
+            'Consumed original move releases capture and restores accepted paint');
+          Continue;
+        end;
+        Check(LTargetCell.getAttribute('data-nyx-range-selected') <> 'true',
+          'Physical hit test paints the smaller pending rectangle');
+
+        if LRound = 2 then
+        begin
+          Send('pointercancel', LOriginCell);
+          Check((GRangeCapturedID = -1) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current and
+            (LTargetCell.getAttribute('data-nyx-range-selected') = 'true'),
+            'Matching cancellation releases capture and restores accepted rectangle');
+        end
+        else
+        begin
+          Send('pointerup', LOriginCell);
+          Check((GRangeCapturedID = -1) and (LRanges.CellRange <> LAccepted) and
+            LRanges.CellRange.Capture.Anchor.Same(LOrigin) and
+            LRanges.CellRange.Capture.Focus.Same(LOrigin) and
+            (document.activeElement = LOriginCell),
+            'Matching release commits the preview and exact physical endpoint focus');
+        end;
+      end;
+      Check((FView.Store.Snapshot = LSource) and
+        FView.Selection.Snapshot.SameState(LRows),
+        'Sustained range input changes no RAW data or ordinary row selection');
+    finally
+      FMode := kmObserve;
+      FRangePointerSending := False;
+      FRangeStrokeSending := False;
+      GRangeCaptureRefused := False;
+      LRanges.ConfigureCellRange(False);
+      LMoveToken.Cancel;
+      TJSObject(FTable)['setPointerCapture'] := LSetCapture;
+      TJSObject(FTable)['hasPointerCapture'] := LHasCapture;
+      TJSObject(FTable)['releasePointerCapture'] := LReleaseCapture;
+    end;
+  end;
+  {$endif}
+
   function CallbackFocusMatches: Boolean;
   begin
     {$ifdef PAS2JS}
@@ -2607,6 +2852,7 @@ begin
         (FView.Store.Snapshot = LSource) and (FHost.Writes = LBefore),
         'managed pointer leaves ordinary row selection, accepted RAW and host authority untouched');
     end;
+    {$ifdef PAS2JS}StrokeJourney;{$endif}
     FMode := kmObserve;
     LRanges.ConfigureCellRange(False);
     FocusOrigin;

@@ -128,6 +128,17 @@ type
     property DispatchCurrent: Boolean read GetDispatchCurrent;
   end;
 
+  { Optional synchronous completion receipt. Claimed input is not necessarily
+    installed input: a consumed or stale endpoint must never arm a later drag.
+    Installed records this envelope's publication only; callers must also check
+    the original entry's Current before deriving any follow-on input authority.
+    Retirement makes the receipt unavailable without revoking accepted cells. }
+  INyxCollectionCellRangePointerReceipt = interface(IInterface)
+    ['{DF26CC06-F051-47A6-B727-D96E1AD270E6}']
+    function GetInstalled: Boolean;
+    property Installed: Boolean read GetInstalled;
+  end;
+
   { Optional actual-mount pointer reservation shares the original range owner
     and request serial with keyboard navigation. Default-off mounts return nil;
     an admitted but subsequently stale envelope remains claimed and never falls

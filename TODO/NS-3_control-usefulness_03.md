@@ -15,9 +15,15 @@ optional per-message mount envelope. Cached preview and accepted cells remain
 separate; exact-pointer abandonment, original input/focus fences and callback
 retirement are checked. Native command04 passes267 with a clean heap; the
 independent control02 preservation journey passes1054. Browser companions compile
-only. Physical browser/LCL capture/movement/release/touch and original acceptance
-remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes) owns
-the separate cohorts, negative diagnostics and next adapter integration.
+only. The browser Shift-mouse adapter now has canonical per-message dispatch,
+actual capture admission, original event flags, fractional resident-cell hit
+testing and exact-subject cleanup. Its immediate Shift-click selection and
+ordinary row input remain distinct. Its expanded browser fixture compiles only;
+native05 preserves1054 existing controls with a complete clean heap, and receipt02
+passes271 native commands. Actual browser execution/trusted capture, LCL sustained
+movement, pen/touch, automatic scrolling/off-page extension and original
+acceptance remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
+owns the separate cohorts, compiler failures and next adapter integration.
 
 The alignment continuation adds independent typed logical axes, version12 only
 on actual presence, crafted source output, ordinary Inspector capture and grouped

@@ -33,7 +33,8 @@ uses
   nyx.collections.view,
   nyx.collections.presentation,
   nyx.collections.alignment,
-  nyx.collections.mount, nyx.collections.draft;
+  nyx.collections.mount, nyx.collections.draft, nyx.scheduler,
+  nyx.collections.range.stroke, nyx.gestures;
 
 type
   { Synchronous physical-input envelope. Prepare captures the original model
@@ -87,6 +88,25 @@ type
   INyxBrowserCollectionCellRangePointerInput = interface(IInterface)
     ['{035C3457-C726-4571-B694-FEAEFBC3F2EC}']
     function BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
+  end;
+
+  { Optional sustained range route. The renderer supplies its ORIGINAL event
+    generation before physical hit testing. Only flags and detached stroke data
+    survive messages; each returned command is retired synchronously. Begin
+    preserves the existing Shift-click publication before arming movement. }
+  INyxBrowserCollectionCellRangeStrokeInput = interface(IInterface)
+    ['{517485F6-732B-4D53-B818-51BA7E835FD1}']
+    function BeginRangeStroke(AEvent: TJSPointerEvent;
+      APhase: TNyxCollectionRangeStrokePhase;
+      const AGeneration: INyxCancellationScope): INyxBrowserColumnCommand;
+  end;
+
+  { Canonical capture directives outrank an adapter's optional gesture default.
+    The renderer reports the sealed decision on the same synchronous command,
+    before applying the platform effect. No event/router lease is retained. }
+  INyxBrowserRangeCaptureDecision = interface(IInterface)
+    ['{5C317A84-F35E-4768-A555-A53691D3FEED}']
+    procedure ObservePointerRequest(ARequest: TNyxPointerRequest);
   end;
 
   { Optional exact resident-cell context entry. Editors retain their native text
@@ -192,13 +212,18 @@ uses
   nyx.collections.cell.actions,
   nyx.collections.representation,
   nyx.collections.text.layout,
-  nyx.scheduler,
   nyx.collections.tree.rows;
 
 { The resize preview uses the same ordinary DOM factory as mounted rows. }
 function NewElement(const ATag: TNyxText): TJSHTMLElement; forward;
 
 type
+  { Standard Document hit testing accepts CSS pixel doubles. The installed Web
+    unit narrows these arguments; this bridge preserves fractional coordinates.
+    The global document and returned resident elements remain borrowed hosts. }
+  TRangeHitDocument = class external name 'Document' (TJSDocument)
+    function elementFromPoint(AX, AY: Double): TJSElement; reintroduce;
+  end;
   { Typed bridge to standard DOM focus options, missing from older Web units. }
   TFocusOptions = class external name 'Object' (TJSObject)
     preventScroll: Boolean;
@@ -273,11 +298,25 @@ type
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
   end;
-  { Adapts an original pointer reservation to the existing synchronous host
-    envelope. No event is replayed and no mount retains this owning wrapper. }
-  TBrowserRangePointerCommand = class(TInterfacedObject, INyxBrowserColumnCommand)
+  { Adapts one original endpoint or pending-stroke message to canonical browser
+    dispatch. Its mount is borrowed only through that message's owning entry;
+    original event flags and exact subject prevent stale cleanup or capture.
+    No event is replayed and no mount retains this synchronous wrapper. }
+  TBrowserRangePointerCommand = class(TInterfacedObject, INyxBrowserColumnCommand,
+    INyxBrowserRangeCaptureDecision)
   private
     FCommand: INyxCollectionCellRangePointerEntry;
+    { Borrowed only while FCommand owns the exact mount synchronously. }
+    FOwner: TBrowserMount;
+    FGeneration: INyxCancellationScope;
+    FPointer: TNyxCollectionRangeStrokePointer;
+    FEndpoint: TNyxCollectionCellIdentity;
+    FSubject: INyxCollectionRangeStroke;
+    FPhase: TNyxCollectionRangeStrokePhase;
+    FArm: Boolean;
+    FCaptureRequested: Boolean;
+    FCompleted: Boolean;
+    FCompleting: Boolean;
   public
     constructor Create(const ACommand: INyxCollectionCellRangePointerEntry);
     destructor Destroy; override;
@@ -285,6 +324,7 @@ type
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
     function Complete(AAllowDefault: Boolean): Boolean;
+    procedure ObservePointerRequest(ARequest: TNyxPointerRequest);
     procedure Retire;
   end;
   { Host-local action and physical origin are typed independently. Fit does not
@@ -543,7 +583,8 @@ type
     INyxBrowserCollectionColumnInput, INyxBrowserCollectionColumnActivation,
     INyxBrowserCollectionColumnRelease, INyxBrowserCollectionClipboardInput,
     INyxBrowserCollectionCellContextInput, INyxCollectionFocusedDraftInput,
-    INyxBrowserCollectionCellRangeInput, INyxBrowserCollectionCellRangePointerInput)
+    INyxBrowserCollectionCellRangeInput, INyxBrowserCollectionCellRangePointerInput,
+    INyxBrowserCollectionCellRangeStrokeInput)
   private
     FHost: TJSHTMLElement;
     { Borrowed exact down target, owned by this mount's row DOM. This scoped
@@ -551,6 +592,19 @@ type
       Another pointer down, the matching click or retirement clears it; it
       retains no command, view or selection owner and uses no time heuristic. }
     FRangePointerCell: TJSHTMLElement;
+    { Adapter ownership holds detached data and original event flags, never a
+      synchronous input envelope. The borrowed host is this mount's own DOM. }
+    FRangeGesture: INyxCollectionRangeStroke;
+    FRangeGeneration: INyxCancellationScope;
+    FRangePointer: TNyxCollectionRangeStrokePointer;
+    FRangeCaptured: Boolean;
+    function RangePointerCommand(AEvent: TJSPointerEvent;
+      const AGeneration: INyxCancellationScope): INyxBrowserColumnCommand;
+    procedure FinishRangeGesture(const ASubject: INyxCollectionRangeStroke);
+    procedure ArmRangeGesture(const APointer: TNyxCollectionRangeStrokePointer;
+      const AGeneration: INyxCancellationScope;
+      const AEndpoint: TNyxCollectionCellIdentity);
+    function RangeGestureCancel(AEvent: TJSEvent): Boolean;
     { A permanent caption survives an empty visible-column map. Opening focus
       suppresses only its own synchronous blur/change noise, not later edits. }
     FColumnLauncher: TJSHTMLElement;
@@ -735,6 +789,9 @@ type
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
     function BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
+    function BeginRangeStroke(AEvent: TJSPointerEvent;
+      APhase: TNyxCollectionRangeStrokePhase;
+      const AGeneration: INyxCancellationScope): INyxBrowserColumnCommand;
     function BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
     function CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
     function BeginColumnDoubleClick(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
@@ -800,29 +857,126 @@ end;
 
 function TBrowserRangePointerCommand.GetCurrent: Boolean;
 begin
-  Result := (FCommand <> nil) and FCommand.Current;
+  Result := (FCommand <> nil) and
+    ((FGeneration = nil) or not FGeneration.Cancelled) and FCommand.Current;
 end;
 
 function TBrowserRangePointerCommand.GetDispatchCurrent: Boolean;
 begin
-  Result := (FCommand <> nil) and FCommand.DispatchCurrent;
+  Result := (FCommand <> nil) and
+    ((FGeneration = nil) or not FGeneration.Cancelled) and FCommand.DispatchCurrent;
 end;
 
 function TBrowserRangePointerCommand.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LReceipt: INyxCollectionCellRangePointerReceipt;
+  LSubject: INyxCollectionRangeStroke;
+  LOwner: TBrowserMount;
+  LArm: Boolean;
 begin
-  Result := (FCommand <> nil) and FCommand.Complete(AAllowDefault);
+  LCommand := FCommand;
+  LOwner := FOwner;
+  LSubject := FSubject;
+  LArm := FArm;
+  FArm := False;
+  Result := False;
+
+  if LCommand = nil then
+  begin
+    Exit;
+  end;
+  FCompleted := True;
+  FCompleting := True;
+  try
+    try
+      Result := LCommand.Complete(AAllowDefault and GetCurrent);
+
+      if (LOwner = nil) or (FCommand <> LCommand) then
+      begin
+        Exit;
+      end;
+
+      if LArm and AAllowDefault and GetCurrent and not FCaptureRequested and
+        Supports(LCommand, INyxCollectionCellRangePointerReceipt, LReceipt) and
+        LReceipt.Installed then
+      begin
+        LOwner.ArmRangeGesture(FPointer, FGeneration, FEndpoint);
+      end
+      else if (LSubject <> nil) and ((FPhase = ncrspRelease) or
+        not AAllowDefault or FCaptureRequested or not GetCurrent or not LSubject.Current) then
+      begin
+        LOwner.FinishRangeGesture(LSubject);
+      end;
+    except
+      { Cancellation is still attempted, but a secondary paint/capture cleanup
+        failure must not replace the original canonical/focus diagnostic. }
+      try
+
+        if (LOwner <> nil) and (FCommand = LCommand) and (LSubject <> nil) then
+        begin
+          LOwner.FinishRangeGesture(LSubject);
+        end;
+      except
+      end;
+      raise;
+    end;
+  finally
+    FCompleting := False;
+  end;
+end;
+
+procedure TBrowserRangePointerCommand.ObservePointerRequest(ARequest: TNyxPointerRequest);
+begin
+
+  if ARequest <> nprUnchanged then
+  begin
+    FCaptureRequested := True;
+
+    if (FOwner <> nil) and (FSubject <> nil) and
+      (FOwner.FRangeGesture = FSubject) then
+    begin
+      { Ownership transfers to the explicit application directive. Cleanup of
+        this pending range must not undo the capture it has just requested. }
+      FOwner.FRangeCaptured := False;
+    end;
+  end;
 end;
 
 procedure TBrowserRangePointerCommand.Retire;
 var
   LCommand: INyxCollectionCellRangePointerEntry;
+  LOwner: TBrowserMount;
+  LSubject: INyxCollectionRangeStroke;
+  LAbandon: Boolean;
+  LMountLease: INyxCollectionMount;
 begin
   LCommand := FCommand;
-  FCommand := nil;
+  LOwner := FOwner;
+  LSubject := FSubject;
+  LAbandon := not FCompleted or FCompleting;
 
-  if LCommand <> nil then
+  if LOwner <> nil then
   begin
-    LCommand.Retire;
+    LMountLease := LOwner;
+  end;
+  FCommand := nil;
+  FOwner := nil;
+  FGeneration := nil;
+  FSubject := nil;
+
+  try
+
+    if LCommand <> nil then
+    begin
+      LCommand.Retire;
+    end;
+  finally
+
+    if LAbandon and (LOwner <> nil) and (LSubject <> nil) then
+    begin
+      LOwner.FinishRangeGesture(LSubject);
+    end;
   end;
 end;
 
@@ -1312,6 +1466,12 @@ var
   LFocus: TJSHTMLElement;
 begin
 
+  if (FRangeGesture <> nil) and (not FRangeGesture.Current or
+    ((FRangeGeneration <> nil) and FRangeGeneration.Cancelled)) then
+  begin
+    FinishRangeGesture(FRangeGesture);
+  end;
+
   if FHost = nil then
   begin
     Exit;
@@ -1420,6 +1580,12 @@ begin
 end;
 
 function TBrowserMount.BeginRangePointer(AEvent: TJSPointerEvent): INyxBrowserColumnCommand;
+begin
+  Result := RangePointerCommand(AEvent, nil);
+end;
+
+function TBrowserMount.RangePointerCommand(AEvent: TJSPointerEvent;
+  const AGeneration: INyxCancellationScope): INyxBrowserColumnCommand;
 const
   CInteractive = 'input,textarea,select,button,a[href],[contenteditable="true"]';
 var
@@ -1431,6 +1597,7 @@ var
   LColumn: Integer;
   LOrigin: TNyxCollectionCellIdentity;
   LEndpoint: TNyxCollectionCellIdentity;
+  LWrapper: TBrowserRangePointerCommand;
 begin
   Result := nil;
   FRangePointerCell := nil;
@@ -1450,6 +1617,12 @@ begin
     Exit;
   end;
   try
+    FinishRangeGesture(FRangeGesture);
+
+    if not LCommand.Current then
+    begin
+      Exit;
+    end;
     LTarget := TJSHTMLElement(AEvent.target);
 
     if (LTarget = nil) or (LTarget.closest(CInteractive) <> nil) then
@@ -1489,7 +1662,18 @@ begin
     end;
     FRangePointerCell := LTarget;
     LCommand.ResolveCells(LOrigin, LEndpoint);
-    Result := TBrowserRangePointerCommand.Create(LCommand);
+    LWrapper := TBrowserRangePointerCommand.Create(LCommand);
+    Result := LWrapper;
+
+    if (AGeneration <> nil) and (AEvent.pointerId >= 0) and
+      (AEvent.pointerId < High(Integer)) then
+    begin
+      LWrapper.FOwner := Self;
+      LWrapper.FGeneration := AGeneration;
+      LWrapper.FPointer := NyxCollectionRangeStrokePointer(ncrsdMouse, AEvent.pointerId);
+      LWrapper.FEndpoint := LEndpoint;
+      LWrapper.FArm := AEvent.pointerType = 'mouse';
+    end;
   finally
 
     if Result = nil then
@@ -1497,6 +1681,274 @@ begin
       LCommand.Retire;
     end;
   end;
+end;
+
+procedure TBrowserMount.FinishRangeGesture(const ASubject: INyxCollectionRangeStroke);
+var
+  LPointer: TNyxCollectionRangeStrokePointer;
+  LHost: TJSHTMLElement;
+  LCaptured: Boolean;
+begin
+
+  if (ASubject = nil) or (FRangeGesture <> ASubject) then
+  begin
+    Exit;
+  end;
+  LPointer := FRangePointer;
+  LHost := FHost;
+  LCaptured := FRangeCaptured;
+  { Withdraw before a physical release can synchronously dispatch capture loss.
+    A nested new stroke owns independent flags and must survive this tail. }
+  FRangeGesture := nil;
+  FRangeGeneration := nil;
+  FRangeCaptured := False;
+  try
+
+    if LCaptured and (LHost <> nil) and
+      TNyxGestureElement(LHost).hasPointerCapture(LPointer.ID) and
+      not ((FRangeGesture <> nil) and FRangeCaptured and
+        FRangePointer.Same(LPointer)) then
+    begin
+      LHost.releasePointerCapture(LPointer.ID);
+    end;
+  finally
+    AbandonCellRangeStroke(LPointer, ASubject);
+  end;
+end;
+
+procedure TBrowserMount.ArmRangeGesture(
+  const APointer: TNyxCollectionRangeStrokePointer;
+  const AGeneration: INyxCancellationScope;
+  const AEndpoint: TNyxCollectionCellIdentity);
+var
+  LEntry: INyxCollectionCellRangeStrokeEntry;
+  LStroke: INyxCollectionRangeStroke;
+  LHost: TJSHTMLElement;
+  LAttemptedCapture: Boolean;
+
+  procedure ReleaseSupersededCapture;
+  begin
+    { Acquisition itself can dispatch retirement. Reconcile the entered pair
+      after return, leaving a newer stroke's same host/pointer ownership intact. }
+    if LAttemptedCapture and (FRangeGesture <> LStroke) and
+      TNyxGestureElement(LHost).hasPointerCapture(APointer.ID) and
+      not ((FRangeGesture <> nil) and FRangeCaptured and
+        FRangePointer.Same(APointer)) then
+    begin
+      LHost.releasePointerCapture(APointer.ID);
+    end;
+  end;
+
+begin
+
+  if (AGeneration = nil) or AGeneration.Cancelled or not InputLifetimeCurrent then
+  begin
+    Exit;
+  end;
+  LEntry := BeginCellRangeStroke(ncrspBegin, APointer, ncrpExtend);
+
+  if LEntry = nil then
+  begin
+    Exit;
+  end;
+  try
+    LEntry.ResolveCells(AEndpoint, AEndpoint);
+    LEntry.Prepare;
+    LEntry.Complete(not AGeneration.Cancelled);
+    LStroke := LEntry.PendingStroke;
+
+    if (LStroke = nil) or not LEntry.Current or not LStroke.Current or
+      AGeneration.Cancelled then
+    begin
+      AbandonCellRangeStroke(APointer, LStroke);
+      Exit;
+    end;
+    LHost := FHost;
+    FRangePointer := APointer;
+    FRangeGeneration := AGeneration;
+    FRangeGesture := LStroke;
+    LAttemptedCapture := False;
+    try
+      { Real capture is required; synthetic tests may inject this platform seam
+        explicitly, but an inactive DOM pointer never masquerades as captured. }
+      if TNyxGestureElement(LHost).hasPointerCapture(APointer.ID) then
+      begin
+        FinishRangeGesture(LStroke);
+        Exit;
+      end;
+
+      if (FRangeGesture <> LStroke) or AGeneration.Cancelled or not LEntry.Current then
+      begin
+        FinishRangeGesture(LStroke);
+        Exit;
+      end;
+      FRangeCaptured := True;
+      LAttemptedCapture := True;
+      LHost.setPointerCapture(APointer.ID);
+      ReleaseSupersededCapture;
+
+      if (FRangeGesture <> LStroke) or AGeneration.Cancelled or
+        not LEntry.Current or not TNyxGestureElement(LHost).hasPointerCapture(APointer.ID) then
+      begin
+        FinishRangeGesture(LStroke);
+      end;
+    except
+      { The accepted Shift-click is already complete. Refused optional capture
+        withdraws its preview rather than replacing that successful endpoint. }
+      try
+        FinishRangeGesture(LStroke);
+      finally
+        ReleaseSupersededCapture;
+      end;
+    end;
+  finally
+    LEntry.Retire;
+  end;
+end;
+
+function TBrowserMount.BeginRangeStroke(AEvent: TJSPointerEvent;
+  APhase: TNyxCollectionRangeStrokePhase;
+  const AGeneration: INyxCancellationScope): INyxBrowserColumnCommand;
+var
+  LEntry: INyxCollectionCellRangeStrokeEntry;
+  LWrapper: TBrowserRangePointerCommand;
+  LSubject: INyxCollectionRangeStroke;
+  LTarget: TJSHTMLElement;
+  LFocus: TJSElement;
+  LRow: TBrowserRow;
+  LIndex: Integer;
+  LColumn: Integer;
+  LOrigin: TNyxCollectionCellIdentity;
+  LEndpoint: TNyxCollectionCellIdentity;
+begin
+  Result := nil;
+
+  if APhase = ncrspBegin then
+  begin
+    Exit(RangePointerCommand(AEvent, AGeneration));
+  end;
+  LSubject := FRangeGesture;
+
+  if (LSubject = nil) or (AEvent.pointerId <> FRangePointer.ID) or
+    (AEvent.pointerType <> 'mouse') then
+  begin
+    Exit;
+  end;
+
+  if (APhase = ncrspRelease) and ((AEvent.button <> 0) or
+    ((AEvent.buttons and 1) <> 0)) then
+  begin
+    Exit;
+  end;
+
+  if (AGeneration = nil) or (FRangeGeneration <> AGeneration) or
+    AGeneration.Cancelled or not LSubject.Current or
+    ((APhase = ncrspMove) and ((AEvent.buttons and 1) = 0)) then
+  begin
+    FinishRangeGesture(LSubject);
+    Exit;
+  end;
+  LEntry := BeginCellRangeStroke(APhase, FRangePointer, ncrpExtend, LSubject);
+
+  if LEntry = nil then
+  begin
+    FinishRangeGesture(LSubject);
+    Exit;
+  end;
+  try
+    { Capture retargets event.target to the host. Hit-test the physical point,
+      then accept only exact resident cells belonging to this mount. }
+    LTarget := TJSHTMLElement(TRangeHitDocument(document).elementFromPoint(
+      AEvent.clientX, AEvent.clientY));
+    LFocus := document.activeElement;
+    LOrigin := Default(TNyxCollectionCellIdentity);
+    LEndpoint := Default(TNyxCollectionCellIdentity);
+
+    if (LTarget <> nil) and
+      (LTarget.closest('input,textarea,select,button,a[href],[contenteditable="true"]') = nil) then
+    begin
+      LTarget := TJSHTMLElement(LTarget.closest('[role=gridcell]'));
+      for LIndex := 0 to High(FResidentRows) do
+      begin
+        LRow := FRows[FResidentRows[LIndex]];
+
+        if LRow = nil then
+        begin
+          Continue;
+        end;
+        for LColumn := 0 to High(LRow.FCells) do
+        begin
+
+          if LRow.FCells[LColumn] = LFocus then
+          begin
+            LOrigin := NyxCollectionCellIdentity(LRow.FRef, ClipboardField(LColumn));
+          end;
+
+          if LRow.FCells[LColumn] = LTarget then
+          begin
+            LEndpoint := NyxCollectionCellIdentity(LRow.FRef, ClipboardField(LColumn));
+          end;
+        end;
+      end;
+    end;
+    { A nonnil original envelope remains claimed even outside the grid. The
+      unresolved candidate then cancels; it never falls into ordinary row input. }
+    if LOrigin.Defined and LEndpoint.Defined then
+    begin
+      LEntry.ResolveCells(LOrigin, LEndpoint);
+    end;
+    LWrapper := TBrowserRangePointerCommand.Create(LEntry);
+    Result := LWrapper;
+    LWrapper.FOwner := Self;
+    LWrapper.FGeneration := AGeneration;
+    LWrapper.FPointer := FRangePointer;
+    LWrapper.FSubject := LSubject;
+    LWrapper.FPhase := APhase;
+  finally
+
+    if Result = nil then
+    begin
+      LEntry.Retire;
+      FinishRangeGesture(LSubject);
+    end;
+  end;
+end;
+
+function TBrowserMount.RangeGestureCancel(AEvent: TJSEvent): Boolean;
+var
+  LSubject: INyxCollectionRangeStroke;
+begin
+  Result := True;
+  LSubject := FRangeGesture;
+
+  if LSubject = nil then
+  begin
+    Exit;
+  end;
+
+  if AEvent._type = 'keydown' then
+  begin
+
+    if (TJSKeyboardEvent(AEvent).key <> 'Escape') or AEvent.defaultPrevented then
+    begin
+      Exit;
+    end;
+  end
+  else if AEvent is TJSPointerEvent then
+  begin
+
+    if TJSPointerEvent(AEvent).pointerId <> FRangePointer.ID then
+    begin
+      Exit;
+    end;
+
+    if (AEvent._type = 'lostpointercapture') and FRangeCaptured and
+      TNyxGestureElement(FHost).hasPointerCapture(FRangePointer.ID) then
+    begin
+      Exit;
+    end;
+  end;
+  FinishRangeGesture(LSubject);
 end;
 
 function TBrowserMount.BeginRangeKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
@@ -3977,18 +4429,22 @@ end;
 procedure TBrowserMount.RetireTargetInput;
 begin
   FRangePointerCell := nil;
-  CancelColumnButtonPress;
+  try
+    FinishRangeGesture(FRangeGesture);
+  finally
+    CancelColumnButtonPress;
 
-  if FColumnLauncher <> nil then
-  begin
-    FColumnLauncher.removeEventListener('pointerdown', @ColumnLauncherPointer);
-    FColumnLauncher.setAttribute('disabled', '');
+    if FColumnLauncher <> nil then
+    begin
+      FColumnLauncher.removeEventListener('pointerdown', @ColumnLauncherPointer);
+      FColumnLauncher.setAttribute('disabled', '');
+    end;
+    InvalidateColumnResizes;
+    FComposingInput := nil;
+    FCompositionEnding := False;
+    FCompositionChange := Default(TCompositionChange);
+    FCompositionFocusPending := False;
   end;
-  InvalidateColumnResizes;
-  FComposingInput := nil;
-  FCompositionEnding := False;
-  FCompositionChange := Default(TCompositionChange);
-  FCompositionFocusPending := False;
 end;
 
 function TBrowserMount.CellComposition(AEvent: TEventListenerEvent): Boolean;
@@ -4783,6 +5239,10 @@ begin
   FHost.addEventListener('click', @QueryClick);
   FHost.addEventListener('keydown', @Key);
   FHost.addEventListener('contextmenu', @CellContext);
+  FHost.addEventListener('pointercancel', @RangeGestureCancel);
+  FHost.addEventListener('lostpointercapture', @RangeGestureCancel);
+  FHost.addEventListener('keydown', @RangeGestureCancel);
+  window.addEventListener('blur', @RangeGestureCancel);
 
   if AView.Projection in [cpList, cpTable, cpTree] then
   begin
@@ -7677,7 +8137,11 @@ var
   LIndex: Integer;
 begin
   try
-    CancelColumnResizes;
+    try
+      FinishRangeGesture(FRangeGesture);
+    finally
+      CancelColumnResizes;
+    end;
   finally
     SetCellEditsSuspended(False);
     FEditSuspension := nil;
@@ -7686,6 +8150,10 @@ begin
 
     if FHost <> nil then
     begin
+      FHost.removeEventListener('pointercancel', @RangeGestureCancel);
+      FHost.removeEventListener('lostpointercapture', @RangeGestureCancel);
+      FHost.removeEventListener('keydown', @RangeGestureCancel);
+      window.removeEventListener('blur', @RangeGestureCancel);
 
       if FHasColumnLayout then
       begin

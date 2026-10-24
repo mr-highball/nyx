@@ -39,10 +39,36 @@ All2316 fixed working inputs reverify unchanged. The independent E-drive source
 copy is complete and every captured input matches the compiled working bytes.
 All actual readers and the capture/audit jobs are joined. The02
 control journey and later03/04 bridge checks retain separate source identities.
-Physical browser/LCL capture/move/up/touch adapters remain unimplemented for this
-bridge. Compile/model/headless focus evidence must not count as a working drag,
-actual touch, browser execution or original criterion completion. WORK's earlier
-W1/Studio evidence remains separate below; no unchanged900s rerun is scheduled.
+The next continuation implements the browser Shift-mouse adapter while keeping
+the immediate endpoint default. An optional installed receipt distinguishes
+successful publication from merely claimed input, so consumed/stale Shift-down
+cannot arm a drag. Each actual Down/Move/Up uses its own canonical envelope and
+the original event-generation flags. Capture-aware fractional hit testing accepts
+only exact resident cells, movement paints private preview, and release focuses
+before installation. Explicit application capture/release outranks the optional
+default. Cancellation, lost capture, refresh and retirement clean up the exact
+subject; plain row clicks and prior pen/touch endpoint routes remain intact.
+
+The first integration build exposes a missing test-enum arm, followed by a
+duplicate imported unit and the installed Web declaration's integer-only hit
+coordinates. These compiler failures remain recorded; fixes add the explicit
+test arm, one import and a private Pascal CSSOM bridge. The closed05 control
+cohort compiles native/browser with zero owned warnings and passes the unchanged
+1054 native journey with a complete clean21157544-block/954391775-byte heap.
+All2316 captured working inputs reverify unchanged and every actual reader is
+joined. The separate02 receipt/command cohort passes271 native checks with a
+complete clean685214-block/25040946-byte heap; its browser companion compiles.
+The expanded browser fixture covers capture refusal, consumed movement, wrong
+pointers, outside hits, matching cancellation/loss, refresh and explicit capture,
+but has NOT executed. The manual19166 test-host question is still pending and
+its listener remains absent; no rejected launch is retried or moved elsewhere.
+
+LCL sustained capture/move/up and browser/LCL pen/touch remain unimplemented.
+Automatic scrolling/off-page extension also remain open. Compile/model/headless
+focus evidence must not count as a working browser drag, trusted device input,
+target parity or original criterion completion. WORK's earlier W1/Studio
+evidence remains separate below; no unchanged900s rerun is scheduled. Root
+continues solo; the helper stays idle until the user changes that preference.
 
 ## Column arrangement W1 — 2026-10-22
 

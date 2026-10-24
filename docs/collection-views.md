@@ -1219,11 +1219,12 @@ sequential callback can consume the default and negotiate capture through that
 same dispatch. Cancellation, a newer selection and disable/re-enable prevent
 both stale range installation and stale pointer capture. The matching click
 still delivers its callback once while preserving independent row membership.
-These endpoint routes do not yet implement sustained drag selection or native
-touch admission; those remain separate adapter requirements.
+The browser route now additionally implements sustained Shift-mouse movement
+after the immediate endpoint selection; execution qualification is still pending.
+LCL sustained movement and native/browser pen/touch admission remain open.
 
 `nyx.collections.range.stroke` supplies the portable pending lifecycle for those
-future adapters. A typed pointer identity and copied original-input facts keep
+adapters. A typed pointer identity and copied original-input facts keep
 mouse, pen and touch releases distinct. `Stage` admits a complete RAW candidate
 and exposes an immutable preview without publishing it. `PrepareRelease` reserves
 the last candidate; its first `Complete` can publish only after unconsumed
@@ -1266,8 +1267,31 @@ Other pointers and superseded subjects are inert. Refresh, edit suspension,
 disable/re-enable, newer input and teardown retire the pending authority. An
 entry retired reentrantly during focus cannot resume its old default. A focus
 failure remains the first diagnostic when repaint cleanup also fails.
-Browser/LCL sustained capture, movement, release and touch wiring remain open;
-these mount APIs alone do not enable a new default gesture.
+These mount APIs alone do not enable a new default gesture.
+
+The browser's optional `INyxBrowserCollectionCellRangeStrokeInput` now uses
+that entry for each original Down/Move/Up dispatch. Successful Shift-down first
+retains its ordinary immediate endpoint publication. The optional synchronous
+`INyxCollectionCellRangePointerReceipt` distinguishes that installation from
+merely claimed or consumed input; only a still-current installed endpoint arms
+the pending extension. The adapter retains the original event-generation flags,
+not its router or input envelope, and requires actual pointer capture. Movement
+uses fractional CSS-pixel hit testing because capture retargets `event.target`;
+only exact owned resident cells qualify. Release focuses and commits the admitted
+rectangle. Wrong pointers do not control the stroke; capture loss, cancellation,
+Escape, refresh and teardown withdraw its preview. Leaving owned data cells
+cancels this current bounded gesture rather than constructing an invalid endpoint.
+Automatic scrolling and off-page extension are not implemented.
+
+An explicit canonical capture/release directive takes precedence over that
+optional default. Capture refusal preserves the already accepted Shift-click.
+Plain clicks retain ordinary row selection, and pen/touch still use their prior
+endpoint behavior rather than implicitly acquiring the mouse drag contract.
+The expanded browser control fixture injects only pointer capture authority;
+its real DOM hit testing and canonical dispatch remain available for desktop/
+compact execution. Current evidence is compilation, not browser execution or
+trusted device capture. The existing native control preservation journey still
+passes1054 with a complete clean heap; this does not qualify new native dragging.
 
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks

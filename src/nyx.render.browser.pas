@@ -89,6 +89,7 @@ uses
   nyx.binding.lifetime,
   nyx.binding.types,
   nyx.collections.view,
+  nyx.collections.range.stroke,
   nyx.collections.selection,
   nyx.collections.bindings,
   nyx.controls,
@@ -240,6 +241,8 @@ type
       const ACommand: INyxBrowserColumnCommand): Boolean;
     function DoubleClick(AEvent: TJSMouseEvent): Boolean;
     function PointerDown(AEvent: TJSPointerEvent): Boolean;
+    function RangePointerEvent(AEvent: TJSPointerEvent; ATrigger: TNyxTrigger;
+      APhase: TNyxCollectionRangeStrokePhase): Boolean;
     function PointerUp(AEvent: TJSPointerEvent): Boolean;
     function PointerMove(AEvent: TJSPointerEvent): Boolean;
     function PointerEnter(AEvent: TJSPointerEvent): Boolean;
@@ -7718,15 +7721,23 @@ begin
 end;
 
 function TNyxBrowserBinding.PointerDown(AEvent: TJSPointerEvent): Boolean;
+begin
+  Result := RangePointerEvent(AEvent, ntPointerDown, ncrspBegin);
+end;
+
+function TNyxBrowserBinding.RangePointerEvent(AEvent: TJSPointerEvent;
+  ATrigger: TNyxTrigger; APhase: TNyxCollectionRangeStrokePhase): Boolean;
 var
   LGeneration: TBrowserViewGeneration;
   LGenerationLease: IInterface;
   LMount: INyxCollectionMount;
   LInput: INyxBrowserCollectionCellRangePointerInput;
+  LStrokeInput: INyxBrowserCollectionCellRangeStrokeInput;
   LCommand: INyxBrowserColumnCommand;
   LEvents: INyxEvents;
   LRevision: Integer;
   LAllowed: Boolean;
+  LEventScope: INyxCancellationScope;
 begin
   try
     LGeneration := TBrowserViewGeneration(FGenerationObject);
@@ -7737,16 +7748,31 @@ begin
       Exit(True);
     end;
     LMount := FCollectionMount;
+    LEvents := CurrentRenderer.FEvents;
+    LRevision := FViewRevision;
 
-    if not CurrentRenderer.FDesignMode and
-      Supports(LMount, INyxBrowserCollectionCellRangePointerInput, LInput) then
+    if not CurrentRenderer.FDesignMode then
     begin
-      LCommand := LInput.BeginRangePointer(AEvent);
+
+      if Supports(LMount, INyxBrowserCollectionCellRangeStrokeInput, LStrokeInput) then
+      begin
+        LEventScope := NyxEventGeneration(LEvents);
+
+        if not LGeneration.Current or LEventScope.Cancelled or
+          (LEvents.ViewRevision <> LRevision) then
+        begin
+          Exit(True);
+        end;
+        LCommand := LStrokeInput.BeginRangeStroke(AEvent, APhase, LEventScope);
+      end
+      else if (APhase = ncrspBegin) and
+        Supports(LMount, INyxBrowserCollectionCellRangePointerInput, LInput) then
+      begin
+        LCommand := LInput.BeginRangePointer(AEvent);
+      end;
 
       if LCommand <> nil then
       begin
-        LEvents := CurrentRenderer.FEvents;
-        LRevision := FViewRevision;
         try
           LCommand.Prepare;
           LAllowed := False;
@@ -7754,7 +7780,7 @@ begin
           if LGeneration.Current and LCommand.DispatchCurrent and
             (LEvents.ViewRevision = LRevision) then
           begin
-            LAllowed := PointerEvent(AEvent, ntPointerDown, LCommand);
+            LAllowed := PointerEvent(AEvent, ATrigger, LCommand);
           end;
           LCommand.Complete(LAllowed and LGeneration.Current and
             (LEvents.ViewRevision = LRevision) and not AEvent.defaultPrevented);
@@ -7766,7 +7792,7 @@ begin
         Exit(False);
       end;
     end;
-    Result := PointerEvent(AEvent, ntPointerDown);
+    Result := PointerEvent(AEvent, ATrigger);
   except
     on E: ENyxBrowserViewRetired do
     begin
@@ -7776,47 +7802,13 @@ begin
 end;
 
 function TNyxBrowserBinding.PointerUp(AEvent: TJSPointerEvent): Boolean;
-var
-  LGeneration: TBrowserViewGeneration;
-  LGenerationLease: IInterface;
 begin
-  try
-    LGeneration := TBrowserViewGeneration(FGenerationObject);
-    LGenerationLease := LGeneration;
-
-    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
-    begin
-      Exit(True);
-    end;
-    Result := PointerEvent(AEvent, ntPointerUp);
-  except
-    on E: ENyxBrowserViewRetired do
-    begin
-      Exit(True);
-    end;
-  end;
+  Result := RangePointerEvent(AEvent, ntPointerUp, ncrspRelease);
 end;
 
 function TNyxBrowserBinding.PointerMove(AEvent: TJSPointerEvent): Boolean;
-var
-  LGeneration: TBrowserViewGeneration;
-  LGenerationLease: IInterface;
 begin
-  try
-    LGeneration := TBrowserViewGeneration(FGenerationObject);
-    LGenerationLease := LGeneration;
-
-    if (LGeneration = nil) or not LGeneration.Current or FDisconnected then
-    begin
-      Exit(True);
-    end;
-    Result := PointerEvent(AEvent, ntPointerMove);
-  except
-    on E: ENyxBrowserViewRetired do
-    begin
-      Exit(True);
-    end;
-  end;
+  Result := RangePointerEvent(AEvent, ntPointerMove, ncrspMove);
 end;
 
 function TNyxBrowserBinding.PointerEnter(AEvent: TJSPointerEvent): Boolean;
@@ -8035,6 +8027,7 @@ var
   LElement: TNyxGestureElement;
   LInput: TNyxGestureElement;
   LOriginID: TNyxText;
+  LRangeDecision: INyxBrowserRangeCaptureDecision;
 begin
   try
     LGeneration := TBrowserViewGeneration(FGenerationObject);
@@ -8196,6 +8189,13 @@ begin
         DispatchNyxGesture(LEvents, FNode, LDispatch, LGesture);
       end;
       LResponse := LGesture.Seal;
+
+      if (AManagedInput <> nil) and AManagedInput.Current and
+        LGeneration.Current and (LEvents.ViewRevision = LRevision) and
+        Supports(AManagedInput, INyxBrowserRangeCaptureDecision, LRangeDecision) then
+      begin
+        LRangeDecision.ObservePointerRequest(LResponse.PointerRequest);
+      end;
 
       { The mounted input can retire without replacing its view (for example
         disable/re-enable during the callback). Its sealed capture request has
