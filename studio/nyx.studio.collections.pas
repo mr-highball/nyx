@@ -52,6 +52,12 @@ type
   TNyxStudioFormatPolicyField = (sfpfStyle, sfpfName, sfpfRevision, sfpfLocale,
     sfpfDecimal, sfpfGroup, sfpfScale, sfpfRounding, sfpfDateOrder,
     sfpfDateSeparator, sfpfTimePrecision, sfpfFirst, sfpfSecond);
+  { Closed roles inside the retained table-defaults draft owner. These are
+    copied authored choices, independently of host clipboard permissions,
+    runtime selection, user preferences or unfinished accepted-data edits. }
+  TNyxStudioWorkbenchPolicyField = (swpfRangeSelection, swpfCopyCell,
+    swpfCopySelectedSource, swpfCopySelectedPage, swpfCopyCellRange,
+    swpfCopyFields, swpfHeaders, swpfLineEnding, swpfFocusedDraft);
   { A copied presentation receipt, never design data/history. Exact command
     context prevents a later project, selection or revision from inheriting its
     report. Rows/controls/stores are not retained. Last preview describes its
@@ -144,6 +150,15 @@ function NyxStudioFormatPolicyDefaultID(AColumn: Integer): TNyxText;
 function CaptureNyxStudioFormat(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ The complete workbench form shares the existing table-defaults draft owner.
+  Only explicit Apply/reset submits one baseline-qualified, undoable command. }
+function NyxStudioWorkbenchPolicyFormID: TNyxText;
+function NyxStudioWorkbenchPolicyFieldID(AField: TNyxStudioWorkbenchPolicyField): TNyxText;
+function NyxStudioWorkbenchPolicyApplyID: TNyxText;
+function NyxStudioWorkbenchPolicyDefaultID: TNyxText;
+function CaptureNyxStudioWorkbench(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture owns no accepted node/store and performs no source generation.
   Partial scalar notation stays text until the isolated session parses it.
   False means this is not the command's supported event. Invalid closed choices,
@@ -213,6 +228,7 @@ uses
   nyx.collections.selection,
   nyx.collections.query.editor,
   nyx.collections.query.policy,
+  nyx.collections.workbench.policy,
   nyx.collections.query.preview,
   nyx.collections.bindings,
   nyx.menu.editor,
@@ -236,7 +252,7 @@ const
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
-    'column-format', 'default-column-format');
+    'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench');
   CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
@@ -399,6 +415,7 @@ end;
   its unsubmitted input through the generic exact-baseline form draft contract;
   Apply/default alone enters the existing paired source-command queue. }
 {$include nyx.studio.collections.formatting.inc}
+{$include nyx.studio.collections.workbench.inc}
 
 procedure AddLayoutPolicyForms(AParent: TNyxNode; const AOwner: TNyxText;
   const ASchema: TNyxCollectionSchema; const ASpec: TNyxCollectionViewSpec;
@@ -479,7 +496,7 @@ begin
     .SetProp(NyxMenuFormBaselineKey, NyxQueryEditorBaseline(ASchema, ASpec))
     .SetProp(NyxMenuFormReferenceKey, '');
   LEditor.Node.Add(TNyxNode.Create(nkHeading, NyxStudioLayoutEditorID + '-title')
-    .Configure.Text('Column layout and display defaults').Done);
+    .Configure.Text('Table defaults').Done);
   LEditor.Node.Add(TNyxNode.Create(nkLabel, NyxStudioLayoutEditorID + '-help')
     .Configure.Text('Author table defaults here; runtime Columns choices remain independent. ' +
       'Disabled user controls still honor authored visibility and pins. ' +
@@ -495,6 +512,7 @@ begin
     .Configure.Text('Maximum current-page rows sampled by Fit (1..1024)')
     .Value(IntToStr(LTable.AutoSizeRows)).Enabled(not ALocked).Done);
   EndForm(-1);
+  AddWorkbenchPolicyForm(LEditor.Node, AOwner, ASpec, ALocked);
   for LIndex := 0 to ASpec.Count - 1 do
   begin
     LColumn := ASpec.ColumnAt(LIndex);
@@ -906,7 +924,8 @@ begin
       (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) and
       not (APending.Collections[LPendingIndex].Intent.Action in
         [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat]) then
+         scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
+         scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench]) then
     begin
       try
         LSchema := ASession.Document.Collections.Snapshot(
@@ -1610,6 +1629,11 @@ var
 
 begin
 
+  if CaptureNyxStudioWorkbench(ASession, AButton, AShellRoot, APending, AEdit) then
+  begin
+    Exit(True);
+  end;
+
   if CaptureNyxStudioFormat(ASession, AButton, AShellRoot, APending, AEdit) then
   begin
     Exit(True);
@@ -1927,7 +1951,8 @@ begin
   end;
 
   if LAction in [scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+    scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
+    scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
   begin
     raise ENyxCollection.Create('Use the current complete query or layout policy form');
   end;

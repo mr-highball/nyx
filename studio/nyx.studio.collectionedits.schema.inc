@@ -48,11 +48,13 @@ var
   LSpecSeven: TNyxText;
   LSpecEight: TNyxText;
   LSpecNine: TNyxText;
+  LSpecTen: TNyxText;
   LColumnFormat: TNyxText;
   LTableQuery: TNyxText;
   LColumnQuery: TNyxText;
   LTableLayout: TNyxText;
   LColumnLayout: TNyxText;
+  LTableWorkbench: TNyxText;
   LLayoutFeatures: TNyxText;
   LPaging: TNyxText;
   LSizing: TNyxText;
@@ -64,12 +66,13 @@ var
   LIndex: Integer;
   LNumber: TNyxText;
 
-  procedure Branch(const AProperties, ARequired: TNyxText);
+  procedure Branch(const AProperties, ARequired: TNyxText;
+    const AConstraints: TNyxText = '');
   begin
     SetLength(LBranches, Length(LBranches) + 1);
     LBranches[High(LBranches)] := TNyxDataValue.ParseJSON(
       '{"type":"object","properties":{' + AProperties + '},"required":[' +
-      ARequired + '],"additionalProperties":false}');
+      ARequired + '],"additionalProperties":false' + AConstraints + '}');
   end;
 
 begin
@@ -266,6 +269,22 @@ begin
   LSpecNine := StringReplace(LSpecNine,
     '"required":["field","kind","title","editable","sizing","queryControls","layoutControls"]',
     '"required":["field","kind","title","editable","sizing","queryControls","layoutControls","display"]', []);
+  { Workbench version ten keeps every nullable version-nine column slot, but
+    requires its own present policy rather than a display/layout declaration.
+    This is advertised separately as table-only, matching actual admission. }
+  LTableWorkbench := '{"type":"object","properties":{"version":{"const":1},' +
+    '"rangeSelection":{"type":"boolean"},"copyActions":{"type":"array","maxItems":4,' +
+    '"uniqueItems":true,"items":{"enum":["cell","selected-source","selected-page","cell-range"]}},' +
+    '"copyFields":{"enum":["visible-presentation","all-arrangement"]},' +
+    '"headers":{"type":"boolean"},"lineEnding":{"enum":["lf","crlf"]},' +
+    '"focusedDraft":{"type":"boolean"}},"required":["version","rangeSelection",' +
+    '"copyActions","copyFields","headers","lineEnding","focusedDraft"],"additionalProperties":false}';
+  LSpecTen := StringReplace(LSpecNine, '"const":9', '"const":10', []);
+  LSpecTen := StringReplace(LSpecTen, '"parent":{"type":"string"}',
+    '"workbench":' + LTableWorkbench + ',"parent":{"type":"string"}', []);
+  LSpecTen := StringReplace(LSpecTen,
+    '"selection","query","typeAhead","paging","queryControls","layoutControls"]',
+    '"selection","query","typeAhead","paging","queryControls","layoutControls","workbench"]', []);
   Delete(LSpecNine, Length(LSpecNine), 1);
   LSpecNine := LSpecNine + ',"allOf":[{"properties":{"columns":{"contains":{' +
     '"properties":{"display":{"type":"object"}},"required":["display"]}}}}]}';
@@ -280,10 +299,13 @@ begin
     '{"properties":{"columns":{"contains":{"properties":{"queryControls":{"type":"object"}},' +
     '"required":["queryControls"]}}}}]}';
   LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' +
-    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' + LSpecNine + ']}';
+    LSpecFour + ',' + LSpecFive + ',' + LSpecSix + ',' + LSpecSeven + ',' + LSpecEight + ',' +
+    LSpecNine + ',' + LSpecTen + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
-    '"op","owner","projection","spec"');
+    '"op","owner","projection","spec"',
+    ',"allOf":[{"if":{"properties":{"spec":{"properties":{"version":{"const":10}}}}},' +
+    '"then":{"properties":{"projection":{"const":"table"}}}}]');
   Branch('"op":{"const":"query"},"owner":{"type":"string","minLength":1},' +
     '"key":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},' +
@@ -324,6 +346,10 @@ begin
     '"field":{"type":"string","minLength":1},"kind":{"enum":["text","boolean","integer","number"]},' +
     '"policy":{"oneOf":[{"type":"null"},' + LColumnFormat + ']}',
     '"op","owner","key","projection","field","kind","policy"');
+  Branch('"op":{"const":"table-workbench"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"const":"table"},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LTableWorkbench + ']}',
+    '"op","owner","key","projection","policy"');
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
@@ -338,7 +364,8 @@ begin
 
     if LAction in [scaQuery, scaTableQuery, scaColumnQuery,
       scaDefaultTableQuery, scaDefaultColumnQuery, scaTableLayout,
-      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+      scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat,
+      scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
     begin
       LProperties := LProperties + ',"baseline":{"type":"string","minLength":1}';
       LRequired := LRequired + ',"baseline"';
@@ -374,6 +401,12 @@ begin
       LRequired := LRequired + ',"columnFormat"';
     end;
 
+    if LAction = scaTableWorkbench then
+    begin
+      LProperties := LProperties + ',"tableWorkbench":' + LTableWorkbench;
+      LRequired := LRequired + ',"tableWorkbench"';
+    end;
+
     if NyxStudioCollectionViewAction(LAction) then
     begin
       LProperties := LProperties + ',"owner":{"type":"string","minLength":1},' +
@@ -382,7 +415,8 @@ begin
       if LAction in [scaColumnContent, scaColumnFixed, scaColumnFlex,
         scaColumnMinimum, scaColumnMaximum, scaColumnDefault,
         scaTableQuery, scaColumnQuery, scaDefaultTableQuery, scaDefaultColumnQuery,
-        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+        scaTableLayout, scaColumnLayout, scaDefaultTableLayout, scaDefaultColumnLayout,
+        scaColumnFormat, scaDefaultColumnFormat, scaTableWorkbench, scaDefaultTableWorkbench] then
       begin
         LProperties := StringReplace(LProperties,
           '"projection":{"enum":["list","table","tree"]}',
@@ -508,7 +542,8 @@ begin
     '"limit":{"type":"integer","minimum":1,"maximum":50},' +
     '"queryControls":{"type":"boolean","default":false},' +
     '"layoutControls":{"type":"boolean","default":false},' +
-    '"formatControls":{"type":"boolean","default":false}},' +
+    '"formatControls":{"type":"boolean","default":false},' +
+    '"workbenchControls":{"type":"boolean","default":false}},' +
     '"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"column"},"owner":{"type":"string","minLength":1},' +
     '"field":{"type":"string","minLength":1},"source":{"enum":["local","effective","restorable"]},' +

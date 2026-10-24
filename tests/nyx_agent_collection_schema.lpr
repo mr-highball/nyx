@@ -32,7 +32,7 @@ uses
   { BEGIN QUERY_CONTROL_DISCOVERY_IMPORTS }
   nyx.collections, nyx.collections.view.types, nyx.collections.columns,
   nyx.collections.paging, nyx.collections.query, nyx.collections.query.policy,
-  nyx.collections.arrangement, nyx.formatting,
+  nyx.collections.arrangement, nyx.formatting, nyx.collections.workbench.policy,
   nyx.studio.collectionedits,
   { END QUERY_CONTROL_DISCOVERY_IMPORTS }
   SysUtils, nyx.text, nyx.data, nyx.studio.mcp, nyx.studio.agents;
@@ -86,6 +86,7 @@ var
   LCount: Integer;
   LLayoutCount: Integer;
   LFormatCount: Integer;
+  LWorkbenchCount: Integer;
   LVersion: Integer;
   LMode: TNyxText;
 
@@ -150,11 +151,30 @@ begin
   LCount := 0;
   LLayoutCount := 0;
   LFormatCount := 0;
+  LWorkbenchCount := 0;
   for LIndex := 0 to LActual.Count - 1 do
   begin
     LBranch := LActual.Item(LIndex);
     LProperties := LBranch.Field('properties');
     LMode := LProperties.Field('mode').Field('const').AsText;
+
+    if NyxAgentHas(LProperties, 'workbenchControls') then
+    begin
+      Inc(LWorkbenchCount);
+      Check((LMode = 'bindings') and
+        (LProperties.Field('workbenchControls').Field('type').AsText = 'boolean') and
+        not LProperties.Field('workbenchControls').Field('default').AsBoolean and
+        not Required(LBranch, 'workbenchControls') and
+        (LProperties.Field('workbenchControls').ToJSON = LPortable.Item(LIndex)
+          .Field('properties').Field('workbenchControls').ToJSON),
+        'workbench discovery is an optional bounded Boolean on binding reads');
+    end
+    else
+    begin
+      Check((LMode <> 'bindings') and
+        not NyxAgentHas(LPortable.Item(LIndex).Field('properties'), 'workbenchControls'),
+        'other closed modes do not advertise table action metadata');
+    end;
 
     if NyxAgentHas(LProperties, 'formatControls') then
     begin
@@ -210,6 +230,7 @@ begin
   Check(LCount = 2, 'only bindings and exact column reads expose queryControls');
   Check(LLayoutCount = 2, 'only bindings and exact column reads expose layoutControls');
   Check(LFormatCount = 2, 'only bindings and exact column reads expose formatControls');
+  Check(LWorkbenchCount = 1, 'only binding reads expose complete table action choices');
   LSpecs := LActual.Item(LActual.Count - 1).Field('properties').Field('changes')
     .Field('items').Field('oneOf').Item(5).Field('properties').Field('spec').Field('oneOf');
   LSpecSchema := LSpecs.Item(4);
@@ -292,7 +313,7 @@ begin
   { Version eight appends authored layout without changing any earlier wire
     envelope. Exercise the actual bind decoder with independent policy data;
     discovery alone cannot prove that saved declarations are admitted. }
-  Check(LSpecs.Count = 9, 'all eight former descriptor versions and display v9 remain discoverable');
+  Check(LSpecs.Count = 10, 'all nine former descriptor versions and workbench v10 remain discoverable');
   LSpecSchema := LSpecs.Item(7);
   LColumnSchema := LSpecSchema.Field('properties').Field('columns').Field('items');
   Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 8) and
@@ -372,6 +393,37 @@ begin
   LBad := Replacing(LColumn.Field('display'), 'revision', NyxData('1'));
   RefusesView(Replacing(LData, 'columns', NyxArray([Replacing(LColumn, 'display', LBad)])),
     'formatter revision is an exact numeric family at the persistence boundary');
+
+  LSpecSchema := LSpecs.Item(9);
+  LPolicy := LSpecSchema.Field('properties').Field('workbench');
+  Check((LSpecSchema.Field('properties').Field('version').Field('const').AsInteger = 10) and
+    Required(LSpecSchema, 'workbench') and
+    (LPolicy.Field('required').Count = 7) and
+    not LPolicy.Field('additionalProperties').AsBoolean and
+    LPolicy.Field('properties').Field('copyActions').Field('uniqueItems').AsBoolean and
+    (LPolicy.Field('properties').Field('copyActions').Field('items').Field('enum').Count = 4) and
+    not NyxAgentHas(LSpecSchema, 'allOf'),
+    'v10 requires closed action choices without manufacturing a display declaration');
+  LData := LBase.TableWorkbench(NyxTableWorkbench.AllowCopy([]).RangeSelection(True)).ToData;
+  LBind := Replacing(LBind, 'spec', LData);
+  Check((ReadNyxCollectionPatch(NyxArray([LBind])).ToData.Item(0).Field('spec').ToJSON = LData.ToJSON) and
+    (LData.Field('columns').Item(0).Field('display').Kind = ndNull),
+    'table-only v10 admits an independent explicit empty permission set');
+  LPolicy := LData.Field('workbench');
+  RefusesView(Replacing(LData, 'workbench', NyxNull),
+    'v10 requires an actual workbench declaration');
+  RefusesView(Replacing(LData, 'workbench', Replacing(LPolicy, 'rangeSelection', NyxData('true'))),
+    'workbench enablement retains its exact Boolean family');
+  LBad := LBind;
+  try
+    ReadNyxCollectionPatch(NyxArray([Replacing(LBad, 'projection', NyxData('list'))]));
+    Check(False, 'a table workbench cannot bind to a list');
+  except
+    on E: ENyxCollection do
+    begin
+      Check(True, 'actual strict bind refuses a table workbench on a list');
+    end;
+  end;
 end;
 
 { END QUERY_CONTROL_DISCOVERY_CASES }
@@ -419,10 +471,10 @@ end;
 { BEGIN EXPANDED_ACTION_NAMES }
 { The two scalar-edit actions each have four mutually exclusive family branches.
   Check their identities independently rather than treating enum length as the
-  number of schema branches. Named operations keep twelve separate closed shapes. }
+  number of schema branches. Named operations keep fourteen separate closed shapes. }
 function ExactChangeBranches(const AChanges: TNyxDataValue): Boolean;
 const
-  CActions: array[0..36] of TNyxText = (
+  CActions: array[0..38] of TNyxText = (
     'create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
     'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection', 'query',
@@ -430,23 +482,24 @@ const
     'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
-    'column-format', 'default-column-format');
-  CNamed: array[0..12] of TNyxText = (
+    'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench');
+  CNamed: array[0..13] of TNyxText = (
     'define', 'field', 'remove-field', 'append/update-row', 'move-row',
-    'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout', 'column-format');
-  CRequired: array[0..12] of TNyxText = (
+    'bind', 'query', 'typeahead', 'table-query', 'column-query', 'table-layout', 'column-layout',
+    'column-format', 'table-workbench');
+  CRequired: array[0..13] of TNyxText = (
     '|op|key|fields|rows|', '|op|key|definition|', '|op|key|field|kind|',
     '|op|key|item|values|', '|op|key|item|index|', '|op|owner|projection|spec|',
     '|op|owner|key|projection|query|', '|op|owner|key|projection|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
     '|op|owner|key|projection|policy|', '|op|owner|key|projection|field|kind|policy|',
-    '|op|owner|key|projection|field|kind|policy|');
+    '|op|owner|key|projection|field|kind|policy|', '|op|owner|key|projection|policy|');
   CFamilies: array[0..3] of TNyxText = ('text', 'boolean', 'integer', 'number');
   CScalars: array[0..3] of TNyxText = ('string', 'boolean', 'integer', 'number');
 var
-  LCounts: array[0..36] of Integer;
-  LFamilies: array[0..36, 0..3] of Boolean;
-  LNamed: array[0..12] of Boolean;
+  LCounts: array[0..38] of Integer;
+  LFamilies: array[0..38, 0..3] of Boolean;
+  LNamed: array[0..13] of Boolean;
   LBranch, LProperties, LOperation, LChoices: TNyxDataValue;
   LIndex, LAt, LFamily, LAction, LShape: Integer;
   LName, LKind, LExpected: TNyxText;
@@ -682,7 +735,7 @@ begin
   LColumn := LChanges.Item(9);
   Check((LTable.Field('properties').Field('op').Field('const').AsText = 'table-query') and
     (LColumn.Field('properties').Field('op').Field('const').AsText = 'column-query') and
-    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 9) and
+    (LChanges.Item(5).Field('properties').Field('spec').Field('oneOf').Count = 10) and
     (LChanges.Item(7).Field('properties').Field('op').Field('const').AsText = 'typeahead'),
     'query policy commands retain their positions beside the appended layout binding version');
   Check((LTable.Field('required').Count = 5) and (LColumn.Field('required').Count = 7) and
@@ -818,9 +871,9 @@ begin
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 56, 'thirteen named commands and all thirty-seven typed ordinary actions');
+    Check(LChanges.Count = 59, 'fourteen named commands and all thirty-nine typed ordinary actions');
     { BEGIN EXPANDED_ACTION_CHECK }
-    Check(ExactChangeBranches(LChanges), 'thirteen named shapes and every typed action/family occur exactly once');
+    Check(ExactChangeBranches(LChanges), 'fourteen named shapes and every typed action/family occur exactly once');
     { END EXPANDED_ACTION_CHECK }
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
@@ -831,7 +884,7 @@ begin
       .Field('properties').Field('choices').Field('maxItems').AsInteger = 128,
       'bounded typed domain choices');
     LDefinition := LChanges.Item(5).Field('properties').Field('spec').Field('oneOf');
-    Check((LDefinition.Count = 9) and
+    Check((LDefinition.Count = 10) and
       (LDefinition.Item(0).Field('properties').Field('version').Field('const').AsInteger = 1) and
       (LDefinition.Item(1).Field('required').Count = 6) and
       (LDefinition.Item(1).Field('properties').Field('selection').Field('const').AsText = 'multiple'),

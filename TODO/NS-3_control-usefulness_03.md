@@ -20,6 +20,15 @@ inputs reverify. Studio workbench authoring/history/semantic adoption, selected-
 target menus, authored export services, actual OS effects and full original
 acceptance remain open; WORK owns their current assignments and retained failures.
 
+The following authoring05 passes33 portable form/session/semantic checks per
+actual target,204 actual native MCP discovery checks and the retained76-check
+representation regression on both targets. Native heaps are complete/clean and
+browser logs are empty; all1929 fixed sources reverify. Table actions now have
+typed ordinary set/reset intents, complete form capture, paired source/history,
+bounded policy reads and atomic grouped semantic operations. A genuine non-table
+bind-admission gap is repaired. Mounted Studio input, own-export/native performance,
+export-service adoption and all original acceptance remain open.
+
 Current W1 implements typed resize/Fit, visible column management, both logical
 pin edges, defaults, per-instance preferences, Studio authoring and source/history
 support. Native/browser control journeys exercise desktop and compact sizes,

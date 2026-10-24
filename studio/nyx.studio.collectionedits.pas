@@ -31,6 +31,7 @@ uses
   nyx.collections.registry,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
   nyx.typeahead, nyx.collections.query.policy, nyx.collections.arrangement, nyx.formatting,
+  nyx.collections.workbench.policy,
   nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.stateedits, nyx.studio.projects;
 
@@ -42,7 +43,8 @@ type
     routing copied authored values through one isolated paired candidate. }
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
     ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead,
-    ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat);
+    ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
+    ccTableWorkbench);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -79,6 +81,10 @@ type
     FTableLayout: TNyxTableLayoutPolicy;
     FColumnLayout: TNyxColumnLayoutPolicy;
     FColumnFormat: TNyxValueFormat;
+    { Workbench presence and immutable intent never retain clipboard hosts,
+      input, selection or runtime result state inside an agent/history patch. }
+    FWorkbenchDeclared: Boolean;
+    FTableWorkbench: TNyxTableWorkbenchPolicy;
   public
     property Kind: TNyxCollectionChangeKind read FKind;
   end;
@@ -208,6 +214,18 @@ function NyxUseDefaultCollectionColumnFormat(const AOwner: TNyxStudioBindingOwne
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
   const AField: TNyxStudioCollectionFieldRef): TNyxCollectionChange;
 
+{ Change the complete saved action policy of one exact bound table. Replay
+  derives the current baseline after preceding grouped edits; an inherited
+  binding becomes a local copy. No runtime service or data mutation is implied. }
+function NyxSetCollectionTableWorkbench(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTableWorkbenchPolicy): TNyxCollectionChange;
+{ Clear only the policy's presence, retaining the effective local binding.
+  Restoring reusable inheritance remains a separate explicit operation. }
+function NyxUseDefaultCollectionTableWorkbench(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+
 { Explicit MCP/descriptor boundary. Friendly closed choices decode to the typed
   API above. Unknown/extra members, wrong primitives, duplicates and unused
   payload refuse. Numeric values retain their exact accepted Pascal family. }
@@ -239,7 +257,7 @@ const
      'column-maximum', 'column-default', 'page-size', 'initial-page', 'default-paging',
      'table-query', 'column-query', 'default-table-query', 'default-column-query',
      'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
-     'column-format', 'default-column-format');
+     'column-format', 'default-column-format', 'table-workbench', 'default-table-workbench');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -403,6 +421,14 @@ begin
     (Ord(AProjection) > Ord(High(TNyxCollectionProjection))) then
   begin
     raise ENyxCollection.Create('Bind requires a defined view and a valid projection');
+  end;
+
+  if Result.FSpec.HasTableWorkbenchPolicy and (AProjection <> cpTable) then
+  begin
+    { The named bind knows its presentation family at construction. Refuse
+      unsupported action intent here, before a semantic patch can advertise
+      a value its schema and eventual runtime mount would both reject. }
+    raise ENyxCollection.Create('Authored workbench actions require a table binding');
   end;
   Result.FKey := NyxCollection(ASpec.Key.Name);
   Result.FProjection := AProjection;
@@ -574,6 +600,32 @@ begin
   Result.FColumnFormat := APolicy.Copy;
 end;
 
+function NyxUseDefaultCollectionTableWorkbench(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+begin
+
+  if AProjection <> cpTable then
+  begin
+    raise ENyxCollection.Create('Authored workbench actions require the table projection');
+  end;
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccTableWorkbench;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+  Result.FProjection := AProjection;
+end;
+
+function NyxSetCollectionTableWorkbench(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTableWorkbenchPolicy): TNyxCollectionChange;
+begin
+  APolicy.Validate;
+  Result := NyxUseDefaultCollectionTableWorkbench(AOwner, AKey, AProjection);
+  Result.FWorkbenchDeclared := True;
+  Result.FTableWorkbench := APolicy.Copy;
+end;
+
 constructor TNyxCollectionPatch.Create(const AChanges: array of TNyxCollectionChange);
 var
   LIndex: Integer;
@@ -712,7 +764,8 @@ begin
               LProjected.Free;
             end;
           end;
-        ccQuery, ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat:
+        ccQuery, ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout,
+        ccColumnFormat, ccTableWorkbench:
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LProjected := LSession.SelectedProjection;
@@ -786,6 +839,16 @@ begin
                       LIntent.ColumnFormat := LChange.FColumnFormat.Copy;
                     end;
                   end;
+                ccTableWorkbench:
+                  begin
+                    LIntent.Action := scaDefaultTableWorkbench;
+
+                    if LChange.FWorkbenchDeclared then
+                    begin
+                      LIntent.Action := scaTableWorkbench;
+                      LIntent.TableWorkbench := LChange.FTableWorkbench.Copy;
+                    end;
+                  end;
               else
                 begin
                   raise ENyxCollection.Create('Unexpected baseline-qualified policy change');
@@ -798,7 +861,8 @@ begin
                 ApplyCollectionIntent also preserves the pending-draft guard
                 when accepted and draft bytes happen to be equal. }
 
-              if LChange.FKind in [ccTableLayout, ccColumnLayout, ccColumnFormat] then
+              if LChange.FKind in [ccTableLayout, ccColumnLayout, ccColumnFormat,
+                ccTableWorkbench] then
               begin
                 LIntent.LayoutBaseline := NyxQueryEditorBaseline(
                   LSession.Document.Collections.Snapshot(LChange.FKey).Schema,
@@ -1219,7 +1283,8 @@ begin
   end;
 
   if LIntent.Action in [scaTableLayout, scaColumnLayout,
-    scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+    scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaTableWorkbench, scaDefaultTableWorkbench] then
   begin
     Add('baseline', NyxData(LIntent.LayoutBaseline));
   end;
@@ -1237,6 +1302,11 @@ begin
   if LIntent.Action = scaColumnFormat then
   begin
     Add('columnFormat', LIntent.ColumnFormat.ToData);
+  end;
+
+  if LIntent.Action = scaTableWorkbench then
+  begin
+    Add('tableWorkbench', LIntent.TableWorkbench.ToData);
   end;
 
   if NyxStudioCollectionViewAction(LIntent.Action) then
@@ -1390,7 +1460,8 @@ begin
   end;
 
   if LIntent.Action in [scaTableLayout, scaColumnLayout,
-    scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat] then
+    scaDefaultTableLayout, scaDefaultColumnLayout, scaColumnFormat, scaDefaultColumnFormat,
+    scaTableWorkbench, scaDefaultTableWorkbench] then
   begin
     LAllowed := LAllowed + 'baseline|';
     Inc(LRequired);
@@ -1416,6 +1487,13 @@ begin
     LAllowed := LAllowed + 'columnFormat|';
     Inc(LRequired);
     LIntent.ColumnFormat := TNyxValueFormat.FromData(AData.Field('columnFormat'));
+  end;
+
+  if LIntent.Action = scaTableWorkbench then
+  begin
+    LAllowed := LAllowed + 'tableWorkbench|';
+    Inc(LRequired);
+    LIntent.TableWorkbench := TNyxTableWorkbenchPolicy.FromData(AData.Field('tableWorkbench'));
   end;
 
   if NyxStudioCollectionViewAction(LIntent.Action) then
@@ -1672,7 +1750,8 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('query', LChange.FQuery.ToData)]);
         end;
-      ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat:
+      ccTableQuery, ccColumnQuery, ccTableLayout, ccColumnLayout, ccColumnFormat,
+      ccTableWorkbench:
         begin
           LOp := 'table-query';
           LPolicy := NyxNull;
@@ -1695,6 +1774,16 @@ begin
           if LChange.FKind = ccColumnFormat then
           begin
             LOp := 'column-format';
+          end;
+
+          if LChange.FKind = ccTableWorkbench then
+          begin
+            LOp := 'table-workbench';
+
+            if LChange.FWorkbenchDeclared then
+            begin
+              LPolicy := LChange.FTableWorkbench.ToData;
+            end;
           end;
 
           if LChange.FQueryControlsDeclared then
@@ -1727,7 +1816,7 @@ begin
             end;
           end;
 
-          if LChange.FKind in [ccTableQuery, ccTableLayout] then
+          if LChange.FKind in [ccTableQuery, ccTableLayout, ccTableWorkbench] then
           begin
             LValues[LIndex] := NyxObject([NyxField('op', NyxData(LOp)),
               NyxField('owner', NyxData(LChange.FOwner.ID)),
@@ -1870,6 +1959,28 @@ begin
           ReadProjection(LData.Field('projection')),
           ReadField(LData.Field('field').AsText, ReadKind(LData.Field('kind'))),
           TNyxColumnQueryPolicy.FromData(LData.Field('policy')));
+      end;
+      Continue;
+    end;
+
+    if LOp = 'table-workbench' then
+    begin
+      Fields(LData, '|op|owner|key|projection|policy|', 5);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionTableWorkbench(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionTableWorkbench(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          TNyxTableWorkbenchPolicy.FromData(LData.Field('policy')));
       end;
       Continue;
     end;

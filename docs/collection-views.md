@@ -1177,6 +1177,38 @@ comments and imports; resetting a policy does not remove an existing import
 that handwritten code may still use. The confined source reader round-trips
 the closed enum/Boolean families, explicit defaults, empty permission sets,
 local reusable bindings and masks without executing host callbacks.
+
+Studio's table defaults include a collapsed **Inspection, selection and copy**
+section. Its complete typed form edits range selection, the four copy actions,
+included columns, headers, line endings and deliberate focused-draft inspection.
+**Apply actions** creates an explicit policy; **Use Nyx defaults** clears only
+its presence. The existing layout draft owner and source queue carry the action,
+and one Undo restores the accepted design/source pair. An old binding/schema,
+pending structural edit or pending Pascal draft refuses before publication.
+
+The existing `nyx_collections` semantic tool accepts optional
+`workbenchControls: true` on a bounded `mode: "bindings"` read. Each requested
+local/effective/restorable binding reports `{declared, policy}` separately from
+`workbenchControlsSupported`. Omitted/false preserves the previous response;
+the closed column-read shape does not accept this table-level selector. This
+metadata describes saved intent and resolved defaults, never live selection or
+application clipboard authority.
+
+For grouped edits, use `NyxSetCollectionTableWorkbench` or
+`NyxUseDefaultCollectionTableWorkbench` in the existing typed collection patch.
+The semantic `table-workbench` operation carries owner/key/table projection and
+one complete policy, or `null` for a local default reset. It derives the current
+binding baseline after preceding changes in that same group. Expected revisions,
+exact operation retries, atomic refusal and paired Undo/Redo retain their existing
+meaning. Resetting a masked reusable binding refuses; explicit inheritance is
+still a separate operation. A table action policy on a non-table bind refuses
+at typed construction as well as in schema discovery and runtime admission.
+
+Authoring05 passes33 native/browser model and semantic checks; actual native MCP
+discovery passes204. The unchanged representation consumer passes76 per actual
+target. Native heaps are complete/clean and browser logs are empty. These prove
+portable form capture, strict admission, source/history and semantic behavior;
+mounted Studio input and the full native Studio/own-export journey remain open.
 The maintained `query-workbench` build includes the pure policy/source consumers
 and independently compiles this run's exact emitted companion on both targets;
 browser execution remains a separate check.

@@ -59,6 +59,37 @@ renderers/control fixture and Studio remain disjoint. Full native Studio
 performance/own-export, pointer gestures, OS effects and all original acceptance
 remain required.
 
+The runtime checkpoint is committed/pushed as0c1fb54. Root's following
+authoring05 executes33 native/browser model and semantic checks, with complete
+4761426/4761426 clean native heap and empty browser logs. Actual native MCP
+discovery passes204 with a complete18198286/18198286 clean heap. The unchanged
+representation consumer passes76 on each actual target; native heap is complete
+1327899/1327899 and browser logs are empty. All1929 fixed input pins and current
+overlays reverify exactly. The new actual schema regression exposes a table
+policy accepted by a List bind; NyxBindCollection now refuses it at construction,
+matching advertised v10 discovery and eventual runtime admission.
+
+The ordinary complete form preserves handwritten source, exact Unicode/NUL
+records, independent paging/sizing, stale-baseline refusal and pending Pascal.
+Semantic grouped title/policy changes publish once, retry idempotently and undo
+as one exact project pair. Local reusable reset, mask/restorable context and
+explicit inheritance remain distinct. Reads are bounded and opt-in; omitted/false
+keeps the old shape. These are form-model/tool/session checks, not actual mounted
+Studio input or full editor acceptance. SourceJobs' existing click route delegates
+to the new capture; that real queue/target journey is the next Root check.
+
+Earlier authoring01–04 fixture/import/bounded-response mistakes and04's genuine
+bind-admission failure remain in private evidence. The05 launcher also mistakenly
+attempts the native MCP server's discovery program with pas2js; its missing
+SyncObjs failure is retained. That server consumer remains native-only. The
+remaining representation checks finish against the unchanged05 source rather
+than rerunning already-passing consumers; no browser MCP-server pass is claimed.
+Lil' Scooty's identity02 now also executes24/226/46 actual browser checks, logs
+empty, matching its clean native results. Its target menus remain unqualified.
+The export-services prerequisite additionally exposes a real input-epoch ABA
+gap; the helper owns an additive portable mount normalization contract/runtime
+repair and its regression. Root has no readers of those changing working files.
+
 The latest managed selected-cells menu qualifies through corrected menu04:
 actual native670 checks have a complete9803936/9803936 clean heap, and actual
 browser701 checks pass at independently preflighted1280x900/390x900, logs empty.

@@ -191,7 +191,8 @@ end;
 
 function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
   AOffset, ALimit: Integer; ATypeAheadSupported,
-  AQueryControls, ALayoutControls, AFormatControls: Boolean): TNyxDataValue;
+  AQueryControls, ALayoutControls, AFormatControls: Boolean;
+  AWorkbenchControls: Boolean = False): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
@@ -285,6 +286,15 @@ begin
       NyxField('declared', NyxData(ASpec.HasTableLayoutPolicy)),
       NyxField('policy', ASpec.TableLayoutPolicy.ToData)]), 'layoutControls');
   end;
+
+  if AWorkbenchControls then
+  begin
+    { A small saved/resolved value only. Clipboard hosts, quotas, runtime
+      selection, drafts, permissions and completed receipts are never queried. }
+    Result := WithResults(Result, NyxObject([
+      NyxField('declared', NyxData(ASpec.HasTableWorkbenchPolicy)),
+      NyxField('policy', ASpec.TableWorkbenchPolicy.ToData)]), 'workbenchControls');
+  end;
 end;
 
 {$include nyx.studio.agents.collectionqueries.inc}
@@ -333,6 +343,7 @@ var
   LQueryControls: Boolean;
   LLayoutControls: Boolean;
   LFormatControls: Boolean;
+  LWorkbenchControls: Boolean;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentCollectionMode) to High(TNyxAgentCollectionMode) do
@@ -410,10 +421,11 @@ begin
     LQueryControls := False;
     LLayoutControls := False;
     LFormatControls := False;
+    LWorkbenchControls := False;
 
     if LMode = acmBindings then
     begin
-      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|');
+      NyxAgentFields(AArguments, '|mode|owner|offset|limit|queryControls|layoutControls|formatControls|workbenchControls|');
       LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollectionFields);
       LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
     end
@@ -479,6 +491,11 @@ begin
     begin
       LFormatControls := AArguments.Field('formatControls').AsBoolean;
     end;
+
+    if NyxAgentHas(AArguments, 'workbenchControls') then
+    begin
+      LWorkbenchControls := AArguments.Field('workbenchControls').AsBoolean;
+    end;
     LName := AArguments.Field('owner').AsText;
     LNode := FSession.Document.Find(LName);
 
@@ -501,7 +518,8 @@ begin
       if LNode.HasCollectionView then
       begin
         LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
-          (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
+          (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
+          LLayoutControls, LFormatControls, LWorkbenchControls);
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -510,7 +528,8 @@ begin
           if LSpec.Defined then
           begin
             LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
-              (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
+              (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
+              LLayoutControls, LFormatControls, LWorkbenchControls);
           end;
         end;
       end;
@@ -522,7 +541,8 @@ begin
         if LProjection.HasCollectionView then
         begin
           LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
-            (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls, LLayoutControls, LFormatControls);
+            (LProjectionName = 'list') or (LProjectionName = 'tree'), LQueryControls,
+            LLayoutControls, LFormatControls, LWorkbenchControls);
         end;
       end;
 
@@ -555,6 +575,12 @@ begin
         begin
           Result := WithResults(Result, NyxData(LProjectionName = 'table'),
             'formatControlsSupported');
+        end;
+
+        if LWorkbenchControls then
+        begin
+          Result := WithResults(Result, NyxData(LProjectionName = 'table'),
+            'workbenchControlsSupported');
         end;
         Exit;
       end;
