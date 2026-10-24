@@ -4929,6 +4929,14 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     if ($LASTEXITCODE -ne 0) {
       throw 'Structured-value read benchmark lost exact values/order'
     }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
+      '-Fusrc', "-FU$nyxDataReadNative", "-FE$nyxDataReadNative",
+      'tools/nyx_data_copy_bench.lpr')
+    & (Join-Path $nyxDataReadNative 'nyx_data_copy_bench.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Structured-value copy benchmark lost exact values/order/lifetime'
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
@@ -4936,12 +4944,16 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       'tests/nyx_json_value_tests.lpr')
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-FE$nyxDataReadBrowser", 'tools/nyx_data_read_bench.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-FE$nyxDataReadBrowser", 'tools/nyx_data_copy_bench.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDataReadBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/data-read.html') `
       -Destination $nyxDataReadBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/json-values.html') `
       -Destination $nyxDataReadBrowser
-    Write-Host 'Native read sample completed; browser sample staged without execution.'
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/data-copy.html') `
+      -Destination $nyxDataReadBrowser
+    Write-Host 'Native read/copy samples completed; browser samples staged without execution.'
     exit 0
   }
 

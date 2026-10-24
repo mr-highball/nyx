@@ -36,6 +36,20 @@ uses
 var
   GPhase: Integer;
   GChecks: Integer;
+  {$ifdef PAS2JS}
+  GContinue: TJSHTMLButtonElement;
+
+{ Checkpoint acknowledgement is an ordinary visible test action. The observer
+  can capture each complete-suite boundary before continuing without assigning
+  hidden DOM flags or changing any Pascal assertions or admission budgets. }
+function ContinueCheckpoint(AEvent: TJSMouseEvent): Boolean;
+begin
+  document.body.setAttribute('data-capture-observed',
+    document.body.getAttribute('data-capture-checkpoint'));
+  GContinue.disabled := True;
+  Result := True;
+end;
+  {$endif}
 
 { Run the existing complete JSON and structured-value suites without substituting
   smaller budgets or samples. Browser startup yields before qualification, and
@@ -54,6 +68,16 @@ begin
 
     if document.body.getAttribute('data-capture-observed') <> CCheckpoints[GPhase] then
     begin
+
+      if GContinue = nil then
+      begin
+        GContinue := TJSHTMLButtonElement(document.createElement('button'));
+        GContinue.onclick := @ContinueCheckpoint;
+        document.body.appendChild(GContinue);
+      end;
+      GContinue.textContent := 'Continue / ' + CCheckpoints[GPhase] + ' / ' +
+        IntToStr(GChecks) + ' completed checks';
+      GContinue.disabled := False;
       window.setTimeout(@Run, 20);
       Exit;
     end;

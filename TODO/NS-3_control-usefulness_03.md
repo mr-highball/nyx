@@ -55,6 +55,13 @@ injected save authority. Outer view-entry leases survive foreign Busy getters;
 removing only those leases makes the actual lifetime regression fail. Formatting
 primitives pass27 checks per actual target but still require column/paint/Fit/
 authoring and explicitly represented-copy/draft integration.
+The later own10 full native Studio run still exceeds the unchanged900s bound at
+stage18/check345; all2267 isolated source pins reverify after the actual job joins.
+A subsequent immutable data-copy optimization passes the complete126-check
+JSON/value suite on both actual targets, with a clean native heap and empty
+browser logs. Focused exact-copy/extension-read samples improve on each target;
+these own10-derived inputs predate current formatting integration and make no
+whole-editor latency or complete W1/W2 acceptance claim.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

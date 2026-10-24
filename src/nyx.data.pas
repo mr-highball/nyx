@@ -49,7 +49,9 @@ type
 
   { Immutable, owned-by-value snapshot. There are no borrowed JSON containers,
     child objects or caller arrays to mutate after admission. Copy explicitly
-    copies fields for pas2js record semantics. Default records are invalid.
+    copies the record while sharing only private immutable text/index storage.
+    Default records are invalid. Re-admission creates a fresh index before any
+    writes; published index arrays must never be modified in place.
     ParseJSON/ToJSON are explicit interchange boundaries; authoring uses typed
     factories below. Object member order and array order remain significant.
     Immediate members are indexed once beside canonical text; reads never parse
@@ -467,30 +469,23 @@ end;
 
 function TNyxDataValue.Copy: TNyxDataValue;
 var
-  LIndex: Integer;
+  LValue: TNyxDataValue;
 begin
   Validate;
-  Result.FKind := FKind;
-  Result.FJSON := FJSON;
-  Result.FText := FText;
-  Result.FReadBudget := FReadBudget;
-  Result.FMemberNames := nil;
-  Result.FMemberStarts := nil;
-  Result.FMemberLengths := nil;
-  { The index contains only immutable text/integer values. Explicit arrays keep
-    both compilers' record-copy semantics independent; no JSON owner is shared. }
-  SetLength(Result.FMemberNames, Length(FMemberNames));
-  for LIndex := 0 to High(FMemberNames) do
-  begin
-    Result.FMemberNames[LIndex] := FMemberNames[LIndex];
-  end;
-  SetLength(Result.FMemberStarts, Length(FMemberStarts));
-  SetLength(Result.FMemberLengths, Length(FMemberLengths));
-  for LIndex := 0 to High(FMemberStarts) do
-  begin
-    Result.FMemberStarts[LIndex] := FMemberStarts[LIndex];
-    Result.FMemberLengths[LIndex] := FMemberLengths[LIndex];
-  end;
+  { ParseJSON is the only index writer and resets all three arrays before
+    allocation/fill. Their elements are private immutable text/integer values,
+    so a snapshot needs retained storage, not three fresh arrays on every read.
+    There is still no shared mutable tree, parent snapshot or owner reference.
+    Build the whole local first: a caller may replace the receiver with its own
+    Copy result, including compiler paths that reuse hidden result storage. }
+  LValue.FKind := FKind;
+  LValue.FJSON := FJSON;
+  LValue.FText := FText;
+  LValue.FReadBudget := FReadBudget;
+  LValue.FMemberNames := FMemberNames;
+  LValue.FMemberStarts := FMemberStarts;
+  LValue.FMemberLengths := FMemberLengths;
+  Result := LValue;
 end;
 
 function TNyxDataValue.GetDefined: Boolean;

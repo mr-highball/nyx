@@ -51,18 +51,25 @@ exact decoded keys with offset/length arrays. `Count` and ordered `Key` reads do
 not decode JSON; `Field` searches those keys and `Item` addresses an exact span.
 Only the requested child is admitted into its own independent snapshot. A small
 child therefore does not retain its former parent, unrelated siblings or a
-mutable JSON tree. `Copy` explicitly copies the index arrays on both compilers.
+mutable JSON tree. `Copy` retains the private immutable index storage on both
+compilers instead of allocating arrays for every store read. No writable index
+is exposed. Re-admission resets the receiver's arrays before filling fresh
+storage, so replacement, self-copy and store retirement cannot change an older
+snapshot. Child extraction still admits separate child storage.
 `AsText` reuses its admitted scalar text. No index/cache fields enter persistence
 or generated source; all interchange types and canonical formatting remain the
 same. If formatting expands input beyond the decoder's UTF-8 read budget,
 cached container/text reads retain the former refusal rather than bypassing it.
 
-`tools/build.ps1 -Target data-read` runs an optimized native read sample with
-range/overflow/I/O checks and stages the same Pascal browser workload. Its CSV
-separates construction/read time and checks every exact value/order. Timing uses
+`tools/build.ps1 -Target data-read` runs optimized native read and snapshot-copy
+samples with range/overflow/I/O checks and stages the same Pascal browser
+workloads. The read CSV separates construction/read time; the copy CSV samples
+direct copies and ordinary extension reads at two member counts. Both preserve
+exact wire/order/checksums and retired-owner semantics. Timing uses
 no heap tracing; native ownership regressions run separately. Execute the staged
-`data-read.html` over HTTP for browser samples. Neither a native timing nor a
-browser compilation establishes another target's speed, overall Studio latency
+`data-read.html` and `data-copy.html` over HTTP for browser samples. Neither a
+native timing nor a browser compilation establishes another target's speed,
+overall Studio latency
 or production memory/frame budgets. See
 [current evidence](../WORK.md#current-return-path-indexed-structured-value-reads--2026-10-07).
 

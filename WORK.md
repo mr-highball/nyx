@@ -6,10 +6,11 @@
 
 ### Current checkpoint — managed cell actions and exact compiled applications
 
-The last direct response revalidated already committed source authority without
-changing product state. This continuation makes concrete progress through actual
-compact Studio/export results, a reusable atomic resource-import capability and
-ownership repairs. Library implementations, base classes and public contracts
+This continuation makes concrete progress through actual compact Studio/export
+results, a reusable atomic resource-import capability and ownership repairs.
+The current committed source guidance explicitly authorizes library changes;
+the latest user direction confirms that authority rather than adding a new gate.
+Library implementations, base classes and public contracts
 are ordinary authorized development. All original task03 criteria, W1/W2 and the
 full goal remain open.
 
@@ -123,17 +124,16 @@ packet. This does not substitute for an independently native-owned Studio export
 or accept the failed full native editor journey. Evidence stays under ignored
 build/qualification/studio-layout-own-09-browser-companion.
 
-Checkpoints7e96075 and8cb8c48 are committed, pushed and remote-verified on hello-nyx.
-They contain W1/context14 and the resource/event changes with independent
-qualification and incomplete full acceptance. Export12 has its separate
-qualified checkpoint; formatting remains working code. No source assignment
-is a permission gate.
+Checkpoints7e96075,8cb8c48 and1c5467d are committed, pushed and remote-verified on
+hello-nyx. They contain W1/context14, resource/event changes and export12 with
+independent qualification and incomplete full acceptance. Formatting remains
+working code. No source assignment is a permission gate.
 
 Preview hosts37/38/39/40/41 are identity-verified stopped/joined, with no listeners on
 their ports. All completed test tabs, including88, are closed; the user's original
 tabs remain untouched. No LAN/Studio service or installed MCP configuration
 changes. Root owns full W1/performance/own-application qualification; Lil' Scooty
-owns typed RAW export capture/actions through existing file-save outcomes.
+owns typed per-column formatting across specification, targets and authoring.
 A fresh full current-source export build clears an earlier stale-PPU MasterDetail
 error without changing correct library code. Root's Chrome compiler/runtime and
 diagnostic sampler04 are joined; exact owned native processes are absent and
@@ -147,6 +147,45 @@ into table painting/Fit, represented same-slot copying or active-draft capture.
 The helper's next slice integrates typed per-column formatting across the existing
 spec, targets and authoring owners. Range/draft integration, full preferences,
 OS effects and the complete original task remain required.
+
+Own10 captures2267 files before shared formatting edits resume. Its actual W1
+runtime dependency closure includes current qualified resources/events/export12;
+three unwired formatter/representation copies are explicitly separate from later
+helper persistence edits and earn no integration credit. Fresh full native,
+ordinary browser and source-worker compilers join0. The original complete native
+Studio1280 journey again exceeds its unchanged900s bound at stage18/check345,
+during ordinary Undo readiness. Executor9189 joins1, the exact native49452
+process is absent, and all2267 source pins reverify unchanged. No native390 or
+native-owned application companion is launched after the failure. This result
+does not accept full W1 or establish a whole-editor speed improvement. Root
+releases native UI; helper formatting qualification is pure at this checkpoint.
+No LAN/Studio service is changed.
+
+Root subsequently changes TNyxDataValue.Copy to retain private immutable index
+storage instead of allocating three arrays per snapshot read. ParseJSON remains
+the only index writer and detaches before filling; Copy assembles a complete
+local before returning, preserving self-copy and exact read-budget admission.
+The complete JSON/structured-value suite adds public self-copy/re-admission,
+store handoff/retirement and formatted four MiB refusal checks. Data-copy02
+passes126 native checks with393233 allocations/frees and zero unfreed blocks,
+then126 actual browser checks with empty warning/error logs. All2269 isolated
+source pins reverify unchanged. The earlier01 browser checkpoint callback type
+failure remains retained;02 matches the installed mouse callback signature.
+Lil' Scooty independently reviews the library change and assertions without
+finding a concrete defect. The maintained data-read target now stages/runs the
+copy sample alongside the original full suites and read sample.
+
+For the same500000-copy workload at256 immediate members, native direct Copy
+changes3156ms to78ms and an ordinary extension read3156ms to110ms. The actual
+browser samples change2019ms to701ms and1973ms to930ms respectively. Checksums,
+wire/order and retirement checks remain exact. These are one focused diagnostic
+sample per variant, not production latency/frame/memory or complete Studio
+performance evidence. The browser also executes the original structured-read
+sample with exact checksums and empty logs. The isolated own10-derived inputs
+exclude the helper's in-progress formatting integration; own10 itself predates
+this Copy change. Evidence is under build/qualification/data-copy-02. Its exact
+loopback preview host47556 is stopped/joined, port19142 has no listener, and all
+four temporary test tabs are closed; the user's original tabs remain untouched.
 
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 

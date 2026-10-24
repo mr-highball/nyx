@@ -246,9 +246,166 @@ var
     Check(LChild.Field('inside').Item(1).Field('end').AsBoolean,
       'nested container spans ignore escaped structural characters', Result);
   end;
+
+  { Shared private indexes may outlive any number of receiver replacements.
+    Exercise self-copy, re-admission and every store handoff through public
+    contracts; no test can repair or inspect the private arrays directly. }
+  procedure CopiedSnapshots;
+  var
+    LOriginal: TNyxDataValue;
+    LSaved: TNyxDataValue;
+    LArray: TNyxDataValue;
+    LLeaf: TNyxDataValue;
+    LStore: TNyxExtensions;
+    LClone: TNyxExtensions;
+    LAssigned: TNyxExtensions;
+    LOverlay: TNyxExtensions;
+    LKey: TNyxExtensionRef;
+    LWire: TNyxText;
+    LName: TNyxText;
+    LIndex: Integer;
+    LRejected: Boolean;
+    LStrict: Boolean;
+  begin
+    LName := TNyxText('moon🌙') + NyxScalarText(0);
+    LOriginal := NyxObject([
+      NyxField(LName, NyxArray([NyxData('original'),
+        NyxData(NyxDecimal('9007199254740993.0000000000000001'))])),
+      NyxField('', NyxData(True))]);
+    LWire := LOriginal.ToJSON;
+    LSaved := LOriginal.Copy;
+    LArray := LOriginal.Field(LName).Copy;
+    LLeaf := LArray.Item(1).Copy;
+    for LIndex := 1 to 8 do
+    begin
+      LOriginal := LOriginal.Copy;
+      LArray := LArray.Copy;
+    end;
+    Check((LOriginal.ToJSON = LWire) and (LOriginal.Key(0) = LName) and
+      (LArray.Count = 2) and (LArray.Item(0).AsText = 'original'),
+      'repeated object/array self-copy retains full published indexes', Result);
+    LOriginal := TNyxDataValue.ParseJSON('{"replacement":[false]}');
+    LArray := TNyxDataValue.ParseJSON('[null]');
+    Check((LSaved.ToJSON = LWire) and (LSaved.Count = 2) and
+      (LSaved.Field(LName).Item(0).AsText = 'original') and
+      (LLeaf.AsDecimal.Text = '9007199254740993.0000000000000001'),
+      're-admission cannot rewrite a retained index or detached exact scalar', Result);
+    LOriginal := NyxObject([]).Copy;
+    LArray := NyxArray([]).Copy;
+    Check((LOriginal.Kind = ndObject) and (LOriginal.Count = 0) and
+      (LArray.Kind = ndArray) and (LArray.Count = 0),
+      'empty copied containers preserve distinct kinds and no stale index', Result);
+    LLeaf := NyxData(TNyxText('🌙') + NyxScalarText(0)).Copy;
+    LLeaf := LLeaf.Copy;
+    Check((LLeaf.AsText = TNyxText('🌙') + NyxScalarText(0)) and
+      NyxData(False).Copy.AsBoolean = False,
+      'copied cached text and Boolean remain exact without container metadata', Result);
+    Check((NyxNull.Copy.Kind = ndNull) and (NyxData(-17).Copy.AsInteger = -17),
+      'copied null and integer retain their admitted scalar families', Result);
+    LRejected := False;
+    LOriginal := Default(TNyxDataValue);
+    try
+      LOriginal.Copy;
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'default record cannot become valid through Copy', Result);
+
+    LKey := NyxExtension('app.copy-lifetime');
+    LStore := TNyxExtensions.Create(nesNode);
+    LClone := nil;
+    LAssigned := TNyxExtensions.Create(nesNode);
+    LOverlay := TNyxExtensions.Create(nesNode);
+    try
+      LStore.SetValue(LKey, LSaved);
+      LClone := LStore.Clone;
+      LAssigned.Assign(LStore);
+      LOverlay.SetValue(NyxExtension('app.first'), NyxData(1));
+      LOverlay.Overlay(LStore);
+      LStore.Assign(LStore);
+      Check(LStore.Value(LKey).ToJSON = LWire,
+        'store self-assignment retains the complete immutable value', Result);
+      LStore.SetValue(LKey, NyxArray([NyxNull]));
+      LSaved := NyxNull;
+      LStore.Free;
+      LStore := nil;
+      Check((LClone.Value(LKey).ToJSON = LWire) and
+        (LAssigned.Value(LKey).Field(LName).Count = 2) and
+        (LOverlay.Value(LKey).Field('').AsBoolean) and
+        (LOverlay.Key(0).Name = 'app.first'),
+        'cloned/assigned/overlaid indexes outlive replacement and store retirement', Result);
+      LSaved := LClone.Value(LKey);
+      LClone.LoadJSON('{"app.replaced":true}');
+      LAssigned.Remove(LKey);
+      LOverlay.SetValue(LKey, NyxData('replaced'));
+      Check((LSaved.ToJSON = LWire) and
+        (LSaved.Field(LName).Item(1).AsDecimal.Text =
+          '9007199254740993.0000000000000001'),
+        'reader snapshot outlives import/removal/overlay-value replacement', Result);
+    finally
+      LOverlay.Free;
+      LAssigned.Free;
+      LClone.Free;
+      LStore.Free;
+    end;
+
+    { Strict JSON admits these raw soliduses at exactly four MiB, while its
+      optional strict formatter expands each solidus into a two-byte escape.
+      Copy must retain the established formatted-read refusal, not rebuild or
+      accidentally mark an over-budget cached scalar as readable. }
+    LStrict := TJSONString.StrictEscaping;
+    try
+      TJSONString.StrictEscaping := True;
+      LOriginal := TNyxDataValue.ParseJSON('"' +
+        TNyxText(StringOfChar('/', 1024)) +
+        TNyxText(StringOfChar('a', NyxMaximumJSONBytes - 1026)) + '"');
+    finally
+      TJSONString.StrictEscaping := LStrict;
+    end;
+    LSaved := LOriginal.Copy;
+    LOriginal := NyxNull;
+    Check(Length(LSaved.ToJSON) > NyxMaximumJSONBytes,
+      'copied scalar retains admitted formatted wire beyond read budget', Result);
+    LRejected := False;
+    try
+      LSaved.AsText;
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'copy retains formatted four MiB scalar read refusal', Result);
+    LSaved := NyxNull;
+    try
+      TJSONString.StrictEscaping := True;
+      LOriginal := TNyxDataValue.ParseJSON('["' +
+        TNyxText(StringOfChar('/', 1024)) +
+        TNyxText(StringOfChar('a', NyxMaximumJSONBytes - 1028)) + '"]');
+    finally
+      TJSONString.StrictEscaping := LStrict;
+    end;
+    LSaved := LOriginal.Copy;
+    LOriginal := NyxNull;
+    LRejected := False;
+    try
+      LSaved.Count;
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (Length(LSaved.ToJSON) > NyxMaximumJSONBytes),
+      'copy retains formatted container read refusal without an index', Result);
+  end;
 begin
   Result := 0;
   IndexedReads;
+  CopiedSnapshots;
   LReference := Default(TNyxExtensionRef);
   LValue := NyxData(TNyxText('🌙漢字') + NyxScalarText(0) + TNyxText('true'));
   Check((LValue.Kind = ndText) and
