@@ -32,6 +32,7 @@ uses
   nyx.behavior,
   nyx.model,
   nyx.collections.query, nyx.collections.arrangement,
+  nyx.projection.refresh,
   nyx.studio.session,
   nyx.studio.collectionintent;
 
@@ -97,6 +98,13 @@ procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
 procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
   ASession: TNyxStudioSession; AProjection: TNyxNode;
   const APending: TNyxStudioPendingDesign); overload;
+{ Exact independent draft owners used by the stock collection inspector.
+  Only their accepted command baselines may change during retained publication;
+  field identities, scalar domains, query structure and every other extension
+  keep ordinary strict admission. A changed baseline resets that entire form,
+  while unrelated property and peer-form drafts remain independent. The root
+  is borrowed only during lookup; returned contexts retain copied IDs/keys. }
+function NyxStudioCollectionFormContexts(AShellRoot: TNyxNode): TNyxProjectionFormContexts;
 { Copied control identities for physical hosts and public authoring consumers.
   They do not authorize a command or identify a column independently of its
   admitted form's owner/schema/full-binding baseline. }
@@ -109,6 +117,7 @@ function NyxStudioQueryPolicyApplyID(AColumn: Integer): TNyxText;
 function NyxStudioQueryPolicyDefaultID(AColumn: Integer): TNyxText;
 
 const
+  NyxStudioQueryEditorID = 'inspector-collection-query';
   NyxStudioLayoutEditorID = 'inspector-collection-layout';
 
 { Stable source IDs locate ordinary inspector parts. Metadata independently
@@ -187,6 +196,7 @@ function RouteNyxStudioCollection(ASession: TNyxStudioSession;
 implementation
 
 uses
+  nyx.data,
   SysUtils,
   nyx.state,
   nyx.contract,
@@ -227,7 +237,7 @@ const
     'table-query', 'column-query', 'default-table-query', 'default-column-query',
     'table-layout', 'column-layout', 'default-table-layout', 'default-column-layout',
     'column-format', 'default-column-format');
-  CQueryEditor = 'inspector-collection-query';
+  CQueryEditor = NyxStudioQueryEditorID;
   CPolicyColumn = 'studio-query-policy-column';
   CPolicyAction = 'studio-query-policy-action';
   CPolicyBaseline = 'studio-query-policy-baseline';
@@ -253,6 +263,38 @@ const
   CComparisonCaptions: array[TNyxQueryComparison] of TNyxText =
     ('Equals', 'Does not equal', 'Less than', 'At most', 'Greater than',
      'At least', 'Contains', 'Starts with', 'Ends with');
+
+function NyxStudioCollectionFormContexts(AShellRoot: TNyxNode): TNyxProjectionFormContexts;
+
+  procedure Add(const AID: TNyxText);
+  var
+    LCount: Integer;
+  begin
+
+    if AShellRoot.Find(AID) = nil then
+    begin
+      Exit;
+    end;
+    LCount := Length(Result);
+    SetLength(Result, LCount + 1);
+    Result[LCount] := TNyxProjectionFormContext.ForForm(AID, AID,
+      [NyxExtension(NyxMenuFormBaselineKey), NyxExtension(CPolicyBaseline)]);
+  end;
+
+begin
+  Result := nil;
+
+  if AShellRoot = nil then
+  begin
+    Exit;
+  end;
+  { Each root owns one complete draft baseline, including its policy forms.
+    Keep these disjoint: accepting query controls must not borrow a layout
+    form's draft, or reset an unrelated primary property form. Query semantics,
+    fields, owner identities and unknown metadata remain strict contracts. }
+  Add(CQueryEditor);
+  Add(NyxStudioLayoutEditorID);
+end;
 
 function NyxStudioQueryPolicyFormID(AColumn: Integer): TNyxText;
 begin
@@ -991,7 +1033,7 @@ begin
         .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
-    LQueryEditor := NewNyxQueryEditor('inspector-collection-query',
+    LQueryEditor := NewNyxQueryEditor(NyxStudioQueryEditorID,
       NyxControl(ASession.SelectedID), LSchema, LSpec);
     LQueryEditor.Configure.Enabled(not LLocked).Done;
     AddNyxQueryEditorPreview(LQueryEditor);

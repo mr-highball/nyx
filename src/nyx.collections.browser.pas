@@ -994,6 +994,8 @@ var
   LActions: INyxCollectionCellActions;
   LEntry: INyxCollectionCellActionInput;
   LCommand: INyxCollectionClipboardCellCommand;
+  LRange: INyxCollectionCellRangeIntent;
+  LRangeContext: INyxCollectionClipboardCellRangeContext;
   LRow: TBrowserRow;
   LDraft: INyxCollectionCellActionDraftCommand;
   LDraftInput: INyxCollectionFocusedDraftInput;
@@ -1027,6 +1029,13 @@ begin
   end;
   { Intent is captured before the RAW input factory or any physical/source
     identity getter. The same envelope is returned through canonical dispatch. }
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    { This owned canonical getter reads flags only. Capture BEFORE the outward
+      input factory: its callback may replace even an identical rectangle. }
+    LRange := FCellRanges.Selection;
+  end;
   LCommand := LEntry.BeginCellInput(LCommands);
 
   if LCommand = nil then
@@ -1038,6 +1047,18 @@ begin
   begin
     { A stale managed reservation remains claimed. Nil would let the outer
       binding dispatch/default this old context after a nested newer menu. }
+    LCommand.Retire;
+    Exit(TBrowserCopyCommand.Create(LCommand));
+  end;
+
+  if (LRange <> nil) and Supports(LCommand,
+    INyxCollectionClipboardCellRangeContext, LRangeContext) then
+  begin
+    LRangeContext.AttachRange(LRange);
+  end;
+
+  if not LCommand.Current then
+  begin
     LCommand.Retire;
     Exit(TBrowserCopyCommand.Create(LCommand));
   end;

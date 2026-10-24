@@ -14,6 +14,42 @@ Library implementations, base classes and public contracts
 are ordinary authorized development. All original task03 criteria, W1/W2 and the
 full goal remain open.
 
+The latest managed selected-cells menu qualifies through corrected menu04:
+actual native670 checks have a complete9803936/9803936 clean heap, and actual
+browser701 checks pass at independently preflighted1280x900/390x900, logs empty.
+Portable command03 passes156 per actual target with a clean native heap. The
+same immutable range is captured before outward context admission; clearing it
+cannot disable the independent RAW-cell action or redirect the old range action.
+Optional range byte-limit refusal leaves the ordinary cell menu available.
+Root reviews the seven changed files and verifies their exact qualified hashes.
+Initial menu03 native/browser fixture failures remain retained; missing controls
+are checked through the actual menu tree and the optional reentry scheduler is
+guarded before use. OS effects, pointer gestures and full W2 acceptance stay open.
+
+Collection query/layout owners now supply their exact independent form-baseline
+keys to retained Inspector publication. New actual-control assertions preserve
+the same Inspector/windows, reset the two submitted forms, retain an unrelated
+property draft and retire old event authority. Focused checks pass15 native with
+a complete12570712/12570712 clean heap and12 browser at1280x900/390x900. The
+complete ordinary native section consumer passes100 with a complete
+48586831/48586831 clean heap. All2284 fixed source pins remain exact. Browser
+full-section capture is still pending: the first observer missed the unchanged
+30s acknowledgment after CDP timeouts; a fresh observer retry reset its kernel
+and could not rebind the live tab. Those outcomes grant no full browser pass.
+The original01 missing direct nyx.data dependency is retained as a compile
+failure;02 compiles on both targets with zero owned warnings. The browser's seven
+installed classes.pas warnings remain distinct. This targeted repair is not a
+whole-editor performance result.
+
+The original full own13 native1280 Studio journey independently times out after
+900s at stage14/check293; its actual process and executor are joined, all2284
+source pins are unchanged and no complete heap or functional pass is claimed.
+Full390 and that native producer's own generated applications were not launched.
+Equivalent full timed reruns remain unwarranted without a concrete repair.
+Root continues the Inspector prerequisite above; Lil' Scooty next owns the pure
+saved table-workbench action policy and descriptor integration under original
+criterion six. Clipboard hosts and other runtime authority stay out of designs.
+
 The new optional INyxResourceCatalogImport preserves the original catalog ABI
 and destination identity. It snapshots/adopts private immutable admitted entries,
 strictly normalizes foreign sources once, preserves exact replacement order and

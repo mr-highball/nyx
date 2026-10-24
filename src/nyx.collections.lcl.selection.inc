@@ -1125,6 +1125,8 @@ var
   LActions: INyxCollectionCellActions;
   LEntry: INyxCollectionCellActionInput;
   LCommand: INyxCollectionClipboardCellCommand;
+  LRange: INyxCollectionCellRangeIntent;
+  LRangeContext: INyxCollectionClipboardCellRangeContext;
   LDraft: INyxCollectionCellActionDraftCommand;
   LDraftInput: INyxCollectionFocusedDraftInput;
   LDraftActions: INyxCollectionCellDraftActions;
@@ -1165,6 +1167,13 @@ begin
   { Reserve both the original RAW input and the actions intent before physical
     coordinates or snapshot getters. A nested newer menu cannot lend the
     returning outer frame its intent, even when every cell byte is unchanged. }
+
+  if FCellRangeEnabled and (FCellRanges <> nil) then
+  begin
+    { Canonical flags-only selection precedes even the outward input factory.
+      A new same-cell rectangle admitted there cannot lend this old menu proof. }
+    LRange := FCellRanges.Selection;
+  end;
   LCommand := LEntry.BeginCellInput(LCommands);
 
   if LCommand = nil then
@@ -1176,6 +1185,19 @@ begin
   begin
     { Nil means unsupported. A reserved but stale managed event stays claimed,
       so the editor cannot replay a native menu after a newer context wins. }
+    LCommand.Retire;
+    Result := LCommand;
+    Exit;
+  end;
+
+  if (LRange <> nil) and Supports(LCommand,
+    INyxCollectionClipboardCellRangeContext, LRangeContext) then
+  begin
+    LRangeContext.AttachRange(LRange);
+  end;
+
+  if not LCommand.Current then
+  begin
     LCommand.Retire;
     Result := LCommand;
     Exit;

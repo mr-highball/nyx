@@ -29,6 +29,7 @@ uses
   nyx.collections.query, nyx.collections.arrangement, nyx.collections.mount,
   nyx.collections.clipboard, nyx.collections.clipboard.actions,
   nyx.collections.clipboard.commands, nyx.collections.representation,
+  nyx.collections.cell.actions,
   nyx.collections.draft, nyx.collections.range, nyx.collections.range.actions,
   nyx.collections.range.commands,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events
@@ -1147,6 +1148,235 @@ begin
   end;
 end;
 
+{ A context attaches the existing rectangle before source getters, but captures
+  the accepted launch cell independently. Optional range retirement must never
+  turn ordinary inspection/copy into a different cell or cancel its authority. }
+procedure RangeContextCapture;
+var
+  LFixture: TFixture;
+  LSelection: INyxCollectionCellRangeSelection;
+  LIntent: INyxCollectionCellRangeIntent;
+  LInput: INyxCollectionClipboardCellInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LContext: INyxCollectionClipboardCellRangeContext;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LFields: TNyxCollectionClipboardFields;
+  LPayload: INyxCollectionClipboardText;
+  LReady: INyxCancellationReadiness;
+  LWriter: INyxCollectionClipboardCapturedWrite;
+  LCancel: INyxCancellationScope;
+  LTicket: INyxClipboardWriteRequest;
+  LOld: INyxClipboardWriteRequest;
+  LOldObject: TWrite;
+  LProxy: TRangeIntentProxy;
+  LProxyLease: INyxCollectionCellRangeIntent;
+  LExpected: TNyxText;
+  LCellBytes: Integer;
+  LBefore: Integer;
+  LReplies: Integer;
+  LRefused: Boolean;
+
+  procedure SelectRange(AOutside: Boolean = False);
+  var
+    LAnchor: TNyxCollectionCellIdentity;
+    LFocus: TNyxCollectionCellIdentity;
+  begin
+    LCapture := LColumns.CaptureColumns;
+    LAnchor := NyxCollectionCellIdentity(LFixture.ItemB, LFields[1]);
+    LFocus := NyxCollectionCellIdentity(LFixture.ItemA, LFields[0]);
+
+    if AOutside then
+    begin
+      LFocus := LAnchor;
+    end;
+    LIntent := LSelection.Select(LFixture.Store.Snapshot, LFixture.View.Snapshot,
+      LFields, LAnchor, LFocus, LCapture.Serial, False, nccleCRLF,
+      TNyxCollectionClipboardLimits.Defaults);
+  end;
+
+  procedure PrepareContext(const AIntent: INyxCollectionCellRangeIntent);
+  begin
+    LCommand := LInput.BeginCellInput;
+    Check(Supports(LCommand, INyxCollectionClipboardCellRangeContext, LContext),
+      'accepted-cell reservation exposes optional same-envelope range attachment');
+    LContext.AttachRange(AIntent);
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+  end;
+
+begin
+  LFixture := TFixture.Create;
+  LSelection := NewNyxCollectionCellRangeSelection;
+  try
+    LColumns := NyxCollectionColumns(LFixture.View);
+    SetLength(LFields, 2);
+    LFields[0] := LFixture.Field;
+    LFields[1] := NyxColumnIdentity(NyxIntegerField('Score'));
+    SelectRange;
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardCellInput, LInput),
+      'context captures through the original accepted-cell input reservation');
+    LProxy := TRangeIntentProxy.Create;
+    LProxyLease := LProxy;
+    LProxy.Inner := LIntent;
+    LProxy.ClearOnRead := LSelection;
+    PrepareContext(LProxyLease);
+    Check(LIntent.Current and (LProxy.ClearOnRead <> nil) and LCommand.Current and
+      (LCommand.Payload.Text = CText) and (LContext.RangePayload = nil),
+      'default-off range attachment reads no foreign getter and preserves exact RAW cell');
+    LCommand.Retire;
+    LFixture.Restrict([nccaCell, nccaCellRange]);
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardCellInput, LInput) and
+      Supports(LFixture.Commands, INyxCollectionClipboardCapturedWrite, LWriter),
+      'explicit range permission uses the existing input and captured-write slot');
+    PrepareContext(LIntent);
+    LPayload := LContext.RangePayload;
+    LReady := LContext.RangeReadiness;
+    LExpected := 'Name' + #9 + 'Score' + #10 + '"' + CText + '"' + #9 + '1' + #10 + 'B' + #9 + '2';
+    Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LPayload <> nil) and (LReady <> nil) and (LPayload.Text = LExpected) and
+      (LPayload.RowCount = 2) and (LPayload.FieldCount = 2) and
+      (LPayload.ItemAt(0).ID = LFixture.ItemA.ID) and
+      LPayload.FieldAt(1).Same(LFields[1]) and
+      (LPayload.CellValue(0, 0).TextValue = CText) and (LFixture.Host.Writes = 0),
+      'selected-cell context normalizes original typed membership and controller headers/LF independently of range formatting');
+    LCellBytes := LCommand.Payload.ByteCount;
+    LSelection.Clear;
+    LRefused := False;
+    try
+      LReady.CheckReady;
+    except
+      on E: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LPayload.Text = LExpected),
+      'clearing the rectangle retires only its separate proof while RAW cell and copied TSV survive');
+    LCommand.Complete(True);
+    Check((LFixture.Host.Writes = 1) and (LFixture.Host.Text = CText),
+      'ordinary accepted-cell completion never silently substitutes the attached rectangle');
+    SelectRange;
+    Check(LIntent.Capture.Payload.ByteCount > LCellBytes,
+      'existing generously admitted rectangle exceeds a later one-cell clipboard byte budget');
+    LFixture.Commands.Revoke;
+    LFixture.Commands := NewNyxCollectionClipboardCommands(LFixture.View,
+      LFixture.InputLease, LFixture.Events, LFixture.HostLease, LFixture.Scheduler,
+      TNyxCollectionClipboardOptions.Defaults.AllowOnly([nccaCell, nccaCellRange])
+        .Limits(TNyxCollectionClipboardLimits.Defaults.UTF8Bytes(LCellBytes)),
+      {$ifdef PAS2JS}@{$endif}LFixture.Readiness);
+    LFixture.Commands.Observe({$ifdef PAS2JS}@{$endif}LFixture.Reply);
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardCellInput, LInput),
+      'bounded controller retains the same accepted-cell reservation contract');
+    PrepareContext(LIntent);
+    Check(LCommand.Current and (LCommand.Payload.Text = CText) and
+      (LCommand.Payload.ByteCount = LCellBytes) and (LContext.RangePayload = nil) and
+      (LContext.RangeReadiness = nil) and LIntent.Current,
+      'optional TSV byte refusal omits only the range action while the complete exact RAW cell remains admitted');
+    LCommand.Retire;
+    LFixture.Restrict([nccaCell, nccaCellRange]);
+    Check(Supports(LFixture.Commands, INyxCollectionClipboardCellInput, LInput) and
+      Supports(LFixture.Commands, INyxCollectionClipboardCapturedWrite, LWriter),
+      'ordinary configured budgets restore independently of the retained rectangle');
+    SelectRange(True);
+    PrepareContext(LIntent);
+    Check(LCommand.Current and (LContext.RangePayload = nil) and
+      (LContext.RangeReadiness = nil),
+      'a context outside selected typed membership omits the range action without refusing RAW');
+    LCommand.Retire;
+    SelectRange;
+    LProxy.Inner := LIntent;
+    LProxy.ClearOnRead := LSelection;
+    PrepareContext(LProxyLease);
+    Check((LSelection.Selection = nil) and LCommand.Current and
+      (LContext.RangePayload = nil),
+      'a getter withdrawing the exact selection cannot lend a newer context its old range authority');
+    LCommand.Retire;
+    SelectRange;
+    LColumns.ConfigureColumns(NyxColumnPreferences.WithColumn(
+      NyxColumnPreference(LFields[0]).Width(200)));
+    PrepareContext(LIntent);
+    Check(LCommand.Current and (LContext.RangePayload = nil),
+      'changed column serial omits stale range metadata while preserving the newly captured accepted cell');
+    LCommand.Retire;
+    SelectRange;
+    PrepareContext(LIntent);
+    LPayload := LContext.RangePayload;
+    LReady := LContext.RangeReadiness;
+    LCommand.Retire;
+    LContext := nil;
+    LCommand := nil;
+    LReady.CheckReady;
+    Check(LPayload.Text = LExpected,
+      'retiring the physical envelope leaves detached payload and original range readiness usable');
+    LCancel := NewNyxCancellationScope;
+    LFixture.Host.InlineCompletion := False;
+    LTicket := LWriter.WriteCaptured(LPayload, LCancel, LReady, nil, nil);
+    LOld := LFixture.Host.LastLease;
+    LOldObject := LFixture.Host.Last;
+    LBefore := LFixture.Host.Endings;
+    LReplies := LFixture.Replies;
+    LCommand := LInput.BeginCellInput;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    LCommand.Complete(True);
+    Check((LFixture.Host.Endings = LBefore + 1) and (LFixture.Host.Text = CText),
+      'captured range-menu output and a later ordinary key share one physical pending slot');
+    LOldObject.Finish;
+    Check(LFixture.Replies = LReplies,
+      'late superseded range output cannot publish into the later ordinary key receipt');
+    LBefore := LFixture.Host.Endings;
+    LTicket.Cancel;
+    Check(LFixture.Host.Endings = LBefore,
+      'retained range-menu cancellation cannot cancel a newer accepted-cell request');
+    LOld := nil;
+    LFixture.Host.Last.Finish;
+    LFixture.Host.InlineCompletion := True;
+    LFixture.ThrowReply := True;
+    LRefused := False;
+    LBefore := LFixture.Replies;
+    try
+      LTicket := LWriter.WriteCaptured(LPayload, LCancel, LReady, nil, nil);
+    except
+      on E: Exception do
+      begin
+        LRefused := E.Message = 'intentional inline observer failure';
+      end;
+    end;
+    Check(LRefused and (LFixture.Replies = LBefore + 1) and
+      (LFixture.Commands.Phase = nccpCompleted),
+      'captured range inline failure remains terminal and propagates once without a second write engine');
+    LFixture.ThrowReply := False;
+    LSelection.Revoke;
+    LRefused := False;
+    LBefore := LFixture.Host.Writes;
+    try
+      LTicket := LWriter.WriteCaptured(LPayload, LCancel, LReady, nil, nil);
+    except
+      on E: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Host.Writes = LBefore) and (LPayload.Text = LExpected),
+      'terminal range retirement refuses host admission without destroying retained exact TSV');
+  finally
+    LSelection.Revoke;
+    LFixture.Commands.CancelPending;
+    LOld := nil;
+    LTicket := nil;
+    LContext := nil;
+    LCommand := nil;
+    LWriter := nil;
+    LInput := nil;
+    LProxyLease := nil;
+    LCapture := nil;
+    LColumns := nil;
+    LFixture.Free;
+  end;
+end;
+
 procedure MountedAdmission;
 var
   LFixture: TFixture;
@@ -1550,6 +1780,7 @@ begin
     CapturedArbitration;
     RepresentedArbitration;
     RangeArbitration;
+    RangeContextCapture;
     MountedAdmission;
     MountedRangeReentry;
     {$ifdef PAS2JS}

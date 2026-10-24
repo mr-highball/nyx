@@ -1035,6 +1035,15 @@ Ordinary editor Ctrl+C and default-off tables retain their existing behavior.
 interfaces and row commands keep their contracts. A stale range remains a
 claimed refusal and cannot turn into a newly captured single-cell command.
 
+An enabled managed cell menu also offers **Copy selected cells** when its launch
+cell belongs to the captured rectangle and `nccaCellRange` is allowed. It captures
+that range before outward context callbacks and shares the existing clipboard
+request slot. The action copies immutable accepted RAW TSV; focused editor text
+and the ordinary **Copy raw value** action remain separate. Clearing or replacing
+the original range visibly refuses its old menu action without disabling RAW
+cell inspection/copy or substituting a newer rectangle. An optional range that
+exceeds copy limits does not prevent the ordinary cell menu from opening.
+
 For an explicitly enabled table, the current adapters also support these keys
 from a data cell in navigation mode:
 
@@ -1081,8 +1090,15 @@ movement and refresh deliver none.
 
 The separate `--probe-native-pointer` fixture option reports unavailable when
 Windows cannot provide cursor positioning. Its retained unavailable result
-grants no hardware-pointer coverage. Pointer/touch range gestures and
-discoverable menu actions remain required. These results do not establish real
+grants no hardware-pointer coverage. The later managed-menu consumer passes670
+native checks with a complete clean heap and701 browser checks at each measured
+1280x900/390x900 viewport, with empty logs. Portable command checks pass156 on
+both actual targets. These retain the earlier functional assertions and exercise
+real menu invocation, original-range retirement, launch-cell membership,
+admission reentry and focused-editor isolation with injected clipboard authority.
+The initial fixture's absent-control lookup and optional-scheduler failures are
+retained separately. Pointer/touch gestures, authored action-policy integration
+and selected-row menu choices remain required. These results do not establish real
 OS clipboard effects, native qualification at two widths or complete workbench
 acceptance.
 

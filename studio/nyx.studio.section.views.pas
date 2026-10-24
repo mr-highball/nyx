@@ -167,7 +167,7 @@ implementation
 uses
   nyx.text.index, nyx.data, nyx.publication, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.inspector.groups, nyx.reusable.editor,
-  nyx.studio.resize, nyx.studio.move;
+  nyx.studio.resize, nyx.studio.move, nyx.studio.collections;
 
 type
   {$ifdef PAS2JS}
@@ -871,6 +871,10 @@ var
   {$endif}
 
   procedure PrepareInspectorForms;
+  var
+    LCollectionForms: TNyxProjectionFormContexts;
+    LIndex: Integer;
+    LCount: Integer;
 
     procedure Add(const AID: TNyxText; const AKeys: array of TNyxExtensionRef);
     var
@@ -902,6 +906,22 @@ var
       property forms, rather than leaving grips attached to the old selection. }
     Add('studio-resize-tools', [NyxExtension(NyxStudioResizeOwnerKey)]);
     Add('studio-position-tools', [NyxExtension(NyxStudioMoveOwnerKey)]);
+    { Collection form owners declare their exact command-baseline keys. Their
+      query/layout descendants are independent of the primary property form;
+      no arbitrary inspector metadata becomes refreshable here. }
+    LCollectionForms := NyxStudioCollectionFormContexts(LView.Root);
+    for LIndex := 0 to High(LCollectionForms) do
+    begin
+
+      if LDocuments[nssInspector].Pages[0].Find(
+        LCollectionForms[LIndex].RuntimeID) = nil then
+      begin
+        Continue;
+      end;
+      LCount := Length(LForms);
+      SetLength(LForms, LCount + 1);
+      LForms[LCount] := LCollectionForms[LIndex];
+    end;
   end;
 
   procedure RestoreRetained;

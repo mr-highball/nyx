@@ -34,6 +34,9 @@ uses
   nyx.content, nyx.presentations, nyx.resources, nyx.resources.browser,
   nyx.resources.editor,
   nyx.collections, nyx.collections.view, nyx.collections.mount,
+  nyx.collections.view.types, nyx.collections.arrangement,
+  nyx.collections.query.policy, nyx.studio.collections,
+  nyx.menu.editor,
   nyx.studio.resource.browser
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser{$endif};
 
@@ -771,6 +774,127 @@ begin
   end;
 end;
 
+{ Real stock collection forms advance their complete accepted command baseline.
+  Physical numeric probes expose unchanged-default restoration separately from
+  the unrelated primary property draft. This checks actual section adoption,
+  not a source/history command or a whole-editor latency budget. }
+procedure CollectionFormCases(ATheme: TNyxTheme;
+  AHost: {$ifdef PAS2JS}TJSHTMLElement{$else}TWinControl{$endif});
+  {$ifdef PAS2JS}async;{$endif}
+var
+  LSession: TNyxStudioSession;
+  LViews: TNyxStudioSectionViews;
+  LDocument: TNyxDocument;
+  LNext: TNyxDocument;
+  LRoot: TNyxNode;
+  LTable: INyxTable;
+  LSpec: TNyxCollectionViewSpec;
+  LQueryField: TNyxStudioSectionControl;
+  LLayoutField: TNyxStudioSectionControl;
+  LPropertyField: TNyxStudioSectionControl;
+  LEventBefore: INyxCancellationScope;
+  LBaseline: TNyxText;
+  LMinimumID: TNyxText;
+  {$ifndef PAS2JS}
+  LQueryHandle: PtrUInt;
+  LLayoutHandle: PtrUInt;
+  {$endif}
+
+  function ComposeCollectionFixture: TNyxDocument;
+  var
+    LState: TNyxStudioViewState;
+    LInput: INyxInput;
+  begin
+    LState := DefaultNyxStudioViewState;
+    LState.BindingsVisible := True;
+    Result := BuildNyxStudioView(LSession, LState);
+    try
+      LInput := NewNyxInput('collection-query-draft');
+      LInput.Configure.Text('Query form draft').InputType(niNumber).Value(7.0).Done;
+      LInput.Contract.Value(NyxNumberDomain.Range(0, 100));
+      Result.Find(NyxStudioQueryEditorID).Add(LInput);
+      LInput := NewNyxInput('collection-property-draft');
+      LInput.Configure.Text('Independent property draft').InputType(niNumber).Value(8.0).Done;
+      LInput.Contract.Value(NyxNumberDomain.Range(0, 100));
+      Result.Find(NyxInspectorGroupID(nigProperties)).Part(NyxPart('body')).Add(LInput);
+    except
+      Result.Free;
+      raise;
+    end;
+  end;
+
+begin
+  LSession := TNyxStudioSession.Create;
+  LViews := TNyxStudioSectionViews.Create(ATheme, nscEditorOwnedHierarchy);
+  LDocument := nil;
+  LNext := nil;
+  try
+    LSession.Document.Collections.Define(NyxCollection('form-records'),
+      NyxCollectionSchema.Text(NyxTextField('name'), ''),
+      [NyxCollectionItem(NyxItem(NyxCollection('form-records'), 'ada'))
+        .WithValue(NyxTextField('name'), 'Ada')]);
+    LSpec := NyxCollectionView(NyxCollection('form-records'))
+      .Column(NyxTextField('name'), 'Name').TableQuery(NyxTableQuery)
+      .TableLayout(NyxTableLayout);
+    LTable := NewNyxTable('collection-form-table');
+    LTable.Binds.Collection(LSpec);
+    LSession.Document.Pages[0].Add(LTable);
+    LTable := nil;
+    LSession.Select('collection-form-table');
+    LDocument := ComposeCollectionFixture;
+    Check(Length(NyxStudioCollectionFormContexts(LDocument.Pages[0])) = 2,
+      'stock collection owner supplies disjoint query and layout baseline scopes');
+    LViews.Render(LDocument, LDocument.Pages[0], AHost);
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LRoot := LViews.SectionRoot(nssInspector);
+    LQueryField := LViews.InputFor('collection-query-draft');
+    LMinimumID := NyxStudioLayoutPolicyFieldID(-1, slpfMinimumCenter);
+    LLayoutField := LViews.InputFor(LMinimumID);
+    LPropertyField := LViews.InputFor('collection-property-draft');
+    {$ifndef PAS2JS}
+    LQueryHandle := TWinControl(LQueryField).Handle;
+    LLayoutHandle := TWinControl(LLayoutField).Handle;
+    {$endif}
+    Draft(LQueryField, '12.75');
+    Draft(LLayoutField, '123');
+    Draft(LPropertyField, '19.5');
+    Check((InputText(LQueryField) = '12.75') and
+      (InputText(LLayoutField) = '123') and (InputText(LPropertyField) = '19.5') and
+      (LSession.Selected.CollectionView.TableLayoutPolicy.MinimumScrollableWidth <> 123),
+      'query, stock layout and independent property inputs hold unsubmitted form values');
+    LBaseline := LRoot.Find(NyxStudioQueryEditorID).Prop(NyxMenuFormBaselineKey);
+    LEventBefore := NyxEventGeneration(LViews.SectionEvents(nssInspector));
+    LSession.Selected.SetCollectionView(LSpec.TableQuery(NyxTableQuery.Filtering(False)));
+    LNext := ComposeCollectionFixture;
+    Check(LViews.TryRefresh(LNext, LNext.Pages[0]),
+      'stock collection policy admission participates in grouped form publication');
+    Check((LViews.SectionRoot(nssInspector) = LRoot) and
+      (LViews.InputFor('collection-query-draft') = LQueryField) and
+      (LViews.InputFor(LMinimumID) = LLayoutField) and
+      (LViews.InputFor('collection-property-draft') = LPropertyField),
+      'changed collection baselines retain the actual Inspector and all independent controls');
+    Check((InputText(LQueryField) = '7') and
+      (InputText(LLayoutField) = TNyxText(IntToStr(LSpec.TableLayoutPolicy.MinimumScrollableWidth))) and
+      (InputText(LPropertyField) = '19.5'),
+      'new collection baselines restore their accepted defaults while unrelated property draft stays unfinished');
+    Check(LEventBefore.Cancelled and
+      (LRoot.Find(NyxStudioQueryEditorID).Prop(NyxMenuFormBaselineKey) <> LBaseline) and
+      (LRoot.Find(NyxStudioQueryEditorID).Prop(NyxMenuFormBaselineKey) =
+        LNext.Find(NyxStudioQueryEditorID).Prop(NyxMenuFormBaselineKey)),
+      'retained collection forms adopt exact new command baselines and retire old event authority');
+    {$ifndef PAS2JS}
+    Check((PtrUInt(TWinControl(LQueryField).Handle) = LQueryHandle) and
+      (PtrUInt(TWinControl(LLayoutField).Handle) = LLayoutHandle),
+      'collection baseline updates keep exact native query and stock layout windows');
+    {$endif}
+  finally
+    LViews.Free;
+    LNext.Free;
+    LDocument.Free;
+    LSession.Free;
+  end;
+end;
+
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LSession: TNyxStudioSession;
@@ -847,6 +971,8 @@ begin
       still required after any repair. Both use the same composition and case. }
     {$ifdef PAS2JS}await(InspectorFormCases(LTheme, LHost));
     {$else}InspectorFormCases(LTheme, LHost);{$endif}
+    {$ifdef PAS2JS}await(CollectionFormCases(LTheme, LHost));
+    {$else}CollectionFormCases(LTheme, LHost);{$endif}
     WriteLn('PASS ', GChecks, ' focused stock Inspector form checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-section-checks', IntToStr(GChecks));
@@ -1260,6 +1386,8 @@ begin
     {$else}ResourceSynchronizationCases(LSession, LTheme, LHost);{$endif}
     {$ifdef PAS2JS}await(InspectorFormCases(LTheme, LHost));
     {$else}InspectorFormCases(LTheme, LHost);{$endif}
+    {$ifdef PAS2JS}await(CollectionFormCases(LTheme, LHost));
+    {$else}CollectionFormCases(LTheme, LHost);{$endif}
     WriteLn('PASS ', GChecks, ' actual Studio section recovery checks');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-section-checks', IntToStr(GChecks));

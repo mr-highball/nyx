@@ -178,6 +178,18 @@ menu discovery, OS effects and complete workbench/Studio/native performance
 acceptance remain required. WORK retains exact source identities, native09's
 ghost-Click failure and the separate native10 unavailable cursor probe.
 
+Managed selected-cells menu04 retains those functional assertions and passes670
+native checks with a complete clean heap and701 browser checks at measured
+1280x900/390x900, logs empty. Command03 passes156 per actual target. Captured
+range retirement, launch-cell membership, optional output-limit refusal and
+focused-editor isolation remain separate from RAW-cell actions. Initial03
+fixture failures are retained in WORK. Authored policy/runtime service adoption,
+selected-row menu choices, pointer gestures and all original acceptance remain
+open. The independent collection-form Inspector repair passes100 full native
+section checks with a clean heap and12 focused browser checks at each width;
+its full browser capture acknowledgment is not yet qualified. The full own13
+native Studio journey still times out at900s, stage14/check293.
+
 The explicit cell-range capture/selection prerequisite passes46 native checks
 with a complete clean heap and46 actual browser checks, logs empty. It retains
 directional typed endpoints, actual filtered-page/visible-field order and exact

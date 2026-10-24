@@ -27,7 +27,7 @@ interface
 
 uses nyx.text, nyx.collections, nyx.collections.arrangement,
   nyx.collections.clipboard, nyx.collections.representation,
-  nyx.clipboard, nyx.scheduler, nyx.events;
+  nyx.clipboard, nyx.scheduler, nyx.events, nyx.collections.range.actions;
 
 type
   { Closed accepted-raw commands distinguish complete source membership from
@@ -124,6 +124,23 @@ type
     ['{34FC120A-0877-49DE-A6C8-9D9595C75491}']
     function GetReadiness: INyxCancellationReadiness;
     property Readiness: INyxCancellationReadiness read GetReadiness;
+  end;
+
+  { Optional enrichment of the SAME accepted-cell command before Prepare enters
+    source getters. It reserves no second clipboard request.
+    Prepare normalizes the supplied immutable range against its exact original
+    source/page/column serial and typed launch cell. Unselected, stale, hidden
+    or disallowed ranges produce no extra action; ordinary RAW capture remains
+    available. Returned TSV uses the original controller's configured headers,
+    lines and bounds. Payload/readiness own only copied values/cancel flags,
+    never the command, live view, mount or editor. UI-owner methods only. }
+  INyxCollectionClipboardCellRangeContext = interface(IInterface)
+    ['{57DCE031-FAF0-4B90-A2EA-E310AF545BA0}']
+    procedure AttachRange(const AIntent: INyxCollectionCellRangeIntent);
+    function GetRangePayload: INyxCollectionClipboardText;
+    function GetRangeReadiness: INyxCancellationReadiness;
+    property RangePayload: INyxCollectionClipboardText read GetRangePayload;
+    property RangeReadiness: INyxCancellationReadiness read GetRangeReadiness;
   end;
 
   { Snapshot actions share the SAME pending-write arbitration as physical copy

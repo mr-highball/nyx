@@ -102,12 +102,14 @@ type
 
   { Prepared input token owns exact source/page/row-or-cell-selection/column
     proof and the synchronous final fence. It retains its controller, never the
-    reverse. Cell-range authority is separately flags-only; no range controller
-    enters an asynchronous host. Retire after transfer cannot cancel that request. }
+    reverse. Optional context-range authority is separate from RAW cell proof;
+    clearing the range cannot cancel accepted-cell inspection or copy. No range
+    controller enters an asynchronous host. Retire after transfer cannot cancel
+    that request. }
   TCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
     INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope,
     INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture,
-    INyxCollectionClipboardRangeCommand)
+    INyxCollectionClipboardRangeCommand, INyxCollectionClipboardCellRangeContext)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -131,6 +133,9 @@ type
     FRangeFocus: TNyxCollectionCellIdentity;
     FRangeSerial: Integer;
     FRangeReady: INyxCancellationReadiness;
+    FContextRangeStarted: Boolean;
+    FContextRangePayload: INyxCollectionClipboardText;
+    FContextRangeReady: INyxCancellationReadiness;
     FPrepared: Boolean;
     FCompleteStarted: Boolean;
     FRetired: Boolean;
@@ -165,6 +170,11 @@ type
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
     procedure ResolveRange(const AIntent: INyxCollectionCellRangeIntent);
+    procedure CaptureRange(const AIntent: INyxCollectionCellRangeIntent);
+    procedure AttachRange(const AIntent: INyxCollectionCellRangeIntent);
+    function GetRangePayload: INyxCollectionClipboardText;
+    function GetRangeReadiness: INyxCancellationReadiness;
+    procedure PrepareContextRange(const AColumns: INyxCollectionColumnsCapture);
     function Complete(AAllowDefault: Boolean): Boolean;
     procedure Retire;
   public
@@ -560,6 +570,7 @@ var
   LSchema: TNyxCollectionSchema;
   LIndex: Integer;
   LRange: INyxCollectionCellRangeCapture;
+  LAdditional: INyxCancellationReadiness;
 begin
 
   if FPrepared or FCompleteStarted or FRetired then
@@ -670,7 +681,14 @@ begin
   begin
     Exit;
   end;
-  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, FRangeReady);
+  { An optional selected-cells action has independent cancellation. Clearing
+    that range must not disable this ordinary cell's RAW/inspection actions. }
+
+  if FAction = nccaCellRange then
+  begin
+    LAdditional := FRangeReady;
+  end;
+  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, LAdditional);
   FScope := LScope;
   FScopeReady := LScope;
 
@@ -712,6 +730,7 @@ begin
         Break;
       end;
     end;
+    PrepareContextRange(LCapture);
   end
   else
   begin
@@ -733,6 +752,8 @@ begin
   if not CurrentProof(False) then
   begin
     FPayload := nil;
+    FContextRangePayload := nil;
+    FContextRangeReady := nil;
   end;
 end;
 
@@ -784,6 +805,33 @@ begin
 end;
 
 procedure TCommand.ResolveRange(const AIntent: INyxCollectionCellRangeIntent);
+begin
+
+  if (FAction <> nccaCellRange) or FRangeStarted or FPrepared or FCompleteStarted or FRetired then
+  begin
+    raise ENyxCollectionRange.Create('Cell range resolution is single-use before preparation');
+  end;
+  FRangeStarted := True;
+  CaptureRange(AIntent);
+end;
+
+procedure TCommand.AttachRange(const AIntent: INyxCollectionCellRangeIntent);
+begin
+
+  if (FAction <> nccaCell) or FContextRangeStarted or FPrepared or FCompleteStarted or FRetired then
+  begin
+    raise ENyxCollectionRange.Create('Cell range context attachment is single-use before preparation');
+  end;
+  FContextRangeStarted := True;
+
+  if not (nccaCellRange in FOptions.Actions) then
+  begin
+    Exit; { No foreign range getter is entered without the original permission. }
+  end;
+  CaptureRange(AIntent);
+end;
+
+procedure TCommand.CaptureRange(const AIntent: INyxCollectionCellRangeIntent);
 var
   LLease: INyxCollectionClipboardCommand;
   LIntent: INyxCollectionCellRangeIntent;
@@ -794,12 +842,6 @@ var
 begin
   LLease := Self;
   LIntent := AIntent;
-
-  if (FAction <> nccaCellRange) or FRangeStarted or FPrepared or FCompleteStarted or FRetired then
-  begin
-    raise ENyxCollectionRange.Create('Cell range resolution is single-use before preparation');
-  end;
-  FRangeStarted := True;
 
   if not OriginalFlags or (LIntent = nil) then
   begin
@@ -859,6 +901,71 @@ begin
   end;
   FRangeSource := LSource;
   FRangePage := LPage;
+end;
+
+procedure TCommand.PrepareContextRange(const AColumns: INyxCollectionColumnsCapture);
+var
+  LObservation: TNyxColumnLayoutObservation;
+  LFields: TNyxCollectionClipboardFields;
+  LRange: INyxCollectionCellRangeCapture;
+  LScope: TCopyScope;
+begin
+
+  if not FContextRangeStarted or not FRangeResolved or (FRangeReady = nil) or
+    not (nccaCellRange in FOptions.Actions) or (FRangeSource <> FSource) or
+    (FRangePage <> FPage) or (FRangeSerial <> FColumnSerial) or not OriginalFlags then
+  begin
+    Exit;
+  end;
+  try
+    FRangeReady.CheckReady;
+  except
+    Exit; { Optional range cancellation never withdraws accepted-cell inspection. }
+  end;
+  LObservation := TNyxColumnLayoutObservation.Read(AColumns);
+  LFields := NyxCollectionClipboardFields(LObservation, nccfVisiblePresentation);
+
+  if not OriginalFlags then
+  begin
+    Exit;
+  end;
+  try
+    { Re-admit against the command's exact original snapshots and current typed
+      visible order, rather than trusting a foreign capture's payload/membership. }
+    LRange := NewNyxCollectionCellRange(FSource, FPage, LFields,
+      FRangeAnchor, FRangeFocus, FColumnSerial, FOptions.IncludeHeaders,
+      FOptions.Lines, FOptions.WorkLimits);
+  except
+    on E: ENyxCollectionClipboard do
+    begin
+      { Rectangle/schema admission and its RAW TSV producer share this family.
+        Optional multi-cell work/byte refusal must preserve a valid RAW cell. }
+      Exit;
+    end;
+  end;
+
+  if not OriginalFlags or not LRange.Contains(FItem, FField) then
+  begin
+    Exit;
+  end;
+  try
+    FRangeReady.CheckReady;
+  except
+    Exit;
+  end;
+  LScope := TCopyScope.Create(FInput, FEpoch, FParentReady, FRangeReady);
+  FContextRangeReady := LScope;
+  FContextRangePayload := LRange.Payload;
+end;
+
+function TCommand.GetRangePayload: INyxCollectionClipboardText;
+begin
+  Result := FContextRangePayload;
+end;
+
+function TCommand.GetRangeReadiness: INyxCancellationReadiness;
+begin
+  Result := FContextRangeReady;
 end;
 
 function TCommand.Complete(AAllowDefault: Boolean): Boolean;

@@ -36,6 +36,7 @@ uses
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
+  NyxCellActionsCopyRangeID = 'nyx-cell-actions-copy-range';
   NyxCellActionsCopyDisplayID = 'nyx-cell-actions-copy-display';
   NyxCellActionsInspectDraftID = 'nyx-cell-actions-inspect-draft';
   NyxCellActionsCopyDraftID = 'nyx-cell-actions-copy-draft';
@@ -92,6 +93,9 @@ type
     and owner-free cancellation facts. A later model edit never redirects the
     inspector or Copy to a new value: the UI explicitly identifies its captured
     revision. Disable, input-epoch change and retirement refuse old actions.
+    An explicitly attached original selected-cell range offers its own RAW TSV
+    action only when the launched cell belongs to it. Range retirement refuses
+    that action independently; it cannot silently substitute a one-cell copy.
     Readonly inspection text visibly escapes NUL/control characters; Copy uses
     the original raw bytes. No editor draft is read or committed here.
     Revoke is terminal and flags-only; Disconnect also cleans target resources. }
@@ -235,7 +239,7 @@ implementation
 
 uses
   SysUtils, nyx.types, nyx.controls, nyx.state, nyx.behavior,
-  nyx.formatting, nyx.numbers.decimal, nyx.times
+  nyx.formatting, nyx.numbers.decimal, nyx.times, nyx.collections.range.actions
   {$ifdef PAS2JS}, JS{$endif};
 
 type
@@ -350,6 +354,7 @@ type
   end;
 
   { One terminal host reply retains copied provenance and weak session facts.
+    Payload identifies the exact outbound cell or selected-cell byte count;
     Delivered distinguishes inline reply exceptions from host admission errors. }
   TCellReply = class(TInterfacedObject)
   public
@@ -359,6 +364,8 @@ type
     RequestSerial: Integer;
     Delivered: Boolean;
     Readiness: INyxCancellationReadiness;
+    Payload: INyxCollectionClipboardText;
+    SelectedCells: Boolean;
     Value: INyxCollectionCellText;
     procedure Receive(const AResult: TNyxClipboardWriteResult);
   end;
@@ -377,7 +384,8 @@ type
   { Controller stores detached snapshot/cancellation only and reserves intent
     directly from its own flags before input factories/getters. Menu and form
     subscriptions refer back through TCellPort, avoiding mount/presenter cycles.
-    Explicit draft sessions keep only copied provenance/text and inert flags. }
+    Explicit draft and selected-cell sessions keep only copied provenance/text
+    and independent inert flags; retiring a range never retires its RAW cell. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
     INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput,
@@ -401,6 +409,8 @@ type
     FInspector: INyxPopover;
     FOpen: INyxPopoverOpenLifetime;
     FSnapshot: INyxCollectionClipboardText;
+    FRangePayload: INyxCollectionClipboardText;
+    FRangeReady: INyxCancellationReadiness;
     FOptions: TNyxCollectionCellActionOptions;
     FDraft: INyxCollectionFocusedDraftCapture;
     FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
@@ -429,7 +439,9 @@ type
     procedure InspectorDefault(AKind, ASerial: Integer;
       const AOpen: INyxPopoverOpenLifetime);
     procedure Inspect(ASerial: Integer; ADraft: Boolean = False);
-    procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil);
+    procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil;
+      ARange: Boolean = False);
+    procedure CopyRange(ASerial: Integer);
     procedure CopyDisplayed(ASerial: Integer);
     procedure CopyDraft(ASerial: Integer);
     procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
@@ -475,9 +487,12 @@ type
     reserved constructor receives an already captured actions intent; no input
     factory or source getter can lend it a later context's authority. Opt-in
     readonly draft capture precedes resolution/callbacks and is matched against
-    the prepared accepted cell before presentation ownership transfers. }
+    the prepared accepted cell before presentation ownership transfers. Optional
+    selected-cell attachment forwards into that same original RAW command; it
+    neither starts another request nor retains a target/provider callback. }
   TCellActionCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
-    INyxCollectionClipboardCellCommand, INyxCollectionCellActionDraftCommand)
+    INyxCollectionClipboardCellCommand, INyxCollectionCellActionDraftCommand,
+    INyxCollectionClipboardCellRangeContext)
   private
     FLaunch: INyxCollectionClipboardCommand;
     FActions: INyxCollectionCellActions;
@@ -504,6 +519,9 @@ type
     function GetHasDraft: Boolean;
     function MatchesDraftCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity): Boolean;
+    procedure AttachRange(const AIntent: INyxCollectionCellRangeIntent);
+    function GetRangePayload: INyxCollectionClipboardText;
+    function GetRangeReadiness: INyxCancellationReadiness;
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
@@ -891,6 +909,8 @@ begin
   FReply := nil;
   FReplyLease := nil;
   FSnapshot := nil;
+  FRangePayload := nil;
+  FRangeReady := nil;
   FDraft := nil;
   FScope := nil;
   FScopeLease := nil;
@@ -1249,6 +1269,9 @@ var
   LOutput: INyxCollectionExportCapture;
   LDisplayPort: INyxCollectionClipboardDisplayCapture;
   LDisplayPolicy: TNyxCollectionCellDisplayPolicy;
+  LRangePort: INyxCollectionClipboardCellRangeContext;
+  LRangePayload: INyxCollectionClipboardText;
+  LRangeReady: INyxCancellationReadiness;
 begin
   LLease := Self;
   LScheduler := FScheduler;
@@ -1284,6 +1307,28 @@ begin
     LOutput := LOutputPort.Output;
   end;
 
+  if Supports(ALaunch, INyxCollectionClipboardCellRangeContext, LRangePort) then
+  begin
+    LRangePayload := LRangePort.RangePayload;
+    LRangeReady := LRangePort.RangeReadiness;
+
+    if (LRangePayload <> nil) and (LRangeReady <> nil) then
+    begin
+      try
+        LRangeReady.CheckReady;
+      except
+        { This optional flags-only proof cannot retire the independent RAW cell. }
+        LRangePayload := nil;
+        LRangeReady := nil;
+      end;
+    end
+    else
+    begin
+      LRangePayload := nil;
+      LRangeReady := nil;
+    end;
+  end;
+
   if (LScope = nil) or not ALaunch.Current or (GetIntent <> ASerial) then
   begin
     Exit;
@@ -1298,6 +1343,8 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FRangePayload := LRangePayload;
+  FRangeReady := LRangeReady;
   FDraft := ADraft;
   FDisplayPolicy := LDisplayPolicy;
   FOutput := LOutput;
@@ -1314,6 +1361,14 @@ begin
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
       NyxMenuCommand('inspect'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+
+    if FRangePayload <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopyRangeID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyRangeID)).Text('Copy selected cells').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyRangeID),
+        NyxMenuCommand('copy-selected-cells')));
+    end;
 
     if FDraft <> nil then
     begin
@@ -1410,6 +1465,10 @@ begin
     else if LInvocation.Command.Name = 'copy-display' then
     begin
       CopyDisplayed(ASerial);
+    end
+    else if LInvocation.Command.Name = 'copy-selected-cells' then
+    begin
+      CopyRange(ASerial);
     end
     else if LInvocation.Command.Name = 'inspect-draft' then
     begin
@@ -1708,7 +1767,47 @@ begin
   end;
 end;
 
-procedure TCellActions.CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText);
+procedure TCellActions.CopyRange(ASerial: Integer);
+var
+  LLease: INyxCollectionCellActions;
+  LReady: INyxCancellationReadiness;
+begin
+  LLease := Self;
+  LReady := FRangeReady;
+
+  if not Current(ASerial) or (FRangePayload = nil) or (LReady = nil) then
+  begin
+    Exit;
+  end;
+  try
+    LReady.CheckReady;
+  except
+    on E: Exception do
+    begin
+      { Only the certified original range check is caught. Presentation and
+        clipboard callbacks below keep their normal exception behavior. }
+      FResult := Default(TNyxClipboardWriteResult);
+      FResult.Outcome := ncwoCancelled;
+      FResult.Error := TNyxText(E.Message);
+      FHasResult := True;
+
+      if (FInspector = nil) or not FInspector.IsOpen then
+      begin
+        Inspect(ASerial);
+      end;
+      Status('Selected-cell copy refused: the captured range is no longer current. Copy accepted value remains available.', ASerial);
+      Exit;
+    end;
+  end;
+
+  if Current(ASerial) and (FRangeReady = LReady) then
+  begin
+    CopyValue(ASerial, nil, True);
+  end;
+end;
+
+procedure TCellActions.CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText;
+  ARange: Boolean);
 var
   LPayload: INyxCollectionClipboardText;
   LScope: INyxCancellationScope;
@@ -1724,7 +1823,8 @@ var
 begin
 
   if not Current(ASerial) or (FPort.RequestSerial >= High(Integer) - 1) or
-    ((AValue <> nil) and (FRepresentationWriter = nil)) then
+    ((AValue <> nil) and (FRepresentationWriter = nil)) or
+    (ARange and ((AValue <> nil) or (FRangePayload = nil) or (FRangeReady = nil))) then
   begin
     Exit;
   end;
@@ -1737,6 +1837,11 @@ begin
       Exit;
     end;
     LDraftReady := FDraft.Readiness;
+  end;
+
+  if ARange then
+  begin
+    LDraftReady := FRangeReady;
   end;
   Inc(FPort.RequestSerial);
   LRequestSerial := FPort.RequestSerial;
@@ -1755,6 +1860,11 @@ begin
     Exit;
   end;
   LPayload := FSnapshot;
+
+  if ARange then
+  begin
+    LPayload := FRangePayload;
+  end;
   LCopyScope := TCellScope.Create(FScope, FOpen, LDraftReady);
   LScope := LCopyScope;
   LWriter := FWriter;
@@ -1766,6 +1876,8 @@ begin
   LReply.Serial := ASerial;
   LReply.RequestSerial := LRequestSerial;
   LReply.Readiness := LCopyScope;
+  LReply.Payload := LPayload;
+  LReply.SelectedCells := ARange;
   LReply.Value := AValue;
   FReply := LReply;
   FReplyLease := LReplyLease;
@@ -1871,13 +1983,20 @@ begin
     end;
     Exit;
   end;
-  ValidateNyxClipboardWriteResult(AResult, FSnapshot.ByteCount);
+  ValidateNyxClipboardWriteResult(AResult, AReply.Payload.ByteCount);
   FResult := AResult;
   FHasResult := True;
 
   if AResult.Outcome = ncwoWritten then
   begin
-    Status('Copied the captured accepted value.', LSerial);
+    if AReply.SelectedCells then
+    begin
+      Status('Copied the captured selected cells.', LSerial);
+    end
+    else
+    begin
+      Status('Copied the captured accepted value.', LSerial);
+    end;
   end
   else
   begin
@@ -2346,6 +2465,50 @@ function TCellActionCommand.MatchesDraftCell(const AItem: TNyxItemRef;
 begin
   Result := GetHasDraft and (FDraft.Value.Item.Collection.Name = AItem.Collection.Name) and
     (FDraft.Value.Item.ID = AItem.ID) and FDraft.Value.Field.Same(AField);
+end;
+
+procedure TCellActionCommand.AttachRange(const AIntent: INyxCollectionCellRangeIntent);
+var
+  LLease: INyxCollectionClipboardCommand;
+  LContext: INyxCollectionClipboardCellRangeContext;
+begin
+  LLease := Self;
+
+  if FPrepared or FCompleted or (FLaunch = nil) or not IntentCurrent then
+  begin
+    Exit;
+  end;
+
+  if Supports(FLaunch, INyxCollectionClipboardCellRangeContext, LContext) then
+  begin
+    LContext.AttachRange(AIntent);
+  end;
+end;
+
+function TCellActionCommand.GetRangePayload: INyxCollectionClipboardText;
+var
+  LContext: INyxCollectionClipboardCellRangeContext;
+begin
+  Result := nil;
+
+  if (FLaunch <> nil) and Supports(FLaunch,
+    INyxCollectionClipboardCellRangeContext, LContext) then
+  begin
+    Result := LContext.RangePayload;
+  end;
+end;
+
+function TCellActionCommand.GetRangeReadiness: INyxCancellationReadiness;
+var
+  LContext: INyxCollectionClipboardCellRangeContext;
+begin
+  Result := nil;
+
+  if (FLaunch <> nil) and Supports(FLaunch,
+    INyxCollectionClipboardCellRangeContext, LContext) then
+  begin
+    Result := LContext.RangeReadiness;
+  end;
 end;
 
 procedure TCellActionCommand.Prepare;

@@ -68,12 +68,15 @@ type
 
   { Delegates every ordinary scheduler operation. A one-shot UI admission
     callback enters a real nested context after the actions owner captured its
-    original intent, exercising stale target return without private-field edits. }
+    original intent, exercising stale target return without private-field edits.
+    The independent replacement mode changes only the accepted range, proving
+    an old context cannot borrow identical newer membership after this callout. }
   TContextScheduler = class(TInterfacedObject, INyxScheduler)
   public
     Base: INyxScheduler;
     Owner: TCopyReview;
     Reentries: Integer;
+    ReplaceRangeOnly: Boolean;
     function GetCapabilities: TNyxSchedulerCapabilities;
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
@@ -217,6 +220,7 @@ type
     FRangeClicks: Integer;
     FRangeClickPhase: TNyxText;
     FRangeKeyName: TNyxText;
+    FRangeReplacements: Integer;
     FRangeKeySending: Boolean;
     FConsumed: Integer;
     FContexts: Integer;
@@ -255,6 +259,7 @@ type
     procedure Filter(AEnabled: Boolean);
     procedure Context(AWait: Boolean = True);
     procedure MenuAction(const AID: TNyxText);
+    function HasMenuAction(const AID: TNyxText): Boolean;
     procedure InspectorAction(const AID: TNyxText);
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
@@ -262,6 +267,8 @@ type
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
     procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
     procedure RunCellRange; {$ifdef PAS2JS}async;{$endif}
+    procedure RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
+    procedure ReplaceContextRange;
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
@@ -422,15 +429,26 @@ end;
 procedure TContextScheduler.RequireUI;
 var
   LOwner: TCopyReview;
+  LReplaceRange: Boolean;
 begin
   Base.RequireUI;
   LOwner := Owner;
   Owner := nil;
+  LReplaceRange := ReplaceRangeOnly;
+  ReplaceRangeOnly := False;
 
   if LOwner <> nil then
   begin
     Inc(Reentries);
-    LOwner.Context(False);
+
+    if LReplaceRange then
+    begin
+      LOwner.ReplaceContextRange;
+    end
+    else
+    begin
+      LOwner.Context(False);
+    end;
   end;
 end;
 
@@ -1143,6 +1161,35 @@ begin
   TButton(LMenu.Presentation.Renderer.FocusFor(AID)).Click;
   Drain;
   {$endif}
+end;
+
+function TCopyReview.HasMenuAction(const AID: TNyxText): Boolean;
+var
+  {$ifdef PAS2JS}
+  LMenu: INyxBrowserMenu;
+  {$else}
+  LMenu: INyxLCLMenu;
+  {$endif}
+begin
+  Result := False;
+
+  if (FCellActions.Menu = nil) or not FCellActions.Menu.IsOpen then
+  begin
+    Exit;
+  end;
+
+  if Supports(FCellActions.Menu,
+    {$ifdef PAS2JS}INyxBrowserMenu{$else}INyxLCLMenu{$endif}, LMenu) then
+  begin
+    { FocusFor deliberately raises for unknown bindings. The retained public
+      menu tree answers optional membership before querying a physical face. }
+
+    if LMenu.Presentation.Renderer.Root.Find(AID) = nil then
+    begin
+      Exit;
+    end;
+    Result := LMenu.Presentation.Renderer.FocusFor(AID) <> nil;
+  end;
 end;
 
 procedure TCopyReview.InspectorAction(const AID: TNyxText);
@@ -2025,6 +2072,220 @@ begin
     'mounted range paint and RAW copy preserve exact accepted data row/query state and authored source');
 end;
 
+procedure TCopyReview.ReplaceContextRange;
+var
+  LRanges: INyxCollectionCellRangeMount;
+begin
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges) and
+    LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+    'foreign UI admission installs a genuinely newer same-byte range through the actual mounted owner');
+  Inc(FRangeReplacements);
+end;
+
+{ Reuses both existing table owners and real target menus. The menu may copy
+  only its original typed rectangle; RAW cell inspection remains independent,
+  including when range readiness is withdrawn after the menu took focus. }
+procedure TCopyReview.RunRangeMenu; {$ifdef PAS2JS}async;{$endif}
+var
+  LRanges: INyxCollectionCellRangeMount;
+  LIntent: INyxCollectionCellRangeIntent;
+  LSource: INyxCollectionSnapshot;
+  LRows: TNyxCollectionSelectionSnapshot;
+  LColumns: INyxCollectionColumns;
+  LCapture: INyxCollectionColumnsCapture;
+  LDraftActions: INyxCollectionCellDraftActions;
+  LExpected: TNyxText;
+  LQuery: TNyxText;
+  LBefore: Integer;
+  LReplies: Integer;
+  LReentries: Integer;
+  LReplacements: Integer;
+  LSerial: Integer;
+  {$ifdef PAS2JS}
+  LEditor: TJSHTMLInputElement;
+  LEventOptions: TJSObject;
+  {$else}
+  LEditor: TCustomEdit;
+  {$endif}
+
+  procedure SelectRange;
+  begin
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemA, NameField),
+      NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+      'real managed-menu setup selects exact current-page typed endpoints');
+    LIntent := LRanges.CellRange;
+    LExpected := LIntent.Capture.Payload.Text;
+  end;
+
+begin
+  FMode := kmObserve;
+  FContextColumn := 0;
+  FCellActions.Close;
+  FocusCell;
+  LSource := FView.Store.Snapshot;
+  LRows := FView.Selection.Snapshot;
+  LQuery := FView.QueryPolicy.ToData.ToJSON;
+  LColumns := NyxCollectionColumns(FView);
+  LCapture := LColumns.CaptureColumns;
+  LSerial := LCapture.Serial;
+  Check(Supports(FMount, INyxCollectionCellRangeMount, LRanges),
+    'managed range menu uses the same real mounted selection owner');
+  LRanges.ConfigureCellRange(True);
+  try
+    SelectRange;
+    LBefore := FHost.Writes;
+    LReplies := FReplies;
+    Context;
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check(HasMenuAction(NyxCellActionsCopyRangeID) and
+      (FCellActions.Snapshot.Text = CText) and (FCellActions.Snapshot.RowCount = 1) and
+      (FHost.Writes = LBefore),
+      'real menu exposes Copy selected cells separately from its original accepted-cell snapshot');
+    MenuAction(NyxCellActionsCopyRangeID);
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check((FHost.Writes = LBefore + 1) and (FReplies = LReplies + 1) and
+      (FHost.Text = LExpected) and (FLastPayload.Text = LExpected) and
+      (FLastPayload.RowCount = 2) and (FLastPayload.FieldCount = 2) and
+      (FLastPayload.CellValue(0, 0).TextValue = CText) and
+      (FCellActions.LastResult.Outcome = ncwoWritten) and
+      (FCellActions.LastResult.ByteCount = FLastPayload.ByteCount),
+      'actual managed button copies original Unicode NUL/newline TSV once and validates the rectangle byte count');
+    FCellActions.Close;
+    FocusCell;
+    Context;
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check(HasMenuAction(NyxCellActionsCopyRangeID),
+      'a fresh menu admits the current original range before focus changes');
+    LRanges.ClearCellRange;
+    LBefore := FHost.Writes;
+    MenuAction(NyxCellActionsCopyRangeID);
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check((FHost.Writes = LBefore) and
+      (FCellActions.LastResult.Outcome = ncwoCancelled) and
+      (FCellActions.Snapshot.Text = CText) and (FCellActions.Inspector <> nil) and
+      FCellActions.Inspector.IsOpen and
+      (FCellActions.Inspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> ''),
+      'clearing the original range refuses its real action visibly without substituting RAW or entering the host');
+    InspectorAction(NyxCellInspectorCloseID);
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    FCellActions.Close;
+    Check(LRanges.SelectCells(NyxCollectionCellIdentity(ItemB,
+      NyxColumnIdentity(NyxIntegerField('Score'))), NyxCollectionCellIdentity(ItemB,
+      NyxColumnIdentity(NyxIntegerField('Score')))),
+      'outside-context range setup uses a valid separate current-page cell');
+    FocusCell;
+    Context;
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check(not HasMenuAction(NyxCellActionsCopyRangeID) and HasMenuAction(NyxCellActionsCopyID),
+      'actual menu omits selected-cell copying outside the launched typed membership and retains RAW copying');
+    MenuAction(NyxCellActionsCopyID);
+    {$ifdef PAS2JS}await(Drain);{$endif}
+    Check((FHost.Writes = LBefore + 1) and (FHost.Text = CText),
+      'ordinary accepted-value action remains independent of an unrelated cell rectangle');
+    FCellActions.Close;
+    { The second, ordinary renderer-managed owner installs this admission actor
+      together with explicit draft actions. The first compatible owner uses its
+      original scheduler directly and has no actor to arm or retire. }
+
+    if FContextScheduler <> nil then
+    begin
+      SelectRange;
+      LReentries := FContextScheduler.Reentries;
+      LReplacements := FRangeReplacements;
+      FContextScheduler.Owner := Self;
+      FContextScheduler.ReplaceRangeOnly := True;
+      FocusCell;
+      Context;
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FContextScheduler.Reentries = LReentries + 1) and
+        (FRangeReplacements = LReplacements + 1) and not LIntent.Current and
+        (LRanges.CellRange <> nil) and LRanges.CellRange.Current and
+        (LRanges.CellRange.Capture.Payload.Text = LExpected) and
+        not HasMenuAction(NyxCellActionsCopyRangeID) and HasMenuAction(NyxCellActionsCopyID) and
+        (FCellActions.Snapshot.Text = CText),
+        'range replacement inside real input admission cannot lend identical newer membership to the older context');
+      FCellActions.Close;
+    end;
+
+    if Supports(FCellActions, INyxCollectionCellDraftActions, LDraftActions) and
+      LDraftActions.FocusedDraftEnabled then
+    begin
+      SelectRange;
+      FocusCell;
+      {$ifdef PAS2JS}
+      Key(Cell, 'F2', False);
+      await(Drain);
+      LEditor := TJSHTMLInputElement(Cell.querySelector('input'));
+      Check((LEditor <> nil) and (document.activeElement = LEditor),
+        'range-menu draft isolation begins with the actual focused browser editor');
+      LEditor.value := CDraft;
+      LEventOptions := TJSObject.new;
+      LEventOptions['bubbles'] := True;
+      LEventOptions['cancelable'] := True;
+      LEventOptions['button'] := 2;
+      LEditor.dispatchEvent(TCellContextEvent.new('contextmenu', LEventOptions));
+      await(Drain);
+      {$else}
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+      Drain;
+      Check(FGrid.EditorMode and (FGrid.Editor is TCustomEdit),
+        'range-menu draft isolation begins with the actual focused native editor');
+      LEditor := TCustomEdit(FGrid.Editor);
+      RestoreNyxLCLInputText(LEditor, CDraft);
+      SendMessage(LEditor.Handle, WM_CONTEXTMENU, LEditor.Handle, MakeLParam(-1, -1));
+      Drain;
+      {$endif}
+      Check(HasMenuAction(NyxCellActionsCopyRangeID) and
+        (LDraftActions.CapturedDraft <> nil) and
+        (LDraftActions.CapturedDraft.Value.Text = CDraft) and
+        (FView.Store.Snapshot = LSource),
+        'explicit editor context captures selected accepted cells before focus without accepting its unfinished draft');
+      LBefore := FHost.Writes;
+      MenuAction(NyxCellActionsCopyRangeID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FHost.Writes = LBefore + 1) and (FHost.Text = LExpected) and
+        (FLastPayload.CellValue(0, 0).TextValue = CText) and
+        (FView.Store.Snapshot = LSource) and
+        {$ifdef PAS2JS}(LEditor.value = CDraft){$else}(NyxLCLInputText(LEditor) = CDraft){$endif},
+        'actual range action copies accepted RAW cells and preserves the same unfinished physical editor text');
+      FCellActions.Close;
+      {$ifdef PAS2JS}
+      LEditor.focus;
+      Key(LEditor, 'Escape', False);
+      await(Drain);
+      {$else}
+      FGrid.SetFocus;
+
+      if not FGrid.EditorMode then
+      begin
+        SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+      end;
+      Check(FGrid.EditorMode, 'fresh native editing permits explicit Escape cleanup of the retained menu draft');
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+      Drain;
+      {$endif}
+    end;
+  finally
+
+    if FContextScheduler <> nil then
+    begin
+      FContextScheduler.Owner := nil;
+      FContextScheduler.ReplaceRangeOnly := False;
+    end;
+    FCellActions.Close;
+    LRanges.ConfigureCellRange(False);
+    FMode := kmObserve;
+    FContextColumn := 0;
+    FocusCell;
+  end;
+  LCapture := LColumns.CaptureColumns;
+  Check((FView.Store.Snapshot = LSource) and FView.Selection.Snapshot.SameState(LRows) and
+    (FView.QueryPolicy.ToData.ToJSON = LQuery) and (LCapture.Serial = LSerial) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'real range-menu actions preserve exact accepted data, ordinary row state, query, layout and authored source');
+end;
+
 {$ifndef PAS2JS}
 procedure TCopyReview.NativeRangeSelected(Sender: TObject; AColumn, ARow: Integer);
 begin
@@ -2617,12 +2878,14 @@ begin
   await(RunDisplayed);
   await(RunFocusedDraft);
   await(RunCellRange);
+  await(RunRangeMenu);
   {$else}
   RunContext;
   RunExport;
   RunDisplayed;
   RunFocusedDraft;
   RunCellRange;
+  RunRangeMenu;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');
@@ -2675,10 +2938,12 @@ begin
       await(LReview.RunFocusedDraft);
       await(LReview.RunDraftActions);
       await(LReview.RunCellRange);
+      await(LReview.RunRangeMenu);
       {$else}
       LReview.RunFocusedDraft;
       LReview.RunDraftActions;
       LReview.RunCellRange;
+      LReview.RunRangeMenu;
       LReview.RunRangeFocusRetirement;
       {$endif}
     finally
