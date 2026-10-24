@@ -883,6 +883,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       foreach ($nyxWorkbenchCopyConsumer in @('nyx_collection_range_tests',
           'nyx_collection_range_navigation_tests',
           'nyx_table_workbench_authoring_tests',
+          'nyx_collection_identity_tests',
+          'nyx_collection_workbench_runtime_tests',
           'nyx_collection_clipboard_commands_tests')) {
         Invoke-NyxCompiler $nyxLclFpc ($nyxWorkbenchCompanionFlags + @(
           "tests/$nyxWorkbenchCopyConsumer.lpr"))
@@ -954,6 +956,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
       $nyxWorkbenchCopyConsumers = @('nyx_collection_range_tests',
         'nyx_collection_range_navigation_tests',
         'nyx_table_workbench_authoring_tests',
+        'nyx_collection_identity_tests',
+        'nyx_collection_workbench_runtime_tests',
         'nyx_collection_clipboard_commands_tests')
       if ($nyxWorkbenchNativeActivation) {
         # This no-effect host consumer owns its actual window size. It does not
@@ -1028,6 +1032,8 @@ function RunOwned([string]$Executable, [string[]]$Arguments, [string]$Tag,
           'nyx_popover_open_lifetime_tests', 'nyx_collection_range_tests',
           'nyx_collection_range_navigation_tests',
           'nyx_table_workbench_authoring_tests',
+          'nyx_collection_identity_tests',
+          'nyx_collection_workbench_runtime_tests',
           'nyx_collection_clipboard_commands_tests', 'nyx_collection_clipboard_controls')) {
         Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
           '-Fusrc', '-Futests', '-Fustudio', '-Fisrc',

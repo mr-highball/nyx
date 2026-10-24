@@ -29,6 +29,17 @@ bounded policy reads and atomic grouped semantic operations. A genuine non-table
 bind-admission gap is repaired. Mounted Studio input, own-export/native performance,
 export-service adoption and all original acceptance remain open.
 
+Runtime07 now qualifies the selected-ID and application export-service bridge
+through the original complete control suite: native968 with a clean heap and
+browser1073 at1280x900/390x900, empty logs. All1930 fixed inputs reverify. Both
+arranged and ordinary tables exercise exact source/page ID menus, separate ID
+receipts, stale-selection refusal and the unchanged real export journey supplied
+before renderer mounting. Portable identity/command/row checks pass24/226/46
+per target; export-service preparation passes31 per target, including a real
+scheduler-epoch ABA regression and its failing old-recapture negative control.
+Mounted Studio input, native performance/own-export, wrapping/density, gestures,
+OS effects and all seven original criteria remain open.
+
 Current W1 implements typed resize/Fit, visible column management, both logical
 pin edges, defaults, per-instance preferences, Studio authoring and source/history
 support. Native/browser control journeys exercise desktop and compact sizes,

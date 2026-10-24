@@ -31,6 +31,7 @@ uses
   nyx.collections.clipboard.commands, nyx.collections.representation,
   nyx.collections.cell.actions,
   nyx.collections.draft, nyx.collections.range, nyx.collections.range.actions,
+  nyx.collections.identities,
   nyx.collections.range.commands,
   nyx.formatting, nyx.contract, nyx.resources, nyx.clipboard, nyx.scheduler, nyx.events,
   nyx.publication
@@ -175,6 +176,15 @@ type
     function GetReadiness: INyxCancellationReadiness;
   end;
 
+  { Public identity values cannot forge the private originating-controller
+    witness. This facade deliberately copies an actual token's visible facts. }
+  TForeignIdentityAction = class(TInterfacedObject, INyxCollectionClipboardIdentityAction)
+  public
+    Inner: INyxCollectionClipboardIdentityAction;
+    function GetValue: INyxCollectionIdentityText;
+    function GetReadiness: INyxCancellationReadiness;
+  end;
+
   { Fixture keeps every borrowed receiver alive through explicit cancellation.
     Only the injected host substitutes authority; the view/store/router and
     immutable producer are the actual library implementations. }
@@ -201,6 +211,9 @@ type
     RepresentationValue: INyxCollectionCellText;
     ThrowRepresentation: Boolean;
     OnReadiness: TEndingCallback;
+    IdentityReplies: Integer;
+    IdentityValue: INyxCollectionIdentityText;
+    ThrowIdentity: Boolean;
     constructor Create(ADisplay: Boolean = False);
     destructor Destroy; override;
     function Readiness: INyxCancellationReadiness;
@@ -217,6 +230,8 @@ type
       const AChanges: INyxCollectionChanges);
     procedure IgnoreStore(const AStore: INyxCollection;
       const AChanges: INyxCollectionChanges);
+    procedure Identities(const AValue: INyxCollectionIdentityText;
+      const AResult: TNyxClipboardWriteResult);
   end;
 
   { Foreign representation getters can synchronously run an application action.
@@ -481,6 +496,16 @@ begin
   Result := Inner.Readiness;
 end;
 
+function TForeignIdentityAction.GetValue: INyxCollectionIdentityText;
+begin
+  Result := Inner.Value;
+end;
+
+function TForeignIdentityAction.GetReadiness: INyxCancellationReadiness;
+begin
+  Result := Inner.Readiness;
+end;
+
 constructor TFixture.Create(ADisplay: Boolean);
 var
   LSpec: TNyxCollectionViewSpec;
@@ -589,6 +614,20 @@ end;
 procedure TFixture.IgnoreStore(const AStore: INyxCollection;
   const AChanges: INyxCollectionChanges);
 begin
+end;
+
+procedure TFixture.Identities(const AValue: INyxCollectionIdentityText;
+  const AResult: TNyxClipboardWriteResult);
+begin
+  Inc(IdentityReplies);
+  IdentityValue := AValue;
+  Check((AResult.Outcome = ncwoWritten) and (AResult.ByteCount = AValue.ByteCount),
+    'identity observer receives only exact identity provenance and the actual host receipt');
+
+  if ThrowIdentity then
+  begin
+    raise Exception.Create('identity observer failure after terminal receipt');
+  end;
 end;
 
 procedure TFixture.Reply(const APayload: INyxCollectionClipboardText;
@@ -2171,6 +2210,179 @@ begin
   end;
 end;
 
+{ Identity representation uses the exact original row cohort/permission but
+  reports on its own facet. Real pending host cancellation and inline receiver
+  failure exercise the existing single clipboard request arbitration. }
+procedure IdentityActions;
+var
+  LFixture: TFixture;
+  LEntry: INyxCollectionClipboardInspectionInput;
+  LCommand: INyxCollectionClipboardCellCommand;
+  LTransfers: INyxCollectionClipboardIdentityTransfers;
+  LRows: INyxCollectionClipboardContextTransfers;
+  LSource: INyxCollectionClipboardIdentityAction;
+  LPage: INyxCollectionClipboardIdentityAction;
+  LWriter: INyxCollectionClipboardIdentityWrite;
+  LCancel: INyxCancellationScope;
+  LRequest: INyxClipboardWriteRequest;
+  LOld: INyxClipboardWriteRequest;
+  LOldObject: TWrite;
+  LRaw: INyxCollectionClipboardCommand;
+  LForeign: TForeignIdentityAction;
+  LForeignLease: INyxCollectionClipboardIdentityAction;
+  LPages: INyxCollectionPages;
+  LBefore: Integer;
+  LRefused: Boolean;
+  LRawBytes: Integer;
+
+  procedure Prepare;
+  begin
+    Supports(LFixture.Commands, INyxCollectionClipboardInspectionInput, LEntry);
+    Supports(LFixture.Commands, INyxCollectionClipboardIdentityWrite, LWriter);
+    LWriter.ObserveIdentities({$ifdef PAS2JS}@{$endif}LFixture.Identities);
+    LCommand := LEntry.BeginCellInspection;
+    LCommand.ResolveCell(LFixture.ItemA, LFixture.Field);
+    LCommand.Prepare;
+    Supports(LCommand, INyxCollectionClipboardIdentityTransfers, LTransfers);
+    LSource := LTransfers.SourceIdentityAction;
+    LPage := LTransfers.PageIdentityAction;
+  end;
+
+  procedure ConfigurePage;
+  begin
+    LPages.ConfigurePaging(NyxCollectionPaging.PageSize(1));
+  end;
+
+  procedure RestoreSelection;
+  begin
+    LFixture.View.SetSelection([LFixture.ItemA, LFixture.ItemB], LFixture.ItemA, LFixture.ItemA);
+  end;
+
+  procedure ConfigureBounded;
+  begin
+    LFixture.Commands.Revoke;
+    LFixture.Commands := NewNyxCollectionClipboardCommands(LFixture.View,
+      LFixture.InputLease, LFixture.Events, LFixture.HostLease, LFixture.Scheduler,
+      TNyxCollectionClipboardOptions.Defaults.AllowOnly([nccaSelectedSource])
+        .Limits(TNyxCollectionClipboardLimits.Defaults.UTF8Bytes(LRawBytes)),
+      {$ifdef PAS2JS}@{$endif}LFixture.Readiness);
+    LFixture.Commands.Observe({$ifdef PAS2JS}@{$endif}LFixture.Reply);
+  end;
+
+begin
+  LFixture := TFixture.Create;
+  try
+    LFixture.Restrict([nccaSelectedSource, nccaSelectedPage]);
+    LPages := NyxCollectionPages(LFixture.View);
+    ConfigurePage;
+    Prepare;
+    LCancel := NewNyxCancellationScope;
+    Check((LSource <> nil) and (LPage <> nil) and
+      (LSource.Value.Text = 'ID' + #10 + LFixture.ItemA.ID + #10 + LFixture.ItemB.ID) and
+      (LPage.Value.Text = 'ID' + #10 + LFixture.ItemA.ID),
+      'original row-only source/page permissions provide distinct exact record-ID choices');
+    LForeign := TForeignIdentityAction.Create;
+    LForeignLease := LForeign;
+    LForeign.Inner := LSource;
+    LRequest := LWriter.WriteIdentities(LForeignLease, LCancel, LSource.Readiness, nil, nil);
+    Check((LRequest = nil) and (LFixture.Host.Writes = 0),
+      'copied public identity getters cannot forge the original private transfer seal');
+    LRequest := LWriter.WriteIdentities(LSource, LCancel, LSource.Readiness, nil, nil);
+    Check((LFixture.Host.Writes = 1) and (LFixture.IdentityReplies = 1) and
+      (LFixture.Replies = 0) and (LFixture.RepresentationReplies = 0) and
+      (LFixture.Commands.LastPayload = nil) and (LWriter.IdentityPhase = nccpCompleted) and
+      (LWriter.LastIdentities = LSource.Value) and
+      (LWriter.LastIdentityResult.ByteCount = LSource.Value.ByteCount),
+      'identity receipt is terminal/exact and never masquerades as RAW column or formatted-cell output');
+    LFixture.Restrict([nccaSelectedPage]);
+    Prepare;
+    Check((LSource = nil) and (LPage <> nil),
+      'page-only permission exposes only the original page identity representation');
+    LRequest := LWriter.WriteIdentities(LPage, LCancel, LPage.Readiness, nil, nil);
+    Check((LFixture.Host.Writes = 2) and (LFixture.Host.Text = 'ID' + #10 + LFixture.ItemA.ID) and
+      (LFixture.Replies = 0) and (LWriter.LastIdentities.Membership = nccmSelectedPage),
+      'page-only identity transfer writes just the original page and never broadens to selected source or cell data');
+    LFixture.Restrict([nccaSelectedSource, nccaSelectedPage]);
+    Prepare;
+    LFixture.ClearSelection;
+    RestoreSelection;
+    LBefore := LFixture.Host.Writes;
+    LRefused := False;
+    try
+      LRequest := LWriter.WriteIdentities(LSource, LCancel, LSource.Readiness, nil, nil);
+    except
+      on E: ENyxCollection do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.Host.Writes = LBefore) and LCommand.Current,
+      'selection ABA refuses the old ID cohort without withdrawing independent RAW inspection');
+    LFixture.OnReadiness := {$ifdef PAS2JS}@{$endif}LFixture.ClearSelection;
+    Prepare;
+    Check(LCommand.Current and (LSource = nil) and (LPage = nil),
+      'nested pre-factory selection cannot be recaptured as a newer ID action');
+    RestoreSelection;
+    LRawBytes := LCommand.Payload.ByteCount;
+    ConfigureBounded;
+    Prepare;
+    Supports(LCommand, INyxCollectionClipboardContextTransfers, LRows);
+    Check((LRows.SourceRowsAction = nil) and (LSource <> nil) and (LPage = nil),
+      'identity output has its own byte admission and cannot silently gain disallowed page membership');
+    LFixture.Restrict([nccaCell, nccaSelectedSource]);
+    Prepare;
+    LFixture.Host.InlineCompletion := False;
+    LRequest := LWriter.WriteIdentities(LSource, LCancel, LSource.Readiness, nil, nil);
+    LOld := LFixture.Host.LastLease;
+    LOldObject := LFixture.Host.Last;
+    LBefore := LFixture.IdentityReplies;
+    Check(LWriter.IdentityPhase = nccpPending, 'ID request enters the actual shared pending host slot');
+    LFixture.Host.InlineCompletion := True;
+    LRaw := LFixture.Cell;
+    LRaw.Complete(True);
+    LOldObject.Finish;
+    Check((LFixture.IdentityReplies = LBefore) and (LWriter.IdentityPhase = nccpCancelled) and
+      (LFixture.LastPayload.Text = CText) and (LFixture.Commands.Phase = nccpCompleted),
+      'new RAW copy retires the old ID receiver and late completion cannot replace either receipt');
+    LRequest.Cancel;
+    Prepare;
+    LFixture.ThrowIdentity := True;
+    LBefore := LFixture.IdentityReplies;
+    LRefused := False;
+    try
+      LRequest := LWriter.WriteIdentities(LSource, LCancel, LSource.Readiness, nil, nil);
+    except
+      on E: Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LFixture.IdentityReplies = LBefore + 1) and
+      (LWriter.IdentityPhase = nccpCompleted) and
+      (LFixture.Commands.LastPayload.Text = CText),
+      'inline identity observer failure propagates exactly once after its separate terminal receipt');
+    LFixture.ThrowIdentity := False;
+    LFixture.Restrict([nccaSelectedSource]);
+    Supports(LFixture.Commands, INyxCollectionClipboardIdentityWrite, LWriter);
+    LRequest := LWriter.WriteIdentities(LSource, LCancel, LSource.Readiness, nil, nil);
+    Check(LRequest = nil, 'a replacement controller cannot adopt an otherwise ready original ID seal');
+  finally
+    LForeignLease := nil;
+    LOld := nil;
+    LRequest := nil;
+    LRaw := nil;
+    LRows := nil;
+    LPage := nil;
+    LSource := nil;
+    LTransfers := nil;
+    LWriter := nil;
+    LCommand := nil;
+    LEntry := nil;
+    LPages := nil;
+    LFixture.Free;
+  end;
+end;
+
 procedure Run;
 var
   LFixture: TFixture;
@@ -2349,6 +2561,7 @@ begin
     SelectedRowsContext;
     SelectedRowsLifetime;
     SelectedRowsAdmission;
+    IdentityActions;
     CapturedArbitration;
     RepresentedArbitration;
     RangeArbitration;

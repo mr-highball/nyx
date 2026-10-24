@@ -53,6 +53,22 @@ type
     No public operation accepts physical grid/DOM column coordinates. }
   TNyxCollectionClipboardFields = array of TNyxColumnIdentity;
 
+  { Owned admitted output rows in explicit source/page order. The private row
+    vector is immutable after capture, owns values only and exposes copied rows;
+    identity-only output can reuse membership admission without a fake field. }
+  TNyxCollectionCopyMembers = record
+  private
+    FKey: TNyxCollectionRef;
+    FRevision: Integer;
+    FItems: array of TNyxCollectionItem;
+    function GetCount: Integer;
+  public
+    function ItemAt(AIndex: Integer): TNyxCollectionItem;
+    property Key: TNyxCollectionRef read FKey;
+    property Revision: Integer read FRevision;
+    property Count: Integer read GetCount;
+  end;
+
   { Caller-adjustable bounded work, capped by existing collection/clipboard
     limits. Defaults allow 16384 rows, 64 fields, 65536 output cells, 32768 row
     inspections and four MiB UTF-8 output. A row inspection includes each source/
@@ -110,6 +126,20 @@ type
   the caller supplies its already admitted complete immutable observation. }
 function NyxCollectionClipboardFields(const AObservation: TNyxColumnLayoutObservation;
   AChoice: TNyxCollectionCopyFields): TNyxCollectionClipboardFields;
+
+{ Shared source/page admission used by typed row and identity representations.
+  Every selected identity must exist in the exact source revision; explicit
+  pages must match schema and actual row values. Source/page scans, output rows
+  and cells are bounded before publication. Inputs are retained before getters.
+  ACellsPerRow describes the real output, including one cell for identity TSV. }
+function CaptureNyxCollectionCopyMembers(const ASource: INyxCollectionSnapshot;
+  const ASelection: TNyxCollectionSelectionSnapshot;
+  AMembership: TNyxCollectionCopyMembership; const APage: INyxCollectionSnapshot;
+  ACellsPerRow: Integer; const ALimits: TNyxCollectionClipboardLimits): TNyxCollectionCopyMembers;
+
+{ One bounded TSV cell. Tab/CR/LF/NUL/quote requires quotation; embedded quotes
+  double. Exact Unicode and controls are preserved, never platform-normalized. }
+function NyxCollectionTSVCell(const AText: TNyxText; AMaximumUTF8Bytes: Integer): TNyxText;
 
 { One entire accepted cell, including a hidden source row/field when explicitly
   requested. Text is unchanged; Boolean/integer/number use invariant lossless
@@ -453,6 +483,209 @@ begin
   AppendPart(AParts, '"', ABytes, AMaximum);
 end;
 
+function TNyxCollectionCopyMembers.GetCount: Integer;
+begin
+  Result := Length(FItems);
+end;
+
+function TNyxCollectionCopyMembers.ItemAt(AIndex: Integer): TNyxCollectionItem;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FItems)) then
+  begin
+    raise ENyxCollectionClipboard.Create('Copied output row index is outside its admitted membership');
+  end;
+  Result := FItems[AIndex].Copy;
+end;
+
+function NyxCollectionTSVCell(const AText: TNyxText; AMaximumUTF8Bytes: Integer): TNyxText;
+var
+  LParts: TNyxStrings;
+  LBytes: Integer;
+begin
+
+  if (AMaximumUTF8Bytes < 0) or (AMaximumUTF8Bytes > NyxClipboardMaximumBytes) then
+  begin
+    raise ENyxCollectionClipboard.Create('TSV cell requires a supported output-byte bound');
+  end;
+  LParts := TNyxStrings.Create;
+  try
+    LBytes := 0;
+    AppendTSV(LParts, AText, LBytes, AMaximumUTF8Bytes);
+    Result := LParts.Join;
+  finally
+    LParts.Free;
+  end;
+end;
+
+function CaptureNyxCollectionCopyMembers(const ASource: INyxCollectionSnapshot;
+  const ASelection: TNyxCollectionSelectionSnapshot;
+  AMembership: TNyxCollectionCopyMembership; const APage: INyxCollectionSnapshot;
+  ACellsPerRow: Integer; const ALimits: TNyxCollectionClipboardLimits): TNyxCollectionCopyMembers;
+var
+  LSource: INyxCollectionSnapshot;
+  LPage: INyxCollectionSnapshot;
+  LSelection: TNyxCollectionSelectionSnapshot;
+  LLimits: TNyxCollectionClipboardLimits;
+  LSchema: TNyxCollectionSchema;
+  LKey: TNyxCollectionRef;
+  LRevision: Integer;
+  LSourceCount: Integer;
+  LScanCount: Integer;
+  LIndex: Integer;
+  LRow: Integer;
+  LPosition: Integer;
+  LCapacity: Integer;
+  LSeen: array of Boolean;
+  LItem: TNyxCollectionItem;
+  LRef: TNyxItemRef;
+  LResult: TNyxCollectionCopyMembers;
+begin
+  LSource := ASource;
+  LPage := APage;
+  LSelection := ASelection;
+  LLimits := ALimits;
+  LLimits.Validate;
+
+  if (ACellsPerRow < 1) or (ACellsPerRow > LLimits.MaximumFields) or
+    (ACellsPerRow > LLimits.MaximumCells) then
+  begin
+    raise ENyxCollectionClipboard.Create('Copied membership requires its bounded actual cell count');
+  end;
+  AdmitSource(LSource, LLimits, LKey, LRevision, LSchema, LSourceCount);
+
+  if (Ord(AMembership) < Ord(Low(TNyxCollectionCopyMembership))) or
+    (Ord(AMembership) > Ord(High(TNyxCollectionCopyMembership))) or
+    not LSelection.Defined or (LSelection.Key.Name <> LKey.Name) or
+    (LSelection.DataRevision <> LRevision) or (LSelection.Count = 0) or
+    (LSelection.Count > NyxMaximumCollectionItems) then
+  begin
+    raise ENyxCollectionClipboard.Create('Copied membership is unknown, missing, stale or exceeds its bounds');
+  end;
+  LScanCount := LSelection.Count;
+
+  if AMembership = nccmAllSelectedSource then
+  begin
+
+    if LPage <> nil then
+    begin
+      raise ENyxCollectionClipboard.Create('All-selected source copy does not consume a page');
+    end;
+
+    if (LSelection.Count > LLimits.MaximumRows) or
+      (LSelection.Count > LLimits.MaximumCells div ACellsPerRow) then
+    begin
+      raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
+    end;
+    Inc(LScanCount, LSourceCount);
+  end
+  else
+  begin
+
+    if LPage = nil then
+    begin
+      raise ENyxCollectionClipboard.Create('Selected-page copy requires its explicit accepted page');
+    end;
+
+    if (LPage.Key.Name <> LKey.Name) or (LPage.Revision <> LRevision) or
+      not LSchema.SameSchema(LPage.Schema) or (LPage.Count < 0) or
+      (LPage.Count > LSourceCount) then
+    begin
+      raise ENyxCollectionClipboard.Create('Collection copy page does not match its source schema/revision');
+    end;
+    Inc(LScanCount, LPage.Count);
+  end;
+
+  if LScanCount > LLimits.MaximumScannedRows then
+  begin
+    raise ENyxCollectionClipboard.Create('Collection copy exceeds its row-inspection budget');
+  end;
+  for LIndex := 0 to LSelection.Count - 1 do
+  begin
+    LRef := LSelection.ItemAt(LIndex);
+
+    if not LSource.Has(LRef) then
+    begin
+      raise ENyxCollectionClipboard.Create('Selected copy row is absent from its accepted source');
+    end;
+  end;
+  LResult := Default(TNyxCollectionCopyMembers);
+  LCapacity := LLimits.MaximumCells div ACellsPerRow;
+
+  if LCapacity > LLimits.MaximumRows then
+  begin
+    LCapacity := LLimits.MaximumRows;
+  end;
+
+  if LCapacity > LSelection.Count then
+  begin
+    LCapacity := LSelection.Count;
+  end;
+  SetLength(LResult.FItems, LCapacity);
+  LRow := 0;
+
+  if AMembership = nccmAllSelectedSource then
+  begin
+    for LIndex := 0 to LSourceCount - 1 do
+    begin
+      LItem := LSource.ItemAt(LIndex);
+
+      if LSelection.Contains(LItem.Ref) then
+      begin
+
+        if LRow >= LCapacity then
+        begin
+          raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
+        end;
+        LResult.FItems[LRow] := LItem.Copy;
+        Inc(LRow);
+      end;
+    end;
+  end
+  else
+  begin
+    LSeen := nil;
+    SetLength(LSeen, LSourceCount);
+    for LIndex := 0 to LPage.Count - 1 do
+    begin
+      LItem := LPage.ItemAt(LIndex);
+      LPosition := LSource.IndexOf(LItem.Ref);
+
+      if (LPosition < 0) or (LPosition >= LSourceCount) then
+      begin
+        raise ENyxCollectionClipboard.Create('Collection copy page contains a foreign/missing source row');
+      end;
+
+      if LSeen[LPosition] or not LItem.SameItem(LSource.Item(LItem.Ref)) then
+      begin
+        raise ENyxCollectionClipboard.Create('Collection copy page repeats or changes an accepted source row');
+      end;
+      LSeen[LPosition] := True;
+
+      if LSelection.Contains(LItem.Ref) then
+      begin
+
+        if LRow >= LCapacity then
+        begin
+          raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
+        end;
+        LResult.FItems[LRow] := LItem.Copy;
+        Inc(LRow);
+      end;
+    end;
+  end;
+
+  if (LRow = 0) or (LRow > LLimits.MaximumRows) or
+    (LRow > LLimits.MaximumCells div ACellsPerRow) then
+  begin
+    raise ENyxCollectionClipboard.Create('Collection copy has no selected output rows or exceeds its cell budget');
+  end;
+  SetLength(LResult.FItems, LRow);
+  LResult.FKey := LKey;
+  LResult.FRevision := LRevision;
+  Result := LResult;
+end;
+
 function NewNyxCollectionClipboardRows(const ASource: INyxCollectionSnapshot;
   const ASelection: TNyxCollectionSelectionSnapshot;
   const AFields: array of TNyxColumnIdentity;
@@ -470,17 +703,13 @@ var
   LKey: TNyxCollectionRef;
   LRevision: Integer;
   LSourceCount: Integer;
-  LScanCount: Integer;
   LIndex: Integer;
   LField: Integer;
   LOther: Integer;
   LRow: Integer;
   LPosition: Integer;
-  LCapacity: Integer;
-  LRows: array of TNyxCollectionItem;
-  LSeen: array of Boolean;
+  LRows: TNyxCollectionCopyMembers;
   LItem: TNyxCollectionItem;
-  LRef: TNyxItemRef;
   LPayload: TClipboardText;
   LParts: TNyxStrings;
   LLine: TNyxText;
@@ -533,124 +762,14 @@ begin
       end;
     end;
   end;
-  LScanCount := LSelection.Count;
+  LRows := CaptureNyxCollectionCopyMembers(LSource, LSelection, AMembership,
+    LPage, Length(LFields), LLimits);
 
-  if AMembership = nccmAllSelectedSource then
+  if (LRows.Key.Name <> LKey.Name) or (LRows.Revision <> LRevision) then
   begin
-
-    if LPage <> nil then
-    begin
-      raise ENyxCollectionClipboard.Create('All-selected source copy does not consume a page');
-    end;
-
-    if (LSelection.Count > LLimits.MaximumRows) or
-      (LSelection.Count > LLimits.MaximumCells div Length(LFields)) then
-    begin
-      raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
-    end;
-    Inc(LScanCount, LSourceCount);
-  end
-  else
-  begin
-
-    if LPage = nil then
-    begin
-      raise ENyxCollectionClipboard.Create('Selected-page copy requires its explicit accepted page');
-    end;
-
-    if (LPage.Key.Name <> LKey.Name) or (LPage.Revision <> LRevision) or
-      not LSchema.SameSchema(LPage.Schema) or (LPage.Count < 0) or
-      (LPage.Count > LSourceCount) then
-    begin
-      raise ENyxCollectionClipboard.Create('Collection copy page does not match its source schema/revision');
-    end;
-    Inc(LScanCount, LPage.Count);
+    raise ENyxCollectionClipboard.Create('Copied output membership changed source identity/revision');
   end;
-
-  if LScanCount > LLimits.MaximumScannedRows then
-  begin
-    raise ENyxCollectionClipboard.Create('Collection copy exceeds its row-inspection budget');
-  end;
-  for LIndex := 0 to LSelection.Count - 1 do
-  begin
-    LRef := LSelection.ItemAt(LIndex);
-
-    if not LSource.Has(LRef) then
-    begin
-      raise ENyxCollectionClipboard.Create('Selected copy row is absent from its accepted source');
-    end;
-  end;
-  LRows := nil;
-  LCapacity := LLimits.MaximumCells div Length(LFields);
-
-  if LCapacity > LLimits.MaximumRows then
-  begin
-    LCapacity := LLimits.MaximumRows;
-  end;
-
-  if LCapacity > LSelection.Count then
-  begin
-    LCapacity := LSelection.Count;
-  end;
-  SetLength(LRows, LCapacity);
-  LRow := 0;
-
-  if AMembership = nccmAllSelectedSource then
-  begin
-    for LIndex := 0 to LSourceCount - 1 do
-    begin
-      LItem := LSource.ItemAt(LIndex);
-
-      if LSelection.Contains(LItem.Ref) then
-      begin
-
-        if LRow >= LCapacity then
-        begin
-          raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
-        end;
-        LRows[LRow] := LItem.Copy;
-        Inc(LRow);
-      end;
-    end;
-  end
-  else
-  begin
-    LSeen := nil;
-    SetLength(LSeen, LSourceCount);
-    for LIndex := 0 to LPage.Count - 1 do
-    begin
-      LItem := LPage.ItemAt(LIndex);
-      LPosition := LSource.IndexOf(LItem.Ref);
-
-      if (LPosition < 0) or (LPosition >= LSourceCount) then
-      begin
-        raise ENyxCollectionClipboard.Create('Collection copy page contains a foreign/missing source row');
-      end;
-
-      if LSeen[LPosition] or not LItem.SameItem(LSource.Item(LItem.Ref)) then
-      begin
-        raise ENyxCollectionClipboard.Create('Collection copy page repeats or changes an accepted source row');
-      end;
-      LSeen[LPosition] := True;
-
-      if LSelection.Contains(LItem.Ref) then
-      begin
-
-        if LRow >= LCapacity then
-        begin
-          raise ENyxCollectionClipboard.Create('Collection copy exceeds its output row/cell budget');
-        end;
-        LRows[LRow] := LItem.Copy;
-        Inc(LRow);
-      end;
-    end;
-  end;
-
-  if (LRow = 0) or (LRow > LLimits.MaximumRows) or
-    (LRow > LLimits.MaximumCells div Length(LFields)) then
-  begin
-    raise ENyxCollectionClipboard.Create('Collection copy has no selected output rows or exceeds its cell budget');
-  end;
+  LRow := LRows.Count;
   LPayload := TClipboardText.Create;
   try
     LPayload.FKey := LKey;
@@ -687,7 +806,8 @@ begin
         begin
           AppendPart(LParts, LLine, LPayload.FBytes, LLimits.MaximumUTF8Bytes);
         end;
-        LPayload.FItems[LIndex] := NyxItem(LKey, LRows[LIndex].Ref.ID);
+        LItem := LRows.ItemAt(LIndex);
+        LPayload.FItems[LIndex] := NyxItem(LKey, LItem.Ref.ID);
         for LField := 0 to High(LFields) do
         begin
 
@@ -696,7 +816,7 @@ begin
             AppendPart(LParts, #9, LPayload.FBytes, LLimits.MaximumUTF8Bytes);
           end;
           LPosition := LIndex * Length(LFields) + LField;
-          LPayload.FValues[LPosition] := ReadValue(LRows[LIndex], LFields[LField]);
+          LPayload.FValues[LPosition] := ReadValue(LItem, LFields[LField]);
           AppendTSV(LParts, ScalarText(LPayload.FValues[LPosition]), LPayload.FBytes,
             LLimits.MaximumUTF8Bytes);
         end;

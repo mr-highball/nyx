@@ -13,6 +13,18 @@ base classes, interfaces and public contracts remain authorized development
 sources. All seven original task03 criteria, W1/W2 and the full goal remain open;
 no user input is needed.
 
+Latest executed integration is runtime07: complete native968 checks with a
+18444677/18444677 clean heap and browser1073 at independently preflighted
+1280x900/390x900, logs empty. All1930 private pins and eleven integration overlays
+reverify exactly. The original full control suite now includes distinct selected
+source/page ID menus and the unchanged export journey configured automatically
+through renderer application services, on arranged and ordinary tables.
+Both compilers have zero owned warnings; seven installed pas2js RTL warnings
+remain separate. The temporary loopback host is stopped/joined, its listener is
+gone and the browser viewport override is reset. Hardware/OS effects, actual
+mounted Studio input, full native performance/own-export and original acceptance
+remain open.
+
 The pure saved policy passes 171 checks on each actual target. Typed generation
 and source reading pass 37 checks per target; independently compiling the exact
 emitted application passes 38 per target. Native heaps are complete and clean,
@@ -46,18 +58,19 @@ pass210 native/browser command checks with a clean native heap and empty browser
 logs. The same qualified files feed runtime06. It prevents cross-controller
 adoption or action relabeling while preserving the original request slot and
 independent RAW/range/row readiness. Its following explicit selected-record-ID
-packet has fresh native24/226/46 results and browser builds; actual browser and
-target-menu qualification are pending. It does not grant selected-ID UI credit.
+packet passes24/226/46 checks on each actual target. Runtime07 supplies its
+actual selected-ID menu integration; the immutable identity value and result
+remain distinct from RAW row/cell output while sharing one request slot.
 
-Root now owns Studio workbench intent/forms, source/history, bounded semantic
-reads/patches and their consumers. New source/tests are being checked against a
-separate immutable authoring snapshot, not the helper's changing working files.
-Lil' Scooty owns the next existing prerequisite: optional runtime export services
-configured before managed actions, plus a distinct pure consumer. Root releases
-that runtime working file after runtime06's immutable readers finish; target
-renderers/control fixture and Studio remain disjoint. Full native Studio
-performance/own-export, pointer gestures, OS effects and all original acceptance
-remain required.
+Root's Studio form/semantic checkpoint is committed/pushed asb28233d; mounted
+Studio input, source-queue integration and full native performance/own-export are
+its next checks. Lil' Scooty finishes the optional export-service/input-preparation
+prerequisite, which now also passes31 per actual target with a complete
+65733/65733 clean native heap and empty browser logs. Root's actual runtime07
+adopts it. Current next helper ownership is typed wrapping/truncation, row density,
+runtime preferences and library/target/Fit integration under original criterion2;
+Root owns subsequent source/generator/Studio adoption and the control fixture.
+Actual readers use closed snapshots, so these disjoint working files may change.
 
 The runtime checkpoint is committed/pushed as0c1fb54. Root's following
 authoring05 executes33 native/browser model and semantic checks, with complete
@@ -85,10 +98,16 @@ SyncObjs failure is retained. That server consumer remains native-only. The
 remaining representation checks finish against the unchanged05 source rather
 than rerunning already-passing consumers; no browser MCP-server pass is claimed.
 Lil' Scooty's identity02 now also executes24/226/46 actual browser checks, logs
-empty, matching its clean native results. Its target menus remain unqualified.
+empty, matching its clean native results. Runtime07 exercises its target menus.
 The export-services prerequisite additionally exposes a real input-epoch ABA
-gap; the helper owns an additive portable mount normalization contract/runtime
-repair and its regression. Root has no readers of those changing working files.
+gap. An additive flags-only preparation contract now normalizes accepted Enabled
+state before epoch reservation; foreign scheduler/service reentry cannot be
+recaptured as the bridge's own work. Its negative control restoring only the
+former recapture fails that same assertion, with a complete clean heap. Runtime07
+retains the old input/range/export cases while adopting this repaired bridge.
+The following presentation02 value-only packet has native63/clean113784 and both
+target compilation; actual browser, view/paint/Fit/source/Studio integration are
+still pending and earn no presentation acceptance.
 
 The latest managed selected-cells menu qualifies through corrected menu04:
 actual native670 checks have a complete9803936/9803936 clean heap, and actual

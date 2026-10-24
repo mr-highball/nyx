@@ -1147,8 +1147,33 @@ action visibly refuses instead of substituting current rows. Range and RAW-cell
 actions retain their independent readiness and permissions. All transfers share
 the existing controller request slot.
 
-The complete retained runtime06 fixture passes878 native checks with a clean
-heap and945 browser checks at measured1280x900/390x900, logs empty. It exercises
+Selected records also have explicit **Copy selected source record IDs** and
+**Copy selected record IDs on this page** actions. These use the corresponding selected-row
+permission and membership, headers/line-ending choices and runtime bounds.
+`nyx.collections.identities` returns `INyxCollectionIdentityText`: owned scoped
+references, exact ordered ID text, source revision and representation metadata.
+This has no invented schema field or cell value. The optional
+`INyxCollectionCellIdentityActions` exposes its distinct payload/result without
+overwriting earlier RAW row/cell facts. Stale membership visibly cancels the
+original ID action while inspection remains useful. Identity and ordinary copy
+still arbitrate through one pending-request slot.
+
+Application services may additionally provide `INyxTableWorkbenchExportServices`.
+Use the `NewNyxTableWorkbenchServices` overload taking clipboard host, explicit
+`INyxFileSaveHost` and copied `TNyxCollectionExportOptions`, optionally followed
+by copy limits. The bridge configures export before managed actions; absence
+keeps exports absent. A supplied nil save host refuses, and an unavailable host
+retains its typed outcome. Page and all-filtered exports keep the existing RAW
+producer, cancellation and Written/DownloadRequested distinction. None of these
+runtime services or options enters the saved design.
+
+Optional `INyxCollectionInputPreparation` synchronizes only the base mount's
+accepted Enabled flags before the bridge reserves its input epoch. It invokes
+no application or widget callback. Subsequent scheduler/service reentry cannot
+disable/enable a table and have its new epoch adopted as the original request.
+
+The complete retained runtime07 fixture passes968 native checks with a clean
+heap and1073 browser checks at measured1280x900/390x900, logs empty. It exercises
 actual controls with injected clipboard authority and synthetic target input.
 Real OS clipboard effects, hardware gestures, the full Studio journey and
 complete workbench acceptance remain separate requirements.

@@ -37,6 +37,7 @@ uses
   nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
   nyx.collections.range.navigation,
   nyx.collections.workbench.policy, nyx.collections.workbench.runtime,
+  nyx.collections.identities,
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
@@ -288,7 +289,8 @@ type
     constructor Create(AArranged: Boolean = True; ADraftActions: Boolean = False;
       AAuthoredWorkbench: Boolean = False; AUnavailableClipboard: Boolean = False;
       ACopyActions: TNyxWorkbenchCopyActions =
-        [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange]);
+        [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange];
+      AAuthoredExports: Boolean = False);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -647,7 +649,7 @@ end;
 
 constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean;
   AAuthoredWorkbench: Boolean; AUnavailableClipboard: Boolean;
-  ACopyActions: TNyxWorkbenchCopyActions);
+  ACopyActions: TNyxWorkbenchCopyActions; AAuthoredExports: Boolean);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
@@ -662,6 +664,14 @@ begin
   FState := FDocument.State.Clone;
   FHost := THost.Create;
   FHostLease := FHost;
+
+  if AAuthoredExports then
+  begin
+    FSaveHost := TSaveHost.Create;
+    FSaveHostLease := FSaveHost;
+    FSaveHost.InlineReply := True;
+    FSaveHost.Outcome := nfsoWritten;
+  end;
   {$ifdef PAS2JS}
   FSurface := TJSHTMLElement(document.createElement('div'));
   document.body.appendChild(FSurface);
@@ -676,7 +686,16 @@ begin
 
   if FAuthoredWorkbench and not FUnavailableClipboard then
   begin
-    FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(FHostLease);
+
+    if AAuthoredExports then
+    begin
+      FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(
+        FHostLease, FSaveHostLease, TNyxCollectionExportOptions.Defaults);
+    end
+    else
+    begin
+      FRenderer.TableWorkbenchServices := NewNyxTableWorkbenchServices(FHostLease);
+    end;
   end;
   FRenderer.Render(FDocument, FDocument.Pages[0], FSurface, False, FState);
   {$ifdef PAS2JS}
@@ -3082,6 +3101,9 @@ var
   LSource: INyxCollectionSnapshot;
   LPayload: INyxCollectionClipboardText;
   LSourcePayload: INyxCollectionClipboardText;
+  LIdentities: INyxCollectionCellIdentityActions;
+  LSourceIDs: INyxCollectionIdentityText;
+  LPageIDs: INyxCollectionIdentityText;
   LBefore: Integer;
 begin
   FMode := kmObserve;
@@ -3097,6 +3119,8 @@ begin
   {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
   Check(HasMenuAction(NyxCellActionsCopySourceRowsID) and
     HasMenuAction(NyxCellActionsCopyPageRowsID) and
+    HasMenuAction(NyxCellActionsCopySourceIDsID) and
+    HasMenuAction(NyxCellActionsCopyPageIDsID) and
     HasMenuAction(NyxCellActionsInspectID) and not HasMenuAction(NyxCellActionsCopyID),
     'row-only authored permissions expose both exact memberships without cell-copy authority');
   LBefore := FHost.Writes;
@@ -3120,6 +3144,31 @@ begin
     (LPayload.ItemAt(0).ID = ItemA.ID) and (LPayload.CellValue(0, 0).TextValue = CText) and
     (FHost.Text = LPayload.Text) and (LSourcePayload.RowCount = 2),
     'actual current-page row action intersects the original page without changing its earlier full-source capture');
+  Check(Supports(FCellActions, INyxCollectionCellIdentityActions, LIdentities),
+    'ordinary authored actions expose a separately typed identity result');
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopySourceIDsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LSourceIDs := LIdentities.LastIdentities;
+  Check((FHost.Writes = LBefore + 1) and LIdentities.HasIdentityResult and
+    (LIdentities.LastIdentityResult.Outcome = ncwoWritten) and
+    (LSourceIDs.Count = 2) and (LSourceIDs.ItemAt(0).ID = ItemA.ID) and
+    (LSourceIDs.ItemAt(1).ID = ItemB.ID) and
+    (FHost.Text = ItemA.ID + #13#10 + ItemB.ID) and
+    (FHost.Text = LSourceIDs.Text) and (FCommands.LastPayload = LPayload),
+    'actual source-ID menu copies only exact ordered IDs with a distinct receipt and no invented cell payload');
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopyPageIDsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LPageIDs := LIdentities.LastIdentities;
+  Check((FHost.Writes = LBefore + 1) and (LPageIDs.Count = 1) and
+    (LPageIDs.ItemAt(0).ID = ItemA.ID) and (FHost.Text = ItemA.ID) and
+    (LSourceIDs.Count = 2) and (FCommands.LastPayload = LPayload),
+    'actual page-ID action intersects the captured page and leaves earlier identity and RAW-row values intact');
   Context;
   {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
   Check(HasMenuAction(NyxCellActionsCopySourceRowsID),
@@ -3136,6 +3185,23 @@ begin
     'changing selected records visibly refuses the original row action while independent RAW inspection remains useful');
   InspectorAction(NyxCellInspectorCloseID);
   FCellActions.Close;
+  FView.SetSelection([ItemA, ItemB], ItemA, ItemA);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  FView.SetSelection([ItemB], ItemA, ItemA);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  LBefore := FHost.Writes;
+  MenuAction(NyxCellActionsCopySourceIDsID);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FHost.Writes = LBefore) and LIdentities.HasIdentityResult and
+    (LIdentities.LastIdentityResult.Outcome = ncwoCancelled) and
+    (FCellActions.Inspector <> nil) and FCellActions.Inspector.IsOpen and
+    (FCellActions.Snapshot.Text = CText),
+    'changed selection visibly refuses the original ID action through its distinct cancelled receipt');
+  InspectorAction(NyxCellInspectorCloseID);
+  FCellActions.Close;
   FView.ClearSelection;
   {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
   FocusCell;
@@ -3144,6 +3210,8 @@ begin
   Check(HasMenuAction(NyxCellActionsInspectID) and
     not HasMenuAction(NyxCellActionsCopySourceRowsID) and
     not HasMenuAction(NyxCellActionsCopyPageRowsID) and
+    not HasMenuAction(NyxCellActionsCopySourceIDsID) and
+    not HasMenuAction(NyxCellActionsCopyPageIDsID) and
     (FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource) and
     (TNyxCodec.Encode(FDocument) = FAuthored),
     'empty row membership offers useful inspection without phantom copy actions or data/design mutation');
@@ -3415,6 +3483,25 @@ begin
     try
       {$ifdef PAS2JS}await(LReview.RunAuthoredInspection);
       {$else}LReview.RunAuthoredInspection;{$endif}
+    finally
+      LReview.Free;
+    end;
+    { Reuse the unchanged real export journey, this time with application
+      services supplied before Render. No manual ConfigureExport/CellActions
+      call can hide an ordering error in authored renderer adoption. }
+    LReview := TCopyReview.Create(True, True, True, False,
+      [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange], True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunExport);
+      {$else}LReview.RunExport;{$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(False, True, True, False,
+      [nwcaCell, nwcaSelectedSource, nwcaSelectedPage, nwcaCellRange], True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunExport);
+      {$else}LReview.RunExport;{$endif}
     finally
       LReview.Free;
     end;

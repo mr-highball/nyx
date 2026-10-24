@@ -31,7 +31,7 @@ uses
   nyx.collections.arrangement, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.export,
   nyx.collections.export.actions, nyx.collections.view, nyx.files.save,
-  nyx.collections.representation, nyx.collections.draft;
+  nyx.collections.representation, nyx.collections.draft, nyx.collections.identities;
 
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
@@ -39,6 +39,8 @@ const
   NyxCellActionsCopyRangeID = 'nyx-cell-actions-copy-range';
   NyxCellActionsCopySourceRowsID = 'nyx-cell-actions-copy-source-rows';
   NyxCellActionsCopyPageRowsID = 'nyx-cell-actions-copy-page-rows';
+  NyxCellActionsCopySourceIDsID = 'nyx-cell-actions-copy-source-ids';
+  NyxCellActionsCopyPageIDsID = 'nyx-cell-actions-copy-page-ids';
   NyxCellActionsCopyDisplayID = 'nyx-cell-actions-copy-display';
   NyxCellActionsInspectDraftID = 'nyx-cell-actions-inspect-draft';
   NyxCellActionsCopyDraftID = 'nyx-cell-actions-copy-draft';
@@ -183,6 +185,19 @@ type
     property LastRepresentation: INyxCollectionCellText read GetLastRepresentation;
     property HasRepresentationResult: Boolean read GetHasRepresentationResult;
     property LastRepresentationResult: TNyxClipboardWriteResult read GetLastRepresentationResult;
+  end;
+
+  { Optional identity-only outcome keeps ID TSV visibly separate from accepted
+    RAW cells and formatted/draft values. Source/page row permission governs the
+    matching ID action; readonly inspection does not grant clipboard authority. }
+  INyxCollectionCellIdentityActions = interface(IInterface)
+    ['{2ABF6475-929C-4B56-8FE4-1B839B432BE3}']
+    function GetLastIdentities: INyxCollectionIdentityText;
+    function GetHasIdentityResult: Boolean;
+    function GetLastIdentityResult: TNyxClipboardWriteResult;
+    property LastIdentities: INyxCollectionIdentityText read GetLastIdentities;
+    property HasIdentityResult: Boolean read GetHasIdentityResult;
+    property LastIdentityResult: TNyxClipboardWriteResult read GetLastIdentityResult;
   end;
 
   { Optional file authority exposes RAW export only when explicitly configured.
@@ -356,7 +371,7 @@ type
   end;
 
   { One terminal host reply retains copied provenance and weak session facts.
-    Payload identifies the exact outbound cell, cell-range or selected-row bytes;
+    RAW, cell representation and identity metadata stay in distinct fields;
     Delivered distinguishes inline reply exceptions from host admission errors. }
   TCellReply = class(TInterfacedObject)
   public
@@ -370,6 +385,7 @@ type
     SelectedCells: Boolean;
     SelectedRows: Boolean;
     Value: INyxCollectionCellText;
+    Identities: INyxCollectionIdentityText;
     procedure Receive(const AResult: TNyxClipboardWriteResult);
   end;
 
@@ -394,11 +410,12 @@ type
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
     INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput,
-    INyxCollectionCellDraftActions)
+    INyxCollectionCellDraftActions, INyxCollectionCellIdentityActions)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
     FActionWriter: INyxCollectionClipboardCapturedActionWrite;
+    FIdentityWriter: INyxCollectionClipboardIdentityWrite;
     FRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
     FExporter: INyxCollectionExportCapturedSave;
     FOutput: INyxCollectionExportCapture;
@@ -424,6 +441,11 @@ type
     FRangeAction: INyxCollectionClipboardActionCapture;
     FSourceRowsAction: INyxCollectionClipboardActionCapture;
     FPageRowsAction: INyxCollectionClipboardActionCapture;
+    FSourceIdentityAction: INyxCollectionClipboardIdentityAction;
+    FPageIdentityAction: INyxCollectionClipboardIdentityAction;
+    FIdentities: INyxCollectionIdentityText;
+    FIdentityResult: TNyxClipboardWriteResult;
+    FHasIdentityResult: Boolean;
     FOptions: TNyxCollectionCellActionOptions;
     FDraft: INyxCollectionFocusedDraftCapture;
     FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
@@ -454,9 +476,11 @@ type
     procedure Inspect(ASerial: Integer; ADraft: Boolean = False);
     procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil;
       ARange: Boolean = False; const ARows: INyxCollectionClipboardText = nil;
-      const ARowsReady: INyxCancellationReadiness = nil);
+      const ARowsReady: INyxCancellationReadiness = nil;
+      const AIdentities: INyxCollectionClipboardIdentityAction = nil);
     procedure CopyRange(ASerial: Integer);
     procedure CopyRows(ASerial: Integer; APage: Boolean);
+    procedure CopyIdentities(ASerial: Integer; APage: Boolean);
     procedure CopyDisplayed(ASerial: Integer);
     procedure CopyDraft(ASerial: Integer);
     procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
@@ -492,6 +516,9 @@ type
     function GetLastRepresentation: INyxCollectionCellText;
     function GetHasRepresentationResult: Boolean;
     function GetLastRepresentationResult: TNyxClipboardWriteResult;
+    function GetLastIdentities: INyxCollectionIdentityText;
+    function GetHasIdentityResult: Boolean;
+    function GetLastIdentityResult: TNyxClipboardWriteResult;
     function GetIntent: Integer;
     function GetExportEnabled: Boolean;
     function GetLastExportResult: TNyxFileSaveResult;
@@ -830,6 +857,7 @@ constructor TCellActions.Create(const AFactory: INyxCollectionCellPresenterFacto
 var
   LWriter: INyxCollectionClipboardRepresentationWrite;
   LActionWriter: INyxCollectionClipboardCapturedActionWrite;
+  LIdentityWriter: INyxCollectionClipboardIdentityWrite;
 begin
   inherited Create;
 
@@ -860,6 +888,11 @@ begin
   if Supports(AWriter, INyxCollectionClipboardCapturedActionWrite, LActionWriter) then
   begin
     FActionWriter := LActionWriter;
+  end;
+
+  if Supports(AWriter, INyxCollectionClipboardIdentityWrite, LIdentityWriter) then
+  begin
+    FIdentityWriter := LIdentityWriter;
   end;
 end;
 
@@ -941,6 +974,10 @@ begin
   FRangeAction := nil;
   FSourceRowsAction := nil;
   FPageRowsAction := nil;
+  FSourceIdentityAction := nil;
+  FPageIdentityAction := nil;
+  FIdentities := nil;
+  FHasIdentityResult := False;
   FDraft := nil;
   FScope := nil;
   FScopeLease := nil;
@@ -1312,6 +1349,32 @@ var
   LRangeAction: INyxCollectionClipboardActionCapture;
   LSourceRowsAction: INyxCollectionClipboardActionCapture;
   LPageRowsAction: INyxCollectionClipboardActionCapture;
+  LIdentityTransfers: INyxCollectionClipboardIdentityTransfers;
+  LSourceIDs: INyxCollectionClipboardIdentityAction;
+  LPageIDs: INyxCollectionClipboardIdentityAction;
+
+  function ReadyIdentity(const AAction: INyxCollectionClipboardIdentityAction): Boolean;
+  var
+    LReady: INyxCancellationReadiness;
+  begin
+    Result := False;
+
+    if AAction = nil then
+    begin
+      Exit;
+    end;
+    LReady := AAction.Readiness;
+
+    if LReady <> nil then
+    begin
+      try
+        LReady.CheckReady;
+        Result := True;
+      except
+        { Certified original flags can only withdraw this optional ID action. }
+      end;
+    end;
+  end;
 begin
   LLease := Self;
   LScheduler := FScheduler;
@@ -1410,6 +1473,23 @@ begin
     LSourceRowsPayload := nil;
   end;
 
+  if (FIdentityWriter <> nil) and
+    Supports(ALaunch, INyxCollectionClipboardIdentityTransfers, LIdentityTransfers) then
+  begin
+    LSourceIDs := LIdentityTransfers.SourceIdentityAction;
+    LPageIDs := LIdentityTransfers.PageIdentityAction;
+
+    if not ReadyIdentity(LSourceIDs) then
+    begin
+      LSourceIDs := nil;
+    end;
+
+    if not ReadyIdentity(LPageIDs) then
+    begin
+      LPageIDs := nil;
+    end;
+  end;
+
   if (FActionWriter = nil) or (LPageRowsAction = nil) then
   begin
     LPageRowsPayload := nil;
@@ -1443,6 +1523,8 @@ begin
   FRangeAction := LRangeAction;
   FSourceRowsAction := LSourceRowsAction;
   FPageRowsAction := LPageRowsAction;
+  FSourceIdentityAction := LSourceIDs;
+  FPageIdentityAction := LPageIDs;
   FDraft := ADraft;
   FDisplayPolicy := LDisplayPolicy;
   FOutput := LOutput;
@@ -1487,6 +1569,22 @@ begin
         .PartName(NyxPart(NyxCellActionsCopyPageRowsID)).Text('Copy selected rows on this page').Done);
       LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyPageRowsID),
         NyxMenuCommand('copy-page-rows')));
+    end;
+
+    if FSourceIdentityAction <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopySourceIDsID).Configure
+        .PartName(NyxPart(NyxCellActionsCopySourceIDsID)).Text('Copy selected source record IDs').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopySourceIDsID),
+        NyxMenuCommand('copy-source-ids')));
+    end;
+
+    if FPageIdentityAction <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsCopyPageIDsID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyPageIDsID)).Text('Copy selected record IDs on this page').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsCopyPageIDsID),
+        NyxMenuCommand('copy-page-ids')));
     end;
 
     if FDraft <> nil then
@@ -1601,6 +1699,14 @@ begin
     else if LInvocation.Command.Name = 'copy-page-rows' then
     begin
       CopyRows(ASerial, True);
+    end
+    else if LInvocation.Command.Name = 'copy-source-ids' then
+    begin
+      CopyIdentities(ASerial, False);
+    end
+    else if LInvocation.Command.Name = 'copy-page-ids' then
+    begin
+      CopyIdentities(ASerial, True);
     end
     else if LInvocation.Command.Name = 'inspect-draft' then
     begin
@@ -1994,9 +2100,58 @@ begin
   end;
 end;
 
+procedure TCellActions.CopyIdentities(ASerial: Integer; APage: Boolean);
+var
+  LLease: INyxCollectionCellActions;
+  LAction: INyxCollectionClipboardIdentityAction;
+  LReady: INyxCancellationReadiness;
+  LValue: INyxCollectionIdentityText;
+begin
+  LLease := Self;
+  LAction := FSourceIdentityAction;
+
+  if APage then
+  begin
+    LAction := FPageIdentityAction;
+  end;
+
+  if not Current(ASerial) or (LAction = nil) then
+  begin
+    Exit;
+  end;
+  LReady := LAction.Readiness;
+  LValue := LAction.Value;
+
+  if not Current(ASerial) or (LReady = nil) or (LValue = nil) then
+  begin
+    Exit;
+  end;
+  try
+    LReady.CheckReady;
+  except
+    on E: Exception do
+    begin
+      FIdentities := LValue;
+      FIdentityResult := Default(TNyxClipboardWriteResult);
+      FIdentityResult.Outcome := ncwoCancelled;
+      FIdentityResult.Error := TNyxText(E.Message);
+      FHasIdentityResult := True;
+      Inspect(ASerial);
+      Status('Record-ID copy refused: its captured selection or table changed. Inspection remains available.', ASerial);
+      Exit;
+    end;
+  end;
+
+  if Current(ASerial) then
+  begin
+    CopyValue(ASerial, nil, False, nil, nil, LAction);
+  end;
+end;
+
 procedure TCellActions.CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText;
   ARange: Boolean; const ARows: INyxCollectionClipboardText;
-  const ARowsReady: INyxCancellationReadiness);
+  const ARowsReady: INyxCancellationReadiness;
+  const AIdentities: INyxCollectionClipboardIdentityAction);
 var
   LPayload: INyxCollectionClipboardText;
   LScope: INyxCancellationScope;
@@ -2011,12 +2166,22 @@ var
   LDraftReady: INyxCancellationReadiness;
   LAction: INyxCollectionClipboardActionCapture;
   LActionWriter: INyxCollectionClipboardCapturedActionWrite;
+  LIdentityWriter: INyxCollectionClipboardIdentityWrite;
+  LIdentityValue: INyxCollectionIdentityText;
 begin
 
-  if not Current(ASerial) or (not ARange and (ARows = nil) and not FCellCopyAllowed) or
+  if not Current(ASerial) or (not ARange and (ARows = nil) and
+    (AIdentities = nil) and not FCellCopyAllowed) or
     (FPort.RequestSerial >= High(Integer) - 1) or
     ((AValue <> nil) and (FRepresentationWriter = nil)) or
     (ARange and ((AValue <> nil) or (FRangePayload = nil) or (FRangeReady = nil))) then
+  begin
+    Exit;
+  end;
+
+  if (AIdentities <> nil) and ((AValue <> nil) or ARange or (ARows <> nil) or
+    (FIdentityWriter = nil) or ((AIdentities <> FSourceIdentityAction) and
+    (AIdentities <> FPageIdentityAction))) then
   begin
     Exit;
   end;
@@ -2057,6 +2222,18 @@ begin
       LAction := FPageRowsAction;
     end;
   end;
+
+  if AIdentities <> nil then
+  begin
+    LDraftReady := AIdentities.Readiness;
+    LIdentityValue := AIdentities.Value;
+  end;
+
+  if not Current(ASerial) or ((AIdentities <> nil) and
+    ((LDraftReady = nil) or (LIdentityValue = nil))) then
+  begin
+    Exit;
+  end;
   Inc(FPort.RequestSerial);
   LRequestSerial := FPort.RequestSerial;
   LOld := FRequest;
@@ -2088,6 +2265,7 @@ begin
   LScope := LCopyScope;
   LWriter := FWriter;
   LActionWriter := FActionWriter;
+  LIdentityWriter := FIdentityWriter;
   LRepresentationWriter := FRepresentationWriter;
   LReply := TCellReply.Create;
   LReplyLease := LReply;
@@ -2100,11 +2278,18 @@ begin
   LReply.SelectedCells := ARange;
   LReply.SelectedRows := ARows <> nil;
   LReply.Value := AValue;
+
+  LReply.Identities := LIdentityValue;
   FReply := LReply;
   FReplyLease := LReplyLease;
   try
 
-    if (AValue = nil) and (LAction <> nil) and (LActionWriter <> nil) then
+    if AIdentities <> nil then
+    begin
+      LRequest := LIdentityWriter.WriteIdentities(AIdentities, LScope, LCopyScope,
+        {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+    end
+    else if (AValue = nil) and (LAction <> nil) and (LActionWriter <> nil) then
     begin
       LRequest := LActionWriter.WriteCapturedAction(LAction, LScope, LCopyScope,
         {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
@@ -2159,6 +2344,7 @@ var
   LValue: INyxCollectionCellText;
   LInspector: INyxPopover;
   LLabel: TNyxText;
+  LIdentities: INyxCollectionIdentityText;
 begin
 
   if not Current(AReply.Serial) or (FReply <> AReply) then
@@ -2177,6 +2363,26 @@ begin
     Exit;
   end;
   LValue := AReply.Value;
+  LIdentities := AReply.Identities;
+
+  if LIdentities <> nil then
+  begin
+    ValidateNyxClipboardWriteResult(AResult, LIdentities.ByteCount);
+    FIdentities := LIdentities;
+    FIdentityResult := AResult;
+    FHasIdentityResult := True;
+
+    if AResult.Outcome = ncwoWritten then
+    begin
+      Status('Copied the captured selected record IDs.', LSerial);
+    end
+    else
+    begin
+      Inspect(LSerial);
+      Status('Captured record IDs were not written: ' + AResult.Error, LSerial);
+    end;
+    Exit;
+  end;
 
   if LValue <> nil then
   begin
@@ -2448,6 +2654,7 @@ begin
   FWriter := nil;
   FActionWriter := nil;
   FRepresentationWriter := nil;
+  FIdentityWriter := nil;
   FExporter := nil;
   FScheduler := nil;
   LFailure := Default(TCellCleanupFailure);
@@ -2508,6 +2715,26 @@ begin
     raise ENyxCollectionRepresentation.Create('Cell actions have no terminal represented receipt');
   end;
   Result := FRepresentationResult;
+end;
+
+function TCellActions.GetLastIdentities: INyxCollectionIdentityText;
+begin
+  Result := FIdentities;
+end;
+
+function TCellActions.GetHasIdentityResult: Boolean;
+begin
+  Result := FHasIdentityResult;
+end;
+
+function TCellActions.GetLastIdentityResult: TNyxClipboardWriteResult;
+begin
+
+  if not FHasIdentityResult then
+  begin
+    raise ENyxCollectionClipboard.Create('Cell actions have no terminal identity receipt');
+  end;
+  Result := FIdentityResult;
 end;
 
 function TCellActions.GetLastResult: TNyxClipboardWriteResult;

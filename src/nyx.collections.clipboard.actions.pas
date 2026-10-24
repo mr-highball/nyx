@@ -26,7 +26,7 @@ unit nyx.collections.clipboard.actions;
 interface
 
 uses nyx.text, nyx.collections, nyx.collections.arrangement,
-  nyx.collections.clipboard, nyx.collections.representation,
+  nyx.collections.clipboard, nyx.collections.representation, nyx.collections.identities,
   nyx.clipboard, nyx.scheduler, nyx.events, nyx.collections.range.actions;
 
 type
@@ -234,6 +234,52 @@ type
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
       AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+  end;
+
+  { Sealed original identity representation. Matching selected-source/page row
+    permission governs IDs as a separate output, without granting cell/range or
+    broader membership. Values/readiness own no controller, mount or live view. }
+  INyxCollectionClipboardIdentityAction = interface(IInterface)
+    ['{194872F5-4D8C-4A6B-8770-E0E7F393C5FC}']
+    function GetValue: INyxCollectionIdentityText;
+    function GetReadiness: INyxCancellationReadiness;
+    property Value: INyxCollectionIdentityText read GetValue;
+    property Readiness: INyxCancellationReadiness read GetReadiness;
+  end;
+
+  { Optional readonly original identity choices on the same context command.
+    Nil means disallowed, stale, empty or over budget. Identity output is admitted
+    independently of column-field TSV and never invents an authored ID field. }
+  INyxCollectionClipboardIdentityTransfers = interface(IInterface)
+    ['{CC05D61D-889A-40B9-8758-ED06B393F1B6}']
+    function GetSourceIdentityAction: INyxCollectionClipboardIdentityAction;
+    function GetPageIdentityAction: INyxCollectionClipboardIdentityAction;
+    property SourceIdentityAction: INyxCollectionClipboardIdentityAction read GetSourceIdentityAction;
+    property PageIdentityAction: INyxCollectionClipboardIdentityAction read GetPageIdentityAction;
+  end;
+
+  { Borrowed UI receiver sees identity text/provenance and its real host result.
+    Identity output never invokes RAW-column or single-cell display observers. }
+  TNyxCollectionIdentityObserver = procedure(const AValue: INyxCollectionIdentityText;
+    const AResult: TNyxClipboardWriteResult) of object;
+
+  { UI-only identity transfer shares the original controller's ONE serial/host
+    slot. Only its private original seal is accepted. Additional readiness can
+    restrict, never replace the captured cohort. Receiver ownership and platform
+    cancellation limits match WriteCaptured. Distinct phase/value/result avoid
+    presenting IDs as RAW schema cells or single-cell formatted output. }
+  INyxCollectionClipboardIdentityWrite = interface(IInterface)
+    ['{138592DA-01AA-463D-B3EF-BBBAFC46FD7D}']
+    function WriteIdentities(const AAction: INyxCollectionClipboardIdentityAction;
+      const ACancellation: INyxCancellationScope; const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    procedure ObserveIdentities(AObserver: TNyxCollectionIdentityObserver);
+    function GetIdentityPhase: TNyxCollectionClipboardPhase;
+    function GetLastIdentityResult: TNyxClipboardWriteResult;
+    function GetLastIdentities: INyxCollectionIdentityText;
+    property IdentityPhase: TNyxCollectionClipboardPhase read GetIdentityPhase;
+    property LastIdentityResult: TNyxClipboardWriteResult read GetLastIdentityResult;
+    property LastIdentities: INyxCollectionIdentityText read GetLastIdentities;
   end;
 
   { Optional original metadata captured during Prepare, before canonical input

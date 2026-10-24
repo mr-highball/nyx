@@ -43,7 +43,8 @@ uses SysUtils, nyx.text, nyx.collections, nyx.collections.selection,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
   nyx.collections.clipboard, nyx.collections.view.types, nyx.collections.export.actions,
   nyx.collections.representation, nyx.contract, nyx.state,
-  nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands;
+  nyx.collections.range, nyx.collections.range.actions, nyx.collections.range.commands,
+  nyx.collections.identities;
 
 type
   { Forward controller is borrowed only under an entered managed owner lease. }
@@ -55,6 +56,31 @@ type
   { Forward seal is private implementation data, never an author-supplied
     action/payload tuple or a backlink to its originating controller. }
   TCapturedAction = class;
+
+  { Forward identity seal remains a private value object with no owner backlink. }
+  TIdentityAction = class;
+
+  { Only the built-in immutable identity seal exposes this borrowed data under
+    an owning QI lease; copied public values cannot grant controller authority. }
+  IIdentityActionProof = interface(IInterface)
+    ['{791EA2E2-C920-41F9-B0D4-B891B48DCF87}']
+    function IdentityData: TIdentityAction;
+  end;
+
+  { Original-controller witness seals one exact source/page ID representation.
+    Identity is inert, and readiness is certified flags-only, without live views. }
+  TIdentityAction = class(TInterfacedObject, INyxCollectionClipboardIdentityAction,
+    IIdentityActionProof)
+  public
+    Identity: IInterface;
+    Value: INyxCollectionIdentityText;
+    Ready: INyxCancellationReadiness;
+    constructor Create(const AIdentity: IInterface; const AValue: INyxCollectionIdentityText;
+      const AReady: INyxCancellationReadiness);
+    function GetValue: INyxCollectionIdentityText;
+    function GetReadiness: INyxCancellationReadiness;
+    function IdentityData: TIdentityAction;
+  end;
 
   { Only actual built-in seals expose this private value witness. The owning
     QI local retains its borrowed class data through admission/reentry checks. }
@@ -101,7 +127,8 @@ type
 
   { One host invocation's weak receiver. Controller detaches Owner before
     cancellation; local managed leases protect an entered inline callback.
-    Payload is immutable and independent of the mounted final input fence. }
+    Exactly one RAW-column, cell-representation or identity-only value supplies
+    its distinct receipt; none retains the mounted synchronous final fence. }
   TReceipt = class(TInterfacedObject)
   public
     Owner: TCommands;
@@ -109,6 +136,7 @@ type
     Delivered: Boolean;
     Payload: INyxCollectionClipboardText;
     Value: INyxCollectionCellText;
+    Identities: INyxCollectionIdentityText;
     Scope: INyxCancellationReadiness;
     Reply: TNyxClipboardWriteReply;
     ReplyOwner: IInterface;
@@ -140,7 +168,7 @@ type
     INyxCollectionClipboardOutputCapture, INyxCollectionClipboardDisplayCapture,
     INyxCollectionClipboardRangeCommand, INyxCollectionClipboardCellRangeContext,
     INyxCollectionClipboardCellPermission, INyxCollectionClipboardCellRowsContext,
-    INyxCollectionClipboardContextTransfers)
+    INyxCollectionClipboardContextTransfers, INyxCollectionClipboardIdentityTransfers)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -160,6 +188,8 @@ type
     FSourceRowsPayload: INyxCollectionClipboardText;
     FPageRowsPayload: INyxCollectionClipboardText;
     FRowsReady: INyxCancellationReadiness;
+    FSourceIdentityAction: INyxCollectionClipboardIdentityAction;
+    FPageIdentityAction: INyxCollectionClipboardIdentityAction;
     FRangeAction: INyxCollectionClipboardActionCapture;
     FSourceRowsAction: INyxCollectionClipboardActionCapture;
     FPageRowsAction: INyxCollectionClipboardActionCapture;
@@ -213,6 +243,8 @@ type
     function GetRangeAction: INyxCollectionClipboardActionCapture;
     function GetSourceRowsAction: INyxCollectionClipboardActionCapture;
     function GetPageRowsAction: INyxCollectionClipboardActionCapture;
+    function GetSourceIdentityAction: INyxCollectionClipboardIdentityAction;
+    function GetPageIdentityAction: INyxCollectionClipboardIdentityAction;
     procedure Prepare;
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
@@ -231,7 +263,7 @@ type
   end;
 
   { Runtime controller keeps one exact pending receipt/request and immutable
-    authority for RAW cell, explicit cell rectangle, row and represented writes.
+    authority for RAW cell, explicit cell rectangle, row, identity and represented writes.
     A receipt borrows this owner; it is revoked before host Cancel. No member
     retains a command, live range selection or mount-retaining synchronous fence.
     Optional readonly context entry shares original command arbitration without
@@ -239,7 +271,8 @@ type
   TCommands = class(TInterfacedObject, INyxCollectionClipboardCommands,
     INyxCollectionClipboardCellInput, INyxCollectionClipboardCapturedWrite,
     INyxCollectionClipboardRepresentationWrite, INyxCollectionClipboardRangeInput,
-    INyxCollectionClipboardInspectionInput, INyxCollectionClipboardCapturedActionWrite)
+    INyxCollectionClipboardInspectionInput, INyxCollectionClipboardCapturedActionWrite,
+    INyxCollectionClipboardIdentityWrite)
   private
     FView: INyxCollectionView;
     FRowsView: INyxCollectionSelectedRowsView;
@@ -263,12 +296,24 @@ type
     FRepresentationResult: TNyxClipboardWriteResult;
     FRepresentation: INyxCollectionCellText;
     FRepresentationObserver: TNyxCollectionRepresentationObserver;
+    FIdentityPhase: TNyxCollectionClipboardPhase;
+    FIdentityResult: TNyxClipboardWriteResult;
+    FIdentities: INyxCollectionIdentityText;
+    FIdentityObserver: TNyxCollectionIdentityObserver;
     procedure Start(ACommand: TCommand);
     function SubmitPayload(const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
       AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
-      const AValue: INyxCollectionCellText = nil): INyxClipboardWriteRequest;
+      const AValue: INyxCollectionCellText = nil;
+      const AIdentities: INyxCollectionIdentityText = nil): INyxClipboardWriteRequest;
+    function WriteIdentities(const AAction: INyxCollectionClipboardIdentityAction;
+      const ACancellation: INyxCancellationScope; const AReadiness: INyxCancellationReadiness;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+    procedure ObserveIdentities(AObserver: TNyxCollectionIdentityObserver);
+    function GetIdentityPhase: TNyxCollectionClipboardPhase;
+    function GetLastIdentityResult: TNyxClipboardWriteResult;
+    function GetLastIdentities: INyxCollectionIdentityText;
     function WriteCaptured(const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
@@ -281,7 +326,8 @@ type
       const APayload: INyxCollectionClipboardText;
       const ACancellation: INyxCancellationScope;
       const AReadiness: INyxCancellationReadiness;
-      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+      AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
+      const AIdentities: INyxCollectionIdentityText = nil): INyxClipboardWriteRequest;
     procedure Received(AReceipt: TReceipt; const AResult: TNyxClipboardWriteResult);
     procedure CancelCurrent;
     procedure RevokeInternal;
@@ -313,6 +359,30 @@ type
       AReadiness: TNyxCollectionClipboardReadinessFactory);
     destructor Destroy; override;
   end;
+
+constructor TIdentityAction.Create(const AIdentity: IInterface;
+  const AValue: INyxCollectionIdentityText; const AReady: INyxCancellationReadiness);
+begin
+  inherited Create;
+  Identity := AIdentity;
+  Value := AValue;
+  Ready := AReady;
+end;
+
+function TIdentityAction.GetValue: INyxCollectionIdentityText;
+begin
+  Result := Value;
+end;
+
+function TIdentityAction.GetReadiness: INyxCancellationReadiness;
+begin
+  Result := Ready;
+end;
+
+function TIdentityAction.IdentityData: TIdentityAction;
+begin
+  Result := Self;
+end;
 
 constructor TCapturedAction.Create(const AIdentity: IInterface;
   AAction: TNyxCollectionClipboardAction; const APayload: INyxCollectionClipboardText;
@@ -690,6 +760,16 @@ begin
   Result := FPageRowsAction;
 end;
 
+function TCommand.GetSourceIdentityAction: INyxCollectionClipboardIdentityAction;
+begin
+  Result := FSourceIdentityAction;
+end;
+
+function TCommand.GetPageIdentityAction: INyxCollectionClipboardIdentityAction;
+begin
+  Result := FPageIdentityAction;
+end;
+
 function TCommand.GetReadiness: INyxCancellationReadiness;
 begin
   Result := nil;
@@ -905,6 +985,8 @@ begin
     FRangeAction := nil;
     FSourceRowsAction := nil;
     FPageRowsAction := nil;
+    FSourceIdentityAction := nil;
+    FPageIdentityAction := nil;
   end;
 end;
 
@@ -1064,6 +1146,8 @@ var
   LObservation: TNyxColumnLayoutObservation;
   LSourcePayload: INyxCollectionClipboardText;
   LPagePayload: INyxCollectionClipboardText;
+  LSourceIDs: INyxCollectionIdentityText;
+  LPageIDs: INyxCollectionIdentityText;
   LScope: TCopyScope;
 
   function Produce(AMembership: TNyxCollectionCopyMembership): INyxCollectionClipboardText;
@@ -1090,6 +1174,28 @@ var
       begin
         { Optional membership/output admission cannot disable valid RAW
           inspection. Application callback failures keep their normal path. }
+      end;
+    end;
+  end;
+
+  function ProduceIDs(AMembership: TNyxCollectionCopyMembership): INyxCollectionIdentityText;
+  var
+    LPage: INyxCollectionSnapshot;
+  begin
+    Result := nil;
+
+    if AMembership = nccmSelectedPage then
+    begin
+      LPage := FPage;
+    end;
+    try
+      Result := NewNyxCollectionIdentityText(FSource, LSelection, AMembership,
+        LPage, FOptions.IncludeHeaders, FOptions.Lines, FOptions.WorkLimits);
+    except
+      on E: ENyxCollectionClipboard do
+      begin
+        { Expected independent identity budget/membership refusal does not
+          suppress RAW inspection or a valid selected-row field payload. }
       end;
     end;
   end;
@@ -1136,14 +1242,17 @@ begin
   if nccaSelectedSource in FOptions.Actions then
   begin
     LSourcePayload := Produce(nccmAllSelectedSource);
+    LSourceIDs := ProduceIDs(nccmAllSelectedSource);
   end;
 
   if nccaSelectedPage in FOptions.Actions then
   begin
     LPagePayload := Produce(nccmSelectedPage);
+    LPageIDs := ProduceIDs(nccmSelectedPage);
   end;
 
-  if not OriginalFlags or ((LSourcePayload = nil) and (LPagePayload = nil)) then
+  if not OriginalFlags or ((LSourcePayload = nil) and (LPagePayload = nil) and
+    (LSourceIDs = nil) and (LPageIDs = nil)) then
   begin
     Exit;
   end;
@@ -1167,6 +1276,16 @@ begin
   begin
     FPageRowsAction := TCapturedAction.Create(FOwner.FTransferIdentity,
       nccaSelectedPage, LPagePayload, LScope);
+  end;
+
+  if LSourceIDs <> nil then
+  begin
+    FSourceIdentityAction := TIdentityAction.Create(FOwner.FTransferIdentity, LSourceIDs, LScope);
+  end;
+
+  if LPageIDs <> nil then
+  begin
+    FPageIdentityAction := TIdentityAction.Create(FOwner.FTransferIdentity, LPageIDs, LScope);
   end;
 end;
 
@@ -1449,11 +1568,59 @@ begin
     LReady, AReply, AReplyOwner);
 end;
 
+function TCommands.WriteIdentities(const AAction: INyxCollectionClipboardIdentityAction;
+  const ACancellation: INyxCancellationScope; const AReadiness: INyxCancellationReadiness;
+  AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+var
+  LLease: INyxCollectionClipboardCommands;
+  LAction: INyxCollectionClipboardIdentityAction;
+  LProof: IIdentityActionProof;
+  LData: TIdentityAction;
+  LSerial: Integer;
+  LScheduler: INyxScheduler;
+  LReady: INyxCancellationReadiness;
+  LPermission: TNyxCollectionClipboardAction;
+begin
+  LLease := Self;
+  LAction := AAction;
+  LSerial := FSerial;
+  LScheduler := FScheduler;
+  Result := nil;
+
+  if FRevoked or (LScheduler = nil) or (LAction = nil) or
+    (AReadiness = nil) or not Supports(LAction, IIdentityActionProof, LProof) then
+  begin
+    Exit;
+  end;
+  LScheduler.RequireUI;
+  LData := LProof.IdentityData;
+
+  if FRevoked or (FSerial <> LSerial) or (LData = nil) or
+    (LData.Identity <> FTransferIdentity) or (LData.Value = nil) then
+  begin
+    Exit;
+  end;
+  LPermission := nccaSelectedSource;
+
+  if LData.Value.Membership = nccmSelectedPage then
+  begin
+    LPermission := nccaSelectedPage;
+  end;
+  LReady := TCopyScope.Create(FInput, FInput.Epoch, LData.Ready, AReadiness);
+
+  if not FRevoked and (FSerial = LSerial) then
+  begin
+    Result := SubmitCapturedAction(LPermission, nil, ACancellation, LReady,
+      AReply, AReplyOwner, LData.Value);
+  end;
+end;
+
 function TCommands.SubmitCapturedAction(AAction: TNyxCollectionClipboardAction;
   const APayload: INyxCollectionClipboardText;
   const ACancellation: INyxCancellationScope;
   const AReadiness: INyxCancellationReadiness;
-  AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface): INyxClipboardWriteRequest;
+  AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
+  const AIdentities: INyxCollectionIdentityText): INyxClipboardWriteRequest;
 var
   LLease: INyxCollectionClipboardCommands;
   LSerial: Integer;
@@ -1463,7 +1630,7 @@ begin
 
   if FRevoked or (Ord(AAction) < Ord(Low(TNyxCollectionClipboardAction))) or
     (Ord(AAction) > Ord(High(TNyxCollectionClipboardAction))) or
-    not (AAction in FOptions.Actions) or (APayload = nil) or
+    not (AAction in FOptions.Actions) or ((APayload = nil) = (AIdentities = nil)) or
     (ACancellation = nil) or (AReadiness = nil) then
   begin
     Exit;
@@ -1490,7 +1657,8 @@ begin
   begin
     Exit;
   end;
-  Result := SubmitPayload(APayload, ACancellation, AReadiness, AReply, AReplyOwner);
+  Result := SubmitPayload(APayload, ACancellation, AReadiness, AReply, AReplyOwner,
+    nil, AIdentities);
 end;
 
 function TCommands.WriteRepresented(const AValue: INyxCollectionCellText;
@@ -1589,7 +1757,8 @@ function TCommands.SubmitPayload(const APayload: INyxCollectionClipboardText;
   const ACancellation: INyxCancellationScope;
   const AReadiness: INyxCancellationReadiness;
   AReply: TNyxClipboardWriteReply; const AReplyOwner: IInterface;
-  const AValue: INyxCollectionCellText): INyxClipboardWriteRequest;
+  const AValue: INyxCollectionCellText;
+  const AIdentities: INyxCollectionIdentityText): INyxClipboardWriteRequest;
 var
   LReceipt: TReceipt;
   LReceiptLease: IInterface;
@@ -1606,13 +1775,19 @@ begin
   LReceipt.Serial := FSerial;
   LReceipt.Payload := APayload;
   LReceipt.Value := AValue;
+  LReceipt.Identities := AIdentities;
   LReceipt.Scope := AReadiness;
   LReceipt.Reply := AReply;
   LReceipt.ReplyOwner := AReplyOwner;
   FReceipt := LReceipt;
   FReceiptLease := LReceiptLease;
 
-  if AValue = nil then
+  if AIdentities <> nil then
+  begin
+    FIdentities := AIdentities;
+    FIdentityPhase := nccpPending;
+  end
+  else if AValue = nil then
   begin
     FPayload := APayload;
     FPhase := nccpPending;
@@ -1624,7 +1799,12 @@ begin
   end;
   try
 
-    if AValue = nil then
+    if AIdentities <> nil then
+    begin
+      LRequest := LHost.BeginWriteText(AIdentities.Text, LScheduler,
+        ACancellation, {$ifdef PAS2JS}@{$endif}LReceipt.Receive);
+    end
+    else if AValue = nil then
     begin
       LRequest := WriteNyxCollectionClipboard(APayload, LHost, LScheduler,
         ACancellation, {$ifdef PAS2JS}@{$endif}LReceipt.Receive);
@@ -1645,7 +1825,11 @@ begin
       FReceiptLease := nil;
       FRequest := nil;
 
-      if AValue = nil then
+      if AIdentities <> nil then
+      begin
+        FIdentityPhase := nccpCancelled;
+      end
+      else if AValue = nil then
       begin
         FPhase := nccpCancelled;
       end
@@ -1683,6 +1867,8 @@ var
   LReplyOwner: IInterface;
   LValue: INyxCollectionCellText;
   LRepresentationObserver: TNyxCollectionRepresentationObserver;
+  LIdentities: INyxCollectionIdentityText;
+  LIdentityObserver: TNyxCollectionIdentityObserver;
   LBytes: Integer;
 begin
   LLease := Self;
@@ -1696,6 +1882,7 @@ begin
   LReplyOwner := AReceipt.ReplyOwner;
   LPayload := AReceipt.Payload;
   LValue := AReceipt.Value;
+  LIdentities := AReceipt.Identities;
   LReady := False;
   try
     AReceipt.Scope.CheckReady;
@@ -1711,7 +1898,12 @@ begin
   FRequest := nil;
   LBytes := 0;
 
-  if LValue = nil then
+  if LIdentities <> nil then
+  begin
+    FIdentityPhase := nccpCancelled;
+    LBytes := LIdentities.ByteCount;
+  end
+  else if LValue = nil then
   begin
     FPhase := nccpCancelled;
     LBytes := LPayload.ByteCount;
@@ -1730,7 +1922,19 @@ begin
     Exit;
   end;
 
-  if LValue = nil then
+  if LIdentities <> nil then
+  begin
+    FIdentityResult := LResult;
+    FIdentities := LIdentities;
+    FIdentityPhase := nccpCompleted;
+    LIdentityObserver := FIdentityObserver;
+
+    if Assigned(LIdentityObserver) then
+    begin
+      LIdentityObserver(LIdentities, LResult);
+    end;
+  end
+  else if LValue = nil then
   begin
     FResult := LResult;
     FPayload := LPayload;
@@ -1792,6 +1996,11 @@ begin
     FRepresentationPhase := nccpCancelled;
   end;
 
+  if FIdentityPhase = nccpPending then
+  begin
+    FIdentityPhase := nccpCancelled;
+  end;
+
   if LRequest <> nil then
   begin
     LRequest.Cancel;
@@ -1829,6 +2038,7 @@ begin
   FReadiness := nil;
   FObserver := nil;
   FRepresentationObserver := nil;
+  FIdentityObserver := nil;
   LView := FView;
   LRowsView := FRowsView;
   LInput := FInput;
@@ -1915,6 +2125,36 @@ end;
 function TCommands.GetLastRepresentation: INyxCollectionCellText;
 begin
   Result := FRepresentation;
+end;
+
+procedure TCommands.ObserveIdentities(AObserver: TNyxCollectionIdentityObserver);
+begin
+
+  if FRevoked and Assigned(AObserver) then
+  begin
+    raise ENyxCollectionClipboard.Create('Retired identity-copy receiver cannot be replaced');
+  end;
+  FIdentityObserver := AObserver;
+end;
+
+function TCommands.GetIdentityPhase: TNyxCollectionClipboardPhase;
+begin
+  Result := FIdentityPhase;
+end;
+
+function TCommands.GetLastIdentityResult: TNyxClipboardWriteResult;
+begin
+
+  if FIdentityPhase <> nccpCompleted then
+  begin
+    raise ENyxCollectionClipboard.Create('Identity copy has no completed host result');
+  end;
+  Result := FIdentityResult;
+end;
+
+function TCommands.GetLastIdentities: INyxCollectionIdentityText;
+begin
+  Result := FIdentities;
 end;
 
 function NewNyxCollectionClipboardCommands(const AView: INyxCollectionView;

@@ -27,7 +27,8 @@ interface
 
 uses nyx.clipboard, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.cell.actions,
-  nyx.collections.mount, nyx.collections.workbench.policy, nyx.events;
+  nyx.collections.mount, nyx.collections.workbench.policy, nyx.events,
+  nyx.collections.export, nyx.collections.export.actions, nyx.files.save;
 
 type
   { Runtime services are independent of saved table intent. A renderer retains
@@ -43,12 +44,37 @@ type
     property CopyLimits: TNyxCollectionClipboardLimits read GetCopyLimits;
   end;
 
+  { Optional file authority extends a runtime service provider without changing
+    its original clipboard ABI. Host/options are captured once before partial
+    mount configuration. Providers must not retain a renderer, mount or tree.
+    Absence keeps existing export behavior; presence requires an explicit host
+    and configures that exact export controller BEFORE managed cell actions.
+    Foreign getters may reenter, so each is followed by the original input fence. }
+  INyxTableWorkbenchExportServices = interface(IInterface)
+    ['{0F5D81F3-CBEA-4D91-A15C-E85CD5D3D2A5}']
+    function GetFileSaveHost: INyxFileSaveHost;
+    function GetExportOptions: TNyxCollectionExportOptions;
+    property FileSaveHost: INyxFileSaveHost read GetFileSaveHost;
+    property ExportOptions: TNyxCollectionExportOptions read GetExportOptions;
+  end;
+
 { Copies and validates runtime bounds; nil host becomes an explicit Unavailable
   adapter. This never infers OS/browser access from an authored policy. }
 function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost = nil):
   INyxTableWorkbenchServices; overload;
 function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
   const ALimits: TNyxCollectionClipboardLimits): INyxTableWorkbenchServices; overload;
+
+{ Export opt-in supplies real runtime authority independently of saved policy.
+  Options are validated/deep-copied. Nil SaveHost refuses before any mount changes;
+  omit this facet to keep exports absent, or inject a host reporting Unavailable.
+  Clipboard=nil retains its established explicit Unavailable adapter behavior. }
+function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
+  const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions):
+  INyxTableWorkbenchServices; overload;
+function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
+  const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions;
+  const ACopyLimits: TNyxCollectionClipboardLimits): INyxTableWorkbenchServices; overload;
 
 { Closed authoring choices map explicitly to the established runtime options.
   Runtime limits are supplied independently and do not enter the saved policy. }
@@ -86,6 +112,44 @@ type
     function GetCopyLimits: TNyxCollectionClipboardLimits;
   end;
 
+  { Owned optional export services retain only explicit hosts and copied values.
+    The base keeps clipboard behavior identical; no policy or document is owned. }
+  TWorkbenchExportServices = class(TWorkbenchServices, INyxTableWorkbenchExportServices)
+  private
+    FSaveHost: INyxFileSaveHost;
+    FExportOptions: TNyxCollectionExportOptions;
+  public
+    constructor Create(const AClipboard: INyxClipboardWriteHost;
+      const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions;
+      const ACopyLimits: TNyxCollectionClipboardLimits);
+    function GetFileSaveHost: INyxFileSaveHost;
+    function GetExportOptions: TNyxCollectionExportOptions;
+  end;
+
+constructor TWorkbenchExportServices.Create(const AClipboard: INyxClipboardWriteHost;
+  const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions;
+  const ACopyLimits: TNyxCollectionClipboardLimits);
+begin
+  inherited Create(AClipboard, ACopyLimits);
+
+  if ASaveHost = nil then
+  begin
+    raise ENyxCollectionExport.Create('Export services require an explicit file-save host');
+  end;
+  FSaveHost := ASaveHost;
+  FExportOptions := AExportOptions.Copy;
+end;
+
+function TWorkbenchExportServices.GetFileSaveHost: INyxFileSaveHost;
+begin
+  Result := FSaveHost;
+end;
+
+function TWorkbenchExportServices.GetExportOptions: TNyxCollectionExportOptions;
+begin
+  Result := FExportOptions.Copy;
+end;
+
 constructor TWorkbenchServices.Create(const AClipboard: INyxClipboardWriteHost;
   const ALimits: TNyxCollectionClipboardLimits);
 begin
@@ -121,6 +185,21 @@ function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
   const ALimits: TNyxCollectionClipboardLimits): INyxTableWorkbenchServices;
 begin
   Result := TWorkbenchServices.Create(AClipboard, ALimits);
+end;
+
+function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
+  const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions):
+  INyxTableWorkbenchServices;
+begin
+  Result := TWorkbenchExportServices.Create(AClipboard, ASaveHost, AExportOptions,
+    TNyxCollectionClipboardOptions.Defaults.WorkLimits);
+end;
+
+function NewNyxTableWorkbenchServices(const AClipboard: INyxClipboardWriteHost;
+  const ASaveHost: INyxFileSaveHost; const AExportOptions: TNyxCollectionExportOptions;
+  const ACopyLimits: TNyxCollectionClipboardLimits): INyxTableWorkbenchServices;
+begin
+  Result := TWorkbenchExportServices.Create(AClipboard, ASaveHost, AExportOptions, ACopyLimits);
 end;
 
 function NyxTableWorkbenchClipboardOptions(const APolicy: TNyxTableWorkbenchPolicy;
@@ -184,11 +263,16 @@ procedure ConfigureNyxTableWorkbench(const AMount: INyxCollectionMount;
 var
   LMount: INyxCollectionMount;
   LInputAdmission: INyxCollectionInputAdmission;
+  LInputPreparation: INyxCollectionInputPreparation;
   LInput: INyxCollectionInputLifetime;
   LClipboard: INyxCollectionClipboardMount;
   LRange: INyxCollectionCellRangeMount;
   LActions: INyxCollectionCellActionOptionsMount;
   LServices: INyxTableWorkbenchServices;
+  LExportServices: INyxTableWorkbenchExportServices;
+  LExport: INyxCollectionExportMount;
+  LSaveHost: INyxFileSaveHost;
+  LExportOptions: TNyxCollectionExportOptions;
   LHost: INyxClipboardWriteHost;
   LFactory: INyxCollectionCellPresenterFactory;
   LEvents: INyxEvents;
@@ -211,6 +295,7 @@ var
   procedure RequireFresh;
   var
     LExisting: INyxCollectionClipboardCommands;
+    LExistingExport: INyxCollectionExportCommands;
   begin
     LExisting := LClipboard.ClipboardCommands;
     RequireCurrent;
@@ -218,6 +303,17 @@ var
     if LExisting <> nil then
     begin
       raise ENyxCollectionClipboard.Create('Authored table actions require an unconfigured clipboard mount');
+    end;
+
+    if LExport <> nil then
+    begin
+      LExistingExport := LExport.ExportCommands;
+      RequireCurrent;
+
+      if LExistingExport <> nil then
+      begin
+        raise ENyxCollectionExport.Create('Authored export services require an unconfigured export mount');
+      end;
     end;
   end;
 
@@ -233,6 +329,15 @@ begin
     not Supports(LMount, INyxCollectionInputAdmission, LInputAdmission) then
   begin
     raise ENyxCollectionClipboard.Create('Authored table actions require a fresh managed mount');
+  end;
+  { Synchronize only privately owned input flags before reserving authority.
+    This makes an initially disabled legacy table legitimate without adopting a
+    newer epoch after any foreign getter or scheduler has had a chance to run.
+    Older providers may omit this facet, but still must keep the original epoch. }
+
+  if Supports(LMount, INyxCollectionInputPreparation, LInputPreparation) then
+  begin
+    LInputPreparation.PrepareInputTracking;
   end;
   LInput := LInputAdmission.GetInputLifetime;
 
@@ -262,6 +367,27 @@ begin
   RequireCurrent;
   LOptions := NyxTableWorkbenchClipboardOptions(LPolicy, LLimits);
 
+  if Supports(LServices, INyxTableWorkbenchExportServices, LExportServices) then
+  begin
+    RequireCurrent;
+
+    if not Supports(LMount, INyxCollectionExportMount, LExport) then
+    begin
+      raise ENyxCollectionExport.Create('This table target does not support export services');
+    end;
+    RequireCurrent;
+    LSaveHost := LExportServices.FileSaveHost;
+    RequireCurrent;
+    LExportOptions := LExportServices.ExportOptions.Copy;
+    RequireCurrent;
+
+    if LSaveHost = nil then
+    begin
+      raise ENyxCollectionExport.Create('Export services require an explicit file-save host');
+    end;
+  end;
+  RequireCurrent;
+
   if LHost = nil then
   begin
     LHost := NewNyxUnavailableClipboardWriteHost;
@@ -278,13 +404,15 @@ begin
   RequireFresh;
   try
     LClipboard.ConfigureClipboard(LHost, LEvents, LScheduler, LOptions);
-    { Clipboard admission may synchronize an already disabled legacy table's
-      interaction epoch. That deliberate own transition precedes our remaining
-      one-time configuration; it does not admit a captured physical input. }
-    LEpoch := LInput.Epoch;
     RequireCurrent;
     LRange.ConfigureCellRange(LPolicy.RangeSelectionEnabled);
     RequireCurrent;
+
+    if LExport <> nil then
+    begin
+      LExport.ConfigureExport(LSaveHost, LEvents, LScheduler, LExportOptions);
+      RequireCurrent;
+    end;
     LActions.ConfigureCellActionsWithOptions(LFactory, LScheduler,
       TNyxCollectionCellActionOptions.Defaults.FocusedDraft(LPolicy.HasFocusedDraft));
     RequireCurrent;

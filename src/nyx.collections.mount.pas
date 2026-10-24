@@ -119,6 +119,17 @@ type
     property InputReady: Boolean read GetInputReady;
   end;
 
+  { Optional UI-owner preparation for a newly configured command surface. This
+    flags-only step synchronizes the mount's already accepted Enabled value and
+    enables epoch tracking BEFORE callers reserve input or invoke foreign code.
+    It performs no scheduler, model, widget or application callout. Later enabled
+    transitions remain observable even on legacy tables without layout controls.
+    Disconnected/retired owners refuse; preparation never installs staged input. }
+  INyxCollectionInputPreparation = interface(IInterface)
+    ['{C8B2A7F1-662E-42AE-B902-A73B64A148E1}']
+    procedure PrepareInputTracking;
+  end;
+
   { An owned physical cell draft, independent of widgets and authored defaults.
     Item and typed field identify its exact accepted scalar. Text is the host's
     wire draft (including an escaped NUL representation), not a promised scalar
@@ -277,6 +288,7 @@ type
     confinement is inherited from the view/store contract. }
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
+    INyxCollectionInputPreparation,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
     INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
     INyxCollectionExportMount, INyxCollectionCellRangeMount,
@@ -320,6 +332,9 @@ type
       is used only for flags-only control; no QI/callback occurs at adoption. }
     FInputLifetime: INyxCollectionInputLifetime;
     FInputStateObject: TObject;
+    { Explicit command preparation keeps legacy mounts' later interaction
+      epochs and whole-refresh shields active before any command is installed. }
+    FInputTrackingPrepared: Boolean;
     function SearchLabel(AIndex: Integer): TNyxText;
     procedure DisconnectInternal;
     procedure Changed(const AView: INyxCollectionView;
@@ -462,6 +477,7 @@ type
     procedure Activate;
     function GetInputLifetime: INyxCollectionInputLifetime;
     function GetInputReady: Boolean;
+    procedure PrepareInputTracking;
     procedure InstallInput;
     procedure Disconnect;
     procedure Refresh;
@@ -2453,6 +2469,27 @@ begin
   raise ENyxCollection.Create('This collection target does not support measured column fit');
 end;
 
+procedure TNyxCollectionMountBase.PrepareInputTracking;
+var
+  LState: TCollectionInputState;
+begin
+
+  if not FConnected or (FInputStateObject = nil) then
+  begin
+    raise ENyxCollection.Create('Input preparation requires a connected collection mount');
+  end;
+  LState := TCollectionInputState(FInputStateObject);
+
+  if not LState.GetCurrent then
+  begin
+    raise ENyxCollection.Create('Input preparation requires the original current mount');
+  end;
+  { The borrowed state is privately owned here; neither this synchronization nor
+    any subsequent tracking flag write invokes an alternative implementation. }
+  FInputTrackingPrepared := True;
+  LState.InteractionEnabled(FEnabled);
+end;
+
 function TNyxCollectionMountBase.GetInputReady: Boolean;
 begin
   Result := (FInputLifetime <> nil) and FInputLifetime.Ready;
@@ -2984,7 +3021,7 @@ begin
       Exit;
     end;
 
-    if FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
+    if FInputTrackingPrepared or FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) or
       FCellRangeEnabled then
     begin
       { The independent state survives a reentrant Disconnect that clears the
@@ -3144,7 +3181,8 @@ begin
     FCellRanges.Clear;
   end;
 
-  if (FHasColumnLayout or (LClipboard <> nil) or (LExport <> nil) or FCellRangeEnabled) and
+  if (FInputTrackingPrepared or FHasColumnLayout or (LClipboard <> nil) or
+    (LExport <> nil) or FCellRangeEnabled) and
     (FInputStateObject <> nil) then
   begin
     { Revoke captured query epochs BEFORE SetEnabled can call the scheduler or
