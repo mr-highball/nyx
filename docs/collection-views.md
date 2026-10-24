@@ -1219,9 +1219,9 @@ sequential callback can consume the default and negotiate capture through that
 same dispatch. Cancellation, a newer selection and disable/re-enable prevent
 both stale range installation and stale pointer capture. The matching click
 still delivers its callback once while preserving independent row membership.
-The browser route now additionally implements sustained Shift-mouse movement
-after the immediate endpoint selection; execution qualification is still pending.
-LCL sustained movement and native/browser pen/touch admission remain open.
+Both routes now additionally implement sustained Shift-mouse movement after the
+immediate endpoint selection. Native message qualification is described below;
+browser execution and native/browser pen/touch admission remain open.
 
 `nyx.collections.range.stroke` supplies the portable pending lifecycle for those
 adapters. A typed pointer identity and copied original-input facts keep
@@ -1290,8 +1290,36 @@ endpoint behavior rather than implicitly acquiring the mouse drag contract.
 The expanded browser control fixture injects only pointer capture authority;
 its real DOM hit testing and canonical dispatch remain available for desktop/
 compact execution. Current evidence is compilation, not browser execution or
-trusted device capture. The existing native control preservation journey still
-passes1054 with a complete clean heap; this does not qualify new native dragging.
+trusted device capture.
+
+The native adapter keeps Down in the grid's existing pre-focus prepared port.
+Its optional `INyxLCLCollectionCellRangeStrokeInput` admits Move/Release, retaining
+only original generation flags, detached pending data and its borrowed capture
+surface between messages. Actual pinned-pane forwarding still reports logical
+outer-grid coordinates; hit testing translates the sender's coordinate system
+and accepts only an exact owned native grid cell. Existing row/editor defaults
+stay shielded through the managed press's move/click/up tail. Native preview
+paint reads copied row/field membership and flags, without querying the dataset.
+
+LCL captures a source before its MouseDown callback and normally releases it
+before MouseUp. The adapter adopts that default pair and defers only that
+release's capture-loss cancellation. Independent loss cancels immediately.
+Explicit canonical capture can transfer ownership without old range cleanup
+releasing the caller's capture. The original source still retains its ordinary
+mouse-up release behavior. The shared retirement hook releases exact physical
+ownership when a model stroke is withdrawn, including a deferred refresh;
+accepted paint is restored while public accepted selection remains separate.
+Disabling retains its pre-existing range-clear policy.
+
+The native09 control journey passes1254 checks at measured900 and1252 at390
+client widths, each with a complete clean heap. Both ordinary tables and arranged
+tables use actual LCL Down/Move/Up messages, physical hit testing and native
+capture; no OS cursor movement or trusted hardware is claimed. Narrow pin
+suspension remains the existing presentation policy. Tests reveal the launch
+before capture through ordinary horizontal scrolling and use a reachable release
+cell; automatic scrolling and off-page dragging remain unimplemented. Browser
+execution, full pending-input Escape/cancel/teardown and native initial-Down
+client-clip admission remain required before complete gesture/parity acceptance.
 
 Current range/command fixtures pass 47/127 checks on both actual targets. Real
 controls pass393 native checks with a complete clean heap and465 browser checks

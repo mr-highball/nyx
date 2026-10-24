@@ -20,10 +20,14 @@ actual capture admission, original event flags, fractional resident-cell hit
 testing and exact-subject cleanup. Its immediate Shift-click selection and
 ordinary row input remain distinct. Its expanded browser fixture compiles only;
 native05 preserves1054 existing controls with a complete clean heap, and receipt02
-passes271 native commands. Actual browser execution/trusted capture, LCL sustained
-movement, pen/touch, automatic scrolling/off-page extension and original
-acceptance remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
-owns the separate cohorts, compiler failures and next adapter integration.
+passes271 native commands. The later native adapter qualifies per-message mouse
+movement/release, cached preview, original capture ownership and refresh cleanup.
+Native09 passes1254/1252 at measured900/390 client widths, with complete clean
+heaps; command05 passes273. Its browser control companion compiles only. Actual
+browser execution/trusted capture, pen/touch, auto-scroll/off-page extension,
+pending-input Escape/cancel/retirement and legacy Down client-clip qualification
+remain open alongside original acceptance; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
+owns the separate cohorts, failures and next integration work.
 
 The alignment continuation adds independent typed logical axes, version12 only
 on actual presence, crafted source output, ordinary Inspector capture and grouped

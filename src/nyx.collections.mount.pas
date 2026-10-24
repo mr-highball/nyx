@@ -432,6 +432,11 @@ type
     function BeginCellRangePointer(AAction: TNyxCollectionRangePointerAction):
       INyxCollectionCellRangePointerEntry;
     procedure CancelCellRangeStroke;
+    { Authority and cached preview have already been withdrawn. A target may
+      release THIS subject's physical capture and restore cached accepted paint;
+      it must not adopt a newer gesture or query a live dataset. Destruction
+      also calls this hook with retired input, so never resurrect that mount. }
+    procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); virtual;
     { Move only physical focus using the already admitted row/canonical field.
       Implementations suppress ordinary row-selection/editor side effects and
       return after any focus callbacks; the command then repeats its final fence. }
@@ -2226,7 +2231,14 @@ begin
   if LStroke <> nil then
   begin
     LStroke.Retire;
+    RetireCellRangeStroke(LStroke);
   end;
+end;
+
+procedure TNyxCollectionMountBase.RetireCellRangeStroke(
+  const AStroke: INyxCollectionRangeStroke);
+begin
+  { Nonphysical adapters own no capture or independent paint cache. }
 end;
 
 function TNyxCollectionMountBase.BeginCellRangeStroke(

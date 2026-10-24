@@ -63,12 +63,41 @@ pointers, outside hits, matching cancellation/loss, refresh and explicit capture
 but has NOT executed. The manual19166 test-host question is still pending and
 its listener remains absent; no rejected launch is retried or moved elsewhere.
 
-LCL sustained capture/move/up and browser/LCL pen/touch remain unimplemented.
-Automatic scrolling/off-page extension also remain open. Compile/model/headless
-focus evidence must not count as a working browser drag, trusted device input,
-target parity or original criterion completion. WORK's earlier W1/Studio
-evidence remains separate below; no unchanged900s rerun is scheduled. Root
-continues solo; the helper stays idle until the user changes that preference.
+The native continuation now uses the existing pre-focus Down port plus an
+optional per-message Move/Release facet. It adopts LCL's implicit source capture
+or acquires it for direct input, while explicit canonical capture wins. Physical
+hit testing translates the existing outer-grid forwarding without changing its
+ordinary callbacks. Cached preview paint works across pinned panes; LCL's
+capture loss before MouseUp waits only for that original release to finish.
+
+Native02/03 first expose the rejected forwarded sender, with clean failed heaps.
+The repair reaches refresh, exposing capture left alive after model cancellation.
+A shared exact-subject retirement hook now withdraws physical ownership even
+when refresh defers target work. It restores accepted paint without resurrecting
+a retiring mount. Explicit wrapper retirement remains fallible; final release
+does not replace the original callback diagnostic. Later failures distinguish
+LCL's normal source mouse-up release and the old fixture's wide-only pin/visible
+cell assumptions from adapter behavior. The desktop assertions stay intact;
+compact input follows the existing pin-suspension and native scroll/focus policy.
+
+The closed native09 control cohort passes1254 at measured900 and1252 at390
+client widths. Complete clean heaps account for21718467/979421423 and
+22036705/993183928 blocks/bytes respectively. All2316 working inputs reverify
+unchanged; both compilers complete with zero owned warnings and every actual
+reader is joined. These are real LCL messages and paint-cache/physical-hit checks,
+not trusted hardware/cursor or raster inspection. The separate native05 command
+cohort passes273 with a complete clean685214-block/25041002-byte heap, including
+exact retired-subject notification; its browser companion compiles. Only the
+native adapter comment and control fixture subsequently differ, neither read by
+those command compilers. The current browser control fixture compiles only.
+
+Browser execution, browser/LCL pen/touch, automatic scrolling/off-page extension,
+and full pending-input Escape/cancel/retirement qualification remain open. The
+legacy native Down route also needs an explicit client-clip admission check:
+MouseToCell alone is insufficient evidence for off-viewport captured input.
+No target-parity or original criterion completion follows from these scoped
+checks. WORK's earlier W1/Studio evidence remains separate below; no unchanged
+900s rerun is scheduled. Root continues solo; the helper stays idle.
 
 ## Column arrangement W1 — 2026-10-22
 

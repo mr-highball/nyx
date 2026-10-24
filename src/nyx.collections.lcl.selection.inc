@@ -921,8 +921,9 @@ end;
 
 function TNativeMount.CanonicalRangeSelected(AColumn, ARow: Integer): Boolean;
 begin
-  Result := FCellRangeEnabled and (FRangePaint <> nil) and
-    InputLifetimeCurrent and FRangePaint.Current and
+  Result := FCellRangeEnabled and InputLifetimeCurrent and
+    (((FRangePaint <> nil) and FRangePaint.Current) or
+      ((FRangePaintStroke <> nil) and FRangePaintStroke.Current)) and
     (ARow >= FRangeFirstRow) and (ARow <= FRangeLastRow) and
     (AColumn >= 0) and (AColumn < Length(FRangePaintFields));
 
@@ -937,11 +938,23 @@ begin
   Result := CanonicalRangeSelected(CanonicalColumn(FGrid, AColumn), ARow);
 end;
 
+procedure TNativeMount.RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke);
+begin
+  FinishRangeGesture(AStroke);
+
+  if InputLifetimeCurrent then
+  begin
+    RenderCellRange;
+  end;
+end;
+
 procedure TNativeMount.RenderCellRange;
 var
   LLease: INyxCollectionMount;
   LIntent: INyxCollectionCellRangeIntent;
   LPrevious: INyxCollectionCellRangeIntent;
+  LPreviousStroke: INyxCollectionRangeStroke;
+  LStroke: INyxCollectionRangeStroke;
   LCapture: INyxCollectionCellRangeCapture;
   LBounds: INyxCollectionCellRangeBounds;
   LPayload: INyxCollectionClipboardText;
@@ -950,17 +963,38 @@ var
   LField: Integer;
 begin
   LLease := Self as INyxCollectionMount;
+
+  if (FRangeGesture <> nil) and (not FRangeGesture.Current or
+    ((FRangeGeneration <> nil) and FRangeGeneration.Cancelled)) then
+  begin
+    FinishRangeGesture(FRangeGesture);
+  end;
   LPrevious := FRangePaint;
+  LPreviousStroke := FRangePaintStroke;
   FRangePaint := nil;
+  FRangePaintStroke := nil;
   FRangePaintFields := nil;
 
   if FCellRangeEnabled and (FCellRanges <> nil) then
   begin
-    LIntent := FCellRanges.Selection;
 
-    if (LIntent <> nil) and LIntent.Current and (LIntent.Page = FRendered) then
+    if (FCellStroke <> nil) and FCellStroke.Current and (FCellStrokePreview <> nil) then
     begin
-      LCapture := LIntent.Capture;
+      LStroke := FCellStroke;
+      LCapture := FCellStrokePreview;
+    end
+    else
+    begin
+      LIntent := FCellRanges.Selection;
+
+      if (LIntent <> nil) and LIntent.Current and (LIntent.Page = FRendered) then
+      begin
+        LCapture := LIntent.Capture;
+      end;
+    end;
+
+    if LCapture <> nil then
+    begin
 
       if Supports(LCapture, INyxCollectionCellRangeBounds, LBounds) then
       begin
@@ -981,6 +1015,7 @@ begin
         FRangeFirstRow := LBounds.FirstRow + 1;
         FRangeLastRow := LBounds.LastRow + 1;
         FRangePaint := LIntent;
+        FRangePaintStroke := LStroke;
       end;
     end;
   end;
@@ -1117,6 +1152,409 @@ begin
   Result := TNativeCellPresentation.Create(Self);
 end;
 
+constructor TNativeRangePointerCommand.Create(AOwner: TNativeMount;
+  const ACommand: INyxCollectionCellRangePointerEntry;
+  const AGeneration: INyxCancellationScope);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FCommand := ACommand;
+  FGeneration := AGeneration;
+end;
+
+destructor TNativeRangePointerCommand.Destroy;
+begin
+  try
+    Retire;
+  except
+    { Explicit retirement reports failure; final release still frees fields. }
+  end;
+  inherited Destroy;
+end;
+
+procedure TNativeRangePointerCommand.ResolveCells(
+  const AOrigin, ATarget: TNyxCollectionCellIdentity);
+begin
+
+  if GetCurrent then
+  begin
+    FCommand.ResolveCells(AOrigin, ATarget);
+  end;
+end;
+
+procedure TNativeRangePointerCommand.Prepare;
+begin
+
+  if GetCurrent then
+  begin
+    FCommand.Prepare;
+  end;
+end;
+
+function TNativeRangePointerCommand.GetCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and (FGeneration <> nil) and
+    not FGeneration.Cancelled and FCommand.Current;
+end;
+
+function TNativeRangePointerCommand.GetDispatchCurrent: Boolean;
+begin
+  Result := (FCommand <> nil) and (FGeneration <> nil) and
+    not FGeneration.Cancelled and FCommand.DispatchCurrent;
+end;
+
+function TNativeRangePointerCommand.Complete(AAllowDefault: Boolean): Boolean;
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LReceipt: INyxCollectionCellRangePointerReceipt;
+  LSubject: INyxCollectionRangeStroke;
+  LOwner: TNativeMount;
+  LArm: Boolean;
+begin
+  LCommand := FCommand;
+  LOwner := FOwner;
+  LSubject := FSubject;
+  LArm := FArm;
+  FArm := False;
+  Result := False;
+
+  if (LCommand = nil) or FCompleted then
+  begin
+    Exit;
+  end;
+  FCompleted := True;
+  FCompleting := True;
+  try
+    try
+      Result := LCommand.Complete(AAllowDefault and GetCurrent);
+
+      if (FOwner <> LOwner) or (FCommand <> LCommand) then
+      begin
+        Exit;
+      end;
+
+      if LArm and AAllowDefault and GetCurrent and not FCaptureRequested and
+        Supports(LCommand, INyxCollectionCellRangePointerReceipt, LReceipt) and
+        LReceipt.Installed then
+      begin
+        LOwner.ArmRangeGesture(FControl, FGeneration, FEndpoint);
+      end
+      else if (LSubject <> nil) and ((FPhase = ncrspRelease) or
+        not AAllowDefault or FCaptureRequested or not GetCurrent or not LSubject.Current) then
+      begin
+        LOwner.FinishRangeGesture(LSubject);
+      end;
+    except
+      try
+
+        if (FCommand = LCommand) and (LSubject <> nil) then
+        begin
+          LOwner.FinishRangeGesture(LSubject);
+        end;
+      except
+        { Preserve the original callback/focus diagnostic over cleanup failure. }
+      end;
+      raise;
+    end;
+  finally
+    FCompleting := False;
+  end;
+end;
+
+procedure TNativeRangePointerCommand.ObservePointerRequest(ARequest: TNyxPointerRequest);
+begin
+
+  if ARequest <> nprUnchanged then
+  begin
+    FCaptureRequested := True;
+
+    if (FOwner <> nil) and (FSubject <> nil) and
+      (FOwner.FRangeGesture = FSubject) then
+    begin
+      { An explicit canonical directive now owns capture. Cancelling this range
+        must not release the capture the application has chosen to keep. }
+      FOwner.FRangeCaptured := False;
+    end;
+  end;
+end;
+
+procedure TNativeRangePointerCommand.Retire;
+var
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LMountLease: INyxCollectionMount;
+  LOwner: TNativeMount;
+  LSubject: INyxCollectionRangeStroke;
+  LAbandon: Boolean;
+begin
+  LCommand := FCommand;
+  LOwner := FOwner;
+  LSubject := FSubject;
+  LAbandon := not FCompleted or FCompleting;
+
+  if LOwner <> nil then
+  begin
+    LMountLease := LOwner;
+  end;
+  FCommand := nil;
+  FOwner := nil;
+  FGeneration := nil;
+  FSubject := nil;
+  FControl := nil;
+  try
+
+    if LCommand <> nil then
+    begin
+      LCommand.Retire;
+    end;
+  finally
+
+    if LAbandon and (LOwner <> nil) and (LSubject <> nil) then
+    begin
+      LOwner.FinishRangeGesture(LSubject);
+    end;
+  end;
+end;
+
+procedure TNativeMount.FinishRangeGesture(const ASubject: INyxCollectionRangeStroke);
+var
+  LControl: TNyxCollectionStringGrid;
+  LCaptured: Boolean;
+begin
+
+  if (ASubject = nil) or (FRangeGesture <> ASubject) then
+  begin
+    Exit;
+  end;
+  LControl := FRangeControl;
+  LCaptured := FRangeCaptured;
+  FRangeGesture := nil;
+  FRangeGeneration := nil;
+  FRangeControl := nil;
+  FRangeCaptured := False;
+  try
+
+    if LCaptured and (LControl <> nil) and NyxLCLHasPointerCapture(LControl) and
+      not ((FRangeGesture <> nil) and FRangeCaptured and (FRangeControl = LControl)) then
+    begin
+      ReleaseNyxLCLPointer(LControl);
+    end;
+  finally
+    AbandonCellRangeStroke(NyxCollectionRangeStrokePointer(ncrsdMouse, 0), ASubject);
+  end;
+end;
+
+procedure TNativeMount.CancelRangeSurface(Sender: TObject);
+var
+  LLease: INyxCollectionMount;
+begin
+  LLease := Self;
+
+  if Sender = FRangeControl then
+  begin
+    FinishRangeGesture(FRangeGesture);
+  end;
+end;
+
+procedure TNativeMount.ArmRangeGesture(AControl: TNyxCollectionStringGrid;
+  const AGeneration: INyxCancellationScope;
+  const AEndpoint: TNyxCollectionCellIdentity);
+var
+  LEntry: INyxCollectionCellRangeStrokeEntry;
+  LStroke: INyxCollectionRangeStroke;
+  LPointer: TNyxCollectionRangeStrokePointer;
+  LAttempted: Boolean;
+  LExisting: TControl;
+
+  procedure ReconcileCapture;
+  begin
+
+    if LAttempted and (FRangeGesture <> LStroke) and
+      NyxLCLHasPointerCapture(AControl) and
+      not ((FRangeGesture <> nil) and FRangeCaptured and (FRangeControl = AControl)) then
+    begin
+      ReleaseNyxLCLPointer(AControl);
+    end;
+  end;
+
+begin
+
+  if (AGeneration = nil) or AGeneration.Cancelled or
+    not InputLifetimeCurrent or (AControl = nil) then
+  begin
+    Exit;
+  end;
+  LPointer := NyxCollectionRangeStrokePointer(ncrsdMouse, 0);
+  LEntry := BeginCellRangeStroke(ncrspBegin, LPointer, ncrpExtend);
+
+  if LEntry = nil then
+  begin
+    Exit;
+  end;
+  try
+    LEntry.ResolveCells(AEndpoint, AEndpoint);
+    LEntry.Prepare;
+    LEntry.Complete(not AGeneration.Cancelled);
+    LStroke := LEntry.PendingStroke;
+
+    if (LStroke = nil) or not LEntry.Current or not LStroke.Current or
+      AGeneration.Cancelled then
+    begin
+      AbandonCellRangeStroke(LPointer, LStroke);
+      Exit;
+    end;
+    FRangeGesture := LStroke;
+    FRangeGeneration := AGeneration;
+    FRangeControl := AControl;
+    LAttempted := False;
+    try
+      { LCL's real WMLButtonDown captures its own source BEFORE MouseDown. Adopt
+        that same default pair; virtual/direct input needs explicit acquisition.
+        Explicit canonical capture was already excluded by the wrapper. Never
+        take a different control's capture to implement this optional default. }
+      LExisting := GetCaptureControl;
+
+      if (LExisting <> nil) and (LExisting <> AControl) then
+      begin
+        FinishRangeGesture(LStroke);
+        Exit;
+      end;
+
+      if not LEntry.Current or AGeneration.Cancelled or (FRangeGesture <> LStroke) then
+      begin
+        FinishRangeGesture(LStroke);
+        Exit;
+      end;
+      FRangeCaptured := True;
+
+      if LExisting <> AControl then
+      begin
+        LAttempted := True;
+        CaptureNyxLCLPointer(AControl);
+      end;
+      ReconcileCapture;
+
+      if not LEntry.Current or AGeneration.Cancelled or (FRangeGesture <> LStroke) or
+        not NyxLCLHasPointerCapture(AControl) then
+      begin
+        FinishRangeGesture(LStroke);
+      end;
+    except
+      try
+        FinishRangeGesture(LStroke);
+      finally
+        ReconcileCapture;
+      end;
+    end;
+  finally
+    LEntry.Retire;
+  end;
+end;
+
+function TNativeMount.BeginRangeStroke(ASender: TObject;
+  APhase: TNyxCollectionRangeStrokePhase; AShift: TShiftState; AX, AY: Integer;
+  const AGeneration: INyxCancellationScope): INyxCollectionCellRangePointerEntry;
+var
+  LEntry: INyxCollectionCellRangeStrokeEntry;
+  LWrapper: TNativeRangePointerCommand;
+  LSubject: INyxCollectionRangeStroke;
+  LHit: TWinControl;
+  LGrid: TStringGrid;
+  LOriginGrid: TStringGrid;
+  LScreen: TPoint;
+  LPoint: TPoint;
+  LData: INyxCollectionSnapshot;
+  LOrigin: TNyxCollectionCellIdentity;
+  LTarget: TNyxCollectionCellIdentity;
+  LPhysical: Integer;
+  LRow: Integer;
+  LColumn: Integer;
+  LOriginColumn: Integer;
+  LOriginRow: Integer;
+  LCount: Integer;
+begin
+  Result := nil;
+  LSubject := FRangeGesture;
+
+  if (LSubject = nil) or
+    ((ASender <> FRangeControl) and (ASender <> FGrid)) or (APhase = ncrspBegin) then
+  begin
+    Exit;
+  end;
+
+  if (AGeneration = nil) or (AGeneration <> FRangeGeneration) or
+    AGeneration.Cancelled or not LSubject.Current or
+    ((APhase = ncrspMove) and not (ssLeft in AShift)) then
+  begin
+    FinishRangeGesture(LSubject);
+    Exit;
+  end;
+  LEntry := BeginCellRangeStroke(APhase,
+    NyxCollectionRangeStrokePointer(ncrsdMouse, 0), ncrpExtend, LSubject);
+
+  if LEntry = nil then
+  begin
+    FinishRangeGesture(LSubject);
+    Exit;
+  end;
+  LWrapper := TNativeRangePointerCommand.Create(Self, LEntry, AGeneration);
+  Result := LWrapper;
+  LWrapper.FSubject := LSubject;
+  LWrapper.FPhase := APhase;
+  { A nonnil but unresolved envelope still claims this original input. A hit
+    outside owned data cells cancels, never borrowing a new row/editor default. }
+  { Existing arranged-pane forwarding reports logical outer-grid coordinates.
+    Preserve that public callback behavior and translate from the ACTUAL sender
+    coordinate system; the pending capture still belongs to its original pane. }
+  LScreen := TControl(ASender).ClientToScreen(Point(AX, AY));
+
+  if not LWrapper.GetCurrent then
+  begin
+    Exit;
+  end;
+  LHit := FindLCLWindow(LScreen);
+  LGrid := InputGrid(LHit);
+  LOriginGrid := InputGrid(Screen.ActiveControl);
+
+  if not LWrapper.GetCurrent or (LGrid = nil) or (LHit <> LGrid) or
+    (LOriginGrid = nil) or (Screen.ActiveControl <> LOriginGrid) or LOriginGrid.EditorMode then
+  begin
+    Exit;
+  end;
+  LPoint := LGrid.ScreenToClient(LScreen);
+  LGrid.MouseToCell(LPoint.X, LPoint.Y, LPhysical, LRow);
+  LColumn := CanonicalColumn(LGrid, LPhysical);
+  LOriginRow := LOriginGrid.Row;
+  LOriginColumn := CanonicalColumn(LOriginGrid, LOriginGrid.Col);
+  LData := FRendered;
+
+  if not LWrapper.GetCurrent or (LData = nil) or (LColumn < 0) or
+    (LOriginColumn < 0) or (LRow <= 0) or (LOriginRow <= 0) or
+    not PtInRect(LGrid.CellRect(LPhysical, LRow), LPoint) then
+  begin
+    Exit;
+  end;
+  LCount := LData.Count;
+
+  if not LWrapper.GetCurrent or (LRow > LCount) or (LOriginRow > LCount) then
+  begin
+    Exit;
+  end;
+  LOrigin := NyxCollectionCellIdentity(LData.ItemAt(LOriginRow - 1).Ref,
+    ClipboardField(LOriginColumn));
+
+  if not LWrapper.GetCurrent then
+  begin
+    Exit;
+  end;
+  LTarget := NyxCollectionCellIdentity(LData.ItemAt(LRow - 1).Ref,
+    ClipboardField(LColumn));
+
+  if LWrapper.GetCurrent then
+  begin
+    LWrapper.ResolveCells(LOrigin, LTarget);
+  end;
+end;
+
 function TNativeMount.PrepareRangePointer(Sender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer): INyxCollectionCellRangePointerEntry;
 var
@@ -1132,24 +1570,36 @@ var
   LOriginRow: Integer;
   LColumn: Integer;
   LCount: Integer;
+  LGeneration: INyxCancellationScope;
+  LWrapper: TNativeRangePointerCommand;
 begin
   Result := nil;
 
   if not FCellRangeEnabled or not Assigned(FRangePointerDispatch) or
     (AButton <> mbLeft) or not (ssShift in AShift) or
-    not (Sender is TNyxCollectionStringGrid) then
+    not (Sender is TNyxCollectionStringGrid) or (FRangeEvents = nil) then
   begin
     Exit;
   end;
   { Reserve BEFORE physical hit/focus/field and immutable page getters. The
     grid's existing native frame protects all borrowed controls during entry. }
+  LGeneration := NyxEventGeneration(FRangeEvents);
   LCommand := BeginCellRangePointer(ncrpExtend);
 
   if LCommand = nil then
   begin
     Exit;
   end;
+  LWrapper := TNativeRangePointerCommand.Create(Self, LCommand, LGeneration);
+  LCommand := LWrapper;
   try
+    FinishRangeGesture(FRangeGesture);
+
+    if not LCommand.Current then
+    begin
+      Result := LCommand;
+      Exit;
+    end;
     LGrid := InputGrid(Sender);
     LOriginGrid := InputGrid(Screen.ActiveControl);
 
@@ -1201,6 +1651,9 @@ begin
     if LCommand.Current then
     begin
       LCommand.ResolveCells(LOrigin, LTarget);
+      LWrapper.FEndpoint := LTarget;
+      LWrapper.FControl := TNyxCollectionStringGrid(LGrid);
+      LWrapper.FArm := True;
     end;
     Result := LCommand;
   finally

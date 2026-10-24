@@ -769,6 +769,7 @@ type
       AFocusOnly: Boolean = False);
   protected
     procedure RenderCellRange; override;
+    procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
     function BeginCellPresentation: INyxCollectionCellPresentation; override;
@@ -839,7 +840,11 @@ end;
 
 destructor TBrowserRangePointerCommand.Destroy;
 begin
-  Retire;
+  try
+    Retire;
+  except
+    { Explicit retirement reports failure; final release still frees fields. }
+  end;
   inherited Destroy;
 end;
 
@@ -1456,6 +1461,16 @@ function TBrowserMount.ClipboardInputAvailable: Boolean;
 begin
   Result := (FHost <> nil) and (FComposingInput = nil) and not FCompositionEnding and
     (FColumnResize = nil) and (FColumnResizePending = nil) and not FOpeningColumnManager;
+end;
+
+procedure TBrowserMount.RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke);
+begin
+  FinishRangeGesture(AStroke);
+
+  if InputLifetimeCurrent then
+  begin
+    RenderCellRange;
+  end;
 end;
 
 procedure TBrowserMount.RenderCellRange;

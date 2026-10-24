@@ -27,6 +27,7 @@ unit nyx.collections.lcl;
 interface
 
 uses
+  Classes,
   Controls,
   Types,
   nyx.gestures.lcl,
@@ -36,7 +37,8 @@ uses
   nyx.collections.alignment,
   nyx.collections.mount,
   nyx.collections.clipboard.actions, nyx.collections.draft,
-  nyx.collections.lcl.grid;
+  nyx.collections.lcl.grid, nyx.collections.range.stroke,
+  nyx.collections.range.pointer, nyx.gestures, nyx.scheduler;
 
 type
   { Borrowed synchronous canonical Click port. False covers blocked/rejected,
@@ -50,6 +52,26 @@ type
     contract. A renderer supplies its existing original-event receiver; a direct
     host omitting it retains ordinary native row/editor input behavior. }
   TNyxLCLRangePointerDispatch = nyx.collections.lcl.grid.TNyxGridRangePointerDispatch;
+
+  { Optional native sustained-pointer route. Each call reserves one synchronous
+    envelope before hit/focus reads. Original event flags and detached pending
+    data survive messages; no entry, event router or renderer is retained by a
+    stroke. Down keeps the existing pre-focus grid port; this facet admits Move
+    and Release only. Non-primary buttons and unrelated surfaces keep old input. }
+  INyxLCLCollectionCellRangeStrokeInput = interface(IInterface)
+    ['{F32588E0-F27B-4425-B2F9-6A6DB5B06406}']
+    function BeginRangeStroke(ASender: TObject; APhase: TNyxCollectionRangeStrokePhase;
+      AShift: TShiftState; AX, AY: Integer;
+      const AGeneration: INyxCancellationScope): INyxCollectionCellRangePointerEntry;
+  end;
+
+  { Reports the sealed original canonical capture directive before its platform
+    effect. Explicit caller capture/release outranks the optional range default;
+    this facet belongs only to the current synchronous pointer envelope. }
+  INyxLCLRangeCaptureDecision = interface(IInterface)
+    ['{C040929A-0674-4943-BD7B-4D725246077E}']
+    procedure ObservePointerRequest(ARequest: TNyxPointerRequest);
+  end;
 
   { Optional native observation publication. The returned aggregate owns only
     observer/input leases and copied context, never its mount/view/store. Prepare
@@ -107,7 +129,6 @@ function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
 implementation
 
 uses
-  Classes,
   SysUtils,
   Math,
   Forms,
@@ -145,14 +166,42 @@ uses
   nyx.collections.range.actions,
   nyx.collections.range.commands,
   nyx.collections.range.navigation,
-  nyx.collections.range.pointer,
-  nyx.scheduler,
   nyx.collections.tree.rows;
 
 type
   { Forward mount is borrowed by native ports only while a local specialized
     lease and the original input frame protect its entered callback. }
   TNativeMount = class;
+  { Synchronous native envelope borrows its mount only while the wrapped entry
+    owns it. Captured generation flags fence canonical callbacks and original
+    focus. Neither the mount nor a pending stroke retains this wrapper. }
+  TNativeRangePointerCommand = class(TInterfacedObject,
+    INyxCollectionCellRangePointerEntry, INyxLCLRangeCaptureDecision)
+  private
+    FCommand: INyxCollectionCellRangePointerEntry;
+    FOwner: TNativeMount;
+    FGeneration: INyxCancellationScope;
+    FSubject: INyxCollectionRangeStroke;
+    FEndpoint: TNyxCollectionCellIdentity;
+    FControl: TNyxCollectionStringGrid;
+    FPhase: TNyxCollectionRangeStrokePhase;
+    FArm: Boolean;
+    FCaptureRequested: Boolean;
+    FCompleted: Boolean;
+    FCompleting: Boolean;
+  public
+    constructor Create(AOwner: TNativeMount;
+      const ACommand: INyxCollectionCellRangePointerEntry;
+      const AGeneration: INyxCancellationScope);
+    destructor Destroy; override;
+    procedure ResolveCells(const AOrigin, ATarget: TNyxCollectionCellIdentity);
+    procedure Prepare;
+    function GetCurrent: Boolean;
+    function GetDispatchCurrent: Boolean;
+    function Complete(AAllowDefault: Boolean): Boolean;
+    procedure ObservePointerRequest(ARequest: TNyxPointerRequest);
+    procedure Retire;
+  end;
   { Entered native focus shield retains the exact mount and uses the existing
     counted grid transition. No session/controller owns this temporary guard. }
   TNativeCellPresentation = class(TInterfacedObject, INyxCollectionCellPresentation)
@@ -418,7 +467,7 @@ type
     to edit, and input/layout commands retain their original admission facts. }
   TNativeMount = class(TNyxCollectionMountBase, INyxCollectionEditMount,
     INyxLCLCollectionObservation, INyxLCLCollectionCellContextInput,
-    INyxCollectionFocusedDraftInput)
+    INyxCollectionFocusedDraftInput, INyxLCLCollectionCellRangeStrokeInput)
   private
     FList: TListBox;
     FGrid: TStringGrid;
@@ -449,6 +498,9 @@ type
     { Exact copied page bounds/field bits drive paint without querying a live
       store/view or a snapshot row from the native DrawCell callback. }
     FRangePaint: INyxCollectionCellRangeIntent;
+    { Preview readiness is a detached flags/data owner, not a live view. The
+      copied row/field cache remains the only native paint membership source. }
+    FRangePaintStroke: INyxCollectionRangeStroke;
     FRangeFirstRow: Integer;
     FRangeLastRow: Integer;
     FRangePaintFields: array of Boolean;
@@ -464,6 +516,19 @@ type
     FColumnClick: TNyxLCLColumnClick;
     FCellContextDispatch: TNyxLCLCellContextDispatch;
     FRangePointerDispatch: TNyxLCLRangePointerDispatch;
+    { The mounted adapter borrows its physical surfaces and owns the ordinary
+      event source only while connected. Pending gestures retain flags alone;
+      retirement clears these ports before any control/frame can be released. }
+    FRangeEvents: INyxEvents;
+    FRangeGesture: INyxCollectionRangeStroke;
+    FRangeGeneration: INyxCancellationScope;
+    FRangeControl: TNyxCollectionStringGrid;
+    FRangeCaptured: Boolean;
+    procedure FinishRangeGesture(const ASubject: INyxCollectionRangeStroke);
+    procedure CancelRangeSurface(Sender: TObject);
+    procedure ArmRangeGesture(AControl: TNyxCollectionStringGrid;
+      const AGeneration: INyxCancellationScope;
+      const AEndpoint: TNyxCollectionCellIdentity);
     function PrepareRangePointer(Sender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer): INyxCollectionCellRangePointerEntry;
     function GridRangeSelected(AColumn, ARow: Integer): Boolean;
@@ -680,6 +745,7 @@ type
   protected
     procedure PrepareTablePresentation; override;
     procedure RenderCellRange; override;
+    procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
     function CellRangeAvailable: Boolean; override;
     function ClipboardInputAvailable: Boolean; override;
@@ -694,6 +760,9 @@ type
     procedure RenderDataset; override;
     procedure DetachTarget; override;
   public
+    function BeginRangeStroke(ASender: TObject; APhase: TNyxCollectionRangeStrokePhase;
+      AShift: TShiftState; AX, AY: Integer;
+      const AGeneration: INyxCancellationScope): INyxCollectionCellRangePointerEntry;
     constructor Create(AControl: TControl; const AView: INyxCollectionView;
       const ALimits: TNyxTableTextWorkLimits;
       AInputPhase: TNyxCollectionInputPhase = ncipReady;
@@ -2596,7 +2665,8 @@ begin
   Grid.Visible := False;
   Grid.AttachColumnInput(InputLifetime, Frame, AOwner.FColumnEditing.Continuity);
   Grid.ConfigureCellContext(InputLifetime, AOwner.BeginCellContext, AOwner.FCellContextDispatch);
-  Grid.ConfigureRangePointer(InputLifetime, AOwner.PrepareRangePointer, AOwner.FRangePointerDispatch);
+  Grid.ConfigureRangePointer(InputLifetime, AOwner.PrepareRangePointer,
+    AOwner.FRangePointerDispatch, AOwner.CancelRangeSurface);
   Grid.Parent := AOwner.FGrid;
   Grid.BorderStyle := bsNone;
   Grid.ScrollBars := ssNone;
@@ -4177,12 +4247,15 @@ procedure TNativeMount.RetireTargetInput;
 var
   LIndex: Integer;
 begin
+  FinishRangeGesture(FRangeGesture);
   FColumnGeometryPending := False;
   FTextLayoutTotal := 0;
   FColumnClick := nil;
   FCellContextDispatch := nil;
   FRangePointerDispatch := nil;
+  FRangeEvents := nil;
   FRangePaint := nil;
+  FRangePaintStroke := nil;
   FRangePaintFields := nil;
 
   if FGrid is TNyxCollectionStringGrid then
@@ -5573,6 +5646,7 @@ begin
     FColumnClick := AColumnClick;
     FCellContextDispatch := ACellContext;
     FRangePointerDispatch := ARangePointer;
+    FRangeEvents := AInputEvents;
 
     FColumnEditing := TColumnEditing.Create(GetInputLifetime, AInputEvents,
       AOriginID, CellCompositionEnded);
@@ -5580,7 +5654,8 @@ begin
     FInputGrid.AttachColumnInput(GetInputLifetime, FColumnFrame,
       FColumnEditing.Continuity);
     FInputGrid.ConfigureCellContext(GetInputLifetime, BeginCellContext, FCellContextDispatch);
-    FInputGrid.ConfigureRangePointer(GetInputLifetime, PrepareRangePointer, FRangePointerDispatch);
+    FInputGrid.ConfigureRangePointer(GetInputLifetime, PrepareRangePointer,
+      FRangePointerDispatch, CancelRangeSurface);
     FInputGridAttached := True;
     FColumnEditing.Add(FInputGrid);
   end;
@@ -7468,6 +7543,7 @@ var
   end;
 
 begin
+  FinishRangeGesture(FRangeGesture);
   FColumnGeometryPending := False;
   FTextLayouts := nil;
   FTextLayoutRows := nil;

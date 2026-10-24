@@ -41,8 +41,8 @@ uses
   nyx.formatting, nyx.times, nyx.numbers.decimal, nyx.contract
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser, nyx.editing.browser
-  {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Windows, LCLType, Types,
-    nyx.collections.lcl.grid, nyx.render.lcl, nyx.editing.lcl,
+  {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Windows, LCLType, LMessages, Types,
+    nyx.collections.lcl.grid, nyx.render.lcl, nyx.editing.lcl, nyx.gestures.lcl,
     nyx.collections.cell.lcl, nyx.menu.lcl, nyx.popover.lcl{$endif};
 
 type
@@ -68,8 +68,8 @@ type
   end;
   {$endif}
 
-  { Each callback mode changes only the original real key's semantic phase.
-    Newer copy is a separate typed command; no physical event is replayed. }
+  { Each callback mode changes only its original physical input's semantic
+    phase. Newer copy/selection is a separate typed command; no event is replayed. }
   TKeyMode = (kmObserve, kmConsume, kmMutate, kmDisableABA, kmNested, kmRetire,
     kmCapture);
 
@@ -746,7 +746,14 @@ begin
   FRenderer := TNyxBrowserRenderer.Create;
   {$else}
   FSurface := TForm.CreateNew(nil);
-  FSurface.ClientWidth := 900;
+  if (ParamCount > 0) and (ParamStr(1) = '--compact') then
+  begin
+    FSurface.ClientWidth := 390;
+  end
+  else
+  begin
+    FSurface.ClientWidth := 900;
+  end;
   FSurface.ClientHeight := 560;
   FRenderer := TNyxLCLRenderer.Create;
   FRenderer.RegisterFactory('table', GridFactory);
@@ -771,6 +778,11 @@ begin
   {$else}
   FSurface.Show;
   FGrid := TNoClipboardGrid(FRenderer.ControlFor(CTable));
+  Check(((ParamCount > 0) and (ParamStr(1) = '--compact') and
+    (FSurface.ClientWidth = 390)) or
+    (((ParamCount = 0) or (ParamStr(1) <> '--compact')) and
+      (FSurface.ClientWidth = 900)),
+    'Native control fixture measures its requested compact or desktop client width');
   {$endif}
   {$ifndef PAS2JS}
   Drain;
@@ -1130,6 +1142,28 @@ begin
       Check(Supports(AExecution, INyxEventResponse, LResponse) and
         LResponse.CanConsume, 'Original managed move admits canonical consumption');
       LResponse.Consume;
+    end;
+
+    if FMode = kmDisableABA then
+    begin
+      FMount.SetInteraction(False, False);
+      FMount.SetInteraction(True, False);
+    end;
+
+    if FMode = kmNested then
+    begin
+      Check(Supports(FMount, INyxCollectionCellRangeMount, LRange) and
+        LRange.SelectCells(NyxCollectionCellIdentity(ItemB, NameField),
+          NyxCollectionCellIdentity(ItemB, NyxColumnIdentity(NyxIntegerField('Score')))),
+        'Nested move callback installs its own newer exact rectangle');
+    end;
+
+    if FMode = kmCapture then
+    begin
+      Check(Supports(AExecution, INyxGestureResponse, LGesture) and
+        LGesture.CanRequest(ngcCapturePointer),
+        'Original managed move admits an explicit caller capture directive');
+      LGesture.CapturePointer;
     end;
     Exit;
   end;
@@ -2108,7 +2142,18 @@ begin
           Inc(LPanes);
         end;
       end;
-      Check(LPanes = 2, 'wide native range paint includes both actual logical pin panes');
+      if FSurface.ClientWidth = 900 then
+      begin
+        Check(LPanes = 2, 'wide native range paint includes both actual logical pin panes');
+      end
+      else
+      begin
+        { The existing presentation suspends physical pins under a narrow
+          budget. Stable logical membership remains independent of those panes. }
+        Check((LPanes = 0) and LIntent.Capture.Contains(ItemA, NameField) and
+          LIntent.Capture.Contains(ItemB, LScore),
+          'Compact native presentation suspends pin panes without losing exact range fields');
+      end;
     end;
     {$endif}
     LKeys := FKeys;
@@ -2724,6 +2769,258 @@ var
   end;
   {$endif}
 
+  {$ifndef PAS2JS}
+  { Real LCL messages exercise implicit Down capture and capture loss before
+    MouseUp, without moving the OS cursor or claiming trusted hardware input.
+    The capture source remains one pane while hit testing enters another pane. }
+  procedure NativeStrokeJourney;
+  var
+    LMoveToken: INyxEventSubscription;
+    LAccepted: INyxCollectionCellRangeIntent;
+    LDownBounds: TRect;
+    LOriginBounds: TRect;
+    LOriginPoint: TPoint;
+    LSourcePoint: TPoint;
+    LDownPoint: TPoint;
+    LReleaseGrid: TNyxCollectionStringGrid;
+    LReleaseColumn: Integer;
+    LReleaseCell: TNyxCollectionCellIdentity;
+    LLaunchOrigin: TNyxCollectionCellIdentity;
+    LRound: Integer;
+    LDownsBefore: Integer;
+    LUpsBefore: Integer;
+    LHit: TWinControl;
+    LFacts: TNyxText;
+
+    procedure SendMove(const APoint: TPoint);
+    begin
+      LTargetGrid.Perform(LM_MOUSEMOVE, MK_SHIFT or MK_LBUTTON,
+        MakeLParam(APoint.X, APoint.Y));
+    end;
+
+    procedure SendUp;
+    begin
+      LTargetGrid.Perform(LM_LBUTTONUP, MK_SHIFT,
+        MakeLParam(LSourcePoint.X, LSourcePoint.Y));
+    end;
+
+  begin
+    LMoveToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
+      ntPointerMove).Subscribe(FCallback);
+    try
+      LRanges.ConfigureCellRange(True);
+      FRangePointerSending := True;
+      FRangeStrokeSending := True;
+      for LRound := 0 to 8 do
+      begin
+        FMode := kmObserve;
+        LRanges.ClearCellRange;
+        FocusOrigin;
+        Check(GetCaptureControl = nil, 'Native stroke begins without unrelated capture');
+        LDownBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+
+        if not Types.IntersectRect(LDownBounds, LDownBounds, LTargetGrid.ClientRect) then
+        begin
+          { Reveal an off-screen launch BEFORE capture, using ordinary native
+            horizontal scrolling. Preserve the focus behavior of that control's
+            goScrollKeepVisible setting rather than inventing hidden input. }
+          LTargetGrid.LeftCol := LTargetColumn;
+          LDownBounds := LTargetGrid.CellRect(LTargetColumn, 2);
+        end;
+        Check(Types.IntersectRect(LDownBounds, LDownBounds, LTargetGrid.ClientRect),
+          'Native drag launch uses the visible part of its actual cell');
+        LLaunchOrigin := LOrigin;
+
+        if (LOriginGrid = LTargetGrid) and (LOriginGrid.Col = LTargetColumn) then
+        begin
+          LLaunchOrigin := NyxCollectionCellIdentity(ItemA, LScore);
+        end;
+        LDownPoint := Point((LDownBounds.Left + LDownBounds.Right) div 2,
+          (LDownBounds.Top + LDownBounds.Bottom) div 2);
+        LDownsBefore := FRangePointers;
+        LUpsBefore := FRangePointerUps;
+
+        if LRound = 5 then
+        begin
+          FMode := kmCapture;
+        end;
+        LTargetGrid.Perform(LM_LBUTTONDOWN, MK_SHIFT or MK_LBUTTON,
+          MakeLParam(LDownPoint.X, LDownPoint.Y));
+        LAccepted := LRanges.CellRange;
+        Check((FRangePointers = LDownsBefore + 1) and (LAccepted <> nil) and
+          LAccepted.Current and LAccepted.Capture.Anchor.Same(LLaunchOrigin) and
+          LAccepted.Capture.Focus.Same(LTarget),
+          'LCL original Down preserves its immediate exact Shift-click selection');
+        LReleaseGrid := LOriginGrid;
+        LReleaseColumn := LOriginColumn;
+        LReleaseCell := LOrigin;
+
+        if (FSurface.ClientWidth = 390) and (LOriginGrid = LTargetGrid) then
+        begin
+          { Suspended pins use one horizontally scrolling native grid. Keep
+            the release in its currently visible Score column while contracting
+            to the first row; auto-scrolling to an off-screen field stays open. }
+          LReleaseGrid := LTargetGrid;
+          LReleaseColumn := LTargetColumn;
+          LReleaseCell := NyxCollectionCellIdentity(ItemA, LScore);
+        end;
+        LOriginBounds := LReleaseGrid.CellRect(LReleaseColumn, 1);
+        Check(Types.IntersectRect(LOriginBounds, LOriginBounds, LReleaseGrid.ClientRect),
+          'Native drag endpoint uses the visible part of its actual cell');
+        LOriginPoint := Point((LOriginBounds.Left + LOriginBounds.Right) div 2,
+          (LOriginBounds.Top + LOriginBounds.Bottom) div 2);
+        LSourcePoint := LTargetGrid.ScreenToClient(LReleaseGrid.ClientToScreen(LOriginPoint));
+
+        if LRound = 5 then
+        begin
+          Check(GetCaptureControl = FGrid,
+            'Explicit canonical capture keeps the renderer control as its owner');
+          SendMove(LSourcePoint);
+          Check((GetCaptureControl = FGrid) and (LRanges.CellRange = LAccepted) and LAccepted.Current and
+            LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+            'Application capture prevents an optional range drag from arming');
+          SendUp;
+          Check(((LTargetGrid = FGrid) and (GetCaptureControl = nil)) or
+            ((LTargetGrid <> FGrid) and (GetCaptureControl = FGrid)),
+            'Original native Up retains its existing source capture-release policy');
+          ReleaseNyxLCLPointer(FGrid);
+          Continue;
+        end;
+        Check(GetCaptureControl = LTargetGrid,
+          'Sustained range adopts the original LCL default capture pair');
+
+        if LRound = 1 then
+        begin
+          FMode := kmConsume;
+        end
+        else if LRound = 6 then
+        begin
+          FMode := kmDisableABA;
+        end
+        else if LRound = 7 then
+        begin
+          FMode := kmNested;
+        end
+        else if LRound = 8 then
+        begin
+          FMode := kmCapture;
+        end;
+
+        if LRound = 3 then
+        begin
+          SendMove(Point(-10000, -10000));
+          Check((GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current, 'Outside native cells cancel without an invalid identity');
+          SendUp;
+          Continue;
+        end;
+        SendMove(LSourcePoint);
+
+        if LRound = 8 then
+        begin
+          Check((GetCaptureControl = FGrid) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current and LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+            'Explicit move capture retires range preview without releasing caller capture');
+          FMode := kmObserve;
+          SendUp;
+          Check(((LTargetGrid = FGrid) and (GetCaptureControl = nil)) or
+            ((LTargetGrid <> FGrid) and (GetCaptureControl = FGrid)),
+            'Range retirement does not change ordinary native Up release ownership');
+          ReleaseNyxLCLPointer(FGrid);
+          Continue;
+        end;
+
+        if LRound in [1, 6, 7] then
+        begin
+          Check(GetCaptureControl = nil,
+            'Consumed, disabled or superseded native movement releases only its old capture');
+
+          if LRound = 7 then
+          begin
+            Check((LRanges.CellRange <> LAccepted) and LRanges.CellRange.Current and
+              LRanges.CellRange.Capture.Anchor.Same(NyxCollectionCellIdentity(ItemB, NameField)),
+              'Newer callback selection survives the old pending movement');
+          end
+          else if LRound = 6 then
+          begin
+            Check((LRanges.CellRange = nil) and not LAccepted.Current and
+              not LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+              'Disabled input keeps its existing range-clear policy across re-enable');
+          end
+          else
+          begin
+            Check((LRanges.CellRange = LAccepted) and LAccepted.Current and
+              LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+              'Cancelled movement restores accepted paint without changing selection');
+          end;
+          FMode := kmObserve;
+          SendUp;
+          Continue;
+        end;
+        LHit := FindLCLWindow(LReleaseGrid.ClientToScreen(LOriginPoint));
+        LFacts := 'round=' + TNyxText(IntToStr(LRound)) + ';accepted=' +
+          TNyxText(BoolToStr(LRanges.CellRange = LAccepted, True)) + ';current=' +
+          TNyxText(BoolToStr(LAccepted.Current, True)) + ';originPaint=' +
+          TNyxText(BoolToStr(LOriginGrid.CellRangeSelected(LOriginColumn, 1), True)) +
+          ';targetPaint=' +
+          TNyxText(BoolToStr(LTargetGrid.CellRangeSelected(LTargetColumn, 2), True)) +
+          ';captureSource=' + TNyxText(BoolToStr(GetCaptureControl = LTargetGrid, True)) +
+          ';hitEndpoint=' + TNyxText(BoolToStr(LHit = LReleaseGrid, True));
+
+        if LHit <> nil then
+        begin
+          LFacts := LFacts + ';hitClass=' + TNyxText(LHit.ClassName);
+        end;
+        Check((LRanges.CellRange = LAccepted) and LAccepted.Current and
+          LReleaseGrid.CellRangeSelected(LReleaseColumn, 1) and
+          not LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+          'Real native pane paint shows pending bounds while accepted selection stays unchanged;' + LFacts);
+
+        if LRound = 2 then
+        begin
+          ReleaseNyxLCLPointer(LTargetGrid);
+          Check((GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current and LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+            'Independent native capture loss cancels preview and restores accepted paint');
+          SendUp;
+        end
+        else if LRound = 4 then
+        begin
+          FMount.Refresh;
+          Check((GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
+            LAccepted.Current, 'Native refresh withdraws pending capture and keeps accepted cells');
+          SendUp;
+        end
+        else
+        begin
+          SendUp;
+          Check((FRangePointerUps = LUpsBefore + 1) and (GetCaptureControl = nil) and
+            (LRanges.CellRange <> LAccepted) and
+            LRanges.CellRange.Capture.Anchor.Same(LLaunchOrigin) and
+            LRanges.CellRange.Capture.Focus.Same(LReleaseCell) and
+            (Screen.ActiveControl = LReleaseGrid) and
+            (LReleaseGrid.Row = 1) and (LReleaseGrid.Col = LReleaseColumn),
+            'LCL capture loss before original Up still commits the exact preview endpoint once');
+        end;
+      end;
+      Check((FView.Store.Snapshot = LSource) and
+        FView.Selection.Snapshot.SameState(LRows),
+        'Native sustained gestures leave accepted RAW and ordinary row selection unchanged');
+    finally
+      FMode := kmObserve;
+      FRangePointerSending := False;
+      FRangeStrokeSending := False;
+      LRanges.ConfigureCellRange(False);
+      LMoveToken.Cancel;
+
+      if GetCaptureControl <> nil then
+      begin
+        ReleaseNyxLCLPointer(GetCaptureControl);
+      end;
+    end;
+  end;
+  {$endif}
+
   function CallbackFocusMatches: Boolean;
   begin
     {$ifdef PAS2JS}
@@ -2853,6 +3150,7 @@ begin
         'managed pointer leaves ordinary row selection, accepted RAW and host authority untouched');
     end;
     {$ifdef PAS2JS}StrokeJourney;{$endif}
+    {$ifndef PAS2JS}NativeStrokeJourney;{$endif}
     FMode := kmObserve;
     LRanges.ConfigureCellRange(False);
     FocusOrigin;

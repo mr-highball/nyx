@@ -90,6 +90,11 @@ type
     AShift: TShiftState; AX, AY: Integer;
     const ACommand: INyxCollectionCellRangePointerEntry) of object;
 
+  { Weak physical-cancellation port. It withdraws only the exact range stroke
+    owned by this native surface; it owns no mount or event router and is
+    cleared before the widget/input incarnation can retire. }
+  TNyxGridRangePointerCancel = procedure(Sender: TObject) of object;
+
   { UI-thread continuity shared by the three surfaces of ONE logical table.
     It owns only composition/deferred-map flags, never a mount, model or widget.
     Text delivery remains independent: PositionsBlocked stops the grid protocol,
@@ -262,6 +267,10 @@ type
     FCellContextDispatch: TNyxGridCellContextDispatch;
     FRangePointerPrepare: TNyxGridRangePointerPrepare;
     FRangePointerDispatch: TNyxGridRangePointerDispatch;
+    FRangePointerCancel: TNyxGridRangePointerCancel;
+    { Native capture may be released before LCL delivers MouseUp. Defer only
+      that message's capture-loss default until its original up has completed. }
+    FRangeReleaseDepth: Integer;
     { Only this physical down's Click/MouseUp tail bypasses LCL row/edit defaults.
       A new down or terminal release clears it; no command is retained here. }
     FRangePointerPress: Boolean;
@@ -311,6 +320,8 @@ type
       AState: TGridDrawState; AText: String); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure CaptureChanged; override;
     procedure UTF8KeyPress(var UTF8Key: TUTF8Char); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -349,7 +360,8 @@ type
     procedure ConfigureCellContext(const ALifetime: INyxCollectionInputLifetime;
       APrepare: TNyxGridCellContextPrepare; ADispatch: TNyxGridCellContextDispatch);
     procedure ConfigureRangePointer(const ALifetime: INyxCollectionInputLifetime;
-      APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch);
+      APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch;
+      ACancel: TNyxGridRangePointerCancel = nil);
     procedure DetachColumnInput;
     function EditorByStyle(Style: TColumnButtonStyle): TWinControl; override;
     procedure RegisterColumnPane(APane: TNyxCollectionStringGrid);
@@ -1745,6 +1757,7 @@ begin
     FCellContextDispatch := nil;
     FRangePointerPrepare := nil;
     FRangePointerDispatch := nil;
+    FRangePointerCancel := nil;
     FRangePointerPress := False;
     LSurface.Retire;
   end;
@@ -1791,7 +1804,8 @@ end;
 
 procedure TNyxCollectionStringGrid.ConfigureRangePointer(
   const ALifetime: INyxCollectionInputLifetime;
-  APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch);
+  APrepare: TNyxGridRangePointerPrepare; ADispatch: TNyxGridRangePointerDispatch;
+  ACancel: TNyxGridRangePointerCancel);
 begin
 
   if (FInputSurface = nil) or not FInputSurface.MatchesLifetime(ALifetime) then
@@ -1799,13 +1813,14 @@ begin
     raise ENyxCollection.Create('Pointer range requires its exact observed grid incarnation');
   end;
 
-  if (Assigned(APrepare) or Assigned(ADispatch)) and
+  if (Assigned(APrepare) or Assigned(ADispatch) or Assigned(ACancel)) and
     (FInputSurface.Retired or ALifetime.Retired) then
   begin
     raise ENyxCollection.Create('Retired pointer range cannot acquire new dispatch ports');
   end;
   FRangePointerPrepare := APrepare;
   FRangePointerDispatch := ADispatch;
+  FRangePointerCancel := ACancel;
 end;
 
 procedure TNyxCollectionStringGrid.DetachColumnInput;
@@ -1816,6 +1831,7 @@ begin
   FCellContextDispatch := nil;
   FRangePointerPrepare := nil;
   FRangePointerDispatch := nil;
+  FRangePointerCancel := nil;
   FRangePointerPress := False;
 
   if FInputSurface <> nil then
@@ -1975,6 +1991,8 @@ var
   LDownMessage: Boolean;
   LPreviousDown: Integer;
   LPreviousDownDouble: Boolean;
+  LRangeRelease: Boolean;
+  LRangeCancel: TNyxGridRangePointerCancel;
 begin
 
   if FInputSurface = nil then
@@ -2002,7 +2020,19 @@ begin
   end;
   LFrame := LSurface.Frame;
   LFrame.Enter;
+  LRangeCancel := FRangePointerCancel;
+  LRangeRelease := (AMessage.Msg = LM_LBUTTONUP) and FRangePointerPress;
+
+  if LRangeRelease then
+  begin
+    Inc(FRangeReleaseDepth);
+  end;
   try
+
+    if (AMessage.Msg = LM_CANCELMODE) and LSurface.Current and Assigned(LRangeCancel) then
+    begin
+      LRangeCancel(Self);
+    end;
 
     if (not LSurface.Ready or not LSurface.PositionReady) and PhysicalInputMessage(AMessage.Msg,
       PtrUInt(AMessage.WParam)) then
@@ -2051,7 +2081,21 @@ begin
       end;
     end;
   finally
-    LFrame.Leave;
+    try
+
+      if LRangeRelease then
+      begin
+        Dec(FRangeReleaseDepth);
+
+        if LSurface.Current and (FRangeReleaseDepth = 0) and
+          not NyxLCLHasPointerCapture(Self) and Assigned(LRangeCancel) then
+        begin
+          LRangeCancel(Self);
+        end;
+      end;
+    finally
+      LFrame.Leave;
+    end;
   end;
 end;
 
@@ -2236,6 +2280,69 @@ begin
       end;
     end;
     inherited MouseDown(Button, Shift, X, Y);
+  finally
+    LFrame.Leave;
+  end;
+end;
+
+procedure TNyxCollectionStringGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  LSurface: INyxGridInputSurface;
+  LFrame: INyxNativeGestureFrame;
+  LMouse: TMouseMoveEvent;
+begin
+
+  if not FRangePointerPress then
+  begin
+    inherited MouseMove(Shift, X, Y);
+    Exit;
+  end;
+  LSurface := FInputSurface;
+
+  if LSurface = nil then
+  begin
+    Exit;
+  end;
+  LFrame := LSurface.Frame;
+  LFrame.Enter;
+  try
+    LMouse := OnMouseMove;
+
+    if LSurface.Current and Assigned(LMouse) then
+    begin
+      { Managed down never initializes native grid drag/click caches. Deliver
+        the original move once, without native row selection or auto-edit. }
+      LMouse(Self, Shift, X, Y);
+    end;
+  finally
+    LFrame.Leave;
+  end;
+end;
+
+procedure TNyxCollectionStringGrid.CaptureChanged;
+var
+  LSurface: INyxGridInputSurface;
+  LFrame: INyxNativeGestureFrame;
+  LCancel: TNyxGridRangePointerCancel;
+begin
+  LSurface := FInputSurface;
+
+  if LSurface = nil then
+  begin
+    inherited CaptureChanged;
+    Exit;
+  end;
+  LFrame := LSurface.Frame;
+  LFrame.Enter;
+  try
+    LCancel := FRangePointerCancel;
+    inherited CaptureChanged;
+
+    if LSurface.Current and (FRangeReleaseDepth = 0) and
+      not NyxLCLHasPointerCapture(Self) and Assigned(LCancel) then
+    begin
+      LCancel(Self);
+    end;
   finally
     LFrame.Leave;
   end;

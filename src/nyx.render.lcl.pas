@@ -117,6 +117,7 @@ uses
   nyx.collections.presentation,
   nyx.collections.clipboard.actions,
   nyx.collections.range.pointer,
+  nyx.collections.range.stroke,
   nyx.collections.range.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
@@ -262,6 +263,8 @@ type
     procedure PreparedRangePointer(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer;
       const ACommand: INyxCollectionCellRangePointerEntry);
+    function HandleRangeMotion(ASender: TObject; ATrigger: TNyxTrigger;
+      AButton: TNyxPointerButton; AShift: TShiftState; AX, AY: Integer): Boolean;
     procedure DoubleClick(ASender: TObject);
     procedure PointerDown(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
@@ -10193,6 +10196,7 @@ var
   LInput: TControl;
   LRenderer: TNyxLCLRenderer;
   LOriginID: TNyxText;
+  LRangeDecision: INyxLCLRangeCaptureDecision;
 begin
   LGeneration := GenerationLease;
   Result := False;
@@ -10335,6 +10339,13 @@ begin
           RequireNativeGeneration(LGeneration);
           LResult := LDecision.Seal;
           RequireNativeGeneration(LGeneration);
+
+          if (AManagedInput <> nil) and AManagedInput.Current and
+            Supports(AManagedInput, INyxLCLRangeCaptureDecision, LRangeDecision) then
+          begin
+            LRangeDecision.ObservePointerRequest(LResult.PointerRequest);
+            RequireNativeGeneration(LGeneration);
+          end;
 
           { Same-view input retirement also revokes physical capture. The
             exact original envelope survives only this synchronous call; never
@@ -10737,6 +10748,151 @@ begin
 end;
 
 
+function TNyxLCLBinding.HandleRangeMotion(ASender: TObject; ATrigger: TNyxTrigger;
+  AButton: TNyxPointerButton; AShift: TShiftState; AX, AY: Integer): Boolean;
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LFrame: INyxNativeGestureFrame;
+  LEvents: INyxEvents;
+  LScope: INyxCancellationScope;
+  LInput: INyxLCLCollectionCellRangeStrokeInput;
+  LCommand: INyxCollectionCellRangePointerEntry;
+  LPhase: TNyxCollectionRangeStrokePhase;
+  LRevision: Integer;
+  LPreviousUp: TMouseEvent;
+  LPreviousMove: TMouseMoveEvent;
+  LConsumed: Boolean;
+  LFailed: Boolean;
+  LCompletionFailed: Boolean;
+begin
+  Result := False;
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit(True);
+  end;
+  LFrame := LGeneration.PhysicalFrame;
+  LFrame.Enter;
+  try
+    try
+
+      if FRenderer.FDesignMode or
+        not Supports(FCollectionMount, INyxLCLCollectionCellRangeStrokeInput, LInput) then
+      begin
+        Exit;
+      end;
+      LEvents := FRenderer.FEvents;
+      LScope := NyxEventGeneration(LEvents);
+      RequireNativeGeneration(LGeneration);
+      LRevision := LEvents.ViewRevision;
+      RequireNativeGeneration(LGeneration);
+      LPhase := ncrspMove;
+
+      if ATrigger = ntPointerUp then
+      begin
+        LPhase := ncrspRelease;
+      end;
+      LCommand := LInput.BeginRangeStroke(ASender, LPhase, AShift, AX, AY, LScope);
+      RequireNativeGeneration(LGeneration);
+
+      if LCommand = nil then
+      begin
+        Exit;
+      end;
+      Result := True;
+      LFailed := False;
+      try
+        try
+          try
+            LCommand.Prepare;
+          except
+            on ENyxCollectionRangeStale do
+            begin
+              { Claimed original input never falls back to a newer row default. }
+            end;
+          end;
+          RequireNativeGeneration(LGeneration);
+
+          if not LCommand.DispatchCurrent or LScope.Cancelled then
+          begin
+            Exit;
+          end;
+
+          if ATrigger = ntPointerUp then
+          begin
+            LPreviousUp := FPointerHooks[PointerSlot(ASender)].Up;
+
+            if Assigned(LPreviousUp) then
+            begin
+              LPreviousUp(ASender, mbLeft, AShift, AX, AY);
+            end;
+          end
+          else
+          begin
+            LPreviousMove := FPointerHooks[PointerSlot(ASender)].Move;
+
+            if Assigned(LPreviousMove) then
+            begin
+              LPreviousMove(ASender, AShift, AX, AY);
+            end;
+          end;
+          RequireNativeGeneration(LGeneration);
+
+          if LScope.Cancelled or (LEvents.ViewRevision <> LRevision) or
+            not LCommand.DispatchCurrent then
+          begin
+            Exit;
+          end;
+          LConsumed := PointerEvent(ASender, ATrigger, Point(AX, AY), True,
+            AButton, AShift, LCommand);
+          RequireNativeGeneration(LGeneration);
+          LCommand.Complete(not LConsumed and not LScope.Cancelled and
+            (LEvents.ViewRevision = LRevision) and LCommand.DispatchCurrent);
+        except
+          LFailed := True;
+          raise;
+        end;
+      finally
+        try
+          LCompletionFailed := False;
+          try
+            try
+              LCommand.Complete(False);
+            except
+              LCompletionFailed := True;
+              raise;
+            end;
+          finally
+            try
+              LCommand.Retire;
+            except
+
+              if not LCompletionFailed then
+              begin
+                raise;
+              end;
+            end;
+          end;
+        except
+
+          if not LFailed then
+          begin
+            raise;
+          end;
+        end;
+      end;
+    except
+      on ENyxNativeGenerationRetired do
+      begin
+        Result := True;
+      end;
+    end;
+  finally
+    LFrame.Leave;
+  end;
+end;
+
 procedure TNyxLCLBinding.PointerUp(ASender: TObject; AButton: TMouseButton;
   AShift: TShiftState; AX, AY: Integer);
 var
@@ -10761,6 +10917,12 @@ begin
       begin
         Exit;
       end;
+      if (AButton = mbLeft) and HandleRangeMotion(ASender, ntPointerUp,
+        npbPrimary, AShift, AX, AY) then
+      begin
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
       LEvents := FRenderer.FEvents;
       RequireNativeGeneration(LGeneration);
       LRevision := LEvents.ViewRevision;
@@ -10820,6 +10982,11 @@ begin
       begin
         Exit;
       end;
+      if HandleRangeMotion(ASender, ntPointerMove, npbNone, AShift, AX, AY) then
+      begin
+        Exit;
+      end;
+      RequireNativeGeneration(LGeneration);
       LEvents := FRenderer.FEvents;
       RequireNativeGeneration(LGeneration);
       LRevision := LEvents.ViewRevision;

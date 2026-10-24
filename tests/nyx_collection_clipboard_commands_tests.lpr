@@ -166,6 +166,9 @@ type
     ThrowStrokeFocus: Boolean;
     ThrowStrokePaint: Boolean;
     RetireStrokeOnFocus: Boolean;
+    LastRetiredStroke: INyxCollectionRangeStroke;
+    RetiredStrokeWasCurrent: Boolean;
+    StrokeRetirements: Integer;
     Item: TNyxItemRef;
     Field: TNyxColumnIdentity;
     procedure SuspendInput(AValue: Boolean);
@@ -175,6 +178,7 @@ type
     procedure RenderDataset; override;
     procedure DetachTarget; override;
     procedure RenderCellRange; override;
+    procedure RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke); override;
     function FocusCellRange(ARow, AColumn: Integer): Boolean; override;
   end;
 
@@ -841,6 +845,13 @@ begin
   begin
     raise Exception.Create('stroke paint diagnostic');
   end;
+end;
+
+procedure TTestMount.RetireCellRangeStroke(const AStroke: INyxCollectionRangeStroke);
+begin
+  LastRetiredStroke := AStroke;
+  RetiredStrokeWasCurrent := AStroke.Current;
+  Inc(StrokeRetirements);
 end;
 
 function TTestMount.FocusCellRange(ARow, AColumn: Integer): Boolean;
@@ -1865,9 +1876,14 @@ begin
       LObject.PreviewContains(LPrevious.Capture.Focus),
       'Matching capture loss restores accepted highlighting without clearing its range');
     BeginStroke;
+    LObject.StrokeRetirements := 0;
     LMount.Refresh;
     Check(not LStroke.Current and (LRanges.CellRange = LPrevious),
       'A target refresh withdraws pending geometry while preserving accepted cells');
+    Check((LObject.LastRetiredStroke = LStroke) and (LObject.StrokeRetirements = 1),
+      'Refresh notifies the physical adapter about the exact withdrawn subject');
+    Check(not LObject.RetiredStrokeWasCurrent,
+      'Physical cleanup observes retired authority and cannot revive its original stroke');
     BeginStroke;
     Prepare(ncrspMove, LPointer);
     LOlder := LEntry;
