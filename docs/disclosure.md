@@ -60,6 +60,11 @@ Nodes own their parts; borrowed validation references are never retained.
 
 Both adapters consume the same visibility gate. Browser headers expose
 `aria-expanded` and `aria-controls` with the retained body's exact identity.
+Native construction applies effective ancestor/disclosure visibility before
+parenting a control. A collection may need its native handle before first Sync;
+that initialization must not temporarily mark closed sibling inputs visible.
+This retains ordinary controls and bindings rather than rebuilding them when
+the section opens. The existing native selection-initialization guard remains.
 Native headers reuse the themed Lazarus button and copy a typed collapsed or
 expanded cue from accepted runtime state. A drawn chevron keeps the authored
 caption separate and reserves matching font-relative space in intrinsic sizing.
@@ -97,6 +102,12 @@ connected host lifecycle and preserving observing-release delivery remain open.
 
 Run `tools/build.ps1 -Target disclosure -DisclosureEvidenceDirectory <NEW-path>`
 to execute native controls and generated Pascal, then compile browser inputs.
+The native initialization consumer observes real `CreateWnd` calls with a bound
+table, closed disclosure, hidden ancestor and visible peer. It also checks later
+opening, object identity, Unicode, focus, authored-state preservation and empty
+initial selection. Replacing only the renderer with its previous implementation
+makes that same regression fail before a later Sync can conceal the wrong flag.
+This is correctness evidence; whole-editor performance remains a separate gate.
 Serve the staged `browser/disclosure.html` through an existing HTTP host and
 observe `data-nyx-disclosure="passed"` for browser execution evidence.
 On Windows, the same target also compiles the Pascal `nyx_disclosure_input`

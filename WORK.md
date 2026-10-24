@@ -238,14 +238,54 @@ full native run. The current11 browser pure suite passes73 and actual controls
 pass25 at verified1280x900 and390x900, all with empty warning/error logs; native26
 has one extra deferred-application-error assertion. The exact updated generated
 application passes74 natively with a complete clean heap and74 in the browser,
-logs empty. Current full browser semantic execution remains live after
-navigation/observer deadlines; it is not restarted or counted as passed. Root
-owns that tab and its temporary loopback host. Full W1/W2 stays open. Root
+logs empty. Current full browser semantic execution subsequently passes245,
+with an empty warning/error log. Earlier navigation/observer deadlines did not
+restart or reduce the synchronous test. All12 original/staged artifact pairs
+reverify unchanged. Exact host58056 is stopped/joined, port19145 has no listener,
+tab109 is closed and the temporary viewport override is reset. Full W1/W2 stays
+open. Formatting checkpointb001af4 is committed, pushed and remote-verified. Root
 independently reviews the new policy/paint/source boundaries; Lil' Scooty reviews
 the optimized-build diff and finds no concrete defect. The next approved W2
 packet is display copying through the existing request slot, followed by explicit
 readonly focused-draft capture. Both preserve the original RAW interface and
 command behavior.
+
+The previous continuation makes product progress through the committed typed
+formatting integration and actual browser73/25/74/245 results. Own12 subsequently
+joins at its unchanged900s native1280 deadline, stage17/check310 during Redo
+readiness; PID16652 is absent and all2273 private source pins remain unchanged.
+No compact native or own native-produced application is launched. The checked
+-O2 build does not resolve full-editor performance. This is a failed full gate,
+not a completion claim or an external blocker.
+
+Root's next bounded deliverable corrects native initial visibility. Build formerly
+uses only the node's visible property until first Sync, while the ordinary
+collection mount's required initial HandleNeeded can realize visible siblings.
+Installed LCL CreateWnd confirms that it traverses visible child controls. Build
+now applies the same effective ancestor/disclosure visibility as Sync before
+parenting. All descriptor/control objects, bindings and the initial-selection
+guard remain. A real CreateWnd probe and existing disclosure/generated consumers
+must qualify the change; source review alone does not establish its performance.
+The first orchestration refuses malformed compiler argument composition before
+launch; a subsequent fixture compile exposes an incorrect Add argument and a
+missing view-types import. Those failures remain retained; the corrected fixture
+uses specialized column ownership and the defining unit. Current probe03 reads
+an isolated own12-derived source copy with only Root overlays, excluding new
+helper W2 edits. Full task03 remains open.
+
+The repaired probe03 passes11 actual native checks with a complete clean heap.
+A separately compiled original-renderer negative control fails the exact
+initial-visibility assertion, also with a complete clean heap. The existing
+disclosure journey passes30 interaction/34 complete-lifetime checks and its own
+independently compiled generated application passes31/35; both have complete
+clean heaps. All four compilers emit zero warnings. Integration executor13687
+joins0, all eight compiler/runtime PIDs are absent and all2274 source pins
+reverify unchanged. Lil' Scooty independently reviews the six-line renderer move
+and finds no concrete regression. The maintained disclosure target includes the
+new native consumer. Browser code is unchanged; this is not a new browser,
+accessibility, visual-quality or full Studio speed claim. Root releases native
+UI for the helper's next W2 controls; a same-source bounded cost comparison is
+the next performance decision, rather than another equivalent full timed rerun.
 
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 

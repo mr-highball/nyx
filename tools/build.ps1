@@ -7825,6 +7825,12 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       "-Fu$nyxLazarus/lcl/units/$nyxDisclosurePlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxDisclosurePlatform",
       "-Fu$nyxLazarus/packager/units/$nyxDisclosurePlatform")
+    # Observe real window initialization before Sync can correct visibility.
+    # The ordinary disclosure journey then retains its original input/lifetime
+    # and independently compiled reconstruction checks.
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDisclosureFlags + @('tests/nyx_native_initial_visibility.lpr'))
+    & (Join-Path $nyxDisclosureNative 'nyx_native_initial_visibility.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Native initial visibility admission failed' }
     Invoke-NyxCompiler $nyxLclFpc ($nyxDisclosureFlags + @('tests/nyx_disclosure_controls.lpr'))
     & (Join-Path $nyxDisclosureNative 'nyx_disclosure_controls.exe') (Join-Path $nyxDisclosureGenerated 'nyx.generated.disclosure.pas')
     if ($LASTEXITCODE -ne 0) { throw 'Native disclosure admission/controls failed' }

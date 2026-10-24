@@ -67,12 +67,19 @@ forms/history/inheritance, source generation/reading and bounded semantic fields
 It passes73 native/browser pure checks,26 native controls with a clean heap and25
 browser control checks at verified desktop/compact sizes. The exact generated
 all-style/program-coexistence application passes74 on each target, clean native
-heap and empty browser logs. Current full browser semantic execution remains
-pending; the earlier native schema182/semantic245 results retain their exact09
-source identity. Display copying through the existing request slot and explicit
+heap and empty browser logs. Current full browser semantic execution also
+passes245, logs empty; earlier native schema182/semantic245 results retain their
+exact09 source identity. Display copying through the existing request slot and explicit
 readonly focused-draft capture are the next W2 integration packet. Full native
 Studio is being checked with an optional optimized build that preserves all
 safety flags, assertions and the900s runtime bound; compilation is not acceptance.
+That own12 native run still times out at stage17/check310, with all2273 source
+pins unchanged. A subsequent native initial-visibility repair passes11 real
+CreateWnd/open/focus/ownership checks; the original-renderer negative control
+fails the same assertion. Existing disclosure34 and its own compiled35 complete
+lifetime checks pass with clean heaps. Effective ancestor/disclosure visibility
+is now applied before native parenting, while controls and initialization guards
+stay retained. Full native Studio performance remains open.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

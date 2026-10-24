@@ -2998,6 +2998,12 @@ begin
   Inc(FBuildCreationMilliseconds, GetTickCount64 - LBuildStarted);
   LBuildStarted := GetTickCount64;
   {$endif}
+  { Match the admitted ancestor/disclosure policy before parenting can create
+    native windows. A collection's initial HandleNeeded may realize its parent
+    and visible siblings before the first Sync; closed bodies must already be
+    hidden during that native initialization. Keep their control objects and
+    bindings so opening later uses the same fields and event identities. }
+  Result.Visible := NyxInteractionVisible(ANode);
   Result.Parent := AParent;
   {$ifdef NYX_STUDIO_PROFILE}
   Inc(FBuildParentMilliseconds, GetTickCount64 - LBuildStarted);
@@ -3005,7 +3011,6 @@ begin
   {$endif}
   Result.Hint := ANode.Prop('hint');
   Result.ShowHint := Result.Hint <> '';
-  Result.Visible := ANode.Prop('visible', 'true') <> 'false';
   Result.Enabled := ANode.Prop('enabled', 'true') <> 'false';
 
   if LInput <> nil then
