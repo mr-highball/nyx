@@ -115,6 +115,29 @@ array, and fluent metadata/tag/cache/fallback changes return another definition.
 `NewNyxResourceContext` captures an independent frame; editing a returned `Snapshot`
 changes only that snapshot. None of these values retains a document or widget.
 
+Compose reusable asset libraries through the optional atomic import capability:
+
+```pascal
+NyxResourceCatalogImport(Document.Resources).Import(SharedAssets);
+```
+
+Import preserves the destination catalog's identity, so retained resource facades
+see the complete new membership together. An exact resource-name/locale pair
+replaces its existing slot; new pairs append in source order. The complete final
+candidate must fit the existing count and byte limits. A later shrinking
+replacement can therefore make an import fit even if sequential insertion would
+temporarily exceed a limit. Failure leaves destination membership unchanged.
+
+Built-in catalogs copy their already-admitted canonical entry data and share
+only immutable definitions. Foreign sources are normalized through their strict
+wire once; neither their mutable membership nor a claimed Clone implementation
+is trusted. The entered destination remains retained across foreign callbacks.
+The optional `INyxResourceCatalogImport` keeps the original `INyxResources` GUID
+and methods unchanged; a destination without it refuses explicitly. Callers
+coordinate this synchronous mutation with catalog readers as they do for Define.
+Studio uses independent snapshots of its startup glyph catalog through this
+same public contract, avoiding atlas re-admission on each shell composition.
+
 Text retains Unicode scalars, NUL and line endings. JSON preserves original file
 bytes and decimal spelling; read `.AsDecimal.Text` for exact numeric tokens.
 Requesting an approximate number is a deliberate typed projection. Foreign

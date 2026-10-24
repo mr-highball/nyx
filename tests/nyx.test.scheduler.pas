@@ -68,6 +68,29 @@ uses
   {$ENDIF}
 
 type
+  { Independent fixture facts outlive the counted delivery scope and are never
+    retained by a router, scheduler or callback after this isolated journey. }
+  TScopeLeaseFacts = class
+  public
+    Destroyed: Integer;
+  end;
+
+  { A UI-only certified delivery source implements both owning scope facets.
+    Destruction is counted without retaining its caller or inventing cancellation
+    from reference count. Exact lifetime is tested through real guarded dispatch. }
+  TScopeLeaseProbe = class(TInterfacedObject, INyxCancellationScope,
+    INyxCancellationReadiness)
+  private
+    FFacts: TScopeLeaseFacts;
+    FCancelled: Boolean;
+  public
+    constructor Create(AFacts: TScopeLeaseFacts);
+    destructor Destroy; override;
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    procedure CheckReady;
+  end;
+
   TProbe = class(TNyxEventCallback)
   public
     Calls: Integer;
@@ -887,6 +910,123 @@ begin
 end;
 {$endif}
 
+constructor TScopeLeaseProbe.Create(AFacts: TScopeLeaseFacts);
+begin
+  inherited Create;
+  FFacts := AFacts;
+end;
+
+destructor TScopeLeaseProbe.Destroy;
+begin
+  Inc(FFacts.Destroyed);
+  inherited Destroy;
+end;
+
+procedure TScopeLeaseProbe.Cancel;
+begin
+  FCancelled := True;
+end;
+
+function TScopeLeaseProbe.GetCancelled: Boolean;
+begin
+  Result := FCancelled;
+end;
+
+procedure TScopeLeaseProbe.CheckReady;
+begin
+
+  if FCancelled then
+  begin
+    raise ENyxSchedule.Create('Original counted delivery was cancelled');
+  end;
+end;
+
+{ Real nested event scopes must retain both certified parent and delivery
+  interfaces independently. Releasing a completed callback context must not
+  destroy a caller's still-held delivery or the router's canonical generation. }
+function RunEventScopeLeaseTests: Integer;
+var
+  LRouter: INyxEvents;
+  LParent: INyxCancellationScope;
+  LParentReady: INyxCancellationReadiness;
+  LDelivery: INyxCancellationScope;
+  LDeliveryReady: INyxCancellationReadiness;
+  LProbe: TProbe;
+  LProbeLease: INyxEventCallback;
+  LToken: INyxEventSubscription;
+  LTickets: TNyxExecutions;
+  LEvent: TNyxEventInfo;
+  LFacts: TScopeLeaseFacts;
+  LRefused: Boolean;
+begin
+  Result := 0;
+  LFacts := TScopeLeaseFacts.Create;
+  LRouter := NewNyxEvents;
+  try
+    LParent := NyxEventGeneration(LRouter);
+    Check(Supports(LParent, INyxCancellationReadiness, LParentReady),
+      'actual router generation supplies its independent readiness lease', Result);
+    LDelivery := TScopeLeaseProbe.Create(LFacts);
+    Check(Supports(LDelivery, INyxCancellationReadiness, LDeliveryReady),
+      'counted guarded delivery supplies a separate readiness lease', Result);
+    LProbe := TProbe.Create;
+    LProbeLease := LProbe;
+    LToken := LRouter.OnAfterEnter(NyxControlEvents('reply')).Subscribe(LProbeLease);
+    LEvent := EventInfo;
+    LTickets := LRouter.DispatchGuarded(LEvent, 'reply', 'thread', LDelivery);
+    Check((Length(LTickets) = 1) and (LTickets[0].Status = nesSucceeded) and
+      (LProbe.Calls = 1) and not LProbe.RetainedContext.Cancelled,
+      'guarded real callback retains an admitted parent and delivery context', Result);
+    LDeliveryReady := nil;
+    LTickets := nil;
+    LProbe.RetainedContext := nil;
+    Check(LFacts.Destroyed = 0,
+      'releasing the actual child context preserves the caller-owned delivery', Result);
+    LDelivery.Cancel;
+    Check(LDelivery.Cancelled and (LFacts.Destroyed = 0),
+      'retained delivery facade remains callable after child-scope retirement', Result);
+    LDelivery := nil;
+    Check(LFacts.Destroyed = 1,
+      'delivery retires exactly once after its final real caller lease', Result);
+    LParentReady.CheckReady;
+    Check(not LParent.Cancelled,
+      'child-scope retirement preserves both retained canonical parent facets', Result);
+    LParent := nil;
+    LParentReady := nil;
+    LParent := NyxEventGeneration(LRouter);
+    Check(Supports(LParent, INyxCancellationReadiness, LParentReady),
+      'the router still owns its canonical generation after external leases retire', Result);
+    LParentReady.CheckReady;
+    LRouter.Close;
+    LRouter := nil;
+    LRefused := False;
+    try
+      LParentReady.CheckReady;
+    except
+      on ENyxSchedule do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LParent.Cancelled and LRefused,
+      'retained canonical parent safely reports terminal cancellation after router disposal', Result);
+  finally
+
+    if LRouter <> nil then
+    begin
+      LRouter.Close;
+    end;
+    LToken := nil;
+    LProbeLease := nil;
+    LTickets := nil;
+    LDeliveryReady := nil;
+    LDelivery := nil;
+    LParentReady := nil;
+    LParent := nil;
+    LFacts.Free;
+  end;
+end;
+
 function RunNyxSchedulerTests: Integer;
 var
   LRouter: INyxEvents;
@@ -904,7 +1044,7 @@ var
   LEvent: TNyxEventInfo;
   LRejected: Boolean;
 begin
-  Result := RunNyxKeyboardResponseTests;
+  Result := RunNyxKeyboardResponseTests + RunEventScopeLeaseTests;
   LRouter := NewNyxEvents;
   try
     LFirst := TProbe.Create;

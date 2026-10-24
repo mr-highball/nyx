@@ -279,9 +279,7 @@ begin
   begin
     LDensity := nbdTouch;
   end;
-  ADocument.Resources.Define(NyxStudioGlyphResource,
-    NyxImageResource(NyxStudioGlyphAtlas).Describe('Studio glyphs',
-      'A locally embedded family of decorative command glyphs.'));
+  NyxResourceCatalogImport(ADocument.Resources).Import(NyxStudioGlyphResources);
   Face(LRoot);
   LNode := LRoot.Find('studio-left');
 

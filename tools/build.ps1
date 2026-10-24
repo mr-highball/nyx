@@ -6219,12 +6219,25 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     if ($LASTEXITCODE -ne 0) {
       throw 'Immutable resource contract qualification failed'
     }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Fisrc', '-Fistudio', "-FU$nyxFoundationNative",
+      "-FE$nyxFoundationNative", 'tests/nyx_resource_import_tests.lpr')
+    & (Join-Path $nyxFoundationNative 'nyx_resource_import_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Atomic reusable resource import qualification failed'
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Futests', "-FE$nyxFoundationBrowser", 'tests/nyx_resource_foundation_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Fisrc', '-Fistudio', "-FE$nyxFoundationBrowser",
+      'tests/nyx_resource_import_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxFoundationBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-foundation.html') `
+      -Destination $nyxFoundationBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-import.html') `
       -Destination $nyxFoundationBrowser
     Write-Host 'Immutable resource native gate passed; actual HTTP browser execution remains separate.'
     exit 0

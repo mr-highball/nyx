@@ -973,6 +973,9 @@ end;
 
 constructor TNyxEventScope.Create(const AParent: INyxEventScope;
   const ADelivery: INyxCancellationScope);
+var
+  LParentReady: INyxCancellationReadiness;
+  LDeliveryReady: INyxCancellationReadiness;
 begin
   inherited Create;
   FParent := AParent;
@@ -980,13 +983,18 @@ begin
 
   if FParent <> nil then
   begin
-    Supports(FParent, INyxCancellationReadiness, FParentReady);
+    Supports(FParent, INyxCancellationReadiness, LParentReady);
+    FParentReady := LParentReady;
   end;
 
   if FDelivery <> nil then
   begin
-    Supports(FDelivery, INyxCancellationReadiness, FDeliveryReady);
+    Supports(FDelivery, INyxCancellationReadiness, LDeliveryReady);
+    FDeliveryReady := LDeliveryReady;
   end;
+  { A QI out parameter is a temporary owning lease in pas2js. Assign fields
+    normally from locals so routine-final temporary release cannot withdraw
+    the field's separate parent/delivery lease or cause later double release. }
 end;
 
 procedure TNyxEventScope.Cancel;

@@ -193,6 +193,16 @@ avoid a callback retaining its own router/view. Explicit Close also releases
 registrations when an application itself owns a router. Renderer disposal calls
 Close automatically.
 
+Guarded callback scopes retain independent parent and delivery readiness leases.
+Retiring a completed child leaves a caller's delivery and the router's canonical
+generation usable; closing the router instead makes retained readiness report
+terminal cancellation safely. Adapter implementations should query optional
+interfaces into local owning variables and then assign their fields normally.
+Passing an interface field directly as a `Supports` output can make pas2js
+release that field as a temporary as well as during owner retirement. The
+guarded-scope regression exercises the actual dispatch path and final delivery
+destruction on both targets.
+
 NyxControlEvents selects the originating control. NyxCompoundEvents selects the
 semantic source. Design identity is the default; explicit niRuntime selects an
 exact realized instance/part. These names remain distinct typed selectors.

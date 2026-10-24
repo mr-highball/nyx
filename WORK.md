@@ -4,81 +4,137 @@
 
 ## Column arrangement W1 — 2026-10-22
 
-### Current checkpoint — extension admission repair and cell context actions
+### Current checkpoint — managed cell actions and exact compiled applications
 
-The previous goal turn made progress by removing the accumulated source-scope
-approval restrictions. Nyx-owned library implementations, base classes and public
-contracts are ordinary authorized work. The current continuation has new actual
-browser evidence and a concrete native performance prerequisite; no original
-criterion, W1/W2 packet or full goal is complete.
+The last direct response revalidated already committed source authority without
+changing product state. This continuation makes concrete progress through actual
+compact Studio/export results, a reusable atomic resource-import capability and
+ownership repairs. Library implementations, base classes and public contracts
+are ordinary authorized development. All original task03 criteria, W1/W2 and the
+full goal remain open.
 
-The unchanged own08 ordinary browser journey eventually passes832 checks at
-measured1280x900, with an empty terminal warning/error log. Its complete13541-unit
-accepted project/source packet is saved. Earlier observation timeouts did not
-stop that application. Compact390x900 instead produces an actual failure at
-stage18/check318: Properties is queried before compact Inspector publication.
-Both terminal outcomes, the desktop packet and screenshots are retained under
-ignored build/qualification/studio-layout-own-08/browser. The failure remains;
-LayoutStep now waits on the existing public AwaitStudio fence immediately after
-its Inspector action. It preserves every original assertion and completion bound.
-This repair still requires browser execution.
+The new optional INyxResourceCatalogImport preserves the original catalog ABI
+and destination identity. It snapshots/adopts private immutable admitted entries,
+strictly normalizes foreign sources once, preserves exact replacement order and
+checks the complete final count/wire charge before publication. Refusal cannot
+publish an earlier replacement. An entered receiver lease survives foreign
+getters that withdraw the caller's target/importer fields. A bounded fixture
+helper ends compiler-owned fluent temporaries before this lifetime test. Removing
+only the entry lease from a diagnostic browser build fails that exact assertion;
+the repaired source passes32 actual browser checks, logs empty, and33 native
+checks with a complete clean heap (32 functional plus one measured-wire equality).
+Original accessor/UTF-8 fixture warnings and pas2js finalization compile failures
+remain retained. Import05 has zero owned warnings; browser compilers retain seven
+installed classes.pas warnings. The normal resource-foundation target now runs
+and stages the new consumer beside the existing gate.
 
-The original native own07 and process-local trace-depth own08 both hit the same
-900s full-journey budget, at stage17/check308 and stage18/check342 respectively.
-Their actual processes are joined, without functional passes or complete heaps.
-All1882 original own07 source pins remain fixed. Compact native and independently
-compiled own companions were not attempted by those first-failure wrappers.
-The visibility helper meanwhile passes381 shared checks on each actual target;
-the native disclosure control consumer passes30 interaction/34 complete-lifetime
-checks with a clean heap. These focused results do not close the full journey.
+Studio imports independent clones of one startup glyph catalog instead of
+re-admitting its atlas on every shell composition. A focused20-iteration native
+sample measures the former public admission at2563ms and import below the
+timer's resolution, with identical catalog wire. This is not a whole-editor speed
+claim. A fresh complete current-source build compiles native Chrome controls and
+browser Studio, then the ordinary1280 native chrome journey passes48 checks with
+a complete clean heap in68.9s. Its saved Inspector capture is visually inspected;
+the asset glyphs and ordinary controls remain visible. Compact native Chrome and
+the complete native table-Studio journey are not qualified by this result.
 
-A bounded sample of that exact checked native own08 executable now identifies
-layout visibility traversing NyxExtension -> NyxData(text) -> JSON parsing and
-allocation. Earlier GDB interrupt/fixture-path failures remain in ignored
-studio-stack-sample-01/02; sample03 captures the actual main-thread stack through
-a temporary Pascal DebugBreakProcess bridge and joins its exact inferior. This
-changes the next action from another equivalent full run to repairing name
-admission. NyxJSONStringByteLength now validates exact UTF-8/UTF-16 and counts
-the quoted wire budget without allocating a JSON string/tree. NyxExtension uses
-that admission and keeps the original name. The independent oracle fixture still
-  uses unchanged NyxData(name).AsText, covering controls/NUL/normalization,
-malformed Unicode, strict solidus escaping and the full4MiB boundary. It passes
-1918 native checks with a complete clean heap and1914 actual browser checks
-with an empty warning/error log. The count difference is the target-specific
-malformed UTF-8 versus UTF-16 corpus. Independent source review finds no mismatch.
-The fresh own09 native disclosure consumer also passes30/34 checks with a clean
-heap. Its unchanged full900s native Studio journey is currently live against a
-new fixed1883-file snapshot, while the compact browser repair is being observed.
+Direct extension-name admission now preserves the original exact Unicode and
+quoted4MiB JSON contract without formatting/parsing a temporary JSON tree.
+NyxJSONStringByteLength supplies the public non-allocating admission/count query;
+NyxExtension retains the original name. The unchanged NyxData(name).AsText oracle
+passes1918 native checks with a complete clean heap and1914 actual browser checks
+with an empty warning/error log. The difference is the malformed UTF-8/UTF-16
+corpus. Independent source review finds no mismatch. The earlier visibility
+helper retains381 checks per actual target, and the fresh own09 disclosure
+consumer passes30 interaction/34 complete-lifetime checks with a clean heap.
 
-Lil' Scooty's managed accepted-cell Inspect/Copy actions now pass99 actual native
-checks with a complete clean heap and zero owned compiler warnings. Browser13
-compiles with zero owned/seven installed RTL warnings; actual execution remains
-required. Real nested contexts establish later accepted intent, while closing
-an inspector in a legacy Copy callback prevents queued host entry. Earlier
-09/11/12 failures remain: compound menu IDs were missing their required named
-parts. Pure command04 has70 native checks and a clean heap; its actual browser
-consumer now passes70 actual browser checks with an empty warning/error log.
-Browser13 desktop instead exposes an actual managed-interface lifetime fault
-after nested dispatch. Corrected14 queries optional interfaces into local owning
-references before assigning fields, avoiding the emitted constructor's duplicate
-field release. It preserves all13 assertions and adds retained-facade retirement
-checks; actual browser14 passes116 checks at measured1280x720 with an empty log.
-Its native UI and compact browser checks remain pending. The first14 receipt's
-phone filename does not establish a phone viewport: its measured dimensions are
-1280x720 and the corrected desktop receipt states that limit explicitly.
-These use injected clipboard authority. Managed
-cancellation cannot undo a Clipboard.write already entered at the OS/browser
-boundary; physical clipboard ordering and hardware input remain unqualified.
+Managed cell actions now qualify through corrected context14: native101 with a
+complete clean heap and browser116 at measured1280x720 and390x900, logs empty.
+Pure command04 also passes70 on each target. These exercise real target controls
+with injected clipboard authority: nested newer context intent, exact accepted
+raw-value/provenance inspection, draft isolation, legacy cancellation and safe
+retained facades after retirement. Prior09/11/12 missing compound-part failures
+and the actual browser13 interface-ownership failure remain retained. The repair
+queries optional interfaces through local owning variables before assigning
+fields; passing fields as Supports outputs emitted duplicate pas2js releases.
+The first14 receipt had a phone filename despite measuring1280x720; only its
+corrected desktop receipt counts. The later compact result independently verifies
+390x900 before startup and after completion. This is synthetic target input,
+not hardware/OS clipboard, accessibility or full visual-quality qualification.
 
-All Root debugger jobs and preview host37 are joined; its loopback listener is
-absent. Both completed own08 tabs are closed and the viewport override resets.
-No LAN/Studio service or installed MCP configuration changed. Root owns the
-extension-admission repair, compact fixture fence and full W1 qualification;
-Lil' Scooty reviews those changes and prepares the next W2 representation/export
-prerequisite. Export preparation is saved privately and excluded from the current
-context repair. The same direct-field optional-interface pattern is also found
-in the existing event-scope constructor and remains a concrete follow-up.
-Actual concurrent source readers still coordinate stable snapshots.
+The adjacent real event-scope constructor now applies the same owning-local rule
+to parent/delivery readiness. Existing scheduler/registration checks plus nine
+guarded-dispatch lifetime assertions pass87 natively with a complete clean heap
+and61 in the browser, logs empty. The browser omits native threading cases.
+Retained parent and delivery facets survive child retirement; final disposal and
+router cancellation remain explicit. Root independently reviews the changed
+constructor and real lifecycle assertions. Export qualification remains a separate
+slice from those event/context cohorts.
+
+RAW export11 captures actual source/unpaged filtered/page membership and column
+identity before canonical callbacks. The immutable UTF-8 producer and injected
+save controller pass42 native/42 browser checks. Actual managed Page/AllFiltered
+menu actions retain every context14 assertion and pass128 native checks with a
+complete clean heap and155 browser checks at measured1280x720 and390x900, logs
+empty. Written and DownloadRequested stay visibly distinct; stale original
+captures, nested cancellation and disabled input cannot redirect a later save.
+These checks use injected authority and make no OS file/clipboard claim.
+Root's subsequent source review identifies a public view-entry lifetime risk
+around the foreign atomic-store Busy getter. Lil' Scooty adds full-entry leases
+and getter-withdrawal regressions in export12; that fresh cohort remains pending.
+
+Ordinary own08 browser Studio passes832 at measured1280x900 with an empty
+warning/error log and a complete13541-unit accepted project/source packet.
+Its compact run instead fails at stage18/check318 by resolving Properties before
+Inspector publication. LayoutStep now awaits the existing public Studio fence
+after that first Inspector action, without changing assertions or the2400-poll
+bound. The same own09 browser tab88 subsequently passes842 checks at measured
+390x900 with an empty warning/error log. Its complete13541-unit project packet
+is byte-for-byte identical to the successful own08 desktop packet: all six paired
+fields, including source/design/drafts, remain exact. Intermittent observer
+deadlines were not treated as termination or a reason to restart the application.
+The terminal packet screenshot is diagnostic evidence, not a visual-quality pass.
+
+The fixed1883-file own09 W1 snapshot also runs the original full native1280
+journey under the unchanged900s budget. It times out at stage18/check317;
+the exact process and wrapper are joined, without a functional pass or complete
+heap. Every source pin is reverified afterward. Original own07/08 deadlines at
+stage17/check308 and stage18/check342 remain. Removing one measured allocation
+path does not resolve whole native refresh cost. Equivalent timed reruns would
+add no evidence. The next diagnostic samples actual remaining refresh work and
+finds repeated glyph admission, validation and native widget work; the resource
+repair and focused measurements above address the glyph path only.
+
+Separately, the exact saved source from the successful own08 BROWSER producer is
+independently compiled against fixed own09 library inputs. Its actual native
+applications pass448 checks at1280 and390, both with complete clean heaps.
+The compiled browser application passes369 at verified1280x900 and390x900, with
+empty logs. An ordinary static preflight establishes each allocated viewport
+before entering the unchanged compiled fixture; an earlier requested390 run
+whose first measurement was1280 is retained but earns no compact precondition.
+The emitted source and all six paired fields remain tied to that browser-owned
+packet. This does not substitute for an independently native-owned Studio export
+or accept the failed full native editor journey. Evidence stays under ignored
+build/qualification/studio-layout-own-09-browser-companion.
+
+Previous checkpoint7e96075 is committed, pushed and remote-verified on hello-nyx.
+It contains the substantial W1/context14 work and records incomplete acceptance.
+The resource/event checkpoint has independent qualification; current export12
+and formatting work stay separate until their own checks. No source assignment
+is a permission gate.
+
+Preview hosts37/38/39/40 are identity-verified stopped/joined, with no listeners on
+their ports. All completed test tabs, including88, are closed; the user's original
+tabs remain untouched. No LAN/Studio service or installed MCP configuration
+changes. Root owns full W1/performance/own-application qualification; Lil' Scooty
+owns typed RAW export capture/actions through existing file-save outcomes.
+A fresh full current-source export build clears an earlier stale-PPU MasterDetail
+error without changing correct library code. Root's Chrome compiler/runtime and
+diagnostic sampler04 are joined; exact owned native processes are absent and
+native UI is released. Lil' Scooty owns export12 qualification, followed by typed
+formatting and explicitly tagged representations in separate new units. Those
+formatting files are saved but uncompiled. Range/draft integration, full
+preferences, OS effects and the complete original task remain required.
 
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 

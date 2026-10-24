@@ -215,6 +215,20 @@ type
     property Count: Integer read GetCount;
   end;
 
+  { Optional atomic catalog composition. Import snapshots the complete source
+    before publication, replacing exact name/locale pairs in their existing
+    positions and appending new pairs in source order. Both catalogs retain
+    independent membership; only private immutable definitions/data may be
+    shared. Foreign sources cross the strict wire boundary first. Count/wire
+    refusal leaves the destination unchanged, including retained catalog facades.
+    This synchronous operation requires the same caller coordination as Define;
+    it owns no document, widget, loader or thread. The original catalog interface
+    and GUID remain usable by implementations without this optional capability. }
+  INyxResourceCatalogImport = interface
+    ['{E482E606-2AB0-4673-8700-430CC7838B75}']
+    function Import(const ASource: INyxResources): INyxResources;
+  end;
+
   { A copied, strongly typed scalar selector. Localize fixes an explicit locale,
     including NyxDefaultLocale; Localized distinguishes that pin from inheritance.
     Otherwise the runtime view's locale/fallback selects a variant. Field and
@@ -319,6 +333,10 @@ function NyxHostedResource(AKind: TNyxResourceKind;
 function NyxResourceFromBytes(AKind: TNyxResourceKind;
   const ABytes: TNyxBytes): INyxResourceDefinition;
 function NewNyxResources: INyxResources;
+{ Obtain atomic composition support without changing the original catalog
+  contract. Nil or an implementation without the capability refuses explicitly;
+  no sequence of partially published Define calls is substituted. }
+function NyxResourceCatalogImport(const ACatalog: INyxResources): INyxResourceCatalogImport;
 { Versioned strict persistence boundaries; unknown members/scalar kinds refuse. }
 function NyxResourceFromData(const AData: TNyxDataValue): INyxResourceDefinition;
 function NyxResourcesFromData(const AData: TNyxDataValue): INyxResources;
@@ -379,7 +397,10 @@ type
     Data: TNyxDataValue;
     WireBytes: Integer;
   end;
-  TResources = class(TInterfacedObject, INyxResources)
+  { Mutable catalog membership around privately admitted immutable entries.
+    Import prepares a detached candidate and exchanges its entry array only
+    after every allocation and aggregate limit check has succeeded. }
+  TResources = class(TInterfacedObject, INyxResources, INyxResourceCatalogImport)
   private
     FEntries: array of TResourceEntry;
     function IndexOf(const AReference: TNyxResourceRef;
@@ -404,6 +425,7 @@ type
     function GetCount: Integer;
     function Clone: INyxResources;
     function ToData: TNyxDataValue;
+    function Import(const ASource: INyxResources): INyxResources;
   end;
 
 procedure Name(const AName: TNyxText);
@@ -1332,6 +1354,127 @@ end;
 function NewNyxResources: INyxResources;
 begin
   Result := TResources.Create;
+end;
+
+function NyxResourceCatalogImport(const ACatalog: INyxResources): INyxResourceCatalogImport;
+var
+  LImport: INyxResourceCatalogImport;
+begin
+
+  if (ACatalog = nil) or not Supports(ACatalog, INyxResourceCatalogImport, LImport) then
+  begin
+    raise ENyxResource.Create('This catalog does not provide atomic resource import');
+  end;
+  Result := LImport;
+end;
+
+function TResources.Import(const ASource: INyxResources): INyxResources;
+var
+  LReceiver: INyxResources;
+  LSourceLease: INyxResources;
+  LSource: TResources;
+  LCandidateLease: INyxResources;
+  LCandidate: TResources;
+  LRetiringEntries: array of TResourceEntry;
+  LEntry: TResourceEntry;
+  LIndex: Integer;
+  LTarget: Integer;
+  LBytes: Integer;
+  LCount: Integer;
+begin
+  { A foreign ToData may reenter application code and release the caller's
+    catalog/importer fields. Keep this entered receiver alive until Result has
+    its own lease or a refused candidate has completely retired. }
+  LReceiver := Self;
+
+  if ASource = nil then
+  begin
+    raise ENyxResource.Create('Resource import requires a source catalog');
+  end;
+  { A public capability/GUID cannot certify private admission. Only this unit's
+    closed implementation carries immutable canonical entries and byte charges;
+    every alternative source is copied through the existing strict reader. }
+
+  if ASource is TResources then
+  begin
+    LSourceLease := ASource;
+  end
+  else
+  begin
+    LSourceLease := NyxResourcesFromData(ASource.ToData);
+  end;
+  LSource := LSourceLease as TResources;
+  LCandidateLease := Clone;
+  LCandidate := LCandidateLease as TResources;
+  LBytes := 0;
+  LCount := Length(LCandidate.FEntries);
+  for LIndex := 0 to High(LCandidate.FEntries) do
+  begin
+    Inc(LBytes, LCandidate.FEntries[LIndex].WireBytes);
+  end;
+  for LIndex := 0 to High(LSource.FEntries) do
+  begin
+    LTarget := LCandidate.IndexOf(LSource.FEntries[LIndex].Reference,
+      LSource.FEntries[LIndex].Locale);
+
+    if LTarget >= 0 then
+    begin
+      Dec(LBytes, LCandidate.FEntries[LTarget].WireBytes);
+    end
+    else
+    begin
+      Inc(LCount);
+    end;
+    Inc(LBytes, LSource.FEntries[LIndex].WireBytes);
+  end;
+  { Charge the complete candidate, not an insertion-order-dependent prefix.
+    A later replacement may shrink a large existing payload. Both admitted
+    inputs are independently bounded, so this sum cannot exceed twice the
+    catalog byte/count limits or overflow the portable Integer domain. }
+
+  if LCount > NyxMaximumResources then
+  begin
+    raise ENyxResource.Create('Resource catalog exceeds 128 entries');
+  end;
+
+  if LBytes > NyxMaximumResourceWireBytes then
+  begin
+    raise ENyxResource.Create('Resource catalog exceeds its packed wire budget');
+  end;
+  for LIndex := 0 to High(LSource.FEntries) do
+  begin
+    LTarget := LCandidate.IndexOf(LSource.FEntries[LIndex].Reference,
+      LSource.FEntries[LIndex].Locale);
+    LEntry := TResourceEntry.Create;
+    try
+      LEntry.Reference := LSource.FEntries[LIndex].Reference;
+      LEntry.Locale := LSource.FEntries[LIndex].Locale;
+      LEntry.Definition := LSource.FEntries[LIndex].Definition;
+      LEntry.Data := LSource.FEntries[LIndex].Data.Copy;
+      LEntry.WireBytes := LSource.FEntries[LIndex].WireBytes;
+
+      if LTarget < 0 then
+      begin
+        LTarget := Length(LCandidate.FEntries);
+        SetLength(LCandidate.FEntries, LTarget + 1);
+      end
+      else
+      begin
+        LCandidate.FEntries[LTarget].Free;
+      end;
+      LCandidate.FEntries[LTarget] := LEntry;
+      LEntry := nil;
+    finally
+      LEntry.Free;
+    end;
+  end;
+  { No external calls or failing admission remain. Exchange independently owned
+    arrays; the candidate retires the old entries after the complete new catalog
+    is installed. An import from Self still reads only the original source. }
+  LRetiringEntries := FEntries;
+  FEntries := LCandidate.FEntries;
+  LCandidate.FEntries := LRetiringEntries;
+  Result := LReceiver;
 end;
 
 destructor TResources.Destroy;

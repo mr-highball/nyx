@@ -18,6 +18,10 @@ function NyxStudioGlyphResource: TNyxResourceRef;
 { Validated immutable image data is initialized once; every shell document owns
   one resource definition and its buttons retain only a small typed selector. }
 function NyxStudioGlyphAtlas: TNyxImageSource;
+{ An independent membership snapshot of the pre-admitted glyph catalog. The
+  shared startup catalog is never exposed for mutation; repeated shell builds
+  import its immutable entries without decoding/formatting the atlas again. }
+function NyxStudioGlyphResources: INyxResources;
 function NyxStudioGlyphPresentation(AGlyph: TNyxStudioGlyph): TNyxButtonPresentation;
 
 implementation
@@ -28,6 +32,7 @@ uses SysUtils;
 
 var
   GAtlas: TNyxImageSource;
+  GResources: INyxResources;
 
 function NyxStudioGlyphResource: TNyxResourceRef;
 begin
@@ -37,6 +42,11 @@ end;
 function NyxStudioGlyphAtlas: TNyxImageSource;
 begin
   Result := GAtlas;
+end;
+
+function NyxStudioGlyphResources: INyxResources;
+begin
+  Result := GResources.Clone;
 end;
 
 function NyxStudioGlyphPresentation(AGlyph: TNyxStudioGlyph): TNyxButtonPresentation;
@@ -56,5 +66,16 @@ initialization
   { Initialization runs before application worker threads exist. Immutable
     resource reads therefore need no lazy mutable cache or competing writes. }
   GAtlas := NyxEmbeddedImage(nimPNG, CStudioGlyphAtlas);
+  GResources := NewNyxResources;
+  GResources.Define(NyxStudioGlyphResource,
+    NyxImageResource(GAtlas).Describe('Studio glyphs',
+      'A locally embedded family of decorative command glyphs.'));
+
+{$ifndef PAS2JS}
+finalization
+  GResources := nil;
+{$endif}
+  { pas2js has no unit finalization. Its immutable startup values belong to the
+    browser realm; each shell still owns independently releasable membership. }
 
 end.

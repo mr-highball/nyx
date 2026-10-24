@@ -37,14 +37,22 @@ workflows and their complete both-target integration remain required. Existing
 file-save and managed menus remain the owners of those corresponding facilities.
 
 Later source-specific checkpoints add managed cell inspection/context actions:
-command04 passes70 native/70 browser checks, context13 passes99 native checks
-with a clean heap, and corrected context14 passes116 actual browser checks at
-1280x720. The retained browser13 failure exposed duplicate interface-field
-release from direct Supports output;14 uses local owning references instead.
-Native14 and compact browser14 still require execution. Full Studio own08 passes
-832 browser checks at1280x900, while compact Inspector publication and complete
-native performance remain open. The direct typed extension-name admission repair
-passes1918 native/1914 browser checks without changing the original JSON budgets.
+command04 passes70 native/70 browser checks, and corrected context14 passes101
+native checks with a clean heap and116 browser checks at1280x720 and390x900.
+The retained browser13 failure exposed duplicate interface-field release from
+direct Supports output;14 uses local owning references instead. The adjacent
+event-scope repair passes87 native/61 browser checks through real guarded dispatch.
+Full Studio passes832 browser checks at1280x900 and842 at390x900; the complete
+project/source packets match exactly. Independently compiled from that browser
+producer, the same application passes448 native checks with clean heaps and369
+browser checks at both widths. The complete native Studio journey still exceeds
+its unchanged900s deadline, so native editor performance and its own producer
+remain open. The direct typed extension-name admission repair passes1918
+native/1914 browser checks without changing the original JSON budgets.
+RAW export11 adds42 portable checks per actual target and managed Page/AllFiltered
+actions with128 native/155 browser checks at both measured browser widths. These
+use injected save authority. A later review adds outer view-entry lifetime leases
+and foreign-getter withdrawal regressions; its export12 cohort is still pending.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 
