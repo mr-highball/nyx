@@ -102,6 +102,15 @@ complete clean heap; browser controls292 pass at measured desktop/compact sizes,
 logs empty. A real nested context during input-factory return cannot redirect
 the older action or retire the newer menu. Explicit draft actions and form/event
 adoption remain the next integration work, with original criteria unchanged.
+The following portable publication prerequisite passes39 native/41 browser
+checks, with clean native heap and empty browser logs. It fences new dispatch
+through reversible target rollback, preserves pending old work on refusal, and
+couples retained effects to the section group's final readiness/commit boundary.
+Forms now pass35 per target and unchanged event publication58. These injected
+target phases do not qualify actual renderer/Inspector adoption, worker/focus
+interaction or native editor performance; those outcomes remain required.
+Reentrant wrapper retirement is deferred through its entered child phase;
+caller-scheduled descendant-work admission remains an explicit integration gap.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

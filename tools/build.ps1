@@ -8582,6 +8582,10 @@ body[data-query-authoring="passed"] script#query-authoring-project {
         "-FU$nyxArrangeUnits", "-FE$nyxArrangeUnits", 'tests/nyx_projection_form_tests.lpr'))
       & (Join-Path $nyxArrangeUnits 'nyx_projection_form_tests.exe')
       if ($LASTEXITCODE -ne 0) { throw 'Owned form-context projection qualification failed' }
+      Invoke-NyxCompiler $nyxArrangeCompiler[0] ($nyxArrangeChecked + @(
+        "-FU$nyxArrangeUnits", "-FE$nyxArrangeUnits", 'tests/nyx_projection_context_tests.lpr'))
+      & (Join-Path $nyxArrangeUnits 'nyx_projection_context_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Owned retained-context publication qualification failed' }
     }
     $nyxArrangeSource = @()
     if ($ArrangementSourceDirectory) {
@@ -8613,6 +8617,8 @@ body[data-query-authoring="passed"] script#query-authoring-project {
       "-FE$nyxArrangeBrowser", 'tests/nyx_arrangement_tests.lpr')
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
       "-FE$nyxArrangeBrowser", 'tests/nyx_projection_form_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
+      "-FE$nyxArrangeBrowser", 'tests/nyx_projection_context_tests.lpr')
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
       '-Futests', "-FE$nyxArrangeBrowser", 'tests/nyx_projection_refresh_tests.lpr') + $nyxArrangeSource)
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
@@ -8620,6 +8626,7 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxArrangeBrowser 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/arrangement-tests.html'),
       (Join-Path $nyxRoot 'studio/web/projection-forms.html'),
+      (Join-Path $nyxRoot 'studio/web/projection-context.html'),
       (Join-Path $nyxRoot 'studio/web/projection-refresh.html'),
       (Join-Path $nyxRoot 'studio/web/bound-arrangement.html') -Destination $nyxArrangeBrowser -Force
     Write-Host 'Owned/actual native arrangements pass; browser execution still needs its isolated HTTP host.'

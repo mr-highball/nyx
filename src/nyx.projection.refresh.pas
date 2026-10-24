@@ -149,7 +149,12 @@ function RefreshNyxBoundFormProjectionProperties(AExisting, ACandidate, ABaselin
   complete projection compatibility remains the admission APIs' responsibility. }
 function PrepareNyxProjectionFormRestores(ABefore, ACandidate: TNyxNode;
   const AForms: TNyxProjectionFormContexts;
-  out ARestores: TNyxProjectionValueRestores): Boolean;
+  out ARestores: TNyxProjectionValueRestores): Boolean; overload;
+{ Metadata-only forms also advance context when they have no Value-bearing
+  descendants. The changed flag is separate from the physical reset vector. }
+function PrepareNyxProjectionFormRestores(ABefore, ACandidate: TNyxNode;
+  const AForms: TNyxProjectionFormContexts;
+  out ARestores: TNyxProjectionValueRestores; out AContextChanged: Boolean): Boolean; overload;
 
 { Exact immutable document context for a mounted view. Fresh encoding validates
   current public data/budgets; it is not an admission cache. All document fields
@@ -342,7 +347,7 @@ end;
 
 function PrepareNyxProjectionFormRestores(ABefore, ACandidate: TNyxNode;
   const AForms: TNyxProjectionFormContexts;
-  out ARestores: TNyxProjectionValueRestores): Boolean;
+  out ARestores: TNyxProjectionValueRestores; out AContextChanged: Boolean): Boolean;
 var
   LIndex: Integer;
   LChanged: Boolean;
@@ -416,6 +421,7 @@ var
 
 begin
   ARestores := nil;
+  AContextChanged := False;
   Result := False;
 
   if not ValidFormContexts(ABefore, ACandidate, AForms) then
@@ -431,17 +437,28 @@ begin
       ACandidate.Find(AForms[LIndex].RuntimeID), AForms[LIndex]) then
     begin
       ARestores := nil;
+      AContextChanged := False;
       Exit;
     end;
 
     if LChanged then
     begin
+      AContextChanged := True;
       Collect(ABefore.Find(AForms[LIndex].RuntimeID),
         ACandidate.Find(AForms[LIndex].RuntimeID));
     end;
   end;
   SetLength(ARestores, LCount);
   Result := True;
+end;
+
+function PrepareNyxProjectionFormRestores(ABefore, ACandidate: TNyxNode;
+  const AForms: TNyxProjectionFormContexts;
+  out ARestores: TNyxProjectionValueRestores): Boolean;
+var
+  LChanged: Boolean;
+begin
+  Result := PrepareNyxProjectionFormRestores(ABefore, ACandidate, AForms, ARestores, LChanged);
 end;
 
 function RefreshableKey(const AKey: TNyxText): Boolean;

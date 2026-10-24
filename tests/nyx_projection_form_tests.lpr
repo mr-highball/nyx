@@ -79,6 +79,9 @@ begin
     LInput.Configure.Value('Independent default').Done;
     LForm.Add(LInput);
     LPage.Add(LForm);
+    LForm := NewNyxCard('form-empty');
+    LForm.Node.SetProp(CContext, 'accepted-empty');
+    LPage.Add(LForm);
     LPage.Add(NewNyxLabel('outside').WithText('Outside the forms'));
   except
     Result.Free;
@@ -100,6 +103,7 @@ var
   LContext: TNyxProjectionFormContext;
   LCopy: TNyxProjectionFormContext;
   LRefused: Boolean;
+  LContextChanged: Boolean;
   LMetadata: TNyxText;
 begin
   LDocument := Fixture;
@@ -119,6 +123,21 @@ begin
       'explicit unchanged form contexts retain ordinary admission');
     Check(PrepareNyxProjectionFormRestores(LBaseline, LCandidate, LForms, LRestores) and
       (Length(LRestores) = 0), 'unchanged contexts produce no draft resets');
+    Check(PrepareNyxProjectionFormRestores(LBaseline, LCandidate, LForms,
+      LRestores, LContextChanged) and not LContextChanged,
+      'unchanged contexts explicitly retain the existing event generation');
+    SetLength(LInvalidForms, 1);
+    LInvalidForms[0] := ContextFor('form-empty');
+    LCandidate.Find('form-empty').SetProp(CContext, 'a new context without inputs');
+    Check(PrepareNyxProjectionFormRestores(LBaseline, LCandidate, LInvalidForms,
+      LRestores, LContextChanged) and LContextChanged and (Length(LRestores) = 0),
+      'metadata-only forms still require old-context event retirement');
+    LCandidate.Find('form-empty').Props.Delete(
+      LCandidate.Find('form-empty').Props.IndexOfName(CContext));
+    Check(not PrepareNyxProjectionFormRestores(LBaseline, LCandidate, LInvalidForms,
+      LRestores, LContextChanged) and not LContextChanged and (Length(LRestores) = 0),
+      'a refused metadata-only context cannot leak a changed-context witness');
+    LCandidate.Find('form-empty').SetProp(CContext, 'accepted-empty');
 
     LExisting.Find('entry-a').Configure.Value('Unfinished / 🌙').Done;
     LExisting.Find('empty-a').Configure.Value('-').Done;

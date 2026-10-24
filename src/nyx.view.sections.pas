@@ -26,7 +26,7 @@ unit nyx.view.sections;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.model, nyx.state, nyx.behavior;
+  SysUtils, nyx.text, nyx.model, nyx.state, nyx.behavior, nyx.publication;
 
 type
   { A section name is open application data, distinct from a control ID.
@@ -139,7 +139,19 @@ function NewNyxViewSectionChange(const APublication: INyxViewSectionPublication)
   order, cancels the whole group and propagates the exception. All prepared
   members publish before any old view retires; unmentioned sections are untouched.
   This is a view transaction, not a document/source/history mutation. }
-function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange): Boolean;
+function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange): Boolean; overload;
+{ Couple section placement with an already prepared effect, such as retained
+  form context/event adoption. Effects validate before physical section previews,
+  fence again after ALL previews, and install without callbacks beside section
+  ownership. Notify follows every install. Uninstalled Retire must undo its own
+  reversible preview; it runs on refusal/failure as well as success. A caller can
+  use PrepareNyxGroup for multiple effects. Committed becomes True before ANY
+  notification/retirement callout, so its failure must not restore accepted data.
+  An owning local retains the original effect through callbacks that replace
+  the caller's reference. Cleanup is always attempted; an already propagating
+  first failure retains its exact identity even if effect retirement also fails. }
+function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange;
+  const AEffects: INyxPreparedPublication; out ACommitted: Boolean): Boolean; overload;
 
 implementation
 
@@ -302,7 +314,8 @@ begin
   {$endif}
 end;
 
-function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange): Boolean;
+function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange;
+  const AEffects: INyxPreparedPublication; out ACommitted: Boolean): Boolean;
 var
   LAccess: array of INyxViewSectionChangeAccess;
   LIndex: Integer;
@@ -315,6 +328,9 @@ var
   LRollbackFailed: Boolean;
   LCleanupFailed: Boolean;
   LRetirementFailed: Boolean;
+  LEffects: INyxPreparedPublication;
+  LEffectsFence: INyxPublicationReadiness;
+  LPrimaryFailed: Boolean;
   {$ifdef PAS2JS}
   LRetirementFailure: JSValue;
   {$else}
@@ -322,122 +338,146 @@ var
   {$endif}
 begin
   Result := False;
-  SetLength(LAccess, Length(AChanges));
-  { Complete shape/duplicate checks before asking ANY target to preview. }
-  for LIndex := 0 to High(AChanges) do
-  begin
-
-    if (AChanges[LIndex] = nil) or
-      not Supports(AChanges[LIndex], INyxViewSectionChangeAccess, LAccess[LIndex]) then
-    begin
-      raise ENyxModel.Create('A section group requires Nyx prepared change handles');
-    end;
-    LChange := LAccess[LIndex].GetChange;
-
-    if LChange.FState <> vcsPrepared then
-    begin
-      raise ENyxModel.Create('A section group requires unpublished prepared changes');
-    end;
-    for LFormer := 0 to LIndex - 1 do
-    begin
-
-      if (LAccess[LFormer].GetChange.FReference.Name = LChange.FReference.Name) or
-        (LAccess[LFormer].GetChange.FPublication.Section = LChange.FPublication.Section) then
-      begin
-        raise ENyxModel.Create('A section group contains a duplicate section');
-      end;
-    end;
-  end;
-  for LIndex := 0 to High(LAccess) do
-  begin
-
-    if not LAccess[LIndex].GetChange.FPublication.Check then
-    begin
-      Exit;
-    end;
-  end;
-  LPreview := -1;
+  ACommitted := False;
+  LEffects := AEffects;
+  LPrimaryFailed := False;
   try
-    for LIndex := 0 to High(LAccess) do
-    begin
-      LPreview := LIndex;
-      LAccess[LIndex].GetChange.FState := vcsPreviewing;
-      LAccess[LIndex].GetChange.FPublication.Preview;
-    end;
-  except
-    LPreviewError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
-    LRollbackError := '';
-    LCleanupError := '';
-    LRollbackFailed := False;
-    LCleanupFailed := False;
-    { Include the throwing preview: target parenting may already have changed.
-      Try every earlier rollback even if an extension violates its obligation;
-      cancel all candidates and report that additional target failure. }
-    for LIndex := LPreview downto 0 do
-    begin
-      try
-        LAccess[LIndex].GetChange.FPublication.Rollback;
-      except
-
-        if not LRollbackFailed then
-        begin
-          LRollbackError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
-          LRollbackFailed := True;
-        end;
-      end;
-    end;
-    for LIndex := 0 to High(LAccess) do
-    begin
-      LAccess[LIndex].GetChange.FState := vcsCanceled;
-      try
-        LAccess[LIndex].GetChange.Cancel;
-      except
-
-        if not LCleanupFailed then
-        begin
-          LCleanupError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
-          LCleanupFailed := True;
-        end;
-      end;
-    end;
-
-    if LRollbackFailed then
-    begin
-      raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
-        TNyxText('; rollback also failed: ') + LRollbackError);
-    end;
-
-    if LCleanupFailed then
-    begin
-      raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
-        TNyxText('; candidate retirement also failed: ') + LCleanupError);
-    end;
-    raise;
-  end;
-  for LIndex := 0 to High(LAccess) do
-  begin
-    LAccess[LIndex].GetChange.FPublication.Publish;
-    LAccess[LIndex].GetChange.FState := vcsPublished;
-  end;
-  { Retire after the whole group is authoritative. Publication ports contain
-    their former owners until this separate release boundary. A supported
-    fallible disconnect must not skip any other member's exact retirement. }
-  LRetirementFailed := False;
-  {$ifdef PAS2JS}
-  LRetirementFailure := Undefined;
-  {$else}
-  LRetirementFailure := nil;
-  {$endif}
-  for LIndex := 0 to High(LAccess) do
-  begin
-    LChange := LAccess[LIndex].GetChange;
     try
-      try
-        LChange.FPublication.RetirePrevious;
-      except
+      SetLength(LAccess, Length(AChanges));
+      { Complete shape/duplicate checks before asking ANY target to preview. }
+      for LIndex := 0 to High(AChanges) do
+      begin
 
-        if not LRetirementFailed then
+        if (AChanges[LIndex] = nil) or
+          not Supports(AChanges[LIndex], INyxViewSectionChangeAccess, LAccess[LIndex]) then
         begin
+          raise ENyxModel.Create('A section group requires Nyx prepared change handles');
+        end;
+        LChange := LAccess[LIndex].GetChange;
+
+        if LChange.FState <> vcsPrepared then
+        begin
+          raise ENyxModel.Create('A section group requires unpublished prepared changes');
+        end;
+        for LFormer := 0 to LIndex - 1 do
+        begin
+
+          if (LAccess[LFormer].GetChange.FReference.Name = LChange.FReference.Name) or
+            (LAccess[LFormer].GetChange.FPublication.Section = LChange.FPublication.Section) then
+          begin
+            raise ENyxModel.Create('A section group contains a duplicate section');
+          end;
+        end;
+      end;
+
+      if LEffects <> nil then
+      begin
+
+        if not Supports(LEffects, INyxPublicationReadiness, LEffectsFence) then
+        begin
+          raise ENyxModel.Create('Section effects require a final readiness fence');
+        end;
+        LEffects.Validate;
+      end;
+      for LIndex := 0 to High(LAccess) do
+      begin
+
+        if not LAccess[LIndex].GetChange.FPublication.Check then
+        begin
+          Exit;
+        end;
+      end;
+      LPreview := -1;
+      try
+        for LIndex := 0 to High(LAccess) do
+        begin
+          LPreview := LIndex;
+          LAccess[LIndex].GetChange.FState := vcsPreviewing;
+          LAccess[LIndex].GetChange.FPublication.Preview;
+        end;
+
+        if LEffectsFence <> nil then
+        begin
+          { A later focus/parenting callout cannot invalidate an earlier retained
+            context and then let its old event witness commit unnoticed. }
+          LEffectsFence.CheckReady;
+        end;
+      except
+        LPreviewError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+        LRollbackError := '';
+        LCleanupError := '';
+        LRollbackFailed := False;
+        LCleanupFailed := False;
+        { Include the throwing preview: target parenting may already have changed.
+          Try every earlier rollback even if an extension violates its obligation;
+          cancel all candidates and report that additional target failure. }
+        for LIndex := LPreview downto 0 do
+        begin
+          try
+            LAccess[LIndex].GetChange.FPublication.Rollback;
+          except
+
+            if not LRollbackFailed then
+            begin
+              LRollbackError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+              LRollbackFailed := True;
+            end;
+          end;
+        end;
+        for LIndex := 0 to High(LAccess) do
+        begin
+          LAccess[LIndex].GetChange.FState := vcsCanceled;
+          try
+            LAccess[LIndex].GetChange.Cancel;
+          except
+
+            if not LCleanupFailed then
+            begin
+              LCleanupError := ActiveSectionFailureText{$ifdef PAS2JS}(JSExceptValue){$endif};
+              LCleanupFailed := True;
+            end;
+          end;
+        end;
+
+        if LRollbackFailed then
+        begin
+          raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
+            TNyxText('; rollback also failed: ') + LRollbackError);
+        end;
+
+        if LCleanupFailed then
+        begin
+          raise ENyxModel.Create('Section preview failed: ' + LPreviewError +
+            TNyxText('; candidate retirement also failed: ') + LCleanupError);
+        end;
+        raise;
+      end;
+      for LIndex := 0 to High(LAccess) do
+      begin
+        LAccess[LIndex].GetChange.FPublication.Publish;
+        LAccess[LIndex].GetChange.FState := vcsPublished;
+      end;
+
+      if LEffects <> nil then
+      begin
+        LEffects.Install;
+      end;
+      ACommitted := True;
+      { Retire after the whole group is authoritative. Publication ports contain
+        their former owners until this separate release boundary. A supported
+        fallible disconnect must not skip any other member's exact retirement. }
+      LRetirementFailed := False;
+      {$ifdef PAS2JS}
+      LRetirementFailure := Undefined;
+      {$else}
+      LRetirementFailure := nil;
+      {$endif}
+
+      if LEffects <> nil then
+      begin
+        try
+          LEffects.Notify;
+        except
           {$ifdef PAS2JS}
           LRetirementFailure := JSExceptValue;
           {$else}
@@ -446,22 +486,71 @@ begin
           LRetirementFailed := True;
         end;
       end;
-    finally
-      LChange.FPublication := nil;
-    end;
-  end;
+      for LIndex := 0 to High(LAccess) do
+      begin
+        LChange := LAccess[LIndex].GetChange;
+        try
+          try
+            LChange.FPublication.RetirePrevious;
+          except
 
-  if LRetirementFailed then
-  begin
-    {$ifdef PAS2JS}
-    asm
-      throw LRetirementFailure;
+            if not LRetirementFailed then
+            begin
+              {$ifdef PAS2JS}
+              LRetirementFailure := JSExceptValue;
+              {$else}
+              LRetirementFailure := Exception(AcquireExceptionObject);
+              {$endif}
+              LRetirementFailed := True;
+            end;
+          end;
+        finally
+          LChange.FPublication := nil;
+        end;
+      end;
+
+      if LRetirementFailed then
+      begin
+        {$ifdef PAS2JS}
+        asm
+          throw LRetirementFailure;
+        end;
+        {$else}
+        raise LRetirementFailure;
+        {$endif}
+      end;
+      Result := True;
+    except
+      LPrimaryFailed := True;
+      raise;
     end;
-    {$else}
-    raise LRetirementFailure;
-    {$endif}
+  finally
+    { Explicit cleanup reports a failed effect rollback; dropping its last
+      managed reference alone would hide that failure in a destructor. }
+
+    if LEffects <> nil then
+    begin
+      try
+        LEffects.Retire;
+      except
+
+        if not LPrimaryFailed then
+        begin
+          raise;
+        end;
+        { Do not replace an empty Pascal exception message or raw JavaScript
+          throw value with a secondary cleanup exception. The surrounding
+          unwind still owns and propagates the exact original failure. }
+      end;
+    end;
   end;
-  Result := True;
+end;
+
+function PublishNyxViewSections(const AChanges: array of INyxViewSectionChange): Boolean;
+var
+  LCommitted: Boolean;
+begin
+  Result := PublishNyxViewSections(AChanges, nil, LCommitted);
 end;
 
 end.

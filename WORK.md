@@ -403,6 +403,66 @@ implementation defects to fix within existing authorization, not reasons to
 make library contracts immutable. Next helper work adds explicitly enabled
 focused-draft menu/inspection actions captured before editor focus changes.
 
+The portable retained-context publication prerequisite now couples a prepared
+event generation with an explicitly reversible target port. Its optional
+preview admission refuses existing pending/running work without cancelling or
+consuming it, and refuses an entered synchronous dispatch. After admission,
+fresh dispatch stays fenced until install or COMPLETE target rollback. UI
+admission precedes access to UI-only router flags; a preview begun from that
+admission still refuses the returning dispatch before event capture. Canonical
+old generation cancellation remains callback-free at install. Target rollback
+runs before releasing the event guard, including focus-like outward callouts.
+
+The extended section coordinator snapshots its original effect across caller
+withdrawal, checks its final fence after all section previews, restores failed
+placement in reverse order and preserves the separate committed flag before any
+notification. Cleanup cannot replace an empty-message original exception or raw
+JavaScript throw value. Metadata-only forms now explicitly report context
+changes even with no input reset list; refusal clears the changed witness.
+
+Context04 passes33 native publication checks with a complete476/476 clean heap
+and35 actual browser checks, including two extra raw-JavaScript failure cases.
+Forms03 passes35 per actual target with a complete3814/3814 native heap; the
+unchanged event-publication consumer passes58 per target with a complete1189/1189
+native heap. Browser warning/error logs are empty. Original01 missing public
+event-info import failure and an initial02 staging expression error remain
+retained; neither ran a failed application. Final event source is explicitly
+recompiled into03, then reused unchanged by04's expanded nonempty section-group
+consumer. All9 final browser artifact pairs reverify unchanged. Exact preview
+host53324 is stopped/joined, port19149 has no listener and tab113 is closed.
+
+This qualifies portable event/publication admission, not renderer/Studio
+adoption, real worker/focus behavior or native editor latency. The unused
+context adapter include remains unqualified working code for the next Root
+integration. The helper's separate opt-in draft-action packet is still being
+repaired/qualified; its staged-construction refusal is not an accepted result.
+
+Further independent review found explicit wrapper retirement from an entered
+target/scheduler callback could detach the group's participant vector while
+that group was still validating/notifying. The wrapper now retains original
+phase locals, marks retirement requested immediately and defers child detachment
+until the entered phase returns; validation then refuses before preview. New
+consumer cases exercise target validation, real event scheduler UI admission
+and installed notification retirement. The earlier04 result remains evidence of
+its earlier source, not this follow-up repair.
+
+The same review confirms that router-owned invocation tickets do not include
+all caller-scheduled descendants: ordinary event callbacks can PostUI child work
+with their execution as parent after the root invocation has become terminal.
+This portable proof is therefore scoped to registered invocation admission.
+Independent child-work admission remains required before actual renderer/Studio
+form preview adoption; no whole-scheduler quiescence is claimed.
+
+Final context05 passes39 native checks with a complete540/540 clean heap and41
+actual browser checks, logs empty. These add all three explicit retirement
+reentries without removing04's assertions. Final15 fixed overlays,10 final
+working-source identities and3 browser artifact origins reverify unchanged;
+the original2275-file base is also verified unchanged. Exact host9864 is
+stopped/joined, port19149 has no listener and tab114 is closed. Both Root native
+compiler/runtime cohorts are joined; the helper's independent actual control
+journey owns native UI until its recorded runtime joins. Whole task acceptance,
+physical form adoption and native Studio performance remain open.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

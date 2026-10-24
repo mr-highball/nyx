@@ -55,12 +55,48 @@ pending actions from the previous context. Before physical adoption it also uses
 `PrepareNyxProjectionFormRestores` to reset the exact input accepted-value
 markers, and preserves ordinary rollback and input lifetimes.
 
-The form contract currently passes 32 shared native/browser checks, with a clean
-native heap and empty browser logs. The existing unchanged native retained-control
-journey passes 174 checks with a clean heap. Studio/renderer adoption and its
-pending-event and physical-input qualification remain the next prerequisite;
-these results do not establish an Inspector performance improvement. The
-maintained `retained-arrangement` target includes the portable form consumer.
+The restore-preparation overload also returns whether context metadata changed,
+independently of its input-reset count. An empty form can still have old queued
+callbacks to retire. Refused preparations clear both outputs. The form contract
+passes 35 shared native/browser checks, with a clean native heap and empty
+browser logs. The previous unchanged native retained-control journey passes
+174 checks with a clean heap against its recorded source cohort.
+
+`nyx.projection.context` couples a prepared successor event generation with an
+adapter's reversible target publication. The optional `INyxEventViewPreview`
+facet refuses pending/running old work or an entered dispatch before any target
+change, preserving those tickets without cancellation or replay. Once admitted,
+new dispatch refuses until installation or complete rollback. Target rollback
+finishes before the event guard retires, so focus/parenting callouts cannot run
+old callbacks against a partly restored form. Successful installation rotates
+one event generation without callbacks; notification follows all installations.
+This explicit preview facility does not change ordinary prepared-view behavior.
+Its ticket proof covers router-owned callback invocations. A callback can have
+scheduled independent descendant work after its own invocation completes; that
+work needs its own target/scheduler admission fence. The current physical
+adapters do not yet qualify that descendant-work boundary.
+
+The corresponding `PublishNyxViewSections` overload accepts that prepared effect
+and returns a separate committed flag. It checks the original readiness fence
+after every section preview, rolls failed previews back in reverse order and
+attempts cleanup on every outcome. It retains the original effect through caller
+reference withdrawal. Notification/retirement failure keeps committed data;
+an already propagating first exception retains its exact identity even when
+cleanup also fails, including raw JavaScript throw values.
+
+Reentrant retirement marks the wrapper unavailable immediately, but defers
+detaching an entered validation/notification group until that phase returns.
+This keeps its participant vector alive through target and scheduler callouts;
+retirement during validation refuses before preview, while notification
+retirement preserves already installed data.
+
+This portable publication consumer passes 39 native checks with a complete clean
+heap and 41 actual browser checks with empty logs; the browser adds two raw throw
+cases. The unchanged event-publication regression passes 58 per actual target.
+These use real routers/coordinators and injected target phases. Studio/renderer
+adoption, actual physical-input/focus and worker integration, and whole-Inspector
+performance remain open. The maintained `retained-arrangement` target includes
+both portable form and retained-context publication consumers.
 
 The portable `TNyxNode.ArrangeLike` boundary prepares every owner array and actual
 managed implementation anchor before publication. It adopts no candidate node.

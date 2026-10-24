@@ -26,7 +26,7 @@ type
     router reservation never owns this plan, and no model or renderer is held.
     Old leases survive Install; cancellation/destruction belongs to later phases. }
   TPreparedEventView = class(TInterfacedObject, INyxPreparedPublication,
-    INyxPreparedEventView, INyxPublicationReadiness)
+    INyxPreparedEventView, INyxPublicationReadiness, INyxEventViewPreview)
   private
     FRouterLease: INyxEvents;
     FRouter: TNyxEvents;
@@ -41,6 +41,8 @@ type
     FPreparing: Boolean;
     FSealed: Boolean;
     FValidated: Boolean;
+    FEnteringPreview: Boolean;
+    FPreviewStarted: Boolean;
     FInstalled: Boolean;
     FNotified: Boolean;
     FRetired: Boolean;
@@ -62,6 +64,7 @@ type
       const AName: TNyxEventRef): INyxEventSubscription;
     procedure Validate;
     procedure CheckReady;
+    function TryBeginPreview: Boolean;
     procedure Install;
     procedure Notify;
     procedure Retire;
@@ -280,6 +283,11 @@ var
   LIndex: Integer;
 begin
   CheckOwner;
+
+  if FRouter.FPreviewingView <> FPreviewStarted then
+  begin
+    raise ENyxSchedule.Create('Prepared event preview ownership changed');
+  end;
   for LIndex := 0 to High(FEntries) do
   begin
 
@@ -304,6 +312,62 @@ begin
   end;
 end;
 
+function TPreparedEventView.TryBeginPreview: Boolean;
+var
+  LLease: INyxPreparedEventView;
+  LIndex: Integer;
+  LStatus: TNyxExecutionStatus;
+begin
+  LLease := Self;
+  Result := False;
+  CheckReady;
+
+  if not FValidated or FEnteringPreview then
+  begin
+    raise ENyxSchedule.Create('Event preview requires validated, nonreentrant admission');
+  end;
+
+  if FPreviewStarted then
+  begin
+    Exit(True);
+  end;
+
+  if FRouter.FDispatchDepth <> 0 then
+  begin
+    Exit;
+  end;
+  FEnteringPreview := True;
+  try
+    for LIndex := 0 to High(FExecutions) do
+    begin
+      { A scheduler's status getter is an extension callout. An entered
+        dispatch is already fenced; any new ticket/generation from reentry
+        must still fail the original final identity check below. }
+      LStatus := FExecutions[LIndex].Status;
+      CheckReady;
+
+      if LStatus in [nesPending, nesRunning] then
+      begin
+        Exit;
+      end;
+    end;
+    CheckReady;
+
+    if FRouter.FDispatchDepth <> 0 then
+    begin
+      Exit;
+    end;
+    { No callback, scheduler operation or managed release separates these
+      final checks from the exact router flag. Existing work is terminal;
+      dispatch cannot introduce another callback until this plan retires. }
+    FRouter.FPreviewingView := True;
+    FPreviewStarted := True;
+    Result := True;
+  finally
+    FEnteringPreview := False;
+  end;
+end;
+
 procedure TPreparedEventView.Install;
 var
   LIndex: Integer;
@@ -319,6 +383,7 @@ begin
   FRouter.FScope := FNextScope;
   FRouter.FViewRevision := FNextRevision;
   FRouter.FExecutions := nil;
+  FRouter.FPreviewingView := False;
   for LIndex := 0 to High(FEntries) do
   begin
     FEntries[LIndex].FStaged := False;
@@ -393,6 +458,7 @@ begin
 
   if (FRouter <> nil) and (FRouter.FPreparedView = Self) then
   begin
+    FRouter.FPreviewingView := False;
     FRouter.FPreparedView := nil;
   end;
 

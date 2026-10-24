@@ -321,6 +321,18 @@ type
     function PrepareView: INyxPreparedEventView;
   end;
 
+  { Optional UI-only quiescence for a reversible retained-control preview.
+    Call after Validate and before changing any old-context model or control.
+    Pending/running old tickets or an entered dispatch return False WITHOUT
+    cancelling, consuming or replaying them. Once admitted, this exact plan
+    refuses new router dispatch until Install or uninstalled Retire. This is
+    not a pause/resume facility for running workers. Existing view preparation
+    remains unchanged unless this facet is explicitly requested. }
+  INyxEventViewPreview = interface(IInterface)
+    ['{00EF10A1-3D03-436A-9649-9A6BF7A1C7EF}']
+    function TryBeginPreview: Boolean;
+  end;
+
 { UI-only capture. Missing/closed/unsupported routers refuse instead of returning
   an unbound token that could silently survive navigation. Alternative routers
   may implement INyxEventGeneration without adopting Nyx's implementation class. }
@@ -507,6 +519,9 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
+  { Router owns registrations and tickets; prepared plans retain it through a
+    weak reservation. Dispatch depth and preview state are UI-thread-only
+    admission flags, never substitutes for worker ticket completion. }
   TNyxEvents = class(TInterfacedObject, INyxEvents, INyxEventGeneration,
     INyxEventObservation, INyxEventObservationEditing, INyxEventViewPreparation)
   private
@@ -517,6 +532,8 @@ type
     FScheduler: INyxScheduler;
     FGroups: array of TNyxEventGroup;
     FExecutions: TNyxExecutions;
+    FDispatchDepth: Integer;
+    FPreviewingView: Boolean;
     { Weak reservation. Its plan retains this router; no reverse lease cycles. }
     FPreparedView: TObject;
     procedure Admit;
@@ -1993,133 +2010,147 @@ var
   LPhase: Integer;
   LCallbackCount: Integer;
 begin
-  Admit;
   LKeepAlive := Self;
-  LSnapshot := nil;
-  Result := nil;
+  Admit;
 
-  if AEvent.Name.Name = '' then
+  if FPreviewingView or (FDispatchDepth = High(Integer)) then
   begin
-    Exit;
+    raise ENyxSchedule.Create('Event dispatch is unavailable during retained view preview');
   end;
-  LEvent := AEvent.Copy;
-  LScope := FScope;
-
-  if ADelivery <> nil then
-  begin
-    { Link before the first synchronous invocation, not after Submit returns. }
-    LScope := TNyxEventScope.Create(FScope, ADelivery);
-  end;
+  { RequireUI precedes reads/writes of these UI-only flags. If that admission
+    reenters and begins preview, the check above refuses before event capture.
+    Keep this witness through ALL before/main/after work and ticket tracking;
+    a synchronous callback cannot preview while later siblings have authority. }
+  Inc(FDispatchDepth);
   try
-    LCallbackCount := 0;
-    for LIndex := 0 to Length(FGroups) - 1 do
+    LSnapshot := nil;
+    Result := nil;
+
+    if AEvent.Name.Name = '' then
     begin
-      LGroup := FGroups[LIndex];
+      Exit;
+    end;
+    LEvent := AEvent.Copy;
+    LScope := FScope;
 
-      if (((LGroup.Trigger <> ntNamed) and (LGroup.Trigger = AEvent.Trigger)) or
-        ((LGroup.Trigger = ntNamed) and (LGroup.Name.Name = AEvent.Name.Name))) and
-        Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID) then
+    if ADelivery <> nil then
+    begin
+      { Link before the first synchronous invocation, not after Submit returns. }
+      LScope := TNyxEventScope.Create(FScope, ADelivery);
+    end;
+    try
+      LCallbackCount := 0;
+      for LIndex := 0 to Length(FGroups) - 1 do
       begin
-        LGroup.Prune;
+        LGroup := FGroups[LIndex];
 
-        if not LGroup.Observing then
+        if (((LGroup.Trigger <> ntNamed) and (LGroup.Trigger = AEvent.Trigger)) or
+          ((LGroup.Trigger = ntNamed) and (LGroup.Name.Name = AEvent.Name.Name))) and
+          Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID) then
         begin
-          for LEntryIndex := 0 to High(LGroup.Registrations) do
-          begin
+          LGroup.Prune;
 
-            if LGroup.Registrations[LEntryIndex].Active then
+          if not LGroup.Observing then
+          begin
+            for LEntryIndex := 0 to High(LGroup.Registrations) do
             begin
-              Inc(LCallbackCount);
+
+              if LGroup.Registrations[LEntryIndex].Active then
+              begin
+                Inc(LCallbackCount);
+              end;
             end;
           end;
         end;
       end;
-    end;
-    { Snapshot all three phases before entering any callback. Observers added
-      during before/main dispatch therefore start with the next event too. }
-    for LPhase := 0 to 2 do
-    begin
-      for LIndex := 0 to High(FGroups) do
+      { Snapshot all three phases before entering any callback. Observers added
+        during before/main dispatch therefore start with the next event too. }
+      for LPhase := 0 to 2 do
       begin
-        LGroup := FGroups[LIndex];
-
-        if not ((((LPhase = 1) and not LGroup.Observing) or
-          ((LPhase = 0) and LGroup.Observing and (LGroup.Phase = nopBeforeCallbacks)) or
-          ((LPhase = 2) and LGroup.Observing and (LGroup.Phase = nopAfterDispatch))) and
-          (((LGroup.Trigger <> ntNamed) and (LGroup.Trigger = AEvent.Trigger)) or
-          ((LGroup.Trigger = ntNamed) and (LGroup.Name.Name = AEvent.Name.Name))) and
-          Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID)) then
+        for LIndex := 0 to High(FGroups) do
         begin
-          Continue;
-        end;
-        for LEntryIndex := 0 to Length(LGroup.Registrations) - 1 do
-        begin
+          LGroup := FGroups[LIndex];
 
-          if not LGroup.Registrations[LEntryIndex].Active then
+          if not ((((LPhase = 1) and not LGroup.Observing) or
+            ((LPhase = 0) and LGroup.Observing and (LGroup.Phase = nopBeforeCallbacks)) or
+            ((LPhase = 2) and LGroup.Observing and (LGroup.Phase = nopAfterDispatch))) and
+            (((LGroup.Trigger <> ntNamed) and (LGroup.Trigger = AEvent.Trigger)) or
+            ((LGroup.Trigger = ntNamed) and (LGroup.Name.Name = AEvent.Name.Name))) and
+            Matches(LGroup.Target, AEvent, AOriginDesignID, ASourceDesignID)) then
           begin
-            { Inactive reserved registration slots survive pruning but do not
-              enter this dispatch. Publication during a callback starts next time. }
             Continue;
           end;
-          LCount := Length(LSnapshot);
-          SetLength(LSnapshot, LCount + 1);
-          LSnapshot[LCount] := TNyxInvocation.Create;
-          LSnapshot[LCount].Lease := LGroup.Registrations[LEntryIndex];
-          LSnapshot[LCount].Entry := LGroup.Entries[LEntryIndex];
-          LSnapshot[LCount].Callback := LGroup.Entries[LEntryIndex].Callback;
-          LSnapshot[LCount].Policy := LGroup.Policy;
-          LSnapshot[LCount].Observing := LGroup.Observing;
-
-          if LGroup.Observing then
+          for LEntryIndex := 0 to Length(LGroup.Registrations) - 1 do
           begin
-            LSnapshot[LCount].Callback := TObserverCallback.Create(
-              LGroup.Observers[LEntryIndex], LCallbackCount);
+
+            if not LGroup.Registrations[LEntryIndex].Active then
+            begin
+              { Inactive reserved registration slots survive pruning but do not
+                enter this dispatch. Publication during a callback starts next time. }
+              Continue;
+            end;
+            LCount := Length(LSnapshot);
+            SetLength(LSnapshot, LCount + 1);
+            LSnapshot[LCount] := TNyxInvocation.Create;
+            LSnapshot[LCount].Lease := LGroup.Registrations[LEntryIndex];
+            LSnapshot[LCount].Entry := LGroup.Entries[LEntryIndex];
+            LSnapshot[LCount].Callback := LGroup.Entries[LEntryIndex].Callback;
+            LSnapshot[LCount].Policy := LGroup.Policy;
+            LSnapshot[LCount].Observing := LGroup.Observing;
+
+            if LGroup.Observing then
+            begin
+              LSnapshot[LCount].Callback := TObserverCallback.Create(
+                LGroup.Observers[LEntryIndex], LCallbackCount);
+            end;
           end;
         end;
       end;
-    end;
-    SetLength(Result, Length(LSnapshot));
-    for LIndex := 0 to Length(LSnapshot) - 1 do
-    begin
-      LWork := TNyxEventWork.Create(LEvent, LSnapshot[LIndex].Callback,
-        LScope, LSnapshot[LIndex].Entry.Scope, ADecision,
-        (ADecision <> nil) and not LSnapshot[LIndex].Observing and
-          (LSnapshot[LIndex].Policy = neSequential), AGesture,
-        (AGesture <> nil) and not LSnapshot[LIndex].Observing and
-          (LSnapshot[LIndex].Policy = neSequential));
-      try
-        Result[LIndex] := FScheduler.Submit(LWork, LSnapshot[LIndex].Policy);
-      except
-        on LException: ENyxScheduleCapacity do
+      SetLength(Result, Length(LSnapshot));
+      for LIndex := 0 to Length(LSnapshot) - 1 do
+      begin
+        LWork := TNyxEventWork.Create(LEvent, LSnapshot[LIndex].Callback,
+          LScope, LSnapshot[LIndex].Entry.Scope, ADecision,
+          (ADecision <> nil) and not LSnapshot[LIndex].Observing and
+            (LSnapshot[LIndex].Policy = neSequential), AGesture,
+          (AGesture <> nil) and not LSnapshot[LIndex].Observing and
+            (LSnapshot[LIndex].Policy = neSequential));
+        try
+          Result[LIndex] := FScheduler.Submit(LWork, LSnapshot[LIndex].Policy);
+        except
+          on LException: ENyxScheduleCapacity do
+          begin
+            { Native backpressure belongs to this invocation's diagnostic. Retain
+              LastExecution and continue independent siblings, including UI-only
+              registrations. Neither run overload on UI nor hide it as success. }
+            {$IFDEF PAS2JS}
+            Result[LIndex] := NewNyxFailedExecution(LException.Message);
+            {$ELSE}
+            Result[LIndex] := NewNyxFailedExecution(UTF8Encode(UnicodeString(LException.Message)));
+            {$ENDIF}
+          end;
+        end;
+        LSnapshot[LIndex].Entry.Track(Result[LIndex]);
+
+        if FClosed then
         begin
-          { Native backpressure belongs to this invocation's diagnostic. Retain
-            LastExecution and continue independent siblings, including UI-only
-            registrations. Neither run overload on UI nor hide it as success. }
-          {$IFDEF PAS2JS}
-          Result[LIndex] := NewNyxFailedExecution(LException.Message);
-          {$ELSE}
-          Result[LIndex] := NewNyxFailedExecution(UTF8Encode(UnicodeString(LException.Message)));
-          {$ENDIF}
+          Result[LIndex].Cancel;
+        end
+        else
+        begin
+          PruneExecutions;
+          SetLength(FExecutions, Length(FExecutions) + 1);
+          FExecutions[High(FExecutions)] := Result[LIndex];
         end;
       end;
-      LSnapshot[LIndex].Entry.Track(Result[LIndex]);
-
-      if FClosed then
+    finally
+      for LIndex := 0 to Length(LSnapshot) - 1 do
       begin
-        Result[LIndex].Cancel;
-      end
-      else
-      begin
-        PruneExecutions;
-        SetLength(FExecutions, Length(FExecutions) + 1);
-        FExecutions[High(FExecutions)] := Result[LIndex];
+        LSnapshot[LIndex].Free;
       end;
     end;
   finally
-    for LIndex := 0 to Length(LSnapshot) - 1 do
-    begin
-      LSnapshot[LIndex].Free;
-    end;
+    Dec(FDispatchDepth);
   end;
 end;
 
