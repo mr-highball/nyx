@@ -19,9 +19,10 @@ browser logs empty. Target26/28 browser controls pass130 at measured390/1280
 widths; native29 repairs hidden editor selection after alignment recreates its
 HWND and passes161 at both widths, with clean heaps and original26/968
 preservation. Focused mounted Studio input01 additionally passes230/232 native
-checks at desktop/compact widths, with clean heaps. Browser title01 passes228
-at measured1280x900; compact trace02 remains in progress. Complete original
-Save/Open and native own-export/performance remain open.
+checks at desktop/compact widths, with clean heaps. Browser title01/trace02 pass
+228/230 at measured1280x900/390x900, with empty logs. All four complete accepted
+project packets match exactly. Complete original Save/Open and native
+own-export/performance remain open.
 These separate cohorts close no original criterion; WORK records their exact
 boundaries and remaining checks.
 

@@ -154,16 +154,22 @@ also compiles with unchanged closed product inputs and advances through real
 Inspector input; the preceding title01 run reaches workbench check214. Thus the
 first exchange is not a proven permanently stalled call. Superseded170/173 runs
 are explicitly closed to reduce competing browser load. The desktop title01 run
-then completes228 checks at measured1280x900: terminal passed status, no error
-attribute and an inert11728-unit accepted project are observed in the actual DOM.
+then completes228 checks at measured1280x900; compact trace02 completes230 at
+measured390x900. Both terminal passed states, absent error attributes and
+inert11728-unit accepted projects are observed in the actual DOM, with empty
+warning/error logs. Their complete project text matches each other and BOTH
+previously qualified native1280/390 packets exactly, preserving canonical SHA256
+DE04A0B25F302BAFC382CB88EED810A3BBBC8732D81A585395C52765B26504E3.
+The native comparison uses escaped inert HTML text through the same host; no
+project code is evaluated to obtain an equality result.
 It exercises ordinary spacing/wrap/alignment input, partial drafts, independent
-resets, isolation and paired Undo/Redo. The compact trace02 run still advances;
-it has no terminal result yet. These exact fixed artifacts/handles and frontiers
-stay in private handoff. Earlier bounded CDP reads remain incomplete observations,
-not failed application assertions. Preserve the compact run rather than start
-another equivalent diagnostic; after its result, continue native responsiveness/
-full own-export and physical-drag prerequisites. Focused input does not qualify
-full Save/Open, an independently compiled own application or responsiveness.
+resets, isolation and paired Undo/Redo. Exact artifacts and receipts stay in
+private evidence. Earlier bounded CDP reads remain incomplete observations,
+not failed application assertions. Completed tabs are closed, the temporary
+viewport is reset, and the identity-checked Pascal host is stopped/joined with
+its listener absent. Native responsiveness/full own-export and physical-drag
+prerequisites are next. Focused input does not qualify full Save/Open, an
+independently compiled own application or responsiveness.
 
 ### Earlier checkpoint — native button admission and runtime table presentation
 
