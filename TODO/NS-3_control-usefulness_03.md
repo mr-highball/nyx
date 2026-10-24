@@ -10,6 +10,16 @@ W1 owns column arrangement and its complete Studio/generated-application journey
 W2 adds full-value inspection, copying, formatting, export and context actions.
 Both packets serve the original seven criteria below and remain open.
 
+The native responsiveness prerequisite now reuses strictly admitted immutable
+button faces by exact effective wire, preserving resource and callback currentness.
+Configuration03 passes88 on both actual targets; ordinary native Studio chrome
+passes48/52 at desktop/compact widths with clean heaps. The isolated repeated
+admission/identity path is measured separately in WORK; whole-editor performance
+and the complete own-export journey remain required. Runtime-only table22 has
+separate native101/browser95 target evidence pending its collection checkpoint;
+typed logical alignment value01 passes53 per actual target, with integration in
+progress. None of these focused results closes an original criterion.
+
 The presentation-authoring continuation adds typed ordinary spacing/text forms,
 independent set/reset and paired history, bounded semantic reads and grouped
 operations with complete version11 discovery. Authoring05 passes40 per actual
@@ -18,12 +28,12 @@ browser warning/error logs. Target20 separately qualifies64 native/browser check
 at narrow/desktop allocations, including genuine arrangement absence, composition
 continuity, explicit budget refusal and readable multiline row geometry. These
 focused checks do not replace mounted Studio input or full W1/W2 acceptance.
-The next discovered W2 gap is runtime-only presentation activation: the current
-view explicitly refuses nonempty preferences without authored opt-in, and mounts
-also latch that presence. Extend both layers so initial and post-mount set/reset
-work while preserving saved absence, ordinary input and detached capture
-lifetimes. No silent successful commit was proven. WORK retains exact cohorts
-and negative evidence.
+The discovered W2 runtime-only presentation gap was an explicit view refusal of
+nonempty preferences without authored opt-in, accompanied by mount-time latching.
+The separately captured22 extension qualifies initial/post-mount set/reset while
+preserving saved absence, ordinary input and detached capture lifetimes; its
+collection integration checkpoint remains pending. No silent successful commit
+was proven in the predecessor. WORK retains exact cohorts and negative evidence.
 
 Actual focused Studio04 now passes121 native checks with a complete clean heap
 and119/121 browser checks at measured1280x900/390x900, logs empty. Exact accepted

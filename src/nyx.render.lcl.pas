@@ -12817,7 +12817,8 @@ var
   LGlyph: TBitmap;
   LRequest: TNyxImageRequestID;
   LForeground: TColor;
-  LSourceWidth, LSourceHeight: Integer;
+  LSourceWidth: Integer;
+  LSourceHeight: Integer;
   LSourceChanged: Boolean;
 begin
   LGeneration := GenerationLease;
@@ -12830,11 +12831,19 @@ begin
   RequireNativeGeneration(LGeneration);
   LPresentation := NyxButtonPresentationOf(FNode);
   RequireNativeGeneration(LGeneration);
+  { Capture the admitted wire before resource resolution crosses an extension
+    boundary. A callback changing the face must remain visible on the next Sync
+    rather than marking its new wire as already painted with the old value. }
+  LIdentity := FNode.Prop(NyxAttributeName(atButtonPresentation));
+  RequireNativeGeneration(LGeneration);
   LSource := NyxButtonGlyphSource(FNode, LPresentation);
   RequireNativeGeneration(LGeneration);
   LForeground := TNyxControlAccess(FControl).Font.Color;
   RequireNativeGeneration(LGeneration);
-  LIdentity := LPresentation.ToData.ToJSON + #10 + IntToStr(LForeground);
+  { NyxButtonPresentationOf has already admitted this exact effective wire.
+    Comparing it avoids serializing/revalidating glyph bytes on every refresh.
+    Keep source resolution above: unchanged selectors can acquire new bytes. }
+  LIdentity := LIdentity + #10 + IntToStr(LForeground);
   RequireNativeGeneration(LGeneration);
 
   if (LIdentity = FLastButtonFace) and (LSource.ToWire = FLastButtonGlyphSource) then

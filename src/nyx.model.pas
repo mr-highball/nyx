@@ -129,6 +129,13 @@ type
     FParent: TNyxNode;
     FOwner: TNyxDocument;
     FProps: TNyxStrings;
+    { Lazily admitted immutable face, owned by this descriptor alone. Compare
+      the effective wire on every read: direct Props edits, viewport overlays
+      and prepared property exchanges must not bypass changed-value admission.
+      Resource bytes/catalogs are deliberately outside this cache. }
+    FHasButtonPresentation: Boolean;
+    FButtonPresentationWire: TNyxText;
+    FButtonPresentation: TNyxButtonPresentation;
     FExtensions: TNyxExtensions;
     FChildren: array of TNyxNode;
     FChildReferences: array of INyxNode;
@@ -181,6 +188,7 @@ type
     function GetCount: Integer;
     function GetChild(AIndex: Integer): TNyxNode;
     function GetProjectionKind: TNyxText;
+    function GetButtonPresentation: TNyxButtonPresentation;
     function GetID: TNyxText;
     function GetDesignID: TNyxText;
     function GetIsRealized: Boolean;
@@ -227,6 +235,13 @@ type
       Codecs and authored-delta comparisons use this explicit wire boundary;
       renderers/application presentation continue to use Prop. }
     function StoredProp(const AKey: TNyxText; const ADefault: TNyxText = ''): TNyxText;
+    { Effective immutable face for adapters and inspection. Empty means ordinary
+      caption defaults. A changed wire is strictly admitted before publication;
+      refusal never returns the previous face as a substitute. Repeated reads
+      reuse the admitted value without JSON/selector/image revalidation. Returned
+      fluent values are independent. This runtime cache is neither persisted nor
+      copied into clones and shares the descriptor's ordinary caller confinement. }
+    property ButtonPresentation: TNyxButtonPresentation read GetButtonPresentation;
     { UI-thread runtime constraints are retained only on realized copies, never
       serialized. Nil policies or authored nodes raise ENyxModel before mutation.
       Identity repeats are no-ops. Policies cannot retain this tree back; their
@@ -3052,6 +3067,30 @@ begin
   begin
     Result := FKind;
   end;
+end;
+
+function TNyxNode.GetButtonPresentation: TNyxButtonPresentation;
+var
+  LWire: TNyxText;
+  LCandidate: TNyxButtonPresentation;
+begin
+  LWire := Prop(NyxAttributeName(atButtonPresentation));
+
+  if not FHasButtonPresentation or (LWire <> FButtonPresentationWire) then
+  begin
+    LCandidate := NyxButtonPresentation;
+
+    if LWire <> '' then
+    begin
+      LCandidate := TNyxButtonPresentation.FromData(TNyxDataValue.ParseJSON(LWire));
+    end;
+    { Publish only after complete admission. All nested fields are immutable
+      value records/strings, with no caller, registry or target backreference. }
+    FButtonPresentation := LCandidate;
+    FButtonPresentationWire := LWire;
+    FHasButtonPresentation := True;
+  end;
+  Result := FButtonPresentation;
 end;
 
 function TNyxNode.GetCount: Integer;

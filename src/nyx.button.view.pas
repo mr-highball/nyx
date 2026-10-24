@@ -8,7 +8,9 @@ interface
 uses nyx.model, nyx.images, nyx.button.presentation;
 
 { Read a copied effective presentation from an authored or realized descriptor.
-  An empty override restores the ordinary caption face. No mutable state is kept. }
+  An empty override restores the ordinary caption face. The descriptor reuses
+  its immutable admission while the exact effective wire is unchanged; glyph
+  resources remain resolved separately against the current runtime catalog. }
 function NyxButtonPresentationOf(ANode: TNyxNode): TNyxButtonPresentation;
 { Resolve through the same realized resource catalog as ordinary Image bindings.
   A valid hosted resource with no published bytes returns NyxNoImage, preserving
@@ -18,22 +20,16 @@ function NyxButtonGlyphSource(ANode: TNyxNode;
 
 implementation
 
-uses SysUtils, nyx.types, nyx.data;
+uses SysUtils;
 
 function NyxButtonPresentationOf(ANode: TNyxNode): TNyxButtonPresentation;
 begin
-  Result := NyxButtonPresentation;
-
   if ANode = nil then
   begin
     raise EArgumentException.Create('Button presentation requires a descriptor');
   end;
 
-  if ANode.Prop(NyxAttributeName(atButtonPresentation)) <> '' then
-  begin
-    Result := TNyxButtonPresentation.FromData(
-      TNyxDataValue.ParseJSON(ANode.Prop(NyxAttributeName(atButtonPresentation))));
-  end;
+  Result := ANode.ButtonPresentation;
 end;
 
 function NyxButtonGlyphSource(ANode: TNyxNode;

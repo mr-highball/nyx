@@ -25,7 +25,9 @@ program nyx_button_configuration_tests;
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.data, nyx.bytes,
-  nyx.images, nyx.resources, nyx.button.presentation, nyx.button.configuration,
+  nyx.images, nyx.resources, nyx.resource.sources,
+  nyx.button.presentation, nyx.button.configuration,
+  nyx.button.view,
   nyx.responsive, nyx.presentations, nyx.containers, nyx.composition, nyx.contract,
   nyx.codec, nyx.codegen, nyx.source, nyx.schema, nyx.event.payload, nyx.platform
   {$ifdef PAS2JS}, Web{$endif};
@@ -476,6 +478,119 @@ begin
   end;
 end;
 
+{ Exercise effective-value changes through the actual descriptor boundaries,
+  including edits which deliberately bypass SetProp and unchanged selectors
+  whose resource catalogs change. Cache reuse must never weaken admission. }
+procedure EffectivePresentationCases;
+var
+  LNode: TNyxNode;
+  LCopy: TNyxNode;
+  LFace: TNyxButtonPresentation;
+  LRetained: TNyxButtonPresentation;
+  LWire: TNyxText;
+  LIndex: Integer;
+  LRejected: Boolean;
+  LResources: INyxResources;
+begin
+  LNode := TNyxNode.CreateRealized('button', 'launch', 'launch', 'launch');
+  LCopy := nil;
+  try
+    Check(NyxButtonPresentationOf(LNode).ControlDensity = nbdNormal,
+      'absent effective face preserves ordinary defaults');
+    LFace := GlyphFace;
+    LWire := LFace.ToData.ToJSON;
+    LNode.Configure.ButtonPresentation(LFace).Done;
+    LRetained := NyxButtonPresentationOf(LNode);
+    LFace := LRetained.GlyphGap(19).Density(nbdTouch);
+    Check(NyxButtonPresentationOf(LNode).GlyphSpacing = 0,
+      'fluent changes to a returned face preserve the descriptor');
+    Check(LRetained.ControlDensity = nbdCompact,
+      'returned immutable face survives later fluent changes');
+    Check(LNode.StoredProp(NyxAttributeName(atButtonPresentation)) = LWire,
+      'face reads preserve exact persisted bytes');
+    { Public property storage is a codec/adapter boundary. Its direct updates
+      must be observed even though they run no typed setter invalidation. }
+    LIndex := LNode.Props.IndexOfName(NyxAttributeName(atButtonPresentation));
+    LNode.Props[LIndex] := NyxAttributeName(atButtonPresentation) + '=' +
+      LFace.ToData.ToJSON;
+    Check(NyxButtonPresentationOf(LNode).GlyphSpacing = 19,
+      'direct property storage edits replace the effective face');
+    LNode.SetProp(NyxAttributeName(atButtonPresentation), '{invalid');
+    for LIndex := 1 to 2 do
+    begin
+      LRejected := False;
+      try
+        LFace := NyxButtonPresentationOf(LNode);
+      except
+        on Exception do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'every invalid current wire read refuses instead of returning an old face');
+    end;
+    LNode.SetProp(NyxAttributeName(atButtonPresentation), LWire);
+    Check(NyxButtonPresentationOf(LNode).GlyphSpacing = 0,
+      'restoring a previously admitted exact wire recovers after refusal');
+    LNode.Configure.WhenViewport(TNyxViewportWidth.Below(600))
+      .ButtonPresentation(NyxButtonPresentation.Density(nbdTouch)).Done;
+    LNode.ApplyViewport(390, 900, npfBrowser);
+    Check(NyxButtonPresentationOf(LNode).ControlDensity = nbdTouch,
+      'effective viewport face wins without changing persisted defaults');
+    LCopy := LNode.CloneRuntimeProjection;
+    Check(NyxButtonPresentationOf(LCopy).ControlDensity = nbdTouch,
+      'runtime clone independently reads its copied effective overlay');
+    LNode.ApplyViewport(1280, 900, npfBrowser);
+    Check(NyxButtonPresentationOf(LNode).ControlDensity = nbdCompact,
+      'leaving a viewport restores the exact current base face');
+    Check(NyxButtonPresentationOf(LCopy).ControlDensity = nbdTouch,
+      'the source viewport change does not invalidate a detached projection');
+    FreeAndNil(LCopy);
+    LCopy := LNode.Clone;
+    Check(NyxButtonPresentationOf(LCopy).ControlDensity = nbdCompact,
+      'ordinary clone reads authored values without a copied viewport cache');
+    LCopy.Configure.ButtonPresentation(NyxButtonPresentation).Done;
+    LNode.ExchangeResourceProjection(LCopy);
+    Check(not NyxButtonPresentationOf(LNode).HasGlyph,
+      'prepared property exchanges invalidate effective face reuse by exact wire');
+    Check(NyxButtonPresentationOf(LCopy).HasGlyph,
+      'the exchanged candidate independently reads displaced properties');
+    LCopy.Free;
+    LCopy := nil;
+    LNode.Configure.ButtonPresentation(NyxButtonPresentation.Glyph(
+      NyxResourceImage(NyxResourceRef('Action atlas')))).Done;
+    LResources := NewNyxResources.Define(NyxResourceRef('Action atlas'),
+      NyxImageResource(NyxEmbeddedImage(nimPNG, CPNG)));
+    LNode.BindResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
+    LFace := NyxButtonPresentationOf(LNode);
+    Check(NyxButtonGlyphSource(LNode, LFace).ToWire = LRetained.ImageSource.ToWire,
+      'cached selector resolves through the current resource context');
+    LResources.Define(NyxResourceRef('Action atlas'),
+      NyxHostedResource(nrkImage, NyxResourceURL('https://example.invalid/action.png')));
+    LNode.BindResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
+    Check(NyxButtonGlyphSource(LNode, NyxButtonPresentationOf(LNode)).Kind = nisEmpty,
+      'unchanged face selector observes replacement with hosted bytes not yet published');
+    LResources.Define(NyxResourceRef('Action atlas'),
+      NyxImageResource(NyxEmbeddedImage(nimPNG, CPNG)));
+    LNode.BindResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
+    Check(NyxButtonGlyphSource(LNode, NyxButtonPresentationOf(LNode)).Kind = nisEmbedded,
+      'unchanged face selector observes a later published packed image again');
+    LNode.Configure.Clear(atButtonPresentation).Done;
+    Check(NyxButtonPresentationOf(LNode).ControlDensity = nbdNormal,
+      'explicit empty effective wire restores ordinary defaults');
+    LNode.Configure.Reset(atButtonPresentation).Done;
+    Check(not NyxButtonPresentationOf(LNode).HasGlyph,
+      'removing the property preserves absent default behavior');
+    LNode.Free;
+    LNode := nil;
+    Check(LRetained.ImageSource.ToWire <> '',
+      'a retained face owns its immutable image after descriptor destruction');
+  finally
+    LCopy.Free;
+    LNode.Free;
+  end;
+end;
+
 { Renderer Build receives a concrete target projection. Re-evaluating that
   mutated base as another platform would invent invalid opposite-target values. }
 procedure RealizedAdmissionCases;
@@ -536,6 +651,7 @@ begin
     ResponsiveNameCases;
     GrammarAndEventCases;
     RealizedAdmissionCases;
+    EffectivePresentationCases;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-button-configuration', 'passed');
     document.body.setAttribute('data-checks', IntToStr(GChecks));

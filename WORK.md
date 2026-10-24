@@ -4,7 +4,36 @@
 
 ## Column arrangement W1 — 2026-10-22
 
-### Current checkpoint — authored workbench policies and runtime integration
+### Current checkpoint — native button admission and runtime table presentation
+
+Native button measurement/refresh now reuse an immutable typed face admitted
+against the exact effective property wire. Changed or malformed values still
+cross strict admission; direct property edits, viewport changes, prepared
+exchanges and independent clones cannot return a stale face. Resource resolution
+remains current on every Sync. The identity is captured before foreign resource
+callbacks so an old face cannot mark a newer wire as already painted.
+Button configuration03 passes88 native and actual browser checks. Native ordinary
+Studio chrome passes48 at1280 and52 at390, with complete clean heaps; whole browser
+Studio also compiles from that closed source. A controlled checked-native
+comparison of1000 face admission/identity operations takes812/829/843ms on the
+previous path and0/0/16ms on the cached path, with equal result checksums and a
+clean heap. This is the isolated path, not a whole-editor latency benchmark.
+The first fixture used an unsupported packed-image location; the next lacked its
+hosted-URL dependency. Both failures remain retained. The standalone browser
+shell initially ran before body creation; its repaired shell executes identical
+compiled Pascal. These are fixture failures, not accepted product regressions.
+
+Lil' Scooty's separately captured runtime-only22 source passes101 native controls
+at390/1280 with clean heaps and95 browser controls at measured390x900/1280x900
+(table350/1240). Unchanged representation26/25 and clipboard968/1073 pass on their
+respective native/browser targets; browser warning/error logs are empty. Initial
+and post-mount activation/reset preserve absent saved policies, RAW, composing
+drafts and peer views; unsupported direct native hosts refuse explicitly. This
+source is pending its collection integration checkpoint, separate from the button
+cache. The next disjoint prerequisite is typed logical column alignment:
+value-only01 passes53 on native and actual browser, while descriptor/runtime/
+target integration remains in progress. All seven original task03 criteria,
+full native Studio/own-export journeys and whole-editor performance remain open.
 
 This continuation implements typed presentation authoring in the ordinary
 Inspector and semantic collection API: separate density/text forms, four typed
