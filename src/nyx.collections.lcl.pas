@@ -33,13 +33,17 @@ uses
   nyx.events, nyx.text, nyx.observation,
   nyx.collections.view,
   nyx.collections.mount,
-  nyx.collections.clipboard.actions, nyx.collections.draft;
+  nyx.collections.clipboard.actions, nyx.collections.draft,
+  nyx.collections.lcl.grid;
 
 type
   { Borrowed synchronous canonical Click port. False covers blocked/rejected,
     retired and committed-notification-failure outcomes; True also permits an
     accepted control with no authored action. The mount clears it on detach. }
   TNyxLCLColumnClick = function(Sender: TObject): Boolean of object;
+  { Native compound-editor context uses the grid's borrowed prepared dispatch
+    port. The renderer keeps canonical events single-owned; no event is replayed. }
+  TNyxLCLCellContextDispatch = nyx.collections.lcl.grid.TNyxGridCellContextDispatch;
 
   { Optional native observation publication. The returned aggregate owns only
     observer/input leases and copied context, never its mount/view/store. Prepare
@@ -52,8 +56,10 @@ type
   end;
 
   { Optional pre-canonical context entry resolves only actual owned grid cells.
-    Editor context menus retain the native editor path. A negative point uses
-    the currently owned logical cell for ordinary keyboard context requests. }
+    Editors retain their native path unless focused-draft actions explicitly
+    opt in. A stale reserved envelope remains claimed instead of replaying an
+    old native menu. A negative point uses the currently owned logical cell
+    for ordinary keyboard context requests. }
   INyxLCLCollectionCellContextInput = interface(IInterface)
     ['{A29C10EB-1B0E-4565-B363-C8BA0BDA676F}']
     function BeginCellContext(Sender: TObject; const APosition: TPoint):
@@ -75,7 +81,8 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputFrame: INyxNativeGestureFrame = nil;
   const AInputEvents: INyxEvents = nil;
   const AOriginID: TNyxText = '';
-  AColumnClick: TNyxLCLColumnClick = nil): INyxCollectionMount;
+  AColumnClick: TNyxLCLColumnClick = nil;
+  ACellContext: TNyxLCLCellContextDispatch = nil): INyxCollectionMount;
 
 implementation
 
@@ -85,7 +92,6 @@ uses
   Math,
   Forms,
   nyx.collections.refresh,
-  nyx.collections.lcl.grid,
   StdCtrls,
   ComCtrls,
   Grids,
@@ -117,6 +123,8 @@ uses
   nyx.collections.tree.rows;
 
 type
+  { Forward mount is borrowed by native ports only while a local specialized
+    lease and the original input frame protect its entered callback. }
   TNativeMount = class;
   { Entered native focus shield retains the exact mount and uses the existing
     counted grid transition. No session/controller owns this temporary guard. }
@@ -393,6 +401,7 @@ type
     FColumnToolbarApplied: Boolean;
     FColumnToolbarHeight: Integer;
     FColumnClick: TNyxLCLColumnClick;
+    FCellContextDispatch: TNyxLCLCellContextDispatch;
     function PrepareFitButton(Sender: TObject): INyxGridColumnButtonCommand;
     function PrepareColumnsButton(Sender: TObject): INyxGridColumnButtonCommand;
     function PrepareColumnButtonDraft(Sender: TObject): Boolean;
@@ -619,7 +628,8 @@ type
       const AInputFrame: INyxNativeGestureFrame = nil;
       const AInputEvents: INyxEvents = nil;
       const AOriginID: TNyxText = '';
-      AColumnClick: TNyxLCLColumnClick = nil);
+      AColumnClick: TNyxLCLColumnClick = nil;
+      ACellContext: TNyxLCLCellContextDispatch = nil);
     function GetEditingPublication: INyxObservationPublication;
     function EditingDispatching: Boolean;
     function BeginCellContext(Sender: TObject; const APosition: TPoint):
@@ -2454,6 +2464,7 @@ begin
   Grid := TNyxCollectionStringGrid.Create(nil);
   Grid.Visible := False;
   Grid.AttachColumnInput(InputLifetime, Frame, AOwner.FColumnEditing.Continuity);
+  Grid.ConfigureCellContext(InputLifetime, AOwner.BeginCellContext, AOwner.FCellContextDispatch);
   Grid.Parent := AOwner.FGrid;
   Grid.BorderStyle := bsNone;
   Grid.ScrollBars := ssNone;
@@ -3992,19 +4003,27 @@ var
 begin
   FColumnGeometryPending := False;
   FColumnClick := nil;
+  FCellContextDispatch := nil;
 
   if FInputGrid <> nil then
   begin
+
+    if FInputGridAttached then
+    begin
+      FInputGrid.ConfigureCellContext(GetInputLifetime, nil, nil);
+    end;
     FInputGrid.ObserveColumnEditor(nil);
   end;
 
   if FStartPane <> nil then
   begin
+    FStartPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
     FStartPane.Grid.ObserveColumnEditor(nil);
   end;
 
   if FEndPane <> nil then
   begin
+    FEndPane.Grid.ConfigureCellContext(GetInputLifetime, nil, nil);
     FEndPane.Grid.ObserveColumnEditor(nil);
   end;
 
@@ -5311,7 +5330,7 @@ constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionV
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
-  AColumnClick: TNyxLCLColumnClick);
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch);
 var
   LIndex: Integer;
   {$ifdef NYX_STUDIO_PROFILE}LHandleStarted: QWord;{$endif}
@@ -5350,12 +5369,14 @@ begin
       mounts lacking this supplied context retain their original behavior. }
     FColumnFrame := AInputFrame;
     FColumnClick := AColumnClick;
+    FCellContextDispatch := ACellContext;
 
     FColumnEditing := TColumnEditing.Create(GetInputLifetime, AInputEvents,
       AOriginID, CellCompositionEnded);
     FInputGrid := TNyxCollectionStringGrid(AControl);
     FInputGrid.AttachColumnInput(GetInputLifetime, FColumnFrame,
       FColumnEditing.Continuity);
+    FInputGrid.ConfigureCellContext(GetInputLifetime, BeginCellContext, FCellContextDispatch);
     FInputGridAttached := True;
     FColumnEditing.Add(FInputGrid);
   end;
@@ -7060,13 +7081,13 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputGate: INyxCollectionInputGate;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
-  AColumnClick: TNyxLCLColumnClick): INyxCollectionMount;
+  AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch): INyxCollectionMount;
 var
   LMount: TNativeMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted: QWord;{$endif}
 begin
   LMount := TNativeMount.Create(AControl, AView, AInputPhase, AInputGate,
-    AInputFrame, AInputEvents, AOriginID, AColumnClick);
+    AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext);
   Result := LMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted := GetTickCount64;{$endif}
   LMount.Activate;

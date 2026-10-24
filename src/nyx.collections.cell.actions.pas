@@ -31,21 +31,36 @@ uses
   nyx.collections.arrangement, nyx.collections.clipboard,
   nyx.collections.clipboard.actions, nyx.collections.export,
   nyx.collections.export.actions, nyx.collections.view, nyx.files.save,
-  nyx.collections.representation;
+  nyx.collections.representation, nyx.collections.draft;
 
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
   NyxCellActionsCopyDisplayID = 'nyx-cell-actions-copy-display';
+  NyxCellActionsInspectDraftID = 'nyx-cell-actions-inspect-draft';
+  NyxCellActionsCopyDraftID = 'nyx-cell-actions-copy-draft';
   NyxCellActionsExportPageID = 'nyx-cell-actions-export-page';
   NyxCellActionsExportFilteredID = 'nyx-cell-actions-export-filtered';
   NyxCellInspectorValueID = 'nyx-cell-inspector-value';
   NyxCellInspectorCopyID = 'nyx-cell-inspector-copy';
   NyxCellInspectorCopyDisplayID = 'nyx-cell-inspector-copy-display';
+  NyxCellInspectorCopyDraftID = 'nyx-cell-inspector-copy-draft';
   NyxCellInspectorCloseID = 'nyx-cell-inspector-close';
   NyxCellInspectorStatusState = 'nyx-cell-inspector-status';
 
 type
+  { Runtime-only opt-in controls whether a managed editor context may capture
+    unfinished text. Defaults preserve ordinary native/browser editor menus;
+    this option never changes RAW copy or the active editor's Ctrl+C. }
+  TNyxCollectionCellActionOptions = record
+  private
+    FFocusedDraft: Boolean;
+  public
+    class function Defaults: TNyxCollectionCellActionOptions; static;
+    function FocusedDraft(AEnabled: Boolean): TNyxCollectionCellActionOptions;
+    property HasFocusedDraft: Boolean read FFocusedDraft;
+  end;
+
   { One synchronous presentation transition. Target input guards nest and keep
     actual drafts inert during focus changes. Leave is idempotent; the managed
     guard may retain its original mount only until this call finishes. }
@@ -124,6 +139,32 @@ type
       INyxCollectionClipboardCellCommand;
   end;
 
+  { Optional synchronous enrichment of the SAME reserved context envelope.
+    Capture is requested before previous/canonical callbacks and presentation
+    focus changes. No target/provider is retained. HasDraft becomes false when
+    preparation cannot prove an exact accepted RAW row/typed field/value match. }
+  INyxCollectionCellActionDraftCommand = interface(IInterface)
+    ['{E2D44E17-685F-4E22-86E0-DFD13F8127AF}']
+    procedure CaptureFocusedDraft(const AInput: INyxCollectionFocusedDraftInput);
+    function GetHasDraft: Boolean;
+    function MatchesDraftCell(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity): Boolean;
+    property HasDraft: Boolean read GetHasDraft;
+  end;
+
+  { Separate explicit-draft session preserves the established RAW snapshot and
+    result ABI. Captures own only copied text/provenance and original readonly
+    flags. Opening never reads the editor again or silently substitutes RAW. }
+  INyxCollectionCellDraftActions = interface(IInterface)
+    ['{BA86D824-9AD6-496D-93E8-52010A17B576}']
+    function GetFocusedDraftEnabled: Boolean;
+    function OpenCellWithDraft(const ALaunch: INyxCollectionClipboardCommand;
+      const ADraft: INyxCollectionFocusedDraftCapture): Boolean;
+    function GetCapturedDraft: INyxCollectionFocusedDraftCapture;
+    property FocusedDraftEnabled: Boolean read GetFocusedDraftEnabled;
+    property CapturedDraft: INyxCollectionFocusedDraftCapture read GetCapturedDraft;
+  end;
+
   { Separate represented result preserves the established accepted-RAW result
     API. Nil value with a failed result denotes pre-host formatting refusal. }
   INyxCollectionCellRepresentationActions = interface(IInterface)
@@ -162,12 +203,28 @@ type
     property CellActions: INyxCollectionCellActions read GetCellActions;
   end;
 
+  { Optional configuration keeps the original mount GUID/vtable unchanged.
+    Options are chosen at the same one-time factory admission as ordinary cell
+    actions; no later callback can enable draft capture for an old envelope. }
+  INyxCollectionCellActionOptionsMount = interface(IInterface)
+    ['{DF6A8E22-8C49-4FE8-A595-8E85855A781B}']
+    procedure ConfigureCellActionsWithOptions(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionCellActionOptions);
+  end;
+
 { Neither constructor retains a mount, tree or renderer. The temporary launch
   envelope may retain the mount's final fence only during canonical dispatch. }
 function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
   APresentation: TNyxCollectionCellPresentation = nil;
-  const AExporter: INyxCollectionExportCapturedSave = nil): INyxCollectionCellActions;
+  const AExporter: INyxCollectionExportCapturedSave = nil): INyxCollectionCellActions; overload;
+function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
+  const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions;
+  APresentation: TNyxCollectionCellPresentation = nil;
+  const AExporter: INyxCollectionExportCapturedSave = nil): INyxCollectionCellActions; overload;
 function NewNyxCollectionCellActionCommand(const ALaunch: INyxCollectionClipboardCommand;
   const AActions: INyxCollectionCellActions): INyxCollectionClipboardCommand;
 { Reversible display notation: backslashes and C0/DEL controls are escaped;
@@ -198,27 +255,32 @@ type
 
   { The existing scheduler owns delayed menu entry, never the mount/controller.
     Original launch ownership ends at execution or cancellation; no controller
-    field stores this command, so its synchronous mount fence cannot cycle. }
+    field stores this command, so its synchronous mount fence cannot cycle.
+    Optional draft bytes/readiness are detached and contain no target owner. }
   TCellOpenWork = class(TInterfacedObject, INyxWork)
   public
     Port: TCellPort;
     PortLease: IInterface;
     Serial: Integer;
     Launch: INyxCollectionClipboardCommand;
+    Draft: INyxCollectionFocusedDraftCapture;
     destructor Destroy; override;
     procedure Execute(const AExecution: INyxExecution);
   end;
 
-  { Owner-free current-session scope joins only certified original flags and a
-    canonical local cancellation port; asynchronous hosts retain no UI owner. }
+  { Owner-free current-session scope joins only certified original flags, an
+    optional explicit-draft proof and a canonical local cancellation port;
+    asynchronous hosts retain no UI owner. }
   TCellScope = class(TInterfacedObject, INyxCancellationScope, INyxCancellationReadiness)
   private
     FOriginal: INyxCancellationReadiness;
     FLocal: INyxCancellationScope;
     FOpen: INyxPopoverOpenLifetime;
+    FDraft: INyxCancellationReadiness;
   public
     constructor Create(const AOriginal: INyxCancellationReadiness;
-      const AOpen: INyxPopoverOpenLifetime = nil);
+      const AOpen: INyxPopoverOpenLifetime = nil;
+      const ADraft: INyxCancellationReadiness = nil);
     procedure Cancel;
     procedure CheckReady;
     function GetCancelled: Boolean;
@@ -314,10 +376,12 @@ type
 
   { Controller stores detached snapshot/cancellation only and reserves intent
     directly from its own flags before input factories/getters. Menu and form
-    subscriptions refer back through TCellPort, avoiding mount/presenter cycles. }
+    subscriptions refer back through TCellPort, avoiding mount/presenter cycles.
+    Explicit draft sessions keep only copied provenance/text and inert flags. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
     INyxCollectionCellActionIntent, INyxCollectionCellExportActions,
-    INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput)
+    INyxCollectionCellRepresentationActions, INyxCollectionCellActionInput,
+    INyxCollectionCellDraftActions)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
@@ -337,6 +401,8 @@ type
     FInspector: INyxPopover;
     FOpen: INyxPopoverOpenLifetime;
     FSnapshot: INyxCollectionClipboardText;
+    FOptions: TNyxCollectionCellActionOptions;
+    FDraft: INyxCollectionFocusedDraftCapture;
     FDisplayPolicy: TNyxCollectionCellDisplayPolicy;
     FRepresentation: INyxCollectionCellText;
     FRepresentationResult: TNyxClipboardWriteResult;
@@ -353,7 +419,8 @@ type
     function Current(ASerial: Integer): Boolean;
     function Advance: Integer;
     procedure Cleanup;
-    procedure ShowCell(const ALaunch: INyxCollectionClipboardCommand; ASerial: Integer);
+    procedure ShowCell(const ALaunch: INyxCollectionClipboardCommand; ASerial: Integer;
+      const ADraft: INyxCollectionFocusedDraftCapture);
     procedure Subscribe(const AStream: INyxEventStream; AKind, ASerial: Integer);
     procedure Invoked(const AEvent: TNyxEventInfo; AKind, ASerial: Integer);
     procedure ObserveButton(const AEvents: INyxEvents; const AID: TNyxText;
@@ -361,10 +428,12 @@ type
     procedure QueueInspector(const AEvent: TNyxEventInfo; AKind, ASerial: Integer);
     procedure InspectorDefault(AKind, ASerial: Integer;
       const AOpen: INyxPopoverOpenLifetime);
-    procedure Inspect(ASerial: Integer);
+    procedure Inspect(ASerial: Integer; ADraft: Boolean = False);
     procedure CopyValue(ASerial: Integer; const AValue: INyxCollectionCellText = nil);
     procedure CopyDisplayed(ASerial: Integer);
-    procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer);
+    procedure CopyDraft(ASerial: Integer);
+    procedure RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
+      ADraft: Boolean = False);
     procedure QueueExport(AMembership: TNyxCollectionExportRows; ASerial: Integer);
     procedure ExportValue(AMembership: TNyxCollectionExportRows; ASerial: Integer);
     procedure Exported(AReply: TCellExportReply; const AResult: TNyxFileSaveResult);
@@ -373,10 +442,15 @@ type
   public
     constructor Create(const AFactory: INyxCollectionCellPresenterFactory;
       const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionCellActionOptions;
       APresentation: TNyxCollectionCellPresentation;
       const AExporter: INyxCollectionExportCapturedSave);
     destructor Destroy; override;
     function OpenCell(const ALaunch: INyxCollectionClipboardCommand): Boolean;
+    function OpenCellWithDraft(const ALaunch: INyxCollectionClipboardCommand;
+      const ADraft: INyxCollectionFocusedDraftCapture): Boolean;
+    function GetFocusedDraftEnabled: Boolean;
+    function GetCapturedDraft: INyxCollectionFocusedDraftCapture;
     function BeginCellInput(const ACommands: INyxCollectionClipboardCommands):
       INyxCollectionClipboardCellCommand;
     procedure Close;
@@ -399,9 +473,11 @@ type
   { Short-lived original physical-input envelope changes only its default:
     opening a managed menu instead of immediately writing the clipboard. The
     reserved constructor receives an already captured actions intent; no input
-    factory or source getter can lend it a later context's authority. }
+    factory or source getter can lend it a later context's authority. Opt-in
+    readonly draft capture precedes resolution/callbacks and is matched against
+    the prepared accepted cell before presentation ownership transfers. }
   TCellActionCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
-    INyxCollectionClipboardCellCommand)
+    INyxCollectionClipboardCellCommand, INyxCollectionCellActionDraftCommand)
   private
     FLaunch: INyxCollectionClipboardCommand;
     FActions: INyxCollectionCellActions;
@@ -411,6 +487,11 @@ type
     FOriginalIntent: Integer;
     FWantOutput: Boolean;
     FPrepared: Boolean;
+    FResolved: Boolean;
+    FDraftAttempted: Boolean;
+    FDraftActions: INyxCollectionCellDraftActions;
+    FDraft: INyxCollectionFocusedDraftCapture;
+    FWantDraft: Boolean;
     function IntentCurrent: Boolean;
   public
     constructor Create(const ALaunch: INyxCollectionClipboardCommand;
@@ -419,6 +500,10 @@ type
       const AIntent: INyxCollectionCellActionIntent; AOriginalIntent: Integer;
       const ACommands: INyxCollectionClipboardCommands);
     procedure ResolveCell(const AItem: TNyxItemRef; const AField: TNyxColumnIdentity);
+    procedure CaptureFocusedDraft(const AInput: INyxCollectionFocusedDraftInput);
+    function GetHasDraft: Boolean;
+    function MatchesDraftCell(const AItem: TNyxItemRef;
+      const AField: TNyxColumnIdentity): Boolean;
     procedure Prepare;
     function GetCurrent: Boolean;
     function GetDispatchCurrent: Boolean;
@@ -488,13 +573,26 @@ begin
   end;
 end;
 
+class function TNyxCollectionCellActionOptions.Defaults: TNyxCollectionCellActionOptions;
+begin
+  Result := Default(TNyxCollectionCellActionOptions);
+end;
+
+function TNyxCollectionCellActionOptions.FocusedDraft(AEnabled: Boolean):
+  TNyxCollectionCellActionOptions;
+begin
+  Result := Self;
+  Result.FFocusedDraft := AEnabled;
+end;
+
 constructor TCellScope.Create(const AOriginal: INyxCancellationReadiness;
-  const AOpen: INyxPopoverOpenLifetime);
+  const AOpen: INyxPopoverOpenLifetime; const ADraft: INyxCancellationReadiness);
 begin
   inherited Create;
   FOriginal := AOriginal;
   FLocal := NewNyxCancellationScope;
   FOpen := AOpen;
+  FDraft := ADraft;
 end;
 
 procedure TCellScope.Cancel;
@@ -505,6 +603,11 @@ end;
 procedure TCellScope.CheckReady;
 begin
   FOriginal.CheckReady;
+
+  if FDraft <> nil then
+  begin
+    FDraft.CheckReady;
+  end;
 
   if FLocal.Cancelled or ((FOpen <> nil) and not FOpen.Current) then
   begin
@@ -643,9 +746,12 @@ var
   LOwner: TCellActions;
   LLease: INyxCollectionCellActions;
   LLaunch: INyxCollectionClipboardCommand;
+  LDraft: INyxCollectionFocusedDraftCapture;
 begin
   LLaunch := Launch;
   Launch := nil;
+  LDraft := Draft;
+  Draft := nil;
   try
     LOwner := Port.Owner;
 
@@ -655,7 +761,7 @@ begin
       Exit;
     end;
     LLease := LOwner;
-    LOwner.ShowCell(LLaunch, Serial);
+    LOwner.ShowCell(LLaunch, Serial, LDraft);
   finally
     LLaunch.Complete(False);
     LLaunch.Retire;
@@ -683,6 +789,7 @@ end;
 
 constructor TCellActions.Create(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions;
   APresentation: TNyxCollectionCellPresentation;
   const AExporter: INyxCollectionExportCapturedSave);
 var
@@ -698,6 +805,7 @@ begin
   FWriter := AWriter;
   FExporter := AExporter;
   FScheduler := AScheduler;
+  FOptions := AOptions;
   FPresentation := APresentation;
   FPort := TCellPort.Create;
   FPortLease := FPort;
@@ -783,6 +891,7 @@ begin
   FReply := nil;
   FReplyLease := nil;
   FSnapshot := nil;
+  FDraft := nil;
   FScope := nil;
   FScopeLease := nil;
   LFailure := Default(TCellCleanupFailure);
@@ -994,6 +1103,10 @@ begin
   begin
     CopyDisplayed(ASerial);
   end
+  else if AKind = 4 then
+  begin
+    CopyDraft(ASerial);
+  end
   else
   begin
     Close;
@@ -1027,6 +1140,22 @@ begin
 end;
 
 function TCellActions.OpenCell(const ALaunch: INyxCollectionClipboardCommand): Boolean;
+begin
+  Result := OpenCellWithDraft(ALaunch, nil);
+end;
+
+function TCellActions.GetFocusedDraftEnabled: Boolean;
+begin
+  Result := FPort.Active and FOptions.HasFocusedDraft;
+end;
+
+function TCellActions.GetCapturedDraft: INyxCollectionFocusedDraftCapture;
+begin
+  Result := FDraft;
+end;
+
+function TCellActions.OpenCellWithDraft(const ALaunch: INyxCollectionClipboardCommand;
+  const ADraft: INyxCollectionFocusedDraftCapture): Boolean;
 var
   LWork: TCellOpenWork;
   LLease: INyxWork;
@@ -1035,16 +1164,46 @@ var
   LOriginalIntent: Integer;
   LExecution: INyxExecution;
   LSerial: Integer;
+  LDraft: INyxCollectionFocusedDraftCapture;
+  LLaunch: INyxCollectionClipboardCommand;
+  LDraftSource: INyxCollectionFocusedDraftCapture;
 begin
   Result := False;
   LSelf := Self;
+  LLaunch := ALaunch;
+  LDraftSource := ADraft;
   LScheduler := FScheduler;
   LOriginalIntent := GetIntent;
 
-  if (LOriginalIntent = 0) or (LScheduler = nil) or (ALaunch = nil) or
-    not ALaunch.Current or (ALaunch.Payload = nil) or (GetIntent <> LOriginalIntent) then
+  if (LDraftSource <> nil) and not FOptions.HasFocusedDraft then
   begin
     Exit;
+  end;
+
+  if (LOriginalIntent = 0) or (LScheduler = nil) or (LLaunch = nil) or
+    not LLaunch.Current or (LLaunch.Payload = nil) or (GetIntent <> LOriginalIntent) then
+  begin
+    Exit;
+  end;
+
+  if (LDraftSource <> nil) and FOptions.HasFocusedDraft then
+  begin
+    LDraft := CopyNyxCollectionFocusedDraft(LDraftSource);
+
+    if not LLaunch.Current or (GetIntent <> LOriginalIntent) then
+    begin
+      Exit;
+    end;
+
+    if not NyxCollectionDraftMatches(LDraft, LLaunch.Payload) then
+    begin
+      raise ENyxCollectionClipboard.Create('Captured draft differs from the original accepted cell');
+    end;
+
+    if not LLaunch.Current or (GetIntent <> LOriginalIntent) then
+    begin
+      Exit;
+    end;
   end;
   LWork := TCellOpenWork.Create;
   LLease := LWork;
@@ -1052,7 +1211,8 @@ begin
   LWork.PortLease := FPortLease;
   LWork.Serial := Advance;
   LSerial := LWork.Serial;
-  LWork.Launch := ALaunch;
+  LWork.Launch := LLaunch;
+  LWork.Draft := LDraft;
 
   if FScope <> nil then
   begin
@@ -1069,7 +1229,8 @@ begin
   Result := True;
 end;
 
-procedure TCellActions.ShowCell(const ALaunch: INyxCollectionClipboardCommand; ASerial: Integer);
+procedure TCellActions.ShowCell(const ALaunch: INyxCollectionClipboardCommand; ASerial: Integer;
+  const ADraft: INyxCollectionFocusedDraftCapture);
 var
   LLease: INyxCollectionCellActions;
   LSerial: Integer;
@@ -1137,6 +1298,7 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FDraft := ADraft;
   FDisplayPolicy := LDisplayPolicy;
   FOutput := LOutput;
   FScope := TCellScope.Create(LScope);
@@ -1152,6 +1314,17 @@ begin
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
       NyxMenuCommand('inspect'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+
+    if FDraft <> nil then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsInspectDraftID).Configure
+        .PartName(NyxPart(NyxCellActionsInspectDraftID)).Text('Inspect captured draft').Done);
+      LPage.Add(NewNyxButton(NyxCellActionsCopyDraftID).Configure
+        .PartName(NyxPart(NyxCellActionsCopyDraftID)).Text('Copy captured draft').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectDraftID),
+        NyxMenuCommand('inspect-draft'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyDraftID),
+        NyxMenuCommand('copy-draft')));
+    end;
 
     if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
     begin
@@ -1238,6 +1411,14 @@ begin
     begin
       CopyDisplayed(ASerial);
     end
+    else if LInvocation.Command.Name = 'inspect-draft' then
+    begin
+      Inspect(ASerial, True);
+    end
+    else if LInvocation.Command.Name = 'copy-draft' then
+    begin
+      CopyDraft(ASerial);
+    end
     else if LInvocation.Command.Name = 'export-page' then
     begin
       QueueExport(ncerCurrentPage, ASerial);
@@ -1249,7 +1430,7 @@ begin
   end;
 end;
 
-procedure TCellActions.Inspect(ASerial: Integer);
+procedure TCellActions.Inspect(ASerial: Integer; ADraft: Boolean);
 var
   LDocument: TNyxDocument;
   LPage: INyxPage;
@@ -1263,25 +1444,55 @@ var
   LEnter: TNyxCollectionCellPresentation;
   LOpen: INyxPopoverOpenLifetime;
   LEvents: INyxEvents;
+  LText: TNyxText;
+  LTitle: TNyxText;
 begin
   LFactory := FFactory;
   LPayload := FSnapshot;
+  LText := LPayload.Text;
+  LTitle := 'Accepted cell value';
+
+  if ADraft then
+  begin
+
+    if FDraft = nil then
+    begin
+      Exit;
+    end;
+    FDraft.Readiness.CheckReady;
+    LText := FDraft.Value.Text;
+    LTitle := 'Captured unfinished cell draft';
+  end;
   LDocument := TNyxDocument.Create;
   try
     LPage := NewNyxPage('nyx-cell-inspector-page');
     LPage.Configure.Padding(12).Gap(8).Done;
-    LPage.Add(NewNyxHeading('nyx-cell-inspector-heading').Configure.Text('Accepted cell value').Done);
+    LPage.Add(NewNyxHeading('nyx-cell-inspector-heading').Configure.Text(LTitle).Done);
     LPage.Add(NewNyxLabel('nyx-cell-inspector-provenance').Configure.Text(
       LPayload.ItemAt(0).ID + ' / ' + LPayload.FieldAt(0).Name +
       ' / captured revision ' + TNyxText(IntToStr(LPayload.Revision))).Done);
-    LPage.Add(NewNyxLabel('nyx-cell-inspector-notation').Configure.Text(
-      'Escaped controls and backslashes; Copy preserves the exact raw value.').Done);
+
+    if ADraft then
+    begin
+      LPage.Add(NewNyxLabel('nyx-cell-inspector-notation').Configure.Text(
+        'Unfinished draft captured before opening; accepted data is unchanged. Controls and backslashes are escaped.').Done);
+    end
+    else
+    begin
+      LPage.Add(NewNyxLabel('nyx-cell-inspector-notation').Configure.Text(
+        'Escaped controls and backslashes; Copy preserves the exact raw value.').Done);
+    end;
     LMemo := NewNyxMemo(NyxCellInspectorValueID);
-    LMemo.Value := NyxCollectionCellInspectionText(LPayload.Text);
+    LMemo.Value := NyxCollectionCellInspectionText(LText);
     LMemo.ReadOnly := True;
     LMemo.Configure.Height(200).Done;
     LPage.Add(LMemo);
     LPage.Add(NewNyxButton(NyxCellInspectorCopyID).Configure.Text('Copy accepted value').Done);
+
+    if ADraft then
+    begin
+      LPage.Add(NewNyxButton(NyxCellInspectorCopyDraftID).Configure.Text('Copy captured draft').Done);
+    end;
 
     if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
     begin
@@ -1314,6 +1525,11 @@ begin
   ObserveButton(LEvents, NyxCellInspectorCopyID, 1, ASerial);
   ObserveButton(LEvents, NyxCellInspectorCloseID, 2, ASerial);
 
+  if ADraft then
+  begin
+    ObserveButton(LEvents, NyxCellInspectorCopyDraftID, 4, ASerial);
+  end;
+
   if (FRepresentationWriter <> nil) and FDisplayPolicy.Defined and FDisplayPolicy.Declared then
   begin
     ObserveButton(LEvents, NyxCellInspectorCopyDisplayID, 3, ASerial);
@@ -1333,7 +1549,7 @@ begin
 
     if Current(ASerial) then
     begin
-      LInspector.Open(NyxPopover('Accepted cell value').Size(480, 400).Focus(NyxPart(NyxCellInspectorCloseID)));
+      LInspector.Open(NyxPopover(LTitle).Size(480, 400).Focus(NyxPart(NyxCellInspectorCloseID)));
     end;
   finally
 
@@ -1382,7 +1598,8 @@ begin
   end;
 end;
 
-procedure TCellActions.RepresentationRefused(const AReason: TNyxText; ASerial: Integer);
+procedure TCellActions.RepresentationRefused(const AReason: TNyxText; ASerial: Integer;
+  ADraft: Boolean);
 var
   LInspector: INyxPopover;
 begin
@@ -1402,7 +1619,45 @@ begin
   begin
     Inspect(ASerial);
   end;
-  Status('Display copy refused: ' + AReason + '. Copy accepted value remains available.', ASerial);
+
+  if ADraft then
+  begin
+    Status('Draft copy refused: ' + AReason + '. Copy accepted value remains available.', ASerial);
+  end
+  else
+  begin
+    Status('Display copy refused: ' + AReason + '. Copy accepted value remains available.', ASerial);
+  end;
+end;
+
+procedure TCellActions.CopyDraft(ASerial: Integer);
+var
+  LLease: INyxCollectionCellActions;
+  LCaptured: INyxCollectionFocusedDraftCapture;
+begin
+  LLease := Self;
+  LCaptured := FDraft;
+
+  if not Current(ASerial) or (LCaptured = nil) or (FRepresentationWriter = nil) then
+  begin
+    Exit;
+  end;
+  try
+    LCaptured.Readiness.CheckReady;
+  except
+    on E: Exception do
+    begin
+      { Only the certified readonly admission check is inside this boundary;
+        host/publication/callback failures below retain their normal behavior. }
+      RepresentationRefused(TNyxText(E.Message), ASerial, True);
+      Exit;
+    end;
+  end;
+
+  if Current(ASerial) and (FDraft = LCaptured) then
+  begin
+    CopyValue(ASerial, LCaptured.Value);
+  end;
 end;
 
 procedure TCellActions.CopyDisplayed(ASerial: Integer);
@@ -1465,12 +1720,23 @@ var
   LRequestSerial: Integer;
   LCopyScope: TCellScope;
   LRepresentationWriter: INyxCollectionClipboardRepresentationWrite;
+  LDraftReady: INyxCancellationReadiness;
 begin
 
   if not Current(ASerial) or (FPort.RequestSerial >= High(Integer) - 1) or
     ((AValue <> nil) and (FRepresentationWriter = nil)) then
   begin
     Exit;
+  end;
+
+  if (AValue <> nil) and (AValue.Representation = nccrExplicitDraft) then
+  begin
+
+    if FDraft = nil then
+    begin
+      Exit;
+    end;
+    LDraftReady := FDraft.Readiness;
   end;
   Inc(FPort.RequestSerial);
   LRequestSerial := FPort.RequestSerial;
@@ -1489,7 +1755,7 @@ begin
     Exit;
   end;
   LPayload := FSnapshot;
-  LCopyScope := TCellScope.Create(FScope, FOpen);
+  LCopyScope := TCellScope.Create(FScope, FOpen, LDraftReady);
   LScope := LCopyScope;
   LWriter := FWriter;
   LRepresentationWriter := FRepresentationWriter;
@@ -1554,6 +1820,7 @@ var
   LSerial: Integer;
   LValue: INyxCollectionCellText;
   LInspector: INyxPopover;
+  LLabel: TNyxText;
 begin
 
   if not Current(AReply.Serial) or (FReply <> AReply) then
@@ -1575,6 +1842,12 @@ begin
 
   if LValue <> nil then
   begin
+    LLabel := 'displayed value';
+
+    if LValue.Representation = nccrExplicitDraft then
+    begin
+      LLabel := 'unfinished draft';
+    end;
     ValidateNyxClipboardWriteResult(AResult, LValue.ByteCount);
     FRepresentation := LValue;
     FRepresentationResult := AResult;
@@ -1582,7 +1855,7 @@ begin
 
     if AResult.Outcome = ncwoWritten then
     begin
-      Status('Copied the captured displayed value.', LSerial);
+      Status('Copied the captured ' + LLabel + '.', LSerial);
     end
     else
     begin
@@ -1594,7 +1867,7 @@ begin
       begin
         Inspect(LSerial);
       end;
-      Status('Displayed value was not written: ' + AResult.Error, LSerial);
+      Status('Captured ' + LLabel + ' was not written: ' + AResult.Error, LSerial);
     end;
     Exit;
   end;
@@ -1922,6 +2195,7 @@ begin
   inherited Create;
   FLaunch := ALaunch;
   FActions := AActions;
+  FResolved := True;
 
   if (FLaunch = nil) or (FActions = nil) or
     not Supports(FActions, INyxCollectionCellActionIntent, LIntent) then
@@ -1944,6 +2218,7 @@ var
   LCommands: INyxCollectionClipboardCommands;
   LEntry: INyxCollectionClipboardCellInput;
   LExport: INyxCollectionCellExportActions;
+  LDraftActions: INyxCollectionCellDraftActions;
 begin
   inherited Create;
   FActions := AActions;
@@ -1963,6 +2238,12 @@ begin
   end;
   FWantOutput := Supports(FActions, INyxCollectionCellExportActions, LExport) and
     LExport.ExportEnabled;
+
+  if Supports(FActions, INyxCollectionCellDraftActions, LDraftActions) then
+  begin
+    FDraftActions := LDraftActions;
+    FWantDraft := LDraftActions.FocusedDraftEnabled;
+  end;
 
   if not IntentCurrent then
   begin
@@ -2000,10 +2281,11 @@ var
 begin
   LLease := Self;
 
-  if FPrepared or FCompleted then
+  if FPrepared or FCompleted or FResolved then
   begin
     raise ENyxCollectionClipboard.Create('Context cell resolution precedes preparation/completion');
   end;
+  FResolved := True;
 
   if not GetCurrent then
   begin
@@ -2019,6 +2301,51 @@ begin
   begin
     LEntry.ResolveCell(AItem, AField);
   end;
+end;
+
+procedure TCellActionCommand.CaptureFocusedDraft(const AInput: INyxCollectionFocusedDraftInput);
+var
+  LLease: INyxCollectionClipboardCommand;
+  LInput: INyxCollectionFocusedDraftInput;
+  LCaptured: INyxCollectionFocusedDraftCapture;
+begin
+  LLease := Self;
+  LInput := AInput;
+
+  if FPrepared or FCompleted or FResolved or FDraftAttempted then
+  begin
+    raise ENyxCollectionClipboard.Create('Focused draft capture precedes cell resolution and is single-use');
+  end;
+  FDraftAttempted := True;
+
+  if not FWantDraft or (LInput = nil) or not GetCurrent then
+  begin
+    Exit;
+  end;
+  LCaptured := LInput.CaptureFocusedDraft;
+
+  if not GetCurrent then
+  begin
+    Exit;
+  end;
+  LCaptured := CopyNyxCollectionFocusedDraft(LCaptured);
+
+  if GetCurrent then
+  begin
+    FDraft := LCaptured;
+  end;
+end;
+
+function TCellActionCommand.GetHasDraft: Boolean;
+begin
+  Result := not FCompleted and (FDraft <> nil) and IntentCurrent;
+end;
+
+function TCellActionCommand.MatchesDraftCell(const AItem: TNyxItemRef;
+  const AField: TNyxColumnIdentity): Boolean;
+begin
+  Result := GetHasDraft and (FDraft.Value.Item.Collection.Name = AItem.Collection.Name) and
+    (FDraft.Value.Item.ID = AItem.ID) and FDraft.Value.Field.Same(AField);
 end;
 
 procedure TCellActionCommand.Prepare;
@@ -2039,6 +2366,14 @@ begin
     Exit;
   end;
   FLaunch.Prepare;
+
+  if (FDraft <> nil) and (not GetCurrent or
+    not NyxCollectionDraftMatches(FDraft, FLaunch.Payload)) then
+  begin
+    { Context on another cell remains an accepted-RAW action; a focused draft
+      can never be attached to that other row/field by positional coincidence. }
+    FDraft := nil;
+  end;
 
   if FWantOutput and GetCurrent then
   begin
@@ -2116,7 +2451,15 @@ begin
 
     if AAllowDefault and (FLaunch <> nil) and FLaunch.Current and IntentCurrent then
     begin
-      FTransferred := FActions.OpenCell(FLaunch);
+
+      if (FDraft <> nil) and (FDraftActions <> nil) then
+      begin
+        FTransferred := FDraftActions.OpenCellWithDraft(FLaunch, FDraft);
+      end
+      else
+      begin
+        FTransferred := FActions.OpenCell(FLaunch);
+      end;
     end;
   finally
 
@@ -2145,7 +2488,17 @@ function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenter
   APresentation: TNyxCollectionCellPresentation;
   const AExporter: INyxCollectionExportCapturedSave): INyxCollectionCellActions;
 begin
-  Result := TCellActions.Create(AFactory, AWriter, AScheduler, APresentation, AExporter);
+  Result := NewNyxCollectionCellActions(AFactory, AWriter, AScheduler,
+    TNyxCollectionCellActionOptions.Defaults, APresentation, AExporter);
+end;
+
+function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
+  const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions;
+  APresentation: TNyxCollectionCellPresentation;
+  const AExporter: INyxCollectionExportCapturedSave): INyxCollectionCellActions;
+begin
+  Result := TCellActions.Create(AFactory, AWriter, AScheduler, AOptions, APresentation, AExporter);
 end;
 
 function NewNyxCollectionCellActionCommand(const ALaunch: INyxCollectionClipboardCommand;

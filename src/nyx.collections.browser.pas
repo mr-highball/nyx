@@ -69,9 +69,11 @@ type
     function BeginClipboardKey(AEvent: TJSKeyboardEvent): INyxBrowserColumnCommand;
   end;
 
-  { Optional exact resident-cell context entry. Editors/custom descendants keep
-    their native text menu. The renderer reserves this proof before canonical
-    context callbacks and completes its managed default only if unconsumed. }
+  { Optional exact resident-cell context entry. Editors retain their native text
+    menu unless focused-draft actions explicitly opt in. The renderer reserves
+    this proof before canonical context callbacks and completes its managed
+    default only if unconsumed. A stale nonnil envelope stays claimed; nil is
+    reserved for unsupported/default-off entry, never a newer managed intent. }
   INyxBrowserCollectionCellContextInput = interface(IInterface)
     ['{3187C630-5F36-46B1-BD40-E2F359DBCECC}']
     function BeginCellContext(AEvent: TJSMouseEvent): INyxBrowserColumnCommand;
@@ -907,10 +909,14 @@ var
   LEntry: INyxCollectionCellActionInput;
   LCommand: INyxCollectionClipboardCellCommand;
   LRow: TBrowserRow;
+  LDraft: INyxCollectionCellActionDraftCommand;
+  LDraftInput: INyxCollectionFocusedDraftInput;
+  LDraftActions: INyxCollectionCellDraftActions;
   LField: TNyxColumnIdentity;
   LItem: TNyxItemRef;
   LIndex: Integer;
   LColumn: Integer;
+  LEditorTarget: Boolean;
 begin
   Result := nil;
   LLease := Self as INyxCollectionMount;
@@ -926,13 +932,40 @@ begin
   begin
     Exit;
   end;
+
+  if (AEvent.target is TJSHTMLInputElement) and
+    (not Supports(LActions, INyxCollectionCellDraftActions, LDraftActions) or
+      not LDraftActions.FocusedDraftEnabled) then
+  begin
+    Exit;
+  end;
   { Intent is captured before the RAW input factory or any physical/source
     identity getter. The same envelope is returned through canonical dispatch. }
   LCommand := LEntry.BeginCellInput(LCommands);
 
-  if (LCommand = nil) or not LCommand.Current then
+  if LCommand = nil then
   begin
     Exit;
+  end;
+
+  if not LCommand.Current then
+  begin
+    { A stale managed reservation remains claimed. Nil would let the outer
+      binding dispatch/default this old context after a nested newer menu. }
+    LCommand.Retire;
+    Exit(TBrowserCopyCommand.Create(LCommand));
+  end;
+
+  if Supports(LCommand, INyxCollectionCellActionDraftCommand, LDraft) and
+    Supports(LLease, INyxCollectionFocusedDraftInput, LDraftInput) then
+  begin
+    LDraft.CaptureFocusedDraft(LDraftInput);
+  end;
+
+  if not LCommand.Current then
+  begin
+    LCommand.Retire;
+    Exit(TBrowserCopyCommand.Create(LCommand));
   end;
   for LIndex := 0 to Length(FResidentRows) - 1 do
   begin
@@ -944,23 +977,33 @@ begin
     end;
     for LColumn := 0 to Length(LRow.FCells) - 1 do
     begin
+      LEditorTarget := (LColumn < Length(LRow.FInputs)) and
+        (AEvent.target = LRow.FInputs[LColumn]);
 
       if (AEvent.target = LRow.FCells[LColumn]) or
-        ((LColumn < Length(LRow.FLabels)) and (AEvent.target = LRow.FLabels[LColumn])) then
+        ((LColumn < Length(LRow.FLabels)) and (AEvent.target = LRow.FLabels[LColumn])) or
+        (LEditorTarget and (LDraft <> nil) and LDraft.HasDraft) then
       begin
         LItem := LRow.FRef;
         LField := ClipboardField(LColumn);
 
         if not LCommand.Current then
         begin
+          LCommand.Retire;
+          Exit(TBrowserCopyCommand.Create(LCommand));
+        end;
+
+        if LEditorTarget and not LDraft.MatchesDraftCell(LItem, LField) then
+        begin
           Exit;
         end;
         LCommand.ResolveCell(LItem, LField);
 
-        if LCommand.Current then
+        if not LCommand.Current then
         begin
-          Result := TBrowserCopyCommand.Create(LCommand);
+          LCommand.Retire;
         end;
+        Result := TBrowserCopyCommand.Create(LCommand);
         Exit;
       end;
     end;

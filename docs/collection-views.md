@@ -954,14 +954,41 @@ editor after retirement or an ABA input transition.
 
 Callers deliberately submit this tagged value through the existing represented
 clipboard port and its original request/cancellation slot. Accepted-value copy
-and the platform editor's normal Ctrl+C remain independent defaults. Explicit
-draft menu/inspection actions are the next UI integration step; the API is not
-silently substituted into those routes.
+and the platform editor's normal Ctrl+C remain independent defaults.
+
+Managed draft actions are deliberately opt-in at runtime. The optional
+`INyxCollectionCellActionOptionsMount` preserves the original mount interface;
+configure it at the same one-time presenter admission as ordinary cell actions:
+
+```pascal
+LDraftOptions := TNyxCollectionCellActionOptions.Defaults.FocusedDraft(True);
+LActionOptionsMount.ConfigureCellActionsWithOptions(
+  LPresenterFactory, LScheduler, LDraftOptions);
+```
+
+An opted-in editor context captures its exact focused draft before previous or
+canonical context callbacks and before menu focus changes. The same reserved
+command carries its accepted row, fully typed field, value and revision through
+dispatch. A newer nested context makes the returning older command inert; it
+cannot replay a native menu or borrow the newer command's authority. Default-off
+editors retain their ordinary platform context menu.
+
+The managed menu exposes **Inspect captured draft** and **Copy captured draft**
+separately from accepted/displayed values. Inspection uses a readonly Nyx memo
+with escaped controls and backslashes; copying preserves the exact original
+unfinished text. The inspector also offers **Copy accepted value**. Draft copy
+uses the existing request slot and an explicitly tagged representation result,
+without an accepted-RAW reply or any parse/commit of the editor text. Stale draft
+readiness refuses transfer while keeping accepted-value copying available.
 
 Current qualification passes 90 command and 76 representation checks on each
 actual target, plus 224 native control checks with a clean heap and 283 browser
 control checks at measured desktop/compact widths with empty logs. The control
 journey covers arranged and ordinary tables through the same maintained fixture.
+The later explicit-action journey retains those assertions and passes 332 native
+checks with a clean heap and 415 browser checks at verified 1280x900 and 390x900,
+with empty logs. It exercises actual menu/inspector buttons, accepted/draft
+receipt separation and nested stale context admission on both targets.
 Effects use injected hosts; real OS clipboard behavior and full workbench
 acceptance remain separate.
 

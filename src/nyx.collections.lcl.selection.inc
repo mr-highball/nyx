@@ -526,7 +526,15 @@ begin
   begin
     LDisplay := 0;
   end;
-  LRow := LData.IndexOf(FView.Selection.Focus);
+  { An actual focused grid need not have a semantic selection yet. Navigation
+    falls back to its physical row; an absent focus is not a scoped item. }
+  LItem := LView.Selection.Focus;
+  LRow := -1;
+
+  if LItem.Defined then
+  begin
+    LRow := LData.IndexOf(LItem);
+  end;
 
   if LRow < 0 then
   begin
@@ -979,6 +987,10 @@ var
   LActions: INyxCollectionCellActions;
   LEntry: INyxCollectionCellActionInput;
   LCommand: INyxCollectionClipboardCellCommand;
+  LDraft: INyxCollectionCellActionDraftCommand;
+  LDraftInput: INyxCollectionFocusedDraftInput;
+  LDraftActions: INyxCollectionCellDraftActions;
+  LPosition: TPoint;
   LGrid: TStringGrid;
   LData: INyxCollectionSnapshot;
   LColumn: Integer;
@@ -992,12 +1004,21 @@ begin
   LCommands := FClipboardCommands;
   LActions := FCellActions;
 
-  if (LCommands = nil) or (LActions = nil) or (Sender is TCustomEdit) then
+  if (LCommands = nil) or (LActions = nil) then
   begin
     Exit;
   end;
   LLease := Self as INyxCollectionMount;
   LData := FRendered;
+
+  if (Sender is TCustomEdit) and
+    (not Supports(LActions, INyxCollectionCellDraftActions, LDraftActions) or
+      not LDraftActions.FocusedDraftEnabled) then
+  begin
+    { Default-off editors retain their ordinary native context path without
+      even entering a managed action's outward input admission. }
+    Exit;
+  end;
 
   if not Supports(LActions, INyxCollectionCellActionInput, LEntry) then
   begin
@@ -1008,7 +1029,34 @@ begin
     returning outer frame its intent, even when every cell byte is unchanged. }
   LCommand := LEntry.BeginCellInput(LCommands);
 
-  if (LCommand = nil) or not LCommand.Current then
+  if LCommand = nil then
+  begin
+    Exit;
+  end;
+
+  if not LCommand.Current then
+  begin
+    { Nil means unsupported. A reserved but stale managed event stays claimed,
+      so the editor cannot replay a native menu after a newer context wins. }
+    LCommand.Retire;
+    Result := LCommand;
+    Exit;
+  end;
+
+  if Supports(LCommand, INyxCollectionCellActionDraftCommand, LDraft) and
+    Supports(LLease, INyxCollectionFocusedDraftInput, LDraftInput) then
+  begin
+    LDraft.CaptureFocusedDraft(LDraftInput);
+  end;
+
+  if not LCommand.Current then
+  begin
+    LCommand.Retire;
+    Result := LCommand;
+    Exit;
+  end;
+
+  if (Sender is TCustomEdit) and ((LDraft = nil) or not LDraft.HasDraft) then
   begin
     Exit;
   end;
@@ -1023,33 +1071,67 @@ begin
 
   if (APosition.X >= 0) and (APosition.Y >= 0) then
   begin
-    LGrid.MouseToCell(APosition.X, APosition.Y, LPhysical, LRow);
+    LPosition := APosition;
+
+    if (Sender is TControl) and (Sender <> LGrid) then
+    begin
+      LPosition := LGrid.ScreenToClient(TControl(Sender).ClientToScreen(LPosition));
+    end;
+
+    if not LCommand.Current then
+    begin
+      LCommand.Retire;
+      Result := LCommand;
+      Exit;
+    end;
+    LGrid.MouseToCell(LPosition.X, LPosition.Y, LPhysical, LRow);
   end;
   Dec(LRow);
   LColumn := CanonicalColumn(LGrid, LPhysical);
   LField := ClipboardField(LColumn);
 
-  if not LCommand.Current or (LData = nil) or (LRow < 0) or
-    (LColumn < 0) or not LField.Defined then
+  if not LCommand.Current then
+  begin
+    LCommand.Retire;
+    Result := LCommand;
+    Exit;
+  end;
+
+  if (LData = nil) or (LRow < 0) or (LColumn < 0) or not LField.Defined then
   begin
     Exit;
   end;
   LCount := LData.Count;
 
-  if LCommand.Current and (LRow < LCount) then
+  if not LCommand.Current then
+  begin
+    LCommand.Retire;
+    Result := LCommand;
+    Exit;
+  end;
+
+  if LRow < LCount then
   begin
     LItem := LData.ItemAt(LRow).Ref;
 
     if not LCommand.Current then
     begin
+      LCommand.Retire;
+      Result := LCommand;
+      Exit;
+    end;
+
+    if (Sender is TCustomEdit) and not LDraft.MatchesDraftCell(LItem, LField) then
+    begin
       Exit;
     end;
     LCommand.ResolveCell(LItem, LField);
 
-    if LCommand.Current then
+    if not LCommand.Current then
     begin
-      Result := LCommand;
+      LCommand.Retire;
     end;
+    Result := LCommand;
   end;
 end;
 

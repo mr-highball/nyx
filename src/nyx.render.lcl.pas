@@ -113,6 +113,7 @@ uses
   nyx.collections.pager,
   nyx.collections.view.types,
   nyx.collections.mount,
+  nyx.collections.clipboard.actions,
   nyx.collections.lcl,
   nyx.collections.lcl.grid,
   nyx.literal.items,
@@ -269,6 +270,12 @@ type
     function DragEvent(ASender: TObject; ADragObject: TDragObject;
       ATrigger: TNyxTrigger; APhase: TNyxDragPhase; AX, AY: Integer): TNyxGestureResult;
     procedure ContextMenu(ASender: TObject; APosition: TPoint; var AHandled: Boolean);
+    procedure PreparedCellContext(ASender: TObject; APosition: TPoint;
+      var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
+      APrevious: TContextPopupEvent);
+    procedure RunCellContext(ASender: TObject; APosition: TPoint;
+      var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
+      APrevious: TContextPopupEvent; APrepared: Boolean);
     procedure Wheel(ASender: TObject; AShift: TShiftState; ADelta: Integer;
       APosition: TPoint; var AHandled: Boolean);
     procedure WheelHorz(ASender: TObject; AShift: TShiftState; ADelta: Integer;
@@ -932,7 +939,6 @@ uses
   LCLIntf, nyx.canvas.lcl, nyx.canvas.scene, nyx.tool.canvas.lcl,
   nyx.collections, nyx.collections.query.lcl,
   nyx.collections.arrangement.lcl,
-  nyx.collections.clipboard.actions,
   nyx.application.resources;
 
 type
@@ -8615,7 +8621,8 @@ begin
   end;
   Result := MountNyxLCLCollection(LBinding.FControl, AView,
     FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
-    FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick);
+    FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick,
+    LBinding.PreparedCellContext);
   LBinding.FCollectionMount := Result;
 
   if Supports(Result, INyxCollectionInputAdmission, LInputAdmission) then
@@ -10639,6 +10646,22 @@ end;
 
 procedure TNyxLCLBinding.ContextMenu(ASender: TObject; APosition: TPoint;
   var AHandled: Boolean);
+begin
+  RunCellContext(ASender, APosition, AHandled, nil, nil, False);
+end;
+
+procedure TNyxLCLBinding.PreparedCellContext(ASender: TObject; APosition: TPoint;
+  var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
+  APrevious: TContextPopupEvent);
+begin
+  { The compound editor already reserved original intent and text before focus
+    or its own previous callback. This entry never captures another command. }
+  RunCellContext(ASender, APosition, AHandled, ACommand, APrevious, True);
+end;
+
+procedure TNyxLCLBinding.RunCellContext(ASender: TObject; APosition: TPoint;
+  var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
+  APrevious: TContextPopupEvent; APrepared: Boolean);
 var
   LGeneration: INyxLCLBindingGeneration;
   LEnteredFrame: INyxNativeGestureFrame;
@@ -10649,6 +10672,7 @@ var
   LInput: INyxLCLCollectionCellContextInput;
   LCommand: INyxCollectionClipboardCommand;
 begin
+  LCommand := ACommand;
   LGeneration := GenerationLease;
 
   if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
@@ -10670,10 +10694,14 @@ begin
         default handoff to the existing scheduler; the session never does. }
       LMount := FCollectionMount;
 
-      if not AHandled and Supports(LMount, INyxLCLCollectionCellContextInput, LInput) then
+      if not AHandled then
       begin
-        LCommand := LInput.BeginCellContext(ASender, APosition);
-        RequireNativeGeneration(LGeneration);
+
+        if not APrepared and Supports(LMount, INyxLCLCollectionCellContextInput, LInput) then
+        begin
+          LCommand := LInput.BeginCellContext(ASender, APosition);
+          RequireNativeGeneration(LGeneration);
+        end;
 
         if (LCommand <> nil) and LCommand.Current then
         begin
@@ -10691,7 +10719,15 @@ begin
       RequireNativeGeneration(LGeneration);
       LRevision := LEvents.ViewRevision;
       RequireNativeGeneration(LGeneration);
-      LPrevious := FPointerHooks[PointerSlot(ASender)].ContextMenu;
+
+      if APrepared then
+      begin
+        LPrevious := APrevious;
+      end
+      else
+      begin
+        LPrevious := FPointerHooks[PointerSlot(ASender)].ContextMenu;
+      end;
       RequireNativeGeneration(LGeneration);
 
       if Assigned(LPrevious) then

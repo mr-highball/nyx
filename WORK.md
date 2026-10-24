@@ -499,6 +499,38 @@ notification gap; it does not qualify scheduler descendants, physical form
 adoption or whole native Studio performance. Independent helper review finds
 no further concrete defect in these notification paths.
 
+Draft-action15 now qualifies the explicit runtime opt-in on ordinary and arranged
+tables. The original editor context captures detached unfinished text/selection
+before callbacks and menu focus changes; managed Inspect/Copy captured draft
+buttons keep accepted RAW data and receipts independent. Native observed editors
+use one prepared dispatch port, without replaying their physical event. Default-off
+editors preserve their platform context path. A stale nonnil managed envelope
+remains claimed, so nested newer intent cannot send the returning outer event
+to the native menu or a newly recaptured canonical command.
+
+The final15 actual native consumer passes332 checks with a complete
+7621457/7621457 clean heap and zero compiler warnings. Actual browser controls
+pass415 at independently preflighted1280x900 and390x900, logs empty. Original
+assertions remain, including Unicode/NUL, unfinished numeric drafts, consumed
+events, RAW/display/draft receipt separation, readonly inspectors and nested
+same-owner context reentry. Earlier07/08/09/10/11/13/14 compiler/setup failures
+remain retained; none substitutes for15's actual execution. Root independently
+reviews portable/controller/target dispatch and the actual new interaction
+assertions without finding another concrete defect.
+
+All three original/staged browser artifact pairs remain byte-exact. Seven source
+pins remain exact; Root inserts one required blank line before an if block in
+each of cell.actions and render.lcl after preserving their exact compiled15
+versions. The recorded whitespace-only comparison is separate from those runtime
+source identities. Exact host37580 is stopped, wrapper78430 joins0, port19151 has
+no listener, tab116 is closed and the viewport override is reset. Native15
+runtime48112 and its wrapper were already joined before this browser cohort.
+These are injected clipboard/save effects and synthetic target inputs, without
+a hardware/OS clipboard, accessibility or full visual-quality claim. The next
+helper packet is the explicit cell-range producer and real interaction; Root
+continues caller-descendant admission before physical retained-form adoption.
+No LAN/Studio service or MCP configuration changes are involved.
+
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
 The previous goal turn made progress: resource isolation and immutable copy

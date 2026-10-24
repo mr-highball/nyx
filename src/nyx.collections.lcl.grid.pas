@@ -28,7 +28,8 @@ interface
 uses
   Classes, Types, Controls, Grids, LMessages, LCLType, nyx.text,
   nyx.collections.mount, nyx.gestures.lcl, nyx.widgets.lcl,
-  nyx.collections.arrangement, nyx.formatting, nyx.state;
+  nyx.collections.arrangement, nyx.formatting, nyx.state,
+  nyx.collections.clipboard.actions;
 
 type
   { Native-only pure text reader. The grid borrows its receiver; its mount must
@@ -46,6 +47,20 @@ type
     native message, including nested callbacks. The grid already owns/consumes
     that header tail; the receiver only marks a previously captured command. }
   TNyxGridColumnDoubleClick = procedure(Sender: TObject; AStamp: Integer) of object;
+
+  { Borrowed synchronous mount entry reserves the exact input/context and
+    optional focused draft before any previous editor context callback. Nil
+    keeps the ordinary editor menu only for unsupported/default-off entry;
+    stale managed admission returns its inert envelope and remains claimed.
+    No physical event is synthesized. }
+  TNyxGridCellContextPrepare = function(Sender: TObject; const APosition: TPoint):
+    INyxCollectionClipboardCommand of object;
+  { Borrowed renderer dispatch consumes that SAME original envelope. It invokes
+    the supplied editor callback before canonical/default delivery and never
+    recaptures a later cell. Both weak ports retire before widget cleanup. }
+  TNyxGridCellContextDispatch = procedure(Sender: TObject; APosition: TPoint;
+    var AHandled: Boolean; const ACommand: INyxCollectionClipboardCommand;
+    APrevious: TContextPopupEvent) of object;
 
   { UI-thread continuity shared by the three surfaces of ONE logical table.
     It owns only composition/deferred-map flags, never a mount, model or widget.
@@ -206,6 +221,8 @@ type
       native hook. Its concrete type stays out of the portable collection API. }
     FInputSurface: INyxGridInputSurface;
     FColumnEditor: TWinControl;
+    FCellContextPrepare: TNyxGridCellContextPrepare;
+    FCellContextDispatch: TNyxGridCellContextDispatch;
     FReads: Int64;
     { Weak, bounded presentation ownership. A table has at most its two edge
       panes; neither side retains the other's component lifetime. The mount
@@ -283,6 +300,11 @@ type
       cleanup must not expose a retired HWND or detach a newer owner. }
     procedure RetireColumnInput(const ALifetime: INyxCollectionInputLifetime);
     function ColumnEditorInputSurface: INyxGridInputSurface;
+    { Install weak ports on the exact live observed incarnation, including its
+      pre-Activate construction. This grants no input authority: the editor
+      entry still requires Ready before invoking either borrowed receiver. }
+    procedure ConfigureCellContext(const ALifetime: INyxCollectionInputLifetime;
+      APrepare: TNyxGridCellContextPrepare; ADispatch: TNyxGridCellContextDispatch);
     procedure DetachColumnInput;
     function EditorByStyle(Style: TColumnButtonStyle): TWinControl; override;
     procedure RegisterColumnPane(APane: TNyxCollectionStringGrid);
@@ -462,6 +484,9 @@ type
   public
     property BorderStyle;
   end;
+  { Actual LCL string editor retains its original grid protocol. The borrowed
+    observed surface frames input and optional managed context dispatch; it
+    owns no mount/renderer and falls back to the native editor menu by default. }
   TColumnCellEditor = class(TCellEditorAccess)
   private
     FLayoutGrid: TNyxCollectionStringGrid;
@@ -479,6 +504,7 @@ type
     procedure InitializeWnd; override;
     procedure FinalizeWnd; override;
     procedure WndProc(var AMessage: TLMessage); override;
+    procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
     procedure UTF8KeyPress(var UTF8Key: TUTF8Char); override;
@@ -1140,6 +1166,79 @@ begin
   end;
 end;
 
+procedure TColumnCellEditor.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
+var
+  LSurface: INyxGridInputSurface;
+  LFrame: INyxNativeGestureFrame;
+  LPrepare: TNyxGridCellContextPrepare;
+  LDispatch: TNyxGridCellContextDispatch;
+  LPrevious: TContextPopupEvent;
+  LCommand: INyxCollectionClipboardCommand;
+begin
+  LSurface := InputSurface;
+
+  if (LSurface = nil) or (FLayoutGrid = nil) then
+  begin
+    inherited DoContextPopup(MousePos, Handled);
+    Exit;
+  end;
+
+  if not LSurface.Ready then
+  begin
+    Handled := True;
+    Exit;
+  end;
+  LPrepare := FLayoutGrid.FCellContextPrepare;
+  LDispatch := FLayoutGrid.FCellContextDispatch;
+  LPrevious := OnContextPopup;
+
+  if not Assigned(LPrepare) or not Assigned(LDispatch) or
+    LSurface.Composing or not LSurface.PositionReady then
+  begin
+    inherited DoContextPopup(MousePos, Handled);
+    Exit;
+  end;
+  LFrame := LSurface.Frame;
+  LFrame.Enter;
+  try
+    LCommand := LPrepare(Self, MousePos);
+
+    if LCommand = nil then
+    begin
+
+      if LSurface.Current then
+      begin
+        inherited DoContextPopup(MousePos, Handled);
+      end
+      else
+      begin
+        Handled := True;
+      end;
+      Exit;
+    end;
+
+    if not LCommand.DispatchCurrent or not LSurface.Current then
+    begin
+      { Preparation may retire the renderer which supplied this borrowed
+        method pointer. Check only retained flags before invoking it. }
+      Handled := True;
+      Exit;
+    end;
+    LDispatch(Self, MousePos, Handled, LCommand, LPrevious);
+  finally
+    try
+
+      if LCommand <> nil then
+      begin
+        LCommand.Retire;
+      end;
+    finally
+      { LAST: a nested callback can retire this exact editor/grid/mount. }
+      LFrame.Leave;
+    end;
+  end;
+end;
+
 procedure TColumnCellEditor.KeyDown(var Key: Word; Shift: TShiftState);
 var
   LSurface: INyxGridInputSurface;
@@ -1434,6 +1533,8 @@ begin
 
   if (LSurface <> nil) and LSurface.MatchesLifetime(ALifetime) then
   begin
+    FCellContextPrepare := nil;
+    FCellContextDispatch := nil;
     LSurface.Retire;
   end;
 
@@ -1458,10 +1559,31 @@ begin
   end;
 end;
 
+procedure TNyxCollectionStringGrid.ConfigureCellContext(
+  const ALifetime: INyxCollectionInputLifetime;
+  APrepare: TNyxGridCellContextPrepare; ADispatch: TNyxGridCellContextDispatch);
+begin
+
+  if (FInputSurface = nil) or not FInputSurface.MatchesLifetime(ALifetime) then
+  begin
+    raise ENyxCollection.Create('Editor context requires its exact observed grid incarnation');
+  end;
+
+  if (Assigned(APrepare) or Assigned(ADispatch)) and
+    (FInputSurface.Retired or ALifetime.Retired) then
+  begin
+    raise ENyxCollection.Create('Retired editor context cannot acquire new dispatch ports');
+  end;
+  FCellContextPrepare := APrepare;
+  FCellContextDispatch := ADispatch;
+end;
+
 procedure TNyxCollectionStringGrid.DetachColumnInput;
 var
   LSurface: INyxGridInputSurface;
 begin
+  FCellContextPrepare := nil;
+  FCellContextDispatch := nil;
 
   if FInputSurface <> nil then
   begin

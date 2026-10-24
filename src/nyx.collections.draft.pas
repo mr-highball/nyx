@@ -81,10 +81,63 @@ function NewNyxCollectionFocusedDraftCapture(const AValue: INyxCollectionCellTex
   original target authority around acquiring that schema from a source. }
 function NyxCollectionDraftDomain(const ASchema: TNyxCollectionSchema;
   const AField: TNyxColumnIdentity): TNyxValueDomain;
+{ Normalize a foreign capture into copied scalar text/selection/epoch and its
+  declared owner-free readiness facet. Callers recheck their entered authority
+  after these getters. Exact matching includes accepted scalar and RAW bytes;
+  equal draft text alone never identifies the original cell. }
+function CopyNyxCollectionFocusedDraft(const ACapture: INyxCollectionFocusedDraftCapture):
+  INyxCollectionFocusedDraftCapture;
+function NyxCollectionDraftMatches(const ACapture: INyxCollectionFocusedDraftCapture;
+  const ARaw: INyxCollectionClipboardText): Boolean;
 
 implementation
 
 uses nyx.bytes, nyx.data, nyx.formatting;
+
+function CopyNyxCollectionFocusedDraft(const ACapture: INyxCollectionFocusedDraftCapture):
+  INyxCollectionFocusedDraftCapture;
+var
+  LCapture: INyxCollectionFocusedDraftCapture;
+  LValue: INyxCollectionCellText;
+  LSelection: TNyxTextSelection;
+  LEpoch: Integer;
+  LReady: INyxCancellationReadiness;
+begin
+  Result := nil;
+  LCapture := ACapture;
+
+  if LCapture = nil then
+  begin
+    Exit;
+  end;
+  LValue := LCapture.Value;
+  LSelection := LCapture.Selection;
+  LEpoch := LCapture.InputEpoch;
+  LReady := LCapture.Readiness;
+  Result := NewNyxCollectionFocusedDraftCapture(LValue, LEpoch, LSelection, LReady);
+end;
+
+function NyxCollectionDraftMatches(const ACapture: INyxCollectionFocusedDraftCapture;
+  const ARaw: INyxCollectionClipboardText): Boolean;
+var
+  LValue: INyxCollectionCellText;
+  LItem: TNyxItemRef;
+begin
+  Result := False;
+
+  if (ACapture = nil) or (ARaw = nil) or (ARaw.RowCount <> 1) or
+    (ARaw.FieldCount <> 1) then
+  begin
+    Exit;
+  end;
+  LValue := ACapture.Value;
+  LItem := ARaw.ItemAt(0);
+  Result := (LValue.Representation = nccrExplicitDraft) and
+    (LValue.Item.Collection.Name = LItem.Collection.Name) and
+    (LValue.Item.ID = LItem.ID) and LValue.Field.Same(ARaw.FieldAt(0)) and
+    (LValue.Revision = ARaw.Revision) and
+    LValue.Value.SameValue(ARaw.CellValue(0, 0)) and (LValue.RawText = ARaw.Text);
+end;
 
 type
   { Every delegated accepted fact belongs to a newly normalized, owner-free

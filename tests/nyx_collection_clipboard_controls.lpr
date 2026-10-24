@@ -64,6 +64,24 @@ type
   { Test owner outlives every subscription and injected host receiver. }
   TCopyReview = class;
 
+  { Delegates every ordinary scheduler operation. A one-shot UI admission
+    callback enters a real nested context after the actions owner captured its
+    original intent, exercising stale target return without private-field edits. }
+  TContextScheduler = class(TInterfacedObject, INyxScheduler)
+  public
+    Base: INyxScheduler;
+    Owner: TCopyReview;
+    Reentries: Integer;
+    function GetCapabilities: TNyxSchedulerCapabilities;
+    procedure RequireUI;
+    procedure Admit(APolicy: TNyxExecutionPolicy);
+    function Submit(const AWork: INyxWork;
+      APolicy: TNyxExecutionPolicy): INyxExecution;
+    function PostUI(const AWork: INyxWork;
+      const AParent: INyxExecution = nil): INyxExecution;
+    procedure Shutdown;
+  end;
+
   { An alternate public input factory delegates the complete RAW command to
     the actual mounted owner. Before returning that command it enters one real
     nested context message, modeling a reentrant input/source getter. Owner is
@@ -134,6 +152,14 @@ type
   end;
 
   {$ifndef PAS2JS}
+  { Exposes LCL's protected ordinary context callback for installing the
+    no-effect fallback sentinel on the SAME real editor. No control is created
+    or replaced, and private widgetset state is never accessed. }
+  TEditorContextAccess = class(TCustomEdit)
+  public
+    property OnContextPopup;
+  end;
+
   { Keep the actual Nyx native grid/input implementation. Its last-resort LCL
     grid clipboard default is replaced only by a no-effect sentinel, so even a
     failing copy-interception assertion cannot mutate the user's clipboard.
@@ -169,6 +195,8 @@ type
     FCallback: INyxEventCallback;
     FToken: INyxEventSubscription;
     FContextToken: INyxEventSubscription;
+    FContextScheduler: TContextScheduler;
+    FContextSchedulerLease: INyxScheduler;
     FCellMount: INyxCollectionCellActionsMount;
     FCellActions: INyxCollectionCellActions;
     FExport: INyxCollectionExportMount;
@@ -194,6 +222,9 @@ type
     FRenderer: TNyxLCLRenderer;
     FSurface: TForm;
     FGrid: TNoClipboardGrid;
+    FEditorContexts: Integer;
+    procedure PreviousEditorContext(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     {$endif}
     procedure FocusCell;
     function CopyKey: Boolean;
@@ -206,6 +237,7 @@ type
     procedure RunExport; {$ifdef PAS2JS}async;{$endif}
     procedure RunDisplayed; {$ifdef PAS2JS}async;{$endif}
     procedure RunFocusedDraft; {$ifdef PAS2JS}async;{$endif}
+    procedure RunDraftActions; {$ifdef PAS2JS}async;{$endif}
     procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
@@ -213,7 +245,7 @@ type
     procedure Reply(const APayload: INyxCollectionClipboardText;
       const AResult: TNyxClipboardWriteResult);
   public
-    constructor Create(AArranged: Boolean = True);
+    constructor Create(AArranged: Boolean = True; ADraftActions: Boolean = False);
     destructor Destroy; override;
     procedure Run; {$ifdef PAS2JS}async;{$endif}
   end;
@@ -357,6 +389,48 @@ begin
   Owner.Semantic(AEvent, AExecution);
 end;
 
+function TContextScheduler.GetCapabilities: TNyxSchedulerCapabilities;
+begin
+  Result := Base.Capabilities;
+end;
+
+procedure TContextScheduler.RequireUI;
+var
+  LOwner: TCopyReview;
+begin
+  Base.RequireUI;
+  LOwner := Owner;
+  Owner := nil;
+
+  if LOwner <> nil then
+  begin
+    Inc(Reentries);
+    LOwner.Context(False);
+  end;
+end;
+
+procedure TContextScheduler.Admit(APolicy: TNyxExecutionPolicy);
+begin
+  Base.Admit(APolicy);
+end;
+
+function TContextScheduler.Submit(const AWork: INyxWork;
+  APolicy: TNyxExecutionPolicy): INyxExecution;
+begin
+  Result := Base.Submit(AWork, APolicy);
+end;
+
+function TContextScheduler.PostUI(const AWork: INyxWork;
+  const AParent: INyxExecution): INyxExecution;
+begin
+  Result := Base.PostUI(AWork, AParent);
+end;
+
+procedure TContextScheduler.Shutdown;
+begin
+  Base.Shutdown;
+end;
+
 function TContextCommands.BeginCellInput: INyxCollectionClipboardCellCommand;
 var
   LEntry: INyxCollectionClipboardCellInput;
@@ -483,14 +557,31 @@ end;
 
 procedure TNativeErrors.Failed(Sender: TObject; E: Exception);
 begin
-  Text := TNyxText(E.Message);
+
+  if Text = '' then
+  begin
+    Text := TNyxText(E.Message);
+    WriteLn('Native callback failure after ', GChecks, ' checks: ', E.Message);
+    DumpExceptionBackTrace(Output);
+  end;
+end;
+
+procedure TCopyReview.PreviousEditorContext(Sender: TObject; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+  Inc(FEditorContexts);
+  { This sentinel stops the inherited physical menu even in a failing oracle;
+    it observes actual fallback without opening an OS menu or clipboard host. }
+  Handled := True;
 end;
 {$endif}
 
-constructor TCopyReview.Create(AArranged: Boolean);
+constructor TCopyReview.Create(AArranged: Boolean; ADraftActions: Boolean);
 var
   LCallback: TKeyCallback;
   LAdmission: INyxCollectionInputAdmission;
+  LOptionsMount: INyxCollectionCellActionOptionsMount;
+  LFactory: INyxCollectionCellPresenterFactory;
 begin
   inherited Create;
   FDocument := Fixture(AArranged);
@@ -539,10 +630,23 @@ begin
     FRenderer.Events.Scheduler, TNyxCollectionExportOptions.Defaults);
   Check(Supports(FMount, INyxCollectionCellActionsMount, FCellMount),
     'actual mounted table exposes managed cell context actions');
-  FCellMount.ConfigureCellActions(
-    {$ifdef PAS2JS}NewNyxBrowserCollectionCellPresenterFactory(FTable)
-    {$else}NewNyxLCLCollectionCellPresenterFactory(FGrid){$endif},
-    FRenderer.Events.Scheduler);
+  LFactory := {$ifdef PAS2JS}NewNyxBrowserCollectionCellPresenterFactory(FTable)
+    {$else}NewNyxLCLCollectionCellPresenterFactory(FGrid){$endif};
+
+  if ADraftActions then
+  begin
+    Check(Supports(FMount, INyxCollectionCellActionOptionsMount, LOptionsMount),
+      'focused draft actions opt in through the optional typed mount configuration');
+    FContextScheduler := TContextScheduler.Create;
+    FContextSchedulerLease := FContextScheduler;
+    FContextScheduler.Base := FRenderer.Events.Scheduler;
+    LOptionsMount.ConfigureCellActionsWithOptions(LFactory, FContextSchedulerLease,
+      TNyxCollectionCellActionOptions.Defaults.FocusedDraft(True));
+  end
+  else
+  begin
+    FCellMount.ConfigureCellActions(LFactory, FRenderer.Events.Scheduler);
+  end;
   FCellActions := FCellMount.CellActions;
   LCallback := TKeyCallback.Create;
   LCallback.Owner := Self;
@@ -553,6 +657,11 @@ end;
 
 destructor TCopyReview.Destroy;
 begin
+
+  if FContextScheduler <> nil then
+  begin
+    FContextScheduler.Owner := nil;
+  end;
 
   if FContextToken <> nil then
   begin
@@ -573,6 +682,8 @@ begin
   end;
   FCommands := nil;
   FCellActions := nil;
+  FContextScheduler := nil;
+  FContextSchedulerLease := nil;
   FExport := nil;
   FCellMount := nil;
   FClipboard := nil;
@@ -1334,6 +1445,232 @@ begin
     'an inert retained draft cannot revive active editor authority or alter authored/accepted data');
 end;
 
+{ Same real editor and managed presenters as the RAW journey. Native context
+  uses the actual editor HWND/keyboard-context message; browser context is a
+  synthetic cancellable event, with no trusted pointer/OS menu claim. }
+procedure TCopyReview.RunDraftActions; {$ifdef PAS2JS}async;{$endif}
+var
+  LDraftActions: INyxCollectionCellDraftActions;
+  LRepresented: INyxCollectionCellRepresentationActions;
+  LSource: INyxCollectionSnapshot;
+  LCapture: INyxCollectionFocusedDraftCapture;
+  LSelection: TNyxTextSelection;
+  LText: TNyxText;
+  LRaw: TNyxText;
+  LBefore: Integer;
+  LRawReplies: Integer;
+  LColumn: Integer;
+  LInspector: INyxPopover;
+  LIntent: INyxCollectionCellActionIntent;
+  LOriginalIntent: Integer;
+  LContexts: Integer;
+  LReentries: Integer;
+  LNestedMenu: INyxMenu;
+  LNestedCapture: INyxCollectionFocusedDraftCapture;
+  {$ifdef PAS2JS}
+  LEditor: TJSHTMLInputElement;
+  LOptions: TJSObject;
+  LContextClaimed: Boolean;
+  LTarget: INyxBrowserPopover;
+  LMemo: TJSHTMLTextAreaElement;
+  {$else}
+  LEditor: TCustomEdit;
+  LTarget: INyxLCLPopover;
+  LMemo: TCustomEdit;
+  LPrevious: TContextPopupEvent;
+  LPreviousContexts: Integer;
+  {$endif}
+
+  procedure EditorContext;
+  begin
+    {$ifdef PAS2JS}
+    LOptions := TJSObject.new;
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := True;
+    LOptions['button'] := 2;
+    LContextClaimed := not LEditor.dispatchEvent(TCellContextEvent.new('contextmenu', LOptions));
+    {$else}
+    SendMessage(LEditor.Handle, WM_CONTEXTMENU, LEditor.Handle, MakeLParam(-1, -1));
+    {$endif}
+  end;
+
+begin
+  Check(Supports(FCellActions, INyxCollectionCellDraftActions, LDraftActions) and
+    LDraftActions.FocusedDraftEnabled and
+    Supports(FCellActions, INyxCollectionCellRepresentationActions, LRepresented),
+    'explicit runtime opt-in enables separate managed draft actions without changing RAW APIs');
+  LSource := FView.Store.Snapshot;
+  try
+    for LColumn := 0 to 1 do
+    begin
+      FContextColumn := LColumn;
+      FocusCell;
+      {$ifdef PAS2JS}
+      await(Drain);
+      Key(Cell, 'F2', False);
+      await(Drain);
+      LEditor := TJSHTMLInputElement(Cell.querySelector('input'));
+      Check((LEditor <> nil) and (document.activeElement = LEditor),
+        'managed draft menu begins from the actual focused browser cell input');
+      {$else}
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+      Drain;
+      Check(FGrid.EditorMode and (FGrid.Editor is TCustomEdit),
+        'managed draft menu begins from the actual focused native cell input');
+      LEditor := TCustomEdit(FGrid.Editor);
+      {$endif}
+      LText := CDraft;
+      LRaw := CText;
+
+      if LColumn = 1 then
+      begin
+        LText := '-';
+        LRaw := '1';
+      end;
+      LSelection := NyxTextSelection(LText, NyxTextScalarCount(LText) - 1,
+        NyxTextScalarCount(LText), {$ifdef PAS2JS}ntdBackward{$else}ntdUnknown{$endif});
+      {$ifdef PAS2JS}
+      LEditor.value := LText;
+      SelectNyxBrowserText(LEditor, LSelection);
+      {$else}
+      RestoreNyxLCLInputText(LEditor, LText);
+      SelectNyxLCLText(LEditor, LSelection);
+      {$endif}
+      LBefore := FHost.Writes;
+      LRawReplies := FReplies;
+      FMode := kmConsume;
+      EditorContext;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      Check(((FCellActions.Menu = nil) or not FCellActions.Menu.IsOpen) and
+        (FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource),
+        'consumed actual editor context opens no draft menu and never accepts text');
+      FMode := kmObserve;
+      EditorContext;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      LCapture := LDraftActions.CapturedDraft;
+      Check((FCellActions.Menu <> nil) and FCellActions.Menu.IsOpen and
+        (LCapture <> nil) and (LCapture.Value.Representation = nccrExplicitDraft) and
+        (LCapture.Value.Text = LText) and (LCapture.Value.RawText = LRaw) and
+        LCapture.Selection.SameRange(LSelection) and
+        (FCellActions.Snapshot.Text = LRaw) and (FView.Store.Snapshot = LSource),
+        'actual editor context captures draft before menu focus while RAW/scalar/source remain accepted');
+      MenuAction(NyxCellActionsInspectDraftID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      LInspector := FCellActions.Inspector;
+      Check((LInspector <> nil) and LInspector.IsOpen,
+        'real managed Inspect captured draft opens an ordinary readonly Nyx inspector');
+      {$ifdef PAS2JS}
+      Check(Supports(LInspector, INyxBrowserPopover, LTarget),
+        'draft inspector retains the actual browser target facet');
+      LMemo := TJSHTMLTextAreaElement(LTarget.Renderer.FocusFor(NyxCellInspectorValueID));
+      Check(LMemo.readOnly and (LMemo.value = NyxCollectionCellInspectionText(LText)),
+        'full browser draft inspection preserves supplementary text and unfinished numeric bytes');
+      {$else}
+      Check(Supports(LInspector, INyxLCLPopover, LTarget),
+        'draft inspector retains the actual native target facet');
+      LMemo := TCustomEdit(LTarget.Renderer.FocusFor(NyxCellInspectorValueID));
+      Check(LMemo.ReadOnly and (NyxLCLInputText(LMemo) = NyxCollectionCellInspectionText(LText)),
+        'full native draft inspection preserves supplementary text and unfinished numeric bytes');
+      {$endif}
+      InspectorAction(NyxCellInspectorCopyDraftID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FHost.Writes = LBefore + 1) and (FHost.Text = LText) and
+        LRepresented.HasRepresentationResult and
+        (LRepresented.LastRepresentation.Representation = nccrExplicitDraft) and
+        (LRepresented.LastRepresentation.Text = LText) and (FReplies = LRawReplies),
+        'real Copy captured draft uses the same host slot with an explicit representation and no RAW reply');
+      InspectorAction(NyxCellInspectorCopyID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      Check((FHost.Writes = LBefore + 2) and (FHost.Text = LRaw) and
+        (FReplies = LRawReplies + 1) and (FView.Store.Snapshot = LSource),
+        'separately labeled accepted-value action still writes exact RAW without accepting the draft');
+      InspectorAction(NyxCellInspectorCloseID);
+      {$ifdef PAS2JS}await(Drain);{$endif}
+      FCellActions.Close;
+      {$ifdef PAS2JS}
+      Key(LEditor, 'Escape', False);
+      await(Drain);
+      {$else}
+      SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+      Drain;
+      {$endif}
+    end;
+    { The actual editor event reserves intent before the scheduler's outward
+      UI admission. That admission enters a newer REAL grid context while the
+      original editor message is still on the stack. The old return must stay
+      claimed instead of falling back to native/default or canonical replay. }
+    FContextColumn := 0;
+    FocusCell;
+    {$ifdef PAS2JS}
+    await(Drain);
+    Key(Cell, 'F2', False);
+    await(Drain);
+    LEditor := TJSHTMLInputElement(Cell.querySelector('input'));
+    Check((LEditor <> nil) and (document.activeElement = LEditor),
+      'nested admission begins from the actual focused browser draft editor');
+    LEditor.value := CDraft;
+    {$else}
+    SendMessage(FGrid.Handle, WM_KEYDOWN, VK_F2, 1);
+    Drain;
+    Check(FGrid.EditorMode and (FGrid.Editor is TCustomEdit),
+      'nested admission begins from the actual focused native draft editor');
+    LEditor := TCustomEdit(FGrid.Editor);
+    RestoreNyxLCLInputText(LEditor, CDraft);
+    LPrevious := TEditorContextAccess(LEditor).OnContextPopup;
+    TEditorContextAccess(LEditor).OnContextPopup := PreviousEditorContext;
+    LPreviousContexts := FEditorContexts;
+    {$endif}
+    try
+      Check(Supports(FCellActions, INyxCollectionCellActionIntent, LIntent),
+        'actual opt-in editor retains the canonical context-intent witness');
+      LOriginalIntent := LIntent.Intent;
+      LContexts := FContexts;
+      LReentries := FContextScheduler.Reentries;
+      LBefore := FHost.Writes;
+      FMode := kmObserve;
+      FContextScheduler.Owner := Self;
+      EditorContext;
+      {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+      LNestedMenu := FCellActions.Menu;
+      LNestedCapture := LDraftActions.CapturedDraft;
+      Check((FContextScheduler.Reentries = LReentries + 1) and
+        (FContexts = LContexts + 1) and (LIntent.Intent = LOriginalIntent + 1) and
+        (LNestedMenu <> nil) and LNestedMenu.IsOpen,
+        'nested real context wins once while the older editor admission cannot replay canonical delivery');
+      {$ifdef PAS2JS}
+      Check(LContextClaimed,
+        'stale original editor context prevents the browser default after the nested menu wins');
+      {$else}
+      Check(FEditorContexts = LPreviousContexts,
+        'stale original editor context never replays the inherited native context callback/default');
+      {$endif}
+      Check((LNestedCapture <> nil) and (LNestedCapture.Value.Text = CDraft) and
+        (LNestedCapture.Value.RawText = CText) and
+        LNestedCapture.Value.Field.Same(NameField) and
+        (LNestedCapture.Value.Item.ID = ItemA.ID) and
+        (FHost.Writes = LBefore) and (FView.Store.Snapshot = LSource),
+        'newer menu retains exact original draft/RAW provenance with no accepted-data or clipboard effect');
+    finally
+      FContextScheduler.Owner := nil;
+      {$ifndef PAS2JS}TEditorContextAccess(LEditor).OnContextPopup := LPrevious;{$endif}
+    end;
+    FCellActions.Close;
+    {$ifdef PAS2JS}
+    Key(LEditor, 'Escape', False);
+    await(Drain);
+    {$else}
+    SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
+    Drain;
+    {$endif}
+  finally
+    FContextColumn := 0;
+    FMode := kmObserve;
+  end;
+  Check((LCapture.Value.Text = '-') and (LCapture.Value.RawText = '1') and
+    (FView.Store.Snapshot = LSource) and (TNyxCodec.Encode(FDocument) = FAuthored),
+    'managed draft presentation/copy leaves all accepted rows and authored source exact');
+end;
+
 procedure TCopyReview.ExportPaging(AEnabled: Boolean);
 var
   LPages: INyxCollectionPages;
@@ -1450,6 +1787,8 @@ var
   {$else}
   LEditor: TCustomEdit;
   LFallback: Integer;
+  LEditorContexts: Integer;
+  LPreviousContext: TContextPopupEvent;
   {$endif}
 begin
   {$ifdef PAS2JS}
@@ -1558,6 +1897,19 @@ begin
   Check((FHost.Writes = LBefore) and FGrid.EditorMode and
     (NyxLCLInputText(LEditor) = CDraft),
     'native grid-owned key route with active editor never captures or accepts its draft');
+  LEditorContexts := FEditorContexts;
+  LPreviousContext := TEditorContextAccess(LEditor).OnContextPopup;
+  TEditorContextAccess(LEditor).OnContextPopup := PreviousEditorContext;
+  try
+    SendMessage(LEditor.Handle, WM_CONTEXTMENU, LEditor.Handle, MakeLParam(-1, -1));
+    Drain;
+  finally
+    TEditorContextAccess(LEditor).OnContextPopup := LPreviousContext;
+  end;
+  Check((FEditorContexts = LEditorContexts + 1) and
+    (FHost.Writes = LBefore) and FGrid.EditorMode and
+    (NyxLCLInputText(LEditor) = CDraft) and (FCellActions.Menu = nil),
+    'default-off native editor retains its actual ordinary context callback and exact unfinished text');
   SendMessage(FGrid.Handle, WM_KEYDOWN, VK_ESCAPE, 1);
   Drain;
   {$endif}
@@ -1617,15 +1969,23 @@ begin
     { Same maintained fixture/spec/data and public input path, with only the
       optional layout controls absent. Renderer-managed native observation must
       not be a benefit available only to the arrangement authoring feature. }
-    LReview := TCopyReview.Create(False);
+    LReview := TCopyReview.Create(False, True);
     try
       Check(not LReview.FView.Spec.HasLayoutControls,
         'ordinary renderer-managed table genuinely omits arrangement controls');
       {$ifdef PAS2JS}
       await(LReview.RunFocusedDraft);
+      await(LReview.RunDraftActions);
       {$else}
       LReview.RunFocusedDraft;
+      LReview.RunDraftActions;
       {$endif}
+    finally
+      LReview.Free;
+    end;
+    LReview := TCopyReview.Create(True, True);
+    try
+      {$ifdef PAS2JS}await(LReview.RunDraftActions);{$else}LReview.RunDraftActions;{$endif}
     finally
       LReview.Free;
     end;

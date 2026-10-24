@@ -272,7 +272,8 @@ type
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
-    INyxCollectionCellActionsMount, INyxCollectionExportMount)
+    INyxCollectionCellActionsMount, INyxCollectionCellActionOptionsMount,
+    INyxCollectionExportMount)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -453,6 +454,10 @@ type
     function GetExportCommands: INyxCollectionExportCommands;
     procedure ConfigureCellActions(const AFactory: INyxCollectionCellPresenterFactory;
       const AScheduler: INyxScheduler);
+    procedure ConfigureCellActionsWithOptions(
+      const AFactory: INyxCollectionCellPresenterFactory;
+      const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionCellActionOptions);
     function GetCellActions: INyxCollectionCellActions;
     procedure ObserveSelection(AObserver: TNyxCollectionSelectionObserver);
     function Select(const AItem: TNyxItemRef): Boolean; overload;
@@ -1300,6 +1305,15 @@ end;
 procedure TNyxCollectionMountBase.ConfigureCellActions(
   const AFactory: INyxCollectionCellPresenterFactory;
   const AScheduler: INyxScheduler);
+begin
+  ConfigureCellActionsWithOptions(AFactory, AScheduler,
+    TNyxCollectionCellActionOptions.Defaults);
+end;
+
+procedure TNyxCollectionMountBase.ConfigureCellActionsWithOptions(
+  const AFactory: INyxCollectionCellPresenterFactory;
+  const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionCellActionOptions);
 var
   LLease: INyxCollectionMount;
   LView: INyxCollectionView;
@@ -1310,6 +1324,7 @@ var
   LCandidate: INyxCollectionCellActions;
   LExports: INyxCollectionExportCommands;
   LExporter: INyxCollectionExportCapturedSave;
+  LOptions: TNyxCollectionCellActionOptions;
 
   procedure Current;
   begin
@@ -1336,6 +1351,7 @@ begin
     LExports := FExportCommands;
     LFactory := AFactory;
     LScheduler := AScheduler;
+    LOptions := AOptions;
     LScheduler.RequireUI;
     Current;
     Supports(FClipboardCommands, INyxCollectionClipboardCapturedWrite, LWriter);
@@ -1347,7 +1363,7 @@ begin
       Current;
     end;
     try
-      LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler,
+      LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler, LOptions,
         BeginCellPresentation, LExporter);
       Current;
       FCellFactory := LFactory;

@@ -116,8 +116,13 @@ with a complete clean heap and empty browser logs; unchanged event publication
 still passes58 per target. Direct/nested groups and real old-ticket cancellation
 now attempt independent later notifications while preserving the first exact
 Pascal diagnostic or raw browser value. Descendant-work and physical adoption
-remain open. The separate draft-action12 native319 result remains partial
-while stale editor-menu fallback is repaired and browser behavior is qualified.
+remain open. Draft-action15 now repairs stale editor-menu fallback and passes332
+native checks with a complete clean heap and415 browser checks at verified
+1280x900/390x900, logs empty. Opt-in managed menus inspect/copy exact captured
+unfinished text with separate accepted-value actions and original context intent.
+Earlier12 is retained as partial evidence of its earlier source. Explicit cell
+range interaction, real OS effects and complete preference/workbench acceptance
+remain required.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 
