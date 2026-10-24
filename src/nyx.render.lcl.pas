@@ -263,6 +263,7 @@ type
     procedure PreparedRangePointer(ASender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer;
       const ACommand: INyxCollectionCellRangePointerEntry);
+    procedure CollectionCaptureChanged(const AOriginID: TNyxText; ATrigger: TNyxTrigger);
     function HandleRangeMotion(ASender: TObject; ATrigger: TNyxTrigger;
       AButton: TNyxPointerButton; AShift: TShiftState; AX, AY: Integer): Boolean;
     procedure DoubleClick(ASender: TObject);
@@ -6414,6 +6415,8 @@ var
   LViewportPublication: INyxObservationPublication;
   LEditingPublication: INyxObservationPublication;
   LCapturePublication: INyxObservationPublication;
+  LScopedCapture: INyxLCLScopedCaptureObserver;
+  LCaptureInput: INyxLCLCaptureInput;
   LParent: TWinControl;
   LMeasurementKey: TNyxText;
   LFormerHorizontal: Integer;
@@ -7427,18 +7430,32 @@ begin
       RequireAttempt;
       LCandidate.FEditingObserver.Activate(FEvents, EditingChanged);
       RequireAttempt;
+
+      if not Supports(LCandidate.FCaptureObserver, INyxLCLScopedCaptureObserver, LScopedCapture) then
+      begin
+        raise ENyxModel.Create('Native collection capture requires scoped input observation');
+      end;
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
-        LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+        LCaptureInput := nil;
+
+        if LCandidate.FBindings[LIndex].FCollectionInputLifetime <> nil then
+        begin
+          LCaptureInput := NyxLCLCollectionCaptureInput(
+            LCandidate.FBindings[LIndex].FCollectionInputLifetime);
+        end;
+        LScopedCapture.AddScoped(LCandidate.FBindings[LIndex].FNode.ID,
           LCandidate.FBindings[LIndex].FControl,
+          LCaptureInput,
           LCandidate.FBindings[LIndex].FControl = LCandidate.FBindings[LIndex].FFocusControl);
           RequireAttempt;
 
         if (LCandidate.FBindings[LIndex].FInput <> nil) and
           (LCandidate.FBindings[LIndex].FInput <> LCandidate.FBindings[LIndex].FControl) then
         begin
-          LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+          LScopedCapture.AddScoped(LCandidate.FBindings[LIndex].FNode.ID,
             LCandidate.FBindings[LIndex].FInput,
+            LCaptureInput,
             LCandidate.FBindings[LIndex].FInput = LCandidate.FBindings[LIndex].FFocusControl);
             RequireAttempt;
         end;
@@ -7448,8 +7465,8 @@ begin
           (LCandidate.FBindings[LIndex].FFocusControl <> LCandidate.FBindings[LIndex].FControl) and
           (LCandidate.FBindings[LIndex].FFocusControl <> LCandidate.FBindings[LIndex].FInput) then
         begin
-          LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
-            LCandidate.FBindings[LIndex].FFocusControl, True);
+          LScopedCapture.AddScoped(LCandidate.FBindings[LIndex].FNode.ID,
+            LCandidate.FBindings[LIndex].FFocusControl, LCaptureInput, True);
             RequireAttempt;
         end;
         RequireAttempt;
@@ -8735,7 +8752,7 @@ begin
   Result := MountNyxLCLCollectionWithTextLimits(LBinding.FControl, AView, FTableTextLimits,
     FCollectionInputPhase, FCollectionInputGate, FPhysicalFrame,
     FCollectionQueryEvents, LBinding.FNode.ID, LBinding.PerformClick,
-    LBinding.PreparedCellContext, LBinding.PreparedRangePointer);
+    LBinding.PreparedCellContext, LBinding.PreparedRangePointer, LBinding.CollectionCaptureChanged);
   LBinding.FCollectionMount := Result;
 
   if Supports(Result, INyxCollectionInputAdmission, LInputAdmission) then
@@ -11978,6 +11995,27 @@ begin
     Emit(LBinding.FNode, LDispatch);
   end;
   { Navigation/disposal may occur in Emit. No borrowed fields are read here. }
+end;
+
+procedure TNyxLCLBinding.CollectionCaptureChanged(const AOriginID: TNyxText;
+  ATrigger: TNyxTrigger);
+var
+  LGeneration: INyxLCLBindingGeneration;
+  LFrame: INyxNativeGestureFrame;
+begin
+  LGeneration := GenerationLease;
+
+  if (LGeneration = nil) or not NativeGenerationCurrent(LGeneration) then
+  begin
+    Exit;
+  end;
+  LFrame := LGeneration.PhysicalFrame;
+  LFrame.Enter;
+  try
+    FRenderer.CaptureChanged(AOriginID, ATrigger);
+  finally
+    LFrame.Leave;
+  end;
 end;
 
 procedure TNyxLCLBinding.CollectionSelectionChanged(

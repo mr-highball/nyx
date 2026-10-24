@@ -62,6 +62,27 @@ type
     procedure Disconnect;
   end;
 
+type
+  { Flags-only native incarnation, without a widget/model backreference. Epoch
+    changes revoke an old button stream across Ready ABA. Getters must not call
+    application code; the source adapter owns and retires these flags. }
+  INyxLCLCaptureInput = interface(IInterface)
+    ['{CBF44153-7D91-437D-AD48-CBEBD659F3AB}']
+    function GetCurrent: Boolean;
+    function GetReady: Boolean;
+    function GetEpoch: Integer;
+    property Current: Boolean read GetCurrent;
+    property Ready: Boolean read GetReady;
+    property Epoch: Integer read GetEpoch;
+  end;
+  { Optional source-scoped admission preserves the original observer ABI. Add
+    before activation and after inner editing hooks. Only flags are retained. }
+  INyxLCLScopedCaptureObserver = interface(IInterface)
+    ['{9544AB34-9808-4DDE-8109-368EDC77855E}']
+    procedure AddScoped(const AOriginID: TNyxText; AControl: TControl;
+      const AInput: INyxLCLCaptureInput; AObserveFocus: Boolean = False);
+  end;
+
 function NewNyxNativeGestureFrame: INyxNativeGestureFrame;
 function NewNyxLCLCaptureObserver(const AFrame: INyxNativeGestureFrame): INyxLCLCaptureObserver;
 function NyxLCLHasPointerCapture(AControl: TControl): Boolean;
@@ -114,8 +135,9 @@ type
   end;
   { One revocable native window-procedure chain borrows its control and retains
     the physical frame/router only while connected. Nested capture observations
-    during an ordinary button-up wait until that message's pointer-up callback
-    finishes; independent capture loss and native CancelMode remain immediate. }
+    during button-up/cancellation wait for their native defaults. Cancellation
+    retains its original button epoch/revision through callbacks and can never
+    borrow a newly published view or cancel a callback's new pointer stream. }
   TNyxLCLCaptureHook = class(TInterfacedObject, INyxLCLCaptureHook)
   private
     FControl: TControl;
@@ -129,12 +151,18 @@ type
     FCaptured: Boolean;
     FObserveFocus: Boolean;
     FButtons: TNyxPointerButtons;
+    FInput: INyxLCLCaptureInput;
+    FButtonEpoch: Integer;
+    FButtonRevision: Integer;
     FReleaseDepth: Integer;
     procedure Handle(var AMessage: TLMessage);
-    procedure Notify(ATrigger: TNyxTrigger);
+    procedure Notify(ATrigger: TNyxTrigger; AInputEpoch: Integer = -1;
+      ARevision: Integer = -1);
+    function InputCurrent(AInputEpoch: Integer = -1): Boolean;
   public
     constructor Create(const AOriginID: TNyxText; AControl: TControl;
-      const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean);
+      const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean;
+      const AInput: INyxLCLCaptureInput = nil);
     destructor Destroy; override;
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Disconnect;
@@ -142,8 +170,10 @@ type
     procedure PublishRevision(ARevision: Integer);
     function Matches(AControl: TControl): Boolean;
   end;
+  { Owns a bounded control set and its idle observation. Scoped flags add input
+    authority without retaining a model. Disconnect precedes inner-hook release. }
   TNyxLCLCaptureObserver = class(TInterfacedObject, INyxLCLCaptureObserver,
-    INyxObservationPublication)
+    INyxObservationPublication, INyxLCLScopedCaptureObserver)
   private
     FHooks: array of INyxLCLCaptureHook;
     FFrame: INyxNativeGestureFrame;
@@ -154,6 +184,8 @@ type
     destructor Destroy; override;
     procedure Add(const AOriginID: TNyxText; AControl: TControl;
       AObserveFocus: Boolean = False);
+    procedure AddScoped(const AOriginID: TNyxText; AControl: TControl;
+      const AInput: INyxLCLCaptureInput; AObserveFocus: Boolean = False);
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Observe(AControl: TControl);
     procedure Disconnect;
@@ -434,7 +466,8 @@ begin
 end;
 
 constructor TNyxLCLCaptureHook.Create(const AOriginID: TNyxText;
-  AControl: TControl; const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean);
+  AControl: TControl; const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean;
+  const AInput: INyxLCLCaptureInput);
 begin
   inherited Create;
 
@@ -445,6 +478,7 @@ begin
   FControl := AControl;
   FOriginID := AOriginID;
   FObserveFocus := AObserveFocus;
+  FInput := AInput;
   FFrame := AFrame;
   FPrevious := AControl.WindowProc;
   FCaptured := NyxLCLHasPointerCapture(AControl);
@@ -479,6 +513,8 @@ begin
   FConnected := False;
   FHandler := nil;
   FEvents := nil;
+  FInput := nil;
+  FButtons := [];
 
   if FControl <> nil then
   begin
@@ -500,19 +536,36 @@ begin
   Result := FControl = AControl;
 end;
 
-procedure TNyxLCLCaptureHook.Notify(ATrigger: TNyxTrigger);
+function TNyxLCLCaptureHook.InputCurrent(AInputEpoch: Integer): Boolean;
+begin
+  Result := (FInput = nil) or (FInput.Current and FInput.Ready and
+    ((AInputEpoch < 0) or (FInput.Epoch = AInputEpoch)));
+end;
+
+procedure TNyxLCLCaptureHook.Notify(ATrigger: TNyxTrigger; AInputEpoch: Integer;
+  ARevision: Integer);
 var
   LHandler: TNyxLCLCaptureHandler;
   LOriginID: TNyxText;
+  LEvents: INyxEvents;
+  LRevision: Integer;
 begin
+  LEvents := FEvents;
+  LRevision := FRevision;
+  LHandler := FHandler;
+  LOriginID := FOriginID;
 
-  if not FConnected or (FEvents = nil) or
-    (FEvents.ViewRevision <> FRevision) or not Assigned(FHandler) then
+  if not FConnected or (LEvents = nil) or not Assigned(LHandler) or
+    not InputCurrent(AInputEpoch) or ((ARevision >= 0) and (LRevision <> ARevision)) then
   begin
     Exit;
   end;
-  LHandler := FHandler;
-  LOriginID := FOriginID;
+
+  if (LEvents.ViewRevision <> LRevision) or not FConnected or
+    (FEvents <> LEvents) or (FRevision <> LRevision) or not InputCurrent(AInputEpoch) then
+  begin
+    Exit;
+  end;
   LHandler(LOriginID, ATrigger);
 end;
 
@@ -566,13 +619,22 @@ var
   LPrevious: TWndMethod;
   LMessageID: Cardinal;
   LReleasing: Boolean;
+  LCancel: Boolean;
+  LCancelEpoch: Integer;
+  LCancelRevision: Integer;
+  LAcceptDown: Boolean;
 begin
   LKeepAlive := Self;
   LFrame := FFrame;
   LPrevious := FPrevious;
   LMessageID := AMessage.Msg;
+  LCancel := (LMessageID = LM_CANCELMODE) and (FButtons <> []) and
+    InputCurrent(FButtonEpoch) and (FButtonRevision = FRevision);
+  LCancelEpoch := FButtonEpoch;
+  LCancelRevision := FButtonRevision;
   LReleasing := (LMessageID = LM_LBUTTONUP) or
-    (LMessageID = LM_RBUTTONUP) or (LMessageID = LM_MBUTTONUP);
+    (LMessageID = LM_RBUTTONUP) or (LMessageID = LM_MBUTTONUP) or
+    (LMessageID = LM_CANCELMODE);
 
   if LReleasing then
   begin
@@ -590,18 +652,52 @@ begin
   {$endif}
   LFrame.Enter;
   try
+    LAcceptDown := InputCurrent;
+
+    if (LMessageID = LM_LBUTTONDOWN) or (LMessageID = LM_RBUTTONDOWN) or
+      (LMessageID = LM_MBUTTONDOWN) then
+    begin
+
+      if not LAcceptDown or (FButtonRevision <> FRevision) or
+        ((FInput <> nil) and (FButtonEpoch <> FInput.Epoch)) then
+      begin
+        FButtons := [];
+      end;
+
+      if LAcceptDown then
+      begin
+        FButtonRevision := FRevision;
+
+        if FInput <> nil then
+        begin
+          FButtonEpoch := FInput.Epoch;
+        end;
+      end;
+    end;
     case LMessageID of
       LM_LBUTTONDOWN:
         begin
-          Include(FButtons, npbPrimary);
+
+          if LAcceptDown then
+          begin
+            Include(FButtons, npbPrimary);
+          end;
         end;
       LM_RBUTTONDOWN:
         begin
-          Include(FButtons, npbSecondary);
+
+          if LAcceptDown then
+          begin
+            Include(FButtons, npbSecondary);
+          end;
         end;
       LM_MBUTTONDOWN:
         begin
-          Include(FButtons, npbAuxiliary);
+
+          if LAcceptDown then
+          begin
+            Include(FButtons, npbAuxiliary);
+          end;
         end;
       LM_LBUTTONUP:
         begin
@@ -616,13 +712,13 @@ begin
           Exclude(FButtons, npbAuxiliary);
         end;
     end;
-    { Losing capture alone does not cancel a pointer stream. CancelMode is an
-      actual native interruption, reported separately before any release/loss. }
+    { Native defaults withdraw the OLD stream before application observation.
+      Its capture-loss observation waits so Cancel still precedes Lost. A new
+      press from the cancel callback must survive the completed native default. }
 
-    if (LMessageID = LM_CANCELMODE) and (FButtons <> []) then
+    if LMessageID = LM_CANCELMODE then
     begin
       FButtons := [];
-      Notify(ntPointerCancel);
     end;
 
     if Assigned(LPrevious) then
@@ -634,6 +730,11 @@ begin
     begin
       Dec(FReleaseDepth);
       LReleasing := False;
+    end;
+
+    if LCancel then
+    begin
+      Notify(ntPointerCancel, LCancelEpoch, LCancelRevision);
     end;
     { Observe after the native/default handler and its editing completion. The
       router epoch refuses a retired view; the retained physical frame protects
@@ -686,6 +787,12 @@ end;
 
 procedure TNyxLCLCaptureObserver.Add(const AOriginID: TNyxText; AControl: TControl;
   AObserveFocus: Boolean);
+begin
+  AddScoped(AOriginID, AControl, nil, AObserveFocus);
+end;
+
+procedure TNyxLCLCaptureObserver.AddScoped(const AOriginID: TNyxText;
+  AControl: TControl; const AInput: INyxLCLCaptureInput; AObserveFocus: Boolean);
 var
   LIndex: Integer;
 begin
@@ -704,7 +811,7 @@ begin
   end;
   SetLength(FHooks, Length(FHooks) + 1);
   FHooks[High(FHooks)] := TNyxLCLCaptureHook.Create(AOriginID, AControl, FFrame,
-    AObserveFocus);
+    AObserveFocus, AInput);
 end;
 
 procedure TNyxLCLCaptureObserver.Activate(const AEvents: INyxEvents;

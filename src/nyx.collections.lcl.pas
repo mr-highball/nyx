@@ -94,6 +94,11 @@ type
       INyxCollectionClipboardCommand;
   end;
 
+{ Flags-only bridge for native observers. It owns the canonical input lifetime,
+  never a mount or widget; epoch/Ready reads remain safe after target retirement. }
+function NyxLCLCollectionCaptureInput(
+  const ALifetime: INyxCollectionInputLifetime): INyxLCLCaptureInput;
+
 { Native adapter boundary for Nyx's real TListBox/TStringGrid/TTreeView controls.
   Renderer retains/disconnects the mount before destroying its borrowed control.
   No dataset is serialized into newline/tab-separated items. Lists select rows;
@@ -101,7 +106,9 @@ type
   Opted-in arrangement or text/density requires the caller's real frame/router/runtime
   origin before any hook/handle is installed. Ordinary Apps supply them; direct
   hosts use the same context and publication port. Legacy non-layout calls keep
-  their optional-argument defaults and unchanged native editing path. }
+  their optional-argument defaults and unchanged native editing path. The weak
+  capture handler reports canonical pane observations and is revoked before
+  its binding or any borrowed native control is destroyed. }
 function MountNyxLCLCollection(AControl: TControl;
   const AView: INyxCollectionView;
   AInputPhase: TNyxCollectionInputPhase = ncipReady;
@@ -111,7 +118,8 @@ function MountNyxLCLCollection(AControl: TControl;
   const AOriginID: TNyxText = '';
   AColumnClick: TNyxLCLColumnClick = nil;
   ACellContext: TNyxLCLCellContextDispatch = nil;
-  ARangePointer: TNyxLCLRangePointerDispatch = nil): INyxCollectionMount;
+  ARangePointer: TNyxLCLRangePointerDispatch = nil;
+  ACaptureHandler: TNyxLCLCaptureHandler = nil): INyxCollectionMount;
 
 { Runtime measurement limits are copied before activation, independently of
   authored policies. The physical frame/router requirements remain unchanged. }
@@ -124,12 +132,14 @@ function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
   const AOriginID: TNyxText = '';
   AColumnClick: TNyxLCLColumnClick = nil;
   ACellContext: TNyxLCLCellContextDispatch = nil;
-  ARangePointer: TNyxLCLRangePointerDispatch = nil): INyxCollectionMount;
+  ARangePointer: TNyxLCLRangePointerDispatch = nil;
+  ACaptureHandler: TNyxLCLCaptureHandler = nil): INyxCollectionMount;
 
 implementation
 
 uses
   SysUtils,
+  nyx.types,
   Math,
   Forms,
   nyx.collections.refresh,
@@ -172,6 +182,17 @@ type
   { Forward mount is borrowed by native ports only while a local specialized
     lease and the original input frame protect its entered callback. }
   TNativeMount = class;
+  { Detached adapter forwards only atomic incarnation facts. It keeps neither
+    native controls nor their collection/view owners alive. }
+  TCollectionCaptureInput = class(TInterfacedObject, INyxLCLCaptureInput)
+  private
+    FLifetime: INyxCollectionInputLifetime;
+  public
+    constructor Create(const ALifetime: INyxCollectionInputLifetime);
+    function GetCurrent: Boolean;
+    function GetReady: Boolean;
+    function GetEpoch: Integer;
+  end;
   { Synchronous native envelope borrows its mount only while the wrapped entry
     owns it. Captured generation flags fence canonical callbacks and original
     focus. Neither the mount nor a pending stroke retains this wrapper. }
@@ -258,29 +279,40 @@ type
     prepared observer epochs. Neither operation touches a widget or model. }
   IColumnEditing = interface(INyxObservationPublication)
     ['{49893923-9033-4621-BAEC-0375E452A36C}']
-    procedure Add(AGrid: TNyxCollectionStringGrid);
+    procedure Add(AGrid: TNyxCollectionStringGrid; AObserveCapture: Boolean = False);
     function Continuity: INyxGridInputContinuity;
     function Composing: Boolean;
     function Dispatching: Boolean;
     procedure Revoke;
     procedure Disconnect;
   end;
+  { Owns cell observers and optional OUTER capture hooks for lazy panes. Revoke
+    clears the weak canonical handler; Disconnect restores capture before editor
+    hooks. Publication changes only already-prepared observer revision flags. }
   TColumnEditing = class(TInterfacedObject, INyxObservationPublication,
     IColumnEditing)
   private
     FCells: array[0..2] of ICellEditing;
-    FCount, FRevision: Integer;
+    FCaptures: array[0..2] of INyxLCLCaptureObserver;
+    FCapturePublications: array[0..2] of INyxObservationPublication;
+    FCaptureHandler: TNyxLCLCaptureHandler;
+    FCaptureInput: INyxLCLCaptureInput;
+    FFrame: INyxNativeGestureFrame;
+    FCount: Integer;
+    FRevision: Integer;
     FLifetime: INyxCollectionInputLifetime;
     FEvents: INyxEvents;
     FOriginID: TNyxText;
     FWake: TNotifyEvent;
     FRevoked: Boolean;
     FContinuity: INyxGridInputContinuity;
+    procedure CaptureChanged(const AOriginID: TNyxText; ATrigger: TNyxTrigger);
   public
     constructor Create(const ALifetime: INyxCollectionInputLifetime;
-      const AEvents: INyxEvents; const AOriginID: TNyxText; AWake: TNotifyEvent);
+      const AEvents: INyxEvents; const AOriginID: TNyxText; AWake: TNotifyEvent;
+      ACaptureHandler: TNyxLCLCaptureHandler; const AFrame: INyxNativeGestureFrame);
     destructor Destroy; override;
-    procedure Add(AGrid: TNyxCollectionStringGrid);
+    procedure Add(AGrid: TNyxCollectionStringGrid; AObserveCapture: Boolean = False);
     function Continuity: INyxGridInputContinuity;
     function GetReady: Boolean;
     procedure PublishRevision(ARevision: Integer);
@@ -772,7 +804,8 @@ type
       const AOriginID: TNyxText = '';
       AColumnClick: TNyxLCLColumnClick = nil;
       ACellContext: TNyxLCLCellContextDispatch = nil;
-      ARangePointer: TNyxLCLRangePointerDispatch = nil);
+      ARangePointer: TNyxLCLRangePointerDispatch = nil;
+      ACaptureHandler: TNyxLCLCaptureHandler = nil);
     function GetEditingPublication: INyxObservationPublication;
     function EditingDispatching: Boolean;
     function BeginCellContext(Sender: TObject; const APosition: TPoint):
@@ -788,6 +821,38 @@ type
   end;
 
 {$include nyx.collections.lcl.selection.inc}
+
+constructor TCollectionCaptureInput.Create(const ALifetime: INyxCollectionInputLifetime);
+begin
+  inherited Create;
+  FLifetime := ALifetime;
+end;
+
+function TCollectionCaptureInput.GetCurrent: Boolean;
+begin
+  Result := (FLifetime <> nil) and FLifetime.Current;
+end;
+
+function TCollectionCaptureInput.GetReady: Boolean;
+begin
+  Result := (FLifetime <> nil) and FLifetime.Ready;
+end;
+
+function TCollectionCaptureInput.GetEpoch: Integer;
+begin
+  Result := -1;
+
+  if FLifetime <> nil then
+  begin
+    Result := FLifetime.Epoch;
+  end;
+end;
+
+function NyxLCLCollectionCaptureInput(
+  const ALifetime: INyxCollectionInputLifetime): INyxLCLCaptureInput;
+begin
+  Result := TCollectionCaptureInput.Create(ALifetime);
+end;
 
 function TNativeMount.CaptureFocusedDraft: INyxCollectionFocusedDraftCapture;
 var
@@ -2489,20 +2554,28 @@ begin
 end;
 
 constructor TColumnEditing.Create(const ALifetime: INyxCollectionInputLifetime;
-  const AEvents: INyxEvents; const AOriginID: TNyxText; AWake: TNotifyEvent);
+  const AEvents: INyxEvents; const AOriginID: TNyxText; AWake: TNotifyEvent;
+  ACaptureHandler: TNyxLCLCaptureHandler; const AFrame: INyxNativeGestureFrame);
 begin
   inherited Create;
   FLifetime := ALifetime;
   FEvents := AEvents;
   FOriginID := AOriginID;
   FWake := AWake;
+  FCaptureHandler := ACaptureHandler;
+  FFrame := AFrame;
+  FCaptureInput := NyxLCLCollectionCaptureInput(ALifetime);
   FContinuity := NewNyxGridInputContinuity;
   FRevision := AEvents.ViewRevision;
 end;
 
 destructor TColumnEditing.Destroy;
 begin
-  Disconnect;
+  try
+    Disconnect;
+  except
+    { Explicit disconnect reports failure; final release must free all fields. }
+  end;
   inherited Destroy;
 end;
 
@@ -2511,7 +2584,22 @@ begin
   Result := FContinuity;
 end;
 
-procedure TColumnEditing.Add(AGrid: TNyxCollectionStringGrid);
+procedure TColumnEditing.CaptureChanged(const AOriginID: TNyxText; ATrigger: TNyxTrigger);
+var
+  LKeepAlive: IColumnEditing;
+  LHandler: TNyxLCLCaptureHandler;
+begin
+  LKeepAlive := Self;
+
+  if FRevoked or not FLifetime.Ready or not Assigned(FCaptureHandler) then
+  begin
+    Exit;
+  end;
+  LHandler := FCaptureHandler;
+  LHandler(AOriginID, ATrigger);
+end;
+
+procedure TColumnEditing.Add(AGrid: TNyxCollectionStringGrid; AObserveCapture: Boolean);
 var
   LKeepAlive: IColumnEditing;
   LCell: ICellEditing;
@@ -2519,6 +2607,9 @@ var
   LLifetime: INyxCollectionInputLifetime;
   LOriginID: TNyxText;
   LWake: TNotifyEvent;
+  LCapture: INyxLCLCaptureObserver;
+  LScoped: INyxLCLScopedCaptureObserver;
+  LPublication: INyxObservationPublication;
 begin
   LKeepAlive := Self;
 
@@ -2533,16 +2624,54 @@ begin
   LOriginID := FOriginID;
   LWake := FWake;
   LCell := TCellEditing.Create(AGrid, LLifetime, LEvents, LOriginID, LWake);
+  try
 
-  if FRevoked or FLifetime.Retired or (FCount = Length(FCells)) then
-  begin
-    raise ENyxCollection.Create('Native table observation retired while preparing its editor');
+    if AObserveCapture and Assigned(FCaptureHandler) then
+    begin
+      LCapture := NewNyxLCLCaptureObserver(FFrame);
+
+      if not Supports(LCapture, INyxLCLScopedCaptureObserver, LScoped) or
+        not Supports(LCapture, INyxObservationPublication, LPublication) then
+      begin
+        raise ENyxCollection.Create('Native pane capture requires scoped publication');
+      end;
+      LScoped.AddScoped(LOriginID, AGrid, FCaptureInput);
+      LCapture.Activate(LEvents, CaptureChanged);
+    end;
+
+    if FRevoked or FLifetime.Retired or (FCount = Length(FCells)) then
+    begin
+      raise ENyxCollection.Create('Native table observation retired while preparing its editor');
+    end;
+    { Lazy panes use the aggregate's ACTUAL admitted revision while still hidden.
+      Allocation/activation occurs here, never in pure renderer adoption. }
+    LCell.PublishRevision(FRevision);
+
+    if LPublication <> nil then
+    begin
+      LPublication.PublishRevision(FRevision);
+    end;
+    FCells[FCount] := LCell;
+    FCaptures[FCount] := LCapture;
+    FCapturePublications[FCount] := LPublication;
+    Inc(FCount);
+  except
+    try
+
+      if LCapture <> nil then
+      begin
+        LCapture.Disconnect;
+      end;
+    except
+      { Preserve the original failed pane admission. }
+    end;
+    try
+      LCell.Disconnect;
+    except
+      { Independent inner cleanup cannot replace the admission diagnostic. }
+    end;
+    raise;
   end;
-  { Lazy panes use the aggregate's ACTUAL admitted revision while still hidden.
-    Allocation/activation occurs here, never in pure renderer adoption. }
-  LCell.PublishRevision(FRevision);
-  FCells[FCount] := LCell;
-  Inc(FCount);
 end;
 
 function TColumnEditing.GetReady: Boolean;
@@ -2575,6 +2704,11 @@ begin
     begin
       Exit;
     end;
+
+    if (FCapturePublications[LIndex] <> nil) and not FCapturePublications[LIndex].Ready then
+    begin
+      Exit;
+    end;
   end;
   Result := True;
 end;
@@ -2587,6 +2721,11 @@ begin
   for LIndex := 0 to FCount - 1 do
   begin
     FCells[LIndex].PublishRevision(ARevision);
+
+    if FCapturePublications[LIndex] <> nil then
+    begin
+      FCapturePublications[LIndex].PublishRevision(ARevision);
+    end;
   end;
 end;
 
@@ -2612,6 +2751,7 @@ var
 begin
   FRevoked := True;
   FWake := nil;
+  FCaptureHandler := nil;
 
   if FContinuity <> nil then
   begin
@@ -2632,6 +2772,24 @@ begin
   LError := '';
   for LIndex := 0 to FCount - 1 do
   begin
+    try
+
+      if FCaptures[LIndex] <> nil then
+      begin
+        FCaptures[LIndex].Disconnect;
+      end;
+    except
+      on E: Exception do
+      begin
+
+        if LError = '' then
+        begin
+          LError := E.Message;
+        end;
+      end;
+    end;
+    FCapturePublications[LIndex] := nil;
+    FCaptures[LIndex] := nil;
     try
       FCells[LIndex].Disconnect;
     except
@@ -2717,7 +2875,7 @@ begin
   { Join observation only after the whole hidden pane is constructed. A failed
     earlier property/handle setup must not leave an aggregate borrowing a freed
     editor. Add is the final operation before exposing the completed pane. }
-  AOwner.FColumnEditing.Add(Grid);
+  AOwner.FColumnEditing.Add(Grid, True);
 end;
 
 procedure TColumnPane.Revoke;
@@ -5598,7 +5756,7 @@ constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionV
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
   AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
-  ARangePointer: TNyxLCLRangePointerDispatch);
+  ARangePointer: TNyxLCLRangePointerDispatch; ACaptureHandler: TNyxLCLCaptureHandler);
 var
   LIndex: Integer;
   {$ifdef NYX_STUDIO_PROFILE}LHandleStarted: QWord;{$endif}
@@ -5649,7 +5807,7 @@ begin
     FRangeEvents := AInputEvents;
 
     FColumnEditing := TColumnEditing.Create(GetInputLifetime, AInputEvents,
-      AOriginID, CellCompositionEnded);
+      AOriginID, CellCompositionEnded, ACaptureHandler, AInputFrame);
     FInputGrid := TNyxCollectionStringGrid(AControl);
     FInputGrid.AttachColumnInput(GetInputLifetime, FColumnFrame,
       FColumnEditing.Continuity);
@@ -7720,11 +7878,12 @@ function MountNyxLCLCollection(AControl: TControl;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
   AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
-  ARangePointer: TNyxLCLRangePointerDispatch): INyxCollectionMount;
+  ARangePointer: TNyxLCLRangePointerDispatch;
+  ACaptureHandler: TNyxLCLCaptureHandler): INyxCollectionMount;
 begin
   Result := MountNyxLCLCollectionWithTextLimits(AControl, AView,
     TNyxTableTextWorkLimits.Defaults, AInputPhase, AInputGate, AInputFrame,
-    AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer);
+    AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer, ACaptureHandler);
 end;
 
 function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
@@ -7734,13 +7893,14 @@ function MountNyxLCLCollectionWithTextLimits(AControl: TControl;
   const AInputFrame: INyxNativeGestureFrame;
   const AInputEvents: INyxEvents; const AOriginID: TNyxText;
   AColumnClick: TNyxLCLColumnClick; ACellContext: TNyxLCLCellContextDispatch;
-  ARangePointer: TNyxLCLRangePointerDispatch): INyxCollectionMount;
+  ARangePointer: TNyxLCLRangePointerDispatch;
+  ACaptureHandler: TNyxLCLCaptureHandler): INyxCollectionMount;
 var
   LMount: TNativeMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted: QWord;{$endif}
 begin
   LMount := TNativeMount.Create(AControl, AView, ALimits, AInputPhase, AInputGate,
-    AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer);
+    AInputFrame, AInputEvents, AOriginID, AColumnClick, ACellContext, ARangePointer, ACaptureHandler);
   Result := LMount;
   {$ifdef NYX_STUDIO_PROFILE}LActivateStarted := GetTickCount64;{$endif}
   LMount.Activate;

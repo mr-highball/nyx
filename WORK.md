@@ -11,8 +11,10 @@ preference. Do not refill the helper queue or start another helper.
 
 ## Active continuation — mounted range strokes
 
-The previous turn qualifies and pushes button-form retention asbe90180. Root
-continues alone on existing task03 W2 physical range selection. Its pure pending
+Root continues alone on existing task03 W2 physical range selection. Native
+Shift-mouse cancellation now reaches the canonical event from the outer grid
+and both actual pinned source panes, including callbacks that start a new drag.
+The previous button-form retention checkpoint remainsbe90180. The pure pending
 stroke cannot retain the old synchronous mount envelope across pointer messages.
 The current bridge adds an optional per-message Begin/Move/Release facet, sharing
 the mount's original request/epoch/selection fences. Only detached stroke data,
@@ -119,10 +121,33 @@ unconsumed fault remains isolated and permits it. The original failed execution
 diagnostic survives capture/range cleanup. Existing desktop and compact journey
 assertions remain; browser behavior is still compilation only.
 
+The canonical-cancel negative01 fails the new actual pinned-pane callback
+assertion with a complete clean6985731-block/311625415-byte heap: private range
+cleanup was working, but lazy panes had no outer capture observer. The repair
+joins scoped capture hooks to the existing editor-observation aggregate, using
+the same physical frame and weak binding port. Admission/publication carries
+flags only; disconnect restores outer capture hooks before inner editor hooks.
+The original pressed-button input epoch and event revision fence cancellation,
+including readiness ABA and revision changes during native default processing.
+Old CancelMode defaults finish before the canonical callback, so a new actual
+press from that callback retains its own capture, preview and release.
+
+Final cancel05 passes1555 native checks at measured900 and1544 at390 client
+widths. Complete clean heaps account for23363812/1049960930 and
+23781076/1067532362 blocks/bytes respectively. An additional46-check native
+capture fixture qualifies ordinary/scoped registration, stale revisions before
+and during CancelMode, epoch ABA, readiness/retirement, repeated cancellation,
+disconnect and fresh input after an epoch change; its complete clean heap is
+664 blocks/41967 bytes. It is included in the existing gestures build target.
+Native compilation reuses qualified09 unit output with the same safety flags
+and deadline, recompiling changed sources; this is not cold-build evidence.
+The browser companion compiles with zero owned warnings. All2317 fixed working
+inputs reverify unchanged, and all actual readers are joined. The newly staged
+browser companion is retained separately from earlier fixtures and has not run.
+
 Browser execution, browser/LCL pen/touch, auto-scroll/off-page extension and
-complete gesture/parity acceptance remain open. Canonical cancel delivery from
-every pinned native source and full physical/device/visual qualification still
-need evidence; private range cancellation alone does not establish all callbacks.
+complete gesture/parity acceptance remain open. The canonical cancellation
+evidence covers the tested native mouse sources, not every input device.
 No original criterion closes from these scoped checks. Earlier W1/Studio evidence
 stays separate; no unchanged900s rerun is scheduled. Root continues solo.
 

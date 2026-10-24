@@ -253,6 +253,7 @@ type
     FRangeMoveFailure: Boolean;
     FRangeFailureConsumes: Boolean;
     FRangeMoveCallbacks: Integer;
+    FRangeCancelCallbacks: Integer;
     FRangePointers: Integer;
     FRangePointerUps: Integer;
     FPointerCallbackRecorded: Boolean;
@@ -272,6 +273,10 @@ type
     {$ifndef PAS2JS}
     FRetireRangeSelection: Boolean;
     FRangeSelectionCallbacks: Integer;
+    { Borrowed only during the synchronous CancelMode callback. A nested press
+      must outlive the old cancellation tail without retaining a retired pane. }
+    FRangeRestartGrid: TNyxCollectionStringGrid;
+    FRangeRestartPoint: TPoint;
     {$endif}
     {$ifdef PAS2JS}
     FRenderer: TNyxBrowserRenderer;
@@ -1142,7 +1147,31 @@ var
   LRange: INyxCollectionCellRangeMount;
   LGesture: INyxGestureResponse;
   LEpoch: Integer;
+  {$ifndef PAS2JS}
+  LRestartGrid: TNyxCollectionStringGrid;
+  {$endif}
 begin
+
+  if FRangeStrokeSending and (AEvent.Trigger = ntPointerCancel) then
+  begin
+    Inc(FRangeCancelCallbacks);
+    Check(AEvent.HasPointer and (AEvent.OriginID = CTable) and
+      (AEvent.SourceID = CTable),
+      'Native cancellation reports the original logical table and pointer context');
+    {$ifndef PAS2JS}
+
+    if FRangeRestartGrid <> nil then
+    begin
+      Check(GetCaptureControl = nil,
+        'Old native cancellation finishes before its callback begins a new press');
+      LRestartGrid := FRangeRestartGrid;
+      FRangeRestartGrid := nil;
+      LRestartGrid.Perform(LM_LBUTTONDOWN, MK_SHIFT or MK_LBUTTON,
+        MakeLParam(FRangeRestartPoint.X, FRangeRestartPoint.Y));
+    end;
+    {$endif}
+    Exit;
+  end;
 
   if FRangeStrokeSending and (AEvent.Trigger = ntPointerMove) then
   begin
@@ -2829,6 +2858,7 @@ var
   procedure NativeStrokeJourney;
   var
     LMoveToken: INyxEventSubscription;
+    LCancelToken: INyxEventSubscription;
     LAccepted: INyxCollectionCellRangeIntent;
     LDownBounds: TRect;
     LOriginBounds: TRect;
@@ -2842,6 +2872,7 @@ var
     LRound: Integer;
     LDownsBefore: Integer;
     LUpsBefore: Integer;
+    LCancelsBefore: Integer;
     LHit: TWinControl;
     LFacts: TNyxText;
 
@@ -2860,11 +2891,13 @@ var
   begin
     LMoveToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
       ntPointerMove).Subscribe(FCallback);
+    LCancelToken := FRenderer.Events.On(NyxControlEvents(CTable, niRuntime),
+      ntPointerCancel).Subscribe(FCallback);
     try
       LRanges.ConfigureCellRange(True);
       FRangePointerSending := True;
       FRangeStrokeSending := True;
-      for LRound := 0 to 10 do
+      for LRound := 0 to 11 do
       begin
         FMode := kmObserve;
         LRanges.ClearCellRange;
@@ -3047,12 +3080,44 @@ var
           Check(LRanges.CellRange = nil,
             'Release after Escape cannot revive the cancelled native range');
         end
-        else if LRound = 10 then
+        else if (LRound = 10) or (LRound = 11) then
         begin
+          LCancelsBefore := FRangeCancelCallbacks;
+
+          if LRound = 11 then
+          begin
+            FRangeRestartGrid := LTargetGrid;
+            FRangeRestartPoint := LDownPoint;
+          end;
           LTargetGrid.Perform(LM_CANCELMODE, 0, 0);
+          FRangeRestartGrid := nil;
+          Check(FRangeCancelCallbacks = LCancelsBefore + 1,
+            'Actual native CancelMode delivers one logical cancellation callback from its source pane');
+
+          if LRound = 11 then
+          begin
+            Check((GetCaptureControl = LTargetGrid) and
+              (FRangePointers = LDownsBefore + 2),
+              'New actual native press from cancellation retains its own capture and callback');
+            LAccepted := LRanges.CellRange;
+            SendMove(LSourcePoint);
+            Check((LRanges.CellRange = LAccepted) and
+              LReleaseGrid.CellRangeSelected(LReleaseColumn, 1) and
+              not LTargetGrid.CellRangeSelected(LTargetColumn, 2),
+              'Cancellation callback starts a genuinely new pending range with private preview');
+            SendUp;
+            Check((GetCaptureControl = nil) and (LRanges.CellRange <> LAccepted) and
+              LRanges.CellRange.Capture.Focus.Same(LReleaseCell) and
+              (FRangeCancelCallbacks = LCancelsBefore + 1),
+              'Old native cancellation cannot cancel or replay the new range release');
+            Continue;
+          end;
           Check((GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
             LAccepted.Current and LTargetGrid.CellRangeSelected(LTargetColumn, 2),
             'Native CancelMode during pending movement restores accepted paint and releases capture');
+          LTargetGrid.Perform(LM_CANCELMODE, 0, 0);
+          Check(FRangeCancelCallbacks = LCancelsBefore + 1,
+            'Repeated native CancelMode cannot replay a completed pointer cancellation');
           SendUp;
           Check(LRanges.CellRange = LAccepted,
             'Release after native CancelMode cannot publish the old preview');
@@ -3116,12 +3181,55 @@ var
           FView.Selection.Snapshot.SameState(LRows),
           'Outside native press releases its ordinary capture without a late range or row default');
       end;
+
+      if LOriginGrid <> LTargetGrid then
+      begin
+        { The main loop launches from the trailing pinned pane. Exercise the
+          leading pane as an independent source too, not merely a painted target.
+          At compact widths the existing pin suspension exposes the outer grid. }
+        LRanges.ClearCellRange;
+        FocusOrigin;
+        LDownBounds := LOriginGrid.CellRect(LOriginColumn, 2);
+        Check(Types.IntersectRect(LDownBounds, LDownBounds, LOriginGrid.ClientRect),
+          'Leading-pane cancellation starts inside its actual visible cell');
+        LDownPoint := Point((LDownBounds.Left + LDownBounds.Right) div 2,
+          (LDownBounds.Top + LDownBounds.Bottom) div 2);
+        LOriginGrid.Perform(LM_LBUTTONDOWN, MK_SHIFT or MK_LBUTTON,
+          MakeLParam(LDownPoint.X, LDownPoint.Y));
+        LAccepted := LRanges.CellRange;
+        Check((GetCaptureControl = LOriginGrid) and (LAccepted <> nil) and
+          LAccepted.Current and
+          LAccepted.Capture.Focus.Same(NyxCollectionCellIdentity(ItemB, NameField)),
+          'Leading pinned pane independently owns its admitted Shift-mouse stroke');
+        LOriginBounds := LTargetGrid.CellRect(LTargetColumn, 1);
+        LOriginPoint := Point((LOriginBounds.Left + LOriginBounds.Right) div 2,
+          (LOriginBounds.Top + LOriginBounds.Bottom) div 2);
+        LSourcePoint := LOriginGrid.ScreenToClient(LTargetGrid.ClientToScreen(LOriginPoint));
+        LOriginGrid.Perform(LM_MOUSEMOVE, MK_SHIFT or MK_LBUTTON,
+          MakeLParam(LSourcePoint.X, LSourcePoint.Y));
+        Check((LRanges.CellRange = LAccepted) and
+          LTargetGrid.CellRangeSelected(LTargetColumn, 1),
+          'Leading-pane capture paints cross-pane preview before cancellation');
+        LCancelsBefore := FRangeCancelCallbacks;
+        LOriginGrid.Perform(LM_CANCELMODE, 0, 0);
+        Check((FRangeCancelCallbacks = LCancelsBefore + 1) and
+          (GetCaptureControl = nil) and (LRanges.CellRange = LAccepted) and
+          LAccepted.Current and not LTargetGrid.CellRangeSelected(LTargetColumn, 1),
+          'Leading pinned source reports one canonical cancellation and restores accepted cells');
+        LOriginGrid.Perform(LM_LBUTTONUP, MK_SHIFT,
+          MakeLParam(LSourcePoint.X, LSourcePoint.Y));
+        Check((LRanges.CellRange = LAccepted) and
+          FView.Selection.Snapshot.SameState(LRows),
+          'Leading-pane release cannot publish its cancelled preview or alter ordinary rows');
+      end;
     finally
       FMode := kmObserve;
       FRangePointerSending := False;
       FRangeStrokeSending := False;
+      FRangeRestartGrid := nil;
       LRanges.ConfigureCellRange(False);
       LMoveToken.Cancel;
+      LCancelToken.Cancel;
 
       if GetCaptureControl <> nil then
       begin

@@ -7315,6 +7315,9 @@ body[data-query-authoring="passed"] script#query-authoring-project {
     Invoke-NyxCompiler $nyxLclFpc ($nyxGestureFlags + @('tests/nyx_gesture_input_tests.lpr'))
     & (Join-Path $nyxGestureNative 'nyx_gesture_input_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Canonical gesture/input contract failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxGestureFlags + @('tests/nyx_gesture_capture_lcl_tests.lpr'))
+    & (Join-Path $nyxGestureNative 'nyx_gesture_capture_lcl_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Native capture epoch/revision contract failed' }
     Invoke-NyxCompiler $nyxLclFpc ($nyxGestureFlags + @('tests/nyx_gesture_tests.lpr'))
     & (Join-Path $nyxGestureNative 'nyx_gesture_tests.exe') (Join-Path $nyxGestureNative 'nyx.gestures.fixture.pas')
     if ($LASTEXITCODE -ne 0) { throw 'Gesture source preparation failed' }

@@ -27,9 +27,13 @@ heaps; command05 passes273. Native edge03 subsequently passes1506/1504, also wit
 complete clean heaps, after closing initial-Down client/cell clipping. Its actual
 LCL messages cover outside edges, pending Escape/CancelMode, direct/callback
 retirement, and consumed/unconsumed fault receipts with ordered siblings. Browser
-companions compile only. Browser execution/trusted capture, pen/touch, auto-scroll,
-off-page extension, canonical cancellation from every physical source and full
-original acceptance remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
+companions compile only. Native cancel05 now passes1555/1544 with complete clean
+heaps, qualifying canonical mouse cancellation from the outer grid and both
+actual pinned source panes, plus a new drag started by the cancellation callback.
+Its separate46-check native observer fixture qualifies original input epochs,
+revision publication, stale/native-default tails and repeated cancellation.
+Browser execution/trusted capture, pen/touch, auto-scroll, off-page extension and
+full original acceptance remain open; [WORK](../WORK.md#active-continuation--mounted-range-strokes)
 owns the separate source cohorts, retained failures and next integration work.
 
 The alignment continuation adds independent typed logical axes, version12 only
