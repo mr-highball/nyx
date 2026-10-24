@@ -49,10 +49,12 @@ browser checks at both widths. The complete native Studio journey still exceeds
 its unchanged900s deadline, so native editor performance and its own producer
 remain open. The direct typed extension-name admission repair passes1918
 native/1914 browser checks without changing the original JSON budgets.
-RAW export11 adds42 portable checks per actual target and managed Page/AllFiltered
-actions with128 native/155 browser checks at both measured browser widths. These
-use injected save authority. A later review adds outer view-entry lifetime leases
-and foreign-getter withdrawal regressions; its export12 cohort is still pending.
+RAW export12 adds47 portable checks per actual target and managed Page/AllFiltered
+actions with128 native/155 browser checks at both measured browser widths, using
+injected save authority. Outer view-entry leases survive foreign Busy getters;
+removing only those leases makes the actual lifetime regression fail. Formatting
+primitives pass27 checks per actual target but still require column/paint/Fit/
+authoring and explicitly represented-copy/draft integration.
 These outcomes preserve every original criterion; they do not establish full
 W1/W2 acceptance, real OS clipboard effects or complete preference/export parity.
 

@@ -28,11 +28,14 @@ interface
 uses
   nyx.text, nyx.model, nyx.root.types, nyx.events, nyx.scheduler,
   nyx.menu, nyx.popover, nyx.clipboard, nyx.collections.clipboard,
-  nyx.collections.clipboard.actions;
+  nyx.collections.clipboard.actions, nyx.collections.export,
+  nyx.collections.export.actions, nyx.collections.view, nyx.files.save;
 
 const
   NyxCellActionsInspectID = 'nyx-cell-actions-inspect';
   NyxCellActionsCopyID = 'nyx-cell-actions-copy';
+  NyxCellActionsExportPageID = 'nyx-cell-actions-export-page';
+  NyxCellActionsExportFilteredID = 'nyx-cell-actions-export-filtered';
   NyxCellInspectorValueID = 'nyx-cell-inspector-value';
   NyxCellInspectorCopyID = 'nyx-cell-inspector-copy';
   NyxCellInspectorCloseID = 'nyx-cell-inspector-close';
@@ -102,6 +105,18 @@ type
     property Intent: Integer read GetIntent;
   end;
 
+  { Optional file authority exposes RAW export only when explicitly configured.
+    It leaves the established cell-actions ABI intact. Receipts distinguish a
+    completed write from a browser download request; neither is inferred from
+    opening the menu or from cancelling a receiver. }
+  INyxCollectionCellExportActions = interface(IInterface)
+    ['{4DA5F702-B618-4FAD-A894-7EABAC9CCDC6}']
+    function GetExportEnabled: Boolean;
+    function GetLastExportResult: TNyxFileSaveResult;
+    property ExportEnabled: Boolean read GetExportEnabled;
+    property LastExportResult: TNyxFileSaveResult read GetLastExportResult;
+  end;
+
   { Optional mount capability leaves every existing GUID/vtable unchanged.
     ConfigureClipboard must already provide accepted-cell capture and explicit
     host authority; no second write engine or saved capability is introduced.
@@ -118,7 +133,8 @@ type
   envelope may retain the mount's final fence only during canonical dispatch. }
 function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
-  APresentation: TNyxCollectionCellPresentation = nil): INyxCollectionCellActions;
+  APresentation: TNyxCollectionCellPresentation = nil;
+  const AExporter: INyxCollectionExportCapturedSave = nil): INyxCollectionCellActions;
 function NewNyxCollectionCellActionCommand(const ALaunch: INyxCollectionClipboardCommand;
   const AActions: INyxCollectionCellActions): INyxCollectionClipboardCommand;
 { Reversible display notation: backslashes and C0/DEL controls are escaped;
@@ -143,6 +159,7 @@ type
     Active: Boolean;
     Serial: Integer;
     RequestSerial: Integer;
+    ExportSerial: Integer;
   end;
 
   { The existing scheduler owns delayed menu entry, never the mount/controller.
@@ -209,6 +226,33 @@ type
     procedure Execute(const AExecution: INyxExecution);
   end;
 
+  { Menu activation closes its presenter before OnInvoke. This deferred default
+    retains only the original main flags and weak session, so later canonical
+    or legacy callbacks can retire it without retaining a closed menu/mount. }
+  TCellExportWork = class(TInterfacedObject, INyxWork)
+  public
+    Port: TCellPort;
+    PortLease: IInterface;
+    Serial: Integer;
+    Membership: TNyxCollectionExportRows;
+    Ready: INyxCancellationReadiness;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+
+  { Save reply owns inert session facts through host completion. No controller
+    or presenter is owned by this borrowed callback; the explicit ReplyOwner
+    keeps this receiver alive even for inline completion and reentry. }
+  TCellExportReply = class(TInterfacedObject)
+  public
+    Port: TCellPort;
+    PortLease: IInterface;
+    Serial: Integer;
+    RequestSerial: Integer;
+    Delivered: Boolean;
+    Ready: INyxCancellationReadiness;
+    procedure Receive(const AResult: TNyxFileSaveResult);
+  end;
+
   { One terminal host reply retains copied provenance and weak session facts.
     Delivered distinguishes inline reply exceptions from host admission errors. }
   TCellReply = class(TInterfacedObject)
@@ -236,10 +280,17 @@ type
   { Controller stores detached snapshot/cancellation only. Its menu and form
     subscriptions refer back through TCellPort, avoiding mount/presenter cycles. }
   TCellActions = class(TInterfacedObject, INyxCollectionCellActions,
-    INyxCollectionCellActionIntent)
+    INyxCollectionCellActionIntent, INyxCollectionCellExportActions)
   private
     FFactory: INyxCollectionCellPresenterFactory;
     FWriter: INyxCollectionClipboardCapturedWrite;
+    FExporter: INyxCollectionExportCapturedSave;
+    FOutput: INyxCollectionExportCapture;
+    FExportRequest: INyxFileSaveRequest;
+    FExportReply: TCellExportReply;
+    FExportReplyLease: IInterface;
+    FExportResult: TNyxFileSaveResult;
+    FHasExportResult: Boolean;
     FScheduler: INyxScheduler;
     FPresentation: TNyxCollectionCellPresentation;
     FPort: TCellPort;
@@ -270,12 +321,16 @@ type
       const AOpen: INyxPopoverOpenLifetime);
     procedure Inspect(ASerial: Integer);
     procedure CopyValue(ASerial: Integer);
+    procedure QueueExport(AMembership: TNyxCollectionExportRows; ASerial: Integer);
+    procedure ExportValue(AMembership: TNyxCollectionExportRows; ASerial: Integer);
+    procedure Exported(AReply: TCellExportReply; const AResult: TNyxFileSaveResult);
     procedure Received(AReply: TCellReply; const AResult: TNyxClipboardWriteResult);
     procedure Status(const AText: TNyxText; ASerial: Integer);
   public
     constructor Create(const AFactory: INyxCollectionCellPresenterFactory;
       const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
-      APresentation: TNyxCollectionCellPresentation);
+      APresentation: TNyxCollectionCellPresentation;
+      const AExporter: INyxCollectionExportCapturedSave);
     destructor Destroy; override;
     function OpenCell(const ALaunch: INyxCollectionClipboardCommand): Boolean;
     procedure Close;
@@ -287,6 +342,8 @@ type
     function GetLastResult: TNyxClipboardWriteResult;
     function GetLastExecution: INyxExecution;
     function GetIntent: Integer;
+    function GetExportEnabled: Boolean;
+    function GetLastExportResult: TNyxFileSaveResult;
   end;
 
   { Short-lived original physical-input envelope changes only its default:
@@ -299,6 +356,7 @@ type
     FTransferred: Boolean;
     FIntent: INyxCollectionCellActionIntent;
     FOriginalIntent: Integer;
+    FWantOutput: Boolean;
   public
     constructor Create(const ALaunch: INyxCollectionClipboardCommand;
       const AActions: INyxCollectionCellActions);
@@ -467,6 +525,50 @@ begin
   LOwner.InspectorDefault(Kind, Serial, Open);
 end;
 
+procedure TCellExportWork.Execute(const AExecution: INyxExecution);
+var
+  LOwner: TCellActions;
+  LLease: INyxCollectionCellActions;
+begin
+
+  if not Port.Active or (Port.Serial <> Serial) then
+  begin
+    Exit;
+  end;
+  try
+    Ready.CheckReady;
+  except
+    Exit;
+  end;
+  LOwner := Port.Owner;
+
+  if (LOwner = nil) or not Port.Active or (Port.Serial <> Serial) then
+  begin
+    Exit;
+  end;
+  LLease := LOwner;
+  LOwner.ExportValue(Membership, Serial);
+end;
+
+procedure TCellExportReply.Receive(const AResult: TNyxFileSaveResult);
+var
+  LSelf: IInterface;
+  LOwner: TCellActions;
+  LLease: INyxCollectionCellActions;
+begin
+  LSelf := Self;
+  Delivered := True;
+  LOwner := Port.Owner;
+
+  if (LOwner = nil) or not Port.Active or (Port.Serial <> Serial) or
+    (Port.ExportSerial <> RequestSerial) then
+  begin
+    Exit;
+  end;
+  LLease := LOwner;
+  LOwner.Exported(Self, AResult);
+end;
+
 destructor TCellOpenWork.Destroy;
 begin
 
@@ -522,7 +624,8 @@ end;
 
 constructor TCellActions.Create(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
-  APresentation: TNyxCollectionCellPresentation);
+  APresentation: TNyxCollectionCellPresentation;
+  const AExporter: INyxCollectionExportCapturedSave);
 begin
   inherited Create;
 
@@ -532,6 +635,7 @@ begin
   end;
   FFactory := AFactory;
   FWriter := AWriter;
+  FExporter := AExporter;
   FScheduler := AScheduler;
   FPresentation := APresentation;
   FPort := TCellPort.Create;
@@ -540,6 +644,7 @@ begin
   FPort.Active := True;
   FPort.Serial := 1;
   FPort.RequestSerial := 1;
+  FPort.ExportSerial := 1;
 end;
 
 destructor TCellActions.Destroy;
@@ -579,6 +684,7 @@ var
   LInspector: INyxPopover;
   LTokens: array of INyxEventSubscription;
   LRequest: INyxClipboardWriteRequest;
+  LExport: INyxFileSaveRequest;
   LIndex: Integer;
   LFailure: TCellCleanupFailure;
   LGuard: INyxCollectionCellPresentation;
@@ -594,11 +700,16 @@ begin
   LInspector := FInspector;
   LTokens := FTokens;
   LRequest := FRequest;
+  LExport := FExportRequest;
   FMenu := nil;
   FInspector := nil;
   FOpen := nil;
   FTokens := nil;
   FRequest := nil;
+  FExportRequest := nil;
+  FExportReply := nil;
+  FExportReplyLease := nil;
+  FOutput := nil;
   FReply := nil;
   FReplyLease := nil;
   FSnapshot := nil;
@@ -629,6 +740,16 @@ begin
     if LRequest <> nil then
     begin
       LRequest.Cancel;
+    end;
+  except
+    {$ifdef PAS2JS}CaptureCleanup(LFailure, JSExceptValue);
+    {$else}on E: Exception do CaptureCleanup(LFailure, E);{$endif}
+  end;
+  try
+
+    if LExport <> nil then
+    begin
+      LExport.Cancel;
     end;
   except
     {$ifdef PAS2JS}CaptureCleanup(LFailure, JSExceptValue);
@@ -863,6 +984,8 @@ var
   LGuard: INyxCollectionCellPresentation;
   LEnter: TNyxCollectionCellPresentation;
   LScheduler: INyxScheduler;
+  LOutputPort: INyxCollectionClipboardOutputCapture;
+  LOutput: INyxCollectionExportCapture;
 begin
   LLease := Self;
   LScheduler := FScheduler;
@@ -886,6 +1009,12 @@ begin
   end;
   LScope := LPrepared.Readiness;
 
+  if (FExporter <> nil) and Supports(ALaunch,
+    INyxCollectionClipboardOutputCapture, LOutputPort) then
+  begin
+    LOutput := LOutputPort.Output;
+  end;
+
   if (LScope = nil) or not ALaunch.Current or (GetIntent <> ASerial) then
   begin
     Exit;
@@ -900,6 +1029,7 @@ begin
     Exit;
   end;
   FSnapshot := LPayload;
+  FOutput := LOutput;
   FScope := TCellScope.Create(LScope);
   FScopeLease := FScope;
   LDocument := TNyxDocument.Create;
@@ -913,6 +1043,17 @@ begin
     LDocument.AddPage(LPage);
     LItems := NyxMenuItems.Add(NyxMenuAction(NyxPart(NyxCellActionsInspectID),
       NyxMenuCommand('inspect'))).Add(NyxMenuAction(NyxPart(NyxCellActionsCopyID), NyxMenuCommand('copy')));
+
+    if (FExporter <> nil) and (LOutput <> nil) then
+    begin
+      LPage.Add(NewNyxButton(NyxCellActionsExportPageID).Configure
+        .PartName(NyxPart(NyxCellActionsExportPageID)).Text('Export current page as RAW TSV').Done);
+      LPage.Add(NewNyxButton(NyxCellActionsExportFilteredID).Configure
+        .PartName(NyxPart(NyxCellActionsExportFilteredID)).Text('Export all filtered rows as RAW TSV').Done);
+      LItems := LItems.Add(NyxMenuAction(NyxPart(NyxCellActionsExportPageID),
+        NyxMenuCommand('export-page'))).Add(NyxMenuAction(NyxPart(NyxCellActionsExportFilteredID),
+        NyxMenuCommand('export-filtered')));
+    end;
     LMenu := LFactory.CreateMenu(LDocument, NyxPageRoot(LPage.ID), LItems);
   finally
     LDocument.Free;
@@ -976,6 +1117,14 @@ begin
     else if LInvocation.Command.Name = 'copy' then
     begin
       CopyValue(ASerial);
+    end
+    else if LInvocation.Command.Name = 'export-page' then
+    begin
+      QueueExport(ncerCurrentPage, ASerial);
+    end
+    else if LInvocation.Command.Name = 'export-filtered' then
+    begin
+      QueueExport(ncerAllFiltered, ASerial);
     end;
   end;
 end;
@@ -1219,6 +1368,168 @@ begin
   end;
 end;
 
+procedure TCellActions.QueueExport(AMembership: TNyxCollectionExportRows;
+  ASerial: Integer);
+var
+  LWork: TCellExportWork;
+  LLease: INyxWork;
+  LScheduler: INyxScheduler;
+  LExecution: INyxExecution;
+begin
+
+  if not Current(ASerial) or (FExporter = nil) or (FOutput = nil) then
+  begin
+    Exit;
+  end;
+  LScheduler := FScheduler;
+  LWork := TCellExportWork.Create;
+  LLease := LWork;
+  LWork.Port := FPort;
+  LWork.PortLease := FPortLease;
+  LWork.Serial := ASerial;
+  LWork.Membership := AMembership;
+  LWork.Ready := FScope;
+  LExecution := LScheduler.PostUI(LLease);
+
+  if GetIntent = ASerial then
+  begin
+    FLastExecution := LExecution;
+  end;
+end;
+
+procedure TCellActions.ExportValue(AMembership: TNyxCollectionExportRows;
+  ASerial: Integer);
+var
+  LExporter: INyxCollectionExportCapturedSave;
+  LOutput: INyxCollectionExportCapture;
+  LOld: INyxFileSaveRequest;
+  LRequest: INyxFileSaveRequest;
+  LReply: TCellExportReply;
+  LReplyLease: IInterface;
+  LScope: TCellScope;
+  LScopeLease: INyxCancellationScope;
+  LSerial: Integer;
+begin
+
+  if not Current(ASerial) or (FExporter = nil) or (FOutput = nil) or
+    (FPort.ExportSerial >= High(Integer) - 1) then
+  begin
+    Exit;
+  end;
+  Inc(FPort.ExportSerial);
+  LSerial := FPort.ExportSerial;
+  LOld := FExportRequest;
+  FExportRequest := nil;
+  FExportReply := nil;
+  FExportReplyLease := nil;
+
+  if LOld <> nil then
+  begin
+    LOld.Cancel;
+  end;
+
+  if not Current(ASerial) or (FPort.ExportSerial <> LSerial) then
+  begin
+    Exit;
+  end;
+  LExporter := FExporter;
+  LOutput := FOutput;
+  Inspect(ASerial);
+
+  if not Current(ASerial) or (FPort.ExportSerial <> LSerial) or
+    (FOpen = nil) or not FOpen.Current then
+  begin
+    Exit;
+  end;
+  Status('Exporting the captured accepted rows as RAW TSV.', ASerial);
+
+  if not Current(ASerial) or (FPort.ExportSerial <> LSerial) then
+  begin
+    Exit;
+  end;
+  LScope := TCellScope.Create(FScope, FOpen);
+  LScopeLease := LScope;
+  LReply := TCellExportReply.Create;
+  LReplyLease := LReply;
+  LReply.Port := FPort;
+  LReply.PortLease := FPortLease;
+  LReply.Serial := ASerial;
+  LReply.RequestSerial := LSerial;
+  LReply.Ready := LScope;
+  FExportReply := LReply;
+  FExportReplyLease := LReplyLease;
+  try
+    LRequest := LExporter.SaveCaptured(LOutput, AMembership, LScopeLease, LScope,
+      {$ifdef PAS2JS}@{$endif}LReply.Receive, LReplyLease);
+  except
+
+    if FExportReply = LReply then
+    begin
+      FExportReply := nil;
+      FExportReplyLease := nil;
+      FExportRequest := nil;
+    end;
+    raise;
+  end;
+
+  if not LReply.Delivered then
+  begin
+
+    if Current(ASerial) and (FPort.ExportSerial = LSerial) and
+      (FExportReply = LReply) then
+    begin
+      FExportRequest := LRequest;
+
+      if LRequest = nil then
+      begin
+        FExportReply := nil;
+        FExportReplyLease := nil;
+        Status('Export refused: the original table capture is no longer current.', ASerial);
+      end;
+    end
+    else if LRequest <> nil then
+    begin
+      LRequest.Cancel;
+    end;
+  end;
+end;
+
+procedure TCellActions.Exported(AReply: TCellExportReply;
+  const AResult: TNyxFileSaveResult);
+var
+  LRequest: INyxFileSaveRequest;
+  LReplyLease: IInterface;
+  LSerial: Integer;
+begin
+
+  if not Current(AReply.Serial) or (FExportReply <> AReply) then
+  begin
+    Exit;
+  end;
+  LSerial := AReply.Serial;
+  LRequest := FExportRequest;
+  LReplyLease := FExportReplyLease;
+  FExportRequest := nil;
+  FExportReply := nil;
+  FExportReplyLease := nil;
+  try
+    AReply.Ready.CheckReady;
+  except
+    Exit;
+  end;
+  { The export controller has already validated the complete payload/result. }
+  FExportResult := AResult;
+  FHasExportResult := True;
+  case AResult.Outcome of
+    nfsoWritten: Status('The captured RAW TSV was written.', LSerial);
+    nfsoDownloadRequested: Status('A download was requested for the captured RAW TSV.', LSerial);
+    nfsoCancelled: Status('Export was cancelled.', LSerial);
+    nfsoActivationRequired: Status('Export requires a new user activation.', LSerial);
+    nfsoUnavailable: Status('This host cannot save the requested RAW TSV.', LSerial);
+    nfsoFailed: Status('Export failed: ' + AResult.Error, LSerial);
+  end;
+end;
+
 procedure TCellActions.Close;
 var
   LLease: INyxCollectionCellActions;
@@ -1255,6 +1566,7 @@ begin
   LFactory := FFactory;
   FFactory := nil;
   FWriter := nil;
+  FExporter := nil;
   FScheduler := nil;
   LFailure := Default(TCellCleanupFailure);
   try
@@ -1311,6 +1623,21 @@ begin
   end;
 end;
 
+function TCellActions.GetExportEnabled: Boolean;
+begin
+  Result := FPort.Active and (FExporter <> nil);
+end;
+
+function TCellActions.GetLastExportResult: TNyxFileSaveResult;
+begin
+
+  if not FHasExportResult then
+  begin
+    raise ENyxCollectionExport.Create('Cell actions have no terminal export receipt');
+  end;
+  Result := FExportResult;
+end;
+
 function TCellActions.GetLastExecution: INyxExecution;
 begin
   Result := FLastExecution;
@@ -1320,6 +1647,7 @@ constructor TCellActionCommand.Create(const ALaunch: INyxCollectionClipboardComm
   const AActions: INyxCollectionCellActions);
 var
   LIntent: INyxCollectionCellActionIntent;
+  LExport: INyxCollectionCellExportActions;
 begin
   inherited Create;
   FLaunch := ALaunch;
@@ -1335,11 +1663,29 @@ begin
     its routine-final release would leave this field owning a released facade. }
   FIntent := LIntent;
   FOriginalIntent := FIntent.Intent;
+  FWantOutput := Supports(FActions, INyxCollectionCellExportActions, LExport) and
+    LExport.ExportEnabled;
 end;
 
 procedure TCellActionCommand.Prepare;
+var
+  LOutput: INyxCollectionClipboardOutputCapture;
 begin
   FLaunch.Prepare;
+
+  if FWantOutput and GetCurrent then
+  begin
+
+    if not Supports(FLaunch, INyxCollectionClipboardOutputCapture, LOutput) then
+    begin
+      raise ENyxCollectionExport.Create('Configured cell export requires original output capture');
+    end;
+
+    if GetCurrent then
+    begin
+      LOutput.PrepareOutput;
+    end;
+  end;
 end;
 
 function TCellActionCommand.GetCurrent: Boolean;
@@ -1395,9 +1741,10 @@ end;
 
 function NewNyxCollectionCellActions(const AFactory: INyxCollectionCellPresenterFactory;
   const AWriter: INyxCollectionClipboardCapturedWrite; const AScheduler: INyxScheduler;
-  APresentation: TNyxCollectionCellPresentation): INyxCollectionCellActions;
+  APresentation: TNyxCollectionCellPresentation;
+  const AExporter: INyxCollectionExportCapturedSave): INyxCollectionCellActions;
 begin
-  Result := TCellActions.Create(AFactory, AWriter, AScheduler, APresentation);
+  Result := TCellActions.Create(AFactory, AWriter, AScheduler, APresentation, AExporter);
 end;
 
 function NewNyxCollectionCellActionCommand(const ALaunch: INyxCollectionClipboardCommand;

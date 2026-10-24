@@ -30,7 +30,9 @@ uses
   nyx.collections, nyx.collections.view, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query, nyx.collections.arrangement,
   nyx.collections.mount, nyx.collections.clipboard, nyx.collections.clipboard.actions
-  , nyx.collections.cell.actions, nyx.menu, nyx.popover
+  , nyx.collections.cell.actions, nyx.menu, nyx.popover, nyx.bytes,
+  nyx.files.save, nyx.collections.paging, nyx.collections.export,
+  nyx.collections.export.actions
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.collections.cell.browser,
     nyx.menu.browser, nyx.popover.browser
   {$else}, Interfaces, Forms, Controls, Grids, StdCtrls, Windows, LCLType, Types,
@@ -85,6 +87,28 @@ type
       AReply: TNyxClipboardWriteReply): INyxClipboardWriteRequest;
   end;
 
+  { Real managed file request reports into an injected counter only. No picker,
+    download, filesystem or clipboard adapter is installed by this consumer. }
+  TSave = class(TNyxFileSaveRequest)
+  public
+    procedure Finish(AOutcome: TNyxFileSaveOutcome);
+  end;
+
+  { File authority captures exact bytes and optionally delays completion so
+    actual mounted disable/retirement can revoke the original receiver. }
+  TSaveHost = class(TInterfacedObject, INyxFileSaveHost)
+  public
+    Saves: Integer;
+    Bytes: TNyxBytes;
+    InlineReply: Boolean;
+    Outcome: TNyxFileSaveOutcome;
+    Last: TSave;
+    LastLease: INyxFileSaveRequest;
+    function BeginSave(const AOptions: TNyxFileSaveOptions; const ABytes: TNyxBytes;
+      const AScheduler: INyxScheduler; const ACancellation: INyxCancellationScope;
+      AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+  end;
+
   {$ifndef PAS2JS}
   { Keep the actual Nyx native grid/input implementation. Its last-resort LCL
     grid clipboard default is replaced only by a no-effect sentinel, so even a
@@ -123,6 +147,9 @@ type
     FContextToken: INyxEventSubscription;
     FCellMount: INyxCollectionCellActionsMount;
     FCellActions: INyxCollectionCellActions;
+    FExport: INyxCollectionExportMount;
+    FSaveHost: TSaveHost;
+    FSaveHostLease: INyxFileSaveHost;
     FMode: TKeyMode;
     FKeys: Integer;
     FConsumed: Integer;
@@ -150,6 +177,8 @@ type
     procedure MenuAction(const AID: TNyxText);
     procedure InspectorAction(const AID: TNyxText);
     procedure RunContext; {$ifdef PAS2JS}async;{$endif}
+    procedure RunExport; {$ifdef PAS2JS}async;{$endif}
+    procedure ExportPaging(AEnabled: Boolean);
     procedure Semantic(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
     procedure CloseInspectorOnClick(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -298,6 +327,38 @@ begin
   LWrite.Finish;
 end;
 
+procedure TSave.Finish(AOutcome: TNyxFileSaveOutcome);
+begin
+
+  if AOutcome in [nfsoWritten, nfsoDownloadRequested] then
+  begin
+    Complete(AOutcome, 'captured.tsv', Length(FBytes));
+  end
+  else
+  begin
+    Complete(AOutcome, '', 0);
+  end;
+end;
+
+function TSaveHost.BeginSave(const AOptions: TNyxFileSaveOptions;
+  const ABytes: TNyxBytes; const AScheduler: INyxScheduler;
+  const ACancellation: INyxCancellationScope; AReply: TNyxFileSaveReply): INyxFileSaveRequest;
+var
+  LSave: TSave;
+begin
+  LSave := TSave.Create(AOptions, ABytes, AScheduler, ACancellation, AReply);
+  Result := LSave;
+  Inc(Saves);
+  Bytes := Copy(ABytes, 0, Length(ABytes));
+  Last := LSave;
+  LastLease := Result;
+
+  if InlineReply then
+  begin
+    LSave.Finish(Outcome);
+  end;
+end;
+
 {$ifndef PAS2JS}
 procedure TNoClipboardGrid.DoCopyToClipboard;
 begin
@@ -357,6 +418,14 @@ begin
     FRenderer.Events.Scheduler, TNyxCollectionClipboardOptions.Defaults);
   FCommands := FClipboard.ClipboardCommands;
   FCommands.Observe({$ifdef PAS2JS}@{$endif}Reply);
+  Check(Supports(FMount, INyxCollectionExportMount, FExport),
+    'actual table exposes optional runtime RAW export authority');
+  FSaveHost := TSaveHost.Create;
+  FSaveHostLease := FSaveHost;
+  FSaveHost.InlineReply := True;
+  FSaveHost.Outcome := nfsoWritten;
+  FExport.ConfigureExport(FSaveHostLease, FRenderer.Events,
+    FRenderer.Events.Scheduler, TNyxCollectionExportOptions.Defaults);
   Check(Supports(FMount, INyxCollectionCellActionsMount, FCellMount),
     'actual mounted table exposes managed cell context actions');
   FCellMount.ConfigureCellActions(
@@ -393,11 +462,19 @@ begin
   end;
   FCommands := nil;
   FCellActions := nil;
+  FExport := nil;
   FCellMount := nil;
   FClipboard := nil;
   FMount := nil;
   FView := nil;
   FHostLease := nil;
+
+  if (FSaveHost <> nil) and (FSaveHost.LastLease <> nil) then
+  begin
+    FSaveHost.LastLease.Cancel;
+    FSaveHost.LastLease := nil;
+  end;
+  FSaveHostLease := nil;
   {$ifdef PAS2JS}
 
   if FSurface <> nil then
@@ -853,6 +930,109 @@ begin
     'retained immutable inspection and all authored defaults survive action cleanup');
 end;
 
+procedure TCopyReview.ExportPaging(AEnabled: Boolean);
+var
+  LPages: INyxCollectionPages;
+  LPolicy: TNyxCollectionPaging;
+begin
+  LPages := NyxCollectionPages(FView);
+  LPolicy := NyxCollectionPaging;
+
+  if AEnabled then
+  begin
+    LPolicy := LPolicy.PageSize(1);
+  end;
+  LPages.ConfigurePaging(LPolicy);
+end;
+
+procedure TCopyReview.RunExport; {$ifdef PAS2JS}async;{$endif}
+var
+  LExportActions: INyxCollectionCellExportActions;
+  LPayload: INyxCollectionExportText;
+  LBefore: Integer;
+  LRevision: Integer;
+  LSource: INyxCollectionSnapshot;
+  LInspector: INyxPopover;
+begin
+  Check(Supports(FCellActions, INyxCollectionCellExportActions, LExportActions) and
+    LExportActions.ExportEnabled, 'actual cell context opts into injected RAW export authority');
+  LRevision := FView.Store.Snapshot.Revision;
+  LSource := FView.Store.Snapshot;
+  ExportPaging(True);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check(FView.Snapshot.Count = 1, 'actual table page is smaller than its accepted source before export');
+  FMode := kmObserve;
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  MenuAction(NyxCellActionsExportPageID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  LPayload := FExport.ExportCommands.LastPayload;
+  Check((FSaveHost.Saves = 1) and (LPayload <> nil) and
+    (LPayload.RowCount = 1) and (LPayload.ItemAt(0).ID = ItemA.ID) and
+    (LPayload.CellValue(0, 0).TextValue = CText),
+    'real managed Export current page uses captured exact accepted cell text and membership');
+  Check((NyxDecodeUTF8(FSaveHost.Bytes) = LPayload.Text) and
+    (LExportActions.LastExportResult.Outcome = nfsoWritten) and
+    (LExportActions.LastExportResult.ByteCount = Length(FSaveHost.Bytes)),
+    'actual page action hands exact RAW TSV bytes to the injected host once');
+  LInspector := FCellActions.Inspector;
+  Check((LInspector <> nil) and LInspector.IsOpen and
+    (LInspector.State.GetValue(NyxTextState(NyxCellInspectorStatusState)) <> ''),
+    'actual managed export presents its terminal save status');
+  InspectorAction(NyxCellInspectorCloseID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  FSaveHost.Outcome := nfsoDownloadRequested;
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  MenuAction(NyxCellActionsExportFilteredID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  LPayload := FExport.ExportCommands.LastPayload;
+  Check((FSaveHost.Saves = 2) and (LPayload.RowCount = 2) and
+    (LPayload.ItemAt(0).ID = ItemA.ID) and (LPayload.ItemAt(1).ID = ItemB.ID) and
+    (LExportActions.LastExportResult.Outcome = nfsoDownloadRequested),
+    'real all-filtered action exports rows outside the page and distinguishes requested download');
+  InspectorAction(NyxCellInspectorCloseID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  EditValue('changed after menu launch');
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  MenuAction(NyxCellActionsExportFilteredID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Check(FSaveHost.Saves = 2, 'accepted mutation after menu launch refuses export instead of recapturing newer data');
+  FCellActions.Close;
+  EditValue(CText);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  FSaveHost.InlineReply := False;
+  FSaveHost.Outcome := nfsoWritten;
+  FocusCell;
+  Context;
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  MenuAction(NyxCellActionsExportPageID);
+  {$ifdef PAS2JS}await(Drain);{$endif}
+  Check((FSaveHost.Saves = 3) and (FExport.ExportCommands.Phase = ncepPending),
+    'actual context export can retain one pending managed save receiver');
+  LBefore := FSaveHost.Saves;
+  FMount.SetInteraction(False, False);
+  FMount.SetInteraction(True, False);
+  FSaveHost.Last.Finish(nfsoWritten);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FExport.ExportCommands.Phase = ncepCancelled) and
+    (FSaveHost.Saves = LBefore) and (FCellActions.Inspector = nil),
+    'actual disable ABA cancels file receiver and old completion cannot reopen or report into a new session');
+  FSaveHost.InlineReply := True;
+  ExportPaging(False);
+  {$ifdef PAS2JS}await(Drain);{$else}Drain;{$endif}
+  Check((FView.Store.Snapshot.Revision = LRevision + 2) and
+    FView.Store.Snapshot.Item(ItemA).SameItem(LSource.Item(ItemA)) and
+    FView.Store.Snapshot.Item(ItemB).SameItem(LSource.Item(ItemB)) and
+    (TNyxCodec.Encode(FDocument) = FAuthored),
+    'all export actions preserve source values, authored defaults and only the two explicit test edits advance data');
+end;
+
 procedure TCopyReview.Run; {$ifdef PAS2JS}async;{$endif}
 var
   LBefore: Integer;
@@ -986,8 +1166,10 @@ begin
   LPayload := FLastPayload;
   {$ifdef PAS2JS}
   await(RunContext);
+  await(RunExport);
   {$else}
   RunContext;
+  RunExport;
   {$endif}
   Check(Supports(FCellActions, INyxCollectionCellActionIntent, LCellIntent),
     'retirement probe retains the actual canonical context facade');

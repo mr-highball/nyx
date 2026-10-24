@@ -837,6 +837,46 @@ LCL adapters expose injectable authority for testing. Real OS clipboard and
 complete mounted keyboard/menu workflows have their own qualification; the
 pure capture helpers do not establish those interactions.
 
+## Exporting captured table results
+
+`nyx.collections.export` prepares immutable RAW TSV from an actual
+`INyxCollectionExportCapture`. Its source, complete filtered/ordered result,
+current page and column arrangement belong to one accepted view cohort.
+`ncerCurrentPage` and `ncerAllFiltered` select those explicit memberships;
+neither follows mutable selection or silently includes hidden selected records.
+`TNyxCollectionExportOptions.Defaults` uses visible presentation fields, exact
+field-name headers and LF separators. Call Fields, Headers, LineEnding, Limits
+or SaveAs to derive another typed policy. All-arrangement fields deliberately
+include hidden columns. Text preserves Unicode, NUL and original cell line
+endings; numeric/Boolean values retain their canonical accepted spelling.
+Escaping follows the same TSV rules as row copying, without a final terminator.
+
+`NewNyxCollectionExportText` admits row/field/work/UTF-8 limits before file
+authority, verifies every result row against its exact accepted source and owns
+copied identities, scalars and bytes. An empty result produces headers only,
+or zero bytes when headers are disabled. Bytes returns an independent array.
+Formatted display and unfinished edit drafts are separate representations;
+neither substitutes for RAW output.
+
+The optional `INyxCollectionExportMount` in `nyx.collections.export.actions`
+injects an existing `INyxFileSaveHost`, event router, UI scheduler and runtime
+options through ConfigureExport. Configure it before managed cell actions to
+expose separate current-page/all-filtered context choices. It preserves older
+mount/view interface GUIDs; saved designs never carry host authority. Prepare
+captures the original input/query/page/columns before canonical callbacks. A
+later accepted source/query/page/layout change refuses that original intent
+rather than exporting a newly recaptured result.
+
+The controller has one pending save slot. New accepted saves withdraw an older
+receiver, while ignored/stale inputs leave it alone. Disable, suspension and
+retirement cancel its exact pending token; a late receipt cannot update a newer
+session. Results reuse `TNyxFileSaveResult`, so Written, DownloadRequested,
+Cancelled, ActivationRequired, Unavailable and Failed retain their different
+meanings. A requested browser download is never reported as a confirmed disk
+write, and receiver cancellation cannot undo an already-entered platform effect.
+Current control qualification uses injected hosts on both targets; actual OS
+effects and complete workbench acceptance remain separate.
+
 ## Viewport-sized table paging
 
 Bound browser tables present accepted values as readable cell text. Retained

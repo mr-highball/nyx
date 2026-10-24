@@ -41,7 +41,7 @@ implementation
 
 uses SysUtils, nyx.text, nyx.collections, nyx.collections.selection,
   nyx.collections.arrangement, nyx.collections.arrangement.controls,
-  nyx.collections.clipboard, nyx.collections.view.types;
+  nyx.collections.clipboard, nyx.collections.view.types, nyx.collections.export.actions;
 
 type
   { Forward controller is borrowed only under an entered managed owner lease. }
@@ -99,7 +99,8 @@ type
     synchronous final fence. It retains its controller, never the reverse.
     Retire after transfer cannot cancel the independent asynchronous request. }
   TCommand = class(TInterfacedObject, INyxCollectionClipboardCommand,
-    INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope)
+    INyxCollectionClipboardCellCommand, INyxCollectionClipboardPreparedScope,
+    INyxCollectionClipboardOutputCapture)
   private
     FOwner: TCommands;
     FOwnerLease: INyxCollectionClipboardCommands;
@@ -133,6 +134,7 @@ type
     FScopeReady: INyxCancellationReadiness;
     FRevision: Integer;
     FPayload: INyxCollectionClipboardText;
+    FOutput: INyxCollectionExportCapture;
     function OriginalFlags(ACompleting: Boolean = False): Boolean;
     function CurrentProof(ACompleting: Boolean): Boolean;
     function CheckProof(ACompleting: Boolean): Boolean;
@@ -140,6 +142,8 @@ type
     function GetDispatchCurrent: Boolean;
     function GetPayload: INyxCollectionClipboardText;
     function GetReadiness: INyxCancellationReadiness;
+    procedure PrepareOutput;
+    function GetOutput: INyxCollectionExportCapture;
     procedure Prepare;
     procedure ResolveCell(const AItem: TNyxItemRef;
       const AField: TNyxColumnIdentity);
@@ -615,6 +619,35 @@ begin
   begin
     FPayload := nil;
   end;
+end;
+
+procedure TCommand.PrepareOutput;
+var
+  LProvider: INyxCollectionExportView;
+  LCapture: INyxCollectionExportCapture;
+begin
+
+  if not FPrepared or FCompleteStarted or FRetired or (FOutput <> nil) then
+  begin
+    raise ENyxCollectionClipboard.Create('Context output capture requires one prepared original command');
+  end;
+
+  if not GetCurrent or not Supports(FView, INyxCollectionExportView, LProvider) or
+    not GetCurrent then
+  begin
+    Exit;
+  end;
+  LCapture := LProvider.CaptureExport;
+
+  if GetCurrent then
+  begin
+    FOutput := LCapture;
+  end;
+end;
+
+function TCommand.GetOutput: INyxCollectionExportCapture;
+begin
+  Result := FOutput;
 end;
 
 procedure TCommand.ResolveCell(const AItem: TNyxItemRef;

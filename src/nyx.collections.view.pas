@@ -66,6 +66,34 @@ type
     property Serial: Integer read GetSerial;
   end;
 
+  { Immutable actual table output membership captured in one UI operation.
+    Filtered is the complete accepted query result, before paging; Page is the
+    actual accepted page. Neither depends on mutable selection. Columns retain
+    exact authored typed descriptors/preferences. These snapshots and private
+    identity witnesses retain no live view, store, document or widget. }
+  INyxCollectionExportCapture = interface(IInterface)
+    ['{AD3AE49B-F454-46AC-927B-E10B13F8F22D}']
+    function GetSource: INyxCollectionSnapshot;
+    function GetFiltered: INyxCollectionSnapshot;
+    function GetPage: INyxCollectionSnapshot;
+    function GetColumns: INyxCollectionColumnsCapture;
+    property Source: INyxCollectionSnapshot read GetSource;
+    property Filtered: INyxCollectionSnapshot read GetFiltered;
+    property Page: INyxCollectionSnapshot read GetPage;
+    property Columns: INyxCollectionColumnsCapture read GetColumns;
+  end;
+
+  { Optional output capture keeps all existing view GUIDs unchanged. Capture is
+    UI-only and refuses a busy/non-table target. CheckExportCurrent rejects a
+    foreign/stale capture, including query/page/layout ABA, before external save
+    entry. Callers separately fence original mounted input and event lifetime.
+    It does not grant file or clipboard authority. }
+  INyxCollectionExportView = interface(IInterface)
+    ['{0764B8D6-9A0B-4EA8-92A6-95CB87ED3A25}']
+    function CaptureExport: INyxCollectionExportCapture;
+    procedure CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
+  end;
+
   { Optional per-table column arrangement; all older view GUIDs stay unchanged.
     Commands reserve this same view and publish through its existing observers.
     No row, selection, query, document or authored default is changed. Resets
@@ -373,7 +401,7 @@ type
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
     INyxCollectionViewPublication, INyxCollectionPages, INyxCollectionQueryPublication,
     INyxCollectionQuerySession, INyxCollectionColumns, IColumnTransferTarget,
-    INyxCollectionColumnSampling)
+    INyxCollectionColumnSampling, INyxCollectionExportView)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
@@ -463,6 +491,8 @@ type
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function CaptureColumns: INyxCollectionColumnsCapture;
+    function CaptureExport: INyxCollectionExportCapture;
+    procedure CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
     function PrepareColumns(const ACapture: INyxCollectionColumnsCapture;
       const APreferences: TNyxColumnPreferences): INyxPreparedPublication;
     function PrepareAutoSize(const ACapture: INyxCollectionColumnsCapture;
@@ -622,6 +652,35 @@ type
     function GetSerial: Integer;
     function ColumnIdentity: IInterface;
     function ColumnSerial: Integer;
+  end;
+
+  { Forward output object is borrowed only under its private proof interface. }
+  TExportCapture = class;
+  { A foreign implementation cannot forge an accepted table's identity/intent.
+    This proof owns only the immutable capture, never its original live view. }
+  IExportCaptureProof = interface(IInterface)
+    ['{24088165-BA2D-4414-A8D8-AE0C3085AA97}']
+    function ExportData: TExportCapture;
+  end;
+  { Complete output captures retain actual immutable membership and inert
+    generation witnesses. No getter calls back into a view or a source owner. }
+  TExportCapture = class(TInterfacedObject, INyxCollectionExportCapture,
+    IExportCaptureProof)
+  public
+    Identity: IInterface;
+    QueryIdentity: IInterface;
+    QueryIntent: Integer;
+    ColumnSerial: Integer;
+    ObservationSerial: Integer;
+    Source: INyxCollectionSnapshot;
+    Filtered: INyxCollectionSnapshot;
+    Page: INyxCollectionSnapshot;
+    Columns: INyxCollectionColumnsCapture;
+    function GetSource: INyxCollectionSnapshot;
+    function GetFiltered: INyxCollectionSnapshot;
+    function GetPage: INyxCollectionSnapshot;
+    function GetColumns: INyxCollectionColumnsCapture;
+    function ExportData: TExportCapture;
   end;
 
   TColumnSample = class;
@@ -2423,6 +2482,87 @@ var
 begin
   LWindow := GetPageWindow;
   Result := GoToPage(Max(1, LWindow.Pages));
+end;
+
+function TExportCapture.GetSource: INyxCollectionSnapshot;
+begin
+  Result := Source;
+end;
+
+function TExportCapture.GetFiltered: INyxCollectionSnapshot;
+begin
+  Result := Filtered;
+end;
+
+function TExportCapture.GetPage: INyxCollectionSnapshot;
+begin
+  Result := Page;
+end;
+
+function TExportCapture.GetColumns: INyxCollectionColumnsCapture;
+begin
+  Result := Columns;
+end;
+
+function TExportCapture.ExportData: TExportCapture;
+begin
+  Result := Self;
+end;
+
+function TView.CaptureExport: INyxCollectionExportCapture;
+var
+  LLease: INyxCollectionView;
+  LCapture: TExportCapture;
+begin
+  { The nested final check enters an alternative source Busy getter. Its own
+    lease ends on return, so this public operation owns its complete entry too. }
+  LLease := Self;
+  LCapture := TExportCapture.Create;
+  Result := LCapture;
+  LCapture.Identity := FColumnIdentity;
+  LCapture.QueryIdentity := FQueryIdentity;
+  LCapture.QueryIntent := FQueryIntent;
+  LCapture.ColumnSerial := FColumnSerial;
+  LCapture.ObservationSerial := FColumnSampleSerial;
+  LCapture.Source := FSource;
+  LCapture.Filtered := FUnpaged;
+  LCapture.Page := FSnapshot;
+  LCapture.Columns := TColumnCapture.Create(FColumnIdentity, FColumnSerial,
+    FSpec, FColumnPreferences);
+  { The atomic store Busy getter is outward. Keep original fields first, then
+    require that exact cohort after readiness rather than recapture its result. }
+  CheckExportCurrent(Result);
+end;
+
+procedure TView.CheckExportCurrent(const ACapture: INyxCollectionExportCapture);
+var
+  LLease: INyxCollectionView;
+  LProof: IExportCaptureProof;
+  LCapture: TExportCapture;
+begin
+  { PublicationReady protects only its own body. Retain this outer receiver
+    through all original-field comparisons after an outward Busy getter. }
+  LLease := Self;
+
+  if (ACapture = nil) or not Supports(ACapture, IExportCaptureProof, LProof) then
+  begin
+    raise ENyxCollection.Create('Export capture does not belong to this table');
+  end;
+  LCapture := LProof.ExportData;
+
+  if (FProjection <> cpTable) or not PublicationReady or (LCapture = nil) or
+    (LCapture.Identity <> FColumnIdentity) or
+    (LCapture.QueryIdentity <> FQueryIdentity) or
+    (LCapture.QueryIntent <> FQueryIntent) or
+    (LCapture.ColumnSerial <> FColumnSerial) or
+    (LCapture.ObservationSerial <> FColumnSampleSerial) or
+    (FColumnSerial >= High(Integer)) or (FQueryIntent >= High(Integer)) or
+    (FColumnSampleSerial >= High(Integer)) or
+    (LCapture.Source <> FSource) or (LCapture.Filtered <> FUnpaged) or
+    (LCapture.Page <> FSnapshot) then
+  begin
+    raise ENyxCollection.Create('Original export source/query/page/columns changed');
+  end;
 end;
 
 function TView.GetSpec: TNyxCollectionViewSpec;

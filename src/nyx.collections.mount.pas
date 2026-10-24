@@ -43,9 +43,12 @@ uses
   nyx.collections.arrangement.controls,
   nyx.collections.arrangement.presenter,
   nyx.collections.clipboard.actions,
+  nyx.collections.export.actions,
+  nyx.collections.export,
   nyx.collections.cell.actions,
   nyx.collections.clipboard,
   nyx.clipboard,
+  nyx.files.save,
   nyx.scheduler,
   nyx.binding.types;
 
@@ -269,7 +272,7 @@ type
   TNyxCollectionMountBase = class(TInterfacedObject, INyxCollectionMount,
     INyxCollectionQueryMount, INyxCollectionInputAdmission,
     INyxCollectionColumnArrangementMount, INyxCollectionClipboardMount,
-    INyxCollectionCellActionsMount)
+    INyxCollectionCellActionsMount, INyxCollectionExportMount)
   private
     FToken: INyxCollectionViewSubscription;
     FConnected: Boolean;
@@ -284,6 +287,9 @@ type
     { A host/scheduler callback cannot install another clipboard controller
       while the exact original runtime authority is being configured. }
     FConfiguringClipboard: Boolean;
+    { Export authority is separately injected; reentrant configuration cannot
+      replace the original candidate while its scheduler/host is inspected. }
+    FConfiguringExport: Boolean;
     { A candidate context presenter cannot recursively replace the exact
       factory/controller being configured across scheduler admission. }
     FConfiguringCellActions: Boolean;
@@ -332,6 +338,7 @@ type
     { Controller owns model/runtime authority only. Per-command synchronous
       fences may retain this mount; asynchronous host scopes never do. }
     FClipboardCommands: INyxCollectionClipboardCommands;
+    FExportCommands: INyxCollectionExportCommands;
     FCellActions: INyxCollectionCellActions;
     FClipboardFields: TNyxCollectionClipboardFields;
     { Cached canonical presentation, independently of row/query snapshots.
@@ -440,6 +447,10 @@ type
       const AEvents: INyxEvents; const AScheduler: INyxScheduler;
       const AOptions: TNyxCollectionClipboardOptions);
     function GetClipboardCommands: INyxCollectionClipboardCommands;
+    procedure ConfigureExport(const AHost: INyxFileSaveHost;
+      const AEvents: INyxEvents; const AScheduler: INyxScheduler;
+      const AOptions: TNyxCollectionExportOptions);
+    function GetExportCommands: INyxCollectionExportCommands;
     procedure ConfigureCellActions(const AFactory: INyxCollectionCellPresenterFactory;
       const AScheduler: INyxScheduler);
     function GetCellActions: INyxCollectionCellActions;
@@ -485,7 +496,7 @@ uses
   nyx.collections.query.session,
   nyx.collections.query.workbench,
   nyx.collections.arrangement.workbench, nyx.collections.arrangement.manager,
-  nyx.collections.clipboard.commands
+  nyx.collections.clipboard.commands, nyx.collections.export.commands
   {$ifdef PAS2JS}, JS{$endif};
 
 type
@@ -1200,6 +1211,82 @@ begin
   Result := FClipboardCommands;
 end;
 
+function TNyxCollectionMountBase.GetExportCommands: INyxCollectionExportCommands;
+begin
+  Result := FExportCommands;
+end;
+
+procedure TNyxCollectionMountBase.ConfigureExport(const AHost: INyxFileSaveHost;
+  const AEvents: INyxEvents; const AScheduler: INyxScheduler;
+  const AOptions: TNyxCollectionExportOptions);
+var
+  LLease: INyxCollectionMount;
+  LView: INyxCollectionView;
+  LInput: INyxCollectionInputLifetime;
+  LHost: INyxFileSaveHost;
+  LEvents: INyxEvents;
+  LScheduler: INyxScheduler;
+  LOptions: TNyxCollectionExportOptions;
+  LCommands: INyxCollectionExportCommands;
+
+  procedure Current;
+  begin
+
+    if not FConnected or FDisconnecting or (FView <> LView) or
+      (FInputLifetime <> LInput) or not LInput.Current or
+      (FExportCommands <> nil) then
+    begin
+      raise ENyxCollectionExport.Create('Table changed while configuring export authority');
+    end;
+  end;
+begin
+
+  if FConfiguringExport or not FConnected or FDisconnecting or
+    (FExportCommands <> nil) or (FCellActions <> nil) or (AHost = nil) or
+    (AEvents = nil) or (AScheduler = nil) then
+  begin
+    raise ENyxCollectionExport.Create('Export configures once before contextual table actions');
+  end;
+  FConfiguringExport := True;
+  try
+    LLease := Self as INyxCollectionMount;
+    LView := FView;
+    LInput := FInputLifetime;
+    LHost := AHost;
+    LEvents := AEvents;
+    LScheduler := AScheduler;
+    LOptions := AOptions.Copy;
+    LScheduler.RequireUI;
+    Current;
+
+    if LView.Projection <> cpTable then
+    begin
+      raise ENyxCollectionExport.Create('Export requires an actual table projection');
+    end;
+    Current;
+    TCollectionInputState(FInputStateObject).InteractionEnabled(FEnabled);
+    try
+      LCommands := NewNyxCollectionExportCommands(LView, LInput, LEvents,
+        LHost, LScheduler, LOptions, PrepareClipboardInput);
+      Current;
+      FExportCommands := LCommands;
+    except
+      try
+
+        if LCommands <> nil then
+        begin
+          LCommands.Revoke;
+        end;
+      except
+        { The original construction/admission failure owns this tail. }
+      end;
+      raise;
+    end;
+  finally
+    FConfiguringExport := False;
+  end;
+end;
+
 function TNyxCollectionMountBase.GetCellActions: INyxCollectionCellActions;
 begin
   Result := FCellActions;
@@ -1221,6 +1308,8 @@ var
   LWriter: INyxCollectionClipboardCapturedWrite;
   LScheduler: INyxScheduler;
   LCandidate: INyxCollectionCellActions;
+  LExports: INyxCollectionExportCommands;
+  LExporter: INyxCollectionExportCapturedSave;
 
   procedure Current;
   begin
@@ -1244,14 +1333,22 @@ begin
     LLease := Self as INyxCollectionMount;
     LView := FView;
     LInput := FInputLifetime;
+    LExports := FExportCommands;
     LFactory := AFactory;
     LScheduler := AScheduler;
     LScheduler.RequireUI;
     Current;
     Supports(FClipboardCommands, INyxCollectionClipboardCapturedWrite, LWriter);
     Current;
+
+    if LExports <> nil then
+    begin
+      Supports(LExports, INyxCollectionExportCapturedSave, LExporter);
+      Current;
+    end;
     try
-      LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler, BeginCellPresentation);
+      LCandidate := NewNyxCollectionCellActions(LFactory, LWriter, LScheduler,
+        BeginCellPresentation, LExporter);
       Current;
       FCellFactory := LFactory;
       FCellActions := LCandidate;
@@ -1710,10 +1807,12 @@ end;
 procedure TNyxCollectionMountBase.SetCellEditsSuspended(AValue: Boolean);
 var
   LClipboard: INyxCollectionClipboardCommands;
+  LExport: INyxCollectionExportCommands;
   LCells: INyxCollectionCellActions;
   LFailure: TMountCleanupFailure;
 begin
   LClipboard := FClipboardCommands;
+  LExport := FExportCommands;
   LCells := FCellActions;
   FEditsSuspended := AValue;
 
@@ -1742,6 +1841,16 @@ begin
       if LClipboard <> nil then
       begin
         LClipboard.CancelPending;
+      end;
+    except
+      {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+      {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+    end;
+    try
+
+      if LExport <> nil then
+      begin
+        LExport.CancelPending;
       end;
     except
       {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
@@ -1808,6 +1917,7 @@ var
   LToken: INyxCollectionViewSubscription;
   LFailure: TMountCleanupFailure;
   LClipboard: INyxCollectionClipboardCommands;
+  LExport: INyxCollectionExportCommands;
   LCells: INyxCollectionCellActions;
   LCellFactory: INyxCollectionCellPresenterFactory;
 begin
@@ -1829,6 +1939,7 @@ begin
     when an implementation throws; retain the first failure for the caller
     and always release the disconnect guard and borrowed target at the end. }
   LClipboard := FClipboardCommands;
+  LExport := FExportCommands;
   LCells := FCellActions;
   LCellFactory := FCellFactory;
   LManager := FColumnManager;
@@ -1837,6 +1948,7 @@ begin
   LQueryFactory := FQueryFactory;
   LToken := FToken;
   FClipboardCommands := nil;
+  FExportCommands := nil;
   FCellActions := nil;
   FCellFactory := nil;
   FClipboardFields := nil;
@@ -1882,6 +1994,16 @@ begin
         CaptureMountCleanup(LFailure, TNyxText(E.Message));
       end;
       {$endif}
+    end;
+    try
+
+      if LExport <> nil then
+      begin
+        LExport.Revoke;
+      end;
+    except
+      {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+      {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
     end;
     try
 
@@ -2172,7 +2294,7 @@ begin
       Exit;
     end;
 
-    if FHasColumnLayout or (FClipboardCommands <> nil) then
+    if FHasColumnLayout or (FClipboardCommands <> nil) or (FExportCommands <> nil) then
     begin
       { The independent state survives a reentrant Disconnect that clears the
         mount field. Ready blocks NEW OS/DOM input throughout all outward reads
@@ -2294,6 +2416,7 @@ var
   LView: INyxCollectionView;
   LInput: INyxCollectionInputLifetime;
   LClipboard: INyxCollectionClipboardCommands;
+  LExport: INyxCollectionExportCommands;
   LCells: INyxCollectionCellActions;
   LQueries: INyxCollectionQueryWorkbench;
   LManager: INyxColumnArrangementManager;
@@ -2317,12 +2440,14 @@ begin
   LView := FView;
   LInput := FInputLifetime;
   LClipboard := FClipboardCommands;
+  LExport := FExportCommands;
   LCells := FCellActions;
   FEnabled := AEnabled;
   FReadOnly := AReadOnly;
   FCellFocusValid := False;
 
-  if (FHasColumnLayout or (LClipboard <> nil)) and (FInputStateObject <> nil) then
+  if (FHasColumnLayout or (LClipboard <> nil) or (LExport <> nil)) and
+    (FInputStateObject <> nil) then
   begin
     { Revoke captured query epochs BEFORE SetEnabled can call the scheduler or
       retire a form. ReadOnly keeps query/selection authority independent. }
@@ -2385,6 +2510,17 @@ begin
         if LClipboard <> nil then
         begin
           LClipboard.CancelPending;
+        end;
+      except
+        {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);
+        {$else}on E: Exception do CaptureMountCleanup(LFailure, TNyxText(E.Message));{$endif}
+      end;
+
+      try
+
+        if LExport <> nil then
+        begin
+          LExport.CancelPending;
         end;
       except
         {$ifdef PAS2JS}CaptureMountCleanup(LFailure, JSExceptValue);

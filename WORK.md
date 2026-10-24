@@ -80,8 +80,14 @@ empty. Written and DownloadRequested stay visibly distinct; stale original
 captures, nested cancellation and disabled input cannot redirect a later save.
 These checks use injected authority and make no OS file/clipboard claim.
 Root's subsequent source review identifies a public view-entry lifetime risk
-around the foreign atomic-store Busy getter. Lil' Scooty adds full-entry leases
-and getter-withdrawal regressions in export12; that fresh cohort remains pending.
+around the foreign atomic-store Busy getter. Full-entry leases and actual
+getter-withdrawal regressions in export12 pass47 native/47 browser checks; its
+unchanged target controls pass128 native with a complete clean heap and155 in
+each measured browser width, logs empty. Removing only the two outer leases in
+a private native negative control fails at the actual original-capture check,
+with a complete clean heap. All575 source pins reverify unchanged after target
+execution. Root independently reviews producer, controller, view and managed
+menu lifetime integration; old optional interface vtables remain unchanged.
 
 Ordinary own08 browser Studio passes832 at measured1280x900 with an empty
 warning/error log and a complete13541-unit accepted project/source packet.
@@ -117,13 +123,13 @@ packet. This does not substitute for an independently native-owned Studio export
 or accept the failed full native editor journey. Evidence stays under ignored
 build/qualification/studio-layout-own-09-browser-companion.
 
-Previous checkpoint7e96075 is committed, pushed and remote-verified on hello-nyx.
-It contains the substantial W1/context14 work and records incomplete acceptance.
-The resource/event checkpoint has independent qualification; current export12
-and formatting work stay separate until their own checks. No source assignment
+Checkpoints7e96075 and8cb8c48 are committed, pushed and remote-verified on hello-nyx.
+They contain W1/context14 and the resource/event changes with independent
+qualification and incomplete full acceptance. Export12 has its separate
+qualified checkpoint; formatting remains working code. No source assignment
 is a permission gate.
 
-Preview hosts37/38/39/40 are identity-verified stopped/joined, with no listeners on
+Preview hosts37/38/39/40/41 are identity-verified stopped/joined, with no listeners on
 their ports. All completed test tabs, including88, are closed; the user's original
 tabs remain untouched. No LAN/Studio service or installed MCP configuration
 changes. Root owns full W1/performance/own-application qualification; Lil' Scooty
@@ -131,10 +137,16 @@ owns typed RAW export capture/actions through existing file-save outcomes.
 A fresh full current-source export build clears an earlier stale-PPU MasterDetail
 error without changing correct library code. Root's Chrome compiler/runtime and
 diagnostic sampler04 are joined; exact owned native processes are absent and
-native UI is released. Lil' Scooty owns export12 qualification, followed by typed
-formatting and explicitly tagged representations in separate new units. Those
-formatting files are saved but uncompiled. Range/draft integration, full
-preferences, OS effects and the complete original task remain required.
+native UI is released. The maintained resource-foundation build actually passes
+the original70 and new32 native checks with clean heaps and compiles/stages both
+browser counterparts. Lil' Scooty's separate typed formatting/representation
+primitives pass27 native checks with a complete clean heap and27 actual browser
+checks, logs empty. They retain RAW defaults, explicit locale/formatter identity,
+exact decimal/calendar/clock policies and owned provenance, but are not wired
+into table painting/Fit, represented same-slot copying or active-draft capture.
+The helper's next slice integrates typed per-column formatting across the existing
+spec, targets and authoring owners. Range/draft integration, full preferences,
+OS effects and the complete original task remain required.
 
 ### Previous checkpoint — resource isolation qualified; full Studio performance open
 
